@@ -1,0 +1,17 @@
+import {escape as e,button,portrait,icon} from './ui.mjs';
+import {ROLES} from './core/rules.mjs';
+import {scopeSlots} from './core/draft.mjs';
+import {currentCombo} from './core/recommend.mjs';
+const roleName=id=>ROLES.find(r=>r.id===id)?.name||id;
+export function renderResultCard(r,i,data,saved){
+ const hero=id=>data.champions.find(c=>c.id===id),targets=r.targets||[];
+ const members=scopeSlots(r.slots,r.scope==='bot'?'bot':'party').filter(s=>s.champion);
+ if(targets.length===1)members.sort((a,b)=>Number(targets.includes(b.role))-Number(targets.includes(a.role)));
+ const fav=saved.favorites.some(f=>f.id===r.id),combo=r.trio||r.duo;
+ return `<article class="result-card ${i===0?'featured':''} ${targets.length===1?'single-target':''}"><div class="card-banner"><div class="card-topline"><span class="rank-label"><span class="rank-num">0${i+1}</span>${i===0?'先看看这套':'也可以这样玩'}</span><button class="favorite-button ${fav?'active':''}" data-action="favorite-result" data-index="${i}" aria-label="${fav?'取消收藏':'收藏'}${e(r.title)}">${icon('star')}</button></div><h3>${e(r.title)}</h3><div class="tags">${(combo?.tags||r.analysis.strengths.slice(0,2)).map(t=>`<span class="tag">${e(t)}</span>`).join('')}</div></div><div class="card-members">${members.map(s=>`<div class="member ${targets.includes(s.role)?'new-member':'fixed-member'}"><span class="member-state">${targets.includes(s.role)?'推荐补位':'已保留'}</span><button data-action="build" data-id="${s.champion}" data-role="${s.role}" data-combo="${e(currentCombo(scopeSlots(r.slots,r.scope),s.champion,s.role,data.catalogInfo?.status)?.id||'')}" title="查看${e(hero(s.champion)?.name)}的出装符文">${portrait(hero(s.champion))}</button><span class="name">${e(hero(s.champion)?.name)}</span><span class="role">${roleName(s.role)}</span></div>`).join('')}</div>${r.contributions?.length?`<div class="candidate-benefits">${r.contributions.map(m=>`<p><b>${e(m.name)}：</b>${e(m.helps.slice(0,2).join('、')||'围绕已选英雄配合')}${m.pairings[0]?`<small>${e(m.pairings[0])}</small>`:''}${m.unusual?'<small>非常规位置，先约好补刀与经济。</small>':''}</p>`).join('')}</div>`:''}<details class="result-reason"><summary>这套组合的依据</summary><p>${e(r.reason)}</p></details>${r.strategy?`<p class="card-strategy"><b>${e(r.strategy.label)}</b> · ${e(r.strategy.tradeoff)}</p>`:''}<div class="card-bottom"><span class="muted">配合难度 · ${e(combo?.difficulty||'适中')}</span>${button('result-detail','玩法与配置','arrow','small',`data-index="${i}"`)}</div></article>`;
+}
+export function coreRouteChoices(build,index,data){
+ if(!build.reference)return '';
+ const baseline=build.reference.core[0]?.items||[];
+ return `<div class="core-options" aria-label="核心装备方案">${build.reference.core.map((core,i)=>{const names=core.items.map(id=>data.items[id]?.name||'旧版装备'),changed=core.items.filter((id,n)=>id!==baseline[n]).map(id=>data.items[id]?.name||'旧版装备');return `<button class="chip core-option ${index===i?'active':''}" data-action="build-core" data-index="${i}"><b>核心方案 ${i+1}${i===0?' · 默认参考':''}</b><span>${e(names.join(' → '))}</span><small>${i===0?'来源中优先展示的路线，不代表国服匹配最优。':changed.length?'与默认不同：'+e(changed.join('、')):'核心装备相同，查看来源信息。'}${core.samples>0?' · '+core.samples.toLocaleString()+' 场来源样本':''}</small></button>`;}).join('')}</div>`;
+}

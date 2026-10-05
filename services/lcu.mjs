@@ -1,0 +1,101 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import https from 'node:https';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+const execFileAsync=promisify(execFile);
+import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
+const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-champ-select/v1/session','/lol-perks/v1/pages']);
+let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
+export function parseLockfile(content) {
+ const parts=String(content).trim().split(':');
+ if(parts.length!==5||parts[0]!=='LeagueClient'||!/^\d+$/.test(parts[2])||!parts[3]||parts[4]!=='https')return null;
+ const port=Number(parts[2]);if(port<1||port>65535)return null;
+ return {port,password:parts[3]};
+}
+export function parseCommandLine(cmd) {
+ const port=String(cmd).match(/--app-port=(\d+)/)?.[1];
+ const password=String(cmd).match(/--remoting-auth-token=([^\s"]+)/)?.[1];
+ if(!port||!password||Number(port)>65535||Number(port)<1)return null;
+ return {port:Number(port),password};
+}
+export async function discoverClient(installPath='') {
+ const roots=[installPath,'C:/WeGameApps/英雄联盟','D:/WeGameApps/英雄联盟','D:/英雄联盟','C:/Riot Games/League of Legends'].filter(Boolean);
+ for(const root of roots)for(const suffix of ['lockfile','LeagueClient/lockfile']) {
+  try {const auth=parseLockfile(await fs.readFile(path.join(root,suffix),'utf8'));if(auth)return auth;}catch{}
+ }
+ if(process.platform==='win32') {
+  try {
+   const {stdout}=await execFileAsync('powershell.exe',['-NoProfile','-NonInteractive','-Command',"$p = Get-CimInstance Win32_Process -Filter \"Name = 'LeagueClientUx.exe'\"; if ($p) { if ($p.CommandLine) { $p.CommandLine } else { 'CLIENT_ACCESS_REQUIRED' } }"],{windowsHide:true,timeout:6000,maxBuffer:131072});
+   return stdout.includes('CLIENT_ACCESS_REQUIRED')?{unreadable:true}:parseCommandLine(stdout);
+  }catch{return null;}
+ }
+ return null;
+}
+export function lcuRequest(auth,route,method='GET',body) {
+ if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route)))throw new Error('不支持此客户端操作');
+ return new Promise((resolve,reject)=>{
+  const payload=body?JSON.stringify(body):null;
+  const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,
+   // The League client exposes a self-signed loopback certificate. This exception is scoped to this socket only.
+   rejectUnauthorized:false,auth:`riot:${auth.password}`,timeout:4500,
+   headers:{Accept:'application/json',...(payload?{'Content-Type':'application/json','Content-Length':Buffer.byteLength(payload)}:{})}},res=>{
+    let raw='',size=0;
+    res.on('error',()=>reject(new Error('客户端读取已中断')));
+    res.on('data',chunk=>{size+=chunk.length;if(size>2_000_000){request.destroy();reject(new Error('客户端响应过大'));return;}raw+=chunk;});
+    res.on('end',()=>{let value;try{value=raw?JSON.parse(raw):null;}catch{return reject(new Error('客户端返回格式异常'));}
+     if(res.statusCode>=400){const error=new Error(res.statusCode===404?'当前没有可读取的选人信息':res.statusCode===401?'客户端连接已变化，请重新连接':`客户端暂未接受操作（${res.statusCode}）`);error.status=res.statusCode;return reject(error);}
+     resolve(value);
+    });
+   });
+  request.on('timeout',()=>request.destroy(new Error('客户端连接超时')));
+  request.on('error',()=>reject(new Error('未能连接客户端，请确认游戏已登录到大厅')));
+  if(payload)request.write(payload);request.end();
+ });
+}
+export function sanitizeSession(session) {
+ const actions=(Array.isArray(session.actions)?session.actions:[]).flat().filter(a=>a&&Number.isInteger(a.actorCellId)&&['pick','ban'].includes(a.type)).map(a=>({actorCellId:a.actorCellId,championId:Number(a.championId)||0,type:a.type,completed:a.completed===true,isInProgress:a.isInProgress===true}));
+ const team=arr=>(Array.isArray(arr)?arr:[]).map(p=>{
+  const cellId=Number(p.cellId),pick=actions.find(a=>a.type==='pick'&&a.actorCellId===cellId);
+  return {championId:Number(p.championId)||0,cellId,assignedPosition:String(p.assignedPosition||''),
+   ...(Number(p.championPickIntent)>0?{championPickIntent:Number(p.championPickIntent)}:{}),
+   ...(pick?{pickState:pick.completed?'locked':'selecting'}:{})};
+ });
+ return {myTeam:team(session.myTeam),theirTeam:team(session.theirTeam),localPlayerCellId:session.localPlayerCellId,allowDuplicatePicks:session.allowDuplicatePicks===false?false:true,
+  bans:[...(session.bans?.myTeamBans||[]),...(session.bans?.theirTeamBans||[])].filter(Number.isInteger),
+  actions,timer:{phase:session.timer?.phase||'',...(Number.isFinite(session.timer?.adjustedTimeLeftInPhase)?{remainingMs:Math.max(0,session.timer.adjustedTimeLeftInPhase)}:{})}};
+}
+export async function clientSnapshot(installPath='') {
+ const cached=!!snapshotAuth&&snapshotPath===installPath&&Date.now()-snapshotAuthAt<30000;
+ const auth=cached?snapshotAuth:await discoverClient(installPath);
+ if(auth?.port&&!cached){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=Date.now();}
+ if(!auth)return {connected:false,phase:'Offline',message:'未发现客户端，可先手动选人'};
+ if(auth.unreadable)return {connected:false,phase:'Offline',needsElevation:true,message:'已发现客户端，需要授权连接才能读取选人信息'};
+ try{
+  const phase=await lcuRequest(auth,'/lol-gameflow/v1/gameflow-phase');
+  let session=null;
+  if(phase==='ChampSelect')session=sanitizeSession(await lcuRequest(auth,'/lol-champ-select/v1/session'));
+  let game={};try{game=sanitizeGame(await lcuRequest(auth,'/lol-gameflow/v1/session'));}catch{}
+  return {connected:true,phase,session,game,mode:identifyMode(game),receivedAt:new Date().toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
+ }catch(e){snapshotAuth=null;snapshotAuthAt=0;return {connected:false,phase:'Offline',message:e.message};}
+}
+export async function writeRunePage({page,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {
+ const {validateRunePage}=await import('../src/core/builds.mjs');
+ if(!validateRunePage(page,trees))throw new Error('符文组合与当前资料不匹配，已取消写入');
+ const auth=await discover(installPath);if(!auth?.port)throw new Error('请先连接英雄联盟客户端，并完成必要的连接授权');
+ const phase=await request(auth,'/lol-gameflow/v1/gameflow-phase');
+ if(!['None','Lobby','Matchmaking','ReadyCheck','ChampSelect'].includes(phase))throw new Error('请在大厅或选人阶段应用符文');
+ const pages=await request(auth,'/lol-perks/v1/pages');
+ if(!Array.isArray(pages))throw new Error('无法读取符文页，已取消写入');
+ const owned=pages.find(p=>p.id===ownedPageId&&String(p.name).startsWith('开黑搭子 · ')&&p.isEditable!==false);
+ const name=String(page.name||'推荐').replace(/^开黑搭子 · /,'').slice(0,30);
+ const payload={name:`开黑搭子 · ${name}`,primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:page.selectedPerkIds,current:true};
+ try{
+  const result=owned?await request(auth,`/lol-perks/v1/pages/${owned.id}`,'PUT',payload):await request(auth,'/lol-perks/v1/pages','POST',payload);
+  const newId=owned?.id||result?.id;
+  if(!Number.isInteger(newId))throw new Error('写入结果不明确，请在客户端检查符文页');
+  const after=await request(auth,'/lol-perks/v1/pages');const confirmed=Array.isArray(after)?after.find(p=>p.id===newId):null;
+  if(!confirmed||JSON.stringify(confirmed.selectedPerkIds)!==JSON.stringify(payload.selectedPerkIds)||confirmed.primaryStyleId!==payload.primaryStyleId||confirmed.subStyleId!==payload.subStyleId)throw new Error('客户端未确认完整符文页，请手动检查');
+  return {pageId:newId,name:payload.name};
+ }catch(e){if(e.status===400||e.status===409)throw new Error('符文页可能已满，或客户端暂不允许修改。请手动腾出一页后重试；助手不会覆盖其他符文页。');throw e;}
+}

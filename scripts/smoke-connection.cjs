@@ -1,0 +1,41 @@
+const {app,ipcMain}=require('electron');
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
+const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA);app.on('browser-window-created',(_e,w)=>windows.push(w));
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(check,label){for(let i=0;i<120;i++){if(await check())return;await delay(100);}throw Error(label);}
+async function run(){
+ const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
+ require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
+ await until(()=>windows.some(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing');
+ const main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),js=code=>main.webContents.executeJavaScript(code,true);
+ await until(()=>js('!!document.querySelector("[data-action=sync]")'),'Connect button missing');
+ const before=(await js('window.buddy.bootstrap()')).state;
+ const click=selector=>js(`document.querySelector(${JSON.stringify(selector)}).click()`);
+ ipcMain.removeHandler('client-status');ipcMain.removeHandler('authorize-client');
+ let authorization=0,releaseStatus,rejectAuthorization;
+ ipcMain.handle('client-status',()=>new Promise(r=>releaseStatus=r));
+ ipcMain.handle('authorize-client',()=>{authorization++;return new Promise((_r,reject)=>rejectAuthorization=reject);});
+ await click('[data-action=sync]');await until(()=>!!releaseStatus,'Status not requested');
+ main.webContents.send('client-update',{connected:false,connecting:true,phase:'Offline',message:'正在启动连接授权'});
+ await until(()=>js('document.querySelector(".connection-strip").textContent.includes("正在启动连接授权")'),'Progress invisible');
+ assert.equal(await js('document.querySelector("[data-action=sync]").disabled'),true);
+ releaseStatus({connected:false,phase:'Offline',message:'需要授权',needsElevation:true});await until(()=>!!rejectAuthorization,'Authorization not requested');
+ main.webContents.send('client-update',{connected:false,connecting:true,phase:'Offline',message:'授权进程已启动，正在建立本机连接…'});
+ await until(()=>js('document.querySelector(".connection-strip").textContent.includes("授权进程已启动")'),'Second progress invisible');
+ rejectAuthorization(Error('Windows 授权已取消，可重新点击连接'));
+ await until(()=>js('!document.querySelector("[data-action=sync]").disabled'),'Connect stayed disabled after cancellation');
+ assert.ok(await js('document.querySelector(".connection-strip").textContent.includes("授权已取消")'));
+ ipcMain.removeHandler('authorize-client');
+ const game=JSON.parse(await fs.readFile('data/game.json','utf8'));
+ ipcMain.handle('authorize-client',()=>{authorization++;return {connected:true,phase:'ChampSelect',message:'已读取选人信息',session:{myTeam:[{cellId:1,championId:game.champions.find(c=>c.id==='Jhin').key,assignedPosition:'BOTTOM'}],theirTeam:[],bans:[],localPlayerCellId:1}};});
+ releaseStatus=null;await click('[data-action=sync]');await until(()=>!!releaseStatus,'Retry not requested');releaseStatus({connected:false,phase:'Offline',message:'需要授权',needsElevation:true});
+ await until(()=>js('document.querySelector("[data-action=sync]").textContent.includes("同步选人")'),'Retry failed');
+ const after=(await js('window.buddy.bootstrap()')).state;
+ await until(async()=>JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8')).draft.slots[2].champion==='Jhin','Pick not persisted');
+ const draft=JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8')).draft;
+ assert.equal(draft.slots[2].champion,'Jhin');assert.equal(draft.slots[2].manualPosition,true);assert.equal(draft.slots[3].champion,null);assert.equal(authorization,2);
+ for(const key of ['favorites','excluded','ownedPageId','guide'])assert.deepEqual(after[key],before[key]);
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,mockClient:true,actualGameAccess:false,progress:true,cancelRetry:true,manualPositionPreserved:true,noRuneWrite:true};
+ await fs.writeFile(path.join(root,'connection-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));app.quit();
+}
+run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'connection-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

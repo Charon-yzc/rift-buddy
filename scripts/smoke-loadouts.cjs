@@ -1,0 +1,48 @@
+const {app,ipcMain}=require('electron');
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
+const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA);app.on('browser-window-created',(_e,w)=>windows.push(w));
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(check,label){for(let i=0;i<120;i++){const r=await check();if(r)return r;await delay(100);}throw Error(label);}
+async function run(){
+ const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
+ require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
+ const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>main.webContents.executeJavaScript(code,true);
+ await until(()=>js('!!document.querySelector("[data-action=combination-library]")'),'Library missing');
+ const click=async selector=>{assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`{const el=document.querySelector(${JSON.stringify(selector)});el.focus({preventScroll:true});el.click();}`);};
+ const search=async value=>js(`{const el=document.querySelector('#combo-search');el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('input',{bubbles:true}));}`);
+ const capture=async name=>{await js('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await delay(100);await fs.writeFile(path.join(root,name),(await main.webContents.capturePage()).toPNG());};
+ const before=(await js('window.buddy.bootstrap()')).state.draft;
+ let copy='',written;
+ ipcMain.removeHandler('copy');ipcMain.handle('copy',(_e,text)=>{copy=text;return true;});
+ ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:true,phase:'Lobby',message:'测试客户端大厅',session:null,mode:null}));
+ ipcMain.removeHandler('apply-runes');ipcMain.handle('apply-runes',(_e,page)=>{written=page;return {name:page.name};});
+ await click('[data-action=combination-library]');await search('时光');assert.ok(await js('document.querySelectorAll(".combo-row").length>=5'));
+ await js('{const el=document.querySelector("#combo-source");el.value="community";el.dispatchEvent(new Event("change",{bubbles:true}));}');assert.ok(await js('!!document.querySelector(".combo-source-link")'));
+ await search('音乐会');await capture('community-library.png');
+ await click('[data-action=build][data-id=Seraphine][data-role=bottom]');
+ assert.ok(await js('document.querySelector(".combo-config").textContent.includes("音乐")'));assert.equal(await js('document.querySelector(".loadout-option.active").dataset.id'),'sera-team');
+ assert.ok(await js('document.querySelectorAll(".rune-option").length>=3'));assert.equal(await js('document.querySelector(".rune-option.active").dataset.id'),'curated-aery');
+ assert.equal((await js('window.buddy.bootstrap()')).state.draft,before);
+ await capture('combo-loadout.png');
+ await click('[data-action=build-jump][data-section=runes]');await capture('rune-options.png');
+ await click('[data-action=build-rune][data-id=curated-guardian]');await click('[data-action=copy-build]');assert.match(copy,/守护者/);assert.match(copy,/音乐会/);
+ await click('[data-action=apply-runes]');await until(()=>written,'No explicit rune request');assert.equal(written.selectedPerkIds[0],8465);assert.equal(written.selectedPerkIds.length,9);
+ await click('[data-action=favorite-build]');await delay(200);let state=(await js('window.buddy.bootstrap()')).state;
+ assert.equal(state.favorites[0].loadoutId,'sera-team');assert.equal(state.favorites[0].runeId,'curated-guardian');assert.ok(state.favorites[0].comboId);
+ await click('[data-action=open-guide]');const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Guide missing'),gjs=code=>guide.webContents.executeJavaScript(code,true);
+ await until(()=>gjs('!!document.querySelector(".next-item")'),'Guide UI missing');let model=(await gjs('window.guide.bootstrap()')).model;assert.equal(model.selection.loadoutId,'sera-team');assert.equal(model.runes[0].id,8465);
+ if(model.collapsed)await gjs('window.guide.control("collapse")');
+ await gjs('document.querySelector("[data-tab=skills]").click()');assert.ok(await gjs('document.querySelector("main").textContent.includes("守护者")'));
+ await gjs('window.guide.control("main")');await until(()=>js('document.querySelector(".rune-option.active")?.dataset.id==="curated-guardian"'),'Guide return lost rune');
+ await click('[data-action=build-loadout][data-id=mana-control]');assert.equal(await js('document.querySelector(".rune-option.active").dataset.id'),'curated-comet');
+ await click('[data-action=build-rune][data-id=curated-first]');await click('[data-action=favorite-build]');await delay(200);
+ state=(await js('window.buddy.bootstrap()')).state;assert.equal(state.favorites.length,2,'Variants must be distinct favorites');
+ await click('[data-action=close]');await click('[data-action=navigate][data-route=favorites]');await click(`[data-action=open-favorite][data-index="${state.favorites.findIndex(f=>f.loadoutId==='sera-team')}"]`);
+ assert.equal(await js('document.querySelector(".loadout-option.active").dataset.id'),'sera-team');assert.equal(await js('document.querySelector(".rune-option.active").dataset.id'),'curated-guardian');
+ await click('[data-action=build-partner]');assert.ok(await js('document.querySelector(".champ-summary").textContent.includes("娑娜")'));assert.ok(await js('document.querySelector(".combo-config").textContent.includes("音乐")'));
+ await js('{const el=document.querySelector("#build-role");el.value="jungle";el.dispatchEvent(new Event("change",{bubbles:true}));}');assert.equal(await js('document.querySelector(".combo-config")'),null);
+ await click('[data-action=build-mode][data-mode=hex]');assert.equal(await js('document.querySelector("[data-action=apply-runes]")'),null);assert.equal(await js('document.querySelector(".rune-option")'),null);
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,communitySources:true,previewKeepsDraft:true,comboLoadouts:true,multipleRunes:true,explicitRunePayload:true,favoritesRoundTrip:true,guideRoundTrip:true,partnerNavigation:true,modeRoleReset:true,actualRuneWrites:false,screenshots:root};
+ await fs.writeFile(path.join(root,'loadouts-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
+}
+run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'loadouts-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

@@ -1,0 +1,16 @@
+node_modules/
+release/
+.local/
+开黑搭子/
+dist/
+test-results/
+*.log
+.env
+.env.*
+!.env.example
+**/settings.json
+client-session-*.json
+client-helper-status.json
+lockfile
+*.pem
+*.key
