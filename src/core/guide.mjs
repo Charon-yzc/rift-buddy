@@ -104,4 +104,4 @@ export function currentPlayerSelection(session,champions,slots=[]){
  const manual=slots.find(s=>s.champion===champion.id&&(s.manualPosition||!Number.isInteger(s.clientCellId)));
  return {id:champion.id,role:manual?.role||assigned||profile(champion).roles[0],positionKnown:!!(manual||assigned),...(assigned&&manual&&manual.role!==assigned?{formalRole:assigned}:{})};
 }
-export function phaseLabel(phase){return ({None:'客户端大厅',Lobby:'组队大厅',Matchmaking:'正在匹配',ReadyCheck:'等待确认',ChampSelect:'正在选人',InProgress:'游戏进行中',Reconnect:'等待重连',WaitingForStats:'结算中',PreEndOfGame:'即将结算',EndOfGame:'已结束',Offline:'未连接'})[phase]||'客户端已连接';}
+export function phaseLabel(phase){return ({None:'客户端大厅',Lobby:'组队大厅',Matchmaking:'正在匹配',ReadyCheck:'等待确认',ChampSelect:'正在选人',GameStart:'正在加载游戏',InProgress:'游戏进行中',Reconnect:'等待重连',WaitingForStats:'结算中',PreEndOfGame:'即将结算',EndOfGame:'已结束',Offline:'未连接'})[phase]||'客户端已连接';}

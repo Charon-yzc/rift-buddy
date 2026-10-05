@@ -1,3 +1,4 @@
+import {electronExecutable} from './electron-runtime.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
@@ -10,6 +11,6 @@ state.preferences.rolePools.bottom={mode:'only',heroes:['Ashe','Jhin']};
 state.preferences.rolePools.support={mode:'only',heroes:['Nami','Lux']};
 state.guide=selectGuide(null,{id:'Seraphine',role:'bottom',mode:'rift',loadoutId:'sera-team',runeId:'curated-guardian',comboId:'double-song',conditions:['heal']});
 await saveState(root,state);
-const child=spawn(path.resolve('node_modules/electron/dist/electron.exe'),[path.resolve('scripts/smoke-user-flow.cjs')],{cwd:path.resolve('.'),env:{...process.env,RIFT_BUDDY_USER_DATA:root},windowsHide:true,stdio:'inherit'});
+const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-user-flow.cjs')],{cwd:path.resolve('.'),env:{...process.env,RIFT_BUDDY_USER_DATA:root},windowsHide:true,stdio:'inherit'});
 const timer=setTimeout(()=>child.kill(),80000);
 try{const [code]=await once(child,'exit');if(code!==0)throw Error(`User flow smoke failed (${code}); ${root}`);await fs.writeFile('.local/latest-user-flow-smoke.json',JSON.stringify({root},null,2));}finally{clearTimeout(timer);}

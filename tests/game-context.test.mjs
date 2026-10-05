@@ -12,6 +12,27 @@ test('confirmed formal position survives missing selection session, disabled liv
  assert.equal(tracker.current(client('InProgress'),live(),data.champions,slots,now).formalRole,'bottom');
  tracker.observe({connected:false,phase:'Offline'},data.champions,slots);tracker.observe(client('Reconnect'),data.champions,slots);assert.equal(tracker.current(client('Reconnect'),null,data.champions,slots,now).role,'bottom');
 });
+
+test('loading preserves the selected hero and formal role before the first live inventory',()=>{
+ const tracker=createCurrentGameTracker(),slots=createSlots();Object.assign(slots[4],{champion:'Seraphine',manualPosition:true,clientCellId:1});
+ tracker.observe(client('ChampSelect','1','Seraphine','BOTTOM'),data.champions,slots);
+ const loading=client('GameStart','1','Seraphine');loading.mode={id:null};tracker.observe(loading,data.champions,slots);
+ assert.equal(tracker.current(loading,null,data.champions,slots,now).id,'Seraphine');
+ assert.equal(tracker.current(loading,null,data.champions,slots,now).formalRole,'bottom');
+ const playing=client('InProgress','1','Seraphine');tracker.observe(playing,data.champions,slots);
+ assert.equal(tracker.current(playing,null,data.champions,slots,now).role,'bottom');
+ assert.equal(tracker.current(playing,live({champion:'Seraphine'}),data.champions,slots,now).formalRole,'bottom');
+ tracker.observe(client('Reconnect'),data.champions,slots);tracker.observe(loading,data.champions,slots);
+ assert.equal(tracker.current(loading,null,data.champions,slots,now).formalRole,'bottom');
+});
+
+test('a new game detected during loading drops the previous hero and role',()=>{
+ const tracker=createCurrentGameTracker();tracker.observe(client('ChampSelect'),data.champions);tracker.observe(client('InProgress'),data.champions);
+ const loading=client('GameStart','2');tracker.observe(loading,data.champions);
+ assert.equal(tracker.current(loading,null,data.champions,[],now),null);
+ tracker.observe(client('InProgress','2'),data.champions);
+ assert.equal(tracker.current(client('InProgress','2'),live(),data.champions,[],now).formalRole,undefined);
+});
 test('a client swap updates formal position while a new game or changed hero drops previous evidence',()=>{
  const tracker=createCurrentGameTracker();tracker.observe(client('ChampSelect'),data.champions);tracker.observe(client('ChampSelect','1','Ashe','MIDDLE'),data.champions);assert.equal(tracker.current(client('ChampSelect'),null,data.champions,[],now).role,'mid');
  tracker.observe(client('InProgress'),data.champions);const changed=tracker.current(client('InProgress'),live({champion:'Jhin'}),data.champions,[],now);assert.equal(changed.id,'Jhin');assert.equal(changed.formalRole,undefined);

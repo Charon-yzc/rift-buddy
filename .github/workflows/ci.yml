@@ -37,6 +37,8 @@ jobs:
         run: npm install --global pnpm@11.25.0
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      - name: Verify development Electron runtime
+        run: pnpm exec electron --version
       - name: Run regression tests
         run: pnpm test
       - name: Check source and bundled data
@@ -47,6 +49,8 @@ jobs:
         run: pnpm package
       - name: Verify package contents
         run: node scripts/inspect-package.mjs --verify-current
+      - name: Check selection, loading and in-game transitions
+        run: node scripts/smoke-package-game-transition.mjs
       - name: Check standalone connection helper
         run: node scripts/smoke-package-helper.mjs
       - name: Check application lifecycle
