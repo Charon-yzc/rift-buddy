@@ -14,3 +14,4 @@ client-helper-status.json
 lockfile
 *.pem
 *.key
+.openchamber/
