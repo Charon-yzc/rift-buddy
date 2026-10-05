@@ -47,3 +47,13 @@ test('current player shortcut respects manual positions and never substitutes an
  assert.equal(currentPlayerSelection(null,data.champions),null);
  const unknown={...session,myTeam:[{cellId:1,championId:22,assignedPosition:''}]};assert.equal(currentPlayerSelection(unknown,data.champions).positionKnown,false);
 });
+
+test('guide display mode persists as a floating ball across selections and saves',()=>{
+ const base=selectGuide(null,selection);
+ assert.equal(base.ball,false);
+ assert.equal(validateGuideState({...base,ball:1}).ball,false);
+ const ball=selectGuide({...base,ball:true},{...selection,coreIndex:1});
+ assert.equal(ball.ball,true);assert.deepEqual(ball.completedItems,base.completedItems);
+ assert.equal(validateState({...defaultState(),guide:ball}).guide.ball,true);
+ assert.equal(validateGuideState({...ball,ball:undefined}).ball,false);
+});

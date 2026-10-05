@@ -30,7 +30,7 @@ export function validateGuideState(value){
  const completedItems=Array.isArray(value.completedItems)?[...new Set(value.completedItems.filter(id=>typeof id==='string'&&/^\d{1,8}$/.test(id)))].slice(0,6):[];
  const b=value.bounds,bounds=b&&Number.isInteger(b.x)&&Math.abs(b.x)<30000&&Number.isInteger(b.y)&&Math.abs(b.y)<30000&&Number.isInteger(b.width)&&b.width>=360&&b.width<=640&&Number.isInteger(b.height)&&b.height>=480&&b.height<=1000?{x:b.x,y:b.y,width:b.width,height:b.height}:null;
  const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(m.entered===true?{entered:true}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
- return {selection,completedItems,collapsed:value.collapsed===true,clickThrough:value.clickThrough!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{})};
+ return {selection,completedItems,collapsed:value.collapsed===true,ball:value.ball===true,clickThrough:value.clickThrough!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{})};
 }
 export function guideIdentity(selection){
  const s=validateGuideSelection(selection);
@@ -39,7 +39,7 @@ export function guideIdentity(selection){
 export function selectGuide(previous,selection){
  const next=validateGuideSelection(selection);
  const same=previous&&guideIdentity(previous.selection)===guideIdentity(next);
- return {selection:next,completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??true,clickThrough:previous?.clickThrough??true,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget}:{}),...(same&&previous.stage?{stage:previous.stage}:{})};
+ return {selection:next,completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??true,ball:previous?.ball===true,clickThrough:previous?.clickThrough??true,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget}:{}),...(same&&previous.stage?{stage:previous.stage}:{})};
 }
 export function reconcileGuide(value,{phase,gameId,live,now=Date.now()}={}){
  const current=validateGuideState(value);if(!current)return {guide:null,reset:false,changed:false};

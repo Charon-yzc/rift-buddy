@@ -22,3 +22,21 @@ main summary{cursor:pointer;color:#b5d3cc;font-size:12px}main details[open] summ
 .collapsed header>div{gap:5px}.collapsed header b{font-size:12px}.collapsed header small{display:none}.collapsed .guide-status{padding:5px 12px 0;font-size:10px}.collapsed .guide-status small{display:none}
 .collapsed .next-item{margin:6px 12px 4px;min-height:64px;padding:7px}.collapsed .next-item p{font-size:10px}.collapsed .quick-reminders{padding:0 12px}.collapsed .quick-reminders p{font-size:11px;line-height:1.5}.collapsed .quick-reminders span{display:none}.collapsed .quick-plan{-webkit-line-clamp:1}
 .collapsed .input-hint{margin:4px 12px;font-size:10px}.collapsed .guide-mismatch{padding:6px;margin:5px 12px}.collapsed .guide-mismatch p{display:none}
+/* Guide polish: larger game-time touch targets, calmer footer. */
+.next-item>button{padding:10px 12px;font-size:11px}.window-actions button{width:28px;height:28px}
+.quick-conditions button{padding:7px 9px}footer p{color:#7d98ab}
+/* Guide aesthetic: glanceable depth, calm states. */
+.next-item{background:linear-gradient(180deg,#153834 0%,#122c2a 100%);box-shadow:0 10px 24px #00000055}
+.route-item{transition:background .15s,border-color .15s}
+.route-item:hover{border-color:#4c6a5c}
+.hero-id img{box-shadow:0 4px 12px #00000055}
+.tip{background:linear-gradient(180deg,#1a2837 0%,#17222f 100%)}
+/* Floating ball: 76px transparent window, draggable circle, click expands. */
+body.ball{border:0;background:transparent}
+#guide-root.ball{height:100%;display:grid;place-items:center;background:transparent}
+.ball-btn{width:64px;height:64px;border-radius:50%;border:2px solid #4da897;background:#14212e;overflow:hidden;position:relative;padding:0;display:block;cursor:pointer;-webkit-app-region:drag;box-shadow:0 10px 28px #00000088}
+.ball-btn:hover{border-color:#7febd5}
+.ball-btn>img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.ball-hero{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:50%;border:2px solid #14212e;overflow:hidden;display:block;pointer-events:none}
+.ball-hero img{width:100%;height:100%;object-fit:cover;display:block}
+.ball-done{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:50%;background:#235749;border:2px solid #14212e;color:#a4ffea;font-size:13px;display:grid;place-items:center;pointer-events:none}

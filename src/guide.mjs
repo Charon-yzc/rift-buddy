@@ -18,9 +18,9 @@ const api=window.guide||{
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
   if(action==='purchase-target')s.purchaseTarget=value||undefined;if(action==='stage')s.stage=value==='auto'?undefined:value;
-  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;
+  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball')s.ball=!s.ball;
   if(action==='copy'){toast('桌面版支持复制');return true;}
-  return {...snapshot,model:createGuideModel(window.previewGuideData,s)};
+  return {...snapshot,ball:!!s.ball,model:createGuideModel(window.previewGuideData,s)};
  },
 };
 const image=(kind,id,name)=>`<img src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}" />`;
@@ -29,7 +29,9 @@ function render(){
  const scroll=root.querySelector('main')?.scrollTop||0,focused=document.activeElement;
  const focus=root.contains(focused)?{id:focused.id,data:{...focused.dataset}}:null;
  const details=[...root.querySelectorAll('details[data-guide-section]')].map(d=>[d.dataset.guideSection,d.open]);
- root.className=snapshot?.model?.collapsed?'collapsed':'';
+ const ball=!!snapshot?.ball;
+ document.body.classList.toggle('ball',ball);
+ root.className=ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
  root.innerHTML=renderGuide(snapshot,tab,isPreview,image);
  for(const [key,open] of details){const d=[...root.querySelectorAll('details[data-guide-section]')].find(d=>d.dataset.guideSection===key);if(d)d.open=open;}
  const main=root.querySelector('main');if(main)main.scrollTop=scroll;
@@ -38,13 +40,17 @@ function render(){
 document.addEventListener('click',async event=>{
  const target=event.target.closest('button');if(!target)return;
  if(target.dataset.tab){tab=target.dataset.tab;render();return;}
+ // The floating ball lives on a draggable region: a real drag must move the
+ // window, never toggle it. Only a near-stationary press counts as a click.
+ if(target.dataset.action==='ball'&&downPos&&Math.hypot(event.clientX-downPos[0],event.clientY-downPos[1])>6)return;
  target.disabled=true;
  try{const result=await api.control(target.dataset.action,target.dataset.id);if(result?.model!==undefined){snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
 document.addEventListener('change',async event=>{const actions={'guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')api.control('hide').catch(error=>toast(error.message));});
-let hoverHeader=false;
+let hoverHeader=false,downPos=null;
+document.addEventListener('mousedown',event=>{downPos=[event.clientX,event.clientY];});
 function trackHeaderHover(event){
  // mousemove still reaches the page while the window passes clicks through
  // (forward:true). Report header hover on change only, so the main process
