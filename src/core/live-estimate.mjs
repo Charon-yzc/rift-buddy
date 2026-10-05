@@ -1,5 +1,6 @@
-// Live in-game estimate: level-adjusted champion stats, kill threshold and a
-// coarse trading edge. Everything is static, explainable arithmetic on Riot
+// Live in-game estimate: level-adjusted champion stats, mutual kill lines and a
+// coarse trading edge, plus a real-time buy suggestion that reacts to the
+// enemy damage mix. Everything is static, explainable arithmetic on Riot
 // Data Dragon numbers. It is a reference, never a prediction.
 
 export function statAtLevel(stats={},level=1){
@@ -15,6 +16,15 @@ export function statAtLevel(stats={},level=1){
  };
 }
 
+// Damage profile from the official attack/magic ratings, not from guesswork:
+// Zed 9/1 -> physical, Ahri 3/8 -> magic, mixed when they are close.
+export function damageProfile(champion){
+ const atk=Number(champion?.info?.attack)||0,mag=Number(champion?.info?.magic)||0;
+ if(mag>=atk+2)return 'magic';
+ if(atk>=mag+2)return 'physical';
+ return 'mixed';
+}
+
 const ITEM_STAT_PATTERNS=[
  ['ad',/(\d+)攻击力/],
  ['ap',/(\d+)法术强度/],
@@ -28,7 +38,7 @@ const ITEM_STAT_PATTERNS=[
 export function itemStats(description=''){
  const out={};
  for(const [key,pattern] of ITEM_STAT_PATTERNS){
-  const amount=String(description).match(new RegExp('(?:' + key + ')? *' + pattern.source,'u'))?.[1] ?? String(description).match(pattern)?.[1];
+  const amount=String(description).match(pattern)?.[1];
   if(amount!==undefined)out[key]=(out[key]||0)+Number(amount);
  }
  return out;
@@ -46,18 +56,20 @@ export function aggregateCombatStats(champion,level,items=[],data){
  return agg;
 }
 
-// Conservative trait multipliers: enemy is under average-peak mitigation.
-const MATCHUPS=[
- ['Marksman',{ad:1,ap:0.1,hp:-0.1,armor:0.2,mr:0}],
- ['Mage',{ad:0.1,ap:1,hp:0,armor:-0.2,mr:0.2}],
- ['Assassin',{ad:1,ap:1,hp:0,armor:0,mr:0}],
- ['Tank',{ad:0.3,ap:-0.2,hp:0.2,armor:1,mr:1}],
- ['Fighter',{ad:0.7,ap:0.3,hp:0,armor:0.4,mr:0.4}],
- ['Support',{ad:0.4,ap:0.4,hp:0,armor:0.6,mr:0.6}],
-];
-function traitMultiplier(champion,matchup){
- const mode=MATCHUPS.find(([tag])=>champion.tags?.includes(tag))?.[1];
- return matchup&&mode?{ad:mode.ad*matchup.ad,ap:mode.ap*matchup.ap,hp:mode.hp*matchup.hp,armor:mode.armor*matchup.armor,mr:mode.mr*matchup.mr}:{ad:1,ap:1,hp:1,armor:1,mr:1};
+// Total invested skill points. Own points come from the live client; the
+// enemy's are proxied by level (one point per level) and labelled as such.
+export function skillPointsTotal(skills,level){
+ if(skills&&['Q','W','E','R'].every(k=>Number.isInteger(skills[k])))return Math.min(18,skills.Q+skills.W+skills.E+skills.R);
+ return Math.min(18,Math.max(1,Number(level)||1));
+}
+
+// Expected ability burst for the invested points. Per-point base plus bonus
+// scaling is a deliberately coarse heuristic, documented here and in the UI.
+export function burstDamage(champion,points,agg,level){
+ const base=statAtLevel(champion.stats,level);
+ const bonus=Math.max(0,agg.ad-base.ad,agg.ap);
+ const perPoint=40+0.4*bonus;
+ return Math.round(Math.max(0,points)*perPoint);
 }
 
 // Expected auto-attack + a small mix of ability casts per second.
@@ -71,30 +83,75 @@ export function roughDps(champion,level,agg){
  return Math.round((mixDps+apBurst)*10)/10;
 }
 
-// Health a champion's 6s trading window would deal, after armor/MR\u3002
-export function tradeDamageWindow(attacker,defender,level,agg,def){
+const mitigate=(amount,armor,mr,physShare)=>amount*(physShare*(100/(100+armor))+(1-physShare)*(100/(100+mr)));
+
+// Health a champion's 6s trading window would deal, after armor/MR.
+export function tradeDamageWindow(attacker,defender,level,agg,def,points=null){
  const a=roughDps(attacker,level,agg);
  const defStats=statAtLevel(defender.stats,level);
- const physMitigation=100/(100+defStats.armor);
- const magMitigation=100/(100+defStats.mr);
- const mitigated=a*(0.55*physMitigation+0.45*magMitigation);
- return Math.round(mitigated*6);
+ const adShare=agg.ad/(agg.ad+agg.ap+1);
+ const autos=mitigate(a*6,defStats.armor,defStats.mr,0.55);
+ const pts=points??skillPointsTotal(null,level);
+ const burst=burstDamage(attacker,pts,agg,level);
+ const burstHit=mitigate(burst,defStats.armor,defStats.mr,adShare);
+ return Math.round(autos+burstHit);
 }
 
-// Trading edge -1..1 vs a matched-level opponent with no reflective info.
-export function tradeEdge(champion,level,agg,opponent,opponentLevel,opponentAgg,data){
- const myDamage=tradeDamageWindow(champion,opponent,level,agg,opponentAgg);
- const theirDamage=tradeDamageWindow(opponent,champion,opponentLevel,opponentAgg,agg);
+// Trading edge -1..1 vs a matched opponent. Positive favors `champion`.
+export function tradeEdge(champion,level,agg,opponent,opponentLevel,opponentAgg,data,points=null){
+ const myDamage=tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points?.mine??null);
+ const theirDamage=tradeDamageWindow(opponent,champion,opponentLevel,opponentAgg,agg,points?.theirs??null);
  const myHp=agg.hp,theirHp=opponentAgg.hp;
- // Edge considers both damage dealt and ability to absorb return.
- const meWins=myDamage/Math.max(theirHp,1)+ (myHp-theirDamage>0?0.05:-0.05);
+ const meWins=myDamage/Math.max(theirHp,1)+(myHp-theirDamage>0?0.05:-0.05);
  const themWins=theirDamage/Math.max(myHp,1);
  const sum=meWins+themWins+0.0001;
  return Math.max(-1,Math.min(1,Number((meWins-themWins)/sum).toFixed(2)));
 }
 
-// Kill threshold: how much HP the enemy must be below for Ashe-style full
-// trade (6s) to finish them. Useful for the floating ball.
-export function killThreshold(champion,level,agg,opponent,opponentLevel,opponentAgg){
- return Math.max(0,tradeDamageWindow(champion,opponent,level,agg,opponentAgg));
+// Kill threshold: how much HP the target must be below for a full 6s trade
+// (autos + invested skills) to finish them.
+export function killThreshold(champion,level,agg,opponent,opponentLevel,opponentAgg,points=null){
+ return Math.max(0,tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points));
+}
+
+// One full duel, both directions: my kill line on them and theirs on me.
+export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data){
+ const enemyAgg=aggregateCombatStats(enemy,enemyLevel,[],data);
+ const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
+ return {
+  enemy:{id:enemy.id,name:enemy.name,level:Number.isInteger(enemyLevel)?enemyLevel:null},
+  edge:tradeEdge(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,data,{mine,theirs}),
+  killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,mine),
+  killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,theirs),
+ };
+}
+
+const DEFENSE_TAGS={physical:['Armor'],magic:['SpellBlock','MagicResist']};
+// Real-time buy: stay on the route by default; deviate to a cheap defense
+// component only when the visible enemy damage is lopsided AND the route's
+// next step is far out of reach. Returns null when the route stays best.
+export function recommendLiveBuy({routeNext,shortfall,gold,enemies=[],champions=[],data,inventory=[]}){
+ const g=Number(gold);
+ if(!Number.isFinite(g)||!Array.isArray(enemies)||!enemies.length)return null;
+ const profiles=enemies.map(e=>{
+  const c=champions.find(c=>c.id===e.id);return c?damageProfile(c):'mixed';
+ });
+ const phys=profiles.filter(p=>p==='physical').length+profiles.filter(p=>p==='mixed').length*0.5;
+ const mag=profiles.filter(p=>p==='magic').length+profiles.filter(p=>p==='mixed').length*0.5;
+ const total=Math.max(1,profiles.length);
+ const need=phys/total>=0.6?'physical':mag/total>=0.6?'magic':null;
+ if(!need)return null;
+ if(Number.isFinite(shortfall)&&shortfall<=800)return null; // route step is close, don't distract
+ const owned=new Set((inventory||[]).map(i=>String(i.id)));
+ const tags=DEFENSE_TAGS[need];
+ const candidates=Object.values(data.items||{})
+  .filter(i=>i&&i.inStore&&i.gold?.purchasable!==false&&i.maps?.['11']
+   &&Array.isArray(i.tags)&&tags.some(t=>i.tags.includes(t))
+   &&Number(i.gold.total)>0&&Number(i.gold.total)<=Math.min(g,2200)
+   &&!owned.has(String(i.id)));
+ if(!candidates.length)return null;
+ candidates.sort((a,b)=>b.gold.total-a.gold.total);
+ const pick=candidates[0];
+ return {kind:'defense',id:String(pick.id),name:pick.name,cost:pick.gold.total,
+  reason:need==='physical'?'对方物理伤害偏多，可先补护甲过渡':'对方魔法伤害偏多，可先补魔抗过渡'};
 }

@@ -104,3 +104,13 @@ test('live estimate handles missing data, enemy level changes and always degrade
  const noEnemy=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),enemies:[]});
  assert.equal(noEnemy.estimate,null);
 });
+
+test('live duels cover every visible enemy in both directions with skill-aware burst', async () => {
+ const fresh={...live,gold:1500,level:6,skills:{Q:3,W:2,E:1,R:0},enemies:[{id:'Jinx',name:'jinx',level:6},{id:'Thresh',name:'thresh',level:5}]};
+ const guide=selectGuide(null,selection);
+ const model=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),inventory:[{id:'1055',count:1}]});
+ assert.equal(model.estimate.duels.length,2);
+ assert.ok(model.estimate.theirKill>0);
+ assert.ok(model.estimate.duels.every(d=>d.killMine>0&&d.killTheirs>0));
+ assert.ok(model.estimate.liveBuy&&model.estimate.liveBuy.kind==='defense');
+});
