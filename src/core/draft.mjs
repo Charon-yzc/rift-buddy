@@ -1,3 +1,4 @@
+export const CLIENT_POSITION_ROLES={TOP:'top',JUNGLE:'jungle',MIDDLE:'mid',MID:'mid',BOTTOM:'bottom',UTILITY:'support',SUPPORT:'support'};
 export const DRAFT_SCOPES={
  context:{name:'考虑全队',description:'只推荐我们的位置，搭配时考虑队友已选英雄。'},
  party:{name:'只看我们',description:'只推荐标记“我们”的位置，只考虑我们之间的配合。'},
@@ -12,9 +13,10 @@ export function publicDraftPicks(session,champions){
 }
 export const unassignedPublicPicks=(slots,session,champions)=>publicDraftPicks(session,champions).filter(p=>!slots.some(s=>s.champion===p.champion&&s.clientCellId===p.cellId));
 export function pickerMatches(champions,query,filter,matchesSearch,profile){
- const all=champions.filter(c=>matchesSearch(c,query));
+ const text=String(query??'');
+ const all=champions.filter(c=>matchesSearch(c,text));
  const usual=all.filter(c=>filter==='all'||profile(c,filter).roles.includes(filter));
- const fallback=!!query.trim()&&!usual.length&&!!all.length;
+ const fallback=!!text.trim()&&!usual.length&&!!all.length;
  return {champions:fallback?all:usual,fallback};
 }
 const payload=s=>({champion:s.champion,locked:!!s.champion&&s.locked,
@@ -37,10 +39,9 @@ export function assignClientChampion(slots,pick,toRole){
  return slots.map(s=>s.role===toRole?{role:s.role,party:s.party,champion:pick.champion,locked:true,clientCellId:pick.cellId,manualPosition:true}:{...s});
 }
 export function clientDraftStatus(client,slots,champions,now=Date.now()){
- const roles={TOP:'top',JUNGLE:'jungle',MIDDLE:'mid',MID:'mid',BOTTOM:'bottom',UTILITY:'support',SUPPORT:'support'};
  const byKey=new Map(champions.map(c=>[c.key,c]));
- const team=client.session?.myTeam||[],hover=team.filter(p=>!p.championId&&byKey.has(p.championPickIntent)).map(p=>({id:byKey.get(p.championPickIntent).id,local:p.cellId===client.session.localPlayerCellId}));
- const mismatch=slots.filter(s=>s.manualPosition&&Number.isInteger(s.clientCellId)).flatMap(s=>{const p=team.find(p=>p.cellId===s.clientCellId),assigned=roles[String(p?.assignedPosition||'').toUpperCase()];return assigned&&assigned!==s.role?[{champion:s.champion,local:s.role,assigned}]:[];});
+ const team=client.session?.myTeam||[],hover=team.filter(p=>!p.championId&&byKey.has(Number(p.championPickIntent))).map(p=>({id:byKey.get(Number(p.championPickIntent)).id,local:p.cellId===client.session.localPlayerCellId}));
+ const mismatch=slots.filter(s=>s.manualPosition&&Number.isInteger(s.clientCellId)).flatMap(s=>{const p=team.find(p=>p.cellId===s.clientCellId),assigned=CLIENT_POSITION_ROLES[String(p?.assignedPosition||'').toUpperCase()];return assigned&&assigned!==s.role?[{champion:s.champion,local:s.role,assigned}]:[];});
  const at=Date.parse(client.receivedAt),age=Number.isFinite(at)?Math.max(0,Math.floor((now-at)/1000)):null;
  const remaining=Number.isFinite(client.session?.timer?.remainingMs)&&age!==null?Math.max(0,Math.ceil(client.session.timer.remainingMs/1000-age)):null;
  return {hover,mismatch,age,remaining,stale:age!==null&&age>15};

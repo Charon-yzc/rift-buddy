@@ -37,7 +37,12 @@ const ROLE_GROUPS = {
 };
 const groups = Object.fromEntries(Object.entries(ROLE_GROUPS).map(([k,v])=>[k,new Set(v.split(' '))]));
 const unusualPositions={bottom:new Set('Kennen Kindred TahmKench Chogath Yone'.split(' ')),jungle:new Set('Rell Shen DrMundo Jax Qiyana Sylas Zed'.split(' ')),support:new Set('Camille Chogath Fiddlesticks Gragas Ivern Lissandra Malphite Sett Shaco Shen Zac'.split(' '))};
-export function conventionalRole(champion,role){return profile(champion,role).roles.includes(role)&&!unusualPositions[role]?.has(champion.id);}
+export function conventionalRole(champion,role,cache=null){
+ const key=cache?`${champion.id}:${role}`:null;
+ let p=key?cache.get(key):null;
+ if(!p){p=profile(champion,role);if(key)cache.set(key,p);}
+ return p.roles.includes(role)&&!unusualPositions[role]?.has(champion.id);
+}
 const traitSets = {
  frontline:'Alistar Amumu Blitzcrank Braum Chogath DrMundo Galio Garen Gragas KSante Leona Malphite Maokai Mordekaiser Nautilus Nunu Ornn Poppy Rammus Rell Sejuani Sett Shen Sion Skarner TahmKench Taric Udyr Volibear Warwick Zac',
  engage:'Alistar Amumu Annie Ashe Blitzcrank Camille Diana Fiddlesticks Galio Gragas Hecarim JarvanIV Leona Lissandra Malphite Maokai Nautilus Neeko Nocturne Nunu Ornn Pantheon Rakan Rell Sejuani Sett Shen Sion Skarner Thresh Vi Volibear MonkeyKing Zac',
@@ -76,7 +81,7 @@ export function profile(c, role) {
  const magic=sets.ap.has(c.id)||['Alistar','Bard','Braum','Leona','Nautilus','Ornn','Rakan','Rammus','Rell','Renata','Thresh'].includes(c.id);
  const mixed=['Kaisa','KogMaw','Varus','Jax','Yone','Udyr','Volibear','Shen'].includes(c.id);
  return {roles,build,damage:magic?'ap':'ad',damageWeights:mixed?{ad:.55,ap:.45}:magic?{ad:0,ap:1}:{ad:1,ap:0},manaFree:MAGES_MANAFREE.has(c.id),
-  difficulty:c.info?.difficulty||5,...Object.fromEntries(Object.entries(sets).filter(([k])=>k!=='ap').map(([k,v])=>[k,v.has(c.id)]))};
+  difficulty:c.info?.difficulty??5,...Object.fromEntries(Object.entries(sets).filter(([k])=>k!=='ap').map(([k,v])=>[k,v.has(c.id)]))};
 }
 
 export let DUOS=bundledCatalog.duos, CROSS_SYNERGIES=bundledCatalog.links, TRIOS=bundledCatalog.trios;
@@ -103,6 +108,6 @@ export const SEARCH_ALIASES={
  Vladimir:'吸血鬼 xxg xixuegui',Singed:'炼金 lj lianjin',Udyr:'乌迪尔 兽灵行者 ude wudier',
 };
 export function matchesSearch(champion, query) {
- const q=String(query).trim().toLowerCase();
- return !q || `${champion.id} ${champion.key} ${champion.name} ${champion.title} ${champion.keywords} ${SEARCH_ALIASES[champion.id]||''}`.toLowerCase().includes(q);
+ const q=String(query??'').trim().toLowerCase();
+ return !q || `${champion.id} ${champion.key} ${champion.name} ${champion.title} ${champion.keywords||''} ${SEARCH_ALIASES[champion.id]||''}`.toLowerCase().includes(q);
 }

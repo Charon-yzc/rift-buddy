@@ -57,6 +57,7 @@ async function boot(){
   ...(app.isPackaged?{helperExecutable:path.join(helperRoot,'node.exe'),helperEntry:path.join(helperRoot,'electron/client-helper-entry.mjs'),helperBundleRoot:helperRoot,launcherExecutable:path.join(helperRoot,'connection-launcher.exe')}:{}) ,
   onProgress:message=>win?.webContents.send('client-update',{connected:false,connecting:true,phase:'Offline',message})});
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));
+ if(state.guide&&!data.champions.some(c=>c.id===state.guide.selection?.id)){state.guide=null;await saveCurrentState();}
  const catalogCore=await import('../src/core/catalog.mjs');
  const {createCatalogStore}=await import('../services/catalog-store.mjs');
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
@@ -118,7 +119,8 @@ async function boot(){
    currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);
    const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId});state.guide=reconciled.guide;if(reconciled.changed)await saveCurrentState();
    if(state.guide&&state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame))await pollLive(true);
-   await guide.phase(latestClient.phase,latestClient.connected);win?.webContents.send('client-update',latestClient);return latestClient;})().finally(()=>statusTask=null);
+   try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
+   win?.webContents.send('client-update',latestClient);return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
  const pollLive=async(force=false)=>{

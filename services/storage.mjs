@@ -23,10 +23,12 @@ function favorite(f){
  if(f.type==='team')return {...base,slots:slots(f.slots),style:styles.includes(f.style)?f.style:'fun',scope:['context','party','bot'].includes(f.scope)?f.scope:'context'};
  if(f.type==='hex'){
   if(f.champion!==null&&!hero(f.champion)||!Array.isArray(f.augments)||f.augments.length>5||!f.augments.every(Number.isInteger))throw Error('强化收藏格式不正确');
-  return {...base,champion:f.champion,augments:[...new Set(f.augments)]};
+  const augList=(v,max)=>Array.isArray(v)?[...new Set(v.filter(Number.isInteger))].slice(0,max):[];
+  return {...base,champion:f.champion,augments:[...new Set(f.augments)],compareIds:augList(f.compareIds,3),ownedAugmentIds:augList(f.ownedAugmentIds,6)};
  }
  if(!hero(f.champion)||!roles.includes(f.role)||!['rift','hex'].includes(f.mode))throw Error('英雄配置收藏格式不正确');
- return {...base,champion:f.champion,role:f.role,mode:f.mode,...validateLoadoutSelection(f),coreIndex:Number.isInteger(f.coreIndex)&&f.coreIndex>=0&&f.coreIndex<3?f.coreIndex:0,conditions:Array.isArray(f.conditions)?[...new Set(f.conditions.filter(c=>conditions.includes(c)))]:[]};
+ const hexAug=v=>Array.isArray(v)?[...new Set(v.filter(Number.isInteger))]:[];
+ return {...base,champion:f.champion,role:f.role,mode:f.mode,...validateLoadoutSelection(f),coreIndex:Number.isInteger(f.coreIndex)&&f.coreIndex>=0&&f.coreIndex<3?f.coreIndex:0,conditions:Array.isArray(f.conditions)?[...new Set(f.conditions.filter(c=>conditions.includes(c)))]:[],...(f.mode==='hex'?{augmentIds:hexAug(f.augmentIds).slice(0,5),compareIds:hexAug(f.compareIds).slice(0,3),ownedAugmentIds:hexAug(f.ownedAugmentIds).slice(0,6)}:{})};
 }
 export function validateState(value) {
  if(!value||typeof value!=='object'||value.schema!==1)throw new Error('保存内容格式不正确');

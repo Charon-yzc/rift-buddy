@@ -97,3 +97,12 @@ test('an unobserved inter-game transition cannot reuse the former queue mode in 
  const next=client('ChampSelect','2');next.mode={id:null};tracker.observe(next,data.champions);assert.equal(tracker.current(next,null,data.champions,[],now),null);
  next.mode={id:'hex'};tracker.observe(next,data.champions);assert.equal(tracker.current(next,null,data.champions,[],now).mode,'hex');
 });
+
+test('an unconfirmed mode reading cannot be reused as the restart baseline',()=>{
+ const tracker=createCurrentGameTracker(),slots=createSlots();Object.assign(slots[4],{champion:'Ashe',manualPosition:true,clientCellId:1});
+ tracker.observe(client('ChampSelect'),data.champions,slots);tracker.observe(client('InProgress'),data.champions,slots);
+ assert.equal(tracker.current(client('InProgress'),live({gameTime:1800}),data.champions,slots,now).formalRole,'bottom');
+ tracker.current(client('InProgress'),live({mode:null,gameTime:1700}),data.champions,slots,now);
+ const next=tracker.current(client('InProgress'),live({gameTime:60}),data.champions,slots,now);
+ assert.equal(next.formalRole,'bottom');assert.equal(next.positionKnown,true);
+});

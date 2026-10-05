@@ -30,6 +30,9 @@ export function createCurrentGameTracker(){
     }
     if(live.mode)mode=live.mode;
     if(own&&live.mode===mode&&Number.isFinite(live.gameTime))liveTime=live.gameTime;
+    // An unconfirmed mode cannot anchor the game clock; reset the baseline so a
+    // later confirmed restart is not measured against a null-mode reading.
+    if(live.mode===null||live.mode===undefined)liveTime=null;
    }
    if(!own||!['rift','hex'].includes(mode))return null;
    const slot=slots.find(s=>s.champion===own.id),role=own.formalKnown?own.role:slot?.role||own.role;

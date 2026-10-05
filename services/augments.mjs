@@ -15,6 +15,7 @@ export function buildAugmentDescriptions(catalog,bin,entries){
    const seq=values.get(name.toLowerCase())||values.get(fieldHash(name));
    if(!seq?.length)return null;
    const unique=[...new Set(seq.map(v=>formatNumber(v*factor)).filter(v=>v!==null))];
+   if(!unique.length)return null;
    return unique.length===1?unique[0]:`${unique[0]}–${unique.at(-1)}（随等级）`;
   }
   function calculation(name){

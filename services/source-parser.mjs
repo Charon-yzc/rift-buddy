@@ -29,8 +29,8 @@ export function itemRows(nodes,refs,prefix){
  const rows=nodes.filter(v=>Array.isArray(v)&&v[0]==='$'&&v[1]==='tr'&&typeof v[2]==='string'&&v[2].startsWith(prefix));
  return rows.map(row=>{
   row=resolveReferences(row,refs);const items=[];let samples=0,pickRate=null;
-  function flatten(v){if(!v||typeof v!=='object')return [];return [v,...Object.values(v).flatMap(c=>c&&typeof c==='object'?flatten(c):[])];}
-  function scan(v){if(!v||typeof v!=='object')return;
+  function flatten(v,depth=0){if(!v||typeof v!=='object'||depth>80)return [];return [v,...Object.values(v).flatMap(c=>c&&typeof c==='object'?flatten(c,depth+1):[])];}
+  function scan(v,depth=0){if(!v||typeof v!=='object'||depth>80)return;
    if(Array.isArray(v)&&v[0]==='$'&&typeof v[2]==='string'&&/^\d+-\d+$/.test(v[2])){
     const descendants=flatten(v[3]),item=descendants.find(n=>n.metaType==='item'&&Number.isInteger(n.metaId));
     const quantity=descendants.find(n=>typeof n.className==='string'&&n.className.includes('absolute bottom-0 right-0')&&Number.isInteger(n.children))?.children||1;
@@ -39,7 +39,7 @@ export function itemRows(nodes,refs,prefix){
    if(v.metaType==='item'&&Number.isInteger(v.metaId))items.push(v.metaId);
    if(Array.isArray(v)&&v[0]==='$'&&v[1]==='span'&&Array.isArray(v[3]?.children)&&v[3].children.includes('Games')){const n=String(v[3].children[0]).replaceAll(',','');if(/^\d+$/.test(n))samples=Number(n);}
    if(Array.isArray(v)&&v[0]==='$'&&v[1]==='strong'&&pickRate===null&&typeof v[3]?.children==='string'&&v[3].children.endsWith('%'))pickRate=Number.parseFloat(v[3].children);
-   for(const child of Object.values(v))if(child&&typeof child==='object')scan(child);
+   for(const child of Object.values(v))if(child&&typeof child==='object')scan(child,depth+1);
   }
   scan(row);return {items,samples,pickRate};
  }).filter(r=>r.items.length&&r.items.length<=12).sort((a,b)=>b.samples-a.samples);

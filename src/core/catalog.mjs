@@ -24,7 +24,7 @@ export function validateCatalog(value,data){
  assert(c.source&&str(c.source.description,1200)&&safeSourceURL(c.source.url),'库来源');
  list(c.duos,1000,v=>!!v,'下路组合');list(c.trios,500,v=>!!v,'三人组合');list(c.links,3000,v=>Array.isArray(v)&&v.length===3&&hero(v[0])&&hero(v[1])&&v[0]!==v[1]&&str(v[2]),'跨位置联动');
  unique([...c.duos,...c.trios],v=>v.id,'组合 ID');unique(c.duos,v=>v.carry+':'+v.support,'下路英雄');unique(c.links,v=>v.slice(0,2).sort().join(':'),'联动');
- unique(c.trios,v=>v.members?.map(m=>m.role+':'+m.champion).sort().join('|'),'三人英雄位置');
+ unique(c.trios,v=>Array.isArray(v.members)?v.members.map(m=>m.role+':'+m.champion).sort().join('|'):String(v.id),'三人英雄位置');
  list(c.loadouts,500,v=>!!v,'出装');unique(c.loadouts,v=>v.id,'出装 ID');
  assert(c.runes&&typeof c.runes==='object'&&!Array.isArray(c.runes)&&Object.keys(c.runes).length<=100,'符文');
  for(const [key,r] of Object.entries(c.runes)){assert(id(key)&&str(r?.name,120)&&str(r.when)&&r.page&&Number.isInteger(r.page.primaryStyleId)&&Number.isInteger(r.page.subStyleId),'符文说明');list(r.page.selectedPerkIds,9,Number.isInteger,'符文页');assert(r.page.selectedPerkIds.length===9,'完整符文页');}
@@ -46,7 +46,7 @@ export function validateCatalog(value,data){
 }
 export function catalogIssues(c,data){
  const errors=[],status={},loadoutStatus={};const heroes=new Set(data.champions.map(h=>h.id));
- const itemValid=id=>{const i=data.items[id];return i?.maps?.['11']&&(i.inStore&&i.gold?.purchasable!==false||data.items[i.specialRecipe]?.maps?.['11']&&data.items[i.specialRecipe]?.inStore);};
+ const itemValid=id=>{const i=data.items[id];return i?.maps?.['11']&&(i.inStore&&i.gold?.purchasable!==false||data.items[i.specialRecipe]?.maps?.['11']&&data.items[i.specialRecipe]?.inStore&&data.items[i.specialRecipe]?.gold?.purchasable!==false);};
  const badConfigs=new Set();
  for(const l of c.loadouts){const missing=[...l.items,l.boots,...l.late,...(l.early||[])].filter(id=>!itemValid(id));const badRunes=l.runes.filter(k=>!validateRunePage(c.runes[k]?.page,data.runes));const mechanics=loadoutMechanicIssues(l,c.runes);if(missing.length||badRunes.length||mechanics.length){badConfigs.add(l.id);errors.push(`${l.name}：装备、符文或触发条件失效（${[...missing,...badRunes,...mechanics].join('、')}）`);}for(const h of l.champions)if(!heroes.has(h))errors.push(`${l.name}：英雄 ${h} 不存在`);loadoutStatus[l.id]={invalid:badConfigs.has(l.id),stale:(l.patch||c.patch)!==data.patch,patch:l.patch||c.patch,reviewedAt:l.reviewedAt||c.reviewedAt};}
  for(const [k,r] of Object.entries(c.runes))if(!validateRunePage(r.page,data.runes))errors.push(`符文 ${k} 与当前资料不符`);
@@ -61,7 +61,7 @@ export function catalogIssues(c,data){
 }
 export function configureCatalog(c){const catalog=validateCatalog(c);configureRuleCatalog(catalog);configureLoadoutCatalog(catalog);return catalog;}
 export function mergePersonal(base,personal={duos:[],trios:[],loadouts:[],runes:{}}){
- const result=structuredClone(base);const trioKey=x=>x.members?.map(m=>m.role+':'+m.champion).sort().join('|');for(const key of ['duos','trios','loadouts']){const additions=personal[key]||[];const ids=new Set(additions.map(x=>x.id));result[key]=result[key].filter(x=>!ids.has(x.id)&&!(key==='duos'&&additions.some(a=>a.carry===x.carry&&a.support===x.support))&&!(key==='trios'&&additions.some(a=>trioKey(a)===trioKey(x)))).concat(structuredClone(additions));}
+ const result=structuredClone(base);const trioKey=x=>Array.isArray(x.members)?x.members.map(m=>m.role+':'+m.champion).sort().join('|'):String(x.id);for(const key of ['duos','trios','loadouts']){const additions=personal[key]||[];const ids=new Set(additions.map(x=>x.id));result[key]=result[key].filter(x=>!ids.has(x.id)&&!(key==='duos'&&additions.some(a=>a.carry===x.carry&&a.support===x.support))&&!(key==='trios'&&additions.some(a=>trioKey(a)===trioKey(x)))).concat(structuredClone(additions));}
  result.runes={...result.runes,...structuredClone(personal.runes||{})};return validateCatalog(result);
 }
 export function catalogDiff(before,after){const changes=[];for(const [id,name] of Object.entries({name:"组合库名称",notes:"维护说明",source:"来源说明",version:"组合库版本",patch:"整理版本",reviewedAt:"复核日期"}))if(JSON.stringify(before[id])!==JSON.stringify(after[id]))changes.push({kind:"metadata",type:"changed",id,name});for(const key of ['duos','trios','loadouts','runes','links']){const rows=c=>key==='runes'?Object.entries(c.runes).map(([id,v])=>({id,...v})):key==='links'?c.links.map(v=>({id:v.slice(0,2).sort().join(':'),name:v[2],value:v})):c[key];const old=new Map(rows(before).map(v=>[v.id,v])),next=new Map(rows(after).map(v=>[v.id,v]));for(const [id,v] of next)if(!old.has(id)||JSON.stringify(old.get(id))!==JSON.stringify(v))changes.push({kind:key,type:old.has(id)?'changed':'added',id,name:v.name||id});for(const [id,v] of old)if(!next.has(id))changes.push({kind:key,type:'removed',id,name:v.name||id});}return changes;}

@@ -17,21 +17,27 @@ export function imageEntries(data){
  ].filter(([key,url])=>keyPattern.test(key)&&typeof url==='string');
 }
 async function exists(filename){try{return (await fs.stat(filename)).size>100;}catch{return false;}}
+// Existence scans touch every referenced asset; run them with bounded
+// concurrency instead of awaiting one stat after another at startup.
+async function mapConcurrent(values,limit,task){
+ let cursor=0;const workers=Array.from({length:Math.min(limit,values.length)},async()=>{while(cursor<values.length)await task(values[cursor++]);});
+ await Promise.all(workers);
+}
 export async function loadImageOverrides(root,data){
  const overrides={};
- for(const [key] of imageEntries(data)){
+ await mapConcurrent(imageEntries(data),32,async([key])=>{
   const filename=path.join(root,`${key}.png`);
   if(await exists(filename))overrides[key]=pathToFileURL(filename).href;
- }
+ });
  return overrides;
 }
 export async function cacheMissingImages({root,bundleRoot,data,progress=()=>{},fetchImage=fetch,budgetMs=60000}){
  const jobs=[];
- for(const [key,url] of imageEntries(data)){
-  if(await exists(path.join(bundleRoot,`${key}.png`))||await exists(path.join(root,`${key}.png`)))continue;
-  let parsed;try{parsed=new URL(url);}catch{continue;}if(parsed.protocol!=='https:'||!imageHosts.has(parsed.hostname))continue;
+ await mapConcurrent(imageEntries(data),32,async([key,url])=>{
+  if(await exists(path.join(bundleRoot,`${key}.png`))||await exists(path.join(root,`${key}.png`)))return;
+  let parsed;try{parsed=new URL(url);}catch{return;}if(parsed.protocol!=='https:'||!imageHosts.has(parsed.hostname))return;
   jobs.push({key,url});
- }
+ });
  let index=0,saved=0,failed=0;const deadline=Date.now()+budgetMs;
  if(jobs.length)progress(`正在缓存 ${jobs.length} 张新增资料图片`);
  await Promise.all(Array.from({length:4},async()=>{

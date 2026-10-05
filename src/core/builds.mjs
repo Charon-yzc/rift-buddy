@@ -56,6 +56,7 @@ export function validHexReference(ref,champion,data){
 const conflicts=itemConflicts;
 export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,loadoutId,comboId,runeId}={}) {
  coreIndex=Number.isInteger(coreIndex)&&coreIndex>=0?coreIndex:0;
+ if(!Array.isArray(conditions))conditions=[];
  const p=profile(champion,mode==='hex'?undefined:role);let key=p.build;
  if(champion.id==='Ashe'&&role==='support'&&mode==='rift')key='pokeSupport';
  if(variant==='ap'&&['Malphite','Gragas','Chogath','Amumu'].includes(champion.id))key='apAssassin';
@@ -107,7 +108,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  };
  const sequence=adaptive.sequence;
  const missing=sequence.filter(id=>!resolve(id));
- const seen=new Set();const equipment=sequence.map(resolve).filter(i=>i&&!seen.has(i.id)&&seen.add(i.id));
+ const seen=new Set();const equipment=sequence.map(resolve).filter(i=>{if(!i||seen.has(i.id))return false;seen.add(i.id);return true;});
  const runeOptions=[],runeSeen=new Set();
  const addRune=(option)=>{const page=structuredClone(option.page);if(p.manaFree)page.selectedPerkIds=page.selectedPerkIds.map(id=>id===8226?8275:id===8009?9111:id);
   if(!validateRunePage(page,data.runes)||runeMechanicIssue(champion.id,page))return;const identity=page.selectedPerkIds.join('-');if(runeSeen.has(identity))return;runeSeen.add(identity);runeOptions.push({...option,page});};
