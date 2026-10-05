@@ -9,7 +9,7 @@ export function createCurrentGameTracker(){
   observe(client,champions,slots=[]){
    if(!client?.connected)return;
    const phase=client.phase,id=client.game?.gameId?String(client.game.gameId):null;
-   if(phase==='ChampSelect'&&lastPhase!=='ChampSelect'||inGame(phase)&&inGame(lastPhase)&&id&&gameId&&id!==gameId||!inGame(phase)&&phase!=='ChampSelect'){own=null;mode=null;liveTime=null;}
+   if((phase==='ChampSelect'&&lastPhase!=='ChampSelect')||(inGame(phase)&&inGame(lastPhase)&&id&&gameId&&id!==gameId)||(!inGame(phase)&&phase!=='ChampSelect')){own=null;mode=null;liveTime=null;}
    if(phase==='ChampSelect'){
     const selected=currentPlayerSelection(client.session,champions,slots),formal=currentPlayerSelection(client.session,champions);
     own=selected?{...selected,role:formal?.positionKnown?formal.role:selected.role,formalKnown:formal?.positionKnown===true}:null;
@@ -28,6 +28,9 @@ export function createCurrentGameTracker(){
     }
     if(live.mode)mode=live.mode;
     if(own&&live.mode===mode&&Number.isFinite(live.gameTime))liveTime=live.gameTime;
+    // An unconfirmed mode cannot anchor the game clock; reset the baseline so a
+    // later confirmed restart is not measured against a null-mode reading.
+    if(live.mode===null||live.mode===undefined)liveTime=null;
    }
    if(!own||!['rift','hex'].includes(mode))return null;
    const slot=slots.find(s=>s.champion===own.id),role=own.formalKnown?own.role:slot?.role||own.role;

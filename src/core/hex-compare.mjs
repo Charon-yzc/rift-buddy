@@ -3,15 +3,16 @@ export const AUGMENT_CATEGORIES=[['damage','伤害'],['crit','暴击'],['haste',
 const patterns={damage:/伤害|攻击力|法术强度|攻击速度|攻速|穿透/,crit:/暴击/,haste:/急速|冷却/,defense:/生命值|护甲|魔抗|减伤|格挡|免疫|复活/,support:/治疗|护盾/,mobility:/移动速度|移速|位移|闪现/,economy:/金币|装备|道具|免费|购买/,quest:/任务|叠加|层数|永久|收集/};
 export function augmentCategories(augment){const text=`${augment.name} ${augment.description}`;return Object.entries(patterns).filter(([,pattern])=>pattern.test(text)).map(([id])=>id);}
 const allyHealers=new Set(['Alistar','Bard','Ivern','Janna','Karma','Kayle','Lulu','Lux','Milio','Nami','Nidalee','Orianna','Rakan','Renata','Senna','Seraphine','Shen','Sona','Soraka','Taric','Yuumi']);
-export function compareAugments({champion,options=[],owned=[],augments=[]}){
+export function compareAugments({champion,options=[],owned=[],augments=[],buildKey=null}){
  const p=champion?profile(champion):null,chosen=new Set(owned),records=new Map(augments.map(a=>[a.id,a]));
+
  return [...new Set(options)].slice(0,3).map(id=>records.get(id)).filter(Boolean).map(a=>{
   const categories=augmentCategories(a),reasons=[],cautions=[],interactions=[];
   if(!p)reasons.push('选择英雄后可补充机制上的适配理由');
   else{
    if(categories.includes('haste')&&!categories.includes('economy'))reasons.push('技能冷却更短，适合需要反复施放技能的打法');
-   if(categories.includes('defense'))reasons.push(p.frontline?'前排更容易撑到下一轮技能':'可补自保；仍需判断会不会牺牲主要输出');
-   if(categories.includes('crit')&&['crit','meleeCrit'].includes(p.build))reasons.push('与常规暴击装备方向相近，转型成本较小');
+   if(categories.includes('crit')&&['crit','jhin','onhit','meleeCrit','senna'].includes(p.build))reasons.push('与常规暴击装备方向相近，转型成本较小');
+   if(categories.includes('defense'))reasons.push(buildKey==='tank'||buildKey==='supportTank'||(!buildKey&&p.build==='tank')?'当前偏前排定位，生存向强化更容易撑到下一轮技能':p.frontline?'前排更容易撑到下一轮技能':'可补自保；仍需判断会不会牺牲主要输出');
    if(categories.includes('mobility'))reasons.push('便于走位和进退，收益取决于你能否持续利用');
    if(a.id===1141){if(allyHealers.has(champion.id))reasons.push('这个英雄有对友方治疗或护盾的手段，可利用强化条件');else cautions.push('先确认自己是否能治疗或护盾队友；自身回复不能直接当作收益');}
    if(a.id===1205)cautions.push('会改变额外攻击力的用途；先核对英雄的技能加成与装备路线');

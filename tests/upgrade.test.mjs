@@ -68,3 +68,11 @@ test('old settings migrate and optional guide corruption preserves favorites; ex
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-migrate-'));
  try{await fs.writeFile(path.join(root,'settings.json'),JSON.stringify({...migrated,excluded:['Jhin'],guide:{selection:{id:'../bad'}}}));const recovered=await readState(root);assert.deepEqual(recovered.excluded,['Jhin']);assert.equal(recovered.guide,null);assert.equal((await fs.readdir(root)).filter(n=>n.includes('recovery')).length,1);}finally{await fs.rm(root,{recursive:true,force:true});}
 });
+
+test('a missing mapNumber in gamestats does not erase a valid session map',()=>{
+ const active={riotId:'private#self',currentGold:0,level:3,abilities:{Q:{abilityLevel:1}}},own={riotId:active.riotId,rawChampionName:'game_character_displayname_Ashe',items:[]};
+ const live=sanitizeLive(active,[own],{gameMode:'CLASSIC',gameTime:30},data.champions,{mapId:11,gameMode:'CLASSIC'});
+ assert.equal(live.mode,'rift');assert.equal(live.mapId,11);
+ const hex=sanitizeLive(active,[own],{gameMode:'ARAM',mapNumber:12,gameTime:30},data.champions,{mapId:11});
+ assert.equal(hex.mapId,12);assert.equal(hex.mode,null);
+});

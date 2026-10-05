@@ -1,14 +1,20 @@
-const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
 const path=require('node:path');
 const fs=require('node:fs/promises');
 const {pathToFileURL}=require('node:url');
 
+// Pure pass-through decision, extracted for testability: hovering the header
+// (drag bar + window buttons) always wins so the panel stays movable and
+// clickable even while the content area passes clicks through to the game.
+function resolveGuideIgnoreMouse(passThrough,hoverHeader){return !!passThrough&&!hoverHeader;}
+
 module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({})}){
- let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0;
+ const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
+ let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const needsAutoShow=()=>autoShowUntil>Date.now()&&getPreferences().guideAutoShow!==false;
  const mousePassThrough=()=>!!(getState()?.clickThrough&&['InProgress','Reconnect'].includes(phase)&&interactionHotkeyAvailable);
- const inputMode=()=>{if(win&&!win.isDestroyed()){const pass=mousePassThrough();win.setIgnoreMouseEvents(pass,{forward:true});win.setFocusable(!pass);if(pass&&win.isFocused())win.blur();}};
- const payload=()=>({model:getModel(),phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),current:currentSelection()});
+ const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
+ const inputMode=()=>{if(win&&!win.isDestroyed()){const ignore=shouldIgnore(),pass=mousePassThrough();win.setIgnoreMouseEvents(ignore,{forward:true});win.setFocusable(!pass);if(ignore&&win.isFocused())win.blur();}};
+ const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),current:currentSelection()};};
  function publish(){if(win&&!win.isDestroyed()){const value=payload(),key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
  async function save(next){await setState(next);publish();return payload();}
  function adjustHeight(){if(win){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=screen.getDisplayMatching(win.getBounds()).workArea,height=Math.min(collapsed?220:getState()?.bounds?.height||640,area.height);win.setMinimumSize(360,collapsed?220:480);win.setSize(width,height);const b=win.getBounds();win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-width)),Math.max(area.y,Math.min(b.y,area.y+area.height-height)));adjusting=false;}}
@@ -34,8 +40,8 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
   win.on('move',remember);win.on('resize',remember);
   win.on('closed',()=>{clearTimeout(boundsTimer);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
- function hide(){autoShowUntil=0;visibilityRequested=false;win?.hide();}
- function show(){autoShowUntil=0;visibilityRequested=true;if(!win)create();else{if(win.isMinimized())win.restore();win.showInactive();inputMode();publish();}return payload();}
+ function hide(){autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
+ function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;if(!win)create();else{if(win.isMinimized())win.restore();win.showInactive();inputMode();publish();}return payload();}
  function toggle(){if(win?.isVisible())hide();else show();}
  async function interact(){const current=getState();if(!current)return;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{
@@ -43,6 +49,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
   return handler(...args);
  });}
  guard('guide-bootstrap',payload);
+ guard('guide-hover',value=>{const next=!!value;if(next!==hoverHeader){hoverHeader=next;inputMode();}return hoverHeader;});
  guard('guide-control',async(action,value)=>{
   if(action==='hide'){hide();return true;}
   if(action==='main'){showMain(getState()?.selection);return true;}
@@ -61,7 +68,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
    if(typeof value!=='string'||!getModel().route.some(i=>i.id===value))throw Error('这个装备不在当前方案中');
    return save({...current,...(current.purchaseTarget===value&&!current.completedItems.includes(value)?{purchaseTarget:undefined}:{}),completedItems:current.completedItems.includes(value)?current.completedItems.filter(id=>id!==value):[...current.completedItems,value]});
   }
-  if(action==='copy'){const m=getModel();clipboard.writeText(`${m.champion.name} · ${m.mode==='hex'?'海克斯大乱斗':m.role}\n${m.route.map(i=>i.name).join(' → ')}\n加点：${m.priority||'请按游戏提示'}\n符文：${m.runes.map(r=>r.name).join(' / ')}\n${m.combo?[m.combo.title,m.combo.ownJob,...(m.combo.steps||[]),m.combo.window,m.combo.early,m.combo.economy].filter(Boolean).join('\n'):''}\n${m.tips}\n资料 ${m.version} · ${m.source}`);return true;}
+  if(action==='copy'){const m=getModel();clipboard.writeText(`${m.champion.name} · ${m.mode==='hex'?'海克斯大乱斗':m.role}\n${m.route.map(i=>i.name).join(' → ')}\n加点：${m.priority||'请按游戏提示'}\n符文：${m.runes.map(r=>r.name).join(' / ')}\n${m.combo?[m.combo.title,m.combo.ownJob,...(m.combo.steps||[]),m.combo.window,m.combo.early,m.combo.economy].filter(Boolean).join('\n'):''}\n${(m.adjustments||[]).map(a=>`${a.title}：${a.text}`).join('\n')}\n${m.tips}\n资料 ${m.version} · ${m.source}\n${m.status?.build||''}`);return true;}
   throw Error('不支持此操作');
  });
  async function changePhase(next,isConnected){
@@ -82,3 +89,4 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  }
  return {show,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{win?.destroy();},window:()=>win};
 };
+module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;

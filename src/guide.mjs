@@ -12,6 +12,7 @@ const api=window.guide||{
   window.previewGuideData=data;window.previewGuideState=selectGuide(state.guide,selection);
   return {model:createGuideModel(data,window.previewGuideState),phase:'Offline',connected:false,hotkeyAvailable:false};
  },
+ hover:async()=>false,
  control:async(action,value)=>{
   const s=window.previewGuideState;
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
@@ -43,6 +44,16 @@ document.addEventListener('click',async event=>{
 });
 document.addEventListener('change',async event=>{const actions={'guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')api.control('hide').catch(error=>toast(error.message));});
+let hoverHeader=false;
+function trackHeaderHover(event){
+ // mousemove still reaches the page while the window passes clicks through
+ // (forward:true). Report header hover on change only, so the main process
+ // can lift pass-through for the drag bar + window buttons.
+ const over=!!event.target?.closest?.('header');
+ if(over!==hoverHeader){hoverHeader=over;api.hover?.(over).catch(()=>{});}
+}
+document.addEventListener('mousemove',trackHeaderHover);
+document.addEventListener('mouseleave',()=>{if(hoverHeader){hoverHeader=false;api.hover?.(false).catch(()=>{});}});
 document.addEventListener('error',event=>{if(event.target.tagName==='IMG')event.target.classList.add('missing');},true);
 api.onUpdate?.(next=>{if(next.model?.mode!=='hex'&&tab==='augments'||!next.model?.combo&&tab==='team')tab='items';snapshot=next;render();});
 try{snapshot=await api.bootstrap();render();}catch(error){root.innerHTML=`<div class="empty"><h2>指引暂时不可用</h2><p>${e(error.message)}</p><button data-action="main">打开完整助手</button></div>`;}

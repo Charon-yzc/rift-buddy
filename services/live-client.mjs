@@ -19,12 +19,19 @@ export function sanitizeLive(active,players,stats,champions,game={}){
  const own=matches[0],raw=String(own.rawChampionName||'').replace(/^game_character_displayname_/,'');
  const champion=champions.find(c=>c.id.toLowerCase()===raw.toLowerCase());
  if(!champion||!Array.isArray(own.items))return {available:false,reason:'当前英雄或装备暂不可读'};
- const inventory=own.items.filter(i=>Number.isInteger(i.itemID)&&i.itemID>0).map(i=>({id:String(i.itemID),count:Number.isInteger(i.count)&&i.count>0?Math.min(i.count,6):1})).slice(0,12);
- const mapId=Number(stats?.mapNumber),mode=identifyMode({...stats,...game,mapId}).id;
+ // Only positively-evidenced holdings enter the bag: entries without a valid
+ // positive count are dropped instead of assumed owned, so a partial or
+ // placeholder read at game start can never mark route items as purchased.
+ const inventory=own.items.filter(i=>Number.isInteger(i.itemID)&&i.itemID>0&&Number.isInteger(i.count)&&i.count>0).map(i=>({id:String(i.itemID),count:Math.min(i.count,6)})).slice(0,12);
+ // A missing gamestats reading must not erase a valid map from the client session.
+ const mapNumber=Number(stats?.mapNumber),gameMap=Number(game?.mapId);
+ const mapId=Number.isInteger(mapNumber)&&mapNumber>0?mapNumber:Number.isInteger(gameMap)&&gameMap>0?gameMap:null;
+ const overlayMode=mapId===null?{}:{mapId};
+ const mode=identifyMode({...stats,...game,...overlayMode}).id;
  return {available:true,champion:champion.id,inventory,gold:Number.isFinite(active.currentGold)?Math.max(0,Math.floor(active.currentGold)):null,
   level:Number.isInteger(active.level)&&active.level>=1&&active.level<=30?active.level:null,
   skills:Object.fromEntries(['Q','W','E','R'].map(key=>{const level=active.abilities?.[key]?.abilityLevel;return [key,Number.isInteger(level)&&level>=0&&level<=10?level:null];})),
-  gameTime:Number.isFinite(stats?.gameTime)?stats.gameTime:null,mapId:Number.isInteger(mapId)?mapId:null,mode,at:Date.now()};
+  gameTime:Number.isFinite(stats?.gameTime)?stats.gameTime:null,mapId,mode,at:Date.now()};
 }
 export async function liveSnapshot(champions,game={},request=liveRequest){
  try{const [active,players,stats]=await Promise.all(['/liveclientdata/activeplayer','/liveclientdata/playerlist','/liveclientdata/gamestats'].map(request));return sanitizeLive(active,players,stats,champions,game);}

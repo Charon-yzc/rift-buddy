@@ -3,7 +3,7 @@ import {validateGuideSelection} from './guide.mjs';
 const key=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const CONFIGURATION_FIELDS=['coreIndex','conditions','loadoutId','runeId','comboId'];
 export function configurationPatch(previous,next){
- return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next[field]));
+ return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next?.[field]));
 }
 export function mergeConfiguration(current,next,fields=CONFIGURATION_FIELDS){
  const merged={...current};
@@ -24,5 +24,7 @@ export function recallPreparation(store,guide,context,{allowSavedCombo=false}={}
  return guide&&guide.id===context.id&&guide.role===context.role&&guide.mode===context.mode&&(allowSavedCombo||(guide.comboId||'')===(context.comboId||''))?structuredClone(guide):null;
 }
 export function recommendationKey(input){
- return JSON.stringify([input.slots,input.scope,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.enemy,input.publicPicks,input.catalogStatus,input.version,input.catalogVersion]);
+ // Client sync bindings churn every poll; only draft content affects results.
+ const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party}));
+ return JSON.stringify([slots,input.scope,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.enemy,input.publicPicks,input.catalogStatus,input.version,input.catalogVersion]);
 }
