@@ -31,7 +31,7 @@ test('owned recipe components are allocated once, repeated components count, cyc
  assert.equal(plans[0].components[0].count,1);assert.equal(plans[2].remaining,2000);
  const upgrade=purchasePlan([{id:'999',cost:0,purchaseBase:{id:'b'}}],items,[{id:'b',count:1}]);assert.equal(upgrade[0].owned,false);assert.equal(upgrade[0].baseOwned,true);
 });
-test('live snapshot removes all identities and opponent data, refusing ambiguous active players',async()=>{
+test('live snapshot removes identities and unverifiable opponent items, refusing ambiguous active players',async()=>{
  const active={riotId:'private#self',currentGold:1234.9,level:7,abilities:{Q:{abilityLevel:3}},fullRunes:{secret:'discard'}},own={riotId:active.riotId,rawChampionName:'game_character_displayname_Ashe',items:[{itemID:3031,count:1}],scores:{kills:1}};
  const live=sanitizeLive(active,[own,{riotId:'private#enemy',rawChampionName:'game_character_displayname_Jhin',items:[{itemID:3072}]}],{gameMode:'CLASSIC',mapNumber:11,gameTime:345},data.champions);
  assert.equal(live.champion,'Ashe');assert.equal(live.gold,1234);assert.deepEqual(live.inventory,[{id:'3031',count:1}]);assert.equal(live.skills.Q,3);

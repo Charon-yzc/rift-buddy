@@ -17,7 +17,8 @@ const api=window.guide||{
   const s=window.previewGuideState;
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
-  if(action==='purchase-target')s.purchaseTarget=value||undefined;if(action==='stage')s.stage=value==='auto'?undefined:value;
+  if(action==='purchase-target'){s.purchaseTarget=value||undefined;s.purchaseTargetKind=snapshot.model.shoppingTargets.find(i=>i.id===value)?.kind==='局势备选'?'situation':undefined;}if(action==='stage')s.stage=value==='auto'?undefined:value;
+  if(action==='live-advice')s.liveAdvice=s.liveAdvice===false;
   if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball')s.ball=!s.ball;
   if(action==='copy'){toast('桌面版支持复制');return true;}
   return {...snapshot,ball:!!s.ball,model:createGuideModel(window.previewGuideData,s)};

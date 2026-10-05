@@ -70,6 +70,7 @@ node scripts/smoke-package-lifecycle.mjs
 | 配置从选人带入指引 | `node scripts/smoke-package-journey.mjs` |
 | 跨局、客户端阶段切换 | `node scripts/smoke-package-game-transition.mjs` |
 | 指引窗口、鼠标交互 | `node scripts/smoke-package-guide.mjs`、`node scripts/smoke-package-guide-input.mjs` |
+| 实时局势装备、技能建议与理由 | `node scripts/smoke-package-live-situation.mjs` |
 | 独立连接助手 | `node scripts/smoke-package-helper.mjs` |
 
 这些验收使用隔离设置和模拟数据；连接助手的默认验收不读取真实客户端，不触发提权。不要在自动化中添加 `--read-client` 或自动真实符文应用。带 `smoke-package-` 前缀的界面脚本通常使用开发 Electron 加载归档中的代码，`lifecycle` 实际启动完整 exe，`helper` 启动打包的独立连接进程。部分脚本依赖 `release/latest.json`，请先完成打包。
@@ -86,9 +87,15 @@ GitHub Actions 在 Windows 中运行安装、开发 Electron 启动检查、回�
 4. 手动购买、卖出一件装备并加点，检查指引识别实际变化。分别验证接口不可用时的手动标记、窗口交互与全屏快捷键。
 5. 结束本局后检查指引的结束行为，再选择另一英雄，确认不会继承上一局配置。真实符文应用另行由测试者主动点击，确认仅触及助手自己的符文页。
 
+局势建议另需检查：双方队伍可确认时，已展示装备变化能否触发、撤销对应建议；本次回城目标和自动建议开关是否保留；当前等级与技能点是否同步。不要把对手装备投入当成实测伤害来源或经济领先。只有一人的训练房间没有真实敌方装备样本，不能作为整套局势规则的实战验收。
+
 记录软件版本、客户端阶段和实际完成的项目即可；未完成的步骤保留为待验证。不要上传个人设置、完整接口响应、客户端凭据或带有玩家身份的截图。
 
 ## 维护组合与版本资料
+
+局势规则在 `src/core/live-situation.mjs`，技能规则在 `src/core/skill-advice.mjs`。数据入口继续使用 Riot [Live Client Data API](https://developer.riotgames.com/docs/lol#game-client-api_live-client-data-api) 的三个只读端点，只保留英雄、己方金币和技能等级、双方公开装备与战绩；玩家身份、位置坐标、敌方经济和冷却不进入推荐模型，也不持久化。队伍未知或数据过期时停止自动分析。
+
+技能机制已对照 Riot [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon) `16.19.1` 对应英雄的技能描述；规则维护时应同时复核护盾、冷却、伤害类型和特殊加点限制。更新游戏资料不会自动证明旧规则仍有效。当前采用明确的触发阈值与机制说明，未训练预测模型，也不计算胜率。扩展自动备选装备后应更新 `SITUATION_ITEMS`，使离线图片进入 `pnpm check` 校验。
 
 组合包位于 `src/core/catalog-data.json`，包含下路组合、三人组合、专用配置和符文方案。字段与复核原则见 [组合库维护说明](../组合库维护说明.txt)。增改条目后运行：
 

@@ -53,6 +53,8 @@ jobs:
         run: node scripts/smoke-package-game-transition.mjs
       - name: Check guide interaction and live-data fallback
         run: node scripts/smoke-package-guide-input.mjs
+      - name: Check live situation advice and explanations
+        run: node scripts/smoke-package-live-situation.mjs
       - name: Check standalone connection helper
         run: node scripts/smoke-package-helper.mjs
       - name: Check application lifecycle

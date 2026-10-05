@@ -10,19 +10,28 @@ export function liveRequest(route){
   });request.on('timeout',()=>request.destroy(Error('局内读取超时')));request.on('error',()=>reject(Error('局内接口暂不可用')));
  });
 }
+const score=n=>Number.isInteger(n)&&n>=0&&n<=10000?n:null;
+const scores=p=>Object.fromEntries(['kills','deaths','assists','creepScore'].map(k=>[k,score(p?.scores?.[k])]));
+const inventoryOf=p=>Array.isArray(p?.items)?p.items.filter(i=>Number.isInteger(i?.itemID)&&i.itemID>0&&Number.isInteger(i.count)&&i.count>0).map(i=>({id:String(i.itemID),count:Math.min(i.count,6)})).slice(0,12):[];
+const championOf=(p,champions)=>champions.find(c=>c.id.toLowerCase()===String(p?.rawChampionName||'').replace(/^game_character_displayname_/,'').toLowerCase());
+const positionOf=p=>({TOP:'top',JUNGLE:'jungle',MIDDLE:'mid',BOTTOM:'bottom',UTILITY:'support'})[p?.position]||null;
 export function sanitizeLive(active,players,stats,champions,game={}){
- // Identity is used only to select the active player, then discarded with every other player.
+ // Names select the active player only. Retain a bounded whitelist of public
+ // scoreboard facts, never identities, enemy gold, coordinates or cooldowns.
  const identity=active?.riotId||active?.summonerName;
  if(typeof identity!=='string'||!identity||!Array.isArray(players))return {available:false,reason:'暂未确认当前英雄'};
- const matches=players.filter(p=>(p.riotId||p.summonerName)===identity);
+ const matches=players.filter(p=>p&&(p.riotId||p.summonerName)===identity);
  if(matches.length!==1)return {available:false,reason:'暂未确认当前英雄'};
- const own=matches[0],raw=String(own.rawChampionName||'').replace(/^game_character_displayname_/,'');
- const champion=champions.find(c=>c.id.toLowerCase()===raw.toLowerCase());
+ const own=matches[0],champion=championOf(own,champions);
  if(!champion||!Array.isArray(own.items))return {available:false,reason:'当前英雄或装备暂不可读'};
 // Only positively-evidenced holdings enter the bag: entries without a valid
 // positive count are dropped instead of assumed owned, so a partial or
 // placeholder read at game start can never mark route items as purchased.
-const inventory=own.items.filter(i=>Number.isInteger(i.itemID)&&i.itemID>0&&Number.isInteger(i.count)&&i.count>0).map(i=>({id:String(i.itemID),count:Math.min(i.count,6)})).slice(0,12);
+const inventory=inventoryOf(own);
+const teamKnown=['ORDER','CHAOS'].includes(own.team);
+const roster=teamKnown?players.slice(0,20).filter(p=>p&&['ORDER','CHAOS'].includes(p.team)).map(p=>{
+ const c=championOf(p,champions);return c?{champion:c.id,side:p.team===own.team?'ally':'enemy',self:p===own,position:positionOf(p),inventory:inventoryOf(p),itemsKnown:Array.isArray(p.items),scores:scores(p)}:null;
+}).filter(Boolean):[];
 const liveMap=Number(stats?.mapNumber),lobbyMap=Number(game?.mapId);
 const mapId=Number.isInteger(liveMap)&&liveMap>0?liveMap:Number.isInteger(lobbyMap)&&lobbyMap>0?lobbyMap:null;
 const gameMode=String(game?.gameMode||'').trim()||String(stats?.gameMode||'');
@@ -30,7 +39,8 @@ const mode=identifyMode({...stats,...game,...(mapId===null?{}:{mapId}),gameMode}
  return {available:true,champion:champion.id,inventory,gold:Number.isFinite(active.currentGold)?Math.max(0,Math.floor(active.currentGold)):null,
   level:Number.isInteger(active.level)&&active.level>=1&&active.level<=30?active.level:null,
   skills:Object.fromEntries(['Q','W','E','R'].map(key=>{const level=active.abilities?.[key]?.abilityLevel;return [key,Number.isInteger(level)&&level>=0&&level<=10?level:null];})),
-  gameTime:Number.isFinite(stats?.gameTime)?stats.gameTime:null,mapId,mode,at:Date.now()};
+  scores:scores(own),roster,teamKnown,
+  gameTime:Number.isFinite(stats?.gameTime)&&stats.gameTime>=0?stats.gameTime:null,mapId,mode,at:Date.now()};
 }
 export async function liveSnapshot(champions,game={},request=liveRequest){
  try{const [active,players,stats]=await Promise.all(['/liveclientdata/activeplayer','/liveclientdata/playerlist','/liveclientdata/gamestats'].map(request));return sanitizeLive(active,players,stats,champions,game);}

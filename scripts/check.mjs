@@ -6,6 +6,7 @@ import {profile} from '../src/core/rules.mjs';
 import {LOADOUTS} from '../src/core/loadouts.mjs';
 import {BUNDLED_CATALOG,validateCatalog} from '../src/core/catalog.mjs';
 import {purchasePlan} from '../src/core/purchase.mjs';
+import {SITUATION_ITEMS} from '../src/core/live-situation.mjs';
 const root=path.resolve('.');let checked=0;const errors=[];
 async function syntax(folder){for(const item of await fs.readdir(folder,{withFileTypes:true})){
  const file=path.join(folder,item.name);if(item.isDirectory())await syntax(file);
@@ -17,6 +18,7 @@ validateCatalog(BUNDLED_CATALOG,data);
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const assets=new Set(data.champions.map(c=>`champion/${c.id}.png`));
+for(const id of SITUATION_ITEMS)assets.add(`item/${id}.png`);
 for(const config of LOADOUTS)for(const id of config.champions)for(const role of config.roles){
  const c=data.champions.find(c=>c.id===id);if(!c){errors.push(`Missing loadout champion: ${id}`);continue;}
  const build=getBuild(c,role,data,{loadoutId:config.id});if(build.missing.length)errors.push(`Unavailable loadout items: ${config.id}`);
