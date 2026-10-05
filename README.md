@@ -4,6 +4,8 @@
 
 **[下载 v0.9.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/tag/v0.9.0)** · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
 
+继续开发请看 [开发指南](docs/development.md) 和 [贡献说明](CONTRIBUTING.md)。仓库包含完整源码、离线资料、依赖锁文件、测试和打包工具；无需额外获取开发者的本机文件。
+
 目前面向国服端游、召唤师峡谷匹配与海克斯大乱斗。手动选人和离线推荐可以直接使用；国服真实选人持续同步、全屏游戏中的指引体验和真实符文应用仍待实战验收，请勿把模拟测试结果视为国服实测证明。
 
 ![开黑选人界面示例](docs/images/main.png)
@@ -99,6 +101,8 @@ node scripts/smoke-package-lifecycle.mjs
 新包输出到 `release/build-*/`，`release/latest.json` 记录本次产物。将其中的完整程序文件夹打包成 ZIP 分发；不要把自己的 `%APPDATA%` 设置目录放进去。
 
 目录结构：`electron/` 为主进程和桥接，`src/` 为界面，`src/core/` 为推荐规则，`services/` 为连接与资料服务，`data/` 为离线快照和图片，`tests/` 为回归测试，`scripts/` 为维护、打包和模拟验收工具。
+
+提交和 Pull Request 会在 [GitHub Actions](https://github.com/Legender134/rift-buddy/actions/workflows/ci.yml) 的 Windows 环境执行回归测试、资料检查、打包核对和模拟验收。它不连接真实游戏、不应用真实符文，也不自动发布下载包。完整操作和各类改动对应的检查见开发指南。
 
 ## 当前验收范围
 

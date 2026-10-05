@@ -19,7 +19,7 @@ async function walk(folder){const found=[];for(const child of await fs.readdir(f
 const expected=['package.json','使用说明.txt','组合库维护说明.txt',...(await Promise.all(['src','electron','services','data','assets'].map(walk))).flat()];
 for(const name of expected){
  if(name==='package.json'){
-  const {scripts,devDependencies,private:privateFlag,...runtimePackage}=JSON.parse(await fs.readFile(name,'utf8'));
+  const {scripts,devDependencies,private:privateFlag,packageManager,...runtimePackage}=JSON.parse(await fs.readFile(name,'utf8'));
   if(JSON.stringify(JSON.parse(asar.extractFile(file,name)))!==JSON.stringify(runtimePackage))mismatch.push(name);
   continue;
  }
