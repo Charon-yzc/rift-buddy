@@ -10,6 +10,7 @@ export function liveRequest(route){
   });request.on('timeout',()=>request.destroy(Error('局内读取超时')));request.on('error',()=>reject(Error('局内接口暂不可用')));
  });
 }
+export function enemiesFromPlayers(own,players,champions){if(!Array.isArray(players)||!own)return[];const ownTeam=own.team||own.teamId||own.teamType;return players.filter(p=>p&&p!==own&&(ownTeam&&(p.team||p.teamId||p.teamType)?(p.team||p.teamId||p.teamType)!==ownTeam:false)&&String(p.rawChampionName||'').length>0).map(p=>{const enemyRaw=String(p.rawChampionName||'').replace(/^game_character_displayname_/,'');const enemy=champions.find(c=>c.id.toLowerCase()===enemyRaw.toLowerCase());return enemy?{id:enemy.id,name:enemy.name,level:Number.isInteger(p.level)&&p.level>=1&&p.level<=30?p.level:null}:null;}).filter(Boolean).slice(0,5);}
 export function sanitizeLive(active,players,stats,champions,game={}){
  // Identity is used only to select the active player, then discarded with every other player.
  const identity=active?.riotId||active?.summonerName;
@@ -27,10 +28,10 @@ const liveMap=Number(stats?.mapNumber),lobbyMap=Number(game?.mapId);
 const mapId=Number.isInteger(liveMap)&&liveMap>0?liveMap:Number.isInteger(lobbyMap)&&lobbyMap>0?lobbyMap:null;
 const gameMode=String(game?.gameMode||'').trim()||String(stats?.gameMode||'');
 const mode=identifyMode({...stats,...game,...(mapId===null?{}:{mapId}),gameMode}).id;
- return {available:true,champion:champion.id,inventory,gold:Number.isFinite(active.currentGold)?Math.max(0,Math.floor(active.currentGold)):null,
+return {available:true,champion:champion.id,inventory,gold:Number.isFinite(active.currentGold)?Math.max(0,Math.floor(active.currentGold)):null,
   level:Number.isInteger(active.level)&&active.level>=1&&active.level<=30?active.level:null,
   skills:Object.fromEntries(['Q','W','E','R'].map(key=>{const level=active.abilities?.[key]?.abilityLevel;return [key,Number.isInteger(level)&&level>=0&&level<=10?level:null];})),
-  gameTime:Number.isFinite(stats?.gameTime)?stats.gameTime:null,mapId,mode,at:Date.now()};
+  gameTime:Number.isFinite(stats?.gameTime)?stats.gameTime:null,mapId,mode,at:Date.now(),enemies:enemiesFromPlayers(own,players,champions)};
 }
 export async function liveSnapshot(champions,game={},request=liveRequest){
  try{const [active,players,stats]=await Promise.all(['/liveclientdata/activeplayer','/liveclientdata/playerlist','/liveclientdata/gamestats'].map(request));return sanitizeLive(active,players,stats,champions,game);}

@@ -101,3 +101,16 @@ test('a missing mapNumber in gamestats does not erase a valid session map',()=>{
  const hex=sanitizeLive(active,[own],{gameMode:'ARAM',mapNumber:12,gameTime:30},data.champions,{mapId:11});
  assert.equal(hex.mapId,12);assert.equal(hex.mode,null);
 });
+
+test('live snapshot surfaces public opponent champions without leaking others',()=>{
+ const active={riotId:'me',currentGold:100,level:3,abilities:{Q:{abilityLevel:1}}};
+ const own={riotId:'me',rawChampionName:'game_character_displayname_Ashe',team:'ORDER',items:[],level:3};
+ const enemy={riotId:'foe',rawChampionName:'game_character_displayname_Darius',team:'CHAOS',items:[],level:4};
+ const live=sanitizeLive(active,[own,enemy],{gameMode:'CLASSIC',mapNumber:11,gameTime:30},data.champions);
+ assert.equal(live.enemies.length,1);
+ assert.equal(live.enemies[0].id,'Darius');
+ assert.equal(live.enemies[0].level,4);
+ assert.equal(JSON.stringify(live.enemies).includes('foe'),false);
+ const anonymous=sanitizeLive(active,[own,{...enemy,team:undefined}],{gameMode:'CLASSIC',mapNumber:11,gameTime:30},data.champions);
+ assert.equal(Array.isArray(anonymous.enemies),true);
+});

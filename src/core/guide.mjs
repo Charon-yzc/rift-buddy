@@ -5,6 +5,7 @@ import {compareAugments} from './hex-compare.mjs';
 import {comboStage,guideMismatch,GUIDE_STAGES} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
+import {aggregateCombatStats,tradeEdge,killThreshold,statAtLevel} from './live-estimate.mjs';
 
 const conditions=['ad','ap','control','heal','burst'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
@@ -92,9 +93,18 @@ export function createGuideModel(data,value,live=null,current=null){
  const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&(matched||!completedItems.includes(i.id)));
  const next=chosen||mainNext,targetPlan=next?purchasePlan([next],data.items,matched?inventory:[],matched?live.gold:null)[0]:null;
  const liveModel=matched?{matched:true,gold:live.gold,level:live.level,skills:live.skills,inventory:live.inventory,gameTime:live.gameTime,at:live.at}:liveStatus;
+ const ownChampion=data.champions.find(c=>c.id===s.id);
+ const enemySnapshots=matched&&Array.isArray(live.enemies)?live.enemies:[];
+ const estimate=matched&&ownChampion&&enemySnapshots.length?(()=>{
+  const target=enemySnapshots[0];const enemyChampion=data.champions.find(c=>c.id===target.id);
+  if(!enemyChampion)return null;
+  const ownAgg=aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
+  const enemyAgg=aggregateCombatStats(enemyChampion,target.level||live.level||1,[],data);
+  return {enemy:{id:enemyChampion.id,name:enemyChampion.name,level:target.level||null},edge:tradeEdge(ownChampion,live.level||1,ownAgg,enemyChampion,target.level||live.level||1,enemyAgg,data),killThreshold:killThreshold(ownChampion,live.level||1,ownAgg,enemyChampion,target.level||live.level||1,enemyAgg),ownStats:statAtLevel(ownChampion.stats,live.level||1),enemyStats:statAtLevel(enemyChampion.stats,target.level||live.level||1),at:live.at};
+ })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action:matched?purchaseAction(targetPlan,next,live.gold):null,
-  live:liveModel,nextSkill:nextSkill(champion.id,build.priority,build.first,liveModel),
+  live:liveModel,estimate,nextSkill:nextSkill(champion.id,build.priority,build.first,liveModel),
   priority:build.priority,first:build.first,summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
   title:build.title,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,

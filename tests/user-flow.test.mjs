@@ -91,3 +91,16 @@ test('three-person jobs, sequence and windows reach the per-member guide',()=>{
  assert.equal(merged.coreIndex,1);assert.deepEqual(merged.conditions,['heal']);assert.deepEqual(merged.compareIds,[1048,1002]);assert.deepEqual(merged.ownedAugmentIds,[1047]);assert.deepEqual(merged.augmentIds,[1048]);
  const store=createPreparationStore();store.remember(merged);assert.deepEqual(store.recall(original),merged);
  });
+
+test('live estimate handles missing data, enemy level changes and always degrades politely', async () => {
+ const fresh={...live,gold:700,level:6,skills:{Q:2,W:1,E:1,R:0},enemies:[{id:'Jinx',name:'jinx',level:6}]};
+ const guide=selectGuide(null,selection);
+ const model=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),inventory:[{id:'3031',count:1}]});
+ assert.ok(model.estimate&&model.estimate.enemy.id==='Jinx');
+ assert.equal(typeof model.estimate.edge,'number');
+ assert.ok(model.estimate.killThreshold>0);
+ const staleLevel=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),level:6,enemies:[{id:'Jinx',name:'jinx',level:11}]});
+ assert.ok(staleLevel.estimate.killThreshold!==model.estimate.killThreshold||staleLevel.estimate.edge!==model.estimate.edge);
+ const noEnemy=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),enemies:[]});
+ assert.equal(noEnemy.estimate,null);
+});
