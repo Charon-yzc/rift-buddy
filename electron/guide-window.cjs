@@ -6,10 +6,10 @@ const {pathToFileURL}=require('node:url');
 module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({})}){
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0;
  const needsAutoShow=()=>autoShowUntil>Date.now()&&getPreferences().guideAutoShow!==false;
- const mousePassThrough=()=>!!(getState()?.clickThrough&&['InProgress','Reconnect'].includes(phase)&&interactionHotkeyAvailable);
+ const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&getModel()?.live.matched)&&interactionHotkeyAvailable);
  const inputMode=()=>{if(win&&!win.isDestroyed()){const pass=mousePassThrough();win.setIgnoreMouseEvents(pass,{forward:true});win.setFocusable(!pass);if(pass&&win.isFocused())win.blur();}};
  const payload=()=>({model:getModel(),phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),current:currentSelection()});
- function publish(){if(win&&!win.isDestroyed()){const value=payload(),key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
+ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload(),key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
  async function save(next){await setState(next);publish();return payload();}
  function adjustHeight(){if(win){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=screen.getDisplayMatching(win.getBounds()).workArea,height=Math.min(collapsed?220:getState()?.bounds?.height||640,area.height);win.setMinimumSize(360,collapsed?220:480);win.setSize(width,height);const b=win.getBounds();win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-width)),Math.max(area.y,Math.min(b.y,area.y+area.height-height)));adjusting=false;}}
  function create(){
@@ -66,7 +66,9 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  });
  async function changePhase(next,isConnected){
   const previous=lastConnectedPhase,id=getState()?.match?.gameId,newGame=!!(id&&lastGameId&&id!==lastGameId);phase=next;connected=!!isConnected;inputMode();publish();
-  if(connected){lastConnectedPhase=next;if(id)lastGameId=id;}
+  // Same-game loading must not turn a deliberately hidden reconnect into a
+  // first entry. A changed id still starts a new game's visibility decision.
+  if(connected){if(next!=='GameStart'||newGame)lastConnectedPhase=next;if(id)lastGameId=id;}
   if(!connected||!getState())return;
   const preferences=getPreferences();
   if(next==='InProgress'&&(newGame||!['InProgress','Reconnect'].includes(previous))&&preferences.guideAutoShow!==false)autoShowUntil=Date.now()+30000;

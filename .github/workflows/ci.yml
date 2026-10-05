@@ -51,6 +51,8 @@ jobs:
         run: node scripts/inspect-package.mjs --verify-current
       - name: Check selection, loading and in-game transitions
         run: node scripts/smoke-package-game-transition.mjs
+      - name: Check guide interaction and live-data fallback
+        run: node scripts/smoke-package-guide-input.mjs
       - name: Check standalone connection helper
         run: node scripts/smoke-package-helper.mjs
       - name: Check application lifecycle

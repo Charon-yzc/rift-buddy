@@ -41,6 +41,14 @@ test('live snapshot removes all identities and opponent data, refusing ambiguous
  assert.throws(()=>liveRequest('/liveclientdata/allgamedata'));
 });
 
+test('confirmed practice on Summoner Rift uses Rift reference builds without inferring unknown modes',()=>{
+ assert.deepEqual(identifyMode({gameMode:'PRACTICETOOL',mapNumber:11}),{id:'rift',label:'训练模式 · 峡谷参考',supported:true});
+ for(const stats of [{gameMode:'PRACTICETOOL'},{gameMode:'PRACTICETOOL',mapId:12},{gameMode:'OTHER',mapId:11}])assert.equal(identifyMode(stats).id,null);
+ const active={riotId:'test-player'},players=[{riotId:'test-player',rawChampionName:'game_character_displayname_Amumu',items:[]}];
+ const live=sanitizeLive(active,players,{gameMode:'PRACTICETOOL',mapNumber:11,gameTime:100},data.champions);
+ assert.equal(live.champion,'Amumu');assert.equal(live.mode,'rift');assert.equal(live.mapId,11);
+});
+
 test('in-game mode survives blank or unavailable lobby metadata without guessing ARAM variants',()=>{
  const active={riotId:'test-player',currentGold:400,level:1},players=[{riotId:'test-player',rawChampionName:'game_character_displayname_Ashe',items:[]}];
  const stats={gameMode:'CLASSIC',mapNumber:11,gameTime:10};
