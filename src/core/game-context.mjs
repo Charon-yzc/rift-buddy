@@ -2,6 +2,7 @@ import {currentPlayerSelection} from './guide.mjs';
 import {profile} from './rules.mjs';
 
 const inGame=phase=>['InProgress','Reconnect'].includes(phase);
+const activeGame=phase=>phase==='GameStart'||inGame(phase);
 // Ephemeral evidence for the current game only; no player identity or history.
 export function createCurrentGameTracker(){
  let own=null,mode=null,lastPhase=null,gameId=null,liveTime=null;
@@ -9,7 +10,8 @@ export function createCurrentGameTracker(){
   observe(client,champions,slots=[]){
    if(!client?.connected)return;
    const phase=client.phase,id=client.game?.gameId?String(client.game.gameId):null;
-   if((phase==='ChampSelect'&&lastPhase!=='ChampSelect')||(inGame(phase)&&inGame(lastPhase)&&id&&gameId&&id!==gameId)||(!inGame(phase)&&phase!=='ChampSelect')){own=null;mode=null;liveTime=null;}
+   // Loading no longer has a selection session, but it belongs to the same game.
+   if(phase==='ChampSelect'&&lastPhase!=='ChampSelect'||activeGame(phase)&&activeGame(lastPhase)&&id&&gameId&&id!==gameId||!activeGame(phase)&&phase!=='ChampSelect'){own=null;mode=null;liveTime=null;}
    if(phase==='ChampSelect'){
     const selected=currentPlayerSelection(client.session,champions,slots),formal=currentPlayerSelection(client.session,champions);
     own=selected?{...selected,role:formal?.positionKnown?formal.role:selected.role,formalKnown:formal?.positionKnown===true}:null;

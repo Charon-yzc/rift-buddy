@@ -40,6 +40,31 @@ test('live snapshot removes all identities and opponent data, refusing ambiguous
  assert.equal((await liveSnapshot(data.champions,{},()=>Promise.reject(Error('offline')))).available,false);
  assert.throws(()=>liveRequest('/liveclientdata/allgamedata'));
 });
+
+test('confirmed practice on Summoner Rift uses Rift reference builds without inferring unknown modes',()=>{
+ assert.deepEqual(identifyMode({gameMode:'PRACTICETOOL',mapNumber:11}),{id:'rift',label:'训练模式 · 峡谷参考',supported:true});
+ for(const stats of [{gameMode:'PRACTICETOOL'},{gameMode:'PRACTICETOOL',mapId:12},{gameMode:'OTHER',mapId:11}])assert.equal(identifyMode(stats).id,null);
+ const active={riotId:'test-player'},players=[{riotId:'test-player',rawChampionName:'game_character_displayname_Amumu',items:[]}];
+ const live=sanitizeLive(active,players,{gameMode:'PRACTICETOOL',mapNumber:11,gameTime:100},data.champions);
+ assert.equal(live.champion,'Amumu');assert.equal(live.mode,'rift');assert.equal(live.mapId,11);
+});
+
+test('in-game mode survives blank or unavailable lobby metadata without guessing ARAM variants',()=>{
+ const active={riotId:'test-player',currentGold:400,level:1},players=[{riotId:'test-player',rawChampionName:'game_character_displayname_Ashe',items:[]}];
+ const stats={gameMode:'CLASSIC',mapNumber:11,gameTime:10};
+ assert.equal(sanitizeLive(active,players,stats,data.champions,{gameMode:'',queueId:0}).mode,'rift');
+ assert.equal(sanitizeLive(active,players,{...stats,gameMode:'ARAM',mapNumber:12},data.champions,{gameMode:''}).mode,null);
+ assert.equal(sanitizeLive(active,players,{...stats,gameMode:'ARAM',mapNumber:12},data.champions,{gameMode:'',queueId:2400}).mode,'hex');
+ assert.equal(sanitizeLive(active,players,stats,data.champions,{gameMode:'CHERRY',queueId:1700}).mode,null);
+});
+
+test('missing in-game map number uses confirmed lobby map but missing maps stay unknown',()=>{
+ const active={riotId:'test-player'},players=[{riotId:'test-player',rawChampionName:'game_character_displayname_Ashe',items:[]}];
+ const live=sanitizeLive(active,players,{gameMode:'CLASSIC'},data.champions,{mapId:11,gameMode:''});
+ assert.equal(live.mapId,11);assert.equal(live.mode,'rift');
+ const unknown=sanitizeLive(active,players,{gameMode:'CLASSIC',mapNumber:-1},data.champions,{gameMode:''});
+ assert.equal(unknown.mapId,null);assert.equal(unknown.mode,null);
+});
 test('automatic inventory is temporary and requires a fresh matching hero and compatible mode',()=>{
  const guide=selectGuide(null,selection),base=createGuideModel(data,guide),item=base.route[0].id;
  const live={available:true,champion:'Ashe',mode:'rift',mapId:11,inventory:[{id:item,count:1}],gold:800,level:6,skills:{},at:Date.now()};

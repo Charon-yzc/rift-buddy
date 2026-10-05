@@ -29,7 +29,7 @@ export function validateGuideState(value){
  const selection=validateGuideSelection(value.selection);
  const completedItems=Array.isArray(value.completedItems)?[...new Set(value.completedItems.filter(id=>typeof id==='string'&&/^\d{1,8}$/.test(id)))].slice(0,6):[];
  const b=value.bounds,bounds=b&&Number.isInteger(b.x)&&Math.abs(b.x)<30000&&Number.isInteger(b.y)&&Math.abs(b.y)<30000&&Number.isInteger(b.width)&&b.width>=360&&b.width<=640&&Number.isInteger(b.height)&&b.height>=480&&b.height<=1000?{x:b.x,y:b.y,width:b.width,height:b.height}:null;
- const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
+ const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(m.entered===true?{entered:true}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
  return {selection,completedItems,collapsed:value.collapsed===true,clickThrough:value.clickThrough!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{})};
 }
 export function guideIdentity(selection){
@@ -49,14 +49,18 @@ export function reconcileGuide(value,{phase,gameId,live,now=Date.now()}={}){
  const matchingLive=fresh&&live.champion===current.selection.id&&live.mode===current.selection.mode;
  const id=/^\d{1,20}$/.test(String(gameId||''))?String(gameId):null;
  const inGame=['InProgress','Reconnect'].includes(phase);
- const externalNewSession=!!(knownPhase&&phase==='ChampSelect'&&before.phase!==phase||inGame&&before.phase&&!['InProgress','Reconnect'].includes(before.phase)||id&&id!==before.gameId&&inGame);
+ // Loading can also be part of a reconnect. Remember whether this game was
+ // entered, and distinguish a first known id from a changed known id.
+ const entered=before.entered===true||['InProgress','Reconnect'].includes(before.phase),changedGame=!!(id&&before.gameId&&id!==before.gameId);
+ const externalNewSession=!!(knownPhase&&phase==='ChampSelect'&&before.phase!==phase||inGame&&before.phase&&!entered||changedGame&&(inGame||phase==='GameStart'));
  const newSession=externalNewSession||!!(matchingLive&&Number.isFinite(live.gameTime)&&Number.isFinite(before.gameTime)&&live.gameTime+30<before.gameTime);
  const reset=newSession;
  if(newSession){delete next.liveAt;delete next.gameTime;}
+ if(inGame||phase==='GameStart'&&!newSession&&entered)next.entered=true;else if(knownPhase||newSession)delete next.entered;
  if(knownPhase)next.phase=phase;if(id)next.gameId=id;
  if(matchingLive){next.liveAt=live.at;if(Number.isFinite(live.gameTime))next.gameTime=live.gameTime;}
  const guide={...current,match:next,...(reset?{completedItems:[]} :{}),...(newSession?{clickThrough:true,purchaseTarget:undefined,stage:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[]}}:{})};
- return {guide,reset,changed:reset||next.phase!==before.phase||next.gameId!==before.gameId};
+ return {guide,reset,changed:reset||next.phase!==before.phase||next.gameId!==before.gameId||next.entered!==before.entered};
 }
 const specialSkills=new Set(['Aphelios','Udyr','Elise','Jayce','Nidalee','Karma']);
 export function nextSkill(champion,priority,first,live){
@@ -105,4 +109,4 @@ export function currentPlayerSelection(session,champions,slots=[]){
  const manual=slots.find(s=>s.champion===champion.id&&(s.manualPosition||!Number.isInteger(s.clientCellId)));
  return {id:champion.id,role:manual?.role||assigned||profile(champion).roles[0],positionKnown:!!(manual||assigned),...(assigned&&manual&&manual.role!==assigned?{formalRole:assigned}:{})};
 }
-export function phaseLabel(phase){return ({None:'客户端大厅',Lobby:'组队大厅',Matchmaking:'正在匹配',ReadyCheck:'等待确认',ChampSelect:'正在选人',InProgress:'游戏进行中',Reconnect:'等待重连',WaitingForStats:'结算中',PreEndOfGame:'即将结算',EndOfGame:'已结束',Offline:'未连接'})[phase]||'客户端已连接';}
+export function phaseLabel(phase){return ({None:'客户端大厅',Lobby:'组队大厅',Matchmaking:'正在匹配',ReadyCheck:'等待确认',ChampSelect:'正在选人',GameStart:'正在加载游戏',InProgress:'游戏进行中',Reconnect:'等待重连',WaitingForStats:'结算中',PreEndOfGame:'即将结算',EndOfGame:'已结束',Offline:'未连接'})[phase]||'客户端已连接';}
