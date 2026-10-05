@@ -5,7 +5,7 @@ import {compareAugments} from './hex-compare.mjs';
 import {comboStage,guideMismatch,GUIDE_STAGES} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
-import {aggregateCombatStats,duel,recommendLiveBuy} from './live-estimate.mjs';
+import {aggregateCombatStats,applyLivePanel,duel,recommendLiveBuy} from './live-estimate.mjs';
 
 const conditions=['ad','ap','control','heal','burst'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
@@ -96,15 +96,20 @@ export function createGuideModel(data,value,live=null,current=null){
  const ownChampion=data.champions.find(c=>c.id===s.id);
  const enemySnapshots=matched&&Array.isArray(live.enemies)?live.enemies:[];
  const estimate=matched&&ownChampion&&enemySnapshots.length?(()=>{
-  const ownAgg=aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
+  const panel=applyLivePanel(ownChampion,live.level||1,live.stats);
+  // A live panel already contains items/runes/buffs: adding item stats again
+  // would double count. The computed path is only the no-panel fallback.
+  const ownAgg=panel.live?panel.agg:aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
   const duels=enemySnapshots.map(target=>{
    const enemyChampion=data.champions.find(c=>c.id===target.id);
    if(!enemyChampion)return null;
-   return duel(ownChampion,live.level||1,ownAgg,live.skills,enemyChampion,target.level||live.level||1,data);
+   return duel(ownChampion,live.level||1,ownAgg,live.skills,enemyChampion,target.level||live.level||1,data,target.items||[]);
   }).filter(Boolean);
   if(!duels.length)return null;
   const primary=duels[0];
+  const curHp=Number.isFinite(live.stats?.hp)?Math.floor(live.stats.hp):null;
   return {enemy:primary.enemy,edge:primary.edge,killThreshold:primary.killMine,theirKill:primary.killTheirs,duels,
+   liveReal:panel.live,curHp,danger:curHp!==null&&curHp>0&&primary.killTheirs>=curHp,
    liveBuy:recommendLiveBuy({shortfall:targetPlan?.shortfall??null,gold:live.gold,enemies:enemySnapshots,champions:data.champions,data,inventory:live.inventory||[]}),at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,

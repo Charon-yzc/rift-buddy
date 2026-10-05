@@ -114,3 +114,15 @@ test('live duels cover every visible enemy in both directions with skill-aware b
  assert.ok(model.estimate.duels.every(d=>d.killMine>0&&d.killTheirs>0));
  assert.ok(model.estimate.liveBuy&&model.estimate.liveBuy.kind==='defense');
 });
+
+test('live panel beats computed stats and flags lethal danger on current health', async () => {
+ const panel={ad:120,ap:0,armor:60,mr:45,atkSpeed:1.0,crit:0.2,ms:340,hp:400,maxHp:2500,regen:10};
+ const fresh={...live,gold:1500,level:9,skills:{Q:4,W:2,E:2,R:1},stats:panel,enemies:[{id:'Jinx',name:'jinx',level:9,items:[{id:'3031',count:1}]}]};
+ const guide=selectGuide(null,selection);
+ const model=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),inventory:[{id:'1055',count:1}]});
+ assert.equal(model.estimate.liveReal,true);
+ assert.equal(model.estimate.curHp,400);
+ assert.equal(typeof model.estimate.danger,'boolean');
+ const healthy=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),stats:{...panel,hp:2500,maxHp:2500},inventory:[]});
+ assert.equal(healthy.estimate.danger,false);
+});

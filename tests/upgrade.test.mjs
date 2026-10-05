@@ -31,11 +31,15 @@ test('owned recipe components are allocated once, repeated components count, cyc
  assert.equal(plans[0].components[0].count,1);assert.equal(plans[2].remaining,2000);
  const upgrade=purchasePlan([{id:'999',cost:0,purchaseBase:{id:'b'}}],items,[{id:'b',count:1}]);assert.equal(upgrade[0].owned,false);assert.equal(upgrade[0].baseOwned,true);
 });
-test('live snapshot removes all identities and opponent data, refusing ambiguous active players',async()=>{
- const active={riotId:'private#self',currentGold:1234.9,level:7,abilities:{Q:{abilityLevel:3}},fullRunes:{secret:'discard'}},own={riotId:active.riotId,rawChampionName:'game_character_displayname_Ashe',items:[{itemID:3031,count:1}],scores:{kills:1}};
- const live=sanitizeLive(active,[own,{riotId:'private#enemy',rawChampionName:'game_character_displayname_Jhin',items:[{itemID:3072}]}],{gameMode:'CLASSIC',mapNumber:11,gameTime:345},data.champions);
+test('live snapshot keeps only public opponent data, refusing ambiguous active players',async()=>{
+ const active={riotId:'private#self',currentGold:1234.9,level:7,abilities:{Q:{abilityLevel:3}},fullRunes:{secret:'discard'},championStats:{attackDamage:84,abilityPower:0,armor:52,magicResist:40,attackSpeed:0.9,critChance:0.25,moveSpeed:340,currentHealth:1500,maxHealth:2300,healthRegenRate:8,nickname:'secret'}},
+ own={riotId:active.riotId,rawChampionName:'game_character_displayname_Ashe',team:'ORDER',items:[{itemID:3031,count:1}],scores:{kills:1}};
+ const live=sanitizeLive(active,[own,{riotId:'private#enemy',rawChampionName:'game_character_displayname_Jhin',team:'CHAOS',items:[{itemID:3072}]}],{gameMode:'CLASSIC',mapNumber:11,gameTime:345},data.champions);
  assert.equal(live.champion,'Ashe');assert.equal(live.gold,1234);assert.deepEqual(live.inventory,[{id:'3031',count:1}]);assert.equal(live.skills.Q,3);
- assert.equal(JSON.stringify(live).includes('private'),false);assert.equal(JSON.stringify(live).includes('3072'),false);
+ assert.equal(live.stats.ad,84);assert.equal(live.stats.hp,1500);assert.equal(live.stats.maxHp,2300);
+ assert.equal(JSON.stringify(live).includes('private'),false);assert.equal(JSON.stringify(live).includes('secret'),false);assert.equal(JSON.stringify(live).includes('nickname'),false);
+ assert.deepEqual(live.enemies[0].items,[{id:'3072',count:1}]);
+ assert.equal(sanitizeLive({...active,championStats:null},[own],{gameMode:'CLASSIC',mapNumber:11,gameTime:345},data.champions).stats,null);
  assert.equal(sanitizeLive(active,[own,own],{},data.champions).available,false);
  assert.equal((await liveSnapshot(data.champions,{},()=>Promise.reject(Error('offline')))).available,false);
  assert.throws(()=>liveRequest('/liveclientdata/allgamedata'));

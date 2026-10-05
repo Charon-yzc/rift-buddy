@@ -41,3 +41,4 @@ body.ball{border:0;background:transparent}
 .ball-hero img{width:100%;height:100%;object-fit:cover;display:block}
 .ball-done{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:50%;background:#235749;border:2px solid #14212e;color:#a4ffea;font-size:13px;display:grid;place-items:center;pointer-events:none}
 .estimate-row{color:#bfd1d9}.estimate-row b{color:#88d9c0;margin-right:6px}.estimate-row span{font-size:10px;color:#7690a5;margin-left:8px}
+.estimate-row.danger{color:#f4d1b4}.estimate-row.danger b{color:#e8a06a}

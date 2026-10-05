@@ -46,14 +46,24 @@ export function itemStats(description=''){
 
 export function aggregateCombatStats(champion,level,items=[],data){
  const base=statAtLevel(champion.stats,level);
- const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr};
+ const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr,atkSpeed:base.atkSpeed,crit:0};
  for(const entry of items){
   const record=data.items?.[entry.id];if(!record)continue;
   const stats=itemStats(record.description);
   const count=Math.max(1,Number(entry.count)||1);
   for(const k of ['ad','ap','hp','armor','mr']) if(stats[k]) agg[k]+=stats[k]*count;
+  if(stats.crit)agg.crit+=stats.crit/100*count;
  }
  return agg;
+}
+// Prefer the live panel (already includes items, runes, buffs): do NOT add
+// item stats on top or they count twice. Computed stats are the fallback.
+export function applyLivePanel(champion,level,panel){
+ const base=statAtLevel(champion.stats,level);
+ if(!panel)return {agg:aggregateCombatStats(champion,level,[],null),live:false};
+ return {agg:{ad:panel.ad??base.ad,ap:panel.ap??0,hp:panel.maxHp??base.hp,
+  armor:panel.armor??base.armor,mr:panel.mr??base.mr,
+  atkSpeed:panel.atkSpeed??base.atkSpeed,crit:panel.crit??0,curHp:panel.hp??null},live:true};
 }
 
 // Total invested skill points. Own points come from the live client; the
@@ -75,9 +85,10 @@ export function burstDamage(champion,points,agg,level){
 // Expected auto-attack + a small mix of ability casts per second.
 export function roughDps(champion,level,agg){
  const base=statAtLevel(champion.stats,level);
+ const as=agg.atkSpeed??base.atkSpeed;
  const adShare=agg.ad/(agg.ad+agg.ap+1);
  const apShare=1-adShare;
- const autoDps=base.ad*base.atkSpeed;
+ const autoDps=agg.ad*as*(1+(agg.crit||0)*0.75);
  const mixDps=autoDps*adShare*(1+apShare*0.35*apShare); // stronger AP mix scales with AP share
  const apBurst=Math.max(0,agg.ap)*Math.min(1,apShare*1.4)/6; // ~one ability cast per 6s with AP ratio
  return Math.round((mixDps+apBurst)*10)/10;
@@ -115,8 +126,10 @@ export function killThreshold(champion,level,agg,opponent,opponentLevel,opponent
 }
 
 // One full duel, both directions: my kill line on them and theirs on me.
-export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data){
- const enemyAgg=aggregateCombatStats(enemy,enemyLevel,[],data);
+// Enemy items are the real public build; only their skill points and current
+// HP are proxied (by level and max HP) and labelled as such in the UI.
+export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyItems=[]){
+ const enemyAgg=aggregateCombatStats(enemy,enemyLevel,enemyItems,data);
  const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
  return {
   enemy:{id:enemy.id,name:enemy.name,level:Number.isInteger(enemyLevel)?enemyLevel:null},
