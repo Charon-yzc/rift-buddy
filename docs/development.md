@@ -108,10 +108,15 @@ pnpm check
 | 文件 | 用途 | 更新命令 |
 | --- | --- | --- |
 | `data/game.json`、`data/images/` | 英雄、装备、符文、海克斯与图片 | `pnpm sync-data`，随后 `node scripts/enrich-items.mjs` |
+| `data/spells.json` | 全英雄技能数值（斩杀线用） | `pnpm sync-data` 结束时版本不一致自动刷新；也可手动 `pnpm spells:enrich` |
 | `data/builds.json` | 按英雄与位置缓存的峡谷参考配置 | `node scripts/sync-builds.mjs --all-roles` |
 | `data/hex-builds.json` | 海克斯参考配置 | `node scripts/sync-hex-builds.mjs` |
 
 更新命令会访问公开资料来源并修改仓库快照，可能因站点变化、限流或网络问题失败。普通功能开发不要运行它们。更新时在单独分支保留旧快照，检查终端失败计数、来源日期、版本与差异，再完成所有资料检查；脚本执行结束不代表每个来源都成功。`sync-data` 会保留已存在的同名图片，若某个图标确实变化，需要单独核实并更新该图片。新资料不能自动证明旧玩法已重新复核。
+
+### 技能估算资料的复核
+
+`data/spells.json` 与 `scripts/enrich-spells.mjs` 是技能公式的实验资料。自动解析存在不完整、条件触发和持续伤害条目，不能把覆盖数量视为逐条验证。生成器不会标记复核完成；只有核实一整套技能的单次施放含义、基础值、系数、特殊加点与条件后，才可手动设置该英雄的 `reviewedForCombat: true`。运行时拒绝版本不匹配、`partial` 或不支持的系数，并保留明确标注的粗略模型。敌方实际技能等级不可读，不从等级构造各技能等级或大招可用状态。
 
 ## 打包与发布
 

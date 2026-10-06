@@ -6,6 +6,7 @@ import {defaultState,validateState,mergeState} from '../services/storage.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+try{data.spellbook=JSON.parse(await fs.readFile('data/spells.json','utf8')).champions||{};}catch{data.spellbook={};}
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]};
 test('guide shows champion-specific current builds and next unchecked item without inventing inventory',()=>{
@@ -56,4 +57,17 @@ test('guide display mode persists as a floating ball across selections and saves
  assert.equal(ball.ball,true);assert.deepEqual(ball.completedItems,base.completedItems);
  assert.equal(validateState({...defaultState(),guide:ball}).guide.ball,true);
  assert.equal(validateGuideState({...ball,ball:undefined}).ball,false);
+});
+
+test('duel picks validate, persist across selections and clear on a new game',async()=>{
+ const {reconcileGuide}=await import('../src/core/guide.mjs');
+ assert.deepEqual(validateGuideState({selection,duelPick:{own:'Janna',foe:'Thresh'}}).duelPick,{own:'Janna',foe:'Thresh'});
+ assert.deepEqual(validateGuideState({selection,duelPick:{own:'Janna'}}).duelPick,{own:'Janna'});
+ assert.equal(validateGuideState({selection,duelPick:{own:'Janna',foe:'Janna'}}).duelPick.foe,undefined);
+ assert.equal(validateGuideState({selection,duelPick:{own:'../x'}}).duelPick,undefined);
+ assert.equal(validateGuideState({selection}).duelPick,undefined);
+ let guide={...selectGuide(null,selection),duelPick:{own:'Janna',foe:'Thresh'}};
+ assert.deepEqual(selectGuide(guide,{...selection,id:'Jhin'}).duelPick,{own:'Janna',foe:'Thresh'});
+ const cleared=reconcileGuide({...guide,match:{phase:'ChampSelect',gameId:'2'}},{phase:'InProgress',gameId:'1',now:Date.now()}).guide;
+ assert.equal(cleared.duelPick,undefined);
 });

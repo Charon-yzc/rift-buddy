@@ -18,7 +18,7 @@ const api=window.guide||{
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
   if(action==='purchase-target')s.purchaseTarget=value||undefined;if(action==='stage')s.stage=value==='auto'?undefined:value;
-  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball')s.ball=!s.ball;
+  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];s.duelPick=undefined;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball')s.ball=!s.ball;if(action==='duel-own'||action==='duel-foe'){const side=action==='duel-own'?'own':'foe';if(value!==''&&!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value))throw Error('英雄选择格式不正确');const next={...(s.duelPick||{}),[side]:value||undefined};if(next.own&&next.foe&&next.own===next.foe)throw Error('不能自己打自己，请换一边');s.duelPick=next.own||next.foe?next:undefined;}
   if(action==='copy'){toast('桌面版支持复制');return true;}
   return {...snapshot,ball:!!s.ball,model:createGuideModel(window.previewGuideData,s)};
  },
@@ -42,15 +42,17 @@ document.addEventListener('click',async event=>{
  if(target.dataset.tab){tab=target.dataset.tab;render();return;}
  // The floating ball lives on a draggable region: a real drag must move the
  // window, never toggle it. Only a near-stationary press counts as a click.
- if(target.dataset.action==='ball'&&downPos&&Math.hypot(event.clientX-downPos[0],event.clientY-downPos[1])>6)return;
+ if(target.dataset.action==='ball'){const moved=dragMoved;dragMoved=false;if(moved)return;}
  target.disabled=true;
  try{const result=await api.control(target.dataset.action,target.dataset.id);if(result?.model!==undefined){snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
-document.addEventListener('change',async event=>{const actions={'guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
+document.addEventListener('change',async event=>{const actions={'guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage','guide-duel-own':'duel-own','guide-duel-foe':'duel-foe'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')api.control('hide').catch(error=>toast(error.message));});
-let hoverHeader=false,downPos=null;
-document.addEventListener('mousedown',event=>{downPos=[event.clientX,event.clientY];});
+let hoverHeader=false,downPos=null,dragMoved=false;
+document.addEventListener('mousedown',event=>{downPos=[event.screenX,event.screenY];dragMoved=false;});
+document.addEventListener('mousemove',event=>{if(event.buttons&&downPos&&Math.hypot(event.screenX-downPos[0],event.screenY-downPos[1])>6)dragMoved=true;});
+document.addEventListener('mouseup',()=>{setTimeout(()=>{dragMoved=false;downPos=null;},0);});
 function trackHeaderHover(event){
  // mousemove still reaches the page while the window passes clicks through
  // (forward:true). Report header hover on change only, so the main process

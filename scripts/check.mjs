@@ -16,6 +16,9 @@ const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 validateCatalog(BUNDLED_CATALOG,data);
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
+const spellsFile=JSON.parse(await fs.readFile('data/spells.json','utf8'));
+if(spellsFile.version!==data.version)errors.push(`Spells data ${spellsFile.version} does not match game data ${data.version}; rerun the spell enrichment.`);
+data.spellbook=spellsFile.champions||{};
 const assets=new Set(data.champions.map(c=>`champion/${c.id}.png`));
 for(const config of LOADOUTS)for(const id of config.champions)for(const role of config.roles){
  const c=data.champions.find(c=>c.id===id);if(!c){errors.push(`Missing loadout champion: ${id}`);continue;}

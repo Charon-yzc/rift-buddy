@@ -405,7 +405,20 @@ export function mergeClientSession(slots, session, champions) {
   if(target&&!target.champion&&!target.manualPosition){const prior=slots.find(s=>s.clientCellId===p.cellId);target.champion=id;target.locked=prior?.champion===id?prior.locked:true;target.clientCellId=p.cellId;}
   else unassigned.push({champion:id,cellId:p.cellId,local:p.cellId===session.localPlayerCellId});
  }
- return {slots:next,unassigned};
+ // Mark the local player's declared lane as ours so solo queue gets a
+ // sensible recommendation target after sync. Additive only: never clears
+ // existing party flags, and blind-pick entries without a declared position
+ // leave everything untouched.
+ const declaredRole=CLIENT_POSITION_ROLES[String(allEntries.find(p=>p.cellId===session?.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
+ const bound=Number.isInteger(session?.localPlayerCellId)&&next.find(s=>s.clientCellId===session.localPlayerCellId);
+ const localRole=bound?.role||declaredRole;
+ const mine=localRole&&next.find(s=>s.role===localRole);
+ // Once bound, party membership belongs to the user's checkboxes. Polling
+ // must not undo an explicit uncheck or mark the pre-drag lane as ours.
+ const previouslyBound=Number.isInteger(session?.localPlayerCellId)&&slots.some(s=>s.clientCellId===session.localPlayerCellId);
+ const changed=!!(mine&&!mine.party&&!mine.manualPosition&&!previouslyBound);
+ if(changed)mine.party=true;
+ return {slots:next,unassigned,markedLocalRole:localRole||null,markedLocalChanged:changed};
 }
 
 export function clearClientPicks(slots){
