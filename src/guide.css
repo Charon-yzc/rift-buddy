@@ -55,6 +55,13 @@ body.ball{border:0;background:transparent}
 .collapsed .verdict small{display:none}
 .collapsed .verdict-nums{font-size:12px}
 .collapsed .verdict-nums em{font-size:15px}
+/* Custom duel simulator: compact pickers, same estimate-row language. */
+.duel-box{margin:6px 0 2px;padding:8px 10px;border:1px solid #2b3a4b;border-radius:8px;background:#141d28}
+.duel-pick{display:flex;align-items:center;gap:6px}
+.duel-pick select{flex:1;min-width:0;font-size:11px;background:#1b2b3c;border:1px solid #304657;border-radius:5px;padding:5px;color:#dbe6f4}
+.duel-pick span{font-size:11px;color:#7d98ab;flex-shrink:0}
+.duel-box .estimate-row{margin:6px 0 0}
+.duel-box .note{margin:6px 0 0}
 /* Readability pass: key in-game text one step larger. */
 .quick-reminders p{font-size:13px}
 .collapsed .quick-reminders p{font-size:12px}

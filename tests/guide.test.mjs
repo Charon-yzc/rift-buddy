@@ -58,3 +58,16 @@ test('guide display mode persists as a floating ball across selections and saves
  assert.equal(validateState({...defaultState(),guide:ball}).guide.ball,true);
  assert.equal(validateGuideState({...ball,ball:undefined}).ball,false);
 });
+
+test('duel picks validate, persist across selections and clear on a new game',async()=>{
+ const {reconcileGuide}=await import('../src/core/guide.mjs');
+ assert.deepEqual(validateGuideState({selection,duelPick:{own:'Janna',foe:'Thresh'}}).duelPick,{own:'Janna',foe:'Thresh'});
+ assert.deepEqual(validateGuideState({selection,duelPick:{own:'Janna'}}).duelPick,{own:'Janna'});
+ assert.equal(validateGuideState({selection,duelPick:{own:'Janna',foe:'Janna'}}).duelPick.foe,undefined);
+ assert.equal(validateGuideState({selection,duelPick:{own:'../x'}}).duelPick,undefined);
+ assert.equal(validateGuideState({selection}).duelPick,undefined);
+ let guide={...selectGuide(null,selection),duelPick:{own:'Janna',foe:'Thresh'}};
+ assert.deepEqual(selectGuide(guide,{...selection,id:'Jhin'}).duelPick,{own:'Janna',foe:'Thresh'});
+ const cleared=reconcileGuide({...guide,match:{phase:'ChampSelect',gameId:'2'}},{phase:'InProgress',gameId:'1',now:Date.now()}).guide;
+ assert.equal(cleared.duelPick,undefined);
+});

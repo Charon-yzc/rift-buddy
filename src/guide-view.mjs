@@ -22,6 +22,26 @@ export function verdictBanner(m){
  const word=est.danger?'注意':dir;
  return `<section class="verdict ${cls}"><b>${word}</b><div class="verdict-nums"><span>斩杀约 <em>${est.killThreshold??'—'}</em></span><span>被斩约 <em>${est.theirKill??'—'}</em></span></div><small>${e(est.enemy?.name||'')} · 估算</small></section>`;
 }
+// Custom duel simulator: pick one ally side and one enemy side from the
+// live scoreboard feed. Same computed numbers as estimateRows, no new
+// claims — options come only from visible allies/enemies.
+export function duelBox(m){
+ const opts=m?.duelOptions;
+ if(!opts||(!opts.own.length&&!opts.foe.length))return '';
+ const pick=m?.duelPick||{};
+ const opt=(id,name,sel)=>`<option value="${id}"${sel?' selected':''}>${e(name)}</option>`;
+ const ownOpts=`<option value="">我方…</option>`+opts.own.map(o=>opt(o.id,(o.self?'我 · ':'')+o.name,pick.own===o.id)).join('');
+ const foeOpts=`<option value="">对方…</option>`+opts.foe.map(o=>opt(o.id,o.name,pick.foe===o.id)).join('');
+ const cd=m?.customDuel;
+ let result='';
+ if(cd&&!cd.unresolved){
+  const dir=cd.edge>0.25?'偏'+cd.own.name:cd.edge<-0.25?'偏'+cd.foe.name:'均势';
+  result=`<p class="estimate-row"><b>${e(cd.own.name)} vs ${e(cd.foe.name)}</b> ${e(dir)} · ${e(cd.own.name)}斩杀约 ${cd.killMine??'—'} · ${e(cd.foe.name)}斩杀约 ${cd.killTheirs??'—'} <span>${e(cd.skillsNote)}；血量按满血估算${cd.approx?' · 部分为估算':''}</span></p>`;
+ }else if(cd?.unresolved){
+  result=`<p class="note">所选英雄不在本局可见名单中，请重选</p>`;
+ }
+ return `<div class="duel-box"><div class="duel-pick"><select id="guide-duel-own" aria-label="我方英雄">${ownOpts}</select><span>vs</span><select id="guide-duel-foe" aria-label="对方英雄">${foeOpts}</select></div>${result}</div>`;
+}
 export function renderGuide(snapshot,tab,isPreview,image){
  const m=snapshot?.model;
  if(!m)return `<header class="drag"><b>开黑搭子 · 本局指引</b><button data-action="hide" aria-label="隐藏">${icon('close')}</button></header><div class="empty"><h2>先准备这一局</h2><p>打开英雄配置，点击“本局指引”，把出装与配合带到这个小窗口。</p><button class="primary" data-action="main">打开助手</button></div>`;
@@ -38,7 +58,7 @@ export function renderGuide(snapshot,tab,isPreview,image){
  <section class="hero-summary"><div class="hero-id">${image('champion',m.champion.id,m.champion.name)}<div><h1>${e(m.champion.name)}</h1><p>${m.mode==='hex'?'海克斯大乱斗':e(m.role)} <span>· ${e(m.version)}</span></p></div></div><button class="text-button" data-action="main" title="打开完整配置">完整配置 ${icon('arrow')}</button></section>
  <div class="guide-status" title="${e(liveText)}">${e(liveText)}${m.live.at?`<small>读取 ${new Date(m.live.at).toLocaleTimeString('zh-CN')}</small>`:''}</div>
  ${wrong?`<section class="guide-mismatch"><b>这份方案与当前英雄、正式位置、模式或组合不一致</b><p>正在查看 ${e(m.champion.name)}${current?'；当前选择 '+e(current.name||current.id):''}。</p><button data-action="${current?'current':'main'}">${current?'换入当前英雄与正式位置':'打开助手重新选择'}</button></section>`:`<section class="next-item ${next?'':'complete'}">${next?`${image('item',action?.id||next.id,action?.name||next.name)}<div><small>${action?({component:'本次回城 · 可买组件',complete:'本次回城 · 可合成',save:'下一步组件参考',upgrade:'查看商店升级条件'}[action.kind]):m.purchaseTarget?'本次回城目标 · 手动参考':'下一件成装参考 · 手动进度'}</small><b>${e(action?.name||next.name)}</b><p>${action?`${action.cost?`约 ${action.cost} 金`:'基础装备已持有'}${action.shortfall===null?' · 金币暂不可读':action.shortfall>0?' · 还差 '+action.shortfall+' 金':''}${action.kind==='component'?' · 通向 '+e(next.name):action.kind==='upgrade'?' · 以游戏任务为准':''}`:next.purchaseBase?`先购买${e(next.purchaseBase.name)}`:`完整价格 ${next.cost} 金`}</p></div>${!m.live.matched&&m.route.some(i=>i.id===next.id)?`<button data-action="item" data-id="${next.id}" aria-label="标记已买${e(next.name)}">已买 ${icon('check')}</button>`:''}`:`${icon('check')}<div><b>这套路线已完成</b><small>仍需按实际局势调整</small></div>`}</section>${verdictBanner(m)}`}
- ${wrong?'':`<div class="quick-reminders">${estimateRows(m)}<p class="quick-skill"><b>加点参考</b> ${m.nextSkill?`有技能点可升 <strong>${m.nextSkill}</strong>`:e(m.priority?m.priority.split('').join(' › '):'按游戏内提示')}<span>以游戏可升级技能为准</span></p>${m.combo?`<p class="quick-plan" title="${e(m.stageHint?.text||m.combo.ownJob||m.combo.plan)}"><b>${e(m.stageHint?.label||'你的配合')}</b> ${e(m.stageHint?.text||m.combo.ownJob||m.combo.plan)}</p>`:''}</div>`}
+ ${wrong?'':`<div class="quick-reminders">${estimateRows(m)}${duelBox(m)}<p class="quick-skill"><b>加点参考</b> ${m.nextSkill?`有技能点可升 <strong>${m.nextSkill}</strong>`:e(m.priority?m.priority.split('').join(' › '):'按游戏内提示')}<span>以游戏可升级技能为准</span></p>${m.combo?`<p class="quick-plan" title="${e(m.stageHint?.text||m.combo.ownJob||m.combo.plan)}"><b>${e(m.stageHint?.label||'你的配合')}</b> ${e(m.stageHint?.text||m.combo.ownJob||m.combo.plan)}</p>`:''}</div>`}
  <p class="input-hint">${e(inputText)}</p>
  <div class="expanded"><nav aria-label="指引内容"><button data-tab="items" class="${tab==='items'?'active':''}">购买 / 局势</button><button data-tab="skills" class="${tab==='skills'?'active':''}">加点 / 符文</button>${m.combo?`<button data-tab="team" class="${tab==='team'?'active':''}">配合速记</button>`:''}${m.mode==='hex'?`<button data-tab="augments" class="${tab==='augments'?'active':''}">强化备选</button>`:''}</nav><main>${tab==='team'&&m.combo?team(m):tab==='skills'?skills(m,image):tab==='augments'&&m.mode==='hex'?augments(m,image):items(m,plan,image)}</main>
  <footer><div class="footer-controls"><button class="text-button" data-action="new-game" title="清空购买标记与本局已选强化">新一局</button><button class="text-button" data-action="copy">${icon('copy')}复制</button><select id="guide-opacity" aria-label="窗口不透明度">${[[1,'完全不透明'],[0.85,'85% 不透明'],[0.65,'65% 不透明']].map(([v,n])=>`<option value="${v}" ${m.opacity===v?'selected':''}>${n}</option>`).join('')}</select><span>${snapshot.hotkeyAvailable?'Ctrl + Shift + G':'托盘可呼出'}</span></div><p>${e(m.source)}${m.stale?' · 机制待复核':''} · 资料 ${e(m.version)}</p></footer></div>`;

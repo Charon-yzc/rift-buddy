@@ -45,6 +45,17 @@ test('live snapshot keeps only public opponent data, refusing ambiguous active p
  assert.throws(()=>liveRequest('/liveclientdata/allgamedata'));
 });
 
+test('live snapshot exposes allies with the same public-only posture as enemies',()=>{
+ const active={riotId:'me',currentGold:100,level:3,abilities:{Q:{abilityLevel:1}}};
+ const mk=(id,team,extra={})=>({riotId:id==='Ashe'?'me':'r-'+id,rawChampionName:'game_character_displayname_'+id,team,items:[],...extra});
+ const live=sanitizeLive(active,[mk('Ashe','ORDER'),mk('Janna','ORDER',{level:8,items:[{itemID:3190,count:1}]}),mk('Jinx','CHAOS',{level:9})],{gameMode:'CLASSIC',mapNumber:11,gameTime:30},data.champions);
+ assert.deepEqual(live.allies,[{id:'Janna',name:live.allies[0].name,level:8,items:[{id:'3190',count:1}]}]);
+ assert.equal(live.enemies.length,1);assert.equal(live.enemies[0].id,'Jinx');
+ assert.equal(JSON.stringify(live.allies).includes('r-'),false);
+ const noTeam=sanitizeLive(active,[mk('Ashe',undefined),mk('Janna',undefined)],{gameMode:'CLASSIC',mapNumber:11,gameTime:30},data.champions);
+ assert.deepEqual(noTeam.allies,[]);
+});
+
 test('confirmed practice on Summoner Rift uses Rift reference builds without inferring unknown modes',()=>{
  assert.deepEqual(identifyMode({gameMode:'PRACTICETOOL',mapNumber:11}),{id:'rift',label:'训练模式 · 峡谷参考',supported:true});
  for(const stats of [{gameMode:'PRACTICETOOL'},{gameMode:'PRACTICETOOL',mapId:12},{gameMode:'OTHER',mapId:11}])assert.equal(identifyMode(stats).id,null);

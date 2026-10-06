@@ -160,3 +160,33 @@ test('verdict banner headlines the same numbers, bigger and without promises', a
  assert.equal(verdictBanner(null),'');
  for(const word of ['预测','保证','必胜','必赢','稳赢','上','打','跑','购买','建议购买','liveBuy'])assert.equal(good.includes(word),false);
 });
+
+test('custom duel pits a picked ally against a picked enemy with disclosed proxies',async()=>{
+ const {sanitizeLive}=await import('../services/live-client.mjs');
+ const {duelBox}=await import('../src/guide-view.mjs');
+ const active={riotId:'me',currentGold:1500,level:9,abilities:{Q:{abilityLevel:4},W:{abilityLevel:2},E:{abilityLevel:2},R:{abilityLevel:1}},championStats:{attackDamage:142,abilityPower:0,armor:71,magicResist:44,attackSpeed:0.95,critChance:0.25,moveSpeed:340,currentHealth:900,maxHealth:2400,healthRegenRate:9}};
+ const players=[
+  {riotId:'me',rawChampionName:'game_character_displayname_Ashe',team:'ORDER',level:9,items:[{itemID:1055,count:1}]},
+  {riotId:'a1',rawChampionName:'game_character_displayname_Janna',team:'ORDER',level:8,items:[{itemID:3190,count:1}]},
+  {riotId:'x1',rawChampionName:'game_character_displayname_Thresh',team:'CHAOS',level:7,items:[{itemID:3190,count:1}]}];
+ const snap=sanitizeLive(active,players,{gameMode:'CLASSIC',mapNumber:11,gameTime:900},data.champions);
+ const at=Date.now();
+ // ally (proxied skills) vs enemy: approx forced, both-sides note
+ const ally=createGuideModel({...data,hexBuilds:{}},{...selectGuide(null,selection),duelPick:{own:'Janna',foe:'Thresh'}},{...snap,matched:true,at});
+ assert.equal(ally.customDuel.pick.own,'Janna');assert.equal(ally.customDuel.own.self,false);
+ assert.equal(ally.customDuel.skillsNote,'双方技能按等级反推');assert.equal(ally.customDuel.approx,true);
+ assert.ok(ally.customDuel.killMine>0&&ally.customDuel.killTheirs>0);
+ // self vs enemy: live panel, single-side note
+ const self=createGuideModel({...data,hexBuilds:{}},{...selectGuide(null,selection),duelPick:{own:'Ashe',foe:'Thresh'}},{...snap,matched:true,at});
+ assert.equal(self.customDuel.own.self,true);assert.equal(self.customDuel.skillsNote,'对方技能按等级反推');
+ // unknown foe / unmatched live: no duel, picker hidden
+ const stale=createGuideModel({...data,hexBuilds:{}},{...selectGuide(null,selection),duelPick:{own:'Ashe',foe:'Zed'}},{...snap,matched:true,at});
+ assert.equal(stale.customDuel.unresolved,true);
+ const plain=createGuideModel(data,selectGuide(null,selection));
+ assert.equal(plain.customDuel,null);assert.equal(plain.duelOptions,null);
+ const html=duelBox(ally);
+ assert.ok(html.includes('迦娜 vs 锤石')&&html.includes('斩杀约'));
+ assert.ok(html.includes('id="guide-duel-own"')&&html.includes('id="guide-duel-foe"'));
+ assert.equal(duelBox(plain),'');
+ for(const word of ['预测','保证','必胜','胜率','购买'])assert.equal(html.includes(word),false);
+});

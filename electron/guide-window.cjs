@@ -108,9 +108,16 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
   if(action==='interaction'){await interact();return payload();}
   if(action==='condition'){if(!['ad','ap','control','heal','burst'].includes(value))throw Error('局势选项不正确');const conditions=current.selection.conditions.includes(value)?current.selection.conditions.filter(c=>c!==value):[...current.selection.conditions,value];return save({...current,selection:{...current.selection,conditions}});}
   if(action==='reset')return save({...current,completedItems:[]});
-  if(action==='new-game'){const result=await save({...current,completedItems:[],clickThrough:true,purchaseTarget:undefined,stage:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[]}});inputMode();return result;}
+  if(action==='new-game'){const result=await save({...current,completedItems:[],clickThrough:true,purchaseTarget:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[]}});inputMode();return result;}
   if(action==='purchase-target'){if(value!==''&&!getModel().shoppingTargets.some(i=>i.id===value&&!i.owned))throw Error('目标已变化，请重新选择');return save({...current,purchaseTarget:value||undefined});}
   if(action==='stage'){if(!['auto','opening','key','later'].includes(value))throw Error('配合阶段不正确');return save({...current,stage:value==='auto'?undefined:value});}
+  if(action==='duel-own'||action==='duel-foe'){
+   const side=action==='duel-own'?'own':'foe';
+   if(value!==''&&!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value))throw Error('英雄选择格式不正确');
+   const next={...(current.duelPick||{}),[side]:value||undefined};
+   if(next.own&&next.foe&&next.own===next.foe)throw Error('不能自己打自己，请换一边');
+   return save({...current,duelPick:next.own||next.foe?next:undefined});
+  }
   if(action==='item'){
    if(getModel().live.matched)throw Error('背包正在同步，购买进度以实际背包为准；可切换回城目标');
    if(typeof value!=='string'||!getModel().route.some(i=>i.id===value))throw Error('这个装备不在当前方案中');

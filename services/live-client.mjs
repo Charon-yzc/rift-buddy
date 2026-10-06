@@ -11,6 +11,11 @@ export function liveRequest(route){
  });
 }
 export function enemiesFromPlayers(own,players,champions){if(!Array.isArray(players)||!own)return[];const ownTeam=own.team||own.teamId||own.teamType;return players.filter(p=>p&&p!==own&&(ownTeam&&(p.team||p.teamId||p.teamType)?(p.team||p.teamId||p.teamType)!==ownTeam:false)&&String(p.rawChampionName||'').length>0).map(p=>{const enemyRaw=String(p.rawChampionName||'').replace(/^game_character_displayname_/,'');const enemy=champions.find(c=>c.id.toLowerCase()===enemyRaw.toLowerCase());return enemy?{id:enemy.id,name:enemy.name,level:Number.isInteger(p.level)&&p.level>=1&&p.level<=30?p.level:null,items:filterEnemyItems(p.items)}:null;}).filter(Boolean).slice(0,5);}
+// Same-team public scoreboard feed, same shape and privacy posture as
+// enemies: champion, level and visible items only, no identities. When our
+// own team tag is unknown we cannot tell allies apart, so report none
+// rather than guessing.
+export function alliesFromPlayers(own,players,champions){if(!Array.isArray(players)||!own)return[];const ownTeam=own.team||own.teamId||own.teamType;if(!ownTeam)return[];return players.filter(p=>p&&p!==own&&(p.team||p.teamId||p.teamType)===ownTeam&&String(p.rawChampionName||'').length>0).map(p=>{const allyRaw=String(p.rawChampionName||'').replace(/^game_character_displayname_/,'');const ally=champions.find(c=>c.id.toLowerCase()===allyRaw.toLowerCase());return ally?{id:ally.id,name:ally.name,level:Number.isInteger(p.level)&&p.level>=1&&p.level<=30?p.level:null,items:filterEnemyItems(p.items)}:null;}).filter(Boolean).slice(0,5);}
 // Enemy holdings come from the public scoreboard feed, so a missing count
 // means "shown without a stack number", not a phantom read: treat it as one.
 // (Own inventory keeps the strict positive-count rule for purchase marking.)
@@ -52,7 +57,7 @@ return {available:true,champion:champion.id,inventory,gold:Number.isFinite(activ
   level:Number.isInteger(active.level)&&active.level>=1&&active.level<=30?active.level:null,
   skills:Object.fromEntries(['Q','W','E','R'].map(key=>{const level=active.abilities?.[key]?.abilityLevel;return [key,Number.isInteger(level)&&level>=0&&level<=10?level:null];})),
   gameTime:Number.isFinite(stats?.gameTime)?stats.gameTime:null,mapId,mode,at:Date.now(),stats:panelStats(active.championStats),
-  enemies:enemiesFromPlayers(own,players,champions)};
+  enemies:enemiesFromPlayers(own,players,champions),allies:alliesFromPlayers(own,players,champions)};
 }
 export async function liveSnapshot(champions,game={},request=liveRequest){
  try{const [active,players,stats]=await Promise.all(['/liveclientdata/activeplayer','/liveclientdata/playerlist','/liveclientdata/gamestats'].map(request));return sanitizeLive(active,players,stats,champions,game);}
