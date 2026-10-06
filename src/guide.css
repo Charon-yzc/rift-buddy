@@ -40,6 +40,15 @@ body.ball{border:0;background:transparent}
 .ball-hero{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:50%;border:2px solid #14212e;overflow:hidden;display:block;pointer-events:none}
 .ball-hero img{width:100%;height:100%;object-fit:cover;display:block}
 .ball-done{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:50%;background:#235749;border:2px solid #14212e;color:#a4ffea;font-size:13px;display:grid;place-items:center;pointer-events:none}
+.live-situation{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #324452}
+.live-situation .section-label button{font-size:11px;padding:6px 8px;border:1px solid #416354;border-radius:6px;color:#9fe5cf;background:#19372e}
+.live-situation .section-label button[aria-pressed=false]{color:#bbcad5;border-color:#405366;background:#243242}
+.situation-choice{padding:10px 0;border-top:1px solid #324452;font-size:12px;line-height:1.6}
+.situation-choice>div{display:flex;align-items:center;gap:8px}.situation-choice img{width:32px;height:32px;border-radius:6px}
+.situation-choice button{margin-left:auto;flex-shrink:0;background:#245648;color:#b4f1d7;padding:6px 8px;border-radius:5px;font-size:11px}
+.situation-choice button:disabled{opacity:.6}.situation-choice p{margin:6px 0}.situation-choice small{color:#a1d3bc}
+.tip .decision-caution,.decision-caution{color:#c3b28e;font-size:11px;line-height:1.6}.skill-decision small{color:#a9b9c9;font-size:10px}
+.quick-skill span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .estimate-row{color:#bfd1d9;border-left:2px solid #4b797c;padding-left:10px}.estimate-row b{color:#88d9c0;margin-right:6px}.estimate-row span{font-size:10px;color:#7690a5;margin-left:8px}
 .collapsed .quick-reminders span.est-src{display:inline}.estimate-row.danger{color:#f4d1b4;border-color:#8a5a3c}.estimate-row.danger b{color:#e8a06a}
 /* Glanceable combat headline: big verdict + kill lines, detail stays below. */

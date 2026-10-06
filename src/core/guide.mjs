@@ -5,6 +5,9 @@ import {compareAugments} from './hex-compare.mjs';
 import {comboStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
+import {assessSituation,chooseSituationTarget,pinnedSituationItem,situationItemIssue,inventoryFulfillsItem} from './live-situation.mjs';
+import {recommendSkill} from './skill-advice.mjs';
+export {nextSkill} from './skill-advice.mjs';
 import {aggregateCombatStats,applyLivePanel,duel} from './live-estimate.mjs';
 
 const conditions=['ad','ap','control','heal','burst'];
@@ -23,7 +26,7 @@ export function validateDuelPick(value){
 }
 export function validateLoadoutSelection(value){
  const selected={};
- for(const key of ['loadoutId','runeId','comboId'])if(value[key]!==undefined&&value[key]!==null){
+ for(const key of ['loadoutId','runeId','skillId','coreId','comboId'])if(value[key]!==undefined&&value[key]!==null){
   if(typeof value[key]!=='string'||!/^[a-z0-9-]{1,150}$/.test(value[key]))throw Error('玩法或符文选择格式不正确');
   if(value.mode==='rift')selected[key]=value[key];
  }
@@ -31,11 +34,13 @@ export function validateLoadoutSelection(value){
 }
 export function validateGuideSelection(value){
  if(!value||!hero(value.id)||!ROLES.some(r=>r.id===value.role)||!['rift','hex'].includes(value.mode))throw Error('请先选择英雄、位置和模式');
- if(value.coreIndex!==undefined&&(!Number.isInteger(value.coreIndex)||value.coreIndex<0||value.coreIndex>2))throw Error('核心方案格式不正确');
+ if(value.coreIndex!==undefined&&(!Number.isInteger(value.coreIndex)||value.coreIndex<0||value.coreIndex>14))throw Error('核心方案格式不正确');
  if(value.conditions!==undefined&&(!Array.isArray(value.conditions)||value.conditions.length>5||!value.conditions.every(c=>conditions.includes(c))))throw Error('局势选项格式不正确');
  if(value.augmentIds!==undefined&&(!Array.isArray(value.augmentIds)||value.augmentIds.length>5||!value.augmentIds.every(Number.isInteger)))throw Error('强化备选格式不正确');
  for(const [key,max] of [['compareIds',3],['ownedAugmentIds',6]])if(value[key]!==undefined&&(!Array.isArray(value[key])||value[key].length>max||!value[key].every(Number.isInteger)))throw Error('强化比较格式不正确');
- return {id:value.id,role:value.role,mode:value.mode,coreIndex:value.coreIndex||0,conditions:[...new Set(value.conditions||[])],...validateLoadoutSelection(value),augmentIds:value.mode==='hex'?[...new Set(value.augmentIds||[])]:[],...(value.mode==='hex'&&value.compareIds?.length?{compareIds:[...new Set(value.compareIds)]}:{}),...(value.mode==='hex'&&value.ownedAugmentIds?.length?{ownedAugmentIds:[...new Set(value.ownedAugmentIds)]}:{})};
+ const focus={};for(const key of ['threatId','protectId'])if(value[key]){if(!hero(value[key]))throw Error('局势关注英雄格式不正确');if(value.mode==='rift')focus[key]=value[key];}
+ if(value.combatFocus!==undefined&&!['lane','teamfight'].includes(value.combatFocus))throw Error('局势关注格式不正确');if(value.mode==='rift'&&value.combatFocus)focus.combatFocus=value.combatFocus;
+ return {id:value.id,role:value.role,mode:value.mode,coreIndex:value.coreIndex||0,conditions:[...new Set(value.conditions||[])],...focus,...validateLoadoutSelection(value),augmentIds:value.mode==='hex'?[...new Set(value.augmentIds||[])]:[],...(value.mode==='hex'&&value.compareIds?.length?{compareIds:[...new Set(value.compareIds)]}:{}),...(value.mode==='hex'&&value.ownedAugmentIds?.length?{ownedAugmentIds:[...new Set(value.ownedAugmentIds)]}:{})};
 }
 export function validateGuideState(value){
  if(!value)return null;
@@ -44,7 +49,8 @@ export function validateGuideState(value){
  const b=value.bounds,bounds=b&&Number.isInteger(b.x)&&Math.abs(b.x)<30000&&Number.isInteger(b.y)&&Math.abs(b.y)<30000&&Number.isInteger(b.width)&&b.width>=360&&b.width<=640&&Number.isInteger(b.height)&&b.height>=480&&b.height<=1000?{x:b.x,y:b.y,width:b.width,height:b.height}:null;
  const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(m.entered===true?{entered:true}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
  const duelPick=validateDuelPick(value.duelPick);
- return {selection,completedItems,collapsed:value.collapsed===true,ball:value.ball===true,clickThrough:value.clickThrough!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
+ const targetKind=value.purchaseTargetKind==='situation'&&/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTargetKind:'situation'}:{};
+ return {selection,completedItems,collapsed:value.collapsed===true,ball:value.ball===true,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
 }
 export function guideIdentity(selection){
  const s=validateGuideSelection(selection);
@@ -53,7 +59,7 @@ export function guideIdentity(selection){
 export function selectGuide(previous,selection){
  const next=validateGuideSelection(selection);
  const same=previous&&guideIdentity(previous.selection)===guideIdentity(next);
- return {selection:next,completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??true,ball:previous?.ball===true,clickThrough:previous?.clickThrough??true,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
+ return {selection:next,completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??true,ball:previous?.ball===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
 }
 export function reconcileGuide(value,{phase,gameId,live,now=Date.now()}={}){
  const current=validateGuideState(value);if(!current)return {guide:null,reset:false,changed:false};
@@ -73,17 +79,8 @@ export function reconcileGuide(value,{phase,gameId,live,now=Date.now()}={}){
  if(inGame||phase==='GameStart'&&!newSession&&entered)next.entered=true;else if(knownPhase||newSession)delete next.entered;
  if(knownPhase)next.phase=phase;if(id)next.gameId=id;
  if(matchingLive){next.liveAt=live.at;if(Number.isFinite(live.gameTime))next.gameTime=live.gameTime;}
- const guide={...current,match:next,...(reset?{completedItems:[]} :{}),...(newSession?{clickThrough:true,purchaseTarget:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[]}}:{})};
+ const guide={...current,match:next,...(reset?{completedItems:[]} :{}),...(newSession?{clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,protectId:undefined,combatFocus:undefined}}:{})};
  return {guide,reset,changed:reset||next.phase!==before.phase||next.gameId!==before.gameId||next.entered!==before.entered};
-}
-const specialSkills=new Set(['Aphelios','Udyr','Elise','Jayce','Nidalee','Karma']);
-export function nextSkill(champion,priority,first,live){
- if(!live?.matched||specialSkills.has(champion)||!Number.isInteger(live.level)||!['Q','W','E','R'].every(k=>Number.isInteger(live.skills?.[k])))return null;
- const ranks=live.skills,unspent=live.level-Object.values(ranks).reduce((a,b)=>a+b,0);
- if(unspent<1)return null;
- const can=k=>k==='R'?ranks.R<[6,11,16].filter(n=>live.level>=n).length:ranks[k]<Math.min(5,Math.ceil(live.level/2));
- const initial=live.level<=3&&typeof first==='string'?first[live.level-1]:null;
- return (can('R')?'R':initial&&can(initial)?initial:[...(priority||'')].find(k=>'QWE'.includes(k)&&can(k)))||null;
 }
 const clean=v=>String(v??'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/@[^@]+@/g,'〔动态数值〕');
 const item=i=>({id:String(i.id),name:i.name,cost:i.gold.total,description:clean(i.description),...(i.purchaseBase?{purchaseBase:{id:String(i.purchaseBase.id),name:i.purchaseBase.name,cost:i.purchaseBase.gold.total}}:{})});
@@ -95,17 +92,29 @@ export function createGuideModel(data,value,live=null,current=null){
  const route=build.items.map(item),validIds=new Set(route.map(i=>i.id));
  const completedItems=guide.completedItems.filter(id=>validIds.has(id));
  const mismatch=guideMismatch(s,current),liveStatus=mismatch?{matched:false,kind:mismatch,reason:mismatch==='role'?'当前位置已变化，请换入当前英雄与位置':'当前选择与这份方案不同，请重新确认'}:liveGuideStatus(live,s),matched=liveStatus.matched,inventory=Array.isArray(live?.inventory)?live.inventory:[],purchase=purchasePlan(route,data.items,matched?inventory:[],matched?live.gold:null);
- const autoCompletedItems=matched?purchase.filter(i=>i.owned).map(i=>i.id):[];
+ const autoCompletedItems=matched?purchase.filter(i=>i.owned||inventoryFulfillsItem({data,id:i.id,inventory})).map(i=>i.id):[];
  const runeNames=new Map(data.runes.flatMap(t=>t.slots.flatMap(slot=>slot.runes.map(r=>[r.id,r.name]))));
  const referenceIds=build.reference?.augmentIds||[];
  const augmentIds=s.augmentIds.length?s.augmentIds:referenceIds.slice(0,5);
  const augments=augmentIds.map(id=>data.augments.find(a=>a.id===id)).filter(Boolean).map(a=>({id:a.id,name:a.name,rarity:a.rarity,description:a.description,status:a.descriptionStatus||'complete'}));
- const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id))||null;
- const choices=[...new Map([...route,...build.early.map(item)].map(i=>[i.id,i])).values()];
- const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':'提前应对',owned:matched&&purchasePlan([i],data.items,inventory,live.gold)[0].owned}));
- const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&(matched||!completedItems.includes(i.id)));
- const next=chosen||mainNext,targetPlan=next?purchasePlan([next],data.items,matched?inventory:[],matched?live.gold:null)[0]:null;
+ const itemIssue=i=>matched?situationItemIssue({data,id:i.id,inventory}):null;
+ const routeBlocked=route.filter(i=>!autoCompletedItems.includes(i.id)&&itemIssue(i)).map(i=>({id:i.id,name:i.name,reason:itemIssue(i)}));
+ const targetBlockedReason=guide.purchaseTarget?itemIssue({id:guide.purchaseTarget}):null;
+ const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
+ const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
+ const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
+ const choices=[...new Map([...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
+ const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:matched&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));
+ const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&!i.blockedReason&&(matched||!completedItems.includes(i.id)));
+ // Route-wide allocation is retained for display, but earlier blocked goals
+ // must not reserve the components needed for the actual next purchase.
+ const mainPurchase=matched&&mainNext?purchasePlan([mainNext],data.items,inventory,live.gold):[];
+ const suggested=matched?chooseSituationTarget({situation,mainNext,purchase:mainPurchase,gold:live.gold}):null;
+ const next=chosen||(suggested?choices.find(i=>i.id===suggested.id):null)||mainNext,targetPlan=next?purchasePlan([next],data.items,matched?inventory:[],matched?live.gold:null)[0]:null;
  const liveModel=matched?{matched:true,gold:live.gold,level:live.level,skills:live.skills,inventory:live.inventory,gameTime:live.gameTime,at:live.at}:liveStatus;
+ const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,orderReason:build.selectedSkill?.when,live:liveModel,signals:situation.signals,custom:!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
+ const nextCandidate=situation.candidates.find(c=>c.id===next?.id);
+ const nextReason=nextCandidate?.reason||`${chosen?'保留你选择的回城目标。'+(pinned?'当前公开数据不再触发这项自动建议，你仍可手动保留或更换。':''):'继续你选择的成装方案。'}${targetPlan?.credit?`已持有组件抵扣约 ${targetPlan.credit} 金，优先利用已有投入。`:''}${build.adjustments.length?build.adjustments[0].text:''}`;
  const ownChampion=data.champions.find(c=>c.id===s.id);
  const enemySnapshots=matched&&Array.isArray(live.enemies)?live.enemies:[];
  const allySnapshots=matched&&Array.isArray(live.allies)?live.allies:[];
@@ -133,7 +142,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const action=matched?purchaseAction(targetPlan,next,live.gold):null;
  // Custom duel simulator: the user picks one ally side and one enemy side
  // from the live scoreboard feed. Self reuses the live panel; a picked ally
- // falls back to visible items + proxied skill points (disclosed as approx).
+ // falls back to visible items and a disclosed total-skill-point heuristic.
  const customDuel=matched&&ownChampion&&guide.duelPick?.own&&guide.duelPick?.foe?(()=>{
   const book=data.spellbook&&Object.keys(data.spellbook).length?data.spellbook:null;
   const foeSnap=enemySnapshots.find(t=>t.id===guide.duelPick.foe);
@@ -167,8 +176,9 @@ export function createGuideModel(data,value,live=null,current=null){
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
   phase:s.mode==='rift'?gamePhase(liveModel,action,next||null):null,
-  live:liveModel,estimate,customDuel,duelPick:guide.duelPick||null,duelOptions,nextSkill:nextSkill(champion.id,build.priority,build.first,liveModel),
-  priority:build.priority,first:build.first,summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
+  estimate,customDuel,duelPick:guide.duelPick||null,duelOptions,routeBlocked,targetBlockedReason,
+  live:liveModel,nextSkill:skillAdvice.next,skillAdvice,situation,nextReason,nextCaution:nextCandidate?.caution||'静态价格与合成条件以游戏商店为准。',liveAdvice:guide.liveAdvice,automaticTarget:!!(!chosen&&suggested&&suggested.id===next?.id),
+  priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillTitle:build.selectedSkill?.name,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
   title:build.title,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
   rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',comparison:compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key}),

@@ -9,6 +9,7 @@ export function comboLoadout(combo,champion,role){
  return combo.loadouts?.[role]||'default';
 }
 export function comboSources(combo){return combo?.sources||[];}
+export function communitySources(combo){return comboSources(combo).filter(s=>s.kind!=='技能依据'&&!s.url.startsWith('https://ddragon.leagueoflegends.com/')&&!s.url.startsWith('https://developer.riotgames.com/'));}
 export function mechanismRuneKeys(buildKey,champion,role){
  if(['Samira','Nilah'].includes(champion.id))return ['conqueror','press'];
  if(champion.id==='Jhin')return ['fleet'];

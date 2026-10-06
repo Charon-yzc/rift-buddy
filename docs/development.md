@@ -37,6 +37,7 @@ pnpm start
 | 选人界面和用户操作 | `src/app.mjs`、`src/draft-*.mjs` | `src/styles.css`、`src/draft.css` |
 | 推荐范围、拖动、客户端选人合并 | `src/core/draft.mjs`、`src/core/recommend.mjs` | `src/core/rules.mjs`、`src/recommend-worker.mjs` |
 | 组合库、导入与回退 | `src/core/catalog.mjs` | `src/core/catalog-data.json`、`services/catalog-store.mjs` |
+| 组合资料依赖与待复核清单 | `src/core/catalog-review.mjs` | `services/data.mjs`、`src/catalog-view.mjs` |
 | 出装、符文和本局准备 | `src/core/builds.mjs`、`src/core/loadouts.mjs` | `src/core/preparation.mjs`、`src/build-options-view.mjs` |
 | 局内指引与窗口 | `electron/guide-window.cjs`、`src/guide.mjs` | `src/core/guide.mjs`、`src/core/purchase.mjs`、`src/core/guide-stage.mjs` |
 | 客户端与局内公开接口 | `services/lcu.mjs`、`services/live-client.mjs` | `services/client-helper.mjs`、`services/helper-launch.mjs` |
@@ -66,10 +67,12 @@ node scripts/smoke-package-lifecycle.mjs
 | --- | --- |
 | 选人、拖动、推荐 | `node scripts/smoke-package-draft.mjs` |
 | 多套配置、组合符文 | `node scripts/smoke-package-loadouts.mjs` |
+| 扩充数据、核心路线、技能节点与收藏同步 | `node scripts/smoke-package-database.mjs` |
 | 组合库编辑、导入、回退 | `node scripts/smoke-package-catalog.mjs` |
 | 配置从选人带入指引 | `node scripts/smoke-package-journey.mjs` |
 | 跨局、客户端阶段切换 | `node scripts/smoke-package-game-transition.mjs` |
 | 指引窗口、鼠标交互 | `node scripts/smoke-package-guide.mjs`、`node scripts/smoke-package-guide-input.mjs` |
+| 实时局势装备、技能建议与理由 | `node scripts/smoke-package-live-situation.mjs` |
 | 独立连接助手 | `node scripts/smoke-package-helper.mjs` |
 
 这些验收使用隔离设置和模拟数据；连接助手的默认验收不读取真实客户端，不触发提权。不要在自动化中添加 `--read-client` 或自动真实符文应用。带 `smoke-package-` 前缀的界面脚本通常使用开发 Electron 加载归档中的代码，`lifecycle` 实际启动完整 exe，`helper` 启动打包的独立连接进程。部分脚本依赖 `release/latest.json`，请先完成打包。
@@ -86,9 +89,19 @@ GitHub Actions 在 Windows 中运行安装、开发 Electron 启动检查、回�
 4. 手动购买、卖出一件装备并加点，检查指引识别实际变化。分别验证接口不可用时的手动标记、窗口交互与全屏快捷键。
 5. 结束本局后检查指引的结束行为，再选择另一英雄，确认不会继承上一局配置。真实符文应用另行由测试者主动点击，确认仅触及助手自己的符文页。
 
+局势建议另需检查：双方队伍可确认时，已展示装备变化能否触发、撤销对应建议；本次回城目标和自动建议开关是否保留；当前等级与技能点是否同步。不要把对手装备投入当成实测伤害来源或经济领先。只有一人的训练房间没有真实敌方装备样本，不能作为整套局势规则的实战验收。
+
 记录软件版本、客户端阶段和实际完成的项目即可；未完成的步骤保留为待验证。不要上传个人设置、完整接口响应、客户端凭据或带有玩家身份的截图。
 
 ## 维护组合与版本资料
+
+局势功能的后续设计见 [局势装备与技能推荐调研和实现方案](live-situation-research.md)。其中记录了近期产品、固定提交的源码、论文和社区资料，并列出当前代码待修正的版本机制；它是开发方案，不代表这些修正已经实现。
+
+进一步的数据核查、组合配置和机制规格见 [一小时补充调研](live-situation-research-supplement.md)。其中的复现说明和场景可用于后续修复验收；统计来源、游戏模式和规则验证版本需要分别维护。
+
+局势规则在 `src/core/live-situation.mjs`，技能规则在 `src/core/skill-advice.mjs`。数据入口继续使用 Riot [Live Client Data API](https://developer.riotgames.com/docs/lol#game-client-api_live-client-data-api) 的三个只读端点，只保留英雄、己方金币和技能等级、双方公开装备与战绩；玩家身份、位置坐标、敌方经济和冷却不进入推荐模型，也不持久化。队伍未知或数据过期时停止自动分析。
+
+技能机制已对照 Riot [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon) `16.19.1` 对应英雄的技能描述；规则维护时应同时复核护盾、冷却、伤害类型和特殊加点限制。更新游戏资料不会自动证明旧规则仍有效。当前采用明确的触发阈值与机制说明，未训练预测模型，也不计算胜率。扩展自动备选装备后应更新 `SITUATION_ITEMS`，使离线图片进入 `pnpm check` 校验。
 
 组合包位于 `src/core/catalog-data.json`，包含下路组合、三人组合、专用配置和符文方案。字段与复核原则见 [组合库维护说明](../组合库维护说明.txt)。增改条目后运行：
 
@@ -108,12 +121,27 @@ pnpm check
 | 文件 | 用途 | 更新命令 |
 | --- | --- | --- |
 | `data/game.json`、`data/images/` | 英雄、装备、符文、海克斯与图片 | `pnpm sync-data`，随后 `node scripts/enrich-items.mjs` |
+| `data/builds.json` | 按英雄与位置缓存的峡谷参考配置 | `pnpm sync-builds`；强制刷新加 `--refresh` |
 | `data/spells.json` | 全英雄技能数值（斩杀线用） | `pnpm sync-data` 结束时版本不一致自动刷新；也可手动 `pnpm spells:enrich` |
-| `data/builds.json` | 按英雄与位置缓存的峡谷参考配置 | `node scripts/sync-builds.mjs --all-roles` |
 | `data/hex-builds.json` | 海克斯参考配置 | `node scripts/sync-hex-builds.mjs` |
 
 更新命令会访问公开资料来源并修改仓库快照，可能因站点变化、限流或网络问题失败。普通功能开发不要运行它们。更新时在单独分支保留旧快照，检查终端失败计数、来源日期、版本与差异，再完成所有资料检查；脚本执行结束不代表每个来源都成功。`sync-data` 会保留已存在的同名图片，若某个图标确实变化，需要单独核实并更新该图片。新资料不能自动证明旧玩法已重新复核。
 
+### 多方案与依赖复核
+
+峡谷优先解析 OP.GG 指定版本的公开结构化响应，网页只作为备用。每个英雄位置最多保留 15 条去重核心路线、18 套九符文完整页和 5 条合法加点序列；稀有位置可能没有足够数据，不能为凑数量补造。JSON 中后续装备为所有购买顺序的汇总，不能称为第四、第五件装备统计；符文组内使用率也不能当作总体使用率。
+
+汇总后期装备池按样本顺序选择互不冲突的成装候选，排除散件、出门装和辅助任务奖励，填充当前路线保留的装备位；候选不足时保留实际数量，不补造装备。旧网页的各购买顺序分组仍逐组取一项。JSON 请求失败可尝试网页备用来源；明确返回其他版本时拒绝混用资料。
+
+局势建议同时参考所选核心的装备取向；法强不等于魔法伤害，未确认的转换或混合路线保留核心并说明不确定性。已持有互斥装备时，回城目标会暂停并提示核对换装；魔宗至魔切等同链任务升级仍可继续，已持有升级装时原目标视为满足，但不会把成装拆成组件用于金币抵扣。自动改变购买目标前，按当前实际目标单独核算金币和可用组件，避免被已跳过的路线项占用预算。
+
+核心收藏使用装备组合 ID，符文使用完整九符文 ID，加点使用序列 ID。刷新后样本排序改变不应切换原选择；条目消失时提示重新确认。来源加点只覆盖它实际给出的技能点数，后续沿明确的技能优先级，并受实时等级与已加技能限制。组合可用 `skillOrder` 和 `skillReason` 声明早期第二点 Q、延后 R 等节点，不能统一覆盖成“有 R 点 R”。
+
+旧收藏没有加点 ID 时仅匹配该玩法的默认加点；选择其他加点会另存收藏，不取消旧项。默认加点可能是机制优先级而非来源序列首项，需保留这个区别。
+
+`reviewBaseline` 保存技能、装备价格/合成/说明/属性、符文说明的内容指纹。`catalog:audit` 和软件维护面板列出关联变化及待复核组合；即使版本号未变也可识别资料修订。指纹只用于检测变化，不能证明玩法经过验证。修改依赖或完成复核后，维护者可调用 `reviewBaseline(entry,catalog,data)` 重新捕获该条目的基线；不要批量更新旧条目的复核日期。
+
+人工扩充来源保存在 `src/core/expanded-combos.mjs`，`pnpm catalog:expand` 生成经过验证的可读 JSON。该脚本只允许已整理的 16.19，遇到新版本会停止，要求先复核人工内容。基础资料更新、参考出装刷新、人工组合复核分别完成；失败的配置刷新保留最后有效快照。单个英雄位置也可在软件中点击刷新。
 ### 技能估算资料的复核
 
 `data/spells.json` 与 `scripts/enrich-spells.mjs` 是技能公式的实验资料。自动解析存在不完整、条件触发和持续伤害条目，不能把覆盖数量视为逐条验证。生成器不会标记复核完成；只有核实一整套技能的单次施放含义、基础值、系数、特殊加点与条件后，才可手动设置该英雄的 `reviewedForCombat: true`。运行时拒绝版本不匹配、`partial` 或不支持的系数，并保留明确标注的粗略模型。敌方实际技能等级不可读，不从等级构造各技能等级或大招可用状态。

@@ -11,7 +11,7 @@ export async function loadBuilds(roots,data){
   try{const parsed=JSON.parse(await fs.readFile(path.join(root,'builds.json'),'utf8'));
    for(const [key,ref] of Object.entries(parsed.entries||{})){
     const champion=data.champions.find(c=>c.id===ref?.champion);
-    const current=result[key],revision=ref?.runeOptions?.length>1?4:3,currentRevision=current?.runeOptions?.length>1?4:3;
+    const current=result[key],revision=Number(ref?.parserVersion)||3,currentRevision=Number(current?.parserVersion)||3;
     if(champion&&key===`${champion.id}:${ref.role}`&&validReference(ref,champion,ref.role,data)&&(!current||revision>currentRevision||revision===currentRevision&&Date.parse(ref.fetchedAt)>Date.parse(current.fetchedAt)))result[key]=ref;
    }
   }catch{}

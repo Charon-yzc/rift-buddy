@@ -76,13 +76,13 @@ test('Chinese names, nicknames and pinyin are searchable',()=>{
  assert.ok(matchesSearch(hero('Yasuo'),'亚索'));assert.ok(matchesSearch(hero('MissFortune'),'女枪'));assert.ok(matchesSearch(hero('MissFortune'),'mf'));
 });
 
-test('common default positions and champions without boots keep their intended behavior',()=>{
+test('common default positions and current Cassiopeia footwear follow the current patch',()=>{
  assert.equal(profile(hero('Zed')).roles[0],'mid');
  assert.equal(profile(hero('MonkeyKing')).roles[0],'jungle');
  assert.ok(profile(hero('MonkeyKing')).roles.includes('top'));
  for(const mode of ['rift','hex'])for(const conditions of [[],['ad'],['control']]){
   const build=getBuild(hero('Cassiopeia'),'mid',data,{mode,conditions});
-  assert.ok(build.items.every(i=>!i.tags.includes('Boots')));
+  assert.ok(build.items.some(i=>i.tags.includes('Boots')));if(conditions.includes('ad'))assert.equal(build.boots,3047);if(conditions.includes('control'))assert.equal(build.boots,3111);
   assert.equal(build.missing.length,0);
  }
 });

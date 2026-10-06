@@ -16,7 +16,7 @@ const data=JSON.parse(await fs.readFile('data/game.json','utf8')),clone=()=>stru
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const store=async options=>createCatalogStore({root:await fs.mkdtemp(path.join(os.tmpdir(),'buddy-catalog-')),getData:()=>data,...options});
 test('bundled pack has validated independent content and complete playable trio configs',()=>{
- const c=validateCatalog(clone(),data);assert.equal(c.duos.length,155);assert.equal(c.trios.length,50);
+ const c=validateCatalog(clone(),data);assert.ok(c.duos.length>=200);assert.ok(c.trios.length>=68);
  for(const t of c.trios)for(const m of t.members){const b=getBuild(hero(m.champion),m.role,data,{comboId:t.id});assert.equal(b.combo.id,t.id);assert.equal(b.loadoutId,m.loadoutId);assert.equal(b.missing.length,0);assert.ok(b.runeOptions.length>=2,`${t.id}:${m.champion}`);}
 });
 test('pack rejects duplicate heroes, incompatible configs, bad items, rune pages and unsafe sources',()=>{
@@ -24,7 +24,7 @@ test('pack rejects duplicate heroes, incompatible configs, bad items, rune pages
  assert.equal(safeSourceURL('https://user:secret@site.example/file.json'),false);
 });
 test('patch review is per combo and invalid equipment marks only affected configs',()=>{
- const next={...data,patch:'16.20',items:{...data.items}};delete next.items[3142];const combo=BUNDLED_CATALOG.duos.find(d=>d.carry==='Varus'&&d.support==='Ashe');const issues=catalogIssues(clone(),next);assert.equal(issues.stale,205);assert.ok(issues.status[combo.id].invalid);assert.equal(issues.status['jarvan-galio-mf'].invalid,false);assert.ok(issues.errors.length);
+ const next={...data,patch:'16.20',items:{...data.items}};delete next.items[3142];const combo=BUNDLED_CATALOG.duos.find(d=>d.carry==='Varus'&&d.support==='Ashe');const issues=catalogIssues(clone(),next);assert.equal(issues.stale,BUNDLED_CATALOG.duos.length+BUNDLED_CATALOG.trios.length);assert.ok(issues.status[combo.id].invalid);assert.equal(issues.status['jarvan-galio-mf'].invalid,false);assert.ok(issues.errors.length);
  const b=getBuild(hero('Varus'),'bottom',next,{comboId:combo.id});assert.equal(b.loadoutId,'default');assert.ok(b.selectionWarnings.length);
 });
 test('preview is inert, apply/rollback survive restart and retain custom combos',async()=>{

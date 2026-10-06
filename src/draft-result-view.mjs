@@ -13,5 +13,17 @@ export function renderResultCard(r,i,data,saved){
 export function coreRouteChoices(build,index,data){
  if(!build.reference)return '';
  const baseline=build.reference.core[0]?.items||[];
- return `<div class="core-options" aria-label="核心装备方案">${build.reference.core.map((core,i)=>{const names=core.items.map(id=>data.items[id]?.name||'旧版装备'),changed=core.items.filter((id,n)=>id!==baseline[n]).map(id=>data.items[id]?.name||'旧版装备');return `<button class="chip core-option ${index===i?'active':''}" data-action="build-core" data-index="${i}"><b>核心方案 ${i+1}${i===0?' · 默认参考':''}</b><span>${e(names.join(' → '))}</span><small>${i===0?'来源中优先展示的路线，不代表国服匹配最优。':changed.length?'与默认不同：'+e(changed.join('、')):'核心装备相同，查看来源信息。'}${core.samples>0?' · '+core.samples.toLocaleString()+' 场来源样本':''}</small></button>`;}).join('')}</div>`;
+ const choices=build.reference.core.map((core,i)=>{const names=core.items.map(id=>data.items[id]?.name||'旧版装备'),changed=core.items.filter((id,n)=>id!==baseline[n]).map(id=>data.items[id]?.name||'旧版装备');return `<button class="chip core-option ${index===i?'active':''}" data-action="build-core" data-index="${i}"><b>${e(corePurpose(core,data))} · 方案 ${i+1}${i===0?' · 默认参考':''}</b><span>${e(names.join(' → '))}</span><small>${i===0?'来源按使用样本排序，不代表国服匹配最优。':changed.length?'与默认不同：'+e(changed.join('、')):'核心装备相同，查看来源信息。'}${core.samples>0?' · '+core.samples.toLocaleString()+' 场来源样本':''}</small></button>`;});
+ return `<p class="bottom-note">${choices.length} 条不同核心路线；用途标签按装备机制整理，符文与加点可单独选择，不假定统计组合互相绑定。</p><div class="core-options" aria-label="核心装备方案">${choices.slice(0,3).join('')}</div>${choices.length>3?`<details class="more-builds" ${index>=3?'open':''}><summary>更多核心路线 · ${choices.length-3} 条</summary><div class="core-options">${choices.slice(3).join('')}</div></details>`:''}`;
+}
+export function corePurpose(core,data){
+ const ids=core.items,tags=ids.flatMap(id=>data.items[id]?.tags||[]);
+ if(ids.some(id=>[3504,6617,6620,3107,3190,3109].includes(id)))return '团队增益与保护';
+ if(ids.includes(3124)||ids.includes(3115))return '普攻特效';
+ if(tags.filter(t=>t==='CriticalStrike').length>=2)return '普攻暴击';
+ if(ids.some(id=>[3142,6697,3814,6694].includes(id)))return '技能穿甲';
+ if(ids.includes(6653))return '持续法术';
+ if(tags.filter(t=>['Armor','SpellBlock'].includes(t)).length>=2)return '防御与承伤';
+ if(tags.filter(t=>t==='SpellDamage').length>=2)return '法术输出';
+ return '基础输出与功能';
 }
