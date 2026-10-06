@@ -42,15 +42,17 @@ document.addEventListener('click',async event=>{
  if(target.dataset.tab){tab=target.dataset.tab;render();return;}
  // The floating ball lives on a draggable region: a real drag must move the
  // window, never toggle it. Only a near-stationary press counts as a click.
- if(target.dataset.action==='ball'&&downPos&&Math.hypot(event.clientX-downPos[0],event.clientY-downPos[1])>6)return;
+ if(target.dataset.action==='ball'){const moved=dragMoved;dragMoved=false;if(moved)return;}
  target.disabled=true;
  try{const result=await api.control(target.dataset.action,target.dataset.id);if(result?.model!==undefined){snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
 document.addEventListener('change',async event=>{const actions={'guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')api.control('hide').catch(error=>toast(error.message));});
-let hoverHeader=false,downPos=null;
-document.addEventListener('mousedown',event=>{downPos=[event.clientX,event.clientY];});
+let hoverHeader=false,downPos=null,dragMoved=false;
+document.addEventListener('mousedown',event=>{downPos=[event.screenX,event.screenY];dragMoved=false;});
+document.addEventListener('mousemove',event=>{if(event.buttons&&downPos&&Math.hypot(event.screenX-downPos[0],event.screenY-downPos[1])>6)dragMoved=true;});
+document.addEventListener('mouseup',()=>{setTimeout(()=>{dragMoved=false;downPos=null;},0);});
 function trackHeaderHover(event){
  // mousemove still reaches the page while the window passes clicks through
  // (forward:true). Report header hover on change only, so the main process

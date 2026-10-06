@@ -26,7 +26,13 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
    win.setMinimumSize(BALL_SIZE,BALL_SIZE);win.setSize(BALL_SIZE,BALL_SIZE);
    const area=screen.getDisplayMatching(win.getBounds()).workArea,b=win.getBounds();
    win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-BALL_SIZE)),Math.max(area.y,Math.min(b.y,area.y+area.height-BALL_SIZE)));
-  }else adjustHeight();
+  }else{
+   const saved=getState()?.bounds;
+   const width=Number.isFinite(saved?.width)?Math.min(Math.max(saved.width,360),640):400;
+   win.setSize(width,win.getSize()[1]);
+   adjustHeight();
+  }
+  win.setResizable(!isBall());
   inputMode();publish();
  }
  function create(){
@@ -35,7 +41,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
   const width=ball?BALL_SIZE:Math.min(saved?.width||400,area.width),height=ball?BALL_SIZE:Math.min(getState()?.collapsed?220:saved?.height||640,area.height);
   win=new BrowserWindow({width,height,minWidth:ball?BALL_SIZE:360,minHeight:ball?BALL_SIZE:getState()?.collapsed?220:480,maxWidth:640,maxHeight:1000,
    x:Math.max(area.x,Math.min(saved?.x??area.x+area.width-440,area.x+area.width-width)),y:Math.max(area.y,Math.min(saved?.y??area.y+40,area.y+area.height-height)),frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,transparent:true,
-   backgroundColor:'#101823',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),
+   backgroundColor:'#101823',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),resizable:!ball,
    webPreferences:{preload:path.join(root,'electron/guide-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   win.setAlwaysOnTop(true,'screen-saver');win.setOpacity(getState()?.opacity||1);inputMode();
   win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
