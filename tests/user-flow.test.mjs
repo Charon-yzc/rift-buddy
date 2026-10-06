@@ -123,7 +123,7 @@ test('live panel beats computed stats and flags lethal danger on current health'
  const model=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),inventory:[{id:'1055',count:1}]});
  assert.equal(model.estimate.liveReal,true);
  assert.equal(model.estimate.curHp,400);
- assert.equal(typeof model.estimate.danger,'boolean');
+ assert.equal(model.estimate.danger,true);
  const healthy=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),stats:{...panel,hp:2500,maxHp:2500},inventory:[]});
  assert.equal(healthy.estimate.danger,false);
 });
@@ -136,6 +136,7 @@ test('estimate output carries no identities and copy stays estimation language',
  const dumped=JSON.stringify(model.estimate);
  for(const leak of ['riotId','summonerName','scores','foe','private'])assert.equal(dumped.includes(leak),false);
  assert.deepEqual(Object.keys(model.estimate.enemy).sort(),['id','level','name']);
+ for(const d of model.estimate.duels)assert.deepEqual(Object.keys(d.enemy).sort(),['id','level','name']);
  const html=estimateRows(model);
  for(const word of ['约','估算','反推'])assert.ok(html.includes(word));
  for(const word of ['预测','保证','必杀','必中','购买','建议购买','liveBuy'])assert.equal(html.includes(word),false);

@@ -15,6 +15,8 @@ test('spell book schema is sound and matches the bundled game version',()=>{
   for(const slot of ['Q','W','E','R']){
    const s=slots[slot];
    assert.ok(s&&typeof s.name==='string',`${id}.${slot} missing`);
+   assert.equal(typeof s.nuke,'boolean',`${id}.${slot} nuke flag`);
+   assert.equal(typeof s.partial,'boolean',`${id}.${slot} partial flag`);
    if(s.damage){
     assert.ok(['physical','magic','true'].includes(s.damage.type),`${id}.${slot} type`);
     assert.ok(s.damage.base.length===(slot==='R'?3:5),`${id}.${slot} ranks`);
@@ -71,12 +73,15 @@ test('skill hits use real ranks and ratios, multi-hits multiply',()=>{
 
 test('proxied enemy ranks never exceed level and gate the ultimate',()=>{
  assert.deepEqual(proxySkillRanks(1),{Q:1,W:0,E:0,R:0});
- assert.deepEqual(proxySkillRanks(5),{Q:5,W:0,E:0,R:0});
- assert.deepEqual(proxySkillRanks(6),{Q:5,W:0,E:0,R:1});
+ assert.deepEqual(proxySkillRanks(5),{Q:3,W:2,E:0,R:0});
+ assert.deepEqual(proxySkillRanks(6),{Q:3,W:2,E:0,R:1});
+ assert.deepEqual(proxySkillRanks(11),{Q:5,W:4,E:0,R:2});
  assert.deepEqual(proxySkillRanks(18),{Q:5,W:5,E:5,R:3});
- for(const level of [1,6,9,11,16,18]){
+ for(const level of [1,5,6,9,11,16,18]){
   const r=proxySkillRanks(level);
   assert.ok(r.Q+r.W+r.E+r.R<=level,`level ${level} total`);
+  assert.ok(r.R===0||level>=6,`level ${level} ult gate`);
+  assert.ok([r.Q,r.W,r.E].every(v=>v<=Math.ceil(level/2)),`level ${level} slot cap`);
  }
 });
 

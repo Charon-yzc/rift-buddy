@@ -75,14 +75,16 @@ export function burstDamage(champion,points,agg,level){
 // One skill hit from the enriched spell book. Falls back to 0 (caller uses
 // the heuristic burst) when the champion or slot is missing.
 export function skillHitDamage(spell,rank,agg,baseAd,targetMaxHp){
- if(!spell?.damage||!Number.isInteger(rank)||rank<1)return 0;
- const ad=Number(agg?.ad)||0;
+ if(!spell?.damage||!Array.isArray(spell.damage.base)||!spell.damage.base.length)return 0;
+ if(!Number.isInteger(rank)||rank<1)return 0;
+ const ad=Number(agg?.ad)||0,bad=Number(baseAd);
  const d=spell.damage,r=Math.min(rank,d.base.length)-1;
  let dmg=d.base[r]||0;
  for(const ratio of d.ratios||[]){
-  const c=Array.isArray(ratio.coeff)?ratio.coeff[r]??ratio.coeff.at(-1):ratio.coeff;
+  let c=Array.isArray(ratio.coeff)?ratio.coeff[r]??ratio.coeff.at(-1):ratio.coeff;
+  if(!Number.isFinite(c))continue;
   const bonus=ratio.formula==='bonus';
-  const v=ratio.stat==='ap'?(Number(agg?.ap)||0):ratio.stat==='ad'?(bonus?Math.max(0,ad-baseAd):ad)
+  const v=ratio.stat==='ap'?(Number(agg?.ap)||0):ratio.stat==='ad'?(bonus?Math.max(0,ad-(Number.isFinite(bad)?bad:0)):ad)
    :ratio.stat==='armor'?Number(agg?.armor)||0:ratio.stat==='mr'?Number(agg?.mr)||0
    :ratio.stat==='maxHp'?targetMaxHp||0:0;
   dmg+=c*v;
@@ -91,15 +93,17 @@ export function skillHitDamage(spell,rank,agg,baseAd,targetMaxHp){
  return Math.max(0,Math.round(dmg*Math.max(1,hits||1)));
 }
 // Proxied enemy ranks: total points never exceed level, R gated behind
-// 6/11/16, Q maxed first. Purely a documented stand-in for unknown enemy
-// skill distribution; the UI labels it as such.
+// 6/11/16, and each of Q/W/E capped like a real leveling curve
+// (ceil(level/2), same bound the guide uses for skill hints). Purely a
+// documented stand-in for unknown enemy skill distribution.
 export function proxySkillRanks(level){
  const L=Math.min(Math.max(Math.round(Number(level))||1,1),18);
  const r=L>=16?3:L>=11?2:L>=6?1:0;
+ const cap=Math.ceil(L/2);
  let rest=L-(r>0?r:0);
- const q=Math.min(5,rest);rest-=q;
- const w=Math.min(5,rest);rest-=w;
- const e=Math.min(5,Math.max(0,rest));
+ const q=Math.min(5,cap,rest);rest-=q;
+ const w=Math.min(5,cap,rest);rest-=w;
+ const e=Math.min(5,cap,Math.max(0,rest));
  return {Q:q,W:w,E:e,R:r};
 }
 // Expected auto-attack + a small mix of ability casts per second.

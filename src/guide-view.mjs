@@ -6,9 +6,10 @@ export function estimateRows(m){
  if(!m?.estimate)return '';
  const dir=m.estimate.edge>0.25?'偏你':m.estimate.edge<-0.25?'偏对方':'均势';
  const source=m.estimate.liveReal?'己方实时面板 + 对方公开出装':'对方按出装+等级反推';
- return `<p class="estimate-row"><b>换血倾向</b> ${dir} · 你斩杀约 ${m.estimate.killThreshold} 血 · 对方斩杀约 ${m.estimate.theirKill} 血 <span>${source}；对方技能按等级反推、血量按满血估算${m.estimate.approx?' · 部分为估算':''}</span></p>`
-  +`${m.estimate.danger?`<p class="estimate-row danger"><b>注意</b> 对方 6 秒窗口伤害约 ${m.estimate.theirKill}，已超过你当前 ${m.estimate.curHp} 血</p>`:''}`
-  +`${m.estimate.duels.length>1?`<p class="estimate-row rivals">其余：${m.estimate.duels.slice(1,6).map(d=>`${e(d.enemy.name)}${d.edge>0.25?'偏你':d.edge<-0.25?'偏对方':'均势'}/斩${d.killMine}`).join(' · ')}</p>`:''}`;
+ const duels=Array.isArray(m.estimate.duels)?m.estimate.duels:[];
+ return `<p class="estimate-row"><b>换血倾向</b> ${dir} · 你斩杀约 ${m.estimate.killThreshold} 血 · 对方斩杀约 ${m.estimate.theirKill} 血 <span class="est-src">${source}；对方技能按等级反推、血量按满血估算${m.estimate.approx?' · 部分为估算':''}</span></p>`
+  +`${m.estimate.danger&&m.estimate.curHp!=null?`<p class="estimate-row danger"><b>注意</b> 对方 6 秒窗口伤害约 ${m.estimate.theirKill}，已超过你当前 ${m.estimate.curHp} 血</p>`:''}`
+  +`${duels.length>1?`<p class="estimate-row rivals">其余：${duels.slice(1,6).map(d=>`${e(d.enemy.name)}${d.edge>0.25?'偏你':d.edge<-0.25?'偏对方':'均势'}/斩${d.killMine}`).join(' · ')}</p>`:''}`;
 }
 export function renderGuide(snapshot,tab,isPreview,image){
  const m=snapshot?.model;

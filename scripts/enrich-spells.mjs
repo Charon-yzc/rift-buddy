@@ -34,6 +34,15 @@ const perRank=(values,rank,maxRank)=>{
  if(nums.length===1)return nums[0];
  return null;
 };
+// RCP coefficient arrays are 0-indexed rank arrays with trailing filler
+// (Annie Q cost [60,65,70,75,80,85], Garen R cd [120,100,80,120,120,120]),
+// unlike bin DataValues which carry a dummy at index 0. Never mix the two.
+const perRankRCP=(values,rank,maxRank)=>{
+ if(!Array.isArray(values)||values.length<maxRank)return null;
+ const nums=values.slice(0,maxRank).map(Number);
+ if(nums.some(v=>!Number.isFinite(v)))return null;
+ return nums[rank-1];
+};
 const formulaOf=(mStatFormula,dataValueName='')=>{
  if(/bonus|^BAD/i.test(dataValueName||''))return 'bonus';
  if(mStatFormula===1||mStatFormula===2)return 'bonus';
@@ -42,9 +51,9 @@ const formulaOf=(mStatFormula,dataValueName='')=>{
 };
 
 function parseTypeTags(dynamicDescription=''){
- const out={};
+ const out=[];
  for(const m of String(dynamicDescription).matchAll(/<(physicalDamage|magicDamage|trueDamage)>@(\w+)@/g)){
-  out[m[2]]=m[1]==='physicalDamage'?'physical':m[1]==='magicDamage'?'magic':'true';
+  out.push({calc:m[2],type:m[1]==='physicalDamage'?'physical':m[1]==='magicDamage'?'magic':'true'});
  }
  return out;
 }
@@ -186,18 +195,18 @@ await Promise.all(Array.from({length:6},async()=>{
     const tags=parseTypeTags(spell.dynamicDescription);
     const maxRank=slot==='R'?3:5;
     const bucket=slots[slot];
-    const cooldown=perRank(spell.cooldownCoefficients,1,maxRank)!==null?Array.from({length:maxRank},(_,i)=>perRank(spell.cooldownCoefficients,i+1,maxRank)):null;
-    const cost=perRank(spell.costCoefficients,1,maxRank)!==null?Array.from({length:maxRank},(_,i)=>perRank(spell.costCoefficients,i+1,maxRank)):null;
+    const cooldown=perRankRCP(spell.cooldownCoefficients,1,maxRank)!==null?Array.from({length:maxRank},(_,i)=>perRankRCP(spell.cooldownCoefficients,i+1,maxRank)):null;
+    const cost=perRankRCP(spell.costCoefficients,1,maxRank)!==null?Array.from({length:maxRank},(_,i)=>perRankRCP(spell.costCoefficients,i+1,maxRank)):null;
     let damage=null,calcName=null,partial=false;
     if(bucket){
-     const tagged=Object.keys(tags)[0]||null;
+     const tagged=tags[0]?.calc||null;
      const mageLike=(Number(c.info?.magic)||0)>=(Number(c.info?.attack)||0)+2;
-     const resolved=resolveCalc(bucket.objs,tagged,maxRank,tagged?tags[tagged]:null,`${c.id}.${slot}`,unresolved,mageLike);
+     const resolved=resolveCalc(bucket.objs,tagged,maxRank,tagged?tags.find(t=>t.calc===tagged)?.type:null,`${c.id}.${slot}`,unresolved,mageLike);
      calcName=resolved.calc;partial=resolved.partial;
-     if(resolved.calc)damage={type:tags[resolved.calc]||null,base:resolved.base,ratios:resolved.ratios};
+     if(resolved.calc)damage={type:tags.find(t=>t.calc===resolved.calc)?.type||null,base:resolved.base,ratios:resolved.ratios};
      if(damage&&!damage.type){damage=null;partial=true;}
      if(tagged&&!resolved.calc)partial=true; // tagged nuke exists but unparseable
-     if(Object.keys(tags).length>1)partial=true; // multi-segment (out+return), first only
+     if(tags.length>1)partial=true; // multi-segment (out+return), first only
      if(damage){
       // Multi-hit skills (Garen E spins): multiply by the machine-readable
       // strike count from a sibling calc instead of counting one hit.
@@ -211,20 +220,32 @@ await Promise.all(Array.from({length:6},async()=>{
         }
         return v;
        });
-       if(hits.every(v=>Number.isInteger(v)&&v>=1&&v<=30))damage.hits=hits;
+       if(hits.every(v=>Number.isInteger(v)&&v>=1&&v<=30)){damage.hits=hits;break;}
       }
+      if(damage.hits&&damage.hits.length!==damage.base.length){delete damage.hits;partial=true;}
      }
     }
-    out[slot]={name:spell.name||slot,cooldown,cost,calc:calcName,damage,partial,nuke:Object.keys(tags).length>0};
+    out[slot]={name:spell.name||slot,cooldown,cost,calc:calcName,damage,partial,nuke:tags.length>0};
    }
    champions[c.id]=out;
   }catch(error){failures.push(`${c.id}: ${error.message}`);}
  }
 }));
 const withDamage=Object.values(champions).filter(s=>Object.values(s).some(v=>v?.damage)).length;
+// Pinned live values: trip the gate if the parser silently shifts a whole
+// field class (this once moved every cooldown/cost by one rank).
+const PINNED=[
+ ['Annie','Q',{cost:[60,65,70,75,80]}],
+ ['Garen','R',{cooldown:[120,100,80]}],
+ ['Jinx','W',{cooldown:[8,7,6,5,4]}],
+];
+const pinFailures=[];
+for(const [id,slot,expect] of PINNED)for(const [field,nums] of Object.entries(expect)){
+ if(JSON.stringify(champions[id]?.[slot]?.[field])!==JSON.stringify(nums))pinFailures.push(`${id}.${slot}.${field}`);
+}
 const maxFailures=Math.max(5,Math.ceil(Object.keys(champions).length*0.1));
-if(failures.length>maxFailures||Object.keys(champions).length<170||withDamage<150){
- console.error(`Spell enrichment below bar (failures ${failures.length}, coverage ${withDamage}/${Object.keys(champions).length}); keeping the previous data/spells.json.`);
+if(failures.length>maxFailures||Object.keys(champions).length<170||withDamage<150||pinFailures.length){
+ console.error(`Spell enrichment below bar (failures ${failures.length}, coverage ${withDamage}/${Object.keys(champions).length}, pins ${pinFailures.join(',')||'ok'}); keeping the previous data/spells.json.`);
  process.exitCode=1;
 }else{
  await atomicJSON('data/spells.json',{version:game.version,patch,fetchedAt:new Date().toISOString(),champions,coverage:{champions:Object.keys(champions).length,withDamage},unresolved:[...new Set(unresolved)],failures});
