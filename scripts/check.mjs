@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {getBuild} from '../src/core/builds.mjs';
+import {getBuild,validReference} from '../src/core/builds.mjs';
 import {profile} from '../src/core/rules.mjs';
 import {LOADOUTS} from '../src/core/loadouts.mjs';
 import {BUNDLED_CATALOG,validateCatalog} from '../src/core/catalog.mjs';
@@ -17,6 +17,7 @@ const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 validateCatalog(BUNDLED_CATALOG,data);
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
+for(const [key,ref] of Object.entries(data.builds)){const c=data.champions.find(c=>c.id===ref.champion);if(!c||!validReference(ref,c,ref.role,data))errors.push(`Invalid source reference: ${key}`);}
 const assets=new Set(data.champions.map(c=>`champion/${c.id}.png`));
 for(const id of SITUATION_ITEMS)assets.add(`item/${id}.png`);
 for(const config of LOADOUTS)for(const id of config.champions)for(const role of config.roles){
@@ -26,7 +27,7 @@ for(const config of LOADOUTS)for(const id of config.champions)for(const role of 
  for(const plan of purchasePlan(build.items,data.items))for(const component of [...plan.components,...plan.choices])assets.add(`item/${component.id}.png`);
  for(const spell of build.summoners)assets.add(`spell/${spell}.png`);
 }
-for(const c of data.champions)for(const mode of ['rift','hex'])for(const role of mode==='hex'?[profile(c).roles[0]]:profile(c).roles)for(let coreIndex=0;coreIndex<3;coreIndex++){
+for(const c of data.champions)for(const mode of ['rift','hex'])for(const role of mode==='hex'?[profile(c).roles[0]]:profile(c).roles)for(let coreIndex=0;coreIndex<(mode==='hex'?3:data.builds[`${c.id}:${role}`]?.core.length||1);coreIndex++){
  const build=getBuild(c,role,data,{mode,coreIndex});
  for(const item of [...build.items,...build.start,...build.early]){assets.add(`item/${item.id}.png`);if(item.purchaseBase)assets.add(`item/${item.purchaseBase.id}.png`);}
  for(const plan of purchasePlan(build.items,data.items))for(const component of [...plan.components,...plan.choices])assets.add(`item/${component.id}.png`);

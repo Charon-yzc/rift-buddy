@@ -13,7 +13,7 @@ const conditions=['ad','ap','control','heal','burst'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
 export function validateLoadoutSelection(value){
  const selected={};
- for(const key of ['loadoutId','runeId','comboId'])if(value[key]!==undefined&&value[key]!==null){
+ for(const key of ['loadoutId','runeId','skillId','coreId','comboId'])if(value[key]!==undefined&&value[key]!==null){
   if(typeof value[key]!=='string'||!/^[a-z0-9-]{1,150}$/.test(value[key]))throw Error('玩法或符文选择格式不正确');
   if(value.mode==='rift')selected[key]=value[key];
  }
@@ -21,11 +21,13 @@ export function validateLoadoutSelection(value){
 }
 export function validateGuideSelection(value){
  if(!value||!hero(value.id)||!ROLES.some(r=>r.id===value.role)||!['rift','hex'].includes(value.mode))throw Error('请先选择英雄、位置和模式');
- if(value.coreIndex!==undefined&&(!Number.isInteger(value.coreIndex)||value.coreIndex<0||value.coreIndex>2))throw Error('核心方案格式不正确');
+ if(value.coreIndex!==undefined&&(!Number.isInteger(value.coreIndex)||value.coreIndex<0||value.coreIndex>14))throw Error('核心方案格式不正确');
  if(value.conditions!==undefined&&(!Array.isArray(value.conditions)||value.conditions.length>5||!value.conditions.every(c=>conditions.includes(c))))throw Error('局势选项格式不正确');
  if(value.augmentIds!==undefined&&(!Array.isArray(value.augmentIds)||value.augmentIds.length>5||!value.augmentIds.every(Number.isInteger)))throw Error('强化备选格式不正确');
  for(const [key,max] of [['compareIds',3],['ownedAugmentIds',6]])if(value[key]!==undefined&&(!Array.isArray(value[key])||value[key].length>max||!value[key].every(Number.isInteger)))throw Error('强化比较格式不正确');
- return {id:value.id,role:value.role,mode:value.mode,coreIndex:value.coreIndex||0,conditions:[...new Set(value.conditions||[])],...validateLoadoutSelection(value),augmentIds:value.mode==='hex'?[...new Set(value.augmentIds||[])]:[],...(value.mode==='hex'&&value.compareIds?.length?{compareIds:[...new Set(value.compareIds)]}:{}),...(value.mode==='hex'&&value.ownedAugmentIds?.length?{ownedAugmentIds:[...new Set(value.ownedAugmentIds)]}:{})};
+ const focus={};for(const key of ['threatId','protectId'])if(value[key]){if(!hero(value[key]))throw Error('局势关注英雄格式不正确');if(value.mode==='rift')focus[key]=value[key];}
+ if(value.combatFocus!==undefined&&!['lane','teamfight'].includes(value.combatFocus))throw Error('局势关注格式不正确');if(value.mode==='rift'&&value.combatFocus)focus.combatFocus=value.combatFocus;
+ return {id:value.id,role:value.role,mode:value.mode,coreIndex:value.coreIndex||0,conditions:[...new Set(value.conditions||[])],...focus,...validateLoadoutSelection(value),augmentIds:value.mode==='hex'?[...new Set(value.augmentIds||[])]:[],...(value.mode==='hex'&&value.compareIds?.length?{compareIds:[...new Set(value.compareIds)]}:{}),...(value.mode==='hex'&&value.ownedAugmentIds?.length?{ownedAugmentIds:[...new Set(value.ownedAugmentIds)]}:{})};
 }
 export function validateGuideState(value){
  if(!value)return null;
@@ -63,7 +65,7 @@ export function reconcileGuide(value,{phase,gameId,live,now=Date.now()}={}){
  if(inGame||phase==='GameStart'&&!newSession&&entered)next.entered=true;else if(knownPhase||newSession)delete next.entered;
  if(knownPhase)next.phase=phase;if(id)next.gameId=id;
  if(matchingLive){next.liveAt=live.at;if(Number.isFinite(live.gameTime))next.gameTime=live.gameTime;}
- const guide={...current,match:next,...(reset?{completedItems:[]} :{}),...(newSession?{clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[]}}:{})};
+ const guide={...current,match:next,...(reset?{completedItems:[]} :{}),...(newSession?{clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,protectId:undefined,combatFocus:undefined}}:{})};
  return {guide,reset,changed:reset||next.phase!==before.phase||next.gameId!==before.gameId||next.entered!==before.entered};
 }
 const clean=v=>String(v??'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/@[^@]+@/g,'〔动态数值〕');
@@ -90,13 +92,13 @@ export function createGuideModel(data,value,live=null,current=null){
  const suggested=matched?chooseSituationTarget({situation,mainNext,purchase,gold:live.gold}):null;
  const next=chosen||(suggested?choices.find(i=>i.id===suggested.id):null)||mainNext,targetPlan=next?purchasePlan([next],data.items,matched?inventory:[],matched?live.gold:null)[0]:null;
  const liveModel=matched?{matched:true,gold:live.gold,level:live.level,skills:live.skills,inventory:live.inventory,gameTime:live.gameTime,at:live.at}:liveStatus;
- const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,live:liveModel,signals:situation.signals,custom:!!build.combo||build.loadoutId!=='default'});
+ const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,orderReason:build.selectedSkill?.when,live:liveModel,signals:situation.signals,custom:!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
  const nextCandidate=situation.candidates.find(c=>c.id===next?.id);
  const nextReason=nextCandidate?.reason||`${chosen?'保留你选择的回城目标。'+(pinned?'当前公开数据不再触发这项自动建议，你仍可手动保留或更换。':''):'继续你选择的成装方案。'}${targetPlan?.credit?`已持有组件抵扣约 ${targetPlan.credit} 金，优先利用已有投入。`:''}${build.adjustments.length?build.adjustments[0].text:''}`;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action:matched?purchaseAction(targetPlan,next,live.gold):null,
   live:liveModel,nextSkill:skillAdvice.next,skillAdvice,situation,nextReason,nextCaution:nextCandidate?.caution||'静态价格与合成条件以游戏商店为准。',liveAdvice:guide.liveAdvice,automaticTarget:!!(!chosen&&suggested&&suggested.id===next?.id),
-  priority:build.priority,first:build.first,summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
+  priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillTitle:build.selectedSkill?.name,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
   title:build.title,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
   rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',comparison:compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key}),

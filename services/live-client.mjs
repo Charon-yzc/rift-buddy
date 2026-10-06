@@ -12,7 +12,7 @@ export function liveRequest(route){
 }
 const score=n=>Number.isInteger(n)&&n>=0&&n<=10000?n:null;
 const scores=p=>Object.fromEntries(['kills','deaths','assists','creepScore'].map(k=>[k,score(p?.scores?.[k])]));
-const inventoryOf=p=>Array.isArray(p?.items)?p.items.filter(i=>Number.isInteger(i?.itemID)&&i.itemID>0&&Number.isInteger(i.count)&&i.count>0).map(i=>({id:String(i.itemID),count:Math.min(i.count,6)})).slice(0,12):[];
+const inventoryOf=p=>Array.isArray(p?.items)?p.items.filter(i=>Number.isInteger(i?.itemID)&&i.itemID>0&&Number.isInteger(i.count)&&i.count>0).map(i=>({id:String(i.itemID),count:Math.min(i.count,6),...(Number.isInteger(i.slot)&&i.slot>=0&&i.slot<=11?{slot:i.slot}:{})})).slice(0,12):[];
 const championOf=(p,champions)=>champions.find(c=>c.id.toLowerCase()===String(p?.rawChampionName||'').replace(/^game_character_displayname_/,'').toLowerCase());
 const positionOf=p=>({TOP:'top',JUNGLE:'jungle',MIDDLE:'mid',BOTTOM:'bottom',UTILITY:'support'})[p?.position]||null;
 export function sanitizeLive(active,players,stats,champions,game={}){
@@ -39,7 +39,7 @@ const mode=identifyMode({...stats,...game,...(mapId===null?{}:{mapId}),gameMode}
  return {available:true,champion:champion.id,inventory,gold:Number.isFinite(active.currentGold)?Math.max(0,Math.floor(active.currentGold)):null,
   level:Number.isInteger(active.level)&&active.level>=1&&active.level<=30?active.level:null,
   skills:Object.fromEntries(['Q','W','E','R'].map(key=>{const level=active.abilities?.[key]?.abilityLevel;return [key,Number.isInteger(level)&&level>=0&&level<=10?level:null];})),
-  scores:scores(own),roster,teamKnown,
+  scores:scores(own),roster,teamKnown,position:positionOf(own),queueId:Number.isInteger(game?.queueId)?game.queueId:null,
   gameTime:Number.isFinite(stats?.gameTime)&&stats.gameTime>=0?stats.gameTime:null,mapId,mode,at:Date.now()};
 }
 export async function liveSnapshot(champions,game={},request=liveRequest){

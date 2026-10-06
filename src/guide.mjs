@@ -18,8 +18,9 @@ const api=window.guide||{
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
   if(action==='purchase-target'){s.purchaseTarget=value||undefined;s.purchaseTargetKind=snapshot.model.shoppingTargets.find(i=>i.id===value)?.kind==='局势备选'?'situation':undefined;}if(action==='stage')s.stage=value==='auto'?undefined:value;
+  if(['threatId','protectId','combatFocus'].includes(action))s.selection[action]=value||undefined;
   if(action==='live-advice')s.liveAdvice=s.liveAdvice===false;
-  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball')s.ball=!s.ball;
+  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];delete s.selection.threatId;delete s.selection.protectId;delete s.selection.combatFocus;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball')s.ball=!s.ball;
   if(action==='copy'){toast('桌面版支持复制');return true;}
   return {...snapshot,ball:!!s.ball,model:createGuideModel(window.previewGuideData,s)};
  },
@@ -48,7 +49,7 @@ document.addEventListener('click',async event=>{
  try{const result=await api.control(target.dataset.action,target.dataset.id);if(result?.model!==undefined){snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
-document.addEventListener('change',async event=>{const actions={'guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
+document.addEventListener('change',async event=>{const actions={'guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage','guide-threat':'threatId','guide-protect':'protectId','guide-focus':'combatFocus'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')api.control('hide').catch(error=>toast(error.message));});
 let hoverHeader=false,downPos=null;
 document.addEventListener('mousedown',event=>{downPos=[event.clientX,event.clientY];});

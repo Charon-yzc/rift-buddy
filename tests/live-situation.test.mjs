@@ -95,7 +95,7 @@ test('defensive shoes alone are insufficient evidence for a percentage penetrati
 });
 
 test('skill advice changes support protection with an explanation and honors a dedicated combo plan',()=>{
- const live={matched:true,level:7,skills:{Q:1,W:1,E:3,R:1}},signals=[{kind:'magic',evidence:'两名对手展示了法强装备'}];
+ const live={matched:true,level:7,skills:{Q:1,W:1,E:3,R:1}},signals=[{kind:'magic',source:'manual',evidence:'两名对手展示了法强装备'}];
  const advice=recommendSkill({champion:'Lux',role:'support',priority:'EQW',first:'EQW',live,signals});
  assert.equal(advice.base,'E');assert.equal(advice.next,'W');assert.equal(advice.changed,true);assert.match(advice.reason,/曲光屏障/);assert.match(advice.caution,/清线/);
  const combo=recommendSkill({champion:'Lux',role:'support',priority:'EQW',live,signals,custom:true});assert.equal(combo.next,'E');assert.match(combo.reason,/专用玩法/);

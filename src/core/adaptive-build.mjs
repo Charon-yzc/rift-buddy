@@ -3,7 +3,7 @@ import {itemConflicts} from './mechanics.mjs';
 // Conditions come from the user, never from inferred or hidden enemy information.
 export function adaptEquipment({items=[],boots=null,late=[],key,support,champion,conditions=[],data,map='11'}) {
  const activeConditions=Array.isArray(conditions)?conditions:[];
- let core=[...items],tail=[...late],shoe=champion==='Cassiopeia'?null:boots;
+ let core=[...items],tail=[...late],shoe=boots;
  const required=[];
  const adjustments=[],early=[];
  const available=id=>data.items[id]?.maps?.[map]&&data.items[id]?.inStore&&data.items[id]?.gold?.purchasable!==false;
@@ -23,7 +23,6 @@ export function adaptEquipment({items=[],boots=null,late=[],key,support,champion
  };
  if(activeConditions.includes('ad')&&shoe){shoe=3047;adjustments.push({title:'普攻压力大',text:'鞋子改为铁板靴，针对普攻承伤。'});}
  if(activeConditions.includes('control')&&shoe){shoe=3111;adjustments.push({title:'控制多',text:'鞋子改为水银之靴；同时勾选普攻压力时优先韧性。韧性无法缩短击飞、压制等所有控制。'});}
- if(champion==='Cassiopeia'&&activeConditions.some(c=>['ad','control'].includes(c)))adjustments.push({title:'无法购买鞋子',text:'卡西奥佩娅保持无鞋路线，请用走位和其他防御装备应对。'});
  if(activeConditions.includes('ap'))replace(tank?(support?3190:2504):mage?3102:enchanter?3190:3156,'魔法伤害多','保留前两件配合装备，提前安排魔法防御；对面伤害变化时取消此条件可恢复原路线。');
  // Reserve separate later slots when multiple needs are selected; don't silently undo the previous choice.
  if(activeConditions.includes('heal')){

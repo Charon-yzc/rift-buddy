@@ -28,7 +28,7 @@ function favorite(f){
  }
  if(!hero(f.champion)||!roles.includes(f.role)||!['rift','hex'].includes(f.mode))throw Error('英雄配置收藏格式不正确');
  const hexAug=v=>Array.isArray(v)?[...new Set(v.filter(Number.isInteger))]:[];
- return {...base,champion:f.champion,role:f.role,mode:f.mode,...validateLoadoutSelection(f),coreIndex:Number.isInteger(f.coreIndex)&&f.coreIndex>=0&&f.coreIndex<3?f.coreIndex:0,conditions:Array.isArray(f.conditions)?[...new Set(f.conditions.filter(c=>conditions.includes(c)))]:[],...(f.mode==='hex'?{augmentIds:hexAug(f.augmentIds).slice(0,5),compareIds:hexAug(f.compareIds).slice(0,3),ownedAugmentIds:hexAug(f.ownedAugmentIds).slice(0,6)}:{})};
+ return {...base,champion:f.champion,role:f.role,mode:f.mode,...validateLoadoutSelection(f),coreIndex:Number.isInteger(f.coreIndex)&&f.coreIndex>=0&&f.coreIndex<15?f.coreIndex:0,conditions:Array.isArray(f.conditions)?[...new Set(f.conditions.filter(c=>conditions.includes(c)))]:[],...(f.mode==='hex'?{augmentIds:hexAug(f.augmentIds).slice(0,5),compareIds:hexAug(f.compareIds).slice(0,3),ownedAugmentIds:hexAug(f.ownedAugmentIds).slice(0,6)}:{})};
 }
 export function validateState(value) {
  if(!value||typeof value!=='object'||value.schema!==1)throw new Error('保存内容格式不正确');

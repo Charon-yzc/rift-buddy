@@ -19,7 +19,7 @@ async function run(){
  const boot=()=>js('window.buddy.bootstrap()');
  const capture=async name=>{await js('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage()).toPNG());};
  ipcMain.removeHandler('refresh-build');ipcMain.handle('refresh-build',()=>({updated:false,reason:'测试离线配置'}));
- const initial=await boot();assert.equal(initial.data.catalog.trios.length,50);
+ const initial=await boot();assert.ok(initial.data.catalog.trios.length>=68);
  await click('[data-action=navigate][data-route=settings]');await capture('catalog-manager.png');await click('[data-action=catalog-json]');
  const pack=structuredClone(initial.data.catalog);pack.version='2026.10.05.smoke';pack.name='实测独立组合库';pack.notes='新增三人套路与专用配置。';
  pack.loadouts.push({...pack.loadouts.find(l=>l.id==='trio-ball'),id:'smoke-galio',name:'测试加里奥接团路线',champions:['Galio'],runes:['comet','aftershock']});

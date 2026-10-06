@@ -72,9 +72,15 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
   if(action==='opacity'){if(![0.65,0.85,1].includes(value))throw Error('透明度格式不正确');const result=await save({...current,opacity:value});win.setOpacity(value);return result;}
   if(action==='interaction'){await interact();return payload();}
   if(action==='live-advice')return save({...current,liveAdvice:current.liveAdvice===false});
+  if(['threatId','protectId','combatFocus'].includes(action)){
+   const m=getModel();if(m.mode!=='rift')throw Error('当前模式不使用峡谷关注目标');
+   if(action==='combatFocus'){if(!['lane','teamfight'].includes(value))throw Error('局势关注格式不正确');}
+   else if(value!==''&&!(action==='threatId'?m.situation.enemies:m.situation.allies).some(p=>p.id===value))throw Error('公开英雄列表已变化，请重新选择');
+   return save({...current,selection:{...current.selection,[action]:value||undefined}});
+  }
   if(action==='condition'){if(!['ad','ap','control','heal','burst'].includes(value))throw Error('局势选项不正确');const conditions=current.selection.conditions.includes(value)?current.selection.conditions.filter(c=>c!==value):[...current.selection.conditions,value];return save({...current,selection:{...current.selection,conditions}});}
   if(action==='reset')return save({...current,completedItems:[]});
-  if(action==='new-game'){const result=await save({...current,completedItems:[],clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[]}});inputMode();return result;}
+  if(action==='new-game'){const result=await save({...current,completedItems:[],clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,protectId:undefined,combatFocus:undefined}});inputMode();return result;}
   if(action==='purchase-target'){const target=getModel().shoppingTargets.find(i=>i.id===value&&!i.owned);if(value!==''&&!target)throw Error('目标已变化，请重新选择');return save({...current,purchaseTarget:value||undefined,purchaseTargetKind:target?.kind==='局势备选'?'situation':undefined});}
   if(action==='stage'){if(!['auto','opening','key','later'].includes(value))throw Error('配合阶段不正确');return save({...current,stage:value==='auto'?undefined:value});}
   if(action==='item'){

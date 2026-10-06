@@ -48,6 +48,7 @@ async function run(){
  // Verify a real skill-rationale tab, while keeping game input completely outside the test.
  hero='Lux';role='UTILITY';enemyItems=[3031,6672];
  await js('window.buddy.client(true)');await js('window.buddy.openGuide({id:"Lux",role:"support",mode:"rift"})');
+ await gjs('window.guide.control("condition","burst")');
  await until(async()=>{const m=await model();return m.live.matched&&m.skillAdvice.next==='W'&&m.skillAdvice.changed;},'Protection skill adjustment missing');
  await gjs('document.querySelector("[data-tab=skills]").click()');await until(()=>gjs('document.querySelector(".skill-decision").textContent.includes("曲光屏障")'),'Skill rationale not rendered');
  await fs.writeFile(path.join(root,'skill-reasons.png'),(await guide.webContents.capturePage()).toPNG());

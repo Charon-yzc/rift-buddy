@@ -2,6 +2,7 @@ import {profile, RULES_PATCH, RULES_VERSION, DUOS, TRIOS} from './rules.mjs';
 import {LOADOUT_DATE,LOADOUT_PATCH,RUNE_PLANS,loadoutOptions,comboLoadout,comboSources,mechanismRuneKeys} from './loadouts.mjs';
 import {itemConflicts,runeMechanicIssue} from './mechanics.mjs';
 import {adaptEquipment} from './adaptive-build.mjs';
+import {legalSkillOrder,orderPriority} from './skill-advice.mjs';
 
 const rune = (primary,secondary,ids,shards=[5008,5008,5001])=>({primaryStyleId:primary,subStyleId:secondary,selectedPerkIds:[...ids,...shards]});
 export const SHARDS={5008:'适应之力',5005:'攻击速度',5007:'技能急速',5001:'成长生命值',5010:'移动速度',5011:'生命值',5013:'韧性与减速抗性'};
@@ -46,7 +47,8 @@ export function validReference(ref,champion,role,data) {
   ref.region==='global'&&ref.tier==='emerald_plus'&&Array.isArray(ref.core)&&ref.core.length&&
   ref.core.every(c=>Array.isArray(c.items)&&c.items.length===3&&c.items.every((id,i)=>Number.isInteger(id)&&data.items[id]?.maps?.['11']&&!itemConflicts(id,c.items.slice(0,i))))&&
   validSourceMetadata(ref,data)&&validSourceRows(ref.core,data,'11')&&validSourceRows(ref.boots,data,'11')&&validSourceRows(ref.start,data,'11')&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'11'))&&validateRunePage(ref.runePage,data.runes)&&
-  (ref.runeOptions===undefined||Array.isArray(ref.runeOptions)&&ref.runeOptions.length>0&&ref.runeOptions.length<=6&&ref.runeOptions.every(o=>typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&Number.isFinite(o.samples)&&o.samples>=0&&validateRunePage(o.page,data.runes))));
+  (ref.runeOptions===undefined||Array.isArray(ref.runeOptions)&&ref.runeOptions.length>0&&ref.runeOptions.length<=18&&ref.runeOptions.every(o=>typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&Number.isFinite(o.samples)&&o.samples>=0&&validateRunePage(o.page,data.runes)))&&
+  (ref.skillOptions===undefined||Array.isArray(ref.skillOptions)&&ref.skillOptions.length<=5&&ref.skillOptions.every(o=>typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&legalSkillOrder(o.order)&&Number.isSafeInteger(o.samples)&&o.samples>0)));
 }
 export function validHexReference(ref,champion,data){
  return !!(ref&&ref.schema===1&&ref.mode==='hex'&&ref.champion===champion.id&&ref.patch===data.patch&&ref.region==='global'&&ref.tier==='all'&&
@@ -54,7 +56,7 @@ export function validHexReference(ref,champion,data){
   validSourceMetadata(ref,data)&&validSourceRows(ref.core,data,'12')&&validSourceRows(ref.boots,data,'12')&&validSourceRows(ref.start,data,'12')&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'12'))&&Array.isArray(ref.augmentIds)&&ref.augmentIds.every(Number.isInteger));
 }
 const conflicts=itemConflicts;
-export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,loadoutId,comboId,runeId}={}) {
+export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,runeId,skillId}={}) {
  coreIndex=Number.isInteger(coreIndex)&&coreIndex>=0?coreIndex:0;
  if(!Array.isArray(conditions))conditions=[];
  const p=profile(champion,mode==='hex'?undefined:role);let key=p.build;
@@ -71,6 +73,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(duo?.patch&&duo.patch!==data.patch)selectionWarnings.push(`这套组合整理于 ${duo.patch}，当前资料 ${data.patch}；机制与专用配置待复核。`);
  if(requested!=='default'&&!config)selectionWarnings.push('原玩法不适用于当前英雄或位置，已使用通用配置。');
  if(config)key=config.base;
+ if(config&&data.catalogInfo?.loadoutStatus?.[config.id]?.stale)selectionWarnings.push('这套专用配置关联的资料已变化，请在资料依赖复核中检查后再使用。');
  const t=structuredClone(templates[key]||templates.mage);
  if(champion.id==='Samira'||champion.id==='Nilah'){t.items=[6676,3031,3072];t.runes=rune(8000,8100,[8010,9111,9103,8014,8139,8135],[5005,5008,5001]);}
  if(champion.id==='Yasuo'||champion.id==='Yone')t.runes=rune(8000,8400,[8008,9111,9104,8299,8444,8451],[5005,5008,5001]);
@@ -84,6 +87,8 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const hexCandidate=data.hexBuilds?.[champion.id];
  const standardRef=validReference(candidate,champion,role,data)?candidate:null;
  const ref=variant!=='default'||config?null:mode==='hex'?(validHexReference(hexCandidate,champion,data)?hexCandidate:null):standardRef;
+ if(ref&&coreId){const index=ref.core.findIndex(c=>'core-'+c.items.join('-')===coreId);if(index>=0)coreIndex=index;else{coreIndex=0;selectionWarnings.push('原核心路线不在当前来源中，已回到默认路线，请重新确认。');}}
+ coreIndex=ref?Math.min(coreIndex,ref.core.length-1):0;
  if(ref){
   const core=ref.core[Math.max(0,Math.min(ref.core.length-1,coreIndex))];
   t.items=[...core.items];if(ref.runePage)t.runes=structuredClone(ref.runePage);t.late=[];
@@ -119,23 +124,28 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const addSource=()=>{for(const option of standardRef?.runeOptions|| (standardRef?[{id:`source-${standardRef.runePage.selectedPerkIds.join('-')}`,samples:standardRef.runeSamples||0,page:standardRef.runePage}]:[])){
   const keystone=data.runes.flatMap(tree=>tree.slots[0].runes).find(r=>r.id===option.page.selectedPerkIds[0]);
   const secondary=data.runes.find(tree=>tree.id===option.page.subStyleId);
-  addRune({...option,name:`${keystone?.name||'来源符文'} · ${secondary?.name||''}`,when:config?'同英雄同位置的排位参考，未验证适合这套娱乐组合。':'全球翡翠及以上排位中使用过的完整方案；按对线与打法选择。',source:'OP.GG'});
+  const explanation=Object.values(RUNE_PLANS).find(p=>p.page.selectedPerkIds[0]===option.page.selectedPerkIds[0])?.when;
+  addRune({...option,name:`${keystone?.name||'来源符文'} · ${secondary?.name||''}`,when:(explanation?explanation+' ':'')+(config?'同英雄同位置的排位参考，未验证适合这套娱乐组合。':'全球翡翠及以上排位完整方案；按对线与打法选择。'),source:'OP.GG'});
  }};
  if(mode==='rift'){if(config){addMechanisms();addSource();}else{addSource();addMechanisms();}if(!runeOptions.length)addRune({id:'curated-base',name:'机制基础方案',when:t.tips,source:'机制整理',samples:null,page:t.runes});}
  const chosenRune=runeOptions.find(o=>o.id===runeId)||runeOptions[0];
  if(runeId&&mode==='rift'&&!runeOptions.some(o=>o.id===runeId))selectionWarnings.push('原符文方案已不在当前列表，请重新核对选择。');
+ const skillChoices=mode==='rift'?(standardRef?.skillOptions||[]).filter(o=>legalSkillOrder(o.order)).map(o=>({...o,name:`来源加点 · ${orderPriority(o.order).split('').join(' › ')}`,when:`全球翡翠及以上排位样本 ${o.samples} 场；仅覆盖前 ${o.order.length} 个技能点，不代表这套组合的最优加点。`,source:'OP.GG'})):[];
+ if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,when:config.skillReason||config.why,source:'机制整理',samples:null});
+ const selectedSkill=skillChoices.find(o=>o.id===skillId)||(!config?skillChoices[0]:skillChoices.find(o=>o.source==='机制整理'))||null;
+ if(skillId&&!skillChoices.some(o=>o.id===skillId))selectionWarnings.push('原加点序列已移出当前资料，已回到默认方案。');
  const runePage={...(chosenRune?.page||t.runes),name:`开黑搭子 · ${champion.name}`,current:true};
  const valid=validateRunePage(runePage,data.runes);
  const sampleCount=ref?.core[Math.min(ref.core.length-1,coreIndex)]?.samples||0;
  const sampleText=adaptive.adapted?'原始配置的样本不代表当前调整路线':sampleCount>0?`核心三件套样本 ${sampleCount} 场`:'当前来源未提供这套三件装的样本数';
  const summoners=ref?.summoners||config?.summoners|| (config&&['rengar-bush','pantheon-stun','ap-dive','naafiri-dive'].includes(config.id)?['SummonerFlash','SummonerDot']:config?.id==='farm-tank'?['SummonerFlash','SummonerTeleport']:mode==='hex'?['SummonerFlash','SummonerSnowball']:role==='jungle'?['SummonerFlash','SummonerSmite']:role==='top'?['SummonerFlash','SummonerTeleport']:role==='support'?['SummonerFlash','SummonerExhaust']:role==='bottom'?['SummonerFlash','SummonerBarrier']:['SummonerFlash','SummonerTeleport']);
- return {key,title:ref?(mode==='hex'?'海克斯常用配置':'本版本常用配置'):t.name,champion:champion.id,role,mode,items:equipment,start:t.start.filter(id=>id!==3865).map(resolve).filter(Boolean),granted:support?[data.items[3865]].filter(Boolean):[],boots,adapted:adaptive.adapted,
+ return {key,title:ref?(mode==='hex'?'海克斯常用配置':'本版本常用配置'):t.name,champion:champion.id,role,mode,selectedCoreIndex:coreIndex,selectedCoreId:ref?'core-'+ref.core[coreIndex].items.join('-'):null,items:equipment,start:t.start.filter(id=>id!==3865).map(resolve).filter(Boolean),granted:support?[data.items[3865]].filter(Boolean):[],boots,adapted:adaptive.adapted,
   loadoutId:config?.id||'default',loadoutOptions:availableLoadouts,combo:duo?{id:duo.id,title:duo.name,patch:duo.patch,reviewedAt:duo.reviewedAt,plan:duo.plan,risk:duo.risk,sources:comboSources(duo),preferred,members:duo.members?.filter(m=>m.champion!==champion.id),ownJob:duo.members?.find(m=>m.champion===champion.id&&m.role===role)?.job||null,steps:duo.steps||[],window:duo.window||null,early:duo.early||null,economy:duo.economy||null}:null,runeOptions,selectedRuneId:chosenRune?.id||null,selectedRune:chosenRune||null,selectionWarnings,
   support,early:[...new Set([...(config?.early||ref?.core[Math.min(ref.core.length-1,coreIndex)]?.early||[]),...adaptive.early])].filter(id=>!t.start.includes(id)).map(resolve).filter(Boolean),runePage:valid&&mode==='rift'?runePage:null,runeValid:valid,summoners:summoners.filter(id=>data.spells[id]),
-  priority:config?.priority||ref?.priority||skillOrders[champion.id]||null,first:config?.first||firstLevels[champion.id]||null,tips:mode==='hex'?t.tips.replace(/保留辅助装升级位。|辅助位保留工资装升级位。/g,''):t.tips,adjustments,
-  rulesDate:config?(config.reviewedAt||LOADOUT_DATE):RULES_VERSION,rulesPatch:ref?.patch||(config?(config.patch||LOADOUT_PATCH):RULES_PATCH),stale:!ref&&data.patch!==(config?(config.patch||LOADOUT_PATCH):RULES_PATCH),
+  skillChoices,selectedSkillId:selectedSkill?.id||null,selectedSkill,skillOrder:selectedSkill?.order||null,priority:selectedSkill?orderPriority(selectedSkill.order):config?.priority||ref?.priority||skillOrders[champion.id]||null,first:selectedSkill?.order.slice(0,3)||config?.first||firstLevels[champion.id]||null,tips:mode==='hex'?t.tips.replace(/保留辅助装升级位。|辅助位保留工资装升级位。/g,''):t.tips,adjustments,
+  rulesDate:config?(config.reviewedAt||LOADOUT_DATE):RULES_VERSION,rulesPatch:ref?.patch||(config?(config.patch||LOADOUT_PATCH):RULES_PATCH),stale:!ref&&(data.patch!==(config?(config.patch||LOADOUT_PATCH):RULES_PATCH)||!!data.catalogInfo?.loadoutStatus?.[config?.id]?.stale),
   source:adaptive.adapted?'局势调整路线':ref?'本版本常用配置':config?'组合玩法参考':'机制基础方案',reference:ref,
-  sourceNote:ref?(mode==='hex'?`OP.GG · 全球海克斯大乱斗 · ${ref.patch}。${sampleText}。后续装备按已选强化调整；不是竞技场或普通大乱斗的配置。`:`OP.GG · 全球翡翠及以上排位 · ${ref.patch}。${sampleText}；${chosenRune?.source==='OP.GG'?`所选符文样本 ${chosenRune.samples} 场`:'所选符文为机制整理，无统计样本'}。后续装备按局势调整，娱乐下路的分工可能与常规排位不同。`):config?`按 ${config.patch||LOADOUT_PATCH} 装备与符文整理的玩法参考，复核于 ${config.reviewedAt||LOADOUT_DATE}；社区来源用于玩法启发，不代表国服匹配胜率或最优配置。${chosenRune?.source==='OP.GG'?'当前符文来自同英雄同位置的排位参考，未验证适合这套组合。':''}`:'按英雄定位与技能机制整理；不是统计胜率榜。装备和符文名称随资料版本更新，搭配规则需要独立复核。',
+  sourceNote:ref?(mode==='hex'?`OP.GG · 全球海克斯大乱斗 · ${ref.patch}。${sampleText}。后续装备按已选强化调整；不是竞技场或普通大乱斗的配置。`:`OP.GG · 全球翡翠及以上排位 · ${ref.patch}。${sampleText}；${chosenRune?.source==='OP.GG'?`${chosenRune.samples>0?'所选符文样本 '+chosenRune.samples+' 场':'来源未提供所选完整符文页的样本数'}`:'所选符文为机制整理，无统计样本'}。后续装备按局势调整，娱乐下路的分工可能与常规排位不同。`):config?`按 ${config.patch||LOADOUT_PATCH} 装备与符文整理的玩法参考，复核于 ${config.reviewedAt||LOADOUT_DATE}；社区来源用于玩法启发，不代表国服匹配胜率或最优配置。${chosenRune?.source==='OP.GG'?'当前符文来自同英雄同位置的排位参考，未验证适合这套组合。':''}`:'按英雄定位与技能机制整理；不是统计胜率榜。装备和符文名称随资料版本更新，搭配规则需要独立复核。',
   missing,
  };
 }
@@ -151,7 +161,7 @@ export function buildAsText(build, champion, data) {
   build.runePage?`符文：${build.runePage.selectedPerkIds.map(id=>runeNames.get(id)||SHARDS[id]).join(' / ')}`:build.mode==='hex'?'海克斯模式请以局内强化选择和实际规则为准。':'符文暂不可用，请核对当前资料版本。',
   build.selectedRune?`符文选择：${build.selectedRune.name}；${build.selectedRune.when}`:'',
   build.summoners.length?`召唤师技能：${build.summoners.map(id=>data.spells[id].name).join(' / ')}`:'',
-  build.priority?`加点优先：${build.priority.split('').join(' > ')}；常规英雄有 R 点 R，一级技能按对线或入侵调整。`:'',
+  build.skillOrder?`加点节点（前 ${build.skillOrder.length} 个技能点）：${build.skillOrder.split('').join(' > ')}；${build.selectedSkill?.when||'根据实时已点技能继续补齐。'}`:build.priority?`加点优先：${build.priority.split('').join(' > ')}；常规英雄通常优先 R，一级技能按对线或入侵调整。`:'',
   ...build.adjustments.map(a=>`${a.title}：${a.text}`),
   build.tips,
   `${build.source}，参考版本 ${build.rulesPatch}。`,build.sourceNote,

@@ -1,7 +1,7 @@
 import {validateGuideSelection} from './guide.mjs';
 
 const key=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
-export const CONFIGURATION_FIELDS=['coreIndex','conditions','loadoutId','runeId','comboId'];
+export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','skillId','comboId'];
 export function configurationPatch(previous,next){
  return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next?.[field]));
 }

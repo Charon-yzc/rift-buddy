@@ -37,6 +37,7 @@ pnpm start
 | 选人界面和用户操作 | `src/app.mjs`、`src/draft-*.mjs` | `src/styles.css`、`src/draft.css` |
 | 推荐范围、拖动、客户端选人合并 | `src/core/draft.mjs`、`src/core/recommend.mjs` | `src/core/rules.mjs`、`src/recommend-worker.mjs` |
 | 组合库、导入与回退 | `src/core/catalog.mjs` | `src/core/catalog-data.json`、`services/catalog-store.mjs` |
+| 组合资料依赖与待复核清单 | `src/core/catalog-review.mjs` | `services/data.mjs`、`src/catalog-view.mjs` |
 | 出装、符文和本局准备 | `src/core/builds.mjs`、`src/core/loadouts.mjs` | `src/core/preparation.mjs`、`src/build-options-view.mjs` |
 | 局内指引与窗口 | `electron/guide-window.cjs`、`src/guide.mjs` | `src/core/guide.mjs`、`src/core/purchase.mjs`、`src/core/guide-stage.mjs` |
 | 客户端与局内公开接口 | `services/lcu.mjs`、`services/live-client.mjs` | `services/client-helper.mjs`、`services/helper-launch.mjs` |
@@ -66,6 +67,7 @@ node scripts/smoke-package-lifecycle.mjs
 | --- | --- |
 | 选人、拖动、推荐 | `node scripts/smoke-package-draft.mjs` |
 | 多套配置、组合符文 | `node scripts/smoke-package-loadouts.mjs` |
+| 扩充数据、核心路线、技能节点与收藏同步 | `node scripts/smoke-package-database.mjs` |
 | 组合库编辑、导入、回退 | `node scripts/smoke-package-catalog.mjs` |
 | 配置从选人带入指引 | `node scripts/smoke-package-journey.mjs` |
 | 跨局、客户端阶段切换 | `node scripts/smoke-package-game-transition.mjs` |
@@ -119,10 +121,20 @@ pnpm check
 | 文件 | 用途 | 更新命令 |
 | --- | --- | --- |
 | `data/game.json`、`data/images/` | 英雄、装备、符文、海克斯与图片 | `pnpm sync-data`，随后 `node scripts/enrich-items.mjs` |
-| `data/builds.json` | 按英雄与位置缓存的峡谷参考配置 | `node scripts/sync-builds.mjs --all-roles` |
+| `data/builds.json` | 按英雄与位置缓存的峡谷参考配置 | `pnpm sync-builds`；强制刷新加 `--refresh` |
 | `data/hex-builds.json` | 海克斯参考配置 | `node scripts/sync-hex-builds.mjs` |
 
 更新命令会访问公开资料来源并修改仓库快照，可能因站点变化、限流或网络问题失败。普通功能开发不要运行它们。更新时在单独分支保留旧快照，检查终端失败计数、来源日期、版本与差异，再完成所有资料检查；脚本执行结束不代表每个来源都成功。`sync-data` 会保留已存在的同名图片，若某个图标确实变化，需要单独核实并更新该图片。新资料不能自动证明旧玩法已重新复核。
+
+### 多方案与依赖复核
+
+峡谷优先解析 OP.GG 指定版本的公开结构化响应，网页只作为备用。每个英雄位置最多保留 15 条去重核心路线、18 套九符文完整页和 5 条合法加点序列；稀有位置可能没有足够数据，不能为凑数量补造。JSON 中后续装备为所有购买顺序的汇总，不能称为第四、第五件装备统计；符文组内使用率也不能当作总体使用率。
+
+核心收藏使用装备组合 ID，符文使用完整九符文 ID，加点使用序列 ID。刷新后样本排序改变不应切换原选择；条目消失时提示重新确认。来源加点只覆盖它实际给出的技能点数，后续沿明确的技能优先级，并受实时等级与已加技能限制。组合可用 `skillOrder` 和 `skillReason` 声明早期第二点 Q、延后 R 等节点，不能统一覆盖成“有 R 点 R”。
+
+`reviewBaseline` 保存技能、装备价格/合成/说明/属性、符文说明的内容指纹。`catalog:audit` 和软件维护面板列出关联变化及待复核组合；即使版本号未变也可识别资料修订。指纹只用于检测变化，不能证明玩法经过验证。修改依赖或完成复核后，维护者可调用 `reviewBaseline(entry,catalog,data)` 重新捕获该条目的基线；不要批量更新旧条目的复核日期。
+
+人工扩充来源保存在 `src/core/expanded-combos.mjs`，`pnpm catalog:expand` 生成经过验证的可读 JSON。该脚本只允许已整理的 16.19，遇到新版本会停止，要求先复核人工内容。基础资料更新、参考出装刷新、人工组合复核分别完成；失败的配置刷新保留最后有效快照。单个英雄位置也可在软件中点击刷新。
 
 ## 打包与发布
 
