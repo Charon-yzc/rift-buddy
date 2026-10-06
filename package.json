@@ -21,7 +21,8 @@
     "catalog:audit": "node scripts/audit-catalog.mjs",
     "catalog:validate": "node scripts/validate-catalog.mjs",
     "sync-builds": "node scripts/sync-builds.mjs --all-roles",
-    "catalog:expand": "node scripts/expand-catalog.mjs"
+    "catalog:expand": "node scripts/expand-catalog.mjs",
+    "spells:enrich": "node scripts/enrich-spells.mjs"
   },
   "devDependencies": {
     "@electron/packager": "20.3.0",

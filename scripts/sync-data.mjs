@@ -1,9 +1,26 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {spawn} from 'node:child_process';
 import { collectSnapshot, atomicJSON, DD } from '../services/data.mjs';
 const root = path.resolve('data');
 const d = await collectSnapshot(console.log);
 await atomicJSON(path.join(root,'game.json'),d);
+// The spell book is versioned separately from game.json: refresh it right
+// here so a new game version can never silently pair with stale formulas.
+// A failed enrichment keeps the previous book and is reported loudly;
+// scripts/check.mjs still fails the release on a version mismatch.
+let spellsVersion=null;
+try{spellsVersion=JSON.parse(await fs.readFile(path.join(root,'spells.json'),'utf8')).version;}catch{}
+if(spellsVersion===d.version){
+ console.log(`技能库已是 ${spellsVersion}，跳过刷新`);
+}else{
+ console.log(`技能库 ${spellsVersion||'缺失'} 与新版本 ${d.version} 不一致，开始刷新`);
+ const code=await new Promise(resolve=>{
+  const child=spawn(process.execPath,[path.join(path.resolve('scripts'),'enrich-spells.mjs')],{stdio:'inherit'});
+  child.on('error',()=>resolve(1));child.on('close',resolve);
+ });
+ if(code!==0)console.error(`技能库刷新未完成（exit ${code}），已保留旧版；发布前请手动运行 pnpm spells:enrich 并通过 pnpm check`);
+}
 const assets = [
  ...d.champions.map(c=>[`champion/${c.id}.png`,c.icon]),
  ...Object.values(d.items).filter(i => i.maps?.['11'] || i.maps?.['12']).map(i=>[`item/${i.id}.png`,i.icon]),

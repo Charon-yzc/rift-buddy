@@ -18,6 +18,9 @@ validateCatalog(BUNDLED_CATALOG,data);
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 for(const [key,ref] of Object.entries(data.builds)){const c=data.champions.find(c=>c.id===ref.champion);if(!c||!validReference(ref,c,ref.role,data))errors.push(`Invalid source reference: ${key}`);}
+const spellsFile=JSON.parse(await fs.readFile('data/spells.json','utf8'));
+if(spellsFile.version!==data.version)errors.push(`Spells data ${spellsFile.version} does not match game data ${data.version}; rerun the spell enrichment.`);
+data.spellbook=spellsFile.champions||{};
 const assets=new Set(data.champions.map(c=>`champion/${c.id}.png`));
 for(const id of SITUATION_ITEMS)assets.add(`item/${id}.png`);
 for(const config of LOADOUTS)for(const id of config.champions)for(const role of config.roles){

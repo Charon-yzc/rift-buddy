@@ -94,10 +94,21 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   t.items=[...core.items];if(ref.runePage)t.runes=structuredClone(ref.runePage);t.late=[];
   t.boots=ref.boots[0]?.items?.[0]||null;
   if(ref.start[0]?.items?.length)t.start=[...ref.start[0].items];
-  const selected=[...t.items,t.boots];
-  for(const options of ref.later){
-   const next=options.flatMap(row=>row.items||[]).find(id=>!conflicts(id,selected)&&(data.items[id]?.inStore&&data.items[id]?.gold?.purchasable!==false||data.items[id]?.specialRecipe)&&data.items[id]?.maps?.[mode==='hex'?'12':'11']&&!data.items[id]?.tags?.includes('Boots'));
-   if(next){t.late.push(next);selected.push(next);}if(t.late.length>=(support?1:2))break;
+  const selected=[...t.items,...(t.boots?[t.boots]:[])],lateLimit=(support?5:6)-selected.length;
+  const laterAvailable=id=>{
+   const record=data.items[id],purchase=record?.inStore&&record.gold?.purchasable!==false?record:data.items[record?.specialRecipe];
+   return record?.maps?.[mode==='hex'?'12':'11']&&purchase?.maps?.[mode==='hex'?'12':'11']&&purchase.inStore&&purchase.gold?.purchasable!==false&&
+    !record.requiredAlly&&(!record.requiredChampion||record.requiredChampion===champion.id)&&!record.tags?.some(t=>['Boots','Consumable','Trinket'].includes(t));
+  };
+  // JSON provides one pool across all later purchases; HTML snapshots instead
+  // provide separate fourth/fifth/sixth purchase groups. Keep that distinction.
+  const groups=ref.laterBasis==='all-orders'?[ref.later.flat()]:ref.later;
+  for(const options of groups){
+   do{
+    const next=options.flatMap(row=>row.items||[]).find(id=>!conflicts(id,selected)&&laterAvailable(id));
+    if(!next)break;t.late.push(next);selected.push(next);
+   }while(ref.laterBasis==='all-orders'&&t.late.length<lateLimit);
+   if(t.late.length>=lateLimit)break;
   }
  }
  if(ref?.filteredCoreCount)selectionWarnings.push(`来源中 ${ref.filteredCoreCount} 条路线含互斥装备，已过滤，保留其他完整配置。`);
@@ -146,7 +157,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   rulesDate:config?(config.reviewedAt||LOADOUT_DATE):RULES_VERSION,rulesPatch:ref?.patch||(config?(config.patch||LOADOUT_PATCH):RULES_PATCH),stale:!ref&&(data.patch!==(config?(config.patch||LOADOUT_PATCH):RULES_PATCH)||!!data.catalogInfo?.loadoutStatus?.[config?.id]?.stale),
   source:adaptive.adapted?'局势调整路线':ref?'本版本常用配置':config?'组合玩法参考':'机制基础方案',reference:ref,
   sourceNote:ref?(mode==='hex'?`OP.GG · 全球海克斯大乱斗 · ${ref.patch}。${sampleText}。后续装备按已选强化调整；不是竞技场或普通大乱斗的配置。`:`OP.GG · 全球翡翠及以上排位 · ${ref.patch}。${sampleText}；${chosenRune?.source==='OP.GG'?`${chosenRune.samples>0?'所选符文样本 '+chosenRune.samples+' 场':'来源未提供所选完整符文页的样本数'}`:'所选符文为机制整理，无统计样本'}。后续装备按局势调整，娱乐下路的分工可能与常规排位不同。`):config?`按 ${config.patch||LOADOUT_PATCH} 装备与符文整理的玩法参考，复核于 ${config.reviewedAt||LOADOUT_DATE}；社区来源用于玩法启发，不代表国服匹配胜率或最优配置。${chosenRune?.source==='OP.GG'?'当前符文来自同英雄同位置的排位参考，未验证适合这套组合。':''}`:'按英雄定位与技能机制整理；不是统计胜率榜。装备和符文名称随资料版本更新，搭配规则需要独立复核。',
-  missing,
+  missing,routeProfile:adaptive.routeProfile,
  };
 }
 export function buildAsText(build, champion, data) {

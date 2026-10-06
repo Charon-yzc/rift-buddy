@@ -2,15 +2,28 @@ import {getBuild,SHARDS} from './builds.mjs';
 import {ROLES,profile} from './rules.mjs';
 import {purchasePlan,liveGuideStatus,purchaseAction} from './purchase.mjs';
 import {compareAugments} from './hex-compare.mjs';
-import {comboStage,guideMismatch,GUIDE_STAGES} from './guide-stage.mjs';
+import {comboStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
-import {assessSituation,chooseSituationTarget,pinnedSituationItem} from './live-situation.mjs';
+import {assessSituation,chooseSituationTarget,pinnedSituationItem,situationItemIssue,inventoryFulfillsItem} from './live-situation.mjs';
 import {recommendSkill} from './skill-advice.mjs';
 export {nextSkill} from './skill-advice.mjs';
+import {aggregateCombatStats,applyLivePanel,duel} from './live-estimate.mjs';
 
 const conditions=['ad','ap','control','heal','burst'];
+const knownLevel=n=>Number.isInteger(n)&&n>=1&&n<=30;
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
+// Custom duel picks: each side is either a valid champion id or absent
+// (half-picked state while the user is still choosing). Equal ids never
+// validate as a pair.
+export function validateDuelPick(value){
+ if(!value||typeof value!=='object')return undefined;
+ const pick={};
+ if(hero(value.own))pick.own=value.own;
+ if(hero(value.foe))pick.foe=value.foe;
+ if(pick.own&&pick.foe&&pick.own===pick.foe)delete pick.foe;
+ return Object.keys(pick).length?pick:undefined;
+}
 export function validateLoadoutSelection(value){
  const selected={};
  for(const key of ['loadoutId','runeId','skillId','coreId','comboId'])if(value[key]!==undefined&&value[key]!==null){
@@ -35,8 +48,9 @@ export function validateGuideState(value){
  const completedItems=Array.isArray(value.completedItems)?[...new Set(value.completedItems.filter(id=>typeof id==='string'&&/^\d{1,8}$/.test(id)))].slice(0,6):[];
  const b=value.bounds,bounds=b&&Number.isInteger(b.x)&&Math.abs(b.x)<30000&&Number.isInteger(b.y)&&Math.abs(b.y)<30000&&Number.isInteger(b.width)&&b.width>=360&&b.width<=640&&Number.isInteger(b.height)&&b.height>=480&&b.height<=1000?{x:b.x,y:b.y,width:b.width,height:b.height}:null;
  const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(m.entered===true?{entered:true}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
+ const duelPick=validateDuelPick(value.duelPick);
  const targetKind=value.purchaseTargetKind==='situation'&&/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTargetKind:'situation'}:{};
- return {selection,completedItems,collapsed:value.collapsed===true,ball:value.ball===true,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{})};
+ return {selection,completedItems,collapsed:value.collapsed===true,ball:value.ball===true,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
 }
 export function guideIdentity(selection){
  const s=validateGuideSelection(selection);
@@ -45,7 +59,7 @@ export function guideIdentity(selection){
 export function selectGuide(previous,selection){
  const next=validateGuideSelection(selection);
  const same=previous&&guideIdentity(previous.selection)===guideIdentity(next);
- return {selection:next,completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??true,ball:previous?.ball===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{})};
+ return {selection:next,completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??true,ball:previous?.ball===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
 }
 export function reconcileGuide(value,{phase,gameId,live,now=Date.now()}={}){
  const current=validateGuideState(value);if(!current)return {guide:null,reset:false,changed:false};
@@ -65,7 +79,7 @@ export function reconcileGuide(value,{phase,gameId,live,now=Date.now()}={}){
  if(inGame||phase==='GameStart'&&!newSession&&entered)next.entered=true;else if(knownPhase||newSession)delete next.entered;
  if(knownPhase)next.phase=phase;if(id)next.gameId=id;
  if(matchingLive){next.liveAt=live.at;if(Number.isFinite(live.gameTime))next.gameTime=live.gameTime;}
- const guide={...current,match:next,...(reset?{completedItems:[]} :{}),...(newSession?{clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,protectId:undefined,combatFocus:undefined}}:{})};
+ const guide={...current,match:next,...(reset?{completedItems:[]} :{}),...(newSession?{clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,protectId:undefined,combatFocus:undefined}}:{})};
  return {guide,reset,changed:reset||next.phase!==before.phase||next.gameId!==before.gameId||next.entered!==before.entered};
 }
 const clean=v=>String(v??'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/@[^@]+@/g,'〔动态数值〕');
@@ -78,25 +92,88 @@ export function createGuideModel(data,value,live=null,current=null){
  const route=build.items.map(item),validIds=new Set(route.map(i=>i.id));
  const completedItems=guide.completedItems.filter(id=>validIds.has(id));
  const mismatch=guideMismatch(s,current),liveStatus=mismatch?{matched:false,kind:mismatch,reason:mismatch==='role'?'当前位置已变化，请换入当前英雄与位置':'当前选择与这份方案不同，请重新确认'}:liveGuideStatus(live,s),matched=liveStatus.matched,inventory=Array.isArray(live?.inventory)?live.inventory:[],purchase=purchasePlan(route,data.items,matched?inventory:[],matched?live.gold:null);
- const autoCompletedItems=matched?purchase.filter(i=>i.owned).map(i=>i.id):[];
+ const autoCompletedItems=matched?purchase.filter(i=>i.owned||inventoryFulfillsItem({data,id:i.id,inventory})).map(i=>i.id):[];
  const runeNames=new Map(data.runes.flatMap(t=>t.slots.flatMap(slot=>slot.runes.map(r=>[r.id,r.name]))));
  const referenceIds=build.reference?.augmentIds||[];
  const augmentIds=s.augmentIds.length?s.augmentIds:referenceIds.slice(0,5);
  const augments=augmentIds.map(id=>data.augments.find(a=>a.id===id)).filter(Boolean).map(a=>({id:a.id,name:a.name,rarity:a.rarity,description:a.description,status:a.descriptionStatus||'complete'}));
- const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id))||null;
+ const itemIssue=i=>matched?situationItemIssue({data,id:i.id,inventory}):null;
+ const routeBlocked=route.filter(i=>!autoCompletedItems.includes(i.id)&&itemIssue(i)).map(i=>({id:i.id,name:i.name,reason:itemIssue(i)}));
+ const targetBlockedReason=guide.purchaseTarget?itemIssue({id:guide.purchaseTarget}):null;
+ const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
  const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
  const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
  const choices=[...new Map([...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
- const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:matched&&purchasePlan([i],data.items,inventory,live.gold)[0].owned}));
- const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&(matched||!completedItems.includes(i.id)));
+ const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:matched&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));
+ const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&!i.blockedReason&&(matched||!completedItems.includes(i.id)));
  const suggested=matched?chooseSituationTarget({situation,mainNext,purchase,gold:live.gold}):null;
  const next=chosen||(suggested?choices.find(i=>i.id===suggested.id):null)||mainNext,targetPlan=next?purchasePlan([next],data.items,matched?inventory:[],matched?live.gold:null)[0]:null;
  const liveModel=matched?{matched:true,gold:live.gold,level:live.level,skills:live.skills,inventory:live.inventory,gameTime:live.gameTime,at:live.at}:liveStatus;
  const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,orderReason:build.selectedSkill?.when,live:liveModel,signals:situation.signals,custom:!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
  const nextCandidate=situation.candidates.find(c=>c.id===next?.id);
  const nextReason=nextCandidate?.reason||`${chosen?'保留你选择的回城目标。'+(pinned?'当前公开数据不再触发这项自动建议，你仍可手动保留或更换。':''):'继续你选择的成装方案。'}${targetPlan?.credit?`已持有组件抵扣约 ${targetPlan.credit} 金，优先利用已有投入。`:''}${build.adjustments.length?build.adjustments[0].text:''}`;
+ const ownChampion=data.champions.find(c=>c.id===s.id);
+ const enemySnapshots=matched&&Array.isArray(live.enemies)?live.enemies:[];
+ const allySnapshots=matched&&Array.isArray(live.allies)?live.allies:[];
+ const duelOptions=matched?{
+  own:[{id:s.id,name:champion.name,self:true},...allySnapshots.map(a=>({id:a.id,name:a.name}))],
+  foe:enemySnapshots.map(t=>({id:t.id,name:t.name}))}:null;
+ const estimate=matched&&ownChampion&&Number.isInteger(live.level)&&live.level>=1&&live.level<=30&&enemySnapshots.length?(()=>{
+  // A reported panel field already contains items/runes/buffs. Only missing
+  // fields use the public-inventory fallback, without adding stats twice.
+  const computed=aggregateCombatStats(ownChampion,live.level,live.inventory||[],data);
+  const panel=applyLivePanel(ownChampion,live.level,live.stats,computed),ownAgg=panel.agg;
+  const duels=enemySnapshots.map(target=>{
+   const enemyChampion=data.champions.find(c=>c.id===target.id);
+   if(!enemyChampion||!Number.isInteger(target.level)||target.level<1||target.level>30)return null;
+   const book=data.spellbook&&Object.keys(data.spellbook).length?data.spellbook:null;
+   return duel(ownChampion,live.level,ownAgg,live.skills,enemyChampion,target.level,data,target.items||[],book);
+  }).filter(Boolean).sort((a,b)=>b.killTheirs-a.killTheirs||a.enemy.id.localeCompare(b.enemy.id));
+  if(!duels.length)return null;
+  const primary=duels[0];
+  const curHp=Number.isFinite(live.stats?.hp)?Math.floor(live.stats.hp):null;
+  const warningEnemies=curHp!==null&&curHp>0?duels.filter(d=>d.killTheirs>=curHp).map(d=>d.enemy):[];
+  return {enemy:primary.enemy,edge:primary.edge,killThreshold:primary.killMine,theirKill:primary.killTheirs,duels,
+   approx:true,liveReal:panel.live,mineSkillBasis:primary.mineSkillBasis,curHp,danger:warningEnemies.length>0,warningEnemies,windowSeconds:6,at:live.at};
+ })():null;
+ const action=matched?purchaseAction(targetPlan,next,live.gold):null;
+ // Custom duel simulator: the user picks one ally side and one enemy side
+ // from the live scoreboard feed. Self reuses the live panel; a picked ally
+ // falls back to visible items and a disclosed total-skill-point heuristic.
+ const customDuel=matched&&ownChampion&&guide.duelPick?.own&&guide.duelPick?.foe?(()=>{
+  const book=data.spellbook&&Object.keys(data.spellbook).length?data.spellbook:null;
+  const foeSnap=enemySnapshots.find(t=>t.id===guide.duelPick.foe);
+  const foeChamp=foeSnap&&data.champions.find(c=>c.id===foeSnap.id);
+  if(!foeChamp||!knownLevel(foeSnap.level))return {pick:{...guide.duelPick},unresolved:true};
+  const foeLevel=foeSnap.level;
+  let ownChamp,ownLevel,ownAgg,ownSkills,ownSelf;
+  if(guide.duelPick.own===s.id){
+   if(!knownLevel(live.level))return {pick:{...guide.duelPick},unresolved:true};
+   ownChamp=ownChampion;ownLevel=live.level;
+   const computed=aggregateCombatStats(ownChampion,ownLevel,live.inventory||[],data);
+   ownAgg=applyLivePanel(ownChampion,ownLevel,live.stats,computed).agg;
+   ownSkills=live.skills;ownSelf=true;
+  }else{
+   const allySnap=allySnapshots.find(a=>a.id===guide.duelPick.own);
+   ownChamp=allySnap&&data.champions.find(c=>c.id===allySnap.id);
+   if(!ownChamp||!knownLevel(allySnap.level))return {pick:{...guide.duelPick},unresolved:true};
+   ownLevel=allySnap.level;
+   ownAgg=aggregateCombatStats(ownChamp,ownLevel,allySnap.items||[],data);
+   ownSkills=null;ownSelf=false;
+  }
+  const d=duel(ownChamp,ownLevel,ownAgg,ownSkills,foeChamp,foeLevel,data,foeSnap.items||[],book);
+  return {pick:{own:ownChamp.id,foe:foeChamp.id},
+   own:{id:ownChamp.id,name:ownChamp.name,level:Number.isInteger(ownLevel)?ownLevel:null,self:ownSelf},
+   foe:{id:foeChamp.id,name:foeChamp.name,level:foeSnap.level},
+   edge:d.edge,killMine:d.killMine,killTheirs:d.killTheirs,
+   approx:!!d.approx||!ownSelf,
+   skillsNote:ownSelf?'对方技能按等级总点数近似':'双方技能按等级总点数近似',
+   at:live.at};
+ })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,
-  start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action:matched?purchaseAction(targetPlan,next,live.gold):null,
+  start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
+  phase:s.mode==='rift'?gamePhase(liveModel,action,next||null):null,
+  estimate,customDuel,duelPick:guide.duelPick||null,duelOptions,routeBlocked,targetBlockedReason,
   live:liveModel,nextSkill:skillAdvice.next,skillAdvice,situation,nextReason,nextCaution:nextCandidate?.caution||'静态价格与合成条件以游戏商店为准。',liveAdvice:guide.liveAdvice,automaticTarget:!!(!chosen&&suggested&&suggested.id===next?.id),
   priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillTitle:build.selectedSkill?.name,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
