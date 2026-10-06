@@ -65,7 +65,12 @@ async function boot(){
  useCatalog(catalogStore.summary());
  const {loadBuilds,loadHexBuilds,createBuildCache}=await import('../services/build-cache.mjs');
  data.builds=await loadBuilds([path.join(root,'data'),path.join(storeRoot,'data')],data);
- try{data.spellbook=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8')).champions||{};}catch{data.spellbook={};}
+ // A mismatched spell book must never be used silently (same gate as update-data).
+ try{
+  const spellsFile=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8'));
+  data.spellbook=spellsFile.version===data.version?(spellsFile.champions||{}):{};
+  if(spellsFile.version!==data.version)diagnostic(`spellbook ${spellsFile.version} != game ${data.version} at boot; estimates use heuristics`);
+ }catch{data.spellbook={};}
  data.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],data);
  const imageCache=await import('../services/image-cache.mjs');
  data.imageOverrides=await imageCache.loadImageOverrides(path.join(storeRoot,'data/images'),data);

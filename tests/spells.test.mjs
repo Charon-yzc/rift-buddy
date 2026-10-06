@@ -62,6 +62,8 @@ test('skill hits use real ranks and ratios, multi-hits multiply',()=>{
  assert.equal(skillHitDamage(book.Ashe.W,0,agg,59,null),0);
  assert.equal(skillHitDamage(null,3,agg,59,null),0);
  assert.equal(skillHitDamage(book.Zed.Q,1,{ad:100,ap:0,armor:0,mr:0},60,null),80+40);
+ // Bonus armor/mr subtract level base instead of using the total.
+ assert.equal(skillHitDamage(book.Taric.E,1,{ad:60,ap:50,armor:100,mr:50},{ad:60,armor:61.5,mr:30},null),134);
  assert.equal(skillHitDamage(book.Garen.E,1,{ad:100,ap:0,armor:0,mr:0},60,null),(4+Math.round(0.4*100))*7);
  // True damage bypasses armor and MR.
  assert.equal(skillHitDamage(book.Darius.R,1,{ad:100,ap:0,armor:200,mr:200},60,3000),125+Math.round(0.75*40));

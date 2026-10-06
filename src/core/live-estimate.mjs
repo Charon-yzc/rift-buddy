@@ -74,18 +74,26 @@ export function burstDamage(champion,points,agg,level){
 
 // One skill hit from the enriched spell book. Falls back to 0 (caller uses
 // the heuristic burst) when the champion or slot is missing.
-export function skillHitDamage(spell,rank,agg,baseAd,targetMaxHp){
+export function skillHitDamage(spell,rank,agg,bases,targetMaxHp){
  if(!spell?.damage||!Array.isArray(spell.damage.base)||!spell.damage.base.length)return 0;
  if(!Number.isInteger(rank)||rank<1)return 0;
- const ad=Number(agg?.ad)||0,bad=Number(baseAd);
+ const ad=Number(agg?.ad)||0;
+ // `bases` carries level base stats so bonus ratios subtract correctly; a
+ // bare number is legacy base AD only (armor/mr bonus then falls back to
+ // total and overestimates — real callers always pass the full object).
+ const baseStats=(typeof bases==='object'&&bases)||{ad:bases};
+ const baseOf=k=>Number(baseStats[k]);
+ const totalOf=k=>Number(agg?.[k])||0;
+ const bonusOf=k=>{const b=baseOf(k);return Number.isFinite(b)?Math.max(0,totalOf(k)-b):totalOf(k);};
  const d=spell.damage,r=Math.min(rank,d.base.length)-1;
  let dmg=d.base[r]||0;
  for(const ratio of d.ratios||[]){
   let c=Array.isArray(ratio.coeff)?ratio.coeff[r]??ratio.coeff.at(-1):ratio.coeff;
   if(!Number.isFinite(c))continue;
   const bonus=ratio.formula==='bonus';
-  const v=ratio.stat==='ap'?(Number(agg?.ap)||0):ratio.stat==='ad'?(bonus?Math.max(0,ad-(Number.isFinite(bad)?bad:0)):ad)
-   :ratio.stat==='armor'?Number(agg?.armor)||0:ratio.stat==='mr'?Number(agg?.mr)||0
+  const v=ratio.stat==='ap'?totalOf('ap'):ratio.stat==='ad'?(bonus?bonusOf('ad'):ad)
+   :ratio.stat==='armor'?(bonus?bonusOf('armor'):totalOf('armor'))
+   :ratio.stat==='mr'?(bonus?bonusOf('mr'):totalOf('mr'))
    :ratio.stat==='maxHp'?targetMaxHp||0:0;
   dmg+=c*v;
  }
@@ -131,13 +139,14 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
  let burst=0;
  const {skills=null,spellbook=null}=extra;
  if(spellbook&&skills){
-  const baseAd=statAtLevel(attacker.stats,level).ad;
+  const base=statAtLevel(attacker.stats,level);
+  const bases={ad:base.ad,armor:base.armor,mr:base.mr};
   const targetMaxHp=Number.isFinite(defAgg?.hp)?defAgg.hp:null;
   for(const slot of ['Q','W','E','R']){
    const rank=skills[slot];
    if(!Number.isInteger(rank)||rank<1)continue;
    const spell=spellbook[attacker.id]?.[slot];
-   const hit=skillHitDamage(spell,rank,agg,baseAd,targetMaxHp);
+   const hit=skillHitDamage(spell,rank,agg,bases,targetMaxHp);
    if(hit<=0)continue;
    const type=spell.damage.type;
    burst+=type==='true'?hit:mitigate(hit,def.armor,def.mr,type==='physical'?1:0);
