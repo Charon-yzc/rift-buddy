@@ -214,7 +214,7 @@ await Promise.all(Array.from({length:6},async()=>{
      if(damage){
       // Multi-hit skills (Garen E spins): multiply by the machine-readable
       // strike count from a sibling calc instead of counting one hit.
-      outer:for(const o of bucket.objs)for(const [name,calc] of Object.entries(o.calcs)){
+      for(const o of bucket.objs)for(const [name,calc] of Object.entries(o.calcs)){
        if(!/NumberOfStrikes|NumTicks|TickCount|HitCount/i.test(name))continue;
        const hits=Array.from({length:maxRank},(_,i)=>{
         let v=null;
