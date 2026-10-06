@@ -163,7 +163,7 @@ test('verdict banner headlines the same numbers, bigger and without promises', a
 
 test('custom duel pits a picked ally against a picked enemy with disclosed proxies',async()=>{
  const {sanitizeLive}=await import('../services/live-client.mjs');
- const {duelBox}=await import('../src/guide-view.mjs');
+ const {duelBox,estimateRows}=await import('../src/guide-view.mjs');
  const active={riotId:'me',currentGold:1500,level:9,abilities:{Q:{abilityLevel:4},W:{abilityLevel:2},E:{abilityLevel:2},R:{abilityLevel:1}},championStats:{attackDamage:142,abilityPower:0,armor:71,magicResist:44,attackSpeed:0.95,critChance:0.25,moveSpeed:340,currentHealth:900,maxHealth:2400,healthRegenRate:9}};
  const players=[
   {riotId:'me',rawChampionName:'game_character_displayname_Ashe',team:'ORDER',level:9,items:[{itemID:1055,count:1}]},
@@ -186,7 +186,10 @@ test('custom duel pits a picked ally against a picked enemy with disclosed proxi
  assert.equal(plain.customDuel,null);assert.equal(plain.duelOptions,null);
  const html=duelBox(ally);
  assert.ok(html.includes('迦娜 vs 锤石')&&html.includes('斩杀约'));
+ assert.ok(html.includes('<strong>')&&!html.includes('undefined'));
  assert.ok(html.includes('id="guide-duel-own"')&&html.includes('id="guide-duel-foe"'));
  assert.equal(duelBox(plain),'');
  for(const word of ['预测','保证','必胜','胜率','购买'])assert.equal(html.includes(word),false);
+ const rows=estimateRows(ally);
+ assert.ok(rows.includes('<strong>')&&!rows.includes('undefined'));
 });

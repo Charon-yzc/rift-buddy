@@ -7,8 +7,8 @@ export function estimateRows(m){
  const dir=m.estimate.edge>0.25?'偏你':m.estimate.edge<-0.25?'偏对方':'均势';
  const source=m.estimate.liveReal?'己方实时面板 + 对方公开出装':'对方按出装+等级反推';
  const duels=Array.isArray(m.estimate.duels)?m.estimate.duels:[];
- return `<p class="estimate-row"><b>换血倾向 · ${e(m.estimate.enemy?.name)}</b> ${dir} · 你斩杀约 ${m.estimate.killThreshold??'—'} 血 · 对方斩杀约 ${m.estimate.theirKill??'—'} 血 <span class="est-src">${source}；对方技能按等级反推、血量按满血估算${m.estimate.approx?' · 部分为估算':''}</span></p>`
-  +`${m.estimate.danger&&m.estimate.curHp!=null?`<p class="estimate-row danger"><b>注意</b> 对方 6 秒窗口伤害约 ${m.estimate.theirKill??'—'}，已达到你当前 ${m.estimate.curHp} 血</p>`:''}`
+ return `<p class="estimate-row"><b>换血倾向 · ${e(m.estimate.enemy?.name)}</b> ${dir} · 你斩杀约 <strong>${m.estimate.killThreshold??'—'}</strong> 血 · 对方斩杀约 <strong>${m.estimate.theirKill??'—'}</strong> 血 <span class="est-src">${source}；对方技能按等级反推、血量按满血估算${m.estimate.approx?' · 部分为估算':''}</span></p>`
+  +`${m.estimate.danger&&m.estimate.curHp!=null?`<p class="estimate-row danger"><b>注意</b> 对方 6 秒窗口伤害约 <strong>${m.estimate.theirKill??'—'}</strong>，已达到你当前 <strong>${m.estimate.curHp}</strong> 血</p>`:''}`
   +`${duels.length>1?`<p class="estimate-row rivals">其余：${duels.slice(1,6).map(d=>`${e(d.enemy?.name)}${d.edge>0.25?'偏你':d.edge<-0.25?'偏对方':'均势'}/斩${d.killMine??'—'}`).join(' · ')}</p>`:''}`;
 }
 // Glanceable combat headline: same computed numbers as estimateRows, only
@@ -36,7 +36,7 @@ export function duelBox(m){
  let result='';
  if(cd&&!cd.unresolved){
   const dir=cd.edge>0.25?'偏'+cd.own.name:cd.edge<-0.25?'偏'+cd.foe.name:'均势';
-  result=`<p class="estimate-row"><b>${e(cd.own.name)} vs ${e(cd.foe.name)}</b> ${e(dir)} · ${e(cd.own.name)}斩杀约 ${cd.killMine??'—'} · ${e(cd.foe.name)}斩杀约 ${cd.killTheirs??'—'} <span>${e(cd.skillsNote)}；血量按满血估算${cd.approx?' · 部分为估算':''}</span></p>`;
+  result=`<p class="estimate-row"><b>${e(cd.own.name)} vs ${e(cd.foe.name)}</b> ${e(dir)} · ${e(cd.own.name)}斩杀约 <strong>${cd.killMine??'—'}</strong> · ${e(cd.foe.name)}斩杀约 <strong>${cd.killTheirs??'—'}</strong> <span class="est-src">${e(cd.skillsNote)}；血量按满血估算${cd.approx?' · 部分为估算':''}</span></p>`;
  }else if(cd?.unresolved){
   result=`<p class="note">所选英雄不在本局可见名单中，请重选</p>`;
  }
