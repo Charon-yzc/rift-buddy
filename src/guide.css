@@ -42,3 +42,22 @@ body.ball{border:0;background:transparent}
 .ball-done{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:50%;background:#235749;border:2px solid #14212e;color:#a4ffea;font-size:13px;display:grid;place-items:center;pointer-events:none}
 .estimate-row{color:#bfd1d9}.estimate-row b{color:#88d9c0;margin-right:6px}.estimate-row span{font-size:10px;color:#7690a5;margin-left:8px}
 .collapsed .quick-reminders span.est-src{display:inline}.estimate-row.danger{color:#f4d1b4}.estimate-row.danger b{color:#e8a06a}
+/* Glanceable combat headline: big verdict + kill lines, detail stays below. */
+.verdict{display:flex;align-items:center;gap:12px;margin:8px 14px 0;padding:10px 14px;border-radius:10px;border:1px solid #2b3a4b;background:#182431;flex-shrink:0}
+.verdict b{font-size:24px;font-weight:800;letter-spacing:2px;white-space:nowrap}
+.verdict.good b{color:#7febd5}.verdict.bad b{color:#f0a35e}.verdict.even b{color:#cfd9e4}
+.verdict.danger{border-color:#8a5a3c;background:#2c2118}.verdict.danger b{color:#f4b183}
+.verdict-nums{display:flex;flex-direction:column;gap:2px;font-size:13px;color:#c7d4e0}
+.verdict-nums em{font-style:normal;font-size:17px;font-weight:800;color:#fff}
+.verdict small{margin-left:auto;font-size:10px;color:#7d98ab;white-space:nowrap}
+.collapsed .verdict{margin:6px 12px 0;padding:7px 12px;gap:10px}
+.collapsed .verdict b{font-size:19px}
+.collapsed .verdict small{display:none}
+.collapsed .verdict-nums{font-size:12px}
+.collapsed .verdict-nums em{font-size:15px}
+/* Readability pass: key in-game text one step larger. */
+.quick-reminders p{font-size:13px}
+.collapsed .quick-reminders p{font-size:12px}
+.next-item b{font-size:15px}
+.next-item p{font-size:12px}
+.guide-status{font-size:12px}

@@ -7,6 +7,16 @@ const {pathToFileURL}=require('node:url');
 // clickable even while the content area passes clicks through to the game.
 function resolveGuideIgnoreMouse(passThrough,hoverHeader){return !!passThrough&&!hoverHeader;}
 
+// Bounds check for the cursor-poll fallback, extracted for testability:
+// forwarded DOM mousemove can be flaky, so the main process double-checks
+// with the OS cursor position while pass-through is active.
+function cursorInBounds(cursor,bounds,margin=2){
+ if(!cursor||!bounds)return false;
+ const m=Math.max(0,Number(margin)||0);
+ return cursor.x>=bounds.x-m&&cursor.x<=bounds.x+bounds.width+m
+     &&cursor.y>=bounds.y-m&&cursor.y<=bounds.y+bounds.height+m;
+}
+
 module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({})}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
@@ -56,7 +66,26 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
   win.on('close',event=>{if(!isQuitting()){event.preventDefault();hide();}});
   const remember=()=>{if(adjusting||isBall())return;clearTimeout(boundsTimer);boundsTimer=setTimeout(()=>{if(!win||win.isDestroyed()||!getState())return;const b=win.getBounds(),current=getState();save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}}).catch(()=>{});},350);};
   win.on('move',remember);win.on('resize',remember);
-  win.on('closed',()=>{clearTimeout(boundsTimer);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
+  // Fallback for flaky forwarded mousemove: while pass-through is active,
+  // poll the OS cursor so hovering the drag strip still lifts ignore for
+  // dragging. The poll owns the strip fully: lift inside it, release fully
+  // outside the window (self-recovers even if DOM mouseleave never fires),
+  // and leave the content area to the DOM path so game clicks still pass
+  // through there.
+  const STRIP_H=44;
+  const hoverPoll=setInterval(()=>{
+   try{
+    if(!win||win.isDestroyed()||!win.isVisible()||isBall()||!mousePassThrough())return;
+    const b=win.getBounds(),p=screen.getCursorScreenPoint();
+    if(cursorInBounds(p,{...b,height:Math.min(STRIP_H,b.height)})){
+     if(shouldIgnore()){hoverHeader=true;inputMode();}
+    }else if(!cursorInBounds(p,b)){
+     if(hoverHeader){hoverHeader=false;inputMode();}
+    }
+   }catch{}
+  },120);
+  if(hoverPoll.unref)hoverPoll.unref();
+  win.on('closed',()=>{clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
  function hide(){autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
  function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;if(!win)create();else{if(win.isMinimized())win.restore();win.showInactive();inputMode();publish();}return payload();}
@@ -111,3 +140,4 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
  return {show,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{win?.destroy();},window:()=>win};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
+module.exports.cursorInBounds=cursorInBounds;

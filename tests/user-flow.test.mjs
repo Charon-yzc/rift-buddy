@@ -142,3 +142,21 @@ test('estimate output carries no identities and copy stays estimation language',
  for(const word of ['预测','保证','必杀','必中','必胜','必赢','稳赢','胜率','购买','建议购买','liveBuy'])assert.equal(html.includes(word),false);
  assert.equal(estimateRows({}),'');
 });
+
+test('verdict banner headlines the same numbers, bigger and without promises', async () => {
+ const {verdictBanner}=await import('../src/guide-view.mjs');
+ const good=verdictBanner({estimate:{edge:0.5,killThreshold:1200,theirKill:800,danger:false,enemy:{name:'金克丝'}}});
+ assert.ok(good.includes('偏你')&&good.includes('1200')&&good.includes('800'));
+ assert.ok(good.includes('verdict good'));
+ const bad=verdictBanner({estimate:{edge:-0.5,killThreshold:300,theirKill:1500,danger:false}});
+ assert.ok(bad.includes('偏对方')&&bad.includes('verdict bad'));
+ const even=verdictBanner({estimate:{edge:0,killThreshold:500,theirKill:500,danger:false}});
+ assert.ok(even.includes('均势')&&even.includes('verdict even'));
+ const danger=verdictBanner({estimate:{edge:-0.9,killThreshold:100,theirKill:2000,danger:true,curHp:400}});
+ assert.ok(danger.includes('注意')&&danger.includes('verdict danger'));
+ const missing=verdictBanner({estimate:{edge:0}});
+ assert.ok(missing.includes('—')&&!missing.includes('undefined'));
+ assert.equal(verdictBanner({}),'');
+ assert.equal(verdictBanner(null),'');
+ for(const word of ['预测','保证','必胜','必赢','稳赢','上','打','跑','购买','建议购买','liveBuy'])assert.equal(good.includes(word),false);
+});

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {resolveGuideIgnoreMouse} from '../electron/guide-window.cjs';
+import {resolveGuideIgnoreMouse,cursorInBounds} from '../electron/guide-window.cjs';
 import {sanitizeLive} from '../services/live-client.mjs';
 import {purchasePlan} from '../src/core/purchase.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
@@ -15,6 +15,19 @@ test('pass-through yields to header hover so the panel stays movable',()=>{
  assert.equal(resolveGuideIgnoreMouse(false,true),false);
  assert.equal(resolveGuideIgnoreMouse(false,false),false);
  assert.equal(resolveGuideIgnoreMouse(0,0),false);
+});
+
+test('cursor poll lifts pass-through only while hovering the panel',()=>{
+ const bounds={x:100,y:100,width:400,height:600};
+ assert.equal(cursorInBounds({x:150,y:150},bounds),true);
+ assert.equal(cursorInBounds({x:100,y:100},bounds),true);
+ assert.equal(cursorInBounds({x:500,y:700},bounds),true);
+ assert.equal(cursorInBounds({x:503,y:150},bounds),false);
+ assert.equal(cursorInBounds({x:150,y:99},bounds),true); // 2px margin
+ assert.equal(cursorInBounds({x:150,y:97},bounds),false);
+ assert.equal(cursorInBounds(null,bounds),false);
+ assert.equal(cursorInBounds({x:150,y:150},null),false);
+ assert.equal(cursorInBounds({x:150,y:150},bounds,0),true);
 });
 
 test('inventory entries without positive counts never invent ownership',()=>{
