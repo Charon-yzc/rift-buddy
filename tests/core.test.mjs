@@ -127,4 +127,12 @@ test('client sync marks the local declared lane as ours without clearing premade
  const blind=mergeClientSession(createSlots(),{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:''}],localPlayerCellId:1},data.champions);
  assert.equal(blind.slots.find(s=>s.role==='top').party,false);
  assert.equal(blind.markedLocalRole,null);assert.equal(blind.markedLocalChanged,false);
+ const manual=solo.slots.map(s=>({...s,party:false}));
+ const polled=mergeClientSession(manual,{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:'TOP'}],localPlayerCellId:1},data.champions);
+ assert.equal(polled.slots.find(s=>s.role==='top').party,false,'Polling must preserve a manual party uncheck');
+ const dragged=createSlots().map(s=>({...s,party:false}));
+ Object.assign(dragged.find(s=>s.role==='support'),{champion:'Garen',clientCellId:1,manualPosition:true});
+ const moved=mergeClientSession(dragged,{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:'TOP'}],localPlayerCellId:1},data.champions);
+ assert.equal(moved.markedLocalRole,'support');assert.equal(moved.slots.find(s=>s.role==='top').party,false);
+ assert.equal(moved.slots.find(s=>s.role==='support').champion,'Garen');
 });
