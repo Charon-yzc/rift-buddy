@@ -1,4 +1,6 @@
 // Maintainer-run enrichment: build data/spells.json from official static data.
+// Run with `pnpm spells:enrich` after every `pnpm sync-data` (a new game
+// version needs a fresh spell book; check.mjs fails loudly on mismatch).
 // Sources (no game client needed):
 // - RCP champion file: slot (Q/W/E/R), names, cooldown/cost, and which
 //   tooltip placeholder carries physical/magic/true damage.
@@ -21,7 +23,7 @@ const BIN_OVERRIDES={MonkeyKing:'monkeyking',Kaisa:'kaisa',Chogath:'chogath',Kog
 // instead of being guessed.
 const KNOWN_STATS={1:'armor',2:'ad',6:'mr',12:'maxHp'};
 const statName=mStat=>KNOWN_STATS[mStat]??null;
-const inferStatFromName=name=>/ap/i.test(name||'')?'ap':/ad/i.test(name||'')?'ad':null;
+const inferStatFromName=name=>/\bAP\b|APRatio|BonusAP/i.test(name||'')?'ap':/\bAD\b|ADRatio|BonusAD|tAD/i.test(name||'')?'ad':null;
 
 const perRank=(values,rank,maxRank)=>{
  if(!Array.isArray(values)||!values.length)return null;
@@ -89,7 +91,7 @@ function collectSlots(bin,alias,ddIds={}){
  return bySlot;
 }
 
-function resolveCalc(objs,wantName,maxRank,damageType,ctx,unresolved){
+function resolveCalc(objs,wantName,maxRank,damageType,ctx,unresolved,mageLike=false){
  // Prefer the object that owns the wanted calc (rank objects carry the real
  // per-rank arrays); never blend DataValues across objects.
  const ordered=[...objs].sort((a,b)=>{
@@ -120,6 +122,10 @@ function resolveCalc(objs,wantName,maxRank,damageType,ctx,unresolved){
     let stat=statName(part.mStat);
     if(stat===null&&part.mStat==null&&damageType==='physical')stat='ad';
     else if(stat===null&&part.mStat==null&&damageType==='magic')stat='ap';
+    // True damage with a bare coefficient almost always follows the
+    // champion's damage type; only trust it for clear mages (Ahri), never
+    // for bruisers (Cho'Gath Feast stays unresolved and partial).
+    else if(stat===null&&part.mStat==null&&damageType==='true'&&mageLike)stat='ap';
     if(stat===null){partial=true;unresolved.push(`${ctx}.${primary}: mStat=${part.mStat}`);continue;}
     parts.push({stat,coeff:part.mCoefficient,formula:formulaOf(part.mStatFormula)});
    }else if(part.__type==='StatByNamedDataValueCalculationPart'){
@@ -135,15 +141,19 @@ function resolveCalc(objs,wantName,maxRank,damageType,ctx,unresolved){
    }else{partial=true;}
   }
   if(flat===null){partial=true;base.push(0);}else base.push(Math.round(flat*100)/100);
-  if(rank===1)for(const p of parts)ratios.push(p.stat?{stat:p.stat,coeff:p.coeff,formula:p.formula}:null);
-  // per-rank ratio drift (rare): keep the widest coefficient honest
-  if(rank>1)for(const p of parts){
+  if(rank>=1)for(const p of parts){
    if(!p.stat)continue;
-   const slot=ratios.find(r=>r&&r.stat===p.stat&&r.formula===p.formula);
-   if(slot&&typeof p.coeff==='number'&&typeof slot.coeff==='number')slot.coeff=Math.max(slot.coeff,p.coeff);
+   let slot=ratios.find(r=>r&&r.stat===p.stat&&r.formula===p.formula);
+   if(!slot){slot={stat:p.stat,coeff:null,formula:p.formula,byRank:{}};ratios.push(slot);}
+   if(typeof p.coeff==='number')slot.byRank[rank]=Math.round(p.coeff*1e4)/1e4;
   }
  }
- return {calc:primary,base,ratios:ratios.filter(Boolean),partial};
+ const finalRatios=ratios.filter(Boolean).map(r=>{
+  const vals=Array.from({length:maxRank},(_,i)=>r.byRank[i+1]);
+  const coeff=vals.every(v=>v===vals[0])?vals[0]:vals;
+  return {stat:r.stat,coeff,formula:r.formula};
+ });
+ return {calc:primary,base,ratios:finalRatios,partial};
 }
 function flatMax(calc,values,maxRank){
  let best=null;
@@ -181,18 +191,43 @@ await Promise.all(Array.from({length:6},async()=>{
     let damage=null,calcName=null,partial=false;
     if(bucket){
      const tagged=Object.keys(tags)[0]||null;
-     const resolved=resolveCalc(bucket.objs,tagged,maxRank,tagged?tags[tagged]:null,`${c.id}.${slot}`,unresolved);
+     const mageLike=(Number(c.info?.magic)||0)>=(Number(c.info?.attack)||0)+2;
+     const resolved=resolveCalc(bucket.objs,tagged,maxRank,tagged?tags[tagged]:null,`${c.id}.${slot}`,unresolved,mageLike);
      calcName=resolved.calc;partial=resolved.partial;
      if(resolved.calc)damage={type:tags[resolved.calc]||null,base:resolved.base,ratios:resolved.ratios};
      if(damage&&!damage.type){damage=null;partial=true;}
+     if(tagged&&!resolved.calc)partial=true; // tagged nuke exists but unparseable
+     if(Object.keys(tags).length>1)partial=true; // multi-segment (out+return), first only
+     if(damage){
+      // Multi-hit skills (Garen E spins): multiply by the machine-readable
+      // strike count from a sibling calc instead of counting one hit.
+      for(const o of bucket.objs)for(const [name,calc] of Object.entries(o.calcs)){
+       if(!/NumberOfStrikes|NumTicks|TickCount|HitCount/i.test(name))continue;
+       const hits=Array.from({length:maxRank},(_,i)=>{
+        let v=null;
+        for(const part of calc.mFormulaParts||[]){
+         if(part.__type==='NamedDataValueCalculationPart')v=perRank(o.values[part.mDataValue],i+1,maxRank)??v;
+         if(part.__type==='NumberCalculationPart')v=part.mNumber;
+        }
+        return v;
+       });
+       if(hits.every(v=>Number.isInteger(v)&&v>=1&&v<=30))damage.hits=hits;
+      }
+     }
     }
-    out[slot]={name:spell.name||slot,cooldown,cost,calc:calcName,damage,partial};
+    out[slot]={name:spell.name||slot,cooldown,cost,calc:calcName,damage,partial,nuke:Object.keys(tags).length>0};
    }
    champions[c.id]=out;
   }catch(error){failures.push(`${c.id}: ${error.message}`);}
  }
 }));
 const withDamage=Object.values(champions).filter(s=>Object.values(s).some(v=>v?.damage)).length;
-await atomicJSON('data/spells.json',{version:game.version,patch,fetchedAt:new Date().toISOString(),champions,coverage:{champions:Object.keys(champions).length,withDamage},unresolved:[...new Set(unresolved)],failures});
+const maxFailures=Math.max(5,Math.ceil(Object.keys(champions).length*0.1));
+if(failures.length>maxFailures||Object.keys(champions).length<170||withDamage<150){
+ console.error(`Spell enrichment below bar (failures ${failures.length}, coverage ${withDamage}/${Object.keys(champions).length}); keeping the previous data/spells.json.`);
+ process.exitCode=1;
+}else{
+ await atomicJSON('data/spells.json',{version:game.version,patch,fetchedAt:new Date().toISOString(),champions,coverage:{champions:Object.keys(champions).length,withDamage},unresolved:[...new Set(unresolved)],failures});
+}
 console.log(JSON.stringify({champions:Object.keys(champions).length,withDamage,failures:failures.length,unresolved:[...new Set(unresolved)]},null,1));
 if(failures.length)console.log('failures:\n'+failures.join('\n'));

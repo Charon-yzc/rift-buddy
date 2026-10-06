@@ -142,6 +142,13 @@ async function boot(){
    delete next.builds;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
    next.builds=await loadBuilds([path.join(root,'data'),path.join(storeRoot,'data')],next);
    next.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],next);
+   // The spell book is versioned separately: a mismatched book must never be
+   // used silently, so it falls back to empty (heuristic estimates + UI note).
+   try{
+    const spellsFile=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8'));
+    next.spellbook=spellsFile.version===next.version?(spellsFile.champions||{}):{};
+    if(spellsFile.version!==next.version)diagnostic(`spellbook ${spellsFile.version} != game ${next.version}; estimates use heuristics until pnpm spells:enrich runs`);
+   }catch{next.spellbook={};}
    const cached=await imageCache.cacheMissingImages({root:path.join(storeRoot,'data/images'),bundleRoot:path.join(root,'data/images'),data:next,progress:message=>win?.webContents.send('data-progress',message)});
    next.imageOverrides=cached.overrides;data=next;useCatalog(catalogStore.summary());guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
   }finally{updating=false;}

@@ -76,32 +76,42 @@ export function burstDamage(champion,points,agg,level){
 // the heuristic burst) when the champion or slot is missing.
 export function skillHitDamage(spell,rank,agg,baseAd,targetMaxHp){
  if(!spell?.damage||!Number.isInteger(rank)||rank<1)return 0;
+ const ad=Number(agg?.ad)||0;
  const d=spell.damage,r=Math.min(rank,d.base.length)-1;
  let dmg=d.base[r]||0;
  for(const ratio of d.ratios||[]){
   const c=Array.isArray(ratio.coeff)?ratio.coeff[r]??ratio.coeff.at(-1):ratio.coeff;
   const bonus=ratio.formula==='bonus';
-  const v=ratio.stat==='ap'?agg.ap:ratio.stat==='ad'?(bonus?Math.max(0,agg.ad-baseAd):agg.ad)
-   :ratio.stat==='bonusAd'?Math.max(0,agg.ad-baseAd)
-   :ratio.stat==='armor'?agg.armor||0:ratio.stat==='mr'?agg.mr||0
+  const v=ratio.stat==='ap'?(Number(agg?.ap)||0):ratio.stat==='ad'?(bonus?Math.max(0,ad-baseAd):ad)
+   :ratio.stat==='armor'?Number(agg?.armor)||0:ratio.stat==='mr'?Number(agg?.mr)||0
    :ratio.stat==='maxHp'?targetMaxHp||0:0;
   dmg+=c*v;
  }
- return Math.max(0,Math.round(dmg));
+ const hits=Array.isArray(d.hits)?d.hits[r]??d.hits.at(-1):1;
+ return Math.max(0,Math.round(dmg*Math.max(1,hits||1)));
 }
-export function proxyRanks(level,maxRank=5){
- const L=Math.min(Math.max(Number(level)||1,1),18);
- return Math.min(maxRank,Math.max(1,Math.round(L*maxRank/18)));
+// Proxied enemy ranks: total points never exceed level, R gated behind
+// 6/11/16, Q maxed first. Purely a documented stand-in for unknown enemy
+// skill distribution; the UI labels it as such.
+export function proxySkillRanks(level){
+ const L=Math.min(Math.max(Math.round(Number(level))||1,1),18);
+ const r=L>=16?3:L>=11?2:L>=6?1:0;
+ let rest=L-(r>0?r:0);
+ const q=Math.min(5,rest);rest-=q;
+ const w=Math.min(5,rest);rest-=w;
+ const e=Math.min(5,Math.max(0,rest));
+ return {Q:q,W:w,E:e,R:r};
 }
 // Expected auto-attack + a small mix of ability casts per second.
 export function roughDps(champion,level,agg){
  const base=statAtLevel(champion.stats,level);
- const as=agg.atkSpeed??base.atkSpeed;
- const adShare=agg.ad/(agg.ad+agg.ap+1);
+ const ad=Number(agg?.ad)||0,ap=Number(agg?.ap)||0;
+ const as=agg?.atkSpeed??base.atkSpeed;
+ const adShare=ad/(ad+ap+1);
  const apShare=1-adShare;
- const autoDps=agg.ad*as*(1+(agg.crit||0)*0.75);
+ const autoDps=ad*as*(1+(Number(agg?.crit)||0)*0.75);
  const mixDps=autoDps*adShare*(1+apShare*0.35*apShare); // stronger AP mix scales with AP share
- const apBurst=Math.max(0,agg.ap)*Math.min(1,apShare*1.4)/6; // ~one ability cast per 6s with AP ratio
+ const apBurst=Math.max(0,ap)*Math.min(1,apShare*1.4)/6; // ~one ability cast per 6s with AP ratio
  return Math.round((mixDps+apBurst)*10)/10;
 }
 
@@ -115,14 +125,14 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
  const def=defAgg&&Number.isFinite(defAgg.armor)?defAgg:{armor:statAtLevel(defender.stats,level).armor,mr:statAtLevel(defender.stats,level).mr};
  const autos=mitigate(roughDps(attacker,level,agg)*6,def.armor,def.mr,0.55);
  let burst=0;
- const {skills=null,spells=null}=extra;
- if(spells&&skills){
+ const {skills=null,spellbook=null}=extra;
+ if(spellbook&&skills){
   const baseAd=statAtLevel(attacker.stats,level).ad;
   const targetMaxHp=Number.isFinite(defAgg?.hp)?defAgg.hp:null;
   for(const slot of ['Q','W','E','R']){
    const rank=skills[slot];
    if(!Number.isInteger(rank)||rank<1)continue;
-   const spell=spells[attacker.id]?.[slot];
+   const spell=spellbook[attacker.id]?.[slot];
    const hit=skillHitDamage(spell,rank,agg,baseAd,targetMaxHp);
    if(hit<=0)continue;
    const type=spell.damage.type;
@@ -138,8 +148,8 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
 
 // Trading edge -1..1 vs a matched opponent. Positive favors `champion`.
 export function tradeEdge(champion,level,agg,opponent,opponentLevel,opponentAgg,data,points=null,extra={}){
- const myDamage=tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points?.mine??null,{skills:extra.mineSkills??null,spells:extra.spells??null});
- const theirDamage=tradeDamageWindow(opponent,champion,opponentLevel,opponentAgg,agg,points?.theirs??null,{skills:extra.theirsSkills??null,spells:extra.spells??null});
+ const myDamage=tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points?.mine??null,{skills:extra.mineSkills??null,spellbook:extra.spellbook??null});
+ const theirDamage=tradeDamageWindow(opponent,champion,opponentLevel,opponentAgg,agg,points?.theirs??null,{skills:extra.theirsSkills??null,spellbook:extra.spellbook??null});
  const myHp=agg.hp,theirHp=opponentAgg.hp;
  const meWins=myDamage/Math.max(theirHp,1)+(myHp-theirDamage>0?0.05:-0.05);
  const themWins=theirDamage/Math.max(myHp,1);
@@ -154,18 +164,24 @@ export function killThreshold(champion,level,agg,opponent,opponentLevel,opponent
 }
 
 // One full duel, both directions: my kill line on them and theirs on me.
-// Enemy items are the real public build; only their skill points and current
-// HP are proxied (by level and max HP) and labelled as such in the UI.
-export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyItems=[],spells=null){
+// Enemy items are the real public build; their ranks are proxied by level
+// (see proxySkillRanks) and their HP by max HP — the UI copy discloses both.
+export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyItems=[],spellbook=null){
  const enemyAgg=aggregateCombatStats(enemy,enemyLevel,enemyItems,data);
- const maxRanks={Q:5,W:5,E:5,R:3};
- const theirsSkills=Object.fromEntries(Object.entries(maxRanks).map(([slot,max])=>[slot,proxyRanks(enemyLevel,max)]));
- const extra={spells,mineSkills:ownSkills,theirsSkills};
+ const theirsSkills=proxySkillRanks(enemyLevel);
+ const extra={spellbook,mineSkills:ownSkills,theirsSkills};
+ const book=spellbook?.[own.id],foeBook=spellbook?.[enemy.id];
+ // Only nuke-tagged slots can make the estimate approximate: utility slots
+ // (Ashe E) are correctly zero, while a tagged-but-unparsed nuke (Garen R)
+ // means real damage is missing from the model.
+ const gap=(ranks,entry)=>['Q','W','E','R'].some(slot=>Number.isInteger(ranks?.[slot])&&ranks[slot]>=1&&entry?.[slot]?.nuke&&(!entry[slot].damage||entry[slot].partial));
+ const approx=!spellbook||!book||!foeBook||gap(ownSkills,book)||gap(theirsSkills,foeBook);
  const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
  return {
   enemy:{id:enemy.id,name:enemy.name,level:Number.isInteger(enemyLevel)?enemyLevel:null},
+  approx:!!approx,
   edge:tradeEdge(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,data,{mine,theirs},extra),
-  killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,null,{skills:ownSkills,spells}),
-  killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,null,{skills:theirsSkills,spells}),
+  killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,null,{skills:ownSkills,spellbook}),
+  killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,null,{skills:theirsSkills,spellbook}),
  };
 }

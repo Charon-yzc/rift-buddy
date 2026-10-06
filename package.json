@@ -19,7 +19,8 @@
     "check": "node scripts/check.mjs",
     "package": "node scripts/package.mjs",
     "catalog:audit": "node scripts/audit-catalog.mjs",
-    "catalog:validate": "node scripts/validate-catalog.mjs"
+    "catalog:validate": "node scripts/validate-catalog.mjs",
+    "spells:enrich": "node scripts/enrich-spells.mjs"
   },
   "devDependencies": {
     "@electron/packager": "20.3.0",

@@ -109,6 +109,7 @@ export function createGuideModel(data,value,live=null,current=null){
   const primary=duels[0];
   const curHp=Number.isFinite(live.stats?.hp)?Math.floor(live.stats.hp):null;
   return {enemy:primary.enemy,edge:primary.edge,killThreshold:primary.killMine,theirKill:primary.killTheirs,duels,
+   approx:duels.some(d=>d.approx),
    liveReal:panel.live,curHp,danger:curHp!==null&&curHp>0&&primary.killTheirs>=curHp,at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,

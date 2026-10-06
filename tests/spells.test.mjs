@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {skillHitDamage,proxyRanks,burstDamage} from '../src/core/live-estimate.mjs';
+import {skillHitDamage,proxySkillRanks,burstDamage,duel} from '../src/core/live-estimate.mjs';
 const spells=JSON.parse(await fs.readFile('data/spells.json','utf8'));
+const game=JSON.parse(await fs.readFile('data/game.json','utf8'));
 const book=spells.champions;
 
-test('spell book schema is sound and matches the game data version',()=>{
- const game=JSON.parse(JSON.stringify({})); // version checked below via sync read
+test('spell book schema is sound and matches the bundled game version',()=>{
+ assert.equal(spells.version,game.version);
  assert.equal(spells.patch,spells.version.split('.').slice(0,2).join('.'));
  assert.ok(spells.coverage.champions>=170);
  assert.ok(spells.coverage.withDamage>=165);
@@ -18,9 +19,11 @@ test('spell book schema is sound and matches the game data version',()=>{
     assert.ok(['physical','magic','true'].includes(s.damage.type),`${id}.${slot} type`);
     assert.ok(s.damage.base.length===(slot==='R'?3:5),`${id}.${slot} ranks`);
     assert.ok(s.damage.base.every(v=>v>=0),`${id}.${slot} base`);
+    if(s.damage.hits)assert.ok(s.damage.hits.length===s.damage.base.length&&s.damage.hits.every(v=>Number.isInteger(v)&&v>=1&&v<=30),`${id}.${slot} hits`);
     for(const r of s.damage.ratios||[]){
-     assert.ok(['ad','ap','bonusAd','armor','mr','maxHp'].includes(r.stat),`${id}.${slot} ratio stat`);
-     assert.ok(Number.isFinite(r.coeff)&&r.coeff>=0,`${id}.${slot} ratio coeff`);
+     assert.ok(['ad','ap','armor','mr','maxHp'].includes(r.stat),`${id}.${slot} ratio stat`);
+     const coeffs=Array.isArray(r.coeff)?r.coeff:[r.coeff];
+     assert.ok(coeffs.every(v=>Number.isFinite(v)&&v>=0),`${id}.${slot} ratio coeff`);
     }
    }
   }
@@ -39,17 +42,56 @@ test('known live values match the shipped data files',()=>{
  assert.deepEqual(zed.ratios,[{stat:'ad',coeff:1,formula:'bonus'}]);
  const darius=book.Darius.R.damage;
  assert.equal(darius.type,'true');assert.deepEqual(darius.base,[125,250,375]);
+ // Jinx W is total AD, not bonus: Riot names bonus explicitly (BonusADRatio,
+ // BADRatio) and the wiki patch note reads "1.4 total attack damage".
  const jinx=book.Jinx.W.damage;
  assert.deepEqual(jinx.base,[10,60,110,160,210]);
+ assert.deepEqual(jinx.ratios,[{stat:'ad',coeff:1.4,formula:'total'}]);
+ const garen=book.Garen.E.damage;
+ assert.deepEqual(garen.hits,[7,7,7,7,7]);
+ // Dual-form champions stay honestly partial.
+ assert.equal(book.Jayce.Q.partial,true);
 });
 
-test('skill hits use real ranks and ratios, proxy ranks stay documented',()=>{
+test('skill hits use real ranks and ratios, multi-hits multiply',()=>{
  const agg={ad:144,ap:0,hp:1195,armor:49,mr:38.5};
  assert.equal(skillHitDamage(book.Ashe.W,1,agg,59,null),20+144);
  assert.equal(skillHitDamage(book.Ashe.W,5,agg,59,null),80+144);
  assert.equal(skillHitDamage(book.Ashe.W,0,agg,59,null),0);
  assert.equal(skillHitDamage(null,3,agg,59,null),0);
  assert.equal(skillHitDamage(book.Zed.Q,1,{ad:100,ap:0,armor:0,mr:0},60,null),80+40);
- assert.deepEqual([proxyRanks(1),proxyRanks(6,3),proxyRanks(18),proxyRanks(11,3)],[1,1,5,2]);
+ assert.equal(skillHitDamage(book.Garen.E,1,{ad:100,ap:0,armor:0,mr:0},60,null),(4+Math.round(0.4*100))*7);
+ // True damage bypasses armor and MR.
+ assert.equal(skillHitDamage(book.Darius.R,1,{ad:100,ap:0,armor:200,mr:200},60,3000),125+Math.round(0.75*40));
+ assert.equal(skillHitDamage(book.Ahri.Q,1,{ad:60,ap:100,armor:0,mr:0},60,null),35+50);
+ // Missing fields never poison the chain with NaN.
+ assert.ok(Number.isFinite(skillHitDamage(book.Ashe.W,1,{ad:100},60,null)));
  assert.ok(burstDamage({stats:{attackdamage:59,attackspeed:0.658,attackspeedperlevel:3}},6,{ad:59,ap:0},6)>0);
+});
+
+test('proxied enemy ranks never exceed level and gate the ultimate',()=>{
+ assert.deepEqual(proxySkillRanks(1),{Q:1,W:0,E:0,R:0});
+ assert.deepEqual(proxySkillRanks(5),{Q:5,W:0,E:0,R:0});
+ assert.deepEqual(proxySkillRanks(6),{Q:5,W:0,E:0,R:1});
+ assert.deepEqual(proxySkillRanks(18),{Q:5,W:5,E:5,R:3});
+ for(const level of [1,6,9,11,16,18]){
+  const r=proxySkillRanks(level);
+  assert.ok(r.Q+r.W+r.E+r.R<=level,`level ${level} total`);
+ }
+});
+
+test('duels flag approximation when the book is missing or partial',()=>{
+ const ashe=game.champions.find(c=>c.id==='Ashe'),jinx=game.champions.find(c=>c.id==='Jinx');
+ const agg={ad:144,ap:0,hp:1195,armor:49,mr:38.5,atkSpeed:0.8,crit:0};
+ const full=duel(ashe,6,agg,{Q:3,W:2,E:1,R:0},jinx,6,game,[],book);
+ // Steroid Qs (Ashe/Jinx) only parse partially, so a real book still flags approx.
+ assert.equal(full.approx,true);assert.ok(full.killMine>0&&full.killTheirs>0);
+ const clean={Ashe:{Q:{damage:{type:'physical',base:[10,10,10,10,10],ratios:[]},partial:false}},Jinx:{Q:{damage:{type:'physical',base:[10,10,10,10,10],ratios:[]},partial:false}}};
+ const exact=duel(ashe,6,agg,{Q:1},jinx,6,game,[],clean);
+ assert.equal(exact.approx,false);
+ const noBook=duel(ashe,6,agg,{Q:3,W:2,E:1,R:0},jinx,6,game,[],null);
+ assert.equal(noBook.approx,true);assert.ok(noBook.killMine>0);
+ const jayce=game.champions.find(c=>c.id==='Jayce');
+ const partial=duel(ashe,6,agg,{Q:3,W:2,E:1,R:0},jayce,6,game,[],book);
+ assert.equal(partial.approx,true);
 });
