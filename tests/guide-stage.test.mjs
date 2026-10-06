@@ -24,9 +24,9 @@ test('objective windows appear only around their soft timings',()=>{
  assert.equal(has(100,'小龙'),false);
  assert.equal(has(800,'先锋'),true);
  assert.equal(has(500,'先锋'),false);
- assert.equal(has(1200,'大龙'),true);
- assert.equal(has(1000,'大龙'),false);
- assert.equal(has(1150,'大龙'),true);
+ assert.equal(has(1200,'大龙出生前后'),true);
+ assert.equal(has(1000,'大龙出生前后'),false);
+ assert.equal(has(1150,'大龙出生前后'),true);
  assert.equal(has(320,'小龙'),true);
 });
 
