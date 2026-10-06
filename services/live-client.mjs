@@ -32,7 +32,7 @@ export function panelStats(raw){
  const ad=num(raw.attackDamage),ap=num(raw.abilityPower);
  if(ad===null&&ap===null)return null;
  const ratio=v=>v===null?null:(v>1&&v<=100?v/100:v);
- return {ad:ad??0,ap:ap??0,armor:num(raw.armor)??0,mr:num(raw.magicResist)??0,
+ return {ad,ap,armor:num(raw.armor),mr:num(raw.magicResist),
   atkSpeed:num(raw.attackSpeed),crit:ratio(num(raw.critChance)),ms:num(raw.moveSpeed),
   hp:num(raw.currentHealth),maxHp:num(raw.maxHealth),regen:num(raw.healthRegenRate)};
 }

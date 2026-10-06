@@ -5,9 +5,10 @@ import {compareAugments} from './hex-compare.mjs';
 import {comboStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
-import {aggregateCombatStats,applyLivePanel,duel,itemOnHits,hasUnparsedOnHit} from './live-estimate.mjs';
+import {aggregateCombatStats,applyLivePanel,duel} from './live-estimate.mjs';
 
 const conditions=['ad','ap','control','heal','burst'];
+const knownLevel=n=>Number.isInteger(n)&&n>=1&&n<=30;
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
 // Custom duel picks: each side is either a valid champion id or absent
 // (half-picked state while the user is still choosing). Equal ids never
@@ -111,24 +112,23 @@ export function createGuideModel(data,value,live=null,current=null){
  const duelOptions=matched?{
   own:[{id:s.id,name:champion.name,self:true},...allySnapshots.map(a=>({id:a.id,name:a.name}))],
   foe:enemySnapshots.map(t=>({id:t.id,name:t.name}))}:null;
- const estimate=matched&&ownChampion&&enemySnapshots.length?(()=>{
-  const panel=applyLivePanel(ownChampion,live.level||1,live.stats);
-  // A live panel already contains items/runes/buffs: adding item stats again
-  // would double count. On-hit effects are the exception: the panel AD/AP
-  // never includes them, so they merge in from the visible inventory.
-  const ownAgg=panel.live?{...panel.agg,onHit:itemOnHits(live.inventory||[],data),onHitApprox:hasUnparsedOnHit(live.inventory||[],data)}:aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
+ const estimate=matched&&ownChampion&&Number.isInteger(live.level)&&live.level>=1&&live.level<=30&&enemySnapshots.length?(()=>{
+  // A reported panel field already contains items/runes/buffs. Only missing
+  // fields use the public-inventory fallback, without adding stats twice.
+  const computed=aggregateCombatStats(ownChampion,live.level,live.inventory||[],data);
+  const panel=applyLivePanel(ownChampion,live.level,live.stats,computed),ownAgg=panel.agg;
   const duels=enemySnapshots.map(target=>{
    const enemyChampion=data.champions.find(c=>c.id===target.id);
-   if(!enemyChampion)return null;
+   if(!enemyChampion||!Number.isInteger(target.level)||target.level<1||target.level>30)return null;
    const book=data.spellbook&&Object.keys(data.spellbook).length?data.spellbook:null;
-   return duel(ownChampion,live.level||1,ownAgg,live.skills,enemyChampion,target.level||live.level||1,data,target.items||[],book);
-  }).filter(Boolean);
+   return duel(ownChampion,live.level,ownAgg,live.skills,enemyChampion,target.level,data,target.items||[],book);
+  }).filter(Boolean).sort((a,b)=>b.killTheirs-a.killTheirs||a.enemy.id.localeCompare(b.enemy.id));
   if(!duels.length)return null;
   const primary=duels[0];
   const curHp=Number.isFinite(live.stats?.hp)?Math.floor(live.stats.hp):null;
+  const warningEnemies=curHp!==null&&curHp>0?duels.filter(d=>d.killTheirs>=curHp).map(d=>d.enemy):[];
   return {enemy:primary.enemy,edge:primary.edge,killThreshold:primary.killMine,theirKill:primary.killTheirs,duels,
-   approx:duels.some(d=>d.approx),
-   liveReal:panel.live,curHp,danger:curHp!==null&&curHp>0&&primary.killTheirs>=curHp,at:live.at};
+   approx:true,liveReal:panel.live,mineSkillBasis:primary.mineSkillBasis,curHp,danger:warningEnemies.length>0,warningEnemies,windowSeconds:6,at:live.at};
  })():null;
  const action=matched?purchaseAction(targetPlan,next,live.gold):null;
  // Custom duel simulator: the user picks one ally side and one enemy side
@@ -138,19 +138,20 @@ export function createGuideModel(data,value,live=null,current=null){
   const book=data.spellbook&&Object.keys(data.spellbook).length?data.spellbook:null;
   const foeSnap=enemySnapshots.find(t=>t.id===guide.duelPick.foe);
   const foeChamp=foeSnap&&data.champions.find(c=>c.id===foeSnap.id);
-  if(!foeChamp)return {pick:{...guide.duelPick},unresolved:true};
-  const foeLevel=foeSnap.level||live.level||1;
+  if(!foeChamp||!knownLevel(foeSnap.level))return {pick:{...guide.duelPick},unresolved:true};
+  const foeLevel=foeSnap.level;
   let ownChamp,ownLevel,ownAgg,ownSkills,ownSelf;
   if(guide.duelPick.own===s.id){
-   ownChamp=ownChampion;ownLevel=live.level||1;
-   const p=applyLivePanel(ownChampion,live.level||1,live.stats);
-   ownAgg=p.live?{...p.agg,onHit:itemOnHits(live.inventory||[],data),onHitApprox:hasUnparsedOnHit(live.inventory||[],data)}:aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
+   if(!knownLevel(live.level))return {pick:{...guide.duelPick},unresolved:true};
+   ownChamp=ownChampion;ownLevel=live.level;
+   const computed=aggregateCombatStats(ownChampion,ownLevel,live.inventory||[],data);
+   ownAgg=applyLivePanel(ownChampion,ownLevel,live.stats,computed).agg;
    ownSkills=live.skills;ownSelf=true;
   }else{
    const allySnap=allySnapshots.find(a=>a.id===guide.duelPick.own);
    ownChamp=allySnap&&data.champions.find(c=>c.id===allySnap.id);
-   if(!ownChamp)return {pick:{...guide.duelPick},unresolved:true};
-   ownLevel=allySnap.level||live.level||1;
+   if(!ownChamp||!knownLevel(allySnap.level))return {pick:{...guide.duelPick},unresolved:true};
+   ownLevel=allySnap.level;
    ownAgg=aggregateCombatStats(ownChamp,ownLevel,allySnap.items||[],data);
    ownSkills=null;ownSelf=false;
   }
@@ -160,12 +161,12 @@ export function createGuideModel(data,value,live=null,current=null){
    foe:{id:foeChamp.id,name:foeChamp.name,level:foeSnap.level},
    edge:d.edge,killMine:d.killMine,killTheirs:d.killTheirs,
    approx:!!d.approx||!ownSelf,
-   skillsNote:ownSelf?'对方技能按等级反推':'双方技能按等级反推',
+   skillsNote:ownSelf?'对方技能按等级总点数近似':'双方技能按等级总点数近似',
    at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
-  phase:gamePhase(liveModel,action,next||null),
+  phase:s.mode==='rift'?gamePhase(liveModel,action,next||null):null,
   live:liveModel,estimate,customDuel,duelPick:guide.duelPick||null,duelOptions,nextSkill:nextSkill(champion.id,build.priority,build.first,liveModel),
   priority:build.priority,first:build.first,summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],

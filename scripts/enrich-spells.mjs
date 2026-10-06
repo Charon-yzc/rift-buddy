@@ -8,8 +8,8 @@
 //   tooltip placeholder carries physical/magic/true damage.
 // - CommunityDragon character .bin.json: the real per-rank formulas
 //   (DataValues + mSpellCalculations), same family as the augment parser.
-// Runtime never fetches these; it reads the bundled data/spells.json and
-// falls back to heuristics when a champion or slot is missing.
+// Runtime never fetches these. Generated entries are experimental and do not
+// replace the heuristic until a supported champion cast model is reviewed.
 import fs from 'node:fs/promises';
 import {getJSON,atomicJSON} from '../services/data.mjs';
 import {landedTicks} from './spell-ticks.mjs';
@@ -195,7 +195,7 @@ await Promise.all(Array.from({length:6},async()=>{
    const ddSpells=dd?.data?.[c.id]?.spells||[];
    const ddIds={Q:ddSpells[0]?.id,W:ddSpells[1]?.id,E:ddSpells[2]?.id,R:ddSpells[3]?.id};
    const slots=collectSlots(bin,c.id,ddIds);
-   const out={};
+   const out={reviewedForCombat:false};
    for(const spell of rcp.spells||[]){
     const slot=String(spell.spellKey||'').toUpperCase();
     if(!['Q','W','E','R'].includes(slot))continue;

@@ -2,14 +2,17 @@ import {escape as e,icon} from './ui.mjs';
 import {GUIDE_STAGES,guideMismatch} from './core/guide-stage.mjs';
 import {phaseLabel} from './core/guide.mjs';
 const conditionNames=[['ad','普攻压力'],['ap','魔法伤害'],['control','控制多'],['heal','回血多'],['burst','需要保命']];
-export function estimateRows(m){
- if(!m?.estimate)return '';
- const dir=m.estimate.edge>0.25?'偏你':m.estimate.edge<-0.25?'偏对方':'均势';
- const source=m.estimate.liveReal?'己方实时面板 + 对方公开出装':'对方按出装+等级反推';
- const duels=Array.isArray(m.estimate.duels)?m.estimate.duels:[];
- return `<p class="estimate-row"><b>换血倾向 · ${e(m.estimate.enemy?.name)}</b> ${dir} · 你斩杀约 <strong>${m.estimate.killThreshold??'—'}</strong> 血 · 对方斩杀约 <strong>${m.estimate.theirKill??'—'}</strong> 血 <span class="est-src">${source}；对方技能按等级反推、血量按满血估算${m.estimate.approx?' · 部分为估算':''}</span></p>`
-  +`${m.estimate.danger&&m.estimate.curHp!=null?`<p class="estimate-row danger"><b>注意</b> 对方 6 秒窗口伤害约 <strong>${m.estimate.theirKill??'—'}</strong>，已达到你当前 <strong>${m.estimate.curHp}</strong> 血</p>`:''}`
-  +`${duels.length>1?`<p class="estimate-row rivals">其余：${duels.slice(1,6).map(d=>`${e(d.enemy?.name)}${d.edge>0.25?'偏你':d.edge<-0.25?'偏对方':'均势'}/斩${d.killMine??'—'}`).join(' · ')}</p>`:''}`;
+export function estimateRows(model){
+ const value=model?.estimate;
+ if(!value)return '';
+ const tendency=d=>d.edge>0.25?'偏你':d.edge<-0.25?'偏对方':'均势';
+ const source=value.liveReal?'己方实时面板 · 对手按公开装备和等级反推估算':'双方按公开装备和等级反推估算';
+ const warningNames=(value.warningEnemies||[]).map(d=>d.name).join('、');
+ const skills=value.mineSkillBasis==='reviewed'?'己方技能使用人工复核公式，对手技能按总点数近似。':'技能项按总点数近似。';
+ return `<p class="estimate-row"><b>6 秒输出估算 · ${e(value.enemy.name)}</b> 我方约 <strong>${value.killThreshold}</strong> / 对方约 <strong>${value.theirKill}</strong> · 换血模型${tendency(value)}<span>${source}；优先显示估算输出最高的对手</span></p>
+ ${value.danger?`<p class="estimate-row danger" title="六秒模型估算，不表示立即斩杀或对手在附近"><b>模型提示 · ${e(warningNames)}</b> ${e(value.enemy.name)}估算 ${value.theirKill}，达到你当前 ${value.curHp} 血</p>`:''}
+ ${value.duels.length>1?`<p class="estimate-row rivals">其他对手（我方 / 对方估算）：${value.duels.slice(1,6).map(d=>`${e(d.enemy.name)} ${d.killMine} / ${d.killTheirs}`).join(' · ')}</p>`:''}
+ <details class="estimate-assumptions" data-guide-section="estimate-assumptions"><summary>估算前提</summary><p>六秒持续输出的粗略模型，${skills}未计命中、距离、技能冷却、穿透、护盾、条件装备特效与海克斯强化；不是实际伤害或立即斩杀判断，也不表示对手在附近。</p></details>`;
 }
 // Glanceable combat headline: same computed numbers as estimateRows, only
 // bigger. No new claims — word mirrors the edge direction, danger mirrors
@@ -20,7 +23,7 @@ export function verdictBanner(m){
  const dir=est.edge>0.25?'偏你':est.edge<-0.25?'偏对方':'均势';
  const cls=est.danger?'danger':est.edge>0.25?'good':est.edge<-0.25?'bad':'even';
  const word=est.danger?'注意':dir;
- return `<section class="verdict ${cls}"><b>${word}</b><div class="verdict-nums"><span>斩杀约 <em>${est.killThreshold??'—'}</em></span><span>被斩约 <em>${est.theirKill??'—'}</em></span></div><small>${e(est.enemy?.name||'')} · 估算</small></section>`;
+ return `<section class="verdict ${cls}"><b>${word}</b><div class="verdict-nums"><span>六秒输出约 <em>${est.killThreshold??'—'}</em></span><span>承受输出约 <em>${est.theirKill??'—'}</em></span></div><small>${e(est.enemy?.name||'')} · 估算</small></section>`;
 }
 // Custom duel simulator: pick one ally side and one enemy side from the
 // live scoreboard feed. Same computed numbers as estimateRows, no new
@@ -36,9 +39,9 @@ export function duelBox(m){
  let result='';
  if(cd&&!cd.unresolved){
   const dir=cd.edge>0.25?'偏'+cd.own.name:cd.edge<-0.25?'偏'+cd.foe.name:'均势';
-  result=`<p class="estimate-row"><b>${e(cd.own.name)} vs ${e(cd.foe.name)}</b> ${e(dir)} · ${e(cd.own.name)}斩杀约 <strong>${cd.killMine??'—'}</strong> · ${e(cd.foe.name)}斩杀约 <strong>${cd.killTheirs??'—'}</strong> <span class="est-src">${e(cd.skillsNote)}；血量按满血估算${cd.approx?' · 部分为估算':''}</span></p>`;
+  result=`<p class="estimate-row"><b>${e(cd.own.name)} vs ${e(cd.foe.name)}</b> ${e(dir)} · ${e(cd.own.name)}六秒输出约 <strong>${cd.killMine??'—'}</strong> · ${e(cd.foe.name)}六秒输出约 <strong>${cd.killTheirs??'—'}</strong> <span class="est-src">${e(cd.skillsNote)}；六秒粗略模型${cd.approx?' · 部分为估算':''}</span></p>`;
  }else if(cd?.unresolved){
-  result=`<p class="note">所选英雄不在本局可见名单中，请重选</p>`;
+  result=`<p class="note">所选英雄或等级暂不可读，请等待同步或重选</p>`;
  }
  return `<div class="duel-box"><div class="duel-pick"><select id="guide-duel-own" aria-label="我方英雄">${ownOpts}</select><span>vs</span><select id="guide-duel-foe" aria-label="对方英雄">${foeOpts}</select></div>${result}</div>`;
 }

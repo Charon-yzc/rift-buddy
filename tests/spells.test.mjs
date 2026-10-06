@@ -113,7 +113,7 @@ test('duels flag approximation when the book is missing or partial',()=>{
  assert.equal(full.approx,true);assert.ok(full.killMine>0&&full.killTheirs>0);
  const clean={Ashe:{Q:{damage:{type:'physical',base:[10,10,10,10,10],ratios:[]},partial:false}},Jinx:{Q:{damage:{type:'physical',base:[10,10,10,10,10],ratios:[]},partial:false}}};
  const exact=duel(ashe,6,agg,{Q:1},jinx,6,game,[],clean);
- assert.equal(exact.approx,false);
+ assert.equal(exact.approx,true,'Unknown enemy spell ranks keep even a clean book approximate');
  const noBook=duel(ashe,6,agg,{Q:3,W:2,E:1,R:0},jinx,6,game,[],null);
  assert.equal(noBook.approx,true);assert.ok(noBook.killMine>0);
  const jayce=game.champions.find(c=>c.id==='Jayce');
@@ -152,7 +152,7 @@ test('unparsed on-hit alone forces approx even with clean spell books',async()=>
  const slot=n=>({damage:{type:'physical',base:Array(n).fill(10),ratios:[]},partial:false});
  const cleanBook={Ashe:{Q:slot(5),W:slot(5),E:slot(5),R:slot(3)},Jinx:{Q:slot(5),W:slot(5),E:slot(5),R:slot(3)}};
  const plain=aggregateCombatStats(ashe,6,[],game);
- assert.equal(duel(ashe,6,plain,{Q:1},jinx,6,game,[],cleanBook).approx,false);
+ assert.equal(duel(ashe,6,plain,{Q:1},jinx,6,game,[],cleanBook).approx,true);
  const withOnHit={...plain,onHitApprox:true};
  assert.equal(duel(ashe,6,withOnHit,{Q:1},jinx,6,game,[],cleanBook).approx,true);
  const foeOnHit=duel(ashe,6,plain,{Q:1},jinx,6,game,[{id:'3153'}],cleanBook);

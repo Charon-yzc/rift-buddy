@@ -104,3 +104,15 @@ test('result and play cards mark creative ideas honestly',()=>{
  const play=resultPlayCard(creative,4,{...data2,catalogInfo:{status:{}}});
  assert.ok(play.includes('强势期')&&play.includes('未经对局验证'));
 });
+
+test('requesting one result preserves the first choice instead of forcing a creative idea',()=>{
+ const slots=locked(createSlots(),[['top','Garen'],['jungle','LeeSin']]);
+ const input={slots,champions:data.champions};
+ const first=recommend({...input,limit:1});
+ const multiple=recommend({...input,limit:5});
+ assert.equal(first.length,1);
+ assert.equal(first[0].id,multiple[0].id);
+ assert.equal(first[0].origin,'curated');
+ assert.ok(multiple.some(r=>r.origin==='creative'));
+ assert.deepEqual(recommend({...input,limit:0}),[]);
+});

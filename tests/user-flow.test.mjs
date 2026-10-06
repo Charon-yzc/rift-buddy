@@ -174,18 +174,18 @@ test('custom duel pits a picked ally against a picked enemy with disclosed proxi
  // ally (proxied skills) vs enemy: approx forced, both-sides note
  const ally=createGuideModel({...data,hexBuilds:{}},{...selectGuide(null,selection),duelPick:{own:'Janna',foe:'Thresh'}},{...snap,matched:true,at});
  assert.equal(ally.customDuel.pick.own,'Janna');assert.equal(ally.customDuel.own.self,false);
- assert.equal(ally.customDuel.skillsNote,'双方技能按等级反推');assert.equal(ally.customDuel.approx,true);
+ assert.equal(ally.customDuel.skillsNote,'双方技能按等级总点数近似');assert.equal(ally.customDuel.approx,true);
  assert.ok(ally.customDuel.killMine>0&&ally.customDuel.killTheirs>0);
  // self vs enemy: live panel, single-side note
  const self=createGuideModel({...data,hexBuilds:{}},{...selectGuide(null,selection),duelPick:{own:'Ashe',foe:'Thresh'}},{...snap,matched:true,at});
- assert.equal(self.customDuel.own.self,true);assert.equal(self.customDuel.skillsNote,'对方技能按等级反推');
+ assert.equal(self.customDuel.own.self,true);assert.equal(self.customDuel.skillsNote,'对方技能按等级总点数近似');
  // unknown foe / unmatched live: no duel, picker hidden
  const stale=createGuideModel({...data,hexBuilds:{}},{...selectGuide(null,selection),duelPick:{own:'Ashe',foe:'Zed'}},{...snap,matched:true,at});
  assert.equal(stale.customDuel.unresolved,true);
  const plain=createGuideModel(data,selectGuide(null,selection));
  assert.equal(plain.customDuel,null);assert.equal(plain.duelOptions,null);
  const html=duelBox(ally);
- assert.ok(html.includes('迦娜 vs 锤石')&&html.includes('斩杀约'));
+ assert.ok(html.includes('迦娜 vs 锤石')&&html.includes('六秒输出约'));
  assert.ok(html.includes('<strong>')&&!html.includes('undefined'));
  assert.ok(html.includes('id="guide-duel-own"')&&html.includes('id="guide-duel-foe"'));
  assert.equal(duelBox(plain),'');

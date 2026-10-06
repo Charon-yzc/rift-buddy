@@ -68,3 +68,14 @@ body.ball{border:0;background:transparent}
 .next-item b{font-size:15px}
 .next-item p{font-size:12px}
 .guide-status{font-size:12px}
+#guide-root{display:flex;flex-direction:column;height:100%;min-height:0}
+.expanded{height:auto;flex:1;min-height:0}
+header,.hero-summary,.guide-status,.next-item,.quick-reminders,.input-hint{flex-shrink:0}
+body:not(.collapsed) .quick-reminders:has(.estimate-row){max-height:min(190px,30vh);overflow-y:auto;scrollbar-width:thin}
+.estimate-assumptions{font-size:10px;color:#8da6b8;margin:3px 0 6px}
+.estimate-assumptions summary{cursor:pointer}
+.collapsed .estimate-row:not(.danger),.collapsed .estimate-assumptions{display:none}
+.collapsed .estimate-row.danger{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
+
+/* Compact mode keeps the warning and input controls visible in 220px. */
+.collapsed .verdict,.collapsed .duel-box{display:none}

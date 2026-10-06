@@ -86,12 +86,12 @@ export function hasUnparsedOnHit(items=[],data){
 }
 // Prefer the live panel (already includes items, runes, buffs): do NOT add
 // item stats on top or they count twice. Computed stats are the fallback.
-export function applyLivePanel(champion,level,panel){
- const base=statAtLevel(champion.stats,level);
- if(!panel)return {agg:aggregateCombatStats(champion,level,[],null),live:false};
- return {agg:{ad:panel.ad??base.ad,ap:panel.ap??0,hp:panel.maxHp??base.hp,
-  armor:panel.armor??base.armor,mr:panel.mr??base.mr,
-  atkSpeed:panel.atkSpeed??base.atkSpeed,crit:panel.crit??0,curHp:panel.hp??null},live:true};
+export function applyLivePanel(champion,level,panel,fallback=null){
+ const computed=fallback||aggregateCombatStats(champion,level,[],null);
+ if(!panel)return {agg:computed,live:false};
+ return {agg:{ad:panel.ad??computed.ad,ap:panel.ap??computed.ap,hp:panel.maxHp??computed.hp,
+  armor:panel.armor??computed.armor,mr:panel.mr??computed.mr,
+  atkSpeed:panel.atkSpeed??computed.atkSpeed,crit:panel.crit??computed.crit,curHp:panel.hp??null,onHit:computed.onHit,onHitApprox:computed.onHitApprox},live:true};
 }
 
 // Total invested skill points. Own points come from the live client; the
@@ -182,18 +182,37 @@ export function roughDps(champion,level,agg){
  return Math.round((mixDps+apBurst)*10)/10;
 }
 
-const mitigate=(amount,armor,mr,physShare)=>amount*(physShare*(100/(100+armor))+(1-physShare)*(100/(100+mr)));
+const resistanceMultiplier=resistance=>resistance>=0?100/(100+resistance):2-100/(100-resistance);
+const mitigate=(amount,armor,mr,physShare)=>amount*(physShare*resistanceMultiplier(armor)+(1-physShare)*resistanceMultiplier(mr));
+
+// Generated spell formulas are research material until the champion's complete
+// cast model is manually reviewed. Partial and unsupported ratios stay out.
+export function canUseCombatSpells(champion,skills,spells){
+ const book=spells?.[champion.id];
+ if(!skills||book?.reviewedForCombat!==true)return false;
+ const learned=['Q','W','E','R'].filter(slot=>Number.isInteger(skills[slot])&&skills[slot]>0);
+ return learned.length>0&&learned.every(slot=>{
+  const spell=book[slot],d=spell?.damage;
+  if(!spell||spell.partial)return false;
+  if(!d)return !spell.nuke;
+  if(d.extra?.length)return false; // Conditional multi-segment models need separate review.
+  if(d.ratios!==undefined&&!Array.isArray(d.ratios))return false;
+  if(d.hits!==undefined&&(!Array.isArray(d.hits)||d.hits.length!==d.base?.length||!d.hits.every(v=>Number.isInteger(v)&&v>=1&&v<=30)))return false;
+  return ['physical','magic','true'].includes(d.type)&&Array.isArray(d.base)&&skills[slot]<=d.base.length&&d.base.every(v=>Number.isFinite(v)&&v>=0)&&
+   (d.ratios||[]).every(r=>r&&Number.isFinite(r.coeff)&&r.coeff>=0&&(r.stat==='ad'&&['total','bonus'].includes(r.formula)||r.stat==='ap'&&r.formula==='total'));
+ });
+}
 
 // Health a champion's 6s trading window would deal. `defAgg` is the real
-// aggregate (armor/mr/hp included), not base stats. Skills use the enriched
-// spell book with per-type mitigation; without it, the heuristic burst stays.
+// aggregate (armor/mr/hp included), not base stats. Only reviewed spell models
+// with known ranks can replace the explicitly labeled heuristic burst.
 export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null,extra={}){
- const base=statAtLevel(attacker.stats,level);
- const def=(defAgg&&Number.isFinite(defAgg.armor)&&Number.isFinite(defAgg.mr))?defAgg:{armor:statAtLevel(defender.stats,level).armor,mr:statAtLevel(defender.stats,level).mr};
+ const base=statAtLevel(defender.stats,extra.defenderLevel??level);
+ const def={armor:Number.isFinite(defAgg?.armor)?defAgg.armor:base.armor,mr:Number.isFinite(defAgg?.mr)?defAgg.mr:base.mr};
  const autos=mitigate(roughDps(attacker,level,agg)*6,def.armor,def.mr,0.55);
  // Flat-number on-hit effects scale with attack speed, one proc per attack,
  // each mitigated by its own damage type.
- const asRate=Number(agg?.atkSpeed)||base.atkSpeed;
+ const asRate=Number(agg?.atkSpeed)||statAtLevel(attacker.stats,level).atkSpeed;
  let onHit=0;
  for(const h of (Array.isArray(agg?.onHit)?agg.onHit:[])){
   const perHit=Number(h?.dmg);if(!(perHit>0))continue;
@@ -201,15 +220,14 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
   onHit+=h.type==='true'?perSec*6:mitigate(perSec*6,def.armor,def.mr,h.type==='physical'?1:0);
  }
  let burst=0;
- const {skills=null,spellbook=null}=extra;
- if(spellbook&&skills){
-  const base=statAtLevel(attacker.stats,level);
-  const bases={ad:base.ad,armor:base.armor,mr:base.mr};
+ const {skills=null}=extra,spells=extra.spellbook??extra.spells??null;
+ if(canUseCombatSpells(attacker,skills,spells)){
+  const base=statAtLevel(attacker.stats,level),bases={ad:base.ad,armor:base.armor,mr:base.mr};
   const targetMaxHp=Number.isFinite(defAgg?.hp)?defAgg.hp:null;
   for(const slot of ['Q','W','E','R']){
    const rank=skills[slot];
    if(!Number.isInteger(rank)||rank<1)continue;
-   const spell=spellbook[attacker.id]?.[slot];
+   const spell=spells[attacker.id]?.[slot];
    const hit=skillHitDamage(spell,rank,agg,bases,targetMaxHp,def);
    if(hit<=0)continue;
    burst+=hit;
@@ -224,8 +242,8 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
 
 // Trading edge -1..1 vs a matched opponent. Positive favors `champion`.
 export function tradeEdge(champion,level,agg,opponent,opponentLevel,opponentAgg,data,points=null,extra={}){
- const myDamage=tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points?.mine??null,{skills:extra.mineSkills??null,spellbook:extra.spellbook??null});
- const theirDamage=tradeDamageWindow(opponent,champion,opponentLevel,opponentAgg,agg,points?.theirs??null,{skills:extra.theirsSkills??null,spellbook:extra.spellbook??null});
+ const myDamage=tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points?.mine??null,{skills:extra.mineSkills??null,spellbook:extra.spellbook??extra.spells??null,defenderLevel:opponentLevel});
+ const theirDamage=tradeDamageWindow(opponent,champion,opponentLevel,opponentAgg,agg,points?.theirs??null,{skills:extra.theirsSkills??null,spellbook:extra.spellbook??extra.spells??null,defenderLevel:level});
  const myHp=agg.hp,theirHp=opponentAgg.hp;
  const meWins=myDamage/Math.max(theirHp,1)+(myHp-theirDamage>0?0.05:-0.05);
  const themWins=theirDamage/Math.max(myHp,1);
@@ -236,30 +254,24 @@ export function tradeEdge(champion,level,agg,opponent,opponentLevel,opponentAgg,
 // Kill threshold: how much HP the target must be below for a full 6s trade
 // (autos + invested skills) to finish them.
 export function killThreshold(champion,level,agg,opponent,opponentLevel,opponentAgg,points=null,extra={}){
- return Math.max(0,tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points,extra));
+ return Math.max(0,tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points,{...extra,defenderLevel:opponentLevel}));
 }
 
 // One full duel, both directions: my kill line on them and theirs on me.
-// Enemy items are the real public build; their ranks are proxied by level
-// (see proxySkillRanks) and their HP by max HP — the UI copy discloses both.
+// Enemy items are the public build; unknown skill ranks are never filled in.
+// Their maximum health and output remain explicitly approximate.
 export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyItems=[],spellbook=null){
  const enemyAgg=aggregateCombatStats(enemy,enemyLevel,enemyItems,data);
- const theirsSkills=proxySkillRanks(enemyLevel);
- const extra={spellbook,mineSkills:ownSkills,theirsSkills};
- const book=spellbook?.[own.id],foeBook=spellbook?.[enemy.id];
- // Only genuinely-missing nukes flag approx: clean utility slots (Ashe E:
- // no damage, not partial) stay quiet, while failed parses (partial) or
- // tagged-but-unresolved nukes (Garen R) disclose. Untagged slots like
- // Jayce's are covered by partial, not by nuke.
- const gap=(ranks,entry)=>['Q','W','E','R'].some(slot=>Number.isInteger(ranks?.[slot])&&ranks[slot]>=1&&entry?.[slot]?.partial);
- const gapMissing=(ranks,entry)=>['Q','W','E','R'].some(slot=>Number.isInteger(ranks?.[slot])&&ranks[slot]>=1&&entry?.[slot]?.nuke&&!entry[slot].damage);
- const approx=!spellbook||!book||!foeBook||gap(ownSkills,book)||gap(theirsSkills,foeBook)||gapMissing(ownSkills,book)||gapMissing(theirsSkills,foeBook)||!!ownAgg?.onHitApprox||!!enemyAgg.onHitApprox;
+ // Enemy spell ranks are unavailable in the public feed; never manufacture
+ // per-slot ranks (especially an ultimate before level 6) for the warning.
+ const extra={spellbook,mineSkills:ownSkills,theirsSkills:null};
  const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
  return {
   enemy:{id:enemy.id,name:enemy.name,level:Number.isInteger(enemyLevel)?enemyLevel:null},
-  approx:!!approx,
+  approx:true,
   edge:tradeEdge(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,data,{mine,theirs},extra),
-  killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,null,{skills:ownSkills,spellbook}),
-  killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,null,{skills:theirsSkills,spellbook}),
+  killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,mine,{skills:ownSkills,spellbook}),
+  killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,theirs,{spellbook}),
+  mineSkillBasis:canUseCombatSpells(own,ownSkills,spellbook)?'reviewed':'heuristic',
  };
 }

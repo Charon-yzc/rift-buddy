@@ -309,7 +309,7 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],publ
  // Let players discover something new: if creative ideas survived scoring but
  // lost every diversity round, give the best one the last slot. Top picks
  // (including curated trios) are never displaced by this.
- if(creativeBySig.size&&!chosen.some(e=>e.creative)){
+ if(creativeBySig.size&&chosen.length>1&&!chosen.some(e=>e.creative)){
   const fallback=pool.filter(e=>e.creative).sort((a,b)=>b.score-a.score||signature(a.slots).localeCompare(signature(b.slots)))[0];
   if(fallback&&chosen.length){pool.push(chosen.pop());chosen.push(pool.splice(pool.indexOf(fallback),1)[0]);}
  }
