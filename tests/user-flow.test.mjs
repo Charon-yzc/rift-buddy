@@ -112,7 +112,7 @@ test('live duels cover every visible enemy in both directions with skill-aware b
  assert.equal(model.estimate.duels.length,2);
  assert.ok(model.estimate.theirKill>0);
  assert.ok(model.estimate.duels.every(d=>d.killMine>0&&d.killTheirs>0));
- assert.ok(model.estimate.liveBuy&&model.estimate.liveBuy.kind==='defense');
+ assert.equal(Object.hasOwn(model.estimate,'liveBuy'),false);
 });
 
 test('live panel beats computed stats and flags lethal danger on current health', async () => {

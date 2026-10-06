@@ -5,7 +5,7 @@ import {compareAugments} from './hex-compare.mjs';
 import {comboStage,guideMismatch,GUIDE_STAGES} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
-import {aggregateCombatStats,applyLivePanel,duel,recommendLiveBuy} from './live-estimate.mjs';
+import {aggregateCombatStats,applyLivePanel,duel} from './live-estimate.mjs';
 
 const conditions=['ad','ap','control','heal','burst'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
@@ -109,8 +109,7 @@ export function createGuideModel(data,value,live=null,current=null){
   const primary=duels[0];
   const curHp=Number.isFinite(live.stats?.hp)?Math.floor(live.stats.hp):null;
   return {enemy:primary.enemy,edge:primary.edge,killThreshold:primary.killMine,theirKill:primary.killTheirs,duels,
-   liveReal:panel.live,curHp,danger:curHp!==null&&curHp>0&&primary.killTheirs>=curHp,
-   liveBuy:recommendLiveBuy({shortfall:targetPlan?.shortfall??null,gold:live.gold,enemies:enemySnapshots,champions:data.champions,data,inventory:live.inventory||[]}),at:live.at};
+   liveReal:panel.live,curHp,danger:curHp!==null&&curHp>0&&primary.killTheirs>=curHp,at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action:matched?purchaseAction(targetPlan,next,live.gold):null,

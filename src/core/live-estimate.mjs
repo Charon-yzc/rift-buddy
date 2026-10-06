@@ -1,6 +1,5 @@
 // Live in-game estimate: level-adjusted champion stats, mutual kill lines and a
-// coarse trading edge, plus a real-time buy suggestion that reacts to the
-// enemy damage mix. Everything is static, explainable arithmetic on Riot
+// coarse trading edge. Everything is static, explainable arithmetic on Riot
 // Data Dragon numbers. It is a reference, never a prediction.
 
 export function statAtLevel(stats={},level=1){
@@ -14,15 +13,6 @@ export function statAtLevel(stats={},level=1){
   atkSpeed:Math.round(stats.attackspeed*(1+(L-1)*stats.attackspeedperlevel/100)*100)/100,
   moveSpeed:stats.movespeed,
  };
-}
-
-// Damage profile from the official attack/magic ratings, not from guesswork:
-// Zed 9/1 -> physical, Ahri 3/8 -> magic, mixed when they are close.
-export function damageProfile(champion){
- const atk=Number(champion?.info?.attack)||0,mag=Number(champion?.info?.magic)||0;
- if(mag>=atk+2)return 'magic';
- if(atk>=mag+2)return 'physical';
- return 'mixed';
 }
 
 const ITEM_STAT_PATTERNS=[
@@ -137,34 +127,4 @@ export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyIt
   killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,mine),
   killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,theirs),
  };
-}
-
-const DEFENSE_TAGS={physical:['Armor'],magic:['SpellBlock','MagicResist']};
-// Real-time buy: stay on the route by default; deviate to a cheap defense
-// component only when the visible enemy damage is lopsided AND the route's
-// next step is far out of reach. Returns null when the route stays best.
-export function recommendLiveBuy({routeNext,shortfall,gold,enemies=[],champions=[],data,inventory=[]}){
- const g=Number(gold);
- if(!Number.isFinite(g)||!Array.isArray(enemies)||!enemies.length)return null;
- const profiles=enemies.map(e=>{
-  const c=champions.find(c=>c.id===e.id);return c?damageProfile(c):'mixed';
- });
- const phys=profiles.filter(p=>p==='physical').length+profiles.filter(p=>p==='mixed').length*0.5;
- const mag=profiles.filter(p=>p==='magic').length+profiles.filter(p=>p==='mixed').length*0.5;
- const total=Math.max(1,profiles.length);
- const need=phys/total>=0.6?'physical':mag/total>=0.6?'magic':null;
- if(!need)return null;
- if(Number.isFinite(shortfall)&&shortfall<=800)return null; // route step is close, don't distract
- const owned=new Set((inventory||[]).map(i=>String(i.id)));
- const tags=DEFENSE_TAGS[need];
- const candidates=Object.values(data.items||{})
-  .filter(i=>i&&i.inStore&&i.gold?.purchasable!==false&&i.maps?.['11']
-   &&Array.isArray(i.tags)&&tags.some(t=>i.tags.includes(t))
-   &&Number(i.gold.total)>0&&Number(i.gold.total)<=Math.min(g,2200)
-   &&!owned.has(String(i.id)));
- if(!candidates.length)return null;
- candidates.sort((a,b)=>b.gold.total-a.gold.total);
- const pick=candidates[0];
- return {kind:'defense',id:String(pick.id),name:pick.name,cost:pick.gold.total,
-  reason:need==='physical'?'对方物理伤害偏多，可先补护甲过渡':'对方魔法伤害偏多，可先补魔抗过渡'};
 }
