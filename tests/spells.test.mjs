@@ -76,6 +76,7 @@ test('proxied enemy ranks never exceed level and gate the ultimate',()=>{
  assert.deepEqual(proxySkillRanks(5),{Q:3,W:2,E:0,R:0});
  assert.deepEqual(proxySkillRanks(6),{Q:3,W:2,E:0,R:1});
  assert.deepEqual(proxySkillRanks(11),{Q:5,W:4,E:0,R:2});
+ assert.deepEqual(proxySkillRanks(16),{Q:5,W:5,E:3,R:3});
  assert.deepEqual(proxySkillRanks(18),{Q:5,W:5,E:5,R:3});
  for(const level of [1,5,6,9,11,16,18]){
   const r=proxySkillRanks(level);
@@ -99,4 +100,7 @@ test('duels flag approximation when the book is missing or partial',()=>{
  const jayce=game.champions.find(c=>c.id==='Jayce');
  const partial=duel(ashe,6,agg,{Q:3,W:2,E:1,R:0},jayce,6,game,[],book);
  assert.equal(partial.approx,true);
+ // Isolated: clean own book vs the real Jayce book must flag from the foe side alone.
+ const isolated=duel(ashe,6,agg,{Q:3,W:2,E:1,R:0},jayce,6,game,[],{Ashe:clean.Ashe,Jayce:book.Jayce});
+ assert.equal(isolated.approx,true);
 });

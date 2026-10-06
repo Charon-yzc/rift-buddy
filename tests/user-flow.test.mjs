@@ -139,6 +139,6 @@ test('estimate output carries no identities and copy stays estimation language',
  for(const d of model.estimate.duels)assert.deepEqual(Object.keys(d.enemy).sort(),['id','level','name']);
  const html=estimateRows(model);
  for(const word of ['约','估算','反推'])assert.ok(html.includes(word));
- for(const word of ['预测','保证','必杀','必中','购买','建议购买','liveBuy'])assert.equal(html.includes(word),false);
+ for(const word of ['预测','保证','必杀','必中','必胜','必赢','稳赢','胜率','购买','建议购买','liveBuy'])assert.equal(html.includes(word),false);
  assert.equal(estimateRows({}),'');
 });

@@ -126,7 +126,7 @@ const mitigate=(amount,armor,mr,physShare)=>amount*(physShare*(100/(100+armor))+
 // spell book with per-type mitigation; without it, the heuristic burst stays.
 export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null,extra={}){
  const base=statAtLevel(attacker.stats,level);
- const def=defAgg&&Number.isFinite(defAgg.armor)?defAgg:{armor:statAtLevel(defender.stats,level).armor,mr:statAtLevel(defender.stats,level).mr};
+ const def=(defAgg&&Number.isFinite(defAgg.armor)&&Number.isFinite(defAgg.mr))?defAgg:{armor:statAtLevel(defender.stats,level).armor,mr:statAtLevel(defender.stats,level).mr};
  const autos=mitigate(roughDps(attacker,level,agg)*6,def.armor,def.mr,0.55);
  let burst=0;
  const {skills=null,spellbook=null}=extra;
@@ -175,11 +175,13 @@ export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyIt
  const theirsSkills=proxySkillRanks(enemyLevel);
  const extra={spellbook,mineSkills:ownSkills,theirsSkills};
  const book=spellbook?.[own.id],foeBook=spellbook?.[enemy.id];
- // Only nuke-tagged slots can make the estimate approximate: utility slots
- // (Ashe E) are correctly zero, while a tagged-but-unparsed nuke (Garen R)
- // means real damage is missing from the model.
- const gap=(ranks,entry)=>['Q','W','E','R'].some(slot=>Number.isInteger(ranks?.[slot])&&ranks[slot]>=1&&entry?.[slot]?.nuke&&(!entry[slot].damage||entry[slot].partial));
- const approx=!spellbook||!book||!foeBook||gap(ownSkills,book)||gap(theirsSkills,foeBook);
+ // Only genuinely-missing nukes flag approx: clean utility slots (Ashe E:
+ // no damage, not partial) stay quiet, while failed parses (partial) or
+ // tagged-but-unresolved nukes (Garen R) disclose. Untagged slots like
+ // Jayce's are covered by partial, not by nuke.
+ const gap=(ranks,entry)=>['Q','W','E','R'].some(slot=>Number.isInteger(ranks?.[slot])&&ranks[slot]>=1&&entry?.[slot]?.partial);
+ const gapMissing=(ranks,entry)=>['Q','W','E','R'].some(slot=>Number.isInteger(ranks?.[slot])&&ranks[slot]>=1&&entry?.[slot]?.nuke&&!entry[slot].damage);
+ const approx=!spellbook||!book||!foeBook||gap(ownSkills,book)||gap(theirsSkills,foeBook)||gapMissing(ownSkills,book)||gapMissing(theirsSkills,foeBook);
  const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
  return {
   enemy:{id:enemy.id,name:enemy.name,level:Number.isInteger(enemyLevel)?enemyLevel:null},

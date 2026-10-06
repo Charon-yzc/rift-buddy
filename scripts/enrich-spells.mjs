@@ -26,6 +26,10 @@ const statName=mStat=>KNOWN_STATS[mStat]??null;
 const inferStatFromName=name=>/\bAP\b|APRatio|BonusAP/i.test(name||'')?'ap':/\bAD\b|ADRatio|BonusAD|tAD/i.test(name||'')?'ad':null;
 
 const perRank=(values,rank,maxRank)=>{
+ // Bin DataValues carry a dummy at index 0 ([r0?,r1..r5,r6?]), so rank r
+ // reads index r. Verified against live values (Ashe W, Annie Q, Zed Q,
+ // Jinx W); a 6-element [r1..r5,filler] layout would shift by one, but no
+ // shipped example of it has been found. RCP arrays use perRankRCP instead.
  if(!Array.isArray(values)||!values.length)return null;
  const nums=values.map(Number);
  if(nums.some(v=>!Number.isFinite(v)))return null;
@@ -210,7 +214,7 @@ await Promise.all(Array.from({length:6},async()=>{
      if(damage){
       // Multi-hit skills (Garen E spins): multiply by the machine-readable
       // strike count from a sibling calc instead of counting one hit.
-      for(const o of bucket.objs)for(const [name,calc] of Object.entries(o.calcs)){
+      outer:for(const o of bucket.objs)for(const [name,calc] of Object.entries(o.calcs)){
        if(!/NumberOfStrikes|NumTicks|TickCount|HitCount/i.test(name))continue;
        const hits=Array.from({length:maxRank},(_,i)=>{
         let v=null;
@@ -225,7 +229,7 @@ await Promise.all(Array.from({length:6},async()=>{
       if(damage.hits&&damage.hits.length!==damage.base.length){delete damage.hits;partial=true;}
      }
     }
-    out[slot]={name:spell.name||slot,cooldown,cost,calc:calcName,damage,partial,nuke:tags.length>0};
+    out[slot]={name:spell.name||slot,cooldown,cost,calc:calcName,damage,partial:partial||(tags.length>0&&!damage),nuke:tags.length>0};
    }
    champions[c.id]=out;
   }catch(error){failures.push(`${c.id}: ${error.message}`);}
