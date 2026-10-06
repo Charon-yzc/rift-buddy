@@ -95,6 +95,8 @@ GitHub Actions 在 Windows 中运行安装、开发 Electron 启动检查、回�
 
 局势功能的后续设计见 [局势装备与技能推荐调研和实现方案](live-situation-research.md)。其中记录了近期产品、固定提交的源码、论文和社区资料，并列出当前代码待修正的版本机制；它是开发方案，不代表这些修正已经实现。
 
+进一步的数据核查、组合配置和机制规格见 [一小时补充调研](live-situation-research-supplement.md)。其中的复现说明和场景可用于后续修复验收；统计来源、游戏模式和规则验证版本需要分别维护。
+
 局势规则在 `src/core/live-situation.mjs`，技能规则在 `src/core/skill-advice.mjs`。数据入口继续使用 Riot [Live Client Data API](https://developer.riotgames.com/docs/lol#game-client-api_live-client-data-api) 的三个只读端点，只保留英雄、己方金币和技能等级、双方公开装备与战绩；玩家身份、位置坐标、敌方经济和冷却不进入推荐模型，也不持久化。队伍未知或数据过期时停止自动分析。
 
 技能机制已对照 Riot [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon) `16.19.1` 对应英雄的技能描述；规则维护时应同时复核护盾、冷却、伤害类型和特殊加点限制。更新游戏资料不会自动证明旧规则仍有效。当前采用明确的触发阈值与机制说明，未训练预测模型，也不计算胜率。扩展自动备选装备后应更新 `SITUATION_ITEMS`，使离线图片进入 `pnpm check` 校验。
