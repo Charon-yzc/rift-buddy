@@ -36,15 +36,53 @@ export function itemStats(description=''){
 
 export function aggregateCombatStats(champion,level,items=[],data){
  const base=statAtLevel(champion.stats,level);
- const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr,atkSpeed:base.atkSpeed,crit:0};
+ const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr,atkSpeed:base.atkSpeed,crit:0,onHit:[],onHitApprox:false};
+ let asPct=0;
  for(const entry of items){
   const record=data.items?.[entry.id];if(!record)continue;
   const stats=itemStats(record.description);
   const count=Math.max(1,Number(entry.count)||1);
   for(const k of ['ad','ap','hp','armor','mr']) if(stats[k]) agg[k]+=stats[k]*count;
   if(stats.crit)agg.crit+=stats.crit/100*count;
+  // Base attack-speed bonuses sit in the first description block; stacking
+  // buffs mentioned later in the text (e.g. Guinsoo's 8%/stack) are temporary
+  // and must not count as permanent stats.
+  const firstBlock=String(record.description||'').split('\n\n')[0];
+  const as=firstBlock.match(/(\d+)%攻击速度/)?.[1];
+  if(as!==undefined)asPct+=Number(as)*count;
  }
+ if(asPct>0)agg.atkSpeed=Math.round(base.atkSpeed*(1+asPct/100)*1000)/1000;
+ agg.onHit=itemOnHits(items,data);
+ agg.onHitApprox=hasUnparsedOnHit(items,data);
  return agg;
+}
+// Flat-number on-hit effects, one entry per unique item (on-hit passives do
+// not stack). Only exact digits count: unnumbered passives ("%HP", "extra")
+// stay unparsed and are disclosed via hasUnparsedOnHit instead of invented.
+export function itemOnHits(items=[],data){
+ const out=[],seen=new Set();
+ for(const entry of items||[]){
+  const id=String(entry.id);if(seen.has(id))continue;seen.add(id);
+  const record=data.items?.[id];if(!record||!record.tags?.includes('OnHit'))continue;
+  const desc=String(record.description||'');
+  if(!desc.includes('攻击特效'))continue;
+  const m=desc.match(/(?:造成|附带)(\d+)额外(魔法|物理)伤害/);
+  if(!m)continue;
+  out.push({dmg:Number(m[1]),type:m[2]==='物理'?'physical':'magic'});
+ }
+ return out;
+}
+// An OnHit-tagged item whose damage has no parseable number (percent-HP,
+// conditional or stacking effects) cannot enter the estimate honestly.
+export function hasUnparsedOnHit(items=[],data){
+ for(const entry of items||[]){
+  const record=data.items?.[String(entry.id)];if(!record||!record.tags?.includes('OnHit'))continue;
+  const desc=String(record.description||'');
+  if(!/伤害/.test(desc)||!desc.includes('攻击特效'))continue;
+  if(/(?:造成|附带)(\d+)额外(魔法|物理)伤害/.test(desc))continue;
+  return true;
+ }
+ return false;
 }
 // Prefer the live panel (already includes items, runes, buffs): do NOT add
 // item stats on top or they count twice. Computed stats are the fallback.
@@ -145,6 +183,15 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
  const base=statAtLevel(attacker.stats,level);
  const def=(defAgg&&Number.isFinite(defAgg.armor)&&Number.isFinite(defAgg.mr))?defAgg:{armor:statAtLevel(defender.stats,level).armor,mr:statAtLevel(defender.stats,level).mr};
  const autos=mitigate(roughDps(attacker,level,agg)*6,def.armor,def.mr,0.55);
+ // Flat-number on-hit effects scale with attack speed, one proc per attack,
+ // each mitigated by its own damage type.
+ const asRate=Number(agg?.atkSpeed)||base.atkSpeed;
+ let onHit=0;
+ for(const h of (Array.isArray(agg?.onHit)?agg.onHit:[])){
+  const perHit=Number(h?.dmg);if(!(perHit>0))continue;
+  const perSec=perHit*asRate;
+  onHit+=h.type==='true'?perSec*6:mitigate(perSec*6,def.armor,def.mr,h.type==='physical'?1:0);
+ }
  let burst=0;
  const {skills=null,spellbook=null}=extra;
  if(spellbook&&skills){
@@ -164,7 +211,7 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
   const adShare=agg.ad/(agg.ad+agg.ap+1);
   burst=mitigate(burstDamage(attacker,pts,agg,level),def.armor,def.mr,adShare);
  }
- return Math.round(autos+burst);
+ return Math.round(autos+burst+onHit);
 }
 
 // Trading edge -1..1 vs a matched opponent. Positive favors `champion`.
@@ -198,7 +245,7 @@ export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyIt
  // Jayce's are covered by partial, not by nuke.
  const gap=(ranks,entry)=>['Q','W','E','R'].some(slot=>Number.isInteger(ranks?.[slot])&&ranks[slot]>=1&&entry?.[slot]?.partial);
  const gapMissing=(ranks,entry)=>['Q','W','E','R'].some(slot=>Number.isInteger(ranks?.[slot])&&ranks[slot]>=1&&entry?.[slot]?.nuke&&!entry[slot].damage);
- const approx=!spellbook||!book||!foeBook||gap(ownSkills,book)||gap(theirsSkills,foeBook)||gapMissing(ownSkills,book)||gapMissing(theirsSkills,foeBook);
+ const approx=!spellbook||!book||!foeBook||gap(ownSkills,book)||gap(theirsSkills,foeBook)||gapMissing(ownSkills,book)||gapMissing(theirsSkills,foeBook)||!!ownAgg?.onHitApprox||!!enemyAgg.onHitApprox;
  const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
  return {
   enemy:{id:enemy.id,name:enemy.name,level:Number.isInteger(enemyLevel)?enemyLevel:null},

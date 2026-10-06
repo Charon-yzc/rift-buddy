@@ -5,7 +5,7 @@ import {compareAugments} from './hex-compare.mjs';
 import {comboStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
-import {aggregateCombatStats,applyLivePanel,duel} from './live-estimate.mjs';
+import {aggregateCombatStats,applyLivePanel,duel,itemOnHits,hasUnparsedOnHit} from './live-estimate.mjs';
 
 const conditions=['ad','ap','control','heal','burst'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
@@ -114,8 +114,9 @@ export function createGuideModel(data,value,live=null,current=null){
  const estimate=matched&&ownChampion&&enemySnapshots.length?(()=>{
   const panel=applyLivePanel(ownChampion,live.level||1,live.stats);
   // A live panel already contains items/runes/buffs: adding item stats again
-  // would double count. The computed path is only the no-panel fallback.
-  const ownAgg=panel.live?panel.agg:aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
+  // would double count. On-hit effects are the exception: the panel AD/AP
+  // never includes them, so they merge in from the visible inventory.
+  const ownAgg=panel.live?{...panel.agg,onHit:itemOnHits(live.inventory||[],data),onHitApprox:hasUnparsedOnHit(live.inventory||[],data)}:aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
   const duels=enemySnapshots.map(target=>{
    const enemyChampion=data.champions.find(c=>c.id===target.id);
    if(!enemyChampion)return null;
@@ -143,7 +144,7 @@ export function createGuideModel(data,value,live=null,current=null){
   if(guide.duelPick.own===s.id){
    ownChamp=ownChampion;ownLevel=live.level||1;
    const p=applyLivePanel(ownChampion,live.level||1,live.stats);
-   ownAgg=p.live?p.agg:aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
+   ownAgg=p.live?{...p.agg,onHit:itemOnHits(live.inventory||[],data),onHitApprox:hasUnparsedOnHit(live.inventory||[],data)}:aggregateCombatStats(ownChampion,live.level||1,live.inventory||[],data);
    ownSkills=live.skills;ownSelf=true;
   }else{
    const allySnap=allySnapshots.find(a=>a.id===guide.duelPick.own);

@@ -112,3 +112,19 @@ test('copied configurations retain chosen situational advice and summoner spells
  for(const id of build.summoners)assert.ok(text.includes(data.spells[id].name));
  assert.ok(text.includes('对手回复多'));assert.ok(text.includes('容易被秒'));assert.ok(text.includes(build.sourceNote));
 });
+
+test('client sync marks the local declared lane as ours without clearing premades',()=>{
+ const hero=id=>data.champions.find(c=>c.id===id);
+ // Solo top: top flips to party, mid/bot/sup premade flags untouched.
+ const solo=mergeClientSession(createSlots(),{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:'TOP'}],localPlayerCellId:1},data.champions);
+ assert.equal(solo.slots.find(s=>s.role==='top').party,true);
+ assert.equal(solo.markedLocalRole,'top');assert.equal(solo.markedLocalChanged,true);
+ assert.deepEqual(createSlots().filter(s=>s.party).map(s=>s.role),solo.slots.filter(s=>s.party&&s.role!=='top').map(s=>s.role));
+ // Already marked: no change reported, flags stable.
+ const again=mergeClientSession(solo.slots,{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:'TOP'}],localPlayerCellId:1},data.champions);
+ assert.equal(again.markedLocalChanged,false);
+ // Blind pick without a declared position: nothing touched.
+ const blind=mergeClientSession(createSlots(),{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:''}],localPlayerCellId:1},data.champions);
+ assert.equal(blind.slots.find(s=>s.role==='top').party,false);
+ assert.equal(blind.markedLocalRole,null);assert.equal(blind.markedLocalChanged,false);
+});

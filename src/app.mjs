@@ -185,7 +185,7 @@ async function performSync(manual=true){
    const nextEnemy=client.session.theirTeam.map(p=>keys.get(p.championId)).filter(Boolean),nextBans=client.session.bans.map(id=>keys.get(id)).filter(Boolean);
    if(JSON.stringify(enemy)!==JSON.stringify(nextEnemy)||JSON.stringify(clientBans)!==JSON.stringify(nextBans))changed=true;
    enemy=nextEnemy;clientBans=nextBans;if(changed){markResultStale();cancelRecommendation();results=[];offset=0;persist();}
-   if(manual)toast(unassigned.length?'读取成功，部分英雄需要你确认位置':'选人信息已同步');
+   if(manual)toast((unassigned.length?'读取成功，部分英雄需要你确认位置':'选人信息已同步')+(merged.markedLocalChanged?' · 已按客户端标出你的分路':''));
   }else{
    if(client.connected&&['None','Lobby','Matchmaking','ReadyCheck'].includes(client.phase)){
     const cleaned=clearClientPicks(slots);if(JSON.stringify(cleaned)!==JSON.stringify(slots)){slots=cleaned;results=[];changed=true;persist();}

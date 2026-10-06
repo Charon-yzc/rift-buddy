@@ -116,3 +116,38 @@ test('duels flag approximation when the book is missing or partial',()=>{
  const isolated=duel(ashe,6,agg,{Q:3,W:2,E:1,R:0},jayce,6,game,[],{Ashe:clean.Ashe,Jayce:book.Jayce});
  assert.equal(isolated.approx,true);
 });
+
+test('item attack speed and flat on-hit enter aggregates; unnumbered passives disclose',async()=>{
+ const {aggregateCombatStats,itemOnHits,hasUnparsedOnHit,duel}=await import('../src/core/live-estimate.mjs');
+ const yone=game.champions.find(c=>c.id==='Yone'),ahri=game.champions.find(c=>c.id==='Ahri');
+ const agg=aggregateCombatStats(yone,6,[{id:'3153',count:1}],game);
+ assert.ok(Math.abs(agg.atkSpeed-0.73*1.25)<0.01);
+ assert.deepEqual(agg.onHit,[]);assert.equal(agg.onHitApprox,true);
+ assert.deepEqual(itemOnHits([{id:'3124'}],game),[{dmg:30,type:'magic'}]);
+ assert.deepEqual(itemOnHits([{id:'1043'}],game),[{dmg:15,type:'physical'}]);
+ assert.equal(hasUnparsedOnHit([{id:'3124'}],game),false);
+ assert.equal(hasUnparsedOnHit([{id:'3091'}],game),true);
+ assert.equal(hasUnparsedOnHit([{id:'3031'}],game),false);
+ assert.equal(hasUnparsedOnHit([],game),false);
+ // Guinsoo flat magic feeds the window; BotRK percent stays disclosed.
+ const withGuinsoo=aggregateCombatStats(yone,6,[{id:'3124',count:1}],game);
+ const plain=aggregateCombatStats(yone,6,[],game);
+ const d=duel(yone,6,withGuinsoo,{Q:3,W:2,E:1,R:0},ahri,6,game,[],book);
+ const d0=duel(yone,6,plain,{Q:3,W:2,E:1,R:0},ahri,6,game,[],book);
+ assert.ok(d.killMine>d0.killMine);
+ const botrk=duel(yone,6,agg,{Q:3,W:2,E:1,R:0},ahri,6,game,[],book);
+ assert.equal(botrk.approx,true);
+});
+
+test('unparsed on-hit alone forces approx even with clean spell books',async()=>{
+ const {aggregateCombatStats,duel}=await import('../src/core/live-estimate.mjs');
+ const ashe=game.champions.find(c=>c.id==='Ashe'),jinx=game.champions.find(c=>c.id==='Jinx');
+ const slot=n=>({damage:{type:'physical',base:Array(n).fill(10),ratios:[]},partial:false});
+ const cleanBook={Ashe:{Q:slot(5),W:slot(5),E:slot(5),R:slot(3)},Jinx:{Q:slot(5),W:slot(5),E:slot(5),R:slot(3)}};
+ const plain=aggregateCombatStats(ashe,6,[],game);
+ assert.equal(duel(ashe,6,plain,{Q:1},jinx,6,game,[],cleanBook).approx,false);
+ const withOnHit={...plain,onHitApprox:true};
+ assert.equal(duel(ashe,6,withOnHit,{Q:1},jinx,6,game,[],cleanBook).approx,true);
+ const foeOnHit=duel(ashe,6,plain,{Q:1},jinx,6,game,[{id:'3153'}],cleanBook);
+ assert.equal(foeOnHit.approx,true);
+});
