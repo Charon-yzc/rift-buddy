@@ -140,6 +140,9 @@ test('estimate output carries no identities and copy stays estimation language',
  const html=estimateRows(model);
  for(const word of ['约','估算','反推'])assert.ok(html.includes(word));
  for(const word of ['预测','保证','必杀','必中','必胜','必赢','稳赢','胜率','购买','建议购买','liveBuy'])assert.equal(html.includes(word),false);
+ assert.ok(html.includes('<details class="estimate-detail"><summary>6 秒输出估算'));
+ const dangerHtml=estimateRows({estimate:{edge:-0.9,killThreshold:100,theirKill:2000,danger:true,curHp:400,enemy:{name:'测试'},warningEnemies:[{name:'测试'}],mineSkillBasis:'heuristic',liveReal:false,duels:[]}});
+ assert.ok(dangerHtml.includes('estimate-row danger')&&dangerHtml.indexOf('estimate-row danger')<dangerHtml.indexOf('estimate-detail'));
  assert.equal(estimateRows({}),'');
 });
 
@@ -192,4 +195,6 @@ test('custom duel pits a picked ally against a picked enemy with disclosed proxi
  for(const word of ['预测','保证','必胜','胜率','购买'])assert.equal(html.includes(word),false);
  const rows=estimateRows(ally);
  assert.ok(rows.includes('<strong>')&&!rows.includes('undefined'));
+ assert.ok(rows.includes('<details class="estimate-detail"><summary>6 秒输出估算'));
+ if(rows.includes('estimate-row danger'))assert.ok(rows.indexOf('estimate-row danger')<rows.indexOf('estimate-detail'));
 });

@@ -9,9 +9,13 @@ export function estimateRows(model){
  const source=value.liveReal?'己方实时面板 · 对手按公开装备和等级反推估算':'双方按公开装备和等级反推估算';
  const warningNames=(value.warningEnemies||[]).map(d=>d.name).join('、');
  const skills=value.mineSkillBasis==='reviewed'?'己方技能使用人工复核公式，对手技能按总点数近似。':'技能项按总点数近似。';
- return `<p class="estimate-row"><b>6 秒输出估算 · ${e(value.enemy.name)}</b> 我方约 <strong>${value.killThreshold}</strong> / 对方约 <strong>${value.theirKill}</strong> · 换血模型${tendency(value)}<span>${source}；优先显示估算输出最高的对手</span></p>
- ${value.danger?`<p class="estimate-row danger" title="六秒模型估算，不表示立即斩杀或对手在附近"><b>模型提示 · ${e(warningNames)}</b> ${e(value.enemy.name)}估算 ${value.theirKill}，达到你当前 ${value.curHp} 血</p>`:''}
- ${value.duels.length>1?`<p class="estimate-row rivals">其他对手（我方 / 对方估算）：${value.duels.slice(1,6).map(d=>`${e(d.enemy.name)} ${d.killMine} / ${d.killTheirs}`).join(' · ')}</p>`:''}
+ // Glance shows the verdict banner numbers; the full rows fold into a
+ // collapsed <details> so one screen holds verdict + warning + summary.
+ // The danger row stays outside so a warning is never hidden behind a click.
+ const summary=`6 秒输出估算 · ${e(value.enemy.name)} · 换血模型${tendency(value)}`;
+ return `${value.danger?`<p class="estimate-row danger" title="六秒模型估算，不表示立即斩杀或对手在附近"><b>模型提示 · ${e(warningNames)}</b> ${e(value.enemy.name)}估算 ${value.theirKill}，达到你当前 ${value.curHp} 血</p>`:''}
+ <details class="estimate-detail"><summary>${summary}</summary><p class="estimate-row"><b>6 秒输出估算 · ${e(value.enemy.name)}</b> 我方约 <strong>${value.killThreshold}</strong> / 对方约 <strong>${value.theirKill}</strong> · 换血模型${tendency(value)}<span>${source}；优先显示估算输出最高的对手</span></p>
+ ${value.duels.length>1?`<p class="estimate-row rivals">其他对手（我方 / 对方估算）：${value.duels.slice(1,6).map(d=>`${e(d.enemy.name)} ${d.killMine} / ${d.killTheirs}`).join(' · ')}</p>`:''}</details>
  <details class="estimate-assumptions" data-guide-section="estimate-assumptions"><summary>估算前提</summary><p>六秒持续输出的粗略模型，${skills}未计命中、距离、技能冷却、穿透、护盾、条件装备特效与海克斯强化；不是实际伤害或立即斩杀判断，也不表示对手在附近。</p></details>`;
 }
 // Glanceable combat headline: same computed numbers as estimateRows, only
