@@ -1,6 +1,8 @@
 // Maintainer-run enrichment: build data/spells.json from official static data.
-// Run with `pnpm spells:enrich` after every `pnpm sync-data` (a new game
-// version needs a fresh spell book; check.mjs fails loudly on mismatch).
+// Normally triggered automatically at the end of `pnpm sync-data` (skipped
+// when versions already match); `pnpm spells:enrich` runs it manually.
+// A new game version needs a fresh spell book; check.mjs fails loudly on
+// mismatch, and sync-data warns loudly if the automatic refresh fails.
 // Sources (no game client needed):
 // - RCP champion file: slot (Q/W/E/R), names, cooldown/cost, and which
 //   tooltip placeholder carries physical/magic/true damage.

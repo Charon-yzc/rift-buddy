@@ -108,6 +108,7 @@ pnpm check
 | 文件 | 用途 | 更新命令 |
 | --- | --- | --- |
 | `data/game.json`、`data/images/` | 英雄、装备、符文、海克斯与图片 | `pnpm sync-data`，随后 `node scripts/enrich-items.mjs` |
+| `data/spells.json` | 全英雄技能数值（斩杀线用） | `pnpm sync-data` 结束时版本不一致自动刷新；也可手动 `pnpm spells:enrich` |
 | `data/builds.json` | 按英雄与位置缓存的峡谷参考配置 | `node scripts/sync-builds.mjs --all-roles` |
 | `data/hex-builds.json` | 海克斯参考配置 | `node scripts/sync-hex-builds.mjs` |
 
