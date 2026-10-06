@@ -39,7 +39,7 @@ export async function fetchChampionBuild(champion,role,data,{fetcher=fetch}={}) 
  const url=`https://op.gg/lol/champions/${encodeURIComponent(champion.id.toLowerCase())}/build/${position[role]}?region=global&type=ranked&tier=emerald_plus&patch=${encodeURIComponent(data.patch)}`;
  const jsonUrl=`https://lol-api-champion.op.gg/api/global/champions/ranked/${encodeURIComponent(champion.key)}/${position[role]}?tier=emerald_plus&version=${encodeURIComponent(data.patch)}`;
  try{return parseBuildJSON(await readPublicJSON(jsonUrl,{fetcher}),{champion,role,data,url});}
- catch(error){if(/版本/.test(error.message))throw error;}
+ catch(error){if(error?.code==='BUILD_PATCH_MISMATCH')throw error;}
  const response=await fetcher(url,{signal:AbortSignal.timeout(25000),redirect:'error'});
  if(!response.ok)throw new Error('版本出装来源暂时不可用');
  const text=await response.text();if(text.length>4_000_000)throw new Error('出装来源响应异常');

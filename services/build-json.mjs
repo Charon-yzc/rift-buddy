@@ -15,7 +15,7 @@ const counted=row=>row&&Number.isSafeInteger(row.play)&&row.play>0&&Number.isSaf
 export function parseBuildJSON(raw,{champion,role,data,url}){
  const source=raw?.data;
  if(!BUILD_POSITIONS[role]||source?.summary?.id!==Number(champion.key)||!source.summary.positions?.some(p=>p.name?.toLowerCase()===BUILD_POSITIONS[role]))throw Error('来源没有返回该英雄和位置的数据');
- if(raw.meta?.version!==data.patch)throw Error(`出装来源版本 ${raw.meta?.version||'未知'} 与资料 ${data.patch} 不一致`);
+ if(raw.meta?.version!==data.patch)throw Object.assign(Error(`出装来源版本 ${raw.meta?.version||'未知'} 与资料 ${data.patch} 不一致`),{code:'BUILD_PATCH_MISMATCH'});
  const rows=(list,limit=30)=>{if(!Array.isArray(list)||list.length>100)throw Error('出装来源表格格式已变化');return list.filter(r=>counted(r)&&Array.isArray(r.ids)&&r.ids.length>0&&r.ids.length<=12&&r.ids.every(id=>Number.isInteger(id)&&data.items[id]?.maps?.['11'])).map(r=>({items:[...r.ids],...metrics(r)})).sort((a,b)=>b.samples-a.samples).slice(0,limit);};
  const distinct=new Set();
  const core=rows(source.core_items).map(r=>separateComponents(r,data)).filter(r=>{

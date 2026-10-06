@@ -9,14 +9,17 @@ const trinkets=new Set(['3340','3363','3364']);
 function contains(items,root,wanted,seen=new Set()){
  if(root===wanted)return true;
  if(seen.has(root)||seen.size>30)return false;seen.add(root);
- return (items[root]?.from||[]).some(id=>contains(items,String(id),wanted,seen));
+ const record=items[root],children=[...(record?.from||[]),...(record?.specialRecipe?[record.specialRecipe]:[])];
+ return children.some(id=>contains(items,String(id),wanted,seen));
 }
 export function inventoryFulfillsItem({data,id,inventory=[]}){
  return inventory.some(i=>Number.isInteger(i.count)&&i.count>0&&contains(data.items,String(i.id),String(id)));
 }
 export function situationItemIssue({data,id,inventory=[]}){
  const record=data.items[id],held=inventory.filter(i=>Number.isInteger(i.count)&&i.count>0).map(i=>String(i.id));
- if(held.some(owned=>owned!==String(id)&&itemConflicts(Number(id),[Number(owned)])))return '与已持有装备互斥，请先在商店确认替换方案。';
+ // Same-family alternatives are incompatible, but a base and its own normal
+ // or task upgrade are a legal transition. Sharing a component is insufficient.
+ if(held.some(owned=>owned!==String(id)&&itemConflicts(Number(id),[Number(owned)])&&!contains(data.items,String(id),owned)&&!contains(data.items,owned,String(id))))return '与已持有装备互斥，请先在商店确认替换方案。';
  if(record?.tags?.includes('Boots')&&held.some(owned=>owned!=='1001'&&data.items[owned]?.tags?.includes('Boots')&&!contains(data.items,String(id),owned)&&!contains(data.items,owned,String(id))))return '已持有另一双成鞋，请先在商店确认卖出与换鞋成本；不能直接购买。';
  return null;
 }

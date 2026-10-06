@@ -106,7 +106,10 @@ export function createGuideModel(data,value,live=null,current=null){
  const choices=[...new Map([...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
  const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:matched&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));
  const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&!i.blockedReason&&(matched||!completedItems.includes(i.id)));
- const suggested=matched?chooseSituationTarget({situation,mainNext,purchase,gold:live.gold}):null;
+ // Route-wide allocation is retained for display, but earlier blocked goals
+ // must not reserve the components needed for the actual next purchase.
+ const mainPurchase=matched&&mainNext?purchasePlan([mainNext],data.items,inventory,live.gold):[];
+ const suggested=matched?chooseSituationTarget({situation,mainNext,purchase:mainPurchase,gold:live.gold}):null;
  const next=chosen||(suggested?choices.find(i=>i.id===suggested.id):null)||mainNext,targetPlan=next?purchasePlan([next],data.items,matched?inventory:[],matched?live.gold:null)[0]:null;
  const liveModel=matched?{matched:true,gold:live.gold,level:live.level,skills:live.skills,inventory:live.inventory,gameTime:live.gameTime,at:live.at}:liveStatus;
  const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,orderReason:build.selectedSkill?.when,live:liveModel,signals:situation.signals,custom:!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});

@@ -14,6 +14,13 @@ async function run(){
  const capture=async name=>{await js('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage()).toPNG());};
  await click('[data-action=combination-library]');await search('冰箭宝石');await click('[data-action=build][data-id=Ashe][data-role=bottom]');
  await until(()=>js('document.querySelectorAll("[data-action=build-core]").length>3'),'Expanded cores missing');
+ assert.match(await js('document.querySelector("[data-action=favorite-build]").textContent'),/已收藏/);
+ const defaultSkill=await js('document.querySelector("#build-skill").value');
+ const alternateSkill=await js('[...document.querySelector("#build-skill").options].find(o=>o.value&&o.value!==document.querySelector("#build-skill").value).value');
+ await set('#build-skill',alternateSkill);assert.doesNotMatch(await js('document.querySelector("[data-action=favorite-build]").textContent'),/已收藏/);
+ await click('[data-action=favorite-build]');await until(async()=>{const b=await js('window.buddy.bootstrap()');return b.state.favorites.length===2;},'Alternative skill favorite was not saved separately');
+ const legacyFavorites=(await js('window.buddy.bootstrap()')).state.favorites;assert.ok(legacyFavorites.some(f=>f.id==='legacy-ashe-taric'));assert.ok(legacyFavorites.some(f=>f.skillId===alternateSkill));
+ await set('#build-skill',defaultSkill);assert.match(await js('document.querySelector("[data-action=favorite-build]").textContent'),/已收藏/);
  await js('for(const d of document.querySelectorAll(".more-builds"))d.open=true');await click('[data-action=build-core][data-index="8"]');
  const choices=await js('[...document.querySelectorAll(".rune-option")].map(e=>e.dataset.id)');assert.ok(choices.length>6);await click(`[data-action=build-rune][data-id="${choices[9]}"]`);
  const skillId=await js('document.querySelector("#build-skill").options[2].value');await set('#build-skill',skillId);await js('document.querySelector("[data-build-section=items]").scrollIntoView({block:"start"})');await capture('expanded-builds.png');
@@ -25,6 +32,7 @@ async function run(){
  await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');await click('[data-action=combination-library]');await search('尼菈');await click('[data-action=build][data-id=Taric][data-role=support]');
  assert.equal(await js('document.querySelector(".loadout-option.active").dataset.id'),'taric-guardian');assert.equal(await js('document.querySelectorAll(".skill-sequence b")[3].textContent'),'Q');await click('[data-action=build-jump][data-section=skills]');await capture('taric-nodes.png');
  await click('[data-action=close]');await click('[data-action=navigate][data-route=settings]');assert.ok(await js('document.querySelector(".catalog-summary").textContent.includes("200 套下路")'));assert.ok(await js('!!document.querySelector(".catalog-review")'));await capture('database-maintenance.png');
- const result={passed:true,archiveSha256:release.archiveSha256,productionMain:true,expandedCores:true,expandedRunes:true,skillSelection:true,stableFavorites:true,guideRoundTrip:true,taricQ2:true,maintenanceVisible:true,realGameInput:false,realRuneWrites:false,screenshots:root};await fs.writeFile(path.join(root,'database-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
+ assert.ok((await js('window.buddy.bootstrap()')).state.favorites.some(f=>f.id==='legacy-ashe-taric'));
+ const result={passed:true,archiveSha256:release.archiveSha256,productionMain:true,expandedCores:true,expandedRunes:true,skillSelection:true,stableFavorites:true,legacyFavoritesPreserved:true,guideRoundTrip:true,taricQ2:true,maintenanceVisible:true,realGameInput:false,realRuneWrites:false,screenshots:root};await fs.writeFile(path.join(root,'database-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'database-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

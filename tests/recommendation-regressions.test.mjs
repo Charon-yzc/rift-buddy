@@ -43,6 +43,25 @@ test('ordered HTML purchase groups retain one choice per position, and a scarce 
  assert.equal(getBuild(hero('Ashe'),'bottom',fixture).items.length,5);
 });
 
+test('later choices exclude source components and support quest rewards while keeping completed low-cost and transforming items',()=>{
+ const original=data.builds['Ashe:bottom'];
+ const ref={...original,core:[{items:[6672,3031,3046],samples:100}],boots:rows([3006]),later:[rows([1082,1038,3070,1055,3865,3869,3870,3041,2526])],laterBasis:'all-orders'};
+ const fixture={...data,builds:{'Ashe:bottom':ref}};
+ assert.deepEqual(getBuild(hero('Ashe'),'bottom',fixture).items.map(i=>i.id),[6672,3031,3046,3006,3041,2526]);
+ for(const [champion,role,badId] of [['Galio','mid',1082],['Lucian','bottom',1038],['Taric','support',3070],['Alistar','support',3869]]){
+  assert.equal(getBuild(hero(champion),role,data).items.some(i=>i.id===badId),false,`${champion}:${role} must not end with ${badId}`);
+ }
+});
+
+test('the default skill identity stays stable when a different source skill is selected',()=>{
+ for(const comboId of [null,'ashe-taric']){
+  const base=getBuild(hero('Ashe'),'bottom',data,{comboId});
+  const other=base.skillChoices.find(s=>s.id!==base.defaultSkillId);assert.ok(other);
+  const changed=getBuild(hero('Ashe'),'bottom',data,{comboId,skillId:other.id});
+  assert.equal(base.selectedSkillId,base.defaultSkillId);assert.equal(changed.defaultSkillId,base.defaultSkillId);assert.equal(changed.selectedSkillId,other.id);
+ }
+});
+
 test('support all-order pools preserve the quest slot while offline non-support defaults finish six-slot routes',()=>{
  const ref={...data.builds['Ashe:support'],core:[{items:[6672,3031,3046],samples:100}],boots:rows([3006]),later:[rows([3036,3072])],laterBasis:'all-orders'};
  const fixture={...data,builds:{'Ashe:support':ref}};

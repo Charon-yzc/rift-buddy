@@ -97,8 +97,10 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   const selected=[...t.items,...(t.boots?[t.boots]:[])],lateLimit=(support?5:6)-selected.length;
   const laterAvailable=id=>{
    const record=data.items[id],purchase=record?.inStore&&record.gold?.purchasable!==false?record:data.items[record?.specialRecipe];
-   return record?.maps?.[mode==='hex'?'12':'11']&&purchase?.maps?.[mode==='hex'?'12':'11']&&purchase.inStore&&purchase.gold?.purchasable!==false&&
-    !record.requiredAlly&&(!record.requiredChampion||record.requiredChampion===champion.id)&&!record.tags?.some(t=>['Boots','Consumable','Trinket'].includes(t));
+   const map=mode==='hex'?'12':'11';
+   const component=record?.into?.some(childId=>{const child=data.items[childId];return child?.maps?.[map]&&child.inStore&&child.gold?.purchasable!==false&&!child.requiredAlly&&(!child.requiredChampion||child.requiredChampion===champion.id)&&!child.specialRecipe;});
+   return record?.maps?.[map]&&purchase?.maps?.[map]&&purchase.inStore&&purchase.gold?.purchasable!==false&&!component&&
+    !record.requiredAlly&&(!record.requiredChampion||record.requiredChampion===champion.id)&&!record.tags?.some(t=>['Boots','Consumable','Trinket','Lane','Jungle'].includes(t));
   };
   // JSON provides one pool across all later purchases; HTML snapshots instead
   // provide separate fourth/fifth/sixth purchase groups. Keep that distinction.
@@ -143,7 +145,8 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(runeId&&mode==='rift'&&!runeOptions.some(o=>o.id===runeId))selectionWarnings.push('原符文方案已不在当前列表，请重新核对选择。');
  const skillChoices=mode==='rift'?(standardRef?.skillOptions||[]).filter(o=>legalSkillOrder(o.order)).map(o=>({...o,name:`来源加点 · ${orderPriority(o.order).split('').join(' › ')}`,when:`全球翡翠及以上排位样本 ${o.samples} 场；仅覆盖前 ${o.order.length} 个技能点，不代表这套组合的最优加点。`,source:'OP.GG'})):[];
  if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,when:config.skillReason||config.why,source:'机制整理',samples:null});
- const selectedSkill=skillChoices.find(o=>o.id===skillId)||(!config?skillChoices[0]:skillChoices.find(o=>o.source==='机制整理'))||null;
+ const defaultSkill=(!config?skillChoices[0]:skillChoices.find(o=>o.source==='机制整理'))||null;
+ const selectedSkill=skillChoices.find(o=>o.id===skillId)||defaultSkill;
  if(skillId&&!skillChoices.some(o=>o.id===skillId))selectionWarnings.push('原加点序列已移出当前资料，已回到默认方案。');
  const runePage={...(chosenRune?.page||t.runes),name:`开黑搭子 · ${champion.name}`,current:true};
  const valid=validateRunePage(runePage,data.runes);
@@ -153,7 +156,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  return {key,title:ref?(mode==='hex'?'海克斯常用配置':'本版本常用配置'):t.name,champion:champion.id,role,mode,selectedCoreIndex:coreIndex,selectedCoreId:ref?'core-'+ref.core[coreIndex].items.join('-'):null,items:equipment,start:t.start.filter(id=>id!==3865).map(resolve).filter(Boolean),granted:support?[data.items[3865]].filter(Boolean):[],boots,adapted:adaptive.adapted,
   loadoutId:config?.id||'default',loadoutOptions:availableLoadouts,combo:duo?{id:duo.id,title:duo.name,patch:duo.patch,reviewedAt:duo.reviewedAt,plan:duo.plan,risk:duo.risk,sources:comboSources(duo),preferred,members:duo.members?.filter(m=>m.champion!==champion.id),ownJob:duo.members?.find(m=>m.champion===champion.id&&m.role===role)?.job||null,steps:duo.steps||[],window:duo.window||null,early:duo.early||null,economy:duo.economy||null}:null,runeOptions,selectedRuneId:chosenRune?.id||null,selectedRune:chosenRune||null,selectionWarnings,
   support,early:[...new Set([...(config?.early||ref?.core[Math.min(ref.core.length-1,coreIndex)]?.early||[]),...adaptive.early])].filter(id=>!t.start.includes(id)).map(resolve).filter(Boolean),runePage:valid&&mode==='rift'?runePage:null,runeValid:valid,summoners:summoners.filter(id=>data.spells[id]),
-  skillChoices,selectedSkillId:selectedSkill?.id||null,selectedSkill,skillOrder:selectedSkill?.order||null,priority:selectedSkill?orderPriority(selectedSkill.order):config?.priority||ref?.priority||skillOrders[champion.id]||null,first:selectedSkill?.order.slice(0,3)||config?.first||firstLevels[champion.id]||null,tips:mode==='hex'?t.tips.replace(/保留辅助装升级位。|辅助位保留工资装升级位。/g,''):t.tips,adjustments,
+  skillChoices,defaultSkillId:defaultSkill?.id||null,selectedSkillId:selectedSkill?.id||null,selectedSkill,skillOrder:selectedSkill?.order||null,priority:selectedSkill?orderPriority(selectedSkill.order):config?.priority||ref?.priority||skillOrders[champion.id]||null,first:selectedSkill?.order.slice(0,3)||config?.first||firstLevels[champion.id]||null,tips:mode==='hex'?t.tips.replace(/保留辅助装升级位。|辅助位保留工资装升级位。/g,''):t.tips,adjustments,
   rulesDate:config?(config.reviewedAt||LOADOUT_DATE):RULES_VERSION,rulesPatch:ref?.patch||(config?(config.patch||LOADOUT_PATCH):RULES_PATCH),stale:!ref&&(data.patch!==(config?(config.patch||LOADOUT_PATCH):RULES_PATCH)||!!data.catalogInfo?.loadoutStatus?.[config?.id]?.stale),
   source:adaptive.adapted?'局势调整路线':ref?'本版本常用配置':config?'组合玩法参考':'机制基础方案',reference:ref,
   sourceNote:ref?(mode==='hex'?`OP.GG · 全球海克斯大乱斗 · ${ref.patch}。${sampleText}。后续装备按已选强化调整；不是竞技场或普通大乱斗的配置。`:`OP.GG · 全球翡翠及以上排位 · ${ref.patch}。${sampleText}；${chosenRune?.source==='OP.GG'?`${chosenRune.samples>0?'所选符文样本 '+chosenRune.samples+' 场':'来源未提供所选完整符文页的样本数'}`:'所选符文为机制整理，无统计样本'}。后续装备按局势调整，娱乐下路的分工可能与常规排位不同。`):config?`按 ${config.patch||LOADOUT_PATCH} 装备与符文整理的玩法参考，复核于 ${config.reviewedAt||LOADOUT_DATE}；社区来源用于玩法启发，不代表国服匹配胜率或最优配置。${chosenRune?.source==='OP.GG'?'当前符文来自同英雄同位置的排位参考，未验证适合这套组合。':''}`:'按英雄定位与技能机制整理；不是统计胜率榜。装备和符文名称随资料版本更新，搭配规则需要独立复核。',

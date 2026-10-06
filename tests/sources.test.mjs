@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {decodeHydration,itemRows,separateComponents,resolveReferences} from '../services/source-parser.mjs';
-import {parseBuildPage,parseBuildJSON,BUILD_PARSER_VERSION} from '../services/build-sources.mjs';
+import {parseBuildPage,parseBuildJSON,fetchChampionBuild,BUILD_PARSER_VERSION} from '../services/build-sources.mjs';
 import {parseHexBuildPage} from '../services/hex-sources.mjs';
 import {validHexReference,getBuild} from '../src/core/builds.mjs';
 import {RUNE_PLANS} from '../src/core/loadouts.mjs';
@@ -10,6 +10,15 @@ const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.
 const item=(id,quantity=1)=>['$','$1',`${id}-0`,{children:[{metaType:'item',metaId:id},{className:'absolute bottom-0 right-0',children:quantity}]}];
 const row=(name,items)=>['$','tr',name,{children:[...items,['$','strong',null,{children:'40%'}],['$','span',null,{children:['2,345',' ','Games']}]]}];
 const hydration=values=>`<script>self.__next_f.push([1,${JSON.stringify(Object.entries(values).map(([key,value])=>`${key}:${JSON.stringify(value)}`).join('\n'))}])</script>`;
+test('JSON HTTP failures fall back to validated HTML, but a mismatched patch never does',async()=>{
+ const champion=data.champions.find(c=>c.id==='Ashe');
+ const html=hydration({1:{championId:22,position:'adc',patch:data.patch,type:'ranked',region:'global',tier:'emerald_plus'},2:{rune_pages:[{play:400,importClientData:RUNE_PLANS.lethal.page}]},3:row('core_items_0',[item(6672),item(3031),item(3046)])});
+ for(const status of [403,429,500]){
+  const urls=[];const result=await fetchChampionBuild(champion,'bottom',data,{fetcher:async url=>{urls.push(url);return new Response(urls.length===1?'{}':html,{status:urls.length===1?status:200});}});
+  assert.equal(urls.length,2);assert.match(urls[0],/lol-api-champion/);assert.match(urls[1],/op.gg\/lol\/champions/);assert.equal(result.patch,data.patch);assert.deepEqual(result.core[0].items,[6672,3031,3046]);
+ }
+ let calls=0;await assert.rejects(fetchChampionBuild(champion,'bottom',data,{fetcher:async()=>{calls++;return Response.json({meta:{version:'16.18'},data:{summary:{id:22,positions:[{name:'ADC'}]}}});}}),{code:'BUILD_PATCH_MISMATCH'});assert.equal(calls,1);
+});
 test('later item table keeps inline game counts and never calls win rate popularity',()=>{
  const value=['$','tr','depth_4_item_0',{children:[{metaType:'item',metaId:3075},['$','strong',null,{children:'55.68%'}],['$','span',null,{children:'731 Games'}]]}];
  const {nodes,refs}=decodeHydration(hydration({1:value}));
