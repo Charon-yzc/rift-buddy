@@ -6,6 +6,7 @@ import {defaultState,validateState,mergeState} from '../services/storage.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+try{data.spellbook=JSON.parse(await fs.readFile('data/spells.json','utf8')).champions||{};}catch{data.spellbook={};}
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]};
 test('guide shows champion-specific current builds and next unchecked item without inventing inventory',()=>{

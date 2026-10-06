@@ -7,6 +7,7 @@ import {purchasePlan} from '../src/core/purchase.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+try{data.spellbook=JSON.parse(await fs.readFile('data/spells.json','utf8')).champions||{};}catch{data.spellbook={};}
 
 test('pass-through yields to header hover so the panel stays movable',()=>{
  assert.equal(resolveGuideIgnoreMouse(true,false),true);

@@ -72,6 +72,27 @@ export function burstDamage(champion,points,agg,level){
  return Math.round(Math.max(0,points)*perPoint);
 }
 
+// One skill hit from the enriched spell book. Falls back to 0 (caller uses
+// the heuristic burst) when the champion or slot is missing.
+export function skillHitDamage(spell,rank,agg,baseAd,targetMaxHp){
+ if(!spell?.damage||!Number.isInteger(rank)||rank<1)return 0;
+ const d=spell.damage,r=Math.min(rank,d.base.length)-1;
+ let dmg=d.base[r]||0;
+ for(const ratio of d.ratios||[]){
+  const c=Array.isArray(ratio.coeff)?ratio.coeff[r]??ratio.coeff.at(-1):ratio.coeff;
+  const bonus=ratio.formula==='bonus';
+  const v=ratio.stat==='ap'?agg.ap:ratio.stat==='ad'?(bonus?Math.max(0,agg.ad-baseAd):agg.ad)
+   :ratio.stat==='bonusAd'?Math.max(0,agg.ad-baseAd)
+   :ratio.stat==='armor'?agg.armor||0:ratio.stat==='mr'?agg.mr||0
+   :ratio.stat==='maxHp'?targetMaxHp||0:0;
+  dmg+=c*v;
+ }
+ return Math.max(0,Math.round(dmg));
+}
+export function proxyRanks(level,maxRank=5){
+ const L=Math.min(Math.max(Number(level)||1,1),18);
+ return Math.min(maxRank,Math.max(1,Math.round(L*maxRank/18)));
+}
 // Expected auto-attack + a small mix of ability casts per second.
 export function roughDps(champion,level,agg){
  const base=statAtLevel(champion.stats,level);
@@ -86,22 +107,39 @@ export function roughDps(champion,level,agg){
 
 const mitigate=(amount,armor,mr,physShare)=>amount*(physShare*(100/(100+armor))+(1-physShare)*(100/(100+mr)));
 
-// Health a champion's 6s trading window would deal, after armor/MR.
-export function tradeDamageWindow(attacker,defender,level,agg,def,points=null){
- const a=roughDps(attacker,level,agg);
- const defStats=statAtLevel(defender.stats,level);
- const adShare=agg.ad/(agg.ad+agg.ap+1);
- const autos=mitigate(a*6,defStats.armor,defStats.mr,0.55);
- const pts=points??skillPointsTotal(null,level);
- const burst=burstDamage(attacker,pts,agg,level);
- const burstHit=mitigate(burst,defStats.armor,defStats.mr,adShare);
- return Math.round(autos+burstHit);
+// Health a champion's 6s trading window would deal. `defAgg` is the real
+// aggregate (armor/mr/hp included), not base stats. Skills use the enriched
+// spell book with per-type mitigation; without it, the heuristic burst stays.
+export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null,extra={}){
+ const base=statAtLevel(attacker.stats,level);
+ const def=defAgg&&Number.isFinite(defAgg.armor)?defAgg:{armor:statAtLevel(defender.stats,level).armor,mr:statAtLevel(defender.stats,level).mr};
+ const autos=mitigate(roughDps(attacker,level,agg)*6,def.armor,def.mr,0.55);
+ let burst=0;
+ const {skills=null,spells=null}=extra;
+ if(spells&&skills){
+  const baseAd=statAtLevel(attacker.stats,level).ad;
+  const targetMaxHp=Number.isFinite(defAgg?.hp)?defAgg.hp:null;
+  for(const slot of ['Q','W','E','R']){
+   const rank=skills[slot];
+   if(!Number.isInteger(rank)||rank<1)continue;
+   const spell=spells[attacker.id]?.[slot];
+   const hit=skillHitDamage(spell,rank,agg,baseAd,targetMaxHp);
+   if(hit<=0)continue;
+   const type=spell.damage.type;
+   burst+=type==='true'?hit:mitigate(hit,def.armor,def.mr,type==='physical'?1:0);
+  }
+ }else{
+  const pts=points??skillPointsTotal(null,level);
+  const adShare=agg.ad/(agg.ad+agg.ap+1);
+  burst=mitigate(burstDamage(attacker,pts,agg,level),def.armor,def.mr,adShare);
+ }
+ return Math.round(autos+burst);
 }
 
 // Trading edge -1..1 vs a matched opponent. Positive favors `champion`.
-export function tradeEdge(champion,level,agg,opponent,opponentLevel,opponentAgg,data,points=null){
- const myDamage=tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points?.mine??null);
- const theirDamage=tradeDamageWindow(opponent,champion,opponentLevel,opponentAgg,agg,points?.theirs??null);
+export function tradeEdge(champion,level,agg,opponent,opponentLevel,opponentAgg,data,points=null,extra={}){
+ const myDamage=tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points?.mine??null,{skills:extra.mineSkills??null,spells:extra.spells??null});
+ const theirDamage=tradeDamageWindow(opponent,champion,opponentLevel,opponentAgg,agg,points?.theirs??null,{skills:extra.theirsSkills??null,spells:extra.spells??null});
  const myHp=agg.hp,theirHp=opponentAgg.hp;
  const meWins=myDamage/Math.max(theirHp,1)+(myHp-theirDamage>0?0.05:-0.05);
  const themWins=theirDamage/Math.max(myHp,1);
@@ -111,20 +149,23 @@ export function tradeEdge(champion,level,agg,opponent,opponentLevel,opponentAgg,
 
 // Kill threshold: how much HP the target must be below for a full 6s trade
 // (autos + invested skills) to finish them.
-export function killThreshold(champion,level,agg,opponent,opponentLevel,opponentAgg,points=null){
- return Math.max(0,tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points));
+export function killThreshold(champion,level,agg,opponent,opponentLevel,opponentAgg,points=null,extra={}){
+ return Math.max(0,tradeDamageWindow(champion,opponent,level,agg,opponentAgg,points,extra));
 }
 
 // One full duel, both directions: my kill line on them and theirs on me.
 // Enemy items are the real public build; only their skill points and current
 // HP are proxied (by level and max HP) and labelled as such in the UI.
-export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyItems=[]){
+export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyItems=[],spells=null){
  const enemyAgg=aggregateCombatStats(enemy,enemyLevel,enemyItems,data);
+ const maxRanks={Q:5,W:5,E:5,R:3};
+ const theirsSkills=Object.fromEntries(Object.entries(maxRanks).map(([slot,max])=>[slot,proxyRanks(enemyLevel,max)]));
+ const extra={spells,mineSkills:ownSkills,theirsSkills};
  const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
  return {
   enemy:{id:enemy.id,name:enemy.name,level:Number.isInteger(enemyLevel)?enemyLevel:null},
-  edge:tradeEdge(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,data,{mine,theirs}),
-  killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,mine),
-  killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,theirs),
+  edge:tradeEdge(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,data,{mine,theirs},extra),
+  killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,null,{skills:ownSkills,spells}),
+  killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,null,{skills:theirsSkills,spells}),
  };
 }

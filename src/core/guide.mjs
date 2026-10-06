@@ -103,7 +103,7 @@ export function createGuideModel(data,value,live=null,current=null){
   const duels=enemySnapshots.map(target=>{
    const enemyChampion=data.champions.find(c=>c.id===target.id);
    if(!enemyChampion)return null;
-   return duel(ownChampion,live.level||1,ownAgg,live.skills,enemyChampion,target.level||live.level||1,data,target.items||[]);
+   return duel(ownChampion,live.level||1,ownAgg,live.skills,enemyChampion,target.level||live.level||1,data,target.items||[],data.spellbook||null);
   }).filter(Boolean);
   if(!duels.length)return null;
   const primary=duels[0];

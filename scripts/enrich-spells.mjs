@@ -1,0 +1,198 @@
+// Maintainer-run enrichment: build data/spells.json from official static data.
+// Sources (no game client needed):
+// - RCP champion file: slot (Q/W/E/R), names, cooldown/cost, and which
+//   tooltip placeholder carries physical/magic/true damage.
+// - CommunityDragon character .bin.json: the real per-rank formulas
+//   (DataValues + mSpellCalculations), same family as the augment parser.
+// Runtime never fetches these; it reads the bundled data/spells.json and
+// falls back to heuristics when a champion or slot is missing.
+import fs from 'node:fs/promises';
+import {getJSON,atomicJSON} from '../services/data.mjs';
+
+const game=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const patch=game.version.split('.').slice(0,2).join('.');
+const CD=`https://raw.communitydragon.org/${patch}`;
+// bin paths use the lowercase alias; a few champions differ.
+const BIN_OVERRIDES={MonkeyKing:'monkeyking',Kaisa:'kaisa',Chogath:'chogath',KogMaw:'kogmaw',RekSai:'reksai',TahmKench:'tahmkench',TwistedFate:'twistedfate',XinZhao:'xinzhao',JarvanIV:'jarvaniv',LeeSin:'leesin',MasterYi:'masteryi',MissFortune:'missfortune',DrMundo:'drmundo',Belveth:'belveth',KSante:'ksante',Aurora:'aurora',Ambessa:'ambessa',Mel:'mel',Yunara:'yunara'};
+
+// mStat enum values verified against known spells (Taric E ArmorDamageValue
+// pairs mStat 1 with armor; Galio W pairs MRRatio with mStat 6; augments pair
+// max-HP with 12). Anything else is collected into `unresolved` for review
+// instead of being guessed.
+const KNOWN_STATS={1:'armor',2:'ad',6:'mr',12:'maxHp'};
+const statName=mStat=>KNOWN_STATS[mStat]??null;
+const inferStatFromName=name=>/ap/i.test(name||'')?'ap':/ad/i.test(name||'')?'ad':null;
+
+const perRank=(values,rank,maxRank)=>{
+ if(!Array.isArray(values)||!values.length)return null;
+ const nums=values.map(Number);
+ if(nums.some(v=>!Number.isFinite(v)))return null;
+ if(nums.length>=maxRank+1)return nums[rank];
+ if(nums.length===maxRank)return nums[rank-1];
+ if(nums.length===1)return nums[0];
+ return null;
+};
+const formulaOf=(mStatFormula,dataValueName='')=>{
+ if(/bonus|^BAD/i.test(dataValueName||''))return 'bonus';
+ if(mStatFormula===1||mStatFormula===2)return 'bonus';
+ if(mStatFormula===0)return 'base';
+ return 'total';
+};
+
+function parseTypeTags(dynamicDescription=''){
+ const out={};
+ for(const m of String(dynamicDescription).matchAll(/<(physicalDamage|magicDamage|trueDamage)>@(\w+)@/g)){
+  out[m[2]]=m[1]==='physicalDamage'?'physical':m[1]==='magicDamage'?'magic':'true';
+ }
+ return out;
+}
+
+function slotFromIcon(icon,alias){
+ const base=String(Array.isArray(icon)?icon[0]:icon||'').split('/').pop().replace(/\.dds$/i,'');
+ const under=base.match(/_([QWER])\d*$/i)?.[1]?.toUpperCase();
+ if(under)return under;
+ // Some icons have no underscore (ZedQ.dds): basename must be exactly alias+slot.
+ const plain=base.match(/^([A-Za-z]+?)([QWER])\d*$/);
+ if(plain&&plain[1].toLowerCase()===(alias||'').toLowerCase())return plain[2].toUpperCase();
+ return null;
+}
+
+function collectSlots(bin,alias,ddIds={}){
+ const groups={};
+ for(const [path,obj] of Object.entries(bin)){
+  const spell=obj?.mSpell;
+  if(!spell||!spell.mSpellCalculations)continue;
+  const group=String(path).split('/Spells/')[1]?.split('/')[0]||path;
+  const icon=Array.isArray(spell.mImgIconName)?spell.mImgIconName[0]:spell.mImgIconName;
+  let slot=slotFromIcon(icon,alias)
+   ||String(path).match(/Ability\/[^/]*_([QWER])\b/i)?.[1]?.toUpperCase()||null;
+  if(!slot){
+   // Last resort: the Data Dragon spell id is usually contained in the
+   // ability folder (DariusExecute ⊂ DariusExecuteAbility).
+   const folder=group.toLowerCase();
+   for(const key of ['Q','W','E','R']){
+    const id=String(ddIds[key]||'').toLowerCase();
+    if(id&&folder.includes(id)){slot=key;break;}
+   }
+  }
+  const bucket=groups[group]??={slot,objs:[]};
+  if(slot&&!bucket.slot)bucket.slot=slot;
+  const values={};for(const dv of spell.DataValues||[])if(dv?.name)values[dv.name]=dv.values;
+  bucket.objs.push({values,calcs:spell.mSpellCalculations,ranked:/rank/i.test(path)});
+ }
+ const bySlot={};
+ for(const bucket of Object.values(groups)){
+  if(!bucket.slot)continue;
+  const merged=bySlot[bucket.slot]??={objs:[]};
+  merged.objs.push(...bucket.objs);
+ }
+ return bySlot;
+}
+
+function resolveCalc(objs,wantName,maxRank,damageType,ctx,unresolved){
+ // Prefer the object that owns the wanted calc (rank objects carry the real
+ // per-rank arrays); never blend DataValues across objects.
+ const ordered=[...objs].sort((a,b)=>{
+  const aw=(a.calcs[wantName]?2:0)+(a.ranked?1:0),bw=(b.calcs[wantName]?2:0)+(b.ranked?1:0);
+  return bw-aw;
+ });
+ const mergedValues={};for(const o of objs)Object.assign(mergedValues,o.values);
+ const valuesOf=o=>new Proxy(o.values,{get:(t,k)=>k in t?t[k]:mergedValues[k]});
+ const names=[...new Set(objs.flatMap(o=>Object.keys(o.calcs)))];
+ const primary=names.includes(wantName)?wantName
+  :names.filter(n=>/damage/i.test(n)).sort((a,b)=>{
+   const oa=objs.find(o=>o.calcs[a]),ob=objs.find(o=>o.calcs[b]);
+   return (flatMax(ob.calcs[b],valuesOf(ob),maxRank)??-1)-(flatMax(oa.calcs[a],valuesOf(oa),maxRank)??-1);
+  })[0]||null;
+ if(!primary)return {calc:null,partial:false};
+ const owner=ordered.find(o=>o.calcs[primary])||ordered[0];
+ const calc=owner.calcs[primary],values=valuesOf(owner);
+ const base=[],ratios=[];
+ let partial=false;
+ for(let rank=1;rank<=maxRank;rank++){
+  let flat=null;const parts=[];
+  for(const part of calc.mFormulaParts||[]){
+   if(part.__type==='NamedDataValueCalculationPart'){
+    const v=perRank(values[part.mDataValue],rank,maxRank);
+    if(v===null){partial=true;continue;}
+    if(flat===null)flat=v;else parts.push({flat:v});
+   }else if(part.__type==='StatByCoefficientCalculationPart'){
+    let stat=statName(part.mStat);
+    if(stat===null&&part.mStat==null&&damageType==='physical')stat='ad';
+    else if(stat===null&&part.mStat==null&&damageType==='magic')stat='ap';
+    if(stat===null){partial=true;unresolved.push(`${ctx}.${primary}: mStat=${part.mStat}`);continue;}
+    parts.push({stat,coeff:part.mCoefficient,formula:formulaOf(part.mStatFormula)});
+   }else if(part.__type==='StatByNamedDataValueCalculationPart'){
+    const coeff=perRank(values[part.mDataValue],rank,maxRank);
+    if(coeff===null){partial=true;continue;}
+    let stat=part.mStat!=null?statName(part.mStat):inferStatFromName(part.mDataValue);
+    if(stat===null&&damageType==='physical')stat='ad';
+    else if(stat===null&&damageType==='magic')stat='ap';
+    if(stat===null){partial=true;unresolved.push(`${ctx}.${primary}: mStat=${part.mStat}(${part.mDataValue})`);continue;}
+    parts.push({stat,coeff,formula:formulaOf(part.mStatFormula,part.mDataValue)});
+   }else if(part.__type==='NumberCalculationPart'){
+    if(flat===null)flat=part.mNumber||0;else parts.push({flat:part.mNumber||0});
+   }else{partial=true;}
+  }
+  if(flat===null){partial=true;base.push(0);}else base.push(Math.round(flat*100)/100);
+  if(rank===1)for(const p of parts)ratios.push(p.stat?{stat:p.stat,coeff:p.coeff,formula:p.formula}:null);
+  // per-rank ratio drift (rare): keep the widest coefficient honest
+  if(rank>1)for(const p of parts){
+   if(!p.stat)continue;
+   const slot=ratios.find(r=>r&&r.stat===p.stat&&r.formula===p.formula);
+   if(slot&&typeof p.coeff==='number'&&typeof slot.coeff==='number')slot.coeff=Math.max(slot.coeff,p.coeff);
+  }
+ }
+ return {calc:primary,base,ratios:ratios.filter(Boolean),partial};
+}
+function flatMax(calc,values,maxRank){
+ let best=null;
+ for(let rank=1;rank<=maxRank;rank++)for(const part of calc.mFormulaParts||[]){
+  if(part.__type==='NamedDataValueCalculationPart'){const v=perRank(values[part.mDataValue],rank,maxRank);if(v!==null)best=Math.max(best??-Infinity,v);}
+  if(part.__type==='NumberCalculationPart')best=Math.max(best??-Infinity,part.mNumber||0);
+ }
+ return best;
+}
+
+const champions={},unresolved=[],failures=[];
+let queue=game.champions.map(c=>c);
+await Promise.all(Array.from({length:6},async()=>{
+ while(queue.length){
+  const c=queue.pop();
+  try{
+   const binId=BIN_OVERRIDES[c.id]||c.id.toLowerCase();
+   const [rcp,bin,dd]=await Promise.all([
+    getJSON(`${CD}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/champions/${c.key}.json`),
+    getJSON(`${CD}/game/data/characters/${binId}/${binId}.bin.json`),
+    getJSON(`https://ddragon.leagueoflegends.com/cdn/${game.version}/data/zh_CN/champion/${c.id}.json`).catch(()=>null),
+   ]);
+   const ddSpells=dd?.data?.[c.id]?.spells||[];
+   const ddIds={Q:ddSpells[0]?.id,W:ddSpells[1]?.id,E:ddSpells[2]?.id,R:ddSpells[3]?.id};
+   const slots=collectSlots(bin,c.id,ddIds);
+   const out={};
+   for(const spell of rcp.spells||[]){
+    const slot=String(spell.spellKey||'').toUpperCase();
+    if(!['Q','W','E','R'].includes(slot))continue;
+    const tags=parseTypeTags(spell.dynamicDescription);
+    const maxRank=slot==='R'?3:5;
+    const bucket=slots[slot];
+    const cooldown=perRank(spell.cooldownCoefficients,1,maxRank)!==null?Array.from({length:maxRank},(_,i)=>perRank(spell.cooldownCoefficients,i+1,maxRank)):null;
+    const cost=perRank(spell.costCoefficients,1,maxRank)!==null?Array.from({length:maxRank},(_,i)=>perRank(spell.costCoefficients,i+1,maxRank)):null;
+    let damage=null,calcName=null,partial=false;
+    if(bucket){
+     const tagged=Object.keys(tags)[0]||null;
+     const resolved=resolveCalc(bucket.objs,tagged,maxRank,tagged?tags[tagged]:null,`${c.id}.${slot}`,unresolved);
+     calcName=resolved.calc;partial=resolved.partial;
+     if(resolved.calc)damage={type:tags[resolved.calc]||null,base:resolved.base,ratios:resolved.ratios};
+     if(damage&&!damage.type){damage=null;partial=true;}
+    }
+    out[slot]={name:spell.name||slot,cooldown,cost,calc:calcName,damage,partial};
+   }
+   champions[c.id]=out;
+  }catch(error){failures.push(`${c.id}: ${error.message}`);}
+ }
+}));
+const withDamage=Object.values(champions).filter(s=>Object.values(s).some(v=>v?.damage)).length;
+await atomicJSON('data/spells.json',{version:game.version,patch,fetchedAt:new Date().toISOString(),champions,coverage:{champions:Object.keys(champions).length,withDamage},unresolved:[...new Set(unresolved)],failures});
+console.log(JSON.stringify({champions:Object.keys(champions).length,withDamage,failures:failures.length,unresolved:[...new Set(unresolved)]},null,1));
+if(failures.length)console.log('failures:\n'+failures.join('\n'));

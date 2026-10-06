@@ -13,6 +13,7 @@ const server=http.createServer(async(req,res)=>{
   if(url.pathname==='/api/bootstrap'){
    const data=JSON.parse(await fs.readFile(path.join(root,'data/game.json'),'utf8'));
    data.builds=await loadBuilds([path.join(root,'data')],data);
+   try{data.spellbook=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8')).champions||{};}catch{data.spellbook={};}
    data.hexBuilds=await loadHexBuilds([path.join(root,'data')],data);
    res.writeHead(200,{'Content-Type':types['.json'],'Cache-Control':'no-store'});res.end(JSON.stringify({data,state:defaultState(),desktop:false,version:manifest.version+'-preview'}));return;
   }

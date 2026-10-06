@@ -8,6 +8,7 @@ import {purchasePlan,purchaseAction,liveGuideStatus} from '../src/core/purchase.
 import {TRIOS} from '../src/core/rules.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+try{data.spellbook=JSON.parse(await fs.readFile('data/spells.json','utf8')).champions||{};}catch{data.spellbook={};}
 const selection={id:'Ashe',role:'bottom',mode:'rift',conditions:[],coreIndex:0};
 const now=1000000;
 const live={available:true,champion:'Ashe',mode:'rift',mapId:11,inventory:[],gold:500,level:1,skills:{Q:0,W:0,E:0,R:0},at:now,gameTime:1};

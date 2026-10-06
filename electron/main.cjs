@@ -65,6 +65,7 @@ async function boot(){
  useCatalog(catalogStore.summary());
  const {loadBuilds,loadHexBuilds,createBuildCache}=await import('../services/build-cache.mjs');
  data.builds=await loadBuilds([path.join(root,'data'),path.join(storeRoot,'data')],data);
+ try{data.spellbook=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8')).champions||{};}catch{data.spellbook={};}
  data.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],data);
  const imageCache=await import('../services/image-cache.mjs');
  data.imageOverrides=await imageCache.loadImageOverrides(path.join(storeRoot,'data/images'),data);
