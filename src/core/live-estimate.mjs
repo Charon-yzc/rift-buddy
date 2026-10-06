@@ -140,8 +140,9 @@ export function skillHitDamage(spell,rank,agg,bases,targetMaxHp,def=null){
     :ratio.stat==='maxHp'?targetMaxHp||0:0;
    amount+=c*v;
   }
-  const hits=Array.isArray(dmg.hits)?dmg.hits[r]??dmg.hits.at(-1):1;
-  return {amount:Math.max(0,amount*Math.max(1,hits||1)),type:dmg.type};
+  const rawHits=Array.isArray(dmg.hits)?dmg.hits[r]??dmg.hits.at(-1):undefined;
+  const hits=rawHits===undefined?1:(Number.isFinite(rawHits)?Math.max(0,rawHits):1);
+  return {amount:Math.max(0,amount*hits),type:dmg.type};
  };
  const hit=rawOf({type:d.type,base:d.base,ratios:d.ratios,hits:d.hits});
  const parts=[hit.type==='true'||!def?{amount:hit.amount,type:hit.type}:{amount:mitigate(hit.amount,def.armor,def.mr,hit.type==='physical'?1:0),type:hit.type}];

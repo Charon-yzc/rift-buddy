@@ -37,8 +37,8 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
    const area=screen.getDisplayMatching(win.getBounds()).workArea,b=win.getBounds();
    win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-BALL_SIZE)),Math.max(area.y,Math.min(b.y,area.y+area.height-BALL_SIZE)));
   }else{
-   const saved=getState()?.bounds;
-   const width=Number.isFinite(saved?.width)?Math.min(Math.max(saved.width,360),640):400;
+   const saved=getState()?.bounds,area=screen.getDisplayMatching(win.getBounds()).workArea;
+   const width=Number.isFinite(saved?.width)?Math.min(Math.max(saved.width,360),640,area.width):Math.min(400,area.width);
    win.setSize(width,win.getSize()[1]);
    adjustHeight();
   }

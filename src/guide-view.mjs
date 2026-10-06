@@ -8,7 +8,7 @@ export function estimateRows(m){
  const source=m.estimate.liveReal?'己方实时面板 + 对方公开出装':'对方按出装+等级反推';
  const duels=Array.isArray(m.estimate.duels)?m.estimate.duels:[];
  return `<p class="estimate-row"><b>换血倾向 · ${e(m.estimate.enemy?.name)}</b> ${dir} · 你斩杀约 ${m.estimate.killThreshold??'—'} 血 · 对方斩杀约 ${m.estimate.theirKill??'—'} 血 <span class="est-src">${source}；对方技能按等级反推、血量按满血估算${m.estimate.approx?' · 部分为估算':''}</span></p>`
-  +`${m.estimate.danger&&m.estimate.curHp!=null?`<p class="estimate-row danger"><b>注意</b> 对方 6 秒窗口伤害约 ${m.estimate.theirKill??'—'}，已超过你当前 ${m.estimate.curHp} 血</p>`:''}`
+  +`${m.estimate.danger&&m.estimate.curHp!=null?`<p class="estimate-row danger"><b>注意</b> 对方 6 秒窗口伤害约 ${m.estimate.theirKill??'—'}，已达到你当前 ${m.estimate.curHp} 血</p>`:''}`
   +`${duels.length>1?`<p class="estimate-row rivals">其余：${duels.slice(1,6).map(d=>`${e(d.enemy?.name)}${d.edge>0.25?'偏你':d.edge<-0.25?'偏对方':'均势'}/斩${d.killMine??'—'}`).join(' · ')}</p>`:''}`;
 }
 // Glanceable combat headline: same computed numbers as estimateRows, only

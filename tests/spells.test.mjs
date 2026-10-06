@@ -76,6 +76,9 @@ test('skill hits use real ranks and ratios, multi-hits multiply',()=>{
  // Guaranteed DoT ticks sum with their own mitigation; other extras never do.
  assert.equal(skillHitDamage(book.Teemo.E,1,{ad:60,ap:100,armor:30,mr:30},{ad:60,armor:0,mr:0},null,{armor:30,mr:30}),79);
  assert.equal(skillHitDamage(book.Teemo.E,1,{ad:60,ap:100,armor:30,mr:30},{ad:60,armor:0,mr:0},null,null),103);
+ // Zero-hit segments contribute nothing instead of forcing one hit.
+ const zero={damage:{type:'physical',base:[100,100,100,100,100],ratios:[],hits:[0,0,0,0,0]}};
+ assert.equal(skillHitDamage(zero,1,{ad:60,ap:0,armor:0,mr:0},{ad:60,armor:0,mr:0},null,{armor:0,mr:0}),0);
  // Secondary segments are inspection-only and never summed (tap/hold and
  // modal forms cannot be told apart from sequential hits in the data).
  const multi={damage:{type:'physical',base:[100],ratios:[],extra:[
@@ -168,6 +171,7 @@ test('DoT tick math pins period and frequency semantics, including f!=1',async()
  // Slow ticks: only those landing inside 6s count.
  assert.equal(landedTicks(10,2,true),3); // 2s interval: ticks at 2,4,6
  assert.equal(landedTicks(30,1,true),6); // 1s interval over 30s: capped at 6
+ assert.equal(landedTicks(30,30,true),0); // 30s interval: no tick lands in 6s
  // Invalid inputs attach nothing, never NaN.
  assert.equal(totalTicks(0,1,false),null);
  assert.equal(totalTicks(4,0,false),null);

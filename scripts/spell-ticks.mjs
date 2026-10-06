@@ -18,10 +18,11 @@ export function totalTicks(dur, f, freqIsPeriod) {
 
 // Ticks of one application landing inside the trading window. interval is
 // derived from the total itself (dur/total), so the cap is correct for any
-// tick rate: fast ticks keep them all, slow ticks keep floor(window/interval).
+// tick rate: fast ticks keep them all, slow ticks keep floor(window/interval),
+// and an interval longer than the window keeps none (0, not 1).
 export function landedTicks(dur, f, freqIsPeriod, windowSec = 6) {
  const total = totalTicks(dur, f, freqIsPeriod);
  if (total === null) return null;
  const interval = dur / total;
- return Math.min(total, Math.max(1, Math.floor(windowSec / interval)));
+ return Math.min(total, Math.max(0, Math.floor(windowSec / interval)));
 }
