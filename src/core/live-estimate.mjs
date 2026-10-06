@@ -74,7 +74,7 @@ export function burstDamage(champion,points,agg,level){
 
 // One skill hit from the enriched spell book. Falls back to 0 (caller uses
 // the heuristic burst) when the champion or slot is missing.
-export function skillHitDamage(spell,rank,agg,bases,targetMaxHp){
+export function skillHitDamage(spell,rank,agg,bases,targetMaxHp,def=null){
  if(!spell?.damage||!Array.isArray(spell.damage.base)||!spell.damage.base.length)return 0;
  if(!Number.isInteger(rank)||rank<1)return 0;
  const ad=Number(agg?.ad)||0;
@@ -86,19 +86,28 @@ export function skillHitDamage(spell,rank,agg,bases,targetMaxHp){
  const totalOf=k=>Number(agg?.[k])||0;
  const bonusOf=k=>{const b=baseOf(k);return Number.isFinite(b)?Math.max(0,totalOf(k)-b):totalOf(k);};
  const d=spell.damage,r=Math.min(rank,d.base.length)-1;
- let dmg=d.base[r]||0;
- for(const ratio of d.ratios||[]){
-  let c=Array.isArray(ratio.coeff)?ratio.coeff[r]??ratio.coeff.at(-1):ratio.coeff;
-  if(!Number.isFinite(c))continue;
-  const bonus=ratio.formula==='bonus';
-  const v=ratio.stat==='ap'?totalOf('ap'):ratio.stat==='ad'?(bonus?bonusOf('ad'):ad)
-   :ratio.stat==='armor'?(bonus?bonusOf('armor'):totalOf('armor'))
-   :ratio.stat==='mr'?(bonus?bonusOf('mr'):totalOf('mr'))
-   :ratio.stat==='maxHp'?targetMaxHp||0:0;
-  dmg+=c*v;
- }
- const hits=Array.isArray(d.hits)?d.hits[r]??d.hits.at(-1):1;
- return Math.max(0,Math.round(dmg*Math.max(1,hits||1)));
+ // Only the primary segment enters the estimate. Secondary tagged segments
+ // (extras) are inspection-only: tap/hold alternatives, modal forms and
+ // conditional bonuses cannot be told apart from sequential hits in the
+ // data, and summing them fabricates damage. Multi-calc slots stay partial.
+ const rawOf=dmg=>{
+  let amount=dmg.base[r]||0;
+  for(const ratio of dmg.ratios||[]){
+   let c=Array.isArray(ratio.coeff)?ratio.coeff[r]??ratio.coeff.at(-1):ratio.coeff;
+   if(!Number.isFinite(c))continue;
+   const bonus=ratio.formula==='bonus';
+   const v=ratio.stat==='ap'?totalOf('ap'):ratio.stat==='ad'?(bonus?bonusOf('ad'):ad)
+    :ratio.stat==='armor'?(bonus?bonusOf('armor'):totalOf('armor'))
+    :ratio.stat==='mr'?(bonus?bonusOf('mr'):totalOf('mr'))
+    :ratio.stat==='maxHp'?targetMaxHp||0:0;
+   amount+=c*v;
+  }
+  const hits=Array.isArray(dmg.hits)?dmg.hits[r]??dmg.hits.at(-1):1;
+  return {amount:Math.max(0,amount*Math.max(1,hits||1)),type:dmg.type};
+ };
+ const hit=rawOf({type:d.type,base:d.base,ratios:d.ratios,hits:d.hits});
+ if(!def||hit.type==='true')return Math.max(0,Math.round(hit.amount));
+ return Math.round(mitigate(hit.amount,def.armor,def.mr,hit.type==='physical'?1:0));
 }
 // Proxied enemy ranks: total points never exceed level, R gated behind
 // 6/11/16, and each of Q/W/E capped like a real leveling curve
@@ -146,10 +155,9 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
    const rank=skills[slot];
    if(!Number.isInteger(rank)||rank<1)continue;
    const spell=spellbook[attacker.id]?.[slot];
-   const hit=skillHitDamage(spell,rank,agg,bases,targetMaxHp);
+   const hit=skillHitDamage(spell,rank,agg,bases,targetMaxHp,def);
    if(hit<=0)continue;
-   const type=spell.damage.type;
-   burst+=type==='true'?hit:mitigate(hit,def.armor,def.mr,type==='physical'?1:0);
+   burst+=hit;
   }
  }else{
   const pts=points??skillPointsTotal(null,level);

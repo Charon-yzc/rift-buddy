@@ -202,18 +202,37 @@ await Promise.all(Array.from({length:6},async()=>{
     const cooldown=perRankRCP(spell.cooldownCoefficients,1,maxRank)!==null?Array.from({length:maxRank},(_,i)=>perRankRCP(spell.cooldownCoefficients,i+1,maxRank)):null;
     const cost=perRankRCP(spell.costCoefficients,1,maxRank)!==null?Array.from({length:maxRank},(_,i)=>perRankRCP(spell.costCoefficients,i+1,maxRank)):null;
     let damage=null,calcName=null,partial=false;
+    // Alternative-mode names (tap vs hold, min vs max charge): either side
+    // matching means the segments are modes, not sequential hits.
+    const ALT_RE=/Min|Max|minDamage|maxDamage|tap|hold|charg|quick|empower/i;
     if(bucket){
-     const tagged=tags[0]?.calc||null;
+     const distinct=[...new Map(tags.map(t=>[t.calc,t])).values()];
+     const tagged=distinct[0]?.calc||null;
      const mageLike=(Number(c.info?.magic)||0)>=(Number(c.info?.attack)||0)+2;
-     const resolved=resolveCalc(bucket.objs,tagged,maxRank,tagged?tags.find(t=>t.calc===tagged)?.type:null,`${c.id}.${slot}`,unresolved,mageLike);
+     const ctx=`${c.id}.${slot}`;
+     const resolved=resolveCalc(bucket.objs,tagged,maxRank,distinct[0]?.type||null,ctx,unresolved,mageLike);
      calcName=resolved.calc;partial=resolved.partial;
-     if(resolved.calc)damage={type:tags.find(t=>t.calc===resolved.calc)?.type||null,base:resolved.base,ratios:resolved.ratios};
+     if(resolved.calc)damage={type:distinct.find(t=>t.calc===resolved.calc)?.type||null,base:resolved.base,ratios:resolved.ratios};
      if(damage&&!damage.type){damage=null;partial=true;}
      if(tagged&&!resolved.calc)partial=true; // tagged nuke exists but unparseable
-     if(tags.length>1)partial=true; // multi-segment (out+return), first only
-     if(damage){
-      // Multi-hit skills (Garen E spins): multiply by the machine-readable
-      // strike count from a sibling calc instead of counting one hit.
+     // The primary itself may be one alternative mode (Vlad E tap): disclose.
+     if(calcName&&ALT_RE.test(calcName))partial=true;
+     // Same calc name tagged with different types (Ahri Q out/return) cannot
+     // be split from bin data: disclose instead of guessing the attribution.
+     if(new Set(tags.map(t=>t.calc+'|'+t.type)).size>new Set(tags.map(t=>t.calc)).size)partial=true;
+     // Several distinct tagged calcs: only the primary enters the estimate.
+     // Summing them would fabricate damage for tap/hold alternatives, modal
+     // forms (Heimer/LeBlanc/Hwei/Kayn) and conditional bonuses, so any
+     // multi-calc slot stays disclosed via partial.
+     if(distinct.length>1)partial=true;
+     // Secondary distinct tagged segments are kept for inspection only.
+     // They are never summed: tap/hold alternatives, modal forms and
+     // conditional bonuses cannot be told apart from sequential hits in
+     // the data, and summing them fabricates damage (Cho'Gath R monster
+     // damage, Heimer/LeBlanc/Hwei modal kits). The estimate uses the
+     // primary alone; multi-calc slots stay disclosed via partial.
+     const sameAs=(a,b)=>a&&b&&a.type===b.type&&JSON.stringify(a.base)===JSON.stringify(b.base)&&JSON.stringify(a.ratios)===JSON.stringify(b.ratios);
+     const hitsFor=()=>{
       for(const o of bucket.objs)for(const [name,calc] of Object.entries(o.calcs)){
        if(!/NumberOfStrikes|NumTicks|TickCount|HitCount/i.test(name))continue;
        const hits=Array.from({length:maxRank},(_,i)=>{
@@ -224,9 +243,28 @@ await Promise.all(Array.from({length:6},async()=>{
         }
         return v;
        });
-       if(hits.every(v=>Number.isInteger(v)&&v>=1&&v<=30)){damage.hits=hits;break;}
+       if(hits.every(v=>Number.isInteger(v)&&v>=1&&v<=30))return hits;
       }
-      if(damage.hits&&damage.hits.length!==damage.base.length){delete damage.hits;partial=true;}
+      return null;
+     };
+     if(damage){
+      // Multi-hit skills (Garen E spins): multiply by the machine-readable
+      // strike count from a sibling calc instead of counting one hit.
+      const hits=hitsFor();
+      if(hits){if(hits.length!==damage.base.length){partial=true;}else damage.hits=hits;}
+      for(const extra of distinct.slice(1)){
+       const r=resolveCalc(bucket.objs,extra.calc,maxRank,extra.type,ctx,unresolved,mageLike);
+       if(!r.calc)continue;
+       const seg={calc:r.calc,type:extra.type,base:r.base,ratios:r.ratios};
+       const eh=hitsFor();
+       if(eh&&eh.length===seg.base.length)seg.hits=eh;
+       if(r.partial)partial=true;
+       if(sameAs(seg,damage))continue; // same number referenced twice
+       // Zero-flat, ratio-less segments (pass-through modifiers) add nothing.
+       if(!(seg.base.some(v=>v!==0)||seg.ratios.length))continue;
+       // Inspection only: the runtime never sums extras (see skillHitDamage).
+       (damage.extra??=[]).push(seg);
+      }
      }
     }
     out[slot]={name:spell.name||slot,cooldown,cost,calc:calcName,damage,partial:partial||(tags.length>0&&!damage),nuke:tags.length>0};

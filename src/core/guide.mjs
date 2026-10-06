@@ -2,7 +2,7 @@ import {getBuild,SHARDS} from './builds.mjs';
 import {ROLES,profile} from './rules.mjs';
 import {purchasePlan,liveGuideStatus,purchaseAction} from './purchase.mjs';
 import {compareAugments} from './hex-compare.mjs';
-import {comboStage,guideMismatch,GUIDE_STAGES} from './guide-stage.mjs';
+import {comboStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
 import {aggregateCombatStats,applyLivePanel,duel} from './live-estimate.mjs';
@@ -113,8 +113,10 @@ export function createGuideModel(data,value,live=null,current=null){
    approx:duels.some(d=>d.approx),
    liveReal:panel.live,curHp,danger:curHp!==null&&curHp>0&&primary.killTheirs>=curHp,at:live.at};
  })():null;
+ const action=matched?purchaseAction(targetPlan,next,live.gold):null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,
-  start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action:matched?purchaseAction(targetPlan,next,live.gold):null,
+  start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
+  phase:gamePhase(liveModel,action,next||null),
   live:liveModel,estimate,nextSkill:nextSkill(champion.id,build.priority,build.first,liveModel),
   priority:build.priority,first:build.first,summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],

@@ -35,6 +35,7 @@ export function renderGuide(snapshot,tab,isPreview,image){
 function items(m,plan,image){
  const early=m.early.map(i=>i.name).join('、');
  return `${m.selectionWarnings.map(w=>`<div class="tip"><p>${e(w)}</p></div>`).join('')}
+ ${m.phase?`<div class="tip"><b>对局节奏 · ${e(m.phase.label)}</b>${m.phase.tips.map(t=>`<p>${e(t)}</p>`).join('')}</div>`:''}
  ${shopping(m)}<section class="quick-conditions"><b>手动调整局势</b><div>${conditionNames.map(([id,name])=>`<button data-action="condition" data-id="${id}" aria-pressed="${m.selection.conditions.includes(id)}" class="${m.selection.conditions.includes(id)?'active':''}">${name}</button>`).join('')}</div><p>按你观察到的情况调整；保留仍在路线里的购买进度。</p></section>
  ${early?`<div class="tip"><b>也可提前补</b><p>${e(early)}。结合对线与回城安排。</p></div>`:''}
  ${plan?`<details data-guide-section="components"><summary>${e(m.next.name)} · 完整合成组件</summary><div class="component-list">${plan.components.map(i=>`<span>${image('item',i.id,i.name)}${e(i.name)}${i.count>1?' ×'+i.count:''}</span>`).join('')}</div><p class="note">${m.live.matched?'扣除已有组件约 '+plan.remaining+' 金':'未读取背包，展示完整组件参考'}。静态价格与任务升级以游戏商店为准。</p></details>`:''}

@@ -22,10 +22,14 @@ test('spell book schema is sound and matches the bundled game version',()=>{
     assert.ok(s.damage.base.length===(slot==='R'?3:5),`${id}.${slot} ranks`);
     assert.ok(s.damage.base.every(v=>v>=0),`${id}.${slot} base`);
     if(s.damage.hits)assert.ok(s.damage.hits.length===s.damage.base.length&&s.damage.hits.every(v=>Number.isInteger(v)&&v>=1&&v<=30),`${id}.${slot} hits`);
-    for(const r of s.damage.ratios||[]){
+    for(const r of [...(s.damage.ratios||[]),...((s.damage.extra||[]).flatMap(x=>x.ratios||[]))]){
      assert.ok(['ad','ap','armor','mr','maxHp'].includes(r.stat),`${id}.${slot} ratio stat`);
      const coeffs=Array.isArray(r.coeff)?r.coeff:[r.coeff];
      assert.ok(coeffs.every(v=>Number.isFinite(v)&&v>=0),`${id}.${slot} ratio coeff`);
+    }
+    for(const x of s.damage?.extra||[]){
+     assert.equal(typeof x.calc,'string',`${id}.${slot} extra calc`);
+     assert.ok(['physical','magic','true'].includes(x.type),`${id}.${slot} extra type`);
     }
    }
   }
@@ -68,6 +72,12 @@ test('skill hits use real ranks and ratios, multi-hits multiply',()=>{
  // True damage bypasses armor and MR.
  assert.equal(skillHitDamage(book.Darius.R,1,{ad:100,ap:0,armor:200,mr:200},60,3000),125+Math.round(0.75*40));
  assert.equal(skillHitDamage(book.Ahri.Q,1,{ad:60,ap:100,armor:0,mr:0},60,null),35+50);
+ // Secondary segments are inspection-only and never summed (tap/hold and
+ // modal forms cannot be told apart from sequential hits in the data).
+ const multi={damage:{type:'physical',base:[100],ratios:[],extra:[
+  {calc:'Thrust',type:'physical',base:[50],ratios:[{stat:'ad',coeff:0.5,formula:'total'}]}]}};
+ assert.equal(skillHitDamage(multi,1,{ad:100,ap:0,armor:0,mr:0},{ad:60,armor:0,mr:0},null,{armor:0,mr:0}),100);
+ assert.equal(skillHitDamage(book.XinZhao.W,1,{ad:100,ap:0,armor:0,mr:0},{ad:60,armor:0,mr:0},null,{armor:0,mr:0}),30+Math.round(0.3*100));
  // Missing fields never poison the chain with NaN.
  assert.ok(Number.isFinite(skillHitDamage(book.Ashe.W,1,{ad:100},60,null)));
  assert.ok(burstDamage({stats:{attackdamage:59,attackspeed:0.658,attackspeedperlevel:3}},6,{ad:59,ap:0},6)>0);
