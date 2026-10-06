@@ -144,8 +144,15 @@ export function skillHitDamage(spell,rank,agg,bases,targetMaxHp,def=null){
   return {amount:Math.max(0,amount*Math.max(1,hits||1)),type:dmg.type};
  };
  const hit=rawOf({type:d.type,base:d.base,ratios:d.ratios,hits:d.hits});
- if(!def||hit.type==='true')return Math.max(0,Math.round(hit.amount));
- return Math.round(mitigate(hit.amount,def.armor,def.mr,hit.type==='physical'?1:0));
+ const parts=[hit.type==='true'||!def?{amount:hit.amount,type:hit.type}:{amount:mitigate(hit.amount,def.armor,def.mr,hit.type==='physical'?1:0),type:hit.type}];
+ // Guaranteed DoT ticks (Duration-wrapper proven, e.g. Teemo poison) add up
+ // with their own type mitigation and tick counts. All other extras stay
+ // inspection-only (see enrich-spells.mjs).
+ for(const x of (d.extra||[]).filter(x=>x.guaranteed)){
+  const h=rawOf({type:x.type,base:x.base,ratios:x.ratios,hits:x.hits});
+  parts.push(h.type==='true'||!def?{amount:h.amount,type:h.type}:{amount:mitigate(h.amount,def.armor,def.mr,h.type==='physical'?1:0),type:h.type});
+ }
+ return Math.max(0,Math.round(parts.reduce((a,b)=>a+b.amount,0)));
 }
 // Proxied enemy ranks: total points never exceed level, R gated behind
 // 6/11/16, and each of Q/W/E capped like a real leveling curve

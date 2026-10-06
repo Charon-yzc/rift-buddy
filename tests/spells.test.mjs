@@ -30,6 +30,7 @@ test('spell book schema is sound and matches the bundled game version',()=>{
     for(const x of s.damage?.extra||[]){
      assert.equal(typeof x.calc,'string',`${id}.${slot} extra calc`);
      assert.ok(['physical','magic','true'].includes(x.type),`${id}.${slot} extra type`);
+     assert.equal(typeof x.guaranteed,'boolean',`${id}.${slot} extra guaranteed`);
     }
    }
   }
@@ -72,6 +73,9 @@ test('skill hits use real ranks and ratios, multi-hits multiply',()=>{
  // True damage bypasses armor and MR.
  assert.equal(skillHitDamage(book.Darius.R,1,{ad:100,ap:0,armor:200,mr:200},60,3000),125+Math.round(0.75*40));
  assert.equal(skillHitDamage(book.Ahri.Q,1,{ad:60,ap:100,armor:0,mr:0},60,null),35+50);
+ // Guaranteed DoT ticks sum with their own mitigation; other extras never do.
+ assert.equal(skillHitDamage(book.Teemo.E,1,{ad:60,ap:100,armor:30,mr:30},{ad:60,armor:0,mr:0},null,{armor:30,mr:30}),79);
+ assert.equal(skillHitDamage(book.Teemo.E,1,{ad:60,ap:100,armor:30,mr:30},{ad:60,armor:0,mr:0},null,null),103);
  // Secondary segments are inspection-only and never summed (tap/hold and
  // modal forms cannot be told apart from sequential hits in the data).
  const multi={damage:{type:'physical',base:[100],ratios:[],extra:[
@@ -150,4 +154,24 @@ test('unparsed on-hit alone forces approx even with clean spell books',async()=>
  assert.equal(duel(ashe,6,withOnHit,{Q:1},jinx,6,game,[],cleanBook).approx,true);
  const foeOnHit=duel(ashe,6,plain,{Q:1},jinx,6,game,[{id:'3153'}],cleanBook);
  assert.equal(foeOnHit.approx,true);
+});
+
+test('DoT tick math pins period and frequency semantics, including f!=1',async()=>{
+ const {landedTicks,totalTicks}=await import('../scripts/spell-ticks.mjs');
+ // Teemo E poison, the proven case: 4s at 1 tick/s under either reading.
+ assert.equal(totalTicks(4,1,false),4);
+ assert.equal(totalTicks(4,1,true),4);
+ assert.equal(landedTicks(4,1,false),4);
+ // Fast ticks, all inside the window: 5s at 2 ticks/s.
+ assert.equal(totalTicks(5,2,false),10);
+ assert.equal(landedTicks(5,2,false),10);
+ // Slow ticks: only those landing inside 6s count.
+ assert.equal(landedTicks(10,2,true),3); // 2s interval: ticks at 2,4,6
+ assert.equal(landedTicks(30,1,true),6); // 1s interval over 30s: capped at 6
+ // Invalid inputs attach nothing, never NaN.
+ assert.equal(totalTicks(0,1,false),null);
+ assert.equal(totalTicks(4,0,false),null);
+ assert.equal(totalTicks(NaN,1,false),null);
+ assert.equal(totalTicks(4,NaN,false),null);
+ assert.equal(landedTicks(-5,1,false),null);
 });

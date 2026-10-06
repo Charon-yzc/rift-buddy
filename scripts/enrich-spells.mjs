@@ -10,6 +10,7 @@
 // falls back to heuristics when a champion or slot is missing.
 import fs from 'node:fs/promises';
 import {getJSON,atomicJSON} from '../services/data.mjs';
+import {landedTicks} from './spell-ticks.mjs';
 
 const game=JSON.parse(await fs.readFile('data/game.json','utf8'));
 const patch=game.version.split('.').slice(0,2).join('.');
@@ -255,7 +256,7 @@ await Promise.all(Array.from({length:6},async()=>{
       for(const extra of distinct.slice(1)){
        const r=resolveCalc(bucket.objs,extra.calc,maxRank,extra.type,ctx,unresolved,mageLike);
        if(!r.calc)continue;
-       const seg={calc:r.calc,type:extra.type,base:r.base,ratios:r.ratios};
+       const seg={calc:r.calc,type:extra.type,base:r.base,ratios:r.ratios,guaranteed:false};
        const eh=hitsFor();
        if(eh&&eh.length===seg.base.length)seg.hits=eh;
        if(r.partial)partial=true;
@@ -263,6 +264,60 @@ await Promise.all(Array.from({length:6},async()=>{
        // Zero-flat, ratio-less segments (pass-through modifiers) add nothing.
        if(!(seg.base.some(v=>v!==0)||seg.ratios.length))continue;
        // Inspection only: the runtime never sums extras (see skillHitDamage).
+       (damage.extra??=[]).push(seg);
+      }
+      // Guaranteed DoT ticks: a sibling Duration-modified wrapper proves a
+      // per-tick calc lands N times (Teemo E TotalDotDamage = Tick x
+      // PoisonDuration). Unlike tap/hold alternatives this is mechanically
+      // provable, so it sums. Monster mods, non-Duration multipliers,
+      // heals, charged/channeled wrappers, per-second values and sub-1
+      // flat numbers (percent misreads) are all excluded; without an
+      // explicit tick count nothing is attached.
+      const seenDot=new Set();
+      for(const o of bucket.objs)for(const [name,calc] of Object.entries(o.calcs)){
+       if(calc?.__type!=='GameCalculationModified')continue;
+       const mod=calc.mModifiedGameCalculation,mult=calc.mMultiplier;
+       if(typeof mod!=='string'||!mult||mult.__type!=='NamedDataValueCalculationPart')continue;
+       if(!/Duration/i.test(mult.mDataValue||'')||/monster/i.test(mult.mDataValue||''))continue;
+       if(mod===calcName||seenDot.has(mod))continue;
+       if(/Heal|Shield|Mana|Energy|Regen|Lifesteal|Charge|Channel|Tap|Hold/i.test(mod+name))continue;
+       const owner=bucket.objs.find(x=>x.calcs&&x.calcs[mod]);
+       const partDvs=[...new Set(((owner?.calcs[mod]?.mFormulaParts)||[]).map(p=>p.mDataValue).filter(v=>typeof v==='string'))];
+       // Per-second values scale with time; only per-tick values multiply
+       // by a count. Anything else would fabricate damage.
+       if(partDvs.some(v=>/PerSecond/i.test(v))){unresolved.push(`${ctx}.${name}: per-second values need scaling, skipped`);continue;}
+       const r=resolveCalc(bucket.objs,mod,maxRank,null,`${ctx}.${name}`,unresolved,mageLike);
+       if(!r.calc||r.partial)continue;
+       // Sub-1 flat numbers with no ratios are percent misreads, not damage.
+       if(Math.max(...r.base)<1&&!r.ratios.length){unresolved.push(`${ctx}.${name}: sub-1 flat, skipped`);continue;}
+       // Tick count from an explicit count DV, else duration ÷ interval.
+       // Period-style names (SecondsPerTick) divide, frequency-style names
+       // (TickFrequency) multiply — the two coincide at 1 and diverge
+       // elsewhere, so an unknown pattern attaches nothing.
+       const freqEntry=Object.entries(o.values).find(([k])=>/TickFrequency|TicksPerSecond|TickRate|SecondsPerTick|TickInterval|TickPeriod/i.test(k));
+       const durVals=o.values[mult.mDataValue];
+       const freq=freqEntry?freqEntry[1]:null;
+       const freqIsPeriod=freqEntry?/SecondsPerTick|TickInterval|TickPeriod/i.test(freqEntry[0]):false;
+       const perRankTick=Array.from({length:maxRank},(_,i)=>{
+        const dur=perRank(durVals,i+1,maxRank);
+        if(!freq)return null;
+        const f=perRank(freq,i+1,maxRank);
+        let total=landedTicks(dur,f,freqIsPeriod);
+        if(total===null)return null;
+        // Corroborate against an explicit count DV when one exists.
+        const countEntry=Object.entries(o.values).find(([k])=>/^(NumDamageTicks|NumTicks|TickCount|HitCount)$/i.test(k));
+        if(countEntry){
+         const expect=perRank(countEntry[1],i+1,maxRank);
+         if(!Number.isFinite(expect)||Math.abs(expect-total)>1)return null;
+        }
+        return total;
+       });
+       if(perRankTick.some(v=>v===null))continue;
+       // Type prefers the RCP tag for this exact calc, then the ratios.
+       const firstStat=(r.ratios.find(x=>x.stat)||{}).stat;
+       const seg={calc:r.calc,type:distinct.find(t=>t.calc===r.calc)?.type||(firstStat==='ap'?'magic':firstStat==='ad'?'physical':damage?.type||null),base:r.base,ratios:r.ratios,hits:perRankTick,guaranteed:true};
+       if(!seg.type)continue;
+       seenDot.add(mod);
        (damage.extra??=[]).push(seg);
       }
      }
