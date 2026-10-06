@@ -31,6 +31,15 @@ async function run(){
  const capture=async name=>{await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
  await capture('guide-live-compact.png');await js('window.guide.control("collapse")');await js('document.querySelector("[data-tab=team]").click()');
  assert.ok(await js('document.querySelectorAll(".team-steps li").length>=2'));await capture('guide-team-expanded.png');
+ // Ball mode must preserve the full panel's width and release keyboard focus.
+ await delay(400);const expandedWidth=w.getSize()[0];
+ await js('window.guide.control("ball")');await until(()=>js('!!document.querySelector(".ball-btn")'),'Floating ball missing');
+ assert.deepEqual(w.getSize(),[76,76]);assert.equal(w.isResizable(),false);assert.equal(w.isFocusable(),false);
+ await js('document.dispatchEvent(new MouseEvent("mousedown",{screenX:10,screenY:10}));document.dispatchEvent(new MouseEvent("mousemove",{buttons:1,screenX:30,screenY:10}));document.querySelector(".ball-btn").click()');
+ assert.equal((await js('window.guide.bootstrap()')).ball,true,'A renderer drag became an expand click');
+ await js('document.dispatchEvent(new MouseEvent("mouseup"))');await delay(50);
+ await js('document.querySelector(".ball-btn").click()');await until(()=>js('!!document.querySelector(".quick-reminders")'),'Ball did not expand');
+ assert.equal(w.getSize()[0],expandedWidth,'Expanding kept the floating ball width');assert.equal(w.isResizable(),true);
  // Choose a shoe before the first core item, using real-semantic inventory snapshots.
  await js('document.querySelector("[data-tab=items]").click()');
  const shoe=snapshot.model.shoppingTargets.find(i=>i.kind==='鞋子');assert.ok(shoe);
@@ -76,7 +85,7 @@ async function run(){
  await js('window.guide.control("hide")');state=core.reconcileGuide(state,{phase:'GameStart',gameId:'4'}).guide;await guide.phase('GameStart',true);assert.equal(w.isVisible(),false,'A new loading game must wait before showing');
  state=core.reconcileGuide(state,{phase:'InProgress',gameId:'4'}).guide;await guide.phase('InProgress',true);assert.equal(w.isVisible(),true,'A changed id learned during loading must re-arm auto-show');
  const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,mousePassThrough:true,liveInputWithoutClientAuthorization:true,staleLiveInputFallback:true,keyboardFocusReleased:true,interactionToggle:true,shortcutUnavailableFallback:true,lobbyInteractive:true,compact220:true,livePurchase:true,trioInstructions:true,modeMismatchGuard:true,sameHeroRoleGuard:true,unknownModeGuard:true,shoeGoal:true,manualMarksNotInventory:true,inventorySale:true,stageSelection:true,endGameHideAndManualReopen:true,endGameCollapse:true,nextGameRestoresPassThrough:true,hiddenReconnectStaysHidden:true,autoShowPreparesNewHero:true,realGameInputs:false,screenshots:root};
- Object.assign(result,{estimateResistance:true,estimateOrderIndependent:true,estimateTargetNamed:true,estimateCompactVisible:true,noCompetingGearAdvice:true});
+ Object.assign(result,{estimateResistance:true,estimateOrderIndependent:true,estimateTargetNamed:true,estimateCompactVisible:true,noCompetingGearAdvice:true,ballWidthRestored:true,ballKeyboardFocusReleased:true,ballRendererDragGuard:true});
  await fs.writeFile(path.join(root,'guide-input-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));guide.destroy();app.quit();
 }
 run().catch(e=>{console.error(e);app.exit(1);});
