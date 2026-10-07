@@ -59,7 +59,7 @@ export function guideIdentity(selection){
 export function selectGuide(previous,selection){
  const next=validateGuideSelection(selection);
  const same=previous&&guideIdentity(previous.selection)===guideIdentity(next);
- return {selection:next,completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??true,ball:previous?.ball===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
+ return {selection:next,completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??false,ball:previous?.ball===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
 }
 export function reconcileGuide(value,{phase,gameId,live,now=Date.now()}={}){
  const current=validateGuideState(value);if(!current)return {guide:null,reset:false,changed:false};
@@ -137,7 +137,7 @@ export function createGuideModel(data,value,live=null,current=null){
   const curHp=Number.isFinite(live.stats?.hp)?Math.floor(live.stats.hp):null;
   const warningEnemies=curHp!==null&&curHp>0?duels.filter(d=>d.killTheirs>=curHp).map(d=>d.enemy):[];
   return {enemy:primary.enemy,edge:primary.edge,killThreshold:primary.killMine,theirKill:primary.killTheirs,duels,
-   approx:true,liveReal:panel.live,mineSkillBasis:primary.mineSkillBasis,curHp,danger:warningEnemies.length>0,warningEnemies,windowSeconds:6,at:live.at};
+   approx:true,liveReal:panel.live,mineSkillBasis:primary.mineSkillBasis,mineWindow:primary.mineWindow,mineShort:primary.mineShort,curHp,danger:warningEnemies.length>0,warningEnemies,windowSeconds:6,at:live.at};
  })():null;
  const action=matched?purchaseAction(targetPlan,next,live.gold):null;
  // Custom duel simulator: the user picks one ally side and one enemy side

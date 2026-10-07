@@ -1,10 +1,11 @@
 export const CLIENT_POSITION_ROLES={TOP:'top',JUNGLE:'jungle',MIDDLE:'mid',MID:'mid',BOTTOM:'bottom',UTILITY:'support',SUPPORT:'support'};
 export const DRAFT_SCOPES={
+ solo:{name:'单人推荐',description:'只为自己选一位英雄；位置未确定时分别查看各路候选，队友英雄作为阵容参考。'},
  context:{name:'考虑全队',description:'只推荐我们的位置，搭配时考虑队友已选英雄。'},
  party:{name:'只看我们',description:'只推荐标记“我们”的位置，只考虑我们之间的配合。'},
  bot:{name:'下路双人组',description:'只搭配下路与辅助，不受其他位置或“我们 / 队友”标记影响。'},
 };
-export const draftTargets=(slots,scope='context')=>slots.filter(s=>(scope==='bot'?['bottom','support'].includes(s.role):s.party)&&(!s.champion||!s.locked)).map(s=>s.role);
+export const draftTargets=(slots,scope='context',soloRole='')=>slots.filter(s=>(scope==='solo'?(!soloRole||s.role===soloRole):scope==='bot'?['bottom','support'].includes(s.role):s.party)&&(!s.champion||!s.locked)).map(s=>s.role);
 export const scopeSlots=(slots,scope='context')=>scope==='bot'?slots.filter(s=>['bottom','support'].includes(s.role)):scope==='party'?slots.filter(s=>s.party):slots;
 export const clearDraftPicks=slots=>slots.map(s=>({role:s.role,party:s.party,champion:null,locked:false}));
 export function publicDraftPicks(session,champions){

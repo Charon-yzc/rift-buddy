@@ -2,15 +2,17 @@
 // coarse trading edge. Everything is static, explainable arithmetic on Riot
 // Data Dragon numbers. It is a reference, never a prediction.
 
+import {percentHealthOnHits,canModelYone,yoneEvents} from './combat-models.mjs';
 export function statAtLevel(stats={},level=1){
  const L=Math.min(Math.max(Number(level)||1,1),18);
+ const n=L-1,growth=n*(0.7025+0.0175*n);
  return {
-  hp:Math.round(stats.hp + stats.hpperlevel*(L-1)),
-  mp:Math.round(stats.mp + stats.mpperlevel*(L-1)),
-  armor:Math.round((stats.armor + stats.armorperlevel*(L-1))*10)/10,
-  mr:Math.round((stats.spellblock + stats.spellblockperlevel*(L-1))*10)/10,
-  ad:Math.round((stats.attackdamage + (stats.attackdamageperlevel||0)*(L-1))*10)/10,
-  atkSpeed:Math.round(stats.attackspeed*(1+(L-1)*stats.attackspeedperlevel/100)*100)/100,
+  hp:Math.round(stats.hp + stats.hpperlevel*growth),
+  mp:Math.round(stats.mp + stats.mpperlevel*growth),
+  armor:Math.round((stats.armor + stats.armorperlevel*growth)*10)/10,
+  mr:Math.round((stats.spellblock + stats.spellblockperlevel*growth)*10)/10,
+  ad:Math.round((stats.attackdamage + (stats.attackdamageperlevel||0)*growth)*10)/10,
+  atkSpeed:stats.attackspeed*(1+growth*(stats.attackspeedperlevel||0)/100),
   moveSpeed:stats.movespeed,
  };
 }
@@ -36,7 +38,7 @@ export function itemStats(description=''){
 
 export function aggregateCombatStats(champion,level,items=[],data){
  const base=statAtLevel(champion.stats,level);
- const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr,atkSpeed:base.atkSpeed,crit:0,onHit:[],onHitApprox:false};
+ const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr,atkSpeed:base.atkSpeed,crit:0,onHit:[],onHitApprox:false,combatPatch:data?.version?.split('.').slice(0,2).join('.')};
  let asPct=0;
  for(const entry of items){
   const record=data.items?.[entry.id];if(!record)continue;
@@ -51,7 +53,10 @@ export function aggregateCombatStats(champion,level,items=[],data){
   const as=firstBlock.match(/(\d+)%攻击速度/)?.[1];
   if(as!==undefined)asPct+=Number(as)*count;
  }
- if(asPct>0)agg.atkSpeed=Math.round(base.atkSpeed*(1+asPct/100)*1000)/1000;
+ if(asPct>0)agg.atkSpeed=base.atkSpeed+champion.stats.attackspeed*asPct/100;
+ if(['Yone','Yasuo'].includes(champion.id))agg.crit=Math.min(1,agg.crit*2);
+ if(champion.id==='Yone')agg.critDamage=1.75*0.95;
+ agg.percentOnHit=percentHealthOnHits(champion,items,data);
  agg.onHit=itemOnHits(items,data);
  agg.onHitApprox=hasUnparsedOnHit(items,data);
  return agg;
@@ -76,6 +81,7 @@ export function itemOnHits(items=[],data){
 // conditional or stacking effects) cannot enter the estimate honestly.
 export function hasUnparsedOnHit(items=[],data){
  for(const entry of items||[]){
+  if(String(entry.id)==='3153'&&data?.version?.startsWith('16.19.'))continue;
   const record=data.items?.[String(entry.id)];if(!record||!record.tags?.includes('OnHit'))continue;
   const desc=String(record.description||'');
   if(!/伤害/.test(desc)||!desc.includes('攻击特效'))continue;
@@ -91,7 +97,7 @@ export function applyLivePanel(champion,level,panel,fallback=null){
  if(!panel)return {agg:computed,live:false};
  return {agg:{ad:panel.ad??computed.ad,ap:panel.ap??computed.ap,hp:panel.maxHp??computed.hp,
   armor:panel.armor??computed.armor,mr:panel.mr??computed.mr,
-  atkSpeed:panel.atkSpeed??computed.atkSpeed,crit:panel.crit??computed.crit,curHp:panel.hp??null,onHit:computed.onHit,onHitApprox:computed.onHitApprox},live:true};
+  atkSpeed:panel.atkSpeed??computed.atkSpeed,crit:panel.crit??computed.crit,critDamage:panel.critDamage??computed.critDamage,curHp:panel.hp??null,onHit:computed.onHit,percentOnHit:computed.percentOnHit,combatPatch:computed.combatPatch,onHitApprox:computed.onHitApprox},live:true};
 }
 
 // Total invested skill points. Own points come from the live client; the
@@ -207,21 +213,22 @@ export function canUseCombatSpells(champion,skills,spells){
 // aggregate (armor/mr/hp included), not base stats. Only reviewed spell models
 // with known ranks can replace the explicitly labeled heuristic burst.
 export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null,extra={}){
+ return combatWindow(attacker,defender,level,agg,defAgg,points,extra).total;
+}
+export function combatWindow(attacker,defender,level,agg,defAgg,points=null,extra={}){
+ const seconds=[2,6].includes(extra.windowSeconds)?extra.windowSeconds:6;
  const base=statAtLevel(defender.stats,extra.defenderLevel??level);
  const def={armor:Number.isFinite(defAgg?.armor)?defAgg.armor:base.armor,mr:Number.isFinite(defAgg?.mr)?defAgg.mr:base.mr};
- const autos=mitigate(roughDps(attacker,level,agg)*6,def.armor,def.mr,0.55);
- // Flat-number on-hit effects scale with attack speed, one proc per attack,
- // each mitigated by its own damage type.
- const asRate=Number(agg?.atkSpeed)||statAtLevel(attacker.stats,level).atkSpeed;
- let onHit=0;
- for(const h of (Array.isArray(agg?.onHit)?agg.onHit:[])){
-  const perHit=Number(h?.dmg);if(!(perHit>0))continue;
-  const perSec=perHit*asRate;
-  onHit+=h.type==='true'?perSec*6:mitigate(perSec*6,def.armor,def.mr,h.type==='physical'?1:0);
- }
- let burst=0;
  const {skills=null}=extra,spells=extra.spellbook??extra.spells??null;
- if(canUseCombatSpells(attacker,skills,spells)){
+ const targetHp=Number.isFinite(defAgg?.hp)?defAgg.hp:base.hp;
+ const specific=canModelYone(attacker,level,agg,skills),reviewed=canUseCombatSpells(attacker,skills,spells);
+ const events=specific?yoneEvents(attacker,agg,skills,seconds,targetHp):[];
+ const asRate=Math.max(0.1,Math.min(10,Number(agg?.atkSpeed)||statAtLevel(attacker.stats,level).atkSpeed));
+ if(!specific){
+  const auto=agg.ad*(1+Math.max(0,Math.min(1,agg.crit||0))*((agg.critDamage||1.75)-1));
+  for(let t=1/asRate;t<=seconds;t+=1/asRate)events.push({at:t,kind:'autos',onHit:true,parts:[{type:'physical',amount:auto}]});
+ }
+ if(!specific&&reviewed){
   const base=statAtLevel(attacker.stats,level),bases={ad:base.ad,armor:base.armor,mr:base.mr};
   const targetMaxHp=Number.isFinite(defAgg?.hp)?defAgg.hp:null;
   for(const slot of ['Q','W','E','R']){
@@ -230,14 +237,33 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
    const spell=spells[attacker.id]?.[slot];
    const hit=skillHitDamage(spell,rank,agg,bases,targetMaxHp,def);
    if(hit<=0)continue;
-   burst+=hit;
+   const cd=spell.cooldown?.[rank-1];
+   const casts=Number.isFinite(cd)&&cd>0?Math.max(1,1+Math.floor((seconds-0.5)/Math.max(1,cd))):1;
+   for(let i=0;i<casts;i++)events.push({at:0.5+i*Math.max(1,cd||seconds),kind:'skills',parts:[{type:'true',amount:hit}]}); // Already mitigated.
   }
- }else{
+ }else if(!specific){
   const pts=points??skillPointsTotal(null,level);
   const adShare=agg.ad/(agg.ad+agg.ap+1);
-  burst=mitigate(burstDamage(attacker,pts,agg,level),def.armor,def.mr,adShare);
+  events.push({at:Math.min(2,seconds),kind:'skills',parts:[{type:'true',amount:mitigate(burstDamage(attacker,pts,agg,level),def.armor,def.mr,adShare)*Math.min(1,seconds/6)}]});
  }
- return Math.round(autos+burst+onHit);
+ const out={seconds,autos:0,skills:0,items:0,delayed:0,attacks:0,qCasts:0,basis:specific?'yone-reviewed':reviewed?'reviewed':'heuristic',unparsedOnHit:!!agg.onHitApprox};
+ let remaining=Math.max(0,Number(extra.startHp??targetHp)||0),recorded=0;
+ const damage=p=>p.type==='true'?p.amount:mitigate(p.amount,def.armor,def.mr,p.type==='physical'?1:0);
+ for(const event of events.sort((a,b)=>a.at-b.at)){
+  const hpBefore=remaining;
+  const amount=event.echoRatio?recorded*event.echoRatio:event.parts.reduce((sum,p)=>sum+damage(p),0);
+  out[event.kind]+=amount;remaining=Math.max(0,remaining-amount);
+  if(specific&&event.kind!=='delayed'&&event.at<5)recorded+=amount;
+  if(event.kind==='autos')out.attacks++;
+  if(specific&&event.kind==='skills'&&event.onHit)out.qCasts++;
+  if(event.onHit){
+   const flat=(agg.onHit||[]).reduce((sum,h)=>sum+damage({type:h.type,amount:h.dmg}),0);
+   const percent=(agg.percentOnHit||[]).reduce((sum,h)=>sum+damage({type:h.type,amount:hpBefore*h.currentHpRatio}),0);
+   out.items+=flat+percent;remaining=Math.max(0,remaining-flat-percent);
+  }
+ }
+ out.total=Math.round(out.autos+out.skills+out.items+out.delayed);
+ return out;
 }
 
 // Trading edge -1..1 vs a matched opponent. Positive favors `champion`.
@@ -262,6 +288,8 @@ export function killThreshold(champion,level,agg,opponent,opponentLevel,opponent
 // Their maximum health and output remain explicitly approximate.
 export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyItems=[],spellbook=null){
  const enemyAgg=aggregateCombatStats(enemy,enemyLevel,enemyItems,data);
+ const mineWindow=combatWindow(own,enemy,ownLevel,ownAgg,enemyAgg,null,{skills:ownSkills,spellbook,defenderLevel:enemyLevel});
+ const mineShort=combatWindow(own,enemy,ownLevel,ownAgg,enemyAgg,null,{skills:ownSkills,spellbook,defenderLevel:enemyLevel,windowSeconds:2});
  // Enemy spell ranks are unavailable in the public feed; never manufacture
  // per-slot ranks (especially an ultimate before level 6) for the warning.
  const extra={spellbook,mineSkills:ownSkills,theirsSkills:null};
@@ -272,6 +300,6 @@ export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyIt
   edge:tradeEdge(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,data,{mine,theirs},extra),
   killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,mine,{skills:ownSkills,spellbook}),
   killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,theirs,{spellbook}),
-  mineSkillBasis:canUseCombatSpells(own,ownSkills,spellbook)?'reviewed':'heuristic',
+  mineSkillBasis:mineWindow.basis,mineWindow,mineShort,
  };
 }

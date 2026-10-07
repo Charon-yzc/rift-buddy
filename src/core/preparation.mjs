@@ -26,5 +26,5 @@ export function recallPreparation(store,guide,context,{allowSavedCombo=false}={}
 export function recommendationKey(input){
  // Client sync bindings churn every poll; only draft content affects results.
  const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party}));
- return JSON.stringify([slots,input.scope,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.enemy,input.publicPicks,input.catalogStatus,input.version,input.catalogVersion]);
+ return JSON.stringify([slots,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.enemy,input.publicPicks,input.catalogStatus,input.version,input.catalogVersion]);
 }

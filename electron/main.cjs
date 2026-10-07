@@ -83,7 +83,7 @@ async function boot(){
  const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker();
  const currentGuideSelection=()=>{
   const own=currentGame.current(latestClient,latestLive,data.champions,state.draft?.slots||[]);if(!own)return null;
-  const prepared=state.guide?.selection;if(!own.positionKnown&&prepared?.id===own.id&&prepared.mode===own.mode)own.role=prepared.role;
+  const prepared=state.guide?.selection;if(!own.positionKnown){if(state.draft?.scope==='solo'&&state.draft.soloRole)own.role=state.draft.soloRole;else if(prepared?.id===own.id&&prepared.mode===own.mode)own.role=prepared.role;}
   const combo=own.mode==='rift'?recommendationCore.currentCombo(state.draft?.slots||[],own.id,own.role,data.catalogInfo?.status):null;
   const prior=state.guide?.selection,same=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own),comboKnown=!!combo||own.mode!=='rift'||recommendationCore.comboContextKnown(state.draft?.slots||[],own.id,own.role,same?prior.comboId:null);
   return {...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,coreIndex:0,conditions:[],...(combo?{comboId:combo.id}:{})};
@@ -123,17 +123,18 @@ async function boot(){
   statusTask=(async()=>{const previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await helper.status(state.preferences?.installPath);}catch{latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
    lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);
+   if(latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
    const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId});state.guide=reconciled.guide;if(reconciled.changed)await saveCurrentState();
-   if(state.guide&&state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame))await pollLive(true);
+   if(state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame))await pollLive(true);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
    win?.webContents.send('client-update',latestClient);return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
  const pollLive=async(force=false)=>{
   if(liveTask){await liveTask;if(!force)return;}
-  if(!state.guide||!force&&!guide.window()?.isVisible()&&!guide.needsAutoShow()||state.preferences.autoLive===false)return;
+  if(!force&&!guide.window()?.isVisible()&&!guide.needsAutoShow()||state.preferences.autoLive===false)return;
   const context=JSON.stringify([latestClient.phase,latestClient.game?.gameId]);
-  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.window()?.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,latestClient.game?.gameId])){latestLive=result;const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result});state.guide=reconciled.guide;if(reconciled.changed)await saveCurrentState();guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
+  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.window()?.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,latestClient.game?.gameId])){latestLive=result;await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result});state.guide=reconciled.guide;if(reconciled.changed)await saveCurrentState();guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
  };
  guard('client-status',status);
  guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return status(true);});
