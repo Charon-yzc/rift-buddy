@@ -128,15 +128,17 @@ test('item attack speed and flat on-hit enter aggregates; unnumbered passives di
  const {aggregateCombatStats,itemOnHits,hasUnparsedOnHit,duel}=await import('../src/core/live-estimate.mjs');
  const yone=game.champions.find(c=>c.id==='Yone'),ahri=game.champions.find(c=>c.id==='Ahri');
  const agg=aggregateCombatStats(yone,6,[{id:'3153',count:1}],game);
- assert.ok(Math.abs(agg.atkSpeed-0.73*1.25)<0.01);
- assert.deepEqual(agg.onHit,[]);assert.equal(agg.onHitApprox,true);
+ // Level growth and item attack speed add against base AS, not each other.
+ assert.ok(Math.abs(agg.atkSpeed-0.86765625)<0.00001);
+ assert.deepEqual(agg.onHit,[]);assert.equal(agg.onHitApprox,false);
+ assert.deepEqual(agg.percentOnHit,[{id:'3153',type:'physical',currentHpRatio:0.09}]);
  assert.deepEqual(itemOnHits([{id:'3124'}],game),[{dmg:30,type:'magic'}]);
  assert.deepEqual(itemOnHits([{id:'1043'}],game),[{dmg:15,type:'physical'}]);
  assert.equal(hasUnparsedOnHit([{id:'3124'}],game),false);
  assert.equal(hasUnparsedOnHit([{id:'3091'}],game),true);
  assert.equal(hasUnparsedOnHit([{id:'3031'}],game),false);
  assert.equal(hasUnparsedOnHit([],game),false);
- // Guinsoo flat magic feeds the window; BotRK percent stays disclosed.
+ // Flat magic and version-reviewed BotRK current-health damage feed the window.
  const withGuinsoo=aggregateCombatStats(yone,6,[{id:'3124',count:1}],game);
  const plain=aggregateCombatStats(yone,6,[],game);
  const d=duel(yone,6,withGuinsoo,{Q:3,W:2,E:1,R:0},ahri,6,game,[],book);

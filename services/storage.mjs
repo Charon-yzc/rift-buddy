@@ -20,7 +20,7 @@ function slots(value,preserveClientMetadata=false){
 function favorite(f){
  if(!f||!text(f.id,250)||!f.id||!text(f.title,200)||!['team','build','hex'].includes(f.type))throw Error('收藏内容格式不正确');
  const base={id:f.id,title:f.title,type:f.type,version:text(f.version,30)?f.version:'未知',createdAt:Number.isFinite(Date.parse(f.createdAt))?f.createdAt:new Date(0).toISOString()};
- if(f.type==='team')return {...base,slots:slots(f.slots),style:styles.includes(f.style)?f.style:'fun',scope:['context','party','bot'].includes(f.scope)?f.scope:'context'};
+ if(f.type==='team')return {...base,slots:slots(f.slots),style:styles.includes(f.style)?f.style:'fun',scope:['solo','context','party','bot'].includes(f.scope)?f.scope:'context'};
  if(f.type==='hex'){
   if(f.champion!==null&&!hero(f.champion)||!Array.isArray(f.augments)||f.augments.length>5||!f.augments.every(Number.isInteger))throw Error('强化收藏格式不正确');
   const augList=(v,max)=>Array.isArray(v)?[...new Set(v.filter(Number.isInteger))].slice(0,max):[];
@@ -44,7 +44,7 @@ export function validateState(value) {
    play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},
    rolePools:Object.fromEntries(roles.map(role=>[role,{heroes:Array.isArray(p.rolePools?.[role]?.heroes)?[...new Set(p.rolePools[role].heroes.filter(hero))].slice(0,180):[],mode:['prefer','only'].includes(p.rolePools?.[role]?.mode)?p.rolePools[role].mode:'off'}])),
    ...(Number.isFinite(Date.parse(p.lastCheck))?{lastCheck:p.lastCheck}:{})},
-  draft:value.draft?{slots:slots(value.draft.slots,true),style:styles.includes(value.draft.style)?value.draft.style:'fun',scope:['context','party','bot'].includes(value.draft.scope)?value.draft.scope:'context'}:null,
+  draft:value.draft?{slots:slots(value.draft.slots,true),style:styles.includes(value.draft.style)?value.draft.style:'fun',scope:['solo','context','party','bot'].includes(value.draft.scope)?value.draft.scope:'context',...(value.draft.scope==='solo'||Object.hasOwn(value.draft,'soloRole')?{soloRole:roles.includes(value.draft.soloRole)?value.draft.soloRole:''}:{})}:null,
   ownedPageId:Number.isInteger(value.ownedPageId)&&value.ownedPageId>0?value.ownedPageId:null,guide:validateGuideState(value.guide)};
 }
 export async function readState(root) {

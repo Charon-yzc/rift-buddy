@@ -7,6 +7,7 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
  require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>main.webContents.executeJavaScript(code,true);
+ main.webContents.setBackgroundThrottling(false);
  await until(()=>js('!!document.querySelector("[data-action=combination-library]")'),'Library missing');
  const click=async selector=>{assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`{const el=document.querySelector(${JSON.stringify(selector)});el.focus({preventScroll:true});el.click();}`);};
  const search=async value=>js(`{const el=document.querySelector('#combo-search');el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('input',{bubbles:true}));}`);

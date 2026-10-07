@@ -192,10 +192,25 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],enemy=[],publicPicks=[],limit=5,offset=0,builds={},pool:heroPool=[],poolMode='off',scope='context',play={},rolePools={},catalogStatus={}}) {
+export function recommend({slots,champions,style='fun',excluded=[],enemy=[],publicPicks=[],limit=5,offset=0,builds={},pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={}}) {
  validateSlots(slots,champions);
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
+ if(scope==='solo'){
+  const options={champions,style,excluded,enemy,publicPicks,builds,pool:heroPool,poolMode,play,rolePools,catalogStatus};
+  const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
+  if(!targets.length)return recommend({...options,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
+  const candidates=[],errors=[];
+  for(const role of targets){
+   try{candidates.push(...recommend({...options,slots:slots.map(s=>({...s,party:s.role===role})),limit:offset+limit,offset:0}).map(r=>({...r,scope:'solo',title:`${ROLES.find(r=>r.id===role).name} · ${champions.find(c=>c.id===r.slots.find(s=>s.role===role).champion)?.name}`,slots:r.slots.map(s=>({...s,party:slots.find(prior=>prior.role===s.role).party}))})));}
+   catch(error){errors.push(error);}
+  }
+  if(!candidates.length&&errors.length)throw errors[0];
+  // Interleave lanes so one lane cannot consume the first page.
+  const ordered=[];
+  for(let i=0;i<offset+limit;i++)for(const role of targets){const result=candidates.filter(r=>r.targets.includes(role))[i];if(result)ordered.push(result);}
+  return ordered.slice(offset,offset+limit);
+ }
  // Profiles are constant for one calculation; reuse them across the search beam.
  // Enemy traits are computed once from visibly picked enemies (no-mirror
  // draft) and reused by every grade call below.
@@ -331,10 +346,10 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],publ
 
 export function replaceMember(result,role,input){
   const editableTargets=result.editableTargets||result.targets;
-  const target=result.slots.find(s=>s.role===role);if(!target||(!target.party&&result.scope!=='bot')||!editableTargets.includes(role))throw Error('只能替换本次推荐范围中的位置');
+  const target=result.slots.find(s=>s.role===role);if(!target||(!target.party&&!['bot','solo'].includes(result.scope))||!editableTargets.includes(role))throw Error('只能替换本次推荐范围中的位置');
  // Freeze the kept members so the new search only fills the replaced role.
  const slots=result.slots.map(s=>({...s,locked:s.role!==role,champion:s.role===role?null:s.champion}));
- const next=recommend({...input,slots,excluded:[...(input.excluded||[]),target.champion],offset:0,limit:3});
+ const next=recommend({...input,slots,...(result.scope==='solo'?{scope:'solo',soloRole:role,soloChampion:null}:{}),excluded:[...(input.excluded||[]),target.champion],offset:0,limit:3});
  const previous=result.trio||result.duo;
  return next.map(r=>({...r,editableTargets:[...editableTargets],replacementNote:previous&&(r.trio||r.duo)?.id!==previous.id?`替换后不再构成「${previous.name}」，按新的配合与分工推荐。`:'只替换这一位，其他英雄保留；仍可继续调整其他推荐位置。'}));
 }

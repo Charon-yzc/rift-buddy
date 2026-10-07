@@ -38,7 +38,7 @@ export function panelStats(raw){
  if(ad===null&&ap===null)return null;
  const ratio=v=>v===null?null:(v>1&&v<=100?v/100:v);
  return {ad,ap,armor:num(raw.armor),mr:num(raw.magicResist),
-  atkSpeed:num(raw.attackSpeed),crit:ratio(num(raw.critChance)),ms:num(raw.moveSpeed),
+  atkSpeed:num(raw.attackSpeed),crit:ratio(num(raw.critChance)),critDamage:Number.isFinite(raw.critDamage)?(raw.critDamage>5?raw.critDamage/100:raw.critDamage):null,ms:num(raw.moveSpeed),
   hp:num(raw.currentHealth),maxHp:num(raw.maxHealth),regen:num(raw.healthRegenRate)};
 }
 export function sanitizeLive(active,players,stats,champions,game={}){
