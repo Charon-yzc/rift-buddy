@@ -18,9 +18,9 @@ const api=window.guide||{
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
   if(action==='purchase-target')s.purchaseTarget=value||undefined;if(action==='stage')s.stage=value==='auto'?undefined:value;
-  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];s.duelPick=undefined;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball')s.ball=!s.ball;if(action==='duel-own'||action==='duel-foe'){const side=action==='duel-own'?'own':'foe';if(value!==''&&!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value))throw Error('英雄选择格式不正确');const next={...(s.duelPick||{}),[side]:value||undefined};if(next.own&&next.foe&&next.own===next.foe)throw Error('不能自己打自己，请换一边');s.duelPick=next.own||next.foe?next:undefined;}
+  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.completedItems=[];s.selection.compareIds=[];s.selection.ownedAugmentIds=[];s.duelPick=undefined;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball'){s.ball=!s.ball;if(s.ball)s.strip=false;}if(action==='strip'){s.strip=!s.strip;if(s.strip)s.ball=false;}if(action==='duel-own'||action==='duel-foe'){const side=action==='duel-own'?'own':'foe';if(value!==''&&!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value))throw Error('英雄选择格式不正确');const next={...(s.duelPick||{}),[side]:value||undefined};if(next.own&&next.foe&&next.own===next.foe)throw Error('不能自己打自己，请换一边');s.duelPick=next.own||next.foe?next:undefined;}
   if(action==='copy'){toast('桌面版支持复制');return true;}
-  return {...snapshot,ball:!!s.ball,model:createGuideModel(window.previewGuideData,s)};
+  return {...snapshot,ball:!!s.ball,strip:!!s.strip,model:createGuideModel(window.previewGuideData,s)};
  },
 };
 const image=(kind,id,name)=>`<img src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}" />`;
@@ -29,9 +29,10 @@ function render(){
  const scroll=root.querySelector('main')?.scrollTop||0,focused=document.activeElement;
  const focus=root.contains(focused)?{id:focused.id,data:{...focused.dataset}}:null;
  const details=[...root.querySelectorAll('details[data-guide-section]')].map(d=>[d.dataset.guideSection,d.open]);
- const ball=!!snapshot?.ball;
+ const ball=!!snapshot?.ball&&!snapshot?.strip,strip=!!snapshot?.strip;
  document.body.classList.toggle('ball',ball);
- root.className=ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
+ document.body.classList.toggle('strip',strip);
+ root.className=strip?'strip':ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
  root.innerHTML=renderGuide(snapshot,tab,isPreview,image);
  for(const [key,open] of details){const d=[...root.querySelectorAll('details[data-guide-section]')].find(d=>d.dataset.guideSection===key);if(d)d.open=open;}
  const main=root.querySelector('main');if(main)main.scrollTop=scroll;
@@ -42,7 +43,7 @@ document.addEventListener('click',async event=>{
  if(target.dataset.tab){tab=target.dataset.tab;render();return;}
  // The floating ball lives on a draggable region: a real drag must move the
  // window, never toggle it. Only a near-stationary press counts as a click.
- if(target.dataset.action==='ball'){const moved=dragMoved;dragMoved=false;if(moved)return;}
+ if(target.dataset.action==='ball'||target.dataset.action==='strip'){const moved=dragMoved;dragMoved=false;if(moved)return;}
  target.disabled=true;
  try{const result=await api.control(target.dataset.action,target.dataset.id);if(result?.model!==undefined){snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}

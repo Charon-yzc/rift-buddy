@@ -57,6 +57,10 @@ test('guide display mode persists as a floating ball across selections and saves
  assert.equal(ball.ball,true);assert.deepEqual(ball.completedItems,base.completedItems);
  assert.equal(validateState({...defaultState(),guide:ball}).guide.ball,true);
  assert.equal(validateGuideState({...ball,ball:undefined}).ball,false);
+ const strip=selectGuide({...base,strip:true},{...selection,coreIndex:1});
+ assert.equal(strip.strip,true);assert.equal(strip.ball,false);
+ assert.equal(validateGuideState({...strip,strip:1}).strip,false);
+ assert.equal(validateState({...defaultState(),guide:strip}).guide.strip,true);
 });
 
 test('duel picks validate, persist across selections and clear on a new game',async()=>{

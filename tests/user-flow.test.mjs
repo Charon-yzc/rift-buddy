@@ -198,3 +198,21 @@ test('custom duel pits a picked ally against a picked enemy with disclosed proxi
  assert.ok(rows.includes('<details class="estimate-detail"><summary>6 秒输出估算'));
  if(rows.includes('estimate-row danger'))assert.ok(rows.indexOf('estimate-row danger')<rows.indexOf('estimate-detail'));
 });
+
+test('kill strip shows only my kill lines against visible enemies',async()=>{
+ const {killStrip}=await import('../src/guide-view.mjs');
+ const {renderGuide}=await import('../src/guide-view.mjs');
+ const fresh={...live,gold:1500,level:9,skills:{Q:4,W:2,E:2,R:1},stats:{ad:120,ap:0,armor:60,mr:45,atkSpeed:1,hp:2500,maxHp:2500},enemies:[{id:'Thresh',name:'锤石',level:8,items:[]},{id:'Jinx',name:'金克丝',level:9,items:[]}]};
+ const model=createGuideModel(data,selectGuide(null,selection),{...fresh,matched:true,at:Date.now(),inventory:[]});
+ assert.ok(model.estimate&&model.estimate.duels.length>=2);
+ const html=killStrip(model);
+ const shown=model.estimate.duels.slice(0,5);
+ for(const d of shown){assert.ok(html.includes(d.enemy.name));assert.ok(html.includes(String(d.killMine)));}
+ assert.equal(html.split('<strong>').length-1,shown.length);
+ for(const word of ['承受输出','被斩','模型提示','注意','购买','胜率'])assert.equal(html.includes(word),false);
+ assert.ok(html.includes('估算')&&html.includes('data-action="strip"')&&!html.includes('undefined'));
+ assert.equal(killStrip({}),'');
+ assert.equal(killStrip({estimate:{duels:[]}}),'');
+ const full=renderGuide({model,strip:true,connected:true,phase:'InProgress',mousePassThrough:false},'items',false,()=>'<img>');
+ assert.ok(full.includes('kill-strip')&&!full.includes('estimate-row danger'));
+});
