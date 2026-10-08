@@ -1,6 +1,7 @@
 import {validateGuideSelection} from './guide.mjs';
 
-const key=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
+export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
+export const PREPARATION_LIMIT=500;
 export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','skillId','comboId','laterIds'];
 export function configurationPatch(previous,next){
  return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next?.[field]));
@@ -10,12 +11,35 @@ export function mergeConfiguration(current,next,fields=CONFIGURATION_FIELDS){
  for(const field of fields)if(CONFIGURATION_FIELDS.includes(field)){if(next[field]===undefined)delete merged[field];else merged[field]=next[field];}
  return validateGuideSelection(merged);
 }
-// This is current preparation, not a record of previous matches.
-export function createPreparationStore(limit=36){
+// Store only reusable choices, without opponents, match IDs or purchase progress.
+export function validatePreparation(value){
+ const s=validateGuideSelection(value);
+ const {threatId,protectId,combatFocus,...configuration}=s;
+ return configuration;
+}
+export function validatePreparations(value){
+ if(value===undefined)return [];
+ if(!Array.isArray(value)||value.length>PREPARATION_LIMIT)throw Error('保存的英雄配置格式不正确');
+ const choices=new Map();
+ for(const entry of value){const s=validatePreparation(entry),key=preparationIdentity(s);choices.delete(key);choices.set(key,s);}
+ return [...choices.values()];
+}
+export function storedPreparation(values,context){
+ const s=values?.findLast(value=>preparationIdentity(value)===preparationIdentity(context));
+ return s?structuredClone(s):null;
+}
+export function upsertPreparation(values,value){
+ const s=validatePreparation(value),key=preparationIdentity(s);
+ return [...(values||[]).filter(entry=>preparationIdentity(entry)!==key),s].slice(-PREPARATION_LIMIT);
+}
+// These are reusable preferences, not a record of previous matches.
+export function createPreparationStore(limit=PREPARATION_LIMIT){
  const choices=new Map();
  return {
-  remember(value){const s=validateGuideSelection(value);const k=key(s);choices.delete(k);choices.set(k,s);if(choices.size>limit)choices.delete(choices.keys().next().value);return structuredClone(s);},
-  recall(value){const s=choices.get(key(value));return s?structuredClone(s):null;},
+  remember(value){const s=validatePreparation(value),key=preparationIdentity(s);if(JSON.stringify(choices.get(key))!==JSON.stringify(s)){choices.delete(key);choices.set(key,s);if(choices.size>limit)choices.delete(choices.keys().next().value);}return structuredClone(s);},
+  recall(value){const s=choices.get(preparationIdentity(value));return s?structuredClone(s):null;},
+  snapshot(){return structuredClone([...choices.values()]);},
+  restore(values){const valid=validatePreparations(values);choices.clear();for(const s of valid.slice(-limit))choices.set(preparationIdentity(s),s);},
   clear(){choices.clear();},
  };
 }

@@ -21,21 +21,27 @@ await Promise.all(Array.from({length:2},async()=>{
    const patch=raw.meta?.version;
    if(raw.data?.summary?.id!==Number(champion.key)||!usableBuildPatch(patch,data.patch,true))throw Error('来源英雄或版本超出可参考范围');
    result.sourcePatch=patch;
-   const roles=[...new Set((raw.data.summary.positions||[]).map(p=>Object.keys(BUILD_POSITIONS).find(r=>BUILD_POSITIONS[r]===p.name?.toLowerCase())).filter(Boolean))];
-   result.roles=roles;result.missing=Object.keys(BUILD_POSITIONS).filter(r=>!roles.includes(r));
-   if(!roles.length)throw Error('来源未提供任何位置统计');
+   const reported=(raw.data.summary.positions||[]).map(p=>Object.keys(BUILD_POSITIONS).find(r=>BUILD_POSITIONS[r]===p.name?.toLowerCase())).filter(Boolean);
+   // The summary omits some supported roles, especially early in a patch.
+   // Query known champion roles and saved roles as well; only a complete,
+   // validated response establishes coverage for the requested position.
+   const savedRoles=Object.values(builds.entries).filter(ref=>ref.champion===champion.id).map(ref=>ref.role);
+   const roles=[...new Set([primary,...reported,...profile(champion).roles,...savedRoles])].filter(role=>BUILD_POSITIONS[role]);
+   result.reportedRoles=reported;result.queriedRoles=roles;result.roles=[];
    for(const role of roles){
     const key=`${champion.id}:${role}`,old=builds.entries[key];
     try{
-     if(!refresh&&old?.parserVersion===BUILD_PARSER_VERSION&&old.patch===patch&&validReference(old,champion,role,data,{allowOlder:true}))continue;
+     if(!refresh&&old?.parserVersion===BUILD_PARSER_VERSION&&old.patch===patch&&validReference(old,champion,role,data,{allowOlder:true})){result.roles.push(role);continue;}
      const url=`https://op.gg/lol/champions/${champion.id.toLowerCase()}/build/${BUILD_POSITIONS[role]}?region=global&type=ranked&tier=emerald_plus&patch=${patch}`;
      const ref=role===primary?parseBuildJSON(raw,{champion,role,data:{...data,patch},url}):await fetchChampionBuild(champion,role,data,{sourcePatch:patch,allowOlder:true,jsonOnly:true});
      if(!validReference(ref,champion,role,data,{allowOlder:true}))throw Error('来源配置不完整');
      if(!validReference(old,champion,role,data,{allowOlder:true})||compareBuildPatches(old.patch,ref.patch)<=0)builds.entries[key]=ref;
+     result.roles.push(role);
      success++;console.log(`${champion.id}:${role} OK (${ref.patch}, ${ref.core.length} cores, ${ref.runeOptions.length} runes)`);
     }catch(error){failed++;result.error=String(error.message);await fs.writeFile(`.local/build-failures/${key.replace(':','-')}.txt`,error.message);console.log(`${key}: ${error.message}`);}
     await delay();
    }
+   result.missing=Object.keys(BUILD_POSITIONS).filter(role=>!result.roles.includes(role));
   }catch(error){failed++;result.error=String(error.message);console.log(`${champion.id}: ${error.message}`);}
   console.log(`Heroes ${Object.keys(coverage).length}/${data.champions.length}`);
   if(Object.keys(coverage).length%10===0)await checkpoint();

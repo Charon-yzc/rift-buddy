@@ -88,7 +88,7 @@ async function boot(){
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
  const getGuideModel=()=>{const m=guideCore.createGuideModel(data,state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,currentGuideSelection());if(m){const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
  const recommendationCore=await import('../src/core/recommend.mjs');
- const {mergeConfiguration}=await import('../src/core/preparation.mjs');let guideRevision=0;
+ const {mergeConfiguration,storedPreparation,upsertPreparation}=await import('../src/core/preparation.mjs');let guideRevision=0;
  const {isFreshBuildReference}=await import('../src/core/builds.mjs');
  const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker();
  const currentGuideSelection=()=>{
@@ -96,9 +96,10 @@ async function boot(){
   const prepared=state.guide?.selection;if(!own.positionKnown){if(state.draft?.scope==='solo'&&state.draft.soloRole)own.role=state.draft.soloRole;else if(prepared?.id===own.id&&prepared.mode===own.mode)own.role=prepared.role;}
   const combo=own.mode==='rift'?recommendationCore.currentCombo(state.draft?.slots||[],own.id,own.role,data.catalogInfo?.status):null;
   const prior=state.guide?.selection,same=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own),comboKnown=!!combo||own.mode!=='rift'||recommendationCore.comboContextKnown(state.draft?.slots||[],own.id,own.role,same?prior.comboId:null);
-  return {...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,coreIndex:0,conditions:[],...(combo?{comboId:combo.id}:{})};
+  const context={id:own.id,role:own.role,mode:own.mode,...(combo?{comboId:combo.id}:{})};
+  return {coreIndex:0,conditions:[],...storedPreparation(state.preparations,context),...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,...(combo?{comboId:combo.id}:{})};
  };
- const setGuideState=async next=>{const valid=guideCore.validateGuideState(next);if(valid)valid.completedItems=guideCore.createGuideModel(data,valid).completedItems;state.guide=valid;const revision=++guideRevision;await saveCurrentState();win?.webContents.send('guide-selection',valid?.selection||null,{revision});};
+ const setGuideState=async next=>{const valid=guideCore.validateGuideState(next);if(valid){valid.completedItems=guideCore.createGuideModel(data,valid).completedItems;state.preparations=upsertPreparation(state.preparations,valid.selection);}state.guide=valid;const revision=++guideRevision;await saveCurrentState();win?.webContents.send('guide-selection',valid?.selection||null,{revision});};
  const prepareCurrentGuide=async()=>{const own=currentGuideSelection();if(!own)return false;if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(own)||own.comboKnown&&(state.guide.selection.comboId||'')!==(own.comboId||'')){const next=guideCore.selectGuide(state.guide,own);if(latestClient.connected)next.match={phase:latestClient.phase,...(latestClient.game?.gameId?{gameId:latestClient.game.gameId}:{})};await setGuideState(next);}return true;};
  const refreshPreparedBuild=()=>{
   const s=state.guide?.selection;if(!s||s.mode!=='hex'||state.preferences.autoCheck===false)return;
@@ -216,5 +217,6 @@ app.on('will-quit',()=>{clearInterval(statusTimer);clearInterval(liveTimer);wind
 app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
  event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;
- Promise.race([helper.shutdown(),new Promise(resolve=>setTimeout(resolve,1500))]).finally(()=>{cleanupDone=true;app.quit();});
+ const stopHelper=Promise.race([helper.shutdown(),new Promise(resolve=>setTimeout(resolve,1500))]);
+ Promise.allSettled([stopHelper,saveTask]).then(results=>{if(results[1].status==='rejected')diagnostic('settings-save-before-quit failed');}).finally(()=>{cleanupDone=true;app.quit();});
 });

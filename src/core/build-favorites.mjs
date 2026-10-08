@@ -4,10 +4,17 @@ const same=(a=[],b=[])=>JSON.stringify(a)===JSON.stringify(b);
 const set=v=>[...new Set(v||[])].sort((a,b)=>a-b);
 const hexFields=v=>({augmentIds:[...(v.augmentIds||[])],compareIds:[...(v.compareIds||[])],ownedAugmentIds:[...(v.ownedAugmentIds||[])]});
 
-export function selectedBuildFields(v){
+export function selectedBuildFields(v,{preserveUnavailable=false}={}){
  const b=v.build;
- return v.mode==='hex'?{...hexFields(v),...(b.selectedCoreId?{coreId:b.selectedCoreId}:{})}:{loadoutId:b.loadoutId,runeId:b.selectedRuneId,laterIds:[...(b.selectedLaterIds||[])],
+ const fields=v.mode==='hex'?{...hexFields(v),...(b.selectedCoreId?{coreId:b.selectedCoreId}:{})}:{loadoutId:b.loadoutId,runeId:b.selectedRuneId,laterIds:[...(b.selectedLaterIds||[])],
   ...(b.selectedCoreId?{coreId:b.selectedCoreId}:{}),...(b.selectedSkillId?{skillId:b.selectedSkillId}:{}),...(b.combo?{comboId:b.combo.id}:{})};
+ // A temporary empty source or a changed source list can display a fallback.
+ // Rendering that fallback must not turn it into a new user selection.
+ if(preserveUnavailable&&v.mode==='rift'){
+  for(const key of ['coreId','runeId','skillId'])if(v[key])fields[key]=v[key];
+  if(!b.reference&&Array.isArray(v.laterIds))fields.laterIds=[...v.laterIds];
+ }
+ return fields;
 }
 export function buildFavoriteId(v){
  const b=v.build,identity=[b.selectedCoreId||v.coreIndex,[...(v.conditions||[])].sort(),b.loadoutId,b.selectedRuneId,b.combo?.id||'',b.selectedSkillId||'',b.selectedLaterIds||[]];

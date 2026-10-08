@@ -102,8 +102,8 @@ test('new session clears transient goals and interaction; same game reconnect re
 });
 test('stage hints use authored combo details and neutral manual fallback',()=>{
  const combo={plan:'基本配合',early:'对线观察',ownJob:'自己的职责',window:'六级配合',economy:'经济分工',risk:'技能空档'};
- assert.equal(comboStage(combo,{matched:true,gameTime:100,level:1}).id,'opening');assert.equal(comboStage(combo,{matched:true,gameTime:899,level:6}).id,'key');assert.equal(comboStage(combo,{matched:true,gameTime:900,level:6}).id,'later');
- assert.match(comboStage(combo,{matched:true,gameTime:900,level:6}).text,/经济分工/);assert.equal(comboStage(combo,{matched:false,gameTime:9999}).known,false);assert.equal(comboStage(combo,null,'opening').automatic,false);
+ assert.equal(comboStage(combo,{matched:true,gameTime:100,level:1}).id,'opening');assert.equal(comboStage(combo,{matched:true,gameTime:900,level:6}).id,'key');assert.equal(comboStage(combo,{matched:true,gameTime:1499,level:6}).id,'key');assert.equal(comboStage(combo,{matched:true,gameTime:1500,level:6}).id,'later');
+ assert.match(comboStage(combo,{matched:true,gameTime:1500,level:6}).text,/经济分工/);assert.equal(comboStage(combo,{matched:false,gameTime:9999}).known,false);assert.equal(comboStage(combo,null,'opening').automatic,false);
  const trio=TRIOS[0],member=trio.members[0],m=createGuideModel(data,selectGuide(null,{id:member.champion,role:member.role,mode:'rift',comboId:trio.id}));assert.ok(m.stageHint);assert.deepEqual(m.combo.steps,trio.steps);
 });
 test('preparation summary separates guide preparation, own client rune application and data freshness',()=>{

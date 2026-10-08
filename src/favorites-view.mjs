@@ -1,8 +1,14 @@
 import {getBuild} from './core/builds.mjs';
 import {ROLES} from './core/rules.mjs';
-import {escape as e,asset} from './ui.mjs';
+import {escape as e,asset,button} from './ui.mjs';
 
 const conditionNames={ad:'普攻压力',ap:'魔法伤害',control:'控制多',heal:'回血多',burst:'容易被秒'};
+export function favoriteTeamSummary(data,favorite,index){
+ if(favorite.type!=='team')return '';
+ const configurations=favorite.configurations||[];
+ if(!configurations.length)return '<p class="favorite-plan-note">旧收藏只保存阵容；载入后沿用各成员最近选择的配置。</p>';
+ return `<details class="favorite-team-configurations"><summary>已保存 ${configurations.length} 位成员的装备、符文与加点</summary>${configurations.map((selection,i)=>`<section><h4>${e(data.champions.find(c=>c.id===selection.id)?.name||selection.id)} · ${e(ROLES.find(r=>r.id===selection.role)?.name)}</h4>${favoriteBuildSummary(data,{...selection,type:'build',champion:selection.id,version:favorite.version})}${button('open-team-build','查看这位成员的配置','arrow','small',`data-index="${index}" data-member="${i}"`)}</section>`).join('')}</details>`;
+}
 export function favoriteBuildSummary(data,favorite){
  if(favorite.type!=='build')return '';
  const champion=data.champions.find(c=>c.id===favorite.champion);

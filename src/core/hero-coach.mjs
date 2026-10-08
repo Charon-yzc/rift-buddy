@@ -4,6 +4,9 @@
 // are checked against same-patch Riot client tooltips mirrored at
 // raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/v1/champions/.
 // These are conditional action examples, not measured win rates or an optimal route.
+import {matchupPlan} from './matchup-plans.mjs';
+import {rolePlay} from './role-plays.mjs';
+export const HERO_PLAYS_PATCH='16.20';
 export const HERO_PLAYS={
  Yone:['用Q补刀并积累旋风，Q3在手再考虑前压；W命中英雄获得的护盾可帮助换血。','先给E本体留安全落点，优先接队友控制再用R；持续普攻与Q后按时回身。','Q3或队友控制 → E接近 → 普攻穿插Q/W → 安全回身','E回身点可能被守，R空了不要把理论整套伤害当成进场保证。'],
  Yasuo:['通过小兵规划E进退路线，Q积累旋风后再找换血，不把所有小兵都用成只能前进。','确认击飞已发生再接R；风墙留给关键飞行道具，进场后保留退路。','积累Q旋风 → 击飞 → R → 普攻与Q','E需要可选目标，缺少兵线时不能照搬对线突进路线。'],
@@ -181,13 +184,18 @@ export const HERO_PLAYS={
 };
 const clean=value=>String(value||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
 const roles={jungle:'刷野时留意技能的范围、续航与对同一目标的收益；路线由队友兵线、自己状态和公开资源决定。',support:'保护与先手先看搭档距离；自己有控制不代表搭档能立刻接上。',top:'短换血先保留退路，处理边线时确认资源与队友是否需要你。',mid:'技能兼顾兵线与消耗，游走前先确认兵线和同行队友。',bottom:'技能换血与持续普攻分开考虑，优先保证自己能安全攻击。'};
-export function heroCoach({data,champion,role,priority='',enemyId=null,stage='opening'}={}){
+export function heroCoach({data,champion,role,priority='',enemyId=null,stage='opening',combo=null,focus='teamfight'}={}){
  const hero=typeof champion==='string'?data?.champions?.find(c=>c.id===champion):champion;if(!hero)return null;
  const plan=HERO_PLAYS[hero.id],book=hero.mechanics;
  const keys=[...new Set([...String(priority||'').replace(/[^QWER]/g,''),'Q','W','E','R'])];
  const skills=keys.map(key=>({key,...book?.spells?.[['Q','W','E','R'].indexOf(key)]})).filter(s=>s.name).map(s=>({key:s.key,name:s.name,description:clean(s.description),cooldown:Array.isArray(s.cooldown)?[...new Set(s.cooldown.filter(Number.isFinite))]:[]}));
  const enemy=data?.champions?.find(c=>c.id===enemyId),enemyPlan=enemy&&HERO_PLAYS[enemy.id];
- return {id:hero.id,name:hero.name,role,curated:!!plan,stage,action:plan?.[stage==='opening'?0:1]||null,opening:plan?.[0]||null,fight:plan?.[1]||null,sequence:plan?.[2]||null,caution:plan?.[3]||null,roleNote:roles[role]||null,passive:book?.passive?{name:book.passive.name,description:clean(book.passive.description)}:null,skills,
+ const matchup=matchupPlan({data,champion:hero,role,enemyId,combo,focus});
+ const task=rolePlay(hero.id,role,stage),phase=stage==='opening'?'opening':stage==='later'?'later':'key';
+ const ownAction=combo?.play?.stages?.[phase]?.ownAction||task?.action;
+ const action=ownAction?[ownAction,matchup?.priority].filter(Boolean).join(' '):matchup?.[stage==='opening'?'opening':'fight']||plan?.[stage==='opening'?0:1]||null;
+ const actionPatch=ownAction?(combo?.play?.patch||task?.patch):matchup?.patch||(plan?HERO_PLAYS_PATCH:null);
+ return {id:hero.id,name:hero.name,role,curated:!!plan,stage,action,opening:task?.opening||matchup?.opening||plan?.[0]||null,fight:task?.key||matchup?.fight||plan?.[1]||null,later:task?.later||null,roleTask:task?{...task,stale:data.patch!==task.patch}:null,sequence:matchup?matchup.sequence.join(' → '):combo?.play?.stages?.[phase]?.steps.join(' → ')||plan?.[2]||null,caution:matchup?[matchup.exit,plan?.[3]].filter(Boolean).join(' '):plan?.[3]||null,matchup,roleNote:roles[role]||null,passive:book?.passive?{name:book.passive.name,description:clean(book.passive.description)}:null,skills,
   enemy:enemy?{id:enemy.id,name:enemy.name,action:enemyPlan?.[1]||null,caution:enemyPlan?.[3]||null,skills:(enemy.mechanics?.spells||[]).map((s,i)=>({key:['Q','W','E','R'][i],name:s.name,description:clean(s.description)}))}:null,
-  source:'Riot Data Dragon 英雄机制；行动顺序为人工整理',patch:data.patch,sourceUrl:`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/champion/${hero.id}.json`};
+  source:'Riot Data Dragon 英雄机制；行动顺序为人工整理',patch:data.patch,actionPatch,actionStale:!!actionPatch&&data.patch!==actionPatch,sourceUrl:`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/champion/${hero.id}.json`};
 }
