@@ -23,7 +23,19 @@ async function run(){
  https.request=(options,callback)=>{const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{const output=response(options),res=new EventEmitter();res.statusCode=output.status||200;res.resume=()=>{};callback(res);res.emit('data',Buffer.from(JSON.stringify(output.value)));res.emit('end');req.emit('close');});req.write=()=>{};req.destroy=e=>{if(e)req.emit('error',e);req.emit('close');};return req;};
  https.get=(options,callback)=>{const req=https.request(options,callback);req.end();return req;};
  require(path.join(base,'electron/main.cjs'));const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true);
- await until(()=>js('!!document.querySelector("[data-action=guide-current]")'),'UI missing');const status=()=>js('window.buddy.client(true)'),state=()=>js('window.buddy.bootstrap().then(b=>b.state)'),prefs=async patch=>{const s=await state();Object.assign(s.preferences,patch);await js(`window.buddy.saveState(${JSON.stringify(s)})`);};
+ await until(()=>js('!!document.querySelector("[data-action=guide-current]")'),'UI missing');const status=()=>js('window.buddy.client(true)'),state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
+ // Change preferences through the renderer that owns them. A raw IPC save
+ // leaves that renderer's preferences stale and a later preparation save can
+ // overwrite the fixture's change; that is not the user's settings flow.
+ const prefs=async patch=>{
+  assert.deepEqual(Object.keys(patch),['autoLive']);
+  await js('document.querySelector("[data-action=navigate][data-route=settings]").click()');
+  await until(()=>js('!!document.querySelector("[data-action=auto-live]")'),'Live setting missing');
+  const enabled=await js('document.querySelector("[data-action=auto-live]").getAttribute("aria-checked")==="true"');
+  if(enabled!==patch.autoLive)await js('document.querySelector("[data-action=auto-live]").click()');
+  await until(async()=>(await state()).preferences.autoLive===patch.autoLive,'Live preference did not persist');
+  await js('document.querySelector("[data-action=navigate][data-route=draft]").click()');
+ };
  await status();assert.equal((await state()).guide.selection.id,'Ashe','First selection must prepare a guide without opening one');assert.equal(windows.some(w=>w.webContents.getURL().endsWith('/src/guide.html')),false,'Selection prepares without displaying the in-game window');phase='GameStart';await status();phase='InProgress';await status();const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Automatic guide missing'),gjs=c=>guide.webContents.executeJavaScript(c,true);await until(()=>gjs('!!document.querySelector(".next-item")'),'Guide UI missing');await until(()=>guide.isVisible(),'Fresh installation must auto-show its first guide');phase='ChampSelect';await status();
  await gjs('window.guide.control("hide")');phase='GameStart';await status();assert.equal(guide.isVisible(),false,'Loading must not auto-show the guide before entering the game');phase='InProgress';const entered=await status();if(!guide.isVisible())console.log(JSON.stringify({entered,guide:await gjs('window.guide.bootstrap()')}));assert.equal(guide.isVisible(),true,'Confirmed prepared guide must auto-show with autoLive disabled');assert.equal((await state()).guide.selection.role,'bottom');assert.equal(liveRequests,0,'Disabled live must never read the local game API');
  // The first live inventory arrives after the selection session has disappeared.
