@@ -45,7 +45,7 @@ test('reviewed Yone accounts for repeated Q, mixed skills and delayed E separate
  assert.equal(d.mineSkillBasis,'yone-reviewed');assert.equal(d.mineWindow.qCasts,2);assert.ok(d.mineWindow.attacks>=3);
  assert.ok(d.mineWindow.items>0&&d.mineWindow.delayed>0);assert.equal(d.mineShort.delayed,0);assert.ok(d.mineWindow.total>d.mineShort.total);
  const noE=duel(yone,6,agg,{...skills,E:0},enemy,6,data);assert.equal(noE.mineWindow.delayed,0);
- assert.equal(canModelYone(yone,5,agg,skills),false);assert.equal(canModelYone(yone,6,{...agg,combatPatch:'16.20'},skills),false);assert.equal(canModelYone(yone,6,agg,{...skills,R:null}),false);
+ assert.equal(canModelYone(yone,5,agg,skills),false);assert.equal(canModelYone(yone,6,{...agg,combatPatch:'16.21'},skills),false);assert.equal(canModelYone(yone,6,agg,{...skills,R:null}),false);
 });
 test('BotRK health damage shrinks each hit, respects armor and never echoes through E',()=>{
  const attacker=hero('Ashe'),defender=hero('Ahri'),agg={ad:0,ap:0,atkSpeed:1,crit:0,onHit:[],percentOnHit:[{type:'physical',currentHpRatio:0.1}]};

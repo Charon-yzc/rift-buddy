@@ -71,25 +71,50 @@ test('client session strips player identifiers and private data',()=>{
  const safe=sanitizeSession({myTeam:[{championId:22,cellId:0,assignedPosition:'BOTTOM',puuid:'private',summonerId:123,displayName:'private'}],theirTeam:[],bans:{myTeamBans:[1],theirTeamBans:[2]},localPlayerCellId:0});
  assert.deepEqual(safe.myTeam,[{championId:22,cellId:0,assignedPosition:'BOTTOM'}]);assert.ok(!JSON.stringify(safe).includes('private'));
 });
-function fakeClient({phase='Lobby',pages=[],verify=true}={}){
+function fakeClient({phase='Lobby',pages=[],verify=true,capacity=Infinity,writeStatus=0}={}){
  const calls=[];let stored=structuredClone(pages);
- return {calls,discover:async()=>({port:12345,password:'test-only'}),request:async(_auth,route,method='GET',payload)=>{
+ return {calls,pages:()=>structuredClone(stored),discover:async()=>({port:12345,password:'test-only'}),request:async(_auth,route,method='GET',payload)=>{
   calls.push({route,method,payload});if(route.endsWith('gameflow-phase'))return phase;
   if(method==='GET')return structuredClone(stored);
+  if(writeStatus||method==='POST'&&stored.filter(p=>p.isEditable===true).length>=capacity){const error=Error('Client rejected write');error.status=writeStatus||400;throw error;}
   const id=method==='PUT'?Number(route.split('/').at(-1)):777;
   if(verify)stored=[...stored.filter(p=>p.id!==id),{...payload,id,isEditable:true}];return {id};
  }};
 }
 const page=getBuild(data.champions.find(c=>c.id==='Ashe'),'bottom',data).runePage;
-test('rune writer creates its own page rather than overwriting a foreign page',async()=>{
- const mock=fakeClient({pages:[{id:12,name:'我自己的符文',isEditable:true}]});
- const result=await writeRunePage({page,ownedPageId:12,trees:data.runes},mock);assert.equal(result.pageId,777);
- assert.deepEqual(mock.calls.filter(c=>c.method!=='GET').map(c=>c.method),['POST']);
+test('a full rune collection replaces the current editable page without creating or backing up a page',async()=>{
+ const pages=[{id:11,name:'其他旧方案',isEditable:true,current:false,selectedPerkIds:[1]},{id:12,name:'当前旧方案',isEditable:true,current:true,selectedPerkIds:[2]}],mock=fakeClient({pages,capacity:2});
+ const result=await writeRunePage({page,trees:data.runes},mock);assert.equal(result.pageId,12);
+ assert.deepEqual(mock.calls.filter(c=>c.method!=='GET').map(c=>[c.method,c.route]),[['PUT','/lol-perks/v1/pages/12']]);
+ assert.equal(mock.pages().length,2);assert.deepEqual(mock.pages().find(p=>p.id===11),pages[0]);
+ const replaced=mock.pages().find(p=>p.id===12);assert.equal(replaced.current,true);assert.deepEqual(replaced.selectedPerkIds,page.selectedPerkIds);assert.match(replaced.name,/^开黑搭子 · /);
 });
-test('rune writer only updates an explicitly owned editable page, with readback',async()=>{
- const mock=fakeClient({pages:[{id:12,name:'开黑搭子 · 旧推荐',isEditable:true}]});
+test('a single occupied editable page is reusable without a blank page or spare slot',async()=>{
+ const mock=fakeClient({pages:[{id:12,name:'我的常用方案',isEditable:true,selectedPerkIds:[1]}],capacity:1});
+ const result=await writeRunePage({page,trees:data.runes},mock);assert.equal(result.pageId,12);assert.equal(mock.pages().length,1);
+ assert.deepEqual(mock.calls.filter(c=>c.method!=='GET').map(c=>c.method),['PUT']);
+});
+test('rune writer reuses the last written editable page even after renaming and selection changes',async()=>{
+ const mock=fakeClient({pages:[{id:11,name:'当前方案',isEditable:true,current:true},{id:12,name:'上次写入后重新命名',isEditable:true,current:false}]});
  const result=await writeRunePage({page,ownedPageId:12,trees:data.runes},mock);assert.equal(result.pageId,12);
  assert.equal(mock.calls.filter(c=>c.method==='PUT').length,1);assert.equal(mock.calls.at(-1).method,'GET');
+});
+test('a deleted or read-only last page falls back to another editable page and skips presets',async()=>{
+ for(const ownedPageId of [999,8000]){
+  const preset={id:8000,name:'客户端预设',isEditable:false,current:true,selectedPerkIds:[1]},mock=fakeClient({pages:[preset,{id:12,name:'可编辑页',isEditable:true}]});
+  assert.equal((await writeRunePage({page,ownedPageId,trees:data.runes},mock)).pageId,12);
+  assert.deepEqual(mock.pages().find(p=>p.id===8000),preset);assert.equal(mock.calls.find(c=>c.method==='PUT').route,'/lol-perks/v1/pages/12');
+ }
+});
+test('only a collection without editable pages creates a new page',async()=>{
+ const preset={id:8000,name:'客户端预设',isEditable:false},mock=fakeClient({pages:[preset],capacity:1});
+ const result=await writeRunePage({page,trees:data.runes},mock);assert.equal(result.pageId,777);
+ assert.deepEqual(mock.calls.filter(c=>c.method!=='GET').map(c=>c.method),['POST']);assert.deepEqual(mock.pages().find(p=>p.id===8000),preset);
+});
+test('replacement refusal does not trigger creation and errors describe the attempted operation',async()=>{
+ const replacing=fakeClient({pages:[{id:12,isEditable:true}],writeStatus:409});
+ await assert.rejects(writeRunePage({page,trees:data.runes},replacing),/暂不允许替换/);assert.deepEqual(replacing.calls.filter(c=>c.method!=='GET').map(c=>c.method),['PUT']);
+ const creating=fakeClient({capacity:0});await assert.rejects(writeRunePage({page,trees:data.runes},creating),/没有可替换.*未能新建/);
 });
 test('rune writes stop before mutation during a game and fail when readback is unconfirmed',async()=>{
  const playing=fakeClient({phase:'InProgress'});await assert.rejects(writeRunePage({page,trees:data.runes},playing),/大厅或选人/);assert.equal(playing.calls.filter(c=>c.method!=='GET').length,0);

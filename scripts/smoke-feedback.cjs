@@ -14,6 +14,7 @@ async function run(){
    if(p==='/liveclientdata/activeplayer')return {value:{riotId:'fixture-own',currentGold:1000,level:6,abilities:Object.fromEntries(Object.entries({Q:3,W:1,E:1,R:1}).map(([key,abilityLevel])=>[key,{abilityLevel}])),championStats:{attackDamage:102,abilityPower:0,attackSpeed:0.9,critChance:0,armor:51,magicResist:40,currentHealth:900,maxHealth:1035}}};
    if(p==='/liveclientdata/playerlist')return {value:[{riotId:'fixture-own',rawChampionName:'game_character_displayname_'+hero,team:'ORDER',level:6,items:[{itemID:3153,count:1}]},{riotId:'fixture-foe',rawChampionName:'game_character_displayname_Ahri',team:'CHAOS',level:6,items:[]}]};
    if(p==='/liveclientdata/gamestats')return {value:{gameMode:'CLASSIC',mapNumber:11,gameTime:600}};
+   if(p==='/liveclientdata/eventdata')return {value:{Events:[]}};
   }
   assert.equal(options.port,23456);
   if(options.method&&options.method!=='GET'){
@@ -39,7 +40,9 @@ async function run(){
  const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'In-game fresh installation did not auto-show'),gjs=c=>guide.webContents.executeJavaScript(c,true);
  await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.estimate?.mineSkillBasis==="yone-reviewed")'),'Yone model missing');
  assert.equal(guide.isVisible(),true);const model=(await gjs('window.guide.bootstrap()')).model;assert.ok(model.estimate.mineWindow.items>0);assert.ok(model.estimate.mineWindow.delayed>0);assert.ok(model.estimate.mineWindow.qCasts>=2);assert.equal(model.estimate.mineShort.delayed,0);
- const fonts=await js('({body:parseFloat(getComputedStyle(document.body).fontSize),family:getComputedStyle(document.body).fontFamily})');assert.ok(fonts.body>=15);assert.match(fonts.family,/Microsoft YaHei/);
+ const fonts=await js('({body:parseFloat(getComputedStyle(document.body).fontSize),family:getComputedStyle(document.body).fontFamily})');assert.equal(fonts.body,14);assert.match(fonts.family,/Microsoft YaHei/);
+ await js('window.buddy.presentation({field:"textScale",value:1.25})');await until(()=>js('parseFloat(getComputedStyle(document.body).fontSize)===17.5'),'Large main font did not render');fonts.large=await js('parseFloat(getComputedStyle(document.body).fontSize)');
+ await js('window.buddy.presentation({field:"textScale",value:1})');await until(()=>js('parseFloat(getComputedStyle(document.body).fontSize)===14'),'Default font did not restore');
  const capture=async(win,name)=>{await fs.writeFile(path.join(root,name),(await win.webContents.capturePage()).toPNG());};
  if((await state()).guide.collapsed)await gjs('window.guide.control("collapse")');
  await capture(guide,'yone-damage.png');

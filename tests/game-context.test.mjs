@@ -1,12 +1,27 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {createCurrentGameTracker} from '../src/core/game-context.mjs';
 import {createSlots,comboContextKnown} from '../src/core/recommend.mjs';
-import {selectGuide,reconcileGuide,validateGuideState} from '../src/core/guide.mjs';
+import {selectGuide,reconcileGuide,validateGuideState,createGuideModel} from '../src/core/guide.mjs';
+import {renderGuide} from '../src/guide-view.mjs';
 import {guideMismatch} from '../src/core/guide-stage.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8')),now=1000000;
 const client=(phase,gameId='1',id='Ashe',position='BOTTOM')=>({connected:true,phase,game:{gameId},mode:{id:'rift'},session:phase==='ChampSelect'?{localPlayerCellId:1,myTeam:[{cellId:1,championId:data.champions.find(c=>c.id===id).key,assignedPosition:position}]}:null});
 const live=(patch={})=>({available:true,at:now,champion:'Ashe',mode:'rift',gameTime:600,...patch});
 const validateRoundTrip=state=>validateGuideState(JSON.parse(JSON.stringify(state)));
+test('starting mid-game uses current public position instead of a persisted automatic client slot',()=>{
+ const slots=createSlots();Object.assign(slots[3],{champion:'Ashe',clientCellId:1});
+ for(const position of ['top',null,'constructor']){
+  const tracker=createCurrentGameTracker();tracker.observe(client('InProgress','2'),data.champions,slots);
+  const own=tracker.current(client('InProgress','2'),live({position}),data.champions,slots,now);
+  assert.equal(own.role,position==='top'?'top':'bottom');assert.equal(own.positionKnown,position==='top');assert.equal(own.formalRole,undefined);
+  const model=createGuideModel(data,selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),live({position,level:9,inventory:[]}),own);
+  if(position==='top')assert.equal(model.live.kind,'role');else assert.match(renderGuide({model,current:own},'overview',false,()=>'<img>'),/位置待确认/);
+ }
+ slots[3].manualPosition=true;
+ const manual=createCurrentGameTracker();manual.observe(client('InProgress','2'),data.champions,slots);
+ const own=manual.current(client('InProgress','2'),live({position:'top'}),data.champions,slots,now);
+ assert.equal(own.role,'bottom');assert.equal(own.positionKnown,true,'An explicit manual choice was lost');
+});
 test('confirmed formal position survives missing selection session, disabled live and reconnect',()=>{
  const tracker=createCurrentGameTracker(),slots=createSlots();Object.assign(slots[4],{champion:'Ashe',manualPosition:true,clientCellId:1});tracker.observe(client('ChampSelect'),data.champions,slots);
  tracker.observe(client('InProgress'),data.champions,slots);assert.equal(tracker.current(client('InProgress'),null,data.champions,slots,now).role,'bottom');

@@ -37,13 +37,13 @@ test('combo configuration controls both economy and actual rune/item selection',
  const snake=getBuild(hero('Cassiopeia'),'bottom',data,{comboId:pair('Cassiopeia','Twitch').id,conditions:['control']});assert.equal(snake.boots,3111);assert.ok(snake.items.some(i=>i.tags.includes('Boots')));
 });
 test('all refreshed sources retain multiple pages and selecting one changes the applied payload',()=>{
- assert.ok(Object.keys(data.builds).length>=305);
- for(const ref of Object.values(data.builds)){assert.ok(validReference(ref,hero(ref.champion),ref.role,data));assert.ok(ref.runeOptions.length>=2);}
+ assert.equal(new Set(Object.values(data.builds).map(ref=>ref.champion)).size,data.champions.length);
+ for(const ref of Object.values(data.builds)){assert.ok(validReference(ref,hero(ref.champion),ref.role,data,{allowOlder:true}));assert.ok(ref.runeOptions.length>=2);}
  const first=getBuild(hero('Ashe'),'bottom',data),choice=first.runeOptions[1],selected=getBuild(hero('Ashe'),'bottom',data,{runeId:choice.id});
  assert.equal(selected.selectedRuneId,choice.id);assert.deepEqual(selected.runePage.selectedPerkIds,choice.page.selectedPerkIds);assert.notDeepEqual(selected.runePage.selectedPerkIds,first.runePage.selectedPerkIds);
  assert.match(buildAsText(selected,hero('Ashe'),data),new RegExp(choice.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
  const bad=structuredClone(data.builds['Ashe:bottom']);bad.runeOptions[1].page.selectedPerkIds[0]=1;assert.equal(validReference(bad,hero('Ashe'),'bottom',data),false);
- const legacy=structuredClone(data.builds['Ashe:bottom']);delete legacy.runeOptions;assert.equal(validReference(legacy,hero('Ashe'),'bottom',data),true);
+ const legacy=structuredClone(data.builds['Ashe:bottom']);delete legacy.runeOptions;assert.equal(validReference(legacy,hero('Ashe'),'bottom',data,{allowOlder:true}),true);
 });
 test('favorites, backup import and guide preserve the chosen loadout and rune',()=>{
  const comboId=pair('Twitch','Lulu').id,b=getBuild(hero('Twitch'),'bottom',data,{comboId,loadoutId:'ap-twitch'}),runeId=b.runeOptions[1].id;
@@ -56,7 +56,7 @@ test('favorites, backup import and guide preserve the chosen loadout and rune',(
  assert.throws(()=>validateGuideSelection({...selection,runeId:'../bad'}),/格式/);
 });
 test('outdated choices are signaled, foreign loadouts ignored, and Hex cannot inherit Rift runes',()=>{
- const stale=getBuild(hero('Ashe'),'bottom',data,{loadoutId:'deleted-loadout',runeId:'deleted-rune'});assert.equal(stale.loadoutId,'default');assert.equal(stale.selectionWarnings.length,2);
+ const stale=getBuild(hero('Ashe'),'bottom',data,{loadoutId:'deleted-loadout',runeId:'deleted-rune'});assert.equal(stale.loadoutId,'default');assert.ok(stale.selectionWarnings.some(w=>w.includes('原玩法')));assert.ok(stale.selectionWarnings.some(w=>w.includes('原符文')));
  const foreign=getBuild(hero('Ashe'),'bottom',data,{loadoutId:'ap-twitch'});assert.equal(foreign.loadoutId,'default');
  const hex=getBuild(hero('Twitch'),'bottom',data,{mode:'hex',loadoutId:'ap-twitch',runeId:'curated-hail'});assert.equal(hex.runePage,null);assert.deepEqual(hex.runeOptions,[]);assert.equal(hex.loadoutId,'default');
 });

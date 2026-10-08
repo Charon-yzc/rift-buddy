@@ -13,6 +13,7 @@ async function run(){
    if(p==='/liveclientdata/activeplayer')return {riotId:'isolated-player',currentGold:gold,level:7,abilities:Object.fromEntries(Object.entries(hero==='Ashe'?{Q:1,W:3,E:1,R:1}:{Q:1,W:1,E:3,R:1}).map(([key,abilityLevel])=>[key,{abilityLevel}]))};
    if(p==='/liveclientdata/playerlist')return [{riotId:'isolated-player',team:'ORDER',rawChampionName:'game_character_displayname_'+hero,items:inventory.map(itemID=>({itemID,count:1})),scores:{kills:0,deaths:0,assists:0,creepScore:60}},...['Jhin','Jinx'].map((id,index)=>({riotId:'discard-this-'+id,team:'CHAOS',rawChampionName:'game_character_displayname_'+id,items:enemyItems[index]?[{itemID:enemyItems[index],count:1}]:[],scores:{kills:0,deaths:0,assists:0,creepScore:50}}))];
    if(p==='/liveclientdata/gamestats')return {gameMode:'CLASSIC',mapNumber:11,gameTime:600};
+   if(p==='/liveclientdata/eventdata')return {Events:[]};
   }
   assert.equal(options.port,23456);
   if(p==='/lol-gameflow/v1/gameflow-phase')return 'InProgress';
@@ -27,10 +28,15 @@ async function run(){
  await until(()=>js('!!window.buddy&&!!document.querySelector("[data-action=guide-current]")'),'UI missing');
  await js('window.buddy.client(true)');await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"rift"})');
  const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Guide missing'),gjs=c=>guide.webContents.executeJavaScript(c,true),model=()=>gjs('window.guide.bootstrap().then(b=>b.model)');
+ await until(async()=>(await model())?.live.matched,'Live data missing');assert.equal((await model()).automaticTarget,false,'Unfocused roster replaced the core');
+ await gjs('window.guide.control("threatId","Jhin")');
  await until(async()=>{const m=await model();return m?.automaticTarget&&m.next.id==='1029';},'Dynamic armor advice missing');
- assert.match((await model()).nextReason,/烬.*金克丝/);
- await gjs('window.guide.control("collapse")');
+ assert.match((await model()).nextReason,/烬/);
+ if((await model()).collapsed)await gjs('window.guide.control("collapse")');
+ await gjs('document.querySelector("[data-tab=items]").click()');
  await until(()=>gjs('!!document.querySelector(".purchase-reason")'),'Purchase rationale not rendered');
+ assert.ok((await gjs('document.querySelector(".purchase-reason").textContent')).includes((await model()).nextReason),'Rendered purchase reason differs from the current target');
+ await gjs('document.images&&[...document.images].forEach(image=>image.loading="eager")');
  await until(()=>gjs('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Offline images missing');
  await fs.writeFile(path.join(root,'equipment-reasons.png'),(await guide.webContents.capturePage()).toPNG());
  // Exercise the rendered action and the real preload/IPC, not a standalone model.

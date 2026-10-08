@@ -1,0 +1,9 @@
+import {escape as e,asset} from './ui.mjs';
+import {validMatchups,matchupEstimate} from './core/matchups.mjs';
+import {buildSourceLabel} from './core/build-source.mjs';
+export function matchupView(data,reference,{publicEnemies=[],compact=false}={}){
+ if(!reference||!validMatchups(reference.matchups)||!reference.matchups.length)return `<p class="note matchup-empty">对阵样本尚未缓存，刷新当前英雄配置后可查看。离线时仍保留装备、符文和加点方案。</p>`;
+ const known=new Set(publicEnemies),heroes=new Map(data.champions.map(c=>[c.id,c])),own=heroes.get(reference.champion)?.name||reference.champion;
+ const rows=[...reference.matchups].sort((a,b)=>Number(known.has(b.champion))-Number(known.has(a.champion))||b.samples-a.samples).slice(0,compact?5:40);
+ return `<div class="matchup-reference"><p class="note">${e(own)} · ${e(reference.role==='bottom'?'下路':reference.role==='support'?'辅助':reference.role==='jungle'?'打野':reference.role==='top'?'上路':'中路')}对阵样本 · OP.GG ${e(reference.patch)}${reference.patch!==data.patch?' · 旧版本参考':''}</p><div class="matchup-table" role="table" aria-label="${e(own)}位置对阵样本"><div class="matchup-heading" role="row"><span role="columnheader">对手英雄</span><span role="columnheader">${e(own)}胜率</span><span role="columnheader">场次</span></div>${rows.map(r=>{const c=heroes.get(r.champion);if(!c)return '';const m=matchupEstimate(r);return `<div class="matchup-row ${known.has(r.champion)?'matchup-public':''}" role="row"><span role="cell">${asset('champion',r.champion,c.name)}<b>${e(c.name)}</b>${known.has(r.champion)?'<small>本局已公开</small>':''}</span><span role="cell" title="95%统计区间 ${m.low.toFixed(1)}%～${m.high.toFixed(1)}%">${m.rate.toFixed(1)}%${m.limited?'<small>样本较少</small>':''}</span><span role="cell">${r.samples.toLocaleString()}</span></div>`;}).join('')}</div><p class="note">${e(buildSourceLabel(reference))}的整局胜率，${compact?'点击完整配置可看更多对手。':'鼠标悬停胜率可看统计区间。'}不等于对线胜率或本局胜率。公开英雄不代表已确认分路，仍需在选人和游戏中确认。</p></div>`;
+}

@@ -34,7 +34,7 @@ main summary{cursor:pointer;color:#b5d3cc;font-size:12px}main details[open] summ
 /* Floating ball: 76px transparent window, draggable circle, click expands. */
 body.ball{border:0;background:transparent}
 #guide-root.ball{height:100%;display:grid;place-items:center;background:transparent}
-.ball-btn{width:64px;height:64px;border-radius:50%;border:2px solid #4da897;background:#14212e;overflow:hidden;position:relative;padding:0;display:block;cursor:pointer;-webkit-app-region:drag;box-shadow:0 10px 28px #00000088}
+.ball-btn{width:64px;height:64px;border-radius:12px;border:2px solid #4da897;background:#14212e;overflow:hidden;position:relative;padding:0;display:block;cursor:pointer;-webkit-app-region:no-drag;box-shadow:0 10px 28px #00000088}
 .ball-btn:hover{border-color:#7febd5}
 .ball-btn>img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .ball-hero{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:50%;border:2px solid #14212e;overflow:hidden;display:block;pointer-events:none}
@@ -91,3 +91,19 @@ body:not(.collapsed) .quick-reminders:has(.estimate-row){max-height:min(130px,20
 
 /* Damage components use readable figures; long assumptions stay expandable. */
 .damage-breakdown{font-size:13px;line-height:1.65}.estimate-row span{display:block;font-size:12px;line-height:1.6;margin:4px 0 0;color:#a8bdcc}.estimate-assumptions{font-size:12px;color:#a8bdcc}.verdict-nums em{font-variant-numeric:tabular-nums}.verdict small{white-space:normal;max-width:80px}
+
+/* One fixed purchase, one skill hint, one scrollable working area. */
+.hero-summary{padding:7px 14px 5px}.hero-id img{width:30px;height:30px}.hero-id h1{font-size:16px;margin-bottom:2px}.hero-id p{font-size:12px}
+.next-item{box-shadow:none;background:#14312f}.next-item small{font-size:12px}.next-item b{font-size:15px}
+.window-actions button[data-action=collapse],.window-actions button[data-action=interaction]{width:42px;font-size:12px}
+.quick-reminders{padding-top:3px}.quick-reminders p{font-size:13px}.quick-reminders span{display:none}
+.quick-plan{-webkit-line-clamp:1}.input-hint{font-size:11px;margin:3px 14px 5px}
+footer{padding:6px 14px}.footer-controls>span{display:none}.footer-controls{justify-content:flex-start;gap:12px}
+.combat-target{display:flex;align-items:center;gap:12px;margin-bottom:14px}.combat-target select{flex:1;padding:8px;font-size:13px}
+.combat-summary{padding:12px 0;border-bottom:1px solid #324452}.combat-summary>b{font-size:16px}.combat-summary>div{display:flex;gap:22px;margin:12px 0}.combat-summary strong{font-size:24px;font-variant-numeric:tabular-nums;color:#b7efe0}.combat-summary small{color:#a8bdcc}
+.ball-label{position:absolute;bottom:0;left:0;right:0;padding:3px 0;background:#14212eeb;color:#c3fff0;font-size:13px;pointer-events:none}.ball-hero,.ball-done{display:none}
+.collapsed .quick-plan{display:none}.collapsed .input-hint{font-size:11px}.collapsed .quick-reminders p{font-size:12px}
+.resource-row,.power-row{padding:10px 0;border-bottom:1px solid #2e4050}.resource-row>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}.resource-row strong{color:#b8e7d8;font-variant-numeric:tabular-nums;font-size:15px}.resource-row p,.power-row p{font-size:13px;color:#b4c7d4;line-height:1.7;margin:7px 0}.resource-row small{color:#88a3b7;font-size:12px}.resource-soon{border-left:3px solid #75d8bd;padding-left:10px}.resource-events{padding:0;list-style:none}.resource-events li{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #293e4e}.resource-events time{color:#a4d7c9;font-variant-numeric:tabular-nums}.resource-timing h2,.power-windows h2{font-size:16px;margin:6px 0 4px}.power-windows{margin-top:18px}
+
+.coach-action{font-size:14px;color:#c2d9e3;line-height:1.8;margin:8px 0}.coach-sequence{font-size:13px;line-height:1.8;color:#afdacb}.coach-sequence b{color:#ddede7;margin-right:5px}.coach-skill{padding:10px 0;border-bottom:1px solid #304353}.coach-skill p,.coach-enemy p,.hero-coach details p{font-size:13px;color:#b0c6d4;line-height:1.8;margin:6px 0}.coach-skill small{font-size:12px;color:#8da6b7}.coach-enemy{margin-top:16px;padding-top:6px;border-top:1px solid #395060}.hero-coach h3{font-size:15px;margin:8px 0}.companion-coach .coach-action{font-size:13px}.companion-coach .coach-sequence{font-size:12px}
+

@@ -6,6 +6,7 @@ import {getBuild} from '../src/core/builds.mjs';
 import {createGuideModel,selectGuide,validateGuideSelection,reconcileGuide} from '../src/core/guide.mjs';
 import {legalSkillOrder,nextSkill,recommendSkill} from '../src/core/skill-advice.mjs';
 import {sanitizeLive} from '../services/live-client.mjs';
+import {reviewBaseline} from '../src/core/catalog-review.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),selection={id:'Ashe',role:'bottom',mode:'rift'};
@@ -23,14 +24,18 @@ test('a refreshed source preserves the exact selected core when sample sorting c
  assert.equal(validateGuideSelection({...selection,coreIndex:14,coreId:b.selectedCoreId}).coreIndex,14);
 });
 test('same-patch recipe and skill changes flag their dependents without changing any review date',()=>{
- const next=structuredClone(data),c=BUNDLED_CATALOG,entry=c.duos.find(d=>d.carry==='Nilah'&&d.support==='Taric');
+ const baseline={...data,patch:BUNDLED_CATALOG.patch},next=structuredClone(baseline),c=structuredClone(BUNDLED_CATALOG);
+ // Isolate these changes from legitimate differences between the bundled
+ // historical review and today's source data (including corrected growth).
+ for(const row of [...c.loadouts,...c.duos,...c.trios])row.reviewBaseline=reviewBaseline(row,c,baseline);
+ const entry=c.duos.find(d=>d.carry==='Nilah'&&d.support==='Taric');
  next.items[3190].gold.total+=100;next.champions.find(c=>c.id==='Taric').mechanics.spells[2].cooldown[0]+=1;
  const issue=catalogIssues(c,next);assert.equal(issue.status[entry.id].stale,true);assert.ok(issue.status[entry.id].changedDependencies.some(d=>d.kind==='item'&&d.id==='3190'));assert.ok(issue.status[entry.id].changedDependencies.some(d=>d.kind==='champion'&&d.id==='Taric'));
  assert.equal(issue.status[entry.id].reviewedAt,entry.reviewedAt);assert.equal(issue.status[c.duos.find(d=>d.carry==='Caitlyn'&&d.support==='Lux').id].stale,false);
- assert.ok(issue.reviewTasks.some(t=>t.id===entry.id));assert.equal(catalogIssues(c,data).reviewTasks.length,0);
+ assert.ok(issue.reviewTasks.some(t=>t.id===entry.id));assert.equal(catalogIssues(c,baseline).status[entry.id].stale,false);
 });
 test('stale rules stop automatic shopping, and public attack investment alone never changes Malphite E priority',()=>{
- const m=createGuideModel({...data,patch:'16.20'},selectGuide(null,selection),live());assert.equal(m.situation.automatic,false);assert.equal(m.automaticTarget,false);assert.match(m.situation.summary,/停止自动/);
+ const m=createGuideModel({...data,patch:'16.21'},selectGuide(null,selection),live());assert.equal(m.situation.automatic,false);assert.equal(m.automaticTarget,false);assert.match(m.situation.summary,/停止自动/);
  const advice=recommendSkill({champion:'Malphite',role:'top',priority:'QEW',first:'QEW',live:{matched:true,level:7,skills:{Q:3,W:1,E:1,R:1}},signals:[{kind:'physical',source:'scoreboard',evidence:'对方购买攻击力装备'}]});assert.equal(advice.next,'Q');assert.equal(advice.changed,false);
 });
 test('delayed ultimate and Taric Q2 remain explicit nodes instead of unconditional R upgrades',()=>{

@@ -15,10 +15,10 @@ const physical=()=>[player('Jhin','CHAOS',[3031]),player('Jinx','CHAOS',[6672])]
 const model=(live,guide=selectGuide(null,selection),current)=>createGuideModel(data,guide,live,current);
 
 test('live situation keeps public scoreboard facts but discards all player identities and hidden fields',()=>{
- const opponent=player('Jhin','CHAOS',[3031],{currentGold:9999,position:'BOTTOM',coordinates:{x:123},respawnTimer:30,health:40,runes:{secret:'private'},scores:{kills:5,deaths:-1,assists:2,creepScore:55,wardScore:14}});
+ const opponent=player('Jhin','CHAOS',[3031],{level:10,currentGold:9999,position:'BOTTOM',coordinates:{x:123},respawnTimer:30,health:40,runes:{secret:'private'},scores:{kills:5,deaths:-1,assists:2,creepScore:55,wardScore:14}});
  const live=read([opponent,null]);
  assert.equal(live.teamKnown,true);assert.equal(live.roster.length,2);
- assert.deepEqual(live.roster[1],{champion:'Jhin',side:'enemy',self:false,position:'bottom',inventory:[{id:'3031',count:1}],itemsKnown:true,scores:{kills:5,deaths:null,assists:2,creepScore:55}});
+ assert.deepEqual(live.roster[1],{champion:'Jhin',side:'enemy',self:false,level:10,position:'bottom',inventory:[{id:'3031',count:1}],itemsKnown:true,scores:{kills:5,deaths:null,assists:2,creepScore:55}});
  const json=JSON.stringify(live);for(const text of ['private','9999','coordinates','respawnTimer','wardScore','health'])assert.equal(json.includes(text),false,text);
  const unknown=sanitizeLive({riotId:'private-Ashe'},[player('Ashe',null),opponent],{gameMode:'CLASSIC',mapNumber:11},data.champions);
  assert.equal(unknown.teamKnown,false);assert.deepEqual(unknown.roster,[]);
@@ -26,8 +26,10 @@ test('live situation keeps public scoreboard facts but discards all player ident
 
 test('live evidence recommends a defensive component with reasons, then stops after it is bought or upgraded',()=>{
  const live=read(physical()),before=model(live);
- assert.equal(before.automaticTarget,true);assert.equal(before.next.id,'1029');assert.equal(before.action.kind,'complete');
- assert.match(before.nextReason,/烬.*金克丝/);assert.match(before.nextReason,/护甲/);assert.match(before.nextCaution,/推迟/);
+ assert.equal(before.automaticTarget,false);assert.notEqual(before.next.id,'1029');
+ const candidate=before.situation.candidates.find(c=>c.id==='1029');
+ assert.match(candidate.reason,/烬.*金克丝/);assert.match(candidate.reason,/护甲/);assert.match(candidate.caution,/推迟/);
+ const focused=model(live,selectGuide(null,{...selection,threatId:'Jhin'}));assert.equal(focused.next.id,'1029');assert.equal(focused.automaticTarget,true);
  assert.equal(before.selection.conditions.length,0,'No inferred conditions are persisted into the user draft');
  for(const bag of [[1029],[3047]]){
   const after=model(read(physical(),bag));assert.equal(after.situation.candidates.some(c=>c.kind==='physical'),false);
@@ -71,7 +73,7 @@ test('armor and healing investments produce relevant alternatives without duplic
 
 test('public magic investments and high visible kill count can trigger magic protection, never a claim about unseen gold',()=>{
  const live=read([player('Lux','CHAOS',[3089],{scores:{kills:6,deaths:0,assists:0}})]),m=model(live);
- assert.equal(m.next.id,'1033');assert.match(m.nextReason,/击杀数为 6/);assert.match(m.situation.caution,/不能证明.*经济/);
+ assert.equal(m.automaticTarget,false);assert.notEqual(m.next.id,'1033');assert.match(m.situation.candidates.find(c=>c.id==='1033').reason,/击杀数为 6/);assert.match(m.situation.caution,/不能证明.*经济/);
  assert.equal(model(read([player('Lux','CHAOS',[1052])])).situation.signals.length,0);
 });
 
@@ -106,12 +108,12 @@ test('skill ranks respect available points, ultimate thresholds, early unlocks a
  assert.equal(nextSkill('Ashe','WQE','WQE',{matched:true,level:3,skills:{Q:0,W:0,E:0,R:0}}),'W');
  assert.equal(nextSkill('Ashe','WQE','WQE',{matched:true,level:3,skills:{Q:0,W:1,E:0,R:0}}),'Q');
  assert.equal(nextSkill('Ashe','WQE','WQE',{matched:true,level:6,skills:{Q:1,W:3,E:1,R:0}}),'R');
- for(const [champion,live] of [['Udyr',{level:7,skills:{Q:1,W:1,E:3,R:1}}],['Ashe',{level:5,skills:{Q:1,W:3,E:1,R:0}}],['Ashe',{level:7,skills:{Q:-1,W:3,E:1,R:1}}],['Ashe',{level:2,skills:{Q:3,W:0,E:0,R:0}}],['Ashe',{level:7,skills:{Q:1,W:3,E:1,R:1.5}}]])assert.equal(nextSkill(champion,'WQE','WQE',{matched:true,...live}),null);
+ for(const [champion,live] of [['Udyr',{level:7,skills:{Q:1,W:1,E:5,R:1}}],['Ashe',{level:5,skills:{Q:1,W:3,E:1,R:0}}],['Ashe',{level:7,skills:{Q:-1,W:3,E:1,R:1}}],['Ashe',{level:2,skills:{Q:3,W:0,E:0,R:0}}],['Ashe',{level:7,skills:{Q:1,W:3,E:1,R:1.5}}]])assert.equal(nextSkill(champion,'WQE','WQE',{matched:true,...live}),null);
 });
 
 test('rendered guide exposes reasons, tradeoffs, candidate selection and a persistent automatic toggle',()=>{
  const m=model(read(physical())),image=(kind,id)=>`<img src="${kind}/${id}">`,snapshot={model:{...m,collapsed:false},connected:false};
  const html=renderGuide(snapshot,'items',false,image);
  assert.match(html,/本次购买为什么/);assert.match(html,/推迟/);assert.match(html,/data-action="live-advice"/);assert.match(html,/data-action="purchase-target" data-id="1029"/);
- const skills=renderGuide(snapshot,'skills',false,image);assert.match(skills,/当前建议升/);assert.match(skills,/已排除满级或等级不足/);
+ const skills=renderGuide(snapshot,'skills',false,image);assert.match(skills,/当前建议升/);assert.match(skills,/保留已学技能/);
 });

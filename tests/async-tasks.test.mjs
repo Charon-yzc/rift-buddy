@@ -16,3 +16,22 @@ test('failed background reads do not block a subsequent manual retry',async()=>{
  const poll=sync(false);const manual=sync(true);
  await assert.rejects(poll,/offline/);assert.equal(await manual,'retried');assert.deepEqual(calls,[false,true]);
 });
+
+test('rune verification waits for an older foreground read and performs a fresh read without authorization',async()=>{
+ let release;const blocked=new Promise(resolve=>{release=resolve;}),calls=[];
+ const sync=createClientSync(async(manual,fresh)=>{calls.push({manual,fresh});if(calls.length===1){await blocked;return 'old selection';}return 'new selection';});
+ const older=sync(true);await Promise.resolve();
+ const verify=sync(false,{fresh:true}),poll=sync(false);
+ assert.deepEqual(calls,[{manual:true,fresh:false}]);release();
+ assert.deepEqual(await Promise.all([older,verify,poll]),['old selection','new selection','old selection']);
+ assert.deepEqual(calls,[{manual:true,fresh:false},{manual:false,fresh:true}]);
+});
+
+test('a connection authorization click remains effective during a fresh rune-context read',async()=>{
+ let release;const blocked=new Promise(resolve=>{release=resolve;}),calls=[];
+ const sync=createClientSync(async(manual,fresh)=>{calls.push({manual,fresh});if(fresh)await blocked;return manual?'authorized':'verified';});
+ const verify=sync(false,{fresh:true});await Promise.resolve();
+ const authorize=sync(true);release();
+ assert.deepEqual(await Promise.all([verify,authorize]),['verified','authorized']);
+ assert.deepEqual(calls,[{manual:false,fresh:true},{manual:true,fresh:false}]);
+});
