@@ -1,12 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {heroCoach,HERO_PLAYS} from '../src/core/hero-coach.mjs';
+import {heroCoach,HERO_PLAYS,HERO_PLAYS_PATCH} from '../src/core/hero-coach.mjs';
 import {heroCoachView} from '../src/hero-coach-view.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+test('a future skill snapshot does not relabel existing manual action notes as reviewed',()=>{
+ const current=heroCoach({data,champion:'Ahri',role:'mid'});
+ const next=heroCoach({data:{...data,patch:'16.21',version:'16.21.1'},champion:'Ahri',role:'mid'});
+ assert.equal(next.action,current.action);assert.equal(next.actionPatch,HERO_PLAYS_PATCH);assert.equal(next.patch,'16.21');assert.equal(next.actionStale,true);
+ assert.match(heroCoachView(next),/行动笔记 16\.20 · 旧版本/);assert.match(heroCoachView(next),/技能快照 16\.21/);
+ assert.equal(current.actionStale,false);
+});
 test('every curated action note belongs to a bundled hero and all heroes retain distinct official skill references',()=>{
  for(const id of Object.keys(HERO_PLAYS))assert.ok(data.champions.some(c=>c.id===id),'Unreachable action notes: '+id);
  for(const champion of data.champions){const coach=heroCoach({data,champion,role:'mid',priority:null});assert.equal(coach.skills.length,4,champion.id);assert.ok(coach.passive?.name,champion.id);assert.equal(coach.sourceUrl,`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${champion.id}.json`);assert.equal(new Set(coach.skills.map(s=>s.key)).size,4);}
@@ -77,7 +84,7 @@ test('junglers teach their own attack, area damage and sustain cycles without pr
 test('enemy coaching is attached only to an explicit public opponent and cannot reveal a vanished target',()=>{
  const selection={id:'Ashe',role:'bottom',mode:'rift',threatId:'Zed'},state=selectGuide(null,selection);
  const live={available:true,champion:'Ashe',mode:'rift',mapId:11,queueId:420,at:Date.now(),level:7,gold:800,gameTime:900,inventory:[],skills:{Q:1,W:3,E:1,R:1},enemies:[{id:'Zed',name:'劫',level:7,items:[],itemsKnown:true}],allies:[]};
- const model=createGuideModel(data,state,live);assert.equal(model.coach.enemy.id,'Zed');assert.equal(model.coach.stage,'fight');
+ const model=createGuideModel(data,state,live);assert.equal(model.coach.enemy.id,'Zed');assert.equal(model.coach.stage,'key');
  const missing=createGuideModel(data,state,{...live,enemies:[]});assert.equal(missing.coach.enemy,null);
  const html=renderGuide({model},'team',false,()=>'<img>');assert.match(html,/已选对手 · 劫/);assert.match(html,/自己怎么打/);
  const unselected=createGuideModel(data,selectGuide(null,{...selection,threatId:undefined}),live);assert.equal(unselected.coach.enemy,null);

@@ -57,6 +57,10 @@ jobs:
         run: node scripts/smoke-package-live-situation.mjs
       - name: Check build choices and combination database
         run: node scripts/smoke-package-database.mjs
+      - name: Check saved preparations and member configurations across restarts
+        run: node scripts/smoke-package-preparations.mjs
+      - name: Check public-opponent plans and duo phases in packaged windows
+        run: node scripts/smoke-package-matchups.mjs
       - name: Check standalone connection helper
         run: node scripts/smoke-package-helper.mjs
       - name: Check application lifecycle

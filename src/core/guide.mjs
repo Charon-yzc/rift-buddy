@@ -3,7 +3,7 @@ import {getBuild,SHARDS} from './builds.mjs';
 import {ROLES,profile} from './rules.mjs';
 import {purchasePlan,liveGuideStatus,purchaseAction} from './purchase.mjs';
 import {compareAugments} from './hex-compare.mjs';
-import {comboStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
+import {comboStage,playStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {dataStatus} from './data-status.mjs';
 import {assessSituation,chooseSituationTarget,pinnedSituationItem,situationItemIssue,inventoryFulfillsItem} from './live-situation.mjs';
@@ -195,7 +195,7 @@ export function createGuideModel(data,value,live=null,current=null){
   phase:s.mode==='rift'?gamePhase({...liveModel,role:s.role},action,next||null):null,
   objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch}):null,
   powers:s.mode==='rift'?powerWindows({champion:s.id,role:s.role,live:liveModel,data,route}):null,
-  coach:s.mode==='rift'?heroCoach({data,champion,role:s.role,priority:build.priority,enemyId:selectedOpponent?.id,stage:matched&&live.gameTime>=840?'fight':'opening'}):null,
+  coach:s.mode==='rift'?heroCoach({data,champion,role:s.role,priority:build.priority,enemyId:selectedOpponent?.id,combo:build.combo,focus:s.combatFocus,stage:playStage(liveModel,guide.stage||'auto')}):null,
   equipment:publicEquipment(data,matched?live:null),estimate,combatUnavailable,ultimateReference:ultimate,customDuel,duelPick:guide.duelPick||null,duelOptions,routeBlocked,targetBlockedReason,
   live:liveModel,nextSkill:skillAdvice.next,skillAdvice,situation,nextReason,nextCaution:nextCandidate?.caution||'静态价格与合成条件以游戏商店为准。',liveAdvice:guide.liveAdvice,automaticTarget:!!(!chosen&&suggested&&suggested.id===next?.id),
   priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,skillTitle:build.selectedSkill?.name,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),

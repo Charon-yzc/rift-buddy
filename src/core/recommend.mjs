@@ -192,12 +192,12 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],enemy=[],publicPicks=[],limit=5,offset=0,builds={},pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={}}) {
+export function recommend({slots,champions,style='fun',excluded=[],enemy=[],publicPicks=[],sourceRoles=[],limit=5,offset=0,builds={},pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={}}) {
  validateSlots(slots,champions);
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
-  const options={champions,style,excluded,enemy,publicPicks,builds,pool:heroPool,poolMode,play,rolePools,catalogStatus};
+  const options={champions,style,excluded,enemy,publicPicks,sourceRoles,builds,pool:heroPool,poolMode,play,rolePools,catalogStatus};
   const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
   if(!targets.length)return recommend({...options,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
   const candidates=[],errors=[];
@@ -229,6 +229,7 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],publ
  if(poolMode==='only'&&!heroPool.some(id=>context.byId.has(id)))throw Error('先添加英雄池，或切换为“全部英雄”');
  const blocked=new Set([...excluded,...enemy.filter(Boolean),...publicPicks.filter(id=>context.byId.has(id)),...fixed.map(s=>s.champion).filter(Boolean)]);
  const {byId}=context;
+ const supportedBySource=new Set((Array.isArray(sourceRoles)?sourceRoles:[]).filter(r=>byId.has(r?.champion)&&ROLES.some(role=>role.id===r.role)).map(r=>r.champion+':'+r.role));
  const candidateSets={};
  // Role-profile cache for candidate filtering (analyzeTeam keeps its own
  // loadout-aware cache in context.profiles; this one is role-only).
@@ -236,7 +237,7 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],publ
  const profOf=(c,role)=>{const k=`${c.id}:${role}`;let p=profCache.get(k);if(!p){p=profile(c,role);profCache.set(k,p);}return p;};
  for(const role of targets) {
   const allowed=c=>!blocked.has(c.id)&&(poolMode!=='only'||context.pool.has(c.id))&&(rolePools[role]?.mode!=='only'||rolePools[role].heroes?.includes(c.id))&&(role!=='bottom'||play.meleeBottom!==false||!Number.isFinite(c.stats?.attackrange)||c.stats.attackrange>250);
-  let candidates=champions.filter(c=>allowed(c)&&(play.unusual===false?conventionalRole(c,role,profCache):profOf(c,role).roles.includes(role)));
+  let candidates=champions.filter(c=>allowed(c)&&(play.unusual===false?conventionalRole(c,role,profCache):profOf(c,role).roles.includes(role)||supportedBySource.has(c.id+':'+role)));
   // Curated pairs can deliberately use unconventional roles.
   const extras=play.unusual===false?[]:[...DUOS.filter(d=>!catalogStatus[d.id]?.invalid).flatMap(d=>role==='bottom'?[d.carry]:role==='support'?[d.support]:[]),...TRIOS.filter(t=>!catalogStatus[t.id]?.invalid).flatMap(t=>t.members.filter(m=>m.role===role).map(m=>m.champion))];
   for(const id of extras)if(byId.has(id)&&allowed(byId.get(id))&&!candidates.some(c=>c.id===id))candidates.push(byId.get(id));

@@ -23,14 +23,19 @@ export function gamePhase(live,action=null,next=null){
  }
  return {id,label:GAME_PHASES[id],tips,at:live.at??null};
 }
+export function playStage(live,choice='auto'){
+ if(['opening','key','later'].includes(choice))return choice;
+ return live?.matched&&Number.isFinite(live.gameTime)&&live.gameTime>=0?(live.gameTime>=1500?'later':live.level>=6?'key':'opening'):'key';
+}
 export function comboStage(combo,live,choice='auto'){
  if(!combo)return null;
  const automatic=choice==='auto';
- const known=!!live?.matched&&Number.isFinite(live.gameTime);
- const id=automatic?(known?(live.gameTime>=900?'later':live.level>=6?'key':'opening'):'key'):choice;
+ const known=!!live?.matched&&Number.isFinite(live.gameTime)&&live.gameTime>=0;
+ const id=playStage(live,choice);
  const label=GUIDE_STAGES.find(([key])=>key===id)?.[1]||'关键配合';
- const text=id==='opening'?(combo.early||combo.plan):id==='later'?[combo.ownJob||combo.plan,combo.economy,combo.risk].filter(Boolean).join('；'):[combo.ownJob||combo.plan,combo.window].filter(Boolean).join('；');
- return {id,label,text,automatic,known,note:automatic?(known?'按自己的等级与时间切换；不判断队友技能是否就绪':'阶段未读取，展示配合参考；可以手动切换'):'你手动选择的阶段'};
+ const play=combo.play?.stages?.[id];
+ const text=play?.ownAction||[play?.steps?.[0],play?.window].filter(Boolean).join('；')||(id==='opening'?(combo.early||combo.plan):id==='later'?[combo.ownJob||combo.plan,combo.economy,combo.risk].filter(Boolean).join('；'):[combo.ownJob||combo.plan,combo.window].filter(Boolean).join('；'));
+ return {id,label,text,play:play||null,automatic,known,note:automatic?(known?'按自己的等级与时间切换；不判断队友技能是否就绪':'阶段未读取，展示配合参考；可以手动切换'):'你手动选择的阶段'};
 }
 export function guideMismatch(selection,current){
  if(!current)return null;

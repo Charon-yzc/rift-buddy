@@ -112,7 +112,9 @@ test('published positions have their own complete source pages; unpublished role
  for(const c of data.champions){const coverage=snapshot.coverage[c.id];assert.ok(!coverage.error,c.id);
   for(const role of coverage.roles){const ref=data.builds[c.id+':'+role];assert.ok(validReference(ref,c,role,data,{allowOlder:true}),c.id+':'+role);assert.ok(ref.core.length>=3);assert.ok(ref.runeOptions.length>=3);}
  }
- const missing=getBuild(hero('Chogath'),'support',data);
+ // A role may gain source coverage later. Test an explicitly unavailable
+ // source instead of requiring the live offline catalog to keep a gap.
+ const missing=getBuild(hero('Chogath'),'support',{...data,builds:{...data.builds,'Chogath:support':undefined}});
  assert.equal(missing.reference,null);assert.equal(missing.selectedRune.source,'机制整理');assert.ok(missing.selectionWarnings.some(w=>w.includes('暂无可用的 OP.GG')));
 });
 

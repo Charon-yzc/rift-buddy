@@ -17,7 +17,12 @@ const counted=row=>row&&Number.isSafeInteger(row.play)&&row.play>0&&Number.isSaf
 export function parseBuildJSON(raw,{champion,role,data,url,buildSource=DEFAULT_BUILD_SOURCE}){
  const requestedSource=requireBuildSource(buildSource),source=raw?.data;
  if(raw?.meta?.region!==undefined&&raw.meta.region!==requestedSource.region||raw?.meta?.tier!==undefined&&raw.meta.tier!==requestedSource.tier)throw Object.assign(Error('来源返回的地域或段位与所选筛选不一致'),{code:'BUILD_SOURCE_MISMATCH'});
- if(!BUILD_POSITIONS[role]||source?.summary?.id!==Number(champion.key)||!source.summary.positions?.some(p=>p.name?.toLowerCase()===BUILD_POSITIONS[role]))throw Object.assign(Error('来源没有返回该英雄和位置的数据'),{code:'BUILD_ROLE_UNAVAILABLE'});
+ // summary.positions lists popular positions, not every position for which the
+ // requested endpoint returns a complete build. Retain an unlisted role only
+ // when the source URL confirms the requested champion and position.
+ let requestedPosition=false;
+ try{const sourceURL=new URL(url);requestedPosition=sourceURL.protocol==='https:'&&['op.gg','www.op.gg'].includes(sourceURL.hostname)&&sourceURL.pathname===`/lol/champions/${champion.id.toLowerCase()}/build/${BUILD_POSITIONS[role]}`;}catch{}
+ if(!BUILD_POSITIONS[role]||source?.summary?.id!==Number(champion.key)||!Array.isArray(source.summary.positions)||!requestedPosition&&!source.summary.positions.some(p=>p?.name?.toLowerCase()===BUILD_POSITIONS[role]))throw Object.assign(Error('来源没有返回该英雄和位置的数据'),{code:'BUILD_ROLE_UNAVAILABLE'});
  if(raw.meta?.version!==data.patch)throw Object.assign(Error(`出装来源版本 ${raw.meta?.version||'未知'} 与资料 ${data.patch} 不一致`),{code:'BUILD_PATCH_MISMATCH'});
  const rows=(list,limit=30)=>{if(!Array.isArray(list)||list.length>100)throw Error('出装来源表格格式已变化');return list.filter(r=>counted(r)&&Array.isArray(r.ids)&&r.ids.length>0&&r.ids.length<=12&&r.ids.every(id=>Number.isInteger(id)&&data.items[id]?.maps?.['11'])).map(r=>({items:[...r.ids],...metrics(r)})).sort((a,b)=>b.samples-a.samples).slice(0,limit);};
  const distinct=new Set();
@@ -49,7 +54,7 @@ export function parseBuildJSON(raw,{champion,role,data,url,buildSource=DEFAULT_B
  return {schema:1,parserVersion:BUILD_PARSER_VERSION,champion:champion.id,role,patch:data.patch,...requestedSource,source:'OP.GG',sourceUrl:url,fetchedAt:new Date().toISOString(),
   core,boots:rows(source.boots,5),start:rows(source.starter_items,5),later:[rows(source.last_items)],laterBasis:'all-orders',
   runePage:completeOptions[0].page,runeSamples:completeOptions[0].samples,runeOptions:completeOptions,skillOptions,priority:null,summoners:summoners?.length===2?summoners:null,
-  availableRoles:source.summary.positions.map(p=>Object.keys(BUILD_POSITIONS).find(r=>BUILD_POSITIONS[r]===p.name?.toLowerCase())).filter(Boolean),
+  availableRoles:[...new Set([role,...source.summary.positions.map(p=>Object.keys(BUILD_POSITIONS).find(r=>BUILD_POSITIONS[r]===p?.name?.toLowerCase())).filter(Boolean)])],
   roleSamples:source.summary.positions.find(p=>p.name?.toLowerCase()===BUILD_POSITIONS[role])?.stats?.play||null,
   matchups:adaptMatchups(source.counters??source.summary.positions.find(p=>p.name?.toLowerCase()===BUILD_POSITIONS[role])?.counters,data.champions,champion.id)};
 }
