@@ -33,7 +33,7 @@ export async function discoverClient(installPath='') {
  return null;
 }
 export function lcuRequest(auth,route,method='GET',body) {
- if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route)))throw new Error('不支持此客户端操作');
+ if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0))throw new Error('不支持此客户端操作');
  return new Promise((resolve,reject)=>{
   const payload=body?JSON.stringify(body):null;
   const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,
@@ -84,18 +84,35 @@ export async function writeRunePage({page,ownedPageId,installPath='',trees},{dis
  if(!validateRunePage(page,trees))throw new Error('符文组合与当前资料不匹配，已取消写入');
  const auth=await discover(installPath);if(!auth?.port)throw new Error('请先连接英雄联盟客户端，并完成必要的连接授权');
  const phase=await request(auth,'/lol-gameflow/v1/gameflow-phase');
- if(!['None','Lobby','Matchmaking','ReadyCheck','ChampSelect'].includes(phase))throw new Error('请在大厅或选人阶段应用符文');
+ const allowedPhases=['None','Lobby','Matchmaking','ReadyCheck','ChampSelect'];
+ if(!allowedPhases.includes(phase))throw new Error('请在大厅或选人阶段应用符文');
  const pages=await request(auth,'/lol-perks/v1/pages');
  if(!Array.isArray(pages))throw new Error('无法读取符文页，已取消写入');
- const owned=pages.find(p=>p.id===ownedPageId&&String(p.name).startsWith('开黑搭子 · ')&&p.isEditable!==false);
+ const editable=pages.filter(p=>Number.isInteger(p?.id)&&p.id>0&&p.isEditable===true);
+ // The user's click authorizes replacement. Reuse the last written page,
+ // otherwise the currently selected editable page, then another editable page.
+ const target=editable.find(p=>p.id===ownedPageId)||editable.find(p=>p.current===true)||editable[0];
  const name=String(page.name||'推荐').replace(/^开黑搭子 · /,'').slice(0,30);
  const payload={name:`开黑搭子 · ${name}`,primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:page.selectedPerkIds,current:true};
  try{
-  const result=owned?await request(auth,`/lol-perks/v1/pages/${owned.id}`,'PUT',payload):await request(auth,'/lol-perks/v1/pages','POST',payload);
-  const newId=owned?.id||result?.id;
-  if(!Number.isInteger(newId))throw new Error('写入结果不明确，请在客户端检查符文页');
-  const after=await request(auth,'/lol-perks/v1/pages');const confirmed=Array.isArray(after)?after.find(p=>p.id===newId):null;
-  if(!confirmed||JSON.stringify(confirmed.selectedPerkIds)!==JSON.stringify(payload.selectedPerkIds)||confirmed.primaryStyleId!==payload.primaryStyleId||confirmed.subStyleId!==payload.subStyleId)throw new Error('客户端未确认完整符文页，请手动检查');
+  const result=target?await request(auth,`/lol-perks/v1/pages/${target.id}`,'PUT',payload):await request(auth,'/lol-perks/v1/pages','POST',payload);
+  const newId=target?.id||result?.id;
+  if(!Number.isSafeInteger(newId)||newId<=0)throw new Error('写入结果不明确，请在客户端检查符文页');
+  const matches=p=>p&&JSON.stringify(p.selectedPerkIds)===JSON.stringify(payload.selectedPerkIds)&&p.primaryStyleId===payload.primaryStyleId&&p.subStyleId===payload.subStyleId;
+  const after=await request(auth,'/lol-perks/v1/pages');let confirmed=Array.isArray(after)?after.find(p=>p.id===newId):null;
+  if(!matches(confirmed))throw new Error('客户端未确认完整符文页，请手动检查');
+  // Saving a page and selecting it are separate client operations. Keep the
+  // existing click and replacement target; only select that verified page.
+  // Interface reference: LeagueAkari commit 5109b2f7, league-client/perks.ts.
+  if(confirmed.current!==true){
+   let currentPhase;try{currentPhase=await request(auth,'/lol-gameflow/v1/gameflow-phase');}catch{throw new Error('符文已保存，但未能确认当前阶段，尚未选用该页；请在客户端核对。');}
+   if(!allowedPhases.includes(currentPhase))throw new Error('符文已保存，但已离开可应用阶段，尚未选用该页；请在客户端核对。');
+   try{await request(auth,'/lol-perks/v1/currentpage','PUT',newId);}catch{throw new Error('符文已保存，但客户端未能选用该页；请在客户端手动选用后核对。');}
+   let selected;try{selected=await request(auth,'/lol-perks/v1/pages');}catch{throw new Error('符文已保存，但无法确认选用结果；请在客户端核对当前符文页。');}
+   confirmed=Array.isArray(selected)?selected.find(p=>p.id===newId):null;
+   if(!matches(confirmed))throw new Error('客户端未确认完整符文页，请手动检查');
+   if(confirmed.current!==true)throw new Error('符文已保存，但客户端未确认选用该页；请在客户端手动选用后核对。');
+  }
   return {pageId:newId,name:payload.name};
- }catch(e){if(e.status===400||e.status===409)throw new Error('符文页可能已满，或客户端暂不允许修改。请手动腾出一页后重试；助手不会覆盖其他符文页。');throw e;}
+ }catch(e){if(e.status===400||e.status===409)throw new Error(target?'客户端暂不允许替换符文，请确认仍在大厅或选人阶段后重试。':'没有可替换的符文页，且客户端未能新建。请检查符文页编辑权限和剩余名额。');throw e;}
 }

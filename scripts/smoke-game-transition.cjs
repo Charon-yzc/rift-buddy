@@ -12,6 +12,7 @@ async function run(){
    if(p==='/liveclientdata/activeplayer')return {value:{riotId:'isolated-player',currentGold:1250,level:8,abilities:Object.fromEntries(['Q','W','E','R'].map(k=>[k,{abilityLevel:k==='Q'?4:1}]))}};
    if(p==='/liveclientdata/playerlist')return {value:[{riotId:'isolated-player',rawChampionName:'game_character_displayname_'+hero,items:[]}]};
    if(p==='/liveclientdata/gamestats')return {value:{gameMode:'CLASSIC',mapNumber:11,gameTime:600}};
+   if(p==='/liveclientdata/eventdata')return {value:{Events:[]}};
   }
   assert.equal(options.port,23456);assert.equal(options.method||'GET','GET','A real rune write must never occur in this test');
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};

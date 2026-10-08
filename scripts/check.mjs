@@ -1,12 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {getBuild,validReference} from '../src/core/builds.mjs';
+import {getBuild,validReference,validHexReference} from '../src/core/builds.mjs';
 import {profile} from '../src/core/rules.mjs';
 import {LOADOUTS} from '../src/core/loadouts.mjs';
 import {BUNDLED_CATALOG,validateCatalog} from '../src/core/catalog.mjs';
 import {purchasePlan} from '../src/core/purchase.mjs';
 import {SITUATION_ITEMS} from '../src/core/live-situation.mjs';
+import {hasCurrentCombatStats} from '../services/champion-stats.mjs';
 const root=path.resolve('.');let checked=0;const errors=[];
 async function syntax(folder){for(const item of await fs.readdir(folder,{withFileTypes:true})){
  const file=path.join(folder,item.name);if(item.isDirectory())await syntax(file);
@@ -14,10 +15,12 @@ async function syntax(folder){for(const item of await fs.readdir(folder,{withFil
 }}
 for(const folder of ['src','electron','services','tests'])await syntax(folder);
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+for(const champion of data.champions)if(!hasCurrentCombatStats(champion,data.patch))errors.push(`Missing current-patch champion combat stats: ${champion.id}`);
 validateCatalog(BUNDLED_CATALOG,data);
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
-for(const [key,ref] of Object.entries(data.builds)){const c=data.champions.find(c=>c.id===ref.champion);if(!c||!validReference(ref,c,ref.role,data))errors.push(`Invalid source reference: ${key}`);}
+for(const [key,ref] of Object.entries(data.builds)){const c=data.champions.find(c=>c.id===ref.champion);if(!c||!validReference(ref,c,ref.role,data,{allowOlder:true}))errors.push(`Invalid source reference: ${key}`);}
+for(const [key,ref] of Object.entries(data.hexBuilds)){const c=data.champions.find(c=>c.id===key);if(!c||!validHexReference(ref,c,data,{allowOlder:true}))errors.push(`Invalid Hex source reference: ${key}`);}
 const spellsFile=JSON.parse(await fs.readFile('data/spells.json','utf8'));
 if(spellsFile.version!==data.version)errors.push(`Spells data ${spellsFile.version} does not match game data ${data.version}; rerun the spell enrichment.`);
 data.spellbook=spellsFile.champions||{};

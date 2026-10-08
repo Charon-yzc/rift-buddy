@@ -55,9 +55,9 @@ async function run(){
   enemies:[{id:'Soraka',name:'索拉卡',level:9,items:[]},{id:'Zed',name:'劫',level:9,items:[{id:'6692',count:1}]}]};
  const initialDuels=core.createGuideModel(data,state,estimateLive,current).estimate.duels;
  estimateLive.stats.hp=Math.floor((initialDuels[0].killTheirs+initialDuels[1].killTheirs)/2);
- live={...estimateLive,at:Date.now()};guide.publish();await until(()=>js('!!document.querySelector(".estimate-row.danger")'),'Model warning missing');
- const estimateBefore=(await js('window.guide.bootstrap()')).model.estimate;assert.equal(estimateBefore.enemy.id,'Zed');assert.equal(estimateBefore.danger,true);
- assert.ok(await js('document.querySelector(".estimate-row.danger").textContent.includes("劫")'),'Warning target unnamed');
+ state.selection.threatId='Zed';live={...estimateLive,at:Date.now()};guide.publish();await js('document.querySelector("[data-tab=combat]").click()');await until(()=>js('!!document.querySelector(".combat-summary")'),'Selected comparison missing');
+ const estimateBefore=(await js('window.guide.bootstrap()')).model.estimate;assert.equal(estimateBefore.enemy.id,'Zed');assert.equal(estimateBefore.danger,false);
+ assert.ok(await js('document.querySelector(".combat-summary").textContent.includes("劫")'),'Comparison target unnamed');
  assert.ok(await js('document.querySelector("footer").getBoundingClientRect().bottom<=innerHeight+1'),'Estimates clipped the expanded footer');
  await js('document.querySelector("[data-guide-section=estimate-assumptions]").open=true');await capture('guide-estimate-expanded.png');
  live={...live,enemies:[...live.enemies].reverse(),at:Date.now()};guide.publish();
@@ -65,7 +65,7 @@ async function run(){
  assert.equal(reordered.enemy.id,estimateBefore.enemy.id);assert.equal(reordered.theirKill,estimateBefore.theirKill);assert.equal(reordered.danger,estimateBefore.danger);
  assert.equal(await js('document.querySelector("[data-guide-section=estimate-assumptions]").open'),true,'Refresh closed model assumptions');
  await js('window.guide.control("collapse")');assert.ok(await js('document.querySelector(".input-hint").getBoundingClientRect().bottom<=innerHeight+1'),'Warning clipped compact controls');
- assert.ok(await js('{const r=document.querySelector(".estimate-row.danger").getBoundingClientRect();r.top>=0&&r.bottom<=innerHeight}'),'Compact warning clipped');
+ assert.equal(await js('!!document.querySelector(".estimate-row.danger")'),false,'Compact guide fabricated danger');
  await capture('guide-estimate-compact.png');await js('window.guide.control("collapse")');
  live={...live,stats:{...live.stats,armor:500,mr:500},enemies:live.enemies.map(p=>p.id==='Zed'?{...p,items:[...p.items,{id:'1029',count:1}]}:p),at:Date.now()};guide.publish();
  const resisted=(await js('window.guide.bootstrap()')).model.estimate;

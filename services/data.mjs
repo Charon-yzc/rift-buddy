@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {buildAugmentDescriptions} from './augments.mjs';
+import {enrichChampionStats,hasCurrentCombatStats} from './champion-stats.mjs';
 
 export const DD = 'https://ddragon.leagueoflegends.com';
 export const CN = 'https://game.gtimg.cn/images/lol/act/img/js';
@@ -23,7 +24,7 @@ export async function collectSnapshot(progress = () => {}, previous = null) {
   const versions = await getJSON(`${DD}/api/versions.json`);
   const version = versions.find(v => /^\d+\.\d+\.\d+$/.test(v));
   if (!version) throw new Error('官方版本号不可用');
-  if(previous?.version===version&&previous.contentRevision>=5&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
+  if(previous?.version===version&&previous.contentRevision>=7&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch))&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
     progress('当前已是最新资料版本');
     return {...previous,checkedAt:new Date().toISOString()};
   }
@@ -37,6 +38,7 @@ export async function collectSnapshot(progress = () => {}, previous = null) {
   const cnHeroes = new Map((cnResult?.hero || []).map(h => [h.alias.toLowerCase(), h]));
   const patch = version.split('.').slice(0,2).join('.');
   const cd = `https://raw.communitydragon.org/${patch}`;
+  const enrichedChampions=await enrichChampionStats(Object.values(champions.data),patch,getJSON,progress);
   progress('正在读取海克斯资料清单');
   let augments = [], augmentSource = null, augmentError = null;
   try {
@@ -58,14 +60,16 @@ export async function collectSnapshot(progress = () => {}, previous = null) {
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:5, version, patch, fetchedAt: new Date().toISOString(),checkedAt:new Date().toISOString(),
+    schema: 1, contentRevision:7, version, patch, fetchedAt: new Date().toISOString(),checkedAt:new Date().toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
-      augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null },
+      augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,
+      championCombatStats:`${cd}/game/data/characters` },
     cnVersion:cnResult?.version || null, augmentError,
-    champions:Object.values(champions.data).map(c => ({
+    champions:enrichedChampions.map(c => ({
       id:c.id, key:Number(c.key), name:cnHeroes.get(c.id.toLowerCase())?.title || c.name,
       title:cnHeroes.get(c.id.toLowerCase())?.name || c.title, tags:c.tags, info:c.info, stats:c.stats,
+      combatStatsSource:c.combatStatsSource,
       mechanics:{passive:{name:c.passive?.name,description:cleanText(c.passive?.description)},spells:c.spells.map(s=>({name:s.name,description:cleanText(s.description),maxrank:s.maxrank,cooldown:s.cooldown,cost:s.cost,effect:s.effect}))},
       keywords:cnHeroes.get(c.id.toLowerCase())?.keywords || `${c.id},${c.name},${c.title}`,
       icon:`${DD}/cdn/${version}/img/champion/${c.image.full}`,

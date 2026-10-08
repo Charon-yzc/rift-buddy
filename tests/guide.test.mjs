@@ -11,7 +11,7 @@ data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entr
 const selection={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]};
 test('guide shows champion-specific current builds and next unchecked item without inventing inventory',()=>{
  const state=selectGuide(null,selection),model=createGuideModel(data,state);
- assert.equal(model.champion.id,'Ashe');assert.equal(model.source,'本版本常用配置');assert.equal(model.runes.length,9);
+ assert.equal(model.champion.id,'Ashe');assert.equal(model.source,data.builds['Ashe:bottom'].patch===data.patch?'OP.GG 常用配置':'旧版本 OP.GG 参考');assert.equal(model.runes.length,9);
  state.completedItems=[model.route[0].id,'99999999'];const after=createGuideModel(data,state);
  assert.deepEqual(after.completedItems,[model.route[0].id]);assert.equal(after.next.id,model.route[1].id);
  assert.equal(model.completedItems.length,0);assert.equal(state.completedItems.length,2);
@@ -24,7 +24,7 @@ test('changing champion, mode or role resets progress; changing a plan retains s
 });
 test('Hex guide uses the exact mode build and chosen augments and contains no ordinary runes',()=>{
  const id=data.hexBuilds.Ashe.augmentIds[0],model=createGuideModel(data,selectGuide(null,{...selection,mode:'hex',augmentIds:[id]}));
- assert.equal(model.runes.length,0);assert.equal(model.source,'本版本常用配置');assert.deepEqual(model.augments.map(a=>a.id),[id]);
+ assert.equal(model.runes.length,0);assert.equal(model.source,'OP.GG 常用配置');assert.deepEqual(model.augments.map(a=>a.id),[id]);
  assert.equal(model.augmentKind,'我的强化备选');assert.ok(model.route.every(i=>data.items[i.id].maps['12']));
  const unknown=createGuideModel(data,selectGuide(null,{...selection,mode:'hex',augmentIds:[-999]}));assert.equal(unknown.augments.length,0);
 });
@@ -63,7 +63,7 @@ test('duel picks validate, persist across selections and clear on a new game',as
  const {reconcileGuide}=await import('../src/core/guide.mjs');
  assert.deepEqual(validateGuideState({selection,duelPick:{own:'Janna',foe:'Thresh'}}).duelPick,{own:'Janna',foe:'Thresh'});
  assert.deepEqual(validateGuideState({selection,duelPick:{own:'Janna'}}).duelPick,{own:'Janna'});
- assert.equal(validateGuideState({selection,duelPick:{own:'Janna',foe:'Janna'}}).duelPick.foe,undefined);
+ assert.deepEqual(validateGuideState({selection,duelPick:{own:'Janna',foe:'Janna'}}).duelPick,{own:'Janna',foe:'Janna'});
  assert.equal(validateGuideState({selection,duelPick:{own:'../x'}}).duelPick,undefined);
  assert.equal(validateGuideState({selection}).duelPick,undefined);
  let guide={...selectGuide(null,selection),duelPick:{own:'Janna',foe:'Thresh'}};

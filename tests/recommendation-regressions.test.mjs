@@ -12,7 +12,8 @@ const hero=id=>data.champions.find(c=>c.id===id);
 const rows=ids=>ids.map(id=>({items:[id],samples:100}));
 const player=(champion,ids)=>({champion,side:'enemy',itemsKnown:true,inventory:ids.map(id=>({id:String(id),count:1})),scores:{kills:0}});
 const live=(champion,roster=[],inventory=[])=>({available:true,at:Date.now(),champion,mode:'rift',mapId:11,gold:1800,level:12,skills:{Q:5,W:3,E:1,R:2},inventory,roster,teamKnown:true});
-const apCoreId='core-6655-4645-3089';
+const apCore=data.builds['KogMaw:bottom'].core.find(c=>c.items.filter(id=>data.items[id]?.stats?.FlatMagicDamageMod>0).length>=2);
+const apCoreId='core-'+apCore.items.join('-');
 
 test('utility equipment alone does not establish magic grievous-wound application',()=>{
  const options={items:[3504,6617,3107],late:[],boots:3158,key:'crit',champion:'Twitch',support:true,data,conditions:['heal']};
@@ -22,13 +23,14 @@ test('utility equipment alone does not establish magic grievous-wound applicatio
  assert.match(build.adjustments.at(-1).text,/主要伤害类型未确认/);
 });
 
-test('all-order later pools fill remaining slots and skip repeats, mutually exclusive items, boots and unavailable items',()=>{
+test('explicit later choices fill remaining slots and skip repeats, mutually exclusive items, boots and unavailable items',()=>{
  const ref={...data.builds['Ashe:bottom'],core:[{items:[6672,3031,3046],samples:100}],boots:rows([3006]),later:[rows([6672,3006,3599,3901,2003,3036,3033,3072])],laterBasis:'all-orders'};
  const fixture={...data,builds:{'Ashe:bottom':ref}};
- const build=getBuild(hero('Ashe'),'bottom',fixture);
+ assert.equal(getBuild(hero('Ashe'),'bottom',fixture).items.length,4);
+ const build=getBuild(hero('Ashe'),'bottom',fixture,{laterIds:[3036,3072]});
  assert.deepEqual(build.items.map(i=>i.id),[6672,3031,3046,3006,3036,3072]);
  for(const [index,i] of build.items.entries())assert.equal(itemConflicts(i.id,build.items.slice(0,index).map(x=>x.id)),false);
- const guide=createGuideModel(fixture,selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),live('Ashe',[],build.items.slice(0,5).map(i=>({id:String(i.id),count:1}))));
+ const guide=createGuideModel(fixture,selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift',laterIds:[3036,3072]}),live('Ashe',[],build.items.slice(0,5).map(i=>({id:String(i.id),count:1}))));
  assert.equal(guide.next.id,'3072','Fifth purchase must not prematurely finish a six-slot route');
  assert.equal(ref.later[0].length,8,'Selection must not mutate the cached reference');
 });
@@ -40,14 +42,14 @@ test('ordered HTML purchase groups retain one choice per position, and a scarce 
  const fixture={...data,builds:{'Ashe:bottom':ref}};
  assert.deepEqual(getBuild(hero('Ashe'),'bottom',fixture).items.map(i=>i.id),[6672,3031,3046,3006,3036,3026]);
  fixture.builds['Ashe:bottom']={...ref,laterBasis:'all-orders',later:[rows([6672,3036,3033])]};
- assert.equal(getBuild(hero('Ashe'),'bottom',fixture).items.length,5);
+ assert.equal(getBuild(hero('Ashe'),'bottom',fixture).items.length,4);
 });
 
 test('later choices exclude source components and support quest rewards while keeping completed low-cost and transforming items',()=>{
  const original=data.builds['Ashe:bottom'];
  const ref={...original,core:[{items:[6672,3031,3046],samples:100}],boots:rows([3006]),later:[rows([1082,1038,3070,1055,3865,3869,3870,3041,2526])],laterBasis:'all-orders'};
  const fixture={...data,builds:{'Ashe:bottom':ref}};
- assert.deepEqual(getBuild(hero('Ashe'),'bottom',fixture).items.map(i=>i.id),[6672,3031,3046,3006,3041,2526]);
+ assert.deepEqual(getBuild(hero('Ashe'),'bottom',fixture,{laterIds:[3041,2526]}).items.map(i=>i.id),[6672,3031,3046,3006,3041,2526]);
  for(const [champion,role,badId] of [['Galio','mid',1082],['Lucian','bottom',1038],['Taric','support',3070],['Alistar','support',3869]]){
   assert.equal(getBuild(hero(champion),role,data).items.some(i=>i.id===badId),false,`${champion}:${role} must not end with ${badId}`);
  }
@@ -62,19 +64,19 @@ test('the default skill identity stays stable when a different source skill is s
  }
 });
 
-test('support all-order pools preserve the quest slot while offline non-support defaults finish six-slot routes',()=>{
+test('support explicit later choices preserve the quest slot and unselected source pools do not invent completions',()=>{
  const ref={...data.builds['Ashe:support'],core:[{items:[6672,3031,3046],samples:100}],boots:rows([3006]),later:[rows([3036,3072])],laterBasis:'all-orders'};
  const fixture={...data,builds:{'Ashe:support':ref}};
- const support=getBuild(hero('Ashe'),'support',fixture);
+ const support=getBuild(hero('Ashe'),'support',fixture,{laterIds:[3036,3072]});
  assert.equal(support.items.length,5);assert.equal(support.granted.length,1);
- assert.equal(getBuild(hero('Ashe'),'bottom',data).items.length,6);
+ assert.equal(getBuild(hero('Ashe'),'bottom',data).items.length,4);
 });
 
 test('AP KogMaw route uses magic resist answers, never percentage armor penetration from the static on-hit key',()=>{
  const selection={id:'KogMaw',role:'bottom',mode:'rift',coreId:apCoreId};
  const get=ids=>createGuideModel(data,selectGuide(null,selection),live('KogMaw',[player('Malphite',[ids[0]]),player('Rammus',[ids[1]])]));
  const armor=get([3075,3143]),resist=get([3065,4401]);
- assert.deepEqual(armor.route.slice(0,3).map(i=>Number(i.id)),[6655,4645,3089]);
+ assert.deepEqual(armor.route.slice(0,3).map(i=>Number(i.id)),apCore.items);
  assert.equal(armor.situation.candidates.some(c=>c.id==='3035'),false);
  const magic=resist.situation.candidates.find(c=>c.id==='4630');assert.ok(magic);assert.match(magic.reason,/所选核心.*法强/);
  const adapted=getBuild(hero('KogMaw'),'bottom',data,{coreId:apCoreId,conditions:['ap','heal','burst']});

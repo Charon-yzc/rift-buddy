@@ -2,7 +2,9 @@ import {purchasePlan,purchaseAction} from './purchase.mjs';
 import {itemConflicts} from './mechanics.mjs';
 import {equipmentRoute} from './route-profile.mjs';
 
-export const SITUATION_RULES_PATCH='16.19';
+// 26.20 notes and 16.20.1 data: the listed protection components, recipes
+// and anti-heal/penetration mechanics are unchanged from the prior review.
+export const SITUATION_RULES_PATCH='16.20';
 export const SITUATION_ITEMS=['1029','1033','3047','3111','3140','3123','3916','3076','3035','4630','3190'];
 const grievous=new Set(['3123','3916','3076','3033','3165','3075','6609']);
 const trinkets=new Set(['3340','3363','3364']);
@@ -34,7 +36,7 @@ export function pinnedSituationItem({data,id,mode,champion,inventory=[]}){
 // never a measurement of damage taken, hidden economy or the player's lane opponent.
 export function assessSituation({data,champion,build,selection,live,enabled=true}){
  const map=selection.mode==='rift'?'11':'12',items=data.items;
- const stale=data.patch!==SITUATION_RULES_PATCH,synced=!!live,fastQueue=[480,490].includes(live?.queueId),automatic=enabled&&synced&&selection.mode==='rift'&&!stale&&!fastQueue;
+ const stale=data.patch!==SITUATION_RULES_PATCH,synced=!!live,inventoryKnown=synced&&live.inventoryKnown!==false,fastQueue=[480,490].includes(live?.queueId),automatic=enabled&&inventoryKnown&&selection.mode==='rift'&&!stale&&!fastQueue;
  const bag=synced&&Array.isArray(live.inventory)?live.inventory.filter(i=>Number.isInteger(i.count)&&i.count>0):[];
  const held=bag.map(i=>String(i.id));
  const signals=[],candidates=[];
@@ -74,7 +76,7 @@ export function assessSituation({data,champion,build,selection,live,enabled=true
  const available=id=>items[id]?.maps?.[map]&&items[id].inStore&&items[id].gold?.purchasable!==false&&!items[id].requiredAlly&&!items[id].requiredChampion;
  const add=(signal,id,reason,caution)=>{
   id=String(id);if(!available(id)||candidates.some(c=>c.id===id)||situationItemIssue({data,id,inventory:bag})||held.some(owned=>contains(items,owned,id)||itemConflicts(Number(id),[Number(owned)])))return;
-  const item=items[id],plan=purchasePlan([{id}],items,bag,synced?live.gold:null)[0],action=synced?purchaseAction(plan,{id,name:item.name},live.gold):null;
+  const item=items[id],plan=purchasePlan([{id}],items,inventoryKnown?bag:[],inventoryKnown?live.gold:null)[0],action=inventoryKnown?purchaseAction(plan,{id,name:item.name},live.gold,bag):null;
   candidates.push({id,name:item.name,cost:item.gold.total,description:item.description,kind:signal.kind,source:signal.source,priority:signal.priority,reason:`${signal.evidence}。${reason}`,caution,plan,action});
  };
  const {tank,magic,physical}=routeProfile;
@@ -94,11 +96,13 @@ export function assessSituation({data,champion,build,selection,live,enabled=true
  // An emergency armor / MR component is sufficient; do not spend the entire
  // bag on every active signal. Manual targets and close-to-finished cores win.
  const knownSlots=bag.every(i=>Number.isInteger(i.slot)),fullBag=knownSlots?new Set(bag.filter(i=>i.slot<6&&!trinkets.has(String(i.id))).map(i=>i.slot)).size>=6:bag.filter(i=>!trinkets.has(String(i.id))).length>=6;
- const preferred=candidates.find(c=>(c.priority>=65&&['physical','magic'].includes(c.kind))||(c.source==='manual'&&c.kind==='healing'))||null;
+ // Whole-team equipment tags alone do not justify diverting a core build.
+ // Only an explicitly marked pressure or selected opponent can do that.
+ const preferred=candidates.find(c=>['physical','magic','healing'].includes(c.kind)&&(c.source==='manual'||!!focused))||null;
  const learned=enemies.length?`已读取 ${enemies.length} 名对手的公开装备${focused?' · 重点观察'+name(focused):''}；${signals.some(s=>s.source==='scoreboard')?'存在可考虑的局势备选':'暂未达到调整条件，继续原方案'}`:selection.combatFocus==='lane'&&!focused?'对线关注需要你选择目标；不会把装备领先的对手猜成你的对线英雄':'尚未确认双方公开装备，按原方案与手动局势参考';
  return {enabled,automatic,signals,candidates:candidates.slice(0,4),preferred:automatic&&!fullBag?preferred?.id||null:null,
   enemies:publicEnemies.map(p=>({id:p.champion,name:name(p)})),allies:allies.map(p=>({id:p.champion,name:name(p)})),
-  summary:stale?'局势机制规则版本不同，已停止自动改购买目标；保留原路线与手动备选':fastQueue?'当前为快速峡谷队列，保留手动参考；不自动套用常规匹配的局势规则':selection.mode!=='rift'?'海克斯保持模式专用方案，局势调整以手动判断为主':!enabled?'自动局势建议已关闭，保留手动调整':learned,
+  summary:stale?'局势机制规则版本不同，已停止自动改购买目标；保留原路线与手动备选':synced&&!inventoryKnown?'背包读取不完整，暂不调整购买目标；金币、技能与公开装备仍可查看':fastQueue?'当前为快速峡谷队列，保留手动参考；不自动套用常规匹配的局势规则':selection.mode!=='rift'?'海克斯保持模式专用方案，局势调整以手动判断为主':!enabled?'自动局势建议已关闭，保留手动调整':learned,
   caution:fullBag?'背包已有六个装备格，先在商店核对合成与腾格；不会自动改回城目标。':'装备投入和公开战绩不能证明伤害来源、经济领先或必胜；这是机制备选。',
   routeProfile,rulesPatch:SITUATION_RULES_PATCH,stale};
 }

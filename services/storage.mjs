@@ -2,7 +2,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {atomicJSON} from './data.mjs';
 import {validateGuideState,validateLoadoutSelection} from '../src/core/guide.mjs';
-export const defaultState=()=>({schema:1,favorites:[],excluded:[],preferences:{style:'fun',autoCheck:true,installPath:'C:/WeGameApps/英雄联盟'},draft:null,ownedPageId:null,guide:null});
+import {normalizePresentation} from '../src/core/presentation.mjs';
+import {normalizeBuildSource} from '../src/core/build-source.mjs';
+export const defaultState=()=>({schema:1,favorites:[],excluded:[],preferences:{style:'fun',autoCheck:true,buildSource:normalizeBuildSource(null),presentation:normalizePresentation(null),installPath:'C:/WeGameApps/英雄联盟'},draft:null,ownedPageId:null,guide:null});
 const roles=['top','jungle','mid','bottom','support'],styles=['balanced','fun','wild'];
 const conditions=['ad','ap','control','heal','burst'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
@@ -38,8 +40,8 @@ export function validateState(value) {
  const p=value.preferences||{};
  if(p.installPath!==undefined&&(!text(p.installPath,500)||/[\r\n\0]/.test(p.installPath)))throw Error('游戏目录格式不正确');
  return {schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],
-  preferences:{style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
-   guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',
+  preferences:{buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
+   clientCompanion:p.clientCompanion!==false,guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',
    autoLive:p.autoLive!==false,pool:Array.isArray(p.pool)?[...new Set(p.pool.filter(hero))].slice(0,200):[],poolMode:['off','prefer','only'].includes(p.poolMode)?p.poolMode:'off',
    play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},
    rolePools:Object.fromEntries(roles.map(role=>[role,{heroes:Array.isArray(p.rolePools?.[role]?.heroes)?[...new Set(p.rolePools[role].heroes.filter(hero))].slice(0,180):[],mode:['prefer','only'].includes(p.rolePools?.[role]?.mode)?p.rolePools[role].mode:'off'}])),
@@ -64,12 +66,13 @@ export function mergeState(current,backup,champions){
  const style=explicit('style')?incoming.preferences.style:current.preferences.style;
  return validateState({...current,favorites:favorites.slice(0,500),
   excluded:[...new Set([...current.excluded,...incoming.excluded])].filter(id=>champions.some(c=>c.id===id)),
-  preferences:{...current.preferences,style,...(explicit('autoCheck')?{autoCheck:incoming.preferences.autoCheck}:{}),...(explicit('autoSync')?{autoSync:incoming.preferences.autoSync}:{}),
+  preferences:{...current.preferences,style,...(explicit('buildSource')?{buildSource:incoming.preferences.buildSource}:{}),...(explicit('presentation')?{presentation:incoming.preferences.presentation}:{}),...(explicit('autoCheck')?{autoCheck:incoming.preferences.autoCheck}:{}),...(explicit('autoSync')?{autoSync:incoming.preferences.autoSync}:{}),
    ...(Object.hasOwn(backup.preferences||{},'play')?{play:incoming.preferences.play}:{}),
    ...(Object.hasOwn(backup.preferences||{},'rolePools')?{rolePools:incoming.preferences.rolePools}:{}),
    ...(Object.hasOwn(backup.preferences||{},'autoLive')?{autoLive:incoming.preferences.autoLive}:{}),
    ...(Object.hasOwn(backup.preferences||{},'guideAutoShow')?{guideAutoShow:incoming.preferences.guideAutoShow}:{}),
    ...(Object.hasOwn(backup.preferences||{},'guideAfterGame')?{guideAfterGame:incoming.preferences.guideAfterGame}:{}),
+   ...(Object.hasOwn(backup.preferences||{},'clientCompanion')?{clientCompanion:incoming.preferences.clientCompanion}:{}),
    ...(explicit('pool')?{pool:incoming.preferences.pool.filter(id=>champions.some(c=>c.id===id))}:{}),...(explicit('poolMode')?{poolMode:incoming.preferences.poolMode}:{})},
   draft:current.draft?{...current.draft,style}:null,
  });

@@ -5,21 +5,21 @@ export const GAME_PHASES={lane:'对线期',mid:'中期节奏',late:'后期团战
 export function gamePhase(live,action=null,next=null){
  const t=typeof live?.gameTime==='number'?live.gameTime:NaN;
  if(!live?.matched||!Number.isFinite(t)||t<0)return null;
- const id=t<300?'lane':t<1200?'mid':'late';
+ const id=t<840?'lane':t<1500?'mid':'late';
  const tips=[];
- if(id==='lane')tips.push('对线期：补刀优先，换血注意小兵仇恨，别在对方兵堆里硬拼。');
- else if(id==='mid')tips.push('中期：推完线再游走，先处理兵线再碰中立资源。');
+ if(id==='lane')tips.push(live.role==='jungle'?'刷野与抓人先看队友兵线，回城前确认附近资源。':live.role==='support'?'与搭档一起处理兵线，再找插眼和回城时机。':'补刀与换血先看兵线，回城前尽量把线处理到安全位置。');
+ else if(id==='mid')tips.push('先确认兵线与队友位置，再决定回城或靠近资源。');
  else tips.push('后期：大龙视野先行，抱团前先排视野，别单独过河。');
- // Objective windows live outside the phase branches so the pre-fight half
- // ([1140,1200) for Baron) is never swallowed by a branch boundary.
- if(t>=180&&t<360)tips.push('第一条小龙刷新前后，顺手补河道视野并沟通落位。');
- if(t>=780&&t<960)tips.push('峡谷先锋团前后，别独自在边路深带。');
- if(t>=1140&&t<1260)tips.push('大龙出生前后，正面先落位再开视野。');
+ // The feed has no objective timers or safe recall window. Do not invent one
+ // from the match clock, or confuse an affordable component with its final item.
  const shortfall=action?.shortfall==null?NaN:Number(action.shortfall);
  const gold=live?.gold==null?NaN:Number(live.gold);
  if(Number.isFinite(gold)&&gold>=0){
-  if(shortfall===0)tips.push(`钱够${next?.name||'下一件'}了，找机会回城。`);
-  else if(shortfall>0&&shortfall<=300)tips.push(`还差约${shortfall}金，推完这波线就回。`);
+  const name=action?.name||next?.name||'目标装备';
+  if(action?.kind==='space')tips.push('背包已满，先确认能否合成或腾出装备格。');
+  else if(action?.kind==='upgrade')tips.push('已持有基础装备，升级条件请看游戏任务与商店。');
+  else if(shortfall===0)tips.push(`当前金币可买${name}${action?.kind==='component'?'组件':''}，回城时可考虑。`);
+  else if(shortfall>0&&shortfall<=300)tips.push(`距${name}还差约${shortfall}金，回城前确认兵线和安全。`);
  }
  return {id,label:GAME_PHASES[id],tips,at:live.at??null};
 }

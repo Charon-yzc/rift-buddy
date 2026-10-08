@@ -1,6 +1,7 @@
 const path=require('node:path');
 const fs=require('node:fs/promises');
 const {pathToFileURL}=require('node:url');
+const {guidePlacement}=require('../src/core/window-placement.mjs');
 
 // Pure pass-through decision, extracted for testability: hovering the header
 // (drag bar + window buttons) always wins so the panel stays movable and
@@ -17,19 +18,22 @@ function cursorInBounds(cursor,bounds,margin=2){
      &&cursor.y>=bounds.y-m&&cursor.y<=bounds.y+bounds.height+m;
 }
 
-module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({})}){
+module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
+ let gameBounds=null;
+ const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
+ function fit(recover=false){if(!win||win.isDestroyed())return;const area=workArea(),current=win.getBounds(),b=guidePlacement(recover?null:current,area,gameBounds,{ball:isBall(),collapsed:!!getState()?.collapsed,recover});adjusting=true;win.setMinimumSize(Math.min(isBall()?76:360,area.width),Math.min(isBall()?76:getState()?.collapsed?280:480,area.height));if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3))win.setBounds(b);adjusting=false;}
  const isBall=()=>!!getState()?.ball;
  const needsAutoShow=()=>autoShowUntil>Date.now()&&getPreferences().guideAutoShow!==false;
 const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&getModel()?.live.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),ignore=ball?false:shouldIgnore(),pass=ball?true:mousePassThrough();win.setIgnoreMouseEvents(ignore,{forward:true});win.setFocusable(!pass);if(ignore&&win.isFocused())win.blur();}};
-const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),current:currentSelection()};};
+const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),presentation:getPreferences().presentation,current:currentSelection()};};
 function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload(),key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
  async function save(next){await setState(next);publish();return payload();}
- function adjustHeight(){if(win&&!isBall()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=screen.getDisplayMatching(win.getBounds()).workArea,height=Math.min(collapsed?220:getState()?.bounds?.height||740,area.height);win.setMinimumSize(360,collapsed?220:480);win.setSize(width,height);const b=win.getBounds();win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-width)),Math.max(area.y,Math.min(b.y,area.y+area.height-height)));adjusting=false;}}
+ function adjustHeight(){if(win&&!isBall()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
  function applyMode(){
   if(!win||win.isDestroyed())return;
   if(isBall()){
@@ -46,14 +50,15 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
   inputMode();publish();
  }
  function create(){
-  const saved=getState()?.bounds,area=(saved?screen.getDisplayMatching(saved):screen.getPrimaryDisplay()).workArea;
+  const saved=getState()?.bounds,area=workArea();
   const ball=isBall();
-  const width=ball?BALL_SIZE:Math.min(saved?.width||400,area.width),height=ball?BALL_SIZE:Math.min(getState()?.collapsed?220:saved?.height||740,area.height);
-  win=new BrowserWindow({width,height,minWidth:ball?BALL_SIZE:360,minHeight:ball?BALL_SIZE:getState()?.collapsed?220:480,maxWidth:640,maxHeight:1000,
+  const width=ball?BALL_SIZE:Math.min(saved?.width||400,area.width),height=ball?BALL_SIZE:Math.min(getState()?.collapsed?280:saved?.height||740,area.height);
+  win=new BrowserWindow({width,height,minWidth:ball?BALL_SIZE:360,minHeight:ball?BALL_SIZE:getState()?.collapsed?280:480,maxWidth:640,maxHeight:1000,
    x:Math.max(area.x,Math.min(saved?.x??area.x+area.width-440,area.x+area.width-width)),y:Math.max(area.y,Math.min(saved?.y??area.y+40,area.y+area.height-height)),frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,transparent:true,
-   backgroundColor:'#101823',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),resizable:!ball,
+   backgroundColor:'#00000000',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),resizable:!ball,
    webPreferences:{preload:path.join(root,'electron/guide-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   win.setAlwaysOnTop(true,'screen-saver');win.setOpacity(getState()?.opacity||1);inputMode();
+  fit();
   win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   win.webContents.on('will-navigate',(event,url)=>{if(url!==pathToFileURL(path.join(root,'src/guide.html')).href)event.preventDefault();});
   win.webContents.on('render-process-gone',(_e,detail)=>diagnostic(`guide renderer gone ${detail.reason}`));
@@ -88,8 +93,12 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
   win.on('closed',()=>{clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
  function hide(){autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
- function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;if(!win)create();else{if(win.isMinimized())win.restore();win.showInactive();inputMode();publish();}return payload();}
- function toggle(){if(win?.isVisible())hide();else show();}
+ function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();publish();}return payload();}
+ async function recover(){const current=getState();if(current)await save({...current,ball:false,collapsed:false,bounds:undefined});show();applyMode();fit(true);return payload();}
+ function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
+ const displayChanged=()=>fit();
+ for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
+ function toggle(){if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible())hide();else show();}
  async function interact(){const current=getState();if(!current)return;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{
   if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');
@@ -98,6 +107,8 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
  guard('guide-bootstrap',payload);
  guard('guide-hover',value=>{const next=!!value;if(next!==hoverHeader){hoverHeader=next;inputMode();}return hoverHeader;});
  guard('guide-control',async(action,value)=>{
+  if(action==='presentation'){await setPresentation(value);publish();return payload();}
+  if(action==='recover')return recover();
   if(action==='hide'){hide();return true;}
   if(action==='main'){showMain(getState()?.selection);return true;}
   if(action==='current'){if(!await prepareCurrent())throw Error('尚未确认当前英雄与模式，请在完整助手中选择');inputMode();publish();return payload();}
@@ -110,7 +121,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
   if(['threatId','protectId','combatFocus'].includes(action)){
    const m=getModel();if(m.mode!=='rift')throw Error('当前模式不使用峡谷关注目标');
    if(action==='combatFocus'){if(!['lane','teamfight'].includes(value))throw Error('局势关注格式不正确');}
-   else if(value!==''&&!(action==='threatId'?m.situation.enemies:m.situation.allies).some(p=>p.id===value))throw Error('公开英雄列表已变化，请重新选择');
+   else if(value!==''&&!(action==='threatId'?m.duelOptions?.foe||m.situation.enemies:m.situation.allies).some(p=>p.id===value))throw Error('公开英雄列表已变化，请重新选择');
    return save({...current,selection:{...current.selection,[action]:value||undefined}});
   }
   if(action==='condition'){if(!['ad','ap','control','heal','burst'].includes(value))throw Error('局势选项不正确');const conditions=current.selection.conditions.includes(value)?current.selection.conditions.filter(c=>c!==value):[...current.selection.conditions,value];return save({...current,selection:{...current.selection,conditions}});}
@@ -122,7 +133,6 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
    const side=action==='duel-own'?'own':'foe';
    if(value!==''&&!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value))throw Error('英雄选择格式不正确');
    const next={...(current.duelPick||{}),[side]:value||undefined};
-   if(next.own&&next.foe&&next.own===next.foe)throw Error('不能自己打自己，请换一边');
    return save({...current,duelPick:next.own||next.foe?next:undefined});
   }
   if(action==='item'){
@@ -151,7 +161,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
    else if(behavior==='collapse'){await save({...getState(),collapsed:true});adjustHeight();}
   }
  }
- return {show,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{win?.destroy();},window:()=>win};
+ return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);win?.destroy();},window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),clickThrough:mousePassThrough()}:null};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;

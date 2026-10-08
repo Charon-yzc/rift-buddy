@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {buildSourceKey,DEFAULT_BUILD_SOURCE} from '../src/core/build-source.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -75,7 +76,8 @@ test('owned transformed items satisfy actual and base goals without consuming in
   const inverse=purchasePlan([base,up],data.items,[{id:upId,count:1}],500);assert.equal(inverse[0].owned,true);assert.equal(inverse[1].owned,false);
   const waiting=purchasePlan([up],data.items,[{id:baseId,count:1}],500)[0];assert.equal(waiting.owned,false);assert.equal(waiting.baseOwned,true);assert.equal(purchaseAction(waiting,up,500).kind,'upgrade');
  }
- const guide=selectGuide(null,{id:'Anivia',role:'mid',mode:'rift'});guide.purchaseTarget='3040';const model=createGuideModel(data,guide,{...live(),champion:'Anivia',inventory:[{id:'3040',count:1}],gold:500});assert.ok(model.autoCompletedItems.includes('3040'));assert.notEqual(model.next?.id,'3040');assert.equal(model.purchaseTarget,'');
+ const aniviaData={...data,builds:{...data.builds,'Anivia:mid':{...data.builds['Anivia:mid'],core:[{items:[6657,3040,3157],samples:1}]}}};
+ const guide=selectGuide(null,{id:'Anivia',role:'mid',mode:'rift'});guide.purchaseTarget='3040';const model=createGuideModel(aniviaData,guide,{...live(),champion:'Anivia',inventory:[{id:'3040',count:1}],gold:500});assert.ok(model.route.some(i=>i.id==='3040'));assert.ok(model.autoCompletedItems.includes('3040'));assert.notEqual(model.next?.id,'3040');assert.equal(model.purchaseTarget,'');
  const ezData={...data,builds:{}},ez=selectGuide(null,{id:'Ezreal',role:'bottom',mode:'rift'});ez.purchaseTarget='3004';const ezModel=createGuideModel(ezData,ez,{...live(),champion:'Ezreal',inventory:[{id:'3042',count:1}],gold:500});assert.ok(ezModel.autoCompletedItems.includes('3004'));assert.notEqual(ezModel.next?.id,'3004');
 });
 test('live inventory never inherits manual plan marks and sale returns an item to the next goal',()=>{
@@ -106,7 +108,7 @@ test('stage hints use authored combo details and neutral manual fallback',()=>{
 });
 test('preparation summary separates guide preparation, own client rune application and data freshness',()=>{
  const champ=data.champions.find(c=>c.id==='Ashe'),b=getBuild(champ,'bottom',data),appliedKey=runeApplicationKey('Ashe','bottom',b.runePage);
- const html=preparationSummary(data,b,champ,{own:{id:'Ashe'},appliedKey});assert.match(html,/本次打开中已应用/);assert.match(html,/国服版本未核实/);assert.match(html,/组合规则/);
+ const html=preparationSummary(data,b,champ,{own:{id:'Ashe'},appliedKey});assert.match(html,/本次已应用/);assert.match(html,/国服版本未核实/);assert.match(html,/组合规则/);
  assert.match(preparationSummary(data,b,champ,{own:{id:'Jhin'},appliedKey:''}),/应用对象仍是你自己的客户端/);assert.match(preparationSummary(data,b,champ,{appliedKey:'wrong',error:'offline'}),/尚未应用/);assert.match(preparationSummary(data,b,champ,{error:'offline'}),/配置刷新未完成/);
  assert.notEqual(runeApplicationKey('Ashe','support',b.runePage),appliedKey);
 });
@@ -118,5 +120,5 @@ test('guide lifecycle preferences survive storage and old backups cannot reset t
 test('new patch request is independent of the pending old patch and only the fresh response is persisted',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-cross-patch-'));let current={...data,builds:{}},release,started;const began=new Promise(r=>started=r);let calls=0;
  const refresh=createBuildCache({root,getData:()=>current,interval:0,fetchRift:async(c,role,snapshot)=>{calls++;if(calls===1){started();await new Promise(r=>release=r);}return {...data.builds['Ashe:bottom'],patch:snapshot.patch};}});
- const old=assert.rejects(refresh('Ashe','bottom'),/版本已更新/);await began;current={...data,patch:'16.20',builds:{}};const fresh=refresh('Ashe','bottom');release();await old;assert.equal((await fresh).patch,'16.20');assert.equal(calls,2);assert.equal(JSON.parse(await fs.readFile(path.join(root,'builds.json'))).entries['Ashe:bottom'].patch,'16.20');
+ const old=assert.rejects(refresh('Ashe','bottom'),/版本已更新/);await began;const newPatch=data.patch.split('.')[0]+'.'+(Number(data.patch.split('.')[1])+1);current={...data,patch:newPatch,builds:{}};const fresh=refresh('Ashe','bottom');release();await old;assert.equal((await fresh).patch,newPatch);assert.equal(calls,2);assert.equal(JSON.parse(await fs.readFile(path.join(root,'builds.json'))).entries[buildSourceKey('Ashe','bottom',DEFAULT_BUILD_SOURCE,newPatch)].patch,newPatch);
 });

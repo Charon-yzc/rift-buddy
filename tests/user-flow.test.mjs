@@ -72,11 +72,12 @@ test('purchase advice can complete an intermediate recipe using owned parts and 
  assert.equal(purchaseAction(plan,target,1400).id,'3');assert.equal(purchaseAction(plan,target,1400).kind,'complete');
  assert.equal(purchaseAction(plan,target,100).shortfall,200);assert.equal(purchaseAction(plan,target,null).shortfall,null);
 });
-test('skill hints respect rank gates and omit unusual innate or alternate leveling systems',()=>{
+test('skill hints respect hero rank gates and omit unread stat allocations',()=>{
  const player={matched:true,level:6,skills:{Q:3,W:1,E:1,R:0}};assert.equal(nextSkill('Ashe','QWE','WQE',player),'R');
  assert.equal(nextSkill('Ashe','QWE','WQE',{...player,level:5}),null);
  assert.equal(nextSkill('Ashe','QWE','WQE',{matched:true,level:2,skills:{Q:0,W:1,E:0,R:0}}),'Q');
- for(const c of ['Aphelios','Udyr','Jayce'])assert.equal(nextSkill(c,'QWE','QWE',player),null);
+ for(const c of ['Aphelios','Jayce'])assert.equal(nextSkill(c,'QWE','QWE',player),null);
+ assert.equal(nextSkill('Udyr','QWE','QWE',player),'W');
 });
 test('three-person jobs, sequence and windows reach the per-member guide',()=>{
  const trio=TRIOS.find(t=>t.members.some(m=>m.champion==='Orianna'))||TRIOS[0],member=trio.members[0];
@@ -116,14 +117,14 @@ test('live duels cover every visible enemy in both directions with skill-aware b
  assert.equal(Object.hasOwn(model.estimate,'liveBuy'),false);
 });
 
-test('live panel beats computed stats and flags lethal danger on current health', async () => {
+test('live panel beats computed stats without turning unknown enemy skills into a lethal warning', async () => {
  const panel={ad:120,ap:0,armor:60,mr:45,atkSpeed:1.0,crit:0.2,ms:340,hp:400,maxHp:2500,regen:10};
  const fresh={...live,gold:1500,level:9,skills:{Q:4,W:2,E:2,R:1},stats:panel,enemies:[{id:'Jinx',name:'jinx',level:9,items:[{id:'3031',count:1}]}]};
  const guide=selectGuide(null,selection);
  const model=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),inventory:[{id:'1055',count:1}]});
  assert.equal(model.estimate.liveReal,true);
  assert.equal(model.estimate.curHp,400);
- assert.equal(model.estimate.danger,true);
+ assert.equal(model.estimate.danger,false);
  const healthy=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),stats:{...panel,hp:2500,maxHp:2500},inventory:[]});
  assert.equal(healthy.estimate.danger,false);
 });
@@ -131,7 +132,7 @@ test('live panel beats computed stats and flags lethal danger on current health'
 test('estimate output carries no identities and copy stays estimation language', async () => {
  const {estimateRows}=await import('../src/guide-view.mjs');
  const fresh={...live,gold:1500,level:9,skills:{Q:4,W:2,E:2,R:1},stats:{ad:120,ap:0,armor:60,mr:45,atkSpeed:1,hp:900,maxHp:2500},enemies:[{id:'Jinx',name:'jinx',level:9,items:[{id:'3031',count:1}]}]};
- const guide=selectGuide(null,selection);
+ const guide=selectGuide(null,{...selection,threatId:'Jinx'});
  const model=createGuideModel(data,guide,{...fresh,matched:true,at:Date.now(),inventory:[]});
  const dumped=JSON.stringify(model.estimate);
  for(const leak of ['riotId','summonerName','scores','foe','private'])assert.equal(dumped.includes(leak),false);
@@ -143,19 +144,14 @@ test('estimate output carries no identities and copy stays estimation language',
  assert.equal(estimateRows({}),'');
 });
 
-test('verdict banner headlines the same numbers, bigger and without promises', async () => {
+test('combat summary requires a selected target and cannot turn model direction into fight advice', async () => {
  const {verdictBanner}=await import('../src/guide-view.mjs');
- const good=verdictBanner({estimate:{edge:0.5,killThreshold:1200,theirKill:800,danger:false,enemy:{name:'金克丝'}}});
- assert.ok(good.includes('偏你')&&good.includes('1200')&&good.includes('800'));
- assert.ok(good.includes('verdict good'));
- const bad=verdictBanner({estimate:{edge:-0.5,killThreshold:300,theirKill:1500,danger:false}});
- assert.ok(bad.includes('偏对方')&&bad.includes('verdict bad'));
- const even=verdictBanner({estimate:{edge:0,killThreshold:500,theirKill:500,danger:false}});
- assert.ok(even.includes('均势')&&even.includes('verdict even'));
- const danger=verdictBanner({estimate:{edge:-0.9,killThreshold:100,theirKill:2000,danger:true,curHp:400}});
- assert.ok(danger.includes('注意')&&danger.includes('verdict danger'));
- const missing=verdictBanner({estimate:{edge:0}});
- assert.ok(missing.includes('—')&&!missing.includes('undefined'));
+ const estimate={targetSelected:true,edge:0.5,killThreshold:1213,theirKill:800,danger:true,enemy:{name:'金克丝'},mineSkillBasis:'heuristic',mineShort:{total:304}};
+ const good=verdictBanner({estimate});
+ assert.ok(good.includes('1200')&&good.includes('300')&&good.includes('技能待复核'));
+ assert.equal(/偏你|偏对方|均势|注意|承受输出/.test(good),false);
+ assert.equal(verdictBanner({estimate:{...estimate,targetSelected:false}}),'');
+ assert.equal(verdictBanner({estimate:{...estimate,edge:-0.9}}),good);
  assert.equal(verdictBanner({}),'');
  assert.equal(verdictBanner(null),'');
  for(const word of ['预测','保证','必胜','必赢','稳赢','上','打','跑','购买','建议购买','liveBuy'])assert.equal(good.includes(word),false);
@@ -185,11 +181,11 @@ test('custom duel pits a picked ally against a picked enemy with disclosed proxi
  const plain=createGuideModel(data,selectGuide(null,selection));
  assert.equal(plain.customDuel,null);assert.equal(plain.duelOptions,null);
  const html=duelBox(ally);
- assert.ok(html.includes('迦娜 vs 锤石')&&html.includes('六秒输出约'));
+ assert.ok(html.includes('迦娜 vs 锤石')&&html.includes('六秒输出通用估算约'));
  assert.ok(html.includes('<strong>')&&!html.includes('undefined'));
  assert.ok(html.includes('id="guide-duel-own"')&&html.includes('id="guide-duel-foe"'));
  assert.equal(duelBox(plain),'');
  for(const word of ['预测','保证','必胜','胜率','购买'])assert.equal(html.includes(word),false);
  const rows=estimateRows(ally);
- assert.ok(rows.includes('<strong>')&&!rows.includes('undefined'));
+ assert.ok(rows.includes('仅复核普攻与被动')&&rows.includes('不能作为整套斩杀线')&&!rows.includes('undefined'));
 });

@@ -1,5 +1,13 @@
 import {escape as e,asset,button} from './ui.mjs';
 import {compareAugments} from './core/hex-compare.mjs';
+import {validHexReference} from './core/builds.mjs';
+
+export function renderHexSourceReference({data,hero,filtered=false}){
+ const champion=data.champions.find(c=>c.id===hero),ref=data.hexBuilds?.[hero];
+ if(!champion||!validHexReference(ref,champion,data,{allowOlder:true}))return `<div class="callout">这个英雄暂时使用机制出装，仍可查询全部强化。${button('refresh-hex','获取海克斯配置','refresh','small')}</div>`;
+ const old=ref.patch!==data.patch,known=ref.augmentIds.map(id=>data.augments.find(a=>a.id===id)).filter(Boolean),missing=ref.augmentIds.length-known.length;
+ return `<section class="panel hex-reference"><div class="panel-head"><div><h3>${e(champion.name)}的强化参考</h3><p>先在局内实际出现的选项中找，选不到也不用强求。</p></div><button class="chip ${filtered?'active':''}" data-action="hex-hero-filter">${filtered?'查看全部强化':'只看这些强化'}</button></div><div class="panel-body">${old?`<p class="callout warning">OP.GG ${e(ref.patch)} 旧版本参考 · 当前资料 ${e(data.patch)}；原方案保留，具体效果以局内为准。</p>`:''}<div class="chips">${known.map(a=>`<button class="chip" data-action="augment-detail" data-id="${a.id}">${e(a.name)}</button>`).join('')}</div>${missing?`<p class="bottom-note">原参考中 ${missing} 项强化未收录于当前资料，已保留其来源，不作为当前可选项。</p>`:''}<p class="bottom-note">OP.GG 英雄页面所列参考 · 全球海克斯大乱斗 · ${e(ref.patch)}。这份清单不预测胜率，已选强化之间的配合仍需结合效果判断。</p><button class="source-link" data-action="link" data-url="${e(ref.sourceUrl)}">查看来源 ↗</button></div></section>`;
+}
 export function renderHexComparison({data,hero,options,owned}){
  const rows=compareAugments({champion:data.champions.find(c=>c.id===hero),options,owned,augments:data.augments});
  const lookup=id=>data.augments.find(a=>a.id===id)?.name||'旧版强化';

@@ -49,7 +49,7 @@ test('live snapshot exposes allies with the same public-only posture as enemies'
  const active={riotId:'me',currentGold:100,level:3,abilities:{Q:{abilityLevel:1}}};
  const mk=(id,team,extra={})=>({riotId:id==='Ashe'?'me':'r-'+id,rawChampionName:'game_character_displayname_'+id,team,items:[],...extra});
  const live=sanitizeLive(active,[mk('Ashe','ORDER'),mk('Janna','ORDER',{level:8,items:[{itemID:3190,count:1}]}),mk('Jinx','CHAOS',{level:9})],{gameMode:'CLASSIC',mapNumber:11,gameTime:30},data.champions);
- assert.deepEqual(live.allies,[{id:'Janna',name:live.allies[0].name,level:8,items:[{id:'3190',count:1}]}]);
+ assert.deepEqual(live.allies,[{id:'Janna',name:live.allies[0].name,level:8,items:[{id:'3190',count:1}],itemsKnown:true}]);
  assert.equal(live.enemies.length,1);assert.equal(live.enemies[0].id,'Jinx');
  assert.equal(JSON.stringify(live.allies).includes('r-'),false);
  const noTeam=sanitizeLive(active,[mk('Ashe',undefined),mk('Janna',undefined)],{gameMode:'CLASSIC',mapNumber:11,gameTime:30},data.champions);

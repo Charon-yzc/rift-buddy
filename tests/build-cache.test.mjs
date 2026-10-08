@@ -6,6 +6,25 @@ import path from 'node:path';
 import {createBuildCache,loadBuilds} from '../services/build-cache.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 const refs=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const hexRefs=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
+
+test('failed cache writes preserve visible Rift and Hex plans and release the refresh queue',async()=>{
+ for(const mode of ['rift','hex']){
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-cache-write-failure-'));
+  // A conflicting directory reproduces a rejected rename without changing any
+  // user cache or requiring Windows permission changes.
+  await fs.mkdir(path.join(root,mode==='hex'?'hex-builds.json':'builds.json'));
+  const current={...data,builds:{'Ashe:bottom':refs['Ashe:bottom']},hexBuilds:{Ashe:hexRefs.Ashe}};
+  const before=mode==='hex'?current.hexBuilds:current.builds;
+  const refresh=createBuildCache({root,getData:()=>current,interval:0,
+   fetchRift:async(c,role)=>({...refs[`${c.id}:${role}`],fetchedAt:new Date().toISOString()}),
+   fetchHex:async c=>({...hexRefs[c.id],fetchedAt:new Date().toISOString()})});
+  await assert.rejects(refresh('Ashe',mode==='hex'?'hex':'bottom'));
+  assert.equal(mode==='hex'?current.hexBuilds:current.builds,before,'Rejected persistence must not change the visible plan');
+  const recovered=await refresh('Ashe',mode==='hex'?'bottom':'hex');
+  assert.equal(mode==='hex'?current.builds['Ashe:bottom']:current.hexBuilds.Ashe,recovered);
+ }
+});
 
 test('quick hero changes queue refreshes and coalesce identical requests without losing saved entries',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-build-cache-'));let calls=0;
@@ -20,7 +39,7 @@ test('late or malformed source responses preserve the previous cache',async()=>{
  let current={...data,builds:{'Ashe:bottom':refs['Ashe:bottom']}};
  const bad=createBuildCache({root,getData:()=>current,interval:0,fetchRift:async()=>({...refs['Ashe:bottom'],start:[null]})});
  await assert.rejects(bad('Ashe','bottom'),/不完整/);assert.equal(current.builds['Ashe:bottom'],refs['Ashe:bottom']);
- const late=createBuildCache({root,getData:()=>current,interval:0,fetchRift:async()=>{current={...current,patch:'16.20'};return refs['Ashe:bottom'];}});
+ const late=createBuildCache({root,getData:()=>current,interval:0,fetchRift:async()=>{current={...current,patch:current.patch.split('.')[0]+'.'+(Number(current.patch.split('.')[1])+1)};return refs['Ashe:bottom'];}});
  await assert.rejects(late('Ashe','bottom'),/版本已更新/);
  assert.deepEqual(await fs.readdir(root),[]);
 });

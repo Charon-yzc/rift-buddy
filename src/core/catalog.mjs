@@ -38,7 +38,7 @@ export function validateCatalog(value,data){
   list(l.runes,8,v=>Object.hasOwn(c.runes,v),'出装符文');assert(l.runes.length,'出装需要符文');if(l.early)list(l.early,5,v=>Number.isInteger(v)&&v>0,'过渡装备');assert(l.damage===undefined||['ad','ap','mixed'].includes(l.damage),'伤害类型');assert(l.priority===undefined||/^(?!.*(.).*\1)[QWE]{3}$/.test(l.priority),'加点顺序');
   assert(l.patch===undefined||/^\d{2}\.\d{1,2}$/.test(l.patch),'配置复核版本');assert(l.reviewedAt===undefined||date(l.reviewedAt),'配置复核日期');
   assert(l.first===undefined||/^[QWE]{3}$/.test(l.first),'前三级技能');
-  assert(l.skillOrder===undefined||legalSkillOrder(l.skillOrder),'技能加点序列');assert(l.skillReason===undefined||str(l.skillReason),'技能加点用途');
+  assert(l.skillOrder===undefined||l.champions.every(champion=>legalSkillOrder(l.skillOrder,champion)),'技能加点序列');assert(l.skillReason===undefined||str(l.skillReason),'技能加点用途');
   assert(l.summoners===undefined||Array.isArray(l.summoners)&&l.summoners.length===2&&l.summoners.every(v=>typeof v==='string'&&/^Summoner[A-Za-z]+$/.test(v))&&new Set(l.summoners).size===2,'召唤师技能');
   if(data&&l.summoners)assert(l.summoners.every(v=>data.spells[v]),'召唤师技能与资料不符');
   assert(!loadoutMechanicIssues(l,c.runes).length,l.name+'：'+loadoutMechanicIssues(l,c.runes).join('；'));

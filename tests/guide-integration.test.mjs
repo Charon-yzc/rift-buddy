@@ -13,11 +13,14 @@ const snapshot=()=>sanitizeLive({riotId:'fixture-Ashe',level:7,currentGold:800,a
 
 test('one sanitized live snapshot drives separate advice and estimates through the merged guide',()=>{
  const live=snapshot(),guide=selectGuide(null,selection),m=createGuideModel(data,guide,live);
- assert.equal(m.next.id,'1029');assert.equal(m.automaticTarget,true);assert.match(m.nextReason,/护甲/);
- assert.equal(m.estimate.duels.length,2);assert.equal(m.estimate.danger,true);
+ assert.notEqual(m.next.id,'1029');assert.equal(m.automaticTarget,false);assert.ok(m.situation.candidates.some(c=>c.id==='1029'));
+ assert.equal(m.estimate.duels.length,2);assert.equal(m.estimate.danger,false);
  assert.equal(m.estimate.curHp,20);assert.equal(m.situation.enemies.length,2);
  const html=renderGuide({model:{...m,collapsed:false}},'items',false,(_kind,id)=>`<img src="${id}">`);
- assert.match(html,/本次购买为什么/);assert.match(html,/verdict danger/);assert.match(html,/guide-duel-own/);
+ assert.match(html,/本次购买为什么/);assert.doesNotMatch(html,/verdict danger|guide-duel-own/);
+ const focused=createGuideModel(data,selectGuide(null,{...selection,threatId:'Jhin'}),live);
+ assert.equal(focused.automaticTarget,true);assert.equal(focused.estimate.enemy.id,'Jhin');
+ assert.match(renderGuide({model:focused},'combat',false,()=>'<img>'),/guide-duel-own/);
  const manual=createGuideModel(data,{...guide,liveAdvice:false},live);
  assert.equal(manual.automaticTarget,false);assert.deepEqual(manual.estimate,m.estimate);
  assert.equal(Object.hasOwn(m.estimate,'liveBuy'),false);

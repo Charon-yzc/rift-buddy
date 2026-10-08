@@ -41,10 +41,15 @@ export function liveGuideStatus(live,selection,now=Date.now()){
 export const liveMatchesGuide=(live,selection,now=Date.now())=>liveGuideStatus(live,selection,now).matched;
 
 // An affordable recipe step, not a claim that this is the optimal shop purchase.
-export function purchaseAction(plan,target,gold){
+export function purchaseAction(plan,target,gold,inventory=[]){
  if(!plan||!target)return null;
  if(plan.upgrade&&plan.baseOwned)return {id:target.purchaseBase.id,name:target.purchaseBase.name,cost:0,kind:'upgrade',target:target.name,shortfall:0};
- const choices=(plan.choices||[]).filter(c=>c.cost>=0);
+ const bag=inventory.filter(i=>Number.isInteger(i.count)&&i.count>0&&!['3340','3363','3364'].includes(String(i.id)));
+ const full=bag.every(i=>Number.isInteger(i.slot))?new Set(bag.filter(i=>i.slot<6).map(i=>i.slot)).size>=6:bag.length>=6;
+ // Consuming an existing recipe part frees its slot. A standalone component
+ // without credit needs an empty slot even when its price is affordable.
+ const choices=(plan.choices||[]).filter(c=>c.cost>=0&&(!full||c.fullCost>c.cost));
+ if(full&&!choices.length)return {id:target.id,name:target.name,cost:plan.remaining,kind:'space',target:target.name,shortfall:null};
  const budget=Number.isFinite(gold)?Math.max(0,Math.floor(gold)):null;
  const affordable=budget===null?[]:choices.filter(c=>c.cost<=budget).sort((a,b)=>b.cost-a.cost||b.fullCost-a.fullCost||a.depth-b.depth||a.id.localeCompare(b.id));
  const chosen=affordable[0]||[...choices].sort((a,b)=>a.cost-b.cost||b.depth-a.depth||a.id.localeCompare(b.id))[0];
