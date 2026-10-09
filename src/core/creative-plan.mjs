@@ -57,6 +57,12 @@ export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
  if(!Array.isArray(value.members)||!(cooperation?[2,3].includes(count):count===3)||!Array.isArray(value.ordered)||value.ordered.length!==count)throw Error('创意组合成员格式不正确');
  result.members=value.members.map(m=>{if(!m||!roles.includes(m.role)||!hero(m.champion))throw Error('创意组合成员格式不正确');return {role:m.role,champion:m.champion};});
  if(new Set(result.members.map(m=>m.role)).size!==count||new Set(result.members.map(m=>m.champion)).size!==count)throw Error('创意组合成员重复');
+ // Draft ownership is saved alongside the plan, not part of the immutable
+ // cooperation text. Keep its content ID compatible with older saved pages.
+ if(value.editableTargets!==undefined){
+  if(!Array.isArray(value.editableTargets)||new Set(value.editableTargets).size!==value.editableTargets.length||value.editableTargets.some(role=>!result.members.some(m=>m.role===role)))throw Error('组合可替换位置与成员不一致');
+  result.editableTargets=[...value.editableTargets];
+ }
  const members=new Set(result.members.map(memberKey)),ordered=new Set();
  result.ordered=value.ordered.map(m=>{if(!m||!members.has(memberKey(m))||ordered.has(memberKey(m))||!text(m.job,cooperation?700:200))throw Error('创意组合分工与成员不一致');ordered.add(memberKey(m));return {role:m.role,champion:m.champion,job:m.job};});
  if(!Array.isArray(value.steps)||!(cooperation?value.steps.length>=count-1&&value.steps.length<=3:value.steps.length===3)||!value.steps.every(s=>text(s,400)))throw Error('创意组合衔接顺序格式不正确');result.steps=[...value.steps];
@@ -76,7 +82,8 @@ export function creativePlanCompatible(plan,slots){return !!plan&&validMemberCou
 export function captureCreativePlan(result,data,now=new Date().toISOString()){
  if(result.creativePlan)return validateCreativePlan(result.creativePlan,result.slots);
  const source=result.creative||(result.adaptive&&!result.trio&&!result.duo?cooperationDescriptor(result.adaptive,data):null);if(!source)return null;
- const plan={patch:RULES_PATCH,dataVersion:data.version,rulesVersion:RULES_VERSION,...source,schema:1,verified:false,createdAt:now};plan.id=creativePlanId(plan);
+ const editable=result.editableTargets??result.targets;
+ const plan={patch:RULES_PATCH,dataVersion:data.version,rulesVersion:RULES_VERSION,...source,schema:1,verified:false,createdAt:now,...(Array.isArray(editable)?{editableTargets:roles.filter(role=>editable.includes(role)&&source.members.some(m=>m.role===role))}:{})};plan.id=creativePlanId(plan);
  return validateCreativePlan(plan,result.slots);
 }
 export function creativeMemberCombo(value,champion,role){

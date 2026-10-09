@@ -245,7 +245,14 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
  const targets=draftTargets(slots,scope);
  if(!targets.length){
   const g=grade(slots,champions,style,[],{},context);
-  if(creativePlanMatches(creativePlan,slots)){const plan=validateCreativePlan(creativePlan,slots),cooperation=plan.archetype==='cooperation';return [{id:signature(slots),slots:structuredClone(slots),...g,trio:null,duo:null,creative:cooperation?null:plan,adaptive:cooperation?plan.cooperation:g.adaptive,creativePlan:plan,origin:cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets:plan.members.map(m=>m.role),contributions:[],strategy:strategySummary(g.analysis,{tempo:plan.tempo,why:plan.why,risk:plan.caution},play.tempo,context.enemyTraits),catalogState:null}];}
+  if(creativePlanMatches(creativePlan,slots)&&creativePlan.members.every(m=>scopeSlots(slots,scope).some(s=>s.role===m.role))){
+   const plan=validateCreativePlan(creativePlan,slots),cooperation=plan.archetype==='cooperation';
+   // Accepted picks are locked for the next search. That must not grant new
+   // replacement permissions to friends who were fixed before the search.
+   // Legacy plans have no record of that permission: require an explicit unlock.
+   const editableTargets=(plan.editableTargets||[]).filter(role=>scopeSlots(slots,scope).some(s=>s.role===role&&(s.party||['bot','solo'].includes(scope))));
+   return [{id:signature(slots),slots:structuredClone(slots),...g,trio:null,duo:null,creative:cooperation?null:plan,adaptive:cooperation?plan.cooperation:g.adaptive,creativePlan:plan,origin:cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,{tempo:plan.tempo,why:plan.why,risk:plan.caution},play.tempo,context.enemyTraits),catalogState:null}];
+  }
   return [{id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,g.trio||g.duo,play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null}];
  }
  const fixed=slots.map(s=>{if(!targets.includes(s.role))return {...s};const {clientCellId,manualPosition,...draft}=s;return {...draft,champion:null};});
@@ -386,7 +393,7 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
 
 export function replaceMember(result,role,input){
   const editableTargets=result.editableTargets||result.targets;
-  const target=result.slots.find(s=>s.role===role);if(!target||(!target.party&&!['bot','solo'].includes(result.scope))||!editableTargets.includes(role))throw Error('只能替换本次推荐范围中的位置');
+  const target=scopeSlots(result.slots,result.scope).find(s=>s.role===role);if(!target||(!target.party&&!['bot','solo'].includes(result.scope))||!editableTargets.includes(role))throw Error('只能替换本次推荐范围中的位置');
  // Freeze the kept members so the new search only fills the replaced role.
  const slots=result.slots.map(s=>({...s,locked:s.role!==role,champion:s.role===role?null:s.champion}));
  const next=recommend({...input,slots,...(result.scope==='solo'?{scope:'solo',soloRole:role,soloChampion:null}:{}),excluded:[...(input.excluded||[]),target.champion],offset:0,limit:3});

@@ -398,6 +398,26 @@ async function run(){
  assert.equal(sourceFetches,fetchesBeforeFilters,'Cached source choice fetched network');assert.equal(writes.length,writesBeforeFilters,'Cached source choice wrote runes');
  assert.equal(await js('document.querySelector("[data-build-source-field=region]").value'),'global');assert.equal(await js('document.querySelector("[data-build-source-field=tier]").value'),'emerald_plus');
  await until(()=>js('document.querySelector("[data-build-source-status]").textContent.includes("实际参考：全球翡翠")'),'Cached default did not return');await capture('source-global-emerald-cached');
+ // A condition click in an uncached source cannot accept its display fallback
+ // for independent core/rune/skill choices, including when saving a favorite.
+ picked='Ahri';assigned='MIDDLE';await sync();await change('#solo-role','mid');await sync();
+ const ahri=getBuild(hero('Ahri'),'mid',data),originalChoices={coreId:'core-'+ahri.reference.core[1].items.join('-'),runeId:ahri.runeOptions[1].id,skillId:ahri.skillChoices[1].id};
+ await change('[data-companion-field=core]','1');await change('[data-companion-field=rune]',originalChoices.runeId);await change('[data-companion-field=skill]',originalChoices.skillId);
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.guide?.selection.runeId==='+JSON.stringify(originalChoices.runeId)+')'),'Original Ahri choices did not reach guide');
+ await change('[data-build-source-field=region]','kr');await change('[data-build-source-field=tier]','diamond_plus');
+ assert.ok(await js('document.querySelector("[data-build-source-status]").textContent.includes("未缓存")'));
+ await click('[data-action=companion-condition][data-condition=ap]');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.guide?.selection.conditions.includes("ap"))'),'Edited pressure did not reach guide');
+ const paused=(await js('window.buddy.bootstrap()')).state.guide.selection;for(const [key,value]of Object.entries(originalChoices))assert.equal(paused[key],value,'Paused edit overwrote '+key);
+ await click('[data-action=companion-favorite]');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.some(f=>f.type==="build"&&f.champion==="Ahri"))'),'Paused choice favorite missing');
+ const pausedFavorite=(await js('window.buddy.bootstrap()')).state.favorites.find(f=>f.type==='build'&&f.champion==='Ahri');for(const [key,value]of Object.entries(originalChoices))assert.equal(pausedFavorite[key],value,'Favorite overwrote '+key);
+ await capture('source-paused-condition');await change('[data-build-source-field=region]','global');await change('[data-build-source-field=tier]','emerald_plus');
+ await until(()=>js('document.querySelector("[data-companion-field=core]")?.value==="1"'),'Original core route not restored');
+ assert.equal(await js('document.querySelector("[data-companion-field=rune]").value'),originalChoices.runeId);assert.equal(await js('document.querySelector("[data-companion-field=skill]").value'),originalChoices.skillId);
+ const restoredChoices=(await js('window.buddy.bootstrap()')).state.guide.selection;for(const [key,value]of Object.entries(originalChoices))assert.equal(restoredChoices[key],value);
+ assert.equal(writes.length,writesBeforeFilters,'Source fallback edit wrote runes');assert.equal(sourceFetches,fetchesBeforeFilters,'Source fallback edit fetched without a refresh click');
+ await capture('source-choice-restored');
  // A formal MIDDLE assignment does not override the player's explicit support preparation.
  picked='Lux';assigned='MIDDLE';await sync();await click('[data-action=companion-full]');
  await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full assistant did not open');
@@ -447,6 +467,7 @@ async function run(){
  report.manualFormalLanePreparation=true;report.manualChampionSwap=true;report.manualLaneRelease=true;report.manualLaneRuneWrites=0;
  report.manualNewGameReleased=true;report.staleGameSaveRejected=true;report.finalGameId=gameId;
  report.cachedSourceSwitch=true;report.cachedSourceNoFetch=true;report.cachedSourceNoRuneWrite=true;
+ report.sourceFallbackSingleEditPreserved=true;report.sourceFallbackFavoritePreserved=true;report.sourceRestoredOriginalChoices=true;
  await fs.writeFile(path.join(root,'companion-workflow.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'companion-workflow-error.txt'),error.stack).catch(()=>{});if(diagnosticMain&&!diagnosticMain.isDestroyed()){const state=await diagnosticMain.webContents.executeJavaScript('window.buddy.bootstrap().then(b=>({client:b.client,draft:b.state.draft,guide:b.state.guide,ui:{current:document.querySelector(".companion-current")?.textContent,preview:document.querySelector(".companion-preview")?.textContent,tab:document.querySelector(".companion-tabs .active")?.dataset.tab,plan:document.querySelector("[data-companion-field=rune]")?.dataset.plan,toast:document.querySelector("#toast")?.textContent}}))').catch(()=>null);await fs.writeFile(path.join(root,'companion-failure-state.json'),JSON.stringify(state,null,2)).catch(()=>{});}app.exit(1);});
