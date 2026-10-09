@@ -74,8 +74,10 @@ async function boot(){
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
  data.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],data);
  selectBuildSource(data,state.preferences.buildSource);
- const {loadPairStatistics}=await import('../services/pair-statistics.mjs');
- data.pairStatistics=await loadPairStatistics(path.join(root,'data/pair-statistics.json'),data);
+ const {loadPairStatisticsCache,createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
+ const pairFiles=[path.join(root,'data/pair-statistics.json'),path.join(storeRoot,'data/pair-statistics-cache.json')];
+ data.pairStatistics=await loadPairStatisticsCache(pairFiles,data);
+ const refreshPairs=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  // A mismatched spell book must never be used silently (same gate as update-data).
  try{
   const spellsFile=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8'));
@@ -177,6 +179,7 @@ async function boot(){
  guard('client-status',status);
  guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return status(true);});
  guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
+ guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
  guard('open-guide',async selection=>{if(selection){const previous=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:latestLive}).guide,next=guideCore.selectGuide(previous,selection);if(!next.match&&latestClient.connected)next.match={phase:latestClient.phase,...(latestClient.game?.gameId?{gameId:latestClient.game.gameId}:{})};await setGuideState(next);}else await prepareCurrentGuide();const result=guide.show();pollLive();return result;});
  guard('update-guide',async selection=>{const s=guideCore.validateGuideSelection(selection);if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(s))return {updated:false};await setGuideState(guideCore.selectGuide(state.guide,mergeConfiguration(state.guide.selection,s,Array.isArray(selection.changedFields)?selection.changedFields:undefined)));guide.publish();return {updated:true,selection:state.guide.selection};});
  guard('matchup-focus',async context=>{
@@ -192,7 +195,7 @@ async function boot(){
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
    delete next.builds;delete next.buildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
    next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
-   next.pairStatistics=await loadPairStatistics(path.join(root,'data/pair-statistics.json'),next);
+   next.pairStatistics=await loadPairStatisticsCache(pairFiles,next);
    next.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],next);
    // The spell book is versioned separately: a mismatched book must never be
    // used silently, so it falls back to empty (heuristic estimates + UI note).
