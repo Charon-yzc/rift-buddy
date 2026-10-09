@@ -30,7 +30,10 @@ async function run(){
  const accepted=await state();for(const [role,id]of expectedMembers)assert.ok(accepted.draft.slots.some(s=>s.role===role&&s.champion===id&&s.locked));
  assert.ok(accepted.draft.slots.find(s=>s.role==='top').manualPosition);assert.equal(accepted.draft.slots.find(s=>s.role==='top').clientCellId,2);
  const plan=accepted.draft.creativePlan;assert.equal(plan.archetype,'cooperation');const favorite=accepted.favorites.find(f=>f.type==='team');assert.deepEqual(favorite.creativePlan,plan);assert.equal(favorite.configurations.length,3);assert.ok(favorite.configurations.every(c=>c.creativePlan.id===plan.id));
+ const expectedEditable=lockedFriends?['jungle']:['jungle','mid'];assert.deepEqual(plan.editableTargets,expectedEditable);
  await click('[data-action=result-detail][data-index="0"]');
+ const controls=await js('[...document.querySelectorAll(".plan-drawer [data-action=replace-member]")].map(b=>b.dataset.role)');
+ assert.deepEqual(controls,expectedEditable,'Accept/restart must not add replacement controls for fixed friends');
  for(const member of plan.members){
   await click('[data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');
   const configuration=await js('document.querySelector(".combo-config").textContent');assert.ok(configuration.includes(plan.window));assert.ok(configuration.includes('机制搭配说明'));

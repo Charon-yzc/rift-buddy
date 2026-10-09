@@ -24,11 +24,11 @@ export function changeCompanionPlan(data,selection,field,value){
   next.bottomQuestPlan=!selection.bottomQuestPlan;if(!next.bottomQuestPlan)next.laterIds=(next.laterIds||[]).slice(0,2);
  }else if(field==='loadout'){
   if(value!=='default'&&!current.loadoutOptions.some(o=>o.id===value))throw Error('玩法已变化，请重新选择');
-  next.loadoutId=value;next.coreIndex=0;delete next.coreId;delete next.runeId;delete next.skillId;delete next.laterIds;
+  next.loadoutId=value;next.coreIndex=0;delete next.coreId;delete next.runeId;delete next.skillId;next.laterIds=[];
  }else if(field==='core'){
   const index=Number(value);
   if(!Number.isInteger(index)||index<0||!current.reference?.core[index])throw Error('装备路线已变化，请重新选择');
-  next.coreIndex=index;delete next.coreId;delete next.laterIds;
+  next.coreIndex=index;next.coreId='core-'+current.reference.core[index].items.join('-');next.laterIds=[];
  }else if(field==='start'||field==='boots'){
   const key=field==='start'?'startId':'bootsId',options=field==='start'?current.startOptions:current.bootsOptions;
   if(value&&!options.some(o=>o.id===value))throw Error('出门装或鞋子选项已变化，请重新选择');
@@ -49,6 +49,7 @@ export function changeCompanionPlan(data,selection,field,value){
   const conditions=selection.conditions||[];
   next.conditions=conditions.includes(value)?conditions.filter(c=>c!==value):[...conditions,value];
  }else throw Error('不支持的方案调整');
- const build=getBuild(champion,next.role,data,next);
- return {...next,laterIds:Array.isArray(next.laterIds)?next.laterIds:build.selectedLaterIds,coreIndex:build.selectedCoreIndex,coreId:build.selectedCoreId||undefined,loadoutId:build.loadoutId,runeId:build.selectedRuneId||undefined,skillId:build.selectedSkillId||undefined};
+ // Display fallbacks are temporary. Only the edited field (and its explicit
+ // dependants above) belongs to this change; unavailable saved choices remain.
+ return next;
 }
