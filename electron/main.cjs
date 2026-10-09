@@ -226,10 +226,9 @@ async function boot(){
   if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
  });
  guard('export-state',async()=>{const result=await dialog.showSaveDialog(win,{title:'备份收藏与偏好',defaultPath:'开黑搭子-备份.json',filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return false;
-  const exported={...state,ownedPageId:null,preferences:{...state.preferences,installPath:''}};await fs.writeFile(result.filePath,JSON.stringify(exported,null,2),'utf8');return true;});
+  await fs.writeFile(result.filePath,storage.createBackup(state),'utf8');return true;});
  guard('import-state',async()=>{const result=await dialog.showOpenDialog(win,{title:'导入收藏与偏好',properties:['openFile'],filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return null;
-  const stat=await fs.stat(result.filePaths[0]);if(stat.size>1_000_000)throw new Error('备份文件过大');
-  const incoming=JSON.parse(await fs.readFile(result.filePaths[0],'utf8'));
+  const incoming=await storage.readBackup(result.filePaths[0]);
   state=storage.mergeState(state,incoming,data.champions);selectBuildSource(data,state.preferences.buildSource);await saveCurrentState();win?.webContents.send('presentation-update',state.preferences.presentation);guide.publish();companion.sync();return state;
  });
  Menu.setApplicationMenu(null);createWindow();

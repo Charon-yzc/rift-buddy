@@ -89,6 +89,6 @@ export function captureCreativePlan(result,data,now=new Date().toISOString()){
 export function creativeMemberCombo(value,champion,role){
  if(!value)return null;const plan=validateCreativePlan(value);
  if(!plan.members.some(m=>m.champion===champion&&m.role===role))return null;
- return {...plan,origin:'creative',risk:plan.caution,members:plan.ordered,...(plan.cooperation?{early:plan.cooperation.opening||null,economy:plan.cooperation.economy||null,sources:plan.cooperation.sourceUrls.map(url=>({name:'Riot 官方技能资料',kind:'技能依据',url}))}:{})};
+ return {...plan,origin:'creative',risk:plan.caution,members:plan.members.map(member=>({...member,job:plan.ordered.find(step=>memberKey(step)===memberKey(member)).job})),...(plan.cooperation?{early:plan.cooperation.opening||null,economy:plan.cooperation.economy||null,sources:plan.cooperation.sourceUrls.map(url=>({name:'Riot 官方技能资料',kind:'技能依据',url}))}:{})};
 }
 export const creativeComboContext=combo=>combo?{comboId:combo.id,...(combo.origin==='creative'?{creativePlan:validateCreativePlan(combo)}:{})}:{};

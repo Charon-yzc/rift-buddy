@@ -1,4 +1,4 @@
-const {app,globalShortcut,screen,clipboard}=require('electron');
+const {app,globalShortcut,screen,clipboard,ipcMain}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events'),{pathToFileURL}=require('node:url');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[];
 let diagnosticMain;
@@ -46,6 +46,13 @@ async function run(){
   if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);
   observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.exitCode=null;observer.kill=()=>observer.stdin.end();return observer;
  };
+ let favoriteGate=null;
+ const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(channel,handler)=>handle(channel,async(...args)=>{
+  if(channel==='save-state'&&favoriteGate&&args[1]?.favorites?.length===favoriteGate.count){
+   const gate=favoriteGate;favoriteGate=null;gate.observed=true;await new Promise((resolve,reject)=>{gate.resolve=resolve;gate.reject=reject;});
+  }
+  return handler(...args);
+ });
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
  diagnosticMain=main;
@@ -418,6 +425,35 @@ async function run(){
  const restoredChoices=(await js('window.buddy.bootstrap()')).state.guide.selection;for(const [key,value]of Object.entries(originalChoices))assert.equal(restoredChoices[key],value);
  assert.equal(writes.length,writesBeforeFilters,'Source fallback edit wrote runes');assert.equal(sourceFetches,fetchesBeforeFilters,'Source fallback edit fetched without a refresh click');
  await capture('source-choice-restored');
+ // A rejected/slow save must not announce success, lose earlier favorites or
+ // prevent a preference changed while the collection write was pending.
+ const beforeFailure=(await js('window.buddy.bootstrap()')).state,countBeforeFailure=beforeFailure.favorites.length;
+ const direction=await js('document.querySelector("[data-action=companion-favorite]").getAttribute("aria-pressed")==="true"?-1:1');
+ await js('document.querySelector("#toast").textContent=""');
+ const rejectedFavorite={count:countBeforeFailure+direction};favoriteGate=rejectedFavorite;
+ await click('[data-action=companion-favorite]');await until(()=>rejectedFavorite.observed,'Favorite save was not intercepted');
+ assert.doesNotMatch(await js('document.querySelector("#toast").textContent'),/已收藏|已取消收藏/);
+ await click('[data-action=companion-favorite]');await until(()=>js('document.querySelector("#toast").textContent.includes("收藏正在保存")'),'Duplicate favorite click was not blocked');
+ await js('(()=>{const b=document.createElement("button");b.dataset.action="auto-live";document.body.append(b);b.click();b.remove();})()');
+ rejectedFavorite.reject(Error('Isolated favorite write rejected'));
+ await until(()=>js('document.querySelector("#toast").textContent.includes("收藏未保存，已保留原收藏")'),'Failed favorite save was not explained');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.length==='+countBeforeFailure+'&&b.state.preferences.autoLive==='+JSON.stringify(!beforeFailure.preferences.autoLive)+')'),'Favorite recovery lost originals or the newer preference');
+ const recovered=(await js('window.buddy.bootstrap()')).state;assert.deepEqual(recovered.favorites,beforeFailure.favorites);
+ await js('document.querySelector("#toast").textContent=""');const confirmedFavorite={count:countBeforeFailure+direction};favoriteGate=confirmedFavorite;
+ await click('[data-action=companion-favorite]');await until(()=>confirmedFavorite.observed,'Retried favorite save was not intercepted');
+ assert.doesNotMatch(await js('document.querySelector("#toast").textContent'),/已收藏|已取消收藏/);confirmedFavorite.resolve();
+ await until(()=>js('document.querySelector("#toast").textContent.includes('+JSON.stringify(direction>0?'已收藏':'已取消收藏')+')'),'Favorite success did not wait for confirmation');
+ assert.equal((await js('window.buddy.bootstrap()')).state.favorites.length,countBeforeFailure+direction);
+ const beforeAddFailure=(await js('window.buddy.bootstrap()')).state.favorites;
+ // The source-path fixture above already saved this build. Its successful
+ // cancellation leaves the same control available for a rejected new add.
+ assert.equal(direction,-1);const rejectedAdd={count:beforeAddFailure.length+1};favoriteGate=rejectedAdd;
+ await click('[data-action=companion-favorite]');await until(()=>rejectedAdd.observed,'New favorite save was not intercepted');rejectedAdd.reject(Error('Isolated new favorite write rejected'));
+ await until(()=>js('document.querySelector("#toast").textContent.includes("收藏未保存，已保留原收藏")'),'Failed new favorite was not explained');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.length==='+beforeAddFailure.length+')'),'Rejected new favorite remained saved');
+ assert.deepEqual((await js('window.buddy.bootstrap()')).state.favorites,beforeAddFailure);
+ await click('[data-action=companion-favorite]');await until(()=>js('document.querySelector("#toast").textContent.includes("已收藏，下次就玩这套")'),'New favorite could not recover after rejection');
+ await capture('favorite-write-confirmed');
  // A formal MIDDLE assignment does not override the player's explicit support preparation.
  picked='Lux';assigned='MIDDLE';await sync();await click('[data-action=companion-full]');
  await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full assistant did not open');
@@ -468,6 +504,7 @@ async function run(){
  report.manualNewGameReleased=true;report.staleGameSaveRejected=true;report.finalGameId=gameId;
  report.cachedSourceSwitch=true;report.cachedSourceNoFetch=true;report.cachedSourceNoRuneWrite=true;
  report.sourceFallbackSingleEditPreserved=true;report.sourceFallbackFavoritePreserved=true;report.sourceRestoredOriginalChoices=true;
+ report.favoriteWriteConfirmation=true;report.favoriteFailureRollback=true;report.favoriteConcurrentPreferencePreserved=true;
  await fs.writeFile(path.join(root,'companion-workflow.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'companion-workflow-error.txt'),error.stack).catch(()=>{});if(diagnosticMain&&!diagnosticMain.isDestroyed()){const state=await diagnosticMain.webContents.executeJavaScript('window.buddy.bootstrap().then(b=>({client:b.client,draft:b.state.draft,guide:b.state.guide,ui:{current:document.querySelector(".companion-current")?.textContent,preview:document.querySelector(".companion-preview")?.textContent,tab:document.querySelector(".companion-tabs .active")?.dataset.tab,plan:document.querySelector("[data-companion-field=rune]")?.dataset.plan,toast:document.querySelector("#toast")?.textContent}}))').catch(()=>null);await fs.writeFile(path.join(root,'companion-failure-state.json'),JSON.stringify(state,null,2)).catch(()=>{});}app.exit(1);});

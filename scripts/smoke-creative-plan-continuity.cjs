@@ -1,6 +1,6 @@
 const {app,globalShortcut,clipboard}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_CREATIVE_RESTART==='1',windows=[],copied=[];let diagnosticMain,writes=0;
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_CREATIVE_RESTART==='1',reordered=process.env.RIFT_BUDDY_CREATIVE_REORDERED==='1',windows=[],copied=[];let diagnosticMain,writes=0;
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);});globalShortcut.register=()=>false;clipboard.writeText=text=>copied.push(text);
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));async function until(read,name){for(let n=0;n<160;n++){if(await read())return;await delay(100);}throw Error(name);}
 async function run(){
@@ -23,6 +23,22 @@ async function run(){
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(350);};
  await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'Creative UI missing');
+ if(reordered){
+  if(restart){await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite][data-index="0"]');}
+  await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Reordered plan missing');await click('[data-action=result-detail][data-index="0"]');
+  if(!restart){await click('[data-action=favorite-result]');await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.some(f=>f.type==="team"))'),'Reordered plan could not be saved');}
+  const favorite=(await js('window.buddy.bootstrap()')).state.favorites.find(f=>f.type==='team'),plan=favorite.creativePlan;
+  assert.notDeepEqual(plan.members.map(m=>m.champion),plan.ordered.map(m=>m.champion));assert.equal(favorite.configurations.length,3);
+  for(const member of plan.members){
+   await click('[data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');await until(()=>js('!!document.querySelector("#build-role")'),'Reordered member could not open');
+   assert.equal(await js('document.querySelector("#build-role").value'),member.role);
+   for(const job of plan.ordered)assert.ok((await js('document.querySelector(".combo-config").textContent')).includes(job.job));
+   await click('[data-action=close]');await click('[data-action=result-detail][data-index="0"]');
+  }
+  await capture(main,restart?'reordered-reopened.png':'reordered-saved.png');assert.equal(writes,0);
+  const report={passed:true,archiveSha256:release.archiveSha256,actionOrder:plan.ordered.map(m=>m.champion),memberOrder:plan.members.map(m=>m.champion),savedMembers:favorite.configurations.length,restart,realRuneWrites:0,realGame:'UNPROVEN'};
+  await fs.writeFile(path.join(root,restart?'reordered-restart.json':'reordered-workflow.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();return;
+ }
  let original;
  if(!restart){
   await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Creative recommendation missing');await click('[data-action=result-detail][data-index="0"]');
