@@ -2,7 +2,9 @@
 
 给朋友一起玩匹配准备的 Windows 桌面助手：根据已经选好的英雄推荐双人或三人组合，把对应的玩法、出装和符文带到本局指引中。
 
-**[下载 v0.16.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/tag/v0.16.0)** · [全部版本](https://github.com/Legender134/rift-buddy/releases) · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
+**[下载 v0.15.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/tag/v0.15.0)** · [全部版本](https://github.com/Legender134/rift-buddy/releases) · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
+
+当前源码为 v0.16.0，维护者本机已构建并安装该版本；公开下载包仍为 v0.15.0。阶段改进默认只推送并合并代码，安装包在本地验证和保留，仅在明确要求或重大更新时上传 Releases，因此源码版本可能领先公开安装包。
 
 继续开发请看 [开发指南](docs/development.md) 和 [贡献说明](CONTRIBUTING.md)。仓库包含完整源码、离线资料、依赖锁文件、测试和打包工具；无需额外获取开发者的本机文件。
 
