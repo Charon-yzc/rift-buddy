@@ -67,6 +67,9 @@
 .single-target .new-member{flex:1.5}.single-target .new-member img{width:72px;height:72px}
 .candidate-benefits{padding:0 16px;color:#b7cabc;font-size:12px;line-height:1.65}
 .candidate-benefits p{margin:5px 0}.candidate-benefits small{display:block;color:#8fa6ba;font-size:13px}
+.result-actions-summary{margin:12px 16px;padding:12px;border:1px solid #355247;border-radius:9px;background:#172a25;overflow-wrap:anywhere}
+.result-actions-summary h4{color:#b5f6d7;margin-bottom:8px}.result-actions-summary p{margin:8px 0;font-size:13px;line-height:1.65}.result-actions-summary b,.result-actions-summary span{display:block}.result-actions-summary b{color:#d9eddf}.result-actions-summary span{color:#b8c9c2}
+.companion-candidate .result-actions-summary{margin:10px 0}.companion-candidate .result-actions-summary p{font-size:inherit}
 .result-reason{padding:8px 16px;font-size:13px;color:#8fa6ba}.result-reason summary{cursor:pointer}.result-reason p{padding-top:7px}
 .result-card .card-strategy{padding:0 16px}.result-card .card-bottom .muted{font-size:13px}
 body:has(.plan-drawer) #toast{bottom:auto;top:90px}

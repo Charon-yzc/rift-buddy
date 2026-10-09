@@ -9,6 +9,8 @@ import {cooperationText} from '../src/cooperation-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {teamFavoriteId} from '../src/core/team-favorites.mjs';
+import {renderResultCard} from '../src/draft-result-view.mjs';
+import {resultMemberJobs} from '../src/cooperation-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 const member=(champion,role)=>({champion,role});
 const setup=(fixed,open)=>createSlots().map(s=>({...s,party:fixed.some(m=>m.role===s.role)||s.role===open,champion:fixed.find(m=>m.role===s.role)?.champion||null,locked:fixed.some(m=>m.role===s.role),...(fixed.some(m=>m.role===s.role)?{manualPosition:true}:{})}));
@@ -23,6 +25,14 @@ const cases=[
  [[member('Vex','mid'),member('Ezreal','bottom')],'support'],
  [[member('Orianna','mid'),member('Ashe','bottom')],'support'],
  ...[['DrMundo','top','mid'],['DrMundo','jungle','mid'],['Ekko','jungle','mid'],['Ekko','mid','jungle'],['Teemo','top','mid'],['Shaco','jungle','mid']].map(([id,role,open])=>[[member(id,role)],open]),
+ ...['Aphelios','Draven','Jhin','Kalista','KogMaw','MissFortune','Lucian','Twitch','Sivir','Tristana','Vayne','Varus','Xayah','Kaisa','Samira','Nilah','Smolder','Yunara','Senna'].map(id=>[[member(id,'bottom')],'mid']),
+ ...['Rammus','Shyvana','Udyr','MasterYi','Nidalee'].map(id=>[[member(id,'jungle')],'mid']),
+ [[member('Lux','mid'),member('Jhin','bottom')],'support'],
+ [[member('Nasus','top'),member('Smolder','mid')],'jungle'],
+ [[member('Garen','top'),member('Shyvana','jungle')],'mid'],
+ [[member('Garen','top'),member('MasterYi','jungle')],'mid'],
+ [[member('Riven','top'),member('Nidalee','jungle')],'mid'],
+ [[member('Akali','mid')],'jungle'],
 ];
 
 test('ordinary locked friends get full-party actions on the first page in every style without custom pools',()=>{
@@ -67,4 +77,35 @@ test('detail favorite controls reflect the saved team and current style',()=>{
  const favorites=[{type:'team',id:teamFavoriteId(row,'fun'),style:'fun',scope:'party',creativePlan:row.creativePlan}];
  assert.match(resultPlayCard(row,0,data,{favorites,style:'fun'}),/aria-pressed="true"[^>]*>.*已收藏 · 点击取消/s);
  for(const options of [{favorites:[],style:'fun'},{favorites,style:'wild'}])assert.match(resultPlayCard(row,0,data,options),/aria-pressed="false"[^>]*>.*收藏组合/s);
+});
+
+test('current shooter and jungle prerequisites do not turn marks, forms or slows into unconditional control',()=>{
+ const graph=createCooperationGraph(data.champions),text=(a,b)=>cooperationText(cooperationPlan([member(a,'jungle'),member(b,'mid')],graph));
+ for(const [a,b,pattern] of [['Jhin','Nasus',/标记与首个英雄命中成立/],['Aphelios','MasterYi',/当前武器.*重力减速/],['Vayne','Smolder',/实际撞墙眩晕/],['Varus','Nidalee',/蔓延禁锢也须实际发生/],['Xayah','Akali',/羽毛回程实际触发禁锢/],['Rammus','Kalista',/实际誓约友军/],['Udyr','Sivir',/普通 E 不按觉醒的定身免疫/],['Shyvana','Nasus',/恐惧.*变化后的目标位置/],['Riven','MasterYi',/第三段 Q/]])assert.match(text(a,b),pattern,a+'/'+b);
+ assert.match(text('Shyvana','Nasus'),/W 治疗须实际命中英雄/);
+ assert.doesNotMatch(text('Shyvana','Nasus'),/烈火燎原|烈焰吐息|龙形态.*击退/);
+ assert.match(text('Rammus','Yunara'),/普通 E 是加速与穿行/);
+ for(const ids of [['Nasus','Smolder'],['MasterYi','Nidalee'],['Kaisa','Lucian']])assert.equal(cooperationPlan(ids.map((id,i)=>member(id,i?'mid':'jungle')),graph),null);
+});
+
+test('member actions appear before statistics and personal-node supplements do not contradict saved cooperation',()=>{
+ for(const [fixed,open] of cases){
+  const slots=setup(fixed,open),[row]=recommend({slots,champions:data.champions,scope:'party',limit:1}),jobs=resultMemberJobs(row,data),card=renderResultCard(row,0,data,{favorites:[]}),detail=resultPlayCard(row,0,data),side=companionView({data,client:{connected:false},slots,unassigned:[],scope:'party',style:'fun',tab:'recommend',results:[row]});
+  assert.equal(jobs.length,fixed.length+1);
+  for(const html of [card,side]){assert.match(html,/aria-label="成员行动分工"/);for(const job of jobs)assert.ok(html.includes(job.job));const stats=html.indexOf('pair-statistics');if(stats>=0)assert.ok(html.indexOf('成员行动分工')<stats);}
+  assert.ok(detail.indexOf('这套怎么配合')<detail.indexOf('为什么补这几个英雄'));
+  if(row.strategy)assert.ok(detail.indexOf('这套怎么配合')<detail.indexOf('代价：'));
+  assert.doesNotMatch(card,/一起行动前 · 阶段条件未整理/);
+  assert.match(card,/个人技能与成装节点/);
+  assert.ok(card.includes(`${row.analysis.curve.windows.length}/${row.analysis.known} 位已整理`));
+  assert.match(card,/代价与退出：/);
+ }
+});
+
+test('a generated fallback never invents a moderate cooperation difficulty',()=>{
+ const slots=setup([member('Kled','top'),member('Nidalee','jungle')],'mid');
+ for(const style of ['balanced','fun','wild']){
+  const rows=recommend({slots,champions:data.champions,scope:'party',style,limit:3});
+  for(const row of rows){assert.equal(row.origin,'generated');const html=renderResultCard(row,0,data,{favorites:[]},style);assert.match(html,/配合难度未评估/);assert.doesNotMatch(html,/配合难度 · 适中/);assert.match(html,/\d\/3 位已整理/);}
+ }
 });

@@ -140,7 +140,7 @@ test('three-person plans must connect every member and retain conditional skills
  const general=cooperationPlan([...trio.slice(0,2),member('Lux','mid')],g);
  assert.ok(general.edges.every(e=>e.family==='skills:Sejuani'),'A reviewed follow-up uses a general plan instead of inventing frost or echo synergy');
  assert.equal(general.memberJobs.length,3);assert.match(general.conditions.join(' '),/Q.*两目标/);assert.match(general.sourceNote,/通用控制接力/);
- assert.equal(cooperationPlan([...trio.slice(0,2),member('Aphelios','mid')],g),null,'A strong pair must not pretend an unreviewed third member connects');
+ assert.equal(cooperationPlan([...trio.slice(0,2),member('Naafiri','mid')],g),null,'A strong pair must not pretend an unreviewed third member connects');
  assert.equal(cooperationPlan([trio[0]],g),null);assert.equal(cooperationPlan([...trio,trio[0]],g),null);
  assert.equal(cooperationPlan([member('Sejuani','jungle'),member('Trundle','jungle')],g),null);
 });
