@@ -5,6 +5,7 @@ import {comboLoadout,loadoutOptions} from './loadouts.mjs';
 import {generateCreativeTrios} from './creative-trios.mjs';
 import {creativePlanMatches,creativeMemberCombo,validateCreativePlan} from './creative-plan.mjs';
 import {createCooperationGraph,cooperationPlan,cooperationSeeds} from './cooperation.mjs';
+import {comboMembers,comboKey} from './combo-members.mjs';
 import {strategyTraits,strategySummary,summarizeEnemyTraits,opponentFit,threatNotes,describeCurve,describeForgiveness,controlChainLabel} from './strategy.mjs';
 
 export function createSlots() {
@@ -56,12 +57,14 @@ export function analyzeTeam(slots, champions, context) {
   control,avgDifficulty,
   damageMix:!traits.ad&&!traits.ap?'none':balancedDamage?'mixed':traits.ad>=traits.ap?'ad':'ap'};
 }
-function findDuo(slots) {
- const carry=slots.find(s=>s.role==='bottom')?.champion;
- const support=slots.find(s=>s.role==='support')?.champion;
- if(!carry||!support)return undefined;
- return comboIndex().duoByPair.get(`${carry}:${support}`);
+function findDuos(slots){
+ const filled=slots.filter(s=>s.champion).map(s=>`${s.role}:${s.champion}`),{duoByMembers,duoOrder}=comboIndex(),found=[];
+ for(let i=0;i<filled.length;i++)for(let j=i+1;j<filled.length;j++){
+  const duo=duoByMembers.get([filled[i],filled[j]].sort().join('|'));if(duo)found.push(duo);
+ }
+ return found.sort((a,b)=>duoOrder.get(a)-duoOrder.get(b));
 }
+const findDuo=slots=>findDuos(slots)[0];
 export function findTrio(slots){
  // Catalog trios have unique member sets, so subset lookup is equivalent to
  // the old linear scan and returns the same single match.
@@ -92,7 +95,7 @@ export function currentCombo(slots,champion,role,status={},comboCache=null,creat
    if(t)found.set(t,(trioOrder.get(t)??0));
   }
   const trios=[...found.keys()].sort((a,b)=>found.get(a)-found.get(b));
-  matches=[...trios,findDuo(slots)].filter(c=>c&&!status?.[c.id]?.invalid);
+  matches=[...trios,...findDuos(slots)].filter(c=>c&&!status?.[c.id]?.invalid);
   comboCache?.set(sig,matches);
  }
  if(!champion)return matches[0]||null;
@@ -164,7 +167,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context) 
  for(const id of ids)for(const link of linkByChamp.get(id)||[])if(ids.has(link[0])&&ids.has(link[1]))linkHit.add(link);
  const connections=CROSS_SYNERGIES.filter(l=>linkHit.has(l));
  score+=connections.length*7;
- if(duo)score+=duo.partners.filter(id=>ids.has(id)).length*7;
+ if(duo)score+=(duo.partners||[]).filter(id=>ids.has(id)).length*7;
  const adaptive=context?.cooperationGraph&&scope!=='solo'?cooperationPlan(slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party),context.cooperationGraph):null;
  if(adaptive)score+=adaptive.bonus;
  const tempo=context?.play?.tempo;if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,trio||duo)[tempo]||0,12)*3;
@@ -201,12 +204,12 @@ const signature=slots=>slots.map(s=>`${s.role}:${s.champion||'-'}`).join('|');
 let comboIndexCache={duos:null,trios:null,links:null};
 function comboIndex(){
  if(comboIndexCache.duos!==DUOS||comboIndexCache.trios!==TRIOS||comboIndexCache.links!==CROSS_SYNERGIES){
-  const duoByPair=new Map(DUOS.filter(d=>d&&d.carry&&d.support).map(d=>[`${d.carry}:${d.support}`,d]));
+  const duoByMembers=new Map(DUOS.map(d=>[comboKey(d),d])),duoOrder=new Map(DUOS.map((d,i)=>[d,i]));
   const trioByMembers=new Map(),trioOrder=new Map();
   TRIOS.forEach((t,i)=>{trioOrder.set(t,i);if(t&&Array.isArray(t.members))trioByMembers.set(t.members.map(m=>`${m.role}:${m.champion}`).sort().join('|'),t);});
   const linkByChamp=new Map();
   for(const link of CROSS_SYNERGIES){for(const id of [link[0],link[1]]){if(!linkByChamp.has(id))linkByChamp.set(id,[]);linkByChamp.get(id).push(link);}}
-  comboIndexCache={duos:DUOS,trios:TRIOS,links:CROSS_SYNERGIES,duoByPair,trioByMembers,trioOrder,linkByChamp};
+  comboIndexCache={duos:DUOS,trios:TRIOS,links:CROSS_SYNERGIES,duoByMembers,duoOrder,trioByMembers,trioOrder,linkByChamp};
  }
  return comboIndexCache;
 }
@@ -259,25 +262,20 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
   const allowed=c=>!blocked.has(c.id)&&(poolMode!=='only'||context.pool.has(c.id))&&(rolePools[role]?.mode!=='only'||rolePools[role].heroes?.includes(c.id))&&(role!=='bottom'||play.meleeBottom!==false||!Number.isFinite(c.stats?.attackrange)||c.stats.attackrange>250);
   let candidates=champions.filter(c=>allowed(c)&&(play.unusual===false?conventionalRole(c,role,profCache):profOf(c,role).roles.includes(role)||supportedBySource.has(c.id+':'+role)));
   // Curated pairs can deliberately use unconventional roles.
-  const extras=play.unusual===false?[]:[...DUOS.filter(d=>!catalogStatus[d.id]?.invalid).flatMap(d=>role==='bottom'?[d.carry]:role==='support'?[d.support]:[]),...TRIOS.filter(t=>!catalogStatus[t.id]?.invalid).flatMap(t=>t.members.filter(m=>m.role===role).map(m=>m.champion))];
+  const extras=play.unusual===false?[]:[...DUOS.filter(d=>!catalogStatus[d.id]?.invalid).flatMap(d=>comboMembers(d).filter(m=>m.role===role).map(m=>m.champion)),...TRIOS.filter(t=>!catalogStatus[t.id]?.invalid).flatMap(t=>t.members.filter(m=>m.role===role).map(m=>m.champion))];
   for(const id of extras)if(byId.has(id)&&allowed(byId.get(id))&&!candidates.some(c=>c.id===id))candidates.push(byId.get(id));
   candidates=candidates.map(c=>({c,score:grade(fixed.map(s=>s.role===role?{...s,champion:c.id}:s),champions,style,[c.id],roleWeights,context).score})).sort((a,b)=>b.score-a.score||a.c.id.localeCompare(b.c.id));
   candidateSets[role]=candidates.map(x=>x.c);
   if(!candidates.length)throw new Error(`${ROLES.find(r=>r.id===role).name}没有可选英雄，请调整英雄池或排除条件`);
  }
- // Beam search, plus every viable curated bot lane as an anchor so unusual pairs survive pruning.
+ // Include viable catalog pairs as anchors so personal and unusual pairs survive pruning.
  const seeds=[fixed];
- const bot=fixed.find(s=>s.role==='bottom'),sup=fixed.find(s=>s.role==='support');
  for(const duo of DUOS) {
   if(catalogStatus[duo.id]?.invalid)continue;
-  if((bot.champion&&bot.champion!==duo.carry)||(sup.champion&&sup.champion!==duo.support))continue;
-  if((!bot.champion&&!targets.includes('bottom'))||(!sup.champion&&!targets.includes('support')))continue;
-  if(!byId.has(duo.carry)||!byId.has(duo.support)||excluded.includes(duo.carry)||excluded.includes(duo.support)||enemy.includes(duo.carry)||enemy.includes(duo.support))continue;
-  if(poolMode==='only'&&((!bot.champion&&!context.pool.has(duo.carry))||(!sup.champion&&!context.pool.has(duo.support))))continue;
-  const otherIds=fixed.filter(s=>!['bottom','support'].includes(s.role)).map(s=>s.champion);
-  if(otherIds.includes(duo.carry)||otherIds.includes(duo.support))continue;
-  if((!bot.champion&&!candidateSets.bottom?.some(c=>c.id===duo.carry))||(!sup.champion&&!candidateSets.support?.some(c=>c.id===duo.support)))continue;
-  seeds.push(fixed.map(s=>s.role==='bottom'?{...s,champion:duo.carry}:s.role==='support'?{...s,champion:duo.support}:s));
+  const members=comboMembers(duo);
+  if(members.some(m=>{const slot=fixed.find(s=>s.role===m.role);return slot.champion?slot.champion!==m.champion:!targets.includes(m.role)||!candidateSets[m.role]?.some(c=>c.id===m.champion);}))continue;
+  if(fixed.some(s=>s.champion&&members.some(m=>m.champion===s.champion&&m.role!==s.role)))continue;
+  seeds.push(fixed.map(s=>{const m=members.find(m=>m.role===s.role);return m?{...s,champion:m.champion}:s;}));
  }
  for(const trio of TRIOS){
   if(catalogStatus[trio.id]?.invalid||!trio.members.some(m=>targets.includes(m.role)))continue;
@@ -324,11 +322,11 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
   const creative=creativeBySig.get(signature(entry.slots));
   unique.set(signature(entry.slots),creative?{...entry,...g,score:g.score+creative.bonus,creative}:{...entry,...g});
  }
- // With a friend already chosen, an executable plan for the whole party is
+ // An executable plan for the whole party is
  // more useful than a higher count of generic team functions. All hard pick
  // restrictions have been applied before this preference. A partial duo or
  // an old link to the third friend does not qualify as a complete plan.
- const prioritizeCooperation=[2,3].includes(partyMembers.length)&&partyMembers.some(m=>m.champion&&!targets.includes(m.role));
+ const prioritizeCooperation=[2,3].includes(partyMembers.length);
  const actionable=entry=>{
   if(!prioritizeCooperation)return false;
   const combo=entry.trio||entry.duo,members=combo?(combo.members||[{role:'bottom',champion:combo.carry},{role:'support',champion:combo.support}]):entry.adaptive?.members;
