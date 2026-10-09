@@ -348,7 +348,13 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
   // such as Ahri/Vi merely because it can be generated for many more allies.
   return entry.adaptive.edges.some(e=>e.current&&e.family.startsWith('skills:'))?1:2;
  };
- const order=(a,b)=>Number(actionable(b))-Number(actionable(a))||b.score-a.score||signature(a.slots).localeCompare(signature(b.slots));
+ const summaryCombo=entry=>entry.trio||entry.duo||(entry.creative&&{tempo:entry.creative.tempo,why:entry.creative.why,risk:entry.creative.caution})||(entry.adaptive&&{tempo:entry.adaptive.tempo,why:entry.adaptive.why,risk:entry.adaptive.failures.join(' ')});
+ const matching=new Map([...unique.values()].map(entry=>[entry,play.tempo&&play.tempo!=='any'&&strategySummary(entry.analysis,summaryCombo(entry),play.tempo).matched]));
+ // An explicit play preference must remain reachable on the first page.
+ // Within matching choices, keep full-party and authored plans ahead of
+ // general mechanisms. Without a matching candidate, retain normal fallback.
+ const priority=entry=>Number(actionable(entry))+(matching.get(entry)?4:0);
+ const order=(a,b)=>priority(b)-priority(a)||b.score-a.score||signature(a.slots).localeCompare(signature(b.slots));
  const sorted=[...unique.values()].sort(order);
  const chosen=[];
  // Keep the best result for every curated duo reachable on reroll. Filling
@@ -371,8 +377,8 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
    const entryStyle=(entry.trio||entry.duo)?.style||'balanced';
    const similarity=chosen.reduce((sum,c)=>sum+targets.filter(r=>c.slots.find(s=>s.role===r).champion===entry.slots.find(s=>s.role===r).champion).length*9+(entry.duo&&c.duo?.id===entry.duo.id?18:0)+(entry.trio&&c.trio?.id===entry.trio.id?22:0)+(entry.trio&&c.trio?.tempo===entry.trio.tempo?6:0)+(((c.trio||c.duo)?.style||'balanced')===entryStyle?10:0)+(entry.creative&&c.creative?.archetype===entry.creative.archetype?14:0),0);
    const v=entry.score-similarity;
-   const priority=Number(actionable(entry));
-   if(priority>bestPriority||priority===bestPriority&&v>best){best=v;winner=j;bestPriority=priority;}
+   const p=priority(entry);
+   if(p>bestPriority||p===bestPriority&&v>best){best=v;winner=j;bestPriority=p;}
   }
   chosen.push(pool.splice(winner,1)[0]);
  }
@@ -386,7 +392,6 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
  const sharedBefore=analyzeTeam(scopeSlots(fixed,scope),champions,context);
  return chosen.slice(offset,offset+limit).map(entry=>{
   const origin=entry.trio||entry.duo?'curated':entry.creative?'creative':entry.adaptive?'adaptive':'generated';
-  const creativeCombo=entry.creative?{tempo:entry.creative.tempo,why:entry.creative.why,risk:entry.creative.caution}:null;
   const points=buildReasonPoints(entry,scope);
   return {
   ...entry,id:signature(entry.slots),targets,scope,origin,
@@ -394,7 +399,7 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
   reason:entry.creative?.why||entry.trio?.why||entry.duo?.why||entry.adaptive?.why||entry.connections[0]?.[2]||`${describeComposition(entry.analysis)}。${entry.analysis.missing.length?`短板是${entry.analysis.missing.join('、')}，具体补充作用见方案详情。`:'具体补充作用见方案详情。'}`,
   reasonPoints:points,
   catalogState:catalogStatus[(entry.trio||entry.duo)?.id]||null,
-  strategy:strategySummary(entry.analysis,entry.trio||entry.duo||creativeCombo||(entry.adaptive&&{tempo:entry.adaptive.tempo,why:entry.adaptive.why,risk:entry.adaptive.failures.join(' ')}),play.tempo,context.enemyTraits),
+  strategy:strategySummary(entry.analysis,summaryCombo(entry),play.tempo,context.enemyTraits),
   contributions:explainContributions(scopeSlots(fixed,scope),scopeSlots(entry.slots,scope),targets,champions,context,{before:sharedBefore,after:entry.analysis}),
   };});
 }

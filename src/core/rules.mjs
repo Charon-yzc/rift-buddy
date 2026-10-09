@@ -66,7 +66,7 @@ const sets=Object.fromEntries(Object.entries(traitSets).map(([k,v])=>[k,new Set(
 for(const id of ['Locke','Yunara','Zaahen'])sets.sustain.add(id);
 // Repeated attacks (W/E/crit cycles) and repeatable Q casts also supply sustained
 // damage. Reviewed against each champion's 16.20.1 Riot skill descriptions.
-for(const id of ['Trundle','Tryndamere','Olaf','Fiora','Ryze','Ezreal','Irelia'])sets.sustain.add(id);
+for(const id of ['Trundle','Tryndamere','Olaf','Fiora','Ryze','Ezreal','Irelia','Briar','Karthus'])sets.sustain.add(id);
 for(const id of Object.keys(SUSTAIN_CONDITIONS))sets.sustain.add(id);
 for(const id of ['Mel','Yunara'])sets.aoe.add(id);
 // Multiple-target damage in the current kit, not a claim that the whole

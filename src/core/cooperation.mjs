@@ -1,6 +1,7 @@
 import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION,profile} from './rules.mjs';
 import {COOPERATION_PAIRS,cooperationCoordination} from './cooperation-pairs.mjs';
 import {createSkillCooperation} from './cooperation-skills.mjs';
+import {preferredTempo} from './strategy.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -71,18 +72,32 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
 
 function connectedEdges(members,graph){
  const edges=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge)edges.push(edge);}
- if(!edges.some(e=>e.current)||edges.length<members.length-1||members.some(m=>!edges.some(e=>[e.a,e.b].includes(m.champion))))return graph.skills.edges(members);
- return edges;
+ const current=edges.filter(e=>e.current);
+ if(!current.length)return graph.skills.edges(members);
+ const missing=members.filter(m=>!edges.some(e=>[e.a,e.b].includes(m.champion)));
+ if(edges.length>=members.length-1&&!missing.length)return edges;
+ if(members.length===3&&missing.length===1){
+  const followup=graph.skills.followup(current[0],missing[0]);
+  if(followup)return [...edges,followup];
+ }
+ return null;
 }
 export function cooperationPlan(members,graph){
  members=members.filter(m=>m.champion);
  if(![2,3].includes(members.length)||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
- const edges=connectedEdges(members,graph);if(!edges)return null;
+ let edges=connectedEdges(members,graph);if(!edges)return null;
+ // A generic control trigger is not automatically a teamfight composition.
+ // Use reviewed member functions for its overall tempo, while keeping authored
+ // pair timing (including protection relays) intact.
+ if(edges.every(e=>e.family.startsWith('skills:'))){
+  const profiles=members.map(m=>graph.profile(m)),traits=Object.fromEntries(['engage','aoe','peel','sustain','poke'].map(k=>[k,profiles.filter(p=>p[k]).length]));
+  const tempo=preferredTempo({traits});edges=edges.map(e=>({...e,tempo}));
+ }
  const current=edges.filter(e=>e.current),main=current[0],coordination=main.family.startsWith('skills:')?graph.skills.coordination(members,edges):cooperationCoordination(members,graph,edges),steps=coordination.relaySteps||edges.map(e=>e.step);
  return {name:`配合 · ${main.name}${members.length===3?'三人联动':''}`,members:members.map(m=>({role:m.role,champion:m.champion})),edges,...coordination,
   why:steps.join(' '),steps,conditions:edges.map(e=>e.condition),failures:edges.map(e=>e.failure),tempo:main.tempo,
   bonus:Math.min(15,current.filter(e=>!e.alreadyLinked).length*4+(members.length===3?3:0)),
-  sourceNote:main.family.startsWith('skills:')?'通用控制接力：按已核对技能条件安排同一目标，未经组合对局验证，不代表独特协同或统计优势。':'按技能条件与已有联动推导，未经组合对局验证；两两能配合不代表整体一定强。',
+  sourceNote:edges.some(e=>e.family.startsWith('follow:'))?'保留已整理双人配合；第三人仅按已核对技能与到场条件跟进，未确认额外三人协同。未经组合对局验证，不代表统计优势。':main.family.startsWith('skills:')?'通用控制接力：按已核对技能条件安排同一目标，未经组合对局验证，不代表独特协同或统计优势。':'按技能条件与已有联动推导，未经组合对局验证；两两能配合不代表整体一定强。',
   patch:main.patch,reviewedAt:main.reviewedAt,sourceUrls:[...new Set(current.flatMap(e=>e.sourceUrls))]};
 }
 
