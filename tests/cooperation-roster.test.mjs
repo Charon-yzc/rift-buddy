@@ -74,7 +74,7 @@ test('current forms, spell keys, delayed control and isolation remain explicit i
  const text=id=>cooperationText(cooperationPlan([member(id,'jungle'),member('Kayle','mid')],graph));
  for(const [id,pattern]of [['Bard',/撞墙或第二单位/],['Briar',/蓄满撞墙/],['Cassiopeia',/背对.*只减速/],['KSante',/全盛姿态 W 不再击退或眩晕/],['Leblanc',/连线未断.*禁锢/],['Mel',/中心命中.*禁锢/],['Mordekaiser',/队友不能跟入 R/],['Qiyana',/当前冰元素/],['Renata',/不保证复活/],['Ryze',/没有 E 标记时 W 只有减速/],['Soraka',/区域结束.*禁锢/],['TwistedFate',/确实锁定金牌/],['Zac',/不同目标.*合拢/],['Zilean',/双炸弹/],['Zoe',/睡眠实际发生/]])assert.match(text(id),pattern,id);
  const noControl=['Akshan','Corki','Gangplank','Illaoi','Kassadin','Kayle','Locke','Naafiri','Olaf','Quinn','Rumble','Talon','Tryndamere','Yorick','Yuumi'];
- for(const id of noControl)assert.equal(cooperationPlan([member(id,'mid'),member('Karthus','jungle')],graph),null,id+' cannot invent a hard-control opener');
+ for(const id of noControl)assert.deepEqual(cooperationPlan([member(id,'mid'),member('Karthus','jungle')],graph).edges,[],id+' cannot invent a hard-control opener');
  const naafiri=cooperationText(cooperationPlan([member('Naafiri','jungle'),member('Rell','support')],graph));assert.match(naafiri,/W 为犬群强化与无法选中，R 才是冲向英雄/);
  const yuumi=cooperationText(cooperationPlan([member('Yuumi','support'),member('Rell','jungle')],graph));assert.match(yuumi,/当前 R 不按旧版.*禁锢/);
  assert.equal(profile(data.champions.find(c=>c.id==='Briar'),'jungle').sustain,true);assert.equal(profile(data.champions.find(c=>c.id==='Karthus'),'jungle').sustain,true);

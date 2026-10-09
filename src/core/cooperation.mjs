@@ -2,6 +2,7 @@ import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION,profile} from './rules.mjs';
 import {COOPERATION_PAIRS,cooperationCoordination} from './cooperation-pairs.mjs';
 import {createSkillCooperation} from './cooperation-skills.mjs';
 import {preferredTempo} from './strategy.mjs';
+import {sharedCooperationPlan} from './shared-cooperation.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -85,13 +86,13 @@ function connectedEdges(members,graph){
 export function cooperationPlan(members,graph){
  members=members.filter(m=>m.champion);
  if(![2,3].includes(members.length)||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
- let edges=connectedEdges(members,graph);if(!edges)return null;
+ let edges=connectedEdges(members,graph);if(!edges)return sharedCooperationPlan(members,graph);
  // A generic control trigger is not automatically a teamfight composition.
  // Use reviewed member functions for its overall tempo, while keeping authored
  // pair timing (including protection relays) intact.
  if(edges.every(e=>e.family.startsWith('skills:'))){
   const profiles=members.map(m=>graph.profile(m)),traits=Object.fromEntries(['engage','aoe','peel','sustain','poke'].map(k=>[k,profiles.filter(p=>p[k]).length]));
-  const tempo=preferredTempo({traits});edges=edges.map(e=>({...e,tempo}));
+  const tempo=preferredTempo({traits,members});edges=edges.map(e=>({...e,tempo}));
  }
  const current=edges.filter(e=>e.current),main=current[0],coordination=main.family.startsWith('skills:')?graph.skills.coordination(members,edges):cooperationCoordination(members,graph,edges),steps=coordination.relaySteps||edges.map(e=>e.step);
  return {name:`配合 · ${main.name}${members.length===3?'三人联动':''}`,members:members.map(m=>({role:m.role,champion:m.champion})),edges,...coordination,

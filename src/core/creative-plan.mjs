@@ -2,11 +2,12 @@ import {RULES_PATCH,RULES_VERSION} from './rules.mjs';
 import {fingerprint} from './catalog-review.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
-const archetypes=['chain','poke','dive','protect','mixed','cooperation'];
+const archetypes=['chain','poke','dive','protect','mixed','cooperation','shared'];
+const tempos=['early','teamfight','protect','poke','growth'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
 const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&value.length<=max&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value);
 const memberKey=m=>m.role+':'+m.champion;
-const content=plan=>Object.fromEntries([...['schema','archetype','archetypeName','name','tempo','members','ordered','why','plan','steps','window','caution','feasibility','patch','dataVersion','rulesVersion'],...(plan.archetype==='cooperation'?['cooperation']:[])].map(key=>[key,plan[key]]));
+const content=plan=>Object.fromEntries([...['schema','archetype','archetypeName','name','tempo','members','ordered','why','plan','steps','window','caution','feasibility','patch','dataVersion','rulesVersion'],...(plan.archetype==='cooperation'?['cooperation']:plan.archetype==='shared'?['shared']:[])].map(key=>[key,plan[key]]));
 export const creativePlanId=plan=>'creative-'+plan.archetype+'-'+fingerprint(content(plan));
 
 // Keep the original conditional interactions with the saved member pages.
@@ -14,7 +15,7 @@ export const creativePlanId=plan=>'creative-'+plan.archetype+'-'+fingerprint(con
 function savedCooperation(value,members){
  if(!value||!Array.isArray(value.members)||JSON.stringify(value.members)!==JSON.stringify(members)||!Array.isArray(value.edges)||value.edges.length<members.length-1||value.edges.length>3)throw Error('机制搭配成员与联动不一致');
  const ids=new Set(members.map(m=>m.champion)),seen=new Set(),edges=value.edges.map(edge=>{
-  if(!edge||!ids.has(edge.a)||!ids.has(edge.b)||edge.a===edge.b||typeof edge.current!=='boolean'||!['early','teamfight','protect','poke'].includes(edge.tempo))throw Error('机制搭配联动格式不正确');
+  if(!edge||!ids.has(edge.a)||!ids.has(edge.b)||edge.a===edge.b||typeof edge.current!=='boolean'||!tempos.includes(edge.tempo))throw Error('机制搭配联动格式不正确');
   const pair=[edge.a,edge.b].sort().join(':');if(seen.has(pair))throw Error('机制搭配联动重复');seen.add(pair);
   const result={a:edge.a,b:edge.b,current:edge.current,tempo:edge.tempo};
   if(edge.control!==undefined){if(typeof edge.control!=='boolean')throw Error('机制搭配控制条件不正确');result.control=edge.control;}
@@ -31,7 +32,7 @@ function savedCooperation(value,members){
  }
  if(value.relaySteps!==undefined){if(!result.memberJobs||!Array.isArray(value.relaySteps)||value.relaySteps.length!==members.length||!value.relaySteps.every(step=>text(step,400)))throw Error('机制搭配整体接力不完整');result.relaySteps=[...value.relaySteps];}
  for(const [field,max] of [['name',100],['sourceNote',300],['patch',30],['reviewedAt',40]]){if(!text(value[field],max))throw Error('机制搭配说明不完整');result[field]=value[field];}
- if(!['early','teamfight','protect','poke'].includes(value.tempo))throw Error('机制搭配节奏不正确');result.tempo=value.tempo;
+ if(!tempos.includes(value.tempo))throw Error('机制搭配节奏不正确');result.tempo=value.tempo;
  result.steps=result.relaySteps||edges.map(e=>e.step);result.conditions=edges.map(e=>e.condition);result.failures=edges.map(e=>e.failure);result.why=result.steps.join(' ');result.sourceUrls=[...new Set(edges.flatMap(e=>e.sourceUrls))];
  return result;
 }
@@ -45,15 +46,35 @@ function cooperationDescriptor(source,data){
   patch:cooperation.patch,dataVersion:data.version,rulesVersion:cooperation.reviewedAt};
 }
 
+// A shared resource/meeting plan contains no control edges and earns no
+// mechanism bonus. Persist its reviewed jobs and original source identities.
+function savedShared(value,members){
+ if(!value||value.kind!=='shared'||value.tempo!=='growth'||value.bonus!==0||!Array.isArray(value.edges)||value.edges.length||JSON.stringify(value.members)!==JSON.stringify(members))throw Error('共同分工不能包含机制联动或加分');
+ const result={kind:'shared',tempo:'growth',bonus:0,members:members.map(m=>({...m})),edges:[]};
+ for(const [field,max] of [['name',100],['why',700],['sourceNote',300],['opening',700],['economy',500],['patch',30],['reviewedAt',40]]){if(!text(value[field],max))throw Error('共同分工说明不完整');result[field]=value[field];}
+ const seen=new Set();if(!Array.isArray(value.memberJobs)||value.memberJobs.length!==members.length)throw Error('共同分工成员不完整');
+ result.memberJobs=value.memberJobs.map(m=>{if(!members.some(member=>memberKey(member)===memberKey(m))||seen.has(memberKey(m))||!text(m.job,700))throw Error('共同分工与成员不一致');seen.add(memberKey(m));return {role:m.role,champion:m.champion,job:m.job};});
+ for(const [field,count,max] of [['steps',3,400],['conditions',2,200],['failures',2,200]]){if(!Array.isArray(value[field])||value[field].length!==count||!value[field].every(v=>text(v,max)))throw Error('共同分工条件不完整');result[field]=[...value[field]];}
+ if(JSON.stringify(value.relaySteps)!==JSON.stringify(result.steps))throw Error('共同分工步骤不一致');result.relaySteps=[...result.steps];
+ if(!Array.isArray(value.sourceUrls)||value.sourceUrls.length!==members.length||new Set(value.sourceUrls).size!==members.length)throw Error('共同分工技能来源不完整');
+ const sourceIds=value.sourceUrls.map(url=>typeof url==='string'&&url.match(/^https:\/\/ddragon\.leagueoflegends\.com\/cdn\/[0-9.]+\/data\/en_US\/champion\/([A-Za-z][A-Za-z0-9]{0,39})\.json$/)?.[1]);
+ if(sourceIds.some(id=>!members.some(m=>m.champion===id))||new Set(sourceIds).size!==members.length)throw Error('共同分工技能来源与成员不一致');result.sourceUrls=[...value.sourceUrls];
+ return result;
+}
+function sharedDescriptor(source,data){
+ const members=source.members.map(m=>({role:m.role,champion:m.champion})),shared=savedShared(source,members);
+ return {archetype:'shared',archetypeName:'共同分工',name:shared.name,tempo:shared.tempo,members,shared,ordered:shared.memberJobs,why:shared.why,plan:[shared.opening,shared.economy].join(' '),steps:shared.steps,window:shared.conditions.join(' '),caution:shared.failures.join(' '),feasibility:shared.sourceNote,patch:shared.patch,dataVersion:data.version,rulesVersion:shared.reviewedAt};
+}
+
 // This is one reusable cooperation plan, never game history or a performance
 // claim. Its content identity keeps different members and revisions separate.
 export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
- if(!value||value.schema!==1||!archetypes.includes(value.archetype)||value.verified!==false||!['early','teamfight','protect','poke'].includes(value.tempo))throw Error('创意组合说明格式不正确');
+ if(!value||value.schema!==1||!archetypes.includes(value.archetype)||value.verified!==false||!tempos.includes(value.tempo))throw Error('创意组合说明格式不正确');
  const result={schema:1,archetype:value.archetype,tempo:value.tempo,verified:false};
  for(const [key,max] of [['archetypeName',80],['name',100],['why',700],['plan',700],['window',400],['caution',500],['feasibility',300],['patch',30],['dataVersion',30],['rulesVersion',40]]){
   if(!text(value[key],max))throw Error('创意组合说明内容不完整');result[key]=value[key];
  }
- const cooperation=value.archetype==='cooperation',count=value.members?.length;
+ const cooperation=value.archetype==='cooperation'||value.archetype==='shared',count=value.members?.length;
  if(!Array.isArray(value.members)||!(cooperation?[2,3].includes(count):count===3)||!Array.isArray(value.ordered)||value.ordered.length!==count)throw Error('创意组合成员格式不正确');
  result.members=value.members.map(m=>{if(!m||!roles.includes(m.role)||!hero(m.champion))throw Error('创意组合成员格式不正确');return {role:m.role,champion:m.champion};});
  if(new Set(result.members.map(m=>m.role)).size!==count||new Set(result.members.map(m=>m.champion)).size!==count)throw Error('创意组合成员重复');
@@ -66,22 +87,27 @@ export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
  const members=new Set(result.members.map(memberKey)),ordered=new Set();
  result.ordered=value.ordered.map(m=>{if(!m||!members.has(memberKey(m))||ordered.has(memberKey(m))||!text(m.job,cooperation?700:200))throw Error('创意组合分工与成员不一致');ordered.add(memberKey(m));return {role:m.role,champion:m.champion,job:m.job};});
  if(!Array.isArray(value.steps)||!(cooperation?value.steps.length>=count-1&&value.steps.length<=3:value.steps.length===3)||!value.steps.every(s=>text(s,400)))throw Error('创意组合衔接顺序格式不正确');result.steps=[...value.steps];
- if(cooperation){
+ if(value.archetype==='cooperation'){
   result.cooperation=savedCooperation(value.cooperation,result.members);
   if(JSON.stringify(result.steps)!==JSON.stringify(result.cooperation.steps)||result.window!==result.cooperation.conditions.join(' ')||result.caution!==result.cooperation.failures.join(' '))throw Error('机制搭配条件与保存说明不一致');
   if(result.cooperation.memberJobs&&(JSON.stringify(result.ordered)!==JSON.stringify(result.cooperation.memberJobs)||result.plan!==[result.cooperation.opening,result.cooperation.economy].join(' ')))throw Error('机制搭配分工与保存说明不一致');
+ }
+ if(value.archetype==='shared'){
+  result.shared=savedShared(value.shared,result.members);
+  const expected=sharedDescriptor(result.shared,{version:result.dataVersion});
+  for(const key of ['archetypeName','name','tempo','ordered','why','plan','steps','window','caution','feasibility','patch','rulesVersion'])if(JSON.stringify(result[key])!==JSON.stringify(expected[key]))throw Error('共同分工条件与保存说明不一致');
  }
  if(typeof value.createdAt!=='string'||!Number.isFinite(Date.parse(value.createdAt)))throw Error('创意组合保存时间格式不正确');result.createdAt=value.createdAt;
  result.id=creativePlanId(result);if(value.id!==result.id)throw Error('创意组合内容与标识不一致');
  if(slots&&!(allowUnknown?creativePlanCompatible(result,slots):creativePlanMatches(result,slots)))throw Error('创意组合说明与保存阵容不一致');
  return result;
 }
-const validMemberCount=plan=>Array.isArray(plan?.members)&&(plan.archetype==='cooperation'?[2,3].includes(plan.members.length):plan.members.length===3);
+const validMemberCount=plan=>Array.isArray(plan?.members)&&(['cooperation','shared'].includes(plan.archetype)?[2,3].includes(plan.members.length):plan.members.length===3);
 export function creativePlanMatches(plan,slots){return !!plan&&validMemberCount(plan)&&plan.members.every(m=>slots?.some(s=>s.role===m.role&&s.champion===m.champion));}
 export function creativePlanCompatible(plan,slots){return !!plan&&validMemberCount(plan)&&Array.isArray(slots)&&plan.members.every(m=>!slots.some(s=>s.role===m.role&&s.champion&&s.champion!==m.champion||s.champion===m.champion&&s.role!==m.role));}
 export function captureCreativePlan(result,data,now=new Date().toISOString()){
  if(result.creativePlan)return validateCreativePlan(result.creativePlan,result.slots);
- const source=result.creative||(result.adaptive&&!result.trio&&!result.duo?cooperationDescriptor(result.adaptive,data):null);if(!source)return null;
+ const source=result.creative||(result.adaptive&&!result.trio&&!result.duo?(result.adaptive.kind==='shared'?sharedDescriptor:cooperationDescriptor)(result.adaptive,data):null);if(!source)return null;
  const editable=result.editableTargets??result.targets;
  const plan={patch:RULES_PATCH,dataVersion:data.version,rulesVersion:RULES_VERSION,...source,schema:1,verified:false,createdAt:now,...(Array.isArray(editable)?{editableTargets:roles.filter(role=>editable.includes(role)&&source.members.some(m=>m.role===role))}:{})};plan.id=creativePlanId(plan);
  return validateCreativePlan(plan,result.slots);
@@ -89,6 +115,7 @@ export function captureCreativePlan(result,data,now=new Date().toISOString()){
 export function creativeMemberCombo(value,champion,role){
  if(!value)return null;const plan=validateCreativePlan(value);
  if(!plan.members.some(m=>m.champion===champion&&m.role===role))return null;
- return {...plan,origin:'creative',risk:plan.caution,members:plan.members.map(member=>({...member,job:plan.ordered.find(step=>memberKey(step)===memberKey(member)).job})),...(plan.cooperation?{early:plan.cooperation.opening||null,economy:plan.cooperation.economy||null,sources:plan.cooperation.sourceUrls.map(url=>({name:'Riot 官方技能资料',kind:'技能依据',url}))}:{})};
+ const source=plan.shared||plan.cooperation;
+ return {...plan,origin:'creative',risk:plan.caution,members:plan.members.map(member=>({...member,job:plan.ordered.find(step=>memberKey(step)===memberKey(member)).job})),...(source?{early:source.opening||null,economy:source.economy||null,sources:source.sourceUrls.map(url=>({name:'Riot 官方技能资料',kind:'技能依据',url}))}:{})};
 }
 export const creativeComboContext=combo=>combo?{comboId:combo.id,...(combo.origin==='creative'?{creativePlan:validateCreativePlan(combo)}:{})}:{};
