@@ -1,9 +1,10 @@
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_COOP_RESTART==='1',windows=[];let copies=[],runeWrites=0;
+const shooters=process.env.RIFT_BUDDY_COOP_SHOOTERS==='1',farming=process.env.RIFT_BUDDY_COOP_FARMING==='1',anchorRole=shooters?'mid':'top',previewRole=shooters?'support':'jungle';
 const coverageData=process.env.RIFT_BUDDY_COOP_COVERAGE==='1';
 const adaptiveData=process.env.RIFT_BUDDY_COOP_DATA==='1';
-const crossLane=process.env.RIFT_BUDDY_COOP_CROSS_LANE==='1',lockedFriends=process.env.RIFT_BUDDY_COOP_LOCKED_FRIENDS==='1',friend=coverageData?'Shen':adaptiveData?'Gwen':lockedFriends?'Fiora':crossLane?'Darius':'Trundle',expectedMembers=[['top',friend],['jungle',coverageData?'Poppy':adaptiveData?'Graves':lockedFriends?'JarvanIV':crossLane?'LeeSin':'Sejuani'],['mid',coverageData?'Brand':adaptiveData?'Vex':lockedFriends?'Syndra':crossLane?'Ahri':'Seraphine']],marker=coverageData?'撞墙':adaptiveData?'恐惧':lockedFriends?'破绽':crossLane?'魅惑':'四层';
+const crossLane=process.env.RIFT_BUDDY_COOP_CROSS_LANE==='1',lockedFriends=process.env.RIFT_BUDDY_COOP_LOCKED_FRIENDS==='1',friend=shooters?'Lux':farming?'Garen':coverageData?'Shen':adaptiveData?'Gwen':lockedFriends?'Fiora':crossLane?'Darius':'Trundle',expectedMembers=shooters?[['mid','Lux'],['bottom','Jhin'],['support','Nautilus']]:farming?[['top','Garen'],['jungle','MasterYi'],['mid','Annie']]:[['top',friend],['jungle',coverageData?'Poppy':adaptiveData?'Graves':lockedFriends?'JarvanIV':crossLane?'LeeSin':'Sejuani'],['mid',coverageData?'Brand':adaptiveData?'Vex':lockedFriends?'Syndra':crossLane?'Ahri':'Seraphine']],marker=shooters?'标记':farming?'击杀或助攻':coverageData?'撞墙':adaptiveData?'恐惧':lockedFriends?'破绽':crossLane?'魅惑':'四层';
 globalShortcut.register=()=>false;global.fetch=async()=>{throw Error('Isolated cooperation smoke: network disabled');};https.request=()=>{throw Error('Isolated cooperation smoke: game sockets disabled');};
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -23,14 +24,15 @@ async function run(){
  assert.ok(await js('document.querySelector(".result-card").textContent.includes("机制搭配")'));
  if((crossLane||lockedFriends)&&!restart)await capture('main.png');
  const {createCooperationGraph,cooperationPlan}=await import(require('node:url').pathToFileURL(path.join(base,'src/core/cooperation.mjs'))),expectedCooperation=cooperationPlan(expectedMembers.map(([role,champion])=>({role,champion})),createCooperationGraph(JSON.parse(await fs.readFile(path.join(base,'data/game.json'))).champions));assert.ok(expectedCooperation);
- const initial=await state();assert.equal(initial.draft.slots.find(s=>s.role==='top').champion,friend);assert.equal(initial.draft.slots.find(s=>s.role==='top').manualPosition,true);
+ assert.equal(await js('document.querySelectorAll(".result-card .result-actions-summary")[0]?.querySelectorAll("p").length'),3,'Main card must show all three member actions');
+ const initial=await state();assert.equal(initial.draft.slots.find(s=>s.role===anchorRole).champion,friend);assert.equal(initial.draft.slots.find(s=>s.role===anchorRole).manualPosition,true);
  let previewRuneId;
  if(!restart){
   await click('[data-action=companion-attach]');await until(()=>js('!!document.querySelector(".companion-candidate")'),'Preview candidates missing');
   for(const [role,id] of expectedMembers){
    await click('[data-action=companion-preview][data-result-index="0"][data-id="'+id+'"][data-role="'+role+'"]');
    const note=await js('document.querySelector(".companion-note")?.textContent');assert.ok(note?.includes(expectedCooperation.name),'Sidebar preview lost cooperation for '+id);
-   if(role==='jungle'){
+   if(role===previewRole){
     const option=await js('(()=>{const s=document.querySelector("[data-companion-field=rune]");return [...s.options].find(o=>o.value!==s.value)?.value;})()');assert.ok(option,'Fixture requires an alternate complete rune page');
     await js('(()=>{const s=document.querySelector("[data-companion-field=rune]");s.value='+JSON.stringify(option)+';s.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(120);previewRuneId=option;
     assert.ok((await js('document.querySelector(".companion-note")?.textContent'))?.includes(expectedCooperation.name),'Editing runes lost the chosen cooperation');
@@ -50,10 +52,10 @@ async function run(){
  if(!restart){await click('.plan-drawer [data-action=favorite-result][data-index="0"]');await until(async()=>(await state()).favorites.some(f=>f.type==='team'),'Favorite missing');assert.equal(await js('document.querySelector(".plan-drawer [data-action=favorite-result]").getAttribute("aria-pressed")'),'true');assert.ok(await js('document.querySelector(".plan-drawer [data-action=favorite-result]").textContent.includes("点击取消")'));await click('.plan-drawer [data-action=favorite-result][data-index="0"]');assert.equal((await state()).favorites.filter(f=>f.type==='team').length,0);assert.equal(await js('document.querySelector(".plan-drawer [data-action=favorite-result]").getAttribute("aria-pressed")'),'false');await click('.plan-drawer [data-action=favorite-result][data-index="0"]');await click('[data-action=use-result][data-index="0"]');await until(()=>js('!!document.querySelector(".result-card")'),'Accepted plan missing');}
  else await click('[data-action=close]');
  const accepted=await state();for(const [role,id]of expectedMembers)assert.ok(accepted.draft.slots.some(s=>s.role===role&&s.champion===id&&s.locked));
- assert.ok(accepted.draft.slots.find(s=>s.role==='top').manualPosition);assert.equal(accepted.draft.slots.find(s=>s.role==='top').clientCellId,2);
+ assert.ok(accepted.draft.slots.find(s=>s.role===anchorRole).manualPosition);assert.equal(accepted.draft.slots.find(s=>s.role===anchorRole).clientCellId,2);
  const plan=accepted.draft.creativePlan;assert.equal(plan.archetype,'cooperation');const favorite=accepted.favorites.find(f=>f.type==='team');assert.deepEqual(favorite.creativePlan,plan);assert.equal(favorite.configurations.length,3);assert.ok(favorite.configurations.every(c=>c.creativePlan.id===plan.id));
- if(previewRuneId)assert.equal(favorite.configurations.find(c=>c.role==='jungle').runeId,previewRuneId,'Accepting the plan must preserve the rune page edited in its sidebar preview');
- const expectedEditable=lockedFriends?['jungle']:['jungle','mid'];assert.deepEqual(plan.editableTargets,expectedEditable);
+ if(previewRuneId)assert.equal(favorite.configurations.find(c=>c.role===previewRole).runeId,previewRuneId,'Accepting the plan must preserve the rune page edited in its sidebar preview');
+ const expectedEditable=shooters?['support']:farming?['mid']:lockedFriends?['jungle']:['jungle','mid'];assert.deepEqual(plan.editableTargets,expectedEditable);
  await click('[data-action=result-detail][data-index="0"]');
  const controls=await js('[...document.querySelectorAll(".plan-drawer [data-action=replace-member]")].map(b=>b.dataset.role)');
  assert.deepEqual(controls,expectedEditable,'Accept/restart must not add replacement controls for fixed friends');
@@ -84,6 +86,7 @@ async function run(){
  }
  await click('[data-action=close]');
  await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")&&!!document.querySelector(".companion-candidate")'),'Sidebar missing');
+ assert.equal(await js('document.querySelector(".companion-candidate .result-actions-summary")?.querySelectorAll("p").length'),3,'Sidebar must show all member actions before expanding details');
  const side=await js('document.querySelector(".companion-candidate").textContent');assert.ok(side.includes('成立条件')&&side.includes(marker)&&side.includes('未经组合对局验证'));
  for(const condition of plan.cooperation.conditions)assert.ok(side.includes(condition),'Sidebar omitted a member condition');assert.ok(side.includes(plan.cooperation.economy));
  await js('[...document.querySelectorAll("details[data-companion-disclosure^=cooperation]")].forEach(d=>d.open=true)');

@@ -79,6 +79,10 @@ jobs:
         run: node scripts/smoke-package-cooperation.mjs --adaptive-data
       - name: Check expanded cooperation and sidebar preview choices before accepting a plan
         run: node scripts/smoke-package-cooperation.mjs --coverage
+      - name: Check shooter marks and farming friends across saved preparations
+        run: |
+          node scripts/smoke-package-cooperation.mjs --shooters
+          node scripts/smoke-package-cooperation.mjs --farming
       - name: Check member statistics refresh, offline caches and quest-only synchronization
         run: node scripts/smoke-package-pair-refresh.mjs
       - name: Check sidebar choices survive uncached sources and individual edits

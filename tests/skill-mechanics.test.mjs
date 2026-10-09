@@ -1,3 +1,4 @@
+import {selectBuildSource} from "../src/core/build-source.mjs";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -96,4 +97,23 @@ test('parsed special orders survive cache validation, plan rendering and live gu
  const aphelios=getBuild(hero('Aphelios'),'bottom',data);
  assert.match(skillSelector(aphelios),/属性加点/);
  assert.match(recommendSkill({champion:'Aphelios',priority:'QWE',live:live(6,{Q:3,W:1,E:1,R:1})}).reason,/属性点/);
+});
+
+test('uncached Udyr sources learn E by level four and retain legal four-stance upgrades and guide advice',()=>{
+ const fixture=structuredClone(data);selectBuildSource(fixture,{region:'kr',tier:'diamond_plus'});
+ for(const role of ['top','jungle']){
+  const build=getBuild(hero('Udyr'),role,fixture);assert.equal(build.reference,null);
+
+  const skills={Q:0,W:0,E:0,R:0},sequence=[];
+  for(let level=1;level<=18;level++){
+   const snapshot=live(level,{...skills}),advice=recommendSkill({champion:'Udyr',role,priority:build.priority,first:build.first,live:snapshot});
+   assert.ok(skillOptions('Udyr',snapshot).allowed.includes(advice.next));skills[advice.next]++;sequence.push(advice.next);
+   if(level===4)assert.ok(skills.E>0,'Approach/stun advice must not omit learning E');
+  }
+  assert.match(sequence.join(''),/E/);assert.equal(Object.values(skills).reduce((sum,n)=>sum+n,0),18);
+  const opening={Q:role==='jungle'?1:0,W:1,E:0,R:role==='jungle'?1:2};
+  const model=createGuideModel(fixture,selectGuide(null,{id:'Udyr',role,mode:'rift'}),{...live(4,opening),available:true,champion:'Udyr',mode:'rift',mapId:11,inventory:[],gold:0,at:Date.now()});
+  assert.equal(model.nextSkill,'E');assert.equal(model.priority,'RWEQ');
+ }
+ const cached=getBuild(hero('Udyr'),'jungle',data);assert.equal(cached.skillOrder,data.builds['Udyr:jungle'].skillOptions[0].order,'Available full source order must retain precedence');
 });
