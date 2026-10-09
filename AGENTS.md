@@ -8,3 +8,4 @@ Windows desktop app. Use the native Windows Node.js / pnpm runtime; WSL is unava
 - Preserve manually configured positions during client sync. Never invent enemy champions, bans, or hidden player data.
 - No match-history feature, accounts, subscriptions, analytics, or uploads.
 - Validate with `pnpm test`, `pnpm check`, then a packaged-app smoke test. Preserve user files and do not publish without explicit authorization.
+- Phase delivery defaults to pushing and merging code. Build, verify and keep installers locally; upload release binaries only when the user explicitly requests them or for a major update. Keep README downloads linked to an already published package and distinguish it from the current source version.
