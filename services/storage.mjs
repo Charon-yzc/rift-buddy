@@ -84,11 +84,13 @@ export async function readBackup(filename){
 export function mergeState(current,backup,champions){
  const incoming=validateState(backup),favorites=[...current.favorites];
  for(const favorite of incoming.favorites)if(!favorites.some(f=>f.id===favorite.id))favorites.push(favorite);
+ if(favorites.length>500)throw Error('导入后收藏将超过 500 项，整次导入已取消；原收藏与偏好保留');
  const explicit=key=>Object.hasOwn(backup.preferences||{},key);
  const style=explicit('style')?incoming.preferences.style:current.preferences.style;
  const preparations=[...(current.preparations||[])];
- for(const configuration of incoming.preparations)if(!storedPreparation(preparations,configuration)&&preparations.length<PREPARATION_LIMIT)preparations.push(configuration);
- return validateState({...current,favorites:favorites.slice(0,500),preparations,
+ for(const configuration of incoming.preparations)if(!storedPreparation(preparations,configuration))preparations.push(configuration);
+ if(preparations.length>PREPARATION_LIMIT)throw Error(`导入后英雄配置将超过 ${PREPARATION_LIMIT} 项，整次导入已取消；原收藏与偏好保留`);
+ return validateState({...current,favorites,preparations,
   excluded:[...new Set([...current.excluded,...incoming.excluded])].filter(id=>champions.some(c=>c.id===id)),
   preferences:{...current.preferences,style,...(explicit('buildSource')?{buildSource:incoming.preferences.buildSource}:{}),...(explicit('presentation')?{presentation:incoming.preferences.presentation}:{}),...(explicit('autoCheck')?{autoCheck:incoming.preferences.autoCheck}:{}),...(explicit('autoSync')?{autoSync:incoming.preferences.autoSync}:{}),
    ...(Object.hasOwn(backup.preferences||{},'play')?{play:incoming.preferences.play}:{}),

@@ -13,6 +13,7 @@ import {reviewBaseline} from './core/catalog-review.mjs';
 import {buildFavoriteId,selectedBuildFields,findSavedBuild} from './core/build-favorites.mjs';
 import {teamFavoriteId,findSavedTeam,captureTeamConfigurations} from './core/team-favorites.mjs';
 import {pairStatisticsText} from './pair-statistics-view.mjs';
+import {runeWriteContext} from './core/rune-context.mjs';
 import {cooperationText} from './cooperation-view.mjs';
 import {captureCreativePlan,creativePlanMatches,creativePlanCompatible,validateCreativePlan,creativeMemberCombo,creativeComboContext} from './core/creative-plan.mjs';
 import {BUNDLED_CATALOG,configureCatalog,catalogIssues} from './core/catalog.mjs';
@@ -447,7 +448,7 @@ async function useItemSet(action,el){
  }finally{itemSetPending='';while(itemSetStatuses.size>50)itemSetStatuses.delete(itemSetStatuses.keys().next().value);render();if(buildView)renderBuild();}
 }
 async function applyPreparedRunes(page,ticket){
- const result=await api.applyRunes(page);
+ const result=await api.applyRunes(page,runeWriteContext(client));
  await sync(false,{fresh:true});
  const confirmed=runeAppliedKeys.confirm(ticket);
  toast(confirmed?'本次已应用：'+result.name:'符文写入已完成，但选人或连接已变化；请在客户端核对后重新应用',!confirmed);

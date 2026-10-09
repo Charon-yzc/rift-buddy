@@ -205,9 +205,9 @@ async function boot(){
    next.imageOverrides=cached.overrides;data=next;useCatalog(catalogStore.summary());guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
   }finally{updating=false;}
  });
- guard('apply-runes',async page=>{
+ guard('apply-runes',async(page,context)=>{
   if(applyingRunes)throw new Error('符文正在应用，请稍后');applyingRunes=true;
-   try{const result=helper.active()?await helper.request('applyRunes',{page}):await lcu.writeRunePage({page,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});state.ownedPageId=result.pageId;await saveCurrentState();return result;}
+   try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);const result=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});state.ownedPageId=result.pageId;await saveCurrentState();return result;}
   finally{applyingRunes=false;}
  });
  guard('copy',text=>{clipboard.writeText(String(text).slice(0,20000));return true;});
