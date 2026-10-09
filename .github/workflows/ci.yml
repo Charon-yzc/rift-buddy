@@ -71,6 +71,8 @@ jobs:
         run: node scripts/smoke-package-creative-plan-continuity.mjs --reordered
       - name: Check public-opponent plans and duo phases in packaged windows
         run: node scripts/smoke-package-matchups.mjs
+      - name: Check public-opponent conditions preserve accepted team order and own skill gates
+        run: node scripts/smoke-package-matchups.mjs --team-order
       - name: Check accepted mechanism plans across member guides and restarts
         run: node scripts/smoke-package-cooperation.mjs
       - name: Check locked cross-lane plans and complete late-item choices across restarts

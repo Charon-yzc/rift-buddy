@@ -46,7 +46,7 @@ function companionPlanSummary(b,data,runes){
 export function companionPlanView(data,plan,favorites=[],{refreshing=false,error='',enemyIds=[],opponentId='',matchupStatus='',publicContext='',itemSetStatuses=new Map()}={}){
  if(!plan)return '<div class="companion-empty">选好英雄后自动准备方案。也可以在推荐卡片中预览装备、符文和加点。</div>';
  const {build:b,selection:s}=plan,key=e(planKey(s)),runes=new Map(data.runes.flatMap(t=>t.slots.flatMap(slot=>slot.runes.map(r=>[r.id,r]))));
- const opponent=publicMatchupOpponent(data,enemyIds,opponentId),coach=s.mode==='rift'?heroCoach({data,champion:s.id,role:s.role,priority:b.priority,enemyId:opponent?.id,combo:b.combo}):null;
+ const opponent=publicMatchupOpponent(data,enemyIds,opponentId),coach=s.mode==='rift'?heroCoach({data,champion:s.id,role:s.role,priority:b.priority,enemyId:opponent?.id,combo:b.combo,stage:b.combo?'key':'opening'}):null;
  const saved=!!findSavedBuild(favorites,{...s,conditions:s.conditions||[],coreIndex:b.selectedCoreIndex||0,build:b});
  const baseline=b.runeOptions[0]?.page.selectedPerkIds||[];
  const featured=featuredRuneOptions(b.runeOptions);

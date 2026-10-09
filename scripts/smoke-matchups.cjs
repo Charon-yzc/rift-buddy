@@ -81,6 +81,47 @@ async function run(){
   const expandedWidth=await js('(()=>{const row=document.querySelector(".combo-row [data-duo-play=naut-samira]").closest(".combo-row"),list=row.parentElement;return {row:row.getBoundingClientRect().width,list:list.getBoundingClientRect().width,available:list.clientWidth-parseFloat(getComputedStyle(list).paddingLeft)-parseFloat(getComputedStyle(list).paddingRight),column:getComputedStyle(row).gridColumn,layout:getComputedStyle(list).display,open:row.querySelector(":scope>details").open};})()');assert.ok(Math.abs(expandedWidth.row-expandedWidth.available)<=2&&expandedWidth.column==='1 / -1','Expanded pair explanation should use the available list width: '+JSON.stringify(expandedWidth));
   await js('document.querySelector(".combo-row [data-duo-play=naut-samira]").closest(".combo-row").scrollIntoView({block:"start"});void 0');await capture(main,'library-naut-samira.png');
   report={passed:true,archiveSha256:release.archiveSha256,geometry,ownPlans:plans,explicitPublicTargetOnly:true,vanishedTargetCleared:true,activeTargetMenuInvalidated:true,newDraftCleared:true,fullDrawerSharesTarget:true,loadoutUnchanged:true,duoSideFullAndLibrary:true,duoCopy:true,clipboardMocked:true,runeWrites};
+ }else if(phase.startsWith('team-order')){
+  await app.whenReady();
+  const core=await import(pathToFileURL(path.join(base,'src/core/guide.mjs')).href);
+  const {createSlots}=await import(pathToFileURL(path.join(base,'src/core/recommend.mjs')).href);
+  const {createCooperationGraph,cooperationPlan}=await import(pathToFileURL(path.join(base,'src/core/cooperation.mjs')).href);
+  const {captureCreativePlan}=await import(pathToFileURL(path.join(base,'src/core/creative-plan.mjs')).href);
+  const graph=createCooperationGraph(data.champions),restored=phase.endsWith('restart'),saveFile=path.join(root,'../team-order/guide-state.json');
+  const groups=[[['jungle','JarvanIV'],['mid','Syndra']],[['top','Kayle'],['jungle','Kindred'],['mid','Vladimir']]];
+  const plans=groups.map(members=>captureCreativePlan({adaptive:cooperationPlan(members.map(([role,champion])=>({role,champion})),graph),slots:createSlots().map(s=>{const m=members.find(([role])=>role===s.role);return {...s,...(m?{champion:m[1],party:true,locked:true}:{})};})},data));
+  let state=restored?core.validateGuideState(JSON.parse(await fs.readFile(saveFile))):core.selectGuide(null,{id:'Syndra',role:'mid',mode:'rift',comboId:plans[0].id,creativePlan:plans[0]});
+  const liveFor=(id,role)=>({available:true,champion:id,position:role,mode:'rift',mapId:11,queueId:420,level:7,gold:800,gameTime:900,inventory:[],skills:{Q:3,W:1,E:1,R:id==='Syndra'?0:1},enemies:['Morgana','Janna','Soraka'].map(enemy=>({id:enemy,name:hero(enemy).name,level:7,items:[],itemsKnown:true})),allies:[],teamKnown:true,roster:['Morgana','Janna','Soraka'].map(champion=>({champion,side:'enemy',self:false,inventory:[],itemsKnown:true,level:7}))});
+  let live=liveFor(state.selection.id,state.selection.role);
+  const factory=require(path.join(base,'electron/guide-window.cjs'));
+  const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);await fs.writeFile(saveFile,JSON.stringify(state,null,2));},getModel:()=>core.createGuideModel(data,state,{...live,at:Date.now()}),currentSelection:()=>null,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:false}),isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
+  guide.show();const w=guide.window(),{js,click,change}=actions(w);
+  await until(()=>js('!!document.querySelector("[data-tab=team]")'),'Team guide not loaded');await click('[data-tab=team]');
+  if(restored){const initial=await js('window.guide.bootstrap()');assert.equal(initial.model.selection.id,'Vladimir');assert.equal(initial.model.selection.threatId,'Janna');assert.equal(initial.model.coach.sequenceSource,'team');for(const step of plans[1].steps)assert.ok(initial.model.coach.sequence.includes(step));}
+  const verified=[];
+  for(const plan of plans)for(const member of plan.members){
+   state=core.selectGuide(state,{id:member.champion,role:member.role,mode:'rift',comboId:plan.id,creativePlan:plan});live=liveFor(member.champion,member.role);guide.publish();
+   await until(()=>js('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(member.champion)+')'),'Member plan missing');
+   await change('#guide-stage','key');
+   for(const enemyId of ['Morgana','Janna','Soraka']){
+    await change('#guide-threat',enemyId);
+    const payload=await js('window.guide.bootstrap()');assert.equal(payload.model.coach.matchup.enemy.id,enemyId);assert.equal(payload.model.coach.sequenceSource,'team');assert.deepEqual(payload.model.coach.unlearned,[]);
+    for(const step of plan.steps)assert.ok(payload.model.coach.sequence.includes(step));
+    assert.ok(await js('document.querySelector(".hero-coach .coach-sequence").textContent.endsWith('+JSON.stringify(plan.steps.join(' → '))+')'),'Rendered enemy plan replaced the accepted team order');
+   }
+   if(member.champion==='Syndra'){
+    live.skills.E=0;guide.publish();await until(()=>js('!!document.querySelector("[data-guide-section=coach-future-sequence]")'),'Own missing spell did not gate the team action');
+    const missing=await js('window.guide.bootstrap()');assert.deepEqual(missing.model.coach.unlearned,['E']);for(const step of plan.steps)assert.ok(missing.model.coach.futureSequence.includes(step));
+    live.skills.E=1;guide.publish();
+   }
+   live.enemies=[];live.roster=[];guide.publish();await until(()=>js('document.querySelectorAll("[data-matchup-enemy]").length===0'),'Withdrawn enemy leaked into team coaching');
+   const withdrawn=await js('window.guide.bootstrap()');for(const step of plan.steps)assert.ok(withdrawn.model.coach.sequence.includes(step));
+   live=liveFor(member.champion,member.role);guide.publish();await change('#guide-threat','Janna');
+   await js('window.guide.control("copy")');for(const step of plan.steps)assert.ok(copiedTexts.at(-1).includes(step));
+   await js('[...document.querySelectorAll("details")].forEach(d=>d.open=true)');await capture(w,member.champion+'-team-order.png');verified.push(member.champion);
+  }
+  assert.deepEqual(state.selection.creativePlan,plans[1]);assert.equal(state.selection.threatId,'Janna');
+  report={passed:true,archiveSha256:release.archiveSha256,memberGuides:verified,enemyConditionsKeepTeamOrder:true,ownSkillGate:true,withdrawnEnemyKeepsTeam:true,copyKeepsTeam:true,restart:restored,runeWrites,realGame:'UNPROVEN'};
  }else{
   await app.whenReady();
   const core=await import(pathToFileURL(path.join(base,'src/core/guide.mjs')).href);

@@ -329,16 +329,16 @@ export function matchupPlan({data,champion,role,enemyId,combo=null,focus='teamfi
  const members=(combo?.members||[]).map(m=>m.champion);
  const samira=own.id==='Samira'||members.includes('Samira');
  const sequence=[rule.window,rule.start||actor.start,actor.follow];
- let opening=rule.opening+' '+actor.probe,fight=rule.fight+' '+actor.follow;
+ let opening=rule.opening+' '+actor.probe,fight=rule.fight+' '+actor.follow,teamCondition=null;
  if(samira){
   const follow=enemy.id==='Janna'?'莎弥拉先用普攻/Q 兑现输出；Q/R 打断威胁未处理时不急着 E 和 R，W 不能阻止风女 R 的近身击退。':
    enemy.id==='Morgana'?'莎弥拉等控制实际生效再跟进；Q 和普攻可先输出，W 留给能挡住的飞行道具，别把黑盾目标当已经被控住。':
    enemy.id==='Yuumi'?'莎弥拉与控制者集中同一宿主，以普攻/Q 交替建立评价；S 和安全近身条件都成立才考虑 R。':
    enemy.id==='Soraka'?'莎弥拉先离开 E 沉默区，再继续技能衔接；仍在结界中不预设能施放或完整维持 R。':
    '莎弥拉先确认 S 评价和能可靠打断自己的威胁；能接 E 不代表现在可以安全开 R。';
-  sequence[2]=follow;fight+=' '+follow;
+  sequence[2]=follow;fight+=' '+follow;teamCondition=follow;
  }
- return {enemy:{id:enemy.id,name:enemy.name},title:rule.title,reason:rule.reason,opening,fight,priority:own.id==='Samira'&&enemy.id==='Janna'?'W 不能阻止风女 R 的近身击退；Q/R 打断威胁未处理时不急着 E/R。':priorities[enemy.id]||rule.priority,sequence,exit:rule.exit,
+ return {enemy:{id:enemy.id,name:enemy.name},title:rule.title,reason:rule.reason,opening,fight,priority:own.id==='Samira'&&enemy.id==='Janna'?'W 不能阻止风女 R 的近身击退；Q/R 打断威胁未处理时不急着 E/R。':priorities[enemy.id]||rule.priority,sequence,teamCondition,exit:rule.exit,
   equipment:rule.equipment,runes:rule.runes,runeCondition:rule.runeCondition||null,equipmentCondition:rule.equipmentCondition||null,coverage:pair?'pair':rule.generic===true?'generic':'enemy',generic:rule.generic===true,skillKeys:[...rule.skills],focus:focus==='lane'?'lane':'teamfight',
   comboTitle:combo?.title||combo?.name||null,patch:MATCHUP_PLANS_PATCH,reviewedAt:MATCHUP_PLANS_REVIEWED_AT,stale:data.patch!==MATCHUP_PLANS_PATCH,
   source:'Riot 英雄机制 · 人工条件整理，无对阵胜率推导',sourceUrls:[own,enemy].map(c=>`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/champion/${c.id}.json`)};
