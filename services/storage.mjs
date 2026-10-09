@@ -6,6 +6,7 @@ import {normalizePresentation} from '../src/core/presentation.mjs';
 import {normalizeBuildSource} from '../src/core/build-source.mjs';
 import {validatePreparations,storedPreparation,PREPARATION_LIMIT} from '../src/core/preparation.mjs';
 import {validateTeamConfigurations} from '../src/core/team-favorites.mjs';
+import {validateCreativePlan} from '../src/core/creative-plan.mjs';
 export const defaultState=()=>({schema:1,favorites:[],excluded:[],preparations:[],preferences:{style:'fun',autoCheck:true,buildSource:normalizeBuildSource(null),presentation:normalizePresentation(null),installPath:'C:/WeGameApps/英雄联盟'},draft:null,ownedPageId:null,guide:null});
 const roles=['top','jungle','mid','bottom','support'],styles=['balanced','fun','wild'];
 const conditions=['ad','ap','control','heal','burst'];
@@ -26,7 +27,7 @@ function favorite(f){
  const base={id:f.id,title:f.title,type:f.type,version:text(f.version,30)?f.version:'未知',createdAt:Number.isFinite(Date.parse(f.createdAt))?f.createdAt:new Date(0).toISOString()};
  if(f.type==='team'){
   const lineup=slots(f.slots);
-  return {...base,slots:lineup,configurations:validateTeamConfigurations(f.configurations,lineup),style:styles.includes(f.style)?f.style:'fun',scope:['solo','context','party','bot'].includes(f.scope)?f.scope:'context',...(roles.includes(f.soloRole)?{soloRole:f.soloRole}:{})};
+  return {...base,slots:lineup,...(f.creativePlan?{creativePlan:validateCreativePlan(f.creativePlan,lineup)}:{}),configurations:validateTeamConfigurations(f.configurations,lineup),style:styles.includes(f.style)?f.style:'fun',scope:['solo','context','party','bot'].includes(f.scope)?f.scope:'context',...(roles.includes(f.soloRole)?{soloRole:f.soloRole}:{})};
  }
  if(f.type==='hex'){
   if(f.champion!==null&&!hero(f.champion)||!Array.isArray(f.augments)||f.augments.length>5||!f.augments.every(Number.isInteger))throw Error('强化收藏格式不正确');
@@ -35,7 +36,7 @@ function favorite(f){
  }
  if(!hero(f.champion)||!roles.includes(f.role)||!['rift','hex'].includes(f.mode))throw Error('英雄配置收藏格式不正确');
  const hexAug=v=>Array.isArray(v)?[...new Set(v.filter(Number.isInteger))]:[];
- return {...base,champion:f.champion,role:f.role,mode:f.mode,...validateLoadoutSelection(f),coreIndex:Number.isInteger(f.coreIndex)&&f.coreIndex>=0&&f.coreIndex<15?f.coreIndex:0,conditions:Array.isArray(f.conditions)?[...new Set(f.conditions.filter(c=>conditions.includes(c)))]:[],...(f.mode==='hex'?{augmentIds:hexAug(f.augmentIds).slice(0,5),compareIds:hexAug(f.compareIds).slice(0,3),ownedAugmentIds:hexAug(f.ownedAugmentIds).slice(0,6)}:{})};
+ return {...base,champion:f.champion,role:f.role,mode:f.mode,...validateLoadoutSelection({...f,id:f.champion}),coreIndex:Number.isInteger(f.coreIndex)&&f.coreIndex>=0&&f.coreIndex<15?f.coreIndex:0,conditions:Array.isArray(f.conditions)?[...new Set(f.conditions.filter(c=>conditions.includes(c)))]:[],...(f.mode==='hex'?{augmentIds:hexAug(f.augmentIds).slice(0,5),compareIds:hexAug(f.compareIds).slice(0,3),ownedAugmentIds:hexAug(f.ownedAugmentIds).slice(0,6)}:{})};
 }
 export function validateState(value) {
  if(!value||typeof value!=='object'||value.schema!==1)throw new Error('保存内容格式不正确');
@@ -51,7 +52,7 @@ export function validateState(value) {
    play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},
    rolePools:Object.fromEntries(roles.map(role=>[role,{heroes:Array.isArray(p.rolePools?.[role]?.heroes)?[...new Set(p.rolePools[role].heroes.filter(hero))].slice(0,180):[],mode:['prefer','only'].includes(p.rolePools?.[role]?.mode)?p.rolePools[role].mode:'off'}])),
    ...(Number.isFinite(Date.parse(p.lastCheck))?{lastCheck:p.lastCheck}:{})},
-  draft:value.draft?{slots:slots(value.draft.slots,true),style:styles.includes(value.draft.style)?value.draft.style:'fun',scope:['solo','context','party','bot'].includes(value.draft.scope)?value.draft.scope:'context',...(value.draft.scope==='solo'||Object.hasOwn(value.draft,'soloRole')?{soloRole:roles.includes(value.draft.soloRole)?value.draft.soloRole:''}:{})}:null,
+  draft:value.draft?{slots:slots(value.draft.slots,true),...(value.draft.creativePlan?{creativePlan:validateCreativePlan(value.draft.creativePlan,slots(value.draft.slots,true),{allowUnknown:true})}:{}),...(typeof value.draft.clientGameId==='string'&&/^\d{1,20}$/.test(value.draft.clientGameId)&&Number(value.draft.clientGameId)>0?{clientGameId:value.draft.clientGameId}:{}),style:styles.includes(value.draft.style)?value.draft.style:'fun',scope:['solo','context','party','bot'].includes(value.draft.scope)?value.draft.scope:'context',...(value.draft.scope==='solo'||Object.hasOwn(value.draft,'soloRole')?{soloRole:roles.includes(value.draft.soloRole)?value.draft.soloRole:''}:{})}:null,
   ownedPageId:Number.isInteger(value.ownedPageId)&&value.ownedPageId>0?value.ownedPageId:null,guide:validateGuideState(value.guide)};
 }
 export async function readState(root) {

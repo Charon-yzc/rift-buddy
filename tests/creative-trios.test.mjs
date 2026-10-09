@@ -67,7 +67,7 @@ test('recommendations label creative ideas without displacing curated trios',()=
  assert.equal(rows.length,5);
  const creative=rows.filter(r=>r.origin==='creative');
  assert.ok(creative.length>=1,'at least one creative idea is discoverable');
- for(const r of rows)assert.ok(['curated','creative','generated'].includes(r.origin));
+ for(const r of rows)assert.ok(['curated','creative','adaptive','generated'].includes(r.origin));
  // Curated combinations keep the lead.
  assert.equal(rows[0].origin,'curated');
  for(const r of creative){

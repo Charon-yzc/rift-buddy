@@ -41,6 +41,18 @@ test('recommendation snapshots include every editable preference and public cons
  const key=recommendationKey(input);for(const change of [{pool:['Ashe']},{rolePools:{bottom:{mode:'only',heroes:['Ashe']}}},{excluded:['Ashe']},{publicPicks:['Ashe']},{scope:'party'},{version:'2'},{catalogVersion:'2'}])assert.notEqual(recommendationKey({...input,...change}),key);
  assert.equal(recommendationKey({...input,offset:3}),key);
 });
+
+test('source position evidence invalidates recommendation tickets while display-only refreshes do not',()=>{
+ const a={champion:'Gragas',role:'jungle',runeSamples:206,fetchedAt:'2026-10-08'},b={champion:'Gragas',role:'mid',runeSamples:1000};
+ const input={slots:createSlots(),builds:{a,b},sourceRoles:[{champion:'Gragas',role:'jungle'}]},ticket=recommendationKey(input);
+ assert.notEqual(recommendationKey({...input,builds:{a:{...a,runeSamples:2060},b}}),ticket);
+ assert.notEqual(recommendationKey({...input,sourceRoles:[...input.sourceRoles,{champion:'Ziggs',role:'bottom'}]}),ticket);
+ assert.equal(recommendationKey({...input,builds:{b,a:{...a,fetchedAt:'2026-10-09',core:[],sourceUrl:'https://op.gg/'}},sourceRoles:[...input.sourceRoles,...input.sourceRoles]}),ticket);
+ const before=recommend({champions:data.champions,slots:createSlots(),scope:'solo',soloRole:'jungle',style:'balanced',builds:data.builds,limit:5});
+ const builds=structuredClone(data.builds);builds['Gragas:jungle'].runeSamples*=10;
+ const after=recommend({champions:data.champions,slots:createSlots(),scope:'solo',soloRole:'jungle',style:'balanced',builds,limit:5});
+ assert.notDeepEqual(before.map(r=>r.slots.find(s=>s.role==='jungle').champion),after.map(r=>r.slots.find(s=>s.role==='jungle').champion));
+});
 test('new game signals reset progress once, reconnect and same-match polling retain it',()=>{
  let guide={...selectGuide(null,selection),completedItems:['3031'],match:{phase:'InProgress',gameId:'1',gameTime:500,liveAt:now-5000}};
  let result=reconcileGuide(guide,{phase:'ChampSelect',gameId:'2',now});assert.equal(result.reset,true);assert.deepEqual(result.guide.completedItems,[]);

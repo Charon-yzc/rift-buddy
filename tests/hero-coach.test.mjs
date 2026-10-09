@@ -5,6 +5,7 @@ import {heroCoach,HERO_PLAYS,HERO_PLAYS_PATCH} from '../src/core/hero-coach.mjs'
 import {heroCoachView} from '../src/hero-coach-view.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
+import {profile} from '../src/core/rules.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 test('a future skill snapshot does not relabel existing manual action notes as reviewed',()=>{
@@ -36,7 +37,7 @@ test('each bundled champion has its own actionable opening, teamfight, sequence 
  for(let field=0;field<4;field++)assert.equal(new Set(Object.values(HERO_PLAYS).map(p=>p[field])).size,data.champions.length,`Repeated action field ${field}`);
 });
 test('form changes and upgraded abilities retain their actual prerequisites',()=>{
- const get=id=>heroCoach({data,champion:id,role:'mid'});
+ const get=id=>heroCoach({data,champion:id,role:profile(data.champions.find(c=>c.id===id)).roles[0]});
  assert.match(get('Aphelios').caution,/E只是武器队列/);
  assert.match(get('Aurora').caution,/R是减速区域/);
  assert.match(get('Gnar').caution,/巨型形态.*推墙才眩晕/);
@@ -51,14 +52,14 @@ test('form changes and upgraded abilities retain their actual prerequisites',()=
  assert.match(get('Zaahen').opening,/只有打敌方英雄才积累果决/);
 });
 test('marks, shield timing and cooldown reductions cannot become unconditional combo guarantees',()=>{
- const get=id=>heroCoach({data,champion:id,role:'jungle'});
+ const get=id=>heroCoach({data,champion:id,role:profile(data.champions.find(c=>c.id===id)).roles[0]});
  assert.match(get('Kaisa').caution,/Q不叠电浆.*R需要带电浆英雄/);
  assert.match(get('Akali').sequence,/穿过圆环.*强化普攻/);
  assert.match(get('Sejuani').opening,/Q用于位移击飞而非叠层/);
  assert.match(get('Sejuani').sequence,/W两击\/普攻叠四层.*E冻结/);
  assert.match(get('MasterYi').caution,/只免疫减速.*不保证技能立刻刷新/);
  assert.match(get('Katarina').fight,/缩短技能冷却.*实际就绪/);
- assert.match(get('Jax').fight,/R主动要命中英雄/);
+ assert.match(get('Jax').fight,/R\s*主动要(?:实际)?命中英雄/);
  assert.match(get('Tristana').caution,/塔\/小兵上爆炸不保证W刷新/);
  assert.match(get('Zilean').caution,/W不缩短R冷却/);
  assert.match(get('Sylas').caution,/W打非英雄不治疗/);

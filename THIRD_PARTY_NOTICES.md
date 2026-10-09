@@ -8,6 +8,8 @@ Source: https://github.com/LeagueAkari/LeagueAkari/blob/5109b2f7fcce6e02312e534c
 
 Pinned revision: `5109b2f7fcce6e02312e534cd1729ed0f2142b51`.
 
+The item-set JSON schema and League client install-directory layout in `src/core/item-sets.mjs` and `services/item-sets.mjs` reference the same revision's `src/renderer/src-opgg-window/opgg/utils/loadout.ts` and `src/main/shards/league-client/index.ts`. This app exports the currently chosen equipment and updates only its own hero/position/mode file; it does not adopt LeagueAkari's deletion of previous sets or chat messages.
+
 MIT License
 
 Copyright (c) 2026 Hanxven

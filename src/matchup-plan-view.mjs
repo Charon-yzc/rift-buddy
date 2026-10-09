@@ -1,11 +1,11 @@
 import {escape as e} from './ui.mjs';
 import {matchupTargetKey,publicMatchupOpponent} from './core/matchup-plans.mjs';
 
-export function matchupTargetView(data,selection,enemyIds=[],targetId=''){
+export function matchupTargetView(data,selection,enemyIds=[],targetId='',{status=''}={}){
  const opponents=[...new Set(enemyIds)].map(id=>data.champions.find(c=>c.id===id)).filter(Boolean);
  if(selection.mode!=='rift'||!opponents.length)return '';
  const target=publicMatchupOpponent(data,enemyIds,targetId);
- return `<section class="matchup-target"><label>针对谁调整配合<select class="select" data-matchup-target data-plan="${e(matchupTargetKey(selection))}" aria-label="针对谁调整配合"><option value="">未指定 · 不猜对线</option>${opponents.map(c=>`<option value="${c.id}" ${target?.id===c.id?'selected':''}>${e(c.name)}</option>`).join('')}</select></label><p class="note">只列公开已选英雄。由你选择重点对手，分路、技能状态和进场条件仍需自行确认。</p></section>`;
+ return `<section class="matchup-target"><label>针对谁调整配合<select class="select" data-matchup-target data-plan="${e(matchupTargetKey(selection))}" aria-label="针对谁调整配合"><option value="">未指定 · 不猜对线</option>${opponents.map(c=>`<option value="${c.id}" ${target?.id===c.id?'selected':''}>${e(c.name)}</option>`).join('')}</select></label>${status?`<p class="note matchup-focus-status" role="status">${e(status)}</p>`:''}<p class="note">只列公开已选英雄。由你选择重点对手，分路、技能状态和进场条件仍需自行确认。</p></section>`;
 }
 export function matchupPlanView(plan,{compact=false}={}){
  if(!plan)return '';

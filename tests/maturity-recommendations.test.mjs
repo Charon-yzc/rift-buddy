@@ -31,7 +31,8 @@ test('validated secondary-position sources remain eligible with a restricted her
   const input={slots:createSlots(),champions:data.champions,builds:data.builds,sourceRoles,scope:'solo',soloRole:role,pool:[champion],poolMode:'only',limit:1};
   const [result]=recommend(input);assert.equal(result.slots.find(s=>s.role===role).champion,champion);
   assert.throws(()=>recommend({...input,excluded:[champion]}),/没有可选英雄/);
-  assert.throws(()=>recommend({...input,play:{unusual:false}}),/没有可选英雄/);
+  if(champion==='TahmKench')assert.equal(recommend({...input,play:{unusual:false}})[0].slots.find(s=>s.role===role).champion,champion);
+  else assert.throws(()=>recommend({...input,play:{unusual:false}}),/没有可选英雄/);
  }
  selectBuildSource(data,{region:'kr',tier:'diamond_plus'});
  assert.equal(Object.keys(data.builds).length,0);

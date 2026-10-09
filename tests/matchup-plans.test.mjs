@@ -77,7 +77,70 @@ test('curated enemy rules have usable current skill evidence and preserve old-ve
   assert.equal(matchupPlan({data:{...data,patch:'17.1'},champion:'Nautilus',role:'support',enemyId:id}).stale,true);
  }
  assert.equal(matchupPlan({data,champion:'Nautilus',role:'support',enemyId:'Unknown'}),null);
- assert.equal(matchupPlan({data,champion:'Nautilus',role:'support',enemyId:'Zed'}),null);
+ assert.ok(matchupPlan({data,champion:'Nautilus',role:'support',enemyId:'Zed'}));
  assert.ok(matchupPlan({data,champion:'Samira',role:'bottom',enemyId:'Samira'}),'Blind-pick mirror champions are valid');
  assert.notEqual(matchupTargetKey({id:'Nautilus',role:'support',mode:'rift',comboId:'naut-samira'}),matchupTargetKey({id:'Nautilus',role:'support',mode:'rift'}));
+});
+
+test('a focused opponent adds constraints without replacing four different champions with a generic control actor',()=>{
+ const cases=[['LeeSin','jungle',/Q命中.*安全时二段/,/两次普攻回能/],['Yuumi','support',/附身/,/E/],['Soraka','support',/Q/,/W/],['Nautilus','support',/被动/,/Q/]];
+ for(const [id,role,sequence,action] of cases)for(const enemyId of ['Darius','Morgana']){
+  const baseline=heroCoach({data,champion:id,role}),focused=heroCoach({data,champion:id,role,enemyId});
+  assert.match(focused.sequence,sequence,id);assert.match(focused.action,action,id);assert.ok(focused.action.startsWith(baseline.action));
+  assert.match(focused.sequence,/玩家确认/);assert.ok(focused.caution.includes(focused.matchup.exit));
+  assert.doesNotMatch(focused.sequence,/你先控制靠近搭档/);
+ }
+});
+
+test('common mid and bottom targets have concrete windows, exits and existing complete-rune tradeoffs',()=>{
+ for(const [id,role,enemyId,window,tradeoff] of [['Ahri','mid','Zed',/影子/,/电刑/],['Ezreal','bottom','Caitlyn',/夹子/,/强攻/],['Jinx','bottom','Nautilus',/Q.*路径/,/致命节奏/]]){
+  const coach=heroCoach({data,champion:id,role,enemyId});assert.ok(coach.matchup,id);
+  assert.match(coach.matchup.sequence[0],window);assert.match(coach.matchup.runes,tradeoff);
+  assert.match(coach.matchup.equipment,/代价/);assert.ok(coach.matchup.exit);assert.ok(!coach.matchup.stale);
+  const selection={id,role,mode:'rift',conditions:[],coreIndex:0},build=getBuild(hero(id),role,data,selection),before=structuredClone(build.runePage);
+  const view=companionPlanView(data,{selection,build},[],{enemyIds:[enemyId],opponentId:enemyId});
+  assert.match(view,new RegExp('data-matchup-enemy="'+enemyId+'"'));assert.deepEqual(build.runePage,before);
+ }
+});
+
+test('jungle isolation, parry and mobile mage paths retain own actions and distinguish dedicated from generic plans',()=>{
+ for(const [id,role,enemyId,limit] of [['LeeSin','jungle','Khazix',/孤立/],['Aatrox','top','Fiora',/W/],['Nautilus','support','Ahri',/R/]]){
+  const coach=heroCoach({data,champion:id,role,enemyId});assert.equal(coach.matchup.generic,false);assert.match(coach.matchup.reason,limit);assert.ok(coach.sequence.includes('玩家确认'));
+  assert.ok(coach.matchup.equipment&&coach.matchup.runes&&coach.matchup.exit);assert.ok(!coach.matchup.stale);
+ }
+ const generic=heroCoach({data,champion:'Ahri',role:'mid',enemyId:'Akali'});
+ assert.equal(generic.matchup.generic,true);assert.match(generic.matchup.reason,/对方机制限制/);assert.match(generic.matchup.sequence[0],/玩家确认/);
+ assert.match(heroCoachView(generic,{compact:true}),/专门对位尚未整理/);assert.match(generic.sequence,/E/);
+ assert.doesNotMatch(generic.matchup.reason,/胜率提升|对方现在没有技能/);
+});
+
+test('every dedicated enemy rule keeps own champion and position additions out of unrelated preparations',()=>{
+ const actors={Garen:'盖伦',LeeSin:'李青',Aatrox:'剑魔',Nautilus:'泰坦',Ahri:'阿狸',Ezreal:'伊泽瑞尔',Jinx:'金克丝'};
+ const pairs=[['Garen','top'],['Lux','support'],['Veigar','mid'],['Ashe','bottom'],['LeeSin','jungle'],['Aatrox','top'],['Nautilus','support'],['Ahri','mid'],['Ezreal','bottom'],['Jinx','bottom']];
+ for(const [id,role] of pairs)for(const enemyId of Object.keys(MATCHUP_RULES)){
+  const coach=heroCoach({data,champion:id,role,enemyId});
+  const text=[coach.matchup.opening,coach.matchup.fight,coach.matchup.exit,coach.matchup.equipment,coach.matchup.runes,...coach.matchup.sequence].join(' ');
+  for(const [actor,name]of Object.entries(actors))if(actor!==id&&actor!==enemyId)assert.ok(!text.includes(name),`${id}/${role} against ${enemyId} imported ${actor}`);
+ }
+ assert.doesNotMatch(heroCoach({data,champion:'Ashe',role:'bottom',enemyId:'Fiora'}).matchup.exit,/三个 Q/);
+ const support=heroCoach({data,champion:'Ahri',role:'support',enemyId:'Zed'});
+ assert.doesNotMatch(support.matchup.runes,/阿狸 E|电刑爆发页/,'A mid-specific note must not leak into another own position');
+ const coach=heroCoach({data,champion:'Garen',role:'top',enemyId:'Ahri'}),html=heroCoachView(coach);
+ assert.doesNotMatch(html,/泰坦 Q|泰坦已有余震/);
+ const selection={id:'Garen',role:'top',mode:'rift'},build=getBuild(hero('Garen'),'top',data,selection);
+ assert.doesNotMatch(companionPlanView(data,{selection,build},[],{enemyIds:['Ahri'],opponentId:'Ahri'}),/泰坦 Q|泰坦已有余震/);
+});
+
+test('five high-risk top opponents produce distinct Garen entry, failure and retreat plans with existing complete-page tradeoffs',()=>{
+ const cases=[['Jax',/E.*闪避.*眩晕/,/先等反击结束.*Q/,/反击|E 范围/],['Tryndamere',/R 免死已经结束/,/自己的 R.*免死/,/开启 R/],['Vayne',/E.*地形/,/Q.*不靠墙/,/击退|撞墙/],['Renekton',/W.*怒气.*二段 E/,/强化 W.*破盾/,/红怒 W/],['Tristana',/E 炸弹.*R.*安全路线/,/炸弹.*长追/,/W.*再次/]];
+ const sequences=[];
+ for(const [enemyId,window,start,exit] of cases){
+  const coach=heroCoach({data,champion:'Garen',role:'top',enemyId,stage:'key'}),m=coach.matchup;
+  assert.equal(m.generic,false);assert.equal(m.coverage,'pair');assert.match(m.sequence[0],window);assert.match(m.sequence[1],start);assert.match(m.exit,exit);
+  assert.match(m.runes,/盖伦.*完整页|盖伦.*风暴掠袭者的狂涌/);assert.match(m.runes,/代价/);assert.match(m.equipment,/代价/);assert.ok(m.runeCondition&&m.equipmentCondition);sequences.push(m.sequence[1]);
+  const support=heroCoach({data,champion:'Garen',role:'support',enemyId}).matchup;assert.equal(support.coverage,'enemy');assert.doesNotMatch(support.runes,/盖伦上单|盖伦已有/);
+ }
+ assert.equal(new Set(sequences).size,cases.length);
+ assert.equal(heroCoach({data,champion:'Garen',role:'top',enemyId:'Akali'}).matchup.coverage,'generic');
+ const future=heroCoach({data,champion:'Garen',role:'top',enemyId:'Tryndamere',ownSkills:{Q:1,W:1,E:3,R:0}});assert.ok(future.unlearned.includes('R'));assert.ok(future.futureSequence);assert.doesNotMatch(future.sequence,/自己的 R/);assert.match(future.futureSequence,/自己的 R/);
 });

@@ -41,7 +41,7 @@ export function guideMismatch(selection,current){
  if(!current)return null;
  if(selection.id!==current.id)return 'champion';
  if(selection.mode!==current.mode)return 'mode';
- if(current.positionKnown&&selection.role!==(current.formalRole||current.role))return 'role';
+ if(current.positionKnown&&selection.role!==current.role)return 'role';
  if(selection.comboId&&current.comboKnown&&selection.comboId!==current.comboId)return 'combo';
  return null;
 }

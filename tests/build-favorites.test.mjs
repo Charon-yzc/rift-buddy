@@ -7,12 +7,36 @@ import {defaultState,validateState,mergeState} from '../services/storage.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';
 import {favoriteBuildSummary} from '../src/favorites-view.mjs';
+import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
+import {laterItemSelector} from '../src/build-options-view.mjs';
 
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const value=(selection)=>({...selection,conditions:selection.conditions||[],build:getBuild(data.champions.find(c=>c.id===selection.id),selection.role,data,selection)});
 const base={id:'Volibear',role:'top',mode:'rift',coreIndex:0};
+
+test('source sample reordering keeps every chosen later item visible and cancellable without clearing the other slot',()=>{
+ const base={id:'Ashe',role:'bottom',mode:'rift'},first=getBuild(data.champions.find(c=>c.id===base.id),base.role,data,base);assert.ok(first.laterOptions.some(o=>Number(o.items[0].id)===3091));
+ let choice=changeCompanionPlan(data,base,'later','3091');choice=changeCompanionPlan(data,choice,'later','3139');
+ const updated=structuredClone(data);for(const row of updated.builds['Ashe:bottom'].later.flat()){row.samples=row.items.includes(3091)||row.items.includes(3139)?1:100000;row.wins=Math.floor(row.samples/2);row.winRate=row.wins/row.samples*100;}
+ const v={...choice,build:getBuild(data.champions.find(c=>c.id===base.id),base.role,updated,choice)},selected=v.build;
+ assert.deepEqual(selected.selectedLaterIds,[3091,3139]);assert.ok(selected.laterOptions.length<=12);assert.ok([3091,3139].every(id=>selected.laterOptions.some(o=>Number(o.items[0].id)===id)));
+ assert.match(laterItemSelector(selected,{companion:true}),/data-id="3091"/);
+ const saved=validateState({...defaultState(),favorites:[save(v)]}).favorites[0];assert.deepEqual(saved.laterIds,[3091,3139]);
+ const restored={...base,...saved,id:base.id};assert.ok(getBuild(data.champions.find(c=>c.id===base.id),base.role,updated,restored).laterOptions.some(o=>Number(o.items[0].id)===3091));
+ assert.throws(()=>changeCompanionPlan(updated,choice,'later','3072'),/装备位已满/);
+ const cancelled=changeCompanionPlan(updated,choice,'later','3091');assert.deepEqual(cancelled.laterIds,[3139]);
+});
+
+test('temporarily unavailable later choices remain visible as paused selections and can be individually cancelled',()=>{
+ const choice={id:'Ashe',role:'bottom',mode:'rift',laterIds:[3091,3139]},missing={...data,buildSource:{region:'kr',tier:'diamond_plus'}};
+ const b=getBuild(data.champions.find(c=>c.id===choice.id),choice.role,missing,choice),fields=selectedBuildFields({...choice,build:b},{preserveUnavailable:true});
+ assert.deepEqual(b.selectedLaterIds,[]);assert.deepEqual(fields.laterIds,[3091,3139]);assert.deepEqual(b.unavailableLaterOptions.map(o=>o.id),[3091,3139]);
+ const html=laterItemSelector(b,{companion:true});assert.match(html,/2 项待核对/);assert.match(html,/取消原选择.*智慧末刃/);assert.match(html,/data-id="3091"/);
+ const cancelled=changeCompanionPlan(missing,choice,'later','3091');assert.deepEqual(cancelled.laterIds,[3139]);
+ const restored=getBuild(data.champions.find(c=>c.id===choice.id),choice.role,data,cancelled);assert.deepEqual(restored.selectedLaterIds,[3139]);
+});
 const save=v=>({id:buildFavoriteId(v),...selectedBuildFields(v),type:'build',title:'测试搭配',champion:v.id,role:v.role,mode:v.mode,conditions:v.conditions,coreIndex:v.build.selectedCoreIndex});
 
 test('different later choices remain separate favorites and survive validated save and import',()=>{
