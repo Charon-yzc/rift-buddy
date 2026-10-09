@@ -71,6 +71,8 @@ jobs:
         run: node scripts/smoke-package-cooperation.mjs --cross-lane
       - name: Check ordinary locked-friend recommendations without hero pools
         run: node scripts/smoke-package-cooperation.mjs --locked-friends
+      - name: Check role statistics and broad skill cooperation across saved member guides
+        run: node scripts/smoke-package-cooperation.mjs --adaptive-data
       - name: Check sidebar choices survive uncached sources and individual edits
         run: node scripts/smoke-package-companion-workflow.mjs
       - name: Check public picks and source refresh invalidate recommendations

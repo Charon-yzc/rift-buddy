@@ -8,6 +8,7 @@ import {BUNDLED_CATALOG,validateCatalog} from '../src/core/catalog.mjs';
 import {purchasePlan} from '../src/core/purchase.mjs';
 import {SITUATION_ITEMS} from '../src/core/live-situation.mjs';
 import {hasCurrentCombatStats} from '../services/champion-stats.mjs';
+import {validatePairStatistics} from '../src/core/pair-statistics.mjs';
 const root=path.resolve('.');let checked=0;const errors=[];
 async function syntax(folder){for(const item of await fs.readdir(folder,{withFileTypes:true})){
  const file=path.join(folder,item.name);if(item.isDirectory())await syntax(file);
@@ -15,6 +16,7 @@ async function syntax(folder){for(const item of await fs.readdir(folder,{withFil
 }}
 for(const folder of ['src','electron','services','tests'])await syntax(folder);
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+validatePairStatistics(JSON.parse(await fs.readFile('data/pair-statistics.json','utf8')),data.champions);
 for(const champion of data.champions)if(!hasCurrentCombatStats(champion,data.patch))errors.push(`Missing current-patch champion combat stats: ${champion.id}`);
 validateCatalog(BUNDLED_CATALOG,data);
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;

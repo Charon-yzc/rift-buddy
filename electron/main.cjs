@@ -74,6 +74,8 @@ async function boot(){
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
  data.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],data);
  selectBuildSource(data,state.preferences.buildSource);
+ const {loadPairStatistics}=await import('../services/pair-statistics.mjs');
+ data.pairStatistics=await loadPairStatistics(path.join(root,'data/pair-statistics.json'),data);
  // A mismatched spell book must never be used silently (same gate as update-data).
  try{
   const spellsFile=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8'));
@@ -190,6 +192,7 @@ async function boot(){
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
    delete next.builds;delete next.buildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
    next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
+   next.pairStatistics=await loadPairStatistics(path.join(root,'data/pair-statistics.json'),next);
    next.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],next);
    // The spell book is versioned separately: a mismatched book must never be
    // used silently, so it falls back to empty (heuristic estimates + UI note).
