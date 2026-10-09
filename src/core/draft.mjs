@@ -8,6 +8,33 @@ export const DRAFT_SCOPES={
 export const draftTargets=(slots,scope='context',soloRole='')=>slots.filter(s=>(scope==='solo'?(!soloRole||s.role===soloRole):scope==='bot'?['bottom','support'].includes(s.role):s.party)&&(!s.champion||!s.locked)).map(s=>s.role);
 export const scopeSlots=(slots,scope='context')=>scope==='bot'?slots.filter(s=>['bottom','support'].includes(s.role)):scope==='party'?slots.filter(s=>s.party):slots;
 export const clearDraftPicks=slots=>slots.map(s=>({role:s.role,party:s.party,champion:null,locked:false}));
+export function clearClientPicks(slots){
+ return slots.map(s=>{
+  if(!Number.isInteger(s.clientCellId))return {...s};
+  const {clientCellId,manualPosition,...manual}=s;return {...manual,champion:null,locked:false};
+ });
+}
+const clientGameId=id=>(typeof id==='string'||Number.isSafeInteger(id))&&/^\d{1,20}$/.test(String(id))&&Number(id)>0?String(id):null;
+export function publicClientGameId(client){return client?.connected?clientGameId(client.game?.gameId)||clientGameId(client.session?.gameId):null;}
+// Keep one current public context, never a history. An unknown ID is not
+// evidence of a new game and must not erase an explicit position choice.
+export function reconcileClientDraft(draft,gameId,previousId=null){
+ gameId=clientGameId(gameId);
+ if(!draft||!gameId)return {draft,changed:false,newGame:false};
+ const prior=clientGameId(draft.clientGameId)||clientGameId(previousId),newGame=!!prior&&prior!==gameId;
+ if(!newGame&&draft.clientGameId===gameId)return {draft,changed:false,newGame:false};
+ const clearSoloRole=newGame&&draft.scope==='solo'&&draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId));
+ const next={...draft,clientGameId:gameId,slots:newGame?clearClientPicks(draft.slots):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
+ if(newGame&&next.creativePlan&&!next.creativePlan.members.every(m=>next.slots.some(s=>s.role===m.role&&s.champion===m.champion)))delete next.creativePlan;
+ return {draft:next,changed:true,newGame};
+}
+export const manualPlayerSlot=(slots,cellId)=>Number.isInteger(cellId)?slots.find(s=>s.manualPosition&&s.clientCellId===cellId):null;
+// Only the local player's explicit override is released. Other bindings and
+// position ownership stay intact; the next sync can import the declared lane.
+export function clearManualPlayerPosition(slots,cellId){
+ const manual=manualPlayerSlot(slots,cellId);
+ return slots.map(s=>s===manual?{role:s.role,party:s.party,champion:null,locked:false}:{...s});
+}
 export function publicDraftPicks(session,champions){
  const byKey=new Map(champions.map(c=>[c.key,c.id]));
  return (session?.myTeam||[]).filter(p=>byKey.has(Number(p.championId))&&Number.isInteger(p.cellId)).map(p=>({champion:byKey.get(Number(p.championId)),cellId:p.cellId,local:p.cellId===session.localPlayerCellId}));

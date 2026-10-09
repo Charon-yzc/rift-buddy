@@ -1,0 +1,78 @@
+const {app,ipcMain,globalShortcut,clipboard}=require('electron');
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_MATCHUP_RESTART==='1',mechanics=process.env.RIFT_BUDDY_MATCHUP_MECHANICS==='1',windows=[];let diagnosticMain,writes=0;
+app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);});globalShortcut.register=()=>false;clipboard.writeText=()=>{};
+const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(name,name==='companion-mode'?(_e,value)=>{const main=windows[0];main.setMinimumSize(value?280:820,480);main.setContentSize(value?440:1180,value?850:850);return {docked:!!value,overlap:false};}:handler);
+const delay=ms=>new Promise(r=>setTimeout(r,ms));async function until(check,label){for(let n=0;n<160;n++){if(await check())return;await delay(100);}throw Error(label);}
+async function run(){
+ app.setPath('userData',root);const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(c=>c.id===id);
+ app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;global.fetch=async()=>{throw Error('Isolated matchup smoke: external network disabled');};
+ let picked=mechanics?'Garen':restart?'Nautilus':'Ahri',assigned=mechanics?'TOP':restart?'UTILITY':'MIDDLE',enemy=mechanics?'Jax':restart?'Morgana':'Zed',gameId='1520';
+ const output=options=>{
+  assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('Rune writes prohibited in matchup selection smoke');}
+  if(options.path==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
+  if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
+  if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:hero(picked).key,assignedPosition:assigned}],theirTeam:[...(enemy?[{cellId:6,championId:hero(enemy).key}]:[]),{cellId:7,championId:0,championPickIntent:hero('Janna').key}],actions:[],bans:{myTeamBans:[],theirTeamBans:[]},timer:{adjustedTimeLeftInPhase:65000}};
+  if(options.path==='/lol-perks/v1/pages')return [];throw Error('Unexpected fixture request '+options.path);
+ };
+ https.request=(options,callback)=>{const req=new EventEmitter();req.write=body=>{options.body=body;};req.end=()=>queueMicrotask(()=>{try{const res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify(output(options))));res.emit('end');req.emit('close');}catch(error){req.emit('error',error);}});req.destroy=error=>{if(error)req.emit('error',error);};return req;};
+ cp.spawn=file=>{assert.ok(file.endsWith('window-observer.exe'));const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};cp.execFile=(file,args,options,callback)=>{queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
+ require(path.join(base,'electron/main.cjs'));let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');diagnosticMain=main;
+ const js=code=>main.webContents.executeJavaScript(code,true),click=selector=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)throw Error("Control missing");el.click();})()'),change=(selector,value)=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+ const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(250);},state=async()=>(await js('window.buddy.bootstrap()')).state;
+ const capture=async name=>{await js('document.querySelector("#toast").classList.remove("show")');await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
+ await until(()=>js('!!document.querySelector("[data-action=sync]")'),'UI missing');await sync();await sync();
+ if(mechanics){
+  for(const file of ['src/core/matchup-plans.mjs','src/core/matchup-preparation.mjs'])assert.ok((await fs.readFile(path.join(base,file))).equals(await fs.readFile(file)),'Packaged source drift: '+file);
+  const targets=[['Jax','反击风暴'],['Tryndamere','R 免死'],['Vayne','真实伤害'],['Renekton','强化 W'],['Tristana','E 炸弹']],proof=[];let selected;
+  if(!restart)for(const [id,condition]of targets){
+   enemy=id;await sync();await sync();await click('[data-action=my-build]');const before=JSON.stringify((await state()).preparations);
+   await change('#overlay-root [data-matchup-target]',id);await until(()=>js('!!document.querySelector("#overlay-root [data-matchup-build]")'),'Opponent comparison missing');
+   assert.equal(JSON.stringify((await state()).preparations),before,'Choosing an opponent automatically changed the configuration');
+   assert.ok(await js('document.querySelector("#overlay-root [data-matchup-build]").textContent.includes('+JSON.stringify(condition)+')'),'Missing concrete mechanism condition');
+   const phase=await js('[...document.querySelectorAll("#overlay-root [data-action=matchup-rune]")].find(b=>b.dataset.id.includes("8230"))?.dataset.id');assert.ok(phase,'Existing Stormraider full page was not offered');
+   const phaseButton='#overlay-root [data-action=matchup-rune][data-id="'+phase+'"]',disabled=await js('document.querySelector('+JSON.stringify(phaseButton)+').disabled');if(!disabled)await click(phaseButton);
+   await until(async()=>(await state()).preparations.some(s=>s.id==='Garen'&&s.role==='top'&&s.runeId===phase),'Full page was not saved');
+   await click('[data-action=open-guide]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.runeId==='+JSON.stringify(phase)+'&&b.model.selection.id==="Garen")'),'Page did not reach actual guide');
+   selected={runeId:phase,enemy:id};proof.push({enemy:id,condition,fullPageId:phase});
+   if(id==='Jax'){await js('document.querySelector("[data-matchup-build]").scrollIntoView({block:"start"});document.querySelector("[data-companion-disclosure^=matchup-trigger]").open=true;void 0');await capture('mechanics-drawer.png');}
+   await click('[data-action=close]');
+  }else{selected=JSON.parse(await fs.readFile(path.join(root,'mechanics-expected.json')));enemy=selected.enemy;await sync();await sync();assert.equal((await state()).preparations.find(s=>s.id==='Garen'&&s.role==='top').runeId,selected.runeId);}
+  await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');await click('[data-action=companion-tab][data-tab=plan]');await change('.companion-shell [data-matchup-target]',enemy);await until(()=>js('!!document.querySelector(".companion-shell [data-matchup-build]")'),'Sidebar comparison missing');
+  assert.ok(await js('document.querySelector(".companion-shell [data-matchup-build]").textContent.includes("风暴掠袭者的狂涌")'));
+  for(const width of [440,360,280]){main.setContentSize(width,850);await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false);}
+  main.setContentSize(440,850);await js('document.querySelector("[data-matchup-build]").scrollIntoView({block:"start"});void 0');await capture('mechanics-sidebar'+(restart?'-restart':'')+'.png');
+  if(!restart)await fs.writeFile(path.join(root,'mechanics-expected.json'),JSON.stringify(selected,null,2));assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));
+  const report={passed:true,archiveSha256:release.archiveSha256,targets:proof,explicitOpponentRequired:true,noAutomaticConfigurationChange:true,actualCompletePageSelection:true,guideSynchronization:!restart,wholeProcessRestart:restart,sidebarWidths:[280,360,440],actualRuneWrites:0,realGame:'UNPROVEN'};await fs.writeFile(path.join(root,restart?'mechanics-restart.json':'mechanics-select.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();return;
+ }
+ await click('[data-action=my-build]');
+ assert.equal(await js('document.querySelectorAll("[data-matchup-build]").length'),0,'An opponent must be explicitly selected');
+ await change('#overlay-root [data-matchup-target]',enemy);await until(()=>js('!!document.querySelector("#overlay-root [data-matchup-build]")'),'Full matchup choices missing');
+ if(!restart){
+  const rune=await js('document.querySelector("#overlay-root [data-action=matchup-rune]").dataset.id');assert.match(rune,/8473/);
+  await click('#overlay-root [data-action=matchup-rune]');await until(async()=>(await state()).preparations.some(s=>s.id==='Ahri'&&s.role==='mid'&&s.runeId===rune),'Drawer rune was not saved');
+  assert.equal(writes,0);await click('[data-action=open-guide]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
+  await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.runeId==='+JSON.stringify(rune)+')'),'Drawer rune did not reach guide');
+  const core=await js('document.querySelector("#overlay-root [data-action=matchup-core]:not(:disabled)").dataset.id');await click('#overlay-root [data-action=matchup-core]:not(:disabled)');
+  await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.coreId==='+JSON.stringify(core)+')'),'Drawer core did not reach guide');
+  const after=(await state()).guide.selection;assert.equal(after.runeId,rune);assert.equal(after.threatId,enemy);assert.equal(after.matchupGameId,gameId);assert.deepEqual(after.laterIds,[]);await js('document.querySelector("[data-matchup-build]").scrollIntoView({block:"start"})');await delay(250);const heading=await js('({title:document.querySelector("[data-matchup-build] h3").getBoundingClientRect().top,nav:document.querySelector(".build-nav").getBoundingClientRect().bottom})');assert.ok(heading.title>=heading.nav-1,"Drawer navigation obscures the opponent heading");await capture('matchup-main.png');
+  await click('[data-action=close]');await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');await click('[data-action=companion-tab][data-tab=plan]');
+  assert.ok(await js('!!document.querySelector(".companion-shell [data-matchup-build]")'));assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false);
+  picked='Nautilus';assigned='UTILITY';enemy='Morgana';await sync();await sync();assert.equal(await js('document.querySelector("#solo-role").value'),'support');assert.equal(await js('document.querySelectorAll("[data-matchup-build]").length'),0);
+  await change('.companion-shell [data-matchup-target]','Morgana');await until(()=>js('!!document.querySelector(".companion-shell [data-action=matchup-rune]")'),'Sidebar opponent choices missing');
+  const guardian=await js('document.querySelector(".companion-shell [data-action=matchup-rune]").dataset.id');assert.match(guardian,/8465/);await click('.companion-shell [data-action=matchup-rune]');
+  await until(async()=>(await state()).preparations.some(s=>s.id==='Nautilus'&&s.role==='support'&&s.runeId===guardian),'Sidebar full page was not saved');
+  const protection=await js('[...document.querySelectorAll(".companion-shell [data-action=matchup-core]")].find(b=>b.dataset.id.includes("3222")).dataset.id');await click('.companion-shell [data-action=matchup-core][data-id="'+protection+'"]');
+  await click('[data-action=guide-current]');await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.id==="Nautilus"&&b.model.selection.runeId==='+JSON.stringify(guardian)+'&&b.model.selection.coreId==='+JSON.stringify(protection)+')'),'Sidebar full configuration did not reach guide');
+  await js('document.querySelector("[data-matchup-build]").scrollIntoView({block:"start"})');await capture('matchup-sidebar.png');
+  const layouts=[];for(const width of [440,360,280]){main.setContentSize(width,850);await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');const overflow=await js('document.documentElement.scrollWidth>innerWidth');assert.equal(overflow,false);layouts.push({width,overflow});}main.setContentSize(440,850);
+  await js('window.staleMatchupButton=document.querySelector("[data-action=matchup-rune]:not(:disabled)");void 0');const before=JSON.stringify((await state()).preparations);enemy='';await sync();await sync();assert.equal(await js('document.querySelectorAll("[data-matchup-build]").length'),0,'A hidden hover became an actionable opponent');
+  await js('document.body.append(staleMatchupButton);staleMatchupButton.click();staleMatchupButton.remove();void 0');await delay(150);assert.equal(JSON.stringify((await state()).preparations),before);assert.match(await js('document.querySelector("#toast").textContent'),/已变化/);assert.equal(writes,0);
+  await fs.writeFile(path.join(root,'expected-configuration.json'),JSON.stringify({runeId:guardian,coreId:protection,layouts},null,2));
+ }else{
+  const expected=JSON.parse(await fs.readFile(path.join(root,'expected-configuration.json'))),saved=(await state()).preparations.find(s=>s.id==='Nautilus'&&s.role==='support');assert.equal(saved.runeId,expected.runeId);assert.equal(saved.coreId,expected.coreId);
+  await click('[data-action=open-guide]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Restart guide window missing');await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.runeId==='+JSON.stringify(expected.runeId)+'&&b.model.selection.coreId==='+JSON.stringify(expected.coreId)+')'),'Restart lost the selected complete configuration');
+ }
+ assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));const report={passed:true,archiveSha256:release.archiveSha256,drawerAndSidebarSelection:true,explicitOpponentRequired:true,fullPagesAndSourceCores:true,guideSynchronization:true,wholeProcessRestart:restart,realRuneWrites:0,realGame:'UNPROVEN'};await fs.writeFile(path.join(root,restart?'matchup-restart.json':'matchup-workflow.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
+}
+run().catch(async error=>{console.error(error);if(diagnosticMain&&!diagnosticMain.isDestroyed()){await fs.writeFile(path.join(root,'failure-state.json'),JSON.stringify(await diagnosticMain.webContents.executeJavaScript('window.buddy.bootstrap()').catch(()=>null),null,2));}app.exit(1);});

@@ -22,6 +22,9 @@ test('only the local unselected intent prepares a labeled plan without creating 
  assert.equal(companionPickIntent(assigned,data.champions,slots,{soloRole:'top'}).selection.role,'jungle');
  slots[2]={...slots[2],champion:'Volibear',manualPosition:true,clientCellId:1};
  assert.equal(companionPickIntent(client,data.champions,slots).selection.role,'mid');
+ assert.equal(companionPickIntent(assigned,data.champions,slots).selection.role,'mid','An explicit lane must survive a declared position');
+ slots[2].champion=null;
+ assert.equal(companionPickIntent(assigned,data.champions,slots).selection.role,'mid','A lane chosen before locking belongs to the player cell');
  for(const change of [{connected:false},{phase:'InProgress'},{mode:{id:'aram'}},{session:{localPlayerCellId:3,myTeam:client.session.myTeam}}])assert.equal(companionPickIntent({...client,...change},data.champions,slots),null);
  for(const change of [{championId:hero('Volibear').key},{championPickIntent:999999},{championPickIntent:String(hero('Volibear').key)},{championPickIntent:0}])assert.equal(companionPickIntent({...client,session:{...client.session,myTeam:[{...client.session.myTeam[0],...change}]}},data.champions,slots),null);
  const intent=companionPickIntent(client,data.champions,createSlots());

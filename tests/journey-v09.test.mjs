@@ -60,8 +60,8 @@ test('same-hero known role mismatch suppresses real inventory actions while unkn
 test('formal client position remains distinct from a manual analysis position in the live guide',()=>{
  const slots=createSlots();Object.assign(slots[4],{champion:'Ashe',locked:true,clientCellId:1,manualPosition:true});
  const current={...currentPlayerSelection({myTeam:[{cellId:1,championId:22,assignedPosition:'BOTTOM'}],localPlayerCellId:1},data.champions,slots),mode:'rift'};assert.equal(current.role,'support');assert.equal(current.formalRole,'bottom');
- const manual=createGuideModel(data,selectGuide(null,{...selection,role:'support'}),live(),current);assert.equal(manual.live.kind,'role');assert.equal(manual.action,null);
- const formal=createGuideModel(data,selectGuide(null,selection),live(),current);assert.equal(formal.live.matched,true);
+ const manual=createGuideModel(data,selectGuide(null,{...selection,role:'support'}),live(),current);assert.equal(manual.live.matched,true);assert.equal(manual.role,'辅助');
+ const formal=createGuideModel(data,selectGuide(null,selection),live(),current);assert.equal(formal.live.kind,'role');assert.equal(formal.action,null);
 });
 test('preparation fallback isolates combination contexts while an empty browsing board can resume its saved reference',()=>{
  const store=createPreparationStore(),old={...selection,comboId:'example-a',loadoutId:'ap-poke',runeId:'curated-comet',conditions:['heal']};

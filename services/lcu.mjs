@@ -5,7 +5,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 const execFileAsync=promisify(execFile);
 import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
-const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-champ-select/v1/session','/lol-perks/v1/pages']);
+const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-champ-select/v1/session','/lol-perks/v1/pages','/data-store/v1/install-dir']);
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
 export function parseLockfile(content) {
  const parts=String(content).trim().split(':');

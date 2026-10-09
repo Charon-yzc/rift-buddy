@@ -134,7 +134,8 @@ function buildDescriptor({arch,t,profiles,roles,champs,score},byId){
  const names=ordered.map(o=>byId.get(o.champion)?.name||o.champion);
  const opener=ordered[0],follow=ordered[1],carry=ordered[2];
  const why=`${names[0]}${opener.job}，${names[1]}${follow.job}，${names[2]}${carry.job}——${arch.hook}。`;
- const plan=`对线期各自稳住补刀；${names[0]}关键技能转好后先喊集合，${names[1]}留技能跟进。${arch.play}。`;
+ const opening=[roles.some(r=>['top','mid','bottom'].includes(r))?'线上成员稳住兵线':null,roles.includes('jungle')?'打野按安全路线发育':null,roles.includes('support')?'辅助把视野与保护留给搭档':null].filter(Boolean).join('，');
+ const plan=`开局按各自位置分工：${opening}；${names[0]}关键技能转好后先喊集合，${names[1]}留技能跟进。${arch.play}。`;
  const checks=[t.engage>=1?`先手${t.engage}人`:null,t.aoe>=1?'范围衔接':'',t.ad>=.8&&t.ap>=.8?'伤害互补':'',t.difficulty<=6?'难度适中':''].filter(Boolean);
  return {
   id:`creative-${arch.id}`,

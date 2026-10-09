@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {sanitizeLive} from '../services/live-client.mjs';
-import {createGuideModel,selectGuide,validateGuideState,reconcileGuide} from '../src/core/guide.mjs';
+import {createGuideModel,selectGuide,validateGuideState,reconcileGuide,prepareGuideOpponent} from '../src/core/guide.mjs';
+import {validatePreparation} from '../src/core/preparation.mjs';
+import {defaultState,validateState} from '../services/storage.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
 
 const data=JSON.parse(await fs.readFile('data/game.json'));
@@ -54,8 +56,48 @@ test('a blocked footwear goal is not shown as a completed route or a directly af
  const m=createGuideModel(data,guide,live);
  assert.equal(m.next,null);assert.equal(m.action,null);assert.equal(m.routeBlocked.length,1);assert.equal(m.routeBlocked[0].id,'3047');
  const html=renderGuide({model:{...m,collapsed:false}},'items',false,(_kind,id)=>`<img src="${id}">`);
- assert.match(html,/路线需要确认换装/);assert.doesNotMatch(html,/这套路线已完成/);
+ assert.match(html,/路线有待处理的装备/);assert.match(html,/已持有另一双成鞋/);assert.doesNotMatch(html,/这套路线已完成/);
  assert.match(html,/<option value="3047" disabled/);
  const upgraded=createGuideModel(data,guide,{...live,inventory:inventory.filter(i=>i.id!=='3111').concat({id:'3174',count:1})});
  assert.equal(upgraded.routeBlocked.length,0);assert.equal(upgraded.next,null);assert.ok(upgraded.autoCompletedItems.includes('3047'));
+});
+
+test('an explicit public opponent reaches actual coaching at first entry and survives reconnect and state reload',()=>{
+ const prepared=prepareGuideOpponent(null,selection,'Jhin',{gameId:'17',enemyIds:['Jhin','Jinx']});
+ prepared.completedItems=['3031'];prepared.purchaseTarget='1029';prepared.stage='later';
+ const loading=reconcileGuide(prepared,{phase:'GameStart',gameId:'17'}).guide;
+ const entered=reconcileGuide(loading,{phase:'InProgress',gameId:'17'});
+ assert.equal(entered.reset,true);assert.deepEqual(entered.guide.completedItems,[]);assert.equal(entered.guide.purchaseTarget,undefined);assert.equal(entered.guide.stage,undefined);
+ assert.equal(entered.guide.selection.threatId,'Jhin');assert.equal(entered.guide.selection.matchupGameId,'17');
+ assert.equal(createGuideModel(data,entered.guide,snapshot()).coach.enemy.id,'Jhin');
+ const restored=validateState({...defaultState(),guide:JSON.parse(JSON.stringify(entered.guide))}).guide;
+ for(const phase of ['Offline','Reconnect','GameStart','InProgress']){
+  const next=reconcileGuide(restored,{phase,gameId:'17'}).guide;assert.equal(next.selection.threatId,'Jhin');
+  assert.equal(createGuideModel(data,next,snapshot()).coach.enemy.id,'Jhin');
+ }
+ const changed=selectGuide(restored,{...validatePreparation(restored.selection),conditions:['control']});
+ assert.equal(changed.selection.threatId,'Jhin');assert.equal(changed.selection.matchupGameId,'17');
+ assert.equal(validatePreparation(changed.selection).threatId,undefined);assert.equal(validatePreparation(changed.selection).matchupGameId,undefined);
+ const unbound=selectGuide(null,{...selection,threatId:'Jhin'});unbound.match={phase:'ChampSelect',gameId:'17'};
+ assert.equal(reconcileGuide(unbound,{phase:'InProgress',gameId:'17'}).guide.selection.threatId,undefined,'An unbound previous target cannot claim same-game continuity');
+});
+
+test('prepared opponent is removed on a withdrawn pick, new game, changed hero or lane, and explicit reset',()=>{
+ const prepared=prepareGuideOpponent(null,selection,'Jhin',{gameId:'17',enemyIds:['Jhin','Jinx']});
+ for(const context of [{phase:'ChampSelect',gameId:'17',enemyIds:['Jinx']},{phase:'ChampSelect',gameId:'18',enemyIds:['Jhin']},{phase:'GameStart',gameId:'18'},{phase:'InProgress',gameId:'18'},...['None','Lobby','Matchmaking','ReadyCheck'].map(phase=>({phase}))]){
+  const result=reconcileGuide(prepared,context);assert.equal(result.guide.selection.threatId,undefined);assert.equal(result.guide.selection.matchupGameId,undefined);assert.equal(result.changed,true);
+ }
+ for(const next of [{...selection,id:'Jinx'},{...selection,role:'support'},{...selection,mode:'hex'}])assert.equal(selectGuide(prepared,next).selection.threatId,undefined);
+ const cleared=prepareGuideOpponent(prepared,selection,'',{gameId:'17',enemyIds:['Jhin']});assert.equal(cleared.selection.threatId,undefined);assert.equal(cleared.selection.matchupGameId,undefined);
+ const entered=reconcileGuide(prepared,{phase:'InProgress',gameId:'17'}).guide;entered.match.gameTime=1100;
+ const rewound=reconcileGuide(entered,{phase:'InProgress',gameId:'17',live:{...snapshot(),gameTime:20}});assert.equal(rewound.reset,true);assert.equal(rewound.guide.selection.threatId,undefined);
+});
+
+test('opponent binding rejects unknown or malformed contexts and never chooses a target from a roster alone',()=>{
+ for(const gameId of ['',0,'-1','new-game',{},'1'.repeat(21)])assert.throws(()=>prepareGuideOpponent(null,selection,'Jhin',{gameId,enemyIds:['Jhin']}));
+ for(const opponent of ['HiddenEnemy',undefined,null,{}])assert.throws(()=>prepareGuideOpponent(null,selection,opponent,{gameId:'17',enemyIds:['Jhin']}));
+ assert.throws(()=>prepareGuideOpponent(null,{...selection,mode:'hex'},'Jhin',{gameId:'17',enemyIds:['Jhin']}));
+ assert.throws(()=>selectGuide(null,{...selection,matchupGameId:'17'}));
+ const ordinary=selectGuide(null,selection);ordinary.match={phase:'ChampSelect',gameId:'17'};
+ assert.equal(reconcileGuide(ordinary,{phase:'InProgress',gameId:'17',enemyIds:['Jhin','Jinx']}).guide.selection.threatId,undefined);
 });

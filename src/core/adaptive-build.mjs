@@ -2,7 +2,7 @@ import {itemConflicts} from './mechanics.mjs';
 import {equipmentRoute} from './route-profile.mjs';
 
 // Conditions come from the user, never from inferred or hidden enemy information.
-export function adaptEquipment({items=[],boots=null,late=[],key,support,champion,conditions=[],data,map='11'}) {
+export function adaptEquipment({items=[],boots=null,late=[],key,support,champion,conditions=[],data,map='11',bottomQuestPlan=false,bootsSelected=false}) {
  const activeConditions=Array.isArray(conditions)?conditions:[];
  let core=[...items],tail=[...late],shoe=boots;
  const required=[];
@@ -24,8 +24,9 @@ export function adaptEquipment({items=[],boots=null,late=[],key,support,champion
   else{old=core[2]||tail.at(-1);if(core.length>2)core.splice(2,1);else if(tail.length)tail.pop();}
   adjustments.push({title,text:`${old?name(old)+' → ':''}${name(id)}。${reason}`});
  };
- if(activeConditions.includes('ad')&&shoe){shoe=3047;adjustments.push({title:'普攻压力大',text:'鞋子改为铁板靴，针对普攻承伤。'});}
- if(activeConditions.includes('control')&&shoe){shoe=3111;adjustments.push({title:'控制多',text:'鞋子改为水银之靴；同时勾选普攻压力时优先韧性。韧性无法缩短击飞、压制等所有控制。'});}
+ if(bootsSelected&&activeConditions.some(c=>['ad','control'].includes(c)))adjustments.push({title:'保留自选鞋子',text:`继续使用${name(shoe)}。普攻压力可比较铁板靴，控制压力可比较水银之靴；恢复默认鞋子后会按条件调整。`});
+ if(!bootsSelected&&activeConditions.includes('ad')&&shoe){shoe=3047;adjustments.push({title:'普攻压力大',text:'鞋子改为铁板靴，针对普攻承伤。'});}
+ if(!bootsSelected&&activeConditions.includes('control')&&shoe){shoe=3111;adjustments.push({title:'控制多',text:'鞋子改为水银之靴；同时勾选普攻压力时优先韧性。韧性无法缩短击飞、压制等所有控制。'});}
  if(activeConditions.includes('ap')){
   if(routeProfile.uncertain)adjustments.push({title:'魔法伤害多',text:'当前输出方式尚未确认，保留核心；可在局势备选中考虑抗魔斗篷。'});
   else replace(tank?(support?3190:2504):mage?3102:enchanter?3190:3156,'魔法伤害多','保留前两件配合装备，提前安排魔法防御；对面伤害变化时取消此条件可恢复原路线。');
@@ -44,7 +45,7 @@ export function adaptEquipment({items=[],boots=null,late=[],key,support,champion
  let sequence=required.length?[...first,...(shoe?[shoe]:[]),...required,...core.slice(2),...tail]:[...core,...(shoe?[shoe]:[]),...tail];
  const unique=[];for(const id of sequence)if(!itemConflicts(id,unique))unique.push(id);
  // Keep boots and condition items before optional late damage; support reserves one slot for its quest item.
- const limit=support?5:6;
+ const limit=support?5:bottomQuestPlan&&map==='11'&&shoe?7:6;
  if(unique.length>limit){const removed=unique.splice(limit);for(const id of required.filter(id=>removed.includes(id)))adjustments.push({title:'装备位有限',text:`当前路线未放入${name(id)}，请在另外两种局势需求中取舍，或后期手动替换。`});}
  return {sequence:unique,boots:shoe,adjustments,early,routeProfile,adapted:activeConditions.some(c=>['ad','control','ap','heal','burst'].includes(c))};
 }

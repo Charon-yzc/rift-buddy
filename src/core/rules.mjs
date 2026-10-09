@@ -26,6 +26,7 @@ export const PRIMARY_ROLES={
  Vayne:'bottom',Vladimir:'mid',Warwick:'jungle',MonkeyKing:'jungle',Yasuo:'mid',Yone:'mid',
  Zac:'jungle',Zed:'mid',Zilean:'support',Zyra:'support',Ashe:'bottom',Brand:'support',
  Amumu:'jungle',Bard:'support',Janna:'support',Milio:'support',
+ Locke:'mid',Mel:'mid',Yunara:'bottom',Zaahen:'top',
 };
 
 const ROLE_GROUPS = {
@@ -36,12 +37,18 @@ const ROLE_GROUPS = {
  support:'Alistar Amumu Ashe Bard Blitzcrank Brand Braum Camille Chogath Fiddlesticks Galio Gragas Heimerdinger Ivern Janna Karma Leona Lissandra Lulu Lux Malphite Maokai Milio Morgana Nami Nautilus Neeko Pantheon Poppy Pyke Rakan Rell Renata Senna Seraphine Sett Shaco Shen Sona Soraka Swain TahmKench Taric Thresh Velkoz Xerath Yuumi Zac Zilean Zyra',
 };
 const groups = Object.fromEntries(Object.entries(ROLE_GROUPS).map(([k,v])=>[k,new Set(v.split(' '))]));
+// A declared primary position must also be eligible in the usual-position list.
+for(const [id,role] of Object.entries(PRIMARY_ROLES))groups[role].add(id);
+// Position membership records which identities this mechanic profile has been
+// reviewed for. A future data-only hero must not silently become an AD fighter.
+groups.jungle.add('Locke');
+export const PROFILE_PATCH='16.20';
 const unusualPositions={bottom:new Set('Kennen Kindred TahmKench Chogath Yone'.split(' ')),jungle:new Set('Rell Shen DrMundo Jax Qiyana Sylas Zed'.split(' ')),support:new Set('Camille Chogath Fiddlesticks Gragas Ivern Lissandra Malphite Sett Shaco Shen Zac'.split(' '))};
 export function conventionalRole(champion,role,cache=null){
  const key=cache?`${champion.id}:${role}`:null;
  let p=key?cache.get(key):null;
  if(!p){p=profile(champion,role);if(key)cache.set(key,p);}
- return p.roles.includes(role)&&!unusualPositions[role]?.has(champion.id);
+ return p.reviewed&&p.roles.includes(role)&&!unusualPositions[role]?.has(champion.id);
 }
 const traitSets = {
  frontline:'Alistar Amumu Blitzcrank Braum Chogath DrMundo Galio Garen Gragas KSante Leona Malphite Maokai Mordekaiser Nautilus Nunu Ornn Poppy Rammus Rell Sejuani Sett Shen Sion Skarner TahmKench Taric Udyr Volibear Warwick Zac',
@@ -53,15 +60,25 @@ const traitSets = {
  ap:'Ahri Akali Amumu Anivia Annie AurelionSol Aurora Azir Brand Cassiopeia Chogath Diana Ekko Elise Evelynn Fiddlesticks Fizz Galio Gragas Gwen Heimerdinger Hwei Ivern Janna Karma Karthus Kassadin Katarina Kayle Kennen Leblanc Lillia Lissandra Lulu Lux Malphite Malzahar Mel Milio Mordekaiser Morgana Nami Neeko Nidalee Nunu Orianna Rumble Ryze Sejuani Seraphine Shaco Shyvana Singed Sona Soraka Swain Sylas Syndra Taliyah Teemo TwistedFate Veigar Velkoz Vex Viktor Vladimir Xerath Yuumi Zac Ziggs Zilean Zoe Zyra',
 };
 const sets=Object.fromEntries(Object.entries(traitSets).map(([k,v])=>[k,new Set(v.split(' '))]));
+// Riot champion mechanics, checked 2026-10-09. Sustain means continuing damage,
+// not healing. These tags are curated functions, never strength or win rates.
+for(const id of ['Locke','Yunara','Zaahen'])sets.sustain.add(id);
+// Repeated attacks (W/E/crit cycles) and repeatable Q casts also supply sustained
+// damage. Reviewed against each champion's 16.20.1 Riot skill descriptions.
+for(const id of ['Trundle','Tryndamere','Olaf','Fiora','Ryze','Ezreal','Irelia'])sets.sustain.add(id);
+for(const id of ['Mel','Yunara'])sets.aoe.add(id);
+sets.poke.add('Mel');sets.engage.add('Zaahen');sets.ap.add('Locke');
 const TANKS=new Set('Alistar Amumu Blitzcrank Braum Chogath DrMundo KSante Leona Malphite Maokai Nautilus Nunu Ornn Rammus Rell Sejuani Shen Sion Skarner TahmKench Taric Zac'.split(' '));
 const ENCHANTERS=new Set('Ivern Janna Karma Lulu Milio Nami Renata Sona Soraka Yuumi Zilean'.split(' '));
 const ONHIT=new Set('Kaisa Kalista KogMaw Vayne Varus Kayle'.split(' '));
 const MAGES_DOT=new Set('Brand Cassiopeia Lillia Malzahar Mordekaiser Rumble Singed Swain Zyra'.split(' '));
 const MAGES_MANAFREE=new Set('Akali Katarina Kennen Vladimir Rumble Mordekaiser'.split(' '));
-const ASSASSINS=new Set('Akali Diana Ekko Elise Evelynn Fizz Kassadin Katarina Leblanc Naafiri Nidalee Shaco Sylas Talon Zed Qiyana Khazix Rengar Pyke'.split(' '));
+const ASSASSINS=new Set('Akali Diana Ekko Elise Evelynn Fizz Kassadin Katarina Leblanc Locke Naafiri Nidalee Shaco Sylas Talon Zed Qiyana Khazix Rengar Pyke'.split(' '));
 export function profile(c, role) {
  const roles=ROLES.filter(r=>groups[r.id].has(c.id)).map(r=>r.id);
+ const reviewed=roles.length>0;
  if(!roles.length) roles.push(c.tags.includes('Marksman')?'bottom':c.tags.includes('Support')?'support':c.tags.includes('Mage')?'mid':'top');
+ if(!reviewed)return {roles,reviewed:false,build:null,damage:null,damageWeights:{ad:0,ap:0},manaFree:null,difficulty:c.info?.difficulty??5,...Object.fromEntries(Object.keys(sets).filter(k=>k!=='ap').map(k=>[k,null]))};
  if(roles.includes(PRIMARY_ROLES[c.id]))roles.sort((a,b)=>Number(b===PRIMARY_ROLES[c.id])-Number(a===PRIMARY_ROLES[c.id]));
  let build=sets.ap.has(c.id)?'mage':'fighter';
  if(c.tags.includes('Marksman')&&!sets.ap.has(c.id)) build=ONHIT.has(c.id)?'onhit':'crit';
@@ -79,8 +96,8 @@ export function profile(c, role) {
  if(role==='support'&&build==='tank') build='supportTank';
  if(role==='support'&&['Galio','Gragas','Rakan'].includes(c.id))build='supportTank';
  const magic=sets.ap.has(c.id)||['Alistar','Bard','Braum','Leona','Nautilus','Ornn','Rakan','Rammus','Rell','Renata','Thresh'].includes(c.id);
- const mixed=['Kaisa','KogMaw','Varus','Jax','Yone','Udyr','Volibear','Shen'].includes(c.id);
- return {roles,build,damage:magic?'ap':'ad',damageWeights:mixed?{ad:.55,ap:.45}:magic?{ad:0,ap:1}:{ad:1,ap:0},manaFree:MAGES_MANAFREE.has(c.id),
+ const mixed=['Kaisa','KogMaw','Varus','Jax','Yone','Udyr','Volibear','Shen','Yunara'].includes(c.id);
+ return {roles,reviewed,build,damage:magic?'ap':'ad',damageWeights:mixed?{ad:.55,ap:.45}:magic?{ad:0,ap:1}:{ad:1,ap:0},manaFree:MAGES_MANAFREE.has(c.id),
   difficulty:c.info?.difficulty??5,...Object.fromEntries(Object.entries(sets).filter(([k])=>k!=='ap').map(([k,v])=>[k,v.has(c.id)]))};
 }
 
