@@ -49,11 +49,14 @@ export function duelBox(m){
 // Transparent kill strip: one direction only — my kill line against each
 // visible enemy, no incoming damage, no warnings. Numbers come from the same
 // estimate model, only killMine is rendered.
+// Layout mirrors the ball: a narrow drag grip owns the -webkit-app-region:drag
+// zone (drag regions swallow every pointer event), while the content stays
+// no-drag so the click that restores the full guide actually reaches us.
 export function killStrip(m){
  const duels=Array.isArray(m?.estimate?.duels)?m.estimate.duels.slice(0,5):[];
  if(!duels.length)return '';
  const rows=duels.map(d=>`<span>vs ${e(d.enemy?.name)} · 我方约 <strong>${d.killMine??'—'}</strong></span>`).join('');
- return `<button class="kill-strip" data-action="strip" title="点击回到完整指引" aria-label="透明斩杀线，点击回到完整指引">${rows}<small>六秒输出估算 · 点击回到完整指引</small></button>`;
+ return `<div class="strip-frame"><span class="strip-grip" aria-hidden="true"></span><button class="kill-strip" data-action="strip" title="点击回到完整指引" aria-label="透明斩杀线，点击回到完整指引">${rows}<small>六秒输出估算 · 点击回到完整指引</small></button></div>`;
 }
 export function renderGuide(snapshot,tab,isPreview,image){
  const m=snapshot?.model;
@@ -64,7 +67,7 @@ export function renderGuide(snapshot,tab,isPreview,image){
  const liveText=(current?.positionKnown===false?'位置待确认 · ':'')+(m.live.matched?`本机同步 · ${m.live.gold??'—'} 金 · ${m.live.level??'—'} 级${inventoryPending?' · 背包待恢复':''}`:'手动参考 · '+m.live.reason);
  const inputText=snapshot.mousePassThrough?'点击标题栏“交互”可调整 · Ctrl + Shift + H':snapshot.interactionHotkeyAvailable?'可交互 · 游戏中 Ctrl + Shift + H 切换穿透':'可交互 · 穿透快捷键未注册';
  if(snapshot.strip){
-  return killStrip(m)||`<button class="kill-strip" data-action="strip" title="点击回到完整指引" aria-label="透明斩杀线，点击回到完整指引"><span>暂无对局估算</span><small>点击回到完整指引</small></button>`;
+  return killStrip(m)||`<div class="strip-frame"><span class="strip-grip" aria-hidden="true"></span><button class="kill-strip" data-action="strip" title="点击回到完整指引" aria-label="透明斩杀线，点击回到完整指引"><span>暂无对局估算</span><small>点击回到完整指引</small></button></div>`;
  }
  if(snapshot.ball){
   const mainImg=(next&&!wrong)?image('item',action?.id||next.id,action?.name||next.name):image('champion',m.champion.id,m.champion.name);

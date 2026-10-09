@@ -20,7 +20,7 @@ const api=window.guide||{
  control:async(action,value)=>{
   const s=window.previewGuideState;
   if(action==='presentation')return {...snapshot,presentation:changePresentation(snapshot.presentation,value)};
-  if(action==='recover'){s.ball=false;s.collapsed=false;}
+  if(action==='recover'){s.ball=false;s.strip=false;s.collapsed=false;}
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
   if(action==='purchase-target'){s.purchaseTarget=value||undefined;s.purchaseTargetKind=snapshot.model.shoppingTargets.find(i=>i.id===value)?.kind==='局势备选'?'situation':undefined;}if(action==='stage')s.stage=value==='auto'?undefined:value;

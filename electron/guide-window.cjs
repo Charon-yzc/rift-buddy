@@ -25,7 +25,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  let gameBounds=null;
  const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
  function fit(recover=false){if(!win||win.isDestroyed())return;const area=workArea(),current=win.getBounds();
-  if(isStrip()){adjusting=true;const h=stripHeight();win.setMinimumSize(Math.min(200,area.width),Math.min(60,area.height));win.setBounds({x:Math.max(area.x,Math.min(current.x,area.x+area.width-STRIP_W)),y:Math.max(area.y,Math.min(current.y,area.y+area.height-h)),width:Math.min(STRIP_W,area.width),height:Math.min(h,area.height)});adjusting=false;return;}
+  if(isStrip()){const h=stripHeight(),b={x:Math.max(area.x,Math.min(current.x,area.x+area.width-STRIP_W)),y:Math.max(area.y,Math.min(current.y,area.y+area.height-h)),width:Math.min(STRIP_W,area.width),height:Math.min(h,area.height)};if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3)){adjusting=true;win.setMinimumSize(Math.min(200,area.width),Math.min(60,area.height));win.setBounds(b);adjusting=false;}return;}
   const b=guidePlacement(recover?null:current,area,gameBounds,{ball:isBall(),collapsed:!!getState()?.collapsed,recover});adjusting=true;win.setMinimumSize(Math.min(isBall()?76:360,area.width),Math.min(isBall()?76:getState()?.collapsed?280:480,area.height));if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3))win.setBounds(b);adjusting=false;}
  const isBall=()=>!!getState()?.ball;
  const isStrip=()=>!!getState()?.strip;
@@ -36,7 +36,7 @@ const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnec
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough();win.setIgnoreMouseEvents(ignore,{forward:true});win.setFocusable(!pass);if(ignore&&win.isFocused())win.blur();}};
 const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
-function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload(),key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
+function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();const value=payload(),key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
  async function save(next){await setState(next);publish();return payload();}
  function adjustHeight(){if(win&&!isBall()&&!isStrip()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
  function applyMode(){
@@ -107,7 +107,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
  function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
  const displayChanged=()=>fit();
  for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
- function toggle(){if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible())hide();else show();}
+ function toggle(){if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible())hide();else show();}
  async function interact(){const current=getState();if(!current)return;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{
   if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');
@@ -168,10 +168,10 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
   }
   if(getState()&&['WaitingForStats','PreEndOfGame','EndOfGame'].includes(next)&&!['WaitingForStats','PreEndOfGame','EndOfGame'].includes(previous)){
    const behavior=preferences.guideAfterGame||'hide';if(behavior==='hide')hide();
-   else if(behavior==='collapse'){await save({...getState(),collapsed:true});adjustHeight();}
+   else if(behavior==='collapse'&&!isStrip()){await save({...getState(),collapsed:true});adjustHeight();}
   }
  }
- return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);win?.destroy();},window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),clickThrough:mousePassThrough()}:null};
+ return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);win?.destroy();},window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),clickThrough:mousePassThrough()}:null};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;

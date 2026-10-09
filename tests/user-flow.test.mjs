@@ -207,4 +207,12 @@ test('kill strip shows only my kill lines against visible enemies',async()=>{
  assert.equal(killStrip({estimate:{duels:[]}}),'');
  const full=renderGuide({model,strip:true,connected:true,phase:'InProgress',mousePassThrough:false},'items',false,()=>'<img>');
  assert.ok(full.includes('kill-strip')&&!full.includes('estimate-row danger'));
+ // The content must be a no-drag region (drag regions swallow pointer
+ // events in a frameless window) with a separate drag grip beside it.
+ assert.ok(full.includes('strip-grip')&&full.includes('strip-frame'));
+ const css=await fs.readFile(new URL('../src/guide.css',import.meta.url),'utf8');
+ const stripRule=css.match(/\.kill-strip\{[^}]*\}/)?.[0]||'';
+ const gripRule=css.match(/\.strip-grip\{[^}]*\}/)?.[0]||'';
+ assert.ok(stripRule.includes('-webkit-app-region:no-drag')&&!stripRule.includes('-webkit-app-region:drag;'));
+ assert.ok(gripRule.includes('-webkit-app-region:drag'));
 });
