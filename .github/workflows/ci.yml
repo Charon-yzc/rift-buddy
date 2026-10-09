@@ -75,6 +75,8 @@ jobs:
         run: node scripts/smoke-package-cooperation.mjs
       - name: Check locked cross-lane plans and complete late-item choices across restarts
         run: node scripts/smoke-package-cooperation.mjs --cross-lane
+      - name: Check retained pair order and third-member follow-ups across restarts
+        run: node scripts/smoke-package-cooperation.mjs --retained-pair
       - name: Check ordinary locked-friend recommendations without hero pools
         run: node scripts/smoke-package-cooperation.mjs --locked-friends
       - name: Check role statistics and broad skill cooperation across saved member guides

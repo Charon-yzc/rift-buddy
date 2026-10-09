@@ -44,8 +44,9 @@ test('ordinary locked friends get full-party actions on the first page in every 
   for(const row of rows){
    assert.deepEqual(row.targets,[open]);assert.equal(row.adaptive.memberJobs.length,fixed.length+1);
    for(const m of fixed)assert.deepEqual(row.slots.find(s=>s.role===m.role),before.find(s=>s.role===m.role));
-   assert.ok(row.adaptive.edges.every(e=>e.current&&e.family.startsWith('skills:')));
-   assert.match(row.adaptive.sourceNote,/通用控制接力.*未经组合对局验证/);
+   assert.ok(row.adaptive.edges.every(e=>e.current));
+   assert.match(row.adaptive.sourceNote,/未经组合对局验证/);
+   if(row.adaptive.edges.some(e=>e.family.startsWith('follow:')))assert.match(row.adaptive.sourceNote,/保留已整理双人配合.*未确认额外三人协同/);
   }
  }
 });
@@ -102,10 +103,10 @@ test('member actions appear before statistics and personal-node supplements do n
  }
 });
 
-test('a generated fallback never invents a moderate cooperation difficulty',()=>{
+test('an inferred plan never invents a moderate cooperation difficulty',()=>{
  const slots=setup([member('Kled','top'),member('Nidalee','jungle')],'mid');
  for(const style of ['balanced','fun','wild']){
   const rows=recommend({slots,champions:data.champions,scope:'party',style,limit:3});
-  for(const row of rows){assert.equal(row.origin,'generated');const html=renderResultCard(row,0,data,{favorites:[]},style);assert.match(html,/配合难度未评估/);assert.doesNotMatch(html,/配合难度 · 适中/);assert.match(html,/\d\/3 位已整理/);}
+  for(const row of rows){assert.ok(row.adaptive);const html=renderResultCard(row,0,data,{favorites:[]},style);assert.match(html,/未经组合对局验证/);assert.doesNotMatch(html,/配合难度 · 适中/);assert.match(html,/\d\/3 位已整理/);}
  }
 });

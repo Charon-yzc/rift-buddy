@@ -1,3 +1,4 @@
+import {COOPERATION_SKILLS} from './cooperation-skills.mjs';
 // Authored conditional plans, checked against bundled Riot 16.20.1 mechanics.
 // A pair is a way to cooperate, not proof of win rate or unconditional strength.
 export const COOPERATION_PAIRS=[
@@ -8,7 +9,7 @@ export const COOPERATION_PAIRS=[
  ['Darius','Viego','留人建立首个击杀','诺手 E/W 把交战留在自己能普攻的位置，佛耶戈 W 命中后接 Q 与被动普攻；先集中同一目标，参与击杀后才考虑占据。','两人能持续接触同一目标，佛耶戈 W/Q 与诺手留人技能可用；先看己方兵线及支援距离。','没有首个击杀就没有占据；W 被挡或诺手接触断开就退，不以刷新或血怒必定触发来计划。','early',true],
  ['Ahri','Viego','魅惑建立收割入口','阿狸 E 命中再接 Q/W，佛耶戈从侧面 W 接控制并普攻/Q；先参与可靠击杀，阿狸保留 R 接应退出。','魅惑与 W 路径不被阻挡，双方能同时接触同一目标；有灵魂后再确认占据位置是否安全。','魅惑落空就不靠佛耶戈独进；没有击杀不预设刷新，占据会改变基础技能，后续按实际技能行动。','early',true],
  ['Jax','Viego','反击风暴接蓄力控制','武器 E 承接普攻威胁，Q 接近后 E 实际眩晕，佛耶戈 W 错开控制再接普攻/Q；武器保留可 Q 回撤目标。','武器 E/Q 与佛耶戈 W 可用，武器能承受接近过程，控制结束前佛耶戈能赶到。','E 没控到或目标离开就不强接 W；武器 Q 没有安全撤离目标时，不为等佛耶戈占据硬留。','teamfight',true],
- ['Kayle','Kindred','成长与双重大招接力','凯尔先保经验，千珏按安全野区发育；交战中千珏 R 防止区域内单位死亡，结束后再用凯尔 R 承接后续爆发，输出始终打能安全触及的人。','双方 R 已学会且可用，凯尔能施法给目标；先约好谁先交，千珏 R 范围与结束时机由玩家确认。','千珏 R 同样保护区域内敌人；两 R 同时交可能浪费窗口，不为印记丢凯尔兵线，也不默认低等级凯尔已有远程形态。','protect',false],
+ ['Kayle','Kindred','成长与双重大招接力','凯尔先保经验，千珏按安全野区发育；交战中千珏 R 防止区域内单位死亡，结束后再用凯尔 R 承接后续爆发，输出始终打能安全触及的人。','双方 R 已学会且可用，凯尔能施法给目标；先约好谁先交，千珏 R 范围与结束时机由玩家确认。','千珏 R 同样保护区域内敌人；两 R 同时交可能浪费窗口，不为印记丢凯尔兵线，也不默认低等级凯尔已有远程形态。','protect',false,{Kayle:'优先经验与安全补刀，Q/普攻只打安全目标；千珏 R 实际结束后，再给约定友军凯尔 R 承接后续反击，不把两 R 同时交。',Kindred:'Q/普攻保持安全输出，R 已可用才按约定先保护区域，报实际结束时机让凯尔接 R；圈内敌人也不会死亡，不为印记强求队友同行。'}],
  ['Amumu','Zed','禁锢后影子切入','阿木木 Q 命中接近，普攻施加诅咒，R 已学会时错开 Q 控制；劫先从安全侧 W/E/Q，目标仍被限制且退路可靠才 R 切入。','Q 路径不被单位挡住，劫有能量和可回撤影子；R 均未就绪时只按 Q 留人接短轮次。','Q 落空或劫无法返回就不深入；阿木木不为劫追入多人阵形，劫不把所有手里剑必命中当条件。','early',true],
  ['Gragas','Zed','撞击接影子爆发','古拉加斯 E 实际撞到英雄后劫 W/E/Q 跟进；古拉加斯 R 若要改位置先报方向，劫 R 只落在两人能接应的位置。','E 路径未被单位阻挡，劫能量/影子与退出空间足够；大招没就绪时只做短换血。','E 落空或爆破把目标带离影子角度时停止；不为补劫伤害把目标炸出队友范围。','early',true],
  ['Nunu','Zed','雪球留人接侧面输出','努努 W 实际撞中后 E 的雪球与束缚继续留人，劫从侧面 W/E/Q；劫保留返回位置，努努 R 只在能安全引导时使用。','雪球路线可到达目标，E 后仍能维持必要距离；劫在跟进距离并有能量，不假定努努 R 必能完整引导。','雪球未命中或 E 距离断开就退；努努被打断时劫不按完整 R 伤害继续追击。','early',true],
@@ -78,8 +79,14 @@ const relayPlans=new Map(relays.map(rows=>{const jobs=rows.map(([role,champion,j
 export function cooperationCoordination(members,graph,edges){
  const laneNames=members.filter(m=>['top','mid','bottom'].includes(m.role)).map(m=>graph.byId.get(m.champion).name);
  const relay=relayPlans.get(relayKey(members));
- const ownStep=(edge,champion)=>COOPERATION_PAIRS.find(row=>row.slice(0,2).includes(edge.a)&&row.slice(0,2).includes(edge.b))?.[8]?.[champion]||edge.step;
- const jobs=relay?members.map(m=>({...m,job:relay.find(r=>r.role===m.role&&r.champion===m.champion).job})):members.map(m=>({...m,job:edges.filter(e=>[e.a,e.b].includes(m.champion)).map(e=>ownStep(e,m.champion)).join(' ')}));
+ const ownStep=(edge,champion)=>{
+  if(edge.family.startsWith('follow:'))return champion===edge.b?edge.step:'';
+  const authored=COOPERATION_PAIRS.find(row=>row.slice(0,2).includes(edge.a)&&row.slice(0,2).includes(edge.b))?.[8]?.[champion];
+  if(authored)return authored;
+  const skill=COOPERATION_SKILLS[champion];
+  return skill?`${skill[0]} 按「${edge.name}」的成立条件与搭档衔接。`:edge.step;
+ };
+ const jobs=relay?members.map(m=>({...m,job:relay.find(r=>r.role===m.role&&r.champion===m.champion).job})):members.map(m=>({...m,job:edges.filter(e=>[e.a,e.b].includes(m.champion)).map(e=>ownStep(e,m.champion)).filter(Boolean).join(' ')}));
  const opening=members.map(m=>((openingRoles[m.champion]||['top','mid','bottom']).includes(m.role)?openings[m.champion]:null)||`${graph.byId.get(m.champion).name}${m.role==='jungle'?'按安全营地发育，报下一条可接应路线，不在兵线不允许时强求同行。':m.role==='support'?'围绕搭档位置留控制与保护，游走前先确认下路能安全补刀。':'先处理兵线与退出路线，再报能否到达队友位置。'}`).join(' ');
  const economy=(laneNames.length?`${laneNames.join('、')}各自保留兵线经济；`:'')+(members.some(m=>m.role==='jungle')?'打野保留安全营地，不为等一次抓人空转；':'')+'转资源前先报谁清线、谁占入口、谁后到，只有成员实际到位且相关条件满足才开。抓人失败回各自兵线或营地，不为了补损失连续强抓。';
  return {opening,economy,memberJobs:jobs,...(relay?{relaySteps:relay.map(m=>graph.byId.get(m.champion).name+'：'+m.job)}:{})};
