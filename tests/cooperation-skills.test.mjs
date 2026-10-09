@@ -50,7 +50,7 @@ test('actual sleep, fear, resource, evolution, form and terrain conditions remai
  assert.match(text('Kayn','Veigar'),/红形态/);assert.match(text('Kayn','Veigar'),/边缘/);assert.match(text('Gwen','Vex'),/只保护格温/);
  assert.match(text('Aurora','Annie'),/减速区域/);assert.match(text('Lux','Belveth'),/低血量单位/);
  assert.match(text('Nocturne','Ahri'),/全地图/);
- assert.equal(cooperationPlan([member('Graves','jungle'),member('Karthus','mid')],g),null,'Reviewed damage follow-ups do not invent a control opener');
- assert.equal(cooperationPlan([member('Graves','jungle'),member('Khazix','mid')],g),null,'Damage alone does not invent a control opener');
+ assert.deepEqual(cooperationPlan([member('Graves','jungle'),member('Karthus','mid')],g).edges,[],'Reviewed damage follow-ups do not invent a control opener');
+ assert.deepEqual(cooperationPlan([member('Graves','jungle'),member('Khazix','mid')],g).edges,[],'Damage alone does not invent a control opener');
  assert.ok(Object.keys(COOPERATION_SKILLS).every(id=>data.champions.some(c=>c.id===id)));
 });

@@ -83,6 +83,10 @@ jobs:
         run: node scripts/smoke-package-cooperation.mjs --retained-pair
       - name: Check ordinary locked-friend recommendations without hero pools
         run: node scripts/smoke-package-cooperation.mjs --locked-friends
+      - name: Check shared resource and meeting plans without invented control across restarts
+        run: |
+          node scripts/smoke-package-cooperation.mjs --shared
+          node scripts/smoke-package-cooperation.mjs --growth
       - name: Check role statistics and broad skill cooperation across saved member guides
         run: node scripts/smoke-package-cooperation.mjs --adaptive-data
       - name: Check expanded cooperation and sidebar preview choices before accepting a plan

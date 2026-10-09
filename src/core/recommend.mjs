@@ -173,7 +173,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context) 
  if(adaptive)score+=adaptive.bonus;
  const pairEvidence=scope==='solo'?null:context?.pairStatistics?.forMembers(slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party));
  score+=pairEvidence?.bonus||0;
- const tempo=context?.play?.tempo;if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,trio||duo)[tempo]||0,12)*3;
+ const tempo=context?.play?.tempo;if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,trio||duo||adaptive)[tempo]||0,12)*3;
  for(const m of a.members){
   if(!requestedIds.includes(m.champion))continue;
   if(context?.poolMode==='prefer'&&context.pool.has(m.champion))score+=12;
@@ -250,14 +250,14 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
  if(!targets.length){
   const g=grade(slots,champions,style,[],{},context);
   if(creativePlanMatches(creativePlan,slots)&&creativePlan.members.every(m=>scopeSlots(slots,scope).some(s=>s.role===m.role))){
-   const plan=validateCreativePlan(creativePlan,slots),cooperation=plan.archetype==='cooperation';
+   const plan=validateCreativePlan(creativePlan,slots),cooperation=['cooperation','shared'].includes(plan.archetype);
    // Accepted picks are locked for the next search. That must not grant new
    // replacement permissions to friends who were fixed before the search.
    // Legacy plans have no record of that permission: require an explicit unlock.
    const editableTargets=(plan.editableTargets||[]).filter(role=>scopeSlots(slots,scope).some(s=>s.role===role&&(s.party||['bot','solo'].includes(scope))));
-   return [{id:signature(slots),slots:structuredClone(slots),...g,trio:null,duo:null,creative:cooperation?null:plan,adaptive:cooperation?plan.cooperation:g.adaptive,creativePlan:plan,origin:cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,{tempo:plan.tempo,why:plan.why,risk:plan.caution},play.tempo,context.enemyTraits),catalogState:null}];
+   return [{id:signature(slots),slots:structuredClone(slots),...g,trio:null,duo:null,creative:cooperation?null:plan,adaptive:cooperation?(plan.shared||plan.cooperation):g.adaptive,creativePlan:plan,origin:cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,{tempo:plan.tempo,why:plan.why,risk:plan.caution},play.tempo,context.enemyTraits),catalogState:null}];
   }
-  return [{id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,g.trio||g.duo,play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null}];
+  return [{id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,g.trio||g.duo||(g.adaptive?.kind==='shared'&&{tempo:g.adaptive.tempo,why:g.adaptive.why,risk:g.adaptive.failures.join(' ')}),play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null}];
  }
  const fixed=slots.map(s=>{if(!targets.includes(s.role))return {...s};const {clientCellId,manualPosition,...draft}=s;return {...draft,champion:null};});
  if(poolMode==='only'&&!heroPool.some(id=>context.byId.has(id)))throw Error('先添加英雄池，或切换为“全部英雄”');
@@ -343,6 +343,7 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
   const combo=entry.trio||entry.duo,members=combo?(combo.members||[{role:'bottom',champion:combo.carry},{role:'support',champion:combo.support}]):entry.adaptive?.members;
   if(!members||members.length!==partyMembers.length||!members.every(m=>partyMembers.some(p=>p.role===m.role)&&entry.slots.some(s=>s.role===m.role&&s.champion===m.champion)))return false;
   if(combo)return 3;
+  if(entry.adaptive.kind==='shared')return .5;
   if(!members.every(m=>entry.adaptive.edges.some(e=>e.current&&[e.a,e.b].includes(m.champion))))return 0;
   // A general control/follow-up plan must not displace reviewed interactions
   // such as Ahri/Vi merely because it can be generated for many more allies.

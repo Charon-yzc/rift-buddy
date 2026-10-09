@@ -21,7 +21,7 @@ export function safeSourceURL(value){try{const u=new URL(value);return u.protoco
 const list=(v,max,check,label)=>{assert(Array.isArray(v)&&v.length<=max&&v.every(check),label);};
 function unique(v,key,label){assert(new Set(v.map(key)).size===v.length,label+'重复');}
 function sources(v){list(v,12,s=>s&&str(s.name,100)&&safeSourceURL(s.url)&&(s.checkedAt===undefined||date(s.checkedAt))&&(s.kind===undefined||str(s.kind,100)),'来源格式');}
-function metadata(c){assert(c&&id(c.id)&&str(c.name,120)&&styles.includes(c.style)&&str(c.why)&&str(c.plan)&&str(c.risk)&&str(c.difficulty,20),'组合内容');list(c.tags,15,v=>str(v,40),'标签');assert(/^\d{2}\.\d{1,2}$/.test(c.patch)&&date(c.reviewedAt),'复核版本与日期');sources(c.sources||[]);assert(c.tempo===undefined||['early','teamfight','protect','poke'].includes(c.tempo),'玩法类型');}
+function metadata(c){assert(c&&id(c.id)&&str(c.name,120)&&styles.includes(c.style)&&str(c.why)&&str(c.plan)&&str(c.risk)&&str(c.difficulty,20),'组合内容');list(c.tags,15,v=>str(v,40),'标签');assert(/^\d{2}\.\d{1,2}$/.test(c.patch)&&date(c.reviewedAt),'复核版本与日期');sources(c.sources||[]);assert(c.tempo===undefined||['early','teamfight','protect','poke','growth'].includes(c.tempo),'玩法类型');}
 export function validateCatalog(value,data){
  assert(value&&value.schema===1&&JSON.stringify(value).length<=CATALOG_LIMIT,'文件格式或大小');
  const c=structuredClone(value);assert(id(c.id)&&typeof c.version==='string'&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,49}$/.test(c.version)&&str(c.name,120)&&str(c.notes,4000)&&/^\d{2}\.\d{1,2}$/.test(c.patch)&&date(c.reviewedAt),'库信息');
