@@ -1,3 +1,4 @@
+import {changeSummonerSlot} from './summoner-selection.mjs';
 import {getBuild} from './builds.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {ROLES,profile} from './rules.mjs';
@@ -19,7 +20,13 @@ export function changeCompanionPlan(data,selection,field,value){
  const champion=data.champions.find(c=>c.id===selection.id);
  if(!champion)throw Error('英雄资料已变化，请重新选择');
  const current=getBuild(champion,selection.role,data,selection),next={...selection};
- if(field==='quest-plan'){
+ if(field.startsWith('summoner-')){
+  if(field==='summoner-reset')delete next.summonerIds;
+  else if(field==='summoner-swap'){
+   if(current.summoners.length!==2)throw Error('当前召唤师技能资料不完整');
+   next.summonerIds=[...current.summoners].reverse();
+  }else next.summonerIds=changeSummonerSlot(data,selection.mode,current.summoners,field.slice(9),value);
+ }else if(field==='quest-plan'){
   if(selection.mode!=='rift'||selection.role!=='bottom')throw Error('任务后额外装备计划只适用于峡谷下路');
   next.bottomQuestPlan=!selection.bottomQuestPlan;if(!next.bottomQuestPlan)next.laterIds=(next.laterIds||[]).slice(0,2);
  }else if(field==='loadout'){

@@ -1,3 +1,4 @@
+import {summonerPlan} from './summoner-selection.mjs';
 import {validMatchups} from './matchups.mjs';
 import {validBuildSource,buildSourceLabel,selectedBuildReference,collectBuildSources} from './build-source.mjs';
 import {profile, RULES_PATCH, RULES_VERSION, DUOS, TRIOS} from './rules.mjs';
@@ -103,7 +104,7 @@ export function buildRoleEvidence(data){
  return result;
 }
 const conflicts=itemConflicts;
-export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,creativePlan,runeId,skillId,startId,bootsId,laterIds=[],bottomQuestPlan=false}={}) {
+export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,creativePlan,runeId,skillId,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false}={}) {
  coreIndex=Number.isInteger(coreIndex)&&coreIndex>=0?coreIndex:0;
  if(!Array.isArray(conditions))conditions=[];
  const p=profile(champion,mode==='hex'?undefined:role);let key=p.build;
@@ -228,7 +229,8 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const valid=validateRunePage(runePage,data.runes);
  const sampleCount=ref?.core[Math.min(ref.core.length-1,coreIndex)]?.samples||0;
  const sampleText=adaptive.adapted?'原始配置的样本不代表当前调整路线':sampleCount>0?`核心三件套样本 ${sampleCount} 场${sampleCount<200?'，样本较少':''}`:'当前来源未提供这套三件装的样本数';
- const summoners=ref?.summoners||config?.summoners|| (config&&['rengar-bush','pantheon-stun','ap-dive','naafiri-dive'].includes(config.id)?['SummonerFlash','SummonerDot']:config?.id==='farm-tank'?['SummonerFlash','SummonerTeleport']:mode==='hex'?['SummonerFlash','SummonerSnowball']:role==='jungle'?['SummonerFlash','SummonerSmite']:role==='top'?['SummonerFlash','SummonerTeleport']:role==='support'?['SummonerFlash','SummonerExhaust']:role==='bottom'?['SummonerFlash','SummonerBarrier']:['SummonerFlash','SummonerTeleport']);
+ const recommendedSummoners=ref?.summoners||config?.summoners|| (config&&['rengar-bush','pantheon-stun','ap-dive','naafiri-dive'].includes(config.id)?['SummonerFlash','SummonerDot']:config?.id==='farm-tank'?['SummonerFlash','SummonerTeleport']:mode==='hex'?['SummonerFlash','SummonerSnowball']:role==='jungle'?['SummonerFlash','SummonerSmite']:role==='top'?['SummonerFlash','SummonerTeleport']:role==='support'?['SummonerFlash','SummonerExhaust']:role==='bottom'?['SummonerFlash','SummonerBarrier']:['SummonerFlash','SummonerTeleport']);
+ const spells=summonerPlan(data,mode,role,recommendedSummoners,summonerIds);selectionWarnings.push(...spells.warnings);
  const fitsRoute=item=>{
   const ap=item.stats?.FlatMagicDamageMod>0,ad=item.stats?.FlatPhysicalDamageMod>0,defense=item.tags?.some(t=>['Armor','SpellBlock'].includes(t)),utility=item.tags?.includes('ManaRegen');
   const kind=adaptive.routeProfile.kind;
@@ -245,7 +247,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const unavailableLaterOptions=mode==='rift'&&Array.isArray(laterIds)?[...new Set(laterIds)].filter(id=>!selectedLaterIds.includes(id)).map(id=>({id,name:data.items[id]?.name||`旧版装备 #${id}`})):[];
  return {key,title:ref?(referenceStale?'旧版本常用参考':mode==='hex'?'海克斯常用配置':'本版本常用配置'):t.name,champion:champion.id,role,mode,selectedCoreIndex:coreIndex,selectedCoreId:ref?'core-'+ref.core[coreIndex].items.join('-'):null,items:equipment,laterOptions,selectedLaterIds,unavailableLaterOptions,start:t.start.filter(id=>id!==3865).map(resolve).filter(Boolean),granted:support?[data.items[3865]].filter(Boolean):[],boots,adapted:adaptive.adapted,
   loadoutId:config?.id||'default',loadoutOptions:availableLoadouts,combo:duo?{...(creative?{origin:'creative',creativePlan:validateCreativePlan(creative),dataVersion:creative.dataVersion,rulesVersion:creative.rulesVersion,createdAt:creative.createdAt,verified:false}:{}),id:duo.id,title:duo.name,patch:duo.patch,reviewedAt:duo.reviewedAt,plan:duo.plan,risk:duo.risk,sources:comboSources(duo),preferred,members:(duo.members||[{champion:duo.carry,role:'bottom'},{champion:duo.support,role:'support'}]).filter(m=>m.champion!==champion.id),ownJob:play?.ownJob||duo.members?.find(m=>m.champion===champion.id&&m.role===role)?.job||null,steps:play?.steps||duo.steps||[],window:play?.window||duo.window||null,early:play?.early||duo.early||null,economy:play?.economy||duo.economy||null,play}:null,runeOptions,selectedRuneId:chosenRune?.id||null,selectedRune:chosenRune||null,selectionWarnings,
-  support,early:[...new Set([...(config?.early||ref?.core[Math.min(ref.core.length-1,coreIndex)]?.early||[]),...adaptive.early])].filter(id=>!t.start.includes(id)).map(resolve).filter(Boolean),runePage:valid&&mode==='rift'?runePage:null,runeValid:valid,summoners:summoners.filter(id=>data.spells[id]),
+  support,early:[...new Set([...(config?.early||ref?.core[Math.min(ref.core.length-1,coreIndex)]?.early||[]),...adaptive.early])].filter(id=>!t.start.includes(id)).map(resolve).filter(Boolean),runePage:valid&&mode==='rift'?runePage:null,runeValid:valid,summoners:spells.ids,summonerOptions:spells.options,selectedSummonerIds:spells.selectedSummonerIds,summonerManual:spells.manual,hasManualSummoners:summonerIds!==undefined,
   skillChoices,defaultSkillId:defaultSkill?.id||null,selectedSkillId:selectedSkill?.id||null,selectedSkill,skillOrder:selectedSkill?.order||null,skillMechanism:skillMechanismNote(champion.id),priority:selectedSkill?orderPriority(selectedSkill.order,champion.id):config?.priority||ref?.priority||skillOrders[champion.id]||null,first:selectedSkill?.order.slice(0,3)||config?.first||(champion.id==='Udyr'?(role==='jungle'?'QRW':'RWR'):champion.id==='Qiyana'&&role==='jungle'?'QWE':firstLevels[champion.id])||null,tips:mode==='hex'||!support?t.tips.replace(/保留辅助装升级位。|辅助位保留工资装升级位。/g,''):t.tips,adjustments,
   rulesDate:config?(config.reviewedAt||LOADOUT_DATE):RULES_VERSION,rulesPatch:ref?.patch||(config?(config.patch||LOADOUT_PATCH):RULES_PATCH),stale:!ref&&(data.patch!==(config?(config.patch||LOADOUT_PATCH):RULES_PATCH)||!!data.catalogInfo?.loadoutStatus?.[config?.id]?.stale),
   source:adaptive.adapted?'局势调整路线':ref?(referenceStale?'旧版本 OP.GG 参考':'OP.GG 常用配置'):config?'组合玩法参考':'机制基础方案',reference:ref,referenceStale,
@@ -267,7 +269,7 @@ export function buildAsText(build, champion, data) {
   build.early?.length?`提前购买：${build.early.map(i=>i.name).join('、')}`:'',
   build.runePage?`符文：${build.runePage.selectedPerkIds.map(id=>runeNames.get(id)||SHARDS[id]).join(' / ')}`:build.mode==='hex'?'海克斯模式请以局内强化选择和实际规则为准。':'符文暂不可用，请核对当前资料版本。',
   build.selectedRune?`符文选择：${build.selectedRune.name}；${build.selectedRune.when}`:'',
-  build.summoners.length?`召唤师技能：${build.summoners.map(id=>data.spells[id].name).join(' / ')}`:'',
+  build.summoners.length?`召唤师技能：${build.summoners.map((id,index)=>(index?'F':'D')+' '+data.spells[id].name).join(' / ')}`:'',
   build.skillOrder?`加点节点（前 ${build.skillOrder.length} 个技能点）：${build.skillOrder.split('').join(' > ')}；${build.selectedSkill?.when||'根据实时已点技能继续补齐。'}`:build.priority?`加点优先：${build.priority.split('').join(' > ')}；常规英雄通常优先 R，一级技能按对线或入侵调整。`:'',
   build.skillMechanism?`加点机制：${build.skillMechanism}`:'',
   ...build.adjustments.map(a=>`${a.title}：${a.text}`),

@@ -61,6 +61,8 @@ jobs:
         run: node scripts/smoke-package-catalog.mjs
       - name: Check saved preparations and member configurations across restarts
         run: node scripts/smoke-package-preparations.mjs
+      - name: Check prepared D/F spells, compact controls and saved member choices
+        run: node scripts/smoke-package-summoners.mjs
       - name: Check backup merge capacity and explicit rune writes in isolated clients
         run: |
           node scripts/smoke-package-import.mjs
