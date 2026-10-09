@@ -40,6 +40,7 @@ test('recommendation snapshots include every editable preference and public cons
  const input={slots:createSlots(),scope:'context',style:'fun',pool:[],poolMode:'off',play:{},rolePools:{},excluded:[],enemy:[],publicPicks:[],version:'1',catalogVersion:'1'};
  const key=recommendationKey(input);for(const change of [{pool:['Ashe']},{rolePools:{bottom:{mode:'only',heroes:['Ashe']}}},{excluded:['Ashe']},{publicPicks:['Ashe']},{scope:'party'},{version:'2'},{catalogVersion:'2'}])assert.notEqual(recommendationKey({...input,...change}),key);
  assert.equal(recommendationKey({...input,offset:3}),key);
+ assert.equal(recommendationKey({...input,limit:6}),key,'Changing window capacity must not invalidate the visible recommendations');
 });
 
 test('source position evidence invalidates recommendation tickets while display-only refreshes do not',()=>{
