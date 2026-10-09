@@ -2,18 +2,74 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {decodeHydration,itemRows,separateComponents,resolveReferences} from '../services/source-parser.mjs';
-import {parseBuildPage} from '../services/build-sources.mjs';
+import {parseBuildPage,parseBuildJSON,fetchChampionBuild,BUILD_PARSER_VERSION} from '../services/build-sources.mjs';
 import {parseHexBuildPage} from '../services/hex-sources.mjs';
 import {validHexReference,getBuild} from '../src/core/builds.mjs';
 import {RUNE_PLANS} from '../src/core/loadouts.mjs';
+import {createRequire} from 'node:module';
+import {companionPlanView} from '../src/companion-view.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 const item=(id,quantity=1)=>['$','$1',`${id}-0`,{children:[{metaType:'item',metaId:id},{className:'absolute bottom-0 right-0',children:quantity}]}];
 const row=(name,items)=>['$','tr',name,{children:[...items,['$','strong',null,{children:'40%'}],['$','span',null,{children:['2,345',' ','Games']}]]}];
 const hydration=values=>`<script>self.__next_f.push([1,${JSON.stringify(Object.entries(values).map(([key,value])=>`${key}:${JSON.stringify(value)}`).join('\n'))}])</script>`;
+test('complete source rune pages retain the exact content behind their statistics',async()=>{
+ const entries=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries,fixture={...data,builds:entries};let checked=0;
+ for(const ref of Object.values(entries)){
+  const champion=data.champions.find(c=>c.id===ref.champion),build=getBuild(champion,ref.role,fixture);
+  for(const option of build.runeOptions.filter(o=>o.source==='OP.GG')){
+   const original=ref.runeOptions.find(o=>o.id===option.id);assert.ok(original);
+   assert.deepEqual(option.page,original.page,`${ref.champion}:${ref.role}:${option.id}`);
+   for(const field of ['samples','wins','winRate','pickRate'])assert.equal(option[field],original[field]);checked++;
+  }
+ }
+ assert.ok(checked>400,'Expected broad coverage of the bundled complete source pages');
+ const champion=data.champions.find(c=>c.id==='Akali'),ref=entries['Akali:top'],original=ref.runeOptions.find(o=>o.page.selectedPerkIds.includes(8009));
+ const selection={id:'Akali',role:'top',mode:'rift',runeId:original.id},selected=getBuild(champion,'top',fixture,selection);
+ assert.deepEqual(selected.runePage.selectedPerkIds,original.page.selectedPerkIds);
+ assert.equal(selected.selectedRune.samples,original.samples);assert.equal(selected.selectedRune.winRate,original.winRate);
+ assert.match(companionPlanView(fixture,{build:selected,selection}),new RegExp(`${original.samples} 场`));
+});
+
+test('HTML fallback cards preserve source identity without borrowing rune-family samples',async()=>{
+ const champion=data.champions.find(c=>c.id==='Ashe'),cached=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries['Ashe:bottom'];
+ const fixture=createRequire(import.meta.url)('../scripts/build-source-fixture.cjs');
+ const ref=parseBuildPage(fixture(cached,data),{champion,role:'bottom',data,url:'https://op.gg/lol/champions/ashe/build/bottom'}),fallback={...data,builds:{'Ashe:bottom':ref}};
+ const selection={id:'Ashe',role:'bottom',mode:'rift'},build=getBuild(champion,'bottom',fallback,selection);
+ assert.equal(build.selectedRune.source,'OP.GG');assert.equal(build.selectedRune.samples,0);assert.ok(build.selectedRune.familySamples>0);
+ const html=companionPlanView(fallback,{build,selection});
+ assert.match(html,/OP.GG 来源参考 · 完整页样本未提供/);assert.match(html,/OP.GG 来源参考 · 核心路线样本未提供/);
+ const sourceCards=[...html.matchAll(/<button class="companion-option[\s\S]*?<\/button>/g)].map(m=>m[0]).filter(h=>h.includes('data-id="source-'));
+ assert.ok(sourceCards.length);assert.ok(sourceCards.every(h=>!h.includes('机制备选')));
+ const mechanism=build.runeOptions.find(o=>o.source==='机制整理');assert.ok(mechanism);
+ const chosen=getBuild(champion,'bottom',fallback,{...selection,runeId:mechanism.id});assert.equal(chosen.selectedRune.source,'机制整理');
+ assert.match(companionPlanView(fallback,{build:chosen,selection}),/机制备选 · 无统计样本/);
+});
+test('JSON HTTP failures fall back to validated HTML, but a mismatched patch never does',async()=>{
+ const champion=data.champions.find(c=>c.id==='Ashe');
+ const html=hydration({1:{championId:22,position:'adc',patch:data.patch,type:'ranked',region:'global',tier:'emerald_plus'},2:{rune_pages:[{play:400,importClientData:RUNE_PLANS.lethal.page}]},3:row('core_items_0',[item(6672),item(3031),item(3046)])});
+ for(const status of [403,429,500]){
+  const urls=[];const result=await fetchChampionBuild(champion,'bottom',data,{fetcher:async url=>{urls.push(url);return new Response(urls.length===1?'{}':html,{status:urls.length===1?status:200});}});
+  assert.equal(urls.length,2);assert.match(urls[0],/lol-api-champion/);assert.match(urls[1],/op.gg\/lol\/champions/);assert.equal(result.patch,data.patch);assert.deepEqual(result.core[0].items,[6672,3031,3046]);
+ }
+ let calls=0;await assert.rejects(fetchChampionBuild(champion,'bottom',data,{fetcher:async()=>{calls++;return Response.json({meta:{version:'16.18'},data:{summary:{id:22,positions:[{name:'ADC'}]}}});}}),{code:'BUILD_PATCH_MISMATCH'});assert.equal(calls,1);
+});
+test('later item table keeps inline game counts and never calls win rate popularity',()=>{
+ const value=['$','tr','depth_4_item_0',{children:[{metaType:'item',metaId:3075},['$','strong',null,{children:'55.68%'}],['$','span',null,{children:'731 Games'}]]}];
+ const {nodes,refs}=decodeHydration(hydration({1:value}));
+ assert.deepEqual(itemRows(nodes,refs,'depth_4_item_'),[{items:[3075],samples:731,pickRate:null,winRate:55.68}]);
+});
+test('structured source expands unique cores, complete runes and partial skill sequences with honest denominators',()=>{
+ const champion=data.champions.find(c=>c.id==='Ashe'),leaf=(page,play)=>({primary_page_id:page.primaryStyleId,secondary_page_id:page.subStyleId,primary_rune_ids:page.selectedPerkIds.slice(0,4),secondary_rune_ids:page.selectedPerkIds.slice(4,6),stat_mod_ids:page.selectedPerkIds.slice(6),play,win:Math.floor(play/2),pick_rate:.9});
+ const source={summary:{id:22,positions:[{name:'ADC'}]},core_items:[{ids:[6672,3031,3046],play:1000,win:510,pick_rate:.4},{ids:[3070,3042,3142,3814],play:800,win:410,pick_rate:.3}],boots:[],starter_items:[],last_items:[{ids:[3075],play:731,win:407,pick_rate:.1}],rune_pages:[{builds:[leaf(RUNE_PLANS.lethal.page,200),leaf(RUNE_PLANS.press.page,100),leaf(RUNE_PLANS.lethal.page,200)]}],runes:[{...leaf(RUNE_PLANS.lethal.page,200),pick_rate:.2}],skills:[{order:['W','Q','E','W','W','R'],play:100,win:50}],summoner_spells:[]};
+ const raw={meta:{version:data.patch},data:source},options={champion,role:'bottom',data,url:'https://op.gg/lol/champions/ashe/build'};
+ const ref=parseBuildJSON(raw,options);assert.equal(ref.core.length,2);assert.deepEqual(ref.core[1].early,[3070]);assert.equal(ref.runeOptions.length,2);assert.equal(ref.runeOptions[0].pickRate,20);assert.equal(ref.runeOptions[1].pickRate,null);assert.equal(ref.laterBasis,'all-orders');assert.equal(ref.later[0][0].samples,731);assert.equal(ref.skillOptions[0].order,'WQEWWR');
+ assert.throws(()=>parseBuildJSON({...raw,meta:{version:'16.18'}},options),/版本/);assert.throws(()=>parseBuildJSON(raw,{...options,role:'support'}),/英雄和位置/);
+ assert.throws(()=>parseBuildJSON({...raw,data:{...source,rune_pages:[]}},options),/完整/);
+});
 test('source reader resolves deferred item rows and preserves quantities and samples',()=>{
  const html=hydration({'1':row('starter_items_0',['$L2','$3']),2:item(2003,2),3:item(1056)});
  const {nodes,refs}=decodeHydration(html);const result=itemRows(nodes,refs,'starter_items_');
- assert.deepEqual(result,[{items:[2003,2003,1056],samples:2345,pickRate:40}]);
+ assert.deepEqual(result,[{items:[2003,2003,1056],samples:2345,pickRate:40,winRate:null}]);
 });
 test('source references cannot execute strings or recurse forever',()=>{
  const refs=new Map([['1',{next:'$2'}],['2',{next:'$1'}]]);
@@ -38,7 +94,7 @@ test('rift parser keeps distinct full rune choices, orders samples and drops inv
   2:{rune_pages:[{play:90,importClientData:RUNE_PLANS.press.page},{play:400,importClientData:RUNE_PLANS.lethal.page},{play:80,importClientData:RUNE_PLANS.press.page},{play:9999,importClientData:{...RUNE_PLANS.press.page,selectedPerkIds:[0]}}]},
   3:row('core_items_0',[item(6672),item(3031),item(3046)])});
  const ref=parseBuildPage(html,{champion,role:'bottom',data,url:'https://op.gg/lol/champions/ashe/build'});
- assert.equal(ref.parserVersion,4);assert.equal(ref.runeOptions.length,2);assert.deepEqual(ref.runeOptions.map(o=>o.samples),[400,90]);assert.deepEqual(ref.runePage,ref.runeOptions[0].page);
+ assert.equal(ref.parserVersion,BUILD_PARSER_VERSION);assert.equal(ref.runeOptions.length,2);assert.deepEqual(ref.runeOptions.map(o=>o.familySamples),[400,90]);assert.ok(ref.runeOptions.every(o=>o.samples===0&&o.sampleScope==='family'));assert.deepEqual(ref.runePage,ref.runeOptions[0].page);
 });
 test('hex parser never accepts the ordinary ARAM or Arena page',()=>{
  const champion=data.champions.find(c=>c.id==='Ashe');

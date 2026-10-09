@@ -12,6 +12,7 @@ async function run(){
    if(p==='/liveclientdata/activeplayer')return {value:{riotId:'isolated-player',currentGold:1250,level:8,abilities:Object.fromEntries(['Q','W','E','R'].map(k=>[k,{abilityLevel:k==='Q'?4:1}]))}};
    if(p==='/liveclientdata/playerlist')return {value:[{riotId:'isolated-player',rawChampionName:'game_character_displayname_'+hero,items:[]}]};
    if(p==='/liveclientdata/gamestats')return {value:{gameMode:'CLASSIC',mapNumber:11,gameTime:600}};
+   if(p==='/liveclientdata/eventdata')return {value:{Events:[]}};
   }
   assert.equal(options.port,23456);assert.equal(options.method||'GET','GET','A real rune write must never occur in this test');
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
@@ -22,8 +23,20 @@ async function run(){
  https.request=(options,callback)=>{const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{const output=response(options),res=new EventEmitter();res.statusCode=output.status||200;res.resume=()=>{};callback(res);res.emit('data',Buffer.from(JSON.stringify(output.value)));res.emit('end');req.emit('close');});req.write=()=>{};req.destroy=e=>{if(e)req.emit('error',e);req.emit('close');};return req;};
  https.get=(options,callback)=>{const req=https.request(options,callback);req.end();return req;};
  require(path.join(base,'electron/main.cjs'));const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true);
- await until(()=>js('!!document.querySelector("[data-action=guide-current]")'),'UI missing');const status=()=>js('window.buddy.client(true)'),state=()=>js('window.buddy.bootstrap().then(b=>b.state)'),prefs=async patch=>{const s=await state();Object.assign(s.preferences,patch);await js(`window.buddy.saveState(${JSON.stringify(s)})`);};
- await status();await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"rift"})');const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Guide missing'),gjs=c=>guide.webContents.executeJavaScript(c,true);await until(()=>gjs('!!document.querySelector(".next-item")'),'Guide UI missing');
+ await until(()=>js('!!document.querySelector("[data-action=guide-current]")'),'UI missing');const status=()=>js('window.buddy.client(true)'),state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
+ // Change preferences through the renderer that owns them. A raw IPC save
+ // leaves that renderer's preferences stale and a later preparation save can
+ // overwrite the fixture's change; that is not the user's settings flow.
+ const prefs=async patch=>{
+  assert.deepEqual(Object.keys(patch),['autoLive']);
+  await js('document.querySelector("[data-action=navigate][data-route=settings]").click()');
+  await until(()=>js('!!document.querySelector("[data-action=auto-live]")'),'Live setting missing');
+  const enabled=await js('document.querySelector("[data-action=auto-live]").getAttribute("aria-checked")==="true"');
+  if(enabled!==patch.autoLive)await js('document.querySelector("[data-action=auto-live]").click()');
+  await until(async()=>(await state()).preferences.autoLive===patch.autoLive,'Live preference did not persist');
+  await js('document.querySelector("[data-action=navigate][data-route=draft]").click()');
+ };
+ await status();assert.equal((await state()).guide.selection.id,'Ashe','First selection must prepare a guide without opening one');assert.equal(windows.some(w=>w.webContents.getURL().endsWith('/src/guide.html')),false,'Selection prepares without displaying the in-game window');phase='GameStart';await status();phase='InProgress';await status();const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Automatic guide missing'),gjs=c=>guide.webContents.executeJavaScript(c,true);await until(()=>gjs('!!document.querySelector(".next-item")'),'Guide UI missing');await until(()=>guide.isVisible(),'Fresh installation must auto-show its first guide');phase='ChampSelect';await status();
  await gjs('window.guide.control("hide")');phase='GameStart';await status();assert.equal(guide.isVisible(),false,'Loading must not auto-show the guide before entering the game');phase='InProgress';const entered=await status();if(!guide.isVisible())console.log(JSON.stringify({entered,guide:await gjs('window.guide.bootstrap()')}));assert.equal(guide.isVisible(),true,'Confirmed prepared guide must auto-show with autoLive disabled');assert.equal((await state()).guide.selection.role,'bottom');assert.equal(liveRequests,0,'Disabled live must never read the local game API');
  // The first live inventory arrives after the selection session has disappeared.
  await prefs({autoLive:true});liveAvailable=true;await js('window.buddy.openGuide()');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model.live.matched)'),'First live data missing');assert.equal((await state()).guide.selection.role,'bottom','Formal role lost after ChampSelect');assert.ok(liveRequests>=3);
@@ -39,6 +52,6 @@ async function run(){
  liveAvailable=true;await status();assert.equal(guide.isVisible(),true,'First unavailable live must retry after identity is ready');let unknown=(await state()).guide.selection;assert.equal(unknown.role,'bottom','Unknown formal role must preserve prepared role');assert.equal(unknown.comboId,'rengar-ivern','Missing roster disproved a saved combination');assert.equal((await gjs('window.guide.bootstrap()')).model.live.matched,true);assert.equal((await gjs('window.guide.bootstrap()')).model.comboConfirmed,false);
  await gjs('window.guide.control("hide")');await status();assert.equal(guide.isVisible(),false,'Retried auto-show must not repeat after manual hide');
  guide.showInactive();await delay(120);const capture=await guide.webContents.capturePage();await fs.writeFile(path.join(root,'formal-role-after-transition.png'),capture.toPNG());
- const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,realLCUSanitizers:true,loadingPreservesFormalRole:true,autoShowWithoutLive:true,formalRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,newGameUnavailableLivePreparesCurrent:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsPreparedCombo:true,unknownFormalRoleKeepsPreparedRole:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,fullMainStatusFlow:true,firstSelectionPrepares:true,freshInstallationAutoShows:true,realLCUSanitizers:true,loadingPreservesFormalRole:true,autoShowWithoutLive:true,formalRoleAfterSessionDisappears:true,sameGameHiddenReconnect:true,sameGameLoadingRetainsProgress:true,newGameUnavailableLivePreparesCurrent:true,retryAfterFirstLiveFailure:true,unknownRosterKeepsPreparedCombo:true,unknownFormalRoleKeepsPreparedRole:true,loopbackSocketsMocked:true,actualRuneWrites:false,userSettingsIsolated:true};await fs.writeFile(path.join(root,'game-transition-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'game-transition-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

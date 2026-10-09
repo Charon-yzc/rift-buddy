@@ -49,9 +49,9 @@ test('duplicate heroes and an impossible pool are rejected clearly',()=>{
  const slots=createSlots();slots[0].champion='Lux';slots[1].champion='Lux';assert.throws(()=>validateSlots(slots,data.champions),/同一英雄/);
  assert.throws(()=>recommend({slots:createSlots(),champions:data.champions,excluded:data.champions.map(c=>c.id)}),/没有可选英雄/);
 });
-test('all cached role references are current, champion-specific and structurally valid',()=>{
+test('all cached role references are compatible, champion-specific and structurally valid',()=>{
  assert.ok(Object.keys(data.builds).length>=175);
- for(const [key,ref] of Object.entries(data.builds))assert.ok(validReference(ref,hero(ref.champion),ref.role,data),key);
+ for(const [key,ref] of Object.entries(data.builds))assert.ok(validReference(ref,hero(ref.champion),ref.role,data,{allowOlder:true}),key);
 });
 test('every champion and declared role has a legal rune page and no duplicated equipment',()=>{
  for(const c of data.champions)for(const role of profile(c).roles){
@@ -62,7 +62,8 @@ test('every champion and declared role has a legal rune page and no duplicated e
 test('outdated and wrong-role source references never masquerade as current recommendations',()=>{
  const ref=data.builds['Ashe:bottom'];assert.ok(ref);
  assert.equal(getBuild(hero('Ashe'),'bottom',data).reference,ref);
- const stale={...data,builds:{'Ashe:bottom':{...ref,patch:'16.18'}}};assert.equal(getBuild(hero('Ashe'),'bottom',stale).reference,null);
+ const stale={...data,builds:{'Ashe:bottom':{...ref,patch:'16.18'}}},older=getBuild(hero('Ashe'),'bottom',stale);
+ assert.equal(older.reference,stale.builds['Ashe:bottom']);assert.equal(older.referenceStale,true);assert.match(older.source,/旧版本/);
  const wrong={...data,builds:{'Ashe:bottom':{...ref,role:'support'}}};assert.equal(getBuild(hero('Ashe'),'bottom',wrong).reference,null);
  const hex=getBuild(hero('Ashe'),'bottom',data,{mode:'hex'});assert.equal(hex.reference,null);assert.equal(hex.runePage,null);assert.ok(hex.items.every(i=>i.maps['12']));
 });
@@ -76,13 +77,13 @@ test('Chinese names, nicknames and pinyin are searchable',()=>{
  assert.ok(matchesSearch(hero('Yasuo'),'亚索'));assert.ok(matchesSearch(hero('MissFortune'),'女枪'));assert.ok(matchesSearch(hero('MissFortune'),'mf'));
 });
 
-test('common default positions and champions without boots keep their intended behavior',()=>{
+test('common default positions and current Cassiopeia footwear follow the current patch',()=>{
  assert.equal(profile(hero('Zed')).roles[0],'mid');
  assert.equal(profile(hero('MonkeyKing')).roles[0],'jungle');
  assert.ok(profile(hero('MonkeyKing')).roles.includes('top'));
  for(const mode of ['rift','hex'])for(const conditions of [[],['ad'],['control']]){
   const build=getBuild(hero('Cassiopeia'),'mid',data,{mode,conditions});
-  assert.ok(build.items.every(i=>!i.tags.includes('Boots')));
+  assert.ok(build.items.some(i=>i.tags.includes('Boots')));if(conditions.includes('ad'))assert.equal(build.boots,3047);if(conditions.includes('control'))assert.equal(build.boots,3111);
   assert.equal(build.missing.length,0);
  }
 });

@@ -1,30 +1,33 @@
 // Live in-game estimate: level-adjusted champion stats, mutual kill lines and a
 // coarse trading edge. Everything is static, explainable arithmetic on Riot
-// Data Dragon numbers. It is a reference, never a prediction.
+// static game numbers. It is a reference, never a prediction.
 
+import {championAttackType,percentHealthOnHits,canModelYone,yoneEvents,canModelVayneAttacks,vayneAttackEvents,canModelAsheAttacks,asheAttackEvents,COMBAT_PATCH} from './combat-models.mjs';
 export function statAtLevel(stats={},level=1){
  const L=Math.min(Math.max(Number(level)||1,1),18);
+ const n=L-1,growth=n*(0.7025+0.0175*n);
  return {
-  hp:Math.round(stats.hp + stats.hpperlevel*(L-1)),
-  mp:Math.round(stats.mp + stats.mpperlevel*(L-1)),
-  armor:Math.round((stats.armor + stats.armorperlevel*(L-1))*10)/10,
-  mr:Math.round((stats.spellblock + stats.spellblockperlevel*(L-1))*10)/10,
-  ad:Math.round((stats.attackdamage + (stats.attackdamageperlevel||0)*(L-1))*10)/10,
-  atkSpeed:Math.round(stats.attackspeed*(1+(L-1)*stats.attackspeedperlevel/100)*100)/100,
+  hp:Math.round(stats.hp + stats.hpperlevel*growth),
+  mp:Math.round(stats.mp + stats.mpperlevel*growth),
+  armor:Math.round((stats.armor + stats.armorperlevel*growth)*10)/10,
+  mr:Math.round((stats.spellblock + stats.spellblockperlevel*growth)*10)/10,
+  ad:Math.round((stats.attackdamage + (stats.attackdamageperlevel||0)*growth)*10)/10,
+  atkSpeed:stats.attackspeed+(stats.attackspeedratio??stats.attackspeed)*growth*(stats.attackspeedperlevel||0)/100,
   moveSpeed:stats.movespeed,
  };
 }
 
 const ITEM_STAT_PATTERNS=[
- ['ad',/(\d+)攻击力/],
- ['ap',/(\d+)法术强度/],
- ['hp',/(\d+)生命值/],
- ['armor',/(\d+)护甲/],
- ['mr',/(\d+)魔法抗性/],
- ['mana',/(\d+)法力值/],
- ['crit',/(\d+)%暴击/],
- ['ms',/(\d+)移动速度/],
+ ['ad',/(\d+(?:\.\d+)?)攻击力/],
+ ['ap',/(\d+(?:\.\d+)?)法术强度/],
+ ['hp',/(\d+(?:\.\d+)?)生命值/],
+ ['armor',/(\d+(?:\.\d+)?)护甲/],
+ ['mr',/(\d+(?:\.\d+)?)魔法抗性/],
+ ['mana',/(\d+(?:\.\d+)?)法力值/],
+ ['crit',/(\d+(?:\.\d+)?)%暴击/],
+ ['ms',/(\d+(?:\.\d+)?)移动速度/],
 ];
+const ITEM_BASE_FIELDS={ad:'FlatPhysicalDamageMod',ap:'FlatMagicDamageMod',hp:'FlatHPPoolMod',armor:'FlatArmorMod',mr:'FlatSpellBlockMod'};
 export function itemStats(description=''){
  const out={};
  for(const [key,pattern] of ITEM_STAT_PATTERNS){
@@ -34,26 +37,48 @@ export function itemStats(description=''){
  return out;
 }
 
-export function aggregateCombatStats(champion,level,items=[],data){
+export function aggregateCombatStats(champion,level,items=[],data,context={}){
  const base=statAtLevel(champion.stats,level);
- const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr,atkSpeed:base.atkSpeed,crit:0,onHit:[],onHitApprox:false};
+ const patch=data?.version?.split('.').slice(0,2).join('.');
+ // Season 2026 restored standard crits to 200%; IE now adds 30%.
+ // Keep this reviewed fallback tied to the bundled patch. Live panel values
+ // take priority below, including champion-specific and temporary modifiers.
+ const critBase=patch===COMBAT_PATCH?champion.id==='Ashe'?1:2:1.75;
+ const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr,atkSpeed:base.atkSpeed,crit:0,critDamage:critBase,onHit:[],onHitApprox:false,combatPatch:patch};
+ agg.combatMode=context.mode||'rift';
  let asPct=0;
  for(const entry of items){
   const record=data.items?.[entry.id];if(!record)continue;
-  const stats=itemStats(record.description);
-  const count=Math.max(1,Number(entry.count)||1);
-  for(const k of ['ad','ap','hp','armor','mr']) if(stats[k]) agg[k]+=stats[k]*count;
-  if(stats.crit)agg.crit+=stats.crit/100*count;
-  // Base attack-speed bonuses sit in the first description block; stacking
-  // buffs mentioned later in the text (e.g. Guinsoo's 8%/stack) are temporary
-  // and must not count as permanent stats.
   const firstBlock=String(record.description||'').split('\n\n')[0];
-  const as=firstBlock.match(/(\d+)%攻击速度/)?.[1];
-  if(as!==undefined)asPct+=Number(as)*count;
+  const stats=itemStats(firstBlock);
+  const count=Math.max(1,Number(entry.count)||1);
+  // Same-patch numeric base stats preserve decimals and attributes omitted
+  // by a translated tooltip. Text remains a fallback for older records.
+  for(const [key,field] of Object.entries(ITEM_BASE_FIELDS)){
+   const value=record.stats?.[field];
+   agg[key]+=(Number.isFinite(value)&&value>=0?value:stats[key]||0)*count;
+  }
+  const critical=record.stats?.FlatCritChanceMod;
+  agg.crit+=(Number.isFinite(critical)&&critical>=0?critical:(stats.crit||0)/100)*count;
+  // Only numeric base attack speed or the first description block counts;
+  // stacking buffs mentioned later (e.g. Guinsoo's 8%/stack) are temporary.
+  const attackSpeed=record.stats?.PercentAttackSpeedMod;
+  const as=Number.isFinite(attackSpeed)&&attackSpeed>=0?attackSpeed*100:Number(firstBlock.match(/(\d+(?:\.\d+)?)%攻击速度/)?.[1]||0);
+  asPct+=as*count;
+  const critDamage=firstBlock.match(/(\d+(?:\.\d+)?)%暴击伤害/)?.[1];
+  if(critDamage!==undefined)agg.critDamage+=Number(critDamage)/100*count;
  }
- if(asPct>0)agg.atkSpeed=Math.round(base.atkSpeed*(1+asPct/100)*1000)/1000;
+ if(asPct>0)agg.atkSpeed=base.atkSpeed+(champion.stats.attackspeedratio??champion.stats.attackspeed)*asPct/100;
+ // Rabadon's same-patch permanent amplifier affects total AP once, after
+ // all flat item AP. A real live AP field overrides this fallback below.
+ if(patch===COMBAT_PATCH&&items.some(i=>String(i.id)==='3089'))agg.ap*=1.3;
+ if(['Yone','Yasuo'].includes(champion.id))agg.crit=Math.min(1,agg.crit*2);
+ if(['Yone','Yasuo'].includes(champion.id))agg.critDamage*=0.95;
+ agg.attackType=['melee','ranged'].includes(context.attackType)?context.attackType:championAttackType(champion,level,null,patch);
+ agg.percentOnHit=percentHealthOnHits(champion,items,data,agg.attackType);
+ agg.percentOnHitUnknown=patch===COMBAT_PATCH&&items.some(i=>String(i.id)==='3153')&&!agg.attackType;
  agg.onHit=itemOnHits(items,data);
- agg.onHitApprox=hasUnparsedOnHit(items,data);
+ agg.onHitApprox=agg.percentOnHitUnknown||hasUnparsedOnHit(items,data);
  return agg;
 }
 // Flat-number on-hit effects, one entry per unique item (on-hit passives do
@@ -76,6 +101,7 @@ export function itemOnHits(items=[],data){
 // conditional or stacking effects) cannot enter the estimate honestly.
 export function hasUnparsedOnHit(items=[],data){
  for(const entry of items||[]){
+  if(String(entry.id)==='3153'&&data?.version?.split('.').slice(0,2).join('.')===COMBAT_PATCH)continue;
   const record=data.items?.[String(entry.id)];if(!record||!record.tags?.includes('OnHit'))continue;
   const desc=String(record.description||'');
   if(!/伤害/.test(desc)||!desc.includes('攻击特效'))continue;
@@ -91,7 +117,7 @@ export function applyLivePanel(champion,level,panel,fallback=null){
  if(!panel)return {agg:computed,live:false};
  return {agg:{ad:panel.ad??computed.ad,ap:panel.ap??computed.ap,hp:panel.maxHp??computed.hp,
   armor:panel.armor??computed.armor,mr:panel.mr??computed.mr,
-  atkSpeed:panel.atkSpeed??computed.atkSpeed,crit:panel.crit??computed.crit,curHp:panel.hp??null,onHit:computed.onHit,onHitApprox:computed.onHitApprox},live:true};
+  atkSpeed:panel.atkSpeed??computed.atkSpeed,crit:panel.crit??computed.crit,critDamage:panel.critDamage??computed.critDamage,curHp:panel.hp??null,onHit:computed.onHit,percentOnHit:computed.percentOnHit,combatPatch:computed.combatPatch,combatMode:computed.combatMode,onHitApprox:computed.onHitApprox,attackType:computed.attackType,percentOnHitUnknown:computed.percentOnHitUnknown},live:true};
 }
 
 // Total invested skill points. Own points come from the live client; the
@@ -207,21 +233,22 @@ export function canUseCombatSpells(champion,skills,spells){
 // aggregate (armor/mr/hp included), not base stats. Only reviewed spell models
 // with known ranks can replace the explicitly labeled heuristic burst.
 export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null,extra={}){
+ return combatWindow(attacker,defender,level,agg,defAgg,points,extra).total;
+}
+export function combatWindow(attacker,defender,level,agg,defAgg,points=null,extra={}){
+ const seconds=[2,6].includes(extra.windowSeconds)?extra.windowSeconds:6;
  const base=statAtLevel(defender.stats,extra.defenderLevel??level);
  const def={armor:Number.isFinite(defAgg?.armor)?defAgg.armor:base.armor,mr:Number.isFinite(defAgg?.mr)?defAgg.mr:base.mr};
- const autos=mitigate(roughDps(attacker,level,agg)*6,def.armor,def.mr,0.55);
- // Flat-number on-hit effects scale with attack speed, one proc per attack,
- // each mitigated by its own damage type.
- const asRate=Number(agg?.atkSpeed)||statAtLevel(attacker.stats,level).atkSpeed;
- let onHit=0;
- for(const h of (Array.isArray(agg?.onHit)?agg.onHit:[])){
-  const perHit=Number(h?.dmg);if(!(perHit>0))continue;
-  const perSec=perHit*asRate;
-  onHit+=h.type==='true'?perSec*6:mitigate(perSec*6,def.armor,def.mr,h.type==='physical'?1:0);
- }
- let burst=0;
  const {skills=null}=extra,spells=extra.spellbook??extra.spells??null;
- if(canUseCombatSpells(attacker,skills,spells)){
+ const targetHp=Number.isFinite(defAgg?.hp)?defAgg.hp:base.hp;
+ const yone=canModelYone(attacker,level,agg,skills),vayne=canModelVayneAttacks(attacker,level,agg,skills),ashe=canModelAsheAttacks(attacker,level,agg),specific=yone||vayne||ashe,reviewed=(agg.combatMode||'rift')==='rift'&&canUseCombatSpells(attacker,skills,spells);
+ const events=yone?yoneEvents(attacker,agg,skills,seconds,targetHp,statAtLevel(attacker.stats,level).ad):vayne?vayneAttackEvents(agg,skills,seconds,targetHp):ashe?asheAttackEvents(agg,seconds):[];
+ const asRate=Math.max(0.1,Math.min(10,Number(agg?.atkSpeed)||statAtLevel(attacker.stats,level).atkSpeed));
+ if(!specific){
+  const auto=agg.ad*(1+Math.max(0,Math.min(1,agg.crit||0))*((agg.critDamage||1.75)-1));
+  for(let t=1/asRate;t<=seconds;t+=1/asRate)events.push({at:t,kind:'autos',onHit:true,parts:[{type:'physical',amount:auto}]});
+ }
+ if(!specific&&reviewed){
   const base=statAtLevel(attacker.stats,level),bases={ad:base.ad,armor:base.armor,mr:base.mr};
   const targetMaxHp=Number.isFinite(defAgg?.hp)?defAgg.hp:null;
   for(const slot of ['Q','W','E','R']){
@@ -230,14 +257,34 @@ export function tradeDamageWindow(attacker,defender,level,agg,defAgg,points=null
    const spell=spells[attacker.id]?.[slot];
    const hit=skillHitDamage(spell,rank,agg,bases,targetMaxHp,def);
    if(hit<=0)continue;
-   burst+=hit;
+   const cd=spell.cooldown?.[rank-1];
+   const casts=Number.isFinite(cd)&&cd>0?Math.max(1,1+Math.floor((seconds-0.5)/Math.max(1,cd))):1;
+   for(let i=0;i<casts;i++)events.push({at:0.5+i*Math.max(1,cd||seconds),kind:'skills',parts:[{type:'true',amount:hit}]}); // Already mitigated.
   }
- }else{
+ }else if(!specific){
   const pts=points??skillPointsTotal(null,level);
   const adShare=agg.ad/(agg.ad+agg.ap+1);
-  burst=mitigate(burstDamage(attacker,pts,agg,level),def.armor,def.mr,adShare);
+  events.push({at:Math.min(2,seconds),kind:'skills',parts:[{type:'true',amount:mitigate(burstDamage(attacker,pts,agg,level),def.armor,def.mr,adShare)*Math.min(1,seconds/6)}]});
  }
- return Math.round(autos+burst+onHit);
+ const out={seconds,autos:0,skills:0,items:0,delayed:0,attacks:0,qCasts:0,silverBolts:0,basis:yone?'yone-reviewed':vayne?'vayne-attacks':ashe?'ashe-attacks':reviewed?'reviewed':'heuristic',unparsedOnHit:!!agg.onHitApprox,percentOnHitUnknown:!!agg.percentOnHitUnknown};
+ let remaining=Math.max(0,Number(extra.startHp??targetHp)||0),recorded=0;
+ const damage=p=>p.type==='true'?p.amount:mitigate(p.amount,def.armor,def.mr,p.type==='physical'?1:0);
+ for(const event of events.sort((a,b)=>a.at-b.at)){
+  const hpBefore=remaining;
+  const amount=event.echoRatio?recorded*event.echoRatio:event.parts.reduce((sum,p)=>sum+damage(p),0);
+  out[event.kind]+=amount;remaining=Math.max(0,remaining-amount);
+  if(yone&&event.kind!=='delayed'&&event.at<5)recorded+=amount;
+  if(event.kind==='autos')out.attacks++;
+  if(yone&&event.kind==='skills'&&event.onHit)out.qCasts++;
+  if(event.silverBolts)out.silverBolts++;
+  if(event.onHit){
+   const flat=(agg.onHit||[]).reduce((sum,h)=>sum+damage({type:h.type,amount:h.dmg}),0);
+   const percent=(agg.percentOnHit||[]).reduce((sum,h)=>sum+damage({type:h.type,amount:hpBefore*h.currentHpRatio}),0);
+   out.items+=flat+percent;remaining=Math.max(0,remaining-flat-percent);
+  }
+ }
+ out.total=Math.round(out.autos+out.skills+out.items+out.delayed);
+ return out;
 }
 
 // Trading edge -1..1 vs a matched opponent. Positive favors `champion`.
@@ -261,17 +308,19 @@ export function killThreshold(champion,level,agg,opponent,opponentLevel,opponent
 // Enemy items are the public build; unknown skill ranks are never filled in.
 // Their maximum health and output remain explicitly approximate.
 export function duel(own,ownLevel,ownAgg,ownSkills,enemy,enemyLevel,data,enemyItems=[],spellbook=null){
- const enemyAgg=aggregateCombatStats(enemy,enemyLevel,enemyItems,data);
+ const enemyAgg=aggregateCombatStats(enemy,enemyLevel,enemyItems,data,{mode:ownAgg.combatMode||'rift'});
+ const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
+ const mineWindow=combatWindow(own,enemy,ownLevel,ownAgg,enemyAgg,mine,{skills:ownSkills,spellbook,defenderLevel:enemyLevel});
+ const mineShort=combatWindow(own,enemy,ownLevel,ownAgg,enemyAgg,mine,{skills:ownSkills,spellbook,defenderLevel:enemyLevel,windowSeconds:2});
  // Enemy spell ranks are unavailable in the public feed; never manufacture
  // per-slot ranks (especially an ultimate before level 6) for the warning.
  const extra={spellbook,mineSkills:ownSkills,theirsSkills:null};
- const mine=skillPointsTotal(ownSkills,ownLevel),theirs=skillPointsTotal(null,enemyLevel);
  return {
   enemy:{id:enemy.id,name:enemy.name,level:Number.isInteger(enemyLevel)?enemyLevel:null},
   approx:true,
   edge:tradeEdge(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,data,{mine,theirs},extra),
-  killMine:killThreshold(own,ownLevel,ownAgg,enemy,enemyLevel,enemyAgg,mine,{skills:ownSkills,spellbook}),
+  killMine:mineWindow.total,
   killTheirs:killThreshold(enemy,enemyLevel,enemyAgg,own,ownLevel,ownAgg,theirs,{spellbook}),
-  mineSkillBasis:canUseCombatSpells(own,ownSkills,spellbook)?'reviewed':'heuristic',
+  mineSkillBasis:mineWindow.basis,mineWindow,mineShort,
  };
 }

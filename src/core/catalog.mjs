@@ -3,6 +3,8 @@ import {configureRuleCatalog} from './rules.mjs';
 import {configureLoadoutCatalog} from './loadouts.mjs';
 import {validateRunePage} from './builds.mjs';
 import {loadoutMechanicIssues} from './mechanics.mjs';
+import {dependencyChanges} from './catalog-review.mjs';
+import {legalSkillOrder} from './skill-advice.mjs';
 
 export const BUNDLED_CATALOG=bundled;
 export const CATALOG_LIMIT=2_000_000;
@@ -13,6 +15,7 @@ const hero=v=>typeof v==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(v);
 const str=(v,max=1500)=>typeof v==='string'&&v.trim().length>0&&v.length<=max&&!v.includes('\0');
 const date=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;
 const assert=(ok,msg)=>{if(!ok)throw Error('组合库检查失败：'+msg);};
+const baseline=value=>assert(value===undefined||value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length<=300&&Object.entries(value).every(([id,hash])=>/^(champion:[A-Za-z][A-Za-z0-9]{0,39}|(?:item|rune):\d{1,8})$/.test(id)&&/^[a-f0-9]{16}$/.test(hash)),'资料依赖基线');
 export function safeSourceURL(value){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&value.length<=1000;}catch{return false;}}
 const list=(v,max,check,label)=>{assert(Array.isArray(v)&&v.length<=max&&v.every(check),label);};
 function unique(v,key,label){assert(new Set(v.map(key)).size===v.length,label+'重复');}
@@ -29,11 +32,13 @@ export function validateCatalog(value,data){
  assert(c.runes&&typeof c.runes==='object'&&!Array.isArray(c.runes)&&Object.keys(c.runes).length<=100,'符文');
  for(const [key,r] of Object.entries(c.runes)){assert(id(key)&&str(r?.name,120)&&str(r.when)&&r.page&&Number.isInteger(r.page.primaryStyleId)&&Number.isInteger(r.page.subStyleId),'符文说明');list(r.page.selectedPerkIds,9,Number.isInteger,'符文页');assert(r.page.selectedPerkIds.length===9,'完整符文页');}
  const configs=new Map(c.loadouts.map(l=>[l.id,l]));
+ for(const entry of [...c.loadouts,...c.duos,...c.trios])baseline(entry.reviewBaseline);
  for(const l of c.loadouts){assert(id(l.id)&&str(l.name,120)&&bases.includes(l.base)&&str(l.why),'出装内容');list(l.champions,180,hero,'出装英雄');list(l.roles,5,v=>roles.includes(v),'出装位置');assert(l.champions.length&&l.roles.length,'出装适用范围');
   for(const field of ['items','late'])list(l[field],6,v=>Number.isInteger(v)&&v>0,'装备列表');assert(l.items.length===3&&Number.isInteger(l.boots)&&l.boots>0,'核心装与鞋子');
   list(l.runes,8,v=>Object.hasOwn(c.runes,v),'出装符文');assert(l.runes.length,'出装需要符文');if(l.early)list(l.early,5,v=>Number.isInteger(v)&&v>0,'过渡装备');assert(l.damage===undefined||['ad','ap','mixed'].includes(l.damage),'伤害类型');assert(l.priority===undefined||/^(?!.*(.).*\1)[QWE]{3}$/.test(l.priority),'加点顺序');
   assert(l.patch===undefined||/^\d{2}\.\d{1,2}$/.test(l.patch),'配置复核版本');assert(l.reviewedAt===undefined||date(l.reviewedAt),'配置复核日期');
   assert(l.first===undefined||/^[QWE]{3}$/.test(l.first),'前三级技能');
+  assert(l.skillOrder===undefined||l.champions.every(champion=>legalSkillOrder(l.skillOrder,champion)),'技能加点序列');assert(l.skillReason===undefined||str(l.skillReason),'技能加点用途');
   assert(l.summoners===undefined||Array.isArray(l.summoners)&&l.summoners.length===2&&l.summoners.every(v=>typeof v==='string'&&/^Summoner[A-Za-z]+$/.test(v))&&new Set(l.summoners).size===2,'召唤师技能');
   if(data&&l.summoners)assert(l.summoners.every(v=>data.spells[v]),'召唤师技能与资料不符');
   assert(!loadoutMechanicIssues(l,c.runes).length,l.name+'：'+loadoutMechanicIssues(l,c.runes).join('；'));
@@ -57,7 +62,10 @@ export function catalogIssues(c,data){
   const invalid=reasons.length>0,staleConfig=members.some(m=>loadoutStatus[m.loadoutId]?.stale);if(x.patch!==data.patch)reasons.push(`整理版本 ${x.patch}，当前资料 ${data.patch}，待复核`);if(staleConfig)reasons.push('关联配置版本待复核');
   status[x.id]={invalid,stale:x.patch!==data.patch||staleConfig,reasons,reviewedAt:x.reviewedAt,patch:x.patch};
  }
- return {errors:[...new Set(errors)],status,loadoutStatus,staleLoadouts:Object.values(loadoutStatus).filter(s=>s.stale).length,stale:Object.values(status).filter(s=>s.stale).length,invalid:Object.values(status).filter(s=>s.invalid).length};
+ for(const l of c.loadouts){const changed=dependencyChanges(l,c,data);Object.assign(loadoutStatus[l.id],{changedDependencies:changed,stale:loadoutStatus[l.id].stale||changed.length>0});}
+ const reviewTasks=[];
+ for(const entry of [...c.duos,...c.trios]){const changed=dependencyChanges(entry,c,data),s=status[entry.id];s.changedDependencies=changed;if(changed.length){s.stale=true;s.reasons.push('关联资料变化：'+changed.map(x=>x.name).join('、'));}const members=entry.members||[{loadoutId:entry.loadouts.bottom},{loadoutId:entry.loadouts.support}];if(members.some(m=>loadoutStatus[m.loadoutId]?.stale)){s.stale=true;if(!s.reasons.includes('关联配置版本待复核'))s.reasons.push('关联配置资料待复核');}if(s.stale||s.invalid)reviewTasks.push({id:entry.id,name:entry.name,reasons:s.reasons,changedDependencies:changed});}
+ return {errors:[...new Set(errors)],status,loadoutStatus,reviewTasks,staleLoadouts:Object.values(loadoutStatus).filter(s=>s.stale).length,stale:Object.values(status).filter(s=>s.stale).length,invalid:Object.values(status).filter(s=>s.invalid).length};
 }
 export function configureCatalog(c){const catalog=validateCatalog(c);configureRuleCatalog(catalog);configureLoadoutCatalog(catalog);return catalog;}
 export function mergePersonal(base,personal={duos:[],trios:[],loadouts:[],runes:{}}){

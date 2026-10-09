@@ -10,7 +10,7 @@ async function run(){
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'),'utf8'));data.builds=JSON.parse(await fs.readFile(path.join(base,'data/builds.json'),'utf8')).entries;
  const spellbook=JSON.parse(await fs.readFile(path.join(base,'data/spells.json'),'utf8'));data.spellbook=spellbook.version===data.version?spellbook.champions:{};
  const trio=TRIOS.find(t=>t.members.some(m=>m.champion==='Ashe'&&m.role==='bottom'));
- let state=core.selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift',comboId:trio?.id,conditions:[]});
+ let state={...core.selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift',comboId:trio?.id,conditions:[]}),collapsed:true};
  let live={available:true,at:Date.now(),champion:'Ashe',mode:'rift',mapId:11,gold:1200,inventory:[],level:8,gameTime:750,skills:{Q:4,W:1,E:1,R:1}};
  const factory=require(path.join(base,'electron/guide-window.cjs')),root=path.resolve(process.env.RIFT_BUDDY_USER_DATA);
  let current={id:'Ashe',role:'bottom',mode:'rift',positionKnown:true},preferences={guideAfterGame:'hide',guideAutoShow:true};
@@ -34,12 +34,13 @@ async function run(){
  // Ball mode must preserve the full panel's width and release keyboard focus.
  await delay(400);const expandedWidth=w.getSize()[0];
  await js('window.guide.control("ball")');await until(()=>js('!!document.querySelector(".ball-btn")'),'Floating ball missing');
- assert.deepEqual(w.getSize(),[76,76]);assert.equal(w.isResizable(),false);assert.equal(w.isFocusable(),false);
+ // Windows can enforce a slightly larger native minimum at display scaling.
+ assert.ok(w.getSize().every(n=>n>=76&&n<=96),'Floating ball must remain compact');assert.equal(w.isResizable(),false);assert.equal(w.isFocusable(),false);
  await js('document.dispatchEvent(new MouseEvent("mousedown",{screenX:10,screenY:10}));document.dispatchEvent(new MouseEvent("mousemove",{buttons:1,screenX:30,screenY:10}));document.querySelector(".ball-btn").click()');
  assert.equal((await js('window.guide.bootstrap()')).ball,true,'A renderer drag became an expand click');
  await js('document.dispatchEvent(new MouseEvent("mouseup"))');await delay(50);
  await js('document.querySelector(".ball-btn").click()');await until(()=>js('!!document.querySelector(".quick-reminders")'),'Ball did not expand');
- assert.equal(w.getSize()[0],expandedWidth,'Expanding kept the floating ball width');assert.equal(w.isResizable(),true);
+ assert.ok(Math.abs(w.getSize()[0]-expandedWidth)<=6,'Expanding must restore the full panel width within native border rounding');assert.equal(w.isResizable(),true);
  // Choose a shoe before the first core item, using real-semantic inventory snapshots.
  await js('document.querySelector("[data-tab=items]").click()');
  const shoe=snapshot.model.shoppingTargets.find(i=>i.kind==='鞋子');assert.ok(shoe);
@@ -54,9 +55,9 @@ async function run(){
   enemies:[{id:'Soraka',name:'索拉卡',level:9,items:[]},{id:'Zed',name:'劫',level:9,items:[{id:'6692',count:1}]}]};
  const initialDuels=core.createGuideModel(data,state,estimateLive,current).estimate.duels;
  estimateLive.stats.hp=Math.floor((initialDuels[0].killTheirs+initialDuels[1].killTheirs)/2);
- live={...estimateLive,at:Date.now()};guide.publish();await until(()=>js('!!document.querySelector(".estimate-row.danger")'),'Model warning missing');
- const estimateBefore=(await js('window.guide.bootstrap()')).model.estimate;assert.equal(estimateBefore.enemy.id,'Zed');assert.equal(estimateBefore.danger,true);
- assert.ok(await js('document.querySelector(".estimate-row.danger").textContent.includes("劫")'),'Warning target unnamed');
+ state.selection.threatId='Zed';live={...estimateLive,at:Date.now()};guide.publish();await js('document.querySelector("[data-tab=combat]").click()');await until(()=>js('!!document.querySelector(".combat-summary")'),'Selected comparison missing');
+ const estimateBefore=(await js('window.guide.bootstrap()')).model.estimate;assert.equal(estimateBefore.enemy.id,'Zed');assert.equal(estimateBefore.danger,false);
+ assert.ok(await js('document.querySelector(".combat-summary").textContent.includes("劫")'),'Comparison target unnamed');
  assert.ok(await js('document.querySelector("footer").getBoundingClientRect().bottom<=innerHeight+1'),'Estimates clipped the expanded footer');
  await js('document.querySelector("[data-guide-section=estimate-assumptions]").open=true');await capture('guide-estimate-expanded.png');
  live={...live,enemies:[...live.enemies].reverse(),at:Date.now()};guide.publish();
@@ -64,7 +65,7 @@ async function run(){
  assert.equal(reordered.enemy.id,estimateBefore.enemy.id);assert.equal(reordered.theirKill,estimateBefore.theirKill);assert.equal(reordered.danger,estimateBefore.danger);
  assert.equal(await js('document.querySelector("[data-guide-section=estimate-assumptions]").open'),true,'Refresh closed model assumptions');
  await js('window.guide.control("collapse")');assert.ok(await js('document.querySelector(".input-hint").getBoundingClientRect().bottom<=innerHeight+1'),'Warning clipped compact controls');
- assert.ok(await js('{const r=document.querySelector(".estimate-row.danger").getBoundingClientRect();r.top>=0&&r.bottom<=innerHeight}'),'Compact warning clipped');
+ assert.equal(await js('!!document.querySelector(".estimate-row.danger")'),false,'Compact guide fabricated danger');
  await capture('guide-estimate-compact.png');await js('window.guide.control("collapse")');
  live={...live,stats:{...live.stats,armor:500,mr:500},enemies:live.enemies.map(p=>p.id==='Zed'?{...p,items:[...p.items,{id:'1029',count:1}]}:p),at:Date.now()};guide.publish();
  const resisted=(await js('window.guide.bootstrap()')).model.estimate;

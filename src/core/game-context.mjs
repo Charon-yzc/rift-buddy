@@ -3,6 +3,8 @@ import {profile} from './rules.mjs';
 
 const inGame=phase=>['InProgress','Reconnect'].includes(phase);
 const activeGame=phase=>phase==='GameStart'||inGame(phase);
+const manualSlot=(slots,id)=>slots.find(s=>s.champion===id&&(s.manualPosition===true||!Number.isInteger(s.clientCellId)));
+const publicRole=role=>['top','jungle','mid','bottom','support'].includes(role)?role:null;
 // Ephemeral evidence for the current game only; no player identity or history.
 export function createCurrentGameTracker(){
  let own=null,mode=null,lastPhase=null,gameId=null,liveTime=null;
@@ -24,10 +26,11 @@ export function createCurrentGameTracker(){
    if(fresh){
     if(own?.id===live.champion&&mode===live.mode&&Number.isFinite(live.gameTime)&&Number.isFinite(liveTime)&&live.gameTime+30<liveTime)own=null;
     if(own?.id!==live.champion){
-     const champion=champions.find(c=>c.id===live.champion),slot=slots.find(s=>s.champion===live.champion);
-     own=champion?{id:champion.id,role:slot?.role||profile(champion).roles[0],positionKnown:!!slot,formalKnown:false}:null;
+     const champion=champions.find(c=>c.id===live.champion),slot=manualSlot(slots,live.champion),position=publicRole(live.position);
+     own=champion?{id:champion.id,role:slot?.role||position||profile(champion).roles[0],positionKnown:!!slot||!!position,formalKnown:false}:null;
      liveTime=null;
     }
+    if(own&&!own.formalKnown&&publicRole(live.position)){own.role=live.position;own.positionKnown=true;}
     if(live.mode)mode=live.mode;
     if(own&&live.mode===mode&&Number.isFinite(live.gameTime))liveTime=live.gameTime;
     // An unconfirmed mode cannot anchor the game clock; reset the baseline so a
@@ -35,8 +38,8 @@ export function createCurrentGameTracker(){
     if(live.mode===null||live.mode===undefined)liveTime=null;
    }
    if(!own||!['rift','hex'].includes(mode))return null;
-   const slot=slots.find(s=>s.champion===own.id),role=own.formalKnown?own.role:slot?.role||own.role;
-   return {id:own.id,role,mode,positionKnown:own.formalKnown||!!slot,...(own.formalKnown?{formalRole:own.role}:{})};
+   const slot=manualSlot(slots,own.id),role=own.formalKnown?own.role:slot?.role||own.role;
+   return {id:own.id,role,mode,positionKnown:own.formalKnown||!!slot||own.positionKnown,...(own.formalKnown?{formalRole:own.role}:{})};
   },
  };
 }

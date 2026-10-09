@@ -1,6 +1,9 @@
 const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('buddy',Object.freeze({
  bootstrap:()=>ipcRenderer.invoke('bootstrap'),
+ windowInfo:()=>ipcRenderer.invoke('window-info'),
+ presentation:change=>ipcRenderer.invoke('presentation',change),
+ onPresentation:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('presentation-update',listener);return()=>ipcRenderer.removeListener('presentation-update',listener);},
  saveState:state=>ipcRenderer.invoke('save-state',state),
  client:force=>ipcRenderer.invoke('client-status',force===true),
  ready:()=>ipcRenderer.invoke('main-ready'),
@@ -14,7 +17,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  catalogRollback:()=>ipcRenderer.invoke('catalog-rollback'),
  catalogPersonal:entry=>ipcRenderer.invoke('catalog-personal',entry),
  catalogExport:()=>ipcRenderer.invoke('catalog-export'),
- refreshBuild:(id,role)=>ipcRenderer.invoke('refresh-build',id,role),
+ refreshBuild:(id,role,source)=>ipcRenderer.invoke('refresh-build',id,role,source),
  applyRunes:page=>ipcRenderer.invoke('apply-runes',page),
  copy:text=>ipcRenderer.invoke('copy',text),
  chooseDirectory:()=>ipcRenderer.invoke('choose-directory'),
@@ -22,6 +25,9 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  exportState:()=>ipcRenderer.invoke('export-state'),
  importState:()=>ipcRenderer.invoke('import-state'),
  togglePin:()=>ipcRenderer.invoke('toggle-pin'),
+ companionMode:value=>ipcRenderer.invoke('companion-mode',value),
+ recoverGuide:()=>ipcRenderer.invoke('recover-guide'),
+ onWindowLayout:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('window-layout',listener);return()=>ipcRenderer.removeListener('window-layout',listener);},
  openGuide:selection=>ipcRenderer.invoke('open-guide',selection),
  updateGuide:selection=>ipcRenderer.invoke('update-guide',selection),
  onGuideSelection:handler=>{const listener=(_,selection,meta)=>handler(selection,meta);ipcRenderer.on('guide-selection',listener);return()=>ipcRenderer.removeListener('guide-selection',listener);},
