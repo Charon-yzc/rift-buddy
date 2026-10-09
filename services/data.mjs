@@ -88,7 +88,17 @@ export function atomicJSON(filename, value, {space=0}={}) {
   const pending=(writeQueues.get(key)||Promise.resolve()).catch(()=>{}).then(async()=>{
     await fs.mkdir(path.dirname(key),{recursive:true});
     const tmp=`${key}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
-    try{await fs.writeFile(tmp,content,'utf8');await fs.rename(tmp,key);}
+    try{
+      await fs.writeFile(tmp,content,'utf8');
+      // Windows readers/indexers can briefly hold the destination open. Keep
+      // the old file intact and the write queue ordered while retrying rename;
+      // never delete the destination or replace it with a non-atomic write.
+      const delays=[25,50,100,200,400,800];
+      for(let attempt=0;;attempt++){
+        try{await fs.rename(tmp,key);break;}
+        catch(error){if(!['EPERM','EBUSY','EACCES'].includes(error.code)||attempt>=delays.length)throw error;await new Promise(resolve=>setTimeout(resolve,delays[attempt]));}
+      }
+    }
     catch(error){await fs.unlink(tmp).catch(()=>{});throw error;}
   });
   writeQueues.set(key,pending);

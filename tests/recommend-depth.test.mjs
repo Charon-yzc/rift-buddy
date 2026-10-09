@@ -11,13 +11,13 @@ const locked=(slots,pairs)=>{for(const [role,id] of pairs)Object.assign(slots.fi
 test('team analysis exposes curve, forgiveness, control chain and difficulty',()=>{
  const slots=locked(createSlots(),[['top','Malphite'],['jungle','JarvanIV'],['mid','Orianna'],['bottom','Varus'],['support','Ashe']]);
  const a=analyzeTeam(slots,data.champions);
- assert.ok(['前期主动','偏后期团战','前后兼顾'].includes(a.curve.label));
+ assert.equal(a.curve.label,'等关键大招窗口');assert.ok(a.curve.windows.some(w=>w.champion==='Orianna'));
  assert.ok(['容错较高','容错中等','容错偏低'].includes(a.forgiveness.label));
  assert.equal(typeof a.control,'string');
  assert.ok(Number.isFinite(a.avgDifficulty));
  assert.ok(['mixed','ad','ap','none'].includes(a.damageMix));
  // Pure mechanism helpers behave on empty traits.
- assert.equal(describeCurve({engage:0,poke:0,sustain:0,aoe:0,peel:0,frontline:0}).label,'前后兼顾');
+ assert.equal(describeCurve({engage:0,poke:0,sustain:0,aoe:0,peel:0,frontline:0}).label,'阶段条件未整理');
  assert.equal(describeForgiveness({peel:0,frontline:0,sustain:0},false).label,'容错偏低');
  assert.equal(controlChainLabel({engage:0,aoe:0}),'缺少稳定先手');
  assert.equal(describeComposition(a).length>0,true);

@@ -21,6 +21,49 @@ const member=(champion,role)=>({champion,role}),graph=()=>createCooperationGraph
 const setup=(roles,picks=[])=>createSlots().map(s=>({...s,party:roles.includes(s.role),...(picks.some(p=>p[0]===s.role)?{champion:picks.find(p=>p[0]===s.role)[1],locked:true}:{} )}));
 const trio=[member('Trundle','top'),member('Sejuani','jungle'),member('Seraphine','mid')];
 
+test('locked cross-lane friends have actionable plans including every member and preserve lane costs',()=>{
+ for(const members of [
+  [member('LeeSin','jungle'),member('Yasuo','mid')],
+  [member('Darius','top'),member('LeeSin','jungle'),member('Ahri','mid')],
+  [member('Kayle','top'),member('Kindred','jungle')],
+  [member('Jax','top'),member('Viego','jungle'),member('Ahri','mid')],
+  ...['Amumu','Gragas','Nunu','Sejuani','Zac'].map(id=>[member(id,'jungle'),member('Zed','mid')]),
+ ]){
+  const slots=setup(members.map(m=>m.role),members.map(m=>[m.role,m.champion]));
+  const [row]=recommend({slots,champions:data.champions,scope:'party'});assert.ok(row.adaptive,members.map(m=>m.champion).join('/'));
+  const plan=captureCreativePlan(row,data),restored=validateCreativePlan(JSON.parse(JSON.stringify(plan)),slots);
+  assert.ok(restored.cooperation.opening);assert.match(restored.cooperation.economy,/兵线|营地/);
+  assert.equal(restored.cooperation.memberJobs.length,members.length);
+  for(const m of members){
+   const own=restored.ordered.find(j=>j.champion===m.champion);assert.match(own.job,/[QWER]|普攻/);
+   const b=getBuild(byId.get(m.champion),m.role,data,{comboId:restored.id,creativePlan:restored});assert.equal(b.combo.id,plan.id);assert.ok(b.combo.economy);assert.ok(b.combo.early);
+  }
+  for(const text of [cooperationText(row.adaptive),resultPlayCard(row,0,data)]){assert.match(text,/开局分工/);assert.match(text,/兵线与资源/);assert.match(text,/失败处理/);}
+ }
+});
+
+test('one or two locked friends still reach whole-party plans when recommending remaining positions',()=>{
+ for(const [roles,picks,pools] of [
+  [['jungle','mid'],[['mid','Zed']],{jungle:{mode:'only',heroes:['Amumu','Gragas','Nunu','Sejuani','Zac']}}],
+  [['top','jungle','mid'],[['top','Darius'],['mid','Ahri']],{jungle:{mode:'only',heroes:['LeeSin','Viego','JarvanIV','Vi']}}],
+  [['top','jungle','mid'],[['jungle','LeeSin']],{top:{mode:'only',heroes:['Darius','Jax']},mid:{mode:'only',heroes:['Ahri','Yasuo']}}],
+ ]){
+  const rows=recommend({slots:setup(roles,picks),champions:data.champions,scope:'party',rolePools:pools});assert.ok(rows.length);
+  assert.ok(rows.some(r=>r.adaptive?.members.length===roles.length));
+  for(const row of rows)for(const [role,champion] of picks)assert.equal(row.slots.find(s=>s.role===role).champion,champion);
+ }
+});
+
+test('prior cooperation saves without phase notes remain unchanged and new contradictory jobs are rejected',()=>{
+ const [row]=recommend({slots:setup(trio.map(m=>m.role),trio.map(m=>[m.role,m.champion])),champions:data.champions,scope:'party'});
+ const plan=captureCreativePlan(row,data),old=structuredClone(plan);
+ for(const field of ['opening','economy','memberJobs','relaySteps'])delete old.cooperation[field];
+ old.cooperation.steps=old.cooperation.edges.map(e=>e.step);old.cooperation.why=old.cooperation.steps.join(' ');old.steps=[...old.cooperation.steps];old.why=old.cooperation.why;old.ordered=old.members.map(m=>({...m,job:old.cooperation.edges.filter(e=>[e.a,e.b].includes(m.champion)).map(e=>e.step).join(' ')}));
+ old.plan='先确认双方技能与站位，再按已保存的联动顺序行动；任一成立条件不满足就停止强接。';old.id=creativePlanId(old);
+ assert.deepEqual(validateCreativePlan(JSON.parse(JSON.stringify(old))),old);
+ const broken=structuredClone(plan);broken.ordered[0].job='与成员计划相矛盾的另一分工';broken.id=creativePlanId(broken);assert.throws(()=>validateCreativePlan(broken),/分工与保存说明不一致/);
+});
+
 test('mechanical families require the actual ally attack or control condition',()=>{
  const g=graph();assert.equal(g.edge(member('Sejuani','jungle'),member('Gwen','top')).family,'frost');
  assert.notEqual(g.edge(member('Sejuani','jungle'),member('Ashe','bottom'))?.family,'frost');
@@ -88,7 +131,7 @@ test('a known teammate duo cannot take over the party plan or its member configu
  const [row]=recommend({slots,champions:data.champions,scope:'context',rolePools:{mid:{mode:'only',heroes:['Seraphine']}}});
  assert.equal(row.origin,'adaptive');assert.equal(row.duo,undefined);assert.equal(row.trio,undefined);assert.deepEqual(row.targets,['mid']);
  assert.equal(row.analysis.known,5,'Other teammates still affect whole-team composition');
- assert.match(row.title,/近战叠霜/);assert.match(row.reason,/萨勒芬妮 E/);assert.match(resultPlayCard(row,0,data),/四层/);
+ assert.match(row.title,/近战叠霜/);assert.match(row.reason,/萨勒芬妮[^。]* E/);assert.match(resultPlayCard(row,0,data),/四层/);
  const configs=captureTeamConfigurations(row,data,createPreparationStore());
  assert.equal(configs.length,5);for(const id of ['Trundle','Sejuani','Seraphine'])assert.equal(configs.find(c=>c.id===id).creativePlan.archetype,'cooperation');
  assert.equal(configs.find(c=>c.id==='Ashe').creativePlan,undefined,'The unrelated duo keeps its own member build');

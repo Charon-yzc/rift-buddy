@@ -29,13 +29,25 @@ test('new champion mechanics participate in both allied function and public oppo
 });
 
 test('repeated attack and spell champions supply sustained damage without becoming burst-only profiles',()=>{
- for(const id of ['Trundle','Tryndamere','Olaf','Fiora','Ryze','Ezreal','Irelia']){
+ for(const id of ['Trundle','Tryndamere','Olaf','Fiora','Ryze','Ezreal','Irelia','Darius','Nasus','Warwick','XinZhao','Swain','Mordekaiser','Singed','Malzahar']){
   assert.equal(profile(hero(id)).sustain,true,id);
   assert.equal(summarizeEnemyTraits([id],data.champions).sustain,1,id);
  }
  for(const id of ['Leblanc','Talon','Malphite'])assert.equal(profile(hero(id)).sustain,false,id);
  const slots=createSlots().map(s=>({...s,champion:s.role==='top'?'Trundle':null}));
  assert.equal(analyzeTeam(slots,data.champions).traits.sustain,1);
+});
+
+test('specific control and preparation conditions agree with the same champions actual mechanism plans',()=>{
+ const team=picks=>analyzeTeam(createSlots().map(s=>({...s,champion:picks[s.role]||null})),data.champions);
+ const pair=team({jungle:'LeeSin',mid:'Yasuo'});assert.equal(pair.control,'有条件控制接力');assert.doesNotMatch(pair.control,/缺少/);
+ const chain=team({mid:'Ahri',bottom:'Ashe',support:'Braum'});assert.equal(chain.control,'有条件控制接力');
+ const early=team({top:'Darius',jungle:'LeeSin'}),growth=team({top:'Kayle',mid:'Veigar'});
+ assert.notEqual(early.curve.label,growth.curve.label);assert.equal(growth.curve.label,'先保成长与装备');
+ assert.match(growth.curve.windows.find(w=>w.champion==='Kayle').condition,/经验|等级/);
+ const bruisers=team({top:'Darius',jungle:'Warwick',mid:'Ahri'});assert.ok(!bruisers.warnings.some(w=>w.includes('持续输出偏少')));
+ assert.match(bruisers.members.find(m=>m.champion==='Darius').p.sustainCondition,/持续近身/);
+ const unknown=team({top:'Garen'});assert.equal(unknown.curve.label,'阶段条件未整理');assert.deepEqual(unknown.curve.unknown,['盖伦']);
 });
 
 test('an uncached source uses Locke magic mechanics and an unreviewed future hero gets no fabricated fallback',()=>{

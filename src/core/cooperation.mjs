@@ -1,4 +1,5 @@
 import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION,profile} from './rules.mjs';
+import {COOPERATION_PAIRS,cooperationCoordination} from './cooperation-pairs.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -44,14 +45,20 @@ const FAMILIES=[
 ];
 
 export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RULES_PATCH,reviewedAt=RULES_VERSION}={}){
- const byId=new Map(champions.map(c=>[c.id,c])),legacy=new Map(),cache=new Map(),profiles=new Map();
+ const byId=new Map(champions.map(c=>[c.id,c])),legacy=new Map(),cache=new Map(),profiles=new Map(),pairs=new Map(COOPERATION_PAIRS.map(row=>[pairKey(row[0],row[1]),row]));
  for(const [a,b,text] of links)if(byId.has(a)&&byId.has(b))legacy.set(pairKey(a,b),{id:'catalog:'+pairKey(a,b),family:'catalog',name:'已整理两两联动',a,b,step:text,condition:'双方实际具备对应技能与接近条件后再衔接。',failure:'原说明没有确认当前技能可用或对手站位；关键技能落空就停止强接。',patch,reviewedAt,current:false,tempo:'teamfight',sourceUrls:[]});
  const prof=m=>{const k=key(m);if(!profiles.has(k))profiles.set(k,profile(byId.get(m.champion),m.role));return profiles.get(k);};
  const edge=(a,b)=>{
   if(a.champion===b.champion||!byId.has(a.champion)||!byId.has(b.champion))return null;
   const k=[key(a),key(b)].sort().join('|');if(cache.has(k))return cache.get(k);
   let found=null;
+  const reviewedPair=pairs.get(pairKey(a.champion,b.champion));
+  if(reviewedPair&&prof(a).reviewed&&prof(b).reviewed){
+   const [first,second,name,step,condition,failure,tempo,control]=reviewedPair;
+   found={id:'pair:'+pairKey(first,second),family:'pair:'+pairKey(first,second),name,a:first,b:second,step,condition,failure,tempo,control,current:true,patch:COOPERATION_PATCH,reviewedAt:COOPERATION_REVIEWED_AT,alreadyLinked:legacy.has(pairKey(first,second)),sourceUrls:[first,second].map(id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`)};
+  }
   for(const family of FAMILIES){
+   if(found)break;
    const owner=[a,b].find(m=>m.champion===family.owner),ally=owner===a?b:a;
    if(!owner||!prof(owner).reviewed||!prof(ally).reviewed||!family.accept(byId.get(ally.champion),prof(ally)))continue;
    const c=byId.get(ally.champion);found={id:family.id+':'+pairKey(a.champion,b.champion),family:family.id,name:family.name,a:a.champion,b:b.champion,step:family.step(c.name,c),condition:family.condition,failure:family.failure,patch:COOPERATION_PATCH,reviewedAt:COOPERATION_REVIEWED_AT,current:true,tempo:family.tempo,alreadyLinked:legacy.has(pairKey(a.champion,b.champion)),sourceUrls:[family.owner,ally.champion].map(id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`)};break;
@@ -70,9 +77,9 @@ export function cooperationPlan(members,graph){
  members=members.filter(m=>m.champion);
  if(![2,3].includes(members.length)||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
  const edges=connectedEdges(members,graph);if(!edges)return null;
- const current=edges.filter(e=>e.current),main=current[0];
- return {name:`配合 · ${main.name}${members.length===3?'三人联动':''}`,members:members.map(m=>({role:m.role,champion:m.champion})),edges,
-  why:edges.map(e=>e.step).join(' '),steps:edges.map(e=>e.step),conditions:edges.map(e=>e.condition),failures:edges.map(e=>e.failure),tempo:main.tempo,
+ const current=edges.filter(e=>e.current),main=current[0],coordination=cooperationCoordination(members,graph,edges),steps=coordination.relaySteps||edges.map(e=>e.step);
+ return {name:`配合 · ${main.name}${members.length===3?'三人联动':''}`,members:members.map(m=>({role:m.role,champion:m.champion})),edges,...coordination,
+  why:steps.join(' '),steps,conditions:edges.map(e=>e.condition),failures:edges.map(e=>e.failure),tempo:main.tempo,
   bonus:Math.min(15,current.filter(e=>!e.alreadyLinked).length*4+(members.length===3?3:0)),
   sourceNote:'按技能条件与已有联动推导，未经组合对局验证；两两能配合不代表整体一定强。',
   patch:COOPERATION_PATCH,reviewedAt:COOPERATION_REVIEWED_AT,sourceUrls:[...new Set(current.flatMap(e=>e.sourceUrls))]};

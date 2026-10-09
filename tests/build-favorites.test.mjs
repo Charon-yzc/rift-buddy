@@ -9,6 +9,7 @@ import {companionPlanView} from '../src/companion-view.mjs';
 import {favoriteBuildSummary} from '../src/favorites-view.mjs';
 import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {laterItemSelector} from '../src/build-options-view.mjs';
+import {createItemSet,validateItemSet} from '../src/core/item-sets.mjs';
 
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
@@ -16,12 +17,23 @@ data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entr
 const value=(selection)=>({...selection,conditions:selection.conditions||[],build:getBuild(data.champions.find(c=>c.id===selection.id),selection.role,data,selection)});
 const base={id:'Volibear',role:'top',mode:'rift',coreIndex:0};
 
+test('Ahri can expand, select and preserve source Morellonomicon without replacing her current core',()=>{
+ const s={id:'Ahri',role:'mid',mode:'rift'},c=data.champions.find(c=>c.id===s.id),before=getBuild(c,s.role,data,s);
+ assert.ok(before.laterOptions.length>12);assert.ok(before.laterOptions.findIndex(o=>Number(o.items[0].id)===3165)>=12);
+ for(const companion of [false,true]){const html=laterItemSelector(before,{companion});assert.match(html,/更多合法来源备选/);assert.match(html,/data-id="3165"/);assert.match(html,/莫雷洛/);}
+ const chosen=changeCompanionPlan(data,s,'later',3165),b=getBuild(c,s.role,data,chosen);
+ assert.deepEqual(b.items.slice(0,3).map(i=>i.id),before.items.slice(0,3).map(i=>i.id));assert.ok(b.selectedLaterIds.includes(3165));
+ const saved=validateState({...defaultState(),favorites:[save({...chosen,build:b,conditions:[]})]}).favorites[0];assert.deepEqual(saved.laterIds,[3165]);
+ const itemSet=validateItemSet(createItemSet(c,b,data),data);assert.ok(itemSet.blocks.some(block=>block.items.some(i=>i.id==='3165')));
+ assert.match(laterItemSelector(b),/已选 · 莫雷洛/);
+});
+
 test('source sample reordering keeps every chosen later item visible and cancellable without clearing the other slot',()=>{
  const base={id:'Ashe',role:'bottom',mode:'rift'},first=getBuild(data.champions.find(c=>c.id===base.id),base.role,data,base);assert.ok(first.laterOptions.some(o=>Number(o.items[0].id)===3091));
  let choice=changeCompanionPlan(data,base,'later','3091');choice=changeCompanionPlan(data,choice,'later','3139');
  const updated=structuredClone(data);for(const row of updated.builds['Ashe:bottom'].later.flat()){row.samples=row.items.includes(3091)||row.items.includes(3139)?1:100000;row.wins=Math.floor(row.samples/2);row.winRate=row.wins/row.samples*100;}
  const v={...choice,build:getBuild(data.champions.find(c=>c.id===base.id),base.role,updated,choice)},selected=v.build;
- assert.deepEqual(selected.selectedLaterIds,[3091,3139]);assert.ok(selected.laterOptions.length<=12);assert.ok([3091,3139].every(id=>selected.laterOptions.some(o=>Number(o.items[0].id)===id)));
+ assert.deepEqual(selected.selectedLaterIds,[3091,3139]);assert.ok(selected.laterOptions.length>12);assert.ok([3091,3139].every(id=>selected.laterOptions.some(o=>Number(o.items[0].id)===id)));
  assert.match(laterItemSelector(selected,{companion:true}),/data-id="3091"/);
  const saved=validateState({...defaultState(),favorites:[save(v)]}).favorites[0];assert.deepEqual(saved.laterIds,[3091,3139]);
  const restored={...base,...saved,id:base.id};assert.ok(getBuild(data.champions.find(c=>c.id===base.id),base.role,updated,restored).laterOptions.some(o=>Number(o.items[0].id)===3091));

@@ -63,6 +63,8 @@ jobs:
         run: node scripts/smoke-package-matchups.mjs
       - name: Check accepted mechanism plans across member guides and restarts
         run: node scripts/smoke-package-cooperation.mjs
+      - name: Check locked cross-lane plans and complete late-item choices across restarts
+        run: node scripts/smoke-package-cooperation.mjs --cross-lane
       - name: Check public picks and source refresh invalidate recommendations
         run: node scripts/smoke-package-recommendation-fit.mjs
       - name: Check standalone connection helper

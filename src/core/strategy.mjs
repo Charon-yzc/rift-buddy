@@ -59,19 +59,21 @@ export function threatNotes(analysis,enemyTraits){
  return notes.slice(0,3);
 }
 export function preferredTempo(analysis,combo){const values=strategyTraits(analysis,combo);return Object.keys(TEMPOS).sort((a,b)=>(values[b]||0)-(values[a]||0))[0];}
-// Curve, forgiveness and control-chain below are mechanism heuristics computed
-// from role traits only (no win rates): they describe which phase the team
-// functions cover and how punishing mistakes are, not how strong the team is.
-export function describeCurve(traits){
- const early=Math.min(traits.engage,2)*2+Math.min(traits.poke,2)*1.5+(traits.poke&&traits.engage?1:0);
- const late=Math.min(traits.sustain,2)*2+Math.min(traits.aoe,2)*1.5+Math.min(traits.peel,2);
- return {early,late,label:early-late>=3?'前期主动':late-early>=3?'偏后期团战':'前后兼顾'};
+// Phase checkpoints come from authored champion mechanics. Function counts
+// cannot establish a power curve; unknown checkpoints stay unknown. Control
+// chains include reviewed interactions and their conditions, never readiness.
+export function describeCurve(_traits,members=[]){
+ const windows=members.filter(m=>m.p?.window).map(m=>({champion:m.champion,name:m.c.name,...m.p.window}));
+ const kinds=new Set(windows.map(w=>w.kind)),unknown=members.filter(m=>!m.p?.window).map(m=>m.c.name);
+ const label=!windows.length?'阶段条件未整理':kinds.size>1?'成员窗口不同，分步配合':kinds.has('growth')||kinds.has('items')?'先保成长与装备':kinds.has('ultimate')?'等关键大招窗口':'基础技能可找机会';
+ return {label,windows,unknown};
 }
 export function describeForgiveness(traits,balancedDamage){
  const score=Math.min(traits.peel,2)*2+Math.min(traits.frontline,2)*2+Math.min(traits.sustain,1)*1.5+(balancedDamage?1.5:0);
  return {score:Math.min(10,score),label:score>=6?'容错较高':score>=3.5?'容错中等':'容错偏低'};
 }
-export function controlChainLabel(traits){
+export function controlChainLabel(traits,edges=[]){
+ if(edges.some(e=>e.current&&(e.control||['frost','concussive','echo','ball','landing'].includes(e.family))))return '有条件控制接力';
  if(traits.engage>=2&&traits.aoe>=1)return '控制链完整';
  if(traits.engage>=2)return '先手充足、缺范围衔接';
  if(traits.engage>=1)return '有先手、缺衔接';

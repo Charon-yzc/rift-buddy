@@ -34,10 +34,12 @@ export function analyzeTeam(slots, champions, context) {
   const weight=m.role==='support'?.25:m.p.build==='tank'?.45:1;
   traits.ad+=m.p.damageWeights.ad*weight;traits.ap+=m.p.damageWeights.ap*weight;
  }
- const warnings=[];
+ const graph=context?.cooperationGraph||createCooperationGraph(champions),controlEdges=[];
+ for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge)controlEdges.push(edge);}
+ const control=controlChainLabel(traits,controlEdges),warnings=[];
  if(members.length>=3){
   if(!traits.frontline)warnings.push('前排偏少，避免直接接正面团战');
-  if(!traits.engage)warnings.push('先手偏少，需要消耗、视野或抓失误来开局');
+  if(!traits.engage)warnings.push(control==='有条件控制接力'?'先手依赖具体技能条件，成立后再接力，不当作稳定随时可开':'先手偏少，需要消耗、视野或抓失误来开局');
   if(!traits.peel)warnings.push('保护偏少，后排要保留自保手段');
   if(traits.ap<.4)warnings.push('法术伤害偏少，留意对方的护甲装备');
   if(traits.ad<.4)warnings.push('物理伤害偏少，留意对方的魔抗装备');
@@ -50,8 +52,8 @@ export function analyzeTeam(slots, champions, context) {
   strengths:Object.entries(labels).filter(([k])=>traits[k]>0).map(([,v])=>v),
   missing:Object.entries(labels).filter(([k])=>!traits[k]).map(([,v])=>v),
   threats:threatNotes({traits},context?.enemyTraits),
-  curve:describeCurve(traits),forgiveness:describeForgiveness(traits,balancedDamage),
-  control:controlChainLabel(traits),avgDifficulty,
+  curve:describeCurve(traits,members),forgiveness:describeForgiveness(traits,balancedDamage),
+  control,avgDifficulty,
   damageMix:!traits.ad&&!traits.ap?'none':balancedDamage?'mixed':traits.ad>=traits.ap?'ad':'ap'};
 }
 function findDuo(slots) {
