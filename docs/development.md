@@ -182,6 +182,14 @@ v0.10.4 的伤害参考需明确选择目标；通用技能公式不产生胜负
 
 v0.10.5 的选人侧栏直接修改当前 preparation，装备路线、符文、加点互相独立，玩法切换回到该玩法默认配置。其他英雄预览独立于实际本局英雄；固定符文按钮始终标明并核对实际英雄。`node scripts/smoke-package-companion-workflow.mjs` 检查打包 UI 的六套候选、选定英雄自动展示方案、原地配置同步到指引、预览与过期操作、双方公开阵容、滚动保留，以及 440/360/280 DIP 布局。窗口隐藏，客户端连接和符文写入均为隔离 fixture，不发送真实游戏输入。
 
+## v0.22.0 的召唤师技能准备
+
+`src/core/summoner-selection.mjs` 统一合法技能、手动优先、换位与来源回退；`summonerIds` 是按 D / F 排列的两个不同技能，加入原有准备字段，在个人与团队收藏、备份和指引中复用。模式合法性同时检查内置允许列表与 Riot 的 CLASSIC / KIWI 元数据；海克斯不使用普通 ARAM 的技能并集。缺少当前资料时仅显示有标注的备选，保存的选择仍保留。
+
+完整页与侧栏共享 `src/summoner-selection-view.mjs`。选择另一格已有技能会换位；恢复来源配置明确删除手动覆盖。D / F 仅描述准备顺序，不增加客户端技能写入或游戏输入。参考 [OP.GG 的 D/F 配置说明](https://help.op.gg/hc/en-us/articles/48467238743961-Getting-Started-with-the-OP-GG-App) 与 [Riot 海克斯模式说明](https://support.riotgames.com/en-us/league-of-legends/events/league-of-legends-aram-mayhem-game-mode)。
+
+打包后执行 `node scripts/smoke-package-summoners.mjs`：隔离设置、禁用网络、模拟符文写入，覆盖两种模式、主窗与 280/360/440 DIP 侧栏、重复换位、恢复来源、来源切换、成员预览及采纳、个人/团队收藏、指引和离线重启。该流程不代表真实国服对局验收。
+
 ## v0.21.0 的行动呈现与扩展覆盖
 
 技能合作动作现覆盖 109 位英雄，新增 27 位的条件按 Riot 16.20.1 原始说明复核，包括现行龙女形态技能。`tests/cooperation-coverage.test.mjs` 检查 45 组普通锁定朋友输入 × 三种风格、分页、限制、完整成员保存，以及武器/标记/形态不能被当成无条件控制。没有硬控入口的两位持续输出英雄仍不生成虚假控制接力。

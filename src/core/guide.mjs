@@ -1,3 +1,4 @@
+import {validateSummonerIds} from './summoner-selection.mjs';
 import {publicEquipment} from './scoreboard.mjs';
 import {getBuild,SHARDS} from './builds.mjs';
 import {ROLES,profile} from './rules.mjs';
@@ -31,6 +32,7 @@ export function validateDuelPick(value){
 }
 export function validateLoadoutSelection(value){
  const selected={};
+ if(value.summonerIds!==undefined)selected.summonerIds=validateSummonerIds(value.summonerIds,value.mode);
  if(value.bottomQuestPlan!==undefined&&typeof value.bottomQuestPlan!=='boolean')throw Error('下路任务计划格式不正确');
  if(value.bottomQuestPlan===true){if(value.role!=='bottom'||value.mode!=='rift')throw Error('额外装备计划只适用于峡谷下路任务');selected.bottomQuestPlan=true;}
  if(value.laterIds!==undefined){if(!Array.isArray(value.laterIds)||value.laterIds.length>(selected.bottomQuestPlan?3:2)||!value.laterIds.every(Number.isInteger))throw Error('后期备选格式不正确');if(value.mode==='rift')selected.laterIds=[...new Set(value.laterIds)];}

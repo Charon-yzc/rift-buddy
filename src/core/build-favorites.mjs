@@ -14,12 +14,15 @@ export function selectedBuildFields(v,{preserveUnavailable=false}={}){
   for(const key of ['coreId','runeId','skillId','startId','bootsId','loadoutId'])if(v[key])fields[key]=v[key];
   if(Array.isArray(v.laterIds))fields.laterIds=[...v.laterIds];
  }
+ if(b.selectedSummonerIds)fields.summonerIds=[...b.selectedSummonerIds];
+ if(preserveUnavailable&&Array.isArray(v.summonerIds))fields.summonerIds=[...v.summonerIds];
  return fields;
 }
 export function buildFavoriteId(v){
  const b=v.build,fields=v.mode==='hex'?{coreId:b.selectedCoreId,loadoutId:b.loadoutId,runeId:b.selectedRuneId,skillId:b.selectedSkillId,laterIds:b.selectedLaterIds,startId:b.selectedStartId,bootsId:b.selectedBootsId}:selectedBuildFields(v,{preserveUnavailable:true});
  const identity=[fields.coreId||v.coreIndex,[...(v.conditions||[])].sort(),fields.loadoutId,fields.runeId,b.combo?.id||'',fields.skillId||'',fields.laterIds||[],!!b.bottomQuestPlan,fields.startId||'',fields.bootsId||''];
  if(v.mode==='hex')identity.push(Object.values(hexFields(v)).map(set));
+ const spellIds=selectedBuildFields(v,{preserveUnavailable:true}).summonerIds;if(spellIds)identity.push({summonerIds:spellIds});
  return `build:${v.id}:${v.role}:${v.mode}:${fingerprint(identity)}`;
 }
 export function findSavedBuild(favorites,v){
@@ -30,6 +33,7 @@ export function findSavedBuild(favorites,v){
   if(f.champion!==v.id||f.role!==v.role||f.mode!==v.mode)return false;
   if(f.coreId?f.coreId!==fields.coreId:(f.coreIndex||0)!==v.coreIndex)return false;
   if(!same([...(f.conditions||[])].sort(),[...(v.conditions||[])].sort()))return false;
+  if(!same(f.summonerIds||[],fields.summonerIds||[]))return false;
   if(v.mode==='hex')return Object.keys(hexFields(v)).every(key=>same(set(f[key]),set(v[key])));
   // Legacy favorites without a later selection reopen with no self-selected
   // later items. They must not swallow a new choice or cancel another plan.
