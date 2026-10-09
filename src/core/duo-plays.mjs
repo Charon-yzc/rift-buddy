@@ -84,6 +84,13 @@ const interactions={
  'Ekko:Zilean':{steps:['艾克先报 W 与 R 影子所在位置，基兰留 E/R 接应而非一起深入','艾克跟可靠控制打三环，基兰 Q/E 限制反击，R 在实际承伤前给','艾克按实际影子与退路返回，基兰不用为了追救援跟进敌阵'],exit:'回身点危险、复活位置会被守或双方距离断开时取消深入。'}
 };
 export function duoPlay(duo,data,{champion,role}={}){
+ if(duo?.members?.length===2){
+  const own=duo.members.find(m=>m.champion===champion&&m.role===role),jobs=duo.members.map(m=>`${data?.champions?.find(c=>c.id===m.champion)?.name||m.champion}：${m.job}`);
+  const stages={opening:{label:'开局 / 对线',ownAction:duo.early,steps:[duo.early],window:duo.window,exit:duo.risk},
+   key:{label:'关键配合',ownAction:own?.job||null,steps:[...duo.steps],window:duo.window,exit:duo.risk},
+   later:{label:'后期团战',ownAction:own?.job||null,steps:jobs,window:duo.window,exit:duo.risk}};
+  return {kind:'duo',id:duo.id,patch:duo.patch,reviewedAt:duo.reviewedAt,stale:data.patch!==duo.patch,stages,window:duo.window,economy:duo.economy,early:duo.early,ownJob:own?.job||null,steps:[...duo.steps],risk:duo.risk,source:(duo.id.startsWith('local-')?'个人整理':'组合库整理')+' · 未经组合对局统计验证',sources:duo.sources||[]};
+ }
  if(!duo?.carry||!duo?.support)return null;
  const carry=data?.champions?.find(c=>c.id===duo.carry),support=data?.champions?.find(c=>c.id===duo.support);
  const carryTask=rolePlay(duo.carry,'bottom'),supportTask=rolePlay(duo.support,'support');

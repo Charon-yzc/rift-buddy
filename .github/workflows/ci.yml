@@ -57,6 +57,8 @@ jobs:
         run: node scripts/smoke-package-live-situation.mjs
       - name: Check build choices and combination database
         run: node scripts/smoke-package-database.mjs
+      - name: Check arbitrary-role personal pairs, editor scrolling and saved member guides
+        run: node scripts/smoke-package-catalog.mjs
       - name: Check saved preparations and member configurations across restarts
         run: node scripts/smoke-package-preparations.mjs
       - name: Check public-opponent plans and duo phases in packaged windows
