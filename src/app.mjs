@@ -125,7 +125,7 @@ const sameMatchupSelection=(a,b)=>a&&b&&['id','role','mode'].every(field=>a[fiel
 const chosenMatchupOpponent=selection=>{const key=matchupTargetKey(selection),pending=sameMatchupSelection(selection,client.opponentFocus)?client.opponentFocus.opponentId:'',prepared=sameMatchupSelection(selection,guideSelection)&&guideSelection.matchupGameId===publicClientGameId(client)?guideSelection.threatId:'';return publicMatchupOpponent(data,publicMatchupIds(),matchupTargets.has(key)?matchupTargets.get(key):pending||prepared);};
 const matchupFocusStatus=selection=>{
  const target=chosenMatchupOpponent(selection);if(!target)return client.opponentFocusNotice||'';
- if(matchupFocusError?.selectionContext===client.selectionContext&&matchupFocusError.opponentId===target.id)return '未同步到局内指引：'+matchupFocusError.message+'；请同步客户端后重新选择。';
+ if(matchupFocusError&&matchupFocusError.selectionContext===client.selectionContext&&matchupFocusError.opponentId===target.id)return '未同步到局内指引：'+matchupFocusError.message+'；请同步客户端后重新选择。';
  if(sameMatchupSelection(selection,guideSelection)&&guideSelection.threatId===target.id&&guideSelection.matchupGameId===publicClientGameId(client))return '已与本局绑定，进入游戏后沿用此对手。';
  if(sameMatchupSelection(selection,client.opponentFocus)&&client.opponentFocus.opponentId===target.id&&client.opponentFocus.status==='confirmed')return '已与本局绑定，进入游戏后沿用此对手。';
  if(sameMatchupSelection(selection,client.opponentFocus)&&client.opponentFocus.opponentId===target.id)return '已记住选择，等待客户端确认本局；连接中断或重启后需重选。';
