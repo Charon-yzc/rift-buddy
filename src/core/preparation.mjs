@@ -2,7 +2,7 @@ import {validateGuideSelection} from './guide.mjs';
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
-export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','skillId','comboId','laterIds'];
+export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','skillId','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId'];
 export function configurationPatch(previous,next){
  return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next?.[field]));
 }
@@ -14,7 +14,7 @@ export function mergeConfiguration(current,next,fields=CONFIGURATION_FIELDS){
 // Store only reusable choices, without opponents, match IDs or purchase progress.
 export function validatePreparation(value){
  const s=validateGuideSelection(value);
- const {threatId,protectId,combatFocus,...configuration}=s;
+ const {threatId,protectId,combatFocus,matchupGameId,...configuration}=s;
  return configuration;
 }
 export function validatePreparations(value){
@@ -68,5 +68,9 @@ export function createRuneApplicationState(){
 export function recommendationKey(input){
  // Client sync bindings churn every poll; only draft content affects results.
  const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party}));
- return JSON.stringify([slots,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.enemy,input.publicPicks,input.catalogStatus,input.version,input.catalogVersion,input.limit]);
+ // These source fields affect position eligibility and frequency in recommend.
+ // Fetch times, item routes and display labels do not affect lineup ranking.
+ const sourceSamples=Object.values(input.builds||{}).map(ref=>[ref.champion,ref.role,Number.isFinite(ref.runeSamples)?ref.runeSamples:null]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+ const sourceRoles=[...new Set((input.sourceRoles||[]).map(ref=>[ref.champion,ref.role].join(':')))].sort();
+ return JSON.stringify([slots,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.enemy,input.visibleEnemies,input.publicPicks,input.catalogStatus,input.version,input.catalogVersion,input.limit,input.creativePlan?.id,sourceSamples,sourceRoles]);
 }

@@ -16,7 +16,7 @@ export function createCurrentGameTracker(){
    if(phase==='ChampSelect'&&lastPhase!=='ChampSelect'||activeGame(phase)&&activeGame(lastPhase)&&id&&gameId&&id!==gameId||!activeGame(phase)&&phase!=='ChampSelect'){own=null;mode=null;liveTime=null;}
    if(phase==='ChampSelect'){
     const selected=currentPlayerSelection(client.session,champions,slots),formal=currentPlayerSelection(client.session,champions);
-    own=selected?{...selected,role:formal?.positionKnown?formal.role:selected.role,formalKnown:formal?.positionKnown===true}:null;
+    own=selected?{...selected,formalKnown:formal?.positionKnown===true,...(formal?.positionKnown?{formalRole:formal.role}:{})}:null;
    }
    if(client.mode?.id)mode=client.mode.id;else if(!own)mode=null;
    lastPhase=phase;if(id)gameId=id;
@@ -30,7 +30,7 @@ export function createCurrentGameTracker(){
      own=champion?{id:champion.id,role:slot?.role||position||profile(champion).roles[0],positionKnown:!!slot||!!position,formalKnown:false}:null;
      liveTime=null;
     }
-    if(own&&!own.formalKnown&&publicRole(live.position)){own.role=live.position;own.positionKnown=true;}
+    if(own&&!own.formalKnown&&!manualSlot(slots,own.id)&&publicRole(live.position)){own.role=live.position;own.positionKnown=true;}
     if(live.mode)mode=live.mode;
     if(own&&live.mode===mode&&Number.isFinite(live.gameTime))liveTime=live.gameTime;
     // An unconfirmed mode cannot anchor the game clock; reset the baseline so a
@@ -38,8 +38,8 @@ export function createCurrentGameTracker(){
     if(live.mode===null||live.mode===undefined)liveTime=null;
    }
    if(!own||!['rift','hex'].includes(mode))return null;
-   const slot=manualSlot(slots,own.id),role=own.formalKnown?own.role:slot?.role||own.role;
-   return {id:own.id,role,mode,positionKnown:own.formalKnown||!!slot||own.positionKnown,...(own.formalKnown?{formalRole:own.role}:{})};
+   const slot=manualSlot(slots,own.id),role=slot?.role||own.role;
+   return {id:own.id,role,mode,positionKnown:own.formalKnown||!!slot||own.positionKnown,...(own.formalKnown?{formalRole:own.formalRole}:{})};
   },
  };
 }

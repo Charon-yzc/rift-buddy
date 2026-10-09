@@ -18,7 +18,7 @@ test('a simultaneous trio and bot pair route each member to their own playable l
  const slots=createSlots();for(const [role,id] of [['top','Malphite'],['jungle','JarvanIV'],['mid','Orianna'],['bottom','Varus'],['support','Ashe']])Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});
  assert.equal(currentCombo(slots, 'Orianna','mid').id,'ball-delivery');
  const duo=currentCombo(slots,'Varus','bottom');assert.notEqual(duo.id,'ball-delivery');assert.equal(currentCombo(slots,'Varus','bottom',{'jarvan-varus-ashe':{invalid:true}}).id,'arrows-ice');
- const b=getBuild(hero('Varus'),'bottom',data,{comboId:duo.id});assert.equal(b.loadoutId,'spell-lethality');assert.ok(b.selectionWarnings.every(w=>w.includes('组合整理于')));
+ const b=getBuild(hero('Varus'),'bottom',data,{comboId:duo.id});assert.equal(b.loadoutId,'spell-lethality');assert.ok(b.selectionWarnings.every(w=>w.includes('组合整理于')||w.includes('出门预算')));assert.ok(b.start.reduce((n,i)=>n+i.gold.total,0)<=500);
  assert.equal(recommend({slots,champions:data.champions})[0].strategy.label,'团战连招');
 });
 test('bot preferences affect results, and replacing a bot position works when it is marked teammate',()=>{

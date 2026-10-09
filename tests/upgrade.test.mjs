@@ -24,6 +24,11 @@ test('queue 2400 is Hex; map 12 or ARAM alone never invents the exact mode',()=>
  assert.equal(identifyMode({queueId:1700,gameMode:'CHERRY'}).id,null);
  assert.deepEqual(sanitizeGame({gameData:{queue:{id:2400,gameMode:'ARAM'},mapId:12,teamOne:[{private:'discard'}]},gameId:123}),{queueId:2400,mapId:12,gameMode:'ARAM'});
 });
+
+test('Swiftplay 480 is distinct from normal Quickplay 490 and cannot prepare a cached ranked Rift route automatically',()=>{
+ const swift=identifyMode({queueId:480,gameMode:'CLASSIC',mapId:11});assert.equal(swift.id,'swiftplay');assert.equal(swift.supported,false);assert.match(swift.label,/独立出门/);
+ for(const queueId of [420,490])assert.deepEqual(identifyMode({queueId,gameMode:'CLASSIC',mapId:11}),{id:'rift',label:'召唤师峡谷',supported:true});
+});
 test('owned recipe components are allocated once, repeated components count, cycles terminate',()=>{
  const items={a:{name:'小件',gold:{total:300}},b:{name:'中件',gold:{total:900},from:['a','a']},c:{name:'成装',gold:{total:2000},from:['b','a']},d:{gold:{total:2000},from:['d']}};
  const plans=purchasePlan([{id:'c'},{id:'b'},{id:'d'}],items,[{id:'a',count:2}],500);

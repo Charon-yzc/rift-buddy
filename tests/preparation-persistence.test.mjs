@@ -6,9 +6,9 @@ import path from 'node:path';
 import {getBuild} from '../src/core/builds.mjs';
 import {selectedBuildFields} from '../src/core/build-favorites.mjs';
 import {createPreparationStore,storedPreparation} from '../src/core/preparation.mjs';
-import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
+import {captureTeamConfigurations,teamFavoriteId,findSavedTeam} from '../src/core/team-favorites.mjs';
 import {favoriteTeamSummary} from '../src/favorites-view.mjs';
-import {createSlots} from '../src/core/recommend.mjs';
+import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {defaultState,saveState,readState,validateState,mergeState} from '../services/storage.mjs';
 
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
@@ -93,4 +93,23 @@ test('a team snapshot cannot refer to another hero, lane, mode or duplicate memb
  assert.throws(()=>validateState({...state,favorites:[{...state.favorites[0],configurations:[configuration,configuration]}]}));
  assert.deepEqual(validateState({...state,favorites:[{...state.favorites[0],configurations:undefined}]}).favorites[0].configurations,[]);
  const solo={...lineup,scope:'solo',targets:['bottom']};assert.deepEqual(captureTeamConfigurations(solo,data,createPreparationStore()).map(s=>s.role),['bottom']);
+});
+
+test('locked solo favorites retain the actual role and complete preparation across later edits and restart',async()=>{
+ const slots=createSlots().map(s=>({...s,champion:s.role==='bottom'?'Ashe':null,locked:s.role==='bottom'}));
+ const [result]=recommend({slots,champions:data.champions,scope:'solo',soloRole:'bottom',soloChampion:'Ashe'});
+ assert.deepEqual(result.targets,[]);assert.equal(result.soloRole,'bottom');
+ const store=createPreparationStore(),selection=chosen('Ashe','bottom');store.remember(selection);
+ const configurations=captureTeamConfigurations(result,data,store);
+ assert.equal(configurations.length,1);assert.deepEqual(configurations[0].conditions,['heal']);
+ for(const key of ['coreId','runeId','skillId'])assert.equal(configurations[0][key],selection[key]);
+ const favorite={id:teamFavoriteId(result,'fun'),type:'team',title:result.title,scope:'solo',style:'fun',soloRole:result.soloRole,slots:result.slots,configurations};
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-locked-solo-'));await saveState(root,{...defaultState(),favorites:[favorite]});
+ store.remember({...selection,conditions:['ap','heal'],runeId:'curated-fleet'});
+ const reopened=await readState(root),saved=reopened.favorites[0];for(const s of saved.configurations)store.remember(s);
+ assert.equal(saved.soloRole,'bottom');assert.deepEqual(store.recall(selection).conditions,['heal']);assert.equal(store.recall(selection).runeId,selection.runeId);
+ assert.equal(findSavedTeam([saved],result,'fun').id,favorite.id);
+ assert.notEqual(teamFavoriteId({...result,soloRole:'support'},'fun'),favorite.id);
+ assert.equal(findSavedTeam([saved],{...result,soloRole:'support'},'fun'),undefined);
+ assert.throws(()=>captureTeamConfigurations({...result,soloRole:''},data,store),/未确认你的位置/);
 });

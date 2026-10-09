@@ -1,8 +1,15 @@
 // Conditional plans curated from Riot 16.20 champion descriptions. These are
 // choices for the player, not observations of positions, cooldowns or win rate.
+import {profile} from './rules.mjs';
+import {rolePlay,genericRolePlay} from './role-plays.mjs';
 export const MATCHUP_PLANS_PATCH='16.20';
 export const MATCHUP_PLANS_REVIEWED_AT='2026-10-09';
 const priorities={
+ Jax:'反击风暴未结束时保留关键普攻与接近，先离开反击范围。',
+ Tryndamere:'不死大招期间先脱离接触，不因低血量继续追击。',
+ Vayne:'接近前避开撞墙方向，失去视野后先回到安全位置。',
+ Renekton:'先看怒气与强化连段，第一段位移已交不等于不能二段。',
+ Tristana:'身上有炸弹时先断开连续攻击，别把交过 W 当无法再跳。',
  Morgana:'黑盾仍在时把控制留给没有黑盾的可安全目标。',
  Janna:'先看风女 Q/R 的打断，未处理威胁时分开试探与进场。',
  Yuumi:'附身时集中可接触的宿主，不把附身悠米当钩子目标。',
@@ -18,10 +25,19 @@ const priorities={
  Samira:'W 不挡全部威胁；对方 R 出现时用可靠打断，先保站位。',
  Teemo:'致盲时不按普攻正常命中安排换血，等待可安全输出的窗口。',
  Gwen:'先看 W 边界与自己是否能选中她，不把落点当已经命中。',
- Darius:'出血在累积时停止长换血，Q 外圈与 E 追击方向先留退路。'
+ Darius:'出血在累积时停止长换血，Q 外圈与 E 追击方向先留退路。',
+ Zed:'先看影子位置；R 标记期间保留自保和退出，别把 W 已交当无法换位。',
+ Caitlyn:'避开夹子与 E 网，保留接近后的退路；踩中夹子后不要继续吃强化爆头。',
+ Nautilus:'避开 Q 路径，R 追踪时与队友分散；Q 空了仍要防被动普攻和 R。',
+ Khazix:'先避免孤立，保留友军接应；目标隐身后不要把原位置当可命中的落点。',
+ Fiora:'W 未处理时把控制分段，守住破绽方向；别把近身长打当唯一选择。',
+ Ahri:'先避 E 路径，R 换位后重新看射程；魅惑落空不等于她不能再退出。'
 };
 
 const actions={
+ Garen:{start:'盖伦 Q 实际命中后衔接 E 短换血，W 留给反击；R 只在当前阶段已学会且局面允许时考虑',follow:'盖伦用 Q 的移动帮助调整退路，E 结束后回到安全兵线或队友，不为了叠层延长无接应的近身战',probe:'盖伦先保补刀与被动恢复空间，Q 不为一次消耗交掉全部接近和退出机会'},
+ Ahri:{start:'阿狸 E 魅惑实际命中后接 Q/W，R 留一段调整与退出',follow:'阿狸先跟队友控制同一目标，魅惑空了或 R 退路被堵就结束追击',probe:'阿狸 Q 兼顾兵线与短换血，E 留给接近者，不为消耗交完 R'},
+ Ezreal:{start:'伊泽瑞尔 Q 先确认没有单位挡住，W 实际命中后再用安全攻击兑现',follow:'伊泽瑞尔穿插安全普攻维持输出，E 留避控制或退回队友，不把 E 接近当默认连招',probe:'伊泽瑞尔在能补刀的位置用 Q 试探，E 出口避夹子与敌方控制'},
  Nautilus:{start:'泰坦用 Q 或被动普攻接控制，R 与第一段控制错开',follow:'泰坦留一段控制给反扑者，不把 Q、被动和 R 同时交空',probe:'泰坦在搭档能跟上的距离试探，不为了逼技能独自交 Q'},
  Samira:{start:'莎弥拉先用普攻与 Q 交替输出，再决定是否交 E 接近',follow:'莎弥拉确认实际控制、S 评价和剩余打断，再决定是否开 R',probe:'莎弥拉用安全距离的 Q 与普攻试探，E 留到目标和落点都确认后'},
  Leona:{start:'蕾欧娜的 E/Q 与 R 分段衔接，让输出跟上再延长控制',follow:'蕾欧娜留控制反打靠近射手的目标，别追到射手无法输出的位置',probe:'蕾欧娜先前压试探，W 承伤时仍与搭档保持跟进距离'},
@@ -41,6 +57,99 @@ const defaultActions=role=>role==='support'?{start:'你先控制靠近搭档的�
  {start:'你先输出能安全触及的目标，关键接近技能等条件成立再交',follow:'你保留离开对方控制范围的路线，不为继续输出交掉全部自保',probe:'你先用能安全命中的攻击或技能短换血，接近技能不用于盲目试探'};
 
 export const MATCHUP_RULES={
+ Jax:{title:'等反击风暴结束，分开试探与追击',skills:['Q','E','R'],
+  reason:'E 闪避普攻并减少范围技能伤害，结束或再施放会眩晕附近目标；Q 跳跃与 R 双抗也会改变接触条件。助手未读取这些技能的状态。',
+  opening:'先看 E 的动作与范围，保留关键普攻和退出空间，不靠近围打反击风暴；他可用 Q 接近或借单位退走。',
+  window:'玩家确认 E 闪避与反击都已结束，自己仍能安全接触并退出，再交关键普攻或控制；范围技能可以造成伤害，但不能当作完全不受 E 影响。',
+  fight:'控制与输出错开反击范围，先保护被跳近的成员；R 提供双抗时重新判断是否继续，不预设同一套伤害仍能兑现。',
+  exit:'E 再次开启、对方可 Q 追到退路或己方输出无法跟上时断开接触；不要为补关键普攻留在反击范围。',
+  equipment:'实际普攻压力大时比较已有铁板靴或护甲备选，代价是其他鞋子或输出收益；武器还包含魔法伤害，护甲不能让普攻穿过闪避。',
+  runes:'需要连续攻击或定身的完整页必须等实际命中；短换血和移动页也要先完成触发，不能以承受 E 反击为代价硬叠层。',
+  runeCondition:'反击风暴期间不能预支关键普攻与叠层，范围伤害也会被减免；先确认反击结束再兑现触发。',equipmentCondition:'护甲与伤害成装都不能让普攻穿过 E 闪避；同时留意实际魔法伤害与退出距离。'},
+ Tryndamere:{title:'免死期间脱离，结束后再确认接触',skills:['Q','W','E','R'],
+  reason:'R 使蛮王暂时不能死亡，Q 消耗怒气回复；E 可接近且暴击能缩短其冷却，背对他的目标还可能被 W 减速。',
+  opening:'短换血先留出口，看怒气、普攻接触和 E 落点；低血量不代表可以无条件继续追击，也不把一次 E 当固定安全时长。',
+  window:'玩家确认 R 免死已结束，目标可触及且自己仍有退路，再考虑后续输出；助手不计大招倒计时，不从低血量推断技能已交。',
+  fight:'免死期间用实际可生效的控制和走位保护核心、减少持续接触，技能分段留给追击；不要全队为低血量目标离开资源与队友。',
+  exit:'目标开启 R、自己的退路被 E 截断或被连续普攻追上时先脱离；免死结束后仍要看 Q 回复和友军接应，不能按原生命条追到底。',
+  equipment:'普攻与暴击压力大时可比较已有防御备选；重伤只针对实际 Q 或装备回复，代价是推迟核心，既不移除 R 免死也不阻止 E 追击。',
+  runes:'移动或短换血页用于实际触发后的脱离，持续输出页要求能安全接触；不要为了叠满征服者或致命节奏与免死目标站桩。',
+  runeCondition:'R 免死期间优先减少接触，不为叠层继续追；移动收益也必须先满足完整页的实际触发。',equipmentCondition:'重伤减少实际治疗，不能解除 R 免死；防御装备也不保证能摆脱 E 与连续普攻。'},
+ Vayne:{title:'远离撞墙角度，先断开连续银弩',skills:['Q','W','E','R'],
+  reason:'E 击退撞上地形会眩晕，W 对同一目标连续命中能造成最大生命值比例真实伤害；R 期间 Q 可隐身并改变落点。',
+  opening:'接近前看自己背后的地形和退路，别沿墙直追；反复补刀消耗下先保状态，不把短暂进入射程当可以连续输出。',
+  window:'玩家确认接近角度不会被 E 推撞地形、目标可被选取且自己仍能退回，再短换血；R/Q 隐身后重新确认目标，不猜落点。',
+  fight:'控制分段限制可见目标，靠队友同侧进退；不要让多名近战沿同一堵墙追击，也不靠单纯堆生命承受连续 W。',
+  exit:'自己即将被推向地形、连续银弩压力加大或目标隐身脱离接触时退出；放弃补一次攻击，回到兵线或队友可接应的路线。',
+  equipment:'已有铁板靴或护甲可针对部分普攻压力，代价是移动或进攻收益；不能削减 W 的真实伤害，额外生命也不消除其比例伤害。重伤需另有实际治疗依据。',
+  runes:'续航页可比较反复消耗下的容错，移动页需先实际触发；持续普攻页在被击退或隐身断开时不能预支层数。',
+  runeCondition:'E 击退和 R/Q 隐身会断开攻击距离；移动或续航不能保证持续触发，也不会消除撞墙风险。',equipmentCondition:'护甲不减免 W 的真实伤害，额外生命不能消除比例伤害；没有实际治疗证据时不据此推荐重伤。'},
+ Renekton:{title:'看怒气拆连段，强化 W 前留退路',skills:['Q','W','E','R'],
+  reason:'怒气强化 Q/W/E；强化 W 会破坏护盾并眩晕，E 命中单位后可再施放，R 增加生命并持续生成怒气。',
+  opening:'在游戏里看怒气与兵线单位，第一段 E 命中小兵也可能带来二段；靠近前先考虑强化 W，不把护盾当无条件承伤。',
+  window:'玩家确认主要 W 反击已处理，怒气变化和 E 后续路径可承受，且自己仍有退出方式，再短换血；不要仅凭一次位移已交开始长打。',
+  fight:'保护被 E 接近的核心，控制分段阻止后续攻击；对方开 R 后重新看生命与怒气，别沿用开大前的追击判断。',
+  exit:'强化 W 威胁仍在、对方二段 E 将截断出口或 R 改变承伤条件时结束换血，退到队友能接应的位置。',
+  equipment:'实际短爆发高时比较已有防御和承伤路线，代价是输出进度；强化 W 会破盾，护盾路线不是连段免疫。重伤只针对实际 Q 治疗，不减少 R 增加的生命。',
+  runes:'骸骨镀层页需要先手消耗后仍可用，移动页必须实际触发；短换血结束后退出，不为征服者层数停在红怒连段内。',
+  runeCondition:'骸骨镀层可能先被消耗；强化 W 与二段 E 尚能反打时，不为叠层延长接触。',equipmentCondition:'强化 W 会破坏护盾；重伤不削减 R 增加的生命，先看实际 Q 治疗与核心进度。'},
+ Tristana:{title:'炸弹期间先断攻击，跳跃不能只算一次',skills:['Q','W','E','R'],
+  reason:'E 炸弹会被普攻或技能命中强化；英雄击杀参与或对英雄引爆满层炸弹能刷新 W，R 还会击退目标。',
+  opening:'保持能回到兵线或队友的位置，身上有 E 炸弹时减少继续被攻击；小炮已跳近时先看炸弹与接应，不默认她只能跳这一次。',
+  window:'玩家确认 E 炸弹威胁已结束或能够断开后续命中，自己能接近且 R 击退后仍有安全站位，再短换血；目标 W 改位后重新看距离。',
+  fight:'保护被跳近和挂炸弹的成员，控制接实际落点；炸弹范围内别挤在同一处，发生击杀参与后重新评估 W，不按先前跳跃记录追击。',
+  exit:'炸弹持续叠层、被 R 推离队友或目标 W 再次改位时结束追击；不要为一轮输出交掉全部退路。',
+  equipment:'实际普攻压力大时比较已有护甲或鞋子备选，代价是其他功能与输出收益；这些选择不移除 E 炸弹、W 刷新条件或 R 击退。',
+  runes:'短换血或移动页需要在安全接触里触发，持续输出页不能假定被 R 推开后仍能叠满；不要为了触发再吃完整炸弹连段。',
+  runeCondition:'E 炸弹期间先减少后续命中，W 可能刷新、R 可击退；不预支完整持续攻击窗口。',equipmentCondition:'护甲或输出成装不移除 E 炸弹和 W 刷新，也不会阻止 R 将你推离输出距离。'},
+ Khazix:{title:'避免孤立，隐身后先找接应',skills:['Q','E','R'],
+  reason:'孤立影响螳螂技能收益，E 可以跳跃，R 隐身会改变选取与追击；助手没有孤立判定、进化或隐身位置。',
+  opening:'支援或入河前看友军接应，低状态不独自经过未知入口；中立野怪不等于自己的友军，不靠它默认解除孤立。',
+  window:'玩家确认有友军单位接应、螳螂可被选取且自己有退出技能，再短换血；不要把一次现身当 R 后续施放已结束。',
+  fight:'靠己方核心与保护成员同侧接战，控制留给实际现身的目标；目标隐身后先回到友军可接应的位置。',
+  exit:'友军距离断开、目标隐身或追击出口进入未知火力时停止追击；低生命不为最后一次攻击离开接应范围。',
+  equipment:'普攻压力大时可比较已有铁板靴调整，容易被秒时可比较已有保命路线，代价是推迟伤害或急速收益。防御装备不解除孤立，也不提供隐身目标的位置。',
+  runes:'若选用持续战斗页，需要安全接触与实际攻击；隐身或退出使长打无法成立时不要预支叠层收益。这里是机制取舍，未关联当前完整页。'},
+ Fiora:{title:'先处理劳伦特心眼刀，再分段控制',skills:['Q','W','R'],
+  reason:'W 挡伤害与控制，挡住定身后回击可以眩晕；破绽与 R 让持续贴身收益变化，助手没有破绽方向与技能状态。',
+  opening:'在游戏里看破绽方向，以短技能试探，先留后撤空间；不要把所有带控制的技能一起送进 W。',
+  window:'玩家确认 W 已结束、自己能避回击且队友可接同一目标，再衔接控制；第一段试探成功不代表能安全打到全部后段。',
+  fight:'控制分段衔接，先确认 W 没有挡住关键技能；己方核心被 R 标记时保留反打，不与她单独绕圈追破绽。',
+  exit:'W 回击将命中自己、破绽被连续触及或队友无法接应时退出；不要为了追加一次攻击延长无接应的近身对拼。',
+  equipment:'实际治疗多时可手动比较已有重伤调整，代价是占用核心或后期防御位；荆棘之甲需受到对方普攻才可靠触发，不能保证覆盖远处目标。护甲不抵消全部破绽伤害。',
+  runes:'若选用征服者页，需要安全持续接触，短换血页要在退出前兑现触发；W 挡住关键控制时不要继续为叠层追击。偏续航的副系也会放弃其他副系收益，具体完整页仍需核对。'},
+ Ahri:{title:'避魅惑，换位后再决定追击',skills:['E','R'],
+  reason:'E 魅惑限制反击，R 多段位移会改变落点；参与击杀还可能获得额外施放，不能按固定落点追到底。',
+  opening:'用兵线遮挡 E 并保留侧向退路，短换血先看能否回到队友；兵线被清后不能沿用刚才的安全路线。',
+  window:'玩家确认 E 路径避开或已落空，阿狸在队友能跟的距离且自己有回撤，再衔接控制；R 改变位置后重新确认射程。',
+  fight:'保护被魅惑的核心，可靠控制实际命中后再让输出接续；阿狸连续换位时不要把全部控制交在空落点。',
+  exit:'己方关键技能落空、目标 R 脱离输出距离或己方核心需要保护时结束追击；不追到友军无法接应的位置。',
+  equipment:'实际法术爆发高时可比较已有魔抗或护盾方案，代价是占用另一件功能装备的位置；水银之靴可针对部分控制，却不让 Q/E 无法命中。先看全队实际伤害再调整。',
+  runes:'需要命中、连续攻击或定身的符文必须满足实际条件；阿狸换位后无法安全追击时，先回到友军可接应位置。符文不会增加技能射程，这里未关联当前完整页。'},
+ Zed:{title:'看影子与标记，留自保再短换血',skills:['Q','W','E','R'],
+  reason:'W 可以换位，影子会复制 Q/E；R 不可选取后施加延迟标记。助手没有影子位置、能量或技能就绪信息。',
+  opening:'在游戏里看影子与本体角度，避免同时吃多路 Q；W 已交时可短换血，但先确认影子能否继续换位。',
+  window:'玩家确认影子角度避开、目标可命中且自己仍有自保或队友接应，再接控制与短爆发；R 不可选取期间不浪费指向技能。',
+  fight:'保护被 R 标记的成员，留控制处理本体重新出现后的接近；与影子错开站位，不全员向同一个影子方向追。',
+  exit:'自己低生命、带标记且退路未确认，或目标换位脱离射程时退出；不因一套打中就继续追到第二个影子。',
+  equipment:'法术输出可比较已有中娅核心路线或护甲组件，代价是推迟纯伤害成装；主动停滞时机要自己确认。护甲不处理所有伤害，不把买到装备当自动躲掉标记。',
+  runes:'短爆发页需要实际命中并能退出，消耗页也不能以承受多路影子伤害为代价；先攻要求先造成伤害，被影子消耗先手时收益下降。具体完整页需按当前英雄核对。'},
+ Caitlyn:{title:'避夹子和网，不用位移硬换射程',skills:['Q','W','E','R'],
+  reason:'W 夹子与 E 网会给凯特琳强化爆头机会；网也让她后撤，不能把一次接近当成已留住目标。',
+  opening:'补刀路径避已看到的夹子，Q 试探后回到安全距离；不为一次普攻走进她能连续攻击而自己不能还手的位置。',
+  window:'玩家确认夹子与网不覆盖出口，凯特琳在己方可输出距离且队友能接应，再进行短换血；E 已交也需看夹子和另一名敌人。',
+  fight:'先处理安全可触及目标，借队友控制缩小射程差；被 R 锁定时看友军是否能安全拦截，不把队友承担伤害当默认保护。',
+  exit:'踩夹子、被网减速或搭档输出距离断开就退；不要让自己为追一个后撤目标接连续爆头。',
+  equipment:'先保留当前英雄的核心；普攻压力大时可手动比较铁板靴调整，代价是原鞋子的急速或攻速收益。鞋子减伤不移除夹子、束缚或网。',
+  runes:'连续攻击型页需要能安全接触同一目标，射程压制下不能预支触发；若选用续航页，也要核对其实际触发方式与放弃的输出收益。这里未关联当前完整页。'},
+ Nautilus:{title:'钩子与追踪大招分开处理',skills:['Q','E','R'],
+  reason:'Q 接近后被动普攻可以禁锢，E 会减速；R 追踪目标并沿途击飞，钩子落空不代表后续控制消失。',
+  opening:'利用兵线遮挡 Q 但不把薄弱兵线当永久保护；泰坦能走到普攻距离时先退，与搭档留出不同撤退方向。',
+  window:'玩家确认 Q 路径被阻或已落空，泰坦不能直接普攻禁锢且搭档能接应，再短换血；六级后另外检查 R 威胁。',
+  fight:'R 朝自己追来时分散队友站位，保留护盾、位移或反打；队友实际控制接近者后再决定接续输出，不为追击离开保护距离。',
+  exit:'泰坦已到普攻距离、搭档被控制或 R 使输出与保护分离时退回接应；不因被动可能刷新就跟进未知火力。',
+  equipment:'先保留当前核心；控制密集可手动比较水银之靴，代价是原鞋子的输出或急速收益。韧性不缩短击飞，魔抗也不让追踪大招失效；看对方全队伤害再调整。',
+  runes:'持续输出型页需要能安全接触，保护或续航型页也不免控制。被开时先保证队友接应距离，不为符文叠层留下；具体完整页需按当前英雄核对。'},
  Morgana:{title:'先处理黑盾，再分段接控',skills:['Q','E','R'],
   reason:'黑暗之盾吸收魔法伤害并在存在期间阻止控制；物理普攻不能按打掉普通护盾的思路处理它。',
   opening:'先试探黑盾给谁，保留另一段控制；黑盾仍在时不要把整条控制链押在受保护的人身上。',
@@ -177,14 +286,49 @@ export function publicMatchupOpponent(data,ids,targetId){
 }
 export function matchupTargetKey(selection){return [selection?.id,selection?.role,selection?.mode,selection?.comboId||''].join(':');}
 
-export function matchupPlan({data,champion,role,enemyId,combo=null,focus='teamfight'}={}){
+// These additions belong to one own champion and position. Enemy-only rules
+// must remain usable by every own champion, including blind-pick mirrors.
+const OWN_MATCHUP_NOTES={
+ 'Garen:top:Jax':{window:'玩家确认武器 E 闪避与眩晕反击已经结束，盖伦能 Q 接触并退回兵线，再 Q/E 短换血；不要把 Q 强化普攻送进闪避，E 范围伤害也会被减免。',start:'盖伦先等反击结束再 Q 命中接 E，W 留给实际反击，不为一段 Q 硬吃眩晕',exit:'武器开始 E 或能 Q 截断盖伦退路时，先用走位与可用 Q 的移动帮助退开；E 范围技不是这段时间必须打满的理由。',runes:'盖伦上单已有征服者与风暴掠袭者的狂涌完整页可比较：征服者要求安全持续接触，狂涌需要先在 3 秒内造成相当于同一英雄 25% 最大生命值的伤害再帮助脱离。代价是持续战斗收益与移动容错的交换，两者都不能让 Q 穿过闪避。',equipment:'盖伦保留已有挺进核心与输出进度；普攻压力大时可比较铁板靴，代价是当前鞋子的其他收益。武器含魔法伤害，护甲不处理全部反击，也不能解决闪避。'},
+ 'Garen:top:Tryndamere':{window:'玩家确认蛮王 R 免死已经结束，盖伦能安全接触且有退出路线，再考虑后续 Q/E；不把 Q 沉默或对手低血量当作已经排除 R 的依据。',start:'盖伦短接触 Q/E 后退，蛮王开 R 时先保退路和 W 承伤，不把自己的 R 交在仍免死的目标上',exit:'蛮王开启 R 或 E 能追上时，盖伦先断开普攻接触，Q 的移动帮助留给退出；不要为征服者层数继续站桩。',runes:'盖伦已有风暴掠袭者的狂涌页可比较实际触发后的撤离，代价是征服者持续战斗收益；若仍选征服者，免死期间也先退出，不把满层当必须完成的任务。',equipment:'盖伦先保核心；普攻与暴击压力高时比较已有防御备选，重伤仅针对实际 Q/吸血回复。代价是输出进度，任何这些装备都不解除 R 免死。'},
+ 'Garen:top:Vayne':{window:'玩家确认盖伦接近路线不会被薇恩 E 推撞地形，目标可被选取，且自己能回到安全兵线，再用 Q/E 短换血；隐身后不猜落点。',start:'盖伦用走位与 Q 移动帮助找不靠墙的接近角度，Q 真正命中后才接 E，W 留给反击',exit:'即将被 E 推向墙、薇恩持续兑现 W 或 R/Q 隐身失去目标时，盖伦退回安全路线；Q 解除减速不等于解除击退或撞墙眩晕。',runes:'盖伦已有风暴掠袭者的狂涌和含复苏之风的完整页可比较：前者需要先完成触发，后者偏受伤后续航。代价是其他副系或持续输出收益，不能把移动或恢复当成必能接近薇恩。',equipment:'盖伦保留能接近后兑现的核心路线；铁板靴或护甲只处理部分普攻压力，代价是进攻收益。W 银弩真实伤害不能靠护甲抵消，单纯堆生命也不消除比例伤害。'},
+ 'Garen:top:Renekton':{window:'玩家确认鳄鱼主要 W 连段已处理、怒气与二段 E 不会截断退路，盖伦能 Q/E 后退出，再开始短换血；不因第一段 E 已交就追进兵线。',start:'盖伦 Q 实际命中后 E 短换血，W 对准自己实际要承受的反击；鳄鱼强化 W 会破盾，不能预支完整护盾承伤',exit:'红怒 W 威胁仍在、鳄鱼二段 E 能追退路或开启 R 改变生命与怒气时，盖伦结束 E 换血并退回安全兵线。',runes:'盖伦已有含骸骨镀层的完整页可比较短连段容错，但先被消耗就未必能覆盖；风暴掠袭者的狂涌用于实际触发后的退出，代价是征服者或其他副系收益。',equipment:'盖伦先保挺进等已有核心进度；防御选择需要看实际连段，护盾不能无条件承受强化 W。重伤只处理实际 Q 治疗，不减少 R 加的生命，代价是另一件核心或功能位。'},
+ 'Garen:top:Tristana':{window:'玩家确认盖伦能在 E 炸弹继续叠层前退出，接近后即使被小炮 R 推开也有安全路线，再 Q/E 短换血；W 已用不等于不会刷新。',start:'盖伦用 Q 的移动帮助争取短接触，Q 真正命中后 E，W 留承接反击；不在炸弹叠层时为一轮伤害长追',exit:'身上 E 炸弹被持续叠层、R 将盖伦推离队友或小炮 W 再次改变距离时，结束换血；不交完所有移动手段继续追。',runes:'盖伦已有风暴掠袭者的狂涌或含复苏之风的完整页可比较，前者要安全完成触发再撤离，后者偏补刀消耗容错；代价是征服者或其他副系收益，不能为触发再吃满炸弹。',equipment:'盖伦保留已有核心路线，实际普攻压力高时比较合法鞋子或护甲备选，代价是进攻收益；这些选择不会移除 E 炸弹、阻止 W 刷新或免疫 R 击退。'},
+ 'LeeSin:jungle:Khazix':{fight:'李青 Q 命中后先看二段落点，W 可回撤友军再决定追击；靠友军同侧接战，控制留给实际现身的目标。',runes:'若选用征服者页，需要持续接触与普攻穿插；电刑需要不同攻击实际命中。隐身或退出使长打无法成立时不要预支满层收益，具体完整页仍需核对。'},
+ 'Aatrox:top:Fiora':{fight:'剑魔 Q 各段看实际命中与击飞，W 拦退路时先确认目标没有越出；己方核心被 R 标记时保留反打。',exit:'W 回击将命中自己、破绽被连续触及或队友无法接应时退出；不要按三个 Q 全中延长近身对拼。'},
+ 'Nautilus:support:Ahri':{fight:'泰坦 Q 或被动接到实际目标后再分段接 R，保护被魅惑的核心；阿狸连续换位时不要把全部控制交在空落点。',runes:'若选用余震页，需要定身实际生效；冰川增幅也不能靠落空 Q 触发。阿狸换位后无法安全追击时改为保护核心，具体完整页仍需核对。'},
+ 'Ahri:mid:Zed':{runes:'若选用电刑爆发页，阿狸 E 命中且能安全接 Q/W 才兑现短爆发；彗星页偏消耗，先攻页要求先造成伤害，被影子消耗先手时收益下降。比较完整页时还需核对副系与碎片。'},
+ 'Ezreal:bottom:Caitlyn':{equipment:'伊泽瑞尔先完成法力与 Q 循环所需核心；普攻压力大时可手动比较铁板靴调整，代价是急速或攻速鞋收益。减伤不移除夹子、束缚或网。',runes:'若选用强攻页，需要连续攻击同一目标；征服者需要持续接触。射程压制下不能预支连续攻击或叠层；按当前完整页核对触发条件，不假定此位置有迅捷步法备选。'},
+ 'Jinx:bottom:Nautilus':{fight:'R 朝自己追来时分散队友站位；金克丝 E 接实际控制或守撤退入口，不靠 W 落空后的前追逼被动。',equipment:'金克丝先保留暴击核心；控制密集可比较水银之靴，代价是攻速鞋收益。韧性不缩短击飞，魔抗不使追踪大招失效。',runes:'若选用致命节奏页，需要持续安全普攻；迅捷步法偏换血续航并放弃部分持续输出。两者都不免控制，具体完整页仍需核对。'}
+};
+
+function genericMatchupRule(enemy,enemyPlan){
+ if(!enemyPlan)return null;
+ const p=profile(enemy);
+ const response=p.engage?'与队友分散，保留自保或反打处理接近者':p.poke?'借兵线与走位避免连续消耗，先保状态再寻找可接应的接近角度':p.sustain?'避免无接应的长换血，控制接上才进入主要输出窗口':p.frontline?'先让队友持续输出跟上，不为绕过前排独自越过战区':'先用安全攻击试探，保留关键控制与退出技能';
+ return {generic:true,title:'公开机制参考 · 专门对位待整理',skills:['Q','W','E','R'],priority:response+'。',
+  reason:'目前只提供对方已整理的技能限制和通用进退条件，不能替代这个对位的专门打法。对方机制限制：'+enemyPlan[3],
+  opening:response+'；换血前确认己方技能、兵线遮挡与搭档距离，无法安全退出就不开始。',
+  window:'玩家确认自己的关键技能可用、攻击能实际命中且队友可接应，再按己方顺序短换血；对方的形态、技能与退出手段仍需在游戏里确认。',
+  fight:response+'；跟队友处理同一可安全触及目标，不把一次命中当必须追到底。',
+  exit:'己方关键技能落空、对方换位或形态改变、队友距离断开就结束追击并重新观察；不要按未知条件继续整套连招。',
+  equipment:'先保留核心，根据你观察到的普攻、法术、治疗或控制压力比较已有局势调整；防御会占用伤害或功能位置，不能只按英雄标签自动替换。',
+  runes:'比较现有完整页实际需要的连续攻击、先手命中或定身条件；做不到就不要预支触发。偏续航或保护的选择也会放弃部分进攻收益，这里没有专门对阵样本。'};
+}
+
+export function matchupPlan({data,champion,role,enemyId,combo=null,focus='teamfight',stage='key',ownPlan=null,enemyPlan=null}={}){
  const own=typeof champion==='string'?data?.champions?.find(c=>c.id===champion):champion;
- const enemy=data?.champions?.find(c=>c.id===enemyId),rule=enemy&&MATCHUP_RULES[enemy.id];
- if(!own||!enemy||!rule||!own.mechanics||!enemy.mechanics)return null;
- const actor=actions[own.id]||defaultActions(role);
+ const enemy=data?.champions?.find(c=>c.id===enemyId),enemyRule=enemy&&(MATCHUP_RULES[enemy.id]||genericMatchupRule(enemy,enemyPlan));
+ if(!own||!enemy||!enemyRule||!own.mechanics||!enemy.mechanics)return null;
+ const pair=OWN_MATCHUP_NOTES[`${own.id}:${role}:${enemy.id}`],rule={...enemyRule,...pair};
+ const mechanical=actions[own.id]||(ownPlan?{probe:ownPlan[0],follow:ownPlan[1],start:ownPlan[2]}:defaultActions(role));
+ const task=rolePlay(own.id,role,stage)||genericRolePlay(role,stage);
+ // Economy and team responsibilities follow the selected position. Keep the
+ // champion's mechanical sequence without importing its primary-role opening.
+ const actor={...mechanical,probe:task?.opening||mechanical.probe,follow:task?.[stage==='later'?'later':'key']||mechanical.follow};
  const members=(combo?.members||[]).map(m=>m.champion);
  const samira=own.id==='Samira'||members.includes('Samira');
- const sequence=[rule.window,actor.start,actor.follow];
+ const sequence=[rule.window,rule.start||actor.start,actor.follow];
  let opening=rule.opening+' '+actor.probe,fight=rule.fight+' '+actor.follow;
  if(samira){
   const follow=enemy.id==='Janna'?'莎弥拉先用普攻/Q 兑现输出；Q/R 打断威胁未处理时不急着 E 和 R，W 不能阻止风女 R 的近身击退。':
@@ -194,8 +338,8 @@ export function matchupPlan({data,champion,role,enemyId,combo=null,focus='teamfi
    '莎弥拉先确认 S 评价和能可靠打断自己的威胁；能接 E 不代表现在可以安全开 R。';
   sequence[2]=follow;fight+=' '+follow;
  }
- return {enemy:{id:enemy.id,name:enemy.name},title:rule.title,reason:rule.reason,opening,fight,priority:own.id==='Samira'&&enemy.id==='Janna'?'W 不能阻止风女 R 的近身击退；Q/R 打断威胁未处理时不急着 E/R。':priorities[enemy.id],sequence,exit:rule.exit,
-  equipment:rule.equipment,runes:rule.runes,skillKeys:[...rule.skills],focus:focus==='lane'?'lane':'teamfight',
+ return {enemy:{id:enemy.id,name:enemy.name},title:rule.title,reason:rule.reason,opening,fight,priority:own.id==='Samira'&&enemy.id==='Janna'?'W 不能阻止风女 R 的近身击退；Q/R 打断威胁未处理时不急着 E/R。':priorities[enemy.id]||rule.priority,sequence,exit:rule.exit,
+  equipment:rule.equipment,runes:rule.runes,runeCondition:rule.runeCondition||null,equipmentCondition:rule.equipmentCondition||null,coverage:pair?'pair':rule.generic===true?'generic':'enemy',generic:rule.generic===true,skillKeys:[...rule.skills],focus:focus==='lane'?'lane':'teamfight',
   comboTitle:combo?.title||combo?.name||null,patch:MATCHUP_PLANS_PATCH,reviewedAt:MATCHUP_PLANS_REVIEWED_AT,stale:data.patch!==MATCHUP_PLANS_PATCH,
   source:'Riot 英雄机制 · 人工条件整理，无对阵胜率推导',sourceUrls:[own,enemy].map(c=>`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/champion/${c.id}.json`)};
 }

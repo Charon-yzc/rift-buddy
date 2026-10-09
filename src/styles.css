@@ -117,3 +117,23 @@ body{background:radial-gradient(1100px 520px at 75% -8%,#17261f 0%,transparent 6
 
 .favorite-team-configurations{margin:14px 0}.favorite-team-configurations summary{cursor:pointer;color:#b5e8d3;font-size:13px;overflow-wrap:anywhere}.favorite-team-configurations section{margin-top:14px;padding-top:12px;border-top:1px solid #344154}.favorite-team-configurations .favorite-plan{margin:8px 0}.favorite-team-configurations h4{color:#d3e3ef}
 
+.opponent-fit{margin:12px 0;padding:12px;border:1px solid #35475b;border-radius:10px;overflow-wrap:anywhere}
+.opponent-fit p{margin:6px 0;line-height:1.6}
+.opponent-fit small{display:block;color:#9caec2;line-height:1.6}
+.opponent-fit details{margin:6px 0}
+.cached-build-shortcut{margin-bottom:12px}
+.cached-build-shortcut .btn{max-width:100%;white-space:normal;text-align:left}
+.companion-current .position-note{display:inline;color:#91a9c0}
+
+/* Opponent choices reuse the current role's legal pages and source cores. */
+.matchup-build{min-width:0;margin:16px 0;padding:16px;border:1px solid #334155;border-radius:14px;background:#131d29;}
+.matchup-build h3{margin-bottom:8px;}.matchup-current{margin:12px 0;}.matchup-configurations{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin:12px 0;}
+.matchup-choice{min-width:0;padding:12px;border:1px solid #334155;border-radius:12px;display:flex;flex-direction:column;gap:8px;}.matchup-choice h4,.matchup-choice p{margin:0;}.matchup-choice small{color:#8994a7;}.matchup-choice .btn{align-self:flex-start;max-width:100%;white-space:normal;}.matchup-choice details{font-size:.9em;}.matchup-choice details p{margin:8px 0;}
+.matchup-rune-page{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0;}.matchup-rune-page span,.matchup-core-items span{display:flex;align-items:center;gap:6px;min-width:0;overflow-wrap:anywhere;}.matchup-rune-page img{width:22px;height:22px;flex:none;}.matchup-rune-page small{grid-column:1/-1;line-height:1.6;}.matchup-core-items{display:flex;flex-direction:column;gap:6px;}.matchup-core-items img{width:28px;height:28px;flex:none;}.matchup-build.compact{padding:10px;}.matchup-build.compact .matchup-configurations{grid-template-columns:minmax(0,1fr);}.matchup-build.compact .matchup-choice{padding:10px;}
+
+.matchup-build{scroll-margin-top:80px}.matchup-choice:has([data-action=matchup-rune]:disabled){border-color:#578b73;background:#172a23}
+.item-set-controls{margin:14px 0;padding:12px;border:1px solid #334356;border-radius:10px;background:#14202d;min-width:0}.item-set-actions{display:flex;flex-wrap:wrap;gap:8px}.item-set-actions .btn{white-space:normal;min-height:36px}.item-set-hint,.item-set-status{font-size:13px;line-height:1.7;margin:8px 0 0;overflow-wrap:anywhere}.item-set-hint{color:#b1bfce}.item-set-status:empty{display:none}.companion-shell .item-set-actions .btn{flex:1 1 125px}.companion-shell .item-set-controls{padding:10px}
+.item-set-help{margin-top:8px;font-size:13px;line-height:1.6}.item-set-help summary{cursor:pointer;color:#b1bfce}.item-set-status.text-gold{color:#e4b567}
+
+.drawer .matchup-build{scroll-margin-top:150px}.matchup-choice .btn:disabled{cursor:default;opacity:1;color:#a1dfb7;background:#1c332b;border-color:#3f6556}
+.more-builds .chips .btn[aria-pressed="true"]{color:#c0f5d7;background:#254d3b;border-color:#87cda9;box-shadow:inset 3px 0 #a6ebc5}

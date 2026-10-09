@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {clientSnapshot,writeRunePage} from './lcu.mjs';
+import {importItemSet} from './item-sets.mjs';
 import {loadSnapshot,atomicJSON} from './data.mjs';
 import {readState} from './storage.mjs';
 import {launchHelper} from './helper-launch.mjs';
@@ -28,7 +29,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
  const config=JSON.parse(await fs.readFile(filename,'utf8'));
  if(!pipePattern.test(config.pipe)||!tokenPattern.test(config.secret)||!Number.isInteger(config.parentPid)||config.parentPid<=0||!Number.isFinite(config.createdAt)||Date.now()-config.createdAt>600000||config.createdAt>Date.now()+5000)throw new Error('连接会话已过期');
  // The helper only serves this app's explicit operations; neither command lines nor credentials leave it.
- let writing=false;
+ let writing=false,itemSetWriting=false;
  const server=net.createServer(socket=>{
   let buffer='',handled=false;socket.setTimeout(15000,()=>socket.destroy());
   socket.on('error',()=>{});
@@ -47,6 +48,11 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
       result=await writeRunePage({page:request.payload.page,ownedPageId:state.ownedPageId,installPath:config.installPath,trees:data.runes});
       // The unelevated app is the sole settings writer; avoid racing a preference save.
      }finally{writing=false;}
+    }else if(request.operation==='importItemSet'){
+     if(itemSetWriting)throw Error('装备集正在写入，请稍后');itemSetWriting=true;
+     try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data'));
+      result=await importItemSet({itemSet:request.payload?.itemSet,data,installPath:config.installPath});
+     }finally{itemSetWriting=false;}
     }else if(request.operation==='shutdown'){socket.end(JSON.stringify({ok:true,result:true})+'\n');server.close();quit();return;}
     else throw new Error('不支持的客户端操作');
     socket.end(JSON.stringify({ok:true,result})+'\n');

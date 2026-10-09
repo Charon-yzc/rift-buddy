@@ -22,11 +22,11 @@ test('starting mid-game uses current public position instead of a persisted auto
  const own=manual.current(client('InProgress','2'),live({position:'top'}),data.champions,slots,now);
  assert.equal(own.role,'bottom');assert.equal(own.positionKnown,true,'An explicit manual choice was lost');
 });
-test('confirmed formal position survives missing selection session, disabled live and reconnect',()=>{
+test('manual tactical position and formal task position both survive loading and reconnect',()=>{
  const tracker=createCurrentGameTracker(),slots=createSlots();Object.assign(slots[4],{champion:'Ashe',manualPosition:true,clientCellId:1});tracker.observe(client('ChampSelect'),data.champions,slots);
- tracker.observe(client('InProgress'),data.champions,slots);assert.equal(tracker.current(client('InProgress'),null,data.champions,slots,now).role,'bottom');
+ tracker.observe(client('InProgress'),data.champions,slots);assert.equal(tracker.current(client('InProgress'),null,data.champions,slots,now).role,'support');
  assert.equal(tracker.current(client('InProgress'),live(),data.champions,slots,now).formalRole,'bottom');
- tracker.observe({connected:false,phase:'Offline'},data.champions,slots);tracker.observe(client('Reconnect'),data.champions,slots);assert.equal(tracker.current(client('Reconnect'),null,data.champions,slots,now).role,'bottom');
+ tracker.observe({connected:false,phase:'Offline'},data.champions,slots);tracker.observe(client('Reconnect'),data.champions,slots);assert.equal(tracker.current(client('Reconnect'),null,data.champions,slots,now).role,'support');
 });
 
 test('loading preserves the selected hero and formal role before the first live inventory',()=>{
@@ -36,7 +36,7 @@ test('loading preserves the selected hero and formal role before the first live 
  assert.equal(tracker.current(loading,null,data.champions,slots,now).id,'Seraphine');
  assert.equal(tracker.current(loading,null,data.champions,slots,now).formalRole,'bottom');
  const playing=client('InProgress','1','Seraphine');tracker.observe(playing,data.champions,slots);
- assert.equal(tracker.current(playing,null,data.champions,slots,now).role,'bottom');
+ assert.equal(tracker.current(playing,null,data.champions,slots,now).role,'support');
  assert.equal(tracker.current(playing,live({champion:'Seraphine'}),data.champions,slots,now).formalRole,'bottom');
  tracker.observe(client('Reconnect'),data.champions,slots);tracker.observe(loading,data.champions,slots);
  assert.equal(tracker.current(loading,null,data.champions,slots,now).formalRole,'bottom');

@@ -114,7 +114,19 @@ async function run(){
   state=core.selectGuide(state,{id:'Samira',role:'bottom',mode:'rift',comboId:'naut-samira'});current={...current,id:'Samira',role:'bottom'};live={...live,champion:'Samira'};live.roster=[...live.roster.filter(p=>p.side==='enemy'),{champion:'Nautilus',side:'ally',self:false,inventory:[],itemsKnown:true,level:7}];guide.publish();
   await until(()=>js('document.querySelector(".hero-coach h3")?.textContent.includes("莎弥拉")'),'Guide kept previous partner role');await change('#guide-stage','key');
   assert.ok((await js('document.querySelector(".hero-coach .coach-action").textContent')).includes('S 和安全近身'));assert.equal(state.selection.role,'bottom');await capture(w,'guide-samira-key.png');
-  report={passed:true,archiveSha256:release.archiveSha256,distinctOwnPlans:true,manualStageAffectsAction:true,publicTargetOnly:true,vanishedTargetCleared:true,newGameCleared:true,comboKept:true,threeDuoPhases:true,duoActions,actionGeometry,partnerRoleSwap:true,runeWrites};
+  const soloRoleActions={},rolePlans=await import(pathToFileURL(path.join(base,'src/core/role-plays.mjs')).href);
+  for(const [id,role]of [['Garen','top'],['Ahri','mid'],['LeeSin','jungle'],['Sejuani','jungle']]){
+   state=core.selectGuide(null,{id,role,mode:'rift'});current={id,role,mode:'rift',positionKnown:true,comboKnown:true};
+   live={...live,champion:id,level:12,gameTime:1600,enemies:[],allies:[],roster:[]};guide.publish();
+   await until(()=>js('document.querySelector(".hero-coach h3")?.textContent.includes('+JSON.stringify(hero(id).name)+')'),'Solo role plan missing: '+id);
+   const actions={};for(const stage of ['opening','key','later']){
+    await change('#guide-stage',stage);
+    actions[stage]=await js('document.querySelector(".hero-coach .coach-action").textContent');
+    assert.equal(actions[stage],rolePlans.rolePlay(id,role,stage).action,id+':'+stage);
+   }
+   assert.equal(new Set(Object.values(actions)).size,3);soloRoleActions[id+':'+role]=actions;await capture(w,'guide-'+id+'-'+role+'-later.png');
+  }
+  report={passed:true,archiveSha256:release.archiveSha256,distinctOwnPlans:true,manualStageAffectsAction:true,publicTargetOnly:true,vanishedTargetCleared:true,newGameCleared:true,comboKept:true,threeDuoPhases:true,duoActions,actionGeometry,partnerRoleSwap:true,soloRoleActions,runeWrites};
  }
  assert.equal(runeWrites,0);await fs.writeFile(path.join(root,'result.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }

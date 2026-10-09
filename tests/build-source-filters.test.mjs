@@ -7,7 +7,7 @@ import {getBuild,validReference,previousPatch} from '../src/core/builds.mjs';
 import {fetchChampionBuild,parseBuildJSON,parseBuildPage} from '../services/build-sources.mjs';
 import {createBuildCache,loadBuildSources,loadBuilds} from '../services/build-cache.mjs';
 import {defaultState,validateState,saveState,readState,mergeState} from '../services/storage.mjs';
-import {buildSourceControls} from '../src/build-source-view.mjs';
+import {buildSourceControls,cachedBuildAlternatives} from '../src/build-source-view.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 const base=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries['Ashe:bottom'];
@@ -64,6 +64,19 @@ test('actual labels and older patch markers follow the reference rather than the
  const html=buildSourceControls(fixture,{reference:ref,champion:'Ashe',role:'bottom'});
  assert.match(html,/实际参考：韩国钻石及以上排位/);assert.match(html,/旧版本/);assert.match(html,/data-build-source-field="region"/);assert.match(html,/data-build-source-field="tier"/);assert.match(html,/点击刷新联网获取/);
  assert.equal(buildSourceLabel({region:'unknown',tier:'emerald_plus'}),'来源未确认');
+});
+
+test('uncached sources offer an explicit validated cache switch without mixing the selected reference',()=>{
+ const old=makeRef(DEFAULT_BUILD_SOURCE,{patch:previousPatch(data.patch)}),current=makeRef(),invalid=makeRef({region:'global',tier:'gold_plus'},{runePage:null}),otherHero={...makeRef(),champion:'Ahri',role:'mid'};
+ const fixture={...data,buildSource:kr,builds:{},buildSources:{old,current,invalid,otherHero}};
+ const alternatives=cachedBuildAlternatives(fixture,'Ashe','bottom');assert.equal(alternatives.length,1);assert.equal(alternatives[0],current);
+ assert.equal(getBuild(champion,'bottom',fixture).reference,null);
+ const html=buildSourceControls(fixture,{champion:'Ashe',role:'bottom',companion:true,plan:'Ashe:bottom:rift'});
+ assert.match(html,/韩国钻石及以上排位 未缓存/);assert.match(html,/data-action="build-source-cache"/);assert.match(html,/改用 全球翡翠及以上排位/);assert.match(html,/data-plan="Ashe:bottom:rift"/);
+ assert.deepEqual(fixture.buildSource,kr);selectBuildSource(fixture,alternatives[0]);assert.equal(getBuild(champion,'bottom',fixture).reference.region,'global');
+ assert.doesNotMatch(buildSourceControls(fixture,{reference:current,champion:'Ashe',role:'bottom'}),/data-action="build-source-cache"/);
+ const stale={...data,buildSource:kr,builds:{},buildSources:{old}};
+ assert.match(buildSourceControls(stale,{champion:'Ashe',role:'bottom'}),new RegExp(old.patch+' 旧版本'));assert.deepEqual(cachedBuildAlternatives(stale,'Ashe','support'),[]);
 });
 
 test('concurrent filters remain separate while identical requests coalesce; late results cannot change the selected filter',async()=>{
