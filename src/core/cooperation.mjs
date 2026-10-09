@@ -1,5 +1,6 @@
 import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION,profile} from './rules.mjs';
 import {COOPERATION_PAIRS,cooperationCoordination} from './cooperation-pairs.mjs';
+import {createSkillCooperation} from './cooperation-skills.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -65,24 +66,24 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
   }
   found||=legacy.get(pairKey(a.champion,b.champion))||null;cache.set(k,found);return found;
  };
- return {edge,profile:prof,byId};
+ return {edge,profile:prof,byId,skills:createSkillCooperation(byId)};
 }
 
 function connectedEdges(members,graph){
  const edges=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge)edges.push(edge);}
- if(!edges.some(e=>e.current)||edges.length<members.length-1||members.some(m=>!edges.some(e=>[e.a,e.b].includes(m.champion))))return null;
+ if(!edges.some(e=>e.current)||edges.length<members.length-1||members.some(m=>!edges.some(e=>[e.a,e.b].includes(m.champion))))return graph.skills.edges(members);
  return edges;
 }
 export function cooperationPlan(members,graph){
  members=members.filter(m=>m.champion);
  if(![2,3].includes(members.length)||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
  const edges=connectedEdges(members,graph);if(!edges)return null;
- const current=edges.filter(e=>e.current),main=current[0],coordination=cooperationCoordination(members,graph,edges),steps=coordination.relaySteps||edges.map(e=>e.step);
+ const current=edges.filter(e=>e.current),main=current[0],coordination=main.family.startsWith('skills:')?graph.skills.coordination(members,edges):cooperationCoordination(members,graph,edges),steps=coordination.relaySteps||edges.map(e=>e.step);
  return {name:`配合 · ${main.name}${members.length===3?'三人联动':''}`,members:members.map(m=>({role:m.role,champion:m.champion})),edges,...coordination,
   why:steps.join(' '),steps,conditions:edges.map(e=>e.condition),failures:edges.map(e=>e.failure),tempo:main.tempo,
   bonus:Math.min(15,current.filter(e=>!e.alreadyLinked).length*4+(members.length===3?3:0)),
-  sourceNote:'按技能条件与已有联动推导，未经组合对局验证；两两能配合不代表整体一定强。',
-  patch:COOPERATION_PATCH,reviewedAt:COOPERATION_REVIEWED_AT,sourceUrls:[...new Set(current.flatMap(e=>e.sourceUrls))]};
+  sourceNote:main.family.startsWith('skills:')?'通用控制接力：按已核对技能条件安排同一目标，未经组合对局验证，不代表独特协同或统计优势。':'按技能条件与已有联动推导，未经组合对局验证；两两能配合不代表整体一定强。',
+  patch:main.patch,reviewedAt:main.reviewedAt,sourceUrls:[...new Set(current.flatMap(e=>e.sourceUrls))]};
 }
 
 // Complete two or three party roles around locked members. Candidate pools

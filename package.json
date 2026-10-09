@@ -1,7 +1,7 @@
 {
   "name": "rift-buddy",
   "productName": "开黑搭子",
-  "version": "0.17.2",
+  "version": "0.18.0",
   "description": "三人开黑选人、出装符文与海克斯玩法助手",
   "private": true,
   "packageManager": "pnpm@11.25.0",
@@ -23,7 +23,8 @@
     "sync-builds": "node scripts/sync-builds.mjs --all-roles",
     "catalog:expand": "node scripts/expand-catalog.mjs",
     "spells:enrich": "node scripts/enrich-spells.mjs",
-    "installer": "node scripts/installer.mjs"
+    "installer": "node scripts/installer.mjs",
+    "sync-pairs": "node scripts/sync-pair-statistics.mjs"
   },
   "devDependencies": {
     "@electron/packager": "20.3.0",

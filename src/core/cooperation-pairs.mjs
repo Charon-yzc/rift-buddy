@@ -58,6 +58,8 @@ const openings={
  Garen:'盖伦先用 Q/E 做有退路的短换血，W 留反击，兵线允许再接打野；不把沉默当目标无法移动。',
  Hwei:'慧先按正确画作清线，留 E 系列应对接近，W 用途先确认；没处理完兵线不先冲河道。',
 };
+// Champion-specific lane advice cannot be reused for another position.
+const openingRoles={Kindred:['jungle']};
 const relays=[
  [['mid','Ahri','清中线后从小兵侧面 E 魅惑实际命中，Q/W 跟伤害，留 R 退出；没有魅惑先停。'],['jungle','LeeSin','等阿狸魅惑命中再 Q 同一目标，判断落点再二段，W 留接应；R 若用只向诺手可接触方向踢。'],['top','Darius','先靠近两人能接应的位置，接魅惑 W/普攻再 Q 外圈；E 留目标退出时，不要求两位队友等满出血。']],
  [['mid','Ahri','先处理兵线，E 实际命中才报进场，Q/W 跟伤害并留 R 接应；控制落空不叫打野硬进。'],['top','Darius','趁魅惑用 W/普攻持续接触，Q 外圈换血，E 留人不提前交完；打不到目标就退出。'],['jungle','Viego','从无遮挡侧面 W 错开魅惑接控制，普攻/Q 集中同一目标；先有可靠击杀，再核对能否安全占据。']],
@@ -78,7 +80,7 @@ export function cooperationCoordination(members,graph,edges){
  const relay=relayPlans.get(relayKey(members));
  const ownStep=(edge,champion)=>COOPERATION_PAIRS.find(row=>row.slice(0,2).includes(edge.a)&&row.slice(0,2).includes(edge.b))?.[8]?.[champion]||edge.step;
  const jobs=relay?members.map(m=>({...m,job:relay.find(r=>r.role===m.role&&r.champion===m.champion).job})):members.map(m=>({...m,job:edges.filter(e=>[e.a,e.b].includes(m.champion)).map(e=>ownStep(e,m.champion)).join(' ')}));
- const opening=members.map(m=>openings[m.champion]||`${graph.byId.get(m.champion).name}${m.role==='jungle'?'按安全营地发育，报下一条可接应路线，不在兵线不允许时强求同行。':m.role==='support'?'围绕搭档位置留控制与保护，游走前先确认下路能安全补刀。':'先处理兵线与退出路线，再报能否到达队友位置。'}`).join(' ');
+ const opening=members.map(m=>((openingRoles[m.champion]||['top','mid','bottom']).includes(m.role)?openings[m.champion]:null)||`${graph.byId.get(m.champion).name}${m.role==='jungle'?'按安全营地发育，报下一条可接应路线，不在兵线不允许时强求同行。':m.role==='support'?'围绕搭档位置留控制与保护，游走前先确认下路能安全补刀。':'先处理兵线与退出路线，再报能否到达队友位置。'}`).join(' ');
  const economy=(laneNames.length?`${laneNames.join('、')}各自保留兵线经济；`:'')+(members.some(m=>m.role==='jungle')?'打野保留安全营地，不为等一次抓人空转；':'')+'转资源前先报谁清线、谁占入口、谁后到，只有成员实际到位且相关条件满足才开。抓人失败回各自兵线或营地，不为了补损失连续强抓。';
  return {opening,economy,memberJobs:jobs,...(relay?{relaySteps:relay.map(m=>graph.byId.get(m.champion).name+'：'+m.job)}:{})};
 }
