@@ -15,11 +15,68 @@ import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {cooperationText,cooperationView} from '../src/cooperation-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
+import {renderGuide} from '../src/guide-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8')),byId=new Map(data.champions.map(c=>[c.id,c]));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const member=(champion,role)=>({champion,role}),graph=()=>createCooperationGraph(data.champions);
 const setup=(roles,picks=[])=>createSlots().map(s=>({...s,party:roles.includes(s.role),...(picks.some(p=>p[0]===s.role)?{champion:picks.find(p=>p[0]===s.role)[1],locked:true}:{} )}));
 const trio=[member('Trundle','top'),member('Sejuani','jungle'),member('Seraphine','mid')];
+
+test('ordinary locked-friend searches expose a complete current plan on the first page without restrictive pools',()=>{
+ const scenarios=[
+  [['jungle','mid'],[['mid','Ahri']]],
+  [['jungle','mid'],[['jungle','Viego']]],
+  [['top','jungle'],[['top','Garen']]],
+  [['top','jungle','mid'],[['top','Aatrox'],['mid','Viktor']]],
+  [['top','jungle','mid'],[['top','Fiora'],['mid','Syndra']]],
+  [['top','jungle','mid'],[['top','Camille'],['mid','Taliyah']]],
+ ];
+ for(const [roles,picks] of scenarios)for(const style of ['balanced','fun','wild']){
+  const slots=setup(roles,picks),input={slots,champions:data.champions,scope:'party',style,play:{unusual:false}};
+  const rows=recommend({...input,limit:3}),plan=rows[0].adaptive;
+  assert.ok(plan,JSON.stringify({picks,style}));assert.equal(plan.members.length,roles.length);
+  assert.ok(plan.members.every(m=>plan.edges.some(e=>e.current&&[e.a,e.b].includes(m.champion))));
+  for(const [role,id] of picks)for(const row of rows)assert.equal(row.slots.find(s=>s.role===role).champion,id);
+  assert.deepEqual(recommend({...input,limit:1}).map(r=>r.id),rows.slice(0,1).map(r=>r.id));
+  assert.deepEqual(recommend({...input,offset:1,limit:2}).map(r=>r.id),rows.slice(1).map(r=>r.id));
+  assert.deepEqual(recommend({...input,limit:0}),[]);
+ }
+ const ahri=recommend({slots:setup(['jungle','mid'],[['mid','Ahri']]),champions:data.champions,scope:'party',play:{unusual:false},limit:3});
+ assert.ok(ahri.some(r=>r.slots.find(s=>s.role==='jungle').champion==='Vi'),'Ahri/Vi should be discoverable without forcing Vi into a pool');
+});
+
+test('cooperation priority never bypasses bans, public picks or the players allowed heroes',()=>{
+ const input={slots:setup(['jungle','mid'],[['mid','Ahri']]),champions:data.champions,scope:'party',play:{unusual:false},limit:20};
+ for(const filter of [{excluded:['Vi','LeeSin','JarvanIV']},{enemy:['Vi','LeeSin','JarvanIV']},{publicPicks:['Vi','LeeSin','JarvanIV']}]){
+  const rows=recommend({...input,...filter});assert.ok(rows.length);assert.ok(rows.every(r=>!['Vi','LeeSin','JarvanIV'].includes(r.slots.find(s=>s.role==='jungle').champion)));
+ }
+ for(const filter of [{poolMode:'only',pool:['Karthus']},{rolePools:{jungle:{mode:'only',heroes:['Karthus']}}}]){
+  const rows=recommend({...input,...filter});assert.equal(rows.length,1);assert.equal(rows[0].slots.find(s=>s.role==='jungle').champion,'Karthus');assert.equal(rows[0].slots.find(s=>s.role==='mid').champion,'Ahri');
+ }
+});
+
+test('new exact pairs preserve separate member jobs and the actual prerequisites after capture',()=>{
+ for(const ids of [['Camille','Galio'],['Ivern','Rengar'],['Taliyah','Pantheon'],['Diana','Yasuo'],['TwistedFate','Nocturne'],['Renekton','Nidalee'],['JarvanIV','Hwei']]){
+  const plan=cooperationPlan(ids.map((id,i)=>member(id,i?'mid':'jungle')),graph());assert.ok(plan,ids.join('/'));assert.ok(plan.edges.some(e=>e.current));
+  const jobs=plan.memberJobs.map(m=>m.job);assert.equal(new Set(jobs).size,2);assert.ok(plan.conditions.length&&plan.failures.length);
+ }
+ const nid=cooperationPlan([member('Renekton','top'),member('Nidalee','jungle')],graph());assert.match(nid.conditions.join(' '),/怒气.*狩猎/);assert.match(nid.failures.join(' '),/标枪被挡/);
+ const tf=cooperationPlan([member('TwistedFate','mid'),member('Nocturne','jungle')],graph());assert.match(tf.conditions.join(' '),/施法范围/);assert.match(tf.failures.join(' '),/不是无条件全地图/);
+});
+
+test('saved cooperation leads the guide and cannot be replaced by a default personal combo',()=>{
+ const slots=setup(['top','jungle','mid'],[['top','Fiora'],['jungle','JarvanIV'],['mid','Syndra']]),[row]=recommend({slots,champions:data.champions,scope:'party'});
+ const plan=captureCreativePlan(row,data),configs=captureTeamConfigurations({...row,creativePlan:plan},data,createPreparationStore());
+ assert.equal(plan.cooperation.relaySteps.length,3);assert.equal(new Set(plan.ordered.map(m=>m.job)).size,3);
+ for(const selection of configs){
+  const model=createGuideModel(data,selectGuide(null,selection),null,{...selection,comboKnown:true}),job=plan.ordered.find(m=>m.champion===selection.id).job;
+  // A known live phase uses the chosen plan rather than the hero's default sequence.
+  const live={available:true,champion:selection.id,mode:'rift',mapId:11,queueId:420,at:Date.now(),level:9,gold:800,gameTime:900,inventory:[],skills:{Q:3,W:2,E:3,R:1},enemies:[],allies:[]};
+  const current=createGuideModel(data,selectGuide(null,selection),live,{...selection,comboKnown:true});assert.ok(current.coach.action.startsWith(job));assert.equal(current.coach.sequence,job);
+  const html=renderGuide({model:current},'team',false,()=>'<img>');assert.ok(html.indexOf('hero-coach-compact')<html.indexOf('team-steps'));assert.ok(html.indexOf('team-steps')<html.indexOf('英雄机制、对位与个人打法'));
+  const overview=renderGuide({model},'overview',false,()=>'<img>');assert.match(overview,/本局配合 · 你的职责/);assert.ok(overview.indexOf('本局配合 · 你的职责')<overview.indexOf('英雄技能与对位参考'));
+ }
+});
 
 test('locked cross-lane friends have actionable plans including every member and preserve lane costs',()=>{
  for(const members of [

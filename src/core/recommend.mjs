@@ -185,9 +185,10 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context) 
   if(!combo||party.length<2)return !!combo;
   const members=combo.members||[{role:'bottom',champion:combo.carry},{role:'support',champion:combo.support}];
   const belongs=m=>party.some(s=>s.role===m.role&&s.champion===m.champion);
-  return adaptive?members.every(belongs):members.some(belongs);
+  return adaptive?members.length===party.length&&members.every(belongs):members.some(belongs);
  };
- const planDuo=valid(findDuo(party))||(relevant(duo)?duo:undefined),planTrio=valid(findTrio(party))||(relevant(trio)?trio:undefined);
+ const partyDuo=valid(findDuo(party)),partyTrio=valid(findTrio(party));
+ const planDuo=(relevant(partyDuo)?partyDuo:undefined)||(relevant(duo)?duo:undefined),planTrio=(relevant(partyTrio)?partyTrio:undefined)||(relevant(trio)?trio:undefined);
  const out={score,analysis:a,duo:planDuo,trio:planTrio,connections,opponentFit:fit,adaptive};
  if(cacheKey)context.gradeCache.set(cacheKey,out);
  return out;
@@ -323,26 +324,42 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
   const creative=creativeBySig.get(signature(entry.slots));
   unique.set(signature(entry.slots),creative?{...entry,...g,score:g.score+creative.bonus,creative}:{...entry,...g});
  }
- const sorted=[...unique.values()].sort((a,b)=>b.score-a.score||signature(a.slots).localeCompare(signature(b.slots)));
+ // With a friend already chosen, an executable plan for the whole party is
+ // more useful than a higher count of generic team functions. All hard pick
+ // restrictions have been applied before this preference. A partial duo or
+ // an old link to the third friend does not qualify as a complete plan.
+ const prioritizeCooperation=[2,3].includes(partyMembers.length)&&partyMembers.some(m=>m.champion&&!targets.includes(m.role));
+ const actionable=entry=>{
+  if(!prioritizeCooperation)return false;
+  const combo=entry.trio||entry.duo,members=combo?(combo.members||[{role:'bottom',champion:combo.carry},{role:'support',champion:combo.support}]):entry.adaptive?.members;
+  if(!members||members.length!==partyMembers.length||!members.every(m=>partyMembers.some(p=>p.role===m.role)&&entry.slots.some(s=>s.role===m.role&&s.champion===m.champion)))return false;
+  return !!combo||members.every(m=>entry.adaptive.edges.some(e=>e.current&&[e.a,e.b].includes(m.champion)));
+ };
+ const order=(a,b)=>Number(actionable(b))-Number(actionable(a))||b.score-a.score||signature(a.slots).localeCompare(signature(b.slots));
+ const sorted=[...unique.values()].sort(order);
  const chosen=[];
  // Keep the best result for every curated duo reachable on reroll. Filling
  // the entire pool with minor variants of a few high scores hides the library.
  const anchors=new Map();for(const entry of sorted){const key=(entry.trio||entry.duo)?.id;if(key&&!anchors.has(key))anchors.set(key,entry);}
- const anchorIds=new Set([...anchors.values()].map(e=>signature(e.slots)));
  // Creative ideas get the same anchor treatment (one best entry per
  // archetype) so they survive the pool cap and stay discoverable.
  const creativeAnchors=new Map();for(const entry of sorted){if(entry.creative&&!creativeAnchors.has(entry.creative.archetype))creativeAnchors.set(entry.creative.archetype,entry);}
- const creativeAnchorIds=new Set([...creativeAnchors.values()].map(e=>signature(e.slots)));
- const pool=[...anchors.values(),...creativeAnchors.values(),...sorted.filter(e=>!anchorIds.has(signature(e.slots))&&!creativeAnchorIds.has(signature(e.slots))).slice(0,Math.max(0,240-anchors.size-creativeAnchors.size))].sort((a,b)=>b.score-a.score);
+ // Preserve one best current cooperation per mechanism through the cap, as
+ // for catalog and creative anchors. Otherwise an existing locked-friend
+ // plan can disappear before the diversity pass has a chance to select it.
+ const adaptiveAnchors=new Map();for(const entry of sorted){if(!entry.adaptive||entry.trio||entry.duo)continue;const key=entry.adaptive.edges.filter(e=>e.current).map(e=>e.family).sort().join('|');if(key&&!adaptiveAnchors.has(key)&&adaptiveAnchors.size<24)adaptiveAnchors.set(key,entry);}
+ const preserved=new Map([...anchors.values(),...creativeAnchors.values(),...adaptiveAnchors.values()].map(entry=>[signature(entry.slots),entry]));
+ const pool=[...preserved.values(),...sorted.filter(entry=>!preserved.has(signature(entry.slots))).slice(0,Math.max(0,240-preserved.size))].sort(order);
  const count=Math.min(Math.max(0,limit+offset),pool.length);
  for(let i=0;i<count;i++) {
-  let winner=0,best=-Infinity;
+  let winner=0,best=-Infinity,bestPriority=-1;
   for(let j=0;j<pool.length;j++) {
    const entry=pool[j];
    const entryStyle=(entry.trio||entry.duo)?.style||'balanced';
    const similarity=chosen.reduce((sum,c)=>sum+targets.filter(r=>c.slots.find(s=>s.role===r).champion===entry.slots.find(s=>s.role===r).champion).length*9+(entry.duo&&c.duo?.id===entry.duo.id?18:0)+(entry.trio&&c.trio?.id===entry.trio.id?22:0)+(entry.trio&&c.trio?.tempo===entry.trio.tempo?6:0)+(((c.trio||c.duo)?.style||'balanced')===entryStyle?10:0)+(entry.creative&&c.creative?.archetype===entry.creative.archetype?14:0),0);
    const v=entry.score-similarity;
-   if(v>best){best=v;winner=j;}
+   const priority=Number(actionable(entry));
+   if(priority>bestPriority||priority===bestPriority&&v>best){best=v;winner=j;bestPriority=priority;}
   }
   chosen.push(pool.splice(winner,1)[0]);
  }
@@ -354,13 +371,13 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
   if(fallback&&chosen.length){pool.push(chosen.pop());chosen.push(pool.splice(pool.indexOf(fallback),1)[0]);}
  }
  const sharedBefore=analyzeTeam(scopeSlots(fixed,scope),champions,context);
- return chosen.slice(offset,offset+limit).map((entry,i)=>{
+ return chosen.slice(offset,offset+limit).map(entry=>{
   const origin=entry.trio||entry.duo?'curated':entry.creative?'creative':entry.adaptive?'adaptive':'generated';
   const creativeCombo=entry.creative?{tempo:entry.creative.tempo,why:entry.creative.why,risk:entry.creative.caution}:null;
   const points=buildReasonPoints(entry,scope);
   return {
   ...entry,id:signature(entry.slots),targets,scope,origin,
-  title:entry.creative?.name||entry.trio?.name||entry.duo?.name||entry.adaptive?.name||(['均衡配合','控制接力','稳住再接团','一起打节奏','换个打法'][i%5]),
+  title:entry.creative?.name||entry.trio?.name||entry.duo?.name||entry.adaptive?.name||'职能搭配参考',
   reason:entry.creative?.why||entry.trio?.why||entry.duo?.why||entry.adaptive?.why||entry.connections[0]?.[2]||`${describeComposition(entry.analysis)}。${entry.analysis.missing.length?`短板是${entry.analysis.missing.join('、')}，具体补充作用见方案详情。`:'具体补充作用见方案详情。'}`,
   reasonPoints:points,
   catalogState:catalogStatus[(entry.trio||entry.duo)?.id]||null,
@@ -418,7 +435,7 @@ export function buildReasonPoints(entry,scope){
  if(entry.opponentFit?.factors?.length)points.push(`公开对手与排序：${entry.opponentFit.factors[0].note}`);
  points.push(`阵容面：${describeComposition(a)}`);
  if(a.members.length===1)points.push('目前只确认一名我方英雄，按本位置分工、英雄池与公开敌方取舍排序；其余队友尚未选好，暂不判断全队短板。');
- else if(a.missing.length)points.push(`短板：${a.missing.join('、')}偏少，${a.curve.label==='前期主动'?'尽早做事、别拖后期':'注意过渡，别在强势期前硬接团'}`);
+ else if(a.missing.length)points.push(`短板：${a.missing.join('、')}偏少；${a.curve.unknown.length?'成员阶段条件尚未整理完整，先核对各人的准备条件':'先确认各人的技能、成长与装备条件，再决定一起行动'}`);
  if(a.avgDifficulty!=null&&a.avgDifficulty>=7)points.push(`操作门槛：阵容平均难度偏高（${a.avgDifficulty.toFixed(1)}），先约好分工再锁`);
  else if(combo?.difficulty==='较高')points.push('操作门槛：这套配合难度较高，先约好进场时机再锁');
  if(a.threats?.length)points.push(`对方阵容：${a.threats.join('；')}`);

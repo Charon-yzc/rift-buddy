@@ -11,7 +11,9 @@ const locked=(slots,pairs)=>{for(const [role,id] of pairs)Object.assign(slots.fi
 test('team analysis exposes curve, forgiveness, control chain and difficulty',()=>{
  const slots=locked(createSlots(),[['top','Malphite'],['jungle','JarvanIV'],['mid','Orianna'],['bottom','Varus'],['support','Ashe']]);
  const a=analyzeTeam(slots,data.champions);
- assert.equal(a.curve.label,'等关键大招窗口');assert.ok(a.curve.windows.some(w=>w.champion==='Orianna'));
+ assert.equal(a.curve.label,'成员窗口不同，分步配合');
+ assert.equal(a.curve.windows.find(w=>w.champion==='JarvanIV').kind,'base');
+ assert.equal(a.curve.windows.find(w=>w.champion==='Orianna').kind,'ultimate');
  assert.ok(['容错较高','容错中等','容错偏低'].includes(a.forgiveness.label));
  assert.equal(typeof a.control,'string');
  assert.ok(Number.isFinite(a.avgDifficulty));

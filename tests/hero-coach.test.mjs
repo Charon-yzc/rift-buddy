@@ -8,6 +8,12 @@ import {renderGuide} from '../src/guide-view.mjs';
 import {profile} from '../src/core/rules.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+test('a saved member job retains its version and remains conditional on learned own skills',()=>{
+ const combo={ownJob:'看到戴安娜实际拉起且目标可接 R 再跟；落地普攻/Q，留风墙与能 E 返回的单位。',patch:'16.19'};
+ const ready=heroCoach({data,champion:'Yasuo',role:'mid',stage:'key',combo,ownSkills:{Q:3,W:1,E:1,R:1}});assert.equal(ready.action,combo.ownJob);assert.equal(ready.sequence,combo.ownJob);assert.equal(ready.actionPatch,'16.19');assert.equal(ready.actionStale,true);
+ const unlearned=heroCoach({data,champion:'Yasuo',role:'mid',stage:'key',combo,ownSkills:{Q:3,W:1,E:1,R:0}});assert.deepEqual(unlearned.unlearned,['R']);assert.equal(unlearned.futureSequence,combo.ownJob);assert.notEqual(unlearned.action,combo.ownJob);assert.doesNotMatch(unlearned.sequence,/可接 R 再跟/);
+ const opening=heroCoach({data,champion:'Yasuo',role:'mid',stage:'opening',combo});assert.notEqual(opening.action,combo.ownJob,'Opening retains lane preparation rather than calling an unavailable ultimate');
+});
 test('a future skill snapshot does not relabel existing manual action notes as reviewed',()=>{
  const current=heroCoach({data,champion:'Ahri',role:'mid'});
  const next=heroCoach({data:{...data,patch:'16.21',version:'16.21.1'},champion:'Ahri',role:'mid'});

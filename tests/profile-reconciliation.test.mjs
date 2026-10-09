@@ -47,7 +47,8 @@ test('specific control and preparation conditions agree with the same champions 
  assert.match(growth.curve.windows.find(w=>w.champion==='Kayle').condition,/经验|等级/);
  const bruisers=team({top:'Darius',jungle:'Warwick',mid:'Ahri'});assert.ok(!bruisers.warnings.some(w=>w.includes('持续输出偏少')));
  assert.match(bruisers.members.find(m=>m.champion==='Darius').p.sustainCondition,/持续近身/);
- const unknown=team({top:'Garen'});assert.equal(unknown.curve.label,'阶段条件未整理');assert.deepEqual(unknown.curve.unknown,['盖伦']);
+ const garen=team({top:'Garen'});assert.equal(garen.curve.windows[0].kind,'base');assert.match(garen.curve.windows[0].condition,/Q.*实际接触.*E.*持续贴近.*R 未学会/);assert.deepEqual(garen.curve.unknown,[]);
+ const unknown=team({top:'Kled'});assert.equal(unknown.curve.label,'阶段条件未整理');assert.deepEqual(unknown.curve.unknown,['克烈']);
 });
 
 test('an uncached source uses Locke magic mechanics and an unreviewed future hero gets no fabricated fallback',()=>{
@@ -58,4 +59,12 @@ test('an uncached source uses Locke magic mechanics and an unreviewed future her
  const future={...hero('Locke'),id:'FutureUnreviewed',name:'未整理英雄'};
  const p=profile(future);assert.equal(p.reviewed,false);assert.equal(p.frontline,null);assert.equal(p.sustain,null);assert.equal(p.damage,null);
  assert.throws(()=>getBuild(future,'mid',uncached),/英雄机制尚未整理/);
+});
+
+test('range damage functions do not turn counted initiators into a guaranteed control chain',()=>{
+ for(const id of ['Lissandra','Taliyah','JarvanIV','Hecarim','Garen','Syndra'])assert.equal(profile(hero(id)).aoe,true,id);
+ const slots=createSlots().map(s=>({...s,champion:({top:'Garen',mid:'Taliyah'})[s.role]||null}));
+ assert.equal(analyzeTeam(slots,data.champions).traits.aoe,2);
+ const counted=analyzeTeam(createSlots().map(s=>({...s,champion:({top:'Garen',jungle:'Hecarim',mid:'Lissandra'})[s.role]||null})),data.champions);
+ assert.doesNotMatch(counted.control,/控制链完整/);assert.match(counted.control,/衔接条件待确认/);
 });
