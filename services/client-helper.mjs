@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {clientSnapshot,writeRunePage} from './lcu.mjs';
+import {validateRuneWriteContext} from '../src/core/rune-context.mjs';
 import {importItemSet} from './item-sets.mjs';
 import {loadSnapshot,atomicJSON} from './data.mjs';
 import {readState} from './storage.mjs';
@@ -45,7 +46,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
      if(writing)throw new Error('符文正在应用，请稍后');writing=true;
      try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data'));
       const state=await readState(userData);
-      result=await writeRunePage({page:request.payload.page,ownedPageId:state.ownedPageId,installPath:config.installPath,trees:data.runes});
+      result=await writeRunePage({page:request.payload.page,context:validateRuneWriteContext(request.payload.context),ownedPageId:state.ownedPageId,installPath:config.installPath,trees:data.runes});
       // The unelevated app is the sole settings writer; avoid racing a preference save.
      }finally{writing=false;}
     }else if(request.operation==='importItemSet'){
