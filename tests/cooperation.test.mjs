@@ -137,7 +137,10 @@ test('three-person plans must connect every member and retain conditional skills
  const g=graph(),plan=cooperationPlan(trio,g);assert.ok(plan);assert.equal(plan.edges.length,2);assert.deepEqual(plan.edges.map(e=>e.family),['frost','echo']);
  assert.match(plan.conditions.join(' '),/E、W 已学会.*四层/);assert.match(plan.failures.join(' '),/远程普攻不/);assert.match(plan.conditions.join(' '),/命中时.*对应状态/);
  assert.ok(plan.sourceUrls.every(url=>url.startsWith('https://ddragon.leagueoflegends.com/cdn/16.20.1/')));assert.ok(plan.bonus<=15);
- assert.equal(cooperationPlan([...trio.slice(0,2),member('Lux','mid')],g),null,'A strong pair must not pretend an unrelated third member connects');
+ const general=cooperationPlan([...trio.slice(0,2),member('Lux','mid')],g);
+ assert.ok(general.edges.every(e=>e.family==='skills:Sejuani'),'A reviewed follow-up uses a general plan instead of inventing frost or echo synergy');
+ assert.equal(general.memberJobs.length,3);assert.match(general.conditions.join(' '),/Q.*两目标/);assert.match(general.sourceNote,/通用控制接力/);
+ assert.equal(cooperationPlan([...trio.slice(0,2),member('Aphelios','mid')],g),null,'A strong pair must not pretend an unreviewed third member connects');
  assert.equal(cooperationPlan([trio[0]],g),null);assert.equal(cooperationPlan([...trio,trio[0]],g),null);
  assert.equal(cooperationPlan([member('Sejuani','jungle'),member('Trundle','jungle')],g),null);
 });
@@ -149,7 +152,7 @@ test('locked friends get meaningful remaining-role choices without changing posi
  assert.ok(rows.some(r=>r.origin==='adaptive'&&r.slots.find(s=>s.role==='mid').champion==='Seraphine'));
  for(const r of rows){assert.deepEqual(r.targets,['mid']);assert.deepEqual(r.slots[0],before[0]);assert.equal(r.slots[1].champion,'Sejuani');assert.equal(r.slots[3].champion,null);assert.equal(r.slots[4].champion,null);}
  for(const filter of [{excluded:['Seraphine']},{enemy:['Seraphine']},{publicPicks:['Seraphine']},{poolMode:'only',pool:['Orianna','Lux']}])assert.ok(recommend({...input,...filter}).every(r=>r.slots.find(s=>s.role==='mid').champion!=='Seraphine'));
- const restricted=recommend({...input,rolePools:{mid:{mode:'only',heroes:['Lux']}}});assert.equal(restricted.length,1);assert.equal(restricted[0].adaptive,null);
+ const restricted=recommend({...input,rolePools:{mid:{mode:'only',heroes:['Lux']}}});assert.equal(restricted.length,1);assert.ok(restricted[0].adaptive.edges.every(e=>e.family==='skills:Sejuani'));assert.match(restricted[0].adaptive.sourceNote,/通用控制接力/);
  assert.equal(rows[0].id,recommend({...input,limit:1})[0].id);
 });
 

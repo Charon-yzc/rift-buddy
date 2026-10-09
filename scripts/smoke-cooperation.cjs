@@ -1,8 +1,9 @@
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_COOP_RESTART==='1',windows=[];let copies=[],runeWrites=0;
+const coverageData=process.env.RIFT_BUDDY_COOP_COVERAGE==='1';
 const adaptiveData=process.env.RIFT_BUDDY_COOP_DATA==='1';
-const crossLane=process.env.RIFT_BUDDY_COOP_CROSS_LANE==='1',lockedFriends=process.env.RIFT_BUDDY_COOP_LOCKED_FRIENDS==='1',friend=adaptiveData?'Gwen':lockedFriends?'Fiora':crossLane?'Darius':'Trundle',expectedMembers=[['top',friend],['jungle',adaptiveData?'Graves':lockedFriends?'JarvanIV':crossLane?'LeeSin':'Sejuani'],['mid',adaptiveData?'Vex':lockedFriends?'Syndra':crossLane?'Ahri':'Seraphine']],marker=adaptiveData?'恐惧':lockedFriends?'破绽':crossLane?'魅惑':'四层';
+const crossLane=process.env.RIFT_BUDDY_COOP_CROSS_LANE==='1',lockedFriends=process.env.RIFT_BUDDY_COOP_LOCKED_FRIENDS==='1',friend=coverageData?'Shen':adaptiveData?'Gwen':lockedFriends?'Fiora':crossLane?'Darius':'Trundle',expectedMembers=[['top',friend],['jungle',coverageData?'Poppy':adaptiveData?'Graves':lockedFriends?'JarvanIV':crossLane?'LeeSin':'Sejuani'],['mid',coverageData?'Brand':adaptiveData?'Vex':lockedFriends?'Syndra':crossLane?'Ahri':'Seraphine']],marker=coverageData?'撞墙':adaptiveData?'恐惧':lockedFriends?'破绽':crossLane?'魅惑':'四层';
 globalShortcut.register=()=>false;global.fetch=async()=>{throw Error('Isolated cooperation smoke: network disabled');};https.request=()=>{throw Error('Isolated cooperation smoke: game sockets disabled');};
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -21,18 +22,37 @@ async function run(){
  await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'UI missing');await generate();
  assert.ok(await js('document.querySelector(".result-card").textContent.includes("机制搭配")'));
  if((crossLane||lockedFriends)&&!restart)await capture('main.png');
+ const {createCooperationGraph,cooperationPlan}=await import(require('node:url').pathToFileURL(path.join(base,'src/core/cooperation.mjs'))),expectedCooperation=cooperationPlan(expectedMembers.map(([role,champion])=>({role,champion})),createCooperationGraph(JSON.parse(await fs.readFile(path.join(base,'data/game.json'))).champions));assert.ok(expectedCooperation);
  const initial=await state();assert.equal(initial.draft.slots.find(s=>s.role==='top').champion,friend);assert.equal(initial.draft.slots.find(s=>s.role==='top').manualPosition,true);
+ let previewRuneId;
+ if(!restart){
+  await click('[data-action=companion-attach]');await until(()=>js('!!document.querySelector(".companion-candidate")'),'Preview candidates missing');
+  for(const [role,id] of expectedMembers){
+   await click('[data-action=companion-preview][data-result-index="0"][data-id="'+id+'"][data-role="'+role+'"]');
+   const note=await js('document.querySelector(".companion-note")?.textContent');assert.ok(note?.includes(expectedCooperation.name),'Sidebar preview lost cooperation for '+id);
+   if(role==='jungle'){
+    const option=await js('(()=>{const s=document.querySelector("[data-companion-field=rune]");return [...s.options].find(o=>o.value!==s.value)?.value;})()');assert.ok(option,'Fixture requires an alternate complete rune page');
+    await js('(()=>{const s=document.querySelector("[data-companion-field=rune]");s.value='+JSON.stringify(option)+';s.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(120);previewRuneId=option;
+    assert.ok((await js('document.querySelector(".companion-note")?.textContent'))?.includes(expectedCooperation.name),'Editing runes lost the chosen cooperation');
+    await click('[data-action=companion-favorite]');const favorite=(await state()).favorites.find(f=>f.type==='build'&&f.champion===id);assert.equal(favorite.runeId,option);assert.equal(favorite.creativePlan?.archetype,'cooperation');
+   }
+   await click('[data-action=companion-tab][data-tab=recommend]');
+  }
+  assert.deepEqual((await state()).draft.slots,initial.draft.slots,'Preview must not accept the suggested lineup');assert.deepEqual((await state()).draft.creativePlan,initial.draft.creativePlan);
+  await click('[data-action=companion-full]');await until(()=>js('!!document.querySelector(".result-card")'),'Main results missing after preview');
+ }
  await click('[data-action=result-detail][data-index="0"]');const detail=await js('document.querySelector(".plan-drawer").textContent');
  for(const text of ['成立条件','失败处理',marker,crossLane||lockedFriends?'开局分工':'对应状态','兵线与资源','未经组合对局验证'])assert.ok(detail.includes(text),'Missing '+text);
  assert.ok(await js('document.querySelector(".cooperation-plan [data-action=link]").dataset.url.startsWith("https://ddragon.leagueoflegends.com/")'));
  let pairEvidence;if(adaptiveData){assert.match(detail,/OP.GG 同队参考/);assert.match(detail,/未提供三人组合或全队胜率/);const bootstrap=await js('window.buddy.bootstrap()'),{createPairStatisticsIndex}=await import(require('node:url').pathToFileURL(path.resolve('src/core/pair-statistics.mjs')));assert.ok(bootstrap.data.pairStatistics.snapshots.some(s=>s.region===bootstrap.data.buildSource.region&&s.tier===bootstrap.data.buildSource.tier&&s.patch===bootstrap.data.patch&&s.entries.length>0));assert.match(bootstrap.data.pairStatistics.revision,/^[a-f0-9]{64}$/);pairEvidence=createPairStatisticsIndex(bootstrap.data.pairStatistics,bootstrap.data.champions,{source:bootstrap.data.buildSource,patch:bootstrap.data.patch}).forMembers(expectedMembers.map(([role,champion])=>({role,champion})));assert.ok(pairEvidence.pairs.length>0);for(const p of pairEvidence.pairs){assert.ok(detail.includes(p.games.toLocaleString()+' 场'));assert.ok(detail.includes(p.winRate.toFixed(1)+'%'));}}
  await capture(restart?'cooperation-restart-detail.png':'cooperation-detail.png');await click('[data-action=copy-result][data-index="0"]');assert.ok(copies.at(-1).includes('成立条件')&&copies.at(-1).includes('失败处理'));
  if(adaptiveData)assert.ok(copies.at(-1).includes('OP.GG 同队参考')&&pairEvidence.pairs.every(p=>copies.at(-1).includes(p.winRate.toFixed(1)+'%')));
- if(!restart){await click('.plan-drawer [data-action=favorite-result][data-index="0"]');await until(async()=>(await state()).favorites.some(f=>f.type==='team'),'Favorite missing');await click('[data-action=use-result][data-index="0"]');await until(()=>js('!!document.querySelector(".result-card")'),'Accepted plan missing');}
+ if(!restart){await click('.plan-drawer [data-action=favorite-result][data-index="0"]');await until(async()=>(await state()).favorites.some(f=>f.type==='team'),'Favorite missing');assert.equal(await js('document.querySelector(".plan-drawer [data-action=favorite-result]").getAttribute("aria-pressed")'),'true');assert.ok(await js('document.querySelector(".plan-drawer [data-action=favorite-result]").textContent.includes("点击取消")'));await click('.plan-drawer [data-action=favorite-result][data-index="0"]');assert.equal((await state()).favorites.filter(f=>f.type==='team').length,0);assert.equal(await js('document.querySelector(".plan-drawer [data-action=favorite-result]").getAttribute("aria-pressed")'),'false');await click('.plan-drawer [data-action=favorite-result][data-index="0"]');await click('[data-action=use-result][data-index="0"]');await until(()=>js('!!document.querySelector(".result-card")'),'Accepted plan missing');}
  else await click('[data-action=close]');
  const accepted=await state();for(const [role,id]of expectedMembers)assert.ok(accepted.draft.slots.some(s=>s.role===role&&s.champion===id&&s.locked));
  assert.ok(accepted.draft.slots.find(s=>s.role==='top').manualPosition);assert.equal(accepted.draft.slots.find(s=>s.role==='top').clientCellId,2);
  const plan=accepted.draft.creativePlan;assert.equal(plan.archetype,'cooperation');const favorite=accepted.favorites.find(f=>f.type==='team');assert.deepEqual(favorite.creativePlan,plan);assert.equal(favorite.configurations.length,3);assert.ok(favorite.configurations.every(c=>c.creativePlan.id===plan.id));
+ if(previewRuneId)assert.equal(favorite.configurations.find(c=>c.role==='jungle').runeId,previewRuneId,'Accepting the plan must preserve the rune page edited in its sidebar preview');
  const expectedEditable=lockedFriends?['jungle']:['jungle','mid'];assert.deepEqual(plan.editableTargets,expectedEditable);
  await click('[data-action=result-detail][data-index="0"]');
  const controls=await js('[...document.querySelectorAll(".plan-drawer [data-action=replace-member]")].map(b=>b.dataset.role)');
