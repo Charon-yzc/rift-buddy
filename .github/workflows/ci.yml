@@ -61,6 +61,8 @@ jobs:
         run: node scripts/smoke-package-catalog.mjs
       - name: Check saved preparations and member configurations across restarts
         run: node scripts/smoke-package-preparations.mjs
+      - name: Check creative action order preserves saved members and configurations
+        run: node scripts/smoke-package-creative-plan-continuity.mjs --reordered
       - name: Check public-opponent plans and duo phases in packaged windows
         run: node scripts/smoke-package-matchups.mjs
       - name: Check accepted mechanism plans across member guides and restarts

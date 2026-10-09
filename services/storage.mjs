@@ -10,6 +10,10 @@ import {validateCreativePlan} from '../src/core/creative-plan.mjs';
 export const defaultState=()=>({schema:1,favorites:[],excluded:[],preparations:[],preferences:{style:'fun',autoCheck:true,buildSource:normalizeBuildSource(null),presentation:normalizePresentation(null),installPath:'C:/WeGameApps/英雄联盟'},draft:null,ownedPageId:null,guide:null});
 const roles=['top','jungle','mid','bottom','support'],styles=['balanced','fun','wild'];
 const conditions=['ad','ap','control','heal','burst'];
+// Complete cooperation plans include saved member configurations. Use the
+// same UTF-8 budget for local settings and portable backups.
+export const STATE_MAX_BYTES=64*1024*1024;
+const checkSize=value=>{if(Buffer.byteLength(JSON.stringify(value),'utf8')>STATE_MAX_BYTES)throw new Error('收藏与配置已超过保存空间，请先移出不需要的收藏');};
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
 const text=(v,max)=>typeof v==='string'&&v.length<=max;
 function slots(value,preserveClientMetadata=false){
@@ -40,12 +44,12 @@ function favorite(f){
 }
 export function validateState(value) {
  if(!value||typeof value!=='object'||value.schema!==1)throw new Error('保存内容格式不正确');
- if(JSON.stringify(value).length>1_000_000)throw new Error('保存内容过大');
+ checkSize(value);
  if(!Array.isArray(value.favorites)||value.favorites.length>500||!Array.isArray(value.excluded)||value.excluded.length>300)throw new Error('收藏或排除列表格式不正确');
  if(!value.excluded.every(hero))throw Error('排除英雄格式不正确');
  const p=value.preferences||{};
  if(p.installPath!==undefined&&(!text(p.installPath,500)||/[\r\n\0]/.test(p.installPath)))throw Error('游戏目录格式不正确');
- return {schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],preparations:validatePreparations(value.preparations),
+ const normalized={schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],preparations:validatePreparations(value.preparations),
   preferences:{buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
    clientCompanion:p.clientCompanion!==false,guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',
    autoLive:p.autoLive!==false,pool:Array.isArray(p.pool)?[...new Set(p.pool.filter(hero))].slice(0,200):[],poolMode:['off','prefer','only'].includes(p.poolMode)?p.poolMode:'off',
@@ -54,10 +58,11 @@ export function validateState(value) {
    ...(Number.isFinite(Date.parse(p.lastCheck))?{lastCheck:p.lastCheck}:{})},
   draft:value.draft?{slots:slots(value.draft.slots,true),...(value.draft.creativePlan?{creativePlan:validateCreativePlan(value.draft.creativePlan,slots(value.draft.slots,true),{allowUnknown:true})}:{}),...(typeof value.draft.clientGameId==='string'&&/^\d{1,20}$/.test(value.draft.clientGameId)&&Number(value.draft.clientGameId)>0?{clientGameId:value.draft.clientGameId}:{}),style:styles.includes(value.draft.style)?value.draft.style:'fun',scope:['solo','context','party','bot'].includes(value.draft.scope)?value.draft.scope:'context',...(value.draft.scope==='solo'||Object.hasOwn(value.draft,'soloRole')?{soloRole:roles.includes(value.draft.soloRole)?value.draft.soloRole:''}:{})}:null,
   ownedPageId:Number.isInteger(value.ownedPageId)&&value.ownedPageId>0?value.ownedPageId:null,guide:validateGuideState(value.guide)};
+ checkSize(normalized);return normalized;
 }
 export async function readState(root) {
  const filename=path.join(root,'settings.json');
- try{const raw=JSON.parse(await fs.readFile(filename,'utf8'));
+ try{if((await fs.stat(filename)).size>STATE_MAX_BYTES)throw Error('保存文件过大');const raw=JSON.parse(await fs.readFile(filename,'utf8'));
   // Recover optional guide damage without losing valid favorites or preferences.
   try{validateGuideState(raw.guide);}catch{await fs.copyFile(filename,`${filename}.recovery-${Date.now()}`).catch(()=>{});raw.guide=null;}
   try{validatePreparations(raw.preparations);}catch{await fs.copyFile(filename,`${filename}.recovery-${Date.now()}`).catch(()=>{});raw.preparations=[];}
@@ -66,6 +71,16 @@ export async function readState(root) {
   return defaultState();}
 }
 export async function saveState(root,state) {await atomicJSON(path.join(root,'settings.json'),validateState(state));}
+export function createBackup(state){
+ const valid=validateState(state);
+ return JSON.stringify({...valid,ownedPageId:null,preferences:{...valid.preferences,installPath:''}});
+}
+export async function readBackup(filename){
+ if((await fs.stat(filename)).size>STATE_MAX_BYTES)throw Error('备份文件超过收藏与配置的保存空间');
+ const incoming=JSON.parse(await fs.readFile(filename,'utf8'));validateState(incoming);
+ // Preserve omitted legacy preferences so mergeState can keep local choices.
+ return incoming;
+}
 export function mergeState(current,backup,champions){
  const incoming=validateState(backup),favorites=[...current.favorites];
  for(const favorite of incoming.favorites)if(!favorites.some(f=>f.id===favorite.id))favorites.push(favorite);
