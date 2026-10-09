@@ -105,8 +105,8 @@ async function run(){
    duoActions[stage]=await js('document.querySelector(".hero-coach .coach-action").textContent');
   }
   assert.equal(new Set(Object.values(duoActions)).size,3);
-  const actionGeometry=await js('(()=>{const action=document.querySelector(".hero-coach .coach-action").getBoundingClientRect(),main=document.querySelector("main").getBoundingClientRect();return {top:action.top,bottom:action.bottom,mainTop:main.top,mainBottom:main.bottom};})()');
-  assert.ok(actionGeometry.top>=actionGeometry.mainTop&&actionGeometry.bottom<=actionGeometry.mainBottom,'Own actionable guidance must fit the first team screen');
+  const actionGeometry=await js('(()=>{const action=document.querySelector(".expanded main .coach-action").getBoundingClientRect(),main=document.querySelector("main").getBoundingClientRect();return {top:action.top,bottom:action.bottom,height:action.height,mainTop:main.top,mainBottom:main.bottom};})()');
+  assert.ok(actionGeometry.height>0&&actionGeometry.top>=actionGeometry.mainTop&&actionGeometry.bottom<=actionGeometry.mainBottom,'Own actionable guidance must be visible and fit the first team screen');
   await capture(w,'guide-own-first-screen.png');
   live.enemies=live.enemies.filter(e=>e.id!=='Janna');live.roster=live.roster.filter(p=>p.champion!=='Janna');guide.publish();await until(()=>js('document.querySelectorAll("[data-matchup-enemy]").length===0'),'Guide leaked a disappeared opponent');
   await change('#guide-threat','Morgana');await js('window.guide.control("new-game")');await until(()=>js('document.querySelectorAll("[data-matchup-enemy]").length===0'),'Guide retained previous-game opponent');

@@ -69,6 +69,10 @@ for(const id of ['Locke','Yunara','Zaahen'])sets.sustain.add(id);
 for(const id of ['Trundle','Tryndamere','Olaf','Fiora','Ryze','Ezreal','Irelia'])sets.sustain.add(id);
 for(const id of Object.keys(SUSTAIN_CONDITIONS))sets.sustain.add(id);
 for(const id of ['Mel','Yunara'])sets.aoe.add(id);
+// Multiple-target damage in the current kit, not a claim that the whole
+// team can hit together. Each skill still has its own area and conditions.
+for(const id of ['Lissandra','Taliyah','Garen','Darius','Renekton','JarvanIV','Hecarim','Chogath','Karthus','Katarina','Lux','Morgana','Syndra','Nocturne','Vi','TwistedFate','Camille','XinZhao','Nidalee','Aatrox','Zed'])sets.aoe.add(id);
+for(const id of ['Darius','Renekton','Aatrox','Hecarim','JarvanIV'])sets.frontline.add(id);
 sets.poke.add('Mel');sets.engage.add('Zaahen');sets.ap.add('Locke');
 const TANKS=new Set('Alistar Amumu Blitzcrank Braum Chogath DrMundo KSante Leona Malphite Maokai Nautilus Nunu Ornn Rammus Rell Sejuani Shen Sion Skarner TahmKench Taric Zac'.split(' '));
 const ENCHANTERS=new Set('Ivern Janna Karma Lulu Milio Nami Renata Sona Soraka Yuumi Zilean'.split(' '));

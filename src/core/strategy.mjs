@@ -74,9 +74,8 @@ export function describeForgiveness(traits,balancedDamage){
 }
 export function controlChainLabel(traits,edges=[]){
  if(edges.some(e=>e.current&&(e.control||['frost','concussive','echo','ball','landing'].includes(e.family))))return '有条件控制接力';
- if(traits.engage>=2&&traits.aoe>=1)return '控制链完整';
- if(traits.engage>=2)return '先手充足、缺范围衔接';
- if(traits.engage>=1)return '有先手、缺衔接';
+ if(traits.engage>=2)return '多种先手，衔接条件待确认';
+ if(traits.engage>=1)return '有先手，衔接条件待确认';
  return '缺少稳定先手';
 }
 export function strategySummary(analysis,combo,requested,enemyTraits=null){
