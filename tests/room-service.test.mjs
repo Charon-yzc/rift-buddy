@@ -322,3 +322,25 @@ test('an address that failed a handshake waits before its next attempt',async()=
  await until(()=>host.snapshot().members.length===2);
  guest.leave();host.leave();
 });
+
+test('resetting a throttled connection cannot crash the host',async()=>{
+ const host=room({nick:'房主'});
+ const created=await host.host();
+ const intruder=room({nick:'闯入者'});
+ const wrongPin=created.pin==='000000'?'111111':'000000';
+ await assert.rejects(()=>intruder.join({host:'127.0.0.1',port:created.port,room:created.room,pin:wrongPin}),/未能加入房间/);
+ // Reconnect from the throttled address and reset the connection while the
+ // accept-time backoff is still holding it paused.
+ const raw=net.connect(created.port,'127.0.0.1');
+ raw.on('error',()=>{});
+ await new Promise(r=>raw.once('connect',r));
+ await wait(80);
+ raw.write('x');
+ raw.resetAndDestroy();
+ await wait(400);
+ // The host must survive and still accept a valid guest.
+ const guest=room({nick:'队友'});
+ await guest.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});
+ await until(()=>host.snapshot().members.length===2);
+ guest.leave();host.leave();
+});

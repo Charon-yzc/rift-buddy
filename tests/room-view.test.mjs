@@ -82,3 +82,9 @@ test('host panel offers address refresh and says the lineup syncs automatically'
  assert.match(html,/阵容会自动同步/);
  assert.match(html,/aria-live="polite"/);
 });
+
+test('a hand-crafted share cannot open a wrong build mode',()=>{
+ const member=mode=>({nick:'队友丙',online:true,share:{lineup:[{role:'mid',champion:'Ahri'},{role:'top',champion:null},{role:'jungle',champion:null},{role:'bottom',champion:null},{role:'support',champion:null}],pick:{champion:'Ahri',role:'mid',mode},at:Date.now()},self:true});
+ assert.match(roomPanel({room:snapshot({members:[member('aram')]}),nick:'队友丙',champ}),/data-action="room-build" data-id="Ahri" data-role="mid" data-mode="rift"/);
+ assert.match(roomPanel({room:snapshot({members:[member('hex')]}),nick:'队友丙',champ}),/data-mode="hex"/);
+});

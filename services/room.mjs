@@ -144,6 +144,10 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   if(code!==undefined&&!validRoomCode(code))throw Error('房间码格式不正确');
   room=code===undefined?secureCode():String(code);pin=secureCode();mode='host';
   server=net.createServer(socket=>{
+   // Every accepted socket needs an error listener from the first tick: a
+   // reset during the throttle window must never surface as an unhandled
+   // 'error' event and take the host process down.
+   socket.on('error',()=>{});
    if(guests.size+waiting.size>=MAX_MEMBERS){socket.destroy();return;}
    waiting.add(socket);
    socket.once('close',()=>waiting.delete(socket));
