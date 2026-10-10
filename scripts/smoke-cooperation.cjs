@@ -98,7 +98,7 @@ async function run(){
  }
  await click('[data-action=close]');
  await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")&&!!document.querySelector(".companion-candidate")'),'Sidebar missing');
- assert.equal(await js('document.querySelector(".companion-candidate .result-actions-summary")?.querySelectorAll("p").length'),expectedMembers.length,'Sidebar must show all member actions before expanding details');
+ assert.equal(await js('document.querySelector(".companion-candidate .result-actions-summary")?.querySelectorAll(":scope > p").length'),expectedMembers.length,'Sidebar must show all member actions before expanding details');
  const side=await js('document.querySelector(".companion-candidate").textContent');assert.ok(side.includes('成立条件')&&side.includes(marker)&&side.includes('未经组合对局验证'));
  for(const condition of planData.conditions)assert.ok(side.includes(condition),'Sidebar omitted a member condition');assert.ok(side.includes(planData.economy));
  await js('[...document.querySelectorAll("details[data-companion-disclosure^=cooperation]")].forEach(d=>d.open=true)');

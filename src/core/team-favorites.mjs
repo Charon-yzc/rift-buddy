@@ -1,6 +1,6 @@
 import {getBuild} from './builds.mjs';
 import {selectedBuildFields} from './build-favorites.mjs';
-import {validatePreparation} from './preparation.mjs';
+import {validatePreparation,recallPreparation} from './preparation.mjs';
 import {scopeSlots} from './draft.mjs';
 import {currentCombo,validateSlots,mergeClientSession} from './recommend.mjs';
 import {captureCreativePlan,creativeComboContext,validateCreativePlan} from './creative-plan.mjs';
@@ -32,7 +32,7 @@ export function captureTeamConfigurations(result,data,store){
   const champion=data.champions.find(c=>c.id===slot.champion);
   if(!champion)throw Error('当前资料没有这位组合成员');
   const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
-  const selection={coreIndex:0,conditions:[],...store.recall(context),...context},build=getBuild(champion,slot.role,data,selection);
+  const selection={coreIndex:0,conditions:[],...recallPreparation(store,null,context),...context},build=getBuild(champion,slot.role,data,selection);
   return validatePreparation({...selection,coreIndex:selection.coreId?selection.coreIndex:build.selectedCoreIndex,...selectedBuildFields({...selection,build},{preserveUnavailable:true})});
  });
 }

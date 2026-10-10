@@ -46,6 +46,8 @@ export function createPreparationStore(limit=PREPARATION_LIMIT){
 }
 export function recallPreparation(store,guide,context,{allowSavedCombo=false}={}){
  const remembered=store.recall(context);if(remembered)return remembered;
+ const catalogId=context.creativePlan?.curated?.id;
+ if(catalogId){const legacy=store.recall({...context,comboId:catalogId});if(legacy)return {...legacy,...context};}
  return guide&&guide.id===context.id&&guide.role===context.role&&guide.mode===context.mode&&(allowSavedCombo||(guide.comboId||'')===(context.comboId||''))?structuredClone(guide):null;
 }
 // A write confirmation belongs to one public client context, not a future match.

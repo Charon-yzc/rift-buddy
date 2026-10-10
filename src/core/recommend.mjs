@@ -275,13 +275,13 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  if(!targets.length){
   const g=completePartyPlan(grade(slots,champions,style,[],{},context),slots,context);
   if(creativePlanMatches(creativePlan,slots)&&creativePlan.members.every(m=>scopeSlots(slots,scope).some(s=>s.role===m.role))){
-   const plan=validateCreativePlan(creativePlan,slots),cooperation=['cooperation','shared'].includes(plan.archetype);
+   const plan=validateCreativePlan(creativePlan,slots),cooperation=['cooperation','shared'].includes(plan.archetype),curated=plan.archetype==='curated',original=curated?creativeMemberCombo(plan,plan.members[0].champion,plan.members[0].role):null;
    // Accepted picks are locked for the next search. That must not grant new
    // replacement permissions to friends who were fixed before the search.
    // Legacy plans have no record of that permission: require an explicit unlock.
    const editableTargets=(plan.editableTargets||[]).filter(role=>scopeSlots(slots,scope).some(s=>s.role===role&&(s.party||['bot','solo'].includes(scope))));
    const strategyCombo=plan.members.length===g.analysis.members.length?{tempo:plan.tempo,why:plan.why,risk:plan.caution}:summaryCombo({...g,adaptive:null,creative:null});
-   return [{id:signature(slots),slots:structuredClone(slots),...g,trio:null,duo:null,creative:cooperation?null:plan,adaptive:cooperation?(plan.shared||plan.cooperation):g.adaptive,creativePlan:plan,origin:cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,strategyCombo,play.tempo,context.enemyTraits),catalogState:null}];
+   return [{id:signature(slots),slots:structuredClone(slots),...g,trio:curated&&plan.members.length===3?original:null,duo:curated&&plan.members.length===2?original:null,creative:cooperation||curated?null:plan,adaptive:cooperation?(plan.shared||plan.cooperation):curated?null:g.adaptive,creativePlan:plan,origin:curated?'curated':cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,strategyCombo,play.tempo,context.enemyTraits),catalogState:null}];
   }
   return [{id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,summaryCombo(g),play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null}];
  }
