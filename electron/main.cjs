@@ -117,7 +117,19 @@ async function boot(){
   const context={id:own.id,role:own.role,mode:own.mode,...creativeComboContext(combo)};
   return {coreIndex:0,conditions:[],...storedPreparation(state.preparations,context),...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,...creativeComboContext(combo)};
  };
- const setGuideState=async next=>{const valid=guideCore.validateGuideState(next);if(valid)valid.completedItems=guideCore.createGuideModel(data,valid).completedItems;await saveCurrentState(current=>({...current,guide:valid,preparations:valid?upsertPreparation(current.preparations,valid.selection):current.preparations}));const revision=++guideRevision;win?.webContents.send('guide-selection',valid?.selection||null,{revision});};
+ const setGuideState=async(next,base)=>{
+  const valid=guideCore.validateGuideState(next),previous=base?guideCore.validateGuideState(base):null;if(valid)valid.completedItems=guideCore.createGuideModel(data,valid).completedItems;
+  await saveCurrentState(current=>{
+   let accepted=valid;
+   if(previous){
+    if(!valid||!current.guide||guideCore.guideIdentity(current.guide.selection)!==guideCore.guideIdentity(previous.selection)||current.guide.match?.gameId!==previous.match?.gameId)throw Error('本局指引已变化，请核对后重新操作');
+    const message='指引设置同时发生变化，请核对后重新操作',selection=current.guide.selection;
+    accepted=mergeSavedFields(current.guide,{...previous,selection},{...valid,selection},message);
+    accepted.selection=mergeSavedFields(selection,previous.selection,valid.selection,message);
+   }
+   return {...current,guide:accepted,preparations:accepted?upsertPreparation(current.preparations,accepted.selection):current.preparations};
+  });const revision=++guideRevision;win?.webContents.send('guide-selection',state.guide?.selection||null,{revision});
+ };
  const prepareCurrentGuide=async()=>{const own=currentGuideSelection();if(!own)return false;if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(own)||own.comboKnown&&(state.guide.selection.comboId||'')!==(own.comboId||'')){const next=guideCore.selectGuide(state.guide,own);if(latestClient.connected)next.match={phase:latestClient.phase,...(latestClient.game?.gameId?{gameId:latestClient.game.gameId}:{})};await setGuideState(next);}return true;};
  const publicEnemyIds=()=>latestClient.connected&&latestClient.phase==='ChampSelect'&&Array.isArray(latestClient.session?.theirTeam)?latestClient.session.theirTeam.map(p=>data.champions.find(c=>c.key===p.championId)?.id).filter(Boolean):undefined;
  const publishOpponentContext=()=>{const focus=opponentFocus.snapshot();latestClient={...latestClient,selectionContext:focus.selectionContext,opponentFocus:focus.focus,opponentFocusNotice:focus.notice};return focus;};

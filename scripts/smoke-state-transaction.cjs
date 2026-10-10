@@ -37,6 +37,17 @@ async function run(){
  await delay(100);blocked=false;releaseWrite();await Promise.all([importing,pendingSave,pendingGuide,pendingPresentation]);
  const accepted=await bootstrap();assert.equal(accepted.state.favorites.filter(f=>f.id==='imported-once').length,1);assert.equal(accepted.state.preferences.autoCheck,true);assert.equal(accepted.state.preferences.presentation.textScale,1.25);assert.equal(accepted.state.guide.selection.id,'Ashe');assert.equal(accepted.state.preparations[0].id,'Ashe');assert.deepEqual(accepted.source,{region:'kr',tier:'diamond_plus'});
  await js('window.buddy.importState()');const retried=await bootstrap();assert.equal(retried.state.favorites.filter(f=>f.id==='imported-once').length,1);assert.equal(retried.state.guide.selection.id,'Ashe');assert.equal(retried.state.preferences.presentation.textScale,1,'An explicit retry imports its saved display preference');assert.deepEqual(JSON.parse(await fs.readFile(path.join(root,'settings.json'))),retried.state);
+ // Guide controls can overlap while disk is slow, including automatic bounds
+ // saves. Each accepted change must preserve independent guide fields.
+ let guideWindow;await until(()=>{guideWindow=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guideWindow;},'Guide missing');const gjs=code=>guideWindow.webContents.executeJavaScript(code,true);
+ await until(()=>gjs('!!window.guide'),'Guide preload missing');blocked=true;writeStarted=false;
+ const toggleGuide=gjs('window.guide.control("live-advice")');await until(()=>writeStarted,'Guide toggle did not block');
+ const opacityGuide=gjs('window.guide.control("opacity",0.65)');await delay(100);blocked=false;releaseWrite();await Promise.all([toggleGuide,opacityGuide]);
+ assert.equal((await bootstrap()).state.guide.liveAdvice,false,'Opacity restored the old live-advice value');assert.equal((await bootstrap()).state.guide.opacity,0.65);
+ blocked=true;writeStarted=false;
+ const conditionGuide=gjs('window.guide.control("condition","heal")');await until(()=>writeStarted,'Guide condition did not block');
+ const stageGuide=gjs('window.guide.control("stage","later")');await delay(100);blocked=false;releaseWrite();await Promise.all([conditionGuide,stageGuide]);
+ assert.ok((await bootstrap()).state.guide.selection.conditions.includes('heal'),'Stage restored the old equipment conditions');assert.equal((await bootstrap()).state.guide.stage,'later');
  // Recalling another hero changes preparation recency without changing its
  // configuration. A later edit must merge by hero context, retaining additions.
  await js('window.buddy.openGuide({id:"Ahri",role:"mid",mode:"rift"})');await delay(100);const preparationBase=await bootstrap();
@@ -76,6 +87,6 @@ async function run(){
  await js('document.querySelector("[data-action=build-condition][data-condition=ad]").click()');blocked=false;releaseWrite();
  await until(async()=>{const s=(await bootstrap()).state,p=s.preparations.find(p=>p.id==='Ahri'&&p.role==='mid');return p?.runeId===runeBefore&&p.conditions.includes('ad')&&s.guide?.selection?.conditions.includes('ad')&&s.guide.selection.runeId===runeBefore;},'Independent queued edit or restored rune did not reach guide');
  assert.equal(await js('document.querySelector("[data-action=build-rune].active").dataset.id'),runeBefore);assert.equal(await js('document.querySelector("[data-action=build-condition][data-condition=ad]").classList.contains("active")'),true);
- const report={passed:true,queuedRendererEditReachesGuideWithoutRejectedRune:true,rendererRejectedRuneEquipmentAndPositionRestored:true,realPreparationConflictRejectedAndQueueRecovered:true,preparationRecencyAndIndependentEditsPreserved:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,failedImportMemoryDiskSourceAndExportPreserved:true,ENOSPC:true,exhaustedWindowsRename:true,ordinarySaveGuideAndPresentationFailuresPreserved:true,queuedImportPreservesLaterEdits:true,retryDeduplicates:true,actualRuneWrites:0,userSettingsIsolated:true,realGame:'UNPROVEN'};await writeFile(path.join(root,'state-transaction-smoke.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
+ const report={passed:true,concurrentGuideAndSelectionFieldsPreserved:true,queuedRendererEditReachesGuideWithoutRejectedRune:true,rendererRejectedRuneEquipmentAndPositionRestored:true,realPreparationConflictRejectedAndQueueRecovered:true,preparationRecencyAndIndependentEditsPreserved:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,failedImportMemoryDiskSourceAndExportPreserved:true,ENOSPC:true,exhaustedWindowsRename:true,ordinarySaveGuideAndPresentationFailuresPreserved:true,queuedImportPreservesLaterEdits:true,retryDeduplicates:true,actualRuneWrites:0,userSettingsIsolated:true,realGame:'UNPROVEN'};await writeFile(path.join(root,'state-transaction-smoke.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await writeFile(path.join(root,'error.txt'),e.stack).catch(()=>{});app.exit(1);});
