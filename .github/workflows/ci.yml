@@ -89,6 +89,10 @@ jobs:
           node scripts/smoke-package-cooperation.mjs --specific
           node scripts/smoke-package-cooperation.mjs --party-four
           node scripts/smoke-package-cooperation.mjs --party-five
+      - name: Check frozen curated plans, selectable party routes and sidebar adoption
+        run: |
+          node scripts/smoke-package-curated-plan.mjs
+          node scripts/smoke-package-curated-plan.mjs --routes
       - name: Check locked cross-lane plans and complete late-item choices across restarts
         run: node scripts/smoke-package-cooperation.mjs --cross-lane
       - name: Check retained pair order and third-member follow-ups across restarts

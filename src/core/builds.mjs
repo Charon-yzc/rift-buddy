@@ -118,10 +118,15 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const creative=mode==='rift'&&creativePlan?.id===comboId?creativeMemberCombo(creativePlan,champion.id,role):null;
  const duo=creative||(mode==='rift'?[...TRIOS,...DUOS].find(d=>d.id===comboId&&comboLoadout(d,champion,role)!==null):null);
  const play=creative?null:duoPlay(duo,data,{champion:champion.id,role});
- const preferred=creative?'default':comboLoadout(duo,champion,role);
- const requested=!loadoutId||loadoutId==='auto'?preferred||'default':loadoutId;
+ const preferred=creative&&creative.archetype!=='curated'?'default':comboLoadout(duo,champion,role);
+ const candidate=selectedBuildReference(data,champion.id,role);
+ const standardRef=validReference(candidate,champion,role,data,{allowOlder:true})?candidate:null;
+ const preferredLoadout=availableLoadouts.find(c=>c.id===preferred);
+ const currentReferencePreferred=creative?.archetype==='curated'&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&(preferredLoadout.patch||LOADOUT_PATCH)!==data.patch&&standardRef?.patch===data.patch;
+ const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];
+ if(currentReferencePreferred)selectionWarnings.push(`原组合配装为 ${preferredLoadout.patch||LOADOUT_PATCH}，当前先展示 ${standardRef.patch} 同位置统计参考；组合专用配装可在“配置玩法”主动选择，统计不代表组合适配已经验证。`);
  if(comboId&&!duo)selectionWarnings.push('原组合已移出当前库，或不适用于这个英雄位置；请重新确认玩法。');
  if(duo?.patch&&duo.patch!==data.patch)selectionWarnings.push(`这套组合整理于 ${duo.patch}，当前资料 ${data.patch}；${creative?'旧版配合说明保留，机制待复核':'机制与专用配置待复核'}。`);
  if(requested!=='default'&&!config)selectionWarnings.push('原玩法不适用于当前英雄或位置，已使用通用配置。');
@@ -141,9 +146,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(support)t.start=[3865,2003,2003];
  else if(role==='jungle'&&mode==='rift')t.start=[1103,2003];
  else if(['enchanter','senna','supportTank','pokeSupport'].includes(key))t.start=[p.damage==='ap'?1056:1055,2003];
- const candidate=selectedBuildReference(data,champion.id,role);
  const hexCandidate=data.hexBuilds?.[champion.id];
- const standardRef=validReference(candidate,champion,role,data,{allowOlder:true})?candidate:null;
  const ref=variant!=='default'||config?null:mode==='hex'?(validHexReference(hexCandidate,champion,data,{allowOlder:true})?hexCandidate:null):standardRef;
  if(!p.reviewed&&!ref&&!config)throw Error(`${champion.name}的英雄机制尚未整理，所选来源也没有可用配置；请核对游戏内资料后自行准备。`);
  const referenceStale=!!ref&&ref.patch!==data.patch;
@@ -261,7 +264,7 @@ export function buildAsText(build, champion, data) {
  return [
   `${champion.name} · ${build.title} · 资料 ${data.version}`,
   build.combo?`组合：${build.combo.title}；${build.combo.plan}`:'',
-  build.combo?.origin==='creative'?`原分工：${build.combo.creativePlan.ordered.map(m=>(data.champions.find(c=>c.id===m.champion)?.name||m.champion)+' '+m.job).join('；')}\n顺序：${build.combo.steps.join(' → ')}\n行动窗口：${build.combo.window}\n保存资料 ${build.combo.dataVersion}；规则 ${build.combo.rulesVersion}；创意机制说明，未经对局验证。`:'',
+  build.combo?.origin==='creative'?`原分工：${build.combo.creativePlan.ordered.map(m=>(data.champions.find(c=>c.id===m.champion)?.name||m.champion)+' '+m.job).join('；')}\n顺序：${build.combo.steps.join(' → ')}\n行动窗口：${build.combo.window}\n保存资料 ${build.combo.dataVersion}；规则 ${build.combo.rulesVersion}；${build.combo.creativePlan.archetype==='curated'?'原保存的整理套路':'创意机制说明'}，未经对局验证。`:'',
   build.combo?.play?duoPlayText(build.combo.play):'',
   `出门购买：${build.start.map(i=>i.name).join('、')}`,
   build.granted?.length?`位置任务：${build.granted.map(i=>i.name).join('、')}由峡谷辅助任务自动给予，以客户端正式位置为准。`:'',

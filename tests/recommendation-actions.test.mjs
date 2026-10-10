@@ -6,7 +6,7 @@ import {createSlots,recommend,currentCombo} from '../src/core/recommend.mjs';
 import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
 import {TRIOS} from '../src/core/rules.mjs';
 import {generateCreativeTrios} from '../src/core/creative-trios.mjs';
-import {captureCreativePlan,creativePlanId,validateCreativePlan,resultCooperation} from '../src/core/creative-plan.mjs';
+import {captureCreativePlan,creativePlanId,validateCreativePlan,resultCooperation,selectPartyRoute} from '../src/core/creative-plan.mjs';
 import {captureTeamConfigurations,restoreTeamFavorite} from '../src/core/team-favorites.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {getBuild} from '../src/core/builds.mjs';
@@ -121,6 +121,25 @@ test('an invalid curated subgroup cannot supply full-party jobs, while valid old
  const [valid]=recommend({slots,champions:data.champions,scope:'party'});assert.ok(valid.adaptive.memberJobs.find(m=>m.champion==='Orianna').job.includes(trio.members[0].job));assert.match(valid.adaptive.memberJobs.find(m=>m.champion==='Orianna').job,/16\.19 · 旧版本说明保留/);
  const [invalid]=recommend({slots,champions:data.champions,scope:'party',catalogStatus:{[trio.id]:{invalid:true}}});
  for(const m of trio.members)assert.ok(!invalid.adaptive.memberJobs.find(j=>j.champion===m.champion).job.includes(m.job));
+});
+
+test('full-party route changes preserve curated defaults and carry chosen jobs and conditions through favorites and guides',async()=>{
+ const members=[member('Urgot','top'),member('Udyr','jungle'),member('Orianna','mid'),member('Varus','bottom'),member('Milio','support')];
+ const slots=setup(members),[result]=recommend({slots,champions:data.champions,scope:'party'}),original=captureCreativePlan(result,data),backup=original.shared.routes[1];
+ assert.equal(original.shared.routes.length,2);assert.equal(original.shared.routes[0].id.startsWith('curated:'),true);
+ const trio=TRIOS.find(t=>'curated:'+t.id===original.shared.routes[0].id);
+ for(const m of trio.members)assert.ok(original.ordered.find(j=>j.champion===m.champion).job.includes(m.job));
+ const before=structuredClone(original),chosen=selectPartyRoute(original,backup.id);
+ assert.deepEqual(original,before);assert.notEqual(chosen.id,original.id);assert.deepEqual(chosen.ordered,backup.memberJobs);
+ assert.equal(chosen.shared.conditions[1],backup.condition);assert.equal(chosen.shared.failures[1],backup.failure);
+ assert.deepEqual(selectPartyRoute(chosen,original.shared.routes[0].id),original);
+ const accepted={...result,creativePlan:chosen},configurations=captureTeamConfigurations(accepted,data,createPreparationStore());
+ const root=await fs.mkdtemp(path.resolve('.local/party-route-state-'));
+ await saveState(root,{...defaultState(),favorites:[{id:'route',type:'team',title:result.title,slots,scope:'party',style:'fun',version:data.version,createdAt:chosen.createdAt,creativePlan:chosen,configurations}],draft:{slots,scope:'party',style:'fun',creativePlan:chosen}});
+ const saved=await readState(root),restored=restoreTeamFavorite(saved.favorites[0],createSlots(),data.champions),[again]=recommend({slots:restored.slots,champions:data.champions,scope:'party',creativePlan:restored.creativePlan});
+ assert.deepEqual(again.adaptive,chosen.shared);assert.ok(resultAsText(again,data).includes(backup.condition));
+ for(const c of saved.favorites[0].configurations){const guide=createGuideModel(data,selectGuide(null,c),null,{...c,comboKnown:true});assert.equal(guide.combo.ownJob,backup.memberJobs.find(m=>m.champion===c.id).job);assert.deepEqual(guide.combo.steps,chosen.steps);}
+ for(const mutate of [p=>p.shared.routes[1].memberJobs.pop(),p=>p.shared.routes[1].id=p.shared.routes[0].id,p=>p.shared.conditions[1]='wrong route']){const bad=structuredClone(chosen);mutate(bad);bad.id=creativePlanId(bad);assert.throws(()=>validateCreativePlan(bad));}
 });
 
 test('copied plans preserve personal actual-state windows, exits, sustained-output conditions and missing coverage',()=>{

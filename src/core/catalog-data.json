@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.06.1",
+  "version": "2026.10.10.1",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -12366,19 +12366,19 @@
         {
           "role": "top",
           "champion": "Malphite",
-          "job": "先手击飞",
+          "job": "先确认发条魔偶仍附着自己、皇子与发条能跟上，再 R 实际击飞同一战区；落地后 Q/E 限制反击。球已返回、R 落空或队友跟不上就回身接应。",
           "loadoutId": "trio-frontline"
         },
         {
           "role": "jungle",
           "champion": "JarvanIV",
-          "job": "限制走位",
+          "job": "先报 EQ 与 R 是否可用，用 EQ 逼位或限制同一目标，给石头人落点留输出距离；R 地形会挡双方，队友需撤时及时解除，不另开第二个战区。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "mid",
           "champion": "Orianna",
-          "job": "送球与范围收尾",
+          "job": "E 把球交给约定的石头人，进场前后都确认魔偶真实位置；石头人 R 实际命中再 R/W 接续。球因距离返回或队友未控住时停手，不凭进场动画盲按 R。",
           "loadoutId": "trio-ball"
         }
       ],
@@ -12479,19 +12479,19 @@
         {
           "role": "jungle",
           "champion": "Diana",
-          "job": "聚拢目标",
+          "job": "等牛头逼位或实际控制后，Q 命中挂月光才 E 接近，R 拉同一战区、W 承接反击并穿插普攻；亚索跟不上或落点人数不明时不交 E 深入。",
           "loadoutId": "trio-diana"
         },
         {
           "role": "mid",
           "champion": "Yasuo",
-          "job": "接击飞与输出",
+          "job": "牛头或皎月的实际击飞发生、自己 R 已学可用且落点能被接应时再接 R；落地普攻/Q，风墙照看可阻挡的反击。没有击飞或 R 不可用就守线，不前冲等大。",
           "loadoutId": "default"
         },
         {
           "role": "support",
           "champion": "Alistar",
-          "job": "开团或保护",
+          "job": "先确认皎月与亚索距离，用 WQ 或 Q 实际击飞同一目标，保留可回到队友的路线；后续 W 可顶离突进者。两位输出无法到位时转保护，不把目标顶出他们覆盖区。",
           "loadoutId": "tank-peel"
         }
       ],
@@ -12566,19 +12566,19 @@
         {
           "role": "jungle",
           "champion": "JarvanIV",
-          "job": "限制位置",
+          "job": "女枪已有安全 R 角度、加里奥在支援范围才 EQ 接近并按需 R 限制目标；围绕落点承伤，不把人框在女枪范围外。队友要退出时解除地形，不追第二个目标。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "mid",
           "champion": "Galio",
-          "job": "支援与后续控制",
+          "job": "确认皇子当时位置在 R 范围内且能撑到落地，再 R 支援；落地 W/E 错开接控，给女枪保同一输出区。目标退出落点或皇子无法承伤时取消强接。",
           "loadoutId": "trio-control-mid"
         },
         {
           "role": "bottom",
           "champion": "MissFortune",
-          "job": "安全铺弹幕",
+          "job": "先站侧后方确认引导位置与退路，皇子控制实际成立后再沿同一战区 R；加里奥落地前不向前贴。侧翼打断者逼近就中止引导撤离，不为打满弹幕站在危险处。",
           "loadoutId": "default"
         }
       ],
@@ -12657,19 +12657,19 @@
         {
           "role": "top",
           "champion": "Camille",
-          "job": "锁定关键目标",
+          "job": "先报 E 墙体与 R 就绪、加里奥能支援的落点，再 E 命中或 R 留同一目标；等蔚后手控制时打 Q 强化二段。目标有反包或队友到不了就不继续深入。",
           "loadoutId": "default"
         },
         {
           "role": "jungle",
           "champion": "Vi",
-          "job": "接近与稳定控制",
+          "job": "在卡蜜尔落点位于支援范围、两名前排能撑到到场时 R；落地 W/E 接前段结束后的控制。目标已经退出或施法落点无法接应时转保护，不把 R 当追踪敌人的传送。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "mid",
           "champion": "Galio",
-          "job": "支援保护",
+          "job": "卡蜜尔先手时用 Q 或已就绪 R 后手留同一目标，卡蜜尔不能先到时先报自己的进场；普攻/E 兑现输出，给加里奥落地留时间。队友跟不上就停，不连交两人突进追进敌阵。",
           "loadoutId": "trio-control-mid"
         }
       ],
@@ -12754,19 +12754,19 @@
         {
           "role": "top",
           "champion": "Shen",
-          "job": "护盾与落地保护",
+          "job": "魔腾进场前先报 R 是否可用并站到不易被打断的位置，按约定承伤时机给盾支援；落地 E 留给反扑，W 保护附近普攻承伤。引导被阻断或落点被包时及时报停。",
           "loadoutId": "trio-frontline"
         },
         {
           "role": "jungle",
           "champion": "Nocturne",
-          "job": "发起突进",
+          "job": "确认 R 的实际目标范围、落点人数和两位队友的支援条件后再进场，Q/普攻输出，E 维持连接才有恐惧；W 留关键反击。支援无法落地时不因关灯独自追入。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "mid",
           "champion": "Galio",
-          "job": "范围支援与接控",
+          "job": "魔腾落点实际在自己 R 范围内才按沟通支援，和慎错开保护；落地 W/E 接控并接应撤退。不能把慎全地图支援等同自己的 R 范围，目标退出原落点就不强接。",
           "loadoutId": "trio-control-mid"
         }
       ],
@@ -12866,19 +12866,19 @@
         {
           "role": "top",
           "champion": "Renekton",
-          "job": "近身换血",
+          "job": "先处理上路兵线并确认实际怒气，能近身时 W 留同一目标，安全普攻协助猪妹叠霜；E 留可返回路径。兵线不允许离线或怒气不足就报短换血，不为叠层追到底。",
           "loadoutId": "default"
         },
         {
           "role": "jungle",
           "champion": "Sejuani",
-          "job": "抓人与前排",
+          "job": "等鳄鱼 W 或冰女控制实际成立，再 W 与附近近战普攻叠到四层后 E，R 留后手延长控制；Q 不当叠层技能。目标无法继续接触或队友退回就停止追层数。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "role": "mid",
           "champion": "Lissandra",
-          "job": "稳定留人",
+          "job": "先清中线再报到场时间，E 只进能接应的位置，W 或已就绪 R 留人，与鳄鱼和猪妹错开；R 也可自保。队友控制落空或落点危险时不跟 E 二段强进。",
           "loadoutId": "trio-control-mid"
         }
       ],
@@ -12951,19 +12951,19 @@
         {
           "role": "top",
           "champion": "Rumble",
-          "job": "铺伤害区域",
+          "job": "先报热量和 R 就绪，皇子实际限制目标后按敌人撤退方向铺 R，Q 持续扫可触及区域；W 留承伤与撤离。目标已跳出地形或队友未到时不追出火焰覆盖。",
           "loadoutId": "default"
         },
         {
           "role": "jungle",
           "champion": "JarvanIV",
-          "job": "框住走位",
+          "job": "确认发条球在自己身上且兰博可覆盖落点，再 EQ 进场、按需 R 限制走位；给发条接 R 留同一战区。球已返回或队友跟不上就取消深进，撤退时解除挡路地形。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "mid",
           "champion": "Orianna",
-          "job": "聚拢与收尾",
+          "job": "E 把球交给皇子，进场后确认实际球位再 R/W 接同一区域，保留自己安全施法位置；不把皇子框住目标等同于必定命中魔偶。球返回或目标脱离就停止追加。",
           "loadoutId": "trio-ball"
         }
       ],
@@ -13053,19 +13053,19 @@
         {
           "role": "top",
           "champion": "Malphite",
-          "job": "范围先手",
+          "job": "确认亚索 R 和女枪引导角度后再 R 开同一战区，实际击飞后 Q/E 接反击，回身照看输出；两名输出无法覆盖或 R 落空就转接应，不只追求命中人数。",
           "loadoutId": "trio-frontline"
         },
         {
           "role": "mid",
           "champion": "Yasuo",
-          "job": "接击飞",
+          "job": "石头人实际击飞、自己 R 已学可用且落地有退路时接 R，落地普攻/Q；没有有效击飞时先补刀与短换血。女枪位置被切或支援断开时回身，不独自向后排续追。",
           "loadoutId": "default"
         },
         {
           "role": "bottom",
           "champion": "MissFortune",
-          "job": "范围输出",
+          "job": "先留安全侧后方引导位置，石头人击飞实际发生后朝亚索同一战区 R；看到打断者靠近就取消引导移位。两人大招不齐时按普攻/Q 短轮次，不前贴等整套。",
           "loadoutId": "default"
         }
       ],
@@ -13139,19 +13139,19 @@
         {
           "role": "top",
           "champion": "Ornn",
-          "job": "前排与远程开团",
+          "job": "在沙兵与沙皇可输出范围内用 R 逼位，二段实际撞中再衔接 Q/E 地形控制；W 承接正面。沙皇被迫后退或沙兵覆盖断开时回头保护，不把队伍带去另一个战区。",
           "loadoutId": "trio-frontline"
         },
         {
           "role": "mid",
           "champion": "Azir",
-          "job": "持续输出与推开突进",
+          "job": "W 放士兵后普攻，Q 让士兵继续覆盖奥恩控制区；E 留通往现有士兵的退出，R 优先推开突进。士兵不在目标附近或布隆跟不上时不为开团漂移进敌阵。",
           "loadoutId": "default"
         },
         {
           "role": "support",
           "champion": "Braum",
-          "job": "阻挡与近身保护",
+          "job": "站在沙皇附近，Q/普攻挂被动后让队友安全普攻补层，E 朝实际飞行威胁、W 接应输出；R 留反扑。奥恩开得过远时不丢保护位置去补控制。",
           "loadoutId": "tank-peel"
         }
       ],
@@ -13231,19 +13231,19 @@
         {
           "role": "jungle",
           "champion": "Poppy",
-          "job": "阻止位移",
+          "job": "先守入口，W 留敌方突进，冰墙实际形成且方向正确时 E 才找撞墙控制；Q 跟同一落点，R 可拆反扑。墙不成立或会把目标推离队友时不强撞。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "role": "mid",
           "champion": "Anivia",
-          "job": "墙与区域限制",
+          "job": "R 覆盖入口、W 改路线前报墙方向，Q 实际控制后用满足冰冻条件的 E；给波比留撞墙角度但不封己方退路。法力不足或阵地被绕后就收技能回撤。",
           "loadoutId": "default"
         },
         {
           "role": "bottom",
           "champion": "Jhin",
-          "job": "远程接控",
+          "job": "先确认队友伤害标记，再 W 接受限目标；按当前弹药普攻，R 只在安全远处引导。没有标记或控制落空就不前走补最后一发，装填时退回己方阵地。",
           "loadoutId": "default"
         }
       ],
@@ -13317,19 +13317,19 @@
         {
           "role": "jungle",
           "champion": "Ivern",
-          "job": "草丛护盾与控制",
+          "job": "先报到场并 W 放下实际草丛，E 给约定的狮子狗承接落点反击，Q 找同一目标、菊花挡追击；草丛未成立或狮子狗退出路径不清时不催他跳入。",
           "loadoutId": "default"
         },
         {
           "role": "bottom",
           "champion": "Rengar",
-          "job": "补刀与切入",
+          "job": "确认翠神草丛、实际怒气和璐璐可保护距离，再从草中跳队友能处理的目标；Q/普攻兑现输出，强化技能按当前需要选择。没有草丛或被保护距离断开就停跳。",
           "loadoutId": "rengar-bush"
         },
         {
           "role": "support",
           "champion": "Lulu",
-          "job": "增益与保护",
+          "job": "狮子狗进场前报 E/W/R 保护，护盾给实际承伤者，敌方反扑时 W 变羊或 R 接应；不要与翠神同时交光保护。狮子狗跳出支援距离时保住退出路线，不跟进敌阵追盾。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -13403,19 +13403,19 @@
         {
           "role": "top",
           "champion": "Shen",
-          "job": "前排与跨图保护",
+          "job": "先报 R 并从安全位置引导，按大嘴实际承伤给盾；落地 E 拦近身者、W 保护附近普攻承伤。引导可被打断，大嘴 W 结束或保护失效就接应退出。",
           "loadoutId": "trio-frontline"
         },
         {
           "role": "bottom",
           "champion": "KogMaw",
-          "job": "持续普攻",
+          "job": "开 W 前确认璐璐保护与慎支援，持续普攻最近可安全触及的目标，Q/E 辅助限制；W 到期就拉开等下一轮，不因有盾站进敌方控制区。",
           "loadoutId": "default"
         },
         {
           "role": "support",
           "champion": "Lulu",
-          "job": "贴身保护与增益",
+          "job": "大嘴 W 可输出时 E/W 增益，敌方贴脸时把 W 留变羊、R 留实际承伤，和慎保护错开；大嘴 W 结束后帮助撤离，不把友军 W 与敌方变羊当同次可用。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -13488,19 +13488,19 @@
         {
           "role": "top",
           "champion": "Shen",
-          "job": "落地控制",
+          "job": "图奇出现前报 R 可用与安全引导位置，按实际承伤给盾支援；落地 E 限近身者、W 保护普攻压力。图奇落点已被围或引导受阻时立即报停，不保证救活。",
           "loadoutId": "trio-frontline"
         },
         {
           "role": "bottom",
           "champion": "Twitch",
-          "job": "侧翼输出",
+          "job": "Q 伪装先找队友能支援的侧翼，R 已可用才按约定现身普攻，E 按实际毒层收尾；璐璐距离断开或侧翼被发现就退出，伪装不当无敌。",
           "loadoutId": "trio-crit-carry"
         },
         {
           "role": "support",
           "champion": "Lulu",
-          "job": "护盾与增益",
+          "job": "图奇出现位置在施法范围内才 E/W 支持普攻，R 留他被进场时反打，与慎盾错开；站在能回撤的一侧，不为追图奇深入而把自己交给敌方。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -13599,19 +13599,19 @@
         {
           "role": "jungle",
           "champion": "JarvanIV",
-          "job": "先手和物理输出",
+          "job": "先确认两位后排能到场与控制可用，再 EQ 先手、R 按需限走位；在她们输出区承伤并留接应路线。她们缺法力或跟不上就回资源，退出时解除挡路地形。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "bottom",
           "champion": "Seraphine",
-          "job": "补刀清线与控制",
+          "job": "负责下路补刀，皇子实际控住再 E/R 接同一目标，回响与减速升级条件自己确认；W 支持承伤，和娑娜 R 错开。皇子过远或关键技能空时先清线，不跟着贴脸。",
           "loadoutId": "sera-team"
         },
         {
           "role": "support",
           "champion": "Sona",
-          "job": "增益与回复",
+          "job": "先保光环距离与法力，Q/W 支持队友、E 帮进退，R 留皇子进场后的反扑；按实际和弦选作用。后排被绕或保护空档时先回撤，不与萨勒芬妮同时赌大招。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -13689,19 +13689,19 @@
         {
           "role": "jungle",
           "champion": "Kindred",
-          "job": "持续输出与保命区域",
+          "job": "先报 R 区域与就绪，领域覆盖实际承伤者，再与宝石约好延迟无敌的衔接；普攻/Q 输出但不追出保护区。领域同样保护敌人，宝石未生效时不当作无缝续命。",
           "loadoutId": "default"
         },
         {
           "role": "mid",
           "champion": "Yasuo",
-          "job": "近身输出",
+          "job": "在千珏与宝石可覆盖的距离普攻/Q，只有自己的 Q3 实际击飞或另一位队友有效击飞、R 可用才接大；宝石 E 眩晕不触发 R。落点离开保护范围时放弃接大。",
           "loadoutId": "default"
         },
         {
           "role": "support",
           "champion": "Taric",
-          "job": "贴身保护与延迟无敌",
+          "job": "提前 W 联结约定承伤者，R 按千珏领域预计结束提前引导，以实际无敌生效为准；E 限反扑，Q/普攻循环量力保护。联结断开或 R 未就绪时不承诺保护链。",
           "loadoutId": "tank-peel"
         }
       ],
@@ -13760,19 +13760,19 @@
         {
           "role": "jungle",
           "champion": "Diana",
-          "job": "切入与聚拢",
+          "job": "先确认球仍附着自己、芮尔能控制同一战区，Q 月光命中才 E，R 实际拉拽后 W/普攻输出；发条球返回或队友未到时取消深入，不为补聚拢追人。",
           "loadoutId": "trio-diana"
         },
         {
           "role": "mid",
           "champion": "Orianna",
-          "job": "带球控制",
+          "job": "E 交给约定进场者并报真实球位，芮尔或皎月实际限制目标后再 R/W；自己保持安全施法距离。球脱离、返回或目标已退出时不凭两人冲入就空按 R。",
           "loadoutId": "trio-ball"
         },
         {
           "role": "support",
           "champion": "Rell",
-          "job": "后续限制与前排",
+          "job": "先报 W/Q 与 R 就绪，逼位或实际先手后让皎月接入，后续控制错开；留返回己方输出的路线。两位法师无法跟进或目标离开球区时转接应，不独自续追。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -13867,19 +13867,19 @@
         {
           "role": "jungle",
           "champion": "Vi",
-          "job": "锁定目标",
+          "job": "先确认狐狸输出距离与目标附近人数，泰坦先手实际命中后 Q 或已就绪 R 后手接同一目标；普攻/E 兑现。泰坦没中且落点无退路就停，不三人大招同时追残血。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "mid",
           "champion": "Ahri",
-          "job": "跟进与机动输出",
+          "job": "泰坦或蔚实际限制目标后 E 接魅惑、Q 去返并穿插 W；R 用于有退路的跟进或退出，先确认已学可用。控制空掉或两名前排离开射程时守安全位置。",
           "loadoutId": "default"
         },
         {
           "role": "support",
           "champion": "Nautilus",
-          "job": "后续控制与保护",
+          "job": "从有视野方向 Q 找同一目标，普攻被动或 R 与蔚后手错开，给狐狸留清晰 E 角度；Q 被阻挡或队友跟不上时不续追，留控制挡反扑。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -13965,19 +13965,19 @@
         {
           "role": "jungle",
           "champion": "Nocturne",
-          "job": "突进发起",
+          "job": "确认卡牌能安全落地、蕾欧娜留到同一目标且 R 在实际范围才切入，Q/普攻输出、E 维持连接，W 留反击；人数不明或两人覆盖断开就不因关灯追入。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "mid",
           "champion": "TwistedFate",
-          "job": "信息与控制",
+          "job": "先处理中线，R 侦察后确认落点安全与两人可到场，提前选好 W 黄牌再落地接控制；黄牌实际生效才叫魔腾跟。落点被包或黄牌未准备就取消支援。",
           "loadoutId": "trio-tf"
         },
         {
           "role": "support",
           "champion": "Leona",
-          "job": "下路留人",
+          "job": "先确认两名支援者范围和时间，E/Q 或 R 留同一目标，和黄牌错开控制；W 承接近身反击。卡牌落不到安全位置或魔腾跟不上时回接应，不独自等人到。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -14076,19 +14076,19 @@
         {
           "role": "top",
           "champion": "Kennen",
-          "job": "侧翼范围控制",
+          "job": "先确认安全侧翼与 R 可用，阿木木实际控制后从另一角度 E/R 入场、W 按实际印记衔接；女枪打断者未处理或队友跟不上时保退出，不从同一入口全员挤入。",
           "loadoutId": "default"
         },
         {
           "role": "jungle",
           "champion": "Amumu",
-          "job": "正面限制",
+          "job": "女枪已占安全引导角度才 Q 控同一目标，R 与凯南控制错开；留一段 Q 或回身照看侧翼。Q 落空、两位输出未到或被绕后时不继续深入。",
           "loadoutId": "default"
         },
         {
           "role": "bottom",
           "champion": "MissFortune",
-          "job": "远处弹幕",
+          "job": "先站能安全引导的侧后方，阿木木控制实际命中后 R 覆盖同一战区；凯南进入不等于所有敌人都已被控。打断者靠近就取消引导移位，勿硬求整段弹幕。",
           "loadoutId": "default"
         }
       ],
@@ -14144,19 +14144,19 @@
         {
           "role": "jungle",
           "champion": "Sejuani",
-          "job": "前排控制",
+          "job": "先手限制同一目标，W 与附近永恩普攻叠霜，实际四层后 E，R 接后续；Q 不算叠层。永恩回身或布隆保护距离断开时停止追层数，回头接应。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "role": "mid",
           "champion": "Yone",
-          "job": "近身输出",
+          "job": "E 本体先留安全回身点，猪妹实际限制后普攻/Q 配合叠层，Q3 或已就绪 R 只进可返回区域；按 E 时限回身。布隆跟不上或回身点危险就缩短这一轮。",
           "loadoutId": "default"
         },
         {
           "role": "support",
           "champion": "Braum",
-          "job": "保护与后续控制",
+          "job": "Q/普攻先给同一目标挂被动，永恩能安全普攻再补层，E 朝真实飞行威胁、W 接应；R 留后续或反扑。永恩回身时跟撤退队形，不独自追补眩晕。",
           "loadoutId": "tank-peel"
         }
       ],
@@ -14238,19 +14238,19 @@
         {
           "role": "jungle",
           "champion": "Maokai",
-          "job": "前排与区域限制",
+          "job": "确认两位射手在输出距离内后 W 留已被箭限制的目标，Q 限近身反扑，R 按真实路径封侧翼；不要把目标 Q 推出射手技能区。远程先手过远时守接应位置。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "role": "bottom",
           "champion": "Varus",
-          "job": "技能消耗与接控",
+          "job": "艾希 R 实际命中再接自己的 R 或 E/Q 消耗，与茂凯控制错开；按所选穿甲路线打一轮后拉开。没有安全持续普攻条件就不硬打前排长战，控制落空时退。",
           "loadoutId": "spell-lethality"
         },
         {
           "role": "support",
           "champion": "Ashe",
-          "job": "远程发起与信息",
+          "job": "E 观察将走的路线后，确认队友能到场才 R 远程发起，W 辅助减速；辅助经济先保支援与退出。箭飞得太远、队友赶不到时不催全队追过去。",
           "loadoutId": "ashe-utility"
         }
       ],
@@ -14346,19 +14346,19 @@
         {
           "role": "top",
           "champion": "Renekton",
-          "job": "近身稳定控制",
+          "job": "先确认怒气与上路线允许支援，近身 W 留同一目标，Q/普攻打一轮、E 留退路；蜘蛛或卡牌接控再续。没线权或目标进塔而队友未准备时停止追击。",
           "loadoutId": "default"
         },
         {
           "role": "jungle",
           "champion": "Elise",
-          "job": "爆发与结茧",
+          "job": "鳄鱼 W 或黄牌实际命中后人形 E 接结茧，再 Q/W 换蜘蛛普攻/Q；蜘蛛 E 按真实落点规避反击。结茧被挡、目标已脱离或退路不明时回营地，不默认三人就能越塔。",
           "loadoutId": "default"
         },
         {
           "role": "mid",
           "champion": "TwistedFate",
-          "job": "支援与黄牌",
+          "job": "先清中线，选好 W 黄牌且安全落地后给鳄鱼/蜘蛛接力，Q 跟同一受控目标；R 前确认目标附近人数。落点被守或黄牌被法术盾挡住就报停，不假定控制已生效。",
           "loadoutId": "trio-tf"
         }
       ],
@@ -14418,19 +14418,19 @@
         {
           "role": "top",
           "champion": "Camille",
-          "job": "单点限制",
+          "job": "猪妹逼位后从实际墙体 E 接近，R 留同一目标给加里奥落点，Q 强化二段按间隔输出；安全普攻可协助叠霜。加里奥到不了或敌方反包时不独自框住等救援。",
           "loadoutId": "default"
         },
         {
           "role": "jungle",
           "champion": "Sejuani",
-          "job": "前排与接控",
+          "job": "先报安全到场，W 与卡蜜尔近战普攻叠到四层才 E，R 留她限制后的接控，Q 留接应；目标无法接触或加里奥落点已失效时停止追层数，保护退出。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "role": "mid",
           "champion": "Galio",
-          "job": "支援及保护",
+          "job": "确认卡蜜尔当时位置在 R 范围、两名前排能撑到落地才支援；落地 W/E 与猪妹错开控制。对手退出落点或敌方反包时接应撤退，不把 R 当锁定敌人的追踪技能。",
           "loadoutId": "trio-control-mid"
         }
       ],
@@ -14515,19 +14515,19 @@
         {
           "role": "jungle",
           "champion": "Nunu",
-          "job": "正面接近与承伤",
+          "job": "先确认有视野且雪球能通过的路线，W 实际撞中后 E 按命中条件接禁锢，Q 兼顾续航；R 仅在能维持引导的位置用。雪球落空或冰墙挡路时回头，不硬闯开阔区。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "role": "mid",
           "champion": "Anivia",
-          "job": "区域控制",
+          "job": "努努 W 实际控制后 Q/R 铺落点，W 前报墙方向，E 等冰冻条件成立；不要把墙挡在努努退路上。法力不足或努努引导被破坏时收阵地回撤。",
           "loadoutId": "default"
         },
         {
           "role": "bottom",
           "champion": "Jhin",
-          "job": "远程接控与收尾",
+          "job": "队友实际伤害留下标记后 W 接控，按弹药普攻，R 在有保护的远处收尾；不能把雪球还在滚当控制已命中。装填、W 落空或两位队友退出时停止追击。",
           "loadoutId": "default"
         }
       ],
@@ -14589,19 +14589,19 @@
         {
           "role": "mid",
           "champion": "Orianna",
-          "job": "范围控制与护盾",
+          "job": "E 按实际承伤给大嘴、确认球位，W 支持进退，R 留进入同一保护区的突进者；不为开团把球送到输出跟不上的地方。球返回或大嘴 W 结束就转接应。",
           "loadoutId": "trio-ball"
         },
         {
           "role": "bottom",
           "champion": "KogMaw",
-          "job": "持续输出",
+          "job": "W 开启前报输出窗口，站在发条与璐璐保护距离内普攻最近安全目标，Q/E 辅助限制；W 结束或阵型被切开时后退，不因双盾站桩吃满控制。",
           "loadoutId": "default"
         },
         {
           "role": "support",
           "champion": "Lulu",
-          "job": "贴身增益与保护",
+          "job": "E/W 在大嘴能连续普攻时给，突进者入场时 W 变羊或 R 反打，与发条控制错开；大嘴 W 到期就帮退。友军 W 已用时不再假定同次能变羊保护。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -14666,19 +14666,19 @@
         {
           "champion": "Ahri",
           "role": "mid",
-          "job": "魅惑跟控",
+          "job": "艾希 R 实际命中且自己能到场后 E 接魅惑、Q 去返与 W 输出，R 留安全换角或退出；布隆没有近身条件时不预设被动眩晕，控制落空就结束这一轮。",
           "loadoutId": "default"
         },
         {
           "champion": "Ashe",
           "role": "bottom",
-          "job": "冰箭开窗",
+          "job": "确认狐狸能在控制期到场才 R 留同一目标，安全普攻补布隆被动，W 减速限制反击；箭过远、布隆无法挂第一层时不追去补层数，退回接应距离。",
           "loadoutId": "default"
         },
         {
           "champion": "Braum",
           "role": "support",
-          "job": "叠被动与挡伤",
+          "job": "先在己方输出附近 Q/普攻给目标挂被动，艾希能安全普攻再接层，E 朝真正飞行威胁、W 接应；R 留反扑。不要为追远处箭目标丢掉保护位置。",
           "loadoutId": "tank-peel"
         }
       ],
@@ -14747,19 +14747,19 @@
         {
           "champion": "Lissandra",
           "role": "mid",
-          "job": "第二轮定点控制",
+          "job": "泰坦实际留人后 W 或已就绪 R 接控，E 二段只进入莎弥拉能跟进且可被接应的位置；自保 R 与控制敌人的 R 需要择一。泰坦落空或打断者仍威胁后排时不强进。",
           "loadoutId": "trio-control-mid"
         },
         {
           "champion": "Samira",
           "role": "bottom",
-          "job": "接控进场",
+          "job": "泰坦与冰女控制实际成立后跟同一目标，普攻和不同技能建立评价；实际达到 S 且打断威胁已处理才 R，W 留可挡飞行道具。评价不够或队友退出就停止 E/R 深入。",
           "loadoutId": "default"
         },
         {
           "champion": "Nautilus",
           "role": "support",
-          "job": "第一轮留人",
+          "job": "先确认两位输出距离，Q/被动普攻或已就绪 R 实际控制同一目标，与冰女后手错开；Q 被阻挡或莎弥拉没评价时转保护，不因三人到齐连交全部控制。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -14840,19 +14840,19 @@
         {
           "champion": "Veigar",
           "role": "mid",
-          "job": "分割走位",
+          "job": "E 封撤退路线，目标实际撞到边缘或被莫甘娜 Q 限制后 W/Q 输出；笼子中央不是眩晕，给烬保同一技能角度。控制全空或法力不足时收回远程守线。",
           "loadoutId": "default"
         },
         {
           "champion": "Jhin",
           "role": "bottom",
-          "job": "远程跟控",
+          "job": "确认队友伤害标记后 W 接同一目标，按实际弹药普攻，R 在安全远处引导；围栏没碰到目标时不预设命中。装填或黑盾保护距离断开就停追。",
           "loadoutId": "default"
         },
         {
           "champion": "Morgana",
           "role": "support",
-          "job": "先手禁锢与黑盾",
+          "job": "维迦 E 限路后 Q 找不被单位挡住的目标，W 跟受控区，E 提前给实际承受魔法控制的队友；黑盾不是受控后解控。Q 落空或护盾破掉就帮助回撤。",
           "loadoutId": "default"
         }
       ],
@@ -14907,19 +14907,19 @@
         {
           "champion": "Karma",
           "role": "mid",
-          "job": "加速护盾",
+          "job": "先报本轮 R 强化用途，E 或强化 E 帮队伍拉开，Q 消耗同一战区，W 需要维持连接才禁锢；不为追伤害离开金克丝。保护空档或核心被切时优先带退。",
           "loadoutId": "trio-karma"
         },
         {
           "champion": "Jinx",
           "role": "bottom",
-          "job": "持续火力与启动",
+          "job": "在两位保护距离内普攻最近安全目标，Q 枪形按距离和资源切换，W/E 接可靠限制；实际触发被动后才追可接触目标。没有击杀参与或保护已空时不预设加速冲入。",
           "loadoutId": "trio-crit-carry"
         },
         {
           "champion": "Lulu",
           "role": "support",
-          "job": "反突进",
+          "job": "E 护盾与卡尔玛错开，W 留真正的贴脸者或在安全输出期给友军增益，R 在金克丝实际受压时用；核心被迫移位就随她回撤，不两人把保护同时当进攻信号。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -15008,19 +15008,19 @@
         {
           "champion": "Zilean",
           "role": "mid",
-          "job": "加速与复活",
+          "job": "先处理中线再保持能支援图奇的距离，E 帮现身后进退，Q/W/Q 接同一载体，R 留实际被集火者；复活前后都留接应。图奇侧翼离开施法范围时不跟入敌阵追救。",
           "loadoutId": "default"
         },
         {
           "champion": "Twitch",
           "role": "bottom",
-          "job": "侧面开火",
+          "job": "Q 伪装前报将出现的一侧，R 可用且两位队友能支援才现身普攻，E 按实际毒层决定收尾；被发现或保护距离断开就退出，不把复活当必定安全落地。",
           "loadoutId": "trio-crit-carry"
         },
         {
           "champion": "Lulu",
           "role": "support",
-          "job": "护盾与反扑保护",
+          "job": "图奇在实际施法范围内才 E/W 增益，R 与基兰复活错开承伤窗口；W 可留对敌变羊，别把同次友军增益与变羊都算可用。复活点被守时接应退，不继续追。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -15104,19 +15104,19 @@
         {
           "champion": "Galio",
           "role": "mid",
-          "job": "接力与反开",
+          "job": "先清中线，洛 W/R 实际限制且当时位置在自己 R 范围内才支援；落地 W/E 错开续控。洛撑不到落地、目标已退出或尼菈跟不上时取消强接，R 不追踪移动敌人。",
           "loadoutId": "trio-control-mid"
         },
         {
           "champion": "Nilah",
           "role": "bottom",
-          "job": "近身输出",
+          "job": "先确认洛控制实际命中、加里奥到场和 E 退出目标，再 E 接近、Q 与普攻输出，R 已学可用才覆盖同一战区；W 留实际普攻压力。队友未到或回撤路径断开就不深进。",
           "loadoutId": "default"
         },
         {
           "champion": "Rakan",
           "role": "support",
-          "job": "开团后回撤",
+          "job": "先报可 E 返回的友军和队友距离，再 W 或已就绪 R 找同一目标；命中后给加里奥落地留时间，E 回可接应友军。W 落空、支援到不了或没有回跳目标时立即停追。",
           "loadoutId": "default"
         }
       ],
@@ -15189,19 +15189,19 @@
         {
           "champion": "Lux",
           "role": "mid",
-          "job": "远程接控",
+          "job": "与莫甘娜约好谁先 Q，禁锢实际成立后 E/R 接同一目标，另一人控制留后手；W 照看反扑。Q 落空或女警跟不上时恢复远程消耗，不同时赌两条控制。",
           "loadoutId": "default"
         },
         {
           "champion": "Caitlyn",
           "role": "bottom",
-          "job": "夹子与射程",
+          "job": "任一 Q 真正禁锢后 W 放到目标能触发的位置，夹子实际触发再接爆头与 Q；E 留退出。夹子未触发或双法师距离断开时不为爆头走入集火区。",
           "loadoutId": "default"
         },
         {
           "champion": "Morgana",
           "role": "support",
-          "job": "禁锢与黑盾",
+          "job": "先 Q 或留 Q 接拉克丝后手，W 跟受控区，E 提前给承受魔法控制的队友；不能等被控再黑盾当解控。两条 Q 都空或盾破时带女警后退，不靠盾无视站位。",
           "loadoutId": "default"
         }
       ],
@@ -15256,19 +15256,19 @@
         {
           "champion": "Orianna",
           "role": "mid",
-          "job": "护盾与反开",
+          "job": "E 按厄斐琉斯实际站位给盾并确认球位置，W 帮进退，R 接进入输出区的威胁或可靠控制；不能把球仍在身边当已附到核心。核心被迫换位时转接应。",
           "loadoutId": "trio-ball"
         },
         {
           "champion": "Aphelios",
           "role": "bottom",
-          "job": "枪械窗口输出",
+          "job": "先报主副武器与弹药，普攻和 Q 按当前主手效果输出，坠明需先减速再 Q 禁锢；R 按真实武器与安全角度用。武器即将更换或保护距离断开时不照搬上一轮连招。",
           "loadoutId": "trio-crit-carry"
         },
         {
           "champion": "Lulu",
           "role": "support",
-          "job": "持续护送",
+          "job": "E/W 支持当前可持续普攻的窗口，W 变羊与 R 留真正突进者，和发条控制错开；施法范围断开或核心需要移位就先帮退，不因双保护让核心站在敌方技能里。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -15361,19 +15361,19 @@
         {
           "champion": "Maokai",
           "role": "jungle",
-          "job": "挡突进与留人",
+          "job": "W 留进入射手输出区的威胁，Q 推离贴脸者，R 按实际路线封反扑；不为抓远处目标离开金克丝。米利欧保护空档或射手已退就回身接应，不把控制目标顶出输出区。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "champion": "Jinx",
           "role": "bottom",
-          "job": "远程收割",
+          "job": "先报可输出位置与装备窗口，在米利欧 W 覆盖内普攻最近安全目标，Q 按距离切换，W/E 接茂凯实际控制；只有实际触发被动才提速。保护空或阵型散就停止追击。",
           "loadoutId": "trio-crit-carry"
         },
         {
           "champion": "Milio",
           "role": "support",
-          "job": "解控与射程保护",
+          "job": "W 跟能安全普攻的金克丝、E 承接实际反击，Q 留贴脸者；R 已可用且能解除的控制实际成立才处理，不能解所有限制。射手离开覆盖或自己被控时先保退出。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -15471,19 +15471,19 @@
         {
           "champion": "Amumu",
           "role": "jungle",
-          "job": "第二轮范围控制",
+          "job": "蕾欧娜先控同一目标后 Q/R 接下一段，给女枪安全弹幕留区域；保留一段 Q 或回身处理打断者。前段落空或女枪没输出角度时停止深入，不全控制同时交掉。",
           "loadoutId": "default"
         },
         {
           "champion": "MissFortune",
           "role": "bottom",
-          "job": "弹幕收尾",
+          "job": "先确认侧后方引导位置与退路，两名前排控制实际命中后 R 覆盖同一区域；打断者仍在可接近位置时不承诺整段。侧翼被绕就取消引导移位。",
           "loadoutId": "default"
         },
         {
           "champion": "Leona",
           "role": "support",
-          "job": "先手定住",
+          "job": "女枪和阿木木能跟上才 E/Q 或 R 先手，W 承接反击，后手交给阿木木；控制落空或女枪被迫撤离时回身保护，不三人同时挤进窄口追人。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -15552,19 +15552,19 @@
         {
           "champion": "Vi",
           "role": "jungle",
-          "job": "定点切入",
+          "job": "泰坦实际留人后 Q 或已就绪 R 接同一目标，普攻/E 输出并给卡莎安全跟进区；目标队友反包或卡莎落点无退路时不继续突进，不把点名当保证击杀。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "champion": "Kaisa",
           "role": "bottom",
-          "job": "印记后跟进",
+          "job": "先确认目标实际有等离子标记且 R 可用，再选有接应与退路的落点；普攻/Q 处理可触及目标，E 按需要调位。泰坦控制落空、标记不在或落点危险就不 R 强跟。",
           "loadoutId": "default"
         },
         {
           "champion": "Nautilus",
           "role": "support",
-          "job": "留人与挡反扑",
+          "job": "从有视野角度 Q/被动普攻先留同一目标，R 与蔚后手错开，为卡莎保可触及战区；钩空或目标有反开支援时回身，留控制接应卡莎退出。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -15649,19 +15649,19 @@
         {
           "champion": "Sejuani",
           "role": "jungle",
-          "job": "留人与反开",
+          "job": "洛 W/R 实际命中后用 W 与近战队友普攻叠霜，四层才 E，R 留后续；霞的远程普攻不替自己叠霜。洛回跳或霞需自保时停追，Q 留接应。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "champion": "Xayah",
           "role": "bottom",
-          "job": "羽毛控制输出",
+          "job": "洛与猪妹控制成立后 Q/普攻布羽毛，回程至少三根实际穿目标才 E 求禁锢，R 留危险进场；羽毛位置不成立时不预设倒钩必中，洛回撤就一起退。",
           "loadoutId": "default"
         },
         {
           "champion": "Rakan",
           "role": "support",
-          "job": "进场与回撤",
+          "job": "先确认霞羽毛方向、猪妹位置与 E 返回友军，再 W/R 发起，命中后让猪妹接下一段；没有回跳目标或 W 落空时立即退，不等霞为救自己浪费自保 R。",
           "loadoutId": "default"
         }
       ],
@@ -15734,19 +15734,19 @@
         {
           "champion": "Ivern",
           "role": "jungle",
-          "job": "护盾与草丛空间",
+          "job": "大嘴开 W 前报 E 护盾与菊花位置，Q 限反扑但不要求大嘴点 Q 近身；护盾与璐璐错开，菊花挡入口。W 窗口结束或大嘴被迫移位就接应，不草丛掩盖敌方未知。",
           "loadoutId": "default"
         },
         {
           "champion": "KogMaw",
           "role": "bottom",
-          "job": "持续射程输出",
+          "job": "先确认 W 与至少一轮保护，在两位队友施法范围内持续普攻安全目标，Q/E 辅助限制；W 结束就拉开，不能因双盾和菊花把自己当可站桩承伤的前排。",
           "loadoutId": "default"
         },
         {
           "champion": "Lulu",
           "role": "support",
-          "job": "增益与变羊",
+          "job": "E 与翠神盾错开，W 在安全时给攻速、反扑时留变羊，R 按大嘴实际承伤用；护盾空档或翠神位置断开就协助退出，不同时交光所有保护。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -15816,19 +15816,19 @@
         {
           "champion": "Nocturne",
           "role": "jungle",
-          "job": "侧面切入",
+          "job": "先确认希维尔与蕾欧娜能跟进、目标在 R 范围且人数可知，再 R 切同一目标，Q/普攻输出、E 维持连接，W 留反击；关灯后落点被包就不独自续追。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "champion": "Sivir",
           "role": "bottom",
-          "job": "全队加速与清线",
+          "job": "三人实际距离允许时 R 提速帮助蕾欧娜留人，Q/普攻与 W 打可触及区域，E 留能挡的关键技能；魔腾落得过远就保持安全输出，不追去兑现预想加速。",
           "loadoutId": "default"
         },
         {
           "champion": "Leona",
           "role": "support",
-          "job": "正面留人",
+          "job": "确认两位输出能覆盖目标后 E/Q 或 R 留人，给魔腾报同一落点，W 承接反击；前段没中或希维尔被迫后退就停，不因魔腾关灯当敌方没有支援。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -15913,19 +15913,19 @@
         {
           "champion": "Zac",
           "role": "jungle",
-          "job": "远距离击飞",
+          "job": "先确认亚索 R 与牛头位置，E 落点实际命中才报击飞，Q 连接不同目标限制反扑；牛头留后手时自己回身接应。E 落空或落点危险就不等亚索强接。",
           "loadoutId": "default"
         },
         {
           "champion": "Yasuo",
           "role": "bottom",
-          "job": "接飞与持续输出",
+          "job": "扎克 E 或牛头 Q 实际击飞、自己 R 已学可用且落地有接应时才接 R，落地普攻/Q；没有有效击飞就守下路经验，不把普通眩晕当 R 入口。",
           "loadoutId": "melee-crit"
         },
         {
           "champion": "Alistar",
           "role": "support",
-          "job": "近身保护",
+          "job": "与扎克约好谁先手，先开时用 WQ/Q 实际击飞，后手时留 Q/W 接反扑或保护亚索；不要 W 顶走集火目标。亚索无 R 或扎克落空时回到下路保护。",
           "loadoutId": "tank-peel"
         }
       ],
@@ -16010,19 +16010,19 @@
         {
           "champion": "JarvanIV",
           "role": "jungle",
-          "job": "隔离目标",
+          "job": "等艾希或韦鲁斯 R 实际限制后 EQ 接近，R 仅在能限制敌人而不困住己方射手的位置用；Q/普攻同一目标。队友撤离要过墙时解除地形，控制落空就不强框。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "champion": "Varus",
           "role": "bottom",
-          "job": "箭雨消耗",
+          "job": "和艾希约好先后，前段控制实际命中再 R 或 E/Q 跟进；按当前穿甲路线消耗，留安全侧面。两位无位移射手被切或技能空档时拉开，不进皇子圈内硬打。",
           "loadoutId": "spell-lethality"
         },
         {
           "champion": "Ashe",
           "role": "support",
-          "job": "视野与留人",
+          "job": "E 观察将走路线，确认队友能覆盖才 R 发起或留后手，与韦鲁斯 R 错开；W 减速帮助退出。箭过远或皇子落点无法支援时停追，守好两名射手退路。",
           "loadoutId": "ashe-utility"
         }
       ],
@@ -16117,19 +16117,19 @@
         {
           "champion": "Shen",
           "role": "top",
-          "job": "远距离护送",
+          "job": "先明确 R 支援扎克还是洛，从安全位置引导，落地 E 留反扑、W 保护附近普攻承伤；另外两名队友输出无法到场时不把支援当三人必杀，优先接应撤退。",
           "loadoutId": "trio-frontline"
         },
         {
           "champion": "Zac",
           "role": "jungle",
-          "job": "击飞聚拢",
+          "job": "确认洛能接控、慎能支援且真正输出位到场，再 E 实际击飞，Q/W 限同一战区；落点被包或输出跟不上就回接应，不只凭三名前排到齐开团。",
           "loadoutId": "default"
         },
         {
           "champion": "Rakan",
           "role": "support",
-          "job": "接控与撤退",
+          "job": "扎克 E 实际命中后 W/R 接下一段，E 返回慎或其他安全友军；先报回跳目标，别与扎克同时盲开。慎支援受阻或输出未到时转保护，不续追深处。",
           "loadoutId": "default"
         }
       ],
@@ -16202,19 +16202,19 @@
         {
           "champion": "Ornn",
           "role": "top",
-          "job": "前排与远距离逼位",
+          "job": "确认队友有实际持续输出距离后 R 逼位，二段实际撞中再接 Q/E 地形控制；与猪妹控制错开。真正输出位不能跟进时回保护位置，不把三前排当独立秒人链。",
           "loadoutId": "trio-frontline"
         },
         {
           "champion": "Sejuani",
           "role": "jungle",
-          "job": "接控留人",
+          "job": "奥恩控制实际成立后 W 与附近近战普攻叠霜，四层才 E，R 留下一段；Q 不当叠层。布隆要保护输出而未到场时停追，不为层数把射手留在后方。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "champion": "Braum",
           "role": "support",
-          "job": "盾与被动保护",
+          "job": "先守真正输出位，Q/普攻挂被动、E 朝实际飞行威胁，W 留回跳友军；R 接反扑而非追奥恩最远目标。队友都往前时更要保接应路线，不离开核心补控制。",
           "loadoutId": "tank-peel"
         }
       ],
@@ -16297,19 +16297,19 @@
         {
           "champion": "Malphite",
           "role": "top",
-          "job": "范围反开",
+          "job": "先留 R 观察敌方救援是否集中，蕾欧娜与蔚已留单点时用 Q/E 承接，R 只开队友能覆盖的多人或反扑；不要三人大招砸一人，输出未到就回接应。",
           "loadoutId": "trio-frontline"
         },
         {
           "champion": "Vi",
           "role": "jungle",
-          "job": "点名留人",
+          "job": "蕾欧娜实际留人后 Q 或已就绪 R 接同一目标，普攻/E 兑现；先确认真正输出位跟得上与敌方反包人数。石头 R 未开不等于要追更深，退路断开就停。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "champion": "Leona",
           "role": "support",
-          "job": "第一轮控制",
+          "job": "先从有视野角度 E/Q 或 R 找队友可处理的落单目标，W 承伤后让蔚接下一段；石头保 R 应对救援。前段没中或输出不在时回保护，不继续单人深入。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -16402,19 +16402,19 @@
         {
           "champion": "Rumble",
           "role": "top",
-          "job": "封撤退路线",
+          "job": "泰坦控制实际成立后按退路铺 R，热量自己确认，Q/W 只在可安全接触的位置接续；女枪侧翼被切或敌人已离火区时不要追出控制范围。",
           "loadoutId": "default"
         },
         {
           "champion": "MissFortune",
           "role": "bottom",
-          "job": "弹幕输出",
+          "job": "先确认安全引导角度，泰坦实际控制后 R 覆盖兰博封住的同一区域；打断者逼近就中止引导移位。两位范围大招方向不同就重新沟通，不为了打满而贴前。",
           "loadoutId": "default"
         },
         {
           "champion": "Nautilus",
           "role": "support",
-          "job": "留人",
+          "job": "两位输出可覆盖时 Q/被动普攻或 R 控同一目标，留一段控制照看女枪打断者；钩空、女枪无安全角度或兰博 R 未就绪时转保护，不先进去等整套。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -16483,19 +16483,19 @@
         {
           "champion": "Shen",
           "role": "top",
-          "job": "护盾与反扑控制",
+          "job": "先报 R 支援莎弥拉还是芮尔，并从安全处给实际承伤者护盾；落地 E 限打断者、W 挡附近普攻压力。引导受阻或莎弥拉未到 S 时不催她开 R 强接。",
           "loadoutId": "trio-frontline"
         },
         {
           "champion": "Samira",
           "role": "bottom",
-          "job": "评价叠层与近身输出",
+          "job": "芮尔实际控住同一目标后普攻与不同技能建立评价，W 留可挡的关键飞行道具；达到 S 且引导环境安全才 R。慎未落地或打断威胁仍在时缩短输出，不强 E 深入。",
           "loadoutId": "default"
         },
         {
           "champion": "Rell",
           "role": "support",
-          "job": "聚拢",
+          "job": "确认莎弥拉能跟进与慎支援对象，W/Q 实际控制后 R 覆盖同一战区，给莎弥拉建立评价时间；W 落空、慎赶不到或无退出路线时停追，R 不当持续眩晕。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -16574,19 +16574,19 @@
         {
           "champion": "Malphite",
           "role": "top",
-          "job": "击飞与反开",
+          "job": "先确认金克丝能安全输出，R 用于可覆盖多人或处理突进，实际击飞后 Q/E 接反击；开得过远没有火力就回身。不要只看命中人数，把核心留给另一方向威胁。",
           "loadoutId": "trio-frontline"
         },
         {
           "champion": "Jinx",
           "role": "bottom",
-          "job": "持续输出和收割",
+          "job": "在璐璐保护距离内普攻安全目标，Q 按射程与资源切换，W/E 接石头实际控制；只有实际触发被动后才判断追击。石头远开或保护空掉时守原输出区。",
           "loadoutId": "trio-crit-carry"
         },
         {
           "champion": "Lulu",
           "role": "support",
-          "job": "护送核心",
+          "job": "E 按实际承伤给金克丝，W 变羊与 R 留突进者，安全普攻期才给友军 W 增益；石头远开时更要守核心，保护结束或队形散就帮撤离。",
           "loadoutId": "enchanter-protect"
         }
       ],
@@ -16684,19 +16684,19 @@
         {
           "champion": "Kennen",
           "role": "top",
-          "job": "侧翼范围控制",
+          "job": "先看安全侧翼与维克托覆盖距离，R 已可用才 E/R 入场，W 按实际印记衔接；布隆仍守后排。没有视野、维克托未到或退出路线被封时不强切。",
           "loadoutId": "default"
         },
         {
           "champion": "Viktor",
           "role": "mid",
-          "job": "区域输出",
+          "job": "W 重力场铺凯南实际进入的战区，E/Q 与已就绪 R 跟同一目标区；按当前强化状态自己核对，不假定 W 立即眩晕。侧翼被绕或凯南孤立时转守输出区。",
           "loadoutId": "default"
         },
         {
           "champion": "Braum",
           "role": "support",
-          "job": "守核心与接控",
+          "job": "先站维克托身边，Q/普攻挂被动、E 朝真实飞行威胁，W 接应后排，R 留反扑；凯南找侧翼时不要一同离开核心，队友输出区被突破就先保护撤离。",
           "loadoutId": "tank-peel"
         }
       ],
@@ -16765,19 +16765,19 @@
         {
           "champion": "Camille",
           "role": "top",
-          "job": "锁定关键目标",
+          "job": "确认发条球仍附自己与洛先手命中后，E 从墙面接近、R 留同一目标，Q 强化二段按间隔输出；球返回或洛无安全回跳时不独自深入等待发条补 R。",
           "loadoutId": "default"
         },
         {
           "champion": "Orianna",
           "role": "mid",
-          "job": "送球与范围控制",
+          "job": "E 把球交给卡蜜尔，洛控住、卡蜜尔落点确认后再按实际球位 R/W；保自己的安全施法距离。卡蜜尔位移让球返回或敌人离开球区时立即停接，不盲按 R。",
           "loadoutId": "trio-ball"
         },
         {
           "champion": "Rakan",
           "role": "support",
-          "job": "第一轮聚拢",
+          "job": "先报可 E 返回的友军，W/R 实际控同一目标后让卡蜜尔接近、发条按球位续控；E 留接应返回。W 落空、球已返回或卡蜜尔目标超出队友覆盖就转保护。",
           "loadoutId": "default"
         }
       ],
@@ -16849,19 +16849,19 @@
         {
           "champion": "Poppy",
           "role": "top",
-          "job": "限制位移与阻挡",
+          "job": "先观察真实墙体方向，卡牌黄牌或烬 W 生效后 E 找撞墙，Q 跟同一落点、W 留突进；没有地形就不预设眩晕，不把目标推离队友技能角度。",
           "loadoutId": "trio-frontline"
         },
         {
           "champion": "TwistedFate",
           "role": "mid",
-          "job": "黄牌与支援",
+          "job": "先清中线，R 看清人数与安全落点后带已选 W 黄牌支援，黄牌实际生效才让两人接；法术盾挡住控制或落点被守时报停，不把安全落地当必定留人。",
           "loadoutId": "trio-tf"
         },
         {
           "champion": "Jhin",
           "role": "bottom",
-          "job": "远距离接控",
+          "job": "队友实际伤害标记成立后 W 接同一目标，按弹药普攻，R 留安全远处；波比还未撞墙时不预设控制。装填、黄牌被挡或队友退出时结束追击。",
           "loadoutId": "default"
         }
       ],
