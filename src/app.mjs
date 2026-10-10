@@ -94,7 +94,8 @@ async function refreshPairData(){
 }
 let catalogPreview=null,catalogBusy=false,catalogRequest=0,catalogEditorKind="trio",resultDraftSignature="";
 let comboView=null,dragPick=null,draggedAt=0,pendingDragRender=false,activeRecommendation=null,generating=false,recommendationRun=0;
-function cancelRecommendation(){recommendationRun++;if(activeRecommendation){activeRecommendation.cancel();activeRecommendation=null;}generating=false;}
+let cancelRecommendationReveal=()=>{};
+function cancelRecommendation(){cancelRecommendationReveal();recommendationRun++;if(activeRecommendation){activeRecommendation.cancel();activeRecommendation=null;}generating=false;}
 let client={connected:false,phase:'Offline',message:'正在检查客户端…'},syncing=false,unassigned=[],enemy=[],clientBans=[];
 let picker=null,buildView=null,detailResult=null,updating=false,pinned=false;
 let libraryQuery='',libraryRole='all',hexQuery='',hexRarity='all',hexHero=null,hexSelected=[],hexSelectedOnly=false,hexForHero=false;
@@ -425,23 +426,29 @@ function calculateRecommendation(input){
  });
 }
 async function generate(next=false){
- if(generating)return;recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();
+ if(generating)return;cancelRecommendationReveal();recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();
  try{offset=next?offset+(results.length||(windowLayout.docked?6:3)):0;const input=recommendationInput();
   const signature=recommendationKey(input);
   let result=await calculateRecommendation(input);if(!result.length&&offset){offset=0;result=await calculateRecommendation({...input,offset:0});}
   if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;
   for(const r of result)if(r.creative)resultCreativePlan(r);results=result;resultsSignature=signature;if(!result.length)recommendationError='当前位置英雄池与公开选人无法组成不重复的阵容，请调整限制';if(!results.length)toast(recommendationError,true);else reveal=true;
  }catch(err){if(!err.cancelled&&run===recommendationRun){recommendationError=err.message;toast(err.message,true);}}finally{if(run===recommendationRun){generating=false;render();}}
- // Use viewport coordinates after the final render: wrapped toolbars and
- // browser zoom can change the layout while scrolling reveals the results.
+ // Zoom and wrapped toolbars can settle after the first paint. Keep the
+ // requested result heading aligned until the user takes over scrolling.
  if(reveal){await document.fonts.ready;
-  for(let frame=0;frame<2;frame++){
-   if(run!==recommendationRun||resultsSignature!==recommendationKey(recommendationInput()))return;
-   const heading=document.querySelector('.recommend-heading'),topbar=document.querySelector('.topbar');if(!heading||!topbar)return;
-   const offset=heading.getBoundingClientRect().top-topbar.getBoundingClientRect().height-12;
-   window.scrollBy({top:offset,behavior:'instant'});
-   if(frame===0)await new Promise(resolve=>requestAnimationFrame(resolve));
-  }
+  if(run!==recommendationRun||resultsSignature!==recommendationKey(recommendationInput()))return;
+  const heading=document.querySelector('.recommend-heading'),topbar=document.querySelector('.topbar');if(!heading||!topbar)return;
+  const controller=new AbortController(),observer=new ResizeObserver(()=>align());
+  const stop=()=>{controller.abort();observer.disconnect();if(cancelRecommendationReveal===stop)cancelRecommendationReveal=()=>{};};
+  const align=()=>{
+   if(controller.signal.aborted)return;
+   if(!heading.isConnected||run!==recommendationRun||resultsSignature!==recommendationKey(recommendationInput())){stop();return;}
+   window.scrollBy({top:heading.getBoundingClientRect().top-topbar.getBoundingClientRect().bottom-12,behavior:'instant'});
+  };
+  cancelRecommendationReveal=stop;
+  for(const event of ['pointerdown','wheel','touchstart','keydown'])window.addEventListener(event,stop,{capture:true,passive:true,signal:controller.signal});
+  window.addEventListener('resize',align,{signal:controller.signal});
+  observer.observe(heading);observer.observe(topbar);align();
  }
 }
 const sync=createClientSync(performSync);

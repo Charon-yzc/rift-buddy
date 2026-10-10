@@ -1,4 +1,6 @@
 const {app,ipcMain,globalShortcut,session}=require('electron');
+// Reproduce Windows CI geometry independently of the host display's DPI.
+app.commandLine.appendSwitch('force-device-scale-factor','1');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[];
 let fixture,sourceEntries,runeWrites=0,sourceRefreshes=0;
@@ -31,6 +33,11 @@ async function run(){
  const click=async selector=>{await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(100);};
  const sync=async()=>{await click('[data-action=sync]');await until(()=>js('!document.querySelector("[data-action=sync]").disabled'),'Sync not completed');};
  const generate=async()=>{await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length>0'),'Worker produced no cards');};
+ const viewport=async(width,zoom,textScale)=>{
+  main.setContentSize(width,820);main.webContents.setZoomFactor(zoom);await js('window.buddy.presentation({field:"textScale",value:'+textScale+'})');
+  await until(()=>js('Math.abs(innerWidth-'+width+'/'+zoom+')<=1&&Math.abs(innerHeight-820/'+zoom+')<=1&&Number(getComputedStyle(document.documentElement).getPropertyValue("--text-scale"))==='+textScale),'Viewport or saved text size did not settle');
+  await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+ };
  const mainIds=()=>js('[...document.querySelectorAll(".result-card .card-members [data-action=build][data-role=mid]")].map(el=>el.dataset.id)');
  const sideIds=()=>js('[...document.querySelectorAll(".companion-candidate [data-action=companion-preview][data-role=mid]")].map(el=>el.dataset.id)');
  const fitIds=()=>js('[...document.querySelectorAll("[data-opponent-fit]")].map(el=>el.dataset.enemyIds)');
@@ -39,7 +46,7 @@ async function run(){
  assert.equal(await js('document.querySelector("#solo-role").value'),'mid');
  await generate();const frontline=await mainIds(),headingGeometry=[];
  for(const [width,zoom,textScale] of [[1180,1,1],[1051,1.25,1],[1180,1.5,1],[1180,1,1.25],[1051,1.25,1.25],[1180,1.5,1.25]]){
-  main.setContentSize(width,820);main.webContents.setZoomFactor(zoom);await js('document.documentElement.style.setProperty("--text-scale",'+textScale+')');await delay(150);
+  await viewport(width,zoom,textScale);
   for(const action of ['recommend','reroll']){
    await click('[data-action='+action+']');await until(()=>js('!!document.querySelector(".recommend-heading")&&!document.querySelector("[data-action=recommend]").disabled'),'Recommendation did not finish');await delay(650);
    const geometry=await js('(()=>{const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}};return {viewport:[innerWidth,innerHeight],topbar:rect(".topbar"),title:rect(".recommend-heading h2"),description:rect(".recommend-heading p"),actions:[...document.querySelectorAll(".draft-result-actions button")].map(el=>{const r=el.getBoundingClientRect();return {label:el.textContent,top:r.top,bottom:r.bottom,left:r.left,right:r.right}})}})()');
@@ -47,7 +54,13 @@ async function run(){
    assert.ok(geometry.actions.length>0);headingGeometry.push({width,zoom,textScale,action,...geometry});
   }
  }
- await capture('main-heading-readable.png');main.webContents.setZoomFactor(1);main.setContentSize(1180,820);await js('document.documentElement.style.removeProperty("--text-scale")');await generate();
+ // Resizing after calculation must preserve visibility without another click.
+ await viewport(1051,1.25,1);
+ assert.ok(await js('document.querySelector(".recommend-heading h2").getBoundingClientRect().top>=document.querySelector(".topbar").getBoundingClientRect().bottom+8'),'Completed result lost its position after zoom');
+ await js('window.dispatchEvent(new WheelEvent("wheel"));window.scrollTo({top:0,behavior:"instant"})');await viewport(1180,1,1);
+ assert.equal(await js('scrollY'),0,'Result reveal took over scrolling after user input');
+ await generate();await delay(700);
+ await capture('main-heading-readable.png');await viewport(1180,1,1);await generate();
  assert.ok((await fitIds()).every(ids=>ids==='DrMundo,Chogath,Garen'));
  assert.equal(await js('[...document.querySelectorAll("[data-opponent-fit]")].some(el=>el.textContent.includes("劫"))'),false,'Enemy hover was treated as confirmed');
  fixture.session=draft(['Ashe','Hecarim','Fiddlesticks']);await sync();
@@ -83,7 +96,7 @@ async function run(){
  await click('[data-action=companion-tab][data-tab=recommend]');
  await until(()=>js('document.querySelectorAll(".companion-candidate").length>0'),'Sidebar did not regenerate after source refresh');
  assert.equal(runeWrites,0);
- const result={passed:true,source,headingGeometry,systemDpi:'UNPROVEN',archiveSha256:release.archiveSha256,frontline,engage,visibleWorkerOrderingChanged:true,mirrorEligibilityIndependent:true,mirrorOnlyChangeInvalidated:true,
+ const result={passed:true,source,headingGeometry,systemDpi:'UNPROVEN',testDeviceScaleFactor:1,userScrollCancelsReveal:true,resizeKeepsCompletedResultVisible:true,archiveSha256:release.archiveSha256,frontline,engage,visibleWorkerOrderingChanged:true,mirrorEligibilityIndependent:true,mirrorOnlyChangeInvalidated:true,
   mainAndSidebarExplain:true,enemyHoverIgnored:true,removedEnemyCleared:true,reconnectNewGameCleared:true,sourceRefreshInvalidatedMain:true,sourceRefreshCancelledPendingWorker:true,sourceRefreshRegeneratedSidebar:true,sourceRefreshes,sidebarOverflow:false,runeWrites};
  await fs.writeFile(path.join(root,'result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
