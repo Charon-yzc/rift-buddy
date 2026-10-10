@@ -68,7 +68,7 @@ test('freezing a catalog plan preserves existing explicit rune, item and loadout
  const restored=recallPreparation(store,null,context);assert.equal(restored.loadoutId,'default');assert.equal(restored.runeId,runeId);assert.equal(restored.comboId,plan.id);
  const member=captureTeamConfigurations({...result,creativePlan:plan},data,store).find(s=>s.id==='Orianna');
  assert.equal(member.loadoutId,'default');assert.equal(member.runeId,runeId);assert.deepEqual(member.conditions,['ap']);
- const current=getBuild(hero('Orianna'),'mid',data,{...context});assert.equal(current.loadoutId,'default');assert.equal(current.reference.patch,data.patch);assert.ok(current.selectionWarnings.some(w=>w.includes('原组合配装')));
+ const current=getBuild(hero('Orianna'),'mid',data,{...context});assert.equal(current.loadoutId,'trio-ball');assert.equal(current.rulesPatch,data.patch);assert.equal(current.reference,null);
  const original=getBuild(hero('Orianna'),'mid',data,{...context,loadoutId:'trio-ball'});assert.equal(original.loadoutId,'trio-ball');assert.equal(original.reference,null);
 });
 

@@ -115,7 +115,7 @@ test('prior cooperation saves without phase notes remain unchanged and new contr
  const [row]=recommend({slots:setup(trio.map(m=>m.role),trio.map(m=>[m.role,m.champion])),champions:data.champions,scope:'party'});
  const plan=captureCreativePlan(row,data),old=structuredClone(plan);
  delete old.stagePlan;
- for(const field of ['opening','economy','memberJobs','relaySteps'])delete old.cooperation[field];
+ for(const field of ['opening','economy','memberJobs','relaySteps','routes'])delete old.cooperation[field];
  old.cooperation.steps=old.cooperation.edges.map(e=>e.step);old.cooperation.why=old.cooperation.steps.join(' ');old.steps=[...old.cooperation.steps];old.why=old.cooperation.why;old.ordered=old.members.map(m=>({...m,job:old.cooperation.edges.filter(e=>[e.a,e.b].includes(m.champion)).map(e=>e.step).join(' ')}));
  old.plan='先确认双方技能与站位，再按已保存的联动顺序行动；任一成立条件不满足就停止强接。';old.id=creativePlanId(old);
  assert.deepEqual(validateCreativePlan(JSON.parse(JSON.stringify(old))),old);

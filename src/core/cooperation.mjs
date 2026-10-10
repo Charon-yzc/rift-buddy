@@ -86,6 +86,13 @@ function connectedEdges(members,graph){
  return null;
 }
 export function cooperationPlan(members,graph,preferences={}){
+ const basePlan=baseCooperationPlan(members,graph,preferences);
+ const alternative=members.filter(m=>m.champion).length===3?partyCooperationPlan(members.filter(m=>m.champion),graph,{...preferences,basePlan}):null;
+ if(!alternative)return basePlan;
+ if(basePlan.kind==='shared')return alternative;
+ return {...basePlan,routes:[alternative.routes.find(r=>r.id==='original-group'),...alternative.routes.filter(r=>r.id!=='original-group')]};
+}
+function baseCooperationPlan(members,graph,preferences={}){
  members=members.filter(m=>m.champion);
  if(members.length>=4)return partyCooperationPlan(members,graph,preferences);
  if(![2,3].includes(members.length)||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;

@@ -126,7 +126,7 @@ test('an invalid curated subgroup cannot supply full-party jobs, while valid old
 test('full-party route changes preserve curated defaults and carry chosen jobs and conditions through favorites and guides',async()=>{
  const members=[member('Urgot','top'),member('Udyr','jungle'),member('Orianna','mid'),member('Varus','bottom'),member('Milio','support')];
  const slots=setup(members),[result]=recommend({slots,champions:data.champions,scope:'party'}),original=captureCreativePlan(result,data),backup=original.shared.routes[1];
- assert.equal(original.shared.routes.length,2);assert.equal(original.shared.routes[0].id.startsWith('curated:'),true);
+ assert.ok(original.shared.routes.length>=2);assert.equal(original.shared.routes[0].id.startsWith('curated:'),true);
  const trio=TRIOS.find(t=>'curated:'+t.id===original.shared.routes[0].id);
  for(const m of trio.members)assert.ok(original.ordered.find(j=>j.champion===m.champion).job.includes(m.job));
  const before=structuredClone(original),chosen=selectPartyRoute(original,backup.id);

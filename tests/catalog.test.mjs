@@ -24,7 +24,7 @@ test('pack rejects duplicate heroes, incompatible configs, bad items, rune pages
  assert.equal(safeSourceURL('https://user:secret@site.example/file.json'),false);
 });
 test('patch review is per combo and invalid equipment marks only affected configs',()=>{
- const next={...data,patch:'16.20',items:{...data.items}};delete next.items[3142];const combo=BUNDLED_CATALOG.duos.find(d=>d.carry==='Varus'&&d.support==='Ashe');const issues=catalogIssues(clone(),next);assert.equal(issues.stale,BUNDLED_CATALOG.duos.length+BUNDLED_CATALOG.trios.length);assert.ok(issues.status[combo.id].invalid);assert.equal(issues.status['jarvan-galio-mf'].invalid,false);assert.ok(issues.errors.length);
+ const next={...data,patch:'16.20',items:{...data.items}};delete next.items[3142];const combo=BUNDLED_CATALOG.duos.find(d=>d.carry==='Varus'&&d.support==='Ashe');const issues=catalogIssues(clone(),next);assert.equal(issues.stale,BUNDLED_CATALOG.duos.length+BUNDLED_CATALOG.trios.length-1);assert.equal(issues.status['galio-nilah-rakan'].stale,false);assert.ok(issues.status[combo.id].invalid);assert.equal(issues.status['jarvan-galio-mf'].invalid,false);assert.ok(issues.errors.length);
  const b=getBuild(hero('Varus'),'bottom',next,{comboId:combo.id});assert.equal(b.loadoutId,'default');assert.ok(b.selectionWarnings.length);
 });
 test('preview is inert, apply/rollback survive restart and retain custom combos',async()=>{

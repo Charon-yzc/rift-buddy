@@ -18,10 +18,12 @@ export function capturePlanStages(plan,data,combo=null){
    return {...m,job,patch:original?.patch||(id==='key'?plan.patch:task.patch),reviewedAt:original?.reviewedAt||(id==='key'?(plan.curated?.reviewedAt||plan.shared?.reviewedAt||plan.cooperation?.reviewedAt||plan.createdAt):task.reviewedAt),...(task?.generic&&id!=='key'?{generic:true}:{})};
   });
   if(memberJobs.some(m=>!m))return null;
-  const original=duo?.stages[id],patch=duo?.patch||(id==='key'?plan.patch:memberJobs[0].patch),reviewedAt=duo?.reviewedAt||memberJobs[0].reviewedAt;
-  const steps=original?.steps||(id==='key'?[...plan.steps]:memberJobs.map(m=>names.get(m.champion)+'：'+m.job));
-  const window=original?.window||(id==='key'?plan.window:id==='opening'?'先确认各自兵线或安全营地、已学技能与到位时间；有各自资源任务时先完成，不要求多人空等。':'资源前先处理安全兵线，与核心约同侧进入；关键配合仍须满足原来的技能、距离与落点条件。');
-  const exit=original?.exit||(id==='key'?plan.caution:id==='opening'?'生命资源不足、兵线无人接或安全出口断开时取消会合，保各自经验。':'核心被迫退出、保护或关键进场交空、成员分到不同战区就退回接应范围，不为第二个目标丢站位。');
+  const opening=id==='opening'?(plan.curated?.early||plan.shared?.opening||plan.cooperation?.opening):null;
+  const original=duo?.stages[id],patch=duo?.patch||(id==='key'||opening?plan.patch:memberJobs[0].patch),reviewedAt=duo?.reviewedAt||(opening?(plan.curated?.reviewedAt||plan.shared?.reviewedAt||plan.cooperation?.reviewedAt||plan.createdAt):memberJobs[0].reviewedAt);
+  const steps=original?.steps||(id==='key'?[...plan.steps]:[...(opening?[opening]:[]),...memberJobs.map(m=>names.get(m.champion)+'：'+m.job)]);
+  const route=id==='later'?plan.shared?.routes?.[0]:null;
+  const window=original?.window||(id==='key'?plan.window:id==='opening'?'先确认各自兵线或安全营地、已学技能与到位时间；有各自资源任务时先完成，不要求多人空等。':route?route.condition:'资源前先处理安全兵线，与核心约同侧进入；关键配合仍须满足原来的技能、距离与落点条件。');
+  const exit=original?.exit||(id==='key'?plan.caution:id==='opening'?'生命资源不足、兵线无人接或安全出口断开时取消会合，保各自经验。':route?route.failure:'核心被迫退出、保护或关键进场交空、成员分到不同战区就退回接应范围，不为第二个目标丢站位。');
   result[id]={label,patch,reviewedAt,memberJobs,steps:[...steps],window,exit};
  }
  return validatePlanStages(result,plan.members);
@@ -44,12 +46,13 @@ export function validatePlanStages(value,members){
  return result;
 }
 
-// A route switch changes the accepted key action, while opening and later
-// decisions keep the same frozen member roles and source versions.
+// Route switches update shared action and regrouping conditions. Personal
+// opening/later jobs and their original source versions remain frozen.
 export function updatePlanKeyStage(plan){
  if(!plan.stagePlan)return plan;
  const current=plan.stagePlan.key;
- return {...plan,stagePlan:{...plan.stagePlan,key:{...current,patch:plan.patch,steps:[...plan.steps],window:plan.window,exit:plan.caution,memberJobs:plan.members.map(m=>({...current.memberJobs.find(p=>memberKey(p)===memberKey(m)),job:plan.ordered.find(p=>memberKey(p)===memberKey(m)).job,patch:plan.patch}))}}};
+ const route=plan.shared?.routes?.[0],later=plan.stagePlan.later;
+ return {...plan,stagePlan:{...plan.stagePlan,...(route?{later:{...later,window:route.condition,exit:route.failure}}:{}),key:{...current,patch:plan.patch,steps:[...plan.steps],window:plan.window,exit:plan.caution,memberJobs:plan.members.map(m=>({...current.memberJobs.find(p=>memberKey(p)===memberKey(m)),job:plan.ordered.find(p=>memberKey(p)===memberKey(m)).job,patch:plan.patch}))}}};
 }
 
 export function savedMemberPlay(plan,champion,role){
