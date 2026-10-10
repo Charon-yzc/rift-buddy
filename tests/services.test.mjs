@@ -42,6 +42,13 @@ test('room nickname preferences sanitize, cap at 24 and fall back to the default
  assert.equal(validateState({...defaultState(),preferences:{roomNick:'x'.repeat(25)}}).preferences.roomNick,'队友');
  assert.equal(validateState({...defaultState(),preferences:{roomNick:' '}}).preferences.roomNick,'队友');
  assert.equal(validateState(defaultState()).preferences.roomNick,'队友');
+// The relay address is the user's own: stored as-is when it is usable, and
+// dropped rather than kept as something that could be pointed at the LAN later.
+assert.equal(validateState({...defaultState(),preferences:{relayUrl:' wss://room.example.com '}}).preferences.relayUrl,'wss://room.example.com');
+assert.equal(validateState({...defaultState(),preferences:{relayUrl:'wss://room.example.com'}}).preferences.relayUrl,'wss://room.example.com');
+for(const bad of ['ws://room.example.com','http://room.example.com','wss://169.254.169.254','wss://10.0.0.1','wss://user:pass@room.example.com','wss://room.example.com/x','wss://'+'a'.repeat(300),'   ',null,undefined,42])
+ assert.equal(validateState({...defaultState(),preferences:{relayUrl:bad}}).preferences.relayUrl,'',`should drop ${JSON.stringify(bad)}`);
+assert.equal(validateState(defaultState()).preferences.relayUrl,'');
 });
 
 test('automatic pick ownership survives restart, while loaded favorites stay manual',async()=>{

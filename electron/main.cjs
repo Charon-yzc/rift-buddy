@@ -169,6 +169,7 @@ async function boot(){
  guard('room-status',()=>roomService?roomService.snapshot():null);
  guard('room-host',nick=>ensureRoom(nick).host());
  guard('room-join',(target,nick)=>ensureRoom(nick).join(target||{}));
+ guard('room-relay',(target,nick)=>ensureRoom(nick).relay(target||{}));
  guard('room-leave',()=>{if(!roomService)return null;roomService.leave();return roomService.snapshot();});
  guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return roomService.publish(share);});
  guard('room-scan',()=>ensureRoom(state.preferences.roomNick).scan());

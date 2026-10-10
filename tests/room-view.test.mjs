@@ -88,3 +88,51 @@ test('a hand-crafted share cannot open a wrong build mode',()=>{
  assert.match(roomPanel({room:snapshot({members:[member('aram')]}),nick:'队友丙',champ}),/data-action="room-build" data-id="Ahri" data-role="mid" data-mode="aram"[^>]*disabled/);
  assert.match(roomPanel({room:snapshot({members:[member('hex')]}),nick:'队友丙',champ}),/data-mode="hex"/);
 });
+
+test('the idle panel offers both transports and says which one is selected',()=>{
+ const html=roomPanel({room:null,nick:'小明',champ});
+ assert.match(html,/data-action="room-transport" data-id="lan" aria-pressed="true"/);
+ assert.match(html,/data-action="room-transport" data-id="relay" aria-pressed="false"/);
+ assert.match(html,/同一网络或虚拟局域网内共享阵容/);
+ assert.match(html,/data-action="room-host"/);
+ assert.doesNotMatch(html,/room-relay-join/);
+ const relay=roomPanel({room:null,nick:'小明',transport:'relay',champ});
+ assert.match(relay,/data-action="room-transport" data-id="relay" aria-pressed="true"/);
+ assert.match(relay,/data-action="room-transport" data-id="lan" aria-pressed="false"/);
+ assert.match(relay,/经中继跨网共享阵容/);
+ assert.match(relay,/data-action="room-relay-join"/);
+ assert.doesNotMatch(relay,/room-host|room-scan|room-invite/);
+});
+
+test('the relay form asks for an address, a room code and a pin, and ships no default relay',()=>{
+ const html=roomPanel({room:null,nick:'队友',transport:'relay',relayUrl:'wss://room.example.com',relayRoom:'482913',pin:'123456',champ});
+ assert.match(html,/id="room-relay-url" value="wss:\/\/room\.example\.com"/);
+ assert.match(html,/id="room-relay-room" value="482913"/);
+ assert.match(html,/id="room-pin" value="123456"/);
+ assert.match(html,/助手不内置任何公共中继/);
+ assert.match(html,/哈希/);
+ const empty=roomPanel({room:null,nick:'队友',transport:'relay',champ});
+ assert.match(empty,/id="room-relay-url" value=""/);
+ assert.doesNotMatch(empty,/wss:\/\/room\.[a-z0-9-]+\.[a-z]{2,}/i);
+});
+
+test('an active relay room shows the link state and never a LAN invite code',()=>{
+ const room=snapshot({mode:'client',transport:'relay',pin:null,port:null,relayUrl:'wss://room.example.com',link:'connected',members:[{nick:'我',online:true,share:null,self:true},{nick:'队友甲',online:true,share:{lineup:[{role:'top',champion:'Garen'},{role:'jungle',champion:null},{role:'mid',champion:null},{role:'bottom',champion:'Ashe'},{role:'support',champion:null}],pick:null,at:Date.now()},self:false}]});
+ const html=roomPanel({room,nick:'我',addresses:[{name:'以太网',address:'10.0.0.2'}],champ});
+ assert.match(html,/经中继/);
+ assert.match(html,/room-link">已连接/);
+ assert.match(html,/data-action="room-copy-relay"/);
+ assert.match(html,/中继 wss:\/\/room\.example\.com｜房间 482913/);
+ assert.doesNotMatch(html,/room-copy-invite|room-refresh-addresses/);
+ // The pin itself must never reach the relay panel: the relay only ever saw
+ // its hash, so there is nothing honest to display.
+ assert.doesNotMatch(html,/口令\s*123456/);
+ assert.match(html,/data-action="room-build" data-id="Garen" data-role="top"/);
+ assert.match(html,/aria-live="polite"/);
+});
+
+test('a dropped relay link says so instead of pretending the room is fine',()=>{
+ const html=roomPanel({room:snapshot({mode:'client',transport:'relay',pin:null,port:null,relayUrl:'wss://room.example.com',link:'reconnecting'}),nick:'我',champ});
+ assert.match(html,/room-link warn">重连中/);
+ assert.match(html,/正在重连/);
+});

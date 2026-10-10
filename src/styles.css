@@ -202,5 +202,14 @@ body{background:radial-gradient(1100px 520px at 75% -8%,#17261f 0%,transparent 6
 .room-nick input:focus{outline:none;border-color:#4f7f68}
 .room-invite-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .room-invite-foot .bottom-note{margin:0}
+.room-transports{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.room-entry{display:flex;justify-content:flex-end;margin:-6px 0 10px}
+.room-transport{flex:1;min-width:150px;display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;border:1px solid #33475c;border-radius:10px;background:#15202c;color:#c9d7e6;padding:8px 11px;font-size:13px;cursor:pointer;transition:border-color .15s,background .15s}
+.room-transport small{color:#7d92a8;font-size:11px}
+.room-transport:hover{border-color:#6ea58a}
+.room-transport.on{border-color:#4f7f68;background:#182731;color:#d6e1ef}
+.room-transport:focus-visible{outline:2px solid #6ea58a;outline-offset:2px}
+.room-link.warn{border-color:#8a6a3c;color:#e4c08a}
+.room-panel code{font-size:12px;color:#8fa6ba}
 .room-nick{flex-wrap:wrap}
 .room-runes{display:flex;flex-wrap:wrap;gap:8px}.room-runes span{border:1px solid #33475c;border-radius:6px;padding:6px 8px}.room-runes small{color:#8fa6ba}.room-skill-order{list-style:none;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}.room-skill-order li{border:1px solid #33475c;border-radius:6px;padding:5px;font-size:12px;text-align:center}.room-configuration .detail-actions{flex-wrap:wrap}

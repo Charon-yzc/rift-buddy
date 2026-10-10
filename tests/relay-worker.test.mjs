@@ -32,7 +32,7 @@ globalThis.Request=class{
  constructor(url,init={}){this.url=url;this.headers=new Map(Object.entries(init.headers||{}));}
 };
 const {RoomHub}=await import('../relay/worker.js');
-const {MAX_SOCKETS}=await import('../relay/room-hub.mjs');
+const {MAX_SOCKETS,RELAY_BURST_FRAMES,RELAY_BURST_BYTES,takeRelayBudget}=await import('../relay/room-hub.mjs');
 
 function fakeState({delayClose=false}={}){
  const sockets=[],store=new Map();
@@ -49,6 +49,29 @@ const hello=nick=>JSON.stringify({kind:'hello',v:ROOM_PROTOCOL,room:'482913',pin
 const state=from=>JSON.stringify({kind:'state',v:ROOM_PROTOCOL,from,at:1,lineup:[],pick:null});
 
 const PIN=await hashPin('482913');
+
+test('worker: authenticated flooding is isolated and survives object reconstruction',async()=>{
+ const store=fakeState(),hub=new RoomHub(store);
+ const a=(await hub.fetch(roomRequest('482913'))).webSocket;await hub.webSocketMessage(a,hello('甲'));
+ const b=(await hub.fetch(roomRequest('482913'))).webSocket;await hub.webSocketMessage(b,hello('乙'));
+ for(let i=0;i<RELAY_BURST_FRAMES;i++)await new RoomHub(store).webSocketMessage(a,state('甲'));
+ assert.equal(a.closed?.code,4009);assert.equal(b.closed,null);
+ const c=(await hub.fetch(roomRequest('482913'))).webSocket;await hub.webSocketMessage(c,hello('丙'));
+ const before=b.sent.length;await hub.webSocketMessage(c,state('丙'));assert.equal(b.sent.length,before+1);
+ // Byte and frame budgets refill with time, without a timer preventing sleep.
+ const exhausted={at:1000,frames:0,bytes:0};assert.equal(takeRelayBudget(exhausted,1,1000),null);
+ assert(takeRelayBudget(exhausted,65536,1500));assert.equal(takeRelayBudget(exhausted,65537,1500),null);
+ assert(takeRelayBudget(exhausted,RELAY_BURST_BYTES,100000));
+});
+
+test('worker: one failed recipient does not block normal peers',async()=>{
+ const hub=new RoomHub(fakeState()),sockets=[];
+ for(const name of ['甲','乙','丙']){const ws=(await hub.fetch(roomRequest('482913'))).webSocket;await hub.webSocketMessage(ws,hello(name));sockets.push(ws);}
+ const [sender,broken,healthy]=sockets,before=healthy.sent.length;
+ broken.send=()=>{throw Error('closed while sending');};
+ await hub.webSocketMessage(sender,state('甲'));
+ assert.equal(broken.closed?.code,4009);assert.equal(healthy.sent.length,before+1);assert.equal(healthy.closed,null);
+});
 
 test('worker: handshake, fan-out, spoof rejection and leave semantics',async()=>{
  const hub=new RoomHub(fakeState());
