@@ -3,25 +3,32 @@ import {comboSourceLinks} from './build-options-view.mjs';
 import {duoPlay} from './core/duo-plays.mjs';
 import {ROLES} from './core/rules.mjs';
 import {scopeSlots} from './core/draft.mjs';
+import {resultCooperation} from './core/creative-plan.mjs';
 
 export function resultMemberJobs(result,data){
- if(result.creative)return result.creative.ordered;
+ if(result.creativePlan)return result.creativePlan.ordered;
+ const execution=resultCooperation(result);if(execution)return execution.memberJobs;
  if(result.trio)return result.trio.members;
  if(result.duo){
   if(result.duo.members)return result.duo.members;
   return [{champion:result.duo.carry,role:'bottom'},{champion:result.duo.support,role:'support'}].map(m=>({...m,job:duoPlay(result.duo,data,m)?.ownJob})).filter(m=>m.job);
  }
- return result.adaptive?.memberJobs||[];
+ return result.creative?.ordered||result.adaptive?.memberJobs||[];
 }
 
-export function resultActionsView(result,data){
+export function resultActionsView(result,data,{compact=false}={}){
  const jobs=resultMemberJobs(result,data);if(!jobs.length)return '';
  const members=(result.scope==='solo'?result.slots.filter(s=>(result.targets||[]).includes(s.role)||!result.targets?.length&&s.champion):scopeSlots(result.slots,result.scope==='bot'?'bot':'party')).filter(s=>s.champion);
  const missing=members.filter(m=>!jobs.some(j=>j.champion===m.champion&&j.role===m.role)),unusual=(result.contributions||[]).filter(m=>m.unusual);
+ if(compact){
+  const execution=resultCooperation(result),plan=result.creativePlan||result.trio||result.duo||result.creative;
+  const conditions=execution?.conditions||[plan?.window].filter(Boolean),failures=execution?.failures||[plan?.risk||plan?.caution].filter(Boolean);
+  return `<section class="result-actions-summary compact-actions" aria-label="成员行动分工"><h4>一起怎么打 · ${jobs.length}/${members.length} 人</h4>${jobs.map(m=>`<p><b>${e(data.champions.find(c=>c.id===m.champion)?.name||m.champion)} · ${e(ROLES.find(r=>r.id===m.role)?.name||m.role)}</b><span>${e(m.job.split(/[。；]/)[0])}。</span></p>`).join('')}<details><summary>展开完整分工、成立与退出条件</summary>${resultActionsView(result,data)}${conditions.length?`<p><b>成立条件：</b>${conditions.map(e).join("；")}</p>`:""}${failures.length?`<p><b>退出与失败处理：</b>${failures.map(e).join("；")}</p>`:""}</details></section>`;
+ }
  return `<section class="result-actions-summary" aria-label="成员行动分工"><h4>${missing.length?'已整理成员分工 · '+jobs.length+'/'+members.length:'这套怎么一起打'}</h4>${jobs.map(m=>`<p><b>${e(data.champions.find(c=>c.id===m.champion)?.name||m.champion)} · ${e(ROLES.find(r=>r.id===m.role)?.name||m.role)}</b><span>${e(m.job)}</span></p>`).join('')}${missing.length?`<small>${missing.map(m=>e(data.champions.find(c=>c.id===m.champion)?.name||m.champion)).join('、')}尚无本套组合的专门分工，可查看各自英雄指引。</small>`:''}${unusual.length?`<small>${unusual.map(m=>e(m.name)).join('、')}使用非常规位置，先约好补刀与经济。</small>`:''}</section>`;
 }
 
-export const cooperationText=plan=>plan?`${plan.opening?'开局分工：'+plan.opening+'\n':''}${plan.kind==='shared'?plan.memberJobs.map(m=>m.champion+'：'+m.job).join('\n')+'\n':''}${plan.steps.join('\n')}\n成立条件：${plan.conditions.join('；')}\n失败处理：${plan.failures.join('；')}\n${plan.economy?'兵线与资源：'+plan.economy+'\n':''}${plan.sourceNote}\n技能条件 ${plan.patch} · ${plan.reviewedAt}\n${plan.edges.filter(e=>!e.current).map(e=>'沿用组合库说明 '+e.patch+' · '+e.reviewedAt).join('\n')}`:'';
+export const cooperationText=(plan,data,{includeJobs=true}={})=>plan?`${plan.opening?'开局分工：'+plan.opening+'\n':''}${includeJobs&&plan.kind==='shared'?plan.memberJobs.map(m=>(data?.champions.find(c=>c.id===m.champion)?.name||m.champion)+'：'+m.job).join('\n')+'\n':''}${plan.steps.join('\n')}\n成立条件：${plan.conditions.join('；')}\n失败处理：${plan.failures.join('；')}\n${plan.economy?'兵线与资源：'+plan.economy+'\n':''}${plan.sourceNote}\n技能条件 ${plan.patch} · ${plan.reviewedAt}\n${plan.edges.filter(e=>!e.current).map(e=>'沿用组合库说明 '+e.patch+' · '+e.reviewedAt).join('\n')}`:'';
 
 export function cooperationView(plan,data){
  if(!plan)return '';

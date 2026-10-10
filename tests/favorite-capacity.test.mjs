@@ -44,7 +44,7 @@ test('portable backup input uses the same byte budget and retains legacy omitted
 
 test('creative action order differs from position order without changing saved identity, member builds or guide context',async()=>{
  const slots=createSlots().map(s=>({...s,party:['top','mid','bottom'].includes(s.role)}));
- const row=recommend({slots,champions:data.champions,scope:'party',style:'balanced',rolePools:{top:{mode:'only',heroes:['Darius']},mid:{mode:'only',heroes:['Annie']},bottom:{mode:'only',heroes:['Yunara']}}})[0],plan=captureCreativePlan(row,data);
+ const row=recommend({slots,champions:data.champions,scope:'party',style:'balanced',rolePools:{top:{mode:'only',heroes:['Darius']},mid:{mode:'only',heroes:['Annie']},bottom:{mode:'only',heroes:['Yunara']}}})[0],plan=captureCreativePlan({slots:row.slots,creative:row.creative},data);
  assert.notDeepEqual(plan.members.map(m=>m.champion),plan.ordered.map(m=>m.champion));row.creativePlan=plan;
  const configurations=captureTeamConfigurations(row,data,createPreparationStore());assert.equal(configurations.length,3);
  for(const member of plan.members){const combo=creativeMemberCombo(plan,member.champion,member.role);assert.deepEqual(creativeComboContext(combo).creativePlan,plan);assert.equal(combo.members.find(m=>m.champion===member.champion).job,plan.ordered.find(m=>m.champion===member.champion).job);}

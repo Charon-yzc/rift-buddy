@@ -16941,19 +16941,19 @@
         {
           "champion": "Sejuani",
           "role": "jungle",
-          "job": "瑟庄妮先控制",
+          "job": "Q 实际击飞后 W 与近战普攻叠霜，四层才 E 冻结；尼菈跟不到就不深入，留控制处理反打。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "champion": "Nilah",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "控制实际命中且 E 落点有接应才进，Q/普攻输出，W 留反击；R 可用时再拉回目标，宝石保护未生效不深入。",
           "loadoutId": "nilah-sustain"
         },
         {
           "champion": "Taric",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 提前联结实际承伤者，E 按队友进场方向准备；R 有延迟，先约生效时间，距离脱节就报撤退。",
           "loadoutId": "taric-guardian"
         }
       ],
@@ -17051,19 +17051,19 @@
         {
           "champion": "Kindred",
           "role": "jungle",
-          "job": "千珏大招覆盖双方；约好结束时机",
+          "job": "Q/普攻安全输出，R 实际可用才保护区域并报结束时刻；圈内敌人也不会死亡，不为印记丢掉队友接应。",
           "loadoutId": "default"
         },
         {
           "champion": "Nilah",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "R 已可用才聚拢目标，Q/普攻保持接触；在千珏圈内确认位置，按圈结束与宝石无敌实际生效决定继续或退出。",
           "loadoutId": "nilah-sustain"
         },
         {
           "champion": "Taric",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 联结承伤者，E 留反打；提前为千珏 R 结束后的伤害安排有延迟的 R，不把两个保护同时全部交掉。",
           "loadoutId": "taric-guardian"
         }
       ],
@@ -17150,19 +17150,19 @@
         {
           "champion": "JarvanIV",
           "role": "jungle",
-          "job": "皇子限制目标走位",
+          "job": "E/Q 实际击飞后限制同一目标，R 地形不挡射手攻击与撤退，挡住己方时解除；队友无法跟进就退。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "champion": "Kalista",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "Q/普攻叠实际矛数，E 按现有层数处理；R 仅在誓约者确认为宝石且可用时约进退落点，不预设一定有投掷接控。",
           "loadoutId": "onhit-carry"
         },
         {
           "champion": "Taric",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 联结实际承伤者，E 按旗枪落点接控；与卡莉丝塔确认誓约和 R 可用，再约投掷落点，延迟无敌要提前安排。",
           "loadoutId": "taric-guardian"
         }
       ],
@@ -17256,19 +17256,19 @@
         {
           "champion": "Vi",
           "role": "jungle",
-          "job": "蔚锁定优先目标",
+          "job": "Q 命中才报跟进，R 已可用且落点有接应时锁定同一目标；普攻/E 后保留退出，射手距离断开就停。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "champion": "Kalista",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "普攻/Q 叠矛，E 按实际层数兑现；与实际誓约者约 R 落点，不把蔚独自到达当成射手也能安全攻击。",
           "loadoutId": "onhit-carry"
         },
         {
           "champion": "Rell",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 落地实际击飞后 Q 错开接控，R 用于聚拢但不当作目标无法行动；先报落点，保留接应射手的距离。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -17362,19 +17362,19 @@
         {
           "champion": "Diana",
           "role": "jungle",
-          "job": "洛先找角度",
+          "job": "洛 W 实际击飞后确认可达，Q 命中才按月光 E 跟进，R 实际拉到人才接后续；队友赶不到就不独自深入。",
           "loadoutId": "trio-diana"
         },
         {
           "champion": "Samira",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "交替普攻与不同技能积累实际评级，W 留敌方飞行弹体；S 评级且 R 可用、打断威胁受控才开大，不因聚拢就无视打断。",
           "loadoutId": "samira-reset"
         },
         {
           "champion": "Rakan",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 找实际击飞角度，R 已可用时再安排魅惑接力；命中后报皎月跟进窗口，E 保留实际可达的返回队友，落空就收缩。",
           "loadoutId": "rakan-engage"
         }
       ],
@@ -17474,19 +17474,19 @@
         {
           "champion": "Sejuani",
           "role": "jungle",
-          "job": "瑟庄妮先手留人",
+          "job": "Q/W 接近并靠近战普攻叠霜，实际四层才 E 冻结；不把莎弥拉远程普攻计作近战叠层，宝石跟不到就退出。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "champion": "Samira",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "控制实际命中后普攻与技能交替提高评级；W 留反击，S 评级且 R 可用才开大，宝石延迟无敌未生效不深入。",
           "loadoutId": "samira-reset"
         },
         {
           "champion": "Taric",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 联结真正承伤者，E 控制错开瑟庄妮；R 提前读条并报实际生效，范围脱节或技能落空时优先接应退出。",
           "loadoutId": "taric-guardian"
         }
       ],
@@ -17583,19 +17583,19 @@
         {
           "champion": "Ivern",
           "role": "jungle",
-          "job": "翠神和璐璐错开保护",
+          "job": "Q 实际禁锢后报同一目标，E 交给被近身的队友，W 按安全站位放草；小菊只在 R 已学会且可用时安排，不强求射手贴身。",
           "loadoutId": "default"
         },
         {
           "champion": "Jinx",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "在护盾与保护范围内用 Q 普攻，W 跟安全目标，E 留突进路线；只有实际参与击杀等触发后才按被动加速追击。",
           "loadoutId": "trio-crit-carry"
         },
         {
           "champion": "Lulu",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "E 护盾与皮克斯交金克丝，友军 W 攻速和对敌变形要选用途；R 留实际被进场位置反打，保护交完就提醒收缩。",
           "loadoutId": "lulu-onhit"
         }
       ],
@@ -17680,19 +17680,19 @@
         {
           "champion": "Ivern",
           "role": "jungle",
-          "job": "翠神先造安全输出空间",
+          "job": "Q 实际禁锢才报目标，E 给真实承伤者并看护盾爆开距离；W 草丛不挡克格莫自己的输出视野，不为引爆要求射手贴脸。",
           "loadoutId": "default"
         },
         {
           "champion": "KogMaw",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "W 可用且能持续安全普攻时输出，Q 命中再跟同一目标；留在米利欧篝火范围，保护断开或攻击距离丢失就退出。",
           "loadoutId": "onhit-carry"
         },
         {
           "champion": "Milio",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 跟克格莫提供射程，E 护盾与移动留反击，Q 留实际突进者；搭档离开篝火或被近身就先保退路。",
           "loadoutId": "milio-range"
         }
       ],
@@ -17777,19 +17777,19 @@
         {
           "champion": "Shen",
           "role": "top",
-          "job": "慎支援前先处理上路兵线",
+          "job": "先处理上路线，R 已可用且能完成引导才支援真实承伤者；到场 E 留反打、W 看实际剑阵范围，引导被打断就报无法到达。",
           "loadoutId": "trio-frontline"
         },
         {
           "champion": "Aphelios",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "按当前主副武器 Q/普攻，坠明减速实际存在才 Q 禁锢；先在保护范围攻击，不把慎 R 或烈娜塔 W 当即刻无敌。",
           "loadoutId": "trio-crit-carry"
         },
         {
           "champion": "Renata",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "E 护盾承接射手换血，Q 留突进者；W 给实际能继续输出的队友，假死后仍需真实击杀参与，不保证一定救回。",
           "loadoutId": "renata-rescue"
         }
       ],
@@ -17889,19 +17889,19 @@
         {
           "champion": "Poppy",
           "role": "jungle",
-          "job": "波比优先限制突进路线",
+          "job": "E 只在实际墙体角度可靠时安排眩晕，W 留可阻挡的突进；R 先约击退方向，不把目标送出两位队友的输出范围。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "champion": "Smolder",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "Q 按实际层数与当前效果发育，W 从安全侧消耗，E 留撤退；保护到位才持续攻击，不预设已有升级后的收尾能力。",
           "loadoutId": "default"
         },
         {
           "champion": "Braum",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "Q 或普攻挂第一层后报集火，实际四层才眩晕；W 跳可接应友军、E 挡来向，别为凑层数让射手走入危险区。",
           "loadoutId": "braum-peel"
         }
       ],
@@ -17983,19 +17983,19 @@
         {
           "champion": "JarvanIV",
           "role": "jungle",
-          "job": "皇子限制区域",
+          "job": "E/Q 实际击飞才报女枪 R 角度，R 地形挡己方撤退时解除；女枪被迫移动或队友跟不上就不继续困战。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "champion": "MissFortune",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "E 覆盖同一目标，Q/普攻安全换血；R 已可用且有完整安全引导位置才开大，目标离开覆盖或打断临近就收缩。",
           "loadoutId": "spell-lethality"
         },
         {
           "champion": "Seraphine",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "趁女枪 E 减速仍在时 E 命中升级禁锢，已有定身时才升级眩晕；Q 跟输出、W 留反击，R 若用先确认命中路径。",
           "loadoutId": "control-support"
         }
       ],
@@ -18094,19 +18094,19 @@
         {
           "champion": "Galio",
           "role": "mid",
-          "job": "下路先打一轮安全换血",
+          "job": "先清中线，R 可用且卢锡安在实际支援范围才支援其当时位置；落地 W/E 错开接控，撑不到落地或目标已退出就取消强接。",
           "loadoutId": "trio-control-mid"
         },
         {
           "champion": "Lucian",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "娜美 E 增益实际给到后 Q/技能与被动普攻做短换血，E 留可返回角度；加里奥未到达不因预期保护继续深入。",
           "loadoutId": "lucian-trade"
         },
         {
           "champion": "Nami",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "E 给卢锡安能安全触及的换血窗口，W 在实际弹跳距离回复；Q 留可靠落点，R 已可用才接限制，队友脱节先保退路。",
           "loadoutId": "nami-empower"
         }
       ],
@@ -18205,19 +18205,19 @@
         {
           "champion": "TwistedFate",
           "role": "mid",
-          "job": "卡牌支援先确认落点",
+          "job": "先清线并选好 W 黄牌，R 已可用才核对范围、视野和安全落点；黄牌实际命中德莱文能攻击的人再跟 Q。",
           "loadoutId": "trio-tf"
         },
         {
           "champion": "Draven",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "Q 飞斧沿安全接斧路线持续攻击被限制目标，W 用于接触与退出，E 留反击；不为追收尾跨过卡牌落点与队友保护。",
           "loadoutId": "default"
         },
         {
           "champion": "Renata",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "E 护盾覆盖德莱文输出窗口，Q 留突进者；W 救援仍需真实击杀参与才能续命，不让射手为了延长假死强追。",
           "loadoutId": "renata-rescue"
         }
       ],
@@ -18300,19 +18300,19 @@
         {
           "champion": "Orianna",
           "role": "mid",
-          "job": "韦鲁斯大招限制移动",
+          "job": "按实际球位 Q/E 调整，接韦鲁斯已经命中的限制；球到位且 R 可用才接 R，未满足就用基础技能与保护。",
           "loadoutId": "trio-ball"
         },
         {
           "champion": "Varus",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "R 实际可用且可靠命中才报先手窗口，别预设蔓延必定抓到多人；Q/普攻保持安全接触，利用米利欧增益持续普攻。",
           "loadoutId": "onhit-carry"
         },
         {
           "champion": "Milio",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "韦鲁斯能安全连续攻击时 W 给射程、E 给保护，Q 留突进者；无承伤者优先反打，不因球和大招存在就催两人深入。",
           "loadoutId": "milio-range"
         }
       ],
@@ -18406,19 +18406,19 @@
         {
           "champion": "Lissandra",
           "role": "mid",
-          "job": "冰女限制关键目标",
+          "job": "W 近身限制或 R 对敌实际眩晕后报同一目标，自 R 不当作对敌眩晕；E 保留退出，不能三人同时脱离接应。",
           "loadoutId": "trio-control-mid"
         },
         {
           "champion": "Kaisa",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "普攻/Q 看实际电浆与分摊目标，只有 R 可用、标记目标实际可选且落点安全才切入；保护和撤退接应赶不到就不深入。",
           "loadoutId": "onhit-carry"
         },
         {
           "champion": "Rakan",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "接冰女实际控制找 W 可靠击飞角度，R 可用时错开魅惑；E 保留实际可达的返回队友，不与两人同时交光进场。",
           "loadoutId": "rakan-engage"
         }
       ],
@@ -18516,19 +18516,19 @@
         {
           "champion": "Graves",
           "role": "jungle",
-          "job": "男枪从侧面创造接近空间",
+          "job": "从安全侧 Q/普攻输出，W 烟幕限制视野但不保证对手无法施法，E 留调整与退出；不与实际承伤者脱节。",
           "loadoutId": "default"
         },
         {
           "champion": "Swain",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "E 实际命中再拉近同一目标、Q 跟伤害，R 可用且能持续接触才接战；法力、保护或接触空间断开就收缩。",
           "loadoutId": "swain-brawl"
         },
         {
           "champion": "Taric",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 联结实际承伤者，E 留反打，R 提前安排有延迟的无敌；距离脱节就报保护无法跟上，不许诺硬追仍能保住。",
           "loadoutId": "taric-guardian"
         }
       ],
@@ -18614,19 +18614,19 @@
         {
           "champion": "Sejuani",
           "role": "jungle",
-          "job": "泰坦给击飞窗口",
+          "job": "Q 实际击飞可报短窗口，W 与近战普攻实际四层后才 E 冻结；保留控制处理反打或第二目标，不把普通眩晕当亚索接大。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "champion": "Yasuo",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "六级并且 R 实际可用、目标真实被击飞且可跟进时才接大；未满足就 Q/安全普攻，稳住经验，风墙与 E 回撤对象留反击。",
           "loadoutId": "melee-crit"
         },
         {
           "champion": "Nautilus",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "R 已学会且实际击飞时给亚索报接大目标与距离；Q/普攻留人按实际效果衔接，不把任意控制命中都当击飞成立。",
           "loadoutId": "tank-engage"
         }
       ],
@@ -18723,19 +18723,19 @@
         {
           "champion": "Shen",
           "role": "top",
-          "job": "慎响应下路真正的承伤窗口",
+          "job": "先处理上路线，R 已可用且能完成引导才支援真实承伤者；到场 E 接应、W 看实际剑阵范围，不把支援当即时保险。",
           "loadoutId": "trio-frontline"
         },
         {
           "champion": "Tristana",
           "role": "bottom",
-          "job": "保持输出距离并确认跟进窗口",
+          "job": "E 挂目标后安全普攻叠实际层数，W 只跳能接应且有退出方向的落点；宝石无敌未生效不深入，不预设击杀刷新跳跃。",
           "loadoutId": "default"
         },
         {
           "champion": "Taric",
           "role": "support",
-          "job": "控制与保护错开，提前约好撤退",
+          "job": "W 提前联结，E 与崔丝塔娜约方向，R 延迟无敌先报生效时间；跳入落点超出保护范围时提醒取消或先接应退出。",
           "loadoutId": "taric-guardian"
         }
       ],

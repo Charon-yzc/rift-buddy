@@ -4,6 +4,7 @@ import {createSkillCooperation} from './cooperation-skills.mjs';
 import {preferredTempo} from './strategy.mjs';
 import {sharedCooperationPlan} from './shared-cooperation.mjs';
 import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
+import {partyCooperationPlan} from './party-cooperation.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -59,7 +60,7 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
   const reviewedPair=pairs.get(pairKey(a.champion,b.champion));
   if(reviewedPair&&prof(a).reviewed&&prof(b).reviewed){
    const [first,second,name,step,condition,failure,tempo,control]=reviewedPair;
-   found={id:'pair:'+pairKey(first,second),family:'pair:'+pairKey(first,second),name,a:first,b:second,step,condition,failure,tempo,control,current:true,patch:COOPERATION_PATCH,reviewedAt:COOPERATION_REVIEWED_AT,alreadyLinked:legacy.has(pairKey(first,second)),sourceUrls:[first,second].map(id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`)};
+   found={id:'pair:'+pairKey(first,second),family:'pair:'+pairKey(first,second),name,a:first,b:second,step,condition,failure,tempo,control,current:true,patch:COOPERATION_PATCH,reviewedAt:reviewedPair[9]||COOPERATION_REVIEWED_AT,alreadyLinked:legacy.has(pairKey(first,second)),sourceUrls:[first,second].map(id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`)};
   }
   for(const family of FAMILIES){
    if(found)break;
@@ -86,6 +87,7 @@ function connectedEdges(members,graph){
 }
 export function cooperationPlan(members,graph,preferences={}){
  members=members.filter(m=>m.champion);
+ if(members.length>=4)return partyCooperationPlan(members,graph,preferences);
  if(![2,3].includes(members.length)||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
  let edges=connectedEdges(members,graph);
  // Authored interactions keep their own conditions. For generic relays,

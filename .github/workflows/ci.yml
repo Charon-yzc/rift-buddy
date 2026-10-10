@@ -84,6 +84,11 @@ jobs:
         run: node scripts/smoke-package-matchups.mjs --team-order
       - name: Check accepted mechanism plans across member guides and restarts
         run: node scripts/smoke-package-cooperation.mjs
+      - name: Check concrete three-person and full-party plans, first-screen actions and attribute preparation
+        run: |
+          node scripts/smoke-package-cooperation.mjs --specific
+          node scripts/smoke-package-cooperation.mjs --party-four
+          node scripts/smoke-package-cooperation.mjs --party-five
       - name: Check locked cross-lane plans and complete late-item choices across restarts
         run: node scripts/smoke-package-cooperation.mjs --cross-lane
       - name: Check retained pair order and third-member follow-ups across restarts

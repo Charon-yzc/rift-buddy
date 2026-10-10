@@ -61,17 +61,17 @@ test('generator respects shape limits, blocks and pools',()=>{
  assert.ok(defs.every(d=>d.members.every(m=>m.champion!=='Ashe')));
 });
 
-test('recommendations label creative ideas without displacing curated trios',()=>{
+test('creative discovery seeds retain specific actions without displacing curated trios',()=>{
  const slots=locked(createSlots(),[['top','Garen'],['jungle','LeeSin']]);
  const rows=recommend({slots,champions:data.champions,limit:5});
  assert.equal(rows.length,5);
- const creative=rows.filter(r=>r.origin==='creative');
+ const creative=rows.filter(r=>r.creative);
  assert.ok(creative.length>=1,'at least one creative idea is discoverable');
  for(const r of rows)assert.ok(['curated','creative','adaptive','generated'].includes(r.origin));
  // Curated combinations keep the lead.
  assert.equal(rows[0].origin,'curated');
  for(const r of creative){
-  assert.match(r.title,/^创意 · /);
+  assert.equal(r.origin,'adaptive');assert.equal(r.title,r.adaptive.name);assert.ok(r.adaptive.memberJobs.every(m=>/[QWER]|普攻/.test(m.job)));
   assert.ok(r.creative.steps.length===3);
   assert.ok(r.reasonPoints.length>0&&r.reasonPoints.length<=5);
   assert.ok(r.reasonPoints.some(t=>/打法/.test(t)));
@@ -91,18 +91,18 @@ test('recommendations label creative ideas without displacing curated trios',()=
  assert.ok(botRows.every(r=>r.origin!=='creative'));
 });
 
-test('result and play cards mark creative ideas honestly',()=>{
+test('discovery-seeded result and play cards show actual conditional tactics honestly',()=>{
  const slots=locked(createSlots(),[['top','Garen'],['jungle','LeeSin']]);
  const rows=recommend({slots,champions:data.champions,limit:5});
- const creative=rows.find(r=>r.origin==='creative');
+ const creative=rows.find(r=>r.creative);
  assert.ok(creative);
  const data2={champions:data.champions,catalogInfo:{status:{}}};
  const card=renderResultCard(creative,4,{...data2}, {favorites:[]});
- assert.ok(card.includes('创意实验'));
+ assert.match(card,/共同分工|机制搭配/);for(const m of creative.adaptive.memberJobs)assert.ok(card.includes(m.job));
  const curatedCard=renderResultCard(rows.find(r=>r.origin==='curated'),0,{...data2},{favorites:[]});
  assert.ok(!curatedCard.includes('创意实验'));
  const play=resultPlayCard(creative,4,{...data2,catalogInfo:{status:{}}});
- assert.ok(play.includes('强势期')&&play.includes('未经对局验证'));
+ assert.ok(play.includes('成立条件')&&play.includes('失败处理')&&play.includes('未经组合对局验证'));for(const m of creative.adaptive.memberJobs)assert.ok(play.includes(m.job));
 });
 
 test('requesting one result preserves the first choice instead of forcing a creative idea',()=>{
@@ -113,6 +113,6 @@ test('requesting one result preserves the first choice instead of forcing a crea
  assert.equal(first.length,1);
  assert.equal(first[0].id,multiple[0].id);
  assert.equal(first[0].origin,'curated');
- assert.ok(multiple.some(r=>r.origin==='creative'));
+ assert.ok(multiple.some(r=>r.creative&&r.origin==='adaptive'));
  assert.deepEqual(recommend({...input,limit:0}),[]);
 });

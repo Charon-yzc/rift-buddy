@@ -7,6 +7,16 @@ const special=new Set(['Aphelios','Udyr','Elise','Jayce','Nidalee','Karma']);
 const freeUltimate=new Set(['Elise','Nidalee','Karma']);
 const keys=['Q','W','E','R'];
 const initialRanks=champion=>({Q:0,W:0,E:0,R:freeUltimate.has(champion)||champion==='Jayce'?1:0});
+// OP.GG's 16.20 bottom priority is Q > E > W. This is an attribute
+// preparation reference, never an ordinary ability-rank sequence (the source
+// also renders automatic R entries, which cannot identify stat investments).
+export function attributePreparation(champion){
+ return champion==='Aphelios'?{kind:'attributes',title:'厄斐琉斯属性加点',priority:['攻击力','穿甲','攻速'],
+  action:'默认优先攻击力，再穿甲，最后攻速；每次升级在游戏内属性面板确认当前已投点和可用选项，再按此顺序补点。',
+  note:'下路静态准备参考，可按出装与普攻手感调整；Q 与 R 随等级自动学习和成长。助手未读取已投属性点，不提示本次必须点哪一项。',
+  patch:'16.20',reviewedAt:'2026-10-10',source:'OP.GG 下路优先级；Riot 特殊升级机制',sourceUrl:'https://op.gg/lol/champions/aphelios/build',
+  mechanismUrls:['https://www.leagueoflegends.com/en-au/news/game-updates/aphelios-kit-primer/','https://www.leagueoflegends.com/en-us/news/game-updates/patch-10-8-notes/']}:null;
+}
 function rankCap(champion,key,level){
  if(champion==='Udyr'||champion==='Jayce'&&key!=='R')return Math.min(6,Math.ceil(level/2));
  if(champion==='Jayce')return 1;
