@@ -4,6 +4,7 @@ release/
 开黑搭子/
 dist/
 test-results/
+.DS_Store
 *.log
 .env
 .env.*
