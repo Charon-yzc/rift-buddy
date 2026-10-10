@@ -49,3 +49,5 @@
 
 .companion-common-runes{display:grid;gap:6px;margin-bottom:10px}.companion-common-runes .btn{height:auto;min-height:34px;white-space:normal;text-align:left;justify-content:flex-start}.companion-section .more-builds{margin:12px 0}.companion-section .more-builds .chips{display:flex;flex-wrap:wrap;gap:6px}.companion-section .more-builds .btn{height:auto;min-height:30px;white-space:normal}
 .companion-core-options{margin:8px 0 12px;border:1px solid #33485a;border-radius:7px;padding:8px;font-size:13px}.companion-core-options>summary{cursor:pointer;color:#c1dfcf}.companion-core-options>p{font-size:12px;line-height:1.7;color:#a8bbcc;margin:10px 0}.companion-core-options .companion-comparisons{margin-top:10px}.companion-refresh-state{font-size:12px;line-height:1.7;color:#b3d7c4;overflow-wrap:anywhere;padding:8px;background:#192635;border-radius:6px}.companion-refresh-state.text-gold{color:#e6bf7e}
+
+.companion-content .party-counterplay{padding:8px;font-size:12px}.companion-content .party-counterplay p{display:block;overflow-wrap:anywhere}

@@ -1,4 +1,5 @@
 import {rolePlay,ROLE_PLAYS_PATCH,ROLE_PLAYS_REVIEWED_AT} from './role-plays.mjs';
+import {partyCounterplayText} from './party-counterplay.mjs';
 
 // Windows are conditions to confirm in the game, never inferred cooldowns.
 const windows={
@@ -113,5 +114,5 @@ export function duoPlay(duo,data,{champion,role}={}){
 }
 export function duoPlayText(play){
  if(!play)return '';
- return [...Object.values(play.stages).map(stage=>`${stage.label}：\n${stage.steps.map((step,index)=>(index+1)+'. '+step).join('\n')}\n玩家确认的窗口：${stage.window}\n何时停：${stage.exit}`),`经济分工：${play.economy}`,`${play.source} · ${play.patch}${play.stale?' · 旧版本需核对':''}`].join('\n');
+ return [...(play.counterplay?[partyCounterplayText(play.counterplay)]:[]),...Object.values(play.stages).map(stage=>`${stage.label}：\n${stage.steps.map((step,index)=>(index+1)+'. '+step).join('\n')}\n玩家确认的窗口：${stage.window}\n何时停：${stage.exit}`),`经济分工：${play.economy}`,`${play.source} · ${play.patch}${play.stale?' · 旧版本需核对':''}`].join('\n');
 }
