@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {normalizeRelayUrl,relayEndpoint,relayHello,relayCloseReason,RELAY_PING} from '../src/core/room-relay.mjs';
-import {createRoomService,RELAY_FRAME_BUDGET} from '../services/room.mjs';
+import {createRoomService,RELAY_FRAME_BUDGET,RELAY_FRAME_REFILL_PER_SECOND} from '../services/room.mjs';
 import {ROOM_PROTOCOL} from '../src/core/room.mjs';
 import fs from 'node:fs/promises';
 import {createSlots} from '../src/core/recommend.mjs';
@@ -145,7 +145,8 @@ test('joining a relay sends the hashed handshake and only resolves on welcome',a
 
 test('a relay join fails loudly instead of hanging when the pin is refused',async()=>{
  const fake=fakeRelay();
- const service=createRoomService({nick:'我',webSocketFactory:fake.factory});
+ const updates=[];
+ const service=createRoomService({nick:'我',webSocketFactory:fake.factory,onUpdate:value=>updates.push(value)});
  const joining=service.relay({url:'wss://room.example.com',room:'482913',pin:'111111'});
  const refused=await fake.next();
  refused.open();
@@ -153,6 +154,8 @@ test('a relay join fails loudly instead of hanging when the pin is refused',asyn
  await assert.rejects(()=>joining,/口令不正确/);
  await tick();
  assert.equal(service.snapshot().mode,'idle','a refused join must not leave a phantom room');
+ assert.equal(updates.at(-1).mode,'idle','the renderer must receive the idle snapshot before showing the refusal');
+ assert.equal(updates.at(-1).link,'idle');
  assert.equal(fake.sockets.length,1,'a refusal must not be retried forever');
 });
 
@@ -238,7 +241,7 @@ test('reconnecting forever is bounded so a broken relay cannot drain the owner q
 
 test('the frame budget counts room traffic, and a heartbeat must never spend it',async()=>{
  const fake=fakeRelay();
- const service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayOpenTimeoutMs:500,relaySilenceMs:60000});
+ const service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayOpenTimeoutMs:500,relaySilenceMs:60000,now:()=>0});
  const socket=await joined(service,fake);
  // A long session: the relay answers every ping, for far more pongs than the
  // budget allows. This is the shape of an ordinary 4-hour room.
@@ -522,6 +525,69 @@ test('the frame budget reports itself instead of closing without a word',async()
  for(let i=0;i<RELAY_FRAME_BUDGET+2;i++)socket.deliver({kind:'join',v:ROOM_PROTOCOL,from:'同一个人'});
  assert.ok(reports.some(line=>/frame budget/.test(line)),`expected a diagnostic, saw ${JSON.stringify(reports)}`);
  service.leave();
+});
+
+test('ordinary relay shares remain connected after hours of valid traffic',async()=>{
+ const fake=fakeRelay();let time=0;
+ const service=createRoomService({nick:'我',webSocketFactory:fake.factory,now:()=>time});
+ try{
+  const socket=await joined(service,fake,{members:[{nick:'我'},{nick:'队友'}]});
+  for(let i=1;i<=14400;i++){
+   time=i*1000;
+   socket.deliver({kind:'state',v:ROOM_PROTOCOL,from:'队友',lineup:[{role:'mid',champion:i%2?'Ahri':'Orianna'}],pick:null,at:time});
+  }
+  assert.equal(socket.readyState,1,'one valid share per second must not exhaust a lifetime allowance');
+  assert.equal(service.snapshot().link,'connected');
+  assert.equal(service.snapshot().members.find(member=>member.nick==='队友').share.at,time);
+ }finally{service.dispose();}
+});
+
+test('a full relay room admits sustained fanout from all eleven remote members',async()=>{
+ const fake=fakeRelay();let time=0;
+ const remote=Array.from({length:11},(_,i)=>'队友'+(i+1));
+ const service=createRoomService({nick:'我',webSocketFactory:fake.factory,now:()=>time});
+ try{
+  const socket=await joined(service,fake,{members:[{nick:'我'},...remote.map(nick=>({nick}))]});
+  for(let second=1;second<=600;second++){
+   time=second*1000;
+   for(let update=0;update<4;update++)for(const from of remote)
+    socket.deliver({kind:'state',v:ROOM_PROTOCOL,from,lineup:[{role:'mid',champion:'Ahri'}],pick:null,at:time});
+  }
+  assert.equal(socket.readyState,1,'the Worker allows four frames/second from each of eleven peers');
+  assert.equal(service.snapshot().members.length,12);
+  assert.ok(service.snapshot().members.filter(member=>!member.self).every(member=>member.share.at===time));
+ }finally{service.dispose();}
+});
+
+test('relay burst allowance refills with elapsed time and stays bounded',async()=>{
+ const fake=fakeRelay();let time=0;
+ const service=createRoomService({nick:'我',webSocketFactory:fake.factory,now:()=>time,relayBackoffMs:60000});
+ try{
+  const socket=await joined(service,fake);
+  const frame={kind:'join',v:ROOM_PROTOCOL,from:'队友'};
+  for(let i=0;i<RELAY_FRAME_BUDGET-1;i++)socket.deliver(frame);
+  assert.equal(socket.readyState,1);
+  time=1000;
+  for(let i=0;i<RELAY_FRAME_REFILL_PER_SECOND;i++)socket.deliver(frame);
+  assert.equal(socket.readyState,1,'one second restores sixty traffic tokens');
+  time=3600000;
+  for(let i=0;i<RELAY_FRAME_BUDGET;i++)socket.deliver(frame);
+  assert.equal(socket.readyState,1,'a long idle restores at most the burst ceiling');
+  socket.deliver(frame);
+  assert.equal(socket.closed?.code,4009,'idle time must not accumulate an unbounded allowance');
+ }finally{service.dispose();}
+});
+
+test('exhausted initial relay transport attempts publish idle for an actionable retry',async()=>{
+ const updates=[];let attempts=0;
+ const service=createRoomService({nick:'我',onUpdate:value=>updates.push(value),webSocketFactory:()=>{attempts++;throw Error('controlled unavailable transport');},relayJoinAttempts:2,relayBackoffMs:1});
+ try{
+  await assert.rejects(service.relay({url:'wss://room.example.com',room:'482913',pin:'111111'}),/无法打开中继连接/);
+  assert.equal(attempts,2);
+  assert.equal(service.snapshot().mode,'idle');
+  assert.equal(updates.at(-1).mode,'idle');
+  assert.equal(updates.at(-1).transport,null);
+ }finally{service.dispose();}
 });
 
 test('relay late join and reconnect retain the sender trio configuration and accepted responsibilities',async t=>{

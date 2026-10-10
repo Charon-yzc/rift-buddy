@@ -153,8 +153,8 @@ async function boot(){
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
  const placement=await import('../src/core/window-placement.mjs');
  companion=require('./client-companion.cjs')({getWindow:()=>win,createWindow,getClient:()=>latestClient,getPreferences:()=>state.preferences,placement,diagnostic});
- // LAN room (CHA-31): share draft lineups with invited peers on the same
- // network or VPN. Local-only; no accounts, no cloud, never logs credentials.
+ // Optional rooms (CHA-31): invited peers share public draft/configuration
+ // snapshots over LAN/VPN or their own trusted relay. Never logs credentials.
  const {createRoomService}=await import('../services/room.mjs');
  const {sanitizeNick}=await import('../src/core/room.mjs');
  let roomNickInUse='';

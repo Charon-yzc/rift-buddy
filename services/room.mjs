@@ -41,9 +41,11 @@ const RELAY_MAX_FAILURES=8;
 // relay that welcomes and immediately drops is the expensive pattern, so
 // only an actually settled connection resets the count.
 const RELAY_STABLE_MS=120000;
-// Inbound frame budget per connection. The relay itself is well behaved;
-// this is the bound that keeps a bad one from flooding the renderer.
+// Bound inbound bursts without expiring a healthy long-running room. A full
+// room has eleven remote senders, each limited by the Worker to 4 frames/sec;
+// the client must admit their ordinary aggregate traffic as tokens refill.
 export const RELAY_FRAME_BUDGET=600;
+export const RELAY_FRAME_REFILL_PER_SECOND=60;
 // Mirrors the manual-invite host pattern so the IPC boundary accepts only
 // invite-shaped targets (hostnames/IPv4), never arbitrary payloads.
 const HOST_NAME=/^[A-Za-z0-9.-]{1,253}$/;
@@ -418,7 +420,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   // replaced it.
   const timers={ping:null,silence:{socket,timer:null},welcome:null,stable:null};
   socket.relayTimers=timers; // so a replaced socket can be stopped, not just closed
-  let welcomed=false,settled=false,frames=RELAY_FRAME_BUDGET,renamed=relayRenamed;
+  let welcomed=false,settled=false,frames=RELAY_FRAME_BUDGET,frameAt=now(),renamed=relayRenamed;
   // One attempt is charged to the breaker exactly once, whichever path gets
   // there first: the welcome deadline marks it, the socket close charges it,
   // and a rejection nobody is waiting on is charged by the retry loop.
@@ -482,7 +484,11 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    // A relay that floods us with real traffic is either broken or hostile:
    // both are reasons to stop reading, not to keep spending the owner's quota
    // on the answer.
-   if(--frames<0){diagnostic('relay frame budget exhausted');try{socket.close(4009,'消息超限');}catch{}return;}
+   const frameNow=Math.max(frameAt,now());
+   frames=Math.min(RELAY_FRAME_BUDGET,frames+(frameNow-frameAt)*RELAY_FRAME_REFILL_PER_SECOND/1000);
+   frameAt=frameNow;
+   if(frames<1){diagnostic('relay frame budget exhausted');try{socket.close(4009,'消息超限');}catch{}return;}
+   frames--;
    if(!welcomed){
     const welcome=validateWelcome(frame);
     if(!welcome||welcome.room!==room)return;
@@ -589,7 +595,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    try{await relayConnect({initial:true});break;}
    catch(error){
     if(mode!=='client'||relayStopped||session!==relaySession)throw Object.assign(error,{message:'已离开房间'});
-    if(!error.transport||attempt>=relayJoinAttempts){teardown();throw error;}
+    if(!error.transport||attempt>=relayJoinAttempts){teardown();emit();throw error;}
     diagnostic(`relay join attempt ${attempt} failed: ${error.message}`);
     relayLink='connecting';emit();
     // Wait out the backoff, but stop immediately if the room was left or
