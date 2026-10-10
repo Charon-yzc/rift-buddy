@@ -1,3 +1,4 @@
+import {attributePlanView} from './attribute-plan-view.mjs';
 import {escape as e,button} from './ui.mjs';
 import {featuredRuneOptions} from './core/builds.mjs';
 import {runeComparisonView} from './rune-comparison-view.mjs';
@@ -32,6 +33,7 @@ export function runeSelector(build,data){
  return `<p class="bottom-note">常用完整符文优先显示不同基石或副系，另有 ${ordered.length-featured.length} 套细节与机制备选。修改会同步到指引；客户端符文需点击应用。</p><div class="rune-options">${cards.slice(0,featured.length).join('')}</div>${cards.length>featured.length?`<details class="more-builds" ${ordered.findIndex(o=>o.id===build.selectedRuneId)>=featured.length?'open':''}><summary>更多完整符文与机制备选 · ${cards.length-featured.length} 套</summary><div class="rune-options">${cards.slice(featured.length).join('')}</div></details>`:''}`;
 }
 export function skillSelector(build){
+ if(build.attributePlan)return attributePlanView(build.attributePlan,build.dataPatch);
  const note=build.skillMechanism?`<p class="bottom-note skill-mechanism">${e(build.skillMechanism)}</p>`:'';
  if(!build.skillChoices?.length)return note;
  return `${note}<div class="skill-options"><label for="build-skill">加点方案（独立于符文选择）</label><select class="select" id="build-skill"><option value="">${build.loadoutId==='default'?'默认来源参考':'保留组合专用加点'}</option>${build.skillChoices.map(o=>`<option value="${o.id}" ${o.id===build.selectedSkillId?'selected':''}>${e(o.name)} · ${o.samples?o.samples.toLocaleString()+' 场':'机制节点'}</option>`).join('')}</select>${build.selectedSkill?`<p class="bottom-note">${e(build.selectedSkill.when)}</p><div class="skill-sequence" aria-label="${build.skillOrder.length} 个技能点的参考序列">${[...build.skillOrder].map((key,i)=>`<span><small>${i+1}</small><b>${key}</b></span>`).join('')}</div>`:''}</div>`;

@@ -49,7 +49,7 @@ function cooperationDescriptor(source,data){
 // A shared tactical/resource plan contains no control edges and earns no
 // mechanism bonus. Persist its reviewed jobs and original source identities.
 function savedShared(value,members){
- if(!value||value.kind!=='shared'||!['poke','protect','growth'].includes(value.tempo)||value.bonus!==0||!Array.isArray(value.edges)||value.edges.length||JSON.stringify(value.members)!==JSON.stringify(members))throw Error('共同分工不能包含机制联动或加分');
+ if(!value||value.kind!=='shared'||!(members.length>=4?tempos:['poke','protect','growth']).includes(value.tempo)||value.bonus!==0||!Array.isArray(value.edges)||value.edges.length||JSON.stringify(value.members)!==JSON.stringify(members))throw Error('共同分工不能包含机制联动或加分');
  const result={kind:'shared',tempo:value.tempo,bonus:0,members:members.map(m=>({...m})),edges:[]};
  for(const [field,max] of [['name',100],['why',700],['sourceNote',300],['opening',700],['economy',500],['patch',30],['reviewedAt',40]]){if(!text(value[field],max))throw Error('共同分工说明不完整');result[field]=value[field];}
  const seen=new Set();if(!Array.isArray(value.memberJobs)||value.memberJobs.length!==members.length)throw Error('共同分工成员不完整');
@@ -75,7 +75,7 @@ export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
   if(!text(value[key],max))throw Error('创意组合说明内容不完整');result[key]=value[key];
  }
  const cooperation=value.archetype==='cooperation'||value.archetype==='shared',count=value.members?.length;
- if(!Array.isArray(value.members)||!(cooperation?[2,3].includes(count):count===3)||!Array.isArray(value.ordered)||value.ordered.length!==count)throw Error('创意组合成员格式不正确');
+ if(!Array.isArray(value.members)||!(value.archetype==='shared'?count>=2&&count<=5:cooperation?[2,3].includes(count):count===3)||!Array.isArray(value.ordered)||value.ordered.length!==count)throw Error('创意组合成员格式不正确');
  result.members=value.members.map(m=>{if(!m||!roles.includes(m.role)||!hero(m.champion))throw Error('创意组合成员格式不正确');return {role:m.role,champion:m.champion};});
  if(new Set(result.members.map(m=>m.role)).size!==count||new Set(result.members.map(m=>m.champion)).size!==count)throw Error('创意组合成员重复');
  // Draft ownership is saved alongside the plan, not part of the immutable
@@ -86,7 +86,7 @@ export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
  }
  const members=new Set(result.members.map(memberKey)),ordered=new Set();
  result.ordered=value.ordered.map(m=>{if(!m||!members.has(memberKey(m))||ordered.has(memberKey(m))||!text(m.job,cooperation?700:200))throw Error('创意组合分工与成员不一致');ordered.add(memberKey(m));return {role:m.role,champion:m.champion,job:m.job};});
- if(!Array.isArray(value.steps)||!(cooperation?value.steps.length>=count-1&&value.steps.length<=3:value.steps.length===3)||!value.steps.every(s=>text(s,400)))throw Error('创意组合衔接顺序格式不正确');result.steps=[...value.steps];
+ if(!Array.isArray(value.steps)||!(value.archetype==='cooperation'?value.steps.length>=count-1&&value.steps.length<=3:value.steps.length===3)||!value.steps.every(s=>text(s,400)))throw Error('创意组合衔接顺序格式不正确');result.steps=[...value.steps];
  if(value.archetype==='cooperation'){
   result.cooperation=savedCooperation(value.cooperation,result.members);
   if(JSON.stringify(result.steps)!==JSON.stringify(result.cooperation.steps)||result.window!==result.cooperation.conditions.join(' ')||result.caution!==result.cooperation.failures.join(' '))throw Error('机制搭配条件与保存说明不一致');
@@ -102,15 +102,25 @@ export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
  if(slots&&!(allowUnknown?creativePlanCompatible(result,slots):creativePlanMatches(result,slots)))throw Error('创意组合说明与保存阵容不一致');
  return result;
 }
-const validMemberCount=plan=>Array.isArray(plan?.members)&&(['cooperation','shared'].includes(plan.archetype)?[2,3].includes(plan.members.length):plan.members.length===3);
+const validMemberCount=plan=>Array.isArray(plan?.members)&&(plan.archetype==='shared'?plan.members.length>=2&&plan.members.length<=5:plan.archetype==='cooperation'?[2,3].includes(plan.members.length):plan.members.length===3);
 export function creativePlanMatches(plan,slots){return !!plan&&validMemberCount(plan)&&plan.members.every(m=>slots?.some(s=>s.role===m.role&&s.champion===m.champion));}
 export function creativePlanCompatible(plan,slots){return !!plan&&validMemberCount(plan)&&Array.isArray(slots)&&plan.members.every(m=>!slots.some(s=>s.role===m.role&&s.champion&&s.champion!==m.champion||s.champion===m.champion&&s.role!==m.role));}
 export function captureCreativePlan(result,data,now=new Date().toISOString()){
  if(result.creativePlan)return validateCreativePlan(result.creativePlan,result.slots);
- const source=result.creative||(result.adaptive&&!result.trio&&!result.duo?(result.adaptive.kind==='shared'?sharedDescriptor:cooperationDescriptor)(result.adaptive,data):null);if(!source)return null;
+ const execution=resultCooperation(result),source=execution?(execution.kind==='shared'?sharedDescriptor:cooperationDescriptor)(execution,data):!result.trio&&!result.duo?result.creative:null;if(!source)return null;
  const editable=result.editableTargets??result.targets;
  const plan={patch:RULES_PATCH,dataVersion:data.version,rulesVersion:RULES_VERSION,...source,schema:1,verified:false,createdAt:now,...(Array.isArray(editable)?{editableTargets:roles.filter(role=>editable.includes(role)&&source.members.some(m=>m.role===role))}:{})};plan.id=creativePlanId(plan);
  return validateCreativePlan(plan,result.slots);
+}
+// Frozen accepted text wins. For new results, keep a complete authored group;
+// otherwise prefer the concrete full-member jobs over a discovery label or a
+// smaller curated subgroup. Creative seeds still serve ranking and discovery.
+export function resultCooperation(result){
+ if(result.creativePlan)return result.creativePlan.shared||result.creativePlan.cooperation||null;
+ const plan=result.adaptive;if(!plan?.memberJobs?.length)return null;
+ const authored=result.trio?.members||result.duo?.members||(result.duo?[{role:'bottom',champion:result.duo.carry},{role:'support',champion:result.duo.support}]:[]);
+ const covers=m=>plan.members.some(p=>memberKey(p)===memberKey(m));
+ return authored.length>=plan.members.length&&authored.every(covers)?null:plan;
 }
 export function creativeMemberCombo(value,champion,role){
  if(!value)return null;const plan=validateCreativePlan(value);
