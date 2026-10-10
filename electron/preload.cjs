@@ -37,4 +37,12 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  onGuideSelection:handler=>{const listener=(_,selection,meta)=>handler(selection,meta);ipcRenderer.on('guide-selection',listener);return()=>ipcRenderer.removeListener('guide-selection',listener);},
  onOpenBuild:handler=>{const listener=(_,selection,meta)=>handler(selection,meta);ipcRenderer.on('open-build',listener);return()=>ipcRenderer.removeListener('open-build',listener);},
  onProgress:handler=>{const listener=(_,msg)=>handler(msg);ipcRenderer.on('data-progress',listener);return()=>ipcRenderer.removeListener('data-progress',listener);},
+ roomStatus:()=>ipcRenderer.invoke('room-status'),
+ roomHost:nick=>ipcRenderer.invoke('room-host',nick),
+ roomJoin:(target,nick)=>ipcRenderer.invoke('room-join',target,nick),
+ roomLeave:()=>ipcRenderer.invoke('room-leave'),
+ roomPublish:share=>ipcRenderer.invoke('room-publish',share),
+ roomScan:()=>ipcRenderer.invoke('room-scan'),
+ roomAddresses:()=>ipcRenderer.invoke('room-addresses'),
+ onRoomUpdate:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('room-update',listener);return()=>ipcRenderer.removeListener('room-update',listener);},
 }));

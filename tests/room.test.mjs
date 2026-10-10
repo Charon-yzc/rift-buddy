@@ -4,7 +4,7 @@ import {
  ROOM_PROTOCOL,MAX_FRAME,makeRoomCode,validRoomCode,validPin,
  encodeDiscovery,decodeDiscovery,encodeInvite,decodeInvite,
  encodeFrame,splitFrames,decodeFrame,
- validateHello,validateWelcome,sanitizeShare,validateLeave,validateJoin,sanitizeNick,lineupFromSlots,
+ validateHello,validateWelcome,sanitizeShare,validateLeave,validateJoin,sanitizeNick,lineupFromSlots,shareFromSlots,
 } from '../src/core/room.mjs';
 
 test('room codes are six digits and deterministic under an injected generator',()=>{
@@ -140,4 +140,15 @@ test('lineupFromSlots extracts only role and champion from local slots',()=>{
  assert.equal(lineupFromSlots([]),null);
  assert.equal(lineupFromSlots(null),null);
  assert.equal(lineupFromSlots(slots.map((s,i)=>i===2?{...s,champion:'bad id'}:s)),null);
+});
+
+test('shareFromSlots publishes the public lineup plus the local pick only',()=>{
+ const slots=[{role:'top',champion:'Garen',party:true,locked:true,clientCellId:3},{role:'jungle',champion:null,party:false,locked:false},{role:'mid',champion:'Ahri',party:true,locked:false},{role:'bottom',champion:'Ashe',party:true,locked:true},{role:'support',champion:null,party:false,locked:false}];
+ assert.deepEqual(shareFromSlots(slots,'top'),{lineup:[{role:'top',champion:'Garen'},{role:'jungle',champion:null},{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{role:'support',champion:null}],pick:{champion:'Garen',role:'top',mode:'rift'}});
+ assert.equal(shareFromSlots(slots,'support').pick,null,'a role without a champion shares no pick');
+ assert.equal(shareFromSlots(slots,'').pick,null,'an unknown own role shares no pick');
+ assert.equal(shareFromSlots(slots,'mid','hex').pick.mode,'hex');
+ assert.equal(shareFromSlots(slots,'mid','bogus').pick.mode,'rift','unknown modes fall back instead of leaking');
+ assert.equal(shareFromSlots(null,'top'),null);
+ assert.equal(shareFromSlots(slots.slice(0,4),'top'),null);
 });

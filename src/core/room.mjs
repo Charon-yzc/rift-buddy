@@ -148,3 +148,13 @@ export function lineupFromSlots(slots){
  if(!Array.isArray(slots)||slots.length!==5)return null;
  return lineup(slots.map(s=>({role:s?.role,champion:s?.champion??null})));
 }
+
+// Build the payload the room shares: the full public lineup plus the local
+// player's own pick (when their role has a champion). Pure so the draft page
+// can reuse it and tests can cover it without Electron.
+export function shareFromSlots(slots,role,mode='rift'){
+ const team=lineupFromSlots(slots);
+ if(!team)return null;
+ const mine=role?team.find(slot=>slot.role===role&&slot.champion):null;
+ return {lineup:team,pick:mine?{champion:mine.champion,role:mine.role,mode:MODES.includes(mode)?mode:'rift'}:null};
+}
