@@ -21,7 +21,7 @@ const api=window.guide||{
  control:async(action,value)=>{
   const s=window.previewGuideState;
   if(action==='presentation')return {...snapshot,presentation:changePresentation(snapshot.presentation,value)};
-  if(action==='recover'){s.ball=false;s.collapsed=false;}
+  if(action==='recover'){s.ball=false;s.strip=false;s.collapsed=false;}
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
   if(action==='purchase-target'){s.purchaseTarget=value||undefined;s.purchaseTargetKind=snapshot.model.shoppingTargets.find(i=>i.id===value)?.kind==='局势备选'?'situation':undefined;}if(action==='stage')s.stage=value==='auto'?undefined:value;
@@ -29,10 +29,10 @@ const api=window.guide||{
   if(action==='later')s.selection=changeCompanionPlan(window.previewGuideData,s.selection,'later',value);
   if(action==='bottom-quest')s.bottomQuestConfirmed=!s.bottomQuestConfirmed;
   if(action==='live-advice')s.liveAdvice=s.liveAdvice===false;
-  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.bottomQuestConfirmed=false;s.completedItems=[];s.duelPick=undefined;delete s.purchaseTarget;delete s.purchaseTargetKind;delete s.stage;s.selection.compareIds=[];s.selection.ownedAugmentIds=[];delete s.selection.threatId;delete s.selection.matchupGameId;delete s.selection.protectId;delete s.selection.combatFocus;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball')s.ball=!s.ball;
+  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.bottomQuestConfirmed=false;s.completedItems=[];s.duelPick=undefined;delete s.purchaseTarget;delete s.purchaseTargetKind;delete s.stage;s.selection.compareIds=[];s.selection.ownedAugmentIds=[];delete s.selection.threatId;delete s.selection.matchupGameId;delete s.selection.protectId;delete s.selection.combatFocus;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball'){s.ball=!s.ball;if(s.ball)s.strip=false;}if(action==='strip'){s.strip=!s.strip;if(s.strip)s.ball=false;}
   if(action==='duel-own'||action==='duel-foe'){const side=action==='duel-own'?'own':'foe';if(value!==''&&!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value))throw Error('英雄选择格式不正确');const next={...(s.duelPick||{}),[side]:value||undefined};s.duelPick=next.own||next.foe?next:undefined;}
   if(action==='copy'){toast('桌面版支持复制');return true;}
-  return {...snapshot,ball:!!s.ball,model:createGuideModel(window.previewGuideData,s)};
+  return {...snapshot,ball:!!s.ball,strip:!!s.strip,model:createGuideModel(window.previewGuideData,s)};
  },
 };
 const image=(kind,id,name)=>`<img src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}" />`;
@@ -53,10 +53,10 @@ function render(){
  const focus=renderedContext===context&&root.contains(focused)?{id:focused.id,data:{...focused.dataset}}:null;
  renderedView=view;renderedContext=context;
  renderedStateWritable=tab!=='scoreboard'||m?.equipment?.available===true;
- const ball=!!snapshot?.ball;
+ const ball=!!snapshot?.ball&&!snapshot?.strip,strip=!!snapshot?.strip;
  renderedExpanded=!ball&&!m?.collapsed;
- document.body.classList.toggle('ball',ball);
- root.className=ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
+ document.body.classList.toggle('ball',ball); document.body.classList.toggle('strip',strip);
+ root.className=strip?'strip':ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
  root.dataset.tab=tab;
  root.dataset.workspace=['skills','combat','scoreboard','rhythm','team','augments','settings'].includes(tab)?'focused':'overview';
  root.innerHTML=renderGuide(snapshot,tab,isPreview,image);
@@ -87,7 +87,7 @@ document.addEventListener('click',async event=>{
  if(target.dataset.tab){if(snapshot.model?.collapsed){try{snapshot=await api.control('collapse');}catch(error){toast(error.message);return;}}if(target.dataset.tab==='settings'&&snapshot.mousePassThrough){try{snapshot=await api.control('interaction');}catch(error){toast(error.message);return;}}tab=target.dataset.tab;render();return;}
  // The floating ball lives on a draggable region: a real drag must move the
  // window, never toggle it. Only a near-stationary press counts as a click.
- if(target.dataset.action==='ball'){const moved=dragMoved;dragMoved=false;if(moved)return;}
+ if(target.dataset.action==='ball'||target.dataset.action==='strip'){const moved=dragMoved;dragMoved=false;if(moved)return;}
  target.disabled=true;
  try{const value=target.dataset.action==='presentation'?{field:target.dataset.field,value:target.dataset.field==='textScale'?Number(target.dataset.value):target.dataset.value}:target.dataset.id;const result=await api.control(target.dataset.action,value);if(result?.model!==undefined){if(target.dataset.action==='new-game'){viewStates.clear();renderedView=null;}snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}

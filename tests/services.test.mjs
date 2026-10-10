@@ -36,6 +36,14 @@ test('state round trip and strict imported collections',async()=>{
  await fs.writeFile(path.join(root,'settings.json'),'broken');assert.equal((await readState(root)).favorites.length,0);assert.ok((await fs.readdir(root)).some(f=>f.includes('.recovery-')));
 });
 
+test('room nickname preferences sanitize, cap at 24 and fall back to the default',()=>{
+ assert.equal(validateState({...defaultState(),preferences:{roomNick:' 小明 '}}).preferences.roomNick,'小明');
+ assert.equal(validateState({...defaultState(),preferences:{roomNick:'队友\u202e甲'}}).preferences.roomNick,'队友甲');
+ assert.equal(validateState({...defaultState(),preferences:{roomNick:'x'.repeat(25)}}).preferences.roomNick,'队友');
+ assert.equal(validateState({...defaultState(),preferences:{roomNick:' '}}).preferences.roomNick,'队友');
+ assert.equal(validateState(defaultState()).preferences.roomNick,'队友');
+});
+
 test('automatic pick ownership survives restart, while loaded favorites stay manual',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-sync-restart-'));
  const slots=createSlots();slots[0]={...slots[0],champion:'Garen',locked:true};

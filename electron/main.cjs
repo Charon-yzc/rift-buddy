@@ -1,11 +1,12 @@
 const {app,BrowserWindow,ipcMain,Menu,Tray,nativeImage,globalShortcut,clipboard,shell,dialog,session,screen}=require('electron');
 const path=require('node:path');
 const fs=require('node:fs/promises');
+const os=require('node:os');
 const {isDeepStrictEqual}=require('node:util');
 const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
-let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,windowObserver,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
+let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,windowObserver,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,rendererReady=false,pendingBuild=null;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
@@ -152,6 +153,26 @@ async function boot(){
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
  const placement=await import('../src/core/window-placement.mjs');
  companion=require('./client-companion.cjs')({getWindow:()=>win,createWindow,getClient:()=>latestClient,getPreferences:()=>state.preferences,placement,diagnostic});
+ // LAN room (CHA-31): share draft lineups with invited peers on the same
+ // network or VPN. Local-only; no accounts, no cloud, never logs credentials.
+ const {createRoomService}=await import('../services/room.mjs');
+ const {sanitizeNick}=await import('../src/core/room.mjs');
+ let roomNickInUse='';
+ const ensureRoom=wanted=>{
+  const clean=sanitizeNick(wanted)||sanitizeNick(state.preferences.roomNick)||'队友';
+  if(roomService&&roomNickInUse===clean)return roomService;
+  if(roomService){if(roomService.snapshot().mode!=='idle')throw Error('请先离开房间再修改昵称');roomService.dispose();roomService=null;}
+  roomNickInUse=clean;
+  roomService=createRoomService({nick:clean,onUpdate:snapshot=>{if(win&&!win.isDestroyed())win.webContents.send('room-update',snapshot);},diagnostic});
+  return roomService;
+ };
+ guard('room-status',()=>roomService?roomService.snapshot():null);
+ guard('room-host',nick=>ensureRoom(nick).host());
+ guard('room-join',(target,nick)=>ensureRoom(nick).join(target||{}));
+ guard('room-leave',()=>{if(!roomService)return null;roomService.leave();return roomService.snapshot();});
+ guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return roomService.publish(share);});
+ guard('room-scan',()=>ensureRoom(state.preferences.roomNick).scan());
+ guard('room-addresses',()=>{const list=[];for(const [name,items] of Object.entries(os.networkInterfaces()))for(const item of items||[])if(item.family==='IPv4'&&!item.internal)list.push({name,address:item.address});return list;});
  guard('presentation',setPresentation);
  guard('bootstrap',()=>({data,state,client:latestClient,windowLayout:companion.layout(),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}));
  const {windowInfo}=await import('../services/window-info.mjs');
@@ -296,7 +317,7 @@ async function boot(){
 }
 if(lock)app.whenReady().then(boot).catch(error=>{diagnostic(`startup error ${error.message}`);dialog.showErrorBox('开黑搭子启动失败',error.message);app.quit();});
 app.on('window-all-closed',()=>{if(!tray||quitting)app.quit();});
-app.on('will-quit',()=>{clearInterval(statusTimer);clearInterval(liveTimer);windowObserver?.stop();companion?.destroy();guide?.destroy();globalShortcut.unregisterAll();});
+app.on('will-quit',()=>{clearInterval(statusTimer);clearInterval(liveTimer);windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
 app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
  event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;

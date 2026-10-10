@@ -21,4 +21,10 @@ test('window UI and copied text distinguish outer bounds from render resolution'
  const info=windowInfo(fixture(),now),html=windowInfoDialog(info),text=windowInfoText(info);
  assert.match(html,/125% 缩放/);assert.match(html,/2400 × 1350/);assert.match(html,/未检测到当前外框/);assert.match(html,/不能确认游戏里的渲染分辨率/);assert.match(text,/1600 × 900 像素 · 1280 × 720 DIP/);assert.match(text,/外框不等于/);assert.doesNotMatch(text,/private|auth|token|C:\//);
  assert.match(windowInfoDialog(null),/window-info-copy" disabled/);assert.match(windowInfoDialog(null,'<bad>'),/&lt;bad&gt;/);
+ // The transparent kill strip must survive the allowlist and read as 文本条,
+ // never as an expanded guide window.
+ const stripInfo=windowInfo({...fixture(),guide:{...fixture().guide,collapsed:false,visible:true,strip:true}},now);
+ assert.equal(stripInfo.guide.strip,true);
+ assert.match(windowInfoDialog(stripInfo),/文本条/);assert.match(windowInfoText(stripInfo),/文本条/);
+ assert.doesNotMatch(windowInfoText(stripInfo),/展开/);
 });

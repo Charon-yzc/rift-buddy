@@ -14,6 +14,6 @@ export function windowInfo(input={},now=Date.now()){
  const observed=value=>{const pixels=rect(value?.pixels),dip=rect(value?.dip);return fresh&&pixels&&dip?{pixels,dip,minimized:value.minimized===true,foreground:value.foreground===true}:null;};
  return {at:new Date(now).toISOString(),version:version(input.version),dataVersion:version(input.dataVersion),displays,
   client:{connected:input.client?.connected===true,phase:phases.has(input.client?.phase)?input.client.phase:'Offline'},
-  main:ownWindow(input.main),guide:ownWindow(input.guide)?{...ownWindow(input.guide),collapsed:input.guide.collapsed===true,ball:input.guide.ball===true,clickThrough:input.guide.clickThrough===true}:null,
+  main:ownWindow(input.main),guide:ownWindow(input.guide)?{...ownWindow(input.guide),collapsed:input.guide.collapsed===true,ball:input.guide.ball===true,strip:input.guide.strip===true,clickThrough:input.guide.clickThrough===true}:null,
   companion:input.companion?.docked===true,observationFresh:fresh,observedClient:observed(input.observedClient),observedGame:observed(input.observedGame)};
 }

@@ -2,9 +2,9 @@ import path from 'node:path';
 const quote=value=>'"'+String(value).replaceAll('$','$$').replaceAll('"','$\\"')+'"';
 export function installerScript({version,directory,output,icon,files}){
  if(!/^\d+\.\d+\.\d+$/.test(version)||version.trim()!==version||!files.length)throw Error('安装包版本或文件清单不完整');
- if(files.some(file=>path.isAbsolute(file)||file.split(/[\\/]/).some(p=>p==='..'||!p)||/[\r\n]/.test(file)))throw Error('安装包清单包含不合法路径');
+ if(files.some(file=>path.win32.isAbsolute(file)||/^[A-Za-z]:/.test(file)||file.split(/[\\/]/).some(p=>p==='..'||!p)||/[\r\n]/.test(file)))throw Error('安装包清单包含不合法路径');
  const relative=files.map(f=>f.replaceAll('/','\\')),folders=new Set();
- for(const file of relative){let dir=path.win32.dirname(file);while(dir!=='.'){folders.add(dir);dir=path.win32.dirname(dir);}}
+ for(const file of relative){let dir=path.win32.dirname(file);while(dir!=='.'){folders.add(dir);const next=path.win32.dirname(dir);if(next===dir)break;dir=next;}}
  const removeFiles=relative.map(file=>`  Delete "$INSTDIR\\${String(file).replaceAll('$','$$').replaceAll('"','$\\"')}"`).join('\n');
  const removeFolders=[...folders].sort((a,b)=>b.split('\\').length-a.split('\\').length||b.length-a.length).map(dir=>`  RMDir "$INSTDIR\\${dir.replaceAll('$','$$').replaceAll('"','$\\"')}"`).join('\n');
  return `# -*- coding: utf-8 -*-

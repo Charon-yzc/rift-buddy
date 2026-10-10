@@ -11,10 +11,10 @@ import {hasCurrentCombatStats} from '../services/champion-stats.mjs';
 import {validatePairStatistics} from '../src/core/pair-statistics.mjs';
 const root=path.resolve('.');let checked=0;const errors=[];
 async function syntax(folder){for(const item of await fs.readdir(folder,{withFileTypes:true})){
- const file=path.join(folder,item.name);if(item.isDirectory())await syntax(file);
+ const file=path.join(folder,item.name);if(item.isDirectory()){if(!item.name.startsWith('.'))await syntax(file);}
  else if(/\.(mjs|cjs|js)$/.test(file)){try{execFileSync(process.execPath,['--check',file],{stdio:'pipe'});checked++;}catch(e){errors.push(`${path.relative(root,file)}: ${e.stderr}`);}}
 }}
-for(const folder of ['src','electron','services','tests'])await syntax(folder);
+for(const folder of ['src','electron','services','tests','relay'])await syntax(folder);
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 validatePairStatistics(JSON.parse(await fs.readFile('data/pair-statistics.json','utf8')),data.champions);
 for(const champion of data.champions)if(!hasCurrentCombatStats(champion,data.patch))errors.push(`Missing current-patch champion combat stats: ${champion.id}`);

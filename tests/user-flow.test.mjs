@@ -154,6 +154,8 @@ test('estimate output carries no identities and copy stays estimation language',
  const html=estimateRows(model);
  for(const word of ['约','估算','反推'])assert.ok(html.includes(word));
  for(const word of ['预测','保证','必杀','必中','必胜','必赢','稳赢','胜率','购买','建议购买','liveBuy'])assert.equal(html.includes(word),false);
+ // A model without an explicitly selected target renders no numbers at all.
+ assert.equal(estimateRows({estimate:{edge:0.9,killThreshold:9999,duels:[],targetSelected:false}}),'');
  assert.equal(estimateRows({}),'');
 });
 
@@ -200,5 +202,30 @@ test('custom duel pits a picked ally against a picked enemy with disclosed proxi
  assert.equal(duelBox(plain),'');
  for(const word of ['预测','保证','必胜','胜率','购买'])assert.equal(html.includes(word),false);
  const rows=estimateRows(ally);
- assert.ok(rows.includes('仅复核普攻与被动')&&rows.includes('不能作为整套斩杀线')&&!rows.includes('undefined'));
+ assert.ok(rows.includes('仅复核普攻与被动')&&rows.includes('不能作为整套斩杀线')&&!rows.includes('undefined'));});
+
+test('kill strip shows only my kill lines against visible enemies',async()=>{
+ const {killStrip}=await import('../src/guide-view.mjs');
+ const {renderGuide}=await import('../src/guide-view.mjs');
+ const fresh={...live,gold:1500,level:9,skills:{Q:4,W:2,E:2,R:1},stats:{ad:120,ap:0,armor:60,mr:45,atkSpeed:1,hp:2500,maxHp:2500},enemies:[{id:'Thresh',name:'锤石',level:8,items:[]},{id:'Jinx',name:'金克丝',level:9,items:[]}]};
+ const model=createGuideModel(data,selectGuide(null,selection),{...fresh,matched:true,at:Date.now(),inventory:[]});
+ assert.ok(model.estimate&&model.estimate.duels.length>=2);
+ const html=killStrip(model);
+ const shown=model.estimate.duels.slice(0,5);
+ for(const d of shown){assert.ok(html.includes(d.enemy.name));assert.ok(html.includes(String(d.killMine)));}
+ assert.equal(html.split('<strong>').length-1,shown.length);
+ for(const word of ['承受输出','被斩','模型提示','注意','购买','胜率'])assert.equal(html.includes(word),false);
+ assert.ok(html.includes('估算')&&html.includes('data-action="strip"')&&!html.includes('undefined'));
+ assert.equal(killStrip({}),'');
+ assert.equal(killStrip({estimate:{duels:[]}}),'');
+ const full=renderGuide({model,strip:true,connected:true,phase:'InProgress',mousePassThrough:false},'items',false,()=>'<img>');
+ assert.ok(full.includes('kill-strip')&&!full.includes('estimate-row danger'));
+ // The content must be a no-drag region (drag regions swallow pointer
+ // events in a frameless window) with a separate drag grip beside it.
+ assert.ok(full.includes('strip-grip')&&full.includes('strip-frame'));
+ const css=await fs.readFile(new URL('../src/guide.css',import.meta.url),'utf8');
+ const stripRule=css.match(/\.kill-strip\{[^}]*\}/)?.[0]||'';
+ const gripRule=css.match(/\.strip-grip\{[^}]*\}/)?.[0]||'';
+ assert.ok(stripRule.includes('-webkit-app-region:no-drag')&&!stripRule.includes('-webkit-app-region:drag;'));
+ assert.ok(gripRule.includes('-webkit-app-region:drag'));
 });
