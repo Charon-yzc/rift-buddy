@@ -16,6 +16,7 @@ export function resultAsText(result,data){
  else if(creative){lines.push(creative.plan,`顺序：${creative.steps.join(' → ')}`,`行动窗口：${creative.window}`,`注意：${creative.caution}`,creative.feasibility);if(creative.curated)lines.push(`前期：${creative.curated.early}`,`经济：${creative.curated.economy}`,...creative.curated.sources.map(s=>`${s.name}：${s.url}`));}
  else if(result.trio){const t=result.trio;lines.push(t.plan,`顺序：${t.steps.join(' → ')}`,`行动窗口：${t.window}`,`前期：${t.early}`,`经济：${t.economy}`,`注意：${t.risk}`,`组合说明 ${t.patch} · ${t.reviewedAt}${t.patch!==data.patch?' · 旧版本说明保留':''}`);}
  else if(result.duo)lines.push(duoPlayText(duoPlay(result.duo,data))||result.duo.plan,`注意：${result.duo.risk}`);
+ if(saved?.stagePlan)for(const phase of Object.values(saved.stagePlan))lines.push(`${phase.label}：`,...phase.steps.map((step,i)=>`${i+1}. ${step}`),`玩家确认的窗口：${phase.window}`,`何时停：${phase.exit}`,`阶段说明 ${phase.patch} · ${phase.reviewedAt}${phase.patch!==data.patch?' · 旧版本说明保留':''}`);
  if(result.strategy)lines.push(`打法：${result.strategy.label}；代价与退出：${result.strategy.tradeoff}`);
  if(result.strategy?.threats?.length)lines.push(`对方阵容提示：${result.strategy.threats.join('；')}`);
  lines.push(pairStatisticsText(result.pairEvidence,data),teamWindowsText(result.analysis,{hasCooperation:!!jobs.length}));

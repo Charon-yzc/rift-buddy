@@ -37,8 +37,8 @@ test('public enemy conditions retain accepted duo/trio order and every member ta
     const after=heroCoach({...input,enemyId});
     assert.equal(after.sequenceSource,'team');
     assert.ok(after.sequence.endsWith(before.sequence));
-    for(const step of saved.steps)assert.ok(after.sequence.includes(step));
-    assert.ok(after.action.includes(build.combo.ownJob));
+    for(const step of saved.stagePlan[stage].steps)assert.ok(after.sequence.includes(step));
+    assert.ok(after.action.includes(build.combo.play.stages[stage].ownAction));
     assert.ok(after.sequence.startsWith(after.matchup.sequence[0]));
     for(const compact of [false,true])assert.ok(heroCoachView(after,{compact}).includes('沿用已选配合'));
    }

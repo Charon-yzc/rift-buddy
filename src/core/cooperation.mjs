@@ -77,11 +77,11 @@ function connectedEdges(members,graph){
  const edges=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge)edges.push(edge);}
  const current=edges.filter(e=>e.current);
  if(!current.length)return graph.skills.edges(members);
- const missing=members.filter(m=>!edges.some(e=>[e.a,e.b].includes(m.champion)));
- if(edges.length>=members.length-1&&!missing.length)return edges;
+ const missing=members.filter(m=>!current.some(e=>[e.a,e.b].includes(m.champion)));
+ if(current.length>=members.length-1&&!missing.length)return current;
  if(members.length===3&&missing.length===1){
   const followup=graph.skills.followup(current[0],missing[0]);
-  if(followup)return [...edges,followup];
+  if(followup)return [...current,followup];
  }
  return null;
 }

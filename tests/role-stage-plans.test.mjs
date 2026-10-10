@@ -4,13 +4,20 @@ import fs from 'node:fs/promises';
 import {EXTRA_ROLE_PLAYS} from '../src/core/role-plays-extra.mjs';
 import {rolePlay,ROLE_PLAYS_PATCH} from '../src/core/role-plays.mjs';
 import {matchupPlan} from '../src/core/matchup-plans.mjs';
-import {getBuild} from '../src/core/builds.mjs';
+import {getBuild,buildRoleEvidence} from '../src/core/builds.mjs';
 import {heroCoach} from '../src/core/hero-coach.mjs';
 import {profile} from '../src/core/rules.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+
+test('all bundled source positions retain authored and distinct opening, meeting and later duties',()=>{
+ for(const b of Object.values(data.builds)){
+  const notes=['opening','key','later'].map(stage=>rolePlay(b.champion,b.role,stage));
+  assert.ok(notes.every(n=>n&&!n.generic),b.champion+':'+b.role);assert.equal(new Set(notes.map(n=>n.action)).size,3,b.champion+':'+b.role);
+ }
+});
 
 test('all stored support and bottom preparations provide concrete distinct stage duties in the guide',()=>{
  for(const key of Object.keys(data.builds).filter(key=>/:(support|bottom)$/.test(key))){
@@ -101,9 +108,10 @@ test('fresh own skill ranks separate current actions from future R sequences wit
 });
 
 test('authored top, mid and jungle plans belong to playable roles and have distinct stage decisions',()=>{
+ const sourced=new Set(buildRoleEvidence(data).map(m=>m.champion+':'+m.role));
  for(const [key,notes]of Object.entries(EXTRA_ROLE_PLAYS)){
   const [id,role]=key.split(':'),hero=data.champions.find(c=>c.id===id);
-  assert.ok(hero,key);assert.ok(profile(hero).roles.includes(role),key);
+  assert.ok(hero,key);assert.ok(profile(hero).roles.includes(role)||sourced.has(key),key);
   assert.ok(['top','mid','jungle'].includes(role));assert.equal(notes.length,3);
   assert.equal(new Set(notes).size,3,key+' repeats the same action for different stages');
   for(const stage of ['opening','key','later']){
@@ -124,6 +132,31 @@ test('stage advice gives different concrete responsibilities for top, mid and ju
  assert.match(rolePlay('Lillia','jungle','later').action,/梦尘.*R.*W 中心/);
  assert.notEqual(rolePlay('Yone','top','key').action,rolePlay('Yone','mid','key').action);
  assert.notEqual(rolePlay('Yone','top','later').action,rolePlay('Yone','mid','later').action);
+});
+
+test('remaining solo roles teach forms, resources and exits through the actual guide',()=>{
+ const cases=[
+  ['Kled','top',/骑乘或下马.*勇气.*W/,/首个会撞到.*未上马/],
+  ['Khazix','jungle',/实际孤立.*尚未进化/,/已进化.*实际参与击杀.*远处接应/],
+  ['Anivia','mid',/Q 实际眩晕.*蛋形态/,/R 完全形成.*法力不足.*停 R/],
+  ['KSante','top',/当前形态.*两层/,/全盛 W 不提供普通 W.*眩晕/],
+  ['Udyr','jungle',/当前姿态与觉醒.*两次强化普攻/,/E 实际攻击.*觉醒用途/],
+  ['Yorick','top',/实际墓穴.*没有召唤物/,/室女.*墙能被打破/]
+ ];
+ for(const [id,role,opening,key] of cases){
+  assert.match(heroCoach({data,champion:id,role,stage:'opening'}).action,opening,id);
+  assert.match(heroCoach({data,champion:id,role,stage:'key'}).action,key,id);
+  for(const stage of ['opening','key','later']){
+   const state={...selectGuide(null,{id,role,mode:'rift'}),stage},model=createGuideModel(data,state);
+   assert.equal(model.coach.roleTask.generic,undefined,id+':'+stage);
+   assert.ok(renderGuide({model},'team',false,()=>'<img>').includes(model.coach.action));
+  }
+ }
+ for(const id of ['Aurora','Gangplank','Irelia','Kennen','Pantheon','Ryze']){
+  assert.match(heroCoach({data,champion:id,role:'top',stage:'key'}).action,/边线/);
+  assert.match(heroCoach({data,champion:id,role:'mid',stage:'key'}).action,/清线|中线/);
+  assert.notEqual(rolePlay(id,'top','key').action,rolePlay(id,'mid','key').action);
+ }
 });
 
 test('reviewed solo lane openings teach their own economy instead of a camp-clearing paragraph',()=>{

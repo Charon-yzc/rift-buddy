@@ -2,6 +2,7 @@ import {RULES_PATCH,RULES_VERSION} from './rules.mjs';
 import {fingerprint} from './catalog-review.mjs';
 import {curatedDescriptor,validateSavedCurated} from './curated-plan.mjs';
 import {TEMPOS} from './strategy.mjs';
+import {capturePlanStages,validatePlanStages,updatePlanKeyStage,savedMemberPlay} from './plan-stages.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
 const archetypes=['chain','poke','dive','protect','mixed','cooperation','shared','curated'];
@@ -9,7 +10,7 @@ const tempos=['early','teamfight','protect','poke','growth'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
 const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&value.length<=max&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value);
 const memberKey=m=>m.role+':'+m.champion;
-const content=plan=>Object.fromEntries([...['schema','archetype','archetypeName','name','tempo','members','ordered','why','plan','steps','window','caution','feasibility','patch','dataVersion','rulesVersion'],...(plan.archetype==='cooperation'?['cooperation']:plan.archetype==='shared'?['shared']:plan.archetype==='curated'?['curated']:[])].map(key=>[key,plan[key]]));
+const content=plan=>Object.fromEntries([...['schema','archetype','archetypeName','name','tempo','members','ordered','why','plan','steps','window','caution','feasibility','patch','dataVersion','rulesVersion'],...(plan.archetype==='cooperation'?['cooperation']:plan.archetype==='shared'?['shared']:plan.archetype==='curated'?['curated']:[]),...(plan.stagePlan!==undefined?['stagePlan']:[])].map(key=>[key,plan[key]]));
 export const creativePlanId=plan=>'creative-'+plan.archetype+'-'+fingerprint(content(plan));
 
 // Keep the original conditional interactions with the saved member pages.
@@ -88,7 +89,7 @@ export function selectPartyRoute(value,routeId){
  const steps=[plan.shared.steps[0],'主线：'+ordered[0].step,'备选：'+ordered[1].step];
  const tempo=ordered[0].tempo||plan.shared.tempo;
  const shared={...plan.shared,tempo,name:`${plan.members.length}人分工 · ${TEMPOS[tempo]}`,routes:ordered,memberJobs:ordered[0].memberJobs,steps,relaySteps:steps,conditions:[plan.shared.conditions[0],ordered[0].condition],failures:[plan.shared.failures[0],ordered[0].failure]};
- const next={...plan,...sharedDescriptor(shared,{version:plan.dataVersion})};next.id=creativePlanId(next);
+ const next=updatePlanKeyStage({...plan,...sharedDescriptor(shared,{version:plan.dataVersion})});next.id=creativePlanId(next);
  return validateCreativePlan(next);
 }
 
@@ -124,6 +125,11 @@ export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
   const expected=sharedDescriptor(result.shared,{version:result.dataVersion});
   for(const key of ['archetypeName','name','tempo','ordered','why','plan','steps','window','caution','feasibility','patch','rulesVersion'])if(JSON.stringify(result[key])!==JSON.stringify(expected[key]))throw Error('共同分工条件与保存说明不一致');
  }
+ if(value.stagePlan!==undefined){
+  result.stagePlan=validatePlanStages(value.stagePlan,result.members);
+  const key=result.stagePlan.key;
+  if(result.ordered.some(m=>key.memberJobs.find(p=>memberKey(p)===memberKey(m))?.job!==m.job)||JSON.stringify(key.steps)!==JSON.stringify(result.steps)||key.window!==result.window||key.exit!==result.caution)throw Error('保存的关键阶段与组合说明不一致');
+ }
  if(typeof value.createdAt!=='string'||!Number.isFinite(Date.parse(value.createdAt)))throw Error('创意组合保存时间格式不正确');result.createdAt=value.createdAt;
  result.id=creativePlanId(result);if(value.id!==result.id)throw Error('创意组合内容与标识不一致');
  if(slots&&!(allowUnknown?creativePlanCompatible(result,slots):creativePlanMatches(result,slots)))throw Error('创意组合说明与保存阵容不一致');
@@ -137,7 +143,8 @@ export function captureCreativePlan(result,data,now=new Date().toISOString()){
  const execution=resultCooperation(result),combo=result.trio||result.duo;
  const source=execution?(execution.kind==='shared'?sharedDescriptor:cooperationDescriptor)(execution,data):combo&&result.scope!=='solo'?curatedDescriptor(combo,data):!combo?result.creative:null;if(!source)return null;
  const editable=result.editableTargets??result.targets;
- const plan={patch:RULES_PATCH,dataVersion:data.version,rulesVersion:RULES_VERSION,...source,schema:1,verified:false,createdAt:now,...(Array.isArray(editable)?{editableTargets:roles.filter(role=>editable.includes(role)&&source.members.some(m=>m.role===role))}:{})};plan.id=creativePlanId(plan);
+ const plan={patch:RULES_PATCH,dataVersion:data.version,rulesVersion:RULES_VERSION,...source,schema:1,verified:false,createdAt:now,...(Array.isArray(editable)?{editableTargets:roles.filter(role=>editable.includes(role)&&source.members.some(m=>m.role===role))}:{})};
+ const stages=capturePlanStages(plan,data,combo);if(stages)plan.stagePlan=stages;plan.id=creativePlanId(plan);
  return validateCreativePlan(plan,result.slots);
 }
 // Frozen accepted text wins. For new results, keep a complete authored group;
@@ -154,6 +161,6 @@ export function creativeMemberCombo(value,champion,role){
  if(!value)return null;const plan=validateCreativePlan(value);
  if(!plan.members.some(m=>m.champion===champion&&m.role===role))return null;
  const source=plan.shared||plan.cooperation;
- return {...plan,origin:'creative',risk:plan.caution,members:plan.members.map(member=>({...member,job:plan.ordered.find(step=>memberKey(step)===memberKey(member)).job,...(plan.curated?{loadoutId:plan.curated.members.find(m=>memberKey(m)===memberKey(member)).loadoutId}:{})})),...(plan.curated?{catalogId:plan.curated.id,early:plan.curated.early,economy:plan.curated.economy,sources:plan.curated.sources,reviewedAt:plan.curated.reviewedAt}:source?{early:source.opening||null,economy:source.economy||null,sources:source.sourceUrls.map(url=>({name:'Riot 官方技能资料',kind:'技能依据',url}))}:{})};
+ return {...plan,origin:'creative',risk:plan.caution,play:savedMemberPlay(plan,champion,role),members:plan.members.map(member=>({...member,job:plan.ordered.find(step=>memberKey(step)===memberKey(member)).job,...(plan.curated?{loadoutId:plan.curated.members.find(m=>memberKey(m)===memberKey(member)).loadoutId}:{})})),...(plan.curated?{catalogId:plan.curated.id,early:plan.curated.early,economy:plan.curated.economy,sources:plan.curated.sources,reviewedAt:plan.curated.reviewedAt}:source?{early:source.opening||null,economy:source.economy||null,sources:source.sourceUrls.map(url=>({name:'Riot 官方技能资料',kind:'技能依据',url}))}:{})};
 }
 export const creativeComboContext=combo=>combo?{comboId:combo.id,...(combo.origin==='creative'?{creativePlan:validateCreativePlan(combo)}:{})}:{};

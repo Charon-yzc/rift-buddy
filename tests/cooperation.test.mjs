@@ -114,11 +114,26 @@ test('one or two locked friends still reach whole-party plans when recommending 
 test('prior cooperation saves without phase notes remain unchanged and new contradictory jobs are rejected',()=>{
  const [row]=recommend({slots:setup(trio.map(m=>m.role),trio.map(m=>[m.role,m.champion])),champions:data.champions,scope:'party'});
  const plan=captureCreativePlan(row,data),old=structuredClone(plan);
+ delete old.stagePlan;
  for(const field of ['opening','economy','memberJobs','relaySteps'])delete old.cooperation[field];
  old.cooperation.steps=old.cooperation.edges.map(e=>e.step);old.cooperation.why=old.cooperation.steps.join(' ');old.steps=[...old.cooperation.steps];old.why=old.cooperation.why;old.ordered=old.members.map(m=>({...m,job:old.cooperation.edges.filter(e=>[e.a,e.b].includes(m.champion)).map(e=>e.step).join(' ')}));
  old.plan='先确认双方技能与站位，再按已保存的联动顺序行动；任一成立条件不满足就停止强接。';old.id=creativePlanId(old);
  assert.deepEqual(validateCreativePlan(JSON.parse(JSON.stringify(old))),old);
  const broken=structuredClone(plan);broken.ordered[0].job='与成员计划相矛盾的另一分工';broken.id=creativePlanId(broken);assert.throws(()=>validateCreativePlan(broken),/分工与保存说明不一致/);
+});
+
+test('member-specific openings never invent Kindred and the ball/control/bullet trio retains every relay condition',()=>{
+ const four=[member('Garen','top'),member('MasterYi','jungle'),member('Kassadin','mid'),member('Kayle','bottom')];
+ const growth=cooperationPlan(four,graph());assert.ok(growth);assert.doesNotMatch(JSON.stringify(growth),/千珏|印记/);
+ const withKindred=cooperationPlan([member('Kayle','top'),member('Kindred','jungle'),member('Vladimir','mid')],graph());assert.match(withKindred.opening,/千珏印记/);
+ const members=[member('Amumu','jungle'),member('Orianna','mid'),member('MissFortune','bottom')],plan=cooperationPlan(members,graph());
+ assert.equal(plan.memberJobs.length,3);assert.equal(plan.relaySteps.length,3);
+ assert.match(plan.memberJobs.find(m=>m.champion==='Orianna').job,/球已到且仍跟随.*球返回或落点脱离/);
+ assert.match(plan.memberJobs.find(m=>m.champion==='Amumu').job,/Q.*普攻施加诅咒.*错开已有控制/);
+ assert.match(plan.memberJobs.find(m=>m.champion==='MissFortune').job,/位移结算后.*锥形.*打断威胁.*中止/);
+ const slots=setup(members.map(m=>m.role),members.map(m=>[m.role,m.champion])),saved=captureCreativePlan({adaptive:plan,slots},data);
+ for(const m of members)assert.equal(saved.ordered.find(p=>p.champion===m.champion).job,plan.memberJobs.find(p=>p.champion===m.champion).job);
+ assert.deepEqual(saved.steps,plan.relaySteps);
 });
 
 test('mechanical families require the actual ally attack or control condition',()=>{
@@ -181,8 +196,9 @@ test('loading an accepted lineup recomputes its plan and detailed UI and copy ex
 
 test('legacy links retain their version and unknown heroes never acquire reviewed family mechanics',()=>{
  const g=createCooperationGraph(data.champions,{links:[['Sejuani','Ahri','先手留人接狐狸控制']],patch:'16.19',reviewedAt:'2026-10-01'});
- const plan=cooperationPlan([member('Gwen','top'),member('Sejuani','jungle'),member('Ahri','mid')],g);assert.ok(plan);assert.ok(plan.edges.some(e=>!e.current&&e.patch==='16.19'));
- assert.match(cooperationView(plan,data),/16\.19 · 旧版本说明保留/);assert.match(cooperationText(plan),/沿用组合库说明 16\.19/);
+ const old=g.edge(member('Sejuani','jungle'),member('Ahri','mid'));assert.equal(old.current,false);assert.equal(old.patch,'16.19');
+ const plan=cooperationPlan([member('Gwen','top'),member('Sejuani','jungle'),member('Ahri','mid')],g);assert.ok(plan);assert.ok(plan.edges.every(e=>e.current));
+ assert.ok(plan.edges.some(e=>e.family.startsWith('follow:')&&e.b==='Ahri'));assert.match(plan.conditions.join(' '),/阿狸：E 路线无遮挡/);assert.match(plan.steps.join(' '),/小兵侧面 E/);
  const unknown={...byId.get('Jinx'),id:'FutureChampion'},unknownGraph=createCooperationGraph([...data.champions,unknown]);
  assert.equal(unknownGraph.edge(member('Milio','support'),member('FutureChampion','bottom')),null);
 });
@@ -213,7 +229,7 @@ test('accepted two- and three-person mechanisms retain original conditions, sour
    assert.deepEqual(selection.creativePlan,plan);const build=getBuild(byId.get(selection.id),selection.role,data,selection);
    assert.equal(build.combo.id,plan.id);assert.equal(build.runePage.selectedPerkIds.length,9);assert.deepEqual(build.combo.steps,plan.steps);assert.equal(build.combo.window,plan.window);assert.equal(build.combo.risk,plan.caution);assert.ok(build.combo.sources.length);
    assert.equal(currentCombo(slots,selection.id,selection.role,{},null,plan).id,plan.id);
-   const model=createGuideModel(data,selectGuide(null,selection),null,{...selection,comboKnown:true});assert.equal(model.comboConfirmed,true);assert.deepEqual(model.combo.creativePlan,plan);assert.match(model.stageHint.text,/四层/);assert.match(model.combo.risk,/停止|不要/);
+   const model=createGuideModel(data,selectGuide(null,selection),null,{...selection,comboKnown:true});assert.equal(model.comboConfirmed,true);assert.deepEqual(model.combo.creativePlan,plan);assert.match(model.stageHint.play.window,/四层/);assert.match(model.combo.risk,/停止|不要/);
   }
   const missing=slots.map(s=>s.role===members[1].role?{...s,champion:null}:s),changed=slots.map(s=>s.role===members[1].role?{...s,champion:'Vi'}:s),own=members[0];
   assert.equal(creativePlanCompatible(plan,missing),true);assert.equal(comboContextKnown(missing,own.champion,own.role,plan.id,plan),false);

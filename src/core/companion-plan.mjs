@@ -2,6 +2,8 @@ import {changeSummonerSlot} from './summoner-selection.mjs';
 import {getBuild} from './builds.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {ROLES,profile} from './rules.mjs';
+import {editRunePage} from './rune-page.mjs';
+import {editSkillOrder} from './skill-advice.mjs';
 
 export function companionPickIntent(client,champions,slots=[],{scope='solo',soloRole=''}={}){
  const session=client?.session,mode=client?.mode?.id;
@@ -31,7 +33,7 @@ export function changeCompanionPlan(data,selection,field,value){
   next.bottomQuestPlan=!selection.bottomQuestPlan;if(!next.bottomQuestPlan)next.laterIds=(next.laterIds||[]).slice(0,2);
  }else if(field==='loadout'){
   if(value!=='default'&&!current.loadoutOptions.some(o=>o.id===value))throw Error('玩法已变化，请重新选择');
-  next.loadoutId=value;next.coreIndex=0;delete next.coreId;delete next.runeId;delete next.skillId;next.laterIds=[];
+  next.loadoutId=value;next.coreIndex=0;delete next.coreId;delete next.runeId;delete next.customRunePage;delete next.skillId;delete next.customSkillOrder;next.laterIds=[];
  }else if(field==='core'){
   const index=Number(value);
   if(!Number.isInteger(index)||index<0||!current.reference?.core[index])throw Error('装备路线已变化，请重新选择');
@@ -46,12 +48,22 @@ export function changeCompanionPlan(data,selection,field,value){
   if(!selected.includes(id)&&selected.length>=current.maxLaterItems)throw Error('后期装备位已满，请先取消一件备选');
   next.laterIds=selected.includes(id)?selected.filter(i=>i!==id):[...selected,id];
   if(!selected.includes(id)&&!getBuild(champion,selection.role,data,next).selectedLaterIds.includes(id))throw Error('这件装备与当前路线互斥或暂不可用，请先取消冲突备选');
+ }else if(field.startsWith('rune-custom:')){
+  if(selection.mode!=='rift')throw Error('此模式不编辑峡谷符文');
+  next.customRunePage=editRunePage(current.runePage,field.slice(12),value,data.runes,data.patch);
+ }else if(field==='rune-reset'){
+  delete next.customRunePage;delete next.runeId;
  }else if(field==='rune'){
   if(!current.runeOptions.some(o=>o.id===value))throw Error('符文方案已变化，请重新选择');
-  next.runeId=value;
+  next.runeId=value;if(value!==current.selectedRuneId||!value.startsWith('custom-'))delete next.customRunePage;
+ }else if(field.startsWith('skill-custom:')){
+  if(selection.mode!=='rift')throw Error('此模式不编辑峡谷加点');
+  next.customSkillOrder={order:editSkillOrder(current.skillOrder,champion.id,Number(field.slice(13)),value,{priority:current.priority,first:current.first}),patch:data.patch};
+ }else if(field==='skill-reset'){
+  delete next.customSkillOrder;delete next.skillId;
  }else if(field==='skill'){
   if(value&&!current.skillChoices.some(o=>o.id===value))throw Error('加点方案已变化，请重新选择');
-  next.skillId=value||undefined;
+  next.skillId=value||undefined;if(value!==current.selectedSkillId||!value?.startsWith('custom-'))delete next.customSkillOrder;
  }else if(field==='condition'){
   if(!['ad','ap','control','heal','burst'].includes(value))throw Error('不支持的对线条件');
   const conditions=selection.conditions||[];

@@ -79,7 +79,10 @@ jobs:
       - name: Check creative action order preserves saved members and configurations
         run: node scripts/smoke-package-creative-plan-continuity.mjs --reordered
       - name: Check public-opponent plans and duo phases in packaged windows
-        run: node scripts/smoke-package-matchups.mjs
+        run: |
+          node scripts/smoke-package-matchups.mjs
+          node scripts/smoke-package-role-preparation.mjs
+          node scripts/smoke-package-role-preparation.mjs --matchup-choices
       - name: Check public-opponent conditions preserve accepted team order and own skill gates
         run: node scripts/smoke-package-matchups.mjs --team-order
       - name: Check accepted mechanism plans across member guides and restarts
@@ -93,6 +96,9 @@ jobs:
         run: |
           node scripts/smoke-package-curated-plan.mjs
           node scripts/smoke-package-curated-plan.mjs --routes
+          node scripts/smoke-package-curated-plan.mjs --duo-stages
+          node scripts/smoke-package-curated-plan.mjs --readiness
+          node scripts/smoke-package-curated-plan.mjs --custom-runes
       - name: Check four/five-member poke, protection routes and separate pair evidence
         run: |
           node scripts/smoke-package-curated-plan.mjs --tactics-four
