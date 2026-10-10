@@ -7,9 +7,9 @@ import {hashPin} from '../relay/room-hub.mjs';
 // These fakes let the real RoomHub class execute in Node so handshake, pin
 // claiming, fan-out and close semantics are covered without deploying.
 class FakeServerSocket{
- constructor(){this.sent=[];this.closed=null;this.attachment=null;}
+ constructor(){this.sent=[];this.closed=null;this.attachment=null;this.readyState=1;this.closeCalls=0;}
  send(data){this.sent.push(String(data));}
- close(code,reason){this.closed={code,reason};this._remove?.();}
+ close(code,reason){this.closed={code,reason};this.readyState=2;this.closeCalls++;if(!this._delayClose)this._remove?.();}
  serializeAttachment(value){this.attachment=value;}
  deserializeAttachment(){return this.attachment;}
 }
@@ -34,11 +34,11 @@ globalThis.Request=class{
 const {RoomHub}=await import('../relay/worker.js');
 const {MAX_SOCKETS}=await import('../relay/room-hub.mjs');
 
-function fakeState(){
+function fakeState({delayClose=false}={}){
  const sockets=[],store=new Map();
  return {
   storage:{async get(k){return store.get(k);},async put(k,v){store.set(k,v);},async delete(k){store.delete(k);}},
-  acceptWebSocket(ws){sockets.push(ws);ws._remove=()=>{const i=sockets.indexOf(ws);if(i>=0)sockets.splice(i,1);};},
+  acceptWebSocket(ws){sockets.push(ws);ws._delayClose=delayClose;ws._remove=()=>{ws.readyState=3;const i=sockets.indexOf(ws);if(i>=0)sockets.splice(i,1);};},
   getWebSockets(){return sockets;},
   setWebSocketAutoResponse(){},
   sockets,store,
@@ -114,6 +114,32 @@ test('worker: silent sockets are evicted instead of blocking real members',async
  await hub.webSocketMessage(first,hello('真人'));
  assert.equal(first.closed,null);
  assert.equal(JSON.parse(first.sent[0]).kind,'welcome');
+});
+
+test('worker: delayed close stays within the attached-socket cap and recovers after disconnect',async()=>{
+ const attached=fakeState({delayClose:true}),hub=new RoomHub(attached);
+ for(let i=0;i<MAX_SOCKETS;i++)assert.equal((await hub.fetch(roomRequest('482913'))).status,101);
+ for(let i=0;i<30;i++){
+  assert.equal((await hub.fetch(roomRequest('482913'))).status,503);
+  assert.equal(attached.sockets.length,MAX_SOCKETS);
+ }
+ assert.ok(attached.sockets.every(ws=>ws.closeCalls===1));
+ const released=attached.sockets[0];released._remove();await hub.webSocketClose(released);
+ const response=await hub.fetch(roomRequest('482913'));
+ assert.equal(response.status,101);assert.equal(attached.sockets.length,MAX_SOCKETS);
+ await hub.webSocketMessage(response.webSocket,hello('恢复后加入'));
+ assert.equal(JSON.parse(response.webSocket.sent[0]).kind,'welcome');
+});
+
+test('worker: a capacity-evicted socket cannot finish its handshake while closing',async()=>{
+ const attached=fakeState({delayClose:true}),hub=new RoomHub(attached);
+ for(let i=0;i<MAX_SOCKETS;i++)await hub.fetch(roomRequest('482913'));
+ assert.equal((await hub.fetch(roomRequest('482913'))).status,503);
+ const closing=attached.sockets[0];assert.equal(closing.readyState,2);
+ await hub.webSocketMessage(closing,hello('已关闭的连接'));
+ assert.equal(closing.deserializeAttachment().nick,null);
+ assert.equal(closing.sent.length,0);assert.equal(attached.store.get('pinHash'),undefined);
+ assert.equal(closing.closeCalls,1);
 });
 
 test('worker: an empty room forgets its pin hash',async()=>{

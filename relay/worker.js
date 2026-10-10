@@ -35,16 +35,16 @@ export class RoomHub{
  async fetch(request){
   const room=new URL(request.url).pathname.slice('/room/'.length);
   const now=Date.now(),sockets=this.peers();
-  // A socket that never completed the handshake must not hold a slot
-  // forever: reap stale ones first, then evict an idle non-member before
-  // ever refusing a real member.
-  const stale=sockets.find(ws=>{const m=this.memberOf(ws);return !m.nick&&Number.isFinite(m.at)&&now-m.at>HANDSHAKE_TIMEOUT_MS;});
+  // A close handshake can leave the socket attached in CLOSING. Only ask
+  // open non-members to close, and count every still-attached socket until
+  // the platform actually releases it before accepting another connection.
+  const silent=sockets.filter(ws=>ws.readyState===1&&!this.memberOf(ws).nick);
+  const stale=silent.find(ws=>{const m=this.memberOf(ws);return Number.isFinite(m.at)&&now-m.at>HANDSHAKE_TIMEOUT_MS;});
   if(stale){try{stale.close(4006,'握手超时');}catch{}}
   else if(sockets.length>=MAX_SOCKETS){
-   const silent=sockets.find(ws=>!this.memberOf(ws).nick);
-   if(silent){try{silent.close(4005,'连接清理');}catch{}}
-   else return new Response('房间连接已满',{status:503});
+   if(silent[0]){try{silent[0].close(4005,'连接清理');}catch{}}
   }
+  if(this.peers().length>=MAX_SOCKETS)return new Response('房间连接已满，请稍后重试',{status:503});
   const pair=new WebSocketPair();
   const [client,server]=Object.values(pair);
   this.state.acceptWebSocket(server);
@@ -61,6 +61,9 @@ export class RoomHub{
  busyNicks(except){return new Set(this.members(except).map(ws=>this.memberOf(ws).nick));}
 
  async webSocketMessage(ws,message){
+  // The peer can still send while our close handshake is pending. It must
+  // not reclaim an evicted handshake slot or publish after being closed.
+  if(ws.readyState!==1)return;
   if(frameTooLarge(message)){ws.close(4009,'消息超限');return;}
   const self=this.memberOf(ws);
   let frame=null;
