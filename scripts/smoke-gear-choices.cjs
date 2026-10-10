@@ -68,6 +68,7 @@ async function run(){
   picked='Chogath';assigned='JUNGLE';await sync();await change('#solo-role','jungle');await sync();
   await until(()=>js('!!document.querySelector("[data-action=companion-start][data-id=start-1103-2003]")'),'Jungle pet choices missing');
   await click('[data-action=companion-start][data-id=start-1103-2003]');
+  await until(async()=>(await state()).preparations.some(p=>p.id==='Chogath'&&p.role==='jungle'&&p.startId==='start-1103-2003'),'Jungle starter was not saved');
   assert.ok((await state()).preparations.some(p=>p.id==='Chogath'&&p.role==='jungle'&&p.startId==='start-1103-2003'));
   picked='Volibear';assigned='TOP';await sync();await change('#solo-role','top');await sync();
  }

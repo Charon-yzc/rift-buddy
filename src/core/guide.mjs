@@ -10,12 +10,13 @@ import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {validateCreativePlan,creativeMemberCombo} from './creative-plan.mjs';
 import {dataStatus} from './data-status.mjs';
 import {assessSituation,chooseSituationTarget,pinnedSituationItem,situationItemIssue,inventoryFulfillsItem} from './live-situation.mjs';
-import {recommendSkill} from './skill-advice.mjs';
+import {recommendSkill,validateCustomSkillOrder} from './skill-advice.mjs';
 export {nextSkill} from './skill-advice.mjs';
 import {aggregateCombatStats,applyLivePanel,duel} from './live-estimate.mjs';
 import {ultimateReference} from './combat-models.mjs';
 import {objectiveRhythm,powerWindows} from './live-rhythm.mjs';
 import {heroCoach} from './hero-coach.mjs';
+import {validateCustomRunePage} from './rune-page.mjs';
 
 const conditions=['ad','ap','control','heal','burst'];
 const knownLevel=n=>Number.isInteger(n)&&n>=1&&n<=30;
@@ -33,6 +34,8 @@ export function validateDuelPick(value){
 }
 export function validateLoadoutSelection(value){
  const selected={};
+ if(value.customRunePage!==undefined){if(value.mode!=='rift')throw Error('自选符文只适用于召唤师峡谷');selected.customRunePage=validateCustomRunePage(value.customRunePage);}
+ if(value.customSkillOrder!==undefined){if(value.mode!=='rift')throw Error('自选加点只适用于召唤师峡谷');selected.customSkillOrder=validateCustomSkillOrder(value.customSkillOrder,value.id||value.champion);}
  if(value.summonerIds!==undefined)selected.summonerIds=validateSummonerIds(value.summonerIds,value.mode);
  if(value.bottomQuestPlan!==undefined&&typeof value.bottomQuestPlan!=='boolean')throw Error('下路任务计划格式不正确');
  if(value.bottomQuestPlan===true){if(value.role!=='bottom'||value.mode!=='rift')throw Error('额外装备计划只适用于峡谷下路任务');selected.bottomQuestPlan=true;}
@@ -151,7 +154,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const suggested=inventoryKnown&&!targetBlockedReason?chooseSituationTarget({situation,mainNext,purchase:mainPurchase,gold:live.gold}):null;
  const next=chosen||(suggested?choices.find(i=>i.id===suggested.id):null)||mainNext,targetPlan=next?purchasePlan([next],data.items,inventory,inventoryKnown?live.gold:null)[0]:null;
  const liveModel=matched?{matched:true,inventoryKnown,gold:live.gold,level:live.level,skills:live.skills,inventory:live.inventory,gameTime:live.gameTime,mapId:live.mapId,queueId:live.queueId,objectives:live.objectives,at:live.at}:liveStatus;
- const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,live:liveModel,signals:situation.signals,custom:!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
+ const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,live:liveModel,signals:situation.signals,custom:!!s.customSkillOrder||!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
  const nextCandidate=situation.candidates.find(c=>c.id===next?.id);
  const nextReason=nextCandidate?.reason||`${chosen?'保留你选择的回城目标。'+(pinned?'当前公开数据不再触发这项自动建议，你仍可手动保留或更换。':''):'继续你选择的成装方案。'}${targetPlan?.credit?`已持有组件抵扣约 ${targetPlan.credit} 金，优先利用已有投入。`:''}`;
  const ownChampion=data.champions.find(c=>c.id===s.id);

@@ -50,7 +50,7 @@ const openings={
  Zed:'劫先保兵线和能量，W 兼顾消耗与回撤；野区同行前先处理兵线，不把影子当免费进场。',
  Yasuo:'亚索先用兵线攒 Q，保留能 E 回来的目标；队友 R 未学会时靠自身 Q 旋风做短换血。',
  Jax:'武器先用 W/普攻安全补刀，E 留给普攻反击；没可 Q 回来的目标不越线等打野。',
- Kayle:'凯尔优先经验和安全补刀，低等级不按远程形态前压；为了千珏印记放弃整波经验通常得不偿失。',
+ Kayle:'凯尔优先经验和安全补刀，先按当前等级确认攻击形态；兵线未处理或没有安全退出时不离线空等。',
  Kindred:'千珏先保证安全营地与自身状态，印记位置只有可观察信息才行动；线上未处理兵线不强求队友入侵。',
  Camille:'卡蜜尔先管兵线与 Q 二段节奏，E 留安全墙体与退路；没有支援距离就不靠 R 等队友落地。',
  Taliyah:'塔莉垭先确认掘石场与兵线，E/W 留实际留人机会；游走前报能否到场，不把 R 当免费传送。',
@@ -65,6 +65,7 @@ const openings={
 // Champion-specific lane advice cannot be reused for another position.
 const openingRoles={Kindred:['jungle']};
 const relays=[
+ [['mid','Orianna','清线后 E 实际给阿木木，先确认球已到且仍跟随；阿木木控制命中后 W，R 已学会可用且球仍覆盖目标才拉起。球返回或落点脱离就取消 R，不为补球位独自追进。'],['jungle','Amumu','球已到、两位队友能覆盖落点才 Q；实际眩晕后普攻施加诅咒，R 已学会可用时错开已有控制。Q 被挡或弹幕够不到就回撤，不把目标追出锥形。'],['bottom','MissFortune','先在可保护的侧面 E 覆盖实际控制落点，Q/普攻接安全目标；球的位移结算后目标仍在锥形、R 已可用且打断威胁已处理才引导。目标走出或侧翼逼近就中止，没 R 用短轮次。']],
  [['mid','Ahri','清中线后从小兵侧面 E 魅惑实际命中，Q/W 跟伤害，留 R 退出；没有魅惑先停。'],['jungle','LeeSin','等阿狸魅惑命中再 Q 同一目标，判断落点再二段，W 留接应；R 若用只向诺手可接触方向踢。'],['top','Darius','先靠近两人能接应的位置，接魅惑 W/普攻再 Q 外圈；E 留目标退出时，不要求两位队友等满出血。']],
  [['mid','Ahri','先处理兵线，E 实际命中才报进场，Q/W 跟伤害并留 R 接应；控制落空不叫打野硬进。'],['top','Darius','趁魅惑用 W/普攻持续接触，Q 外圈换血，E 留人不提前交完；打不到目标就退出。'],['jungle','Viego','从无遮挡侧面 W 错开魅惑接控制，普攻/Q 集中同一目标；先有可靠击杀，再核对能否安全占据。']],
  [['top','Jax','兵线允许时 E/Q 靠近，E 实际眩晕后报目标，留可 Q 回撤的单位；没有退路先不跳。'],['mid','Ahri','等武器眩晕实际发生，从小兵侧面 E 魅惑接力、Q/W 跟伤害，留 R 退出。'],['jungle','Viego','W 接在已有控制之后，普攻/Q 集中同一目标，武器与阿狸能接应才继续；没有击杀不预设占据。']],
@@ -90,7 +91,7 @@ export function cooperationCoordination(members,graph,edges){
   return skill?`${independentCooperationAction(champion)} 按「${edge.name}」的成立条件与搭档衔接。`:edge.step;
  };
  const jobs=relay?members.map(m=>({...m,job:relay.find(r=>r.role===m.role&&r.champion===m.champion).job})):members.map(m=>({...m,job:edges.filter(e=>[e.a,e.b].includes(m.champion)).map(e=>ownStep(e,m.champion)).filter(Boolean).join(' ')}));
- const opening=members.map(m=>((openingRoles[m.champion]||['top','mid','bottom']).includes(m.role)?openings[m.champion]:null)||`${graph.byId.get(m.champion).name}${m.role==='jungle'?'按安全营地发育，报下一条可接应路线，不在兵线不允许时强求同行。':m.role==='support'?'围绕搭档位置留控制与保护，游走前先确认下路能安全补刀。':'先处理兵线与退出路线，再报能否到达队友位置。'}`).join(' ');
+ const opening=members.map(m=>(((openingRoles[m.champion]||['top','mid','bottom']).includes(m.role)?openings[m.champion]:null)||`${graph.byId.get(m.champion).name}${m.role==='jungle'?'按安全营地发育，报下一条可接应路线，不在兵线不允许时强求同行。':m.role==='support'?'围绕搭档位置留控制与保护，游走前先确认下路能安全补刀。':'先处理兵线与退出路线，再报能否到达队友位置。'}`)+(m.champion==='Kayle'&&members.some(p=>p.champion==='Kindred')?' 为了千珏印记放弃整波经验通常得不偿失。':'')).join(' ');
  const economy=(laneNames.length?`${laneNames.join('、')}各自保留兵线经济；`:'')+(members.some(m=>m.role==='jungle')?'打野保留安全营地，不为等一次抓人空转；':'')+'转资源前先报谁清线、谁占入口、谁后到，只有成员实际到位且相关条件满足才开。抓人失败回各自兵线或营地，不为了补损失连续强抓。';
  return {opening,economy,memberJobs:jobs,...(relay?{relaySteps:relay.map(m=>graph.byId.get(m.champion).name+'：'+m.job)}:{})};
 }

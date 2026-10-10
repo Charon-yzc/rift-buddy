@@ -22,6 +22,15 @@
 .drawer .modal-header{z-index:3}
 [data-build-section]{scroll-margin-top:150px}
 .rune-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rune-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.rune-edit-row{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:12px;color:#a8b5c7}
+.rune-edit-row .select{width:100%;min-width:0;max-width:100%}
+.rune-editor-descriptions{margin:12px 0;font-size:12px;line-height:1.65;color:#b4c0d1}
+.companion-shell .rune-editor-grid{grid-template-columns:minmax(0,1fr)}
+.skill-editor-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:12px 0}
+.skill-editor-grid label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:12px;color:#a8b5c7}
+.skill-editor-grid .select{min-width:0;width:100%;padding:7px 4px}
+.companion-shell .skill-editor-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:600px){.rune-options{grid-template-columns:1fr}}
 .combo-filter-extra{display:flex;align-items:center;flex-wrap:wrap;gap:10px 20px;margin:12px 0}
 .combo-filter-extra .combo-fit{margin:0}

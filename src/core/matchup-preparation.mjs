@@ -71,7 +71,7 @@ function enemyPressures(enemy){
  return tags;
 }
 function matchingRule(rules,eligible,tags,role){return rules.filter(r=>(!r.role||r.role===role)&&r.tags.some(t=>tags.has(t))&&eligible(r)).sort((a,b)=>b.score-a.score)[0];}
-function sourcePage(option){return {kind:option.source==='OP.GG'?'OP.GG 同位置完整页':'机制完整页',patch:option.patch||MATCHUP_PREPARATION_PATCH,samples:option.samples||0};}
+function sourcePage(option){return {kind:option.source==='OP.GG'?'OP.GG 同位置完整页':option.source==='个人自选'?'个人自选，无统计样本':'机制完整页',patch:option.patch||MATCHUP_PREPARATION_PATCH,samples:option.samples||0};}
 function coreSelection(data,selection,core,index){
  const next={...selection,variant:'default',loadoutId:'default',coreIndex:index,coreId:'core-'+core.items.join('-'),laterIds:[]};
  const b=getBuild(data.champions.find(c=>c.id===selection.id),selection.role,data,next);

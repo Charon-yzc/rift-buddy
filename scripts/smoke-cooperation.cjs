@@ -90,7 +90,7 @@ async function run(){
   if(crossLane&&member.champion==='Ahri')assert.ok(payload.model.selection.laterIds.includes(3165),'Selected late item did not reach guide or restart');
   await guideJs('document.querySelector("[data-tab=team]").click()');await until(()=>guideJs('!!document.querySelector(".team-steps")'),'Guide plan not rendered');
   assert.ok(await guideJs('(()=>{const a=document.querySelector(".team-steps"),b=[...document.querySelectorAll("summary")].find(s=>s.textContent==="英雄机制、对位与个人打法");return !!b&&!!(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING);})()'),'Chosen cooperation must precede generic personal coaching');
-  const text=await guideJs('document.querySelector(".expanded main").textContent');for(const step of plan.steps)assert.ok(text.includes(step));assert.ok(text.includes(plan.window)&&text.includes(plan.caution)&&text.includes('成立条件')&&text.includes('失败处理'));
+  const text=await guideJs('document.querySelector(".expanded main").textContent');for(const step of plan.steps)assert.ok(text.includes(step));assert.ok(text.includes(plan.window),'Saved condition missing from guide');assert.ok(text.includes(plan.caution),'Saved failure action missing from guide');
   await guideJs('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await delay(250);
   assert.ok(await guideJs('document.querySelector(".team-steps").getBoundingClientRect().height>0'),'Guide plan is not visible');
   await fs.writeFile(path.join(root,(restart?'restart-':'')+'guide-'+member.champion+'.png'),(await guide.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());

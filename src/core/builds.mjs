@@ -6,9 +6,12 @@ import {LOADOUT_DATE,LOADOUT_PATCH,RUNE_PLANS,loadoutOptions,comboLoadout,comboS
 import {itemConflicts,runeMechanicIssue} from './mechanics.mjs';
 import {adaptEquipment} from './adaptive-build.mjs';
 import {prepareGear} from './gear-choices.mjs';
-import {legalSkillOrder,orderPriority,skillMechanismNote,attributePreparation} from './skill-advice.mjs';
+import {legalSkillOrder,orderPriority,skillMechanismNote,attributePreparation,validateCustomSkillOrder} from './skill-advice.mjs';
 import {duoPlay,duoPlayText} from './duo-plays.mjs';
 import {creativeMemberCombo,validateCreativePlan} from './creative-plan.mjs';
+import {fallbackMemberPlay} from './plan-stages.mjs';
+import {validateRunePage,validateCustomRunePage} from './rune-page.mjs';
+export {validateRunePage} from './rune-page.mjs';
 
 export const BUILD_PARSER_VERSION=8;
 export function isFreshBuildReference(ref,patch,mode='rift',now=Date.now()){
@@ -50,16 +53,6 @@ const skillOrders={
 };
 const firstLevels={Aatrox:'QEW',Akshan:'EQQ',Ambessa:'QWE',Anivia:'QEE',AurelionSol:'EQW',Aurora:'QEW',Azir:'WQE',Belveth:'QEW',Briar:'WEQ',Evelynn:'QEW',Gnar:'QWE',Illaoi:'QWE',Irelia:'QEW',Jayce:'QWE',Kayn:'QEW',Kled:'QEW',KSante:'QEW',Leblanc:'WQE',Locke:'QEW',Mel:'QEW',Naafiri:'QEW',Qiyana:'WQE',Quinn:'EQW',RekSai:'QWE',Skarner:'QWE',Yunara:'QWE',Zaahen:'QEW',Yasuo:'QEW',Yone:'QWE',Jinx:'QWE',Jhin:'QWE',Ashe:'WQE',Caitlyn:'QWE',Corki:'EQW',Lux:'EQW',MissFortune:'QWE',Alistar:'QWE',Malphite:'QEW',Amumu:'QEW',Nautilus:'QWE',Leona:'EQW',Rell:'WQE',Ezreal:'QEW',Lucian:'QEW',Nami:'WEQ',Lulu:'EQW',KogMaw:'WQE',Twitch:'EQW',Samira:'QEW',Nilah:'QEW',Taric:'EQW',Seraphine:'QEW',Sona:'QWE',Zyra:'EQW',Veigar:'QEW',Chogath:'EQW',TahmKench:'QWE',Senna:'QWE',Heimerdinger:'QWE',Ziggs:'QEW',Swain:'EQW',Kalista:'EQW',Pyke:'QEW',Xayah:'WQE',Rakan:'WQE'};
 
-export function validateRunePage(page, trees) {
- if(!page||!Array.isArray(page.selectedPerkIds)||page.selectedPerkIds.length!==9) return false;
- const primary=trees.find(t=>t.id===page.primaryStyleId),secondary=trees.find(t=>t.id===page.subStyleId);
- if(!primary||!secondary||primary.id===secondary.id)return false;
- const ids=page.selectedPerkIds;
- if(!primary.slots.every((s,i)=>s.runes.some(r=>r.id===ids[i])))return false;
- const s1=secondary.slots.findIndex(s=>s.runes.some(r=>r.id===ids[4])),s2=secondary.slots.findIndex(s=>s.runes.some(r=>r.id===ids[5]));
- if(s1<=0||s2<=0||s1===s2)return false;
- return [[5008,5005,5007],[5008,5010,5001],[5011,5013,5001]].every((allowed,i)=>allowed.includes(ids[i+6]));
-}
 function validSourceRows(rows,data,map,older=false){return Array.isArray(rows)&&rows.length<=30&&rows.every(row=>row&&Array.isArray(row.items)&&row.items.length<=12&&row.items.every(id=>Number.isSafeInteger(id)&&id>0&&(older||data.items[id]?.maps?.[map]))&&Number.isFinite(row.samples)&&row.samples>=0);}
 function validSourceMetadata(ref,data,older=false){return Number.isFinite(Date.parse(ref.fetchedAt))&&typeof ref.sourceUrl==='string'&&ref.sourceUrl.startsWith('https://op.gg/')&&
  (ref.summoners===null||Array.isArray(ref.summoners)&&ref.summoners.length===2&&ref.summoners.every(id=>typeof id==='string'&&(older||data.spells[id])))&&
@@ -104,7 +97,7 @@ export function buildRoleEvidence(data){
  return result;
 }
 const conflicts=itemConflicts;
-export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,creativePlan,runeId,skillId,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false}={}) {
+export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false}={}) {
  coreIndex=Number.isInteger(coreIndex)&&coreIndex>=0?coreIndex:0;
  if(!Array.isArray(conditions))conditions=[];
  const p=profile(champion,mode==='hex'?undefined:role);let key=p.build;
@@ -117,7 +110,8 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const availableLoadouts=loadoutOptions(champion,role,mode).filter(l=>[...l.items,l.boots,...l.late,...(l.early||[])].every(id=>{const i=data.items[id],base=data.items[i?.specialRecipe];return i?.maps?.['11']&&(i.inStore&&i.gold?.purchasable!==false||base?.maps?.['11']&&base.inStore&&base.gold?.purchasable!==false);})&&l.runes.every(k=>validateRunePage(RUNE_PLANS[k]?.page,data.runes)));
  const creative=mode==='rift'&&creativePlan?.id===comboId?creativeMemberCombo(creativePlan,champion.id,role):null;
  const duo=creative||(mode==='rift'?[...TRIOS,...DUOS].find(d=>d.id===comboId&&comboLoadout(d,champion,role)!==null):null);
- const play=creative?null:duoPlay(duo,data,{champion:champion.id,role});
+ const play=creative?(creative.play||fallbackMemberPlay(creative,data,champion.id,role)):duoPlay(duo,data,{champion:champion.id,role});
+ if(play){play.currentPatch=data.patch;play.stale=Object.values(play.stages).some(stage=>(stage.patch||play.patch)!==data.patch);}
  const preferred=creative&&creative.archetype!=='curated'?'default':comboLoadout(duo,champion,role);
  const candidate=selectedBuildReference(data,champion.id,role);
  const standardRef=validReference(candidate,champion,role,data,{allowOlder:true})?candidate:null;
@@ -221,13 +215,28 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   addRune({...option,patch:standardRef.patch,name:`${keystone?.name||'来源符文'} · ${secondary?.name||''}`,when:(explanation?explanation+' ':'')+(config?`${buildSourceLabel(standardRef)}同英雄同位置参考，未验证适合这套娱乐组合。`:`${buildSourceLabel(standardRef)}完整方案；按对线与打法选择。`),source:'OP.GG'});
  }};
  if(mode==='rift'){if(config){addMechanisms();addSource();}else{addSource();addMechanisms();}if(!runeOptions.length)addRune({id:'curated-base',name:'机制基础方案',when:t.tips,source:'机制整理',samples:null,page:t.runes});}
- const chosenRune=runeOptions.find(o=>o.id===runeId)||runeOptions[0];
- if(runeId&&mode==='rift'&&!runeOptions.some(o=>o.id===runeId))selectionWarnings.push('原符文方案已不在当前列表，请重新核对选择。');
+ let customRune=null;
+ if(mode==='rift'&&customRunePage){
+  let page;try{page=validateCustomRunePage(customRunePage);}catch{}
+  if(page&&validateRunePage(page,data.runes)){
+   customRune={id:'custom-'+page.selectedPerkIds.join('-'),name:'自选符文页',when:'按个人打法逐枚调整，未经配置统计或组合效果验证；应用到客户端仍需明确点击。',source:'个人自选',samples:null,patch:page.patch,page};runeOptions.push(customRune);
+   if(page.patch!==data.patch)selectionWarnings.push(`自选符文整理于 ${page.patch}，当前资料 ${data.patch}，请核对变动。`);
+   const issue=runeMechanicIssue(champion.id,page);if(issue)selectionWarnings.push('自选符文：'+issue);
+  }else selectionWarnings.push('保存的自选符文含当前不可用选项，已保留原选择并暂用完整页参考，请重新调整后再应用。');
+ }
+ const chosenRune=customRune||runeOptions.find(o=>o.id===runeId)||runeOptions[0];
+ if(runeId&&mode==='rift'&&!customRune&&!runeOptions.some(o=>o.id===runeId))selectionWarnings.push('原符文方案已不在当前列表，请重新核对选择。');
  const skillChoices=mode==='rift'?(standardRef?.skillOptions||[]).filter(o=>legalSkillOrder(o.order,champion.id)).map(o=>({...o,name:`来源加点 · ${orderPriority(o.order,champion.id).split('').join(' › ')}`,when:`${buildSourceLabel(standardRef)}样本 ${o.samples} 场${o.samples<200?'，样本较少':''}；仅覆盖前 ${o.order.length} 个技能点，不代表这套组合的最优加点。`,source:'OP.GG'})):[];
  if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,when:config.skillReason||config.why,source:'机制整理',samples:null});
  const defaultSkill=(!config?skillChoices[0]:skillChoices.find(o=>o.source==='机制整理'))||null;
- const selectedSkill=skillChoices.find(o=>o.id===skillId)||defaultSkill;
- if(skillId&&!skillChoices.some(o=>o.id===skillId))selectionWarnings.push('原加点序列已移出当前资料，已回到默认方案。');
+ let customSkill=null;
+ if(mode==='rift'&&customSkillOrder){
+  let stored;try{stored=validateCustomSkillOrder(customSkillOrder,champion.id);}catch{}
+  if(stored){customSkill={id:'custom-skill-'+stored.order.toLowerCase(),name:'自选逐级加点',order:stored.order,patch:stored.patch,when:'按个人打法选择的合法技能点；已有技能不会重置，未验证统计优势。',source:'个人自选',samples:null};skillChoices.push(customSkill);if(stored.patch!==data.patch)selectionWarnings.push(`自选加点整理于 ${stored.patch}，请核对当前等级规则。`);}
+  else selectionWarnings.push('保存的自选加点当前不可用，暂用原方案参考，请核对英雄等级规则。');
+ }
+ const selectedSkill=customSkill||skillChoices.find(o=>o.id===skillId)||defaultSkill;
+ if(skillId&&!customSkill&&!skillChoices.some(o=>o.id===skillId))selectionWarnings.push('原加点序列已移出当前资料，已回到默认方案。');
  const runePage={...(chosenRune?.page||t.runes),name:`开黑搭子 · ${champion.name}`,current:true};
  const valid=validateRunePage(runePage,data.runes);
  const sampleCount=ref?.core[Math.min(ref.core.length-1,coreIndex)]?.samples||0;
