@@ -192,6 +192,10 @@ body{background:radial-gradient(1100px 520px at 75% -8%,#17261f 0%,transparent 6
 .room-member header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .room-member header b{font-size:13px}
 .room-member header small{color:#7d92a8;font-size:11px;margin-left:auto}
+.room-personal{margin:8px 0 0;color:#a8bdcf;font-size:12px;line-height:1.5}
+.room-personal b{color:#d6e1ef}.room-personal span{color:#e6b875}
+.room-champ.is-pick{border-color:#77b493;background:#1d342f}
+.room-pick-label{color:#a8e0bf;font-size:11px}
 .room-champs{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
 .room-champ{display:inline-flex;align-items:center;gap:7px;border:1px solid #33475c;border-radius:8px;background:#1a2634;color:#d6e1ef;padding:5px 8px;font-size:12px;cursor:pointer;transition:border-color .15s}
 .room-champ:hover{border-color:#77b493}

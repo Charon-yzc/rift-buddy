@@ -14,13 +14,18 @@ function memberCard(member,champ){
  const lineup=share&&Array.isArray(share.lineup)?share.lineup:[];
  const champions=lineup.filter(slot=>slot&&slot.champion);
  const mode=share?.mode||share?.pick?.mode||'rift';
+ const selected=share?.pick;
+ const hasPick=selected?.champion&&ROLES.some(r=>r.id===selected.role);
+ const pickMatches=hasPick&&selected.mode===mode&&champions.some(slot=>slot.champion===selected.champion&&slot.role===selected.role);
+ const personal=hasPick?`<p class="room-personal">个人选择：<b>${e(champ(selected.champion)?.name||selected.champion)}</b> · ${e(roleName(selected.role))}${pickMatches?'':' <span>（与共享阵容不一致，请核对）</span>'}</p>`:'<p class="room-personal">个人选择未确认</p>';
  const chips=champions.map(slot=>{
   const c=champ(slot.champion);
   const config=share?.configurations?.find(s=>s.champion===slot.champion&&s.role===slot.role);
-  return `<button class="room-champ" data-action="room-build" data-id="${e(slot.champion)}" data-role="${e(slot.role)}" data-mode="${e(config?.mode||mode)}" data-member="${e(member.nick)}" ${!config&&!(['rift','hex'].includes(mode))?'disabled':''} title="${e(roleName(slot.role))} · ${config?'查看发送方配置':'仅共享英雄，查看本地配置'}">${c?portrait(c,'sm'):''}<span>${e(c?.name||slot.champion)}${config?' · '+(config.mode==='hex'?'海克斯配置':'符文与加点'):!['rift','hex'].includes(mode)?' · 此模式暂不支持':' · 本地参考'}</span></button>`;
+  const own=pickMatches&&slot.champion===selected.champion&&slot.role===selected.role;
+  return `<button class="room-champ${own?' is-pick':''}" data-action="room-build" data-id="${e(slot.champion)}" data-role="${e(slot.role)}" data-mode="${e(config?.mode||mode)}" data-member="${e(member.nick)}" ${!config&&!(['rift','hex'].includes(mode))?'disabled':''} title="${own?'本人选择 · ':''}${e(roleName(slot.role))} · ${config?'查看发送方配置':'仅共享英雄，查看本地配置'}">${c?portrait(c,'sm'):''}<span>${own?'<strong class="room-pick-label">本人</strong> ':''}${e(c?.name||slot.champion)}${config?' · '+(config.mode==='hex'?'海克斯配置':'符文与加点'):!['rift','hex'].includes(mode)?' · 此模式暂不支持':' · 本地参考'}</span></button>`;
  }).join('');
  const updated=share?.at?`更新于 ${new Date(share.at).toLocaleTimeString('zh-CN')}`:'还没分享阵容';
- return `<article class="room-member"><header><b>${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
+ return `<article class="room-member"><header><b>${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${personal}${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
 }
 
 // Two transports, one nickname. The relay address is the user's own, so it is

@@ -46,6 +46,35 @@ test('a host without detected addresses asks guests to scan instead of inventing
  assert.match(html,/暂未检测到局域网地址/);
 });
 
+test('members sharing the same lineup keep their own champion and role visible',()=>{
+ const shared=snapshot().members[1].share;
+ const members=[{nick:'上路玩家',share:shared},{nick:'射手玩家',share:{...shared,pick:{champion:'Ashe',role:'bottom',mode:'rift'}}}];
+ const cards=roomPanel({room:snapshot({members}),champ}).match(/<article class="room-member">.*?<\/article>/g);
+ assert.equal(cards.length,2);
+ for(const [index,champion,role]of [[0,'Garen','top'],[1,'Ashe','bottom']]){
+  assert.match(cards[index],new RegExp(`class="room-champ is-pick"[^>]*data-id="${champion}" data-role="${role}"`));
+  assert.equal((cards[index].match(/room-champ is-pick/g)||[]).length,1);
+  assert.equal((cards[index].match(/data-action="room-build"/g)||[]).length,2);
+ }
+ assert.match(cards[0],/个人选择：<b>盖伦<\/b> · 上路/);
+ assert.match(cards[1],/个人选择：<b>艾希<\/b> · 下路/);
+});
+
+test('an unconfirmed personal pick is not inferred from the shared lineup or nickname',()=>{
+ const share={...snapshot().members[1].share,pick:null};
+ const html=roomPanel({room:snapshot({members:[{nick:'盖伦上路',share}]}),champ});
+ assert.match(html,/个人选择未确认/);assert.doesNotMatch(html,/room-champ is-pick|room-pick-label/);
+ assert.equal((html.match(/data-action="room-build"/g)||[]).length,2);
+});
+
+test('a personal pick inconsistent with the lineup or mode asks for confirmation without highlighting another build',()=>{
+ const shared=snapshot().members[1].share;
+ for(const pick of [{champion:'Ashe',role:'top',mode:'rift'},{champion:'Garen',role:'top',mode:'hex'}]){
+  const html=roomPanel({room:snapshot({members:[{nick:'队友',share:{...shared,mode:'rift',pick}}]}),champ});
+  assert.match(html,/与共享阵容不一致，请核对/);assert.doesNotMatch(html,/room-champ is-pick|room-pick-label/);
+ }
+});
+
 test('guest room never shows host credentials and escapes nicknames',()=>{
  const room=snapshot({mode:'client',pin:null,host:'192.168.1.5',members:[{nick:'<b>坏人</b>',online:true,share:null,self:true}]});
  const html=roomPanel({room,nick:'队友',addresses:[{name:'x',address:'10.0.0.2'}],champ});
