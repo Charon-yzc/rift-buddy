@@ -58,7 +58,8 @@ test('a trio retains its original relay and can explicitly adopt side pressure w
  const plan=selectPartyRoute(original,'side-pressure');assert.equal(plan.archetype,'shared');assert.equal(plan.members.length,3);assert.equal(plan.shared.bonus,0);
  assert.match(plan.ordered.find(m=>m.champion==='Sejuani').job,/实际步行到场时间.*不假定有全图转场/);
  assert.match(plan.ordered.find(m=>m.champion==='Ahri').job,/安全中线/);
- assert.doesNotMatch(plan.steps.join(' '),/射手负责|辅助负责/);
+ assert.doesNotMatch([plan.steps.join(' '),...plan.shared.conditions,...plan.shared.failures].join(' '),/射手负责|辅助负责|四人硬开/);
+ assert.match(plan.shared.routes[0].condition,/接应者实际到场时间与技能范围/);
  const persisted=validateCreativePlan(JSON.parse(JSON.stringify(plan)));assert.deepEqual(persisted,plan);
  for(const m of plan.members){const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:persisted}),stage:'later'});assert.equal(model.stageHint.play.window,plan.shared.routes[0].condition);assert.equal(model.stageHint.play.exit,plan.shared.routes[0].failure);}
 });
