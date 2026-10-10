@@ -7,9 +7,9 @@ import {electronExecutable} from './electron-runtime.mjs';
 import {defaultState,saveState} from '../services/storage.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 
-const source=process.argv.includes('--source'),size=Number(process.argv.find(a=>/^--size=/.test(a))?.split('=')[1]||3),ball=process.argv.includes('--ball');
-if(![2,3,4,5].includes(size)||ball&&size!==3)throw Error('Choose two through five players; the ball fixture has three.');
-const picks=ball?{jungle:'Vi',mid:'Orianna',support:'Nautilus'}:Object.fromEntries(Object.entries({jungle:'Gragas',mid:'Yasuo',support:'Rakan',top:'Ornn',bottom:'Jinx'}).slice(0,size));
+const source=process.argv.includes('--source'),size=Number(process.argv.find(a=>/^--size=/.test(a))?.split('=')[1]||3),ball=process.argv.includes('--ball'),wallTrio=process.argv.includes('--wall-trio');
+if(![2,3,4,5].includes(size)||(ball||wallTrio)&&size!==3||ball&&wallTrio)throw Error('Choose two through five players; the ball fixture has three.');
+const picks=wallTrio?{top:'Camille',jungle:'JarvanIV',mid:'Galio'}:ball?{jungle:'Vi',mid:'Orianna',support:'Nautilus'}:Object.fromEntries(Object.entries({jungle:'Gragas',mid:'Yasuo',support:'Rakan',top:'Ornn',bottom:'Jinx'}).slice(0,size));
 const root=await fs.mkdtemp(path.resolve('.local/party-counterplay-smoke-')),state=defaultState();
 Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,rolePools:{}});
 state.draft={slots:createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role],...(picks[s.role]?{manualPosition:true}:{}),...(s.role==='jungle'?{clientCellId:1}:{})})),style:'fun',scope:'party'};
@@ -22,4 +22,4 @@ for(const restart of [false,true]){
  const report=JSON.parse(await fs.readFile(path.join(root,restart?'restart.json':'select.json')));
  if(!report.passed||report.archiveSha256!==release.archiveSha256||report.actualRuneWrites!==0)throw Error('Invalid counterplay proof');
 }
-console.log(JSON.stringify({root,size,ball,passed:true,archiveSha256:release.archiveSha256}));
+console.log(JSON.stringify({root,size,ball,wallTrio,passed:true,archiveSha256:release.archiveSha256}));

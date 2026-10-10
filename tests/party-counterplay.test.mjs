@@ -107,3 +107,18 @@ test('saved counterplay rejects swapped members, untrusted sources and inconsist
  const snapshot=structuredClone(plan);snapshot.counterplay.rules[0].window='采用时保存的人工条件原文。';snapshot.id=creativePlanId(snapshot);
  assert.equal(validateCreativePlan(snapshot).counterplay.rules[0].window,'采用时保存的人工条件原文。');
 });
+
+test('Camille Jarvan and Galio cannot treat a Poppy-blocked dash as a valid shared landing point',()=>{
+ const picks={top:'Camille',jungle:'JarvanIV',mid:'Galio'},r=result(picks,['Poppy']),plan=capture(r),rule=plan.counterplay.rules[0];
+ assert.match(rule.window,/卡蜜尔 E 二段.*嘉文四世 E→Q.*加里奥 E/);
+ assert.equal(rule.sources.length,4);assert.doesNotMatch(rule.window,/卡蜜尔 R|嘉文四世 R|加里奥 R/);
+ const jobs=resultMemberJobs({...r,creativePlan:plan},data);
+ assert.match(jobs.find(m=>m.champion==='Camille').job,/E 被挡或缚地时取消原定接续/);
+ assert.match(jobs.find(m=>m.champion==='JarvanIV').job,/插旗不等于已击飞.*E→Q 被挡就取消/);
+ assert.match(jobs.find(m=>m.champion==='Galio').job,/E 没有实际到位就停.*不能以友军突进动画/);
+ assert.match(resultAsText({...r,creativePlan:plan},data),/卡蜜尔 E 二段/);
+ const hweiPlan=capture(result({top:'Camille',jungle:'JarvanIV',mid:'Hwei'},['Poppy']));
+ assert.match(hweiPlan.counterplay.rules[0].window,/卡蜜尔 E 二段.*嘉文四世 E→Q/);
+ assert.doesNotMatch(hweiPlan.counterplay.rules[0].members.map(m=>m.action).join(' '),/加里奥/,'Counterplay cannot invent the alternate third member');
+ for(const m of plan.members){const guide=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'key'});assert.match(guide.coach.action,/W 领域未处理/);assert.match(guide.combo.play.stages.later.exit,/主线与备用/);}
+});

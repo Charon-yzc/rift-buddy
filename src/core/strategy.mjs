@@ -47,8 +47,8 @@ export function opponentFit(analysis,enemyTraits){
  factors.sort((a,b)=>b.adjustment-a.adjustment||a.id.localeCompare(b.id));
  return {count:enemies.length,enemies:enemies.map(({id,name})=>({id,name})),factors,
   adjustment:Math.min(12,factors.reduce((sum,f)=>sum+f.adjustment,0)),
-  summary:enemies.length?`已考虑公开的${enemies.map(e=>e.name).join('、')}。`:'',
-  caveat:'人工机制参考；敌方分路、出装和技能状态未确认，不代表对线胜率。'};
+  summary:enemies.length?`公开对手：${enemies.map(e=>e.name).join('、')}。`:'',
+  caveat:'仅覆盖已整理的排序规则，不是完整反制审查；敌方分路、出装和技能状态未确认，不代表对线胜率。'};
 }
 export function threatNotes(analysis,enemyTraits){
  if(!enemyTraits||!enemyTraits.count)return [];

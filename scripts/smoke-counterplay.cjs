@@ -33,6 +33,13 @@ async function run(){
  await js('document.querySelector(".window-tools").open=true');
  assert.ok(await js('[...document.querySelectorAll(".window-tools-content .btn")].every(b=>{const r=b.getBoundingClientRect();return r.width>0&&r.top>=0&&r.right<=innerWidth;})'));
  await js('document.querySelector(".window-tools").open=false');
+ if(!restart){
+ await click('[data-action=draft-scope][data-scope="solo"]');
+ assert.ok(await js('(()=>{const b=document.querySelector("[data-action=position-auto]"),r=b?.getBoundingClientRect();return !!r&&r.width>0&&r.height>0;})()'),'Manual position restore must remain visible in the short solo window');
+ await click('[data-action=position-auto]');
+ assert.equal(await js('!!document.querySelector("[data-action=position-auto]")'),false,'Restore action must clear the manual local position');
+ await click('[data-action=draft-scope][data-scope="party"]');
+ }
  await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card .party-counterplay")'),'Concrete common conditions missing');
  main.setContentSize(1080,720);await capture('main.png');
  const mainText=await js('document.querySelector(".result-card").textContent');
@@ -63,6 +70,8 @@ async function run(){
    await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model.stage==='+JSON.stringify(stage)+')'),'Guide stage did not change');
    const payload=await guideJs('window.guide.bootstrap()');assert.deepEqual(payload.model.combo.creativePlan,plan);
    assert.match(payload.model.combo.play.stages[stage].ownAction,/若本局仍有/);
+   const specific={Camille:'E 被挡或缚地时取消原定接续',JarvanIV:'E→Q 被挡就取消这轮接控',Galio:'E 没有实际到位就停'}[member.champion];
+   if(specific)assert.ok(payload.model.combo.play.stages[stage].ownAction.includes(specific),'Specific counterplay action missing in member guide');
    const text=await guideJs('document.querySelector(".expanded main").textContent');
    for(const phrase of ['W 领域','黑盾阻止原定控制','R 把成员或目标推离'])assert.ok(text.includes(phrase),'Guide omitted '+phrase+' for '+member.champion+' '+stage);
   }

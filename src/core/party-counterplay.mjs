@@ -4,11 +4,14 @@ export const PARTY_COUNTERPLAY_PATCH='16.20',PARTY_COUNTERPLAY_REVIEWED_AT='2026
 const source=id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`;
 // Explicitly reviewed dashes. Vi R is unstoppable and Yasuo R is a blink:
 // neither is included in Poppy W's dash interruption instruction.
-const dash={Gragas:'E',Rakan:'W / E',Yasuo:'E',Vi:'Q',Ornn:'E',Sejuani:'Q'};
+const dash={Gragas:'E',Rakan:'W / E',Yasuo:'E',Vi:'Q',Ornn:'E',Sejuani:'Q',Camille:'E 二段',JarvanIV:'E→Q',Galio:'E'};
 const key=m=>m.role+':'+m.champion;
 const names={Poppy:'波比',Janna:'风女',Morgana:'莫甘娜'};
 const own={
  Poppy:{
+  Camille:'若本局仍有波比，W 领域未处理时不交从墙面突进的 E 二段；E 被挡或缚地时取消原定接续，不能把未到位的自己报成队友支援落点。R 另确认合法施放、实际目标与接应，不当作 E 已安全到场。',
+  JarvanIV:'若本局仍有波比，W 领域未处理时先留 E→Q 突进，可从安全距离单独 Q 消耗或 E 插旗支援；插旗不等于已击飞。E→Q 被挡就取消这轮接控，不让队友按原定位置跟进；R 另确认合法施放、实际落点与输出覆盖，撤退时及时解除挡路地形。',
+  Galio:'若本局仍有波比，W 领域未处理时留 E 向前突进，改安全 Q 消耗或 W 保护近处队友；E 没有实际到位就停。R 支援须先核对友军当时位置、范围与能否撑到延迟落地，不能以友军突进动画当作落点已经成立。',
   Gragas:'若本局仍有波比，W 领域未处理时先留 E；E 被挡就取消这轮击飞，不能催洛 W 补进同一领域。',
   Rakan:'若本局仍有波比，W 领域未处理时不补 W 进场；E 回友军也是突进，退路穿过领域时不能当必能回去。',
   Yasuo:'若本局仍有波比，W 领域未处理时不 E 试探；R 是闪现到实际被击飞的目标，仍须一次 R 可用、落点安全与队友接应。',
