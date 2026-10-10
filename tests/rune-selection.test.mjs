@@ -17,17 +17,18 @@ test('late or failed writes cannot confirm a newer session or supersede a newer 
  state.observe(draft({connected:false}));assert.equal(state.confirm(state.begin('offline')),false);
 });
 function fixture({selectOnWrite=false,switchFailure=false,switchIgnored=false,phaseChanged=false,corruptOnSwitch=false,create=false}={}){
- const preset={id:8000,isEditable:false,current:true,selectedPerkIds:[1]},editable={id:12,isEditable:true,current:false,selectedPerkIds:[2]};let pages=[preset,...(create?[]:[editable])],phaseReads=0;const calls=[];
+ const preset={id:8000,isEditable:false,current:true,selectedPerkIds:[1]},editable={id:12,isEditable:true,current:false,selectedPerkIds:[2]};let pages=[preset,...(create?[]:[editable])],written=false;const calls=[];
  return {calls,pages:()=>structuredClone(pages),discover:async()=>({port:12345,password:'test-only'}),request:async(_auth,route,method='GET',body)=>{
   calls.push({route,method,body});
-  if(route==='/lol-gameflow/v1/gameflow-phase')return phaseChanged&&phaseReads++>0?'InProgress':'ChampSelect';
+  if(route==='/lol-gameflow/v1/gameflow-phase')return phaseChanged&&written?'InProgress':'ChampSelect';
+  if(route==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:22,assignedPosition:'bottom'}]};
   if(method==='GET'&&route==='/lol-perks/v1/pages')return structuredClone(pages);
   if(method==='PUT'&&route==='/lol-perks/v1/currentpage'){
    if(switchFailure){const error=Error('Selection refused');error.status=409;throw error;}
    if(!switchIgnored)pages=pages.map(p=>({...p,current:p.id===body,...(corruptOnSwitch&&p.id===body?{selectedPerkIds:[3]}:{})}));return null;
   }
   const id=method==='POST'?777:Number(route.split('/').at(-1));assert.ok(method==='POST'&&route==='/lol-perks/v1/pages'||method==='PUT'&&id===12,'Unexpected content mutation');
-  if(selectOnWrite)pages=pages.map(p=>({...p,current:false}));pages=[...pages.filter(p=>p.id!==id),{...body,id,isEditable:true,current:selectOnWrite}];return {id};
+  written=true;if(selectOnWrite)pages=pages.map(p=>({...p,current:false}));pages=[...pages.filter(p=>p.id!==id),{...body,id,isEditable:true,current:selectOnWrite}];return {id};
  }};
 }
 test('saved rune content is explicitly selected when the client ignores the payload current flag',async()=>{

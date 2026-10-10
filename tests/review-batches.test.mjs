@@ -43,9 +43,9 @@ test('creative ideas carry distinct per-archetype plans and visible cautions',()
  assert.ok(defs.length>=2);
  assert.equal(new Set(defs.map(d=>d.plan)).size,defs.length);
  const rows=recommend({slots:createSlots(),champions:data.champions,limit:5});
- const creative=rows.find(r=>r.origin==='creative');
+ const creative=rows.find(r=>r.creative);
  assert.ok(creative);
- assert.ok(creative.reasonPoints.some(t=>t.startsWith('注意：')));
+ assert.equal(creative.origin,'adaptive');assert.ok(creative.reasonPoints.some(t=>t.startsWith('失败就退出：')));for(const m of creative.adaptive.memberJobs)assert.match(m.job,/[QWER]|普攻/);
  const card=renderResultCard(creative,4,viewData,{favorites:[]});
  assert.ok(card.includes('未经对局验证'));
 });

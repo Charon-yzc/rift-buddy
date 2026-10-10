@@ -1,18 +1,33 @@
+import {selectBuildSource} from "../src/core/build-source.mjs";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {legalSkillOrder,orderPriority,skillOptions,nextSkill,recommendSkill} from '../src/core/skill-advice.mjs';
-import {getBuild,validReference} from '../src/core/builds.mjs';
+import {getBuild,validReference,buildAsText} from '../src/core/builds.mjs';
 import {parseBuildJSON} from '../services/build-json.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';
 import {skillSelector} from '../src/build-options-view.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
+import {renderGuide} from '../src/guide-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),live=(level,skills)=>({matched:true,level,skills});
 // Current OP.GG source sequences, independently checked against the
 // character record's actual rank gates (sixth basic rank at level 11).
 const udyrOrder='RWRERQRWRWRWWWE',jayceOrder='QWEQQWQWQWQWWEE';
+
+test('Aphelios has sourced static attribute preparation across builds, sidebar, guide and copy without inferred live investments',()=>{
+ for(const fixture of [data,{...data,builds:{}}]){
+  const c=hero('Aphelios'),selection={id:c.id,role:'bottom',mode:'rift'},build=getBuild(c,'bottom',fixture);
+  assert.deepEqual(build.attributePlan.priority,['攻击力','穿甲','攻速']);assert.match(build.attributePlan.sourceUrl,/^https:\/\/op.gg\/lol\/champions\/aphelios\/build$/);
+  assert.equal(build.priority,null);assert.equal(build.first,null);assert.equal(build.skillOrder,null);assert.deepEqual(build.skillChoices,[]);
+  const model=createGuideModel(fixture,selectGuide(null,selection),{...live(6,{Q:1,W:1,E:1,R:1}),available:true,champion:c.id,mode:'rift',mapId:11,inventory:[],gold:0,at:Date.now()});
+  assert.equal(model.nextSkill,null);assert.deepEqual(model.attributePlan,build.attributePlan);
+  for(const text of [skillSelector(build),companionPlanView(fixture,{build,selection}),renderGuide({model},'skills',false,()=>'<img>'),renderGuide({model},'overview',false,()=>'<img>'),buildAsText(build,c,fixture)]){
+   assert.match(text,/攻击力.*穿甲.*攻速/s);assert.match(text,/未读取已投属性点/);assert.doesNotMatch(text,/通常优先大招|常规英雄通常优先 R|前三级参考/);
+  }
+ }
+});
 
 test('missing position sources leave legal mechanism upgrades for every ordinary hero through level eighteen',()=>{
  const offline={...data,builds:{}};
@@ -96,4 +111,23 @@ test('parsed special orders survive cache validation, plan rendering and live gu
  const aphelios=getBuild(hero('Aphelios'),'bottom',data);
  assert.match(skillSelector(aphelios),/属性加点/);
  assert.match(recommendSkill({champion:'Aphelios',priority:'QWE',live:live(6,{Q:3,W:1,E:1,R:1})}).reason,/属性点/);
+});
+
+test('uncached Udyr sources learn E by level four and retain legal four-stance upgrades and guide advice',()=>{
+ const fixture=structuredClone(data);selectBuildSource(fixture,{region:'kr',tier:'diamond_plus'});
+ for(const role of ['top','jungle']){
+  const build=getBuild(hero('Udyr'),role,fixture);assert.equal(build.reference,null);
+
+  const skills={Q:0,W:0,E:0,R:0},sequence=[];
+  for(let level=1;level<=18;level++){
+   const snapshot=live(level,{...skills}),advice=recommendSkill({champion:'Udyr',role,priority:build.priority,first:build.first,live:snapshot});
+   assert.ok(skillOptions('Udyr',snapshot).allowed.includes(advice.next));skills[advice.next]++;sequence.push(advice.next);
+   if(level===4)assert.ok(skills.E>0,'Approach/stun advice must not omit learning E');
+  }
+  assert.match(sequence.join(''),/E/);assert.equal(Object.values(skills).reduce((sum,n)=>sum+n,0),18);
+  const opening={Q:role==='jungle'?1:0,W:1,E:0,R:role==='jungle'?1:2};
+  const model=createGuideModel(fixture,selectGuide(null,{id:'Udyr',role,mode:'rift'}),{...live(4,opening),available:true,champion:'Udyr',mode:'rift',mapId:11,inventory:[],gold:0,at:Date.now()});
+  assert.equal(model.nextSkill,'E');assert.equal(model.priority,'RWEQ');
+ }
+ const cached=getBuild(hero('Udyr'),'jungle',data);assert.equal(cached.skillOrder,data.builds['Udyr:jungle'].skillOptions[0].order,'Available full source order must retain precedence');
 });

@@ -1,4 +1,10 @@
 import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION,profile} from './rules.mjs';
+import {COOPERATION_PAIRS,cooperationCoordination} from './cooperation-pairs.mjs';
+import {createSkillCooperation} from './cooperation-skills.mjs';
+import {preferredTempo} from './strategy.mjs';
+import {sharedCooperationPlan} from './shared-cooperation.mjs';
+import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
+import {partyCooperationPlan} from './party-cooperation.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -44,54 +50,83 @@ const FAMILIES=[
 ];
 
 export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RULES_PATCH,reviewedAt=RULES_VERSION}={}){
- const byId=new Map(champions.map(c=>[c.id,c])),legacy=new Map(),cache=new Map(),profiles=new Map();
+ const byId=new Map(champions.map(c=>[c.id,c])),legacy=new Map(),cache=new Map(),profiles=new Map(),pairs=new Map(COOPERATION_PAIRS.map(row=>[pairKey(row[0],row[1]),row]));
  for(const [a,b,text] of links)if(byId.has(a)&&byId.has(b))legacy.set(pairKey(a,b),{id:'catalog:'+pairKey(a,b),family:'catalog',name:'已整理两两联动',a,b,step:text,condition:'双方实际具备对应技能与接近条件后再衔接。',failure:'原说明没有确认当前技能可用或对手站位；关键技能落空就停止强接。',patch,reviewedAt,current:false,tempo:'teamfight',sourceUrls:[]});
  const prof=m=>{const k=key(m);if(!profiles.has(k))profiles.set(k,profile(byId.get(m.champion),m.role));return profiles.get(k);};
  const edge=(a,b)=>{
   if(a.champion===b.champion||!byId.has(a.champion)||!byId.has(b.champion))return null;
   const k=[key(a),key(b)].sort().join('|');if(cache.has(k))return cache.get(k);
   let found=null;
+  const reviewedPair=pairs.get(pairKey(a.champion,b.champion));
+  if(reviewedPair&&prof(a).reviewed&&prof(b).reviewed){
+   const [first,second,name,step,condition,failure,tempo,control]=reviewedPair;
+   found={id:'pair:'+pairKey(first,second),family:'pair:'+pairKey(first,second),name,a:first,b:second,step,condition,failure,tempo,control,current:true,patch:COOPERATION_PATCH,reviewedAt:reviewedPair[9]||COOPERATION_REVIEWED_AT,alreadyLinked:legacy.has(pairKey(first,second)),sourceUrls:[first,second].map(id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`)};
+  }
   for(const family of FAMILIES){
+   if(found)break;
    const owner=[a,b].find(m=>m.champion===family.owner),ally=owner===a?b:a;
    if(!owner||!prof(owner).reviewed||!prof(ally).reviewed||!family.accept(byId.get(ally.champion),prof(ally)))continue;
    const c=byId.get(ally.champion);found={id:family.id+':'+pairKey(a.champion,b.champion),family:family.id,name:family.name,a:a.champion,b:b.champion,step:family.step(c.name,c),condition:family.condition,failure:family.failure,patch:COOPERATION_PATCH,reviewedAt:COOPERATION_REVIEWED_AT,current:true,tempo:family.tempo,alreadyLinked:legacy.has(pairKey(a.champion,b.champion)),sourceUrls:[family.owner,ally.champion].map(id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`)};break;
   }
   found||=legacy.get(pairKey(a.champion,b.champion))||null;cache.set(k,found);return found;
  };
- return {edge,profile:prof,byId};
+ return {edge,profile:prof,byId,skills:createSkillCooperation(byId)};
 }
 
 function connectedEdges(members,graph){
  const edges=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge)edges.push(edge);}
- if(!edges.some(e=>e.current)||edges.length<members.length-1||members.some(m=>!edges.some(e=>[e.a,e.b].includes(m.champion))))return null;
- return edges;
+ const current=edges.filter(e=>e.current);
+ if(!current.length)return graph.skills.edges(members);
+ const missing=members.filter(m=>!edges.some(e=>[e.a,e.b].includes(m.champion)));
+ if(edges.length>=members.length-1&&!missing.length)return edges;
+ if(members.length===3&&missing.length===1){
+  const followup=graph.skills.followup(current[0],missing[0]);
+  if(followup)return [...edges,followup];
+ }
+ return null;
 }
-export function cooperationPlan(members,graph){
+export function cooperationPlan(members,graph,preferences={}){
  members=members.filter(m=>m.champion);
+ if(members.length>=4)return partyCooperationPlan(members,graph,preferences);
  if(![2,3].includes(members.length)||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
- const edges=connectedEdges(members,graph);if(!edges)return null;
- const current=edges.filter(e=>e.current),main=current[0];
- return {name:`配合 · ${main.name}${members.length===3?'三人联动':''}`,members:members.map(m=>({role:m.role,champion:m.champion})),edges,
-  why:edges.map(e=>e.step).join(' '),steps:edges.map(e=>e.step),conditions:edges.map(e=>e.condition),failures:edges.map(e=>e.failure),tempo:main.tempo,
+ let edges=connectedEdges(members,graph);
+ // Authored interactions keep their own conditions. For generic relays,
+ // choose independently usable tactical jobs before inventing a control lead.
+ if(!edges||edges.every(e=>e.family.startsWith('skills:'))){
+  const tactical=tacticalCooperationPlan(members,graph,preferences);if(tactical)return tactical;
+ }
+ if(!edges)return sharedCooperationPlan(members,graph);
+ // A generic control trigger is not automatically a teamfight composition.
+ // Use reviewed member functions for its overall tempo, while keeping authored
+ // pair timing (including protection relays) intact.
+ if(edges.every(e=>e.family.startsWith('skills:'))){
+  const profiles=members.map(m=>graph.profile(m)),traits=Object.fromEntries(['engage','aoe','peel','sustain','poke'].map(k=>[k,profiles.filter(p=>p[k]).length]));
+  const tempo=preferredTempo({traits,members});edges=edges.map(e=>({...e,tempo}));
+ }
+ const current=edges.filter(e=>e.current),main=current[0],coordination=main.family.startsWith('skills:')?graph.skills.coordination(members,edges):cooperationCoordination(members,graph,edges),steps=coordination.relaySteps||edges.map(e=>e.step);
+ return {name:`配合 · ${main.name}${members.length===3?'三人联动':''}`,members:members.map(m=>({role:m.role,champion:m.champion})),edges,...coordination,
+  why:steps.join(' '),steps,conditions:edges.map(e=>e.condition),failures:edges.map(e=>e.failure),tempo:main.tempo,
   bonus:Math.min(15,current.filter(e=>!e.alreadyLinked).length*4+(members.length===3?3:0)),
-  sourceNote:'按技能条件与已有联动推导，未经组合对局验证；两两能配合不代表整体一定强。',
-  patch:COOPERATION_PATCH,reviewedAt:COOPERATION_REVIEWED_AT,sourceUrls:[...new Set(current.flatMap(e=>e.sourceUrls))]};
+  sourceNote:edges.some(e=>e.family.startsWith('follow:'))?'保留已整理双人配合；第三人仅按已核对技能与到场条件跟进，未确认额外三人协同。未经组合对局验证，不代表统计优势。':main.family.startsWith('skills:')?'通用控制接力：按已核对技能条件安排同一目标，未经组合对局验证，不代表独特协同或统计优势。':'按技能条件与已有联动推导，未经组合对局验证；两两能配合不代表整体一定强。',
+  patch:main.patch,reviewedAt:main.reviewedAt,sourceUrls:[...new Set(current.flatMap(e=>e.sourceUrls))]};
 }
 
 // Complete two or three party roles around locked members. Candidate pools
 // have already applied bans, public picks, roles and player restrictions.
 // Keep a bounded set of distinct mechanisms before the existing team score.
-export function cooperationSeeds({members,targets,candidateSets,graph,limit=24}){
+export function cooperationSeeds({members,targets,candidateSets,graph,limit=24,preferences={}}){
  if(![2,3].includes(members.length)||!targets.length||targets.some(r=>!members.some(m=>m.role===r)))return [];
  const pools=members.map(m=>targets.includes(m.role)?(candidateSets[m.role]||[]).map((c,rank)=>({role:m.role,champion:c.id,rank})):graph.byId.has(m.champion)?[{role:m.role,champion:m.champion,rank:0}]:[]);
  if(pools.some(p=>!p.length))return [];
  const best=new Map();
  const visit=picks=>{
   if(new Set(picks.map(m=>m.champion)).size!==picks.length)return;
-  const edges=connectedEdges(picks,graph);if(!edges)return;
+  const connected=connectedEdges(picks,graph),tactical=!connected||connected.every(e=>e.family.startsWith('skills:'))?tacticalCooperationPlan(picks,graph,preferences):null;
+  if(!connected&&!tactical)return;
+  const edges=tactical?[]:connected;
   const traits=picks.map(m=>graph.profile(m)),ad=traits.reduce((n,p)=>n+p.damageWeights.ad,0),ap=traits.reduce((n,p)=>n+p.damageWeights.ap,0);
   const score=edges.length*8+edges.filter(e=>e.current).length*3+(ad>=.75&&ap>=.75?6:0)+['frontline','sustain','peel','engage'].filter(k=>traits.some(p=>p[k])).length*2-picks.reduce((n,m)=>n+m.rank,0)/8-traits.reduce((n,p)=>n+p.difficulty,0)/4;
-  const family=edges.map(e=>e.family).sort().join('|'),signature=picks.map(key).join('|'),previous=best.get(family);
+  const family=tactical?'tactical:'+tactical.tempo+':'+picks.map(m=>m.role+':'+(graph.profile(m).frontline?'frontline':graph.profile(m).peel?'peel':'damage')).join('|'):edges.map(e=>e.family).sort().join('|'),signature=picks.map(key).join('|'),previous=best.get(family);
   if(!previous||score>previous.score||score===previous.score&&signature<previous.signature)best.set(family,{score,signature,members:picks});
  };
  for(const a of pools[0])for(const b of pools[1]){if(pools.length===2)visit([a,b]);else for(const c of pools[2])visit([a,b,c]);}

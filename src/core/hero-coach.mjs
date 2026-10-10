@@ -198,21 +198,23 @@ export function heroCoach({data,champion,role,priority='',enemyId=null,stage='op
  const primaryRole=profile(hero).roles[0],lanes=['top','mid','bottom'];
  const compatibleRole=primaryRole===role||lanes.includes(primaryRole)&&lanes.includes(role);
  const taskAction=task?.generic&&compatibleRole?[plan?.[stage==='opening'?0:1],task.action].filter(Boolean).join(' '):task?.action;
- const ownAction=combo?.play?.stages?.[phase]?.ownAction||taskAction||plan?.[stage==='opening'?0:1];
- const rawSequence=matchup?matchup.sequence.join(' → '):combo?.play?.stages?.[phase]?.steps.join(' → ')||plan?.[2]||null;
+ const cooperationAction=phase!=='opening'?combo?.ownJob:null;
+ const ownAction=combo?.play?.stages?.[phase]?.ownAction||cooperationAction||taskAction||plan?.[stage==='opening'?0:1];
+ const teamSequence=combo?.play?.stages?.[phase]?.steps?.join(' → ')||(cooperationAction?(combo?.steps?.join(' → ')||cooperationAction):null);
+ const rawSequence=teamSequence?[matchup?.sequence[0],matchup?.teamCondition,teamSequence].filter(Boolean).join(' → '):matchup?matchup.sequence.join(' → '):plan?.[2]||null;
  // Enemy windows can legitimately discuss the enemy's R. Gate only the own
  // actions, and use actual ranks rather than a universal level-six cutoff.
- const ownSequence=matchup?matchup.sequence.slice(1).join(' → '):rawSequence;
- const unlearned=['Q','W','E','R'].filter(key=>ownSkills?.[key]===0&&ownSequence?.includes(key));
+ const ownSequence=teamSequence?ownAction:matchup?matchup.sequence.slice(1).join(' → '):rawSequence;
+ const unlearned=['Q','W','E','R'].filter(key=>ownSkills?.[key]===0&&(ownSequence?.includes(key)||ownAction?.includes(key)));
  const futureSequence=unlearned.length?rawSequence:null;
  const basicText=task?.opening||plan?.[0];
  const basicAction=basicText&&!unlearned.some(key=>basicText.includes(key))?basicText:`${hero.name}先用当前已学会的技能与安全普攻短换血，留退出路线；尚未学会 ${unlearned.join('/')} 时不按后续连招进场。`;
  const currentAction=unlearned.some(key=>ownAction?.includes(key))?basicAction:ownAction;
  const action=currentAction?[currentAction,matchup?.priority].filter(Boolean).join(' '):matchup?.[stage==='opening'?'opening':'fight']||null;
- const sequence=futureSequence?[matchup?.sequence[0],basicAction].filter(Boolean).join(' → '):rawSequence;
- const actionPatch=combo?.play?.stages?.[phase]?.ownAction?combo.play.patch:task?.patch||(plan?HERO_PLAYS_PATCH:matchup?.patch||null);
+ const sequence=futureSequence?[matchup?.sequence[0],matchup?.teamCondition,basicAction].filter(Boolean).join(' → '):rawSequence;
+ const actionPatch=combo?.play?.stages?.[phase]?.ownAction?combo.play.patch:cooperationAction?combo.patch:task?.patch||(plan?HERO_PLAYS_PATCH:matchup?.patch||null);
  const taskText=(key,index)=>task?.generic&&compatibleRole?[plan?.[index],task[key]].filter(Boolean).join(' '):task?.[key]||plan?.[index]||null;
- return {id:hero.id,name:hero.name,role,curated:!!plan,stage,action,opening:taskText('opening',0),fight:taskText('key',1),later:taskText('later',1),roleTask:task?{...task,stale:data.patch!==task.patch}:null,sequence,futureSequence,unlearned,caution:matchup?[matchup.exit,plan?.[3]].filter(Boolean).join(' '):plan?.[3]||null,matchup,roleNote:roles[role]||null,passive:book?.passive?{name:book.passive.name,description:clean(book.passive.description)}:null,skills,
+ return {id:hero.id,name:hero.name,role,curated:!!plan,stage,action,opening:taskText('opening',0),fight:taskText('key',1),later:taskText('later',1),roleTask:task?{...task,stale:data.patch!==task.patch}:null,sequenceSource:teamSequence?'team':'personal',sequence,futureSequence,unlearned,caution:matchup?[matchup.exit,plan?.[3]].filter(Boolean).join(' '):plan?.[3]||null,matchup,roleNote:roles[role]||null,passive:book?.passive?{name:book.passive.name,description:clean(book.passive.description)}:null,skills,
   enemy:enemy?{id:enemy.id,name:enemy.name,action:enemyPlan?.[1]||null,caution:enemyPlan?.[3]||null,skills:(enemy.mechanics?.spells||[]).map((s,i)=>({key:['Q','W','E','R'][i],name:s.name,description:clean(s.description)}))}:null,
   source:'Riot Data Dragon 英雄机制；行动顺序为人工整理',patch:data.patch,actionPatch,actionStale:!!actionPatch&&data.patch!==actionPatch,sourceUrl:`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/champion/${hero.id}.json`};
 }

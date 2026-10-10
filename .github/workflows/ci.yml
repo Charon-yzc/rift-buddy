@@ -57,14 +57,76 @@ jobs:
         run: node scripts/smoke-package-live-situation.mjs
       - name: Check build choices and combination database
         run: node scripts/smoke-package-database.mjs
+      - name: Check arbitrary-role personal pairs, editor scrolling and saved member guides
+        run: node scripts/smoke-package-catalog.mjs
       - name: Check saved preparations and member configurations across restarts
         run: node scripts/smoke-package-preparations.mjs
+      - name: Check in-guide late choices, support reservation, favorites and restart
+        run: node scripts/smoke-package-guide-continuation.mjs
+      - name: Check favorites preserve current public picks, manual positions and member choices
+        run: node scripts/smoke-package-favorite-context.mjs
+      - name: Check poke friends, distinct third-member duties and saved tactical choices
+        run: |
+          node scripts/smoke-package-cooperation.mjs --poke
+          node scripts/smoke-package-cooperation.mjs --poke-guard
+      - name: Check prepared D/F spells, compact controls and saved member choices
+        run: node scripts/smoke-package-summoners.mjs
+      - name: Check backup merge capacity and explicit rune writes in isolated clients
+        run: |
+          node scripts/smoke-package-import.mjs
+          node scripts/smoke-package-state-transaction.mjs
+          node scripts/smoke-package-rune-replacement.mjs
+      - name: Check creative action order preserves saved members and configurations
+        run: node scripts/smoke-package-creative-plan-continuity.mjs --reordered
       - name: Check public-opponent plans and duo phases in packaged windows
         run: node scripts/smoke-package-matchups.mjs
+      - name: Check public-opponent conditions preserve accepted team order and own skill gates
+        run: node scripts/smoke-package-matchups.mjs --team-order
       - name: Check accepted mechanism plans across member guides and restarts
         run: node scripts/smoke-package-cooperation.mjs
+      - name: Check concrete three-person and full-party plans, first-screen actions and attribute preparation
+        run: |
+          node scripts/smoke-package-cooperation.mjs --specific
+          node scripts/smoke-package-cooperation.mjs --party-four
+          node scripts/smoke-package-cooperation.mjs --party-five
+      - name: Check frozen curated plans, selectable party routes and sidebar adoption
+        run: |
+          node scripts/smoke-package-curated-plan.mjs
+          node scripts/smoke-package-curated-plan.mjs --routes
+      - name: Check four/five-member poke, protection routes and separate pair evidence
+        run: |
+          node scripts/smoke-package-curated-plan.mjs --tactics-four
+          node scripts/smoke-package-curated-plan.mjs --tactics
+          node scripts/smoke-package-curated-plan.mjs --independent-four
+          node scripts/smoke-package-curated-plan.mjs --independent-five
+      - name: Check locked cross-lane plans and complete late-item choices across restarts
+        run: node scripts/smoke-package-cooperation.mjs --cross-lane
+      - name: Check retained pair order and third-member follow-ups across restarts
+        run: node scripts/smoke-package-cooperation.mjs --retained-pair
+      - name: Check ordinary locked-friend recommendations without hero pools
+        run: node scripts/smoke-package-cooperation.mjs --locked-friends
+      - name: Check shared resource and meeting plans without invented control across restarts
+        run: |
+          node scripts/smoke-package-cooperation.mjs --shared
+          node scripts/smoke-package-cooperation.mjs --growth
+      - name: Check role statistics and broad skill cooperation across saved member guides
+        run: node scripts/smoke-package-cooperation.mjs --adaptive-data
+      - name: Check expanded cooperation and sidebar preview choices before accepting a plan
+        run: node scripts/smoke-package-cooperation.mjs --coverage
+      - name: Check shooter marks and farming friends across saved preparations
+        run: |
+          node scripts/smoke-package-cooperation.mjs --shooters
+          node scripts/smoke-package-cooperation.mjs --farming
+      - name: Check member statistics refresh, offline caches and quest-only synchronization
+        run: node scripts/smoke-package-pair-refresh.mjs
+      - name: Check sidebar choices survive uncached sources and individual edits
+        run: node scripts/smoke-package-companion-workflow.mjs
       - name: Check public picks and source refresh invalidate recommendations
         run: node scripts/smoke-package-recommendation-fit.mjs
+      - name: Check partial settings recovery and locked friend continuity
+        run: node scripts/smoke-package-state-recovery.mjs
+      - name: Check own selectable heroes, public draft restrictions and locked favorites
+        run: node scripts/smoke-package-pick-eligibility.mjs
       - name: Check standalone connection helper
         run: node scripts/smoke-package-helper.mjs
       - name: Check application lifecycle

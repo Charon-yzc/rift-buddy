@@ -56,7 +56,7 @@ export async function createCatalogStore({root,getData,write=atomicJSON,download
   setSource:async url=>{if(typeof url!=='string'||url&&!safeSourceURL(url))throw Error('请输入有效 HTTPS JSON 地址，或留空使用内置库检查');return mutate(s=>({...s,sourceUrl:url}));},
   apply:token=>mutate(s=>{const stage=staged.get(token);if(!stage||Date.now()-stage.createdAt>30*60*1000)throw Error('更新预览已过期，请重新检查');if(stage.baseVersion!==contentVersion(state))throw Error('组合库已变化，请重新预览');validateCatalog(stage.incoming,getData());mergePersonal(stage.incoming,s.personal);return {...s,previous:base(),installed:stage.incoming};}),
   rollback:()=>mutate(s=>{if(!s.previous)throw Error('没有可回退的组合库');const old=s.previous;mergePersonal(old,s.personal);return {...s,previous:base(),installed:old};}),
-  savePersonal:entry=>mutate(s=>{if(!entry||!entry.id?.startsWith('local-'))throw Error('自定义组合必须使用 local- 开头的 ID');const kind=entry.members?'trios':'duos';const personal={...s.personal,[kind]:s.personal[kind].filter(x=>x.id!==entry.id).concat([entry])};validateCatalog(mergePersonal(base(),personal),getData());return {...s,personal};}),
+  savePersonal:entry=>mutate(s=>{if(!entry||!entry.id?.startsWith('local-'))throw Error('自定义组合必须使用 local- 开头的 ID');const kind=entry.members?.length===3?'trios':'duos';const personal={...s.personal,duos:s.personal.duos.filter(x=>x.id!==entry.id),trios:s.personal.trios.filter(x=>x.id!==entry.id)};personal[kind].push(entry);validateCatalog(mergePersonal(base(),personal),getData());return {...s,personal};}),
   export:()=>active(),
  };
 }

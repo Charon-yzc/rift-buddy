@@ -5,8 +5,9 @@ import {once} from 'node:events';
 import {electronExecutable} from './electron-runtime.mjs';
 import {defaultState,saveState} from '../services/storage.mjs';
 
-const root=await fs.mkdtemp(path.resolve('.local/matchups-smoke-'));
-for(const phase of ['side','guide']){
+const teamOrder=process.argv.includes('--team-order'),phases=teamOrder?['team-order','team-order-restart']:['side','guide'];
+const root=await fs.mkdtemp(path.resolve(teamOrder?'.local/team-order-smoke-':'.local/matchups-smoke-'));
+for(const phase of phases){
  const directory=path.join(root,phase),state=defaultState();
  await fs.mkdir(directory);Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(directory,'client-fixture')});
  await fs.mkdir(state.preferences.installPath);await saveState(directory,state);
@@ -16,5 +17,5 @@ for(const phase of ['side','guide']){
  try{const [code]=await once(child,'exit');if(code!==0)throw Error(phase+' matchup smoke failed: '+await fs.readFile(path.join(directory,'smoke.log'),'utf8'));}
  finally{clearTimeout(timer);await log.close();}
 }
-const side=JSON.parse(await fs.readFile(path.join(root,'side/result.json'),'utf8')),guide=JSON.parse(await fs.readFile(path.join(root,'guide/result.json'),'utf8'));
-const result={root,side,guide};await fs.writeFile('.local/latest-matchups-smoke.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
+const reports=Object.fromEntries(await Promise.all(phases.map(async phase=>[phase,JSON.parse(await fs.readFile(path.join(root,phase,'result.json'),'utf8'))])));
+const result={root,...reports};await fs.writeFile(teamOrder?'.local/latest-team-order-smoke.json':'.local/latest-matchups-smoke.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

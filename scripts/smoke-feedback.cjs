@@ -23,6 +23,7 @@ async function run(){
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
   if(p==='/lol-gameflow/v1/session')return {value:{gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}}};
   if(p==='/lol-champ-select/v1/session')return {value:{localPlayerCellId:1,myTeam:[{cellId:1,championId:data.champions.find(c=>c.id===hero).key,assignedPosition:''}],theirTeam:[],actions:[],bans:{}}};
+  if(['/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids'].includes(p))return {status:404,value:{message:'Optional selection scope unavailable in this fixture'}};
   if(p==='/lol-perks/v1/pages')return {value:pages};
   throw Error('Unexpected fixture route '+p);
  };
@@ -53,7 +54,7 @@ async function run(){
  assert.ok(await js('document.querySelector(".current-preparation p").textContent.includes("→")'));
  assert.ok(await js('document.querySelector(".unassigned")?.textContent.includes("你")'),'Unknown positions must remain unassigned');assert.equal(writes,0,'Preparation must not apply runes');
  await capture(main,'volibear-preparation.png');
- await js('{const role=document.querySelector("#solo-role");role.value="jungle";role.dispatchEvent(new Event("change",{bubbles:true}));}');await until(async()=>(await state()).draft.soloRole==='jungle','Manual jungle role not saved');await click('[data-action=guide-current]');assert.equal((await state()).guide.selection.role,'jungle','Guide button must use the manually chosen role rather than the default reference');
+ await js('{const role=document.querySelector("#solo-role");role.value="jungle";role.dispatchEvent(new Event("change",{bubbles:true}));}');await until(async()=>(await state()).draft.soloRole==='jungle','Manual jungle role not saved');await click('[data-action=guide-current]');await until(async()=>(await state()).guide.selection.role==='jungle','Manual jungle guide not saved');assert.equal((await state()).guide.selection.role,'jungle','Guide button must use the manually chosen role rather than the default reference');
  await click('[data-action=my-runes]');await until(()=>js('document.querySelector("[data-action=my-runes]")?.textContent.includes("重新应用")'),'Clicked rune application not confirmed');assert.equal(writes,1);assert.equal((await state()).ownedPageId,777);
  await status();assert.equal(writes,1,'Polling must not reapply runes');
  const result={passed:true,archiveSha256:release.archiveSha256,defaultSolo:true,oneCandidatePerResult:true,explicitSoloRole:true,freshInGameRecovery:true,manualHidePreserved:true,volibearAutoPreparation:true,blindPickUnassigned:true,yoneContinuousDamage:true,clickOnlyRuneApplication:true,actualRuneWrites:false,loopbackSocketsMocked:true,fonts,screenshots:root};

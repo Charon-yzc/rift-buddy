@@ -3,6 +3,7 @@ import {changePresentation} from './core/presentation.mjs';
 import {renderGuide} from './guide-view.mjs';
 import {escape as e,icon} from './ui.mjs';
 import {createGuideModel,selectGuide} from './core/guide.mjs';
+import {changeCompanionPlan} from './core/companion-plan.mjs';
 let snapshot,tab='overview',messageTimer,renderedView=null,renderedExpanded=false,renderedContext=null,renderedMatchId=null,renderedStateWritable=true;
 let activeSelect=null,pendingSelectUpdate=false;
 const viewStates=new Map();
@@ -25,6 +26,7 @@ const api=window.guide||{
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
   if(action==='purchase-target'){s.purchaseTarget=value||undefined;s.purchaseTargetKind=snapshot.model.shoppingTargets.find(i=>i.id===value)?.kind==='局势备选'?'situation':undefined;}if(action==='stage')s.stage=value==='auto'?undefined:value;
   if(['threatId','protectId','combatFocus'].includes(action)){s.selection[action]=value||undefined;if(action==='threatId')delete s.selection.matchupGameId;}
+  if(action==='later')s.selection=changeCompanionPlan(window.previewGuideData,s.selection,'later',value);
   if(action==='bottom-quest')s.bottomQuestConfirmed=!s.bottomQuestConfirmed;
   if(action==='live-advice')s.liveAdvice=s.liveAdvice===false;
   if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.bottomQuestConfirmed=false;s.completedItems=[];s.duelPick=undefined;delete s.purchaseTarget;delete s.purchaseTargetKind;delete s.stage;s.selection.compareIds=[];s.selection.ownedAugmentIds=[];delete s.selection.threatId;delete s.selection.matchupGameId;delete s.selection.protectId;delete s.selection.combatFocus;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball'){s.ball=!s.ball;if(s.ball)s.strip=false;}if(action==='strip'){s.strip=!s.strip;if(s.strip)s.ball=false;}
@@ -82,7 +84,7 @@ document.addEventListener('change',event=>{if(event.target===activeSelect){activ
 window.addEventListener('blur',endSelect);
 document.addEventListener('click',async event=>{
  const target=event.target.closest('button');if(!target)return;
- if(target.dataset.tab){if(target.dataset.tab==='settings'&&snapshot.model?.collapsed){try{snapshot=await api.control('collapse');}catch(error){toast(error.message);return;}}if(target.dataset.tab==='settings'&&snapshot.mousePassThrough){try{snapshot=await api.control('interaction');}catch(error){toast(error.message);return;}}tab=target.dataset.tab;render();return;}
+ if(target.dataset.tab){if(snapshot.model?.collapsed){try{snapshot=await api.control('collapse');}catch(error){toast(error.message);return;}}if(target.dataset.tab==='settings'&&snapshot.mousePassThrough){try{snapshot=await api.control('interaction');}catch(error){toast(error.message);return;}}tab=target.dataset.tab;render();return;}
  // The floating ball lives on a draggable region: a real drag must move the
  // window, never toggle it. Only a near-stationary press counts as a click.
  if(target.dataset.action==='ball'||target.dataset.action==='strip'){const moved=dragMoved;dragMoved=false;if(moved)return;}

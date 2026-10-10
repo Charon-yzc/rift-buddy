@@ -59,10 +59,10 @@ test('secondary roles preserve actual mechanics, shared cooldown choices and eco
 });
 
 test('uncovered hero-position pairs retain own mechanics plus distinct generic stage duties with an honest coverage label',()=>{
- const id='Zilean',role='mid';assert.equal(rolePlay(id,role),null);
+ const id='Zilean',role='top';assert.equal(rolePlay(id,role),null);
  const coaches=['opening','key','later'].map(stage=>heroCoach({data,champion:id,role,stage}));
  assert.equal(new Set(coaches.map(c=>c.action)).size,3);
- assert.match(coaches[0].action,/兵线/);assert.match(coaches[1].action,/同侧.*资源/);assert.match(coaches[2].action,/核心.*资源/);
+ assert.match(coaches[0].action,/边线/);assert.match(coaches[1].action,/资源.*边线/);assert.match(coaches[2].action,/边线.*核心/);
  for(const coach of coaches){assert.equal(coach.roleTask.generic,true);assert.match(coach.sequence,/Q附着.*W缩短冷却.*第二次Q/);assert.match(renderGuide({model:createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift'}),stage:coach.stage})},'team',false,()=>'<img>'),/通用位置分工/);}
 });
 

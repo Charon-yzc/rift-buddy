@@ -1,4 +1,5 @@
 import bundledCatalog from "./catalog-data.json" with {type:"json"};
+import {championWindow,SUSTAIN_CONDITIONS} from './champion-windows.mjs';
 export let COMBINATION_SOURCE=bundledCatalog.source;
 export const ROLES = [
  {id:'top',name:'上路',short:'上',hint:'抗压 · 边线'}, {id:'jungle',name:'打野',short:'野',hint:'节奏 · 支援'},
@@ -65,8 +66,13 @@ const sets=Object.fromEntries(Object.entries(traitSets).map(([k,v])=>[k,new Set(
 for(const id of ['Locke','Yunara','Zaahen'])sets.sustain.add(id);
 // Repeated attacks (W/E/crit cycles) and repeatable Q casts also supply sustained
 // damage. Reviewed against each champion's 16.20.1 Riot skill descriptions.
-for(const id of ['Trundle','Tryndamere','Olaf','Fiora','Ryze','Ezreal','Irelia'])sets.sustain.add(id);
+for(const id of ['Trundle','Tryndamere','Olaf','Fiora','Ryze','Ezreal','Irelia','Briar','Karthus'])sets.sustain.add(id);
+for(const id of Object.keys(SUSTAIN_CONDITIONS))sets.sustain.add(id);
 for(const id of ['Mel','Yunara'])sets.aoe.add(id);
+// Multiple-target damage in the current kit, not a claim that the whole
+// team can hit together. Each skill still has its own area and conditions.
+for(const id of ['Lissandra','Taliyah','Garen','Darius','Renekton','JarvanIV','Hecarim','Chogath','Karthus','Katarina','Lux','Morgana','Syndra','Nocturne','Vi','TwistedFate','Camille','XinZhao','Nidalee','Aatrox','Zed'])sets.aoe.add(id);
+for(const id of ['Darius','Renekton','Aatrox','Hecarim','JarvanIV'])sets.frontline.add(id);
 sets.poke.add('Mel');sets.engage.add('Zaahen');sets.ap.add('Locke');
 const TANKS=new Set('Alistar Amumu Blitzcrank Braum Chogath DrMundo KSante Leona Malphite Maokai Nautilus Nunu Ornn Rammus Rell Sejuani Shen Sion Skarner TahmKench Taric Zac'.split(' '));
 const ENCHANTERS=new Set('Ivern Janna Karma Lulu Milio Nami Renata Sona Soraka Yuumi Zilean'.split(' '));
@@ -98,7 +104,7 @@ export function profile(c, role) {
  const magic=sets.ap.has(c.id)||['Alistar','Bard','Braum','Leona','Nautilus','Ornn','Rakan','Rammus','Rell','Renata','Thresh'].includes(c.id);
  const mixed=['Kaisa','KogMaw','Varus','Jax','Yone','Udyr','Volibear','Shen','Yunara'].includes(c.id);
  return {roles,reviewed,build,damage:magic?'ap':'ad',damageWeights:mixed?{ad:.55,ap:.45}:magic?{ad:0,ap:1}:{ad:1,ap:0},manaFree:MAGES_MANAFREE.has(c.id),
-  difficulty:c.info?.difficulty??5,...Object.fromEntries(Object.entries(sets).filter(([k])=>k!=='ap').map(([k,v])=>[k,v.has(c.id)]))};
+  difficulty:c.info?.difficulty??5,window:championWindow(c.id),sustainCondition:SUSTAIN_CONDITIONS[c.id]||null,...Object.fromEntries(Object.entries(sets).filter(([k])=>k!=='ap').map(([k,v])=>[k,v.has(c.id)]))};
 }
 
 export let DUOS=bundledCatalog.duos, CROSS_SYNERGIES=bundledCatalog.links, TRIOS=bundledCatalog.trios;

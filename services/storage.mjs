@@ -1,15 +1,20 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {randomUUID} from 'node:crypto';
 import {atomicJSON} from './data.mjs';
 import {validateGuideState,validateLoadoutSelection} from '../src/core/guide.mjs';
 import {normalizePresentation} from '../src/core/presentation.mjs';
 import {normalizeBuildSource} from '../src/core/build-source.mjs';
-import {validatePreparations,storedPreparation,PREPARATION_LIMIT} from '../src/core/preparation.mjs';
+import {validatePreparations,validatePreparation,storedPreparation,PREPARATION_LIMIT} from '../src/core/preparation.mjs';
 import {validateTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {validateCreativePlan} from '../src/core/creative-plan.mjs';
 export const defaultState=()=>({schema:1,favorites:[],excluded:[],preparations:[],preferences:{style:'fun',autoCheck:true,buildSource:normalizeBuildSource(null),presentation:normalizePresentation(null),installPath:'C:/WeGameApps/英雄联盟'},draft:null,ownedPageId:null,guide:null});
 const roles=['top','jungle','mid','bottom','support'],styles=['balanced','fun','wild'];
 const conditions=['ad','ap','control','heal','burst'];
+// Complete cooperation plans include saved member configurations. Use the
+// same UTF-8 budget for local settings and portable backups.
+export const STATE_MAX_BYTES=64*1024*1024;
+const checkSize=value=>{if(Buffer.byteLength(JSON.stringify(value),'utf8')>STATE_MAX_BYTES)throw new Error('收藏与配置已超过保存空间，请先移出不需要的收藏');};
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
 const text=(v,max)=>typeof v==='string'&&v.length<=max;
 function slots(value,preserveClientMetadata=false){
@@ -40,40 +45,81 @@ function favorite(f){
 }
 export function validateState(value) {
  if(!value||typeof value!=='object'||value.schema!==1)throw new Error('保存内容格式不正确');
- if(JSON.stringify(value).length>1_000_000)throw new Error('保存内容过大');
+ checkSize(value);
  if(!Array.isArray(value.favorites)||value.favorites.length>500||!Array.isArray(value.excluded)||value.excluded.length>300)throw new Error('收藏或排除列表格式不正确');
  if(!value.excluded.every(hero))throw Error('排除英雄格式不正确');
  const p=value.preferences||{};
  if(p.installPath!==undefined&&(!text(p.installPath,500)||/[\r\n\0]/.test(p.installPath)))throw Error('游戏目录格式不正确');
- return {schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],preparations:validatePreparations(value.preparations),
+ const normalized={schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],preparations:validatePreparations(value.preparations),
   preferences:{buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
    clientCompanion:p.clientCompanion!==false,guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',
    autoLive:p.autoLive!==false,pool:Array.isArray(p.pool)?[...new Set(p.pool.filter(hero))].slice(0,200):[],poolMode:['off','prefer','only'].includes(p.poolMode)?p.poolMode:'off',
-   play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},
+   play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke','growth'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},
    rolePools:Object.fromEntries(roles.map(role=>[role,{heroes:Array.isArray(p.rolePools?.[role]?.heroes)?[...new Set(p.rolePools[role].heroes.filter(hero))].slice(0,180):[],mode:['prefer','only'].includes(p.rolePools?.[role]?.mode)?p.rolePools[role].mode:'off'}])),
    ...(Number.isFinite(Date.parse(p.lastCheck))?{lastCheck:p.lastCheck}:{})},
-  draft:value.draft?{slots:slots(value.draft.slots,true),...(value.draft.creativePlan?{creativePlan:validateCreativePlan(value.draft.creativePlan,slots(value.draft.slots,true),{allowUnknown:true})}:{}),...(typeof value.draft.clientGameId==='string'&&/^\d{1,20}$/.test(value.draft.clientGameId)&&Number(value.draft.clientGameId)>0?{clientGameId:value.draft.clientGameId}:{}),style:styles.includes(value.draft.style)?value.draft.style:'fun',scope:['solo','context','party','bot'].includes(value.draft.scope)?value.draft.scope:'context',...(value.draft.scope==='solo'||Object.hasOwn(value.draft,'soloRole')?{soloRole:roles.includes(value.draft.soloRole)?value.draft.soloRole:''}:{})}:null,
+  draft:value.draft?{slots:slots(value.draft.slots,true),...(roles.includes(value.draft.playerPosition?.role)&&Number.isInteger(value.draft.playerPosition?.cellId)&&value.draft.playerPosition.cellId>=0&&value.draft.playerPosition.cellId<30?{playerPosition:{role:value.draft.playerPosition.role,cellId:value.draft.playerPosition.cellId}}:{}),...(value.draft.creativePlan?{creativePlan:validateCreativePlan(value.draft.creativePlan,slots(value.draft.slots,true),{allowUnknown:true})}:{}),...(typeof value.draft.clientGameId==='string'&&/^\d{1,20}$/.test(value.draft.clientGameId)&&Number(value.draft.clientGameId)>0?{clientGameId:value.draft.clientGameId}:{}),style:styles.includes(value.draft.style)?value.draft.style:'fun',scope:['solo','context','party','bot'].includes(value.draft.scope)?value.draft.scope:'context',...(value.draft.scope==='solo'||Object.hasOwn(value.draft,'soloRole')?{soloRole:roles.includes(value.draft.soloRole)?value.draft.soloRole:''}:{})}:null,
   ownedPageId:Number.isInteger(value.ownedPageId)&&value.ownedPageId>0?value.ownedPageId:null,guide:validateGuideState(value.guide)};
+ checkSize(normalized);return normalized;
+}
+const recoveryBlocked=new Set();
+// Startup recovery is deliberately separate from strict writes and imports.
+// Keep readable sections and entries; the original bytes remain in a backup.
+function readableState(raw){
+ const state=defaultState(),issues=[];
+ if(!raw||raw.schema!==1||typeof raw!=='object'||Array.isArray(raw))return {state,issues:['保存文件格式无法读取']};
+ const collection=(key,label,limit,validate)=>{
+  const source=raw[key];if(source===undefined&&key==='preparations')return;
+  if(!Array.isArray(source)){issues.push(label+'列表无法读取');return;}
+  const kept=[];let skipped=0;
+  for(const item of source){try{if(kept.length>=limit)throw Error('capacity');kept.push(validate(item));}catch{skipped++;}}
+  state[key]=kept;if(skipped)issues.push(`${label} ${skipped} 项无法读取或超过容量`);
+ };
+ collection('favorites','收藏',500,favorite);
+ collection('preparations','英雄配置',PREPARATION_LIMIT,validatePreparation);
+ collection('excluded','排除英雄',300,value=>{if(!hero(value))throw Error('hero');return value;});
+ const preferences=raw.preferences&&typeof raw.preferences==='object'?{...raw.preferences}:{};
+ if(preferences.installPath!==undefined&&(!text(preferences.installPath,500)||/[\r\n\0]/.test(preferences.installPath))){delete preferences.installPath;issues.push('游戏目录无法读取');}
+ for(const [key,label,value] of [['preferences','偏好',preferences],['draft','当前阵容',raw.draft],['guide','指引',raw.guide],['ownedPageId','符文页记录',raw.ownedPageId]]){
+  try{state[key]=validateState({...defaultState(),[key]:value})[key];}catch{issues.push(label+'无法读取');}
+ }
+ return {state:validateState(state),issues};
 }
 export async function readState(root) {
- const filename=path.join(root,'settings.json');
- try{const raw=JSON.parse(await fs.readFile(filename,'utf8'));
-  // Recover optional guide damage without losing valid favorites or preferences.
-  try{validateGuideState(raw.guide);}catch{await fs.copyFile(filename,`${filename}.recovery-${Date.now()}`).catch(()=>{});raw.guide=null;}
-  try{validatePreparations(raw.preparations);}catch{await fs.copyFile(filename,`${filename}.recovery-${Date.now()}`).catch(()=>{});raw.preparations=[];}
-  return {...defaultState(),...validateState(raw)};}
- catch(e){if(e.code!=='ENOENT'){try{await fs.copyFile(filename,`${filename}.recovery-${Date.now()}`);}catch{}}
-  return defaultState();}
+ const filename=path.join(root,'settings.json');let raw;
+ try{if((await fs.stat(filename)).size>STATE_MAX_BYTES)throw Error('保存文件过大');raw=JSON.parse(await fs.readFile(filename,'utf8'));
+  const valid=validateState(raw);recoveryBlocked.delete(path.resolve(root));return {...defaultState(),...valid};}
+ catch(error){
+  if(error.code==='ENOENT'){recoveryBlocked.delete(path.resolve(root));return defaultState();}
+  const backupFile=`settings.json.recovery-${Date.now()}-${randomUUID()}`;let backedUp=false;
+  try{await fs.copyFile(filename,path.join(root,backupFile),fs.constants.COPYFILE_EXCL);backedUp=true;recoveryBlocked.delete(path.resolve(root));}catch{recoveryBlocked.add(path.resolve(root));}
+  const recovered=readableState(raw);
+  return {...recovered.state,recovery:{issues:recovered.issues,backedUp,backupFile:backedUp?backupFile:null}};
+ }
 }
-export async function saveState(root,state) {await atomicJSON(path.join(root,'settings.json'),validateState(state));}
+export async function saveState(root,state) {
+ if(recoveryBlocked.has(path.resolve(root)))throw Error('原设置的恢复副本尚未保存，已停止覆盖原文件；请检查保存目录与磁盘后重新打开助手');
+ await atomicJSON(path.join(root,'settings.json'),validateState(state));
+}
+export function createBackup(state){
+ const valid=validateState(state);
+ return JSON.stringify({...valid,ownedPageId:null,preferences:{...valid.preferences,installPath:''}});
+}
+export async function readBackup(filename){
+ if((await fs.stat(filename)).size>STATE_MAX_BYTES)throw Error('备份文件超过收藏与配置的保存空间');
+ const incoming=JSON.parse(await fs.readFile(filename,'utf8'));validateState(incoming);
+ // Preserve omitted legacy preferences so mergeState can keep local choices.
+ return incoming;
+}
 export function mergeState(current,backup,champions){
  const incoming=validateState(backup),favorites=[...current.favorites];
  for(const favorite of incoming.favorites)if(!favorites.some(f=>f.id===favorite.id))favorites.push(favorite);
+ if(favorites.length>500)throw Error('导入后收藏将超过 500 项，整次导入已取消；原收藏与偏好保留');
  const explicit=key=>Object.hasOwn(backup.preferences||{},key);
  const style=explicit('style')?incoming.preferences.style:current.preferences.style;
  const preparations=[...(current.preparations||[])];
- for(const configuration of incoming.preparations)if(!storedPreparation(preparations,configuration)&&preparations.length<PREPARATION_LIMIT)preparations.push(configuration);
- return validateState({...current,favorites:favorites.slice(0,500),preparations,
+ for(const configuration of incoming.preparations)if(!storedPreparation(preparations,configuration))preparations.push(configuration);
+ if(preparations.length>PREPARATION_LIMIT)throw Error(`导入后英雄配置将超过 ${PREPARATION_LIMIT} 项，整次导入已取消；原收藏与偏好保留`);
+ return validateState({...current,favorites,preparations,
   excluded:[...new Set([...current.excluded,...incoming.excluded])].filter(id=>champions.some(c=>c.id===id)),
   preferences:{...current.preferences,style,...(explicit('buildSource')?{buildSource:incoming.preferences.buildSource}:{}),...(explicit('presentation')?{presentation:incoming.preferences.presentation}:{}),...(explicit('autoCheck')?{autoCheck:incoming.preferences.autoCheck}:{}),...(explicit('autoSync')?{autoSync:incoming.preferences.autoSync}:{}),
    ...(Object.hasOwn(backup.preferences||{},'play')?{play:incoming.preferences.play}:{}),

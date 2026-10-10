@@ -1,3 +1,5 @@
+import {itemConflicts} from './mechanics.mjs';
+import {validateSummonerIds} from './summoner-selection.mjs';
 import {publicEquipment} from './scoreboard.mjs';
 import {getBuild,SHARDS} from './builds.mjs';
 import {ROLES,profile} from './rules.mjs';
@@ -31,6 +33,7 @@ export function validateDuelPick(value){
 }
 export function validateLoadoutSelection(value){
  const selected={};
+ if(value.summonerIds!==undefined)selected.summonerIds=validateSummonerIds(value.summonerIds,value.mode);
  if(value.bottomQuestPlan!==undefined&&typeof value.bottomQuestPlan!=='boolean')throw Error('下路任务计划格式不正确');
  if(value.bottomQuestPlan===true){if(value.role!=='bottom'||value.mode!=='rift')throw Error('额外装备计划只适用于峡谷下路任务');selected.bottomQuestPlan=true;}
  if(value.laterIds!==undefined){if(!Array.isArray(value.laterIds)||value.laterIds.length>(selected.bottomQuestPlan?3:2)||!value.laterIds.every(Number.isInteger))throw Error('后期备选格式不正确');if(value.mode==='rift')selected.laterIds=[...new Set(value.laterIds)];}
@@ -134,6 +137,8 @@ export function createGuideModel(data,value,live=null,current=null){
  const itemIssue=i=>pendingQuestId===String(i.id)&&!bottomQuestConfirmed?bottomQuestReason:inventoryKnown?situationItemIssue({data,id:i.id,inventory}):null;
  const routeBlocked=route.filter(i=>!autoCompletedItems.includes(i.id)&&itemIssue(i)).map(i=>({id:i.id,name:i.name,reason:itemIssue(i)}));
  const targetBlockedReason=guide.purchaseTarget?itemIssue({id:guide.purchaseTarget}):null;
+ const laterChoices=(build.laterOptions||[]).map(row=>{const choice=item(row.items[0]),selected=build.selectedLaterIds.includes(Number(choice.id));return {...choice,selected,fitsRoute:row.fitsRoute,blockedReason:selected?null:itemIssue(choice)|| (itemConflicts(Number(choice.id),route.map(i=>Number(i.id)))?'与当前路线互斥，请先取消冲突备选':null)};});
+ const laterNeeded=laterChoices.length?Math.max(0,build.maxLaterItems-build.selectedLaterIds.length):0;
  const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
  const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
  const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
@@ -219,6 +224,7 @@ export function createGuideModel(data,value,live=null,current=null){
    at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,matchId:guide.match?.gameId||null,
+  laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
   phase:s.mode==='rift'?gamePhase({...liveModel,role:s.role},action,next||null):null,
   objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch}):null,
@@ -226,7 +232,7 @@ export function createGuideModel(data,value,live=null,current=null){
   coach:s.mode==='rift'?heroCoach({data,champion,role:s.role,priority:build.priority,enemyId:selectedOpponent?.id,combo:build.combo,focus:s.combatFocus,stage:playStage(liveModel,guide.stage||'auto'),ownSkills:liveModel.skills}):null,
   equipment:publicEquipment(data,matched?live:null),estimate,combatUnavailable,ultimateReference:ultimate,customDuel,duelPick:guide.duelPick||null,duelOptions,bottomQuest:pendingQuestId?{confirmed:bottomQuestConfirmed,itemId:pendingQuestId,eligible:bottomQuestEligible,reason:bottomQuestReason}:null,routeBlocked,targetBlockedReason,
   live:liveModel,nextSkill:skillAdvice.next,skillAdvice,situation,nextReason,nextCaution:nextCandidate?.caution||'静态价格与合成条件以游戏商店为准。',liveAdvice:guide.liveAdvice,automaticTarget:!!(!chosen&&suggested&&suggested.id===next?.id),
-  priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,skillTitle:build.selectedSkill?.name,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
+  priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,attributePlan:build.attributePlan,skillTitle:build.selectedSkill?.name,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
   title:build.title,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
   rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',comparison:compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key}),

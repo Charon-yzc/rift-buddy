@@ -1,9 +1,13 @@
 import {profile} from './rules.mjs';
+import {COOPERATION_SKILLS} from './cooperation-skills.mjs';
 
-export const TEMPOS={early:'抓人节奏',teamfight:'团战连招',protect:'保护核心',poke:'控制消耗'};
+export const TEMPOS={early:'抓人节奏',teamfight:'团战连招',protect:'保护核心',poke:'控制消耗',growth:'发育与会合'};
 export function strategyTraits(analysis,combo){
- const t=analysis.traits,values={early:t.engage*2,teamfight:t.aoe*2+t.engage,protect:t.peel*3+t.sustain,poke:t.poke*3};
- if(combo?.tempo)values[combo.tempo]+=6;
+ const t=analysis.traits,control=Array.isArray(analysis.members)?analysis.members.some(m=>COOPERATION_SKILLS[m.champion]?.[3]):t.engage>0;
+ // Sustain describes output, not ally protection. An area spell or a dash
+ // alone cannot establish a reviewed control opener either.
+ const values={early:control?t.engage*2:0,teamfight:t.aoe*2+(control?t.engage:0),protect:t.peel?t.peel*3+t.sustain:0,poke:t.poke*3,growth:control?1:4+t.sustain*2+t.aoe};
+ if(Object.hasOwn(values,combo?.tempo))values[combo.tempo]+=6;
  return values;
 }
 // Enemy traits below come only from visibly picked enemy champions supplied by
@@ -59,28 +63,29 @@ export function threatNotes(analysis,enemyTraits){
  return notes.slice(0,3);
 }
 export function preferredTempo(analysis,combo){const values=strategyTraits(analysis,combo);return Object.keys(TEMPOS).sort((a,b)=>(values[b]||0)-(values[a]||0))[0];}
-// Curve, forgiveness and control-chain below are mechanism heuristics computed
-// from role traits only (no win rates): they describe which phase the team
-// functions cover and how punishing mistakes are, not how strong the team is.
-export function describeCurve(traits){
- const early=Math.min(traits.engage,2)*2+Math.min(traits.poke,2)*1.5+(traits.poke&&traits.engage?1:0);
- const late=Math.min(traits.sustain,2)*2+Math.min(traits.aoe,2)*1.5+Math.min(traits.peel,2);
- return {early,late,label:early-late>=3?'前期主动':late-early>=3?'偏后期团战':'前后兼顾'};
+// Phase checkpoints come from authored champion mechanics. Function counts
+// cannot establish a power curve; unknown checkpoints stay unknown. Control
+// chains include reviewed interactions and their conditions, never readiness.
+export function describeCurve(_traits,members=[]){
+ const windows=members.filter(m=>m.p?.window).map(m=>({champion:m.champion,name:m.c.name,...m.p.window}));
+ const kinds=new Set(windows.map(w=>w.kind)),unknown=members.filter(m=>!m.p?.window).map(m=>m.c.name);
+ const label=!windows.length?'阶段条件未整理':kinds.size>1?'成员窗口不同，分步配合':kinds.has('growth')||kinds.has('items')?'先保成长与装备':kinds.has('ultimate')?'等关键大招窗口':'基础技能可找机会';
+ return {label,windows,unknown};
 }
 export function describeForgiveness(traits,balancedDamage){
  const score=Math.min(traits.peel,2)*2+Math.min(traits.frontline,2)*2+Math.min(traits.sustain,1)*1.5+(balancedDamage?1.5:0);
  return {score:Math.min(10,score),label:score>=6?'容错较高':score>=3.5?'容错中等':'容错偏低'};
 }
-export function controlChainLabel(traits){
- if(traits.engage>=2&&traits.aoe>=1)return '控制链完整';
- if(traits.engage>=2)return '先手充足、缺范围衔接';
- if(traits.engage>=1)return '有先手、缺衔接';
+export function controlChainLabel(traits,edges=[]){
+ if(edges.some(e=>e.current&&(e.control||['frost','concussive','echo','ball','landing'].includes(e.family))))return '有条件控制接力';
+ if(traits.engage>=2)return '多种先手，衔接条件待确认';
+ if(traits.engage>=1)return '有先手，衔接条件待确认';
  return '缺少稳定先手';
 }
 export function strategySummary(analysis,combo,requested,enemyTraits=null){
  const values=strategyTraits(analysis,combo),tempo=preferredTempo(analysis,combo);
  return {tempo,label:TEMPOS[tempo],preference:requested&&requested!=='any'?TEMPOS[requested]:null,matched:requested==='any'||!requested||tempo===requested,
-  benefit:combo?.why||({early:'围绕留人和支援距离一起抓机会。',teamfight:'控制与范围技能接力，等关键技能齐再接团。',protect:'把保护技能留给主要输出，让核心持续作战。',poke:'先用远程技能压低状态，再决定是否接近目标。'}[tempo]),
-  tradeoff:combo?.risk||({early:'抓人失败时先退回兵线或野区，避免多人一起损失发育。',teamfight:'大招冷却或队友跟不上时，先分散发育。',protect:'保护技能交掉后容易被再次进场，别同时追不同目标。',poke:'被近身或技能落空后优势会减少，保留撤退路径。'}[tempo]),
+  benefit:combo?.why||({early:'围绕实际留人条件和支援距离一起抓机会。',teamfight:'各自确认技能覆盖与安全位置，等队友实际到位再接同一目标。',protect:'把能给友军的保护技能留给主要输出，让核心持续作战。',poke:'先用远程技能试探，再决定是否接近目标。',growth:'先保各自兵线与安全营地，报到位时间；成员确认技能与退路后再会合。'}[tempo]),
+  tradeoff:combo?.risk||({early:'抓人失败时先退回兵线或野区，避免多人一起损失发育。',teamfight:'大招冷却或队友跟不上时，先分散发育。',protect:'保护技能交掉后容易被再次进场，别同时追不同目标。',poke:'被近身或技能落空后保留撤退路径，不假定消耗已经成功。',growth:'没有安全接触机会、有人赶不到或退路被封就取消会合，不为等人一起丢兵线和营地。'}[tempo]),
   threats:threatNotes(analysis,enemyTraits)};
 }

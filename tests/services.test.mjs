@@ -14,6 +14,18 @@ test('atomic saves serialize overlapping snapshots and preserve a parseable fina
  await Promise.all(Array.from({length:40},(_,i)=>atomicJSON(file,{i,payload:'x'.repeat(4000)})));
  assert.equal(JSON.parse(await fs.readFile(file,'utf8')).i,39);assert.deepEqual(await fs.readdir(root),['state.json']);
 });
+test('transient destination locks keep old settings intact and preserve queued saves; terminal failures do not poison the queue',async t=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-json-lock-')),file=path.join(root,'settings.json');await atomicJSON(file,{revision:0});
+ const rename=fs.rename;let calls=0;
+ const transient=t.mock.method(fs,'rename',async(from,to)=>{
+  if(to===file&&calls++<2){assert.deepEqual(JSON.parse(await fs.readFile(file,'utf8')),{revision:0});throw Object.assign(Error('isolated destination lock'),{code:'EPERM'});}
+  return rename(from,to);
+ });
+ await Promise.all([atomicJSON(file,{revision:1}),atomicJSON(file,{revision:2})]);assert.equal(calls,4);assert.deepEqual(JSON.parse(await fs.readFile(file,'utf8')),{revision:2});transient.mock.restore();
+ let denied=true;t.mock.method(fs,'rename',async(from,to)=>{if(to===file&&denied){denied=false;throw Object.assign(Error('isolated permanent failure'),{code:'EIO'});}return rename(from,to);});
+ await assert.rejects(atomicJSON(file,{revision:99}),{code:'EIO'});assert.deepEqual(JSON.parse(await fs.readFile(file,'utf8')),{revision:2});
+ await atomicJSON(file,{revision:3});assert.deepEqual(JSON.parse(await fs.readFile(file,'utf8')),{revision:3});assert.deepEqual(await fs.readdir(root),['settings.json']);
+});
 test('state round trip and strict imported collections',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-state-'));const state=defaultState();state.draft={slots:createSlots(),style:'fun'};
  await saveState(root,state);assert.deepEqual((await readState(root)).draft,{...state.draft,scope:'context'});

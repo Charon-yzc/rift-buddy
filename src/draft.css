@@ -10,3 +10,9 @@
 .combo-row{box-shadow:0 12px 30px #00000055;transition:border-color .15s,box-shadow .15s}
 .combo-row:hover{border-color:#4c6a5c}
 @media(max-width:1100px){.draft-scope{gap:8px}.combo-list{grid-template-columns:1fr}.combo-row{padding:14px}.combo-members{flex-wrap:wrap}.draft-result-actions{flex-wrap:wrap;justify-content:flex-end}}
+.pair-refresh{margin:12px 0;border:1px solid #293e52;border-radius:8px;padding:10px 12px;min-width:0}
+.pair-refresh>summary{cursor:pointer;color:#9ab5a8;font-size:12px}
+.pair-refresh-controls{display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin-top:12px}
+.pair-refresh-controls label{display:grid;gap:5px;font-size:12px;min-width:90px;flex:1}
+.pair-refresh-controls .select{max-width:100%;width:100%}
+.pair-refresh .bottom-note{margin:8px 0 0;overflow-wrap:anywhere}

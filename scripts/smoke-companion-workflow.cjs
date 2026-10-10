@@ -1,4 +1,4 @@
-const {app,globalShortcut,screen,clipboard}=require('electron');
+const {app,globalShortcut,screen,clipboard,ipcMain}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events'),{pathToFileURL}=require('node:url');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[];
 let diagnosticMain;
@@ -8,7 +8,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let n=0;n<160;n++){if(await check())return;await delay(100);}throw Error(label);}
 async function run(){
  app.setPath('userData',root);
- const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar');
+ const release=JSON.parse(await fs.readFile('release/latest.json')),base=process.env.RIFT_BUDDY_SOURCE==='1'?process.cwd():path.join(release.directory,'resources/app.asar');
  // The fixture loads the packaged main in the Electron harness, whose default
  // getVersion is Electron's version rather than this app's packaged manifest.
  const packagedManifest=JSON.parse(await fs.readFile(path.join(base,'package.json')));app.getVersion=()=>packagedManifest.version;
@@ -46,6 +46,13 @@ async function run(){
   if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);
   observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.exitCode=null;observer.kill=()=>observer.stdin.end();return observer;
  };
+ let favoriteGate=null;
+ const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(channel,handler)=>handle(channel,async(...args)=>{
+  if(channel==='save-state'&&favoriteGate&&args[1]?.favorites?.length===favoriteGate.count){
+   const gate=favoriteGate;favoriteGate=null;gate.observed=true;await new Promise((resolve,reject)=>{gate.resolve=resolve;gate.reject=reject;});
+  }
+  return handler(...args);
+ });
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
  diagnosticMain=main;
@@ -249,12 +256,12 @@ async function run(){
  await click('[data-action=companion-jump][data-section=items]');
  const later=await js('document.querySelector("[data-action=companion-later]").dataset.id');
  await js('document.querySelector("[data-action=companion-later]").closest("details").open=true');
- await click('[data-action=companion-later]');await delay(250);
+ await click('[data-action=companion-later]');await until(async()=>JSON.stringify((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds)===JSON.stringify([Number(later)]),'Late choice did not reach the saved guide');
  assert.deepEqual((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds,[Number(later)]);
  assert.equal(writes.length,1,'Late choices must not write runes');await capture('chogath-jungle');
  await click('[data-action=my-runes]');await until(()=>writes.length===2,'Cho source rune application missing');assert.equal(writes.length,2);assert.deepEqual(writes.at(-1).selectedPerkIds,cho.runePage.selectedPerkIds);
  await js('document.querySelector("[data-action=companion-later]").closest("details").open=true');
- await click('[data-action=companion-later]');await delay(150);
+ await click('[data-action=companion-later]');await until(async()=>JSON.stringify((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds)==='[]','Removing the late choice did not reach the saved guide');
  assert.deepEqual((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds,[]);
 
  await js('window.buddy.companionMode(false)');await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full UI not restored');
@@ -398,6 +405,55 @@ async function run(){
  assert.equal(sourceFetches,fetchesBeforeFilters,'Cached source choice fetched network');assert.equal(writes.length,writesBeforeFilters,'Cached source choice wrote runes');
  assert.equal(await js('document.querySelector("[data-build-source-field=region]").value'),'global');assert.equal(await js('document.querySelector("[data-build-source-field=tier]").value'),'emerald_plus');
  await until(()=>js('document.querySelector("[data-build-source-status]").textContent.includes("实际参考：全球翡翠")'),'Cached default did not return');await capture('source-global-emerald-cached');
+ // A condition click in an uncached source cannot accept its display fallback
+ // for independent core/rune/skill choices, including when saving a favorite.
+ picked='Ahri';assigned='MIDDLE';await sync();await change('#solo-role','mid');await sync();
+ const ahri=getBuild(hero('Ahri'),'mid',data),originalChoices={coreId:'core-'+ahri.reference.core[1].items.join('-'),runeId:ahri.runeOptions[1].id,skillId:ahri.skillChoices[1].id};
+ await change('[data-companion-field=core]','1');await change('[data-companion-field=rune]',originalChoices.runeId);await change('[data-companion-field=skill]',originalChoices.skillId);
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.guide?.selection.runeId==='+JSON.stringify(originalChoices.runeId)+')'),'Original Ahri choices did not reach guide');
+ await change('[data-build-source-field=region]','kr');await change('[data-build-source-field=tier]','diamond_plus');
+ assert.ok(await js('document.querySelector("[data-build-source-status]").textContent.includes("未缓存")'));
+ await click('[data-action=companion-condition][data-condition=ap]');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.guide?.selection.conditions.includes("ap"))'),'Edited pressure did not reach guide');
+ const paused=(await js('window.buddy.bootstrap()')).state.guide.selection;for(const [key,value]of Object.entries(originalChoices))assert.equal(paused[key],value,'Paused edit overwrote '+key);
+ await click('[data-action=companion-favorite]');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.some(f=>f.type==="build"&&f.champion==="Ahri"))'),'Paused choice favorite missing');
+ const pausedFavorite=(await js('window.buddy.bootstrap()')).state.favorites.find(f=>f.type==='build'&&f.champion==='Ahri');for(const [key,value]of Object.entries(originalChoices))assert.equal(pausedFavorite[key],value,'Favorite overwrote '+key);
+ await capture('source-paused-condition');await change('[data-build-source-field=region]','global');await change('[data-build-source-field=tier]','emerald_plus');
+ await until(()=>js('document.querySelector("[data-companion-field=core]")?.value==="1"'),'Original core route not restored');
+ assert.equal(await js('document.querySelector("[data-companion-field=rune]").value'),originalChoices.runeId);assert.equal(await js('document.querySelector("[data-companion-field=skill]").value'),originalChoices.skillId);
+ const restoredChoices=(await js('window.buddy.bootstrap()')).state.guide.selection;for(const [key,value]of Object.entries(originalChoices))assert.equal(restoredChoices[key],value);
+ assert.equal(writes.length,writesBeforeFilters,'Source fallback edit wrote runes');assert.equal(sourceFetches,fetchesBeforeFilters,'Source fallback edit fetched without a refresh click');
+ await capture('source-choice-restored');
+ // A rejected/slow save must not announce success, lose earlier favorites or
+ // prevent a preference changed while the collection write was pending.
+ const beforeFailure=(await js('window.buddy.bootstrap()')).state,countBeforeFailure=beforeFailure.favorites.length;
+ const direction=await js('document.querySelector("[data-action=companion-favorite]").getAttribute("aria-pressed")==="true"?-1:1');
+ await js('document.querySelector("#toast").textContent=""');
+ const rejectedFavorite={count:countBeforeFailure+direction};favoriteGate=rejectedFavorite;
+ await click('[data-action=companion-favorite]');await until(()=>rejectedFavorite.observed,'Favorite save was not intercepted');
+ assert.doesNotMatch(await js('document.querySelector("#toast").textContent'),/已收藏|已取消收藏/);
+ await click('[data-action=companion-favorite]');await until(()=>js('document.querySelector("#toast").textContent.includes("收藏正在保存")'),'Duplicate favorite click was not blocked');
+ await js('(()=>{const b=document.createElement("button");b.dataset.action="auto-live";document.body.append(b);b.click();b.remove();})()');
+ rejectedFavorite.reject(Error('Isolated favorite write rejected'));
+ await until(()=>js('document.querySelector("#toast").textContent.includes("收藏未保存，已保留原收藏")'),'Failed favorite save was not explained');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.length==='+countBeforeFailure+'&&b.state.preferences.autoLive==='+JSON.stringify(!beforeFailure.preferences.autoLive)+')'),'Favorite recovery lost originals or the newer preference');
+ const recovered=(await js('window.buddy.bootstrap()')).state;assert.deepEqual(recovered.favorites,beforeFailure.favorites);
+ await js('document.querySelector("#toast").textContent=""');const confirmedFavorite={count:countBeforeFailure+direction};favoriteGate=confirmedFavorite;
+ await click('[data-action=companion-favorite]');await until(()=>confirmedFavorite.observed,'Retried favorite save was not intercepted');
+ assert.doesNotMatch(await js('document.querySelector("#toast").textContent'),/已收藏|已取消收藏/);confirmedFavorite.resolve();
+ await until(()=>js('document.querySelector("#toast").textContent.includes('+JSON.stringify(direction>0?'已收藏':'已取消收藏')+')'),'Favorite success did not wait for confirmation');
+ assert.equal((await js('window.buddy.bootstrap()')).state.favorites.length,countBeforeFailure+direction);
+ const beforeAddFailure=(await js('window.buddy.bootstrap()')).state.favorites;
+ // The source-path fixture above already saved this build. Its successful
+ // cancellation leaves the same control available for a rejected new add.
+ assert.equal(direction,-1);const rejectedAdd={count:beforeAddFailure.length+1};favoriteGate=rejectedAdd;
+ await click('[data-action=companion-favorite]');await until(()=>rejectedAdd.observed,'New favorite save was not intercepted');rejectedAdd.reject(Error('Isolated new favorite write rejected'));
+ await until(()=>js('document.querySelector("#toast").textContent.includes("收藏未保存，已保留原收藏")'),'Failed new favorite was not explained');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.length==='+beforeAddFailure.length+')'),'Rejected new favorite remained saved');
+ assert.deepEqual((await js('window.buddy.bootstrap()')).state.favorites,beforeAddFailure);
+ await click('[data-action=companion-favorite]');await until(()=>js('document.querySelector("#toast").textContent.includes("已收藏，下次就玩这套")'),'New favorite could not recover after rejection');
+ await capture('favorite-write-confirmed');
  // A formal MIDDLE assignment does not override the player's explicit support preparation.
  picked='Lux';assigned='MIDDLE';await sync();await click('[data-action=companion-full]');
  await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full assistant did not open');
@@ -447,6 +503,8 @@ async function run(){
  report.manualFormalLanePreparation=true;report.manualChampionSwap=true;report.manualLaneRelease=true;report.manualLaneRuneWrites=0;
  report.manualNewGameReleased=true;report.staleGameSaveRejected=true;report.finalGameId=gameId;
  report.cachedSourceSwitch=true;report.cachedSourceNoFetch=true;report.cachedSourceNoRuneWrite=true;
+ report.sourceFallbackSingleEditPreserved=true;report.sourceFallbackFavoritePreserved=true;report.sourceRestoredOriginalChoices=true;
+ report.favoriteWriteConfirmation=true;report.favoriteFailureRollback=true;report.favoriteConcurrentPreferencePreserved=true;
  await fs.writeFile(path.join(root,'companion-workflow.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'companion-workflow-error.txt'),error.stack).catch(()=>{});if(diagnosticMain&&!diagnosticMain.isDestroyed()){const state=await diagnosticMain.webContents.executeJavaScript('window.buddy.bootstrap().then(b=>({client:b.client,draft:b.state.draft,guide:b.state.guide,ui:{current:document.querySelector(".companion-current")?.textContent,preview:document.querySelector(".companion-preview")?.textContent,tab:document.querySelector(".companion-tabs .active")?.dataset.tab,plan:document.querySelector("[data-companion-field=rune]")?.dataset.plan,toast:document.querySelector("#toast")?.textContent}}))').catch(()=>null);await fs.writeFile(path.join(root,'companion-failure-state.json'),JSON.stringify(state,null,2)).catch(()=>{});}app.exit(1);});

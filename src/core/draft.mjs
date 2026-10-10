@@ -25,10 +25,22 @@ export function reconcileClientDraft(draft,gameId,previousId=null){
  if(!newGame&&draft.clientGameId===gameId)return {draft,changed:false,newGame:false};
  const clearSoloRole=newGame&&draft.scope==='solo'&&draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId));
  const next={...draft,clientGameId:gameId,slots:newGame?clearClientPicks(draft.slots):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
+ if(newGame)delete next.playerPosition;
  if(newGame&&next.creativePlan&&!next.creativePlan.members.every(m=>next.slots.some(s=>s.role===m.role&&s.champion===m.champion)))delete next.creativePlan;
  return {draft:next,changed:true,newGame};
 }
 export const manualPlayerSlot=(slots,cellId)=>Number.isInteger(cellId)?slots.find(s=>s.manualPosition&&s.clientCellId===cellId):null;
+// Keep the user's local lane independent of a prospective champion. Bind only
+// after the public client actually selects a hero, using the existing move rule.
+export function restorePlayerPosition(slots,session,champions,position){
+ if(!position||position.cellId!==session?.localPlayerCellId||!slots.some(s=>s.role===position.role))return slots;
+ const own=session.myTeam?.find(p=>p.cellId===position.cellId),id=champions.find(c=>c.key===Number(own?.championId))?.id;
+ if(!id)return slots;
+ const target=slots.find(s=>s.role===position.role);
+ if(Number.isInteger(target.clientCellId)&&target.clientCellId!==position.cellId&&session.myTeam.some(p=>p.cellId===target.clientCellId&&Number(p.championId)>0))return slots;
+ const from=slots.find(s=>s.champion===id),next=from&&from.role!==position.role?moveChampion(slots,from.role,position.role):slots;
+ return next.map(s=>s.role===position.role?{...s,champion:id,locked:from?.locked??true,clientCellId:position.cellId,manualPosition:true}:s);
+}
 // Only the local player's explicit override is released. Other bindings and
 // position ownership stay intact; the next sync can import the declared lane.
 export function clearManualPlayerPosition(slots,cellId){
