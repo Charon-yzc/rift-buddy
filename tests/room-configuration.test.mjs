@@ -68,6 +68,38 @@ test('a late room member receives the original accepted trio, concrete configura
  }finally{a.dispose();b.dispose();}
 });
 
+test('clearing an accepted trio member publishes the current lineup and can restore the original plan',async()=>{
+ const trio=TRIOS.find(t=>t.id==='ball-delivery'),team=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
+ const original=captureCreativePlan({trio,slots:team,scope:'party'},data),before=JSON.stringify(original);
+ const a=createRoomService({nick:'房主',listenHost:'127.0.0.1',discovery:false}),b=createRoomService({nick:'客人',listenHost:'127.0.0.1',discovery:false});
+ const publish=lineup=>{const strategy=captureRoomStrategy(lineup,data,original);a.publish({lineup,configurations:captureRoomConfigurations(lineup,data,createPreparationStore(),{creativePlan:strategy}),...(strategy?{strategy}:{})});return strategy;};
+ const received=async predicate=>{for(let i=0;i<50;i++){const share=b.snapshot().members.find(m=>m.nick==='房主')?.share;if(predicate(share))return share;await new Promise(r=>setTimeout(r,20));}assert.fail('current lineup did not reach the room');};
+ try{
+  const address=await a.host();publish(team);await b.join({host:'127.0.0.1',port:address.port,room:address.room,pin:address.pin});await received(s=>s?.strategy?.id===original.id);
+  for(const member of original.members){
+   const partial=team.map(s=>s.role===member.role?{...s,champion:null}:s);assert.equal(publish(partial),null);
+   const share=await received(s=>s?.lineup.find(p=>p.role===member.role)?.champion===null);
+   assert(!share.strategy);assert.equal(share.configurations.length,2);assert(!share.configurations.some(c=>c.role===member.role));
+   assert.equal(publish(team).id,original.id);await received(s=>s?.strategy?.id===original.id);
+  }
+  const empty=team.map(s=>({...s,champion:null}));assert.equal(publish(empty),null);
+  const cleared=await received(s=>s?.lineup.every(p=>p.champion===null));assert(!cleared.strategy);assert.deepEqual(cleared.configurations,[]);
+  assert.equal(publish(team).id,original.id);await received(s=>s?.strategy?.id===original.id);
+  assert.equal(JSON.stringify(original),before,'sharing must preserve the local restorable plan');
+ }finally{a.dispose();b.dispose();}
+});
+
+test('an open build overrides a shared configuration only in the same mode and combination context',()=>{
+ const team=createSlots().map(s=>({...s,champion:s.role==='mid'?'Ahri':null})),champion=data.champions.find(c=>c.id==='Ahri'),empty=createPreparationStore();
+ const base=getBuild(champion,'mid',data,{mode:'rift'}),page=base.runeOptions.at(-1).page;
+ const current={id:'Ahri',role:'mid',mode:'rift',customRunePage:{...page,patch:data.patch},summonerIds:['SummonerFlash','SummonerBarrier']};
+ const capture=(mode,selection)=>captureRoomConfigurations(team,data,empty,{mode,current:selection})[0];
+ assert.equal(capture('hex',current).mode,'hex');assert.equal(capture('hex',current).runes,null);
+ const rift=capture('rift',{...current,mode:'hex'});assert.equal(rift.mode,'rift');assert(rift.runes);
+ const matched=capture('rift',current);assert.deepEqual(matched.runes.selectedPerkIds,page.selectedPerkIds);assert.deepEqual(matched.spells,current.summonerIds);
+ const wrongCombo=capture('rift',{...current,comboId:'different-preview'});assert.deepEqual(wrongCombo.spells,base.summoners);
+});
+
 test('two, four and five members retain their own configurations and Hex does not become a Rift page',()=>{
  const full=createSlots().map((s,i)=>({...s,champion:['Garen','Diana','Yasuo','Ashe','Rakan'][i]}));
  for(const size of [2,4,5]){const team=full.map((s,i)=>i<size?s:{...s,champion:null}),configs=captureRoomConfigurations(team,data,createPreparationStore());assert.equal(configs.length,size);assert(configs.every(c=>c.mode==='rift'));assert(encodeFrame(sanitizeShare({kind:'state',v:1,from:'甲',at:1,lineup:team,configurations:configs})));}
