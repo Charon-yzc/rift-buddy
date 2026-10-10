@@ -60,7 +60,7 @@ function roomActive({room,addresses,champ}){
   ?`<span class="badge room-link${room.link==='connected'?'':' warn'}">${link||'中继'}</span>`
   :`<span class="badge">${isHost?'房主':'成员'}</span>`;
  const inviteBlock=isRelay
-  ?`<div class="room-invites"><p>邀请队友（把下面两项发给他们）：</p><div class="chips"><button data-action="room-copy-relay">${icon('copy')}${e(`中继 ${room.relayUrl||''}｜房间 ${room.room}`)}</button></div><div class="room-invite-foot"><span class="bottom-note">队友在“中继”里填同一个中继地址、房间码和口令即可加入。${room.link==='reconnecting'?'连接中断，正在重连，期间分享可能延迟。':room.link==='failed'?'连续重连失败已停止，请离开房间后重新加入。':''}</span></div></div>`
+  ?`<div class="room-invites"><p>邀请队友（复制下面的地址和房间码，口令请另行告知）：</p><div class="chips"><button data-action="room-copy-relay">${icon('copy')}${e(`中继 ${room.relayUrl||''}｜房间 ${room.room}`)}</button></div><div class="room-invite-foot"><span class="bottom-note">队友在“中继”里填同一个中继地址、房间码和口令即可加入。${room.link==='reconnecting'?'连接中断，正在重连，期间分享可能延迟。':room.link==='failed'?'连续重连失败已停止，请离开房间后重新加入。':''}</span></div></div>`
   :isHost?`<div class="room-invites"><p>邀请队友（邀请码和口令一起发）：</p><div class="chips">${invites.length?invites.map(item=>`<button data-action="room-copy-invite" data-invite="${e(item.invite)}">${icon('copy')}${e(item.name)} · ${e(item.invite)}</button>`).join(''):'<span class="bottom-note">暂未检测到局域网地址；可让队友手动扫描。</span>'}</div><div class="room-invite-foot">${button('room-refresh-addresses','刷新本机地址','refresh','quiet small')}<span class="bottom-note">口令 ${e(room.pin||'')}。队友在“加入房间”里粘贴完整邀请即可；裸邀请码需另填口令。</span></div></div>`
   :'';
  return `<section class="panel room-panel"><div class="panel-head">${head}${badge}${button('room-leave','离开房间','','quiet small')}</div>

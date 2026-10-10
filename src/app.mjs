@@ -721,7 +721,7 @@ document.addEventListener('click',async event=>{
   finally{roomBusy=false;}
   render();return;}
  if(action==='room-publish'){if(!await publishRoomShare({force:true}))throw Error('分享失败，请检查房间连接后重试');toast('已分享当前阵容');return;}
- if(action==='room-copy-relay'){await api.copy(`开黑搭子中继房间｜中继 ${room?.relayUrl||''}｜房间 ${room?.room||''}`);toast('邀请信息已复制');return;}
+ if(action==='room-copy-relay'){await api.copy(`开黑搭子中继房间｜中继 ${room?.relayUrl||''}｜房间 ${room?.room||''}`);toast('地址和房间码已复制；口令请另行告知');return;}
  if(action==='room-copy-invite'){await api.copy(`开黑搭子房间 ${room?.room||''}｜邀请码 ${el.dataset.invite}｜口令 ${room?.pin||''}`);toast('邀请信息已复制');return;}
  if(action==='room-build'){const member=room?.members.find(m=>m.nick===el.dataset.member),config=member?.share?.configurations?.find(s=>s.champion===el.dataset.id&&s.role===el.dataset.role);if(config){closeOverlay();roomConfigurationView={config:structuredClone(config),from:member.nick,strategy:member.share.strategy?structuredClone(member.share.strategy):null};overlay.innerHTML=roomConfigurationDialog(roomConfigurationView.config,data,member.nick,roomConfigurationView.strategy);}else{showBuild(el.dataset.id,el.dataset.role,el.dataset.mode||'rift');toast('发送方仅共享英雄；当前显示本机配置参考');}return;}
  if(action==='room-copy-configuration'){if(!roomConfigurationView)throw Error('共享配置已变化，请重新打开');await api.copy(roomConfigurationText(roomConfigurationView.config,data,roomConfigurationView.from,roomConfigurationView.strategy));toast('发送方配置已复制');return;}
