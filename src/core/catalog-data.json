@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.10.2",
+  "version": "2026.10.10.3",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -7208,7 +7208,7 @@
       "patch": "16.19",
       "loadouts": {
         "bottom": "default",
-        "support": "poke-support"
+        "support": "poke-no-immobilize"
       },
       "reviewBaseline": {
         "champion:Caitlyn": "ffa017a1b5ab5269",
@@ -8051,7 +8051,7 @@
       "patch": "16.19",
       "loadouts": {
         "bottom": "battle-mage",
-        "support": "poke-support"
+        "support": "poke-no-immobilize"
       },
       "reviewBaseline": {
         "champion:Cassiopeia": "85636d3bc842c9dc",
@@ -8115,7 +8115,7 @@
       "patch": "16.19",
       "loadouts": {
         "bottom": "jhin-control",
-        "support": "poke-support"
+        "support": "poke-no-immobilize"
       },
       "reviewBaseline": {
         "champion:Jhin": "cc35368c11100f62",
@@ -12573,7 +12573,7 @@
           "role": "mid",
           "champion": "Galio",
           "job": "确认皇子当时位置在 R 范围内且能撑到落地，再 R 支援；落地 W/E 错开接控，给女枪保同一输出区。目标退出落点或皇子无法承伤时取消强接。",
-          "loadoutId": "trio-control-mid"
+          "loadoutId": "trio-galio-engage"
         },
         {
           "role": "bottom",
@@ -12670,7 +12670,7 @@
           "role": "mid",
           "champion": "Galio",
           "job": "卡蜜尔先手时用 Q 或已就绪 R 后手留同一目标，卡蜜尔不能先到时先报自己的进场；普攻/E 兑现输出，给加里奥落地留时间。队友跟不上就停，不连交两人突进追进敌阵。",
-          "loadoutId": "trio-control-mid"
+          "loadoutId": "trio-galio-engage"
         }
       ],
       "steps": [
@@ -12767,7 +12767,7 @@
           "role": "mid",
           "champion": "Galio",
           "job": "魔腾落点实际在自己 R 范围内才按沟通支援，和慎错开保护；落地 W/E 接控并接应撤退。不能把慎全地图支援等同自己的 R 范围，目标退出原落点就不强接。",
-          "loadoutId": "trio-control-mid"
+          "loadoutId": "trio-galio-engage"
         }
       ],
       "steps": [
@@ -14431,7 +14431,7 @@
           "role": "mid",
           "champion": "Galio",
           "job": "确认卡蜜尔当时位置在 R 范围、两名前排能撑到落地才支援；落地 W/E 与猪妹错开控制。对手退出落点或敌方反包时接应撤退，不把 R 当锁定敌人的追踪技能。",
-          "loadoutId": "trio-control-mid"
+          "loadoutId": "trio-galio-engage"
         }
       ],
       "steps": [
@@ -15105,19 +15105,19 @@
           "champion": "Galio",
           "role": "mid",
           "job": "先清中线，洛 W/R 实际限制且当时位置在自己 R 范围内才支援；落地 W/E 错开续控。洛撑不到落地、目标已退出或尼菈跟不上时取消强接，R 不追踪移动敌人。",
-          "loadoutId": "trio-control-mid"
+          "loadoutId": "trio-galio-engage"
         },
         {
           "champion": "Nilah",
           "role": "bottom",
           "job": "先确认洛控制实际命中、加里奥到场和 E 退出目标，再 E 接近、Q 与普攻输出，R 已学可用才覆盖同一战区；W 留实际普攻压力。队友未到或回撤路径断开就不深进。",
-          "loadoutId": "default"
+          "loadoutId": "nilah-sustain"
         },
         {
           "champion": "Rakan",
           "role": "support",
           "job": "先报可 E 返回的友军和队友距离，再 W 或已就绪 R 找同一目标；命中后给加里奥落地留时间，E 回可接应友军。W 落空、支援到不了或没有回跳目标时立即停追。",
-          "loadoutId": "default"
+          "loadoutId": "rakan-engage"
         }
       ],
       "patch": "16.20",
@@ -15146,24 +15146,48 @@
         "champion:Galio": "62214853523131ad",
         "champion:Nilah": "30e5ef1b4f79390e",
         "champion:Rakan": "69d7edc48cac55e5",
-        "item:6655": "e593f4433de96e4b",
+        "item:3152": "37dc7712644a19f0",
+        "item:4005": "049fc32e0486e5b6",
         "item:3157": "4e1ddce33472ee0f",
-        "item:3089": "a8a9b060b253391c",
         "item:3020": "357a162d6a40286e",
+        "item:3089": "a8a9b060b253391c",
         "item:3135": "9eb1465e02c69db0",
-        "item:3102": "74374782f1274206",
-        "rune:8112": "0082006b65520bc3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8463": "3296414353df0e65",
         "rune:8473": "ed2f46234183276d",
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47"
+        "rune:8347": "def2a55844436c47",
+        "rune:8230": "b4da4b07836c5635",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8234": "018bc04903dfba25",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998",
+        "item:6676": "f75b10fbdb261e7f",
+        "item:3031": "0ccdceb96f0cd392",
+        "item:3036": "fcf5de31162e9e9d",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3072": "5c29525fccb26a37",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8005": "e05d6553b23e1d97",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8014": "04092c4f9754532b",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8410": "da4ec8f245880032",
+        "item:3050": "c3e25c9df9075147",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3158": "72ca672b9221f063",
+        "item:2065": "a30335c7d456f5fd",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8351": "6594874b24a7b00e"
       }
     },
     {
@@ -18095,7 +18119,7 @@
           "champion": "Galio",
           "role": "mid",
           "job": "先清中线，R 可用且卢锡安在实际支援范围才支援其当时位置；落地 W/E 错开接控，撑不到落地或目标已退出就取消强接。",
-          "loadoutId": "trio-control-mid"
+          "loadoutId": "trio-galio-engage"
         },
         {
           "champion": "Lucian",
@@ -19445,9 +19469,7 @@
         "Brand",
         "Zyra",
         "Lux",
-        "Shaco",
-        "Teemo",
-        "Nidalee"
+        "Shaco"
       ],
       "roles": [
         "support"
@@ -19466,20 +19488,18 @@
         "comet",
         "harvest"
       ],
-      "why": "先保证辅助装和视野，用技能与阵地支援；高价装备按实际经济分段购买。",
+      "why": "帝国指令需要自身定身实际命中：岩突/岩场、击飞、眩晕、禁锢或盒子恐惧；单纯消耗和减速不能触发。辅助任务和视野优先，命中可靠性低时主动选择普通消耗装备参考，不把昂贵兰德里与冰杖当固定时间成装。先给队友可接应窗口，打完一轮保留撤退空间。",
       "damage": "ap",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Taliyah": "bbd8f417c4822070",
-        "champion:Velkoz": "06abcf2e8bb52be6",
-        "champion:Xerath": "8686c1e8e481fd88",
-        "champion:Brand": "faaa1f3065d564b1",
-        "champion:Zyra": "7c484794dc761405",
-        "champion:Lux": "ca4ca5d4fa16b8c8",
-        "champion:Shaco": "b34bdc56bc3cd330",
-        "champion:Teemo": "feed1f50df880a59",
-        "champion:Nidalee": "36d6c8ca771274ee",
+        "champion:Taliyah": "164392e23c74360e",
+        "champion:Velkoz": "4fc6f59617324dce",
+        "champion:Xerath": "c6bf3b1c613437cd",
+        "champion:Brand": "dfe0f7f6ef8e7e6e",
+        "champion:Zyra": "f653495a90d1586e",
+        "champion:Lux": "50314ad04c92f1a6",
+        "champion:Shaco": "ea2b12296434e0e4",
         "item:4005": "049fc32e0486e5b6",
         "item:6653": "dae566be4a35ad25",
         "item:3116": "1ca09887b440d0f6",
@@ -19495,7 +19515,63 @@
         "rune:8126": "9e648d4b51a0c973",
         "rune:8140": "93302565a400fc06",
         "rune:8106": "bfb83fa22daf18de"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 塔莉垭技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Taliyah.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 维克兹技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Velkoz.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 泽拉斯技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Xerath.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 布兰德技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Brand.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 婕拉技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Zyra.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 拉克丝技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lux.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 萨科技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Shaco.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "ashe-utility",
@@ -19508,32 +19584,32 @@
       ],
       "base": "pokeSupport",
       "items": [
-        4005,
+        3179,
         3004,
-        3179
+        6694
       ],
       "boots": 3158,
       "late": [
-        6694
+        3190
       ],
       "runes": [
         "comet",
         "hail"
       ],
-      "why": "寒冰辅助围绕 W 消耗和 R 接控，不按下路普攻核心配置。",
+      "why": "围绕 W 消耗与 R 实际眩晕，黯影阔剑支持可安全到达的视野清理，女神泪按真实经济逐步升级魔宗。移除固定帝国指令：W/普攻减速不能触发本版定身条件，只有 R 实际眩晕可触发。赛瑞尔达仅对低于半血目标的技能伤害附减速；辅助经济慢，先保鞋、视野与退路，不按补刀位成装速度打。",
       "early": [
         3070
       ],
       "priority": "WQE",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Ashe": "7f33044ee104f59d",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3004": "24796bd572e1c936",
+        "champion:Ashe": "f363e1846cfe0370",
         "item:3179": "0c7b834979696674",
-        "item:3158": "72ca672b9221f063",
+        "item:3004": "24796bd572e1c936",
         "item:6694": "8ac6919d2a7a1dd6",
+        "item:3158": "72ca672b9221f063",
+        "item:3190": "89cdf2838748dfc7",
         "item:3070": "e2dbf1b6d5da375b",
         "rune:8229": "9eaed52046ba81fd",
         "rune:8226": "b05a5d0fb43e4a6e",
@@ -19547,7 +19623,27 @@
         "rune:8135": "d7b9ee19a520bf84",
         "rune:8009": "e88eb74c171319c4",
         "rune:9104": "e6b524a54b35a2f3"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 艾希技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ashe.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "tank-peel",
@@ -20048,13 +20144,13 @@
         "comet",
         "harvest"
       ],
-      "why": "先布置撤退路径和入口，辅助经济与视野优先；扫描会削弱阵地。",
+      "why": "主 W 先布置盒子阵地与撤退入口，E 用来补实际可接触目标；盒子恐惧实际生效才触发帝国指令，E 减速不触发。辅助任务和视野预算优先，盒子被扫描或未完成布置时取消接战；不按被动爆发伤害保证先手击杀。",
       "damage": "ap",
-      "priority": "EWQ",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "priority": "WEQ",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Shaco": "b34bdc56bc3cd330",
+        "champion:Shaco": "ea2b12296434e0e4",
         "item:4005": "049fc32e0486e5b6",
         "item:6653": "dae566be4a35ad25",
         "item:3116": "1ca09887b440d0f6",
@@ -20070,7 +20166,28 @@
         "rune:8126": "9e648d4b51a0c973",
         "rune:8140": "93302565a400fc06",
         "rune:8106": "bfb83fa22daf18de"
-      }
+      },
+      "first": "WQE",
+      "sources": [
+        {
+          "name": "Riot · 萨科技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Shaco.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "teemo-onhit",
@@ -20241,16 +20358,16 @@
         "aery",
         "guardian"
       ],
-      "why": "先保证辅助装与回复保护，按搭档火力和进场方式使用技能。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "赫利亚需先伤害英雄存充能，再实际治疗或护盾友军；摸不到敌方时不能预设这件装备的治疗收益，应主动改用更适合安全保护的配置。月石要另一位可传递效果的友军，救赎有落地延迟。辅助任务与视野预算优先，娜美、璐璐、娑娜、索拉卡、米利欧、悠米分别按实际可施放的治疗护盾与距离接应。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Nami": "6a067b32874ba55a",
-        "champion:Sona": "ff758feda78ac5c1",
-        "champion:Soraka": "99175be210bfdbdd",
-        "champion:Lulu": "12ee018aa7e41dc6",
-        "champion:Milio": "7bec2e4244a3e4bc",
-        "champion:Yuumi": "8878f62a7e5e6ec8",
+        "champion:Nami": "b10366f1187813b9",
+        "champion:Sona": "2313d851c59e6f93",
+        "champion:Soraka": "46ec394f508ebcc0",
+        "champion:Lulu": "5f5091380ca45272",
+        "champion:Milio": "9176ff8b22c1f1c9",
+        "champion:Yuumi": "74372983c2c1dbfe",
         "item:6620": "cfb94d4a02cc64c8",
         "item:6617": "6dccd52cee1f2c6e",
         "item:3107": "53bdbba0a53ca5c6",
@@ -20266,7 +20383,57 @@
         "rune:8473": "ed2f46234183276d",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 娜美技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nami.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 娑娜技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Sona.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 索拉卡技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Soraka.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 璐璐技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lulu.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 米利欧技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Milio.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 悠米技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Yuumi.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "quinn-burst",
@@ -20436,17 +20603,17 @@
         "grasp",
         "aftershock"
       ],
-      "why": "承担前排并留住目标；抗性和鞋子按对方主要伤害调整。打野先保证清野与支援节奏。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "上路先保兵线与能回撤的换血位置，日炎只在能保持近身时兑现；对手魔法威胁高时先换魔抗，不能固定先叠护甲。贾修需要持续交战，不当进场即满层；狂徒要达到额外生命条件并脱战。墨菲特六级前没有自身硬控，不能触发余震；不灭也需要安全普攻英雄。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Malphite": "72a1b3b4b24d83b0",
-        "champion:Shen": "d93abdead72ceaa9",
-        "champion:Ornn": "21cb2512406c635b",
-        "champion:Sejuani": "8b875d1d645405f8",
-        "champion:Maokai": "4e10562e6c18312f",
-        "champion:Nunu": "a12bf5e1699a4089",
-        "champion:Poppy": "fa2cafaf8d0f2976",
+        "champion:Malphite": "1cef2e2fdec84d8d",
+        "champion:Shen": "e59438000b98dd56",
+        "champion:Ornn": "aec2b0070700de64",
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Maokai": "e196429fdd9138f9",
+        "champion:Nunu": "8f44e57080d4e3bf",
+        "champion:Poppy": "af33a45e62ad30e5",
         "item:3068": "f23565139478f276",
         "item:2504": "ead2f4757e3e6c8c",
         "item:6665": "9693faf50145df4e",
@@ -20465,7 +20632,63 @@
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 墨菲特技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Malphite.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 慎技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Shen.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 奥恩技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ornn.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 瑟庄妮技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Sejuani.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 茂凯技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Maokai.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 努努和威朗普技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nunu.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 波比技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Poppy.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trio-ball",
@@ -20479,7 +20702,7 @@
       "base": "mage",
       "items": [
         6655,
-        3040,
+        4645,
         3089
       ],
       "boots": 3020,
@@ -20487,37 +20710,56 @@
         3135,
         3157
       ],
-      "early": [
-        3070
-      ],
+      "early": [],
       "runes": [
-        "comet",
-        "aery"
+        "aery",
+        "comet"
       ],
-      "why": "先保证蓝量与清线，进场前沟通魔偶位置；不要为了送球放弃安全距离。",
+      "why": "卢登先补蓝量和清线，取消固定的第二件大天使与提前女神泪；魔偶实际到位且仍在覆盖范围才接 R。影焰对低生命目标增益，不是可靠斩杀线；需要自保时可把后续帽子改为中娅，魔抗高时考虑虚空。艾黎适合 Q 消耗兼 E 给友军盾，彗星仍须命中，别为送球贴脸。",
       "damage": "ap",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Orianna": "d35601ede743b428",
+        "champion:Orianna": "a3ef9b02b9b57356",
         "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
+        "item:4645": "152f57227a713097",
         "item:3089": "a8a9b060b253391c",
         "item:3020": "357a162d6a40286e",
         "item:3135": "9eb1465e02c69db0",
         "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8229": "9eaed52046ba81fd",
+        "rune:8214": "6d3b2bf192d500da",
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8214": "6d3b2bf192d500da",
         "rune:8236": "a1bb7cfc15c3d089",
         "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432"
-      }
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "priority": "QWE",
+      "first": "QWE",
+      "sources": [
+        {
+          "name": "Riot · 奥莉安娜技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Orianna.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trio-jungle-frontline",
@@ -20549,17 +20791,17 @@
         "aftershock",
         "phase"
       ],
-      "why": "承担清野、先手和支援，接控后确认队友能跟上；抗性按主要威胁调整。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "先保安全营地再报到场时间；日炎服务近身清野，抗性按公开威胁调整。余震要自身硬控实际命中：慎 E、努努 W 或 E、茂凯 Q/W 等，墨菲特要等已学 R；减速不算。相位要完成独立攻击或技能命中，不预设进场就加速。奥恩、慎等非常规打野的发育与清野可行性未经对局验证。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Malphite": "72a1b3b4b24d83b0",
-        "champion:Shen": "d93abdead72ceaa9",
-        "champion:Ornn": "21cb2512406c635b",
-        "champion:Sejuani": "8b875d1d645405f8",
-        "champion:Maokai": "4e10562e6c18312f",
-        "champion:Nunu": "a12bf5e1699a4089",
-        "champion:Poppy": "fa2cafaf8d0f2976",
+        "champion:Malphite": "1cef2e2fdec84d8d",
+        "champion:Shen": "e59438000b98dd56",
+        "champion:Ornn": "aec2b0070700de64",
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Maokai": "e196429fdd9138f9",
+        "champion:Nunu": "8f44e57080d4e3bf",
+        "champion:Poppy": "af33a45e62ad30e5",
         "item:3068": "f23565139478f276",
         "item:2504": "ead2f4757e3e6c8c",
         "item:6665": "9693faf50145df4e",
@@ -20578,7 +20820,63 @@
         "rune:8237": "141d0a7c16b98b91",
         "rune:8444": "fbb59f496f94894e",
         "rune:8451": "9e4f8837510e3998"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 墨菲特技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Malphite.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 慎技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Shen.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 奥恩技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ornn.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 瑟庄妮技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Sejuani.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 茂凯技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Maokai.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 努努和威朗普技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nunu.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 波比技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Poppy.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trio-ad-diver",
@@ -20606,13 +20904,13 @@
         "conqueror",
         "lethal"
       ],
-      "why": "先保证留住目标后的存活，黑切服务队友的物理伤害；不是一套只追求秒人的刺客配置。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "星蚀需要实际完成命中轮次，不能把位移本身当护盾；黑切需逐次物理伤害叠层才服务队友，并非落地就满破甲。血手承接近身反击，不能抵消越过队友范围的集火。征服者适合持续接触，致命节奏需要实际连续普攻；蔚、嘉文、魔腾进场后先确认能否安全留在同一目标。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:JarvanIV": "3906c2327e3ea4cf",
-        "champion:Vi": "3397db3348f1185c",
-        "champion:Nocturne": "8c842f929153f246",
+        "champion:JarvanIV": "c9d96bc727699c9b",
+        "champion:Vi": "ed4ccc20b476dc0e",
+        "champion:Nocturne": "2759f235cb713880",
         "item:6692": "bec6d540fde1d4ec",
         "item:3071": "8b44dc349847ea0e",
         "item:3053": "6f40bd5cd29bb7d2",
@@ -20631,7 +20929,39 @@
         "rune:8017": "50a79a13bce940f0",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8410": "da4ec8f245880032"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 嘉文四世技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/JarvanIV.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 蔚技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Vi.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 魔腾技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nocturne.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trio-diana",
@@ -20657,11 +20987,11 @@
         "conqueror",
         "electro"
       ],
-      "why": "纳什兼顾清野和持续输出，中娅留给聚拢后的集火；爆发路线和持续作战符文按进场任务取舍。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "纳什服务技能后普攻和第三击，清野与近身输出仍需实际接触。Q 月光命中才按 E 重置接近；R 先拉到英雄才有延迟爆发。中娅用于进场后承接集火，凝滞期间不能继续普攻或施法；队友接不上时先取消深入。征服者偏持续接触，电刑要求独立命中轮次，不把一次范围 R 当三个触发。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Diana": "b000c49c492c9ebb",
+        "champion:Diana": "0c1ee1b395e630d3",
         "item:3115": "627135c117eaf20a",
         "item:3157": "4e1ddce33472ee0f",
         "item:3089": "a8a9b060b253391c",
@@ -20680,7 +21010,27 @@
         "rune:8106": "bfb83fa22daf18de",
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 黛安娜技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Diana.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trio-tf",
@@ -20706,11 +21056,11 @@
         "electro",
         "comet"
       ],
-      "why": "以黄牌和支援创造人数优势，中娅保护落点；大招落地前先确认草丛和敌方支援。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "卢登补蓝量清线，巫妖要施法后实际普攻才能兑现；黄牌必须已锁定并命中，不把选牌过程当控制。R 只在实际范围内、安全落点和队友能接应时转场；中娅保落点但凝滞中不能接牌。电刑用于可完成的短轮次，彗星用于 Q 消耗，不能用样本外配置保证抓人成功。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:TwistedFate": "2b12b700e4ad0de3",
+        "champion:TwistedFate": "4b3a9807b94dcc47",
         "item:6655": "e593f4433de96e4b",
         "item:3100": "784ea66d3e781fdb",
         "item:3157": "4e1ddce33472ee0f",
@@ -20727,7 +21077,27 @@
         "rune:8237": "141d0a7c16b98b91",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 崔斯特技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/TwistedFate.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trio-karma",
@@ -20753,11 +21123,11 @@
         "aery",
         "comet"
       ],
-      "why": "前期先有清线能力，再转团队护盾与救赎。功能装会降低个人爆发，适合已有持续输出核心的组合。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "卢登先维持中路清线，再转功能装备；赫利亚要先对英雄造成伤害存充能、再实际治疗或护盾友军。强化 W 的自疗不是友军治疗，不能按它兑现同一保护收益。救赎有落地延迟，需提前覆盖可接应区域；转功能装降低个人爆发，只适合组合另有持续输出。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Karma": "45fd0f3c03239ddc",
+        "champion:Karma": "36385f1555005577",
         "item:6655": "e593f4433de96e4b",
         "item:6620": "cfb94d4a02cc64c8",
         "item:3107": "53bdbba0a53ca5c6",
@@ -20774,7 +21144,27 @@
         "rune:8237": "141d0a7c16b98b91",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 卡尔玛技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Karma.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trio-crit-carry",
@@ -20802,13 +21192,13 @@
         "lethal",
         "fleet"
       ],
-      "why": "队友负责留人与护送，自己保证持续普攻；飓风用于多目标团战，生存压力大时用局势选项调整。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "海妖第一件提供攻速与每第三次普攻的物理特效，不提供暴击率，也不是真实伤害；无尽第二件时暴击尚未堆满。飓风只在旁边还有可攻击目标时提供额外弹体，单目标不会自动三倍输出。金克丝先报枪形，厄斐琉斯先报双枪和弹药，图奇先报 R 与安全射线；保护断开就缩短攻击轮次。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Jinx": "254ecb71a3fd189d",
-        "champion:Aphelios": "3aa1ca4eb079416d",
-        "champion:Twitch": "111f0429fcbd016f",
+        "champion:Jinx": "df81736e14513be3",
+        "champion:Aphelios": "a16a2bc3afe40b1c",
+        "champion:Twitch": "ab3e76d629cf2787",
         "item:6672": "56acf36018ec56ee",
         "item:3031": "0ccdceb96f0cd392",
         "item:3085": "fbd0dd92f5cc7425",
@@ -20825,7 +21215,39 @@
         "rune:9103": "7d88abbfc22dd0df",
         "rune:8014": "04092c4f9754532b",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 金克丝技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Jinx.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 厄斐琉斯技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Aphelios.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 图奇技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Twitch.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trio-control-mid",
@@ -20852,12 +21274,12 @@
         "electro",
         "aftershock"
       ],
-      "why": "中娅提前放入路线，控制之后需要活着等第二轮技能。余震偏近身承伤，电刑偏抓单爆发；按本局分工选。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "卢登支持 Q 清线与法力，丽桑卓 W/对敌 R、加里奥 W/E 实际控制后再跟伤害。丽桑卓自 R 用于自保，不同时算对敌眩晕；中娅与自 R 都暂停自己的行动。余震需要实际定身，电刑需要三个独立命中。保留这条旧选择作为蓝量路线；新加里奥接控可另选腰带配置，队友到不了落点就取消深入。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Lissandra": "348aabf9f9259774",
-        "champion:Galio": "93e234e70ba0094e",
+        "champion:Lissandra": "599da97edcf817b9",
+        "champion:Galio": "62214853523131ad",
         "item:6655": "e593f4433de96e4b",
         "item:3157": "4e1ddce33472ee0f",
         "item:3089": "a8a9b060b253391c",
@@ -20876,7 +21298,33 @@
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 丽桑卓技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lissandra.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 加里奥技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "taric-guardian",
@@ -20908,11 +21356,11 @@
       "first": "EQW",
       "skillOrder": "EQWQEREEEWRWWWQRQQ",
       "skillReason": "四级补第二点 Q，提高可储存治疗充能，再主 E 缩短控制冷却；需要能安全穿插强化普攻，不能保证无限治疗。",
-      "why": "与尼菈、卡莉丝塔、千珏等队友约好近身保护与大招时间。先保证蓝量和可触及的队友，再做骑士之誓、团队护盾与救赎；重伤交给能稳定覆盖目标的人。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "四级给第二点 Q 保留两层治疗容量，再优先 E；被动的两次强化普攻能补 Q 层数和减冷却，但要实际接触且有蓝，不能无限空转。W 先联结本轮承伤者，R 有延迟，按实际生效衔接尼菈或千珏等队友。骑士之誓需与绑定者保持距离；钢铁烈阳用于实际承伤窗口，救赎需要提前落点。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Taric": "c80b2adac0419e29",
+        "champion:Taric": "d7034e2662bef2b0",
         "item:3109": "97c25fae90d4a8a4",
         "item:3190": "89cdf2838748dfc7",
         "item:3107": "53bdbba0a53ca5c6",
@@ -20927,7 +21375,27 @@
         "rune:8347": "def2a55844436c47",
         "rune:8351": "6594874b24a7b00e",
         "rune:8306": "68d4bd3d69d9d19c"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 塔里克技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Taric.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "taric-glacial",
@@ -20959,11 +21427,11 @@
       "first": "EQW",
       "skillOrder": "EQWQEREEEWRWWWQRQQ",
       "skillReason": "早期第二点 Q 支持强化普攻后的充能使用，之后主 E；冰川需要 E 命中，无法安全接敌时改守护者保护。",
-      "why": "队友有位移或先手控制时，用联结 E 接控制与冰川区域限制。护盾与移动功能优先于昂贵个人输出；没有安全进场角度时不要为触发符文硬冲。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "四级给第二点 Q 后优先 E，靠实际被动普攻补治疗容量；W 联结不断开，队友位移时 E 才能从正确位置接控。冰川需要 E 实际眩晕，不因连上线就触发；若被迫保护可改守护者。护盾、骑士之誓和舒瑞娅服务接应，不能为触发 E 让两人同时进入危险位置。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Taric": "c80b2adac0419e29",
+        "champion:Taric": "d7034e2662bef2b0",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:2065": "a30335c7d456f5fd",
@@ -20978,7 +21446,27 @@
         "rune:8453": "f9a0180e7f2f0432",
         "rune:8465": "4b16b0cca812d727",
         "rune:8463": "3296414353df0e65"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 塔里克技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Taric.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "nilah-sustain",
@@ -20993,11 +21481,11 @@
       "items": [
         6676,
         3031,
-        3072
+        3036
       ],
       "boots": 3006,
       "late": [
-        3036,
+        3072,
         3026
       ],
       "runes": [
@@ -21006,16 +21494,16 @@
       ],
       "priority": "QEW",
       "first": "QEW",
-      "why": "治疗护盾辅助给近身续战争取窗口，Q 与普攻穿插输出。先完成暴击核心，再考虑续航；第三件吸血不能替代抵挡关键控制的站位。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "收集者与无尽先提供暴击，尼菈 Q 命中后才有延长攻击范围，穿插普攻持续接触；第三件多米尼克服务实际护甲威胁，续航压力可在后续选择饮血。征服者要持续命中叠层，强攻要实际三次普攻；W 只按真实闪避窗口使用，不能免所有技能。近身目标不可持续接触时不靠吸血保证生存。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Nilah": "040a6c8c12c965e3",
+        "champion:Nilah": "30e5ef1b4f79390e",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3006": "d8d9fde1f7908326",
         "item:3036": "fcf5de31162e9e9d",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3072": "5c29525fccb26a37",
         "item:3026": "9ac9f874ae405bd1",
         "rune:8010": "b8dd7b11cee84803",
         "rune:9111": "6667591beed15f1b",
@@ -21029,7 +21517,27 @@
         "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8410": "da4ec8f245880032"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 尼菈技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nilah.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "samira-reset",
@@ -21057,11 +21565,11 @@
       ],
       "priority": "QEW",
       "first": "QEW",
-      "why": "跟队友硬控进场，穿插技能和普攻叠评级；大招能否输出取决于对手打断技能。保留暴击核心，续航和复活作为后续备选。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "收集者与无尽先建暴击，饮血用于可持续攻击的续航；穿插不同攻击和技能叠评级，R 只有评级满足且打断威胁处理后才引导。征服者需持续命中，强攻需实际三次普攻，Q/R 不替代三次普攻触发。W 留可拦截弹体，E 结束位置要有退路；击杀尚未发生就不预设 E 刷新。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Samira": "c5f97ec28c913a72",
+        "champion:Samira": "fb97a340c89c0ba1",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
         "item:3072": "5c29525fccb26a37",
@@ -21080,7 +21588,27 @@
         "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8410": "da4ec8f245880032"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 莎弥拉技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Samira.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "nami-empower",
@@ -21093,13 +21621,13 @@
       ],
       "base": "enchanter",
       "items": [
-        4005,
         6620,
+        6617,
         3107
       ],
       "boots": 3158,
       "late": [
-        6617
+        4005
       ],
       "runes": [
         "aery",
@@ -21107,16 +21635,16 @@
       ],
       "priority": "WEQ",
       "first": "WEQ",
-      "why": "与卢锡安、尼菈或技能穿插普攻的队友重复短换血。先让治疗与增益真正命中可输出队友；W 升级不等于冷却变短，仍要管理蓝量。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "先用 W 对英雄伤害或其他可靠命中存赫利亚充能，再用 W 治疗或其他友军护盾兑现；月石要实际治疗或护盾友军，并需要另一位可传递效果的友军。帝国指令改为备选：仅 Q/R 实际定身可触发，E 和被动减速不能触发。主 W 增强换血与回复但不缩短其冷却，法力不足就停止连续换血。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Nami": "6a067b32874ba55a",
-        "item:4005": "049fc32e0486e5b6",
+        "champion:Nami": "b10366f1187813b9",
         "item:6620": "cfb94d4a02cc64c8",
+        "item:6617": "6dccd52cee1f2c6e",
         "item:3107": "53bdbba0a53ca5c6",
         "item:3158": "72ca672b9221f063",
-        "item:6617": "6dccd52cee1f2c6e",
+        "item:4005": "049fc32e0486e5b6",
         "rune:8214": "6d3b2bf192d500da",
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea",
@@ -21127,7 +21655,27 @@
         "rune:8473": "ed2f46234183276d",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 娜美技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nami.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "lulu-onhit",
@@ -21154,11 +21702,11 @@
       ],
       "priority": "EWQ",
       "first": "EQW",
-      "why": "香炉增益适合能连续普攻的队友，护盾与变羊用于保住其输出时间；队友改成远程技能消耗时，先重新核对香炉收益。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "香炉要 E 实际给可持续普攻的友军盾，E 给敌人伤害不提供同一次友军增益。友军 W 攻速与对敌变形是同次二选一，先报本轮保护用途；月石还需要第二位可传递的友军。主 E、副 W 支持保护，不代表对线可无代价贴前；队友改技能消耗时重新选择装备路线。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Lulu": "12ee018aa7e41dc6",
+        "champion:Lulu": "5f5091380ca45272",
         "item:3504": "f6eed220149ca076",
         "item:6617": "6dccd52cee1f2c6e",
         "item:3107": "53bdbba0a53ca5c6",
@@ -21174,7 +21722,27 @@
         "rune:8473": "ed2f46234183276d",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 璐璐技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lulu.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "milio-range",
@@ -21201,11 +21769,11 @@
       ],
       "priority": "EWQ",
       "first": "EQW",
-      "why": "在射手能安全普攻时给射程和增益，治疗护盾保护持续输出。射程不是技能射程，解控也不能覆盖所有限制效果；先留控制处理突进。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "香炉通过 E/W 的实际护盾或治疗帮助普攻队友，W 提升的是范围内普攻射程而非所有技能距离；W 蓝耗高且冷却长，不能按常驻增益规划追击。月石需另一位可传递效果的友军；R 只在自身可施放且队友在范围时解控，不能处理所有限制。Q 留反突进，主 E、副 W 以保护为先。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Milio": "7bec2e4244a3e4bc",
+        "champion:Milio": "9176ff8b22c1f1c9",
         "item:3504": "f6eed220149ca076",
         "item:6617": "6dccd52cee1f2c6e",
         "item:3107": "53bdbba0a53ca5c6",
@@ -21221,7 +21789,27 @@
         "rune:8473": "ed2f46234183276d",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 米利欧技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Milio.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "rakan-engage",
@@ -21234,13 +21822,13 @@
       ],
       "base": "supportTank",
       "items": [
+        3050,
         3190,
-        3109,
-        2065
+        3109
       ],
       "boots": 3158,
       "late": [
-        3107
+        2065
       ],
       "runes": [
         "guardian",
@@ -21249,16 +21837,16 @@
       ],
       "priority": "WEQ",
       "first": "WQE",
-      "why": "给近身输出或能快速跟进的队友寻找击飞角度，留一位安全返回对象。装备优先团队护盾和移动功能，不把每次 W 当成必须强开的信号。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "基克在自己施放 R 后于自身周围生成短时风暴，不是旧版绑定搭档增伤；只有能安全贴近目标才兑现。钢铁烈阳承接集火，骑士之誓绑定可接应输出者并保持距离。守护者偏接应，冰川或余震都要 W/R 实际硬控；W 落空就 E 回安全队友，不把大招触碰当必定能控全队。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Rakan": "5dadfc0f0f54ae6b",
+        "champion:Rakan": "69d7edc48cac55e5",
+        "item:3050": "c3e25c9df9075147",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
-        "item:2065": "a30335c7d456f5fd",
         "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
+        "item:2065": "a30335c7d456f5fd",
         "rune:8465": "4b16b0cca812d727",
         "rune:8463": "3296414353df0e65",
         "rune:8473": "ed2f46234183276d",
@@ -21269,7 +21857,27 @@
         "rune:8306": "68d4bd3d69d9d19c",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8242": "37935df8d31dd429"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 洛技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rakan.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "braum-peel",
@@ -21296,11 +21904,11 @@
       ],
       "priority": "QEW",
       "first": "QWE",
-      "why": "先与射手约好同一目标叠被动，盾墙拦截投射物。辅助经济用于护盾与保护，不为叠被动层数离开核心队友。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "钢铁烈阳和骑士之誓优先保实际承伤队友，盾墙对准来弹方向并保留 W 接应。Q 只挂被动和减速，要实际达到四层才眩晕；余震不能由单发 Q 减速触发，需四层眩晕或 R 击飞。基克要自己施放 R 且附近有敌人，不能在远处按绑定搭档常驻增益计算。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Braum": "4726b43beaea9728",
+        "champion:Braum": "ae3aa48403ffcbe5",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3050": "c3e25c9df9075147",
@@ -21315,7 +21923,27 @@
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 布隆技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Braum.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "renata-rescue",
@@ -21342,11 +21970,11 @@
       ],
       "priority": "EWQ",
       "first": "EQW",
-      "why": "W 用在队友有真实持续输出和收尾机会的窗口，护盾与攻速配合普攻核心；无法获得击杀参与时救援会结束，不按击杀数自动判断能续命。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "E 穿过实际友军才给盾并触发香炉，骑士之誓需与绑定输出者保持距离。W 提前给有真实持续输出与收尾机会的队友，死亡延缓不等于已复活；没获得所需击杀参与就会结束。Q 的二段投向要留退路，R 也不是必定命中。主 E、副 W 用于接应，不能只靠纸面保护延长不安全追击。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Renata": "d2081c74ab6d2eac",
+        "champion:Renata": "040340652360d067",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3504": "f6eed220149ca076",
@@ -21362,7 +21990,27 @@
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea",
         "rune:8236": "a1bb7cfc15c3d089"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 烈娜塔 · 戈拉斯克技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Renata.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "lucian-trade",
@@ -21390,11 +22038,11 @@
       ],
       "priority": "QEW",
       "first": "QEW",
-      "why": "配合娜美、米利欧等增益，技能后穿插普攻，短换血后撤。先完成技能与暴击核心，别因为辅助有增益就把位移只用于追击。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "夺萃在施法后下一次实际普攻触发咒刃和回蓝，技能与被动双枪穿插，先做三件暴击核心。强攻要普攻实际连中同一英雄；友军治疗/护盾或附近真实定身创造被动增益，不能把娜美 E 减速当硬控。E 留一次必要退出，不因辅助有增益就连续向前追。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Lucian": "c5f5aebc32c005b5",
+        "champion:Lucian": "cd773946a58860de",
         "item:3508": "f557158549cb18ca",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
@@ -21413,7 +22061,27 @@
         "rune:8299": "d7db081cd64d0bc2",
         "rune:8473": "ed2f46234183276d",
         "rune:8451": "9e4f8837510e3998"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 卢锡安技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lucian.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "jhin-control",
@@ -21441,11 +22109,11 @@
       ],
       "priority": "QWE",
       "first": "QWE",
-      "why": "辅助先命中技能制造 W 条件，烬再接禁锢和第四枪；火炮窗口帮助安全跟进。换弹期间输出节奏不同，需要先与辅助约好。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "收集者、无尽与火炮服务实际弹药下的短轮次，火炮只在充能完成时提供强化攻击窗口。W 禁锢需目标近期被烬或友军伤害、或触发陷阱；普通未标记 W 不定身。第四枪与换弹按当前弹药确认，迅捷步法需充能攻击，不用固定攻速假设持续火力；R 引导时先保侧翼。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Jhin": "cc35368c11100f62",
+        "champion:Jhin": "226e6c11b8a992f5",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
         "item:3094": "fe69f998d9961e0d",
@@ -21464,7 +22132,27 @@
         "rune:8106": "bfb83fa22daf18de",
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 烬技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Jhin.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "swain-brawl",
@@ -21493,11 +22181,11 @@
       ],
       "priority": "QEW",
       "first": "EQW",
-      "why": "蓝量装备支持重复施法，持续法术与减速让近身作战更容易保持接触。与塔里克等保护搭配时仍需避免重伤和远程风筝。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "why": "恶意靠 R 实际伤害触发地面效果并补蓝量，兰德里和冰杖服务能持续覆盖的战区。E 返回段实际禁锢后才选择拉回，W 本版冷却降为 20 至 16 秒，但助手不推测当前就绪。生命与魔抗成长变化不等于能顶住集火；重伤、被风筝或吸取不到英雄时先退，不能把 R 当永久作战许可。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "reviewBaseline": {
-        "champion:Swain": "2f1ca8910269fb77",
+        "champion:Swain": "2df9ea554c5ac91d",
         "item:3118": "2bf87c4847cde85f",
         "item:6653": "dae566be4a35ad25",
         "item:3116": "1ca09887b440d0f6",
@@ -21516,7 +22204,27 @@
         "rune:8237": "141d0a7c16b98b91",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8347": "def2a55844436c47"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · 斯维因技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Swain.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     },
     {
       "id": "trynd-delayed-r",
@@ -21568,6 +22276,151 @@
         "rune:8014": "04092c4f9754532b",
         "rune:8347": "def2a55844436c47"
       }
+    },
+    {
+      "id": "poke-no-immobilize",
+      "name": "无定身的法术消耗辅助",
+      "champions": [
+        "Nidalee",
+        "Teemo"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "burn",
+      "items": [
+        6653,
+        3116,
+        3157
+      ],
+      "boots": 3158,
+      "late": [
+        3135
+      ],
+      "runes": [
+        "comet",
+        "harvest"
+      ],
+      "why": "奈德丽没有自身定身，提莫致盲与蘑菇减速也不满足帝国指令，本路线不购买它。先保证辅助任务与视野，再按实际经济做法术消耗；高价装备不按补刀位速度完成。标枪被挡、陷阱被清或无法安全接触时就停止前压，仍可选择普通位置参考，不把这套娱乐路线当常规排位强度。",
+      "damage": "ap",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
+      "reviewBaseline": {
+        "champion:Nidalee": "e54aff9035f36827",
+        "champion:Teemo": "b29454e3375baf8c",
+        "item:6653": "dae566be4a35ad25",
+        "item:3116": "1ca09887b440d0f6",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3158": "72ca672b9221f063",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47",
+        "rune:8128": "d4f527472e056bb3",
+        "rune:8126": "9e648d4b51a0c973",
+        "rune:8140": "93302565a400fc06",
+        "rune:8106": "bfb83fa22daf18de"
+      },
+      "sources": [
+        {
+          "name": "Riot · 奈德丽技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nidalee.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 提莫技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Teemo.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
+    },
+    {
+      "id": "trio-galio-engage",
+      "name": "加里奥转场与接控",
+      "champions": [
+        "Galio"
+      ],
+      "roles": [
+        "mid"
+      ],
+      "base": "mage",
+      "items": [
+        3152,
+        4005,
+        3157
+      ],
+      "boots": 3020,
+      "late": [
+        3089,
+        3135
+      ],
+      "runes": [
+        "aftershock",
+        "phase"
+      ],
+      "why": "火箭腰带补接近角度，本版仅 10 技能急速，不按旧数值推断冷却；先管 Q 蓝量，装备位移不保证 E/W 命中。E 击飞或 W 嘲讽实际生效才能触发帝国指令和余震，R 要实际安全落点。中娅承接接控后的集火，凝滞中不继续施法；相位需真实命中轮次，不能当无条件退路。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
+      "reviewBaseline": {
+        "champion:Galio": "62214853523131ad",
+        "item:3152": "37dc7712644a19f0",
+        "item:4005": "049fc32e0486e5b6",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3089": "a8a9b060b253391c",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8439": "b2c74fd18c4ad076",
+        "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8306": "68d4bd3d69d9d19c",
+        "rune:8347": "def2a55844436c47",
+        "rune:8230": "b4da4b07836c5635",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8234": "018bc04903dfba25",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998"
+      },
+      "priority": "QWE",
+      "first": "QWE",
+      "sources": [
+        {
+          "name": "Riot · 加里奥技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        }
+      ]
     }
   ],
   "runes": {

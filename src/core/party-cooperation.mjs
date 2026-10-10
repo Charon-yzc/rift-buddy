@@ -4,10 +4,11 @@ import {cooperationCoordination} from './cooperation-pairs.mjs';
 import {preferredTempo,TEMPOS} from './strategy.mjs';
 import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
 import {independentCooperationAction} from './shared-cooperation.mjs';
+import {sidePressureRoute} from './side-pressure.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
 const same=(a,b)=>a.role===b.role&&a.champion===b.champion;
-function partyRoutes(members,graph,edges,tempo,curated,requestedTempo){
+function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
  const name=id=>graph.byId.get(id).name;
  const priority=['pair:Malphite:Yasuo','pair:Diana:Yasuo','pair:Yasuo:Zac'];
  const ordered=[...edges].sort((a,b)=>{
@@ -26,8 +27,8 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo){
    const row=COOPERATION_SKILLS[m.champion],p=graph.profile(m),action=independentCooperationAction(m.champion);let job;
    if(lead.actors.includes(m.champion))job=lead.curated?lead.curated.members.find(p=>same(m,p)).job+`（沿用组合说明 ${lead.curated.patch}${lead.curated.patch!==SKILL_COOPERATION_PATCH?' · 旧版本说明保留':''}）`:lead.edge?cooperationCoordination([m],graph,[lead.edge]).memberJobs[0].job:row[3]+' '+row[0];
    else if(p.peel&&(!p.engage||m.role==='support')&&protectedMember&&protectedMember.champion!==m.champion)job=`本轮优先接应${name(protectedMember.champion)}，不与主线同时深入。${action}`;
-   else if(relay&&p.engage&&row[3])job=`进场留作第二波或反打，先等主线实际生效与队友到位。${action} 主线失败就接应退出，不为补一次控制独自深入。`;
-   else job=(relay?'等主线实际生效、同一目标在自己安全覆盖内再跟进。':'与主线保持可接应距离，按自己的安全接触条件行动，不等队友先控制。')+action+' 跟不上就回到队友，不转追第二个目标。';
+   else if(relay&&p.engage&&row[3])job=`${action} 进场留作第二波或反打，先等主线实际生效与队友到位；主线失败就接应退出，不为补一次控制独自深入。`;
+   else job=action+' '+(relay?'先确认主线实际生效、同一目标在自己安全覆盖内再跟进。':'与主线保持可接应距离，按自己的安全接触条件行动，不等队友先控制。')+' 跟不上就回到队友，不转追第二个目标。';
    return {role:m.role,champion:m.champion,job:job+' 成立前先确认：'+row[1]+' 停止条件：'+row[2]};
   });
   return {id:lead.id,label:lead.actors.map(name).join(' / '),tempo:lead.curated?.tempo||lead.edge?.tempo||'teamfight',step:lead.step,condition:lead.condition,failure:lead.failure,memberJobs:jobs};
@@ -39,11 +40,13 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo){
  // Reviewed subgroup text remains the default unless the player selects a
  // supported tactical preference; control is an alternative, never a gate
  // that every ranged member must wait for before using a poke skill.
- const requested=uniqueTactics.find(r=>r.tempo===requestedTempo);
- const primary=requested||controlRoutes.find(r=>r.id.startsWith('curated:'))||uniqueTactics.find(r=>r.tempo===tactical?.tempo)||controlRoutes[0];
+ const original=basePlan?{id:'original-group',label:'原三人配合',tempo:basePlan.tempo,step:basePlan.steps.join(' '),condition:basePlan.conditions.join(' '),failure:basePlan.failures.join(' '),memberJobs:basePlan.memberJobs}:null;
+ const available=[original,...controlRoutes,...uniqueTactics,sidePressureRoute(members,graph)].filter(Boolean);
+ const requested=available.find(r=>r.tempo===requestedTempo&&!r.id.startsWith('curated:'))||available.find(r=>r.tempo===requestedTempo);
+ const primary=requested||original||controlRoutes.find(r=>r.id.startsWith('curated:'))||uniqueTactics.find(r=>r.tempo===tactical?.tempo)||controlRoutes[0];
  const mainActors=leads.find(l=>l.id===primary?.id)?.actors;
  const alternative=uniqueTactics.find(r=>r.id!==primary?.id)||controlRoutes.find(r=>r.id!==primary?.id&&(!mainActors||leads.find(l=>l.id===r.id).actors.some(id=>!mainActors.includes(id))));
- const routes=[primary,alternative].filter(Boolean);
+ const routes=[primary,alternative,...available.filter(r=>r.id!==primary?.id&&r.id!==alternative?.id)].filter(Boolean);
  if(!routes.length)return [];
  if(routes.length===1)routes.push({id:'reset',label:'取消进场，保护与发育',tempo:'growth',step:'先手条件不齐就取消接战，控制留靠近己方的目标；先保成员和安全兵线、营地，不要求补齐一套连招。',condition:'成员能互相接应且有安全资源可处理；玩家确认退路与公开资源方向。',failure:'退出路线被截断时先共同限制追击者，不分散去补不同的资源。',memberJobs:members.map(m=>({role:m.role,champion:m.champion,job:'本轮取消深入，先接应回撤。'+independentCooperationAction(m.champion)+' '+COOPERATION_SKILLS[m.champion][2]}))});
  return routes;
@@ -51,12 +54,13 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo){
 // Four/five players need a whole-party resource and action plan, even when
 // only a subgroup has a reviewed interaction. This adds no synergy bonus and
 // does not claim that the whole group has a unique or measured advantage.
-export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:requestedTempo='any'}={}){
- if(![4,5].includes(members.length)||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
+export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:requestedTempo='any',basePlan=null}={}){
+ if(![3,4,5].includes(members.length)||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
+ if(members.length===3&&(!basePlan?.memberJobs||!sidePressureRoute(members,graph)||[basePlan.steps,basePlan.conditions,basePlan.failures].some(rows=>rows.join(' ').length>400)))return null;
  const name=id=>graph.byId.get(id).name,edges=[];
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)edges.push(edge);}
  const curated=TRIOS.filter(t=>!catalogStatus[t.id]?.invalid&&t.members.every(m=>members.some(p=>same(m,p))));
- const coordination=cooperationCoordination(members,graph,[]);
+ const coordination=basePlan||cooperationCoordination(members,graph,[]);
  let memberJobs=members.map(m=>{
   const row=COOPERATION_SKILLS[m.champion],original=curated.find(t=>t.members.some(p=>same(m,p))),authored=original?.members.find(p=>same(m,p));
   const edge=edges.find(e=>[e.a,e.b].includes(m.champion));
@@ -65,7 +69,7 @@ export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:reque
  });
  const profiles=members.map(m=>graph.profile(m)),traits=Object.fromEntries(['engage','aoe','peel','sustain','poke'].map(k=>[k,profiles.filter(p=>p[k]).length]));
  const inferredTempo=preferredTempo({traits,members});
- const routes=partyRoutes(members,graph,edges,inferredTempo,curated,requestedTempo),tempo=routes[0]?.tempo||inferredTempo;
+ const routes=partyRoutes(members,graph,edges,inferredTempo,curated,requestedTempo,basePlan),tempo=routes[0]?.tempo||inferredTempo;
  if(routes.length)memberJobs=routes[0].memberJobs;
  const steps=[
   members.map(m=>name(m.champion)+(m.role==='jungle'?'报安全营地与到场时间':m.role==='support'?'先确认搭档能安全补刀再报去向':'先处理自己的兵线再报可离线时间')).join('；')+'。未到齐就保各自资源。',
