@@ -200,6 +200,12 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context) 
  return out;
 }
 const signature=slots=>slots.map(s=>`${s.role}:${s.champion||'-'}`).join('|');
+function summaryCombo(entry){
+ // A party plan describes that group. In whole-team mode, a partial party
+ // cannot replace the strategy of the other already picked team members.
+ const adaptive=entry.adaptive,coversAnalysis=adaptive&&(adaptive.kind==='shared'||adaptive.members.length===entry.analysis.members.length);
+ return entry.trio||entry.duo||(entry.creative&&{tempo:entry.creative.tempo,why:entry.creative.why,risk:entry.creative.caution})||(coversAnalysis&&{tempo:adaptive.tempo,why:adaptive.why,risk:adaptive.failures.join(' ')});
+}
 // Catalog lookup indexes. Rebuilt only when the catalog arrays are replaced
 // (configureRuleCatalog reassigns them); reads are O(1)/O(subsets) instead of
 // full scans inside every grade call. Order-sensitive consumers re-sort by
@@ -257,7 +263,7 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
    const editableTargets=(plan.editableTargets||[]).filter(role=>scopeSlots(slots,scope).some(s=>s.role===role&&(s.party||['bot','solo'].includes(scope))));
    return [{id:signature(slots),slots:structuredClone(slots),...g,trio:null,duo:null,creative:cooperation?null:plan,adaptive:cooperation?(plan.shared||plan.cooperation):g.adaptive,creativePlan:plan,origin:cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,{tempo:plan.tempo,why:plan.why,risk:plan.caution},play.tempo,context.enemyTraits),catalogState:null}];
   }
-  return [{id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,g.trio||g.duo||(g.adaptive?.kind==='shared'&&{tempo:g.adaptive.tempo,why:g.adaptive.why,risk:g.adaptive.failures.join(' ')}),play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null}];
+  return [{id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,summaryCombo(g),play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null}];
  }
  const fixed=slots.map(s=>{if(!targets.includes(s.role))return {...s};const {clientCellId,manualPosition,...draft}=s;return {...draft,champion:null};});
  if(poolMode==='only'&&!heroPool.some(id=>context.byId.has(id)))throw Error('先添加英雄池，或切换为“全部英雄”');
@@ -349,7 +355,6 @@ export function recommend({slots,champions,style='fun',excluded=[],enemy=[],visi
   // such as Ahri/Vi merely because it can be generated for many more allies.
   return entry.adaptive.edges.some(e=>e.current&&e.family.startsWith('skills:'))?1:2;
  };
- const summaryCombo=entry=>entry.trio||entry.duo||(entry.creative&&{tempo:entry.creative.tempo,why:entry.creative.why,risk:entry.creative.caution})||(entry.adaptive&&{tempo:entry.adaptive.tempo,why:entry.adaptive.why,risk:entry.adaptive.failures.join(' ')});
  const matching=new Map([...unique.values()].map(entry=>[entry,play.tempo&&play.tempo!=='any'&&strategySummary(entry.analysis,summaryCombo(entry),play.tempo).matched]));
  // An explicit play preference must remain reachable on the first page.
  // Within matching choices, keep full-party and authored plans ahead of

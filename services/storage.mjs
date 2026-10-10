@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {randomUUID} from 'node:crypto';
 import {atomicJSON} from './data.mjs';
 import {validateGuideState,validateLoadoutSelection} from '../src/core/guide.mjs';
 import {normalizePresentation} from '../src/core/presentation.mjs';
 import {normalizeBuildSource} from '../src/core/build-source.mjs';
-import {validatePreparations,storedPreparation,PREPARATION_LIMIT} from '../src/core/preparation.mjs';
+import {validatePreparations,validatePreparation,storedPreparation,PREPARATION_LIMIT} from '../src/core/preparation.mjs';
 import {validateTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {validateCreativePlan} from '../src/core/creative-plan.mjs';
 export const defaultState=()=>({schema:1,favorites:[],excluded:[],preparations:[],preferences:{style:'fun',autoCheck:true,buildSource:normalizeBuildSource(null),presentation:normalizePresentation(null),installPath:'C:/WeGameApps/英雄联盟'},draft:null,ownedPageId:null,guide:null});
@@ -60,17 +61,45 @@ export function validateState(value) {
   ownedPageId:Number.isInteger(value.ownedPageId)&&value.ownedPageId>0?value.ownedPageId:null,guide:validateGuideState(value.guide)};
  checkSize(normalized);return normalized;
 }
-export async function readState(root) {
- const filename=path.join(root,'settings.json');
- try{if((await fs.stat(filename)).size>STATE_MAX_BYTES)throw Error('保存文件过大');const raw=JSON.parse(await fs.readFile(filename,'utf8'));
-  // Recover optional guide damage without losing valid favorites or preferences.
-  try{validateGuideState(raw.guide);}catch{await fs.copyFile(filename,`${filename}.recovery-${Date.now()}`).catch(()=>{});raw.guide=null;}
-  try{validatePreparations(raw.preparations);}catch{await fs.copyFile(filename,`${filename}.recovery-${Date.now()}`).catch(()=>{});raw.preparations=[];}
-  return {...defaultState(),...validateState(raw)};}
- catch(e){if(e.code!=='ENOENT'){try{await fs.copyFile(filename,`${filename}.recovery-${Date.now()}`);}catch{}}
-  return defaultState();}
+const recoveryBlocked=new Set();
+// Startup recovery is deliberately separate from strict writes and imports.
+// Keep readable sections and entries; the original bytes remain in a backup.
+function readableState(raw){
+ const state=defaultState(),issues=[];
+ if(!raw||raw.schema!==1||typeof raw!=='object'||Array.isArray(raw))return {state,issues:['保存文件格式无法读取']};
+ const collection=(key,label,limit,validate)=>{
+  const source=raw[key];if(source===undefined&&key==='preparations')return;
+  if(!Array.isArray(source)){issues.push(label+'列表无法读取');return;}
+  const kept=[];let skipped=0;
+  for(const item of source){try{if(kept.length>=limit)throw Error('capacity');kept.push(validate(item));}catch{skipped++;}}
+  state[key]=kept;if(skipped)issues.push(`${label} ${skipped} 项无法读取或超过容量`);
+ };
+ collection('favorites','收藏',500,favorite);
+ collection('preparations','英雄配置',PREPARATION_LIMIT,validatePreparation);
+ collection('excluded','排除英雄',300,value=>{if(!hero(value))throw Error('hero');return value;});
+ const preferences=raw.preferences&&typeof raw.preferences==='object'?{...raw.preferences}:{};
+ if(preferences.installPath!==undefined&&(!text(preferences.installPath,500)||/[\r\n\0]/.test(preferences.installPath))){delete preferences.installPath;issues.push('游戏目录无法读取');}
+ for(const [key,label,value] of [['preferences','偏好',preferences],['draft','当前阵容',raw.draft],['guide','指引',raw.guide],['ownedPageId','符文页记录',raw.ownedPageId]]){
+  try{state[key]=validateState({...defaultState(),[key]:value})[key];}catch{issues.push(label+'无法读取');}
+ }
+ return {state:validateState(state),issues};
 }
-export async function saveState(root,state) {await atomicJSON(path.join(root,'settings.json'),validateState(state));}
+export async function readState(root) {
+ const filename=path.join(root,'settings.json');let raw;
+ try{if((await fs.stat(filename)).size>STATE_MAX_BYTES)throw Error('保存文件过大');raw=JSON.parse(await fs.readFile(filename,'utf8'));
+  const valid=validateState(raw);recoveryBlocked.delete(path.resolve(root));return {...defaultState(),...valid};}
+ catch(error){
+  if(error.code==='ENOENT'){recoveryBlocked.delete(path.resolve(root));return defaultState();}
+  const backupFile=`settings.json.recovery-${Date.now()}-${randomUUID()}`;let backedUp=false;
+  try{await fs.copyFile(filename,path.join(root,backupFile),fs.constants.COPYFILE_EXCL);backedUp=true;recoveryBlocked.delete(path.resolve(root));}catch{recoveryBlocked.add(path.resolve(root));}
+  const recovered=readableState(raw);
+  return {...recovered.state,recovery:{issues:recovered.issues,backedUp,backupFile:backedUp?backupFile:null}};
+ }
+}
+export async function saveState(root,state) {
+ if(recoveryBlocked.has(path.resolve(root)))throw Error('原设置的恢复副本尚未保存，已停止覆盖原文件；请检查保存目录与磁盘后重新打开助手');
+ await atomicJSON(path.join(root,'settings.json'),validateState(state));
+}
 export function createBackup(state){
  const valid=validateState(state);
  return JSON.stringify({...valid,ownedPageId:null,preferences:{...valid.preferences,installPath:''}});

@@ -57,14 +57,14 @@ async function boot(){
  const itemSetCore=await import('../src/core/item-sets.mjs'),itemSetService=await import('../services/item-sets.mjs');
  storeRoot=app.getPath('userData');state=await storage.readState(storeRoot);
  // A saved legacy ball must not trap the upgraded app in an icon-only view.
- if(state.guide?.ball){state.guide={...state.guide,ball:false,collapsed:false};await saveCurrentState();}
+ if(state.guide?.ball){state.guide={...state.guide,ball:false,collapsed:false};if(state.recovery?.backedUp!==false)await saveCurrentState();}
  const {createHelperManager}=await import('../services/client-helper.mjs');
  const helperRoot=path.join(process.resourcesPath,'connection');
  helper=createHelperManager({userData:storeRoot,bundleRoot:root,executable:process.execPath,isPackaged:app.isPackaged,
   ...(app.isPackaged?{helperExecutable:path.join(helperRoot,'node.exe'),helperEntry:path.join(helperRoot,'electron/client-helper-entry.mjs'),helperBundleRoot:helperRoot,launcherExecutable:path.join(helperRoot,'connection-launcher.exe')}:{}) ,
   onProgress:message=>win?.webContents.send('client-update',{connected:false,connecting:true,phase:'Offline',message})});
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));
- if(state.guide&&!data.champions.some(c=>c.id===state.guide.selection?.id)){state.guide=null;await saveCurrentState();}
+ if(state.guide&&!data.champions.some(c=>c.id===state.guide.selection?.id)){state.guide=null;if(state.recovery?.backedUp!==false)await saveCurrentState();}
  const catalogCore=await import('../src/core/catalog.mjs');
  const {createCatalogStore}=await import('../services/catalog-store.mjs');
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
