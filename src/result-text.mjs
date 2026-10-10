@@ -4,6 +4,7 @@ import {duoPlay,duoPlayText} from './core/duo-plays.mjs';
 import {resultMemberJobs,cooperationText} from './cooperation-view.mjs';
 import {pairStatisticsText} from './pair-statistics-view.mjs';
 import {teamWindowsText} from './team-windows-view.mjs';
+import {partyCounterplayText} from './core/party-counterplay.mjs';
 
 // One serializer for sharing the same original plan used by member pages.
 // Personal prerequisites, exits and unknown coverage remain in copied text.
@@ -12,6 +13,7 @@ export function resultAsText(result,data){
  const saved=result.creativePlan,adaptive=resultCooperation(result),creative=saved&&!adaptive?saved:!adaptive?result.creative:null;
  const jobs=resultMemberJobs(result,data),lines=[result.title,result.slots.filter(s=>s.champion).map(s=>`${role(s.role)}：${name(s.champion)}`).join('\n'),saved?.why||adaptive?.why||result.reason];
  if(jobs.length)lines.push('成员分工：',...jobs.map(m=>`${name(m.champion)} · ${role(m.role)}：${m.job}`));
+ if(!adaptive)lines.push(partyCounterplayText(saved?.counterplay||result.counterplay));
  if(adaptive)lines.push(cooperationText(adaptive,data,{includeJobs:false}));
  else if(creative){lines.push(creative.plan,`顺序：${creative.steps.join(' → ')}`,`行动窗口：${creative.window}`,`注意：${creative.caution}`,creative.feasibility);if(creative.curated)lines.push(`前期：${creative.curated.early}`,`经济：${creative.curated.economy}`,...creative.curated.sources.map(s=>`${s.name}：${s.url}`));}
  else if(result.trio){const t=result.trio;lines.push(t.plan,`顺序：${t.steps.join(' → ')}`,`行动窗口：${t.window}`,`前期：${t.early}`,`经济：${t.economy}`,`注意：${t.risk}`,`组合说明 ${t.patch} · ${t.reviewedAt}${t.patch!==data.patch?' · 旧版本说明保留':''}`);}

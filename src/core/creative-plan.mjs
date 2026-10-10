@@ -3,6 +3,7 @@ import {fingerprint} from './catalog-review.mjs';
 import {curatedDescriptor,validateSavedCurated} from './curated-plan.mjs';
 import {TEMPOS} from './strategy.mjs';
 import {capturePlanStages,validatePlanStages,updatePlanKeyStage,savedMemberPlay} from './plan-stages.mjs';
+import {validatePartyCounterplay,resultCounterplay} from './party-counterplay.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
 const archetypes=['chain','poke','dive','protect','mixed','cooperation','shared','curated'];
@@ -10,7 +11,7 @@ const tempos=['early','teamfight','protect','poke','growth'];
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
 const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&value.length<=max&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value);
 const memberKey=m=>m.role+':'+m.champion;
-const content=plan=>Object.fromEntries([...['schema','archetype','archetypeName','name','tempo','members','ordered','why','plan','steps','window','caution','feasibility','patch','dataVersion','rulesVersion'],...(plan.archetype==='cooperation'?['cooperation']:plan.archetype==='shared'?['shared']:plan.archetype==='curated'?['curated']:[]),...(plan.stagePlan!==undefined?['stagePlan']:[])].map(key=>[key,plan[key]]));
+const content=plan=>Object.fromEntries([...['schema','archetype','archetypeName','name','tempo','members','ordered','why','plan','steps','window','caution','feasibility','patch','dataVersion','rulesVersion'],...(plan.archetype==='cooperation'?['cooperation']:plan.archetype==='shared'?['shared']:plan.archetype==='curated'?['curated']:[]),...(plan.stagePlan!==undefined?['stagePlan']:[]),...(plan.counterplay!==undefined?['counterplay']:[])].map(key=>[key,plan[key]]));
 export const creativePlanId=plan=>'creative-'+plan.archetype+'-'+fingerprint(content(plan));
 
 // Keep the original conditional interactions with the saved member pages.
@@ -118,6 +119,7 @@ export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
  if(!Array.isArray(value.members)||!(value.archetype==='shared'?count>=2&&count<=5:cooperation||curated?[2,3].includes(count):count===3)||!Array.isArray(value.ordered)||value.ordered.length!==count)throw Error('创意组合成员格式不正确');
  result.members=value.members.map(m=>{if(!m||!roles.includes(m.role)||!hero(m.champion))throw Error('创意组合成员格式不正确');return {role:m.role,champion:m.champion};});
  if(new Set(result.members.map(m=>m.role)).size!==count||new Set(result.members.map(m=>m.champion)).size!==count)throw Error('创意组合成员重复');
+ if(value.counterplay!==undefined)result.counterplay=validatePartyCounterplay(value.counterplay,result.members);
  // Draft ownership is saved alongside the plan, not part of the immutable
  // cooperation text. Keep its content ID compatible with older saved pages.
  if(value.editableTargets!==undefined){
@@ -157,6 +159,7 @@ export function captureCreativePlan(result,data,now=new Date().toISOString()){
  const source=execution?(execution.kind==='shared'?sharedDescriptor:cooperationDescriptor)(execution,data):combo&&result.scope!=='solo'?curatedDescriptor(combo,data):!combo?result.creative:null;if(!source)return null;
  const editable=result.editableTargets??result.targets;
  const plan={patch:RULES_PATCH,dataVersion:data.version,rulesVersion:RULES_VERSION,...source,schema:1,verified:false,createdAt:now,...(Array.isArray(editable)?{editableTargets:roles.filter(role=>editable.includes(role)&&source.members.some(m=>m.role===role))}:{})};
+ if(result.counterplay)plan.counterplay=validatePartyCounterplay(result.counterplay,plan.members);
  const stages=capturePlanStages(plan,data,combo);if(stages)plan.stagePlan=stages;plan.id=creativePlanId(plan);
  return validateCreativePlan(plan,result.slots);
 }
@@ -164,11 +167,12 @@ export function captureCreativePlan(result,data,now=new Date().toISOString()){
 // otherwise prefer the concrete full-member jobs over a discovery label or a
 // smaller curated subgroup. Creative seeds still serve ranking and discovery.
 export function resultCooperation(result){
- if(result.creativePlan)return result.creativePlan.shared||result.creativePlan.cooperation||null;
+ const withCounterplay=plan=>plan&&resultCounterplay(result)?{...plan,counterplay:resultCounterplay(result)}:plan;
+ if(result.creativePlan)return withCounterplay(result.creativePlan.shared||result.creativePlan.cooperation||null);
  const plan=result.adaptive;if(!plan?.memberJobs?.length)return null;
  const authored=result.trio?.members||result.duo?.members||(result.duo?[{role:'bottom',champion:result.duo.carry},{role:'support',champion:result.duo.support}]:[]);
  const covers=m=>plan.members.some(p=>memberKey(p)===memberKey(m));
- return authored.length>=plan.members.length&&authored.every(covers)?null:plan;
+ return authored.length>=plan.members.length&&authored.every(covers)?null:withCounterplay(plan);
 }
 export function creativeMemberCombo(value,champion,role){
  if(!value)return null;const plan=validateCreativePlan(value);

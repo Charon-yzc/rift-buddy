@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.10.3",
+  "version": "2026.10.10.4",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -12642,15 +12642,27 @@
       ],
       "why": "三人的进场围绕同一目标，加里奥帮助前排进场后撑过第一轮。",
       "plan": "先处理兵线并确认加里奥支援范围；卡蜜尔或蔚先手，另一人后手接控；加里奥跟上，确认击杀后一起撤。",
-      "risk": "三人都交进场技能后撤退困难；不要追进敌方全队。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "risk": "加里奥 R 以友军位置为落点且有延迟，不保证敌人留在范围内；蔚 W 是被动，不能接控。前两人都深入、友军被逼退或三人覆盖断开就取消强接并互相接应，不追进敌方全队。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "sources": [
         {
-          "name": "Riot Galio 技能说明",
-          "url": "https://www.leagueoflegends.com/en-us/champions/galio/",
+          "name": "Riot Camille 16.20.1 技能说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Camille.json",
           "kind": "官方技能依据",
-          "checkedAt": "2026-10-05"
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot Vi 16.20.1 技能说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Vi.json",
+          "kind": "官方技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot Galio 16.20.1 技能说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json",
+          "kind": "官方技能依据",
+          "checkedAt": "2026-10-10"
         }
       ],
       "members": [
@@ -12663,28 +12675,28 @@
         {
           "role": "jungle",
           "champion": "Vi",
-          "job": "在卡蜜尔落点位于支援范围、两名前排能撑到到场时 R；落地 W/E 接前段结束后的控制。目标已经退出或施法落点无法接应时转保护，不把 R 当追踪敌人的传送。",
+          "job": "先报 Q/R 是否可用；卡蜜尔留住同一目标、加里奥能接应时，用 Q 命中或 R 追到该敌方英雄并实际击飞，别与卡蜜尔同时交完先手。落地普攻接 E 重置普攻并叠 W 被动；W 不能主动施放或作为接控。队友跟不上、目标越出共同覆盖就停止深入，留 Q 作接应或撤退。",
           "loadoutId": "trio-ad-diver"
         },
         {
           "role": "mid",
           "champion": "Galio",
-          "job": "卡蜜尔先手时用 Q 或已就绪 R 后手留同一目标，卡蜜尔不能先到时先报自己的进场；普攻/E 兑现输出，给加里奥落地留时间。队友跟不上就停，不连交两人突进追进敌阵。",
+          "job": "先确认卡蜜尔或蔚作为 R 的友军落点在范围内，且能撑到延迟落地；R 不以敌方英雄为目标。落地后用 W 嘲讽或 E 实际击飞错开接控，Q 补同一战区伤害。友军落点已被逼退、敌人离开落区或输出到不了时取消强接，转保护撤离。",
           "loadoutId": "trio-galio-engage"
         }
       ],
       "steps": [
-        "先处理兵线并确认加里奥支援范围",
-        "卡蜜尔或蔚先手，另一人后手接控",
-        "加里奥跟上，确认击杀后一起撤。"
+        "处理兵线与营地，先报卡蜜尔 E/R、蔚 Q/R 与加里奥 R 的实际可用情况和支援范围。",
+        "卡蜜尔或蔚一人先手留同一敌方目标，另一人看到控制实际成立后后手接续，别同时交完突进。",
+        "加里奥以能承接延迟的友军位置为 R 落点；落地 W/E 错开接控，三人继续同一战区输出，接不上就撤。"
       ],
-      "window": "卡蜜尔 R 能限制目标、蔚可到场且加里奥 R 支援范围覆盖落点时。",
+      "window": "卡蜜尔 E/R 或蔚 Q/R 能先留住同一敌方目标，另一人保留后手；加里奥 R 已学可用、友军落点在支援范围内且撑得到落地，三人输出和退路都覆盖这一战区时。",
       "early": "卡蜜尔先稳上路线，蔚清野到能接上控制的一侧；加里奥处理兵线后再支援，不在技能未齐时强行越塔。",
       "economy": "卡蜜尔保留上路补刀和经验；蔚以野区经济为主，支援后别长期蹭线；加里奥保留中路补刀和经验。这套按正式位置分工，换位先在客户端确认。",
       "reviewBaseline": {
-        "champion:Camille": "0b801f50146ed95d",
-        "champion:Vi": "3397db3348f1185c",
-        "champion:Galio": "93e234e70ba0094e",
+        "champion:Camille": "d8925ce8a69d2250",
+        "champion:Vi": "ed4ccc20b476dc0e",
+        "champion:Galio": "62214853523131ad",
         "item:6692": "bec6d540fde1d4ec",
         "item:3071": "8b44dc349847ea0e",
         "item:3053": "6f40bd5cd29bb7d2",
@@ -12703,23 +12715,22 @@
         "rune:8017": "50a79a13bce940f0",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8410": "da4ec8f245880032",
-        "item:6655": "e593f4433de96e4b",
+        "item:3152": "37dc7712644a19f0",
+        "item:4005": "049fc32e0486e5b6",
         "item:3157": "4e1ddce33472ee0f",
-        "item:3089": "a8a9b060b253391c",
         "item:3020": "357a162d6a40286e",
+        "item:3089": "a8a9b060b253391c",
         "item:3135": "9eb1465e02c69db0",
-        "item:3102": "74374782f1274206",
-        "rune:8112": "0082006b65520bc3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8463": "3296414353df0e65",
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47"
+        "rune:8347": "def2a55844436c47",
+        "rune:8230": "b4da4b07836c5635",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8234": "018bc04903dfba25",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8444": "fbb59f496f94894e"
       }
     },
     {

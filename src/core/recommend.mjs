@@ -3,7 +3,8 @@ import {draftTargets,scopeSlots,CLIENT_POSITION_ROLES} from './draft.mjs';
 export {clearClientPicks} from './draft.mjs';
 import {comboLoadout,loadoutOptions} from './loadouts.mjs';
 import {generateCreativeTrios} from './creative-trios.mjs';
-import {creativePlanMatches,creativeMemberCombo,validateCreativePlan,resultCooperation} from './creative-plan.mjs';
+import {creativePlanMatches,creativeMemberCombo,validateCreativePlan,creativePlanId,resultCooperation} from './creative-plan.mjs';
+import {createPartyCounterplay} from './party-counterplay.mjs';
 import {createCooperationGraph,cooperationPlan,cooperationSeeds} from './cooperation.mjs';
 import {createPairStatisticsIndex} from './pair-statistics.mjs';
 import {comboMembers,comboKey} from './combo-members.mjs';
@@ -215,6 +216,13 @@ function completePartyPlan(entry,slots,context){
  const plan=cooperationPlan(members,context.cooperationGraph,{...context.play,catalogStatus:context.catalogStatus});
  return plan?{...entry,adaptive:plan,trio:null,duo:null}:entry;
 }
+function attachPartyCounterplay(entry,scope,champions,enemies){
+ if(scope==='solo'||entry.creativePlan)return entry;
+ const execution=resultCooperation(entry),authored=comboMembers(entry.trio||entry.duo);
+ const members=execution?.members||(authored.length?authored:entry.creative?.members||scopeSlots(entry.slots,scope==='bot'?'bot':'party').filter(m=>m.champion));
+ const counterplay=createPartyCounterplay(members,enemies,champions);
+ return counterplay?{...entry,counterplay}:entry;
+}
 function summaryCombo(entry){
  // A party plan describes that group. In whole-team mode, a partial party
  // cannot replace the strategy of the other already picked team members.
@@ -275,7 +283,12 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  if(!targets.length){
   const g=completePartyPlan(grade(slots,champions,style,[],{},context),slots,context);
   if(creativePlanMatches(creativePlan,slots)&&creativePlan.members.every(m=>scopeSlots(slots,scope).some(s=>s.role===m.role))){
-   const plan=validateCreativePlan(creativePlan,slots),cooperation=['cooperation','shared'].includes(plan.archetype),curated=plan.archetype==='curated',original=curated?creativeMemberCombo(plan,plan.members[0].champion,plan.members[0].role):null;
+   let plan=validateCreativePlan(creativePlan,slots);
+   const counterplay=createPartyCounterplay(plan.members,visibleEnemies,champions);
+   // Offer the current public conditions as a new candidate. The accepted
+   // input object and its original skill/stage text remain untouched.
+   if(counterplay&&JSON.stringify(counterplay)!==JSON.stringify(plan.counterplay)){plan={...plan,counterplay};plan.id=creativePlanId(plan);plan=validateCreativePlan(plan,slots);}
+   const cooperation=['cooperation','shared'].includes(plan.archetype),curated=plan.archetype==='curated',original=curated?creativeMemberCombo(plan,plan.members[0].champion,plan.members[0].role):null;
    // Accepted picks are locked for the next search. That must not grant new
    // replacement permissions to friends who were fixed before the search.
    // Legacy plans have no record of that permission: require an explicit unlock.
@@ -283,7 +296,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
    const strategyCombo=plan.members.length===g.analysis.members.length?{tempo:plan.tempo,why:plan.why,risk:plan.caution}:summaryCombo({...g,adaptive:null,creative:null});
    return [{id:signature(slots),slots:structuredClone(slots),...g,trio:curated&&plan.members.length===3?original:null,duo:curated&&plan.members.length===2?original:null,creative:cooperation||curated?null:plan,adaptive:cooperation?(plan.shared||plan.cooperation):curated?null:g.adaptive,creativePlan:plan,origin:curated?'curated':cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,strategyCombo,play.tempo,context.enemyTraits),catalogState:null}];
   }
-  return [{id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,summaryCombo(g),play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null}];
+  return [attachPartyCounterplay({id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,summaryCombo(g),play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null},scope,champions,visibleEnemies)];
  }
  const fixed=slots.map(s=>{if(!targets.includes(s.role))return {...s};const {clientCellId,manualPosition,...draft}=s;return {...draft,champion:null};});
  if(poolMode==='only'&&!heroPool.some(id=>context.byId.has(id)))throw Error('先添加英雄池，或切换为“全部英雄”');
@@ -422,7 +435,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   entry=completePartyPlan(entry,entry.slots,context);
   const execution=resultCooperation(entry),origin=execution?'adaptive':entry.trio||entry.duo?'curated':entry.creative?'creative':'generated';
   const points=buildReasonPoints(entry,scope);
-  return {
+  return attachPartyCounterplay({
   ...entry,id:signature(entry.slots),targets,scope,origin,
   title:execution?.name||entry.creative?.name||entry.trio?.name||entry.duo?.name||entry.adaptive?.name||'职能搭配参考',
   reason:execution?.why||entry.creative?.why||entry.trio?.why||entry.duo?.why||entry.adaptive?.why||entry.connections[0]?.[2]||`${describeComposition(entry.analysis)}。${entry.analysis.missing.length?`短板是${entry.analysis.missing.join('、')}，具体补充作用见方案详情。`:'具体补充作用见方案详情。'}`,
@@ -430,7 +443,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   catalogState:catalogStatus[(entry.trio||entry.duo)?.id]||null,
   strategy:strategySummary(entry.analysis,summaryCombo(entry),play.tempo,context.enemyTraits),
   contributions:explainContributions(scopeSlots(fixed,scope),scopeSlots(entry.slots,scope),targets,champions,context,{before:sharedBefore,after:entry.analysis}),
-  };});
+  },scope,champions,visibleEnemies);});
 }
 
 export function replaceMember(result,role,input){
