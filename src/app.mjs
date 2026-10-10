@@ -432,12 +432,16 @@ async function generate(next=false){
   if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;
   for(const r of result)if(r.creative)resultCreativePlan(r);results=result;resultsSignature=signature;if(!result.length)recommendationError='当前位置英雄池与公开选人无法组成不重复的阵容，请调整限制';if(!results.length)toast(recommendationError,true);else reveal=true;
  }catch(err){if(!err.cancelled&&run===recommendationRun){recommendationError=err.message;toast(err.message,true);}}finally{if(run===recommendationRun){generating=false;render();}}
- // Measure the final DOM after fonts/layout settle. The final render above
- // replaces the heading; scrolling its earlier instance loses the margin and
- // can place the title behind a toolbar that wraps at larger text scales.
+ // Use viewport coordinates after the final render: wrapped toolbars and
+ // browser zoom can change the layout while scrolling reveals the results.
  if(reveal){await document.fonts.ready;
-  if(run!==recommendationRun||resultsSignature!==recommendationKey(recommendationInput()))return;
-  const heading=document.querySelector('.recommend-heading');if(heading){heading.style.scrollMarginTop=((document.querySelector('.topbar')?.getBoundingClientRect().height||0)+12)+'px';heading.scrollIntoView({behavior:'instant',block:'start'});}
+  for(let frame=0;frame<2;frame++){
+   if(run!==recommendationRun||resultsSignature!==recommendationKey(recommendationInput()))return;
+   const heading=document.querySelector('.recommend-heading'),topbar=document.querySelector('.topbar');if(!heading||!topbar)return;
+   const offset=heading.getBoundingClientRect().top-topbar.getBoundingClientRect().height-12;
+   window.scrollBy({top:offset,behavior:'instant'});
+   if(frame===0)await new Promise(resolve=>requestAnimationFrame(resolve));
+  }
  }
 }
 const sync=createClientSync(performSync);
