@@ -527,16 +527,16 @@ test('the frame budget reports itself instead of closing without a word',async()
  service.leave();
 });
 
-test('silence retires stale members without waiting for the socket close handshake',async t=>{
+for(const closeBehavior of ['pending','throws'])test(`silence retires stale members when socket close ${closeBehavior}`,async t=>{
  const fake=fakeRelay(),updates=[];
  const service=createRoomService({nick:'我',webSocketFactory:fake.factory,onUpdate:state=>updates.push(state),relaySilenceMs:40,relayPingMs:20,relayBackoffMs:5,relayOpenTimeoutMs:500});
  t.after(()=>service.leave());
  const first=await joined(service,fake,{members:[{nick:'我'},{nick:'旧队友'}]});
- first.close=function(code,reason){this.readyState=2;this.closed={code,reason};};
+ first.close=function(code,reason){if(closeBehavior==='throws')throw Error('controlled close failure');this.readyState=2;this.closed={code,reason};};
  service.publish({lineup:[{role:'bottom',champion:'Ashe'}],pick:null});
  first.deliver({kind:'state',v:ROOM_PROTOCOL,from:'旧队友',at:1,lineup:[{role:'mid',champion:'Ahri'}],pick:null});
  const replacement=await fake.next(2);
- assert.equal(first.readyState,2,'the physical close event has not arrived');
+ assert.equal(first.readyState,closeBehavior==='pending'?2:1,'the physical close event has not arrived');
  assert.ok(updates.some(state=>state.link==='reconnecting'&&state.members.length===1),'the stale teammate must disappear at the deadline');
  assert.deepEqual(service.snapshot().members.map(member=>member.nick),['我']);
  const oldSent=first.sent.length;
