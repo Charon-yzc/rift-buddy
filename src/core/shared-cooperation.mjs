@@ -21,6 +21,7 @@ const ACTIONS={
  MasterYi:'能安全持续接触才普攻/E，Q 只去结束位置有接应的目标，W 留自己承接反击。',
 };
 const key=m=>m.role+':'+m.champion;
+export const independentCooperationAction=id=>ACTIONS[id]||COOPERATION_SKILLS[id]?.[0]||'';
 export function sharedCooperationPlan(members,graph){
  if(![2,3].includes(members.length)||members.some(m=>!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion]||COOPERATION_SKILLS[m.champion][3])||new Set(members.map(key)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length||new Set(members.map(m=>m.role)).size!==members.length)return null;
  const name=id=>graph.byId.get(id).name;
@@ -29,7 +30,7 @@ export function sharedCooperationPlan(members,graph){
  const conditions=['没有已核对的稳定控制衔接；先由每位玩家确认当前技能、层数、形态与退出路线，不按时间推算就绪。','只有成员确实到位、共同目标可安全接触且退路可用时，才在约定位置做短轮次；会合不等于必须开团。'];
  const failures=['任何成员无法到位、目标离开可接触距离或退出路线被封，就取消这轮会合，回各自兵线或安全营地。','自保与自疗不当作给队友的保护；不要把减速、沉默或预期击杀当成已成立的硬控与刷新。'];
  const steps=['先各自处理兵线或安全营地，报能到场的时间；等待成员实际确认自己的技能与资源。','确认共同目标、实际到场位置和退路，按各自技能条件做短轮次；没有安全接触机会就不交位移深入。','有人赶不到、技能落空或目标退出覆盖就一起停止追击，各回资源；下一次会合重新确认条件。'];
- const memberJobs=members.map(m=>{const row=COOPERATION_SKILLS[m.champion];return {...m,job:`${ACTIONS[m.champion]||row[0]} 成立前先确认：${row[1]} 停止条件：${row[2]}`};});
+ const memberJobs=members.map(m=>{const row=COOPERATION_SKILLS[m.champion];return {...m,job:`${independentCooperationAction(m.champion)} 成立前先确认：${row[1]} 停止条件：${row[2]}`};});
  return {kind:'shared',name:'共同分工 · 发育与会合',members:members.map(m=>({role:m.role,champion:m.champion})),edges:[],memberJobs,relaySteps:steps,steps,opening,economy,conditions,failures,tempo:'growth',bonus:0,
   why:members.map(m=>name(m.champion)).join('、')+'先保各自资源，再按实际到位与技能条件会合；这套没有已核对的稳定控制接力。',
   sourceNote:'共同分工：按已核对的各自技能安排发育、会合与退出；没有确认独特组合协同，未经组合对局验证，不代表统计优势。',patch:SKILL_COOPERATION_PATCH,reviewedAt:SKILL_COOPERATION_REVIEWED_AT,sourceUrls:members.map(m=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${m.champion}.json`)};

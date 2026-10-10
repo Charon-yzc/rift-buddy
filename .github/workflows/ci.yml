@@ -93,6 +93,12 @@ jobs:
         run: |
           node scripts/smoke-package-curated-plan.mjs
           node scripts/smoke-package-curated-plan.mjs --routes
+      - name: Check four/five-member poke, protection routes and separate pair evidence
+        run: |
+          node scripts/smoke-package-curated-plan.mjs --tactics-four
+          node scripts/smoke-package-curated-plan.mjs --tactics
+          node scripts/smoke-package-curated-plan.mjs --independent-four
+          node scripts/smoke-package-curated-plan.mjs --independent-five
       - name: Check locked cross-lane plans and complete late-item choices across restarts
         run: node scripts/smoke-package-cooperation.mjs --cross-lane
       - name: Check retained pair order and third-member follow-ups across restarts

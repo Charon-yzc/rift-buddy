@@ -39,13 +39,13 @@ export function createPairStatisticsIndex(snapshot,champions,{source=DEFAULT_BUI
   if(!prior||patchOrder(next.patch,prior.patch)>0||next.patch===prior.patch&&(next.games>prior.games||next.games===prior.games&&(next.fetchedAt>prior.fetchedAt||next.fetchedAt===prior.fetchedAt&&next.origin<prior.origin)))rows.set(identity,next);
  }
  return {forMembers(members){
-  members=members.filter(m=>m.champion);if(![2,3].includes(members.length))return null;
-  const pairs=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const row=rows.get([key(members[i]),key(members[j])].sort().join('|'));if(row)pairs.push(row);}
+  members=members.filter(m=>m.champion);if(members.length<2||members.length>5)return null;
+  const pairs=[],missingPairs=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const row=rows.get([key(members[i]),key(members[j])].sort().join('|'));if(row)pairs.push(row);else missingPairs.push([members[i],members[j]].map(({role,champion})=>({role,champion})));}
   // A small, sample-shrunk ordering signal. This is an observed pair win rate,
   // not causal synergy lift, and must not become a trio/full-team prediction.
   const currentPairs=pairs.filter(p=>p.current),versions=[...new Set(pairs.map(p=>p.patch))],mixed=versions.length>1,current=pairs.length?currentPairs.length===pairs.length:matching[0]?.patch===patch;
-  const bonus=currentPairs.length?currentPairs.reduce((n,p)=>n+Math.max(-4,Math.min(4,(p.winRate-50)/2))*p.games/(p.games+500),0)/pairs.length:0;
-  return {pairs,expectedPairs:members.length*(members.length-1)/2,bonus,source:{...source},sourceLabel:buildSourceLabel(source),patch:mixed?null:versions[0]||matching[0]?.patch||null,current,mixed,
-   notice:!matching.length?'当前来源筛选暂无同队统计，按技能条件与分工推荐。':!pairs.length?'来源热门表未收录这组位置搭配，不能据此判定强弱。':!current?(mixed?'各对版本分别标明，旧版本样本不参与当前版本排序。':'旧版本统计保留供参考，不参与当前版本排序。'):'仅作候选排序参考；同队胜率受英雄强度、对局与选手影响，不证明配合提升。'};
+  const bonus=members.length<=3&&currentPairs.length?currentPairs.reduce((n,p)=>n+Math.max(-4,Math.min(4,(p.winRate-50)/2))*p.games/(p.games+500),0)/pairs.length:0;
+  return {pairs,missingPairs,expectedPairs:members.length*(members.length-1)/2,bonus,source:{...source},sourceLabel:buildSourceLabel(source),patch:mixed?null:versions[0]||matching[0]?.patch||null,current,mixed,
+   notice:!matching.length?'当前来源筛选暂无同队统计，按技能条件与分工推荐。':!pairs.length?'来源热门表未收录这组位置搭配，不能据此判定强弱。':members.length>3?'逐对样本供比较，不参与四五人候选排序；同队胜率受英雄强度、对局与选手影响，不证明配合提升。':!current?(mixed?'各对版本分别标明，旧版本样本不参与当前版本排序。':'旧版本统计保留供参考，不参与当前版本排序。'):'仅作候选排序参考；同队胜率受英雄强度、对局与选手影响，不证明配合提升。'};
  }};
 }

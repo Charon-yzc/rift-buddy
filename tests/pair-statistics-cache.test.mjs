@@ -24,6 +24,14 @@ test('an explicit member refresh validates all targets before changing memory or
  fail=false;await refresh([a,b],source);assert.equal(data.pairStatistics.snapshots[0].entries.length,2);assert.deepEqual((await loadPairStatisticsCache([file],game)).snapshots,data.pairStatistics.snapshots);
 });
 
+test('five-member refresh stays sequential, coalesces repeats and retains the complete old cache if the last member fails',async()=>{
+ const members=[a,b,c,{champion:'Ashe',role:'bottom'},{champion:'Lulu',role:'support'}],data=initial(),root=await temp(),before=structuredClone(data.pairStatistics),file=path.join(root,'pair-statistics-cache.json');await fs.writeFile(file,JSON.stringify(before));const bytes=await fs.readFile(file);let active=0,maxActive=0,calls=0,fail=true;
+ const refresh=createPairStatisticsCache({root,getData:()=>data,interval:0,fetchEntry:async(champion,role,_data,selected)=>{calls++;active++;maxActive=Math.max(active,maxActive);await Promise.resolve();active--;if(fail&&champion.id==='Vex')throw Error('last member offline');return entry({champion:champion.id,role},members.find(m=>m.role!==role),selected);}});
+ const pending=refresh(members,source);assert.equal(refresh([...members].reverse(),source),pending);await assert.rejects(pending,/last member/);assert.equal(calls,5);assert.equal(maxActive,1);assert.deepEqual(data.pairStatistics,before);assert.deepEqual(await fs.readFile(file),bytes);
+ fail=false;await refresh(members,source);assert.equal(data.pairStatistics.snapshots[0].entries.length,5);assert.deepEqual((await loadPairStatisticsCache([file],game)).snapshots,data.pairStatistics.snapshots);
+ const html=pairRefreshView(data,members,{open:true});assert.doesNotMatch(html,/data-action="refresh-pairs"[^>]*disabled/);assert.doesNotMatch(html,/请选择一至三个/);
+});
+
 test('pending duplicate member requests coalesce and different source requests retain both caches',async()=>{
  const data=initial(),root=await temp(),gate=deferred();let calls=0;
  const refresh=createPairStatisticsCache({root,getData:()=>data,interval:0,fetchEntry:async(champion,role,_data,selected)=>{calls++;await gate.promise;return entry({champion:champion.id,role},b,selected);}});
@@ -60,7 +68,7 @@ test('corrupted cache files fall back without hiding the valid bundled snapshot 
 
 test('target validation prevents arbitrary heroes, duplicate positions, and unbounded queued requests',async()=>{
  const data=initial(),gate=deferred(),root=await temp(),refresh=createPairStatisticsCache({root,getData:()=>data,interval:0,fetchEntry:async(champion,role,_data,selected)=>{await gate.promise;return entry({champion:champion.id,role},b,selected);}});
- for(const targets of [[],[a,a],[a,{...b,role:a.role}],[{...a,champion:'Unknown'}],[a,b,c,{champion:'Ashe',role:'bottom'}]])assert.throws(()=>refresh(targets,source));
+ for(const targets of [[],[a,a],[a,{...b,role:a.role}],[{...a,champion:'Unknown'}],[a,b,c,{champion:'Ashe',role:'bottom'},{champion:'Lulu',role:'support'},{champion:'Ahri',role:'mid'}]])assert.throws(()=>refresh(targets,source));
  const jobs=[source,kr,{region:'global',tier:'gold_plus'},{region:'kr',tier:'gold_plus'}].map(s=>refresh([a],s));assert.throws(()=>refresh([a],{region:'global',tier:'diamond_plus'}),/正在刷新/);gate.resolve();await Promise.all(jobs);
 });
 

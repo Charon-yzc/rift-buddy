@@ -1,4 +1,5 @@
 import {COOPERATION_SKILLS,SKILL_COOPERATION_PATCH,SKILL_COOPERATION_REVIEWED_AT} from './cooperation-skills.mjs';
+import {independentCooperationAction} from './shared-cooperation.mjs';
 
 // Independently usable kit actions, not a control relay or measured synergy.
 // Only the explicitly reviewed functions below can establish these plans.
@@ -62,11 +63,11 @@ const choose=(members,tempo)=>{
  return possible.poke?'poke':possible.protect?'protect':null;
 };
 export function tacticalCooperationPlan(members,graph,{tempo='any'}={}){
- if(![2,3].includes(members.length)||members.some(m=>!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(key)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length||new Set(members.map(m=>m.role)).size!==members.length)return null;
+ if(members.length<2||members.length>5||members.some(m=>!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(key)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length||new Set(members.map(m=>m.role)).size!==members.length)return null;
  const mode=choose(members,tempo);if(!mode)return null;
  const name=id=>graph.byId.get(id).name,labels={poke:'消耗与拉扯',protect:'保护与持续输出',growth:'成长与约定会合'};
  const functions=members.map(m=>{const kit=actions[m.champion]||{};return mode==='poke'?(kit.poke?'poke':kit.guard?'guard':kit.carry?'carry':'growth'):mode==='protect'?(kit.guard?'guard':kit.carry?'carry':kit.poke?'poke':'growth'):(kit.growth?'growth':kit.guard?'guard':kit.carry?'carry':'poke');});
- const memberJobs=members.map((m,i)=>{const row=COOPERATION_SKILLS[m.champion];return {...m,job:actions[m.champion]?.[functions[i]]||`先守远程队友能接应的位置与退路，不独自进场；本轮短接触安全条件成立才${row[0]} 玩家确认：${row[1]} 退出条件：${row[2]}`};});
+ const memberJobs=members.map((m,i)=>{const row=COOPERATION_SKILLS[m.champion];return {...m,job:actions[m.champion]?.[functions[i]]||`先守远程队友能接应的位置与退路，不独自进场；${independentCooperationAction(m.champion)} 玩家确认：${row[1]} 退出条件：${row[2]}`};});
  const opening=members.map(m=>`${name(m.champion)}${m.role==='jungle'?'先保安全营地，报路线与到位时间':m.role==='support'?'先保搭档补刀与经验，离线前报去向':'先处理安全兵线，报可离线时间'}`).join('；')+'。玩家先确认实际技能、法力、形态与退路，有人赶不到就取消会合。';
  const economy=(members.some(m=>['top','mid','bottom'].includes(m.role))?members.filter(m=>['top','mid','bottom'].includes(m.role)).map(m=>name(m.champion)).join('、')+'保各自兵线；':'')+(members.some(m=>m.role==='jungle')?'打野保安全营地，不空等抓人；':'')+(members.some(m=>m.role==='support')?'辅助不抢搭档补刀；':'')+'先报清线与到位时间，技能落空或状态不足就各回资源，不为一轮消耗、叠层或追回损失让全员丢经济。';
  const scripts={

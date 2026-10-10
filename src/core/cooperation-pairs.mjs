@@ -1,4 +1,5 @@
 import {COOPERATION_SKILLS} from './cooperation-skills.mjs';
+import {independentCooperationAction} from './shared-cooperation.mjs';
 // Authored conditional plans, checked against bundled Riot 16.20.1 mechanics.
 // A pair is a way to cooperate, not proof of win rate or unconditional strength.
 export const COOPERATION_PAIRS=[
@@ -86,7 +87,7 @@ export function cooperationCoordination(members,graph,edges){
   const authored=COOPERATION_PAIRS.find(row=>row.slice(0,2).includes(edge.a)&&row.slice(0,2).includes(edge.b))?.[8]?.[champion];
   if(authored)return authored;
   const skill=COOPERATION_SKILLS[champion];
-  return skill?`${skill[0]} 按「${edge.name}」的成立条件与搭档衔接。`:edge.step;
+  return skill?`${independentCooperationAction(champion)} 按「${edge.name}」的成立条件与搭档衔接。`:edge.step;
  };
  const jobs=relay?members.map(m=>({...m,job:relay.find(r=>r.role===m.role&&r.champion===m.champion).job})):members.map(m=>({...m,job:edges.filter(e=>[e.a,e.b].includes(m.champion)).map(e=>ownStep(e,m.champion)).filter(Boolean).join(' ')}));
  const opening=members.map(m=>((openingRoles[m.champion]||['top','mid','bottom']).includes(m.role)?openings[m.champion]:null)||`${graph.byId.get(m.champion).name}${m.role==='jungle'?'按安全营地发育，报下一条可接应路线，不在兵线不允许时强求同行。':m.role==='support'?'围绕搭档位置留控制与保护，游走前先确认下路能安全补刀。':'先处理兵线与退出路线，再报能否到达队友位置。'}`).join(' ');

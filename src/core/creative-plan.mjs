@@ -1,6 +1,7 @@
 import {RULES_PATCH,RULES_VERSION} from './rules.mjs';
 import {fingerprint} from './catalog-review.mjs';
 import {curatedDescriptor,validateSavedCurated} from './curated-plan.mjs';
+import {TEMPOS} from './strategy.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
 const archetypes=['chain','poke','dive','protect','mixed','cooperation','shared','curated'];
@@ -61,12 +62,14 @@ function savedShared(value,members){
   if(members.length<4||!Array.isArray(value.routes)||value.routes.length!==2)throw Error('全队主备路线不完整');
   const ids=new Set();result.routes=value.routes.map(route=>{
    const saved={};for(const [field,max] of [['id',120],['label',100],['step',400],['condition',400],['failure',400]]){if(!text(route?.[field],max))throw Error('全队行动路线说明不完整');saved[field]=route[field];}
+   if(route.tempo!==undefined){if(!tempos.includes(route.tempo))throw Error('全队行动路线节奏不正确');saved.tempo=route.tempo;}
    if(ids.has(saved.id))throw Error('全队行动路线重复');ids.add(saved.id);
    const jobs=new Map();if(!Array.isArray(route.memberJobs)||route.memberJobs.length!==members.length)throw Error('全队行动路线缺少成员分工');
    for(const m of route.memberJobs){if(!members.some(p=>memberKey(p)===memberKey(m))||jobs.has(memberKey(m))||!text(m.job,700))throw Error('全队行动路线分工不一致');jobs.set(memberKey(m),m.job);}
    saved.memberJobs=members.map(m=>({...m,job:jobs.get(memberKey(m))}));return saved;
   });
   if(JSON.stringify(result.memberJobs)!==JSON.stringify(result.routes[0].memberJobs)||result.steps[1]!=='主线：'+result.routes[0].step||result.steps[2]!=='备选：'+result.routes[1].step||result.conditions[1]!==result.routes[0].condition||result.failures[1]!==result.routes[0].failure)throw Error('全队当前分工与主线不一致');
+  if(result.routes[0].tempo!==undefined&&result.tempo!==result.routes[0].tempo)throw Error('全队当前节奏与主线不一致');
  }
  if(!Array.isArray(value.sourceUrls)||value.sourceUrls.length!==members.length||new Set(value.sourceUrls).size!==members.length)throw Error('共同分工技能来源不完整');
  const sourceIds=value.sourceUrls.map(url=>typeof url==='string'&&url.match(/^https:\/\/ddragon\.leagueoflegends\.com\/cdn\/[0-9.]+\/data\/en_US\/champion\/([A-Za-z][A-Za-z0-9]{0,39})\.json$/)?.[1]);
@@ -83,7 +86,8 @@ export function selectPartyRoute(value,routeId){
  if(!routes?.some(route=>route.id===routeId))throw Error('这套方案没有该行动路线，请重新推荐');
  const ordered=[routes.find(route=>route.id===routeId),...routes.filter(route=>route.id!==routeId)];
  const steps=[plan.shared.steps[0],'主线：'+ordered[0].step,'备选：'+ordered[1].step];
- const shared={...plan.shared,routes:ordered,memberJobs:ordered[0].memberJobs,steps,relaySteps:steps,conditions:[plan.shared.conditions[0],ordered[0].condition],failures:[plan.shared.failures[0],ordered[0].failure]};
+ const tempo=ordered[0].tempo||plan.shared.tempo;
+ const shared={...plan.shared,tempo,name:`${plan.members.length}人分工 · ${TEMPOS[tempo]}`,routes:ordered,memberJobs:ordered[0].memberJobs,steps,relaySteps:steps,conditions:[plan.shared.conditions[0],ordered[0].condition],failures:[plan.shared.failures[0],ordered[0].failure]};
  const next={...plan,...sharedDescriptor(shared,{version:plan.dataVersion})};next.id=creativePlanId(next);
  return validateCreativePlan(next);
 }
