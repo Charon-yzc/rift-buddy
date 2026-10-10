@@ -131,3 +131,52 @@ test('two, four and five members retain their own configurations and Hex does no
  for(const size of [2,4,5]){const team=full.map((s,i)=>i<size?s:{...s,champion:null}),configs=captureRoomConfigurations(team,data,createPreparationStore());assert.equal(configs.length,size);assert(configs.every(c=>c.mode==='rift'));assert(encodeFrame(sanitizeShare({kind:'state',v:1,from:'甲',at:1,lineup:team,configurations:configs})));}
  const configs=captureRoomConfigurations(full,data,createPreparationStore(),{mode:'hex'});assert.equal(configs.length,5);assert(configs.every(c=>c.mode==='hex'&&c.runes===null));assert.throws(()=>roomPreparation(configs[0],data),/海克斯/);
 });
+
+test('a late trio peer keeps attribute guidance and a three-point opening without inventing QWER ranks',async()=>{
+ const team=createSlots().map(s=>({...s,champion:({jungle:'Ivern',bottom:'Aphelios',support:'Lulu'})[s.role]||null}));
+ const strategy=captureRoomStrategy(team,data),configs=captureRoomConfigurations(team,data,createPreparationStore(),{creativePlan:strategy});
+ const a=createRoomService({nick:'属性房主',listenHost:'127.0.0.1',discovery:false}),b=createRoomService({nick:'晚加入队友',listenHost:'127.0.0.1',discovery:false});
+ try{
+  const address=await a.host();a.publish({lineup:team,configurations:configs,strategy});
+  await b.join({host:'127.0.0.1',port:address.port,room:address.room,pin:address.pin});
+  let received;for(let i=0;i<50;i++){received=b.snapshot().members.find(m=>m.nick==='属性房主')?.share;if(received?.configurations?.length===3)break;await new Promise(r=>setTimeout(r,20));}
+  assert.deepEqual(received.configurations,configs);
+  const aphelios=received.configurations.find(c=>c.champion==='Aphelios'),lulu=received.configurations.find(c=>c.champion==='Lulu');
+  const original=getBuild(data.champions.find(c=>c.id==='Aphelios'),'bottom',data);
+  assert.deepEqual(aphelios.attributePlan,original.attributePlan);assert.equal(aphelios.skills,null);assert.equal(aphelios.first,null);
+  const text=roomConfigurationText(aphelios,data,'房主'),html=roomConfigurationDialog(aphelios,data,'房主');
+  for(const detail of [original.attributePlan.action,original.attributePlan.note,original.attributePlan.sourceUrl,...original.attributePlan.mechanismUrls])assert(text.includes(detail)&&html.includes(detail));
+  assert.match(text,/攻击力 > 穿甲 > 攻速/);assert.match(html,/属性方案供查看与复制/);assert.doesNotMatch(html,/<li>|采用符文、加点/);
+  assert(!roomPreparation(aphelios,data).customSkillOrder);
+  assert.equal(lulu.skills,null);assert.equal(lulu.first,'EQW');
+  const adopted=roomPreparation(lulu,data,received.strategy),build=getBuild(data.champions.find(c=>c.id==='Lulu'),'support',data,adopted);
+  assert.equal(adopted.customSkillOrder.order,'EQW');assert.equal(build.skillOrder,'EQW');assert.equal(build.first,'EQW');
+  assert.equal(adopted.customSkillOrder.priority,'EWQ');assert.equal(build.priority,'EWQ','opening order must not replace the later maxing priority');
+  const remembered=createPreparationStore();remembered.remember(adopted);
+  const sharedAgain=captureRoomConfigurations(team,data,remembered,{creativePlan:strategy}).find(c=>c.champion==='Lulu');
+  assert.equal(sharedAgain.skills,'EQW');assert.equal(sharedAgain.priority,'EWQ');
+  assert.equal(roomPreparation(sharedAgain,data).customSkillOrder.priority,'EWQ','re-sharing an adopted opening must retain its later priority');
+  const luluHtml=roomConfigurationDialog(lulu,data,'房主'),luluText=roomConfigurationText(lulu,data,'房主');
+  assert.match(luluHtml,/采用符文、开局三点与召唤师技能/);assert.equal((luluHtml.match(/<li>/g)||[]).length,3);
+  assert.match(luluText,/1级 E → 2级 Q → 3级 W/);assert.match(luluText,/仅覆盖前 3 个技能点/);assert.doesNotMatch(luluText,/18级/);
+ }finally{a.dispose();b.dispose();}
+});
+
+test('attribute snapshots strip unknown fields and reject oversized, conflicting or wrongly bound advice',()=>{
+ const team=createSlots().map(s=>({...s,champion:s.role==='bottom'?'Aphelios':null}));
+ const c=captureRoomConfigurations(team,data,createPreparationStore())[0],plan=c.attributePlan;
+ const clean=sanitizeRoomConfiguration({...c,attributePlan:{...plan,auth:'secret',runePageId:123}});
+ assert.deepEqual(clean.attributePlan,plan);assert(!JSON.stringify(clean).includes('secret'));
+ for(const bad of [
+  {...c,champion:'Ashe'},{...c,skills:'QWE'},{...c,first:'QWE'},{...c,priority:'QWE'},
+  {...c,attributePlan:{...plan,priority:['攻击力','攻击力','攻速']}},
+  {...c,attributePlan:{...plan,action:'x'.repeat(1001)}},
+  {...c,attributePlan:{...plan,sourceUrl:'javascript:alert(1)'}},
+  {...c,attributePlan:{...plan,mechanismUrls:Array(5).fill(plan.sourceUrl)}},
+ ])assert.equal(sanitizeRoomConfiguration(bad),null);
+ const normal=captureRoomConfigurations(slots,data,createPreparationStore())[0];
+ assert.equal(sanitizeRoomConfiguration({...normal,first:'RRR'}),null,'opening must agree with a supplied sequence');
+ const {first,attributePlan,...legacy}=normal;assert(sanitizeRoomConfiguration(legacy));
+ const invalid=sanitizeRoomConfiguration({...legacy,skills:null,first:'RRR'});assert(invalid);
+ assert.throws(()=>roomPreparation(invalid,data),/等级规则/);
+});

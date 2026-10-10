@@ -53,6 +53,17 @@ function pick(value){
 function stamp(value){return Number.isFinite(value)&&value>0?value:null;}
 const positive=id=>Number.isSafeInteger(id)&&id>0&&id<100000000;
 const itemIds=(value,max)=>Array.isArray(value)&&value.length<=max&&value.every(positive)?[...value]:null;
+function attributePlan(value){
+ if(!value||typeof value!=='object'||Array.isArray(value)||value.kind!=='attributes')return null;
+ const priority=value.priority;
+ if(!Array.isArray(priority)||priority.length!==3||new Set(priority).size!==3||!priority.every(s=>['攻击力','穿甲','攻速'].includes(s)))return null;
+ const out={kind:'attributes',priority:[...priority]};
+ for(const key of ['title','action','note','source']){const text=value[key];if(typeof text!=='string'||!text.trim()||text.length>1000)return null;out[key]=text.replace(/[\p{Cc}\p{Cf}\p{Cs}]/gu,'');}
+ if(typeof value.patch!=='string'||!/^\d{2}\.\d{1,2}$/.test(value.patch)||typeof value.reviewedAt!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value.reviewedAt))return null;
+ const url=s=>typeof s==='string'&&s.length<=300&&/^https:\/\/[^\s\p{Cc}\p{Cf}\p{Cs}]+$/u.test(s);
+ if(!url(value.sourceUrl)||!Array.isArray(value.mechanismUrls)||value.mechanismUrls.length>4||!value.mechanismUrls.every(url))return null;
+ return {...out,patch:value.patch,reviewedAt:value.reviewedAt,sourceUrl:value.sourceUrl,mechanismUrls:[...value.mechanismUrls]};
+}
 // Concrete public configuration values, not catalog indexes interpreted on
 // another machine. Rebuild every field; no client identities or free metadata.
 export function sanitizeRoomConfiguration(value){
@@ -64,9 +75,12 @@ export function sanitizeRoomConfiguration(value){
  if(value.runes!=null){const page=value.runes;if(identity.mode!=='rift'||!positive(page.primaryStyleId)||!positive(page.subStyleId)||page.primaryStyleId===page.subStyleId||!Array.isArray(page.selectedPerkIds)||page.selectedPerkIds.length!==9||!page.selectedPerkIds.every(positive))return null;runes={primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:[...page.selectedPerkIds]};}
  const skills=value.skills??null;if(skills!==null&&(typeof skills!=='string'||! /^[QWER]{1,18}$/.test(skills)))return null;
  const priority=value.priority??null;if(priority!==null&&(typeof priority!=='string'||! /^[QWER]{3,4}$/.test(priority)||new Set(priority).size!==priority.length))return null;
+ const first=value.first??null;if(first!==null&&(typeof first!=='string'||! /^[QWER]{3}$/.test(first)||skills!==null&&first!==skills.slice(0,3)))return null;
+ let attributes=null;
+ if(value.attributePlan!=null){attributes=attributePlan(value.attributePlan);if(!attributes||identity.champion!=='Aphelios'||skills!==null||first!==null||priority!==null)return null;}
  let basis;
  if(value.basis!==undefined){if(!value.basis||typeof value.basis!=='object'||Array.isArray(value.basis))return null;basis={};for(const key of ['title','note','rune','skill']){const text=value.basis[key];if(typeof text!=='string'||text.length>1000)return null;basis[key]=text.replace(/[\p{Cc}\p{Cf}\p{Cs}]/gu,'');}}
- return {...identity,patch:value.patch,start,items,boots,spells:[...spells],runes,skills,priority,...(basis?{basis}:{})};
+ return {...identity,patch:value.patch,start,items,boots,spells:[...spells],runes,skills,priority,...(value.first!==undefined?{first}:{}),...(value.attributePlan!==undefined?{attributePlan:attributes}:{}),...(basis?{basis}:{})};
 }
 function configurations(value,team){
  if(value===undefined)return undefined;

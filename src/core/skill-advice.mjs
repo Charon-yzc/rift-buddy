@@ -54,7 +54,11 @@ export function editSkillOrder(order,champion,index,key,{priority,first}={}){
 }
 export function validateCustomSkillOrder(value,champion){
  if(!value||!/^\d{2}\.\d{1,2}$/.test(value.patch||'')||!legalSkillOrder(value.order,champion))throw Error('自选加点序列不符合英雄等级规则');
- return {order:value.order,patch:value.patch};
+ // Partial sender openings must retain their later priority: EQW for the
+ // first three points does not imply maxing Q before W afterwards.
+ const priority=value.priority;
+ if(priority!==undefined&&(value.order.length!==3||typeof priority!=='string'||! /^[QWER]{3,4}$/.test(priority)||new Set(priority).size!==priority.length))throw Error('开局加点的后续优先级不可用');
+ return {order:value.order,patch:value.patch,...(priority!==undefined?{priority}:{})};
 }
 export function orderPriority(order,champion=null){const slots=champion==='Udyr'?keys:['Q','W','E'],ranks=Object.fromEntries(slots.map(k=>[k,0])),full=[],max=champion==='Udyr'||champion==='Jayce'?6:5;for(const k of order||''){if(k in ranks&&++ranks[k]===max)full.push(k);}return [...full,...slots.filter(k=>!full.includes(k)).sort((a,b)=>ranks[b]-ranks[a])].join('');}
 export function skillOptions(champion,live){

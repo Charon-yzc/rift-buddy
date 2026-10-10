@@ -43,7 +43,7 @@ export function captureRoomConfigurations(slots,data,store,{creativePlan=null,gu
   const context={id:champion.id,role:slot.role,mode,...creativeComboContext(combo)};
   const selection=current&&preparationIdentity(current)===preparationIdentity(context)?current:{coreIndex:0,conditions:[],...recallPreparation(store,guide,context),...context};
   const b=getBuild(champion,slot.role,data,selection);
-  return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:b.items.map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,priority:b.priority,basis:{title:b.title,note:b.sourceNote,rune:b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文',skill:b.selectedSkill?.when||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列'}});
+  return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:b.items.map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,first:b.first,attributePlan:b.attributePlan,priority:b.priority,basis:{title:b.title,note:b.sourceNote,rune:b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文',skill:b.selectedSkill?.when||b.attributePlan?.note||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列'}});
  }).filter(Boolean);
 }
 
@@ -55,7 +55,10 @@ export function roomPreparation(raw,data,strategy){
  if(config?.mode==='hex')throw Error('海克斯配置可查看和复制，不应用峡谷符文');
  if(!config||config.patch!==data.patch||!data.champions.some(c=>c.id===config.champion))throw Error('配置与当前英雄或资料版本不一致，请先核对发送方配置');
  if(!config.runes||!validateRunePage(config.runes,data.runes))throw Error('发送方符文在当前资料中不可用，不能采用替代页');
- const skills=config.skills?validateCustomSkillOrder({order:config.skills,patch:config.patch},config.champion):undefined;
+ // A three-point opening is a partial sequence, never a fabricated 18-point
+ // order. Attribute guidance stays a copied reference, not a QWER edit.
+ const order=config.skills||config.first;
+ const skills=order?validateCustomSkillOrder({order,patch:config.patch,...(order.length===3&&config.priority?{priority:config.priority}:{})},config.champion):undefined;
  const summonerIds=validateSummonerIds(config.spells,'rift');
  const plan=strategy&&strategy.members?.some(m=>m.champion===config.champion&&m.role===config.role)?validateCreativePlan(strategy):null;
  const combo=plan?creativeMemberCombo(plan,config.champion,config.role):null;
