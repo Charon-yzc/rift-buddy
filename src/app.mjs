@@ -700,7 +700,11 @@ document.addEventListener('click',async event=>{
  if(action==='companion-attach'){if(!api.companionMode)throw Error('贴边选人请在桌面版使用');const layout=await api.companionMode(true);acceptWindowLayout(layout);if(!layout.docked)toast('进入选人后自动贴边；请先连接客户端');return;}
  if(action==='client-companion'){saved.preferences.clientCompanion=saved.preferences.clientCompanion===false;await persist();render();return;}
  if(action==='recover-guide'){if(!api.recoverGuide)throw Error('找回指引请在桌面版使用');await api.recoverGuide();if(overlay.querySelector('[data-window-info]'))await showWindowInfo(true);toast('指引已展开并移回游戏所在屏幕');return;}
- if(action==='room-focus'){document.querySelector('.room-panel')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
+ if(action==='room-focus'){
+  const panel=document.querySelector('.room-panel');
+  if(panel){panel.style.scrollMarginTop=((document.querySelector('.topbar')?.getBoundingClientRect().height||68)+16)+'px';panel.scrollIntoView({block:'start',behavior:'smooth'});}
+  return;
+ }
  if(action==='room-host'){if(!api.roomHost)throw Error('局域网房间请在桌面版使用');if(roomBusy)return;roomBusy=true;roomError='';render();try{room=await api.roomHost(saved.preferences.roomNick||'队友');roomAddresses=await api.roomAddresses?.()||[];roomShareSig='';roomShareWarned=false;await publishRoomShare({force:true});toast('房间已创建，把邀请码和口令发给队友');}catch(error){roomError=roomErrorMessage(error);}finally{roomBusy=false;}render();return;}
  if(action==='room-scan'){if(!api.roomScan)throw Error('局域网房间请在桌面版使用');if(roomScanning)return;roomScanning=true;roomScanResults=null;roomError='';render();try{roomScanResults=await api.roomScan();}catch(error){roomError=roomErrorMessage(error);}finally{roomScanning=false;}render();return;}
  if(action==='room-refresh-addresses'){roomAddresses=await api.roomAddresses?.()||[];render();toast('已刷新本机地址');return;}
