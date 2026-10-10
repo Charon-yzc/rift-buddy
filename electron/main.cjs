@@ -101,7 +101,7 @@ async function boot(){
  const recommendationCore=await import('../src/core/recommend.mjs');
  const {publicClientGameId,reconcileClientDraft}=await import('../src/core/draft.mjs');
  const {creativeComboContext}=await import('../src/core/creative-plan.mjs');
- const {mergeConfiguration,storedPreparation,upsertPreparation}=await import('../src/core/preparation.mjs');let guideRevision=0;
+ const {mergeConfiguration,storedPreparation,upsertPreparation,preparationIdentity}=await import('../src/core/preparation.mjs');let guideRevision=0;
  const {isFreshBuildReference}=await import('../src/core/builds.mjs');
  const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker();
  const {createOpponentFocusTracker}=await import('../src/core/opponent-focus.mjs');const opponentFocus=createOpponentFocusTracker({newToken:require('node:crypto').randomUUID});
@@ -158,7 +158,14 @@ async function boot(){
   const before=base?storage.validateState(base):structuredClone(state),same=isDeepStrictEqual;
   await saveCurrentState(current=>{
    const merged={...current,preferences:{...current.preferences}};
-   for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide'].includes(key)||same(next[key],before[key]))continue;if(!same(current[key],before[key])&&!same(current[key],next[key]))throw Error('配置同时发生变化，请刷新后重新保存');merged[key]=next[key];}
+   for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(!same(current[key],before[key])&&!same(current[key],next[key]))throw Error('配置同时发生变化，请刷新后重新保存');merged[key]=next[key];}
+   // Remembering a guide changes preparation recency. Merge actual per-hero
+   // changes so that reordering or another hero's update cannot block a save.
+   for(const identity of new Set([...before.preparations,...next.preparations].map(preparationIdentity))){
+    const previous=before.preparations.find(p=>preparationIdentity(p)===identity),changed=next.preparations.find(p=>preparationIdentity(p)===identity),accepted=current.preparations.find(p=>preparationIdentity(p)===identity);
+    if(same(previous,changed))continue;if(!same(accepted,previous)&&!same(accepted,changed))throw Error('这位英雄的配置同时发生变化，请刷新后重新保存');
+    merged.preparations=changed?upsertPreparation(merged.preparations,changed):merged.preparations.filter(p=>preparationIdentity(p)!==identity);
+   }
    for(const key of Object.keys(next.preferences)){if(key==='presentation'||same(next.preferences[key],before.preferences[key]))continue;if(!same(current.preferences[key],before.preferences[key])&&!same(current.preferences[key],next.preferences[key]))throw Error('偏好同时发生变化，请刷新后重新保存');merged.preferences[key]=next.preferences[key];}
    const context=reconcileClientDraft(merged.draft,publicClientGameId(latestClient),current.draft?.clientGameId||current.guide?.match?.gameId);merged.draft=context.newGame&&current.draft?.clientGameId===publicClientGameId(latestClient)?current.draft:context.draft;return merged;
   });guide.publish();companion.sync();return true;
