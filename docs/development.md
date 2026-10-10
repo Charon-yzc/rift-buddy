@@ -299,3 +299,14 @@ v0.10.5 的选人侧栏直接修改当前 preparation，装备路线、符文、
 保存格式沿 `archetype:shared`，允许 `poke/protect/growth`，原成长方案标识和原文不变。当前小队说明不能替代已知五人阵容的整体战术；载入收藏只恢复没有当前英雄或客户端位置绑定的空位置勾选。`tests/tactical-cooperation.test.mjs` 覆盖锁定杰斯/豹女、不同第三人、真实双人互动保留、保护与自疗负例、公开限制，以及收藏、磁盘、复制、侧栏和逐人指引。实际窗口验收使用 `node scripts/smoke-package-cooperation.mjs --poke` 和 `--poke-guard`；`--source` 可在打包前做源码预检，不能替代最终 ASAR 验收。
 
 推荐结果滚动在最终 DOM 渲染和字体就绪后测量工具栏高度；不能先滚动旧节点再重绘。`smoke-package-recommendation-fit.mjs` 检查多种窗口宽度、缩放与字号下标题、说明及换批按钮的位置。
+
+
+## v0.32.0 的四五人战术与逐对数据
+
+四五人路线复用 `tactical-cooperation.mjs` 已核对的独立消耗、保护与成长职责。默认保留有效三人子组原文；玩家选定可成立的战术时使用该战术，另一路保留不同战术或局部控制。路线的可选 `tempo` 随原文保存，旧无此字段的方案继续按旧内容恢复。近身控制不能成为远程消耗的统一前置条件。
+
+同队统计为二至五位成员分别列出全部已收录两两样本与缺失项；四五人 `bonus` 固定为零，禁止合成为整队胜率。显式刷新最多五位成员，沿原队列逐一获取，全部通过且写盘成功才替换缓存；中途失败保留原集合。
+
+无控制、保护及撤退路线复用已核对的独立安全动作，不继承“接实际控制后”的通用跟进句。`smoke-package-curated-plan.mjs --independent-four/--independent-five` 验证盖伦、卡兹克、卡萨丁、芸阿娜及米利欧的原路线、备选、采用、收藏、重启和每位成员指引；`--tactics-four/--tactics` 验证消耗/保护与逐对样本。所有符文写入仍模拟。
+
+个人准备节点补尼菈、洛、卡兹克、男枪、格温与薇古丝，按实际形态、层数、进化、弹药及接应条件会合，不按分钟或等级直接宣称强势。2026-10-10 对照 Riot 16.19.1 与 16.20.1 的[加里奥](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json)、[尼菈](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nilah.json)、[洛](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rakan.json)：三者的基础属性、被动、技能描述/模板、冷却和范围未见差异；人工核对 W/R 实际控制、加里奥当时友军落点、尼菈接近与退出、洛 E 可选友军后，补齐“近身救援舞”的成立与停止条件并更新该套复核来源。专用配装及其他旧版套路继续保留原复核状态；这次机制核对不证明当前最优配装、国服对局有效性或整队胜率。

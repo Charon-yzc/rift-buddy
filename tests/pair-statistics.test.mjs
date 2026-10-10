@@ -5,7 +5,7 @@ import {createPairStatisticsIndex,validatePairStatistics,pairApiUrl,pairSourceUr
 import {parsePairStatisticsJSON,loadPairStatistics} from '../services/pair-statistics.mjs';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
-import {pairStatisticsView} from '../src/pair-statistics-view.mjs';
+import {pairStatisticsText,pairStatisticsView} from '../src/pair-statistics-view.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
@@ -38,6 +38,21 @@ test('opposite-direction samples never add and three players never get a synthet
  assert.equal(result.pairs.length,1);assert.equal(result.expectedPairs,3);assert.equal(result.pairs[0].games,1100);assert.equal(result.pairs[0].winRate,53);assert.ok(Math.abs(result.bonus)<=4);assert.equal(result.winRate,undefined);
  assert.equal(createPairStatisticsIndex(s,data.champions,{source,patch:data.patch}).forMembers([a]),null);
  assert.equal(createPairStatisticsIndex(s,data.champions,{source,patch:data.patch}).forMembers([a,member('Vex','top')]).pairs.length,0);
+});
+
+test('four and five friends keep separate cached pair observations and named missing pairs without affecting ranking',async()=>{
+ const snapshot=await loadPairStatistics('data/pair-statistics.json',data),members=[member('Malphite','top'),member('Diana','jungle'),member('Yasuo','mid'),member('KogMaw','bottom'),member('Lulu','support')],index=createPairStatisticsIndex(snapshot,data.champions,{source,patch:data.patch});
+ for(const count of [4,5]){
+  const group=members.slice(0,count),evidence=index.forMembers(group),expected=count*(count-1)/2;
+  assert.equal(evidence.expectedPairs,expected);assert.equal(evidence.bonus,0);assert.equal(evidence.winRate,undefined);assert.ok(evidence.pairs.length>0);
+  assert.equal(evidence.pairs.length+evidence.missingPairs.length,expected);
+  for(let i=0;i<count;i++)for(let j=i+1;j<count;j++){
+   const pair=index.forMembers([group[i],group[j]]);if(pair.pairs.length)assert.deepEqual(evidence.pairs.find(p=>p.members.every(m=>[group[i],group[j]].some(a=>a.role===m.role&&a.champion===m.champion))),pair.pairs[0]);
+  }
+  const input={slots:slots(group),champions:data.champions,scope:'party',patch:data.patch,buildSource:source},[base]=recommend(input),[r]=recommend({...input,pairStatistics:snapshot});assert.equal(r.score,base.score);assert.deepEqual(r.pairEvidence,evidence);
+  for(const text of [pairStatisticsText(evidence,data),pairStatisticsView(evidence,data)]){assert.match(text,/每一对分别统计.*未提供四人、五人或全队胜率/);for(const pair of evidence.pairs)assert.ok(text.includes(pair.winRate.toFixed(1)+'%'));if(evidence.missingPairs.length)assert.match(text,/来源表未收录/);}
+  for(const html of [renderResultCard(r,0,data,{favorites:[]}),resultPlayCard(r,0,data),companionView({data,client:{connected:false},slots:input.slots,unassigned:[],scope:'party',style:'fun',tab:'recommend',results:[r]})]){assert.match(html,/OP.GG 同队参考/);assert.ok(html.includes(`${evidence.pairs.length}/${expected} 对有样本`)||html.includes('同队统计参考'));}
+ }
 });
 
 test('old snapshots remain readable without ranking and selected regions or tiers never silently fall back',()=>{

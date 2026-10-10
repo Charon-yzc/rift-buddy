@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {createCooperationGraph,cooperationPlan,cooperationSeeds} from '../src/core/cooperation.mjs';
-import {captureCreativePlan,validateCreativePlan,creativeMemberCombo,creativePlanId} from '../src/core/creative-plan.mjs';
+import {captureCreativePlan,validateCreativePlan,creativeMemberCombo,creativePlanId,selectPartyRoute} from '../src/core/creative-plan.mjs';
 import {captureTeamConfigurations,restoreTeamFavorite} from '../src/core/team-favorites.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {getBuild,buildAsText} from '../src/core/builds.mjs';
@@ -18,6 +18,42 @@ const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.pars
 const graph=createCooperationGraph(data.champions),member=(champion,role)=>({champion,role}),hero=id=>data.champions.find(c=>c.id===id);
 const setup=(members,open=[])=>createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role)||open.includes(s.role),champion:members.find(m=>m.role===s.role)?.champion||null,locked:members.some(m=>m.role===s.role),...(members.some(m=>m.role===s.role)?{manualPosition:true,clientCellId:['top','jungle','mid','bottom','support'].indexOf(s.role)}:{})}));
 const friends=[member('Jayce','top'),member('Nidalee','jungle')];
+const pokeParty=[...friends,member('Ziggs','mid'),member('Ezreal','bottom'),member('Karma','support')];
+const independentParty=[member('Garen','top'),member('Khazix','jungle'),member('Kassadin','mid'),member('Yunara','bottom'),member('Milio','support')];
+
+test('four friends without control and five friends using protection retain independent actions through reset and saved guides',()=>{
+ for(const count of [4,5]){
+  const members=independentParty.slice(0,count),slots=setup(members),[r]=recommend({slots,champions:data.champions,scope:'party'}),p=r.adaptive;
+  assert.doesNotMatch(p.memberJobs.map(m=>m.job).join(' '),/接实际控制后|等主线实际生效/);
+  assert.match(p.memberJobs.find(m=>m.champion==='Garen').job,/能安全近身时 Q/);assert.match(p.memberJobs.find(m=>m.champion==='Khazix').job,/目标是否实际孤立/);
+  if(count===4)assert.match(p.steps[1],/成长成员报实际等级.*不凭分钟数/);
+  const plan=captureCreativePlan(r,data),variants=[plan];
+  if(count===5)assert.match(p.steps[1],/米利欧 W.*芸阿娜/);
+  variants.push(selectPartyRoute(plan,p.routes[1].id));
+  for(const saved of variants){const configs=captureTeamConfigurations({...r,creativePlan:saved},data,createPreparationStore());for(const config of configs){const build=getBuild(hero(config.id),config.role,data,config),guide=createGuideModel(data,selectGuide(null,config),null,{...config,comboKnown:true});assert.equal(guide.combo.ownJob,build.combo.ownJob);assert.doesNotMatch(guide.combo.ownJob,/接实际控制后|等主线实际生效/);}}
+ }
+ const withoutGrowth=cooperationPlan([...independentParty.slice(0,2),member('Akali','mid'),independentParty[3]],graph);assert.match(withoutGrowth.steps[1],/独立短轮次.*没有稳定控制/);assert.doesNotMatch(withoutGrowth.memberJobs.map(m=>m.job).join(' '),/接实际控制后/);
+ const poke=cooperationPlan([...friends,member('Garen','mid')],graph,{tempo:'poke'});assert.match(poke.memberJobs.find(m=>m.champion==='Garen').job,/能安全近身时 Q/);assert.doesNotMatch(poke.memberJobs.find(m=>m.champion==='Garen').job,/接实际控制后/);
+ for(const id of ['Nilah','Rakan','Khazix','Graves','Gwen','Vex']){const p=graph.profile(member(id,id==='Rakan'?'support':id==='Nilah'?'bottom':id==='Khazix'||id==='Graves'?'jungle':id==='Gwen'?'top':'mid'));assert.ok(p.window,id);assert.match(p.window.condition,/先确认|先看/);}
+});
+
+test('adding a fourth or fifth poke friend preserves independent ranged actions instead of requiring melee control',()=>{
+ const pair=cooperationPlan(friends,graph,{tempo:'poke'});
+ for(const count of [2,3,4,5]){
+  const members=pokeParty.slice(0,count),slots=setup(members),[r]=recommend({slots,champions:data.champions,scope:'party',play:{tempo:'poke'}}),p=r.adaptive;
+  assert.equal(p.tempo,'poke');assert.equal(r.strategy.matched,true);
+  for(const m of friends)assert.equal(p.memberJobs.find(j=>j.champion===m.champion).job,pair.memberJobs.find(j=>j.champion===m.champion).job);
+  assert.match(p.conditions.join(' '),/不以硬控为统一开场条件/);
+  assert.doesNotMatch(p.memberJobs.map(m=>m.job).join(' '),/等主线实际生效|先实际击退/);
+  if(count>=4){
+   assert.equal(p.routes[0].id,'tactical:poke');assert.match(p.steps[1],/不要求先手控制命中才开始/);
+   const plan=captureCreativePlan(r,data);assert.equal(plan.shared.routes[0].tempo,'poke');
+   if(count===5){const guard=selectPartyRoute(plan,'tactical:protect');assert.equal(guard.tempo,'protect');assert.notEqual(guard.id,plan.id);assert.match(guard.ordered.find(m=>m.champion==='Karma').job,/E 给约定核心/);assert.deepEqual(selectPartyRoute(guard,'tactical:poke'),plan);}
+  }
+ }
+ const growing=[member('Kayle','top'),member('MasterYi','jungle'),member('Veigar','mid'),member('Smolder','bottom'),member('Janna','support')];
+ for(const count of [4,5]){const p=cooperationPlan(growing.slice(0,count),graph,{tempo:'growth'});assert.equal(p.tempo,'growth');assert.match(p.memberJobs.find(m=>m.champion==='Kayle').job,/经验与安全补刀优先/);assert.match(p.memberJobs.find(m=>m.champion==='Smolder').job,/实际被动层数/);assert.match(p.steps[1],/不凭分钟数认定成型/);assert.ok(captureCreativePlan({adaptive:p,slots:setup(growing.slice(0,count))},data));}
+});
 
 test('ranged locked friends get an independent poke plan, with different third-member jobs and genuine melee prerequisites',()=>{
  for(const third of ['Lux','Galio']){
@@ -60,7 +96,7 @@ test('supported protection and growth change actual duties; self-sustain cannot 
 });
 
 test('acceptance, restart, favorites, copy, sidebar and each member guide preserve the same tactical choices and configurations',async()=>{
- for(const [members,tempo] of [[friends,'poke'],[[...friends,member('Galio','mid')],'poke'],[[member('Ezreal','bottom'),member('Karma','mid')],'protect'],[[member('Smolder','mid'),member('Janna','support')],'growth']]){
+ for(const [members,tempo] of [[friends,'poke'],[[...friends,member('Galio','mid')],'poke'],[[member('Ezreal','bottom'),member('Karma','mid')],'protect'],[[member('Smolder','mid'),member('Janna','support')],'growth'],[pokeParty.slice(0,4),'poke'],[pokeParty,'poke'],[pokeParty,'protect']]){
   const slots=setup(members),[r]=recommend({slots,champions:data.champions,scope:'party',play:{tempo}}),plan=captureCreativePlan(r,data);assert.equal(plan.archetype,'shared');assert.deepEqual(validateCreativePlan(plan,slots),plan);
   const configs=captureTeamConfigurations({...r,creativePlan:plan},data,createPreparationStore()),favorite={id:'tactical-'+plan.id,type:'team',title:r.title,slots,creativePlan:plan,configurations:configs,scope:'party',style:'fun',version:data.version,createdAt:plan.createdAt};
   await fs.mkdir('.local',{recursive:true});const root=await fs.mkdtemp(path.resolve('.local/tactical-state-test-'));await saveState(root,{...defaultState(),favorites:[favorite],draft:{slots,creativePlan:plan,scope:'party',style:'fun'},preferences:{play:{tempo}}});const saved=await readState(root);

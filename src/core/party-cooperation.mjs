@@ -2,10 +2,12 @@ import {TRIOS} from './rules.mjs';
 import {COOPERATION_SKILLS,SKILL_COOPERATION_PATCH,SKILL_COOPERATION_REVIEWED_AT} from './cooperation-skills.mjs';
 import {cooperationCoordination} from './cooperation-pairs.mjs';
 import {preferredTempo,TEMPOS} from './strategy.mjs';
+import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
+import {independentCooperationAction} from './shared-cooperation.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
 const same=(a,b)=>a.role===b.role&&a.champion===b.champion;
-function partyRoutes(members,graph,edges,tempo,curated){
+function partyRoutes(members,graph,edges,tempo,curated,requestedTempo){
  const name=id=>graph.byId.get(id).name;
  const priority=['pair:Malphite:Yasuo','pair:Diana:Yasuo','pair:Yasuo:Zac'];
  const ordered=[...edges].sort((a,b)=>{
@@ -17,27 +19,39 @@ function partyRoutes(members,graph,edges,tempo,curated){
  // Reviewed basic control is an alternative entry, never an inferred ready
  // spell or a claim of unique whole-team synergy.
  for(const m of members){const row=COOPERATION_SKILLS[m.champion];if(row[3]&&!leads.some(l=>l.actors.includes(m.champion)))leads.push({id:'skills:'+m.champion,actors:[m.champion],step:name(m.champion)+'：'+row[3],condition:row[4]||row[1],failure:row[2]});}
- if(!leads.length)return [];
- const selected=[leads[0],leads.find(l=>l.id!==leads[0].id&&l.actors.some(id=>!leads[0].actors.includes(id)))].filter(Boolean);
- const routes=selected.map(lead=>{
+ const controlRoutes=leads.map(lead=>{
+  const relay=!['protect','growth'].includes(lead.curated?.tempo||lead.edge?.tempo);
   const protectedMember=[...members].filter(m=>graph.profile(m).sustain).sort((a,b)=>Number(b.role==='bottom')-Number(a.role==='bottom')||Number(lead.actors.includes(b.champion))-Number(lead.actors.includes(a.champion))||roles.indexOf(a.role)-roles.indexOf(b.role))[0];
   const jobs=members.map(m=>{
-   const row=COOPERATION_SKILLS[m.champion],p=graph.profile(m);let job;
+   const row=COOPERATION_SKILLS[m.champion],p=graph.profile(m),action=independentCooperationAction(m.champion);let job;
    if(lead.actors.includes(m.champion))job=lead.curated?lead.curated.members.find(p=>same(m,p)).job+`（沿用组合说明 ${lead.curated.patch}${lead.curated.patch!==SKILL_COOPERATION_PATCH?' · 旧版本说明保留':''}）`:lead.edge?cooperationCoordination([m],graph,[lead.edge]).memberJobs[0].job:row[3]+' '+row[0];
-   else if(p.peel&&(!p.engage||m.role==='support')&&protectedMember&&protectedMember.champion!==m.champion)job=`本轮优先接应${name(protectedMember.champion)}，不与主线同时深入。${row[0]}`;
-   else if(p.engage&&row[3])job=`进场留作第二波或反打，先等主线实际生效与队友到位。${row[0]} 主线失败就接应退出，不为补一次控制独自深入。`;
-   else job=`等主线实际生效、同一目标在自己安全覆盖内，再${row[0]} 跟不上就回到队友，不转追第二个目标。`;
+   else if(p.peel&&(!p.engage||m.role==='support')&&protectedMember&&protectedMember.champion!==m.champion)job=`本轮优先接应${name(protectedMember.champion)}，不与主线同时深入。${action}`;
+   else if(relay&&p.engage&&row[3])job=`进场留作第二波或反打，先等主线实际生效与队友到位。${action} 主线失败就接应退出，不为补一次控制独自深入。`;
+   else job=(relay?'等主线实际生效、同一目标在自己安全覆盖内再跟进。':'与主线保持可接应距离，按自己的安全接触条件行动，不等队友先控制。')+action+' 跟不上就回到队友，不转追第二个目标。';
    return {role:m.role,champion:m.champion,job:job+' 成立前先确认：'+row[1]+' 停止条件：'+row[2]};
   });
-  return {id:lead.id,label:lead.actors.map(name).join(' / '),step:lead.step,condition:lead.condition,failure:lead.failure,memberJobs:jobs};
+  return {id:lead.id,label:lead.actors.map(name).join(' / '),tempo:lead.curated?.tempo||lead.edge?.tempo||'teamfight',step:lead.step,condition:lead.condition,failure:lead.failure,memberJobs:jobs};
  });
- if(routes.length===1)routes.push({id:'reset',label:'取消进场，保护与发育',step:'先手条件不齐就取消接战，控制留靠近己方的目标；先保成员和安全兵线、营地，不要求补齐一套连招。',condition:'成员能互相接应且有安全资源可处理；玩家确认退路与公开资源方向。',failure:'退出路线被截断时先共同限制追击者，不分散去补不同的资源。',memberJobs:members.map(m=>({role:m.role,champion:m.champion,job:'本轮取消深入，先接应回撤。'+COOPERATION_SKILLS[m.champion][0]+' '+COOPERATION_SKILLS[m.champion][2]}))});
+ const tactical=tacticalCooperationPlan(members,graph,{tempo:requestedTempo});
+ const tacticalRoutes=['poke','protect','growth'].map(mode=>({mode,plan:tacticalCooperationPlan(members,graph,{tempo:mode})})).filter(({mode,plan})=>plan?.tempo===mode).map(({plan})=>plan);
+ const uniqueTactics=tacticalRoutes.map(p=>({id:'tactical:'+p.tempo,label:p.name.replace('共同分工 · ',''),tempo:p.tempo,step:p.steps.join(' '),condition:p.conditions.join(' '),failure:p.failures.join(' '),memberJobs:p.memberJobs}));
+ // A larger party retains independently usable poke/protection/growth jobs.
+ // Reviewed subgroup text remains the default unless the player selects a
+ // supported tactical preference; control is an alternative, never a gate
+ // that every ranged member must wait for before using a poke skill.
+ const requested=uniqueTactics.find(r=>r.tempo===requestedTempo);
+ const primary=requested||controlRoutes.find(r=>r.id.startsWith('curated:'))||uniqueTactics.find(r=>r.tempo===tactical?.tempo)||controlRoutes[0];
+ const mainActors=leads.find(l=>l.id===primary?.id)?.actors;
+ const alternative=uniqueTactics.find(r=>r.id!==primary?.id)||controlRoutes.find(r=>r.id!==primary?.id&&(!mainActors||leads.find(l=>l.id===r.id).actors.some(id=>!mainActors.includes(id))));
+ const routes=[primary,alternative].filter(Boolean);
+ if(!routes.length)return [];
+ if(routes.length===1)routes.push({id:'reset',label:'取消进场，保护与发育',tempo:'growth',step:'先手条件不齐就取消接战，控制留靠近己方的目标；先保成员和安全兵线、营地，不要求补齐一套连招。',condition:'成员能互相接应且有安全资源可处理；玩家确认退路与公开资源方向。',failure:'退出路线被截断时先共同限制追击者，不分散去补不同的资源。',memberJobs:members.map(m=>({role:m.role,champion:m.champion,job:'本轮取消深入，先接应回撤。'+independentCooperationAction(m.champion)+' '+COOPERATION_SKILLS[m.champion][2]}))});
  return routes;
 }
 // Four/five players need a whole-party resource and action plan, even when
 // only a subgroup has a reviewed interaction. This adds no synergy bonus and
 // does not claim that the whole group has a unique or measured advantage.
-export function partyCooperationPlan(members,graph,{catalogStatus={}}={}){
+export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:requestedTempo='any'}={}){
  if(![4,5].includes(members.length)||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
  const name=id=>graph.byId.get(id).name,edges=[];
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)edges.push(edge);}
@@ -47,15 +61,15 @@ export function partyCooperationPlan(members,graph,{catalogStatus={}}={}){
   const row=COOPERATION_SKILLS[m.champion],original=curated.find(t=>t.members.some(p=>same(m,p))),authored=original?.members.find(p=>same(m,p));
   const edge=edges.find(e=>[e.a,e.b].includes(m.champion));
   const local=edge?cooperationCoordination([m],graph,[edge]).memberJobs[0].job:null;
-  return {role:m.role,champion:m.champion,job:`${authored?.job||local||row[0]}${original?`（沿用组合说明 ${original.patch}${original.patch!==SKILL_COOPERATION_PATCH?' · 旧版本说明保留':''}）`:''} 成立前先确认：${row[1]} 停止条件：${row[2]}`};
+  return {role:m.role,champion:m.champion,job:`${authored?.job||local||independentCooperationAction(m.champion)}${original?`（沿用组合说明 ${original.patch}${original.patch!==SKILL_COOPERATION_PATCH?' · 旧版本说明保留':''}）`:''} 成立前先确认：${row[1]} 停止条件：${row[2]}`};
  });
  const profiles=members.map(m=>graph.profile(m)),traits=Object.fromEntries(['engage','aoe','peel','sustain','poke'].map(k=>[k,profiles.filter(p=>p[k]).length]));
- const tempo=preferredTempo({traits,members});
- const routes=partyRoutes(members,graph,edges,tempo,curated);
+ const inferredTempo=preferredTempo({traits,members});
+ const routes=partyRoutes(members,graph,edges,inferredTempo,curated,requestedTempo),tempo=routes[0]?.tempo||inferredTempo;
  if(routes.length)memberJobs=routes[0].memberJobs;
  const steps=[
   members.map(m=>name(m.champion)+(m.role==='jungle'?'报安全营地与到场时间':m.role==='support'?'先确认搭档能安全补刀再报去向':'先处理自己的兵线再报可离线时间')).join('；')+'。未到齐就保各自资源。',
-  routes.length?'主线：'+routes[0].step:'先报同一个可安全接触的目标与退出方向。各人按下面自己的技能条件行动；只有控制实际命中才接后续，不把队友到场当成技能已就绪，也不要求全员同时深入。',
+  routes.length?'主线：'+routes[0].step:'先报同一个可安全接触的目标与退出方向。各人按下面自己的技能条件做独立短轮次；没有稳定控制就不安排控制后的接力，不把队友到场当成技能已就绪，也不要求全员同时深入。',
   routes.length?'备选：'+routes[1].step:'任一关键成员无法到位、技能落空、目标离开覆盖或退路被封，就一起停止追击、接应退出，再回各自兵线或安全营地；下一轮重新确认条件。'
  ];
  return {kind:'shared',name:`${members.length}人分工 · ${TEMPOS[tempo]}`,members:members.map(m=>({role:m.role,champion:m.champion})),memberJobs,...(routes.length?{routes}:{}),edges:[],bonus:0,tempo,steps,relaySteps:steps,opening:coordination.opening,economy:coordination.economy,

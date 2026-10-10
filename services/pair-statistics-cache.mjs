@@ -42,7 +42,7 @@ export function createPairStatisticsCache({root,getData,fetchEntry=fetchPairStat
  const pending=new Map();let queue=Promise.resolve(),lastStart=0;
  return function refresh(targets,requestedSource){
   const data=getData(),source=requireBuildSource(requestedSource),patch=data.patch;
-  if(!Array.isArray(targets)||targets.length<1||targets.length>3)throw Error('请先选择一至三位开黑成员及位置');
+  if(!Array.isArray(targets)||targets.length<1||targets.length>5)throw Error('请先选择一至五位开黑成员及位置');
   const members=targets.map(t=>({champion:t?.champion,role:t?.role})).sort((a,b)=>(a.champion+':'+a.role).localeCompare(b.champion+':'+b.role));
   if(members.some(t=>!data.champions.some(c=>c.id===t.champion)||!['top','jungle','mid','bottom','support'].includes(t.role))||new Set(members.map(t=>t.champion)).size!==members.length||new Set(members.map(t=>t.role)).size!==members.length)throw Error('开黑成员英雄或位置不正确');
   const key=JSON.stringify([source,patch,members]);if(pending.has(key))return pending.get(key);

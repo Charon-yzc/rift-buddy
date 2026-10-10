@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.10.1",
+  "version": "2026.10.10.2",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -15092,9 +15092,9 @@
       ],
       "why": "洛先制造控制，加里奥跟进救援，尼菈在近身窗口打持续伤害。",
       "plan": "洛 W/R 找机会，加里奥 R 按落点跟进；尼菈等集火点集中再 E/R，洛保留回撤目标。",
-      "risk": "三人都想近身，容易被拉扯或范围伤害一起命中。",
+      "risk": "洛控制落空、加里奥支援无法到达、尼菈跟不上或退出目标断开就取消深入；三人保持能互相接应的角度，避免一起停在敌方范围伤害内。W 躲普攻与加里奥魔法护盾不能当作免疫全部伤害或控制。",
       "early": "尼菈不要为补远程兵吃满消耗，洛护送补刀；加里奥先处理兵线再支援。",
-      "window": "洛能回到队友身边、加里奥支援距离足够且尼菈状态完整时。",
+      "window": "洛 W 与 E 当前可用且有实际可回跳友军；加里奥 R 已学会、可用且洛当时位置在支援范围；尼菈 Q/W/E 可用、有安全接近与退出单位，R 若要联动也须已学会且可用。三人到场与状态均由玩家确认。",
       "economy": "尼菈拿下路补刀；加里奥不能长期放弃中线，洛的经济优先鞋子与保护。",
       "steps": [
         "洛 W/R 找机会，加里奥 R 按落点跟进",
@@ -15120,32 +15120,32 @@
           "loadoutId": "default"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-10",
       "sources": [
         {
           "name": "Riot · 加里奥技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Galio.json",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-10"
         },
         {
           "name": "Riot · 尼菈技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nilah.json",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nilah.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-10"
         },
         {
           "name": "Riot · 洛技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Rakan.json",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rakan.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-10"
         }
       ],
       "reviewBaseline": {
-        "champion:Galio": "93e234e70ba0094e",
-        "champion:Nilah": "040a6c8c12c965e3",
-        "champion:Rakan": "5dadfc0f0f54ae6b",
+        "champion:Galio": "62214853523131ad",
+        "champion:Nilah": "30e5ef1b4f79390e",
+        "champion:Rakan": "69d7edc48cac55e5",
         "item:6655": "e593f4433de96e4b",
         "item:3157": "4e1ddce33472ee0f",
         "item:3089": "a8a9b060b253391c",
