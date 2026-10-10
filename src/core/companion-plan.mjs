@@ -22,8 +22,15 @@ export function changeCompanionPlan(data,selection,field,value){
  const champion=data.champions.find(c=>c.id===selection.id);
  if(!champion)throw Error('英雄资料已变化，请重新选择');
  const current=getBuild(champion,selection.role,data,selection),next={...selection};
- if(field.startsWith('summoner-')){
+ if(field==='source-opponent-reset'){
+  delete next.sourceOpponent;delete next.coreId;delete next.runeId;delete next.skillId;next.coreIndex=0;next.laterIds=[];
+ }else if(field.startsWith('summoner-')){
   if(field==='summoner-reset')delete next.summonerIds;
+  else if(field==='summoner-pair'){
+   const option=current.sourceSummonerOptions.find(o=>o.id===value);
+   if(!option)throw Error('来源召唤师技能备选已变化，请重新选择');
+   next.summonerIds=[...option.ids];
+  }
   else if(field==='summoner-swap'){
    if(current.summoners.length!==2)throw Error('当前召唤师技能资料不完整');
    next.summonerIds=[...current.summoners].reverse();

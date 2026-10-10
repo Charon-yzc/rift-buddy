@@ -16,6 +16,16 @@ export function resultMemberJobs(result,data){
  return result.creative?.ordered||result.adaptive?.memberJobs||[];
 }
 
+// A semicolon often separates a shared safety rule from the actual hero
+// action. Keep the whole first sentence, including that concrete action.
+export const memberActionSummary=job=>String(job||'').split('。')[0].trim()+'。';
+export function resultActionLeadView(result,data,own){
+ const jobs=resultMemberJobs(result,data),member=jobs.find(m=>m.champion===own?.id&&m.role===own?.role)||jobs[0];
+ if(!member)return '';
+ const name=data.champions.find(c=>c.id===member.champion)?.name||member.champion;
+ return `<p class="companion-action-lead" aria-label="本轮具体职责"><b>${e(name)}：</b>${e(memberActionSummary(member.job))}</p>`;
+}
+
 export function resultActionsView(result,data,{compact=false,disclosure=''}={}){
  const jobs=resultMemberJobs(result,data);if(!jobs.length)return '';
  const members=(result.scope==='solo'?result.slots.filter(s=>(result.targets||[]).includes(s.role)||!result.targets?.length&&s.champion):scopeSlots(result.slots,result.scope==='bot'?'bot':'party')).filter(s=>s.champion);
@@ -23,7 +33,7 @@ export function resultActionsView(result,data,{compact=false,disclosure=''}={}){
  if(compact){
   const execution=resultCooperation(result),plan=result.creativePlan||result.trio||result.duo||result.creative;
   const conditions=execution?.conditions||[plan?.window].filter(Boolean),failures=execution?.failures||[plan?.risk||plan?.caution].filter(Boolean);
-  return `<section class="result-actions-summary compact-actions" aria-label="成员行动分工"><h4>一起怎么打 · ${jobs.length}/${members.length} 人</h4>${jobs.map(m=>`<p><b>${e(data.champions.find(c=>c.id===m.champion)?.name||m.champion)} · ${e(ROLES.find(r=>r.id===m.role)?.name||m.role)}</b><span>${e(m.job.split(/[。；]/)[0])}。</span></p>`).join('')}<details${disclosure?` data-companion-disclosure="${e(disclosure)}"`:""}><summary>展开完整分工、成立与退出条件</summary>${resultActionsView(result,data)}${conditions.length?`<p><b>成立条件：</b>${conditions.map(e).join("；")}</p>`:""}${failures.length?`<p><b>退出与失败处理：</b>${failures.map(e).join("；")}</p>`:""}</details></section>`;
+  return `<section class="result-actions-summary compact-actions" aria-label="成员行动分工"><h4>一起怎么打 · ${jobs.length}/${members.length} 人</h4>${jobs.map(m=>`<p><b>${e(data.champions.find(c=>c.id===m.champion)?.name||m.champion)} · ${e(ROLES.find(r=>r.id===m.role)?.name||m.role)}</b><span>${e(memberActionSummary(m.job))}</span></p>`).join('')}<details${disclosure?` data-companion-disclosure="${e(disclosure)}"`:""}><summary>展开完整分工、成立与退出条件</summary>${resultActionsView(result,data)}${conditions.length?`<p><b>成立条件：</b>${conditions.map(e).join("；")}</p>`:""}${failures.length?`<p><b>退出与失败处理：</b>${failures.map(e).join("；")}</p>`:""}</details></section>`;
  }
  return `<section class="result-actions-summary" aria-label="成员行动分工"><h4>${missing.length?'已整理成员分工 · '+jobs.length+'/'+members.length:'这套怎么一起打'}</h4>${jobs.map(m=>`<p><b>${e(data.champions.find(c=>c.id===m.champion)?.name||m.champion)} · ${e(ROLES.find(r=>r.id===m.role)?.name||m.role)}</b><span>${e(m.job)}</span></p>`).join('')}${missing.length?`<small>${missing.map(m=>e(data.champions.find(c=>c.id===m.champion)?.name||m.champion)).join('、')}尚无本套组合的专门分工，可查看各自英雄指引。</small>`:''}${unusual.length?`<small>${unusual.map(m=>e(m.name)).join('、')}使用非常规位置，先约好补刀与经济。</small>`:''}</section>`;
 }

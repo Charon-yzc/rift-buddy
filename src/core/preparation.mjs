@@ -2,7 +2,7 @@ import {validateGuideSelection} from './guide.mjs';
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
-export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','customRunePage','skillId','customSkillOrder','summonerIds','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId'];
+export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','customRunePage','skillId','customSkillOrder','summonerIds','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId','sourceOpponent'];
 export function configurationKey(selection){return JSON.stringify([selection.id,selection.role,selection.mode,CONFIGURATION_FIELDS.map(field=>field==='conditions'?[...(selection.conditions||[])].sort():field==='bottomQuestPlan'?!!selection[field]:selection[field]??null)]);}
 export function configurationPatch(previous,next){
  return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next?.[field]));
@@ -12,7 +12,9 @@ export function mergeConfiguration(current,next,fields=CONFIGURATION_FIELDS){
  for(const field of fields)if(CONFIGURATION_FIELDS.includes(field)){if(next[field]===undefined)delete merged[field];else merged[field]=next[field];}
  return validateGuideSelection(merged);
 }
-// Store only reusable choices, without opponents, match IDs or purchase progress.
+// Store reusable choices, including an explicitly chosen source filter. A
+// source opponent is a reference scope, never an assertion about a new game.
+// Actual current opponents, match IDs and purchase progress are not retained.
 export function validatePreparation(value){
  const s=validateGuideSelection(value);
  const {threatId,protectId,combatFocus,matchupGameId,...configuration}=s;

@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  catalogPersonal:entry=>ipcRenderer.invoke('catalog-personal',entry),
  catalogExport:()=>ipcRenderer.invoke('catalog-export'),
  refreshBuild:(id,role,source)=>ipcRenderer.invoke('refresh-build',id,role,source),
+ refreshOpponentBuild:(id,role,opponent,source)=>ipcRenderer.invoke('refresh-opponent-build',id,role,opponent,source),
  refreshPairs:(members,source)=>ipcRenderer.invoke('refresh-pairs',members,source),
  applyRunes:(page,context)=>ipcRenderer.invoke('apply-runes',page,context),
  importItemSet:itemSet=>ipcRenderer.invoke('import-item-set',itemSet),

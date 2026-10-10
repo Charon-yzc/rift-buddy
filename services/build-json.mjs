@@ -4,6 +4,7 @@ import {separateComponents} from './source-parser.mjs';
 import {legalSkillOrder} from '../src/core/skill-advice.mjs';
 import {adaptMatchups} from '../src/core/matchups.mjs';
 import {DEFAULT_BUILD_SOURCE,requireBuildSource} from '../src/core/build-source.mjs';
+import {summonerOptions} from '../src/core/summoner-selection.mjs';
 
 export {BUILD_PARSER_VERSION};
 export const BUILD_CORE_LIMIT=15;
@@ -49,11 +50,15 @@ export function parseBuildJSON(raw,{champion,role,data,url,buildSource=DEFAULT_B
  const completeOptions=[...representatives,...runeOptions.filter(o=>!selected.has(o.id))].slice(0,BUILD_RUNE_LIMIT).sort((a,b)=>b.samples-a.samples);
  if(!core.length||!runeOptions.length)throw Error('该位置缺少完整出装或符文样本');
  const skillOptions=(Array.isArray(source.skills)?source.skills:[]).filter(r=>counted(r)&&Array.isArray(r.order)&&legalSkillOrder(r.order.join(''),champion.id)).sort((a,b)=>b.play-a.play).slice(0,5).map(r=>({id:'source-skill-'+r.order.join('').toLowerCase(),order:r.order.join(''),...metrics(r)}));
- const spellRow=(Array.isArray(source.summoner_spells)?source.summoner_spells:[]).filter(r=>counted(r)&&Array.isArray(r.ids)&&r.ids.length===2).sort((a,b)=>b.play-a.play)[0];
- const summoners=spellRow?.ids.map(key=>Object.keys(data.spells).find(id=>Number(data.spells[id].key)===key)).filter(Boolean);
+ const spellNames=new Map(summonerOptions(data,'rift').map(id=>[Number(data.spells[id].key),id])),spellPairs=new Set();
+ const sourceSummonerOptions=(Array.isArray(source.summoner_spells)&&source.summoner_spells.length<=100?source.summoner_spells:[]).filter(r=>counted(r)&&Array.isArray(r.ids)&&r.ids.length===2&&r.ids[0]!==r.ids[1]&&r.ids.every(id=>Number.isSafeInteger(id)&&spellNames.has(id))).sort((a,b)=>b.play-a.play).flatMap(r=>{
+  const ids=r.ids.map(id=>spellNames.get(id)),identity=[...ids].sort().join('-');if(spellPairs.has(identity))return [];spellPairs.add(identity);
+  return [{id:'source-spells-'+identity,ids,...metrics(r)}];
+ }).slice(0,20);
+ const summoners=sourceSummonerOptions[0]?.ids||null;
  return {schema:1,parserVersion:BUILD_PARSER_VERSION,champion:champion.id,role,patch:data.patch,...requestedSource,source:'OP.GG',sourceUrl:url,fetchedAt:new Date().toISOString(),
   core,boots:rows(source.boots,5),start:rows(source.starter_items,5),later:[rows(source.last_items)],laterBasis:'all-orders',
-  runePage:completeOptions[0].page,runeSamples:completeOptions[0].samples,runeOptions:completeOptions,skillOptions,priority:null,summoners:summoners?.length===2?summoners:null,
+  runePage:completeOptions[0].page,runeSamples:completeOptions[0].samples,runeOptions:completeOptions,skillOptions,priority:null,summoners,sourceSummonerOptions,
   availableRoles:[...new Set([role,...source.summary.positions.map(p=>Object.keys(BUILD_POSITIONS).find(r=>BUILD_POSITIONS[r]===p?.name?.toLowerCase())).filter(Boolean)])],
   roleSamples:source.summary.positions.find(p=>p.name?.toLowerCase()===BUILD_POSITIONS[role])?.stats?.play||null,
   matchups:adaptMatchups(source.counters??source.summary.positions.find(p=>p.name?.toLowerCase()===BUILD_POSITIONS[role])?.counters,data.champions,champion.id)};

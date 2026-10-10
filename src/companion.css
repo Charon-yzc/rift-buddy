@@ -12,6 +12,7 @@
 .companion-candidate{padding:12px 0;border-bottom:1px solid #293443}.companion-members{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.companion-rank{font-size:12px;color:#90a6bb;min-width:10px}.companion-hero{display:flex;gap:9px;text-align:left;align-items:center;background:transparent;padding:2px 0;color:#e8edf4;border-radius:4px;min-width:0}.companion-hero:hover{background:#213128}.companion-hero .portrait{width:42px;height:42px;border-radius:5px;object-fit:cover}.companion-hero small{display:block;font-size:12px;color:#a8bbce}
 .companion-candidate h4{margin:9px 0 5px;font-size:14px}.companion-candidate p{font-size:13px;line-height:1.65;margin:8px 0;color:#b4c6d8}.companion-candidate .companion-pairing{color:#bdddc9}.companion-caution{color:#d9b88d!important;font-size:12px;line-height:1.6}.companion-row-actions{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}.companion-row-actions>span{color:#8297ad;font-size:11px}
 .companion-candidate-actions{justify-content:flex-start;flex-wrap:wrap;margin:10px 0}
+.companion-candidate .companion-action-lead{color:#d9e9df;border-left:2px solid #77c99b;padding-left:8px;overflow-wrap:anywhere}
 .companion-candidate .companion-members{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));position:relative;padding-left:16px;gap:7px}
 .companion-candidate .companion-rank{position:absolute;left:0;top:10px}
 .companion-candidate .companion-hero{gap:6px;width:100%}

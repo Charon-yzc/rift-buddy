@@ -20,7 +20,7 @@ export function preferBuildReference(next,current){
 }
 export function collectBuildSources(data){
  const entries={...(data.buildSources||{})};
- for(const ref of Object.values(data.builds||{}))if(validBuildSource(ref)){
+ for(const ref of Object.values(data.builds||{}))if(validBuildSource(ref)&&ref.scope===undefined&&ref.opponent===undefined){
   const key=buildSourceKey(ref.champion,ref.role,ref,ref.patch);
   if(preferBuildReference(ref,entries[key]))entries[key]=ref;
  }
@@ -28,7 +28,7 @@ export function collectBuildSources(data){
 }
 export function projectBuildSources(entries,source,patch){
  const selected=normalizeBuildSource(source),result={};
- for(const ref of Object.values(entries||{}))if(sameBuildSource(ref,selected)&&[0,-1].includes(patchOrder(ref.patch,patch))){
+ for(const ref of Object.values(entries||{}))if(ref.scope===undefined&&ref.opponent===undefined&&sameBuildSource(ref,selected)&&[0,-1].includes(patchOrder(ref.patch,patch))){
   const key=`${ref.champion}:${ref.role}`;if(preferBuildReference(ref,result[key]))result[key]=ref;
  }
  return result;
@@ -40,6 +40,6 @@ export function selectBuildSource(data,source){
 }
 export function selectedBuildReference(data,champion,role){
  const selected=normalizeBuildSource(data.buildSource),candidate=data.builds?.[`${champion}:${role}`];
- if(sameBuildSource(candidate,selected))return candidate;
+ if(candidate?.scope===undefined&&candidate?.opponent===undefined&&sameBuildSource(candidate,selected))return candidate;
  return projectBuildSources(data.buildSources,selected,data.patch)[`${champion}:${role}`];
 }

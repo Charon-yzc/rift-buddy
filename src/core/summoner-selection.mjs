@@ -9,6 +9,15 @@ export function summonerOptions(data,mode){
  const tag=mode==='hex'?'KIWI':'CLASSIC';
  return (byMode[mode]||[]).filter(id=>data.spells[id]?.modes?.includes(tag));
 }
+export function validSourceSummonerOptions(value,data,{older=false}={}){
+ if(value===undefined)return true;
+ const legal=older?byMode.rift:summonerOptions(data,'rift'),seen=new Set();
+ return Array.isArray(value)&&value.length<=20&&value.every(o=>{
+  if(!o||!Array.isArray(o.ids)||o.ids.length!==2||o.ids[0]===o.ids[1]||!o.ids.every(id=>legal.includes(id)))return false;
+  const identity=[...o.ids].sort().join('-');if(o.id!=='source-spells-'+identity||seen.has(identity))return false;seen.add(identity);
+  return Number.isSafeInteger(o.samples)&&o.samples>0&&Number.isSafeInteger(o.wins)&&o.wins>=0&&o.wins<=o.samples&&Number.isFinite(o.winRate)&&Math.abs(o.winRate-100*o.wins/o.samples)<.000001&&(o.pickRate===null||Number.isFinite(o.pickRate)&&o.pickRate>=0&&o.pickRate<=100);
+ });
+}
 export function summonerPlan(data,mode,role,recommended,manual){
  const options=summonerOptions(data,mode),available=ids=>Array.isArray(ids)&&ids.length===2&&ids[0]!==ids[1]&&ids.every(id=>options.includes(id));
  const warnings=[],fallback=mode==='hex'?['SummonerFlash','SummonerSnowball']:['SummonerFlash',role==='jungle'?'SummonerSmite':role==='support'?'SummonerExhaust':role==='bottom'?'SummonerBarrier':'SummonerTeleport'];

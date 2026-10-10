@@ -118,7 +118,7 @@ async function run(){
    const expected=plan.stagePlan[stage],own=expected.memberJobs.find(m=>m.champion===member.champion),current=await gjs('window.guide.bootstrap()');
    assert.equal(current.model.coach.action,own.job);assert.deepEqual(current.model.stageHint.play.steps,expected.steps);assert.equal(current.model.stageHint.play.window,expected.window);assert.equal(current.model.stageHint.play.exit,expected.exit);
    const visible=await gjs('document.body.textContent');assert.ok(visible.includes(own.job));assert.doesNotMatch(visible,/Changed later|Changed catalog|Changed job/);
-   for(const step of expected.steps)assert.ok(visible.includes(step));assert.ok(visible.includes(expected.window));assert.ok(visible.includes(expected.exit));
+   for(const step of expected.steps)assert.ok(visible.includes(step));for(const clause of new Set([expected.window,expected.exit].flatMap(text=>text.split('。').map(s=>s.trim()).filter(Boolean))))assert.ok(visible.includes(clause),'Saved stage condition missing: '+clause);
    assert.ok(copied.includes(own.job));
    if(duoStages&&member.champion==='Ashe'&&stage==='later'){
     assert.match(visible,/自保或反开.*保护范围/);await gjs('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');

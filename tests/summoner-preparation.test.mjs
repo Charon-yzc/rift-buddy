@@ -9,6 +9,11 @@ import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {selectBuildSource} from '../src/core/build-source.mjs';
 import {defaultState,validateState,createBackup,mergeState} from '../services/storage.mjs';
 import {summonerSelector} from '../src/summoner-selection-view.mjs';
+import {parseBuildJSON} from '../services/build-json.mjs';
+import {validReference} from '../src/core/builds.mjs';
+import {sourceStatisticsLabel} from '../src/source-statistics-view.mjs';
+import {runeSelector,skillSelector} from '../src/build-options-view.mjs';
+import {coreRouteChoices} from '../src/draft-result-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),base={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]},pair=['SummonerDot','SummonerFlash'];
@@ -59,4 +64,44 @@ test('both configuration surfaces expose prepared keys and copied member builds 
  const selection={...base,summonerIds:pair},b=build(selection);
  for(const compact of [false,true]){const html=summonerSelector(b,data,{compact,planKey:'Ashe:bottom:rift'});assert.match(html,/准备 D 位召唤师技能/);assert.match(html,/准备 F 位召唤师技能/);assert.match(html,/客户端确认实际 D \/ F/);assert.match(html,/summoner-reset/);}
  assert.match(buildAsText(b,hero('Ashe'),data),/召唤师技能：D 引燃 \/ F 闪现/);
+});
+
+test('source keeps every valid distinct spell pair and its own results, rejecting malformed or mode-incompatible rows',async()=>{
+ const [sample]=JSON.parse(await fs.readFile('tests/fixtures/opgg-unlisted-positions.json')).cases,raw=structuredClone(sample.raw);
+ raw.data.summoner_spells=[
+  {ids:[4,4],play:10000,win:6000},{ids:[4,32],play:9000,win:5000},{ids:[4,99999],play:8000,win:4000},{ids:[4,14],play:7000,win:7001},
+  {ids:[4,12],play:586,win:293,pick_rate:.7},{ids:[4,14],play:202,win:0,pick_rate:0},{ids:[12,4],play:20,win:10},{ids:['4',14],play:10,win:5}
+ ];
+ const champion=hero(sample.champion),ref=parseBuildJSON(raw,{champion,role:sample.role,data,url:sample.url});
+ assert.equal(ref.sourceSummonerOptions.length,2);assert.deepEqual(ref.summoners,['SummonerFlash','SummonerTeleport']);
+ assert.deepEqual(ref.sourceSummonerOptions.map(o=>[o.samples,o.wins,o.winRate,o.pickRate]),[[586,293,50,70],[202,0,0,0]]);
+ assert.ok(validReference(ref,champion,sample.role,data));
+ const bad=structuredClone(ref);bad.sourceSummonerOptions[1].wins=203;assert.equal(validReference(bad,champion,sample.role,data),false);
+ const duplicate=structuredClone(ref);duplicate.sourceSummonerOptions.push(duplicate.sourceSummonerOptions[0]);assert.equal(validReference(duplicate,champion,sample.role,data),false);
+ const fixture={...data,builds:{[sample.champion+':'+sample.role]:ref}},selection={id:sample.champion,role:sample.role,mode:'rift',loadoutId:'default',conditions:[]};
+ const initial=build(selection,fixture),alternative=initial.sourceSummonerOptions[1],chosen=changeCompanionPlan(fixture,selection,'summoner-pair',alternative.id);
+ assert.deepEqual(chosen.summonerIds,['SummonerFlash','SummonerDot']);assert.deepEqual(build(chosen,fixture).summoners,chosen.summonerIds);
+ assert.throws(()=>changeCompanionPlan(fixture,selection,'summoner-pair','source-spells-invalid'),/已变化/);
+ const swapped=changeCompanionPlan(fixture,chosen,'summoner-swap'),store=createPreparationStore();store.remember(swapped);
+ const saved=validateState({...defaultState(),preparations:store.snapshot()}),restored=createPreparationStore();restored.restore(JSON.parse(JSON.stringify(saved.preparations)));
+ assert.deepEqual(restored.recall(selection).summonerIds,['SummonerDot','SummonerFlash']);
+ assert.deepEqual(createGuideModel(fixture,selectGuide(null,restored.recall(selection))).summoners.map(s=>s.id),['SummonerDot','SummonerFlash']);
+ for(const compact of [false,true]){const html=summonerSelector(build(swapped,fixture),fixture,{compact,planKey:[selection.id,selection.role,'rift'].join(':')});assert.match(html,/来源技能搭配 · 2 套/);assert.match(html,/586 场技能搭配样本/);assert.match(html,/202 场技能搭配样本 · 胜率 0.0% · 使用率 0.0%/);assert.match(html,/不代表.*联合胜率/);}
+ const lost={...fixture,builds:{}};assert.deepEqual(build(swapped,lost).summoners,['SummonerDot','SummonerFlash']);
+ assert.deepEqual(build({...selection,mode:'hex'},fixture).sourceSummonerOptions,[]);
+});
+
+test('configuration cards expose independent core, full-page and skill results without turning missing data into zero',()=>{
+ assert.equal(sourceStatisticsLabel({samples:0,winRate:90,pickRate:90,source:'OP.GG'},{scope:'完整符文页'}),'完整符文页样本未提供');
+ assert.match(sourceStatisticsLabel({samples:100,winRate:null,pickRate:null,source:'OP.GG'}),/胜率未提供 · 使用率未提供/);
+ const fixture=structuredClone(data),ref=fixture.builds['Ashe:bottom'];
+ Object.assign(ref.core[0],{samples:601,wins:301,winRate:50.083,pickRate:40});
+ Object.assign(ref.runeOptions[0],{samples:403,wins:201,winRate:49.876,pickRate:null});
+ ref.skillOptions=[{id:'source-skill-wqewwrwqwqrqqee',order:'WQEWWRWQWQRQQEE',samples:205,wins:100,winRate:48.78,pickRate:30}];
+ const b=build({...base,loadoutId:'default'},fixture);
+ assert.match(coreRouteChoices(b,0,fixture),/601 场核心三件样本 · 胜率 50.1% · 使用率 40.0%/);
+ assert.match(runeSelector(b,fixture),/403 场完整符文页样本 · 胜率 49.9% · 使用率未提供/);
+ assert.match(skillSelector(b),/205 场加点样本 · 胜率 48.8% · 使用率 30.0%/);
+ const custom={...b,runeOptions:[{...b.runeOptions[0],source:'个人自选',samples:null,winRate:null,pickRate:null}]};
+ assert.match(runeSelector(custom,fixture),/个人自选 · 无统计样本/);
 });

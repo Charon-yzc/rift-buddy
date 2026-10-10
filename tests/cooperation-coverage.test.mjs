@@ -65,7 +65,7 @@ test('expanded follow-ups retain all member jobs and conditions in saved builds 
 
 test('new control openers state actual triggers while damage alone never becomes crowd control',()=>{
  const graph=createCooperationGraph(data.champions),text=(a,b)=>cooperationText(cooperationPlan([member(a,'jungle'),member(b,'mid')],graph));
- for(const [a,b,pattern] of [['Poppy','Sylas',/实际撞墙/],['Ornn','Zeri',/二段.*击飞/],['Malzahar','Vladimir',/实际压制.*引导/],['Ekko','Teemo',/延迟结束.*实际都在区域/],['Shaco','Teemo',/盒子已经可触发并实际恐惧/],['Gragas','Yasuo',/普通眩晕不是可接大击飞/],['Kennen','Nocturne',/三次印记实际触发眩晕/],['TahmKench','DrMundo',/三层/],['Taric','Kindred',/不是按下立即无敌/]])assert.match(text(a,b),pattern);
+ for(const [a,b,pattern] of [['Poppy','Sylas',/实际撞墙/],['Ornn','Zeri',/二段.*击飞/],['Malzahar','Vladimir',/实际压制.*引导/],['Ekko','Teemo',/延迟结束.*实际都在区域/],['Shaco','Teemo',/盒子已经可触发并实际恐惧/],['Gragas','Yasuo',/E 实际撞到目标造成击退.*亚索确认可接 R/],['Kennen','Nocturne',/三次印记实际触发眩晕/],['TahmKench','DrMundo',/三层/],['Taric','Kindred',/不是按下立即无敌/]])assert.match(text(a,b),pattern);
  assert.match(text('Rell','DrMundo'),/被动只抵挡.*一次定身/);
  for(const ids of [['Kindred','Vladimir'],['DrMundo','Teemo'],['Karthus','Ezreal']])assert.deepEqual(cooperationPlan(ids.map((id,i)=>member(id,i?'mid':'jungle')),graph).edges,[],'Follow-up damage alone cannot invent a control opener');
  const slots=setup([member('Shen','top'),member('Poppy','jungle')],'mid'),input={slots,champions:data.champions,scope:'party'};
