@@ -17,7 +17,7 @@ app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label){for(let n=0;n<150;n++){if(await check())return;await delay(60);}throw Error(label);}
 async function run(){
- const release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=path.join(release.directory,'resources/app.asar');
+ const release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=process.env.RIFT_BUDDY_SOURCE==='1'?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'),'utf8')),key=id=>data.champions.find(c=>c.id===id).key;
  const online=()=>({connected:true,phase:'ChampSelect',receivedAt:new Date().toISOString(),message:'隔离公开选人',mode:{id:'rift',label:'召唤师峡谷'},game:{gameId:'2501',mapId:11},session:{localPlayerCellId:1,myTeam:[{cellId:2,championId:key('Darius'),assignedPosition:'TOP'},{cellId:1,championId:key('Vi'),assignedPosition:'JUNGLE'}],theirTeam:[],bans:[]}});

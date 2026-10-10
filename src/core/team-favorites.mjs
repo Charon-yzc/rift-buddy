@@ -47,6 +47,11 @@ export function restoreTeamFavorite(favorite,current,champions,session=null,{eli
  const publicCells=new Set((session?.myTeam||[]).map(p=>p.cellId).filter(Number.isInteger));
  const unavailable=publicUnavailableChampions(session,champions);
  const next=session?mergeClientSession(current,session,champions).slots:structuredClone(current);
+ // Loading a party also restores its empty role checkboxes. Otherwise the
+ // default three roles remain selected around a saved duo and the next search
+ // fills extra positions instead of reopening that duo's accepted plan.
+ // Current heroes and explicit client-position bindings retain ownership.
+ if(['party','context'].includes(favorite.scope))for(const slot of next)if(!slot.champion&&!slot.manualPosition&&!Number.isInteger(slot.clientCellId))slot.party=favorite.slots.find(s=>s.role===slot.role).party;
  for(const member of desired){
   const slot=next.find(s=>s.role===member.role),existing=next.find(s=>s.champion===member.champion);
   const manualTeammate=slot.champion&&slot.locked&&!slot.party;

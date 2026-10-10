@@ -3,6 +3,7 @@ import {COOPERATION_PAIRS,cooperationCoordination} from './cooperation-pairs.mjs
 import {createSkillCooperation} from './cooperation-skills.mjs';
 import {preferredTempo} from './strategy.mjs';
 import {sharedCooperationPlan} from './shared-cooperation.mjs';
+import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -83,10 +84,16 @@ function connectedEdges(members,graph){
  }
  return null;
 }
-export function cooperationPlan(members,graph){
+export function cooperationPlan(members,graph,preferences={}){
  members=members.filter(m=>m.champion);
  if(![2,3].includes(members.length)||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
- let edges=connectedEdges(members,graph);if(!edges)return sharedCooperationPlan(members,graph);
+ let edges=connectedEdges(members,graph);
+ // Authored interactions keep their own conditions. For generic relays,
+ // choose independently usable tactical jobs before inventing a control lead.
+ if(!edges||edges.every(e=>e.family.startsWith('skills:'))){
+  const tactical=tacticalCooperationPlan(members,graph,preferences);if(tactical)return tactical;
+ }
+ if(!edges)return sharedCooperationPlan(members,graph);
  // A generic control trigger is not automatically a teamfight composition.
  // Use reviewed member functions for its overall tempo, while keeping authored
  // pair timing (including protection relays) intact.
@@ -105,17 +112,19 @@ export function cooperationPlan(members,graph){
 // Complete two or three party roles around locked members. Candidate pools
 // have already applied bans, public picks, roles and player restrictions.
 // Keep a bounded set of distinct mechanisms before the existing team score.
-export function cooperationSeeds({members,targets,candidateSets,graph,limit=24}){
+export function cooperationSeeds({members,targets,candidateSets,graph,limit=24,preferences={}}){
  if(![2,3].includes(members.length)||!targets.length||targets.some(r=>!members.some(m=>m.role===r)))return [];
  const pools=members.map(m=>targets.includes(m.role)?(candidateSets[m.role]||[]).map((c,rank)=>({role:m.role,champion:c.id,rank})):graph.byId.has(m.champion)?[{role:m.role,champion:m.champion,rank:0}]:[]);
  if(pools.some(p=>!p.length))return [];
  const best=new Map();
  const visit=picks=>{
   if(new Set(picks.map(m=>m.champion)).size!==picks.length)return;
-  const edges=connectedEdges(picks,graph);if(!edges)return;
+  const connected=connectedEdges(picks,graph),tactical=!connected||connected.every(e=>e.family.startsWith('skills:'))?tacticalCooperationPlan(picks,graph,preferences):null;
+  if(!connected&&!tactical)return;
+  const edges=tactical?[]:connected;
   const traits=picks.map(m=>graph.profile(m)),ad=traits.reduce((n,p)=>n+p.damageWeights.ad,0),ap=traits.reduce((n,p)=>n+p.damageWeights.ap,0);
   const score=edges.length*8+edges.filter(e=>e.current).length*3+(ad>=.75&&ap>=.75?6:0)+['frontline','sustain','peel','engage'].filter(k=>traits.some(p=>p[k])).length*2-picks.reduce((n,m)=>n+m.rank,0)/8-traits.reduce((n,p)=>n+p.difficulty,0)/4;
-  const family=edges.map(e=>e.family).sort().join('|'),signature=picks.map(key).join('|'),previous=best.get(family);
+  const family=tactical?'tactical:'+tactical.tempo+':'+picks.map(m=>m.role+':'+(graph.profile(m).frontline?'frontline':graph.profile(m).peel?'peel':'damage')).join('|'):edges.map(e=>e.family).sort().join('|'),signature=picks.map(key).join('|'),previous=best.get(family);
   if(!previous||score>previous.score||score===previous.score&&signature<previous.signature)best.set(family,{score,signature,members:picks});
  };
  for(const a of pools[0])for(const b of pools[1]){if(pools.length===2)visit([a,b]);else for(const c of pools[2])visit([a,b,c]);}

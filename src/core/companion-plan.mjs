@@ -45,6 +45,7 @@ export function changeCompanionPlan(data,selection,field,value){
   if(!Number.isInteger(id)||!selected.includes(id)&&!current.laterOptions.some(o=>o.items.some(i=>Number(i.id)===id)))throw Error('后期备选已变化，请重新选择');
   if(!selected.includes(id)&&selected.length>=current.maxLaterItems)throw Error('后期装备位已满，请先取消一件备选');
   next.laterIds=selected.includes(id)?selected.filter(i=>i!==id):[...selected,id];
+  if(!selected.includes(id)&&!getBuild(champion,selection.role,data,next).selectedLaterIds.includes(id))throw Error('这件装备与当前路线互斥或暂不可用，请先取消冲突备选');
  }else if(field==='rune'){
   if(!current.runeOptions.some(o=>o.id===value))throw Error('符文方案已变化，请重新选择');
   next.runeId=value;

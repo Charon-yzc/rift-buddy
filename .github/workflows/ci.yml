@@ -61,13 +61,20 @@ jobs:
         run: node scripts/smoke-package-catalog.mjs
       - name: Check saved preparations and member configurations across restarts
         run: node scripts/smoke-package-preparations.mjs
+      - name: Check in-guide late choices, support reservation, favorites and restart
+        run: node scripts/smoke-package-guide-continuation.mjs
       - name: Check favorites preserve current public picks, manual positions and member choices
         run: node scripts/smoke-package-favorite-context.mjs
+      - name: Check poke friends, distinct third-member duties and saved tactical choices
+        run: |
+          node scripts/smoke-package-cooperation.mjs --poke
+          node scripts/smoke-package-cooperation.mjs --poke-guard
       - name: Check prepared D/F spells, compact controls and saved member choices
         run: node scripts/smoke-package-summoners.mjs
       - name: Check backup merge capacity and explicit rune writes in isolated clients
         run: |
           node scripts/smoke-package-import.mjs
+          node scripts/smoke-package-state-transaction.mjs
           node scripts/smoke-package-rune-replacement.mjs
       - name: Check creative action order preserves saved members and configurations
         run: node scripts/smoke-package-creative-plan-continuity.mjs --reordered
