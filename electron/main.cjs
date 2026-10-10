@@ -158,7 +158,9 @@ async function boot(){
   const before=base?storage.validateState(base):structuredClone(state),same=isDeepStrictEqual;
   await saveCurrentState(current=>{
    const merged={...current,preferences:{...current.preferences}};
-   for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(!same(current[key],before[key])&&!same(current[key],next[key]))throw Error('配置同时发生变化，请刷新后重新保存');merged[key]=next[key];}
+   for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(key==='draft'&&next.draft&&before.draft&&current.draft){
+     merged.draft={...current.draft};for(const field of new Set([...Object.keys(before.draft),...Object.keys(next.draft)])){if(same(next.draft[field],before.draft[field]))continue;if(!same(current.draft[field],before.draft[field])&&!same(current.draft[field],next.draft[field]))throw Error('选人配置同时发生变化，请重新同步');if(next.draft[field]===undefined)delete merged.draft[field];else merged.draft[field]=next.draft[field];}continue;
+    }if(!same(current[key],before[key])&&!same(current[key],next[key]))throw Error('配置同时发生变化，请刷新后重新保存');merged[key]=next[key];}
    // Remembering a guide changes preparation recency. Merge actual per-hero
    // changes so that reordering or another hero's update cannot block a save.
    for(const identity of new Set([...before.preparations,...next.preparations].map(preparationIdentity))){
