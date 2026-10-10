@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  roomStatus:()=>ipcRenderer.invoke('room-status'),
  roomHost:nick=>ipcRenderer.invoke('room-host',nick),
  roomJoin:(target,nick)=>ipcRenderer.invoke('room-join',target,nick),
+ roomRelay:(target,nick)=>ipcRenderer.invoke('room-relay',target,nick),
  roomLeave:()=>ipcRenderer.invoke('room-leave'),
  roomPublish:share=>ipcRenderer.invoke('room-publish',share),
  roomScan:()=>ipcRenderer.invoke('room-scan'),

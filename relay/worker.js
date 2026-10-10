@@ -8,10 +8,10 @@
 // do not know the pin. Deploy notes: docs/room-relay-deploy.md.
 
 import {ROOM_PROTOCOL,validateLeave} from '../src/core/room.mjs';
-import {MAX_RELAY_MEMBERS,MAX_SOCKETS,HANDSHAKE_TIMEOUT_MS,validateRelayHello,relayWelcome,relayJoin,relayLeave,sanitizeRelayState,frameTooLarge} from './room-hub.mjs';
-
-const PING='{"kind":"ping","v":'+ROOM_PROTOCOL+'}';
-const PONG='{"kind":"pong","v":'+ROOM_PROTOCOL+'}';
+import {MAX_RELAY_MEMBERS,RELAY_PING as PING,RELAY_PONG as PONG,validateRelayHello,relayWelcome,relayJoin,relayLeave,sanitizeRelayState,frameTooLarge} from '../src/core/room-relay.mjs';
+// The Worker entry module may only export handlers and classes, so the socket
+// budget and the handshake deadline live beside it rather than here.
+import {MAX_SOCKETS,HANDSHAKE_TIMEOUT_MS} from './room-hub.mjs';
 
 export default {
  async fetch(request,env){
@@ -52,6 +52,10 @@ export class RoomHub{
   return new Response(null,{status:101,webSocket:client});
  }
 
+ // A peer that closes between the snapshot and this send would throw
+ // "send() after close" and take the whole room down; a lost frame only
+ // costs that peer the notice.
+ send(peers,line){for(const peer of peers){try{peer.send(line);}catch{}}}
  peers(){return this.state.getWebSockets();}
  memberOf(ws){return ws.deserializeAttachment()||{};}
  // Handshaken, not-yet-left members other than `except`. Everything the
@@ -79,13 +83,13 @@ export class RoomHub{
    const welcome=relayWelcome(self.room,[...this.busyNicks(ws)]);
    if(welcome)ws.send(JSON.stringify(welcome));
    const join=relayJoin(hello.nick);
-   if(join){const line=JSON.stringify(join);for(const peer of this.members(ws))peer.send(line);}
+   if(join)this.send(this.members(ws),JSON.stringify(join));
    return;
   }
   if(frame?.kind==='state'){
    const line=sanitizeRelayState(message,self.nick);
    if(!line)return;
-   for(const peer of this.members(ws))peer.send(line);
+   this.send(this.members(ws),line);
    return;
   }
   const leave=validateLeave(frame);
@@ -99,7 +103,10 @@ export class RoomHub{
   if(!self.nick||self.left)return;
   ws.serializeAttachment({...self,left:true});
   const leave=relayLeave(self.nick);
-  if(leave){const line=JSON.stringify(leave);for(const peer of this.members(ws))peer.send(line);}
+  // A peer that goes away between the snapshot and this send would throw
+  // "send() after close" and take the whole room down; a failed fan-out
+  // should only cost that peer its leave notice.
+  if(leave)this.send(this.members(ws),JSON.stringify(leave));
   // Last member out clears the claim so an emptied room starts fresh.
   if(this.busyNicks(ws).size===0)await this.state.storage.delete('pinHash');
  }
