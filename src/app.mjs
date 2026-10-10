@@ -425,13 +425,20 @@ function calculateRecommendation(input){
  });
 }
 async function generate(next=false){
- if(generating)return;recommendationError='';const run=++recommendationRun;generating=true;render();
+ if(generating)return;recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();
  try{offset=next?offset+(results.length||(windowLayout.docked?6:3)):0;const input=recommendationInput();
   const signature=recommendationKey(input);
   let result=await calculateRecommendation(input);if(!result.length&&offset){offset=0;result=await calculateRecommendation({...input,offset:0});}
   if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;
-  for(const r of result)if(r.creative)resultCreativePlan(r);results=result;resultsSignature=signature;if(!result.length)recommendationError='当前位置英雄池与公开选人无法组成不重复的阵容，请调整限制';generating=false;render();if(!results.length)toast(recommendationError,true);else {const heading=document.querySelector('.recommend-heading');if(heading){heading.style.scrollMarginTop=((document.querySelector('.topbar')?.getBoundingClientRect().height||0)+12)+'px';heading.scrollIntoView({behavior:'smooth',block:'start'});}}
+  for(const r of result)if(r.creative)resultCreativePlan(r);results=result;resultsSignature=signature;if(!result.length)recommendationError='当前位置英雄池与公开选人无法组成不重复的阵容，请调整限制';if(!results.length)toast(recommendationError,true);else reveal=true;
  }catch(err){if(!err.cancelled&&run===recommendationRun){recommendationError=err.message;toast(err.message,true);}}finally{if(run===recommendationRun){generating=false;render();}}
+ // Measure the final DOM after fonts/layout settle. The final render above
+ // replaces the heading; scrolling its earlier instance loses the margin and
+ // can place the title behind a toolbar that wraps at larger text scales.
+ if(reveal){await document.fonts.ready;
+  if(run!==recommendationRun||resultsSignature!==recommendationKey(recommendationInput()))return;
+  const heading=document.querySelector('.recommend-heading');if(heading){heading.style.scrollMarginTop=((document.querySelector('.topbar')?.getBoundingClientRect().height||0)+12)+'px';heading.scrollIntoView({behavior:'instant',block:'start'});}
+ }
 }
 const sync=createClientSync(performSync);
 async function performSync(manual=true,fresh=false){

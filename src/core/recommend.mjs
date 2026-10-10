@@ -169,7 +169,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context) 
  const connections=CROSS_SYNERGIES.filter(l=>linkHit.has(l));
  score+=connections.length*7;
  if(duo)score+=(duo.partners||[]).filter(id=>ids.has(id)).length*7;
- const adaptive=context?.cooperationGraph&&scope!=='solo'?cooperationPlan(slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party),context.cooperationGraph):null;
+ const adaptive=context?.cooperationGraph&&scope!=='solo'?cooperationPlan(slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party),context.cooperationGraph,context.play):null;
  if(adaptive)score+=adaptive.bonus;
  const pairEvidence=scope==='solo'?null:context?.pairStatistics?.forMembers(slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party));
  score+=pairEvidence?.bonus||0;
@@ -203,7 +203,7 @@ const signature=slots=>slots.map(s=>`${s.role}:${s.champion||'-'}`).join('|');
 function summaryCombo(entry){
  // A party plan describes that group. In whole-team mode, a partial party
  // cannot replace the strategy of the other already picked team members.
- const adaptive=entry.adaptive,coversAnalysis=adaptive&&(adaptive.kind==='shared'||adaptive.members.length===entry.analysis.members.length);
+ const adaptive=entry.adaptive,coversAnalysis=adaptive&&adaptive.members.length===entry.analysis.members.length;
  return entry.trio||entry.duo||(entry.creative&&{tempo:entry.creative.tempo,why:entry.creative.why,risk:entry.creative.caution})||(coversAnalysis&&{tempo:adaptive.tempo,why:adaptive.why,risk:adaptive.failures.join(' ')});
 }
 // Catalog lookup indexes. Rebuilt only when the catalog arrays are replaced
@@ -265,7 +265,8 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
    // replacement permissions to friends who were fixed before the search.
    // Legacy plans have no record of that permission: require an explicit unlock.
    const editableTargets=(plan.editableTargets||[]).filter(role=>scopeSlots(slots,scope).some(s=>s.role===role&&(s.party||['bot','solo'].includes(scope))));
-   return [{id:signature(slots),slots:structuredClone(slots),...g,trio:null,duo:null,creative:cooperation?null:plan,adaptive:cooperation?(plan.shared||plan.cooperation):g.adaptive,creativePlan:plan,origin:cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,{tempo:plan.tempo,why:plan.why,risk:plan.caution},play.tempo,context.enemyTraits),catalogState:null}];
+   const strategyCombo=plan.members.length===g.analysis.members.length?{tempo:plan.tempo,why:plan.why,risk:plan.caution}:summaryCombo({...g,adaptive:null,creative:null});
+   return [{id:signature(slots),slots:structuredClone(slots),...g,trio:null,duo:null,creative:cooperation?null:plan,adaptive:cooperation?(plan.shared||plan.cooperation):g.adaptive,creativePlan:plan,origin:cooperation?'adaptive':'creative',scope,title:plan.name,reason:plan.why,reasonPoints:[plan.why],targets:[],editableTargets,contributions:[],strategy:strategySummary(g.analysis,strategyCombo,play.tempo,context.enemyTraits),catalogState:null}];
   }
   return [{id:signature(slots),slots:structuredClone(slots),...g,scope,origin:g.trio||g.duo?'curated':g.adaptive?'adaptive':'generated',title:g.trio?.name||g.duo?.name||g.adaptive?.name||'当前阵容',reason:'当前范围没有未锁定位置，下面展示已选英雄的配合与配置。',reasonPoints:['当前范围没有未锁定位置，下面展示已选英雄的配合与配置。'],targets:[],contributions:[],strategy:strategySummary(g.analysis,summaryCombo(g),play.tempo,context.enemyTraits),catalogState:catalogStatus[(g.trio||g.duo)?.id]||null}];
  }
@@ -305,7 +306,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   seeds.push(fixed.map(s=>{const m=trio.members.find(m=>m.role===s.role);return m?{...s,champion:m.champion}:s;}));
  }
  const partyMembers=fixed.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party);
- for(const members of cooperationSeeds({members:partyMembers,targets,candidateSets,graph:context.cooperationGraph})){
+ for(const members of cooperationSeeds({members:partyMembers,targets,candidateSets,graph:context.cooperationGraph,preferences:play})){
   const seed=fixed.map(s=>{const member=members.find(m=>m.role===s.role);return member?{...s,champion:member.champion}:s;});
   const ids=seed.map(s=>s.champion).filter(Boolean);if(new Set(ids).size===ids.length)seeds.push(seed);
  }
@@ -353,7 +354,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   const combo=entry.trio||entry.duo,members=combo?(combo.members||[{role:'bottom',champion:combo.carry},{role:'support',champion:combo.support}]):entry.adaptive?.members;
   if(!members||members.length!==partyMembers.length||!members.every(m=>partyMembers.some(p=>p.role===m.role)&&entry.slots.some(s=>s.role===m.role&&s.champion===m.champion)))return false;
   if(combo)return 3;
-  if(entry.adaptive.kind==='shared')return .5;
+  if(entry.adaptive.kind==='shared')return entry.adaptive.tempo==='growth'?.5:1;
   if(!members.every(m=>entry.adaptive.edges.some(e=>e.current&&[e.a,e.b].includes(m.champion))))return 0;
   // A general control/follow-up plan must not displace reviewed interactions
   // such as Ahri/Vi merely because it can be generated for many more allies.
@@ -376,7 +377,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // Preserve one best current cooperation per mechanism through the cap, as
  // for catalog and creative anchors. Otherwise an existing locked-friend
  // plan can disappear before the diversity pass has a chance to select it.
- const adaptiveAnchors=new Map();for(const entry of sorted){if(!entry.adaptive||entry.trio||entry.duo)continue;const key=entry.adaptive.edges.filter(e=>e.current).map(e=>e.family).sort().join('|');if(key&&!adaptiveAnchors.has(key)&&adaptiveAnchors.size<24)adaptiveAnchors.set(key,entry);}
+ const adaptiveAnchors=new Map();for(const entry of sorted){if(!entry.adaptive||entry.trio||entry.duo)continue;const key=entry.adaptive.kind==='shared'?'shared:'+entry.adaptive.tempo:entry.adaptive.edges.filter(e=>e.current).map(e=>e.family).sort().join('|');if(key&&!adaptiveAnchors.has(key)&&adaptiveAnchors.size<24)adaptiveAnchors.set(key,entry);}
  const preserved=new Map([...anchors.values(),...creativeAnchors.values(),...adaptiveAnchors.values()].map(entry=>[signature(entry.slots),entry]));
  const pool=[...preserved.values(),...sorted.filter(entry=>!preserved.has(signature(entry.slots))).slice(0,Math.max(0,240-preserved.size))].sort(order);
  const count=Math.min(Math.max(0,limit+offset),pool.length);

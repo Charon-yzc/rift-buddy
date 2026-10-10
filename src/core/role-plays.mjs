@@ -2,7 +2,7 @@ import {EXTRA_ROLE_PLAYS} from './role-plays-extra.mjs';
 // Curated role and stage tasks, checked against Riot's 16.20 champion mechanics.
 // These describe decisions for the player; no cooldown, position or hit is inferred.
 export const ROLE_PLAYS_PATCH='16.20';
-export const ROLE_PLAYS_REVIEWED_AT='2026-10-09';
+export const ROLE_PLAYS_REVIEWED_AT='2026-10-10';
 export const BOTTOM_PLAYS={
  "Corki":["Q 补刀短消耗，E 要持续朝目标扫射并穿插普攻；W 留搭档离开后的退路，当前没有炸药包转场计划。","搭档限制目标后 Q/R 接伤害与持续普攻，E 维持面向；W 优先规避反击，导弹遇兵阻挡就别按后排必中追近。","留在核心保护范围持续普攻与导弹，按实际 R 普通/超级次序输出；E 转身可能扫不到，W 出口须有接应而非冲敌阵。"],
  "Yunara":["用普攻积累灵蕴并补刀，达到可用条件后 Q 才安排强化换血，W 减速接搭档；普通 E 是移速与穿单位，不当作能穿墙的冲刺。","搭档限制目标后 Q 持续普攻，R 超凡形态再用强化 E 调位置和 W 射线；先确认形态，不把普通与强化技能同时当可用。","在搭档能保护的距离连续攻击可接触目标，R 期间强化 E 留退出；超凡结束就按普通 E 重算退路，不追到保护之外。"],

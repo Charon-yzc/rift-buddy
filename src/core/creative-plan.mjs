@@ -46,11 +46,11 @@ function cooperationDescriptor(source,data){
   patch:cooperation.patch,dataVersion:data.version,rulesVersion:cooperation.reviewedAt};
 }
 
-// A shared resource/meeting plan contains no control edges and earns no
+// A shared tactical/resource plan contains no control edges and earns no
 // mechanism bonus. Persist its reviewed jobs and original source identities.
 function savedShared(value,members){
- if(!value||value.kind!=='shared'||value.tempo!=='growth'||value.bonus!==0||!Array.isArray(value.edges)||value.edges.length||JSON.stringify(value.members)!==JSON.stringify(members))throw Error('共同分工不能包含机制联动或加分');
- const result={kind:'shared',tempo:'growth',bonus:0,members:members.map(m=>({...m})),edges:[]};
+ if(!value||value.kind!=='shared'||!['poke','protect','growth'].includes(value.tempo)||value.bonus!==0||!Array.isArray(value.edges)||value.edges.length||JSON.stringify(value.members)!==JSON.stringify(members))throw Error('共同分工不能包含机制联动或加分');
+ const result={kind:'shared',tempo:value.tempo,bonus:0,members:members.map(m=>({...m})),edges:[]};
  for(const [field,max] of [['name',100],['why',700],['sourceNote',300],['opening',700],['economy',500],['patch',30],['reviewedAt',40]]){if(!text(value[field],max))throw Error('共同分工说明不完整');result[field]=value[field];}
  const seen=new Set();if(!Array.isArray(value.memberJobs)||value.memberJobs.length!==members.length)throw Error('共同分工成员不完整');
  result.memberJobs=value.memberJobs.map(m=>{if(!members.some(member=>memberKey(member)===memberKey(m))||seen.has(memberKey(m))||!text(m.job,700))throw Error('共同分工与成员不一致');seen.add(memberKey(m));return {role:m.role,champion:m.champion,job:m.job};});

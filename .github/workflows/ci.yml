@@ -65,6 +65,10 @@ jobs:
         run: node scripts/smoke-package-guide-continuation.mjs
       - name: Check favorites preserve current public picks, manual positions and member choices
         run: node scripts/smoke-package-favorite-context.mjs
+      - name: Check poke friends, distinct third-member duties and saved tactical choices
+        run: |
+          node scripts/smoke-package-cooperation.mjs --poke
+          node scripts/smoke-package-cooperation.mjs --poke-guard
       - name: Check prepared D/F spells, compact controls and saved member choices
         run: node scripts/smoke-package-summoners.mjs
       - name: Check backup merge capacity and explicit rune writes in isolated clients
