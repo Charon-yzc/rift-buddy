@@ -4,6 +4,7 @@ import {validatePreparation} from './preparation.mjs';
 import {scopeSlots} from './draft.mjs';
 import {currentCombo,validateSlots,mergeClientSession} from './recommend.mjs';
 import {captureCreativePlan,creativeComboContext,validateCreativePlan} from './creative-plan.mjs';
+import {publicUnavailableChampions} from './pick-eligibility.mjs';
 
 export const resultSoloRole=result=>result.soloRole||result.targets?.[0]||'';
 export function teamFavoriteId(result,style){return `${result.id}${result.creativePlan?'|'+result.creativePlan.id:''}|${style}|${result.scope}${result.scope==='solo'?'|'+resultSoloRole(result):''}`;}
@@ -37,17 +38,22 @@ export function captureTeamConfigurations(result,data,store){
 }
 
 // Restore reusable members; previous non-party picks are never a current draft.
-export function restoreTeamFavorite(favorite,current,champions,session=null){
+export function restoreTeamFavorite(favorite,current,champions,session=null,{eligibleByRole={},confirmedPick=null}={}){
  validateSlots(favorite.slots,champions);validateSlots(current,champions);
  if(favorite.scope==='solo'&&!favorite.soloRole)throw Error('旧单人收藏未保存位置，请重新推荐并收藏');
  const desired=favorite.slots.filter(s=>s.champion&&(favorite.scope==='solo'?s.role===favorite.soloRole:favorite.scope==='bot'?['bottom','support'].includes(s.role):s.party));
  if(!desired.length)throw Error('这项收藏没有可载入的开黑成员，请重新推荐并收藏');
  const conflicts=[],publicIds=new Set((session?.myTeam||[]).map(p=>champions.find(c=>c.key===Number(p.championId))?.id).filter(Boolean));
  const publicCells=new Set((session?.myTeam||[]).map(p=>p.cellId).filter(Number.isInteger));
+ const unavailable=publicUnavailableChampions(session,champions);
  const next=session?mergeClientSession(current,session,champions).slots:structuredClone(current);
  for(const member of desired){
   const slot=next.find(s=>s.role===member.role),existing=next.find(s=>s.champion===member.champion);
   const manualTeammate=slot.champion&&slot.locked&&!slot.party;
+  if(unavailable.bans.includes(member.champion)||unavailable.enemy.includes(member.champion)||Array.isArray(eligibleByRole[member.role])&&!eligibleByRole[member.role].includes(member.champion)&&!(confirmedPick?.role===member.role&&confirmedPick.champion===member.champion)){
+   conflicts.push({role:member.role,champion:member.champion,current:slot.champion,reason:'unavailable'});continue;
+  }
+  if(slot.champion&&slot.locked&&slot.champion!==member.champion){conflicts.push({role:member.role,champion:member.champion,current:slot.champion,reason:manualTeammate?'teammate':'locked'});continue;}
   if(manualTeammate||publicCells.has(slot.clientCellId)&&slot.champion!==member.champion||existing&&existing.role!==member.role||publicIds.has(member.champion)&&!existing){
    conflicts.push({role:member.role,champion:member.champion,current:slot.champion,reason:manualTeammate?'teammate':existing&&existing.role!==member.role?'position':publicIds.has(member.champion)&&!existing?'unassigned':'current'});continue;
   }

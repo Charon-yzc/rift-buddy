@@ -19,6 +19,7 @@ async function run(){
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
   if(options.path==='/lol-gameflow/v1/session')return {value:{gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}}};
   if(options.path==='/lol-champ-select/v1/session')return {value:{localPlayerCellId:1,myTeam:[{cellId:1,championId:ownChampion,assignedPosition:'top'}],theirTeam:[],actions:[],bans:{}}};
+  if(['/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids'].includes(options.path)){assert.ok(!options.method||options.method==='GET');return {status:404,value:{message:'Optional selection scope unavailable in this fixture'}};}
   if(!options.method||options.method==='GET'){
    assert.equal(options.path,'/lol-perks/v1/pages');const value=structuredClone(pages);
    if(changeOnPages==='phase')phase='GameStart';else if(changeOnPages==='game')gameId='1402';else if(changeOnPages==='hero')ownChampion=data.champions.find(c=>c.id==='Zed').key;
