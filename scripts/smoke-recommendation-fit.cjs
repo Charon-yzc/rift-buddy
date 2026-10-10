@@ -18,7 +18,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label){for(let n=0;n<150;n++){if(await check())return;await delay(70);}throw Error(label);}
 async function run(){
  app.setPath('userData',root);
- const release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=path.join(release.directory,'resources/app.asar');
+ const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?{archiveSha256:null}:JSON.parse(await fs.readFile('release/latest.json','utf8')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'),'utf8')),hero=id=>data.champions.find(c=>c.id===id);
  sourceEntries=JSON.parse(await fs.readFile(path.join(base,'data/builds.json'),'utf8')).entries;
@@ -37,7 +37,17 @@ async function run(){
  const capture=async name=>{await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await delay(800);await fs.writeFile(path.join(root,name),(await main.webContents.capturePage({stayHidden:true,stayAwake:true})).toPNG());};
  await until(()=>js('!!document.querySelector("#solo-role")'),'App not loaded');await sync();
  assert.equal(await js('document.querySelector("#solo-role").value'),'mid');
- await generate();const frontline=await mainIds();
+ await generate();const frontline=await mainIds(),headingGeometry=[];
+ for(const [width,zoom,textScale] of [[1180,1,1],[1051,1.25,1],[1180,1.5,1],[1180,1,1.25],[1051,1.25,1.25],[1180,1.5,1.25]]){
+  main.setContentSize(width,820);main.webContents.setZoomFactor(zoom);await js('document.documentElement.style.setProperty("--text-scale",'+textScale+')');await delay(150);
+  for(const action of ['recommend','reroll']){
+   await click('[data-action='+action+']');await until(()=>js('!!document.querySelector(".recommend-heading")&&!document.querySelector("[data-action=recommend]").disabled'),'Recommendation did not finish');await delay(650);
+   const geometry=await js('(()=>{const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}};return {viewport:[innerWidth,innerHeight],topbar:rect(".topbar"),title:rect(".recommend-heading h2"),description:rect(".recommend-heading p"),actions:[...document.querySelectorAll(".draft-result-actions button")].map(el=>{const r=el.getBoundingClientRect();return {label:el.textContent,top:r.top,bottom:r.bottom,left:r.left,right:r.right}})}})()');
+   for(const r of [geometry.title,geometry.description,...geometry.actions]){assert.ok(r.top>=geometry.topbar.bottom+8,'Sticky toolbar covers recommendation: '+JSON.stringify({width,zoom,textScale,action,geometry}));assert.ok(r.bottom<=geometry.viewport[1]&&r.left>=0&&r.right<=geometry.viewport[0],'Recommendation action outside viewport: '+JSON.stringify({width,zoom,textScale,action,geometry}));}
+   assert.ok(geometry.actions.length>0);headingGeometry.push({width,zoom,textScale,action,...geometry});
+  }
+ }
+ await capture('main-heading-readable.png');main.webContents.setZoomFactor(1);main.setContentSize(1180,820);await js('document.documentElement.style.removeProperty("--text-scale")');await generate();
  assert.ok((await fitIds()).every(ids=>ids==='DrMundo,Chogath,Garen'));
  assert.equal(await js('[...document.querySelectorAll("[data-opponent-fit]")].some(el=>el.textContent.includes("劫"))'),false,'Enemy hover was treated as confirmed');
  fixture.session=draft(['Ashe','Hecarim','Fiddlesticks']);await sync();
@@ -73,7 +83,7 @@ async function run(){
  await click('[data-action=companion-tab][data-tab=recommend]');
  await until(()=>js('document.querySelectorAll(".companion-candidate").length>0'),'Sidebar did not regenerate after source refresh');
  assert.equal(runeWrites,0);
- const result={passed:true,archiveSha256:release.archiveSha256,frontline,engage,visibleWorkerOrderingChanged:true,mirrorEligibilityIndependent:true,mirrorOnlyChangeInvalidated:true,
+ const result={passed:true,source,headingGeometry,systemDpi:'UNPROVEN',archiveSha256:release.archiveSha256,frontline,engage,visibleWorkerOrderingChanged:true,mirrorEligibilityIndependent:true,mirrorOnlyChangeInvalidated:true,
   mainAndSidebarExplain:true,enemyHoverIgnored:true,removedEnemyCleared:true,reconnectNewGameCleared:true,sourceRefreshInvalidatedMain:true,sourceRefreshCancelledPendingWorker:true,sourceRefreshRegeneratedSidebar:true,sourceRefreshes,sidebarOverflow:false,runeWrites};
  await fs.writeFile(path.join(root,'result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }

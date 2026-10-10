@@ -4,7 +4,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  windowInfo:()=>ipcRenderer.invoke('window-info'),
  presentation:change=>ipcRenderer.invoke('presentation',change),
  onPresentation:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('presentation-update',listener);return()=>ipcRenderer.removeListener('presentation-update',listener);},
- saveState:state=>ipcRenderer.invoke('save-state',state),
+ saveState:(state,base)=>ipcRenderer.invoke('save-state',state,base),
  client:force=>ipcRenderer.invoke('client-status',force===true),
  ready:()=>ipcRenderer.invoke('main-ready'),
  onClient:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('client-update',listener);return()=>ipcRenderer.removeListener('client-update',listener);},

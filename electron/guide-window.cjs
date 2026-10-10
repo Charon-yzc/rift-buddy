@@ -18,7 +18,7 @@ function cursorInBounds(cursor,bounds,margin=2){
      &&cursor.y>=bounds.y-m&&cursor.y<=bounds.y+bounds.height+m;
 }
 
-module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');}}){
+module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
@@ -125,6 +125,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();const value=payload()
    const selection={...current.selection,[action]:value||undefined};if(action==='threatId')delete selection.matchupGameId;
    return save({...current,selection});
   }
+  if(action==='later'){const m=getModel(),choice=m.laterChoices.find(i=>i.id===value),unavailable=m.unavailableLaterOptions.some(i=>String(i.id)===value);if(!choice&&!unavailable)throw Error('后期备选已变化，请重新选择');if(choice?.blockedReason&&!choice.selected)throw Error(choice.blockedReason);return save({...current,selection:adjustPlan(current.selection,'later',value)});}
   if(action==='condition'){if(!['ad','ap','control','heal','burst'].includes(value))throw Error('局势选项不正确');const conditions=current.selection.conditions.includes(value)?current.selection.conditions.filter(c=>c!==value):[...current.selection.conditions,value];return save({...current,selection:{...current.selection,conditions}});}
   if(action==='bottom-quest'){if(!current.selection.bottomQuestPlan)throw Error('当前不是下路任务后装备计划');const quest=getModel().bottomQuest;if(!current.bottomQuestConfirmed&&quest?.eligible===false)throw Error(quest.reason);return save({...current,bottomQuestConfirmed:!current.bottomQuestConfirmed});}
   if(action==='reset')return save({...current,completedItems:[]});

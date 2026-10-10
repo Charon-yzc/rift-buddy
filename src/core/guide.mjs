@@ -1,3 +1,4 @@
+import {itemConflicts} from './mechanics.mjs';
 import {validateSummonerIds} from './summoner-selection.mjs';
 import {publicEquipment} from './scoreboard.mjs';
 import {getBuild,SHARDS} from './builds.mjs';
@@ -136,6 +137,8 @@ export function createGuideModel(data,value,live=null,current=null){
  const itemIssue=i=>pendingQuestId===String(i.id)&&!bottomQuestConfirmed?bottomQuestReason:inventoryKnown?situationItemIssue({data,id:i.id,inventory}):null;
  const routeBlocked=route.filter(i=>!autoCompletedItems.includes(i.id)&&itemIssue(i)).map(i=>({id:i.id,name:i.name,reason:itemIssue(i)}));
  const targetBlockedReason=guide.purchaseTarget?itemIssue({id:guide.purchaseTarget}):null;
+ const laterChoices=(build.laterOptions||[]).map(row=>{const choice=item(row.items[0]),selected=build.selectedLaterIds.includes(Number(choice.id));return {...choice,selected,fitsRoute:row.fitsRoute,blockedReason:selected?null:itemIssue(choice)|| (itemConflicts(Number(choice.id),route.map(i=>Number(i.id)))?'与当前路线互斥，请先取消冲突备选':null)};});
+ const laterNeeded=laterChoices.length?Math.max(0,build.maxLaterItems-build.selectedLaterIds.length):0;
  const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
  const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
  const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
@@ -221,6 +224,7 @@ export function createGuideModel(data,value,live=null,current=null){
    at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,matchId:guide.match?.gameId||null,
+  laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
   phase:s.mode==='rift'?gamePhase({...liveModel,role:s.role},action,next||null):null,
   objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch}):null,
