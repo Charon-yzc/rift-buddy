@@ -6,7 +6,8 @@ async function until(check,label){for(let n=0;n<150;n++){const v=await check();i
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
  const register=ipcMain.handle.bind(ipcMain);
- ipcMain.handle=(channel,handler)=>register(channel,channel==='update-guide'?async(...args)=>{await delay(180);return handler(...args);}:handler);
+ const syncDelay=Number(process.env.RIFT_GUIDE_SYNC_DELAY??180);assert.ok([0,180,500].includes(syncDelay));
+ ipcMain.handle=(channel,handler)=>register(channel,channel==='update-guide'?async(...args)=>{await delay(syncDelay);return handler(...args);}:handler);
  require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true);
  await until(()=>js('!!document.querySelector("[data-action=guide-current]")'),'UI missing');
@@ -29,6 +30,10 @@ async function run(){
  await click('[data-action=build-rune][data-id=curated-guardian]');
  await until(async()=>{const s=(await state()).guide.selection;return s.runeId==='curated-guardian'&&s.conditions.includes('ap');},'Interleaved guide edit lost');
  await until(()=>js('document.querySelector("[data-action=build-condition][data-condition=ap]").classList.contains("active")'),'Guide choice not returned to config');
+ await delay(600);
+ const accepted=await state();assert.ok(accepted.guide.selection.conditions.includes('ap'),'Accepted guide choice was overwritten by a later queued update');
+ assert.ok(accepted.preparations.findLast(s=>s.id==='Seraphine'&&s.role==='bottom'&&s.comboId==='double-song').conditions.includes('ap'),'Saved preparation lost the accepted guide choice');
+ assert.ok((await active()).conditions.includes('ap'),'Main window reverted the accepted guide choice');
  await capture('prepared-configuration.png');
  // A saved Hex context must survive ordinary equipment changes and reopening.
  await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"hex",augmentIds:[1048],compareIds:[1048,1002],ownedAugmentIds:[1047]})');
@@ -70,7 +75,8 @@ async function run(){
  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]").textContent.includes("同步选人")'),'Mock public pick not read');
  await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
  await until(()=>js('document.querySelector(".rune-target-warning")?.textContent.includes("盖伦")'),'Own champion mismatch warning missing');
- assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/萨勒芬妮.*你的客户端/);
+ assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/萨勒芬妮.*替换符文/);
+ assert.match(await js('document.querySelector(".rune-target-warning").textContent'),/你自己的客户端/);
  // Changing the arranged partner must not leak a former combo's private build.
  await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');
  const pick=async(role,id)=>{await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};

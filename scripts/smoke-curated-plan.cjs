@@ -51,8 +51,8 @@ async function run(){
  }
  if(!restart){
   if(routes){await click('.companion-candidate [data-action=result-detail]');
-   if(['all-routes','side-pressure','side-pressure-trio'].includes(scenario)){
-    const target=scenario==='all-routes'?'ball:Orianna:Sejuani':'side-pressure';
+   if(['ball-trio','all-routes','side-pressure','side-pressure-trio'].includes(scenario)){
+    const target=scenario==='ball-trio'?'ball:Orianna:Vi':scenario==='all-routes'?'ball:Orianna:Sejuani':'side-pressure';
     await captureDetails('.plan-drawer .party-route-more','more-routes.png');
     await click('.plan-drawer [data-action=party-route][data-route="'+target+'"]');
    }else if(!tactics||tactics===5)await click('.plan-drawer [data-action=party-route]');
@@ -66,7 +66,7 @@ async function run(){
  else await fs.writeFile(path.join(root,'accepted.json'),JSON.stringify(plan,null,2));
  if(readiness){assert.deepEqual(plan.members.map(m=>m.champion),['Kled','Khazix','Anivia']);}
  else if(independent){assert.doesNotMatch(plan.ordered.map(m=>m.job).join(' '),/接实际控制后|等主线实际生效/);assert.equal(plan.shared.routes[0].id,independent===4?'reset':'tactical:growth');}
- else if(routes){assert.ok(plan.shared.routes.length>=2);if(scenario==='all-routes'){for(const id of ['ball:Orianna:Ornn','ball:Orianna:Sejuani','tactical:protect','tactical:growth'])assert.ok(plan.shared.routes.some(r=>r.id===id));assert.equal(plan.shared.routes[0].id,'ball:Orianna:Sejuani');}else if(['side-pressure','side-pressure-trio'].includes(scenario)){assert.equal(plan.shared.routes[0].id,'side-pressure');assert.match(plan.stagePlan.later.window,/不要求全员同时到同侧/);}else if(tactics){assert.equal(plan.tempo,tactics===5?'protect':'poke');assert.equal(plan.shared.routes[0].tempo,plan.tempo);assert.match(plan.ordered.find(m=>m.champion==='Jayce').job,/炮形 Q/);}else{assert.ok(!plan.shared.routes[0].id.startsWith('curated:'));assert.ok(plan.shared.routes.some(r=>r.id.startsWith('curated:')));}}
+ else if(routes){assert.ok(plan.shared.routes.length>=2);if(scenario==='ball-trio'){for(const id of ['ball:Nautilus:Orianna','ball:Orianna:Vi'])assert.ok(plan.shared.routes.some(r=>r.id===id));assert.equal(plan.shared.routes[0].id,'ball:Orianna:Vi');assert.match(plan.ordered.find(m=>m.champion==='Orianna').job,/E 只给蔚.*球已到且仍跟随.*R 可用才接一次.*不为另一位进场者再安排一次 R/);assert.match(plan.ordered.find(m=>m.champion==='Nautilus').job,/第二波或接应.*主线失败就一起退出/);}else if(scenario==='all-routes'){for(const id of ['ball:Orianna:Ornn','ball:Orianna:Sejuani','tactical:protect','tactical:growth'])assert.ok(plan.shared.routes.some(r=>r.id===id));assert.equal(plan.shared.routes[0].id,'ball:Orianna:Sejuani');}else if(['side-pressure','side-pressure-trio'].includes(scenario)){assert.equal(plan.shared.routes[0].id,'side-pressure');assert.match(plan.stagePlan.later.window,/不要求全员同时到同侧/);}else if(tactics){assert.equal(plan.tempo,tactics===5?'protect':'poke');assert.equal(plan.shared.routes[0].tempo,plan.tempo);assert.match(plan.ordered.find(m=>m.champion==='Jayce').job,/炮形 Q/);}else{assert.ok(!plan.shared.routes[0].id.startsWith('curated:'));assert.ok(plan.shared.routes.some(r=>r.id.startsWith('curated:')));}}
  else if(scenario==='yasuo-relay'){assert.match(plan.ordered.find(m=>m.champion==='Yasuo').job,/同一轮不安排两次自己的 R/);assert.match(plan.ordered.find(m=>m.champion==='Diana').job,/备用仅在墨菲特未开成/);}
  else{if(!duoStages&&scenario!=='trio-stages'){assert.match(plan.ordered.find(m=>m.champion==='Rakan').job,/W|R/);assert.match(plan.steps.join(' '),/洛/);}
   await js('(async()=>{const {TRIOS,DUOS}=await import(new URL("./core/rules.mjs",location.href).href),c=[...TRIOS,...DUOS].find(t=>t.id==='+JSON.stringify(plan.curated.id)+');c.name="Changed catalog";c.steps=["Changed lead"];c.members?.forEach(m=>m.job="Changed job");const {BOTTOM_PLAYS}=await import(new URL("./core/role-plays.mjs",location.href).href);if('+duoStages+')BOTTOM_PLAYS.Ashe[2]="Changed later action";})()');

@@ -53,6 +53,13 @@ jobs:
         run: node scripts/smoke-package-game-transition.mjs
       - name: Check manual positions, preparation writes and explicit version refresh
         run: node scripts/smoke-package-journey.mjs
+      - name: Check interleaved configuration and guide edits preserve accepted fields
+        run: |
+          foreach ($delay in @(0,180,500)) {
+            $env:RIFT_GUIDE_SYNC_DELAY = "$delay"
+            node scripts/smoke-package-user-flow.mjs
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       - name: Check guide interaction and live-data fallback
         run: node scripts/smoke-package-guide-input.mjs
       - name: Check live situation advice and explanations
@@ -101,6 +108,7 @@ jobs:
         run: |
           node scripts/smoke-package-curated-plan.mjs
           node scripts/smoke-package-curated-plan.mjs --routes
+          node scripts/smoke-package-curated-plan.mjs --ball-trio
           node scripts/smoke-package-curated-plan.mjs --duo-stages
           node scripts/smoke-package-curated-plan.mjs --readiness
           node scripts/smoke-package-curated-plan.mjs --custom-runes
