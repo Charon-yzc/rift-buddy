@@ -5,7 +5,7 @@ import {profile,PRIMARY_ROLES,conventionalRole} from '../src/core/rules.mjs';
 import {analyzeTeam,createSlots,recommend} from '../src/core/recommend.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {selectBuildSource} from '../src/core/build-source.mjs';
-import {summarizeEnemyTraits} from '../src/core/strategy.mjs';
+import {summarizeEnemyTraits,describeCurve} from '../src/core/strategy.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
@@ -48,7 +48,24 @@ test('specific control and preparation conditions agree with the same champions 
  const bruisers=team({top:'Darius',jungle:'Warwick',mid:'Ahri'});assert.ok(!bruisers.warnings.some(w=>w.includes('持续输出偏少')));
  assert.match(bruisers.members.find(m=>m.champion==='Darius').p.sustainCondition,/持续近身/);
  const garen=team({top:'Garen'});assert.equal(garen.curve.windows[0].kind,'base');assert.match(garen.curve.windows[0].condition,/Q.*实际接触.*E.*持续贴近.*R 未学会/);assert.deepEqual(garen.curve.unknown,[]);
- const unknown=team({top:'Kled'});assert.equal(unknown.curve.label,'阶段条件未整理');assert.deepEqual(unknown.curve.unknown,['克烈']);
+ const kled=team({top:'Kled'});assert.match(kled.curve.windows[0].condition,/骑乘或下马.*勇气.*W.*下马不能.*Q\/E\/R/);
+ const unknown=describeCurve({},[{champion:'FutureUnreviewed',c:{name:'未整理英雄'},p:profile({...hero('Kled'),id:'FutureUnreviewed'})}]);
+ assert.equal(unknown.label,'阶段条件未整理');assert.deepEqual(unknown.windows,[]);assert.deepEqual(unknown.unknown,['未整理英雄']);
+});
+
+test('all members retain distinct readiness and failure conditions instead of a shared control gate',()=>{
+ const team=picks=>analyzeTeam(createSlots().map(s=>({...s,champion:picks[s.role]||null})),data.champions);
+ const scaling=team({top:'Taric',jungle:'Udyr',mid:'Anivia'});
+ assert.deepEqual(scaling.curve.windows.map(w=>w.champion),['Taric','Udyr','Anivia']);
+ assert.match(scaling.curve.windows[0].condition,/真实连接.*Q 当前充能.*延迟.*真正生效.*先撤/);
+ assert.match(scaling.curve.windows[1].condition,/当前姿态.*觉醒.*两次普攻.*攻击距离断开/);
+ assert.match(scaling.curve.windows[2].condition,/Q 实际爆开眩晕.*R 已学会并完全形成.*资源不足/);
+ const duo=team({bottom:'Xayah',support:'Yuumi'});
+ assert.match(duo.curve.windows[0].condition,/实际羽毛.*回收线.*未来羽毛/);
+ assert.match(duo.curve.windows[1].condition,/实际附身对象.*E 按护盾.*不能当直接治疗.*不按旧版禁锢/);
+ const five=team({top:'Yorick',jungle:'Viego',mid:'Yone',bottom:'Zeri',support:'Zilean'});
+ assert.deepEqual(five.curve.unknown,[]);assert.equal(five.curve.windows.length,5);
+ for(const [index,pattern] of [/实际墓穴.*召唤物不在覆盖/,/真实出现可附身躯体/,/肉身位置.*返回点被占/,/当前 E 穿透.*退路被占/,/保护期间真实遭遇致命伤害/].entries())assert.match(five.curve.windows[index].condition,pattern);
 });
 
 test('an uncached source uses Locke magic mechanics and an unreviewed future hero gets no fabricated fallback',()=>{

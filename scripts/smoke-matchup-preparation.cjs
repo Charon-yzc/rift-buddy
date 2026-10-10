@@ -49,8 +49,11 @@ async function run(){
  assert.equal(await js('document.querySelectorAll("[data-matchup-build]").length'),0,'An opponent must be explicitly selected');
  await change('#overlay-root [data-matchup-target]',enemy);await until(()=>js('!!document.querySelector("#overlay-root [data-matchup-build]")'),'Full matchup choices missing');
  if(!restart){
+  await js('(()=>{const el=document.querySelector("[data-rune-surface=build][data-rune-field=\\"8\\"]");el.value=[...el.options].find(o=>o.value!==el.value).value;el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+  await until(async()=>(await state()).preparations.some(s=>s.id==='Ahri'&&s.customRunePage),'Personal page was not saved before switching');
   const rune=await js('document.querySelector("#overlay-root [data-action=matchup-rune]").dataset.id');assert.match(rune,/8473/);
   await click('#overlay-root [data-action=matchup-rune]');await until(async()=>(await state()).preparations.some(s=>s.id==='Ahri'&&s.role==='mid'&&s.runeId===rune),'Drawer rune was not saved');
+  assert.equal((await state()).preparations.find(s=>s.id==='Ahri'&&s.role==='mid').customRunePage,undefined,'Old personal page masked the selected complete page');
   assert.equal(writes,0);await click('[data-action=open-guide]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
   await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.runeId==='+JSON.stringify(rune)+')'),'Drawer rune did not reach guide');
   const core=await js('document.querySelector("#overlay-root [data-action=matchup-core]:not(:disabled)").dataset.id');await click('#overlay-root [data-action=matchup-core]:not(:disabled)');

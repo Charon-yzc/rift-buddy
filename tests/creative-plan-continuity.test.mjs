@@ -41,7 +41,7 @@ test('a creative favorite retains its original jobs, order, window, version and 
  for(const selection of saved.configurations){
   assert.deepEqual(selection.creativePlan,plan);const build=getBuild(hero(selection.id),selection.role,data,selection);
   assert.deepEqual(build.runePage.selectedPerkIds,pages.get(selection.id));assert.equal(build.runePage.selectedPerkIds.length,9);
-  assert.equal(build.combo.ownJob,plan.ordered.find(m=>m.champion===selection.id).job);assert.deepEqual(build.combo.steps,plan.steps);assert.equal(build.combo.window,plan.window);assert.equal(build.combo.play,null);
+  assert.equal(build.combo.ownJob,plan.ordered.find(m=>m.champion===selection.id).job);assert.deepEqual(build.combo.steps,plan.steps);assert.equal(build.combo.window,plan.window);assert.deepEqual(build.combo.play.stages.key.steps,plan.stagePlan.key.steps);assert.notEqual(build.combo.play.stages.key.ownAction,build.combo.play.stages.later.ownAction);
   assert.doesNotMatch(build.selectionWarnings.join('；'),/原组合已移出/);
   const model=createGuideModel(data,selectGuide(null,selection),null,{...selection,comboKnown:true});assert.equal(model.comboConfirmed,true);assert.deepEqual(model.combo.creativePlan,plan);
   const memberFavorite={...selection,id:'saved-member-'+selection.id,champion:selection.id,type:'build',title:'成员配置',createdAt:plan.createdAt,version:data.version};
@@ -79,7 +79,7 @@ test('old creative versions remain readable and distinct without asserting revie
  assert.throws(()=>validateGuideSelection({id:'Lux',role:'mid',mode:'rift',creativePlan:valid}),/英雄位置/);
  assert.throws(()=>validateGuideSelection({id:'Lux',champion:'Annie',role:'mid',mode:'rift',creativePlan:valid}),/英雄位置/);
  assert.throws(()=>validateCreativePlan({...valid,verified:true}),/格式/);
- assert.throws(()=>validateCreativePlan({...valid,window:'changed without changing identity'}),/标识/);
+ assert.throws(()=>validateCreativePlan({...valid,window:'changed without changing identity'}),/标识|阶段/);
  assert.ok(configurationPatch({comboId:plan.id},{comboId:plan.id,creativePlan:plan}).includes('creativePlan'));
  const legacy=validateState({...defaultState(),favorites:[{id:'old-team',title:'旧阵容',type:'team',slots,style:'fun',scope:'party'}]});assert.equal(legacy.favorites[0].creativePlan,undefined);assert.deepEqual(legacy.favorites[0].configurations,[]);
 });

@@ -28,10 +28,33 @@ export function skillMechanismNote(champion){
 }
 export function legalSkillOrder(order,champion=null){
  if(typeof order!=='string'||!/^([QWER]){3,18}$/.test(order))return false;
+ return legalSkillPrefix(order,champion);
+}
+export function legalSkillPrefix(order,champion=null){
+ if(typeof order!=='string'||!/^([QWER]){0,18}$/.test(order))return false;
  if(champion==='Aphelios')return false;
  const ranks=initialRanks(champion);
  for(let i=0;i<order.length;i++){const k=order[i],level=i+1;if(champion==='Jayce'&&k==='R')return false;ranks[k]++;if(ranks[k]>rankCap(champion,k,level))return false;}
  return true;
+}
+export function fillSkillOrder(prefix,champion,{preferred='',priority='QWE',first='QWE'}={}){
+ if(!legalSkillPrefix(prefix,champion))return null;
+ preferred=typeof preferred==='string'?preferred:'';priority=typeof priority==='string'?priority:'QWE';first=typeof first==='string'?first:'';
+ let order=prefix;
+ while(order.length<18){
+  const i=order.length,choices=[preferred[i],i<3?first[i]:null,champion!=='Udyr'?'R':null,...priority,'Q','W','E','R'];
+  const key=choices.find(k=>k&&legalSkillPrefix(order+k,champion));if(!key)return null;order+=key;
+ }
+ return order;
+}
+export function editSkillOrder(order,champion,index,key,{priority,first}={}){
+ const current=fillSkillOrder(legalSkillOrder(order,champion)?order:'',champion,{priority,first});
+ if(!current||!Number.isInteger(index)||index<0||index>=18||!keys.includes(key)||!legalSkillPrefix(current.slice(0,index)+key,champion))throw Error('这个等级不能投入所选技能，请核对可升级选项');
+ return fillSkillOrder(current.slice(0,index)+key,champion,{preferred:current,priority,first});
+}
+export function validateCustomSkillOrder(value,champion){
+ if(!value||!/^\d{2}\.\d{1,2}$/.test(value.patch||'')||!legalSkillOrder(value.order,champion))throw Error('自选加点序列不符合英雄等级规则');
+ return {order:value.order,patch:value.patch};
 }
 export function orderPriority(order,champion=null){const slots=champion==='Udyr'?keys:['Q','W','E'],ranks=Object.fromEntries(slots.map(k=>[k,0])),full=[],max=champion==='Udyr'||champion==='Jayce'?6:5;for(const k of order||''){if(k in ranks&&++ranks[k]===max)full.push(k);}return [...full,...slots.filter(k=>!full.includes(k)).sort((a,b)=>ranks[b]-ranks[a])].join('');}
 export function skillOptions(champion,live){

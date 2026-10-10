@@ -42,8 +42,24 @@ async function run(){
  const laterGuide=await gjs('window.guide.bootstrap().then(b=>({stage:b.model?.coach?.stage,action:b.model?.coach?.action}))');assert.equal(laterGuide.stage,'later');assert.match(laterGuide.action,/资源入口 Q\/W 限制敌方进场/);
  await gjs('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
  await fs.writeFile(path.join(root,'chogath-jungle-guide.png'),(await guide.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
- const cases=[['Volibear','JUNGLE','jungle',/W 重复同一营地目标续航/],['Yunara','BOTTOM','bottom',/普通 E 是移速与穿单位/],['Hwei','UTILITY','support',/WE 回蓝后不能同时保证立即 WW/]];
- for(const [id,position,role,expected]of cases){picked=id;assigned=position;await sync();await change('#solo-role',role);await sync();await change('.companion-shell [data-matchup-target]','Nautilus');assert.match(await js('document.querySelector(".companion-coach").textContent'),expected);await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+'&&b.model.selection.role==='+JSON.stringify(role)+')'),'Changed role did not reach guide');}
+ const cases=[['Volibear','JUNGLE','jungle',/W 重复同一营地目标续航/],['Yunara','BOTTOM','bottom',/普通 E 是移速与穿单位/],['Hwei','UTILITY','support',/WE 回蓝后不能同时保证立即 WW/],['Kled','TOP','top',/斯嘎尔|骑乘/],['Khazix','JUNGLE','jungle',/孤立/],['Anivia','MIDDLE','mid',/冰冻|Q/]];
+ for(const [id,position,role,expected]of cases){
+  picked=id;assigned=position;await sync();await change('#solo-role',role);await sync();
+  await until(()=>js('!!document.querySelector(\'.companion-shell [data-plan="'+id+':'+role+':rift"]\')'),'Changed hero did not reach the sidebar');
+  await change('.companion-shell [data-matchup-target]','Nautilus');await until(async()=>expected.test(await js('document.querySelector(".companion-coach").textContent')),'Changed role advice missing for '+id);
+  assert.match(await js('document.querySelector(".companion-coach").textContent'),expected);await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+'&&b.model.selection.role==='+JSON.stringify(role)+')'),'Changed role did not reach guide');
+ }
+ const {rolePlay}=await import(require('node:url').pathToFileURL(path.resolve('src/core/role-plays.mjs')));
+ for(const [id,position,role]of cases.slice(-3)){
+  picked=id;assigned=position;await sync();await change('#solo-role',role);await sync();await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+')'),'Personal guide missing');
+  await gjs('document.querySelector("[data-tab=team]").click();void 0');
+  for(const stage of ['opening','key','later']){
+   await gjs('(()=>{const el=document.querySelector("#guide-stage");el.value='+JSON.stringify(stage)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+   await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.coach?.stage==='+JSON.stringify(stage)+')'),'Personal stage missing');
+   const expected=rolePlay(id,role,stage),coach=await gjs('window.guide.bootstrap().then(b=>b.model.coach)');assert.ok(expected);assert.equal(coach.roleTask.generic,undefined);assert.ok(coach.action.includes(expected.action));
+   assert.ok((await gjs('document.querySelector(".hero-coach").textContent')).includes(expected.action));
+  }
+ }
  const saved=(await state()).preparations;assert.ok(saved.some(p=>p.id==='Chogath'&&p.role==='support'));assert.ok(saved.some(p=>p.id==='Chogath'&&p.role==='jungle'));
  assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));
  const report={passed:true,archiveSha256:release.archiveSha256,mainAndSidebarRoles:true,explicitPositionPreserved:true,guideRoleAndStage:true,distinctSavedRolePreparations:true,actualRuneWrites:0,realGame:'UNPROVEN'};await fs.writeFile(path.join(root,'role-workflow.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
