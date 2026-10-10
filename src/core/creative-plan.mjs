@@ -37,7 +37,19 @@ function savedCooperation(value,members){
  for(const [field,max] of [['name',100],['sourceNote',300],['patch',30],['reviewedAt',40]]){if(!text(value[field],max))throw Error('机制搭配说明不完整');result[field]=value[field];}
  if(!tempos.includes(value.tempo))throw Error('机制搭配节奏不正确');result.tempo=value.tempo;
  result.steps=result.relaySteps||edges.map(e=>e.step);result.conditions=edges.map(e=>e.condition);result.failures=edges.map(e=>e.failure);result.why=result.steps.join(' ');result.sourceUrls=[...new Set(edges.flatMap(e=>e.sourceUrls))];
+ if(value.routes!==undefined){
+  if(members.length!==3||!result.memberJobs||!Array.isArray(value.routes)||value.routes.length<2||value.routes.length>32)throw Error('三人备选路线缺少原分工');
+  result.routes=savedShared(asSharedRoutes({...result,routes:value.routes},members),members).routes;
+  const first=result.routes[0];if(first.id!=='original-group'||first.step!==result.steps.join(' ')||first.condition!==result.conditions.join(' ')||first.failure!==result.failures.join(' ')||JSON.stringify(first.memberJobs)!==JSON.stringify(result.memberJobs))throw Error('三人原路线条件与保存说明不一致');
+ }
  return result;
+}
+
+function asSharedRoutes(source,members){
+ const routes=source.routes,main=routes[0],tempo=main.tempo||source.tempo,steps=[source.opening,'主线：'+main.step,'备选：'+routes[1].step];
+ return {kind:'shared',members,edges:[],bonus:0,tempo,name:`${members.length}人分工 · ${TEMPOS[tempo]}`,memberJobs:main.memberJobs,routes,steps,relaySteps:steps,opening:source.opening,economy:source.economy,why:source.why,
+  conditions:['玩家确认各自技能、兵线、公开敌人动向、实际到场时间与退路；不推算隐藏位置或技能就绪。',main.condition],failures:['安全路径或接应条件不成立就取消本轮，优先退出与保留安全资源。',main.failure],
+  sourceNote:'原三人配合与人工确认的分线备选；没有全队统计优势，未经组合对局验证。',patch:source.patch,reviewedAt:source.reviewedAt,sourceUrls:source.sourceUrls};
 }
 
 function cooperationDescriptor(source,data){
@@ -52,7 +64,7 @@ function cooperationDescriptor(source,data){
 // A shared tactical/resource plan contains no control edges and earns no
 // mechanism bonus. Persist its reviewed jobs and original source identities.
 function savedShared(value,members){
- if(!value||value.kind!=='shared'||!(members.length>=4?tempos:['poke','protect','growth']).includes(value.tempo)||value.bonus!==0||!Array.isArray(value.edges)||value.edges.length||JSON.stringify(value.members)!==JSON.stringify(members))throw Error('共同分工不能包含机制联动或加分');
+ if(!value||value.kind!=='shared'||!(members.length>=4||value.routes?tempos:['poke','protect','growth']).includes(value.tempo)||value.bonus!==0||!Array.isArray(value.edges)||value.edges.length||JSON.stringify(value.members)!==JSON.stringify(members))throw Error('共同分工不能包含机制联动或加分');
  const result={kind:'shared',tempo:value.tempo,bonus:0,members:members.map(m=>({...m})),edges:[]};
  for(const [field,max] of [['name',100],['why',700],['sourceNote',300],['opening',700],['economy',500],['patch',30],['reviewedAt',40]]){if(!text(value[field],max))throw Error('共同分工说明不完整');result[field]=value[field];}
  const seen=new Set();if(!Array.isArray(value.memberJobs)||value.memberJobs.length!==members.length)throw Error('共同分工成员不完整');
@@ -60,7 +72,7 @@ function savedShared(value,members){
  for(const [field,count,max] of [['steps',3,400],['conditions',2,value.routes?400:200],['failures',2,value.routes?400:200]]){if(!Array.isArray(value[field])||value[field].length!==count||!value[field].every(v=>text(v,max)))throw Error('共同分工条件不完整');result[field]=[...value[field]];}
  if(JSON.stringify(value.relaySteps)!==JSON.stringify(result.steps))throw Error('共同分工步骤不一致');result.relaySteps=[...result.steps];
  if(value.routes!==undefined){
-  if(members.length<4||!Array.isArray(value.routes)||value.routes.length!==2)throw Error('全队主备路线不完整');
+  if(members.length<3||!Array.isArray(value.routes)||value.routes.length<2||value.routes.length>32)throw Error('全队主备路线不完整');
   const ids=new Set();result.routes=value.routes.map(route=>{
    const saved={};for(const [field,max] of [['id',120],['label',100],['step',400],['condition',400],['failure',400]]){if(!text(route?.[field],max))throw Error('全队行动路线说明不完整');saved[field]=route[field];}
    if(route.tempo!==undefined){if(!tempos.includes(route.tempo))throw Error('全队行动路线节奏不正确');saved.tempo=route.tempo;}
@@ -83,12 +95,13 @@ function sharedDescriptor(source,data){
 }
 
 export function selectPartyRoute(value,routeId){
- const plan=validateCreativePlan(value),routes=plan.shared?.routes;
+ const plan=validateCreativePlan(value),routes=plan.shared?.routes||plan.cooperation?.routes;
  if(!routes?.some(route=>route.id===routeId))throw Error('这套方案没有该行动路线，请重新推荐');
  const ordered=[routes.find(route=>route.id===routeId),...routes.filter(route=>route.id!==routeId)];
- const steps=[plan.shared.steps[0],'主线：'+ordered[0].step,'备选：'+ordered[1].step];
- const tempo=ordered[0].tempo||plan.shared.tempo;
- const shared={...plan.shared,tempo,name:`${plan.members.length}人分工 · ${TEMPOS[tempo]}`,routes:ordered,memberJobs:ordered[0].memberJobs,steps,relaySteps:steps,conditions:[plan.shared.conditions[0],ordered[0].condition],failures:[plan.shared.failures[0],ordered[0].failure]};
+ const source=plan.shared||asSharedRoutes(plan.cooperation,plan.members);
+ const steps=[source.steps[0],'主线：'+ordered[0].step,'备选：'+ordered[1].step];
+ const tempo=ordered[0].tempo||source.tempo;
+ const shared={...source,tempo,name:`${plan.members.length}人分工 · ${TEMPOS[tempo]}`,routes:ordered,memberJobs:ordered[0].memberJobs,steps,relaySteps:steps,conditions:[source.conditions[0],ordered[0].condition],failures:[source.failures[0],ordered[0].failure]};
  const next=updatePlanKeyStage({...plan,...sharedDescriptor(shared,{version:plan.dataVersion})});next.id=creativePlanId(next);
  return validateCreativePlan(next);
 }

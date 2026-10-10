@@ -27,7 +27,7 @@ test('same-patch recipe and skill changes flag their dependents without changing
  const baseline={...data,patch:BUNDLED_CATALOG.patch},next=structuredClone(baseline),c=structuredClone(BUNDLED_CATALOG);
  // Isolate these changes from legitimate differences between the bundled
  // historical review and today's source data (including corrected growth).
- for(const row of [...c.loadouts,...c.duos,...c.trios])row.reviewBaseline=reviewBaseline(row,c,baseline);
+ for(const row of [...c.loadouts,...c.duos,...c.trios]){row.patch=baseline.patch;row.reviewBaseline=reviewBaseline(row,c,baseline);}
  const entry=c.duos.find(d=>d.carry==='Nilah'&&d.support==='Taric');
  next.items[3190].gold.total+=100;next.champions.find(c=>c.id==='Taric').mechanics.spells[2].cooldown[0]+=1;
  const issue=catalogIssues(c,next);assert.equal(issue.status[entry.id].stale,true);assert.ok(issue.status[entry.id].changedDependencies.some(d=>d.kind==='item'&&d.id==='3190'));assert.ok(issue.status[entry.id].changedDependencies.some(d=>d.kind==='champion'&&d.id==='Taric'));

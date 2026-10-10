@@ -35,6 +35,7 @@ export function validateCatalog(value,data){
  const configs=new Map(c.loadouts.map(l=>[l.id,l]));
  for(const entry of [...c.loadouts,...c.duos,...c.trios])baseline(entry.reviewBaseline);
  for(const l of c.loadouts){assert(id(l.id)&&str(l.name,120)&&bases.includes(l.base)&&str(l.why),'出装内容');list(l.champions,180,hero,'出装英雄');list(l.roles,5,v=>roles.includes(v),'出装位置');assert(l.champions.length&&l.roles.length,'出装适用范围');
+  sources(l.sources||[]);
   for(const field of ['items','late'])list(l[field],6,v=>Number.isInteger(v)&&v>0,'装备列表');assert(l.items.length===3&&Number.isInteger(l.boots)&&l.boots>0,'核心装与鞋子');
   list(l.runes,8,v=>Object.hasOwn(c.runes,v),'出装符文');assert(l.runes.length,'出装需要符文');if(l.early)list(l.early,5,v=>Number.isInteger(v)&&v>0,'过渡装备');assert(l.damage===undefined||['ad','ap','mixed'].includes(l.damage),'伤害类型');assert(l.priority===undefined||/^(?!.*(.).*\1)[QWE]{3}$/.test(l.priority),'加点顺序');
   assert(l.patch===undefined||/^\d{2}\.\d{1,2}$/.test(l.patch),'配置复核版本');assert(l.reviewedAt===undefined||date(l.reviewedAt),'配置复核日期');

@@ -50,7 +50,8 @@ test('accepted three/four/five-person plans give distinct role duties at each st
   if(plan.shared?.routes){
    const switched=selectPartyRoute(plan,plan.shared.routes[1].id);
    assert.deepEqual(switched.stagePlan.key.steps,switched.steps);assert.deepEqual(switched.stagePlan.key.memberJobs.map(m=>m.job),switched.ordered.map(m=>m.job));
-   assert.deepEqual(switched.stagePlan.later,plan.stagePlan.later);assert.notEqual(switched.id,plan.id);
+   assert.deepEqual(switched.stagePlan.later.memberJobs,plan.stagePlan.later.memberJobs);assert.deepEqual(switched.stagePlan.later.steps,plan.stagePlan.later.steps);
+   assert.equal(switched.stagePlan.later.window,switched.shared.routes[0].condition);assert.equal(switched.stagePlan.later.exit,switched.shared.routes[0].failure);assert.notEqual(switched.id,plan.id);
   }
  }
 });
@@ -65,9 +66,34 @@ test('old saves keep their identity while clearly using current role references 
  assert.equal(JSON.stringify(build.combo.creativePlan),original);assert.equal(JSON.stringify(old),original);
 });
 
+test('accepted trio opening keeps the whole-party early plan alongside personal duties in every guide',()=>{
+ const trio=TRIOS.find(t=>t.members.some(m=>m.champion==='Shen')&&t.members.some(m=>m.champion==='Nocturne')&&t.members.some(m=>m.champion==='Galio'));
+ const slots=slotsFor(trio.members),plan=captureCreativePlan({trio,slots,scope:'party'},data),originalEarly=trio.early;
+ assert.equal(plan.stagePlan.opening.steps[0],originalEarly);
+ try{
+  trio.early='Changed opening';
+  const restored=validateState(JSON.parse(JSON.stringify({...defaultState(),draft:{slots,scope:'party',creativePlan:plan}}))).draft.creativePlan;
+  for(const m of trio.members){
+   const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',creativePlan:restored,comboId:restored.id}),stage:'opening'});
+   assert.ok(model.stageHint.play.steps.includes(originalEarly));
+   const html=renderGuide({model},'team',false,()=>'<img>');assert.ok(html.includes(originalEarly));assert.ok(html.includes(model.coach.action));assert.doesNotMatch(html,/Changed opening/);
+  }
+  assert.ok(resultAsText({trio,slots,creativePlan:restored},data).includes(originalEarly));
+ }finally{trio.early=originalEarly;}
+});
+
 test('contradictory or incomplete saved stage content is rejected even with a recalculated identity',()=>{
  const trio=TRIOS[0],slots=slotsFor(trio.members),plan=captureCreativePlan({trio,slots,scope:'party'},data);
  for(const change of [p=>p.stagePlan.key.steps[0]='Wrong team action',p=>p.stagePlan.key.memberJobs[0].job='Wrong job',p=>p.stagePlan.later.memberJobs[0].champion='FutureUnknown',p=>delete p.stagePlan.opening,p=>p.stagePlan.later.exit='']){
   const bad=structuredClone(plan);change(bad);bad.id=creativePlanId(bad);assert.throws(()=>validateCreativePlan(bad));
+ }
+});
+
+test('personal trio opening text is visible and party guide puts stop conditions before the expandable full sequence',()=>{
+ const trio={...structuredClone(TRIOS.find(t=>t.id==='galio-nilah-rakan')),id:'local-opening',early:'先确认三人本轮安全兵线与实际到场时间，不能到就取消；个人三人开局专属约定。'},slots=slotsFor(trio.members),plan=captureCreativePlan({trio,slots,scope:'party'},data);
+ for(const m of trio.members){const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'opening'}),html=renderGuide({model},'team',false,()=>'<img>');
+  assert.ok(html.includes(trio.early));assert.doesNotMatch(html,/class="quick-plan"/);
+  const panel=html.slice(html.indexOf('class="duo-stage"'));assert.ok(panel.indexOf('何时停')<panel.indexOf('完整队友行动与顺序'));
+  assert.match(panel,/data-guide-section="party-steps"/);assert.ok(panel.includes(model.coach.action));
  }
 });

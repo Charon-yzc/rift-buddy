@@ -1,6 +1,7 @@
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),customRunes=process.env.RIFT_CURATED_CUSTOM_RUNES==='1',duoStages=process.env.RIFT_CURATED_DUO_STAGES==='1',readiness=process.env.RIFT_CURATED_READINESS==='1',routes=process.env.RIFT_CURATED_ROUTES==='1',tactics=Number(process.env.RIFT_CURATED_TACTICS)||0,independent=Number(process.env.RIFT_CURATED_INDEPENDENT)||0,restart=process.env.RIFT_CURATED_RESTART==='1',windows=[];let writes=0,copied='',pairCache,refreshedMembers=[];
+const scenario=process.env.RIFT_CURATED_SCENARIO||'';
 globalShortcut.register=()=>false;global.fetch=async()=>{throw Error('Isolated smoke: network disabled');};https.request=()=>{throw Error('Isolated smoke: game sockets disabled');};
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -13,6 +14,14 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
  const js=async code=>{try{return await main.webContents.executeJavaScript(code,true);}catch(error){throw Error(error.message+'\nMain script: '+code);}},click=async selector=>{assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector+' missing');await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(120);},state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
+ const captureDetails=async(selector,file)=>{
+  await js('document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
+  await until(()=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)return false;el.open=true;const pane=el.closest(".plan-drawer")?.querySelector(".drawer-content")||el.closest(".drawer"),pad=el.closest(".plan-drawer")?16:150;pane.scrollTop+=el.getBoundingClientRect().top-pane.getBoundingClientRect().top-pad;const r=el.querySelector("summary").getBoundingClientRect();return r.top>=pad-2&&r.bottom<innerHeight-90;})()'),'Details summary is not visible: '+selector);
+  await delay(160);
+  const position=await js('(()=>{const r=document.querySelector('+JSON.stringify(selector)+').querySelector("summary").getBoundingClientRect();return {top:r.top,bottom:r.bottom};})()');assert.ok(position.top>=0&&position.bottom<main.getContentSize()[1]);
+  await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await delay(100);
+  await fs.writeFile(path.join(root,file),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
+ };
  await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'UI missing');await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")'),'Results missing');
  if(tactics){
   const boot=await js('window.buddy.bootstrap()'),before=boot.state.draft.slots;pairCache=boot.data.pairStatistics;
@@ -41,20 +50,28 @@ async function run(){
   await click('[data-action=companion-tab][data-tab=recommend]');
  }
  if(!restart){
-  if(routes){await click('.companion-candidate [data-action=result-detail]');if(!tactics||tactics===5)await click('.plan-drawer [data-action=party-route]');if(tactics===5)assert.match(await js('document.querySelector(".plan-drawer h2").textContent'),/保护核心/);await click('.plan-drawer [data-action=favorite-result]');await click('.plan-drawer [data-action=use-result]');}
+  if(routes){await click('.companion-candidate [data-action=result-detail]');
+   if(['all-routes','side-pressure','side-pressure-trio'].includes(scenario)){
+    const target=scenario==='all-routes'?'ball:Orianna:Sejuani':'side-pressure';
+    await captureDetails('.plan-drawer .party-route-more','more-routes.png');
+    await click('.plan-drawer [data-action=party-route][data-route="'+target+'"]');
+   }else if(!tactics||tactics===5)await click('.plan-drawer [data-action=party-route]');
+   if(tactics===5)assert.match(await js('document.querySelector(".plan-drawer h2").textContent'),/保护核心/);await click('.plan-drawer [data-action=favorite-result]');await click('.plan-drawer [data-action=use-result]');}
   else await click('.companion-candidate [data-action=use-result]');
   await until(async()=>!!(await state()).draft.creativePlan,'Adoption missing');
  }
  await click('[data-action=companion-full]');await until(()=>js('!!document.querySelector(".result-card")'),'Main results missing');
- let plan=(await state()).draft.creativePlan;if(readiness)assert.ok(['shared','cooperation'].includes(plan.archetype));else assert.equal(plan.archetype,routes||independent?'shared':'curated');
+ let plan=(await state()).draft.creativePlan;if(readiness)assert.ok(['shared','cooperation'].includes(plan.archetype));else assert.equal(plan.archetype,scenario==='yasuo-relay'?'cooperation':routes||independent?'shared':'curated');
  if(restart)assert.deepEqual(plan,JSON.parse(await fs.readFile(path.join(root,'accepted.json'),'utf8')));
  else await fs.writeFile(path.join(root,'accepted.json'),JSON.stringify(plan,null,2));
  if(readiness){assert.deepEqual(plan.members.map(m=>m.champion),['Kled','Khazix','Anivia']);}
  else if(independent){assert.doesNotMatch(plan.ordered.map(m=>m.job).join(' '),/接实际控制后|等主线实际生效/);assert.equal(plan.shared.routes[0].id,independent===4?'reset':'tactical:growth');}
- else if(routes){assert.equal(plan.shared.routes.length,2);if(tactics){assert.equal(plan.tempo,tactics===5?'protect':'poke');assert.equal(plan.shared.routes[0].tempo,plan.tempo);assert.match(plan.ordered.find(m=>m.champion==='Jayce').job,/炮形 Q/);}else{assert.ok(!plan.shared.routes[0].id.startsWith('curated:'));assert.ok(plan.shared.routes[1].id.startsWith('curated:'));}}
- else{if(!duoStages){assert.match(plan.ordered.find(m=>m.champion==='Rakan').job,/W|R/);assert.match(plan.steps.join(' '),/洛/);}
+ else if(routes){assert.ok(plan.shared.routes.length>=2);if(scenario==='all-routes'){for(const id of ['ball:Orianna:Ornn','ball:Orianna:Sejuani','tactical:protect','tactical:growth'])assert.ok(plan.shared.routes.some(r=>r.id===id));assert.equal(plan.shared.routes[0].id,'ball:Orianna:Sejuani');}else if(['side-pressure','side-pressure-trio'].includes(scenario)){assert.equal(plan.shared.routes[0].id,'side-pressure');assert.match(plan.stagePlan.later.window,/不要求全员同时到同侧/);}else if(tactics){assert.equal(plan.tempo,tactics===5?'protect':'poke');assert.equal(plan.shared.routes[0].tempo,plan.tempo);assert.match(plan.ordered.find(m=>m.champion==='Jayce').job,/炮形 Q/);}else{assert.ok(!plan.shared.routes[0].id.startsWith('curated:'));assert.ok(plan.shared.routes.some(r=>r.id.startsWith('curated:')));}}
+ else if(scenario==='yasuo-relay'){assert.match(plan.ordered.find(m=>m.champion==='Yasuo').job,/同一轮不安排两次自己的 R/);assert.match(plan.ordered.find(m=>m.champion==='Diana').job,/备用仅在墨菲特未开成/);}
+ else{if(!duoStages&&scenario!=='trio-stages'){assert.match(plan.ordered.find(m=>m.champion==='Rakan').job,/W|R/);assert.match(plan.steps.join(' '),/洛/);}
   await js('(async()=>{const {TRIOS,DUOS}=await import(new URL("./core/rules.mjs",location.href).href),c=[...TRIOS,...DUOS].find(t=>t.id==='+JSON.stringify(plan.curated.id)+');c.name="Changed catalog";c.steps=["Changed lead"];c.members?.forEach(m=>m.job="Changed job");const {BOTTOM_PLAYS}=await import(new URL("./core/role-plays.mjs",location.href).href);if('+duoStages+')BOTTOM_PLAYS.Ashe[2]="Changed later action";})()');
  }
+ if(scenario==='trio-stages'){assert.equal(plan.stagePlan.opening.steps[0],plan.curated.early);assert.match(plan.curated.early,/六级前/);}
  await click('[data-action=result-detail][data-index="0"]');await click('.plan-drawer [data-action=copy-result]');
  for(const m of plan.ordered)assert.ok(copied.includes(m.job));assert.doesNotMatch(copied,/Changed catalog|Changed lead|Changed job/);
  if(readiness){
@@ -84,6 +101,11 @@ async function run(){
  for(const member of plan.members){
   await click('.plan-drawer [data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');
   const body=await js('document.querySelector(".drawer-content").textContent');assert.ok(body.includes(plan.ordered.find(m=>m.champion===member.champion).job));assert.doesNotMatch(body,/Changed job/);
+  if(scenario==='loadout-review'){
+   const selected=(await state()).preparations.find(p=>p.id===member.champion&&p.comboId===plan.id);
+   assert.equal(selected?.loadoutId,{Galio:'trio-galio-engage',Nilah:'nilah-sustain',Rakan:'rakan-engage'}[member.champion]);
+   assert.match(body,/本配置的一手依据/);await captureDetails('.drawer .configuration-evidence',(restart?'restart-':'')+member.champion+'-configuration.png');
+  }
   await click('[data-action=open-guide]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
   await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(member.champion)+')',true),'Wrong guide member');
   const payload=await guide.webContents.executeJavaScript('window.guide.bootstrap()',true);assert.deepEqual(payload.model.combo.creativePlan,plan);assert.equal(payload.model.combo.ownJob,plan.ordered.find(m=>m.champion===member.champion).job);assert.equal(payload.model.runes.length,9);assert.deepEqual(payload.model.combo.steps,plan.steps);
@@ -106,7 +128,7 @@ async function run(){
   await click('[data-action=back-result]');
  }
  assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));
- const proof={passed:true,archiveSha256:release.archiveSha256,routes,tactics,independent,readiness,duoStages,customRunes,restart,planId:plan.id,memberGuides:plan.members.length,memberStages:plan.members.length*3,sameIdCatalogChange:!routes&&!independent&&!readiness,refreshedMembers,sidebarGeometry:geometry,actualRuneWrites:0,realGame:'UNPROVEN'};
+ const proof={passed:true,archiveSha256:release.archiveSha256,scenario,routes,tactics,independent,readiness,duoStages,customRunes,restart,planId:plan.id,memberGuides:plan.members.length,memberStages:plan.members.length*3,sameIdCatalogChange:!!plan.curated&&!readiness,refreshedMembers,sidebarGeometry:geometry,actualRuneWrites:0,realGame:'UNPROVEN'};
  await fs.writeFile(path.join(root,restart?'restart.json':'select.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify(proof));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'error.txt'),error.stack).catch(()=>{});for(const [i,w]of windows.entries())if(!w.isDestroyed())await fs.writeFile(path.join(root,'failure-'+i+'.png'),(await w.webContents.capturePage()).toPNG()).catch(()=>{});app.exit(1);});
