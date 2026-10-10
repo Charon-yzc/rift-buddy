@@ -60,6 +60,22 @@ test('personal duo seeds respect pools, exclusions and public picks',()=>{
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });
 
+test('duo and trio library loading preserves locked friends and checks current public eligibility atomically',()=>{
+ for(const combo of [entry(),{members:[...entry().members,{role:'top',champion:'Garen'}]}]){
+  const original=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role),champion:s.role==='mid'?'Lux':null,locked:s.role==='mid'})),before=structuredClone(original);
+  assert.throws(()=>loadPersonalCombo(original,combo),/锁定英雄冲突/);assert.deepEqual(original,before);
+  const unlocked=original.map(s=>({...s,locked:false})),unchanged=structuredClone(unlocked);
+  for(const options of [{publicBans:['Ahri']},{enemy:['Ahri']},{eligibleByRole:{mid:['Lux']}},{eligibleByRole:{mid:[]}},{publicPicks:['Ahri']},{publicCells:[1]}]){
+   const current=options.publicCells?unlocked.map(s=>s.role==='mid'?{...s,clientCellId:1,manualPosition:true}:s):unlocked;
+   assert.throws(()=>loadPersonalCombo(current,combo,options),/本局不可选|客户端已确认/);assert.deepEqual(unlocked,unchanged);
+  }
+  const loaded=loadPersonalCombo(unlocked,combo,{eligibleByRole:{mid:['Ahri']}});assert.equal(loaded.find(s=>s.role==='mid').champion,'Ahri');assert.equal(loaded.find(s=>s.role==='mid').locked,true);assert.deepEqual(unlocked,unchanged);
+  const picked=unlocked.map(s=>s.role==='mid'?{...s,champion:'Ahri',locked:true,clientCellId:1,manualPosition:true}:s),options={eligibleByRole:{mid:[]},confirmedPick:{role:'mid',champion:'Ahri'},publicCells:[1]};
+  assert.deepEqual(loadPersonalCombo(picked,combo,options).find(s=>s.role==='mid'),picked.find(s=>s.role==='mid'));
+  assert.throws(()=>loadPersonalCombo(picked,combo,{...options,publicBans:['Ahri']}),/本局不可选/);
+ }
+});
+
 test('empty cross-lane parties surface existing concrete mechanism plans before generic functions',()=>{
  for(const roles of [['jungle','mid'],['top','jungle']]){
   const empty=createSlots().map(s=>({...s,party:roles.includes(s.role)}));const [first]=recommend({slots:empty,champions:data.champions,scope:'party',style:'fun',play:{unusual:false},limit:3});assert.ok(first.adaptive||first.duo||first.trio);assert.notEqual(first.origin,'generated');

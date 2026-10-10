@@ -6,7 +6,8 @@ import {promisify} from 'node:util';
 const execFileAsync=promisify(execFile);
 import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
 import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteContext} from '../src/core/rune-context.mjs';
-const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-champ-select/v1/session','/lol-perks/v1/pages','/data-store/v1/install-dir']);
+import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
+const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-champ-select/v1/session','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
 export function parseLockfile(content) {
  const parts=String(content).trim().split(':');
@@ -63,22 +64,37 @@ export function sanitizeSession(session) {
    ...(pick?{pickState:pick.completed?'locked':'selecting'}:{})};
  });
  return {myTeam:team(session.myTeam),theirTeam:team(session.theirTeam),localPlayerCellId:session.localPlayerCellId,allowDuplicatePicks:session.allowDuplicatePicks===false?false:true,
+  ...(/^[1-9]\d{0,19}$/.test(String(session.gameId||''))?{gameId:String(session.gameId)}:{}),
   bans:[...(session.bans?.myTeamBans||[]),...(session.bans?.theirTeamBans||[])].filter(Number.isInteger),
   actions,timer:{phase:session.timer?.phase||'',...(Number.isFinite(session.timer?.adjustedTimeLeftInPhase)?{remainingMs:Math.max(0,session.timer.adjustedTimeLeftInPhase)}:{})}};
 }
-export async function clientSnapshot(installPath='') {
- const cached=!!snapshotAuth&&snapshotPath===installPath&&Date.now()-snapshotAuthAt<30000;
- const auth=cached?snapshotAuth:await discoverClient(installPath);
- if(auth?.port&&!cached){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=Date.now();}
+export async function clientSnapshot(installPath='',{discover=discoverClient,request=lcuRequest,now=Date.now}={}) {
+ const native=discover===discoverClient&&request===lcuRequest;
+ const cached=native&&!!snapshotAuth&&snapshotPath===installPath&&now()-snapshotAuthAt<30000;
+ const auth=cached?snapshotAuth:await discover(installPath);
+ if(native&&auth?.port&&!cached){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=now();}
  if(!auth)return {connected:false,phase:'Offline',message:'未发现客户端，可先手动选人'};
  if(auth.unreadable)return {connected:false,phase:'Offline',needsElevation:true,message:'已发现客户端，需要授权连接才能读取选人信息'};
  try{
-  const phase=await lcuRequest(auth,'/lol-gameflow/v1/gameflow-phase');
-  let session=null;
-  if(phase==='ChampSelect')session=sanitizeSession(await lcuRequest(auth,'/lol-champ-select/v1/session'));
-  let game={};try{game=sanitizeGame(await lcuRequest(auth,'/lol-gameflow/v1/session'));}catch{}
-  return {connected:true,phase,session,game,mode:identifyMode(game),receivedAt:new Date().toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
- }catch(e){snapshotAuth=null;snapshotAuthAt=0;return {connected:false,phase:'Offline',message:e.message};}
+  let phase=await request(auth,'/lol-gameflow/v1/gameflow-phase'),session=null,eligibility=null;
+  if(phase==='ChampSelect'){
+   session=sanitizeSession(await request(auth,'/lol-champ-select/v1/session'));
+   const context=pickEligibilityContext(session);
+   const reads=await Promise.allSettled(['pickable-champion-ids','disabled-champion-ids'].map(name=>request(auth,'/lol-champ-select/v1/'+name)));
+   if(reads.some(r=>r.status==='rejected'&&r.reason?.status===401))throw Error('客户端连接已变化，请重新连接');
+   const [pickable,disabled]=reads.map(r=>r.status==='fulfilled'?normalizeChampionIds(r.value):null);
+   eligibility={pickable,disabled,context,localPlayerCellId:session.localPlayerCellId,receivedAt:new Date(now()).toISOString()};
+   if(pickable!==null||disabled!==null){
+    // A non-atomic LCU read can cross a new selection or phase. Do not reuse
+    // either list if the public draft changed while these reads were pending.
+    phase=await request(auth,'/lol-gameflow/v1/gameflow-phase');
+    session=phase==='ChampSelect'?sanitizeSession(await request(auth,'/lol-champ-select/v1/session')):null;
+    if(context!==pickEligibilityContext(session))eligibility=null;
+   }
+  }
+  let game={};try{game=sanitizeGame(await request(auth,'/lol-gameflow/v1/session'));}catch{}
+  return {connected:true,phase,session,eligibility,game,mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
+ }catch(e){if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {
  const {validateRunePage}=await import('../src/core/builds.mjs');
