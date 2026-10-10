@@ -2,6 +2,7 @@ import test,{afterEach} from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
 import {createRoomService} from '../services/room.mjs';
+import {MAX_FRAME,encodeFrame} from '../src/core/room.mjs';
 
 // Every service created in this file is disposed after each test, so an
 // assertion failure can never leave a listening socket behind and hang the
@@ -100,7 +101,7 @@ test('a flood from an unauthenticated socket cannot poison later guests',async()
  const created=await host.host();
  const flood=net.connect(created.port,'127.0.0.1');
  await new Promise(r=>flood.once('connect',r));
- flood.write('x'.repeat(40000)); // no newline, oversized
+ flood.write('x'.repeat(MAX_FRAME+1)); // no newline, oversized
  await until(()=>flood.destroyed);
  const guest=room({nick:'队友'});
  await guest.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});
@@ -186,7 +187,7 @@ test('a client flood fails the join instead of leaving a stuck client',async()=>
  const fake=fakeServer(socket=>{
   socket.on('error',()=>{});
   socket.resume();
-  socket.write('x'.repeat(40000)); // no newline, oversized
+  socket.write('x'.repeat(MAX_FRAME+1)); // no newline, oversized
  });
  await new Promise(r=>fake.listen(0,'127.0.0.1',r));
  const guest=room({nick:'队友'});
@@ -196,11 +197,13 @@ test('a client flood fails the join instead of leaving a stuck client',async()=>
 });
 
 test('disposing during a pending join settles the promise instead of hanging',async()=>{
+ const silent=fakeServer(socket=>{socket.on('error',()=>{});socket.resume();});
+ await new Promise(resolve=>silent.listen(0,'127.0.0.1',resolve));
  const guest=room({nick:'队友'});
  // Attach handlers immediately so a fast refusal cannot surface as an
  // unhandled rejection; the guarantee under test is that it always settles.
  let outcome=null;
- const pending=guest.join({host:'10.255.255.1',port:9,room:'482913',pin:'482913'})
+ const pending=guest.join({host:'127.0.0.1',port:silent.address().port,room:'482913',pin:'482913'})
   .then(()=>{outcome='resolved';},()=>{outcome='rejected';});
  await wait(80);
  guest.dispose();
@@ -343,4 +346,27 @@ test('resetting a throttled connection cannot crash the host',async()=>{
  await guest.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});
  await until(()=>host.snapshot().members.length===2);
  guest.leave();host.leave();
+});
+
+test('the twelve-member limit includes the host and leaves existing peers connected',async()=>{
+ const host=room({nick:'房主'}),address=await host.host();
+ const target={host:'127.0.0.1',port:address.port,room:address.room,pin:address.pin};
+ const guests=[];for(let i=0;i<11;i++){const guest=room({nick:'队友'+i});await guest.join(target);guests.push(guest);}
+ await until(()=>host.snapshot().members.length===12&&guests.every(g=>g.snapshot().members.length===12));
+ await assert.rejects(()=>room({nick:'超员'}).join(target),/未能加入/);
+ host.publish({lineup:[{role:'mid',champion:'Ahri'}],mode:'hex'});
+ await until(()=>guests.every(g=>g.snapshot().members.find(m=>m.nick==='房主')?.share?.mode==='hex'));
+});
+
+test('an excessive frame burst closes that sender while a normal member can still share',async()=>{
+ const host=room({nick:'房主'}),address=await host.host(),target={host:'127.0.0.1',port:address.port,room:address.room,pin:address.pin};
+ const guest=room({nick:'正常'});await guest.join(target);
+ const raw=net.connect(address.port,'127.0.0.1');raw.on('error',()=>{});raw.on('data',()=>{});
+ const closed=new Promise(resolve=>raw.once('close',resolve));await new Promise(resolve=>raw.once('connect',resolve));
+ raw.write(encodeFrame({kind:'hello',v:1,room:address.room,pin:address.pin,nick:'突发'}));
+ await until(()=>host.snapshot().members.some(m=>m.nick==='突发'));
+ raw.write(encodeFrame({kind:'state',v:1,from:'突发',at:1,lineup:[]}).repeat(61));await closed;
+ await until(()=>host.snapshot().members.length===2);
+ guest.publish({lineup:[{role:'bottom',champion:'Ashe'}]});
+ await until(()=>host.snapshot().members.find(m=>m.nick==='正常')?.share?.lineup[0]?.champion==='Ashe');
 });

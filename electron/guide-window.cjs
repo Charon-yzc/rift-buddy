@@ -21,16 +21,16 @@ function cursorInBounds(cursor,bounds,margin=2){
 module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
- const BALL_SIZE=76,STRIP_W=280;
+ const BALL_SIZE=76;
  let gameBounds=null;
  const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
  function fit(recover=false){if(!win||win.isDestroyed())return;const area=workArea(),current=win.getBounds();
-  if(isStrip()){const h=stripHeight(),b={x:Math.max(area.x,Math.min(current.x,area.x+area.width-STRIP_W)),y:Math.max(area.y,Math.min(current.y,area.y+area.height-h)),width:Math.min(STRIP_W,area.width),height:Math.min(h,area.height)};if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3)){adjusting=true;win.setMinimumSize(Math.min(200,area.width),Math.min(60,area.height));win.setBounds(b);adjusting=false;}return;}
+  if(isStrip()){const h=stripHeight(),w=stripWidth(),b={x:Math.max(area.x,Math.min(current.x,area.x+area.width-w)),y:Math.max(area.y,Math.min(current.y,area.y+area.height-h)),width:Math.min(w,area.width),height:Math.min(h,area.height)};if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3)){adjusting=true;win.setMinimumSize(Math.min(200,area.width),Math.min(60,area.height));win.setBounds(b);adjusting=false;}return;}
   const b=guidePlacement(recover?null:current,area,gameBounds,{ball:isBall(),collapsed:!!getState()?.collapsed,recover});adjusting=true;win.setMinimumSize(Math.min(isBall()?76:360,area.width),Math.min(isBall()?76:getState()?.collapsed?280:480,area.height));if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3))win.setBounds(b);adjusting=false;}
  const isBall=()=>!!getState()?.ball;
  const isStrip=()=>!!getState()?.strip;
- const stripRows=()=>{try{const d=getModel()?.estimate?.duels;return Array.isArray(d)?Math.min(5,Math.max(1,d.length)):1;}catch{return 1;}};
- const stripHeight=()=>44+stripRows()*20;
+ const stripScale=()=>[1,1.1,1.25].includes(getPreferences().presentation?.textScale)?getPreferences().presentation.textScale:1;
+ const stripWidth=()=>Math.ceil(340*stripScale()),stripHeight=()=>Math.ceil(160*stripScale());
  const needsAutoShow=()=>autoShowUntil>Date.now()&&getPreferences().guideAutoShow!==false;
 const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&getModel()?.live.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
@@ -41,27 +41,31 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
  function adjustHeight(){if(win&&!isBall()&&!isStrip()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
  function applyMode(){
   if(!win||win.isDestroyed())return;
+  clearTimeout(boundsTimer);
+  adjusting=true;
+  // On Windows changing resizability can change the native frame bounds.
+  // Apply it before the desired size, not after restoring the full window.
+  win.setResizable(!isBall()&&!isStrip());
   if(isStrip()){
-   win.setMinimumSize(200,60);win.setSize(STRIP_W,stripHeight());
+   win.setMinimumSize(200,60);win.setSize(stripWidth(),stripHeight());
    const area=screen.getDisplayMatching(win.getBounds()).workArea,b=win.getBounds();
-   win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-STRIP_W)),Math.max(area.y,Math.min(b.y,area.y+area.height-stripHeight())));
+   win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-stripWidth())),Math.max(area.y,Math.min(b.y,area.y+area.height-stripHeight())));
   }else if(isBall()){
    win.setMinimumSize(BALL_SIZE,BALL_SIZE);win.setSize(BALL_SIZE,BALL_SIZE);
    const area=screen.getDisplayMatching(win.getBounds()).workArea,b=win.getBounds();
    win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-BALL_SIZE)),Math.max(area.y,Math.min(b.y,area.y+area.height-BALL_SIZE)));
   }else{
-   const saved=getState()?.bounds,area=screen.getDisplayMatching(win.getBounds()).workArea;
-   const width=Number.isFinite(saved?.width)?Math.min(Math.max(saved.width,360),640,area.width):Math.min(400,area.width);
-   win.setSize(width,win.getSize()[1]);
-   adjustHeight();
+   const saved=getState()?.bounds,area=screen.getDisplayMatching(win.getBounds()).workArea,current=win.getBounds(),collapsed=!!getState()?.collapsed;
+   const desired=guidePlacement({...current,width:saved?.width||400,height:collapsed?280:saved?.height||740},area,gameBounds,{collapsed});
+   win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setBounds(desired);
   }
-  win.setResizable(!isBall()&&!isStrip());
+  adjusting=false;
   inputMode();publish();
  }
  function create(){
   const saved=getState()?.bounds,area=workArea();
   const ball=isBall(),strip=isStrip();
-  const width=ball?BALL_SIZE:strip?STRIP_W:Math.min(saved?.width||400,area.width),height=ball?BALL_SIZE:Math.min(strip?stripHeight():getState()?.collapsed?280:saved?.height||740,area.height);
+  const width=ball?BALL_SIZE:strip?stripWidth():Math.min(saved?.width||400,area.width),height=ball?BALL_SIZE:Math.min(strip?stripHeight():getState()?.collapsed?280:saved?.height||740,area.height);
   win=new BrowserWindow({width,height,minWidth:ball?BALL_SIZE:strip?200:360,minHeight:ball?BALL_SIZE:strip?60:getState()?.collapsed?280:480,maxWidth:640,maxHeight:1000,
    x:Math.max(area.x,Math.min(saved?.x??area.x+area.width-440,area.x+area.width-width)),y:Math.max(area.y,Math.min(saved?.y??area.y+40,area.y+area.height-height)),frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,transparent:true,
    backgroundColor:'#00000000',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),resizable:!ball&&!strip,
@@ -78,7 +82,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
    if(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT)setTimeout(async()=>{try{await fs.writeFile(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT,(await win.webContents.capturePage()).toPNG());diagnostic('guide screenshot saved');}catch(e){diagnostic(`guide capture failed ${e.message}`);}},1500);
   });
   win.on('close',event=>{if(!isQuitting()){event.preventDefault();hide();}});
-  const remember=()=>{if(adjusting||isBall()||isStrip())return;clearTimeout(boundsTimer);boundsTimer=setTimeout(()=>{if(!win||win.isDestroyed()||!getState())return;const b=win.getBounds(),current=getState();save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}}).catch(()=>{});},350);};
+  const remember=()=>{if(adjusting||isBall()||isStrip())return;clearTimeout(boundsTimer);boundsTimer=setTimeout(()=>{if(!win||win.isDestroyed()||!getState()||isBall()||isStrip())return;const b=win.getBounds(),current=getState();save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}}).catch(()=>{});},350);};
   win.on('move',remember);win.on('resize',remember);
   // Fallback for flaky forwarded mousemove: while pass-through is active,
   // poll the OS cursor so hovering the drag strip still lifts ignore for
@@ -123,8 +127,17 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
   if(action==='current'){if(!await prepareCurrent())throw Error('尚未确认当前英雄与模式，请在完整助手中选择');inputMode();publish();return payload();}
   const current=getState();if(!current)throw Error('先在配置页选择“本局指引”');
   if(action==='collapse'){const result=await save({...current,collapsed:!current.collapsed});adjustHeight();return result;}
-  if(action==='ball'){const ball=!current.ball;const result=await save({...current,ball,strip:ball?false:current.strip});applyMode();return result;}
-  if(action==='strip'){const strip=!current.strip;const result=await save({...current,strip,ball:strip?false:current.ball});applyMode();return result;}
+  const fullBounds=()=>{
+   if(current.ball||current.strip||!win)return current.bounds;
+   const bounds=win.getBounds(),saved=current.bounds;
+   // Fractional Windows scaling rounds native bounds by a few DIPs. Reusing
+   // that rounding as a new requested size would grow every compact cycle.
+   for(const key of ['width','height'])if(saved&&Math.abs(bounds[key]-saved[key])<=3)bounds[key]=saved[key];
+   if(current.collapsed)bounds.height=saved?.height||740;
+   return bounds;
+  };
+  if(action==='ball'){const ball=!current.ball;const result=await save({...current,bounds:fullBounds(),ball,strip:ball?false:current.strip});applyMode();return result;}
+  if(action==='strip'){const strip=!current.strip;const result=await save({...current,bounds:fullBounds(),strip,ball:strip?false:current.ball});applyMode();return result;}
   if(action==='opacity'){if(![0.65,0.85,1].includes(value))throw Error('透明度格式不正确');const result=await save({...current,opacity:value});win.setOpacity(value);return result;}
   if(action==='interaction'){await interact();return payload();}
   if(action==='live-advice')return save({...current,liveAdvice:current.liveAdvice===false});
@@ -174,7 +187,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
    else if(behavior==='collapse'&&!isStrip()){await save({...getState(),collapsed:true});adjustHeight();}
   }
  }
- return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);win?.destroy();},window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),clickThrough:mousePassThrough()}:null};
+ return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);win?.destroy();},window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;

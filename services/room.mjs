@@ -27,6 +27,9 @@ const HOST_NAME=/^[A-Za-z0-9.-]{1,253}$/;
 
 // One member as the UI sees it: online status plus the latest sanitized share.
 const memberView=({nick,share})=>({nick,online:true,share:share||null});
+const shareBody=share=>({lineup:share.lineup,pick:share.pick,at:share.at,...(share.mode!==undefined?{mode:share.mode}:{}),...(share.configurations!==undefined?{configurations:share.configurations}:{}),...(share.strategy?{strategy:share.strategy}:{})});
+const send=(socket,frame)=>{const line=encodeFrame(frame);if(!line)return false;if(socket.destroyed)return false;if(socket.writableLength>MAX_FRAME*8){socket.destroy();return false;}try{socket.write(line);return true;}catch{socket.destroy();return false;}};
+const frameBudget=()=>{let start=Date.now(),count=0;return n=>{const now=Date.now();if(now-start>=1000){start=now;count=0;}count+=n;return count<=60;};};
 
 export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>{},now=Date.now,announceMs=ANNOUNCE_MS,handshakeTimeoutMs=HANDSHAKE_TIMEOUT_MS,listenHost='0.0.0.0',discovery=true}={}){
  const display=sanitizeNick(nick);
@@ -74,9 +77,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  }
 
  function broadcast(frame,except){
-  const line=encodeFrame(frame);
-  if(!line)return;
-  for(const socket of guests.keys())if(typeof socket!=='string'&&socket!==except&&!socket.destroyed)socket.write(line);
+  for(const socket of guests.keys())if(typeof socket!=='string'&&socket!==except)send(socket,frame);
  }
 
  // A frame handler bound to one host-side connection. Each connection owns its
@@ -84,7 +85,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  // another member's stream.
  function hostConnection(socket){
   const decoder=new StringDecoder('utf8');
-  let buffer='',hello=null,dead=false;
+  let buffer='',hello=null,dead=false;const budget=frameBudget();
   let handshakeTimer=setTimeout(()=>socket.destroy(),handshakeTimeoutMs);
   socket.setKeepAlive(true,15000);
   socket.on('error',()=>{});
@@ -103,8 +104,8 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   socket.on('data',chunk=>{
    if(dead)return;
    buffer+=decoder.write(chunk);
-   if(buffer.length>MAX_FRAME*8){dead=true;socket.destroy();return;}
    const {lines,rest}=splitFrames(buffer);
+   if(Buffer.byteLength(rest)>MAX_FRAME||lines.some(line=>Buffer.byteLength(line)>MAX_FRAME)||!budget(lines.length)){dead=true;socket.destroy();return;}
    buffer=rest;
    for(const line of lines){
     const frame=decodeFrame(line);
@@ -112,16 +113,16 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     if(!hello){
      const handshake=validateHello(frame);
      if(!handshake||handshake.room!==room||handshake.pin!==pin||nickTaken(handshake.nick)){dead=true;noteFailure(remote);socket.destroy();return;}
-     if(guests.size>=MAX_MEMBERS){dead=true;socket.destroy();return;}
+     if(guests.size>=MAX_MEMBERS-1){dead=true;socket.destroy();return;}
      clearTimeout(handshakeTimer);hello=handshake;failures.delete(remote);
      waiting.delete(socket);
      guests.set(socket,{nick:handshake.nick,share:null});
      const memberList=[{nick},...[...guests.values()].map(g=>({nick:g.nick}))];
-     socket.write(encodeFrame({kind:'welcome',v:ROOM_PROTOCOL,room,members:memberList}));
+     send(socket,{kind:'welcome',v:ROOM_PROTOCOL,room,members:memberList});
      // Catch the newcomer up with the current table, then send the host's own
      // share. Writers only ever receive frames from other members.
-     for(const g of guests.values())if(g.share)socket.write(encodeFrame({kind:'state',v:ROOM_PROTOCOL,from:g.nick,lineup:g.share.lineup,pick:g.share.pick,at:g.share.at}));
-     socket.write(encodeFrame({kind:'state',v:ROOM_PROTOCOL,from:nick,lineup:ownShare?.lineup||[],pick:ownShare?.pick??null,at:ownShare?.at||now()}));
+     for(const g of guests.values())if(g.share)send(socket,{kind:'state',v:ROOM_PROTOCOL,from:g.nick,...shareBody(g.share)});
+     send(socket,{kind:'state',v:ROOM_PROTOCOL,from:nick,...(ownShare?shareBody(ownShare):{lineup:[],pick:null,at:now()})});
      broadcast({kind:'join',v:ROOM_PROTOCOL,from:hello.nick},socket);
      emit();
      continue;
@@ -129,7 +130,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     const share=sanitizeShare(frame);
     if(share){
      const guest=guests.get(socket);
-     if(guest&&share.from===guest.nick){guest.share={lineup:share.lineup,pick:share.pick,at:share.at};broadcast(share,socket);emit();}
+     if(guest&&share.from===guest.nick){guest.share=shareBody(share);broadcast(share,socket);emit();}
      continue;
     }
     const leave=validateLeave(frame);
@@ -148,7 +149,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    // reset during the throttle window must never surface as an unhandled
    // 'error' event and take the host process down.
    socket.on('error',()=>{});
-   if(guests.size+waiting.size>=MAX_MEMBERS){socket.destroy();return;}
+   if(guests.size+waiting.size>=MAX_MEMBERS-1){socket.destroy();return;}
    waiting.add(socket);
    socket.once('close',()=>waiting.delete(socket));
    const remote=socket.remoteAddress||'';
@@ -196,7 +197,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    const socket=net.connect(targetPort,target);
    upstream={host:target,socket};
    room=targetCode;pin=targetSecret;port=targetPort;
-   let decoder=new StringDecoder('utf8'),buffer='',welcomed=false,dead=false,failReason=null,settled=false;
+   let decoder=new StringDecoder('utf8'),buffer='',welcomed=false,dead=false,failReason=null,settled=false;const budget=frameBudget();
    let settleOk=()=>{},settleFail=()=>{};
    const handshake=new Promise((resolve,reject)=>{
     settleOk=()=>{if(!settled){settled=true;resolve();}};
@@ -226,8 +227,8 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    socket.on('data',chunk=>{
     if(dead)return;
     buffer+=decoder.write(chunk);
-    if(buffer.length>MAX_FRAME*8){dead=true;failReason=Error('房间连接异常：收到无法解析的数据');socket.destroy();return;}
     const {lines,rest}=splitFrames(buffer);
+    if(Buffer.byteLength(rest)>MAX_FRAME||lines.some(line=>Buffer.byteLength(line)>MAX_FRAME)||!budget(lines.length)){dead=true;failReason=Error('房间连接异常：收到无法解析的数据');socket.destroy();return;}
     buffer=rest;
     for(const line of lines){
      const frame=decodeFrame(line);
@@ -238,7 +239,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
        welcomed=true;clearTimeout(deadline);
        // Seed the member list from the welcome so presence shows before any
        // share arrives (welcome.members are sanitized display names).
-       for(const name of welcome.members)if(name!==nick)guests.set('nick:'+name,{nick:name,share:null});
+       for(const name of [...new Set(welcome.members)].filter(name=>name!==nick).slice(0,MAX_MEMBERS-1))guests.set('nick:'+name,{nick:name,share:null});
        settleOk();
        emit();
       }
@@ -246,12 +247,12 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
      }
      const share=sanitizeShare(frame);
      if(share){
-      if(share.from===nick)ownShare={lineup:share.lineup,pick:share.pick,at:share.at};
-      else guests.set('nick:'+share.from,{nick:share.from,share:{lineup:share.lineup,pick:share.pick,at:share.at}});
+      if(share.from===nick)ownShare=shareBody(share);
+      else if(guests.has('nick:'+share.from))guests.set('nick:'+share.from,{nick:share.from,share:shareBody(share)});
       emit();continue;
      }
      const join=validateJoin(frame);
-     if(join&&join.from!==nick){if(!guests.has('nick:'+join.from))guests.set('nick:'+join.from,{nick:join.from,share:null});emit();continue;}
+     if(join&&join.from!==nick){if(!guests.has('nick:'+join.from)&&guests.size<MAX_MEMBERS-1)guests.set('nick:'+join.from,{nick:join.from,share:null});emit();continue;}
      const leave=validateLeave(frame);
      if(leave){
       guests.delete('nick:'+leave.from);
@@ -260,7 +261,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     }
    });
    await handshake;
-  }catch(error){teardown();throw error;}
+  }catch(error){teardown();throw Error(error.message?.startsWith('未能加入房间')?error.message:'未能加入房间：'+error.message);}
   emit();
   return snapshot();
  }
@@ -268,11 +269,11 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  // --- shared ---------------------------------------------------------------
  function publish(share){
   if(mode==='idle')throw Error('尚未创建或加入房间');
-  const clean=sanitizeShare({kind:'state',v:ROOM_PROTOCOL,from:nick,lineup:share?.lineup||[],pick:share?.pick??null,at:share?.at||now()});
-  if(!clean)throw Error('分享内容格式不正确');
-  ownShare={lineup:clean.lineup,pick:clean.pick,at:clean.at};
+  const clean=sanitizeShare({kind:'state',v:ROOM_PROTOCOL,from:nick,lineup:share?.lineup||[],pick:share?.pick??null,at:share?.at||now(),...(share?.mode!==undefined?{mode:share.mode}:{}),...(share?.configurations!==undefined?{configurations:share.configurations}:{}),...(share?.strategy?{strategy:share.strategy}:{})});
+  if(!clean||!encodeFrame(clean))throw Error('分享内容格式不正确或过大');
   if(mode==='host')broadcast(clean);
-  else if(upstream&&!upstream.socket.destroyed)upstream.socket.write(encodeFrame(clean));
+  else if(!upstream||!send(upstream.socket,clean))throw Error('分享失败：房间连接不可用');
+  ownShare=shareBody(clean);
   emit();
   return snapshot();
  }

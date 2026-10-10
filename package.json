@@ -1,7 +1,7 @@
 {
   "name": "rift-buddy",
   "productName": "开黑搭子",
-  "version": "0.36.0",
+  "version": "0.37.0",
   "description": "三人开黑选人、出装符文与海克斯玩法助手",
   "private": true,
   "packageManager": "pnpm@11.25.0",

@@ -1,13 +1,14 @@
 // LAN room sharing (CHA-31): pure protocol helpers only — discovery packets,
 // invite codes, NDJSON framing and payload validation. No sockets, no storage
 // and no LCU data live here; the Electron room service composes these with
-// Node net/dgram. Shared payloads carry only public picks (role + champion)
-// and a build reference — never credentials, accounts or match history.
+// Node net/dgram. Shared payloads carry selected public picks and bounded
+// configuration/strategy snapshots, never credentials or account data.
 
+import {validateCreativePlan} from './creative-plan.mjs';
 export const ROOM_PROTOCOL=1;
 export const ROLES=['top','jungle','mid','bottom','support'];
 const MODES=['rift','hex','aram'];
-export const MAX_FRAME=4096;
+export const MAX_FRAME=65536;
 const HERO=/^[A-Za-z][A-Za-z0-9]{0,39}$/;
 const CODE=/^\d{6}$/;
 
@@ -50,6 +51,30 @@ function pick(value){
  return {champion,role,mode};
 }
 function stamp(value){return Number.isFinite(value)&&value>0?value:null;}
+const positive=id=>Number.isSafeInteger(id)&&id>0&&id<100000000;
+const itemIds=(value,max)=>Array.isArray(value)&&value.length<=max&&value.every(positive)?[...value]:null;
+// Concrete public configuration values, not catalog indexes interpreted on
+// another machine. Rebuild every field; no client identities or free metadata.
+export function sanitizeRoomConfiguration(value){
+ if(!value||typeof value!=='object'||Array.isArray(value))return null;
+ const identity=pick(value);if(!identity||!['rift','hex'].includes(identity.mode)||typeof value.patch!=='string'||!/^\d{2}\.\d{1,2}$/.test(value.patch))return null;
+ const start=itemIds(value.start,4),items=itemIds(value.items,7),boots=itemIds(value.boots,1),spells=value.spells;
+ if(!start||!items||!boots||!Array.isArray(spells)||spells.length!==2||!spells.every(id=>typeof id==='string'&&/^Summoner[A-Za-z]{1,30}$/.test(id))||new Set(spells).size!==2)return null;
+ let runes=null;
+ if(value.runes!=null){const page=value.runes;if(identity.mode!=='rift'||!positive(page.primaryStyleId)||!positive(page.subStyleId)||page.primaryStyleId===page.subStyleId||!Array.isArray(page.selectedPerkIds)||page.selectedPerkIds.length!==9||!page.selectedPerkIds.every(positive))return null;runes={primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:[...page.selectedPerkIds]};}
+ const skills=value.skills??null;if(skills!==null&&(typeof skills!=='string'||! /^[QWER]{1,18}$/.test(skills)))return null;
+ const priority=value.priority??null;if(priority!==null&&(typeof priority!=='string'||! /^[QWER]{3,4}$/.test(priority)||new Set(priority).size!==priority.length))return null;
+ let basis;
+ if(value.basis!==undefined){if(!value.basis||typeof value.basis!=='object'||Array.isArray(value.basis))return null;basis={};for(const key of ['title','note','rune','skill']){const text=value.basis[key];if(typeof text!=='string'||text.length>1000)return null;basis[key]=text.replace(/[\p{Cc}\p{Cf}\p{Cs}]/gu,'');}}
+ return {...identity,patch:value.patch,start,items,boots,spells:[...spells],runes,skills,priority,...(basis?{basis}:{})};
+}
+function configurations(value,team){
+ if(value===undefined)return undefined;
+ if(!Array.isArray(value)||value.length>5)return null;
+ const seen=new Set(),out=[];
+ for(const raw of value){const config=sanitizeRoomConfiguration(raw);if(!config||seen.has(config.role)||!team.some(s=>s.role===config.role&&s.champion===config.champion))return null;seen.add(config.role);out.push(config);}
+ return out;
+}
 
 // --- UDP discovery -------------------------------------------------------
 // Broadcast to the room table: one small JSON packet per announcement.
@@ -81,12 +106,18 @@ export function decodeInvite(text){
  const port=Number(m[2]);
  return port>=1&&port<=65535?{host:m[1],port,room:m[3]}:null;
 }
+export function decodeRoomInvitation(text){
+ const raw=String(text||'').trim(),target=decodeInvite(raw);if(target)return {...target,pin:null};
+ const full=raw.match(/^开黑搭子房间 (\d{6})｜邀请码 ([A-Za-z0-9.-]{1,253}:\d{1,5}#\d{6})｜口令 (\d{6})$/);
+ if(!full)return null;
+ const decoded=decodeInvite(full[2]);return decoded&&decoded.room===full[1]?{...decoded,pin:full[3]}:null;
+}
 
 // --- NDJSON framing -------------------------------------------------------
 export function encodeFrame(value){
  let line;
  try{line=JSON.stringify(value);}catch{return null;}
- if(typeof line!=='string'||line.length+1>MAX_FRAME)return null;
+ if(typeof line!=='string'||new TextEncoder().encode(line).length+1>MAX_FRAME)return null;
  return line+'\n';
 }
 // Split a stream buffer into complete lines plus the trailing partial line.
@@ -99,7 +130,7 @@ export function splitFrames(text){
 }
 export function decodeFrame(line){
  const text=String(line);
- if(text.length>MAX_FRAME)return null;
+ if(new TextEncoder().encode(text).length>MAX_FRAME)return null;
  try{
   const value=JSON.parse(text);
   return value&&typeof value==='object'&&!Array.isArray(value)?value:null;
@@ -128,7 +159,11 @@ export function sanitizeShare(value){
  const from=nick(value.from),team=lineup(value.lineup),at=stamp(value.at);
  const selected=value.pick==null?null:pick(value.pick);
  if(!from||!team||at===null||(value.pick!=null&&selected===null))return null;
- return {kind:'state',v:ROOM_PROTOCOL,from,lineup:team,pick:selected,at};
+ if(value.mode!==undefined&&!MODES.includes(value.mode))return null;
+ const builds=configurations(value.configurations,team);if(builds===null)return null;
+ let strategy;
+ if(value.strategy!==undefined){try{strategy=validateCreativePlan(value.strategy);if(!strategy.members.every(m=>team.some(s=>s.role===m.role&&s.champion===m.champion)))return null;}catch{return null;}}
+ return {kind:'state',v:ROOM_PROTOCOL,from,lineup:team,pick:selected,at,...(value.mode!==undefined?{mode:value.mode}:{}),...(builds!==undefined?{configurations:builds}:{}),...(strategy?{strategy}:{})};
 }
 export function validateLeave(value){
  if(value?.kind!=='leave'||value.v!==ROOM_PROTOCOL)return null;
@@ -154,7 +189,7 @@ export function lineupFromSlots(slots){
 // can reuse it and tests can cover it without Electron.
 export function shareFromSlots(slots,role,mode='rift'){
  const team=lineupFromSlots(slots);
- if(!team)return null;
+ if(!team||!MODES.includes(mode))return null;
  const mine=role?team.find(slot=>slot.role===role&&slot.champion):null;
- return {lineup:team,pick:mine?{champion:mine.champion,role:mine.role,mode:MODES.includes(mode)?mode:'rift'}:null};
+ return {lineup:team,mode,pick:mine?{champion:mine.champion,role:mine.role,mode}:null};
 }

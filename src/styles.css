@@ -203,3 +203,4 @@ body{background:radial-gradient(1100px 520px at 75% -8%,#17261f 0%,transparent 6
 .room-invite-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .room-invite-foot .bottom-note{margin:0}
 .room-nick{flex-wrap:wrap}
+.room-runes{display:flex;flex-wrap:wrap;gap:8px}.room-runes span{border:1px solid #33475c;border-radius:6px;padding:6px 8px}.room-runes small{color:#8fa6ba}.room-skill-order{list-style:none;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}.room-skill-order li{border:1px solid #33475c;border-radius:6px;padding:5px;font-size:12px;text-align:center}.room-configuration .detail-actions{flex-wrap:wrap}

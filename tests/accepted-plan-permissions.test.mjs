@@ -64,3 +64,20 @@ test('saved permissions reject duplicates and nonmembers without changing the or
  for(const editableTargets of [['jungle','jungle'],['support'],null])assert.throws(()=>validateCreativePlan({...plan,editableTargets}),/可替换位置/);
  const legacy={...plan};delete legacy.editableTargets;assert.equal(creativePlanId(legacy),plan.id);assert.deepEqual(validateCreativePlan(legacy),legacy);
 });
+
+test('adding a fifth locked friend replaces the four-person candidate with complete current-party jobs',()=>{
+ for(const scope of ['party','context']){
+  const heroes={top:'Malphite',jungle:'JarvanIV',mid:'Orianna',bottom:'Ashe'};
+  const slots=createSlots().map(s=>({...s,champion:heroes[s.role]||null,party:!!heroes[s.role],locked:!!heroes[s.role]}));
+  const prior=captureCreativePlan(recommend({...base,scope,slots})[0],data);
+  const original=structuredClone(prior);
+  const expanded=slots.map(s=>s.role==='support'?{...s,champion:'Rakan',party:true,locked:true}:s);
+  const row=recommend({...base,scope,slots:expanded,creativePlan:prior})[0],next=captureCreativePlan(row,data);
+  assert.equal(next.members.length,5);assert.equal(next.ordered.length,5);
+  assert.ok(next.ordered.find(m=>m.champion==='Rakan')?.job);
+  for(const stage of Object.values(next.stagePlan))assert.equal(stage.memberJobs.length,5);
+  assert.deepEqual(row.targets,[]);assert.deepEqual(row.slots,expanded);assert.deepEqual(prior,original);
+  const reopened=recommend({...base,scope,slots:expanded,creativePlan:next})[0];
+  assert.equal(reopened.creativePlan.id,next.id);
+ }
+});

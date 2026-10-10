@@ -29,8 +29,9 @@ import {changePresentation} from './core/presentation.mjs';
 import {companionView} from './companion-view.mjs';
 import {favoriteBuildSummary,favoriteTeamSummary} from './favorites-view.mjs';
 import {windowInfoDialog,windowInfoText} from './window-info-view.mjs';
-import {roomPanel} from './room-view.mjs';
-import {shareFromSlots,decodeInvite,sanitizeNick,validPin} from './core/room.mjs';
+import {roomPanel,roomConfigurationDialog,roomConfigurationText} from './room-view.mjs';
+import {shareFromSlots,decodeRoomInvitation,sanitizeNick,validPin} from './core/room.mjs';
+import {captureRoomStrategy,captureRoomConfigurations,roomPreparation} from './core/room-configuration.mjs';
 import {changeCompanionPlan,companionPickIntent} from './core/companion-plan.mjs';
 import {opponentBuildKey} from './core/opponent-build-source.mjs';
 import {matchupPreparation,selectMatchupPreparation} from './core/matchup-preparation.mjs';
@@ -109,6 +110,7 @@ const companionScroll=new Map();
 const companionDisclosures=new Map();
 let pendingIntentPreparation=null;
 let room=null,roomScanning=false,roomScanResults=null,roomError='',roomInvite='',roomPin='',roomAddresses=[],roomShareTimer=null,roomShareSig='',roomBusy=false,roomShareWarned=false;
+let roomConfigurationView=null,roomStrategySnapshot=null;
 let activeCreativePlan=null,creativePlanNotice='';
 function resultCreativePlan(result){const plan=captureCreativePlan(result,data);if(plan)result.creativePlan=plan;return plan;}
 function reconcileCreativePlan(){if(activeCreativePlan&&!creativePlanCompatible(activeCreativePlan,slots)){activeCreativePlan=null;creativePlanNotice='成员或位置已变化，原分工不再适用。收藏中的原组合说明仍保留。';}}
@@ -247,14 +249,16 @@ function roomErrorMessage(error){
  if(/ENOTFOUND|EAI_AGAIN/.test(raw))return '地址无法解析：请让房主重新发送邀请码';
  return raw||'操作失败，请重试';
 }
-function roomSharePayload(){const role=soloRole||assignedPlayerRole()||'';return shareFromSlots(slots,role);}
+function roomSharePayload(){
+ const role=soloRole||assignedPlayerRole()||'',mode=client.connected?(client.mode?.id||null):'rift',share=shareFromSlots(slots,role,mode);if(!share)return null;
+ const candidate=captureRoomStrategy(slots,data,activeCreativePlan,mode);if(candidate?.id!==roomStrategySnapshot?.id)roomStrategySnapshot=candidate;
+ return {...share,configurations:mode==='aram'?[]:captureRoomConfigurations(slots,data,preparations,{creativePlan:roomStrategySnapshot,guide:guideSelection,current:buildView?buildSelection():null,mode}),...(roomStrategySnapshot?{strategy:roomStrategySnapshot}:{})};
+}
 async function publishRoomShare({force=false}={}){
  if(!room||room.mode==='idle'||!api.roomPublish)return false;
- const share=roomSharePayload();if(!share)return false;
- const signature=JSON.stringify(share);
- if(!force&&signature===roomShareSig)return true;
- roomShareSig=signature;
- try{room=await api.roomPublish(share);roomShareWarned=false;return true;}
+ try{const share=roomSharePayload();if(!share)return false;
+  const signature=JSON.stringify(share);if(!force&&signature===roomShareSig)return true;
+  roomShareSig=signature;room=await api.roomPublish(share);roomShareWarned=false;return true;}
  catch{roomShareSig='';if(!force&&!roomShareWarned){roomShareWarned=true;toast('阵容暂时没有同步到房间，请检查房间连接',true);}return false;}
 }
 function scheduleRoomPublish(){
@@ -389,7 +393,7 @@ function renderSettings(){return `${heading('LOCAL FIRST. ALWAYS CLEAR.','数据
 function openPicker(kind,role=null){picker={kind,role,query:'',filter:kind==='slot'?role:'all'};buildView=null;detailResult=null;renderPicker();requestAnimationFrame(()=>document.getElementById('picker-search')?.focus());}
 function renderPicker(){overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="选择英雄"><header class="modal-header"><div><h2>${picker.kind==='rolepool'?roleName(picker.role)+'英雄池':picker.kind==='pool'?'我们的英雄池':picker.kind==='excluded'?'不想玩的英雄':picker.kind==='hex'?'选择海克斯英雄':`选择${roleName(picker.role)}英雄`}</h2><p>${picker.kind==='pool'?'点击标记你们愿意玩的英雄；推荐范围可设为优先或仅使用这些英雄。':picker.kind==='excluded'?'点击切换排除状态；推荐时会跳过这些英雄。':'支持中文名、称号、英文名与拼音；非常规玩法可切换到全部。'}</p></div>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="modal-controls"><div class="search-wrap">${icon('search')}<input id="picker-search" aria-label="搜索英雄" value="${e(picker.query)}" placeholder="搜英雄，例如：亚索 / 女枪 / jh" /></div><div class="chips">${[['all','全部'],...ROLES.map(r=>[r.id,r.name])].map(([id,n])=>`<button class="chip ${picker.filter===id?'active':''}" data-action="picker-role" data-role="${id}">${n}</button>`).join('')}</div></div><div class="champ-grid" id="picker-grid">${pickerTiles()}</div><footer class="modal-footer">${picker.kind==='rolepool'?`${roleName(picker.role)}已有 ${saved.preferences.rolePools[picker.role].heroes.length} 位英雄`:picker.kind==='pool'?`英雄池已有 ${saved.preferences.pool.length} 位英雄`:picker.kind==='excluded'?`已排除 ${saved.excluded.length} 位英雄`:'英雄的位置由你决定，选中后默认锁定。'}</footer></section></div>`;}
 function pickerTiles(){const match=pickerMatches(data.champions,picker.query,picker.filter,matchesSearch,profile);return (match.fallback?'<p class="picker-fallback">当前筛选位置无常规英雄，以下为其他位置的搜索结果。选中后仍放在'+roleName(picker.role||picker.filter)+'。</p>':'')+match.champions.map(c=>{const used=picker.kind==='slot'&&slots.some(s=>s.role!==picker.role&&s.champion===c.id);return `<button class="champ-option ${used?'used':''} ${(picker.kind==='excluded'&&saved.excluded.includes(c.id)||picker.kind==='pool'&&saved.preferences.pool.includes(c.id)||picker.kind==='rolepool'&&saved.preferences.rolePools[picker.role].heroes.includes(c.id))?'selected':''}" data-action="pick-champion" data-id="${c.id}" aria-label="${e(c.name)}" ${used?'disabled':''} title="${e(c.name)} · ${e(c.title)}">${portrait(c)}<span>${e(c.name)}</span></button>`;}).join('')||'<p class="muted">没有找到匹配英雄。</p>';}
-function closeOverlay(){activeOverlaySelect=null;pendingBuildRender=false;renderedBuildContext=null;currentWindowInfo=null;catalogRequest++;comboView=null;picker=null;buildView=null;detailResult=null;buildReturn=null;overlay.innerHTML='';}
+function closeOverlay(){roomConfigurationView=null;activeOverlaySelect=null;pendingBuildRender=false;renderedBuildContext=null;currentWindowInfo=null;catalogRequest++;comboView=null;picker=null;buildView=null;detailResult=null;buildReturn=null;overlay.innerHTML='';}
 async function showWindowInfo(refresh=false){
  if(!refresh){closeOverlay();overlay.innerHTML=windowInfoDialog(null);}
  const restore=preserveOverlay(overlay),request=++catalogRequest;
@@ -559,7 +563,7 @@ async function performSync(manual=true,fresh=false){
    if(manual)toast(client.message,!client.connected);
   }
  }catch(err){client={connected:false,phase:'Offline',message:err.message,...(lastClientRead?{receivedAt:lastClientRead}:{})};if(manual)toast(err.message,true);}
- finally{if(previousRecommendation!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;changed=true;}changed=runeAppliedKeys.observe(client)||changed;await saveChain;syncing=false;if(manual||changed||before!==JSON.stringify(client)){
+ finally{scheduleRoomPublish();if(previousRecommendation!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;changed=true;}changed=runeAppliedKeys.observe(client)||changed;await saveChain;syncing=false;if(manual||changed||before!==JSON.stringify(client)){
   if(changed){markResultStale();cancelRecommendation();}
   // A background status tick must not replace an active search field while typing.
   if(dragPick)pendingDragRender=true;else if(activeAppSelect||windowLayout.docked&&changed||!document.activeElement?.matches('input,select'))render();
@@ -697,11 +701,13 @@ document.addEventListener('click',async event=>{
  if(action==='room-scan'){if(!api.roomScan)throw Error('局域网房间请在桌面版使用');if(roomScanning)return;roomScanning=true;roomScanResults=null;roomError='';render();try{roomScanResults=await api.roomScan();}catch(error){roomError=roomErrorMessage(error);}finally{roomScanning=false;}render();return;}
  if(action==='room-refresh-addresses'){roomAddresses=await api.roomAddresses?.()||[];render();toast('已刷新本机地址');return;}
  if(action==='room-fill'){roomInvite=el.dataset.invite||'';roomError='';render();return;}
- if(action==='room-join'){if(!api.roomJoin)throw Error('局域网房间请在桌面版使用');if(roomBusy)return;const target=decodeInvite(roomInvite.trim());if(!target)throw Error('邀请码格式：192.168.1.5:47833#482913');if(!validPin(roomPin.trim()))throw Error('口令是 6 位数字');roomBusy=true;roomError='';render();try{room=await api.roomJoin({host:target.host,port:target.port,room:target.room,pin:roomPin.trim()},saved.preferences.roomNick||'队友');roomShareSig='';roomShareWarned=false;await publishRoomShare({force:true});}catch(error){roomError=roomErrorMessage(error);}finally{roomBusy=false;}render();return;}
+ if(action==='room-join'){if(!api.roomJoin)throw Error('局域网房间请在桌面版使用');if(roomBusy)return;const target=decodeRoomInvitation(roomInvite.trim());if(!target)throw Error('粘贴房主复制的完整邀请，或输入 192.168.1.5:47833#482913');const secret=target.pin||roomPin.trim();if(!validPin(secret))throw Error('口令是 6 位数字');roomBusy=true;roomError='';render();try{room=await api.roomJoin({host:target.host,port:target.port,room:target.room,pin:secret},saved.preferences.roomNick||'队友');roomShareSig='';roomShareWarned=false;await publishRoomShare({force:true});}catch(error){roomError=roomErrorMessage(error);}finally{roomBusy=false;}render();return;}
  if(action==='room-leave'){if(!api.roomLeave)throw Error('局域网房间请在桌面版使用');room=await api.roomLeave();roomScanResults=null;roomError='';roomShareSig='';roomShareWarned=false;render();toast('已离开房间');return;}
  if(action==='room-publish'){if(!await publishRoomShare({force:true}))throw Error('分享失败，请检查房间连接后重试');toast('已分享当前阵容');return;}
  if(action==='room-copy-invite'){await api.copy(`开黑搭子房间 ${room?.room||''}｜邀请码 ${el.dataset.invite}｜口令 ${room?.pin||''}`);toast('邀请信息已复制');return;}
- if(action==='room-build'){showBuild(el.dataset.id,el.dataset.role,el.dataset.mode||'rift');return;}
+ if(action==='room-build'){const member=room?.members.find(m=>m.nick===el.dataset.member),config=member?.share?.configurations?.find(s=>s.champion===el.dataset.id&&s.role===el.dataset.role);if(config){closeOverlay();roomConfigurationView={config:structuredClone(config),from:member.nick,strategy:member.share.strategy?structuredClone(member.share.strategy):null};overlay.innerHTML=roomConfigurationDialog(roomConfigurationView.config,data,member.nick,roomConfigurationView.strategy);}else{showBuild(el.dataset.id,el.dataset.role,el.dataset.mode||'rift');toast('发送方仅共享英雄；当前显示本机配置参考');}return;}
+ if(action==='room-copy-configuration'){if(!roomConfigurationView)throw Error('共享配置已变化，请重新打开');await api.copy(roomConfigurationText(roomConfigurationView.config,data,roomConfigurationView.from,roomConfigurationView.strategy));toast('发送方配置已复制');return;}
+ if(action==='room-adopt-configuration'){if(!roomConfigurationView)throw Error('共享配置已变化，请重新打开');const selection=roomPreparation(roomConfigurationView.config,data,roomConfigurationView.strategy);showBuild(selection.id,selection.role,selection.mode,selection);roomConfigurationView=null;toast('已采用到本机配置；符文仍需核对英雄后点击替换');return;}
  if(action.startsWith('catalog-')&&!boot.desktop)throw Error('组合库管理请在桌面版使用');
  if(action==='navigate'){route=el.dataset.route;closeOverlay();render();window.scrollTo(0,0);}
  else if(action==='catalog-import'||action==='catalog-check'){if(catalogBusy)return;catalogBusy=true;const request=++catalogRequest;try{const preview=action==='catalog-import'?await api.catalogPreview():await api.catalogCheck();if(preview&&request===catalogRequest){closeOverlay();catalogPreview=preview;overlay.innerHTML=catalogPreviewDialog(preview);}}finally{catalogBusy=false;}}

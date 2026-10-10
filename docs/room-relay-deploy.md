@@ -1,92 +1,45 @@
-# 房间中继部署（Cloudflare Workers 免费版）
+# 房间中继源码与部署边界
 
-跨网开黑的房间中继：把 `relay/` 目录部署到 Cloudflare，得到一条 WebSocket 地址，队友跨城市也能共享阵容。**完全免费、无需信用卡、只用邮箱注册**。
+**桌面客户端目前只接入局域网 TCP 房间。`relay/` 是独立的 Cloudflare Worker / Durable Object 实现，桌面尚无互联网中继入口，本阶段未部署。部署 Worker 得到地址也不会自动让桌面跨网连接。** 两台 Windows 的局域网、防火墙、虚拟局域网以及真实国服连续对局仍待验证。单机 loopback 或模拟 Worker 检查不能代替这些证据。
 
-## 它做什么
+## 已有协议
 
-- 每个房间号一个独立的 Durable Object；成员用 WebSocket 连上后，中继只转发经白名单清洗的公开房间帧（昵称、role/champion/pick（含模式）、客户端时间戳，以及仅含昵称的加入/离开通知）
-- 口令只以 SHA-256 哈希形式到达服务器，服务器从不接收明文口令（6 位口令空间很小，哈希本身不是强密钥，只用于挡住不知道口令的人；房间最后一人离开后哈希即清除）
-- 不写请求日志、不建账号、不存选人数据；房间空了自动休眠，重新有人连再唤醒
+- 每个六位房间号一个 Durable Object；WebSocket 握手后仅转发经白名单重建的昵称、公开阵容、模式、所选配置快照、组合职责和加入／离开通知。配置含装备编号、完整符文、召唤师技能、加点及来源说明，不包含 LCU 凭据、riotId、战绩、隐藏敌人或任意个人设置。
+- 加入时发送六位口令的 SHA-256，服务不接收明文口令。空间很小，哈希可以被枚举，不能当作强身份认证。最后一位已加入成员离开后清除口令哈希。
+- 不保存共享状态；晚加入者需要客户端在 welcome / join 后重新发送自己的当前状态。该客户端接线尚未实现。
+- 不主动写请求日志；Cloudflare 平台可观察请求与连接元数据。口令哈希存于 Durable Object storage，昵称等连接附件由平台托管，不能承诺平台完全不保留数据。
+- 文本帧按 UTF-8 字节限制为 64 KiB；白名单和字段长度另受限制。房间最多 12 位成员，尚未握手的连接不接收成员消息。
 
-免费额度（2026 年现行）：每天 10 万次请求 + 13000 GB-s 计算时长。对几支开黑小队来说完全用不完——一晚上一局房间只有几百条消息。
+## 局域网与互联网的区别
 
-## 部署步骤
+桌面“开黑房间 · 局域网”在用户主动创建／加入后自动分享所选公开阵容与配置。TCP 未加密，六位口令只提供基本加入限制；只在可信局域网或受信虚拟局域网使用。Windows 防火墙应仅允许当前可信网络。虚拟局域网可能不转发 UDP 扫描公告，队友可粘贴房主从对应网卡复制的完整邀请，能否互通仍取决于实际网络。
 
-1. 打开 <https://dash.cloudflare.com/sign-up>，用邮箱注册（不需要信用卡），验证邮件
-2. 本机安装 wrangler（一次性）：
+互联网方案需要完成客户端 WebSocket 接线、重发／重连策略及部署后的连通性验收，不能把本机 TCP 邀请直接填入 Worker。
 
-   ```bash
-   npm install -g wrangler
-   ```
+## 开发者本地验证
 
-3. 登录 Cloudflare（会弹出浏览器授权）：
+先运行仓库的 `pnpm test` 与 `pnpm check`。其中 Worker 测试使用模拟平台对象，只验证所列代码行为。
 
-   ```bash
-   wrangler login
-   ```
+若已自行准备 Wrangler，可以另外运行本地 Workers 运行时；首次运行可能下载工具，须自行确认环境和网络：
 
-4. 在仓库根目录运行：
+```powershell
+# 终端 1，仓库根目录
+pnpm exec wrangler dev --config relay/wrangler.toml --port 8787
 
-   ```bash
-   wrangler deploy --config relay/wrangler.toml
-   ```
-
-5. 看到 `Uploaded rift-buddy-room` 和地址（形如 `https://rift-buddy-room.<你的子域>.workers.dev`）即部署成功
-
-### 没有账号先试一下（临时账号）
-
-不想先注册也可以部署到临时预览账号，60 分钟内用打印出的认领链接把它收编到正式账号即可：
-
-```bash
-cd relay && npx wrangler deploy --temporary
-```
-
-命令会输出 `Claim URL`；须在 60 分钟内打开链接、登录 Cloudflare 并完成页面上的认领确认（Claim Account）才算认领成功——只打开链接不算。不认领则部署自动过期回收，不留任何东西。已登录过别的 Cloudflare 账号时，`--temporary` 可能不可用，先 `wrangler logout` 再试。
-
-## 本地验证（推荐先跑）
-
-首次运行 wrangler 需联网下载一次（之后离线可用）；它自带的本地 Workers 运行时就是线上同款引擎，可先在本地验证整套中继逻辑。
-
-```bash
-# 终端 1：本地跑中继
-cd relay && npx wrangler dev --port 8787
-
-# 终端 2：跑冒烟脚本（握手/转发/清洗/冒名/离开全链路）
+# 终端 2，仅访问本机
 node relay/smoke.mjs ws://127.0.0.1:8787/room/482913 482913
 ```
 
-全部 `✔` 后再部署到线上。部署后也可以用同一条命令对线上地址复查：
+Wrangler 不是本仓库已安装的开发依赖。未准备工具时，上述命令不会代表本地已验证成功；也不要为运行检查擅自改变账号或部署状态。
 
-```bash
-node relay/smoke.mjs wss://rift-buddy-room.<你的子域>.workers.dev/room/482913 482913
+## 以后部署时
+
+部署者需自行准备 Cloudflare 账号、Wrangler 与正确的登录环境，检查 `relay/wrangler.toml` 的 Worker 名称和 SQLite Durable Object 绑定。获得部署授权后，在仓库根目录执行：
+
+```powershell
+pnpm exec wrangler deploy --config relay/wrangler.toml
 ```
 
-## 给客户端填地址
+再使用输出地址进行 WebSocket 冒烟、实际客户端互通和退出清理检查。当前没有已验证的生产地址；大陆不同运营商／域名的可达性为未知，自有域名也不能保证连通。
 
-局域网房间已接入桌面客户端（「开黑选人」页的“开黑房间 · 局域网”面板）：建房、扫描、邀请码加入和阵容共享都可直接用，队友用 Radmin VPN、蒲公英等虚拟局域网工具跨网也能连。互联网中继开关是后续切片：届时把 `wss://.../room/` 填成中继地址即可。
-
-## 成本与限制
-
-| 项目 | 免费额度 | 说明 |
-| --- | --- | --- |
-| 请求 | 100,000 / 天 | 握手、状态帧都算请求；开黑用量约几百/晚 |
-| 计算时长 | 13,000 GB-s / 天 | 空闲自动休眠，几乎不消耗 |
-| 存储 | 5 GB | 每房间只存一个 pinHash（64 字节） |
-
-## 隐私说明
-
-- 服务器可见：房间号、昵称、角色+英雄（公开选人）、客户端时间戳、口令哈希
-- 服务器不采用、不保存、不转发：LCU 凭据、riotId、战绩、明文口令、符文页内容（即使客户端误发也会被白名单清洗掉）
-- 中继代码不写任何日志；房间最后一人离开后连口令哈希也一并清除
-- 说明：Cloudflare 平台侧可能保留调用日志（含方法与 URL，URL 中只有房间号），这不含上面"不采用、不保存、不转发"列出的任何数据
-
-## 大陆网络说明（实测）
-
-- 2026-10 实测：`*.workers.dev` 域名在大陆部分网络被 DNS 污染（解析到无效 IP），浏览器可过 Cloudflare 的「正在验证」页后使用，程序直连可能失败
-- 稳定方案：在 Cloudflare 免费绑定自己的域名，改成 `wss://room.你的域名`，绕开 `workers.dev` 的域名问题
-- 无域名时的替代：任何 1 核 1G 的小 VPS 都能跑等价服务；或纯局域网开黑直接用助手的局域网房间（不需要本中继）
-
-## 备选方案
-
-- 不想注册 Cloudflare：可在任意 1 核 1G 的小 VPS 上自写等价 Node 中继（协议与清洗逻辑在 `relay/room-hub.mjs` 可直接复用；Worker 专有 API 部分需换成 `ws` 之类的库）
-- 纯局域网开黑：不需要本中继，直接用助手的局域网房间即可
+Cloudflare 当前允许 Free 计划使用 SQLite Durable Objects，但请求、计算与存储都有额度，超限会失败；不要承诺永久免费或用不完。以[官方计费与额度](https://developers.cloudflare.com/durable-objects/platform/pricing/)、[WebSocket 休眠说明](https://developers.cloudflare.com/durable-objects/best-practices/websockets/)及部署账号的实际计划为准。

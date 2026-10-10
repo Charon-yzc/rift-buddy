@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
  ROOM_PROTOCOL,MAX_FRAME,makeRoomCode,validRoomCode,validPin,
- encodeDiscovery,decodeDiscovery,encodeInvite,decodeInvite,
+ encodeDiscovery,decodeDiscovery,encodeInvite,decodeInvite,decodeRoomInvitation,
  encodeFrame,splitFrames,decodeFrame,
  validateHello,validateWelcome,sanitizeShare,validateLeave,validateJoin,sanitizeNick,lineupFromSlots,shareFromSlots,
 } from '../src/core/room.mjs';
@@ -32,6 +32,11 @@ test('manual invites round trip so firewalled tables still connect',()=>{
  assert.deepEqual(decodeInvite(' desk.local:80#000000'),{host:'desk.local',port:80,room:'000000'});
  for(const bad of ['','192.168.1.5#482913','192.168.1.5:0#482913','192.168.1.5:47833#12345','bad host:1#482913','192.168.1.5:47833#1234567'])assert.equal(decodeInvite(bad),null);
  assert.equal(encodeInvite({host:'bad host',port:1,room:'000000'}),null);
+});
+test('the exact copied invitation can join without manually extracting an address or pin',()=>{
+ assert.deepEqual(decodeRoomInvitation('开黑搭子房间 482913｜邀请码 192.168.1.5:47833#482913｜口令 123456'),{host:'192.168.1.5',port:47833,room:'482913',pin:'123456'});
+ assert.deepEqual(decodeRoomInvitation('desk.local:80#000000'),{host:'desk.local',port:80,room:'000000',pin:null});
+ assert.equal(decodeRoomInvitation('开黑搭子房间 111111｜邀请码 192.168.1.5:47833#482913｜口令 123456'),null);
 });
 
 test('frames are single-line NDJSON with a hard size cap',()=>{
@@ -144,11 +149,11 @@ test('lineupFromSlots extracts only role and champion from local slots',()=>{
 
 test('shareFromSlots publishes the public lineup plus the local pick only',()=>{
  const slots=[{role:'top',champion:'Garen',party:true,locked:true,clientCellId:3},{role:'jungle',champion:null,party:false,locked:false},{role:'mid',champion:'Ahri',party:true,locked:false},{role:'bottom',champion:'Ashe',party:true,locked:true},{role:'support',champion:null,party:false,locked:false}];
- assert.deepEqual(shareFromSlots(slots,'top'),{lineup:[{role:'top',champion:'Garen'},{role:'jungle',champion:null},{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{role:'support',champion:null}],pick:{champion:'Garen',role:'top',mode:'rift'}});
+ assert.deepEqual(shareFromSlots(slots,'top'),{mode:'rift',lineup:[{role:'top',champion:'Garen'},{role:'jungle',champion:null},{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{role:'support',champion:null}],pick:{champion:'Garen',role:'top',mode:'rift'}});
  assert.equal(shareFromSlots(slots,'support').pick,null,'a role without a champion shares no pick');
  assert.equal(shareFromSlots(slots,'').pick,null,'an unknown own role shares no pick');
  assert.equal(shareFromSlots(slots,'mid','hex').pick.mode,'hex');
- assert.equal(shareFromSlots(slots,'mid','bogus').pick.mode,'rift','unknown modes fall back instead of leaking');
+ assert.equal(shareFromSlots(slots,'mid','bogus'),null,'unknown modes must not become Rift');assert.equal(shareFromSlots(slots,'','hex').mode,'hex');
  assert.equal(shareFromSlots(null,'top'),null);
  assert.equal(shareFromSlots(slots.slice(0,4),'top'),null);
 });

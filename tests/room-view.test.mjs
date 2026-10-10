@@ -65,7 +65,7 @@ test('a champion missing from local data still renders a clickable chip',()=>{
  const room=snapshot({members:[{nick:'队友乙',online:true,share:{lineup:[{role:'mid',champion:'Vex'},{role:'top',champion:null},{role:'jungle',champion:null},{role:'bottom',champion:null},{role:'support',champion:null}],pick:null,at:Date.now()},self:true}]});
  const html=roomPanel({room,nick:'队友乙',champ});
  assert.match(html,/data-action="room-build" data-id="Vex" data-role="mid" data-mode="rift"/);
- assert.match(html,/>Vex</);
+ assert.match(html,/>Vex · 本地参考</);
 });
 
 test('scanning and busy states disable their buttons instead of double-firing',()=>{
@@ -85,6 +85,6 @@ test('host panel offers address refresh and says the lineup syncs automatically'
 
 test('a hand-crafted share cannot open a wrong build mode',()=>{
  const member=mode=>({nick:'队友丙',online:true,share:{lineup:[{role:'mid',champion:'Ahri'},{role:'top',champion:null},{role:'jungle',champion:null},{role:'bottom',champion:null},{role:'support',champion:null}],pick:{champion:'Ahri',role:'mid',mode},at:Date.now()},self:true});
- assert.match(roomPanel({room:snapshot({members:[member('aram')]}),nick:'队友丙',champ}),/data-action="room-build" data-id="Ahri" data-role="mid" data-mode="rift"/);
+ assert.match(roomPanel({room:snapshot({members:[member('aram')]}),nick:'队友丙',champ}),/data-action="room-build" data-id="Ahri" data-role="mid" data-mode="aram"[^>]*disabled/);
  assert.match(roomPanel({room:snapshot({members:[member('hex')]}),nick:'队友丙',champ}),/data-mode="hex"/);
 });

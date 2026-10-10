@@ -282,7 +282,9 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  if(ownUnavailable)throw Error(ROLES.find(r=>r.id===ownUnavailable.role).name+'的'+context.byId.get(ownUnavailable.champion).name+'不在本机当前可选范围；已保留阵容，请核对我的位置、同步选人或解锁调整后重新推荐');
  if(!targets.length){
   const g=completePartyPlan(grade(slots,champions,style,[],{},context),slots,context);
-  if(creativePlanMatches(creativePlan,slots)&&creativePlan.members.every(m=>scopeSlots(slots,scope).some(s=>s.role===m.role))){
+  // A newly joined party member needs their own job. Keep the saved subgroup
+  // readable, but let the complete current-party candidate cover everyone.
+  if(creativePlanMatches(creativePlan,slots)&&creativePlan.members.every(m=>scopeSlots(slots,scope).some(s=>s.role===m.role))&&(!g.adaptive||g.adaptive.members.length<=creativePlan.members.length)){
    let plan=validateCreativePlan(creativePlan,slots);
    const counterplay=createPartyCounterplay(plan.members,visibleEnemies,champions);
    // Offer the current public conditions as a new candidate. The accepted

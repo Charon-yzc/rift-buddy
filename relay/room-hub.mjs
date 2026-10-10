@@ -64,4 +64,4 @@ export function sanitizeRelayState(message,nick){
 }
 
 // Text-only, bounded frames: anything else is a protocol violation.
-export function frameTooLarge(message){return typeof message!=='string'||message.length>MAX_FRAME;}
+export function frameTooLarge(message){return typeof message!=='string'||new TextEncoder().encode(message).length>MAX_FRAME;}
