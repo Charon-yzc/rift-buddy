@@ -1,9 +1,9 @@
 const {app,ipcMain,globalShortcut,session,dialog}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],delay=ms=>new Promise(r=>setTimeout(r,ms));
-let failure='',renames=0,blocked=false,releaseWrite,writeStarted=false;
+let failure='',renames=0,blocked=false,releaseWrite,writeStarted=false,failedWrites=0;
 const writeFile=fs.writeFile.bind(fs),rename=fs.rename.bind(fs),settingsTemp=file=>String(file).startsWith(path.join(root,'settings.json.'));
-fs.writeFile=async(file,...args)=>{if(settingsTemp(file)){if(blocked){writeStarted=true;await new Promise(resolve=>{releaseWrite=resolve;});}if(failure==='ENOSPC')throw Object.assign(Error('Isolated ENOSPC fixture'),{code:'ENOSPC'});}return writeFile(file,...args);};
+fs.writeFile=async(file,...args)=>{if(settingsTemp(file)){if(blocked){writeStarted=true;await new Promise(resolve=>{releaseWrite=resolve;});}if(failure==='ENOSPC'||failure==='ENOSPC_ONCE'){if(failure==='ENOSPC_ONCE')failure='';failedWrites++;throw Object.assign(Error('Isolated ENOSPC fixture'),{code:'ENOSPC'});}}return writeFile(file,...args);};
 fs.rename=async(from,...args)=>{if(settingsTemp(from)&&failure==='EPERM'){renames++;throw Object.assign(Error('Isolated EPERM fixture'),{code:'EPERM'});}return rename(from,...args);};
 globalShortcut.register=()=>false;global.fetch=async()=>{throw Error('Isolated transaction smoke: network disabled');};https.request=()=>{throw Error('Isolated transaction smoke: sockets disabled');};
 app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
@@ -40,12 +40,42 @@ async function run(){
  // Recalling another hero changes preparation recency without changing its
  // configuration. A later edit must merge by hero context, retaining additions.
  await js('window.buddy.openGuide({id:"Ahri",role:"mid",mode:"rift"})');await delay(100);const preparationBase=await bootstrap();
- await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"rift"})');await delay(100);await js('window.buddy.openGuide({id:"Nautilus",role:"support",mode:"rift"})');await delay(100);
+ await js('window.buddy.openGuide({id:"Ahri",role:"mid",mode:"rift",summonerIds:["SummonerFlash","SummonerTeleport"]})');await delay(100);await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"rift"})');await delay(100);await js('window.buddy.openGuide({id:"Nautilus",role:"support",mode:"rift"})');await delay(100);
  const edited=structuredClone(preparationBase.state);edited.preparations.find(p=>p.id==='Ahri').conditions=['ad'];await js('window.buddy.saveState('+JSON.stringify(edited)+','+JSON.stringify(preparationBase.state)+')');
- const mergedPreparations=(await bootstrap()).state.preparations;assert.deepEqual(mergedPreparations.find(p=>p.id==='Ahri').conditions,['ad']);assert.ok(mergedPreparations.some(p=>p.id==='Nautilus'));assert.ok(mergedPreparations.some(p=>p.id==='Ashe'));
+ const mergedPreparations=(await bootstrap()).state.preparations;assert.deepEqual(mergedPreparations.find(p=>p.id==='Ahri').conditions,['ad']);assert.deepEqual(mergedPreparations.find(p=>p.id==='Ahri').summonerIds,["SummonerFlash","SummonerTeleport"]);assert.ok(mergedPreparations.some(p=>p.id==='Nautilus'));assert.ok(mergedPreparations.some(p=>p.id==='Ashe'));
  const conflictBase=(await bootstrap()).state;await js('window.buddy.openGuide({id:"Ahri",role:"mid",mode:"rift",conditions:["heal"]})');await delay(100);const conflicting=structuredClone(conflictBase);conflicting.preparations.find(p=>p.id==='Ahri').conditions=['control'];
  const conflictError=await js('window.buddy.saveState('+JSON.stringify(conflicting)+','+JSON.stringify(conflictBase)+').then(()=>null,e=>e.message)');assert.match(conflictError,/同时发生变化/);assert.deepEqual((await bootstrap()).state.preparations.find(p=>p.id==='Ahri').conditions,['heal']);
  await js('window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,excluded:["Zed","Lux"]},b.state))');assert.deepEqual((await bootstrap()).state.excluded,['Zed','Lux']);
- const report={passed:true,realPreparationConflictRejectedAndQueueRecovered:true,preparationRecencyAndIndependentEditsPreserved:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,failedImportMemoryDiskSourceAndExportPreserved:true,ENOSPC:true,exhaustedWindowsRename:true,ordinarySaveGuideAndPresentationFailuresPreserved:true,queuedImportPreservesLaterEdits:true,retryDeduplicates:true,actualRuneWrites:0,userSettingsIsolated:true,realGame:'UNPROVEN'};await writeFile(path.join(root,'state-transaction-smoke.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
+ // Exercise the real renderer, not just direct IPC: rejected rune, equipment
+ // and manual-position input must agree with the last confirmed preparation.
+ await js('window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,buildSource:{region:"global",tier:"emerald_plus"}}},b.state))');
+ await new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.webContents.reload();});await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'Renderer reload missing');
+ const openAhri=async()=>{main.webContents.send('open-build',{id:'Ahri',role:'mid',mode:'rift'});await until(()=>js('document.querySelectorAll("[data-action=build-rune]").length>1'),'Rune choices missing');await delay(250);};
+ await openAhri();
+ for(const action of ['build-rune','build-core']){
+  const selector='[data-action="'+action+'"]',active=await js('[...document.querySelectorAll('+JSON.stringify(selector)+')].find(b=>b.classList.contains("active"))?.dataset');
+  const button=await js('[...document.querySelectorAll('+JSON.stringify(selector)+')].find(b=>!b.classList.contains("active"))?.dataset');assert.ok(button,'An alternate '+action+' is required');
+  const beforeUI=(await bootstrap()).state,failedBefore=failedWrites;failure='ENOSPC';
+  await js('[...document.querySelectorAll('+JSON.stringify(selector)+')].find(b=>!b.classList.contains("active")).click()');await until(()=>failedWrites>failedBefore,'UI save did not fail');
+  await until(()=>js('[...document.querySelectorAll('+JSON.stringify(selector)+')].find(b=>b.classList.contains("active"))?.dataset.'+(action==='build-rune'?'id':'index')+'==='+JSON.stringify(action==='build-rune'?active.id:active.index)),'Rejected choice stayed selected');
+  assert.deepEqual((await bootstrap()).state,beforeUI);assert.match(await js('document.querySelector("#toast").textContent'),/已恢复上次保存/);
+  await js('document.querySelector("[data-action=close]").click()');await openAhri();
+  assert.equal(await js('[...document.querySelectorAll('+JSON.stringify(selector)+')].find(b=>b.classList.contains("active"))?.dataset.'+(action==='build-rune'?'id':'index')),action==='build-rune'?active.id:active.index);
+  failure='';
+ }
+ await js('document.querySelector("[data-action=close]").click()');
+ const roleBefore=await js('document.querySelector("#solo-role").value'),failedBefore=failedWrites;failure='ENOSPC';
+ await js('(()=>{const select=document.querySelector("#solo-role");select.value="top";select.dispatchEvent(new Event("change",{bubbles:true}));})()');await until(()=>failedWrites>failedBefore,'Position save did not fail');await until(()=>js('document.querySelector("#solo-role").value==='+JSON.stringify(roleBefore)),'Rejected position stayed selected');failure='';
+ await new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.webContents.reload();});await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'Reload missing');await openAhri();
+ assert.equal(await js('document.querySelector("[data-action=build-rune].active").dataset.id'),(await bootstrap()).state.preparations.find(p=>p.id==='Ahri'&&p.role==='mid').runeId);
+ // Queue an independent equipment-condition edit while the rune save is
+ // blocked. Only the rejected rune is undone; the later edit reaches the guide.
+ const runeBefore=await js('document.querySelector("[data-action=build-rune].active").dataset.id');
+ writeStarted=false;blocked=true;failure='ENOSPC_ONCE';
+ await js('[...document.querySelectorAll("[data-action=build-rune]")].find(b=>!b.classList.contains("active")).click()');await until(()=>writeStarted,'Rune save did not block');
+ await js('document.querySelector("[data-action=build-condition][data-condition=ad]").click()');blocked=false;releaseWrite();
+ await until(async()=>{const s=(await bootstrap()).state,p=s.preparations.find(p=>p.id==='Ahri'&&p.role==='mid');return p?.runeId===runeBefore&&p.conditions.includes('ad')&&s.guide?.selection?.conditions.includes('ad')&&s.guide.selection.runeId===runeBefore;},'Independent queued edit or restored rune did not reach guide');
+ assert.equal(await js('document.querySelector("[data-action=build-rune].active").dataset.id'),runeBefore);assert.equal(await js('document.querySelector("[data-action=build-condition][data-condition=ad]").classList.contains("active")'),true);
+ const report={passed:true,queuedRendererEditReachesGuideWithoutRejectedRune:true,rendererRejectedRuneEquipmentAndPositionRestored:true,realPreparationConflictRejectedAndQueueRecovered:true,preparationRecencyAndIndependentEditsPreserved:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,failedImportMemoryDiskSourceAndExportPreserved:true,ENOSPC:true,exhaustedWindowsRename:true,ordinarySaveGuideAndPresentationFailuresPreserved:true,queuedImportPreservesLaterEdits:true,retryDeduplicates:true,actualRuneWrites:0,userSettingsIsolated:true,realGame:'UNPROVEN'};await writeFile(path.join(root,'state-transaction-smoke.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await writeFile(path.join(root,'error.txt'),e.stack).catch(()=>{});app.exit(1);});

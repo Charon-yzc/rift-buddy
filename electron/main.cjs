@@ -11,6 +11,9 @@ let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
 let importingItemSet=false;
 let synchronizeSavedState=()=>{};
+function mergeSavedFields(current,previous,next,message){
+ const merged={...current};for(const field of new Set([...Object.keys(previous),...Object.keys(next)])){if(isDeepStrictEqual(next[field],previous[field]))continue;if(!isDeepStrictEqual(current[field],previous[field])&&!isDeepStrictEqual(current[field],next[field]))throw Error(message);if(next[field]===undefined)delete merged[field];else merged[field]=next[field];}return merged;
+}
 function saveCurrentState(update){
  saveTask=saveTask.catch(()=>{}).then(async()=>{const snapshot=structuredClone(update?update(structuredClone(state)):state);await storage.saveState(storeRoot,snapshot);state=snapshot;synchronizeSavedState();return state;});return saveTask;
 }
@@ -159,13 +162,13 @@ async function boot(){
   await saveCurrentState(current=>{
    const merged={...current,preferences:{...current.preferences}};
    for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(key==='draft'&&next.draft&&before.draft&&current.draft){
-     merged.draft={...current.draft};for(const field of new Set([...Object.keys(before.draft),...Object.keys(next.draft)])){if(same(next.draft[field],before.draft[field]))continue;if(!same(current.draft[field],before.draft[field])&&!same(current.draft[field],next.draft[field]))throw Error('选人配置同时发生变化，请重新同步');if(next.draft[field]===undefined)delete merged.draft[field];else merged.draft[field]=next.draft[field];}continue;
+     merged.draft=mergeSavedFields(current.draft,before.draft,next.draft,'选人配置同时发生变化，请重新同步');continue;
     }if(!same(current[key],before[key])&&!same(current[key],next[key]))throw Error('配置同时发生变化，请刷新后重新保存');merged[key]=next[key];}
    // Remembering a guide changes preparation recency. Merge actual per-hero
    // changes so that reordering or another hero's update cannot block a save.
    for(const identity of new Set([...before.preparations,...next.preparations].map(preparationIdentity))){
     const previous=before.preparations.find(p=>preparationIdentity(p)===identity),changed=next.preparations.find(p=>preparationIdentity(p)===identity),accepted=current.preparations.find(p=>preparationIdentity(p)===identity);
-    if(same(previous,changed))continue;if(!same(accepted,previous)&&!same(accepted,changed))throw Error('这位英雄的配置同时发生变化，请刷新后重新保存');
+    if(same(previous,changed))continue;if(changed&&accepted){merged.preparations=upsertPreparation(merged.preparations,mergeSavedFields(accepted,previous||{},changed,'这位英雄的配置同时发生变化，请刷新后重新保存'));continue;}if(!same(accepted,previous)&&!same(accepted,changed))throw Error('这位英雄的配置同时发生变化，请刷新后重新保存');
     merged.preparations=changed?upsertPreparation(merged.preparations,changed):merged.preparations.filter(p=>preparationIdentity(p)!==identity);
    }
    for(const key of Object.keys(next.preferences)){if(key==='presentation'||same(next.preferences[key],before.preferences[key]))continue;if(!same(current.preferences[key],before.preferences[key])&&!same(current.preferences[key],next.preferences[key]))throw Error('偏好同时发生变化，请刷新后重新保存');merged.preferences[key]=next.preferences[key];}

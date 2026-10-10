@@ -8,7 +8,7 @@ const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let n=0;n<160;n++){if(await check())return;await delay(100);}throw Error(label);}
 async function run(){
  app.setPath('userData',root);
- const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar');
+ const release=JSON.parse(await fs.readFile('release/latest.json')),base=process.env.RIFT_BUDDY_SOURCE==='1'?process.cwd():path.join(release.directory,'resources/app.asar');
  // The fixture loads the packaged main in the Electron harness, whose default
  // getVersion is Electron's version rather than this app's packaged manifest.
  const packagedManifest=JSON.parse(await fs.readFile(path.join(base,'package.json')));app.getVersion=()=>packagedManifest.version;
@@ -256,12 +256,12 @@ async function run(){
  await click('[data-action=companion-jump][data-section=items]');
  const later=await js('document.querySelector("[data-action=companion-later]").dataset.id');
  await js('document.querySelector("[data-action=companion-later]").closest("details").open=true');
- await click('[data-action=companion-later]');await delay(250);
+ await click('[data-action=companion-later]');await until(async()=>JSON.stringify((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds)===JSON.stringify([Number(later)]),'Late choice did not reach the saved guide');
  assert.deepEqual((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds,[Number(later)]);
  assert.equal(writes.length,1,'Late choices must not write runes');await capture('chogath-jungle');
  await click('[data-action=my-runes]');await until(()=>writes.length===2,'Cho source rune application missing');assert.equal(writes.length,2);assert.deepEqual(writes.at(-1).selectedPerkIds,cho.runePage.selectedPerkIds);
  await js('document.querySelector("[data-action=companion-later]").closest("details").open=true');
- await click('[data-action=companion-later]');await delay(150);
+ await click('[data-action=companion-later]');await until(async()=>JSON.stringify((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds)==='[]','Removing the late choice did not reach the saved guide');
  assert.deepEqual((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds,[]);
 
  await js('window.buddy.companionMode(false)');await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full UI not restored');
