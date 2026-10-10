@@ -17,7 +17,7 @@ const paths=await packager({
  dir:root,out,platform:'win32',arch:'x64',name:'开黑搭子',executableName:'开黑搭子',
  appVersion:manifest.version,buildVersion:manifest.version,electronVersion:'44.5.1',icon:path.join(root,'assets/icon.ico'),
  asar:true,prune:false,overwrite:false,download:{mirrorOptions:{mirror:process.env.ELECTRON_MIRROR}},
- ignore:[/^\/(?:README\.md|CONTRIBUTING\.md|NOTICE\.md|docs|\.github)(?:\/|$)/,/^\/开黑搭子(?:\/|$)/,/^\/node_modules(?:\/|$)/,/^\/release(?:\/|$)/,/^\/\.local(?:\/|$)/,/^\/tests(?:\/|$)/,/^\/scripts(?:\/|$)/,/^\/test-results(?:\/|$)/,/^\/\.git(?:\/|$)/,/^\/AGENTS\.md$/,/^\/pnpm.*$/,/^\/\.gitignore$/],
+ ignore:[/^\/(?:README\.md|CONTRIBUTING\.md|NOTICE\.md|docs|relay|\.github)(?:\/|$)/,/^\/开黑搭子(?:\/|$)/,/^\/node_modules(?:\/|$)/,/^\/release(?:\/|$)/,/^\/\.local(?:\/|$)/,/^\/tests(?:\/|$)/,/^\/scripts(?:\/|$)/,/^\/test-results(?:\/|$)/,/^\/\.git(?:\/|$)/,/^\/AGENTS\.md$/,/^\/pnpm.*$/,/^\/\.gitignore$/],
  win32metadata:{CompanyName:'个人开黑工具',FileDescription:'开黑搭子 — 三人选人、出装符文与海克斯手册',ProductName:'开黑搭子',InternalName:'RiftBuddy',OriginalFilename:'开黑搭子.exe'},
  });
 const directory=paths[0];
