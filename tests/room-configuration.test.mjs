@@ -8,13 +8,39 @@ import {createRoomService} from '../services/room.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {fillSkillOrder} from '../src/core/skill-advice.mjs';
-import {captureRoomStrategy,captureRoomConfigurations,roomPreparation} from '../src/core/room-configuration.mjs';
+import {captureRoomStrategy,captureRoomConfigurations,roomPreparation,roomPlayerRole} from '../src/core/room-configuration.mjs';
 import {sanitizeRoomConfiguration,sanitizeShare,encodeFrame,decodeFrame,MAX_FRAME} from '../src/core/room.mjs';
 import {roomConfigurationDialog,roomConfigurationText} from '../src/room-view.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
 const slots=createSlots();for(const [role,champion]of [['jungle','Diana'],['mid','Yasuo'],['support','Rakan']])slots.find(s=>s.role===role).champion=champion;
 const store=createPreparationStore();
+
+const ownClient=(champion='Yasuo',assignedPosition='mid')=>({connected:true,session:{localPlayerCellId:4,myTeam:[{cellId:4,championId:champion?data.champions.find(c=>c.id===champion).key:0,assignedPosition}]}});
+test('a current local champion overrides a stale saved solo role in room sharing',()=>{
+ assert.equal(roomPlayerRole(slots,data.champions,ownClient(),'support'),'mid');
+ assert.equal(roomPlayerRole(slots,data.champions,ownClient(),'bottom'),'mid');
+});
+test('a manually moved local champion keeps its chosen position in room sharing',()=>{
+ const moved=slots.map(s=>({...s,champion:s.role==='top'?'Yasuo':s.role==='mid'?null:s.champion,...(s.role==='top'?{manualPosition:true,clientCellId:4}:{})}));
+ assert.equal(roomPlayerRole(moved,data.champions,ownClient(),'bottom'),'top');
+});
+test('a known local champion absent from the lineup cannot borrow the saved solo role',()=>{
+ assert.equal(roomPlayerRole(slots,data.champions,ownClient('Ashe','bottom'),'support'),'');
+ const unknownPosition=slots.map(s=>({...s,...(s.champion==='Yasuo'?{clientCellId:4}:{})}));
+ assert.equal(roomPlayerRole(unknownPosition,data.champions,ownClient('Yasuo',''),'support'),'');
+});
+test('before the local pick, room sharing uses the current assigned or manual slot and never another cell',()=>{
+ assert.equal(roomPlayerRole(slots,data.champions,ownClient(null),'support'),'mid');
+ const occupied=slots.map(s=>({...s,...(s.role==='mid'?{clientCellId:9}:{})}));
+ assert.equal(roomPlayerRole(occupied,data.champions,ownClient(null),'support'),'');
+ const manual=slots.map(s=>({...s,...(s.role==='support'?{clientCellId:4,manualPosition:true}:{})}));
+ assert.equal(roomPlayerRole(manual,data.champions,ownClient(null),'bottom'),'support');
+});
+test('offline room sharing keeps the explicit local role and ignores a disconnected client session',()=>{
+ assert.equal(roomPlayerRole(slots,data.champions,{...ownClient(),connected:false},'support'),'support');
+ assert.equal(roomPlayerRole(slots,data.champions,null,''),'');
+});
 
 test('a directly loaded catalog duo freezes its public instructions and exact recommended runes',()=>{
  const team=createSlots().map(s=>({...s,champion:s.role==='bottom'?'Seraphine':s.role==='support'?'Sona':null}));

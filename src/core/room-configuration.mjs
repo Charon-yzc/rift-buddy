@@ -6,6 +6,24 @@ import {sanitizeRoomConfiguration} from './room.mjs';
 import {validateRunePage} from './rune-page.mjs';
 import {validateCustomSkillOrder} from './skill-advice.mjs';
 import {validateSummonerIds} from './summoner-selection.mjs';
+import {currentPlayerSelection} from './guide.mjs';
+import {manualPlayerSlot,CLIENT_POSITION_ROLES} from './draft.mjs';
+
+// A saved solo preference can outlive its mode or game. When the client has
+// identified this player, share that player's current public/manual slot.
+// Unknown positions and slots occupied by another client cell stay unknown.
+export function roomPlayerRole(slots,champions,client,soloRole=''){
+ const session=client?.connected?client.session:null;
+ if(!session)return soloRole;
+ const own=currentPlayerSelection(session,champions,slots);
+ if(own)return own.positionKnown&&slots.some(s=>s.role===own.role&&s.champion===own.id)?own.role:'';
+ const cell=session.localPlayerCellId;
+ if(!Number.isInteger(cell))return '';
+ const player=session.myTeam?.find(p=>p.cellId===cell);
+ const role=manualPlayerSlot(slots,cell)?.role||CLIENT_POSITION_ROLES[String(player?.assignedPosition||'').toUpperCase()];
+ const slot=slots.find(s=>s.role===role);
+ return slot&&(!Number.isInteger(slot.clientCellId)||slot.clientCellId===cell)?role:'';
+}
 
 // Catalog adoption uses the visible lineup rather than an accepted result
 // object. Freeze that same catalog text too, before it crosses machines.

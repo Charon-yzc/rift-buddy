@@ -31,7 +31,7 @@ import {favoriteBuildSummary,favoriteTeamSummary} from './favorites-view.mjs';
 import {windowInfoDialog,windowInfoText} from './window-info-view.mjs';
 import {roomPanel,roomConfigurationDialog,roomConfigurationText} from './room-view.mjs';
 import {shareFromSlots,decodeRoomInvitation,sanitizeNick,validPin,validRoomCode} from './core/room.mjs';
-import {captureRoomStrategy,captureRoomConfigurations,roomPreparation} from './core/room-configuration.mjs';
+import {captureRoomStrategy,captureRoomConfigurations,roomPreparation,roomPlayerRole} from './core/room-configuration.mjs';
 import {normalizeRelayUrl} from './core/room-relay.mjs';
 import {changeCompanionPlan,companionPickIntent} from './core/companion-plan.mjs';
 import {opponentBuildKey} from './core/opponent-build-source.mjs';
@@ -252,7 +252,7 @@ function roomErrorMessage(error){
  return raw||'操作失败，请重试';
 }
 function roomSharePayload(){
- const role=soloRole||assignedPlayerRole()||'',mode=client.connected?(client.mode?.id||null):'rift',share=shareFromSlots(slots,role,mode);if(!share)return null;
+ const role=roomPlayerRole(slots,data.champions,client,soloRole),mode=client.connected?(client.mode?.id||null):'rift',share=shareFromSlots(slots,role,mode);if(!share)return null;
  const candidate=captureRoomStrategy(slots,data,activeCreativePlan,mode);if(candidate?.id!==roomStrategySnapshot?.id)roomStrategySnapshot=candidate;
  return {...share,configurations:mode==='aram'?[]:captureRoomConfigurations(slots,data,preparations,{creativePlan:roomStrategySnapshot,guide:guideSelection,current:buildView?buildSelection():null,mode}),...(roomStrategySnapshot?{strategy:roomStrategySnapshot}:{})};
 }
