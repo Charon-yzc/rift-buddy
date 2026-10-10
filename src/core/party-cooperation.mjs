@@ -25,7 +25,13 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
   const protectedMember=[...members].filter(m=>graph.profile(m).sustain).sort((a,b)=>Number(b.role==='bottom')-Number(a.role==='bottom')||Number(lead.actors.includes(b.champion))-Number(lead.actors.includes(a.champion))||roles.indexOf(a.role)-roles.indexOf(b.role))[0];
   const jobs=members.map(m=>{
    const row=COOPERATION_SKILLS[m.champion],p=graph.profile(m),action=independentCooperationAction(m.champion);let job;
-   if(lead.actors.includes(m.champion))job=lead.curated?lead.curated.members.find(p=>same(m,p)).job+`（沿用组合说明 ${lead.curated.patch}${lead.curated.patch!==SKILL_COOPERATION_PATCH?' · 旧版本说明保留':''}）`:lead.edge?cooperationCoordination([m],graph,[lead.edge]).memberJobs[0].job:row[3]+' '+row[0];
+   if(lead.edge?.family==='ball'){
+    const carrier=lead.actors.find(id=>id!=='Orianna'),carrierName=name(carrier);
+    if(m.champion==='Orianna')job=`本轮 E 只给${carrierName}，确认球已到且仍跟随；${carrierName}实际安全接近目标、球仍覆盖目标且 R 可用才接一次，W 接同一落点。球返回或落点脱离就取消，不为另一位进场者再安排一次 R。`;
+    else if(m.champion===carrier)job=`本轮由自己带球，先确认发条 E 的球已到且仍跟随、队友能覆盖落点才安全进场。${action} ${carrier==='Nautilus'?'Q 实际命中并接近或安全步行到位才算带球到场；R 的追踪冲击波不会移动自己。':carrier==='Vi'?'Q 被前方英雄截住就停在实际碰撞处；R 只有实际到达目标才算进场。':''} 球返回或队友赶不到就取消接大并接应退出，不为留球独自深入。`;
+    else job=`本轮由${carrierName}带球，自己的进场留作第二波或接应，等主线实际生效且安全覆盖才跟进；主线失败就一起退出，不要求第二次发条 R。${action}`;
+   }
+   else if(lead.actors.includes(m.champion))job=lead.curated?lead.curated.members.find(p=>same(m,p)).job+`（沿用组合说明 ${lead.curated.patch}${lead.curated.patch!==SKILL_COOPERATION_PATCH?' · 旧版本说明保留':''}）`:lead.edge?cooperationCoordination([m],graph,[lead.edge]).memberJobs[0].job:row[3]+' '+row[0];
    else if(p.peel&&(!p.engage||m.role==='support')&&protectedMember&&protectedMember.champion!==m.champion)job=`本轮优先接应${name(protectedMember.champion)}，不与主线同时深入。${action}`;
    else if(relay&&p.engage&&row[3])job=`${action} 进场留作第二波或反打，先等主线实际生效与队友到位；主线失败就接应退出，不为补一次控制独自深入。`;
    else job=action+' '+(relay?'先确认主线实际生效、同一目标在自己安全覆盖内再跟进。':'与主线保持可接应距离，按自己的安全接触条件行动，不等队友先控制。')+' 跟不上就回到队友，不转追第二个目标。';
@@ -56,9 +62,10 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
 // does not claim that the whole group has a unique or measured advantage.
 export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:requestedTempo='any',basePlan=null}={}){
  if(![3,4,5].includes(members.length)||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
- if(members.length===3&&(!basePlan?.memberJobs||!sidePressureRoute(members,graph)||[basePlan.steps,basePlan.conditions,basePlan.failures].some(rows=>rows.join(' ').length>400)))return null;
+ if(members.length===3&&(!basePlan?.memberJobs||[basePlan.steps,basePlan.conditions,basePlan.failures].some(rows=>rows.join(' ').length>400)))return null;
  const name=id=>graph.byId.get(id).name,edges=[];
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)edges.push(edge);}
+ if(members.length===3&&!sidePressureRoute(members,graph)&&edges.filter(e=>e.family==='ball').length<2)return null;
  const curated=TRIOS.filter(t=>!catalogStatus[t.id]?.invalid&&t.members.every(m=>members.some(p=>same(m,p))));
  const coordination=basePlan||cooperationCoordination(members,graph,[]);
  let memberJobs=members.map(m=>{

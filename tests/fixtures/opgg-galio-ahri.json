@@ -1,0 +1,3829 @@
+{
+  "source": "Reduced OP.GG public 16.20 Galio mid vs Ahri response and inert returned page fragments, global emerald_plus, fetched 2026-10-10. Not a trio outcome.",
+  "url": "https://op.gg/lol/champions/galio/build/mid?region=global&tier=emerald_plus&patch=16.20&target_champion=ahri",
+  "raw": {
+    "data": {
+      "summary": {
+        "id": 3,
+        "is_rotation": false,
+        "is_rip": false,
+        "average_stats": {
+          "play": 28653,
+          "win_rate": 0.495131,
+          "pick_rate": 0.0522108,
+          "ban_rate": 0.0168112,
+          "kda": 2.595264,
+          "tier": 4,
+          "rank": 113,
+          "tier_data": {
+            "tier": 4,
+            "rank": 113,
+            "rank_prev": 112,
+            "rank_prev_patch": 101
+          }
+        },
+        "positions": [
+          {
+            "name": "MID",
+            "stats": {
+              "play": 22124,
+              "win_rate": 0.49096,
+              "pick_rate": 0.0400865,
+              "role_rate": 0.772136,
+              "ban_rate": 0.0167535,
+              "kda": 2.646901,
+              "tier_data": {
+                "tier": 2,
+                "rank": 30,
+                "rank_prev": 30,
+                "rank_prev_patch": 28
+              }
+            },
+            "roles": [
+              {
+                "name": "MAGE",
+                "stats": {
+                  "win_rate": 0.509911,
+                  "role_rate": 0.627188,
+                  "play": 11502,
+                  "win": 5865
+                }
+              },
+              {
+                "name": "TANK",
+                "stats": {
+                  "win_rate": 0.469941,
+                  "role_rate": 0.247614,
+                  "play": 4541,
+                  "win": 2134
+                }
+              },
+              {
+                "name": "CONTROLLER",
+                "stats": {
+                  "win_rate": 0.461911,
+                  "role_rate": 0.123834,
+                  "play": 2271,
+                  "win": 1049
+                }
+              }
+            ],
+            "counters": [
+              {
+                "champion_id": 80,
+                "play": 103,
+                "win": 42
+              },
+              {
+                "champion_id": 99,
+                "play": 200,
+                "win": 85
+              },
+              {
+                "champion_id": 50,
+                "play": 101,
+                "win": 43
+              }
+            ]
+          },
+          {
+            "name": "SUPPORT",
+            "stats": {
+              "play": 4714,
+              "win_rate": 0.515061,
+              "pick_rate": 0.00870103,
+              "role_rate": 0.16452,
+              "ban_rate": 0.0157726,
+              "kda": 2.496085,
+              "tier_data": {
+                "tier": 4,
+                "rank": 30,
+                "rank_prev": 30,
+                "rank_prev_patch": 34
+              }
+            },
+            "roles": [
+              {
+                "name": "CONTROLLER",
+                "stats": {
+                  "win_rate": 0.523361,
+                  "role_rate": 0.681386,
+                  "play": 2654,
+                  "win": 1389
+                }
+              },
+              {
+                "name": "TANK",
+                "stats": {
+                  "win_rate": 0.517241,
+                  "role_rate": 0.268036,
+                  "play": 1044,
+                  "win": 540
+                }
+              },
+              {
+                "name": "MAGE",
+                "stats": {
+                  "win_rate": 0.507772,
+                  "role_rate": 0.0495507,
+                  "play": 193,
+                  "win": 98
+                }
+              }
+            ],
+            "counters": [
+              {
+                "champion_id": 16,
+                "play": 70,
+                "win": 23
+              },
+              {
+                "champion_id": 143,
+                "play": 36,
+                "win": 13
+              },
+              {
+                "champion_id": 78,
+                "play": 42,
+                "win": 17
+              }
+            ]
+          }
+        ],
+        "roles": []
+      },
+      "summoner_spells": [
+        {
+          "ids": [
+            4,
+            12
+          ],
+          "win": 272,
+          "play": 586,
+          "pick_rate": 0.7052
+        },
+        {
+          "ids": [
+            4,
+            14
+          ],
+          "win": 102,
+          "play": 202,
+          "pick_rate": 0.2431
+        },
+        {
+          "ids": [
+            4,
+            6
+          ],
+          "win": 15,
+          "play": 38,
+          "pick_rate": 0.0457
+        },
+        {
+          "ids": [
+            3,
+            4
+          ],
+          "win": 3,
+          "play": 3,
+          "pick_rate": 0.0036
+        },
+        {
+          "ids": [
+            4,
+            21
+          ],
+          "win": 2,
+          "play": 2,
+          "pick_rate": 0.0024
+        }
+      ],
+      "core_items": [
+        {
+          "ids": [
+            6664,
+            4005,
+            3157
+          ],
+          "play": 44,
+          "win": 25,
+          "pick_rate": 0.129
+        },
+        {
+          "ids": [
+            3152,
+            4005,
+            3157
+          ],
+          "play": 43,
+          "win": 28,
+          "pick_rate": 0.1261
+        },
+        {
+          "ids": [
+            6664,
+            4005,
+            3075
+          ],
+          "play": 10,
+          "win": 3,
+          "pick_rate": 0.0293
+        },
+        {
+          "ids": [
+            6664,
+            4005,
+            4633
+          ],
+          "play": 8,
+          "win": 5,
+          "pick_rate": 0.0235
+        },
+        {
+          "ids": [
+            6664,
+            4005,
+            3110
+          ],
+          "play": 7,
+          "win": 4,
+          "pick_rate": 0.0205
+        },
+        {
+          "ids": [
+            2504,
+            4005,
+            3157
+          ],
+          "play": 5,
+          "win": 2,
+          "pick_rate": 0.0147
+        },
+        {
+          "ids": [
+            4646,
+            4645,
+            3089
+          ],
+          "play": 5,
+          "win": 3,
+          "pick_rate": 0.0147
+        },
+        {
+          "ids": [
+            6664,
+            3152,
+            4005
+          ],
+          "play": 5,
+          "win": 2,
+          "pick_rate": 0.0147
+        },
+        {
+          "ids": [
+            6664,
+            3152,
+            3157
+          ],
+          "play": 5,
+          "win": 3,
+          "pick_rate": 0.0147
+        },
+        {
+          "ids": [
+            1082,
+            6664,
+            4005,
+            3157
+          ],
+          "play": 5,
+          "win": 2,
+          "pick_rate": 0.0147
+        },
+        {
+          "ids": [
+            1082,
+            3152,
+            4005,
+            3157
+          ],
+          "play": 5,
+          "win": 3,
+          "pick_rate": 0.0147
+        },
+        {
+          "ids": [
+            3152,
+            4005,
+            6664
+          ],
+          "play": 4,
+          "win": 0,
+          "pick_rate": 0.0117
+        },
+        {
+          "ids": [
+            3152,
+            4005,
+            4633
+          ],
+          "play": 4,
+          "win": 4,
+          "pick_rate": 0.0117
+        },
+        {
+          "ids": [
+            6664,
+            3152,
+            3075
+          ],
+          "play": 4,
+          "win": 4,
+          "pick_rate": 0.0117
+        },
+        {
+          "ids": [
+            1082,
+            6664,
+            4005,
+            3041
+          ],
+          "play": 3,
+          "win": 3,
+          "pick_rate": 0.0088
+        }
+      ],
+      "mythic_items": [],
+      "boots": [
+        {
+          "ids": [
+            3111
+          ],
+          "play": 518,
+          "win": 238,
+          "pick_rate": 0.6616
+        },
+        {
+          "ids": [
+            3020
+          ],
+          "play": 139,
+          "win": 81,
+          "pick_rate": 0.1775
+        },
+        {
+          "ids": [
+            3047
+          ],
+          "play": 89,
+          "win": 39,
+          "pick_rate": 0.1137
+        },
+        {
+          "ids": [
+            3158
+          ],
+          "play": 19,
+          "win": 9,
+          "pick_rate": 0.0243
+        },
+        {
+          "ids": [
+            3009
+          ],
+          "play": 18,
+          "win": 8,
+          "pick_rate": 0.023
+        }
+      ],
+      "starter_items": [
+        {
+          "ids": [
+            1056,
+            2003,
+            2003
+          ],
+          "play": 661,
+          "win": 323,
+          "pick_rate": 0.8378
+        },
+        {
+          "ids": [
+            1054,
+            2003
+          ],
+          "play": 55,
+          "win": 16,
+          "pick_rate": 0.0697
+        },
+        {
+          "ids": [
+            1120,
+            2003
+          ],
+          "play": 50,
+          "win": 26,
+          "pick_rate": 0.0634
+        },
+        {
+          "ids": [
+            1082,
+            2031
+          ],
+          "play": 16,
+          "win": 5,
+          "pick_rate": 0.0203
+        },
+        {
+          "ids": [
+            1056,
+            2003
+          ],
+          "play": 3,
+          "win": 2,
+          "pick_rate": 0.0038
+        },
+        {
+          "ids": [
+            1028,
+            1056,
+            2003,
+            2003
+          ],
+          "play": 1,
+          "win": 0,
+          "pick_rate": 0.0013
+        },
+        {
+          "ids": [
+            1056,
+            2003,
+            2003,
+            2003,
+            2003
+          ],
+          "play": 1,
+          "win": 1,
+          "pick_rate": 0.0013
+        },
+        {
+          "ids": [
+            1082,
+            2003,
+            2003
+          ],
+          "play": 1,
+          "win": 1,
+          "pick_rate": 0.0013
+        },
+        {
+          "ids": [
+            1120,
+            2003,
+            2031
+          ],
+          "play": 1,
+          "win": 1,
+          "pick_rate": 0.0013
+        }
+      ],
+      "last_items": [
+        {
+          "ids": [
+            4005
+          ],
+          "play": 462,
+          "win": 237,
+          "pick_rate": 0.5614
+        },
+        {
+          "ids": [
+            6664
+          ],
+          "play": 408,
+          "win": 178,
+          "pick_rate": 0.4957
+        },
+        {
+          "ids": [
+            3152
+          ],
+          "play": 307,
+          "win": 159,
+          "pick_rate": 0.373
+        },
+        {
+          "ids": [
+            3157
+          ],
+          "play": 212,
+          "win": 126,
+          "pick_rate": 0.2576
+        },
+        {
+          "ids": [
+            1082
+          ],
+          "play": 178,
+          "win": 88,
+          "pick_rate": 0.2163
+        },
+        {
+          "ids": [
+            4646
+          ],
+          "play": 87,
+          "win": 46,
+          "pick_rate": 0.1057
+        },
+        {
+          "ids": [
+            2504
+          ],
+          "play": 75,
+          "win": 38,
+          "pick_rate": 0.0911
+        },
+        {
+          "ids": [
+            4633
+          ],
+          "play": 73,
+          "win": 45,
+          "pick_rate": 0.0887
+        },
+        {
+          "ids": [
+            4645
+          ],
+          "play": 67,
+          "win": 37,
+          "pick_rate": 0.0814
+        },
+        {
+          "ids": [
+            2420
+          ],
+          "play": 66,
+          "win": 38,
+          "pick_rate": 0.0802
+        },
+        {
+          "ids": [
+            3075
+          ],
+          "play": 62,
+          "win": 28,
+          "pick_rate": 0.0753
+        },
+        {
+          "ids": [
+            3076
+          ],
+          "play": 55,
+          "win": 22,
+          "pick_rate": 0.0668
+        },
+        {
+          "ids": [
+            8020
+          ],
+          "play": 53,
+          "win": 24,
+          "pick_rate": 0.0644
+        },
+        {
+          "ids": [
+            3089
+          ],
+          "play": 33,
+          "win": 23,
+          "pick_rate": 0.0401
+        },
+        {
+          "ids": [
+            3041
+          ],
+          "play": 29,
+          "win": 25,
+          "pick_rate": 0.0352
+        },
+        {
+          "ids": [
+            3110
+          ],
+          "play": 27,
+          "win": 14,
+          "pick_rate": 0.0328
+        },
+        {
+          "ids": [
+            3100
+          ],
+          "play": 21,
+          "win": 8,
+          "pick_rate": 0.0255
+        },
+        {
+          "ids": [
+            3916
+          ],
+          "play": 16,
+          "win": 8,
+          "pick_rate": 0.0194
+        },
+        {
+          "ids": [
+            3143
+          ],
+          "play": 15,
+          "win": 8,
+          "pick_rate": 0.0182
+        },
+        {
+          "ids": [
+            3135
+          ],
+          "play": 12,
+          "win": 7,
+          "pick_rate": 0.0146
+        },
+        {
+          "ids": [
+            2502
+          ],
+          "play": 7,
+          "win": 2,
+          "pick_rate": 0.0085
+        },
+        {
+          "ids": [
+            4401
+          ],
+          "play": 6,
+          "win": 2,
+          "pick_rate": 0.0073
+        },
+        {
+          "ids": [
+            6653
+          ],
+          "play": 5,
+          "win": 2,
+          "pick_rate": 0.0061
+        },
+        {
+          "ids": [
+            6665
+          ],
+          "play": 5,
+          "win": 2,
+          "pick_rate": 0.0061
+        },
+        {
+          "ids": [
+            3165
+          ],
+          "play": 5,
+          "win": 4,
+          "pick_rate": 0.0061
+        },
+        {
+          "ids": [
+            3102
+          ],
+          "play": 4,
+          "win": 3,
+          "pick_rate": 0.0049
+        },
+        {
+          "ids": [
+            3109
+          ],
+          "play": 4,
+          "win": 2,
+          "pick_rate": 0.0049
+        },
+        {
+          "ids": [
+            3116
+          ],
+          "play": 4,
+          "win": 3,
+          "pick_rate": 0.0049
+        },
+        {
+          "ids": [
+            8010
+          ],
+          "play": 4,
+          "win": 3,
+          "pick_rate": 0.0049
+        },
+        {
+          "ids": [
+            3070
+          ],
+          "play": 4,
+          "win": 3,
+          "pick_rate": 0.0049
+        }
+      ],
+      "rune_pages": [
+        {
+          "id": 8230,
+          "primary_page_id": 8200,
+          "secondary_page_id": 8400,
+          "play": 447,
+          "win": 205,
+          "pick_rate": 0.5425,
+          "builds": [
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8226,
+                8210,
+                8237
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8242,
+                8444
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 303,
+              "win": 138,
+              "pick_rate": 0.6779
+            },
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8226,
+                8210,
+                8237
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8444,
+                8451
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 20,
+              "win": 11,
+              "pick_rate": 0.0447
+            },
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8226,
+                8210,
+                8237
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8242,
+                8444
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 13,
+              "win": 8,
+              "pick_rate": 0.0291
+            },
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8226,
+                8210,
+                8237
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8242,
+                8473
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 12,
+              "win": 4,
+              "pick_rate": 0.0268
+            },
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8275,
+                8210,
+                8237
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8444,
+                8451
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 10,
+              "win": 5,
+              "pick_rate": 0.0224
+            }
+          ]
+        },
+        {
+          "id": 8439,
+          "primary_page_id": 8400,
+          "secondary_page_id": 8200,
+          "play": 188,
+          "win": 90,
+          "pick_rate": 0.2282,
+          "builds": [
+            {
+              "id": 8439,
+              "primary_page_id": 8400,
+              "primary_rune_ids": [
+                8439,
+                8401,
+                8473,
+                8451
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8210,
+                8275
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 120,
+              "win": 57,
+              "pick_rate": 0.6383
+            },
+            {
+              "id": 8439,
+              "primary_page_id": 8400,
+              "primary_rune_ids": [
+                8439,
+                8401,
+                8444,
+                8451
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8210,
+                8275
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 7,
+              "win": 4,
+              "pick_rate": 0.0372
+            },
+            {
+              "id": 8439,
+              "primary_page_id": 8400,
+              "primary_rune_ids": [
+                8439,
+                8401,
+                8444,
+                8451
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8210,
+                8275
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 4,
+              "win": 2,
+              "pick_rate": 0.0213
+            },
+            {
+              "id": 8439,
+              "primary_page_id": 8400,
+              "primary_rune_ids": [
+                8439,
+                8401,
+                8473,
+                8451
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8210,
+                8237
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 3,
+              "win": 3,
+              "pick_rate": 0.016
+            },
+            {
+              "id": 8439,
+              "primary_page_id": 8400,
+              "primary_rune_ids": [
+                8439,
+                8446,
+                8444,
+                8451
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8237,
+                8275
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 3,
+              "win": 1,
+              "pick_rate": 0.016
+            }
+          ]
+        },
+        {
+          "id": 8112,
+          "primary_page_id": 8100,
+          "secondary_page_id": 8200,
+          "play": 88,
+          "win": 41,
+          "pick_rate": 0.1068,
+          "builds": [
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8140,
+                8135
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8237,
+                8275
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 57,
+              "win": 30,
+              "pick_rate": 0.6477
+            },
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8140,
+                8135
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8232,
+                8234
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 3,
+              "win": 1,
+              "pick_rate": 0.0341
+            },
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8140,
+                8135
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8226,
+                8237
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 3,
+              "win": 1,
+              "pick_rate": 0.0341
+            },
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8140,
+                8106
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8237,
+                8275
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 2,
+              "win": 0,
+              "pick_rate": 0.0227
+            },
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8137,
+                8135
+              ],
+              "secondary_page_id": 8200,
+              "secondary_rune_ids": [
+                8237,
+                8275
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 2,
+              "win": 0,
+              "pick_rate": 0.0227
+            }
+          ]
+        },
+        {
+          "id": 8230,
+          "primary_page_id": 8200,
+          "secondary_page_id": 8000,
+          "play": 15,
+          "win": 11,
+          "pick_rate": 0.0182,
+          "builds": [
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8275,
+                8233,
+                8237
+              ],
+              "secondary_page_id": 8000,
+              "secondary_rune_ids": [
+                8017,
+                9111
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 7,
+              "win": 5,
+              "pick_rate": 0.4667
+            },
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8275,
+                8210,
+                8236
+              ],
+              "secondary_page_id": 8000,
+              "secondary_rune_ids": [
+                8017,
+                9111
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 2,
+              "win": 2,
+              "pick_rate": 0.1333
+            },
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8224,
+                8210,
+                8237
+              ],
+              "secondary_page_id": 8000,
+              "secondary_rune_ids": [
+                8014,
+                9111
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 1,
+              "win": 1,
+              "pick_rate": 0.0667
+            },
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8226,
+                8210,
+                8236
+              ],
+              "secondary_page_id": 8000,
+              "secondary_rune_ids": [
+                9105,
+                9111
+              ],
+              "stat_mod_ids": [
+                5007,
+                5001,
+                5001
+              ],
+              "play": 1,
+              "win": 1,
+              "pick_rate": 0.0667
+            },
+            {
+              "id": 8230,
+              "primary_page_id": 8200,
+              "primary_rune_ids": [
+                8230,
+                8226,
+                8210,
+                8237
+              ],
+              "secondary_page_id": 8000,
+              "secondary_rune_ids": [
+                8017,
+                9111
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 1,
+              "win": 1,
+              "pick_rate": 0.0667
+            }
+          ]
+        },
+        {
+          "id": 8112,
+          "primary_page_id": 8100,
+          "secondary_page_id": 8400,
+          "play": 14,
+          "win": 6,
+          "pick_rate": 0.017,
+          "builds": [
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8137,
+                8135
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8444,
+                8451
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 4,
+              "win": 2,
+              "pick_rate": 0.2857
+            },
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8140,
+                8135
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8242,
+                8444
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 1,
+              "win": 0,
+              "pick_rate": 0.0714
+            },
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8137,
+                8106
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8451,
+                8473
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 1,
+              "win": 0,
+              "pick_rate": 0.0714
+            },
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8137,
+                8135
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8242,
+                8473
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5011
+              ],
+              "play": 1,
+              "win": 1,
+              "pick_rate": 0.0714
+            },
+            {
+              "id": 8112,
+              "primary_page_id": 8100,
+              "primary_rune_ids": [
+                8112,
+                8143,
+                8137,
+                8135
+              ],
+              "secondary_page_id": 8400,
+              "secondary_rune_ids": [
+                8451,
+                8473
+              ],
+              "stat_mod_ids": [
+                5008,
+                5008,
+                5001
+              ],
+              "play": 1,
+              "win": 0,
+              "pick_rate": 0.0714
+            }
+          ]
+        }
+      ],
+      "runes": [
+        {
+          "id": 8230,
+          "primary_page_id": 8200,
+          "primary_rune_ids": [
+            8230,
+            8226,
+            8210,
+            8237
+          ],
+          "secondary_page_id": 8400,
+          "secondary_rune_ids": [
+            8242,
+            8444
+          ],
+          "stat_mod_ids": [
+            5008,
+            5008,
+            5011
+          ],
+          "play": 303,
+          "win": 138,
+          "pick_rate": 0.3677
+        },
+        {
+          "id": 8439,
+          "primary_page_id": 8400,
+          "primary_rune_ids": [
+            8439,
+            8401,
+            8473,
+            8451
+          ],
+          "secondary_page_id": 8200,
+          "secondary_rune_ids": [
+            8210,
+            8275
+          ],
+          "stat_mod_ids": [
+            5008,
+            5008,
+            5001
+          ],
+          "play": 120,
+          "win": 57,
+          "pick_rate": 0.1456
+        },
+        {
+          "id": 8112,
+          "primary_page_id": 8100,
+          "primary_rune_ids": [
+            8112,
+            8143,
+            8140,
+            8135
+          ],
+          "secondary_page_id": 8200,
+          "secondary_rune_ids": [
+            8237,
+            8275
+          ],
+          "stat_mod_ids": [
+            5008,
+            5008,
+            5001
+          ],
+          "play": 57,
+          "win": 30,
+          "pick_rate": 0.0692
+        },
+        {
+          "id": 8230,
+          "primary_page_id": 8200,
+          "primary_rune_ids": [
+            8230,
+            8226,
+            8210,
+            8237
+          ],
+          "secondary_page_id": 8400,
+          "secondary_rune_ids": [
+            8444,
+            8451
+          ],
+          "stat_mod_ids": [
+            5008,
+            5008,
+            5011
+          ],
+          "play": 20,
+          "win": 11,
+          "pick_rate": 0.0243
+        },
+        {
+          "id": 8230,
+          "primary_page_id": 8200,
+          "primary_rune_ids": [
+            8230,
+            8226,
+            8210,
+            8237
+          ],
+          "secondary_page_id": 8400,
+          "secondary_rune_ids": [
+            8242,
+            8444
+          ],
+          "stat_mod_ids": [
+            5008,
+            5008,
+            5001
+          ],
+          "play": 13,
+          "win": 8,
+          "pick_rate": 0.0158
+        }
+      ],
+      "skill_masteries": [
+        {
+          "ids": [
+            "Q",
+            "W",
+            "E"
+          ],
+          "play": 416,
+          "win": 243,
+          "pick_rate": 0.887,
+          "builds": [
+            {
+              "order": [
+                "Q",
+                "W",
+                "E",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "Q",
+                "W",
+                "R",
+                "W",
+                "W",
+                "E",
+                "E"
+              ],
+              "play": 249,
+              "win": 147,
+              "pick_rate": 0.5986
+            },
+            {
+              "order": [
+                "Q",
+                "E",
+                "W",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "Q",
+                "W",
+                "R",
+                "W",
+                "W",
+                "E",
+                "E"
+              ],
+              "play": 75,
+              "win": 48,
+              "pick_rate": 0.1803
+            },
+            {
+              "order": [
+                "W",
+                "Q",
+                "E",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "Q",
+                "W",
+                "R",
+                "W",
+                "W",
+                "E",
+                "E"
+              ],
+              "play": 14,
+              "win": 6,
+              "pick_rate": 0.0337
+            },
+            {
+              "order": [
+                "E",
+                "Q",
+                "W",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "Q",
+                "W",
+                "R",
+                "W",
+                "W",
+                "E",
+                "E"
+              ],
+              "play": 14,
+              "win": 8,
+              "pick_rate": 0.0337
+            },
+            {
+              "order": [
+                "Q",
+                "W",
+                "E",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "Q",
+                "W",
+                "R",
+                "E",
+                "W",
+                "W",
+                "E"
+              ],
+              "play": 7,
+              "win": 3,
+              "pick_rate": 0.0168
+            }
+          ]
+        },
+        {
+          "ids": [
+            "Q",
+            "E",
+            "W"
+          ],
+          "play": 46,
+          "win": 29,
+          "pick_rate": 0.0981,
+          "builds": [
+            {
+              "order": [
+                "Q",
+                "E",
+                "W",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "E",
+                "Q",
+                "E",
+                "R",
+                "E",
+                "E",
+                "W",
+                "W"
+              ],
+              "play": 19,
+              "win": 11,
+              "pick_rate": 0.413
+            },
+            {
+              "order": [
+                "Q",
+                "W",
+                "E",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "E",
+                "Q",
+                "E",
+                "R",
+                "E",
+                "E",
+                "W",
+                "W"
+              ],
+              "play": 6,
+              "win": 3,
+              "pick_rate": 0.1304
+            },
+            {
+              "order": [
+                "W",
+                "Q",
+                "E",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "E",
+                "Q",
+                "E",
+                "R",
+                "E",
+                "E",
+                "W",
+                "W"
+              ],
+              "play": 3,
+              "win": 2,
+              "pick_rate": 0.0652
+            },
+            {
+              "order": [
+                "Q",
+                "W",
+                "E",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "E",
+                "Q",
+                "E",
+                "R",
+                "W",
+                "E",
+                "E",
+                "W"
+              ],
+              "play": 2,
+              "win": 2,
+              "pick_rate": 0.0435
+            },
+            {
+              "order": [
+                "Q",
+                "E",
+                "W",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "Q",
+                "W",
+                "R",
+                "E",
+                "E",
+                "E",
+                "E"
+              ],
+              "play": 2,
+              "win": 1,
+              "pick_rate": 0.0435
+            }
+          ]
+        },
+        {
+          "ids": [
+            "W",
+            "Q",
+            "E"
+          ],
+          "play": 4,
+          "win": 1,
+          "pick_rate": 0.0085,
+          "builds": [
+            {
+              "order": [
+                "Q",
+                "W",
+                "E",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "W",
+                "W",
+                "R",
+                "W",
+                "Q",
+                "E",
+                "E"
+              ],
+              "play": 1,
+              "win": 0,
+              "pick_rate": 0.25
+            },
+            {
+              "order": [
+                "Q",
+                "E",
+                "W",
+                "W",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "W",
+                "W",
+                "R",
+                "Q",
+                "Q",
+                "E",
+                "E"
+              ],
+              "play": 1,
+              "win": 0,
+              "pick_rate": 0.25
+            },
+            {
+              "order": [
+                "W",
+                "Q",
+                "E",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "W",
+                "W",
+                "W",
+                "R",
+                "W",
+                "Q",
+                "E",
+                "E"
+              ],
+              "play": 1,
+              "win": 1,
+              "pick_rate": 0.25
+            },
+            {
+              "order": [
+                "W",
+                "Q",
+                "E",
+                "W",
+                "W",
+                "R",
+                "W",
+                "Q",
+                "W",
+                "Q",
+                "Q",
+                "R",
+                "Q",
+                "E",
+                "E"
+              ],
+              "play": 1,
+              "win": 0,
+              "pick_rate": 0.25
+            }
+          ]
+        },
+        {
+          "ids": [
+            "W",
+            "E",
+            "Q"
+          ],
+          "play": 3,
+          "win": 2,
+          "pick_rate": 0.0064,
+          "builds": [
+            {
+              "order": [
+                "E",
+                "W",
+                "Q",
+                "W",
+                "W",
+                "R",
+                "W",
+                "E",
+                "W",
+                "E",
+                "R",
+                "E",
+                "E",
+                "Q",
+                "Q"
+              ],
+              "play": 1,
+              "win": 1,
+              "pick_rate": 0.3333
+            },
+            {
+              "order": [
+                "Q",
+                "W",
+                "E",
+                "W",
+                "W",
+                "R",
+                "W",
+                "E",
+                "E",
+                "E",
+                "R",
+                "W",
+                "E",
+                "Q",
+                "Q"
+              ],
+              "play": 1,
+              "win": 1,
+              "pick_rate": 0.3333
+            },
+            {
+              "order": [
+                "Q",
+                "E",
+                "W",
+                "W",
+                "W",
+                "R",
+                "W",
+                "Q",
+                "W",
+                "E",
+                "R",
+                "Q",
+                "E",
+                "E",
+                "Q"
+              ],
+              "play": 1,
+              "win": 0,
+              "pick_rate": 0.3333
+            }
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "order": [
+            "Q",
+            "W",
+            "E",
+            "Q",
+            "Q",
+            "R",
+            "Q",
+            "W",
+            "Q",
+            "W",
+            "R",
+            "W",
+            "W",
+            "E",
+            "E"
+          ],
+          "play": 249,
+          "win": 147,
+          "pick_rate": 0.5309
+        },
+        {
+          "order": [
+            "Q",
+            "E",
+            "W",
+            "Q",
+            "Q",
+            "R",
+            "Q",
+            "W",
+            "Q",
+            "W",
+            "R",
+            "W",
+            "W",
+            "E",
+            "E"
+          ],
+          "play": 75,
+          "win": 48,
+          "pick_rate": 0.1599
+        },
+        {
+          "order": [
+            "Q",
+            "E",
+            "W",
+            "Q",
+            "Q",
+            "R",
+            "Q",
+            "E",
+            "Q",
+            "E",
+            "R",
+            "E",
+            "E",
+            "W",
+            "W"
+          ],
+          "play": 19,
+          "win": 11,
+          "pick_rate": 0.0405
+        },
+        {
+          "order": [
+            "W",
+            "Q",
+            "E",
+            "Q",
+            "Q",
+            "R",
+            "Q",
+            "W",
+            "Q",
+            "W",
+            "R",
+            "W",
+            "W",
+            "E",
+            "E"
+          ],
+          "play": 14,
+          "win": 6,
+          "pick_rate": 0.0299
+        },
+        {
+          "order": [
+            "E",
+            "Q",
+            "W",
+            "Q",
+            "Q",
+            "R",
+            "Q",
+            "W",
+            "Q",
+            "W",
+            "R",
+            "W",
+            "W",
+            "E",
+            "E"
+          ],
+          "play": 14,
+          "win": 8,
+          "pick_rate": 0.0299
+        }
+      ],
+      "skill_evolves": [],
+      "trends": {
+        "total_rank": 250,
+        "total_position_rank": 57,
+        "win": [
+          {
+            "version": "16.20",
+            "rate": 0.491,
+            "rank": 42,
+            "created_at": "2026-10-08T23:11:41+09:00"
+          },
+          {
+            "version": "16.19",
+            "rate": 0.4959,
+            "rank": 41,
+            "created_at": "2026-10-05T23:08:26+09:00"
+          },
+          {
+            "version": "16.18",
+            "rate": 0.4967,
+            "rank": 38,
+            "created_at": "2026-09-17T23:16:20+09:00"
+          },
+          {
+            "version": "16.17",
+            "rate": 0.4943,
+            "rank": 39,
+            "created_at": "2026-09-08T23:06:59+09:00"
+          },
+          {
+            "version": "16.16",
+            "rate": 0.4956,
+            "rank": 38,
+            "created_at": "2026-08-21T22:40:36+09:00"
+          },
+          {
+            "version": "16.15",
+            "rate": 0.5052,
+            "rank": 30,
+            "created_at": "2026-08-10T22:45:28+09:00"
+          },
+          {
+            "version": "16.14",
+            "rate": 0.501,
+            "rank": 33,
+            "created_at": "2026-07-27T22:38:14+09:00"
+          },
+          {
+            "version": "16.13",
+            "rate": 0.502,
+            "rank": 31,
+            "created_at": "2026-07-13T22:37:18+09:00"
+          },
+          {
+            "version": "16.12",
+            "rate": 0.4944,
+            "rank": 40,
+            "created_at": "2026-06-22T22:37:02+09:00"
+          },
+          {
+            "version": "16.11",
+            "rate": 0.4977,
+            "rank": 37,
+            "created_at": "2026-06-08T22:35:07+09:00"
+          }
+        ],
+        "pick": [
+          {
+            "version": "16.20",
+            "rate": 0.0401,
+            "rank": 19,
+            "created_at": "2026-10-08T23:11:41+09:00"
+          },
+          {
+            "version": "16.19",
+            "rate": 0.0388,
+            "rank": 20,
+            "created_at": "2026-10-05T23:08:26+09:00"
+          },
+          {
+            "version": "16.18",
+            "rate": 0.0384,
+            "rank": 21,
+            "created_at": "2026-09-17T23:16:20+09:00"
+          },
+          {
+            "version": "16.17",
+            "rate": 0.0388,
+            "rank": 20,
+            "created_at": "2026-09-08T23:06:59+09:00"
+          },
+          {
+            "version": "16.16",
+            "rate": 0.0431,
+            "rank": 17,
+            "created_at": "2026-08-21T22:40:36+09:00"
+          },
+          {
+            "version": "16.15",
+            "rate": 0.0471,
+            "rank": 15,
+            "created_at": "2026-08-10T22:45:28+09:00"
+          },
+          {
+            "version": "16.14",
+            "rate": 0.0469,
+            "rank": 14,
+            "created_at": "2026-07-27T22:38:14+09:00"
+          },
+          {
+            "version": "16.13",
+            "rate": 0.0438,
+            "rank": 18,
+            "created_at": "2026-07-13T22:37:18+09:00"
+          },
+          {
+            "version": "16.12",
+            "rate": 0.0424,
+            "rank": 18,
+            "created_at": "2026-06-22T22:37:02+09:00"
+          },
+          {
+            "version": "16.11",
+            "rate": 0.0429,
+            "rank": 16,
+            "created_at": "2026-06-08T22:35:07+09:00"
+          }
+        ],
+        "ban": [
+          {
+            "version": "16.20",
+            "rate": 0.0168,
+            "rank": 42,
+            "created_at": "2026-10-08T23:11:41+09:00"
+          },
+          {
+            "version": "16.19",
+            "rate": 0.016,
+            "rank": 41,
+            "created_at": "2026-10-05T23:08:26+09:00"
+          },
+          {
+            "version": "16.18",
+            "rate": 0.0164,
+            "rank": 42,
+            "created_at": "2026-09-17T23:16:20+09:00"
+          },
+          {
+            "version": "16.17",
+            "rate": 0.0176,
+            "rank": 41,
+            "created_at": "2026-09-08T23:06:59+09:00"
+          },
+          {
+            "version": "16.16",
+            "rate": 0.0197,
+            "rank": 41,
+            "created_at": "2026-08-21T22:40:36+09:00"
+          },
+          {
+            "version": "16.15",
+            "rate": 0.0203,
+            "rank": 41,
+            "created_at": "2026-08-10T22:45:28+09:00"
+          },
+          {
+            "version": "16.14",
+            "rate": 0.02,
+            "rank": 41,
+            "created_at": "2026-07-27T22:38:14+09:00"
+          },
+          {
+            "version": "16.13",
+            "rate": 0.0215,
+            "rank": 35,
+            "created_at": "2026-07-13T22:37:18+09:00"
+          },
+          {
+            "version": "16.12",
+            "rate": 0.0172,
+            "rank": 44,
+            "created_at": "2026-06-22T22:37:02+09:00"
+          },
+          {
+            "version": "16.11",
+            "rate": 0.0157,
+            "rank": 42,
+            "created_at": "2026-06-08T22:35:07+09:00"
+          }
+        ]
+      },
+      "game_lengths": [
+        {
+          "game_length": 0,
+          "rate": 0.459786,
+          "average": 0.5,
+          "rank": 43
+        },
+        {
+          "game_length": 25,
+          "rate": 0.498632,
+          "average": 0.5,
+          "rank": 32
+        },
+        {
+          "game_length": 30,
+          "rate": 0.50995,
+          "average": 0.5,
+          "rank": 17
+        },
+        {
+          "game_length": 35,
+          "rate": 0.512299,
+          "average": 0.5,
+          "rank": 20
+        },
+        {
+          "game_length": 40,
+          "rate": 0.496403,
+          "average": 0.5,
+          "rank": 34
+        }
+      ],
+      "counters": [
+        {
+          "champion_id": 805,
+          "play": 995,
+          "win": 517
+        },
+        {
+          "champion_id": 112,
+          "play": 769,
+          "win": 351
+        },
+        {
+          "champion_id": 55,
+          "play": 706,
+          "win": 361
+        },
+        {
+          "champion_id": 517,
+          "play": 676,
+          "win": 347
+        },
+        {
+          "champion_id": 84,
+          "play": 669,
+          "win": 349
+        },
+        {
+          "champion_id": 103,
+          "play": 663,
+          "win": 317
+        },
+        {
+          "champion_id": 777,
+          "play": 663,
+          "win": 322
+        },
+        {
+          "champion_id": 134,
+          "play": 565,
+          "win": 281
+        },
+        {
+          "champion_id": 7,
+          "play": 564,
+          "win": 278
+        },
+        {
+          "champion_id": 105,
+          "play": 531,
+          "win": 252
+        },
+        {
+          "champion_id": 157,
+          "play": 528,
+          "win": 268
+        },
+        {
+          "champion_id": 4,
+          "play": 512,
+          "win": 251
+        },
+        {
+          "champion_id": 238,
+          "play": 440,
+          "win": 218
+        },
+        {
+          "champion_id": 245,
+          "play": 419,
+          "win": 191
+        },
+        {
+          "champion_id": 127,
+          "play": 416,
+          "win": 192
+        },
+        {
+          "champion_id": 131,
+          "play": 340,
+          "win": 176
+        },
+        {
+          "champion_id": 90,
+          "play": 305,
+          "win": 159
+        },
+        {
+          "champion_id": 910,
+          "play": 297,
+          "win": 136
+        },
+        {
+          "champion_id": 101,
+          "play": 256,
+          "win": 126
+        },
+        {
+          "champion_id": 893,
+          "play": 244,
+          "win": 113
+        },
+        {
+          "champion_id": 8,
+          "play": 235,
+          "win": 113
+        },
+        {
+          "champion_id": 61,
+          "play": 219,
+          "win": 102
+        },
+        {
+          "champion_id": 142,
+          "play": 209,
+          "win": 99
+        },
+        {
+          "champion_id": 711,
+          "play": 205,
+          "win": 90
+        },
+        {
+          "champion_id": 99,
+          "play": 200,
+          "win": 85
+        },
+        {
+          "champion_id": 45,
+          "play": 199,
+          "win": 91
+        },
+        {
+          "champion_id": 39,
+          "play": 190,
+          "win": 100
+        },
+        {
+          "champion_id": 246,
+          "play": 179,
+          "win": 98
+        },
+        {
+          "champion_id": 38,
+          "play": 157,
+          "win": 80
+        },
+        {
+          "champion_id": 13,
+          "play": 152,
+          "win": 81
+        },
+        {
+          "champion_id": 91,
+          "play": 146,
+          "win": 67
+        },
+        {
+          "champion_id": 34,
+          "play": 138,
+          "win": 62
+        },
+        {
+          "champion_id": 1,
+          "play": 134,
+          "win": 63
+        },
+        {
+          "champion_id": 163,
+          "play": 130,
+          "win": 70
+        },
+        {
+          "champion_id": 166,
+          "play": 127,
+          "win": 66
+        },
+        {
+          "champion_id": 136,
+          "play": 118,
+          "win": 57
+        },
+        {
+          "champion_id": 800,
+          "play": 110,
+          "win": 66
+        },
+        {
+          "champion_id": 236,
+          "play": 109,
+          "win": 55
+        },
+        {
+          "champion_id": 268,
+          "play": 107,
+          "win": 67
+        },
+        {
+          "champion_id": 80,
+          "play": 103,
+          "win": 42
+        },
+        {
+          "champion_id": 50,
+          "play": 101,
+          "win": 43
+        },
+        {
+          "champion_id": 126,
+          "play": 96,
+          "win": 49
+        },
+        {
+          "champion_id": 75,
+          "play": 95,
+          "win": 43
+        },
+        {
+          "champion_id": 901,
+          "play": 95,
+          "win": 47
+        },
+        {
+          "champion_id": 69,
+          "play": 80,
+          "win": 47
+        },
+        {
+          "champion_id": 63,
+          "play": 62,
+          "win": 35
+        },
+        {
+          "champion_id": 161,
+          "play": 60,
+          "win": 29
+        },
+        {
+          "champion_id": 96,
+          "play": 51,
+          "win": 27
+        },
+        {
+          "champion_id": 115,
+          "play": 49,
+          "win": 22
+        },
+        {
+          "champion_id": 887,
+          "play": 39,
+          "win": 19
+        },
+        {
+          "champion_id": 86,
+          "play": 38,
+          "win": 20
+        },
+        {
+          "champion_id": 10,
+          "play": 37,
+          "win": 20
+        },
+        {
+          "champion_id": 79,
+          "play": 36,
+          "win": 21
+        },
+        {
+          "champion_id": 54,
+          "play": 35,
+          "win": 22
+        },
+        {
+          "champion_id": 41,
+          "play": 34,
+          "win": 21
+        },
+        {
+          "champion_id": 950,
+          "play": 33,
+          "win": 17
+        }
+      ]
+    },
+    "meta": {
+      "version": "16.20",
+      "cached_at": "2026-10-10 21:25:12"
+    }
+  },
+  "fragments": [
+    {
+      "position": "mid",
+      "championName": "Galio",
+      "championId": 3,
+      "patch": "16.20",
+      "tier": "emerald_plus",
+      "region": "global",
+      "type": "ranked"
+    },
+    [
+      "$",
+      "$L87",
+      null,
+      {
+        "ref": "$undefined",
+        "defaultLocale": "en",
+        "href": {
+          "pathname": "/lol/champions/galio/items/mid",
+          "query": {
+            "region": "global",
+            "type": "ranked",
+            "tier": "emerald_plus",
+            "patch": "16.20",
+            "target_champion": "ahri"
+          }
+        },
+        "locale": "$undefined",
+        "localeCookie": {
+          "name": "NEXT_LOCALE",
+          "maxAge": 31536000,
+          "sameSite": "lax"
+        },
+        "unprefixed": "$undefined",
+        "prefetch": false,
+        "children": [
+          "$",
+          "div",
+          null,
+          {
+            "className": "flex items-center px-3 py-2 text-sm font-bold leading-5 text-gray-900",
+            "children": [
+              [
+                "Galio",
+                " ",
+                "Item builds"
+              ],
+              [
+                "$",
+                "svg",
+                null,
+                {
+                  "xmlns": "http://www.w3.org/2000/svg",
+                  "width": 16,
+                  "height": 16,
+                  "viewBox": "0 0 24 24",
+                  "className": "text-gray-400",
+                  "children": [
+                    "$",
+                    "path",
+                    null,
+                    {
+                      "fill": "currentColor",
+                      "fillRule": "nonzero",
+                      "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ]
+      }
+    ],
+    [
+      "$",
+      "tr",
+      "core_items_0",
+      {
+        "className": "text-xs",
+        "children": [
+          [
+            "$",
+            "td",
+            null,
+            {
+              "children": [
+                "$",
+                "div",
+                null,
+                {
+                  "className": "flex-start flex flex-wrap items-center gap-1 whitespace-pre-wrap",
+                  "children": [
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "6664-0",
+                      {
+                        "children": [
+                          false,
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 6664,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/6664.png",
+                                      "alt": "Hollow Radiance",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "4005-1",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 4005,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/4005.png",
+                                      "alt": "Imperial Mandate",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "3157-2",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 3157,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/3157.png",
+                                      "alt": "Zhonya's Hourglass",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          [
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "div",
+                  null,
+                  {
+                    "className": "flex flex-col items-center justify-center",
+                    "children": [
+                      [
+                        "$",
+                        "strong",
+                        null,
+                        {
+                          "className": "tabular-nums",
+                          "children": "12.90%"
+                        }
+                      ],
+                      [
+                        "$",
+                        "span",
+                        null,
+                        {
+                          "className": "text-gray-500",
+                          "children": [
+                            "44",
+                            " ",
+                            "Games"
+                          ]
+                        }
+                      ]
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "strong",
+                  null,
+                  {
+                    "className": "flex justify-center text-xs tabular-nums text-main-600",
+                    "children": "56.82%"
+                  }
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    [
+      "$",
+      "tr",
+      "core_items_1",
+      {
+        "className": "text-xs",
+        "children": [
+          [
+            "$",
+            "td",
+            null,
+            {
+              "children": [
+                "$",
+                "div",
+                null,
+                {
+                  "className": "flex-start flex flex-wrap items-center gap-1 whitespace-pre-wrap",
+                  "children": [
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "3152-0",
+                      {
+                        "children": [
+                          false,
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 3152,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/3152.png",
+                                      "alt": "Hextech Rocketbelt",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "4005-1",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 4005,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/4005.png",
+                                      "alt": "Imperial Mandate",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "3157-2",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 3157,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/3157.png",
+                                      "alt": "Zhonya's Hourglass",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          [
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "div",
+                  null,
+                  {
+                    "className": "flex flex-col items-center justify-center",
+                    "children": [
+                      [
+                        "$",
+                        "strong",
+                        null,
+                        {
+                          "className": "tabular-nums",
+                          "children": "12.61%"
+                        }
+                      ],
+                      [
+                        "$",
+                        "span",
+                        null,
+                        {
+                          "className": "text-gray-500",
+                          "children": [
+                            "43",
+                            " ",
+                            "Games"
+                          ]
+                        }
+                      ]
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "strong",
+                  null,
+                  {
+                    "className": "flex justify-center text-xs tabular-nums text-main-600",
+                    "children": "65.12%"
+                  }
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    [
+      "$",
+      "tr",
+      "core_items_2",
+      {
+        "className": "text-xs",
+        "children": [
+          [
+            "$",
+            "td",
+            null,
+            {
+              "children": [
+                "$",
+                "div",
+                null,
+                {
+                  "className": "flex-start flex flex-wrap items-center gap-1 whitespace-pre-wrap",
+                  "children": [
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "6664-0",
+                      {
+                        "children": [
+                          false,
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 6664,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/6664.png",
+                                      "alt": "Hollow Radiance",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "4005-1",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 4005,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/4005.png",
+                                      "alt": "Imperial Mandate",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "3075-2",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 3075,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/3075.png",
+                                      "alt": "Thornmail",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          [
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "div",
+                  null,
+                  {
+                    "className": "flex flex-col items-center justify-center",
+                    "children": [
+                      [
+                        "$",
+                        "strong",
+                        null,
+                        {
+                          "className": "tabular-nums",
+                          "children": "2.93%"
+                        }
+                      ],
+                      [
+                        "$",
+                        "span",
+                        null,
+                        {
+                          "className": "text-gray-500",
+                          "children": [
+                            "10",
+                            " ",
+                            "Games"
+                          ]
+                        }
+                      ]
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "strong",
+                  null,
+                  {
+                    "className": "flex justify-center text-xs tabular-nums text-gray-500",
+                    "children": "30.00%"
+                  }
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    [
+      "$",
+      "tr",
+      "core_items_3",
+      {
+        "className": "text-xs",
+        "children": [
+          [
+            "$",
+            "td",
+            null,
+            {
+              "children": [
+                "$",
+                "div",
+                null,
+                {
+                  "className": "flex-start flex flex-wrap items-center gap-1 whitespace-pre-wrap",
+                  "children": [
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "6664-0",
+                      {
+                        "children": [
+                          false,
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 6664,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/6664.png",
+                                      "alt": "Hollow Radiance",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "4005-1",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 4005,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/4005.png",
+                                      "alt": "Imperial Mandate",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "4633-2",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 4633,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/4633.png",
+                                      "alt": "Riftmaker",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          [
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "div",
+                  null,
+                  {
+                    "className": "flex flex-col items-center justify-center",
+                    "children": [
+                      [
+                        "$",
+                        "strong",
+                        null,
+                        {
+                          "className": "tabular-nums",
+                          "children": "2.35%"
+                        }
+                      ],
+                      [
+                        "$",
+                        "span",
+                        null,
+                        {
+                          "className": "text-gray-500",
+                          "children": [
+                            "8",
+                            " ",
+                            "Games"
+                          ]
+                        }
+                      ]
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "strong",
+                  null,
+                  {
+                    "className": "flex justify-center text-xs tabular-nums text-main-600",
+                    "children": "62.50%"
+                  }
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    [
+      "$",
+      "tr",
+      "core_items_4",
+      {
+        "className": "text-xs",
+        "children": [
+          [
+            "$",
+            "td",
+            null,
+            {
+              "children": [
+                "$",
+                "div",
+                null,
+                {
+                  "className": "flex-start flex flex-wrap items-center gap-1 whitespace-pre-wrap",
+                  "children": [
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "6664-0",
+                      {
+                        "children": [
+                          false,
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 6664,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/6664.png",
+                                      "alt": "Hollow Radiance",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "4005-1",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 4005,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/4005.png",
+                                      "alt": "Imperial Mandate",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      "$",
+                      "$Sreact.fragment",
+                      "3110-2",
+                      {
+                        "children": [
+                          [
+                            "$",
+                            "svg",
+                            null,
+                            {
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "width": 24,
+                              "height": 24,
+                              "viewBox": "0 0 24 24",
+                              "className": "flex-shrink-0 text-gray-400",
+                              "children": [
+                                "$",
+                                "path",
+                                null,
+                                {
+                                  "fill": "currentColor",
+                                  "fillRule": "nonzero",
+                                  "d": "M13.2 12 9 7.5 10.4 6l5.6 6-5.6 6L9 16.5z"
+                                }
+                              ]
+                            }
+                          ],
+                          [
+                            "$",
+                            "div",
+                            null,
+                            {
+                              "className": "relative",
+                              "children": [
+                                "$",
+                                "$L5d",
+                                null,
+                                {
+                                  "metaType": "item",
+                                  "metaId": 3110,
+                                  "mode": "$undefined",
+                                  "children": [
+                                    "$",
+                                    "$L5e",
+                                    null,
+                                    {
+                                      "className": "rounded",
+                                      "src": "https://opgg-static.akamaized.net/meta/images/lol/16.20.1/item/3110.png",
+                                      "alt": "Frozen Heart",
+                                      "width": 32,
+                                      "height": 32
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          ],
+          [
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "div",
+                  null,
+                  {
+                    "className": "flex flex-col items-center justify-center",
+                    "children": [
+                      [
+                        "$",
+                        "strong",
+                        null,
+                        {
+                          "className": "tabular-nums",
+                          "children": "2.05%"
+                        }
+                      ],
+                      [
+                        "$",
+                        "span",
+                        null,
+                        {
+                          "className": "text-gray-500",
+                          "children": [
+                            "7",
+                            " ",
+                            "Games"
+                          ]
+                        }
+                      ]
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              "$",
+              "td",
+              null,
+              {
+                "children": [
+                  "$",
+                  "strong",
+                  null,
+                  {
+                    "className": "flex justify-center text-xs tabular-nums text-main-600",
+                    "children": "57.14%"
+                  }
+                ]
+              }
+            ]
+          ]
+        ]
+      }
+    ]
+  ]
+}

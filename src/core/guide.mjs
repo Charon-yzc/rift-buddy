@@ -34,6 +34,7 @@ export function validateDuelPick(value){
 }
 export function validateLoadoutSelection(value){
  const selected={};
+ if(value.sourceOpponent!==undefined){if(value.mode!=='rift'||!hero(value.sourceOpponent)||value.sourceOpponent===(value.id||value.champion))throw Error('来源对手筛选格式不正确');selected.sourceOpponent=value.sourceOpponent;}
  if(value.customRunePage!==undefined){if(value.mode!=='rift')throw Error('自选符文只适用于召唤师峡谷');selected.customRunePage=validateCustomRunePage(value.customRunePage);}
  if(value.customSkillOrder!==undefined){if(value.mode!=='rift')throw Error('自选加点只适用于召唤师峡谷');selected.customSkillOrder=validateCustomSkillOrder(value.customSkillOrder,value.id||value.champion);}
  if(value.summonerIds!==undefined)selected.summonerIds=validateSummonerIds(value.summonerIds,value.mode);
@@ -123,6 +124,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const s=guide.selection,champion=data.champions.find(c=>c.id===s.id);
  if(!champion)throw Error('当前资料没有这位英雄，请重新选择');
  const build=getBuild(champion,s.role,data,s);
+ if(s.sourceOpponent&&s.threatId&&s.sourceOpponent!==s.threatId)build.selectionWarnings.push(`配置来源仍筛选对 ${data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent}，当前关注 ${data.champions.find(c=>c.id===s.threatId)?.name||s.threatId}；请在助手刷新并选择新参考，已有装备与符文不会自动更改。`);
  const route=build.items.map(item),validIds=new Set(route.map(i=>i.id));
  const completedItems=guide.completedItems.filter(id=>validIds.has(id));
  const mismatch=guideMismatch(s,current),liveStatus=mismatch?{matched:false,kind:mismatch,reason:mismatch==='role'?'当前位置已变化，请换入当前英雄与位置':'当前选择与这份方案不同，请重新确认'}:liveGuideStatus(live,s),matched=liveStatus.matched;
@@ -237,7 +239,7 @@ export function createGuideModel(data,value,live=null,current=null){
   live:liveModel,nextSkill:skillAdvice.next,skillAdvice,situation,nextReason,nextCaution:nextCandidate?.caution||'静态价格与合成条件以游戏商店为准。',liveAdvice:guide.liveAdvice,automaticTarget:!!(!chosen&&suggested&&suggested.id===next?.id),
   priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,attributePlan:build.attributePlan,skillTitle:build.selectedSkill?.name,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
-  title:build.title,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,configurationNote:build.configurationNote,configurationSources:build.configurationSources,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
+  title:build.title,sourceOpponentName:s.sourceOpponent?(data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent):null,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,configurationNote:build.configurationNote,configurationSources:build.configurationSources,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
   rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',comparison:compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key}),
   collapsed:guide.collapsed,clickThrough:guide.clickThrough,opacity:guide.opacity,imageOverrides:data.imageOverrides||{}};
 }

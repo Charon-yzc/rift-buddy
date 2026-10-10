@@ -79,6 +79,9 @@ async function boot(){
  const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;guide?.publish();return result;};
  useCatalog(catalogStore.summary());
  const {loadBuildSources,loadHexBuilds,createBuildCache}=await import('../services/build-cache.mjs');
+ const {loadOpponentBuildSources,createOpponentBuildCache}=await import('../services/opponent-build-cache.mjs');
+ data.opponentBuildSources=await loadOpponentBuildSources(path.join(storeRoot,'data'),data);
+ const refreshOpponentBuild=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
  data.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],data);
  selectBuildSource(data,state.preferences.buildSource);synchronizeSavedState=()=>{selectBuildSource(data,state.preferences.buildSource);if(state.preferences.autoLive===false)latestLive=null;};
@@ -215,8 +218,13 @@ async function boot(){
  guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return status(true);});
  guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
  guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
+ guard('refresh-opponent-build',async(id,role,opponent,source)=>{
+  const target=data.champions.find(c=>c.id===opponent);
+  if(!latestClient.connected||latestClient.phase!=='ChampSelect'||!target||!latestClient.session?.theirTeam?.some(p=>p.championId===target.key))throw Error('所选对手已不在当前公开选人中，请同步后重试');
+  const result=await refreshOpponentBuild(id,role,opponent,source);guide.publish();return result;
+ });
  guard('open-guide',async selection=>{if(selection){const previous=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:latestLive}).guide,next=guideCore.selectGuide(previous,selection);if(!next.match&&latestClient.connected)next.match={phase:latestClient.phase,...(latestClient.game?.gameId?{gameId:latestClient.game.gameId}:{})};await setGuideState(next);}else await prepareCurrentGuide();const result=guide.show();pollLive();return result;});
- guard('update-guide',async selection=>{const s=guideCore.validateGuideSelection(selection);if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(s))return {updated:false};await setGuideState(guideCore.selectGuide(state.guide,mergeConfiguration(state.guide.selection,s,Array.isArray(selection.changedFields)?selection.changedFields:undefined)));guide.publish();return {updated:true,selection:state.guide.selection};});
+ guard('update-guide',async selection=>{const s=guideCore.validateGuideSelection(selection);if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(s))return {updated:false};await setGuideState(guideCore.selectGuide(state.guide,mergeConfiguration(state.guide.selection,s,Array.isArray(selection.changedFields)?selection.changedFields:undefined)),state.guide);guide.publish();return {updated:true,selection:state.guide.selection};});
  guard('matchup-focus',async context=>{
   const own=currentGuideSelection();
   if(!latestClient.connected||latestClient.phase!=='ChampSelect'||!own||!context||guideCore.guideIdentity(own)!==guideCore.guideIdentity(context))throw Error('选人上下文已变化，请同步后重新选择对手');
@@ -228,8 +236,9 @@ async function boot(){
   if(updating)throw new Error('资料更新正在进行');updating=true;
   try{const next=await dataService.collectSnapshot(msg=>win?.webContents.send('data-progress',msg),data);
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
-   delete next.builds;delete next.buildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
+   delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
    next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
+   next.opponentBuildSources=await loadOpponentBuildSources(path.join(storeRoot,'data'),next);
    next.pairStatistics=await loadPairStatisticsCache(pairFiles,next);
    next.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],next);
    // The spell book is versioned separately: a mismatched book must never be

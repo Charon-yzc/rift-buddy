@@ -17,6 +17,8 @@ export function selectedBuildFields(v,{preserveUnavailable=false}={}){
  if(v.mode==='rift'&&(v.customRunePage||b.selectedRune?.source==='个人自选'))fields.customRunePage=structuredClone(v.customRunePage||b.selectedRune.page);
  if(v.mode==='rift'&&(v.customSkillOrder||b.selectedSkill?.source==='个人自选'))fields.customSkillOrder=structuredClone(v.customSkillOrder||{order:b.selectedSkill.order,patch:b.selectedSkill.patch});
  if(b.selectedSummonerIds)fields.summonerIds=[...b.selectedSummonerIds];
+ if(v.mode==='rift'&&b.sourceOpponent)fields.sourceOpponent=b.sourceOpponent;
+ if(preserveUnavailable&&v.mode==='rift'&&v.sourceOpponent)fields.sourceOpponent=v.sourceOpponent;
  if(preserveUnavailable&&Array.isArray(v.summonerIds))fields.summonerIds=[...v.summonerIds];
  return fields;
 }
@@ -26,6 +28,7 @@ export function buildFavoriteId(v){
  if(v.mode==='hex')identity.push(Object.values(hexFields(v)).map(set));
  if(fields.customRunePage)identity.push({customRunePage:fields.customRunePage});
  if(fields.customSkillOrder)identity.push({customSkillOrder:fields.customSkillOrder});
+ if(fields.sourceOpponent)identity.push({sourceOpponent:fields.sourceOpponent});
  const spellIds=selectedBuildFields(v,{preserveUnavailable:true}).summonerIds;if(spellIds)identity.push({summonerIds:spellIds});
  return `build:${v.id}:${v.role}:${v.mode}:${fingerprint(identity)}`;
 }
@@ -40,6 +43,7 @@ export function findSavedBuild(favorites,v){
   if(!same(f.summonerIds||[],fields.summonerIds||[]))return false;
   if(!same(f.customRunePage||null,fields.customRunePage||null))return false;
   if(!same(f.customSkillOrder||null,fields.customSkillOrder||null))return false;
+  if((f.sourceOpponent||'')!==(fields.sourceOpponent||''))return false;
   if(v.mode==='hex')return Object.keys(hexFields(v)).every(key=>same(set(f[key]),set(v[key])));
   // Legacy favorites without a later selection reopen with no self-selected
   // later items. They must not swallow a new choice or cancel another plan.

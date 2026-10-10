@@ -51,6 +51,15 @@ jobs:
         run: node scripts/inspect-package.mjs --verify-current
       - name: Check selection, loading and in-game transitions
         run: node scripts/smoke-package-game-transition.mjs
+      - name: Check manual positions, preparation writes and explicit version refresh
+        run: node scripts/smoke-package-journey.mjs
+      - name: Check interleaved configuration and guide edits preserve accepted fields
+        run: |
+          foreach ($delay in @(0,180,500)) {
+            $env:RIFT_GUIDE_SYNC_DELAY = "$delay"
+            node scripts/smoke-package-user-flow.mjs
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       - name: Check guide interaction and live-data fallback
         run: node scripts/smoke-package-guide-input.mjs
       - name: Check live situation advice and explanations
@@ -85,17 +94,21 @@ jobs:
           node scripts/smoke-package-role-preparation.mjs --matchup-choices
       - name: Check public-opponent conditions preserve accepted team order and own skill gates
         run: node scripts/smoke-package-matchups.mjs --team-order
+      - name: Check explicit opponent sources, independent statistics and saved member choices
+        run: node scripts/smoke-package-opponent-builds.mjs
       - name: Check accepted mechanism plans across member guides and restarts
         run: node scripts/smoke-package-cooperation.mjs
       - name: Check concrete three-person and full-party plans, first-screen actions and attribute preparation
         run: |
           node scripts/smoke-package-cooperation.mjs --specific
+          node scripts/smoke-package-cooperation.mjs --gragas-relay
           node scripts/smoke-package-cooperation.mjs --party-four
           node scripts/smoke-package-cooperation.mjs --party-five
       - name: Check frozen curated plans, selectable party routes and sidebar adoption
         run: |
           node scripts/smoke-package-curated-plan.mjs
           node scripts/smoke-package-curated-plan.mjs --routes
+          node scripts/smoke-package-curated-plan.mjs --ball-trio
           node scripts/smoke-package-curated-plan.mjs --duo-stages
           node scripts/smoke-package-curated-plan.mjs --readiness
           node scripts/smoke-package-curated-plan.mjs --custom-runes

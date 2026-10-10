@@ -8,9 +8,53 @@ import {captureTeamConfigurations,restoreTeamFavorite} from '../src/core/team-fa
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {defaultState,saveState,readState} from '../services/storage.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
-import {resultActionsView} from '../src/cooperation-view.mjs';
+import {resultActionsView,resultActionLeadView,memberActionSummary} from '../src/cooperation-view.mjs';
+import {distinctPlayConditions} from '../src/duo-play-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
+
+test('Vi Orianna Nautilus can choose either actual ball carrier and preserve one ultimate, member jobs and stages through disk',async()=>{
+ const slots=setup({jungle:'Vi',mid:'Orianna',support:'Nautilus'}),[result]=recommend({slots,champions:data.champions,scope:'party'}),original=captureCreativePlan(result,data);
+ assert.equal(original.archetype,'cooperation');assert.match(original.ordered.find(m=>m.champion==='Vi').job,/等泰坦.*一次 R 生效.*第二波/);
+ for(const carrier of ['Vi','Nautilus']){
+  const plan=selectPartyRoute(original,'ball:'+['Orianna',carrier].sort().join(':')),carrierName=carrier==='Vi'?'蔚':'诺提勒斯';
+  assert.equal(plan.archetype,'shared');assert.equal(plan.shared.routes[0].id,'ball:'+['Orianna',carrier].sort().join(':'));
+  assert.ok(plan.ordered.find(m=>m.champion==='Orianna').job.includes('E 只给'+carrierName));
+  assert.match(plan.ordered.find(m=>m.champion==='Orianna').job,/球已到且仍跟随.*R 可用才接一次.*球返回.*取消.*不为另一位进场者再安排一次 R/);
+  assert.match(plan.ordered.find(m=>m.champion===carrier).job,/球已到且仍跟随.*队友能覆盖落点/);
+  assert.match(plan.ordered.find(m=>m.champion===carrier).job,carrier==='Vi'?/Q 被前方英雄截住.*R 只有实际到达目标/:/R 的追踪冲击波不会移动自己/);
+  assert.match(plan.ordered.find(m=>m.champion!=='Orianna'&&m.champion!==carrier).job,/第二波或接应.*主线失败就一起退出.*不要求第二次发条 R/);
+  assert.deepEqual(plan.stagePlan.opening,original.stagePlan.opening);assert.deepEqual(plan.stagePlan.later.memberJobs,original.stagePlan.later.memberJobs);assert.deepEqual(plan.stagePlan.later.steps,original.stagePlan.later.steps);
+  const configurations=captureTeamConfigurations({...result,creativePlan:plan},data,createPreparationStore()),root=await fs.mkdtemp(path.resolve('.local/ball-carrier-'));
+  await saveState(root,{...defaultState(),favorites:[{id:'ball',type:'team',title:plan.name,slots,scope:'party',style:'fun',createdAt:plan.createdAt,version:data.version,creativePlan:plan,configurations}]});
+  const saved=await readState(root),restored=restoreTeamFavorite(saved.favorites[0],createSlots(),data.champions);assert.deepEqual(restored.creativePlan,plan);
+  for(const config of saved.favorites[0].configurations){const guide=createGuideModel(data,{...selectGuide(null,config),stage:'key'});assert.equal(guide.combo.ownJob,plan.ordered.find(m=>m.champion===config.id).job);assert.equal(guide.coach.action,plan.ordered.find(m=>m.champion===config.id).job);}
+ }
+});
+
+test('Gragas Yasuo Rakan use actual airborne, one Yasuo ultimate and a conditional third-member fallback in every saved member guide',async()=>{
+ const slots=setup({jungle:'Gragas',mid:'Yasuo',support:'Rakan'}),[result]=recommend({slots,champions:data.champions,scope:'party'}),plan=captureCreativePlan(result,data);
+ assert.equal(plan.archetype,'cooperation');assert.equal(plan.steps.length,3);
+ const jobs=new Map(plan.ordered.map(m=>[m.champion,m.job]));
+ assert.match(jobs.get('Gragas'),/E 实际击退后让亚索接一次 R.*E 被挡.*取消/);
+ assert.match(jobs.get('Yasuo'),/R 可用且在范围、落点安全.*同一轮不安排第二次自己的 R.*洛 R 魅惑不作为击飞/);
+ assert.match(jobs.get('Rakan'),/等亚索落地再用 W.*只有酒桶 E 未开成.*W 与亚索 R 都可用.*备用击飞/);
+ const root=await fs.mkdtemp(path.resolve('.local/airborne-relay-')),configurations=captureTeamConfigurations({...result,creativePlan:plan},data,createPreparationStore());
+ await saveState(root,{...defaultState(),favorites:[{id:'airborne',type:'team',title:plan.name,slots,scope:'party',style:'fun',createdAt:plan.createdAt,version:data.version,creativePlan:plan,configurations}]});
+ const saved=await readState(root),restored=restoreTeamFavorite(saved.favorites[0],createSlots(),data.champions);
+ assert.deepEqual(restored.creativePlan,plan);
+ for(const c of saved.favorites[0].configurations){const model=createGuideModel(data,selectGuide(null,c));assert.equal(model.combo.ownJob,jobs.get(c.id));assert.deepEqual(model.combo.steps,plan.steps);}
+});
+
+test('compact member actions retain the concrete skill after a shared semicolon and shared conditions repeat only once',()=>{
+ const job='队友在实际跟进范围再进场；E 命中后 Q 覆盖同一目标。失败就停。';
+ assert.equal(memberActionSummary(job),'队友在实际跟进范围再进场；E 命中后 Q 覆盖同一目标。');
+ const [result]=recommend({slots:setup({top:'Ornn',jungle:'Viego',mid:'Ahri',bottom:'Jinx',support:'Lulu'}),champions:data.champions,scope:'party'}),plan=captureCreativePlan(result,data),fixed={...result,creativePlan:plan};
+ const compact=resultActionsView(fixed,data,{compact:true});for(const m of plan.ordered)assert.ok(compact.includes(memberActionSummary(m.job)),m.champion);
+ const lead=resultActionLeadView(fixed,data,{id:'Ahri',role:'mid'});assert.match(lead,/阿狸/);assert.ok(lead.includes(memberActionSummary(plan.ordered.find(m=>m.champion==='Ahri').job)));
+ const original='双方技能可用。蔚在实际接近范围。双方技能可用。发条的球在蔚身上。';
+ assert.equal(distinctPlayConditions(original),'双方技能可用。蔚在实际接近范围。发条的球在蔚身上。');assert.equal(distinctPlayConditions(''),'');
+});
 
 test('teamfight preference retains every actual ball route and every supported alternative through adoption and disk',async()=>{
  const slots=setup({top:'Ornn',jungle:'Sejuani',mid:'Orianna',bottom:'Jinx',support:'Lulu'});
