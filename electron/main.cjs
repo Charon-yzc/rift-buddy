@@ -156,7 +156,7 @@ async function boot(){
  const {sanitizeNick}=await import('../src/core/room.mjs');
  let roomNickInUse='';
  const ensureRoom=wanted=>{
-  const clean=sanitizeNick(wanted)||state.preferences.roomNick||'队友';
+  const clean=sanitizeNick(wanted)||sanitizeNick(state.preferences.roomNick)||'队友';
   if(roomService&&roomNickInUse===clean)return roomService;
   if(roomService){if(roomService.snapshot().mode!=='idle')throw Error('请先离开房间再修改昵称');roomService.dispose();roomService=null;}
   roomNickInUse=clean;

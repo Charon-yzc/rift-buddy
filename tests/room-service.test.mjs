@@ -291,3 +291,34 @@ test('dispose tears the room down without leaving sockets behind',async()=>{
  await until(()=>guest.snapshot().mode==='idle');
  guest.dispose();
 });
+
+test('a chatty host that never welcomes still fails the join on a wall-clock deadline',async()=>{
+ const fake=fakeServer(socket=>{
+  socket.on('error',()=>{});
+  socket.resume();
+  const noise=setInterval(()=>{try{socket.write('\n');}catch{}},60); // keepalive noise, no welcome
+  socket.on('close',()=>clearInterval(noise));
+ });
+ await new Promise(r=>fake.listen(0,'127.0.0.1',r));
+ const guest=room({nick:'队友',handshakeTimeoutMs:250});
+ const started=Date.now();
+ await assert.rejects(()=>guest.join({host:'127.0.0.1',port:fake.address().port,room:'482913',pin:'482913'}),/房主没有响应/);
+ const waited=Date.now()-started;
+ assert.ok(waited<3000,`incoming bytes must not reset the deadline (${waited}ms)`);
+ assert.equal(guest.snapshot().mode,'idle');
+ await new Promise(r=>fake.close(r));
+});
+
+test('an address that failed a handshake waits before its next attempt',async()=>{
+ const host=room({nick:'房主'});
+ const created=await host.host();
+ const guest=room({nick:'队友'});
+ const wrongPin=created.pin==='000000'?'111111':'000000';
+ await assert.rejects(()=>guest.join({host:'127.0.0.1',port:created.port,room:created.room,pin:wrongPin}),/未能加入房间/);
+ const started=Date.now();
+ await guest.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});
+ const waited=Date.now()-started;
+ assert.ok(waited>=200,`expected the throttled retry to wait, saw ${waited}ms`);
+ await until(()=>host.snapshot().members.length===2);
+ guest.leave();host.leave();
+});

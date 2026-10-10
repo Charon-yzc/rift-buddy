@@ -10,7 +10,7 @@ function memberCard(member,champ){
  const share=member.share;
  const lineup=share&&Array.isArray(share.lineup)?share.lineup:[];
  const champions=lineup.filter(slot=>slot&&slot.champion);
- const mode=share?.pick?.mode||'rift';
+ const mode=share?.pick?.mode==='hex'?'hex':'rift';
  const chips=champions.map(slot=>{
   const c=champ(slot.champion);
   return `<button class="room-champ" data-action="room-build" data-id="${e(slot.champion)}" data-role="${e(slot.role)}" data-mode="${e(mode)}" title="${e(roleName(slot.role))} · 查看本地配置">${c?portrait(c,'sm'):''}<span>${e(c?.name||slot.champion)}</span></button>`;

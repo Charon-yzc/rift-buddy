@@ -28,7 +28,7 @@ const HOST_NAME=/^[A-Za-z0-9.-]{1,253}$/;
 // One member as the UI sees it: online status plus the latest sanitized share.
 const memberView=({nick,share})=>({nick,online:true,share:share||null});
 
-export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>{},now=Date.now,announceMs=ANNOUNCE_MS}={}){
+export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>{},now=Date.now,announceMs=ANNOUNCE_MS,handshakeTimeoutMs=HANDSHAKE_TIMEOUT_MS}={}){
  const display=sanitizeNick(nick);
  if(!display)throw Error('昵称格式不正确');
  nick=display;
@@ -39,10 +39,11 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  let upstream=null;
  let ownShare=null;
  const failures=new Map(); // remote address -> consecutive failed handshakes
- // Failed handshakes linger briefly before the socket is destroyed so one
- // address cannot guess pins at full LAN speed. Bounded so spoofed sources
- // cannot grow the table without limit.
- const noteFailure=remote=>{if(failures.size>256)failures.clear();const count=(failures.get(remote)||0)+1;failures.set(remote,count);return Math.min(count*250,1500);};
+ // An address that keeps failing waits before its next hello is even read, so
+ // one machine cannot guess pins at full LAN speed. The table is bounded so
+ // spoofed sources cannot grow it without limit.
+ const failDelay=remote=>Math.min((failures.get(remote)||0)*250,1500);
+ const noteFailure=remote=>{if(failures.size>256)failures.clear();failures.set(remote,(failures.get(remote)||0)+1);};
  const secureCode=()=>makeRoomCode(()=>randomInt(0,1000000)/1000000);
 
  const emit=()=>{try{onUpdate(snapshot());}catch{}};
@@ -84,7 +85,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  function hostConnection(socket){
   const decoder=new StringDecoder('utf8');
   let buffer='',hello=null,dead=false;
-  let handshakeTimer=setTimeout(()=>socket.destroy(),HANDSHAKE_TIMEOUT_MS);
+  let handshakeTimer=setTimeout(()=>socket.destroy(),handshakeTimeoutMs);
   socket.setKeepAlive(true,15000);
   socket.on('error',()=>{});
   const remote=socket.remoteAddress||'';
@@ -110,7 +111,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     if(!frame)continue;
     if(!hello){
      const handshake=validateHello(frame);
-     if(!handshake||handshake.room!==room||handshake.pin!==pin||nickTaken(handshake.nick)){dead=true;waiting.delete(socket);const timer=setTimeout(()=>{try{socket.destroy();}catch{}},noteFailure(remote));if(timer.unref)timer.unref();return;}
+     if(!handshake||handshake.room!==room||handshake.pin!==pin||nickTaken(handshake.nick)){dead=true;noteFailure(remote);socket.destroy();return;}
      if(guests.size>=MAX_MEMBERS){dead=true;socket.destroy();return;}
      clearTimeout(handshakeTimer);hello=handshake;failures.delete(remote);
      waiting.delete(socket);
@@ -146,6 +147,17 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    if(guests.size+waiting.size>=MAX_MEMBERS){socket.destroy();return;}
    waiting.add(socket);
    socket.once('close',()=>waiting.delete(socket));
+   const remote=socket.remoteAddress||'';
+   const backoff=failDelay(remote);
+   if(backoff>0){
+    // Throttled address: wait before its hello is even read. It still holds a
+    // membership slot while waiting, so guessing cannot escape the cap.
+    socket.pause();
+    const timer=setTimeout(()=>{if(!socket.destroyed){socket.resume();hostConnection(socket);}},backoff);
+    if(timer.unref)timer.unref();
+    socket.once('close',()=>clearTimeout(timer));
+    return;
+   }
    hostConnection(socket);
   });
   try{
@@ -183,10 +195,12 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     settleOk=()=>{if(!settled){settled=true;resolve();}};
     settleFail=error=>{if(!settled){settled=true;reject(error);}};
    });
+   let deadline=setTimeout(()=>{failReason=failReason||Error('连接超时：确认和房主在同一局域网或虚拟局域网，并检查防火墙');socket.destroy();},CONNECT_TIMEOUT_MS);
+   if(deadline.unref)deadline.unref();
    socket.setKeepAlive(true,15000);
-   socket.setTimeout(CONNECT_TIMEOUT_MS,()=>{failReason=failReason||Error('连接超时：确认和房主在同一局域网或虚拟局域网，并检查防火墙');socket.destroy();});
    socket.on('error',error=>{if(!welcomed)failReason=failReason||error;});
    socket.on('close',()=>{
+    clearTimeout(deadline);
     decoder.end();
     // A close before welcome means the host refused the handshake (pin, name
     // or capacity) or the network dropped: the join must fail loudly.
@@ -196,8 +210,11 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    socket.on('connect',()=>{
     const hello=encodeFrame({kind:'hello',v:ROOM_PROTOCOL,room:targetCode,pin:targetSecret,nick});
     if(hello)socket.write(hello);else socket.destroy();
-    // The host answers with welcome; a silent peer must not hold the guest.
-    socket.setTimeout(HANDSHAKE_TIMEOUT_MS,()=>{failReason=Error('未能加入房间：房主没有响应');socket.destroy();});
+    // A wall-clock deadline: a chatty peer that never welcomes must not reset
+    // it (socket.setTimeout is an inactivity timer and would).
+    clearTimeout(deadline);
+    deadline=setTimeout(()=>{failReason=Error('未能加入房间：房主没有响应');socket.destroy();},handshakeTimeoutMs);
+    if(deadline.unref)deadline.unref();
    });
    socket.on('data',chunk=>{
     if(dead)return;
@@ -211,7 +228,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
      if(!welcomed){
       const welcome=validateWelcome(frame);
       if(welcome&&welcome.room===room){
-       welcomed=true;socket.setTimeout(0);
+       welcomed=true;clearTimeout(deadline);
        // Seed the member list from the welcome so presence shows before any
        // share arrives (welcome.members are sanitized display names).
        for(const name of welcome.members)if(name!==nick)guests.set('nick:'+name,{nick:name,share:null});
