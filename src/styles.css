@@ -171,8 +171,8 @@ body{background:radial-gradient(1100px 520px at 75% -8%,#17261f 0%,transparent 6
 
 @media(max-width:1180px) and (max-height:760px){[data-page="draft"] .party-summary-hint{display:none}}
 
-/* LAN room (CHA-31): create/join controls, member shares, clickable picks. */
-.room-panel{margin:14px 0}.room-panel .panel-head h3{display:flex;align-items:center;gap:8px}
+/* Room sharing (CHA-31): create/join controls, member shares, clickable picks. */
+.room-panel{margin:14px 0;scroll-margin-top:84px}.room-panel .panel-head h3{display:flex;align-items:center;gap:8px}
 .room-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .room-join{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
 .room-join label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8fa6ba;flex:1;min-width:150px}
