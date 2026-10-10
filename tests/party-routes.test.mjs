@@ -56,6 +56,18 @@ test('compact member actions retain the concrete skill after a shared semicolon 
  assert.equal(distinctPlayConditions(original),'双方技能可用。蔚在实际接近范围。发条的球在蔚身上。');assert.equal(distinctPlayConditions(''),'');
 });
 
+test('five-person ball summaries show each hero action after the common carrier rule, including with public counterplay',()=>{
+ const slots=setup({top:'Ornn',jungle:'JarvanIV',mid:'Orianna',bottom:'MissFortune',support:'Leona'}),[result]=recommend({slots,champions:data.champions,scope:'party',visibleEnemies:['Kindred']}),plan=selectPartyRoute(captureCreativePlan(result,data),'ball:JarvanIV:Orianna'),fixed={...result,creativePlan:plan};
+ const html=resultActionsView(fixed,data,{compact:true});
+ for(const [id,name,action] of [['Ornn','奥恩','Q 柱成形'],['MissFortune','厄运小姐','E 覆盖'],['Leona','蕾欧娜','E 实际到达'],['JarvanIV','嘉文四世','E/Q 对准']]){
+  const visible=html.match(new RegExp('<p><b>'+name+' · [^<]+</b><span>([^<]*)</span>'))?.[1];
+  assert.ok(visible?.includes(action),id+' compact action must remain visible without opening details');
+  assert.ok(resultActionLeadView(fixed,data,{id,role:plan.members.find(m=>m.champion===id).role}).includes(action));
+ }
+ assert.match(html,/千珏/);assert.match(html,/领域内不报必杀/);
+ assert.equal(memberActionSummary(''),'');
+});
+
 test('teamfight preference retains every actual ball route and every supported alternative through adoption and disk',async()=>{
  const slots=setup({top:'Ornn',jungle:'Sejuani',mid:'Orianna',bottom:'Jinx',support:'Lulu'});
  const [result]=recommend({slots,champions:data.champions,scope:'party',play:{tempo:'teamfight'}}),plan=captureCreativePlan(result,data);

@@ -1,6 +1,7 @@
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_COUNTERPLAY_RESTART==='1',windows=[];
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_COUNTERPLAY_RESTART==='1',kindred=process.env.RIFT_BUDDY_COUNTERPLAY_KINDRED==='1',ballFive=process.env.RIFT_BUDDY_COUNTERPLAY_BALL_FIVE==='1',windows=[];
+const enemies=kindred?['Kindred']:['Poppy','Janna','Morgana'],mainPhrases=kindred?['千珏','领域内不报必杀']:['波比','风女','莫甘娜','W 领域','黑盾'],detailPhrases=kindred?['取消原计划的必杀收尾','治疗后的生命','若本局仍有']:['R 把成员或目标推离','黑盾阻止原定控制','若本局仍有'];
 let copies=[],runeWrites=0,publicSession=null;
 globalShortcut.register=()=>false;
 global.fetch=async()=>{throw Error('Isolated counterplay smoke: network disabled');};
@@ -18,7 +19,7 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?{archiveSha256:null}:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  for(const file of ['src/core/party-counterplay.mjs','src/core/creative-plan.mjs','src/core/plan-stages.mjs','src/core/recommend.mjs','src/core/builds.mjs','src/cooperation-view.mjs','src/party-counterplay-view.mjs','src/duo-play-view.mjs','src/result-text.mjs','src/app.mjs','src/styles.css','src/companion.css'])assert.ok((await fs.readFile(path.join(base,file))).equals(await fs.readFile(file)),'Packaged source drift: '+file);
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json'))),members=initial.draft.slots.filter(s=>s.party).map(({role,champion})=>({role,champion})),key=id=>data.champions.find(c=>c.id===id).key;
- if(!restart)publicSession={gameId:9001,localPlayerCellId:1,allowDuplicatePicks:true,myTeam:members.map((m,i)=>({cellId:m.role==='jungle'?1:i+2,championId:key(m.champion),assignedPosition:m.role==='bottom'?'bottom':m.role})),theirTeam:['Poppy','Janna','Morgana'].map((id,i)=>({cellId:6+i,championId:key(id)})),bans:[]};
+ if(!restart)publicSession={gameId:9001,localPlayerCellId:1,allowDuplicatePicks:true,myTeam:members.map((m,i)=>({cellId:m.role==='jungle'?1:i+2,championId:key(m.champion),assignedPosition:m.role==='bottom'?'bottom':m.role})),theirTeam:enemies.map((id,i)=>({cellId:6+i,championId:key(id)})),bans:[]};
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
@@ -43,17 +44,23 @@ async function run(){
  await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card .party-counterplay")'),'Concrete common conditions missing');
  main.setContentSize(1080,720);await capture('main.png');
  const mainText=await js('document.querySelector(".result-card").textContent');
- for(const phrase of ['波比','风女','莫甘娜','W 领域','黑盾'])assert.ok(mainText.includes(phrase),'Main omitted '+phrase);
+ for(const phrase of mainPhrases)assert.ok(mainText.includes(phrase),'Main omitted '+phrase);
+ async function checkBallSummaries(selector){
+  if(!ballFive)return;
+  const summaries=await js('Array.from(document.querySelectorAll('+JSON.stringify(selector+' .compact-actions > p')+')).map(p=>p.textContent)');
+  for(const [name,action] of [['奥恩','Q 柱成形'],['厄运小姐','E 覆盖'],['蕾欧娜','E 实际到达'],['嘉文四世','E/Q 对准']])assert.ok(summaries.some(s=>s.includes(name)&&s.includes(action)),'Visible compact action lost for '+name+': '+summaries.join(' | '));
+ }
+ await checkBallSummaries('.result-card');
  await click('[data-action=result-detail][data-index="0"]');
  const detail=await js('document.querySelector(".plan-drawer").textContent');
  assert.ok(await js('!!document.querySelector('+JSON.stringify('.plan-drawer [aria-label="共同进场与反制条件"]')+')'));
- for(const phrase of ['R 把成员或目标推离','黑盾阻止原定控制','若本局仍有'])assert.ok(detail.includes(phrase),'Detail omitted '+phrase);
+ for(const phrase of detailPhrases)assert.ok(detail.includes(phrase),'Detail omitted '+phrase);
  await click('[data-action=copy-result][data-index="0"]');
- assert.match(copies.at(-1),/采用时公开对手.*本局仍有/);assert.match(copies.at(-1),/黑盾阻止原定控制/);
+ assert.match(copies.at(-1),/采用时公开对手.*本局仍有/);assert.ok(copies.at(-1).includes(kindred?'取消原计划的必杀收尾':'黑盾阻止原定控制'));
  if(!restart){await click('.plan-drawer [data-action=favorite-result][data-index="0"]');await click('[data-action=use-result][data-index="0"]');await until(async()=>!!(await state()).draft.creativePlan,'Acceptance missing');}
  else await click('[data-action=close]');
  const accepted=await state(),plan=accepted.draft.creativePlan;
- assert.deepEqual(plan.counterplay.enemies,['Poppy','Janna','Morgana']);
+ assert.deepEqual(plan.counterplay.enemies,enemies);
  assert.deepEqual(accepted.favorites.find(f=>f.type==='team').creativePlan,plan,'Favorite lost accepted conditions');
  if(restart){assert.deepEqual(plan,initial.draft.creativePlan);assert.equal(publicSession,null,'Restart must not supply a new enemy session');}
  await click('[data-action=result-detail][data-index="0"]');
@@ -70,10 +77,10 @@ async function run(){
    await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model.stage==='+JSON.stringify(stage)+')'),'Guide stage did not change');
    const payload=await guideJs('window.guide.bootstrap()');assert.deepEqual(payload.model.combo.creativePlan,plan);
    assert.match(payload.model.combo.play.stages[stage].ownAction,/若本局仍有/);
-   const specific={Camille:'E 被挡或缚地时取消原定接续',JarvanIV:'E→Q 被挡就取消这轮接控',Galio:'E 没有实际到位就停'}[member.champion];
-   if(specific)assert.ok(payload.model.combo.play.stages[stage].ownAction.includes(specific),'Specific counterplay action missing in member guide');
+   const specific={Diana:'E 被挡或缚地就取消原定落点',Rell:'E 是加速，不能补出击飞',Camille:'E 被挡或缚地时取消原定接续',JarvanIV:'E→Q 被挡就取消这轮接控',Galio:'E 没有实际到位就停'}[member.champion];
+   if(specific&&!kindred)assert.ok(payload.model.combo.play.stages[stage].ownAction.includes(specific),'Specific counterplay action missing in member guide');
    const text=await guideJs('document.querySelector(".expanded main").textContent');
-   for(const phrase of ['W 领域','黑盾阻止原定控制','R 把成员或目标推离'])assert.ok(text.includes(phrase),'Guide omitted '+phrase+' for '+member.champion+' '+stage);
+   for(const phrase of detailPhrases)assert.ok(text.includes(phrase),'Guide omitted '+phrase+' for '+member.champion+' '+stage);
   }
   await capture('guide-'+member.champion+'.png',guide);
   await click('[data-action=back-result]');
@@ -83,13 +90,19 @@ async function run(){
  await click('[data-action=companion-tab][data-tab=recommend]');
  await until(()=>js('document.body.classList.contains("companion-mode")&&!!document.querySelector(".companion-candidate .party-counterplay")'),'Sidebar common gates missing');
  const sidebar=[];
+ for(const scale of ballFive?[1,1.25]:[1]){
+ await js('window.buddy.presentation({field:"textScale",value:'+scale+'})');
+ await until(()=>js('Number(document.documentElement.style.getPropertyValue("--text-scale"))==='+scale),'Text scale not applied');
  for(const width of [440,360,280]){
   main.setContentSize(width,850);await delay(100);
   assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false,'Sidebar overflow '+width);
   const text=await js('document.querySelector(".companion-candidate").textContent');
-  for(const phrase of ['若本局仍有','黑盾阻止原定控制','R 把成员或目标推离'])assert.ok(text.includes(phrase),'Sidebar omitted '+phrase);
-  await capture('sidebar-'+width+'.png');sidebar.push(width);
+  for(const phrase of detailPhrases)assert.ok(text.includes(phrase),'Sidebar omitted '+phrase);
+  await checkBallSummaries('.companion-candidate');
+  await capture('sidebar-'+width+(scale===1?'':'-large')+'.png');sidebar.push({width,textScale:scale});
  }
+ }
+ await js('window.buddy.presentation({field:"textScale",value:1})');
  assert.equal(runeWrites,0);assert.ok(windows.every(w=>!w.isVisible()));
  const report={passed:true,restart,archiveSha256:release.archiveSha256,members,draftLayout,publicContext:restart?'saved conditional context only':'mock public picks',commonGates:plan.counterplay.rules.map(r=>r.opponent),copy:true,favorite:true,stages:['key','later'],sidebarWidths:sidebar,actualRuneWrites:runeWrites,realGame:'UNKNOWN'};
  await fs.writeFile(path.join(root,restart?'restart.json':'select.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));app.quit();

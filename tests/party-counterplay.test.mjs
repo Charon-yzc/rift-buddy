@@ -122,3 +122,27 @@ test('Camille Jarvan and Galio cannot treat a Poppy-blocked dash as a valid shar
  assert.doesNotMatch(hweiPlan.counterplay.rules[0].members.map(m=>m.action).join(' '),/加里奥/,'Counterplay cannot invent the alternate third member');
  for(const m of plan.members){const guide=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'key'});assert.match(guide.coach.action,/W 领域未处理/);assert.match(guide.combo.play.stages.later.exit,/主线与备用/);}
 });
+
+test('Diana and Rell share the Poppy dash gate without treating moonlight resets or Rell speed as a free backup',()=>{
+ const r=result({jungle:'Diana',mid:'Yasuo',support:'Rell'},['Poppy','Morgana']),plan=capture(r),poppy=plan.counterplay.rules.find(r=>r.opponent==='Poppy');
+ assert.match(poppy.window,/黛安娜 E.*亚索 E.*芮尔 W 跃下/);
+ assert.match(poppy.members.find(m=>m.champion==='Diana').action,/E 被挡或缚地.*不因月光或 E 刷新承诺二次进场/);
+ assert.match(poppy.members.find(m=>m.champion==='Rell').action,/W 被挡就取消这次击飞.*E 是加速，不能补出击飞/);
+ assert.match(plan.counterplay.rules.find(r=>r.opponent==='Morgana').members.find(m=>m.champion==='Rell').action,/Q 具破盾作用.*黑盾已解除.*实际眩晕/);
+ for(const m of plan.members){const guide=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'key'});assert.match(guide.coach.action,/W 领域未处理/);assert.match(guide.combo.play.stages.later.exit,/主线与备用/);}
+});
+
+test('public Kindred changes whole-party finish, follow-up and exit decisions without predicting an ultimate or inventing immunity',()=>{
+ const picks={top:'Ornn',jungle:'Zac',mid:'Orianna',bottom:'MissFortune',support:'Leona'},r=result(picks,['Kindred']),plan=capture(r),rule=plan.counterplay.rules[0];
+ assert.equal(rule.opponent,'Kindred');assert.equal(rule.members.length,5);
+ assert.match(rule.window,/同时保护友军、敌军和中立单位.*并非全程伤害免疫/);
+ assert.match(rule.window,/10% 生命值.*不能受伤或治疗.*结束时.*治疗/);
+ assert.match(rule.stop,/取消原计划的必杀收尾.*治疗后的生命.*共同接应退出/);
+ assert.match(rule.members.find(m=>m.champion==='MissFortune').action,/本轮没有第二次 R/);
+ assert.match(rule.members.find(m=>m.champion==='Orianna').action,/不把聚拢等同于目标已离开保护范围/);
+ for(const m of plan.members){const guide=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'later'});assert.match(guide.coach.action,/若本局仍有千珏/);assert.match(guide.combo.play.stages.later.exit,/治疗后的生命/);}
+ assert.match(resultAsText({...r,creativePlan:plan},data),/Kindred\.json/);
+ const four=capture(result(picks,['Poppy','Janna','Morgana','Kindred']));assert.equal(four.counterplay.rules.length,4);assert.deepEqual(validateCreativePlan(four),four);
+ const fresh=capture(result(picks,['Kindred'],{creativePlan:capture(result(picks,['Poppy']))}));assert.deepEqual(fresh.counterplay.enemies,['Kindred']);
+ const pair=capture(result({jungle:'Gragas',mid:'Yasuo'},['Kindred']));assert.equal(pair.counterplay.rules[0].members.length,2);assert.doesNotMatch(pair.counterplay.rules[0].members.map(m=>m.action).join(' '),/女枪|发条|奥恩/);
+});
