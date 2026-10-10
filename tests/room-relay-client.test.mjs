@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {normalizeRelayUrl,relayEndpoint,relayHello,relayCloseReason,RELAY_PING} from '../src/core/room-relay.mjs';
 import {createRoomService,RELAY_FRAME_BUDGET,RELAY_FRAME_REFILL_PER_SECOND} from '../services/room.mjs';
-import {ROOM_PROTOCOL} from '../src/core/room.mjs';
+import {ROOM_PROTOCOL,MAX_FRAME} from '../src/core/room.mjs';
 import fs from 'node:fs/promises';
 import {createSlots} from '../src/core/recommend.mjs';
 import {TRIOS} from '../src/core/rules.mjs';
@@ -525,6 +525,65 @@ test('the frame budget reports itself instead of closing without a word',async()
  for(let i=0;i<RELAY_FRAME_BUDGET+2;i++)socket.deliver({kind:'join',v:ROOM_PROTOCOL,from:'同一个人'});
  assert.ok(reports.some(line=>/frame budget/.test(line)),`expected a diagnostic, saw ${JSON.stringify(reports)}`);
  service.leave();
+});
+
+test('silence retires stale members without waiting for the socket close handshake',async t=>{
+ const fake=fakeRelay(),updates=[];
+ const service=createRoomService({nick:'我',webSocketFactory:fake.factory,onUpdate:state=>updates.push(state),relaySilenceMs:40,relayPingMs:20,relayBackoffMs:5,relayOpenTimeoutMs:500});
+ t.after(()=>service.leave());
+ const first=await joined(service,fake,{members:[{nick:'我'},{nick:'旧队友'}]});
+ first.close=function(code,reason){this.readyState=2;this.closed={code,reason};};
+ service.publish({lineup:[{role:'bottom',champion:'Ashe'}],pick:null});
+ first.deliver({kind:'state',v:ROOM_PROTOCOL,from:'旧队友',at:1,lineup:[{role:'mid',champion:'Ahri'}],pick:null});
+ const replacement=await fake.next(2);
+ assert.equal(first.readyState,2,'the physical close event has not arrived');
+ assert.ok(updates.some(state=>state.link==='reconnecting'&&state.members.length===1),'the stale teammate must disappear at the deadline');
+ assert.deepEqual(service.snapshot().members.map(member=>member.nick),['我']);
+ const oldSent=first.sent.length;
+ replacement.open();
+ replacement.deliver({kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'我'},{nick:'新队友'}]});
+ assert.equal(JSON.parse(replacement.sent.at(-1)).lineup[0].champion,'Ashe','reconnect re-announces our retained share');
+ first.lateClose(1006,'late');
+ first.deliver({kind:'join',v:ROOM_PROTOCOL,from:'旧队友'});
+ await tick(25);
+ assert.equal(service.snapshot().link,'connected');
+ assert.deepEqual(service.snapshot().members.map(member=>member.nick).sort(),['我','新队友'].sort());
+ assert.equal(first.sent.length,oldSent,'retired heartbeat must stay stopped');
+ assert.equal(fake.sockets.length,2,'the late close must not trigger another retry');
+});
+
+test('a blocked send queue retires the link and retains the last successfully shared lineup',async t=>{
+ const fake=fakeRelay();
+ const service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:5,relayOpenTimeoutMs:500});
+ t.after(()=>service.leave());
+ const first=await joined(service,fake,{members:[{nick:'我'},{nick:'乙'}]});
+ service.publish({lineup:[{role:'bottom',champion:'Ashe'}],pick:null});
+ first.close=function(code,reason){this.readyState=2;this.closed={code,reason};};
+ first.bufferedAmount=MAX_FRAME*8+1;
+ assert.throws(()=>service.publish({lineup:[{role:'mid',champion:'Ahri'}],pick:null}),/中继连接不可用/);
+ assert.equal(service.snapshot().link,'reconnecting');
+ assert.deepEqual(service.snapshot().members.map(member=>member.nick),['我']);
+ const replacement=await fake.next(2);
+ replacement.open();
+ replacement.deliver({kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'我'}]});
+ assert.equal(JSON.parse(replacement.sent.at(-1)).lineup[0].champion,'Ashe','a failed publication must not replace the last successful share');
+ first.lateClose(1006,'late');
+ assert.equal(service.snapshot().link,'connected');
+});
+
+for(const limit of ['traffic','members'])test(`exceeding the relay ${limit} limit retires a socket whose close event is pending`,async t=>{
+ const fake=fakeRelay();
+ const service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:5,relayOpenTimeoutMs:500,now:()=>0});
+ t.after(()=>service.leave());
+ const socket=await joined(service,fake);
+ socket.close=function(code,reason){this.readyState=2;this.closed={code,reason};};
+ for(let i=0;i<=RELAY_FRAME_BUDGET&&socket.readyState===1;i++)socket.deliver({kind:'join',v:ROOM_PROTOCOL,from:limit==='traffic'?'乙':`队友${i}`});
+ assert.equal(socket.closed.code,limit==='traffic'?4009:4004);
+ assert.equal(service.snapshot().link,'reconnecting');
+ assert.deepEqual(service.snapshot().members.map(member=>member.nick),['我']);
+ await fake.next(2);
+ socket.deliver({kind:'join',v:ROOM_PROTOCOL,from:'迟到消息'});
+ assert.deepEqual(service.snapshot().members.map(member=>member.nick),['我']);
 });
 
 test('ordinary relay shares remain connected after hours of valid traffic',async()=>{

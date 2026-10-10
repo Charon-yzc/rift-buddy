@@ -314,7 +314,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  function relaySend(value){
   const socket=relaySocket;
   if(!socket||socket.readyState!==1)return false;
-  if(socket.bufferedAmount>MAX_FRAME*8){diagnostic('relay send buffer exhausted');disposeSocket(socket);return false;}
+  if(socket.bufferedAmount>MAX_FRAME*8){diagnostic('relay send buffer exhausted');retireSocket(socket);return false;}
   const line=encodeFrame(value);
   if(!line)return false;
   try{socket.send(line.slice(0,-1));return true;}catch{return false;}
@@ -345,7 +345,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   deadline.timer=setTimeout(()=>{
    if(relaySocket!==deadline.socket)return;
    diagnostic('relay silent, reconnecting');
-   try{deadline.socket.close();}catch{}
+   retireSocket(deadline.socket);
   },ms);
   if(deadline.timer.unref)deadline.timer.unref();
  }
@@ -401,6 +401,14 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   for(const key of ['welcome','stable'])if(timers[key]){clearTimeout(timers[key]);timers[key]=null;}
  }
  function disposeSocket(socket){stopSocketTimers(socket);try{socket.close();}catch{}}
+ // close() starts a handshake; its event can arrive much later, especially
+ // while queued sends are blocked. A known-dead link must stop contributing
+ // presence immediately. The same handler also ignores its eventual event.
+ function retireSocket(socket,code,reason){
+  stopSocketTimers(socket);
+  try{socket.close(code,reason);}catch{}
+  socket.relayOnClose?.({code:code??1006});
+ }
 
  function relayConnect({initial=false}={}){
   if(mode!=='client'||!relayUrl||relayStopped)return Promise.reject(relayTransportError('房间已离开'));
@@ -468,7 +476,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    timers.ping=setInterval(()=>{relaySend({kind:'ping',v:ROOM_PROTOCOL});},relayPingMs);
    if(timers.ping.unref)timers.ping.unref();
    relaySend({kind:'ping',v:ROOM_PROTOCOL});
-   relayArmSilence(timers.silence);
+   if(relaySocket===socket)relayArmSilence(timers.silence);
   };
   socket.onmessage=event=>{
    if(relaySocket!==socket)return;
@@ -487,7 +495,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    const frameNow=Math.max(frameAt,now());
    frames=Math.min(RELAY_FRAME_BUDGET,frames+(frameNow-frameAt)*RELAY_FRAME_REFILL_PER_SECOND/1000);
    frameAt=frameNow;
-   if(frames<1){diagnostic('relay frame budget exhausted');try{socket.close(4009,'消息超限');}catch{}return;}
+   if(frames<1){diagnostic('relay frame budget exhausted');retireSocket(socket,4009,'消息超限');return;}
    frames--;
    if(!welcomed){
     const welcome=validateWelcome(frame);
@@ -515,7 +523,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    // be an echo: each answer is itself a share the peer answers in turn.
    const join=validateJoin(frame);
    if(join&&join.from!==relayActiveNick){
-    if(!guests.has('nick:'+join.from)&&guests.size>=MAX_RELAY_MEMBERS-1){try{socket.close(4004,'房间已满');}catch{}return;}
+    if(!guests.has('nick:'+join.from)&&guests.size>=MAX_RELAY_MEMBERS-1){retireSocket(socket,4004,'房间已满');return;}
     if(!guests.has('nick:'+join.from))guests.set('nick:'+join.from,{nick:join.from,share:null});
     relayAnnounce();
     emit();
@@ -525,7 +533,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    if(bye){guests.delete('nick:'+bye.from);emit();}
   };
   socket.onerror=()=>{};
-  socket.onclose=event=>{
+  socket.onclose=socket.relayOnClose=event=>{
    clearTimers();
    // A late close from a socket we already replaced must not clear the member
    // table, count a failure or schedule a retry against the live connection.
