@@ -101,6 +101,8 @@ jobs:
         run: node scripts/smoke-package-companion-workflow.mjs
       - name: Check public picks and source refresh invalidate recommendations
         run: node scripts/smoke-package-recommendation-fit.mjs
+      - name: Check partial settings recovery and locked friend continuity
+        run: node scripts/smoke-package-state-recovery.mjs
       - name: Check standalone connection helper
         run: node scripts/smoke-package-helper.mjs
       - name: Check application lifecycle

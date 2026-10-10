@@ -47,21 +47,22 @@ export function restoreTeamFavorite(favorite,current,champions,session=null){
  const next=session?mergeClientSession(current,session,champions).slots:structuredClone(current);
  for(const member of desired){
   const slot=next.find(s=>s.role===member.role),existing=next.find(s=>s.champion===member.champion);
-  if(publicCells.has(slot.clientCellId)&&slot.champion!==member.champion||existing&&existing.role!==member.role||publicIds.has(member.champion)&&!existing){
-   conflicts.push({role:member.role,champion:member.champion,current:slot.champion,reason:existing&&existing.role!==member.role?'position':publicIds.has(member.champion)&&!existing?'unassigned':'current'});continue;
+  const manualTeammate=slot.champion&&slot.locked&&!slot.party;
+  if(manualTeammate||publicCells.has(slot.clientCellId)&&slot.champion!==member.champion||existing&&existing.role!==member.role||publicIds.has(member.champion)&&!existing){
+   conflicts.push({role:member.role,champion:member.champion,current:slot.champion,reason:manualTeammate?'teammate':existing&&existing.role!==member.role?'position':publicIds.has(member.champion)&&!existing?'unassigned':'current'});continue;
   }
   if(slot.champion===member.champion&&publicIds.has(member.champion)){slot.party=member.party;continue;}
   const {clientCellId,manualPosition,...saved}=member;Object.assign(slot,saved,{locked:!!saved.champion});delete slot.clientCellId;delete slot.manualPosition;
  }
  validateSlots(next,champions);
- let creativePlan=null;if(favorite.creativePlan){try{creativePlan=validateCreativePlan(favorite.creativePlan,next);}catch{conflicts.push({kind:'plan'});}}
+ let creativePlan=null;if(favorite.creativePlan){try{if(conflicts.some(c=>c.role))throw Error('Member conflict');creativePlan=validateCreativePlan(favorite.creativePlan,next);}catch{conflicts.push({kind:'plan'});}}
  const configurations=(favorite.configurations||[]).filter(selection=>{
-  if(!desired.some(s=>s.role===selection.role&&s.champion===selection.id)||!next.some(s=>s.role===selection.role&&s.champion===selection.id))return false;
+  if(conflicts.some(c=>c.role===selection.role)||!desired.some(s=>s.role===selection.role&&s.champion===selection.id)||!next.some(s=>s.role===selection.role&&s.champion===selection.id))return false;
   if(selection.creativePlan)return creativePlan?.id===selection.creativePlan.id;
   return (currentCombo(scopeSlots(next,favorite.scope),selection.id,selection.role,null,null,creativePlan)?.id||null)===(selection.comboId||null);
  }).map(s=>structuredClone(s));
  const merged=session?mergeClientSession(next,session,champions):{slots:next,unassigned:[]};
  return {...merged,creativePlan,configurations,conflicts,
-  loadedMembers:desired.filter(member=>next.some(slot=>slot.role===member.role&&slot.champion===member.champion)).length,
+  loadedMembers:desired.filter(member=>!conflicts.some(c=>c.role===member.role)&&next.some(slot=>slot.role===member.role&&slot.champion===member.champion)).length,
   skippedConfigurations:(favorite.configurations||[]).filter(selection=>desired.some(member=>member.role===selection.role&&member.champion===selection.id)).length-configurations.length};
 }

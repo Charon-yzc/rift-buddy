@@ -93,3 +93,21 @@ test('a matching champion cannot import a saved partner configuration when the p
  const result=restoreTeamFavorite({slots,scope:'bot',configurations},createSlots(),champions,draft);
  assert.deepEqual(result.slots.slice(3).map(s=>s.champion),['Lucian','Janna']);assert.deepEqual(result.configurations,[]);assert.equal(result.skippedConfigurations,2);
 });
+
+test('locked manual teammates retain both their hero and ownership when loading old party favorites',()=>{
+ for(const session of [null,{myTeam:[{cellId:1,championId:key('Vi'),assignedPosition:''},{cellId:8,championId:key('Lux'),assignedPosition:''}]}]){
+  const current=createSlots();Object.assign(current[2],{champion:'Lux',locked:true,party:false,manualPosition:true,clientCellId:8});const before=structuredClone(current);
+  const result=restoreTeamFavorite({...favorite,scope:'party'},current,champions,session);
+  assert.deepEqual(result.slots[2],before[2]);assert.equal(result.loadedMembers,2);assert.equal(result.configurations.length,0);assert.equal(result.conflicts.find(c=>c.role==='mid').reason,'teammate');assert.deepEqual(current,before);
+ }
+ const current=createSlots();Object.assign(current[2],{champion:'Ahri',locked:true,party:false});const result=restoreTeamFavorite(favorite,current,champions);
+ assert.equal(result.slots[2].party,false);assert.equal(result.loadedMembers,2);assert.equal(result.configurations.length,0);assert.equal(result.skippedConfigurations,1);
+ const unlocked=current.map(s=>({...s,locked:false})),loaded=restoreTeamFavorite(favorite,unlocked,champions);assert.equal(loaded.slots[2].party,true);assert.equal(loaded.loadedMembers,3);assert.equal(loaded.configurations.length,1);
+});
+
+test('a matching but non-party locked member cannot activate a whole saved cooperation plan',()=>{
+ const slots=createSlots().map(s=>({...s,party:['jungle','mid'].includes(s.role),champion:s.role==='jungle'?'JarvanIV':s.role==='mid'?'Syndra':null})),adaptive=cooperationPlan(slots.filter(s=>s.champion),createCooperationGraph(champions));
+ const creativePlan=captureCreativePlan({slots,scope:'party',adaptive},data),configurations=captureTeamConfigurations({slots,scope:'party',adaptive},data,createPreparationStore()),current=structuredClone(slots);Object.assign(current[2],{locked:true,party:false});
+ const result=restoreTeamFavorite({slots,scope:'party',creativePlan,configurations},current,champions);
+ assert.equal(result.slots[2].party,false);assert.equal(result.creativePlan,null);assert.deepEqual(result.configurations,[]);assert.ok(result.conflicts.some(c=>c.kind==='plan'));
+});
