@@ -729,6 +729,10 @@ document.addEventListener('click',async event=>{
  if(action==='room-copy-invite'){await api.copy(`开黑搭子房间 ${room?.room||''}｜邀请码 ${el.dataset.invite}｜口令 ${room?.pin||''}`);toast('邀请信息已复制');return;}
  if(action==='room-build'){const member=room?.members.find(m=>m.nick===el.dataset.member),config=member?.share?.configurations?.find(s=>s.champion===el.dataset.id&&s.role===el.dataset.role);if(config){closeOverlay();roomConfigurationView={config:structuredClone(config),from:member.nick,strategy:member.share.strategy?structuredClone(member.share.strategy):null};overlay.innerHTML=roomConfigurationDialog(roomConfigurationView.config,data,member.nick,roomConfigurationView.strategy);}else{showBuild(el.dataset.id,el.dataset.role,el.dataset.mode||'rift');toast('发送方仅共享英雄；当前显示本机配置参考');}return;}
  if(action==='room-copy-configuration'){if(!roomConfigurationView)throw Error('共享配置已变化，请重新打开');await api.copy(roomConfigurationText(roomConfigurationView.config,data,roomConfigurationView.from,roomConfigurationView.strategy));toast('发送方配置已复制');return;}
+ if(action==='room-configuration-jump'){
+  const section=overlay.querySelector(`[data-room-section="${el.dataset.section}"]`);
+  if(section){section.style.scrollMarginTop=((overlay.querySelector('.modal-header')?.getBoundingClientRect().height||84)+16)+'px';section.scrollIntoView({block:'start'});}return;
+ }
  if(action==='room-adopt-configuration'){if(!roomConfigurationView)throw Error('共享配置已变化，请重新打开');const selection=roomPreparation(roomConfigurationView.config,data,roomConfigurationView.strategy);showBuild(selection.id,selection.role,selection.mode,selection);roomConfigurationView=null;toast('已采用到本机配置；符文仍需核对英雄后点击替换');return;}
  if(action.startsWith('catalog-')&&!boot.desktop)throw Error('组合库管理请在桌面版使用');
  if(action==='navigate'){route=el.dataset.route;closeOverlay();render();window.scrollTo(0,0);}
