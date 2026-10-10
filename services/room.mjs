@@ -6,6 +6,7 @@
 
 import net from 'node:net';
 import dgram from 'node:dgram';
+import {randomInt} from 'node:crypto';
 import {StringDecoder} from 'node:string_decoder';
 import {
  ROOM_PROTOCOL,MAX_FRAME,makeRoomCode,validRoomCode,validPin,
@@ -20,6 +21,9 @@ const MAX_MEMBERS=12;
 const ANNOUNCE_MS=1500;
 const HANDSHAKE_TIMEOUT_MS=10000;
 const CONNECT_TIMEOUT_MS=8000;
+// Mirrors the manual-invite host pattern so the IPC boundary accepts only
+// invite-shaped targets (hostnames/IPv4), never arbitrary payloads.
+const HOST_NAME=/^[A-Za-z0-9.-]{1,253}$/;
 
 // One member as the UI sees it: online status plus the latest sanitized share.
 const memberView=({nick,share})=>({nick,online:true,share:share||null});
@@ -34,6 +38,12 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  const waiting=new Set(); // host: accepted sockets that have not completed the handshake
  let upstream=null;
  let ownShare=null;
+ const failures=new Map(); // remote address -> consecutive failed handshakes
+ // Failed handshakes linger briefly before the socket is destroyed so one
+ // address cannot guess pins at full LAN speed. Bounded so spoofed sources
+ // cannot grow the table without limit.
+ const noteFailure=remote=>{if(failures.size>256)failures.clear();const count=(failures.get(remote)||0)+1;failures.set(remote,count);return Math.min(count*250,1500);};
+ const secureCode=()=>makeRoomCode(()=>randomInt(0,1000000)/1000000);
 
  const emit=()=>{try{onUpdate(snapshot());}catch{}};
  function snapshot(){
@@ -77,6 +87,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   let handshakeTimer=setTimeout(()=>socket.destroy(),HANDSHAKE_TIMEOUT_MS);
   socket.setKeepAlive(true,15000);
   socket.on('error',()=>{});
+  const remote=socket.remoteAddress||'';
   const nickTaken=value=>value===nick||[...guests.values()].some(g=>g.nick===value);
   socket.on('close',()=>{
    clearTimeout(handshakeTimer);
@@ -99,9 +110,9 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     if(!frame)continue;
     if(!hello){
      const handshake=validateHello(frame);
-     if(!handshake||handshake.room!==room||handshake.pin!==pin||nickTaken(handshake.nick)){dead=true;socket.destroy();return;}
+     if(!handshake||handshake.room!==room||handshake.pin!==pin||nickTaken(handshake.nick)){dead=true;waiting.delete(socket);const timer=setTimeout(()=>{try{socket.destroy();}catch{}},noteFailure(remote));if(timer.unref)timer.unref();return;}
      if(guests.size>=MAX_MEMBERS){dead=true;socket.destroy();return;}
-     clearTimeout(handshakeTimer);hello=handshake;
+     clearTimeout(handshakeTimer);hello=handshake;failures.delete(remote);
      waiting.delete(socket);
      guests.set(socket,{nick:handshake.nick,share:null});
      const memberList=[{nick},...[...guests.values()].map(g=>({nick:g.nick}))];
@@ -130,7 +141,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  async function host({code}={}){
   if(mode!=='idle')throw Error('请先离开当前房间');
   if(code!==undefined&&!validRoomCode(code))throw Error('房间码格式不正确');
-  room=code===undefined?makeRoomCode():String(code);pin=makeRoomCode();mode='host';
+  room=code===undefined?secureCode():String(code);pin=secureCode();mode='host';
   server=net.createServer(socket=>{
    if(guests.size+waiting.size>=MAX_MEMBERS){socket.destroy();return;}
    waiting.add(socket);
@@ -160,25 +171,38 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  async function join({host:target,port:targetPort,room:targetRoom,pin:targetPin}){
   if(mode!=='idle')throw Error('请先离开当前房间');
   const targetCode=String(targetRoom??''),targetSecret=String(targetPin??'');
-  if(typeof target!=='string'||!target||!Number.isInteger(targetPort)||targetPort<1||targetPort>65535||!validRoomCode(targetCode)||!validPin(targetSecret))throw Error('房间地址格式不正确');
+  if(typeof target!=='string'||!HOST_NAME.test(target)||!Number.isInteger(targetPort)||targetPort<1||targetPort>65535||!validRoomCode(targetCode)||!validPin(targetSecret))throw Error('房间地址格式不正确');
   mode='client';
   try{
    const socket=net.connect(targetPort,target);
    upstream={host:target,socket};
    room=targetCode;pin=targetSecret;port=targetPort;
-   let decoder=new StringDecoder('utf8'),buffer='',welcomed=false,dead=false;
+   let decoder=new StringDecoder('utf8'),buffer='',welcomed=false,dead=false,failReason=null,settled=false;
+   let settleOk=()=>{},settleFail=()=>{};
+   const handshake=new Promise((resolve,reject)=>{
+    settleOk=()=>{if(!settled){settled=true;resolve();}};
+    settleFail=error=>{if(!settled){settled=true;reject(error);}};
+   });
    socket.setKeepAlive(true,15000);
-   socket.setTimeout(CONNECT_TIMEOUT_MS,()=>socket.destroy());
-   socket.on('error',()=>{});
-   socket.on('close',()=>{decoder.end();if(socket===upstream?.socket&&mode==='client'){teardown();emit();}});
+   socket.setTimeout(CONNECT_TIMEOUT_MS,()=>{failReason=failReason||Error('连接超时：确认和房主在同一局域网或虚拟局域网，并检查防火墙');socket.destroy();});
+   socket.on('error',error=>{if(!welcomed)failReason=failReason||error;});
+   socket.on('close',()=>{
+    decoder.end();
+    // A close before welcome means the host refused the handshake (pin, name
+    // or capacity) or the network dropped: the join must fail loudly.
+    if(!welcomed)settleFail(failReason||Error('未能加入房间：请核对口令与昵称（或房间已满）'));
+    if(socket===upstream?.socket&&mode==='client'){teardown();emit();}
+   });
    socket.on('connect',()=>{
     const hello=encodeFrame({kind:'hello',v:ROOM_PROTOCOL,room:targetCode,pin:targetSecret,nick});
     if(hello)socket.write(hello);else socket.destroy();
+    // The host answers with welcome; a silent peer must not hold the guest.
+    socket.setTimeout(HANDSHAKE_TIMEOUT_MS,()=>{failReason=Error('未能加入房间：房主没有响应');socket.destroy();});
    });
    socket.on('data',chunk=>{
     if(dead)return;
     buffer+=decoder.write(chunk);
-    if(buffer.length>MAX_FRAME*8){dead=true;socket.destroy();return;}
+    if(buffer.length>MAX_FRAME*8){dead=true;failReason=Error('房间连接异常：收到无法解析的数据');socket.destroy();return;}
     const {lines,rest}=splitFrames(buffer);
     buffer=rest;
     for(const line of lines){
@@ -191,6 +215,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
        // Seed the member list from the welcome so presence shows before any
        // share arrives (welcome.members are sanitized display names).
        for(const name of welcome.members)if(name!==nick)guests.set('nick:'+name,{nick:name,share:null});
+       settleOk();
        emit();
       }
       continue; // State before welcome is ignored: only a confirmed room speaks.
@@ -210,13 +235,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
      }
     }
    });
-   await new Promise((resolve,reject)=>{
-    const onConnect=()=>{cleanup();resolve();};
-    const onError=error=>{cleanup();reject(error);};
-    const onClose=()=>{cleanup();reject(Error('连接已断开'));};
-    const cleanup=()=>{socket.off('connect',onConnect);socket.off('error',onError);socket.off('close',onClose);};
-    socket.once('connect',onConnect);socket.once('error',onError);socket.once('close',onClose);
-   });
+   await handshake;
   }catch(error){teardown();throw error;}
   emit();
   return snapshot();
@@ -250,7 +269,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    const finish=()=>{try{socket.close();}catch{}resolve([...found.values()]);};
    socket.on('message',(msg,rinfo)=>{
     const info=decodeDiscovery(msg.toString('utf8'));
-    if(!info||info.room===room)return;
+    if(!info||info.room===room||found.size>=64)return;
     found.set(info.room,{room:info.room,port:info.port,host:rinfo.address});
    });
    socket.on('error',finish);

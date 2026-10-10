@@ -62,15 +62,13 @@ test('publishing a share relays lineup and pick both directions',async()=>{
  host.leave();guest.leave();
 });
 
-test('wrong pin is rejected and the guest drops back to idle',async()=>{
+test('a wrong pin fails the join with a clear error and no member leak',async()=>{
  const host=room({nick:'房主'});
  const created=await host.host();
  const guest=room({nick:'闯入者'});
  const wrongPin=created.pin==='000000'?'111111':'000000';
- // The server silently destroys a bad handshake; join may resolve first and
- // then the close handler resets the guest to idle. Accept either surface.
- try{await guest.join({host:'127.0.0.1',port:created.port,room:created.room,pin:wrongPin});}catch{}
- await until(()=>guest.snapshot().mode==='idle');
+ await assert.rejects(()=>guest.join({host:'127.0.0.1',port:created.port,room:created.room,pin:wrongPin}),/未能加入房间/);
+ assert.equal(guest.snapshot().mode,'idle');
  assert.equal(host.snapshot().members.length,1);
  host.leave();
 });
@@ -119,8 +117,8 @@ test('duplicate display names are rejected while the room stays usable',async()=
  await first.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});
  await until(()=>host.snapshot().members.length===2);
  const second=room({nick:'同名'});
- try{await second.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});}catch{}
- await until(()=>second.snapshot().mode==='idle');
+ await assert.rejects(()=>second.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin}),/未能加入房间/);
+ assert.equal(second.snapshot().mode,'idle');
  assert.equal(host.snapshot().members.length,2);
  const third=room({nick:'丙'});
  await third.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});
@@ -140,20 +138,20 @@ test('invalid join arguments leave the service idle',async()=>{
 });
 
 test('a guest ignores state frames until the room welcome arrives',async()=>{
- // A fake server that speaks the protocol but never welcomes: the guest must
- // stay empty instead of trusting stray state frames.
+ // A fake server that speaks the protocol but never welcomes: stray state
+ // must be ignored and the join must fail instead of trusting it.
  const fake=fakeServer(socket=>{
   socket.on('error',()=>{});
   socket.resume(); // consume the client's hello (and FIN) so close() can settle
   socket.write(JSON.stringify({kind:'state',v:1,from:'野服务器',at:99,lineup:[{role:'top',champion:'Garen'}],pick:null})+'\n');
+  socket.end();
  });
  await new Promise(r=>fake.listen(0,'127.0.0.1',r));
  const guest=room({nick:'队友'});
- await guest.join({host:'127.0.0.1',port:fake.address().port,room:'482913',pin:'482913'});
- await wait(150);
+ await assert.rejects(()=>guest.join({host:'127.0.0.1',port:fake.address().port,room:'482913',pin:'482913'}),/未能加入房间/);
+ assert.equal(guest.snapshot().mode,'idle');
  assert.equal(guest.snapshot().members.length,1);
  assert.equal(guest.snapshot().members[0].nick,'队友');
- guest.leave();
  await new Promise(r=>fake.close(r));
 });
 
@@ -184,7 +182,7 @@ test('rapid rejoin after leaving cannot be torn down by the old socket',async()=
  guest.leave();host1.leave();host2.leave();
 });
 
-test('a client flood drops the guest back to idle instead of a stuck client',async()=>{
+test('a client flood fails the join instead of leaving a stuck client',async()=>{
  const fake=fakeServer(socket=>{
   socket.on('error',()=>{});
   socket.resume();
@@ -192,7 +190,7 @@ test('a client flood drops the guest back to idle instead of a stuck client',asy
  });
  await new Promise(r=>fake.listen(0,'127.0.0.1',r));
  const guest=room({nick:'队友'});
- await guest.join({host:'127.0.0.1',port:fake.address().port,room:'482913',pin:'482913'});
+ await assert.rejects(()=>guest.join({host:'127.0.0.1',port:fake.address().port,room:'482913',pin:'482913'}),/房间连接异常/);
  await until(()=>guest.snapshot().mode==='idle');
  await new Promise(r=>fake.close(r));
 });
@@ -233,8 +231,8 @@ test('visually identical display names cannot slip past the duplicate check',asy
  await first.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});
  await until(()=>host.snapshot().members.length===2);
  const sneaky=room({nick:'甲\u180f'});
- try{await sneaky.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin});}catch{}
- await until(()=>sneaky.snapshot().mode==='idle');
+ await assert.rejects(()=>sneaky.join({host:'127.0.0.1',port:created.port,room:created.room,pin:created.pin}),/未能加入房间/);
+ assert.equal(sneaky.snapshot().mode,'idle');
  assert.equal(host.snapshot().members.length,2);
 });
 

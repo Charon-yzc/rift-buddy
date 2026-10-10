@@ -189,3 +189,6 @@ body{background:radial-gradient(1100px 520px at 75% -8%,#17261f 0%,transparent 6
 .room-nick label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8fa6ba;flex:1;max-width:260px;min-width:150px}
 .room-nick input{background:#101823;border:1px solid #334155;border-radius:8px;padding:9px 11px;color:#d6e1ef;font-size:13px;width:100%}
 .room-nick input:focus{outline:none;border-color:#4f7f68}
+.room-invite-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.room-invite-foot .bottom-note{margin:0}
+.room-nick{flex-wrap:wrap}

@@ -14,7 +14,8 @@ test('idle room panel offers create, scan and join with the saved nickname',()=>
  assert.match(html,/id="room-nick" value="小明"/);
  assert.match(html,/id="room-invite"/);assert.match(html,/id="room-pin"/);
  assert.match(html,/data-action="room-join"/);
- assert.match(html,/不读取任何客户端数据/);
+ assert.match(html,/不需要额外读取客户端数据/);
+ assert.match(html,/防火墙/);
  assert.doesNotMatch(html,/口令 123456/);
 });
 
@@ -58,4 +59,26 @@ test('join errors stay visible and the panel promises no win rates',()=>{
  assert.match(html,/口令是 6 位数字/);
  const active=roomPanel({room:snapshot(),nick:'房主',addresses:[],champ});
  for(const text of [html,active])assert.doesNotMatch(text,/胜率|预测|上分/);
+});
+
+test('a champion missing from local data still renders a clickable chip',()=>{
+ const room=snapshot({members:[{nick:'队友乙',online:true,share:{lineup:[{role:'mid',champion:'Vex'},{role:'top',champion:null},{role:'jungle',champion:null},{role:'bottom',champion:null},{role:'support',champion:null}],pick:null,at:Date.now()},self:true}]});
+ const html=roomPanel({room,nick:'队友乙',champ});
+ assert.match(html,/data-action="room-build" data-id="Vex" data-role="mid" data-mode="rift"/);
+ assert.match(html,/>Vex</);
+});
+
+test('scanning and busy states disable their buttons instead of double-firing',()=>{
+ const scanning=roomPanel({room:null,nick:'队友',scanning:true,champ});
+ assert.match(scanning,/扫描中…/);assert.match(scanning,/data-action="room-scan"[^>]*disabled/);
+ const busy=roomPanel({room:null,nick:'队友',busy:true,champ});
+ assert.match(busy,/data-action="room-host"[^>]*disabled/);
+ assert.match(busy,/data-action="room-join"[^>]*disabled/);
+});
+
+test('host panel offers address refresh and says the lineup syncs automatically',()=>{
+ const html=roomPanel({room:snapshot(),nick:'房主',addresses:[{name:'以太网',address:'10.0.0.2'}],champ});
+ assert.match(html,/data-action="room-refresh-addresses"/);
+ assert.match(html,/阵容会自动同步/);
+ assert.match(html,/aria-live="polite"/);
 });
