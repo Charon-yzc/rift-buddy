@@ -23,6 +23,7 @@ async function run(){
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
   if(p==='/lol-gameflow/v1/session')return {value:{gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}}};
   if(p==='/lol-champ-select/v1/session')return {value:{localPlayerCellId:1,myTeam:[{cellId:1,championId:data.champions.find(c=>c.id===hero).key,assignedPosition:''}],theirTeam:[],actions:[],bans:{}}};
+  if(['/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids'].includes(p))return {status:404,value:{message:'Optional selection scope unavailable in this fixture'}};
   if(p==='/lol-perks/v1/pages')return {value:pages};
   throw Error('Unexpected fixture route '+p);
  };

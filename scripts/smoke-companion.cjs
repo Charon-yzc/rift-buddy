@@ -12,6 +12,7 @@ async function run(){
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'1301',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:hero?data.champions.find(c=>c.id===hero).key:0,assignedPosition:''}],theirTeam:[],actions:[],bans:{}};
+  if(['/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids'].includes(options.path))return null; // Unknown optional data; do not invent an empty owned pool.
   throw Error('Unexpected fixture route '+options.path);
  };
  https.request=(options,callback)=>{const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{const res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify(output(options))));res.emit('end');req.emit('close');});req.destroy=e=>{if(e)req.emit('error',e);};req.write=()=>{writes++;throw Error('No writes allowed');};return req;};
@@ -27,10 +28,11 @@ async function run(){
  const anchor=new BrowserWindow({x:area.x+40,y:area.y+80,width:Math.min(1200,area.width-430),height:Math.min(800,area.height-120),show:true,title:'选人窗口测试',webPreferences:{sandbox:true}});
  await anchor.loadURL('data:text/html,<html lang="zh-CN"><body style="background:%2309141c;color:%23b2edcb;font:24px sans-serif;padding:40px">选人窗口测试</body></html>');anchor.focus();
  const snapshot=(client=anchor.getBounds(),game=null)=>observer.stdout.emit('data',JSON.stringify({client:client?{...screen.dipToScreenRect(null,client),foreground:true,minimized:false}:null,game:game?{...screen.dipToScreenRect(null,game),foreground:true,minimized:false}:null})+'\n');
- await until(()=>main.isVisible(),'Main not shown');await delay(500);anchor.focus();await delay(100);
+ await delay(500);anchor.focus();await delay(100);
  const anchorFocused=anchor.isFocused();let focusRequests=0;
  for(const method of ['focus','show']){const original=main[method].bind(main);main[method]=(...args)=>{focusRequests++;return original(...args);};}
  snapshot();await js('window.buddy.client(true)');await click('[data-action=sync]');
+ await until(()=>main.isVisible(),'Main not shown after client window snapshot');
  await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');
  assert.ok(main.getBounds().width<=441);assert.ok(main.getBounds().x>=anchor.getBounds().x+anchor.getBounds().width);assert.equal(focusRequests,0,'Docking must not request focus');assert.equal(anchor.isFocused(),anchorFocused,'Docking changed the observed test anchor focus');
  await click('[data-action=companion-tab][data-tab=plan]');await until(()=>js('!!document.querySelector(".current-preparation")'),'Plan not prepared');
