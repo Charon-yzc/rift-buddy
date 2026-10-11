@@ -16,7 +16,7 @@ import {
  encodeFrame,splitFrames,decodeFrame,
  validateHello,validateWelcome,sanitizeShare,validateLeave,validateJoin,sanitizeNick,
 } from '../src/core/room.mjs';
-import {MAX_RELAY_MEMBERS,RELAY_PING,hashPin,normalizeRelayUrl,relayEndpoint,relayHello,relayCloseReason,frameTooLarge} from '../src/core/room-relay.mjs';
+import {MAX_RELAY_MEMBERS,RELAY_PING,DEFAULT_RELAY_URL,hashPin,normalizeRelayUrl,relayEndpoint,relayHello,relayCloseReason,frameTooLarge} from '../src/core/room-relay.mjs';
 
 export const DISCOVERY_GROUP='239.255.77.77';
 export const DISCOVERY_PORT=47833;
@@ -315,7 +315,13 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   const socket=relaySocket;
   if(!socket||socket.readyState!==1)return false;
   if(socket.bufferedAmount>MAX_FRAME*8){diagnostic('relay send buffer exhausted');retireSocket(socket);return false;}
-  const line=encodeFrame(value);
+  // The supplied public relay currently strips configuration fields and
+  // closes a normal 11 KiB trio snapshot with 4009. Send its supported
+  // lineup shape on every publish/rejoin/reconnect, keeping ownShare intact.
+  // Other relays and LAN retain the complete configuration protocol.
+  const outgoing=value.kind==='state'&&relayUrl===DEFAULT_RELAY_URL
+   ?{kind:value.kind,v:value.v,from:value.from,lineup:value.lineup,pick:value.pick,at:value.at}:value;
+  const line=encodeFrame(outgoing);
   if(!line)return false;
   try{socket.send(line.slice(0,-1));return true;}catch{return false;}
  }

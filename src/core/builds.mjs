@@ -126,6 +126,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];
+ if(creative?.archetype==='shared'&&!config)selectionWarnings.push('多人共同分工保留局部组合的配合，个人准备当前使用普通位置参考，不会自动沿用三人专用配置；可在“配置玩法”主动选择，已有个人选择优先保留。');
  if(mode==='rift'&&sourceOpponent&&!scopedRef)selectionWarnings.push(`原对 ${data.champions.find(c=>c.id===sourceOpponent)?.name||sourceOpponent} 的来源参考在当前筛选下暂不可用，保留原选择，暂显示普通同位置配置；可刷新对手参考或恢复普通来源。`);
  if(currentReferencePreferred)selectionWarnings.push(`原组合配装为 ${preferredLoadout.patch||LOADOUT_PATCH}，当前先展示 ${standardRef.patch} 同位置统计参考；组合专用配装可在“配置玩法”主动选择，统计不代表组合适配已经验证。`);
  if(comboId&&!duo)selectionWarnings.push('原组合已移出当前库，或不适用于这个英雄位置；请重新确认玩法。');
@@ -237,7 +238,10 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,patch:config.patch||LOADOUT_PATCH,reviewedAt:config.reviewedAt||LOADOUT_DATE,when:config.skillReason||config.why,source:'机制整理',samples:null});
  const scopedSkills=mode==='rift'?loadoutSkillPlans(champion,role,config?.id||'default').map(p=>({stale:p.patch!==data.patch||dependencyChanges(p,null,data).length>0,id:'scoped-skill-'+p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,order:p.order,reason:p.reason,patch:p.patch,reviewedAt:p.reviewedAt,reference:p.reference,sources:p.sources||[],source:'机制整理',samples:null,when:`机制整理 ${p.patch}，复核 ${p.reviewedAt}；${p.reason}${p.reference?` 前 ${p.reference.order.length} 点参考 ${p.reference.patch} 同位置来源（获取 ${p.reference.fetchedAt}）；${p.reference.order.length<p.order.length?'后续节点为机制补齐，':''}整套整理无统计样本。来源：${p.reference.url}`:' 整套整理无统计样本。'}`})) : [];
  if(config)skillChoices.unshift(...scopedSkills);else skillChoices.push(...scopedSkills);
- const defaultSkill=(config?skillChoices.find(o=>o.source==='机制整理'):duo?scopedSkills[0]||skillChoices[0]:skillChoices[0])||null;
+ // A dedicated gear/rune route may have no authored skill nodes. Keep its
+ // equipment while providing the independently labelled same-role source;
+ // do not extend that partial order or imply it was measured for this combo.
+ const defaultSkill=(config?skillChoices.find(o=>o.source==='机制整理')||skillChoices.find(o=>o.source==='OP.GG'):duo?scopedSkills[0]||skillChoices[0]:skillChoices[0])||null;
  let customSkill=null;
  if(mode==='rift'&&customSkillOrder){
   let stored;try{stored=validateCustomSkillOrder(customSkillOrder,champion.id);}catch{}
@@ -245,6 +249,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   else selectionWarnings.push(champion.id==='Azir'?`保存的阿兹尔自选顺序 ${customSkillOrder.order}（${customSkillOrder.patch}）当前不可用：一级只能学 W，Q / E 从2级解锁。原记录保留，当前展示默认参考；修改或恢复默认后才替换原选择。`:'保存的自选加点当前不可用，暂用原方案参考，请核对英雄等级规则。');
  }
  const selectedSkill=customSkill||skillChoices.find(o=>o.id===skillId)||defaultSkill;
+ if(config&&selectedSkill?.source==='OP.GG')selectionWarnings.push('当前加点使用同英雄同位置来源的部分序列，未验证适合这套专用配置；装备与符文仍保留各自选择。');
  if(scopedSkills.some(s=>s.id===selectedSkill?.id)&&selectedSkill.stale){selectedSkill.when+=' 当前技能资料版本或内容已变化，待复核。';selectionWarnings.push(`所选组合加点整理于 ${selectedSkill.patch}，当前技能资料版本或内容已变化；请核对等级与机制，不改变装备或符文的原复核版本。`);}
  if(skillId&&!customSkill&&!skillChoices.some(o=>o.id===skillId))selectionWarnings.push('原加点序列已移出当前资料，已回到默认方案。');
  const runePage={...(chosenRune?.page||t.runes),name:`开黑搭子 · ${champion.name}`,current:true};

@@ -5,10 +5,11 @@ import {roomPreparation} from './core/room-configuration.mjs';
 import {SHARDS} from './core/builds.mjs';
 import {creativeMemberCombo} from './core/creative-plan.mjs';
 import {duoPlayView} from './duo-play-view.mjs';
-import {DEFAULT_RELAY_URL} from './core/room-relay.mjs';
+import {DEFAULT_RELAY_URL,normalizeRelayUrl} from './core/room-relay.mjs';
 
 const roleName=id=>ROLES.find(r=>r.id===id)?.name||id;
 const LINK_TEXT={connecting:'连接中',connected:'已连接',reconnecting:'重连中',failed:'连接失败',idle:''};
+const defaultRelayNotice=url=>normalizeRelayUrl(url)===DEFAULT_RELAY_URL?'<p class="callout warning">默认中继目前仅共享英雄阵容，不转发装备、符文、加点或组合职责。完整配置请使用可信局域网或支持完整配置的其他中继。</p>':'';
 const attributeLines=plan=>plan?[
  `${plan.title}：${plan.priority.join(' > ')}`,plan.action,plan.note,
  `属性方案来源：${plan.source} · ${plan.patch} · 整理于 ${plan.reviewedAt}`,
@@ -29,17 +30,18 @@ function memberCard(member,champ){
   const c=champ(slot.champion);
   const config=share?.configurations?.find(s=>s.champion===slot.champion&&s.role===slot.role);
   const own=pickMatches&&slot.champion===selected.champion&&slot.role===selected.role;
-  return `<button class="room-champ${own?' is-pick':''}" data-action="room-build" data-id="${e(slot.champion)}" data-role="${e(slot.role)}" data-mode="${e(config?.mode||mode)}" data-member="${e(member.nick)}" ${!config&&!(['rift','hex'].includes(mode))?'disabled':''} title="${own?'本人选择 · ':''}${e(roleName(slot.role))} · ${config?'查看发送方配置':'仅共享英雄，查看本地配置'}">${c?portrait(c,'sm'):''}<span>${own?'<strong class="room-pick-label">本人</strong> ':''}${e(c?.name||slot.champion)}${config?' · '+(config.mode==='hex'?'海克斯配置':'符文与加点'):!['rift','hex'].includes(mode)?' · 此模式暂不支持':' · 本地参考'}</span></button>`;
+  return `<button class="room-champ${own?' is-pick':''}" data-action="room-build" data-id="${e(slot.champion)}" data-role="${e(slot.role)}" data-mode="${e(config?.mode||mode)}" data-member="${e(member.nick)}" ${!config&&!(['rift','hex'].includes(mode))?'disabled':''} title="${own?'本人选择 · ':''}${e(roleName(slot.role))} · ${config?'查看发送方配置':'未收到配置，查看说明'}">${c?portrait(c,'sm'):''}<span>${own?'<strong class="room-pick-label">本人</strong> ':''}${e(c?.name||slot.champion)}${config?' · '+(config.mode==='hex'?'海克斯配置':'符文与加点'):!['rift','hex'].includes(mode)?' · 此模式暂不支持':' · 未收到配置'}</span></button>`;
  }).join('');
  const updated=share?.at?`更新于 ${new Date(share.at).toLocaleTimeString('zh-CN')}`:'还没分享阵容';
- return `<article class="room-member"><header><b>${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${personal}${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
+ const configurationNote=!member.self&&champions.length&&!share?.configurations?.length?'<p class="bottom-note">已收到阵容，尚未收到这位队友的配置；本地参考不代表队友所选。</p>':'';
+ return `<article class="room-member"><header><b>${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${personal}${configurationNote}${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
 }
 
 // Two opt-in transports, one nickname. The suggested relay address remains
 // editable and a previously saved custom address takes precedence.
 function transportSwitch(current){
  const option=(id,label,note)=>`<button class="room-transport${current===id?' on':''}" data-action="room-transport" data-id="${id}" aria-pressed="${current===id}">${label}<small>${note}</small></button>`;
- return `<div class="room-transports">${option('lan','局域网','同一网络或虚拟局域网')}${option('relay','中继','跨网共享阵容与配置')}</div>`;
+ return `<div class="room-transports">${option('lan','局域网','同一网络或虚拟局域网')}${option('relay','中继','跨网共享阵容，配置需服务支持')}</div>`;
 }
 
 function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom}){
@@ -47,8 +49,9 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
  const forms=transport==='relay'
   ?`<div class="room-join"><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="wss://room.你的域名" spellcheck="false" aria-label="中继地址"></label><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'处理中…':'加入中继房间','arrow','small',busy?'disabled':'')}</div>
    <p class="bottom-note">你和队友填同一个中继地址、房间码和口令，再各自点击加入；昵称是房间里显示的名字。地址可改成你信任的自建中继。</p>
-   <details class="more-builds room-relay-help"><summary>怎么用中继房间</summary><ol class="play-steps"><li>切到“中继”，使用预填地址 ${e(DEFAULT_RELAY_URL)}，或和队友约定同一个可信地址。</li><li>约定任意 6 位数字房间码，例如 482913，所有人填写相同的房间码。</li><li>另定 6 位数字口令，只在线下或微信私聊告诉队友，别发到公开的地方。</li><li>填写昵称后各自点击“加入中继房间”。加入后自动共享助手中所选公开阵容和配置；队友点英雄头像查看发送方配置，采用和写入符文由本人点击确认。</li></ol></details>
-   <p class="bottom-note">公开阵容与配置会发送给该中继并转给房间成员，中继运营者也能看到内容。六位口令虽只发送哈希，仍可被枚举，不是强身份认证。</p>`
+   ${defaultRelayNotice(relayUrl)}
+   <details class="more-builds room-relay-help"><summary>怎么用中继房间</summary><ol class="play-steps"><li>切到“中继”，使用预填地址 ${e(DEFAULT_RELAY_URL)}，或和队友约定同一个可信地址。</li><li>约定任意 6 位数字房间码，例如 482913，所有人填写相同的房间码。</li><li>另定 6 位数字口令，只在线下或微信私聊告诉队友，别发到公开的地方。</li><li>填写昵称后各自点击“加入中继房间”。加入后自动共享助手中所选公开阵容；中继支持时也会转发配置。队友点英雄头像，收到配置时查看发送方快照，未收到时先提示缺失，可主动打开本机参考。采用和写入符文由本人点击确认。</li></ol></details>
+   <p class="bottom-note">公开阵容会发送给该中继并转给房间成员；其他中继还会接收配置，中继运营者也能看到所发内容。六位口令虽只发送哈希，仍可被枚举，不是强身份认证。</p>`
   :`<div class="room-actions">${button('room-host',busy?'处理中…':'创建房间','team','primary small',busy?'disabled':'')}${button('room-scan',scanning?'扫描中…':'扫描局域网房间','search','small',scanning?'disabled':'')}</div>
    <div class="room-join"><label>邀请码<input id="room-invite" value="${e(invite)}" placeholder="粘贴完整邀请，或 地址:端口#房间号" aria-label="邀请码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" aria-label="房间口令"></label>${button('room-join',busy?'处理中…':'加入房间','arrow','small',busy?'disabled':'')}</div>
    ${results?`<div class="room-scan">${results.length?results.map(item=>`<button data-action="room-fill" data-invite="${e(`${item.host}:${item.port}#${item.room}`)}">房间 ${e(item.room)} · ${e(item.host)}</button>`).join(''):'<p class="bottom-note">没有发现房间。确认在同一网络，或让房主把邀请码发给你。</p>'}</div>`:''}
@@ -80,7 +83,8 @@ function roomActive({room,addresses,champ}){
  return `<section class="panel room-panel"><div class="panel-head">${head}${badge}${button('room-leave','离开房间','','quiet small')}</div>
   <div class="panel-body">
    ${inviteBlock}
-   <div class="room-share-row">${button('room-publish','分享我的阵容与配置','upload','primary small')}<span class="bottom-note">进入房间后阵容会自动同步，包含所选装备、完整符文、召唤师技能与加点；队友点击英雄查看发送方配置。不会自动改动队友的阵容或客户端。</span></div>
+   ${isRelay?defaultRelayNotice(room.relayUrl):''}
+   <div class="room-share-row">${button('room-publish',isRelay?'重新分享当前选择':'分享我的阵容与配置','upload','primary small')}<span class="bottom-note">${isRelay?'阵容会自动同步。本版本向默认中继只发送阵容，其他中继会发送配置；是否转发仍取决于服务版本。仅实际收到配置的英雄显示“符文与加点”或“海克斯配置”，否则明确提示未收到。':'进入房间后阵容会自动同步，包含所选装备、完整符文、召唤师技能与加点；队友点击英雄查看发送方配置。'}不会自动改动队友的阵容或客户端。</span></div>
    <div class="room-members" aria-live="polite">${room.members.map(member=>memberCard(member,champ)).join('')}</div>
   </div></section>`;
 }
@@ -88,6 +92,11 @@ function roomActive({room,addresses,champ}){
 export function roomPanel({room,nick='队友',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl=DEFAULT_RELAY_URL,relayRoom='',addresses=[],champ}){
  if(!room||room.mode==='idle')return roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom});
  return roomActive({room,addresses,champ});
+}
+
+export function roomMissingConfigurationDialog({id,role,mode,nick,champ}){
+ const champion=champ(id),local=champion&&['rift','hex'].includes(mode);
+ return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer room-configuration" role="dialog" aria-modal="true" aria-label="未收到队友配置"><header class="modal-header"><h2>${e(champion?.name||id)} · 未收到${e(nick)}的配置</h2><button class="btn quiet small" data-action="close">关闭</button></header><div class="drawer-content"><p>目前只收到这位队友的英雄选择，未收到该英雄的装备、符文、召唤师技能和加点。可能是对方版本较旧、尚未分享或中继没有转发；无法据此还原队友配置。</p><p>本机参考使用你自己的资料与已保存选择，不代表队友所选，也不能作为发送方配置采用。</p>${local?`<button class="btn small" data-action="room-local-reference" data-id="${e(id)}" data-role="${e(role)}" data-mode="${e(mode)}">查看本机参考</button>`:'<p>当前资料或模式不支持本机配置参考。</p>'}</div></section></div>`;
 }
 
 export function roomConfigurationText(config,data,from,strategy){
