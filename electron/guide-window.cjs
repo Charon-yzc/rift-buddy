@@ -4,6 +4,7 @@ const {pathToFileURL}=require('node:url');
 const {guidePlacement}=require('../src/core/window-placement.mjs');
 const {compactGuidePlacement}=require('../src/core/guide-placement.mjs');
 const createSkillWindow=require('./skill-window.cjs');
+const createJungleWindow=require('./jungle-window.cjs');
 
 // Pure pass-through decision, extracted for testability: hovering the header
 // (drag bar + window buttons) always wins so the panel stays movable and
@@ -41,7 +42,8 @@ const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough();win.setIgnoreMouseEvents(ignore,{forward:true});win.setFocusable(!pass);if(ignore&&win.isFocused())win.blur();}};
 const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,openTab,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
 const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
-function publish(){const value=payload();if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
+const jungle=createJungleWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
+function publish(){const value=payload();if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);jungle.publish(value);if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
  async function save(next){await setState(next,getState());publish();return payload();}
  function adjustHeight(){if(win&&!isBall()&&!isStrip()&&!isCompact()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
  function applyMode(){
@@ -113,13 +115,13 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
   win.on('closed',()=>{clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
  function hideGear(){autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
- function hide(){hideGear();skill.hide();}
- function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;skill.show();if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();publish();}return payload();}
- async function recover(){const current=getState();if(current)await save({...current,ball:false,strip:false,collapsed:false,compact:true,compactBounds:undefined,bounds:undefined});show();applyMode();fit(true);skill.fit();return payload();}
- function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;skill.fit();if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
- const displayChanged=()=>{fit();skill.fit();};
+ function hide(){hideGear();skill.hide();jungle.hide();}
+ function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;skill.show();jungle.show();if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();publish();}return payload();}
+ async function recover(){const current=getState();if(current)await save({...current,ball:false,strip:false,collapsed:false,compact:true,compactBounds:undefined,bounds:undefined,jungleWidget:{...current.jungleWidget,offset:undefined},skillWidget:{...current.skillWidget,offset:undefined}});show();applyMode();fit(true);skill.fit();jungle.fit();return payload();}
+ function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;skill.fit();jungle.fit();if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
+ const displayChanged=()=>{fit();skill.fit();jungle.fit();};
  for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
- function toggle(){if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||skill.visible())hide();else show();}
+ function toggle(){if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||skill.visible()||jungle.visible())hide();else show();}
  async function interact(){const current=getState();if(!current)return;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{
   if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');
@@ -135,6 +137,7 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
   if(action==='current'){if(!await prepareCurrent())throw Error('尚未确认当前英雄与模式，请在完整助手中选择');inputMode();publish();return payload();}
   const current=getState();if(!current)throw Error('先在配置页选择“本局指引”');
   if(action==='layout'){if(!['compact','details'].includes(value))throw Error('指引布局不正确');await save({...current,compact:value==='compact',ball:false,strip:false,collapsed:false});applyMode();return payload();}
+  if(action==='jungle-widget'){await save({...current,jungleWidget:{...current.jungleWidget,enabled:current.jungleWidget?.enabled===false}});if(getState()?.jungleWidget?.enabled===false)jungle.hide();else jungle.show();return payload();}
   if(action==='skill-widget'){await save({...current,skillWidget:{...current.skillWidget,enabled:current.skillWidget?.enabled===false}});if(getState()?.skillWidget?.enabled===false)skill.hide();else skill.show();return payload();}
   if(action==='collapse'){const result=await save({...current,collapsed:!current.collapsed});adjustHeight();return result;}
   const fullBounds=()=>{
@@ -205,7 +208,7 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
    else if(behavior==='collapse'&&!isStrip()){await save({...getState(),compact:true,collapsed:false});applyMode();}
   }
  }
- return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);skill.destroy();win?.destroy();},isVisible:()=>!!win?.isVisible()||skill.visible(),window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
+ return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);skill.destroy();jungle.destroy();win?.destroy();},isVisible:()=>!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),jungleWidget:jungle.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;

@@ -510,45 +510,55 @@ export function buildReasonPoints(entry,scope){
  return points.filter(Boolean).slice(0,5);
 }
 
-export function mergeClientSession(slots, session, champions) {
- const byKey=new Map(champions.map(c=>[c.key,c.id]));
- const next=structuredClone(slots),unassigned=[];
- const allEntries=session?.myTeam||[],entries=allEntries.filter(p=>byKey.has(Number(p.championId)));
- // Clear tracked picks together before rebuilding. This makes champion swaps
- // atomic and keeps manual position bindings attached to the same client cell.
- for(const slot of next){
-  if(!Number.isInteger(slot.clientCellId))continue;
-  slot.champion=null;slot.locked=false;delete slot.clientCellId;delete slot.manualPosition;
- }
+export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={}}={}) {
+ const byKey=new Map(champions.map(c=>[c.key,c])),next=structuredClone(slots),unassigned=[],displaced=[];
+ const allEntries=(session?.myTeam||[]).filter((p,i,a)=>Number.isInteger(p.cellId)&&p.cellId>=0&&p.cellId<30&&a.findIndex(q=>q.cellId===p.cellId)===i).slice(0,5);
+ const entries=allEntries.filter(p=>byKey.has(Number(p.championId))),placed=new Set();
+ for(const slot of next)if(Number.isInteger(slot.clientCellId)){slot.champion=null;slot.locked=false;delete slot.clientCellId;delete slot.manualPosition;delete slot.automaticPosition;}
+ const put=(p,target,manual=false,automatic=false)=>{
+  const id=byKey.get(Number(p.championId))?.id;
+  if(target.champion&&target.champion!==id)displaced.push(target.champion);
+  Object.assign(target,{champion:id||null,locked:!!id,clientCellId:p.cellId});
+  if(manual)target.manualPosition=true;
+  if(automatic)target.automaticPosition=true;
+  placed.add(p.cellId);
+ };
+ // A player's explicit lane remains attached to the client cell through swaps.
  for(const prior of slots.filter(s=>s.manualPosition&&Number.isInteger(s.clientCellId))){
-  const current=allEntries.find(p=>p.cellId===prior.clientCellId);if(!current)continue;
-  const slot=next.find(s=>s.role===prior.role),id=byKey.get(Number(current.championId));
-  slot.clientCellId=prior.clientCellId;slot.manualPosition=true;
-  if(id&&!next.some(s=>s.champion===id)){slot.champion=id;slot.locked=prior.champion===id?prior.locked:true;}
+  const current=allEntries.find(p=>p.cellId===prior.clientCellId),target=next.find(s=>s.role===prior.role);
+  if(current&&target&&!placed.has(current.cellId))put(current,target,true);
  }
- // Only exact declared positions are imported. Empty assignedPosition in blind pick needs a user choice.
- for(const p of entries) {
-  const id=byKey.get(Number(p.championId));
-  if(next.some(s=>s.clientCellId===p.cellId&&s.manualPosition))continue;
-  const same=next.find(s=>s.champion===id);
-  if(same){if(!Number.isInteger(same.clientCellId)&&Number.isInteger(p.cellId)){same.clientCellId=p.cellId;same.manualPosition=true;}continue;} // Bind the first sync without changing the user's position.
-  const role=CLIENT_POSITION_ROLES[String(p.assignedPosition||'').toUpperCase()];
-  const target=next.find(s=>s.role===role);
-  if(target&&!target.champion&&!target.manualPosition){const prior=slots.find(s=>s.clientCellId===p.cellId);target.champion=id;target.locked=prior?.champion===id?prior.locked:true;target.clientCellId=p.cellId;}
-  else unassigned.push({champion:id,cellId:p.cellId,local:p.cellId===session.localPlayerCellId});
+ for(const p of entries){
+  if(placed.has(p.cellId))continue;
+  const same=next.find(s=>s.champion===byKey.get(Number(p.championId)).id&&!Number.isInteger(s.clientCellId));
+  if(same)put(p,same,true);
  }
- // Mark the local player's declared lane as ours so solo queue gets a
- // sensible recommendation target after sync. Additive only: never clears
- // existing party flags, and blind-pick entries without a declared position
- // leave everything untouched.
- const declaredRole=CLIENT_POSITION_ROLES[String(allEntries.find(p=>p.cellId===session?.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
- const bound=Number.isInteger(session?.localPlayerCellId)&&next.find(s=>s.clientCellId===session.localPlayerCellId);
- const localRole=bound?.role||declaredRole;
- const mine=localRole&&next.find(s=>s.role===localRole);
- // Once bound, party membership belongs to the user's checkboxes. Polling
- // must not undo an explicit uncheck or mark the pre-drag lane as ours.
- const previouslyBound=Number.isInteger(session?.localPlayerCellId)&&slots.some(s=>s.clientCellId===session.localPlayerCellId);
- const changed=!!(mine&&!mine.party&&!mine.manualPosition&&!previouslyBound);
+ // Declared lanes have priority over inferred lanes, independent of cell order.
+ const ordered=[...entries].sort((a,b)=>Number(!!CLIENT_POSITION_ROLES[String(b.assignedPosition||'').toUpperCase()])-Number(!!CLIENT_POSITION_ROLES[String(a.assignedPosition||'').toUpperCase()])||a.cellId-b.cellId);
+ for(const p of ordered){
+  if(placed.has(p.cellId))continue;
+  const champion=byKey.get(Number(p.championId)),declared=CLIENT_POSITION_ROLES[String(p.assignedPosition||'').toUpperCase()],prior=slots.find(s=>s.clientCellId===p.cellId);
+  const preferred=[declared,...(!declared&&prior?[prior.role]:[]),...(roleOrder[champion.id]||[]),...profile(champion).roles,...ROLES.map(r=>r.id)].filter((r,i,a)=>r&&a.indexOf(r)===i);
+  let target=next.find(s=>s.role===declared&&!s.champion&&!Number.isInteger(s.clientCellId));
+  if(!target&&autoArrange)target=preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!s.champion&&!Number.isInteger(s.clientCellId));
+  // Public picks supersede only prospective local suggestions, never a bound pick.
+  if(!target&&autoArrange)target=preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!Number.isInteger(s.clientCellId));
+  if(target)put(p,target,false,target.role!==declared);
+  else unassigned.push({champion:champion.id,cellId:p.cellId,local:p.cellId===session.localPlayerCellId});
+ }
+ const local=allEntries.find(p=>p.cellId===session?.localPlayerCellId),bound=next.find(s=>s.clientCellId===session?.localPlayerCellId);
+ const localRole=bound?.role||CLIENT_POSITION_ROLES[String(local?.assignedPosition||'').toUpperCase()],mine=next.find(s=>s.role===localRole);
+ const previous=slots.some(s=>s.clientCellId===session?.localPlayerCellId),changed=!!(mine&&!mine.party&&!mine.partyManual&&!mine.manualPosition&&!previous);
  if(changed)mine.party=true;
- return {slots:next,unassigned,markedLocalRole:localRole||null,markedLocalChanged:changed};
+ if(autoParty&&party){
+  if(party.status==='known')for(const s of next)if(!s.partyManual)s.party=false;
+  const used=new Set();
+  for(const member of [...party.members].sort((a,b)=>Number(b.local)-Number(a.local)||a.cellId-b.cellId)){
+   const player=allEntries.find(p=>p.cellId===member.cellId),at=next.find(s=>s.clientCellId===member.cellId);
+   const preferred=[CLIENT_POSITION_ROLES[String(player?.assignedPosition||'').toUpperCase()],CLIENT_POSITION_ROLES[member.firstPosition],CLIENT_POSITION_ROLES[member.secondPosition],...ROLES.map(r=>r.id)].filter(Boolean);
+   const target=at||preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!Number.isInteger(s.clientCellId)&&!used.has(s.role));
+   if(target){used.add(target.role);if(!target.partyManual)target.party=true;}
+  }
+ }
+ return {slots:next,unassigned,displaced,markedLocalRole:localRole||null,markedLocalChanged:changed};
 }

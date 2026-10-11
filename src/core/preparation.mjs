@@ -3,7 +3,7 @@ import {validateCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboC
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
-export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','customRunePage','skillId','customSkillOrder','summonerIds','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId','sourceOpponent'];
+export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','customRunePage','skillId','customSkillOrder','summonerIds','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId','sourceOpponent','sharedEquipment'];
 export function configurationKey(selection){return JSON.stringify([selection.id,selection.role,selection.mode,CONFIGURATION_FIELDS.map(field=>field==='conditions'?[...(selection.conditions||[])].sort():field==='bottomQuestPlan'?!!selection[field]:selection[field]??null)]);}
 export function configurationPatch(previous,next){
  return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next?.[field]));

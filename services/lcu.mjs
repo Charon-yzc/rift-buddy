@@ -7,7 +7,9 @@ const execFileAsync=promisify(execFile);
 import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
 import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteContext} from '../src/core/rune-context.mjs';
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
-const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
+import {publicPlayerIdentity,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
+const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
+const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
 export function parseLockfile(content) {
  const parts=String(content).trim().split(':');
@@ -71,17 +73,19 @@ export function sanitizeSession(session) {
   bans:[...(session.bans?.myTeamBans||[]),...(session.bans?.theirTeamBans||[])].filter(Number.isInteger),
   actions,timer:{phase:session.timer?.phase||'',...(Number.isFinite(session.timer?.adjustedTimeLeftInPhase)?{remainingMs:Math.max(0,session.timer.adjustedTimeLeftInPhase)}:{})}};
 }
-export async function clientSnapshot(installPath='',{discover=discoverClient,request=lcuRequest,now=Date.now}={}) {
+export async function clientSnapshot(installPath='',{discover=discoverClient,request=lcuRequest,now=Date.now,partyIds=[]}={}) {
  const native=discover===discoverClient&&request===lcuRequest;
  const cached=native&&!!snapshotAuth&&snapshotPath===installPath&&now()-snapshotAuthAt<30000;
  const auth=cached?snapshotAuth:await discover(installPath);
  if(native&&auth?.port&&!cached){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=now();}
- if(!auth)return {connected:false,phase:'Offline',message:'未发现客户端，可先手动选人'};
+ if(!auth){lobbyCaches.delete(request);return {connected:false,phase:'Offline',message:'未发现客户端，可先手动选人'};}
  if(auth.unreadable)return {connected:false,phase:'Offline',needsElevation:true,message:'已发现客户端，需要授权连接才能读取选人信息'};
  try{
-  let phase=await request(auth,'/lol-gameflow/v1/gameflow-phase'),session=null,eligibility=null;
+  let cache=lobbyCaches.get(request);
+  if(!cache||cache.port!==auth.port||cache.password!==auth.password||cache.installPath!==installPath){cache={port:auth.port,password:auth.password,installPath,lobby:null,gameId:null};lobbyCaches.set(request,cache);}
+  let phase=await request(auth,'/lol-gameflow/v1/gameflow-phase'),session=null,rawSession=null,eligibility=null;
   if(phase==='ChampSelect'){
-   session=sanitizeSession(await request(auth,'/lol-champ-select/v1/session'));
+   rawSession=await request(auth,'/lol-champ-select/v1/session');session=sanitizeSession(rawSession);
    const context=pickEligibilityContext(session);
    const reads=await Promise.allSettled(['pickable-champion-ids','disabled-champion-ids'].map(name=>request(auth,'/lol-champ-select/v1/'+name)));
    if(reads.some(r=>r.status==='rejected'&&r.reason?.status===401))throw Error('客户端连接已变化，请重新连接');
@@ -91,13 +95,26 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
     // A non-atomic LCU read can cross a new selection or phase. Do not reuse
     // either list if the public draft changed while these reads were pending.
     phase=await request(auth,'/lol-gameflow/v1/gameflow-phase');
-    session=phase==='ChampSelect'?sanitizeSession(await request(auth,'/lol-champ-select/v1/session')):null;
+    rawSession=phase==='ChampSelect'?await request(auth,'/lol-champ-select/v1/session'):null;session=rawSession?sanitizeSession(rawSession):null;
     if(context!==pickEligibilityContext(session))eligibility=null;
    }
   }
   let game={};try{game=sanitizeGame(await request(auth,'/lol-gameflow/v1/session'));}catch{}
-  return {connected:true,phase,session,eligibility,game,mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
- }catch(e){if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
+  if(['None','Lobby','Matchmaking','ReadyCheck'].includes(phase)){
+   // Read the pre-match party only. A champ-select chat contains all allies,
+   // which is not evidence that they queued together. No chat/JWT is retained.
+   try{const lobby=await request(auth,'/lol-lobby/v2/lobby'),after=await request(auth,'/lol-gameflow/v1/gameflow-phase');
+    if(after===phase){cache.lobby=sanitizeLobbyParty(lobby,now());cache.gameId=null;}
+    phase=after;
+   }catch(error){if(error.status===401)throw error;if(['None','Lobby'].includes(phase))cache.lobby=null;}
+  }
+  const gameId=String(session?.gameId||game.gameId||'');
+  if(session&&cache.gameId&&gameId&&cache.gameId!==gameId)cache.lobby=null;
+  if(session&&gameId)cache.gameId=gameId;
+  const identities=session?{...session,myTeam:session.myTeam.map(p=>({...p,identity:publicPlayerIdentity(rawSession.myTeam?.find(m=>Number(m.cellId)===p.cellId))}))}:null;
+  const party=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:cache.lobby?'lobby':'unknown',members:[],lobbyCount:cache.lobby?.members.length??null,unmatched:0};
+  return {connected:true,phase,session,eligibility,game,party,mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
+ }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {
  const {validateRunePage}=await import('../src/core/builds.mjs');

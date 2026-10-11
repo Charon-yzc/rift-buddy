@@ -15,7 +15,7 @@ const live={available:true,champion:'Ashe',mode:'rift',mapId:11,inventory:[],gol
 
 test('unassigned public picks cannot appear in recommendations even with a strict role pool',()=>{
  const ashe=data.champions.find(c=>c.id==='Ashe');
- const merged=mergeClientSession(createSlots(),{myTeam:[{championId:ashe.key,assignedPosition:'',cellId:1}],localPlayerCellId:2},data.champions);
+ const merged=mergeClientSession(createSlots(),{myTeam:[{championId:ashe.key,assignedPosition:'',cellId:1}],localPlayerCellId:2},data.champions,{autoArrange:false});
  const input={slots:merged.slots,champions:data.champions,publicPicks:merged.unassigned.map(p=>p.champion),scope:'bot',rolePools:{bottom:{mode:'only',heroes:['Ashe','Jhin']},support:{mode:'only',heroes:['Nami']}}};
  const result=recommend(input);assert.ok(result.length);assert.ok(result.every(r=>r.slots.find(s=>s.role==='bottom').champion==='Jhin'));
  assert.throws(()=>recommend({...input,rolePools:{...input.rolePools,bottom:{mode:'only',heroes:['Ashe']}}}),/没有可选英雄/);

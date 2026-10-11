@@ -6,13 +6,14 @@ export function fitWindow(bounds,area,{width=400,height=740,minWidth=280,minHeig
  const h=Math.min(area.height,clamp(bounds?.height||height,minHeight,maxHeight));
  return {x:Math.round(clamp(bounds?.x??area.x+area.width-w-12,area.x,area.x+area.width-w)),y:Math.round(clamp(bounds?.y??area.y+24,area.y,area.y+area.height-h)),width:Math.round(w),height:Math.round(h)};
 }
-export function companionPlacement(client,area){
+export function companionPlacement(client,area,desired=520){
+ desired=[400,520,600].includes(desired)?desired:520;
  const gap=8,right=area.x+area.width-client.x-client.width-gap,left=client.x-area.x-gap;
- const side=right>=280?'right':left>=280?'left':'edge';
- const room=side==='right'?right:side==='left'?left:400;
- const width=Math.min(440,room,area.width),height=Math.min(Math.max(client.height,520),area.height);
+ const side=right>=desired?'right':left>=desired?'left':Math.max(right,left)>=280?(right>=left?'right':'left'):'edge';
+ const room=side==='right'?right:side==='left'?left:desired;
+ const width=Math.min(desired,room,area.width),height=Math.min(Math.max(client.height,520),area.height);
  const x=side==='right'?client.x+client.width+gap:side==='left'?client.x-gap-width:area.x+area.width-width;
- return {...fitWindow({x,y:client.y,width,height},area,{minWidth:280,minHeight:480,maxWidth:440}),side,overlap:side==='edge'};
+ return {...fitWindow({x,y:client.y,width,height},area,{minWidth:280,minHeight:480,maxWidth:600}),side,overlap:side==='edge'};
 }
 export function guidePlacement(saved,area,game,{ball=false,collapsed=false,recover=false}={}){
  const minWidth=ball?76:Math.min(360,area.width),minHeight=ball?76:collapsed?280:Math.min(480,area.height);

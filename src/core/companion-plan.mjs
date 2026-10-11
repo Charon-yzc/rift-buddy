@@ -22,6 +22,7 @@ export function changeCompanionPlan(data,selection,field,value){
  const champion=data.champions.find(c=>c.id===selection.id);
  if(!champion)throw Error('英雄资料已变化，请重新选择');
  const current=getBuild(champion,selection.role,data,selection),next={...selection};
+ if(['core','start','boots','later','loadout','quest-plan','source-opponent-reset'].includes(field))delete next.sharedEquipment;
  if(field==='source-opponent-reset'){
   delete next.sourceOpponent;delete next.coreId;delete next.runeId;delete next.skillId;next.coreIndex=0;next.laterIds=[];
  }else if(field.startsWith('summoner-')){

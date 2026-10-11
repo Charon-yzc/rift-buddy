@@ -25,7 +25,7 @@ export function localPickEligibility(client,slots,champions,{scope='context',sol
  const selected=champions.find(c=>c.key===Number(player.championId));
  const manuallyPlaced=selected&&slots.find(s=>s.champion===selected.id&&(s.manualPosition||!Number.isInteger(s.clientCellId)));
  const explicit=playerPosition?.cellId===session.localPlayerCellId&&slots.some(s=>s.role===playerPosition.role)?playerPosition.role:'';
- const role=manualPlayerSlot(slots,session.localPlayerCellId)?.role||explicit||manuallyPlaced?.role||CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()]||(scope==='solo'?soloRole:'');
+ const role=manualPlayerSlot(slots,session.localPlayerCellId)?.role||explicit||manuallyPlaced?.role||slots.find(s=>selected&&s.champion===selected.id&&s.clientCellId===session.localPlayerCellId)?.role||CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()]||(scope==='solo'?soloRole:'');
  const roles=role?[role]:scope==='solo'?slots.map(s=>s.role):[];
  if(!roles.length)return none('position','已读取本机可选范围 · 请先确认“我的位置”；朋友的可选范围未知');
  const allowed=champions.filter(c=>(pickable===null||pickable.includes(c.key))&&!(disabled||[]).includes(c.key)).map(c=>c.id).sort();

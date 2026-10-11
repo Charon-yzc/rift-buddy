@@ -10,6 +10,7 @@ import {normalizeBuildSource} from '../src/core/build-source.mjs';
 import {validatePreparations,validatePreparation,storedPreparation,PREPARATION_LIMIT} from '../src/core/preparation.mjs';
 import {validateTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {validateCreativePlan} from '../src/core/creative-plan.mjs';
+import {normalizePartyIds} from '../src/core/client-party.mjs';
 export const defaultState=()=>({schema:1,favorites:[],excluded:[],preparations:[],preferences:{style:'fun',autoCheck:true,buildSource:normalizeBuildSource(null),presentation:normalizePresentation(null),installPath:'C:/WeGameApps/英雄联盟'},draft:null,ownedPageId:null,guide:null});
 const roles=['top','jungle','mid','bottom','support'],styles=['balanced','fun','wild'];
 const conditions=['ad','ap','control','heal','burst'];
@@ -26,7 +27,8 @@ function slots(value,preserveClientMetadata=false){
   if(!roles.includes(s.role)||s.champion!==null&&!hero(s.champion)||typeof s.party!=='boolean'||typeof s.locked!=='boolean')throw Error('阵容内容格式不正确');
   if(s.champion&&picked.has(s.champion))throw Error('阵容中有重复英雄');if(s.champion)picked.add(s.champion);
   return {role:s.role,champion:s.champion,party:s.party,locked:!!s.champion&&s.locked,
-   ...(preserveClientMetadata&&(s.champion||s.manualPosition===true)&&Number.isInteger(s.clientCellId)&&s.clientCellId>=0&&s.clientCellId<30?{clientCellId:s.clientCellId,...(s.manualPosition===true?{manualPosition:true}:{})}:{})};
+   ...(preserveClientMetadata&&s.partyManual===true?{partyManual:true}:{}),
+   ...(preserveClientMetadata&&(s.champion||s.manualPosition===true)&&Number.isInteger(s.clientCellId)&&s.clientCellId>=0&&s.clientCellId<30?{clientCellId:s.clientCellId,...(s.manualPosition===true?{manualPosition:true}:{}),...(s.automaticPosition===true?{automaticPosition:true}:{})}:{})};
  });
 }
 function favorite(f){
@@ -54,7 +56,7 @@ export function validateState(value) {
  if(p.installPath!==undefined&&(!text(p.installPath,500)||/[\r\n\0]/.test(p.installPath)))throw Error('游戏目录格式不正确');
  const normalized={schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],preparations:validatePreparations(value.preparations),
   preferences:{buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
-   clientCompanion:p.clientCompanion!==false,guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',roomNick:sanitizeNick(p.roomNick)||'队友',relayUrl:normalizeRelayUrl(p.relayUrl)||'',
+   clientCompanion:p.clientCompanion!==false,companionWidth:[400,520,600].includes(p.companionWidth)?p.companionWidth:520,clickPrepare:p.clickPrepare!==false,autoArrange:p.autoArrange!==false,autoParty:p.autoParty!==false,partyIds:normalizePartyIds(p.partyIds),guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',roomNick:sanitizeNick(p.roomNick)||'队友',relayUrl:normalizeRelayUrl(p.relayUrl)||'',
    autoLive:p.autoLive!==false,pool:Array.isArray(p.pool)?[...new Set(p.pool.filter(hero))].slice(0,200):[],poolMode:['off','prefer','only'].includes(p.poolMode)?p.poolMode:'off',
    play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke','growth'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},
    rolePools:Object.fromEntries(roles.map(role=>[role,{heroes:Array.isArray(p.rolePools?.[role]?.heroes)?[...new Set(p.rolePools[role].heroes.filter(hero))].slice(0,180):[],mode:['prefer','only'].includes(p.rolePools?.[role]?.mode)?p.rolePools[role].mode:'off'}])),
