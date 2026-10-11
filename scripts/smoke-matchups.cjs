@@ -141,13 +141,14 @@ async function run(){
   assert.equal(new Set(Object.values(plans)).size,3);await capture(w,'guide-yuumi-plan.png');assert.equal(await js('document.querySelector("[data-matchup-enemy]").dataset.matchupEnemy'),'Yuumi');
   await change('#guide-threat','Janna');await change('#guide-stage','opening');const opening=await js('document.querySelector(".hero-coach .coach-action").textContent');
   await change('#guide-stage','later');assert.notEqual(await js('document.querySelector(".hero-coach .coach-action").textContent'),opening);
-  const duoActions={};for(const stage of ['opening','key','later']){
+  const duoActions={},actionGeometries={};for(const stage of ['opening','key','later']){
    await change('#guide-stage',stage);await until(()=>js('document.querySelector("[data-duo-stage]")?.dataset.duoStage==='+JSON.stringify(stage)),'Duo phase did not follow guide stage');
-   duoActions[stage]=await js('document.querySelector(".hero-coach .coach-action").textContent');
+   duoActions[stage]=await js('document.querySelector(".duo-own-action").textContent');
+   const geometry=await js('(()=>{const action=document.querySelector(".expanded main .duo-own-action").getBoundingClientRect(),main=document.querySelector("main").getBoundingClientRect();return {top:action.top,bottom:action.bottom,height:action.height,mainTop:main.top,mainBottom:main.bottom};})()');
+   assert.ok(geometry.height>0&&geometry.top>=geometry.mainTop&&geometry.bottom<=geometry.mainBottom,'Own actionable guidance must be visible and fit the first team screen: '+stage);
+   actionGeometries[stage]=geometry;
   }
   assert.equal(new Set(Object.values(duoActions)).size,3);
-  const actionGeometry=await js('(()=>{const action=document.querySelector(".expanded main .coach-action").getBoundingClientRect(),main=document.querySelector("main").getBoundingClientRect();return {top:action.top,bottom:action.bottom,height:action.height,mainTop:main.top,mainBottom:main.bottom};})()');
-  assert.ok(actionGeometry.height>0&&actionGeometry.top>=actionGeometry.mainTop&&actionGeometry.bottom<=actionGeometry.mainBottom,'Own actionable guidance must be visible and fit the first team screen');
   await capture(w,'guide-own-first-screen.png');
   live.enemies=live.enemies.filter(e=>e.id!=='Janna');live.roster=live.roster.filter(p=>p.champion!=='Janna');guide.publish();await until(()=>js('document.querySelectorAll("[data-matchup-enemy]").length===0'),'Guide leaked a disappeared opponent');
   await change('#guide-threat','Morgana');await js('window.guide.control("new-game")');await until(()=>js('document.querySelectorAll("[data-matchup-enemy]").length===0'),'Guide retained previous-game opponent');
@@ -167,7 +168,7 @@ async function run(){
    }
    assert.equal(new Set(Object.values(actions)).size,3);soloRoleActions[id+':'+role]=actions;await capture(w,'guide-'+id+'-'+role+'-later.png');
   }
-  report={passed:true,archiveSha256:release.archiveSha256,distinctOwnPlans:true,manualStageAffectsAction:true,publicTargetOnly:true,vanishedTargetCleared:true,newGameCleared:true,comboKept:true,threeDuoPhases:true,duoActions,actionGeometry,partnerRoleSwap:true,soloRoleActions,runeWrites};
+  report={passed:true,archiveSha256:release.archiveSha256,distinctOwnPlans:true,manualStageAffectsAction:true,publicTargetOnly:true,vanishedTargetCleared:true,newGameCleared:true,comboKept:true,threeDuoPhases:true,duoActions,actionGeometries,partnerRoleSwap:true,soloRoleActions,runeWrites};
  }
  assert.equal(runeWrites,0);await fs.writeFile(path.join(root,'result.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
