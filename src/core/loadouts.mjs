@@ -1,7 +1,8 @@
 import bundledCatalog from './catalog-data.json' with {type:'json'};
-export let LOADOUT_PATCH=bundledCatalog.patch,LOADOUT_DATE=bundledCatalog.reviewedAt,RUNE_PLANS=bundledCatalog.runes,LOADOUTS=bundledCatalog.loadouts;
-export function configureLoadoutCatalog(catalog){LOADOUT_PATCH=catalog.patch;LOADOUT_DATE=catalog.reviewedAt;RUNE_PLANS=catalog.runes;LOADOUTS=catalog.loadouts;}
+export let LOADOUT_PATCH=bundledCatalog.patch,LOADOUT_DATE=bundledCatalog.reviewedAt,RUNE_PLANS=bundledCatalog.runes,LOADOUTS=bundledCatalog.loadouts,SKILL_PLANS=bundledCatalog.skillPlans||[];
+export function configureLoadoutCatalog(catalog){LOADOUT_PATCH=catalog.patch;LOADOUT_DATE=catalog.reviewedAt;RUNE_PLANS=catalog.runes;LOADOUTS=catalog.loadouts;SKILL_PLANS=catalog.skillPlans||[];}
 export function loadoutOptions(champion,role,mode='rift'){return mode==='rift'?LOADOUTS.filter(p=>p.champions.includes(champion.id)&&p.roles.includes(role)):[];}
+export function loadoutSkillPlans(champion,role,loadoutId='default'){return SKILL_PLANS.filter(p=>p.champion===champion.id&&p.role===role&&p.loadoutId===loadoutId);}
 export function comboLoadout(combo,champion,role){
  if(!combo||!champion)return null;
  if(combo.members){const member=combo.members.find(m=>m.role===role&&m.champion===champion.id);return member?.loadoutId|| (member?'default':null);}

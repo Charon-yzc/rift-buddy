@@ -3,7 +3,8 @@ import {validMatchups} from './matchups.mjs';
 import {selectedOpponentBuild,validOpponentScope} from './opponent-build-source.mjs';
 import {validBuildSource,buildSourceLabel,selectedBuildReference,collectBuildSources} from './build-source.mjs';
 import {profile, RULES_PATCH, RULES_VERSION, DUOS, TRIOS} from './rules.mjs';
-import {LOADOUT_DATE,LOADOUT_PATCH,RUNE_PLANS,loadoutOptions,comboLoadout,comboSources,mechanismRuneKeys} from './loadouts.mjs';
+import {dependencyChanges} from './catalog-review.mjs';
+import {LOADOUT_DATE,LOADOUT_PATCH,RUNE_PLANS,loadoutOptions,loadoutSkillPlans,comboLoadout,comboSources,mechanismRuneKeys} from './loadouts.mjs';
 import {itemConflicts,runeMechanicIssue} from './mechanics.mjs';
 import {adaptEquipment} from './adaptive-build.mjs';
 import {prepareGear} from './gear-choices.mjs';
@@ -232,9 +233,11 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  }
  const chosenRune=customRune||runeOptions.find(o=>o.id===runeId)||runeOptions[0];
  if(runeId&&mode==='rift'&&!customRune&&!runeOptions.some(o=>o.id===runeId))selectionWarnings.push('原符文方案已不在当前列表，请重新核对选择。');
- const skillChoices=mode==='rift'?(standardRef?.skillOptions||[]).filter(o=>legalSkillOrder(o.order,champion.id)).map(o=>({...o,name:`来源加点 · ${orderPriority(o.order,champion.id).split('').join(' › ')}`,when:`${referenceLabel(standardRef)}样本 ${o.samples} 场${o.samples<200?'，样本较少':''}；仅覆盖前 ${o.order.length} 个技能点，不代表这套组合的最优加点。`,source:'OP.GG'})):[];
- if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,when:config.skillReason||config.why,source:'机制整理',samples:null});
- const defaultSkill=(!config?skillChoices[0]:skillChoices.find(o=>o.source==='机制整理'))||null;
+ const skillChoices=mode==='rift'?(standardRef?.skillOptions||[]).filter(o=>legalSkillOrder(o.order,champion.id)).map(o=>({...o,patch:standardRef.patch,sourceUrl:standardRef.sourceUrl,fetchedAt:standardRef.fetchedAt,name:`来源加点 · ${orderPriority(o.order,champion.id).split('').join(' › ')}`,when:`${referenceLabel(standardRef)} · ${standardRef.patch} · 获取 ${standardRef.fetchedAt}；样本 ${o.samples} 场${o.samples<200?'，样本较少':''}；仅覆盖前 ${o.order.length} 个技能点，不代表这套组合的最优加点。`,source:'OP.GG'})):[];
+ if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,patch:config.patch||LOADOUT_PATCH,reviewedAt:config.reviewedAt||LOADOUT_DATE,when:config.skillReason||config.why,source:'机制整理',samples:null});
+ const scopedSkills=mode==='rift'?loadoutSkillPlans(champion,role,config?.id||'default').map(p=>({stale:p.patch!==data.patch||dependencyChanges(p,null,data).length>0,id:'curated-skill-'+p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,order:p.order,reason:p.reason,patch:p.patch,reviewedAt:p.reviewedAt,reference:p.reference,sources:p.sources||[],source:'机制整理',samples:null,when:`机制整理 ${p.patch}，复核 ${p.reviewedAt}；${p.reason}${p.reference?` 前 ${p.reference.order.length} 点参考 ${p.reference.patch} 同位置来源（获取 ${p.reference.fetchedAt}）；${p.reference.order.length<p.order.length?'后续节点为机制补齐，':''}整套整理无统计样本。来源：${p.reference.url}`:' 整套整理无统计样本。'}`})) : [];
+ if(config)skillChoices.unshift(...scopedSkills);else skillChoices.push(...scopedSkills);
+ const defaultSkill=(config?skillChoices.find(o=>o.source==='机制整理'):duo?scopedSkills[0]||skillChoices[0]:skillChoices[0])||null;
  let customSkill=null;
  if(mode==='rift'&&customSkillOrder){
   let stored;try{stored=validateCustomSkillOrder(customSkillOrder,champion.id);}catch{}
@@ -242,6 +245,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   else selectionWarnings.push('保存的自选加点当前不可用，暂用原方案参考，请核对英雄等级规则。');
  }
  const selectedSkill=customSkill||skillChoices.find(o=>o.id===skillId)||defaultSkill;
+ if(scopedSkills.some(s=>s.id===selectedSkill?.id)&&selectedSkill.stale){selectedSkill.when+=' 当前技能资料版本或内容已变化，待复核。';selectionWarnings.push(`所选组合加点整理于 ${selectedSkill.patch}，当前技能资料版本或内容已变化；请核对等级与机制，不改变装备或符文的原复核版本。`);}
  if(skillId&&!customSkill&&!skillChoices.some(o=>o.id===skillId))selectionWarnings.push('原加点序列已移出当前资料，已回到默认方案。');
  const runePage={...(chosenRune?.page||t.runes),name:`开黑搭子 · ${champion.name}`,current:true};
  const valid=validateRunePage(runePage,data.runes);

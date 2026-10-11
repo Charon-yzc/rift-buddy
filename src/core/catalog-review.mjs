@@ -2,8 +2,8 @@
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().filter(k=>value[k]!==undefined).map(k=>[k,canonical(value[k])])):value;
 export function fingerprint(value){let hash=14695981039346656037n;for(const c of JSON.stringify(canonical(value??null))){hash^=BigInt(c.charCodeAt(0));hash=BigInt.asUintN(64,hash*1099511628211n);}return hash.toString(16).padStart(16,'0');}
 export function dependencyRecords(entry,catalog,data){
- const members=entry.members|| (entry.carry?[{champion:entry.carry,loadoutId:entry.loadouts.bottom},{champion:entry.support,loadoutId:entry.loadouts.support}]:entry.champions.map(champion=>({champion,loadoutId:entry.id})));
- const configs=entry.champions?[entry]:members.map(m=>catalog.loadouts.find(l=>l.id===m.loadoutId)).filter(Boolean);
+ const members=entry.champion?[{champion:entry.champion}]:entry.members|| (entry.carry?[{champion:entry.carry,loadoutId:entry.loadouts.bottom},{champion:entry.support,loadoutId:entry.loadouts.support}]:entry.champions.map(champion=>({champion,loadoutId:entry.id})));
+ const configs=entry.champion?[]:entry.champions?[entry]:members.map(m=>catalog.loadouts.find(l=>l.id===m.loadoutId)).filter(Boolean);
  const runes=data.runes.flatMap(t=>t.slots.flatMap(s=>s.runes)),result={};
  for(const m of members){const c=data.champions.find(c=>c.id===m.champion);result['champion:'+m.champion]=c?{stats:c.stats,mechanics:c.mechanics}:null;}
  for(const l of configs){for(const id of [...l.items,l.boots,...l.late,...(l.early||[])]){const i=data.items[id];result['item:'+id]=i?{description:i.description,stats:i.stats,gold:i.gold,from:i.from,specialRecipe:i.specialRecipe,maps:i.maps,inStore:i.inStore,requiredChampion:i.requiredChampion,requiredAlly:i.requiredAlly}:null;}

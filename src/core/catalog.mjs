@@ -33,6 +33,17 @@ export function validateCatalog(value,data){
  assert(c.runes&&typeof c.runes==='object'&&!Array.isArray(c.runes)&&Object.keys(c.runes).length<=100,'符文');
  for(const [key,r] of Object.entries(c.runes)){assert(id(key)&&str(r?.name,120)&&str(r.when)&&r.page&&Number.isInteger(r.page.primaryStyleId)&&Number.isInteger(r.page.subStyleId),'符文说明');list(r.page.selectedPerkIds,9,Number.isInteger,'符文页');assert(r.page.selectedPerkIds.length===9,'完整符文页');}
  const configs=new Map(c.loadouts.map(l=>[l.id,l]));
+ if(c.skillPlans!==undefined){
+  list(c.skillPlans,500,p=>p&&typeof p==='object'&&!Array.isArray(p),'独立加点方案');unique(c.skillPlans,p=>p.id,'加点方案 ID');unique(c.skillPlans,p=>[p.champion,p.role,p.loadoutId].join(':'),'加点适用范围');
+  for(const p of c.skillPlans){
+   baseline(p.reviewBaseline);
+   assert(id(p.id)&&str(p.name,120)&&hero(p.champion)&&roles.includes(p.role)&&id(p.loadoutId)&&legalSkillOrder(p.order,p.champion)&&str(p.reason,450),'独立加点内容');
+   assert(/^\d{2}\.\d{1,2}$/.test(p.patch)&&date(p.reviewedAt),'加点独立复核版本');
+   const l=configs.get(p.loadoutId);assert(p.loadoutId==='default'||l&&l.champions.includes(p.champion)&&l.roles.includes(p.role),'加点与玩法英雄位置不对应');
+   sources(p.sources||[]);
+   if(p.reference!==undefined){const r=p.reference;assert(r&&legalSkillOrder(r.order,p.champion)&&p.order.startsWith(r.order)&&/^\d{2}\.\d{1,2}$/.test(r.patch)&&safeSourceURL(r.url)&&r.url.length<=300&&typeof r.fetchedAt==='string'&&r.fetchedAt.length<=40&&Number.isFinite(Date.parse(r.fetchedAt)),'加点来源覆盖');}
+  }
+ }
  for(const entry of [...c.loadouts,...c.duos,...c.trios])baseline(entry.reviewBaseline);
  for(const l of c.loadouts){assert(id(l.id)&&str(l.name,120)&&bases.includes(l.base)&&str(l.why),'出装内容');list(l.champions,180,hero,'出装英雄');list(l.roles,5,v=>roles.includes(v),'出装位置');assert(l.champions.length&&l.roles.length,'出装适用范围');
   sources(l.sources||[]);
@@ -56,6 +67,7 @@ export function validateCatalog(value,data){
 }
 export function catalogIssues(c,data){
  const errors=[],status={},loadoutStatus={};const heroes=new Set(data.champions.map(h=>h.id));
+ for(const p of c.skillPlans||[])if(!heroes.has(p.champion))errors.push(`加点 ${p.name}：英雄 ${p.champion} 不存在`);
  const itemValid=id=>{const i=data.items[id];return i?.maps?.['11']&&(i.inStore&&i.gold?.purchasable!==false||data.items[i.specialRecipe]?.maps?.['11']&&data.items[i.specialRecipe]?.inStore&&data.items[i.specialRecipe]?.gold?.purchasable!==false);};
  const badConfigs=new Set();
  for(const l of c.loadouts){const missing=[...l.items,l.boots,...l.late,...(l.early||[])].filter(id=>!itemValid(id));const badRunes=l.runes.filter(k=>!validateRunePage(c.runes[k]?.page,data.runes));const mechanics=loadoutMechanicIssues(l,c.runes);if(missing.length||badRunes.length||mechanics.length){badConfigs.add(l.id);errors.push(`${l.name}：装备、符文或触发条件失效（${[...missing,...badRunes,...mechanics].join('、')}）`);}for(const h of l.champions)if(!heroes.has(h))errors.push(`${l.name}：英雄 ${h} 不存在`);loadoutStatus[l.id]={invalid:badConfigs.has(l.id),stale:(l.patch||c.patch)!==data.patch,patch:l.patch||c.patch,reviewedAt:l.reviewedAt||c.reviewedAt};}
@@ -74,7 +86,7 @@ export function catalogIssues(c,data){
 }
 export function configureCatalog(c){const catalog=validateCatalog(c);configureRuleCatalog(catalog);configureLoadoutCatalog(catalog);return catalog;}
 export function mergePersonal(base,personal={duos:[],trios:[],loadouts:[],runes:{}}){
- const result=structuredClone(base);for(const key of ['duos','trios','loadouts']){const additions=personal[key]||[];const ids=new Set(additions.map(x=>x.id));result[key]=result[key].filter(x=>!ids.has(x.id)&&!(['duos','trios'].includes(key)&&additions.some(a=>comboKey(a)===comboKey(x)))).concat(structuredClone(additions));}
+ const result=structuredClone(base);for(const key of ['duos','trios','loadouts','skillPlans']){const additions=personal[key]||[];const ids=new Set(additions.map(x=>x.id));result[key]=(result[key]||[]).filter(x=>!ids.has(x.id)&&!(['duos','trios'].includes(key)&&additions.some(a=>comboKey(a)===comboKey(x)))&&!(key==='skillPlans'&&additions.some(a=>a.champion===x.champion&&a.role===x.role&&a.loadoutId===x.loadoutId))).concat(structuredClone(additions));}
  result.runes={...result.runes,...structuredClone(personal.runes||{})};return validateCatalog(result);
 }
-export function catalogDiff(before,after){const changes=[];for(const [id,name] of Object.entries({name:"组合库名称",notes:"维护说明",source:"来源说明",version:"组合库版本",patch:"整理版本",reviewedAt:"复核日期"}))if(JSON.stringify(before[id])!==JSON.stringify(after[id]))changes.push({kind:"metadata",type:"changed",id,name});for(const key of ['duos','trios','loadouts','runes','links']){const rows=c=>key==='runes'?Object.entries(c.runes).map(([id,v])=>({id,...v})):key==='links'?c.links.map(v=>({id:v.slice(0,2).sort().join(':'),name:v[2],value:v})):c[key];const old=new Map(rows(before).map(v=>[v.id,v])),next=new Map(rows(after).map(v=>[v.id,v]));for(const [id,v] of next)if(!old.has(id)||JSON.stringify(old.get(id))!==JSON.stringify(v))changes.push({kind:key,type:old.has(id)?'changed':'added',id,name:v.name||id});for(const [id,v] of old)if(!next.has(id))changes.push({kind:key,type:'removed',id,name:v.name||id});}return changes;}
+export function catalogDiff(before,after){const changes=[];for(const [id,name] of Object.entries({name:"组合库名称",notes:"维护说明",source:"来源说明",version:"组合库版本",patch:"整理版本",reviewedAt:"复核日期"}))if(JSON.stringify(before[id])!==JSON.stringify(after[id]))changes.push({kind:"metadata",type:"changed",id,name});for(const key of ['duos','trios','loadouts','runes','links','skillPlans']){const rows=c=>key==='runes'?Object.entries(c.runes).map(([id,v])=>({id,...v})):key==='links'?c.links.map(v=>({id:v.slice(0,2).sort().join(':'),name:v[2],value:v})):c[key]||[];const old=new Map(rows(before).map(v=>[v.id,v])),next=new Map(rows(after).map(v=>[v.id,v]));for(const [id,v] of next)if(!old.has(id)||JSON.stringify(old.get(id))!==JSON.stringify(v))changes.push({kind:key,type:old.has(id)?'changed':'added',id,name:v.name||id});for(const [id,v] of old)if(!next.has(id))changes.push({kind:key,type:'removed',id,name:v.name||id});}return changes;}
