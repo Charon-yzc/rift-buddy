@@ -134,7 +134,7 @@ test('two, four and five members retain their own configurations and Hex does no
 
 test('a late trio peer keeps attribute guidance and a three-point opening without inventing QWER ranks',async()=>{
  const team=createSlots().map(s=>({...s,champion:({jungle:'Ivern',bottom:'Aphelios',support:'Lulu'})[s.role]||null}));
- const strategy=captureRoomStrategy(team,data),configs=captureRoomConfigurations(team,data,createPreparationStore(),{creativePlan:strategy});
+ const strategy=captureRoomStrategy(team,data),configs=captureRoomConfigurations(team,data,createPreparationStore(),{creativePlan:strategy}).map(c=>c.champion==='Lulu'?{...c,skills:null,first:'EQW',priority:'EWQ',basis:{...c.basis,skill:'旧共享仅提供开局三点与后续优先级'}}:c);
  const a=createRoomService({nick:'属性房主',listenHost:'127.0.0.1',discovery:false}),b=createRoomService({nick:'晚加入队友',listenHost:'127.0.0.1',discovery:false});
  try{
   const address=await a.host();a.publish({lineup:team,configurations:configs,strategy});
@@ -156,6 +156,10 @@ test('a late trio peer keeps attribute guidance and a three-point opening withou
   const sharedAgain=captureRoomConfigurations(team,data,remembered,{creativePlan:strategy}).find(c=>c.champion==='Lulu');
   assert.equal(sharedAgain.skills,'EQW');assert.equal(sharedAgain.priority,'EWQ');
   assert.equal(roomPreparation(sharedAgain,data).customSkillOrder.priority,'EWQ','re-sharing an adopted opening must retain its later priority');
+  const resharedHtml=roomConfigurationDialog(sharedAgain,data,'再次分享'),resharedText=roomConfigurationText(sharedAgain,data,'再次分享');
+  assert.match(resharedHtml,/采用符文、开局三点与召唤师技能/);assert.match(resharedHtml,/仅覆盖前 3 个技能点/);
+  assert.match(resharedText,/开局三点：1级 E → 2级 Q → 3级 W/);assert.match(resharedText,/仅覆盖前 3 个技能点/);
+  assert.equal((resharedHtml.match(/<li>/g)||[]).length,3);assert.doesNotMatch(resharedText,/18级/);
   const luluHtml=roomConfigurationDialog(lulu,data,'房主'),luluText=roomConfigurationText(lulu,data,'房主');
   assert.match(luluHtml,/采用符文、开局三点与召唤师技能/);assert.equal((luluHtml.match(/<li>/g)||[]).length,3);
   assert.match(luluText,/1级 E → 2级 Q → 3级 W/);assert.match(luluText,/仅覆盖前 3 个技能点/);assert.doesNotMatch(luluText,/18级/);

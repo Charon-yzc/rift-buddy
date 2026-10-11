@@ -50,7 +50,7 @@ export function captureRoomConfigurations(slots,data,store,{creativePlan=null,gu
 // Adoption is an explicit local edit, never a network-triggered rune write.
 // The equipment snapshot remains visible separately: local item references
 // can differ, so this action promises only the concrete runes/skills/spells.
-export function roomPreparation(raw,data,strategy){
+export function roomPreparation(raw,data,strategy,{localStrategy=null}={}){
  const config=sanitizeRoomConfiguration(raw);
  if(config?.mode==='hex')throw Error('海克斯配置可查看和复制，不应用峡谷符文');
  if(!config||config.patch!==data.patch||!data.champions.some(c=>c.id===config.champion))throw Error('配置与当前英雄或资料版本不一致，请先核对发送方配置');
@@ -60,7 +60,13 @@ export function roomPreparation(raw,data,strategy){
  const order=config.skills||config.first;
  const skills=order?validateCustomSkillOrder({order,patch:config.patch,...(order.length===3&&config.priority?{priority:config.priority}:{})},config.champion):undefined;
  const summonerIds=validateSummonerIds(config.spells,'rift');
- const plan=strategy&&strategy.members?.some(m=>m.champion===config.champion&&m.role===config.role)?validateCreativePlan(strategy):null;
+ const incoming=strategy&&strategy.members?.some(m=>m.champion===config.champion&&m.role===config.role)?validateCreativePlan(strategy):null;
+ // An explicit adoption can apply the concrete choices to this same local
+ // group despite different catalog text identities. Its duties remain local;
+ // the sender's frozen strategy remains visible as a separate reference.
+ const local=localStrategy?validateCreativePlan(localStrategy):null;
+ const sameGroup=incoming&&local&&incoming.members.length===local.members.length&&incoming.members.every(m=>local.members.some(p=>p.champion===m.champion&&p.role===m.role));
+ const plan=sameGroup?local:incoming;
  const combo=plan?creativeMemberCombo(plan,config.champion,config.role):null;
  return {id:config.champion,role:config.role,mode:'rift',...creativeComboContext(combo),customRunePage:{...config.runes,patch:config.patch},...(skills?{customSkillOrder:skills}:{}),summonerIds};
 }

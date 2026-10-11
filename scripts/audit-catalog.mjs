@@ -8,5 +8,5 @@ for(const t of catalog.trios){const key=t.members.map(m=>m.role).sort().join('+'
 const review=[...catalog.duos,...catalog.trios].map(c=>({id:c.id,name:c.name,...issues.status[c.id],
  members:(c.members||[{champion:c.carry,role:'bottom',loadoutId:c.loadouts.bottom},{champion:c.support,role:'support',loadoutId:c.loadouts.support}]).map(m=>({...m,configReview:issues.loadoutStatus[m.loadoutId]||null})),
  sourceCount:c.sources.length,configurations:(c.members?.map(m=>m.loadoutId)||Object.values(c.loadouts)).filter(id=>id!=='default').map(id=>({id,items:configs.get(id)?.items,runes:configs.get(id)?.runes}))}));
-console.log(JSON.stringify({at:new Date().toISOString(),version:catalog.version,patch:data.patch,coverage,errors:issues.errors,stale:issues.stale,staleLoadouts:issues.staleLoadouts,review},null,2));
+console.log(JSON.stringify({at:new Date().toISOString(),version:catalog.version,patch:data.patch,coverage,errors:issues.errors,stale:issues.stale,staleLoadouts:issues.staleLoadouts,staleSkillPlans:issues.staleSkillPlans,skillReview:(catalog.skillPlans||[]).map(p=>({id:p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,...issues.skillPlanStatus[p.id]})),review},null,2));
 if(issues.errors.length)process.exitCode=1;

@@ -5,6 +5,7 @@ import {featuredRuneOptions} from './core/builds.mjs';
 import {runeComparisonView} from './rune-comparison-view.mjs';
 import {runeEditorView} from './rune-editor-view.mjs';
 import {skillEditorView} from './skill-editor-view.mjs';
+import {skillPlanCaption} from './skill-plan-view.mjs';
 import {buildSourceLabel} from './core/build-source.mjs';
 export function sourceOpponentNotice(build,data,{requested=build.sourceOpponent,plan=''}={}){
  if(!requested||build.mode!=='rift')return '';
@@ -47,6 +48,6 @@ export function runeSelector(build,data){
 export function skillSelector(build){
  if(build.attributePlan)return attributePlanView(build.attributePlan,build.dataPatch);
  const note=build.skillMechanism?`<p class="bottom-note skill-mechanism">${e(build.skillMechanism)}</p>`:'';
- if(!build.skillChoices?.length)return note+skillEditorView(build);
- return `${note}${skillEditorView(build)}<div class="skill-options"><label for="build-skill">加点方案（独立于符文选择）</label><select class="select" id="build-skill"><option value="">${build.loadoutId==='default'?'默认来源参考':'保留组合专用加点'}</option>${build.skillChoices.map(o=>`<option value="${o.id}" ${o.id===build.selectedSkillId?'selected':''}>${e(o.name)} · ${e(sourceStatisticsLabel(o,{scope:'加点'}))}</option>`).join('')}</select>${build.selectedSkill?`<p class="bottom-note">${e(build.selectedSkill.when)}</p><p class="bottom-note">${e(sourceStatisticsLabel(build.selectedSkill,{scope:'加点'}))}</p><div class="skill-sequence" aria-label="${build.skillOrder.length} 个技能点的参考序列">${[...build.skillOrder].map((key,i)=>`<span><small>${i+1}</small><b>${key}</b></span>`).join('')}</div>`:''}</div>`;
+ if(!build.skillChoices?.length)return note+skillPlanCaption({order:build.skillOrder,champion:build.champion})+skillEditorView(build);
+ return `${note}<div class="skill-options"><label for="build-skill">加点方案（独立于符文选择）</label><select class="select" id="build-skill"><option value="">恢复默认加点</option>${build.skillChoices.map(o=>`<option value="${o.id}" ${o.id===build.selectedSkillId?'selected':''}>${e(o.name)} · ${e(sourceStatisticsLabel(o,{scope:'加点'}))}</option>`).join('')}</select>${skillPlanCaption({...build.selectedSkill,order:build.skillOrder,champion:build.champion})}${build.selectedSkill?`<p class="bottom-note">${e(sourceStatisticsLabel(build.selectedSkill,{scope:'加点'}))}</p><div class="skill-sequence" aria-label="${build.skillOrder.length} 个技能点的参考序列">${[...build.skillOrder].map((key,i)=>`<span><small>${i+1}</small><b>${key}</b></span>`).join('')}</div>`:''}</div>${skillEditorView(build)}`;
 }

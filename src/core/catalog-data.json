@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.10.4",
+  "version": "2026.10.11.1",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -22720,5 +22720,203 @@
         ]
       }
     }
-  }
+  },
+  "skillPlans": [
+    {
+      "id": "malphite-top-trio-frontline",
+      "name": "石头人换血与进场",
+      "champion": "Malphite",
+      "role": "top",
+      "loadoutId": "trio-frontline",
+      "order": "QEWQQRQEQEREEWWRWW",
+      "reason": "Q 开局在安全距离换血，E 为贴身反击，W 补普攻；沿 Q/E/W 继续。R 只在实际击飞能获队友接应时作为交战窗口，不把有 R 等同于必须开。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "QEWQQRQEQEREEWW",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/malphite/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:27:54.876Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Malphite16.20.1技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Malphite.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Malphite": "1cef2e2fdec84d8d"
+      }
+    },
+    {
+      "id": "jarvaniv-jungle-trio-ad-diver",
+      "name": "皇子清野与留人",
+      "champion": "JarvanIV",
+      "role": "jungle",
+      "loadoutId": "trio-ad-diver",
+      "order": "EQWQQRQEQEREEWWRWW",
+      "reason": "E 开局提供自身攻速，二级 Q 与已放出的旗衔接，三级 W 补护盾和减速；主 Q 副 E，会推迟 W 成长。EQ 以实际路径命中为准；R 围人前确认队友覆盖及退路，围墙妨碍队友撤退时可再次施放拆除，不把位移本身当作控制已命中。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "EQWQQRQEQEREEWW",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/jarvaniv/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:27:10.861Z"
+      },
+      "sources": [
+        {
+          "name": "Riot JarvanIV16.20.1技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/JarvanIV.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:JarvanIV": "c9d96bc727699c9b"
+      }
+    },
+    {
+      "id": "orianna-mid-trio-ball",
+      "name": "发条控球接力",
+      "champion": "Orianna",
+      "role": "mid",
+      "loadoutId": "trio-ball",
+      "order": "QWEQQRQWQWRWWEEREE",
+      "reason": "Q 开局控球和清线，二级 W 补球位周围伤害与减速/加速场，三级 E 准备友军护盾；主 Q 便于反复调整球位，副 W 补范围作用，会推迟 E 护盾成长。R 以实际魔偶位置和队友覆盖为准，球回归或队友进场超距就停止接大。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "QWEQQRQWQWRWWEE",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/orianna/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:28:28.434Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Orianna16.20.1技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Orianna.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Orianna": "a3ef9b02b9b57356"
+      }
+    },
+    {
+      "id": "lulu-support-lulu-onhit",
+      "name": "璐璐保护普攻核心",
+      "champion": "Lulu",
+      "role": "support",
+      "loadoutId": "lulu-onhit",
+      "order": "EQWEEREWEWRWWQQRQQ",
+      "reason": "E 开局兼顾实际友军护盾或敌军视野/伤害用途，二级 Q 为安全消耗，三级 W 提供友军攻速移速或敌军变形；主 E 副 W。敌人逼近或明确友军攻速窗口时可显式调整为更早 W 的开局，不自动替换用户开局。R 增加最大生命并击飞附近敌人，不写成治疗。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "EQWEEREWEWRWWQQ",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/lulu/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:27:51.444Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Lulu16.20.1技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lulu.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Lulu": "5f5091380ca45272"
+      }
+    },
+    {
+      "id": "ivern-jungle-default",
+      "name": "艾翁护盾与接应",
+      "champion": "Ivern",
+      "role": "jungle",
+      "loadoutId": "default",
+      "order": "QEWEEREQEQRQQWWRWW",
+      "reason": "Q/E/W 开局沿同位置来源，主 E 副 Q，围绕实际友军护盾、延时爆炸与已确认 Q 命中接应；会推迟 W 成长。营地被动不用于史诗野怪，W 造草不代表草内安全，先自行确认视野和接应范围。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "QEWEEREQEQRQQWW",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/ivern/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:27:07.829Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Ivern16.20.1技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ivern.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Ivern": "f4b498c5991475d6"
+      }
+    },
+    {
+      "id": "kogmaw-bottom-default",
+      "name": "大嘴生化弹幕窗口",
+      "champion": "KogMaw",
+      "role": "bottom",
+      "loadoutId": "default",
+      "order": "WQEWWRWQWQRQQEEREE",
+      "reason": "W/Q/E 开局沿同位置普攻路线，主 W 副 Q；W 实际可用且有持续普攻空间时输出，未学 E 或 E 不可用不承诺自身减速留人。R 节点只示升级，不承诺命中/蓝量/追击收益。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "WQEWWRWQWQRQQEE",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/kogmaw/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:27:37.093Z"
+      },
+      "sources": [
+        {
+          "name": "Riot KogMaw16.20.1技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/KogMaw.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:KogMaw": "ba006aa34e05e235"
+      }
+    },
+    {
+      "id": "lulu-support-enchanter-protect",
+      "name": "璐璐双盾接应",
+      "champion": "Lulu",
+      "role": "support",
+      "loadoutId": "enchanter-protect",
+      "order": "EQWEEREWEWRWWQQRQQ",
+      "reason": "E 开局兼顾实际友军护盾或敌军视野/伤害用途，二级 Q 为安全消耗，三级 W 提供友军攻速移速或敌军变形；主 E 副 W。敌人逼近或明确友军攻速窗口时可显式调整为更早 W 的开局，不自动替换用户开局。R 增加最大生命并击飞附近敌人，不写成治疗。 适用于双盾接应的辅助位置，不借用其他位置统计，也不改变装备与符文原复核记录。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "EQWEEREWEWRWWQQ",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/lulu/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:27:51.444Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Lulu16.20.1技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lulu.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Lulu": "5f5091380ca45272"
+      }
+    }
+  ]
 }
