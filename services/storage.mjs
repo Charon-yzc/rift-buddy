@@ -69,7 +69,7 @@ const recoveryBlocked=new Set();
 // Startup recovery is deliberately separate from strict writes and imports.
 // Keep readable sections and entries; the original bytes remain in a backup.
 function readableState(raw){
- const state=defaultState(),issues=[];
+ const state=validateState(defaultState()),issues=[];
  if(!raw||raw.schema!==1||typeof raw!=='object'||Array.isArray(raw))return {state,issues:['保存文件格式无法读取']};
  const collection=(key,label,limit,validate)=>{
   const source=raw[key];if(source===undefined&&key==='preparations')return;
@@ -93,7 +93,7 @@ export async function readState(root) {
  try{if((await fs.stat(filename)).size>STATE_MAX_BYTES)throw Error('保存文件过大');raw=JSON.parse(await fs.readFile(filename,'utf8'));
   const valid=validateState(raw);recoveryBlocked.delete(path.resolve(root));return {...defaultState(),...valid};}
  catch(error){
-  if(error.code==='ENOENT'){recoveryBlocked.delete(path.resolve(root));return defaultState();}
+  if(error.code==='ENOENT'){recoveryBlocked.delete(path.resolve(root));return validateState(defaultState());}
   const backupFile=`settings.json.recovery-${Date.now()}-${randomUUID()}`;let backedUp=false;
   try{await fs.copyFile(filename,path.join(root,backupFile),fs.constants.COPYFILE_EXCL);backedUp=true;recoveryBlocked.delete(path.resolve(root));}catch{recoveryBlocked.add(path.resolve(root));}
   const recovered=readableState(raw);

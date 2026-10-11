@@ -355,7 +355,7 @@ function renderRoom(){
  const share=roomSharePayload(),plan=roomOwnPreparation(),connection=api.roomStatus?roomPanel({room,transport:roomTransport,relayUrl:roomRelayUrl,relayRoom:roomRelayRoom,nick:saved.preferences.roomNick||'队友',busy:roomBusy,scanning:roomScanning,scanResults:roomScanResults,error:roomError,invite:roomInvite,pin:roomPin,addresses:roomAddresses,champ,hasPreparationFile:!!roomPreparationFile,preparationFileBusy}):'<p class="callout">连接队友房间请使用桌面版。</p>';
  return roomWorkspace({data,share,ownPlan:plan,connected:!!room&&room.mode!=='idle',connectionLabel:room&&room.mode!=='idle'?'房间 '+room.room+' · '+room.members.length+' 人':'',role:roomOwnRole(),configurations:share?.configurations||[],clientControls:clientControls(plan,'room'),connection,notice:creativePlanNotice,clientMessage:client.message});
 }
-function selectedClientPreparation(view){if(view==='incoming-room'){const member=room?.members.find(m=>m.nick===clickedRoomPlan?.member),config=member?.share?.configurations?.find(c=>c.champion===clickedRoomPlan.id&&c.role===clickedRoomPlan.role);return config?roomClientPlan(config,data,member.share.strategy):null;}return view==='room'?roomOwnPreparation():view==='companion'?companionPreparation():view==='build'&&buildView?{selection:buildSelection(),build:buildView.build}:null;}
+function selectedClientPreparation(view){if(view==='incoming-room'){const member=room?.members.find(m=>m.nick===clickedRoomPlan?.member),config=member?.share?.configurations?.find(c=>c.champion===clickedRoomPlan.id&&c.role===clickedRoomPlan.role);return config?roomClientPlan(config,data,member.share.strategy,{localStrategy:captureRoomStrategy(slots,data,activeCreativePlan,config.mode)}):null;}return view==='room'?roomOwnPreparation():view==='companion'?companionPreparation():view==='build'&&buildView?{selection:buildSelection(),build:buildView.build}:null;}
 async function useClientPreparation(el,directClick=false){
  if(!api.prepareSelection)throw Error('客户端配置请在桌面版使用');
  if(clientPreparing||runeApplying||itemSetPending)throw Error('当前配置正在处理，请等待完成');
@@ -371,7 +371,7 @@ async function useClientPreparation(el,directClick=false){
   const result=await api.prepareSelection({...prepared.value,sessionGameId:gameId,context:clickedContext});
   clientPreparationStatuses.set(key,result);
   if(result.steps?.runes?.status==='done')runeAppliedKeys.clear();
-  rememberPreparation(selection);await sync(false,{fresh:true});scheduleRoomPublish();
+  rememberPreparation(selection);await persist({throwOnError:true});syncPreparedGuide(selection);await guideSyncChain;await sync(false,{fresh:true});scheduleRoomPublish();
   toast(result.complete?'预选与配置已完成，锁定请在客户端确认':'部分步骤未完成，请查看操作结果',!result.complete);return result;
  }catch(error){clientPreparationStatuses.set(key,{message:String(error.message||'操作未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'')});throw error;}
  finally{clientPreparing=false;while(clientPreparationStatuses.size>30)clientPreparationStatuses.delete(clientPreparationStatuses.keys().next().value);render();if(buildView)renderBuild();}
@@ -728,6 +728,7 @@ document.addEventListener('click',async event=>{
   }
  if(action==='companion-summoner'){editCompanionPlan(el,el.dataset.field,el.dataset.id);return;}
  if(action==='companion-core'){editCompanionPlan(el,'core',el.dataset.id);return;}
+ if(action==='companion-shared-reset'){editCompanionPlan(el,'shared-reset');return;}
  if(action==='recovery-settings'){if(windowLayout.docked)acceptWindowLayout(await api.companionMode(false));route='settings';render();return;}
  if(action==='dismiss-recovery'){stateRecovery=null;render();return;}
  if(action==='companion-start'||action==='companion-boots'){editCompanionPlan(el,action==='companion-start'?'start':'boots',el.dataset.id);return;}
@@ -766,7 +767,7 @@ document.addEventListener('click',async event=>{
   companionPreview={id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(creativeMemberCombo(activeCreativePlan,el.dataset.id,el.dataset.role))};companionTab='plan';closeOverlay();render();if(saved.preferences.clickPrepare!==false)await useClientPreparation({dataset:{preparationView:'companion'}},true);return;
  }
  if(action==='player-flow-settings'){closeOverlay();overlay.innerHTML=playerFlowSettings(saved.preferences);return;}
- if(action==='player-flow-toggle'){const field=el.dataset.field;if(!['clickPrepare','autoArrange','autoParty'].includes(field))throw Error('设置项不正确');saved.preferences[field]=saved.preferences[field]===false;await persist();overlay.innerHTML=playerFlowSettings(saved.preferences);await sync(false,{fresh:true});return;}
+ if(action==='player-flow-toggle'){const field=el.dataset.field;if(!['clickPrepare','autoArrange','autoParty'].includes(field))throw Error('设置项不正确');saved.preferences[field]=saved.preferences[field]===false;await persist({throwOnError:true});render();overlay.innerHTML=playerFlowSettings(saved.preferences);await sync(false,{fresh:true});return;}
  if(action==='room-connect-focus'){document.querySelector('#room-connection')?.scrollIntoView({block:'start'});return;}
  if(action==='client-prepare'){await useClientPreparation(el);return;}
  if(action==='room-own-edit'){const plan=roomOwnPreparation();if(!plan)throw Error('请先选择自己的英雄与位置');showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,plan.selection);return;}
@@ -868,7 +869,7 @@ document.addEventListener('click',async event=>{
  else if(action==='toggle-party'){const s=slots.find(s=>s.role===el.dataset.role);s.party=!s.party;s.partyManual=true;invalidate();}
  else if(action==='toggle-lock'){const s=slots.find(s=>s.role===el.dataset.role);guardClientSlot(s);s.locked=!s.locked;invalidate();}
  else if(action==='clear-slot'){const s=slots.find(s=>s.role===el.dataset.role);guardClientSlot(s);s.champion=null;s.locked=false;delete s.clientCellId;delete s.manualPosition;if(client.session)unassigned=unassignedPublicPicks(slots,client.session,data.champions);invalidate();}
- else if(action==='reset-draft'){slots=slots.map(s=>selectedInClient(s)?{...s,locked:true}:clearDraftPicks([s])[0]);unassigned=publicDraftPicks(client.session,data.champions);recommendationError='';invalidate();toast('英雄已清空，保留你们的位置与公开选人约束');}
+ else if(action==='reset-draft'){slots=slots.map(s=>selectedInClient(s)?{...s,locked:true}:clearDraftPicks([s])[0]);unassigned=unassignedPublicPicks(slots,client.session,data.champions);recommendationError='';invalidate();toast('未选定的英雄已清空，客户端已选英雄和位置保留');}
  else if(action==='reset-party'){const defaults=createSlots();slots=slots.map(s=>({...s,party:defaults.find(d=>d.role===s.role).party}));invalidate();toast('位置归属已恢复为中单、下路、辅助；英雄保留');}
  else if(action==='example'){if(slots.some(selectedInClient))throw Error('当前已有客户端选人，示例会覆盖阵容；请在空阵容时使用。');scope='context';slots=createSlots();slots[0]={...slots[0],champion:'Garen',locked:true};slots[1]={...slots[1],champion:'LeeSin',locked:true};invalidate();toast('已载入示例：队友选了盖伦和李青，你们补中下辅');}
  else if(action==='recommend'||action==='reroll')await generate(action==='reroll');
@@ -886,10 +887,11 @@ document.addEventListener('click',async event=>{
  else if(action==='build'){let selection=el.dataset.combo?{comboId:el.dataset.combo}:{};if(el.hasAttribute('data-result-index')){const result=results[Number(el.dataset.resultIndex)];if(!result||resultsSignature!==recommendationKey(recommendationInput()))throw Error('推荐条件已变化，请重新推荐');const plan=resultCreativePlan(result);if(plan)selection=creativeComboContext(creativeMemberCombo(plan,el.dataset.id,el.dataset.role));}showBuild(el.dataset.id,el.dataset.role,el.dataset.mode||'rift',selection);}
  else if(action==='build-partner'&&el.dataset.id){const plan=buildView?.build?.combo?.creativePlan;showBuild(el.dataset.id,el.dataset.role,'rift',plan?.id===el.dataset.combo?creativeComboContext(creativeMemberCombo(plan,el.dataset.id,el.dataset.role)):{comboId:el.dataset.combo});}
  else if(action==='build-partner'){const d=DUOS.find(d=>d.id===el.dataset.combo);if(d){const partner=comboMembers(d).find(m=>m.champion!==buildView.id);if(partner)showBuild(partner.champion,partner.role,'rift',{comboId:d.id});}}
- else if(action==='build-loadout'){buildView.loadoutId=el.dataset.id;buildView.coreIndex=0;delete buildView.runeId;delete buildView.customRunePage;delete buildView.skillId;delete buildView.customSkillOrder;delete buildView.coreId;delete buildView.laterIds;renderBuild();}
- else if(action==='build-quest-plan'){const next=changeCompanionPlan(data,buildSelection(),'quest-plan');buildView.bottomQuestPlan=next.bottomQuestPlan;buildView.laterIds=next.laterIds;renderBuild();}
- else if(action==='build-start'||action==='build-boots'){const next=changeCompanionPlan(data,buildSelection(),action==='build-start'?'start':'boots',el.dataset.id);for(const key of ['startId','bootsId']){delete buildView[key];if(next[key])buildView[key]=next[key];}renderBuild();}
- else if(action==='build-later'){const next=changeCompanionPlan(data,buildSelection(),'later',el.dataset.id);buildView.laterIds=next.laterIds;renderBuild();}
+ else if(action==='build-shared-reset'){delete buildView.sharedEquipment;renderBuild();}
+ else if(action==='build-loadout'){buildView.loadoutId=el.dataset.id;buildView.coreIndex=0;delete buildView.sharedEquipment;delete buildView.runeId;delete buildView.customRunePage;delete buildView.skillId;delete buildView.customSkillOrder;delete buildView.coreId;delete buildView.laterIds;renderBuild();}
+ else if(action==='build-quest-plan'){const next=changeCompanionPlan(data,buildSelection(),'quest-plan');delete buildView.sharedEquipment;buildView.bottomQuestPlan=next.bottomQuestPlan;buildView.laterIds=next.laterIds;renderBuild();}
+ else if(action==='build-start'||action==='build-boots'){const next=changeCompanionPlan(data,buildSelection(),action==='build-start'?'start':'boots',el.dataset.id);delete buildView.sharedEquipment;for(const key of ['startId','bootsId']){delete buildView[key];if(next[key])buildView[key]=next[key];}renderBuild();}
+ else if(action==='build-later'){const next=changeCompanionPlan(data,buildSelection(),'later',el.dataset.id);delete buildView.sharedEquipment;buildView.laterIds=next.laterIds;renderBuild();}
  else if(action==='build-rune'){const next=changeCompanionPlan(data,buildSelection(),'rune',el.dataset.id);delete buildView.customRunePage;Object.assign(buildView,next);renderBuild();}
  else if(action==='build-rune-reset'){delete buildView.runeId;delete buildView.customRunePage;renderBuild();}
  else if(action==='build-jump')overlay.querySelector(`[data-build-section="${el.dataset.section}"]`)?.scrollIntoView({block:'start'});
@@ -897,7 +899,7 @@ document.addEventListener('click',async event=>{
  else if(action==='build-summoner'){editBuildSummoners(el,el.dataset.field,el.dataset.id);}
  else if(action==='build-skill'){const next=changeCompanionPlan(data,buildSelection(),'skill',el.dataset.id||'');delete buildView.customSkillOrder;Object.assign(buildView,next);renderBuild();}
  else if(action==='build-skill-reset'){delete buildView.skillId;delete buildView.customSkillOrder;renderBuild();}
- else if(action==='build-core'){buildView.coreIndex=Number(el.dataset.index);delete buildView.coreId;delete buildView.laterIds;renderBuild();}
+ else if(action==='build-core'){buildView.coreIndex=Number(el.dataset.index);delete buildView.sharedEquipment;delete buildView.coreId;delete buildView.laterIds;renderBuild();}
  else if(action==='refresh-build')await refreshConfiguration(buildView.id,buildView.role,buildView.mode);
  else if(action==='build-condition'){const c=el.dataset.condition;buildView.conditions=buildView.conditions.includes(c)?buildView.conditions.filter(x=>x!==c):[...buildView.conditions,c];renderBuild();}
  else if(action==='apply-runes'){

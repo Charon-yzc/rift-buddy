@@ -10,6 +10,9 @@ import {defaultState,validateState} from '../services/storage.mjs';
 import {createItemSet} from '../src/core/item-sets.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {jungleWidgetPlacement} from '../src/core/guide-placement.mjs';
+import {selectedBuildFields,buildFavoriteId,findSavedBuild} from '../src/core/build-favorites.mjs';
+import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
+import {sharedEquipmentReset,loadoutSelector} from '../src/build-options-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const key=id=>data.champions.find(c=>c.id===id).key;
 test('five public picks always enter the board, inferred conflicts remain movable and public changes remain fixed',()=>{
@@ -41,6 +44,16 @@ test('a received concrete item order survives preparation, guide, restart and re
  const shared=captureRoomConfigurations(slots,data,store,{guide:plan.selection});assert.deepEqual(shared[0].items,config.items);
  assert.throws(()=>roomClientPlan({...config,items:[999999]},data),/不可用/);
  assert.throws(()=>roomClientPlan({...config,patch:'16.1'},data),/版本|不一致/);
+ const view={...plan.selection,build:plan.build},fields=selectedBuildFields(view,{preserveUnavailable:true});
+ assert.deepEqual(fields.sharedEquipment,plan.selection.sharedEquipment,'Opening the full drawer must preserve the received route');
+ const favorite={id:buildFavoriteId(view),type:'build',champion:view.id,role:view.role,mode:view.mode,...fields};
+ const other={...view,sharedEquipment:{...view.sharedEquipment,items:[...view.sharedEquipment.items].reverse()}};
+ assert.notEqual(buildFavoriteId(other),favorite.id);assert.equal(findSavedBuild([favorite],other),undefined);
+ const rune=changeCompanionPlan(data,plan.selection,'rune',plan.build.runeOptions[0].id);assert.deepEqual(rune.sharedEquipment,plan.selection.sharedEquipment);
+ const equipmentOnly=changeCompanionPlan(data,rune,'shared-reset');assert.equal(equipmentOnly.sharedEquipment,undefined);assert.equal(equipmentOnly.runeId,rune.runeId);assert.deepEqual(equipmentOnly.customSkillOrder,rune.customSkillOrder);assert.deepEqual(equipmentOnly.summonerIds,rune.summonerIds);
+ assert.match(loadoutSelector({...plan.build,loadoutOptions:[]},data),/data-action="build-shared-reset"/);
+ assert.match(sharedEquipmentReset(plan.build,{companion:true,plan:'Ashe:bottom:rift'}),/data-action="companion-shared-reset"/);assert.equal(sharedEquipmentReset(base),'');
+ const local=changeCompanionPlan(data,rune,'loadout','default');assert.equal(local.sharedEquipment,undefined);assert.deepEqual(getBuild(hero,'bottom',data,local).items.map(i=>Number(i.id)),base.items.map(i=>Number(i.id)));
 });
 test('jungle planning defaults above the right minimap and custom offsets remain bounded after a display change',()=>{
  const area={x:0,y:0,width:1920,height:1080},game={...area},placed=jungleWidgetPlacement(null,area,game);

@@ -13,6 +13,14 @@ const favorite={id:'good-ashe',title:'我的艾希',type:'build',champion:'Ashe'
 const fixture=()=>({...defaultState(),favorites:[favorite],preparations:[choice],excluded:['Garen'],preferences:{...defaultState().preferences,autoSync:false,autoCheck:false,pool:['Ashe'],poolMode:'only'},draft:{slots:createSlots().map(s=>({...s,champion:s.role==='mid'?'Lux':null,locked:s.role==='mid'})),scope:'party',style:'fun'},ownedPageId:3,guide:selectGuide(null,choice)});
 async function corrupt(directory,state){const bytes=JSON.stringify(state);await fs.writeFile(path.join(directory,'settings.json'),bytes);return bytes;}
 
+test('first startup uses the same preference values as saved startup, so first edits have no false concurrent change',async()=>{
+ const directory=await root(),first=await readState(directory),before=validateState(first);
+ assert.deepEqual(first,before);
+ const next=validateState({...before,preferences:{...before.preferences,clickPrepare:false,autoArrange:false,autoParty:false,companionWidth:600,partyIds:['队友#CN1']}});
+ for(const key of ['clickPrepare','autoArrange','autoParty','companionWidth','partyIds'])assert.deepEqual(first.preferences[key],before.preferences[key],key+' must compare equally before the first save');
+ await saveState(directory,next);assert.deepEqual(await readState(directory),next);assert.equal(validateState(defaultState()).preferences.clickPrepare,true);
+});
+
 test('one malformed favorite preserves valid choices, draft, guide, ownership and preferences, with an exact original backup',async()=>{
  const directory=await root(),source=fixture();source.favorites.push({...favorite,id:'bad',role:undefined});const bytes=await corrupt(directory,source);
  const recovered=await readState(directory),expected=validateState(fixture());
