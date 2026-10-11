@@ -48,6 +48,24 @@ test('unconfirmed hover or spell readback cannot report complete; failed items r
  const g=fixture(),read=g.deps.request;g.deps.request=(auth,route,method,body)=>method==='PATCH'&&route.endsWith('my-selection')?null:read(auth,route,method,body);const p=await g.run();assert.equal(p.complete,false);assert.equal(p.steps.spells.status,'failed');assert.equal(p.steps.runes.pageId,11);assert.equal(g.items,0);
  const h=fixture();h.deps.writeItems=async()=>{throw Error('没有目录写入权限');};const s=await h.run();assert.equal(s.steps.items.status,'failed');assert.equal(s.steps.runes.pageId,11);assert.equal(s.steps.spells.status,'done');assert.equal(s.complete,false);
 });
+test('stale intent cannot authorize configuration after another champion is selected or locked',async()=>{
+ for(const change of [
+  f=>{f.own.championId=1;f.action.championId=1;f.action.completed=true;},
+  f=>{f.own.championId=1;},
+  f=>{f.action.championId=1;},
+  f=>{f.action.completed=true;},
+ ]){
+  const f=fixture(),request=f.deps.request;
+  f.deps.request=async(auth,route,method,body)=>{const result=await request(auth,route,method,body);if(method==='PATCH'&&route.includes('/actions/'))change(f);return result;};
+  const result=await f.run();assert.equal(result.complete,false);assert.equal(result.steps.hover.status,'failed');assert.equal(result.steps.runes.status,'skipped');assert.equal(f.items,0);
+  assert(!f.calls.some(c=>c.method==='PUT'||c.method==='POST'||c.route.endsWith('my-selection')));
+ }
+});
+test('rune dispatch rejects action changes even while the public own hero and intent remain unchanged',async()=>{
+ const f=fixture(),request=f.deps.request;
+ f.deps.request=async(auth,route,method,body)=>{const result=await request(auth,route,method,body);if(route==='/lol-perks/v1/pages'&&method===undefined)f.action.championId=1;return result;};
+ const result=await f.run();assert.equal(result.complete,false);assert.equal(result.steps.hover.status,'done');assert.equal(result.steps.runes.status,'failed');assert.equal(f.items,0);assert(!f.calls.some(c=>c.method==='PUT'||c.method==='POST'||c.route.endsWith('my-selection')));
+});
 test('wrong session, unsupported mode and mismatched item-set identity reject before writes; low-level allowlist cannot lock or ban',async()=>{
  for(const mutate of [f=>f.value.sessionGameId='778',f=>f.game.gameData.queue={id:450,gameMode:'ARAM'},f=>f.value.itemSet.associatedChampions=[1]]){const f=fixture();mutate(f);await assert.rejects(f.run());assert(!f.calls.some(c=>c.method!=='GET'));}
  const f=fixture();assert(validateClientPreparation(f.value,data));

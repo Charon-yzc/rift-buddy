@@ -77,6 +77,11 @@ function savedShared(value,members){
   const ids=new Set();result.routes=value.routes.map(route=>{
    const saved={};for(const [field,max] of [['id',120],['label',100],['step',400],['condition',400],['failure',400]]){if(!text(route?.[field],max))throw Error('全队行动路线说明不完整');saved[field]=route[field];}
    if(route.tempo!==undefined){if(!tempos.includes(route.tempo))throw Error('全队行动路线节奏不正确');saved.tempo=route.tempo;}
+   if(route.loadoutGroup!==undefined){
+    const group=route.loadoutGroup,subgroup=group?.members;
+    if(!Array.isArray(subgroup)||subgroup.length!==3||new Set(subgroup.map(memberKey)).size!==3||subgroup.some(m=>!members.some(p=>memberKey(p)===memberKey(m)))||route.id!=='curated:'+group.id)throw Error('局部组合配置与当前行动路线不一致');
+    saved.loadoutGroup=validateSavedCurated(group,subgroup.map(m=>({role:m.role,champion:m.champion})));
+   }
    if(ids.has(saved.id))throw Error('全队行动路线重复');ids.add(saved.id);
    const jobs=new Map();if(!Array.isArray(route.memberJobs)||route.memberJobs.length!==members.length)throw Error('全队行动路线缺少成员分工');
    for(const m of route.memberJobs){if(!members.some(p=>memberKey(p)===memberKey(m))||jobs.has(memberKey(m))||!text(m.job,700))throw Error('全队行动路线分工不一致');jobs.set(memberKey(m),m.job);}
@@ -178,6 +183,7 @@ export function creativeMemberCombo(value,champion,role){
  if(!value)return null;const plan=validateCreativePlan(value);
  if(!plan.members.some(m=>m.champion===champion&&m.role===role))return null;
  const source=plan.shared||plan.cooperation;
- return {...plan,origin:'creative',risk:plan.caution,play:savedMemberPlay(plan,champion,role),members:plan.members.map(member=>({...member,job:plan.ordered.find(step=>memberKey(step)===memberKey(member)).job,...(plan.curated?{loadoutId:plan.curated.members.find(m=>memberKey(m)===memberKey(member)).loadoutId}:{})})),...(plan.curated?{catalogId:plan.curated.id,early:plan.curated.early,economy:plan.curated.economy,sources:plan.curated.sources,reviewedAt:plan.curated.reviewedAt}:source?{early:source.opening||null,economy:source.economy||null,sources:source.sourceUrls.map(url=>({name:'Riot 官方技能资料',kind:'技能依据',url}))}:{})};
+ const bindings=plan.curated||plan.shared?.routes?.[0]?.loadoutGroup;
+ return {...plan,origin:'creative',risk:plan.caution,play:savedMemberPlay(plan,champion,role),members:plan.members.map(member=>{const bound=bindings?.members.find(m=>memberKey(m)===memberKey(member));return {...member,job:plan.ordered.find(step=>memberKey(step)===memberKey(member)).job,...(bound?{loadoutId:bound.loadoutId}:{})};}),...(plan.curated?{catalogId:plan.curated.id,early:plan.curated.early,economy:plan.curated.economy,sources:plan.curated.sources,reviewedAt:plan.curated.reviewedAt}:source?{early:source.opening||null,economy:source.economy||null,sources:source.sourceUrls.map(url=>({name:'Riot 官方技能资料',kind:'技能依据',url}))}:{})};
 }
 export const creativeComboContext=combo=>combo?{comboId:combo.id,...(combo.origin==='creative'?{creativePlan:validateCreativePlan(combo)}:{})}:{};

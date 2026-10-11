@@ -50,11 +50,21 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   if(!pickable.includes(selected.championId)||disabled.includes(selected.championId)||banned||taken)throw Error('这个英雄本局不可选，请更换推荐');
  }
  const result={champion:selected.champion,gameId:selected.sessionGameId,steps:Object.fromEntries(['hover','runes','spells','items'].map(k=>[k,{status:'pending'}]))};
- let expected=initial.context;
+ let expected=initial.context,confirmedTarget=false;
+ const targetMatches=now=>now.action.championId===selected.championId&&typeof now.action.completed==='boolean'&&
+  (now.own.championId===selected.championId||now.own.championId===0&&now.action.completed===false&&now.own.championPickIntent===selected.championId);
  const ensure=async()=>{
   const now=await read();
-  if(!sameRuneWriteContext(now.context,expected)||now.action.id!==initial.action.id)throw Error('选人对象或阶段已变化，已停止后续配置；请在客户端核对');
+  if(!sameRuneWriteContext(now.context,expected)||now.action.id!==initial.action.id||confirmedTarget&&!targetMatches(now))throw Error('选人对象或阶段已变化，已停止后续配置；请在客户端核对');
   return now;
+ };
+ const runeRequest=async(auth,route,...args)=>{
+  const result=await request(auth,route,...args);
+  if(route==='/lol-champ-select/v1/session'){
+   const own=result?.myTeam?.find(p=>p.cellId===initial.context.cellId),actions=(Array.isArray(result?.actions)?result.actions:[]).flat().filter(a=>a?.type==='pick'&&a.actorCellId===initial.context.cellId);
+   if(result.localPlayerCellId!==initial.context.cellId||!own||actions.length!==1||actions[0].id!==initial.action.id||!targetMatches({own,action:actions[0]}))throw Error('目标英雄或选人操作已变化，已停止符文配置；请在客户端核对');
+  }
+  return result;
  };
  let step='hover';
  try{
@@ -65,10 +75,10 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
    await request(auth,`/lol-champ-select/v1/session/actions/${before.action.id}`,'PATCH',{championId:selected.championId,completed:false});
   }
   const after=await read();
-  if(after.context.cellId!==initial.context.cellId||after.context.assignedPosition!==initial.context.assignedPosition||after.action.id!==initial.action.id||![after.own.championId,after.own.championPickIntent].includes(selected.championId))throw Error('客户端未确认目标英雄，已停止配置；请在客户端核对预选');
-  expected=after.context;result.steps.hover={status:'done',locked:after.action.completed===true};
+  if(after.context.cellId!==initial.context.cellId||after.context.assignedPosition!==initial.context.assignedPosition||after.action.id!==initial.action.id||!targetMatches(after))throw Error('客户端未确认目标英雄，已停止配置；请在客户端核对预选');
+  expected=after.context;confirmedTarget=true;result.steps.hover={status:'done',locked:after.action.completed===true};
   step='runes';await ensure();
-  const rune=await writeRunes({page:selected.page,context:expected,ownedPageId,installPath,trees:data.runes},{discover:async()=>auth,request});
+  const rune=await writeRunes({page:selected.page,context:expected,ownedPageId,installPath,trees:data.runes},{discover:async()=>auth,request:runeRequest});
   result.steps.runes={status:'done',pageId:rune.pageId,name:rune.name};
   step='spells';await ensure();
   const [spell1Id,spell2Id]=selected.summoners.map(id=>Number(data.spells[id].key));

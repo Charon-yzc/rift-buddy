@@ -76,14 +76,14 @@ test('dedicated configurations without authored nodes retain equipment and offer
  }
  assert(examples.length>20,'exercise real trio and duo dedicated routes, not an empty fixture');
 });
-test('four/five-member preparation explains ordinary fallback and preserves explicit subgroup configuration',()=>{
+test('four/five-member preparation retains active subgroup preparation and preserves explicit ordinary configuration',()=>{
  for(const picks of [{top:'Camille',jungle:'Vi',mid:'Galio',bottom:'Ashe'},{top:'Camille',jungle:'Vi',mid:'Galio',bottom:'Ashe',support:'Janna'}]){
   const slots=createSlots().map(s=>({...s,champion:picks[s.role]||null,party:!!picks[s.role],locked:!!picks[s.role]}));
   const [result]=recommend({slots,champions:data.champions,scope:'party',builds:data.builds,patch:data.patch,catalogStatus:data.catalogInfo.status});assert(result);
   const creativePlan=captureCreativePlan(result,data);assert.equal(creativePlan.archetype,'shared');
-  const selection={comboId:creativePlan.id,creativePlan},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'default');assert.equal(ordinary.skillOrder.length,15);
-  assert.match(ordinary.selectionWarnings.join(' '),/不会自动沿用三人专用配置/);assert.match(loadoutSelector(ordinary,data),/同位置常用配置/);
-  const explicit=getBuild(hero('Vi'),'jungle',data,{...selection,loadoutId:'trio-ad-diver'});assert.equal(explicit.skillOrder.length,18);assert.match(loadoutSelector(explicit,data),/主动选择的专用配置/);
+  const selection={comboId:creativePlan.id,creativePlan},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'trio-ad-diver');assert.equal(ordinary.skillOrder.length,18);
+  assert.match(loadoutSelector(ordinary,data),/当前主线的三人专用配置/);
+  const explicit=getBuild(hero('Vi'),'jungle',data,{...selection,loadoutId:'default'});assert.equal(explicit.loadoutId,'default');assert.equal(explicit.skillOrder.length,15);assert.match(loadoutSelector(explicit,data),/同位置常用配置/);
   assert(!explicit.selectionWarnings.some(s=>s.includes('个人准备当前使用普通位置参考')));
  }
 });

@@ -116,7 +116,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const duo=creative||(mode==='rift'?[...TRIOS,...DUOS].find(d=>d.id===comboId&&comboLoadout(d,champion,role)!==null):null);
  const play=creative?(creative.play||fallbackMemberPlay(creative,data,champion.id,role)):duoPlay(duo,data,{champion:champion.id,role});
  if(play){play.currentPatch=data.patch;play.stale=Object.values(play.stages).some(stage=>(stage.patch||play.patch)!==data.patch);}
- const preferred=creative&&creative.archetype!=='curated'?'default':comboLoadout(duo,champion,role);
+ const preferred=comboLoadout(duo,champion,role);
  const generic=selectedBuildReference(data,champion.id,role),scoped=mode==='rift'&&sourceOpponent?selectedOpponentBuild(data,champion.id,role,sourceOpponent):null;
  const scopedRef=scoped&&validReference(scoped,champion,role,data,{allowOlder:true,opponent:sourceOpponent})?scoped:null;
  const standardRef=scopedRef||(validReference(generic,champion,role,data,{allowOlder:true})?generic:null);
@@ -126,7 +126,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];
- if(creative?.archetype==='shared'&&!config)selectionWarnings.push('多人共同分工保留局部组合的配合，个人准备当前使用普通位置参考，不会自动沿用三人专用配置；可在“配置玩法”主动选择，已有个人选择优先保留。');
+ if(creative?.archetype==='shared'&&!config)selectionWarnings.push('当前行动路线没有适用的专用配置，个人准备使用普通位置参考；可在“配置玩法”主动选择，已有个人选择优先保留。');
  if(mode==='rift'&&sourceOpponent&&!scopedRef)selectionWarnings.push(`原对 ${data.champions.find(c=>c.id===sourceOpponent)?.name||sourceOpponent} 的来源参考在当前筛选下暂不可用，保留原选择，暂显示普通同位置配置；可刷新对手参考或恢复普通来源。`);
  if(currentReferencePreferred)selectionWarnings.push(`原组合配装为 ${preferredLoadout.patch||LOADOUT_PATCH}，当前先展示 ${standardRef.patch} 同位置统计参考；组合专用配装可在“配置玩法”主动选择，统计不代表组合适配已经验证。`);
  if(comboId&&!duo)selectionWarnings.push('原组合已移出当前库，或不适用于这个英雄位置；请重新确认玩法。');
