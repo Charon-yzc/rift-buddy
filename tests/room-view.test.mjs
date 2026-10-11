@@ -133,16 +133,19 @@ test('the idle panel offers both transports and says which one is selected',()=>
  assert.doesNotMatch(relay,/room-host|room-scan|room-invite/);
 });
 
-test('the relay form asks for an address, a room code and a pin, and ships no default relay',()=>{
+test('the relay form preserves a custom address and suggests the shared default with concrete joining instructions',()=>{
  const html=roomPanel({room:null,nick:'队友',transport:'relay',relayUrl:'wss://room.example.com',relayRoom:'482913',pin:'123456',champ});
  assert.match(html,/id="room-relay-url" value="wss:\/\/room\.example\.com"/);
  assert.match(html,/id="room-relay-room" value="482913"/);
  assert.match(html,/id="room-pin" value="123456"/);
- assert.match(html,/助手不内置任何公共中继/);
+ assert.match(html,/地址可改成你信任的自建中继/);
  assert.match(html,/哈希/);
  const empty=roomPanel({room:null,nick:'队友',transport:'relay',champ});
- assert.match(empty,/id="room-relay-url" value=""/);
- assert.doesNotMatch(empty,/wss:\/\/room\.[a-z0-9-]+\.[a-z]{2,}/i);
+ assert.match(empty,/id="room-relay-url" value="wss:\/\/room\.riftbuddy\.dpdns\.org"/);
+ assert.match(empty,/任意 6 位数字房间码/);assert.match(empty,/6 位数字口令/);assert.match(empty,/微信私聊/);
+ assert.match(empty,/自动共享助手中所选公开阵容和配置/);assert.match(empty,/点英雄头像/);
+ assert.match(empty,/采用和写入符文由本人点击确认/);
+ const cleared=roomPanel({room:null,transport:'relay',relayUrl:'',champ});assert.match(cleared,/id="room-relay-url" value=""/,'editing/clearing must not silently refill the field');
 });
 
 test('an active relay room shows the link state and never a LAN invite code',()=>{

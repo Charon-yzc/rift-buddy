@@ -27,6 +27,7 @@
 .rune-edit-row .select{width:100%;min-width:0;max-width:100%}
 .rune-editor-descriptions{margin:12px 0;font-size:12px;line-height:1.65;color:#b4c0d1}
 .companion-shell .rune-editor-grid{grid-template-columns:minmax(0,1fr)}
+.skill-options>.select{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
 .skill-editor-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:12px 0}
 .skill-editor-grid label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:12px;color:#a8b5c7}
 .skill-editor-grid .select{min-width:0;width:100%;padding:7px 4px}

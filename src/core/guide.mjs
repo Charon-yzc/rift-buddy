@@ -10,7 +10,7 @@ import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {validateCreativePlan,creativeMemberCombo} from './creative-plan.mjs';
 import {dataStatus} from './data-status.mjs';
 import {assessSituation,chooseSituationTarget,pinnedSituationItem,situationItemIssue,inventoryFulfillsItem} from './live-situation.mjs';
-import {recommendSkill,validateCustomSkillOrder} from './skill-advice.mjs';
+import {recommendSkill,validateSavedSkillOrder} from './skill-advice.mjs';
 export {nextSkill} from './skill-advice.mjs';
 import {aggregateCombatStats,applyLivePanel,duel} from './live-estimate.mjs';
 import {ultimateReference} from './combat-models.mjs';
@@ -36,7 +36,7 @@ export function validateLoadoutSelection(value){
  const selected={};
  if(value.sourceOpponent!==undefined){if(value.mode!=='rift'||!hero(value.sourceOpponent)||value.sourceOpponent===(value.id||value.champion))throw Error('来源对手筛选格式不正确');selected.sourceOpponent=value.sourceOpponent;}
  if(value.customRunePage!==undefined){if(value.mode!=='rift')throw Error('自选符文只适用于召唤师峡谷');selected.customRunePage=validateCustomRunePage(value.customRunePage);}
- if(value.customSkillOrder!==undefined){if(value.mode!=='rift')throw Error('自选加点只适用于召唤师峡谷');selected.customSkillOrder=validateCustomSkillOrder(value.customSkillOrder,value.id||value.champion);}
+ if(value.customSkillOrder!==undefined){if(value.mode!=='rift')throw Error('自选加点只适用于召唤师峡谷');selected.customSkillOrder=validateSavedSkillOrder(value.customSkillOrder,value.id||value.champion);}
  if(value.summonerIds!==undefined)selected.summonerIds=validateSummonerIds(value.summonerIds,value.mode);
  if(value.bottomQuestPlan!==undefined&&typeof value.bottomQuestPlan!=='boolean')throw Error('下路任务计划格式不正确');
  if(value.bottomQuestPlan===true){if(value.role!=='bottom'||value.mode!=='rift')throw Error('额外装备计划只适用于峡谷下路任务');selected.bottomQuestPlan=true;}

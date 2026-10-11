@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.11.1",
+  "version": "2026.10.11.2",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -22916,6 +22916,168 @@
       ],
       "reviewBaseline": {
         "champion:Lulu": "5f5091380ca45272"
+      }
+    },
+    {
+      "id": "galio-mid-trio-galio-engage",
+      "name": "加里奥清线与落地接控",
+      "champion": "Galio",
+      "role": "mid",
+      "loadoutId": "trio-galio-engage",
+      "order": "QWEQQRQWQWRWWEEREE",
+      "reason": "Q/W/E 开局，主 Q 副 W：Q 用于清线与消耗，W 先提供魔法护盾，蓄力后实际释放才嘲讽；E 后退再突进，碰墙或首名英雄即停止。优先 W 会推迟 E 成长。R 需要实际可选的友军位置，护盾针对魔法伤害，落地有延迟；先确认队友能撑到落地、后续接控和退出空间。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "QWEQQRQWQWRWWEE",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/galio/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:26:46.392Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Galio 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Galio": "62214853523131ad"
+      }
+    },
+    {
+      "id": "vi-jungle-trio-ad-diver",
+      "name": "蔚清野与单点接应",
+      "champion": "Vi",
+      "role": "jungle",
+      "loadoutId": "trio-ad-diver",
+      "order": "WEQQQRQEQEREEWWRWW",
+      "reason": "W/E/Q 开局，W 是每第三次攻击同一目标触发的被动，不是可主动按出的技能；E 强化下次普攻，Q 到三级才学会，不承诺二级 Q 抓人。主 Q 副 E，会推迟 W 成长。Q 蓄力会减速自己，R 实际抵达目标后才击飞；先确认队友到场和撤离路径，不把不可阻挡等同于安全进场。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "WEQQQRQEQEREEWW",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/vi/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:29:57.993Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Vi 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Vi.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Vi": "ed4ccc20b476dc0e"
+      }
+    },
+    {
+      "id": "shen-top-trio-frontline",
+      "name": "慎换血与支援接应",
+      "champion": "Shen",
+      "role": "top",
+      "loadoutId": "trio-frontline",
+      "order": "QEWQQRQEQEREEWWRWW",
+      "reason": "Q/E/W 开局，主 Q 副 E：Q 回收魂刃穿过目标后才增强普攻，E 以实际嘲讽命中接队友；会推迟 W 冷却成长。W 保护的是魂刃周围区域内的友军免受普攻，不阻挡所有技能。R 给实际友军护盾后需要完成引导才能传送，先处理自身安全和兵线，队友不能把护盾视为已有人落地接应。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "QEWQQRQEQEREEWW",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/shen/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:29:02.693Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Shen 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Shen.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Shen": "e59438000b98dd56"
+      }
+    },
+    {
+      "id": "nocturne-jungle-trio-ad-diver",
+      "name": "梦魇清野与进场确认",
+      "champion": "Nocturne",
+      "role": "jungle",
+      "loadoutId": "trio-ad-diver",
+      "order": "QWEQQRQEQEREEWWRWW",
+      "reason": "Q/W/E 开局，主 Q 副 E；Q 的路径增益作用于自己，W 主动只能阻挡一次技能，E 连接要持续不断才触发恐惧。副 E 会推迟 W 被动攻速和冷却成长。R 先限制敌方视野，再由自己确认目标并二次施放突进；队友先到实际可支援的位置，进场后无法接应就不追，不假设敌方技能已交。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "QWEQQRQEQEREEWW",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/nocturne/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:28:24.137Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Nocturne 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nocturne.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Nocturne": "2759f235cb713880"
+      }
+    },
+    {
+      "id": "camille-top-default",
+      "name": "青钢影换血与锁定接应",
+      "champion": "Camille",
+      "role": "top",
+      "loadoutId": "default",
+      "order": "WQEQQRQEQEREEWWRWW",
+      "reason": "W/Q/E 开局：W 外圈命中英雄才有对应额外伤害与回复，Q 第二次施放需等待强化窗口；E 要先有可攀墙面并实际撞到英雄才控制。主 Q 副 E，会推迟 W 成长。R 锁住一名目标且推开其他敌人，施放前确认队友能覆盖锁定区和自己后续退路，不把单独锁人当作团队已到场。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "reference": {
+        "order": "WQEQQRQEQEREEWW",
+        "patch": "16.20",
+        "url": "https://op.gg/lol/champions/camille/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.20",
+        "fetchedAt": "2026-10-07T21:26:22.369Z"
+      },
+      "sources": [
+        {
+          "name": "Riot Camille 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Camille.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Camille": "d8925ce8a69d2250"
+      }
+    },
+    {
+      "id": "galio-bottom-farm-tank",
+      "name": "加里奥补刀前排开局",
+      "champion": "Galio",
+      "role": "bottom",
+      "loadoutId": "farm-tank",
+      "order": "QWE",
+      "reason": "仅整理前三点 Q/W/E：Q 为补刀和远程消耗，W 的被动护盾只吸收魔法伤害，主动需蓄力后释放才嘲讽，三级 E 才补位移与击飞。与赛娜搭档时由加里奥补刀，先核对兵线、蓝量和赛娜接应；不把中路来源样本移到下路，不提供未经复核的 4–18 级节点，后续按实际对线和分工调整。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Galio 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Galio": "62214853523131ad"
       }
     }
   ]

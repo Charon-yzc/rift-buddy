@@ -242,7 +242,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(mode==='rift'&&customSkillOrder){
   let stored;try{stored=validateCustomSkillOrder(customSkillOrder,champion.id);}catch{}
   if(stored){customSkill={id:'custom-skill-'+stored.order.toLowerCase(),name:'自选逐级加点',...stored,when:'按个人打法选择的合法技能点；已有技能不会重置，未验证统计优势。',source:'个人自选',samples:null};skillChoices.push(customSkill);if(stored.patch!==data.patch)selectionWarnings.push(`自选加点整理于 ${stored.patch}，请核对当前等级规则。`);}
-  else selectionWarnings.push('保存的自选加点当前不可用，暂用原方案参考，请核对英雄等级规则。');
+  else selectionWarnings.push(champion.id==='Azir'?`保存的阿兹尔自选顺序 ${customSkillOrder.order}（${customSkillOrder.patch}）当前不可用：一级只能学 W，Q / E 从2级解锁。原记录保留，当前展示默认参考；修改或恢复默认后才替换原选择。`:'保存的自选加点当前不可用，暂用原方案参考，请核对英雄等级规则。');
  }
  const selectedSkill=customSkill||skillChoices.find(o=>o.id===skillId)||defaultSkill;
  if(scopedSkills.some(s=>s.id===selectedSkill?.id)&&selectedSkill.stale){selectedSkill.when+=' 当前技能资料版本或内容已变化，待复核。';selectionWarnings.push(`所选组合加点整理于 ${selectedSkill.patch}，当前技能资料版本或内容已变化；请核对等级与机制，不改变装备或符文的原复核版本。`);}

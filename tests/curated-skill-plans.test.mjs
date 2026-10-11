@@ -40,11 +40,11 @@ test('an installed older catalog previews new skill plans and can apply or roll 
  const local={...structuredClone(legacy.trios[0]),id:'local-skill-upgrade',name:'自己的三人计划'};await before.savePersonal(local);
  const upgraded=await createCatalogStore(options);assert.deepEqual(upgraded.summary().catalog.skillPlans,[]);
  const preview=await upgraded.check();assert.equal(preview.version,BUNDLED_CATALOG.version);
- assert.equal(preview.changes.filter(c=>c.kind==='skillPlans'&&c.type==='added').length,7);
+ assert.equal(preview.changes.filter(c=>c.kind==='skillPlans'&&c.type==='added').length,BUNDLED_CATALOG.skillPlans.length);
  assert.match(catalogPreviewDialog(preview),/新增 · 加点方案/);assert.doesNotMatch(catalogPreviewDialog(preview),/新增 · undefined/);
  assert.deepEqual(upgraded.summary().catalog.skillPlans,[],'preview must not apply content');
  await upgraded.apply(preview.token);const applied=await createCatalogStore(options);
- assert.equal(applied.summary().catalog.skillPlans.length,7);assert(applied.summary().catalog.trios.some(c=>c.id===local.id));
+ assert.equal(applied.summary().catalog.skillPlans.length,BUNDLED_CATALOG.skillPlans.length);assert(applied.summary().catalog.trios.some(c=>c.id===local.id));
  await applied.rollback();assert.equal(applied.summary().catalog.version,'before-skills');assert.deepEqual(applied.summary().catalog.skillPlans,[]);
  assert(applied.summary().catalog.trios.some(c=>c.id===local.id));
 });
@@ -100,7 +100,7 @@ test('catalog scope, source coverage and personal override are validated without
  const duplicate=clone();duplicate.skillPlans.push({...duplicate.skillPlans[0],id:'other-id'});assert.throws(()=>validateCatalog(duplicate,data),/适用范围重复/);
  const mine={...c.skillPlans[0],id:'personal-malphite',reason:'个人换血顺序，未经统计优势验证'};
  const merged=mergePersonal(c,{skillPlans:[mine]});assert.equal(merged.skillPlans.filter(p=>p.champion==='Malphite'&&p.role==='top'&&p.loadoutId===mine.loadoutId).length,1);assert(merged.skillPlans.some(p=>p.id===mine.id));
- assert.deepEqual(merged.loadouts,c.loadouts);assert.equal(catalogDiff(legacy,c).filter(r=>r.kind==='skillPlans'&&r.type==='added').length,7);
+ assert.deepEqual(merged.loadouts,c.loadouts);assert.equal(catalogDiff(legacy,c).filter(r=>r.kind==='skillPlans'&&r.type==='added').length,BUNDLED_CATALOG.skillPlans.length);
 });
 
 test('saved full, partial source and three-point personal orders reach all preparation surfaces without promoting editor previews',()=>{

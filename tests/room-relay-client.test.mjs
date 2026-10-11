@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {normalizeRelayUrl,relayEndpoint,relayHello,relayCloseReason,RELAY_PING} from '../src/core/room-relay.mjs';
+import {normalizeRelayUrl,initialRelayUrl,DEFAULT_RELAY_URL,relayEndpoint,relayHello,relayCloseReason,RELAY_PING} from '../src/core/room-relay.mjs';
 import {createRoomService,RELAY_FRAME_BUDGET,RELAY_FRAME_REFILL_PER_SECOND} from '../services/room.mjs';
 import {ROOM_PROTOCOL,MAX_FRAME} from '../src/core/room.mjs';
 import fs from 'node:fs/promises';
@@ -17,6 +17,15 @@ import {captureRoomStrategy,captureRoomConfigurations} from '../src/core/room-co
 
 const pinHash=pin=>createHash('sha256').update(pin).digest('hex');
 const tick=(ms=5)=>new Promise(resolve=>setTimeout(resolve,ms));
+
+test('the suggested relay is a valid opt-in input and saved custom addresses retain precedence',()=>{
+ assert.equal(DEFAULT_RELAY_URL,'wss://room.riftbuddy.dpdns.org');assert.equal(normalizeRelayUrl(DEFAULT_RELAY_URL),DEFAULT_RELAY_URL);
+ for(const saved of [undefined,null,'','  '])assert.equal(initialRelayUrl(saved),DEFAULT_RELAY_URL);
+ assert.equal(initialRelayUrl('wss://other.example.com/'),'wss://other.example.com');
+ assert.equal(initialRelayUrl('ws://localhost:8787'),'ws://localhost:8787');
+ assert.equal(relayEndpoint(DEFAULT_RELAY_URL,'482913'),'wss://room.riftbuddy.dpdns.org/room/482913');
+ assert.equal(relayEndpoint('', '482913'),null,'cleared input must still fail explicit join validation');
+});
 const kinds=sent=>sent.map(text=>JSON.parse(text).kind);
 
 // A WebSocket stand-in that records what the client sent and lets a test push

@@ -32,7 +32,7 @@ import {windowInfoDialog,windowInfoText} from './window-info-view.mjs';
 import {roomPanel,roomConfigurationDialog,roomConfigurationText} from './room-view.mjs';
 import {shareFromSlots,decodeRoomInvitation,sanitizeNick,validPin,validRoomCode} from './core/room.mjs';
 import {captureRoomStrategy,captureRoomConfigurations,roomPreparation,roomPlayerRole} from './core/room-configuration.mjs';
-import {normalizeRelayUrl} from './core/room-relay.mjs';
+import {normalizeRelayUrl,initialRelayUrl} from './core/room-relay.mjs';
 import {changeCompanionPlan,companionPickIntent} from './core/companion-plan.mjs';
 import {opponentBuildKey} from './core/opponent-build-source.mjs';
 import {matchupPreparation,selectMatchupPreparation} from './core/matchup-preparation.mjs';
@@ -112,7 +112,7 @@ const companionDisclosures=new Map();
 let pendingIntentPreparation=null;
 let room=null,roomScanning=false,roomScanResults=null,roomError='',roomInvite='',roomPin='',roomAddresses=[],roomShareTimer=null,roomShareSig='',roomBusy=false,roomShareWarned=false;
 let roomConfigurationView=null,roomStrategySnapshot=null;
-let roomTransport='lan',roomRelayUrl='',roomRelayRoom='';
+let roomTransport='lan',roomRelayUrl=initialRelayUrl(),roomRelayRoom='';
 let activeCreativePlan=null,creativePlanNotice='';
 function resultCreativePlan(result){const plan=captureCreativePlan(result,data);if(plan)result.creativePlan=plan;return plan;}
 function reconcileCreativePlan(){if(activeCreativePlan&&!creativePlanCompatible(activeCreativePlan,slots)){activeCreativePlan=null;creativePlanNotice='成员或位置已变化，原分工不再适用。收藏中的原组合说明仍保留。';}}
@@ -888,7 +888,7 @@ window.addEventListener('unhandledrejection',event=>{toast(event.reason?.message
 try{boot=await api.bootstrap();data=boot.data;saved=boot.state;savedBase=structuredClone(saved);stateRecovery=saved.recovery||null;data.catalog=configureCatalog(data.catalog||BUNDLED_CATALOG);data.catalogInfo||={...catalogIssues(data.catalog,data),version:data.catalog.version};configureAssets(data);
  client=boot.client||client;runeAppliedKeys.observe(client);windowLayout=boot.windowLayout||{docked:false};api.onWindowLayout?.(acceptWindowLayout);
  room=await api.roomStatus?.()||null;if(room?.mode==='host')roomAddresses=await api.roomAddresses?.()||[];
- roomRelayUrl=saved.preferences.relayUrl||'';roomTransport=room?.transport==='relay'?'relay':'lan';
+ roomRelayUrl=initialRelayUrl(saved.preferences.relayUrl);roomTransport=room?.transport==='relay'?'relay':'lan';
  api.onRoomUpdate?.(snapshot=>{room=snapshot;if(route==='draft')render();});
   preparations.restore(saved.preparations);guideSelection=saved.guide?.selection||null;if(guideSelection){if(!preparations.recall(guideSelection))preparations.remember(guideSelection);guideSyncBase=guideSelection;lastGuideSyncKey=buildChoiceKey(guideSelection);}
  api.onPresentation?.(value=>{saved.preferences.presentation=value;applyPresentation(value);if(overlay.querySelector('.presentation-settings'))updatePresentationDialog(overlay,value);});

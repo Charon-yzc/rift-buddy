@@ -5,6 +5,7 @@ import {roomPreparation} from './core/room-configuration.mjs';
 import {SHARDS} from './core/builds.mjs';
 import {creativeMemberCombo} from './core/creative-plan.mjs';
 import {duoPlayView} from './duo-play-view.mjs';
+import {DEFAULT_RELAY_URL} from './core/room-relay.mjs';
 
 const roleName=id=>ROLES.find(r=>r.id===id)?.name||id;
 const LINK_TEXT={connecting:'连接中',connected:'已连接',reconnecting:'重连中',failed:'连接失败',idle:''};
@@ -34,18 +35,20 @@ function memberCard(member,champ){
  return `<article class="room-member"><header><b>${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${personal}${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
 }
 
-// Two transports, one nickname. The relay address is the user's own, so it is
-// a settings field rather than something the app ships with.
+// Two opt-in transports, one nickname. The suggested relay address remains
+// editable and a previously saved custom address takes precedence.
 function transportSwitch(current){
  const option=(id,label,note)=>`<button class="room-transport${current===id?' on':''}" data-action="room-transport" data-id="${id}" aria-pressed="${current===id}">${label}<small>${note}</small></button>`;
- return `<div class="room-transports">${option('lan','局域网','同一网络或虚拟局域网')}${option('relay','中继','跨网，自己部署的中继')}</div>`;
+ return `<div class="room-transports">${option('lan','局域网','同一网络或虚拟局域网')}${option('relay','中继','跨网共享阵容与配置')}</div>`;
 }
 
 function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom}){
  const results=Array.isArray(scanResults)?scanResults.slice(0,64):null;
  const forms=transport==='relay'
   ?`<div class="room-join"><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="wss://room.你的域名" spellcheck="false" aria-label="中继地址"></label><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'处理中…':'加入中继房间','arrow','small',busy?'disabled':'')}</div>
-   <p class="bottom-note">使用你或队友部署的可信中继，助手不内置任何公共中继。加入后，公开阵容与配置会发送给该中继并转给房间成员；中继运营者也能看到内容。六位口令虽只发送哈希，仍可被枚举，不是强身份认证。</p>`
+   <p class="bottom-note">你和队友填同一个中继地址、房间码和口令，再各自点击加入；昵称是房间里显示的名字。地址可改成你信任的自建中继。</p>
+   <details class="more-builds room-relay-help"><summary>怎么用中继房间</summary><ol class="play-steps"><li>切到“中继”，使用预填地址 ${e(DEFAULT_RELAY_URL)}，或和队友约定同一个可信地址。</li><li>约定任意 6 位数字房间码，例如 482913，所有人填写相同的房间码。</li><li>另定 6 位数字口令，只在线下或微信私聊告诉队友，别发到公开的地方。</li><li>填写昵称后各自点击“加入中继房间”。加入后自动共享助手中所选公开阵容和配置；队友点英雄头像查看发送方配置，采用和写入符文由本人点击确认。</li></ol></details>
+   <p class="bottom-note">公开阵容与配置会发送给该中继并转给房间成员，中继运营者也能看到内容。六位口令虽只发送哈希，仍可被枚举，不是强身份认证。</p>`
   :`<div class="room-actions">${button('room-host',busy?'处理中…':'创建房间','team','primary small',busy?'disabled':'')}${button('room-scan',scanning?'扫描中…':'扫描局域网房间','search','small',scanning?'disabled':'')}</div>
    <div class="room-join"><label>邀请码<input id="room-invite" value="${e(invite)}" placeholder="粘贴完整邀请，或 地址:端口#房间号" aria-label="邀请码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" aria-label="房间口令"></label>${button('room-join',busy?'处理中…':'加入房间','arrow','small',busy?'disabled':'')}</div>
    ${results?`<div class="room-scan">${results.length?results.map(item=>`<button data-action="room-fill" data-invite="${e(`${item.host}:${item.port}#${item.room}`)}">房间 ${e(item.room)} · ${e(item.host)}</button>`).join(''):'<p class="bottom-note">没有发现房间。确认在同一网络，或让房主把邀请码发给你。</p>'}</div>`:''}
@@ -82,7 +85,7 @@ function roomActive({room,addresses,champ}){
   </div></section>`;
 }
 
-export function roomPanel({room,nick='队友',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl='',relayRoom='',addresses=[],champ}){
+export function roomPanel({room,nick='队友',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl=DEFAULT_RELAY_URL,relayRoom='',addresses=[],champ}){
  if(!room||room.mode==='idle')return roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom});
  return roomActive({room,addresses,champ});
 }

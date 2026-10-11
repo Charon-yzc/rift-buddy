@@ -3,7 +3,7 @@
 // Elise/Nidalee/Karma start with a free R rank. Aphelios' live ability ranks
 // cannot identify his invested stat points, so his advice remains descriptive.
 // These are curated options, not a claim that a rank order is statistically best.
-const special=new Set(['Aphelios','Udyr','Elise','Jayce','Nidalee','Karma']);
+const special=new Set(['Aphelios','Udyr','Elise','Jayce','Nidalee','Karma','Azir']);
 const freeUltimate=new Set(['Elise','Nidalee','Karma']);
 const keys=['Q','W','E','R'];
 const initialRanks=champion=>({Q:0,W:0,E:0,R:freeUltimate.has(champion)||champion==='Jayce'?1:0});
@@ -18,13 +18,16 @@ export function attributePreparation(champion){
   mechanismUrls:['https://www.leagueoflegends.com/en-au/news/game-updates/aphelios-kit-primer/','https://www.leagueoflegends.com/en-us/news/game-updates/patch-10-8-notes/']}:null;
 }
 function rankCap(champion,key,level){
+ // Azir's Q/E first unlock is level 2, not a dependency on having spent W.
+ // Same-patch CharacterRecords/Root SpellLevelUpInfoList: [2,3,5,7,9].
+ if(champion==='Azir'&&(key==='Q'||key==='E')&&level<2)return 0;
  if(champion==='Udyr'||champion==='Jayce'&&key!=='R')return Math.min(6,Math.ceil(level/2));
  if(champion==='Jayce')return 1;
  if(key==='R')return (freeUltimate.has(champion)?1:0)+[6,11,16].filter(n=>level>=n).length;
  return Math.min(5,Math.ceil(level/2));
 }
 export function skillMechanismNote(champion){
- return champion==='Udyr'?'四种姿态都可从一级学习，第六级在英雄11级解锁；R不是普通大招。':champion==='Jayce'?'R自动学习，不消耗技能点；Q / W / E各可升六级，第六级在英雄11级解锁。':freeUltimate.has(champion)?'R在一级自带一级，不消耗技能点；后续R在6 / 11 / 16级升级。':champion==='Aphelios'?'技能自动成长，升级点用于攻击力、攻速与穿甲；请按游戏内属性加点，实时技能等级不能还原已投属性点。':'';
+ return champion==='Azir'?'一级只能学习 W；Q / E 从英雄2级解锁，攒点时按当前英雄等级确认，不要求先投入 W。':champion==='Udyr'?'四种姿态都可从一级学习，第六级在英雄11级解锁；R不是普通大招。':champion==='Jayce'?'R自动学习，不消耗技能点；Q / W / E各可升六级，第六级在英雄11级解锁。':freeUltimate.has(champion)?'R在一级自带一级，不消耗技能点；后续R在6 / 11 / 16级升级。':champion==='Aphelios'?'技能自动成长，升级点用于攻击力、攻速与穿甲；请按游戏内属性加点，实时技能等级不能还原已投属性点。':'';
 }
 export function legalSkillOrder(order,champion=null){
  if(typeof order!=='string'||!/^([QWER]){3,18}$/.test(order))return false;
@@ -59,6 +62,17 @@ export function validateCustomSkillOrder(value,champion){
  const priority=value.priority;
  if(priority!==undefined&&(value.order.length!==3||typeof priority!=='string'||! /^[QWER]{3,4}$/.test(priority)||new Set(priority).size!==priority.length))throw Error('开局加点的后续优先级不可用');
  return {order:value.order,patch:value.patch,...(priority!==undefined?{priority}:{})};
+}
+// Retain previously accepted Azir records for inspection/export, including
+// portable backups. This is not an active skill choice: getBuild and room
+// adoption still use strict validation. New editor edits use legal prefixes.
+// Restrict compatibility to the exact old first-unlock error, never arbitrary
+// malformed sequences or other champions' invalid ranks.
+export function validateSavedSkillOrder(value,champion){
+ try{return validateCustomSkillOrder(value,champion);}catch(error){
+  if(champion!=='Azir'||!['Q','E'].includes(value?.order?.[0]))throw error;
+  return validateCustomSkillOrder(value,null);
+ }
 }
 export function orderPriority(order,champion=null){const slots=champion==='Udyr'?keys:['Q','W','E'],ranks=Object.fromEntries(slots.map(k=>[k,0])),full=[],max=champion==='Udyr'||champion==='Jayce'?6:5;for(const k of order||''){if(k in ranks&&++ranks[k]===max)full.push(k);}return [...full,...slots.filter(k=>!full.includes(k)).sort((a,b)=>ranks[b]-ranks[a])].join('');}
 export function skillOptions(champion,live){
