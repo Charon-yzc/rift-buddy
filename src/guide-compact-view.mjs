@@ -1,7 +1,7 @@
 import {escape as e,icon} from './ui.mjs';
 
 export function compactGuideView(snapshot,image,{wrong=false}={}){
- const m=snapshot.model,gear=m.completeGear,route=gear?.route||m.route||[],next=gear?.next;
+ const m=snapshot.model,gear=m.completeGear,route=gear?.route||m.route||[],manualTarget=!!(m.purchaseTarget&&m.next),next=manualTarget?m.next:gear?.next;
  const slot=i=>`<div class="compact-slot ${i.owned?'owned':''}" title="${e([i.name,i.owned?'已持有':i.planned?'手动计划已标记，未读取背包':i.reason].filter(Boolean).join(' · '))}"><span>${route.indexOf(i)+1}</span>${image('item',i.id,i.name)}<small>${e(i.name)}</small>${i.owned?'<em>✓</em>':i.pending?'<em title="完成任务后再确认">待</em>':i.planned?'<em title="手动计划标记，不代表已持有">计</em>':''}</div>`;
  const alternatives=gear?.alternatives||[];
  const resource=m.objectives?.available&&!m.objectives.stale?m.objectives.rows.find(r=>r.state==='prepare'):null;
@@ -10,7 +10,7 @@ export function compactGuideView(snapshot,image,{wrong=false}={}){
  <main class="compact-guide-main">${wrong?`<section class="compact-mismatch"><b>当前英雄或方案已变化</b><p>先核对本局英雄、位置与组合。</p><button data-action="${snapshot.current?'current':'main'}">${snapshot.current?'换入当前英雄':'打开助手'}</button></section>`:`
  <div class="compact-route-label"><b>成装顺序</b><span>${gear?.reservedSupport?'另保留辅助任务装':route.length===7?'第七件须完成下路任务':gear?.automatic?'局势建议':'原准备参考'}</span></div>
  <div class="compact-route ${route.length===7?'seven':''}">${route.map(slot).join('')}</div>
- <div class="compact-next"><span>${next?'下一件 <b>'+e(next.name)+'</b>':gear?.manualProgress?gear.pendingQuest?'前六件已标记 · 第七件待任务':'计划进度已标记':gear?.pendingQuest?'六件已齐 · 第七件待任务':'完整路线已持有'}</span><button ${m.mode==='rift'?'data-tab="rhythm"':'data-action="layout" data-id="details"'}>${m.jungle?'野区与资源':m.mode==='rift'?'资源节奏':'依据与调整'} ›</button></div>
+ <div class="compact-next"><span>${next?(manualTarget?'回城目标 <b>':'下一件 <b>')+e(next.name)+'</b>':gear?.manualProgress?gear.pendingQuest?'前六件已标记 · 第七件待任务':'计划进度已标记':gear?.pendingQuest?'六件已齐 · 第七件待任务':'完整路线已持有'}</span><button ${m.mode==='rift'?'data-tab="rhythm"':'data-action="layout" data-id="details"'}>${m.jungle?'野区与资源':m.mode==='rift'?'资源节奏':'依据与调整'} ›</button></div>
  <div class="compact-alternatives"><small>备选</small>${alternatives.length?alternatives.map(i=>`<span class="${i.blockedReason?'blocked':''}" title="${e([i.reason,i.caution,i.blockedReason].filter(Boolean).join('；'))}">${image('item',i.id,i.name)}${e(i.name)}</span>`).join(''):'<span>按需要在详情选择后续成装</span>'}</div>
  <p class="compact-reason" title="${e(note?.reason||gear?.notes?.join('；')||gear?.caution)}">${e(note?note.change+'：'+note.name+'；'+note.reason:gear?.notes?.[0]||'保留组合核心；按实际对位、回城与商店选择。')}</p>${resource?`<button class="compact-resource" data-tab="rhythm" title="${e(resource.action)}">资源准备 · ${e(resource.name)} ${e(resource.label)} ›</button>`:''}`}</main>`;
 }

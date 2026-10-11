@@ -24,6 +24,14 @@ test('manual offline progress advances the compact goal without claiming real in
  const all=createGuideModel(data,state);assert.equal(all.completeGear.next,null);
  assert.match(renderGuide({model:all},'overview',false,()=>'<img>'),/计划进度已标记/);
 });
+test('an explicit return-to-shop goal remains visible on the compact card without replacing the full route',()=>{
+ const state=selectGuide(null,selection),before=createGuideModel(data,state);state.purchaseTarget='3006';
+ const model=createGuideModel(data,state),html=renderGuide({model},'overview',false,()=>'<img>');
+ assert.equal(model.purchaseTarget,'3006');assert.equal(model.next.id,'3006');assert.deepEqual(model.completeGear.route,before.completeGear.route);
+ assert.match(html,/回城目标 <b>狂战士胫甲<\/b>/);assert.doesNotMatch(html,/下一件 <b>/);
+ state.completedItems=['3006'];const finished=createGuideModel(data,state);
+ assert.equal(finished.purchaseTarget,'');assert.doesNotMatch(renderGuide({model:finished},'overview',false,()=>'<img>'),/回城目标 <b>/);
+});
 test('moving the separate skill window follows the game bottom while clamping disconnected displays',()=>{
  const area={x:-1920,y:0,width:1920,height:1040},game={x:-1920,y:0,width:1920,height:1080},first=skillWidgetPlacement(null,area,game);
  assert(first.y+first.height<game.height-100);const moved={...first,x:first.x-90,y:first.y-40},offset=skillWidgetOffset(moved,area,game);

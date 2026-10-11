@@ -1,7 +1,7 @@
 import {itemConflicts} from './mechanics.mjs';
 import {equipmentRoute} from './route-profile.mjs';
 import {purchasePlan} from './purchase.mjs';
-import {inventoryFulfillsItem} from './live-situation.mjs';
+import {inventoryFulfillsItem,situationItemIssue} from './live-situation.mjs';
 
 export const COMPLETE_GEAR_PATCH='16.20';
 const normalQueues=new Set([400,420,430,440]);
@@ -32,12 +32,12 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  const profile=build.routeProfile||equipmentRoute({items:build.items,key:build.key,champion:selection.id,data,support:build.support});
  const base=build.items.map(idOf).slice(0,slotLimit),baseSet=new Set(base),notes=[];
  const route=[...base];
- const append=id=>{id=String(id);if(route.length<slotLimit&&available(id)&&!itemConflicts(Number(id),route.map(Number))){route.push(id);return true;}return false;};
+ const append=id=>{id=String(id);if(route.length<slotLimit&&available(id)&&!itemConflicts(Number(id),route.map(Number))&&!situationItemIssue({data,id,inventory:route.map(id=>({id,count:1}))})){route.push(id);return true;}return false;};
  // The source's complete-item candidates are independent alternatives. Fill
 // empty slots with compatible reference picks, without saving that as a user choice.
  for(const row of build.laterOptions||[])if(row.fitsRoute!==false&&row.items?.[0])append(idOf(row.items[0]));
  const baseline=[...route];
- for(const owned of held.filter(full))for(let n=route.length-1;n>=0;n--)if(route[n]!==owned&&!owns(route[n])&&itemConflicts(Number(owned),[Number(route[n])])){
+ for(const owned of held.filter(full))for(let n=route.length-1;n>=0;n--)if(route[n]!==owned&&!owns(route[n])&&situationItemIssue({data,id:route[n],inventory:[{id:owned,count:1}]})){
   notes.push('已买 '+item(owned).name+'；不再安排互斥的 '+item(route[n]).name+'，其余空位再按局势选择。');route.splice(n,1);
  }
  const alreadyFinished=held.filter(id=>full(id)&&!route.some(target=>owns(target)&&inventoryFulfillsItem({data,id:target,inventory:[{id,count:1}]})));
@@ -46,7 +46,7 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
   if(route.length>=slotLimit){const at=route.findLastIndex(target=>!owns(target)&&!item(target)?.tags?.includes('Boots'));if(at>=0)route.splice(at,1);}
   if(route.length<slotLimit)route.unshift(id);
  }
- for(const row of build.laterOptions||[])if(row.fitsRoute!==false&&row.items?.[0]&&!held.some(owned=>idOf(row.items[0])!==owned&&itemConflicts(Number(idOf(row.items[0])),[Number(owned)])))append(idOf(row.items[0]));
+ for(const row of build.laterOptions||[])if(row.fitsRoute!==false&&row.items?.[0]&&!situationItemIssue({data,id:idOf(row.items[0]),inventory}))append(idOf(row.items[0]));
  const pinned=new Set([...(selection.laterIds||[]).map(String),...(selection.bootsId?[String(build.boots)]:[])]);
  // Preserve the selected combo's first two interaction items and every item
 // actually finished. Existing component investment also protects the next goal.

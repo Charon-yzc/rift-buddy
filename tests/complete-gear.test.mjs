@@ -35,6 +35,18 @@ test('actual completed inventory wins over an unbought conflicting plan without 
  assert(plan.route.some(r=>r.id==='3033'&&r.owned));assert(!plan.route.some(r=>r.id!=='3033'&&itemConflicts(Number(r.id),[3033])));
  assert(plan.route.length<=6);assert(!plan.updates.some(r=>r.replaces==='3033'));
 });
+test('a different completed pair of boots replaces the planned boots without consuming two route slots',()=>{
+ const b=build(),planned=String(b.boots);
+ for(const id of ['3047','3111'].filter(id=>id!==planned)){
+  const p=run(b,{live:{...live,inventory:[{id,count:1,slot:0}]}});
+  assert.equal(p.route.filter(r=>data.items[r.id].tags.includes('Boots')).length,1);
+  assert(p.route.some(r=>r.id===id&&r.owned));assert(!p.route.some(r=>r.id===planned));assert.equal(p.route.length,6);
+ }
+ const component=run(b,{live:{...live,inventory:[{id:'1001',count:1,slot:0}]}});
+ assert(component.route.some(r=>r.id===planned));assert(!component.route.some(r=>r.id==='1001'));
+ const upgraded=run(build('Ashe','bottom',{bootsId:'boots-3047'}),{live:{...live,inventory:[{id:'3174',count:1,slot:0}]}});
+ assert.equal(upgraded.route.filter(r=>data.items[r.id].tags.includes('Boots')).length,1);assert(upgraded.route.find(r=>r.id==='3047')?.owned);
+});
 test('Live inventory takes precedence over offline manual marks, including incomplete reads',()=>{
  const first=String(build().items[0].id);
  for(const reading of [live,{...live,inventoryKnown:false}]){
