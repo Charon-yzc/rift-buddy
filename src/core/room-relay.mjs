@@ -8,6 +8,9 @@
 import {ROOM_PROTOCOL,MAX_FRAME,validRoomCode,sanitizeNick,decodeFrame,encodeFrame,sanitizeShare} from './room.mjs';
 
 export const MAX_RELAY_MEMBERS=12;
+// Suggested input only. It never opens a connection or replaces a saved
+// custom address; joining remains an explicit click in the desktop panel.
+export const DEFAULT_RELAY_URL='wss://room.riftbuddy.dpdns.org';
 const PIN_HASH=/^[a-f0-9]{64}$/;
 const RELAY_HOST=/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$/;
 // Auto-answered by the Worker without waking the Durable Object, so it must
@@ -55,6 +58,8 @@ export function normalizeRelayUrl(value){
  if(!RELAY_HOST.test(host))return null;
  return `${url.protocol}//${url.host}`;
 }
+
+export function initialRelayUrl(saved){return normalizeRelayUrl(saved)||DEFAULT_RELAY_URL;}
 
 // The client configures the host only; the room code is part of the path.
 export function relayEndpoint(base,room){

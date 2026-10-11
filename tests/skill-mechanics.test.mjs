@@ -32,7 +32,7 @@ test('Aphelios has sourced static attribute preparation across builds, sidebar, 
 test('missing position sources leave legal mechanism upgrades for every ordinary hero through level eighteen',()=>{
  const offline={...data,builds:{}};
  for(const champion of data.champions){
-  if(champion.id==='Aphelios')continue; // Live ability ranks cannot identify invested stat points.
+  if(['Aphelios','Yuumi'].includes(champion.id))continue; // Attribute points / automatic W rank mapping are not verified live investments.
   for(const role of ['top','jungle','mid','bottom','support']){
    const build=getBuild(champion,role,offline),skills={Q:0,W:0,E:0,R:['Elise','Nidalee','Karma','Jayce'].includes(champion.id)?1:0};
    assert.ok(build.priority,`${champion.id}:${role} missing priority`);

@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {roomPanel} from '../src/room-view.mjs';
+import {roomPanel,roomMissingConfigurationDialog} from '../src/room-view.mjs';
 
 const champions={Ashe:{id:'Ashe',name:'艾希',icon:'ashe.png'},Garen:{id:'Garen',name:'盖伦',icon:'garen.png'}};
 const champ=id=>champions[id];
@@ -93,8 +93,22 @@ test('join errors stay visible and the panel promises no win rates',()=>{
 test('a champion missing from local data still renders a clickable chip',()=>{
  const room=snapshot({members:[{nick:'队友乙',online:true,share:{lineup:[{role:'mid',champion:'Vex'},{role:'top',champion:null},{role:'jungle',champion:null},{role:'bottom',champion:null},{role:'support',champion:null}],pick:null,at:Date.now()},self:true}]});
  const html=roomPanel({room,nick:'队友乙',champ});
- assert.match(html,/data-action="room-build" data-id="Vex" data-role="mid" data-mode="rift"/);
- assert.match(html,/>Vex · 本地参考</);
+ assert.match(html,/data-action="room-build" data-id="Vex" data-role="mid" data-mode=""/);
+ assert.match(html,/>Vex · 模式未知 · 未收到配置</);
+});
+
+test('a lineup-only relay with no confirmed pick cannot invent a mode for local references',()=>{
+ const share={...snapshot().members[1].share,pick:null};
+ const html=roomPanel({room:snapshot({members:[{nick:'海克斯队友',share}]}),champ});
+ assert.match(html,/data-id="Ashe" data-role="bottom" data-mode=""/);
+ assert.match(html,/模式未知 · 未收到配置/);
+ assert.doesNotMatch(html,/data-action="room-build"[^>]*data-mode="rift"/);
+ const missing=roomMissingConfigurationDialog({id:'Ashe',role:'bottom',mode:'',nick:'海克斯队友',champ});
+ assert.match(missing,/未收到游戏模式/);
+ assert.match(missing,/data-action="room-local-reference"[^>]*data-mode="rift"[^>]*>查看峡谷本机参考/);
+ assert.match(missing,/data-action="room-local-reference"[^>]*data-mode="hex"[^>]*>查看海克斯本机参考/);
+ assert.doesNotMatch(missing,/room-adopt|room-copy-configuration/);
+ for(const mode of ['rift','hex']){const known=roomPanel({room:snapshot({members:[{nick:'队友',share:{...share,mode}}]}),champ});assert.match(known,new RegExp('data-action="room-build"[^>]*data-mode="'+mode+'"'));assert.doesNotMatch(known,/模式未知/);}
 });
 
 test('scanning and busy states disable their buttons instead of double-firing',()=>{
@@ -133,16 +147,51 @@ test('the idle panel offers both transports and says which one is selected',()=>
  assert.doesNotMatch(relay,/room-host|room-scan|room-invite/);
 });
 
-test('the relay form asks for an address, a room code and a pin, and ships no default relay',()=>{
+test('the relay form preserves a custom address and suggests the shared default with concrete joining instructions',()=>{
  const html=roomPanel({room:null,nick:'队友',transport:'relay',relayUrl:'wss://room.example.com',relayRoom:'482913',pin:'123456',champ});
  assert.match(html,/id="room-relay-url" value="wss:\/\/room\.example\.com"/);
  assert.match(html,/id="room-relay-room" value="482913"/);
  assert.match(html,/id="room-pin" value="123456"/);
- assert.match(html,/助手不内置任何公共中继/);
+ assert.match(html,/地址可改成你信任的自建中继/);
  assert.match(html,/哈希/);
  const empty=roomPanel({room:null,nick:'队友',transport:'relay',champ});
- assert.match(empty,/id="room-relay-url" value=""/);
- assert.doesNotMatch(empty,/wss:\/\/room\.[a-z0-9-]+\.[a-z]{2,}/i);
+ assert.match(empty,/id="room-relay-url" value="wss:\/\/room\.riftbuddy\.dpdns\.org"/);
+ assert.match(empty,/任意 6 位数字房间码/);assert.match(empty,/6 位数字口令/);assert.match(empty,/微信私聊/);
+ assert.match(empty,/自动共享助手中所选公开阵容/);assert.match(empty,/中继支持时也会转发配置/);assert.match(empty,/点英雄头像/);
+ assert.match(empty,/采用和写入符文由本人点击确认/);
+ const cleared=roomPanel({room:null,transport:'relay',relayUrl:'',champ});assert.match(cleared,/id="room-relay-url" value=""/,'editing/clearing must not silently refill the field');
+});
+
+test('the default relay explains the observed configuration limit before joining and while connected',()=>{
+ const idle=roomPanel({room:null,transport:'relay',champ});
+ assert.match(idle,/默认中继目前仅共享英雄阵容/);assert.match(idle,/不转发装备、符文、加点或组合职责/);
+ const relay=snapshot({mode:'client',transport:'relay',relayUrl:'wss://room.riftbuddy.dpdns.org',link:'connected'});
+ const active=roomPanel({room:relay,champ});
+ assert.match(active,/room-link">已连接/);assert.match(active,/默认中继目前仅共享英雄阵容/);
+ assert.match(active,/已收到阵容，尚未收到这位队友的配置/);
+ assert.doesNotMatch(active,/包含所选装备、完整符文/);
+ const custom=roomPanel({room:null,transport:'relay',relayUrl:'wss://example.com',champ});
+ assert.doesNotMatch(custom,/默认中继目前仅共享英雄阵容/);
+});
+
+test('missing peer configuration requires a separate local reference click and cannot offer adoption',()=>{
+ const html=roomMissingConfigurationDialog({id:'Garen',role:'top',mode:'rift',nick:'<队友>',champ});
+ assert.match(html,/aria-label="未收到队友配置"/);assert.match(html,/未收到&lt;队友&gt;的配置/);
+ assert.match(html,/本机参考不代表队友所选|不代表队友所选/);
+ assert.match(html,/data-action="room-local-reference" data-id="Garen" data-role="top" data-mode="rift"/);
+ assert.doesNotMatch(html,/data-action="room-adopt-configuration"|data-action="room-copy-configuration"/);
+ for(const [id,mode] of [['Unknown','rift'],['Garen','aram']]){
+  const unsupported=roomMissingConfigurationDialog({id,role:'top',mode,nick:'队友',champ});
+  assert.doesNotMatch(unsupported,/data-action="room-local-reference"/);
+ }
+});
+
+test('a received configuration stays available even on the default relay without assuming other peers have it',()=>{
+ const received=snapshot().members[1];
+ const html=roomPanel({room:snapshot({mode:'client',transport:'relay',relayUrl:'wss://room.riftbuddy.dpdns.org',link:'connected',members:[{...received,share:{...received.share,configurations:[{champion:'Garen',role:'top',mode:'rift'}]}}]}),champ});
+ assert.match(html,/title="本人选择 · 上路 · 查看发送方配置"/);
+ assert.match(html,/盖伦 · 符文与加点/);assert.match(html,/艾希 · 未收到配置/);
+ assert.doesNotMatch(html,/尚未收到这位队友的配置/);
 });
 
 test('an active relay room shows the link state and never a LAN invite code',()=>{

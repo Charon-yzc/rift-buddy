@@ -77,21 +77,29 @@ jobs:
       - name: Check poke friends, distinct third-member duties and saved tactical choices
         run: |
           node scripts/smoke-package-cooperation.mjs --poke
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --poke-guard
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check prepared D/F spells, compact controls and saved member choices
         run: node scripts/smoke-package-summoners.mjs
       - name: Check backup merge capacity and explicit rune writes in isolated clients
         run: |
           node scripts/smoke-package-import.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-state-transaction.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-rune-replacement.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check creative action order preserves saved members and configurations
         run: node scripts/smoke-package-creative-plan-continuity.mjs --reordered
       - name: Check public-opponent plans and duo phases in packaged windows
         run: |
           node scripts/smoke-package-matchups.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-role-preparation.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-role-preparation.mjs --matchup-choices
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check public-opponent conditions preserve accepted team order and own skill gates
         run: node scripts/smoke-package-matchups.mjs --team-order
       - name: Check explicit opponent sources, independent statistics and saved member choices
@@ -101,23 +109,37 @@ jobs:
       - name: Check concrete three-person and full-party plans, first-screen actions and attribute preparation
         run: |
           node scripts/smoke-package-cooperation.mjs --specific
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --gragas-relay
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --party-four
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --party-five
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check frozen curated plans, selectable party routes and sidebar adoption
         run: |
           node scripts/smoke-package-curated-plan.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --routes
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --ball-trio
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --duo-stages
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --readiness
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --custom-runes
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check four/five-member poke, protection routes and separate pair evidence
         run: |
           node scripts/smoke-package-curated-plan.mjs --tactics-four
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --tactics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --independent-four
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --independent-five
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check locked cross-lane plans and complete late-item choices across restarts
         run: node scripts/smoke-package-cooperation.mjs --cross-lane
       - name: Check retained pair order and third-member follow-ups across restarts
@@ -127,7 +149,9 @@ jobs:
       - name: Check shared resource and meeting plans without invented control across restarts
         run: |
           node scripts/smoke-package-cooperation.mjs --shared
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --growth
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check role statistics and broad skill cooperation across saved member guides
         run: node scripts/smoke-package-cooperation.mjs --adaptive-data
       - name: Check expanded cooperation and sidebar preview choices before accepting a plan
@@ -135,7 +159,9 @@ jobs:
       - name: Check shooter marks and farming friends across saved preparations
         run: |
           node scripts/smoke-package-cooperation.mjs --shooters
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --farming
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check member statistics refresh, offline caches and quest-only synchronization
         run: node scripts/smoke-package-pair-refresh.mjs
       - name: Check sidebar choices survive uncached sources and individual edits

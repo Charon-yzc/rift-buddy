@@ -78,7 +78,9 @@ const TANKS=new Set('Alistar Amumu Blitzcrank Braum Chogath DrMundo KSante Leona
 const ENCHANTERS=new Set('Ivern Janna Karma Lulu Milio Nami Renata Sona Soraka Yuumi Zilean'.split(' '));
 const ONHIT=new Set('Kaisa Kalista KogMaw Vayne Varus Kayle'.split(' '));
 const MAGES_DOT=new Set('Brand Cassiopeia Lillia Malzahar Mordekaiser Rumble Singed Swain Zyra'.split(' '));
-const MAGES_MANAFREE=new Set('Akali Katarina Kennen Vladimir Rumble Mordekaiser'.split(' '));
+// Riot Data Dragon 16.20.1 en_US/champion.json, checked 2026-10-11.
+// Energy is also mana-free, but Presence of Mind can still restore it.
+const MANA_FREE=new Set('Aatrox Akali Ambessa Belveth Briar DrMundo Garen Gnar Katarina Kennen Kled LeeSin Mordekaiser RekSai Renekton Rengar Riven Rumble Sett Shen Shyvana Tryndamere Viego Vladimir Yasuo Yone Zac Zed'.split(' '));
 const ASSASSINS=new Set('Akali Diana Ekko Elise Evelynn Fizz Kassadin Katarina Leblanc Locke Naafiri Nidalee Shaco Sylas Talon Zed Qiyana Khazix Rengar Pyke'.split(' '));
 export function profile(c, role) {
  const roles=ROLES.filter(r=>groups[r.id].has(c.id)).map(r=>r.id);
@@ -103,7 +105,7 @@ export function profile(c, role) {
  if(role==='support'&&['Galio','Gragas','Rakan'].includes(c.id))build='supportTank';
  const magic=sets.ap.has(c.id)||['Alistar','Bard','Braum','Leona','Nautilus','Ornn','Rakan','Rammus','Rell','Renata','Thresh'].includes(c.id);
  const mixed=['Kaisa','KogMaw','Varus','Jax','Yone','Udyr','Volibear','Shen','Yunara'].includes(c.id);
- return {roles,reviewed,build,damage:magic?'ap':'ad',damageWeights:mixed?{ad:.55,ap:.45}:magic?{ad:0,ap:1}:{ad:1,ap:0},manaFree:MAGES_MANAFREE.has(c.id),
+ return {roles,reviewed,build,damage:magic?'ap':'ad',damageWeights:mixed?{ad:.55,ap:.45}:magic?{ad:0,ap:1}:{ad:1,ap:0},manaFree:MANA_FREE.has(c.id),
   difficulty:c.info?.difficulty??5,window:championWindow(c.id),sustainCondition:SUSTAIN_CONDITIONS[c.id]||null,...Object.fromEntries(Object.entries(sets).filter(([k])=>k!=='ap').map(([k,v])=>[k,v.has(c.id)]))};
 }
 

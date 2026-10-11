@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {normalizeRelayUrl,relayEndpoint,relayHello,relayCloseReason,RELAY_PING} from '../src/core/room-relay.mjs';
+import {normalizeRelayUrl,initialRelayUrl,DEFAULT_RELAY_URL,relayEndpoint,relayHello,relayCloseReason,RELAY_PING} from '../src/core/room-relay.mjs';
 import {createRoomService,RELAY_FRAME_BUDGET,RELAY_FRAME_REFILL_PER_SECOND} from '../services/room.mjs';
 import {ROOM_PROTOCOL,MAX_FRAME} from '../src/core/room.mjs';
 import fs from 'node:fs/promises';
@@ -17,6 +17,15 @@ import {captureRoomStrategy,captureRoomConfigurations} from '../src/core/room-co
 
 const pinHash=pin=>createHash('sha256').update(pin).digest('hex');
 const tick=(ms=5)=>new Promise(resolve=>setTimeout(resolve,ms));
+
+test('the suggested relay is a valid opt-in input and saved custom addresses retain precedence',()=>{
+ assert.equal(DEFAULT_RELAY_URL,'wss://room.riftbuddy.dpdns.org');assert.equal(normalizeRelayUrl(DEFAULT_RELAY_URL),DEFAULT_RELAY_URL);
+ for(const saved of [undefined,null,'','  '])assert.equal(initialRelayUrl(saved),DEFAULT_RELAY_URL);
+ assert.equal(initialRelayUrl('wss://other.example.com/'),'wss://other.example.com');
+ assert.equal(initialRelayUrl('ws://localhost:8787'),'ws://localhost:8787');
+ assert.equal(relayEndpoint(DEFAULT_RELAY_URL,'482913'),'wss://room.riftbuddy.dpdns.org/room/482913');
+ assert.equal(relayEndpoint('', '482913'),null,'cleared input must still fail explicit join validation');
+});
 const kinds=sent=>sent.map(text=>JSON.parse(text).kind);
 
 // A WebSocket stand-in that records what the client sent and lets a test push
@@ -672,6 +681,31 @@ test('relay late join and reconnect retain the sender trio configuration and acc
  service.publish({lineup:[],mode:'rift',pick:null,configurations:[],at:124});
  replacement.deliver({kind:'join',v:ROOM_PROTOCOL,from:'丁'});
  const cleared=JSON.parse(replacement.sent.at(-1));assert.deepEqual(cleared.lineup,[]);assert.deepEqual(cleared.configurations,[]);assert(!cleared.strategy);
+});
+
+test('the supplied legacy relay sends only its supported lineup after publish, late join and reconnect, preserving local configuration',async t=>{
+ const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+ data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+ const trio=TRIOS.find(row=>row.id==='ball-delivery');
+ const lineup=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
+ const strategy=captureRoomStrategy(lineup,data),configurations=captureRoomConfigurations(lineup,data,createPreparationStore());
+ assert(strategy);assert.equal(configurations.length,3);
+ const full={lineup,mode:'rift',pick:{champion:'Malphite',role:'top',mode:'rift'},configurations,strategy,at:123};
+ assert(Buffer.byteLength(JSON.stringify(full))>10000,'a normal frozen trio exceeds the observed legacy server budget');
+ const fake=fakeRelay(),service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:2});t.after(()=>service.dispose());
+ const socket=await joined(service,fake,{url:DEFAULT_RELAY_URL+'/',members:[{nick:'乙'}]});
+ service.publish(full);
+ const wire=JSON.parse(socket.sent.at(-1));
+ assert.deepEqual(Object.keys(wire).sort(),['kind','v','from','lineup','pick','at'].sort());
+ assert.deepEqual(wire.lineup,lineup.map(({champion,role})=>({role,champion})));assert.deepEqual(wire.pick,full.pick);
+ assert(Buffer.byteLength(socket.sent.at(-1))<1000);
+ const local=service.snapshot().members.find(member=>member.self).share;
+ assert.deepEqual(local.configurations,configurations);assert.deepEqual(local.strategy,strategy);assert.equal(local.mode,'rift');
+ socket.deliver({kind:'join',v:ROOM_PROTOCOL,from:'丙'});assert.deepEqual(JSON.parse(socket.sent.at(-1)),wire);
+ socket.close(1006,'lost');
+ const replacement=await fake.next(2);replacement.open();replacement.deliver({kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:['乙','丙']});
+ assert.deepEqual(JSON.parse(replacement.sent.at(-1)),wire);
+ assert.deepEqual(service.snapshot().members.find(member=>member.self).share,local,'the compatibility projection must not overwrite the saved local snapshot');
 });
 
 test('relay accepts only welcomed members and counts self in the twelve-member limit',async t=>{

@@ -3,8 +3,9 @@
 // Elise/Nidalee/Karma start with a free R rank. Aphelios' live ability ranks
 // cannot identify his invested stat points, so his advice remains descriptive.
 // These are curated options, not a claim that a rank order is statistically best.
-const special=new Set(['Aphelios','Udyr','Elise','Jayce','Nidalee','Karma']);
+const special=new Set(['Aphelios','Udyr','Elise','Jayce','Nidalee','Karma','Azir','Shen','Zilean','Yuumi']);
 const freeUltimate=new Set(['Elise','Nidalee','Karma']);
+const firstUnlock={Azir:{Q:2,E:2},Shen:{W:2},Zilean:{W:2},Yuumi:{W:2}};
 const keys=['Q','W','E','R'];
 const initialRanks=champion=>({Q:0,W:0,E:0,R:freeUltimate.has(champion)||champion==='Jayce'?1:0});
 // OP.GG's 16.20 bottom priority is Q > E > W. This is an attribute
@@ -18,13 +19,17 @@ export function attributePreparation(champion){
   mechanismUrls:['https://www.leagueoflegends.com/en-au/news/game-updates/aphelios-kit-primer/','https://www.leagueoflegends.com/en-us/news/game-updates/patch-10-8-notes/']}:null;
 }
 function rankCap(champion,key,level){
+ // Same-patch CharacterRecords/Root SpellLevelUpInfoList: these first ranks
+ // require level 2, independently of points spent in another ability.
+ if(level<(firstUnlock[champion]?.[key]||1))return 0;
+ if(champion==='Yuumi'&&key==='Q')return Math.min(6,Math.ceil(level/2));
  if(champion==='Udyr'||champion==='Jayce'&&key!=='R')return Math.min(6,Math.ceil(level/2));
  if(champion==='Jayce')return 1;
  if(key==='R')return (freeUltimate.has(champion)?1:0)+[6,11,16].filter(n=>level>=n).length;
  return Math.min(5,Math.ceil(level/2));
 }
 export function skillMechanismNote(champion){
- return champion==='Udyr'?'四种姿态都可从一级学习，第六级在英雄11级解锁；R不是普通大招。':champion==='Jayce'?'R自动学习，不消耗技能点；Q / W / E各可升六级，第六级在英雄11级解锁。':freeUltimate.has(champion)?'R在一级自带一级，不消耗技能点；后续R在6 / 11 / 16级升级。':champion==='Aphelios'?'技能自动成长，升级点用于攻击力、攻速与穿甲；请按游戏内属性加点，实时技能等级不能还原已投属性点。':'';
+ return champion==='Yuumi'?'Q 可升六级，第六级从英雄11级解锁；W 的主动投入从2级开始。尚未验证实时数据中自动可用 W 的等级与已投点对应关系，暂展示所选静态顺序，不推算本次升级。':champion==='Azir'?'一级只能学习 W；Q / E 从英雄2级解锁，攒点时按当前英雄等级确认，不要求先投入 W。':['Shen','Zilean'].includes(champion)?'一级可学习 Q / E，W 从英雄2级解锁；攒点时按当前英雄等级确认，不要求先投入其他技能。':champion==='Udyr'?'四种姿态都可从一级学习，第六级在英雄11级解锁；R不是普通大招。':champion==='Jayce'?'R自动学习，不消耗技能点；Q / W / E各可升六级，第六级在英雄11级解锁。':freeUltimate.has(champion)?'R在一级自带一级，不消耗技能点；后续R在6 / 11 / 16级升级。':champion==='Aphelios'?'技能自动成长，升级点用于攻击力、攻速与穿甲；请按游戏内属性加点，实时技能等级不能还原已投属性点。':'';
 }
 export function legalSkillOrder(order,champion=null){
  if(typeof order!=='string'||!/^([QWER]){3,18}$/.test(order))return false;
@@ -60,9 +65,23 @@ export function validateCustomSkillOrder(value,champion){
  if(priority!==undefined&&(value.order.length!==3||typeof priority!=='string'||! /^[QWER]{3,4}$/.test(priority)||new Set(priority).size!==priority.length))throw Error('开局加点的后续优先级不可用');
  return {order:value.order,patch:value.patch,...(priority!==undefined?{priority}:{})};
 }
-export function orderPriority(order,champion=null){const slots=champion==='Udyr'?keys:['Q','W','E'],ranks=Object.fromEntries(slots.map(k=>[k,0])),full=[],max=champion==='Udyr'||champion==='Jayce'?6:5;for(const k of order||''){if(k in ranks&&++ranks[k]===max)full.push(k);}return [...full,...slots.filter(k=>!full.includes(k)).sort((a,b)=>ranks[b]-ranks[a])].join('');}
+// Retain records accepted before the first-unlock correction for inspection/export, including
+// portable backups. This is not an active skill choice: getBuild and room
+// adoption still use strict validation. New editor edits use legal prefixes.
+// Restrict compatibility to the exact old first-unlock error, never arbitrary
+// malformed sequences or other champions' invalid ranks.
+export function validateSavedSkillOrder(value,champion){
+ try{return validateCustomSkillOrder(value,champion);}catch(error){
+  if(!(firstUnlock[champion]?.[value?.order?.[0]]>1))throw error;
+  return validateCustomSkillOrder(value,null);
+ }
+}
+export function orderPriority(order,champion=null){const slots=champion==='Udyr'?keys:['Q','W','E'],ranks=Object.fromEntries(slots.map(k=>[k,0])),full=[],max=k=>champion==='Udyr'||champion==='Jayce'||champion==='Yuumi'&&k==='Q'?6:5;for(const k of order||''){if(k in ranks&&++ranks[k]===max(k))full.push(k);}return [...full,...slots.filter(k=>!full.includes(k)).sort((a,b)=>ranks[b]-ranks[a])].join('');}
 export function skillOptions(champion,live){
- if(!live?.matched||champion==='Aphelios'||!Number.isInteger(live.level)||live.level<1||live.level>30)return null;
+ // Yuumi's automatically available W has no verified Live Client rank/point
+ // mapping here. Static paid-point sequences are supported; do not infer the
+ // next live investment from an unverified initial W value.
+ if(!live?.matched||['Aphelios','Yuumi'].includes(champion)||!Number.isInteger(live.level)||live.level<1||live.level>30)return null;
  const ranks=live.skills;
  const initial=initialRanks(champion),cap=k=>rankCap(champion,k,live.level);
  if(!keys.every(k=>Number.isInteger(ranks?.[k])&&ranks[k]>=initial[k]&&ranks[k]<=cap(k)))return null;
@@ -96,7 +115,7 @@ const protection={
 };
 export function recommendSkill({champion,role,priority,first,order=null,live,signals=[],custom=false,reviewed=true}){
  const base=nextSkill(champion,priority,first,live,order),options=skillOptions(champion,live);
- if(!options||!reviewed&&special.has(champion))return {next:null,base:null,changed:false,priority,reason:champion==='Aphelios'?skillMechanismNote(champion):!reviewed&&special.has(champion)?'特殊英雄加点规则与当前资料不同，暂保留所选序列，请核对游戏内可升级选项。':'技能等级尚未完整读取或不符合该英雄加点规则，暂展示原方案。',caution:'以游戏内可升级技能为准。'};
+ if(!options||!reviewed&&special.has(champion))return {next:null,base:null,changed:false,priority,reason:['Aphelios','Yuumi'].includes(champion)?skillMechanismNote(champion):!reviewed&&special.has(champion)?'特殊英雄加点规则与当前资料不同，暂保留所选序列，请核对游戏内可升级选项。':'技能等级尚未完整读取或不符合该英雄加点规则，暂展示原方案。',caution:'以游戏内可升级技能为准。'};
  if(!options.points)return {next:null,base:null,changed:false,priority,reason:'当前技能点已用完；升级后按新的等级重新计算。',caution:''};
  if(base==='R'&&options.standardUltimate)return {next:'R',base,changed:false,priority,reason:`当前 ${live.level} 级，R 可以升级；${order?'所选加点序列到达 R 节点。':'沿常规方案优先提升大招。'}`,caution:skillMechanismNote(champion)||'这是普通英雄的等级规则；施放时机由你判断。'};
  const relevant=reviewed?signals.filter(s=>s.source==='manual'&&['physical','magic','survival','control','teamProtection'].includes(s.kind)):[];
