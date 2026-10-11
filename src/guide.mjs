@@ -43,7 +43,7 @@ const api=window.guide||{
 const image=(kind,id,name)=>`<img src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}" />`;
 function toast(message){clearTimeout(messageTimer);const el=document.getElementById('guide-toast');el.textContent=message;el.className='visible';messageTimer=setTimeout(()=>el.className='',4000);}
 function render(){
- if(snapshot?.openTab?.serial!==lastOpenTab&&snapshot?.openTab?.tab==='skills'){tab='skills';lastOpenTab=snapshot.openTab.serial;}
+ if(snapshot?.openTab?.serial!==lastOpenTab&&['skills','rhythm'].includes(snapshot?.openTab?.tab)){tab=snapshot.openTab.tab;lastOpenTab=snapshot.openTab.serial;}
  activeSelect=null;pendingSelectUpdate=false;
  applyPresentation(snapshot?.presentation);
  const m=snapshot?.model,matchId=m?.matchId||null;

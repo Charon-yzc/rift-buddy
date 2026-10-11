@@ -76,7 +76,7 @@ test('current action prioritizes safety and evidence, and champion coordination 
  assert.match(make({notes,live:{...live,stats:{hp:200,maxHp:1000}}}).lead.title,/暂停进场/);
  assert.match(make({notes,patch:'16.21'}).lead.title,/待复核/);
  assert.match(make({notes,live:{...live,queueId:490}}).lead.title,/模式尚未/);
- for(const skills of [{Q:0,W:1,E:1,R:0},{Q:1,W:null,E:1,R:1},{}])assert(!make({notes,live:{...live,skills}}).ready);
+ for(const skills of [{Q:0,W:1,E:1,R:0},{Q:1,W:null,E:1,R:1},{}]){const unknown=make({notes,live:{...live,skills}});assert(!unknown.ready);assert.match(unknown.skillNote,/基础技能/);}
  const j4=make({champion:'JarvanIV',notes});assert.match(j4.lead.text,/EQ/);assert.match(j4.routeTitle,/三营/);assert.doesNotMatch(j4.lead.text,/R留人/);
  const vi=make({champion:'Vi',notes,live:{...live,skills:{...live.skills,R:1}}});assert.match(vi.lead.text,/R/);assert.match(vi.skillNote,/≠/);
  assert.match(make({champion:'LeeSin',notes}).lead.text,/二段/);
