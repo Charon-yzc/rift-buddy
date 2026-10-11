@@ -6,7 +6,8 @@ import {captureCreativePlan,selectPartyRoute} from '../src/core/creative-plan.mj
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {objectiveRhythm} from '../src/core/live-rhythm.mjs';
 import {objectiveCoordination} from '../src/core/objective-coordination.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 const data=JSON.parse(fs.readFileSync('data/game.json'));data.builds=JSON.parse(fs.readFileSync('data/builds.json')).entries;data.catalog=configureCatalog(BUNDLED_CATALOG);data.catalogInfo=catalogIssues(data.catalog,data);
 const resource={id:'dragon',name:'元素亚龙',remaining:50,state:'prepare'};
 const slotsFor=members=>createSlots().map(s=>({...s,champion:members.find(m=>m.role===s.role)?.champion||null,party:members.some(m=>m.role===s.role),locked:members.some(m=>m.role===s.role)}));

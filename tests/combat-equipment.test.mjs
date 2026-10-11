@@ -5,7 +5,8 @@ import {aggregateCombatStats,applyLivePanel,combatWindow} from '../src/core/live
 import {championAttackType} from '../src/core/combat-models.mjs';
 import {sanitizeLive} from '../services/live-client.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {parseChampionCombatStats} from '../services/champion-stats.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;

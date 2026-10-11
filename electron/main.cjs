@@ -232,9 +232,9 @@ async function boot(){
  });
  const pollLive=async(force=false)=>{
   if(liveTask){await liveTask;if(!force)return;}
-  if(!force&&!guide.window()?.isVisible()&&!guide.needsAutoShow()||state.preferences.autoLive===false)return;
+  if(!force&&!guide.isVisible()&&!guide.needsAutoShow()||state.preferences.autoLive===false)return;
   const context=JSON.stringify([latestClient.phase,latestClient.game?.gameId]);
-  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.window()?.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,latestClient.game?.gameId])){latestLive=result;await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
+  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,latestClient.game?.gameId])){latestLive=result;await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
  };
  guard('client-status',status);
  guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return status(true);});

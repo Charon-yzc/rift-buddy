@@ -1,3 +1,5 @@
+import {jungleGuidance,validateJungleNotes} from './jungle-guidance.mjs';
+import {completeGearPlan} from './complete-gear.mjs';
 import {itemConflicts} from './mechanics.mjs';
 import {validateSummonerIds} from './summoner-selection.mjs';
 import {publicEquipment} from './scoreboard.mjs';
@@ -70,9 +72,11 @@ export function validateGuideState(value){
  const b=value.bounds,bounds=b&&Number.isInteger(b.x)&&Math.abs(b.x)<30000&&Number.isInteger(b.y)&&Math.abs(b.y)<30000&&Number.isInteger(b.width)&&b.width>=360&&b.width<=640&&Number.isInteger(b.height)&&b.height>=480&&b.height<=1000?{x:b.x,y:b.y,width:b.width,height:b.height}:null;
  const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(m.entered===true?{entered:true}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
  const duelPick=validateDuelPick(value.duelPick);
+ const offset=value.skillWidget?.offset,skillOffset=offset&&Number.isInteger(offset.x)&&Math.abs(offset.x)<30000&&Number.isInteger(offset.y)&&Math.abs(offset.y)<30000?{x:offset.x,y:offset.y}:null;
+ const cb=value.compactBounds,compactBounds=cb&&Number.isInteger(cb.x)&&Math.abs(cb.x)<30000&&Number.isInteger(cb.y)&&Math.abs(cb.y)<30000?{x:cb.x,y:cb.y}:null;
  const targetKind=value.purchaseTargetKind==='situation'&&/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTargetKind:'situation'}:{};
  const bottomQuestConfirmed=!!(selection.bottomQuestPlan&&value.bottomQuestConfirmed===true);
- return {selection,completedItems,bottomQuestConfirmed,collapsed:value.collapsed===true,ball:value.ball===true&&value.strip!==true,strip:value.strip===true,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
+ return {selection,completedItems,bottomQuestConfirmed,...(validateJungleNotes(value.jungleNotes)?{jungleNotes:validateJungleNotes(value.jungleNotes)}:{}),compact:value.compact!==false,skillWidget:{enabled:value.skillWidget?.enabled!==false,...(skillOffset?{offset:skillOffset}:{})},...(compactBounds?{compactBounds}:{}),collapsed:value.collapsed===true,ball:value.ball===true&&value.strip!==true,strip:value.strip===true,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
 }
 export function guideIdentity(selection){
  const s=validateGuideSelection(selection);
@@ -84,7 +88,7 @@ export function selectGuide(previous,selection){
  // Reusable preparations omit opponents. Keep an explicitly chosen opponent
  // only while replacing a configuration for the same known current game.
  if(same&&!Object.hasOwn(selection,'threatId')&&previous.selection.matchupGameId&&previous.selection.matchupGameId===previous.match?.gameId){next.threatId=previous.selection.threatId;next.matchupGameId=previous.selection.matchupGameId;}
- return {selection:next,bottomQuestConfirmed:!!(same&&next.bottomQuestPlan&&previous.bottomQuestConfirmed),completedItems:same?[...previous.completedItems]:[],collapsed:previous?.collapsed??false,ball:previous?.ball===true&&previous?.strip!==true,strip:previous?.strip===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
+ return {selection:next,...(same&&previous.jungleNotes?{jungleNotes:previous.jungleNotes}:{}),bottomQuestConfirmed:!!(same&&next.bottomQuestPlan&&previous.bottomQuestConfirmed),completedItems:same?[...previous.completedItems]:[],compact:previous?.compact!==false,skillWidget:previous?.skillWidget||{enabled:true},...(previous?.compactBounds?{compactBounds:previous.compactBounds}:{}),collapsed:previous?.collapsed??false,ball:previous?.ball===true&&previous?.strip!==true,strip:previous?.strip===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
 }
 export function prepareGuideOpponent(value,selection,opponentId,{gameId,enemyIds}={}){
  const id=String(gameId||'');if(!/^\d{1,20}$/.test(id)||Number(id)<=0)throw Error('本局尚未确认，请同步客户端后重试');
@@ -113,7 +117,7 @@ export function reconcileGuide(value,{phase,gameId,enemyIds,live,now=Date.now()}
  if(matchingLive){next.liveAt=live.at;if(Number.isFinite(live.gameTime))next.gameTime=live.gameTime;}
  const focusGame=current.selection.matchupGameId,firstEntry=!!(focusGame&&inGame&&!entered&&!changedGame&&id===before.gameId&&id===focusGame);
  const focusInvalid=!!(focusGame&&(id&&id!==focusGame||knownPhase&&['None','Lobby','Matchmaking','ReadyCheck'].includes(phase)||phase==='ChampSelect'&&Array.isArray(enemyIds)&&!enemyIds.includes(current.selection.threatId)));
- const guide={...current,match:next,...(reset?{completedItems:[],bottomQuestConfirmed:false} :{}),...(newSession?{clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:firstEntry?current.selection.threatId:undefined,matchupGameId:firstEntry?focusGame:undefined,protectId:undefined,combatFocus:undefined}}:{})};
+ const guide={...current,match:next,...(reset?{completedItems:[],bottomQuestConfirmed:false,jungleNotes:undefined} :{}),...(newSession?{compact:true,clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:firstEntry?current.selection.threatId:undefined,matchupGameId:firstEntry?focusGame:undefined,protectId:undefined,combatFocus:undefined}}:{})};
  if(focusInvalid){guide.selection={...guide.selection};delete guide.selection.threatId;delete guide.selection.matchupGameId;}
  return {guide,reset,changed:reset||focusInvalid||next.phase!==before.phase||next.gameId!==before.gameId||next.entered!==before.entered};
 }
@@ -146,6 +150,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const laterNeeded=laterChoices.length?Math.max(0,build.maxLaterItems-build.selectedLaterIds.length):0;
  const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
  const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
+ const completeGear=completeGearPlan({data,build,selection:s,live:matched?{...live,matched:true}:null,signals:situation.signals,enabled:guide.liveAdvice,bottomQuestConfirmed,bottomQuestEligible});
  const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
  const choices=[...new Map([...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
  const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:inventoryKnown&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));
@@ -229,7 +234,7 @@ export function createGuideModel(data,value,live=null,current=null){
    at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,matchId:guide.match?.gameId||null,
-  laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
+  jungle:jungleGuidance({champion:s.id,role:s.role,mode:s.mode,patch:data.patch,live:matched?{...live,matched:true}:null,notes:guide.jungleNotes,combo:build.combo}),completeGear,compact:guide.compact,skillWidget:guide.skillWidget,laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
   phase:s.mode==='rift'?gamePhase({...liveModel,role:s.role},action,next||null):null,
   objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch,plan:build.combo?.creativePlan,champion:s.id,confirmed:current?.comboKnown===true&&!mismatch,protectId:s.protectId,data}):null,

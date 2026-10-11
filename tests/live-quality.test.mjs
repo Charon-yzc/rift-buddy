@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {sanitizeLive} from '../services/live-client.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {aggregateCombatStats,applyLivePanel,combatWindow,statAtLevel} from '../src/core/live-estimate.mjs';
 import {canModelYone} from '../src/core/combat-models.mjs';
 

@@ -5,7 +5,8 @@ import {sanitizeLive} from '../services/live-client.mjs';
 import {createGuideModel,selectGuide,validateGuideState,reconcileGuide,prepareGuideOpponent} from '../src/core/guide.mjs';
 import {validatePreparation} from '../src/core/preparation.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 
 const data=JSON.parse(await fs.readFile('data/game.json'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;

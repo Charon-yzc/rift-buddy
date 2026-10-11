@@ -2,6 +2,8 @@ const path=require('node:path');
 const fs=require('node:fs/promises');
 const {pathToFileURL}=require('node:url');
 const {guidePlacement}=require('../src/core/window-placement.mjs');
+const {compactGuidePlacement}=require('../src/core/guide-placement.mjs');
+const createSkillWindow=require('./skill-window.cjs');
 
 // Pure pass-through decision, extracted for testability: hovering the header
 // (drag bar + window buttons) always wins so the panel stays movable and
@@ -22,31 +24,35 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
- let gameBounds=null;
+ let gameBounds=null,openTab=null;
  const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
  function fit(recover=false){if(!win||win.isDestroyed())return;const area=workArea(),current=win.getBounds();
+  if(isCompact()){const b=compactGuidePlacement(recover?null:getState()?.compactBounds||current,area,gameBounds,stripScale());adjusting=true;win.setMinimumSize(b.width,b.height);if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>2))win.setBounds(b);adjusting=false;return;}
   if(isStrip()){const h=stripHeight(),w=stripWidth(),b={x:Math.max(area.x,Math.min(current.x,area.x+area.width-w)),y:Math.max(area.y,Math.min(current.y,area.y+area.height-h)),width:Math.min(w,area.width),height:Math.min(h,area.height)};if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3)){adjusting=true;win.setMinimumSize(Math.min(200,area.width),Math.min(60,area.height));win.setBounds(b);adjusting=false;}return;}
   const b=guidePlacement(recover?null:current,area,gameBounds,{ball:isBall(),collapsed:!!getState()?.collapsed,recover});adjusting=true;win.setMinimumSize(Math.min(isBall()?76:360,area.width),Math.min(isBall()?76:getState()?.collapsed?280:480,area.height));if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3))win.setBounds(b);adjusting=false;}
  const isBall=()=>!!getState()?.ball;
  const isStrip=()=>!!getState()?.strip;
+ const isCompact=()=>!isBall()&&!isStrip()&&getState()?.compact!==false;
  const stripScale=()=>[1,1.1,1.25].includes(getPreferences().presentation?.textScale)?getPreferences().presentation.textScale:1;
  const stripWidth=()=>Math.ceil(340*stripScale()),stripHeight=()=>Math.ceil(160*stripScale());
  const needsAutoShow=()=>autoShowUntil>Date.now()&&getPreferences().guideAutoShow!==false;
 const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&getModel()?.live.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough();win.setIgnoreMouseEvents(ignore,{forward:true});win.setFocusable(!pass);if(ignore&&win.isFocused())win.blur();}};
-const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
-function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();const value=payload(),key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
+const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,openTab,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
+const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
+function publish(){const value=payload();if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
  async function save(next){await setState(next,getState());publish();return payload();}
- function adjustHeight(){if(win&&!isBall()&&!isStrip()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
+ function adjustHeight(){if(win&&!isBall()&&!isStrip()&&!isCompact()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
  function applyMode(){
   if(!win||win.isDestroyed())return;
   clearTimeout(boundsTimer);
   adjusting=true;
   // On Windows changing resizability can change the native frame bounds.
   // Apply it before the desired size, not after restoring the full window.
-  win.setResizable(!isBall()&&!isStrip());
-  if(isStrip()){
+  win.setResizable(!isBall()&&!isStrip()&&!isCompact());
+  if(isCompact()){const area=workArea(),b=compactGuidePlacement(getState()?.compactBounds,area,gameBounds,stripScale());win.setMinimumSize(b.width,b.height);win.setBounds(b);
+  }else if(isStrip()){
    win.setMinimumSize(200,60);win.setSize(stripWidth(),stripHeight());
    const area=screen.getDisplayMatching(win.getBounds()).workArea,b=win.getBounds();
    win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-stripWidth())),Math.max(area.y,Math.min(b.y,area.y+area.height-stripHeight())));
@@ -63,12 +69,13 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
   inputMode();publish();
  }
  function create(){
-  const saved=getState()?.bounds,area=workArea();
+  const saved=isCompact()?getState()?.compactBounds:getState()?.bounds,area=workArea();
+  const compact=isCompact(),placed=compactGuidePlacement(saved,area,gameBounds,stripScale());
   const ball=isBall(),strip=isStrip();
-  const width=ball?BALL_SIZE:strip?stripWidth():Math.min(saved?.width||400,area.width),height=ball?BALL_SIZE:Math.min(strip?stripHeight():getState()?.collapsed?280:saved?.height||740,area.height);
-  win=new BrowserWindow({width,height,minWidth:ball?BALL_SIZE:strip?200:360,minHeight:ball?BALL_SIZE:strip?60:getState()?.collapsed?280:480,maxWidth:640,maxHeight:1000,
+  const width=compact?placed.width:ball?BALL_SIZE:strip?stripWidth():Math.min(saved?.width||400,area.width),height=compact?placed.height:ball?BALL_SIZE:Math.min(strip?stripHeight():getState()?.collapsed?280:saved?.height||740,area.height);
+  win=new BrowserWindow({width,height,minWidth:compact?placed.width:ball?BALL_SIZE:strip?200:360,minHeight:compact?placed.height:ball?BALL_SIZE:strip?60:getState()?.collapsed?280:480,maxWidth:640,maxHeight:1000,
    x:Math.max(area.x,Math.min(saved?.x??area.x+area.width-440,area.x+area.width-width)),y:Math.max(area.y,Math.min(saved?.y??area.y+40,area.y+area.height-height)),frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,transparent:true,
-   backgroundColor:'#00000000',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),resizable:!ball&&!strip,
+   backgroundColor:'#00000000',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),resizable:!ball&&!strip&&!compact,
    webPreferences:{preload:path.join(root,'electron/guide-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   win.setAlwaysOnTop(true,'screen-saver');win.setOpacity(getState()?.opacity||1);inputMode();
   fit();
@@ -82,7 +89,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
    if(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT)setTimeout(async()=>{try{await fs.writeFile(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT,(await win.webContents.capturePage()).toPNG());diagnostic('guide screenshot saved');}catch(e){diagnostic(`guide capture failed ${e.message}`);}},1500);
   });
   win.on('close',event=>{if(!isQuitting()){event.preventDefault();hide();}});
-  const remember=()=>{if(adjusting||isBall()||isStrip())return;clearTimeout(boundsTimer);boundsTimer=setTimeout(()=>{if(!win||win.isDestroyed()||!getState()||isBall()||isStrip())return;const b=win.getBounds(),current=getState();save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}}).catch(()=>{});},350);};
+  const remember=()=>{if(adjusting||isBall()||isStrip())return;clearTimeout(boundsTimer);boundsTimer=setTimeout(()=>{if(!win||win.isDestroyed()||!getState()||isBall()||isStrip())return;const b=win.getBounds(),current=getState();if(isCompact()){save({...current,compactBounds:{x:b.x,y:b.y}}).catch(()=>{});return;}save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}}).catch(()=>{});},350);};
   win.on('move',remember);win.on('resize',remember);
   // Fallback for flaky forwarded mousemove: while pass-through is active,
   // poll the OS cursor so hovering the drag strip still lifts ignore for
@@ -105,13 +112,14 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
   if(hoverPoll.unref)hoverPoll.unref();
   win.on('closed',()=>{clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
- function hide(){autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
- function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();publish();}return payload();}
- async function recover(){const current=getState();if(current)await save({...current,ball:false,strip:false,collapsed:false,bounds:undefined});show();applyMode();fit(true);return payload();}
- function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
- const displayChanged=()=>fit();
+ function hideGear(){autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
+ function hide(){hideGear();skill.hide();}
+ function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;skill.show();if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();publish();}return payload();}
+ async function recover(){const current=getState();if(current)await save({...current,ball:false,strip:false,collapsed:false,compact:true,compactBounds:undefined,bounds:undefined});show();applyMode();fit(true);skill.fit();return payload();}
+ function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;skill.fit();if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
+ const displayChanged=()=>{fit();skill.fit();};
  for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
- function toggle(){if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible())hide();else show();}
+ function toggle(){if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||skill.visible())hide();else show();}
  async function interact(){const current=getState();if(!current)return;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{
   if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');
@@ -122,13 +130,15 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
  guard('guide-control',async(action,value)=>{
   if(action==='presentation'){await setPresentation(value);publish();return payload();}
   if(action==='recover')return recover();
-  if(action==='hide'){hide();return true;}
+  if(action==='hide'){hideGear();return true;}
   if(action==='main'){showMain(getState()?.selection);return true;}
   if(action==='current'){if(!await prepareCurrent())throw Error('尚未确认当前英雄与模式，请在完整助手中选择');inputMode();publish();return payload();}
   const current=getState();if(!current)throw Error('先在配置页选择“本局指引”');
+  if(action==='layout'){if(!['compact','details'].includes(value))throw Error('指引布局不正确');await save({...current,compact:value==='compact',ball:false,strip:false,collapsed:false});applyMode();return payload();}
+  if(action==='skill-widget'){await save({...current,skillWidget:{...current.skillWidget,enabled:current.skillWidget?.enabled===false}});if(getState()?.skillWidget?.enabled===false)skill.hide();else skill.show();return payload();}
   if(action==='collapse'){const result=await save({...current,collapsed:!current.collapsed});adjustHeight();return result;}
   const fullBounds=()=>{
-   if(current.ball||current.strip||!win)return current.bounds;
+   if(current.ball||current.strip||isCompact()||!win)return current.bounds;
    const bounds=win.getBounds(),saved=current.bounds;
    // Fractional Windows scaling rounds native bounds by a few DIPs. Reusing
    // that rounding as a new requested size would grow every compact cycle.
@@ -141,6 +151,12 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
   if(action==='opacity'){if(![0.65,0.85,1].includes(value))throw Error('透明度格式不正确');const result=await save({...current,opacity:value});win.setOpacity(value);return result;}
   if(action==='interaction'){await interact();return payload();}
   if(action==='live-advice')return save({...current,liveAdvice:current.liveAdvice===false});
+  if(action==='jungle'){
+   const m=getModel();if(!m.jungle)throw Error('当前不是峡谷打野指引');
+   if(typeof value!=='string'||value.length>30)throw Error('野区标记不正确');
+   const [field,choice]=value.split(':'),{changeJungleNotes}=require(path.join(root,'src/core/jungle-guidance.mjs'));
+   return save({...current,jungleNotes:changeJungleNotes(current.jungleNotes,field,choice,m.live?.matched?m.live.gameTime:null)});
+  }
   if(['threatId','protectId','combatFocus'].includes(action)){
    const m=getModel();if(m.mode!=='rift')throw Error('当前模式不使用峡谷关注目标');
    if(action==='combatFocus'){if(!['lane','teamfight'].includes(value))throw Error('局势关注格式不正确');}
@@ -152,7 +168,7 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
   if(action==='condition'){if(!['ad','ap','control','heal','burst'].includes(value))throw Error('局势选项不正确');const conditions=current.selection.conditions.includes(value)?current.selection.conditions.filter(c=>c!==value):[...current.selection.conditions,value];return save({...current,selection:{...current.selection,conditions}});}
   if(action==='bottom-quest'){if(!current.selection.bottomQuestPlan)throw Error('当前不是下路任务后装备计划');const quest=getModel().bottomQuest;if(!current.bottomQuestConfirmed&&quest?.eligible===false)throw Error(quest.reason);return save({...current,bottomQuestConfirmed:!current.bottomQuestConfirmed});}
   if(action==='reset')return save({...current,completedItems:[]});
-  if(action==='new-game'){const result=await save({...current,completedItems:[],bottomQuestConfirmed:false,clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,matchupGameId:undefined,protectId:undefined,combatFocus:undefined}});inputMode();return result;}
+  if(action==='new-game'){const result=await save({...current,jungleNotes:undefined,completedItems:[],bottomQuestConfirmed:false,clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,matchupGameId:undefined,protectId:undefined,combatFocus:undefined}});inputMode();return result;}
   if(action==='purchase-target'){const target=getModel().shoppingTargets.find(i=>i.id===value&&!i.owned&&!i.blockedReason);if(value!==''&&!target)throw Error('目标已变化，请重新选择');return save({...current,purchaseTarget:value||undefined,purchaseTargetKind:target?.kind==='局势备选'?'situation':undefined});}
   if(action==='stage'){if(!['auto','opening','key','later'].includes(value))throw Error('配合阶段不正确');return save({...current,stage:value==='auto'?undefined:value});}
   if(action==='duel-own'||action==='duel-foe'){
@@ -184,10 +200,10 @@ function publish(){if(win&&!win.isDestroyed()){inputMode();if(isStrip())fit();co
   }
   if(getState()&&['WaitingForStats','PreEndOfGame','EndOfGame'].includes(next)&&!['WaitingForStats','PreEndOfGame','EndOfGame'].includes(previous)){
    const behavior=preferences.guideAfterGame||'hide';if(behavior==='hide')hide();
-   else if(behavior==='collapse'&&!isStrip()){await save({...getState(),collapsed:true});adjustHeight();}
+   else if(behavior==='collapse'&&!isStrip()){await save({...getState(),compact:true,collapsed:false});applyMode();}
   }
  }
- return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);win?.destroy();},window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
+ return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);skill.destroy();win?.destroy();},isVisible:()=>!!win?.isVisible()||skill.visible(),window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;

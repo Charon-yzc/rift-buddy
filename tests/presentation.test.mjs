@@ -7,7 +7,8 @@ import {changePresentation,normalizePresentation} from '../src/core/presentation
 import {defaultState,validateState,mergeState,saveState,readState} from '../services/storage.mjs';
 import {publicEquipment} from '../src/core/scoreboard.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {sanitizeLive} from '../services/live-client.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;

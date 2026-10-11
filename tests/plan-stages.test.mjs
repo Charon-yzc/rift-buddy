@@ -8,7 +8,8 @@ import {captureCreativePlan,creativePlanId,validateCreativePlan,selectPartyRoute
 import {cooperationPlan,createCooperationGraph} from '../src/core/cooperation.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {resultAsText} from '../src/result-text.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 

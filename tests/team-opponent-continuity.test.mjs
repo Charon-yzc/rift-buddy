@@ -8,7 +8,8 @@ import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {selectGuide,createGuideModel,prepareGuideOpponent,validateGuideState} from '../src/core/guide.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {companionPlanView} from '../src/companion-view.mjs';
 
 const data=JSON.parse(await fs.readFile('data/game.json'));
