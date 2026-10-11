@@ -46,9 +46,23 @@ test('bundled current stats include real level AD and distinct AS ratios for all
  const live=applyLivePanel(hero('Vayne'),18,{ad:213.4,atkSpeed:1.78},vayne).agg;
  assert.equal(live.ad,213.4);assert.equal(live.atkSpeed,1.78);
 });
-test('an already enriched snapshot checks versions without fetching every champion again',async()=>{
+const cnNames=()=>({version:data.patch,hero:data.champions.map(c=>({alias:c.id,title:c.name,name:c.title,keywords:c.keywords}))});
+test('an already enriched snapshot checks global and CN versions without fetching every champion again',async()=>{
  const original=global.fetch,calls=[];
- global.fetch=async url=>{calls.push(url);return {ok:true,json:async()=>[data.version]};};
- try{const result=await collectSnapshot(()=>{},data);assert.equal(result.contentRevision,7);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,1);}
+ global.fetch=async url=>{calls.push(url);return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cnNames()};};
+ try{const result=await collectSnapshot(()=>{},data);assert.equal(result.contentRevision,7);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
+ finally{global.fetch=original;}
+});
+
+test('same global patch can refresh a later CN dictionary without changing stats, mechanics or source capture date',async()=>{
+ const original=global.fetch,previous=structuredClone(data),before=structuredClone(previous),cn=cnNames();previous.cnVersion='16.19';cn.hero[0].title='国服更新名称';cn.hero[0].name='国服更新称号';cn.hero[0].keywords='新关键词';
+ global.fetch=async url=>({ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cn});
+ try{const result=await collectSnapshot(()=>{},previous);assert.equal(result.cnVersion,data.patch);assert.equal(result.champions[0].name,'国服更新名称');assert.equal(result.champions[0].title,'国服更新称号');assert.equal(result.champions[0].keywords,'新关键词');assert.deepEqual(result.champions[0].stats,before.champions[0].stats);assert.deepEqual(result.champions[0].mechanics,before.champions[0].mechanics);assert.deepEqual(result.items,before.items);assert.equal(result.fetchedAt,before.fetchedAt);assert.equal(previous.champions[0].name,before.champions[0].name);assert.equal(previous.cnVersion,'16.19');}
+ finally{global.fetch=original;}
+});
+
+test('partial, mismatched and failed CN dictionaries retain existing names and CN version',async()=>{
+ const original=global.fetch;
+ try{for(const cn of [null,{version:data.patch,hero:[]},{...cnNames(),version:'16.21'}]){const messages=[];global.fetch=async url=>{if(cn===null&&!url.endsWith('versions.json'))throw Error('CN unavailable');return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cn};};const result=await collectSnapshot(m=>messages.push(m),data);assert.deepEqual(result.champions,data.champions);assert.equal(result.cnVersion,data.cnVersion);assert(messages.some(m=>m.includes('保留既有名称')));}}
  finally{global.fetch=original;}
 });

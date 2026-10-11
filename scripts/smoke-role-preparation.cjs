@@ -36,7 +36,7 @@ async function run(){
  await click('[data-action=guide-current]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
  await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.id==="Chogath"&&b.model.selection.role==="jungle")'),'Role selection did not reach guide');
  const gjs=code=>guide.webContents.executeJavaScript(code,true);
- await gjs('document.querySelector("[data-tab=team]").click();void 0');
+ await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=team]").click();void 0');
  await gjs('(()=>{const el=document.querySelector("#guide-stage");el.value="later";el.dispatchEvent(new Event("change",{bubbles:true}));})()');
  await until(()=>gjs('document.querySelector(".hero-coach .coach-phase")?.textContent.includes("后期团战")'),'The visible guide still shows a different phase');
  const laterGuide=await gjs('window.guide.bootstrap().then(b=>({stage:b.model?.coach?.stage,action:b.model?.coach?.action}))');assert.equal(laterGuide.stage,'later');assert.match(laterGuide.action,/资源入口 Q\/W 限制敌方进场/);
@@ -52,7 +52,7 @@ async function run(){
  const {rolePlay}=await import(require('node:url').pathToFileURL(path.resolve('src/core/role-plays.mjs')));
  for(const [id,position,role]of cases.slice(-3)){
   picked=id;assigned=position;await sync();await change('#solo-role',role);await sync();await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+')'),'Personal guide missing');
-  await gjs('document.querySelector("[data-tab=team]").click();void 0');
+  await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=team]").click();void 0');
   for(const stage of ['opening','key','later']){
    await gjs('(()=>{const el=document.querySelector("#guide-stage");el.value='+JSON.stringify(stage)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
    await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.coach?.stage==='+JSON.stringify(stage)+')'),'Personal stage missing');

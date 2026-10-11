@@ -2,7 +2,8 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import {createCurrentGameTracker} from '../src/core/game-context.mjs';
 import {createSlots,comboContextKnown} from '../src/core/recommend.mjs';
 import {selectGuide,reconcileGuide,validateGuideState,createGuideModel} from '../src/core/guide.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {guideMismatch} from '../src/core/guide-stage.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8')),now=1000000;
 const client=(phase,gameId='1',id='Ashe',position='BOTTOM')=>({connected:true,phase,game:{gameId},mode:{id:'rift'},session:phase==='ChampSelect'?{localPlayerCellId:1,myTeam:[{cellId:1,championId:data.champions.find(c=>c.id===id).key,assignedPosition:position}]}:null});

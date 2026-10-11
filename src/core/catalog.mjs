@@ -38,6 +38,7 @@ export function validateCatalog(value,data){
   for(const p of c.skillPlans){
    baseline(p.reviewBaseline);
    assert(id(p.id)&&str(p.name,120)&&hero(p.champion)&&roles.includes(p.role)&&id(p.loadoutId)&&legalSkillOrder(p.order,p.champion)&&str(p.reason,450),'独立加点内容');
+   assert(p.continuationPriority===undefined||p.order.length===3&&/^(?!.*(.).*\1)[QWE]{3}$/.test(p.continuationPriority),'加点后续优先');
    assert(/^\d{2}\.\d{1,2}$/.test(p.patch)&&date(p.reviewedAt),'加点独立复核版本');
    const l=configs.get(p.loadoutId);assert(p.loadoutId==='default'||l&&l.champions.includes(p.champion)&&l.roles.includes(p.role),'加点与玩法英雄位置不对应');
    sources(p.sources||[]);

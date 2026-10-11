@@ -4,7 +4,8 @@ import fs from 'node:fs/promises';
 import {aggregateCombatStats,applyLivePanel,canUseCombatSpells,duel,killThreshold} from '../src/core/live-estimate.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {panelStats} from '../services/live-client.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;

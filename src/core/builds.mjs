@@ -116,7 +116,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const duo=creative||(mode==='rift'?[...TRIOS,...DUOS].find(d=>d.id===comboId&&comboLoadout(d,champion,role)!==null):null);
  const play=creative?(creative.play||fallbackMemberPlay(creative,data,champion.id,role)):duoPlay(duo,data,{champion:champion.id,role});
  if(play){play.currentPatch=data.patch;play.stale=Object.values(play.stages).some(stage=>(stage.patch||play.patch)!==data.patch);}
- const preferred=creative&&creative.archetype!=='curated'?'default':comboLoadout(duo,champion,role);
+ const preferred=comboLoadout(duo,champion,role);
  const generic=selectedBuildReference(data,champion.id,role),scoped=mode==='rift'&&sourceOpponent?selectedOpponentBuild(data,champion.id,role,sourceOpponent):null;
  const scopedRef=scoped&&validReference(scoped,champion,role,data,{allowOlder:true,opponent:sourceOpponent})?scoped:null;
  const standardRef=scopedRef||(validReference(generic,champion,role,data,{allowOlder:true})?generic:null);
@@ -126,7 +126,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];
- if(creative?.archetype==='shared'&&!config)selectionWarnings.push('多人共同分工保留局部组合的配合，个人准备当前使用普通位置参考，不会自动沿用三人专用配置；可在“配置玩法”主动选择，已有个人选择优先保留。');
+ if(creative?.archetype==='shared'&&!config)selectionWarnings.push('当前行动路线没有适用的专用配置，个人准备使用普通位置参考；可在“配置玩法”主动选择，已有个人选择优先保留。');
  if(mode==='rift'&&sourceOpponent&&!scopedRef)selectionWarnings.push(`原对 ${data.champions.find(c=>c.id===sourceOpponent)?.name||sourceOpponent} 的来源参考在当前筛选下暂不可用，保留原选择，暂显示普通同位置配置；可刷新对手参考或恢复普通来源。`);
  if(currentReferencePreferred)selectionWarnings.push(`原组合配装为 ${preferredLoadout.patch||LOADOUT_PATCH}，当前先展示 ${standardRef.patch} 同位置统计参考；组合专用配装可在“配置玩法”主动选择，统计不代表组合适配已经验证。`);
  if(comboId&&!duo)selectionWarnings.push('原组合已移出当前库，或不适用于这个英雄位置；请重新确认玩法。');
@@ -236,7 +236,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(runeId&&mode==='rift'&&!customRune&&!runeOptions.some(o=>o.id===runeId))selectionWarnings.push('原符文方案已不在当前列表，请重新核对选择。');
  const skillChoices=mode==='rift'?(standardRef?.skillOptions||[]).filter(o=>legalSkillOrder(o.order,champion.id)).map(o=>({...o,patch:standardRef.patch,sourceUrl:standardRef.sourceUrl,fetchedAt:standardRef.fetchedAt,name:`来源加点 · ${orderPriority(o.order,champion.id).split('').join(' › ')}`,when:`${referenceLabel(standardRef)} · ${standardRef.patch} · 获取 ${standardRef.fetchedAt}；样本 ${o.samples} 场${o.samples<200?'，样本较少':''}；仅覆盖前 ${o.order.length} 个技能点，不代表这套组合的最优加点。`,source:'OP.GG'})):[];
  if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,patch:config.patch||LOADOUT_PATCH,reviewedAt:config.reviewedAt||LOADOUT_DATE,when:config.skillReason||config.why,source:'机制整理',samples:null});
- const scopedSkills=mode==='rift'?loadoutSkillPlans(champion,role,config?.id||'default').map(p=>({stale:p.patch!==data.patch||dependencyChanges(p,null,data).length>0,id:'scoped-skill-'+p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,order:p.order,reason:p.reason,patch:p.patch,reviewedAt:p.reviewedAt,reference:p.reference,sources:p.sources||[],source:'机制整理',samples:null,when:`机制整理 ${p.patch}，复核 ${p.reviewedAt}；${p.reason}${p.reference?` 前 ${p.reference.order.length} 点参考 ${p.reference.patch} 同位置来源（获取 ${p.reference.fetchedAt}）；${p.reference.order.length<p.order.length?'后续节点为机制补齐，':''}整套整理无统计样本。来源：${p.reference.url}`:' 整套整理无统计样本。'}`})) : [];
+ const scopedSkills=mode==='rift'?loadoutSkillPlans(champion,role,config?.id||'default').map(p=>({stale:p.patch!==data.patch||dependencyChanges(p,null,data).length>0,id:'scoped-skill-'+p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,order:p.order,priority:p.continuationPriority,reason:p.reason,patch:p.patch,reviewedAt:p.reviewedAt,reference:p.reference,sources:p.sources||[],source:'机制整理',samples:null,when:`机制整理 ${p.patch}，复核 ${p.reviewedAt}；${p.reason}${p.reference?` 前 ${p.reference.order.length} 点参考 ${p.reference.patch} 同位置来源（获取 ${p.reference.fetchedAt}）；${p.reference.order.length<p.order.length?'后续节点为机制补齐，':''}整套整理无统计样本。来源：${p.reference.url}`:' 整套整理无统计样本。'}`})) : [];
  if(config)skillChoices.unshift(...scopedSkills);else skillChoices.push(...scopedSkills);
  // A dedicated gear/rune route may have no authored skill nodes. Keep its
  // equipment while providing the independently labelled same-role source;

@@ -33,7 +33,7 @@ async function run(){
  await until(async()=>{const m=await model();return m?.automaticTarget&&m.next.id==='1029';},'Dynamic armor advice missing');
  assert.match((await model()).nextReason,/烬/);
  if((await model()).collapsed)await gjs('window.guide.control("collapse")');
- await gjs('document.querySelector("[data-tab=items]").click()');
+ await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=items]").click()');
  await until(()=>gjs('!!document.querySelector(".purchase-reason")'),'Purchase rationale not rendered');
  assert.ok((await gjs('document.querySelector(".purchase-reason").textContent')).includes((await model()).nextReason),'Rendered purchase reason differs from the current target');
  await gjs('document.images&&[...document.images].forEach(image=>image.loading="eager")');
@@ -56,7 +56,7 @@ async function run(){
  await js('window.buddy.client(true)');await js('window.buddy.openGuide({id:"Lux",role:"support",mode:"rift"})');
  await gjs('window.guide.control("condition","burst")');
  await until(async()=>{const m=await model();return m.live.matched&&m.skillAdvice.next==='W'&&m.skillAdvice.changed;},'Protection skill adjustment missing');
- await gjs('document.querySelector("[data-tab=skills]").click()');await until(()=>gjs('document.querySelector(".skill-decision").textContent.includes("曲光屏障")'),'Skill rationale not rendered');
+ await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=skills]").click()');await until(()=>gjs('document.querySelector(".skill-decision").textContent.includes("曲光屏障")'),'Skill rationale not rendered');
  await fs.writeFile(path.join(root,'skill-reasons.png'),(await guide.webContents.capturePage()).toPNG());
  await gjs('window.guide.control("hide")');await js('window.buddy.openGuide()');assert.equal((await model()).skillAdvice.next,'W');
  const result={passed:true,archiveSha256:release.archiveSha256,productionMain:true,publicScoreboardSanitized:true,dynamicEquipmentReasons:true,renderedToggle:true,manualTargetPreserved:true,boughtComponentStopsAdvice:true,enemySoldItemsRefresh:true,skillProtectionRationale:true,hideReopen:true,readOnlyRequests:requests,realGameInput:false,userSettingsIsolated:true,screenshots:root};

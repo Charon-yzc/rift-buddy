@@ -1,7 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {aggregateCombatStats,applyLivePanel,combatWindow} from '../src/core/live-estimate.mjs';
 import {canModelAsheAttacks,asheAttackEvents} from '../src/core/combat-models.mjs';
-import {createGuideModel,selectGuide} from '../src/core/guide.mjs';import {renderGuide} from '../src/guide-view.mjs';
+import {createGuideModel,selectGuide} from '../src/core/guide.mjs';import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 const data=JSON.parse(await fs.readFile('data/game.json')),ashe=data.champions.find(c=>c.id==='Ashe'),enemy=data.champions.find(c=>c.id==='Ahri');
 const def={hp:2000,armor:100,mr:100},ranks={Q:4,W:2,E:2,R:1};
 const agg={...aggregateCombatStats(ashe,9,[],data),ad:100,atkSpeed:1,crit:.5};

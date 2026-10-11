@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.11.3",
+  "version": "2026.10.11.4",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -12451,28 +12451,28 @@
         "团战连招"
       ],
       "why": "牛头和皎月提供两轮击飞窗口，亚索选择有后续支援的目标接大。",
-      "plan": "牛头先逼位；皎月确认能跟上后聚拢；亚索等目标落在有效距离内接 R，牛头留意保护退路。",
-      "risk": "全员贴脸时易被反开；亚索不要看到单人击飞就脱离队伍。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "plan": "牛头先确认两位输出的距离，再用实际击飞建立先手；皎月Q月光成立后才E接近并按落点R聚拢；亚索选择能被接应的击飞目标接R，牛头留下一轮控制保护退出。",
+      "risk": "全员贴脸易被反开；月光未命中时E不享重置，皎月空R没有延迟爆发，亚索无实际击飞不能R。牛头W方向错误会拆掉集火，风墙也不挡所有伤害；队友距离断开就留控制保护撤退。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
       "sources": [
         {
-          "name": "Riot · 黛安娜技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Diana.json",
+          "name": "Riot Diana 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Diana.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-11"
         },
         {
-          "name": "Riot · 亚索技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Yasuo.json",
+          "name": "Riot Yasuo 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Yasuo.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-11"
         },
         {
-          "name": "Riot · 阿利斯塔技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Alistar.json",
+          "name": "Riot Alistar 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Alistar.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-11"
         }
       ],
       "members": [
@@ -12496,17 +12496,17 @@
         }
       ],
       "steps": [
-        "牛头先逼位",
-        "皎月确认能跟上后聚拢",
-        "亚索等目标落在有效距离内接 R，牛头留意保护退路。"
+        "牛头报Q/W和退路，亚索先报R是否已学可用及接近路径，皎月确认Q/E/R和双方位置；无共同输出角度就继续处理线野。",
+        "牛头Q或WQ实际击飞后，皎月只在月光命中且落点可接应时E/R；亚索只接已击飞且在实际R距离的敌方英雄，不为等第二轮击飞先跳出队伍。",
+        "皎月R拉到英雄才有延迟爆发；亚索落地Q/普攻，风墙守可阻挡的反击；牛头W可顶走突进者，别把集火目标顶出输出区。"
       ],
-      "window": "黛安娜负责聚拢目标，亚索负责接击飞与输出，阿利斯塔负责开团或保护；三人关键技能齐、输出跟得上且没有同时瞄准不同目标时。",
-      "early": "黛安娜先保野区清野节奏，亚索先保中路兵线经验，阿利斯塔先保辅助状态与视野；这套以完整技能的接力为主，前期先使用小技能换血，别等同于已经有大招连招。",
-      "economy": "黛安娜以野区经济为主，支援后别长期蹭线；亚索保留中路补刀和经验；阿利斯塔走辅助经济，保任务装与视野。这套按正式位置分工，换位先在客户端确认。",
+      "window": "皎月与亚索六级技能实际已学可用、牛头控制可用，击飞真正发生且亚索有安全落点，三人的伤害与退出路线覆盖同一战区；两轮击飞可作备选，不要求交完才输出。",
+      "early": "皎月Q挂月光后E清野/接近，技能后穿插普攻兑现被动，先保野区节奏；亚索保中线经验，Q叠层和E路径由本人确认；牛头按辅助经济保护下路，二级技能齐且队友能到才尝试WQ。大招未齐时先小技能换血，不跳过各自发育等六级团。",
+      "economy": "皎月先报营地与到场时间，亚索先安全处理中线，牛头先报辅助搭档是否安全、视野与回城预算；不要让牛头单独探未确认入口。资源前输出两人补给后再进场，牛头留接应位置；兵线损失大或状态差就守线、回城或换另一侧公开收益。",
       "reviewBaseline": {
-        "champion:Diana": "b000c49c492c9ebb",
-        "champion:Yasuo": "bc4e1091fdb3cfb7",
-        "champion:Alistar": "8a197011035cf22f",
+        "champion:Diana": "0c1ee1b395e630d3",
+        "champion:Yasuo": "d36ebea001e3d1cb",
+        "champion:Alistar": "e2aa1310b144ff1f",
         "item:3115": "627135c117eaf20a",
         "item:3157": "4e1ddce33472ee0f",
         "item:3089": "a8a9b060b253391c",
@@ -12743,22 +12743,28 @@
         "抓人节奏"
       ],
       "why": "梦魇提供接近机会，慎和加里奥按距离、冷却分别支援。",
-      "plan": "先沟通可支援的落点；梦魇进场前确认慎没有被控制，加里奥在范围内；两次支援错开，保留撤退控制。",
-      "risk": "支援范围和引导会限制跟进；法术与持续输出还要看另外两位队友。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "plan": "先选一个三人都能覆盖的落点并报状态；魔腾确认目标与退路后进场，慎按承伤窗口R，加里奥确认友军仍在范围内才R后接控；两次保护错开，留一轮控制接应撤退。",
+      "risk": "魔腾关灯不证明落点安全，W只挡一次技能；慎R引导可能被阻断，加里奥支援有范围和延迟。两位队友到不了就由魔腾止步、其余人守线或换另一侧公开资源，别为凑连招接连送入。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
       "sources": [
         {
-          "name": "Riot Galio 技能说明",
-          "url": "https://www.leagueoflegends.com/en-us/champions/galio/",
-          "kind": "官方技能依据",
-          "checkedAt": "2026-10-05"
+          "name": "Riot Shen 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Shen.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
         },
         {
-          "name": "Riot Shen 技能说明",
-          "url": "https://www.leagueoflegends.com/en-us/champions/shen/",
-          "kind": "官方技能依据",
-          "checkedAt": "2026-10-05"
+          "name": "Riot Nocturne 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nocturne.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        },
+        {
+          "name": "Riot Galio 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
         }
       ],
       "members": [
@@ -12782,17 +12788,17 @@
         }
       ],
       "steps": [
-        "先沟通可支援的落点",
-        "梦魇进场前确认慎没有被控制，加里奥在范围内",
-        "两次支援错开，保留撤退控制。"
+        "慎先处理上路兵线并找不易被打断的施法位置，加里奥处理中线、确认R范围；魔腾报目标、关键技能和退出方向。",
+        "魔腾按实际R范围进场；慎按承伤时机R友军，加里奥确认友军落点撑得到延迟落地，再接R/W/E，避免同时交完保护。",
+        "魔腾E维持连接才有恐惧，慎W只守魂刃附近区域；目标离开共同覆盖、支援被打断或己方状态不够时就停止深入。"
       ],
-      "window": "魔腾 R 的落点同时在慎和加里奥支援范围内，且慎施法位置不易被打断时。",
-      "early": "慎优先上路经验，魔腾清野准备六级窗口；加里奥用中线线权确认支援方向，六级前少赌远距离救援。",
-      "economy": "慎保留上路补刀和经验；魔腾以野区经济为主，支援后别长期蹭线；加里奥保留中路补刀和经验。这套按正式位置分工，换位先在客户端确认。",
+      "window": "三人六级技能实际已学且可用，魔腾目标在自身R范围、友军落点同时在加里奥R范围，慎能完成引导；兵线、血量、能量/蓝量和退路均由玩家确认后才安排这一轮。",
+      "early": "慎先用Q拉刃后的普攻稳上路，E留给能跟上的换血或撤退；魔腾按野区经济清野，Q/普攻处理营地，W留关键技能；加里奥Q处理中线，W/E接近身。六级前用相邻位置的小规模接应，不把双支援当已成立。",
+      "economy": "慎保上路经验，离线前报将损失的兵线与塔压；魔腾保营地循环，别长期守一条线；加里奥先处理能安全离开的中线，再回城补给或支援。资源前先报谁接边线、谁能到场；慎一旦R离边，就取消本轮继续带线，不同时承诺两项任务。",
       "reviewBaseline": {
-        "champion:Shen": "d93abdead72ceaa9",
-        "champion:Nocturne": "8c842f929153f246",
-        "champion:Galio": "93e234e70ba0094e",
+        "champion:Shen": "e59438000b98dd56",
+        "champion:Nocturne": "2759f235cb713880",
+        "champion:Galio": "62214853523131ad",
         "item:3068": "f23565139478f276",
         "item:2504": "ead2f4757e3e6c8c",
         "item:6665": "9693faf50145df4e",
@@ -12825,18 +12831,16 @@
         "rune:9104": "e6b524a54b35a2f3",
         "rune:8017": "50a79a13bce940f0",
         "rune:8410": "da4ec8f245880032",
-        "item:6655": "e593f4433de96e4b",
+        "item:3152": "37dc7712644a19f0",
+        "item:4005": "049fc32e0486e5b6",
         "item:3157": "4e1ddce33472ee0f",
-        "item:3089": "a8a9b060b253391c",
         "item:3020": "357a162d6a40286e",
+        "item:3089": "a8a9b060b253391c",
         "item:3135": "9eb1465e02c69db0",
-        "item:3102": "74374782f1274206",
-        "rune:8112": "0082006b65520bc3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
+        "rune:8230": "b4da4b07836c5635",
         "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea"
+        "rune:8234": "018bc04903dfba25",
+        "rune:8237": "141d0a7c16b98b91"
       }
     },
     {
@@ -13300,28 +13304,28 @@
         "抓人节奏"
       ],
       "why": "翠神提供草丛和护盾，璐璐保护补刀狮子狗的进退窗口。",
-      "plan": "下路先保经验；翠神到场提前布草；雷恩加尔只跳可支援目标，璐璐跟上保护，护盾和控制错开。",
-      "risk": "非常规近战下路容易被消耗；缺持续远程火力，三人不能同时追出支援距离。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "plan": "狮子狗与璐璐先保下路补刀经验；翠神完成必要野区循环后报到，放下实际可用草丛并E接应；狮子狗按残暴和保护距离选择进退，璐璐把W/R留给这一轮反扑。",
+      "risk": "近战下路容易被消耗，队伍缺持续远程火力；草丛不提供无条件安全，普通E只有减速、普通W不解控。璐璐对敌E没有友军护盾，W不能同时给友军增益和敌军变羊；保护交光或线野代价太大就停止重复跳入。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
       "sources": [
         {
-          "name": "Riot · 艾翁技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Ivern.json",
+          "name": "Riot Ivern 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ivern.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-11"
         },
         {
-          "name": "Riot · 雷恩加尔技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Rengar.json",
+          "name": "Riot Rengar 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rengar.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-11"
         },
         {
-          "name": "Riot · 璐璐技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Lulu.json",
+          "name": "Riot Lulu 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lulu.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-11"
         }
       ],
       "members": [
@@ -13345,17 +13349,17 @@
         }
       ],
       "steps": [
-        "下路先保经验",
-        "翠神到场提前布草",
-        "雷恩加尔只跳可支援目标，璐璐跟上保护，护盾和控制错开。"
+        "翠神先报营地、Q/E与草丛位置，璐璐报E/W/R和站位，狮子狗报实际残暴、血量、兵线与退出方向；先有安全草丛和共同目标再考虑跳跃。",
+        "狮子狗从实际草丛跳到可接应目标，Q/普攻输出；强化Q、E定身或W解控按当前需要选择。翠神Q命中可供友军接近，但不等于所有人都该跟进。",
+        "翠神E和璐璐E错开承接实际伤害；璐璐W明确选友军加速或敌军变羊，R明确给友军接应。保护距离断开就停跳，留控制和菊花掩护撤退。"
       ],
-      "window": "艾翁草丛位置可以供狮子狗跳跃，璐璐护盾或大招可用且落点没有敌方集火时。",
-      "early": "狮子狗先靠草丛和补刀保持状态，璐璐保护他的进退；艾翁不长期停下路，先保证野区经济。",
-      "economy": "艾翁以野区经济为主，支援后别长期蹭线；雷恩加尔保留下路补刀和经验；璐璐走辅助经济，保任务装与视野。这套按正式位置分工，换位先在客户端确认。",
+      "window": "翠神草丛确已成立，狮子狗能从该位置合法跳跃，翠神/璐璐实际护盾和控制可用、目标在共同保护范围；狮子狗残暴与撤退路线由本人确认，不能把草丛视为安全视野。",
+      "early": "狮子狗1–3级Q/W/E先补刀与短换血，近期受伤再用W，不为抢跳丢兵线；璐璐按E护盾与Q减速保下路状态；翠神依自己的被动营地成熟节奏获得金币经验，W学到且能到场才布草，不按普通打野攻击非史诗营地的逻辑分配任务。",
+      "economy": "狮子狗承担下路补刀，璐璐走辅助任务与视野经济，翠神保留自己的野区收入；三人到下路前先报兵线、营地和补给，成功换血也不长期三人分一条线。资源前先决定狮子狗接线还是到场，无法安全接近入口就放弃跳入，守线或换另一侧已确认收益。",
       "reviewBaseline": {
-        "champion:Ivern": "5e7fbcf05d7dd05c",
-        "champion:Rengar": "6aa1eae9db8d84fa",
-        "champion:Lulu": "12ee018aa7e41dc6",
+        "champion:Ivern": "f4b498c5991475d6",
+        "champion:Rengar": "37409a7c0d60e8e8",
+        "champion:Lulu": "5f5091380ca45272",
         "item:3074": "6700c33eea0226cf",
         "item:6692": "bec6d540fde1d4ec",
         "item:3814": "f9788442be1f2810",
@@ -19723,15 +19727,15 @@
         "guardian",
         "aftershock"
       ],
-      "why": "留控制保护补刀位，控制时机比独自冲锋更重要。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "辅助经济先保任务装、视野与补给，核心装按实际威胁和回城金币取舍。鸟盾要在队友承伤前主动覆盖附近友军，不能隔地图保护；骑士之誓先绑定当前要保护的友军，并留在有效距离，自己低血时也要计入分担风险。基克在自己施放大招后围绕自身形成风暴，追不上敌人时不要为触发它走出保护距离。守护者依赖附近或实际受术的友军承伤；余震需真实定身：布隆要被动叠满或R，塔里克要E命中，塔姆要三层Q或W击飞，波比要实际击退/打断，牛头要Q/W或叠满E后普攻。普通减速不算，未满足时不要预算余震抗性。荆棘需敌方普攻击中自己才给该攻击者重伤；魔法或远程威胁为主时按对手改鞋和抗性，不机械堆甲。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
       "reviewBaseline": {
-        "champion:Braum": "4726b43beaea9728",
-        "champion:Taric": "c80b2adac0419e29",
-        "champion:TahmKench": "d6a9f15da4e076b5",
-        "champion:Poppy": "fa2cafaf8d0f2976",
-        "champion:Alistar": "8a197011035cf22f",
+        "champion:Braum": "ae3aa48403ffcbe5",
+        "champion:Taric": "d7034e2662bef2b0",
+        "champion:TahmKench": "9635271a9add58c5",
+        "champion:Poppy": "af33a45e62ad30e5",
+        "champion:Alistar": "e2aa1310b144ff1f",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3050": "c3e25c9df9075147",
@@ -19746,7 +19750,51 @@
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot Braum 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Braum.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        },
+        {
+          "name": "Riot Taric 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Taric.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        },
+        {
+          "name": "Riot TahmKench 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/TahmKench.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        },
+        {
+          "name": "Riot Poppy 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Poppy.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        },
+        {
+          "name": "Riot Alistar 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Alistar.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        },
+        {
+          "name": "Riot 16.20.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-11"
+        },
+        {
+          "name": "Riot 16.20.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-11"
+        }
+      ]
     },
     {
       "id": "tank-engage",
@@ -23100,12 +23148,12 @@
     },
     {
       "id": "galio-bottom-farm-tank",
-      "name": "加里奥补刀前排开局",
+      "name": "加里奥补刀与接控参考",
       "champion": "Galio",
       "role": "bottom",
       "loadoutId": "farm-tank",
-      "order": "QWE",
-      "reason": "仅整理前三点 Q/W/E：Q 为补刀和远程消耗，W 的被动护盾只吸收魔法伤害，主动需蓄力后释放才嘲讽，三级 E 才补位移与击飞。与赛娜搭档时由加里奥补刀，先核对兵线、蓝量和赛娜接应；不把中路来源样本移到下路，不提供未经复核的 4–18 级节点，后续按实际对线和分工调整。",
+      "order": "QWEQQRQWQWRWWEEREE",
+      "reason": "补刀位机制参考，逐级节点由本项目整理，未借用中路统计：1–3级Q/W/E，先保兵线与蓝量；4–9级优先Q补刀，6级学R，先确认友军落点在范围内且撑得到落地，再支援。10–13级补W接控，W被动护盾只吸收魔法伤害，主动蓄力后才嘲讽；代价是E成长较晚，不因已有W就顶着物理集火。14–18级补E，11/16级升级R。与赛娜搭档由加里奥补刀，低状态或她无法接应时留E撤退；若实际对线更需承伤，可在个人加点中提前W并相应延后Q，不把这条参考当唯一最优解。",
       "patch": "16.20",
       "reviewedAt": "2026-10-11",
       "sources": [
@@ -23234,12 +23282,12 @@
     },
     {
       "id": "rengar-bottom-rengar-bush",
-      "name": "狮子狗补刀与受击回复开局",
+      "name": "狮子狗草丛补刀与套索参考",
       "champion": "Rengar",
       "role": "bottom",
       "loadoutId": "rengar-bush",
-      "order": "QWE",
-      "reason": "仅整理前三点：Q 帮助补刀和近身短换血，二级 W 基于近期实际受伤回复，三级 E 命中首个目标减速；只有满残暴的 E 才禁锢，普通 W 不解控。安全草丛、翠神护盾和队友接应不到就不跳；不借用打野或上路统计，也不补造后续十八点。",
+      "order": "QWEQQRQEQEREEWWRWW",
+      "reason": "补刀位机制参考，逐级节点由本项目整理，未借用打野或上路统计：1–3级Q/W/E，Q接普攻补刀，W回复近期实际受伤，E只命中首个目标；4–9级优先Q，6级学R。10–13级补E以加强套索伤害，11级升R；只有强化E才禁锢，普通E仍是减速。14–18级补W，16级升R，代价是W伤害成长较晚。若对线更需要W伤害，可在个人加点中提前W、延后E；回复与强化W解控都要按真实受伤和残暴选择，不能把加点优先级当强化技能指令。翠神草丛未成立、保护距离断开或兵线亏损大就不跳；R支援也先确认安全路线。",
       "patch": "16.20",
       "reviewedAt": "2026-10-11",
       "sources": [
@@ -23253,6 +23301,673 @@
       "reviewBaseline": {
         "champion:Rengar": "37409a7c0d60e8e8"
       }
+    },
+    {
+      "id": "veigar-support-control-support",
+      "name": "维迦辅助开局与补点",
+      "champion": "Veigar",
+      "role": "support",
+      "loadoutId": "control-support",
+      "order": "QEW",
+      "reason": "Q 一级用于不抢搭档补刀的安全消耗，二级 E 才有牢笼边缘控制，三级 W 跟实际限制后的落点。辅助后续偏 E 的控制频率，再 Q；代价是个人伤害与清线成长变慢。牢笼内部不是全域晕眩，目标没碰边缘就不保证 W 命中；保留蓝量与退路，不为了叠层抢补刀。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Veigar 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Veigar.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Veigar": "b0c876605f73d7f8"
+      },
+      "continuationPriority": "EQW"
+    },
+    {
+      "id": "sion-bottom-farm-tank",
+      "name": "赛恩下路开局与补点",
+      "champion": "Sion",
+      "role": "bottom",
+      "loadoutId": "farm-tank",
+      "order": "QWE",
+      "reason": "Q 一级接安全补刀，二级 W 才有护盾和击杀生命成长，三级 E 的实际减速帮助下一次 Q 蓄力；后续偏 Q、W。赛恩补刀，赛娜或基兰先接应再配合，不让辅助承担补刀经济。Q 蓄力至少一秒才击飞，W 仍存在才可延迟引爆；受压时短 Q 收兵并退，不为叠生命或引爆硬吃双人消耗。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Sion 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Sion.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sion": "6a3d576ca1dcc4d1"
+      },
+      "continuationPriority": "QWE"
+    },
+    {
+      "id": "sett-bottom-default",
+      "name": "瑟提下路开局与补点",
+      "champion": "Sett",
+      "role": "bottom",
+      "loadoutId": "default",
+      "order": "QEW",
+      "reason": "Q 一级用于能安全接近的小兵或短换血，二级 E 才补拉回与条件控制，三级 W 才有豪意护盾和中央真伤；后续偏 Q、W。由瑟提补刀，赛娜留在能接应的位置。E 两侧都抓到敌人才晕眩，单侧仅减速；不为蓄 W 故意吃伤，摸不到目标就保兵线，不能把近战三点当可靠远程消耗。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Sett 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Sett.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sett": "76c5b480536d4f6c"
+      },
+      "continuationPriority": "QWE"
+    },
+    {
+      "id": "garen-bottom-default",
+      "name": "盖伦下路开局与补点",
+      "champion": "Garen",
+      "role": "bottom",
+      "loadoutId": "default",
+      "order": "QEW",
+      "reason": "Q 一级保移速、解除减速与下一次普攻沉默，二级 E 才补近身清线，三级 W 才补主动承伤；后续偏 E、Q。盖伦补刀，悠米保护并不替代进出路径。E 会推线且要求贴近，不因有悠米就深入双人火力；W 留给实际爆发，退出后等被动恢复，不把 Q 当移除所有控制。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Garen 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Garen.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Garen": "da16a590f3304db3"
+      },
+      "continuationPriority": "EQW"
+    },
+    {
+      "id": "cassiopeia-bottom-battle-mage",
+      "name": "卡西奥佩娅下路开局与补点",
+      "champion": "Cassiopeia",
+      "role": "bottom",
+      "loadoutId": "battle-mage",
+      "order": "EQW",
+      "reason": "E 一级精确补尾刀，实际击杀才返还法力；二级 Q 才有自己的中毒来源，三级 W 才补减速与缚地；后续偏 E、Q。蛇女承担补刀经济，与辛吉德、提莫或图奇配合时也先确认目标实际仍中毒，不能默认搭档所有攻击都满足条件。未中毒的 E 连打会耗蓝，Q 空或敌人退出毒区就停止追击并保安全兵线。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Cassiopeia 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Cassiopeia.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Cassiopeia": "74ace7fa9d54e0e4"
+      },
+      "continuationPriority": "EQW"
+    },
+    {
+      "id": "singed-support-default",
+      "name": "辛吉德辅助开局与补点",
+      "champion": "Singed",
+      "role": "support",
+      "loadoutId": "default",
+      "order": "QEW",
+      "reason": "Q 一级只在能安全靠近时短开施毒，二级 E 才能过肩摔，三级 W 才有远程减速与缚地；辅助后续偏 E、W，牺牲 Q 的个人清线伤害以保控制频率。让蛇女补刀，Q 不持续扫兵抢经济。E 是近身施放，只有摔入 W 区域才附加禁锢；接近会被集火或搭档跟不上，就把 W/E 留作撤退而不绕后硬摔。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Singed 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Singed.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Singed": "65d32cdacd60176e"
+      },
+      "continuationPriority": "EWQ"
+    },
+    {
+      "id": "taliyah-bottom-default",
+      "name": "塔莉垭下路开局与补点",
+      "champion": "Taliyah",
+      "role": "bottom",
+      "loadoutId": "default",
+      "order": "QEW",
+      "reason": "Q 一级安全补刀与消耗，二级 E 才有撒石阵减速和对冲刺/强制位移的条件惩罚，三级 W 才能主动把目标搬过石阵；后续偏 Q、E。由塔莉垭补刀，搭档控制实际命中再接 W，不把二级写成已经会 W。Q 受首个目标与掘石场影响；W 失手或 E 已交就停止强开，留蓝量和安全兵线，不追进近身范围补连招。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Taliyah 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Taliyah.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Taliyah": "164392e23c74360e"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "rammus-bottom-anti-auto-rammus",
+      "name": "拉莫斯下路开局与补点",
+      "champion": "Rammus",
+      "role": "bottom",
+      "loadoutId": "anti-auto-rammus",
+      "order": "WEQ",
+      "reason": "W 一级先保近身承伤与反击普攻，二级 E 才有短距离嘲讽，三级 Q 才补滚动转场；针对普攻的补刀前排后续偏 W、E，代价是 Q 的转场成长较慢。龙龟补刀，悠米接应；对手不普攻、靠远程技能耗血时不假设反伤能赢。Q 会撞到首个敌人而停，E 也不是远程先手；摸不到或退路不明就保安全经验，不能强滚穿兵线。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Rammus 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Rammus.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Rammus": "f1863a22e11c5376"
+      },
+      "continuationPriority": "WEQ"
+    },
+    {
+      "id": "orianna-bottom-mana-control",
+      "name": "奥莉安娜下路开局与补点",
+      "champion": "Orianna",
+      "role": "bottom",
+      "loadoutId": "mana-control",
+      "order": "QEW",
+      "reason": "Q 一级控制球位补刀，二级 E 先保自己或搭档护盾，三级 W 才补球周围伤害、友军加速和敌方减速；后续偏 Q、W。由发条补刀，石头人进入前先核对球实际依附和接应距离；六级前没有 R 拉回。E 的路径和球落点都会改变接续，球未到、蓝量不足或搭档独进就取消，保留安全补刀而不空等一轮强开。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Orianna 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Orianna.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Orianna": "a3ef9b02b9b57356"
+      },
+      "continuationPriority": "QWE"
+    },
+    {
+      "id": "anivia-bottom-mana-control",
+      "name": "艾尼维亚下路开局与补点",
+      "champion": "Anivia",
+      "role": "bottom",
+      "loadoutId": "mana-control",
+      "order": "QEW",
+      "reason": "Q 一级安全补刀和条件晕眩，二级 E 跟自己的实际冰冻目标，三级 W 才能为波比提供可用墙体；后续偏 E、Q，三级提前 W 会让第二点 E 延后。冰鸟补刀，Q 爆炸或完全成形 R 的冰冻才支持强化 E，不把所有减速都当冰冻。W 也会挡队友退路，落点不明就不用墙强留；Q 空、蓝量不足或波比角度不成立就收线退出。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Anivia 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Anivia.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Anivia": "52343f9ffaa815a9"
+      },
+      "continuationPriority": "EQW"
+    },
+    {
+      "id": "pantheon-bottom-pantheon-stun",
+      "name": "潘森下路开局与补点",
+      "champion": "Pantheon",
+      "role": "bottom",
+      "loadoutId": "pantheon-stun",
+      "order": "QWE",
+      "reason": "Q 一级安全补刀或短枪消耗，二级 W 才有指定目标晕眩和布隆接普攻入口，三级 E 才有正面防伤；后续偏 Q、E。潘森承担补刀，先确认布隆可跟与被动层数，不能把一次 W 当已触发布隆晕眩。E 只挡所选方向的伤害且不挡塔伤；W 不可用、后方有人或布隆接应不到就保 Q 补刀，取消越塔和深入。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Pantheon 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Pantheon.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Pantheon": "ade6cc95e4c6b966"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "taliyah-bottom-mana-control",
+      "name": "塔莉垭下路开局与补点",
+      "champion": "Taliyah",
+      "role": "bottom",
+      "loadoutId": "mana-control",
+      "order": "QEW",
+      "reason": "Q 一级安全补刀与消耗，二级 E 才有撒石阵减速和对冲刺/强制位移的条件惩罚，三级 W 才能主动把目标搬过石阵；后续偏 Q、E。由塔莉垭补刀，搭档控制实际命中再接 W，不把二级写成已经会 W。Q 受首个目标与掘石场影响；W 失手或 E 已交就停止强开，留蓝量和安全兵线，不追进近身范围补连招。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Taliyah 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Taliyah.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Taliyah": "164392e23c74360e"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "taliyah-support-poke-support",
+      "name": "塔莉垭辅助开局与补点",
+      "champion": "Taliyah",
+      "role": "support",
+      "loadoutId": "poke-support",
+      "order": "QEW",
+      "reason": "Q 一级短轮次消耗，二级 E 才补减速与反冲刺区域，三级 W 才有主动强制位移；后续偏 Q、E 会牺牲 W 冷却成长，应优先把 W 留给确定接控或撤退。烬负责补刀，塔莉垭不靠清整波兵取得装备。E 并非踏入就必晕，W 要实际搬过石阵才成立；蓝量不足、目标被兵挡或烬不能接应，就放弃前压。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Taliyah 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Taliyah.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Taliyah": "164392e23c74360e"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "quinn-bottom-quinn-burst",
+      "name": "奎因下路开局与补点",
+      "champion": "Quinn",
+      "role": "bottom",
+      "loadoutId": "quinn-burst",
+      "order": "EQW",
+      "reason": "E 一级留短换血与后跳空间，二级 Q 才补遮蔽视野，三级 W 才有标记普攻后的攻速/移速和主动区域显形；后续偏 W、Q，依赖安全触发侵扰而不是光学 W 就常驻加速。奎因补刀，派克只在能覆盖落点时接控。E 需要敌方目标且落点可能被夹，Q 被兵挡时不算命中英雄；无安全落点就普通补刀，不强行冲到人脸上。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Quinn 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Quinn.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Quinn": "96eaff1d877b5c1a"
+      },
+      "continuationPriority": "WQE"
+    },
+    {
+      "id": "trundle-support-trundle-support",
+      "name": "特朗德尔辅助开局与补点",
+      "champion": "Trundle",
+      "role": "support",
+      "loadoutId": "trundle-support",
+      "order": "EQW",
+      "reason": "E 一级先有远程冰柱封路、短暂击退与减速，二级 Q 才补安全近身的撕咬削攻，三级 W 才补自身区域移速/攻速；辅助后续偏 E、W，牺牲 Q 个人伤害。由萨勒芬妮补刀，柱子只在实际触及目标时形成接控，不能把持续减速当持续定身。柱子也会妨碍队友；角度不清或蓝量不足就留作撤退，不靠冲进敌方兵线咬人刷经济。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Trundle 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Trundle.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Trundle": "63bbe05e19260ce3"
+      },
+      "continuationPriority": "EWQ"
+    },
+    {
+      "id": "urgot-bottom-melee-fighter",
+      "name": "厄加特下路开局与补点",
+      "champion": "Urgot",
+      "role": "bottom",
+      "loadoutId": "melee-fighter",
+      "order": "EWQ",
+      "reason": "E 一级保护盾与条件翻背，二级 W 才能对已被其他技能标记的英雄优先开火，三级 Q 再补远程减速与标记；后续偏 W、Q。厄加特补刀，潘森实际 W 命中后才确认 E 接续，E 冲刺不保证能穿过前方英雄。W 未点满不能无限开，未标记时可能打近处小兵且自身减速；翻背落空或接应不到就收线退，不让辅助承担持续火力。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Urgot 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Urgot.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Urgot": "42adf07c563030c7"
+      },
+      "continuationPriority": "WQE"
+    },
+    {
+      "id": "ekko-bottom-ap-dive",
+      "name": "艾克下路开局与补点",
+      "champion": "Ekko",
+      "role": "bottom",
+      "loadoutId": "ap-dive",
+      "order": "QEW",
+      "reason": "Q 一级先安全补刀，二级 E 才补短位移与下一次强化近身攻击，三级 W 才有延迟区域和入场护盾/晕眩；后续偏 Q、E。艾克补刀，基兰提供接应而非保证不死。W 需艾克本人进入区域才晕，E 二段进入敌人旁不能算稳定退路；Q 空、W 接不上或退路不明就停止追击，六级前不能依赖尚未学习的 R 回溯。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Ekko 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Ekko.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Ekko": "d17ece4a263656b8"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "naafiri-bottom-naafiri-dive",
+      "name": "纳亚菲利下路开局与补点",
+      "champion": "Naafiri",
+      "role": "bottom",
+      "loadoutId": "naafiri-dive",
+      "order": "QEW",
+      "reason": "Q 一级两段犬牙用于补刀和安全消耗，二级 E 才有短冲刺与狗群回收，三级 W 才有短暂无选取和狗群强化；后续偏 Q、E。纳亚菲利补刀，蕾欧娜实际命中控制才考虑进场。现版 W 不是旧版指定冲锋，R 六级后才提供远距离追击；Q 第二段治疗也须符合目标条件。未命中、接应不到或落点危险就保 E/W 退出，不要求开局跨兵追人。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Naafiri 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Naafiri.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Naafiri": "490e0d502915c350"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "nidalee-support-poke-no-immobilize",
+      "name": "奈德丽辅助开局与补点",
+      "champion": "Nidalee",
+      "role": "support",
+      "loadoutId": "poke-no-immobilize",
+      "order": "QEW",
+      "reason": "Q 一级标枪短轮次消耗，二级 E 才补人形治疗和攻速，三级 W 再补陷阱与豹形机动；后续偏 Q、E，主动治疗会消耗法力，不等于能一直补给。由凯特琳或烬补刀，标枪会被首个单位挡住，陷阱没有定身，不能据此假定触发需要硬控的效果。没有可确认的捕猎标记、搭档不能覆盖或无安全落点就不变豹追击，保蓝量接应。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Nidalee 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Nidalee.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Nidalee": "e54aff9035f36827"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "teemo-bottom-teemo-traps",
+      "name": "提莫下路开局与补点",
+      "champion": "Teemo",
+      "role": "bottom",
+      "loadoutId": "teemo-traps",
+      "order": "EQW",
+      "reason": "E 一级保普攻附毒补刀，二级 Q 才能对实际目标致盲，三级 W 才有主动移速；后续偏 E、Q。提莫补刀，萨科或米利欧接应；致盲只约束受影响普攻，不能当技能免疫，W 加速也不是位移。毒伤会影响尾刀与兵线，六级前没有蘑菇可铺；对方以技能消耗或退路被切断就收缩，不能为持续挂毒长时间追击。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Teemo 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Teemo.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Teemo": "b29454e3375baf8c"
+      },
+      "continuationPriority": "EQW"
+    },
+    {
+      "id": "sejuani-support-tank-engage",
+      "name": "瑟庄妮辅助开局与补点",
+      "champion": "Sejuani",
+      "role": "support",
+      "loadoutId": "tank-engage",
+      "order": "QWE",
+      "reason": "Q 一级留实际击飞和退出角度，二级 W 才补两段挥击，三级 E 才有对四层霜冻目标的晕眩；辅助后续偏 Q、W，代价是 E 伤害与控制成长较晚。卡特琳娜或佛耶戈补刀，近战友军普攻可协助叠层，远程成员不能照搬；三级前不安排已经可用的 E 控制。Q 撞到首位英雄会停，W 扫兵会推线；层数不足、Q 空或搭档接不到就撤回，不继续等不存在的晕。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Sejuani 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Sejuani.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573"
+      },
+      "continuationPriority": "QWE"
+    },
+    {
+      "id": "viego-bottom-melee-fighter",
+      "name": "佛耶戈下路开局与补点",
+      "champion": "Viego",
+      "role": "bottom",
+      "loadoutId": "melee-fighter",
+      "order": "QWE",
+      "reason": "Q 一级安全补刀与技能后普攻接续，二级 W 才有蓄力后首个目标晕眩，三级 E 再补地形黑雾机动；后续偏 Q、E。佛耶戈补刀，瑟庄妮先核对实际霜冻层数再接控制。W 会被首个敌人拦下，E 伪装不代表敌人看不到所有行为；没有实际击杀与幽魂就不能安排占据刷新。先手落空或目标不可安全接触就保线退出，六级前不依赖 R。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Viego 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Viego.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Viego": "61185e81ee691f67"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "poppy-bottom-farm-tank",
+      "name": "波比下路开局与补点",
+      "champion": "Poppy",
+      "role": "bottom",
+      "loadoutId": "farm-tank",
+      "order": "QEW",
+      "reason": "Q 一级安全补刀与两段地面伤害，二级 E 才有条件撞墙，三级 W 才有主动加速与反可阻挡突进区域；后续偏 Q、E。波比补刀，基兰接应；E 只有实际撞到地形才晕，不能把普通推回当硬控已命中。W 不保证挡所有位移，缺墙角、敌人不突进或队友跟不上就保安全兵线，E 留给可退出的角度，不把目标推离搭档伤害。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Poppy 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Poppy.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Poppy": "af33a45e62ad30e5"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "drmundo-bottom-farm-tank",
+      "name": "蒙多医生下路开局与补点",
+      "champion": "DrMundo",
+      "role": "bottom",
+      "loadoutId": "farm-tank",
+      "order": "QEW",
+      "reason": "Q 一级用骨锯补安全尾刀，二级 E 才补强化普攻与击杀后的拍飞，三级 W 再补承伤储存和引爆回复；后续偏 Q、E。蒙多补刀，璐璐保护不能替代走位；Q 会撞首个敌人，E 拍飞需先击杀，W 回复取决于实际命中目标。没血或无安全退路就放掉危险尾刀，不为 W 储伤故意挨打，也不假设被动可以持续抵抗所有控制。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot DrMundo 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/DrMundo.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:DrMundo": "4f965c27d85177a6"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "twitch-support-ap-twitch",
+      "name": "图奇辅助开局与补点",
+      "champion": "Twitch",
+      "role": "support",
+      "loadoutId": "ap-twitch",
+      "order": "WEQ",
+      "reason": "W 一级先有毒区减速与实际叠毒，二级 E 才能对范围内已中毒目标结算伤害，三级 Q 才补伪装转位；辅助后续偏 E、W，牺牲个人 Q 攻速/漫游成长。让蛇女补刀，不靠扫兵取得核心经济。毒区外不继续自动叠层，Q 是会被近处敌人发现的伪装；毒层不足、蓝量不足或搭档不能接应就结束消耗，不能为游走把独自补刀的蛇女留在危险线。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Twitch 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Twitch.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Twitch": "ab3e76d629cf2787"
+      },
+      "continuationPriority": "EWQ"
+    },
+    {
+      "id": "anivia-support-control-support",
+      "name": "艾尼维亚辅助开局与补点",
+      "champion": "Anivia",
+      "role": "support",
+      "loadoutId": "control-support",
+      "order": "QWE",
+      "reason": "Q 一级先有远程条件控制，二级 W 才补区域封路，三级 E 再补对实际冰冻目标的伤害；辅助后续偏 Q、W，牺牲个人 E 伤害换控制与封路。由萨勒芬妮补刀，冰墙既可能留人也可能封死搭档退路，不把墙视为无风险命中。Q 没晕或退路不明就停手，不能把萨勒芬妮的任意减速当自己的强化 E 冰冻条件。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Anivia 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Anivia.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Anivia": "52343f9ffaa815a9"
+      },
+      "continuationPriority": "QWE"
+    },
+    {
+      "id": "yasuo-support-melee-crit",
+      "name": "亚索辅助开局与补点",
+      "champion": "Yasuo",
+      "role": "support",
+      "loadoutId": "melee-crit",
+      "order": "QWE",
+      "reason": "Q 一级保短距离触及和两次命中后的第三次旋风，二级 W 先保可阻挡飞行道具，三级 E 才补借敌方单位位移；后续偏 Q、E，提前风墙会推迟二级机动。由永恩补刀，亚索叠 Q 也会推兵线，不抢尾刀换层数。风墙不挡所有技能，E 需要尚可冲刺的敌方目标与安全退出路径；未准备旋风、风墙已交或没有退路就停手，六级前没有 R 接击飞。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Yasuo 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Yasuo.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Yasuo": "d36ebea001e3d1cb"
+      },
+      "continuationPriority": "QEW"
+    },
+    {
+      "id": "teemo-bottom-teemo-onhit",
+      "name": "提莫下路开局与补点",
+      "champion": "Teemo",
+      "role": "bottom",
+      "loadoutId": "teemo-onhit",
+      "order": "EQW",
+      "reason": "E 一级保普攻附毒补刀，二级 Q 才能对实际目标致盲，三级 W 才有主动移速；后续偏 E、Q。提莫补刀，萨科或米利欧接应；致盲只约束受影响普攻，不能当技能免疫，W 加速也不是位移。毒伤会影响尾刀与兵线，六级前没有蘑菇可铺；对方以技能消耗或退路被切断就收缩，不能为持续挂毒长时间追击。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Teemo 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Teemo.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Teemo": "b29454e3375baf8c"
+      },
+      "continuationPriority": "EQW"
+    },
+    {
+      "id": "neeko-bottom-default",
+      "name": "妮蔻下路开局与补点",
+      "champion": "Neeko",
+      "role": "bottom",
+      "loadoutId": "default",
+      "order": "QEW",
+      "reason": "Q 一级安全补刀与满足条件后的再次盛开，二级 E 才补实际命中的禁锢，三级 W 才有幻象与第三次普攻收益；后续偏 Q、E。妮蔻补刀，派克实际控制后才接 Q 落点，不能把 E 穿过普通小兵直接写成必然延长禁锢。幻象不替代已确认退路，Q/E 空或敌方能近身就收线退出，六级前不安排尚未学习的大招入场。 仅复核前三点与后续优先，不补造4–18级序列，也不借用其他位置统计。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-11",
+      "sources": [
+        {
+          "name": "Riot Neeko 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Neeko.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-11"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Neeko": "d6f4984cd7330b72"
+      },
+      "continuationPriority": "QEW"
     }
   ]
 }

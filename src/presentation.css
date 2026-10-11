@@ -91,7 +91,7 @@ button,input,select{font-family:inherit}
    for the selected content instead of repeating the current-plan action. */
 .companion-short-label{display:none}
 @media(max-width:380px){
- .companion-header{flex-wrap:nowrap;gap:4px}.companion-header>div{min-width:0}.companion-header b{white-space:nowrap;display:block}.companion-header .btn{flex-shrink:0;gap:4px;padding:4px}.companion-header [data-action=presentation-open]>.icon{display:none}
+ .companion-header{flex-wrap:nowrap;gap:4px}.companion-header>div{min-width:0}.companion-header b{white-space:nowrap;display:block}.companion-header small{display:none}.companion-header .btn{flex-shrink:0;gap:4px;padding:4px}.companion-header [data-action=presentation-open]>.icon{display:none}
  .companion-wide-label{display:none}.companion-short-label{display:inline}.companion-tabs button{white-space:nowrap}
  .companion-shell[data-tab=plan][data-plan-preview=false] .companion-current-hero>[data-action=companion-current]{display:none}
  .companion-current-hero>span{min-width:0}.companion-current-hero small{line-height:1.4}

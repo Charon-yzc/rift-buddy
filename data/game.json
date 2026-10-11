@@ -4,7 +4,7 @@
   "version": "16.20.1",
   "patch": "16.20",
   "fetchedAt": "2026-10-07T10:31:36.651Z",
-  "checkedAt": "2026-10-07T18:29:01.227Z",
+  "checkedAt": "2026-10-11T09:33:41.917Z",
   "sources": {
     "champions": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
     "items": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/item.json",
@@ -14,7 +14,7 @@
     "augmentDescriptions": "https://raw.communitydragon.org/16.20/game/maps/modespecificdata/kiwi.bin.json",
     "championCombatStats": "https://raw.communitydragon.org/16.20/game/data/characters"
   },
-  "cnVersion": "16.19",
+  "cnVersion": "16.20",
   "augmentError": null,
   "champions": [
     {

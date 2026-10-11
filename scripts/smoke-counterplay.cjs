@@ -71,7 +71,7 @@ async function run(){
   let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
   const guideJs=code=>guide.webContents.executeJavaScript(code,true);
   await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(member.champion)+'&&b.model?.combo?.id==='+JSON.stringify(plan.id)+')'),'Member plan missing in guide');
-  await guideJs('document.querySelector("[data-tab=team]").click()');
+  await guideJs('window.guide.control("layout","details")');await guideJs('document.querySelector("[data-tab=team]").click()');
   for(const stage of ['key','later']){
    await guideJs('(()=>{const s=document.querySelector("#guide-stage");s.value='+JSON.stringify(stage)+';s.dispatchEvent(new Event("change",{bubbles:true}));})()');
    await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model.stage==='+JSON.stringify(stage)+')'),'Guide stage did not change');

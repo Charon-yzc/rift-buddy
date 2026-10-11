@@ -5,6 +5,7 @@ import path from 'node:path';
 import {clientSnapshot,writeRunePage} from './lcu.mjs';
 import {validateRuneWriteContext} from '../src/core/rune-context.mjs';
 import {importItemSet} from './item-sets.mjs';
+import {prepareClientSelection} from './client-preparation.mjs';
 import {loadSnapshot,atomicJSON} from './data.mjs';
 import {readState} from './storage.mjs';
 import {launchHelper} from './helper-launch.mjs';
@@ -49,6 +50,11 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
       result=await writeRunePage({page:request.payload.page,context:validateRuneWriteContext(request.payload.context),ownedPageId:state.ownedPageId,installPath:config.installPath,trees:data.runes});
       // The unelevated app is the sole settings writer; avoid racing a preference save.
      }finally{writing=false;}
+    }else if(request.operation==='prepareSelection'){
+     if(writing||itemSetWriting)throw Error('客户端配置正在处理，请稍后');writing=true;itemSetWriting=true;socket.setTimeout(60000,()=>socket.destroy());
+     try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data')),state=await readState(userData);
+      result=await prepareClientSelection({value:request.payload?.value,data,ownedPageId:state.ownedPageId,installPath:config.installPath});
+     }finally{writing=false;itemSetWriting=false;}
     }else if(request.operation==='importItemSet'){
      if(itemSetWriting)throw Error('装备集正在写入，请稍后');itemSetWriting=true;
      try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data'));
@@ -113,7 +119,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
   })().finally(()=>{opening=null;});return opening;
  }
  return {ensure,active:()=>!!config,
-  request:(operation,payload)=>{if(!config)throw new Error('尚未授权客户端连接');return requestHelper(config,operation,payload);},
+  request:(operation,payload)=>{if(!config)throw new Error('尚未授权客户端连接');return requestHelper(config,operation,payload,operation==='prepareSelection'?60000:12000);},
   status:async installPath=>{if(config){try{return await requestHelper(config,'status');}catch{}}return clientSnapshot(installPath);},
   shutdown:async()=>{closed=true;if(config){try{await requestHelper(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
  };

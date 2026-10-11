@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
-import {captureCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext} from '../src/core/creative-plan.mjs';
+import {captureCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext,validateCreativePlan,creativePlanId} from '../src/core/creative-plan.mjs';
 import {createPreparationStore,partyRoutePreparations,recallPreparation} from '../src/core/preparation.mjs';
 import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {getBuild} from '../src/core/builds.mjs';
@@ -10,6 +10,21 @@ import {validateState,defaultState} from '../services/storage.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 const context=(plan,m)=>({id:m.champion,role:m.role,mode:'rift',...creativeComboContext(creativeMemberCombo(plan,m.champion,m.role))});
+
+test('adding fourth and fifth members retains the active reviewed trio preparation, while another route and personal choices remain independent',()=>{
+ const core={top:'Camille',jungle:'Vi',mid:'Galio'},hero=id=>data.champions.find(h=>h.id===id);
+ const [trio]=recommend({slots:setup(core),champions:data.champions,scope:'party'}),three=captureCreativePlan(trio,data);
+ const expected=new Map(three.members.map(m=>[m.champion,getBuild(hero(m.champion),m.role,data,context(three,m))]));
+ for(const added of [{support:'Rakan'},{support:'Rakan',bottom:'Jinx'}]){
+  const [result]=recommend({slots:setup({...core,...added}),champions:data.champions,scope:'party'}),plan=captureCreativePlan(result,data),saved=validateCreativePlan(JSON.parse(JSON.stringify(plan)));
+  assert.equal(saved.shared.routes[0].loadoutGroup.id,three.curated.id);
+  for(const m of three.members){const b=getBuild(hero(m.champion),m.role,data,context(saved,m)),before=expected.get(m.champion);assert.equal(b.loadoutId,before.loadoutId);assert.deepEqual(b.runePage,before.runePage);assert.equal(b.skillOrder,before.skillOrder);if(m.champion!=='Camille'){assert.notEqual(b.loadoutId,'default');assert.equal(b.skillOrder.length,18);}assert.deepEqual(b.summoners,before.summoners);const manual=getBuild(hero(m.champion),m.role,data,{...context(saved,m),loadoutId:'default'});assert.equal(manual.loadoutId,'default');}
+  for(const m of saved.members.filter(m=>!three.members.some(p=>p.champion===m.champion)))assert.equal(getBuild(hero(m.champion),m.role,data,context(saved,m)).loadoutId,'default');
+  const alternate=saved.shared.routes.find(r=>!r.loadoutGroup),changed=selectPartyRoute(saved,alternate.id);
+  assert.equal(getBuild(hero('Camille'),'top',data,context(changed,{role:'top',champion:'Camille'})).loadoutId,'default');
+  const invalid=structuredClone(saved);invalid.shared.routes[0].loadoutGroup.members[0].champion='Ashe';invalid.id=creativePlanId(invalid);assert.throws(()=>validateCreativePlan(invalid),/配置与当前行动路线/);
+ }
+});
 
 for(const picks of [{top:'Jax',jungle:'Sejuani',mid:'Ahri'},{top:'Fiora',jungle:'Graves',mid:'TwistedFate',support:'Bard'},{top:'Fiora',jungle:'Ivern',mid:'Zoe',bottom:'Jhin',support:'Bard'}]){
  test(`${Object.keys(picks).length}-person alternate route preserves actual personal choices through restart and favorite capture`,()=>{

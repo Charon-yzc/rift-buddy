@@ -1,3 +1,4 @@
+import {changeJungleNotes} from './core/jungle-guidance.mjs';
 import {applyPresentation} from './presentation-view.mjs';
 import {changePresentation} from './core/presentation.mjs';
 import {renderGuide} from './guide-view.mjs';
@@ -5,7 +6,7 @@ import {escape as e,icon} from './ui.mjs';
 import {createGuideModel,selectGuide} from './core/guide.mjs';
 import {changeCompanionPlan} from './core/companion-plan.mjs';
 let snapshot,tab='overview',messageTimer,renderedView=null,renderedExpanded=false,renderedContext=null,renderedMatchId=null,renderedStateWritable=true;
-let activeSelect=null,pendingSelectUpdate=false;
+let activeSelect=null,pendingSelectUpdate=false,lastOpenTab=null;
 const viewStates=new Map();
 const root=document.getElementById('guide-root');
 const isPreview=!window.guide;
@@ -21,7 +22,10 @@ const api=window.guide||{
  control:async(action,value)=>{
   const s=window.previewGuideState;
   if(action==='presentation')return {...snapshot,presentation:changePresentation(snapshot.presentation,value)};
-  if(action==='recover'){s.ball=false;s.strip=false;s.collapsed=false;}
+  if(action==='recover'){s.ball=false;s.strip=false;s.collapsed=false;s.compact=true;}
+  if(action==='layout'){s.compact=value==='compact';s.ball=false;s.strip=false;s.collapsed=false;}
+  if(action==='jungle'){const [field,choice]=value.split(':');s.jungleNotes=changeJungleNotes(s.jungleNotes,field,choice,snapshot.model?.live?.matched?snapshot.model.live.gameTime:null);}
+  if(action==='skill-widget')s.skillWidget={...s.skillWidget,enabled:s.skillWidget?.enabled===false};
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
   if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
   if(action==='purchase-target'){s.purchaseTarget=value||undefined;s.purchaseTargetKind=snapshot.model.shoppingTargets.find(i=>i.id===value)?.kind==='局势备选'?'situation':undefined;}if(action==='stage')s.stage=value==='auto'?undefined:value;
@@ -29,7 +33,7 @@ const api=window.guide||{
   if(action==='later')s.selection=changeCompanionPlan(window.previewGuideData,s.selection,'later',value);
   if(action==='bottom-quest')s.bottomQuestConfirmed=!s.bottomQuestConfirmed;
   if(action==='live-advice')s.liveAdvice=s.liveAdvice===false;
-  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.bottomQuestConfirmed=false;s.completedItems=[];s.duelPick=undefined;delete s.purchaseTarget;delete s.purchaseTargetKind;delete s.stage;s.selection.compareIds=[];s.selection.ownedAugmentIds=[];delete s.selection.threatId;delete s.selection.matchupGameId;delete s.selection.protectId;delete s.selection.combatFocus;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball'){s.ball=!s.ball;if(s.ball)s.strip=false;}if(action==='strip'){s.strip=!s.strip;if(s.strip)s.ball=false;}
+  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.jungleNotes=undefined;s.bottomQuestConfirmed=false;s.completedItems=[];s.duelPick=undefined;delete s.purchaseTarget;delete s.purchaseTargetKind;delete s.stage;s.selection.compareIds=[];s.selection.ownedAugmentIds=[];delete s.selection.threatId;delete s.selection.matchupGameId;delete s.selection.protectId;delete s.selection.combatFocus;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball'){s.ball=!s.ball;if(s.ball)s.strip=false;}if(action==='strip'){s.strip=!s.strip;if(s.strip)s.ball=false;}
   if(action==='duel-own'||action==='duel-foe'){const side=action==='duel-own'?'own':'foe';if(value!==''&&!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value))throw Error('英雄选择格式不正确');const next={...(s.duelPick||{}),[side]:value||undefined};s.duelPick=next.own||next.foe?next:undefined;}
   if(action==='copy'){toast('桌面版支持复制');return true;}
   return {...snapshot,ball:!!s.ball,strip:!!s.strip,model:createGuideModel(window.previewGuideData,s)};
@@ -38,6 +42,7 @@ const api=window.guide||{
 const image=(kind,id,name)=>`<img src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}" />`;
 function toast(message){clearTimeout(messageTimer);const el=document.getElementById('guide-toast');el.textContent=message;el.className='visible';messageTimer=setTimeout(()=>el.className='',4000);}
 function render(){
+ if(snapshot?.openTab?.serial!==lastOpenTab&&snapshot?.openTab?.tab==='skills'){tab='skills';lastOpenTab=snapshot.openTab.serial;}
  activeSelect=null;pendingSelectUpdate=false;
  applyPresentation(snapshot?.presentation);
  const m=snapshot?.model,matchId=m?.matchId||null;
@@ -55,7 +60,7 @@ function render(){
  renderedStateWritable=tab!=='scoreboard'||m?.equipment?.available===true;
  const ball=!!snapshot?.ball&&!snapshot?.strip,strip=!!snapshot?.strip;
  renderedExpanded=!ball&&!m?.collapsed;
- document.body.classList.toggle('ball',ball); document.body.classList.toggle('strip',strip);
+ document.body.classList.toggle('ball',ball); document.body.classList.toggle('strip',strip);document.body.classList.toggle('compact',!ball&&!strip&&m?.compact!==false);
  root.className=strip?'strip':ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
  root.dataset.tab=tab;
  root.dataset.workspace=['skills','combat','scoreboard','rhythm','team','augments','settings'].includes(tab)?'focused':'overview';
@@ -70,7 +75,7 @@ function render(){
 // Replacing a native select while its menu is open closes it on each poll.
 // Retain the newest snapshot, then paint it when the user finishes choosing.
 // Invalid or changed game/preparation contexts still render immediately.
-const selectionContext=value=>JSON.stringify([value?.model?.matchId,value?.model?.selection,value?.model?.collapsed,value?.ball,value?.phase]);
+const selectionContext=value=>JSON.stringify([value?.model?.matchId,value?.model?.selection,value?.model?.collapsed,value?.model?.compact,value?.ball,value?.phase]);
 function endSelect(){activeSelect=null;if(pendingSelectUpdate)render();}
 document.addEventListener('pointerdown',event=>{if(event.target.tagName==='SELECT'&&root.contains(event.target))activeSelect=event.target;});
 document.addEventListener('keydown',event=>{
@@ -84,7 +89,7 @@ document.addEventListener('change',event=>{if(event.target===activeSelect){activ
 window.addEventListener('blur',endSelect);
 document.addEventListener('click',async event=>{
  const target=event.target.closest('button');if(!target)return;
- if(target.dataset.tab){if(snapshot.model?.collapsed){try{snapshot=await api.control('collapse');}catch(error){toast(error.message);return;}}if(target.dataset.tab==='settings'&&snapshot.mousePassThrough){try{snapshot=await api.control('interaction');}catch(error){toast(error.message);return;}}tab=target.dataset.tab;render();return;}
+ if(target.dataset.tab){if(snapshot.model?.compact!==false){try{snapshot=await api.control('layout','details');}catch(error){toast(error.message);return;}}if(snapshot.model?.collapsed){try{snapshot=await api.control('collapse');}catch(error){toast(error.message);return;}}if(target.dataset.tab==='settings'&&snapshot.mousePassThrough){try{snapshot=await api.control('interaction');}catch(error){toast(error.message);return;}}tab=target.dataset.tab;render();return;}
  // The floating ball lives on a draggable region: a real drag must move the
  // window, never toggle it. Only a near-stationary press counts as a click.
  if(target.dataset.action==='ball'||target.dataset.action==='strip'){const moved=dragMoved;dragMoved=false;if(moved)return;}

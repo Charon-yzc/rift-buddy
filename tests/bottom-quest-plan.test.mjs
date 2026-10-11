@@ -10,7 +10,8 @@ import {createPreparationStore} from '../src/core/preparation.mjs';
 import {selectedBuildFields,buildFavoriteId,findSavedBuild} from '../src/core/build-favorites.mjs';
 import {defaultState,saveState,readState} from '../services/storage.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';
-import {renderGuide} from '../src/guide-view.mjs';
+import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
+const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {itemConflicts} from '../src/core/mechanics.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
@@ -34,7 +35,7 @@ test('changing tactical lane cannot grant another formal position the seventh eq
  const model=createGuideModel(data,state,null,current);
  assert.equal(model.live.kind,undefined,'A valid manual tactical position should not become a role mismatch');
  assert.equal(model.bottomQuest.eligible,false);assert.equal(model.bottomQuest.confirmed,false);assert.equal(model.next,null);
- assert.match(model.routeBlocked.at(-1).reason,/客户端分路为辅助/);
+ assert.equal(model.route.length,6);assert.equal(model.completeGear.slotLimit,6);assert.match(model.bottomQuest.reason,/客户端分路为辅助/);
  const html=renderGuide({model,current},'items',false,()=>'<img>');
  assert.match(html,/手动方案位置不会授予/);assert.match(html,/data-action="bottom-quest" disabled/);
  assert.doesNotMatch(html,/第七件等待本局下路任务/);

@@ -36,9 +36,10 @@ test('accepted Camille/Galio/Vi and Shen/Nocturne/Galio plans have usable scoped
   }
  }
 });
-test('Galio with farming Senna gets only reviewed bottom opening and cannot borrow mid statistics or change old gear review',()=>{
+test('Galio farming with Senna has independent full nodes and tradeoffs without borrowing mid statistics or changing old gear review',()=>{
  const combo=DUOS.find(c=>c.id==='galio-senna');assert(combo);const selection=accepted(combo).find(s=>s.id==='Galio'),b=getBuild(hero('Galio'),'bottom',data,selection);
- assert.equal(b.loadoutId,'farm-tank');assert.equal(b.skillOrder,'QWE');assert.equal(b.selectedSkill.reference,undefined);assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.winRate,undefined);
+ assert.equal(b.loadoutId,'farm-tank');assert.equal(b.skillOrder,'QWEQQRQWQWRWWEEREE');assert(legalSkillOrder(b.skillOrder,'Galio'));assert.equal(b.priority,'QWE');assert.equal(b.selectedSkill.reference,undefined);assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.winRate,undefined);
+ assert.match(b.selectedSkill.reason,/代价是E成长较晚/);assert.match(b.selectedSkill.reason,/提前W/);assert.equal(createGuideModel(data,selectGuide(null,selection)).skillOrder,b.skillOrder);
  assert.equal(b.selectedSkill.patch,'16.20');assert.equal(b.rulesPatch,'16.19');assert.equal(b.stale,true);assert(!b.skillChoices.some(s=>s.source==='OP.GG'));
  const mid=getBuild(hero('Galio'),'mid',data);assert.equal(mid.skillOrder.length,15);assert.equal(mid.selectedSkill.source,'OP.GG');assert(!mid.skillChoices.some(s=>s.loadoutId==='farm-tank'));
  const wrongScope=getBuild(hero('Galio'),'mid',data,{loadoutId:'trio-galio-engage'});assert.equal(wrongScope.skillOrder.length,18);assert(!wrongScope.skillChoices.some(s=>s.loadoutId==='farm-tank'));
@@ -75,22 +76,24 @@ test('dedicated configurations without authored nodes retain equipment and offer
  }
  assert(examples.length>20,'exercise real trio and duo dedicated routes, not an empty fixture');
 });
-test('four/five-member preparation explains ordinary fallback and preserves explicit subgroup configuration',()=>{
+test('four/five-member preparation retains active subgroup preparation and preserves explicit ordinary configuration',()=>{
  for(const picks of [{top:'Camille',jungle:'Vi',mid:'Galio',bottom:'Ashe'},{top:'Camille',jungle:'Vi',mid:'Galio',bottom:'Ashe',support:'Janna'}]){
   const slots=createSlots().map(s=>({...s,champion:picks[s.role]||null,party:!!picks[s.role],locked:!!picks[s.role]}));
   const [result]=recommend({slots,champions:data.champions,scope:'party',builds:data.builds,patch:data.patch,catalogStatus:data.catalogInfo.status});assert(result);
   const creativePlan=captureCreativePlan(result,data);assert.equal(creativePlan.archetype,'shared');
-  const selection={comboId:creativePlan.id,creativePlan},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'default');assert.equal(ordinary.skillOrder.length,15);
-  assert.match(ordinary.selectionWarnings.join(' '),/不会自动沿用三人专用配置/);assert.match(loadoutSelector(ordinary,data),/同位置常用配置/);
-  const explicit=getBuild(hero('Vi'),'jungle',data,{...selection,loadoutId:'trio-ad-diver'});assert.equal(explicit.skillOrder.length,18);assert.match(loadoutSelector(explicit,data),/主动选择的专用配置/);
+  const selection={comboId:creativePlan.id,creativePlan},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'trio-ad-diver');assert.equal(ordinary.skillOrder.length,18);
+  assert.match(loadoutSelector(ordinary,data),/当前主线的三人专用配置/);
+  const explicit=getBuild(hero('Vi'),'jungle',data,{...selection,loadoutId:'default'});assert.equal(explicit.loadoutId,'default');assert.equal(explicit.skillOrder.length,15);assert.match(loadoutSelector(explicit,data),/同位置常用配置/);
   assert(!explicit.selectionWarnings.some(s=>s.includes('个人准备当前使用普通位置参考')));
  }
 });
-test('Rengar bottom offers a mechanism-only opening without borrowing lane statistics or fabricating later nodes',()=>{
+test('Rengar bottom has a reviewed full mechanism reference while keeping empowered skills conditional and personal choices first',()=>{
  for(const combo of [TRIOS.find(c=>c.id==='ivern-rengar-lulu'),DUOS.find(c=>c.id==='rengar-ivern')]){
   const selection=accepted(combo).find(s=>s.id==='Rengar'),b=getBuild(hero('Rengar'),'bottom',data,selection);
-  assert.equal(b.skillOrder,'QWE');assert.equal(b.selectedSkill.source,'机制整理');assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.reference,undefined);
-  assert(!b.skillChoices.some(s=>s.source==='OP.GG'));assert.equal(createGuideModel(data,selectGuide(null,selection)).skillOrder,'QWE');
+  assert.equal(b.skillOrder,'QWEQQRQEQEREEWWRWW');assert(legalSkillOrder(b.skillOrder,'Rengar'));assert.equal(b.priority,'QEW');assert.equal(b.selectedSkill.source,'机制整理');assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.reference,undefined);
+  assert.match(b.selectedSkill.reason,/只有强化E才禁锢/);assert.match(b.selectedSkill.reason,/代价是W伤害成长较晚/);assert.match(b.selectedSkill.reason,/不能把加点优先级当强化技能指令/);
+  assert(!b.skillChoices.some(s=>s.source==='OP.GG'));assert.equal(createGuideModel(data,selectGuide(null,selection)).skillOrder,b.skillOrder);
+  const personal=getBuild(hero('Rengar'),'bottom',data,{...selection,customSkillOrder:{order:'WQE',priority:'WEQ',patch:data.patch}});assert.equal(personal.skillOrder,'WQE');assert.equal(personal.priority,'WEQ');assert.deepEqual(personal.runePage,b.runePage);
   assert.equal(b.rulesPatch,'16.20');assert.equal(b.stale,false);assert(!b.runePage.selectedPerkIds.includes(8009),'mana-free Rengar must not use Presence of Mind');
  }
  const sera=BUNDLED_CATALOG.loadouts.find(l=>l.id==='sera-team');assert.equal(sera.patch,'16.20');assert.match(sera.why,/海力亚先伤害敌方英雄积充能/);

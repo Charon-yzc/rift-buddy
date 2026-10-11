@@ -44,7 +44,7 @@ function transportSwitch(current){
  return `<div class="room-transports">${option('lan','局域网','同一网络或虚拟局域网')}${option('relay','中继','跨网共享阵容，配置需服务支持')}</div>`;
 }
 
-function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom}){
+function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,hasPreparationFile,preparationFileBusy}){
  const results=Array.isArray(scanResults)?scanResults.slice(0,64):null;
  const forms=transport==='relay'
   ?`<div class="room-join"><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="wss://room.你的域名" spellcheck="false" aria-label="中继地址"></label><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'处理中…':'加入中继房间','arrow','small',busy?'disabled':'')}</div>
@@ -62,10 +62,11 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
    ${transportSwitch(transport)}
    ${forms}
    ${error?`<p class="callout warning">${e(error)}</p>`:''}
+   ${preparationFileControls(hasPreparationFile,preparationFileBusy)}
   </div></section>`;
 }
 
-function roomActive({room,addresses,champ}){
+function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy}){
  const isRelay=room.transport==='relay';
  const isHost=room.mode==='host';
  const link=LINK_TEXT[room.link]||'';
@@ -86,12 +87,13 @@ function roomActive({room,addresses,champ}){
    ${isRelay?defaultRelayNotice(room.relayUrl):''}
    <div class="room-share-row">${button('room-publish',isRelay?'重新分享当前选择':'分享我的阵容与配置','upload','primary small')}<span class="bottom-note">${isRelay?'阵容会自动同步。本版本向默认中继只发送阵容，其他中继会发送配置；是否转发仍取决于服务版本。仅实际收到配置的英雄显示“符文与加点”或“海克斯配置”，否则明确提示未收到。':'进入房间后阵容会自动同步，包含所选装备、完整符文、召唤师技能与加点；队友点击英雄查看发送方配置。'}不会自动改动队友的阵容或客户端。</span></div>
    <div class="room-members" aria-live="polite">${room.members.map(member=>memberCard(member,champ)).join('')}</div>
+   ${preparationFileControls(hasPreparationFile,preparationFileBusy)}
   </div></section>`;
 }
 
-export function roomPanel({room,nick='队友',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl=DEFAULT_RELAY_URL,relayRoom='',addresses=[],champ}){
- if(!room||room.mode==='idle')return roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom});
- return roomActive({room,addresses,champ});
+export function roomPanel({room,nick='队友',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl=DEFAULT_RELAY_URL,relayRoom='',addresses=[],champ,hasPreparationFile=false,preparationFileBusy=false}){
+ if(!room||room.mode==='idle')return roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,hasPreparationFile,preparationFileBusy});
+ return roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy});
 }
 
 export function roomMissingConfigurationDialog({id,role,mode,nick,champ}){
@@ -116,7 +118,7 @@ export function roomConfigurationText(config,data,from,strategy){
   ...(config.basis?[`配置来源：${config.basis.title}；${config.basis.note}`,`符文说明：${config.basis.rune}`,`加点说明：${config.basis.skill}`]:['旧共享未提供来源说明，请与发送方核对']),
   '发送方配置快照；不代表已购买、技能就绪、联合胜率或最优配置。'].join('\n');
 }
-export function roomConfigurationDialog(config,data,from,strategy,{localStrategy=null}={}){
+export function roomConfigurationDialog(config,data,from,strategy,{localStrategy=null,fromFile=false}={}){
  const c=data.champions.find(c=>c.id===config.champion),trees=new Map(data.runes.map(t=>[t.id,t])),runes=new Map(data.runes.flatMap(t=>t.slots.flatMap(s=>s.runes.map(r=>[r.id,r]))));
  const names=ids=>ids.map(id=>e(data.items[id]?.name||`装备 #${id}`)).join(' → ')||'未提供';
  let adoptionError='',adoption=null;try{adoption=roomPreparation(config,data,strategy,{localStrategy});}catch(error){adoptionError=error.message;}
@@ -129,5 +131,8 @@ export function roomConfigurationDialog(config,data,from,strategy,{localStrategy
  const skillHtml=`<section class="detail-section" data-room-section="skills"><h3>发送方召唤师技能与加点</h3>${config.priority?`<p>加点优先：${e(config.priority.split('').join(' > '))}；按游戏内可升级选项核对。</p>`:''}<p>${config.spells.map(id=>e(data.spells[id]?.name||id)).join(' / ')}</p>${config.attributePlan?attributeLines(config.attributePlan).map(line=>`<p>${e(line)}</p>`).join(''):order?`${order.length<18?`<p>${order.length===3?'开局三点':'部分逐级参考'}：仅覆盖前 ${order.length} 个技能点；发送方未提供后续逐级加点，后续按游戏内可升级选项核对。</p>`:''}<ol class="room-skill-order">${order.split('').map((key,i)=>`<li>${i+1}级 <b>${key}</b></li>`).join('')}</ol>`:'<p>发送方未提供普通逐级加点；特殊英雄属性点另行核对。</p>'}</section>`;
  const sourceHtml=`<section class="detail-section" data-room-section="source">${config.basis?`<h3>发送方配置来源 · ${e(config.basis.title)}</h3><p>${e(config.basis.note)}</p><p>符文：${e(config.basis.rune)}</p><p>加点：${e(config.basis.skill)}</p>`:'<p class="callout warning">旧共享未提供来源说明，请与发送方核对。</p>'}</section>`;
  const nav=`<nav class="room-configuration-nav" aria-label="共享配置分区">${[['runes','符文'],['skills','召唤师技能与加点'],['gear','装备'],...(strategy?[['strategy','组合职责']]:[]),['source','来源说明']].map(([section,label])=>`<button class="btn quiet small" data-action="room-configuration-jump" data-section="${section}">${label}</button>`).join('')}</nav>`;
- return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer room-configuration" role="dialog" aria-modal="true" aria-label="发送方配置"><header class="modal-header"><h2>${e(c?.name||config.champion)} · ${e(from)}的配置</h2><button class="btn quiet small" data-action="close">关闭</button></header><div class="drawer-content"><p class="section-copy">${e(roleName(config.role))} · ${config.mode==='hex'?'海克斯大乱斗':'召唤师峡谷'} · 发送方资料 ${e(config.patch)} · 本机资料 ${e(data.patch)}</p><p>这是点击时取得的发送方配置快照；装备是计划，符文尚未应用到你的客户端。</p>${config.patch!==data.patch?'<p class="callout warning">双方资料版本不同，名称按本机资料显示，原编号保留；先核对版本，不能采用替代符文页。</p>':''}${adoptionError?`<p class="callout warning">${e(adoptionError)}</p>`:''}<div class="detail-actions"><button class="btn small" data-action="room-copy-configuration">复制发送方配置</button><button class="btn primary small" data-action="room-adopt-configuration" ${adoptionError?'disabled':''}>采用符文${order?.length===3?'、开局三点':config.skills?'、加点':''}与召唤师技能${keepsLocal?' · 当前本机方案':play?'及组合职责':''}</button></div><p class="bottom-note">${keepsLocal?`采用到本机当前组合「${e(adoption.creativePlan.name)}」；保留本机分工，发送方组合说明另行参考。`:''}采用只编辑本机英雄配置，装备另行参考；写符文仍需在随后配置页核对英雄并明确点击替换。</p>${nav}${runeHtml}${skillHtml}${gearHtml}${strategyHtml}${sourceHtml}</div></section></div>`;
+ return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer room-configuration" role="dialog" aria-modal="true" aria-label="发送方配置"><header class="modal-header"><h2>${e(c?.name||config.champion)} · ${e(from)}的配置</h2>${fromFile?button('room-file-preview','全部成员','','quiet small'):''}<button class="btn quiet small" data-action="close">关闭</button></header><div class="drawer-content"><p class="section-copy">${e(roleName(config.role))} · ${config.mode==='hex'?'海克斯大乱斗':'召唤师峡谷'} · 发送方资料 ${e(config.patch)} · 本机资料 ${e(data.patch)}</p><p>这是点击时取得的发送方配置快照；装备是计划，符文尚未应用到你的客户端。</p>${config.patch!==data.patch?'<p class="callout warning">双方资料版本不同，名称按本机资料显示，原编号保留；先核对版本，不能采用替代符文页。</p>':''}${adoptionError?`<p class="callout warning">${e(adoptionError)}</p>`:''}<div class="detail-actions"><button class="btn small" data-action="room-copy-configuration">复制发送方配置</button><button class="btn primary small" data-action="room-adopt-configuration" ${adoptionError?'disabled':''}>采用符文${order?.length===3?'、开局三点':config.skills?'、加点':''}与召唤师技能${keepsLocal?' · 当前本机方案':play?'及组合职责':''}</button></div><p class="bottom-note">${keepsLocal?`采用到本机当前组合「${e(adoption.creativePlan.name)}」；保留本机分工，发送方组合说明另行参考。`:''}采用只编辑本机英雄配置，装备另行参考；写符文仍需在随后配置页核对英雄并明确点击替换。</p>${nav}${runeHtml}${skillHtml}${gearHtml}${strategyHtml}${sourceHtml}</div></section></div>`;
 }
+
+function preparationFileControls(hasFile,busy){return `<div class="room-file-controls"><h4>完整准备文件</h4><p class="bottom-note">不用建房也可导出当前所选英雄的装备、符文、加点与组合分工；自行私发给队友，对方先查看再明确采用。文件是固定快照，不会自动同步，不包含收藏备份或客户端账号。</p><div class="room-actions">${button('room-file-export','导出当前准备','download','small',busy?'disabled':'')}${button('room-file-import','打开队友准备','folder','small',busy?'disabled':'')}${hasFile?button('room-file-preview','查看已打开文件','','quiet small'):''}</div></div>`;}
+export function roomPreparationFileDialog(share,champ){return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer room-configuration" role="dialog" aria-modal="true" aria-label="准备文件"><header class="modal-header"><h2>准备文件 · ${e(share.from)}</h2>${button('close','关闭','','quiet small')}</header><div class="drawer-content"><p>文件记录于 ${e(new Date(share.at).toLocaleString('zh-CN'))} · ${share.mode==='hex'?'海克斯大乱斗':'召唤师峡谷'}。昵称由文件提供，未验证发送者身份；这份快照不会自动更新，也不会直接替换你的阵容或写入客户端。</p><p>选择一位成员，核对配置和版本后再明确采用；装备单独参考，符文仍需本人核对英雄后点击替换。</p><div class="room-champs">${share.configurations.map(c=>`<button class="room-champ" data-action="room-file-build" data-id="${e(c.champion)}" data-role="${e(c.role)}">${champ(c.champion)?portrait(champ(c.champion),'sm'):''}<span>${e(champ(c.champion)?.name||c.champion)} · ${e(roleName(c.role))} · ${e(c.patch)}</span></button>`).join('')}</div>${share.strategy?`<p class="bottom-note">已保留组合「${e(share.strategy.name)}」及其原始分工；查看成员配置时可逐项核对。</p>`:''}</div></section></div>`;}

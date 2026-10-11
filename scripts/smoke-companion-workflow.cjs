@@ -325,7 +325,7 @@ async function run(){
  assert.ok(await js('document.documentElement.scrollWidth<=innerWidth'),'Large text window report overflowed');
  await capture('window-info-full');await click('[data-action=close]');
  await js('window.buddy.openGuide()');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Cross-window guide missing');
- const guideJs=c=>guide.webContents.executeJavaScript(c,true);await until(()=>guideJs('!!document.querySelector(".next-item")'),'Cross-window guide not rendered');
+ const guideJs=c=>guide.webContents.executeJavaScript(c,true);await until(()=>guideJs('!!window.guide'),'Guide preload missing');await guideJs('window.guide.control("layout","details")');await until(()=>guideJs('!!document.querySelector(".next-item")'),'Cross-window guide not rendered');
  await guideJs('window.guide.control("presentation",{field:"textScale",value:1.1})');
  await until(()=>js('Math.abs(parseFloat(getComputedStyle(document.querySelector(".nav-item")).fontSize)-14.3)<0.01'),'Guide font did not reach main');
  assert.equal((await js('window.buddy.bootstrap()')).state.preferences.presentation.textScale,1.1);
