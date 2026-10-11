@@ -17,17 +17,27 @@ test('manual offline progress advances the compact goal without claiming real in
  assert.deepEqual(model.autoCompletedItems,[]);assert.equal(model.targetPlan.credit,0);
  assert.match(html,/手动计划/);assert.match(html,/不代表已持有/);assert.match(html,new RegExp('下一件 <b>'+gear.next.name));
  assert.doesNotMatch(html,/完整路线已持有|<em>✓<\/em>/);
+ state.completedItems=before.completeGear.route.filter(i=>i.fromPreparation).map(i=>i.id);
+ const remaining=createGuideModel(data,state);assert(remaining.completeGear.next.suggested);assert.equal(remaining.completeGear.next.planned,false);assert.equal(remaining.next.id,remaining.completeGear.next.id);
+ state.purchaseTarget=remaining.next.id;const chosen=createGuideModel(data,state);assert.equal(chosen.purchaseTarget,remaining.next.id);assert(chosen.shoppingTargets.some(i=>i.id===remaining.next.id&&i.kind==='路线成装'));
  state.completedItems=before.route.map(i=>i.id);
- const remaining=createGuideModel(data,state);assert(remaining.completeGear.next.suggested);assert.equal(remaining.completeGear.next.planned,false);
- state.selection.laterIds=before.completeGear.route.filter(i=>i.suggested).map(i=>Number(i.id));
- state.completedItems=createGuideModel(data,state).route.map(i=>i.id);
- const all=createGuideModel(data,state);assert.equal(all.completeGear.next,null);
+ const all=createGuideModel(data,validateGuideState(JSON.parse(JSON.stringify(state))));assert.equal(all.completeGear.next,null);assert.equal(all.next,null);assert.equal(all.purchaseTarget,'');assert.equal(all.route.length,6);assert.equal(all.selection.laterIds,undefined);
  assert.match(renderGuide({model:all},'overview',false,()=>'<img>'),/计划进度已标记/);
+ assert.match(renderGuide({model:{...all,compact:false}},'items',false,()=>'<img>'),/这套路线已完成/);
+});
+
+test('automatically filled seventh items obey the same explicit quest and progress gates',()=>{
+ const state=selectGuide(null,{...selection,bottomQuestPlan:true}),before=createGuideModel(data,state);assert.equal(before.route.length,7);
+ const last=before.route[6].id;assert.equal(before.bottomQuest.itemId,last);assert(before.shoppingTargets.find(i=>i.id===last).blockedReason);
+ state.completedItems=before.route.map(i=>i.id);state.purchaseTarget=last;
+ const waiting=createGuideModel(data,state);assert.equal(waiting.next,null);assert.equal(waiting.completeGear.next,null);assert(!waiting.completedItems.includes(last));assert(!waiting.completeGear.route[6].planned);assert.equal(waiting.purchaseTarget,'');
+ state.completedItems=before.route.slice(0,6).map(i=>i.id);state.bottomQuestConfirmed=true;
+ const ready=createGuideModel(data,state);assert.equal(ready.next.id,last);assert.equal(ready.completeGear.next.id,last);assert.equal(ready.purchaseTarget,last);
 });
 test('an explicit return-to-shop goal remains visible on the compact card without replacing the full route',()=>{
  const state=selectGuide(null,selection),before=createGuideModel(data,state);state.purchaseTarget='3006';
  const model=createGuideModel(data,state),html=renderGuide({model},'overview',false,()=>'<img>');
- assert.equal(model.purchaseTarget,'3006');assert.equal(model.next.id,'3006');assert.deepEqual(model.completeGear.route,before.completeGear.route);
+ assert.equal(model.purchaseTarget,'3006');assert.equal(model.next.id,'3006');assert.deepEqual(model.completeGear.route.map(i=>i.id),before.completeGear.route.map(i=>i.id));assert(model.completeGear.route.find(i=>i.id==='3006').protected);
  assert.match(html,/回城目标 <b>狂战士胫甲<\/b>/);assert.doesNotMatch(html,/下一件 <b>/);
  state.completedItems=['3006'];const finished=createGuideModel(data,state);
  assert.equal(finished.purchaseTarget,'');assert.doesNotMatch(renderGuide({model:finished},'overview',false,()=>'<img>'),/回城目标 <b>/);

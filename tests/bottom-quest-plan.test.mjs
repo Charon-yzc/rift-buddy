@@ -35,7 +35,7 @@ test('changing tactical lane cannot grant another formal position the seventh eq
  const model=createGuideModel(data,state,null,current);
  assert.equal(model.live.kind,undefined,'A valid manual tactical position should not become a role mismatch');
  assert.equal(model.bottomQuest.eligible,false);assert.equal(model.bottomQuest.confirmed,false);assert.equal(model.next,null);
- assert.match(model.routeBlocked.at(-1).reason,/客户端分路为辅助/);
+ assert.equal(model.route.length,6);assert.equal(model.completeGear.slotLimit,6);assert.match(model.bottomQuest.reason,/客户端分路为辅助/);
  const html=renderGuide({model,current},'items',false,()=>'<img>');
  assert.match(html,/手动方案位置不会授予/);assert.match(html,/data-action="bottom-quest" disabled/);
  assert.doesNotMatch(html,/第七件等待本局下路任务/);

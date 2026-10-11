@@ -11,7 +11,7 @@ const clean=value=>String(value||'').replace(/<[^>]*>/g,'');
 
 // This is an explained, temporary in-game route. It never changes a saved
 // preparation, spends gold, sells an item or claims a statistically best build.
-export function completeGearPlan({data,build,selection,live=null,completedItems=[],signals=[],enabled=true,bottomQuestConfirmed=false,bottomQuestEligible=true}){
+export function completeGearPlan({data,build,selection,live=null,completedItems=[],purchaseTarget=null,signals=[],enabled=true,bottomQuestConfirmed=false,bottomQuestEligible=true}){
  const map=selection.mode==='rift'?'11':'12',records=data.items;
  const item=id=>records[String(id)],available=id=>{
   const r=item(id);return !!(r?.maps?.[map]&&r.inStore&&r.gold?.purchasable!==false&&!r.requiredAlly&&(!r.requiredChampion||r.requiredChampion===selection.id));
@@ -40,7 +40,7 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  for(const owned of held.filter(full))for(let n=route.length-1;n>=0;n--)if(route[n]!==owned&&!owns(route[n])&&situationItemIssue({data,id:route[n],inventory:[{id:owned,count:1}]})){
   notes.push('已买 '+item(owned).name+'；不再安排互斥的 '+item(route[n]).name+'，其余空位再按局势选择。');route.splice(n,1);
  }
- const alreadyFinished=held.filter(id=>full(id)&&!route.some(target=>owns(target)&&inventoryFulfillsItem({data,id:target,inventory:[{id,count:1}]})));
+ const alreadyFinished=held.filter(id=>full(id)&&!route.some(target=>build.items.some(i=>idOf(i)===target&&String(i.purchaseBase?.id)===id)||owns(target)&&inventoryFulfillsItem({data,id:target,inventory:[{id,count:1}]})));
  for(const id of alreadyFinished){
   if(route.includes(id))continue;
   if(route.length>=slotLimit){const at=route.findLastIndex(target=>!owns(target)&&!item(target)?.tags?.includes('Boots'));if(at>=0)route.splice(at,1);}
@@ -50,8 +50,8 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  const pinned=new Set([...(selection.laterIds||[]).map(String),...(selection.bootsId?[String(build.boots)]:[])]);
  // Preserve the selected combo's first two interaction items and every item
 // actually finished. Existing component investment also protects the next goal.
- const protectedIds=new Set([...base.filter(id=>!item(id)?.tags?.includes('Boots')).slice(0,2),...pinned,...held.filter(full)]);
- const originalNext=route.find(id=>!owns(id)),credit=originalNext&&inventoryKnown?purchasePlan([{id:originalNext}],records,inventory,live.gold)[0]:null;
+ const protectedIds=new Set([...base.filter(id=>!item(id)?.tags?.includes('Boots')).slice(0,2),...pinned,...held.filter(full),...(route.includes(String(purchaseTarget))?[String(purchaseTarget)]:[])]);
+ const originalNext=route.find(id=>!owns(id)),credit=originalNext&&inventoryKnown?purchasePlan([build.items.find(i=>idOf(i)===originalNext)||{id:originalNext}],records,inventory,live.gold)[0]:null;
  if(credit&&(credit.credit>=item(originalNext).gold.total*.5||Number.isFinite(live.gold)&&credit.remaining<=live.gold))protectedIds.add(originalNext);
  const automatic=enabled&&selection.mode==='rift'&&data.patch===COMPLETE_GEAR_PATCH&&!build.stale&&!build.referenceStale&&inventoryKnown&&live.teamKnown===true&&normalQueues.has(live.queueId);
  const roster=automatic&&Array.isArray(live.roster)?live.roster:[];
@@ -117,6 +117,7 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  if(!automatic)notes.push(!enabled?'局势调整已关闭；保留原准备和备选。':!inventoryKnown?'本局背包尚未完整读取，暂不改动完整路线。':data.patch!==COMPLETE_GEAR_PATCH||build.stale||build.referenceStale?'方案或规则需要复核，暂停自动改路线。':'队列或双方公开数据尚未确认，保留原路线。');
  if(route.length<slotLimit)notes.push('当前来源没有足够适合路线的成装候选；空余装备位由玩家选择，不以不合适装备凑满。');
  const pendingQuest=slotLimit===7&&route.length===7&&!bottomQuestConfirmed&&!owns(route[6]);
+ if(pendingQuest)manualIds.delete(route[6]);
  if(pendingQuest)notes.unshift('第七件先等本局正式下路任务完成，并在详情确认；当前不作为可购买目标。');
  if(selection.bottomQuestPlan&&!bottomQuestEligible)notes.unshift('本局正式位置或队列不满足下路第七件条件，按六格参考。');
  const manualProgress=route.some(planned);

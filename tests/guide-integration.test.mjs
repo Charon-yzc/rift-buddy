@@ -49,16 +49,15 @@ test('merged guide persists both feature selections and clears both sets of matc
  assert.equal(next.liveAdvice,false);
 });
 
-test('a blocked footwear goal is not shown as a completed route or a directly affordable purchase',()=>{
+test('different owned footwear replaces the unbought pair and invalidates the old explicit goal',()=>{
  const guide={...selectGuide(null,{...selection,conditions:['ad']}),purchaseTarget:'3047',purchaseTargetKind:'situation'};
  const route=createGuideModel(data,guide).route;
  const inventory=route.filter(i=>i.id!=='3047').map(i=>({id:i.id,count:1}));inventory.push({id:'3111',count:1});
  const live={...snapshot(),roster:[],enemies:[],inventory,gold:5000};
  const m=createGuideModel(data,guide,live);
- assert.equal(m.next,null);assert.equal(m.action,null);assert.equal(m.routeBlocked.length,1);assert.equal(m.routeBlocked[0].id,'3047');
+ assert.equal(m.next,null);assert.equal(m.action,null);assert.equal(m.routeBlocked.length,0);assert(m.targetBlockedReason.includes('已持有另一双成鞋'));assert.equal(m.purchaseTarget,'');assert(m.targetFallback);assert(!m.route.some(i=>i.id==='3047'));assert(m.route.some(i=>i.id==='3111'));
  const html=renderGuide({model:{...m,collapsed:false}},'items',false,(_kind,id)=>`<img src="${id}">`);
- assert.match(html,/路线有待处理的装备/);assert.match(html,/已持有另一双成鞋/);assert.doesNotMatch(html,/这套路线已完成/);
- assert.match(html,/<option value="3047" disabled/);
+ assert.match(html,/已持有另一双成鞋/);assert.match(html,/这套路线已完成/);assert.match(html,/<option value="3047" disabled/);
  const upgraded=createGuideModel(data,guide,{...live,inventory:inventory.filter(i=>i.id!=='3111').concat({id:'3174',count:1})});
  assert.equal(upgraded.routeBlocked.length,0);assert.equal(upgraded.next,null);assert.ok(upgraded.autoCompletedItems.includes('3047'));
 });

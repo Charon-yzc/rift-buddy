@@ -25,6 +25,12 @@ test('existing component investment and personal later choice prevent destructiv
  assert(invested.route.some(r=>r.id===String(first.id)));assert(!invested.updates.some(u=>u.replaces===String(first.id)));
 });
 
+test('an explicitly chosen full-item shopping goal survives a new automatic defensive diversion',()=>{
+ const b=build(),before=run(b),target=before.route[2].id;
+ const after=run(b,{purchaseTarget:target,signals:[signal('magic','manual',100)]});
+ assert(after.route.some(r=>r.id===target));assert(!after.updates.some(u=>u.replaces===target));assert(after.updates.some(u=>u.id==='3156'));
+});
+
 test('conditional alternatives explain choices before any observed pressure without changing the route',()=>{
  const plan=run();assert.equal(plan.updates.length,0);assert(plan.alternatives.length>=2&&plan.alternatives.length<=3);
  assert(plan.alternatives.every(a=>a.source==='conditional'&&a.reason.includes('尚未确认')&&a.caution));

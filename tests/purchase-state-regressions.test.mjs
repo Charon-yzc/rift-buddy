@@ -49,7 +49,7 @@ test('each mana task family allows its own upgrade and blocks a different branch
   assert.equal(model.routeBlocked.some(i=>i.id===String(target)),false);
   const otherBase=base===3004?3003:3004,other=guide(fixture,[3078,otherBase]);
   assert.match(situationItemIssue({data,id:String(target),inventory:bag([otherBase])}),/互斥/);
-  assert.ok(other.routeBlocked.some(i=>i.id===String(target)));
+  assert(!other.route.some(i=>i.id===String(target)));assert(other.shoppingTargets.find(i=>i.id===String(target)).blockedReason);assert(other.completeGear.notes.some(n=>n.includes('不再安排')));
   assert.notEqual(other.next?.id,String(target));
  }
 });
@@ -67,16 +67,16 @@ test('task and normal recipe ownership is directional, without dismantling finis
  assert.equal(component.credit,0);assert.equal(component.owned,false);
 });
 
-test('affordable actual next core wins over a detour even when a blocked earlier route item reserves its component',()=>{
+test('affordable actual next core uses its component after an incompatible earlier goal leaves the runtime route',()=>{
  const roster=['Jhin','Jinx'].map((champion,index)=>({champion,side:'enemy',itemsKnown:true,inventory:bag([index?6672:3031]),scores:{kills:0}}));
  const state=selectGuide(null,{...selection,coreId:'core-3078-3042-3156',threatId:'Jhin'});
  const model=guide(data,[3078,3040,1036],{state,gold:2750,roster});
- assert.ok(model.routeBlocked.some(i=>i.id==='3042'));
+ assert(!model.route.some(i=>i.id==='3042'));assert(model.shoppingTargets.find(i=>i.id==='3042').blockedReason);
  assert.ok(model.situation.candidates.some(i=>i.id==='1029'),'The defensive alternative still exists for manual choice');
  assert.equal(model.next.id,'3156');assert.equal(model.automaticTarget,false);
  assert.equal(model.action.kind,'complete');assert.equal(model.action.cost,2750);
  assert.equal(model.targetPlan.credit,350);
- assert.equal(model.purchase.find(i=>i.id==='3156').credit,0,'Keep full-route display allocation intact');
+ assert.equal(model.purchase.find(i=>i.id==='3156').credit,350,'An unavailable removed goal cannot reserve the next core component');
  const original=purchasePlan(model.route,data.items,bag([3078,3040,1036]),2750);
  assert.deepEqual(model.purchase,original);
 });

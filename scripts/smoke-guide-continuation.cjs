@@ -16,14 +16,25 @@ async function run(){
   await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');const gjs=code=>guide.webContents.executeJavaScript(code,true),snapshot=()=>gjs('window.guide.bootstrap()');
   await until(()=>gjs('!!window.guide'),'Guide API missing');await gjs('window.guide.control("layout","details")');await until(async()=>(await snapshot()).model?.selection.id===id,'Guide context missing');
   if(phase==='select'){
-   let model=(await snapshot()).model;for(const item of model.route)await gjs('window.guide.control("item",'+JSON.stringify(item.id)+')');
-   await until(()=>gjs('document.body.textContent.includes("核心路线完成，继续选择后期装备")'),'No post-core continuation');
+   let model=(await snapshot()).model;for(const item of model.completeGear.route.filter(i=>i.fromPreparation))await gjs('window.guide.control("item",'+JSON.stringify(item.id)+')');
+   await until(async()=>{const m=(await snapshot()).model;return m.next&&m.next.id===m.completeGear.next?.id&&m.completeGear.next.suggested;},'No complete-route continuation');
    await gjs('document.querySelector("button[data-tab=items]").click()');await until(()=>gjs('!!document.querySelector("[data-guide-section=later]")'),'Late pool missing in guide');
-   model=(await snapshot()).model;assert.equal(model.next,null);assert.equal(model.maxLaterItems,id==='Nautilus'?1:2);const progress=[...model.completedItems],choice=model.laterChoices.find(i=>i.fitsRoute&&!i.blockedReason);assert.ok(choice);
+   model=(await snapshot()).model;assert.ok(model.next);assert.equal(model.maxLaterItems,id==='Nautilus'?1:2);const progress=[...model.completedItems],choice=model.laterChoices.find(i=>i.fitsRoute&&!i.blockedReason&&!progress.includes(i.id));assert.ok(choice);
    await gjs('document.querySelector('+JSON.stringify('[data-action=later][data-id="'+choice.id+'"]')+').click()');
-   await until(async()=>(await snapshot()).model.selection.laterIds?.includes(Number(choice.id)),'Late selection not accepted');model=(await snapshot()).model;assert.equal(model.next.id,choice.id);assert.deepEqual(model.completedItems,progress);assert.equal(model.route.length,5);assert.ok(model.laterChoices.find(i=>i.id===choice.id).selected);
+   await until(async()=>(await snapshot()).model.selection.laterIds?.includes(Number(choice.id)),'Late selection not accepted');model=(await snapshot()).model;assert.equal(model.next.id,choice.id);assert.deepEqual(model.completedItems,progress);assert.equal(model.route.length,id==='Nautilus'?5:6);assert.ok(model.laterChoices.find(i=>i.id===choice.id).selected);
    expected[id]={selection:model.selection,progress,chosen:choice.id};main.webContents.send('open-build',model.selection);await until(()=>js('!!document.querySelector("[data-action=favorite-build]")'),'Main configuration missing');await delay(100);await js('document.querySelector("[data-action=favorite-build]").click()');
    await until(async()=>(await state()).favorites.some(f=>f.champion===id&&f.laterIds?.includes(Number(choice.id))),'Favorite did not retain guide late choice');
+   if(id==='Ashe'){
+    // Replacing a full manual route must discard exited item marks before the
+    // next mark is persisted, otherwise the six-slot state cap drops it.
+    await js('window.buddy.openGuide('+JSON.stringify({id,role,mode:'rift'})+')');await gjs('window.guide.control("reset")');
+    const full=(await snapshot()).model;for(const item of full.route)await gjs('window.guide.control("item",'+JSON.stringify(item.id)+')');
+    assert.equal((await snapshot()).model.next,null);const replacement=full.laterChoices.find(i=>i.fitsRoute&&!i.blockedReason&&!full.route.some(r=>r.id===i.id));assert.ok(replacement);
+    await gjs('window.guide.control("later",'+JSON.stringify(replacement.id)+')');assert.equal((await snapshot()).model.next.id,replacement.id);
+    await gjs('window.guide.control("item",'+JSON.stringify(replacement.id)+')');const replaced=(await snapshot()).model;assert.equal(replaced.next,null);assert.equal(replaced.completedItems.length,6);assert.ok(replaced.completedItems.includes(replacement.id));
+    assert.ok((await state()).guide.completedItems.includes(replacement.id));
+    await js('window.buddy.openGuide('+JSON.stringify(expected[id].selection)+')');await gjs('window.guide.control("reset")');for(const item of progress)await gjs('window.guide.control("item",'+JSON.stringify(item)+')');
+   }
    for(const width of [360,440]){guide.setSize(width,740);await delay(100);const layout=await gjs('({width:innerWidth,scroll:document.documentElement.scrollWidth})');assert.ok(layout.scroll<=layout.width,'Late pool overflow');await fs.writeFile(path.join(root,id+'-'+width+'.png'),(await guide.webContents.capturePage()).toPNG());}
   }else{
    const model=(await snapshot()).model;assert.deepEqual(model.selection.laterIds,expected[id].selection.laterIds);assert.ok(model.route.some(i=>i.id===expected[id].chosen));assert.ok((await state()).favorites.some(f=>f.champion===id&&f.laterIds?.includes(Number(expected[id].chosen))));

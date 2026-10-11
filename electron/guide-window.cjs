@@ -166,7 +166,7 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
   }
   if(action==='later'){const m=getModel(),choice=m.laterChoices.find(i=>i.id===value),unavailable=m.unavailableLaterOptions.some(i=>String(i.id)===value);if(!choice&&!unavailable)throw Error('后期备选已变化，请重新选择');if(choice?.blockedReason&&!choice.selected)throw Error(choice.blockedReason);return save({...current,selection:adjustPlan(current.selection,'later',value)});}
   if(action==='condition'){if(!['ad','ap','control','heal','burst'].includes(value))throw Error('局势选项不正确');const conditions=current.selection.conditions.includes(value)?current.selection.conditions.filter(c=>c!==value):[...current.selection.conditions,value];return save({...current,selection:{...current.selection,conditions}});}
-  if(action==='bottom-quest'){if(!current.selection.bottomQuestPlan)throw Error('当前不是下路任务后装备计划');const quest=getModel().bottomQuest;if(!current.bottomQuestConfirmed&&quest?.eligible===false)throw Error(quest.reason);return save({...current,bottomQuestConfirmed:!current.bottomQuestConfirmed});}
+  if(action==='bottom-quest'){if(!current.selection.bottomQuestPlan)throw Error('当前不是下路任务后装备计划');const quest=getModel().bottomQuest;if(!current.bottomQuestConfirmed&&quest?.eligible===false)throw Error(quest.reason);return save({...current,bottomQuestConfirmed:!current.bottomQuestConfirmed,completedItems:current.completedItems.filter(id=>id!==quest?.itemId)});}
   if(action==='reset')return save({...current,completedItems:[]});
   if(action==='new-game'){const result=await save({...current,jungleNotes:undefined,completedItems:[],bottomQuestConfirmed:false,clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,matchupGameId:undefined,protectId:undefined,combatFocus:undefined}});inputMode();return result;}
   if(action==='purchase-target'){const target=getModel().shoppingTargets.find(i=>i.id===value&&!i.owned&&!i.blockedReason);if(value!==''&&!target)throw Error('目标已变化，请重新选择');return save({...current,purchaseTarget:value||undefined,purchaseTargetKind:target?.kind==='局势备选'?'situation':undefined});}
@@ -178,9 +178,11 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
    return save({...current,duelPick:next.own||next.foe?next:undefined});
   }
   if(action==='item'){
-   if(getModel().live.matched)throw Error('背包正在同步，购买进度以实际背包为准；可切换回城目标');
-   if(typeof value!=='string'||!getModel().route.some(i=>i.id===value))throw Error('这个装备不在当前方案中');
-   return save({...current,...(current.purchaseTarget===value&&!current.completedItems.includes(value)?{purchaseTarget:undefined}:{}),completedItems:current.completedItems.includes(value)?current.completedItems.filter(id=>id!==value):[...current.completedItems,value]});
+   const m=getModel();
+   if(m.live.matched)throw Error('背包正在同步，购买进度以实际背包为准；可切换回城目标');
+   if(typeof value!=='string'||!m.route.some(i=>i.id===value))throw Error('这个装备不在当前方案中');
+   const progress=m.completedItems,blocked=m.routeBlocked.find(i=>i.id===value);if(blocked&&!progress.includes(value))throw Error(blocked.reason);
+   return save({...current,...(current.purchaseTarget===value&&!progress.includes(value)?{purchaseTarget:undefined}:{}),completedItems:progress.includes(value)?progress.filter(id=>id!==value):[...progress,value]});
   }
   if(action==='copy'){const m=getModel();clipboard.writeText(`${m.champion.name} · ${m.mode==='hex'?'海克斯大乱斗':m.role}\n${m.route.map(i=>i.name).join(' → ')}\n本次购买：${m.next?.name||'路线已完成'}\n理由：${m.nextReason}\n取舍：${m.nextCaution}\n加点：${m.priority||'请按游戏提示'}${m.nextSkill?'；当前建议 '+m.nextSkill:''}\n加点理由：${m.skillAdvice.reason}\n取舍：${m.skillAdvice.caution}\n符文：${m.runes.map(r=>r.name).join(' / ')}\n${m.combo?[m.combo.title,m.combo.ownJob,...(m.combo.steps||[]),m.combo.window,m.combo.early,m.combo.economy].filter(Boolean).join('\n'):''}\n${(m.adjustments||[]).map(a=>`${a.title}：${a.text}`).join('\n')}\n${m.tips}\n资料 ${m.version} · ${m.source}\n${m.status?.build||''}`);return true;}
   throw Error('不支持此操作');

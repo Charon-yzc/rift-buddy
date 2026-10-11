@@ -129,31 +129,36 @@ export function createGuideModel(data,value,live=null,current=null){
  if(!champion)throw Error('当前资料没有这位英雄，请重新选择');
  const build=getBuild(champion,s.role,data,s);
  if(s.sourceOpponent&&s.threatId&&s.sourceOpponent!==s.threatId)build.selectionWarnings.push(`配置来源仍筛选对 ${data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent}，当前关注 ${data.champions.find(c=>c.id===s.threatId)?.name||s.threatId}；请在助手刷新并选择新参考，已有装备与符文不会自动更改。`);
- const route=build.items.map(item),validIds=new Set(route.map(i=>i.id));
- const completedItems=guide.completedItems.filter(id=>validIds.has(id));
+ const preparedRoute=build.items.map(item);
  const mismatch=guideMismatch(s,current),liveStatus=mismatch?{matched:false,kind:mismatch,reason:mismatch==='role'?'当前位置已变化，请换入当前英雄与位置':'当前选择与这份方案不同，请重新确认'}:liveGuideStatus(live,s),matched=liveStatus.matched;
- const inventoryKnown=matched&&live.inventoryKnown!==false,inventory=inventoryKnown&&Array.isArray(live?.inventory)?live.inventory:[],purchase=purchasePlan(route,data.items,inventory,inventoryKnown?live.gold:null);
- const autoCompletedItems=inventoryKnown?purchase.filter(i=>i.owned||inventoryFulfillsItem({data,id:i.id,inventory})).map(i=>i.id):[];
+ const inventoryKnown=matched&&live.inventoryKnown!==false,inventory=inventoryKnown&&Array.isArray(live?.inventory)?live.inventory:[];
  const runeNames=new Map(data.runes.flatMap(t=>t.slots.flatMap(slot=>slot.runes.map(r=>[r.id,r.name]))));
  const referenceIds=build.reference?.augmentIds||[];
  const augmentIds=s.augmentIds.length?s.augmentIds:referenceIds.slice(0,5);
  const augments=augmentIds.map(id=>data.augments.find(a=>a.id===id)).filter(Boolean).map(a=>({id:a.id,name:a.name,rarity:a.rarity,description:a.description,status:a.descriptionStatus||'complete'}));
- const pendingQuestId=build.bottomQuestPlan&&route.length>6?route[6].id:null;
  const formalRole=current?.formalRole||(['top','jungle','mid','bottom','support'].includes(matched&&live?.position)?live.position:null);
  const bottomQuestEligible=live?.queueId!==480&&(!formalRole||formalRole==='bottom');
  const bottomQuestReason=!bottomQuestEligible?live?.queueId===480?'当前快速模式不提供普通峡谷下路任务额外装备位。':`本局客户端分路为${ROLES.find(r=>r.id===formalRole)?.name}，手动方案位置不会授予下路任务额外装备位。`:'先确认本局正式下路任务已完成，鞋子已移入任务位，再使用额外装备位。';
  const bottomQuestConfirmed=guide.bottomQuestConfirmed===true&&!mismatch&&bottomQuestEligible;
+ const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
+ const completeGear=completeGearPlan({data,build,selection:s,live:matched?{...live,matched:true}:null,completedItems:guide.completedItems,purchaseTarget:guide.purchaseTarget,signals:situation.signals,enabled:guide.liveAdvice,bottomQuestConfirmed,bottomQuestEligible});
+ // Every displayed complete item participates in the same purchase plan and
+ // explicit offline progress controls. Filling a runtime route never changes
+ // the player's saved core or personal later-item selections.
+ const route=completeGear.route.map(i=>preparedRoute.find(p=>p.id===i.id)||item(data.items[i.id])),validIds=new Set(route.map(i=>i.id));
+ const pendingQuestId=completeGear.slotLimit===7&&route.length>6?route[6].id:null;
+ const completedItems=guide.completedItems.filter(id=>validIds.has(id)&&!(id===pendingQuestId&&!bottomQuestConfirmed));
+ const purchase=purchasePlan(route,data.items,inventory,inventoryKnown?live.gold:null);
+ const autoCompletedItems=inventoryKnown?purchase.filter(i=>i.owned||inventoryFulfillsItem({data,id:i.id,inventory})).map(i=>i.id):[];
  const itemIssue=i=>pendingQuestId===String(i.id)&&!bottomQuestConfirmed?bottomQuestReason:inventoryKnown?situationItemIssue({data,id:i.id,inventory}):null;
  const routeBlocked=route.filter(i=>!autoCompletedItems.includes(i.id)&&itemIssue(i)).map(i=>({id:i.id,name:i.name,reason:itemIssue(i)}));
  const targetBlockedReason=guide.purchaseTarget?itemIssue({id:guide.purchaseTarget}):null;
- const laterChoices=(build.laterOptions||[]).map(row=>{const choice=item(row.items[0]),selected=build.selectedLaterIds.includes(Number(choice.id));return {...choice,selected,fitsRoute:row.fitsRoute,blockedReason:selected?null:itemIssue(choice)|| (itemConflicts(Number(choice.id),route.map(i=>Number(i.id)))?'与当前路线互斥，请先取消冲突备选':null)};});
+ const laterChoices=(build.laterOptions||[]).map(row=>{const choice=item(row.items[0]),selected=build.selectedLaterIds.includes(Number(choice.id));return {...choice,selected,fitsRoute:row.fitsRoute,blockedReason:selected?null:itemIssue(choice)|| (itemConflicts(Number(choice.id),preparedRoute.map(i=>Number(i.id)))?'与当前路线互斥，请先取消冲突备选':null)};});
  const laterNeeded=laterChoices.length?Math.max(0,build.maxLaterItems-build.selectedLaterIds.length):0;
  const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
- const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
- const completeGear=completeGearPlan({data,build,selection:s,live:matched?{...live,matched:true}:null,completedItems,signals:situation.signals,enabled:guide.liveAdvice,bottomQuestConfirmed,bottomQuestEligible});
  const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
- const choices=[...new Map([...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
- const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:inventoryKnown&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));
+ const choices=[...new Map([...preparedRoute,...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
+ const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':preparedRoute.some(p=>p.id===i.id)?'原准备':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:inventoryKnown&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));
  const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&!i.blockedReason&&(matched||!completedItems.includes(i.id)));
  // Route-wide allocation is retained for display, but earlier blocked goals
  // must not reserve the components needed for the actual next purchase.
@@ -240,7 +245,7 @@ export function createGuideModel(data,value,live=null,current=null){
   objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch,plan:build.combo?.creativePlan,champion:s.id,confirmed:current?.comboKnown===true&&!mismatch,protectId:s.protectId,data}):null,
   powers:s.mode==='rift'?powerWindows({champion:s.id,role:s.role,live:liveModel,data,route}):null,
   coach:s.mode==='rift'?heroCoach({data,champion,role:s.role,priority:build.priority,enemyId:selectedOpponent?.id,combo:build.combo,focus:s.combatFocus,stage:playStage(liveModel,guide.stage||'auto'),ownSkills:liveModel.skills}):null,
-  equipment:publicEquipment(data,matched?live:null),estimate,combatUnavailable,ultimateReference:ultimate,customDuel,duelPick:guide.duelPick||null,duelOptions,bottomQuest:pendingQuestId?{confirmed:bottomQuestConfirmed,itemId:pendingQuestId,eligible:bottomQuestEligible,reason:bottomQuestReason}:null,routeBlocked,targetBlockedReason,
+  equipment:publicEquipment(data,matched?live:null),estimate,combatUnavailable,ultimateReference:ultimate,customDuel,duelPick:guide.duelPick||null,duelOptions,bottomQuest:s.bottomQuestPlan&&build.boots?{confirmed:bottomQuestConfirmed,itemId:pendingQuestId,eligible:bottomQuestEligible,reason:bottomQuestReason}:null,routeBlocked,targetBlockedReason,
   live:liveModel,nextSkill:skillAdvice.next,skillAdvice,situation,nextReason,nextCaution:nextCandidate?.caution||'静态价格与合成条件以游戏商店为准。',liveAdvice:guide.liveAdvice,automaticTarget:!!(!chosen&&suggested&&suggested.id===next?.id),
   priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,attributePlan:build.attributePlan,skillTitle:build.selectedSkill?.name,skillPatch:build.selectedSkill?.patch,skillStale:build.selectedSkill?.stale,skillSources:build.selectedSkill?.sources,skillReference:build.selectedSkill?.reference,skillSourceUrl:build.selectedSkill?.sourceUrl,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
