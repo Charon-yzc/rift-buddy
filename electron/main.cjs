@@ -196,7 +196,6 @@ async function boot(){
   next.draft=draftContext.newGame&&state.draft?.clientGameId===gameId?state.draft:draftContext.draft;
   // The renderer cannot claim ownership of existing user rune pages.
   const before=base?storage.validateState(base):structuredClone(state),same=isDeepStrictEqual;
-  if(latestClient.connected&&latestClient.phase==='ChampSelect'&&next.draft)for(const player of latestClient.session?.myTeam||[]){const id=data.champions.find(c=>c.key===Number(player.championId))?.id;if(id&&before.draft?.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id)&&!next.draft.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id&&s.locked))throw Error('客户端已选英雄不能移除或解锁，请同步后调整位置。');}
   await saveCurrentState(current=>{
    const merged={...current,preferences:{...current.preferences}};
    for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(key==='draft'&&next.draft&&before.draft&&current.draft){
@@ -210,7 +209,12 @@ async function boot(){
     merged.preparations=changed?upsertPreparation(merged.preparations,changed):merged.preparations.filter(p=>preparationIdentity(p)!==identity);
    }
    for(const key of Object.keys(next.preferences)){if(key==='presentation'||same(next.preferences[key],before.preferences[key]))continue;if(!same(current.preferences[key],before.preferences[key])&&!same(current.preferences[key],next.preferences[key]))throw Error('偏好同时发生变化，请刷新后重新保存');merged.preferences[key]=next.preferences[key];}
-   const context=reconcileClientDraft(merged.draft,publicClientGameId(latestClient),current.draft?.clientGameId||current.guide?.match?.gameId);merged.draft=context.newGame&&current.draft?.clientGameId===publicClientGameId(latestClient)?current.draft:context.draft;return merged;
+   const gameId=publicClientGameId(latestClient),context=reconcileClientDraft(merged.draft,gameId,current.draft?.clientGameId||current.guide?.match?.gameId);merged.draft=context.newGame&&current.draft?.clientGameId===gameId?current.draft:context.draft;
+   // Protect accepted picks from this game, after the queued merge. A renderer
+   // base from the previous game must not block releasing its old lane binding.
+   const accepted=reconcileClientDraft(current.draft,gameId,current.guide?.match?.gameId).draft;
+   if(latestClient.connected&&latestClient.phase==='ChampSelect'&&merged.draft)for(const player of latestClient.session?.myTeam||[]){const id=data.champions.find(c=>c.key===Number(player.championId))?.id;if(id&&accepted?.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id)&&!merged.draft.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id&&s.locked))throw Error('客户端已选英雄不能移除或解锁，请同步后调整位置。');}
+   return merged;
   });guide.publish();companion.sync();return true;
  });
  const {createClientSync}=await import('../src/core/async-tasks.mjs');
