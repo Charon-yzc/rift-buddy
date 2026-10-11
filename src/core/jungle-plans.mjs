@@ -19,6 +19,6 @@ export function junglePlan(champion,start,side){
  const end=side?(side==='blue'?(start==='blue'?'下路':'上路'):(start==='blue'?'上路':'下路')):null;
  return {opening,special,profile:p,routeTitle:special?'画圈与回收示例':p?.early?'三营检查 → 无机会接着刷':'六营发育示例',
   finish:special?'回收方向按实际安全与成熟情况调整':end?`完整示例结束靠近${end}；中路机会顺路比较`:'出生方未知：暂不指定结束靠近哪条边路',
-  compactRoute:special?['画圈 → 转半区 → 安全回收']: [camps.slice(0,3).join(' → '),camps.slice(3).join(' → ')],
-  checkpoint:p?.early?'前三营后自己检查邻线；没有可靠机会就继续后三营，不蹲等。':'保住经验与回城节奏；遇到近处可靠机会可以提前停刷，不强行刷满。'};
+  compactRoute:special?[start==='blue'?'蓝→蛙→三狼画圈；转红→锋喙鸟画圈':'红→锋喙鸟画圈；转蓝→蛙→三狼画圈','成熟后安全回收；惩戒可立即释放']: [camps.slice(0,3).join(' → '),camps.slice(3).join(' → ')],
+  checkpoint:special?'先画起手半区，再转半区画圈；按实际成熟状态回收，血蓝不足可缩短路线。':p?.early?'前三营后自己检查邻线；没有可靠机会就继续后三营，不蹲等。':'保住经验与回城节奏；遇到近处可靠机会可以提前停刷，不强行刷满。'};
 }

@@ -9,6 +9,11 @@ test('Nocturne and Diana retain concrete six camps while Ivern uses passive rele
  const nocturne=make();assert.equal(nocturne.opening.length,6);assert.match(nocturne.choices[0].text,/尚未学会/);assert.match(nocturne.mechanics,/6级前/);
  const diana=make({champion:'Diana',notes:{start:'red'}});assert.equal(diana.opening[0],'红BUFF');assert.match(diana.mechanics,/学会|6级R/);
  const ivern=make({champion:'Ivern'});assert(ivern.special);assert(ivern.opening.some(t=>t.includes('画圈')));assert.match(jungleGuidanceView(ivern),/不代表当前已经刷过/);
+ for(const start of ['blue','red']){
+  const opening=make({champion:'Ivern',notes:{start},live:{...live,gameTime:100}});
+  assert.equal(opening.compactRoute.length,2);assert.match(opening.compactRoute[0],start==='blue'?/^蓝→蛙→三狼/:/^红→锋喙鸟/);
+  assert.match(opening.compactRoute[0],/画圈；转/);assert.match(opening.compactRoute[1],/成熟.*回收.*惩戒/);assert.match(opening.lead.title,/画圈/);
+ }
  assert.equal(make({role:'mid'}),null);assert.equal(make({mode:'hex'}),null);
 });
 test('only fresh player-checked lane conditions offer a gank option; low health, stale patch, and other queues stop it',()=>{

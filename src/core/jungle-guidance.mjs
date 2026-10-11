@@ -47,7 +47,7 @@ export function jungleGuidance({champion,role,mode,patch,live,notes,combo}={}){
  {id:'resource',title:'资源 / 反蹲',text:'邻线先推、自己惩戒与队友支援都确认后再比较开资源；对方多人未露面时先保退路。反蹲依据游戏内实际看到的动向，不根据计时猜敌方位置。'}];
  const recoveries={invaded:{title:'先撤离，再改线',text:'放弃争夺被入侵的营地，先去队友能接应的一侧；安全路线不清楚就回城，别为补路线原地等。'},recalled:{title:'补给后重新接路线',text:special?'从安全入口重新检查画圈和成熟营地，按实际成熟情况回收；不要照旧圈序盲走。':'从安全入口检查实际还在的营地，连刷同半区；近处有已确认机会再转抓，不跨图追旧路线。'},'no-window':{title:'停止蹲等，先补经验',text:'目标退回或队友跟不上就结束这次抓人，转同侧安全营地；先问队友下一次能接什么控制。'}};
  const openingPhase=matched&&Number.isFinite(live.gameTime)&&live.gameTime<210;
- let lead=ready?{title:choices[1].title,text:r===null?'先确认自己技能是否可用，再和队友比较这次机会。':r>0?profile?.afterR||'约好同一目标，先手命中再跟进；技能是否就绪请自己确认。':profile?.beforeR||'等队友先控，再接伤害；技能是否就绪请自己确认。'}:{title:unlearnedR?'先补经验，近处机会再抓':profile?.early&&openingPhase?'三营后看近处，没机会继续刷':'安全营地优先，顺路看机会',text:unlearnedR?'R尚未学会；先保经验。队友控制与进退都确认后，可比较不依赖R的近处抓人。':openingPhase?plan.checkpoint:'连刷同侧安全营地并计划回城；先和邻线约好控制，再比较抓人或资源，不跨图追旧机会。'};
+ let lead=ready?{title:choices[1].title,text:r===null?'先确认自己技能是否可用，再和队友比较这次机会。':r>0?profile?.afterR||'约好同一目标，先手命中再跟进；技能是否就绪请自己确认。':profile?.beforeR||'等队友先控，再接伤害；技能是否就绪请自己确认。'}:{title:unlearnedR?'先补经验，近处机会再抓':special&&openingPhase?'先画圈，再回收成熟营地':profile?.early&&openingPhase?'三营后看近处，没机会继续刷':'安全营地优先，顺路看机会',text:unlearnedR?'R尚未学会；先保经验。队友控制与进退都确认后，可比较不依赖R的近处抓人。':openingPhase?plan.checkpoint:'连刷同侧安全营地并计划回城；先和邻线约好控制，再比较抓人或资源，不跨图追旧机会。'};
  if(recovery)lead=recoveries[recovery];
  if(lowResource)lead=resource.type==='MANA'?{title:'先恢复法力，暂停进场',text:'自身法力低于两成；先比较补给或安全续航，不开抓人或资源。恢复后也须核对整套技能消耗。'}:{title:'先回能量，别急着进场',text:'自身能量不足50；先等能量恢复并核对技能消耗，不因血量充足就继续追。'};
  if(low)lead={title:'先补给，暂停进场',text:'自身生命不足四成；不要继续抓人或争资源，先比较回城与可安全续航的营地。'};
