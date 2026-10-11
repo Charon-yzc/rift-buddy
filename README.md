@@ -2,9 +2,9 @@
 
 给朋友一起玩匹配准备的 Windows 桌面助手：根据已经选好的英雄推荐开黑组合，把对应的玩法、出装和符文带到本局指引中。
 
-**[下载 v0.41.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/download/v0.41.0/RiftBuddy-0.41.0-Setup.exe)** · [本版说明](https://github.com/Legender134/rift-buddy/releases/tag/v0.41.0) · [全部版本](https://github.com/Legender134/rift-buddy/releases) · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
+**[下载 v0.42.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/download/v0.42.0/RiftBuddy-0.42.0-Setup.exe)** · [本版说明](https://github.com/Legender134/rift-buddy/releases/tag/v0.42.0) · [全部版本](https://github.com/Legender134/rift-buddy/releases) · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
 
-当前源码为 v0.42.0，公开 Windows 预览安装包仍为上方已发布的 v0.41.0。v0.42.0 正在完成本地包验收和三位全新独立模型审查；不宣称整体成熟或真实国服实战验收。后续阶段默认推送并合并代码，安装包在本地验证和保留，仅在明确要求或重大更新时上传 Releases。
+当前源码与上方 Windows 预览安装包均为 v0.42.0。本阶段通过三位全新独立模型对同一固定源码、实际应用包及安装器的审查，接受阶段代码和明确局限的预览交付；整体成熟度仍未通过，真实国服实战按用户安排后续验证。后续阶段默认推送并合并代码，安装包在本地验证和保留，仅在明确要求或重大更新时上传 Releases。
 
 v0.42.0 玩家流程改进：选人侧栏先显示全队、推荐入口、已采用组合和收到的队友阵容，房间可直接在侧栏连接。读取大厅公开预组队并在选人时匹配，缺失身份可补充公开 ID 或手动标记；未分路英雄自动暂排、可换位，客户端已选英雄不能在助手删除。默认点击推荐／组合英雄就预选并配置，设置可改为只查看；不会锁定。侧栏默认更宽，未变化轮询只更新倒计时，减少整页刷新。局内装备卡进一步缩小、移除重复英雄名，打野规划另放小地图上方；各窗可移动、关闭和恢复。收到的完整配置可显式点击准备，出装顺序保留到指引与再次分享；默认公网中继仍只转发阵容。见[玩家流程说明](docs/player-flow.md)。
 
