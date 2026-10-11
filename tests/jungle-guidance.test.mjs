@@ -3,7 +3,7 @@ import {jungleGuidance,changeJungleNotes,validateJungleNotes} from '../src/core/
 import {selectGuide,createGuideModel,reconcileGuide,validateGuideState} from '../src/core/guide.mjs';
 import {jungleGuidanceView} from '../src/jungle-guidance-view.mjs';
 const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
-const live={matched:true,mapId:11,queueId:420,gameTime:400,skills:{Q:3,W:1,E:1,R:0},stats:{hp:600,maxHp:1000}};
+const live={matched:true,mapId:11,queueId:420,gameTime:400,skills:{Q:3,W:1,E:1,R:0},stats:{hp:600,maxHp:1000,resource:{type:'MANA',value:400,max:500}}};
 const make=(extra={})=>jungleGuidance({champion:'Nocturne',role:'jungle',mode:'rift',patch:'16.20',live,...extra});
 test('Nocturne and Diana retain concrete six camps while Ivern uses passive release, without inferring a clear record',()=>{
  const nocturne=make();assert.equal(nocturne.opening.length,6);assert.match(nocturne.choices[0].text,/尚未学会/);assert.match(nocturne.mechanics,/6级前/);
@@ -78,4 +78,14 @@ test('current action prioritizes safety and evidence, and champion coordination 
  assert.match(make({champion:'Ivern',notes}).lead.text,/E套/);
  assert.match(make({champion:'Evelynn'}).routeTitle,/通用/);assert.match(make({champion:'Evelynn'}).mechanics,/尚未补/);
  assert.doesNotMatch(make({champion:'LeeSin',live:{...live,gameTime:1200}}).lead.title,/三营/);
+});
+
+test('low own mana or energy takes precedence over a gank candidate, with unknown resources disclosed',()=>{
+ const notes={lane:'bottom',at:390,pushed:true,follow:true,control:true,safe:true};
+ const read=resource=>make({notes,live:{...live,stats:{...live.stats,resource}}});
+ assert(!read({type:'MANA',value:99,max:500}).ready);assert.match(read({type:'MANA',value:99,max:500}).lead.title,/恢复法力/);
+ assert(read({type:'MANA',value:100,max:500}).ready);
+ assert.match(read({type:'ENERGY',value:49,max:200}).lead.title,/回能量/);
+ for(const resource of [null,{type:'RAGE',value:0,max:100},{type:'MANA',value:-1,max:100},{type:'MANA',value:0,max:0}])assert.match(read(resource).skillNote,/需核对/);
+ assert.match(make({notes,live:{...live,matched:false,stats:{...live.stats,resource:{type:'MANA',value:0,max:500}}}}).lead.title,/等待/);
 });
