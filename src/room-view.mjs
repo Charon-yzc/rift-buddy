@@ -21,7 +21,7 @@ function memberCard(member,champ){
  const share=member.share;
  const lineup=share&&Array.isArray(share.lineup)?share.lineup:[];
  const champions=lineup.filter(slot=>slot&&slot.champion);
- const mode=share?.mode||share?.pick?.mode||'rift';
+ const mode=share?.mode||share?.pick?.mode||null;
  const selected=share?.pick;
  const hasPick=selected?.champion&&ROLES.some(r=>r.id===selected.role);
  const pickMatches=hasPick&&selected.mode===mode&&champions.some(slot=>slot.champion===selected.champion&&slot.role===selected.role);
@@ -30,7 +30,7 @@ function memberCard(member,champ){
   const c=champ(slot.champion);
   const config=share?.configurations?.find(s=>s.champion===slot.champion&&s.role===slot.role);
   const own=pickMatches&&slot.champion===selected.champion&&slot.role===selected.role;
-  return `<button class="room-champ${own?' is-pick':''}" data-action="room-build" data-id="${e(slot.champion)}" data-role="${e(slot.role)}" data-mode="${e(config?.mode||mode)}" data-member="${e(member.nick)}" ${!config&&!(['rift','hex'].includes(mode))?'disabled':''} title="${own?'本人选择 · ':''}${e(roleName(slot.role))} · ${config?'查看发送方配置':'未收到配置，查看说明'}">${c?portrait(c,'sm'):''}<span>${own?'<strong class="room-pick-label">本人</strong> ':''}${e(c?.name||slot.champion)}${config?' · '+(config.mode==='hex'?'海克斯配置':'符文与加点'):!['rift','hex'].includes(mode)?' · 此模式暂不支持':' · 未收到配置'}</span></button>`;
+  return `<button class="room-champ${own?' is-pick':''}" data-action="room-build" data-id="${e(slot.champion)}" data-role="${e(slot.role)}" data-mode="${e(config?.mode||mode||'')}" data-member="${e(member.nick)}" ${!config&&mode&&!(['rift','hex'].includes(mode))?'disabled':''} title="${own?'本人选择 · ':''}${e(roleName(slot.role))} · ${config?'查看发送方配置':'未收到配置，查看说明'}">${c?portrait(c,'sm'):''}<span>${own?'<strong class="room-pick-label">本人</strong> ':''}${e(c?.name||slot.champion)}${config?' · '+(config.mode==='hex'?'海克斯配置':'符文与加点'):!mode?' · 模式未知 · 未收到配置':!['rift','hex'].includes(mode)?' · 此模式暂不支持':' · 未收到配置'}</span></button>`;
  }).join('');
  const updated=share?.at?`更新于 ${new Date(share.at).toLocaleTimeString('zh-CN')}`:'还没分享阵容';
  const configurationNote=!member.self&&champions.length&&!share?.configurations?.length?'<p class="bottom-note">已收到阵容，尚未收到这位队友的配置；本地参考不代表队友所选。</p>':'';
@@ -96,7 +96,9 @@ export function roomPanel({room,nick='队友',transport='lan',busy=false,scannin
 
 export function roomMissingConfigurationDialog({id,role,mode,nick,champ}){
  const champion=champ(id),local=champion&&['rift','hex'].includes(mode);
- return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer room-configuration" role="dialog" aria-modal="true" aria-label="未收到队友配置"><header class="modal-header"><h2>${e(champion?.name||id)} · 未收到${e(nick)}的配置</h2><button class="btn quiet small" data-action="close">关闭</button></header><div class="drawer-content"><p>目前只收到这位队友的英雄选择，未收到该英雄的装备、符文、召唤师技能和加点。可能是对方版本较旧、尚未分享或中继没有转发；无法据此还原队友配置。</p><p>本机参考使用你自己的资料与已保存选择，不代表队友所选，也不能作为发送方配置采用。</p>${local?`<button class="btn small" data-action="room-local-reference" data-id="${e(id)}" data-role="${e(role)}" data-mode="${e(mode)}">查看本机参考</button>`:'<p>当前资料或模式不支持本机配置参考。</p>'}</div></section></div>`;
+ const reference=(value,label)=>`<button class="btn small" data-action="room-local-reference" data-id="${e(id)}" data-role="${e(role)}" data-mode="${value}">${label}</button>`;
+ const controls=local?reference(mode,'查看本机参考'):!mode&&champion?`<p>未收到游戏模式，请先选择要查看的本机参考模式；这不会确认队友实际在玩的模式。</p><div class="detail-actions">${reference('rift','查看峡谷本机参考')}${reference('hex','查看海克斯本机参考')}</div>`:'<p>当前资料或模式不支持本机配置参考。</p>';
+ return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer room-configuration" role="dialog" aria-modal="true" aria-label="未收到队友配置"><header class="modal-header"><h2>${e(champion?.name||id)} · 未收到${e(nick)}的配置</h2><button class="btn quiet small" data-action="close">关闭</button></header><div class="drawer-content"><p>目前只收到这位队友的英雄选择，未收到该英雄的装备、符文、召唤师技能和加点。可能是对方版本较旧、尚未分享或中继没有转发；无法据此还原队友配置。</p><p>本机参考使用你自己的资料与已保存选择，不代表队友所选，也不能作为发送方配置采用。</p>${controls}</div></section></div>`;
 }
 
 export function roomConfigurationText(config,data,from,strategy){

@@ -93,8 +93,22 @@ test('join errors stay visible and the panel promises no win rates',()=>{
 test('a champion missing from local data still renders a clickable chip',()=>{
  const room=snapshot({members:[{nick:'队友乙',online:true,share:{lineup:[{role:'mid',champion:'Vex'},{role:'top',champion:null},{role:'jungle',champion:null},{role:'bottom',champion:null},{role:'support',champion:null}],pick:null,at:Date.now()},self:true}]});
  const html=roomPanel({room,nick:'队友乙',champ});
- assert.match(html,/data-action="room-build" data-id="Vex" data-role="mid" data-mode="rift"/);
- assert.match(html,/>Vex · 未收到配置</);
+ assert.match(html,/data-action="room-build" data-id="Vex" data-role="mid" data-mode=""/);
+ assert.match(html,/>Vex · 模式未知 · 未收到配置</);
+});
+
+test('a lineup-only relay with no confirmed pick cannot invent a mode for local references',()=>{
+ const share={...snapshot().members[1].share,pick:null};
+ const html=roomPanel({room:snapshot({members:[{nick:'海克斯队友',share}]}),champ});
+ assert.match(html,/data-id="Ashe" data-role="bottom" data-mode=""/);
+ assert.match(html,/模式未知 · 未收到配置/);
+ assert.doesNotMatch(html,/data-action="room-build"[^>]*data-mode="rift"/);
+ const missing=roomMissingConfigurationDialog({id:'Ashe',role:'bottom',mode:'',nick:'海克斯队友',champ});
+ assert.match(missing,/未收到游戏模式/);
+ assert.match(missing,/data-action="room-local-reference"[^>]*data-mode="rift"[^>]*>查看峡谷本机参考/);
+ assert.match(missing,/data-action="room-local-reference"[^>]*data-mode="hex"[^>]*>查看海克斯本机参考/);
+ assert.doesNotMatch(missing,/room-adopt|room-copy-configuration/);
+ for(const mode of ['rift','hex']){const known=roomPanel({room:snapshot({members:[{nick:'队友',share:{...share,mode}}]}),champ});assert.match(known,new RegExp('data-action="room-build"[^>]*data-mode="'+mode+'"'));assert.doesNotMatch(known,/模式未知/);}
 });
 
 test('scanning and busy states disable their buttons instead of double-firing',()=>{

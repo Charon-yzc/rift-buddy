@@ -21,7 +21,7 @@ export function isFreshBuildReference(ref,patch,mode='rift',now=Date.now()){
  return !!ref&&ref.patch===patch&&['rift','hex'].includes(mode)&&(mode==='hex'||ref.parserVersion===BUILD_PARSER_VERSION)&&Number.isFinite(age)&&age>=0&&age<86400000;
 }
 const rune = (primary,secondary,ids,shards=[5008,5008,5001])=>({primaryStyleId:primary,subStyleId:secondary,selectedPerkIds:[...ids,...shards]});
-const ENERGY_USERS=new Set('Akali Kennen LeeSin Shen Zed'.split(' '));
+const ENERGY_USERS=new Set('Akali Ambessa Kennen LeeSin Shen Zed'.split(' '));
 export const SHARDS={5008:'适应之力',5005:'攻击速度',5007:'技能急速',5001:'成长生命值',5010:'移动速度',5011:'生命值',5013:'韧性与减速抗性'};
 export function featuredRuneOptions(options,limit=3){
  const source=options.filter(o=>o.source==='OP.GG'),pool=source.length?source:options,selected=[],keystones=new Set(),families=new Set();
