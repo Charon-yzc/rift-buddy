@@ -16,6 +16,16 @@ test('late or failed writes cannot confirm a newer session or supersede a newer 
  state.clear();assert.equal(state.has('second'),false);assert.equal(state.confirm(current),false);
  state.observe(draft({connected:false}));assert.equal(state.confirm(state.begin('offline')),false);
 });
+test('confirming the same hovered hero retains an already checked rune page but invalidates pending writes',()=>{
+ for(const championPickIntent of [0,22]){
+  const hover=draft({session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:22,assignedPosition:'bottom'}]}}),picked=draft({session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:22,championPickIntent,assignedPosition:'bottom'}]}});
+  const applied=createRuneApplicationState();applied.observe(hover);assert(applied.confirm(applied.begin('Ashe:bottom:page')));applied.observe(picked);assert(applied.has('Ashe:bottom:page'));
+  const pending=createRuneApplicationState();pending.observe(hover);const ticket=pending.begin('Ashe:bottom:page');pending.observe(picked);assert.equal(pending.confirm(ticket),false);
+  for(const next of [draft({game:{gameId:1502},session:picked.session}),draft({session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:21,championPickIntent:22,assignedPosition:'bottom'}]}}),draft({session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:22,championPickIntent:22,assignedPosition:'middle'}]}})]){
+   const changed=createRuneApplicationState();changed.observe(hover);changed.confirm(changed.begin('Ashe:bottom:page'));changed.observe(next);assert.equal(changed.has('Ashe:bottom:page'),false);
+  }
+ }
+});
 function fixture({selectOnWrite=false,switchFailure=false,switchIgnored=false,phaseChanged=false,corruptOnSwitch=false,create=false}={}){
  const preset={id:8000,isEditable:false,current:true,selectedPerkIds:[1]},editable={id:12,isEditable:true,current:false,selectedPerkIds:[2]};let pages=[preset,...(create?[]:[editable])],written=false;const calls=[];
  return {calls,pages:()=>structuredClone(pages),discover:async()=>({port:12345,password:'test-only'}),request:async(_auth,route,method='GET',body)=>{

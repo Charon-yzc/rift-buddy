@@ -63,7 +63,13 @@ export function createRuneApplicationState(){
   return JSON.stringify([client.phase,client.mode?.id||'',client.game?.gameId||session?.gameId||'',session?.localPlayerCellId??null,own?.championId||0,own?.championPickIntent||0,own?.assignedPosition||'']);
  };
  return {
-  observe(client){const next=clientContext(client);if(next===context)return false;context=next;revision++;const had=!!appliedKey;appliedKey='';return had;},
+  observe(client){
+   const next=clientContext(client);if(next===context)return false;
+   const before=context&&JSON.parse(context),after=next&&JSON.parse(next);
+   const confirmedIntent=before&&after&&before[4]===0&&before[5]>0&&after[4]===before[5]&&[0,before[5]].includes(after[5])&&[0,1,2,3,6].every(i=>before[i]===after[i]);
+   context=next;revision++;if(confirmedIntent)return false;
+   const had=!!appliedKey;appliedKey='';return had;
+  },
   has(key){return !!key&&key===appliedKey;},
   clear(){revision++;appliedKey='';},
   begin(key){this.clear();return {revision,context,key};},

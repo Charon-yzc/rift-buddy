@@ -31,12 +31,19 @@ async function run(){
  let sourceFetches=0,resumeSource;const sourceWait=new Promise(resolve=>resumeSource=resolve);
  global.fetch=async url=>{assert.ok(['lol-api-champion.op.gg','op.gg'].includes(new URL(url).hostname));sourceFetches++;if(sourceFetches===1)await sourceWait;return new Response('{}',{status:503});};
  let picked='',hovered='',assigned='',enemyPicked='Malphite',observer,phase='ChampSelect',gameId='1501',offline=false,holdRuneWrite=false,resumeRuneWrite=null,writes=[];
- let page={...getBuild(hero('Ashe'),'bottom',data).runePage,id:44,isEditable:true};
+ let page={...getBuild(hero('Ashe'),'bottom',data).runePage,id:44,isEditable:true},preparationAction=null,spells={spell1Id:4,spell2Id:7},hoverWrites=0,spellWrites=0;
  const output=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
-  if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:hovered?hero(hovered).key:0,assignedPosition:assigned}],theirTeam:[{cellId:6,championId:hero(enemyPicked).key}],actions:[],bans:{myTeamBans:[hero('Yone').key],theirTeamBans:[]},timer:{adjustedTimeLeftInPhase:65000}};
+  if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:hovered?hero(hovered).key:0,assignedPosition:assigned}],theirTeam:[{cellId:6,championId:hero(enemyPicked).key}],actions:preparationAction?[[preparationAction]]:[],bans:{myTeamBans:[hero('Yone').key],theirTeamBans:[]},timer:{phase:'PLANNING',adjustedTimeLeftInPhase:65000}};
+  if(preparationAction){
+   if(options.path.endsWith('/pickable-champion-ids'))return data.champions.map(c=>c.key);
+   if(options.path.endsWith('/disabled-champion-ids'))return [];
+   if(options.path.endsWith('/actions/4')&&options.method==='PATCH'){const body=JSON.parse(options.body);assert.equal(body.completed,false);hovered=data.champions.find(c=>c.key===body.championId).id;preparationAction.championId=body.championId;hoverWrites++;return {};}
+   if(options.path.endsWith('/my-selection')){if(options.method==='PATCH'){spells=JSON.parse(options.body);spellWrites++;}return spells;}
+   if(options.path==='/data-store/v1/install-dir')return path.join(root,'client-fixture');
+  }
   if(options.path==='/lol-perks/v1/pages'){assert.ok(!options.method||options.method==='GET');return [page];}
   assert.equal(options.path,'/lol-perks/v1/pages/44');assert.equal(options.method,'PUT');
   const body=JSON.parse(options.body);writes.push(structuredClone(body));page={...body,id:44,isEditable:true};return page;
@@ -505,10 +512,25 @@ async function run(){
  await js('window.buddy.saveState('+JSON.stringify(oldGameState)+')');
  const delayedSave=await js('window.buddy.bootstrap()');assert.equal(delayedSave.state.draft.clientGameId,'1507');assert.equal(delayedSave.state.draft.slots.find(s=>s.champion==='Lux').role,'mid','Delayed old-game save restored the old binding');
  assert.equal(writes.length,writesBeforeFilters,'New game reconciliation wrote runes');
+ // The default hero click must finish setup once, and show that fact after
+ // the player confirms the same hero. No extra application is needed on polls.
+ gameId='1508';picked='';hovered='';assigned='MIDDLE';preparationAction={id:4,type:'pick',actorCellId:1,championId:0,completed:false,isInProgress:true};
+ await fs.writeFile(path.join(root,'client-fixture','LeagueClient.exe'),'isolated fixture');await sync();
+ await click('[data-action=player-flow-settings]');await click('[data-action=player-flow-toggle][data-field=clickPrepare]');await click('[data-action=close]');
+ await click('[data-action=companion-tab][data-tab=recommend]');await until(()=>js('!!document.querySelector("[data-action=companion-preview][data-role=mid]")'),'No mid candidate for default preparation');
+ const beforePrepareWrites=writes.length;await click('[data-action=companion-preview][data-role=mid]');
+ await until(()=>js('document.querySelector(".client-preparation-result")?.textContent.includes("配置已完成")'),'Default click did not complete all four steps');
+ assert.equal(hoverWrites,1);assert.equal(spellWrites,1);assert.equal(writes.length,beforePrepareWrites+1);assert.equal(preparationAction.completed,false);
+ picked=hovered;preparationAction.completed=true;await sync();
+ await until(()=>js('document.querySelector(".companion-ready")?.textContent.includes("本次已应用")'),'Completed setup still asks to apply runes');
+ assert.match(await js('document.querySelector("[data-action=my-runes]").textContent'),/重新应用/);
+ await sync();assert.equal(writes.length,beforePrepareWrites+1,'Confirming or polling the hero reapplied runes');
+ await capture('one-click-confirmed-status');gameId='1509';await sync();assert.match(await js('document.querySelector(".companion-ready").textContent'),/待应用/,'New game retained a previous rune confirmation');preparationAction=null;
  // Retain the final manual choice in this isolated profile for restart validation.
  picked='Lux';assigned='MIDDLE';await sync();await change('#solo-role','support');await sync();await click('[data-action=guide-current]');
  await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.selection?.role==="support")'),'Final support guide missing');
  const report={passed:true,archiveSha256:release.archiveSha256,baseDataVersion:data.version,sourcePatch:cho.reference.patch,choJungleHail:true,sourceVersionLabelCorrect:true,oldSourceVisible:cho.referenceStale,lateChoicesSync:true,sixCandidates:true,automaticPlanOnPick:true,inlineCoreRuneSkill:true,comparisonCards:true,favoriteSelection:true,presentationPersisted:true,stalePreferenceWriteProtected:true,crossWindowPresentation:true,minimumFullWindowReadable:true,guideSelectionMatches:true,explicitRuneClickOnly:true,runeConfirmationLifecycle:true,lateRuneWriteRejected:true,pendingRuneClickBlocked:true,previewSeparated:true,staleHeroActionRejected:true,tabAndSyncScrollPreserved:true,publicEnemiesAndBans:true,wideAndNarrowLayouts:true,clientGeometryUnchanged:true,testWindowsHidden:true,loopbackSocketsMocked:true,actualRuneWrites:false};
+ report.defaultClickPreparationStatus=true;report.sameHeroConfirmationNoRepeatWrite=true;report.newGameClearsPreparedRuneStatus=true;
  report.manualFormalLanePreparation=true;report.manualChampionSwap=true;report.manualLaneRelease=true;report.manualLaneRuneWrites=0;
  report.manualNewGameReleased=true;report.staleGameSaveRejected=true;report.finalGameId=gameId;
  report.cachedSourceSwitch=true;report.cachedSourceNoFetch=true;report.cachedSourceNoRuneWrite=true;
