@@ -7,7 +7,7 @@ const area={x:0,y:0,width:2195,height:1187};
 function contained(b,a){assert.ok(b.x>=a.x&&b.y>=a.y&&b.x+b.width<=a.x+a.width&&b.y+b.height<=a.y+a.height);}
 test('175% display: the observed client in DIPs leaves space for an adjacent sidebar',()=>{
  const client={x:71,y:158,width:1601,height:901},b=companionPlacement(client,area);
- assert.equal(b.side,'right');assert.equal(b.x,1680);assert.equal(b.width,440);assert.equal(b.overlap,false);contained(b,area);
+ assert.equal(b.side,'right');assert.equal(b.x,1680);assert.equal(b.width,515);assert.equal(b.overlap,false);contained(b,area);
 });
 test('sidebar follows negative-coordinate displays and switches sides without resizing its anchor',()=>{
  const a={x:-1920,y:0,width:1920,height:1040},client={x:-1400,y:80,width:1360,height:900},copy=structuredClone(client),b=companionPlacement(client,a);

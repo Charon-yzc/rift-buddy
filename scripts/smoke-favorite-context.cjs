@@ -48,7 +48,7 @@ async function run(){
   assert.deepEqual(await currentSlots(),before.draft.slots,'Failed refresh changed draft');
   assert.deepEqual((await state()).preparations,before.preparations,'Failed refresh changed configurations');
  }else{
-  const expected=phase==='manual'?[null,'Vi','Darius','Ashe','Nami']:phase==='blind'?[null,null,null,'Ashe','Nami']:phase==='solo'?['Darius','Vi',null,null,null]:phase==='offline'?[null,null,'Ahri','Ashe','Nami']:phase==='changed'?['Sett','Volibear','Ahri','Ashe','Nami']:['Darius','Vi','Ahri','Ashe','Nami'];
+  const expected=phase==='manual'?[null,'Vi','Darius','Ashe','Nami']:phase==='blind'?[null,null,'Ahri','Ashe','Nami']:phase==='solo'?['Darius','Vi',null,null,null]:phase==='offline'?[null,null,'Ahri','Ashe','Nami']:phase==='changed'?['Sett','Volibear','Ahri','Ashe','Nami']:['Darius','Vi','Ahri','Ashe','Nami'];
   await until(async()=>JSON.stringify(ids(await currentSlots()))===JSON.stringify(expected),'Favorite restored previous non-party picks or lost current public picks');
   if(phase==='offline'){fixture=online();await sync();expected[0]='Darius';expected[1]='Vi';}
   for(let n=0;n<2;n++)await sync();
@@ -58,8 +58,10 @@ async function run(){
    assert.equal((await state()).preparations.find(p=>p.id==='Ahri').runeId,'previous-ahri-choice');
   }
   if(phase==='blind'){
-   assert.ok(await js('!!document.querySelector("[data-action=assign-import][data-id=Ahri]")'),'Blind public hero must remain unassigned');
-   assert.equal((await state()).preparations.find(p=>p.id==='Ahri').runeId,'previous-ahri-choice');
+   assert.equal(await js('document.querySelector("[data-action=assign-import][data-id=Ahri]")'),null,'Public hero should be arranged automatically');
+   const own=(await currentSlots()).find(s=>s.clientCellId===1);assert.equal(own?.champion,'Ahri');assert.equal(own?.role,'mid');assert.equal(own?.locked,true);
+   const selection=favoriteBefore.configurations.find(p=>p.id==='Ahri'),actual=(await state()).preparations.find(p=>p.id==='Ahri'&&p.role===selection.role&&(p.comboId||null)===(selection.comboId||null));
+   for(const field of ['runeId','coreId','skillId'])assert.equal(actual?.[field],selection[field],'Arranged public hero must use the explicitly loaded favorite configuration: '+field);
   }
   if(phase==='solo'){assert.equal((await state()).draft.soloRole,'jungle');assert.equal(await js('document.querySelector("#solo-role").value'),'jungle');}
   if(!['manual','blind','solo'].includes(phase)){

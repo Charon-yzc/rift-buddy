@@ -8,7 +8,7 @@ import {createRoomService} from '../services/room.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {fillSkillOrder} from '../src/core/skill-advice.mjs';
-import {captureRoomStrategy,captureRoomConfigurations,roomPreparation,roomPlayerRole} from '../src/core/room-configuration.mjs';
+import {captureRoomStrategy,captureRoomConfigurations,roomPreparation,roomPlayerRole,roomClientPlan} from '../src/core/room-configuration.mjs';
 import {sanitizeRoomConfiguration,sanitizeShare,encodeFrame,decodeFrame,MAX_FRAME} from '../src/core/room.mjs';
 import {roomConfigurationDialog,roomConfigurationText} from '../src/room-view.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
@@ -25,10 +25,10 @@ test('a manually moved local champion keeps its chosen position in room sharing'
  const moved=slots.map(s=>({...s,champion:s.role==='top'?'Yasuo':s.role==='mid'?null:s.champion,...(s.role==='top'?{manualPosition:true,clientCellId:4}:{})}));
  assert.equal(roomPlayerRole(moved,data.champions,ownClient(),'bottom'),'top');
 });
-test('a known local champion absent from the lineup cannot borrow the saved solo role',()=>{
+test('room role uses the bound inferred slot and never borrows a stale saved solo role',()=>{
  assert.equal(roomPlayerRole(slots,data.champions,ownClient('Ashe','bottom'),'support'),'');
  const unknownPosition=slots.map(s=>({...s,...(s.champion==='Yasuo'?{clientCellId:4}:{})}));
- assert.equal(roomPlayerRole(unknownPosition,data.champions,ownClient('Yasuo',''),'support'),'');
+ assert.equal(roomPlayerRole(unknownPosition,data.champions,ownClient('Yasuo',''),'support'),'mid');
 });
 test('before the local pick, room sharing uses the current assigned or manual slot and never another cell',()=>{
  assert.equal(roomPlayerRole(slots,data.champions,ownClient(null),'support'),'mid');
@@ -79,6 +79,14 @@ test('untrusted configurations are bounded, role-bound and cannot substitute unk
  assert.throws(()=>roomPreparation({...c,runes:{...c.runes,selectedPerkIds:Array(9).fill(99999)}},data),/不可用/);
  const legacy=sanitizeShare({...frame,configurations:undefined});assert(!Object.hasOwn(legacy,'configurations'));
  assert.equal(encodeFrame({text:'中'.repeat(Math.ceil(MAX_FRAME/3))}),null);
+});
+
+test('a personal snapshot without strategy applies to the receiving current trio and remains its next shared equipment',()=>{
+ const trio=TRIOS.find(t=>t.id==='ball-delivery'),team=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
+ const strategy=captureCreativePlan({trio,slots:team,scope:'party'},data),choices=createPreparationStore(),config=captureRoomConfigurations(team,data,choices,{creativePlan:strategy})[0];
+ config.items.reverse();const applied=roomClientPlan(config,data,undefined,{localStrategy:strategy});choices.remember(applied.selection);
+ assert.equal(applied.build.combo.creativePlan.id,strategy.id);assert.deepEqual(applied.build.items.map(i=>Number(i.id)),config.items);
+ const shared=captureRoomConfigurations(team,data,choices,{creativePlan:strategy}).find(c=>c.champion===config.champion&&c.role===config.role);assert.deepEqual(shared.items,config.items);
 });
 
 test('a late room member receives the original accepted trio, concrete configurations and all saved stages over loopback',async()=>{

@@ -36,6 +36,10 @@ function memberCard(member,champ){
  const configurationNote=!member.self&&champions.length&&!share?.configurations?.length?'<p class="bottom-note">已收到阵容，尚未收到这位队友的配置；本地参考不代表队友所选。</p>':'';
  return `<article class="room-member"><header><b>${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${personal}${configurationNote}${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
 }
+export function roomSharesView(room,champ,{clickPrepare=true}={}){
+ const members=(room?.members||[]).filter(m=>!m.self&&m.share?.lineup?.some(s=>s.champion));
+ return members.length?`<section class="companion-section companion-room-shares" aria-label="收到的队友阵容"><h3>队友发来的阵容</h3>${clickPrepare?'<p class="companion-hint">已确认峡谷模式时，点击英雄会预选并配置；锁定由你完成。模式未知时先查看说明，未收到配置时使用本机参考。</p>':''}${members.map(m=>clickPrepare?memberCard(m,champ).replaceAll('data-action="room-build"',m.share.mode==='rift'?'data-action="room-prepare"':'data-action="room-build"'):memberCard(m,champ)).join('')}</section>`:'';
+}
 
 // Two opt-in transports, one nickname. The suggested relay address remains
 // editable and a previously saved custom address takes precedence.

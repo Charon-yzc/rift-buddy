@@ -51,6 +51,18 @@ test('a creative favorite retains its original jobs, order, window, version and 
  assert.match(favoriteTeamSummary(data,saved,0),/原保存的创意分工/);
 });
 
+test('a former party member cannot supply frozen jobs for a different current party',()=>{
+ const {plan,slots}=fixture();
+ const changed=slots.map(s=>s.role==='bottom'?{...s,party:false}:s.role==='jungle'?{...s,champion:'Ivern',party:true,locked:true}:s);
+ assert.equal(creativePlanMatches(plan,changed),true,'The old three heroes may still be on the whole-team board');
+ const result=recommend({slots:changed,champions:data.champions,scope:'context',creativePlan:plan})[0];
+ assert.notEqual(result.creativePlan?.id,plan.id);
+ const current=captureCreativePlan(result,data);
+ assert(current.members.some(m=>m.champion==='Ivern'));
+ assert(!current.members.some(m=>m.champion==='Ashe'));
+ assert(!current.ordered.some(m=>m.champion==='Ashe'));
+});
+
 test('a changed member invalidates the original context while missing public members remain unknown and the saved plan stays intact',()=>{
  const {plan,slots}=fixture(),original=structuredClone(plan),selection={id:'Annie',role:'mid',mode:'rift',comboId:plan.id,creativePlan:plan};
  const publicSession={localPlayerCellId:1,myTeam:plan.members.map((m,i)=>({cellId:i+1,championId:hero(m.champion).key,assignedPosition:m.role==='mid'?'TOP':m.role==='bottom'?'BOTTOM':'UTILITY'}))};

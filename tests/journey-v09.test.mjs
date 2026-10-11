@@ -20,10 +20,10 @@ data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift'};
 const live=()=>({available:true,champion:'Ashe',mode:'rift',mapId:11,at:Date.now(),inventory:[],gold:1000,level:8,gameTime:700,skills:{Q:4,W:1,E:1,R:1}});
 
-test('first client sync binds a manual hero then follows swaps without losing position, ownership or unlock',()=>{
+test('first client sync binds a manual hero then follows swaps without losing position or ownership; public selections stay fixed',()=>{
  const slots=createSlots();Object.assign(slots[4],{champion:'Ashe',locked:false,party:false});
  const session={myTeam:[{cellId:1,championId:22,assignedPosition:'BOTTOM'}],localPlayerCellId:1};
- const first=mergeClientSession(slots,session,data.champions);assert.equal(first.slots[4].clientCellId,1);assert.equal(first.slots[4].manualPosition,true);assert.equal(first.slots[4].locked,false);
+ const first=mergeClientSession(slots,session,data.champions);assert.equal(first.slots[4].clientCellId,1);assert.equal(first.slots[4].manualPosition,true);assert.equal(first.slots[4].locked,true);
  const second=mergeClientSession(first.slots,{...session,myTeam:[{cellId:1,championId:202,assignedPosition:'BOTTOM'}]},data.champions);
  assert.equal(second.slots[4].champion,'Jhin');assert.equal(second.slots[4].party,false);assert.equal(second.slots[3].champion,null);assert.equal(second.unassigned.length,0);assert.equal(slots[4].clientCellId,undefined);
 });

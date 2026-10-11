@@ -27,9 +27,9 @@ test('solo skips an unavailable lane and persists its explicit selection',()=>{
  assert.equal(validateState({...defaultState(),draft}).draft.soloRole,'jungle');
  assert.equal(validateState({...defaultState(),draft:{...draft,soloRole:'bogus'}}).draft.soloRole,'');
 });
-test('blind-pick positions stay unassigned and explicit player moves survive polling',()=>{
+test('manual arrangement opt-out leaves blind-pick positions unassigned and explicit player moves survive polling',()=>{
  const session={localPlayerCellId:1,myTeam:[{cellId:1,championId:hero('Volibear').key,assignedPosition:''},{cellId:2,championId:hero('Lux').key,assignedPosition:''}]};
- const result=mergeClientSession(createSlots(),session,data.champions);assert.equal(result.unassigned.length,2);assert.equal(result.slots.filter(s=>s.champion).length,0);
+ const result=mergeClientSession(createSlots(),session,data.champions,{autoArrange:false});assert.equal(result.unassigned.length,2);assert.equal(result.slots.filter(s=>s.champion).length,0);
  session.myTeam[0].assignedPosition='JUNGLE';let slots=mergeClientSession(createSlots(),session,data.champions).slots;slots=moveChampion(slots,'jungle','top');
  assert.equal(mergeClientSession(slots,session,data.champions).slots[0].champion,'Volibear');
 });

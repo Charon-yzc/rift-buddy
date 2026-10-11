@@ -4,3 +4,5 @@ body.compact #guide-root{border-radius:12px;overflow:hidden;background:#0f1d1bf5
 
 body:not(.compact) header>div:first-child{min-width:0;flex:1;overflow:hidden}body:not(.compact) .guide-hero-link{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body:not(.compact) .window-actions{flex-shrink:0}
 .compact-resource{display:block;max-width:100%;margin-top:5px;padding:3px 6px;border-radius:4px;background:#213b30;color:#aee0c4;font-size:calc(9px * var(--text-scale,1));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;-webkit-app-region:no-drag}
+
+body.compact header.compact-header{height:30px;min-height:30px;padding:0 6px}body.compact main.compact-guide-main{height:calc(100vh - 30px);padding:5px 8px}.compact-slot>img{width:calc(28px * var(--text-scale,1));height:calc(28px * var(--text-scale,1))}body.compact .window-actions button{min-width:23px;padding:0 3px}.compact-slot>em{top:18px}

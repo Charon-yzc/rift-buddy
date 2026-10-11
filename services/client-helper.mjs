@@ -42,7 +42,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
    try{
     let result;
     if(request.operation==='ping')result={ready:true};
-    else if(request.operation==='status')result=await clientSnapshot(config.installPath);
+    else if(request.operation==='status')result=await clientSnapshot(config.installPath,{partyIds:request.payload?.partyIds});
     else if(request.operation==='applyRunes'){
      if(writing)throw new Error('符文正在应用，请稍后');writing=true;
      try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data'));
@@ -120,7 +120,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
  }
  return {ensure,active:()=>!!config,
   request:(operation,payload)=>{if(!config)throw new Error('尚未授权客户端连接');return requestHelper(config,operation,payload,operation==='prepareSelection'?60000:12000);},
-  status:async installPath=>{if(config){try{return await requestHelper(config,'status');}catch{}}return clientSnapshot(installPath);},
+  status:async (installPath,partyIds=[])=>{if(config){try{return await requestHelper(config,'status',{partyIds});}catch{}}return clientSnapshot(installPath,{partyIds});},
   shutdown:async()=>{closed=true;if(config){try{await requestHelper(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
  };
 }

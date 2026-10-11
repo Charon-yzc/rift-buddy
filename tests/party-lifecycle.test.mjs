@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {clientSnapshot} from '../services/lcu.mjs';
+const identity=(id,extra={})=>({summonerId:id,puuid:'public-player-id-'+id,gameName:'Player'+id,tagLine:'CN1',...extra});
+function fixture(){
+ const own=identity(11),friend=identity(22);let phase='Lobby',gameId=123,secret='mock-auth',lobby={localMember:own,members:[own,friend],chatPassword:'do-not-export',jwt:'do-not-export'};
+ let team=[{...own,cellId:1,championId:0,assignedPosition:'MIDDLE'},{...friend,cellId:2,championId:99,assignedPosition:'UTILITY'}, {...identity(33),cellId:3,championId:22}];
+ const calls=[],mock={discover:async()=>({port:23456,password:secret}),now:()=>1000,request:async(_a,url)=>{calls.push(url);if(url.endsWith('gameflow-phase'))return phase;if(url==='/lol-lobby/v2/lobby'){if(lobby instanceof Error)throw lobby;return lobby;}if(url==='/lol-champ-select/v1/session')return {gameId,localPlayerCellId:1,myTeam:team,theirTeam:[],bans:{}};if(url.endsWith('champion-ids'))return [];return {gameData:{gameId,queue:{id:420},gameMode:'CLASSIC'}};}};
+ return {mock,calls,set:v=>{({phase=phase,gameId=gameId,secret=secret,lobby=lobby,team=team}=v);},friend};
+}
+test('lobby public premade survives ready-check into champ-select without exporting identity or reading chat',async()=>{
+ const f=fixture();assert.equal((await clientSnapshot('',f.mock)).party.lobbyCount,2);
+ f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404})});await clientSnapshot('',f.mock);
+ f.set({phase:'ChampSelect'});const selected=await clientSnapshot('',f.mock);
+ assert.equal(selected.party.status,'known');assert.deepEqual(selected.party.members.map(m=>m.cellId),[1,2]);
+ assert.ok(!JSON.stringify(selected).includes('public-player'));assert.ok(!JSON.stringify(selected).includes('Player22'));assert.ok(!JSON.stringify(selected).includes('do-not-export'));
+ assert.ok(f.calls.every(url=>!url.includes('chat')));assert.equal(f.calls.filter(url=>url==='/lol-lobby/v2/lobby').length,2);
+ f.set({gameId:456});assert.equal((await clientSnapshot('',f.mock)).party.status,'unknown');
+});
+test('auth and account transitions cannot carry lobby membership; hidden manual identity stays unavailable',async()=>{
+ const f=fixture();await clientSnapshot('',f.mock);f.set({phase:'ChampSelect',secret:'new-mock-auth'});
+ assert.deepEqual((await clientSnapshot('',f.mock)).party.members.map(m=>m.cellId),[1]);
+ f.set({team:[{...identity(11),cellId:1,championId:0},{...f.friend,nameVisibilityType:'HIDDEN',cellId:2,championId:99}]});
+ assert.deepEqual((await clientSnapshot('',{...f.mock,partyIds:['Player22#CN1']})).party.members.map(m=>m.cellId),[1]);
+ f.set({team:[{...identity(11),cellId:1,championId:0},{...f.friend,cellId:2,championId:99}]});
+ assert.deepEqual((await clientSnapshot('',{...f.mock,partyIds:['Player22#CN1']})).party.members.map(m=>m.cellId),[1,2]);
+});
+test('lobby auth failure disconnects, while unavailable optional lobby does not invent membership',async()=>{
+ const f=fixture();f.set({lobby:Object.assign(Error('mock no access'),{status:401})});assert.equal((await clientSnapshot('',f.mock)).connected,false);
+ f.set({lobby:Object.assign(Error('optional missing'),{status:404})});const c=await clientSnapshot('',f.mock);assert.equal(c.connected,true);assert.equal(c.party.status,'unknown');
+});

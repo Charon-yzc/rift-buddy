@@ -1,3 +1,4 @@
+import {validateSharedEquipment} from './shared-equipment.mjs';
 import {jungleGuidance,validateJungleNotes} from './jungle-guidance.mjs';
 import {completeGearPlan} from './complete-gear.mjs';
 import {itemConflicts} from './mechanics.mjs';
@@ -36,6 +37,7 @@ export function validateDuelPick(value){
 }
 export function validateLoadoutSelection(value){
  const selected={};
+ if(value.sharedEquipment!==undefined){if(value.mode!=='rift')throw Error('共享出装只适用于召唤师峡谷');selected.sharedEquipment=validateSharedEquipment(value.sharedEquipment);}
  if(value.sourceOpponent!==undefined){if(value.mode!=='rift'||!hero(value.sourceOpponent)||value.sourceOpponent===(value.id||value.champion))throw Error('来源对手筛选格式不正确');selected.sourceOpponent=value.sourceOpponent;}
  if(value.customRunePage!==undefined){if(value.mode!=='rift')throw Error('自选符文只适用于召唤师峡谷');selected.customRunePage=validateCustomRunePage(value.customRunePage);}
  if(value.customSkillOrder!==undefined){if(value.mode!=='rift')throw Error('自选加点只适用于召唤师峡谷');selected.customSkillOrder=validateSavedSkillOrder(value.customSkillOrder,value.id||value.champion);}
@@ -72,11 +74,12 @@ export function validateGuideState(value){
  const b=value.bounds,bounds=b&&Number.isInteger(b.x)&&Math.abs(b.x)<30000&&Number.isInteger(b.y)&&Math.abs(b.y)<30000&&Number.isInteger(b.width)&&b.width>=360&&b.width<=640&&Number.isInteger(b.height)&&b.height>=480&&b.height<=1000?{x:b.x,y:b.y,width:b.width,height:b.height}:null;
  const m=value.match,match=m&&typeof m==='object'?{...(typeof m.phase==='string'&&m.phase.length<40?{phase:m.phase}:{}),...(m.entered===true?{entered:true}:{}),...(/^\d{1,20}$/.test(String(m.gameId||''))?{gameId:String(m.gameId)}:{}),...(Number.isFinite(m.gameTime)&&m.gameTime>=0&&m.gameTime<1e6?{gameTime:m.gameTime}:{}),...(Number.isFinite(m.liveAt)&&m.liveAt>0?{liveAt:m.liveAt}:{})}:null;
  const duelPick=validateDuelPick(value.duelPick);
+ const jungleOffset=value.jungleWidget?.offset,validJungleOffset=jungleOffset&&Number.isInteger(jungleOffset.x)&&Math.abs(jungleOffset.x)<30000&&Number.isInteger(jungleOffset.y)&&Math.abs(jungleOffset.y)<30000?{x:jungleOffset.x,y:jungleOffset.y}:null;
  const offset=value.skillWidget?.offset,skillOffset=offset&&Number.isInteger(offset.x)&&Math.abs(offset.x)<30000&&Number.isInteger(offset.y)&&Math.abs(offset.y)<30000?{x:offset.x,y:offset.y}:null;
  const cb=value.compactBounds,compactBounds=cb&&Number.isInteger(cb.x)&&Math.abs(cb.x)<30000&&Number.isInteger(cb.y)&&Math.abs(cb.y)<30000?{x:cb.x,y:cb.y}:null;
  const targetKind=value.purchaseTargetKind==='situation'&&/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTargetKind:'situation'}:{};
  const bottomQuestConfirmed=!!(selection.bottomQuestPlan&&value.bottomQuestConfirmed===true);
- return {selection,completedItems,bottomQuestConfirmed,...(validateJungleNotes(value.jungleNotes)?{jungleNotes:validateJungleNotes(value.jungleNotes)}:{}),compact:value.compact!==false,skillWidget:{enabled:value.skillWidget?.enabled!==false,...(skillOffset?{offset:skillOffset}:{})},...(compactBounds?{compactBounds}:{}),collapsed:value.collapsed===true,ball:value.ball===true&&value.strip!==true,strip:value.strip===true,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
+ return {selection,completedItems,bottomQuestConfirmed,...(validateJungleNotes(value.jungleNotes)?{jungleNotes:validateJungleNotes(value.jungleNotes)}:{}),compact:value.compact!==false,jungleWidget:{enabled:value.jungleWidget?.enabled!==false,...(validJungleOffset?{offset:validJungleOffset}:{})},skillWidget:{enabled:value.skillWidget?.enabled!==false,...(skillOffset?{offset:skillOffset}:{})},...(compactBounds?{compactBounds}:{}),collapsed:value.collapsed===true,ball:value.ball===true&&value.strip!==true,strip:value.strip===true,clickThrough:value.clickThrough!==false,liveAdvice:value.liveAdvice!==false,opacity:[0.65,0.85,1].includes(value.opacity)?value.opacity:1,...(bounds?{bounds}:{}),...(match?{match}:{}),...(/^\d{1,8}$/.test(value.purchaseTarget||'')?{purchaseTarget:value.purchaseTarget,...targetKind}:{}),...(GUIDE_STAGES.some(([id])=>id===value.stage)&&value.stage!=='auto'?{stage:value.stage}:{}),...(duelPick?{duelPick}:{})};
 }
 export function guideIdentity(selection){
  const s=validateGuideSelection(selection);
@@ -88,7 +91,7 @@ export function selectGuide(previous,selection){
  // Reusable preparations omit opponents. Keep an explicitly chosen opponent
  // only while replacing a configuration for the same known current game.
  if(same&&!Object.hasOwn(selection,'threatId')&&previous.selection.matchupGameId&&previous.selection.matchupGameId===previous.match?.gameId){next.threatId=previous.selection.threatId;next.matchupGameId=previous.selection.matchupGameId;}
- return {selection:next,...(same&&previous.jungleNotes?{jungleNotes:previous.jungleNotes}:{}),bottomQuestConfirmed:!!(same&&next.bottomQuestPlan&&previous.bottomQuestConfirmed),completedItems:same?[...previous.completedItems]:[],compact:previous?.compact!==false,skillWidget:previous?.skillWidget||{enabled:true},...(previous?.compactBounds?{compactBounds:previous.compactBounds}:{}),collapsed:previous?.collapsed??false,ball:previous?.ball===true&&previous?.strip!==true,strip:previous?.strip===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
+ return {selection:next,...(same&&previous.jungleNotes?{jungleNotes:previous.jungleNotes}:{}),bottomQuestConfirmed:!!(same&&next.bottomQuestPlan&&previous.bottomQuestConfirmed),completedItems:same?[...previous.completedItems]:[],compact:previous?.compact!==false,jungleWidget:previous?.jungleWidget||{enabled:true},skillWidget:previous?.skillWidget||{enabled:true},...(previous?.compactBounds?{compactBounds:previous.compactBounds}:{}),collapsed:previous?.collapsed??false,ball:previous?.ball===true&&previous?.strip!==true,strip:previous?.strip===true,clickThrough:previous?.clickThrough??true,liveAdvice:previous?.liveAdvice!==false,opacity:previous?.opacity||1,...(previous?.bounds?{bounds:previous.bounds}:{}),...(previous?.match?{match:{...previous.match}}:{}),...(same&&previous.purchaseTarget?{purchaseTarget:previous.purchaseTarget,...(previous.purchaseTargetKind==='situation'?{purchaseTargetKind:'situation'}:{})}:{}),...(same&&previous.stage?{stage:previous.stage}:{}),...(validateDuelPick(previous?.duelPick)?{duelPick:validateDuelPick(previous.duelPick)}:{})};
 }
 export function prepareGuideOpponent(value,selection,opponentId,{gameId,enemyIds}={}){
  const id=String(gameId||'');if(!/^\d{1,20}$/.test(id)||Number(id)<=0)throw Error('本局尚未确认，请同步客户端后重试');
@@ -239,7 +242,7 @@ export function createGuideModel(data,value,live=null,current=null){
    at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,matchId:guide.match?.gameId||null,
-  jungle:jungleGuidance({champion:s.id,role:s.role,mode:s.mode,patch:data.patch,live:matched?{...live,matched:true}:null,notes:guide.jungleNotes,combo:build.combo}),completeGear,compact:guide.compact,skillWidget:guide.skillWidget,laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
+  jungle:jungleGuidance({champion:s.id,role:s.role,mode:s.mode,patch:data.patch,live:matched?{...live,matched:true}:null,notes:guide.jungleNotes,combo:build.combo}),completeGear,compact:guide.compact,jungleWidget:guide.jungleWidget,skillWidget:guide.skillWidget,laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
   phase:s.mode==='rift'?gamePhase({...liveModel,role:s.role},action,next||null):null,
   objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch,plan:build.combo?.creativePlan,champion:s.id,confirmed:current?.comboKnown===true&&!mismatch,protectId:s.protectId,data}):null,
@@ -259,6 +262,8 @@ export function currentPlayerSelection(session,champions,slots=[]){
  const champion=champions.find(c=>c.key===player?.championId);if(!champion)return null;
  const assigned=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
  const manual=slots.find(s=>s.champion===champion.id&&(s.manualPosition||!Number.isInteger(s.clientCellId)));
- return {id:champion.id,role:manual?.role||assigned||profile(champion).roles[0],positionKnown:!!(manual||assigned),...(assigned&&manual&&manual.role!==assigned?{formalRole:assigned}:{})};
+ const bound=slots.find(s=>s.champion===champion.id&&s.clientCellId===session.localPlayerCellId);
+ const role=manual?.role||bound?.role||assigned||profile(champion).roles[0];
+ return {id:champion.id,role,positionKnown:!!(manual||assigned&&role===assigned),...(assigned&&role!==assigned?{formalRole:assigned}:{})};
 }
 export function phaseLabel(phase){return ({None:'客户端大厅',Lobby:'组队大厅',Matchmaking:'正在匹配',ReadyCheck:'等待确认',ChampSelect:'正在选人',GameStart:'正在加载游戏',InProgress:'游戏进行中',Reconnect:'等待重连',WaitingForStats:'结算中',PreEndOfGame:'即将结算',EndOfGame:'已结束',Offline:'未连接'})[phase]||'客户端已连接';}

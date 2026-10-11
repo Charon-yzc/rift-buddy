@@ -20,6 +20,7 @@ export function selectedBuildFields(v,{preserveUnavailable=false}={}){
  if(v.mode==='rift'&&b.sourceOpponent)fields.sourceOpponent=b.sourceOpponent;
  if(preserveUnavailable&&v.mode==='rift'&&v.sourceOpponent)fields.sourceOpponent=v.sourceOpponent;
  if(preserveUnavailable&&Array.isArray(v.summonerIds))fields.summonerIds=[...v.summonerIds];
+ if(v.mode==='rift'&&v.sharedEquipment)fields.sharedEquipment=structuredClone(v.sharedEquipment);
  return fields;
 }
 export function buildFavoriteId(v){
@@ -29,6 +30,7 @@ export function buildFavoriteId(v){
  if(fields.customRunePage)identity.push({customRunePage:fields.customRunePage});
  if(fields.customSkillOrder)identity.push({customSkillOrder:fields.customSkillOrder});
  if(fields.sourceOpponent)identity.push({sourceOpponent:fields.sourceOpponent});
+ if(fields.sharedEquipment)identity.push({sharedEquipment:fields.sharedEquipment});
  const spellIds=selectedBuildFields(v,{preserveUnavailable:true}).summonerIds;if(spellIds)identity.push({summonerIds:spellIds});
  return `build:${v.id}:${v.role}:${v.mode}:${fingerprint(identity)}`;
 }
@@ -38,6 +40,7 @@ export function findSavedBuild(favorites,v){
   if(f.type!=='build')return false;
   if(f.id===id)return true;
   if(f.champion!==v.id||f.role!==v.role||f.mode!==v.mode)return false;
+  if(!same(f.sharedEquipment||null,fields.sharedEquipment||null))return false;
   if(f.coreId?f.coreId!==fields.coreId:(f.coreIndex||0)!==v.coreIndex)return false;
   if(!same([...(f.conditions||[])].sort(),[...(v.conditions||[])].sort()))return false;
   if(!same(f.summonerIds||[],fields.summonerIds||[]))return false;

@@ -29,20 +29,19 @@ test('current manual position and live champion win over an incompatible saved m
  assert.ok(result.conflicts.some(c=>c.role==='mid'&&c.champion==='Ahri'));assert.equal(result.configurations.length,0);
  assert.ok(!result.slots.some(s=>s.champion==='Garen'||s.champion==='LeeSin'));
 });
-test('unknown blind positions stay unassigned and offline loading cannot seed stale non-party context',()=>{
+test('blind picks auto-arrange while offline loading cannot seed stale non-party context',()=>{
  const result=restoreTeamFavorite(favorite,createSlots(),champions,{myTeam:[{cellId:1,championId:key('Vi'),assignedPosition:''}]});
- assert.ok(!result.slots.some(s=>s.champion==='Vi'));assert.ok(result.unassigned.some(s=>s.champion==='Vi'));
+ assert.ok(result.slots.some(s=>s.role==='jungle'&&s.champion==='Vi'&&s.automaticPosition));assert.deepEqual(result.unassigned,[]);
  const offline=restoreTeamFavorite(favorite,createSlots(),champions);
  assert.deepEqual(offline.slots.map(s=>s.champion),[null,null,'Ahri','Ashe','Nami']);assert.equal(offline.configurations.length,1);
  assert.ok(offline.slots.every(s=>!Object.hasOwn(s,'clientCellId')));
  const later=mergeClientSession(offline.slots,session,champions);assert.deepEqual(later.slots.map(s=>s.champion),['Darius','Vi','Ahri','Ashe','Nami']);assert.deepEqual(later.unassigned,[]);
 });
 
-test('a favorite cannot assign a public blind-pick hero or overwrite an unpicked manual client cell',()=>{
+test('a favorite preserves an automatically assigned public pick and an unpicked manual client cell',()=>{
  const unknown={localPlayerCellId:1,myTeam:[{cellId:1,championId:key('Ahri'),assignedPosition:''}]};
  const result=restoreTeamFavorite(favorite,createSlots(),champions,unknown);
- assert.equal(result.slots[2].champion,null);assert.deepEqual(result.unassigned,[{champion:'Ahri',cellId:1,local:true}]);assert.equal(result.configurations.length,0);
- assert.equal(result.conflicts[0].reason,'unassigned');
+ assert.equal(result.slots[2].champion,'Ahri');assert.equal(result.slots[2].clientCellId,1);assert.equal(result.slots[2].automaticPosition,true);assert.deepEqual(result.unassigned,[]);assert.equal(result.configurations.length,1);
  const current=createSlots();Object.assign(current[2],{clientCellId:1,manualPosition:true});
  const unpicked={localPlayerCellId:1,myTeam:[{cellId:1,championId:0,assignedPosition:''}]};
  const kept=restoreTeamFavorite(favorite,current,champions,unpicked);

@@ -1,7 +1,7 @@
 // Only the assistant's own window is resized. The observed League windows
 // are read-only anchors, including on mixed-DPI and disconnected displays.
 module.exports=function createClientCompanion({getWindow,createWindow,getClient,getPreferences,placement,diagnostic}){
- const {screen}=require('electron');
+ const {screen,BrowserWindow}=require('electron');
  let native=null,docked=false,normal=null,pinned=false,phase='',expanded=false,dismissed=false,hidden=false,last='',lastPublished='';
  const layout=()=>({docked,...(docked?{overlap:last==='edge'}:{})});
  function publish(){const win=getWindow(),key=JSON.stringify(layout());if(win&&!win.isDestroyed()&&key!==lastPublished){lastPublished=key;win.webContents.send('window-layout',layout());}}
@@ -23,12 +23,14 @@ module.exports=function createClientCompanion({getWindow,createWindow,getClient,
   if(!native||native.minimized){if(docked){getWindow()?.hide();hidden=true;}return;}
   let win=getWindow();if(!win||win.isDestroyed()){createWindow();win=getWindow();}
   if(!docked){const current=win.getBounds();if(!normal||['x','y','width','height'].some(k=>Math.abs(current[k]-normal[k])>4))normal=current;pinned=win.isAlwaysOnTop();docked=true;}
-  const area=screen.getDisplayMatching(native).workArea,b=placement.companionPlacement(native,area);
+  const area=screen.getDisplayMatching(native).workArea,b=placement.companionPlacement(native,area,getPreferences().companionWidth);
   win.setMinimumSize(Math.min(280,area.width),Math.min(480,area.height));
   // Windows rounds framed window bounds at fractional display scales. Avoid
   // repeatedly resizing a window that is already within that rounding margin.
   const current=win.getBounds();if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3))win.setBounds({x:b.x,y:b.y,width:b.width,height:b.height});
-  const onTop=native.foreground||win.isFocused();if(win.isAlwaysOnTop()!==onTop)win.setAlwaysOnTop(onTop,'floating');
+  // Include our modal dialogs in the foreground interaction group. Never
+  // repeatedly toggle the topmost flag while focus moves inside the assistant.
+  const onTop=native.foreground||BrowserWindow.getAllWindows().some(w=>!w.isDestroyed()&&w.isFocused());if(win.isAlwaysOnTop()!==onTop)win.setAlwaysOnTop(onTop,'floating');
   if(!win.isVisible()||hidden){win.showInactive();hidden=false;}
   last=b.side;publish();
  }

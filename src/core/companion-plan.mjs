@@ -22,7 +22,10 @@ export function changeCompanionPlan(data,selection,field,value){
  const champion=data.champions.find(c=>c.id===selection.id);
  if(!champion)throw Error('英雄资料已变化，请重新选择');
  const current=getBuild(champion,selection.role,data,selection),next={...selection};
- if(field==='source-opponent-reset'){
+ if(['shared-reset','core','start','boots','later','loadout','quest-plan','source-opponent-reset'].includes(field))delete next.sharedEquipment;
+ if(field==='shared-reset'){
+  // Return only equipment to this local role/combo; keep personal runes and D/F.
+ }else if(field==='source-opponent-reset'){
   delete next.sourceOpponent;delete next.coreId;delete next.runeId;delete next.skillId;next.coreIndex=0;next.laterIds=[];
  }else if(field.startsWith('summoner-')){
   if(field==='summoner-reset')delete next.summonerIds;

@@ -3,7 +3,7 @@ import {validateCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboC
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
-export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','customRunePage','skillId','customSkillOrder','summonerIds','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId','sourceOpponent'];
+export const CONFIGURATION_FIELDS=['coreIndex','coreId','conditions','loadoutId','runeId','customRunePage','skillId','customSkillOrder','summonerIds','comboId','creativePlan','laterIds','bottomQuestPlan','startId','bootsId','sourceOpponent','sharedEquipment'];
 export function configurationKey(selection){return JSON.stringify([selection.id,selection.role,selection.mode,CONFIGURATION_FIELDS.map(field=>field==='conditions'?[...(selection.conditions||[])].sort():field==='bottomQuestPlan'?!!selection[field]:selection[field]??null)]);}
 export function configurationPatch(previous,next){
  return CONFIGURATION_FIELDS.filter(field=>JSON.stringify(previous?.[field])!==JSON.stringify(next?.[field]));
@@ -63,7 +63,13 @@ export function createRuneApplicationState(){
   return JSON.stringify([client.phase,client.mode?.id||'',client.game?.gameId||session?.gameId||'',session?.localPlayerCellId??null,own?.championId||0,own?.championPickIntent||0,own?.assignedPosition||'']);
  };
  return {
-  observe(client){const next=clientContext(client);if(next===context)return false;context=next;revision++;const had=!!appliedKey;appliedKey='';return had;},
+  observe(client){
+   const next=clientContext(client);if(next===context)return false;
+   const before=context&&JSON.parse(context),after=next&&JSON.parse(next);
+   const confirmedIntent=before&&after&&before[4]===0&&before[5]>0&&after[4]===before[5]&&[0,before[5]].includes(after[5])&&[0,1,2,3,6].every(i=>before[i]===after[i]);
+   context=next;revision++;if(confirmedIntent)return false;
+   const had=!!appliedKey;appliedKey='';return had;
+  },
   has(key){return !!key&&key===appliedKey;},
   clear(){revision++;appliedKey='';},
   begin(key){this.clear();return {revision,context,key};},

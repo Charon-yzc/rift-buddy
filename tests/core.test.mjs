@@ -23,7 +23,7 @@ test('one remaining party player gets advice across all five roles',()=>{
 test('locked unusual positions survive recommendations and client sync',()=>{
  const slots=createSlots();slots[2]={...slots[2],champion:'Yasuo',locked:true};
  const merged=mergeClientSession(slots,{myTeam:[{championId:hero('Yasuo').key,assignedPosition:'BOTTOM',cellId:1},{championId:hero('Lux').key,assignedPosition:'',cellId:2}],localPlayerCellId:2},data.champions);
- assert.equal(merged.slots[2].champion,'Yasuo');assert.equal(merged.slots[3].champion,null);assert.deepEqual(merged.unassigned,[{champion:'Lux',cellId:2,local:true}]);
+ assert.equal(merged.slots[2].champion,'Yasuo');assert.equal(merged.slots[3].champion,null);assert.deepEqual(merged.unassigned,[]);assert.ok(merged.slots.some(s=>s.champion==='Lux'&&s.automaticPosition));
  for(const result of recommend({slots,champions:data.champions,limit:3}))assert.equal(result.slots[2].champion,'Yasuo');
 });
 test('small candidate pool remains fully reachable by reroll',()=>{
@@ -42,7 +42,7 @@ test('automatic imports track changed picks and role swaps without displacing ma
  session.myTeam[0].assignedPosition='UTILITY';session.myTeam[1].assignedPosition='BOTTOM';draft=mergeClientSession(draft,session,data.champions).slots;
  assert.equal(draft[3].champion,'Lux');assert.equal(draft[4].champion,'Jhin');
  delete draft[3].clientCellId;session.myTeam[1].championId=hero('Lulu').key;
- const result=mergeClientSession(draft,session,data.champions);assert.equal(result.slots[3].champion,'Lux');assert.equal(result.unassigned[0].champion,'Lulu');
+ const result=mergeClientSession(draft,session,data.champions);assert.equal(result.slots[3].champion,'Lux');assert.equal(result.unassigned.length,0);assert.ok(result.slots.some(s=>s.champion==='Lulu'&&Number.isInteger(s.clientCellId)));
  const cleared=clearClientPicks(result.slots);assert.equal(cleared[3].champion,'Lux');assert.equal(cleared[4].champion,null);assert.equal(cleared[4].locked,false);
 });
 test('duplicate heroes and an impossible pool are rejected clearly',()=>{
@@ -125,10 +125,10 @@ test('client sync marks the local declared lane as ours without clearing premade
  // Already marked: no change reported, flags stable.
  const again=mergeClientSession(solo.slots,{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:'TOP'}],localPlayerCellId:1},data.champions);
  assert.equal(again.markedLocalChanged,false);
- // Blind pick without a declared position: nothing touched.
+ // Blind pick: assign a provisional lane and mark the local player.
  const blind=mergeClientSession(createSlots(),{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:''}],localPlayerCellId:1},data.champions);
- assert.equal(blind.slots.find(s=>s.role==='top').party,false);
- assert.equal(blind.markedLocalRole,null);assert.equal(blind.markedLocalChanged,false);
+ assert.equal(blind.slots.find(s=>s.role==='top').party,true);
+ assert.equal(blind.markedLocalRole,'top');assert.equal(blind.markedLocalChanged,true);
  const manual=solo.slots.map(s=>({...s,party:false}));
  const polled=mergeClientSession(manual,{myTeam:[{cellId:1,championId:hero('Garen').key,assignedPosition:'TOP'}],localPlayerCellId:1},data.champions);
  assert.equal(polled.slots.find(s=>s.role==='top').party,false,'Polling must preserve a manual party uncheck');

@@ -11,7 +11,7 @@ export const clearDraftPicks=slots=>slots.map(s=>({role:s.role,party:s.party,cha
 export function clearClientPicks(slots){
  return slots.map(s=>{
   if(!Number.isInteger(s.clientCellId))return {...s};
-  const {clientCellId,manualPosition,...manual}=s;return {...manual,champion:null,locked:false};
+  const {clientCellId,manualPosition,automaticPosition,...manual}=s;return {...manual,champion:null,locked:false};
  });
 }
 const clientGameId=id=>(typeof id==='string'||Number.isSafeInteger(id))&&/^\d{1,20}$/.test(String(id))&&Number(id)>0?String(id):null;
@@ -69,7 +69,7 @@ export function moveChampion(slots,fromRole,toRole){
  return slots.map(s=>{
   if(![fromRole,toRole].includes(s.role))return {...s};
   // Position ownership stays on the board; champion and client binding move together.
-  return {role:s.role,party:s.party,...(s.role===toRole?a:b)};
+  return {role:s.role,party:s.party,...(s.partyManual?{partyManual:true}:{}),...(s.role===toRole?a:b)};
  });
 }
 export function assignClientChampion(slots,pick,toRole){

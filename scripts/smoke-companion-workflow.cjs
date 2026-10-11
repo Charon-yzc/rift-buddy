@@ -31,12 +31,19 @@ async function run(){
  let sourceFetches=0,resumeSource;const sourceWait=new Promise(resolve=>resumeSource=resolve);
  global.fetch=async url=>{assert.ok(['lol-api-champion.op.gg','op.gg'].includes(new URL(url).hostname));sourceFetches++;if(sourceFetches===1)await sourceWait;return new Response('{}',{status:503});};
  let picked='',hovered='',assigned='',enemyPicked='Malphite',observer,phase='ChampSelect',gameId='1501',offline=false,holdRuneWrite=false,resumeRuneWrite=null,writes=[];
- let page={...getBuild(hero('Ashe'),'bottom',data).runePage,id:44,isEditable:true};
+ let page={...getBuild(hero('Ashe'),'bottom',data).runePage,id:44,isEditable:true},preparationAction=null,spells={spell1Id:4,spell2Id:7},hoverWrites=0,spellWrites=0;
  const output=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
-  if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:hovered?hero(hovered).key:0,assignedPosition:assigned}],theirTeam:[{cellId:6,championId:hero(enemyPicked).key}],actions:[],bans:{myTeamBans:[hero('Yone').key],theirTeamBans:[]},timer:{adjustedTimeLeftInPhase:65000}};
+  if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:hovered?hero(hovered).key:0,assignedPosition:assigned}],theirTeam:[{cellId:6,championId:hero(enemyPicked).key}],actions:preparationAction?[[preparationAction]]:[],bans:{myTeamBans:[hero('Yone').key],theirTeamBans:[]},timer:{phase:'PLANNING',adjustedTimeLeftInPhase:65000}};
+  if(preparationAction){
+   if(options.path.endsWith('/pickable-champion-ids'))return data.champions.map(c=>c.key);
+   if(options.path.endsWith('/disabled-champion-ids'))return [];
+   if(options.path.endsWith('/actions/4')&&options.method==='PATCH'){const body=JSON.parse(options.body);assert.equal(body.completed,false);hovered=data.champions.find(c=>c.key===body.championId).id;preparationAction.championId=body.championId;hoverWrites++;return {};}
+   if(options.path.endsWith('/my-selection')){if(options.method==='PATCH'){spells=JSON.parse(options.body);spellWrites++;}return spells;}
+   if(options.path==='/data-store/v1/install-dir')return path.join(root,'client-fixture');
+  }
   if(options.path==='/lol-perks/v1/pages'){assert.ok(!options.method||options.method==='GET');return [page];}
   assert.equal(options.path,'/lol-perks/v1/pages/44');assert.equal(options.method,'PUT');
   const body=JSON.parse(options.body);writes.push(structuredClone(body));page={...body,id:44,isEditable:true};return page;
@@ -56,17 +63,17 @@ async function run(){
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
  diagnosticMain=main;
- const js=code=>main.webContents.executeJavaScript(code,true),click=selector=>js('document.querySelector('+JSON.stringify(selector)+').click()');
- const change=(selector,value)=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(String(value))+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+ const js=code=>main.webContents.executeJavaScript(code,true).catch(error=>{console.error('Failed smoke expression:',code);throw error;}),click=selector=>js('document.querySelector('+JSON.stringify(selector)+').click()');
+ const change=async(selector,value)=>{if(selector==='#solo-role'&&!await js('!!document.querySelector("#solo-role")'))await click('[data-action=companion-tab][data-tab=plan]');return js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(String(value))+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');};
  const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(180);};
  const toggleAutoSync=()=>js('(()=>{const b=document.createElement("button");b.dataset.action="auto-sync";document.body.append(b);b.click();b.remove();})()');
  const backgroundSync=async()=>{await js('window.buddy.client(true)');await delay(250);};
  await until(()=>js('!!document.querySelector("#solo-role")'),'Main not loaded');await until(()=>observer,'Observer missing');
- const area=screen.getPrimaryDisplay().workArea,anchor={x:area.x+20,y:area.y+40,width:Math.min(1200,area.width-480),height:Math.min(850,area.height-100)},anchorBefore=structuredClone(anchor);
+ const area=screen.getPrimaryDisplay().workArea,anchor={x:area.x+20,y:area.y+40,width:Math.min(1200,area.width-560),height:Math.min(850,area.height-100)},anchorBefore=structuredClone(anchor);
  observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor),foreground:false,minimized:false},game:null})+'\n');await sync();
  await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');
  await until(()=>js('document.querySelectorAll(".companion-candidate").length===6'),'Six automatic candidates missing');
- assert.ok(main.getBounds().width>=438&&main.getBounds().width<=441);assert.deepEqual(anchor,anchorBefore);assert.equal(main.isVisible(),false);assert.equal(writes.length,0);
+ assert.ok(main.getBounds().width>=518&&main.getBounds().width<=521,'Default sidebar must use 520 logical pixels when space is available');assert.deepEqual(anchor,anchorBefore);assert.equal(main.isVisible(),false);assert.equal(writes.length,0);
  const capture=async name=>{
   await js('[...document.images].forEach(i=>i.loading="eager")');
   await until(()=>js('[...document.querySelectorAll(".companion-shell img")].every(i=>i.complete&&i.naturalWidth>0)'),'Missing bundled image');
@@ -77,6 +84,7 @@ async function run(){
   await fs.writeFile(path.join(root,name+'.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  };
  await capture('recommend');
+ await click('[data-action=companion-tab][data-tab=plan]');
  // A declared lane exists before choosing a champion. Visible lane and
  // candidates follow the formal lane until the player explicitly overrides it.
  await change('#solo-role','top');assigned='JUNGLE';await sync();
@@ -84,6 +92,7 @@ async function run(){
  await click('[data-action=position-auto]');await sync();
  assert.equal(await js('document.querySelector("#solo-role").value'),'jungle');
  assert.equal(await js('document.querySelector("#solo-role").disabled'),false);
+ await click('[data-action=companion-tab][data-tab=recommend]');
  await until(()=>js('document.querySelectorAll(".companion-candidate").length===6&&[...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].every(b=>b.dataset.role==="jungle")'),'Before-pick candidates ignored the declared jungle lane');
  assert.equal((await js('window.buddy.bootstrap()')).state.draft.soloRole,'jungle');
  assert.equal(writes.length,0);await capture('assigned-before-pick');
@@ -93,16 +102,18 @@ async function run(){
  assert.equal(await js('document.querySelector("#solo-role").disabled'),false,'The player must be able to explicitly change the tactical lane');
  assert.equal(await js('beforeAssignmentRole.isConnected'),false,'A newly declared lane did not replace the stale editable control');
  assigned='';await sync();await change('#solo-role','');
+ await click('[data-action=companion-tab][data-tab=recommend]');
  await until(()=>js('new Set([...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].map(b=>b.dataset.role)).size===5'),'Unknown lane did not restore separate lane candidates');
  hovered='Volibear';await sync();
- assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'plan','Local intent must prepare a plan automatically');
+ assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'recommend','A client hover must preserve the selection and team view');
+ await click('[data-action=companion-tab][data-tab=plan]');
  assert.equal(await js('!!document.querySelector("[data-pick-intent]")'),true);assert.equal(await js('document.querySelectorAll("[data-action=my-runes]").length'),0);
  await change('#solo-role','top');
  const previewRune=getBuild(hero('Volibear'),'top',data).runeOptions.at(-1);
  await change('[data-companion-field=rune]',previewRune.id);await change('[data-companion-field=core]',1);await capture('intent-plan');
  assert.equal((await js('window.buddy.bootstrap()')).state.guide,null,'Preselection must not create an in-game selection');assert.equal(writes.length,0);
- hovered='Vayne';await sync();assert.ok(await js('document.querySelector("[data-pick-intent]").textContent.includes("薇恩")'));
- hovered='Volibear';await sync();assert.equal(await js('document.querySelector("[data-companion-field=rune]").value'),previewRune.id);assert.equal(await js('document.querySelector("[data-companion-field=core]").value'),'1');
+ hovered='Vayne';await sync();await click('[data-action=companion-tab][data-tab=plan]');assert.ok(await js('document.querySelector("[data-pick-intent]").textContent.includes("薇恩")'));
+ hovered='Volibear';await sync();await click('[data-action=companion-tab][data-tab=plan]');assert.equal(await js('document.querySelector("[data-companion-field=rune]").value'),previewRune.id);assert.equal(await js('document.querySelector("[data-companion-field=core]").value'),'1');
  await click('[data-action=companion-tab][data-tab=recommend]');
  await click('[data-action=companion-preview]');assert.ok(await js('!!document.querySelector(".companion-preview")'));assert.equal(await js('document.querySelectorAll(".drawer").length'),0);assert.equal(writes.length,0);
  const manualPreview=await js('document.querySelector("[data-companion-field=rune]").dataset.plan');hovered='Vayne';await sync();assert.equal(await js('document.querySelector("[data-companion-field=rune]").dataset.plan'),manualPreview,'Intent changes replaced a manually viewed plan');
@@ -110,7 +121,8 @@ async function run(){
  picked='Volibear';hovered='';await sync();await until(async()=>((await js('window.buddy.bootstrap()')).state.guide?.selection.runeId===previewRune.id),'Actual pick lost the preview rune choice');
  assert.equal((await js('window.buddy.bootstrap()')).state.guide.selection.coreIndex,1,'Actual pick lost the preview equipment route');
  await until(()=>js('document.querySelector(".companion-current-hero")?.textContent.includes("沃利贝尔")&&!document.querySelector(".companion-preview")'),'Actual pick did not replace the intent view');
- assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'plan','Picking must show preparation automatically');assert.equal(await js('document.querySelectorAll(".companion-preview").length'),0);
+ assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'recommend','An actual pick must return to the team and current action view');assert.equal(await js('document.querySelectorAll(".companion-preview").length'),0);
+ await click('[data-action=companion-tab][data-tab=plan]');
  await change('#solo-role','top');await delay(200);
  assert.equal((await js('window.buddy.bootstrap()')).state.draft.slots.find(s=>s.role==='top').champion,'Volibear');
  // Both presentations edit the same manually chosen position in blind pick.
@@ -189,10 +201,10 @@ async function run(){
  const lateFavorite=savedLate.find(f=>f.laterIds?.includes(Number(favoriteLater)));assert.ok(lateFavorite);
  await click('[data-action=companion-later]');await delay(150);
  assert.equal(await js('document.querySelector("[data-action=companion-favorite]").getAttribute("aria-pressed")'),'true','Original saved plan was lost');
- await click('[data-action=presentation-open]');await click('[data-field=textScale][data-value="1.25"]');
+ await click('[data-action=companion-full]');await click('[data-action=presentation-open]');await click('[data-field=textScale][data-value="1.25"]');
  await until(()=>js('getComputedStyle(document.querySelector(".presentation-preview b")).fontSize==="21.25px"'),'Sidebar font setting missing');
  assert.equal((await js('window.buddy.bootstrap()')).state.preferences.presentation.textScale,1.25);
- await capture('sidebar-settings');await click('[data-action=close]');await click('[data-action=companion-jump][data-section=items]');await capture('large-plan');
+ await click('[data-action=close]');await click('[data-action=companion-attach]');await sync();await click('[data-action=companion-tab][data-tab=plan]');await capture('sidebar-settings');await click('[data-action=companion-jump][data-section=items]');await capture('large-plan');
  await js('window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,presentation:{textScale:1,guideModules:[]}}}))');
  assert.equal((await js('window.buddy.bootstrap()')).state.preferences.presentation.textScale,1.25,'A stale whole-state write overwrote new presentation');
  await js('window.buddy.presentation({field:"reset"})');await delay(100);
@@ -215,6 +227,7 @@ async function run(){
  picked='Ashe';assigned='bottom';await backgroundSync();
  assert.equal(await js('previousHeroSelect.isConnected'),false,'Changing the local champion retained an invalid open menu');
  await toggleAutoSync();
+ await click('[data-action=companion-tab][data-tab=plan]');
  assert.equal(await js('document.querySelector("#solo-role").value'),'top','Champion swap lost the manual position');
  await click('[data-action=position-auto]');await sync();
  assert.equal(await js('document.querySelector("[data-action=my-runes]").dataset.id'),'Ashe');assert.equal(await js('document.querySelector("#solo-role").disabled'),false);
@@ -229,10 +242,10 @@ async function run(){
  assert.ok(await js('document.querySelector(".companion-content").clientHeight>=150'),'Minimum sidebar height squeezed large text content');
  for(const size of [{width:360,height:600},{width:280,height:480}]){
   observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor),foreground:false,minimized:false},game:null})+'\n');
-  main.setBounds({...main.getBounds(),...size});await delay(150);
+  main.setContentSize(size.width,size.height);await until(()=>js('Math.abs(innerWidth-'+size.width+')<=1'),'Sidebar content did not reach '+size.width+' logical pixels');
   await click('[data-action=companion-jump][data-section=runes]');
   const metrics=await js('({width:innerWidth,scroll:document.documentElement.scrollWidth,height:innerHeight,content:document.querySelector(".companion-content").clientHeight,footer:document.querySelector(".companion-footer").getBoundingClientRect().bottom,button:document.querySelector("[data-action=my-runes]").getBoundingClientRect().bottom})');
-  assert.ok(metrics.scroll<=metrics.width,'Horizontal overflow at '+size.width);assert.ok(metrics.content>=150,'Content squeezed at '+size.width);assert.ok(metrics.footer<=metrics.height+1);assert.ok(metrics.button<=metrics.height);await capture('plan-'+size.width);
+  assert.ok(metrics.scroll<=metrics.width,'Horizontal overflow at '+size.width+': '+JSON.stringify(metrics));assert.ok(metrics.content>=150,'Content squeezed at '+size.width);assert.ok(metrics.footer<=metrics.height+1);assert.ok(metrics.button<=metrics.height);await capture('plan-'+size.width);
   const copiesBefore=copiedTexts.length;await click('[data-action=window-info]');
   await until(()=>js('document.querySelector("[data-window-info]")?.textContent.includes("按缩放换算")'),'Window report missing');
   assert.equal(copiedTexts.length,copiesBefore,'Opening window info copied without a click');
@@ -249,6 +262,7 @@ async function run(){
  }
  await js('window.buddy.presentation({field:"reset"})');await delay(100);
  main.setBounds({...main.getBounds(),width:440,height:850});picked='Chogath';assigned='jungle';await sync();
+ await click('[data-action=companion-tab][data-tab=plan]');
  assert.equal(await js('document.querySelector("[data-action=my-runes]").dataset.id'),'Chogath');
  const cho=getBuild(hero('Chogath'),'jungle',data);assert.equal(cho.runePage.selectedPerkIds[0],9923);
  assert.equal(await js('document.querySelector(".companion-content").textContent.includes("旧版本参考")'),cho.referenceStale);
@@ -388,7 +402,7 @@ async function run(){
  picked='Chogath';hovered='';await sync();
  await until(()=>js('document.querySelector("[data-companion-field=rune]").dataset.plan==="Chogath:jungle:rift"'),'Actual pick lost the manual role from combination scope');
  await click('[data-action=companion-tab][data-tab=recommend]');await change('#companion-scope','solo');await click('[data-action=companion-tab][data-tab=plan]');
- picked='Ashe';assigned='bottom';await sync();await click('[data-action=position-auto]');await sync();await click('[data-companion-disclosure=source] > summary');
+ picked='Ashe';assigned='bottom';await sync();await click('[data-action=companion-tab][data-tab=plan]');await click('[data-action=position-auto]');await sync();await click('[data-companion-disclosure=source] > summary');
  const fetchesBeforeFilters=sourceFetches,writesBeforeFilters=writes.length;
  for(const region of ['global','kr'])for(const tier of ['gold_plus','emerald_plus','diamond_plus']){
   await change('[data-build-source-field=region]',region);await change('[data-build-source-field=tier]',tier);
@@ -479,6 +493,7 @@ async function run(){
  assert.deepEqual(supportGuide.model.runes.map(r=>r.id),luxSupport.runePage.selectedPerkIds);
  await capture('lux-manual-support');
  picked='Nami';assigned='BOTTOM';await sync();
+ await click('[data-action=companion-tab][data-tab=plan]');
  assert.equal(await js('document.querySelector("[data-companion-field=rune]").dataset.plan'),'Nami:support:rift');
  const swapGuide=await guideJs('window.guide.bootstrap()');assert.equal(swapGuide.current.role,'support');assert.equal(swapGuide.current.formalRole,'bottom');
  await click('[data-action=position-auto]');await sync();
@@ -489,6 +504,7 @@ async function run(){
  picked='Lux';assigned='MIDDLE';await sync();await change('#solo-role','support');await sync();
  const oldGameState=await js('window.buddy.bootstrap().then(b=>b.state)');assert.equal(oldGameState.draft.clientGameId,'1506');
  gameId='1507';await sync();await sync();
+ await click('[data-action=companion-tab][data-tab=plan]');
  assert.equal(await js('document.querySelector("#solo-role").value'),'mid','New game inherited the previous tactical lane');
  assert.equal(await js('document.querySelector("[data-companion-field=rune]").dataset.plan'),'Lux:mid:rift');
  await click('[data-action=guide-current]');await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.selection?.role==="mid")'),'New game guide inherited the previous tactical lane');
@@ -496,10 +512,25 @@ async function run(){
  await js('window.buddy.saveState('+JSON.stringify(oldGameState)+')');
  const delayedSave=await js('window.buddy.bootstrap()');assert.equal(delayedSave.state.draft.clientGameId,'1507');assert.equal(delayedSave.state.draft.slots.find(s=>s.champion==='Lux').role,'mid','Delayed old-game save restored the old binding');
  assert.equal(writes.length,writesBeforeFilters,'New game reconciliation wrote runes');
+ // The default hero click must finish setup once, and show that fact after
+ // the player confirms the same hero. No extra application is needed on polls.
+ gameId='1508';picked='';hovered='';assigned='MIDDLE';preparationAction={id:4,type:'pick',actorCellId:1,championId:0,completed:false,isInProgress:true};
+ await fs.writeFile(path.join(root,'client-fixture','LeagueClient.exe'),'isolated fixture');await sync();
+ await click('[data-action=player-flow-settings]');await click('[data-action=player-flow-toggle][data-field=clickPrepare]');await click('[data-action=close]');
+ await click('[data-action=companion-tab][data-tab=recommend]');await until(()=>js('!!document.querySelector("[data-action=companion-preview][data-role=mid]")'),'No mid candidate for default preparation');
+ const beforePrepareWrites=writes.length;await click('[data-action=companion-preview][data-role=mid]');
+ await until(()=>js('document.querySelector(".client-preparation-result")?.textContent.includes("配置已完成")'),'Default click did not complete all four steps');
+ assert.equal(hoverWrites,1);assert.equal(spellWrites,1);assert.equal(writes.length,beforePrepareWrites+1);assert.equal(preparationAction.completed,false);
+ picked=hovered;preparationAction.completed=true;await sync();
+ await until(()=>js('document.querySelector(".companion-ready")?.textContent.includes("本次已应用")'),'Completed setup still asks to apply runes');
+ assert.match(await js('document.querySelector("[data-action=my-runes]").textContent'),/重新应用/);
+ await sync();assert.equal(writes.length,beforePrepareWrites+1,'Confirming or polling the hero reapplied runes');
+ await capture('one-click-confirmed-status');gameId='1509';await sync();assert.match(await js('document.querySelector(".companion-ready").textContent'),/待应用/,'New game retained a previous rune confirmation');preparationAction=null;
  // Retain the final manual choice in this isolated profile for restart validation.
  picked='Lux';assigned='MIDDLE';await sync();await change('#solo-role','support');await sync();await click('[data-action=guide-current]');
  await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.selection?.role==="support")'),'Final support guide missing');
  const report={passed:true,archiveSha256:release.archiveSha256,baseDataVersion:data.version,sourcePatch:cho.reference.patch,choJungleHail:true,sourceVersionLabelCorrect:true,oldSourceVisible:cho.referenceStale,lateChoicesSync:true,sixCandidates:true,automaticPlanOnPick:true,inlineCoreRuneSkill:true,comparisonCards:true,favoriteSelection:true,presentationPersisted:true,stalePreferenceWriteProtected:true,crossWindowPresentation:true,minimumFullWindowReadable:true,guideSelectionMatches:true,explicitRuneClickOnly:true,runeConfirmationLifecycle:true,lateRuneWriteRejected:true,pendingRuneClickBlocked:true,previewSeparated:true,staleHeroActionRejected:true,tabAndSyncScrollPreserved:true,publicEnemiesAndBans:true,wideAndNarrowLayouts:true,clientGeometryUnchanged:true,testWindowsHidden:true,loopbackSocketsMocked:true,actualRuneWrites:false};
+ report.defaultClickPreparationStatus=true;report.sameHeroConfirmationNoRepeatWrite=true;report.newGameClearsPreparedRuneStatus=true;
  report.manualFormalLanePreparation=true;report.manualChampionSwap=true;report.manualLaneRelease=true;report.manualLaneRuneWrites=0;
  report.manualNewGameReleased=true;report.staleGameSaveRejected=true;report.finalGameId=gameId;
  report.cachedSourceSwitch=true;report.cachedSourceNoFetch=true;report.cachedSourceNoRuneWrite=true;

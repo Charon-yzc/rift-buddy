@@ -16,7 +16,7 @@ export function roomPlayerRole(slots,champions,client,soloRole=''){
  const session=client?.connected?client.session:null;
  if(!session)return soloRole;
  const own=currentPlayerSelection(session,champions,slots);
- if(own)return own.positionKnown&&slots.some(s=>s.role===own.role&&s.champion===own.id)?own.role:'';
+ if(own)return slots.some(s=>s.role===own.role&&s.champion===own.id)?own.role:'';
  const cell=session.localPlayerCellId;
  if(!Number.isInteger(cell))return '';
  const player=session.myTeam?.find(p=>p.cellId===cell);
@@ -69,4 +69,15 @@ export function roomPreparation(raw,data,strategy,{localStrategy=null}={}){
  const plan=sameGroup?local:incoming;
  const combo=plan?creativeMemberCombo(plan,config.champion,config.role):null;
  return {id:config.champion,role:config.role,mode:'rift',...creativeComboContext(combo),customRunePage:{...config.runes,patch:config.patch},...(skills?{customSkillOrder:skills}:{}),summonerIds};
+}
+// A click in the sidebar can prepare the concrete sender snapshot. The item
+// set contains only that snapshot's order; it must not mix in local defaults.
+export function roomClientPlan(raw,data,strategy,{localStrategy=null}={}){
+ const config=sanitizeRoomConfiguration(raw),local=localStrategy?validateCreativePlan(localStrategy):null;
+ // Applying this member's equipment does not adopt a different whole lineup.
+ // Keep the receiving team's current duties, including when no strategy came
+ // with the personal snapshot, so in-game lookup finds this explicit choice.
+ const context=local?.members.some(m=>m.champion===config.champion&&m.role===config.role)?local:strategy;
+ const selection={...roomPreparation(config,data,context),sharedEquipment:{patch:config.patch,start:config.start,items:config.items},...(config.role==='bottom'&&config.items.length===7?{bottomQuestPlan:true}:{})};
+ return {selection,build:getBuild(data.champions.find(c=>c.id===selection.id),selection.role,data,selection)};
 }

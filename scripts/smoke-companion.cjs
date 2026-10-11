@@ -34,7 +34,7 @@ async function run(){
  snapshot();await js('window.buddy.client(true)');await click('[data-action=sync]');
  await until(()=>main.isVisible(),'Main not shown after client window snapshot');
  await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');
- assert.ok(main.getBounds().width<=441);assert.ok(main.getBounds().x>=anchor.getBounds().x+anchor.getBounds().width);assert.equal(focusRequests,0,'Docking must not request focus');assert.equal(anchor.isFocused(),anchorFocused,'Docking changed the observed test anchor focus');
+ assert.ok(main.getBounds().width<=521);assert.ok(main.getBounds().x>=anchor.getBounds().x+anchor.getBounds().width);assert.equal(focusRequests,0,'Docking must not request focus');assert.equal(anchor.isFocused(),anchorFocused,'Docking changed the observed test anchor focus');
  await click('[data-action=companion-tab][data-tab=plan]');await until(()=>js('!!document.querySelector(".current-preparation")'),'Plan not prepared');
  assert.ok(await js('document.querySelector(".companion-ready").textContent.includes("方案已选好")'));assert.equal(writes,0);
  const overflow=await js('({width:innerWidth,scroll:document.documentElement.scrollWidth})');assert.ok(overflow.scroll<=overflow.width,'Sidebar overflows horizontally');

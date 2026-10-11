@@ -36,8 +36,8 @@ test('manual position reservations survive temporary unselection, restart and la
  assert.equal(mergeClientSession(restored.slots,session('Jhin'),data.champions).slots[2].champion,'Jhin');
  assert.equal(clearClientPicks(restored.slots)[2].clientCellId,undefined);
 });
-test('unassigned public picks require a chosen empty position and retain client ownership',()=>{
- const s=session();s.myTeam.forEach(p=>p.assignedPosition='');const result=mergeClientSession(createSlots(),s,data.champions);
+test('manual arrangement opt-out keeps an explicit empty-position fallback and client ownership',()=>{
+ const s=session();s.myTeam.forEach(p=>p.assignedPosition='');const result=mergeClientSession(createSlots(),s,data.champions,{autoArrange:false});
  assert.equal(result.unassigned.length,2);assert.equal(result.slots.filter(s=>s.champion).length,0);
  const assigned=assignClientChampion(result.slots,result.unassigned[0],'jungle');
  assert.equal(assigned[1].clientCellId,1);assert.equal(assigned[1].manualPosition,true);

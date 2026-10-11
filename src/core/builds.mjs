@@ -1,3 +1,4 @@
+import {sharedEquipmentBuild} from './shared-equipment.mjs';
 import {summonerPlan,validSourceSummonerOptions} from './summoner-selection.mjs';
 import {validMatchups} from './matchups.mjs';
 import {selectedOpponentBuild,validOpponentScope} from './opponent-build-source.mjs';
@@ -100,8 +101,19 @@ export function buildRoleEvidence(data){
  }
  return result;
 }
+// Compare only positions from the currently selected, validated source. A
+// missing/old position is not a zero-sample position and remains a fallback.
+export function rankedClientRoles(data){
+ const result={};
+ for(const champion of data.champions){
+  const rows=Object.values(data.builds||{}).filter(ref=>ref?.champion===champion.id&&validReference(ref,champion,ref.role,data)&&Number.isSafeInteger(ref.roleSamples)&&ref.roleSamples>0);
+  if(rows.length&&rows.every(ref=>ref.region===rows[0].region&&ref.tier===rows[0].tier))result[champion.id]=rows.sort((a,b)=>b.roleSamples-a.roleSamples||a.role.localeCompare(b.role)).map(ref=>ref.role);
+ }
+ return result;
+}
 const conflicts=itemConflicts;
-export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent}={}) {
+export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent,sharedEquipment}={}) {
+ if(sharedEquipment){const base=getBuild(champion,role,data,{mode,variant,conditions,coreIndex,coreId,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds,bottomQuestPlan,sourceOpponent});return sharedEquipmentBuild(base,sharedEquipment,data);}
  coreIndex=Number.isInteger(coreIndex)&&coreIndex>=0?coreIndex:0;
  if(!Array.isArray(conditions))conditions=[];
  const p=profile(champion,mode==='hex'?undefined:role);let key=p.build;
