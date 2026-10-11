@@ -11,7 +11,7 @@ const clean=value=>String(value||'').replace(/<[^>]*>/g,'');
 
 // This is an explained, temporary in-game route. It never changes a saved
 // preparation, spends gold, sells an item or claims a statistically best build.
-export function completeGearPlan({data,build,selection,live=null,signals=[],enabled=true,bottomQuestConfirmed=false,bottomQuestEligible=true}){
+export function completeGearPlan({data,build,selection,live=null,completedItems=[],signals=[],enabled=true,bottomQuestConfirmed=false,bottomQuestEligible=true}){
  const map=selection.mode==='rift'?'11':'12',records=data.items;
  const item=id=>records[String(id)],available=id=>{
   const r=item(id);return !!(r?.maps?.[map]&&r.inStore&&r.gold?.purchasable!==false&&!r.requiredAlly&&(!r.requiredChampion||r.requiredChampion===selection.id));
@@ -24,6 +24,10 @@ export function completeGearPlan({data,build,selection,live=null,signals=[],enab
  const inventory=inventoryKnown&&Array.isArray(live.inventory)?live.inventory.filter(i=>i.count>0):[];
  const held=[...new Set(inventory.map(idOf))];
  const owns=id=>inventoryKnown&&inventoryFulfillsItem({data,id:String(id),inventory});
+ // Manual marks advance the offline plan only. Never use them as inventory,
+ // component credit or evidence for adapting the route, even with a partial Live read.
+ const manualIds=new Set(live?.matched===true?[]:completedItems.map(String));
+ const planned=id=>manualIds.has(String(id));
  const slotLimit=build.support?5:selection.bottomQuestPlan&&build.boots&&bottomQuestEligible?7:6;
  const profile=build.routeProfile||equipmentRoute({items:build.items,key:build.key,champion:selection.id,data,support:build.support});
  const base=build.items.map(idOf).slice(0,slotLimit),baseSet=new Set(base),notes=[];
@@ -115,8 +119,10 @@ export function completeGearPlan({data,build,selection,live=null,signals=[],enab
  const pendingQuest=slotLimit===7&&route.length===7&&!bottomQuestConfirmed&&!owns(route[6]);
  if(pendingQuest)notes.unshift('第七件先等本局正式下路任务完成，并在详情确认；当前不作为可购买目标。');
  if(selection.bottomQuestPlan&&!bottomQuestEligible)notes.unshift('本局正式位置或队列不满足下路第七件条件，按六格参考。');
- const describe=id=>({pending:pendingQuest&&route[6]===id,id,name:item(id)?.name||id,cost:item(id)?.gold?.total??null,description:clean(item(id)?.description),owned:owns(id),fromPreparation:baseSet.has(id),suggested:!baseSet.has(id),protected:protectedIds.has(id),reason:updates.find(c=>c.id===id)?.reason||(!baseSet.has(id)?'适合当前路线的后续参考；无整套联合胜率':null)});
- const next=route.find(id=>!owns(id)&&!(pendingQuest&&route[6]===id));
- return {pendingQuest,automatic,changed:JSON.stringify(route)!==JSON.stringify(baseline),rulesPatch:COMPLETE_GEAR_PATCH,route:route.map(describe),baseline:baseline.map(describe),next:next?describe(next):null,updates,alternatives:candidates.filter(c=>!c.alreadyPlanned&&!updates.some(u=>u.id===c.id)).slice(0,3),notes,slotLimit,reservedSupport:!!build.support,
+ const manualProgress=route.some(planned);
+ if(manualProgress)notes.unshift('按详情中的手动计划标记推进；尚未读取真实背包，标记不代表已持有。');
+ const describe=id=>({pending:pendingQuest&&route[6]===id,id,name:item(id)?.name||id,cost:item(id)?.gold?.total??null,description:clean(item(id)?.description),owned:owns(id),planned:planned(id),fromPreparation:baseSet.has(id),suggested:!baseSet.has(id),protected:protectedIds.has(id),reason:updates.find(c=>c.id===id)?.reason||(!baseSet.has(id)?'适合当前路线的后续参考；无整套联合胜率':null)});
+ const next=route.find(id=>!owns(id)&&!planned(id)&&!(pendingQuest&&route[6]===id));
+ return {pendingQuest,manualProgress,automatic,changed:JSON.stringify(route)!==JSON.stringify(baseline),rulesPatch:COMPLETE_GEAR_PATCH,route:route.map(describe),baseline:baseline.map(describe),next:next?describe(next):null,updates,alternatives:candidates.filter(c=>!c.alreadyPlanned&&!updates.some(u=>u.id===c.id)).slice(0,3),notes,slotLimit,reservedSupport:!!build.support,
   basis:automatic?'按公开装备与手动局势更新，保留已买和两件打法核心':'原准备与后续成装参考',caution:'顺序是机制建议；先核对兵线、回城和商店，不自动购买、出售或改动保存方案。'};
 }

@@ -150,7 +150,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const laterNeeded=laterChoices.length?Math.max(0,build.maxLaterItems-build.selectedLaterIds.length):0;
  const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
  const situation=assessSituation({data,champion:champion.id,build,selection:s,live:matched?{...live,inventory}:null,enabled:guide.liveAdvice});
- const completeGear=completeGearPlan({data,build,selection:s,live:matched?{...live,matched:true}:null,signals:situation.signals,enabled:guide.liveAdvice,bottomQuestConfirmed,bottomQuestEligible});
+ const completeGear=completeGearPlan({data,build,selection:s,live:matched?{...live,matched:true}:null,completedItems,signals:situation.signals,enabled:guide.liveAdvice,bottomQuestConfirmed,bottomQuestEligible});
  const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
  const choices=[...new Map([...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
  const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:inventoryKnown&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));

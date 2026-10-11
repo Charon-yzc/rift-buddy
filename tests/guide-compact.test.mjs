@@ -9,6 +9,21 @@ test('default in-game card shows complete ordered items, while components and la
  assert.equal(m.compact,true);assert.equal(m.completeGear.route.length,6);assert.equal((html.match(/class="compact-slot /g)||[]).length,6);assert.match(html,/成装顺序/);assert.match(html,/data-action="layout" data-id="details"/);assert.doesNotMatch(html,/本次回城 · 可买组件|duel-box|hero-summary|--gear-count/);
  const full=renderGuide({model:{...m,compact:false}},'items',false,()=>'<img>');assert.match(full,/完整成装顺序/);assert.match(full,/购买计划|回城/);assert.match(full,/data-id="compact"/);
 });
+test('manual offline progress advances the compact goal without claiming real inventory',()=>{
+ const state=selectGuide(null,selection),before=createGuideModel(data,state),first=before.route[0].id;
+ state.completedItems=[first];const model=createGuideModel(data,state),gear=model.completeGear,html=renderGuide({model},'overview',false,()=>'<img>');
+ assert.equal(gear.next.id,model.next.id);assert.notEqual(gear.next.id,first);
+ assert.equal(gear.route.find(i=>i.id===first).planned,true);assert(gear.route.every(i=>!i.owned));assert(!gear.automatic);
+ assert.deepEqual(model.autoCompletedItems,[]);assert.equal(model.targetPlan.credit,0);
+ assert.match(html,/手动计划/);assert.match(html,/不代表已持有/);assert.match(html,new RegExp('下一件 <b>'+gear.next.name));
+ assert.doesNotMatch(html,/完整路线已持有|<em>✓<\/em>/);
+ state.completedItems=before.route.map(i=>i.id);
+ const remaining=createGuideModel(data,state);assert(remaining.completeGear.next.suggested);assert.equal(remaining.completeGear.next.planned,false);
+ state.selection.laterIds=before.completeGear.route.filter(i=>i.suggested).map(i=>Number(i.id));
+ state.completedItems=createGuideModel(data,state).route.map(i=>i.id);
+ const all=createGuideModel(data,state);assert.equal(all.completeGear.next,null);
+ assert.match(renderGuide({model:all},'overview',false,()=>'<img>'),/计划进度已标记/);
+});
 test('moving the separate skill window follows the game bottom while clamping disconnected displays',()=>{
  const area={x:-1920,y:0,width:1920,height:1040},game={x:-1920,y:0,width:1920,height:1080},first=skillWidgetPlacement(null,area,game);
  assert(first.y+first.height<game.height-100);const moved={...first,x:first.x-90,y:first.y-40},offset=skillWidgetOffset(moved,area,game);

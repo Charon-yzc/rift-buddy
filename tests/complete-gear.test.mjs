@@ -35,6 +35,15 @@ test('actual completed inventory wins over an unbought conflicting plan without 
  assert(plan.route.some(r=>r.id==='3033'&&r.owned));assert(!plan.route.some(r=>r.id!=='3033'&&itemConflicts(Number(r.id),[3033])));
  assert(plan.route.length<=6);assert(!plan.updates.some(r=>r.replaces==='3033'));
 });
+test('Live inventory takes precedence over offline manual marks, including incomplete reads',()=>{
+ const first=String(build().items[0].id);
+ for(const reading of [live,{...live,inventoryKnown:false}]){
+  const p=run(build(),{live:reading,completedItems:[first]});
+  assert.equal(p.next.id,first);assert(!p.manualProgress);assert(p.route.every(i=>!i.planned&&!i.owned));
+ }
+ const p=run(build(),{live:{...live,inventory:[{id:first,count:1,slot:0}]},completedItems:[first]});
+ assert(p.route.find(i=>i.id===first).owned);assert(!p.manualProgress);assert.notEqual(p.next.id,first);
+});
 test('team healing reduction avoids redundant auto-buy and preserves a useful alternative',()=>{
  const b=build('Ahri','mid'),p=run(b,{selection:{id:'Ahri',role:'mid',mode:'rift'},signals:[signal('healing','manual',100)],live:{...live,roster:[{side:'ally',champion:'Ashe',itemsKnown:true,inventory:[{id:'3033',count:1}]}]}});
  assert(!p.updates.some(r=>r.kind==='healing'));assert(p.alternatives.some(r=>r.id==='3165'&&r.teamAntiheal));assert(p.notes.some(n=>n.includes('队友')));
