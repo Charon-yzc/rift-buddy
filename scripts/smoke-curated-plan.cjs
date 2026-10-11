@@ -111,7 +111,7 @@ async function run(){
   const payload=await guide.webContents.executeJavaScript('window.guide.bootstrap()',true);assert.deepEqual(payload.model.combo.creativePlan,plan);assert.equal(payload.model.combo.ownJob,plan.ordered.find(m=>m.champion===member.champion).job);assert.equal(payload.model.runes.length,9);assert.deepEqual(payload.model.combo.steps,plan.steps);
   if(customRunes&&member.champion==='Galio'){assert.deepEqual(payload.model.selection.customRunePage,expectedCustom);assert.deepEqual(payload.model.runes.map(r=>r.id),expectedCustom.selectedPerkIds);assert.deepEqual(payload.model.selection.customSkillOrder,expectedCustomSkill);assert.equal(payload.model.skillOrder,expectedCustomSkill.order);}
   const gjs=async code=>{try{return await guide.webContents.executeJavaScript(code,true);}catch(error){throw Error(error.message+'\nGuide script: '+code);}};
-  await gjs('document.querySelector("[data-tab=team]").click();void 0');
+  await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=team]").click();void 0');
   for(const stage of ['opening','key','later']){
    await gjs('(()=>{const el=document.querySelector("#guide-stage");el.value='+JSON.stringify(stage)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
    await until(()=>gjs('window.guide.bootstrap().then(b=>b.model.coach.stage==='+JSON.stringify(stage)+')'),'Stage not applied');

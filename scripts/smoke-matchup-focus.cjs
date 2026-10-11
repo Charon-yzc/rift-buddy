@@ -73,7 +73,7 @@ async function run(){
  const gjs=code=>guide.webContents.executeJavaScript(code,true);
  await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.coach?.enemy?.id==="Morgana")'),'Actual coaching did not use the chosen opponent');
  assert.equal((await state()).guide.selection.threatId,'Morgana');assert.equal((await state()).guide.selection.matchupGameId,gameId);
- await gjs('document.querySelector("[data-tab=team]").click()');await until(()=>gjs('document.body.textContent.includes("已选对手")&&document.body.textContent.includes("莫甘娜")'),'Chosen opponent not rendered in the actual coaching tab');
+ await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=team]").click()');await until(()=>gjs('document.body.textContent.includes("已选对手")&&document.body.textContent.includes("莫甘娜")'),'Chosen opponent not rendered in the actual coaching tab');
  await gjs('document.querySelector(".coach-enemy").open=true;document.querySelector(".coach-enemy").scrollIntoView({block:"start"});void 0');await gjs('document.querySelectorAll("img").forEach(i=>i.loading="eager");Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
  await fs.writeFile(path.join(root,'morgana-coaching-'+step+'.png'),(await guide.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  if(step==='select'||waiting){

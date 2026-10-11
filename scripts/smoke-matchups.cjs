@@ -96,7 +96,7 @@ async function run(){
   const factory=require(path.join(base,'electron/guide-window.cjs'));
   const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);await fs.writeFile(saveFile,JSON.stringify(state,null,2));},getModel:()=>core.createGuideModel(data,state,{...live,at:Date.now()}),currentSelection:()=>null,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:false}),isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
   guide.show();const w=guide.window(),{js,click,change}=actions(w);
-  await until(()=>js('!!document.querySelector("[data-tab=team]")'),'Team guide not loaded');await click('[data-tab=team]');
+  await until(()=>js('!!window.guide'),'Guide preload missing');await js('window.guide.control("layout","details")');await until(()=>js('!!document.querySelector("[data-tab=team]")'),'Team guide not loaded');await click('[data-tab=team]');
   if(restored){const initial=await js('window.guide.bootstrap()');assert.equal(initial.model.selection.id,'Vladimir');assert.equal(initial.model.selection.threatId,'Janna');assert.equal(initial.model.coach.sequenceSource,'team');for(const step of plans[1].steps)assert.ok(initial.model.coach.sequence.includes(step));}
   const verified=[];
   for(const plan of plans)for(const member of plan.members){
@@ -133,7 +133,7 @@ async function run(){
   let current={id:'Nautilus',role:'support',mode:'rift',positionKnown:true,comboId:'naut-samira',comboKnown:true};
   const factory=require(path.join(base,'electron/guide-window.cjs'));
   const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);},getModel:()=>core.createGuideModel(data,state,{...live,at:Date.now()},current),currentSelection:()=>current,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:false}),isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
-  guide.show();const w=guide.window(),{js,click,change}=actions(w);await until(()=>js('!!document.querySelector("[data-tab=team]")'),'Guide not loaded');await click('[data-tab=team]');
+  guide.show();const w=guide.window(),{js,click,change}=actions(w);await until(()=>js('!!window.guide'),'Guide preload missing');await js('window.guide.control("layout","details")');await until(()=>js('!!document.querySelector("[data-tab=team]")'),'Guide not loaded');await click('[data-tab=team]');
   const plans={};for(const id of ['Morgana','Janna','Yuumi']){
    await change('#guide-threat',id);await until(()=>js('document.querySelector("[data-matchup-enemy]")?.dataset.matchupEnemy==='+JSON.stringify(id)),id+' guide plan missing');
    plans[id]=await js('document.querySelector(".hero-coach .coach-action").textContent');
@@ -159,7 +159,7 @@ async function run(){
   const soloRoleActions={},rolePlans=await import(pathToFileURL(path.join(base,'src/core/role-plays.mjs')).href);
   for(const [id,role]of [['Garen','top'],['Ahri','mid'],['LeeSin','jungle'],['Sejuani','jungle']]){
    state=core.selectGuide(null,{id,role,mode:'rift'});current={id,role,mode:'rift',positionKnown:true,comboKnown:true};
-   live={...live,champion:id,level:12,gameTime:1600,enemies:[],allies:[],roster:[]};guide.publish();
+   live={...live,champion:id,level:12,gameTime:1600,enemies:[],allies:[],roster:[]};guide.publish();await js('window.guide.control("layout","details")');await click('[data-tab=team]');
    await until(()=>js('document.querySelector(".hero-coach h3")?.textContent.includes('+JSON.stringify(hero(id).name)+')'),'Solo role plan missing: '+id);
    const actions={};for(const stage of ['opening','key','later']){
     await change('#guide-stage',stage);

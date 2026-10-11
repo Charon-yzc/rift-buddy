@@ -14,7 +14,7 @@ async function run(){
  for(const[id,role]of [['Ashe','bottom'],['Nautilus','support']]){
   const saved=phase==='restart'?(await state()).preparations.find(p=>p.id===id&&p.role===role):{id,role,mode:'rift'};assert.ok(saved);await js('window.buddy.openGuide('+JSON.stringify(saved)+')');
   await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');const gjs=code=>guide.webContents.executeJavaScript(code,true),snapshot=()=>gjs('window.guide.bootstrap()');
-  await until(()=>gjs('!!window.guide'),'Guide API missing');await until(async()=>(await snapshot()).model?.selection.id===id,'Guide context missing');
+  await until(()=>gjs('!!window.guide'),'Guide API missing');await gjs('window.guide.control("layout","details")');await until(async()=>(await snapshot()).model?.selection.id===id,'Guide context missing');
   if(phase==='select'){
    let model=(await snapshot()).model;for(const item of model.route)await gjs('window.guide.control("item",'+JSON.stringify(item.id)+')');
    await until(()=>gjs('document.body.textContent.includes("核心路线完成，继续选择后期装备")'),'No post-core continuation');
