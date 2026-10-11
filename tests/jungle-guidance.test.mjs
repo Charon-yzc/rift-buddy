@@ -30,3 +30,14 @@ test('new match and changing own hero clear lane evidence, while the guide expos
  assert.equal(selectGuide(state,{...selection,id:'Diana'}).jungleNotes,undefined);
  const model=createGuideModel(data,state,null,null);assert(model.jungle);assert.equal(model.jungle.ready,false);assert.match(jungleGuidanceView(model.jungle),/兵线|观察/);
 });
+
+test('unavailable or mismatched public skills never imply an unlearned ultimate',()=>{
+ for(const champion of ['Nocturne','Diana','Fiddlesticks','Evelynn']){
+  for(const unknown of [null,{matched:false,skills:{R:0},stats:{hp:1,maxHp:1000}},{...live,skills:{}},{...live,skills:{R:null}},{...live,skills:{R:-1}}]){
+   const text=make({champion,live:unknown}).choices[0].text;
+   assert.match(text,/等级未知/);assert.doesNotMatch(text,/尚未学会|生命不足/);
+  }
+  assert.match(make({champion}).choices[0].text,/尚未学会/);
+  assert.doesNotMatch(make({champion,live:{...live,skills:{R:1}}}).choices[0].text,/尚未学会|等级未知/);
+ }
+});

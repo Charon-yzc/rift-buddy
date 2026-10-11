@@ -128,7 +128,7 @@ let roomRoleChoice=null,clickedRoomPlan=null;
 let roomTransport='lan',roomRelayUrl=initialRelayUrl(),roomRelayRoom='';
 let activeCreativePlan=null,creativePlanNotice='';
 function resultCreativePlan(result){const plan=captureCreativePlan(result,data);if(plan)result.creativePlan=plan;return plan;}
-function reconcileCreativePlan(){if(activeCreativePlan&&!creativePlanCompatible(activeCreativePlan,slots)){activeCreativePlan=null;creativePlanNotice='成员或位置已变化，原分工不再适用。收藏中的原组合说明仍保留。';}}
+function reconcileCreativePlan(){if(activeCreativePlan&&(!creativePlanCompatible(activeCreativePlan,slots)||scope!=='bot'&&activeCreativePlan.members.some(m=>!slots.some(s=>s.party&&s.role===m.role)))){activeCreativePlan=null;creativePlanNotice='开黑成员、英雄或位置已变化，原分工不再适用。请按当前选人重新搭配；收藏中的原组合说明仍保留。';}}
 let currentWindowInfo=null;
 let itemSetPending='',clientPreparing=false;const itemSetStatuses=new Map(),clientPreparationStatuses=new Map();
 let activeAppSelect=null,pendingAppRender=false,renderedSelectContext=null,appSelectVersion=0;
@@ -984,7 +984,7 @@ try{boot=await api.bootstrap();data=boot.data;saved=boot.state;savedBase=structu
  client=boot.client||client;runeAppliedKeys.observe(client);windowLayout=boot.windowLayout||{docked:false};api.onWindowLayout?.(acceptWindowLayout);
  room=await api.roomStatus?.()||null;if(room?.mode==='host')roomAddresses=await api.roomAddresses?.()||[];
  roomRelayUrl=initialRelayUrl(saved.preferences.relayUrl);roomTransport=room?.transport==='relay'?'relay':'lan';
- api.onRoomUpdate?.(snapshot=>{room=snapshot;if(route==='draft'||route==='room')render();});
+ api.onRoomUpdate?.(snapshot=>{room=snapshot;if(windowLayout.docked||route==='draft'||route==='room')render();});
   preparations.restore(saved.preparations);guideSelection=saved.guide?.selection||null;if(guideSelection){if(!preparations.recall(guideSelection))preparations.remember(guideSelection);guideSyncBase=guideSelection;lastGuideSyncKey=buildChoiceKey(guideSelection);}
  api.onPresentation?.(value=>{saved.preferences.presentation=value;applyPresentation(value);if(overlay.querySelector('.presentation-settings'))updatePresentationDialog(overlay,value);});
  api.onGuideSelection?.((selection,meta={})=>{if(meta.revision&&meta.revision<guideRevision)return;guideRevision=meta.revision||guideRevision;guideSelection=selection;if(!guideSyncPending)acceptGuideSelection(selection);});

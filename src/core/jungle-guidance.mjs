@@ -32,10 +32,11 @@ export function jungleGuidance({champion,role,mode,patch,live,notes,combo}={}){
  const mechanics=champion==='Nocturne'?'Q覆盖营地后在影径穿插普攻，被动帮助范围清野与续航；6级前优先经验，明显有队友控制的近处机会再考虑抓。':champion==='Diana'?'技能后穿插普攻，W贴营地吸收伤害，Q覆盖多目标；6级R解锁后才按拉拽团战找多人配合。':special?'翠神靠被动画圈与成熟释放野怪，不套普通攻击六营路线；画圈消耗生命与法力，惩戒用于立即释放，成熟以游戏内显示为准。':early?'前三营后可检查邻近兵线：队友能接控制且目标压出时再考虑抓；没有窗口就接着清野，不在草里长等。':'先完成同半区营地，再检查邻近兵线；没有可靠机会就沿另一半区刷到等级与回城节点。';
  const fresh=live?.matched===true&&Number.isFinite(live.gameTime)&&Number.isFinite(checked.at)&&live.gameTime>=checked.at&&live.gameTime-checked.at<=90;
  const validQueue=live?.mapId===11&&[400,420,430,440].includes(live?.queueId),stale=patch!==JUNGLE_GUIDANCE_PATCH;
- const hp=live?.stats?.maxHp>0&&Number.isFinite(live?.stats?.hp)?live.stats.hp/live.stats.maxHp:null;
- const low=hp!==null&&hp<.4,unlearnedR=['Nocturne','Diana','Fiddlesticks','Evelynn'].includes(champion)&&!(live?.skills?.R>0);
+ const hp=live?.matched===true&&live?.stats?.maxHp>0&&Number.isFinite(live?.stats?.hp)?live.stats.hp/live.stats.maxHp:null;
+ const r=live?.matched===true&&Number.isInteger(live?.skills?.R)&&live.skills.R>=0&&live.skills.R<=3?live.skills.R:null;
+ const low=hp!==null&&hp<.4,dependsOnR=['Nocturne','Diana','Fiddlesticks','Evelynn'].includes(champion),unlearnedR=dependsOnR&&r===0;
  const ready=!!(fresh&&checked.pushed&&checked.follow&&checked.control&&checked.safe&&hp!==null&&!low&&!stale&&validQueue);
- const choices=[{id:'farm',title:'继续刷野 / 补给',text:low?'自身生命不足四成：先考虑补给或安全营地；有续航也要核对法力和敌方动向。':unlearnedR?'大招尚未学会：优先保住经验节奏，已确认的近处好机会再考虑抓。':'没有确认的近处机会时，刷同侧安全营地并计划回城；不为等待抓人让整片营地空转。'},
+ const choices=[{id:'farm',title:'继续刷野 / 补给',text:low?'自身生命不足四成：先考虑补给或安全营地；有续航也要核对法力和敌方动向。':unlearnedR?'大招尚未学会：优先保住经验节奏，已确认的近处好机会再考虑抓。':dependsOnR&&r===null?'大招等级未知：先在游戏内确认是否已学会、是否可用，再比较抓人机会；没有确认的近处机会就刷安全营地。':'没有确认的近处机会时，刷同侧安全营地并计划回城；不为等待抓人让整片营地空转。'},
  {id:'gank',title:ready?`${labels[checked.lane]}可比较抓人机会`:'抓人条件待核对',text:ready?`${labels[checked.lane]}：你刚确认敌方压出、队友能跟、有可靠控制和安全进退。可与继续刷野比较；${unlearnedR?'当前仍没有R，不按6级连招进场。':'进场前自己确认技能就绪。'}目标缩回、队友回城或入口被看见就取消。`:'在地图上自己检查敌方是否压出、队友血蓝与兵线、控制能否接上、进退路线；不能仅凭阵容或击杀数指定要抓哪条路。'},
  {id:'resource',title:'资源 / 反蹲',text:'邻线先推、自己惩戒与队友支援都确认后再比较开资源；对方多人未露面时先保退路。反蹲依据游戏内实际看到的动向，不根据计时猜敌方位置。'}];
  return {patch:JUNGLE_GUIDANCE_PATCH,stale,notes:checked,fresh,opening,start:special?null:start,special,mechanics,choices,ready,

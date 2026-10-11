@@ -33,11 +33,11 @@ async function run(){
  }
  if(independent&&!restart){const body=await js('document.querySelector(".result-card").textContent');assert.doesNotMatch(body,/接实际控制后|等主线实际生效/);assert.match(body,/能安全近身时 Q/);assert.match(body,/目标是否实际孤立/);if(independent===5)assert.match(body,/米利欧 W.*芸阿娜/);else assert.match(body,/成长成员实际等级.*玩家核对/);}
  await click('[data-action=companion-attach]');await until(()=>js('!!document.querySelector(".companion-candidate")'),'Sidebar missing');
- const geometry=[];for(const width of [280,360,440]){main.setContentSize(width,850);await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
-  const row=await js('(()=>{const c=document.querySelector(".companion-candidate"),buttons=[c.querySelector("[data-action=use-result]"),c.querySelector("[data-action=result-detail]"),...c.querySelectorAll("[data-action=companion-preview]")];return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,buttons:buttons.map(b=>{const r=b.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,visible:r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth};})};})()');
-  assert.equal(row.overflow,false);assert.ok(row.buttons.every(b=>b.visible),'Sidebar first-screen actions clipped at '+width);geometry.push(row);
+ const geometry=[];for(const width of [280,400,520,600]){main.setContentSize(width,850);await js('document.querySelector(".companion-content").scrollTop=0;new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
+  const row=await js('(()=>{const c=document.querySelector(".companion-candidate"),pane=document.querySelector(".companion-content").getBoundingClientRect(),buttons='+ (restart?'[document.querySelector(".companion-chosen-action")]':'[c.querySelector("[data-action=use-result]"),c.querySelector("[data-action=result-detail]")]') +',heroes=[...c.querySelectorAll("[data-action=companion-preview]")];const inspect=b=>{const r=b.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,visible:r.top>=pane.top-1&&r.bottom<=pane.bottom+1&&r.left>=-1&&r.right<=innerWidth+1};};return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,buttons:buttons.map(inspect),heroes:heroes.map(b=>{b.scrollIntoView({block:"nearest",behavior:"instant"});return inspect(b);})};})()');
+  assert.equal(row.overflow,false);assert.ok(row.buttons.every(b=>b.visible),'Sidebar first-screen '+(restart?'accepted duty':'adoption')+' clipped at '+width);assert.ok(row.heroes.length&&row.heroes.every(b=>b.visible),'Member preparation must remain reachable by scrolling '+JSON.stringify(row));geometry.push(row);
  }
- main.setContentSize(440,850);await fs.writeFile(path.join(root,restart?'restart-sidebar.png':'sidebar.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
+ main.setContentSize(520,850);await fs.writeFile(path.join(root,restart?'restart-sidebar.png':'sidebar.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  const editVisibleRune=async(surface,slot)=>{
   await js('(()=>{const el=document.querySelector(\'[data-rune-surface="'+surface+'"][data-rune-field="'+slot+'"]\');if(!el)throw Error("Rune editor missing");const option=[...el.options].find(o=>o.value!==el.value);el.value=option.value;el.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(160);
  };
@@ -45,7 +45,7 @@ async function run(){
   await click('.companion-candidate [data-action=companion-preview][data-id="Galio"]');
   await until(()=>js('!!document.querySelector("[data-rune-surface=companion]")'),'Sidebar editor missing');
   await editVisibleRune('companion',1);await editVisibleRune('companion',6);
-  for(const width of [280,360,440]){main.setContentSize(width,850);await js('document.querySelector(".rune-editor").open=true;document.querySelector(".rune-editor").scrollIntoView({block:"start"});void 0');await delay(80);assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false);}
+  for(const width of [280,400,520,600]){main.setContentSize(width,850);await js('document.querySelector(".rune-editor").open=true;document.querySelector(".rune-editor").scrollIntoView({block:"start"});void 0');await delay(80);assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false);}
   await fs.writeFile(path.join(root,'custom-rune-sidebar.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
   await click('[data-action=companion-tab][data-tab=recommend]');
  }

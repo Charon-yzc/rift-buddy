@@ -284,7 +284,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   const g=completePartyPlan(grade(slots,champions,style,[],{},context),slots,context);
   // A newly joined party member needs their own job. Keep the saved subgroup
   // readable, but let the complete current-party candidate cover everyone.
-  if(creativePlanMatches(creativePlan,slots)&&creativePlan.members.every(m=>scopeSlots(slots,scope).some(s=>s.role===m.role))&&(!g.adaptive||g.adaptive.members.length<=creativePlan.members.length)){
+  if(creativePlanMatches(creativePlan,slots)&&creativePlan.members.every(m=>scopeSlots(slots,scope==='context'?'party':scope).some(s=>s.role===m.role))&&(!g.adaptive||g.adaptive.members.length<=creativePlan.members.length)){
    let plan=validateCreativePlan(creativePlan,slots);
    const counterplay=createPartyCounterplay(plan.members,visibleEnemies,champions);
    // Offer the current public conditions as a new candidate. The accepted
