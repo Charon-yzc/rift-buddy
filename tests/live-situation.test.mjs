@@ -19,10 +19,13 @@ test('live situation keeps public scoreboard facts but discards all player ident
  const opponent=player('Jhin','CHAOS',[3031],{level:10,currentGold:9999,position:'BOTTOM',coordinates:{x:123},respawnTimer:30,health:40,runes:{secret:'private'},scores:{kills:5,deaths:-1,assists:2,creepScore:55,wardScore:14}});
  const live=read([opponent,null]);
  assert.equal(live.teamKnown,true);assert.equal(live.roster.length,2);
+ assert.equal(live.teamSide,'blue');
  assert.deepEqual(live.roster[1],{champion:'Jhin',side:'enemy',self:false,level:10,position:'bottom',inventory:[{id:'3031',count:1}],itemsKnown:true,scores:{kills:5,deaths:null,assists:2,creepScore:55}});
  const json=JSON.stringify(live);for(const text of ['private','9999','coordinates','respawnTimer','wardScore','health'])assert.equal(json.includes(text),false,text);
  const unknown=sanitizeLive({riotId:'private-Ashe'},[player('Ashe',null),opponent],{gameMode:'CLASSIC',mapNumber:11},data.champions);
  assert.equal(unknown.teamKnown,false);assert.deepEqual(unknown.roster,[]);
+ assert.equal(unknown.teamSide,null);
+ assert.equal(sanitizeLive({riotId:'private-Ashe'},[player('Ashe','CHAOS')],{gameMode:'CLASSIC',mapNumber:11},data.champions).teamSide,'red');
 });
 
 test('live evidence recommends a defensive component with reasons, then stops after it is bought or upgraded',()=>{

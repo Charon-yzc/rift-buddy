@@ -75,7 +75,7 @@ return {available:true,champion:champion.id,inventory,inventoryKnown,gold:Number
   level:Number.isInteger(active.level)&&active.level>=1&&active.level<=30?active.level:null,
   skills:Object.fromEntries(['Q','W','E','R'].map(key=>{const level=active.abilities?.[key]?.abilityLevel;return [key,Number.isInteger(level)&&level>=0&&level<=10?level:null];})),
   attackType:championAttackType(champion,active.level,active.abilities?.Q?.id),
-  scores:scores(own),roster,teamKnown,position:positionOf(own),queueId:Number.isInteger(game?.queueId)?game.queueId:null,
+  scores:scores(own),roster,teamKnown,teamSide:own.team==='ORDER'?'blue':own.team==='CHAOS'?'red':null,position:positionOf(own),queueId:Number.isInteger(game?.queueId)?game.queueId:null,
   gameTime:Number.isFinite(stats?.gameTime)&&stats.gameTime>=0?stats.gameTime:null,mapId,mode,at:Date.now(),stats:panelStats(active.championStats),
   objectives:sanitizePublicEvents(events,players,own,stats?.gameTime),
   enemies:enemiesFromPlayers(own,players,champions),allies:alliesFromPlayers(own,players,champions)};

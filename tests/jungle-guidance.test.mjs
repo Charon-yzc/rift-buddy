@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
-import {jungleGuidance,changeJungleNotes} from '../src/core/jungle-guidance.mjs';
+import {jungleGuidance,changeJungleNotes,validateJungleNotes} from '../src/core/jungle-guidance.mjs';
 import {selectGuide,createGuideModel,reconcileGuide,validateGuideState} from '../src/core/guide.mjs';
 import {jungleGuidanceView} from '../src/jungle-guidance-view.mjs';
 const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
@@ -40,4 +40,42 @@ test('unavailable or mismatched public skills never imply an unlearned ultimate'
   assert.match(make({champion}).choices[0].text,/尚未学会/);
   assert.doesNotMatch(make({champion,live:{...live,skills:{R:1}}}).choices[0].text,/尚未学会|等级未知/);
  }
+});
+
+test('birth side determines the default lower-side start and finishing lane, without inventing camp progress',()=>{
+ const blue=make({live:{...live,teamSide:'blue'}});assert.equal(blue.start,'red');assert.match(blue.finish,/上路/);
+ const red=make({live:{...live,teamSide:'red'}});assert.equal(red.start,'blue');assert.match(red.finish,/上路/);
+ const changed=make({live:{...live,teamSide:'red'},notes:{start:'red',side:'blue'}});assert.equal(changed.side,'red');assert.match(changed.finish,/下路/);
+ const fallback=make({live:null,notes:{side:'red'}});assert.equal(fallback.side,'red');assert.match(fallback.lead.title,/等待/);
+ assert.match(make().finish,/未知/);assert.equal(blue.compactRoute.join(' → ').split(' → ').length,6);
+ assert.match(jungleGuidanceView(blue),/不代表当前已经刷过/);
+});
+
+test('interruption clears old gank evidence, lasts at most 90 seconds, and cannot revive it after resume',()=>{
+ const notes={start:'red',side:'blue',lane:'top',at:390,pushed:true,follow:true,control:true,safe:true};assert(make({notes}).ready);
+ for(const reason of ['invaded','recalled','no-window']){
+  const next=changeJungleNotes(notes,'situation',reason,400);assert.equal(next.lane,undefined);assert.equal(next.start,'red');
+  assert.equal(validateGuideState({...selectGuide(null,{id:'Nocturne',role:'jungle',mode:'rift'}),jungleNotes:next}).jungleNotes.situation,reason);
+  assert.equal(make({notes:next}).recovery,reason);assert(!make({notes:next}).ready);
+  assert.equal(make({notes:next,live:{...live,gameTime:491}}).recovery,null);
+  assert.equal(make({notes:next,live:{...live,gameTime:399}}).recovery,null);
+  const resumed=changeJungleNotes(next,'resume',undefined,null);assert(!make({notes:resumed}).ready);assert(!resumed.situation);
+ }
+ assert.throws(()=>changeJungleNotes(notes,'situation','enemy-near',400));
+ assert.throws(()=>changeJungleNotes(notes,'situation','invaded',null));
+ assert.deepEqual(validateJungleNotes({situation:'enemy-near',situationAt:400,enemyX:3000}),undefined);
+});
+
+test('current action prioritizes safety and evidence, and champion coordination respects learned skills',()=>{
+ const notes={lane:'bottom',at:390,pushed:true,follow:true,control:true,safe:true};
+ assert.match(make({notes,live:{...live,stats:{hp:200,maxHp:1000}}}).lead.title,/暂停进场/);
+ assert.match(make({notes,patch:'16.21'}).lead.title,/待复核/);
+ assert.match(make({notes,live:{...live,queueId:490}}).lead.title,/模式尚未/);
+ for(const skills of [{Q:0,W:1,E:1,R:0},{Q:1,W:null,E:1,R:1},{}])assert(!make({notes,live:{...live,skills}}).ready);
+ const j4=make({champion:'JarvanIV',notes});assert.match(j4.lead.text,/EQ/);assert.match(j4.routeTitle,/三营/);assert.doesNotMatch(j4.lead.text,/R留人/);
+ const vi=make({champion:'Vi',notes,live:{...live,skills:{...live.skills,R:1}}});assert.match(vi.lead.text,/R/);assert.match(vi.skillNote,/≠/);
+ assert.match(make({champion:'LeeSin',notes}).lead.text,/二段/);
+ assert.match(make({champion:'Ivern',notes}).lead.text,/E套/);
+ assert.match(make({champion:'Evelynn'}).routeTitle,/通用/);assert.match(make({champion:'Evelynn'}).mechanics,/尚未补/);
+ assert.doesNotMatch(make({champion:'LeeSin',live:{...live,gameTime:1200}}).lead.title,/三营/);
 });
