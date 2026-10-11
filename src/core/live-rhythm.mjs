@@ -1,5 +1,6 @@
 // PC Summoner's Rift rules. Swiftplay and unconfirmed queues have different
 // objectives: do not silently apply this schedule to them.
+import {objectiveCoordination} from './objective-coordination.mjs';
 export const OBJECTIVE_RULES={patch:'16.20',reviewedAt:'2026-10-08',sources:[
  'https://www.leagueoflegends.com/en-us/news/game-updates/patch-9-23-notes/',
  'https://www.leagueoflegends.com/en-au/news/game-updates/patch-25-09-notes/',
@@ -8,7 +9,7 @@ export const OBJECTIVE_RULES={patch:'16.20',reviewedAt:'2026-10-08',sources:[
 const normalQueues=new Set([400,420,430,440,490]);
 export function clockLabel(seconds){if(!Number.isFinite(seconds)||seconds<0)return '—';const n=Math.ceil(seconds);return `${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`;}
 const prepare={jungle:'先规划刷野方向和惩戒，确认队友能否先到；不要独自开资源。',support:'先与队友处理兵线，再一起布置河道视野；避免独自探草。',top:'先处理边线，确认传送与队友是否需要你；不要为了资源白丢整波线。',mid:'先处理兵线，再和打野一起进入河道；确认对方是否先到。',bottom:'提前补给并处理兵线，跟队友进入河道；先保证安全输出位置。'};
-export function objectiveRhythm({live,role,patch}={}){
+export function objectiveRhythm({live,role,patch,plan,champion,confirmed=false,protectId,data}={}){
  const time=live?.gameTime;
  if(!live?.matched||!Number.isFinite(time)||time<0)return {available:false,reason:'进入本局并读取游戏时间后显示资源准备。',rows:[],recent:[]};
  const feed=live.objectives,events=feed?.available&&Array.isArray(feed.events)?feed.events.filter(e=>Number.isFinite(e.time)&&e.time<=time+2):[];
@@ -37,6 +38,7 @@ export function objectiveRhythm({live,role,patch}={}){
  if(!baron)row('baron','纳什男爵',1200,'首次出现时间');
  else rows.push({id:'baron',name:'纳什男爵',state:'observed',label:`上次击杀 ${clockLabel(baron.time)}`,action:'下一次出现请看游戏内大龙计时，回城后提前与队友一起排视野。',basis:'公开击杀事件'});
  rows.sort((a,b)=>(a.remaining??Infinity)-(b.remaining??Infinity));
+ for(const resource of rows){const coordination=objectiveCoordination({plan,champion,role,resource,confirmed,protectId,data});if(coordination)resource.coordination=coordination;}
  return {available:true,rows,recent,counts:completeSides?counts:null,soul:completeSides?soul:null,stale,rules:OBJECTIVE_RULES,reason:!feed?.available?'资源事件暂不可读，仅保留首次出现时间参考。':!history?'事件历史不完整，龙魂与未观测的击杀待确认。':''};
 }
 const transformed=new Set(['Elise','Jayce','Nidalee','Udyr','Karma']);

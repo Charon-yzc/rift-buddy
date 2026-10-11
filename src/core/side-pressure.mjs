@@ -11,10 +11,15 @@ const supportMoves={
  Taliyah:'先清线再看 R 墙体的实际路径与落点，安全才转场；到场 E/W 接同一目标，不让墙挡住己方回撤，也不把墙当伤害。',
  Pantheon:'先处理本局兵线或营地，R 可用且实际落点安全才转场；落地 W 实际眩晕后 Q/普攻，E 留反击，不单凭大招覆盖决定越塔。',
 };
-export function sidePressureRoute(members,graph){
+export function sidePressureActors(members){
  const side=members.find(m=>m.role==='top'&&sidelanes.has(m.champion));
  const mover=members.find(m=>m!==side&&supportMoves[m.champion])||members.find(m=>m!==side&&m.role==='jungle');
  if(!side||!mover)return null;
+ return {side,mover};
+}
+export function sidePressureRoute(members,graph){
+ const actors=sidePressureActors(members);if(!actors)return null;
+ const {side,mover}=actors;
  const name=m=>graph.byId.get(m.champion).name;
  const memberJobs=members.map(m=>({role:m.role,champion:m.champion,job:m===side?
   `${independentCooperationAction(m.champion)} 本轮负责安全边线，先报兵线到达与退出方向；只在公开敌人动向和队友接应允许时前推，多人消失就收线回撤，不把单挑能力当已确认能赢。`:

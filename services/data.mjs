@@ -25,6 +25,14 @@ export async function collectSnapshot(progress = () => {}, previous = null) {
   const version = versions.find(v => /^\d+\.\d+\.\d+$/.test(v));
   if (!version) throw new Error('官方版本号不可用');
   if(previous?.version===version&&previous.contentRevision>=7&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch))&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
+    // Tencent's names can catch up after Data Dragon has already shipped this
+    // patch. Checking the same static version must not pin that older CN data.
+    const cn=await getJSON(`${CN}/heroList/hero_list.js`).catch(()=>null);
+    const names=new Map((Array.isArray(cn?.hero)?cn.hero:[]).filter(h=>typeof h?.alias==='string'&&typeof h.title==='string'&&h.title.trim()&&typeof h.name==='string'&&h.name.trim()&&typeof h.keywords==='string').map(h=>[h.alias.toLowerCase(),h]));
+    if(cn?.version===previous.patch&&previous.champions.every(c=>names.has(c.id.toLowerCase()))){
+      progress('已核对同补丁国服英雄名称资料');
+      previous={...previous,cnVersion:cn.version,champions:previous.champions.map(c=>{const h=names.get(c.id.toLowerCase());return {...c,name:h.title,title:h.name,keywords:h.keywords};})};
+    }else progress('国服名称来源尚未提供完整同补丁资料，保留既有名称与版本记录');
     progress('当前已是最新资料版本');
     return {...previous,checkedAt:new Date().toISOString()};
   }

@@ -232,7 +232,7 @@ export function createGuideModel(data,value,live=null,current=null){
   laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
   phase:s.mode==='rift'?gamePhase({...liveModel,role:s.role},action,next||null):null,
-  objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch}):null,
+  objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch,plan:build.combo?.creativePlan,champion:s.id,confirmed:current?.comboKnown===true&&!mismatch,protectId:s.protectId,data}):null,
   powers:s.mode==='rift'?powerWindows({champion:s.id,role:s.role,live:liveModel,data,route}):null,
   coach:s.mode==='rift'?heroCoach({data,champion,role:s.role,priority:build.priority,enemyId:selectedOpponent?.id,combo:build.combo,focus:s.combatFocus,stage:playStage(liveModel,guide.stage||'auto'),ownSkills:liveModel.skills}):null,
   equipment:publicEquipment(data,matched?live:null),estimate,combatUnavailable,ultimateReference:ultimate,customDuel,duelPick:guide.duelPick||null,duelOptions,bottomQuest:pendingQuestId?{confirmed:bottomQuestConfirmed,itemId:pendingQuestId,eligible:bottomQuestEligible,reason:bottomQuestReason}:null,routeBlocked,targetBlockedReason,

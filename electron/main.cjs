@@ -279,6 +279,16 @@ async function boot(){
    try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);const result=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});await saveCurrentState(current=>({...current,ownedPageId:result.pageId}));return result;}
   finally{applyingRunes=false;}
  });
+ guard('prepare-selection',async value=>{
+  if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，请稍后');
+  applyingRunes=true;importingItemSet=true;
+  try{
+   const service=await import('../services/client-preparation.mjs');service.validateClientPreparation(value,data);
+   const result=helper.active()?await helper.request('prepareSelection',{value}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
+   if(result.steps?.runes?.status==='done')await saveCurrentState(current=>({...current,ownedPageId:result.steps.runes.pageId}));
+   await status(true);return result;
+  }finally{applyingRunes=false;importingItemSet=false;}
+ });
  guard('copy',text=>{clipboard.writeText(String(text).slice(0,20000));return true;});
  guard('import-item-set',async value=>{
   if(importingItemSet)throw Error('装备集正在写入，请稍后');importingItemSet=true;
@@ -296,6 +306,16 @@ async function boot(){
   const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
   if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
+ });
+ guard('export-preparation',async value=>{
+  const {preparationFileText}=await import('../src/core/preparation-file.mjs'),text=preparationFileText(value);
+  const selected=await dialog.showSaveDialog(win,{title:'导出当前完整准备',defaultPath:'开黑搭子-准备.json',filters:[{name:'开黑准备 JSON',extensions:['json']}]});
+  if(selected.canceled)return false;
+  try{await dataService.atomicJSON(selected.filePath,JSON.parse(text),{space:2});}catch{throw Error('未能导出准备文件，请选择可写入的位置后重试');}return true;
+ });
+ guard('import-preparation',async()=>{
+  const selected=await dialog.showOpenDialog(win,{title:'打开队友准备文件',properties:['openFile'],filters:[{name:'开黑准备 JSON',extensions:['json']}]});if(selected.canceled)return null;
+  const {readPreparationFile}=await import('../services/preparation-file.mjs');return readPreparationFile(selected.filePaths[0]);
  });
  guard('export-state',async()=>{const result=await dialog.showSaveDialog(win,{title:'备份收藏与偏好',defaultPath:'开黑搭子-备份.json',filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return false;
   await fs.writeFile(result.filePath,storage.createBackup(state),'utf8');return true;});

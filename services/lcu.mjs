@@ -7,7 +7,7 @@ const execFileAsync=promisify(execFile);
 import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
 import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteContext} from '../src/core/rune-context.mjs';
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
-const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-champ-select/v1/session','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
+const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
 export function parseLockfile(content) {
  const parts=String(content).trim().split(':');
@@ -35,7 +35,10 @@ export async function discoverClient(installPath='') {
  return null;
 }
 export function lcuRequest(auth,route,method='GET',body) {
- if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0))throw new Error('不支持此客户端操作');
+ const keys=body&&typeof body==='object'&&!Array.isArray(body)?Object.keys(body).sort().join(','):'';
+ const preview=method==='PATCH'&&/^\/lol-champ-select\/v1\/session\/actions\/\d+$/.test(route)&&keys==='championId,completed'&&Number.isSafeInteger(body.championId)&&body.championId>0&&body.completed===false;
+ const spells=method==='PATCH'&&route==='/lol-champ-select/v1/session/my-selection'&&keys==='spell1Id,spell2Id'&&[body.spell1Id,body.spell2Id].every(n=>Number.isSafeInteger(n)&&n>0)&&body.spell1Id!==body.spell2Id;
+ if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells)throw new Error('不支持此客户端操作');
  return new Promise((resolve,reject)=>{
   const payload=body?JSON.stringify(body):null;
   const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,
