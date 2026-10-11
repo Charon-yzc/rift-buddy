@@ -517,7 +517,9 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
  for(const slot of next)if(Number.isInteger(slot.clientCellId)){slot.champion=null;slot.locked=false;delete slot.clientCellId;delete slot.manualPosition;delete slot.automaticPosition;}
  const put=(p,target,manual=false,automatic=false)=>{
   const id=byKey.get(Number(p.championId))?.id;
+  for(const slot of next)if(slot!==target&&slot.champion===id&&!Number.isInteger(slot.clientCellId)&&slot.automaticPosition){slot.champion=null;slot.locked=false;delete slot.automaticPosition;}
   if(target.champion&&target.champion!==id)displaced.push(target.champion);
+  delete target.manualPosition;delete target.automaticPosition;
   Object.assign(target,{champion:id||null,locked:!!id,clientCellId:p.cellId});
   if(manual)target.manualPosition=true;
   if(automatic)target.automaticPosition=true;
@@ -530,8 +532,9 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
  }
  for(const p of entries){
   if(placed.has(p.cellId))continue;
-  const same=next.find(s=>s.champion===byKey.get(Number(p.championId)).id&&!Number.isInteger(s.clientCellId));
-  if(same)put(p,same,true);
+  const declared=CLIENT_POSITION_ROLES[String(p.assignedPosition||'').toUpperCase()];
+  const same=next.find(s=>s.champion===byKey.get(Number(p.championId)).id&&!Number.isInteger(s.clientCellId)&&(!s.automaticPosition||!declared||s.role===declared));
+  if(same)put(p,same,!same.automaticPosition,same.automaticPosition&&same.role!==declared);
  }
  // Declared lanes have priority over inferred lanes, independent of cell order.
  const ordered=[...entries].sort((a,b)=>Number(!!CLIENT_POSITION_ROLES[String(b.assignedPosition||'').toUpperCase()])-Number(!!CLIENT_POSITION_ROLES[String(a.assignedPosition||'').toUpperCase()])||a.cellId-b.cellId);
@@ -539,7 +542,7 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
   if(placed.has(p.cellId))continue;
   const champion=byKey.get(Number(p.championId)),declared=CLIENT_POSITION_ROLES[String(p.assignedPosition||'').toUpperCase()],prior=slots.find(s=>s.clientCellId===p.cellId);
   const preferred=[declared,...(!declared&&prior?[prior.role]:[]),...(roleOrder[champion.id]||[]),...profile(champion).roles,...ROLES.map(r=>r.id)].filter((r,i,a)=>r&&a.indexOf(r)===i);
-  let target=next.find(s=>s.role===declared&&!s.champion&&!Number.isInteger(s.clientCellId));
+  let target=next.find(s=>s.role===declared&&!Number.isInteger(s.clientCellId)&&(!s.champion||autoArrange&&(s.automaticPosition||!s.locked)));
   if(!target&&autoArrange)target=preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!s.champion&&!Number.isInteger(s.clientCellId));
   // Public picks supersede only prospective local suggestions, never a bound pick.
   if(!target&&autoArrange)target=preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!Number.isInteger(s.clientCellId));

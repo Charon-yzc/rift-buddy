@@ -15,6 +15,20 @@ import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {sharedEquipmentReset,loadoutSelector} from '../src/build-options-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const key=id=>data.champions.find(c=>c.id===id).key;
+
+test('public declared picks replace prospective recommendations in their own lanes before using empty lanes',()=>{
+ const slots=createSlots();slots[1].champion='MasterYi';slots[1].locked=true;slots[1].automaticPosition=true;
+ const heroes=['Garen','Rengar','Ahri','Ashe','Lulu'],positions=['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'];
+ const session={localPlayerCellId:1,myTeam:heroes.map((id,cellId)=>({cellId,championId:key(id),assignedPosition:positions[cellId]}))};
+ const result=mergeClientSession(slots,session,data.champions);
+ assert.deepEqual(result.slots.map(s=>s.champion),heroes);assert.deepEqual(result.slots.map(s=>s.clientCellId),[0,1,2,3,4]);
+ assert.deepEqual(result.unassigned,[]);assert.deepEqual(result.displaced,['MasterYi']);
+ assert.equal(currentPlayerSelection(session,data.champions,result.slots).role,'jungle');
+ assert.deepEqual(mergeClientSession(result.slots,session,data.champions).slots,result.slots);
+ const changed=createSlots();changed[0]={...changed[0],champion:'Rengar',locked:true,automaticPosition:true};changed[1]={...changed[1],champion:'MasterYi',locked:true,automaticPosition:true};
+ const corrected=mergeClientSession(changed,{localPlayerCellId:1,myTeam:[session.myTeam[1]]},data.champions).slots;
+ assert.equal(corrected[0].champion,null);assert.equal(corrected[1].champion,'Rengar');assert.equal(corrected[1].manualPosition,undefined);
+});
 test('five public picks always enter the board, inferred conflicts remain movable and public changes remain fixed',()=>{
  const heroes=['Lux','Ahri','Ashe','Jhin','Nami'],session={localPlayerCellId:0,myTeam:heroes.map((id,cellId)=>({cellId,championId:key(id),assignedPosition:''}))};
  let result=mergeClientSession(createSlots(),session,data.champions,{roleOrder:{Lux:['mid','support'],Ahri:['mid']},autoParty:true,party:{status:'known',members:[{cellId:0,local:true},{cellId:1},{cellId:2}]}});
