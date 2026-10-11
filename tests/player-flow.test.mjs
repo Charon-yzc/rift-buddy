@@ -20,7 +20,8 @@ test('public declared picks replace prospective recommendations in their own lan
  const slots=createSlots();slots[1].champion='MasterYi';slots[1].locked=true;slots[1].automaticPosition=true;
  const heroes=['Garen','Rengar','Ahri','Ashe','Lulu'],positions=['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'];
  const session={localPlayerCellId:1,myTeam:heroes.map((id,cellId)=>({cellId,championId:key(id),assignedPosition:positions[cellId]}))};
- const result=mergeClientSession(slots,session,data.champions);
+ const restored=validateState({...defaultState(),draft:{slots}}).draft.slots;assert.equal(restored[1].automaticPosition,true);
+ const result=mergeClientSession(restored,session,data.champions);
  assert.deepEqual(result.slots.map(s=>s.champion),heroes);assert.deepEqual(result.slots.map(s=>s.clientCellId),[0,1,2,3,4]);
  assert.deepEqual(result.unassigned,[]);assert.deepEqual(result.displaced,['MasterYi']);
  assert.equal(currentPlayerSelection(session,data.champions,result.slots).role,'jungle');

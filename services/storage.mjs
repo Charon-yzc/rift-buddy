@@ -28,7 +28,8 @@ function slots(value,preserveClientMetadata=false){
   if(s.champion&&picked.has(s.champion))throw Error('阵容中有重复英雄');if(s.champion)picked.add(s.champion);
   return {role:s.role,champion:s.champion,party:s.party,locked:!!s.champion&&s.locked,
    ...(preserveClientMetadata&&s.partyManual===true?{partyManual:true}:{}),
-   ...(preserveClientMetadata&&(s.champion||s.manualPosition===true)&&Number.isInteger(s.clientCellId)&&s.clientCellId>=0&&s.clientCellId<30?{clientCellId:s.clientCellId,...(s.manualPosition===true?{manualPosition:true}:{}),...(s.automaticPosition===true?{automaticPosition:true}:{})}:{})};
+   ...(preserveClientMetadata&&s.champion&&s.automaticPosition===true?{automaticPosition:true}:{}),
+   ...(preserveClientMetadata&&(s.champion||s.manualPosition===true)&&Number.isInteger(s.clientCellId)&&s.clientCellId>=0&&s.clientCellId<30?{clientCellId:s.clientCellId,...(s.manualPosition===true?{manualPosition:true}:{})}:{})};
  });
 }
 function favorite(f){
