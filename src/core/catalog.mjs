@@ -66,8 +66,17 @@ export function validateCatalog(value,data){
  return c;
 }
 export function catalogIssues(c,data){
- const errors=[],status={},loadoutStatus={};const heroes=new Set(data.champions.map(h=>h.id));
+ const errors=[],status={},loadoutStatus={},skillPlanStatus={},skillReviewTasks=[];const heroes=new Set(data.champions.map(h=>h.id));
  for(const p of c.skillPlans||[])if(!heroes.has(p.champion))errors.push(`加点 ${p.name}：英雄 ${p.champion} 不存在`);
+ for(const p of c.skillPlans||[]){
+  const changedDependencies=dependencyChanges(p,c,data),invalid=!heroes.has(p.champion),reasons=[];
+  if(invalid)reasons.push('含当前资料不存在的英雄');
+  if(p.patch!==data.patch)reasons.push(`加点整理版本 ${p.patch}，当前资料 ${data.patch}，待复核`);
+  if(changedDependencies.length)reasons.push('技能资料变化：'+changedDependencies.map(x=>x.name).join('、'));
+  const stale=p.patch!==data.patch||changedDependencies.length>0;
+  skillPlanStatus[p.id]={invalid,stale,patch:p.patch,reviewedAt:p.reviewedAt,reasons,changedDependencies};
+  if(stale||invalid)skillReviewTasks.push({id:p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,reasons,changedDependencies});
+ }
  const itemValid=id=>{const i=data.items[id];return i?.maps?.['11']&&(i.inStore&&i.gold?.purchasable!==false||data.items[i.specialRecipe]?.maps?.['11']&&data.items[i.specialRecipe]?.inStore&&data.items[i.specialRecipe]?.gold?.purchasable!==false);};
  const badConfigs=new Set();
  for(const l of c.loadouts){const missing=[...l.items,l.boots,...l.late,...(l.early||[])].filter(id=>!itemValid(id));const badRunes=l.runes.filter(k=>!validateRunePage(c.runes[k]?.page,data.runes));const mechanics=loadoutMechanicIssues(l,c.runes);if(missing.length||badRunes.length||mechanics.length){badConfigs.add(l.id);errors.push(`${l.name}：装备、符文或触发条件失效（${[...missing,...badRunes,...mechanics].join('、')}）`);}for(const h of l.champions)if(!heroes.has(h))errors.push(`${l.name}：英雄 ${h} 不存在`);loadoutStatus[l.id]={invalid:badConfigs.has(l.id),stale:(l.patch||c.patch)!==data.patch,patch:l.patch||c.patch,reviewedAt:l.reviewedAt||c.reviewedAt};}
@@ -82,7 +91,7 @@ export function catalogIssues(c,data){
  for(const l of c.loadouts){const changed=dependencyChanges(l,c,data);Object.assign(loadoutStatus[l.id],{changedDependencies:changed,stale:loadoutStatus[l.id].stale||changed.length>0});}
  const reviewTasks=[];
  for(const entry of [...c.duos,...c.trios]){const changed=dependencyChanges(entry,c,data),s=status[entry.id];s.changedDependencies=changed;if(changed.length){s.stale=true;s.reasons.push('关联资料变化：'+changed.map(x=>x.name).join('、'));}const members=entry.members||[{loadoutId:entry.loadouts.bottom},{loadoutId:entry.loadouts.support}];if(members.some(m=>loadoutStatus[m.loadoutId]?.stale)){s.stale=true;if(!s.reasons.includes('关联配置版本待复核'))s.reasons.push('关联配置资料待复核');}if(s.stale||s.invalid)reviewTasks.push({id:entry.id,name:entry.name,reasons:s.reasons,changedDependencies:changed});}
- return {errors:[...new Set(errors)],status,loadoutStatus,reviewTasks,staleLoadouts:Object.values(loadoutStatus).filter(s=>s.stale).length,stale:Object.values(status).filter(s=>s.stale).length,invalid:Object.values(status).filter(s=>s.invalid).length};
+ return {errors:[...new Set(errors)],status,loadoutStatus,reviewTasks,skillPlanStatus,skillReviewTasks,staleSkillPlans:Object.values(skillPlanStatus).filter(s=>s.stale).length,staleLoadouts:Object.values(loadoutStatus).filter(s=>s.stale).length,stale:Object.values(status).filter(s=>s.stale).length,invalid:Object.values(status).filter(s=>s.invalid).length};
 }
 export function configureCatalog(c){const catalog=validateCatalog(c);configureRuleCatalog(catalog);configureLoadoutCatalog(catalog);return catalog;}
 export function mergePersonal(base,personal={duos:[],trios:[],loadouts:[],runes:{}}){

@@ -1,4 +1,5 @@
 import {validateGuideSelection} from './guide.mjs';
+import {validateCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext} from './creative-plan.mjs';
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
@@ -78,4 +79,25 @@ export function recommendationKey(input){
  const sourceSamples=Object.values(input.builds||{}).map(ref=>[ref.champion,ref.role,Number.isFinite(ref.runeSamples)?ref.runeSamples:null]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
  const sourceRoles=[...new Set((input.sourceRoles||[]).map(ref=>[ref.champion,ref.role].join(':')))].sort();
  return JSON.stringify([slots,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.catalogStatus,input.version,input.catalogVersion,input.creativePlan?.id,sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics]);
+}
+// Only an explicitly adopted alternate route inherits this result's personal
+// choices. The frozen plan and any previously edited destination stay separate.
+export function partyRoutePreparations(store,original,selected){
+ if(!original||!selected)return [];
+ const from=validateCreativePlan(original),to=validateCreativePlan(selected);
+ if(from.id===to.id)return [];
+ const routes=to.shared?.routes;
+ if(!routes?.length)throw Error('个人配置只能随当前方案的备选路线保留');
+ // Repeated previews also reorder the remaining alternatives. Reconstruct
+ // that exact order from the original family, without weakening plan identity.
+ let candidate=from;
+ for(const route of [...routes].reverse())candidate=selectPartyRoute(candidate,route.id);
+ if(candidate.id!==to.id)throw Error('个人配置只能随当前方案的备选路线保留');
+ return to.members.flatMap(member=>{
+  const context=plan=>({id:member.champion,role:member.role,mode:'rift',...creativeComboContext(creativeMemberCombo(plan,member.champion,member.role))});
+  const target=context(to);if(store.recall(target))return [];
+  const previous=recallPreparation(store,null,context(from));if(!previous)return [];
+  const fields=Object.fromEntries(CONFIGURATION_FIELDS.filter(field=>!['comboId','creativePlan'].includes(field)&&previous[field]!==undefined).map(field=>[field,structuredClone(previous[field])]));
+  return [validatePreparation({...fields,...target})];
+ });
 }

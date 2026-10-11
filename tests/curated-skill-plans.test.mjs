@@ -15,6 +15,7 @@ import {skillSelector} from '../src/build-options-view.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
 import {skillMilestones} from '../src/skill-plan-view.mjs';
+import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {catalogPreviewDialog} from '../src/catalog-view.mjs';
 import {createCatalogStore} from '../services/catalog-store.mjs';
 import os from 'node:os';
@@ -143,4 +144,44 @@ test('imported partial skill plans render with optional sources and never promis
   const model=createGuideModel(data,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery'}));
   assert.match(renderGuide({model,phase:'Offline',connected:false},'skills',false,()=>''),/仅覆盖 1–3 级/);
  }finally{configureCatalog(BUNDLED_CATALOG);}
+});
+
+test('a valid imported skill entry cannot redirect a legacy explicit favorite with the same catalog ID',()=>{
+ const legacy=clone();delete legacy.skillPlans;
+ const selection={id:'Taric',role:'support',mode:'rift',loadoutId:'taric-guardian',skillId:'curated-skill-taric-guardian'};
+ try{
+  configureCatalog(legacy);const before=getBuild(hero('Taric'),'support',data,selection);
+  assert.equal(before.skillOrder.length,18);
+  const fields=selectedBuildFields({...selection,build:before}),state=validateState(JSON.parse(JSON.stringify({...defaultState(),
+   guide:selectGuide(null,{...selection,...fields}),favorites:[{id:buildFavoriteId({...selection,build:before}),type:'build',title:'原宝石加点',champion:'Taric',role:'support',mode:'rift',...fields}]})));
+  const incoming=structuredClone(legacy);incoming.skillPlans=[{id:'taric-guardian',name:'另一个合法开局',champion:'Taric',role:'support',loadoutId:'taric-guardian',order:'QEW',reason:'仅前三点的个人整理，未经实战验证',patch:data.patch,reviewedAt:'2026-10-11'}];
+  configureCatalog(validateCatalog(incoming,data));
+  const restored={...state.favorites[0],id:'Taric',role:'support',mode:'rift'},after=getBuild(hero('Taric'),'support',data,restored);
+  assert.equal(after.skillOrder,before.skillOrder,'importing a different record must preserve the old explicit choice');
+  assert.equal(createGuideModel(data,state.guide).skillOrder,before.skillOrder);
+  assert.equal(new Set(after.skillChoices.map(s=>s.id)).size,after.skillChoices.length,'every displayed choice must have a distinct ID');
+  const imported=after.skillChoices.find(s=>s.name==='另一个合法开局');assert(imported);assert.notEqual(imported.id,selection.skillId);
+  const changed=changeCompanionPlan(data,restored,'skill',imported.id);assert.equal(getBuild(hero('Taric'),'support',data,changed).skillOrder,'QEW');
+  assert.deepEqual(after.runePage,before.runePage);assert.deepEqual(after.items,before.items);
+ }finally{configureCatalog(BUNDLED_CATALOG);}
+});
+
+test('the sidebar shows the actual personal or fallback skill and can restore defaults without changing other choices',()=>{
+ const base={id:'Lulu',role:'support',mode:'rift',comboId:'ivern-kog-lulu',conditions:['ap','control'],summonerIds:['SummonerFlash','SummonerExhaust']};
+ const initial=getBuild(hero('Lulu'),'support',data,base),rune=initial.runeOptions.at(-1).id;
+ const own={...base,runeId:rune,customSkillOrder:{order:'EQW',priority:'EWQ',patch:data.patch}};
+ const selectedInSidebar=s=>{
+  const b=getBuild(hero(s.id),s.role,data,s),html=companionPlanView(data,{build:b,selection:s});
+  const options=html.match(/<select[^>]*data-companion-field="skill"[^>]*>([\s\S]*?)<\/select>/)?.[1];
+  for(const option of b.skillChoices.filter(o=>o.source==='OP.GG'))assert(options.includes(`开局 ${option.order.slice(0,3)} · ${option.order.length} 点 · ${option.samples.toLocaleString()} 场`),'source candidates expose actual opening, coverage and sample before selection');
+  return {build:b,id:options?.match(/<option value="([^"]*)" selected[^>]*>/)?.[1]};
+ };
+ const personal=selectedInSidebar(own);assert.equal(personal.id,personal.build.selectedSkillId);assert.equal(personal.build.skillOrder,'EQW');
+ const reset=changeCompanionPlan(data,own,'skill',''),fallback=selectedInSidebar(reset);
+ assert.equal(reset.customSkillOrder,undefined);assert.equal(fallback.id,fallback.build.selectedSkillId);assert.equal(fallback.build.skillOrder.length,18);
+ const source=fallback.build.skillChoices.find(s=>s.source==='OP.GG'),explicit=changeCompanionPlan(data,reset,'skill',source.id),chosen=selectedInSidebar(explicit);
+ assert.equal(chosen.id,source.id);assert.equal(chosen.build.skillOrder,source.order);
+ for(const s of [reset,explicit]){assert.equal(s.runeId,rune);assert.deepEqual(s.conditions,own.conditions);assert.deepEqual(s.summonerIds,own.summonerIds);assert.deepEqual(getBuild(hero('Lulu'),'support',data,s).runePage,personal.build.runePage);}
+ const unavailable={...reset,skillId:'retired-skill'},original=structuredClone(unavailable),displayed=selectedInSidebar(unavailable);
+ assert.equal(displayed.id,displayed.build.selectedSkillId);assert(displayed.build.selectionWarnings.some(w=>w.includes('原加点序列')));assert.deepEqual(unavailable,original);
 });
