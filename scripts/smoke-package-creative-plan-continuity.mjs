@@ -9,7 +9,7 @@ import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 
 const reordered=process.argv.includes('--reordered'),members=reordered?{top:['Darius'],mid:['Annie'],bottom:['Yunara']}:{mid:['Annie'],bottom:['Ashe'],support:['Rell']};
 const root=await fs.mkdtemp(path.resolve('.local/creative-plan-workflow-')),state=defaultState();
-state.preferences={...state.preferences,autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,rolePools:Object.fromEntries(['top','jungle','mid','bottom','support'].map(role=>[role,{mode:members[role]?'only':'off',heroes:members[role]||[]}]))};
+state.preferences={...state.preferences,autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,rolePools:Object.fromEntries(['top','jungle','mid','bottom','support'].map(role=>[role,{mode:members[role]?'only':'off',heroes:members[role]||[]}]))};
 state.preferences.installPath=path.join(root,'client-fixture');state.draft={slots:createSlots().map(slot=>({...slot,party:!!members[slot.role]})),style:reordered?'balanced':'fun',scope:'party'};
 // Start with a saved legacy creative plan: new recommendations now prefer concrete
 // skill cooperation, while existing action order and saved identity must survive.

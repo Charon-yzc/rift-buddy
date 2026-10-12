@@ -11,7 +11,7 @@ if(archiveSha256!==release.archiveSha256)throw Error('Packaged archive hash mism
 const reports=[];
 for(const group of [['waiting-save','waiting-restart'],['waiting-selection'],['waiting-loading'],['waiting-live'],['waiting-guards']]){
  const folder=path.join(root,group[0]),state=defaultState();await fs.mkdir(folder);
- Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:true,clientCompanion:false,guideAutoShow:true,installPath:path.join(folder,'client-fixture')});
+ Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:true,clientCompanion:false,guideAutoShow:true,installPath:path.join(folder,'client-fixture')});
  await fs.mkdir(state.preferences.installPath);await fs.writeFile(path.join(state.preferences.installPath,'lockfile'),'LeagueClient:1:23456:isolated-fixture-only:https');await saveState(folder,state);
  for(const phase of group){
   const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-matchup-focus.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:folder,RIFT_MATCHUP_FOCUS_PHASE:phase},windowsHide:true,stdio:'inherit'}),timer=setTimeout(()=>child.kill(),90000);

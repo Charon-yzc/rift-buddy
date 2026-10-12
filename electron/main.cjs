@@ -109,6 +109,14 @@ async function boot(){
  data.imageOverrides=await imageCache.loadImageOverrides(path.join(storeRoot,'data/images'),data);
  const refreshBuild=createBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const liveService=await import('../services/live-client.mjs');
+ const {createAppUpdateService}=await import('../services/app-update.mjs');
+ const {compareVersions:compareAppVersion,releasePageUrl,isReleaseNotesUrl}=await import('../src/core/app-update.mjs');
+ const appUpdateBase={currentVersion:app.getVersion(),tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||path.join(app.getPath('temp'),'rift-buddy-update'),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'};
+ const updater=()=>createAppUpdateService({...appUpdateBase,mirrorBase:state.preferences.updateMirror});
+ const appUpdater=updater();
+ await appUpdater.sweep().catch(()=>{});
+ let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null,appUpdateInstallFlight=null;
+ const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;win?.webContents.send('app-update-progress',snapshot);};
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));win?.webContents.send('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
@@ -292,6 +300,63 @@ async function boot(){
    next.imageOverrides=cached.overrides;data=next;useCatalog(catalogStore.summary());guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
   }finally{updating=false;}
  });
+ guard('app-update-check',async(silent=false)=>{
+  if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)return appUpdateStatus;
+  const prev=appUpdateStatus;
+  appUpdateFlight=(async()=>{
+   publishAppUpdate({phase:'checking'});
+   try{
+    const kept=await updater().pending();
+    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,via:kept.via||'direct',fallback:kept.fallback||false}});}
+    else{
+     const result=await updater().check();
+     if(silent&&result.status==='available'&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
+     else publishAppUpdate({phase:result.status,release:result.release||null});
+    }
+   }catch(error){if(silent){publishAppUpdate(prev);}else{publishAppUpdate({phase:'error',error:error.message});throw error;}}
+   finally{appUpdateFlight=null;}
+   return appUpdateStatus;
+  })();
+  return appUpdateFlight;
+ });
+ guard('app-update-download',async()=>{
+  if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)throw Error('软件更新正在处理，请等待本次完成');
+  const release=appUpdateStatus.release;
+  if(appUpdateStatus.phase!=='available'||!release)throw Error('没有可下载的新版本，请先检查更新');
+  appUpdateAbort=new AbortController();
+  let fellBack=false;
+  try{
+   publishAppUpdate({phase:'downloading',release,received:0,total:null});
+   const record=await updater().download(release,{signal:appUpdateAbort.signal,onProgress:p=>{if(p.note==='mirror-fallback')fellBack=true;publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total,via:p.via||null,fallbackNotice:fellBack});}});
+   publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256,via:record.via||'direct',fallback:fellBack}});
+   return appUpdateStatus;
+  }catch(error){publishAppUpdate({phase:'error',release,error:error.message});throw error;}
+  finally{appUpdateAbort=null;}
+ });
+ guard('app-update-cancel',()=>{appUpdateAbort?.abort();return true;});
+ guard('app-update-install',async()=>{
+  if(appUpdateInstallFlight)return appUpdateInstallFlight;
+  if(appUpdateFlight||appUpdateAbort||appUpdateStatus.phase!=='ready')throw Error('请等待安装包下载并校验完成');
+  const prev=appUpdateStatus;
+  appUpdateInstallFlight=Promise.resolve().then(async()=>{
+   publishAppUpdate({...prev,phase:'installing',error:''});
+   try{
+    const record=await updater().install();
+    if(record.dryRun){publishAppUpdate(prev);return record;}
+    quitting=true;app.quit();return record;
+   }catch(error){
+    const kept=await updater().pending().catch(()=>null);
+    publishAppUpdate(kept?{...prev,error:error.message}:{phase:'error',error:error.message});
+    throw error;
+   }
+  }).finally(()=>{appUpdateInstallFlight=null;});
+  return appUpdateInstallFlight;
+ });
+ guard('app-update-delete',async()=>{
+  if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)throw Error('软件更新正在处理，请等待本次完成');
+  appUpdateFlight=Promise.resolve().then(async()=>{await updater().cleanup();publishAppUpdate({phase:'idle'});return true;}).finally(()=>{appUpdateFlight=null;});
+  return appUpdateFlight;
+ });
  guard('apply-runes',async(page,context)=>{
   if(applyingRunes)throw new Error('符文正在应用，请稍后');applyingRunes=true;
    try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);const result=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});await saveCurrentState(current=>({...current,ownedPageId:result.pageId}));return result;}
@@ -321,9 +386,10 @@ async function boot(){
  guard('toggle-pin',()=>{win.setAlwaysOnTop(!win.isAlwaysOnTop());return win.isAlwaysOnTop();});
  guard('choose-directory',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择英雄联盟安装目录',properties:['openDirectory']});return result.canceled?null:result.filePaths[0];});
  guard('open-link',async url=>{
-  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol'];
+  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
-  if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
+  if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');
+  if(parsed.hostname==='github.com'&&!isReleaseNotesUrl(url)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
  });
  guard('export-preparation',async value=>{
   const {preparationFileText}=await import('../src/core/preparation-file.mjs'),text=preparationFileText(value);

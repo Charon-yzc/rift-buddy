@@ -9,7 +9,7 @@ const teamOrder=process.argv.includes('--team-order'),phases=teamOrder?['team-or
 const root=await fs.mkdtemp(path.resolve(teamOrder?'.local/team-order-smoke-':'.local/matchups-smoke-'));
 for(const phase of phases){
  const directory=path.join(root,phase),state=defaultState();
- await fs.mkdir(directory);Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(directory,'client-fixture')});
+ await fs.mkdir(directory);Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(directory,'client-fixture')});
  await fs.mkdir(state.preferences.installPath);await saveState(directory,state);
  const log=await fs.open(path.join(directory,'smoke.log'),'wx');
  const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-matchups.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:directory,RIFT_BUDDY_MATCHUP_PHASE:phase},windowsHide:true,stdio:['ignore',log.fd,log.fd]});

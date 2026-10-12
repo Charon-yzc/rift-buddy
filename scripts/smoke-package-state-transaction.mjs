@@ -5,7 +5,7 @@ import {once} from 'node:events';
 import {electronExecutable} from './electron-runtime.mjs';
 import {defaultState,saveState,createBackup} from '../services/storage.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/state-transaction-smoke-')),state=defaultState();
-Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false});
+Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false});
 state.favorites=[{id:'original-kept',title:'原收藏',type:'build',champion:'Ashe',role:'bottom',mode:'rift'}];
 await saveState(root,state);
 const incoming=structuredClone(state);incoming.favorites=[{id:'imported-once',title:'导入收藏',type:'build',champion:'Ahri',role:'mid',mode:'rift'}];incoming.excluded=['Zed'];incoming.preferences.buildSource={region:'kr',tier:'diamond_plus'};incoming.preferences.style='balanced';

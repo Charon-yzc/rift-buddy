@@ -286,6 +286,8 @@ v0.10.5 的选人侧栏直接修改当前 preparation，装备路线、符文、
 
 先完成 `pnpm test`、`pnpm check`、`pnpm package` 和 `node scripts/inspect-package.mjs`。使用官方 NSIS 3.12 或更新版本，将 `RIFT_BUDDY_MAKENSIS` 指向 `makensis.exe`，再运行 `pnpm installer`。脚本生成 `release/installer-时间/RiftBuddy-版本-Setup.exe`，并在 `release/installer-latest.json` 记录路径和校验值，不会安装到本机。安装程序按当前用户创建快捷方式；卸载按固定文件清单删除程序，保留未列出的文件和用户资料。
 
+每次发布 Release 必须上传两个文件：`RiftBuddy-<版本>-Setup.exe` 与 `SHA256SUMS-<版本>.txt`（后者由 `pnpm installer` 从安装包 SHA-256 自动生成，单行 `<sha256><两空格><安装包文件名>`）。预发布（Pre-release）同样参与更新检查，取语义化版本号最大者；安装包缺失会报错，校验文件缺失则删除已下载的临时包并拒绝安装。失败不能绕过校验。使用与验证边界见[软件更新说明](app-update.md)。
+
 对手条件计划在 `src/core/matchup-plans.mjs`，按公开英雄与用户选择附加到己方打法，不修改配置或推荐胜率。当前 16 位重点对手的条件整理基于 Riot 16.20 技能资料；版本变化继续显示并注明需复核。选人目标只保留本次会话，按英雄/位置/模式/组合隔离；对手消失后不展示，进入新局清空。局内沿已有公开重点对手控件选择；手动配合阶段也会切换己方条件任务。使用 `node scripts/smoke-package-matchups.mjs` 验证实际 ASAR 的侧栏、完整配置页和局内指引；状态、公开敌人和窗口贴边在隔离进程中模拟，绝不连接真实 LCU 或写符文。
 
 双人任务在 `src/core/role-plays.mjs` 和 `src/core/duo-plays.mjs`。按英雄与位置整理开局、关键配合、后期任务，再补需要两个英雄共同成立的特殊条件；`getBuild().combo.play` 为当前成员提供阶段任务，原组合内容与用户已有配置保留。官方角色、组合身份与实时确认范围沿已有准备流程处理，不根据任务猜测敌方冷却、站位或技能命中。未覆盖的自定义成员返回缺失，不伪造专项分工；自定义前期、顺序、窗口和经济说明优先使用。旧版本任务保留并注明版本。

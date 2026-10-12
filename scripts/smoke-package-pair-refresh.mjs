@@ -7,7 +7,7 @@ import {defaultState,saveState} from '../services/storage.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 
 const root=await fs.mkdtemp(path.resolve('.local/pair-refresh-smoke-')),state=defaultState();
-Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,style:'balanced'});
+Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,style:'balanced'});
 state.preferences.rolePools={top:{heroes:['Gwen'],mode:'only'}};
 state.draft={slots:createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role),champion:s.role==='jungle'?'Graves':s.role==='mid'?'Vex':null,locked:['jungle','mid'].includes(s.role)})),scope:'party',style:'balanced'};
 await saveState(root,state);

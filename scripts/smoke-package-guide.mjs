@@ -5,7 +5,7 @@ import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {defaultState,saveState} from '../services/storage.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/guide-smoke-'));
-const state=defaultState();state.preferences.autoSync=false;state.preferences.autoCheck=false;
+const state=defaultState();state.preferences.autoSync=false;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;
 state.preferences.autoLive=false;
 await saveState(root,state);
 const executable=electronExecutable();

@@ -7,7 +7,7 @@ import {defaultState,saveState} from '../services/storage.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 
 const root=await fs.mkdtemp(path.resolve('.local/preparations-smoke-')),state=defaultState();
-Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,style:'balanced',installPath:path.join(root,'client-fixture')});
+Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,style:'balanced',installPath:path.join(root,'client-fixture')});
 state.preferences.rolePools={bottom:{heroes:['Aphelios'],mode:'only'},support:{heroes:['Thresh'],mode:'only'}};
 state.draft={slots:createSlots(),scope:'bot',style:'balanced'};
 await saveState(root,state);

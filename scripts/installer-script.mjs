@@ -1,5 +1,10 @@
 import path from 'node:path';
 const quote=value=>'"'+String(value).replaceAll('$','$$').replaceAll('"','$\\"')+'"';
+export function checksumRecord({version,sha256}){
+ if(!/^\d+\.\d+\.\d+$/.test(version||''))throw Error('安装包版本格式不正确');
+ if(!/^[0-9a-f]{64}$/.test(sha256||''))throw Error('安装包校验值格式不正确');
+ return `${sha256}  RiftBuddy-${version}-Setup.exe\n`;
+}
 export function installerScript({version,directory,output,icon,files}){
  if(!/^\d+\.\d+\.\d+$/.test(version)||version.trim()!==version||!files.length)throw Error('安装包版本或文件清单不完整');
  if(files.some(file=>path.win32.isAbsolute(file)||/^[A-Za-z]:/.test(file)||file.split(/[\\/]/).some(p=>p==='..'||!p)||/[\r\n]/.test(file)))throw Error('安装包清单包含不合法路径');
