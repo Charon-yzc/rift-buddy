@@ -8,6 +8,8 @@ import crypto from 'node:crypto';
 import vm from 'node:vm';
 import {EventEmitter,once} from 'node:events';
 import {createAppUpdateService} from '../services/app-update.mjs';
+import {BUNDLED_CATALOG,validateCatalog,safeSourceURL} from '../src/core/catalog.mjs';
+import {isReleaseNotesUrl} from '../src/core/app-update.mjs';
 
 const bin=Buffer.alloc(32768,42),sha=crypto.createHash('sha256').update(bin).digest('hex');
 const release={version:'99.0.0',tag:'v99.0.0'};
@@ -22,6 +24,20 @@ async function fixture(t,respond){
  return {dir,hits,options,service:createAppUpdateService(options)};
 }
 const normalResponse=(req,res)=>res.end(req.url.endsWith('.txt')?checksum:bin);
+test('release links preserve validated custom catalog sources without opening arbitrary GitHub pages',async()=>{
+ const url='https://github.com/Legender134/rift-buddy/blob/main/README.md',catalog=structuredClone(BUNDLED_CATALOG);
+ catalog.trios[0].sources=[{name:'自定义组合依据',url}];
+ const game=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+ game.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+ const validated=validateCatalog(catalog,game),source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),opened=[];
+ vm.runInNewContext(source.slice(source.indexOf(" guard('open-link'"),source.indexOf(" guard('export-preparation'")),{URL,Error,data:{catalog:validated},catalogCore:{safeSourceURL},isReleaseNotesUrl,guard:(name,handler)=>handlers.set(name,handler),shell:{openExternal:async value=>opened.push(value)}});
+ await handlers.get('open-link')(url);
+ await handlers.get('open-link')('https://github.com/Legender134/rift-buddy/releases/tag/v0.46.0');
+ assert.equal(opened.length,2);assert.equal(opened[0],url);
+ await assert.rejects(handlers.get('open-link')('https://github.com/other/repo/blob/main/README.md'),/不支持的链接/);
+ await assert.rejects(handlers.get('open-link')('https://github.com/Legender134/rift-buddy/blob/main/other.md'),/不支持的链接/);
+ assert.equal(opened.length,2);
+});
 async function mainFixture(service,preferences={}){
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),snapshots=[];
  const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences},app:{getVersion:()=> '0.46.0',quit:()=>{}},guard:(name,fn)=>handlers.set(name,fn),compareAppVersion:()=>1,releasePageUrl:()=>'',updater:()=>service,snapshots};
