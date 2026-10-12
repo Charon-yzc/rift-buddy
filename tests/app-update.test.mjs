@@ -1,6 +1,44 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseReleaseFeed,compareVersions,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile} from '../src/core/app-update.mjs';
+import crypto from 'node:crypto';
+import {EventEmitter} from 'node:events';
+import {createAppUpdateService} from '../services/app-update.mjs';
+const FEED2=`<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><title>v9.9.9</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9"/><updated>2026-10-12T00:00:00Z</updated></entry></feed>`;
+const FEED_KEY='github.com/Legender134/rift-buddy/releases.atom';
+const fakeRequest=routes=>(url,options,callback)=>{
+ const u=new URL(url.href||url),route=routes[u.hostname+u.pathname];
+ const req=new EventEmitter();req.destroy=e=>{req.emit('error',e||Error('aborted'));req.emit('close');};
+ req.end=()=>queueMicrotask(()=>{
+  if(options?.signal?.aborted){req.emit('error',Error('aborted'));req.emit('close');return;}
+  const res=new EventEmitter();res.resume=()=>{};
+  if(!route){res.statusCode=404;callback(res);res.emit('end');req.emit('close');return;}
+  res.statusCode=route.status;res.headers=route.headers||{};
+  callback(res);
+  if(route.status>=300&&route.status<400){res.emit('end');req.emit('close');return;}
+  res.emit('data',Buffer.isBuffer(route.body)?route.body:Buffer.from(route.body||''));res.emit('end');req.emit('close');
+ });
+ return req;
+};
+const service=(over={})=>createAppUpdateService({currentVersion:'0.44.0',tempDir:'C:\\fake-tmp',storeFile:'C:\\fake-tmp\\app-update.json',lookup:async()=>[{address:'8.8.8.8',family:4}],...over});
+test('check reports a newer prerelease-channel tag',async()=>{
+ const s=service({request:fakeRequest({[FEED_KEY]:{status:200,body:FEED2}})});
+ const r=await s.check();
+ assert.equal(r.status,'available');assert.equal(r.release.version,'9.9.9');assert.equal(r.release.tag,'v9.9.9');
+});
+test('check reports current when local leads the feed',async()=>{
+ const s=service({currentVersion:'9.9.10',request:fakeRequest({[FEED_KEY]:{status:200,body:FEED2}})});
+ const r=await s.check();
+ assert.equal(r.status,'current');assert.equal(r.release.version,'9.9.9');
+});
+test('cross-allowlist redirects, hop overflow and http errors are rejected',async()=>{
+ const s1=service({request:fakeRequest({[FEED_KEY]:{status:302,headers:{location:'https://evil-1.example/x'}}})});
+ await assert.rejects(s1.check(),/不在白名单|跳转/);
+ const chain={};for(let i=0;i<7;i++)chain[i===0?FEED_KEY:`release-assets.githubusercontent.com/h${i}`]={status:302,headers:{location:`https://release-assets.githubusercontent.com/h${i+1}`}};
+ await assert.rejects(service({request:fakeRequest(chain)}).check(),/跳转/);
+ await assert.rejects(service({request:fakeRequest({[FEED_KEY]:{status:503,body:'x'}})}).check(),/HTTP 503/);
+ await assert.rejects(service({request:()=>{throw Error('offline');}}).check(),/offline/);
+});
 const FEED=`<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><title>v9.9.9 测试版</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9"/><updated>2026-10-12T00:00:00Z</updated></entry><entry><title>v0.1.0 早期预览</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v0.1.0"/><updated>2026-01-01T00:00:00Z</updated></entry><entry><title>nightly</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/nightly-1"/><updated>2026-10-01T00:00:00Z</updated></entry><entry><title>v0.2.0 drafting</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v0.2.0"/><updated>not-a-date</updated></entry></feed>`;
 test('feed keeps only strict semver tags with valid timestamps',()=>{
  const entries=parseReleaseFeed(FEED);
