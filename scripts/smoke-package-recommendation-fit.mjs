@@ -6,7 +6,7 @@ import {electronExecutable} from './electron-runtime.mjs';
 import {defaultState,saveState} from '../services/storage.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/recommendation-fit-smoke-'));
 const state=defaultState();
-Object.assign(state.preferences,{style:'balanced',autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,
+Object.assign(state.preferences,{style:'balanced',autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,clickPrepare:false,
  installPath:path.join(root,'client-fixture'),rolePools:{mid:{mode:'only',heroes:['Galio','Gragas','Annie','Lux','Diana','Yasuo','Cassiopeia','Lissandra','Azir','Seraphine']}}});
 await fs.mkdir(state.preferences.installPath);await saveState(root,state);
 const log=await fs.open(path.join(root,'smoke.log'),'wx');

@@ -29,7 +29,7 @@ async function run(){
  fixture={connected:true,phase:'ChampSelect',receivedAt:new Date().toISOString(),game:{gameId:'3101',mapId:11},session:draft(['DrMundo','Chogath','Garen'])};
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
- const js=code=>main.webContents.executeJavaScript(code,true);
+ const js=async code=>{try{return await main.webContents.executeJavaScript(code,true);}catch(error){throw Error(code+'\n'+error.message);}};
  const click=async selector=>{await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(100);};
  const sync=async()=>{await click('[data-action=sync]');await until(()=>js('!document.querySelector("[data-action=sync]").disabled'),'Sync not completed');};
  const generate=async()=>{await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length>0'),'Worker produced no cards');};
@@ -38,7 +38,7 @@ async function run(){
   await until(()=>js('Math.abs(innerWidth-'+width+'/'+zoom+')<=1&&Math.abs(innerHeight-820/'+zoom+')<=1&&Number(getComputedStyle(document.documentElement).getPropertyValue("--text-scale"))==='+textScale),'Viewport or saved text size did not settle');
   await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
  };
- const mainIds=()=>js('[...document.querySelectorAll(".result-card .card-members [data-action=build][data-role=mid]")].map(el=>el.dataset.id)');
+ const mainIds=()=>js('[...document.querySelectorAll(".result-card .candidate-members [data-action=build][data-role=mid]")].map(el=>el.dataset.id)');
  const sideIds=()=>js('[...document.querySelectorAll(".companion-candidate [data-action=companion-preview][data-role=mid]")].map(el=>el.dataset.id)');
  const fitIds=()=>js('[...document.querySelectorAll("[data-opponent-fit]")].map(el=>el.dataset.enemyIds)');
  const capture=async name=>{await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await delay(800);await fs.writeFile(path.join(root,name),(await main.webContents.capturePage({stayHidden:true,stayAwake:true})).toPNG());};
@@ -49,8 +49,8 @@ async function run(){
   await viewport(width,zoom,textScale);
   for(const action of ['recommend','reroll']){
    await click('[data-action='+action+']');await until(()=>js('!!document.querySelector(".recommend-heading")&&!document.querySelector("[data-action=recommend]").disabled'),'Recommendation did not finish');await delay(650);
-   const geometry=await js('(()=>{const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}};return {viewport:[innerWidth,innerHeight],topbar:rect(".topbar"),title:rect(".recommend-heading h2"),description:rect(".recommend-heading p"),actions:[...document.querySelectorAll(".draft-result-actions button")].map(el=>{const r=el.getBoundingClientRect();return {label:el.textContent,top:r.top,bottom:r.bottom,left:r.left,right:r.right}})}})()');
-   for(const r of [geometry.title,geometry.description,...geometry.actions]){assert.ok(r.top>=geometry.topbar.bottom+8,'Sticky toolbar covers recommendation: '+JSON.stringify({width,zoom,textScale,action,geometry}));assert.ok(r.bottom<=geometry.viewport[1]&&r.left>=0&&r.right<=geometry.viewport[0],'Recommendation action outside viewport: '+JSON.stringify({width,zoom,textScale,action,geometry}));}
+   const geometry=await js('(()=>{const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}};return {viewport:[innerWidth,innerHeight],topbar:rect(".topbar"),title:rect(".recommend-heading h2"),actions:[...document.querySelectorAll(".draft-result-actions button")].map(el=>{const r=el.getBoundingClientRect();return {label:el.textContent,top:r.top,bottom:r.bottom,left:r.left,right:r.right}})}})()');
+   for(const r of [geometry.title,...geometry.actions]){assert.ok(r.top>=geometry.topbar.bottom+8,'Sticky toolbar covers recommendation: '+JSON.stringify({width,zoom,textScale,action,geometry}));assert.ok(r.bottom<=geometry.viewport[1]&&r.left>=0&&r.right<=geometry.viewport[0],'Recommendation action outside viewport: '+JSON.stringify({width,zoom,textScale,action,geometry}));}
    assert.ok(geometry.actions.length>0);headingGeometry.push({width,zoom,textScale,action,...geometry});
   }
  }

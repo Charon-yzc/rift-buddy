@@ -87,7 +87,7 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   if(spells?.spell1Id!==spell1Id||spells?.spell2Id!==spell2Id)throw Error('客户端未确认召唤师技能，请手动核对');
   result.steps.spells={status:'done'};
   step='items';await ensure();
-  const items=await writeItems({itemSet:selected.itemSet,data,installPath},{discover:async()=>auth,request});
+  const items=await writeItems({itemSet:selected.itemSet,data,installPath},{discover:async()=>auth,request,beforeCommit:ensure});
   result.steps.items={status:'done',title:items.title};
  }catch(error){
   result.steps[step]={status:'failed',message:String(error.message||'操作未完成')};
