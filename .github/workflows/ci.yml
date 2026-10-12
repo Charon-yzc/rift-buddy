@@ -176,3 +176,5 @@ jobs:
         run: node scripts/smoke-package-helper.mjs
       - name: Check application lifecycle
         run: node scripts/smoke-package-lifecycle.mjs
+      - name: Check application update discovery, verified download and install handoff
+        run: node scripts/smoke-package-app-update.mjs
