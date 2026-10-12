@@ -11,10 +11,18 @@ import {atomicJSON} from './data.mjs';
 export const UPDATE_HOSTS=['github.com','release-assets.githubusercontent.com','objects.githubusercontent.com'];
 export const UPDATE_REDIRECT_LIMIT=5;
 const FEED_TIMEOUT=15000,TEXT_BYTES_LIMIT=65536,SETUP_BYTES_LIMIT=512*1024*1024,FILE_TIMEOUT=600000;
-async function resolvePublic(hostname,{lookup=dns.lookup,timeout=FEED_TIMEOUT}={}){
- const records=await Promise.race([lookup(hostname,{all:true,verbatim:true}),new Promise((_,reject)=>{const t=setTimeout(()=>reject(Error('解析更新地址超时')),timeout);if(t.unref)t.unref();})]);
- if(!records.length||records.some(r=>!publicAddress(r.address)))throw Error('更新地址不能指向本机、内网或保留地址');
- return records;
+async function resolvePublic(hostname,{lookup=dns.lookup,timeout=FEED_TIMEOUT,signal}={}){
+ const abortError=()=>Object.assign(Error('下载已取消'),{name:'AbortError'});
+ if(signal?.aborted)throw abortError();
+ let timer,onAbort;
+ try{
+  const cancelled=new Promise((_,reject)=>{onAbort=()=>reject(abortError());signal?.addEventListener('abort',onAbort,{once:true});});
+  const expired=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('解析更新地址超时')),Math.min(timeout,FEED_TIMEOUT));timer.unref?.();});
+  const records=await Promise.race([lookup(hostname,{all:true,verbatim:true}),cancelled,expired]);
+  if(signal?.aborted)throw abortError();
+  if(!records.length||records.some(r=>!publicAddress(r.address)))throw Error('更新地址不能指向本机、内网或保留地址');
+  return records;
+ }finally{clearTimeout(timer);if(onAbort)signal?.removeEventListener('abort',onAbort);}
 }
 function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,extraHosts,onHeaders,onData}){
  return new Promise(async(resolve,reject)=>{
@@ -24,7 +32,7 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,ex
     const u=new URL(target);
     if(u.protocol!=='https:'&&!insecureHosts.includes(u.hostname))return reject(Error('更新地址必须使用 HTTPS'));
     if(!UPDATE_HOSTS.includes(u.hostname)&&!insecureHosts.includes(u.hostname)&&!(extraHosts||[]).includes(u.hostname))return reject(Error(`更新跳转不在白名单内：${u.hostname}；不跟随`));
-    const records=insecureHosts.includes(u.hostname)?null:await resolvePublic(u.hostname,{lookup,timeout});
+    const records=insecureHosts.includes(u.hostname)?null:await resolvePublic(u.hostname,{lookup,timeout,signal});
     const result=await new Promise((res,rej)=>{
      let bytes=0,failed=null,settled=false,ended=false;const parts=[];let chain=Promise.resolve();
      let req,response,timer;

@@ -24,6 +24,19 @@ async function fixture(t,respond){
  return {dir,hits,options,service:createAppUpdateService(options)};
 }
 const normalResponse=(req,res)=>res.end(req.url.endsWith('.txt')?checksum:bin);
+test('cancelling a stalled DNS lookup releases the main update lock and removes partial files',{timeout:3000},async t=>{
+ const {options,dir}=await fixture(t,normalResponse),started=Promise.withResolvers(),late=Promise.withResolvers();
+ let requests=0,lookups=0;
+ const service=createAppUpdateService({...options,insecureHosts:[],mirrorBase:'https://mirror.smoke',
+  lookup:()=>{lookups++;started.resolve();return late.promise;},request:()=>{requests++;throw Error('Cancelled DNS must not create a request');}});
+ const {handlers,context,snapshots}=await mainFixture(service);context.release=release;
+ vm.runInContext('appUpdateStatus={phase:"available",release};',context);
+ const download=handlers.get('app-update-download')(),cancelled=assert.rejects(download,/下载已取消/);
+ await started.promise;assert.equal(handlers.get('app-update-cancel')(),true);await cancelled;
+ assert.equal(snapshots.at(-1).phase,'error');assert.equal(lookups,1);assert.equal(requests,0);
+ assert.deepEqual(await fs.readdir(dir),[]);assert.equal(await handlers.get('app-update-delete')(),true);
+ late.resolve([{address:'1.1.1.1',family:4}]);await Promise.resolve();assert.equal(requests,0);
+});
 test('redirect responses are closed before following Location even when their bodies never end',{timeout:3000},async t=>{
  let redirectRequest,redirectResponse,serverResponse,resolveClosed,bodyBytes=0;
  const closed=new Promise(resolve=>{resolveClosed=resolve;});
