@@ -40,3 +40,5 @@ function rebase(base,local,accepted,field=''){
 // the other window stay present in both the visible state and queued saves.
 // This does not resolve write conflicts: main still checks each request's base.
 export function rebaseWindowState(base,local,accepted){return rebase(base,local,accepted);}
+// Stored snapshots may normalize object-key order without changing any values.
+export {same as equalWindowState};

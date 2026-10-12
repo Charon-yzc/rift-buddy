@@ -5,7 +5,7 @@ import {adoptRoomLineup,roomLineupIdentity} from './core/room-lineup.mjs';
 import {rankedClientRoles} from './core/builds.mjs';
 import {playerFlowSettings} from './player-flow-settings.mjs';
 import {rollbackUnacceptedState} from './core/save-state.mjs';
-import {rebaseWindowState} from './core/window-state.mjs';
+import {rebaseWindowState,equalWindowState} from './core/window-state.mjs';
 import {localPickEligibility} from './core/pick-eligibility.mjs';
 import {pickEligibilityView} from './pick-eligibility-view.mjs';
 import {summonerSelector} from './summoner-selection-view.mjs';
@@ -302,7 +302,7 @@ function persist({throwOnError=false,derived=false}={}){
 }
 function acceptSavedState(accepted,revision,base=savedBase){
  const viewed=buildView&&buildSelection();
- const previous=JSON.stringify(saved),draftBefore=JSON.stringify(saved.draft),sourceBefore=JSON.stringify(saved.preferences.buildSource),guideBefore=JSON.stringify(saved.guide?.selection);
+ const previous=JSON.stringify(saved),draftBefore=saved.draft,sourceBefore=JSON.stringify(saved.preferences.buildSource),guideBefore=JSON.stringify(saved.guide?.selection);
  saved=rebaseWindowState(base,saved,accepted);savedBase=structuredClone(accepted);stateRevision=Math.max(stateRevision,revision);
  preparations.restore(saved.preparations);slots=saved.draft?.slots||createSlots();scope=saved.draft?.scope||'solo';soloRole=saved.draft?.soloRole||'';style=saved.draft?.style||saved.preferences.style||'fun';activeCreativePlan=saved.draft?.creativePlan||null;
  // Configuration edits are already included in saved.preparations. Hydrate
@@ -312,7 +312,7 @@ function acceptSavedState(accepted,revision,base=savedBase){
  if(pendingIntentPreparation){if(pendingIntentPlanId!==(activeCreativePlan?.id||'')){pendingIntentPreparation=null;pendingIntentPlanId='';}else pendingIntentPreparation=preparations.recall(pendingIntentPreparation);}
  if(!guideSyncPending){guideSelection=saved.guide?.selection||null;guideSyncBase=guideSelection;lastGuideSyncKey=guideSelection?buildChoiceKey(guideSelection):'';}
  if(sourceBefore!==JSON.stringify(saved.preferences.buildSource))selectBuildSource(data,saved.preferences.buildSource);
- if(draftBefore!==JSON.stringify(saved.draft)){markResultStale();cancelRecommendation();results=[];offset=0;queueCompanionRecommendation();}
+ if(!equalWindowState(draftBefore,saved.draft)){markResultStale();cancelRecommendation();results=[];offset=0;queueCompanionRecommendation();}
  if(previous!==JSON.stringify(saved)){render();if(buildView)renderBuild();}
 }
 function drainExternalState(){

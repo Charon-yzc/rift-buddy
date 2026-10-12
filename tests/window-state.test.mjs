@@ -1,9 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {rebaseWindowState} from '../src/core/window-state.mjs';
+import {rebaseWindowState,equalWindowState} from '../src/core/window-state.mjs';
 
 const hero=(id,extra={})=>({id,role:'mid',mode:'rift',runeId:'old',...extra});
 const state=()=>({preferences:{buildSource:{region:'global',tier:'emerald_plus'},play:{tempo:'any'}},draft:{soloRole:'mid',slots:[{role:'mid',champion:'Ahri',party:true},{role:'support',champion:null,party:false}]},preparations:[hero('Ahri'),hero('Annie')],favorites:[{id:'old',title:'Old',type:'build'}],excluded:['Zed'],ownedPageId:1});
+
+test('normalized key order is the same draft but changed members and plan duties remain changes',()=>{
+ const local={slots:[{role:'mid',champion:'Ahri',party:true}],style:'balanced',scope:'party',soloRole:'',creativePlan:{id:'plan',steps:['保留控制'],members:[{champion:'Ahri',role:'mid'}]}};
+ const accepted={slots:[{party:true,champion:'Ahri',role:'mid'}],creativePlan:{members:[{role:'mid',champion:'Ahri'}],steps:['保留控制'],id:'plan'},style:'balanced',scope:'party',soloRole:''};
+ assert.notEqual(JSON.stringify(local),JSON.stringify(accepted));assert(equalWindowState(local,accepted));
+ for(const changed of [(()=>{const x=structuredClone(accepted);x.slots[0].champion='Annie';return x;})(),(()=>{const x=structuredClone(accepted);x.creativePlan.steps=['先交控制'];return x;})()])assert(!equalWindowState(local,changed));
+});
 
 test('idle window accepts the complete confirmed snapshot without mutating it',()=>{
  const base=state(),accepted=state();accepted.preferences.play.tempo='growth';accepted.ownedPageId=8;
