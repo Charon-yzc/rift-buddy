@@ -533,7 +533,9 @@ async function run(){
  await until(()=>js('document.querySelector(".companion-ready")?.firstChild?.textContent==="符文已应用"'),'Completed setup still asks to apply runes');
  assert.match(await js('document.querySelector("[data-action=my-runes]").textContent'),/重新应用/);
  await sync();assert.equal(writes.length,beforePrepareWrites+1,'Confirming or polling the hero reapplied runes');
- await capture('one-click-confirmed-status');gameId='1509';await sync();assert.match(await js('document.querySelector(".companion-ready").textContent'),/待应用/,'New game retained a previous rune confirmation');preparationAction=null;
+ await capture('one-click-confirmed-status');gameId='1509';await sync();
+ await until(async()=>{const current=await js('window.buddy.bootstrap().then(b=>({gameId:b.client?.game?.gameId,draftGameId:b.state.draft.clientGameId,championId:b.client?.session?.myTeam?.find(p=>p.cellId===b.client.session.localPlayerCellId)?.championId,target:document.querySelector("[data-action=my-runes]")?.dataset.id,ready:document.querySelector(".companion-ready")?.firstChild?.textContent}))');return current.gameId==='1509'&&current.draftGameId==='1509'&&current.championId===hero(picked).key&&current.target===picked&&current.ready==='符文待应用';},'New game did not clear the same champion rune confirmation after synchronization');
+ assert.match(await js('document.querySelector(".companion-ready").textContent'),/待应用/,'New game retained a previous rune confirmation');assert.equal(writes.length,beforePrepareWrites+1,'Starting a new game reapplied runes');preparationAction=null;
  // Retain the final manual choice in this isolated profile for restart validation.
  picked='Lux';assigned='MIDDLE';await sync();await change('#solo-role','support');await sync();await click('[data-action=guide-current]');
  await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.selection?.role==="support")'),'Final support guide missing');
