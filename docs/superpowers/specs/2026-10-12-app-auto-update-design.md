@@ -109,9 +109,10 @@ ready → [删除安装包] → idle
 
  guards（沿用 `guard()` 主窗口来源校验）：
 
-- `app-update-check(silent=false)`：串行化（检查中重复调用直接返回当前状态，不叠加请求）。
-- `app-update-download` / `app-update-cancel` / `app-update-install` / `app-update-dismiss(tag)`。
-- 事件 `app-update-progress(snapshot)`：`{phase, received?, total?, percent?, release?, error?}`。
+- `app-update-check(silent=false)`：串行化（检查中重复调用直接返回当前状态，不叠加请求）。先看本地已下载记录（`pending()` 且版本更新 → 直接 `ready`，支持重启续装），再走网络。
+- `app-update-download` / `app-update-cancel` / `app-update-install` / `app-update-delete`。
+- 忽略版本（`dismissedAppVersion`）为渲染层本地偏好，经既有 save-state 流程持久化，**无独立 IPC**（实施时相对初版的简化：少一次主进程往返，语义不变）。
+- 事件 `app-update-progress(snapshot)`：`{phase, received?, total?, percent?, release?, error?, record?}`。
   `total` 缺失（无 content-length）时 `percent` 为 null，界面只显示已下载字节数。
 
 启动时：`cleanup()` 残留；若偏好允许且超 24 小时，延迟静默 `check`，
