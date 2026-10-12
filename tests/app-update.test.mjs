@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseReleaseFeed,compareVersions,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile} from '../src/core/app-update.mjs';
+import {parseReleaseFeed,compareVersions,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile,releasePageUrl,isReleaseNotesUrl} from '../src/core/app-update.mjs';
 import crypto from 'node:crypto';
 import {EventEmitter} from 'node:events';
 import {createAppUpdateService} from '../services/app-update.mjs';
@@ -52,6 +52,7 @@ test('download streams to disk with progress and verifies the checksum',async()=
  const record=await s.download({version:'9.9.9',tag:'v9.9.9'},{onProgress:p=>progress.push(p)});
  assert.equal(record.sha256,BIN_SHA);assert.equal(record.bytes,BIN.length);
  assert.ok(progress.length&&progress.at(-1).received===BIN.length);
+ assert.ok(progress.some(p=>p.stage==='verifying'));assert.ok(progress[0].stage==='downloading');
  assert.equal(JSON.parse(await fs.readFile(path.join(dir,'app-update.json'),'utf8')).sha256,BIN_SHA);
  assert.deepEqual(await s.pending(),record);
  const again=await s.download({version:'9.9.9',tag:'v9.9.9'},{});
@@ -69,7 +70,35 @@ test('oversize responses and missing checksum assets abort',async()=>{
  const big={'github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe':{status:200,headers:{'content-length':String(600*1024*1024)},body:'x'}};
  await assert.rejects(dlService(big,{tempDir:dir}).download({version:'9.9.9',tag:'v9.9.9'},{}),/大小限制/);
  const nocsum={'github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe':{status:200,headers:{'content-length':'10'},body:'0123456789'},'github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt':{status:404,body:''}};
- await assert.rejects(dlService(nocsum,{tempDir:dir}).download({version:'9.9.9',tag:'v9.9.9'},{}),/HTTP 404/);
+ await assert.rejects(dlService(nocsum,{tempDir:dir}).download({version:'9.9.9',tag:'v9.9.9'},{}),/安装包缺失/);
+ assert.deepEqual((await fs.readdir(dir)).filter(n=>n.endsWith('.exe')||n.endsWith('.part')),[]);
+ const nosetup={'github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe':{status:404,body:''}};
+ await assert.rejects(dlService(nosetup,{tempDir:dir}).download({version:'9.9.9',tag:'v9.9.9'},{}),/安装包缺失/);
+});
+test('reuse re-hashes and recovers from a same-size swapped binary',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
+ const record=await s.download({version:'9.9.9',tag:'v9.9.9'},{});
+ await fs.writeFile(record.file,crypto.randomBytes(BIN.length));
+ const fresh=await s.download({version:'9.9.9',tag:'v9.9.9'},{});
+ assert.equal(fresh.sha256,BIN_SHA);
+ assert.equal(crypto.createHash('sha256').update(await fs.readFile(fresh.file)).digest('hex'),BIN_SHA);
+});
+test('startup sweep removes orphan parts and stale records but keeps valid pendings',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ await fs.writeFile(path.join(dir,'rift-buddy-update-1.exe.part'),'orphan');
+ await fs.writeFile(path.join(dir,'keep.txt'),'keep');
+ const stale=createAppUpdateService({currentVersion:'9.9.9',tempDir:dir,storeFile:path.join(dir,'app-update.json'),request:fakeRequest({}),...iso});
+ await fs.writeFile(path.join(dir,'app-update.json'),JSON.stringify({schema:1,version:'0.1.0',tag:'v0.1.0',file:path.join(dir,'old.exe'),sha256:'0'.repeat(64),bytes:1,downloadedAt:new Date().toISOString()}));
+ await fs.writeFile(path.join(dir,'old.exe'),'x');
+ const swept=await stale.sweep();
+ assert.deepEqual(swept.parts,['rift-buddy-update-1.exe.part']);assert.equal(swept.stale,'0.1.0');
+ assert.deepEqual(await fs.readdir(dir),['keep.txt']);
+ const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
+ await s.download({version:'9.9.9',tag:'v9.9.9'},{});
+ const kept=await s.sweep();
+ assert.deepEqual(kept,{parts:[],stale:null});
+ assert.ok(await s.pending());
 });
 test('an aborted download leaves no record',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
@@ -135,4 +164,15 @@ test('checksum parsing is strict about hash and filename',()=>{
  assert.throws(()=>parseChecksumFile(`${hash}  Other-Setup.exe\n`,'RiftBuddy-0.42.0-Setup.exe'),/缺少/);
  assert.throws(()=>parseChecksumFile('not-a-hash  RiftBuddy-0.42.0-Setup.exe\n','RiftBuddy-0.42.0-Setup.exe'),/缺少/);
  assert.throws(()=>parseChecksumFile('x'.repeat(70000),'f'),/格式不正确/);
+});
+test('release page urls and notes-link scoping',()=>{
+ assert.equal(releasePageUrl('v9.9.9'),'https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9');
+ assert.throws(()=>releasePageUrl('nightly'),/更新地址格式不正确/);
+ assert.equal(isReleaseNotesUrl('https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9'),true);
+ assert.equal(isReleaseNotesUrl('https://github.com:443/Legender134/rift-buddy/releases/tag/v1.0.0'),true,'explicit default port is the same endpoint');
+ for(const bad of ['https://github.com/Legender134/rift-buddy/blob/main/README.md','https://github.com/other/repo/releases/tag/v1.0.0','https://github.com/Legender134/rift-buddy/releases','http://github.com/Legender134/rift-buddy/releases/tag/v1.0.0','https://user:pass@github.com/Legender134/rift-buddy/releases/tag/v1.0.0','https://github.com:8443/Legender134/rift-buddy/releases/tag/v1.0.0','javascript:alert(1)','not a url'])assert.equal(isReleaseNotesUrl(bad),false,bad);
+});
+test('an empty feed reports current without a release',async()=>{
+ const s=service({request:fakeRequest({[FEED_KEY]:{status:200,body:'<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'}})});
+ assert.deepEqual(await s.check(),{status:'current',release:null});
 });

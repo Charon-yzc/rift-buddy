@@ -31,3 +31,15 @@ export function parseChecksumFile(text,fileName){
  for(const line of text.split('\n')){const m=line.trim().match(/^([0-9a-f]{64})\s{1,2}(\S+)$/);if(m&&m[2]===fileName)return m[1];}
  throw Error(`校验文件缺少${fileName}，无法确认安装包完整性`);
 }
+export function releasePageUrl(tag){
+ if(!TAG_PATTERN.test(tag))throw Error('更新地址格式不正确');
+ return `https://github.com/Legender134/rift-buddy/releases/tag/${tag}`;
+}
+// 发布说明链接白名单（与 catalog.mjs safeSourceURL 同等严格，外加本仓库 release 路径限定）。
+export function isReleaseNotesUrl(value){
+ try{
+  const u=new URL(value);
+  return u.protocol==='https:'&&!u.username&&!u.password&&u.host==='github.com'&&String(value).length<=1000
+   &&u.pathname.startsWith('/Legender134/rift-buddy/releases/tag/');
+ }catch{return false;}
+}

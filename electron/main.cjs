@@ -102,8 +102,9 @@ async function boot(){
  const refreshBuild=createBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const liveService=await import('../services/live-client.mjs');
  const {createAppUpdateService}=await import('../services/app-update.mjs');
- const {compareVersions:compareAppVersion}=await import('../src/core/app-update.mjs');
- const appUpdater=createAppUpdateService({currentVersion:app.getVersion(),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'});
+ const {compareVersions:compareAppVersion,releasePageUrl,isReleaseNotesUrl}=await import('../src/core/app-update.mjs');
+ const appUpdater=createAppUpdateService({currentVersion:app.getVersion(),tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||path.join(app.getPath('temp'),'rift-buddy-update'),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'});
+ appUpdater.sweep().catch(()=>{});
  let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null;
  const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;win?.webContents.send('app-update-progress',snapshot);};
  const {changePresentation}=await import('../src/core/presentation.mjs');
@@ -286,17 +287,18 @@ async function boot(){
  });
  guard('app-update-check',async(silent=false)=>{
   if(appUpdateFlight)return appUpdateStatus;
+  const prev=appUpdateStatus;
   appUpdateFlight=(async()=>{
    publishAppUpdate({phase:'checking'});
    try{
     const kept=await appUpdater.pending();
-    if(kept&&compareAppVersion(kept.version,app.getVersion())>0){publishAppUpdate({phase:'ready',record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256}});}
+    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await appUpdater.verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256}});}
     else{
      const result=await appUpdater.check();
      if(result.status==='available'&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
      else publishAppUpdate({phase:result.status,release:result.release||null});
     }
-   }catch(error){publishAppUpdate({phase:'error',error:error.message});if(!silent)throw error;}
+   }catch(error){if(silent){publishAppUpdate(prev);}else{publishAppUpdate({phase:'error',error:error.message});throw error;}}
    finally{appUpdateFlight=null;}
    return appUpdateStatus;
   })();
@@ -309,16 +311,16 @@ async function boot(){
   appUpdateAbort=new AbortController();
   try{
    publishAppUpdate({phase:'downloading',release,received:0,total:null});
-   const record=await appUpdater.download(release,{signal:AbortSignal.any([appUpdateAbort.signal,AbortSignal.timeout(600000)]),onProgress:p=>publishAppUpdate({phase:'downloading',release,received:p.received,total:p.total})});
+   const record=await appUpdater.download(release,{signal:AbortSignal.any([appUpdateAbort.signal,AbortSignal.timeout(600000)]),onProgress:p=>publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total})});
    publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256}});
    return appUpdateStatus;
-  }finally{appUpdateAbort=null;}
+  }catch(error){publishAppUpdate({phase:'error',release,error:error.message});throw error;}
+  finally{appUpdateAbort=null;}
  });
  guard('app-update-cancel',()=>{appUpdateAbort?.abort();return true;});
  guard('app-update-install',async()=>{
-  const record=await appUpdater.install();
-  if(record.dryRun)return record;
-  quitting=true;app.quit();return record;
+  try{const record=await appUpdater.install();if(record.dryRun)return record;quitting=true;app.quit();return record;}
+  catch(error){publishAppUpdate({phase:'idle'});throw error;}
  });
  guard('app-update-delete',async()=>{await appUpdater.cleanup();publishAppUpdate({phase:'idle'});return true;});
  guard('apply-runes',async(page,context)=>{
@@ -353,7 +355,7 @@ async function boot(){
   const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
   if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');
-  if(parsed.hostname==='github.com'&&!parsed.pathname.startsWith('/Legender134/rift-buddy/releases/tag/'))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
+  if(parsed.hostname==='github.com'&&!isReleaseNotesUrl(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
  });
  guard('export-preparation',async value=>{
   const {preparationFileText}=await import('../src/core/preparation-file.mjs'),text=preparationFileText(value);

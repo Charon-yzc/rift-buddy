@@ -679,19 +679,19 @@ async function applyPreparedRunes(page,ticket){
  return confirmed;
 }
 async function checkAppUpdate(silent=false){
- if(appUpdate.phase==='checking'||appUpdate.phase==='downloading')return;
+ if(['checking','downloading','verifying'].includes(appUpdate.phase))return;
  appUpdate={phase:'checking',release:null,received:0,total:null,error:''};if(!silent)render();
  const cleanError=message=>String(message||'请稍后重试').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');
  try{
   const snapshot=await api.checkAppUpdate(silent);
-  saved.preferences.lastAppUpdateCheck=new Date().toISOString();await persist();
+  if(['available','current','ready'].includes(snapshot.phase)){saved.preferences.lastAppUpdateCheck=new Date().toISOString();await persist();}
   appUpdate={phase:snapshot.phase,release:snapshot.release||null,received:0,total:null,error:snapshot.error||'',...(snapshot.record?{record:snapshot.record}:{}),...(snapshot.dismissed?{dismissed:true}:{})};
   if(!silent){if(snapshot.phase==='available')toast(`发现新版 v${snapshot.release.version}，可下载安装`);else if(snapshot.phase==='ready')toast('新版安装包已就绪，可退出并安装');else if(snapshot.phase==='current')toast('软件已是最新版本');else toast('软件更新检查未完成：'+cleanError(snapshot.error),true);}
  }catch(err){appUpdate={phase:'error',release:null,received:0,total:null,error:cleanError(err.message)};if(!silent)toast('软件更新检查未完成：'+appUpdate.error,true);}
  finally{if(route==='settings'||!silent)render();}
 }
-async function downloadAppUpdate(){try{appUpdate.phase='downloading';render();await api.downloadAppUpdate();}catch(err){toast(String(err.message||'下载未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,''),true);}}
-async function installAppUpdate(){try{const r=await api.installAppUpdate();if(r?.dryRun)toast('已记录安装演练，未真实拉起安装程序');}catch(err){toast(String(err.message||'安装未启动').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,''),true);}}
+async function downloadAppUpdate(){const release=appUpdate.release;try{appUpdate.phase='downloading';render();await api.downloadAppUpdate();}catch(err){appUpdate={phase:'error',release,received:0,total:null,error:String(err.message||'下载未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'')};render();toast(appUpdate.error,true);}}
+async function installAppUpdate(){try{const r=await api.installAppUpdate();if(r?.dryRun)toast('已记录安装演练，未真实拉起安装程序');}catch(err){appUpdate={phase:'idle',release:null,received:0,total:null,error:''};if(route==='settings')render();toast(String(err.message||'安装未启动').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,''),true);}}
 async function updateData(silent=false){
  if(updating)return;updating=true;updateMessage='正在检查官方版本';if(!silent)render();
  saved.preferences.lastCheck=new Date().toISOString();persist();
