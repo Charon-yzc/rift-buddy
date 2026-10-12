@@ -86,6 +86,22 @@ test('backup imports restore preferences while retaining this machine\'s rune ow
  assert.equal(result.ownedPageId,123);assert.equal(result.preferences.installPath,current.preferences.installPath);
  assert.equal(result.preferences.autoCheck,false);assert.equal(result.draft.style,'wild');assert.deepEqual(result.excluded,['Ashe']);
 });
+test('app update preferences default on, validate strictly and merge explicitly',()=>{
+ const v=validateState(defaultState()).preferences;
+ assert.equal(v.appUpdateCheck,true);assert.equal(v.lastAppUpdateCheck,undefined);assert.equal(v.dismissedAppVersion,undefined);
+ assert.equal(validateState({...defaultState(),preferences:{appUpdateCheck:false}}).preferences.appUpdateCheck,false);
+ assert.equal(validateState({...defaultState(),preferences:{lastAppUpdateCheck:'not-a-date'}}).preferences.lastAppUpdateCheck,undefined);
+ assert.equal(validateState({...defaultState(),preferences:{lastAppUpdateCheck:'2026-10-12T00:00:00.000Z'}}).preferences.lastAppUpdateCheck,'2026-10-12T00:00:00.000Z');
+ assert.equal(validateState({...defaultState(),preferences:{dismissedAppVersion:'v9.9.9'}}).preferences.dismissedAppVersion,'v9.9.9');
+ assert.equal(validateState({...defaultState(),preferences:{dismissedAppVersion:'nightly'}}).preferences.dismissedAppVersion,undefined);
+ const current=defaultState(),backup={...defaultState(),preferences:{appUpdateCheck:false,lastAppUpdateCheck:'2026-10-12T00:00:00.000Z',dismissedAppVersion:'v9.9.9'}};
+ const merged=mergeState(current,backup,[]);
+ assert.equal(merged.preferences.appUpdateCheck,false);
+ assert.equal(merged.preferences.lastAppUpdateCheck,undefined);
+ assert.equal(merged.preferences.dismissedAppVersion,undefined);
+ const kept=mergeState(current,defaultState(),[]);
+ assert.equal(kept.preferences.appUpdateCheck,true);
+});
 test('LCU parsing and request scope reject malformed parameters before network access',()=>{
  assert.deepEqual(parseLockfile('LeagueClient:1:12345:test-token:https'),{port:12345,password:'test-token'});
  for(const bad of ['','LeagueClient:1:99999:token:https','Other:1:1:token:https','LeagueClient:1:123:token:http'])assert.equal(parseLockfile(bad),null);
