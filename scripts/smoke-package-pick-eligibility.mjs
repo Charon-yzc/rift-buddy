@@ -10,7 +10,7 @@ const phases=['owned','restart','empty','banned','enemy','mirror','position','po
 for(const phase of phases){
  const profile=path.join(root,phase==='restart'?'owned':phase==='position-restart'?'position':phase);await fs.mkdir(profile,{recursive:true});
  if(!phase.endsWith('restart')){
-  const state=defaultState();Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(profile,'client-fixture'),pool:['Ahri','Lux','Vi','JarvanIV'],poolMode:'only'});
+  const state=defaultState();Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(profile,'client-fixture'),pool:['Ahri','Lux','Vi','JarvanIV'],poolMode:'only'});
   state.draft={slots:createSlots().map(s=>({...s,party:phase.startsWith('library')||['jungle','mid'].includes(s.role),champion:phase==='library'?(s.role==='mid'?'Lux':s.role==='bottom'?'Ashe':null):s.role==='mid'&&['banned','enemy','mirror','locked'].includes(phase)?phase==='locked'?'Lux':'Ahri':null,locked:phase==='library'?['mid','bottom'].includes(s.role):s.role==='mid'&&['banned','enemy','mirror','locked'].includes(phase)})),scope:['position-solo','library-solo'].includes(phase)?'solo':'party',style:'fun'};
   const slots=createSlots().map(s=>({...s,party:['jungle','mid'].includes(s.role),champion:s.role==='mid'?'Ahri':s.role==='jungle'?'Vi':null,locked:['jungle','mid'].includes(s.role)}));
   state.favorites=[{id:'old-pair',type:'team',title:'旧蔚阿狸计划',scope:'party',style:'fun',slots,configurations:[]}];

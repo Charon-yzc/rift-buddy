@@ -114,8 +114,8 @@ async function boot(){
  const appUpdateBase={currentVersion:app.getVersion(),tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||path.join(app.getPath('temp'),'rift-buddy-update'),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'};
  const updater=()=>createAppUpdateService({...appUpdateBase,mirrorBase:state.preferences.updateMirror});
  const appUpdater=updater();
- appUpdater.sweep().catch(()=>{});
- let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null;
+ await appUpdater.sweep().catch(()=>{});
+ let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null,appUpdateInstallFlight=null;
  const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;win?.webContents.send('app-update-progress',snapshot);};
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));win?.webContents.send('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
@@ -301,7 +301,7 @@ async function boot(){
   }finally{updating=false;}
  });
  guard('app-update-check',async(silent=false)=>{
-  if(appUpdateFlight)return appUpdateStatus;
+  if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)return appUpdateStatus;
   const prev=appUpdateStatus;
   appUpdateFlight=(async()=>{
    publishAppUpdate({phase:'checking'});
@@ -320,7 +320,7 @@ async function boot(){
   return appUpdateFlight;
  });
  guard('app-update-download',async()=>{
-  if(appUpdateAbort)throw Error('安装包正在下载，请等待本次完成');
+  if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)throw Error('软件更新正在处理，请等待本次完成');
   const release=appUpdateStatus.release;
   if(appUpdateStatus.phase!=='available'||!release)throw Error('没有可下载的新版本，请先检查更新');
   appUpdateAbort=new AbortController();
@@ -335,10 +335,28 @@ async function boot(){
  });
  guard('app-update-cancel',()=>{appUpdateAbort?.abort();return true;});
  guard('app-update-install',async()=>{
-  try{const record=await updater().install();if(record.dryRun)return record;quitting=true;app.quit();return record;}
-  catch(error){publishAppUpdate({phase:'idle'});throw error;}
+  if(appUpdateInstallFlight)return appUpdateInstallFlight;
+  if(appUpdateFlight||appUpdateAbort||appUpdateStatus.phase!=='ready')throw Error('请等待安装包下载并校验完成');
+  const prev=appUpdateStatus;
+  appUpdateInstallFlight=Promise.resolve().then(async()=>{
+   publishAppUpdate({...prev,phase:'installing',error:''});
+   try{
+    const record=await updater().install();
+    if(record.dryRun){publishAppUpdate(prev);return record;}
+    quitting=true;app.quit();return record;
+   }catch(error){
+    const kept=await updater().pending();
+    publishAppUpdate(kept?{...prev,error:error.message}:{phase:'error',error:error.message});
+    throw error;
+   }
+  }).finally(()=>{appUpdateInstallFlight=null;});
+  return appUpdateInstallFlight;
  });
- guard('app-update-delete',async()=>{await updater().cleanup();publishAppUpdate({phase:'idle'});return true;});
+ guard('app-update-delete',async()=>{
+  if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)throw Error('软件更新正在处理，请等待本次完成');
+  appUpdateFlight=Promise.resolve().then(async()=>{await updater().cleanup();publishAppUpdate({phase:'idle'});return true;}).finally(()=>{appUpdateFlight=null;});
+  return appUpdateFlight;
+ });
  guard('apply-runes',async(page,context)=>{
   if(applyingRunes)throw new Error('符文正在应用，请稍后');applyingRunes=true;
    try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);const result=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});await saveCurrentState(current=>({...current,ownedPageId:result.pageId}));return result;}

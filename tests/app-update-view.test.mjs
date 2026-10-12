@@ -7,6 +7,15 @@ test('panel escapes untrusted text and shows the current version',()=>{
  assert.ok(html.includes('软件更新'));assert.ok(!html.includes('<script>'));assert.ok(html.includes('&lt;script&gt;'));assert.ok(html.includes('&lt;b&gt;boom&lt;/b&gt;'));
  assert.ok(html.includes('data-action="app-update-check"'));
 });
+test('installation is busy and failed launch retains an escaped retry message',()=>{
+ const installing=appUpdatePanel({...base,update:{phase:'installing'}});
+ assert.match(installing,/data-action="app-update-install"[^>]*disabled/);
+ assert.ok(!installing.includes('data-action="app-update-delete"'));
+ assert.ok(!installing.includes('data-action="app-update-check"'));
+ const retry=appUpdatePanel({...base,update:{phase:'ready',error:'EACCES <blocked>',record:{version:'99.0.0'}}});
+ assert.ok(retry.includes('可重试'));assert.ok(retry.includes('&lt;blocked&gt;'));
+ assert.match(retry,/data-action="app-update-install"/);
+});
 test('each phase exposes exactly its own actions',()=>{
  const available=appUpdatePanel({...base,update:{phase:'available',release:{version:'9.9.9',tag:'v9.9.9',url:'https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9',publishedAt:'2026-10-12T00:00:00Z'}}});
  assert.ok(available.includes('data-action="app-update-download"'));assert.ok(available.includes('data-action="app-update-dismiss"'));assert.ok(available.includes('data-url="https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9"'));assert.ok(!available.includes('app-update-install'));

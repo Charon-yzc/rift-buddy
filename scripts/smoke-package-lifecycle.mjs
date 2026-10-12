@@ -7,7 +7,7 @@ import {defaultState,saveState} from '../services/storage.mjs';
 const release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
 const root=await fs.mkdtemp(path.resolve('.local/lifecycle-'));
 const log=path.join(root,'startup.log'),screenshot=path.join(root,'window.png');
-const state=defaultState();state.preferences.autoSync=false;state.preferences.autoCheck=false;
+const state=defaultState();state.preferences.autoSync=false;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;
 await saveState(root,state);
 const env={...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_DIAGNOSTICS:log,RIFT_BUDDY_SCREENSHOT:screenshot};
 const children=[];

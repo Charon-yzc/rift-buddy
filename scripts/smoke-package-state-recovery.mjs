@@ -12,7 +12,7 @@ const oldFavorite={id:'old-party',title:'旧开黑组合',type:'team',slots:oldS
 for(const phase of ['recovery','restart','tempo','blocked']){
  const profile=path.join(root,phase==='restart'?'recovery':phase);await fs.mkdir(profile,{recursive:true});
  if(phase!=='restart'){
-  const state=defaultState();Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(profile,'client-fixture'),pool:['Ahri','Vi'],poolMode:'only',play:{tempo:'early'}});
+  const state=defaultState();Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(profile,'client-fixture'),pool:['Ahri','Vi'],poolMode:'only',play:{tempo:'early'}});
   state.favorites=[oldFavorite,{id:'good-build',type:'build',title:'保留的艾希配置',champion:'Ashe',role:'bottom',mode:'rift',runeId:'retained-rune-choice'}];
   state.preparations=[{id:'Lux',role:'mid',mode:'rift',runeId:'manual-lux-choice'}];
   state.draft={slots:createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),champion:s.role==='mid'?'Lux':null,locked:s.role==='mid'})),scope:'party',style:'fun'};

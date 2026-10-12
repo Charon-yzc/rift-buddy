@@ -6,7 +6,7 @@ import {once} from 'node:events';
 import {defaultState,validateState,saveState} from '../services/storage.mjs';
 import {selectGuide} from '../src/core/guide.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/user-flow-smoke-')),state=validateState(defaultState());
-state.preferences.autoSync=false;state.preferences.autoCheck=false;state.preferences.autoLive=false;
+state.preferences.autoSync=false;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;state.preferences.autoLive=false;
 state.preferences.rolePools.bottom={mode:'only',heroes:['Ashe','Jhin']};
 state.preferences.rolePools.support={mode:'only',heroes:['Nami','Lux']};
 state.guide=selectGuide(null,{id:'Seraphine',role:'bottom',mode:'rift',loadoutId:'sera-team',runeId:'curated-guardian',comboId:'double-song',conditions:['heal']});

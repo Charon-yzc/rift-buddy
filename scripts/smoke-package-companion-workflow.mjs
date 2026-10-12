@@ -4,7 +4,7 @@ import {defaultState,saveState} from '../services/storage.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/companion-workflow-smoke-')),state=defaultState();
 // This workflow checks view-only option edits and explicit rune application.
 // Keep click-to-prepare disabled so preview clicks cannot write in this fixture.
-state.preferences={...state.preferences,autoSync:false,autoCheck:false,autoLive:false,clientCompanion:true,guideAutoShow:false,clickPrepare:false};
+state.preferences={...state.preferences,autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:true,guideAutoShow:false,clickPrepare:false};
 state.preferences.installPath=path.join(root,'client-fixture');await fs.mkdir(state.preferences.installPath);await fs.writeFile(path.join(state.preferences.installPath,'lockfile'),'LeagueClient:1:23456:isolated-test-only:https');await saveState(root,state);
 const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-companion-workflow.cjs')],{cwd:path.resolve('.'),env:{...process.env,RIFT_BUDDY_USER_DATA:root},windowsHide:true,stdio:'inherit'});
 const timer=setTimeout(()=>child.kill(),180000);

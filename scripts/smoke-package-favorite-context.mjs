@@ -26,7 +26,7 @@ const phaseNames=['standard','restart','manual','blind','offline','failed','solo
 for(const phase of phaseNames){
  const profile=path.join(root,phase==='restart'?'standard':phase);await fs.mkdir(profile,{recursive:true});
  if(phase!=='restart'){
-  const state=defaultState();Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(profile,'client-fixture')});
+  const state=defaultState();Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(profile,'client-fixture')});
   state.favorites=[structuredClone(favorite)];state.preparations=[{id:'Ahri',role:'mid',mode:'rift',runeId:'previous-ahri-choice'},{id:'Lux',role:'support',mode:'rift',runeId:'unrelated-lux-choice'}];
   state.draft={slots:createSlots(),scope:'context',style:'balanced'};
   if(phase==='manual')Object.assign(state.draft.slots[2],{champion:'Darius',locked:true,clientCellId:2,manualPosition:true});

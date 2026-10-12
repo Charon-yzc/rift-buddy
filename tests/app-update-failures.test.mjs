@@ -1,0 +1,100 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import http from 'node:http';
+import crypto from 'node:crypto';
+import vm from 'node:vm';
+import {EventEmitter,once} from 'node:events';
+import {createAppUpdateService} from '../services/app-update.mjs';
+
+const bin=Buffer.alloc(32768,42),sha=crypto.createHash('sha256').update(bin).digest('hex');
+const release={version:'99.0.0',tag:'v99.0.0'};
+const checksum=`${sha}  RiftBuddy-99.0.0-Setup.exe\n`;
+async function fixture(t,respond){
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-failure-')),hits=[];
+ const server=http.createServer((req,res)=>{hits.push(req.url);respond(req,res);});
+ server.listen(0,'127.0.0.1');await once(server,'listening');
+ const request=(url,options,callback)=>http.request({...options,hostname:'127.0.0.1',port:server.address().port,path:url.pathname},callback);
+ const options={currentVersion:'0.45.0',tempDir:dir,storeFile:path.join(dir,'pending.json'),request,insecureHosts:['github.com','mirror.smoke']};
+ t.after(async()=>{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await fs.rm(dir,{recursive:true,force:true});});
+ return {dir,hits,options,service:createAppUpdateService(options)};
+}
+const normalResponse=(req,res)=>res.end(req.url.endsWith('.txt')?checksum:bin);
+test('install waits for spawn, reports asynchronous failure and keeps a retryable package',async t=>{
+ const {options,service}=await fixture(t,normalResponse);await service.download(release);
+ let child,unrefs=0,attempts=0;
+ const s=createAppUpdateService({...options,spawnImpl:()=>{attempts++;child=new EventEmitter();child.unref=()=>unrefs++;return child;}});
+ const first=s.install();await new Promise(resolve=>setTimeout(resolve,25));
+ assert.equal(attempts,1);assert.equal(unrefs,0);
+ const failure=assert.rejects(first,/EACCES/);child.emit('error',Error('EACCES blocked'));await failure;
+ assert.ok(await s.pending());
+ let settled=false;const second=s.install().then(result=>{settled=true;return result;});
+ await new Promise(resolve=>setTimeout(resolve,25));assert.equal(settled,false);
+ child.emit('spawn');assert.equal((await second).launched,true);assert.equal(unrefs,1);assert.equal(attempts,2);
+});
+test('a failed streamed disk write stops the response immediately without mirror retry',async t=>{
+ let responseClosed=false,finished=false;
+ const {options,hits,dir}=await fixture(t,(req,res)=>{
+  res.on('close',()=>{responseClosed=true;});res.write(bin);
+  const timer=setTimeout(()=>{finished=true;res.end(bin);},2000);res.on('close',()=>clearTimeout(timer));
+ });
+ const open=fs.open.bind(fs);const mock=t.mock.method(fs,'open',async(file,...args)=>{
+  const handle=await open(file,...args);
+  if(String(file).endsWith('.part'))handle.write=async()=>{throw Object.assign(Error('ENOSPC disk full'),{code:'ENOSPC'});};
+  return handle;
+ });
+ const s=createAppUpdateService({...options,mirrorBase:'https://mirror.smoke'});
+ await assert.rejects(s.download(release),/ENOSPC/);mock.mock.restore();
+ await new Promise(resolve=>setTimeout(resolve,25));
+ assert.equal(finished,false);assert.equal(responseClosed,true);assert.equal(hits.length,1);
+ assert.deepEqual(await fs.readdir(dir),[]);assert.equal(await s.pending(),null);
+});
+test('cancellation waits for the active write before closing and deleting the partial file',async t=>{
+ const {options,dir}=await fixture(t,(_req,res)=>{res.write(bin);});
+ const controller=new AbortController(),open=fs.open.bind(fs);
+ let releaseWrite,startedResolve,writing=false,closedDuringWrite=false;
+ const started=new Promise(resolve=>{startedResolve=resolve;});
+ const mock=t.mock.method(fs,'open',async(file,...args)=>{
+  const handle=await open(file,...args);if(!String(file).endsWith('.part'))return handle;
+  const write=handle.write.bind(handle),close=handle.close.bind(handle);
+  handle.write=async chunk=>{writing=true;startedResolve();await new Promise(resolve=>{releaseWrite=resolve;});try{return await write(chunk);}finally{writing=false;}};
+  handle.close=async()=>{closedDuringWrite||=writing;return close();};return handle;
+ });
+ const s=createAppUpdateService(options),download=s.download(release,{signal:controller.signal});
+ await started;const rejected=assert.rejects(download,/abort|取消/i);controller.abort();
+ await new Promise(resolve=>setTimeout(resolve,25));assert.equal(writing,true);assert.equal(closedDuringWrite,false);
+ releaseWrite();await rejected;mock.mock.restore();
+ assert.equal(closedDuringWrite,false);assert.deepEqual(await fs.readdir(dir),[]);
+});
+test('pending-record persistence failure rolls back the executable without downloading twice',async t=>{
+ const {options,dir,hits}=await fixture(t,normalResponse);
+ const blocked=path.join(dir,'blocked-record');await fs.mkdir(blocked);
+ const s=createAppUpdateService({...options,storeFile:blocked,mirrorBase:'https://mirror.smoke'});
+ await assert.rejects(s.download(release),/EPERM|EISDIR|EACCES/);
+ assert.equal(hits.filter(url=>url.endsWith('.exe')).length,1);
+ assert.equal(await s.pending(),null);
+ assert.deepEqual((await fs.readdir(dir)).filter(n=>/\.exe|\.part$/.test(n)),[]);
+});
+test('main serializes installation, blocks conflicting operations and restores ready after failure',async()=>{
+ const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
+ const handlers=new Map(),snapshots=[];let finish,launches=0,quits=0;
+ const ready={phase:'ready',release,record:{version:release.version}};
+ const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences:{}},app:{getVersion:()=> '0.45.0',quit:()=>quits++},guard:(name,fn)=>handlers.set(name,fn),compareAppVersion:()=>1,releasePageUrl:()=>'',updater:()=>({pending:async()=>({version:release.version}),install:()=>{launches++;return new Promise((resolve,reject)=>{finish={resolve,reject};});}})};
+ vm.createContext(context);
+ const init=source.slice(source.indexOf(" let appUpdateStatus="),source.indexOf(" const {changePresentation}"));
+ const guards=source.slice(source.indexOf(" guard('app-update-check'"),source.indexOf(" guard('apply-runes'"));
+ vm.runInContext(init+guards,context);context.ready=ready;
+ vm.runInContext('appUpdateStatus=ready;win={webContents:{send:(_name,s)=>snapshots.push(s)}};',Object.assign(context,{snapshots}));
+ const first=handlers.get('app-update-install')(),second=handlers.get('app-update-install')();
+ const failures=[assert.rejects(first,/EACCES/),assert.rejects(second,/EACCES/)];
+ await Promise.resolve();assert.equal(launches,1);
+ assert.equal((await handlers.get('app-update-check')()).phase,'installing');
+ await assert.rejects(handlers.get('app-update-delete')(),/正在处理/);
+ await assert.rejects(handlers.get('app-update-download')(),/正在处理/);
+ finish.reject(Error('EACCES blocked'));await Promise.all(failures);
+ assert.equal(quits,0);assert.equal(snapshots.at(-1).phase,'ready');assert.match(snapshots.at(-1).error,/EACCES/);
+ const retry=handlers.get('app-update-install')();await Promise.resolve();finish.resolve({launched:true});await retry;
+ assert.equal(launches,2);assert.equal(quits,1);
+});

@@ -6,7 +6,7 @@ import {once} from 'node:events';
 import {defaultState,saveState} from '../services/storage.mjs';
 import {selectGuide} from '../src/core/guide.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/rune-replacement-smoke-')),state=defaultState();
-state.preferences={...state.preferences,autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false};
+state.preferences={...state.preferences,autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false};
 state.guide={...selectGuide(null,{id:'Volibear',role:'top',mode:'rift'}),ball:true,collapsed:true};
 state.preferences.installPath=path.join(root,'client-fixture');
 await fs.mkdir(state.preferences.installPath);await fs.writeFile(path.join(state.preferences.installPath,'lockfile'),'LeagueClient:1:23456:isolated-test-only:https');await saveState(root,state);

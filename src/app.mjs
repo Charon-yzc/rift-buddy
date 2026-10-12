@@ -701,7 +701,7 @@ async function applyPreparedRunes(page,ticket){
  return confirmed;
 }
 async function checkAppUpdate(silent=false){
- if(['checking','downloading','verifying'].includes(appUpdate.phase))return;
+ if(['checking','downloading','verifying','installing'].includes(appUpdate.phase))return;
  appUpdate={phase:'checking',release:null,received:0,total:null,error:'',via:null};if(!silent)render();
  const cleanError=message=>String(message||'请稍后重试').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');
  try{
@@ -713,7 +713,15 @@ async function checkAppUpdate(silent=false){
  finally{if(route==='settings'||!silent)render();}
 }
 async function downloadAppUpdate(){const release=appUpdate.release;try{appUpdate.phase='downloading';render();await api.downloadAppUpdate();}catch(err){const prev=appUpdate;appUpdate={phase:'error',release,received:0,total:null,error:String(err.message||'下载未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,''),via:prev.via||null,fallbackNotice:prev.fallbackNotice||false};render();toast(appUpdate.error,true);}}
-async function installAppUpdate(){try{const r=await api.installAppUpdate();if(r?.dryRun)toast('已记录安装演练，未真实拉起安装程序');}catch(err){appUpdate={phase:'idle',release:null,received:0,total:null,error:'',via:null};if(route==='settings')render();toast(String(err.message||'安装未启动').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,''),true);}}
+async function installAppUpdate(){
+ if(appUpdate.phase!=='ready')return;
+ const prev=appUpdate;appUpdate={...prev,phase:'installing',error:''};render();
+ try{const r=await api.installAppUpdate();if(r?.dryRun){appUpdate=prev;render();toast('已记录安装演练，未真实拉起安装程序');}}
+ catch(err){
+  const error=String(err.message||'安装未启动').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');
+  appUpdate={...(appUpdate.phase==='installing'?prev:appUpdate),error};if(route==='settings')render();toast(error,true);
+ }
+}
 async function updateData(silent=false){
  if(updating)return;updating=true;updateMessage='正在检查官方版本';if(!silent)render();
  saved.preferences.lastCheck=new Date().toISOString();persist();

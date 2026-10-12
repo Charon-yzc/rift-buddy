@@ -26,19 +26,39 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,ex
     if(!UPDATE_HOSTS.includes(u.hostname)&&!insecureHosts.includes(u.hostname)&&!(extraHosts||[]).includes(u.hostname))return reject(Error(`更新跳转不在白名单内：${u.hostname}；不跟随`));
     const records=insecureHosts.includes(u.hostname)?null:await resolvePublic(u.hostname,{lookup,timeout});
     const result=await new Promise((res,rej)=>{
-     let bytes=0,failed=false;const parts=[];let chain=Promise.resolve();
-     let req;
+     let bytes=0,failed=null,settled=false,ended=false;const parts=[];let chain=Promise.resolve();
+     let req,response,timer;
+     const fail=error=>{
+      if(failed||settled)return;failed=error;
+      clearTimeout(timer);
+      try{req?.destroy(error);}catch{}
+      // Let any in-flight file write finish before downloadVia closes its handle.
+      // Schedule this after the rejection handler itself has settled the chain.
+      queueMicrotask(()=>{const finish=()=>{if(!settled){settled=true;rej(error);}};chain.then(finish,finish);});
+     };
      try{req=request(u,{method:'GET',headers:{'User-Agent':'rift-buddy-update','Accept':'*/*'},signal,lookup:records?(_h,o,cb)=>o?.all?cb(null,records):cb(null,records[0].address,records[0].family):undefined},r=>{
-      if(r.statusCode>=300&&r.statusCode<400&&r.headers.location){r.resume();res({redirect:r.headers.location});return;}
-      if(r.statusCode!==200){r.resume();rej(Error(`更新服务未返回数据（HTTP ${r.statusCode}）；不跟随跳转`));return;}
-      try{onHeaders?.(r.headers||{});}catch(e){req.destroy(e);return;}
-      r.on('data',c=>{bytes+=c.length;if(bytes>byteLimit){failed=true;req.destroy(Error('更新数据超过大小限制'));return;}if(onData)chain=chain.then(()=>onData(c));else parts.push(c);});
-      r.on('error',rej);r.on('end',()=>{if(failed)return;chain.then(()=>res({statusCode:r.statusCode,headers:r.headers||{},body:onData?null:Buffer.concat(parts),bytes})).then(null,rej);});
+      response=r;
+      r.on('error',fail);r.on('aborted',()=>fail(Error('更新下载中断，请重试')));
+      if(r.statusCode>=300&&r.statusCode<400&&r.headers.location){settled=true;r.resume();res({redirect:r.headers.location});return;}
+      if(r.statusCode!==200){fail(Error(`更新服务未返回数据（HTTP ${r.statusCode}）；不跟随跳转`));return;}
+      try{onHeaders?.(r.headers||{});}catch(e){fail(e);return;}
+      r.on('data',c=>{
+       if(failed||settled)return;
+       bytes+=c.length;if(bytes>byteLimit){fail(Error('更新数据超过大小限制'));return;}
+       if(onData){
+        r.pause?.();
+        chain=chain.then(()=>failed?undefined:onData(c)).then(()=>{if(!failed)r.resume?.();}).catch(fail);
+       }else parts.push(c);
+      });
+      r.on('end',()=>{ended=true;chain.then(()=>{if(!failed&&!settled){settled=true;clearTimeout(timer);res({statusCode:r.statusCode,headers:r.headers||{},body:onData?null:Buffer.concat(parts),bytes});}}).catch(fail);});
+      r.on('close',()=>{if(!ended&&!settled)fail(Error('更新下载中断，请重试'));});
      });
-     }catch(e){rej(e);return;}
-     if(!req||typeof req.on!=='function'||typeof req.end!=='function'){rej(Error('更新请求创建失败'));return;}
-     const timer=setTimeout(()=>req.destroy(Error('更新下载超时，继续使用当前版本')),timeout);if(timer.unref)timer.unref();
-     req.on('error',rej);req.on('close',()=>clearTimeout(timer));req.end();
+     }catch(e){fail(e);return;}
+     if(!req||typeof req.on!=='function'||typeof req.end!=='function'){fail(Error('更新请求创建失败'));return;}
+     timer=setTimeout(()=>fail(Error('更新下载超时，继续使用当前版本')),timeout);if(timer.unref)timer.unref();
+     req.on('error',fail);req.on('close',()=>clearTimeout(timer));
+     if(failed){try{req.destroy(failed);response?.destroy?.();}catch{}return;}
+     req.end();
     });
     if(result.redirect){target=new URL(result.redirect,u).href;continue;}
     return resolve(result);
@@ -81,16 +101,17 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   const via=mirror?'mirror':'direct';
   const setup=setupFileName(release.version),sum=checksumFileName(release.version);
   const target=path.join(tempDir,`rift-buddy-update-${Date.now()}-${crypto.randomUUID()}.exe.part`);
-  await fs.mkdir(tempDir,{recursive:true});
-  const handle=await fs.open(target,'w');
+  const localFailure=e=>{e.localFailure=true;return e;};
+  let handle;
+  try{await fs.mkdir(tempDir,{recursive:true});handle=await fs.open(target,'w');}catch(e){throw localFailure(e);}
   const hash=crypto.createHash('sha256');let received=0,total=null;
   const progress=(stage,note)=>{if(onProgress)onProgress({received,total,stage,via,note});};
   try{
    await fetchOnce(mirrorAssetUrl(mirror,releaseDownloadUrl(release.tag,setup)),{request,timeout:FILE_TIMEOUT,byteLimit:SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts,
     onHeaders:h=>{const t=Number(h?.['content-length']);total=Number.isFinite(t)?t:null;if(total!==null&&total>SETUP_BYTES_LIMIT)throw Error('安装包超过大小限制，已停止下载');progress('downloading');},
-    onData:async chunk=>{if(signal?.aborted)throw Error('下载已取消');hash.update(chunk);await handle.write(chunk);received+=chunk.length;progress('downloading');}});
+     onData:async chunk=>{if(signal?.aborted)throw Error('下载已取消');hash.update(chunk);try{await handle.write(chunk);}catch(e){throw localFailure(e);}received+=chunk.length;progress('downloading');}});
+   try{await handle.close();}catch(e){throw localFailure(e);}
   }catch(e){await handle.close().catch(()=>{});await fs.unlink(target).catch(()=>{});throw e;}
-  await handle.close();
   if(signal?.aborted){await fs.unlink(target).catch(()=>{});throw Error('下载已取消');}
   progress('verifying');
   // 校验文件永远直连：否则镜像可同时伪造"坏包+配套哈希"，校验形同虚设。
@@ -102,9 +123,10 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   }catch(e){await fs.unlink(target).catch(()=>{});if(/HTTP 404/.test(e.message||'')){const m=Error('新版安装包缺失，请等待维护者补传发布资产后重试');m.checksumStage=true;throw m;}if(e.message!=='下载已取消')e.checksumStage=true;throw e;}
   const digest=hash.digest('hex');
   if(digest!==expected){await fs.unlink(target).catch(()=>{});throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
-  const final=target.replace(/\.part$/,'.exe');await fs.rename(target,final);
+  const final=target.replace(/\.part$/,'');
   const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,via,fallback,downloadedAt:new Date().toISOString()};
-  await atomicJSON(storeFile,record);return record;
+  try{await fs.rename(target,final);await atomicJSON(storeFile,record);return record;}
+  catch(e){await fs.unlink(final).catch(()=>{});await fs.unlink(target).catch(()=>{});throw localFailure(e);}
  }
  async function download(release,{signal,userSignal,onProgress}={}){
   if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||typeof release.tag!=='string')throw Error('新版信息格式不正确');
@@ -117,7 +139,7 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   for(const base of bases){
    try{return await downloadVia(release,{signal,onProgress,mirror:base,fallback:base===''&&mirror!==''});}
    catch(e){
-    if((userSignal||signal)?.aborted||e.checksumStage)throw e;
+    if((userSignal||signal)?.aborted||e.checksumStage||e.localFailure)throw e;
     attemptError=e;
     if(base&&onProgress)onProgress({received:0,total:null,stage:'downloading',via:'direct',note:'mirror-fallback'});
    }
@@ -131,7 +153,11 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   try{for await(const chunk of handle.createReadStream())hash.update(chunk);}finally{await handle.close();}
   if(hash.digest('hex')!==record.sha256){await cleanup();throw Error('安装包完整性复验不一致，已删除；请重新下载');}
   if(dryRun){const witness={file:record.file,sha256:record.sha256,bytes:record.bytes,at:new Date().toISOString()};await atomicJSON(storeFile+'.dry-run.json',witness);return {launched:false,dryRun:true,...witness};}
-  const child=spawnImpl(record.file,{detached:true,stdio:'ignore'});child.unref?.();return {launched:true,file:record.file};
+  return new Promise((resolve,reject)=>{
+   const child=spawnImpl(record.file,{detached:true,stdio:'ignore'});
+   child.once('error',reject);
+   child.once('spawn',()=>{child.unref?.();resolve({launched:true,file:record.file});});
+  });
  }
  return {check,download,pending,cleanup,install,verify,sweep};
 }

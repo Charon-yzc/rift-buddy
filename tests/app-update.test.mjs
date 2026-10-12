@@ -192,7 +192,7 @@ test('install re-hashes before launch and supports a dry run without spawning',a
  const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
  await assert.rejects(s.install(),/没有已下载的安装包/);
  await s.download({version:'9.9.9',tag:'v9.9.9'},{});
- const calls=[],s2=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir,spawnImpl:(file,opts)=>{calls.push([file,opts]);return{unref(){}}}});
+ const calls=[],s2=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir,spawnImpl:(file,opts)=>{calls.push([file,opts]);const child=new EventEmitter();child.unref=()=>{};queueMicrotask(()=>child.emit('spawn'));return child;}});
  const launched=await s2.install();
  assert.equal(launched.launched,true);assert.equal(calls.length,1);
  assert.equal(calls[0][0],(await s2.pending()).file);assert.deepEqual(calls[0][1],{detached:true,stdio:'ignore'});

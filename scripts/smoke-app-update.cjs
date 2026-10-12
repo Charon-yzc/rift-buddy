@@ -18,6 +18,17 @@ const MSETUP100_URL='https://mirror.smoke/https://github.com/Legender134/rift-bu
 async function run(){
  app.setPath('userData',root);
  const https=require('node:https'),dns=require('node:dns/promises'),{EventEmitter}=require('node:events');
+ const handoff=process.env.RIFT_BUDDY_SMOKE_UPDATE_HANDOFF==='1';let launches=0,quits=0;
+ if(handoff){
+  const cp=require('node:child_process'),spawn=cp.spawn;
+  cp.spawn=(file,...args)=>{
+   if(!String(file).startsWith(path.join(root,'update-tmp')+path.sep))return spawn(file,...args);
+   const child=new EventEmitter(),attempt=++launches;child.unref=()=>{};
+   setTimeout(()=>child.emit(attempt===1?'error':'spawn',attempt===1?Error('EACCES smoke blocked'):undefined),200);
+   return child;
+  };
+  require('node:module').syncBuiltinESMExports();app.quit=()=>{quits++;};
+ }
  dns.lookup=async()=>[{address:'8.8.8.8',family:4}];
  let mode='offline';
  https.request=(url,options,callback)=>{
@@ -56,6 +67,17 @@ async function run(){
  assert.equal(record.version,'99.0.0');
  assert.equal(crypto.createHash('sha256').update(await fs.readFile(record.file)).digest('hex'),BIN_SHA);
  await click('[data-action=app-update-install]');
+ if(handoff){
+  await until(()=>js('document.querySelector("[data-action=app-update-install]")?.disabled'),'Install button did not enter busy state');
+  await until(()=>js('document.querySelector("[role=alert]")?.textContent.includes("EACCES")'),'Spawn failure not surfaced');
+  assert.equal(launches,1);assert.equal(quits,0);assert.ok(await fs.stat(record.file));
+  assert.ok(await js('!document.querySelector("[data-action=app-update-install]").disabled'),'Retry missing');
+  await click('[data-action=app-update-install]');
+  await js('window.buddy.installAppUpdate().catch(()=>{})');
+  await until(()=>quits===1,'Confirmed spawn did not request quit');
+  assert.equal(launches,2);assert.equal(quits,1);
+  console.log(JSON.stringify({passed:true,handoff:true,asyncFailureRetry:true,concurrentInstall:true,launches,quits}));return;
+ }
  const witness=await until(async()=>fs.readFile(path.join(root,'app-update.json.dry-run.json'),'utf8').then(JSON.parse).catch(()=>null),'Dry-run witness missing');
  assert.equal(witness.sha256,BIN_SHA);assert.equal(witness.file,record.file);
  assert.ok(await js('document.body.textContent.length>0'),'App quit during dry run');

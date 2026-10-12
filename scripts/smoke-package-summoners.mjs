@@ -10,7 +10,7 @@ import {createSlots} from '../src/core/recommend.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/summoners-smoke-')),state=defaultState();
 const release=JSON.parse(await fs.readFile('release/latest.json'));
 if(createHash('sha256').update(await fs.readFile(path.join(release.directory,'resources/app.asar'))).digest('hex')!==release.archiveSha256)throw Error('Archive changed');
-Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(root,'client-fixture'),rolePools:{bottom:{heroes:['Aphelios'],mode:'only'},support:{heroes:['Thresh'],mode:'only'}}});
+Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(root,'client-fixture'),rolePools:{bottom:{heroes:['Aphelios'],mode:'only'},support:{heroes:['Thresh'],mode:'only'}}});
 state.draft={slots:createSlots(),scope:'bot',style:'balanced'};
 await saveState(root,state);
 for(const phase of ['prepare','restore']){

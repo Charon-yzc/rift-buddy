@@ -9,7 +9,7 @@ import {createSlots} from '../src/core/recommend.mjs';
 const source=process.argv.includes('--source'),root=await fs.mkdtemp(path.resolve('.local/opponent-source-smoke-')),state=defaultState();
 const release=source?{archiveSha256:null}:JSON.parse(await fs.readFile('release/latest.json'));
 if(!source&&createHash('sha256').update(await fs.readFile(path.join(release.directory,'resources/app.asar'))).digest('hex')!==release.archiveSha256)throw Error('Archive changed');
-Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(root,'client-fixture')});
+Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,installPath:path.join(root,'client-fixture')});
 const picks={mid:'Galio',bottom:'Nilah',support:'Rakan'};
 state.draft={slots:createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]})),scope:'party',style:'fun'};
 await fs.mkdir(state.preferences.installPath);await fs.writeFile(path.join(state.preferences.installPath,'lockfile'),'LeagueClient:1:23456:isolated-fixture-only:https');await saveState(root,state);

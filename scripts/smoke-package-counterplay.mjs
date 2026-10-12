@@ -11,7 +11,7 @@ const source=process.argv.includes('--source'),size=Number(process.argv.find(a=>
 if(![2,3,4,5].includes(size)||(ball||wallTrio||moon)&&size!==3||ballFive&&size!==5||[ball,wallTrio,moon,ballFive].filter(Boolean).length>1)throw Error('Choose two through five players and a matching fixture size.');
 const picks=ballFive?{top:'Ornn',jungle:'JarvanIV',mid:'Orianna',bottom:'MissFortune',support:'Leona'}:moon?{jungle:'Diana',mid:'Yasuo',support:'Rell'}:wallTrio?{top:'Camille',jungle:'JarvanIV',mid:'Galio'}:ball?{jungle:'Vi',mid:'Orianna',support:'Nautilus'}:Object.fromEntries(Object.entries({jungle:'Gragas',mid:'Yasuo',support:'Rakan',top:'Ornn',bottom:'Jinx'}).slice(0,size));
 const root=await fs.mkdtemp(path.resolve('.local/party-counterplay-smoke-')),state=defaultState();
-Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,rolePools:{}});
+Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:false,autoLive:false,clientCompanion:false,guideAutoShow:false,rolePools:{}});
 state.draft={slots:createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role],...(picks[s.role]?{manualPosition:true}:{}),...(s.role==='jungle'?{clientCellId:1}:{})})),style:'fun',scope:'party'};
 await saveState(root,state);
 const release=source?{archiveSha256:null}:JSON.parse(await fs.readFile('release/latest.json'));
