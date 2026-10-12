@@ -13688,23 +13688,41 @@
         "保护核心"
       ],
       "why": "千珏与塔里克分别提供保命窗口，亚索利用队友争取的时间输出。",
-      "plan": "先确认保命技能冷却；千珏在有效区域使用 R；塔里克按敌方下一轮爆发提前开大；亚索不要离开保护范围。",
-      "risk": "两种保护不是无限续命，千珏 R 也保护敌人；塔里克大招有延迟，须练习时机。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "plan": "先确认千珏 R 与塔里克 R 均可用，并约好退出方向；千珏领域覆盖实际承伤者；塔里克按领域结束与自己的大招延迟提前施放，以无敌实际生效为准；亚索只在保护仍覆盖的击飞落点接 R。",
+      "risk": "千珏 R 同时保护圈内敌人和中立单位，10% 生命阈值后不能继续治疗；塔里克 R 有延迟且需覆盖承伤者。塔里克 E 是眩晕，千珏 E 是减速，这三人不能凭两者给亚索提供击飞。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot Taric 技能说明",
-          "url": "https://www.leagueoflegends.com/en-us/champions/taric/",
-          "kind": "官方技能依据",
-          "checkedAt": "2026-10-05"
+          "name": "Riot · Kindred 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Kindred.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Yasuo 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Yasuo.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Taric 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Taric.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "members": [
         {
           "role": "jungle",
           "champion": "Kindred",
-          "job": "先报 R 区域与就绪，领域覆盖实际承伤者，再与宝石约好延迟无敌的衔接；普攻/Q 输出但不追出保护区。领域同样保护敌人，宝石未生效时不当作无缝续命。",
+          "job": "先报 R 就绪、领域位置和结束窗口，Q/普攻不追出保护区；E 减速不提供亚索所需击飞。R 也保护敌人和中立单位，10% 阈值后不能用治疗硬续；塔里克无敌未实际生效就准备退出。",
           "loadoutId": "default"
         },
         {
@@ -13716,23 +13734,23 @@
         {
           "role": "support",
           "champion": "Taric",
-          "job": "提前 W 联结约定承伤者，R 按千珏领域预计结束提前引导，以实际无敌生效为准；E 限反扑，Q/普攻循环量力保护。联结断开或 R 未就绪时不承诺保护链。",
+          "job": "提前 W 联结本轮承伤者，保持有效距离；按千珏领域结束和 R 延迟预开，以实际无敌生效为准。E 留反扑但眩晕不能让亚索接 R；Q/被动普攻循环要有蓝量与安全接触，链断就撤。",
           "loadoutId": "tank-peel"
         }
       ],
       "steps": [
-        "先确认保命技能冷却",
-        "千珏在有效区域使用 R",
-        "塔里克按敌方下一轮爆发提前开大",
-        "亚索不要离开保护范围。"
+        "先报两种 R 的就绪、塔里克联结对象与共同退出方向。",
+        "千珏 R 覆盖实际承伤者，圈内敌人同样受保护；到 10% 生命阈值后不能继续治疗。",
+        "塔里克按领域结束提前安排有延迟的 R，确认无敌实际生效；未衔接成功就撤。",
+        "亚索只有 Q3 实际击飞且 R 可用才接大，落点超出保护就放弃；塔里克 E 眩晕不能触发亚索 R。"
       ],
-      "window": "千珏和宝石两种大招分别可用；先约好无敌延迟和千珏领域结束时机，不把保命窗全重叠交掉。",
-      "early": "千珏先保野区清野节奏，亚索先保中路兵线经验，塔里克先保辅助状态与视野；输出核心先发育，保护技能留给反扑，不为凑三人集合放弃兵线。",
+      "window": "两种 R 均实际可用，塔里克 W 联结仍有效、亚索能留在保护覆盖内；提前报领域结束与无敌生效，接不上就沿约定方向撤。",
+      "early": "千珏先保野区节奏；本版 W 对野怪系数提高、E 减速延长且不能选小型野怪，不据此预设入侵优势。亚索先保中线经验与 Q 层数，塔里克保下路状态和蓝量，六级前没有双 R 保护链。",
       "economy": "千珏以野区经济为主，支援后别长期蹭线；亚索保留中路补刀和经验；塔里克走辅助经济，保任务装与视野。这套按正式位置分工，换位先在客户端确认。",
       "reviewBaseline": {
-        "champion:Kindred": "1b00e44809ef6b49",
-        "champion:Yasuo": "bc4e1091fdb3cfb7",
-        "champion:Taric": "c80b2adac0419e29",
+        "champion:Kindred": "b089b055eca4104f",
+        "champion:Yasuo": "d36ebea001e3d1cb",
+        "champion:Taric": "d7034e2662bef2b0",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3050": "c3e25c9df9075147",
@@ -13759,23 +13777,41 @@
         "团战连招"
       ],
       "why": "皎月与芮尔把目标留在一处，发条提供范围后续。",
-      "plan": "先确认魔偶附着和支援距离；芮尔逼位或先手；皎月聚拢，发条按球的真实位置接大；保留一轮控制防反扑。",
-      "risk": "主要伤害偏法术；不要三人同时进场后无人保护另外两位。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "plan": "发条 E 的球实际到达并仍附着皎月后再报进场；芮尔 W/Q 实际控制同一区域，皎月 W 承伤、Q 月光后 E 接近再 R 拉拽；发条按真实球位接 R/W，留一轮控制和共同退路。",
+      "risk": "伤害偏法术；发条球要实际到位，超距返回会断开接力。芮尔 R 拖曳不保证敌人无法行动，皎月无月光 E 不会刷新，不能靠护盾增强承诺顶住集火。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot Orianna 技能说明",
-          "url": "https://www.leagueoflegends.com/en-us/champions/orianna/",
-          "kind": "官方技能依据",
-          "checkedAt": "2026-10-05"
+          "name": "Riot · Diana 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Diana.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Orianna 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Orianna.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Rell 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rell.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "members": [
         {
           "role": "jungle",
           "champion": "Diana",
-          "job": "先确认球仍附着自己、芮尔能控制同一战区，Q 月光命中才 E，R 实际拉拽后 W/普攻输出；发条球返回或队友未到时取消深入，不为补聚拢追人。",
+          "job": "先确认球已到达并仍附着自己、芮尔能控同一区域，W 在承伤前开；Q 月光命中才按 E 刷新接近，R 实际拉到英雄后让发条跟进。无月光 E 会消耗进退手段，球返回或队友未到就停止深入。",
           "loadoutId": "trio-diana"
         },
         {
@@ -13787,23 +13823,23 @@
         {
           "role": "support",
           "champion": "Rell",
-          "job": "先报 W/Q 与 R 就绪，逼位或实际先手后让皎月接入，后续控制错开；留返回己方输出的路线。两位法师无法跟进或目标离开球区时转接应，不独自续追。",
+          "job": "按当前骑乘形态确认 W，Q 是眩晕，W 下马实际命中才击飞；与皎月/发条控制错开。R 拉拽后持续拖曳不等于敌人不能施法，E 给实际跟进友军加速；输出接不到就回身接应。",
           "loadoutId": "tank-engage"
         }
       ],
       "steps": [
-        "先确认魔偶附着和支援距离",
-        "芮尔逼位或先手",
-        "皎月聚拢，发条按球的真实位置接大",
-        "保留一轮控制防反扑。"
+        "发条先 E 送球，确认球实际到达皎月且未超距返回；三人先报支援距离。",
+        "芮尔 W 实际击飞或 Q 实际眩晕后，皎月 W 承接近身伤害，Q 月光命中才按 E 刷新安排进场。",
+        "皎月 R 实际拉到英雄后，发条在球的真实位置接 R/W；芮尔 R 拖曳不能当持续眩晕封住敌方施法。",
+        "球返回、控制落空或队友接不到时停止深入，芮尔回身接应，不同时追向三个方向。"
       ],
-      "window": "黛安娜负责切入与聚拢，奥莉安娜负责带球控制，芮尔负责后续限制与前排；三人关键技能齐、输出跟得上且没有同时瞄准不同目标时。",
-      "early": "黛安娜先保野区清野节奏，奥莉安娜先保中路兵线经验，芮尔先保辅助状态与视野；这套以完整技能的接力为主，前期先使用小技能换血，别等同于已经有大招连招。",
+      "window": "球实际附着进场者且仍在有效范围，芮尔控制与皎月/发条 R 可用，两位法师能覆盖同一落点；球返回或输出未到就转接应。",
+      "early": "皎月所选开局为 Q/W/E，三级前未学 E 不安排突进；先保安全营地。发条先处理中线，芮尔保下路任务与视野；六级前用已学的小技能接力，W 护盾加强不等于可以提前越塔。",
       "economy": "黛安娜以野区经济为主，支援后别长期蹭线；奥莉安娜保留中路补刀和经验；芮尔走辅助经济，保任务装与视野。这套按正式位置分工，换位先在客户端确认。",
       "reviewBaseline": {
-        "champion:Diana": "b000c49c492c9ebb",
-        "champion:Orianna": "d35601ede743b428",
-        "champion:Rell": "41676b37935fa0dc",
+        "champion:Diana": "0c1ee1b395e630d3",
+        "champion:Orianna": "a3ef9b02b9b57356",
+        "champion:Rell": "bec49be1ddcf29c0",
         "item:3115": "627135c117eaf20a",
         "item:3157": "4e1ddce33472ee0f",
         "item:3089": "a8a9b060b253391c",
@@ -13823,16 +13859,14 @@
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea",
         "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
         "rune:8214": "6d3b2bf192d500da",
         "rune:8236": "a1bb7cfc15c3d089",
         "rune:8463": "3296414353df0e65",
         "rune:8453": "f9a0180e7f2f0432",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47",
         "item:3190": "89cdf2838748dfc7",
         "item:3050": "c3e25c9df9075147",
         "item:3109": "97c25fae90d4a8a4",
@@ -14063,35 +14097,41 @@
         "团战连招"
       ],
       "why": "阿木木留住目标，凯南从侧翼续控，女枪输出期间有人挡住突进。",
-      "plan": "先扫侧翼视野；阿木木确认输出距离后先手；凯南从不同角度切入，女枪沿控制区域铺弹幕。",
-      "risk": "不要三人挤在一个入口；女枪大招怕打断，凯南进场也需要退出计划。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "plan": "先确认凯南侧翼与女枪安全引导角度；阿木木 Q 实际眩晕后，凯南从另一角度 E/R 补印记，实际三层才算眩晕；阿木木 R 错开续控，女枪 R 覆盖同一区域，打断者靠近即移位。",
+      "risk": "凯南 R 放出不等于目标已经三层眩晕，火箭腰带只有 10 技能急速，不能按旧冷却反复进出。女枪 R 需要安全引导；两名前排深入后仍要留人回身照看绕后。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 凯南技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Kennen.json",
+          "name": "Riot · Kennen 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Kennen.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 阿木木技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Amumu.json",
+          "name": "Riot · Amumu 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Amumu.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 厄运小姐技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/MissFortune.json",
+          "name": "Riot · MissFortune 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/MissFortune.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "members": [
         {
           "role": "top",
           "champion": "Kennen",
-          "job": "先确认安全侧翼与 R 可用，阿木木实际控制后从另一角度 E/R 入场、W 按实际印记衔接；女枪打断者未处理或队友跟不上时保退出，不从同一入口全员挤入。",
+          "job": "先确认安全侧翼、能量和 R 可用，阿木木实际控制后从另一角度 E/R 入场，W 只接已有印记；同一目标实际三层才眩晕。E 结束才获得攻速，腰带仅 10 急速；女枪被绕或退路被封就退出。",
           "loadoutId": "default"
         },
         {
@@ -14108,17 +14148,18 @@
         }
       ],
       "steps": [
-        "先扫侧翼视野",
-        "阿木木确认输出距离后先手",
-        "凯南从不同角度切入，女枪沿控制区域铺弹幕。"
+        "扫凯南侧翼与女枪身后视野，先报敌方可见打断者和撤离方向。",
+        "女枪已在可输出距离后，阿木木 Q 实际命中首个目标才进；Q 被单位挡住就取消。",
+        "凯南从另一角度 E/R 入场、W 接已有印记，实际三层才眩晕；E 结束后才利用本版提高的攻速普攻。",
+        "阿木木 R 与已有眩晕错开；女枪从安全侧 R 覆盖控制区，打断者靠近就取消引导退开。"
       ],
-      "window": "凯南负责侧翼范围控制，阿木木负责正面限制，厄运小姐负责远处弹幕；三人关键技能齐、输出跟得上且没有同时瞄准不同目标时。",
+      "window": "阿木木 Q/R 与凯南 R 实际可用，凯南有安全侧翼、女枪有安全引导角度且能覆盖同一战区；打断者无法处理就只打短轮次。",
       "early": "凯南先保上路兵线经验，阿木木先保野区清野节奏，厄运小姐先保下路兵线经验；这套以完整技能的接力为主，前期先使用小技能换血，别等同于已经有大招连招。",
       "economy": "凯南保留上路补刀和经验；阿木木以野区经济为主，支援后别长期蹭线；厄运小姐保留下路补刀和经验。这套按正式位置分工，换位先在客户端确认。",
       "reviewBaseline": {
-        "champion:Kennen": "8e676d097f1e7cdf",
-        "champion:Amumu": "a4e2b0ff5abf7e6b",
-        "champion:MissFortune": "ddbf8a2569548361"
+        "champion:Kennen": "acea9254a0f94a5c",
+        "champion:Amumu": "958a576cfa8191dd",
+        "champion:MissFortune": "10b496d2ce7c344d"
       }
     },
     {
@@ -14225,28 +14266,34 @@
         "控制消耗"
       ],
       "why": "寒冰辅助和茂凯创造接控窗口，韦鲁斯用穿甲技能从后方输出。",
-      "plan": "寒冰确认路线后远程先手；茂凯接控制或封侧翼；韦鲁斯接大与技能消耗，技能空档一起拉开。",
-      "risk": "寒冰辅助经济有限；穿甲韦鲁斯打多前排持续输出不足，别硬接长时间正面战。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "plan": "寒冰先确认队友能覆盖箭的落点，R 实际眩晕首名英雄才开始接力；茂凯 W 到达禁锢、Q 留反扑，韦鲁斯 R 禁锢与箭错开后 E/WQ 消耗；敌人仍能反击或技能空档就一起拉开。",
+      "risk": "寒冰辅助经济有限，W/普攻减速不能触发帝国指令的定身条件。韦鲁斯 R 禁锢不阻止原地攻击或施法；穿甲路线不保证长战打穿前排，不追过远的箭。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 茂凯技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Maokai.json",
+          "name": "Riot · Maokai 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Maokai.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 韦鲁斯技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Varus.json",
+          "name": "Riot · Varus 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Varus.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 艾希技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Ashe.json",
+          "name": "Riot · Ashe 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ashe.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "members": [
@@ -14259,7 +14306,7 @@
         {
           "role": "bottom",
           "champion": "Varus",
-          "job": "艾希 R 实际命中再接自己的 R 或 E/Q 消耗，与茂凯控制错开；按所选穿甲路线打一轮后拉开。没有安全持续普攻条件就不硬打前排长战，控制落空时退。",
+          "job": "艾希 R 实际命中才接自己的 R 禁锢，并与茂凯控制错开；按安全距离用 E 或 W 强化 Q 消耗，枯萎引爆要有真实层数。Q 蓄力会减速自己且穿过单位伤害衰减，R 扩散不保证命中其他人；被切或空技能就退。",
           "loadoutId": "spell-lethality"
         },
         {
@@ -14270,17 +14317,18 @@
         }
       ],
       "steps": [
-        "寒冰确认路线后远程先手",
-        "茂凯接控制或封侧翼",
-        "韦鲁斯接大与技能消耗，技能空档一起拉开。"
+        "寒冰 E 看计划路线并确认射手退路，队友能到箭落点才发 R。",
+        "R 实际眩晕首名英雄后茂凯 W 接近并禁锢，Q 方向不把目标推离射手技能区。",
+        "韦鲁斯 R 与已有控制错开，再 E 或 W 强化 Q；R 是禁锢，扩散要实际触及下一目标，不预设全队被控。",
+        "Q 蓄力会减速自己、穿过单位会衰减伤害；箭过远、打断威胁近身或这一轮落空时共同撤回。"
       ],
       "window": "茂凯负责前排与区域限制，韦鲁斯负责技能消耗与接控，艾希负责远程发起与信息；敌方退路被地形或控制限制、我方有撤退空间时。",
       "early": "茂凯先保野区清野节奏，韦鲁斯先保下路兵线经验，艾希先保辅助状态与视野；先用安全消耗和清线建立空间，空技能后后退。",
       "economy": "茂凯以野区经济为主，支援后别长期蹭线；韦鲁斯保留下路补刀和经验；艾希走辅助经济，保任务装与视野。这套按正式位置分工，换位先在客户端确认。",
       "reviewBaseline": {
-        "champion:Maokai": "4e10562e6c18312f",
-        "champion:Varus": "ae3624a9b39454a2",
-        "champion:Ashe": "7f33044ee104f59d",
+        "champion:Maokai": "e196429fdd9138f9",
+        "champion:Varus": "7a703d4303dfcfdd",
+        "champion:Ashe": "f363e1846cfe0370",
         "item:3068": "f23565139478f276",
         "item:2504": "ead2f4757e3e6c8c",
         "item:6665": "9693faf50145df4e",
@@ -14312,9 +14360,9 @@
         "rune:8126": "9e648d4b51a0c973",
         "rune:8140": "93302565a400fc06",
         "rune:8106": "bfb83fa22daf18de",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3004": "24796bd572e1c936",
         "item:3179": "0c7b834979696674",
+        "item:3004": "24796bd572e1c936",
+        "item:3190": "89cdf2838748dfc7",
         "item:3070": "e2dbf1b6d5da375b",
         "rune:9923": "89bc1d7f8c9bcddc",
         "rune:8143": "c3f9de836bc96957",
@@ -14668,14 +14716,16 @@
         "抓人节奏"
       ],
       "why": "艾希远距离留人，让阿狸更容易衔接魅惑，布隆守住反扑路线。",
-      "plan": "艾希 R 命中后阿狸 E 接控；布隆近身挂被动，艾希普攻补眩晕。",
-      "risk": "远距离先手容易超出队友支援范围，布隆无法凭空冲到目标身边。",
-      "early": "下路先用 W 换血和布隆被动威胁留住线，阿狸有线权后再靠下。",
+      "plan": "艾希 R 实际眩晕且阿狸可到场后，阿狸从无阻挡角度 E 接魅惑；布隆 Q/普攻挂第一层，艾希安全普攻补到四层才眩晕，布隆留 W/E/R 照看反扑。",
+      "risk": "阿狸 E 会被先碰到的敌方单位挡住；布隆必须先挂第一层，普通技能伤害不替代后续普攻层数。艾希成长攻击力下调不改变接控条件，也不代表这一轮能击杀。",
+      "early": "艾希先保下路补刀，布隆用已学 Q 挂印记威胁但不强求四层；阿狸所选 W/Q/E 开局到三级才有 E，先处理中线再靠下，六级前没有远程箭先手。",
       "window": "艾希六级且阿狸能到场，布隆靠近输出位时。",
       "economy": "艾希吃下路兵线，阿狸先处理中线再支援；布隆不与艾希抢补刀。",
       "steps": [
-        "艾希 R 命中后阿狸 E 接控",
-        "布隆近身挂被动，艾希普攻补眩晕。"
+        "先确认阿狸支援距离，艾希 R 实际命中首名英雄才报接力；周围减速不当作全员眩晕。",
+        "阿狸 E 路线不被小兵等单位阻挡再接魅惑，Q 去返/W 输出，R 留安全换角或退出。",
+        "布隆 Q/普攻先挂第一层，艾希在安全距离普攻接层，实际四层才眩晕；阿狸技能伤害不帮叠普攻层数。",
+        "箭过远、魅惑被挡或射手为补层数要冒进时停追，布隆回到输出侧挡来弹。"
       ],
       "members": [
         {
@@ -14697,32 +14747,38 @@
           "loadoutId": "tank-peel"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 阿狸技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Ahri.json",
+          "name": "Riot · Ahri 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ahri.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 艾希技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Ashe.json",
+          "name": "Riot · Ashe 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ashe.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 布隆技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Braum.json",
+          "name": "Riot · Braum 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Braum.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "reviewBaseline": {
-        "champion:Ahri": "8f6a93d0d1909974",
-        "champion:Ashe": "7f33044ee104f59d",
-        "champion:Braum": "4726b43beaea9728",
+        "champion:Ahri": "bde1d83c334a89af",
+        "champion:Ashe": "f363e1846cfe0370",
+        "champion:Braum": "ae3aa48403ffcbe5",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3050": "c3e25c9df9075147",
@@ -16036,14 +16092,16 @@
         "控制消耗"
       ],
       "why": "双箭先远程消耗，皇子限制走位，让韦鲁斯有更明确的技能目标。",
-      "plan": "艾希 R 或韦鲁斯 R 留人，皇子按需 R 限制撤退；输出从安全侧面跟进。",
-      "risk": "皇子的墙也会限制己方行动，不适合把两位无位移射手一起圈进危险处。",
+      "plan": "艾希 R 眩晕或韦鲁斯 R 禁锢实际命中后，皇子 E/Q 连线实际击飞才续控；R 只按需制造地形并留拆墙出口，两位射手从圈外安全侧跟技能，敌方脱身就结束这一轮。",
+      "risk": "皇子 R 是可再次施放拆除的地形，敌方仍可攻击、施法或用可用位移逃出；两名无位移射手不要为补伤害进圈。围墙挡住己方退出时立即拆除。",
       "early": "双人线先消耗不盲目压塔，艾希 E 辅助确认路线，皇子到场再决定强开。",
-      "window": "敌方已被消耗、位移交掉或入口被控制时。",
+      "window": "箭或锁链实际留住队友够得到的目标，皇子 EQ 可用且有退出路径；敌方被消耗不等于位移已交，需玩家实际确认。",
       "economy": "韦鲁斯补刀并走消耗路线，艾希辅助经济先功能与视野，皇子正常打野发育。",
       "steps": [
-        "艾希 R 或韦鲁斯 R 留人，皇子按需 R 限制撤退",
-        "输出从安全侧面跟进。"
+        "两名射手约好先手顺序，艾希 E 核对路线，箭或锁链实际命中才让皇子跟进。",
+        "皇子 E 旗实际存在、Q 连线命中才击飞；单独 Q 与 R 围墙都不能当作可靠眩晕。",
+        "R 仅在落点可支援且不困己方时使用，两名无位移射手留在圈外安全侧。",
+        "敌方位移出圈、远程控制落空或队友需要过墙撤离时停止追击，皇子再次施放 R 主动拆墙。"
       ],
       "members": [
         {
@@ -16065,32 +16123,38 @@
           "loadoutId": "ashe-utility"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 嘉文四世技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/JarvanIV.json",
+          "name": "Riot · JarvanIV 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/JarvanIV.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 韦鲁斯技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Varus.json",
+          "name": "Riot · Varus 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Varus.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 艾希技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Ashe.json",
+          "name": "Riot · Ashe 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ashe.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "reviewBaseline": {
-        "champion:JarvanIV": "3906c2327e3ea4cf",
-        "champion:Varus": "ae3624a9b39454a2",
-        "champion:Ashe": "7f33044ee104f59d",
+        "champion:JarvanIV": "c9d96bc727699c9b",
+        "champion:Varus": "7a703d4303dfcfdd",
+        "champion:Ashe": "f363e1846cfe0370",
         "item:6692": "bec6d540fde1d4ec",
         "item:3071": "8b44dc349847ea0e",
         "item:3053": "6f40bd5cd29bb7d2",
@@ -16124,9 +16188,9 @@
         "rune:8126": "9e648d4b51a0c973",
         "rune:8140": "93302565a400fc06",
         "rune:8106": "bfb83fa22daf18de",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3004": "24796bd572e1c936",
         "item:3179": "0c7b834979696674",
+        "item:3004": "24796bd572e1c936",
+        "item:3190": "89cdf2838748dfc7",
         "item:3070": "e2dbf1b6d5da375b",
         "rune:9923": "89bc1d7f8c9bcddc",
         "rune:8143": "c3f9de836bc96957",
@@ -16710,26 +16774,28 @@
         "团战连招"
       ],
       "why": "凯南从侧面制造范围控制，维克托在区域内持续输出，布隆守住反切。",
-      "plan": "布隆先守阵，凯南找侧翼入场；维克托铺重力场和范围伤害，布隆控制后续突进者。",
-      "risk": "三人不能同时离开输出侧，凯南没侧翼视野时硬冲容易被秒。",
+      "plan": "布隆守维克托输出侧，凯南只从已确认视野的侧翼进入；凯南实际三层印记眩晕后维克托 W 铺落点，目标停留满 1.25 秒才眩晕；布隆控制后续突进者，输出区被突破就先撤。",
+      "risk": "凯南进场和维克托刚放 W 都不等于立即眩晕；腰带仅 10 技能急速，未触发强化不预设额外效果。布隆若随凯南一起离开，维克托会失去反切保护。",
       "early": "凯南与维克托各保线上经验，布隆陪下路，先用视野为后续侧翼铺路。",
       "window": "凯南 R 可用、侧翼安全且维克托能覆盖入场区域时。",
       "economy": "凯南上路、维克托中路各发育；布隆辅助经济把防护和视野优先。",
       "steps": [
-        "布隆先守阵，凯南找侧翼入场",
-        "维克托铺重力场和范围伤害，布隆控制后续突进者。"
+        "布隆先留在维克托一侧，确认凯南侧翼、维克托能覆盖的距离和共同退出方向。",
+        "凯南 E/R 接近，W 补已有印记，同一目标实际三层才眩晕；E 结束后才获得攻速。",
+        "维克托 W 铺实际落点，目标留在场内满 1.25 秒才眩晕，E/Q 与可用 R 跟进；强化按当前碎片状态确认。",
+        "布隆 Q/普攻挂印记、E 朝来弹、W/R 留反切；凯南孤立或后排被绕就转守，不全员追进侧翼。"
       ],
       "members": [
         {
           "champion": "Kennen",
           "role": "top",
-          "job": "先看安全侧翼与维克托覆盖距离，R 已可用才 E/R 入场，W 按实际印记衔接；布隆仍守后排。没有视野、维克托未到或退出路线被封时不强切。",
+          "job": "先看安全侧翼、能量与维克托覆盖距离，R 可用才 E/R 入场，W 只接已有印记；实际三层才眩晕，E 结束才获攻速。腰带不保证有第二轮冷却；没有视野、维克托未到或退路被封时不强切。",
           "loadoutId": "default"
         },
         {
           "champion": "Viktor",
           "role": "mid",
-          "job": "W 重力场铺凯南实际进入的战区，E/Q 与已就绪 R 跟同一目标区；按当前强化状态自己核对，不假定 W 立即眩晕。侧翼被绕或凯南孤立时转守输出区。",
+          "job": "W 铺凯南实际控制区，目标在场内停留满 1.25 秒才眩晕；E/Q 与可用 R 从安全侧输出，Q 后强化普攻需实际接触。强化看当前碎片状态，不预设升级；凯南孤立或侧翼被绕就转守输出区。",
           "loadoutId": "default"
         },
         {
@@ -16739,32 +16805,38 @@
           "loadoutId": "tank-peel"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 凯南技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Kennen.json",
+          "name": "Riot · Kennen 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Kennen.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 维克托技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Viktor.json",
+          "name": "Riot · Viktor 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Viktor.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 布隆技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Braum.json",
+          "name": "Riot · Braum 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Braum.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "reviewBaseline": {
-        "champion:Kennen": "8e676d097f1e7cdf",
-        "champion:Viktor": "7fa122410067e4f8",
-        "champion:Braum": "4726b43beaea9728",
+        "champion:Kennen": "acea9254a0f94a5c",
+        "champion:Viktor": "c82f49fb2e5145f1",
+        "champion:Braum": "ae3aa48403ffcbe5",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
         "item:3050": "c3e25c9df9075147",
@@ -17083,8 +17155,8 @@
         "接力窗口"
       ],
       "why": "以生命保护、接力窗口形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "千珏大招覆盖双方；约好结束时机，塔里克的大招提前读条，再决定尼菈进退。",
-      "risk": "两个保护技能不能同时无脑交；千珏大招也可能保护敌人。",
+      "plan": "塔里克先 W 联结尼菈，千珏 R 覆盖实际承伤区并报结束；塔里克按延迟提前安排 R，尼菈确认保护实际生效再 Q/普攻接触，R 结束段才拉拢；接不上保护就留 E 目标撤回。",
+      "risk": "千珏 R 保护敌我且在 10% 阈值阻止治疗，塔里克 R 有延迟；尼菈 W 闪避普攻并减魔法伤害，不能免所有技能。尼菈 R 拉拢在结束段，三人保护失败时不能靠吸血硬撑。",
       "difficulty": "适中",
       "members": [
         {
@@ -17096,7 +17168,7 @@
         {
           "champion": "Nilah",
           "role": "bottom",
-          "job": "R 已可用才聚拢目标，Q/普攻保持接触；在千珏圈内确认位置，按圈结束与宝石无敌实际生效决定继续或退出。",
+          "job": "Q 命中单位后才有延长攻击距离，普攻保持安全接触，W 触碰友军才共享闪避且不能免所有技能；R 在 1 秒结束段才拉拢。按千珏圈结束和宝石无敌实际生效决定进退，E 留真实可达单位退出，不为吸血追出保护区。",
           "loadoutId": "nilah-sustain"
         },
         {
@@ -17107,44 +17179,51 @@
         }
       ],
       "steps": [
-        "千珏大招覆盖双方；约好结束时机",
-        "塔里克的大招提前读条",
-        "再决定尼菈进退。"
+        "先报千珏/塔里克 R 就绪、W 联结对象及尼菈可 E 返回的实际单位。",
+        "千珏 R 领域也保护敌人，10% 生命阈值后不能继续治疗，不把尼菈或宝石的回复当阈值下续命。",
+        "塔里克按领域结束提前施放有延迟的 R，尼菈在有效覆盖内 Q/普攻；W 接触友军才能共享闪避窗口。",
+        "尼菈 R 经过 1 秒才在结束段拉拢；保护未衔接、敌人脱离或退路消失就保留 E 撤出，不追出圈。"
       ],
-      "window": "三人关键技能可用、输出跟得上且兵线允许行动时；技能状态需自己沟通。",
-      "early": "各自优先保证正式位置的经济与经验；六级前先用基础技能接力，不把完整大招连招当成已经拥有。",
-      "economy": "打野保留野区节奏；中上保留各自兵线；下路射手补刀，辅助保留任务经济。换位先重新约定。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "window": "千珏 R、塔里克 R 与 W 联结实际可用，尼菈能留在保护覆盖内且有真实 E 目标退出；先沟通领域结束和无敌生效，缺一环就只打短轮次。",
+      "early": "千珏先保营地和印记风险，E 不能选小型野怪；尼菈与塔里克先保下路经验、补刀和蓝量。尼菈被动增益不要求千珏长期蹭线，六级前用 Q/W/E 短接触与接应。",
+      "economy": "千珏保野区经济，尼菈补下路兵线，塔里克留辅助任务和视野位；宝石蓝量不足时先回补，不为刷被动普攻抢尼菈补刀。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 千珏技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Kindred.json",
+          "name": "Riot · Kindred 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Kindred.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 尼菈技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nilah.json",
+          "name": "Riot · Nilah 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nilah.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 塔里克技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Taric.json",
+          "name": "Riot · Taric 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Taric.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "reviewBaseline": {
-        "champion:Kindred": "1b00e44809ef6b49",
-        "champion:Nilah": "040a6c8c12c965e3",
-        "champion:Taric": "c80b2adac0419e29",
+        "champion:Kindred": "b089b055eca4104f",
+        "champion:Nilah": "30e5ef1b4f79390e",
+        "champion:Taric": "d7034e2662bef2b0",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3006": "d8d9fde1f7908326",
         "item:3036": "fcf5de31162e9e9d",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3072": "5c29525fccb26a37",
         "item:3026": "9ac9f874ae405bd1",
         "rune:8010": "b8dd7b11cee84803",
         "rune:9111": "6667591beed15f1b",
@@ -17394,8 +17473,8 @@
         "近身爆发"
       ],
       "why": "以聚拢接力、近身爆发形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "洛先找角度，皎月聚拢，莎弥拉确认评级与打断技能后进场。",
-      "risk": "并非所有控制都能保护莎弥拉大招，连招失败时三人都难退出。",
+      "plan": "洛 W 实际击飞并留 E 返回队友，皎月 W 承伤、Q 月光后 E 接近再 R 拉拢；莎弥拉交替攻击/不同技能累积实际 S 评级，打断威胁处理后才 R；本人造成伤害后 3 秒内该英雄死亡才刷新 E，含有效助攻，尚未死亡就不预支。",
+      "risk": "聚拢不等于封住敌人所有打断；莎弥拉 W 不挡近身技能，E 不能跳友军。目标须在本人造成伤害后 3 秒内死亡才刷新 E，包含有效助攻但不能提前预支；洛返回队友走远或皎月无月光时不能保证退出。",
       "difficulty": "适中",
       "members": [
         {
@@ -17407,7 +17486,7 @@
         {
           "champion": "Samira",
           "role": "bottom",
-          "job": "交替普攻与不同技能积累实际评级，W 留敌方飞行弹体；S 评级且 R 可用、打断威胁受控才开大，不因聚拢就无视打断。",
+          "job": "普攻与不同技能交替积累实际评级，S 且 R 可用、关键打断处理后才开大；W 仅留飞行弹体。E 只能穿过敌方单位，本人造成伤害后 3 秒内该英雄死亡才刷新 E，含有效助攻；尚未死亡就不预支。洛魅惑不能凭空提供被动延长击飞，退路不足先收缩。",
           "loadoutId": "samira-reset"
         },
         {
@@ -17418,39 +17497,46 @@
         }
       ],
       "steps": [
-        "洛先找角度",
-        "皎月聚拢",
-        "莎弥拉确认评级与打断技能后进场。"
+        "洛先确认 W 可命中的角度和 E 可返回的友军，皎月与莎弥拉都在可跟进距离。",
+        "洛 W 实际击飞后皎月 Q 月光、E 接近，W 提前承伤，R 实际拉到英雄；洛 R 魅惑按真实触碰错开。",
+        "莎弥拉只有对已有击飞目标的被动攻击才延长击飞，魅惑不凭空变成击飞；普攻和不同技能交替累积实际评级。",
+        "到 S 评级、R 可用且关键打断处理后才开大；W 仅挡弹体，本人造成伤害后 3 秒内该英雄死亡才刷新 E，含有效助攻，尚未死亡就不预支；落空由洛 E 返回收缩。"
       ],
-      "window": "三人关键技能可用、输出跟得上且兵线允许行动时；技能状态需自己沟通。",
-      "early": "各自优先保证正式位置的经济与经验；六级前先用基础技能接力，不把完整大招连招当成已经拥有。",
-      "economy": "打野保留野区节奏；中上保留各自兵线；下路射手补刀，辅助保留任务经济。换位先重新约定。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "window": "洛 W 与返回 E 有效，皎月能实际拉到英雄，莎弥拉评级由本人确认；S 未到只做安全跟伤害，不因两人开团承诺已经可 R。",
+      "early": "皎月先清安全营地，所选 Q/W/E 开局三级才有 E；莎弥拉保下路补刀，用普攻与 Q 短换血。洛保辅助状态和可返回队友，六级前没有完整 R 接力。",
+      "economy": "皎月保野区节奏，莎弥拉吃下路兵线，洛保任务装、鞋与视野；不为叠评级放弃一整波兵或让三人长期停在同一路。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 黛安娜技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Diana.json",
+          "name": "Riot · Diana 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Diana.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 莎弥拉技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Samira.json",
+          "name": "Riot · Samira 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Samira.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 洛技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Rakan.json",
+          "name": "Riot · Rakan 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rakan.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "reviewBaseline": {
-        "champion:Diana": "b000c49c492c9ebb",
-        "champion:Samira": "c5f97ec28c913a72",
-        "champion:Rakan": "5dadfc0f0f54ae6b",
+        "champion:Diana": "0c1ee1b395e630d3",
+        "champion:Samira": "fb97a340c89c0ba1",
+        "champion:Rakan": "69d7edc48cac55e5",
         "item:3115": "627135c117eaf20a",
         "item:3157": "4e1ddce33472ee0f",
         "item:3089": "a8a9b060b253391c",
@@ -17481,11 +17567,11 @@
         "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8410": "da4ec8f245880032",
+        "item:3050": "c3e25c9df9075147",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
-        "item:2065": "a30335c7d456f5fd",
         "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
+        "item:2065": "a30335c7d456f5fd",
         "rune:8465": "4b16b0cca812d727",
         "rune:8463": "3296414353df0e65",
         "rune:8453": "f9a0180e7f2f0432",
@@ -17921,20 +18007,20 @@
         "发育保护"
       ],
       "why": "以反突进、发育保护形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "波比优先限制突进路线，布隆保护射手侧翼，斯莫德安全叠层后再支援。",
-      "risk": "面对远程消耗不能只等对手突进，成长收益不是当前输出能力。",
+      "plan": "波比 W 留能被阻挡的突进，E 只按真实墙角安排眩晕；布隆守射手侧翼，Q/普攻先挂印记再安全补四层。斯莫德按实际 Q 成长状态发育，E 留越地形退出，R 经过自己才治疗自己。",
+      "risk": "波比 W 不能拦所有位移，E 没撞墙没有眩晕，蓄力 R 会让队友暂时打不到目标。斯莫德当前未有对应层数就没有升级 Q 或处决；本版暴击增益也不等于已成型。",
       "difficulty": "适中",
       "members": [
         {
           "champion": "Poppy",
           "role": "jungle",
-          "job": "E 只在实际墙体角度可靠时安排眩晕，W 留可阻挡的突进；R 先约击退方向，不把目标送出两位队友的输出范围。",
+          "job": "W 留能被阻挡的突进，闪烁不当可挡冲刺；E 只有真实撞墙才眩晕。R 短按是击飞，蓄力会把目标送向其基地并令飞行时不可选取，先约用途，别送走射手正打的目标；后排被绕就回身接应。",
           "loadoutId": "trio-jungle-frontline"
         },
         {
           "champion": "Smolder",
           "role": "bottom",
-          "job": "Q 按实际层数与当前效果发育，W 从安全侧消耗，E 留撤退；保护到位才持续攻击，不预设已有升级后的收尾能力。",
+          "job": "Q 按实际层数与当前升级效果补刀输出，不预设处决；W 安全消耗，E 留越地形撤退。R 火焰经过自己才治疗自己，不治疗两位队友；敌方可绕过保护时先退，不以本版暴击加强推定已成型。",
           "loadoutId": "default"
         },
         {
@@ -17945,39 +18031,46 @@
         }
       ],
       "steps": [
-        "波比优先限制突进路线",
-        "布隆保护射手侧翼",
-        "斯莫德安全叠层后再支援。"
+        "先保斯莫德补刀区和 E 越地形退路，波比 W 留可阻挡突进，不能把闪现等闪烁当可挡冲刺。",
+        "波比 E 只有撞到地形才眩晕；布隆 Q/普攻挂第一层，友军安全普攻补到四层才眩晕。",
+        "斯莫德 Q 以本人实际层数和当前升级效果为准，W 从安全侧消耗，E 不提前拿去追低血目标。",
+        "波比 R 短按击飞、蓄力送走并令目标飞行时不可选取，先沟通避免送走集火目标；对手不突进就让出危险消耗区。"
       ],
-      "window": "三人关键技能可用、输出跟得上且兵线允许行动时；技能状态需自己沟通。",
-      "early": "各自优先保证正式位置的经济与经验；六级前先用基础技能接力，不把完整大招连招当成已经拥有。",
-      "economy": "打野保留野区节奏；中上保留各自兵线；下路射手补刀，辅助保留任务经济。换位先重新约定。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "window": "波比 W/E 与布隆保护实际可用，斯莫德有可持续输出的安全位置；面对消耗阵容先保补刀和撤退，不能只等对手主动冲进控制。",
+      "early": "波比按安全营地发育后才报到场，斯莫德先用 Q 补刀与技能命中积累实际层数，布隆保下路状态。斯莫德 R 只在已学且火焰经过自己时治疗自己，不当作三人群体回复。",
+      "economy": "波比保野区经济，斯莫德独享下路补刀，布隆保辅助任务与视野。夺萃/黑切/朔极路线换取蓝量、生命与技能频率，暴击收益较少；回城时比较暴击输出与生存需求，先确认能否持续接触目标，保留 E 退路，不为补伤害离开队友接应范围。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 波比技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Poppy.json",
+          "name": "Riot · Poppy 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Poppy.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 斯莫德技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Smolder.json",
+          "name": "Riot · Smolder 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Smolder.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 布隆技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Braum.json",
+          "name": "Riot · Braum 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Braum.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "reviewBaseline": {
-        "champion:Poppy": "fa2cafaf8d0f2976",
-        "champion:Smolder": "07562d4ce9824818",
-        "champion:Braum": "4726b43beaea9728",
+        "champion:Poppy": "af33a45e62ad30e5",
+        "champion:Smolder": "5f9af800584064ad",
+        "champion:Braum": "ae3aa48403ffcbe5",
         "item:3068": "f23565139478f276",
         "item:2504": "ead2f4757e3e6c8c",
         "item:6665": "9693faf50145df4e",
@@ -18126,20 +18219,20 @@
         "中路支援"
       ],
       "why": "以短换血、中路支援形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "下路先打一轮安全换血，加里奥兵线处理好后响应真正可跟进的控制窗口。",
-      "risk": "加里奥支援不是瞬间到达，不能在他到来前把位移用完。",
+      "plan": "娜美 E 支持卢锡安安全短换血，W 治疗或 Q/R 实际定身再确认警觉增益；加里奥先处理中线、确认 R 范围和固定落点，卢锡安留 E 退出，不把加里奥支援当瞬间全伤害保护。",
+      "risk": "加里奥 R 不是全地图、不是瞬间到达，施法后落点不会追踪卢锡安后续 E；区域护盾仅挡魔法伤害。娜美 E 是减速增伤，不能当硬控或本版帝国指令触发。",
       "difficulty": "适中",
       "members": [
         {
           "champion": "Galio",
           "role": "mid",
-          "job": "先清中线，R 可用且卢锡安在实际支援范围才支援其当时位置；落地 W/E 错开接控，撑不到落地或目标已退出就取消强接。",
+          "job": "先清中线，R 可用且友军在当前等级范围内才选其当时位置；区域护盾仅挡魔法伤害，落地有延迟且落点不追踪卢锡安后续 E。队友撑不到或敌人已离开就不强接；落地 W/E 错开控制并留出口。",
           "loadoutId": "trio-galio-engage"
         },
         {
           "champion": "Lucian",
           "role": "bottom",
-          "job": "娜美 E 增益实际给到后 Q/技能与被动普攻做短换血，E 留可返回角度；加里奥未到达不因预期保护继续深入。",
+          "job": "娜美 E 只提供这轮减速增伤，警觉需实际治疗/护盾、附近敌方定身或友军触发 W 标记；Q/技能后被动双枪短换血，E 留安全退出。加里奥 R 落点不跟随自己后续 E，未到达不因预期保护继续深入。",
           "loadoutId": "lucian-trade"
         },
         {
@@ -18150,56 +18243,64 @@
         }
       ],
       "steps": [
-        "下路先打一轮安全换血",
-        "加里奥兵线处理好后响应真正可跟进的控制窗口。"
+        "卢锡安保 E 回撤，娜美 E 给实际可攻击窗口，再用 W 在弹跳距离内回复；E 减速本身不是定身。",
+        "警觉以真实治疗/护盾、附近敌方定身或友军伤害触发 W 标记为准，不能把任意 E 增益都当触发。",
+        "加里奥处理好中线，R 只能选施法范围内友军的当时位置，先确认队友能撑到延迟落地；区域护盾仅吸收魔法伤害。",
+        "卢锡安后续 E 不会拖着既定落点走；敌人离开落区或支援接不上就停止深入，加里奥落地后 W/E 错开接控。"
       ],
-      "window": "三人关键技能可用、输出跟得上且兵线允许行动时；技能状态需自己沟通。",
-      "early": "各自优先保证正式位置的经济与经验；六级前先用基础技能接力，不把完整大招连招当成已经拥有。",
-      "economy": "打野保留野区节奏；中上保留各自兵线；下路射手补刀，辅助保留任务经济。换位先重新约定。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "window": "加里奥 R 已学会可用、目标友军在当前等级施法范围，娜美控制或治疗实际给到且卢锡安有 E 退路；撑不到落地就只打一轮换血。",
+      "early": "卢锡安与娜美先安全补刀、Q/被动双枪短换血，娜美所选 W/E/Q 开局到三级才有 Q。加里奥先清中线，六级前靠真实步行支援，不把尚未学会的 R 当保护。",
+      "economy": "卢锡安吃下路兵线，加里奥保中线经验与回补节奏，娜美走辅助任务经济。娜美先保蓝量与视野，帝国指令仅作 Q/R 能实际定身时的备选，不靠 E 减速触发。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 加里奥技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Galio.json",
+          "name": "Riot · Galio 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 卢锡安技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Lucian.json",
+          "name": "Riot · Lucian 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lucian.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 娜美技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nami.json",
+          "name": "Riot · Nami 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nami.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "reviewBaseline": {
-        "champion:Galio": "93e234e70ba0094e",
-        "champion:Lucian": "c5f5aebc32c005b5",
-        "champion:Nami": "6a067b32874ba55a",
-        "item:6655": "e593f4433de96e4b",
+        "champion:Galio": "62214853523131ad",
+        "champion:Lucian": "cd773946a58860de",
+        "champion:Nami": "b10366f1187813b9",
+        "item:3152": "37dc7712644a19f0",
+        "item:4005": "049fc32e0486e5b6",
         "item:3157": "4e1ddce33472ee0f",
-        "item:3089": "a8a9b060b253391c",
         "item:3020": "357a162d6a40286e",
+        "item:3089": "a8a9b060b253391c",
         "item:3135": "9eb1465e02c69db0",
-        "item:3102": "74374782f1274206",
-        "rune:8112": "0082006b65520bc3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8463": "3296414353df0e65",
         "rune:8473": "ed2f46234183276d",
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c",
         "rune:8347": "def2a55844436c47",
+        "rune:8230": "b4da4b07836c5635",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8234": "018bc04903dfba25",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998",
         "item:3508": "f557158549cb18ca",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
@@ -18216,12 +18317,11 @@
         "rune:9111": "6667591beed15f1b",
         "rune:9105": "8f6975f18cf3ff8d",
         "rune:8299": "d7db081cd64d0bc2",
-        "rune:8451": "9e4f8837510e3998",
-        "item:4005": "049fc32e0486e5b6",
         "item:6620": "cfb94d4a02cc64c8",
-        "item:3107": "53bdbba0a53ca5c6",
         "item:6617": "6dccd52cee1f2c6e",
+        "item:3107": "53bdbba0a53ca5c6",
         "rune:8214": "6d3b2bf192d500da",
+        "rune:8210": "e78877d51ff049ea",
         "rune:8236": "a1bb7cfc15c3d089",
         "rune:8453": "f9a0180e7f2f0432",
         "rune:8465": "4b16b0cca812d727"
@@ -18548,20 +18648,20 @@
         "近身续战"
       ],
       "why": "以混合伤害、近身续战形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "男枪从侧面创造接近空间，斯维因持续接战，塔里克保护真正承伤的队友。",
-      "risk": "烟幕不能保证对手无法施法，近身作战仍怕重伤与脱节。",
+      "plan": "先确认男枪弹药、斯维因法力与塔里克联结；男枪 W 烟幕限制视野，斯维因 E 返回段实际禁锢后才拉回，Q/R 保持可持续接触；塔里克按承伤提前安排延迟 R，接触或保护断开就一起撤。",
+      "risk": "烟幕不是沉默，男枪普攻会被前方单位挡住且必须换弹；E 双抗有层数和持续时间。斯维因 R 要持续吸取英雄维持，重伤和风筝仍会破坏续战，塔里克延迟保护不是无限续命。",
       "difficulty": "适中",
       "members": [
         {
           "champion": "Graves",
           "role": "jungle",
-          "job": "从安全侧 Q/普攻输出，W 烟幕限制视野但不保证对手无法施法，E 留调整与退出；不与实际承伤者脱节。",
+          "job": "先确认弹药和无遮挡普攻线，安全侧 Q/普攻输出，W 烟幕只限视野和减速、不沉默；E 装回一发并增加实际层数的护甲与魔抗，不能当免伤。换弹、层数到期、与承伤队友脱节或退路被封就收缩。",
           "loadoutId": "default"
         },
         {
           "champion": "Swain",
           "role": "bottom",
-          "job": "E 实际命中再拉近同一目标、Q 跟伤害，R 可用且能持续接触才接战；法力、保护或接触空间断开就收缩。",
+          "job": "E 返回段实际禁锢后才选择再次施放拉回，W 对真实落点、Q 跟伤害；R 可用且能持续吸取附近敌方英雄才接战，吸取不到英雄时能量会耗尽。法力、保护或接触断开就退，不把本版基础魔抗提高当抗集火许可。",
           "loadoutId": "swain-brawl"
         },
         {
@@ -18572,39 +18672,46 @@
         }
       ],
       "steps": [
-        "男枪从侧面创造接近空间",
-        "斯维因持续接战",
-        "塔里克保护真正承伤的队友。"
+        "先报男枪弹药与无遮挡普攻线、斯维因法力/R 就绪、塔里克 W 实际联结和共同退路。",
+        "男枪 W 烟幕只限制视野和减速，不沉默；斯维因 E 返回段实际禁锢后才选择拉回同一目标，W 覆盖真实落点。",
+        "斯维因 Q/R 只在能持续吸取附近敌方英雄时接战；男枪 E 按实际双抗层数调整，增抗不等于能顶住集火。",
+        "塔里克 R 按延迟提前施放，Q/被动循环要有蓝和安全普攻；换弹、吸取不到英雄、联结断开或无敌未生效就共同收缩。"
       ],
-      "window": "三人关键技能可用、输出跟得上且兵线允许行动时；技能状态需自己沟通。",
-      "early": "各自优先保证正式位置的经济与经验；六级前先用基础技能接力，不把完整大招连招当成已经拥有。",
-      "economy": "打野保留野区节奏；中上保留各自兵线；下路射手补刀，辅助保留任务经济。换位先重新约定。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "window": "男枪有弹药和无遮挡普攻线，斯维因有蓝与实际英雄接触空间，塔里克联结有效且 R 可用；E 返回段真实禁锢后再决定拉回，不预设烟幕封住全部反击。",
+      "early": "男枪先保安全营地与弹药节奏；斯维因补下路兵，塔里克保任务和蓝量。本版斯维因基础护甲下降、基础魔抗提高，W 伤害/冷却改善不代表一二级就能顶住集火，六级前不按 R 续战。",
+      "economy": "男枪保野区经济，斯维因作为下路法核补刀，塔里克留辅助任务与视野位；三人需要不同回补节奏，不为长期近身刷治疗挤掉营地和兵线。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "sources": [
         {
-          "name": "Riot · 格雷福斯技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Graves.json",
+          "name": "Riot · Graves 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Graves.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 斯维因技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Swain.json",
+          "name": "Riot · Swain 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Swain.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
         },
         {
-          "name": "Riot · 塔里克技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Taric.json",
+          "name": "Riot · Taric 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Taric.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ],
       "reviewBaseline": {
-        "champion:Graves": "774bf3fac71959ed",
-        "champion:Swain": "2f1ca8910269fb77",
-        "champion:Taric": "c80b2adac0419e29",
+        "champion:Graves": "ea75172ee2199edb",
+        "champion:Swain": "2df9ea554c5ac91d",
+        "champion:Taric": "d7034e2662bef2b0",
         "item:3118": "2bf87c4847cde85f",
         "item:6653": "dae566be4a35ad25",
         "item:3116": "1ca09887b440d0f6",
@@ -18921,12 +19028,12 @@
         "comet",
         "harvest"
       ],
-      "why": "围绕技能消耗或队友控制后的大招；打多前排持续火力有限。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "幽梦用于安全换角，赛瑞尔达仅让低于半血目标受到的技能伤害附减速；狂妄要实际参与英雄击杀才有临时攻击力，不按已有层数预算。韦鲁斯 R 是禁锢，W 强化 Q 与枯萎引爆看真实层数，Q 蓄力会减速自己且穿过单位伤害衰减；女枪 R 要安全引导。彗星须实际命中，黑暗收割要伤害命中低于半血英雄；这套以一轮技能消耗为主，多前排长战或无法持续普攻时，饮血也不能保证续航。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "reviewBaseline": {
-        "champion:Varus": "ae3624a9b39454a2",
-        "champion:MissFortune": "ddbf8a2569548361",
+        "champion:Varus": "7a703d4303dfcfdd",
+        "champion:MissFortune": "10b496d2ce7c344d",
         "item:3142": "4226f2eefc236540",
         "item:6694": "8ac6919d2a7a1dd6",
         "item:6697": "16b1481e352b1fef",
@@ -18943,7 +19050,33 @@
         "rune:8126": "9e648d4b51a0c973",
         "rune:8140": "93302565a400fc06",
         "rune:8106": "bfb83fa22daf18de"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · Varus 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Varus.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · MissFortune 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/MissFortune.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 16.20.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 16.20.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-12"
+        }
+      ]
     },
     {
       "id": "ap-twitch",
@@ -19826,18 +19959,18 @@
         "aftershock",
         "glacial"
       ],
-      "why": "控制命中后确认输出能跟上，辅助装与视野优先。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "辅助经济先保任务装、鞋与视野，鸟盾主动覆盖附近承伤队友，骑士之誓先绑定并保持有效距离；基克在自己施放 R 后于自身周围成风暴，不是远程绑定增伤。余震与冰川均要真实定身：牛头 Q/W 或叠满 E 后普攻，蕾欧娜 Q/E 或 R 中心，泰坦被动/Q/R，芮尔 Q/W，阿木木 Q/R，墨菲特 R，瑟庄妮 Q/四层 E/R，扎克双目标 Q/E/R；普通减速不算。芮尔 R 拖曳不能当持续眩晕。海克斯闪现要在闪现冷却且可安全引导时用；荆棘只对普攻击中自己的攻击者施重伤，魔法威胁多就按实际对手改抗性，不机械堆甲。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-12",
       "reviewBaseline": {
-        "champion:Alistar": "8a197011035cf22f",
-        "champion:Leona": "060aef3e3162ad2d",
-        "champion:Nautilus": "89b73fd1b583624c",
-        "champion:Rell": "41676b37935fa0dc",
-        "champion:Amumu": "a4e2b0ff5abf7e6b",
-        "champion:Malphite": "72a1b3b4b24d83b0",
-        "champion:Sejuani": "8b875d1d645405f8",
-        "champion:Zac": "9754f98869dae8ec",
+        "champion:Alistar": "e2aa1310b144ff1f",
+        "champion:Leona": "2b7d4e998553b365",
+        "champion:Nautilus": "67da151a84906467",
+        "champion:Rell": "bec49be1ddcf29c0",
+        "champion:Amumu": "958a576cfa8191dd",
+        "champion:Malphite": "1cef2e2fdec84d8d",
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Zac": "79df9b9e7571e89c",
         "item:3190": "89cdf2838748dfc7",
         "item:3050": "c3e25c9df9075147",
         "item:3109": "97c25fae90d4a8a4",
@@ -19852,7 +19985,69 @@
         "rune:8351": "6594874b24a7b00e",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8453": "f9a0180e7f2f0432"
-      }
+      },
+      "sources": [
+        {
+          "name": "Riot · Alistar 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Alistar.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Leona 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Leona.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Nautilus 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nautilus.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Rell 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rell.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Amumu 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Amumu.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Malphite 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Malphite.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Sejuani 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Sejuani.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · Zac 16.20.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Zac.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 16.20.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 16.20.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-12"
+        }
+      ]
     },
     {
       "id": "farm-tank",
@@ -20890,7 +21085,7 @@
         "aftershock",
         "phase"
       ],
-      "why": "先保安全营地再报到场时间；日炎服务近身清野，抗性按公开威胁调整。余震要自身硬控实际命中：慎 E、努努 W 或 E、茂凯 Q/W 等，墨菲特要等已学 R；减速不算。相位要完成独立攻击或技能命中，不预设进场就加速。奥恩、慎等非常规打野的发育与清野可行性未经对局验证。",
+      "why": "先保安全营地再报到场时间；日炎服务近身清野，抗性按公开威胁调整。余震要自身硬控实际命中：慎 E、努努 W 或 E、茂凯 Q/W 等，墨菲特要等已学 R；减速不算。风暴掠袭者的狂涌需 3 秒内对英雄造成其 25% 最大生命值伤害，不是旧相位的三次命中；坦克未达到伤害阈值就没有加速退路。奥恩、慎等非常规打野的发育与清野可行性未经对局验证。",
       "patch": "16.20",
       "reviewedAt": "2026-10-10",
       "reviewBaseline": {
@@ -21664,7 +21859,7 @@
       ],
       "priority": "QEW",
       "first": "QEW",
-      "why": "收集者与无尽先建暴击，饮血用于可持续攻击的续航；穿插不同攻击和技能叠评级，R 只有评级满足且打断威胁处理后才引导。征服者需持续命中，强攻需实际三次普攻，Q/R 不替代三次普攻触发。W 留可拦截弹体，E 结束位置要有退路；击杀尚未发生就不预设 E 刷新。",
+      "why": "收集者与无尽先建暴击，饮血用于可持续攻击的续航；穿插不同攻击和技能叠评级，R 只有评级满足且打断威胁处理后才引导。征服者需持续命中，强攻需实际三次普攻，Q/R 不替代三次普攻触发。W 留可拦截弹体，E 结束位置要有退路；本人造成伤害后 3 秒内该英雄死亡才刷新 E，含有效助攻，尚未死亡就不预支。",
       "patch": "16.20",
       "reviewedAt": "2026-10-10",
       "reviewBaseline": {
@@ -22280,9 +22475,9 @@
       ],
       "priority": "QEW",
       "first": "EQW",
-      "why": "恶意靠 R 实际伤害触发地面效果并补蓝量，兰德里和冰杖服务能持续覆盖的战区。E 返回段实际禁锢后才选择拉回，W 本版冷却降为 20 至 16 秒，但助手不推测当前就绪。生命与魔抗成长变化不等于能顶住集火；重伤、被风筝或吸取不到英雄时先退，不能把 R 当永久作战许可。",
+      "why": "残疫靠 R 实际伤害触发地面效果并补蓝量，兰德里和冰杖服务能持续覆盖的战区。E 返回段实际禁锢后才选择拉回；本版基础护甲 25 降至 23、基础魔抗 31 升至 34，W 冷却降为 20 至 16 秒，但助手不推测当前就绪。基础抗性调整不等于能顶住集火；重伤、被风筝或吸取不到英雄时先退，不能把 R 当永久作战许可。",
       "patch": "16.20",
-      "reviewedAt": "2026-10-10",
+      "reviewedAt": "2026-10-12",
       "reviewBaseline": {
         "champion:Swain": "2df9ea554c5ac91d",
         "item:3118": "2bf87c4847cde85f",
@@ -22322,6 +22517,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
           "kind": "符文触发依据",
           "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 26.20 召唤师峡谷更新",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "版本机制依据",
+          "checkedAt": "2026-10-12"
         }
       ]
     },
@@ -22474,9 +22675,9 @@
         "aftershock",
         "phase"
       ],
-      "why": "火箭腰带补接近角度，本版仅 10 技能急速，不按旧数值推断冷却；先管 Q 蓝量，装备位移不保证 E/W 命中。E 击飞或 W 嘲讽实际生效才能触发帝国指令和余震，R 要实际安全落点。中娅承接接控后的集火，凝滞中不继续施法；相位需真实命中轮次，不能当无条件退路。",
+      "why": "火箭腰带补接近角度，本版仅 10 技能急速，不按旧数值推断冷却；先管 Q 蓝量，装备位移不保证 E/W 命中。E 击飞或 W 嘲讽实际生效才能触发帝国指令和余震，R 要实际安全落点。中娅承接接控后的集火，凝滞中不继续施法；风暴掠袭者的狂涌需 3 秒内造成目标 25% 最大生命值伤害，不能按三次命中或无条件退路安排。",
       "patch": "16.20",
-      "reviewedAt": "2026-10-10",
+      "reviewedAt": "2026-10-12",
       "reviewBaseline": {
         "champion:Galio": "62214853523131ad",
         "item:3152": "37dc7712644a19f0",
@@ -22695,8 +22896,8 @@
       }
     },
     "phase": {
-      "name": "相位猛冲 · 拉扯",
-      "when": "需要打完连招后调整位置；直接伤害较少。",
+      "name": "风暴掠袭者的狂涌 · 伤害阈值拉扯",
+      "when": "3 秒内对英雄造成其 25% 最大生命值伤害才获得移速与减速抗性；不是三次命中，未达阈值不能预设加速退路。",
       "page": {
         "primaryStyleId": 8200,
         "subStyleId": 8400,
