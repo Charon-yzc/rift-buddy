@@ -17,6 +17,8 @@ Object.assign(state.preferences,{autoSync:false,autoCheck:false,autoLive:false,c
 if(tactics)state.preferences.play={...state.preferences.play,tempo:'poke'};
 if(scenario==='all-routes')state.preferences.play={...state.preferences.play,tempo:'teamfight'};
 state.draft={slots:createSlots().map(s=>({...s,party:!!fixed[s.role],champion:fixed[s.role]||null,locked:!!fixed[s.role],...(fixed[s.role]?{manualPosition:true}:{})})),scope:'party',style:'fun'};
+// This offline sample explicitly chooses the member whose duty must be first.
+state.draft.playerPosition={role:Object.keys(fixed)[0],cellId:2};
 await saveState(root,state);
 for(const restart of [false,true]){
  const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-curated-plan.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:root,TEMP:root,TMP:root,RIFT_CURATED_SCENARIO:scenario,RIFT_CURATED_CUSTOM_RUNES:customRunes?'1':'0',RIFT_CURATED_DUO_STAGES:duoStages?'1':'0',RIFT_CURATED_READINESS:readiness?'1':'0',RIFT_CURATED_ROUTES:routes?'1':'0',RIFT_CURATED_TACTICS:tactics?String(partySize):'0',RIFT_CURATED_INDEPENDENT:independent?String(partySize):'0',RIFT_CURATED_RESTART:restart?'1':'0'},windowsHide:true,stdio:'inherit'}),timer=setTimeout(()=>child.kill(),90000);
