@@ -930,10 +930,12 @@ app.on('browser-window-created',(_e,w)=>windows.push(w));
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let i=0;i<150;i++){const r=await check();if(r)return r;await delay(100);}throw Error(label);}
 const BIN=crypto.randomBytes(131072),BIN_SHA=crypto.createHash('sha256').update(BIN).digest('hex');
+// 注意：源码模式（RIFT_BUDDY_SOURCE=1）下 app.getVersion() 返回 Electron 版本号（实测 44.5.1）
+// 而非应用版本；v99.0.0 高于源码与打包两种 current，保证两种模式都确定性触发更新。
 const FEED_URL='https://github.com/Legender134/rift-buddy/releases.atom';
-const SETUP_URL='https://github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe';
-const SUM_URL='https://github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt';
-const FEED=`<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><title>v9.9.9 烟测版</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9"/><updated>2026-10-12T00:00:00Z</updated></entry></feed>`;
+const SETUP_URL='https://github.com/Legender134/rift-buddy/releases/download/v99.0.0/RiftBuddy-99.0.0-Setup.exe';
+const SUM_URL='https://github.com/Legender134/rift-buddy/releases/download/v99.0.0/SHA256SUMS-99.0.0.txt';
+const FEED=`<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><title>v99.0.0 烟测版</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v99.0.0"/><updated>2026-10-12T00:00:00Z</updated></entry></feed>`;
 async function run(){
  app.setPath('userData',root);
  const https=require('node:https'),dns=require('node:dns/promises'),{EventEmitter}=require('node:events');
@@ -945,7 +947,7 @@ async function run(){
   req.end=()=>queueMicrotask(()=>{
    const res=new EventEmitter();res.resume=()=>{};
    if(mode==='offline'){req.emit('error',Error('Smoke offline'));req.emit('close');return;}
-   const routes={[FEED_URL]:{status:200,body:Buffer.from(FEED)},[SUM_URL]:{status:200,body:Buffer.from(`${BIN_SHA}  RiftBuddy-9.9.9-Setup.exe\n`)},[SETUP_URL]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN,chunks:4}};
+   const routes={[FEED_URL]:{status:200,body:Buffer.from(FEED)},[SUM_URL]:{status:200,body:Buffer.from(`${BIN_SHA}  RiftBuddy-99.0.0-Setup.exe\n`)},[SETUP_URL]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN,chunks:4}};
    const route=routes[href];
    if(!route){res.statusCode=404;callback(res);res.emit('end');req.emit('close');return;}
    res.statusCode=route.status;res.headers=route.headers||{};callback(res);
@@ -956,7 +958,7 @@ async function run(){
   return req;
  };
  const source=process.env.RIFT_BUDDY_SOURCE==='1';
- if(!source)var release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
+ const release=source?null:JSON.parse(await fs.readFile('release/latest.json','utf8'));
  require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>main.webContents.executeJavaScript(code,true);
  await until(()=>js('!!document.querySelector("[data-action=role-pools]")'),'Draft missing');
@@ -968,11 +970,11 @@ async function run(){
  // 阶段 2：回环 fixture 走完发现→下载→校验→就绪
  mode='feed';
  await click('[data-action=app-update-check]');
- await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("9.9.9")'),'Available version not shown');
+ await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("99.0.0")'),'Available version not shown');
  await click('[data-action=app-update-download]');
  await until(()=>js('!!document.querySelector("[data-action=app-update-install]")'),'Ready state not reached');
  const record=JSON.parse(await fs.readFile(path.join(root,'app-update.json'),'utf8'));
- assert.equal(record.version,'9.9.9');
+ assert.equal(record.version,'99.0.0');
  assert.equal(crypto.createHash('sha256').update(await fs.readFile(record.file)).digest('hex'),BIN_SHA);
  // 阶段 3：dry-run 安装——记录见证、不 spawn、不退出
  await click('[data-action=app-update-install]');
