@@ -1,6 +1,11 @@
 // Coordinates here are Electron DIPs. Native rectangles must be converted at
 // the boundary; never mix display scaling with game/client resolution.
 const clamp=(n,low,high)=>Math.max(low,Math.min(n,high));
+export function savedWindowBounds(value,{minWidth=1,minHeight=1,maxWidth=10000,maxHeight=10000}={}){
+ if(!value||!['x','y','width','height'].every(k=>Number.isInteger(value[k])))return null;
+ if(Math.abs(value.x)>=30000||Math.abs(value.y)>=30000||value.width<minWidth||value.width>maxWidth||value.height<minHeight||value.height>maxHeight)return null;
+ return {x:value.x,y:value.y,width:value.width,height:value.height};
+}
 export function fitWindow(bounds,area,{width=400,height=740,minWidth=280,minHeight=220,maxWidth=640,maxHeight=1000}={}){
  const w=Math.min(area.width,clamp(bounds?.width||width,minWidth,maxWidth));
  const h=Math.min(area.height,clamp(bounds?.height||height,minHeight,maxHeight));
@@ -24,5 +29,5 @@ export function guidePlacement(saved,area,game,{ball=false,collapsed=false,recov
   const anchor=game||area;
   bounds={x:anchor.x+anchor.width-(ball?76:saved?.width||400)-12,y:anchor.y+24,width:ball?76:saved?.width||400,height:ball?76:collapsed?280:saved?.height||740};
  }
- return fitWindow({...bounds,...(ball?{width:76,height:76}:collapsed?{height:220}:{})},area,{minWidth,minHeight,maxWidth:ball?76:640,maxHeight:ball?76:1000});
+ return fitWindow({...bounds,...(ball?{width:76,height:76}:collapsed?{height:220}:{})},area,{minWidth,minHeight,maxWidth:ball?76:1000,maxHeight:ball?76:1200});
 }

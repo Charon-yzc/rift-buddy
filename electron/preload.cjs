@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  exportState:()=>ipcRenderer.invoke('export-state'),
  importState:()=>ipcRenderer.invoke('import-state'),
  togglePin:()=>ipcRenderer.invoke('toggle-pin'),
+ windowLayoutControl:action=>ipcRenderer.invoke('window-layout-control',action),
  companionMode:value=>ipcRenderer.invoke('companion-mode',value),
  recoverGuide:()=>ipcRenderer.invoke('recover-guide'),
  onWindowLayout:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('window-layout',listener);return()=>ipcRenderer.removeListener('window-layout',listener);},

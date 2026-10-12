@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 import {skillMechanismNote} from '../src/core/skill-advice.mjs';
+import {correctSemanticDescriptions} from './ability-reference-semantics.mjs';
+import {correctDirectRankFields} from './ability-reference-values.mjs';
+import {correctAdditionalForms} from './ability-reference-forms.mjs';
+import {correctGrowthDescriptions} from './ability-reference-growth.mjs';
 
 export const resolvedText=v=>String(v??'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim();
 const round=v=>Math.round(v*10000)/10000;
@@ -64,6 +68,9 @@ export function normalizeAbilityReference(game,records,{overview,bins,sources,fe
  // Curated source corrections are patch-gated and guarded by both exact source
  // prose and same-version game-data fields. They must be reviewed next patch.
  assert.equal(game.patch,'16.20','Review the curated special-skill normalization for the new patch first');
+ correctSemanticDescriptions({patch:game.patch,ability,spell,values,replace,dictionary});
+ correctGrowthDescriptions({patch:game.patch,ability,spell,values,replace,dictionary});
+ correctDirectRankFields({patch:game.patch,ability,spell,values,replace,dictionary});
  const rengarQ=ability('Rengar','Q'),rengarTooltip=dictionary[spell('Rengar','RengarQ').mClientData.mTooltipData.mLocKeys.keyTooltipExtended.toLowerCase()];
  assert(rengarTooltip.includes('第一次攻击造成')&&!rengarTooltip.includes('暴击'));
  assert.equal(rengarQ.description.split('第一次攻击会暴击，造成').length,3);
@@ -176,5 +183,6 @@ export function normalizeAbilityReference(game,records,{overview,bins,sources,fe
  ability('Shyvana','Q').metrics=ability('Shyvana','Q').metrics.filter(m=>m.label!=='范围');ability('Shyvana','Q').metrics.push(noteMetric('范围','强化普攻，增加50攻击距离；非25000射程'));
  ability('Shyvana','E').metrics=ability('Shyvana','E').metrics.filter(m=>m.label!=='资料范围');ability('Shyvana','E').metrics.push(metric('人类施法距离',[800],'单位'),metric('魔龙施法距离',[1000],'单位'));
  ability('Shyvana','R').metrics=ability('Shyvana','R').metrics.filter(m=>m.label!=='冷却');ability('Shyvana','R').metrics.push(noteMetric('冷却机制','按龙怒触发和维持；不是0秒可无限使用的普通终极技能'));
+ correctAdditionalForms({patch:game.patch,ability,spell,values,replace,dictionary,corrections});
  return {schema:1,patch:game.patch,version:game.version,fetchedAt,generatedAt:new Date().toISOString(),sources,champions,corrections};
 }
