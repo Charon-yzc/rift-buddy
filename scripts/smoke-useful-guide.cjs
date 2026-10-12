@@ -20,8 +20,9 @@ async function run(){
  const painted=async w=>{try{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');}catch(error){throw Error('painted '+w.getTitle()+': '+error.message);}await delay(80);};
  await painted(win);
  const metrics=await js('(()=>{const p=document.querySelector("main"),r=document.querySelector(".compact-alternatives").getBoundingClientRect();return {width:innerWidth,height:innerHeight,scroll:p.scrollHeight-p.clientHeight,alternativesBottom:r.bottom,routeCount:document.querySelectorAll(".compact-slot").length,conditions:[...document.querySelectorAll(".compact-alternatives button small")].map(e=>e.textContent),reason:document.querySelector(".compact-reason").textContent,horizontal:document.documentElement.scrollWidth>innerWidth}})()');
- assert.equal(metrics.routeCount,6);assert.equal(metrics.horizontal,false);assert(metrics.conditions.length>=2);assert(metrics.alternativesBottom<=metrics.height,'Default equipment conditions must be visible without scrolling');assert(metrics.reason.length>10);
+ console.log('Default equipment metrics '+JSON.stringify(metrics));await fs.writeFile(path.join(output,'equipment-metrics.json'),JSON.stringify(metrics,null,2));
  await fs.writeFile(path.join(output,'equipment.png'),(await win.webContents.capturePage()).toPNG());
+ assert.equal(metrics.routeCount,6);assert.equal(metrics.horizontal,false);assert(metrics.conditions.length>=2);assert(metrics.alternativesBottom<=metrics.height,'Default equipment conditions must be visible without scrolling');assert(metrics.reason.length>10);
  const before=core.createGuideModel(data,state,live),choice=before.completeGear.alternatives.find(a=>!a.blockedReason);assert(choice);
  await js(`document.querySelector('[data-action="purchase-target"][data-id="${choice.id}"]').click()`);
  await until(()=>Promise.resolve(state.purchaseTarget===choice.id),'Alternative click did not set an explicit return-to-shop goal');

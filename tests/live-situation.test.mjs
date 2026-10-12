@@ -29,6 +29,11 @@ test('public enemy magic resistance never turns enchanter utility routes into pe
   assert(!m.situation.candidates.some(c=>c.id==='4630'),id+' got a penetration component');assert(!m.completeGear.route.some(i=>i.id==='3135'),id+' got automatic Void Staff');
  }
 });
+test('an AP-heavy Sona source core keeps utility advice through the public live-data path',()=>{
+ const selected={id:'Sona',role:'support',mode:'rift',coreId:'core-3121-6616-3041'},foes=[player('Garen','CHAOS',[2504]),player('Maokai','CHAOS',[2504])];
+ const live=sanitizeLive({riotId:'private-Sona',currentGold:800,level:7},[player('Sona','ORDER'),...foes],{gameMode:'CLASSIC',mapNumber:11,gameTime:600,queueId:420},data.champions),m=createGuideModel(data,selectGuide(null,selected),live);
+ assert(m.situation.signals.some(s=>s.kind==='resist'));assert(!m.situation.candidates.some(c=>c.id==='4630'));assert(!m.completeGear.updates.some(c=>c.id==='3135'));assert(!m.completeGear.alternatives.some(c=>['3157','3102','3135'].includes(c.id)));
+});
 
 test('live situation keeps public scoreboard facts but discards all player identities and hidden fields',()=>{
  const opponent=player('Jhin','CHAOS',[3031],{level:10,currentGold:9999,position:'BOTTOM',coordinates:{x:123},respawnTimer:30,health:40,runes:{secret:'private'},scores:{kills:5,deaths:-1,assists:2,creepScore:55,wardScore:14}});

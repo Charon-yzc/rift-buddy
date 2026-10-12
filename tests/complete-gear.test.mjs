@@ -45,6 +45,20 @@ test('enchanter routes keep utility choices under enemy magic resistance while d
  }
  const mage=run(build('Ahri','mid'),{selection:{id:'Ahri',role:'mid',mode:'rift'},signals:[signal('resist')]});assert(mage.updates.some(i=>i.id==='3135'));
 });
+test('all source cores of protection supports retain their responsibility, including AP-heavy alternatives',()=>{
+ let covered=0;
+ for(const c of data.champions){
+  if(build(c.id,'support').key!=='enchanter')continue;
+  const ref=data.builds[c.id+':support'];if(!ref)continue;
+  for(const core of ref.core){
+   const b=build(c.id,'support',{coreId:'core-'+core.items.join('-')}),s={id:c.id,role:'support',mode:'rift'},before=run(b,{selection:s}),after=run(b,{selection:s,signals:[signal('resist')]});
+   assert.equal(b.routeProfile.enchanter,true,c.id+' '+b.selectedCoreId);
+   assert.deepEqual(after.route.map(i=>i.id),before.route.map(i=>i.id));assert(!after.updates.some(i=>i.id==='3135'));assert(!after.alternatives.some(i=>['3157','3102','3135'].includes(i.id)));covered++;
+  }
+ }
+ assert(covered>100,'Expected the complete bundled support-source core pool');
+ const damage=build('Lux','support');assert.equal(damage.routeProfile.kind,'magic');assert(run(damage,{selection:{id:'Lux',role:'support',mode:'rift'},signals:[signal('resist')]}).updates.some(i=>i.id==='3135'));
+});
 test('actual completed inventory wins over an unbought conflicting plan without suggesting sales',()=>{
  const plan=run(build(),{live:{...live,inventory:[{id:'3033',count:1,slot:0}]},signals:[signal('armor')]});
  assert(plan.route.some(r=>r.id==='3033'&&r.owned));assert(!plan.route.some(r=>r.id!=='3033'&&itemConflicts(Number(r.id),[3033])));
