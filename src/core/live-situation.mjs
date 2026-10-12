@@ -89,7 +89,7 @@ export function assessSituation({data,champion,build,selection,live,enabled=true
   const manualAshePoke=signal.source==='manual'&&champion==='Ashe'&&build.key==='pokeSupport';
   if(signal.kind==='healing'&&(tank||magic||physical||manualAshePoke)&&!held.some(id=>grievous.has(id)))add(signal,tank?'3076':magic?'3916':'3123','先用重伤小件应对回复，不必立即为了重伤改掉整套核心。'+(manualAshePoke&&routeProfile.uncertain?'你手动选择了回复压力，艾希可用W或普攻施加物理重伤；这不证明当前路线主要是物理伤害。':routeProfile.reason),tank?'棘刺背心需要被对方普攻命中才能对攻击者施加重伤，无法可靠覆盖远处的治疗目标；先和队友分工。':magic?'湮灭宝珠需要自己造成魔法伤害；无法稳定命中时让队友负责，不建议全队重复购买。':'死刑宣告需要自己造成物理伤害；先和队友分工，不要只因对方有吸血就牺牲关键成装。');
   if(signal.kind==='armor'&&physical&&!held.some(id=>items[id]?.tags?.includes('ArmorPenetration')))add(signal,'3035','百分比护甲穿透小件适合应对已经投入护甲的目标，再按你的打法选择后续成装。'+routeProfile.reason,'仅在你经常需要打这些目标时提前购买；会推迟原核心，不能同时购买互斥的穿透成装。');
-  if(signal.kind==='resist'&&magic&&!held.some(id=>['3135','3137','3302'].includes(id)))add(signal,'4630','枯萎珠宝提供百分比法术穿透，可应对已投入魔抗的目标。'+routeProfile.reason,'只看到了装备投入，没有读取对手实时抗性；后续法穿成装存在互斥关系，仍要保留输出核心。');
+  if(signal.kind==='resist'&&magic&&!routeProfile.enchanter&&!held.some(id=>['3135','3137','3302'].includes(id)))add(signal,'4630','枯萎珠宝提供百分比法术穿透，可应对已投入魔抗的目标。'+routeProfile.reason,'只看到了装备投入，没有读取对手实时抗性；后续法穿成装存在互斥关系，仍要保留输出核心。');
   if(signal.kind==='control')add(signal,'3140','水银饰带可手动解除部分控制，作为关键控制下的应对备选。','需要你主动使用，不能解除滞空；一般控制可考虑原路线的水银之靴，先确认究竟是哪种控制。');
   if(signal.kind==='teamProtection')add(signal,'3190','钢铁烈阳之匣的主动护盾可提供附近队友的团战保护，作为功能装备选。','需自己主动使用并贴近被保护队友；会占用辅助经济、推迟原增益装备，不根据击杀数推断队友需要护盾。');
  }

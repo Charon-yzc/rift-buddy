@@ -55,8 +55,16 @@ test('new game returns to compact view, preserves explicitly closed skills, and 
  const malformed=validateGuideState({...state,compactBounds:{x:Infinity,y:2},skillWidget:{enabled:false,offset:{x:'10',y:0}}});assert.equal(malformed.compactBounds,undefined);assert.equal(malformed.skillWidget.offset,undefined);
 });
 
-test('compact resource notice only uses a fresh preparation window, without treating an expired spawn as an ongoing fight',()=>{
+test('compact advice prioritizes visible equipment conditions over redundant objective timers',()=>{
  const m=createGuideModel(data,selectGuide(null,selection)),objectives={available:true,rows:[{state:'prepare',name:'元素亚龙',label:'还有 0:45',action:'先处理兵线与回城'}]};
- const html=renderGuide({model:{...m,objectives}},'overview',false,()=>'<img>');assert.match(html,/compact-resource/);assert.match(html,/元素亚龙/);
- for(const o of [{...objectives,stale:true},{...objectives,rows:[{...objectives.rows[0],state:'check'}]},{available:false,rows:[]}])assert.doesNotMatch(renderGuide({model:{...m,objectives:o}},'overview',false,()=>'<img>'),/compact-resource/);
+ const html=renderGuide({model:{...m,objectives}},'overview',false,()=>'<img>');assert.doesNotMatch(html,/compact-resource|元素亚龙/);
+ assert(m.completeGear.alternatives.length>=2);
+ for(const a of m.completeGear.alternatives){
+  assert(a.when&&a.use);assert(html.includes(a.when));assert(html.includes(a.name));
+  assert(m.shoppingTargets.some(t=>t.id===a.id),'every visible alternative is a valid explicit shopping target');
+ }
+ assert.match(html,/data-action="purchase-target"/);
+ const alternative=m.completeGear.alternatives.find(a=>!a.blockedReason);
+ if(alternative){const chosen=createGuideModel(data,{...selectGuide(null,selection),purchaseTarget:alternative.id});assert.equal(chosen.next.id,alternative.id);assert.equal(chosen.purchaseTarget,alternative.id);assert.deepEqual(chosen.completeGear.route.map(i=>i.id),m.completeGear.route.map(i=>i.id));}
+ const full=renderGuide({model:{...m,compact:false}},'items',false,()=>'<img>');assert(full.includes(m.completeGear.route.find(i=>i.use).use));
 });

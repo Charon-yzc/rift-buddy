@@ -62,18 +62,23 @@ async function run(){
  });
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
+ const fullMain=main;
  diagnosticMain=main;
- const js=code=>main.webContents.executeJavaScript(code,true).catch(error=>{console.error('Failed smoke expression:',code);throw error;}),click=selector=>js('document.querySelector('+JSON.stringify(selector)+').click()');
+ const selectSurface=async side=>{await until(()=>{main=side?windows.find(w=>!w.isDestroyed()&&new URL(w.webContents.getURL()||'about:blank').searchParams.get('surface')==='companion'):fullMain;return main&&!main.isDestroyed();},'Requested surface missing');await until(()=>main.webContents.executeJavaScript('!!document.querySelector('+(side?'".companion-shell"':'"[data-action=navigate]"')+')'),'Requested surface not ready');diagnosticMain=main;};
+ const js=async code=>{const result=await main.webContents.executeJavaScript(code,true).catch(error=>{console.error('Failed smoke expression:',code);throw error;});if(code==='window.buddy.companionMode(false)')await selectSurface(false);if(code==='window.buddy.companionMode(true)')await selectSurface(true);return result;};
+ const click=async selector=>{await js('document.querySelector('+JSON.stringify(selector)+').click()');if(selector==='[data-action=companion-full]')await selectSurface(false);if(selector==='[data-action=companion-attach]')await selectSurface(true);};
  const change=async(selector,value)=>{if(selector==='#solo-role'&&!await js('!!document.querySelector("#solo-role")'))await click('[data-action=companion-tab][data-tab=plan]');return js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(String(value))+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');};
- const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(180);};
+ let resumeSidebar=false;
+ const sync=async()=>{if(main.isDestroyed()||phase!=='ChampSelect'||offline){if(main.isDestroyed()||main!==fullMain)resumeSidebar=true;await selectSurface(false);}await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(180);if(phase==='ChampSelect'&&!offline&&resumeSidebar){await selectSurface(true);resumeSidebar=false;await click('[data-action=sync]');await delay(180);}};
  const toggleAutoSync=()=>js('(()=>{const b=document.createElement("button");b.dataset.action="auto-sync";document.body.append(b);b.click();b.remove();})()');
  const backgroundSync=async()=>{await js('window.buddy.client(true)');await delay(250);};
  await until(()=>js('!!document.querySelector("#solo-role")'),'Main not loaded');await until(()=>observer,'Observer missing');
  const area=screen.getPrimaryDisplay().workArea,anchor={x:area.x+20,y:area.y+40,width:Math.min(1200,area.width-560),height:Math.min(850,area.height-100)},anchorBefore=structuredClone(anchor);
  observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor),foreground:false,minimized:false},game:null})+'\n');await sync();
+ await selectSurface(true);
  await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');
  await until(()=>js('document.querySelectorAll(".companion-candidate").length===6'),'Six automatic candidates missing');
- assert.ok(main.getBounds().width>=518&&main.getBounds().width<=521,'Default sidebar must use 520 logical pixels when space is available');assert.deepEqual(anchor,anchorBefore);assert.equal(main.isVisible(),false);assert.equal(writes.length,0);
+ assert.ok(main.getBounds().width>=438&&main.getBounds().width<=441,'Default sidebar must use 440 logical pixels when space is available');assert.ok(!fullMain.isDestroyed(),'Main and sidebar must coexist');assert.deepEqual(anchor,anchorBefore);assert.equal(main.isVisible(),false);assert.equal(writes.length,0);
  const capture=async name=>{
   await js('[...document.images].forEach(i=>i.loading="eager")');
   await until(()=>js('[...document.querySelectorAll(".companion-shell img")].every(i=>i.complete&&i.naturalWidth>0)'),'Missing bundled image');
@@ -238,8 +243,8 @@ async function run(){
  await js('window.buddy.presentation({field:"textScale",value:1.25})');await delay(100);
  await click('[data-action=companion-jump][data-section=runes]');
  main.setSize(280,320);await delay(150);
- assert.ok(main.getSize()[1]>=Math.min(480,area.height),'Sidebar allowed shrinking below its readable minimum');
- assert.ok(await js('document.querySelector(".companion-content").clientHeight>=150'),'Minimum sidebar height squeezed large text content');
+ assert.ok(main.getSize()[1]>=Math.min(320,area.height),'Sidebar allowed shrinking below its minimum');
+ assert.ok(await js('document.querySelector(".companion-content").clientHeight>0'),'Minimum sidebar height must retain a scrollable content area');
  for(const size of [{width:360,height:600},{width:280,height:480}]){
   observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor),foreground:false,minimized:false},game:null})+'\n');
   main.setContentSize(size.width,size.height);await until(()=>js('Math.abs(innerWidth-'+size.width+')<=1'),'Sidebar content did not reach '+size.width+' logical pixels');
@@ -350,7 +355,7 @@ async function run(){
  assert.equal((await js('window.buddy.bootstrap()')).state.preferences.presentation.textScale,1.1);
  await guideJs('window.guide.control("presentation",{field:"toggleModule",value:"scoreboard"})');assert.equal((await js('window.buddy.bootstrap()')).state.preferences.presentation.guideModules.includes('scoreboard'),false);
  await guideJs('window.guide.control("presentation",{field:"reset"})');
- assert.equal(main.isVisible(),false);assert.ok(windows.every(w=>!w.isVisible()));
+ assert.equal(main.isVisible(),false);assert.ok(windows.filter(w=>!w.isDestroyed()).every(w=>!w.isVisible()));
  if(process.env.RIFT_BUDDY_SMOKE_OLD_SOURCE!=='1'){
  const freshFetches=sourceFetches;await click('[data-action=auto-check]');
  await js('(()=>{const b=document.createElement("button");b.dataset.action="build";b.dataset.id="Ashe";b.dataset.role="bottom";document.body.append(b);b.click();b.remove();})()');

@@ -17,7 +17,9 @@ export function junglePlan(champion,start,side){
  const camps=start==='blue'?['蓝BUFF','魔沼蛙','三狼','锋喙鸟','红BUFF','石甲虫']:['红BUFF','石甲虫','锋喙鸟','三狼','蓝BUFF','魔沼蛙'];
  const opening=special?[`${start==='blue'?'蓝BUFF → 魔沼蛙 → 三狼':'红BUFF → 锋喙鸟'}依次画圈；血蓝不足可缩短`,`${start==='blue'?'转红BUFF → 锋喙鸟':'转蓝BUFF → 魔沼蛙 → 三狼'}画圈；惩戒可立即释放选定营地`,'沿安全方向回收实际已成熟的营地，不盲等','回收后比较邻线配合或补给','石甲虫按实际状态与成熟情况补']:camps;
  const end=side?(side==='blue'?(start==='blue'?'下路':'上路'):(start==='blue'?'上路':'下路')):null;
+ const rotationRoute=special?['安全半区画圈 → 转另一半区画圈','沿安全方向回收已成熟营地']:start==='blue'?['三狼 → 魔沼蛙 → 蓝BUFF（实际可刷时）','检查中/邻线 → 转锋喙鸟/石甲虫']:['锋喙鸟 → 石甲虫 → 红BUFF（实际可刷时）','检查中/邻线 → 转三狼/魔沼蛙'];
  return {opening,special,profile:p,routeTitle:special?'画圈与回收示例':p?.early?'三营检查 → 无机会接着刷':'六营发育示例',
+  rotationRoute,
   finish:special?'回收方向按实际安全与成熟情况调整':end?`完整示例结束靠近${end}；中路机会顺路比较`:'出生方未知：暂不指定结束靠近哪条边路',
   compactRoute:special?[start==='blue'?'蓝→蛙→三狼画圈；转红→锋喙鸟画圈':'红→锋喙鸟画圈；转蓝→蛙→三狼画圈','成熟后安全回收；惩戒可立即释放']: [camps.slice(0,3).join(' → '),camps.slice(3).join(' → ')],
   checkpoint:special?'先画起手半区，再转半区画圈；按实际成熟状态回收，血蓝不足可缩短路线。':p?.early?'前三营后自己检查邻线；没有可靠机会就继续后三营，不蹲等。':'保住经验与回城节奏；遇到近处可靠机会可以提前停刷，不强行刷满。'};

@@ -15,7 +15,7 @@ export function clearClientPicks(slots){
  });
 }
 const clientGameId=id=>(typeof id==='string'||Number.isSafeInteger(id))&&/^\d{1,20}$/.test(String(id))&&Number(id)>0?String(id):null;
-export function publicClientGameId(client){return client?.connected?clientGameId(client.game?.gameId)||clientGameId(client.session?.gameId):null;}
+export function publicClientGameId(client){return client?.connected?(client.phase==='ChampSelect'?clientGameId(client.session?.gameId)||clientGameId(client.game?.gameId):clientGameId(client.game?.gameId)||clientGameId(client.session?.gameId)):null;}
 // Keep one current public context, never a history. An unknown ID is not
 // evidence of a new game and must not erase an explicit position choice.
 export function reconcileClientDraft(draft,gameId,previousId=null){

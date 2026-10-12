@@ -89,3 +89,27 @@
 .companion-ranking-roster>button:hover{background:#243c32}.companion-ranking-roster>button[data-local=true]{color:#b2edcb}.companion-ranking-roster>button:focus-visible{outline:2px solid #b2edcb;outline-offset:2px}
 .companion-ranking-roster .portrait,.companion-ranking-roster .empty-portrait{width:22px;height:22px;flex-shrink:0}.companion-ranking-roster>button>span{min-width:0;overflow-wrap:anywhere}.companion-ranking-roster small{display:block;font-size:calc(9px * var(--text-scale));color:#9fb9ac}
 @media(max-width:450px){.companion-ranking-roster>button{flex-direction:column;text-align:center}}
+
+/* The selection pane budgets its height for six comparable choices. */
+.companion-shell[data-tab=recommend] .companion-content{padding-top:6px;padding-bottom:8px}
+.companion-team-compact .companion-section-head{margin:0 0 3px;min-height:26px}.companion-team-compact .companion-section-head h3{font-size:calc(13px * var(--text-scale));margin:0}
+.companion-team-compact .companion-section-head>.btn{padding:3px 6px;min-height:26px;font-size:calc(12px * var(--text-scale))}
+.companion-team-compact .companion-roster-row{padding:2px 0}.companion-team-compact .companion-roster-hero{gap:3px}
+.companion-team-compact .companion-roster-hero b,.companion-team-compact .companion-roster-hero small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}
+.companion-shell[data-tab=recommend] .companion-section-head{margin:6px 0 0;min-height:28px}.companion-shell[data-tab=recommend] .companion-section-head h3{margin:0;font-size:calc(13px * var(--text-scale))}
+.companion-candidate{padding:3px 0;border-bottom:1px solid #2c3c37}
+.companion-candidate .candidate-row{gap:5px;padding-right:40px;min-height:32px}
+.companion-candidate .candidate-members{gap:4px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:0}
+.companion-candidate .candidate-members:has(>.candidate-member:only-child){grid-template-columns:minmax(0,1fr)}
+.companion-candidate .candidate-members:has(>.candidate-member:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+.companion-candidate .candidate-member{gap:4px;padding:1px 0;width:100%}.companion-candidate .candidate-member .portrait{width:26px;height:26px;border-radius:4px}
+.companion-candidate .candidate-member b{font-size:calc(12px * var(--text-scale));line-height:1.35}.companion-candidate .candidate-member small{font-size:calc(11px * var(--text-scale));line-height:1.35}
+.companion-candidate .candidate-row>.btn{min-height:30px;padding:4px 7px;font-size:calc(12px * var(--text-scale))}
+.companion-candidate>.candidate-summary{margin:3px 0 0 21px;font-size:calc(12px * var(--text-scale));line-height:1.4}
+.companion-candidate>.candidate-warning{margin:2px 0 0 21px;font-size:calc(11px * var(--text-scale));line-height:1.4}
+.companion-content .candidate-details>summary{top:4px;min-width:36px;min-height:30px;padding:4px 2px;font-size:calc(12px * var(--text-scale));line-height:1.4}
+.companion-candidate .candidate-detail-content{padding-left:21px}.companion-candidate .candidate-detail-content .btn{min-height:30px}
+.companion-candidate .candidate-detail-content p{font-size:calc(12px * var(--text-scale));line-height:1.65}
+.companion-recommend-options{margin-top:6px}.companion-recommend-options>summary{font-size:calc(11px * var(--text-scale))!important}
+.companion-team-compact+.companion-section-head{margin-top:6px}
+.companion-shell[data-tab=recommend] .companion-section-head>.btn{padding:3px 6px;min-height:30px;line-height:1.4}

@@ -5,9 +5,11 @@ export function checksumRecord({version,sha256}){
  if(!/^[0-9a-f]{64}$/.test(sha256||''))throw Error('安装包校验值格式不正确');
  return `${sha256}  RiftBuddy-${version}-Setup.exe\n`;
 }
-export function installerScript({version,directory,output,icon,files}){
+export function installerScript({version,directory,output,icon,files,obsoleteLocales=[]}){
  if(!/^\d+\.\d+\.\d+$/.test(version)||version.trim()!==version||!files.length)throw Error('安装包版本或文件清单不完整');
  if(files.some(file=>path.win32.isAbsolute(file)||/^[A-Za-z]:/.test(file)||file.split(/[\\/]/).some(p=>p==='..'||!p)||/[\r\n]/.test(file)))throw Error('安装包清单包含不合法路径');
+ if(!Array.isArray(obsoleteLocales)||obsoleteLocales.length>200||obsoleteLocales.some(name=>typeof name!=='string'||!/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,4})?\.pak$/.test(name)||['en-US.pak','zh-CN.pak','zh-TW.pak'].includes(name)||files.some(file=>file.replaceAll('\\','/')==='locales/'+name)))throw Error('旧语言资源清单不正确');
+ const removeLocales=obsoleteLocales.map(name=>`  Delete "$INSTDIR\\locales\\${name}"`).join('\n');
  const relative=files.map(f=>f.replaceAll('/','\\')),folders=new Set();
  for(const file of relative){let dir=path.win32.dirname(file);while(dir!=='.'){folders.add(dir);const next=path.win32.dirname(dir);if(next===dir)break;dir=next;}}
  const removeFiles=relative.map(file=>`  Delete "$INSTDIR\\${String(file).replaceAll('$','$$').replaceAll('"','$\\"')}"`).join('\n');
@@ -47,6 +49,7 @@ FunctionEnd
 Section "开黑搭子" Main
   SetOutPath "$INSTDIR"
   File /r ${quote(path.join(directory,'*.*'))}
+${removeLocales}
   WriteUninstaller "$INSTDIR\\卸载开黑搭子.exe"
   CreateDirectory "$SMPROGRAMS\\开黑搭子"
   CreateShortcut "$SMPROGRAMS\\开黑搭子\\开黑搭子.lnk" "$INSTDIR\\开黑搭子.exe"

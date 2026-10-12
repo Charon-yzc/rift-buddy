@@ -2,6 +2,8 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import {prepareClientSelection,validateClientPreparation} from '../services/client-preparation.mjs';
 import {getBuild} from '../src/core/builds.mjs';import {createItemSet} from '../src/core/item-sets.mjs';
 import {runeWriteContext} from '../src/core/rune-context.mjs';import {lcuRequest} from '../services/lcu.mjs';
+import io from 'node:fs/promises';import path from 'node:path';
+import {importItemSet} from '../services/item-sets.mjs';
 const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
 const hero=data.champions.find(c=>c.id==='Ashe'),build=getBuild(hero,'bottom',data);
 function fixture({locked=false}={}){
@@ -33,6 +35,38 @@ test('locked same hero applies configuration without selecting or unlocking, loc
  const f=fixture({locked:true});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
  const other=fixture({locked:true});other.own.championId=1;other.value.context.championId=1;await assert.rejects(other.run(),/锁定其他英雄/);assert(!other.calls.some(c=>c.method!=='GET'));
 });
+
+test('current champ-select ID authorizes the click while gameflow is empty, zero or from the previous game',async()=>{
+ for(const gameId of [undefined,0,776]){
+  const f=fixture();f.game.gameData.gameId=gameId;
+  f.value.context=runeWriteContext({connected:true,phase:'ChampSelect',session:f.session,game:{gameId}});
+  assert.equal(f.value.context.gameId,'777');
+  const result=await f.run();assert.equal(result.complete,true);
+  assert.equal(f.action.completed,false);assert.equal(f.items,1);
+ }
+});
+
+test('a new selection session is rejected even when stale gameflow still matches the clicked game',async()=>{
+ const f=fixture();f.session.gameId=778;
+ await assert.rejects(f.run(),/选人会话已变化/);
+ assert.equal(f.calls.filter(c=>c.method!=='GET').length,0);
+ const g=fixture(),read=g.deps.request;
+ g.deps.request=async(auth,route,method,body)=>{const result=await read(auth,route,method,body);if(method==='PUT')g.session.gameId=778;return result;};
+ const result=await g.run();assert.equal(result.steps.spells.status,'failed');assert.equal(g.items,0);
+});
+test('a new game during installation lookup or temporary-file I/O cannot commit the previous selection’s equipment set',async()=>{
+ for(const edge of ['install-dir','temporary']){
+  const f=fixture(),root=await io.mkdtemp(path.resolve('.local/preparation-item-')),install=path.join(root,'LeagueClient'),game=path.join(root,'Game');
+  await io.mkdir(install);await io.mkdir(game);await io.writeFile(path.join(install,'LeagueClient.exe'),'mock');await io.writeFile(path.join(game,'League of Legends.exe'),'mock');
+  const changeGame=()=>{f.session.gameId=778;f.game.gameData.gameId=778;},request=f.deps.request;
+  f.deps.request=async(auth,route,...args)=>{if(route==='/data-store/v1/install-dir'){if(edge==='install-dir')changeGame();return install;}return request(auth,route,...args);};
+  let renames=0;const disk={...io,writeFile:async(...args)=>{await io.writeFile(...args);if(edge==='temporary'&&String(args[0]).endsWith('.tmp'))changeGame();},rename:async(...args)=>{renames++;return io.rename(...args);}};
+  f.deps.writeItems=(args,deps)=>importItemSet(args,{...deps,io:disk});
+  const result=await f.run();assert.equal(result.complete,false,edge);assert.equal(result.steps.items.status,'failed');assert.match(result.steps.items.message,/选人会话已变化/);assert.equal(result.steps.spells.status,'done');assert.equal(renames,0);
+  assert.deepEqual(await io.readdir(path.join(game,'Config','Global','Recommended')),[],'Failed selection must leave no visible or temporary item set');
+ }
+});
+
 test('unavailable heroes, missing availability and non-player turn produce no writes',async()=>{
  for(const mode of ['banned','taken','disabled','missing','turn']){const f=fixture();if(mode==='banned')f.session.bans.myTeamBans=[22];if(mode==='taken')f.session.myTeam.push({cellId:1,championId:22});if(mode==='turn'){f.session.timer.phase='BAN_PICK';f.action.isInProgress=false;}
   const request=f.deps.request;f.deps.request=(auth,route,...args)=>route.endsWith('/disabled-champion-ids')&&mode==='disabled'?[22]:route.endsWith('/pickable-champion-ids')&&mode==='missing'?null:request(auth,route,...args);
