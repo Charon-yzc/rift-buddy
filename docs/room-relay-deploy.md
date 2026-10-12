@@ -61,6 +61,6 @@ Wrangler 不是本仓库已安装的开发依赖。未准备工具时，上述�
 pnpm exec wrangler deploy --config relay/wrangler.toml
 ```
 
-再使用输出地址进行 WebSocket 冒烟、实际客户端互通和退出清理检查。默认公网地址已通过单机双连接的阵容转发检查，完整配置转发未通过；需要由实际服务维护者核对并更新现有 Worker。没有取得该服务管理权限，不部署、不新建替代服务。大陆不同运营商／域名的可达性为未知，自有域名也不能保证连通。
+再使用输出地址进行 WebSocket 冒烟、实际客户端互通和退出清理检查。默认公网地址在 2026-10-12 的单机独立连接复测中，已完整转发二至五人配置、职责与晚加入快照；本次无需更改现有 Worker。没有取得该服务管理权限，不部署、不新建替代服务。两台 Windows、不同运营商及长时连接仍待验证，自有域名也不能保证连通。
 
 Cloudflare 当前允许 Free 计划使用 SQLite Durable Objects，但请求、计算与存储都有额度，超限会失败；不要承诺永久免费或用不完。以[官方计费与额度](https://developers.cloudflare.com/durable-objects/platform/pricing/)、[WebSocket 休眠说明](https://developers.cloudflare.com/durable-objects/best-practices/websockets/)及部署账号的实际计划为准。
