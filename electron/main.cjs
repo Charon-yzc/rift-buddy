@@ -33,12 +33,12 @@ if(helperFlag){
 const quitRequested=process.argv.includes('--quit');
 const lock=app.requestSingleInstanceLock();if(!lock||quitRequested)app.quit();
 if(quitRequested)return;
-function showMainWindow(){if(!win){if(data)createWindow();}else{if(win.isMinimized())win.restore();win.show();win.focus();}diagnostic(`show-main-window ${!!win?.isVisible()}`);}
+function showMainWindow(){companion?.unfold();if(!win){if(data)createWindow();}else{if(win.isMinimized())win.restore();win.show();win.focus();}diagnostic(`show-main-window ${!!win?.isVisible()}`);}
 app.on('second-instance',(_event,argv)=>{if(argv.includes('--quit')){quitting=true;app.quit();}else if(argv.includes('--show-guide'))guide?.show();else showMainWindow();});
 function createWindow(){
  rendererReady=false;
- const area=screen.getPrimaryDisplay().workArea;
- win=new BrowserWindow({width:Math.min(1460,area.width),height:Math.min(980,area.height),minWidth:Math.min(1050,area.width),minHeight:Math.min(720,area.height),backgroundColor:'#10151e',title:'开黑搭子',
+ const placement=require('../src/core/window-placement.mjs'),saved=state?.preferences?.mainBounds,area=screen.getDisplayMatching(saved||screen.getPrimaryDisplay().bounds).workArea,bounds=placement.fitWindow(saved,area,{width:1460,height:980,minWidth:Math.min(1050,area.width),minHeight:Math.min(720,area.height),maxWidth:area.width,maxHeight:area.height});
+ win=new BrowserWindow({...bounds,minWidth:Math.min(1050,area.width),minHeight:Math.min(720,area.height),backgroundColor:'#10151e',title:'开黑搭子',
   icon:path.join(root,'assets/icon.png'),show:false,autoHideMenuBar:true,
   webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
  win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
@@ -51,6 +51,7 @@ function createWindow(){
   diagnostic('did-finish-load');
   if(process.env.RIFT_BUDDY_SCREENSHOT){setTimeout(async()=>{try{const image=await win.webContents.capturePage();await fs.writeFile(process.env.RIFT_BUDDY_SCREENSHOT,image.toPNG());diagnostic('screenshot saved');}catch(e){diagnostic(e.message);}},2200);}
  });
+ companion?.bindWindow();
  win.on('close',()=>{companion?.dismiss();});
  win.on('closed',()=>{win=null;});
 }
@@ -90,6 +91,13 @@ async function boot(){
  const pairFiles=[path.join(root,'data/pair-statistics.json'),path.join(storeRoot,'data/pair-statistics-cache.json')];
  data.pairStatistics=await loadPairStatisticsCache(pairFiles,data);
  const refreshPairs=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
+ const {loadRankings,createRankingsCache}=await import('../services/rankings-cache.mjs');
+ data.rankings=await loadRankings([path.join(root,'data'),path.join(storeRoot,'data')],data);
+ const refreshRankings=createRankingsCache({root:path.join(storeRoot,'data'),getData:()=>data});
+ const {loadPatchNotes}=await import('../services/patch-notes.mjs');
+ data.patchNotes=await loadPatchNotes(path.join(root,'data'),data);
+ const {loadAbilities}=await import('../services/abilities.mjs');
+ data.abilityReference=await loadAbilities(path.join(root,'data'),data);
  // A mismatched spell book must never be used silently (same gate as update-data).
  try{
   const spellsFile=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8'));
@@ -160,7 +168,7 @@ async function boot(){
  diagnostic(`loaded data ${data.version}`);
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
  const placement=await import('../src/core/window-placement.mjs');
- companion=require('./client-companion.cjs')({getWindow:()=>win,createWindow,getClient:()=>latestClient,getPreferences:()=>state.preferences,placement,diagnostic});
+ companion=require('./client-companion.cjs')({root,getWindow:()=>win,createWindow,getClient:()=>latestClient,getPreferences:()=>state.preferences,savePlacement:patch=>saveCurrentState(current=>{const preferences={...current.preferences};for(const [key,value] of Object.entries(patch)){if(value===undefined)delete preferences[key];else preferences[key]=value;}return {...current,preferences};}),placement,diagnostic});
  // Optional rooms (CHA-31): invited peers share public draft/configuration
  // snapshots over LAN/VPN or their own trusted relay. Never logs credentials.
  const {createRoomService}=await import('../services/room.mjs');
@@ -187,6 +195,7 @@ async function boot(){
  const {windowInfo}=await import('../services/window-info.mjs');
  guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:latestClient,companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
  guard('companion-mode',value=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');return companion.setMode(value);});
+ guard('window-layout-control',async action=>{if(action==='fold')return companion.fold();if(!['follow','reset-side','reset-all'].includes(action))throw Error('窗口布局操作不正确');const result=await companion.reset(action==='reset-all',action!=='follow');if(action==='reset-all'&&state.guide)await guide.recover(true);return result;});
  guard('recover-guide',async()=>{await prepareCurrentGuide();await pollLive(true);return guide.recover();});
  guard('catalog-source',url=>catalogStore.setSource(url).then(useCatalog));
  guard('catalog-check',()=>catalogStore.check());
@@ -216,7 +225,7 @@ async function boot(){
     if(same(previous,changed))continue;if(changed&&accepted){merged.preparations=upsertPreparation(merged.preparations,mergeSavedFields(accepted,previous||{},changed,'这位英雄的配置同时发生变化，请刷新后重新保存'));continue;}if(!same(accepted,previous)&&!same(accepted,changed))throw Error('这位英雄的配置同时发生变化，请刷新后重新保存');
     merged.preparations=changed?upsertPreparation(merged.preparations,changed):merged.preparations.filter(p=>preparationIdentity(p)!==identity);
    }
-   for(const key of Object.keys(next.preferences)){if(key==='presentation'||same(next.preferences[key],before.preferences[key]))continue;if(!same(current.preferences[key],before.preferences[key])&&!same(current.preferences[key],next.preferences[key]))throw Error('偏好同时发生变化，请刷新后重新保存');merged.preferences[key]=next.preferences[key];}
+   for(const key of Object.keys(next.preferences)){if(['presentation','mainBounds','companionBounds'].includes(key)||same(next.preferences[key],before.preferences[key]))continue;if(!same(current.preferences[key],before.preferences[key])&&!same(current.preferences[key],next.preferences[key]))throw Error('偏好同时发生变化，请刷新后重新保存');merged.preferences[key]=next.preferences[key];}
    const gameId=publicClientGameId(latestClient),context=reconcileClientDraft(merged.draft,gameId,current.draft?.clientGameId||current.guide?.match?.gameId);merged.draft=context.newGame&&current.draft?.clientGameId===gameId?current.draft:context.draft;
    // Protect accepted picks from this game, after the queued merge. A renderer
    // base from the previous game must not block releasing its old lane binding.
@@ -253,6 +262,7 @@ async function boot(){
  guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return status(true);});
  guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
  guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
+ guard('refresh-rankings',source=>refreshRankings(source));
  guard('refresh-opponent-build',async(id,role,opponent,source)=>{
   const target=data.champions.find(c=>c.id===opponent);
   if(!latestClient.connected||latestClient.phase!=='ChampSelect'||!target||!latestClient.session?.theirTeam?.some(p=>p.championId===target.key))throw Error('所选对手已不在当前公开选人中，请同步后重试');
@@ -271,10 +281,13 @@ async function boot(){
   if(updating)throw new Error('资料更新正在进行');updating=true;
   try{const next=await dataService.collectSnapshot(msg=>win?.webContents.send('data-progress',msg),data);
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
-   delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
+   delete next.abilityReference;delete next.rankings;delete next.patchNotes;delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
    next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
    next.opponentBuildSources=await loadOpponentBuildSources(path.join(storeRoot,'data'),next);
    next.pairStatistics=await loadPairStatisticsCache(pairFiles,next);
+   next.rankings=await loadRankings([path.join(root,'data'),path.join(storeRoot,'data')],next);
+   next.patchNotes=await loadPatchNotes(path.join(root,'data'),next);
+   next.abilityReference=await loadAbilities(path.join(root,'data'),next);
    next.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],next);
    // The spell book is versioned separately: a mismatched book must never be
    // used silently, so it falls back to empty (heuristic estimates + UI note).

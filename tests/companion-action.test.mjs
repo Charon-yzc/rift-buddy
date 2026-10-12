@@ -33,3 +33,24 @@ test('received sidebar plans expose explicit lineup adoption, route friend click
  assert.equal(roomSharesView(room,get,{compact:true,adoptedShare:roomLineupIdentity({...share,at:9999})}), '');
  const missing={members:[{nick:'队友',share:{...share,mode:undefined}}]};assert.match(roomSharesView(missing,get,{compact:true}),/data-share="[0-9a-f]+" disabled/);assert.doesNotMatch(roomSharesView(missing,get,{compact:true,allowUnknownRift:true}),/data-share="[0-9a-f]+" disabled/);
 });
+
+test('rankings retain the local action and all five slots outside the scrolling table, including incoming plans',()=>{
+ const slots=createSlots().map(s=>({...s,champion:s.role==='jungle'?'Graves':s.role==='mid'?'Vex':null,clientCellId:s.role==='jungle'?0:s.role==='mid'?1:null,manualPosition:s.role==='jungle',party:['jungle','mid'].includes(s.role),locked:['jungle','mid'].includes(s.role)}));
+ const [result]=recommend({slots,champions:data.champions,scope:'party'}),activePlan=captureCreativePlan(result,data),live=structuredClone(client);
+ live.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(live.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
+ const props={data,client:live,slots,unassigned:[],scope:'party',soloRole:'jungle',style:'fun',tab:'rankings',results:[],activePlan,rankings:'<section data-test-table>排行内容</section>',room:{members:[{nick:'朋友',share:{kind:'state',v:1,from:'朋友',at:1000,mode:'rift',lineup:slots.map(s=>({role:s.role,champion:s.champion}))}}]}};
+ const before=structuredClone({slots,client:live});const html=companionView(props),contextStart=html.indexOf('aria-label="排行中的当前队伍与我的下一步"'),main=html.indexOf('<main class="companion-content"');
+ assert(contextStart>0&&contextStart<main);const context=html.slice(contextStart,main);
+ assert.equal((context.match(/data-role=/g)||[]).length,6);assert.match(context,/data-action="active-hero-prepare"[^>]+data-id="Graves"/);assert.match(context,/打野 · 你 · 手动/);assert.match(context,/data-tab="recommend"/);
+ assert.match(context,/现在先做：/);assert.match(context,/companion-ranking-duty/);
+ assert.match(html,/data-action="room-adopt-lineup"/);assert(html.indexOf('data-action="room-adopt-lineup"')<html.indexOf('data-test-table'));
+ const unknown=companionView({...props,client:{...live,eligibility:null}});assert(unknown.indexOf('data-eligibility="unknown"')<unknown.indexOf('data-test-table'));
+ assert.deepEqual({slots,client:live},before);
+});
+
+test('a prepared hover stays visible on the team and ranking tabs without promoting it to a selected roster pick',()=>{
+ const slots=createSlots(),live=structuredClone(client);live.session.myTeam[0].championId=0;live.session.myTeam[0].championPickIntent=hero('Graves').key;
+ const before=structuredClone({slots,client:live}),props={data,client:live,slots,unassigned:[],scope:'party',soloRole:'jungle',style:'fun',results:[],preparation:null,plan:{preview:true,intent:true,selection:{id:'Graves',role:'jungle',mode:'rift'}},preparationStatus:{complete:true}};
+ for(const tab of ['recommend','rankings'])for(const plan of [props.plan,{preview:true,selection:{id:'Vex',role:'mid',mode:'rift'}}]){const html=companionView({...props,tab,plan});assert.match(html,/data-action="companion-roster-plan"[^>]+data-id="Graves"/);assert.match(html,/预选配置已完成 · 尚未选定/);assert.doesNotMatch(html,/data-local="true"/);}
+ assert.deepEqual({slots,client:live},before);assert(slots.every(s=>!s.champion));
+});

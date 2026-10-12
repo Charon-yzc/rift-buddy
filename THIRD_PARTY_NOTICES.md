@@ -1,5 +1,15 @@
 # Third-party notices
 
+## Riot and Tencent champion reference data
+
+`data/abilities.json` contains Chinese champion descriptions from Tencent's public League of Legends champion details, with same-patch Riot Data Dragon cooldown/resource ordering and localized client spell data distributed by CommunityDragon used for special forms and source corrections. `data/images/ability/` bundles those public skill icons, using exact-version Data Dragon PNGs for missing Tencent icons. Each source URL and SHA-256 is retained in the reference data. No game process memory or private game data is used.
+
+Sources: https://game.gtimg.cn/images/lol/act/img/js/hero/103.js ; https://developer.riotgames.com/docs/lol#data-dragon ; https://raw.communitydragon.org/16.20/game/data/characters/ ; https://raw.communitydragon.org/16.20/game/zh_cn/data/menu/en_us/lol.stringtable.json . Riot's official patch announcements are linked per entry in `data/patch-notes.json`.
+
+`data/rankings.json` caches OP.GG public aggregate champion rankings. Original request scope, source URL, analysis time and fetch time are retained; these statistics are separate from curated combo recommendations and do not represent China-server results.
+
+This product is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
+
 ## LeagueAkari
 
 The matchup normalization in `src/core/matchups.mjs` adapts the public champion matchup representation from LeagueAkari. A recorded matchup keeps an unknown relationship; raw whole-game results do not become an asserted lane counter.

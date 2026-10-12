@@ -1,8 +1,8 @@
 const path=require('node:path');
 const fs=require('node:fs/promises');
 const {pathToFileURL}=require('node:url');
-const {guidePlacement}=require('../src/core/window-placement.mjs');
-const {compactGuidePlacement}=require('../src/core/guide-placement.mjs');
+const {fitWindow,guidePlacement}=require('../src/core/window-placement.mjs');
+const {compactGuidePlacement,guideWindowLimits}=require('../src/core/guide-placement.mjs');
 const createSkillWindow=require('./skill-window.cjs');
 const createJungleWindow=require('./jungle-window.cjs');
 
@@ -27,9 +27,12 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const BALL_SIZE=76;
  let gameBounds=null,openTab=null;
  const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
- function fit(recover=false){if(!win||win.isDestroyed())return;const area=workArea(),current=win.getBounds();
-  if(isCompact()){const b=compactGuidePlacement(recover?null:getState()?.compactBounds||current,area,gameBounds,stripScale());adjusting=true;win.setMinimumSize(b.width,b.height);if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>2))win.setBounds(b);adjusting=false;return;}
-  if(isStrip()){const h=stripHeight(),w=stripWidth(),b={x:Math.max(area.x,Math.min(current.x,area.x+area.width-w)),y:Math.max(area.y,Math.min(current.y,area.y+area.height-h)),width:Math.min(w,area.width),height:Math.min(h,area.height)};if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3)){adjusting=true;win.setMinimumSize(Math.min(200,area.width),Math.min(60,area.height));win.setBounds(b);adjusting=false;}return;}
+ const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{visibilityRequested=true;win?.showInactive();inputMode();publish();}});
+ const resize=require('./window-resize.cjs')({getWindow:()=>win,getArea:workArea,getLimits:area=>guideWindowLimits(isCompact()?'compact':isStrip()?'strip':'details',area,stripScale()),onStart:()=>{clearTimeout(boundsTimer);boundsTimer=null;hoverHeader=true;inputMode();},onEnd:rememberBounds});
+ async function rememberBounds(){clearTimeout(boundsTimer);boundsTimer=null;if(!win||win.isDestroyed()||!getState()||isBall())return;const b=win.getBounds(),current=getState();if(isCompact()){await save({...current,compactBounds:b});return;}if(isStrip()){await save({...current,stripBounds:b});return;}await save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}});}
+ function fit(recover=false){if(!win||win.isDestroyed()||resize.active()||boundsTimer)return;const area=workArea(),current=win.getBounds();
+  if(isCompact()){const b=compactGuidePlacement(recover?(getState()?.compactBounds?{width:getState().compactBounds.width,height:getState().compactBounds.height}:null):getState()?.compactBounds||current,area,gameBounds,stripScale());adjusting=true;const l=guideWindowLimits('compact',area,stripScale());win.setMinimumSize(l.minWidth,l.minHeight);if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>2))win.setBounds(b);adjusting=false;return;}
+  if(isStrip()){const b=fitWindow(getState()?.stripBounds||{...current,width:stripWidth(),height:stripHeight()},area,guideWindowLimits('strip',area,stripScale()));if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3)){adjusting=true;const l=guideWindowLimits('strip',area,stripScale());win.setMinimumSize(l.minWidth,l.minHeight);win.setBounds(b);adjusting=false;}return;}
   const b=guidePlacement(recover?null:current,area,gameBounds,{ball:isBall(),collapsed:!!getState()?.collapsed,recover});adjusting=true;win.setMinimumSize(Math.min(isBall()?76:360,area.width),Math.min(isBall()?76:getState()?.collapsed?280:480,area.height));if(['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3))win.setBounds(b);adjusting=false;}
  const isBall=()=>!!getState()?.ball;
  const isStrip=()=>!!getState()?.strip;
@@ -43,21 +46,19 @@ const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStr
 const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,openTab,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
 const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
 const jungle=createJungleWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
-function publish(){const value=payload();if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);jungle.publish(value);if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
+function publish(){if(peek.active())peek.sync(visibilityRequested);const value=payload();if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);jungle.publish(value);if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
  async function save(next){await setState(next,getState());publish();return payload();}
  function adjustHeight(){if(win&&!isBall()&&!isStrip()&&!isCompact()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
  function applyMode(){
   if(!win||win.isDestroyed())return;
-  clearTimeout(boundsTimer);
+  clearTimeout(boundsTimer);boundsTimer=null;resize.cancel();
   adjusting=true;
   // On Windows changing resizability can change the native frame bounds.
   // Apply it before the desired size, not after restoring the full window.
   win.setResizable(!isBall()&&!isStrip()&&!isCompact());
-  if(isCompact()){const area=workArea(),b=compactGuidePlacement(getState()?.compactBounds,area,gameBounds,stripScale());win.setMinimumSize(b.width,b.height);win.setBounds(b);
+  if(isCompact()){const area=workArea(),b=compactGuidePlacement(getState()?.compactBounds,area,gameBounds,stripScale());const l=guideWindowLimits('compact',area,stripScale());win.setMinimumSize(l.minWidth,l.minHeight);win.setBounds(b);
   }else if(isStrip()){
-   win.setMinimumSize(200,60);win.setSize(stripWidth(),stripHeight());
-   const area=screen.getDisplayMatching(win.getBounds()).workArea,b=win.getBounds();
-   win.setPosition(Math.max(area.x,Math.min(b.x,area.x+area.width-stripWidth())),Math.max(area.y,Math.min(b.y,area.y+area.height-stripHeight())));
+   const area=workArea(),l=guideWindowLimits('strip',area,stripScale()),b=fitWindow(getState()?.stripBounds||{...win.getBounds(),width:stripWidth(),height:stripHeight()},area,l);win.setMinimumSize(l.minWidth,l.minHeight);win.setBounds(b);
   }else if(isBall()){
    win.setMinimumSize(BALL_SIZE,BALL_SIZE);win.setSize(BALL_SIZE,BALL_SIZE);
    const area=screen.getDisplayMatching(win.getBounds()).workArea,b=win.getBounds();
@@ -71,11 +72,11 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
   inputMode();publish();
  }
  function create(){
-  const saved=isCompact()?getState()?.compactBounds:getState()?.bounds,area=workArea();
+  const saved=isCompact()?getState()?.compactBounds:isStrip()?getState()?.stripBounds:getState()?.bounds,area=workArea();
   const compact=isCompact(),placed=compactGuidePlacement(saved,area,gameBounds,stripScale());
   const ball=isBall(),strip=isStrip();
-  const width=compact?placed.width:ball?BALL_SIZE:strip?stripWidth():Math.min(saved?.width||400,area.width),height=compact?placed.height:ball?BALL_SIZE:Math.min(strip?stripHeight():getState()?.collapsed?280:saved?.height||740,area.height);
-  win=new BrowserWindow({width,height,minWidth:compact?placed.width:ball?BALL_SIZE:strip?200:360,minHeight:compact?placed.height:ball?BALL_SIZE:strip?60:getState()?.collapsed?280:480,maxWidth:640,maxHeight:1000,
+  const width=compact?placed.width:ball?BALL_SIZE:strip?saved?.width||stripWidth():Math.min(saved?.width||400,area.width),height=compact?placed.height:ball?BALL_SIZE:Math.min(strip?saved?.height||stripHeight():getState()?.collapsed?280:saved?.height||740,area.height);
+  win=new BrowserWindow({width,height,minWidth:compact?guideWindowLimits('compact',area,stripScale()).minWidth:ball?BALL_SIZE:strip?280:360,minHeight:compact?guideWindowLimits('compact',area,stripScale()).minHeight:ball?BALL_SIZE:strip?160:getState()?.collapsed?280:480,maxWidth:1000,maxHeight:1200,
    x:Math.max(area.x,Math.min(saved?.x??area.x+area.width-440,area.x+area.width-width)),y:Math.max(area.y,Math.min(saved?.y??area.y+40,area.y+area.height-height)),frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,transparent:true,
    backgroundColor:'#00000000',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),resizable:!ball&&!strip&&!compact,
    webPreferences:{preload:path.join(root,'electron/guide-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
@@ -91,7 +92,7 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
    if(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT)setTimeout(async()=>{try{await fs.writeFile(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT,(await win.webContents.capturePage()).toPNG());diagnostic('guide screenshot saved');}catch(e){diagnostic(`guide capture failed ${e.message}`);}},1500);
   });
   win.on('close',event=>{if(!isQuitting()){event.preventDefault();hide();}});
-  const remember=()=>{if(adjusting||isBall()||isStrip())return;clearTimeout(boundsTimer);boundsTimer=setTimeout(()=>{if(!win||win.isDestroyed()||!getState()||isBall()||isStrip())return;const b=win.getBounds(),current=getState();if(isCompact()){save({...current,compactBounds:{x:b.x,y:b.y}}).catch(()=>{});return;}save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}}).catch(()=>{});},350);};
+  const remember=()=>{if(adjusting||isBall()||resize.active())return;clearTimeout(boundsTimer);boundsTimer=setTimeout(()=>rememberBounds().catch(error=>diagnostic('guide placement not saved '+error.message)),350);};
   win.on('move',remember);win.on('resize',remember);
   // Fallback for flaky forwarded mousemove: while pass-through is active,
   // poll the OS cursor so hovering the drag strip still lifts ignore for
@@ -104,7 +105,7 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
    try{
     if(!win||win.isDestroyed()||!win.isVisible()||isBall()||isStrip()||!mousePassThrough())return;
     const b=win.getBounds(),p=screen.getCursorScreenPoint();
-    if(cursorInBounds(p,{...b,height:Math.min(STRIP_H,b.height)})){
+    if(cursorInBounds(p,{...b,height:Math.min(STRIP_H,b.height)})||cursorInBounds(p,{x:b.x+b.width-20,y:b.y+b.height-20,width:20,height:20})){
      if(shouldIgnore()){hoverHeader=true;inputMode();}
     }else if(!cursorInBounds(p,b)){
      if(hoverHeader){hoverHeader=false;inputMode();}
@@ -112,12 +113,12 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
    }catch{}
   },120);
   if(hoverPoll.unref)hoverPoll.unref();
-  win.on('closed',()=>{clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
+  win.on('closed',()=>{peek.destroy();clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
- function hideGear(){autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
+ function hideGear(){peek.unfold();resize.cancel();autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
  function hide(){hideGear();skill.hide();jungle.hide();}
- function show(){autoShowUntil=0;visibilityRequested=true;hoverHeader=false;skill.show();jungle.show();if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();publish();}return payload();}
- async function recover(){const current=getState();if(current)await save({...current,ball:false,strip:false,collapsed:false,compact:true,compactBounds:undefined,bounds:undefined,jungleWidget:{...current.jungleWidget,offset:undefined},skillWidget:{...current.skillWidget,offset:undefined}});show();applyMode();fit(true);skill.fit();jungle.fit();return payload();}
+ function show(){peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;skill.show();jungle.show();if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();publish();}return payload();}
+ async function recover(reset=false){peek.unfold();resize.cancel();clearTimeout(boundsTimer);boundsTimer=null;const current=getState();if(current)await save({...current,ball:false,strip:false,collapsed:false,compact:true,compactBounds:undefined,stripBounds:undefined,bounds:undefined,jungleWidget:{...current.jungleWidget,...(reset?{enabled:true}:{}),offset:undefined,size:undefined},skillWidget:{...current.skillWidget,...(reset?{enabled:true}:{}),offset:undefined,size:undefined}});show();applyMode();fit(true);skill.reset();jungle.reset();return payload();}
  function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;skill.fit();jungle.fit();if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
  const displayChanged=()=>{fit();skill.fit();jungle.fit();};
  for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
@@ -131,6 +132,9 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
  guard('guide-hover',value=>{const next=!!value;if(next!==hoverHeader){hoverHeader=next;inputMode();}return hoverHeader;});
  guard('guide-control',async(action,value)=>{
   if(action==='presentation'){await setPresentation(value);publish();return payload();}
+  if(['resize-start','resize','resize-end','resize-key'].includes(action)){if(isBall())throw Error('请先展开指引');return resize.control(action,value);}
+  if(action==='fold'){resize.cancel();peek.fold();return true;}
+  if(action==='reset-layout')return recover(true);
   if(action==='recover')return recover();
   if(action==='hide'){hideGear();return true;}
   if(action==='main'){showMain(getState()?.selection);return true;}
@@ -208,7 +212,7 @@ function publish(){const value=payload();if(getState()?.skillWidget?.enabled===f
    else if(behavior==='collapse'&&!isStrip()){await save({...getState(),compact:true,collapsed:false});applyMode();}
   }
  }
- return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);skill.destroy();jungle.destroy();win?.destroy();},isVisible:()=>!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),jungleWidget:jungle.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
+ return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);peek.destroy();skill.destroy();jungle.destroy();win?.destroy();},isVisible:()=>peek.visible()||!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),jungleWidget:jungle.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;

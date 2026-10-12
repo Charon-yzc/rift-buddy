@@ -1,0 +1,1 @@
+.window-resize-grip{position:fixed;right:1px;bottom:1px;width:15px;height:15px;min-width:0;padding:0;border:0;background:transparent;color:#85b19b;font-size:13px;line-height:15px;cursor:nwse-resize;z-index:20;-webkit-app-region:no-drag;touch-action:none}.window-resize-grip:hover,.window-resize-grip:focus-visible{background:#294c3f;color:#d9f5e6;outline:1px solid #8cd4b1}
