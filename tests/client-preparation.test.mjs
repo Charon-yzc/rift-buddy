@@ -33,6 +33,25 @@ test('locked same hero applies configuration without selecting or unlocking, loc
  const f=fixture({locked:true});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
  const other=fixture({locked:true});other.own.championId=1;other.value.context.championId=1;await assert.rejects(other.run(),/锁定其他英雄/);assert(!other.calls.some(c=>c.method!=='GET'));
 });
+
+test('current champ-select ID authorizes the click while gameflow is empty, zero or from the previous game',async()=>{
+ for(const gameId of [undefined,0,776]){
+  const f=fixture();f.game.gameData.gameId=gameId;
+  f.value.context=runeWriteContext({connected:true,phase:'ChampSelect',session:f.session,game:{gameId}});
+  assert.equal(f.value.context.gameId,'777');
+  const result=await f.run();assert.equal(result.complete,true);
+  assert.equal(f.action.completed,false);assert.equal(f.items,1);
+ }
+});
+
+test('a new selection session is rejected even when stale gameflow still matches the clicked game',async()=>{
+ const f=fixture();f.session.gameId=778;
+ await assert.rejects(f.run(),/选人会话已变化/);
+ assert.equal(f.calls.filter(c=>c.method!=='GET').length,0);
+ const g=fixture(),read=g.deps.request;
+ g.deps.request=async(auth,route,method,body)=>{const result=await read(auth,route,method,body);if(method==='PUT')g.session.gameId=778;return result;};
+ const result=await g.run();assert.equal(result.steps.spells.status,'failed');assert.equal(g.items,0);
+});
 test('unavailable heroes, missing availability and non-player turn produce no writes',async()=>{
  for(const mode of ['banned','taken','disabled','missing','turn']){const f=fixture();if(mode==='banned')f.session.bans.myTeamBans=[22];if(mode==='taken')f.session.myTeam.push({cellId:1,championId:22});if(mode==='turn'){f.session.timer.phase='BAN_PICK';f.action.isInProgress=false;}
   const request=f.deps.request;f.deps.request=(auth,route,...args)=>route.endsWith('/disabled-champion-ids')&&mode==='disabled'?[22]:route.endsWith('/pickable-champion-ids')&&mode==='missing'?null:request(auth,route,...args);

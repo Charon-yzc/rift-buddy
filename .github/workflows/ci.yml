@@ -49,6 +49,17 @@ jobs:
         run: pnpm package
       - name: Verify package contents
         run: node scripts/inspect-package.mjs --verify-current
+      - name: Check real main and sidebar synchronization and idle-game resources
+        run: node scripts/smoke-package-dual-windows.mjs
+      - name: Check accepted trio hover, explicit preparation and cross-window configuration
+        run: |
+          node scripts/smoke-package-party-preparation.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/smoke-package-party-preparation.mjs --unadopted
+      - name: Check compact complete gear, conditional alternatives and jungle routes
+        run: node scripts/smoke-package-useful-guide.mjs
+      - name: Check six compact choices at common main and sidebar sizes
+        run: pnpm exec electron scripts/smoke-selection-layout.cjs
       - name: Check selection, loading and in-game transitions
         run: node scripts/smoke-package-game-transition.mjs
       - name: Check manual positions, preparation writes and explicit version refresh

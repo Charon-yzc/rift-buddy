@@ -5,6 +5,16 @@ import {jungleGuidanceView} from '../src/jungle-guidance-view.mjs';
 const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
 const live={matched:true,mapId:11,queueId:420,gameTime:400,skills:{Q:3,W:1,E:1,R:0},stats:{hp:600,maxHp:1000,resource:{type:'MANA',value:400,max:500}}};
 const make=(extra={})=>jungleGuidance({champion:'Nocturne',role:'jungle',mode:'rift',patch:'16.20',live,...extra});
+
+test('later jungle rotations remain concrete, and an explicit half change does not invent camp or lane evidence',()=>{
+ const red=make({notes:{half:'red'},live:{...live,gameTime:1100}});
+ assert.equal(red.rotationRoute.length,2);assert.match(red.rotationRoute[0],/锋喙鸟.*石甲虫.*实际可刷/);assert(!red.openingPhase);assert(!red.ready);
+ const notes=changeJungleNotes({start:'red'},'half','blue',1100),blue=make({notes,live:{...live,gameTime:1100}});
+ assert.match(blue.rotationRoute[0],/三狼.*魔沼蛙.*实际可刷/);assert.equal(notes.lane,undefined);assert.equal(notes.at,undefined);
+ assert.match(make({champion:'Ivern',notes}).rotationRoute.join(' '),/画圈.*成熟营地/);
+ assert.throws(()=>changeJungleNotes(notes,'half','enemy',1100));
+ assert.equal(validateJungleNotes({half:'enemy',campAlive:true}),undefined);
+});
 test('Nocturne and Diana retain concrete six camps while Ivern uses passive release, without inferring a clear record',()=>{
  const nocturne=make();assert.equal(nocturne.opening.length,6);assert.match(nocturne.choices[0].text,/尚未学会/);assert.match(nocturne.mechanics,/6级前/);
  const diana=make({champion:'Diana',notes:{start:'red'}});assert.equal(diana.opening[0],'红BUFF');assert.match(diana.mechanics,/学会|6级R/);

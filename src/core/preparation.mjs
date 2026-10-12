@@ -1,5 +1,6 @@
 import {validateGuideSelection} from './guide.mjs';
 import {validateCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext} from './creative-plan.mjs';
+import {champSelectGameId} from './rune-context.mjs';
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
@@ -48,9 +49,13 @@ export function createPreparationStore(limit=PREPARATION_LIMIT){
  };
 }
 export function recallPreparation(store,guide,context,{allowSavedCombo=false}={}){
- const remembered=store.recall(context);if(remembered)return remembered;
- const catalogId=context.creativePlan?.curated?.id;
- if(catalogId){const legacy=store.recall({...context,comboId:catalogId});if(legacy)return {...legacy,...context};}
+ // An explicitly prepared combination stays selected while the other members
+ // are still unknown. A saved solo default must not replace it on confirmation.
+ // Callers with a known lineup keep using that lineup's exact identity.
+ const reference=allowSavedCombo&&!context.comboId&&guide?.comboId&&['id','role','mode'].every(field=>guide[field]===context[field])?guide:context;
+ const remembered=store.recall(reference);if(remembered)return remembered;
+ const catalogId=reference.creativePlan?.curated?.id;
+ if(catalogId){const legacy=store.recall({...reference,comboId:catalogId});if(legacy)return {...legacy,...reference};}
  return guide&&guide.id===context.id&&guide.role===context.role&&guide.mode===context.mode&&(allowSavedCombo||(guide.comboId||'')===(context.comboId||''))?structuredClone(guide):null;
 }
 // A write confirmation belongs to one public client context, not a future match.
@@ -60,7 +65,7 @@ export function createRuneApplicationState(){
  const clientContext=client=>{
   if(!client?.connected)return null;
   const session=client.session,own=session?.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
-  return JSON.stringify([client.phase,client.mode?.id||'',client.game?.gameId||session?.gameId||'',session?.localPlayerCellId??null,own?.championId||0,own?.championPickIntent||0,own?.assignedPosition||'']);
+  return JSON.stringify([client.phase,client.mode?.id||'',champSelectGameId(client.phase==='ChampSelect'?session:null,client.game),session?.localPlayerCellId??null,own?.championId||0,own?.championPickIntent||0,own?.assignedPosition||'']);
  };
  return {
   observe(client){

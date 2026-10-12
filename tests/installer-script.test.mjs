@@ -1,6 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {installerScript,checksumRecord} from '../scripts/installer-script.mjs';
+
+test('upgrading removes only retired Chromium language packs and preserves current locales and user files',()=>{
+ const options={version:'0.47.0',directory:'D:\\bundle',output:'D:\\setup.exe',icon:'D:\\icon.ico',files:['resources/app.asar','locales/zh-CN.pak','locales/en-US.pak']};
+ const script=installerScript({...options,obsoleteLocales:['ar.pak','es-419.pak']});
+ const install=script.slice(script.indexOf('Section "开黑搭子"'),script.indexOf('Section "Uninstall"'));
+ assert.ok(install.includes('Delete "$INSTDIR\\locales\\ar.pak"'));
+ assert.ok(install.includes('Delete "$INSTDIR\\locales\\es-419.pak"'));
+ assert.ok(!install.includes('Delete "$INSTDIR\\locales\\zh-CN.pak"'));
+ assert.ok(!install.includes('RMDir /r'));
+ for(const name of ['../personal.txt','zh-CN.pak','en-US.pak','zh-TW.pak','ar.pak"\nDelete *'])assert.throws(()=>installerScript({...options,obsoleteLocales:[name]}),/语言资源/);
+ assert.throws(()=>installerScript({...options,files:[...options.files,'locales/ar.pak'],obsoleteLocales:['ar.pak']}),/语言资源/);
+});
 const args={version:'0.12.0',directory:'C:\\bundle',output:'C:\\output\\setup.exe',icon:'C:\\icon.ico',files:['开黑搭子.exe','resources/app.asar','resources/connection/node.exe']};
 test('installer removes only its enumerated payload while retaining unrelated files and personal preferences',()=>{
  const script=installerScript(args),uninstall=script.slice(script.indexOf('Section "Uninstall"'));

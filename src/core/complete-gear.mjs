@@ -2,6 +2,7 @@ import {itemConflicts} from './mechanics.mjs';
 import {equipmentRoute} from './route-profile.mjs';
 import {purchasePlan} from './purchase.mjs';
 import {inventoryFulfillsItem,situationItemIssue} from './live-situation.mjs';
+import {equipmentUse,equipmentCondition} from './equipment-notes.mjs';
 
 export const COMPLETE_GEAR_PATCH='16.20';
 const normalQueues=new Set([400,420,430,440]);
@@ -64,7 +65,7 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
   const heldConflict=held.find(old=>old!==id&&itemConflicts(Number(id),[Number(old)]));
   const pinnedConflict=conflicts.find(old=>protectedIds.has(old));
   const blockedReason=heldConflict?'与已持有的'+item(heldConflict)?.name+'互斥；先在商店决定是否换装':pinnedConflict?'需改动已选核心或个人备选 '+item(pinnedConflict)?.name:null;
-  candidates.push({id,name:item(id).name,kind:signal.kind,source:signal.source,priority:signal.priority||0,reason:clean(signal.evidence)+'。'+reason,caution,blockedReason,alreadyPlanned:route.includes(id),teamAntiheal:signal.kind==='healing'&&teamAntiheal.length>0});
+  candidates.push({id,name:item(id).name,kind:signal.kind,when:equipmentCondition(signal.kind),use:equipmentUse(item(id),data.patch),source:signal.source,priority:signal.priority||0,reason:clean(signal.evidence)+'。'+reason,caution,blockedReason,alreadyPlanned:route.includes(id),teamAntiheal:signal.kind==='healing'&&teamAntiheal.length>0});
  };
  for(const signal of signals){
   if(signal.kind==='armor'&&profile.physical)add(signal,build.key==='fighter'?'3071':build.key==='adAssassin'||build.key==='ezreal'?'6694':'3036','考虑百分比护甲穿透；排在两件打法核心之后，替换尚未购买的后续装备。','只在你需要持续攻击这些护甲目标时提前；穿透家族不能并购，不能由装备投入推断其实际抗性。');
@@ -122,7 +123,7 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  if(selection.bottomQuestPlan&&!bottomQuestEligible)notes.unshift('本局正式位置或队列不满足下路第七件条件，按六格参考。');
  const manualProgress=route.some(planned);
  if(manualProgress)notes.unshift('按详情中的手动计划标记推进；尚未读取真实背包，标记不代表已持有。');
- const describe=id=>({pending:pendingQuest&&route[6]===id,id,name:item(id)?.name||id,cost:item(id)?.gold?.total??null,description:clean(item(id)?.description),owned:owns(id),planned:planned(id),fromPreparation:baseSet.has(id),suggested:!baseSet.has(id),protected:protectedIds.has(id),reason:updates.find(c=>c.id===id)?.reason||(!baseSet.has(id)?'适合当前路线的后续参考；无整套联合胜率':null)});
+ const describe=id=>({pending:pendingQuest&&route[6]===id,id,name:item(id)?.name||id,cost:item(id)?.gold?.total??null,use:equipmentUse(item(id),data.patch),description:clean(item(id)?.description),owned:owns(id),planned:planned(id),fromPreparation:baseSet.has(id),suggested:!baseSet.has(id),protected:protectedIds.has(id),reason:updates.find(c=>c.id===id)?.reason||(!baseSet.has(id)?'适合当前路线的后续参考；无整套联合胜率':null)});
  const next=route.find(id=>!owns(id)&&!planned(id)&&!(pendingQuest&&route[6]===id));
  return {pendingQuest,manualProgress,automatic,changed:JSON.stringify(route)!==JSON.stringify(baseline),rulesPatch:COMPLETE_GEAR_PATCH,route:route.map(describe),baseline:baseline.map(describe),next:next?describe(next):null,updates,alternatives:candidates.filter(c=>!c.alreadyPlanned&&!updates.some(u=>u.id===c.id)).slice(0,3),notes,slotLimit,reservedSupport:!!build.support,
   basis:automatic?'按公开装备与手动局势更新，保留已买和两件打法核心':'原准备与后续成装参考',caution:'顺序是机制建议；先核对兵线、回城和商店，不自动购买、出售或改动保存方案。'};

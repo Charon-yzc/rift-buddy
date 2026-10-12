@@ -1,5 +1,6 @@
 import {createItemSet} from './core/item-sets.mjs';
 import {escape as e,button} from './ui.mjs';
+import {champSelectGameId} from './core/rune-context.mjs';
 
 export function clientPreparationPlan(data,plan){
  if(!plan||plan.selection.mode!=='rift'||!plan.build.runePage)return null;
@@ -8,7 +9,7 @@ export function clientPreparationPlan(data,plan){
  const value={champion:s.id,role:s.role,mode:s.mode,page:structuredClone(b.runePage),summoners:[...b.summoners],itemSet:createItemSet(champion,b,data)};
  return {value,fingerprint:JSON.stringify([value,b.skillOrder,b.first,b.priority,s.comboId||''])};
 }
-export const preparationGameId=client=>String(client.session?.gameId||client.game?.gameId||'');
+export const preparationGameId=client=>champSelectGameId(client.session,client.game);
 export const clientPreparationKey=(client,prepared)=>JSON.stringify([preparationGameId(client),prepared.fingerprint]);
 export function clientPreparationControls({data,plan,client,view='build',available=false,pending=false,statuses=new Map()}){
  const prepared=clientPreparationPlan(data,plan);if(!prepared)return '';

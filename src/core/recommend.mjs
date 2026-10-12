@@ -412,9 +412,15 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  const adaptiveAnchors=new Map();for(const entry of sorted){if(!entry.adaptive||entry.trio||entry.duo)continue;const key=entry.adaptive.kind==='shared'?'shared:'+entry.adaptive.tempo:entry.adaptive.edges.filter(e=>e.current).map(e=>e.family).sort().join('|');if(key&&!adaptiveAnchors.has(key)&&adaptiveAnchors.size<24)adaptiveAnchors.set(key,entry);}
  const preserved=new Map([...anchors.values(),...creativeAnchors.values(),...adaptiveAnchors.values()].map(entry=>[signature(entry.slots),entry]));
  const pool=[...preserved.values(),...sorted.filter(entry=>!preserved.has(signature(entry.slots))).slice(0,Math.max(0,240-preserved.size))].sort(order);
+ // Reserve a fixed discovery position in the ordered stream, rather than
+ // replacing each requested page's last result. Page size and offset must
+ // never change which earlier candidates exist.
+ const discoveryIndex=4;
  const count=Math.min(Math.max(0,limit+offset),pool.length);
  for(let i=0;i<count;i++) {
   let winner=0,best=-Infinity,bestPriority=-1;
+  const discovery=i===discoveryIndex&&creativeBySig.size&&!chosen.some(entry=>entry.creative)?pool.filter(entry=>entry.creative).sort((a,b)=>b.score-a.score||signature(a.slots).localeCompare(signature(b.slots)))[0]:null;
+  if(discovery){chosen.push(pool.splice(pool.indexOf(discovery),1)[0]);continue;}
   for(let j=0;j<pool.length;j++) {
    const entry=pool[j];
    const entryStyle=(entry.trio||entry.duo)?.style||'balanced';
@@ -424,13 +430,6 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
    if(p>bestPriority||p===bestPriority&&v>best){best=v;winner=j;bestPriority=p;}
   }
   chosen.push(pool.splice(winner,1)[0]);
- }
- // Let players discover something new: if creative ideas survived scoring but
- // lost every diversity round, give the best one the last slot. Top picks
- // (including curated trios) are never displaced by this.
- if(creativeBySig.size&&chosen.length>1&&!chosen.some(e=>e.creative)){
-  const fallback=pool.filter(e=>e.creative).sort((a,b)=>b.score-a.score||signature(a.slots).localeCompare(signature(b.slots)))[0];
-  if(fallback&&chosen.length){pool.push(chosen.pop());chosen.push(pool.splice(pool.indexOf(fallback),1)[0]);}
  }
  const sharedBefore=analyzeTeam(scopeSlots(fixed,scope),champions,context);
  return chosen.slice(offset,offset+limit).map(entry=>{

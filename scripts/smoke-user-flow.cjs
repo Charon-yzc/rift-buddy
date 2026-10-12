@@ -43,7 +43,7 @@ async function run(){
  await click('[data-action=open-guide]');let h=(await state()).guide.selection;assert.deepEqual(h.augmentIds,[1048]);assert.deepEqual(h.compareIds,[1048,1002]);assert.deepEqual(h.ownedAugmentIds,[1047]);
  await gjs('window.guide.control("hide")');await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');
  await click('[data-action=example]');await click('[data-action=draft-scope][data-scope=bot]');await click('[data-action=recommend]');
- await until(()=>js('document.querySelectorAll(".result-card").length===3'),'No recommendations');await click('[data-action=result-detail]');
+ await until(()=>js('document.querySelectorAll(".result-card").length>=3&&document.querySelectorAll(".result-card").length<=6'),'No recommendations');await click('[data-action=result-detail]');
  const members=()=>js('[...document.querySelectorAll(".lineup-detail [data-action=build]")].map(e=>({role:e.dataset.role,id:e.dataset.id}))');
  let before=await members();await click('[data-action=replace-member][data-role=bottom]');
  await until(async()=>JSON.stringify(await members())!==JSON.stringify(before),'Bottom unchanged');let second=await members();
@@ -79,14 +79,14 @@ async function run(){
  assert.match(await js('document.querySelector(".rune-target-warning").textContent'),/你自己的客户端/);
  // Changing the arranged partner must not leak a former combo's private build.
  await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');
- const pick=async(role,id)=>{await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
- await pick('bottom','Rengar');await pick('support','Ivern');await click('.slot [data-action=build][data-role=bottom]');
+ const pick=async(role,id)=>{if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
+ await pick('bottom','Rengar');await pick('support','Ivern');await click('.slot-config[data-action=build][data-role=bottom]');
  await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Rengar Ivern private build missing');
  await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing');
- await click('[data-action=close]');await pick('support','Nami');await click('.slot [data-action=build][data-role=bottom]');
+ await click('[data-action=close]');await pick('support','Nami');await click('.slot-config[data-action=build][data-role=bottom]');
  assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.notEqual((await active()).loadout,'rengar-bush');
  await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide');
- await click('[data-action=close]');await pick('support','Ivern');await click('.slot [data-action=build][data-role=bottom]');
+ await click('[data-action=close]');await pick('support','Ivern');await click('.slot-config[data-action=build][data-role=bottom]');
  await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Returning combo choice not restored');
  await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide');
  await capture('partner-context-isolation.png');
