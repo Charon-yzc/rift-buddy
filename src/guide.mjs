@@ -1,3 +1,4 @@
+import {windowResizeGrip,installWindowResize} from './window-resize.mjs';
 import {changeJungleNotes} from './core/jungle-guidance.mjs';
 import {applyPresentation} from './presentation-view.mjs';
 import {changePresentation} from './core/presentation.mjs';
@@ -22,7 +23,7 @@ const api=window.guide||{
  control:async(action,value)=>{
   const s=window.previewGuideState;
   if(action==='presentation')return {...snapshot,presentation:changePresentation(snapshot.presentation,value)};
-  if(action==='recover'){s.ball=false;s.strip=false;s.collapsed=false;s.compact=true;}
+  if(action==='reset-layout'||action==='recover'){s.ball=false;s.strip=false;s.collapsed=false;s.compact=true;}
   if(action==='layout'){s.compact=value==='compact';s.ball=false;s.strip=false;s.collapsed=false;}
   if(action==='jungle'){const [field,choice]=value.split(':');s.jungleNotes=changeJungleNotes(s.jungleNotes,field,choice,snapshot.model?.live?.matched?snapshot.model.live.gameTime:null);}
   if(action==='jungle-widget')s.jungleWidget={...s.jungleWidget,enabled:s.jungleWidget?.enabled===false};
@@ -65,7 +66,7 @@ function render(){
  root.className=strip?'strip':ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
  root.dataset.tab=tab;
  root.dataset.workspace=['skills','combat','scoreboard','rhythm','team','augments','settings'].includes(tab)?'focused':'overview';
- root.innerHTML=renderGuide(snapshot,tab,isPreview,image);
+ root.innerHTML=renderGuide(snapshot,tab,isPreview,image)+(ball?'':windowResizeGrip);
  const navigation=root.querySelector('nav[aria-label="指引内容"]'),activeTab=navigation?.querySelector('button.active');
  if(activeTab){const left=activeTab.offsetLeft-navigation.offsetLeft;if(left+activeTab.offsetWidth>navigation.clientWidth)navigation.scrollLeft=left+activeTab.offsetWidth-navigation.clientWidth;}
  for(const [key,open] of saved.details){const d=[...root.querySelectorAll('details[data-guide-section]')].find(d=>d.dataset.guideSection===key);if(d)d.open=open;}
@@ -108,12 +109,13 @@ function trackHeaderHover(event){
  // mousemove still reaches the page while the window passes clicks through
  // (forward:true). Report header hover on change only, so the main process
  // can lift pass-through for the drag bar + window buttons.
- const over=!!event.target?.closest?.('header');
+ const over=!!event.target?.closest?.('header,[data-window-resize]');
  if(over!==hoverHeader){hoverHeader=over;api.hover?.(over).catch(()=>{});}
 }
 document.addEventListener('mousemove',trackHeaderHover);
 document.addEventListener('mouseleave',()=>{if(hoverHeader){hoverHeader=false;api.hover?.(false).catch(()=>{});}});
 document.addEventListener('error',event=>{if(event.target.tagName==='IMG')event.target.classList.add('missing');},true);
+installWindowResize(root,(action,value)=>api.control(action,value));
 api.onUpdate?.(next=>{
  if(next.model?.mode!=='hex'&&tab==='augments'||next.model?.mode==='hex'&&tab==='team')tab='overview';
  const before=snapshot?.model,after=next.model,missingField=['gold','level'].some(k=>before?.live?.[k]!==null&&after?.live?.[k]===null);

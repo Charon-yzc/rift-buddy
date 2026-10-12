@@ -11,6 +11,7 @@ import {validatePreparations,validatePreparation,storedPreparation,PREPARATION_L
 import {validateTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {validateCreativePlan} from '../src/core/creative-plan.mjs';
 import {normalizePartyIds} from '../src/core/client-party.mjs';
+import {savedWindowBounds} from '../src/core/window-placement.mjs';
 export const defaultState=()=>({schema:1,favorites:[],excluded:[],preparations:[],preferences:{style:'fun',autoCheck:true,buildSource:normalizeBuildSource(null),presentation:normalizePresentation(null),installPath:'C:/WeGameApps/英雄联盟'},draft:null,ownedPageId:null,guide:null});
 const roles=['top','jungle','mid','bottom','support'],styles=['balanced','fun','wild'];
 const conditions=['ad','ap','control','heal','burst'];
@@ -56,7 +57,7 @@ export function validateState(value) {
  const p=value.preferences||{};
  if(p.installPath!==undefined&&(!text(p.installPath,500)||/[\r\n\0]/.test(p.installPath)))throw Error('游戏目录格式不正确');
  const normalized={schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],preparations:validatePreparations(value.preparations),
-  preferences:{buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
+  preferences:{...(savedWindowBounds(p.mainBounds)?{mainBounds:savedWindowBounds(p.mainBounds)}:{}),...(savedWindowBounds(p.companionBounds)?{companionBounds:savedWindowBounds(p.companionBounds)}:{}),buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
    clientCompanion:p.clientCompanion!==false,companionWidth:[400,520,600].includes(p.companionWidth)?p.companionWidth:520,clickPrepare:p.clickPrepare!==false,compactTeam:p.compactTeam!==false,autoArrange:p.autoArrange!==false,autoParty:p.autoParty!==false,partyIds:normalizePartyIds(p.partyIds),guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',roomNick:sanitizeNick(p.roomNick)||'队友',relayUrl:normalizeRelayUrl(p.relayUrl)||'',
    autoLive:p.autoLive!==false,pool:Array.isArray(p.pool)?[...new Set(p.pool.filter(hero))].slice(0,200):[],poolMode:['off','prefer','only'].includes(p.poolMode)?p.poolMode:'off',
    play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke','growth'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},
