@@ -1,0 +1,32 @@
+import {escape as e,portrait,button} from './ui.mjs';
+import {ROLES} from './core/rules.mjs';
+import {pickEligibilityView} from './pick-eligibility-view.mjs';
+import {memberActionSummary} from './cooperation-view.mjs';
+const roleName=role=>ROLES.find(r=>r.id===role)?.name||'位置待确认';
+
+export function companionEligibilityView(eligibility){
+ const content=pickEligibilityView(eligibility);
+ return ['checked','manual'].includes(eligibility.status)?`<details class="companion-eligibility" data-companion-disclosure="eligibility"><summary>可选英雄与来源范围</summary>${content}</details>`:content;
+}
+
+export function companionTeamView({data,client,slots,known,generating,compact=false,chosen=false}){
+ const hero=id=>data.champions.find(c=>c.id===id);
+ return `<section class="companion-team-now ${compact?'companion-team-compact':''}" aria-label="全队当前选人"><div class="companion-section-head"><h3>当前阵容 · ${known} / 5</h3>${button('recommend',generating?'搭配中…':chosen?'换一套':'推荐阵容','spark',`${chosen?'quiet':'primary'} small`,generating?'disabled':'')}</div><div class="companion-roster">${slots.map(s=>{const local=Number.isInteger(s.clientCellId)&&s.clientCellId===client.session?.localPlayerCellId;return `<div class="companion-roster-row" data-drop-role="${s.role}" data-local="${local}"><button class="companion-roster-hero" draggable="${!!s.champion}" data-drag-role="${s.role}" data-action="${s.champion?'companion-roster-plan':'pick-slot'}" data-role="${s.role}" ${s.champion?`data-id="${e(s.champion)}"`:''} aria-label="${roleName(s.role)} · ${e(hero(s.champion)?.name||'选择英雄')}${local?' · 你':''}">${portrait(hero(s.champion),'sm')}<span><b>${e(hero(s.champion)?.name||'等待选择')}</b><small>${roleName(s.role)}${s.automaticPosition?' · 暂排':s.manualPosition?' · 手动':''}${local?' · 你':''}</small></span></button><div class="companion-roster-tools">${button('toggle-party',s.party?'我们':'队友','','quiet small',`data-role="${s.role}" aria-pressed="${s.party}" title="${s.party?'已标记为开黑成员，点击取消标记':'点击标记为开黑成员'}"`)}${s.champion?button('move-slot','换位','','quiet small',`data-role="${s.role}" aria-label="调整${e(hero(s.champion)?.name)}的位置"`):''}</div></div>`;}).join('')}</div><small class="companion-team-hint">${client.party?.status==='known'?`已识别开黑成员${client.party.unmatched?' · 部分需手动标记':''}`:'可点“我们”标记开黑成员'} · 拖动或点换位</small></section>`;
+}
+
+export function companionChosenViews({data,client,activePlan,own,ownRole,heroAction,preparationStatus}){
+ const hero=id=>data.champions.find(c=>c.id===id);
+ const member=activePlan?.members.find(m=>m.champion===own?.id)||activePlan?.members.find(m=>m.role===ownRole)||(own?{champion:own.id,role:ownRole}:null);
+ const duty=m=>activePlan?.ordered?.find(p=>p.champion===m?.champion&&p.role===m?.role)?.job;
+ if(!activePlan&&!member)return {lead:'',details:''};
+ const action=member&&heroAction(member.champion),ownAction=duty(member),locked=(client.session?.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===client.session.localPlayerCellId&&a.completed===true);
+ const status=preparationStatus?.complete?'':preparationStatus?.message||'';
+ const lead=`<section class="companion-next-action" aria-label="我的下一步"><div class="companion-next-heading"><b>${e(activePlan?.name||'本局默认配置')}</b>${activePlan?button('companion-jump','配合详情','','quiet small','data-section="chosen-play"'):''}</div>${ownAction?`<p><b>现在先做：</b>${e(memberActionSummary(ownAction))}</p>`:''}${member?`<div class="companion-next-controls">${button(activePlan?.members.some(m=>m.champion===member.champion&&m.role===member.role)?'active-hero-prepare':'companion-roster-plan',`${e(hero(member.champion)?.name)} · ${e(action.label)}`,'check',`${action.prepare?'primary':'quiet'} small`,`data-id="${e(member.champion)}" data-role="${e(member.role)}"`)}<small>${preparationStatus?.complete?'配置已完成 · 请在客户端核对':locked?'英雄已锁定，可调整配置':'锁定由你在客户端确认'}</small></div>`:'<p>点击全队概览中的英雄查看方案，先确认自己的位置。</p>'}${status?`<p class="companion-preparation-status" role="status">${e(status)}</p>`:''}</section>`;
+ const details=activePlan?`<details class="companion-chosen" data-companion-disclosure="chosen-play" data-companion-section="chosen-play" aria-label="已采用组合"><summary>配合窗口、分工与停止条件</summary><p>${e(activePlan.plan||activePlan.why)}</p><p>行动窗口：${e(activePlan.window)}</p><p class="companion-caution">${e(activePlan.caution)}</p><div class="companion-members">${activePlan.members.map(m=>`<button class="companion-hero" data-action="active-hero-prepare" data-id="${e(m.champion)}" data-role="${e(m.role)}">${portrait(hero(m.champion),'sm')}<span>${e(hero(m.champion)?.name)}<small>${roleName(m.role)} · ${e(heroAction(m.champion).label)}</small></span></button>`).join('')}</div>${activePlan.members.map(m=>`<p><b>${e(hero(m.champion)?.name)}</b> · ${e(duty(m)||'按组合分工，确认技能和距离后一起行动。')}</p>`).join('')}</details>`:'';
+ return {lead,details};
+}
+
+export function companionFooter({client,live,own,build,applied,guideAutoShow,overlap}){
+ const ready=build?.runePage?(applied?'符文已应用':'符文待应用'):own?'方案已准备':'等待选英雄';
+ return `<footer class="companion-footer"><div class="companion-footer-line"><span class="companion-ready" role="status">${e(ready)}<span data-client-countdown>${live.remaining!==null?` · 约剩 ${live.remaining} 秒`:''}</span></span>${own?button('guide-current','本局指引','book','quiet small','aria-label="打开本局指引"'):''}<details class="companion-footer-menu" data-companion-disclosure="footer-tools"><summary>更多操作</summary><div>${build?.runePage?button('my-runes',applied?'重新应用符文':'单独替换符文','check','small',`data-id="${own.id}" ${client.connected&&client.phase==='ChampSelect'?'':'disabled'}`):''}${button('guide-auto-show',guideAutoShow?'关闭自动指引':'开启自动指引','','quiet small')}${button('window-info','窗口资料','','quiet small')}${button('sync','同步客户端','','quiet small')}</div></details></div><div class="companion-connection">${client.connected?`${e(client.mode?.label||'客户端已连接')}${overlap?' · 靠屏幕边缘':''}`:'连接中断 · 当前为旧参考'} · ${guideAutoShow?'进入游戏自动呼出指引':'自动指引已关闭'}</div></footer>`;
+}

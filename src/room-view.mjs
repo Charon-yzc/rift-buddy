@@ -5,11 +5,11 @@ import {roomPreparation} from './core/room-configuration.mjs';
 import {SHARDS} from './core/builds.mjs';
 import {creativeMemberCombo} from './core/creative-plan.mjs';
 import {duoPlayView} from './duo-play-view.mjs';
-import {DEFAULT_RELAY_URL,normalizeRelayUrl} from './core/room-relay.mjs';
+import {DEFAULT_RELAY_URL} from './core/room-relay.mjs';
+import {roomLineupIdentity} from './core/room-lineup.mjs';
 
 const roleName=id=>ROLES.find(r=>r.id===id)?.name||id;
 const LINK_TEXT={connecting:'连接中',connected:'已连接',reconnecting:'重连中',failed:'连接失败',idle:''};
-const defaultRelayNotice=url=>normalizeRelayUrl(url)===DEFAULT_RELAY_URL?'<p class="callout warning">默认中继目前仅共享英雄阵容，不转发装备、符文、加点或组合职责。完整配置请使用可信局域网或支持完整配置的其他中继。</p>':'';
 const attributeLines=plan=>plan?[
  `${plan.title}：${plan.priority.join(' > ')}`,plan.action,plan.note,
  `属性方案来源：${plan.source} · ${plan.patch} · 整理于 ${plan.reviewedAt}`,
@@ -36,8 +36,13 @@ function memberCard(member,champ){
  const configurationNote=!member.self&&champions.length&&!share?.configurations?.length?'<p class="bottom-note">已收到阵容，尚未收到这位队友的配置；本地参考不代表队友所选。</p>':'';
  return `<article class="room-member"><header><b>${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${personal}${configurationNote}${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
 }
-export function roomSharesView(room,champ,{clickPrepare=true}={}){
+export function roomSharesView(room,champ,{clickPrepare=true,heroAction=null,compact=false,adoptedShare='',allowUnknownRift=false,allowRiftAdoption=true}={}){
  const members=(room?.members||[]).filter(m=>!m.self&&m.share?.lineup?.some(s=>s.champion));
+ if(compact){
+  const incoming=members.filter(m=>roomLineupIdentity(m.share,m.nick)!==adoptedShare).sort((a,b)=>b.share.at-a.share.at);
+  const card=m=>{const share=m.share,known=share.mode==='rift'&&allowRiftAdoption,unknown=share.mode===undefined,signature=roomLineupIdentity(share,m.nick);return `<article class="companion-incoming"><div class="companion-incoming-head"><b>${e(m.nick)}发来的阵容</b>${button('room-adopt-lineup',unknown?'按峡谷采用':'采用阵容','','primary small',`data-member="${e(m.nick)}" data-share="${signature}" ${known||unknown&&allowUnknownRift?'':'disabled'}`)}</div><div class="companion-incoming-champs">${share.lineup.filter(s=>s.champion).map(s=>{const action=heroAction?.(s.champion),prepare=clickPrepare&&known&&(action? action.prepare:true),config=share.configurations?.some(c=>c.champion===s.champion&&c.role===s.role);return `<button class="room-champ" data-action="${prepare?'room-prepare':'room-build'}" data-id="${e(s.champion)}" data-role="${e(s.role)}" data-mode="${e(share.mode||'')}" data-member="${e(m.nick)}" title="${e(roleName(s.role))} · ${e(action?.label||'查看配置')} · ${config?'发送方配置':'未收到配置'}">${portrait(champ(s.champion),'sm')}<span>${e(champ(s.champion)?.name||s.champion)}</span></button>`;}).join('')}</div><small>${unknown?'未收到模式；仅在当前峡谷选人时可按峡谷采用。':known?'采用只调整助手阵容；点击自己的英雄再预选与配置。':'当前模式仅供查看。'}${share.configurations?.length?'':' 未收到配置，采用后使用本机参考。'}</small></article>`;};
+  return incoming.length?`<section class="companion-room-shares" aria-label="收到的队友阵容">${card(incoming[0])}${incoming.length>1?`<details data-companion-disclosure="room-other-shares"><summary>其他队友方案 · ${incoming.length-1} 份</summary>${incoming.slice(1).map(card).join('')}</details>`:''}</section>`:'';
+ }
  return members.length?`<section class="companion-section companion-room-shares" aria-label="收到的队友阵容"><h3>队友发来的阵容</h3>${clickPrepare?'<p class="companion-hint">已确认峡谷模式时，点击英雄会预选并配置；锁定由你完成。模式未知时先查看说明，未收到配置时使用本机参考。</p>':''}${members.map(m=>clickPrepare?memberCard(m,champ).replaceAll('data-action="room-build"',m.share.mode==='rift'?'data-action="room-prepare"':'data-action="room-build"'):memberCard(m,champ)).join('')}</section>`:'';
 }
 
@@ -53,9 +58,8 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
  const forms=transport==='relay'
   ?`<div class="room-join"><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="wss://room.你的域名" spellcheck="false" aria-label="中继地址"></label><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'处理中…':'加入中继房间','arrow','small',busy?'disabled':'')}</div>
    <p class="bottom-note">你和队友填同一个中继地址、房间码和口令，再各自点击加入；昵称是房间里显示的名字。地址可改成你信任的自建中继。</p>
-   ${defaultRelayNotice(relayUrl)}
    <details class="more-builds room-relay-help"><summary>怎么用中继房间</summary><ol class="play-steps"><li>切到“中继”，使用预填地址 ${e(DEFAULT_RELAY_URL)}，或和队友约定同一个可信地址。</li><li>约定任意 6 位数字房间码，例如 482913，所有人填写相同的房间码。</li><li>另定 6 位数字口令，只在线下或微信私聊告诉队友，别发到公开的地方。</li><li>填写昵称后各自点击“加入中继房间”。加入后自动共享助手中所选公开阵容；中继支持时也会转发配置。队友点英雄头像，收到配置时查看发送方快照，未收到时先提示缺失，可主动打开本机参考。采用和写入符文由本人点击确认。</li></ol></details>
-   <p class="bottom-note">公开阵容会发送给该中继并转给房间成员；其他中继还会接收配置，中继运营者也能看到所发内容。六位口令虽只发送哈希，仍可被枚举，不是强身份认证。</p>`
+   <p class="bottom-note">公开阵容与所选配置会发送给该中继并转给房间成员，中继运营者也能看到所发内容。六位口令虽只发送哈希，仍可被枚举，不是强身份认证。</p>`
   :`<div class="room-actions">${button('room-host',busy?'处理中…':'创建房间','team','primary small',busy?'disabled':'')}${button('room-scan',scanning?'扫描中…':'扫描局域网房间','search','small',scanning?'disabled':'')}</div>
    <div class="room-join"><label>邀请码<input id="room-invite" value="${e(invite)}" placeholder="粘贴完整邀请，或 地址:端口#房间号" aria-label="邀请码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" aria-label="房间口令"></label>${button('room-join',busy?'处理中…':'加入房间','arrow','small',busy?'disabled':'')}</div>
    ${results?`<div class="room-scan">${results.length?results.map(item=>`<button data-action="room-fill" data-invite="${e(`${item.host}:${item.port}#${item.room}`)}">房间 ${e(item.room)} · ${e(item.host)}</button>`).join(''):'<p class="bottom-note">没有发现房间。确认在同一网络，或让房主把邀请码发给你。</p>'}</div>`:''}
@@ -88,8 +92,7 @@ function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy
  return `<section class="panel room-panel"><div class="panel-head">${head}${badge}${button('room-leave','离开房间','','quiet small')}</div>
   <div class="panel-body">
    ${inviteBlock}
-   ${isRelay?defaultRelayNotice(room.relayUrl):''}
-   <div class="room-share-row">${button('room-publish',isRelay?'重新分享当前选择':'分享我的阵容与配置','upload','primary small')}<span class="bottom-note">${isRelay?'阵容会自动同步。本版本向默认中继只发送阵容，其他中继会发送配置；是否转发仍取决于服务版本。仅实际收到配置的英雄显示“符文与加点”或“海克斯配置”，否则明确提示未收到。':'进入房间后阵容会自动同步，包含所选装备、完整符文、召唤师技能与加点；队友点击英雄查看发送方配置。'}不会自动改动队友的阵容或客户端。</span></div>
+   <div class="room-share-row">${button('room-publish',isRelay?'重新分享当前选择':'分享我的阵容与配置','upload','primary small')}<span class="bottom-note">进入房间后自动分享阵容、装备、完整符文、召唤师技能、加点与组合分工；队友点英雄查看发送方配置。${isRelay?'仅展示实际收到的配置，旧版队友或中继未转发时会提示缺失。':''}不会自动改动队友的阵容或客户端。</span></div>
    <div class="room-members" aria-live="polite">${room.members.map(member=>memberCard(member,champ)).join('')}</div>
    ${preparationFileControls(hasPreparationFile,preparationFileBusy)}
   </div></section>`;
