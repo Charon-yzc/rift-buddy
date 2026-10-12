@@ -101,6 +101,11 @@ async function boot(){
  data.imageOverrides=await imageCache.loadImageOverrides(path.join(storeRoot,'data/images'),data);
  const refreshBuild=createBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const liveService=await import('../services/live-client.mjs');
+ const {createAppUpdateService}=await import('../services/app-update.mjs');
+ const {compareVersions:compareAppVersion}=await import('../src/core/app-update.mjs');
+ const appUpdater=createAppUpdateService({currentVersion:app.getVersion(),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'});
+ let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null;
+ const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;win?.webContents.send('app-update-progress',snapshot);};
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));win?.webContents.send('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
@@ -279,6 +284,43 @@ async function boot(){
    next.imageOverrides=cached.overrides;data=next;useCatalog(catalogStore.summary());guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
   }finally{updating=false;}
  });
+ guard('app-update-check',async(silent=false)=>{
+  if(appUpdateFlight)return appUpdateStatus;
+  appUpdateFlight=(async()=>{
+   publishAppUpdate({phase:'checking'});
+   try{
+    const kept=await appUpdater.pending();
+    if(kept&&compareAppVersion(kept.version,app.getVersion())>0){publishAppUpdate({phase:'ready',record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256}});}
+    else{
+     const result=await appUpdater.check();
+     if(result.status==='available'&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
+     else publishAppUpdate({phase:result.status,release:result.release||null});
+    }
+   }catch(error){publishAppUpdate({phase:'error',error:error.message});if(!silent)throw error;}
+   finally{appUpdateFlight=null;}
+   return appUpdateStatus;
+  })();
+  return appUpdateFlight;
+ });
+ guard('app-update-download',async()=>{
+  if(appUpdateAbort)throw Error('安装包正在下载，请等待本次完成');
+  const release=appUpdateStatus.release;
+  if(appUpdateStatus.phase!=='available'||!release)throw Error('没有可下载的新版本，请先检查更新');
+  appUpdateAbort=new AbortController();
+  try{
+   publishAppUpdate({phase:'downloading',release,received:0,total:null});
+   const record=await appUpdater.download(release,{signal:AbortSignal.any([appUpdateAbort.signal,AbortSignal.timeout(600000)]),onProgress:p=>publishAppUpdate({phase:'downloading',release,received:p.received,total:p.total})});
+   publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256}});
+   return appUpdateStatus;
+  }finally{appUpdateAbort=null;}
+ });
+ guard('app-update-cancel',()=>{appUpdateAbort?.abort();return true;});
+ guard('app-update-install',async()=>{
+  const record=await appUpdater.install();
+  if(record.dryRun)return record;
+  quitting=true;app.quit();return record;
+ });
+ guard('app-update-delete',async()=>{await appUpdater.cleanup();publishAppUpdate({phase:'idle'});return true;});
  guard('apply-runes',async(page,context)=>{
   if(applyingRunes)throw new Error('符文正在应用，请稍后');applyingRunes=true;
    try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);const result=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});await saveCurrentState(current=>({...current,ownedPageId:result.pageId}));return result;}
@@ -308,9 +350,10 @@ async function boot(){
  guard('toggle-pin',()=>{win.setAlwaysOnTop(!win.isAlwaysOnTop());return win.isAlwaysOnTop();});
  guard('choose-directory',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择英雄联盟安装目录',properties:['openDirectory']});return result.canceled?null:result.filePaths[0];});
  guard('open-link',async url=>{
-  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol'];
+  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
-  if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
+  if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');
+  if(parsed.hostname==='github.com'&&!parsed.pathname.startsWith('/Legender134/rift-buddy/releases/tag/'))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
  });
  guard('export-preparation',async value=>{
   const {preparationFileText}=await import('../src/core/preparation-file.mjs'),text=preparationFileText(value);
