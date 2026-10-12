@@ -22,6 +22,15 @@ async function fixture(t,respond){
  return {dir,hits,options,service:createAppUpdateService(options)};
 }
 const normalResponse=(req,res)=>res.end(req.url.endsWith('.txt')?checksum:bin);
+async function mainFixture(service,preferences={}){
+ const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),snapshots=[];
+ const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences},app:{getVersion:()=> '0.46.0',quit:()=>{}},guard:(name,fn)=>handlers.set(name,fn),compareAppVersion:()=>1,releasePageUrl:()=>'',updater:()=>service,snapshots};
+ vm.createContext(context);
+ const init=source.slice(source.indexOf(' let appUpdateStatus='),source.indexOf(' const {changePresentation}'));
+ const guards=source.slice(source.indexOf(" guard('app-update-check'"),source.indexOf(" guard('apply-runes'"));
+ vm.runInContext(init+guards+'win={webContents:{send:(_channel,s)=>snapshots.push(s)}};',context);
+ return {context,handlers,snapshots};
+}
 test('install waits for spawn, reports asynchronous failure and keeps a retryable package',async t=>{
  const {options,service}=await fixture(t,normalResponse);await service.download(release);
  let child,unrefs=0,attempts=0;
@@ -69,13 +78,82 @@ test('cancellation waits for the active write before closing and deleting the pa
  assert.equal(closedDuringWrite,false);assert.deepEqual(await fs.readdir(dir),[]);
 });
 test('pending-record persistence failure rolls back the executable without downloading twice',async t=>{
- const {options,dir,hits}=await fixture(t,normalResponse);
- const blocked=path.join(dir,'blocked-record');await fs.mkdir(blocked);
+ let blocked;
+ const {options,dir,hits}=await fixture(t,async(req,res)=>{if(req.url.endsWith('.exe'))await fs.mkdir(blocked);normalResponse(req,res);});
+ blocked=path.join(dir,'blocked-record');
  const s=createAppUpdateService({...options,storeFile:blocked,mirrorBase:'https://mirror.smoke'});
  await assert.rejects(s.download(release),/EPERM|EISDIR|EACCES/);
  assert.equal(hits.filter(url=>url.endsWith('.exe')).length,1);
- assert.equal(await s.pending(),null);
+ await assert.rejects(s.pending(),/EPERM|EISDIR|EACCES/);
  assert.deepEqual((await fs.readdir(dir)).filter(n=>/\.exe|\.part$/.test(n)),[]);
+});
+test('partial writes persist every byte and zero-byte writes fail without retrying the mirror',async t=>{
+ const {options,dir,hits}=await fixture(t,normalResponse),open=fs.open.bind(fs);
+ let writes=0,zero=false;
+ const mock=t.mock.method(fs,'open',async(file,...args)=>{
+  const handle=await open(file,...args);if(!String(file).endsWith('.part'))return handle;
+  const write=handle.write.bind(handle);
+  handle.write=async(buffer,offset,length)=>{writes++;return zero?{bytesWritten:0}:write(buffer,offset,Math.min(length,1024));};return handle;
+ });
+ const s=createAppUpdateService({...options,mirrorBase:'https://mirror.smoke'}),record=await s.download(release);
+ assert.ok(writes>1);assert.deepEqual(await fs.readFile(record.file),bin);assert.equal((await s.pending()).bytes,bin.length);
+ await s.cleanup();zero=true;hits.length=0;
+ await assert.rejects(s.download(release),/写入未完成/);mock.mock.restore();
+ assert.equal(hits.length,1);assert.deepEqual(await fs.readdir(dir),[]);
+});
+test('cancellation during final rename or record persistence rolls back ready state',async t=>{
+ const {options,dir}=await fixture(t,normalResponse),rename=fs.rename.bind(fs);
+ for(const stage of ['package','record']){
+  const controller=new AbortController();
+  const mock=t.mock.method(fs,'rename',async(from,to)=>{
+   const result=await rename(from,to);
+   if(stage==='package'?String(from).endsWith('.part'):to===options.storeFile)controller.abort();
+   return result;
+  });
+  const s=createAppUpdateService(options);
+  await assert.rejects(s.download(release,{signal:controller.signal}),/取消/);mock.mock.restore();
+  assert.equal(await s.pending(),null);assert.deepEqual(await fs.readdir(dir),[]);
+ }
+});
+test('cleanup retains a retryable record when Windows refuses to delete the executable',async t=>{
+ const {service,options}=await fixture(t,normalResponse),record=await service.download(release),unlink=fs.unlink.bind(fs);
+ const mock=t.mock.method(fs,'unlink',async file=>{if(file===record.file)throw Object.assign(Error('EPERM locked package'),{code:'EPERM'});return unlink(file);});
+ await assert.rejects(service.cleanup(),/EPERM/);
+ assert.equal((await service.pending()).file,record.file);assert.ok(await fs.stat(options.storeFile));
+ await fs.truncate(record.file,2);
+ await assert.rejects(service.pending(),/EPERM/);assert.ok(await fs.stat(options.storeFile));
+ mock.mock.restore();await service.cleanup();assert.equal(await service.pending(),null);
+});
+test('manual checks restore a skipped release while background checks retain the skip',async()=>{
+ const {handlers}=await mainFixture({pending:async()=>null,check:async()=>({status:'available',release})},{dismissedAppVersion:release.tag});
+ assert.equal((await handlers.get('app-update-check')(true)).dismissed,true);
+ assert.equal((await handlers.get('app-update-check')(false)).phase,'available');
+});
+test('a timed-out mirror leaves a fresh direct attempt that can finish successfully',async t=>{
+ let startedResolve;const started=new Promise(resolve=>{startedResolve=resolve;});
+ const {options,hits}=await fixture(t,(req,res)=>{
+  if(req.url.startsWith('/https://')){res.writeHead(200);res.flushHeaders();startedResolve();}
+  else normalResponse(req,res);
+ });
+ t.mock.timers.enable({apis:['setTimeout']});
+ const service=createAppUpdateService({...options,mirrorBase:'https://mirror.smoke'}),{handlers,context,snapshots}=await mainFixture(service);
+ context.release=release;vm.runInContext('appUpdateStatus={phase:"available",release};',context);
+ const download=handlers.get('app-update-download')();await started;t.mock.timers.tick(600001);
+ const result=await download;t.mock.timers.reset();
+ assert.equal(result.phase,'ready');assert.equal(result.record.sha256,sha);
+ assert.ok(snapshots.some(s=>s.fallbackNotice));assert.equal(hits.filter(url=>url.endsWith('.exe')).length,2);
+});
+test('slow timestamp saving cannot overwrite newer download progress or ready state',async()=>{
+ const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');let receive,releaseSave,enteredSave;
+ const saved=new Promise(resolve=>{releaseSave=resolve;}),entered=new Promise(resolve=>{enteredSave=resolve;});
+ const context={appUpdate:{phase:'idle'},saved:{preferences:{}},Date,route:'settings',render:()=>{},toast:()=>{},persist:()=>{enteredSave();return saved;},api:{checkAppUpdate:async()=>({phase:'available',release}),onAppUpdate:handler=>{receive=handler;},downloadAppUpdate:async()=>{receive({phase:'ready',release,record:{version:release.version,bytes:bin.length}});}}};
+ vm.createContext(context);
+ vm.runInContext(source.slice(source.indexOf('async function checkAppUpdate('),source.indexOf('async function updateData(')),context);
+ const start=source.indexOf(' api.onAppUpdate?.(');
+ vm.runInContext(source.slice(start,source.indexOf(' saved.preferences={style:',start)),context);
+ const check=context.checkAppUpdate(false);await entered;assert.equal(context.appUpdate.phase,'available');
+ await context.downloadAppUpdate();assert.equal(context.appUpdate.phase,'ready');releaseSave();await check;
+ assert.equal(context.appUpdate.phase,'ready');assert.equal(context.appUpdate.record.bytes,bin.length);
 });
 test('main serializes installation, blocks conflicting operations and restores ready after failure',async()=>{
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');

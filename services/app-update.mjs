@@ -79,9 +79,18 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   const info={version:release.version,tag:release.tag,url:release.url,publishedAt:release.updated};
   return isNewerThan(release.version,currentVersion)?{status:'available',release:info}:{status:'current',release:info};
  }
- const readRecord=async()=>{try{const raw=JSON.parse(await fs.readFile(storeFile,'utf8'));if(raw?.schema!==1||typeof raw.file!=='string'||typeof raw.sha256!=='string')return null;const stat=await fs.stat(raw.file).catch(()=>null);if(!stat||stat.size!==raw.bytes){await fs.unlink(raw.file).catch(()=>{});await fs.unlink(storeFile).catch(()=>{});return null;}return raw;}catch{return null;}};
+ const removeFile=async file=>{try{await fs.unlink(file);}catch(error){if(error.code!=='ENOENT')throw error;}};
+ const readRecord=async()=>{
+  let raw;
+  try{raw=JSON.parse(await fs.readFile(storeFile,'utf8'));}catch(error){if(error.code==='ENOENT'||error instanceof SyntaxError)return null;throw error;}
+  if(raw?.schema!==1||typeof raw.file!=='string'||typeof raw.sha256!=='string')return null;
+  let stat;
+  try{stat=await fs.stat(raw.file);}catch(error){if(error.code!=='ENOENT')throw error;}
+  if(!stat||stat.size!==raw.bytes){await removeFile(raw.file);await removeFile(storeFile);return null;}
+  return raw;
+ };
  async function pending(){return readRecord();}
- async function cleanup(){const raw=await readRecord().catch(()=>null);if(raw)await fs.unlink(raw.file).catch(()=>{});await fs.unlink(storeFile).catch(()=>{});}
+ async function cleanup(){const raw=await readRecord();if(raw)await removeFile(raw.file);await removeFile(storeFile);}
  // 复验已落盘文件的哈希（复用/续装路径）；失败则清理并返回 false。
  async function verify(record){
   try{const hash=crypto.createHash('sha256'),handle=await fs.open(record.file,'r');
@@ -102,6 +111,7 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   const setup=setupFileName(release.version),sum=checksumFileName(release.version);
   const target=path.join(tempDir,`rift-buddy-update-${Date.now()}-${crypto.randomUUID()}.exe.part`);
   const localFailure=e=>{e.localFailure=true;return e;};
+  const removeLocal=async file=>{try{await removeFile(file);}catch(e){throw localFailure(e);}};
   let handle;
   try{await fs.mkdir(tempDir,{recursive:true});handle=await fs.open(target,'w');}catch(e){throw localFailure(e);}
   const hash=crypto.createHash('sha256');let received=0,total=null;
@@ -109,10 +119,21 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   try{
    await fetchOnce(mirrorAssetUrl(mirror,releaseDownloadUrl(release.tag,setup)),{request,timeout:FILE_TIMEOUT,byteLimit:SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts,
     onHeaders:h=>{const t=Number(h?.['content-length']);total=Number.isFinite(t)?t:null;if(total!==null&&total>SETUP_BYTES_LIMIT)throw Error('安装包超过大小限制，已停止下载');progress('downloading');},
-     onData:async chunk=>{if(signal?.aborted)throw Error('下载已取消');hash.update(chunk);try{await handle.write(chunk);}catch(e){throw localFailure(e);}received+=chunk.length;progress('downloading');}});
+    onData:async chunk=>{
+     let offset=0;
+     while(offset<chunk.length){
+      if(signal?.aborted)throw Error('下载已取消');
+      try{
+       const {bytesWritten}=await handle.write(chunk,offset,chunk.length-offset);
+       if(!Number.isInteger(bytesWritten)||bytesWritten<=0||bytesWritten>chunk.length-offset)throw Error('安装包写入未完成，请检查磁盘空间后重试');
+       offset+=bytesWritten;received+=bytesWritten;
+      }catch(e){throw localFailure(e);}
+     }
+     hash.update(chunk);progress('downloading');
+    }});
    try{await handle.close();}catch(e){throw localFailure(e);}
-  }catch(e){await handle.close().catch(()=>{});await fs.unlink(target).catch(()=>{});throw e;}
-  if(signal?.aborted){await fs.unlink(target).catch(()=>{});throw Error('下载已取消');}
+  }catch(e){await handle.close().catch(()=>{});await removeLocal(target);throw e;}
+  if(signal?.aborted){await removeLocal(target);throw Error('下载已取消');}
   progress('verifying');
   // 校验文件永远直连：否则镜像可同时伪造"坏包+配套哈希"，校验形同虚设。
   // 校验阶段失败不触发镜像重试（与直连无关，重下也一样；哈希不一致除外，它走篡改回落）。
@@ -120,15 +141,24 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   try{
    const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
    expected=parseChecksumFile(sumRes.body.toString('utf8'),setup);
-  }catch(e){await fs.unlink(target).catch(()=>{});if(/HTTP 404/.test(e.message||'')){const m=Error('新版安装包缺失，请等待维护者补传发布资产后重试');m.checksumStage=true;throw m;}if(e.message!=='下载已取消')e.checksumStage=true;throw e;}
+  }catch(e){await removeLocal(target);if(/HTTP 404/.test(e.message||'')){const m=Error('新版安装包缺失，请等待维护者补传发布资产后重试');m.checksumStage=true;throw m;}if(e.message!=='下载已取消')e.checksumStage=true;throw e;}
   const digest=hash.digest('hex');
-  if(digest!==expected){await fs.unlink(target).catch(()=>{});throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
+  if(digest!==expected){await removeLocal(target);throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
   const final=target.replace(/\.part$/,'');
   const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,via,fallback,downloadedAt:new Date().toISOString()};
-  try{await fs.rename(target,final);await atomicJSON(storeFile,record);return record;}
-  catch(e){await fs.unlink(final).catch(()=>{});await fs.unlink(target).catch(()=>{});throw localFailure(e);}
+  let recorded=false;
+  const checkCancelled=()=>{if(signal?.aborted)throw Error('下载已取消');};
+  try{
+   checkCancelled();await fs.rename(target,final);checkCancelled();
+   await atomicJSON(storeFile,record);recorded=true;checkCancelled();return record;
+  }catch(e){
+   if(recorded){try{await cleanup();}catch(error){throw localFailure(error);}}
+   else await removeLocal(final);
+   await removeLocal(target);
+   throw signal?.aborted?e:localFailure(e);
+  }
  }
- async function download(release,{signal,userSignal,onProgress}={}){
+ async function download(release,{signal,onProgress}={}){
   if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||typeof release.tag!=='string')throw Error('新版信息格式不正确');
   const kept=await readRecord();
   if(kept&&kept.version===release.version&&await verify(kept)){if(onProgress)onProgress({received:kept.bytes,total:kept.bytes,stage:'verifying',via:kept.via||'direct'});return kept;}
@@ -139,7 +169,7 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   for(const base of bases){
    try{return await downloadVia(release,{signal,onProgress,mirror:base,fallback:base===''&&mirror!==''});}
    catch(e){
-    if((userSignal||signal)?.aborted||e.checksumStage||e.localFailure)throw e;
+    if(signal?.aborted||e.checksumStage||e.localFailure)throw e;
     attemptError=e;
     if(base&&onProgress)onProgress({received:0,total:null,stage:'downloading',via:'direct',note:'mirror-fallback'});
    }

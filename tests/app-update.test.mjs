@@ -165,7 +165,7 @@ test('checksum-stage failure does not re-download the binary',async()=>{
  assert.equal(hits[DSETUP]||0,0);
  assert.deepEqual((await fs.readdir(dir)).filter(n=>n.endsWith('.exe')||n.endsWith('.part')),[]);
 });
-test('user abort never retries, timeout-like abort retries once, total failure never installs',async()=>{
+test('user abort never retries and total failure never installs',async()=>{
  const setup='github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe';
  const user=new AbortController();user.abort();
  const dirA=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
@@ -173,12 +173,12 @@ test('user abort never retries, timeout-like abort retries once, total failure n
  const sA=dlService(routesA,{tempDir:dirA,mirrorBase:MIRROR,request:counting(routesA,hitsA)});
  await assert.rejects(sA.download({version:'9.9.9',tag:'v9.9.9'},{signal:user.signal}),/abort|取消/i);
  assert.equal(hitsA[setup]||0,0);assert.equal(await sA.pending(),null);
- const live=new AbortController(),dead=new AbortController();dead.abort();
+ const dead=new AbortController();dead.abort();
  const dirB=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
  const routesB=mRoutes(BIN,BIN_SHA,'ok'),hitsB={};
  const sB=dlService(routesB,{tempDir:dirB,mirrorBase:MIRROR,request:counting(routesB,hitsB)});
- await assert.rejects(sB.download({version:'9.9.9',tag:'v9.9.9'},{signal:dead.signal,userSignal:live.signal}),/abort/i);
- assert.equal(hitsB[setup],1);assert.equal(await sB.pending(),null);
+ await assert.rejects(sB.download({version:'9.9.9',tag:'v9.9.9'},{signal:dead.signal}),/abort/i);
+ assert.equal(hitsB[setup]||0,0);assert.equal(await sB.pending(),null);
  const dirC=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
  const fail={[setup]:{status:500,body:'boom'},['mirror.smoke/https://'+setup]:{status:500,body:'boom'},'github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt':{status:200,body:`${BIN_SHA}  RiftBuddy-9.9.9-Setup.exe\n`}};
  const sC=dlService(fail,{tempDir:dirC,mirrorBase:MIRROR});

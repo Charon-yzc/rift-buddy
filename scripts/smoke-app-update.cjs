@@ -100,9 +100,11 @@ async function run(){
  await click('[data-action=app-update-check]');
  await until(()=>js('!!document.querySelector("[data-action=app-update-dismiss]")'),'Dismiss missing');
  await click('[data-action=app-update-dismiss]');
- await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("已是最新")'),'Dismiss did not settle');
+ await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("已忽略")'),'Dismiss did not settle');
+ await js('window.buddy.checkAppUpdate(true)');
+ await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("已忽略")'),'Background check did not retain dismissed state');
  await click('[data-action=app-update-check]');
- await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("已是最新")'),'Dismissed version re-prompted');
+ await until(()=>js('!!document.querySelector("[data-action=app-update-download]")'),'Manual check could not recover dismissed version');
  mode='feed2';
  await js(`window.buddy.checkAppUpdate(false);window.buddy.checkAppUpdate(false);`);
  await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("100.0.0")'),'Newer version not prompted');
