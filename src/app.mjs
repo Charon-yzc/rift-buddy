@@ -463,7 +463,7 @@ async function useClientPreparation(el,directClick=false){
   const current=clientPreparationPlan(data,selectedClientPreparation(view));
   if(!current||current.fingerprint!==prepared.fingerprint||preparationGameId(client)!==gameId||JSON.stringify(runeWriteContext(client))!==JSON.stringify(clickedContext))throw Error('选人或方案已变化，尚未操作；请重新核对');
   await persist({throwOnError:true});await guideSyncChain;
-  const result=await api.prepareSelection({...prepared.value,sessionGameId:gameId,context:clickedContext});
+  const result=await api.prepareSelection({...prepared.value,selection,sessionGameId:gameId,context:clickedContext});
   clientPreparationStatuses.set(key,result);
   if(result.steps?.runes?.status==='done')runeAppliedKeys.clear();
   const latestSelection=preparations.recall(selection)||selection;

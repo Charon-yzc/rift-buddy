@@ -17,6 +17,8 @@ const uses={
  '3165':'用魔法伤害给治疗目标持续挂重伤；已有队友覆盖时别急着重复出。',
  '3033':'用物理伤害覆盖重伤并补穿甲；与其他百分比穿甲比较着选。',
  '3190':'队友聚在身边承接爆发时开群体护盾，别等人倒下才按。',
+ '3222':'为关键队友解除可净化的控制；先核对控制种类和施放范围。',
+ '3107':'提前预判队友聚集的位置放范围治疗；落地有延迟，不能代替及时保护。',
  '6653':'技能持续命中与拉长交战时发挥灼烧；别为了叠收益硬扛。',
  '2504':'自己承接魔法伤害时补魔抗；魔法护盾需要脱离魔法伤害后恢复。',
  '6631':'贴近后用主动减速维持普攻距离，不提供远距离突进。',
@@ -55,7 +57,7 @@ const uses={
  ,'2524':'先用减速或定身触发，再让附近普攻队友利用攻速；不代替真正的保护技能。'
  ,'6620':'先伤害英雄积累灵魂充能，再治疗或护盾队友转成回血；别为充能冒险。'
 };
-export const equipmentCondition=kind=>({armor:'护甲目标',resist:'魔抗目标',magic:'魔法爆发',physical:'暴击普攻',healing:'治疗较多',survival:'需要保命',teamProtection:'保护队友'}[kind]||'按打法');
+export const equipmentCondition=kind=>({armor:'护甲目标',resist:'魔抗目标',magic:'魔法爆发',physical:'暴击普攻',healing:'治疗较多',survival:'需要保命',control:'关键控制',teamProtection:'保护队友'}[kind]||'按打法');
 export function equipmentUse(item,patch){
  if(patch==='16.20'&&uses[String(item?.id)])return uses[String(item.id)];
  // Preserve actual bundled effect text for items without a reviewed short note.

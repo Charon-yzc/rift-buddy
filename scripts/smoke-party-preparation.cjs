@@ -15,6 +15,8 @@ async function run(){
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(c=>c.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json'))),originalPlan=initial.draft.creativePlan,fixture=JSON.parse(await fs.readFile(path.join(root,'party-fixture.json'))),unadopted=process.env.RIFT_BUDDY_UNADOPTED==='1';
  assert.equal(fixture.unadopted,unadopted,'Wrapper and renderer fixture variants differ');
  let observer,phase='ChampSelect',gameflowId=0,gameId=471001,intent=0,picked=0,completed=false,spell1Id=4,spell2Id=12,requests=0,holdRune=true,resumeRune=null;
+ const loadingTransition=process.env.RIFT_BUDDY_LOADING_TRANSITION==='1',loadingNewGame=process.env.RIFT_BUDDY_LOADING_NEW_GAME==='1',rename=fs.rename;
+ if(loadingTransition)fs.rename=async(from,to)=>{const result=await rename(from,to);if(String(to).endsWith('rift-buddy-3-mid-rift.json')){assert.ok(path.resolve(to).startsWith(root+path.sep));picked=intent;intent=0;completed=true;if(loadingNewGame)gameId++;gameflowId=gameId;phase='GameStart';}return result;};
  let page={id:44,name:'Isolated editable page',isEditable:true,isActive:true,current:true};
  const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:unadopted?0:hero('Camille').key,assignedPosition:'TOP'},{cellId:1,championId:unadopted?0:hero('Vi').key,assignedPosition:'JUNGLE'},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:'MIDDLE'},{cellId:3,championId:0,assignedPosition:'BOTTOM'},{cellId:4,championId:0,assignedPosition:'UTILITY'}],theirTeam:[],actions:[[{id:2,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',remainingMs:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
  const output=options=>{
@@ -71,7 +73,21 @@ async function run(){
   // fixture never clicks Adopt or injects a guide/party plan into app state.
   await click(side,'[data-action=companion-preview][data-id=Galio]');await until(()=>resumeRune,'Unadopted candidate click did not reach the mock rune write');
   assertConfiguration(attempts[0],'Initial candidate click');assert.equal(attempts[0].sessionGameId,String(gameId));assert.equal(attempts[0].context.gameId,String(gameId));
-  resumeRune();holdRune=false;await until(()=>results.length===1,'Unadopted candidate did not prepare');assert.equal(results[0].complete,true);await settled();
+  resumeRune();holdRune=false;await until(()=>results.length===1,'Unadopted candidate did not prepare');assert.equal(results[0].complete,true);
+  if(loadingTransition){
+   await until(()=>side.isDestroyed(),'Loading did not release the selection sidebar');
+   const current=JSON.parse(await fs.readFile(path.join(root,'settings.json'))),prepared=current.preparations.find(p=>p.id==='Galio'&&p.comboId&&p.creativePlan?.curated?.id===candidate.combo);
+   assert.equal(current.draft.creativePlan,undefined);assert.deepEqual(current.preparations.find(p=>p.id==='Galio'&&!p.comboId),fixture.oldSolo);assert.equal(mockedRuneWrites(),1);
+   if(loadingNewGame){assert.equal(prepared,undefined);assert.ok(!current.guide||String(current.guide.match?.gameId)!==String(gameId),'A previous-game click installed a guide in the new game');}
+   else{
+    assert.ok(prepared,'Loading lost the completed candidate configuration');assert.ok(current.guide,'Loading lost the current guide');assert.equal(current.guide.selection.comboId,prepared.comboId);assert.equal(String(current.guide.match.gameId),String(gameId));
+    const builds=JSON.parse(await fs.readFile(path.join(base,'data/builds.json'))).entries,build=require(path.join(base,'src/core/builds.mjs')).getBuild(hero('Galio'),'mid',{...data,builds},current.guide.selection);
+    assert.deepEqual(build.runePage,expected.page);assert.deepEqual(build.summoners,expected.summoners);assert.equal(build.items.length,6);
+   }
+   const imported=JSON.parse(await fs.readFile(path.join(root,'client-fixture','Game','Config','Global','Recommended','rift-buddy-3-mid-rift.json')));assert.deepEqual(imported.blocks,expected.itemSet.blocks);assert.ok(writes.filter(w=>w.route.includes('/session/actions/')).every(w=>w.body.completed===false));
+   const report={passed:true,source,archiveSha256:release?.archiveSha256||null,variant:loadingNewGame?'loading-new-game':'loading-transition',realRuneWrites:0,mockedRuneWrites:mockedRuneWrites(),allNetworkMocked:true,complete:results[0].complete,sideDestroyed:side.isDestroyed(),candidateConfigurationSaved:!!prepared,currentGuide:current.guide,oldSoloConfigurationPreserved:true,newGameGuideRejected:loadingNewGame,requests};await fs.writeFile(path.join(root,'party-preparation.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();return;
+  }
+  await settled();
   assert.equal(picked,0);assert.equal(intent,hero('Galio').key);assert.equal(completed,false);assert.equal(mockedRuneWrites(),1);
   assertConfiguration(await ownPlan(),'Pending player hover');let clickedConfiguration;await until(async()=>{const current=await assertStoredSolo();clickedConfiguration=current.preparations.find(p=>p.id==='Galio'&&p.comboId&&p.creativePlan?.curated?.id===candidate.combo);return !!clickedConfiguration;},'Candidate combination was not retained separately from the solo preference');
   // Returning from recommendations and a stale gameflow response cannot

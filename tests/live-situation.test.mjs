@@ -21,6 +21,15 @@ test('public own resource values are allowlisted and malformed or unknown resour
 const physical=()=>[player('Jhin','CHAOS',[3031]),player('Jinx','CHAOS',[6672])];
 const model=(live,guide=selectGuide(null,selection),current)=>createGuideModel(data,guide,live,current);
 
+test('public enemy magic resistance never turns enchanter utility routes into penetration purchases',()=>{
+ const foes=[player('Galio','CHAOS',[3065]),player('Malphite','CHAOS',[3102])];
+ for(const id of ['Lulu','Janna','Soraka','Nami','Sona','Karma','Milio']){
+  const selected={id,role:'support',mode:'rift'},live=sanitizeLive({riotId:'private-'+id,currentGold:800,level:7},[player(id,'ORDER'),...foes],{gameMode:'CLASSIC',mapNumber:11,gameTime:600,queueId:420},data.champions),m=createGuideModel(data,selectGuide(null,selected),live);
+  assert(m.situation.signals.some(s=>s.kind==='resist'),id+' fixture did not produce a real public resist signal');
+  assert(!m.situation.candidates.some(c=>c.id==='4630'),id+' got a penetration component');assert(!m.completeGear.route.some(i=>i.id==='3135'),id+' got automatic Void Staff');
+ }
+});
+
 test('live situation keeps public scoreboard facts but discards all player identities and hidden fields',()=>{
  const opponent=player('Jhin','CHAOS',[3031],{level:10,currentGold:9999,position:'BOTTOM',coordinates:{x:123},respawnTimer:30,health:40,runes:{secret:'private'},scores:{kills:5,deaths:-1,assists:2,creepScore:55,wardScore:14}});
  const live=read([opponent,null]);
