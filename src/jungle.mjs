@@ -1,11 +1,13 @@
 import {escape as e} from './ui.mjs';
 import {applyPresentation} from './presentation-view.mjs';
 const root=document.getElementById('jungle-root'),api=window.jungleWidget;
+let last='';
 function render(value){
  applyPresentation(value?.presentation);
- const m=value?.model,j=value?.jungle||m?.jungle,level=value?.level??m?.live?.level,time=value?.time??m?.live?.gameTime;
- const lead=j?.choices?.find(c=>c.id===(j.ready?'gank':'farm'));
- root.innerHTML=`<header><b>野区规划${Number.isFinite(time)?` · ${Math.floor(time/60)}:${String(Math.floor(time%60)).padStart(2,'0')}`:''}${level?' · '+e(level)+'级':''}</b><div><button data-action="details" aria-label="调整路线与抓人条件" title="查看路线、资源与自己确认的抓人条件">⋯</button><button data-action="hide" aria-label="关闭野区规划" title="可从装备卡的野区按钮恢复">×</button></div></header><main><b>${e(lead?.title||'等待读取本局')}</b><p title="${e(lead?.text)}">${e(lead?.text||'只依据本局自身状态和你确认的条件，不猜测敌方位置。')}</p>${Number.isFinite(time)&&time<210?`<small title="${e(j?.opening?.join(' → '))}">开局参考 · ${e(j?.opening?.slice(0,3).join(' → '))} → …</small>`:`<small>${j?.fresh?'兵线标记有效 · 变化时请重新确认':'兵线未确认或已过期 · 不指定抓哪路'}</small>`}</main>`;
+ const m=value?.model,j=value?.jungle||m?.jungle,time=value?.time??m?.live?.gameTime;
+ const early=Number.isFinite(time)&&time<210&&!j?.recovery&&!j?.ready;
+ const markup=`<header><b>野区规划${early?' · 开局示例':''}</b><div><button data-action="details" aria-label="调整路线与抓人条件" title="查看完整路线、配合与自己确认的条件">⋯</button><button data-action="hide" aria-label="关闭野区规划" title="可从装备卡的野区按钮恢复">×</button></div></header><main><b>${e(j?.lead?.title||'等待读取本局')}</b><p title="${e(j?.lead?.text)}">${e(j?.lead?.text||'本局状态暂不可读；请以游戏内情况为准。')}</p>${early?`<div class="route" title="${e(j?.routeTitle+' · '+j?.finish)}">${(j?.compactRoute||[]).map(r=>`<small>${e(r)}</small>`).join('')}</div>`:`<small title="${e(j?.skillNote)}">${e(j?.skillNote||'技能状态待确认')}</small>`}<div class="quick-notes" aria-label="自己确认路线中断">${j?.recovery?'<button data-action="note" data-value="resume">恢复比较机会</button>':[['invaded','被入侵'],['recalled','刚回城'],['no-window','没机会']].map(([id,label])=>`<button data-action="note" data-value="situation:${id}" title="自己确认${label}，取消旧抓人标记；90秒后失效">${label}</button>`).join('')}</div></main>`;
+ if(markup!==last){last=markup;root.innerHTML=markup;}
 }
-root.addEventListener('click',async event=>{const button=event.target.closest('[data-action]');if(button)try{await api.control(button.dataset.action);}catch{button.title='操作未完成，请从本局指引恢复';}});
+root.addEventListener('click',async event=>{const button=event.target.closest('[data-action]');if(!button)return;button.disabled=true;try{await api.control(button.dataset.action,button.dataset.value);}catch(error){button.title=error.message||'操作未完成，请从本局指引恢复';}finally{if(button.isConnected)button.disabled=false;}});
 api.onUpdate(render);render(await api.bootstrap());

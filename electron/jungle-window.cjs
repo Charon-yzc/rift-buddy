@@ -18,6 +18,14 @@ module.exports=function createJungleWindow({root,getState,setState,getPayload,ge
  const eligible=value=>!!value?.model?.jungle&&!['champion','mode','role','combo'].includes(value.model.live?.kind)&&(['InProgress','Reconnect'].includes(value.phase)||value.model.live?.matched===true);
  function show(){requested=true;if(!getState()||getState().jungleWidget?.enabled===false||!eligible(getPayload()))return;if(!win)create();else{fit();win.showInactive();publish();}}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');return handler(...args);});}
- guard('jungle-bootstrap',getPayload);guard('jungle-control',async action=>{if(action==='hide'){await close();return true;}if(action==='details'){await showDetails();return true;}throw Error('不支持此操作');});
+ guard('jungle-bootstrap',getPayload);guard('jungle-control',async(action,value)=>{
+  if(action==='hide'){await close();return true;}if(action==='details'){await showDetails();return true;}
+  if(action==='note'){
+   const m=getPayload()?.model,current=getState();if(!m?.jungle||!current)throw Error('当前不是峡谷打野指引');
+   if(!['situation:invaded','situation:recalled','situation:no-window','resume'].includes(value))throw Error('野区标记不正确');
+   const [field,choice]=value.split(':'),{changeJungleNotes}=require(path.join(root,'src/core/jungle-guidance.mjs'));
+   await setState({...current,jungleNotes:changeJungleNotes(current.jungleNotes,field,choice,m.live?.matched?m.live.gameTime:null)},current);onChange();return true;
+  }throw Error('不支持此操作');
+ });
  return {show,hide,fit,publish,visible,destroy:()=>{clearTimeout(timer);win?.destroy();},info:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),enabled:getState()?.jungleWidget?.enabled!==false}:null};
 };

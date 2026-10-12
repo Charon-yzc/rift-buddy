@@ -46,6 +46,7 @@ export function panelStats(raw){
  return {ad,ap,armor:num(raw.armor),mr:num(raw.magicResist),
   atkSpeed:num(raw.attackSpeed),crit:ratio(num(raw.critChance)),critDamage:Number.isFinite(raw.critDamage)?(raw.critDamage>5?raw.critDamage/100:raw.critDamage):null,ms:num(raw.moveSpeed),
    hp:num(raw.currentHealth),maxHp:num(raw.maxHealth),regen:num(raw.healthRegenRate),
+   ...(['MANA','ENERGY'].includes(raw.resourceType)&&Number.isFinite(raw.resourceMax)&&raw.resourceMax>0&&Number.isFinite(raw.resourceValue)&&raw.resourceValue>=0&&raw.resourceValue<=raw.resourceMax?{resource:{type:raw.resourceType,value:raw.resourceValue,max:raw.resourceMax}}:{}),
    ...(Number.isFinite(raw.abilityHaste)&&raw.abilityHaste>=0&&raw.abilityHaste<=1000?{abilityHaste:raw.abilityHaste}:{}),
    ...(Number.isFinite(raw.magicPenetrationFlat)&&raw.magicPenetrationFlat>=0&&raw.magicPenetrationFlat<=1000?{magicPenFlat:raw.magicPenetrationFlat}:{})};
 }
@@ -75,7 +76,7 @@ return {available:true,champion:champion.id,inventory,inventoryKnown,gold:Number
   level:Number.isInteger(active.level)&&active.level>=1&&active.level<=30?active.level:null,
   skills:Object.fromEntries(['Q','W','E','R'].map(key=>{const level=active.abilities?.[key]?.abilityLevel;return [key,Number.isInteger(level)&&level>=0&&level<=10?level:null];})),
   attackType:championAttackType(champion,active.level,active.abilities?.Q?.id),
-  scores:scores(own),roster,teamKnown,position:positionOf(own),queueId:Number.isInteger(game?.queueId)?game.queueId:null,
+  scores:scores(own),roster,teamKnown,teamSide:own.team==='ORDER'?'blue':own.team==='CHAOS'?'red':null,position:positionOf(own),queueId:Number.isInteger(game?.queueId)?game.queueId:null,
   gameTime:Number.isFinite(stats?.gameTime)&&stats.gameTime>=0?stats.gameTime:null,mapId,mode,at:Date.now(),stats:panelStats(active.championStats),
   objectives:sanitizePublicEvents(events,players,own,stats?.gameTime),
   enemies:enemiesFromPlayers(own,players,champions),allies:alliesFromPlayers(own,players,champions)};

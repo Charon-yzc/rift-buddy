@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {sanitizeLive} from '../services/live-client.mjs';
+import {sanitizeLive,panelStats} from '../services/live-client.mjs';
 import {createGuideModel,selectGuide,validateGuideState,nextSkill} from '../src/core/guide.mjs';
 import {recommendSkill} from '../src/core/skill-advice.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
@@ -12,6 +12,12 @@ data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entr
 const selection={id:'Ashe',role:'bottom',mode:'rift'};
 const player=(id,team,items=[],extra={})=>({riotId:'private-'+id,rawChampionName:'game_character_displayname_'+id,team,items:items.map(itemID=>({itemID,count:1})),scores:{kills:0,deaths:0,assists:0,creepScore:50},...extra});
 const read=(enemies=[],own=[],extra={})=>sanitizeLive({riotId:'private-Ashe',currentGold:800,level:7,abilities:Object.fromEntries(Object.entries({Q:1,W:3,E:1,R:1}).map(([key,abilityLevel])=>[key,{abilityLevel}])),...extra},[player('Ashe','ORDER',own),...enemies],{gameMode:'CLASSIC',mapNumber:11,gameTime:600},data.champions);
+
+test('public own resource values are allowlisted and malformed or unknown resource mechanisms stay unknown',()=>{
+ for(const type of ['MANA','ENERGY'])assert.deepEqual(panelStats({attackDamage:50,resourceType:type,resourceValue:25,resourceMax:200}).resource,{type,value:25,max:200});
+ for(const value of [null,NaN,-1,201])assert.equal(panelStats({attackDamage:50,resourceType:'MANA',resourceValue:value,resourceMax:200}).resource,undefined);
+ assert.equal(panelStats({attackDamage:50,resourceType:'RAGE',resourceValue:0,resourceMax:100}).resource,undefined);
+});
 const physical=()=>[player('Jhin','CHAOS',[3031]),player('Jinx','CHAOS',[6672])];
 const model=(live,guide=selectGuide(null,selection),current)=>createGuideModel(data,guide,live,current);
 
@@ -19,10 +25,13 @@ test('live situation keeps public scoreboard facts but discards all player ident
  const opponent=player('Jhin','CHAOS',[3031],{level:10,currentGold:9999,position:'BOTTOM',coordinates:{x:123},respawnTimer:30,health:40,runes:{secret:'private'},scores:{kills:5,deaths:-1,assists:2,creepScore:55,wardScore:14}});
  const live=read([opponent,null]);
  assert.equal(live.teamKnown,true);assert.equal(live.roster.length,2);
+ assert.equal(live.teamSide,'blue');
  assert.deepEqual(live.roster[1],{champion:'Jhin',side:'enemy',self:false,level:10,position:'bottom',inventory:[{id:'3031',count:1}],itemsKnown:true,scores:{kills:5,deaths:null,assists:2,creepScore:55}});
  const json=JSON.stringify(live);for(const text of ['private','9999','coordinates','respawnTimer','wardScore','health'])assert.equal(json.includes(text),false,text);
  const unknown=sanitizeLive({riotId:'private-Ashe'},[player('Ashe',null),opponent],{gameMode:'CLASSIC',mapNumber:11},data.champions);
  assert.equal(unknown.teamKnown,false);assert.deepEqual(unknown.roster,[]);
+ assert.equal(unknown.teamSide,null);
+ assert.equal(sanitizeLive({riotId:'private-Ashe'},[player('Ashe','CHAOS')],{gameMode:'CLASSIC',mapNumber:11},data.champions).teamSide,'red');
 });
 
 test('live evidence recommends a defensive component with reasons, then stops after it is bought or upgraded',()=>{
