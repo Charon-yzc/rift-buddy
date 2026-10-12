@@ -571,19 +571,36 @@ function editBuildSummoners(el,field,value){
 }
 function buildSelection(){return {id:buildView.id,role:buildView.role,mode:buildView.mode,coreIndex:buildView.coreIndex,conditions:[...buildView.conditions],...selectedBuildFields(buildView,{preserveUnavailable:true}),...(buildView.mode==='hex'?{augmentIds:buildView.augmentIds||[],compareIds:buildView.compareIds||[],ownedAugmentIds:buildView.ownedAugmentIds||[]}:{})};}
 function buildSelectionContext(build){const own=currentPlayerSelection(client.session,data.champions,slots);return JSON.stringify([buildChoiceKey(buildSelection()),buildView.augmentIds||[],buildView.compareIds||[],buildView.ownedAugmentIds||[],data.patch,data.buildSource,build?.reference?.fetchedAt,client.connected,client.phase,client.game?.gameId,client.mode?.id,own?.id,own?.formalRole,own?.role,runeAppliedKeys.has(runeApplicationKey(build?.champion,build?.role,build?.runePage))]);}
-function acceptGuideSelection(selection){if(!selection)return;rememberPreparation(selection);guideSyncBase=selection;lastGuideSyncKey=buildChoiceKey(selection);if(buildView&&selection.id===buildView.id&&selection.role===buildView.role&&selection.mode===buildView.mode){for(const field of [...CONFIGURATION_FIELDS,'compareIds','ownedAugmentIds'])delete buildView[field];Object.assign(buildView,selection);renderBuild();}}
+function acceptGuideSelection(selection){if(!selection)return;rememberPreparation(selection);guideSyncBase=selection;lastGuideSyncKey=buildChoiceKey(selection);if(buildView&&selection.id===buildView.id&&selection.role===buildView.role&&selection.mode===buildView.mode){for(const field of [...CONFIGURATION_FIELDS,'compareIds','ownedAugmentIds'])delete buildView[field];Object.assign(buildView,selection);renderBuild();}if(windowLayout.docked)render();}
+function receiveGuideSelection(selection,revision=0){
+ if(revision&&revision<=guideRevision)return;
+ guideRevision=revision||guideRevision;guideSelection=selection;
+ if(!guideSyncPending)acceptGuideSelection(selection);
+}
 function syncPreparedGuide(selection){
  if(restoringSave||!api.updateGuide||!guideSelection||guideSelection.id!==selection.id||guideSelection.role!==selection.role||guideSelection.mode!==selection.mode)return;
  const key=buildChoiceKey(selection);if(key===lastGuideSyncKey)return;
  const changedFields=configurationPatch(guideSyncBase||guideSelection,selection);guideSyncBase=selection;lastGuideSyncKey=key;if(!changedFields.length)return;
- guideSyncPending++;guideSyncChain=guideSyncChain.catch(()=>{}).then(async()=>{
+ const revision=guideRevision;guideSyncPending++;guideSyncChain=guideSyncChain.catch(()=>{}).then(async()=>{
   await saveChain;const prepared=preparations.recall(selection);
   if(!prepared||!guideSelection||['id','role','mode'].some(field=>guideSelection[field]!==prepared[field]))return;
   // Only send this window's actual edits. A later guide update may have
   // changed a different field while this request was waiting to be sent.
   const acceptedFields=changedFields.filter(field=>JSON.stringify(guideSelection[field])!==JSON.stringify(prepared[field]));
-  if(!acceptedFields.length)return;return api.updateGuide({...prepared,changedFields:acceptedFields});
- }).catch(error=>{if(lastGuideSyncKey===key)lastGuideSyncKey='';toast('指引尚未同步：'+error.message,true);}).finally(()=>{guideSyncPending--;if(!guideSyncPending)acceptGuideSelection(guideSelection);});
+  if(!acceptedFields.length)return;
+  const response=await api.updateGuide({...prepared,changedFields:acceptedFields});
+  // The invoke response can arrive before its guide-selection notification.
+  // Use the accepted result so finally cannot save the preceding default.
+  if(response?.updated&&response.selection)receiveGuideSelection(response.selection,response.revision);
+ }).catch(error=>{if(lastGuideSyncKey===key)lastGuideSyncKey='';toast('指引尚未同步：'+error.message,true);}).finally(()=>{guideSyncPending--;if(!guideSyncPending&&guideRevision>revision)acceptGuideSelection(guideSelection);});
+}
+async function openPreparedGuide(selection){
+ const revision=guideRevision,response=await api.openGuide(selection);
+ if(response&&typeof response==='object'&&'selection' in response)receiveGuideSelection(response.selection,response.revision);
+ // Browser preview has no versioned IPC. A late unversioned response must
+ // still leave a newer notification's accepted configuration intact.
+ else if(selection&&guideRevision===revision)guideSelection=selection;
+ return response;
 }
 function runeTargetNotice(c){const own=currentPlayerSelection(client.session,data.champions,slots),applied=runeAppliedKeys.has(runeApplicationKey(c.id,buildView.role,buildView.build.runePage));return `${own&&own.id!==c.id?`<div class="callout warning rune-target-warning">你已选择 ${e(champ(own.id)?.name)}，正在查看 ${e(c.name)}。下面的操作会将 ${e(c.name)} 的符文应用到你自己的客户端。</div>`:''}<p class="rune-application-status">${applied?'本次已应用这套符文，客户端修改后需重新应用':'当前选择尚未在本次选人中应用'} · 应用前核对英雄与位置</p>`;}
 const buildKey=(id,role,mode,source=data.buildSource)=>buildSourcePendingKey(data.patch,id,mode==='hex'?'hex':role,source);
@@ -1053,8 +1070,8 @@ document.addEventListener('click',async event=>{
  else if(action==='result-detail')showResult(Number(el.dataset.index));
  else if(action==='party-route'){const index=Number(el.dataset.index),result=results[index];if(!result||resultsSignature!==recommendationKey(recommendationInput()))throw Error('选人已变化，请重新推荐');const original=result.preparationOrigin||resultCreativePlan(result),plan=selectPartyRoute(resultCreativePlan(result),el.dataset.route),reopen=!!detailResult,strategy=plan.members.length===result.analysis.members.length?strategySummary(result.analysis,{tempo:plan.tempo,why:plan.why,risk:plan.caution},saved.preferences.play.tempo,summarizeEnemyTraits(publicMatchupIds(),data.champions)):result.strategy;results[index]={...result,preparationOrigin:original,title:plan.name,reason:plan.why,reasonPoints:[plan.why],strategy,creativePlan:plan,adaptive:plan.shared,trio:null,duo:null,creative:null,origin:'adaptive'};closeOverlay();render();if(reopen)showResult(index);toast('已切换方案内行动路线，点击“就试这套”采用');}
  else if(action==='use-result'){if(client.connected&&client.phase==='ChampSelect'){await sync(false,{fresh:true});if(!client.connected||client.phase!=='ChampSelect'||!client.session)throw Error('无法确认本局选人，已保留阵容，请重新连接后接受方案');}if(resultsSignature!==recommendationKey(recommendationInput())||!results[Number(el.dataset.index)])throw Error('选人已变化，请重新推荐');const result=results[Number(el.dataset.index)];const nextPlan=resultCreativePlan(result),inherited=partyRoutePreparations(preparations,result.preparationOrigin,nextPlan);preservePlayerPosition();for(const selection of inherited)preparations.remember(selection);activeCreativePlan=nextPlan;creativePlanNotice='';cancelRecommendation();if(scope==='solo')soloRole=result.targets[0]||soloRole;slots=structuredClone(result.slots).map(s=>({...s,locked:!!s.champion,...(s.champion&&!Number.isInteger(s.clientCellId)&&!s.manualPosition?{automaticPosition:true}:{})}));closeOverlay();await persist({throwOnError:true});results=[result];resultsSignature=recommendationKey(recommendationInput());companionPreview=null;companionTab='recommend';render();const shared=await publishRoomShare({force:true});toast((shared?'已采用组合并分享':'已采用组合；加入房间后可分享')+'；点击你的英雄，预选并配置。');}
- else if(action==='open-guide'){await saveChain;const selection={...buildSelection(),augmentIds:buildView.mode==='hex'&&hexHero===buildView.id?hexSelected:buildView.augmentIds||[],compareIds:buildView.mode==='hex'&&hexHero===buildView.id?hexOptions:buildView.compareIds||[],ownedAugmentIds:buildView.mode==='hex'&&hexHero===buildView.id?hexOwned:buildView.ownedAugmentIds||[]};await matchupFocusChain;await guideSyncChain;await api.openGuide(selection);guideSelection=selection;if(buildView)renderBuild();toast('指引已打开；游戏中 Ctrl + Shift + H 切换穿透与交互');}
-  else if(action==='guide-current'){const prepared=myPreparation();await matchupFocusChain;await guideSyncChain;if(prepared){await api.openGuide(prepared.selection);guideSelection=prepared.selection;}else await api.openGuide();}
+  else if(action==='open-guide'){const identity=preparationIdentity(buildSelection());await matchupFocusChain;await guideSyncChain;await saveChain;if(!buildView||preparationIdentity(buildSelection())!==identity)throw Error('配置窗口已变化，请重新打开当前英雄的指引');const selection={...buildSelection(),augmentIds:buildView.mode==='hex'&&hexHero===buildView.id?hexSelected:buildView.augmentIds||[],compareIds:buildView.mode==='hex'&&hexHero===buildView.id?hexOptions:buildView.compareIds||[],ownedAugmentIds:buildView.mode==='hex'&&hexHero===buildView.id?hexOwned:buildView.ownedAugmentIds||[]};await openPreparedGuide(selection);if(buildView)renderBuild();toast('指引已打开；游戏中 Ctrl + Shift + H 切换穿透与交互');}
+  else if(action==='guide-current'){await matchupFocusChain;await guideSyncChain;await saveChain;const prepared=myPreparation();await openPreparedGuide(prepared?.selection);}
  else if(action==='my-runes'){
   const selected=myPreparation();if(!selected?.build.runePage||selected.own.id!==el.dataset.id)throw Error('选人已变化，请核对当前英雄');
   if(runeApplying||clientPreparing)throw Error('正在应用配置，请等待本次操作完成');runeApplying=true;const ticket=runeAppliedKeys.begin(runeApplicationKey(selected.own.id,selected.build.role,selected.build.runePage));reflectRunePending();
@@ -1186,7 +1203,7 @@ try{boot=await api.bootstrap();data=boot.data;saved=boot.state;savedBase=structu
  api.onRoomUpdate?.(snapshot=>{room=snapshot;if(windowLayout.docked||route==='draft'||route==='room')render();});
   preparations.restore(saved.preparations);guideSelection=saved.guide?.selection||null;if(guideSelection){if(!preparations.recall(guideSelection))preparations.remember(guideSelection);guideSyncBase=guideSelection;lastGuideSyncKey=buildChoiceKey(guideSelection);}
  api.onPresentation?.(value=>{saved.preferences.presentation=value;applyPresentation(value);if(overlay.querySelector('.presentation-settings'))updatePresentationDialog(overlay,value);});
- api.onGuideSelection?.((selection,meta={})=>{if(meta.revision&&meta.revision<guideRevision)return;guideRevision=meta.revision||guideRevision;guideSelection=selection;if(!guideSyncPending)acceptGuideSelection(selection);});
+ api.onGuideSelection?.((selection,meta={})=>receiveGuideSelection(selection,meta.revision));
  api.onOpenBuild?.(selection=>{showBuild(selection.id,selection.role,selection.mode,selection);});
  api.onMainPage?.(destination=>{if(windowLayout.docked)return;if(destination?.route==='reference'&&champ(destination.id)){referenceHero=destination.id;referenceTab=destination.tab==='changes'?'changes':'skills';referenceSkill='Q';referenceVariant=0;route='reference';}else if(destination?.route==='settings')route='settings';else return;closeOverlay();render();});
  api.onProgress?.(message=>{updateMessage=message;const status=document.getElementById('update-message');if(status)status.textContent=message;});

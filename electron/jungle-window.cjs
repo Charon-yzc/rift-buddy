@@ -25,7 +25,7 @@ module.exports=function createJungleWindow({root,getState,setState,getPayload,ge
   if(action==='hide'){await close();return true;}if(action==='details'){await showDetails();return true;}
   if(action==='note'){
    const m=getPayload()?.model,current=getState();if(!m?.jungle||!current)throw Error('当前不是峡谷打野指引');
-   if(!['situation:invaded','situation:recalled','situation:no-window','half:red','half:blue','resume'].includes(value))throw Error('野区标记不正确');
+   if(!['situation:invaded','situation:recalled','situation:no-window','half:red','half:blue','stage:opening','stage:rotation','resume'].includes(value))throw Error('野区标记不正确');
    const [field,choice]=value.split(':'),{changeJungleNotes}=require(path.join(root,'src/core/jungle-guidance.mjs'));
    await setState({...current,jungleNotes:changeJungleNotes(current.jungleNotes,field,choice,m.live?.matched?m.live.gameTime:null)},current);onChange();return true;
   }throw Error('不支持此操作');
