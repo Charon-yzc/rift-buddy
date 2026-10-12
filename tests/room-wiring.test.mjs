@@ -27,3 +27,10 @@ test('the automatic room decoration wraps updates, guards, leave state and the c
  assert.match(main,/queueRoomAuto\(latestClient\)/,'the client poll must feed the auto room step');
  assert.match(main,/autoRoomDecision\(\{enabled/);
 });
+test('the renderer wires the automatic room toggle, copy text and quiet hint',async()=>{
+ const app=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
+ assert.match(app,/if\(el\.id==='room-auto'\)\{saved\.preferences\.roomAuto=el\.checked;persist\(\);render\(\);\}/);
+ assert.match(app,/autoEnabled:saved\.preferences\.roomAuto===true/);
+ assert.match(app,/autoQuiet:roomAutoQuiet&&\(room\?\.members\?\.length\?\?0\)<=1/);
+ assert.match(app,/room\?\.auto\?`开黑搭子组队房间/);
+});
