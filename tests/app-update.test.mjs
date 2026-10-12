@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseReleaseFeed,compareVersions,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile,releasePageUrl,isReleaseNotesUrl} from '../src/core/app-update.mjs';
+import {parseReleaseFeed,compareVersions,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile,releasePageUrl,isReleaseNotesUrl,normalizeMirrorBase,mirrorAssetUrl,DEFAULT_UPDATE_MIRROR,UPDATE_MIRROR_PRESETS} from '../src/core/app-update.mjs';
 import crypto from 'node:crypto';
 import {EventEmitter} from 'node:events';
 import {createAppUpdateService} from '../services/app-update.mjs';
@@ -107,6 +107,43 @@ test('an aborted download leaves no record',async()=>{
  await assert.rejects(s.download({version:'9.9.9',tag:'v9.9.9'},{signal:controller.signal}),/abort/i);
  assert.equal(await s.pending(),null);
 });
+const MIRROR='https://mirror.smoke';
+const mRoutes=(bin,sha,mode='ok')=>{
+ const setup='github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe';
+ const sum='github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt';
+ const m=h=>`mirror.smoke/https://${h}`;
+ const direct={[setup]:{status:200,headers:{'content-length':String(bin.length)},body:bin},[sum]:{status:200,body:`${sha}  RiftBuddy-9.9.9-Setup.exe\n`}};
+ if(mode==='ok')return {...direct,[m(setup)]:{status:200,headers:{'content-length':String(bin.length)},body:bin}};
+ if(mode==='down')return {...direct,[m(setup)]:{status:500,body:'boom'}};
+ if(mode==='missing')return {...direct,[m(setup)]:{status:404,body:''}};
+ if(mode==='tamper')return {...direct,[m(setup)]:{status:200,headers:{'content-length':String(bin.length)},body:crypto.randomBytes(bin.length)}};
+ throw Error('bad mirror mode');
+};
+test('mirror accelerates and records the path',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const events=[],s=dlService(mRoutes(BIN,BIN_SHA,'ok'),{tempDir:dir,mirrorBase:MIRROR});
+ const r=await s.download({version:'9.9.9',tag:'v9.9.9'},{onProgress:e=>events.push(e)});
+ assert.equal(r.via,'mirror');assert.equal(r.sha256,BIN_SHA);
+ assert.ok(events.some(e=>e.via==='mirror'&&e.stage==='downloading'));
+ assert.deepEqual(await s.pending(),r);
+});
+test('mirror failure falls back to direct once with notice',async()=>{
+ for(const mode of ['down','missing']){
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+  const events=[],s=dlService(mRoutes(BIN,BIN_SHA,mode),{tempDir:dir,mirrorBase:MIRROR});
+  const r=await s.download({version:'9.9.9',tag:'v9.9.9'},{onProgress:e=>events.push(e)});
+  assert.equal(r.via,'direct',mode);assert.equal(r.sha256,BIN_SHA,mode);
+  assert.ok(events.some(e=>e.note==='mirror-fallback'),mode);
+ }
+});
+test('mirror tampering cannot forge the checksum and falls back',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const events=[],s=dlService(mRoutes(BIN,BIN_SHA,'tamper'),{tempDir:dir,mirrorBase:MIRROR});
+ const r=await s.download({version:'9.9.9',tag:'v9.9.9'},{onProgress:e=>events.push(e)});
+ assert.equal(r.via,'direct');assert.equal(r.sha256,BIN_SHA);
+ assert.equal(crypto.createHash('sha256').update(await fs.readFile(r.file)).digest('hex'),BIN_SHA);
+ assert.ok(events.some(e=>e.note==='mirror-fallback'));
+});
 test('install re-hashes before launch and supports a dry run without spawning',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
  const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
@@ -175,4 +212,14 @@ test('release page urls and notes-link scoping',()=>{
 test('an empty feed reports current without a release',async()=>{
  const s=service({request:fakeRequest({[FEED_KEY]:{status:200,body:'<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'}})});
  assert.deepEqual(await s.check(),{status:'current',release:null});
+});
+test('mirror base normalizes strictly and presets stay https',()=>{
+ assert.equal(DEFAULT_UPDATE_MIRROR,'https://gh-proxy.com');
+ assert.deepEqual(UPDATE_MIRROR_PRESETS,['https://gh-proxy.com','https://gh.llkk.cc']);
+ assert.equal(normalizeMirrorBase(''),'');assert.equal(normalizeMirrorBase('  '),'');
+ assert.equal(normalizeMirrorBase('https://m.example.com/'),'https://m.example.com');
+ assert.equal(normalizeMirrorBase('https://m.example.com///'),'https://m.example.com');
+ assert.equal(mirrorAssetUrl('','https://github.com/a/b'),'https://github.com/a/b');
+ assert.equal(mirrorAssetUrl('https://m.example.com/','https://github.com/a/b'),'https://m.example.com/https://github.com/a/b');
+ for(const bad of ['http://m.example.com','https://u:p@m.example.com','https://m.example.com:8443','not a url','https://m.example.com/'+'x'.repeat(200)])assert.throws(()=>normalizeMirrorBase(bad),/镜像/,bad);
 });

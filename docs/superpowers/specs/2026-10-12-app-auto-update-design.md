@@ -53,6 +53,16 @@ semver 取最大者（不只信排序），与本地 `app.getVersion()` 比较�
   流式写入临时文件、边下边算哈希，不 whole-file 驻留内存。
 - **用户主权**：检查可自动（廉价），下载与安装必须用户明确点击；绝不静默安装。
   与"符文写入需明确点击"同一伦理。
+- **镜像加速（默认启用，用户拍板）**：安装包主体默认经 `https://gh-proxy.com` 下载
+  （2026-10-12 实测约 850KB/s，为直连约 1.8 倍；备选 `https://gh.llkk.cc`，均可在设置页
+  一键切换、清空回直连、自填其他地址）。5 个公共代理探针中 2 个 TLS 握手失败、1 个返回
+  错误内容——第三方代理可用性按天变化，不可默认信任。因此：
+  (1) **校验文件与发现页永远直连**，否则镜像可同时伪造"坏包+配套哈希"；
+  (2) 镜像失败（挂掉/404/内容不对）自动改走直连重试一次，并在界面明示
+  "镜像加速失败，已改用直连"；用户取消不重试；
+  (3) 镜像地址必须无账号信息、无端口的 HTTPS，DNS 同样过公网检查，跳转白名单
+  为原三域名加镜像 host；
+  (4) UI 与文档必须标注"第三方代理，速度与可用性不保证"及实测日期，不许写成官方保证。
 - **临时文件**：`app.getPath('temp')` 下随机后缀文件名；`userData/app-update.json`
   记录 `{version, file, sha256, bytes, downloadedAt}`；启动时清理过期残留；
   拉起安装程序前**重新哈希**一次文件， mismatch 则拒绝启动并删文件。
@@ -99,8 +109,13 @@ ready → [删除安装包] → idle
 - `check({silent})` → `{status: 'current' | 'available', release?: {version, tag, url, publishedAt}}`。
   feed 获取走白名单跳转策略。安装包大小不在检查阶段获取（避免多一次 HEAD 请求），
   下载开始后由响应 `content-length` 给出；缺失则全程显示"大小未知"，不虚构任何数字。
-- `download(release, {signal})`：流式落盘 + 增量 sha256 + 进度回调；完成后取
-  checksum 文件并比对；失败删残留并抛中文错。
+- `download(release, {signal, onProgress})`：流式落盘 + 增量 sha256 + 进度回调
+  （`{received, total, stage: 'downloading'|'verifying', via: 'mirror'|'direct', note?}`）；
+  安装包主体走镜像（`mirrorBase`，默认见下），**校验文件永远直连**；
+  镜像失败改走直连重试一次并经 `note:'mirror-fallback'` 明示；完成后取
+  checksum 文件并比对；失败删残留并抛中文错。返回 record（含 `via`）。
+- `verify(record)`：复验已落盘文件哈希，供复用/续装路径；失败清理并返回 false。
+- `sweep()`：清扫崩溃残留 `.part` 与本地已赶上版本的过期记录，有效 pending 保留；启动时调用一次。
 - `install()`：复验哈希 → `spawn(file, {detached: true, stdio: 'ignore'})` →
   返回调用方，由 main 随后 `app.quit()`。测试注入 fake spawn，永不真实拉起。
 - `cleanup()`：按 `app-update.json` 与 temp 目录 glob 清理本功能残留。
@@ -112,8 +127,9 @@ ready → [删除安装包] → idle
 - `app-update-check(silent=false)`：串行化（检查中重复调用直接返回当前状态，不叠加请求）。先看本地已下载记录（`pending()` 且版本更新 → 直接 `ready`，支持重启续装），再走网络。
 - `app-update-download` / `app-update-cancel` / `app-update-install` / `app-update-delete`。
 - 忽略版本（`dismissedAppVersion`）为渲染层本地偏好，经既有 save-state 流程持久化，**无独立 IPC**（实施时相对初版的简化：少一次主进程往返，语义不变）。
-- 事件 `app-update-progress(snapshot)`：`{phase, received?, total?, percent?, release?, error?, record?}`。
-  `total` 缺失（无 content-length）时 `percent` 为 null，界面只显示已下载字节数。
+- 事件 `app-update-progress(snapshot)`：`{phase, received?, total?, via?, fallbackNotice?, release?, error?, record?}`。
+  `total` 缺失（无 content-length）时只显示已下载字节数；`via` 标记实际通道，
+  回落时 `fallbackNotice` 为 true 并在界面明示（ready 上持久保留）。
 
 启动时：`cleanup()` 残留；若偏好允许且超 24 小时，延迟静默 `check`，
 有新版且未被忽略 → 经 `app-update-progress` 事件推送 snapshot 到渲染层，
@@ -122,6 +138,8 @@ ready → [删除安装包] → idle
 ### 6.4 偏好与持久化（`services/storage.mjs`）
 
 - `appUpdateCheck: p.appUpdateCheck !== false`（默认开；检查本身廉价且静默）。
+- `updateMirror`：默认 `https://gh-proxy.com`（用户拍板默认启用）；`''` 为显式直连；
+  非法值回落默认。跟 `installPath` 一样只留本机，不随备份合并。
 - `lastAppUpdateCheck`：合法 ISO 才保留，位置与 `lastCheck` 并列。
 - `dismissedAppVersion`：`vX.Y.Z` 字符串，格式非法则丢弃。
 - `mergeState`：`appUpdateCheck` 走 `explicit()` 合并；`lastAppUpdateCheck` 与
@@ -140,6 +158,8 @@ ready → [删除安装包] → idle
 
 - 当前版本（来自 `boot.version`）徽标；自动检查开关（`appUpdateCheck`）；
   [检查软件更新] 按钮；状态行（`app-update-message`，复用 `updateMessage` 模式）。
+- 下载镜像行：输入框 + 两个预设一键按钮（`gh-proxy.com` / `gh.llkk.cc`）+ [恢复直连]；
+  附第三方属性与实测日期说明。非法输入保存时直接报错，不落盘。
 - 有新版：版本号 + 发布时间 + [查看发布说明]（open-link）+ [下载新版]；
   大小在下载开始后显示，缺失写"大小未知"；下载中显示进度条与 [取消]；
   就绪后 [退出并安装] + [删除安装包]；

@@ -7,6 +7,7 @@ import {sanitizeNick} from '../src/core/room.mjs';
 import {normalizeRelayUrl} from '../src/core/room-relay.mjs';
 import {normalizePresentation} from '../src/core/presentation.mjs';
 import {normalizeBuildSource} from '../src/core/build-source.mjs';
+import {DEFAULT_UPDATE_MIRROR,normalizeMirrorBase} from '../src/core/app-update.mjs';
 import {validatePreparations,validatePreparation,storedPreparation,PREPARATION_LIMIT} from '../src/core/preparation.mjs';
 import {validateTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {validateCreativePlan} from '../src/core/creative-plan.mjs';
@@ -19,6 +20,7 @@ const conditions=['ad','ap','control','heal','burst'];
 export const STATE_MAX_BYTES=64*1024*1024;
 const checkSize=value=>{if(Buffer.byteLength(JSON.stringify(value),'utf8')>STATE_MAX_BYTES)throw new Error('收藏与配置已超过保存空间，请先移出不需要的收藏');};
 const hero=id=>typeof id==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(id);
+const mirrorPref=v=>{if(v===undefined||v===null)return DEFAULT_UPDATE_MIRROR;try{return normalizeMirrorBase(v);}catch{return DEFAULT_UPDATE_MIRROR;}};
 const text=(v,max)=>typeof v==='string'&&v.length<=max;
 function slots(value,preserveClientMetadata=false){
  if(!Array.isArray(value)||value.length!==5||new Set(value.map(s=>s?.role)).size!==5)throw Error('阵容位置格式不正确');
@@ -56,7 +58,7 @@ export function validateState(value) {
  const p=value.preferences||{};
  if(p.installPath!==undefined&&(!text(p.installPath,500)||/[\r\n\0]/.test(p.installPath)))throw Error('游戏目录格式不正确');
  const normalized={schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],preparations:validatePreparations(value.preparations),
-  preferences:{buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,appUpdateCheck:p.appUpdateCheck!==false,autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
+  preferences:{buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,appUpdateCheck:p.appUpdateCheck!==false,updateMirror:mirrorPref(p.updateMirror),autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,
    clientCompanion:p.clientCompanion!==false,companionWidth:[400,520,600].includes(p.companionWidth)?p.companionWidth:520,clickPrepare:p.clickPrepare!==false,compactTeam:p.compactTeam!==false,autoArrange:p.autoArrange!==false,autoParty:p.autoParty!==false,partyIds:normalizePartyIds(p.partyIds),guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',roomNick:sanitizeNick(p.roomNick)||'队友',relayUrl:normalizeRelayUrl(p.relayUrl)||'',
    autoLive:p.autoLive!==false,pool:Array.isArray(p.pool)?[...new Set(p.pool.filter(hero))].slice(0,200):[],poolMode:['off','prefer','only'].includes(p.poolMode)?p.poolMode:'off',
    play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke','growth'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},

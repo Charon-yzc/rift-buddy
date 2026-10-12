@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {spawn as defaultSpawn} from 'node:child_process';
-import {RELEASE_FEED_URL,parseReleaseFeed,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile} from '../src/core/app-update.mjs';
+import {RELEASE_FEED_URL,parseReleaseFeed,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile,normalizeMirrorBase,mirrorAssetUrl} from '../src/core/app-update.mjs';
 import {publicAddress} from './catalog-store.mjs';
 import {atomicJSON} from './data.mjs';
 export const UPDATE_HOSTS=['github.com','release-assets.githubusercontent.com','objects.githubusercontent.com'];
@@ -16,14 +16,14 @@ async function resolvePublic(hostname,{lookup=dns.lookup,timeout=FEED_TIMEOUT}={
  if(!records.length||records.some(r=>!publicAddress(r.address)))throw Error('更新地址不能指向本机、内网或保留地址');
  return records;
 }
-function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,onHeaders,onData}){
+function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,extraHosts,onHeaders,onData}){
  return new Promise(async(resolve,reject)=>{
   let target=url;
   try{
    for(let hop=0;hop<=UPDATE_REDIRECT_LIMIT;hop++){
     const u=new URL(target);
     if(u.protocol!=='https:'&&!insecureHosts.includes(u.hostname))return reject(Error('更新地址必须使用 HTTPS'));
-    if(!UPDATE_HOSTS.includes(u.hostname)&&!insecureHosts.includes(u.hostname))return reject(Error(`更新跳转不在白名单内：${u.hostname}；不跟随`));
+    if(!UPDATE_HOSTS.includes(u.hostname)&&!insecureHosts.includes(u.hostname)&&!(extraHosts||[]).includes(u.hostname))return reject(Error(`更新跳转不在白名单内：${u.hostname}；不跟随`));
     const records=insecureHosts.includes(u.hostname)?null:await resolvePublic(u.hostname,{lookup,timeout});
     const result=await new Promise((res,rej)=>{
      let bytes=0,failed=false;const parts=[];let chain=Promise.resolve();
@@ -47,8 +47,11 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,on
   }catch(e){reject(e);}
  });
 }
-export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),storeFile=path.join(os.tmpdir(),'rift-buddy-app-update.json'),request=https.request,spawnImpl=defaultSpawn,feedUrl=RELEASE_FEED_URL,insecureHosts=[],dryRun=false,lookup=dns.lookup}={}){
+export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),storeFile=path.join(os.tmpdir(),'rift-buddy-app-update.json'),request=https.request,spawnImpl=defaultSpawn,feedUrl=RELEASE_FEED_URL,mirrorBase='',insecureHosts=[],dryRun=false,lookup=dns.lookup}={}){
  if(typeof currentVersion!=='string'||!currentVersion)throw Error('当前版本格式不正确');
+ const mirror=normalizeMirrorBase(mirrorBase||'');
+ const mirrorHost=mirror?new URL(mirror).hostname:null;
+ const extraHosts=mirrorHost?[mirrorHost]:[];
  async function check({signal}={}){
   const {body}=await fetchOnce(feedUrl,{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
   const release=newestRelease(parseReleaseFeed(body.toString('utf8')));
@@ -74,35 +77,51 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   return removed;
  }
  const missingAsset=e=>/HTTP 404/.test(e?.message||'')?Error('新版安装包缺失，请等待维护者补传发布资产后重试'):e;
- async function download(release,{signal,onProgress}={}){
-  if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||typeof release.tag!=='string')throw Error('新版信息格式不正确');
-  const kept=await readRecord();
-  if(kept&&kept.version===release.version&&await verify(kept)){if(onProgress)onProgress({received:kept.bytes,total:kept.bytes,stage:'verifying'});return kept;}
-  await cleanup();
+ async function downloadVia(release,{signal,onProgress,mirror}){
+  const via=mirror?'mirror':'direct';
   const setup=setupFileName(release.version),sum=checksumFileName(release.version);
   const target=path.join(tempDir,`rift-buddy-update-${Date.now()}-${crypto.randomUUID()}.exe.part`);
   await fs.mkdir(tempDir,{recursive:true});
   const handle=await fs.open(target,'w');
   const hash=crypto.createHash('sha256');let received=0,total=null;
-  const progress=stage=>{if(onProgress)onProgress({received,total,stage});};
+  const progress=(stage,note)=>{if(onProgress)onProgress({received,total,stage,via,note});};
   try{
-   await fetchOnce(releaseDownloadUrl(release.tag,setup),{request,timeout:FILE_TIMEOUT,byteLimit:SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,
+   await fetchOnce(mirrorAssetUrl(mirror,releaseDownloadUrl(release.tag,setup)),{request,timeout:FILE_TIMEOUT,byteLimit:SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts,
     onHeaders:h=>{const t=Number(h?.['content-length']);total=Number.isFinite(t)?t:null;if(total!==null&&total>SETUP_BYTES_LIMIT)throw Error('安装包超过大小限制，已停止下载');progress('downloading');},
     onData:async chunk=>{if(signal?.aborted)throw Error('下载已取消');hash.update(chunk);await handle.write(chunk);received+=chunk.length;progress('downloading');}});
-  }catch(e){await handle.close().catch(()=>{});await fs.unlink(target).catch(()=>{});throw missingAsset(e);}
+  }catch(e){await handle.close().catch(()=>{});await fs.unlink(target).catch(()=>{});throw e;}
   await handle.close();
   if(signal?.aborted){await fs.unlink(target).catch(()=>{});throw Error('下载已取消');}
   progress('verifying');
+  // 校验文件永远直连：否则镜像可同时伪造"坏包+配套哈希"，校验形同虚设。
   let expected;
   try{
    const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
    expected=parseChecksumFile(sumRes.body.toString('utf8'),setup);
-  }catch(e){await fs.unlink(target).catch(()=>{});throw missingAsset(e);}
+  }catch(e){await fs.unlink(target).catch(()=>{});throw e;}
   const digest=hash.digest('hex');
   if(digest!==expected){await fs.unlink(target).catch(()=>{});throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
   const final=target.replace(/\.part$/,'.exe');await fs.rename(target,final);
-  const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,downloadedAt:new Date().toISOString()};
+  const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,via,downloadedAt:new Date().toISOString()};
   await atomicJSON(storeFile,record);return record;
+ }
+ async function download(release,{signal,onProgress}={}){
+  if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||typeof release.tag!=='string')throw Error('新版信息格式不正确');
+  const kept=await readRecord();
+  if(kept&&kept.version===release.version&&await verify(kept)){if(onProgress)onProgress({received:kept.bytes,total:kept.bytes,stage:'verifying',via:kept.via||'direct'});return kept;}
+  await cleanup();
+  // 镜像失败（挂掉/404/内容不对）改走直连重试一次并明示；用户取消不重试。
+  const bases=mirror?[mirror,'']:[''];
+  let attemptError=null;
+  for(const base of bases){
+   try{return await downloadVia(release,{signal,onProgress,mirror:base});}
+   catch(e){
+    if(signal?.aborted)throw e;
+    attemptError=e;
+    if(base&&onProgress)onProgress({received:0,total:null,stage:'downloading',via:'direct',note:'mirror-fallback'});
+   }
+  }
+  throw missingAsset(attemptError);
  }
  async function install(){
   const record=await readRecord();

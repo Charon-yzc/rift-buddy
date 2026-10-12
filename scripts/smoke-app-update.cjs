@@ -14,6 +14,7 @@ const FEED=`<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entr
 const FEED2=`<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><title>v100.0.0 烟测版2</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v100.0.0"/><updated>2026-10-12T01:00:00Z</updated></entry></feed>`;
 const SETUP100_URL='https://github.com/Legender134/rift-buddy/releases/download/v100.0.0/RiftBuddy-100.0.0-Setup.exe';
 const SUM100_URL='https://github.com/Legender134/rift-buddy/releases/download/v100.0.0/SHA256SUMS-100.0.0.txt';
+const MSETUP100_URL='https://mirror.smoke/https://github.com/Legender134/rift-buddy/releases/download/v100.0.0/RiftBuddy-100.0.0-Setup.exe';
 async function run(){
  app.setPath('userData',root);
  const https=require('node:https'),dns=require('node:dns/promises'),{EventEmitter}=require('node:events');
@@ -25,7 +26,7 @@ async function run(){
   req.end=()=>queueMicrotask(()=>{
    const res=new EventEmitter();res.resume=()=>{};
    if(mode==='offline'){req.emit('error',Error('Smoke offline'));req.emit('close');return;}
-   const routes={[FEED_URL]:{status:200,body:Buffer.from(mode==='feed2'?FEED2:FEED)},[SUM_URL]:{status:200,body:Buffer.from(`${BIN_SHA}  RiftBuddy-99.0.0-Setup.exe\n`)},[SETUP_URL]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN,chunks:4},[SETUP100_URL]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN},[SUM100_URL]:mode==='nocsum'?{status:404,body:''}:{status:200,body:Buffer.from(`${BIN_SHA}  RiftBuddy-100.0.0-Setup.exe\n`)}};
+   const routes={[FEED_URL]:{status:200,body:Buffer.from(mode==='feed2'||mode==='mirror404'?FEED2:FEED)},[SUM_URL]:{status:200,body:Buffer.from(`${BIN_SHA}  RiftBuddy-99.0.0-Setup.exe\n`)},[SETUP_URL]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN,chunks:4},[SETUP100_URL]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN},[SUM100_URL]:mode==='nocsum'?{status:404,body:''}:{status:200,body:Buffer.from(`${BIN_SHA}  RiftBuddy-100.0.0-Setup.exe\n`)},[MSETUP100_URL]:mode==='mirror404'?{status:404,body:''}:{status:200,headers:{'content-length':String(BIN.length)},body:BIN,chunks:2}};
    const route=routes[href];
    if(!route){res.statusCode=404;callback(res);res.emit('end');req.emit('close');return;}
    res.statusCode=route.status;res.headers=route.headers||{};callback(res);
@@ -42,6 +43,7 @@ async function run(){
  const reload=()=>new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.webContents.reload();});
  await until(()=>js('!!document.querySelector("[data-action=role-pools]")'),'Draft missing');
  const click=async selector=>{assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`document.querySelector(${JSON.stringify(selector)}).click()`);await delay(120);};
+ const set=async(selector,value,event='input')=>js(`{const el=document.querySelector(${JSON.stringify(selector)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event(${JSON.stringify(event)},{bubbles:true}));}`);
  await click('[data-action=navigate][data-route=settings]');
  await click('[data-action=app-update-check]');
  await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("未完成")'),'Offline failure not surfaced');
@@ -91,6 +93,28 @@ async function run(){
  // 阶段 8：发布说明链接越权拒绝（有效链接不断言，避免在 CI 拉起浏览器）
  assert.ok((await js('window.buddy.openLink("https://github.com/other/repo/releases/tag/v1").then(()=> "OPENED").catch(()=> "REJECTED")')).startsWith('REJECTED'));
  assert.ok((await js('window.buddy.openLink("https://github.com/Legender134/rift-buddy/blob/main/README.md").then(()=> "OPENED").catch(()=> "REJECTED")')).startsWith('REJECTED'));
- console.log(JSON.stringify({passed:true,offline:true,verified:true,dryRun:true,dismissed:true,pendingShortcut:true,cleanupChecked:true}));
+ // 阶段 9：镜像加速下载（安装包走镜像，校验文件仍直连）
+ await set('#update-mirror','https://mirror.smoke','change');
+ await until(async()=>(await js('window.buddy.bootstrap()')).state.preferences.updateMirror==='https://mirror.smoke','Mirror pref not persisted');
+ mode='feed2';
+ await click('[data-action=app-update-check]');
+ await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("100.0.0")'),'Mirror available not shown');
+ await click('[data-action=app-update-download]');
+ await until(()=>js('!!document.querySelector("[data-action=app-update-install]")'),'Mirror ready not reached');
+ assert.ok(await js('document.querySelector("#app-update-message")?.textContent.includes("经镜像下载")'));
+ const mrecord=JSON.parse(await fs.readFile(path.join(root,'app-update.json'),'utf8'));
+ assert.equal(mrecord.via,'mirror');
+ // 阶段 10：镜像失败自动改直连并明示
+ await click('[data-action=app-update-delete]');
+ await until(async()=>js('!!document.querySelector("[data-action=app-update-check]")'),'Mirror delete did not reset');
+ mode='mirror404';
+ await click('[data-action=app-update-check]');
+ await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("100.0.0")'),'Fallback available not shown');
+ await click('[data-action=app-update-download]');
+ await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("已改用直连")'),'Fallback notice not shown');
+ await until(()=>js('!!document.querySelector("[data-action=app-update-install]")'),'Fallback ready not reached');
+ const frecord=JSON.parse(await fs.readFile(path.join(root,'app-update.json'),'utf8'));
+ assert.equal(frecord.via,'direct');assert.equal(frecord.sha256,BIN_SHA);
+ console.log(JSON.stringify({passed:true,offline:true,verified:true,dryRun:true,dismissed:true,pendingShortcut:true,cleanupChecked:true,mirror:true,fallback:true}));
 }
 run().then(()=>app.exit(0)).catch(e=>{console.error(e);app.exit(1);});

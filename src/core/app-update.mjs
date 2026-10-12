@@ -35,7 +35,23 @@ export function releasePageUrl(tag){
  if(!TAG_PATTERN.test(tag))throw Error('更新地址格式不正确');
  return `https://github.com/Legender134/rift-buddy/releases/tag/${tag}`;
 }
-// 发布说明链接白名单（与 catalog.mjs safeSourceURL 同等严格，外加本仓库 release 路径限定）。
+// 默认下载镜像（2026-10-12 实测：约 850KB/s，为直连约 1.8 倍；第三方代理可用性
+// 按天变化，失败时自动回落直连并明示，见服务层）。用户清空偏好则直连。
+export const DEFAULT_UPDATE_MIRROR='https://gh-proxy.com';
+export const UPDATE_MIRROR_PRESETS=['https://gh-proxy.com','https://gh.llkk.cc'];
+export function normalizeMirrorBase(value){
+ if(value===undefined||value===null||String(value).trim()==='')return '';
+ const clean=String(value).trim().replace(/\/+$/,'');
+ let u;try{u=new URL(clean);}catch{throw Error('下载镜像地址格式不正确，应为 https:// 开头的地址');}
+ if(u.protocol!=='https:'||u.username||u.password||u.port)throw Error('下载镜像地址必须是没有账号信息与端口的 HTTPS 地址');
+ if(clean.length>200)throw Error('下载镜像地址过长');
+ return clean;
+}
+export function mirrorAssetUrl(mirror,url){
+ const base=normalizeMirrorBase(mirror);
+ if(!base)return String(url);
+ return `${base}/${String(url)}`;
+}
 export function isReleaseNotesUrl(value){
  try{
   const u=new URL(value);

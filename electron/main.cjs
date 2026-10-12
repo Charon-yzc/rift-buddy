@@ -103,7 +103,9 @@ async function boot(){
  const liveService=await import('../services/live-client.mjs');
  const {createAppUpdateService}=await import('../services/app-update.mjs');
  const {compareVersions:compareAppVersion,releasePageUrl,isReleaseNotesUrl}=await import('../src/core/app-update.mjs');
- const appUpdater=createAppUpdateService({currentVersion:app.getVersion(),tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||path.join(app.getPath('temp'),'rift-buddy-update'),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'});
+ const appUpdateBase={currentVersion:app.getVersion(),tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||path.join(app.getPath('temp'),'rift-buddy-update'),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'};
+ const updater=()=>createAppUpdateService({...appUpdateBase,mirrorBase:state.preferences.updateMirror});
+ const appUpdater=updater();
  appUpdater.sweep().catch(()=>{});
  let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null;
  const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;win?.webContents.send('app-update-progress',snapshot);};
@@ -291,10 +293,10 @@ async function boot(){
   appUpdateFlight=(async()=>{
    publishAppUpdate({phase:'checking'});
    try{
-    const kept=await appUpdater.pending();
-    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await appUpdater.verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256}});}
+    const kept=await updater().pending();
+    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,via:kept.via||'direct'}});}
     else{
-     const result=await appUpdater.check();
+     const result=await updater().check();
      if(result.status==='available'&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
      else publishAppUpdate({phase:result.status,release:result.release||null});
     }
@@ -309,20 +311,21 @@ async function boot(){
   const release=appUpdateStatus.release;
   if(appUpdateStatus.phase!=='available'||!release)throw Error('没有可下载的新版本，请先检查更新');
   appUpdateAbort=new AbortController();
+  let fellBack=false;
   try{
    publishAppUpdate({phase:'downloading',release,received:0,total:null});
-   const record=await appUpdater.download(release,{signal:AbortSignal.any([appUpdateAbort.signal,AbortSignal.timeout(600000)]),onProgress:p=>publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total})});
-   publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256}});
+   const record=await updater().download(release,{signal:AbortSignal.any([appUpdateAbort.signal,AbortSignal.timeout(600000)]),onProgress:p=>{if(p.note==='mirror-fallback')fellBack=true;publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total,via:p.via||null,fallbackNotice:fellBack});}});
+   publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256,via:record.via||'direct',fallback:fellBack}});
    return appUpdateStatus;
   }catch(error){publishAppUpdate({phase:'error',release,error:error.message});throw error;}
   finally{appUpdateAbort=null;}
  });
  guard('app-update-cancel',()=>{appUpdateAbort?.abort();return true;});
  guard('app-update-install',async()=>{
-  try{const record=await appUpdater.install();if(record.dryRun)return record;quitting=true;app.quit();return record;}
+  try{const record=await updater().install();if(record.dryRun)return record;quitting=true;app.quit();return record;}
   catch(error){publishAppUpdate({phase:'idle'});throw error;}
  });
- guard('app-update-delete',async()=>{await appUpdater.cleanup();publishAppUpdate({phase:'idle'});return true;});
+ guard('app-update-delete',async()=>{await updater().cleanup();publishAppUpdate({phase:'idle'});return true;});
  guard('apply-runes',async(page,context)=>{
   if(applyingRunes)throw new Error('符文正在应用，请稍后');applyingRunes=true;
    try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);const result=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});await saveCurrentState(current=>({...current,ownedPageId:result.pageId}));return result;}

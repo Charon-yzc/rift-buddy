@@ -102,6 +102,18 @@ test('app update preferences default on, validate strictly and merge explicitly'
  const kept=mergeState(current,defaultState(),[]);
  assert.equal(kept.preferences.appUpdateCheck,true);
 });
+test('update mirror defaults to the preset, keeps explicit direct and drops garbage',()=>{
+ assert.equal(validateState(defaultState()).preferences.updateMirror,'https://gh-proxy.com');
+ assert.equal(validateState({...defaultState(),preferences:{updateMirror:''}}).preferences.updateMirror,'');
+ assert.equal(validateState({...defaultState(),preferences:{updateMirror:'https://m.example.com/'}}).preferences.updateMirror,'https://m.example.com');
+ assert.equal(validateState({...defaultState(),preferences:{updateMirror:'http://m.example.com'}}).preferences.updateMirror,'https://gh-proxy.com');
+ const current=defaultState();
+ const direct=mergeState(current,{...defaultState(),preferences:{updateMirror:''}},[]);
+ assert.equal(direct.preferences.updateMirror,'https://gh-proxy.com');
+ const custom={...defaultState(),preferences:{updateMirror:'https://m.example.com'}};
+ current.preferences.updateMirror='https://m.example.com';
+ assert.equal(mergeState(current,custom,[]).preferences.updateMirror,'https://m.example.com');
+});
 test('LCU parsing and request scope reject malformed parameters before network access',()=>{
  assert.deepEqual(parseLockfile('LeagueClient:1:12345:test-token:https'),{port:12345,password:'test-token'});
  for(const bad of ['','LeagueClient:1:99999:token:https','Other:1:1:token:https','LeagueClient:1:123:token:http'])assert.equal(parseLockfile(bad),null);

@@ -1038,3 +1038,20 @@ git push origin feature/app-update
 **2. Placeholder scan:** 全文无 TBD/TODO/"类似 Task N"/"适当处理"；Task 8 harness 的 `var release` 声明已提示按 `node --check` 调整。
 
 **3. Type consistency:** 快照/记录/release 形状在头部锁定，全任务一致；`compareAppVersion` 为 `compareVersions` 在 main.cjs 内的别名（避免与既有标识冲突，用途单一）；service 返回 `{check,download,pending,cleanup,install}` 五件套，Task 2 先返回 `{check}`、Task 3 补齐——步骤内已写明 return 行的两次改写，无悬空引用；`fmtBytes` 只在 view 内使用；`appUpdate`（渲染层）vs `appUpdateStatus`（主进程）命名分离，无混用。
+
+---
+
+## Addendum: 默认镜像加速（用户拍板，计划外追加）
+
+- 决策：默认经 `https://gh-proxy.com` 下载安装包（2026-10-12 实测约 850KB/s，为直连 1.8 倍；
+  5 探针中 2 个 TLS 失败、1 个返回错误内容）。备选 `gh.llkk.cc` + 自填 + 恢复直连。
+- 安全 rails（实现时相对本计划的增补）：
+  发现页与校验文件永远直连（否则镜像可伪造"坏包+配套哈希"）；镜像失败自动改直连重试一次
+  并在界面持久明示；用户取消不重试；SHA-256 校验不动；record 持久化 `via` 字段。
+- 新增：core `DEFAULT_UPDATE_MIRROR`/`UPDATE_MIRROR_PRESETS`/`normalizeMirrorBase`/`mirrorAssetUrl`；
+  service `mirrorBase` 参数 + `downloadVia` + 回落循环 + `verify`/`sweep` 暴露；
+  storage `updateMirror`（默认 DEFAULT，显式 `''` 直连，只留本机不合并）；
+  main per-call 工厂（偏好实时生效）+ 快照 `via`/`fallbackNotice`/`record.fallback`；
+  view 镜像行 + 通道文案；单测（前缀/回落/伪造回落/空 feed/同尺寸调包复用/清扫）；
+  烟测阶段 9（镜像）/10（回落）/8（open-link 越权）。
+- §10 非目标中的"无可配置源"被此 addendum 覆盖：源固定仍为官方仓库，镜像只换传输通道。
