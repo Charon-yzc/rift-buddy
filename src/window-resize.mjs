@@ -1,4 +1,4 @@
-export const windowResizeGrip='<button class="window-resize-grip" data-window-resize aria-label="调整窗口大小" title="拖动调整大小；聚焦后用方向键微调。拖动顶部移动窗口。">◢</button>';
+export const windowResizeGrip='<button class="window-resize-grip" data-window-resize aria-label="调整窗口大小" title="拖动调整大小；拖动顶部移动窗口。">◢</button>';
 export function installWindowResize(root,control){
  let pointer=null,chain=Promise.resolve();
  const send=(action,value)=>{chain=chain.catch(()=>{}).then(()=>control(action,value)).catch(error=>{root.title=error.message||'调整未完成';});};

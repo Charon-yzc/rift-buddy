@@ -73,6 +73,9 @@ export function correctSemanticDescriptions({patch,ability,spell,values,replace,
  equal(tahm.mFormulaParts[2].mSubpart.mPart1.mDataValue,'APRatioPer100BonusHP');ranks('TahmKench','TahmKenchPassive','APRatioPer100BonusHP',[.0125]);
  replace('TahmKench','P','+0%【法术强度】','+1.25%×(【额外生命值】÷100)×【法术强度】','TahmKenchPassive TotalDamage dynamic AP coefficient based on bonus health');
  replace('TahmKench','Q','+0.2%【法术强度】','+1.25%×(【额外生命值】÷100)×【法术强度】','TahmKenchQ applies the current passive damage; no sampled AP coefficient');
+ ranks('TahmKench','TahmKenchRWrapper','BaseDamage',[100,250,400]);ranks('TahmKench','TahmKenchRWrapper','BasePercentHPDamage',[.15]);
+ const tr=calculation('TahmKench','TahmKenchRWrapper','PercentHPDamage');equal(tr.mFormulaParts[0].mDataValue,'BasePercentHPDamage');coefficient('TahmKench','TahmKenchRWrapper','PercentHPDamage',1,.0007);
+ replace('TahmKench','R','【100/250/400】(+目标16%=(15%+0.07%【法术强度】最大生命值)','【100/250/400】+(15%+0.07%×【法术强度】)×目标最大生命值','TahmKenchRWrapper BaseDamage + PercentHPDamage; remove sampled 16% and restore formula grouping');
  const vb=calculation('Volibear','VolibearW','EmpoweredDamage');equal(vb.mModifiedGameCalculation,'TotalDamage');equal(vb.mMultiplier.__type,'SumOfSubPartsCalculationPart');
  ranks('Volibear','VolibearW','W2DamageMultiplier',[1.5]);ranks('Volibear','VolibearW','W2BonusADDamageMultiplier',[.0025]);
  equal([vb.mMultiplier.mSubparts[1].mStat,vb.mMultiplier.mSubparts[1].mStatFormula],[2,2]);

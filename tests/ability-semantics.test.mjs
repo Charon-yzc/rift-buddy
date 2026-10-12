@@ -21,6 +21,8 @@ test('growth and conditional damage use their actual rank or current-stat basis'
  assert.doesNotMatch(ability('MissFortune','R').description,/787-1813|造成73=/);
  assert.match(ability('Volibear','W').description,/1.5\+0.0025×【额外攻击力】/);
  assert.match(ability('TahmKench','P').description,/1.25%×\(【额外生命值】÷100\)×【法术强度】/);
+ const devour=ability('TahmKench','R').description;assert.match(devour,/100\/250\/400】\+\(15%\+0.07%×【法术强度】\)×目标最大生命值/);assert.doesNotMatch(devour,/目标16%=/);
+ const devourDamage=(rank,ap,hp)=>[100,250,400][rank-1]+(.15+.0007*ap)*hp;assert.equal(devourDamage(1,0,1000),250);assert.equal(devourDamage(3,100,2000),840);
  assert.match(ability('Kaisa','E').description,/随E等级/);assert.doesNotMatch(ability('Kaisa','E').description,/77.33%|当前：【0.84】/);
  for(const id of ['Yasuo','Yone']){assert.match(ability(id,'P').description,/通常倍率的95%/);assert.doesNotMatch(ability(id,'P').description,/190%|当前加成：0/);}
 });
@@ -57,6 +59,7 @@ test('life costs, continuous costs and passive/self targeting are actionable rat
  assert.equal(metric('Locke','W','持续自身伤害').unit,'%当前生命值/秒');assert.match(ability('Locke','W').notes.join(''),/实际运行关系尚未取得真实游戏证据/);
  assert.match(metric('Vi','W','触发方式').text,/被动/);assert(!metric('Vi','W','冷却'));assert(!metric('Vi','W','资料范围'));
  assert(!metric('Alistar','R','资料范围'));assert.match(metric('Alistar','R','施放方式').text,/自身施放/);
+ assert(!metric('Ashe','Q','资料范围'));assert.match(metric('Ashe','Q','施放方式').text,/当前普攻射程/);
  assert.deepEqual(metric('Darius','Q','斧刃作用半径').values,[425]);
  assert(!metric('TahmKench','E','资料范围'));assert.match(metric('TahmKench','E','施放目标').text,/不是护盾施法距离/);
 });
