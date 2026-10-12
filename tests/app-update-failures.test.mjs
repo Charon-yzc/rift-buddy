@@ -154,6 +154,8 @@ test('slow timestamp saving cannot overwrite newer download progress or ready st
  const check=context.checkAppUpdate(false);await entered;assert.equal(context.appUpdate.phase,'available');
  await context.downloadAppUpdate();assert.equal(context.appUpdate.phase,'ready');releaseSave();await check;
  assert.equal(context.appUpdate.phase,'ready');assert.equal(context.appUpdate.record.bytes,bin.length);
+ receive({phase:'current',release,dismissed:true});assert.equal(context.appUpdate.dismissed,true);
+ receive({phase:'available',release});assert.equal(context.appUpdate.dismissed,undefined);
 });
 test('main serializes installation, blocks conflicting operations and restores ready after failure',async()=>{
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
