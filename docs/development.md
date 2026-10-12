@@ -76,6 +76,7 @@ pnpm start
 | 局内指引与窗口 | `electron/guide-window.cjs`、`src/guide.mjs` | `src/core/guide.mjs`、`src/core/purchase.mjs`、`src/core/guide-stage.mjs` |
 | 客户端与局内公开接口 | `services/lcu.mjs`、`services/live-client.mjs` | `services/client-helper.mjs`、`services/helper-launch.mjs` |
 | 本机连接进程 | `electron/client-helper-entry.mjs` | `electron/connection-launcher.cs` |
+| 组队房间自动连接 | `src/core/room-auto.mjs` | `services/lcu.mjs`、`electron/main.cjs`、`src/room-view.mjs` |
 | 设置、资料、图片缓存 | `services/storage.mjs`、`services/data.mjs` | `services/image-cache.mjs`、`services/build-cache.mjs` |
 
 渲染界面通过 preload 提供的有限 `buddy` API 调用主进程；不要直接向网页暴露 Node.js 或任意文件、网络、进程能力。推荐计算在 Worker 中执行，组合库变更要同时更新推荐与配置目录。客户端同步先过滤公开字段，再与用户手动安排的位置合并；本局配置按英雄、位置、模式及组合区分，避免切换搭档时误用专用配置。
@@ -150,6 +151,8 @@ GitHub Actions 在 Windows 中运行安装、开发 Electron 启动检查、回�
 局势建议另需检查：双方队伍可确认时，已展示装备变化能否触发、撤销对应建议；本次回城目标和自动建议开关是否保留；当前等级与技能点是否同步。不要把对手装备投入当成实测伤害来源或经济领先。只有一人的训练房间没有真实敌方装备样本，不能作为整套局势规则的实战验收。
 
 记录软件版本、客户端阶段和实际完成的项目即可；未完成的步骤保留为待验证。不要上传个人设置、完整接口响应、客户端凭据或带有玩家身份的截图。
+
+组队房间自动连接（0.47.0）另需两台 Windows 在同一预组队大厅（≥2 人、非自定义）实测，双方都开启“自动连接组队房间”：核对两面板显示同一个 6 位房间码并互相看到公开游戏 ID 与阵容；手动离开后本组队不再自动重连；换一个新组队后恢复；队伍解散约 30 秒后自动房间关闭；进入选人后连接保持；旧版本助手用复制的“地址+房间码+口令”手动加入成功；关闭“自动同步”后不再自动连接。`partyId` 是否在成员间一致只能靠这项检查证伪，未完成时按未验证记录。
 
 ## 维护组合与版本资料
 
