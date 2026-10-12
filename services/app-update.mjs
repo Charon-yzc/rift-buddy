@@ -56,5 +56,42 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   const info={version:release.version,tag:release.tag,url:release.url,publishedAt:release.updated};
   return isNewerThan(release.version,currentVersion)?{status:'available',release:info}:{status:'current',release:info};
  }
- return {check};
+ const readRecord=async()=>{try{const raw=JSON.parse(await fs.readFile(storeFile,'utf8'));if(raw?.schema!==1||typeof raw.file!=='string'||typeof raw.sha256!=='string')return null;const stat=await fs.stat(raw.file);if(stat.size!==raw.bytes)return null;return raw;}catch{return null;}};
+ async function pending(){return readRecord();}
+ async function cleanup(){const raw=await readRecord().catch(()=>null);if(raw)await fs.unlink(raw.file).catch(()=>{});await fs.unlink(storeFile).catch(()=>{});}
+ async function download(release,{signal,onProgress}={}){
+  if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||typeof release.tag!=='string')throw Error('新版信息格式不正确');
+  const kept=await readRecord();
+  if(kept&&kept.version===release.version){if(onProgress)onProgress({received:kept.bytes,total:kept.bytes});return kept;}
+  await cleanup();
+  const setup=setupFileName(release.version),sum=checksumFileName(release.version);
+  const target=path.join(tempDir,`rift-buddy-update-${Date.now()}-${crypto.randomUUID()}.exe.part`);
+  await fs.mkdir(tempDir,{recursive:true});
+  const handle=await fs.open(target,'w');
+  const hash=crypto.createHash('sha256');let received=0,total=null;
+  const progress=()=>{if(onProgress)onProgress({received,total});};
+  try{
+   await fetchOnce(releaseDownloadUrl(release.tag,setup),{request,timeout:FILE_TIMEOUT,byteLimit:SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,
+    onHeaders:h=>{const t=Number(h?.['content-length']);total=Number.isFinite(t)?t:null;if(total!==null&&total>SETUP_BYTES_LIMIT)throw Error('安装包超过大小限制，已停止下载');progress();},
+    onData:async chunk=>{if(signal?.aborted)throw Error('下载已取消');hash.update(chunk);await handle.write(chunk);received+=chunk.length;progress();}});
+  }catch(e){await handle.close().catch(()=>{});await fs.unlink(target).catch(()=>{});throw e;}
+  await handle.close();
+  if(signal?.aborted){await fs.unlink(target).catch(()=>{});throw Error('下载已取消');}
+  const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
+  const digest=hash.digest('hex'),expected=parseChecksumFile(sumRes.body.toString('utf8'),setup);
+  if(digest!==expected){await fs.unlink(target).catch(()=>{});throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
+  const final=target.replace(/\.part$/,'.exe');await fs.rename(target,final);
+  const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,downloadedAt:new Date().toISOString()};
+  await atomicJSON(storeFile,record);return record;
+ }
+ async function install(){
+  const record=await readRecord();
+  if(!record)throw Error('没有已下载的安装包，请先下载新版');
+  const hash=crypto.createHash('sha256'),handle=await fs.open(record.file,'r');
+  try{for await(const chunk of handle.createReadStream())hash.update(chunk);}finally{await handle.close();}
+  if(hash.digest('hex')!==record.sha256){await cleanup();throw Error('安装包完整性复验不一致，已删除；请重新下载');}
+  if(dryRun){const witness={file:record.file,sha256:record.sha256,bytes:record.bytes,at:new Date().toISOString()};await atomicJSON(storeFile+'.dry-run.json',witness);return {launched:false,dryRun:true,...witness};}
+  const child=spawnImpl(record.file,{detached:true,stdio:'ignore'});child.unref?.();return {launched:true,file:record.file};
+ }
+ return {check,download,pending,cleanup,install};
 }

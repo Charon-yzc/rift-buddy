@@ -39,6 +39,69 @@ test('cross-allowlist redirects, hop overflow and http errors are rejected',asyn
  await assert.rejects(service({request:fakeRequest({[FEED_KEY]:{status:503,body:'x'}})}).check(),/HTTP 503/);
  await assert.rejects(service({request:()=>{throw Error('offline');}}).check(),/offline/);
 });
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+const BIN=crypto.randomBytes(65536),BIN_SHA=crypto.createHash('sha256').update(BIN).digest('hex');
+const iso={lookup:async()=>[{address:'8.8.8.8',family:4}]};
+const dlService=(routes,over={})=>{const dir=over.tempDir;return createAppUpdateService({currentVersion:'0.44.0',tempDir:dir,storeFile:path.join(dir,'app-update.json'),feedUrl:'https://github.com/Legender134/rift-buddy/releases.atom',request:fakeRequest(routes),...iso,...over});};
+const setupRoutes=(bin,sha)=>({'github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe':{status:200,headers:{'content-length':String(bin.length)},body:bin},'github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt':{status:200,body:`${sha}  RiftBuddy-9.9.9-Setup.exe\n`}});
+test('download streams to disk with progress and verifies the checksum',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const progress=[],s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
+ const record=await s.download({version:'9.9.9',tag:'v9.9.9'},{onProgress:p=>progress.push(p)});
+ assert.equal(record.sha256,BIN_SHA);assert.equal(record.bytes,BIN.length);
+ assert.ok(progress.length&&progress.at(-1).received===BIN.length);
+ assert.equal(JSON.parse(await fs.readFile(path.join(dir,'app-update.json'),'utf8')).sha256,BIN_SHA);
+ assert.deepEqual(await s.pending(),record);
+ const again=await s.download({version:'9.9.9',tag:'v9.9.9'},{});
+ assert.equal(again.file,record.file);
+});
+test('hash mismatch deletes the file and reports honestly',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const s=dlService(setupRoutes(BIN,'0'.repeat(64)),{tempDir:dir});
+ await assert.rejects(s.download({version:'9.9.9',tag:'v9.9.9'},{}),/不一致/);
+ const left=await fs.readdir(dir);assert.ok(!left.some(n=>n.endsWith('.exe')));
+ assert.equal(await s.pending(),null);
+});
+test('oversize responses and missing checksum assets abort',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const big={'github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe':{status:200,headers:{'content-length':String(600*1024*1024)},body:'x'}};
+ await assert.rejects(dlService(big,{tempDir:dir}).download({version:'9.9.9',tag:'v9.9.9'},{}),/大小限制/);
+ const nocsum={'github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe':{status:200,headers:{'content-length':'10'},body:'0123456789'},'github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt':{status:404,body:''}};
+ await assert.rejects(dlService(nocsum,{tempDir:dir}).download({version:'9.9.9',tag:'v9.9.9'},{}),/HTTP 404/);
+});
+test('an aborted download leaves no record',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
+ const controller=new AbortController();controller.abort();
+ await assert.rejects(s.download({version:'9.9.9',tag:'v9.9.9'},{signal:controller.signal}),/abort/i);
+ assert.equal(await s.pending(),null);
+});
+test('install re-hashes before launch and supports a dry run without spawning',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
+ await assert.rejects(s.install(),/没有已下载的安装包/);
+ await s.download({version:'9.9.9',tag:'v9.9.9'},{});
+ const calls=[],s2=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir,spawnImpl:(file,opts)=>{calls.push([file,opts]);return{unref(){}}}});
+ const launched=await s2.install();
+ assert.equal(launched.launched,true);assert.equal(calls.length,1);
+ assert.equal(calls[0][0],(await s2.pending()).file);assert.deepEqual(calls[0][1],{detached:true,stdio:'ignore'});
+ const dir3=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const s3=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir3,dryRun:true});
+ await s3.download({version:'9.9.9',tag:'v9.9.9'},{});
+ const dry=await s3.install();
+ assert.equal(dry.dryRun,true);
+ const witness=JSON.parse(await fs.readFile(path.join(dir3,'app-update.json.dry-run.json'),'utf8'));
+ assert.equal(witness.sha256,BIN_SHA);
+});
+test('install refuses a swapped binary',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
+ const record=await s.download({version:'9.9.9',tag:'v9.9.9'},{});
+ await fs.writeFile(record.file,crypto.randomBytes(BIN.length));
+ await assert.rejects(s.install(),/不一致|完整性/);assert.equal(await s.pending(),null);
+});
 const FEED=`<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><title>v9.9.9 测试版</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9"/><updated>2026-10-12T00:00:00Z</updated></entry><entry><title>v0.1.0 早期预览</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v0.1.0"/><updated>2026-01-01T00:00:00Z</updated></entry><entry><title>nightly</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/nightly-1"/><updated>2026-10-01T00:00:00Z</updated></entry><entry><title>v0.2.0 drafting</title><link href="https://github.com/Legender134/rift-buddy/releases/tag/v0.2.0"/><updated>not-a-date</updated></entry></feed>`;
 test('feed keeps only strict semver tags with valid timestamps',()=>{
  const entries=parseReleaseFeed(FEED);
