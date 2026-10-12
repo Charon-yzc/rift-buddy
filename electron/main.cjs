@@ -235,6 +235,7 @@ async function boot(){
   try{derived=await deriveAutoRoom(key);}catch{}
   if(!derived){
    roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
+   if(roomService&&win&&!win.isDestroyed())win.webContents.send('room-update',decorateRoom(roomService.snapshot()));
    diagnostic('auto room derive failed');
    return;
   }
@@ -249,6 +250,9 @@ async function boot(){
    if(roomAutoBlockedKey!==key){
     roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;
     roomAutoError=error?.message||'自动连接失败';
+    // The service already emitted its idle snapshot before this error
+    // existed; the panel needs the decorated one to show why nothing came up.
+    if(roomService&&win&&!win.isDestroyed())win.webContents.send('room-update',decorateRoom(roomService.snapshot()));
    }
    diagnostic(`auto room join failed: ${error?.message||'unknown'}`);
   }
