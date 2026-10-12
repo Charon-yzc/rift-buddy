@@ -90,6 +90,13 @@ async function boot(){
  const pairFiles=[path.join(root,'data/pair-statistics.json'),path.join(storeRoot,'data/pair-statistics-cache.json')];
  data.pairStatistics=await loadPairStatisticsCache(pairFiles,data);
  const refreshPairs=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
+ const {loadRankings,createRankingsCache}=await import('../services/rankings-cache.mjs');
+ data.rankings=await loadRankings([path.join(root,'data'),path.join(storeRoot,'data')],data);
+ const refreshRankings=createRankingsCache({root:path.join(storeRoot,'data'),getData:()=>data});
+ const {loadPatchNotes}=await import('../services/patch-notes.mjs');
+ data.patchNotes=await loadPatchNotes(path.join(root,'data'),data);
+ const {loadAbilities}=await import('../services/abilities.mjs');
+ data.abilityReference=await loadAbilities(path.join(root,'data'),data);
  // A mismatched spell book must never be used silently (same gate as update-data).
  try{
   const spellsFile=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8'));
@@ -245,6 +252,7 @@ async function boot(){
  guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return status(true);});
  guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
  guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
+ guard('refresh-rankings',source=>refreshRankings(source));
  guard('refresh-opponent-build',async(id,role,opponent,source)=>{
   const target=data.champions.find(c=>c.id===opponent);
   if(!latestClient.connected||latestClient.phase!=='ChampSelect'||!target||!latestClient.session?.theirTeam?.some(p=>p.championId===target.key))throw Error('所选对手已不在当前公开选人中，请同步后重试');
@@ -263,10 +271,13 @@ async function boot(){
   if(updating)throw new Error('资料更新正在进行');updating=true;
   try{const next=await dataService.collectSnapshot(msg=>win?.webContents.send('data-progress',msg),data);
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
-   delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
+   delete next.abilityReference;delete next.rankings;delete next.patchNotes;delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
    next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
    next.opponentBuildSources=await loadOpponentBuildSources(path.join(storeRoot,'data'),next);
    next.pairStatistics=await loadPairStatisticsCache(pairFiles,next);
+   next.rankings=await loadRankings([path.join(root,'data'),path.join(storeRoot,'data')],next);
+   next.patchNotes=await loadPatchNotes(path.join(root,'data'),next);
+   next.abilityReference=await loadAbilities(path.join(root,'data'),next);
    next.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],next);
    // The spell book is versioned separately: a mismatched book must never be
    // used silently, so it falls back to empty (heuristic estimates + UI note).

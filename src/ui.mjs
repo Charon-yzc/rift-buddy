@@ -33,6 +33,7 @@ export function configureAssets(data){
  fallbackAssets=new Map([
   ...Object.values(data.items).map(i=>[`item/${i.id}`,i.icon]),
   ...data.augments.map(a=>[`augment/${a.id}`,a.icon]),
+  ...(data.abilityReference?.champions||[]).flatMap(c=>c.abilities.map(a=>[`ability/${c.id}-${a.key}`,a.icon])),
   ...Object.entries(data.spells).map(([id,s])=>[`spell/${id}`,`${dd}/cdn/${data.version}/img/spell/${s.image.full}`]),
   ...data.runes.flatMap(t=>t.slots.flatMap(s=>s.runes.map(r=>[`rune/${r.id}`,`${dd}/cdn/img/${r.icon}`]))),
  ]);

@@ -3,13 +3,14 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 
-const keyPattern=/^(champion|item|rune|spell|augment)\/[A-Za-z0-9_-]+$/;
+const keyPattern=/^(champion|item|rune|spell|augment|ability)\/[A-Za-z0-9_-]+$/;
 const imageHosts=new Set(['ddragon.leagueoflegends.com','raw.communitydragon.org','game.gtimg.cn']);
 const pngSignature=Buffer.from([137,80,78,71,13,10,26,10]);
 export function imageEntries(data){
  const dd='https://ddragon.leagueoflegends.com';
  return [
   ...data.champions.map(c=>[`champion/${c.id}`,c.icon]),
+  ...(data.abilityReference?.champions||[]).flatMap(c=>c.abilities.map(a=>[`ability/${c.id}-${a.key}`,a.icon])),
   ...Object.values(data.items).filter(i=>i.maps?.['11']||i.maps?.['12']).map(i=>[`item/${i.id}`,i.icon]),
   ...data.augments.map(a=>[`augment/${a.id}`,a.icon]),
   ...Object.entries(data.spells).map(([id,s])=>[`spell/${id}`,`${dd}/cdn/${data.version}/img/spell/${s.image.full}`]),

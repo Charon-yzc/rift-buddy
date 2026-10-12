@@ -9,6 +9,9 @@ import {purchasePlan} from '../src/core/purchase.mjs';
 import {SITUATION_ITEMS} from '../src/core/live-situation.mjs';
 import {hasCurrentCombatStats} from '../services/champion-stats.mjs';
 import {validatePairStatistics} from '../src/core/pair-statistics.mjs';
+import {validRankingReference} from '../src/core/rankings.mjs';
+import {validPatchNotes} from '../src/core/patch-notes.mjs';
+import {validAbilityReference} from '../src/core/abilities.mjs';
 const root=path.resolve('.');let checked=0;const errors=[];
 async function syntax(folder){for(const item of await fs.readdir(folder,{withFileTypes:true})){
  const file=path.join(folder,item.name);if(item.isDirectory()){if(!item.name.startsWith('.'))await syntax(file);}
@@ -16,6 +19,11 @@ async function syntax(folder){for(const item of await fs.readdir(folder,{withFil
 }}
 for(const folder of ['src','electron','services','tests','relay'])await syntax(folder);
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const rankingData=JSON.parse(await fs.readFile('data/rankings.json','utf8'));
+if(Object.keys(rankingData.entries||{}).length!==6||Object.values(rankingData.entries).some(ref=>!validRankingReference(ref,data)))errors.push('Invalid bundled five-role rankings');
+if(!validPatchNotes(JSON.parse(await fs.readFile('data/patch-notes.json','utf8')),data))errors.push('Invalid bundled patch changes');
+const abilities=JSON.parse(await fs.readFile('data/abilities.json','utf8'));
+if(!validAbilityReference(abilities,data))errors.push('Invalid or outdated bundled champion ability reference');
 validatePairStatistics(JSON.parse(await fs.readFile('data/pair-statistics.json','utf8')),data.champions);
 for(const champion of data.champions)if(!hasCurrentCombatStats(champion,data.patch))errors.push(`Missing current-patch champion combat stats: ${champion.id}`);
 validateCatalog(BUNDLED_CATALOG,data);
@@ -27,6 +35,7 @@ const spellsFile=JSON.parse(await fs.readFile('data/spells.json','utf8'));
 if(spellsFile.version!==data.version)errors.push(`Spells data ${spellsFile.version} does not match game data ${data.version}; rerun the spell enrichment.`);
 data.spellbook=spellsFile.champions||{};
 const assets=new Set(data.champions.map(c=>`champion/${c.id}.png`));
+for(const hero of abilities.champions)for(const a of hero.abilities)assets.add(`ability/${hero.id}-${a.key}.png`);
 for(const id of SITUATION_ITEMS)assets.add(`item/${id}.png`);
 for(const config of LOADOUTS)for(const id of config.champions)for(const role of config.roles){
  const c=data.champions.find(c=>c.id===id);if(!c){errors.push(`Missing loadout champion: ${id}`);continue;}

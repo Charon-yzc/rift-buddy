@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  onClient:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('client-update',listener);return()=>ipcRenderer.removeListener('client-update',listener);},
  authorizeClient:()=>ipcRenderer.invoke('authorize-client'),
  updateData:()=>ipcRenderer.invoke('update-data'),
+ refreshRankings:source=>ipcRenderer.invoke('refresh-rankings',source),
  catalogSource:url=>ipcRenderer.invoke('catalog-source',url),
  catalogCheck:()=>ipcRenderer.invoke('catalog-check'),
  catalogPreview:raw=>ipcRenderer.invoke('catalog-preview',raw),
