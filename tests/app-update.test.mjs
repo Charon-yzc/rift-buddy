@@ -144,6 +144,49 @@ test('mirror tampering cannot forge the checksum and falls back',async()=>{
  assert.equal(crypto.createHash('sha256').update(await fs.readFile(r.file)).digest('hex'),BIN_SHA);
  assert.ok(events.some(e=>e.note==='mirror-fallback'));
 });
+const DSETUP='github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe';
+const counting=(routes,hits)=>(url,options,callback)=>{const k=new URL(url.href||url),key=k.hostname+k.pathname;hits[key]=(hits[key]||0)+1;return fakeRequest(routes)(url,options,callback);};
+test('a consistent mirror lie still loses to the direct checksum',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const BIN2=crypto.randomBytes(BIN.length),E2=crypto.createHash('sha256').update(BIN2).digest('hex');
+ const sum='github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt';
+ const routes={[DSETUP]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN},[sum]:{status:200,body:`${BIN_SHA}  RiftBuddy-9.9.9-Setup.exe\n`},[`mirror.smoke/https://${DSETUP}`]:{status:200,headers:{'content-length':String(BIN2.length)},body:BIN2},[`mirror.smoke/https://${sum}`]:{status:200,body:`${E2}  RiftBuddy-9.9.9-Setup.exe\n`}};
+ const s=dlService(routes,{tempDir:dir,mirrorBase:MIRROR});
+ const r=await s.download({version:'9.9.9',tag:'v9.9.9'},{});
+ assert.equal(r.via,'direct');assert.equal(r.sha256,BIN_SHA);
+ assert.equal(crypto.createHash('sha256').update(await fs.readFile(r.file)).digest('hex'),BIN_SHA);
+});
+test('checksum-stage failure does not re-download the binary',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const routes=mRoutes(BIN,BIN_SHA,'ok');
+ routes['github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt']={status:404,body:''};
+ const hits={},s=dlService(routes,{tempDir:dir,mirrorBase:MIRROR,request:counting(routes,hits)});
+ await assert.rejects(s.download({version:'9.9.9',tag:'v9.9.9'},{}),/缺失/);
+ assert.equal(hits[DSETUP]||0,0);
+ assert.deepEqual((await fs.readdir(dir)).filter(n=>n.endsWith('.exe')||n.endsWith('.part')),[]);
+});
+test('user abort never retries, timeout-like abort retries once, total failure never installs',async()=>{
+ const setup='github.com/Legender134/rift-buddy/releases/download/v9.9.9/RiftBuddy-9.9.9-Setup.exe';
+ const user=new AbortController();user.abort();
+ const dirA=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const routesA=mRoutes(BIN,BIN_SHA,'ok'),hitsA={};
+ const sA=dlService(routesA,{tempDir:dirA,mirrorBase:MIRROR,request:counting(routesA,hitsA)});
+ await assert.rejects(sA.download({version:'9.9.9',tag:'v9.9.9'},{signal:user.signal}),/abort|取消/i);
+ assert.equal(hitsA[setup]||0,0);assert.equal(await sA.pending(),null);
+ const live=new AbortController(),dead=new AbortController();dead.abort();
+ const dirB=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const routesB=mRoutes(BIN,BIN_SHA,'ok'),hitsB={};
+ const sB=dlService(routesB,{tempDir:dirB,mirrorBase:MIRROR,request:counting(routesB,hitsB)});
+ await assert.rejects(sB.download({version:'9.9.9',tag:'v9.9.9'},{signal:dead.signal,userSignal:live.signal}),/abort/i);
+ assert.equal(hitsB[setup],1);assert.equal(await sB.pending(),null);
+ const dirC=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
+ const fail={[setup]:{status:500,body:'boom'},['mirror.smoke/https://'+setup]:{status:500,body:'boom'},'github.com/Legender134/rift-buddy/releases/download/v9.9.9/SHA256SUMS-9.9.9.txt':{status:200,body:`${BIN_SHA}  RiftBuddy-9.9.9-Setup.exe\n`}};
+ const sC=dlService(fail,{tempDir:dirC,mirrorBase:MIRROR});
+ await assert.rejects(sC.download({version:'9.9.9',tag:'v9.9.9'},{}),/500/);
+ assert.equal(await sC.pending(),null);
+ assert.deepEqual((await fs.readdir(dirC)).filter(n=>n.endsWith('.exe')||n.endsWith('.part')),[]);
+ await assert.rejects(sC.install(),/没有已下载/);
+});
 test('install re-hashes before launch and supports a dry run without spawning',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
  const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
@@ -221,5 +264,6 @@ test('mirror base normalizes strictly and presets stay https',()=>{
  assert.equal(normalizeMirrorBase('https://m.example.com///'),'https://m.example.com');
  assert.equal(mirrorAssetUrl('','https://github.com/a/b'),'https://github.com/a/b');
  assert.equal(mirrorAssetUrl('https://m.example.com/','https://github.com/a/b'),'https://m.example.com/https://github.com/a/b');
- for(const bad of ['http://m.example.com','https://u:p@m.example.com','https://m.example.com:8443','not a url','https://m.example.com/'+'x'.repeat(200)])assert.throws(()=>normalizeMirrorBase(bad),/镜像/,bad);
+ for(const bad of ['http://m.example.com','https://u:p@m.example.com','https://m.example.com:8443','https://m.example.com?x=1','https://m.example.com/#f','not a url','https://m.example.com/'+'x'.repeat(200)])assert.throws(()=>normalizeMirrorBase(bad),/镜像/,bad);
+ assert.equal(normalizeMirrorBase('https://m.example.com/sub'),'https://m.example.com/sub');
 });

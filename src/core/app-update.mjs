@@ -44,6 +44,7 @@ export function normalizeMirrorBase(value){
  const clean=String(value).trim().replace(/\/+$/,'');
  let u;try{u=new URL(clean);}catch{throw Error('下载镜像地址格式不正确，应为 https:// 开头的地址');}
  if(u.protocol!=='https:'||u.username||u.password||u.port)throw Error('下载镜像地址必须是没有账号信息与端口的 HTTPS 地址');
+ if(u.search||u.hash)throw Error('下载镜像地址不能带查询参数与锚点');
  if(clean.length>200)throw Error('下载镜像地址过长');
  return clean;
 }

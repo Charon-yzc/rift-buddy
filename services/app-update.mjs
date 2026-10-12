@@ -77,7 +77,7 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   return removed;
  }
  const missingAsset=e=>/HTTP 404/.test(e?.message||'')?Error('新版安装包缺失，请等待维护者补传发布资产后重试'):e;
- async function downloadVia(release,{signal,onProgress,mirror}){
+ async function downloadVia(release,{signal,onProgress,mirror,fallback=false}){
   const via=mirror?'mirror':'direct';
   const setup=setupFileName(release.version),sum=checksumFileName(release.version);
   const target=path.join(tempDir,`rift-buddy-update-${Date.now()}-${crypto.randomUUID()}.exe.part`);
@@ -94,29 +94,30 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   if(signal?.aborted){await fs.unlink(target).catch(()=>{});throw Error('下载已取消');}
   progress('verifying');
   // 校验文件永远直连：否则镜像可同时伪造"坏包+配套哈希"，校验形同虚设。
+  // 校验阶段失败不触发镜像重试（与直连无关，重下也一样；哈希不一致除外，它走篡改回落）。
   let expected;
   try{
    const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
    expected=parseChecksumFile(sumRes.body.toString('utf8'),setup);
-  }catch(e){await fs.unlink(target).catch(()=>{});throw e;}
+  }catch(e){await fs.unlink(target).catch(()=>{});if(/HTTP 404/.test(e.message||'')){const m=Error('新版安装包缺失，请等待维护者补传发布资产后重试');m.checksumStage=true;throw m;}if(e.message!=='下载已取消')e.checksumStage=true;throw e;}
   const digest=hash.digest('hex');
   if(digest!==expected){await fs.unlink(target).catch(()=>{});throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
   const final=target.replace(/\.part$/,'.exe');await fs.rename(target,final);
-  const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,via,downloadedAt:new Date().toISOString()};
+  const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,via,fallback,downloadedAt:new Date().toISOString()};
   await atomicJSON(storeFile,record);return record;
  }
- async function download(release,{signal,onProgress}={}){
+ async function download(release,{signal,userSignal,onProgress}={}){
   if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||typeof release.tag!=='string')throw Error('新版信息格式不正确');
   const kept=await readRecord();
   if(kept&&kept.version===release.version&&await verify(kept)){if(onProgress)onProgress({received:kept.bytes,total:kept.bytes,stage:'verifying',via:kept.via||'direct'});return kept;}
   await cleanup();
-  // 镜像失败（挂掉/404/内容不对）改走直连重试一次并明示；用户取消不重试。
+  // 镜像失败（挂掉/404/内容不对）改走直连重试一次并明示；用户取消、校验阶段失败不重试。
   const bases=mirror?[mirror,'']:[''];
   let attemptError=null;
   for(const base of bases){
-   try{return await downloadVia(release,{signal,onProgress,mirror:base});}
+   try{return await downloadVia(release,{signal,onProgress,mirror:base,fallback:base===''&&mirror!==''});}
    catch(e){
-    if(signal?.aborted)throw e;
+    if((userSignal||signal)?.aborted||e.checksumStage)throw e;
     attemptError=e;
     if(base&&onProgress)onProgress({received:0,total:null,stage:'downloading',via:'direct',note:'mirror-fallback'});
    }

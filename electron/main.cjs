@@ -294,7 +294,7 @@ async function boot(){
    publishAppUpdate({phase:'checking'});
    try{
     const kept=await updater().pending();
-    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,via:kept.via||'direct'}});}
+    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,via:kept.via||'direct',fallback:kept.fallback||false}});}
     else{
      const result=await updater().check();
      if(result.status==='available'&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
@@ -314,7 +314,7 @@ async function boot(){
   let fellBack=false;
   try{
    publishAppUpdate({phase:'downloading',release,received:0,total:null});
-   const record=await updater().download(release,{signal:AbortSignal.any([appUpdateAbort.signal,AbortSignal.timeout(600000)]),onProgress:p=>{if(p.note==='mirror-fallback')fellBack=true;publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total,via:p.via||null,fallbackNotice:fellBack});}});
+   const record=await updater().download(release,{signal:AbortSignal.any([appUpdateAbort.signal,AbortSignal.timeout(600000)]),userSignal:appUpdateAbort.signal,onProgress:p=>{if(p.note==='mirror-fallback')fellBack=true;publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total,via:p.via||null,fallbackNotice:fellBack});}});
    publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256,via:record.via||'direct',fallback:fellBack}});
    return appUpdateStatus;
   }catch(error){publishAppUpdate({phase:'error',release,error:error.message});throw error;}
