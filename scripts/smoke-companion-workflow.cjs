@@ -274,15 +274,20 @@ async function run(){
  assert.deepEqual((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds,[Number(later)]);
  assert.equal(writes.length,1,'Late choices must not write runes');await capture('chogath-jungle');
  await click('[data-action=my-runes]');await until(()=>writes.length===2,'Cho source rune application missing');assert.equal(writes.length,2);assert.deepEqual(writes.at(-1).selectedPerkIds,cho.runePage.selectedPerkIds);
+ await until(()=>js('document.querySelector(".companion-shell")?.dataset.tab==="recommend"&&!document.querySelector("[data-action=my-runes]")?.disabled&&document.querySelector("[data-action=my-runes]")?.textContent.includes("重新应用")'),'Successful rune application must finish and return to the team');
+ await click('[data-action=companion-tab][data-tab=plan]');
+ const restoredDisclosureScope=await js('document.querySelector(".companion-content").dataset.disclosureScope');assert.equal(restoredDisclosureScope,'plan:Chogath:jungle:rift','Resume late choices in the same declared plan');
  await js('document.querySelector("[data-action=companion-later]").closest("details").open=true');
  await click('[data-action=companion-later]');await until(async()=>JSON.stringify((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds)==='[]','Removing the late choice did not reach the saved guide');
  assert.deepEqual((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds,[]);
+ assert.equal(await js('document.querySelector(".companion-content").dataset.disclosureScope'),restoredDisclosureScope);assert.equal(await js('document.querySelector("[data-companion-disclosure=later]").open'),true,'Late choices must remain open before full UI');
 
  await js('window.buddy.companionMode(false)');await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full UI not restored');
  assert.equal(await js('document.querySelector("#solo-role").value'),'jungle');
  assert.equal(await js('document.querySelector("#solo-role").disabled'),false,'Full UI must allow an explicit tactical position');
  assert.equal(await js('[...document.querySelectorAll("[data-action=solo-role]")].every(b=>!b.disabled)'),true,'Full UI position buttons must allow an explicit tactical override');
  await js('window.buddy.companionMode(true)');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar not restored');
+ assert.equal(await js('document.querySelector(".companion-shell").dataset.tab'),'plan');assert.equal(await js('document.querySelector(".companion-content").dataset.disclosureScope'),restoredDisclosureScope,'Full UI must restore the same plan disclosure scope');
  assert.equal(await js('document.querySelector("[data-companion-disclosure=later]").open'),true,'Opening full UI dropped the disclosure state');
  await js('window.buddy.companionMode(false)');await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full UI not restored for favorites');
  await click('[data-action=navigate][data-route=favorites]');
@@ -356,7 +361,7 @@ async function run(){
  // A confirmation belongs to this draft, including after an asynchronous write.
  await click('[data-action=companion-attach]');await sync();
  await until(()=>js('!!document.querySelector(".companion-ready")'),'Lifecycle sidebar missing');
- const applied=()=>js('document.querySelector(".companion-ready")?.textContent.includes("本次已应用")');
+ const applied=()=>js('document.querySelector(".companion-ready")?.firstChild?.textContent==="符文已应用"');
  const apply=async()=>{await click('[data-action=my-runes]');await until(applied,'This draft write not confirmed');};
  const startWrites=writes.length;await apply();await sync();assert.equal(await applied(),true,'Ordinary polling lost this click');assert.equal(writes.length,startWrites+1);
  await capture('runes-this-draft');
@@ -519,10 +524,13 @@ async function run(){
  await click('[data-action=player-flow-settings]');await click('[data-action=player-flow-toggle][data-field=clickPrepare]');await click('[data-action=close]');
  await click('[data-action=companion-tab][data-tab=recommend]');await until(()=>js('!!document.querySelector("[data-action=companion-preview][data-role=mid]")'),'No mid candidate for default preparation');
  const beforePrepareWrites=writes.length;await click('[data-action=companion-preview][data-role=mid]');
+ await until(()=>js('document.querySelector(".companion-shell")?.dataset.tab==="recommend"&&document.querySelector("#toast")?.textContent==="预选与配置已完成，锁定请在客户端确认"'),'Default preparation must finish and return to the team');
+ await click('[data-action=companion-tab][data-tab=plan]');
  await until(()=>js('document.querySelector(".client-preparation-result")?.textContent.includes("配置已完成")'),'Default click did not complete all four steps');
+ assert.equal(await js('document.querySelectorAll(".client-preparation-result [data-step-status=done]").length'),4,'All four preparation results must remain available after returning to the team');
  assert.equal(hoverWrites,1);assert.equal(spellWrites,1);assert.equal(writes.length,beforePrepareWrites+1);assert.equal(preparationAction.completed,false);
  picked=hovered;preparationAction.completed=true;await sync();
- await until(()=>js('document.querySelector(".companion-ready")?.textContent.includes("本次已应用")'),'Completed setup still asks to apply runes');
+ await until(()=>js('document.querySelector(".companion-ready")?.firstChild?.textContent==="符文已应用"'),'Completed setup still asks to apply runes');
  assert.match(await js('document.querySelector("[data-action=my-runes]").textContent'),/重新应用/);
  await sync();assert.equal(writes.length,beforePrepareWrites+1,'Confirming or polling the hero reapplied runes');
  await capture('one-click-confirmed-status');gameId='1509';await sync();assert.match(await js('document.querySelector(".companion-ready").textContent'),/待应用/,'New game retained a previous rune confirmation');preparationAction=null;
