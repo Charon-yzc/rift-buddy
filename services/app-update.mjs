@@ -39,7 +39,7 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,ex
      try{req=request(u,{method:'GET',headers:{'User-Agent':'rift-buddy-update','Accept':'*/*'},signal,lookup:records?(_h,o,cb)=>o?.all?cb(null,records):cb(null,records[0].address,records[0].family):undefined},r=>{
       response=r;
       r.on('error',fail);r.on('aborted',()=>fail(Error('更新下载中断，请重试')));
-      if(r.statusCode>=300&&r.statusCode<400&&r.headers.location){settled=true;r.resume();res({redirect:r.headers.location});return;}
+      if(r.statusCode>=300&&r.statusCode<400&&r.headers.location){settled=true;clearTimeout(timer);r.destroy?.();req?.destroy();res({redirect:r.headers.location});return;}
       if(r.statusCode!==200){fail(Error(`更新服务未返回数据（HTTP ${r.statusCode}）；不跟随跳转`));return;}
       try{onHeaders?.(r.headers||{});}catch(e){fail(e);return;}
       r.on('data',c=>{
@@ -57,6 +57,7 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,ex
      if(!req||typeof req.on!=='function'||typeof req.end!=='function'){fail(Error('更新请求创建失败'));return;}
      timer=setTimeout(()=>fail(Error('更新下载超时，继续使用当前版本')),timeout);if(timer.unref)timer.unref();
      req.on('error',fail);req.on('close',()=>clearTimeout(timer));
+     if(settled){clearTimeout(timer);req.destroy();return;}
      if(failed){try{req.destroy(failed);response?.destroy?.();}catch{}return;}
      req.end();
     });

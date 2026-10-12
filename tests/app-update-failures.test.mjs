@@ -24,6 +24,28 @@ async function fixture(t,respond){
  return {dir,hits,options,service:createAppUpdateService(options)};
 }
 const normalResponse=(req,res)=>res.end(req.url.endsWith('.txt')?checksum:bin);
+test('redirect responses are closed before following Location even when their bodies never end',{timeout:3000},async t=>{
+ let redirectRequest,redirectResponse,serverResponse,resolveClosed,bodyBytes=0;
+ const closed=new Promise(resolve=>{resolveClosed=resolve;});
+ const {options,service}=await fixture(t,(req,res)=>{
+  if(req.url.startsWith('/https://')){
+   serverResponse=res;res.once('close',resolveClosed);
+   res.writeHead(302,{Location:'https://github.com/Legender134/rift-buddy/releases/download/v99.0.0/RiftBuddy-99.0.0-Setup.exe'});
+   res.write('unbounded redirect body');
+  }else normalResponse(req,res);
+ });
+ const request=(url,opts,callback)=>{
+  const req=options.request(url,opts,res=>{if(url.hostname==='mirror.smoke'){redirectResponse=res;res.on('data',chunk=>{bodyBytes+=chunk.length;});}callback(res);});
+  if(url.hostname==='mirror.smoke')redirectRequest=req;
+  return req;
+ };
+ const s=createAppUpdateService({...options,mirrorBase:'https://mirror.smoke',request});
+ const record=await s.download(release);await closed;
+ assert.equal(record.sha256,sha);assert.equal(redirectRequest.destroyed,true);
+ assert.equal(redirectResponse.destroyed,true);assert.equal(serverResponse.destroyed,true);
+ assert.ok(bodyBytes<=Buffer.byteLength('unbounded redirect body'));
+ assert.equal((await service.pending()).file,record.file);
+});
 test('release links preserve validated custom catalog sources without opening arbitrary GitHub pages',async()=>{
  const url='https://github.com/Legender134/rift-buddy/blob/main/README.md',catalog=structuredClone(BUNDLED_CATALOG);
  catalog.trios[0].sources=[{name:'自定义组合依据',url}];
@@ -47,16 +69,17 @@ async function mainFixture(service,preferences={}){
  vm.runInContext(init+guards+'win={webContents:{send:(_channel,s)=>snapshots.push(s)}};',context);
  return {context,handlers,snapshots};
 }
-test('install waits for spawn, reports asynchronous failure and keeps a retryable package',async t=>{
+test('install waits for spawn, reports asynchronous failure and keeps a retryable package',{timeout:3000},async t=>{
  const {options,service}=await fixture(t,normalResponse);await service.download(release);
  let child,unrefs=0,attempts=0;
- const s=createAppUpdateService({...options,spawnImpl:()=>{attempts++;child=new EventEmitter();child.unref=()=>unrefs++;return child;}});
- const first=s.install();await new Promise(resolve=>setTimeout(resolve,25));
+ const requested=[Promise.withResolvers(),Promise.withResolvers()];
+ const s=createAppUpdateService({...options,spawnImpl:()=>{child=new EventEmitter();child.unref=()=>unrefs++;requested[attempts++].resolve();return child;}});
+ const first=s.install();await requested[0].promise;
  assert.equal(attempts,1);assert.equal(unrefs,0);
  const failure=assert.rejects(first,/EACCES/);child.emit('error',Error('EACCES blocked'));await failure;
  assert.ok(await s.pending());
  let settled=false;const second=s.install().then(result=>{settled=true;return result;});
- await new Promise(resolve=>setTimeout(resolve,25));assert.equal(settled,false);
+ await requested[1].promise;assert.equal(settled,false);
  child.emit('spawn');assert.equal((await second).launched,true);assert.equal(unrefs,1);assert.equal(attempts,2);
 });
 test('a failed streamed disk write stops the response immediately without mirror retry',async t=>{
