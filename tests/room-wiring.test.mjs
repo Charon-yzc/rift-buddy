@@ -18,3 +18,12 @@ test('every room IPC channel exposed by preload has a guarded handler in main',a
  assert.ok(used.length>=8,`expected the renderer to use the full room API, saw ${used.join(',')}`);
  for(const name of used)assert.match(preload,new RegExp(`\\b${name}:`),`${name} is used by the renderer but not exposed in preload`);
 });
+test('the automatic room decoration wraps updates, guards, leave state and the client poll',async()=>{
+ const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
+ assert.match(main,/import\('\.\.\/src\/core\/room-auto\.mjs'\)/,'main must load the auto room core');
+ assert.match(main,/webContents\.send\('room-update',decorateRoom\(snapshot\)\)/,'room updates must carry the auto marker');
+ assert.match(main,/guard\('room-status',\(\)=>roomService\?decorateRoom\(roomService\.snapshot\(\)\):null\)/);
+ assert.match(main,/if\(roomAutoKey\)roomAutoBlockedKey=roomAutoKey/,'a manual leave must not be undone by the next poll');
+ assert.match(main,/queueRoomAuto\(latestClient\)/,'the client poll must feed the auto room step');
+ assert.match(main,/autoRoomDecision\(\{enabled/);
+});

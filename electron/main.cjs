@@ -173,23 +173,87 @@ async function boot(){
  // snapshots over LAN/VPN or their own trusted relay. Never logs credentials.
  const {createRoomService}=await import('../services/room.mjs');
  const {sanitizeNick}=await import('../src/core/room.mjs');
+ const {initialRelayUrl}=await import('../src/core/room-relay.mjs');
+ const {deriveAutoRoom,autoRoomNick,autoRoomDecision,decorateAutoRoom,LOBBY_PHASES,AUTO_RETRY_MS}=await import('../src/core/room-auto.mjs');
  let roomNickInUse='';
+ // Automatic party room (CHA-71): the lobby identifier the current auto room
+ // was derived from, plus the state needed to decide when to stop. Manual
+ // rooms never set roomAutoKey and are never touched by the poll below.
+ let roomAutoKey=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve();
+ const decorateRoom=snapshot=>decorateAutoRoom(snapshot,{auto:!!roomAutoKey,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});
  const ensureRoom=wanted=>{
   const clean=sanitizeNick(wanted)||sanitizeNick(state.preferences.roomNick)||'队友';
   if(roomService&&roomNickInUse===clean)return roomService;
   if(roomService){if(roomService.snapshot().mode!=='idle')throw Error('请先离开房间再修改昵称');roomService.dispose();roomService=null;}
   roomNickInUse=clean;
-  roomService=createRoomService({nick:clean,onUpdate:snapshot=>{if(win&&!win.isDestroyed())win.webContents.send('room-update',snapshot);},diagnostic});
+  roomService=createRoomService({nick:clean,onUpdate:snapshot=>{if(win&&!win.isDestroyed())win.webContents.send('room-update',decorateRoom(snapshot));},diagnostic});
   return roomService;
  };
- guard('room-status',()=>roomService?roomService.snapshot():null);
- guard('room-host',nick=>ensureRoom(nick).host());
- guard('room-join',(target,nick)=>ensureRoom(nick).join(target||{}));
- guard('room-relay',(target,nick)=>ensureRoom(nick).relay(target||{}));
- guard('room-leave',()=>{if(!roomService)return null;roomService.leave();return roomService.snapshot();});
- guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return roomService.publish(share);});
+ guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):null);
+ guard('room-host',async nick=>decorateRoom(await ensureRoom(nick).host()));
+ guard('room-join',async(target,nick)=>decorateRoom(await ensureRoom(nick).join(target||{})));
+ guard('room-relay',async(target,nick)=>decorateRoom(await ensureRoom(nick).relay(target||{})));
+ guard('room-leave',()=>{
+  if(!roomService)return null;
+  // Leaving by hand must not be undone by the next poll: remember the party
+  // this auto room came from until the lobby identifier changes.
+  if(roomAutoKey)roomAutoBlockedKey=roomAutoKey;
+  roomService.leave();roomAutoKey=null;roomAutoPin=null;roomAutoError='';
+  return decorateRoom(roomService.snapshot());
+ });
+ guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return decorateRoom(roomService.publish(share));});
  guard('room-scan',()=>ensureRoom(state.preferences.roomNick).scan());
  guard('room-addresses',()=>{const list=[];for(const [name,items] of Object.entries(os.networkInterfaces()))for(const item of items||[])if(item.family==='IPv4'&&!item.internal)list.push({name,address:item.address});return list;});
+ // Runs after each client poll, never inside it: a relay handshake can take
+ // seconds and must not delay client-status answers. Only the two stopwatches
+ // and the decision table decide; this effect never throws into the poll.
+ const roomAutoStep=async client=>{
+  const enabled=state.preferences?.roomAuto===true;
+  if(roomAutoKey&&roomService&&roomService.snapshot().mode==='idle'){roomAutoKey=null;roomAutoPin=null;}
+  const inWindow=!!client?.connected&&LOBBY_PHASES.includes(client.phase);
+  if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=2)roomAutoGoneSince=null;
+  else if(inWindow)roomAutoGoneSince=roomAutoGoneSince??Date.now();
+  else roomAutoGoneSince=null;
+  if(client?.connected)roomAutoOfflineSince=null;else roomAutoOfflineSince=roomAutoOfflineSince??Date.now();
+  const now=Date.now();
+  const decision=autoRoomDecision({enabled,connected:!!client?.connected,phase:client?.phase||'',
+   lobbyKey:client?.party?.key||null,lobbyCount:Number.isFinite(client?.party?.lobbyCount)?client.party.lobbyCount:null,
+   activeAutoKey:roomAutoKey,manualRoomActive:!!(roomService&&roomService.snapshot().mode!=='idle'&&!roomAutoKey),
+   blockedKey:roomAutoBlockedKey,failedKey:roomAutoFailedKey,failedRetryAt:roomAutoFailedUntil,
+   partyGoneForMs:roomAutoGoneSince===null?null:now-roomAutoGoneSince,
+   offlineForMs:roomAutoOfflineSince===null?null:now-roomAutoOfflineSince,now});
+  if(decision.action==='hold')return;
+  if(decision.action==='leave'){
+   try{roomService?.leave();}catch{}
+   roomAutoKey=null;roomAutoPin=null;
+   diagnostic(`auto room left (${decision.reason})`);
+   return;
+  }
+  const key=decision.key;
+  if(decision.action==='switch'){try{roomService?.leave();}catch{}roomAutoKey=null;roomAutoPin=null;}
+  let derived=null;
+  try{derived=await deriveAutoRoom(key);}catch{}
+  if(!derived){
+   roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
+   diagnostic('auto room derive failed');
+   return;
+  }
+  roomAutoError='';roomAutoKey=key;roomAutoPin=derived.pin;
+  try{
+   await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
+   roomAutoFailedKey=null;roomAutoFailedUntil=0;
+   diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
+  }catch(error){
+   roomAutoKey=null;roomAutoPin=null;
+   // A manual leave or a replacement room already explains the failure.
+   if(roomAutoBlockedKey!==key){
+    roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;
+    roomAutoError=error?.message||'自动连接失败';
+   }
+   diagnostic(`auto room join failed: ${error?.message||'unknown'}`);
+  }
+ };
+ const queueRoomAuto=client=>{roomAutoTask=roomAutoTask.catch(()=>{}).then(()=>roomAutoStep(client)).catch(error=>diagnostic(`auto room step failed: ${error?.message||'unknown'}`));return roomAutoTask;};
  guard('presentation',setPresentation);
  guard('bootstrap',()=>({data,state,client:latestClient,windowLayout:companion.layout(),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}));
  const {windowInfo}=await import('../services/window-info.mjs');
@@ -249,7 +313,7 @@ async function boot(){
    if(state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame))await pollLive(true);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
    companion.sync();
-   win?.webContents.send('client-update',latestClient);return latestClient;})().finally(()=>statusTask=null);
+   queueRoomAuto(latestClient);win?.webContents.send('client-update',latestClient);return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
  const pollLive=async(force=false)=>{
