@@ -8,6 +8,22 @@ export function correctDirectRankFields({patch,ability,spell,values,replace,dict
  const asq=ability('AurelionSol','Q');assert.deepEqual(values('AurelionSol','AurelionSolQ','ManaCostPerSecond',5),[30,35,40,45,50]);
  for(const m of asq.metrics.filter(m=>m.label==='法力消耗')){m.unit='点/秒';m.basis='引导期间持续消耗，按Q等级排列';}
  replace('AurelionSol','Q','距高','距离','Correct Tencent typo; range mechanism unchanged');
+ assert.deepEqual(values('AurelionSol','AurelionSolW','DistancePerMass',1),[7.5]);assert.deepEqual(values('AurelionSol','AurelionSolE','ExecutionGrowthPerBreakpoint',1),[.026]);
+ assert.deepEqual(values('AurelionSol','AurelionSolE','OuterRadiusAreaPerStack',1),[900]);assert.deepEqual(values('AurelionSol','AurelionSolR','AreaPerPassiveStack',1),[900]);
+ replace('AurelionSol','P','-星穹流丽：0.0%距离提升。','-星穹流丽：飞行距离随星尘增加，每层增加7.5距离单位；1500是零层的基础距离。','AurelionSolW DistancePerMass=7.5; discard zero-stack current-state example');
+ replace('AurelionSol','P','-星芒凝汇：0.0%区域提升和(2.6%【星辰层数】)额外处决阈值。','-星芒凝汇：黑洞区域随星尘增加；每层提高0.026个百分点的处决阈值，100层增加2.6个百分点。','AurelionSolE area growth and ExecutionGrowthPerBreakpoint=.026 percentage points');
+ replace('AurelionSol','P','-星落和天瀑：0.0%区域提升。','-星落和天瀑：生效区域随星尘增加；黑洞与普通星落的面积参数每层增加900平方单位。','AurelionSolE OuterRadiusAreaPerStack and AurelionSolR AreaPerPassiveStack');
+ replace('AurelionSol','P','\n奥瑞利安·索尔已获取的星尘数量：0','','Offline reference cannot report current-game stardust');
+ replace('AurelionSol','R','\n己收集的用于激活天瀑的星尘数量：0/75。','','Offline reference cannot report current-game progress; threshold remains above');
+ replace('AurelionSol','E','(5 +2.6%【星辰层数】)%【最大生命值】','(5+0.026×【星尘层数】)%【最大生命值】','AurelionSolE CurrentExecutionThreshold adds .026 percentage points per stack');
+ for(const key of ['Q','E']){const s=spell('AurelionSol','AurelionSol'+key),range=s.mSpellCalculations.LevelBasedRangeScaling.mFormulaParts[0];assert.equal(range.mLevel1Value,750);assert.equal(range.mInitialBonusPerLevel,10);const a=ability('AurelionSol',key);a.metrics=a.metrics.filter(m=>m.label!=='资料范围');a.metrics.push({label:'施法距离',text:'750+10×(英雄等级−1)单位；1级750，18级920'});}
+ const aw=ability('AurelionSol','W');aw.metrics=aw.metrics.filter(m=>m.label!=='资料范围');aw.metrics.push({label:'飞行距离',text:'1500+7.5×星尘层数单位；100层为2250，随星尘增长'});
+ assert.deepEqual(values('Udyr','UdyrQ','AttackSpeedBase',6),[.2,.32,.44,.56,.68,.8]);assert.deepEqual(values('Udyr','UdyrQ','OnHitBonusHPRatio',6),[.01,.012,.014,.016,.018,.02]);
+ assert.deepEqual(values('Udyr','UdyrQ','LightningDamageLevel1',1),[.015]);assert.deepEqual(values('Udyr','UdyrQ','LightningDamageLevel18',1),[.03]);assert.deepEqual(values('Udyr','UdyrQ','Bounces',1),[6]);assert.deepEqual(values('Udyr','UdyrQ','RepeatBouncePenalty',1),[1]);
+ const uq=spell('Udyr','UdyrQ');assert.equal(uq.mSpellCalculations.OnHitDamage.mFormulaParts[2].mDataValue,'OnHitBonusHPRatio');assert.equal(uq.mSpellCalculations.EmpoweredLightningBonus.mFormulaParts[1].mDataValue,'LightningAPRatio');assert(Math.abs(uq.DataValues.find(v=>v.name==='LightningAPRatio').values[1]-.00006)<1e-10);
+ replace('Udyr','Q','获得20%攻击速度','获得【20%/32%/44%/56%/68%/80%】攻击速度（随Q等级1—6）','UdyrQ AttackSpeedBase six ranks');
+ replace('Udyr','Q','+1%【额外生命值】','+【1%/1.2%/1.4%/1.6%/1.8%/2%】【额外生命值】','UdyrQ OnHitDamage health coefficient six ranks');
+ replace('Udyr','Q','共计9%最大生命值','共计(9%—18%【随英雄等级1—18提升】+0.036%【法术强度】)最大生命值','UdyrQ EmpoweredLightningBonusMax six full repeated hits, not level-1 zero-AP sample');
  change('Aurora','W','AuroraW','MoveSpeedBonus',[20,25,30,35,40],'并进入双界行者状态。','并进入双界行者状态，获得【20%/25%/30%/35%/40%】移动速度。');
  change('Braum','E','BraumE','ShieldHoldDuration',[3,3.25,3.5,3.75,4],'盾牌举起3秒','盾牌举起【3/3.25/3.5/3.75/4】秒');
  change('Braum','R','BraumRWrapper','MaxKnockup',[1,1.5,2],'击飞0.6到1秒','击飞0.6到【1/1.5/2】秒（最大值随R等级）');

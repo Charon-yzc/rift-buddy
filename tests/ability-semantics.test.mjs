@@ -83,4 +83,8 @@ test('resolved reference never presents an unbound coefficient, stuck rank separ
  }
  assert.doesNotMatch(ability('Kaisa','P').description,/0.0%|0.0\//);assert.match(ability('Kaisa','P').description,/达到100%额外攻击速度可进化/);
  assert.doesNotMatch(ability('Bard','W').description,/当前已激活的圣坛数：0/);
+ for(const key of ['P','R'])assert.doesNotMatch(ability('AurelionSol',key).description,/0.0%|星尘数量：0/);
+ assert.match(ability('AurelionSol','E').description,/5\+0.026×【星尘层数】/);assert.match(metric('AurelionSol','W','飞行距离').text,/1500\+7.5×星尘层数/);
+ for(const key of ['Q','E']){assert(!metric('AurelionSol',key,'资料范围'));assert.match(metric('AurelionSol',key,'施法距离').text,/英雄等级/);}
+ const udyr=ability('Udyr','Q').description;assert.match(udyr,/20%\/32%\/44%\/56%\/68%\/80%.*随Q等级1—6/);assert.match(udyr,/1%\/1.2%\/1.4%\/1.6%\/1.8%\/2%/);assert.match(udyr,/9%—18%.*0.036%【法术强度】/);
 });
