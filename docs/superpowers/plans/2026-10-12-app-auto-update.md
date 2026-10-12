@@ -217,7 +217,7 @@ const fakeRequest=routes=>(url,options,callback)=>{
  });
  return req;
 };
-const service=(over={})=>createAppUpdateService({currentVersion:'0.44.0',tempDir:'C:\\fake-tmp',storeFile:'C:\\fake-tmp\\app-update.json',...over});
+const service=(over={})=>createAppUpdateService({currentVersion:'0.44.0',tempDir:'C:\\fake-tmp',storeFile:'C:\\fake-tmp\\app-update.json',lookup:async()=>[{address:'8.8.8.8',family:4}],...over});
 test('check reports a newer prerelease-channel tag',async()=>{
  const s=service({feedUrl:'https://github.com/Legender134/rift-buddy/releases.atom',request:fakeRequest({'github.com/releases.atom':{status:200,body:FEED2}})});
  const r=await s.check();
@@ -263,7 +263,7 @@ async function resolvePublic(hostname,{lookup=dns.lookup,timeout=FEED_TIMEOUT}={
  if(!records.length||records.some(r=>!publicAddress(r.address)))throw Error('更新地址不能指向本机、内网或保留地址');
  return records;
 }
-function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts}){
+function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,onHeaders,onData}){
  return new Promise(async(resolve,reject)=>{
   let target=url;
   try{
@@ -273,12 +273,14 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts}){
     if(!UPDATE_HOSTS.includes(u.hostname)&&!insecureHosts.includes(u.hostname))return reject(Error(`更新跳转不在白名单内：${u.hostname}；不跟随`));
     const records=insecureHosts.includes(u.hostname)?null:await resolvePublic(u.hostname,{lookup,timeout});
     const result=await new Promise((res,rej)=>{
-     let bytes=0;const parts=[];
+     let bytes=0,failed=false;const parts=[];let chain=Promise.resolve();
      const req=request(u,{method:'GET',headers:{'User-Agent':'rift-buddy-update','Accept':'*/*'},signal,lookup:records?(_h,o,cb)=>o?.all?cb(null,records):cb(null,records[0].address,records[0].family):undefined},r=>{
       if(r.statusCode>=300&&r.statusCode<400&&r.headers.location){r.resume();res({redirect:r.headers.location});return;}
       if(r.statusCode!==200){r.resume();rej(Error(`更新服务未返回数据（HTTP ${r.statusCode}）；不跟随跳转`));return;}
-      r.on('data',c=>{bytes+=c.length;if(bytes>byteLimit){req.destroy(Error('更新数据超过大小限制'));return;}parts.push(c);});
-      r.on('error',rej);r.on('end',()=>res({statusCode:r.statusCode,headers:r.headers||{},body:Buffer.concat(parts)}));
+      try{onHeaders?.(r.headers||{});}catch(e){req.destroy(e);return;}
+      // onData 模式（大文件）：分片回调链式串行，不累积整包；否则累积（小文本）。
+      r.on('data',c=>{bytes+=c.length;if(bytes>byteLimit){failed=true;req.destroy(Error('更新数据超过大小限制'));return;}if(onData)chain=chain.then(()=>onData(c));else parts.push(c);});
+      r.on('error',rej);r.on('end',()=>{if(failed)return;chain.then(()=>res({statusCode:r.statusCode,headers:r.headers||{},body:onData?null:Buffer.concat(parts),bytes})).then(null,rej);});
      });
      const timer=setTimeout(()=>req.destroy(Error('更新下载超时，继续使用当前版本')),timeout);if(timer.unref)timer.unref();
      req.on('error',rej);req.on('close',()=>clearTimeout(timer));req.end();
@@ -305,7 +307,7 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
 ```
 
 Run: `node --test tests/app-update.test.mjs`
-Expected: PASS（8 tests；注意 fake `lookup`  key：`resolvePublic` 默认用 `dns.lookup`——测试里 hostname 全走白名单会触发真实 DNS！必须在 fake 层处理：测试的 `service()`  helper 传入 `lookup:async()=>[{address:'8.8.8.8',family:4}]`。把 Step 1 的 `service` helper 改为默认带该 lookup——执行者在本步顺手补上，否则测试会打真实 DNS。）
+Expected: PASS（8 tests）
 
 - [ ] **Step 3: 全量回归并提交**
 
@@ -358,8 +360,7 @@ test('download streams to disk with progress and verifies the checksum',async()=
 test('hash mismatch deletes the file and reports honestly',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
  const s=dlService(setupRoutes(BIN,'0'.repeat(64)),{tempDir:dir});
- await assert.rejects(s.download({version:'9.9.9',tag:'v9.9.9'},{关于:{}}),/不一致/);
- await assert.rejects(s.download({version:'9.9.9',tag:'v9.9.9'},{关于:0}),/不一致/);
+ await assert.rejects(s.download({version:'9.9.9',tag:'v9.9.9'},{}),/不一致/);
  const left=await fs.readdir(dir);assert.ok(!left.some(n=>n.endsWith('.exe')));
  assert.equal(await s.pending(),null);
 });
@@ -379,7 +380,7 @@ test('an aborted download leaves no record',async()=>{
 });
 ```
 
-注意：上面 mismatch 测试里我故意写了两个非法占位调用（`{关于:{}}` / `{关于:0}`）——执行者必须删掉这两行，只保留一次合法调用后再断言。正确写法见 Step 2 后的运行期望。Fake 的 `body` 字段是 string 时 `Buffer.from` 对二进制会坏：fake 里约定 `body` 可为 Buffer（`Buffer.isBuffer(route.body)?route.body:Buffer.from(route.body||'')`），执行者在实现 fake 升级时一并改掉——**fake 升级是本步的一部分**，不要跳过。
+Fake 约定：`body` 可为 Buffer 或 string（`Buffer.isBuffer(route.body)?route.body:Buffer.from(route.body||'')`）；二进制 fixture（`BIN`）以 Buffer 传入。`dlService` 的 `setupRoutes` 与 `iso`（fake lookup）定义见本 Step 1 顶部，不得省略。
 
 Run: `node --test tests/app-update.test.mjs`
 Expected: FAIL（`s.download is not a function`）
@@ -399,18 +400,15 @@ async function download(release,{signal,onProgress}={}){
  await cleanup();
  const setup=setupFileName(release.version),sum=checksumFileName(release.version);
  const target=path.join(tempDir,`rift-buddy-update-${Date.now()}-${crypto.randomUUID()}.exe.part`);
- const res=await fetchOnce(releaseDownloadUrl(release.tag,setup),{request,timeout:FILE_TIMEOUT,byteLimit:SETUP_BYTES_LIMIT,signal,lookup,insecureHosts});
- const total=Number(res.headers?.['content-length']);
- if(Number.isFinite(total)&&total>SETUP_BYTES_LIMIT)throw Error('安装包超过大小限制，已停止下载');
- const hash=crypto.createHash('sha256');let received=0;
+ // 真流式：分片到达即写盘+哈希，内存不累积整包。
  await fs.mkdir(tempDir,{recursive:true});
  const handle=await fs.open(target,'w');
+ const hash=crypto.createHash('sha256');let received=0,total=null;
+ const progress=()=>{if(onProgress)onProgress({received,total});};
  try{
-  for(let offset=0;offset<res.body.length;offset+=65536){
-   if(signal?.aborted)throw Error('下载已取消');
-   const chunk=res.body.subarray(offset,offset+65536);hash.update(chunk);await handle.write(chunk);
-   received+=chunk.length;if(onProgress)onProgress({received,total:Number.isFinite(total)?total:null});
-  }
+  await fetchOnce(releaseDownloadUrl(release.tag,setup),{request,timeout:FILE_TIMEOUT,byteLimit:SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,
+   onHeaders:h=>{const t=Number(h?.['content-length']);total=Number.isFinite(t)?t:null;if(total!==null&&total>SETUP_BYTES_LIMIT)throw Error('安装包超过大小限制，已停止下载');progress();},
+   onData:async chunk=>{if(signal?.aborted)throw Error('下载已取消');hash.update(chunk);await handle.write(chunk);received+=chunk.length;progress();}});
  }finally{await handle.close();}
  if(signal?.aborted){await fs.unlink(target).catch(()=>{});throw Error('下载已取消');}
  const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
@@ -425,7 +423,7 @@ async function download(release,{signal,onProgress}={}){
 并把 `return {check};` 改为 `return {check,download,pending,cleanup};`（`install` 下一步加）。
 
 Run: `node --test tests/app-update.test.mjs`
-Expected: PASS（下载/复用/mismatch/超限/取消 相关全过；若 fake 的 Buffer 支持没改会挂，回去补 fake）
+Expected: PASS（下载/复用/mismatch/超限/取消 相关全过）
 
 - [ ] **Step 3: 写安装测试（先红）**
 
@@ -1035,6 +1033,6 @@ git push origin feature/app-update
 - §10 非目标 → Global Constraints 重申（无 builder、无静默安装、无签名、无 README 自动改、无 CI 发布权、无可配置源）。
 - §11 交付 → Task 8 Step 5。
 
-**2. Placeholder scan:** 全文无 TBD/TODO/"类似 Task N"/"适当处理"；Task 3 Step 1 的两个非法占位调用已在文中明确标出必须删除；Task 8 harness 的 `var release` 声明已提示按 `node --check` 调整。
+**2. Placeholder scan:** 全文无 TBD/TODO/"类似 Task N"/"适当处理"；Task 8 harness 的 `var release` 声明已提示按 `node --check` 调整。
 
 **3. Type consistency:** 快照/记录/release 形状在头部锁定，全任务一致；`compareAppVersion` 为 `compareVersions` 在 main.cjs 内的别名（避免与既有标识冲突，用途单一）；service 返回 `{check,download,pending,cleanup,install}` 五件套，Task 2 先返回 `{check}`、Task 3 补齐——步骤内已写明 return 行的两次改写，无悬空引用；`fmtBytes` 只在 view 内使用；`appUpdate`（渲染层）vs `appUpdateStatus`（主进程）命名分离，无混用。
