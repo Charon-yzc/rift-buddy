@@ -1,5 +1,6 @@
 // Current public lobby membership only. Never decode hidden/obfuscated IDs,
 // read chat messages, or carry lobby credentials into renderer/storage/rooms.
+import {sanitizePartyKey} from './room-auto.mjs';
 const clean = value => typeof value === 'string' ? value.trim().normalize('NFKC') : '';
 export function publicPlayerIdentity(player) {
  if (!player || String(player.nameVisibilityType || '').toUpperCase() === 'HIDDEN') return {};
@@ -26,7 +27,10 @@ export function sanitizeLobbyParty(raw, receivedAt = Date.now()) {
  const members = raw.members.filter(p => !p.isBot && !p.isSpectator).map(p => ({identity:publicPlayerIdentity(p),
   firstPosition:String(p.firstPositionPreference || '').toUpperCase(), secondPosition:String(p.secondPositionPreference || '').toUpperCase()}));
  if (!Object.keys(local).length || !members.some(p => sameIdentity(p.identity, local))) return null;
- return {local, members, receivedAt};
+ // partyId identifies the shared lobby across its members. chatRoomId,
+ // chatRoomKey and mucJwtDto are credentials and are never read.
+ const key = sanitizePartyKey(raw.partyId);
+ return {local, members, receivedAt, ...(key ? {key} : {})};
 }
 export function resolveClientParty(session, lobby, manualIds = [], now = Date.now()) {
  const team = session?.myTeam || [], localCell = session?.localPlayerCellId, own = team.find(p => p.cellId === localCell);

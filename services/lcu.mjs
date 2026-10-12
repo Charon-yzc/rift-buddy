@@ -8,6 +8,7 @@ import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
 import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteContext} from '../src/core/rune-context.mjs';
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {publicPlayerIdentity,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
+import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
@@ -112,8 +113,14 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   if(session&&cache.gameId&&gameId&&cache.gameId!==gameId)cache.lobby=null;
   if(session&&gameId)cache.gameId=gameId;
   const identities=session?{...session,myTeam:session.myTeam.map(p=>({...p,identity:publicPlayerIdentity(rawSession.myTeam?.find(m=>Number(m.cellId)===p.cellId))}))}:null;
-  const party=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:cache.lobby?'lobby':'unknown',members:[],lobbyCount:cache.lobby?.members.length??null,unmatched:0};
-  return {connected:true,phase,session,eligibility,game,party,mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
+  // A relay room code is derived from this key, so it is exposed only while
+  // the phase is pre-match and the lobby evidence is fresh. It is an
+  // identifier, never a credential, and it stays on this machine.
+  const lobbyFresh=!!cache.lobby&&Number.isFinite(cache.lobby.receivedAt)&&now()-cache.lobby.receivedAt<=LOBBY_AUTO_FRESH_MS&&LOBBY_PHASES.includes(phase);
+  const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:cache.lobby?'lobby':'unknown',members:[],lobbyCount:cache.lobby?.members.length??null,unmatched:0};
+  const party=lobbyFresh&&cache.lobby.key?{...baseParty,key:cache.lobby.key}:baseParty;
+  const own=lobbyFresh&&cache.lobby.local?.riotId?{riotId:cache.lobby.local.riotId}:null;
+  return {connected:true,phase,session,eligibility,game,party,...(own?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {
