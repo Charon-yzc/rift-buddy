@@ -62,17 +62,20 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,ac
   return {action:'hold',reason:'not-lobby'};
  }
  if(manualRoomActive)return {action:'hold',reason:'room-busy'};
- if(!(Number.isFinite(lobbyCount)&&lobbyCount>=2)){
+ // Evidence means a usable identifier with at least two party members. An
+ // unreadable identifier counts as missing evidence on purpose: a room that
+ // cannot be verified against the current party must not outlive it.
+ if(!(Number.isFinite(lobbyCount)&&lobbyCount>=2&&key)){
   if(activeAutoKey&&Number.isFinite(partyGoneForMs)&&partyGoneForMs>=AUTO_PARTY_GONE_MS)return {action:'leave',key:activeAutoKey,reason:'party-ended'};
-  return {action:'hold',reason:'waiting-party'};
+  return {action:'hold',reason:Number.isFinite(lobbyCount)&&lobbyCount>=2?'no-key':'waiting-party'};
  }
- // Evidence is present but the identifier is unusable: never join, and never
- // drop a healthy room on a read that simply did not carry a key.
- if(!key)return {action:'hold',reason:'no-key'};
- if(blockedKey===key)return {action:'hold',key,reason:'blocked'};
+ // A different party we are not allowed to join right now makes the active
+ // room stale: it belongs to people the player has already left.
+ const stale=!!activeAutoKey&&activeAutoKey!==key;
+ if(blockedKey===key)return stale?{action:'leave',key:activeAutoKey,reason:'party-changed'}:{action:'hold',key,reason:'blocked'};
  // A caller that cannot say what time it is must not skip a backoff it may
  // still be inside: treat an unknown clock as "not yet expired".
- if(failedKey===key&&Number.isFinite(failedRetryAt)&&(!Number.isFinite(now)||now<failedRetryAt))return {action:'hold',key,reason:'retrying'};
+ if(failedKey===key&&Number.isFinite(failedRetryAt)&&(!Number.isFinite(now)||now<failedRetryAt))return stale?{action:'leave',key:activeAutoKey,reason:'party-changed'}:{action:'hold',key,reason:'retrying'};
  if(activeAutoKey===key)return {action:'hold',key,reason:'connected'};
  if(activeAutoKey)return {action:'switch',key,reason:'switch'};
  return {action:'join',key,reason:'join'};

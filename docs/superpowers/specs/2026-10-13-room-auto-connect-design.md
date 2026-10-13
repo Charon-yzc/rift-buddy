@@ -66,16 +66,17 @@
       offlineForMs >= AUTO_OFFLINE_GRACE_MS     → leave('offline')      [仅自动房间]
       否则                                       → hold('not-lobby')
 3  当前房间不是自动房间（手动房间）               → hold('room-busy')     // 手动房间永不被动断开
-4  组队证据不足（status≠lobby 或 lobbyCount<2）:
-      partyGoneForMs >= AUTO_PARTY_GONE_MS      → leave('party-ended')
-      否则                                       → hold('waiting-party')
-5  证据在但标识不可用                             → hold('no-key')        // 不加入也不离开
-6  该标识被用户手动离开过                         → hold('blocked')
-7  该标识在失败退避期内                           → hold('retrying')
-8  已连接到该标识的自动房间                       → hold('connected')
-9  已连接到另一个标识的自动房间                   → switch(newKey)
-10 其余                                          → join(key)
+4  组队证据不足（status≠lobby 或 lobbyCount<2 或标识读不到）:
+      partyGoneForMs >= AUTO_PARTY_GONE_MS      → leave('party-ended')   // 无法核对的房间不留给已离开的队伍
+      否则                                       → hold('waiting-party' / 'no-key')
+5  该标识被用户手动离开过                         → hold('blocked')
+6  该标识在失败退避期内                           → hold('retrying')
+7  已连接到该标识的自动房间                       → hold('connected')
+8  已连接到另一个标识的自动房间                   → switch(newKey)
+9  其余                                          → join(key)
 ```
+
+规则 5/6 的例外：已连的是**另一个**标识时，旧房间属于玩家已经离开的队伍 → `leave('party-changed')`（规则 8 的 switch 也先断开旧房间）。
 
 - 大厅窗口 = `['None','Lobby','Matchmaking','ReadyCheck']`（与 `services/lcu.mjs:103` 一致）。
 - 常量（`src/core/room-auto.mjs`）：`LOBBY_AUTO_FRESH_MS=120000`、`AUTO_PARTY_GONE_MS=30000`、
@@ -83,7 +84,7 @@
 - **保持**：进入选人/对局后 phase 不在大厅窗口 → `hold`，连接不断。选人阶段没有 `partyId`，因此不会重连，
   只会保持；客户端重启后若已不在大厅窗口，不再自动加入（§5）。
 - **开关语义**：`roomAuto===true` 且“自动同步”未关闭才算开启；关闭任一开关都会收束已连接的自动房间（在偏好保存时执行，不依赖轮询）。
-- **手动离开**：`guard('room-leave')` 记录 `blockedKey = 当前自动 key`，清空自动状态；同一组队不再自动连，标识变化即解除（该记忆只在本进程内，见 §5.7）。
+- **手动离开**：`guard('room-leave')` 记录 `blockedKey = 当前自动 key（含正在建立的）`，清空自动状态并中止未完成的握手；同一组队不再自动连，标识变化即解除（该记忆只在本进程内，见 §5.7）。
 - **失败退避**：`join`/`switch` 抛错时记 `{key, retryAt: now+AUTO_RETRY_MS}`，只写诊断；同一 key 到期再试一次，
   key 变化立即重试。本地收束（手动离开、关开关、关“自动同步”）不算失败：`closeAutoRoom` 记下 `roomAutoCancelledKey`，
   握手中的拒绝只写诊断，不写退避与错误提示。房间服务自身的 3 次握手尝试与 8 次重连断路器继续生效，不额外加循环。
@@ -141,7 +142,7 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
 - `decorateRoom(snapshot)`：调用 `decorateAutoRoom(snapshot,{auto: roomAutoKey && snapshot.mode!=='idle', pin: roomAutoPin, error: roomAutoError, retryAt: roomAutoRetryAt})`；
   应用到 `room-update` 推送与全部 room guards 的返回值（`status/host/join/relay/leave/publish`）。
 - `roomAutoStep(client)`：在 `status()`（`electron/main.cjs:238-254`）的轮询任务末尾调用。先维护两个秒表：
-  `roomAutoGoneSince`（大厅窗口内 `party.status!=='lobby' || lobbyCount<2` 时记时，恢复即清空）、
+  `roomAutoGoneSince`（大厅窗口内 `party.status!=='lobby' || lobbyCount<2 || 标识读不到` 时记时，恢复即清空）、
   `roomAutoOfflineSince`（`connected===false` 时记时）；再调 `autoRoomDecision` 执行：
   - `join`/`switch`：`switch` 先 `roomService.leave()`；随后
     `ensureRoom(autoRoomNick({identity:client.own,savedNick:state.preferences.roomNick})).relay({url: initialRelayUrl(state.preferences.relayUrl), room, pin})`；
@@ -222,7 +223,7 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
 2. 手动点“离开房间”后，本组队内不再自动重连；换一个新组队（新 partyId）后恢复自动连接。
 3. 队伍解散/人数降到 1 后约 30 秒，自动房间关闭；进入选人后连接保持不断。
 4. 旧版本助手（或另一台未开启开关的机器）用面板复制的“地址+房间码+口令”手动加入成功。
-5. 关闭“自动同步”后不再自动连接；客户端在线时，关闭任一开关都会立即断开自动房间（不依赖轮询）。
+5. 连接中点“离开房间”会立即断开且本组队不再自动重连；在空闲面板取消勾选或关闭“自动同步”会立即停止自动连接；关闭“自动同步”后不再自动连接。
 6. 记录两机读到的组队标识是否一致（大小写差异会派生出不同房间码）；两机房间码不一致时先核对这一项。
 
 记录软件版本、客户端阶段与实际完成项；未完成项保留为待验证，不上传个人设置或带玩家身份的截图。

@@ -33,14 +33,20 @@ test('the automatic room decoration wraps updates, guards, leave state and the c
  for(const [name,pattern] of Object.entries(guards))assert.match(main,pattern,`${name} must return a decorated snapshot`);
  assert.match(main,/if\(roomAutoKey\)\{roomAutoBlockedKey=roomAutoKey;closeAutoRoom\('manual'\);\}/,'a manual leave must not be undone by the next poll');
  assert.match(main,/queueRoomAuto\(\)/,'the client poll must feed the auto room step');
+ assert.match(main,/\.then\(\(\)=>roomAutoStep\(latestClient\)\)/,'the step must read the current client, not a captured one');
+ assert.match(main,/auto:!!roomAutoKey&&!!roomAutoPin/,'only an established auto room may be marked as one');
  assert.match(main,/autoRoomDecision\(\{enabled/);
+ assert.match(main,/roomAutoError=error\?\.message\|\|'自动连接失败';/,'a relay failure must reach the panel');
+ assert.match(main,/roomAutoFailedKey=key;roomAutoFailedUntil=Date\.now\(\)\+AUTO_RETRY_MS;/,'a relay failure must earn a backoff');
 });
 test('only this process keeps the lobby identifier and the auto room closes with its switch',async()=>{
  const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
  assert.match(main,/const forRenderer=client=>\{/,'the renderer must not receive the lobby identifier');
+ assert.match(main,/const \{own,party,\.\.\.rest\}=client,\{key,\.\.\.cleanParty\}=party\|\|\{\};/,'the identity used as the room nickname must be stripped');
  assert.match(main,/return \{\.\.\.rest,\.\.\.\(party\?\{party:cleanParty\}:\{\}\)\};/,'a missing party must stay missing');
  for(const boundary of [/send\('client-update',forRenderer\(latestClient\)\)/,/guard\('client-status',async force=>forRenderer\(await status\(force\)\)\)/,/guard\('authorize-client'[\s\S]{0,200}?forRenderer\(await status\(true\)\)/,/guard\('bootstrap',[\s\S]{0,120}?client:forRenderer\(latestClient\)/,/guard\('window-info'[\s\S]{0,300}?client:forRenderer\(latestClient\)/])assert.match(main,boundary,'every renderer-facing client snapshot must be stripped');
  assert.match(main,/closeAutoRoomIfRevoked\(\);\s+guide\.publish\(\)/,'turning the switch or sync off must close the auto room');
+ assert.match(main,/if\(had&&win&&!win\.isDestroyed\(\)\)win\.webContents\.send\('room-update'/,'revoking must also refresh the panel');
  assert.match(main,/storage\.mergeState\(current,incoming,data\.champions\)\);closeAutoRoomIfRevoked\(\)/,'an imported backup must not leave an orphan room');
  assert.match(main,/state\.preferences\?\.roomAuto===true&&state\.preferences\?\.autoSync!==false/,'automatic rooms follow the client poll switch');
  assert.match(main,/roomAutoCancelledKey=roomAutoKey;/,'a local close must be distinguishable from a relay failure');
@@ -54,7 +60,10 @@ test('the renderer wires the automatic room toggle, copy text and quiet hint',as
  assert.match(app,/autoQuiet:roomAutoQuiet&&\(room\?\.members\?\.length\?\?0\)<=1/);
  assert.match(app,/room\?\.auto\?`开黑搭子组队房间/);
  assert.match(app,/noteRoomSnapshot\(snapshot\)|applyRoomSnapshot\(snapshot\)/,'room updates must feed the quiet hint');
+ assert.match(app,/onRoomUpdate\?\.\(snapshot=>\{applyRoomSnapshot\(snapshot\);/,'live updates must go through the shared snapshot handler');
  assert.match(app,/applyRoomSnapshot\(room\)/,'a rebuilt window must start the quiet hint from its boot snapshot');
  assert.match(app,/if\(identity!==roomShareRoom\)\{roomShareRoom=identity;roomShareSig='';if\(identity\)scheduleRoomPublish\(\);\}/,'a rebuilt room must hear the current share again');
+ assert.match(app,/roomQuietTimer=setTimeout\(\(\)=>\{roomQuietTimer=null;roomAutoQuiet=true;/,'the quiet hint needs its timer');
+ assert.match(app,/地址、房间码和口令已复制；可直接发给队友手动加入/,'the automatic copy toast is part of the contract');
  assert.match(app,/autoSync:saved\.preferences\.autoSync!==false/,'the panel must know whether client sync is on');
 });
