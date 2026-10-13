@@ -201,7 +201,7 @@ async function boot(){
  // Automatic party room (CHA-71): the lobby identifier the current auto room
  // was derived from, plus the state needed to decide when to stop. Manual
  // rooms never set roomAutoKey and are never touched by the poll below.
- let roomAutoKey=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoCancelledKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve();
+ let roomAutoKey=null,roomAutoCode=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoCancelledKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve();
  const decorateRoom=snapshot=>decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});
  // The sandboxed renderer never needs the lobby identifier or the identity
  // used as the room nickname: only this process derives the room from them.
@@ -213,8 +213,10 @@ async function boot(){
  const closeAutoRoom=reason=>{
   if(!roomAutoKey)return false;
   roomAutoCancelledKey=roomAutoKey;
-  try{roomService?.leave();}catch{}
-  roomAutoKey=null;roomAutoPin=null;roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
+  // A room the user created by hand inside the claim window is not ours to close.
+  const snapshot=roomService?.snapshot();
+  if(!snapshot||snapshot.mode==='idle'||snapshot.room===roomAutoCode)try{roomService?.leave();}catch{}
+  roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
   diagnostic(`auto room left (${reason})`);
   return true;
  };
@@ -222,10 +224,11 @@ async function boot(){
  // to go even when the poll that would notice is switched off.
  const closeAutoRoomIfRevoked=()=>{
   if(state.preferences.roomAuto===true&&state.preferences.autoSync!==false)return false;
-  const had=closeAutoRoom('preference');roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
+  const had=closeAutoRoom('preference'),hadError=!!roomAutoError;
+  roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
   // The panel may still hold the previous snapshot; the promise it shows
   // ("稍后会自动重试") is void once the switch is off.
-  if(had)publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[]}));
+  if(had||hadError)publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[]}));
   return true;
  };
  const ensureRoom=wanted=>{
@@ -241,12 +244,11 @@ async function boot(){
  guard('room-join',async(target,nick)=>decorateRoom(await ensureRoom(nick).join(target||{})));
  guard('room-relay',async(target,nick)=>decorateRoom(await ensureRoom(nick).relay(target||{})));
  guard('room-leave',()=>{
-  if(!roomService)return null;
   // Leaving by hand must not be undone by the next poll: remember the party
   // this auto room came from until the lobby identifier changes.
   if(roomAutoKey){roomAutoBlockedKey=roomAutoKey;closeAutoRoom('manual');}
-  else{roomService.leave();roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
-  return decorateRoom(roomService.snapshot());
+  else if(roomService){roomService.leave();roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
+  return roomService?decorateRoom(roomService.snapshot()):null;
  });
  guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return decorateRoom(roomService.publish(share));});
  guard('room-scan',()=>ensureRoom(state.preferences.roomNick).scan());
@@ -259,9 +261,9 @@ async function boot(){
   // with sync off there is nothing to follow, so the switch is off too.
   const enabled=state.preferences?.roomAuto===true&&state.preferences?.autoSync!==false;
   if(!enabled){roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
-  if(roomAutoKey&&roomService&&roomService.snapshot().mode==='idle'){roomAutoKey=null;roomAutoPin=null;}
+  if(roomAutoKey&&roomService&&roomService.snapshot().mode==='idle'){roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;}
   const inWindow=!!client?.connected&&LOBBY_PHASES.includes(client.phase);
-  if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=2)roomAutoGoneSince=null;
+  if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=2&&client.party?.key)roomAutoGoneSince=null;
   else if(inWindow)roomAutoGoneSince=roomAutoGoneSince??Date.now();
   else roomAutoGoneSince=null;
   if(client?.connected)roomAutoOfflineSince=null;else roomAutoOfflineSince=roomAutoOfflineSince??Date.now();
@@ -275,7 +277,7 @@ async function boot(){
   if(decision.action==='hold')return;
   if(decision.action==='leave'){closeAutoRoom(decision.reason);return;}
   const key=decision.key;
-  if(decision.action==='switch'){try{roomService?.leave();}catch{}roomAutoPin=null;}
+  if(decision.action==='switch'){try{roomService?.leave();}catch{}roomAutoCode=null;roomAutoPin=null;}
   // Claim the key before the (async) derivation so a manual leave or a
   // preference change during it still records the block and aborts this try.
   roomAutoCancelledKey=null;roomAutoKey=key;
@@ -285,20 +287,20 @@ async function boot(){
   // claim; a failure the player caused is not a failure to report.
   if(roomAutoKey!==key)return;
   if(!derived){
-   roomAutoKey=null;roomAutoPin=null;roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
-   if(roomService&&win&&!win.isDestroyed())publishWindows('room-update',decorateRoom(roomService.snapshot()));
+   roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
+   publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[]}));
    diagnostic('auto room derive failed');
    return;
   }
   // A room the user joined by hand while this step was deriving wins.
-  if(roomService&&roomService.snapshot().mode!=='idle'){roomAutoKey=null;roomAutoPin=null;diagnostic('auto room yielded to a manual room');return;}
+  if(roomService&&roomService.snapshot().mode!=='idle'){roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;diagnostic('auto room yielded to a manual room');return;}
   roomAutoError='';roomAutoPin=derived.pin;
   try{
    await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
-   roomAutoFailedKey=null;roomAutoFailedUntil=0;
+   roomAutoCode=derived.code;roomAutoFailedKey=null;roomAutoFailedUntil=0;
    diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
   }catch(error){
-   roomAutoKey=null;roomAutoPin=null;
+   roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;
    // A manual leave, a preference change or a replacement room explains the
    // failure by itself: only a real relay problem earns a retry and a notice.
    if(roomAutoBlockedKey!==key&&roomAutoCancelledKey!==key){
@@ -306,7 +308,7 @@ async function boot(){
     roomAutoError=error?.message||'自动连接失败';
     // The service already emitted its idle snapshot before this error
     // existed; the panel needs the decorated one to show why nothing came up.
-    if(roomService&&win&&!win.isDestroyed())publishWindows('room-update',decorateRoom(roomService.snapshot()));
+    publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[]}));
    }
    diagnostic(`auto room join failed: ${error?.message||'unknown'}`);
   }

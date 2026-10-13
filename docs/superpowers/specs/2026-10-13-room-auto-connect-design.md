@@ -140,7 +140,7 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
 
 - 模块状态：`roomAutoKey`、`roomAutoPin`、`roomAutoBlockedKey`、`roomAutoCancelledKey`、`roomAutoFailedKey`、`roomAutoFailedUntil`、
   `roomAutoError`、`roomAutoGoneSince`、`roomAutoOfflineSince`。
-- `decorateRoom(snapshot)`：调用 `decorateAutoRoom(snapshot,{auto: roomAutoKey && snapshot.mode!=='idle', pin: roomAutoPin, error: roomAutoError, retryAt: roomAutoRetryAt})`；
+- `decorateRoom(snapshot)`：调用 `decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoRetryAt})`——`auto` 只在自动房间真正建立（key 与派生口令都已就位）后为真，避免认领窗口把用户手动建好的房间标成自动；
   应用到 `room-update` 推送与全部 room guards 的返回值（`status/host/join/relay/leave/publish`）。
 - `roomAutoStep(client)`：在 `status()`（`electron/main.cjs:238-254`）的轮询任务末尾调用。先维护两个秒表：
   `roomAutoGoneSince`（大厅窗口内 `party.status!=='lobby' || lobbyCount<2 || 标识读不到` 时记时，恢复即清空）、

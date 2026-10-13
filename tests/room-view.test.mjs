@@ -249,6 +249,7 @@ test('an automatic relay room copies the derived pin and admits when nobody else
  const manual=roomPanel({room:snapshot({mode:'client',transport:'relay',link:'connected',relayUrl:'wss://room.example.com',pin:'123456',members:[{nick:'我',online:true,share:null,self:true}]}),nick:'我',champ,autoQuiet:true});
  assert.doesNotMatch(manual,/暂时没看到队友/);
  assert.match(manual,/中继 wss:\/\/room\.example\.com｜房间 482913/);
+ assert.match(manual,/邀请队友（复制下面的地址和房间码，口令请另行告知）：/);
  assert.doesNotMatch(manual,/口令 123456/);
  const failedLink=roomPanel({room:snapshot({mode:'client',transport:'relay',link:'failed',relayUrl:'wss://room.example.com',auto:true,pin:'654321',members:[{nick:'我',online:true,share:null,self:true}]}),nick:'我',champ});
  assert.match(failedLink,/连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连（重启助手后会重新尝试）。/);
