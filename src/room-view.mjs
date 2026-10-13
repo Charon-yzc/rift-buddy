@@ -53,10 +53,13 @@ function transportSwitch(current){
  return `<div class="room-transports">${option('lan','局域网','同一网络或虚拟局域网')}${option('relay','中继','跨网共享阵容，配置需服务支持')}</div>`;
 }
 
-function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,hasPreparationFile,preparationFileBusy}){
+function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,autoEnabled=false,autoSync=true,autoError='',hasPreparationFile,preparationFileBusy}){
  const results=Array.isArray(scanResults)?scanResults.slice(0,64):null;
  const forms=transport==='relay'
-  ?`<div class="room-join"><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="wss://room.你的域名" spellcheck="false" aria-label="中继地址"></label><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'处理中…':'加入中继房间','arrow','small',busy?'disabled':'')}</div>
+  ?`<label class="room-auto"><input type="checkbox" id="room-auto" ${autoEnabled?'checked':''} aria-label="自动连接组队房间"> 自动连接组队房间</label>
+   <p class="bottom-note">开启后，进入英雄联盟预组队大厅（非自定义、至少 2 名开黑成员）时，助手用大厅共享标识派生 6 位房间码与口令，自动连上中继并分享你的公开阵容与个人配置；房间昵称使用你的公开游戏 ID。派生口令知道组队数据即可算出，不是强认证。默认关闭；中继运营者与同房间成员能看到分享内容。${autoEnabled&&!autoSync?'当前“自动同步”已关闭：自动连接不会触发，已连接的自动房间也会关闭。':''}${autoEnabled?'':'当前关闭：下面的房间码与口令仍可手动加入。'}</p>
+   ${autoError&&autoEnabled&&autoSync?`<p class="callout warning">${e(`上次自动连接失败：${autoError}；稍后会自动重试，换一个组队也会重试。`)}</p>`:''}
+   <div class="room-join"><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="wss://room.你的域名" spellcheck="false" aria-label="中继地址"></label><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'处理中…':'加入中继房间','arrow','small',busy?'disabled':'')}</div>
    <p class="bottom-note">你和队友填同一个中继地址、房间码和口令，再各自点击加入；昵称是房间里显示的名字。地址可改成你信任的自建中继。</p>
    <details class="more-builds room-relay-help"><summary>怎么用中继房间</summary><ol class="play-steps"><li>切到“中继”，使用预填地址 ${e(DEFAULT_RELAY_URL)}，或和队友约定同一个可信地址。</li><li>约定任意 6 位数字房间码，例如 482913，所有人填写相同的房间码。</li><li>另定 6 位数字口令，只在线下或微信私聊告诉队友，别发到公开的地方。</li><li>填写昵称后各自点击“加入中继房间”。加入后自动共享助手中所选公开阵容；中继支持时也会转发配置。队友点英雄头像，收到配置时查看发送方快照，未收到时先提示缺失，可主动打开本机参考。采用和写入符文由本人点击确认。</li></ol></details>
    <p class="bottom-note">公开阵容与所选配置会发送给该中继并转给房间成员，中继运营者也能看到所发内容。六位口令虽只发送哈希，仍可被枚举，不是强身份认证。</p>`
@@ -74,19 +77,19 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
   </div></section>`;
 }
 
-function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy}){
+function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy,autoQuiet=false}){
  const isRelay=room.transport==='relay';
  const isHost=room.mode==='host';
  const link=LINK_TEXT[room.link]||'';
  const invites=isHost&&Number.isInteger(room.port)?(addresses||[]).map(item=>({name:item.name||'本机地址',invite:`${item.address}:${room.port}#${room.room}`})):[];
  const head=isRelay
-  ?`<div><h3>${icon('link')}开黑房间 · ${e(room.room)}</h3><p>${room.members.length} 人在线 · 经中继</p></div>`
+  ?`<div><h3>${icon('link')}开黑房间 · ${e(room.room)}</h3><p>${room.members.length} 人在线${room.auto?' · 自动连接':''} · 经中继</p></div>`
   :`<div><h3>${icon('link')}开黑房间 · ${e(room.room)}</h3><p>${room.members.length} 人在线${isHost?` · 口令 ${e(room.pin||'')}`:''}</p></div>`;
  const badge=isRelay
-  ?`<span class="badge room-link${room.link==='connected'?'':' warn'}">${link||'中继'}</span>`
+  ?`<span class="badge room-link${room.link==='connected'?'':' warn'}">${room.auto?'自动 · 组队房间 · ':''}${link||'中继'}</span>`
   :`<span class="badge">${isHost?'房主':'成员'}</span>`;
  const inviteBlock=isRelay
-  ?`<div class="room-invites"><p>邀请队友（复制下面的地址和房间码，口令请另行告知）：</p><div class="chips"><button data-action="room-copy-relay">${icon('copy')}${e(`中继 ${room.relayUrl||''}｜房间 ${room.room}`)}</button></div><div class="room-invite-foot"><span class="bottom-note">队友在“中继”里填同一个中继地址、房间码和口令即可加入。${room.link==='reconnecting'?'连接中断，正在重连，期间分享可能延迟。':room.link==='failed'?'连续重连失败已停止，请离开房间后重新加入。':''}</span></div></div>`
+  ?`<div class="room-invites"><p>邀请队友（复制下面的地址${room.auto?'、房间码和口令':'和房间码'}${room.auto?'':'，口令请另行告知'}）：</p><div class="chips"><button data-action="room-copy-relay">${icon('copy')}${e(room.auto?`中继 ${room.relayUrl||''}｜房间 ${room.room}｜口令 ${room.pin||''}`:`中继 ${room.relayUrl||''}｜房间 ${room.room}`)}</button></div><div class="room-invite-foot"><span class="bottom-note">${room.auto?'口令由大厅共享标识派生，只用于同队汇合，不是强认证。旧版队友或派生不一致时，可按上面的地址、房间码与口令手动加入。':'队友在“中继”里填同一个中继地址、房间码和口令即可加入。'}${room.link==='reconnecting'?'连接中断，正在重连，期间分享可能延迟。':room.link==='failed'?(room.auto?'连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连（重启助手后会重新尝试）。':'连续重连失败已停止，请离开房间后重新加入。'):''}${room.auto&&autoQuiet?'暂时没看到队友：可以把上面的房间码和口令发给队友手动加入，或让队友确认也开启了自动连接。':''}</span></div></div>`
   :isHost?`<div class="room-invites"><p>邀请队友（邀请码和口令一起发）：</p><div class="chips">${invites.length?invites.map(item=>`<button data-action="room-copy-invite" data-invite="${e(item.invite)}">${icon('copy')}${e(item.name)} · ${e(item.invite)}</button>`).join(''):'<span class="bottom-note">暂未检测到局域网地址；可让队友手动扫描。</span>'}</div><div class="room-invite-foot">${button('room-refresh-addresses','刷新本机地址','refresh','quiet small')}<span class="bottom-note">口令 ${e(room.pin||'')}。队友在“加入房间”里粘贴完整邀请即可；裸邀请码需另填口令。</span></div></div>`
   :'';
  return `<section class="panel room-panel"><div class="panel-head">${head}${badge}${button('room-leave','离开房间','','quiet small')}</div>
@@ -98,9 +101,9 @@ function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy
   </div></section>`;
 }
 
-export function roomPanel({room,nick='队友',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl=DEFAULT_RELAY_URL,relayRoom='',addresses=[],champ,hasPreparationFile=false,preparationFileBusy=false}){
- if(!room||room.mode==='idle')return roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,hasPreparationFile,preparationFileBusy});
- return roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy});
+export function roomPanel({room,nick='队友',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl=DEFAULT_RELAY_URL,relayRoom='',addresses=[],champ,hasPreparationFile=false,preparationFileBusy=false,autoEnabled=false,autoSync=true,autoError='',autoQuiet=false}){
+ if(!room||room.mode==='idle')return roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,autoEnabled,autoSync,autoError,hasPreparationFile,preparationFileBusy});
+ return roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy,autoQuiet});
 }
 
 export function roomMissingConfigurationDialog({id,role,mode,nick,champ}){

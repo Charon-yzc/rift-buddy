@@ -29,7 +29,7 @@ test('each phase exposes exactly its own actions',()=>{
  const verifying=appUpdatePanel({...base,update:{phase:'verifying',release:{version:'9.9.9'},received:1024,total:2048}});
  assert.ok(verifying.includes('正在校验'));assert.ok(verifying.includes('data-action="app-update-cancel"'));assert.ok(verifying.includes('<progress'));
  const mirror=appUpdatePanel({...base,preferences:{appUpdateCheck:true,updateMirror:'https://gh-proxy.com'},update:{phase:'downloading',release:{version:'9.9.9'},received:10,total:100,via:'mirror'}});
- assert.ok(mirror.includes('id="update-mirror"'));assert.ok(mirror.includes('value="https://gh-proxy.com"'));assert.ok(mirror.includes('data-action="app-update-mirror-preset"'));assert.ok(mirror.includes('data-action="app-update-mirror-clear"'));assert.ok(mirror.includes('镜像加速'));assert.ok(mirror.includes('2026-10-12'));
+ assert.ok(mirror.includes('id="update-mirror"'));assert.ok(mirror.includes('value="https://gh-proxy.com"'));assert.ok(mirror.includes('data-action="app-update-mirror-preset"'));assert.ok(mirror.includes('data-action="app-update-mirror-clear"'));assert.ok(mirror.includes('镜像加速'));assert.ok(mirror.includes('校验文件直接从 GitHub 获取'));assert.ok(!mirror.includes('1.8 倍'));
  const fallback=appUpdatePanel({...base,update:{phase:'downloading',release:{version:'9.9.9'},received:10,total:100,via:'direct',fallbackNotice:true}});
  assert.ok(fallback.includes('已改用直连'));
  const readyFallback=appUpdatePanel({...base,update:{phase:'ready',release:{version:'9.9.9'},record:{version:'9.9.9',bytes:100,sha256:'abc',via:'direct',fallback:true}}});

@@ -13,7 +13,10 @@ export function preparationProgress({data,plan,client,statuses=new Map(),pending
  const applicable=client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='rift'&&!!game&&(!locked||matches);
  let previous=null;
  if(applicable)for(const [k,value] of statuses){try{const [id,fingerprint]=JSON.parse(k),payload=JSON.parse(fingerprint)[0];if(id===game&&payload.champion===plan.selection.id&&payload.role===plan.selection.role&&payload.mode===plan.selection.mode)previous=value;}catch{}}
- const recorded=applicable&&matches?statuses.get(key):null;
+ const rawReceipt=applicable?statuses.get(key):null;
+ const receipt=rawReceipt?.message&&!rawReceipt.steps&&!rawReceipt.complete?{...rawReceipt,steps:{hover:{status:'failed',message:rawReceipt.message},runes:{status:'skipped'},spells:{status:'skipped'},items:{status:'skipped'}}}:rawReceipt;
+ // A failed hover is a result even when the target never reached the client.
+ const recorded=matches||receipt?.steps?.hover?.status==='failed'?receipt:null;
  const status=recorded||(applicable&&runeApplied?{complete:false,message:'符文已单独应用；其余配置尚未核对',steps:{runes:{status:'done'}}}:null),pending=key===pendingKey,changed=!recorded&&!!previous;
  const complete=!!status?.complete&&Object.keys(labels).every(k=>status.steps?.[k]?.status==='done');
  const failed=Object.keys(labels).filter(k=>status?.steps?.[k]?.status==='failed');

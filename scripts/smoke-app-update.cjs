@@ -90,7 +90,7 @@ async function run(){
  await click('[data-action=app-update-check]');
  await until(()=>js('!!document.querySelector("[data-action=app-update-install]")'),'Pending shortcut not restored');
  assert.ok(await js('!!document.querySelector("[data-action=app-update-install]")'));
- const notesLink=await js('document.querySelector("[data-action=link]")?.dataset.url');
+ const notesLink=await js('[...document.querySelectorAll("[data-action=link]")].find(el=>el.textContent.includes("查看发布说明"))?.dataset.url');
  assert.equal(notesLink,'https://github.com/Legender134/rift-buddy/releases/tag/v99.0.0');
  // 阶段 5：删除安装包回 idle
  await click('[data-action=app-update-delete]');

@@ -16,6 +16,17 @@ test('late or failed writes cannot confirm a newer session or supersede a newer 
  state.clear();assert.equal(state.has('second'),false);assert.equal(state.confirm(current),false);
  state.observe(draft({connected:false}));assert.equal(state.confirm(state.begin('offline')),false);
 });
+
+test('a checked shared write survives its own receipt while newer operations and context changes reject it',()=>{
+ const make=()=>{const state=createRuneApplicationState();state.observe(draft());return state;};
+ const state=make(),ticket=state.begin('mine');state.clear();state.confirm(state.begin('mine'));
+ assert.equal(state.confirm(ticket),false);assert.equal(state.confirmShared(ticket,12,12),true);assert.equal(state.has('mine'),true);
+ const newer=make(),old=newer.begin('old');newer.clear();assert.equal(newer.confirmShared(old,12,13),false);assert.equal(newer.has('old'),false);
+ for(const revision of [undefined,null,0,NaN])assert.equal(newer.confirmShared(old,revision,0),false);
+ for(const change of [s=>s.observe(draft({game:{gameId:1502}})),s=>{s.observe(draft({game:{gameId:1502}}));s.observe(draft());},s=>s.clear(true)]){
+  const changed=make(),prior=changed.begin('old');change(changed);assert.equal(changed.confirmShared(prior,20,20),false);assert.equal(changed.has('old'),false);
+ }
+});
 test('confirming the same hovered hero retains an already checked rune page but invalidates pending writes',()=>{
  for(const championPickIntent of [0,22]){
   const hover=draft({session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:22,assignedPosition:'bottom'}]}}),picked=draft({session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:22,championPickIntent,assignedPosition:'bottom'}]}});

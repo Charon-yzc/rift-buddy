@@ -76,6 +76,7 @@ pnpm start
 | 局内指引与窗口 | `electron/guide-window.cjs`、`src/guide.mjs` | `src/core/guide.mjs`、`src/core/purchase.mjs`、`src/core/guide-stage.mjs` |
 | 客户端与局内公开接口 | `services/lcu.mjs`、`services/live-client.mjs` | `services/client-helper.mjs`、`services/helper-launch.mjs` |
 | 本机连接进程 | `electron/client-helper-entry.mjs` | `electron/connection-launcher.cs` |
+| 组队房间自动连接 | `src/core/room-auto.mjs` | `services/lcu.mjs`、`electron/main.cjs`、`src/room-view.mjs`、`src/app.mjs` |
 | 设置、资料、图片缓存 | `services/storage.mjs`、`services/data.mjs` | `services/image-cache.mjs`、`services/build-cache.mjs` |
 
 渲染界面通过 preload 提供的有限 `buddy` API 调用主进程；不要直接向网页暴露 Node.js 或任意文件、网络、进程能力。推荐计算在 Worker 中执行，组合库变更要同时更新推荐与配置目录。客户端同步先过滤公开字段，再与用户手动安排的位置合并；本局配置按英雄、位置、模式及组合区分，避免切换搭档时误用专用配置。
@@ -150,6 +151,8 @@ GitHub Actions 在 Windows 中运行安装、开发 Electron 启动检查、回�
 局势建议另需检查：双方队伍可确认时，已展示装备变化能否触发、撤销对应建议；本次回城目标和自动建议开关是否保留；当前等级与技能点是否同步。不要把对手装备投入当成实测伤害来源或经济领先。只有一人的训练房间没有真实敌方装备样本，不能作为整套局势规则的实战验收。
 
 记录软件版本、客户端阶段和实际完成的项目即可；未完成的步骤保留为待验证。不要上传个人设置、完整接口响应、客户端凭据或带有玩家身份的截图。
+
+组队房间自动连接（0.50.0）另需两台 Windows 在同一预组队大厅（≥2 人、非自定义）实测，双方都开启“自动连接组队房间”：核对两面板显示同一个 6 位房间码并互相看到公开游戏 ID 与阵容；连接中点“离开房间”应立即断开（含正在连接时）；手动离开后本组队不再自动重连（重启助手后记忆清除）；换一个新组队后恢复；队伍解散约 30 秒后自动房间关闭；进入选人后连接保持；旧版本助手用复制的“地址+房间码+口令”手动加入成功；关闭“自动同步”后不再自动连接且已连房间立即关闭。若两机房间码不一致，用外部工具读取 `/lol-lobby/v2/lobby` 的 `partyId` 核对两机是否一致（助手按设计不展示、不记录该标识；大小写差异也会派生出不同房间码）。`partyId` 是否在成员间一致只能靠这项检查证伪，未完成时按未验证记录。
 
 ## 维护组合与版本资料
 
@@ -287,6 +290,8 @@ v0.10.5 的选人侧栏直接修改当前 preparation，装备路线、符文、
 先完成 `pnpm test`、`pnpm check`、`pnpm package` 和 `node scripts/inspect-package.mjs`。使用官方 NSIS 3.12 或更新版本，将 `RIFT_BUDDY_MAKENSIS` 指向 `makensis.exe`，再运行 `pnpm installer`。脚本生成 `release/installer-时间/RiftBuddy-版本-Setup.exe`，并在 `release/installer-latest.json` 记录路径和校验值，不会安装到本机。安装程序按当前用户创建快捷方式；卸载按固定文件清单删除程序，保留未列出的文件和用户资料。
 
 每次发布 Release 必须上传两个文件：`RiftBuddy-<版本>-Setup.exe` 与 `SHA256SUMS-<版本>.txt`（后者由 `pnpm installer` 从安装包 SHA-256 自动生成，单行 `<sha256><两空格><安装包文件名>`）。预发布（Pre-release）同样参与更新检查，取语义化版本号最大者；安装包缺失会报错，校验文件缺失则删除已下载的临时包并拒绝安装。失败不能绕过校验。使用与验证边界见[软件更新说明](app-update.md)。
+
+从 v0.51.0 起，每次公开安装包必须同步 [GitHub Releases](https://github.com/Legender134/rift-buddy/releases) 与 [Gitee 国内镜像](https://gitee.com/legender134/rift-buddy/releases)。两边使用同一个安装程序及版本，不能重新构建成不同字节。运行 `node scripts/package-gitee-mirror.mjs`，将经过校验的安装包切成低于 Gitee 单附件 100 MB 限制的分卷，同时生成合并脚本、SHA-256 和机器可读清单。先上传所有分卷、合并脚本和校验文本，最后上传 `Mirror.json` 清单；客户端只根据完整清单下载合并，不执行远端合并脚本。逐项下载核对后再把 README 标为已同步。镜像发布失败需记录明确状态，不能把已有仓库链接算作已上传；不得为腾出配额擅自删除历史安装包。
 
 对手条件计划在 `src/core/matchup-plans.mjs`，按公开英雄与用户选择附加到己方打法，不修改配置或推荐胜率。当前 16 位重点对手的条件整理基于 Riot 16.20 技能资料；版本变化继续显示并注明需复核。选人目标只保留本次会话，按英雄/位置/模式/组合隔离；对手消失后不展示，进入新局清空。局内沿已有公开重点对手控件选择；手动配合阶段也会切换己方条件任务。使用 `node scripts/smoke-package-matchups.mjs` 验证实际 ASAR 的侧栏、完整配置页和局内指引；状态、公开敌人和窗口贴边在隔离进程中模拟，绝不连接真实 LCU 或写符文。
 

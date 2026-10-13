@@ -1,15 +1,30 @@
 // Navigation shared by packaged smoke tests after the task-first draft redesign.
 // Return the current visible entry; never synthesize state or bypass a handler.
 async function revealDraftAction(js,selector){
- let target=selector;
+ let target=selector,openedComparison=false;
  const exists=sel=>js(`!!document.querySelector(${JSON.stringify(sel)})`);
  const click=sel=>js(`document.querySelector(${JSON.stringify(sel)}).click()`);
- if(/data-action=(recommend|reroll|combination-library|draft-filters)/.test(selector)){
-  if(!await exists('[data-action=recommend]')&&await exists('[data-action=task-compare]'))await click('[data-action=task-compare]');
-  if(/data-action=(recommend|reroll)/.test(selector))target=await exists('[data-action=recommend]')?'[data-action=recommend]':'[data-action=reroll]';
+ const advanced=/data-action=(role-pools|hero-pool|exclusions|reset-draft|example|refresh-pairs|style)(?:\]|\b)/.test(selector);
+ if(advanced||/data-action=(recommend|reroll|combination-library|draft-filters|draft-scope)/.test(selector)){
+  if(!await exists('[data-action=recommend],[data-action=reroll]')&&await exists('[data-action=task-compare]')){
+   await click('[data-action=task-compare]');
+   openedComparison=true;
+   for(let n=0;n<150&&!await exists('[data-action=recommend],[data-action=reroll]');n++)await new Promise(resolve=>setTimeout(resolve,100));
+   if(!await exists('[data-action=recommend],[data-action=reroll]'))throw Error('Draft comparison did not open');
+  }
+  if(/data-action=(recommend|reroll)/.test(selector)){
+   if(openedComparison){
+    const ready=()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false');
+    for(let n=0;n<150&&!await ready();n++)await new Promise(resolve=>setTimeout(resolve,100));
+    if(!await ready())throw Error('Initial draft comparison stayed pending');
+   }
+   target=await exists('[data-action=recommend]')?'[data-action=recommend]':'[data-action=reroll]';
+  }
  }
  if(selector==='[data-action=my-build]'&&!await exists(selector))target='[data-action=task-edit]';
- if(!await exists(target)&&/data-action=(role-pools|hero-pool|exclusions|reset-draft|example|refresh-pairs)|data-action=style/.test(selector)&&await exists('[data-action=draft-filters]'))await click('[data-action=draft-filters]');
+ if(!await exists(target)&&advanced&&await exists('[data-action=draft-filters]'))await click('[data-action=draft-filters]');
+ const filters='[role=dialog][aria-label="推荐偏好"]';
+ if(await js(`(()=>{const dialog=document.querySelector(${JSON.stringify(filters)}),el=document.querySelector(${JSON.stringify(target)});return !!dialog&&!!el&&!dialog.contains(el);})()`))await click(filters+' [data-action=close]');
  // Follow the same disclosure path available to a player before clicking.
  if(await exists(target))await js(`(()=>{const el=document.querySelector(${JSON.stringify(target)});for(let parent=el.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;})()`);
  return target;

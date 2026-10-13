@@ -61,7 +61,7 @@ export function recallPreparation(store,guide,context,{allowSavedCombo=false}={}
 // A write confirmation belongs to one public client context, not a future match.
 // It records a checked click; the user can still change the page in the client.
 export function createRuneApplicationState(){
- let context=null,revision=0,appliedKey='';
+ let context=null,revision=0,contextRevision=0,appliedKey='';
  const clientContext=client=>{
   if(!client?.connected)return null;
   const session=client.session,own=session?.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
@@ -72,14 +72,18 @@ export function createRuneApplicationState(){
    const next=clientContext(client);if(next===context)return false;
    const before=context&&JSON.parse(context),after=next&&JSON.parse(next);
    const confirmedIntent=before&&after&&before[4]===0&&before[5]>0&&after[4]===before[5]&&[0,before[5]].includes(after[5])&&[0,1,2,3,6].every(i=>before[i]===after[i]);
-   context=next;revision++;if(confirmedIntent)return false;
+   context=next;revision++;contextRevision++;if(confirmedIntent)return false;
    const had=!!appliedKey;appliedKey='';return had;
   },
   has(key){return !!key&&key===appliedKey;},
-  clear(){revision++;appliedKey='';},
-  begin(key){this.clear();return {revision,context,key};},
+  clear(contextChanged=false){revision++;if(contextChanged)contextRevision++;appliedKey='';},
+  begin(key){this.clear();return {revision,context,contextRevision,key};},
   isCurrent(ticket){return !!ticket?.key&&!!context&&ticket.revision===revision&&ticket.context===context;},
   confirm(ticket){if(!this.isCurrent(ticket))return false;appliedKey=ticket.key;return true;},
+  confirmShared(ticket,resultRevision,knownRevision){
+   if(!ticket?.key||!context||ticket.context!==context||ticket.contextRevision!==contextRevision||!Number.isSafeInteger(resultRevision)||!Number.isSafeInteger(knownRevision)||resultRevision<=0||resultRevision<knownRevision)return false;
+   revision++;appliedKey=ticket.key;return true;
+  },
  };
 }
 export function recommendationKey(input){

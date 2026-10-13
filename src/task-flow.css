@@ -22,3 +22,12 @@
 .companion-persistent .companion-roster-hero>.empty-portrait{display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;flex-shrink:0}
 
 .draft-list-heading>.draft-result-actions{display:flex;align-items:center;gap:10px;width:100%}.draft-list-heading>.draft-result-actions>span{margin-right:auto;font-size:12px;color:var(--muted)}
+
+/* Small windows keep configuration reachable; the receipt area scrolls independently. */
+.companion-persistent{flex:0 1 auto;max-height:42vh;overflow:auto;scrollbar-gutter:stable}
+.companion-content{min-height:min(150px,35vh)}
+@media(max-height:560px){.companion-persistent{max-height:40vh;padding-top:4px;padding-bottom:4px}.companion-persistent .preparation-identity{display:none}}
+
+/* Scoped layout overrides prevent legacy comparison headers from adding empty space. */
+.page[data-page=draft] .draft-compare-options.draft-scope{padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;gap:10px}
+.draft-compare-workspace>.draft-list-heading.recommend-heading{margin:0;padding:0;min-height:36px}

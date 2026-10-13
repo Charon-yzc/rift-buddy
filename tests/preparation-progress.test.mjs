@@ -45,3 +45,20 @@ test('successful steps survive a post-write save/sync warning',()=>{
  const key=clientPreparationKey(client,clientPreparationPlan(data,plan)),statuses=new Map([[key,{...record(),followUpError:'模拟后续保存失败'}]]),p=preparationProgress({data,plan,client,statuses});assert.equal(p.complete,true);assert.equal(p.failed.length,0);
  const html=preparationProgressView({data,plan,client,statuses,available:true});assert.match(html,/配置回执已保留/);assert.match(html,/模拟后续保存失败/);assert.equal((html.match(/data-step-status="done"/g)||[]).length,4);
 });
+
+test('failed hover remains actionable while the client still has no target hero',()=>{
+ const waiting={...client,session:{...client.session,myTeam:[{cellId:0,championId:0}],actions:[]}},key=clientPreparationKey(waiting,clientPreparationPlan(data,plan));
+ const statuses=new Map([[key,record('hover')]]),p=preparationProgress({data,plan,client:waiting,statuses});
+ assert.equal(p.complete,false);assert.deepEqual(p.failed,['hover']);
+ const html=preparationProgressView({data,plan,client:waiting,statuses,available:true});assert.match(html,/模拟失败 &lt;source&gt;/);assert.match(html,/重新执行整套/);
+ statuses.set(key,record());assert.equal(preparationProgress({data,plan,client:waiting,statuses}).complete,false,'Successful history cannot confirm a hero that is no longer selected');
+});
+
+test('preflight rejection survives a shared receipt before any champion is hovered',()=>{
+ const waiting={...client,session:{...client.session,myTeam:[{cellId:0,championId:0}],actions:[]}},key=clientPreparationKey(waiting,clientPreparationPlan(data,plan));
+ for(const receipt of [{message:'无法确认当前选人'}, {complete:false,message:'无法确认当前选人',preparationRevision:2}]){
+  const statuses=new Map([[key,structuredClone(receipt)]]),p=preparationProgress({data,plan,client:waiting,statuses});
+  assert.equal(p.complete,false);assert.deepEqual(p.failed,['hover']);assert.equal(p.status.steps.runes.status,'skipped');
+  const html=preparationProgressView({data,plan,client:waiting,statuses,available:true});assert.match(html,/无法确认当前选人/);assert.match(html,/重新执行整套/);assert.doesNotMatch(html,/data-step-status="done"/);
+ }
+});

@@ -201,27 +201,145 @@ async function boot(){
  // snapshots over LAN/VPN or their own trusted relay. Never logs credentials.
  const {createRoomService}=await import('../services/room.mjs');
  const {sanitizeNick}=await import('../src/core/room.mjs');
+ const {initialRelayUrl}=await import('../src/core/room-relay.mjs');
+ const {deriveAutoRoom,autoRoomNick,autoRoomDecision,decorateAutoRoom,LOBBY_PHASES,AUTO_RETRY_MS}=await import('../src/core/room-auto.mjs');
  let roomNickInUse='';
+ // Automatic party room (CHA-71): the lobby identifier the current auto room
+ // was derived from, plus the state needed to decide when to stop. Manual
+ // rooms never set roomAutoKey and are never touched by the poll below.
+ let roomAutoKey=null,roomAutoCode=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoCancelledKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve(),roomAutoRunning=false,roomAutoRequested=false;
+ const decorateRoom=snapshot=>decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});
+ // The sandboxed renderer never needs the lobby identifier or the identity
+ // used as the room nickname: only this process derives the room from them.
+ const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(party?{party:cleanParty}:{})};};
+ // Closing the auto room always clears the whole auto state, so a later
+ // re-enable starts clean instead of inheriting a stale failure or pin. The
+ // cancelled key lets an in-flight handshake tell a local close apart from a
+ // relay failure instead of reporting "已离开房间" as a connection error.
+ const closeAutoRoom=reason=>{
+  if(!roomAutoKey)return false;
+  roomAutoCancelledKey=roomAutoKey;
+  // A room the user created by hand inside the claim window is not ours to close.
+  const snapshot=roomService?.snapshot();
+  if(!snapshot||snapshot.mode==='idle'||snapshot.room===roomAutoCode)try{roomService?.leave();}catch{}
+  roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
+  diagnostic(`auto room left (${reason})`);
+  return true;
+ };
+ // Either switch (or an imported backup) can revoke the feature; the room has
+ // to go even when the poll that would notice is switched off.
+ const closeAutoRoomIfRevoked=()=>{
+  if(state.preferences.roomAuto===true&&state.preferences.autoSync!==false)return false;
+  const had=closeAutoRoom('preference'),hadError=!!roomAutoError;
+  roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
+  // The panel may still hold the previous snapshot; the promise it shows
+  // ("稍后会自动重试") is void once the switch is off.
+  if(had||hadError)publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[],transport:'relay'}));
+  return true;
+ };
  const ensureRoom=wanted=>{
   const clean=sanitizeNick(wanted)||sanitizeNick(state.preferences.roomNick)||'队友';
   if(roomService&&roomNickInUse===clean)return roomService;
   if(roomService){if(roomService.snapshot().mode!=='idle')throw Error('请先离开房间再修改昵称');roomService.dispose();roomService=null;}
   roomNickInUse=clean;
-  roomService=createRoomService({nick:clean,onUpdate:snapshot=>publishWindows('room-update',snapshot),diagnostic});
+  roomService=createRoomService({nick:clean,onUpdate:snapshot=>publishWindows('room-update',decorateRoom(snapshot)),diagnostic});
   return roomService;
  };
- guard('room-status',()=>roomService?roomService.snapshot():null);
- guard('room-host',nick=>ensureRoom(nick).host());
- guard('room-join',(target,nick)=>ensureRoom(nick).join(target||{}));
- guard('room-relay',(target,nick)=>ensureRoom(nick).relay(target||{}));
- guard('room-leave',()=>{if(!roomService)return null;roomService.leave();return roomService.snapshot();});
- guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return roomService.publish(share);});
+ guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):(roomAutoError?decorateAutoRoom({mode:'idle',members:[],transport:'relay'},{error:roomAutoError,retryAt:roomAutoFailedUntil||null}):null));
+ guard('room-host',async nick=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).host());});
+ guard('room-join',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).join(target||{}));});
+ guard('room-relay',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).relay(target||{}));});
+ guard('room-leave',()=>{
+  // Leaving by hand must not be undone by the next poll: remember the party
+  // this auto room came from until the lobby identifier changes.
+  if(roomAutoKey){roomAutoBlockedKey=roomAutoKey;closeAutoRoom('manual');}
+  else if(roomService){roomService.leave();roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
+  return roomService?decorateRoom(roomService.snapshot()):null;
+ });
+ guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return decorateRoom(roomService.publish(share));});
  guard('room-scan',()=>ensureRoom(state.preferences.roomNick).scan());
  guard('room-addresses',()=>{const list=[];for(const [name,items] of Object.entries(os.networkInterfaces()))for(const item of items||[])if(item.family==='IPv4'&&!item.internal)list.push({name,address:item.address});return list;});
+ // Runs after each client poll, never inside it: a relay handshake can take
+ // seconds and must not delay client-status answers. Only the two stopwatches
+ // and the decision table decide; this effect never throws into the poll.
+ const observeRoomAuto=client=>{
+  // Automatic client observation is what makes an automatic room possible:
+  // with sync off there is nothing to follow, so the switch is off too.
+  const enabled=state.preferences?.roomAuto===true&&state.preferences?.autoSync!==false;
+  if(!enabled){roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
+  const inWindow=!!client?.connected&&LOBBY_PHASES.includes(client.phase);
+  if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=2&&client.party?.key)roomAutoGoneSince=null;
+  else if(inWindow)roomAutoGoneSince=roomAutoGoneSince??Date.now();
+  else roomAutoGoneSince=null;
+  // "标识变化即解除": seeing a different party lifts a manual-leave block.
+  if(roomAutoBlockedKey&&client?.party?.key&&client.party.key!==roomAutoBlockedKey)roomAutoBlockedKey=null;
+  if(client?.connected)roomAutoOfflineSince=null;else roomAutoOfflineSince=roomAutoOfflineSince??Date.now();
+  const now=Date.now();
+  return autoRoomDecision({enabled,connected:!!client?.connected,phase:client?.phase||'',
+   lobbyKey:client?.party?.key||null,lobbyCount:Number.isFinite(client?.party?.lobbyCount)?client.party.lobbyCount:null,
+   activeAutoKey:roomAutoKey,manualRoomActive:!!(roomService&&roomService.snapshot().mode!=='idle'&&!roomAutoKey),
+   blockedKey:roomAutoBlockedKey,failedKey:roomAutoFailedKey,failedRetryAt:roomAutoFailedUntil,
+   partyGoneForMs:roomAutoGoneSince===null?null:now-roomAutoGoneSince,
+   offlineForMs:roomAutoOfflineSince===null?null:now-roomAutoOfflineSince,now});
+ };
+ const roomAutoStep=async client=>{
+  if(roomAutoKey&&roomService&&roomService.snapshot().mode==='idle'){roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;}
+  const decision=observeRoomAuto(client);
+  if(decision.action==='hold')return;
+  if(decision.action==='leave'){closeAutoRoom(decision.reason);return;}
+  const key=decision.key;
+  if(decision.action==='switch'){try{roomService?.leave();}catch{}roomAutoCode=null;roomAutoPin=null;}
+  // Claim the key before the (async) derivation so a manual leave or a
+  // preference change during it still records the block and aborts this try.
+  roomAutoCancelledKey=null;roomAutoKey=key;
+  let derived=null;
+  try{derived=await deriveAutoRoom(key);}catch{}
+  // A manual leave or a preference change during the derivation releases the
+  // claim; a failure the player caused is not a failure to report.
+  if(roomAutoKey!==key)return;
+  if(!derived){
+   roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
+   publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[],transport:'relay'}));
+   diagnostic('auto room derive failed');
+   return;
+  }
+  // A room the user joined by hand while this step was deriving wins.
+  if(roomService&&roomService.snapshot().mode!=='idle'){roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;diagnostic('auto room yielded to a manual room');return;}
+  roomAutoError='';roomAutoCode=derived.code;roomAutoPin=derived.pin;
+  try{
+   await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
+   // Revocation already closed this attempt. A later manual room owns the service.
+   if(roomAutoKey!==key)return;
+   roomAutoFailedKey=null;roomAutoFailedUntil=0;
+   diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
+  }catch(error){
+   if(roomAutoKey!==key)return;
+   roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;
+   // A manual leave, a preference change or a replacement room explains the
+   // failure by itself: only a real relay problem earns a retry and a notice.
+   if(roomAutoBlockedKey!==key&&roomAutoCancelledKey!==key){
+    roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;
+    roomAutoError=error?.message||'自动连接失败';
+    // The service already emitted its idle snapshot before this error
+    // existed; the panel needs the decorated one to show why nothing came up.
+    publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[],transport:'relay'}));
+   }
+   diagnostic(`auto room join failed: ${error?.message||'unknown'}`);
+  }
+ };
+ const queueRoomAuto=()=>{
+  // Observe revocation immediately, even while a slow relay is handshaking.
+  const decision=observeRoomAuto(latestClient);
+  if(decision.action==='leave'||decision.action==='switch')closeAutoRoom(decision.reason);
+  roomAutoRequested=true;if(roomAutoRunning)return roomAutoTask;
+  roomAutoRunning=true;
+  roomAutoTask=(async()=>{try{while(roomAutoRequested){roomAutoRequested=false;await roomAutoStep(latestClient);}}catch(error){diagnostic(`auto room step failed: ${error?.message||'unknown'}`);}finally{roomAutoRunning=false;}})();
+  return roomAutoTask;
+ };
  guard('presentation',setPresentation);
- guard('bootstrap',({surface})=>({data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:latestClient,windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}),true);
+ guard('bootstrap',({surface})=>({data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}),true);
  const {windowInfo}=await import('../services/window-info.mjs');
- guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:latestClient,companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
+ guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:forRenderer(latestClient),companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
  guard('companion-mode',(value,{surface})=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');const operation=companion.setMode(value);return {...companion.layout(surface),opened:value?operation.docked:undefined,reason:operation.reason};},true);
  guard('open-main-page',destination=>{
   if(!destination||!['settings','reference'].includes(destination.route)||destination.route==='reference'&&(!data.champions.some(c=>c.id===destination.id)||!['skills','changes'].includes(destination.tab)))throw Error('页面不正确');
@@ -265,7 +383,11 @@ async function boot(){
    const accepted=reconcileClientDraft(current.draft,gameId,current.guide?.match?.gameId).draft;
    if(latestClient.connected&&latestClient.phase==='ChampSelect'&&merged.draft)for(const player of latestClient.session?.myTeam||[]){const id=data.champions.find(c=>c.key===Number(player.championId))?.id;if(id&&accepted?.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id)&&!merged.draft.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id&&s.locked))throw Error('客户端已选英雄不能移除或解锁，请同步后调整位置。');}
    return merged;
-  },sender);guide.publish();companion.sync();return {state,revision:stateRevision};
+  },sender);
+   // Turning the switch (or client sync) off must not leave a room behind:
+   // with sync off no poll will run to notice the new preference.
+   closeAutoRoomIfRevoked();
+   guide.publish();companion.sync();return {state,revision:stateRevision};
  },true);
  const {createClientSync}=await import('../src/core/async-tasks.mjs');
  const status=createClientSync(async(force=false)=>{
@@ -284,7 +406,7 @@ async function boot(){
    companion.sync();
    if(inGame()&&!['GameStart','InProgress','Reconnect'].includes(previousPhase)){mainExplicitInGame=false;if(win){win.hide();mainRelease.request(win);}}
    else if(!inGame()){mainExplicitInGame=false;mainRelease.cancel();if(!win)createWindow({automatic:true});}
-   publishWindows('client-update',latestClient);return latestClient;})().finally(()=>statusTask=null);
+   queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
  const pollLive=async(force=false)=>{
@@ -293,8 +415,8 @@ async function boot(){
   const context=JSON.stringify([latestClient.phase,latestClient.game?.gameId]);
   liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,latestClient.game?.gameId])){latestLive=result;await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
  };
- guard('client-status',status);
- guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return status(true);});
+ guard('client-status',async force=>forRenderer(await status(force)));
+ guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return forRenderer(await status(true));});
  guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
  guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
  guard('refresh-rankings',source=>refreshRankings(source));
@@ -437,10 +559,10 @@ async function boot(){
  guard('toggle-pin',({window})=>{window.setAlwaysOnTop(!window.isAlwaysOnTop());return window.isAlwaysOnTop();},true);
  guard('choose-directory',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择英雄联盟安装目录',properties:['openDirectory']});return result.canceled?null:result.filePaths[0];});
  guard('open-link',async url=>{
-  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com'];
+  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com','gitee.com'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
   if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');
-  if(parsed.hostname==='github.com'&&!isReleaseNotesUrl(url)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
+  if(['github.com','gitee.com'].includes(parsed.hostname)&&!isReleaseNotesUrl(url)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
  });
  guard('export-preparation',async value=>{
   const {preparationFileText}=await import('../src/core/preparation-file.mjs'),text=preparationFileText(value);
@@ -456,7 +578,7 @@ async function boot(){
   await fs.writeFile(result.filePath,storage.createBackup(state),'utf8');return true;});
  guard('import-state',async()=>{const result=await dialog.showOpenDialog(win,{title:'导入收藏与偏好',properties:['openFile'],filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return null;
   const incoming=await storage.readBackup(result.filePaths[0]);
-  await saveCurrentState(current=>storage.mergeState(current,incoming,data.champions));publishWindows('presentation-update',state.preferences.presentation);guide.publish();companion.sync();return state;
+  await saveCurrentState(current=>storage.mergeState(current,incoming,data.champions));closeAutoRoomIfRevoked();publishWindows('presentation-update',state.preferences.presentation);guide.publish();companion.sync();return state;
  });
  Menu.setApplicationMenu(null);createWindow();
  try{tray=new Tray(nativeImage.createFromPath(path.join(root,'assets/icon.png')));tray.setToolTip('开黑搭子');tray.setContextMenu(Menu.buildFromTemplate([{label:'打开开黑搭子',click:showMainWindow},{label:'本局指引',click:()=>prepareCurrentGuide().then(()=>guide.show()).catch(()=>guide.show())},{label:'找回指引到当前屏幕',click:()=>prepareCurrentGuide().then(()=>guide.recover()).catch(()=>guide.recover().catch(()=>{}))},{label:'切换指引交互 / 鼠标穿透',click:()=>guide.interact().catch(()=>{})},{label:'退出',click:()=>{quitting=true;app.quit();}}]));tray.on('double-click',showMainWindow);}catch{}

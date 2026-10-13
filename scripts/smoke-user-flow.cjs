@@ -78,8 +78,13 @@ async function run(){
  await until(()=>js('document.querySelector(".rune-target-warning")?.textContent.includes("盖伦")'),'Own champion mismatch warning missing');
  assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/萨勒芬妮.*替换符文/);
  assert.match(await js('document.querySelector(".rune-target-warning").textContent'),/你自己的客户端/);
+ assert.equal(await js('document.querySelector("[data-action=open-guide]").disabled'),true,'Teammate configuration must not replace my guide');
  // Changing the arranged partner must not leak a former combo's private build.
- await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');
+ // Return to manual planning and explicitly choose our own bottom role first.
+ await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'None',message:'测试手动配置'}));
+ await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Manual planning sync missing');
+ await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');await click('[data-action=close]');
+ await js('{const role=document.querySelector("#solo-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');
  const pick=async(role,id)=>{if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
  await pick('bottom','Rengar');await pick('support','Ivern');await click('.slot-config[data-action=build][data-role=bottom]');
  await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Rengar Ivern private build missing');
