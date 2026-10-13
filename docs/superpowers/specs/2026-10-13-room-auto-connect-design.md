@@ -85,8 +85,9 @@
 - **开关语义**：`roomAuto===true` 且“自动同步”未关闭才算开启；关闭任一开关都会收束已连接的自动房间（在偏好保存时执行，不依赖轮询）。
 - **手动离开**：`guard('room-leave')` 记录 `blockedKey = 当前自动 key`，清空自动状态；同一组队不再自动连，标识变化即解除（该记忆只在本进程内，见 §5.7）。
 - **失败退避**：`join`/`switch` 抛错时记 `{key, retryAt: now+AUTO_RETRY_MS}`，只写诊断；同一 key 到期再试一次，
-  key 变化立即重试。房间服务自身的 3 次握手尝试与 8 次重连断路器继续生效，不额外加循环。
-- **切换**：`switch` 先 `leave()` 再按新标识 `join`。
+  key 变化立即重试。本地收束（手动离开、关开关、关“自动同步”）不算失败：`closeAutoRoom` 记下 `roomAutoCancelledKey`，
+  握手中的拒绝只写诊断，不写退避与错误提示。房间服务自身的 3 次握手尝试与 8 次重连断路器继续生效，不额外加循环。
+- **切换**：`switch` 先 `leave()` 再按新标识 `join`；派生前先认领新 key，派生后复查它是否仍属于本次尝试。
 
 ## 5. 诚实边界与未验证项（必须呈现）
 
@@ -101,7 +102,7 @@
 6. 读取不到组队标识（部分队列或接口差异）时不自动连接，也不弹错打扰；说明文档写明可继续手动加入。
    这一路径静默 `hold`：不做界面提示，也不写诊断（避免一次读取抖动就闪警告或刷日志）。
 7. 手动离开的记忆只在本进程内：重启助手后同一组队会再次自动连接；说明文档写明这一点。
-8. 昵称回落的撞名风险：本机读不到公开游戏 ID（身份隐藏或接口不提供）且两名队友使用同一“我的昵称”时，中继按昵称判重会拒绝其中一人（4003）；说明文档写明各自设置不同昵称或手动加入。
+8. 昵称回落的撞名风险：接口没有提供公开游戏 ID（本机身份隐藏时不产生组队标识，因此不会自动连接）且两名队友使用同一“我的昵称”时，中继按昵称判重会拒绝其中一人（4003）；说明文档写明各自设置不同昵称或手动加入。
 
 ## 6. 模块设计
 
@@ -135,7 +136,7 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
 
 ### 6.3 `electron/main.cjs`
 
-- 模块状态：`roomAutoKey`、`roomAutoPin`、`roomAutoBlockedKey`、`roomAutoFailedKey`、`roomAutoFailedAt`、
+- 模块状态：`roomAutoKey`、`roomAutoPin`、`roomAutoBlockedKey`、`roomAutoCancelledKey`、`roomAutoFailedKey`、`roomAutoFailedUntil`、
   `roomAutoError`、`roomAutoGoneSince`、`roomAutoOfflineSince`。
 - `decorateRoom(snapshot)`：调用 `decorateAutoRoom(snapshot,{auto: roomAutoKey && snapshot.mode!=='idle', pin: roomAutoPin, error: roomAutoError, retryAt: roomAutoRetryAt})`；
   应用到 `room-update` 推送与全部 room guards 的返回值（`status/host/join/relay/leave/publish`）。
@@ -145,8 +146,11 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
   - `join`/`switch`：`switch` 先 `roomService.leave()`；随后
     `ensureRoom(autoRoomNick({identity:client.own,savedNick:state.preferences.roomNick})).relay({url: initialRelayUrl(state.preferences.relayUrl), room, pin})`；
     成功后记 `roomAutoKey/roomAutoPin`，诊断写原因与派生房间码（**不写昵称，也不写 partyId**）。
+    在异步派生之前先认领 key（`roomAutoKey=key`、清 `roomAutoCancelledKey`）；派生完成后复查 `roomAutoKey===key` 才继续握手。
   - `leave`：`closeAutoRoom(reason)`——仅当 `roomAutoKey` 存在时 `roomService.leave()`，并清空自动状态与失败退避。
-  - 失败：记失败退避 + `roomAutoError`（中文原因）+ 诊断；**绝不向 `status()` 外抛错**。
+  - 失败：只有 `blockedKey` 与 `cancelledKey` 都不等于该 key 时才记失败退避 + `roomAutoError`（中文原因）+ 诊断；
+    **绝不向 `status()` 外抛错**。
+  - 偏好收束：`closeAutoRoomIfRevoked()` 在 `save-state` 与 `import-state` 之后调用，覆盖没有轮询的场合。
 - 若房间服务报告 idle 而 `roomAutoKey` 仍在（例如中继失败后 teardown），清理 `roomAutoKey`（保留失败退避）。
 - `guard('room-leave')`：若离开的是自动房间，先记 `roomAutoBlockedKey = roomAutoKey` 再离开。
 - 保持现有约束：不记录 LCU 凭据；符文写入、客户端写入仍需用户明确点击；自动房间不自动采用队友方案。
@@ -178,7 +182,9 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
   `中继 <url>｜房间 <code>｜口令 <pin>`；脚注 `口令由大厅共享标识派生，只用于同队汇合，不是强认证。旧版队友或派生不一致时可粘贴加入。`
 - 安静提示（连上 30 秒且成员只有自己）：`暂时没看到队友：可以把上面的房间码和口令发给队友手动加入，或让队友确认也开启了自动连接。`
 - 复制 toast：`地址、房间码和口令已复制；可直接发给队友手动加入`
-- 自动连接失败（idle 视图）：`上次自动连接失败：<原因>；稍后会自动重试，换一个组队也会重试。`
+- 自动连接失败（idle 视图，且开关与“自动同步”都开启时才显示）：`上次自动连接失败：<原因>；稍后会自动重试，换一个组队也会重试。`
+- “自动同步”关闭时的补充行（开关仍勾选）：`当前“自动同步”已关闭：自动连接不会触发，已连接的自动房间也会关闭。`
+- 自动房间连接失败（`link==='failed'`）时替换通用建议：`连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连（重启助手后会重新尝试）。`
 
 ## 8. 测试计划
 
@@ -202,8 +208,9 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
   idle 补 `autoError/autoRetryAt` 且不改其他字段。
 - 扩展 `tests/room-wiring.test.mjs`（静态断言风格）：`main.cjs` 的 `room-update` 推送与六个 room guards 返回值都经 `decorateAutoRoom`；
   `client-update`/`client-status`/`authorize-client`/`bootstrap`/`window-info` 的客户端快照都经 `forRenderer` 剥除 `party.key`/`own`；
-  手动离开走 `closeAutoRoom('manual')`；偏好关闭或关闭“自动同步”走 `closeAutoRoom('preference')`；轮询喂给自动步骤时读取最新快照；
-  渲染层用 `noteRoomSnapshot` 同时处理实时更新与窗口重建后的启动快照。
+  手动离开走 `closeAutoRoom('manual')`；偏好关闭或关闭“自动同步”走 `closeAutoRoomIfRevoked()`（`save-state` 与 `import-state` 各一处）；
+  本地收束用 `roomAutoCancelledKey` 与 `blockedKey` 一起豁免失败记录；轮询喂给自动步骤时读取最新快照；
+  渲染层用 `applyRoomSnapshot` 同时处理实时更新与窗口重建后的启动快照，并在房间标识变化时清空分享签名强制重发。
 - 门禁：`pnpm test` → `pnpm check` → `pnpm package` + `node scripts/inspect-package.mjs --verify-current` +
   `node scripts/smoke-package-lifecycle.mjs`。不新增房间烟测脚本（决策为纯函数，房间层已有 fake-WebSocket 覆盖）。
 
@@ -215,7 +222,8 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
 2. 手动点“离开房间”后，本组队内不再自动重连；换一个新组队（新 partyId）后恢复自动连接。
 3. 队伍解散/人数降到 1 后约 30 秒，自动房间关闭；进入选人后连接保持不断。
 4. 旧版本助手（或另一台未开启开关的机器）用面板复制的“地址+房间码+口令”手动加入成功。
-5. 关闭“自动同步”后不再自动连接。
+5. 关闭“自动同步”后不再自动连接；客户端在线时，关闭任一开关都会立即断开自动房间（不依赖轮询）。
+6. 记录两机读到的组队标识是否一致（大小写差异会派生出不同房间码）；两机房间码不一致时先核对这一项。
 
 记录软件版本、客户端阶段与实际完成项；未完成项保留为待验证，不上传个人设置或带玩家身份的截图。
 

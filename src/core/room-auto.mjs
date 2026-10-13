@@ -70,7 +70,9 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,ac
  // drop a healthy room on a read that simply did not carry a key.
  if(!key)return {action:'hold',reason:'no-key'};
  if(blockedKey===key)return {action:'hold',key,reason:'blocked'};
- if(failedKey===key&&Number.isFinite(failedRetryAt)&&Number.isFinite(now)&&now<failedRetryAt)return {action:'hold',key,reason:'retrying'};
+ // A caller that cannot say what time it is must not skip a backoff it may
+ // still be inside: treat an unknown clock as "not yet expired".
+ if(failedKey===key&&Number.isFinite(failedRetryAt)&&(!Number.isFinite(now)||now<failedRetryAt))return {action:'hold',key,reason:'retrying'};
  if(activeAutoKey===key)return {action:'hold',key,reason:'connected'};
  if(activeAutoKey)return {action:'switch',key,reason:'switch'};
  return {action:'join',key,reason:'join'};

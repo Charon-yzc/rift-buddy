@@ -1,5 +1,10 @@
 # 组队房间自动连接（CHA-71）Implementation Plan
 
+> **执行说明（2026-10-13 补充）：** 本文件是首次执行时的计划快照。第一、二轮独立评审后，
+> 撤回开关的语义、`forRenderer` 剥除、`closeAutoRoom`/`closeAutoRoomIfRevoked`、快照重发、
+> 决策表 `no-key` 分支与 `now` 缺省语义等已按 `docs/superpowers/specs/2026-10-13-room-auto-connect-design.md`
+> 更新；两者冲突时以规格与代码为准（例如本计划里的 `queueRoomAuto(latestClient)` 现已改为执行时读取最新快照）。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 用户明确开启后，进入 ≥2 名开黑成员的英雄联盟预组队大厅时，每位队友的助手用大厅共享标识派生 6 位房间码与口令，零输入汇入同一个中继房间，房间昵称用公开游戏 ID。

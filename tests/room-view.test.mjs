@@ -227,6 +227,9 @@ test('the automatic party room shows its derived code, pin and honest fallbacks'
  assert.doesNotMatch(failed,/<b>/);
  const revoked=roomPanel({room:null,transport:'relay',autoEnabled:false,autoError:'中继没有回应',champ});
  assert.doesNotMatch(revoked,/上次自动连接失败/,'a revoked switch must not promise a retry');
+ const unsynced=roomPanel({room:null,transport:'relay',autoEnabled:true,autoSync:false,autoError:'中继没有回应',champ});
+ assert.doesNotMatch(unsynced,/上次自动连接失败/,'no poll runs with sync off, so nothing will retry');
+ assert.match(unsynced,/当前“自动同步”已关闭：自动连接不会触发，已连接的自动房间也会关闭。/);
  assert.ok(idle.indexOf('id="room-auto"')<idle.indexOf('id="room-relay-room"'),'the switch must come before the fields its note points at');
 });
 
@@ -245,5 +248,5 @@ test('an automatic relay room copies the derived pin and admits when nobody else
  const manual=roomPanel({room:snapshot({mode:'client',transport:'relay',link:'connected',relayUrl:'wss://room.example.com',members:[{nick:'我',online:true,share:null,self:true}]}),nick:'我',champ,autoQuiet:true});
  assert.doesNotMatch(manual,/暂时没看到队友/);
  const failedLink=roomPanel({room:snapshot({mode:'client',transport:'relay',link:'failed',relayUrl:'wss://room.example.com',auto:true,pin:'654321',members:[{nick:'我',online:true,share:null,self:true}]}),nick:'我',champ});
- assert.match(failedLink,/连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连。/);
+ assert.match(failedLink,/连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连（重启助手后会重新尝试）。/);
 });

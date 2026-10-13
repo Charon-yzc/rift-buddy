@@ -179,19 +179,28 @@ async function boot(){
  // Automatic party room (CHA-71): the lobby identifier the current auto room
  // was derived from, plus the state needed to decide when to stop. Manual
  // rooms never set roomAutoKey and are never touched by the poll below.
- let roomAutoKey=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve();
+ let roomAutoKey=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoCancelledKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve();
  const decorateRoom=snapshot=>decorateAutoRoom(snapshot,{auto:!!roomAutoKey,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});
- // The sandboxed renderer never needs the lobby identifier or the raw game
- // id: only this process derives the room from them, so they are stripped
- // from everything sent back across the IPC boundary.
- const forRenderer=client=>{if(!client)return client;const {own,...rest}=client,{key,...party}=client.party||{};return {...rest,party};};
+ // The sandboxed renderer never needs the lobby identifier or the identity
+ // used as the room nickname: only this process derives the room from them.
+ const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(party?{party:cleanParty}:{})};};
  // Closing the auto room always clears the whole auto state, so a later
- // re-enable starts clean instead of inheriting a stale failure or pin.
+ // re-enable starts clean instead of inheriting a stale failure or pin. The
+ // cancelled key lets an in-flight handshake tell a local close apart from a
+ // relay failure instead of reporting "已离开房间" as a connection error.
  const closeAutoRoom=reason=>{
   if(!roomAutoKey)return false;
+  roomAutoCancelledKey=roomAutoKey;
   try{roomService?.leave();}catch{}
   roomAutoKey=null;roomAutoPin=null;roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
   diagnostic(`auto room left (${reason})`);
+  return true;
+ };
+ // Either switch (or an imported backup) can revoke the feature; the room has
+ // to go even when the poll that would notice is switched off.
+ const closeAutoRoomIfRevoked=()=>{
+  if(state.preferences.roomAuto===true&&state.preferences.autoSync!==false)return false;
+  closeAutoRoom('preference');roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
   return true;
  };
  const ensureRoom=wanted=>{
@@ -202,7 +211,7 @@ async function boot(){
   roomService=createRoomService({nick:clean,onUpdate:snapshot=>{if(win&&!win.isDestroyed())win.webContents.send('room-update',decorateRoom(snapshot));},diagnostic});
   return roomService;
  };
- guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):null);
+ guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):(roomAutoError?decorateAutoRoom({mode:'idle',members:[]},{error:roomAutoError,retryAt:roomAutoFailedUntil||null}):null));
  guard('room-host',async nick=>decorateRoom(await ensureRoom(nick).host()));
  guard('room-join',async(target,nick)=>decorateRoom(await ensureRoom(nick).join(target||{})));
  guard('room-relay',async(target,nick)=>decorateRoom(await ensureRoom(nick).relay(target||{})));
@@ -241,24 +250,29 @@ async function boot(){
   if(decision.action==='hold')return;
   if(decision.action==='leave'){closeAutoRoom(decision.reason);return;}
   const key=decision.key;
-  if(decision.action==='switch'){try{roomService?.leave();}catch{}roomAutoKey=null;roomAutoPin=null;}
+  if(decision.action==='switch'){try{roomService?.leave();}catch{}roomAutoPin=null;}
+  // Claim the key before the (async) derivation so a manual leave or a
+  // preference change during it still records the block and aborts this try.
+  roomAutoCancelledKey=null;roomAutoKey=key;
   let derived=null;
   try{derived=await deriveAutoRoom(key);}catch{}
   if(!derived){
-   roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
+   roomAutoKey=null;roomAutoPin=null;roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
    if(roomService&&win&&!win.isDestroyed())win.webContents.send('room-update',decorateRoom(roomService.snapshot()));
    diagnostic('auto room derive failed');
    return;
   }
-  roomAutoError='';roomAutoKey=key;roomAutoPin=derived.pin;
+  if(roomAutoKey!==key)return; // released while deriving: nothing to join
+  roomAutoError='';roomAutoPin=derived.pin;
   try{
    await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
    roomAutoFailedKey=null;roomAutoFailedUntil=0;
    diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
   }catch(error){
    roomAutoKey=null;roomAutoPin=null;
-   // A manual leave or a replacement room already explains the failure.
-   if(roomAutoBlockedKey!==key){
+   // A manual leave, a preference change or a replacement room explains the
+   // failure by itself: only a real relay problem earns a retry and a notice.
+   if(roomAutoBlockedKey!==key&&roomAutoCancelledKey!==key){
     roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;
     roomAutoError=error?.message||'自动连接失败';
     // The service already emitted its idle snapshot before this error
@@ -314,7 +328,7 @@ async function boot(){
   });
    // Turning the switch (or client sync) off must not leave a room behind:
    // with sync off no poll will run to notice the new preference.
-   if(roomAutoKey&&(state.preferences.roomAuto!==true||state.preferences.autoSync===false))closeAutoRoom('preference');
+   closeAutoRoomIfRevoked();
    guide.publish();companion.sync();return true;
  });
  const {createClientSync}=await import('../src/core/async-tasks.mjs');
@@ -488,7 +502,7 @@ async function boot(){
   await fs.writeFile(result.filePath,storage.createBackup(state),'utf8');return true;});
  guard('import-state',async()=>{const result=await dialog.showOpenDialog(win,{title:'导入收藏与偏好',properties:['openFile'],filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return null;
   const incoming=await storage.readBackup(result.filePaths[0]);
-  await saveCurrentState(current=>storage.mergeState(current,incoming,data.champions));win?.webContents.send('presentation-update',state.preferences.presentation);guide.publish();companion.sync();return state;
+  await saveCurrentState(current=>storage.mergeState(current,incoming,data.champions));closeAutoRoomIfRevoked();win?.webContents.send('presentation-update',state.preferences.presentation);guide.publish();companion.sync();return state;
  });
  Menu.setApplicationMenu(null);createWindow();
  try{tray=new Tray(nativeImage.createFromPath(path.join(root,'assets/icon.png')));tray.setToolTip('开黑搭子');tray.setContextMenu(Menu.buildFromTemplate([{label:'打开开黑搭子',click:showMainWindow},{label:'本局指引',click:()=>prepareCurrentGuide().then(()=>guide.show()).catch(()=>guide.show())},{label:'找回指引到当前屏幕',click:()=>prepareCurrentGuide().then(()=>guide.recover()).catch(()=>guide.recover().catch(()=>{}))},{label:'切换指引交互 / 鼠标穿透',click:()=>guide.interact().catch(()=>{})},{label:'退出',click:()=>{quitting=true;app.quit();}}]));tray.on('double-click',showMainWindow);}catch{}

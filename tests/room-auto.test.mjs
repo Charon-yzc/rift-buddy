@@ -95,6 +95,7 @@ test('the decision table keeps the manual room and the blocked key safe',()=>{
  assert.equal(autoRoomDecision({...base,activeAutoKey:KEY,blockedKey:KEY}).reason,'blocked');
  assert.equal(autoRoomDecision({...base,failedKey:'other-key-123',failedRetryAt:9999}).action,'join');
  assert.equal(autoRoomDecision({...base,failedKey:KEY,failedRetryAt:1000,now:1000}).action,'join');
+ assert.equal(autoRoomDecision({...base,failedKey:KEY,failedRetryAt:9999,now:undefined}).reason,'retrying','an unknown clock must not skip a live backoff');
  // Evidence without a usable identifier never drops a healthy room.
  assert.equal(autoRoomDecision({...base,lobbyKey:null,activeAutoKey:KEY,partyGoneForMs:AUTO_PARTY_GONE_MS}).reason,'no-key');
 });
