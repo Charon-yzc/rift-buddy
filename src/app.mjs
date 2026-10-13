@@ -1024,12 +1024,12 @@ document.addEventListener('click',async event=>{
  }
  if(action==='active-hero-prepare'){
   if(!activeCreativePlan?.members.some(m=>m.champion===el.dataset.id&&m.role===el.dataset.role))throw Error('组合已变化，请重新选择');
-  companionPreview={id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(creativeMemberCombo(activeCreativePlan,el.dataset.id,el.dataset.role))};companionTab='plan';closeOverlay();render();if(memberHeroAction(el.dataset.id,el.dataset.role).prepare)await useClientPreparation({dataset:{preparationView:'companion'}},true);return;
+  companionPreview={id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(creativeMemberCombo(activeCreativePlan,el.dataset.id,el.dataset.role)),readOnly:!taskOwnRole()||taskOwnRole()!==el.dataset.role};companionTab='plan';closeOverlay();render();if(memberHeroAction(el.dataset.id,el.dataset.role).prepare)await useClientPreparation({dataset:{preparationView:'companion'}},true);return;
  }
  if(action==='companion-roster-plan'){
   if(!slots.some(s=>s.role===el.dataset.role&&s.champion===el.dataset.id))throw Error('阵容已变化，请重新选择');
   const combo=currentCombo(slots,el.dataset.id,el.dataset.role,data.catalogInfo?.status,null,activeCreativePlan);
-  companionPreview={id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(combo)};companionTab='plan';closeOverlay();render();
+  companionPreview={id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(combo),readOnly:!taskOwnRole()||taskOwnRole()!==el.dataset.role};companionTab='plan';closeOverlay();render();
   if(memberHeroAction(el.dataset.id,el.dataset.role).prepare)await useClientPreparation({dataset:{preparationView:'companion'}},true);return;
  }
  if(action==='player-flow-settings'){closeOverlay();overlay.innerHTML=playerFlowSettings(saved.preferences,windowLayout);return;}
