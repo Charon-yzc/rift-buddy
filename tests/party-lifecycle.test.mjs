@@ -42,3 +42,13 @@ test('the lobby key and own public name appear only while the pre-match evidence
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:1000+120001});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'stale evidence must not derive a room');
 });
+test('a hidden local identity or a clock step backwards cannot expose a key',async()=>{
+ const f=fixture();
+ f.set({lobby:{localMember:{...identity(11),nameVisibilityType:'HIDDEN'},members:[identity(11),identity(22)],partyId:'party-3ee56b17'}});
+ const hidden=await clientSnapshot('',f.mock);
+ assert.equal(hidden.party.key,undefined);assert.equal(hidden.own,undefined);assert.equal(hidden.party.status,'unknown');
+ f.set({lobby:{localMember:identity(11),members:[identity(11),identity(22)],partyId:'party-3ee56b17'}});
+ assert.equal((await clientSnapshot('',f.mock)).party.key,'party-3ee56b17');
+ f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:500});
+ assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'evidence read in the future must not count as fresh');
+});

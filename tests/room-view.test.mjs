@@ -225,6 +225,9 @@ test('the automatic party room shows its derived code, pin and honest fallbacks'
  const failed=roomPanel({room:null,transport:'relay',autoEnabled:true,autoError:'<b>中继没有回应</b>',champ});
  assert.match(failed,/上次自动连接失败：&lt;b&gt;中继没有回应&lt;\/b&gt;；稍后会自动重试，换一个组队也会重试。/);
  assert.doesNotMatch(failed,/<b>/);
+ const revoked=roomPanel({room:null,transport:'relay',autoEnabled:false,autoError:'中继没有回应',champ});
+ assert.doesNotMatch(revoked,/上次自动连接失败/,'a revoked switch must not promise a retry');
+ assert.ok(idle.indexOf('id="room-auto"')<idle.indexOf('id="room-relay-room"'),'the switch must come before the fields its note points at');
 });
 
 test('an automatic relay room copies the derived pin and admits when nobody else arrived',()=>{
@@ -238,4 +241,9 @@ test('an automatic relay room copies the derived pin and admits when nobody else
  assert.doesNotMatch(html,/暂时没看到队友/);
  const quiet=roomPanel({room,nick:'我',champ,autoQuiet:true});
  assert.match(quiet,/暂时没看到队友：可以把上面的房间码和口令发给队友手动加入，或让队友确认也开启了自动连接。/);
+ // A manual room never borrows the automatic hint or its failure advice.
+ const manual=roomPanel({room:snapshot({mode:'client',transport:'relay',link:'connected',relayUrl:'wss://room.example.com',members:[{nick:'我',online:true,share:null,self:true}]}),nick:'我',champ,autoQuiet:true});
+ assert.doesNotMatch(manual,/暂时没看到队友/);
+ const failedLink=roomPanel({room:snapshot({mode:'client',transport:'relay',link:'failed',relayUrl:'wss://room.example.com',auto:true,pin:'654321',members:[{nick:'我',online:true,share:null,self:true}]}),nick:'我',champ});
+ assert.match(failedLink,/连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连。/);
 });

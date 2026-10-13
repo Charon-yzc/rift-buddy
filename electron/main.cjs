@@ -181,6 +181,19 @@ async function boot(){
  // rooms never set roomAutoKey and are never touched by the poll below.
  let roomAutoKey=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve();
  const decorateRoom=snapshot=>decorateAutoRoom(snapshot,{auto:!!roomAutoKey,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});
+ // The sandboxed renderer never needs the lobby identifier or the raw game
+ // id: only this process derives the room from them, so they are stripped
+ // from everything sent back across the IPC boundary.
+ const forRenderer=client=>{if(!client)return client;const {own,...rest}=client,{key,...party}=client.party||{};return {...rest,party};};
+ // Closing the auto room always clears the whole auto state, so a later
+ // re-enable starts clean instead of inheriting a stale failure or pin.
+ const closeAutoRoom=reason=>{
+  if(!roomAutoKey)return false;
+  try{roomService?.leave();}catch{}
+  roomAutoKey=null;roomAutoPin=null;roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
+  diagnostic(`auto room left (${reason})`);
+  return true;
+ };
  const ensureRoom=wanted=>{
   const clean=sanitizeNick(wanted)||sanitizeNick(state.preferences.roomNick)||'队友';
   if(roomService&&roomNickInUse===clean)return roomService;
@@ -197,8 +210,8 @@ async function boot(){
   if(!roomService)return null;
   // Leaving by hand must not be undone by the next poll: remember the party
   // this auto room came from until the lobby identifier changes.
-  if(roomAutoKey)roomAutoBlockedKey=roomAutoKey;
-  roomService.leave();roomAutoKey=null;roomAutoPin=null;roomAutoError='';
+  if(roomAutoKey){roomAutoBlockedKey=roomAutoKey;closeAutoRoom('manual');}
+  else{roomService.leave();roomAutoError='';}
   return decorateRoom(roomService.snapshot());
  });
  guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return decorateRoom(roomService.publish(share));});
@@ -208,7 +221,10 @@ async function boot(){
  // seconds and must not delay client-status answers. Only the two stopwatches
  // and the decision table decide; this effect never throws into the poll.
  const roomAutoStep=async client=>{
-  const enabled=state.preferences?.roomAuto===true;
+  // Automatic client observation is what makes an automatic room possible:
+  // with sync off there is nothing to follow, so the switch is off too.
+  const enabled=state.preferences?.roomAuto===true&&state.preferences?.autoSync!==false;
+  if(!enabled){roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
   if(roomAutoKey&&roomService&&roomService.snapshot().mode==='idle'){roomAutoKey=null;roomAutoPin=null;}
   const inWindow=!!client?.connected&&LOBBY_PHASES.includes(client.phase);
   if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=2)roomAutoGoneSince=null;
@@ -223,12 +239,7 @@ async function boot(){
    partyGoneForMs:roomAutoGoneSince===null?null:now-roomAutoGoneSince,
    offlineForMs:roomAutoOfflineSince===null?null:now-roomAutoOfflineSince,now});
   if(decision.action==='hold')return;
-  if(decision.action==='leave'){
-   try{roomService?.leave();}catch{}
-   roomAutoKey=null;roomAutoPin=null;
-   diagnostic(`auto room left (${decision.reason})`);
-   return;
-  }
+  if(decision.action==='leave'){closeAutoRoom(decision.reason);return;}
   const key=decision.key;
   if(decision.action==='switch'){try{roomService?.leave();}catch{}roomAutoKey=null;roomAutoPin=null;}
   let derived=null;
@@ -257,11 +268,11 @@ async function boot(){
    diagnostic(`auto room join failed: ${error?.message||'unknown'}`);
   }
  };
- const queueRoomAuto=client=>{roomAutoTask=roomAutoTask.catch(()=>{}).then(()=>roomAutoStep(client)).catch(error=>diagnostic(`auto room step failed: ${error?.message||'unknown'}`));return roomAutoTask;};
+ const queueRoomAuto=()=>{roomAutoTask=roomAutoTask.catch(()=>{}).then(()=>roomAutoStep(latestClient)).catch(error=>diagnostic(`auto room step failed: ${error?.message||'unknown'}`));return roomAutoTask;};
  guard('presentation',setPresentation);
- guard('bootstrap',()=>({data,state,client:latestClient,windowLayout:companion.layout(),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}));
+ guard('bootstrap',()=>({data,state,client:forRenderer(latestClient),windowLayout:companion.layout(),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}));
  const {windowInfo}=await import('../services/window-info.mjs');
- guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:latestClient,companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
+ guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:forRenderer(latestClient),companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
  guard('companion-mode',value=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');return companion.setMode(value);});
  guard('window-layout-control',async action=>{if(action==='fold')return companion.fold();if(!['follow','reset-side','reset-all'].includes(action))throw Error('窗口布局操作不正确');const result=await companion.reset(action==='reset-all',action!=='follow');if(action==='reset-all'&&state.guide)await guide.recover(true);return result;});
  guard('recover-guide',async()=>{await prepareCurrentGuide();await pollLive(true);return guide.recover();});
@@ -300,7 +311,11 @@ async function boot(){
    const accepted=reconcileClientDraft(current.draft,gameId,current.guide?.match?.gameId).draft;
    if(latestClient.connected&&latestClient.phase==='ChampSelect'&&merged.draft)for(const player of latestClient.session?.myTeam||[]){const id=data.champions.find(c=>c.key===Number(player.championId))?.id;if(id&&accepted?.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id)&&!merged.draft.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id&&s.locked))throw Error('客户端已选英雄不能移除或解锁，请同步后调整位置。');}
    return merged;
-  });guide.publish();companion.sync();return true;
+  });
+   // Turning the switch (or client sync) off must not leave a room behind:
+   // with sync off no poll will run to notice the new preference.
+   if(roomAutoKey&&(state.preferences.roomAuto!==true||state.preferences.autoSync===false))closeAutoRoom('preference');
+   guide.publish();companion.sync();return true;
  });
  const {createClientSync}=await import('../src/core/async-tasks.mjs');
  const status=createClientSync(async(force=false)=>{
@@ -317,7 +332,7 @@ async function boot(){
    if(state.preferences.guideAutoShow!==false&&latestClient.connected&&latestClient.phase==='InProgress'&&(guide.needsAutoShow()||!['InProgress','Reconnect'].includes(previousPhase)||latestClient.game?.gameId&&latestClient.game.gameId!==previousGame))await pollLive(true);
    try{await guide.phase(latestClient.phase,latestClient.connected);}catch(error){diagnostic(`guide phase failed ${error.message}`);}
    companion.sync();
-   queueRoomAuto(latestClient);win?.webContents.send('client-update',latestClient);return latestClient;})().finally(()=>statusTask=null);
+   queueRoomAuto();win?.webContents.send('client-update',forRenderer(latestClient));return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
  const pollLive=async(force=false)=>{
@@ -326,8 +341,8 @@ async function boot(){
   const context=JSON.stringify([latestClient.phase,latestClient.game?.gameId]);
   liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,latestClient.game?.gameId])){latestLive=result;await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
  };
- guard('client-status',status);
- guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return status(true);});
+ guard('client-status',async force=>forRenderer(await status(force)));
+ guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return forRenderer(await status(true));});
  guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
  guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
  guard('refresh-rankings',source=>refreshRankings(source));

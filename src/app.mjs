@@ -310,6 +310,14 @@ function scheduleRoomPublish(){
  clearTimeout(roomShareTimer);
  roomShareTimer=setTimeout(()=>{publishRoomShare();},600);
 }
+// The quiet hint is a claim about the room, not about a single update: it
+// starts from any snapshot that shows a connected auto room, including the
+// one a rebuilt window reads at boot, and resets on anything else.
+function noteRoomSnapshot(snapshot){
+ const quiet=!!(snapshot?.auto&&snapshot.mode!=='idle'&&snapshot.link==='connected');
+ if(quiet&&!roomQuietTimer)roomQuietTimer=setTimeout(()=>{roomQuietTimer=null;roomAutoQuiet=true;if(windowLayout.docked||route==='draft'||route==='room')render();},AUTO_QUIET_MS);
+ if(!quiet){if(roomQuietTimer){clearTimeout(roomQuietTimer);roomQuietTimer=null;}roomAutoQuiet=false;}
+}
 function rememberPreparation(value){if(restoringSave)return value;const before=preparations.recall(value),next=preparations.remember(value);if(JSON.stringify(before)!==JSON.stringify(next))persist();return next;}
 function invalidate(){preservePlayerPosition();reconcileCreativePlan();const own=currentPlayerSelection(client.session,data.champions,slots);if(scope==='solo'&&own?.positionKnown)soloRole=own.role;recommendationError='';markResultStale();cancelRecommendation();results=[];offset=0;autoRecommendationKey='';persist();render();queueCompanionRecommendation();}
 function render(){
@@ -1109,8 +1117,9 @@ window.addEventListener('unhandledrejection',event=>{toast(event.reason?.message
 try{boot=await api.bootstrap();data=boot.data;saved=boot.state;savedBase=structuredClone(saved);stateRecovery=saved.recovery||null;data.catalog=configureCatalog(data.catalog||BUNDLED_CATALOG);data.catalogInfo||={...catalogIssues(data.catalog,data),version:data.catalog.version};configureAssets(data);
  client=boot.client||client;runeAppliedKeys.observe(client);windowLayout=boot.windowLayout||{docked:false};api.onWindowLayout?.(acceptWindowLayout);
  room=await api.roomStatus?.()||null;if(room?.mode==='host')roomAddresses=await api.roomAddresses?.()||[];
+ noteRoomSnapshot(room);
  roomRelayUrl=initialRelayUrl(saved.preferences.relayUrl);roomTransport=room?.transport==='relay'?'relay':'lan';
- api.onRoomUpdate?.(snapshot=>{room=snapshot;const quiet=!!(snapshot?.auto&&snapshot.mode!=='idle'&&snapshot.link==='connected');if(quiet&&!roomQuietTimer)roomQuietTimer=setTimeout(()=>{roomQuietTimer=null;roomAutoQuiet=true;if(windowLayout.docked||route==='draft'||route==='room')render();},AUTO_QUIET_MS);if(!quiet){if(roomQuietTimer){clearTimeout(roomQuietTimer);roomQuietTimer=null;}roomAutoQuiet=false;}if(windowLayout.docked||route==='draft'||route==='room')render();});
+ api.onRoomUpdate?.(snapshot=>{room=snapshot;noteRoomSnapshot(snapshot);if(windowLayout.docked||route==='draft'||route==='room')render();});
   preparations.restore(saved.preparations);guideSelection=saved.guide?.selection||null;if(guideSelection){if(!preparations.recall(guideSelection))preparations.remember(guideSelection);guideSyncBase=guideSelection;lastGuideSyncKey=buildChoiceKey(guideSelection);}
  api.onPresentation?.(value=>{saved.preferences.presentation=value;applyPresentation(value);if(overlay.querySelector('.presentation-settings'))updatePresentationDialog(overlay,value);});
  api.onGuideSelection?.((selection,meta={})=>{if(meta.revision&&meta.revision<guideRevision)return;guideRevision=meta.revision||guideRevision;guideSelection=selection;if(!guideSyncPending)acceptGuideSelection(selection);});

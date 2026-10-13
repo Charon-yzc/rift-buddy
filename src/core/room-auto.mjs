@@ -62,10 +62,13 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,ac
   return {action:'hold',reason:'not-lobby'};
  }
  if(manualRoomActive)return {action:'hold',reason:'room-busy'};
- if(!(Number.isFinite(lobbyCount)&&lobbyCount>=2&&key)){
+ if(!(Number.isFinite(lobbyCount)&&lobbyCount>=2)){
   if(activeAutoKey&&Number.isFinite(partyGoneForMs)&&partyGoneForMs>=AUTO_PARTY_GONE_MS)return {action:'leave',key:activeAutoKey,reason:'party-ended'};
-  return {action:'hold',reason:Number.isFinite(lobbyCount)&&lobbyCount>=2?'no-key':'waiting-party'};
+  return {action:'hold',reason:'waiting-party'};
  }
+ // Evidence is present but the identifier is unusable: never join, and never
+ // drop a healthy room on a read that simply did not carry a key.
+ if(!key)return {action:'hold',reason:'no-key'};
  if(blockedKey===key)return {action:'hold',key,reason:'blocked'};
  if(failedKey===key&&Number.isFinite(failedRetryAt)&&Number.isFinite(now)&&now<failedRetryAt)return {action:'hold',key,reason:'retrying'};
  if(activeAutoKey===key)return {action:'hold',key,reason:'connected'};

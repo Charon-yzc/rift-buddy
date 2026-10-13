@@ -116,7 +116,7 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   // A relay room code is derived from this key, so it is exposed only while
   // the phase is pre-match and the lobby evidence is fresh. It is an
   // identifier, never a credential, and it stays on this machine.
-  const lobbyFresh=!!cache.lobby&&Number.isFinite(cache.lobby.receivedAt)&&now()-cache.lobby.receivedAt<=LOBBY_AUTO_FRESH_MS&&LOBBY_PHASES.includes(phase);
+  const lobbyFresh=!!cache.lobby&&Number.isFinite(cache.lobby.receivedAt)&&now()>=cache.lobby.receivedAt&&now()-cache.lobby.receivedAt<=LOBBY_AUTO_FRESH_MS&&LOBBY_PHASES.includes(phase);
   const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:cache.lobby?'lobby':'unknown',members:[],lobbyCount:cache.lobby?.members.length??null,unmatched:0};
   const party=lobbyFresh&&cache.lobby.key?{...baseParty,key:cache.lobby.key}:baseParty;
   const own=lobbyFresh&&cache.lobby.local?.riotId?{riotId:cache.lobby.local.riotId}:null;

@@ -8,7 +8,15 @@ test('the party key accepts only a bounded public identifier',()=>{
  assert.equal(sanitizePartyKey(KEY),KEY);
  assert.equal(sanitizePartyKey('  '+KEY+' '),KEY);
  assert.equal(sanitizePartyKey('\n'+KEY+'\n'),KEY);
- for(const bad of ['',null,undefined,42,'abc','a'.repeat(65),'has space','under_score','3ee56b17.97c9','a#b','3ee56b17\n97c9'])assert.equal(sanitizePartyKey(bad),null,String(bad));
+ assert.equal(sanitizePartyKey('3ee56b17\n97c9'),null);
+ for(const bad of ['',null,undefined,42,'abc','abcde','a'.repeat(65),'has space','under_score','3ee56b17.97c9','a#b'])assert.equal(sanitizePartyKey(bad),null,String(bad));
+});
+
+test('a derived value below 100000 keeps six digits and reads big-endian',async()=>{
+ const padding=async()=>new Uint8Array([0,0,0,5,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]);
+ assert.deepEqual(await deriveAutoRoom(KEY,{digest:padding}),{code:'000005',pin:'000005'});
+ const endian=async()=>new Uint8Array([1,0,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]);
+ assert.deepEqual(await deriveAutoRoom(KEY,{digest:endian}),{code:'777216',pin:'777216'});
 });
 
 test('both numbers derive from one key, deterministically and without a protocol change',async()=>{
@@ -75,4 +83,18 @@ test('leaving needs a sustained absence, an expired offline grace or a revoked s
  assert.deepEqual(autoRoomDecision({...base,lobbyCount:null,partyGoneForMs:AUTO_PARTY_GONE_MS}),{action:'leave',key:KEY,reason:'party-ended'});
  assert.deepEqual(autoRoomDecision({...base,enabled:false}),{action:'leave',key:KEY,reason:'disabled'});
  assert.equal(autoRoomDecision({...base,enabled:false,activeAutoKey:null,manualRoomActive:true}).action,'hold');
+});
+test('the decision table keeps the manual room and the blocked key safe',()=>{
+ const base={enabled:true,connected:true,phase:'Lobby',lobbyKey:KEY,lobbyCount:2,now:1000};
+ // A manual room is never dropped, not even after the offline grace or a
+ // long party absence: rule 3 runs before both leave rules.
+ assert.equal(autoRoomDecision({...base,connected:false,manualRoomActive:true,offlineForMs:AUTO_OFFLINE_GRACE_MS}).action,'hold');
+ assert.equal(autoRoomDecision({...base,lobbyCount:1,manualRoomActive:true,partyGoneForMs:AUTO_PARTY_GONE_MS}).action,'hold');
+ // A manual leave outranks a live connection, and a failure only blocks the
+ // key it happened on.
+ assert.equal(autoRoomDecision({...base,activeAutoKey:KEY,blockedKey:KEY}).reason,'blocked');
+ assert.equal(autoRoomDecision({...base,failedKey:'other-key-123',failedRetryAt:9999}).action,'join');
+ assert.equal(autoRoomDecision({...base,failedKey:KEY,failedRetryAt:1000,now:1000}).action,'join');
+ // Evidence without a usable identifier never drops a healthy room.
+ assert.equal(autoRoomDecision({...base,lobbyKey:null,activeAutoKey:KEY,partyGoneForMs:AUTO_PARTY_GONE_MS}).reason,'no-key');
 });
