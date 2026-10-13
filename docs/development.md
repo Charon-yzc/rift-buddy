@@ -76,7 +76,7 @@ pnpm start
 | 局内指引与窗口 | `electron/guide-window.cjs`、`src/guide.mjs` | `src/core/guide.mjs`、`src/core/purchase.mjs`、`src/core/guide-stage.mjs` |
 | 客户端与局内公开接口 | `services/lcu.mjs`、`services/live-client.mjs` | `services/client-helper.mjs`、`services/helper-launch.mjs` |
 | 本机连接进程 | `electron/client-helper-entry.mjs` | `electron/connection-launcher.cs` |
-| 组队房间自动连接 | `src/core/room-auto.mjs` | `services/lcu.mjs`、`electron/main.cjs`、`src/room-view.mjs` |
+| 组队房间自动连接 | `src/core/room-auto.mjs` | `services/lcu.mjs`、`electron/main.cjs`、`src/room-view.mjs`、`src/app.mjs` |
 | 设置、资料、图片缓存 | `services/storage.mjs`、`services/data.mjs` | `services/image-cache.mjs`、`services/build-cache.mjs` |
 
 渲染界面通过 preload 提供的有限 `buddy` API 调用主进程；不要直接向网页暴露 Node.js 或任意文件、网络、进程能力。推荐计算在 Worker 中执行，组合库变更要同时更新推荐与配置目录。客户端同步先过滤公开字段，再与用户手动安排的位置合并；本局配置按英雄、位置、模式及组合区分，避免切换搭档时误用专用配置。
