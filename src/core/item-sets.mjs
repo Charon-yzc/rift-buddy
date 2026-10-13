@@ -1,3 +1,4 @@
+import {preparationEquipment} from './complete-gear.mjs';
 const roles={top:'上路',jungle:'打野',mid:'中路',bottom:'下路',support:'辅助'};
 export const ITEM_SET_PREFIX='rift-buddy-';
 const titlePrefix='开黑搭子 · ';
@@ -27,12 +28,12 @@ export function createItemSet(champion,build,data){
  };
  add('出门购买 · 当前选择',build.start);
  add('首次回城 · 优先组件',build.early);
- const later=new Set((build.selectedLaterIds||[]).map(String)),equipment=build.items||[];
+ const later=new Set((build.selectedLaterIds||[]).map(String)),equipment=preparationEquipment(data,build);
  add('鞋子 · 可按对线提前购买',equipment.filter(i=>i.tags?.includes('Boots')));
- add(build.reference?.laterBasis==='all-orders'?'当前核心路线 · 按顺序购买':'当前成装路线 · 按顺序购买',equipment.filter(i=>!i.tags?.includes('Boots')&&!later.has(String(i.id))));
+ add('当前成装路线 · 按顺序购买',equipment.filter(i=>!i.tags?.includes('Boots')&&!later.has(String(i.id))));
  add('后期计划 · 当前已选',equipment.filter(i=>later.has(String(i.id))));
  // Alternatives are a separate shop block, never presented as a joint build.
- add('后期备选 · 按局势选择',build.laterOptions?.flatMap(o=>o.items).filter(i=>!equipment.some(selected=>String(selected.id)===String(i.id))),false);
+ add('后期备选 · 按局势选择',build.laterOptions?.filter(o=>o.fitsRoute!==false).flatMap(o=>o.items).filter(i=>!equipment.some(selected=>String(selected.id)===String(i.id))).slice(0,6),false);
  if(!blocks.length)throw Error('当前方案没有可购买装备，请刷新资料或切换方案');
  const patch=String(build.rulesPatch||data.patch),stale=build.referenceStale||build.stale;
  return validateItemSet({uid:`${ITEM_SET_PREFIX}${champion.key}-${build.role}-${build.mode}`,title:`${titlePrefix}${champion.name} · ${roles[build.role]} · ${build.mode==='hex'?'海克斯':'峡谷'} · ${patch}${stale?' 旧版本参考':''}`,sortrank:0,type:'global',map:'any',mode:'any',blocks,associatedChampions:[champion.key],associatedMaps:[map],preferredItemSlots:[]},data);

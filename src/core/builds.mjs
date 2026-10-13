@@ -134,7 +134,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const standardRef=scopedRef||(validReference(generic,champion,role,data,{allowOlder:true})?generic:null);
  const referenceLabel=ref=>buildSourceLabel(ref)+(ref?.opponent?' · 对 '+(data.champions.find(c=>c.id===ref.opponent)?.name||ref.opponent)+' 的来源参考':'');
  const preferredLoadout=availableLoadouts.find(c=>c.id===preferred);
- const currentReferencePreferred=creative?.archetype==='curated'&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&(preferredLoadout.patch||LOADOUT_PATCH)!==data.patch&&standardRef?.patch===data.patch;
+ const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&(preferredLoadout.patch||LOADOUT_PATCH)!==data.patch&&standardRef?.patch===data.patch;
  const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];

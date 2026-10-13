@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{pathToFileURL}=require('node:url'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_PICK_PHASE,windows=[];let runeWrites=0,clientReads=0,pickable=null,ownChampion=0,makeClient;
@@ -19,7 +20,7 @@ async function run(){
  };
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
- const js=code=>main.webContents.executeJavaScript(code,true),state=()=>js('window.buddy.bootstrap().then(b=>b.state)'),click=async selector=>{assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(150);},capture=async name=>fs.writeFile(path.join(root,name+'.png'),(await main.webContents.capturePage()).toPNG());
+ const js=code=>main.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});}),state=()=>js('window.buddy.bootstrap().then(b=>b.state)'),click=async selector=>{selector=await revealDraftAction(js,selector);assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(150);},capture=async name=>fs.writeFile(path.join(root,name+'.png'),(await main.webContents.capturePage()).toPNG());
  await until(()=>js('!!document.querySelector("[data-action=navigate]")'),'App not ready');const before=await state();assert.equal(before.preferences.autoSync,false);
  if(phase.endsWith('restart')){
   const expected=JSON.parse(await fs.readFile(path.join(root,'accepted.json')));assert.deepEqual(before.draft,expected.draft);assert.deepEqual(before.favorites,expected.favorites);assert.ok(!Object.hasOwn(before,'eligibility'));assert.equal(await js('document.querySelector(".pick-eligibility").dataset.eligibility'),'manual');

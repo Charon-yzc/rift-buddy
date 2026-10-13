@@ -1,4 +1,5 @@
 import {getBuild} from './builds.mjs';
+import {preparationEquipment} from './complete-gear.mjs';
 import {selectedBuildFields} from './build-favorites.mjs';
 import {validatePreparation,recallPreparation} from './preparation.mjs';
 import {scopeSlots} from './draft.mjs';
@@ -33,7 +34,9 @@ export function captureTeamConfigurations(result,data,store){
   if(!champion)throw Error('当前资料没有这位组合成员');
   const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
   const selection={coreIndex:0,conditions:[],...recallPreparation(store,null,context),...context},build=getBuild(champion,slot.role,data,selection);
-  return validatePreparation({...selection,coreIndex:selection.coreId?selection.coreIndex:build.selectedCoreIndex,...selectedBuildFields({...selection,build},{preserveUnavailable:true})});
+  const fields=selectedBuildFields({...selection,build},{preserveUnavailable:true});
+  if(!fields.laterIds?.length){const existing=new Set(build.items.map(item=>String(item.id)));fields.laterIds=preparationEquipment(data,build,selection).filter(item=>!existing.has(String(item.id))).map(item=>Number(item.id));}
+  return validatePreparation({...selection,coreIndex:selection.coreId?selection.coreIndex:build.selectedCoreIndex,...fields});
  });
 }
 

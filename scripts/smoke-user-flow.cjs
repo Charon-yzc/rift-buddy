@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -9,10 +10,10 @@ async function run(){
  const syncDelay=Number(process.env.RIFT_GUIDE_SYNC_DELAY??180);assert.ok([0,180,500].includes(syncDelay));
  ipcMain.handle=(channel,handler)=>register(channel,channel==='update-guide'?async(...args)=>{await delay(syncDelay);return handler(...args);}:handler);
  require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
- const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true);
+ const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true).catch(error=>{throw Error('Renderer expression: '+c,{cause:error});});
  await until(()=>js('!!document.querySelector("[data-action=guide-current]")'),'UI missing');
  ipcMain.handle=register;
- const click=async sel=>{assert.ok(await js(`!!document.querySelector(${JSON.stringify(sel)})`),sel);await js(`document.querySelector(${JSON.stringify(sel)}).click()`);};
+ const click=async sel=>{sel=await revealDraftAction(js,sel);assert.ok(await js(`!!document.querySelector(${JSON.stringify(sel)})`),sel);await js(`document.querySelector(${JSON.stringify(sel)}).click()`);};
  const active=()=>js('({loadout:document.querySelector(".loadout-option.active")?.dataset.id,rune:document.querySelector(".rune-option.active")?.dataset.id,conditions:[...document.querySelectorAll("[data-action=build-condition].active")].map(e=>e.dataset.condition)})');
  const capture=async(name,w=main)=>{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
  const state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
@@ -63,12 +64,12 @@ async function run(){
  await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length>0'),'Strict pool results missing');await click('[data-action=result-detail]');
  before=await members();await click('[data-action=replace-member][data-role=bottom]');
  await until(()=>js('document.querySelector("#toast").classList.contains("error")'),'Expected replacement failure missing');
- assert.deepEqual(await members(),before);assert.equal(await js('document.querySelector("[data-action=recommend]").disabled'),false);assert.equal(await js('document.querySelector("[data-action=use-result]").disabled'),false);
+ assert.deepEqual(await members(),before);assert.equal(await js('document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),false);assert.equal(await js('document.querySelector("[data-action=use-result]").disabled'),false);
  await click('[data-action=close]');
  await js('window.testOriginalWorker=window.Worker;window.Worker=class extends window.testOriginalWorker{postMessage(...args){setTimeout(()=>super.postMessage(...args),350);}};true');
- await click('[data-action=recommend]');assert.equal(await js('document.querySelector("[data-action=recommend]").disabled'),true);
+ await click('[data-action=recommend]');assert.equal(await js('document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),true);
  await click('[data-action=exclusions]');await click('[data-action=pick-champion][data-id=Ashe]');await delay(700);
- assert.equal(await js('document.querySelectorAll(".result-card").length'),0,'Preference change allowed obsolete results');assert.equal(await js('document.querySelector("[data-action=recommend]").disabled'),false);
+ assert.equal(await js('document.querySelectorAll(".result-card").length'),0,'Preference change allowed obsolete results');assert.equal(await js('document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),false);
  await js('window.Worker=window.testOriginalWorker;delete window.testOriginalWorker');await click('[data-action=close]');
  const champion=(await js('window.buddy.bootstrap()')).data.champions.find(c=>c.id==='Garen');
  ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:true,phase:'ChampSelect',message:'测试公开选人',mode:{id:'rift',label:'峡谷'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:champion.key,assignedPosition:'top'}],theirTeam:[],bans:[]}}));

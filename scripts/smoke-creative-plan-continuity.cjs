@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,globalShortcut,clipboard}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_CREATIVE_RESTART==='1',reordered=process.env.RIFT_BUDDY_CREATIVE_REORDERED==='1',windows=[],copied=[];let diagnosticMain,writes=0;
@@ -22,7 +23,7 @@ async function run(){
  const js=async code=>{try{return await main.webContents.executeJavaScript(code,true);}catch(error){throw Error(code+'\n'+error.message);}},click=selector=>js('(()=>{const node=document.querySelector('+JSON.stringify(selector)+');if(!node)throw Error("Missing fixture control");node.click();})()');
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(350);};
- await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'Creative UI missing');
+ await until(()=>js('!!document.querySelector("#solo-role")'),'Creative UI missing');
  if(reordered){
   if(restart){await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite][data-index="0"]');}
   await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Reordered plan missing');await click('[data-action=result-detail][data-index="0"]');

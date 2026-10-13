@@ -1,8 +1,8 @@
 {
   "name": "rift-buddy",
   "productName": "开黑搭子",
-  "version": "0.50.0",
-  "description": "三人开黑选人、出装符文与海克斯玩法助手",
+  "version": "0.51.0",
+  "description": "英雄联盟朋友开黑助手：二至五人选人、配合准备与局内参考",
   "private": true,
   "packageManager": "pnpm@11.25.0",
   "engines": {

@@ -10,10 +10,16 @@ let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,rendererReady=false,pendingBuild=null,pendingMainPage=null;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
-let stateRevision=0,dataRevision=0,preparationRevision=0;
+let stateRevision=0,dataRevision=0;
+const {createPreparationLedger,preservePreparationResult}=require('./preparation-ledger.cjs');
+const preparationLedger=createPreparationLedger();
 const sharedDataFields=new Map();
 function appWindows(){return [win,companion?.getWindow()].filter(w=>w&&!w.isDestroyed());}
 function publishWindows(channel,value,exclude){for(const window of appWindows())if(window.webContents!==exclude)window.webContents.send(channel,value);}
+function publishPreparation(event){if(event)for(const window of appWindows())try{window.webContents.send('preparation-update',event);}catch{diagnostic('preparation result notification unavailable');}return event;}
+function observePreparation(){publishPreparation(preparationLedger.observe(latestClient));}
+function beginPreparation(kind,payload){observePreparation();const operation=preparationLedger.begin(kind,payload);publishPreparation(operation.event);return operation.token;}
+function finishPreparation(token,payload){return publishPreparation(preparationLedger.finish(token,payload));}
 function publishData(keys,replace=false){
  if(replace)sharedDataFields.clear();
  const changes={};for(const key of keys)if(replace||sharedDataFields.get(key)!==data[key]){changes[key]=data[key];sharedDataFields.set(key,data[key]);}
@@ -213,10 +219,10 @@ async function boot(){
  guard('room-scan',()=>ensureRoom(state.preferences.roomNick).scan());
  guard('room-addresses',()=>{const list=[];for(const [name,items] of Object.entries(os.networkInterfaces()))for(const item of items||[])if(item.family==='IPv4'&&!item.internal)list.push({name,address:item.address});return list;});
  guard('presentation',setPresentation);
- guard('bootstrap',({surface})=>({data,state,stateRevision,dataRevision,surface,client:latestClient,windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}),true);
+ guard('bootstrap',({surface})=>({data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:latestClient,windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}),true);
  const {windowInfo}=await import('../services/window-info.mjs');
  guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:latestClient,companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
- guard('companion-mode',(value,{surface})=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');companion.setMode(value);return companion.layout(surface);},true);
+ guard('companion-mode',(value,{surface})=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');const operation=companion.setMode(value);return {...companion.layout(surface),opened:value?operation.docked:undefined,reason:operation.reason};},true);
  guard('open-main-page',destination=>{
   if(!destination||!['settings','reference'].includes(destination.route)||destination.route==='reference'&&(!data.champions.some(c=>c.id===destination.id)||!['skills','changes'].includes(destination.tab)))throw Error('页面不正确');
   pendingMainPage=destination.route==='reference'?{route:'reference',id:destination.id,tab:destination.tab}:{route:'settings'};showMainWindow();
@@ -232,7 +238,7 @@ async function boot(){
  guard('catalog-rollback',()=>catalogStore.rollback().then(useCatalog));
  guard('catalog-personal',entry=>catalogStore.savePersonal(entry).then(useCatalog));
  guard('catalog-export',async()=>{const selected=await dialog.showSaveDialog(win,{title:'导出完整组合库',defaultPath:`开黑搭子-组合库-${data.catalog.version}.json`,filters:[{name:'组合库 JSON',extensions:['json']}]});if(selected.canceled)return false;await fs.writeFile(selected.filePath,JSON.stringify(catalogStore.export(),null,2),'utf8');return true;});
- guard('main-ready',({surface})=>{if(surface==='main'){rendererReady=true;if(pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}if(pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}}return {state,revision:stateRevision};},true);
+ guard('main-ready',({surface})=>{if(surface==='main'){rendererReady=true;if(pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}if(pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}}return {state,revision:stateRevision,preparationSnapshot:preparationLedger.snapshot()};},true);
  guard('save-state',async(next,base,{sender})=>{
   next=storage.validateState(next);
   // A delayed renderer snapshot cannot restore a binding from an earlier game.
@@ -265,7 +271,7 @@ async function boot(){
  const status=createClientSync(async(force=false)=>{
   if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:6000):30000))return latestClient;
   statusTask=(async()=>{const previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
-   lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
+   observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId);if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId).draft}));
    currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);
    if(latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
@@ -386,34 +392,42 @@ async function boot(){
   appUpdateFlight=Promise.resolve().then(async()=>{await updater().cleanup();publishAppUpdate({phase:'idle'});return true;}).finally(()=>{appUpdateFlight=null;});
   return appUpdateFlight;
  });
- guard('apply-runes',async(page,context,{sender})=>{
-  if(applyingRunes)throw new Error('符文正在应用，请稍后');applyingRunes=true;
-   try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);const result=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});await saveCurrentState(current=>({...current,ownedPageId:result.pageId}));publishWindows('preparation-update',{kind:'runes',revision:++preparationRevision,result,context,page:{primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:page.selectedPerkIds}},sender);return result;}
+ guard('apply-runes',async(page,context)=>{
+  if(applyingRunes||importingItemSet)throw new Error('客户端配置正在处理，请稍后');applyingRunes=true;
+   let operation;
+   try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);operation=beginPreparation('runes',{context,page:{primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:page.selectedPerkIds}});
+    const written=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});
+    let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['保存符文页记录',()=>saveCurrentState(current=>({...current,ownedPageId:written.pageId}))],['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};}
+   catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'符文未完成')}});throw error;}
   finally{applyingRunes=false;}
- },true);
- guard('prepare-selection',async(value,{sender})=>{
+ });
+ guard('prepare-selection',async value=>{
   if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，请稍后');
   applyingRunes=true;importingItemSet=true;
+  let operation;
   try{
    const service=await import('../services/client-preparation.mjs'),selection=value?.selection===undefined?null:guideCore.validateGuideSelection(value.selection);value=service.validateClientPreparation(value,data);
    if(selection&&(selection.id!==value.champion||selection.role!==value.role||selection.mode!==value.mode))throw Error('准备配置与英雄或位置不一致，请重新点击');
-   const result=helper.active()?await helper.request('prepareSelection',{value}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
-   if(result.steps?.runes?.status==='done')await saveCurrentState(current=>({...current,ownedPageId:result.steps.runes.pageId}));
-   await status(true);
+   operation=beginPreparation('selection',{value,selection,context:value.context});
+   const written=helper.active()?await helper.request('prepareSelection',{value}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
+   let event=finishPreparation(operation,{result:written});
    // Loading can destroy the sidebar before its IPC reply. Commit the clicked
    // configuration in main so its guide survives that legitimate transition.
-   if(result.complete&&selection&&inGame()&&publicClientGameId(latestClient)===String(value.sessionGameId)){
+   const result=await preservePreparationResult(written,[['保存符文页记录',async()=>{if(written.steps?.runes?.status==='done')await saveCurrentState(current=>({...current,ownedPageId:written.steps.runes.pageId}));}],['刷新客户端',()=>status(true)],['同步本局指引',async()=>{if(written.complete&&selection&&inGame()&&publicClientGameId(latestClient)===String(value.sessionGameId)){
     const chosen={...selection,...storedPreparation(state.preparations,selection)},next=guideCore.selectGuide(state.guide,chosen);
     next.match={...(next.match||{}),gameId:String(value.sessionGameId),phase:latestClient.phase};await setGuideState(next);guide.publish();await guide.phase(latestClient.phase,latestClient.connected);
-   }
-   publishWindows('preparation-update',{kind:'selection',revision:++preparationRevision,result,value},sender);return result;
+   }}]]);
+   if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};
+  }catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'配置未完成')}});throw error;
   }finally{applyingRunes=false;importingItemSet=false;}
- },true);
+ });
  guard('copy',text=>{clipboard.writeText(String(text).slice(0,20000));return true;});
  guard('import-item-set',async value=>{
-  if(importingItemSet)throw Error('装备集正在写入，请稍后');importingItemSet=true;
-  try{const itemSet=itemSetCore.validateItemSet(value,data);
-   return helper.active()?await helper.request('importItemSet',{itemSet}):await itemSetService.importItemSet({itemSet,data,installPath:state.preferences?.installPath});
+  if(importingItemSet||applyingRunes)throw Error('客户端配置正在处理，请稍后');importingItemSet=true;
+  let operation;
+  try{const itemSet=itemSetCore.validateItemSet(value,data);operation=beginPreparation('items',{itemSet});
+   const written=helper.active()?await helper.request('importItemSet',{itemSet}):await itemSetService.importItemSet({itemSet,data,installPath:state.preferences?.installPath});let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};
+  }catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'装备集未完成')}});throw error;
   }finally{importingItemSet=false;}
  });
  guard('export-item-set',async value=>{

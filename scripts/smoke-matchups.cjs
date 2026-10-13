@@ -32,10 +32,10 @@ async function run(){
   let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
   const {js,click,change}=actions(main);
   await until(()=>js('!!document.querySelector("[data-action=sync]")'),'Main not loaded');await click('[data-action=sync]');
-  await until(()=>js('document.querySelector(".current-preparation")?.textContent.includes("诺提勒斯")'),'Public pick not synchronized');
+  await until(()=>js('document.querySelector(".preparation-task")?.textContent.includes("诺提勒斯")'),'Public pick not synchronized');
   await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar not entered');
   await click('[data-action=companion-tab][data-tab=plan]');
-  const geometry=await js('(()=>{const panel=document.querySelector(".companion-content").getBoundingClientRect(),summary=document.querySelector(".companion-plan-summary").getBoundingClientRect();return {width:innerWidth,height:innerHeight,panel:{top:panel.top,bottom:panel.bottom},summary:{top:summary.top,bottom:summary.bottom},overflow:document.documentElement.scrollWidth>innerWidth};})()');
+  const geometry=await js('(()=>{const panel=document.querySelector(".companion-content").getBoundingClientRect(),summary=document.querySelector(".preparation-task").getBoundingClientRect();return {width:innerWidth,height:innerHeight,panel:{top:panel.top,bottom:panel.bottom},summary:{top:summary.top,bottom:summary.bottom},overflow:document.documentElement.scrollWidth>innerWidth};})()');
   // Windows display scaling can round requested DIP content bounds by one pixel.
   assert.ok(Math.abs(geometry.width-440)<=1);assert.ok(Math.abs(geometry.height-729)<=1);assert.equal(geometry.overflow,false);assert.ok(geometry.summary.top>=geometry.panel.top&&geometry.summary.bottom<=geometry.panel.bottom,'Current core/rune/skill summary must fit the first screen');
   await capture(main,'side-first-screen.png');

@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA);
@@ -50,10 +51,10 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1';
  const release=source?null:JSON.parse(await fs.readFile('release/latest.json','utf8'));
  require(source?path.resolve('electron/main.cjs'):path.join(release.directory,'resources/app.asar/electron/main.cjs'));
- const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>main.webContents.executeJavaScript(code,true);
+ const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>main.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});
  const reload=()=>new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.webContents.reload();});
- await until(()=>js('!!document.querySelector("[data-action=role-pools]")'),'Draft missing');
- const click=async selector=>{assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`document.querySelector(${JSON.stringify(selector)}).click()`);await delay(120);};
+ await until(()=>js('!!document.querySelector("#solo-role")'),'Draft missing');
+ const click=async selector=>{selector=await revealDraftAction(js,selector);assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`document.querySelector(${JSON.stringify(selector)}).click()`);await delay(120);};
  const set=async(selector,value,event='input')=>js(`{const el=document.querySelector(${JSON.stringify(selector)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event(${JSON.stringify(event)},{bubbles:true}));}`);
  await click('[data-action=navigate][data-route=settings]');
  await click('[data-action=app-update-check]');
@@ -84,7 +85,7 @@ async function run(){
  // 阶段 4：重启后续装——renderer 重启后离线重查，pending 快捷方式不断网恢复 ready
  mode='offline';
  await reload();
- await until(()=>js('!!document.querySelector("[data-action=role-pools]")'),'Restart missing');
+ await until(()=>js('!!document.querySelector("#solo-role")'),'Restart missing');
  await click('[data-action=navigate][data-route=settings]');
  await click('[data-action=app-update-check]');
  await until(()=>js('!!document.querySelector("[data-action=app-update-install]")'),'Pending shortcut not restored');

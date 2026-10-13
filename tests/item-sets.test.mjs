@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import {getBuild} from '../src/core/builds.mjs';
 import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {createItemSet,validateItemSet} from '../src/core/item-sets.mjs';
+import {completeGearPlan} from '../src/core/complete-gear.mjs';
 import {itemSetControls} from '../src/item-sets-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),build=s=>getBuild(hero(s.id),s.role,data,s),make=s=>createItemSet(hero(s.id),build(s),data);
@@ -15,7 +16,7 @@ test('shop set follows independent selected starter, footwear, core and late equ
  const set=createItemSet(hero(s.id),b,data);assert.deepEqual(set.associatedChampions,[106]);assert.deepEqual(set.associatedMaps,[11]);assert.equal(set.uid,'rift-buddy-106-top-rift');
  assert.deepEqual(set.blocks.find(g=>g.type.startsWith('出门')).items,[{id:'1054',count:1},{id:'2003',count:1}]);assert.deepEqual(set.blocks.find(g=>g.type.startsWith('鞋子')).items,[{id:'3158',count:1}]);
  assert.ok(set.blocks.find(g=>g.type.startsWith('后期计划')).items.some(i=>i.id===String(later)));assert.ok(!set.blocks.find(g=>g.type.startsWith('后期备选'))?.items.some(i=>i.id===String(later)));
- const expected=b.items.filter(i=>!i.tags.includes('Boots')&&!b.selectedLaterIds.includes(Number(i.id))).map(i=>String(i.purchaseBase?.id||i.id));assert.deepEqual(set.blocks.find(g=>g.type.startsWith('当前核心')).items.map(i=>i.id),expected);
+ const expected=completeGearPlan({data,build:b,selection:s,enabled:false}).route.map(row=>b.items.find(i=>String(i.id)===row.id)||data.items[row.id]).filter(i=>!i.tags.includes('Boots')&&!b.selectedLaterIds.includes(Number(i.id))).map(i=>String(i.purchaseBase?.id||i.id));assert.deepEqual(set.blocks.find(g=>g.type.startsWith('当前成装')).items.map(i=>i.id),expected);
  const duplicated=createItemSet(hero(s.id),{...b,start:[data.items[2003],data.items[2003]]},data);assert.deepEqual(duplicated.blocks[0].items,[{id:'2003',count:2}]);
  assert.equal(make({...s,role:'jungle'}).uid,'rift-buddy-106-jungle-rift');
 });

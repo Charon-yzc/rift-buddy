@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_COOP_RESTART==='1',windows=[];let copies=[],runeWrites=0;
@@ -22,11 +23,11 @@ async function run(){
  for(const file of ['src/core/party-cooperation.mjs','src/attribute-plan-view.mjs','src/result-text.mjs','src/core/tactical-cooperation.mjs','src/core/shared-cooperation.mjs','src/core/cooperation.mjs','src/core/cooperation-skills.mjs','src/core/cooperation-pairs.mjs','src/core/pair-statistics.mjs','src/pair-statistics-view.mjs','services/pair-statistics.mjs','data/pair-statistics.json','src/core/creative-plan.mjs','src/core/recommend.mjs','src/core/builds.mjs','src/cooperation-view.mjs','src/guide-view.mjs','src/companion-view.mjs','src/app.mjs'])assert.ok((await fs.readFile(path.join(base,file))).equals(await fs.readFile(file)),'Packaged source drift: '+file);
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
- const js=async code=>{try{return await main.webContents.executeJavaScript(code,true);}catch(error){throw Error('Renderer probe failed: '+code,{cause:error});}},click=async selector=>{await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(120);};
+ const js=async code=>{try{return await main.webContents.executeJavaScript(code,true);}catch(error){throw Error('Renderer probe failed: '+code,{cause:error});}},click=async selector=>{selector=await revealDraftAction(js,selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(120);};
  const state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
- const generate=async()=>{await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")&&!document.querySelector("[data-action=recommend]").disabled'),'Worker result missing');};
+ const generate=async()=>{await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")&&!document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),'Worker result missing');};
  const capture=async name=>{await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
- await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'UI missing');await generate();
+ await until(()=>js('!!document.querySelector("#solo-role")'),'UI missing');await generate();
  const firstCardText=await js('document.querySelector(".result-card").textContent');
  assert.ok(firstCardText.includes(planLabel),'Expected '+planLabel+' in the completed first result: '+firstCardText.slice(0,600));
  let firstScreenActions=null;
@@ -88,7 +89,10 @@ async function run(){
    if(!restart)await click('[data-action=build-later][data-id="3165"]');
   }
   assert.ok(await js('[...document.querySelectorAll("[data-action=build-partner]")].every(b=>b.textContent.length<40)'),'Partner controls must use champion names');
-  await click('[data-action=open-guide]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
+  // Peer detail is read-only in the UI. Exercise each member's guide data through
+  // the isolated API, without claiming that peer detail can replace the player's guide.
+  const savedMember=(await state()).preparations.find(p=>p.id===member.champion&&p.role===member.role&&p.comboId===plan.id)||favorite.configurations.find(p=>p.id===member.champion&&p.role===member.role);
+  await js('window.buddy.openGuide('+JSON.stringify({...savedMember,id:member.champion,role:member.role,mode:'rift',creativePlan:plan,comboId:plan.id})+')');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
   const guideJs=code=>guide.webContents.executeJavaScript(code,true);await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(member.champion)+'&&b.model?.combo?.id==='+JSON.stringify(plan.id)+')'),'Member cooperation did not reach guide');
   const payload=await guideJs('window.guide.bootstrap()');assert.deepEqual(payload.model.combo.creativePlan,plan);assert.deepEqual(payload.model.combo.steps,plan.steps);assert.equal(payload.model.runes.length,9);assert.equal(payload.model.combo.window,plan.window);assert.equal(payload.model.combo.risk,plan.caution);
   if(member.champion==='Aphelios'){assert.deepEqual(payload.model.attributePlan.priority,['攻击力','穿甲','攻速']);assert.equal(payload.model.nextSkill,null);await guideJs('window.guide.control("layout","details")');await guideJs('document.querySelector("[data-tab=skills]").click()');assert.ok(await guideJs('document.querySelector(".attribute-plan").textContent.includes("攻击力 › 穿甲 › 攻速")'));}
