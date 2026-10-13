@@ -11,7 +11,7 @@ import {getBuild} from '../src/core/builds.mjs';
 import {clientPreparationPlan} from '../src/client-preparation-view.mjs';
 import {validatePreparation} from '../src/core/preparation.mjs';
 
-const loadingNewGame=process.argv.includes('--loading-new-game'),loadingTransition=process.argv.includes('--loading-transition')||loadingNewGame,unadopted=process.argv.includes('--unadopted')||loadingTransition,root=await fs.mkdtemp(path.resolve('.local/party-preparation-smoke-')),state=defaultState();
+const customGame=process.argv.includes('--custom'),loadingNewGame=process.argv.includes('--loading-new-game'),loadingTransition=process.argv.includes('--loading-transition')||loadingNewGame,unadopted=process.argv.includes('--unadopted')||loadingTransition,root=await fs.mkdtemp(path.resolve('.local/party-preparation-smoke-')),state=defaultState();
 const picks={top:'Camille',jungle:'Vi',mid:'Galio'},data=JSON.parse(await fs.readFile('data/game.json'));
 const rolePools=Object.fromEntries(Object.entries(picks).map(([role,id])=>[role,{heroes:[id],mode:'only'}]));
 const slots=createSlots().map(s=>({...s,party:!!picks[s.role],champion:unadopted?null:picks[s.role]||null,locked:!unadopted&&!!picks[s.role],...(!unadopted?(s.role==='top'?{clientCellId:0,manualPosition:true}:s.role==='jungle'?{clientCellId:1,manualPosition:true}:s.role==='mid'?{automaticPosition:true}:{}):{})}));
@@ -41,6 +41,6 @@ await fs.writeFile(path.join(installPath,'lockfile'),'LeagueClient:1:23456:isola
 await fs.writeFile(path.join(installPath,'LeagueClient.exe'),'isolated fixture marker');await fs.writeFile(path.join(game,'League of Legends.exe'),'isolated fixture marker');
 await saveState(root,state);
 console.log('PARTY PREPARATION ROOT '+root);
-const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-party-preparation.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_SOURCE:process.argv.includes('--source')?'1':'0',RIFT_BUDDY_UNADOPTED:unadopted?'1':'0',RIFT_BUDDY_LOADING_TRANSITION:loadingTransition?'1':'0',RIFT_BUDDY_LOADING_NEW_GAME:loadingNewGame?'1':'0'},windowsHide:true,stdio:'inherit'});
+const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-party-preparation.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_SOURCE:process.argv.includes('--source')?'1':'0',RIFT_BUDDY_UNADOPTED:unadopted?'1':'0',RIFT_BUDDY_LOADING_TRANSITION:loadingTransition?'1':'0',RIFT_BUDDY_LOADING_NEW_GAME:loadingNewGame?'1':'0',RIFT_BUDDY_CUSTOM_GAME:customGame?'1':'0'},windowsHide:true,stdio:'inherit'});
 const timer=setTimeout(()=>child.kill(),150000);
 try{const [code]=await once(child,'exit');if(code!==0)throw Error('Party preparation smoke failed ('+code+'); '+root);await fs.writeFile('.local/latest-party-preparation-smoke.json',JSON.stringify({root,unadopted},null,2));}finally{clearTimeout(timer);}

@@ -60,6 +60,7 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  };
  const runeRequest=async(auth,route,...args)=>{
   const result=await request(auth,route,...args);
+  if(route==='/lol-gameflow/v1/session'&&identifyMode(sanitizeGame(result)).id!=='rift')throw Error('当前模式已变化，已停止符文配置；请在客户端核对');
   if(route==='/lol-champ-select/v1/session'){
    const own=result?.myTeam?.find(p=>p.cellId===initial.context.cellId),actions=(Array.isArray(result?.actions)?result.actions:[]).flat().filter(a=>a?.type==='pick'&&a.actorCellId===initial.context.cellId);
    if(result.localPlayerCellId!==initial.context.cellId||!own||actions.length!==1||actions[0].id!==initial.action.id||!targetMatches({own,action:actions[0]}))throw Error('目标英雄或选人操作已变化，已停止符文配置；请在客户端核对');

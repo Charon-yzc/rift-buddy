@@ -6,11 +6,11 @@ import io from 'node:fs/promises';import path from 'node:path';
 import {importItemSet} from '../services/item-sets.mjs';
 const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
 const hero=data.champions.find(c=>c.id==='Ashe'),build=getBuild(hero,'bottom',data);
-function fixture({locked=false}={}){
+function fixture({locked=false,gameflow}={}){
  const own={cellId:0,championId:locked?22:0,championPickIntent:0,assignedPosition:'bottom',spell1Id:1,spell2Id:3};
  const action={id:4,type:'pick',actorCellId:0,championId:locked?22:0,completed:locked,isInProgress:!locked};
  const session={gameId:777,localPlayerCellId:0,myTeam:[own],theirTeam:[],actions:[[action]],allowDuplicatePicks:false,bans:{myTeamBans:[],theirTeamBans:[]},timer:{phase:locked?'FINALIZATION':'PLANNING'}};
- const game={gameData:{gameId:777,mapId:11,queue:{id:420,gameMode:'CLASSIC'}}},calls=[],pages=[{id:2,current:false,isEditable:false},{id:11,current:true,isEditable:true}];let phase='ChampSelect',items=0;
+ const game=gameflow?structuredClone(gameflow):{gameData:{gameId:777,mapId:11,queue:{id:420,gameMode:'CLASSIC'}}},calls=[],pages=[{id:2,current:false,isEditable:false},{id:11,current:true,isEditable:true}];let phase='ChampSelect',items=0;
  const value={champion:'Ashe',role:'bottom',mode:'rift',sessionGameId:'777',context:runeWriteContext({connected:true,phase,game:{gameId:'777'},session}),page:build.runePage,summoners:build.summoners,itemSet:createItemSet(hero,build,data)};
  const request=async(auth,route,method='GET',body)=>{
   calls.push({route,method,body});
@@ -34,6 +34,32 @@ test('explicit client preparation previews only own pick and verifies actual run
 test('locked same hero applies configuration without selecting or unlocking, locked other hero rejects before writes',async()=>{
  const f=fixture({locked:true});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
  const other=fixture({locked:true});other.own.championId=1;other.value.context.championId=1;await assert.rejects(other.run(),/锁定其他英雄/);assert(!other.calls.some(c=>c.method!=='GET'));
+});
+
+test('custom Rift map metadata completes explicit preview, editable runes, spells and equipment without locking',async()=>{
+ for(const gameflow of [{gameData:{gameId:0,isCustomGame:true,queue:{id:0,gameMode:''}},map:{id:11,gameMode:'CLASSIC'}},{gameData:{gameId:0,isCustomGame:true,queue:{id:0,mapId:11,gameMode:'CLASSIC'}}}]){
+  const f=fixture({gameflow}),result=await f.run();assert(result.complete);assert.equal(f.action.completed,false);assert.equal(f.own.championPickIntent,22);assert.equal(f.items,1);assert.equal(result.steps.runes.pageId,11);assert.equal(f.pages[0].isEditable,false);
+  assert.deepEqual(f.calls.filter(c=>c.method==='PATCH').map(c=>c.route),['/lol-champ-select/v1/session/actions/4','/lol-champ-select/v1/session/my-selection']);
+ }
+});
+test('custom status alone never authorizes configuration on unknown maps, URF, ARAM or Swiftplay',async()=>{
+ for(const [map,queue] of [[{id:11},{id:0}],[{gameMode:'CLASSIC'},{id:0}],[{id:11,gameMode:'URF'},{id:0}],[{id:12,gameMode:'ARAM'},{id:0}],[{id:11,gameMode:'CLASSIC'},{id:480}]]){
+  const f=fixture({gameflow:{gameData:{gameId:777,isCustomGame:true,queue},map}});await assert.rejects(f.run(),/当前模式/);assert(!f.calls.some(c=>c.method!=='GET'));assert.equal(f.items,0);
+ }
+});
+
+test('contradictory mode metadata stops custom and ranked preparation before every write',async()=>{
+ const variants=[
+  {gameData:{gameId:777,queue:{id:0,mapId:11,gameMode:'CLASSIC'}},map:{id:11,gameMode:'URF'}},
+  {gameData:{gameId:777,gameMode:'CLASSIC',queue:{id:0}},map:{id:11,gameMode:'ARAM'}},
+  {gameData:{gameId:777,mapId:11,queue:{id:0,gameMode:'CLASSIC'}},map:{id:12,gameMode:'ARAM'}},
+  {gameData:{gameId:777,mapId:11,queue:{id:420,gameMode:'URF'}}}
+ ];
+ for(const gameflow of variants){const f=fixture({gameflow});await assert.rejects(f.run(),/当前模式/);assert(!f.calls.some(c=>c.method!=='GET'));assert.equal(f.items,0);}
+});
+test('a new mode conflict after explicit preview stops runes, summoners and equipment',async()=>{
+ const f=fixture(),request=f.deps.request;f.deps.request=async(...args)=>{const result=await request(...args);if(args[1]==='/lol-perks/v1/pages'&&(args[2]||'GET')==='GET')f.game.map={id:12,gameMode:'ARAM'};return result;};
+ const result=await f.run();assert.equal(result.complete,false);assert.equal(result.steps.hover.status,'done');assert.equal(f.action.completed,false);assert.equal(f.items,0);assert.deepEqual(f.calls.filter(c=>c.method!=='GET').map(c=>c.route),['/lol-champ-select/v1/session/actions/4']);
 });
 
 test('current champ-select ID authorizes the click while gameflow is empty, zero or from the previous game',async()=>{

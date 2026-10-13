@@ -15,7 +15,7 @@ async function run(){
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(c=>c.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json'))),originalPlan=initial.draft.creativePlan,fixture=JSON.parse(await fs.readFile(path.join(root,'party-fixture.json'))),unadopted=process.env.RIFT_BUDDY_UNADOPTED==='1';
  assert.equal(fixture.unadopted,unadopted,'Wrapper and renderer fixture variants differ');
  let observer,phase='ChampSelect',gameflowId=0,gameId=471001,intent=0,picked=0,completed=false,spell1Id=4,spell2Id=12,requests=0,holdRune=true,resumeRune=null;
- const loadingTransition=process.env.RIFT_BUDDY_LOADING_TRANSITION==='1',loadingNewGame=process.env.RIFT_BUDDY_LOADING_NEW_GAME==='1',rename=fs.rename;
+ const customGame=process.env.RIFT_BUDDY_CUSTOM_GAME==='1',loadingTransition=process.env.RIFT_BUDDY_LOADING_TRANSITION==='1',loadingNewGame=process.env.RIFT_BUDDY_LOADING_NEW_GAME==='1',rename=fs.rename;
  if(loadingTransition)fs.rename=async(from,to)=>{const result=await rename(from,to);if(String(to).endsWith('rift-buddy-3-mid-rift.json')){assert.ok(path.resolve(to).startsWith(root+path.sep));picked=intent;intent=0;completed=true;if(loadingNewGame)gameId++;gameflowId=gameId;phase='GameStart';}return result;};
  let page={id:44,name:'Isolated editable page',isEditable:true,isActive:true,current:true};
  const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:unadopted?0:hero('Camille').key,assignedPosition:'TOP'},{cellId:1,championId:unadopted?0:hero('Vi').key,assignedPosition:'JUNGLE'},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:'MIDDLE'},{cellId:3,championId:0,assignedPosition:'BOTTOM'},{cellId:4,championId:0,assignedPosition:'UTILITY'}],theirTeam:[],actions:[[{id:2,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',remainingMs:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
@@ -24,7 +24,7 @@ async function run(){
   const method=options.method||'GET',route=options.path,body=options.body===undefined?undefined:JSON.parse(options.body);
   if(method==='GET'){
    if(route==='/lol-gameflow/v1/gameflow-phase')return phase;
-   if(route==='/lol-gameflow/v1/session')return {gameData:{gameId:gameflowId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
+   if(route==='/lol-gameflow/v1/session')return customGame?{gameData:{gameId:gameflowId,isCustomGame:true,queue:{id:0,gameMode:''}},map:{id:11,gameMode:'CLASSIC'}}:{gameData:{gameId:gameflowId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
    if(route==='/lol-champ-select/v1/session')return rawSession();
    if(route.endsWith('/pickable-champion-ids'))return data.champions.map(c=>c.key);
    if(route.endsWith('/disabled-champion-ids'))return [];
@@ -54,6 +54,7 @@ async function run(){
  observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor),foreground:false,minimized:false},game:null})+'\n');
  await click(main,'[data-action=sync]');await until(()=>{side=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().includes('surface=companion'));return side;},'Independent sidebar missing');diagnosticSide=side;
  await until(()=>js(side,'!!document.querySelector(".companion-shell")'),'Sidebar UI missing');await click(side,'[data-action=sync]');
+ if(customGame)assert.equal((await handlers.get('client-status')(event(side),false)).mode.id,'rift','Custom map was not recognized through the actual snapshot');
  await until(()=>js(side,'!!document.querySelector("[data-action=companion-preview][data-id=Galio]")'),'Galio recommendation missing');
  assert.equal((await state()).preferences.clickPrepare,true);assert.equal(attempts.length,0);
  const itemIds=value=>value.itemSet.blocks.flatMap(block=>block.items.map(item=>Number(item.id)));

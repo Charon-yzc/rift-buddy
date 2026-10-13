@@ -140,7 +140,8 @@ async function run(){
  await js('window.buddy.companionMode(true)');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar did not return after lane choice');
  await until(()=>js('!!document.querySelector("[data-companion-field=core]")'),'Inline core selector missing');
  const b=getBuild(hero('Volibear'),'top',data),rune=b.runeOptions.find(o=>o.page.selectedPerkIds[0]!==b.runePage.selectedPerkIds[0]),skill=b.skillChoices.at(-1);
- await change('[data-companion-field=rune]',rune.id);await change('[data-companion-field=core]',1);await change('[data-companion-field=skill]',skill.id);await delay(250);
+ await change('[data-companion-field=rune]',rune.id);await change('[data-companion-field=core]',1);await change('[data-companion-field=skill]',skill.id);
+ await until(async()=>{const selected=(await js('window.buddy.bootstrap()')).state.guide?.selection;return selected?.id==='Volibear'&&selected.role==='top'&&selected.runeId===rune.id&&selected.skillId===skill.id&&selected.coreIndex===1;},'Inline configuration edits were not saved');
  assert.equal(await js('document.querySelector("[data-companion-field=rune]").value'),rune.id);assert.equal(await js('document.querySelector("[data-companion-field=core]").value'),'1');
  const prepared=(await js('window.buddy.bootstrap()')).state.guide.selection;assert.equal(prepared.runeId,rune.id);assert.equal(prepared.skillId,skill.id);assert.equal(prepared.coreIndex,1);
  await toggleAutoSync();

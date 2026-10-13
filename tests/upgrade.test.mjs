@@ -29,6 +29,42 @@ test('Swiftplay 480 is distinct from normal Quickplay 490 and cannot prepare a c
  const swift=identifyMode({queueId:480,gameMode:'CLASSIC',mapId:11});assert.equal(swift.id,'swiftplay');assert.equal(swift.supported,false);assert.match(swift.label,/独立出门/);
  for(const queueId of [420,490])assert.deepEqual(identifyMode({queueId,gameMode:'CLASSIC',mapId:11}),{id:'rift',label:'召唤师峡谷',supported:true});
 });
+
+test('custom gameflow reads the public top-level map and nonempty queue fallbacks without inferring unknown modes',()=>{
+ const variants=[
+  {gameData:{gameId:777,isCustomGame:true,queue:{id:0,gameMode:''}},map:{id:11,gameMode:'CLASSIC'}},
+  {gameData:{gameId:777,queue:{id:0,mapId:11,gameMode:'CLASSIC'}}},
+  {gameData:{gameId:777,gameMode:'CLASSIC',queue:{id:0,gameMode:'  '}},map:{id:11}},
+  {gameData:{gameId:777,queue:{id:0,mapId:11,gameMode:'CLASSIC'}},map:{gameMode:''}},
+  {gameData:{gameId:777,mapId:0,queue:{id:0,mapId:11,gameMode:'CLASSIC'}},map:{id:0}},
+  {gameData:{gameId:777,mapId:null,queue:{id:0,gameMode:''}},map:{id:11,gameMode:'CLASSIC'}}
+ ];
+ for(const raw of variants){assert.deepEqual(sanitizeGame(raw),{queueId:0,mapId:11,gameId:'777',gameMode:'CLASSIC'});assert.equal(identifyMode(sanitizeGame(raw)).id,'rift');}
+ for(const [map,queue] of [[{id:11,gameMode:'CLASSIC'},{id:0,gameMode:'URF'}],[{id:12,gameMode:'ARAM'},{id:0}],[{id:11},{id:0}], [{gameMode:'CLASSIC'},{id:0}], [{id:11,gameMode:'CLASSIC'},{id:480}]]){
+  assert.notEqual(identifyMode(sanitizeGame({gameData:{isCustomGame:true,queue},map})).id,'rift');
+ }
+ const safe=sanitizeGame({gameData:{gameId:777,queue:{id:0},password:'discard',spectatorKey:'discard',teamOne:[{puuid:'discard'}]},map:{id:11,gameMode:'CLASSIC',assets:{private:'discard'}}});
+ assert(!JSON.stringify(safe).includes('discard'));assert.equal(Object.keys(safe).length,4);
+});
+test('conflicting public maps, modes and ranked queue metadata cannot authorize a Rift configuration',()=>{
+ const variants=[
+  {gameData:{queue:{id:0,mapId:11,gameMode:'CLASSIC'}},map:{id:11,gameMode:'URF'}},
+  {gameData:{gameMode:'CLASSIC',queue:{id:0}},map:{id:11,gameMode:'ARAM'}},
+  {gameData:{mapId:11,queue:{id:0,gameMode:'CLASSIC'}},map:{id:12,gameMode:'ARAM'}},
+  {gameData:{mapId:11,queue:{id:0,gameMode:'CLASSIC'}},map:{id:12,gameMode:'CLASSIC'}},
+  {gameData:{mapId:11,queue:{id:420,gameMode:'URF'}}},
+  {gameData:{queue:{id:420,gameMode:'CLASSIC'}},map:{id:12,gameMode:'CLASSIC'}}
+ ];
+ for(const raw of variants){const mode=identifyMode(sanitizeGame(raw));assert.equal(mode.id,null);assert.equal(mode.supported,false);assert.match(mode.label,/不一致/);}
+});
+test('case, empty metadata and compatible practice or Mayhem map labels retain their actual mode',()=>{
+ for(const modes of [[' classic ','CLASSIC'],['PRACTICETOOL','CLASSIC']]){
+  const game=sanitizeGame({gameData:{queue:{id:0,mapId:11,gameMode:modes[0]}},map:{id:11,gameMode:modes[1]}});assert(!game.modeConflict);assert.equal(identifyMode(game).id,'rift');
+ }
+ const hex=sanitizeGame({gameData:{queue:{id:2400,mapId:12,gameMode:'KIWI'}},map:{id:12,gameMode:'ARAM'}});assert(!hex.modeConflict);assert.equal(identifyMode(hex).id,'hex');
+ assert.equal(identifyMode({queueId:420,mapId:11,gameMode:' classic '}).id,'rift');
+});
+
 test('owned recipe components are allocated once, repeated components count, cycles terminate',()=>{
  const items={a:{name:'小件',gold:{total:300}},b:{name:'中件',gold:{total:900},from:['a','a']},c:{name:'成装',gold:{total:2000},from:['b','a']},d:{gold:{total:2000},from:['d']}};
  const plans=purchasePlan([{id:'c'},{id:'b'},{id:'d'}],items,[{id:'a',count:2}],500);

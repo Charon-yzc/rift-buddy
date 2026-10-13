@@ -60,6 +60,8 @@ jobs:
           node scripts/smoke-package-party-preparation.mjs --loading-transition
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-party-preparation.mjs --loading-new-game
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/smoke-package-party-preparation.mjs --custom
       - name: Check compact complete gear, conditional alternatives and jungle routes
         run: |
           node scripts/smoke-package-useful-guide.mjs
