@@ -2,9 +2,9 @@
 
 给朋友一起玩匹配准备的 Windows 桌面助手：根据已经选好的英雄推荐开黑组合，把对应的玩法、出装和符文带到本局指引中。
 
-**[下载 v0.48.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/download/v0.48.0/RiftBuddy-0.48.0-Setup.exe)** · [本版说明](https://github.com/Legender134/rift-buddy/releases/tag/v0.48.0) · [全部版本](https://github.com/Legender134/rift-buddy/releases) · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
+**[下载 v0.50.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/download/v0.50.0/RiftBuddy-0.50.0-Setup.exe)** · [本版说明](https://github.com/Legender134/rift-buddy/releases/tag/v0.50.0) · [SHA-256 校验](https://github.com/Legender134/rift-buddy/releases/download/v0.50.0/SHA256SUMS-0.50.0.txt) · [全部版本](https://github.com/Legender134/rift-buddy/releases) · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
 
-当前源码为 v0.50.0，公开下载为 v0.48.0 Windows 预览版。公开安装包已核对 CRC、147 个应用文件及上传后回下载的 SHA-256，本机覆盖升级、92 个个人文件保持和安装后启动、退出重开已验证；v0.48 三位全新空上下文 gpt-6.1-sol / xhigh 同版独立理论与模拟审查、完整 Windows CI 均通过。修复后的国服联动、真实帧率与长期内存、物理全屏和混合 DPI 仍待复测，整体成熟度未宣告通过；展开安装目录仍约 440 MiB。
+当前源码与公开下载均为 v0.50.0 Windows 预览版。公开安装包已核对 CRC、148 个应用文件及上传后回下载的 SHA-256，实际打包程序启动、单实例和退出重开已验证；本轮三位全新空上下文 gpt-6.1-sol / xhigh 同版独立审查和完整 Windows CI 均通过本阶段验收。v0.50 覆盖安装与修复后的国服联动、真实帧率与长期内存、物理全屏和混合 DPI 仍待复测，整体成熟度未宣告通过；展开安装目录仍约 440 MiB。
 
 v0.50.0：修复自定义峡谷选人时漏读地图和模式元数据，导致点击英雄只预览、无法预选并配置的问题。主窗、侧栏与配置服务共用修正后的解析；只在公开信息确认峡谷模式时预选本人英雄、应用符文、D/F 和装备集，仍由玩家锁定。未知地图或模式不会因“自定义房间”标志而被猜成峡谷；公开地图或模式相互冲突时停止配置，读取符文页期间模式变化也不会继续写入。修复须继续以真实国服体验复测。
 
