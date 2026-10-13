@@ -46,7 +46,7 @@ async function existingFile(filename,itemSet,io){
  if(previous.uid!==itemSet.uid||typeof previous.title!=='string'||!previous.title.startsWith('开黑搭子 · ')||JSON.stringify(previous.associatedChampions)!==JSON.stringify(itemSet.associatedChampions)||JSON.stringify(previous.associatedMaps)!==JSON.stringify(itemSet.associatedMaps))throw Error('同名文件不属于开黑搭子，已保留原文件；请使用导出 JSON');
  return content;
 }
-export async function importItemSet({itemSet,data,installPath=''},{discover=discoverClient,request=lcuRequest,io=fs}={}){
+export async function importItemSet({itemSet,data,installPath=''},{discover=discoverClient,request=lcuRequest,io=fs,beforeCommit}={}){
  const selected=validateItemSet(itemSet,data),auth=await discover(installPath);
  if(!auth?.port)throw Error('请先连接英雄联盟客户端；也可以直接导出 JSON');
  let target;
@@ -60,6 +60,9 @@ export async function importItemSet({itemSet,data,installPath=''},{discover=disc
    await io.writeFile(temporary,content,{encoding:'utf8',flag:'wx'});created=true;
    await directory(target,io);
    if(await existingFile(filename,selected,io)!==previous)throw Error('装备集文件在写入前发生变化，已取消本次更新；请重试或导出 JSON');
+   // A click-scoped import may have waited for directory I/O or another write.
+   // Revalidate its selection immediately before replacing the visible set.
+   if(beforeCommit)await beforeCommit();
    await io.rename(temporary,filename);created=false;
   }catch(error){
    if(created)await io.unlink(temporary).catch(()=>{});

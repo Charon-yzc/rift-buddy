@@ -20,11 +20,11 @@ async function run(){
  assert.equal(snapshot.draft.slots[0].champion,null);assert.equal(snapshot.draft.slots[2].champion,'Garen');assert.equal(snapshot.draft.slots[0].party,false);assert.equal(snapshot.draft.slots[2].party,true);
  await drag('mid','jungle');snapshot=await settled();assert.equal(snapshot.draft.slots[1].champion,'Garen');assert.equal(snapshot.draft.slots[2].champion,'LeeSin');
  await click('[data-action=move-slot][data-role=jungle]');await click('[data-action=move-confirm][data-role=top]');snapshot=await settled();assert.equal(snapshot.draft.slots[0].champion,'Garen');
- await click('[data-action=example]');await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length===3'),'Worker recommendation missing');
+ await click('[data-action=example]');await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length===6'),'Worker recommendation missing');
  assert.equal(await js('document.querySelectorAll(".card-members .member").length'),9);await click('[data-action=result-detail]');assert.equal(await js('document.querySelectorAll(".lineup-detail .member").length'),5);await click('[data-action=close]');
- await click('[data-action=draft-scope][data-scope=party]');await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length===3'),'Party recommendations missing');
+ await click('[data-action=draft-scope][data-scope=party]');await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length===6'),'Party recommendations missing');
  await click('[data-action=result-detail]');assert.equal(await js('document.querySelectorAll(".lineup-detail .member").length'),3);await click('[data-action=close]');
- await click('[data-action=draft-scope][data-scope=bot]');await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length===3'),'Bot recommendations missing');
+ await click('[data-action=draft-scope][data-scope=bot]');await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length===6'),'Bot recommendations missing');
  assert.equal(await js('document.querySelectorAll(".card-members .member").length'),6);await capture('bot-recommendations.png');
  const first=await js('document.querySelector(".card-members").textContent');await click('[data-action=reroll]');await until(()=>js(`document.querySelector(".card-members")?.textContent!==${JSON.stringify(first)}`),'Reroll did not change pairs');
  await click('[data-action=combination-library]');assert.equal(await js('document.querySelectorAll(".combo-row").length'),155);

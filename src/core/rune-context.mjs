@@ -1,8 +1,13 @@
 // Public context of the user's click; no credentials or player identifiers.
 export const RUNE_PHASES=['None','Lobby','Matchmaking','ReadyCheck','ChampSelect'];
+// Champ select owns its current game ID. Gameflow may still describe the
+// previous game (or report 0) until this selection reaches game start.
+export function champSelectGameId(session,game){
+ return [session?.gameId,game?.gameId].map(v=>String(v??'')).find(v=>/^[1-9]\d{0,19}$/.test(v))||'';
+}
 export function runeWriteContext(client){
  if(!client?.connected||!RUNE_PHASES.includes(client.phase))throw Error('请在大厅或选人阶段应用符文');
- const result={phase:client.phase,gameId:/^\d{1,20}$/.test(String(client.game?.gameId||''))&&Number(client.game.gameId)>0?String(client.game.gameId):null};
+ const result={phase:client.phase,gameId:champSelectGameId(client.phase==='ChampSelect'?client.session:null,client.game)||null};
  if(client.phase==='ChampSelect'){
   const session=client.session,cell=session?.localPlayerCellId,own=session?.myTeam?.find(p=>p.cellId===cell);
   if(!Number.isInteger(cell)||cell<0||cell>=30||!own||![own.championId||0,own.championPickIntent||0].every(n=>Number.isSafeInteger(n)&&n>=0))throw Error('未能确认当前选人对象，请同步客户端后重新点击应用');

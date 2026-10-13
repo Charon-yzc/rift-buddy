@@ -33,7 +33,7 @@ async function run(){
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true);
  await until(()=>js('!!document.querySelector("#solo-role")'),'Default solo mode missing');
  const click=selector=>js(`document.querySelector(${JSON.stringify(selector)}).click()`),state=()=>js('window.buddy.bootstrap().then(b=>b.state)'),status=()=>js('window.buddy.client(true)');
- await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length===3'),'Solo worker results missing');
+ await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length===6'),'Solo worker results missing');
  assert.equal(await js('document.querySelectorAll(".card-members .member").length'),3,'Solo must suggest one player per result');
  await click('[data-action=solo-role][data-role=top]');await delay(180);assert.equal((await state()).draft.soloRole,'top');
  await status();assert.equal((await state()).guide,null,'Unavailable live identity must wait');

@@ -47,6 +47,15 @@ test('write permission and atomic rename failures retain the old set and remove 
  await assert.rejects(f.write(next,failed),/原文件已保留/);assert.equal(await fs.readFile(filename,'utf8'),before);assert.deepEqual(await fs.readdir(f.target),[itemSet.uid+'.json']);
 });
 
+test('a selection guard is evaluated after a preceding item-set write and preserves its committed file when the queued click expires',async()=>{
+ const f=await fixture();let release,entered,queued;const ready=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve),waiting=new Promise(resolve=>queued=resolve);let current=true,guards=0;
+ const first=importItemSet({itemSet,data},{...f.deps,beforeCommit:async()=>{entered();await gate;}});await ready;
+ const disk={...fs,realpath:async filename=>{const result=await fs.realpath(filename);if(filename===f.target)setImmediate(queued);return result;}};
+ const second=importItemSet({itemSet:{...itemSet,title:itemSet.title+' Queued'},data},{...f.deps,io:disk,beforeCommit:async()=>{guards++;if(!current)throw Error('选人会话已变化');}});
+ await waiting;assert.equal(guards,0,'Second commit remains behind the first write');current=false;release();await first;await assert.rejects(second,/选人会话已变化/);assert.equal(guards,1);
+ assert.deepEqual(JSON.parse(await fs.readFile(path.join(f.target,itemSet.uid+'.json'))),itemSet);assert.deepEqual(await fs.readdir(f.target),[itemSet.uid+'.json']);
+});
+
 test('an existing set that requires read permission produces the same actionable authorization fallback before creating temporary files',async()=>{
  const f=await fixture();await f.write();const filename=path.join(f.target,itemSet.uid+'.json'),before=await fs.readFile(filename,'utf8'),io={...fs,readFile:async(file,...args)=>{if(file===filename)throw Object.assign(Error('isolated read denial'),{code:'EACCES'});return fs.readFile(file,...args);}};
  await assert.rejects(f.write({...itemSet,title:itemSet.title+' New'},io),/写入被拒绝.*连接授权/);assert.equal(await fs.readFile(filename,'utf8'),before);assert.deepEqual(await fs.readdir(f.target),[itemSet.uid+'.json']);

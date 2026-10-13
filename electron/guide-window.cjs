@@ -160,9 +160,9 @@ function publish(){if(peek.active())peek.sync(visibilityRequested);const value=p
   if(action==='live-advice')return save({...current,liveAdvice:current.liveAdvice===false});
   if(action==='jungle'){
    const m=getModel();if(!m.jungle)throw Error('当前不是峡谷打野指引');
-   if(typeof value!=='string'||value.length>30)throw Error('野区标记不正确');
+   if(typeof value!=='string'||value.length>100)throw Error('野区标记不正确');
    const [field,choice]=value.split(':'),{changeJungleNotes}=require(path.join(root,'src/core/jungle-guidance.mjs'));
-   return save({...current,jungleNotes:changeJungleNotes(current.jungleNotes,field,choice,m.live?.matched?m.live.gameTime:null)});
+   return save({...current,jungleNotes:changeJungleNotes(current.jungleNotes,field,choice,m.live?.matched?m.live.gameTime:null,m.jungle.route)});
   }
   if(['threatId','protectId','combatFocus'].includes(action)){
    const m=getModel();if(m.mode!=='rift')throw Error('当前模式不使用峡谷关注目标');

@@ -25,7 +25,7 @@ const api=window.guide||{
   if(action==='presentation')return {...snapshot,presentation:changePresentation(snapshot.presentation,value)};
   if(action==='reset-layout'||action==='recover'){s.ball=false;s.strip=false;s.collapsed=false;s.compact=true;}
   if(action==='layout'){s.compact=value==='compact';s.ball=false;s.strip=false;s.collapsed=false;}
-  if(action==='jungle'){const [field,choice]=value.split(':');s.jungleNotes=changeJungleNotes(s.jungleNotes,field,choice,snapshot.model?.live?.matched?snapshot.model.live.gameTime:null);}
+  if(action==='jungle'){const [field,choice]=value.split(':');s.jungleNotes=changeJungleNotes(s.jungleNotes,field,choice,snapshot.model?.live?.matched?snapshot.model.live.gameTime:null,snapshot.model?.jungle?.route);}
   if(action==='jungle-widget')s.jungleWidget={...s.jungleWidget,enabled:s.jungleWidget?.enabled===false};
   if(action==='skill-widget')s.skillWidget={...s.skillWidget,enabled:s.skillWidget?.enabled===false};
   if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}

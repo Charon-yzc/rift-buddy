@@ -1,49 +1,51 @@
-// Only the assistant's own window is resized. The observed League windows
-// are read-only anchors, including on mixed-DPI and disconnected displays.
-module.exports=function createClientCompanion({root,getWindow,createWindow,getClient,getPreferences,savePlacement,placement,diagnostic}){
+const path=require('node:path');
+const {pathToFileURL}=require('node:url');
+const sidebarPlacement=require('./companion-placement.cjs');
+// League windows are read-only anchors. The sidebar has its own lifetime and
+// bounds; opening the full assistant never resizes or replaces either window.
+module.exports=function createClientCompanion({root,getWindow,showMain,getClient,getPreferences,savePlacement,placement,diagnostic}){
  const {screen,BrowserWindow}=require('electron');
- let native=null,docked=false,normal=null,pinned=false,phase='',expanded=false,dismissed=false,hidden=false,last='',lastPublished='';
- let boundWindow=null,manual=false,manualBounds=null,timer=null;
- const peek=require('./window-peek.cjs')({root,getWindow,getArea:()=>screen.getDisplayMatching(getWindow()?.getBounds()||screen.getPrimaryDisplay().bounds).workArea,title:'选人助手',onRestore:()=>{const win=getWindow();if(docked)sync();else win?.show();}});
- const layout=()=>({docked,...(docked?{overlap:last==='edge',custom:!!(manualBounds||getPreferences().companionBounds)}:{})});
- const limits=area=>({minWidth:Math.min(280,area.width),minHeight:Math.min(480,area.height),maxWidth:area.width,maxHeight:area.height});
- function bindWindow(){const win=getWindow();if(!win||win===boundWindow)return;boundWindow=win;
-  const begin=()=>{manual=true;clearTimeout(timer);};
-  const remember=()=>{if(!manual||win.isMinimized()||win.isMaximized())return;if(docked)manualBounds=win.getBounds();clearTimeout(timer);timer=setTimeout(async()=>{manual=false;timer=null;const b=win.getBounds(),key=docked?'companionBounds':'mainBounds';if(docked)manualBounds=b;try{await savePlacement({[key]:b});publish();}catch(error){diagnostic('window placement not saved '+error.message);}},350);};
+ let native=null,side=null,ready=false,phase='',dismissed=false,manual=false,manualBounds=null,boundMain=null,overlap=false,cancelSidePlacement=()=>{},cancelMainPlacement=()=>{};
+ const published=new Map();
+ const areaFor=b=>screen.getDisplayMatching(b||screen.getPrimaryDisplay().bounds).workArea;
+ const limits=area=>({minWidth:Math.min(280,area.width),minHeight:Math.min(320,native?.height||320,area.height),maxWidth:area.width,maxHeight:area.height});
+ const peek=require('./window-peek.cjs')({root,getWindow:()=>side,getArea:()=>areaFor(side?.getBounds()),title:'选人侧栏',onRestore:()=>sync()});
+ function layout(surface='main'){return surface==='companion'?{surface,docked:true,overlap,custom:!!(manualBounds||getPreferences().companionBounds)}:{surface:'main',docked:false,companionVisible:!!side&&!side.isDestroyed()&&side.isVisible()};}
+ function publish(){for(const [surface,win] of [['main',getWindow()],['companion',side]]){if(!win||win.isDestroyed())continue;const value=layout(surface),key=JSON.stringify(value);if(published.get(win.webContents.id)!==key){published.set(win.webContents.id,key);win.webContents.send('window-layout',value);}}}
+ function bindPlacement(win,key){let moving=false,saveTimer=null;const id=win.webContents.id;
+  const begin=()=>{moving=true;if(key==='companionBounds')manual=true;clearTimeout(saveTimer);};
+  const remember=()=>{if(!moving||win.isMinimized()||win.isMaximized())return;if(key==='companionBounds')manualBounds=win.getBounds();clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{moving=false;saveTimer=null;if(key==='companionBounds')manual=false;try{await savePlacement({[key]:win.getBounds()});publish();}catch(error){diagnostic('window placement not saved '+error.message);}},350);};
   win.on('will-move',begin);win.on('will-resize',begin);win.on('move',remember);win.on('resize',remember);
-  win.on('closed',()=>{peek.destroy();clearTimeout(timer);timer=null;manual=false;boundWindow=null;});
+  const cancel=()=>{clearTimeout(saveTimer);saveTimer=null;moving=false;if(key==='companionBounds')manual=false;};win.on('closed',()=>{cancel();published.delete(id);});return cancel;
  }
- function publish(){const win=getWindow(),key=JSON.stringify(layout());if(win&&!win.isDestroyed()&&key!==lastPublished){lastPublished=key;win.webContents.send('window-layout',layout());}}
- function restore(hide=false){
-  const win=getWindow();if(!docked)return;
-  const wasFolded=peek.active();peek.unfold();clearTimeout(timer);timer=null;manual=false;docked=false;hidden=false;
-  if(win&&!win.isDestroyed()){
-   if(hide)win.hide();
-   const area=screen.getDisplayMatching(normal||win.getBounds()).workArea;
-   win.setMinimumSize(Math.min(1050,area.width),Math.min(720,area.height));
-   win.setBounds(placement.fitWindow(normal,area,{minWidth:Math.min(1050,area.width),minHeight:Math.min(720,area.height),maxWidth:area.width,maxHeight:area.height,width:1460,height:980}));
-   win.setAlwaysOnTop(pinned);if(wasFolded&&!hide)win.showInactive();publish();
-  }
+ function bindWindow(){const main=getWindow();if(!main||main===boundMain)return;boundMain=main;cancelMainPlacement=bindPlacement(main,'mainBounds');main.on('closed',()=>{boundMain=null;});publish();}
+ function create(){
+  const area=areaFor(native),bounds=sidebarPlacement(native,area,getPreferences().companionWidth);
+  side=new BrowserWindow({...bounds,...limits(area),title:'开黑搭子 · 选人侧栏',backgroundColor:'#10151e',icon:path.join(root,'assets/icon.png'),show:false,autoHideMenuBar:true,skipTaskbar:true,
+   webPreferences:{preload:path.join(root,'electron/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  const win=side,url=pathToFileURL(path.join(root,'src/index.html'));url.searchParams.set('surface','companion');
+  win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',(event,value)=>{if(value!==url.href)event.preventDefault();});
+  cancelSidePlacement=bindPlacement(win,'companionBounds');
+  win.on('close',()=>{dismissed=true;});win.on('closed',()=>{if(side===win){side=null;ready=false;manual=false;peek.destroy();publish();}});
+  win.once('ready-to-show',()=>{if(side===win){ready=true;sync();}});
+  win.webContents.on('render-process-gone',(_event,detail)=>diagnostic('sidebar renderer gone '+detail.reason));
+  win.loadFile(path.join(root,'src/index.html'),{query:{surface:'companion'}});publish();
  }
+ function release(){peek.destroy();cancelSidePlacement();if(side&&!side.isDestroyed())side.destroy();side=null;ready=false;publish();}
  function sync(){
   const client=getClient(),next=client.connected?client.phase:'Offline';
-  if(next!==phase){phase=next;expanded=false;dismissed=false;}
-  if(phase!=='ChampSelect'||getPreferences().clientCompanion===false||expanded||dismissed){const inGame=['GameStart','InProgress','Reconnect'].includes(phase);restore(inGame);peek.sync(!inGame,!!native?.foreground||BrowserWindow.getAllWindows().some(w=>!w.isDestroyed()&&w.isFocused()));return;}
-  if(!native||native.minimized){peek.sync(false);if(docked){getWindow()?.hide();hidden=true;}return;}
-  let win=getWindow();if(!win||win.isDestroyed()){createWindow();win=getWindow();}
-  bindWindow();
-  if(!docked){const current=win.getBounds();if(!normal||['x','y','width','height'].some(k=>Math.abs(current[k]-normal[k])>4))normal=current;pinned=win.isAlwaysOnTop();docked=true;}
-  const saved=manualBounds||getPreferences().companionBounds,area=screen.getDisplayMatching(saved||native).workArea,b=saved?{...placement.fitWindow(saved,area,limits(area)),side:'custom'}:placement.companionPlacement(native,area,getPreferences().companionWidth);
-  win.setMinimumSize(Math.min(280,area.width),Math.min(480,area.height));
-  // Windows rounds framed window bounds at fractional display scales. Avoid
-  // repeatedly resizing a window that is already within that rounding margin.
-  const current=win.getBounds();if(!manual&&['x','y','width','height'].some(k=>Math.abs(current[k]-b[k])>3))win.setBounds({x:b.x,y:b.y,width:b.width,height:b.height});
-  // Include our modal dialogs in the foreground interaction group. Never
-  // repeatedly toggle the topmost flag while focus moves inside the assistant.
-  const onTop=native.foreground||BrowserWindow.getAllWindows().some(w=>!w.isDestroyed()&&w.isFocused());if(win.isAlwaysOnTop()!==onTop)win.setAlwaysOnTop(onTop,'floating');
-  if(peek.active()){win.hide();peek.sync(true,onTop);}else if(!win.isVisible()||hidden){win.showInactive();hidden=false;}
-  last=b.side;publish();
+  if(next!==phase){phase=next;dismissed=false;}
+  if(phase!=='ChampSelect'||getPreferences().clientCompanion===false||dismissed){release();return;}
+  if(!native||native.minimized){peek.sync(false,false);if(side&&!side.isDestroyed()&&side.isVisible())side.hide();publish();return;}
+  if(!side||side.isDestroyed())create();
+  const saved=manualBounds||getPreferences().companionBounds,area=areaFor(saved||native),bounds=saved?placement.fitWindow(saved,area,limits(area)):sidebarPlacement(native,area,getPreferences().companionWidth);
+  overlap=!saved&&bounds.overlap===true;const minimum=side.getMinimumSize(),nextLimits=limits(area);if(minimum[0]!==nextLimits.minWidth||minimum[1]!==nextLimits.minHeight)side.setMinimumSize(nextLimits.minWidth,nextLimits.minHeight);
+  // Fractional-DPI rounding and native observation noise must not cause a
+  // resize on every tick. Width is fixed; normal movement changes position only.
+  const current=side.getBounds();if(!manual&&['x','y','width','height'].some(k=>Math.abs(current[k]-bounds[k])>3))side.setBounds({x:bounds.x,y:bounds.y,width:bounds.width,height:bounds.height});
+  const onTop=!!native.foreground;if(side.isAlwaysOnTop()!==onTop)side.setAlwaysOnTop(onTop,'floating');
+  if(peek.active()){if(side.isVisible())side.hide();peek.sync(true,onTop);}else if(ready&&!side.isVisible())side.showInactive();publish();
  }
- async function reset(all=false,defaults=false){peek.unfold();clearTimeout(timer);timer=null;manual=false;manualBounds=null;await savePlacement({companionBounds:undefined,...(defaults?{companionWidth:520}:{}),...(all?{mainBounds:undefined}:{})});if(all){normal=null;const win=getWindow();if(win&&!docked){const area=screen.getDisplayMatching(win.getBounds()).workArea;win.setBounds(placement.fitWindow(null,area,{width:1460,height:980,minWidth:Math.min(1050,area.width),minHeight:Math.min(720,area.height),maxWidth:area.width,maxHeight:area.height}));}}sync();publish();return layout();}
- return {layout,sync,bindWindow,reset,unfold:()=>peek.unfold(),fold:()=>{peek.fold();return layout();},observe:value=>{native=value;sync();},setMode:value=>{expanded=!value;dismissed=false;if(!value)restore();else sync();publish();return layout();},dismiss:()=>{dismissed=true;restore();},destroy:()=>{peek.destroy();clearTimeout(timer);restore();}};
+ async function reset(all=false,defaults=false){peek.unfold();cancelSidePlacement();manualBounds=null;await savePlacement({companionBounds:undefined,...(defaults?{companionWidth:440}:{}),...(all?{mainBounds:undefined}:{})});if(all){cancelMainPlacement();const main=getWindow();if(main&&!main.isDestroyed()){const area=areaFor(main.getBounds());main.setBounds(placement.fitWindow(null,area,{width:1460,height:980,minWidth:Math.min(1050,area.width),minHeight:Math.min(720,area.height),maxWidth:area.width,maxHeight:area.height}));}}dismissed=false;sync();return layout();}
+ return {layout,sync,bindWindow,reset,getWindow:()=>side,unfold:()=>{peek.unfold();sync();},fold:()=>{peek.fold();publish();return layout('companion');},observe:value=>{native=value;sync();},setMode:value=>{if(!value)showMain();else{dismissed=false;peek.unfold();sync();}return layout(value?'companion':'main');},dismiss:()=>{dismissed=true;release();},destroy:release};
 };

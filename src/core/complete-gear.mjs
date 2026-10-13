@@ -2,6 +2,7 @@ import {itemConflicts} from './mechanics.mjs';
 import {equipmentRoute} from './route-profile.mjs';
 import {purchasePlan} from './purchase.mjs';
 import {inventoryFulfillsItem,situationItemIssue} from './live-situation.mjs';
+import {equipmentUse,equipmentCondition} from './equipment-notes.mjs';
 
 export const COMPLETE_GEAR_PATCH='16.20';
 const normalQueues=new Set([400,420,430,440]);
@@ -64,11 +65,12 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
   const heldConflict=held.find(old=>old!==id&&itemConflicts(Number(id),[Number(old)]));
   const pinnedConflict=conflicts.find(old=>protectedIds.has(old));
   const blockedReason=heldConflict?'与已持有的'+item(heldConflict)?.name+'互斥；先在商店决定是否换装':pinnedConflict?'需改动已选核心或个人备选 '+item(pinnedConflict)?.name:null;
-  candidates.push({id,name:item(id).name,kind:signal.kind,source:signal.source,priority:signal.priority||0,reason:clean(signal.evidence)+'。'+reason,caution,blockedReason,alreadyPlanned:route.includes(id),teamAntiheal:signal.kind==='healing'&&teamAntiheal.length>0});
+  candidates.push({id,name:item(id).name,kind:signal.kind,when:equipmentCondition(signal.kind),use:equipmentUse(item(id),data.patch),source:signal.source,priority:signal.priority||0,reason:clean(signal.evidence)+'。'+reason,caution,blockedReason,alreadyPlanned:route.includes(id),teamAntiheal:signal.kind==='healing'&&teamAntiheal.length>0});
  };
  for(const signal of signals){
+  if(signal.kind==='resist'&&profile.enchanter)notes.push('对手已投入魔抗；当前是增益保护路线，保留辅助装备，让负责输出的队友比较穿透。');
   if(signal.kind==='armor'&&profile.physical)add(signal,build.key==='fighter'?'3071':build.key==='adAssassin'||build.key==='ezreal'?'6694':'3036','考虑百分比护甲穿透；排在两件打法核心之后，替换尚未购买的后续装备。','只在你需要持续攻击这些护甲目标时提前；穿透家族不能并购，不能由装备投入推断其实际抗性。');
-  if(signal.kind==='resist'&&profile.magic)add(signal,'3135','考虑百分比法术穿透，保留两件打法核心。','需要你稳定造成魔法伤害；法穿家族互斥，法强投入不能代表全部伤害类型。');
+  if(signal.kind==='resist'&&profile.magic&&!profile.enchanter)add(signal,'3135','考虑百分比法术穿透，保留两件打法核心。','需要你稳定造成魔法伤害；法穿家族互斥，法强投入不能代表全部伤害类型。');
   if(signal.kind==='magic'&&!held.some(id=>item(id)?.tags?.includes('SpellBlock')&&full(id)))add(signal,profile.tank?'2504':profile.enchanter?'3190':profile.magic?'3102':profile.physical?'3156':null,'将适合当前路线的魔法防御成装提前到两件核心之后。','防御会推迟输出；已选血手、盾弓等护盾家族与饮魔刀可能互斥，主动/护盾触发要以游戏内说明为准。');
   if(signal.kind==='physical'&&profile.tank)add(signal,'3143','考虑护甲成装；若主要威胁依靠暴击普攻，兰顿的减暴击与主动减速更有价值。','物理技能、真实伤害或远处法术并不等于暴击普攻压力；需玩家核对伤害方式并手动使用主动。');
   if(signal.kind==='healing'){
@@ -87,6 +89,10 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
   conditional('magic','3156','主要威胁是魔法爆发、需要自己承接时比较饮魔刀路线。','可能与已选护盾家族互斥；会延后输出，不凭法强装备判断实际伤害。');
   conditional('survival','3026','有队友接应、需要第二次进场机会时比较守护天使。','复活位置仍危险时可能再次被击杀；不要当作可随意进场。');
   if(['crit','jhin','meleeCrit'].includes(build.key))conditional('healing','3033','需要自己用物理伤害覆盖治疗目标时比较凡性的提醒。','先和队友沟通重伤覆盖；与其他百分比穿甲互斥。');
+ }else if(profile.enchanter){
+  conditional('teamProtection','3190','需要贴近多名队友承接爆发时比较鸟盾。','牺牲部分增益属性，主动范围与时机由玩家确认。');
+  conditional('control','3222','需要帮关键队友解除可被净化的控制时比较米凯尔的祝福。','不能解除所有控制；具体控制类型、施放范围和主动时机须在游戏内核对。');
+  conditional('teamProtection','3107','需要为聚集作战的队友补充范围治疗时比较救赎。','治疗有落地延迟，先看队友是否能留在范围内，不代替及时保护技能。');
  }else if(profile.magic){
   conditional('resist','3135','需要自己持续处理魔抗目标时比较百分比法穿。','法穿家族互斥；无法稳定命中时并不能解决输出问题。');
   conditional('survival','3157','需要承接敌方爆发或等待队友跟进时比较中娅。','主动由玩家使用；金身结束后仍需退路与接应。');
@@ -95,8 +101,6 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
   conditional('magic','2504','需要持续承接魔法压力时比较魔抗成装。','按实际伤害方式核对，不能只凭敌方英雄标签。');
   conditional('physical','3143','主要威胁是暴击普攻时比较兰顿。','物理技能和真实伤害不等于暴击普攻，主动仍需玩家使用。');
   conditional('healing','3075','自己能承接治疗目标普攻时比较荆棘之甲。','对方不攻击你时不能可靠覆盖其治疗，先分配重伤职责。');
- }else if(profile.enchanter){
-  conditional('teamProtection','3190','需要贴近多名队友承接爆发时比较鸟盾。','牺牲部分增益属性，主动范围与时机由玩家确认。');
  }
  candidates.sort((a,b)=>b.priority-a.priority);
  const updates=[];
@@ -122,7 +126,7 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  if(selection.bottomQuestPlan&&!bottomQuestEligible)notes.unshift('本局正式位置或队列不满足下路第七件条件，按六格参考。');
  const manualProgress=route.some(planned);
  if(manualProgress)notes.unshift('按详情中的手动计划标记推进；尚未读取真实背包，标记不代表已持有。');
- const describe=id=>({pending:pendingQuest&&route[6]===id,id,name:item(id)?.name||id,cost:item(id)?.gold?.total??null,description:clean(item(id)?.description),owned:owns(id),planned:planned(id),fromPreparation:baseSet.has(id),suggested:!baseSet.has(id),protected:protectedIds.has(id),reason:updates.find(c=>c.id===id)?.reason||(!baseSet.has(id)?'适合当前路线的后续参考；无整套联合胜率':null)});
+ const describe=id=>({pending:pendingQuest&&route[6]===id,id,name:item(id)?.name||id,cost:item(id)?.gold?.total??null,use:equipmentUse(item(id),data.patch),description:clean(item(id)?.description),owned:owns(id),planned:planned(id),fromPreparation:baseSet.has(id),suggested:!baseSet.has(id),protected:protectedIds.has(id),reason:updates.find(c=>c.id===id)?.reason||(!baseSet.has(id)?'适合当前路线的后续参考；无整套联合胜率':null)});
  const next=route.find(id=>!owns(id)&&!planned(id)&&!(pendingQuest&&route[6]===id));
  return {pendingQuest,manualProgress,automatic,changed:JSON.stringify(route)!==JSON.stringify(baseline),rulesPatch:COMPLETE_GEAR_PATCH,route:route.map(describe),baseline:baseline.map(describe),next:next?describe(next):null,updates,alternatives:candidates.filter(c=>!c.alreadyPlanned&&!updates.some(u=>u.id===c.id)).slice(0,3),notes,slotLimit,reservedSupport:!!build.support,
   basis:automatic?'按公开装备与手动局势更新，保留已买和两件打法核心':'原准备与后续成装参考',caution:'顺序是机制建议；先核对兵线、回城和商店，不自动购买、出售或改动保存方案。'};

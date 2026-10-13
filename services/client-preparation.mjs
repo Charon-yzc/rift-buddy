@@ -3,7 +3,7 @@ import {importItemSet} from './item-sets.mjs';
 import {validateRunePage} from '../src/core/builds.mjs';
 import {validateItemSet} from '../src/core/item-sets.mjs';
 import {validateSummonerIds,summonerOptions} from '../src/core/summoner-selection.mjs';
-import {runeWriteContext,validateRuneWriteContext,sameRuneWriteContext} from '../src/core/rune-context.mjs';
+import {runeWriteContext,validateRuneWriteContext,sameRuneWriteContext,champSelectGameId} from '../src/core/rune-context.mjs';
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
 
@@ -30,8 +30,8 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   if(await request(auth,'/lol-gameflow/v1/gameflow-phase')!=='ChampSelect')throw Error('已离开选人阶段，请在客户端核对');
   const game=sanitizeGame(await request(auth,'/lol-gameflow/v1/session'));
   if(identifyMode(game).id!=='rift')throw Error('当前模式尚不支持客户端预选并配置');
-  const raw=await request(auth,'/lol-champ-select/v1/session'),session=sanitizeSession(raw),gameId=String(session.gameId||game.gameId||'');
-  if(gameId!==selected.sessionGameId||String(game.gameId||'')!==selected.sessionGameId)throw Error('未能确认仍是本局，请同步客户端后重试');
+  const raw=await request(auth,'/lol-champ-select/v1/session'),session=sanitizeSession(raw),gameId=champSelectGameId(session,game);
+  if(gameId!==selected.sessionGameId)throw Error('选人会话已变化，请同步客户端后重试');
   const context=runeWriteContext({connected:true,phase:'ChampSelect',session,game}),own=raw.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
   const actions=(Array.isArray(raw.actions)?raw.actions:[]).flat().filter(a=>a?.type==='pick'&&a.actorCellId===session.localPlayerCellId);
   if(!own||actions.length!==1||!Number.isSafeInteger(actions[0].id)||actions[0].id<0)throw Error('未能确认本人的选人操作，请同步后重试');
@@ -87,7 +87,7 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   if(spells?.spell1Id!==spell1Id||spells?.spell2Id!==spell2Id)throw Error('客户端未确认召唤师技能，请手动核对');
   result.steps.spells={status:'done'};
   step='items';await ensure();
-  const items=await writeItems({itemSet:selected.itemSet,data,installPath},{discover:async()=>auth,request});
+  const items=await writeItems({itemSet:selected.itemSet,data,installPath},{discover:async()=>auth,request,beforeCommit:ensure});
   result.steps.items={status:'done',title:items.title};
  }catch(error){
   result.steps[step]={status:'failed',message:String(error.message||'操作未完成')};

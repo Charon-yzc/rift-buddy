@@ -6,6 +6,7 @@ import {getBuild} from '../src/core/builds.mjs';
 import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {companionView} from '../src/companion-view.mjs';
+import {captureCreativePlan,creativeMemberCombo,creativeComboContext} from '../src/core/creative-plan.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),base={id:'Volibear',role:'top',mode:'rift',conditions:[],coreIndex:0};
@@ -45,6 +46,43 @@ test('inline rune and equipment choices stay independent and survive preparation
  const skill=original.skillChoices.at(-1);
  selected=changeCompanionPlan(data,recalled,'skill',skill.id);
  assert.equal(build(selected).skillOrder,skill.order);assert.equal(build(selected).selectedRuneId,rune.id);
+});
+
+test('unlocked hover resolves the accepted trio configuration and preserves personal choices under its exact plan',()=>{
+ const picks={top:'Camille',jungle:'Vi',mid:'Galio'};
+ const slots=createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
+ const [result]=recommend({slots,champions:data.champions,scope:'party',limit:1}),creativePlan=captureCreativePlan(result,data);
+ const accepted={id:'Galio',role:'mid',mode:'rift',...creativeComboContext(creativeMemberCombo(creativePlan,'Galio','mid'))};
+ const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:2,myTeam:[{cellId:2,championId:0,championPickIntent:hero('Galio').key,assignedPosition:'MIDDLE'}]}};
+ const intent=companionPickIntent(client,data.champions,slots,{creativePlan});
+ assert.deepEqual(intent.selection,accepted);
+ assert.equal(build(intent.selection).runePage.selectedPerkIds[0],8439,'Accepted engage trio needs its Aftershock page, not the ordinary source page');
+ const store=createPreparationStore(),custom=changeCompanionPlan(data,accepted,'summoner-swap');store.remember(custom);
+ const recalled={...recallPreparation(store,null,intent.selection),...intent.selection};
+ assert.deepEqual(build(recalled).summoners,build(custom).summoners);
+ assert.deepEqual(build(recalled).items,build(accepted).items);
+ assert.equal(companionPickIntent(client,data.champions,slots,{creativePlan,soloRole:'support'}).selection.comboId,accepted.comboId,'Formal lane takes precedence');
+ const different=structuredClone(client);different.session.myTeam[0].championPickIntent=hero('Lux').key;
+ assert.equal(companionPickIntent(different,data.champions,slots,{creativePlan}).selection.comboId,undefined);
+ const moved=structuredClone(client);moved.session.myTeam[0].assignedPosition='SUPPORT';
+ assert.equal(companionPickIntent(moved,data.champions,createSlots(),{creativePlan}).selection.comboId,undefined);
+ assert.equal(companionPickIntent({...client,phase:'Lobby'},data.champions,slots,{creativePlan}),null);
+});
+
+test('confirming a candidate keeps its prepared combo before a saved solo default while teammates remain unknown',()=>{
+ const picks={top:'Camille',jungle:'Vi',mid:'Galio'},slots=createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
+ const [result]=recommend({slots,champions:data.champions,scope:'party',limit:1}),plan=captureCreativePlan(result,data);
+ const context={id:'Galio',role:'mid',mode:'rift'},clicked={...context,...creativeComboContext(creativeMemberCombo(plan,'Galio','mid'))},store=createPreparationStore();
+ const solo=store.remember(changeCompanionPlan(data,context,'summoner-swap'));
+ assert.notDeepEqual(build(solo).runePage.selectedPerkIds,build(clicked).runePage.selectedPerkIds);
+ const chosen=store.remember(clicked),personal=store.remember(changeCompanionPlan(data,chosen,'summoner-swap'));
+ const restored=recallPreparation(store,chosen,context,{allowSavedCombo:true});
+ assert.deepEqual(restored,personal,'Use the latest personal configuration for the currently prepared combo');
+ for(const field of ['runePage','summoners','items'])assert.deepEqual(build(restored)[field],build(personal)[field]);
+ assert.deepEqual(recallPreparation(store,chosen,context),solo,'Known solo context still selects its own saved preferences');
+ assert.equal(recallPreparation(store,chosen,{...context,comboId:'different-plan'}),null,'A different known lineup cannot inherit this preparation');
+ assert.equal(recallPreparation(store,chosen,{...context,role:'support'},{allowSavedCombo:true}),null,'Changing lane cannot inherit this preparation');
+ assert.deepEqual(store.recall(context),solo,'Remembered solo preferences remain intact');
 });
 
 test('invalid or stale inline options cannot alter a remembered plan',()=>{

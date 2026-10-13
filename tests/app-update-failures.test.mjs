@@ -75,7 +75,7 @@ test('release links preserve validated custom catalog sources without opening ar
 });
 async function mainFixture(service,preferences={}){
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),snapshots=[];
- const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences},app:{getVersion:()=> '0.46.0',quit:()=>{}},guard:(name,fn)=>handlers.set(name,fn),compareAppVersion:()=>1,releasePageUrl:()=>'',updater:()=>service,snapshots};
+ const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences},app:{getVersion:()=> '0.46.0',quit:()=>{}},guard:(name,fn)=>handlers.set(name,fn),compareAppVersion:()=>1,releasePageUrl:()=>'',updater:()=>service,publishWindows:(_channel,value)=>snapshots.push(value),snapshots};
  vm.createContext(context);
  const init=source.slice(source.indexOf(' let appUpdateStatus='),source.indexOf(' const {changePresentation}'));
  const guards=source.slice(source.indexOf(" guard('app-update-check'"),source.indexOf(" guard('apply-runes'"));
@@ -213,7 +213,7 @@ test('main serializes installation, blocks conflicting operations and restores r
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
  const handlers=new Map(),snapshots=[];let finish,launches=0,quits=0;
  const ready={phase:'ready',release,record:{version:release.version}};
- const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences:{}},app:{getVersion:()=> '0.45.0',quit:()=>quits++},guard:(name,fn)=>handlers.set(name,fn),compareAppVersion:()=>1,releasePageUrl:()=>'',updater:()=>({pending:async()=>({version:release.version}),install:()=>{launches++;return new Promise((resolve,reject)=>{finish={resolve,reject};});}})};
+ const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences:{}},app:{getVersion:()=> '0.45.0',quit:()=>quits++},guard:(name,fn)=>handlers.set(name,fn),compareAppVersion:()=>1,releasePageUrl:()=>'',publishWindows:(_channel,value)=>snapshots.push(value),updater:()=>({pending:async()=>({version:release.version}),install:()=>{launches++;return new Promise((resolve,reject)=>{finish={resolve,reject};});}})};
  vm.createContext(context);
  const init=source.slice(source.indexOf(" let appUpdateStatus="),source.indexOf(" const {changePresentation}"));
  const guards=source.slice(source.indexOf(" guard('app-update-check'"),source.indexOf(" guard('apply-runes'"));

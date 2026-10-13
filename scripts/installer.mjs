@@ -11,7 +11,7 @@ if(crypto.createHash('sha256').update(await fs.readFile(archive)).digest('hex')!
 if(await fs.stat(output).then(()=>true).catch(()=>false))throw Error('同版本安装程序已存在，请保留原文件并使用新版本号');
 async function walk(dir){const rows=[];for(const entry of await fs.readdir(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isSymbolicLink())throw Error('安装文件不能是符号链接');if(entry.isDirectory())rows.push(...await walk(file));else rows.push(path.relative(directory,file));}return rows;}
 const files=(await walk(directory)).sort(),script=path.resolve('.local',`installer-${manifest.version}.nsi`);
-await fs.mkdir(path.dirname(script),{recursive:true});await fs.writeFile(script,installerScript({version:manifest.version,directory,output,files,icon:path.join(root,'assets/icon.ico')}),'utf8');
+await fs.mkdir(path.dirname(script),{recursive:true});await fs.writeFile(script,installerScript({version:manifest.version,directory,output,files,obsoleteLocales:release.localesRemoved||[],icon:path.join(root,'assets/icon.ico')}),'utf8');
 const compiler=process.env.RIFT_BUDDY_MAKENSIS||'makensis.exe';
 await fs.mkdir(path.dirname(output),{recursive:true});
 await new Promise((resolve,reject)=>{const child=spawn(compiler,['/NOCONFIG','/INPUTCHARSET','UTF8',script],{stdio:'inherit',windowsHide:true});child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error(`安装程序生成失败：${code}`)));});

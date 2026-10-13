@@ -96,6 +96,8 @@ test('unknown and delayed public identifiers preserve manual work while a previo
  for(const value of [null,undefined,0,'0','missing-game','-1'])assert.deepEqual(reconcileClientDraft(draft,value),{draft,changed:false,newGame:false});
  assert.equal(publicClientGameId({connected:false,game:{gameId:'1507'}}),null);
  assert.equal(publicClientGameId({connected:true,game:{gameId:0},session:{gameId:1506}}),'1506');
+ for(const gameId of [0,1505,1507])assert.equal(publicClientGameId({connected:true,phase:'ChampSelect',game:{gameId},session:{gameId:1506}}),'1506','Current selection owns the identity, even while gameflow lags');
+ assert.equal(publicClientGameId({connected:true,phase:'InProgress',game:{gameId:1507},session:{gameId:1506}}),'1507','The running game owns its identity after selection');
  const first=reconcileClientDraft(draft,'1506');assert.equal(first.newGame,false);assert.deepEqual(first.draft.slots,slots);
  assert.equal(reconcileClientDraft(draft,'1506',1506).newGame,false,'Numeric previous ID was treated as a different game');
  const legacy=reconcileClientDraft(draft,'1507','1506');assert.equal(legacy.newGame,true);assert.equal(legacy.draft.soloRole,'');

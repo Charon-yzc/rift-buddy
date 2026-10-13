@@ -13,7 +13,9 @@ export function equipmentRoute({items=[],key,champion,data,support=false}){
  const martial=records.filter(i=>!i.stats?.FlatMagicDamageMod&&(i.stats?.FlatPhysicalDamageMod>0||i.tags?.some(t=>['AttackSpeed','CriticalStrike'].includes(t)))).length;
  const defense=records.filter(i=>!i.stats?.FlatMagicDamageMod&&!i.stats?.FlatPhysicalDamageMod&&i.tags?.some(t=>['Armor','SpellBlock'].includes(t))).length;
  const utility=records.filter(i=>i.tags?.includes('ManaRegen')).length;
- if(support&&utility>=2)kind='enchanter';
+ // AP on an enchanter's selected source core does not change the protection
+ // responsibility. A dedicated damage loadout supplies its own non-enchanter key.
+ if(support&&(utility>=2||base==='enchanter'))kind='enchanter';
  else if(ap>=2&&!martial)kind='magic';
  else if(martial>=2&&!ap)kind='physical';
  else if(defense>=2&&!ap&&!martial)kind='tank';

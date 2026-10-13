@@ -1,7 +1,8 @@
 # CHA-71 组队房间自动连接设计规格
 
 - Issue: [CHA-71 进入房间后自动通过中继网络连接并生成房间码](https://linear.app/challenger702/issue/CHA-71/进入房间后自动通过中继网络连接并生成房间码)
-- 基准分支：`upstream/main`（v0.46.0，`7c54f50`），工作分支：`feature/room-auto`，隔离 worktree（桌面 `rift-buddy-room-auto`）
+- 基准分支：`upstream/main`（v0.49.0，`e5c87f2`；本功能最初基于 v0.46.0 开发，合入前已并入 v0.47–v0.49 的上游改动）；下文的 `文件:行` 引用按最初基准记录，合入上游后行号可能偏移
+- 工作分支：`feature/room-auto`，隔离 worktree（桌面 `rift-buddy-room-auto`）
 - 范围决议（已批准）：房间码与口令派生自组队大厅共享标识；触发条件为“非自定义大厅且 ≥2 名开黑成员”；默认关闭、需用户明确开启；编排放主进程
 - 日期：2026-10-13
 
@@ -230,11 +231,11 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
 
 ## 10. 文档与版本
 
-- `README.md`：v0.47.0 段落（默认关闭、派生说明、未验证项）。
+- `README.md`：v0.50.0 段落（默认关闭、派生说明、未验证项）。
 - `使用说明.txt`：开黑房间章节补自动连接（如何开启、昵称是游戏 ID、口令非强认证、依赖自动同步）。
 - `docs/room-relay-deploy.md`：新增“组队房间自动连接”小节（派生规则、输入不是凭据、无服务端改动、双机未验证）。
 - `docs/development.md`：模块表加 `src/core/room-auto.mjs`；“真实客户端验收”补 §9 步骤。
-- `package.json`：`0.46.0` → `0.47.0`。
+- `package.json`：`0.46.0` → `0.50.0`。
 - `docs/superpowers/` 规格与计划是流程文档：CHA-68 的同类文档没有并入 upstream（PR #44 的合并结果不含该目录）。
   本分支是否把该目录并入 PR，交付时由用户决定。
 

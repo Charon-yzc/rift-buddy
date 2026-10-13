@@ -21,6 +21,15 @@ const paths=await packager({
  win32metadata:{CompanyName:'个人开黑工具',FileDescription:'开黑搭子 — 三人选人、出装符文与海克斯手册',ProductName:'开黑搭子',InternalName:'RiftBuddy',OriginalFilename:'开黑搭子.exe'},
  });
 const directory=paths[0];
+// This Chinese desktop app only needs Chinese UI resources and the English
+// fallback. Keep Chromium itself, codecs and license notices intact.
+const localeRoot=path.join(directory,'locales'),localesKept=['en-US.pak','zh-CN.pak','zh-TW.pak'];
+let localeBytesRemoved=0;const localesRemoved=[];
+for(const entry of await fs.readdir(localeRoot,{withFileTypes:true})){
+ if(entry.isFile()&&entry.name.endsWith('.pak')&&!localesKept.includes(entry.name)){
+  const file=path.join(localeRoot,entry.name);localeBytesRemoved+=(await fs.stat(file)).size;await fs.unlink(file);localesRemoved.push(entry.name);
+ }
+}
 const observer=path.join(directory,'resources/window-observer.exe');await fs.copyFile(builtObserver,observer);
 // Keep the signed, unmodified Node runtime separate from Electron's UI. The
 // connection process still uses normal Windows consent and the same scoped IPC.
@@ -39,7 +48,7 @@ await fs.copyFile(path.join(root,'使用说明.txt'),path.join(directory,'使用
 await fs.copyFile(path.join(root,'组合库维护说明.txt'),path.join(directory,'组合库维护说明.txt'));
 const exe=path.join(directory,'开黑搭子.exe');
 const digest=crypto.createHash('sha256').update(await fs.readFile(exe)).digest('hex');
-const record={createdAt:new Date().toISOString(),directory,executable:exe,sha256:digest,archiveSha256:crypto.createHash('sha256').update(await fs.readFile(path.join(directory,'resources/app.asar'))).digest('hex'),helperRuntime:process.version,helperSha256:crypto.createHash('sha256').update(await fs.readFile(path.join(helperRoot,'node.exe'))).digest('hex'),launcherSha256:crypto.createHash('sha256').update(await fs.readFile(launcher)).digest('hex')};
+const record={createdAt:new Date().toISOString(),directory,executable:exe,sha256:digest,archiveSha256:crypto.createHash('sha256').update(await fs.readFile(path.join(directory,'resources/app.asar'))).digest('hex'),helperRuntime:process.version,helperSha256:crypto.createHash('sha256').update(await fs.readFile(path.join(helperRoot,'node.exe'))).digest('hex'),launcherSha256:crypto.createHash('sha256').update(await fs.readFile(launcher)).digest('hex'),localesKept,localesRemoved,localeBytesRemoved};
 record.observerSha256=crypto.createHash('sha256').update(await fs.readFile(observer)).digest('hex');
 record.observerSourceSha256=crypto.createHash('sha256').update(await fs.readFile('electron/window-observer.cs')).digest('hex');
 await fs.writeFile(path.join(root,'release/latest.json'),JSON.stringify(record,null,2));

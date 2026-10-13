@@ -163,7 +163,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const laterNeeded=laterChoices.length?Math.max(0,build.maxLaterItems-build.selectedLaterIds.length):0;
  const mainNext=route.find(i=>!(matched?autoCompletedItems:completedItems).includes(i.id)&&!itemIssue(i))||null;
  const pinned=guide.purchaseTargetKind==='situation'?pinnedSituationItem({data,id:guide.purchaseTarget,mode:s.mode,champion:champion.id,inventory:matched?inventory:[]}):null;
- const choices=[...new Map([...preparedRoute,...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
+ const choices=[...new Map([...preparedRoute,...route,...build.early.map(item),...situation.candidates.map(c=>item(data.items[c.id])),...completeGear.alternatives.map(c=>item(data.items[c.id])),...(pinned?[item(pinned)]:[])].map(i=>[i.id,i])).values()];
  const shoppingTargets=choices.map(i=>({...i,kind:i.id===String(build.boots)?'鞋子':validIds.has(i.id)?'路线成装':preparedRoute.some(p=>p.id===i.id)?'原准备':build.early.some(early=>String(early.id)===i.id)?'提前应对':'局势备选',owned:inventoryKnown&&(inventoryFulfillsItem({data,id:i.id,inventory})||purchasePlan([i],data.items,inventory,live.gold)[0].owned),blockedReason:itemIssue(i)}));
  const chosen=shoppingTargets.find(i=>i.id===guide.purchaseTarget&&!i.owned&&!i.blockedReason&&(matched||!completedItems.includes(i.id)));
  // Route-wide allocation is retained for display, but earlier blocked goals
@@ -245,7 +245,7 @@ export function createGuideModel(data,value,live=null,current=null){
    at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,matchId:guide.match?.gameId||null,
-  jungle:jungleGuidance({champion:s.id,role:s.role,mode:s.mode,patch:data.patch,live:matched?{...live,matched:true}:null,notes:guide.jungleNotes,combo:build.combo}),completeGear,compact:guide.compact,jungleWidget:guide.jungleWidget,skillWidget:guide.skillWidget,laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
+  jungle:jungleGuidance({champion:s.id,role:s.role,mode:s.mode,patch:data.patch,live:matched?{...live,matched:true}:null,notes:guide.jungleNotes,combo:build.combo,matchId:guide.match?.gameId}),completeGear,compact:guide.compact,jungleWidget:guide.jungleWidget,skillWidget:guide.skillWidget,laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
   phase:s.mode==='rift'?gamePhase({...liveModel,role:s.role},action,next||null):null,
   objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch,plan:build.combo?.creativePlan,champion:s.id,confirmed:current?.comboKnown===true&&!mismatch,protectId:s.protectId,data}):null,
