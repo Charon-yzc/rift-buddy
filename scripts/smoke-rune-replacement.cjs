@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,globalShortcut}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),{EventEmitter}=require('node:events'),{pathToFileURL}=require('node:url');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[];
@@ -43,42 +44,50 @@ async function run(){
  };
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
- const js=code=>main.webContents.executeJavaScript(code,true),click=sel=>js('document.querySelector('+JSON.stringify(sel)+').click()');
+ const js=code=>main.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});
+ const click=async sel=>{sel=await revealDraftAction(js,sel);return js('(()=>{const el=document.querySelector('+JSON.stringify(sel)+');if(!el||el.disabled)throw Error("Control missing or disabled");el.click();})()');};
+ const applyRunes=async()=>{await click('[data-action=apply-runes]');await until(()=>js('document.querySelector("[data-action=apply-runes]")?.disabled===false'),'Rune application did not settle');};
+ const sync=async()=>{
+  if(await js('!!document.querySelector("[data-action=close]")'))await click('[data-action=close]');
+  await click('[data-action=navigate][data-route=settings]');await click('[data-action=sync]');
+  await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Client sync stayed pending');
+  await click('[data-action=navigate][data-route=draft]');
+ };
  await until(()=>js('!!document.querySelector("#solo-role")'),'Main not loaded');assert.equal(main.isVisible(),false);
  const initial=(await js('window.buddy.bootstrap()')).state.guide;assert.equal(initial.ball,false,'Legacy saved ball survived upgrade');assert.equal(initial.collapsed,false);
- await click('[data-action=sync]');await until(()=>js('!!document.querySelector("[data-action=my-runes]")'),'Prepared rune button missing');
- assert.match(await js('document.querySelector("[data-action=my-runes]").textContent'),/替换/);assert.equal(writes.length,0,'Preparation must not apply runes');
- await click('[data-action=my-runes]');await until(()=>js('document.querySelector("[data-action=my-runes]")?.textContent.includes("重新应用")'),'First replacement not confirmed');
+ await sync();await until(()=>js('!!document.querySelector("[data-action=task-edit]")'),'Own task edit missing');await click('[data-action=task-edit]');await until(()=>js('!!document.querySelector("[data-action=apply-runes]")'),'Prepared rune button missing');
+ assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/替换/);assert.equal(writes.length,0,'Preparation must not apply runes');
+ await applyRunes();await until(()=>js('document.querySelector(".rune-application-status")?.textContent.includes("已应用")'),'First replacement not confirmed');
  assert.deepEqual(writes,[{method:'PUT',path:'/lol-perks/v1/pages/22'}]);assert.equal(pages.length,3);assert.deepEqual(pages.find(p=>p.id===8000),preset);
  assert.equal((await js('window.buddy.bootstrap()')).state.ownedPageId,22);
  // A changed client selection still reuses the previously written page.
- pages=pages.map(p=>({...p,current:p.id===21}));await click('[data-action=my-runes]');await until(()=>writes.length===2,'Reapply missing');await delay(150);
+ pages=pages.map(p=>({...p,current:p.id===21}));await applyRunes();assert.equal(writes.length,2,'Reapply missing');
  assert.equal(writes[1].path,'/lol-perks/v1/pages/22');
  assert.deepEqual(selections,[22],'Unselected saved page was not explicitly selected');assert.equal(pages.find(p=>p.id===22).current,true);
- pages=pages.map(p=>({...p,current:p.id===21}));selectionRejected=true;await click('[data-action=my-runes]');
+ pages=pages.map(p=>({...p,current:p.id===21}));selectionRejected=true;await applyRunes();
  await until(()=>js('document.querySelector("#toast").textContent.includes("符文已保存")'),'Partial-save failure was not explained');
- assert.match(await js('document.querySelector("[data-action=my-runes]").textContent'),/替换/,'Failed selection retained an applied marker');
+ assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/替换/,'Failed selection retained an applied marker');
  assert.equal(pages.find(p=>p.id===22).current,false);assert.equal(writes.length,3);
- selectionRejected=false;await click('[data-action=my-runes]');await until(()=>js('document.querySelector("[data-action=my-runes]")?.textContent.includes("重新应用")'),'Retry selection was not confirmed');assert.equal(writes.length,4);assert.equal(pages.find(p=>p.id===22).current,true);
- await click('[data-action=my-build]');await until(()=>js('!!document.querySelector("[data-action=apply-runes]")'),'Full build missing');
+ selectionRejected=false;await applyRunes();await until(()=>js('document.querySelector(".rune-application-status")?.textContent.includes("已应用")'),'Retry selection was not confirmed');assert.equal(writes.length,4);assert.equal(pages.find(p=>p.id===22).current,true);
+ if(!await js('!!document.querySelector("[data-action=apply-runes]")'))await click('[data-action=task-edit]');await until(()=>js('!!document.querySelector("[data-action=apply-runes]")'),'Full build missing');
  assert.ok(await js('document.querySelector(".drawer").textContent.includes("直接覆盖一张可编辑符文页")'));assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/替换/);
- await click('[data-action=apply-runes]');await until(()=>writes.length===5,'Full build replacement missing');await delay(150);assert.equal(writes[4].path,'/lol-perks/v1/pages/22');
- pages=pages.map(p=>({...p,current:p.id===21}));selectionRejected=true;await click('[data-action=apply-runes]');
+ await applyRunes();assert.equal(writes.length,5,'Full build replacement missing');assert.equal(writes[4].path,'/lol-perks/v1/pages/22');
+ pages=pages.map(p=>({...p,current:p.id===21}));selectionRejected=true;await applyRunes();
  await until(()=>js('document.querySelector("#toast").textContent.includes("符文已保存")'),'Drawer partial-save failure was not explained');
  assert.ok(await js('document.querySelector(".rune-application-status").textContent.includes("尚未")'),'Drawer retained an applied marker after failed selection');assert.equal(writes.length,6);
- selectionRejected=false;await click('[data-action=apply-runes]');await until(()=>js('document.querySelector(".rune-application-status").textContent.includes("已应用")'),'Drawer retry did not confirm selection');assert.equal(writes.length,7);assert.equal(pages.find(p=>p.id===22).current,true);
+ selectionRejected=false;await applyRunes();await until(()=>js('document.querySelector(".rune-application-status").textContent.includes("已应用")'),'Drawer retry did not confirm selection');assert.equal(writes.length,7);assert.equal(pages.find(p=>p.id===22).current,true);
  // If that page was removed in the client, the remaining editable page works.
  pages=pages.filter(p=>p.id!==22).map(p=>({...p,current:p.id===21}));
- await click('[data-action=close]');await click('[data-action=my-runes]');await until(async()=>(await js('window.buddy.bootstrap()')).state.ownedPageId===21,'Missing-page fallback not saved');
+ await click('[data-action=close]');await click('[data-action=task-edit]');await applyRunes();await until(async()=>(await js('window.buddy.bootstrap()')).state.ownedPageId===21,'Missing-page fallback not saved');
  assert.equal(writes.at(-1).path,'/lol-perks/v1/pages/21');assert.equal(writes.length,8);assert.ok(writes.every(w=>w.method==='PUT'));assert.equal(pages.length,2);assert.deepEqual(pages.find(p=>p.id===8000),preset);
  const applied=pages.find(p=>p.id===21);assert.equal(applied.current,true);assert.ok(applied.name.startsWith('开黑搭子 · '));assert.equal(main.isVisible(),false);
  for(const changed of ['phase','game','hero']){
-  phase='ChampSelect';gameId='1401';ownChampion=originalChampion;await click('[data-action=sync]');await until(()=>js('!!document.querySelector("[data-action=my-runes]")'),'Restored own pick missing');
-  const beforePages=structuredClone(pages),beforeWrites=writes.length;changeOnPages=changed;await js('document.querySelector("#toast").textContent=""');await click('[data-action=my-runes]');
+  phase='ChampSelect';gameId='1401';ownChampion=originalChampion;await sync();await click('[data-action=task-edit]');await until(()=>js('document.querySelector("[data-action=apply-runes]")?.disabled===false'),'Restored own pick missing');
+  const beforePages=structuredClone(pages),beforeWrites=writes.length;changeOnPages=changed;await js('document.querySelector("#toast").textContent=""');await click('[data-action=apply-runes]');
   await until(()=>js('document.querySelector("#toast").textContent.includes("尚未写入符文")'),'Changed target not rejected: '+changed);
-  await until(()=>js('!document.querySelector("[data-action=my-runes]")?.disabled'),'Rejected action stayed pending');assert.equal(writes.length,beforeWrites);assert.deepEqual(pages,beforePages);
+  await until(()=>js('!document.querySelector("[data-action=apply-runes]")?.disabled'),'Rejected action stayed pending');assert.equal(writes.length,beforeWrites);assert.deepEqual(pages,beforePages);
  }
- const result={passed:true,archiveSha256:release.archiveSha256,legacyBallExpandedOnBoot:true,fullCollectionReplacement:true,noBlankPageRequired:true,creationAttempts:0,lastWrittenPageReused:true,deletedPageFallback:true,currentPageSelected:true,presetsUnchanged:true,preDispatchPhaseGameAndHeroChangesRejected:true,explicitClickOnly:true,bothApplicationButtons:true,loopbackSocketsMocked:true,actualRuneWrites:false,testWindowsHidden:true};
+ const result={passed:true,archiveSha256:release.archiveSha256,legacyBallExpandedOnBoot:true,fullCollectionReplacement:true,noBlankPageRequired:true,creationAttempts:0,lastWrittenPageReused:true,deletedPageFallback:true,currentPageSelected:true,presetsUnchanged:true,preDispatchPhaseGameAndHeroChangesRejected:true,explicitClickOnly:true,explicitDrawerRuneAction:true,loopbackSocketsMocked:true,actualRuneWrites:false,testWindowsHidden:true};
  await fs.writeFile(path.join(root,'rune-replacement-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'rune-replacement-smoke-error.txt'),error.stack).catch(()=>{});app.exit(1);});

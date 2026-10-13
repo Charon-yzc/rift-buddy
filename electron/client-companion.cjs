@@ -5,7 +5,7 @@ const sidebarPlacement=require('./companion-placement.cjs');
 // bounds; opening the full assistant never resizes or replaces either window.
 module.exports=function createClientCompanion({root,getWindow,showMain,getClient,getPreferences,savePlacement,placement,diagnostic}){
  const {screen,BrowserWindow}=require('electron');
- let native=null,side=null,ready=false,phase='',dismissed=false,manual=false,manualBounds=null,boundMain=null,overlap=false,cancelSidePlacement=()=>{},cancelMainPlacement=()=>{};
+ let native=null,side=null,ready=false,phase='',dismissed=false,manualRequested=false,manual=false,manualBounds=null,boundMain=null,overlap=false,cancelSidePlacement=()=>{},cancelMainPlacement=()=>{};
  const published=new Map();
  const areaFor=b=>screen.getDisplayMatching(b||screen.getPrimaryDisplay().bounds).workArea;
  const limits=area=>({minWidth:Math.min(280,area.width),minHeight:Math.min(320,native?.height||320,area.height),maxWidth:area.width,maxHeight:area.height});
@@ -34,8 +34,8 @@ module.exports=function createClientCompanion({root,getWindow,showMain,getClient
  function release(){peek.destroy();cancelSidePlacement();if(side&&!side.isDestroyed())side.destroy();side=null;ready=false;publish();}
  function sync(){
   const client=getClient(),next=client.connected?client.phase:'Offline';
-  if(next!==phase){phase=next;dismissed=false;}
-  if(phase!=='ChampSelect'||getPreferences().clientCompanion===false||dismissed){release();return;}
+  if(next!==phase){phase=next;dismissed=false;manualRequested=false;}
+  if(phase!=='ChampSelect'||getPreferences().clientCompanion===false&&!manualRequested||dismissed){release();return;}
   if(!native||native.minimized){peek.sync(false,false);if(side&&!side.isDestroyed()&&side.isVisible())side.hide();publish();return;}
   if(!side||side.isDestroyed())create();
   const saved=manualBounds||getPreferences().companionBounds,area=areaFor(saved||native),bounds=saved?placement.fitWindow(saved,area,limits(area)):sidebarPlacement(native,area,getPreferences().companionWidth);
@@ -47,5 +47,5 @@ module.exports=function createClientCompanion({root,getWindow,showMain,getClient
   if(peek.active()){if(side.isVisible())side.hide();peek.sync(true,onTop);}else if(ready&&!side.isVisible())side.showInactive();publish();
  }
  async function reset(all=false,defaults=false){peek.unfold();cancelSidePlacement();manualBounds=null;await savePlacement({companionBounds:undefined,...(defaults?{companionWidth:440}:{}),...(all?{mainBounds:undefined}:{})});if(all){cancelMainPlacement();const main=getWindow();if(main&&!main.isDestroyed()){const area=areaFor(main.getBounds());main.setBounds(placement.fitWindow(null,area,{width:1460,height:980,minWidth:Math.min(1050,area.width),minHeight:Math.min(720,area.height),maxWidth:area.width,maxHeight:area.height}));}}dismissed=false;sync();return layout();}
- return {layout,sync,bindWindow,reset,getWindow:()=>side,unfold:()=>{peek.unfold();sync();},fold:()=>{peek.fold();publish();return layout('companion');},observe:value=>{native=value;sync();},setMode:value=>{if(!value)showMain();else{dismissed=false;peek.unfold();sync();}return layout(value?'companion':'main');},dismiss:()=>{dismissed=true;release();},destroy:release};
+ return {layout,sync,bindWindow,reset,getWindow:()=>side,unfold:()=>{peek.unfold();sync();},fold:()=>{peek.fold();publish();return layout('companion');},observe:value=>{native=value;sync();},setMode:value=>{if(!value)showMain();else{const client=getClient();if(!client.connected||client.phase!=='ChampSelect')return {docked:false,reason:'连接客户端并进入选人阶段后可打开侧栏'};if(!native||native.minimized)return {docked:false,reason:'请先打开英雄联盟客户端窗口'};sync();manualRequested=true;dismissed=false;peek.unfold();sync();}return layout(value?'companion':'main');},dismiss:()=>{dismissed=true;release();},destroy:release};
 };

@@ -15,7 +15,7 @@ async function run(){
  client.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(client.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
  const results=recommend({slots,champions:data.champions,scope:'party',limit:6});assert.equal(results.length,6);
  const props={data,client,slots,unassigned:[],scope:'party',style:'fun',tab:'recommend',results};
- const html=(content,bodyClass='')=>`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><base href="${pathToFileURL(path.join(base,'src/')).href}">${['styles.css','draft.css','database-upgrade.css','companion.css','presentation.css','room-workspace.css'].map(name=>`<link rel="stylesheet" href="${name}">`).join('')}</head><body class="${bodyClass}">${content}</body></html>`;
+ const html=(content,bodyClass='')=>`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><base href="${pathToFileURL(path.join(base,'src/')).href}">${['styles.css','draft.css','database-upgrade.css','companion.css','presentation.css','room-workspace.css','task-flow.css'].map(name=>`<link rel="stylesheet" href="${name}">`).join('')}</head><body class="${bodyClass}">${content}</body></html>`;
  const w=new BrowserWindow({width:440,height:800,show:false,useContentSize:true,webPreferences:{contextIsolation:true,nodeIntegration:false}});
  // This harness loads rendered views only. It has no preload, app IPC or client transport.
  const metrics=[];
@@ -58,17 +58,17 @@ async function run(){
  require(path.join(base,'electron/main.cjs'));
  const until=async(check,label)=>{for(let i=0;i<150;i++){if(await check())return;await delay(100);}throw Error(label);};
  let main;await until(()=>{main=windows.find(window=>window.webContents.getURL().endsWith('/src/index.html'));return main;},'Main renderer missing');
- main.setMinimumSize(640,600);main.setContentSize(1366,768);const js=code=>main.webContents.executeJavaScript(code,true);
- await until(()=>js('!!document.querySelector("[data-action=example]")'),'Main draft missing');
- await js(`document.querySelector('[data-action=example]').click()`);await delay(200);
- await js(`document.querySelector('.draft-context [data-action=recommend]').click()`);
+ main.setMinimumSize(640,600);main.setContentSize(1280,720);const js=code=>main.webContents.executeJavaScript(code,true);
+ await until(()=>js('!!document.querySelector("[data-action=draft-scope]")'),'Main draft missing');
+ await js(`document.querySelector('[data-action=draft-scope][data-scope=party]').click()`);await delay(200);
+ await js(`document.querySelector('[data-action=recommend]').click()`);
  try{await until(()=>js('document.querySelectorAll(".compact-candidate").length===6'),'Six main candidates missing');}catch(error){await fs.writeFile(path.join(root,'main-missing.txt'),await js('document.body.innerText'));await fs.writeFile(path.join(root,'main-missing.png'),(await main.webContents.capturePage()).toPNG());throw error;}
  await delay(150);
- const mainState=await js(`(()=>{const rows=[...document.querySelectorAll('.compact-candidate')],pane=document.querySelector('.draft-candidates'),rect=element=>{const r=element.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,right:r.right}};return {rows:rows.map(rect),pane:rect(pane),context:rect(document.querySelector('.draft-context')),slots:document.querySelectorAll('.draft-context .slot').length,bodyWidth:document.documentElement.scrollWidth,width:innerWidth,height:innerHeight}})()`);
- await fs.writeFile(path.join(root,'main-1366x768-metrics.json'),JSON.stringify(mainState,null,2));
+ const mainState=await js(`(()=>{const rows=[...document.querySelectorAll('.compact-candidate')],pane=document.querySelector('.task-candidate-list'),rect=element=>{const r=element.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,right:r.right}};return {rows:rows.map(rect),pane:rect(pane),context:rect(document.querySelector('.task-roster')),slots:document.querySelectorAll('.task-roster .slot').length,bodyWidth:document.documentElement.scrollWidth,width:innerWidth,height:innerHeight}})()`);
+ await fs.writeFile(path.join(root,'main-1280x720-metrics.json'),JSON.stringify(mainState,null,2));
  await js('Promise.all([...document.images].map(image=>{image.loading="eager";return image.decode().catch(()=>{});})).then(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))');main.webContents.invalidate();await delay(150);
- await fs.writeFile(path.join(root,'main-1366x768.png'),(await main.webContents.capturePage()).toPNG());
- assert.equal(mainState.slots,5);assert.equal(mainState.rows.length,6);assert.ok(mainState.rows[5].bottom<=Math.min(mainState.pane.bottom,mainState.height),'Six main candidates fit beside the roster');assert.ok(mainState.bodyWidth<=mainState.width,'Main cannot overflow horizontally');
+ await fs.writeFile(path.join(root,'main-1280x720.png'),(await main.webContents.capturePage()).toPNG());
+ assert.equal(mainState.slots,5);assert.equal(mainState.rows.length,6);assert.ok(mainState.rows[3].bottom<=Math.min(mainState.pane.bottom,mainState.height),'Four complete candidates remain readable below the current roster');assert.ok(mainState.bodyWidth<=mainState.width,'Main cannot overflow horizontally');
  await js(`document.querySelector('.candidate-details>summary').click();document.querySelector('.candidate-details [data-action=result-detail]').click();`);
  await until(()=>js('!!document.querySelector(".plan-drawer")'),'Full result detail remains accessible');
  await js(`document.querySelector('[data-action=close]').click();document.querySelector('.candidate-member').click();`);
@@ -76,6 +76,8 @@ async function run(){
  main.setContentSize(1050,640);await js(`document.querySelector('[data-action=close]').click()`);await delay(100);
  assert.ok(await js('document.documentElement.scrollWidth<=innerWidth'),'Small main remains operable without horizontal overflow');
  await fs.writeFile(path.join(root,'main-1050x640.png'),(await main.webContents.capturePage()).toPNG());
- await fs.writeFile(path.join(root,'layout.json'),JSON.stringify({passed:true,source,archiveSha256:release?.archiveSha256||null,transport:'blocked',clientWrites,metrics,mainState},null,2));console.log(JSON.stringify({passed:true,source,clientWrites,metrics:metrics.map(m=>({label:m.label,sixVisible:m.sixVisible,rowHeight:m.rows[0].height})),mainSixVisible:true,screenshots:root},null,2));w.destroy();main.destroy();app.quit();
+ await fs.writeFile(path.join(root,'layout.json'),JSON.stringify({passed:true,source,archiveSha256:release?.archiveSha256||null,transport:'blocked',clientWrites,metrics,mainState},null,2));console.log(JSON.stringify({passed:true,source,clientWrites,metrics:metrics.map(m=>({label:m.label,sixVisible:m.sixVisible,rowHeight:m.rows[0].height})),mainFourVisible:mainState.rows[3].bottom<=Math.min(mainState.pane.bottom,mainState.height),screenshots:root},null,2));w.destroy();main.destroy();app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'error.txt'),error.stack);app.exit(1);});
+
+

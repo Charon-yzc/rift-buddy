@@ -214,3 +214,43 @@ test('a dropped relay link says so instead of pretending the room is fine',()=>{
  assert.match(html,/room-link warn">重连中/);
  assert.match(html,/正在重连/);
 });
+
+test('the automatic party room shows its derived code, pin and honest fallbacks',()=>{
+ const idle=roomPanel({room:null,transport:'relay',champ});
+ assert.match(idle,/id="room-auto"/);assert.doesNotMatch(idle,/id="room-auto" checked/);
+ assert.match(idle,/自动连接组队房间/);assert.match(idle,/默认关闭/);
+ assert.match(idle,/当前关闭：下面的房间码与口令仍可手动加入。/);
+ const on=roomPanel({room:null,transport:'relay',autoEnabled:true,champ});
+ assert.match(on,/id="room-auto" checked/);assert.doesNotMatch(on,/当前关闭/);
+ const failed=roomPanel({room:null,transport:'relay',autoEnabled:true,autoError:'<b>中继没有回应</b>',champ});
+ assert.match(failed,/上次自动连接失败：&lt;b&gt;中继没有回应&lt;\/b&gt;；稍后会自动重试，换一个组队也会重试。/);
+ assert.doesNotMatch(failed,/<b>/);
+ const revoked=roomPanel({room:null,transport:'relay',autoEnabled:false,autoError:'中继没有回应',champ});
+ assert.doesNotMatch(revoked,/上次自动连接失败/,'a revoked switch must not promise a retry');
+ const unsynced=roomPanel({room:null,transport:'relay',autoEnabled:true,autoSync:false,autoError:'中继没有回应',champ});
+ assert.doesNotMatch(unsynced,/上次自动连接失败/,'no poll runs with sync off, so nothing will retry');
+ assert.match(unsynced,/当前“自动同步”已关闭：自动连接不会触发，已连接的自动房间也会关闭。/);
+ assert.ok(idle.indexOf('id="room-auto"')<idle.indexOf('id="room-relay-room"'),'the switch must come before the fields its note points at');
+});
+
+test('an automatic relay room copies the derived pin and admits when nobody else arrived',()=>{
+ const room=snapshot({mode:'client',transport:'relay',link:'connected',relayUrl:'wss://room.example.com',auto:true,pin:'654321',members:[{nick:'我',online:true,share:null,self:true}]});
+ const html=roomPanel({room,nick:'我',champ});
+ assert.match(html,/自动 · 组队房间 · 已连接/);
+ assert.match(html,/1 人在线 · 自动连接 · 经中继/);
+ assert.match(html,/中继 wss:\/\/room\.example\.com｜房间 482913｜口令 654321/);
+ assert.match(html,/口令由大厅共享标识派生，只用于同队汇合，不是强认证/);
+ assert.match(html,/旧版队友或派生不一致时，可按上面的地址、房间码与口令手动加入。/);
+ assert.doesNotMatch(html,/暂时没看到队友/);
+ const quiet=roomPanel({room,nick:'我',champ,autoQuiet:true});
+ assert.match(quiet,/暂时没看到队友：可以把上面的房间码和口令发给队友手动加入，或让队友确认也开启了自动连接。/);
+ // A manual room never borrows the automatic hint or its failure advice, and
+ // its copy text never carries a pin.
+ const manual=roomPanel({room:snapshot({mode:'client',transport:'relay',link:'connected',relayUrl:'wss://room.example.com',pin:'123456',members:[{nick:'我',online:true,share:null,self:true}]}),nick:'我',champ,autoQuiet:true});
+ assert.doesNotMatch(manual,/暂时没看到队友/);
+ assert.match(manual,/中继 wss:\/\/room\.example\.com｜房间 482913/);
+ assert.match(manual,/邀请队友（复制下面的地址和房间码，口令请另行告知）：/);
+ assert.doesNotMatch(manual,/口令 123456/);
+ const failedLink=roomPanel({room:snapshot({mode:'client',transport:'relay',link:'failed',relayUrl:'wss://room.example.com',auto:true,pin:'654321',members:[{nick:'我',online:true,share:null,self:true}]}),nick:'我',champ});
+ assert.match(failedLink,/连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连（重启助手后会重新尝试）。/);
+});

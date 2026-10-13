@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session}=require('electron');
 // Reproduce Windows CI geometry independently of the host display's DPI.
 app.commandLine.appendSwitch('force-device-scale-factor','1');
@@ -30,7 +31,7 @@ async function run(){
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
  const js=async code=>{try{return await main.webContents.executeJavaScript(code,true);}catch(error){throw Error(code+'\n'+error.message);}};
- const click=async selector=>{await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(100);};
+ const click=async selector=>{selector=await revealDraftAction(js,selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(100);};
  const sync=async()=>{await click('[data-action=sync]');await until(()=>js('!document.querySelector("[data-action=sync]").disabled'),'Sync not completed');};
  const generate=async()=>{await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll(".result-card").length>0'),'Worker produced no cards');};
  const viewport=async(width,zoom,textScale)=>{
@@ -48,7 +49,7 @@ async function run(){
  for(const [width,zoom,textScale] of [[1180,1,1],[1051,1.25,1],[1180,1.5,1],[1180,1,1.25],[1051,1.25,1.25],[1180,1.5,1.25]]){
   await viewport(width,zoom,textScale);
   for(const action of ['recommend','reroll']){
-   await click('[data-action='+action+']');await until(()=>js('!!document.querySelector(".recommend-heading")&&!document.querySelector("[data-action=recommend]").disabled'),'Recommendation did not finish');await delay(650);
+   await click('[data-action='+action+']');await until(()=>js('!!document.querySelector(".recommend-heading")&&!document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),'Recommendation did not finish');await delay(650);
    const geometry=await js('(()=>{const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}};return {viewport:[innerWidth,innerHeight],topbar:rect(".topbar"),title:rect(".recommend-heading h2"),actions:[...document.querySelectorAll(".draft-result-actions button")].map(el=>{const r=el.getBoundingClientRect();return {label:el.textContent,top:r.top,bottom:r.bottom,left:r.left,right:r.right}})}})()');
    for(const r of [geometry.title,...geometry.actions]){assert.ok(r.top>=geometry.topbar.bottom+8,'Sticky toolbar covers recommendation: '+JSON.stringify({width,zoom,textScale,action,geometry}));assert.ok(r.bottom<=geometry.viewport[1]&&r.left>=0&&r.right<=geometry.viewport[0],'Recommendation action outside viewport: '+JSON.stringify({width,zoom,textScale,action,geometry}));}
    assert.ok(geometry.actions.length>0);headingGeometry.push({width,zoom,textScale,action,...geometry});

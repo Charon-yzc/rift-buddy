@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),cp=require('node:child_process'),https=require('node:https'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_PAIR_PHASE,windows=[],requests=[];
@@ -19,9 +20,9 @@ async function run(){
   return new Response(JSON.stringify({meta:{version:invalid&&match[3]==='mid'?'16.19':data.patch},data:[{champion_id:Number(match[2]),position,synergy_champion_id:data.champions.find(c=>c.id===ally).key,synergy_position:position==='MID'?'JUNGLE':'MID',play:1000,win:match[1]==='kr'?650:550,win_rate:match[1]==='kr'?.65:.55}]}));
  };
  require(path.join(base,'electron/main.cjs'));
- const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true);
- await until(()=>js('!!document.querySelector("[data-pair-refresh]")'),'Pair controls missing');
- const click=async selector=>{assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(90);};
+ const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=c=>main.webContents.executeJavaScript(c,true).catch(error=>{throw Error('Renderer expression: '+c,{cause:error});});
+ await until(()=>js('!!document.querySelector("[data-action=draft-filters]")'),'Draft missing');await js('document.querySelector("[data-action=draft-filters]").click()');await until(()=>js('!!document.querySelector("[data-pair-refresh]")'),'Pair controls missing');
+ const click=async selector=>{selector=await revealDraftAction(js,selector);assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(90);};
  const change=async(selector,value)=>{await js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(100);};
  const boot=()=>js('window.buddy.bootstrap()'),state=async()=>(await boot()).state;
  const cacheFile=path.join(root,'data/pair-statistics-cache.json');
@@ -36,7 +37,7 @@ async function run(){
   invalid=true;await js('document.querySelector("#toast").textContent=""');await click('[data-action=refresh-pairs]');await until(()=>js('document.querySelector("#toast").textContent.includes("原同队参考保留")'),'Partial failure not explained');assert.deepEqual(await fs.readFile(cacheFile),before);assert.deepEqual((await boot()).data.pairStatistics,beforeData);assert.ok(await js('!!document.querySelector(".result-card")'));
   invalid=false;held=true;resume=null;await click('[data-action=refresh-pairs]');await until(()=>resume,'Changed-member request not held');await click('[data-action=reset-draft]');resume();await until(()=>requests.length===8,'Changed-member request unfinished');await delay(1000);assert.equal(await js('document.querySelectorAll(".result-card").length'),0);
   const current=await state(),original=JSON.parse(await fs.readFile(path.join(root,'initial-state.json')));current.draft=original.draft;await js('window.buddy.saveState('+JSON.stringify(current)+')');
-  await new Promise(r=>{main.webContents.once('did-finish-load',r);main.webContents.reload();});await until(()=>js('!!document.querySelector("[data-pair-refresh]")'),'Reload missing');
+  await new Promise(r=>{main.webContents.once('did-finish-load',r);main.webContents.reload();});await until(()=>js('!!document.querySelector("[data-action=draft-filters]")'),'Reload missing');await click('[data-action=draft-filters]');
   await openPairs();await fs.writeFile(path.join(root,'pair-refresh-main.png'),(await main.webContents.capturePage()).toPNG());
   main.webContents.send('window-layout',{docked:true,overlap:false});await until(()=>js('!!document.querySelector(".companion-shell")'),'Sidebar missing');
   for(const width of [280,360,440]){main.setMinimumSize(240,500);main.setBounds({x:20,y:30,width,height:850});await delay(100);await openPairs();const box=await js('(()=>{const el=document.querySelector("[data-pair-refresh]");return {width:el.clientWidth,scroll:el.scrollWidth,button:!!el.querySelector("[data-action=refresh-pairs]")};})()');assert.ok(box.scroll<=box.width+1);assert.ok(box.button);await fs.writeFile(path.join(root,'pair-refresh-sidebar-'+width+'.png'),(await main.webContents.capturePage()).toPNG());}

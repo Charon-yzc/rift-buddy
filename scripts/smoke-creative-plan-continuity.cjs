@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,globalShortcut,clipboard}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_CREATIVE_RESTART==='1',reordered=process.env.RIFT_BUDDY_CREATIVE_REORDERED==='1',windows=[],copied=[];let diagnosticMain,writes=0;
@@ -7,22 +8,22 @@ async function run(){
  app.setPath('userData',root);const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(c=>c.id===id);
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;
  global.fetch=async()=>{throw Error('Isolated creative workflow: external network disabled');};
- let phase=restart?'ChampSelect':'Lobby',gameId=restart?'1510':'0',support='Rell';
+ let phase=restart?'ChampSelect':'Lobby',gameId=restart?'1510':'0',support='Rell',formalPosition=restart?'TOP':'MIDDLE';
  const output=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('No rune writes allowed in creative workflow');}
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
-  if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:hero('Annie').key,assignedPosition:'TOP'},{cellId:2,championId:hero('Ashe').key,assignedPosition:'BOTTOM'},{cellId:3,championId:hero(support).key,assignedPosition:'UTILITY'}],theirTeam:[],actions:[],bans:{myTeamBans:[],theirTeamBans:[]},timer:{adjustedTimeLeftInPhase:65000}};
+  if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:hero('Annie').key,assignedPosition:formalPosition},{cellId:2,championId:hero('Ashe').key,assignedPosition:'BOTTOM'},{cellId:3,championId:hero(support).key,assignedPosition:'UTILITY'}],theirTeam:[],actions:[],bans:{myTeamBans:[],theirTeamBans:[]},timer:{adjustedTimeLeftInPhase:65000}};
   if(options.path==='/lol-perks/v1/pages')return [];throw Error('Unexpected fixture request '+options.path);
  };
  https.request=(options,callback)=>{const req=new EventEmitter();req.write=body=>{options.body=body;};req.end=()=>queueMicrotask(()=>{try{const res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify(output(options))));res.emit('end');req.emit('close');}catch(error){req.emit('error',error);}});req.destroy=error=>{if(error)req.emit('error',error);};return req;};
  cp.spawn=file=>{assert.ok(file.endsWith('window-observer.exe'),'Native subprocess blocked');const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();observer.exitCode=null;return observer;};
  cp.execFile=(file,args,options,callback)=>{const done=typeof options==='function'?options:callback;queueMicrotask(()=>done?.(null,'',''));return new EventEmitter();};
  require(path.join(base,'electron/main.cjs'));let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Creative main missing');diagnosticMain=main;
- const js=async code=>{try{return await main.webContents.executeJavaScript(code,true);}catch(error){throw Error(code+'\n'+error.message);}},click=selector=>js('(()=>{const node=document.querySelector('+JSON.stringify(selector)+');if(!node)throw Error("Missing fixture control");node.click();})()');
+ const js=async code=>{try{return await main.webContents.executeJavaScript(code,true);}catch(error){throw Error(code+'\n'+error.message);}},click=async selector=>{selector=await revealDraftAction(js,selector);return js('(()=>{const node=document.querySelector('+JSON.stringify(selector)+');if(!node||node.disabled)throw Error("Missing or disabled fixture control");node.click();})()');};
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(350);};
- await until(()=>js('!!document.querySelector("[data-action=recommend]")'),'Creative UI missing');
+ await until(()=>js('!!document.querySelector("#solo-role")'),'Creative UI missing');
  if(reordered){
   if(restart){await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite][data-index="0"]');}
   await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Reordered plan missing');await click('[data-action=result-detail][data-index="0"]');
@@ -55,7 +56,12 @@ async function run(){
   await click('[data-action=build][data-id=Annie][data-role=mid]');assert.equal(await js('document.querySelector("#build-role").value'),'mid');assert.ok(await js('document.querySelector(".combo-config").textContent.includes('+JSON.stringify(original.window)+')'));
   await click('[data-action=favorite-build]');await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.some(f=>f.type==="build"&&f.creativePlan))'),'Creative member favorite dropped context');
   await click('[data-action=build-partner][data-role=bottom]');assert.equal(await js('document.querySelector("#build-role").value'),'bottom');assert.ok(await js('document.querySelector(".combo-config").textContent.includes('+JSON.stringify(original.ordered.find(m=>m.champion==='Ashe').job)+')'));
-  await click('[data-action=close]');phase='ChampSelect';gameId='1510';await sync();await sync();
+  await click('[data-action=close]');phase='ChampSelect';gameId='1510';await sync();
+  // Explicitly bind our chosen role through the UI before the public client
+  // reports another lane. Offline fixture slots are not a player identity.
+  await js('{const role=document.querySelector("#solo-role");role.value="mid";role.dispatchEvent(new Event("change",{bubbles:true}));}');
+  await until(()=>js('window.buddy.bootstrap().then(b=>b.state.draft.playerPosition?.role==="mid"&&b.state.draft.playerPosition?.cellId===1)'),'Manual own position was not saved');
+  formalPosition='TOP';await sync();
  }else{
   original=JSON.parse(await fs.readFile(path.join(root,'creative-plan-original.json'),'utf8'));await sync();await sync();
   const saved=await js('window.buddy.bootstrap()');assert.deepEqual(saved.state.draft.creativePlan,original);assert.deepEqual(saved.state.favorites.find(f=>f.type==='team').creativePlan,original);

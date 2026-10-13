@@ -1,4 +1,5 @@
 import {getBuild} from './builds.mjs';
+import {preparationEquipment} from './complete-gear.mjs';
 import {currentCombo} from './recommend.mjs';
 import {captureCreativePlan,creativeComboContext,validateCreativePlan,creativePlanMatches,creativeMemberCombo} from './creative-plan.mjs';
 import {recallPreparation,preparationIdentity} from './preparation.mjs';
@@ -43,7 +44,7 @@ export function captureRoomConfigurations(slots,data,store,{creativePlan=null,gu
   const context={id:champion.id,role:slot.role,mode,...creativeComboContext(combo)};
   const selection=current&&preparationIdentity(current)===preparationIdentity(context)?current:{coreIndex:0,conditions:[],...recallPreparation(store,guide,context),...context};
   const b=getBuild(champion,slot.role,data,selection);
-  return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:b.items.map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,first:b.first,attributePlan:b.attributePlan,priority:b.priority,basis:{title:b.title,note:b.sourceNote,rune:b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文',skill:b.selectedSkill?.when||b.attributePlan?.note||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列'}});
+  return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:preparationEquipment(data,b,selection).map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,first:b.first,attributePlan:b.attributePlan,priority:b.priority,basis:{title:b.title,note:b.sourceNote+' 后续空位按同一局内指引的兼容成装参考补齐，不代表整套联合统计。',rune:b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文',skill:b.selectedSkill?.when||b.attributePlan?.note||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列'}});
  }).filter(Boolean);
 }
 

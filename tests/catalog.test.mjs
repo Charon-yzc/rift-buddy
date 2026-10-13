@@ -17,7 +17,7 @@ data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const store=async options=>createCatalogStore({root:await fs.mkdtemp(path.join(os.tmpdir(),'buddy-catalog-')),getData:()=>data,...options});
 test('bundled pack has validated independent content and complete playable trio configs',()=>{
  const c=validateCatalog(clone(),data);assert.ok(c.duos.length>=200);assert.ok(c.trios.length>=68);
- for(const t of c.trios)for(const m of t.members){const b=getBuild(hero(m.champion),m.role,data,{comboId:t.id});assert.equal(b.combo.id,t.id);assert.equal(b.loadoutId,m.loadoutId);assert.equal(b.missing.length,0);assert.ok(b.runeOptions.length>=2,`${t.id}:${m.champion}`);}
+ for(const t of c.trios)for(const m of t.members){const b=getBuild(hero(m.champion),m.role,data,{comboId:t.id,loadoutId:m.loadoutId});assert.equal(b.combo.id,t.id);assert.equal(b.loadoutId,m.loadoutId);assert.equal(b.missing.length,0);assert.ok(b.runeOptions.length>=2,`${t.id}:${m.champion}`);}
 });
 test('pack rejects duplicate heroes, incompatible configs, bad items, rune pages and unsafe sources',()=>{
  for(const edit of [c=>c.duos.push(c.duos[0]),c=>c.trios[0].members[1].role=c.trios[0].members[0].role,c=>c.trios[0].members[0].loadoutId='trio-ball',c=>c.loadouts[0].items[0]=123456789,c=>c.runes.lethal.page.selectedPerkIds[0]=999,c=>c.duos[0].sources=[{name:'x',url:'javascript:alert(1)'}],c=>c.links.push(c.links[0])]){const c=clone();edit(c);assert.throws(()=>validateCatalog(c,data),/组合库/);}

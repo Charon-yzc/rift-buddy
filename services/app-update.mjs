@@ -6,11 +6,13 @@ import os from 'node:os';
 import path from 'node:path';
 import {spawn as defaultSpawn} from 'node:child_process';
 import {RELEASE_FEED_URL,parseReleaseFeed,newestRelease,isNewerThan,setupFileName,checksumFileName,releaseDownloadUrl,parseChecksumFile,normalizeMirrorBase,mirrorAssetUrl} from '../src/core/app-update.mjs';
+import {GITEE_REPOSITORY_URL,GITEE_RELEASE_FEED_URL,parseGiteeReleases,giteeDownloadUrl,mirrorManifestName,parseMirrorManifest} from '../src/core/app-update.mjs';
 import {publicAddress} from './catalog-store.mjs';
 import {atomicJSON} from './data.mjs';
 export const UPDATE_HOSTS=['github.com','release-assets.githubusercontent.com','objects.githubusercontent.com'];
 export const UPDATE_REDIRECT_LIMIT=5;
 const FEED_TIMEOUT=15000,TEXT_BYTES_LIMIT=65536,SETUP_BYTES_LIMIT=512*1024*1024,FILE_TIMEOUT=600000;
+const GITEE_HOSTS=['gitee.com','foruda.gitee.com'];
 async function resolvePublic(hostname,{lookup=dns.lookup,timeout=FEED_TIMEOUT,signal}={}){
  const abortError=()=>Object.assign(Error('下载已取消'),{name:'AbortError'});
  if(signal?.aborted)throw abortError();
@@ -76,16 +78,26 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,ex
   }catch(e){reject(e);}
  });
 }
-export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),storeFile=path.join(os.tmpdir(),'rift-buddy-app-update.json'),request=https.request,spawnImpl=defaultSpawn,feedUrl=RELEASE_FEED_URL,mirrorBase='',insecureHosts=[],dryRun=false,lookup=dns.lookup}={}){
+export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),storeFile=path.join(os.tmpdir(),'rift-buddy-app-update.json'),request=https.request,spawnImpl=defaultSpawn,feedUrl=RELEASE_FEED_URL,giteeFeedUrl=GITEE_RELEASE_FEED_URL,mirrorBase='',insecureHosts=[],dryRun=false,lookup=dns.lookup}={}){
  if(typeof currentVersion!=='string'||!currentVersion)throw Error('当前版本格式不正确');
- const mirror=normalizeMirrorBase(mirrorBase||'');
+ const preferGitee=normalizeMirrorBase(mirrorBase||'')===GITEE_REPOSITORY_URL;
+ const mirror=preferGitee?'':normalizeMirrorBase(mirrorBase||'');
  const mirrorHost=mirror?new URL(mirror).hostname:null;
  const extraHosts=mirrorHost?[mirrorHost]:[];
  async function check({signal}={}){
-  const {body}=await fetchOnce(feedUrl,{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
-  const release=newestRelease(parseReleaseFeed(body.toString('utf8')));
+  const options={request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts};
+  const results=await Promise.allSettled([
+   fetchOnce(feedUrl,options).then(({body})=>newestRelease(parseReleaseFeed(body.toString('utf8')))),
+   // Local smoke feeds deliberately isolate all external traffic.
+   feedUrl===RELEASE_FEED_URL&&giteeFeedUrl?fetchOnce(giteeFeedUrl,{...options,byteLimit:512*1024,extraHosts:GITEE_HOSTS}).then(({body})=>newestRelease(parseGiteeReleases(body.toString('utf8')))):Promise.resolve(null)
+  ]);
+  if(signal?.aborted)throw Error('下载已取消');
+  const github=results[0].status==='fulfilled'?results[0].value:null,gitee=results[1].status==='fulfilled'?results[1].value:null;
+  if(!github&&!gitee&&results[0].status==='rejected')throw results[0].reason;
+  const release=newestRelease(preferGitee?[gitee,github].filter(Boolean):[github,gitee].filter(Boolean));
   if(!release)return {status:'current',release:null};
-  const info={version:release.version,tag:release.tag,url:release.url,publishedAt:release.updated};
+  const githubAvailable=github?.version===release.version,giteeAvailable=gitee?.version===release.version&&!gitee.manualOnly;
+  const info={version:release.version,tag:release.tag,url:release.url,publishedAt:release.updated,source:release.source||'github',githubAvailable,giteeAvailable,manualOnly:!githubAvailable&&!giteeAvailable,giteeVersion:gitee?.version||null};
   return isNewerThan(release.version,currentVersion)?{status:'available',release:info}:{status:'current',release:info};
  }
  const removeFile=async file=>{try{await fs.unlink(file);}catch(error){if(error.code!=='ENOENT')throw error;}};
@@ -115,19 +127,27 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   return removed;
  }
  const missingAsset=e=>/HTTP 404/.test(e?.message||'')?Error('新版安装包缺失，请等待维护者补传发布资产后重试'):e;
- async function downloadVia(release,{signal,onProgress,mirror,fallback=false}){
-  const via=mirror?'mirror':'direct';
+ async function downloadVia(release,{signal,onProgress,mirror,fallback=false,gitee=false}){
+  const via=gitee?'gitee':mirror?'mirror':'direct';
   const setup=setupFileName(release.version),sum=checksumFileName(release.version);
+  let manifest=null;
+  if(gitee){
+   const {body}=await fetchOnce(giteeDownloadUrl(release.tag,mirrorManifestName(release.version)),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts:GITEE_HOSTS});
+   manifest=parseMirrorManifest(body.toString('utf8'),release);
+  }
   const target=path.join(tempDir,`rift-buddy-update-${Date.now()}-${crypto.randomUUID()}.exe.part`);
   const localFailure=e=>{e.localFailure=true;return e;};
   const removeLocal=async file=>{try{await removeFile(file);}catch(e){throw localFailure(e);}};
   let handle;
   try{await fs.mkdir(tempDir,{recursive:true});handle=await fs.open(target,'w');}catch(e){throw localFailure(e);}
-  const hash=crypto.createHash('sha256');let received=0,total=null;
+  const hash=crypto.createHash('sha256');let received=0,total=manifest?.bytes||null;
   const progress=(stage,note)=>{if(onProgress)onProgress({received,total,stage,via,note});};
   try{
-   await fetchOnce(mirrorAssetUrl(mirror,releaseDownloadUrl(release.tag,setup)),{request,timeout:FILE_TIMEOUT,byteLimit:SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts,
-    onHeaders:h=>{const t=Number(h?.['content-length']);total=Number.isFinite(t)?t:null;if(total!==null&&total>SETUP_BYTES_LIMIT)throw Error('安装包超过大小限制，已停止下载');progress('downloading');},
+   const assets=manifest?manifest.parts:[{name:setup}];
+   for(const asset of assets){
+    const partHash=crypto.createHash('sha256');let partBytes=0;
+    await fetchOnce(gitee?giteeDownloadUrl(release.tag,asset.name):mirrorAssetUrl(mirror,releaseDownloadUrl(release.tag,setup)),{request,timeout:FILE_TIMEOUT,byteLimit:asset.bytes||SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts:gitee?GITEE_HOSTS:extraHosts,
+    onHeaders:h=>{const t=Number(h?.['content-length']);if(!manifest)total=Number.isFinite(t)?t:null;if(Number.isFinite(t)&&t>(asset.bytes||SETUP_BYTES_LIMIT))throw Error('安装包超过大小限制，已停止下载');progress('downloading');},
     onData:async chunk=>{
      let offset=0;
      while(offset<chunk.length){
@@ -138,18 +158,22 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
        offset+=bytesWritten;received+=bytesWritten;
       }catch(e){throw localFailure(e);}
      }
-     hash.update(chunk);progress('downloading');
+     hash.update(chunk);partHash.update(chunk);partBytes+=chunk.length;progress('downloading');
     }});
+    if(manifest&&(partBytes!==asset.bytes||partHash.digest('hex')!==asset.sha256))throw Error('国内镜像分卷校验不一致，已停止合并；请重新下载');
+   }
    try{await handle.close();}catch(e){throw localFailure(e);}
   }catch(e){await handle.close().catch(()=>{});await removeLocal(target);throw e;}
   if(signal?.aborted){await removeLocal(target);throw Error('下载已取消');}
   progress('verifying');
   // 校验文件永远直连：否则镜像可同时伪造"坏包+配套哈希"，校验形同虚设。
   // 校验阶段失败不触发镜像重试（与直连无关，重下也一样；哈希不一致除外，它走篡改回落）。
-  let expected;
+  let expected=manifest?.sha256;
   try{
-   const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
-   expected=parseChecksumFile(sumRes.body.toString('utf8'),setup);
+   if(!manifest){
+    const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
+    expected=parseChecksumFile(sumRes.body.toString('utf8'),setup);
+   }
   }catch(e){await removeLocal(target);if(/HTTP 404/.test(e.message||'')){const m=Error('新版安装包缺失，请等待维护者补传发布资产后重试');m.checksumStage=true;throw m;}if(e.message!=='下载已取消')e.checksumStage=true;throw e;}
   const digest=hash.digest('hex');
   if(digest!==expected){await removeLocal(target);throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
@@ -168,10 +192,19 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   }
  }
  async function download(release,{signal,onProgress}={}){
-  if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||typeof release.tag!=='string')throw Error('新版信息格式不正确');
+  if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||![release.version,`v${release.version}`].includes(release.tag))throw Error('新版信息格式不正确');
+  if(release.manualOnly)throw Error('此国内发行版仅支持网页下载，请按发布页说明还原安装包');
   const kept=await readRecord();
   if(kept&&kept.version===release.version&&await verify(kept)){if(onProgress)onProgress({received:kept.bytes,total:kept.bytes,stage:'verifying',via:kept.via||'direct'});return kept;}
   await cleanup();
+  if((release.source==='gitee'&&release.githubAvailable!==true)||preferGitee&&release.giteeAvailable!==false){
+   try{return await downloadVia(release,{signal,onProgress,mirror:'',gitee:true});}
+   catch(error){
+    if(signal?.aborted||error.localFailure||release.githubAvailable===false)throw error;
+    onProgress?.({received:0,total:null,stage:'downloading',via:'direct',note:'mirror-fallback'});
+    return downloadVia(release,{signal,onProgress,mirror:'',fallback:true});
+   }
+  }
   // 镜像失败（挂掉/404/内容不对）改走直连重试一次并明示；用户取消、校验阶段失败不重试。
   const bases=mirror?[mirror,'']:[''];
   let attemptError=null;

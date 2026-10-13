@@ -10,6 +10,12 @@ const antiheal=new Set(['3076','3075','3916','3165','3123','3033']);
 const idOf=value=>String(typeof value==='object'?value.id:value);
 const clean=value=>String(value||'').replace(/<[^>]*>/g,'');
 
+// Explicit preparation/share/save actions use the same complete offline route
+// shown by the guide. This does not read a live match or apply situational swaps.
+export function preparationEquipment(data,build,selection={id:build.champion,role:build.role,mode:build.mode,bottomQuestPlan:build.bottomQuestPlan}){
+ return completeGearPlan({data,build,selection,enabled:false}).route.map(row=>build.items.find(item=>String(item.id)===row.id)||data.items[row.id]).filter(Boolean);
+}
+
 // This is an explained, temporary in-game route. It never changes a saved
 // preparation, spends gold, sells an item or claims a statistically best build.
 export function completeGearPlan({data,build,selection,live=null,completedItems=[],purchaseTarget=null,signals=[],enabled=true,bottomQuestConfirmed=false,bottomQuestEligible=true}){

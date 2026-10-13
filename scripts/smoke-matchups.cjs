@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session,clipboard}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events'),{pathToFileURL}=require('node:url');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_MATCHUP_PHASE,windows=[];
@@ -23,7 +24,7 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'),'utf8'));data.builds=JSON.parse(await fs.readFile(path.join(base,'data/builds.json'),'utf8')).entries;
  const hero=id=>data.champions.find(c=>c.id===id);
- const actions=w=>({js:code=>w.webContents.executeJavaScript(code,true),click:async selector=>{await w.webContents.executeJavaScript('document.querySelector('+JSON.stringify(selector)+').click()',true);await delay(80);},change:async(selector,value)=>{await w.webContents.executeJavaScript('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()',true);await delay(100);}});
+ const actions=w=>({js:code=>w.webContents.executeJavaScript(code,true),click:async selector=>{selector=await revealDraftAction(code=>w.webContents.executeJavaScript(code,true),selector);await w.webContents.executeJavaScript('document.querySelector('+JSON.stringify(selector)+').click()',true);await delay(80);},change:async(selector,value)=>{await w.webContents.executeJavaScript('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()',true);await delay(100);}});
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('[...document.images].forEach(i=>i.loading="eager")');await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await w.webContents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
  let report;
  if(phase==='side'){
@@ -32,12 +33,12 @@ async function run(){
   let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
   const {js,click,change}=actions(main);
   await until(()=>js('!!document.querySelector("[data-action=sync]")'),'Main not loaded');await click('[data-action=sync]');
-  await until(()=>js('document.querySelector(".current-preparation")?.textContent.includes("诺提勒斯")'),'Public pick not synchronized');
+  await until(()=>js('document.querySelector(".preparation-task")?.textContent.includes("诺提勒斯")'),'Public pick not synchronized');
   await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar not entered');
   await click('[data-action=companion-tab][data-tab=plan]');
-  const geometry=await js('(()=>{const panel=document.querySelector(".companion-content").getBoundingClientRect(),summary=document.querySelector(".companion-plan-summary").getBoundingClientRect();return {width:innerWidth,height:innerHeight,panel:{top:panel.top,bottom:panel.bottom},summary:{top:summary.top,bottom:summary.bottom},overflow:document.documentElement.scrollWidth>innerWidth};})()');
+  const geometry=await js('(()=>{const panel=document.querySelector(".companion-content").getBoundingClientRect(),summary=document.querySelector(".preparation-task").getBoundingClientRect();return {width:innerWidth,height:innerHeight,panel:{top:panel.top,bottom:panel.bottom},summary:{top:summary.top,bottom:summary.bottom},overflow:document.documentElement.scrollWidth>innerWidth};})()');
   // Windows display scaling can round requested DIP content bounds by one pixel.
-  assert.ok(Math.abs(geometry.width-440)<=1);assert.ok(Math.abs(geometry.height-729)<=1);assert.equal(geometry.overflow,false);assert.ok(geometry.summary.top>=geometry.panel.top&&geometry.summary.bottom<=geometry.panel.bottom,'Current core/rune/skill summary must fit the first screen');
+  assert.ok(Math.abs(geometry.width-440)<=1);assert.ok(Math.abs(geometry.height-729)<=1);assert.equal(geometry.overflow,false);assert.ok(geometry.summary.top>=0&&geometry.summary.bottom<=geometry.panel.top,'Persistent preparation receipt must fit above the scrollable configuration');
   await capture(main,'side-first-screen.png');
   assert.equal(await js('!!document.querySelector("[data-duo-play=naut-samira]")'),true,'Prepared side plan omitted the actual duo stage tasks');
   assert.equal(await js('document.querySelectorAll("[data-matchup-enemy]").length'),0,'No enemy should be selected automatically');

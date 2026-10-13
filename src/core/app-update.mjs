@@ -1,4 +1,35 @@
 export const RELEASE_FEED_URL='https://github.com/Legender134/rift-buddy/releases.atom';
+export const GITEE_REPOSITORY_URL='https://gitee.com/legender134/rift-buddy';
+export const GITEE_RELEASE_FEED_URL=GITEE_REPOSITORY_URL.replace('gitee.com/','gitee.com/api/v5/repos/')+'/releases?per_page=10';
+export const mirrorManifestName=v=>`RiftBuddy-${v}-Mirror.json`;
+export const mirrorPartName=(v,index)=>`${setupFileName(v)}.part${String(index+1).padStart(2,'0')}`;
+export const MIRROR_PART_BYTES=90*1024*1024;
+export function giteeReleaseUrl(tag){
+ if(!TAG_PATTERN.test(tag))throw Error('更新地址格式不正确');
+ return `${GITEE_REPOSITORY_URL}/releases/${tag}`;
+}
+export function giteeDownloadUrl(tag,file){
+ if(!TAG_PATTERN.test(tag)||!/^RiftBuddy-[\d.]+-(?:Setup\.exe(?:\.part\d{2})?|Mirror\.json)$/.test(file))throw Error('国内镜像附件名称不正确');
+ return `${GITEE_REPOSITORY_URL}/releases/download/${tag}/${file}`;
+}
+export function parseGiteeReleases(text){
+ const rows=JSON.parse(text);if(!Array.isArray(rows))throw Error('国内镜像目录格式不正确');
+ return rows.filter(r=>r&&TAG_PATTERN.test(r.tag_name)&&Number.isFinite(Date.parse(r.created_at))).map(r=>{
+  const version=r.tag_name.replace(/^v/,'');
+  return {tag:r.tag_name,version,updated:r.created_at,url:giteeReleaseUrl(r.tag_name),source:'gitee',manualOnly:!Array.isArray(r.assets)||!r.assets.some(a=>a?.name===mirrorManifestName(version)&&a.browser_download_url===giteeDownloadUrl(r.tag_name,a.name))};
+ });
+}
+export function parseMirrorManifest(text,release){
+ const m=JSON.parse(text),version=release.version;
+ if(!/^\d+\.\d+\.\d+$/.test(version)||![version,`v${version}`].includes(release.tag)||m?.schema!==1||m.version!==version||m.tag!==release.tag||m.file!==setupFileName(version)||!Number.isSafeInteger(m.bytes)||m.bytes<=0||m.bytes>512*1024*1024||!/^([0-9a-f]{64})$/.test(m.sha256)||!Array.isArray(m.parts)||!m.parts.length||m.parts.length>16)throw Error('国内镜像清单格式不正确');
+ let total=0;
+ const parts=m.parts.map((p,i)=>{
+  if(p?.name!==mirrorPartName(version,i)||!Number.isSafeInteger(p.bytes)||p.bytes<=0||p.bytes>MIRROR_PART_BYTES||!/^([0-9a-f]{64})$/.test(p.sha256))throw Error('国内镜像分卷格式不正确');
+  total+=p.bytes;return {name:p.name,bytes:p.bytes,sha256:p.sha256};
+ });
+ if(total!==m.bytes)throw Error('国内镜像分卷大小不一致');
+ return {schema:1,version,tag:m.tag,file:m.file,bytes:m.bytes,sha256:m.sha256,parts};
+}
 const TAG_PATTERN=/^v?\d+\.\d+\.\d+$/;
 export function parseReleaseFeed(xml){
  if(typeof xml!=='string'||!xml.includes('<feed'))throw Error('更新目录格式不正确');
@@ -56,7 +87,8 @@ export function mirrorAssetUrl(mirror,url){
 export function isReleaseNotesUrl(value){
  try{
   const u=new URL(value);
-  return u.protocol==='https:'&&!u.username&&!u.password&&u.host==='github.com'&&String(value).length<=1000
-   &&u.pathname.startsWith('/Legender134/rift-buddy/releases/tag/');
+  if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||String(value).length>1000)return false;
+  if(u.host==='gitee.com')return /^\/legender134\/rift-buddy\/releases(?:\/v?\d+\.\d+\.\d+)?\/?$/.test(u.pathname);
+  return u.host==='github.com'&&/^\/Legender134\/rift-buddy\/releases(?:\/tag\/v?\d+\.\d+\.\d+)?\/?$/.test(u.pathname);
  }catch{return false;}
 }

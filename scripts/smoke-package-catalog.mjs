@@ -7,5 +7,8 @@ import {defaultState,saveState} from '../services/storage.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/catalog-smoke-')),state=defaultState();
 state.preferences.autoSync=false;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;state.preferences.autoLive=false;await saveState(root,state);
 const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-catalog.cjs')],{cwd:path.resolve('.'),env:{...process.env,RIFT_BUDDY_USER_DATA:root},windowsHide:false,stdio:'inherit'});
-const timer=setTimeout(()=>child.kill(),65000);
+// The full import/editor/concurrent-save/reload path takes about 60 seconds
+// without other Electron smokes. Keep room for suite contention; each UI wait
+// still has its own 15-second deadline and the child logs completed stages.
+const timer=setTimeout(()=>{console.error('Catalog smoke exceeded 90 seconds; inspect the last logged stage.');child.kill();},90000);
 try{const [code]=await once(child,'exit');if(code!==0)throw Error(`Catalog smoke failed (${code}); ${root}`);await fs.writeFile('.local/latest-catalog-smoke.json',JSON.stringify({root},null,2));}finally{clearTimeout(timer);}

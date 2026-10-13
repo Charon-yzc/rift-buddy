@@ -72,7 +72,7 @@ async function run(){
  // also rejects the other window while that same rune operation is in flight.
  holdRune=true;await click(side,'[data-action=my-runes]');await until(()=>resumeRune,'Explicit rune click did not reach mocked write');
  const context=await js(main,'window.buddy.bootstrap().then(b=>({phase:b.client.phase,gameId:b.client.game.gameId,cellId:b.client.session.localPlayerCellId,championId:b.client.session.myTeam[0].championId,championPickIntent:0,assignedPosition:"MIDDLE"}))');
- await assert.rejects(handlers.get('apply-runes')(event(main),{},context),/正在应用/);resumeRune();holdRune=false;await until(()=>writes===1,'Mock rune write missing');await until(()=>js(main,'document.querySelector(".current-preparation")?.textContent.includes("本次已应用")'),'Rune confirmation did not reach main');
+ await assert.rejects(handlers.get('apply-runes')(event(main),{},context),/正在应用|配置正在处理/);resumeRune();holdRune=false;await until(()=>writes===1,'Mock rune write missing');await until(()=>js(main,'document.querySelector(".preparation-task [data-preparation-step=runes]")?.dataset.stepStatus==="done"'),'Rune confirmation did not reach main');
  const both=metrics(),heaps={};for(const [name,window] of [['main',main],['sidebar',side]]){window.webContents.debugger.attach('1.3');heaps[name]={before:await window.webContents.debugger.sendCommand('Runtime.getHeapUsage')};await window.webContents.debugger.sendCommand('HeapProfiler.collectGarbage');heaps[name].after=await window.webContents.debugger.sendCommand('Runtime.getHeapUsage');window.webContents.debugger.detach();}await delay(200);const afterGC=metrics();
  await fs.writeFile(path.join(root,'main.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());await fs.writeFile(path.join(root,'sidebar.png'),(await side.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  const savedBeforeGame=await js(main,'window.buddy.bootstrap().then(b=>b.state)'),busyDialog=js(main,'window.buddy.chooseDirectory()');await until(()=>resumeDialog,'In-flight dialog fixture did not start');
@@ -90,3 +90,4 @@ async function run(){
  await fs.writeFile(path.join(root,'dual-windows.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'dual-windows-error.txt'),error.stack).catch(()=>{});for(const window of windows.filter(w=>!w.isDestroyed()))await fs.writeFile(path.join(root,'failure-'+window.webContents.id+'.html'),await window.webContents.executeJavaScript('document.documentElement.outerHTML').catch(()=>''));app.exit(1);});
+

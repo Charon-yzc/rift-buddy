@@ -250,7 +250,8 @@ test('release page urls and notes-link scoping',()=>{
  assert.throws(()=>releasePageUrl('nightly'),/更新地址格式不正确/);
  assert.equal(isReleaseNotesUrl('https://github.com/Legender134/rift-buddy/releases/tag/v9.9.9'),true);
  assert.equal(isReleaseNotesUrl('https://github.com:443/Legender134/rift-buddy/releases/tag/v1.0.0'),true,'explicit default port is the same endpoint');
- for(const bad of ['https://github.com/Legender134/rift-buddy/blob/main/README.md','https://github.com/other/repo/releases/tag/v1.0.0','https://github.com/Legender134/rift-buddy/releases','http://github.com/Legender134/rift-buddy/releases/tag/v1.0.0','https://user:pass@github.com/Legender134/rift-buddy/releases/tag/v1.0.0','https://github.com:8443/Legender134/rift-buddy/releases/tag/v1.0.0','javascript:alert(1)','not a url'])assert.equal(isReleaseNotesUrl(bad),false,bad);
+ assert.equal(isReleaseNotesUrl('https://github.com/Legender134/rift-buddy/releases'),true);
+ for(const bad of ['https://github.com/Legender134/rift-buddy/blob/main/README.md','https://github.com/other/repo/releases/tag/v1.0.0','http://github.com/Legender134/rift-buddy/releases/tag/v1.0.0','https://user:pass@github.com/Legender134/rift-buddy/releases/tag/v1.0.0','https://github.com:8443/Legender134/rift-buddy/releases/tag/v1.0.0','javascript:alert(1)','not a url'])assert.equal(isReleaseNotesUrl(bad),false,bad);
 });
 test('an empty feed reports current without a release',async()=>{
  const s=service({request:fakeRequest({[FEED_KEY]:{status:200,body:'<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"></feed>'}})});

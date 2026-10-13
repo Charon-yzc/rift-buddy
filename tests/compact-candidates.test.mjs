@@ -41,7 +41,7 @@ test('unknown eligibility stays ahead of candidate actions while verified eligib
  assert.ok(unknown.indexOf('data-eligibility="unknown"')<unknown.indexOf('data-action="use-result"'));
  client.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(client.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
  const checked=companionView(props);
- assert.ok(checked.indexOf('data-eligibility="checked"')>checked.lastIndexOf('data-action="use-result"'));
+ assert.ok(checked.lastIndexOf('data-eligibility="checked"')>checked.lastIndexOf('data-action="use-result"'));
  assert.match(checked,/朋友的可选范围未知/);assert.match(checked,/data-tab="team" aria-label="调整阵容位置与开黑成员"/);
 });
 

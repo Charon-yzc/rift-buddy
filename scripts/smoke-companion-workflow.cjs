@@ -176,9 +176,9 @@ async function run(){
  assert.equal(await js('document.querySelector("[data-companion-disclosure=core]").open'),false,'Core comparisons dominate the initial plan');
  await click('[data-companion-disclosure=core] > summary');await sync();
  assert.equal(await js('document.querySelector("[data-companion-disclosure=core]").open'),true,'Client sync closed the core comparison');
- await click('[data-action=companion-core][data-id="0"]');await delay(150);assert.equal((await js('window.buddy.bootstrap()')).state.guide.selection.coreIndex,0);
+ await click('[data-action=companion-core][data-id="0"]');await until(async()=>(await js('window.buddy.bootstrap()')).state.guide.selection.coreIndex===0,'First core route was not saved');
  assert.equal(await js('document.querySelector("[data-companion-disclosure=core]").open'),true,'Changing a route closed the comparison');
- await click('[data-action=companion-core][data-id="1"]');await delay(150);assert.equal((await js('window.buddy.bootstrap()')).state.guide.selection.coreIndex,1);
+ await click('[data-action=companion-core][data-id="1"]');await until(async()=>(await js('window.buddy.bootstrap()')).state.guide.selection.coreIndex===1,'Second core route was not saved');
  assert.equal(writes.length,0,'Core cards must not apply runes');
  await click('[data-companion-disclosure=core] > summary');
  await click('[data-companion-disclosure=source] > summary');await click('[data-action=companion-refresh]');
@@ -280,7 +280,7 @@ async function run(){
  assert.deepEqual((await js('window.buddy.bootstrap()')).state.guide.selection.laterIds,[Number(later)]);
  assert.equal(writes.length,1,'Late choices must not write runes');await capture('chogath-jungle');
  await click('[data-action=my-runes]');await until(()=>writes.length===2,'Cho source rune application missing');assert.equal(writes.length,2);assert.deepEqual(writes.at(-1).selectedPerkIds,cho.runePage.selectedPerkIds);
- await until(()=>js('document.querySelector(".companion-shell")?.dataset.tab==="recommend"&&!document.querySelector("[data-action=my-runes]")?.disabled&&document.querySelector("[data-action=my-runes]")?.textContent.includes("重新应用")'),'Successful rune application must finish and return to the team');
+ await until(()=>js('document.querySelector(".companion-shell")?.dataset.tab==="recommend"&&document.querySelector("[data-preparation-step=runes]")?.dataset.stepStatus==="done"'),'Successful rune application must finish and return to the team');
  await click('[data-action=companion-tab][data-tab=plan]');
  const restoredDisclosureScope=await js('document.querySelector(".companion-content").dataset.disclosureScope');assert.equal(restoredDisclosureScope,'plan:Chogath:jungle:rift','Resume late choices in the same declared plan');
  await js('document.querySelector("[data-action=companion-later]").closest("details").open=true');
@@ -486,8 +486,8 @@ async function run(){
  await click('[data-action=move-slot][data-role=mid]');await click('[data-action=move-confirm][data-role=support]');
  await sync();await sync();
  assert.equal(await js('document.querySelector("#solo-role").value'),'support');
- assert.match(await js('document.querySelector(".current-preparation").textContent'),/拉克丝.*辅助/);
- await click('[data-action=my-build]');
+ assert.match(await js('document.querySelector(".preparation-task").textContent'),/拉克丝.*辅助/);
+ await click('[data-action=task-edit]');
  assert.equal(await js('document.querySelector("#build-role").value'),'support');
  const luxSupport=getBuild(hero('Lux'),'support',data);
  assert.equal(writes.length,writesBeforeFilters,'Changing tactical lane wrote a rune page');
@@ -532,16 +532,16 @@ async function run(){
  const beforePrepareWrites=writes.length;await click('[data-action=companion-preview][data-role=mid]');
  await until(()=>js('document.querySelector(".companion-shell")?.dataset.tab==="recommend"&&document.querySelector("#toast")?.textContent==="预选与配置已完成，锁定请在客户端确认"'),'Default preparation must finish and return to the team');
  await click('[data-action=companion-tab][data-tab=plan]');
- await until(()=>js('document.querySelector(".client-preparation-result")?.textContent.includes("配置已完成")'),'Default click did not complete all four steps');
- assert.equal(await js('document.querySelectorAll(".client-preparation-result [data-step-status=done]").length'),4,'All four preparation results must remain available after returning to the team');
+ await until(()=>js('document.querySelectorAll(".preparation-task [data-step-status=done]").length===4'),'Default click did not complete all four steps');
+ assert.equal(await js('document.querySelectorAll(".preparation-task [data-step-status=done]").length'),4,'All four preparation results must remain available after returning to the team');
  assert.equal(hoverWrites,1);assert.equal(spellWrites,1);assert.equal(writes.length,beforePrepareWrites+1);assert.equal(preparationAction.completed,false);
  picked=hovered;preparationAction.completed=true;await sync();
- await until(()=>js('document.querySelector(".companion-ready")?.firstChild?.textContent==="符文已应用"'),'Completed setup still asks to apply runes');
- assert.match(await js('document.querySelector("[data-action=my-runes]").textContent'),/重新应用/);
+ await until(()=>js('document.querySelector(".preparation-task [data-preparation-step=runes]")?.dataset.stepStatus==="done"&&document.querySelector(".preparation-task strong")?.textContent==="英雄已锁定，配置已完成"'),'Completed setup still asks to apply runes');
+ assert.match(await js('document.querySelector(".preparation-task [data-action=client-prepare]").textContent'),/重新应用/);
  await sync();assert.equal(writes.length,beforePrepareWrites+1,'Confirming or polling the hero reapplied runes');
  await capture('one-click-confirmed-status');gameId='1509';await sync();
- await until(async()=>{const current=await js('window.buddy.bootstrap().then(b=>({gameId:b.client?.game?.gameId,draftGameId:b.state.draft.clientGameId,championId:b.client?.session?.myTeam?.find(p=>p.cellId===b.client.session.localPlayerCellId)?.championId,target:document.querySelector("[data-action=my-runes]")?.dataset.id,ready:document.querySelector(".companion-ready")?.firstChild?.textContent}))');return current.gameId==='1509'&&current.draftGameId==='1509'&&current.championId===hero(picked).key&&current.target===picked&&current.ready==='符文待应用';},'New game did not clear the same champion rune confirmation after synchronization');
- assert.match(await js('document.querySelector(".companion-ready").textContent'),/待应用/,'New game retained a previous rune confirmation');assert.equal(writes.length,beforePrepareWrites+1,'Starting a new game reapplied runes');preparationAction=null;
+ await until(async()=>{const current=await js('window.buddy.bootstrap().then(b=>({gameId:b.client?.game?.gameId,draftGameId:b.state.draft.clientGameId,championId:b.client?.session?.myTeam?.find(p=>p.cellId===b.client.session.localPlayerCellId)?.championId,target:document.querySelector(".preparation-task [data-action=client-prepare]")?.dataset.plan,ready:document.querySelector(".preparation-task [data-preparation-step=runes]")?.dataset.stepStatus}))');return current.gameId==='1509'&&current.draftGameId==='1509'&&current.championId===hero(picked).key&&current.target===picked+':mid:rift'&&current.ready==='idle';},'New game did not clear the same champion rune confirmation after synchronization');
+ assert.equal(await js('document.querySelector(".preparation-task [data-preparation-step=runes]").dataset.stepStatus'),'idle','New game retained a previous rune confirmation');assert.equal(writes.length,beforePrepareWrites+1,'Starting a new game reapplied runes');preparationAction=null;
  // Retain the final manual choice in this isolated profile for restart validation.
  picked='Lux';assigned='MIDDLE';await sync();await change('#solo-role','support');await sync();await click('[data-action=guide-current]');
  await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.selection?.role==="support")'),'Final support guide missing');
