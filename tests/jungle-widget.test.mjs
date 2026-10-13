@@ -7,13 +7,14 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {escape as e} from '../src/ui.mjs';
 import {jungleGuidance,changeJungleNotes} from '../src/core/jungle-guidance.mjs';
+import {jungleRouteMap,routeStepButton} from '../src/jungle-route-view.mjs';
 const live={matched:true,mapId:11,queueId:420,teamSide:'blue',gameTime:120,skills:{Q:1,W:1,E:1,R:0},stats:{hp:600,maxHp:1000,resource:{type:'MANA',value:400,max:500}}};
 const make=(champion,notes,time=120)=>jungleGuidance({champion,notes,live:{...live,gameTime:time},role:'jungle',mode:'rift',patch:'16.20'});
 
 async function renderer(jungle,time=120){
  let update,click;const calls=[],root={innerHTML:'',addEventListener:(type,handler)=>{if(type==='click')click=handler;}},api={bootstrap:async()=>({jungle,time}),onUpdate:fn=>{update=fn;},control:async(...args)=>calls.push(args)};
  const source=fs.readFileSync(new URL('../src/jungle.mjs',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
- await vm.runInNewContext(`(async()=>{${source}\n})()`,{document:{getElementById:()=>root},window:{jungleWidget:api},e,applyPresentation:()=>{},windowResizeGrip:'',installWindowResize:()=>{}});
+ await vm.runInNewContext(`(async()=>{${source}\n})()`,{document:{getElementById:()=>root},window:{jungleWidget:api},e,jungleRouteMap,routeStepButton,applyPresentation:()=>{},windowResizeGrip:'',installWindowResize:()=>{}});
  return {html:()=>root.innerHTML,update:(j,time)=>update({jungle:j,time}),click:async value=>click({target:{closest:()=>({dataset:{action:'note',value},isConnected:false})}}),calls};
 }
 const route=html=>html.match(/<div class="route"[^>]*>([\s\S]*?)<\/div>/)?.[1]||'';

@@ -245,7 +245,7 @@ export function createGuideModel(data,value,live=null,current=null){
    at:live.at};
  })():null;
  return {selection:s,champion:{id:champion.id,name:champion.name,title:champion.title},version:data.version,role:ROLES.find(r=>r.id===s.role).name,mode:s.mode,matchId:guide.match?.gameId||null,
-  jungle:jungleGuidance({champion:s.id,role:s.role,mode:s.mode,patch:data.patch,live:matched?{...live,matched:true}:null,notes:guide.jungleNotes,combo:build.combo}),completeGear,compact:guide.compact,jungleWidget:guide.jungleWidget,skillWidget:guide.skillWidget,laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
+  jungle:jungleGuidance({champion:s.id,role:s.role,mode:s.mode,patch:data.patch,live:matched?{...live,matched:true}:null,notes:guide.jungleNotes,combo:build.combo,matchId:guide.match?.gameId}),completeGear,compact:guide.compact,jungleWidget:guide.jungleWidget,skillWidget:guide.skillWidget,laterChoices,laterNeeded,maxLaterItems:build.maxLaterItems,unavailableLaterOptions:build.unavailableLaterOptions||[],
   start:build.start.map(item),granted:(build.granted||[]).map(item),early:build.early.map(item),route,completedItems,autoCompletedItems,purchase,next,targetPlan,shoppingTargets,purchaseTarget:chosen?.id||'',targetFallback:!!guide.purchaseTarget&&!chosen,action,
   phase:s.mode==='rift'?gamePhase({...liveModel,role:s.role},action,next||null):null,
   objectives:s.mode==='rift'?objectiveRhythm({live:liveModel,role:s.role,patch:data.patch,plan:build.combo?.creativePlan,champion:s.id,confirmed:current?.comboKnown===true&&!mismatch,protectId:s.protectId,data}):null,
