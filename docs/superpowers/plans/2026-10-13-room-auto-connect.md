@@ -17,7 +17,7 @@
 
 ## Global Constraints
 
-- 工作区：`C:\Users\Ankhron\Desktop\rift-buddy-room-auto`，分支 `feature/room-auto`（基于 `upstream/main` v0.46.0）。零新依赖，只用 Node 内置模块与仓库现有 devDependencies。
+- 工作区：隔离 worktree（桌面 `rift-buddy-room-auto`），分支 `feature/room-auto`（基于 `upstream/main` v0.46.0）。零新依赖，只用 Node 内置模块与仓库现有 devDependencies。
 - 验证顺序：`pnpm test` 先、`pnpm check`（`node scripts/check.mjs`）后；收尾再做打包验收 `pnpm package`、`node scripts/inspect-package.mjs --verify-current`、`node scripts/smoke-package-lifecycle.mjs`。
 - 自动化测试**永不连接真实 LCU、真实中继或真实网络**，**永不写符文**；房间层继续用注入的 fake WebSocket。
 - 绝不记录 LCU 凭据；不读取聊天字段（`chatRoomId`、`chatRoomKey`、`mucJwtDto`、`multiUserChatPassword`）。

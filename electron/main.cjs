@@ -263,6 +263,8 @@ async function boot(){
    return;
   }
   if(roomAutoKey!==key)return; // released while deriving: nothing to join
+  // A room the user joined by hand while this step was deriving wins.
+  if(roomService&&roomService.snapshot().mode!=='idle'){roomAutoKey=null;roomAutoPin=null;diagnostic('auto room yielded to a manual room');return;}
   roomAutoError='';roomAutoPin=derived.pin;
   try{
    await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});

@@ -98,4 +98,6 @@ test('the decision table keeps the manual room and the blocked key safe',()=>{
  assert.equal(autoRoomDecision({...base,failedKey:KEY,failedRetryAt:9999,now:undefined}).reason,'retrying','an unknown clock must not skip a live backoff');
  // Evidence without a usable identifier never drops a healthy room.
  assert.equal(autoRoomDecision({...base,lobbyKey:null,activeAutoKey:KEY,partyGoneForMs:AUTO_PARTY_GONE_MS}).reason,'no-key');
+ // Entering champ select keeps the room: there is no lobby evidence to act on.
+ assert.equal(autoRoomDecision({...base,phase:'ChampSelect',activeAutoKey:KEY}).action,'hold');
 });

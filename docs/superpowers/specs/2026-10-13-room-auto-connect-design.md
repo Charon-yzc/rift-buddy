@@ -1,7 +1,7 @@
 # CHA-71 组队房间自动连接设计规格
 
 - Issue: [CHA-71 进入房间后自动通过中继网络连接并生成房间码](https://linear.app/challenger702/issue/CHA-71/进入房间后自动通过中继网络连接并生成房间码)
-- 基准分支：`upstream/main`（v0.46.0，`7c54f50`），工作分支：`feature/room-auto`，隔离 worktree `C:\Users\Ankhron\Desktop\rift-buddy-room-auto`
+- 基准分支：`upstream/main`（v0.46.0，`7c54f50`），工作分支：`feature/room-auto`，隔离 worktree（桌面 `rift-buddy-room-auto`）
 - 范围决议（已批准）：房间码与口令派生自组队大厅共享标识；触发条件为“非自定义大厅且 ≥2 名开黑成员”；默认关闭、需用户明确开启；编排放主进程
 - 日期：2026-10-13
 
