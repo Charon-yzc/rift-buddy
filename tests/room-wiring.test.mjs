@@ -23,7 +23,7 @@ test('the automatic room decoration wraps updates, guards, leave state and the c
  assert.match(main,/import\('\.\.\/src\/core\/room-auto\.mjs'\)/,'main must load the auto room core');
  assert.match(main,/publishWindows\('room-update',decorateRoom\(snapshot\)\)/,'room updates must carry the auto marker');
  const guards={
-  'room-status':/guard\('room-status',\(\)=>roomService\?decorateRoom\(roomService\.snapshot\(\)\):\(roomAutoError\?decorateAutoRoom\(\{mode:'idle',members:\[\]\},\{error:roomAutoError,retryAt:roomAutoFailedUntil\|\|null\}\):null\)\)/,
+  'room-status':/guard\('room-status',\(\)=>roomService\?decorateRoom\(roomService\.snapshot\(\)\):\(roomAutoError\?decorateAutoRoom\(\{mode:'idle',members:\[\],transport:'relay'\},\{error:roomAutoError,retryAt:roomAutoFailedUntil\|\|null\}\):null\)\)/,
   'room-host':/guard\('room-host',async nick=>decorateRoom\(await ensureRoom\(nick\)\.host\(\)\)\)/,
   'room-join':/guard\('room-join',async\(target,nick\)=>decorateRoom\(await ensureRoom\(nick\)\.join\(target\|\|\{\}\)\)\)/,
   'room-relay':/guard\('room-relay',async\(target,nick\)=>decorateRoom\(await ensureRoom\(nick\)\.relay\(target\|\|\{\}\)\)\)/,
@@ -46,7 +46,10 @@ test('the automatic room decoration wraps updates, guards, leave state and the c
  assert.match(main,/roomAutoError=error\?\.message\|\|'自动连接失败';[\s\S]{0,400}?publishWindows\('room-update'/,'a relay failure must reach the panel');
  assert.match(main,/roomAutoError='房间码派生失败';[\s\S]{0,200}?publishWindows\('room-update'/,'a derivation failure must reach the panel');
  assert.match(main,/roomAutoFailedKey=key;roomAutoFailedUntil=Date\.now\(\)\+AUTO_RETRY_MS;/,'a relay failure must earn a backoff');
+ assert.match(main,/roomAutoError='';roomAutoCode=derived\.code;roomAutoPin=derived\.pin;/,'the derived code must be claimed before the handshake so a leave can abort it');
+ assert.match(main,/if\(roomAutoKey!==key\)\{try\{roomService\?\.leave\(\);\}catch\{\}roomAutoCode=null;roomAutoPin=null;return;\}/,'a release during the welcome must close what was just built');
  assert.match(main,/snapshot\.room===roomAutoCode\)try\{roomService\?\.leave\(\);\}/,'a manual room inside the claim window is not ours to close');
+ assert.match(main,/if\(roomAutoBlockedKey&&client\?\.party\?\.key&&client\.party\.key!==roomAutoBlockedKey\)roomAutoBlockedKey=null;/,'a different party lifts the manual-leave block');
 });
 test('only this process keeps the lobby identifier and the auto room closes with its switch',async()=>{
  const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');

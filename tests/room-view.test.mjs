@@ -240,7 +240,7 @@ test('an automatic relay room copies the derived pin and admits when nobody else
  assert.match(html,/1 人在线 · 自动连接 · 经中继/);
  assert.match(html,/中继 wss:\/\/room\.example\.com｜房间 482913｜口令 654321/);
  assert.match(html,/口令由大厅共享标识派生，只用于同队汇合，不是强认证/);
- assert.match(html,/旧版队友或派生不一致时可粘贴加入/);
+ assert.match(html,/旧版队友或派生不一致时，可按上面的地址、房间码与口令手动加入。/);
  assert.doesNotMatch(html,/暂时没看到队友/);
  const quiet=roomPanel({room,nick:'我',champ,autoQuiet:true});
  assert.match(quiet,/暂时没看到队友：可以把上面的房间码和口令发给队友手动加入，或让队友确认也开启了自动连接。/);

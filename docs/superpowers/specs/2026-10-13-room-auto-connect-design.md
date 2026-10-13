@@ -1,6 +1,6 @@
 # CHA-71 组队房间自动连接设计规格
 
-- Issue: [CHA-71 进入房间后自动通过中继网络连接并生成房间码](https://linear.app/challenger702/issue/CHA-71/进入房间后自动通过中继网络连接并生成房间码)
+- Issue: CHA-71 进入房间后自动通过中继网络连接并生成房间码（内部跟踪器编号；链接仅保存在会话侧）
 - 基准分支：`upstream/main`（v0.49.0，`e5c87f2`；本功能最初基于 v0.46.0 开发，合入前已并入 v0.47–v0.49 的上游改动）；下文的 `文件:行` 引用按最初基准记录，合入上游后行号可能偏移
 - 工作分支：`feature/room-auto`，隔离 worktree（桌面 `rift-buddy-room-auto`）
 - 范围决议（已批准）：房间码与口令派生自组队大厅共享标识；触发条件为“非自定义大厅且 ≥2 名开黑成员”；默认关闭、需用户明确开启；编排放主进程
@@ -18,8 +18,8 @@
 ## 2. 现状与已验证事实（本节是设计地基）
 
 1. 大厅 JSON 含 `partyId`（服务端生成；社区实测抓包示例：`{"partyId":"3ee56b17-97c9-4538-9425-515157abdd45",…,"localMember":{…},"members":[…]}`，
-   见 Pupix/rift-explorer issue #111）。同一响应里还有 `chatRoomId`、`chatRoomKey`、`mucJwtDto` 等聊天凭据字段，
-   因此清洗只取 `partyId`，其余一律丢弃——沿用 `src/core/client-party.mjs:1-2` 的既有约束。
+   见 Pupix/rift-explorer issue #111；该样例里 `partyId` 与 `chatRoomId`、`chatRoomKey` 是同一个字符串）。清洗只取 `partyId` 字段，
+   `chatRoomId`、`chatRoomKey`、`mucJwtDto` 等聊天凭据一律不读——沿用 `src/core/client-party.mjs:1-2` 的既有约束。
 2. 现有大厅清洗已排除自定义房间与 >5 人、要求 `localMember` 在 `members` 中（`src/core/client-party.mjs:23-30`），
    且从不读聊天（`tests/client-party.test.mjs:6` 用 `chatPassword`/`jwt` 夹具断言不外泄）。
 3. 客户端快照在预组队窗口只有**人数**没有成员列表：`party.lobbyCount`（`services/lcu.mjs:115` 的无会话分支），
@@ -85,7 +85,7 @@
 - **保持**：进入选人/对局后 phase 不在大厅窗口 → `hold`，连接不断。选人阶段没有 `partyId`，因此不会重连，
   只会保持；客户端重启后若已不在大厅窗口，不再自动加入（§5）。
 - **开关语义**：`roomAuto===true` 且“自动同步”未关闭才算开启；关闭任一开关都会收束已连接的自动房间（在偏好保存时执行，不依赖轮询）。
-- **手动离开**：`guard('room-leave')` 记录 `blockedKey = 当前自动 key（含正在建立的）`，清空自动状态并中止未完成的握手；同一组队不再自动连，标识变化即解除（该记忆只在本进程内，见 §5.7）。
+- **手动离开**：`guard('room-leave')` 记录 `blockedKey = 当前自动 key（含正在建立的）`，清空自动状态并中止未完成的握手（认领的房间码在握手前就已记录，`closeAutoRoom` 只在快照的房间码属于本次自动尝试或服务空闲时才 `leave()`，用户手动建的房间不会被误关）；同一组队不再自动连，看到不同的标识即解除（该记忆只在本进程内，见 §5.7）。
 - **失败退避**：`join`/`switch` 抛错时记 `{key, retryAt: now+AUTO_RETRY_MS}`，只写诊断；同一 key 到期再试一次，
   key 变化立即重试。本地收束（手动离开、关开关、关“自动同步”）不算失败：`closeAutoRoom` 记下 `roomAutoCancelledKey`，
   握手中的拒绝只写诊断，不写退避与错误提示。房间服务自身的 3 次握手尝试与 8 次重连断路器继续生效，不额外加循环。
@@ -148,7 +148,9 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
   - `join`/`switch`：`switch` 先 `roomService.leave()`；随后
     `ensureRoom(autoRoomNick({identity:client.own,savedNick:state.preferences.roomNick})).relay({url: initialRelayUrl(state.preferences.relayUrl), room, pin})`；
     成功后记 `roomAutoKey/roomAutoPin`，诊断写原因与派生房间码（**不写昵称，也不写 partyId**）。
-    在异步派生之前先认领 key（`roomAutoKey=key`、清 `roomAutoCancelledKey`）；派生完成后复查 `roomAutoKey===key` 才继续握手。
+    在异步派生之前先认领 key（`roomAutoKey=key`、清 `roomAutoCancelledKey`）；派生完成后复查 `roomAutoKey===key` 才继续握手，
+    并在调用 `relay()` 之前记下派生房间码（`roomAutoCode=derived.code`）——这样握手期间的本地收束能识别出「正在建立的是自己的房间」并真正 `leave()` 中止它；
+    `relay()` 兑现后再复查一次 `roomAutoKey===key`，若期间已被收束则立即离开刚建好的房间。
   - `leave`：`closeAutoRoom(reason)`——仅当 `roomAutoKey` 存在时 `roomService.leave()`，并清空自动状态与失败退避。
   - 失败：只有 `blockedKey` 与 `cancelledKey` 都不等于该 key 时才记失败退避 + `roomAutoError`（中文原因）+ 诊断；
     **绝不向 `status()` 外抛错**。
@@ -180,8 +182,8 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,
 - 未勾选时的补充行：`当前关闭：下面的房间码与口令仍可手动加入。`
 - 自动房间徽标：`自动 · 组队房间`（后接现有连接状态文字，例如 `自动 · 组队房间 · 已连接`）；标题行 `N 人在线 · 自动连接 · 经中继`。
 - 复选框与其说明渲染在手动表单之前（说明里的“下面的房间码与口令”指其后的表单）。
-- 自动房间邀请块：`邀请队友（复制下面的地址、房间码和口令）：` + 按钮文本
-  `中继 <url>｜房间 <code>｜口令 <pin>`；脚注 `口令由大厅共享标识派生，只用于同队汇合，不是强认证。旧版队友或派生不一致时可粘贴加入。`
+- 自动房间邀请块：`邀请队友（复制下面的地址、房间码和口令）：` + 按钮文本 `中继 <url>｜房间 <code>｜口令 <pin>`；
+- 邀请块脚注：`口令由大厅共享标识派生，只用于同队汇合，不是强认证。旧版队友或派生不一致时，可按上面的地址、房间码与口令手动加入。`
 - 安静提示（连上 30 秒且成员只有自己）：`暂时没看到队友：可以把上面的房间码和口令发给队友手动加入，或让队友确认也开启了自动连接。`
 - 复制 toast：`地址、房间码和口令已复制；可直接发给队友手动加入`
 - 自动连接失败（idle 视图，且开关与“自动同步”都开启时才显示）：`上次自动连接失败：<原因>；稍后会自动重试，换一个组队也会重试。`

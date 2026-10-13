@@ -228,7 +228,7 @@ async function boot(){
   roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;
   // The panel may still hold the previous snapshot; the promise it shows
   // ("稍后会自动重试") is void once the switch is off.
-  if(had||hadError)publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[]}));
+  if(had||hadError)publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[],transport:'relay'}));
   return true;
  };
  const ensureRoom=wanted=>{
@@ -239,7 +239,7 @@ async function boot(){
   roomService=createRoomService({nick:clean,onUpdate:snapshot=>publishWindows('room-update',decorateRoom(snapshot)),diagnostic});
   return roomService;
  };
- guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):(roomAutoError?decorateAutoRoom({mode:'idle',members:[]},{error:roomAutoError,retryAt:roomAutoFailedUntil||null}):null));
+ guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):(roomAutoError?decorateAutoRoom({mode:'idle',members:[],transport:'relay'},{error:roomAutoError,retryAt:roomAutoFailedUntil||null}):null));
  guard('room-host',async nick=>decorateRoom(await ensureRoom(nick).host()));
  guard('room-join',async(target,nick)=>decorateRoom(await ensureRoom(nick).join(target||{})));
  guard('room-relay',async(target,nick)=>decorateRoom(await ensureRoom(nick).relay(target||{})));
@@ -266,6 +266,8 @@ async function boot(){
   if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=2&&client.party?.key)roomAutoGoneSince=null;
   else if(inWindow)roomAutoGoneSince=roomAutoGoneSince??Date.now();
   else roomAutoGoneSince=null;
+  // "标识变化即解除": seeing a different party lifts a manual-leave block.
+  if(roomAutoBlockedKey&&client?.party?.key&&client.party.key!==roomAutoBlockedKey)roomAutoBlockedKey=null;
   if(client?.connected)roomAutoOfflineSince=null;else roomAutoOfflineSince=roomAutoOfflineSince??Date.now();
   const now=Date.now();
   const decision=autoRoomDecision({enabled,connected:!!client?.connected,phase:client?.phase||'',
@@ -288,16 +290,18 @@ async function boot(){
   if(roomAutoKey!==key)return;
   if(!derived){
    roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;roomAutoFailedKey=key;roomAutoFailedUntil=Date.now()+AUTO_RETRY_MS;roomAutoError='房间码派生失败';
-   publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[]}));
+   publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[],transport:'relay'}));
    diagnostic('auto room derive failed');
    return;
   }
   // A room the user joined by hand while this step was deriving wins.
   if(roomService&&roomService.snapshot().mode!=='idle'){roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;diagnostic('auto room yielded to a manual room');return;}
-  roomAutoError='';roomAutoPin=derived.pin;
+  roomAutoError='';roomAutoCode=derived.code;roomAutoPin=derived.pin;
   try{
    await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
-   roomAutoCode=derived.code;roomAutoFailedKey=null;roomAutoFailedUntil=0;
+   // Released between the welcome and this line: close what we just built.
+   if(roomAutoKey!==key){try{roomService?.leave();}catch{}roomAutoCode=null;roomAutoPin=null;return;}
+   roomAutoFailedKey=null;roomAutoFailedUntil=0;
    diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
   }catch(error){
    roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;
@@ -308,7 +312,7 @@ async function boot(){
     roomAutoError=error?.message||'自动连接失败';
     // The service already emitted its idle snapshot before this error
     // existed; the panel needs the decorated one to show why nothing came up.
-    publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[]}));
+    publishWindows('room-update',decorateRoom(roomService?roomService.snapshot():{mode:'idle',members:[],transport:'relay'}));
    }
    diagnostic(`auto room join failed: ${error?.message||'unknown'}`);
   }

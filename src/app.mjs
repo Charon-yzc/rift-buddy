@@ -368,10 +368,10 @@ function scheduleRoomPublish(){
  roomShareTimer=setTimeout(()=>{publishRoomShare();},600);
 }
 // The quiet hint is a claim about the room, not about a single update: it
-// starts from any snapshot that shows a connected auto room, including the
-// one a rebuilt window reads at boot, and resets on anything else. A rebuilt
-// room also has to hear the current share again: the payload signature alone
-// would suppress an unchanged one.
+// starts on the first connected snapshot of an auto room (including the one a
+// rebuilt window reads at boot) and is reset by any snapshot that is not a
+// connected auto room. A rebuilt room also has to hear the current share
+// again: the payload signature alone would suppress an unchanged one.
 function applyRoomSnapshot(snapshot){
  room=snapshot;
  const identity=snapshot&&snapshot.mode!=='idle'?String(snapshot.room||''):'';

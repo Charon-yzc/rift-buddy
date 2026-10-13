@@ -35,6 +35,8 @@ test('the lobby key and own public name appear only while the pre-match evidence
  const lobby=await clientSnapshot('',f.mock);
  assert.equal(lobby.party.key,'party-3ee56b17');
  assert.equal(lobby.own.riotId,'Player11#CN1');
+ assert.equal(lobby.party.local,undefined,'the sanitized party must not carry the raw local identity');
+ assert.equal(lobby.party.receivedAt,undefined,'the sanitized party must not leak its cache stamp');
  assert.ok(!JSON.stringify(lobby).includes('do-not-export'),'chat credentials must never surface');
  assert.ok(!JSON.stringify(lobby).includes('11111111-2222'),'a credential that looks like a party id must not surface either');
  f.set({phase:'ChampSelect'});
