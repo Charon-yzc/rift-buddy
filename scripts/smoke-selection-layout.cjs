@@ -32,7 +32,7 @@ async function run(){
   await fs.writeFile(path.join(root,label+'.png'),(await w.webContents.capturePage()).toPNG());
   assert.equal(state.rows.length,6);assert.equal(state.overflow,0,label+' controls cannot cross the window edge');
   assert.ok(state.controls.every(r=>r.height>=30),label+' controls remain at least 30px high');
-  if(scale===1)assert.ok(state.sixVisible,label+' sixth candidate and roster should fit without scrolling');
+  if(scale===1)assert.ok(state.sixVisible,label+' sixth candidate and roster should fit without scrolling: '+JSON.stringify(state));
   await fs.writeFile(path.join(root,label+'.png'),(await w.webContents.capturePage()).toPNG());metrics.push({label,...state});
   if(label==='party-440x800'){
    const before=await w.webContents.executeJavaScript(`document.querySelector('.candidate-detail-content').checkVisibility({contentVisibilityAuto:true})`);assert.equal(before,false);

@@ -2,17 +2,19 @@
 
 英雄联盟朋友开黑助手，支持二至五人选人，以三人配合为重点。比较阵容，点自己的英雄预选并准备符文、D/F 和商店装备集；锁定由玩家在客户端确认。
 
-**[下载 v0.50.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/download/v0.50.0/RiftBuddy-0.50.0-Setup.exe)** · [本版说明](https://github.com/Legender134/rift-buddy/releases/tag/v0.50.0) · [SHA-256 校验](https://github.com/Legender134/rift-buddy/releases/download/v0.50.0/SHA256SUMS-0.50.0.txt) · [全部版本](https://github.com/Legender134/rift-buddy/releases) · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
+**[下载 v0.51.0 Windows 预览版](https://github.com/Legender134/rift-buddy/releases/download/v0.51.0/RiftBuddy-0.51.0-Setup.exe)** · **[Gitee 国内同版下载](https://gitee.com/legender134/rift-buddy/releases/v0.51.0)** · [本版说明](https://github.com/Legender134/rift-buddy/releases/tag/v0.51.0) · [SHA-256 校验](https://github.com/Legender134/rift-buddy/releases/download/v0.51.0/SHA256SUMS-0.51.0.txt) · [全部版本](https://github.com/Legender134/rift-buddy/releases) · [使用说明](使用说明.txt) · [组合库维护说明](组合库维护说明.txt)
 
-[Gitee 国内下载镜像](https://gitee.com/legender134/rift-buddy/releases) 当前公开版本为 **v0.45.0**；附件分卷下载后可用同版 Merge.cmd 合并。v0.51.0 将同时检查两处更新，并在应用内自动下载、合并与校验 Gitee 分卷。每次公开安装包同步两个发布源，未上传完成前不会标为已同步。
+[Gitee 国内下载镜像](https://gitee.com/legender134/rift-buddy/releases/v0.51.0) 已同步 **v0.51.0**。首次下载时，把两个 `.part` 分卷和同版 `Merge.cmd` 放在同一目录，双击脚本校验合并，再运行生成的 `Setup.exe`。v0.51.0 内置更新同时检查 GitHub 与 Gitee，选择 Gitee 后自动下载、合并与校验分卷。每次公开安装包同步两个发布源，未上传完成前不会标为已同步。
 
-当前源码 **v0.51.0**；公开下载仍是 **v0.50.0**。v0.51.0 安装包发布前，下方下载继续指向已发布版本。源码新增功能不会自动进入上述旧下载包。
+当前源码与两处公开安装包均为 **v0.51.0**。Gitee 分卷还原后的安装包与 GitHub 完整包一致，SHA-256：`1faa5b381e5b81c641f53f4b1b90216aa0acbed195337e2cac0c114a5e7111b7`。
 
 选人时先确认“我是这一位”和朋友的位置，再生成候选。自己的候选头像一次采用该阵容并预选配置；队友头像及独立“详情”只查看。采用后首屏展示本人分工、配合条件和四步配置结果，“换一套”回到比较。主窗与贴边侧栏可同时使用，关闭自动侧栏也能手动打开本局侧栏。
 
 准备结果分别记录英雄预选、符文、D/F 和装备集。配置修改后需再次主动应用；部分失败旁提供重新执行、导出装备集和安装目录设置。组合分享、收藏、客户端装备集及局内指引沿用同一完整装备路线。收到方案、采用方案和队友已完成配置是不同状态，不会互相代替。
 
 真实国服联动、整局帧率与长期内存、物理全屏、混合 DPI 和双机跨网仍待玩家复测。模拟验证与代码审查不能证明推荐收益或整体成熟度。
+
+本版保留两项待修问题：单独导入本人装备集后，成功提示未同步到另一窗口的四步总览（实际导入正常，CHA-76）；100% 缩放、440×800 侧栏中第六条候选底部说明约需滚动 5 像素，选择按钮完整可见（CHA-77）。后者使 Windows CI 的六条完整显示断言尚未通过；未放宽或跳过该检查。
 
 v0.51.0 组队房间自动连接：在“开黑房间 · 中继”里明确勾选后，进入英雄联盟预组队大厅（非自定义、至少 2 名开黑成员）时，助手用大厅共享标识派生 6 位房间码与口令，自动连上中继并分享你的公开阵容与个人配置；房间昵称使用你的公开游戏 ID。开关默认关闭；连接中点“离开房间”会立即断开且本组队不再自动重连（重启助手后该记忆清除）；在空闲面板取消勾选或关闭“自动同步”会立即停止自动连接；队伍解散或客户端离线时约 30／60 秒后自动断开。派生口令不是强认证，知道组队数据即可算出。错过大厅（例如启动时已在选人阶段）不会自动补连，手动加入流程不变；关闭“自动同步”后不会自动连接。两台机器是否派生出同一个房间仍待真实双机验证。见[房间中继说明](docs/room-relay-deploy.md)。
 
