@@ -72,3 +72,7 @@ pnpm exec wrangler deploy --config relay/wrangler.toml
 再使用输出地址进行 WebSocket 冒烟、实际客户端互通和退出清理检查。默认公网地址在 2026-10-12 的单机独立连接复测中，已完整转发二至五人配置、职责与晚加入快照；本次无需更改现有 Worker。没有取得该服务管理权限，不部署、不新建替代服务。两台 Windows、不同运营商及长时连接仍待验证，自有域名也不能保证连通。
 
 Cloudflare 当前允许 Free 计划使用 SQLite Durable Objects，但请求、计算与存储都有额度，超限会失败；不要承诺永久免费或用不完。以[官方计费与额度](https://developers.cloudflare.com/durable-objects/platform/pricing/)、[WebSocket 休眠说明](https://developers.cloudflare.com/durable-objects/best-practices/websockets/)及部署账号的实际计划为准。
+
+## 0.52 候选投票升级
+
+新的 `welcome` 声明 `ballots: 1`，`state.ballot` 携带有界候选与一人一票；只更换桌面程序不足以启用旧中继。部署本仓库最新 Worker（连同 `src/core/room*.mjs` 依赖）后重连。旧握手没有能力声明时客户端保留阵容分享并禁用投票。2026-10-14 默认线上中继实测仍丢弃新增字段，尚未部署本升级。

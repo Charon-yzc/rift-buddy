@@ -1,13 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {createSlots,recommend,analyzeTeam,explainContributions} from '../src/core/recommend.mjs';
+import {createSlots,recommend,analyzeTeam,explainContributions,mergeClientSession} from '../src/core/recommend.mjs';
 import {summarizeEnemyTraits,threatNotes,strategySummary} from '../src/core/strategy.mjs';
 import {compareAugments} from '../src/core/hex-compare.mjs';
+import {candidateSummary} from '../src/draft-result-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
+
+test('automatic lanes follow a changed hero while explicit lanes remain attached to the player',()=>{
+ const session=id=>({localPlayerCellId:0,myTeam:[{cellId:0,championId:hero(id).key,assignedPosition:''}]});
+ const first=mergeClientSession(createSlots(),session('Garen'),data.champions).slots;
+ assert.equal(first.find(s=>s.champion==='Garen').role,'top');
+ const next=mergeClientSession(first,session('Soraka'),data.champions).slots;
+ assert.equal(next.find(s=>s.champion==='Soraka').role,'support');
+ const manual=first.map(s=>s.champion?{...s,manualPosition:true}:s);
+ assert.equal(mergeClientSession(manual,session('Soraka'),data.champions).slots.find(s=>s.champion==='Soraka').role,'top');
+});
+
+test('the last friend recommendation explains that new hero instead of repeating an already fixed pair',()=>{
+ const slots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role),champion:({top:'Malphite',mid:'Yasuo'})[s.role]||null,locked:['top','mid'].includes(s.role)}));
+ const rows=recommend({slots,champions:data.champions,scope:'party',style:'fun',poolMode:'only',pool:['Gragas','Morgana','Ivern'],limit:6});
+ const summaries=new Map(rows.map(row=>[row.slots.find(s=>s.role==='jungle').champion,candidateSummary(row).line]));
+ assert.equal(summaries.size,3);assert.equal(new Set(summaries.values()).size,3);
+ assert.match(summaries.get('Gragas'),/酒桶 E/);assert.match(summaries.get('Ivern'),/艾翁 E/);
+ assert.match(summaries.get('Morgana'),/Q|E|黑盾/);
+ assert.doesNotMatch(summaries.get('Morgana'),/^墨菲特 R 实际击飞后，亚索/);
+});
 
 test('mixed damage is preferred over mono damage when completing a trio',()=>{
  const slots=createSlots();

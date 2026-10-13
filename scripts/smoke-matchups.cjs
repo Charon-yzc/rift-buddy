@@ -24,7 +24,7 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'),'utf8'));data.builds=JSON.parse(await fs.readFile(path.join(base,'data/builds.json'),'utf8')).entries;
  const hero=id=>data.champions.find(c=>c.id===id);
- const actions=w=>({js:code=>w.webContents.executeJavaScript(code,true),click:async selector=>{selector=await revealDraftAction(code=>w.webContents.executeJavaScript(code,true),selector);await w.webContents.executeJavaScript('document.querySelector('+JSON.stringify(selector)+').click()',true);await delay(80);},change:async(selector,value)=>{await w.webContents.executeJavaScript('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()',true);await delay(100);}});
+ const actions=w=>{const js=code=>w.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});return {js,click:async selector=>{selector=await revealDraftAction(js,selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(80);},change:async(selector,value)=>{await js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(100);}};};
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('[...document.images].forEach(i=>i.loading="eager")');await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await w.webContents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
  let report;
  if(phase==='side'){
@@ -35,21 +35,23 @@ async function run(){
   await until(()=>js('!!document.querySelector("[data-action=sync]")'),'Main not loaded');await click('[data-action=sync]');
   await until(()=>js('document.querySelector(".preparation-task")?.textContent.includes("诺提勒斯")'),'Public pick not synchronized');
   await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar not entered');
-  await click('[data-action=companion-tab][data-tab=plan]');
+  // The persistent preparation receipt now lives with the lineup task.
+  await click('[data-action=companion-tab][data-tab=recommend]');
   const geometry=await js('(()=>{const panel=document.querySelector(".companion-content").getBoundingClientRect(),summary=document.querySelector(".preparation-task").getBoundingClientRect();return {width:innerWidth,height:innerHeight,panel:{top:panel.top,bottom:panel.bottom},summary:{top:summary.top,bottom:summary.bottom},overflow:document.documentElement.scrollWidth>innerWidth};})()');
   // Windows display scaling can round requested DIP content bounds by one pixel.
   assert.ok(Math.abs(geometry.width-440)<=1);assert.ok(Math.abs(geometry.height-729)<=1);assert.equal(geometry.overflow,false);assert.ok(geometry.summary.top>=0&&geometry.summary.bottom<=geometry.panel.top,'Persistent preparation receipt must fit above the scrollable configuration');
   await capture(main,'side-first-screen.png');
+  await click('[data-action=companion-tab][data-tab=plan]');
   assert.equal(await js('!!document.querySelector("[data-duo-play=naut-samira]")'),true,'Prepared side plan omitted the actual duo stage tasks');
   assert.equal(await js('document.querySelectorAll("[data-matchup-enemy]").length'),0,'No enemy should be selected automatically');
-  const selectedRune=await js('document.querySelector("[data-companion-field=rune]").value');
+  await click('[data-action=companion-jump][data-section=runes]');const selectedRune=await js('document.querySelector("[data-companion-field=rune]").value');await click('[data-companion-disclosure=edit-opponent]>summary');
   const plans={};
   for(const id of ['Morgana','Janna','Yuumi']){
    await change('[data-matchup-target]',id);await until(()=>js('document.querySelector("[data-matchup-enemy]")?.dataset.matchupEnemy==='+JSON.stringify(id)),id+' condition plan missing');
    plans[id]=await js('document.querySelector(".hero-coach-compact").textContent');assert.equal(await js('document.querySelector("[data-companion-field=rune]").value'),selectedRune);
   }
   assert.equal(new Set(Object.values(plans)).size,3);assert.ok(plans.Morgana.includes('黑盾'));assert.ok(plans.Janna.includes('W 不能阻止风女 R'));assert.ok(plans.Yuumi.includes('同一宿主'));
-  await click('[data-action=companion-jump][data-section=opponent]');await capture(main,'side-yuumi-plan.png');
+  await js('document.querySelector("[data-companion-section=opponent]").scrollIntoView({block:"start"})');await capture(main,'side-yuumi-plan.png');
   console.log('Side: three distinct plans and first-screen summary verified');
   await js('(()=>{const b=document.createElement("button");b.dataset.action="auto-sync";document.body.append(b);b.click();b.remove();})()');
   await js('window.openMatchupSelect=document.querySelector("[data-matchup-target]");openMatchupSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');

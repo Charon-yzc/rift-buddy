@@ -81,7 +81,7 @@ test('four/five-member preparation retains active subgroup preparation and prese
   const slots=createSlots().map(s=>({...s,champion:picks[s.role]||null,party:!!picks[s.role],locked:!!picks[s.role]}));
   const [result]=recommend({slots,champions:data.champions,scope:'party',builds:data.builds,patch:data.patch,catalogStatus:data.catalogInfo.status});assert(result);
   const creativePlan=captureCreativePlan(result,data);assert.equal(creativePlan.archetype,'shared');
-  const selection={comboId:creativePlan.id,creativePlan},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'trio-ad-diver');assert.equal(ordinary.skillOrder.length,18);
+  const selection={comboId:creativePlan.id,creativePlan},ordinary=getBuild(hero('Vi'),'jungle',data,selection);assert.equal(ordinary.loadoutId,'trio-vi-followup');assert.equal(ordinary.skillOrder.length,18);
   assert.match(loadoutSelector(ordinary,data),/当前主线的三人专用配置/);
   const explicit=getBuild(hero('Vi'),'jungle',data,{...selection,loadoutId:'default'});assert.equal(explicit.loadoutId,'default');assert.equal(explicit.skillOrder.length,15);assert.match(loadoutSelector(explicit,data),/同位置常用配置/);
   assert(!explicit.selectionWarnings.some(s=>s.includes('个人准备当前使用普通位置参考')));

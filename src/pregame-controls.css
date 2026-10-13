@@ -1,0 +1,43 @@
+.pregame-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;min-width:0;color:#d4e5dd;font-size:14px;line-height:1.4}
+.pregame-primary,.pregame-secondary{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0}
+.pregame-secondary{margin-left:auto}
+.pregame-role{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:14px;color:#b6c9be}
+.pregame-role .select{width:88px;min-height:32px;padding:5px 7px;border:1px solid #344a40;border-radius:6px;background:#14221c;color:#e0eee7;font-size:14px;line-height:1.4}
+.pregame-modes,.pregame-styles,.pregame-scopes{display:flex;align-items:center;gap:4px}
+.pregame-modes{padding:2px;border-radius:7px;background:#101c17}
+.pregame-controls .btn,.pregame-more>summary{min-height:32px;padding:5px 9px;border:1px solid #334a3e;border-radius:6px;background:transparent;color:#bdd2c5;font-family:inherit;font-size:13px;line-height:1.4;white-space:nowrap;cursor:pointer;box-shadow:none}
+.pregame-controls .pregame-choice.active{border-color:#648b72;background:#213d2d;color:#d6f7e1}
+.pregame-modes>.btn{border-color:transparent;font-size:14px}
+.pregame-modes>.btn.active{border-color:#547c62}
+.pregame-controls .pregame-members,.pregame-controls .pregame-room{border-color:transparent;color:#a9c0b2}
+.pregame-controls .pregame-room.is-connected{color:#b6e4c7}
+.pregame-controls .btn:hover,.pregame-more>summary:hover{background:#22392c;border-color:#5f806c;color:#e0f4e8}
+.pregame-controls .btn:focus-visible,.pregame-controls .select:focus-visible,.pregame-more>summary:focus-visible{outline:2px solid #a8daba;outline-offset:2px}
+.pregame-more{position:relative;margin-left:auto;font-size:13px}
+.pregame-more>summary{display:flex;align-items:center;gap:7px;list-style:none;color:#a9c0b2;border-color:transparent}
+.pregame-more>summary::-webkit-details-marker{display:none}
+.pregame-more>summary:after{content:'⌄';font-size:14px;line-height:1}
+.pregame-more[open]>summary{color:#d0f1dc;background:#20392a;border-color:#567a63}
+.pregame-more[open]>summary:after{transform:rotate(180deg)}
+.pregame-more-content{position:absolute;right:0;top:calc(100% + 7px);z-index:15;display:grid;gap:10px;width:max-content;max-width:min(320px,calc(100vw - 28px));padding:12px;border:1px solid #42634f;border-radius:8px;background:#14231b;box-shadow:0 10px 24px #0005}
+.pregame-scopes{flex-wrap:wrap}
+.pregame-controls .pregame-preferences{justify-content:flex-start;border-color:transparent;text-align:left}
+.pregame-controls-compact{display:grid;gap:7px;font-size:13px}
+.pregame-controls-compact .pregame-primary,.pregame-controls-compact .pregame-secondary{width:100%;gap:6px;flex-wrap:nowrap;margin-left:0}
+.pregame-controls-compact .pregame-role{gap:5px;font-size:13px}
+.pregame-controls-compact .pregame-role .select{width:75px;font-size:13px}
+.pregame-controls-compact .pregame-modes>.btn{padding-inline:7px;font-size:13px}
+.pregame-controls-compact .pregame-members{padding-inline:4px;margin-left:auto}
+.pregame-controls-compact .pregame-secondary>.pregame-room{margin-left:auto;padding-inline:4px}
+.pregame-controls-compact .pregame-more{margin-left:0}
+.pregame-controls-compact .pregame-styles>.btn{padding-inline:8px}
+@media(max-width:700px){.pregame-controls{display:grid;gap:7px}.pregame-secondary{margin-left:0}.pregame-controls-compact .pregame-primary{flex-wrap:wrap}.pregame-controls-compact .pregame-secondary{gap:4px}}
+@media(prefers-reduced-motion:no-preference){.pregame-controls .btn,.pregame-more>summary{transition:background-color .12s ease,border-color .12s ease,color .12s ease}}
+
+.pregame-controls .pregame-role{padding:5px 7px;border:1px solid #77bca3;border-radius:7px;background:#24463c;color:#d4f6e7;font-weight:700}
+.pregame-controls .pregame-role .select{width:100px;background:#172e27;border-color:#649881;color:#f0fff8;min-height:34px;font-weight:700}
+.pregame-controls-compact .pregame-primary{flex-wrap:wrap}
+.pregame-controls-compact .pregame-members{font-size:11px}
+.launch-actions{display:grid;gap:8px;margin:14px 0}
+.launch-actions .btn{width:100%;min-height:42px}
+.launch-actions .connect-client{background:#23463a;border-color:#8fceb4;color:#cdf6e2}

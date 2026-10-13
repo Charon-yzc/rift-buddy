@@ -35,6 +35,19 @@ test('an accepted prospective lineup can be replaced, while a manual lock and pu
  const banned={...client,session:{...client.session,bans:[hero('Diana').key],theirTeam:[{championId:hero('Yasuo').key}]}};const blocked=adoptRoomLineup(share(),data,createSlots(),banned);assert.equal(blocked.slots[1].champion,null);assert.equal(blocked.slots[2].champion,null);assert.equal(blocked.creativePlan,null);
 });
 
+test('room adoption rejects conflicting public hovers before saving a plan and allows cleared or matching hovers',()=>{
+ const current=createSlots(),incoming=share(),live=structuredClone(client);
+ live.session.myTeam.push({cellId:1,championId:0,championPickIntent:hero('Lux').key,assignedPosition:'MIDDLE'});
+ const before=structuredClone({current,incoming,live});
+ assert.throws(()=>adoptRoomLineup(incoming,data,current,live),/已预选拉克丝/);assert.deepEqual({current,incoming,live},before);
+ live.session.myTeam[1].championPickIntent=hero('Yasuo').key;
+ assert.equal(adoptRoomLineup(incoming,data,current,live).creativePlan.id,incoming.strategy.id);
+ live.session.myTeam[1].championPickIntent=0;
+ assert.equal(adoptRoomLineup(incoming,data,current,live).creativePlan.id,incoming.strategy.id);
+ live.session.myTeam[0].championPickIntent=hero('Lux').key;
+ assert.throws(()=>adoptRoomLineup(incoming,data,current,live,{}, {ownRole:'mid'}),/已预选拉克丝/);
+});
+
 test('lineup-only relay adoption requires an explicit current Rift interpretation and does not forge missing configurations',()=>{
  const incoming=share();delete incoming.mode;delete incoming.configurations;delete incoming.strategy;
  for(const invalid of [null,{...client,connected:false},{...client,mode:{id:'hex'}},{...client,phase:'Lobby'}])assert.throws(()=>adoptRoomLineup(incoming,data,createSlots(),invalid),/模式/);

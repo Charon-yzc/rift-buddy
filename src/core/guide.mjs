@@ -264,7 +264,7 @@ export function currentPlayerSelection(session,champions,slots=[]){
  const player=session.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
  const champion=champions.find(c=>c.key===player?.championId);if(!champion)return null;
  const assigned=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
- const manual=slots.find(s=>s.champion===champion.id&&(s.manualPosition||!Number.isInteger(s.clientCellId)));
+ const manual=slots.find(s=>s.champion===champion.id&&(s.manualPosition||!s.automaticPosition&&!Number.isInteger(s.clientCellId)));
  const bound=slots.find(s=>s.champion===champion.id&&s.clientCellId===session.localPlayerCellId);
  const role=manual?.role||bound?.role||assigned||profile(champion).roles[0];
  return {id:champion.id,role,positionKnown:!!(manual||assigned&&role===assigned),...(assigned&&role!==assigned?{formalRole:assigned}:{})};

@@ -88,7 +88,7 @@ export function createRuneApplicationState(){
 }
 export function recommendationKey(input){
  // Client bindings and page size can change without changing the draft.
- const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party}));
+ const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party,...(s.publicIntent?{publicIntent:true}:{})}));
  // These source fields affect position eligibility and frequency in recommend.
  // Fetch times, item routes and display labels do not affect lineup ranking.
  const sourceSamples=Object.values(input.builds||{}).map(ref=>[ref.champion,ref.role,Number.isFinite(ref.runeSamples)?ref.runeSamples:null]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));

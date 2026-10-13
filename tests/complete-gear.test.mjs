@@ -7,6 +7,18 @@ const live={matched:true,inventoryKnown:true,inventory:[],gold:0,teamKnown:true,
 const build=(id='Ashe',role='bottom',options={})=>getBuild(hero(id),role,data,options);
 const signal=(kind,source='scoreboard',priority=70)=>({kind,source,priority,evidence:'公开装备投入'});
 const run=(b=build(),extra={})=>completeGearPlan({data,build:b,selection,live,...extra});
+test('frontline physical-pressure branch replaces conditional MR while protecting bought, targeted and invested defenses',()=>{
+ for(const [id,role,loadoutId] of [['Malphite','top','trio-frontline'],['Sejuani','jungle','trio-jungle-frontline']]){
+  const s={id,role,mode:'rift',loadoutId},b=build(id,role,s);
+  assert.equal(b.items[1].id,2504);
+  const physical=build(id,role,{...s,conditions:['ad']});assert.equal(physical.items[1].id,3143);assert(!physical.items.some(i=>i.id===2504));
+  assert.equal(build(id,role,{...s,conditions:['ad','ap']}).items[1].id,2504);
+  const signals=[signal('physical','manual',100)],changed=run(b,{selection:s,signals});assert.equal(changed.route[1].id,'3143');assert(changed.updates.some(u=>u.replaces==='2504'));
+  for(const extra of [{purchaseTarget:'2504'},{selection:{...s,laterIds:[2504]}},{live:{...live,inventory:[{id:'2504',count:1}]}},{live:{...live,inventory:[{id:'1033',count:1}]}},{signals:[...signals,signal('magic','manual',100)]},{signals:[signal('physical')]}]){
+   const retained=run(b,{selection:s,signals,...extra});assert(retained.route.some(i=>i.id==='2504'),JSON.stringify(extra));
+  }
+ }
+});
 test('complete ordered defaults fill compatible later slots without modifying preparation',()=>{
  const b=build(),before=JSON.stringify(b),plan=run(b);assert.equal(plan.route.length,6);assert.equal(JSON.stringify(b),before);
  assert(plan.route.every((r,n)=>!itemConflicts(Number(r.id),plan.route.slice(0,n).map(x=>Number(x.id)))));

@@ -50,10 +50,10 @@ for(const bad of ['ws://room.example.com','http://room.example.com','wss://169.2
  assert.equal(validateState({...defaultState(),preferences:{relayUrl:bad}}).preferences.relayUrl,'',`should drop ${JSON.stringify(bad)}`);
 assert.equal(validateState(defaultState()).preferences.relayUrl,'');
 });
-test('auto room consent defaults off and an imported backup cannot enable it',()=>{
- assert.equal(validateState(defaultState()).preferences.roomAuto,false);
+test('auto room defaults on, explicit opt-out survives and backups cannot change that choice',()=>{
+ assert.equal(validateState(defaultState()).preferences.roomAuto,true);
  assert.equal(validateState({...defaultState(),preferences:{roomAuto:true}}).preferences.roomAuto,true);
- for(const bad of ['true',1,null,undefined,{},[]])assert.equal(validateState({...defaultState(),preferences:{roomAuto:bad}}).preferences.roomAuto,false,JSON.stringify(bad));
+ for(const bad of ['true',1,null,{},[]])assert.equal(validateState({...defaultState(),preferences:{roomAuto:bad}}).preferences.roomAuto,false,JSON.stringify(bad));
  const off=validateState({...defaultState(),preferences:{roomAuto:false}}),on=validateState({...defaultState(),preferences:{roomAuto:true}});
  assert.equal(mergeState(off,on,data.champions).preferences.roomAuto,false,'a backup must not start uploading on this machine');
  assert.equal(mergeState(on,off,data.champions).preferences.roomAuto,true,'the local choice must survive an import');

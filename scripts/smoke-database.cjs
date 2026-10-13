@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[];
 app.on('browser-window-created',(_event,w)=>windows.push(w));
@@ -6,9 +7,9 @@ async function until(check,label){for(let i=0;i<150;i++){const r=await check();i
 async function run(){
  app.setPath('userData',root);const release=JSON.parse(await fs.readFile('release/latest.json','utf8'));require(path.join(release.directory,'resources/app.asar/electron/main.cjs'));
  const main=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/index.html')),'Main missing'),js=code=>main.webContents.executeJavaScript(code,true);
- await until(()=>js('!!document.querySelector("[data-action=combination-library]")'),'Draft missing');
+ await until(()=>js('!!document.querySelector("[data-action=draft-filters]")'),'Draft missing');
  ipcMain.removeHandler('refresh-build');ipcMain.handle('refresh-build',()=>({updated:false,reason:'隔离验收保留内置配置'}));
- const click=async selector=>{assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`document.querySelector(${JSON.stringify(selector)}).click()`);await delay(80);};
+ const click=async selector=>{selector=await revealDraftAction(js,selector);assert.ok(await js(`!!document.querySelector(${JSON.stringify(selector)})`),selector);await js(`document.querySelector(${JSON.stringify(selector)}).click()`);await delay(80);};
  const set=async(selector,value)=>js(`{const e=document.querySelector(${JSON.stringify(selector)});e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('change',{bubbles:true}));}`);
  const search=async value=>{await js(`{const e=document.querySelector('#combo-search');e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('input',{bubbles:true}));}`);await delay(100);};
  const capture=async name=>{await js('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage()).toPNG());};

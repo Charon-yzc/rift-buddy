@@ -1,4 +1,4 @@
-import {changeSummonerSlot} from './summoner-selection.mjs';
+import {changeSummonerSlot,preferredFlashOrder,configuredFlashSlot} from './summoner-selection.mjs';
 import {getBuild} from './builds.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {ROLES,profile} from './rules.mjs';
@@ -7,22 +7,37 @@ import {editSkillOrder} from './skill-advice.mjs';
 import {currentCombo} from './recommend.mjs';
 import {creativeComboContext} from './creative-plan.mjs';
 
-export function companionPickIntent(client,champions,slots=[],{scope='solo',soloRole='',creativePlan=null,catalogStatus={}}={}){
+// Offline lineup design edits this machine's reference, never a teammate's
+// live configuration. Shared snapshots keep their explicit read-only flag.
+export function localConfigurationPreview(selection,client,ownRole=''){
+ const live=client?.connected&&client.phase==='ChampSelect';
+ return {...selection,readOnly:!!live&&(!ownRole||selection.role!==ownRole),localReference:!live};
+}
+export function configurationReadOnly(selection,client,ownRole=''){
+ return !!selection?.readOnly||!!(selection?.localReference&&client?.connected&&client.phase==='ChampSelect'&&(!ownRole||selection.role!==ownRole));
+}
+export function assertConfigurationEditable(selection){
+ if(selection?.readOnly)throw Error('队友配置仅供查看，请回到本人的配置');
+}
+
+export function companionPickIntent(client,champions,slots=[],{scope='solo',soloRole='',playerPosition=null,creativePlan=null,catalogStatus={}}={}){
  const session=client?.session,mode=client?.mode?.id;
  if(!client?.connected||client.phase!=='ChampSelect'||!['rift','hex'].includes(mode)||!Number.isInteger(session?.localPlayerCellId))return null;
  const player=session.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
  if(!player||player.championId||!Number.isInteger(player.championPickIntent))return null;
  const champion=champions.find(c=>c.key===player.championPickIntent);if(!champion)return null;
  const assigned=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
- const manual=slots.find(s=>s.manualPosition&&s.clientCellId===session.localPlayerCellId)||slots.find(s=>s.champion===champion.id&&!Number.isInteger(s.clientCellId));
+ const manual=slots.find(s=>s.manualPosition&&s.clientCellId===session.localPlayerCellId)||slots.find(s=>s.champion===champion.id&&!s.automaticPosition&&!Number.isInteger(s.clientCellId));
+ const chosen=playerPosition?.cellId===session.localPlayerCellId&&ROLES.some(r=>r.id===playerPosition.role)?playerPosition.role:null;
  const preferred=ROLES.some(r=>r.id===soloRole)?soloRole:null;
- const role=manual?.role||assigned||preferred||profile(champion).roles[0];
+ const role=manual?.role||chosen||assigned||preferred||profile(champion).roles[0];
  const combo=mode==='rift'?currentCombo(slots,champion.id,role,catalogStatus,null,creativePlan):null;
- return {selection:{id:champion.id,role,mode,...creativeComboContext(combo)},positionKnown:!!(assigned||manual||preferred)};
+ return {selection:{id:champion.id,role,mode,...creativeComboContext(combo)},positionKnown:!!(assigned||manual||chosen||preferred)};
 }
 
 // Inline controls edit the same preparation as the drawer and in-game guide.
 export function changeCompanionPlan(data,selection,field,value){
+ assertConfigurationEditable(selection);
  const champion=data.champions.find(c=>c.id===selection.id);
  if(!champion)throw Error('英雄资料已变化，请重新选择');
  const current=getBuild(champion,selection.role,data,selection),next={...selection};
@@ -36,7 +51,7 @@ export function changeCompanionPlan(data,selection,field,value){
   else if(field==='summoner-pair'){
    const option=current.sourceSummonerOptions.find(o=>o.id===value);
    if(!option)throw Error('来源召唤师技能备选已变化，请重新选择');
-   next.summonerIds=[...option.ids];
+   next.summonerIds=preferredFlashOrder(option.ids,configuredFlashSlot(data));
   }
   else if(field==='summoner-swap'){
    if(current.summoners.length!==2)throw Error('当前召唤师技能资料不完整');

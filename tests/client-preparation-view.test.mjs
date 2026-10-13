@@ -21,7 +21,7 @@ test('one-click payload uses the concrete selected combination and keeps explici
 test('client controls explain writes and preserve partial outcomes without claiming success',()=>{
  const statuses=new Map([[clientPreparationKey(client,clientPreparationPlan(data,plan)),{complete:false,steps:{hover:{status:'done'},runes:{status:'done'},spells:{status:'failed',message:'技能读取失败 <mock>'},items:{status:'skipped'}}}]]);
  const html=clientPreparationControls({data,plan,client,available:true,view:'room',statuses});
- assert.match(html,/data-preparation-view="room"/);assert.match(html,/只预选英雄，锁定由你完成/);assert.match(html,/覆盖一张可编辑符文页/);assert.match(html,/部分步骤未完成/);assert.match(html,/技能读取失败 &lt;mock&gt;/);assert.match(html,/data-step-status="skipped"/);assert(!html.includes('配置已完成，请'));
+ assert.match(html,/data-preparation-view="room"/);assert.match(html,/锁定由你确认/);assert.match(html,/替换一张可编辑符文页/);assert.match(html,/部分步骤未完成/);assert.match(html,/技能读取失败 &lt;mock&gt;/);assert.match(html,/data-step-status="skipped"/);assert(!html.includes('配置已完成，请'));
  for(const changed of [{...client,connected:false},{...client,mode:{id:'hex'}},{...client,session:{...client.session,myTeam:[{cellId:0,championId:22}],actions:[[{type:'pick',actorCellId:0,completed:true}]]}}])assert.match(clientPreparationControls({data,plan,client:changed,available:true}),/data-action="client-prepare"[^>]+disabled/);
 });
 test('room workspace exposes actual defaults for every member and separates local planning from actual peer sharing',()=>{

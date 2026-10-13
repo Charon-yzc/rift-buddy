@@ -101,7 +101,7 @@ export function relayWelcome(room,nicks){
  const code=typeof room==='string'&&validRoomCode(room)?room:null;
  if(!code)return null;
  const members=(Array.isArray(nicks)?nicks:[]).map(sanitizeNick).filter(Boolean).slice(0,MAX_RELAY_MEMBERS);
- return {kind:'welcome',v:ROOM_PROTOCOL,room:code,members:members.map(nick=>({nick}))};
+ return {kind:'welcome',v:ROOM_PROTOCOL,room:code,members:members.map(nick=>({nick})),ballots:1};
 }
 export function relayJoin(nick){
  const from=sanitizeNick(nick);

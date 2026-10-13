@@ -31,9 +31,29 @@ test('explicit client preparation previews only own pick and verifies actual run
  const f=fixture(),before=structuredClone(f.value),result=await f.run();assert.equal(result.complete,true);assert(Object.values(result.steps).every(s=>s.status==='done'));assert.equal(f.action.completed,false);assert.equal(f.own.championPickIntent,22);assert.equal(result.steps.runes.pageId,11);assert.equal(f.items,1);assert.deepEqual(f.pages[0],{id:2,current:false,isEditable:false});assert.deepEqual(f.value,before);
  assert.deepEqual(f.calls.filter(c=>c.method==='PATCH').map(c=>c.route),['/lol-champ-select/v1/session/actions/4','/lol-champ-select/v1/session/my-selection']);assert(!f.calls.some(c=>c.body?.completed===true));
 });
+test('explicit lane claim only preselects a representative, leaves runes/spells/items and lock untouched',async()=>{
+ const f=fixture();f.value.preselectOnly=true;const before=structuredClone(f.pages),spells=[f.own.spell1Id,f.own.spell2Id];const result=await f.run();
+ assert.equal(result.preselectOnly,true);assert.equal(result.steps.hover.status,'done');assert.equal(f.action.completed,false);assert.equal(f.items,0);assert.deepEqual(f.pages,before);assert.deepEqual([f.own.spell1Id,f.own.spell2Id],spells);
+ assert.deepEqual(f.calls.filter(c=>c.method!=='GET').map(c=>c.route),['/lol-champ-select/v1/session/actions/4']);
+});
 test('locked same hero applies configuration without selecting or unlocking, locked other hero rejects before writes',async()=>{
  const f=fixture({locked:true});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
  const other=fixture({locked:true});other.own.championId=1;other.value.context.championId=1;await assert.rejects(other.run(),/锁定其他英雄/);assert(!other.calls.some(c=>c.method!=='GET'));
+});
+test('default preparation preserves the latest client Flash key, including a change while runes are applied',async()=>{
+ for(const flashSlot of [0,1]){
+  const f=fixture();f.value.summoners=['SummonerFlash','SummonerBarrier'];f.own.spell1Id=4;f.own.spell2Id=7;
+  const request=f.deps.request;
+  f.deps.request=async(auth,route,method,body)=>{const result=await request(auth,route,method,body);if(method==='PUT'){f.own.spell1Id=flashSlot===0?4:7;f.own.spell2Id=flashSlot===1?4:7;}return result;};
+  const result=await f.run();assert.equal(result.complete,true);
+  const patch=f.calls.find(c=>c.method==='PATCH'&&c.route.endsWith('/my-selection')).body;
+  assert.equal([patch.spell1Id,patch.spell2Id][flashSlot],4);assert.equal([patch.spell1Id,patch.spell2Id][1-flashSlot],Number(data.spells.SummonerBarrier.key));
+  assert.equal(result.steps.spells.summoners[flashSlot],'SummonerFlash');
+ }
+ const explicit=fixture();explicit.own.spell1Id=7;explicit.own.spell2Id=4;explicit.value.summoners=['SummonerFlash','SummonerBarrier'];explicit.value.preserveFlashSlot=false;
+ assert.equal((await explicit.run()).complete,true);assert.equal(explicit.own.spell1Id,4);assert.equal(explicit.own.spell2Id,Number(data.spells.SummonerBarrier.key));
+ const noFlash=fixture();noFlash.own.spell1Id=4;noFlash.own.spell2Id=7;noFlash.value.summoners=['SummonerSmite','SummonerHaste'];
+ assert.equal((await noFlash.run()).complete,true);assert.equal(noFlash.own.spell1Id,Number(data.spells.SummonerSmite.key));assert.equal(noFlash.own.spell2Id,Number(data.spells.SummonerHaste.key));
 });
 
 test('custom Rift map metadata completes explicit preview, editable runes, spells and equipment without locking',async()=>{
@@ -102,6 +122,43 @@ test('unavailable heroes, missing availability and non-player turn produce no wr
 test('new bans while reading eligibility cancel before hover and a new game before a later step stops its writes',async()=>{
  const f=fixture(),request=f.deps.request;f.deps.request=async(auth,route,...args)=>{const result=await request(auth,route,...args);if(route.endsWith('/disabled-champion-ids'))f.session.bans.theirTeamBans=[22];return result;};const r=await f.run();assert.equal(r.steps.hover.status,'failed');assert.equal(r.steps.runes.status,'skipped');assert(!f.calls.some(c=>c.method!=='GET'));
  const g=fixture(),read=g.deps.request;g.deps.request=async(auth,route,method,body)=>{const result=await read(auth,route,method,body);if(method==='PUT'){g.session.gameId=778;g.game.gameData.gameId=778;}return result;};const p=await g.run();assert.equal(p.steps.spells.status,'failed');assert.equal(p.steps.items.status,'skipped');assert(!g.calls.some(c=>c.method==='PATCH'&&c.route.endsWith('my-selection')));
+});
+test('unrelated teammate selections and bans during eligibility reads still prepare the clicked hero',async()=>{
+ for(const change of [f=>f.session.myTeam.push({cellId:1,championId:103,assignedPosition:'MIDDLE'}),f=>f.session.bans.theirTeamBans=[1]]){
+  const f=fixture(),request=f.deps.request;let eligibilityReads=0;
+  f.deps.request=async(auth,route,...args)=>{const result=await request(auth,route,...args);if(route.endsWith('/disabled-champion-ids')&&++eligibilityReads===1)change(f);return result;};
+  const result=await f.run();assert.equal(result.complete,true);assert.equal(eligibilityReads,2);assert.equal(f.own.championPickIntent,22);assert.equal(f.action.completed,false);assert.equal(f.items,1);
+  assert.deepEqual(f.calls.filter(c=>c.method==='PATCH').map(c=>c.route),['/lol-champ-select/v1/session/actions/4','/lol-champ-select/v1/session/my-selection']);
+ }
+});
+test('target availability, own action, game, mode and turn changes during eligibility reads stop before every write',async()=>{
+ const changes={
+  banned:f=>{f.session.bans.theirTeamBans=[22];},
+  teammate:f=>{f.session.myTeam.push({cellId:1,championId:22});},
+  opponent:f=>{f.session.theirTeam.push({cellId:5,championId:22});},
+  disabled:()=>{},unpickable:()=>{},missing:()=>{},
+  game:f=>{f.session.gameId=778;},
+  action:f=>{f.action.id=5;},
+  player:f=>{f.session.localPlayerCellId=1;},
+  locked:f=>{f.own.championId=1;f.action.championId=1;f.action.completed=true;},
+  mode:f=>{f.game.gameData.queue={id:450,gameMode:'ARAM'};},
+  phase:f=>{f.setPhase('ReadyCheck');},
+  turn:f=>{f.session.timer.phase='BAN_PICK';f.action.isInProgress=false;},
+ };
+ for(const [kind,change] of Object.entries(changes)){
+  const f=fixture(),request=f.deps.request;let changed=false;
+  f.deps.request=async(auth,route,...args)=>{
+   const result=await request(auth,route,...args);
+   if(changed&&route.endsWith('/pickable-champion-ids')&&kind==='unpickable')return [];
+   if(route.endsWith('/disabled-champion-ids')){
+    if(changed&&kind==='disabled')return [22];
+    if(changed&&kind==='missing')return null;
+    if(!changed){changed=true;change(f);}
+   }
+   return result;
+  };
+  const result=await f.run();assert.equal(result.complete,false,kind);assert.equal(result.steps.hover.status,'failed',kind);assert.equal(result.steps.runes.status,'skipped',kind);assert.equal(f.items,0,kind);assert(!f.calls.some(c=>c.method!=='GET'),kind);
+ }
 });
 test('unconfirmed hover or spell readback cannot report complete; failed items retain the successfully written rune page id',async()=>{
  const f=fixture(),request=f.deps.request;f.deps.request=(auth,route,method,body)=>method==='PATCH'&&route.includes('/actions/')?null:request(auth,route,method,body);const r=await f.run();assert.equal(r.steps.hover.status,'failed');assert.equal(r.steps.runes.status,'skipped');

@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),cp=require('node:child_process'),https=require('node:https'),{EventEmitter}=require('node:events'),{createHash}=require('node:crypto');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_SUMMONER_PHASE,windows=[],copies=[];
@@ -22,7 +23,7 @@ async function run(){
  require(path.join(archive,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
  const js=code=>main.webContents.executeJavaScript(code,true),state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
- const click=async selector=>{assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(110);};
+ const click=async selector=>{selector=await revealDraftAction(js,selector);assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(110);};
  const change=async(selector,value)=>{await js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)throw Error("Control missing");el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(110);};
  const read=(compact=false)=>js('[...document.querySelectorAll('+JSON.stringify(compact?'[data-companion-field^="summoner-"]':'[data-build-summoner]')+')].map(s=>s.value)');
  const preparePair=async(ids,compact=false)=>{const attr=compact?'data-companion-field':'data-build-summoner',prefix=compact?'summoner-':'';await change('['+attr+'="'+prefix+'d"]',ids[0]);await change('['+attr+'="'+prefix+'f"]',ids[1]);assert.deepEqual(await read(compact),ids);};
@@ -31,10 +32,10 @@ async function run(){
  const capture=async(name)=>{await js('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  await until(()=>js('!!document.querySelector("[data-action=navigate]")'),'UI missing');
  if(phase==='prepare'){
-  await open();const defaults=await read();await click('[data-action=favorite-build]');await preparePair(pair);
+  await open();let defaults=await read();await click('[data-action=favorite-build]');await preparePair(pair);
   await click('[data-action=build-summoner][data-field=summoner-swap]');assert.deepEqual(await read(),[...pair].reverse());
   await change('[data-build-summoner=d]',pair[0]);assert.deepEqual(await read(),pair,'Duplicate choice must swap slots');
-  await click('[data-action=build-summoner][data-field=summoner-reset]');assert.deepEqual(await read(),defaults);await preparePair(pair);
+  await click('[data-action=build-summoner][data-field=summoner-reset]');defaults=[...defaults.filter(id=>id!=='SummonerFlash'),'SummonerFlash'];assert.deepEqual(await read(),defaults,'Reset keeps the explicitly chosen Flash key');await preparePair(pair);
   await click('[data-action=favorite-build]');await click('[data-action=copy-build]');assert.match(copies.at(-1),/召唤师技能：D 引燃 \/ F 闪现/);
   await click('[data-action=open-guide]');await guidePair(pair);
   await change('[data-build-source-field=region]','kr');await change('[data-build-source-field=region]','global');assert.deepEqual(await read(),pair);await guidePair(pair);
@@ -48,7 +49,7 @@ async function run(){
   await preparePair(pair,true);assert.deepEqual((await state()).draft.slots,before,'Preview accepted draft unexpectedly');
   for(const width of [280,360,440]){main.setContentSize(width,850);await until(()=>js('Math.abs(innerWidth-'+width+')<=2'),'Resize did not settle');await delay(250);assert.deepEqual(await read(true),pair);assert.equal(await js('document.documentElement.scrollWidth>innerWidth+1'),false,'Sidebar overflow '+width);assert.ok(await js('[...document.querySelectorAll("[data-companion-field^=summoner-]")].every(s=>{const r=s.getBoundingClientRect();return r.width>80&&r.left>=0&&r.right<=innerWidth+1;})'),'Clipped spell controls '+width);await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await click('[data-action=companion-jump][data-section=skills]');await js('document.querySelector(".companion-content .summoner-preparation").scrollIntoView({block:"center"})');await delay(350);const box=await js('(()=>{const r=document.querySelector(".companion-content .summoner-preparation").getBoundingClientRect(),c=document.querySelector(".companion-content").getBoundingClientRect();return {top:r.top,bottom:r.bottom,clipTop:c.top,clipBottom:c.bottom};})()');assert.ok(box.top>=box.clipTop&&box.bottom<=box.clipBottom,"Spell preparation outside scroll viewport "+width+JSON.stringify(box));await capture('sidebar-summoners-'+width+'.png');}
   await click('[data-action=companion-full]');await click('[data-action=favorite-result][data-index="0"]');const favorite=(await state()).favorites.find(f=>f.type==='team');assert.deepEqual(favorite.configurations.find(m=>m.id==='Aphelios').summonerIds,pair);
-  await click('[data-action=result-detail][data-index="0"]');await click('[data-action=use-result][data-index="0"]');await until(()=>js('!!document.querySelector(".result-card")'),'Accepted results missing');
+  await click('[data-action=result-detail][data-index="0"]');await click('[data-action=use-result][data-index="0"]');await until(()=>js('!!document.querySelector(".adopted-task")'),'Accepted plan missing');
   await open('Aphelios');assert.deepEqual(await read(),pair);await click('[data-action=open-guide]');await guidePair(pair);await click('[data-action=close]');
   await fs.writeFile(path.join(root,'expected.json'),JSON.stringify({favorite,defaults},null,2));
  }else{

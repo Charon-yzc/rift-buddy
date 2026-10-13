@@ -9,7 +9,7 @@ const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));async function until(check,label){for(let n=0;n<170;n++){if(await check())return;await delay(70);}throw Error(label);}
 async function run(){
- const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar');
+ const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?{archiveSha256:null}:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  for(const file of ['services/lcu.mjs','services/storage.mjs','src/core/draft.mjs','src/core/pick-eligibility.mjs','src/core/personal-combo.mjs','src/core/team-favorites.mjs','src/core/recommend.mjs','src/app.mjs','src/companion-view.mjs','src/pick-eligibility-view.mjs','src/styles.css'])assert.ok((await fs.readFile(path.join(base,file))).equals(await fs.readFile(file)),'Packaged source drift: '+file);
  const {pickEligibilityContext}=await import(pathToFileURL(path.join(base,'src/core/pick-eligibility.mjs'))),{champions}=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),key=id=>champions.find(c=>c.id===id).key;
  pickable=phase==='empty'?[]:[key('Ahri')];

@@ -40,3 +40,10 @@ test('manual sidebar placement persists, restore defaults follows again, and gam
 test('missing or minimized client hides only sidebar and follow resumes without moving main',async()=>{
  const f=fixture();f.companion.observe(anchor);await Promise.resolve();const side=f.companion.getWindow();f.companion.observe(null);assert.equal(side.isVisible(),false);assert.equal(f.main.isVisible(),true);f.companion.observe({...anchor,minimized:true});assert.equal(side.isVisible(),false);f.companion.observe(anchor);assert.equal(side.isVisible(),true);assert.deepEqual(f.main.getBounds(),f.before);f.companion.destroy();
 });
+
+test('the same sidebar follows lobby, matchmaking, ready check and selection without resizing main',async()=>{
+ const f=fixture();f.setClient({connected:true,phase:'Lobby'});f.companion.observe(anchor);await Promise.resolve();
+ const side=f.companion.getWindow();assert.ok(side?.isVisible());
+ for(const phase of ['Matchmaking','ReadyCheck','ChampSelect']){f.setClient({connected:true,phase});f.companion.sync();assert.equal(f.companion.getWindow(),side);assert.ok(side.isVisible());assert.deepEqual(f.main.getBounds(),f.before);}
+ f.setClient({connected:true,phase:'InProgress'});f.companion.sync();assert.equal(side.isDestroyed(),true);f.companion.destroy();
+});

@@ -18,6 +18,13 @@ export function validSourceSummonerOptions(value,data,{older=false}={}){
   return Number.isSafeInteger(o.samples)&&o.samples>0&&Number.isSafeInteger(o.wins)&&o.wins>=0&&o.wins<=o.samples&&Number.isFinite(o.winRate)&&Math.abs(o.winRate-100*o.wins/o.samples)<.000001&&(o.pickRate===null||Number.isFinite(o.pickRate)&&o.pickRate>=0&&o.pickRate<=100);
  });
 }
+export function preferredFlashOrder(ids,slot){
+ if(ids===undefined)return undefined;
+ const next=[...ids],index=next.indexOf('SummonerFlash');
+ if(index>=0&&['d','f'].includes(slot)&&index!==(slot==='d'?0:1))next.reverse();
+ return next;
+}
+export function configuredFlashSlot(data){return ['d','f'].includes(data.flashSlot)?data.flashSlot:data.clientFlashSlot;}
 export function summonerPlan(data,mode,role,recommended,manual){
  const options=summonerOptions(data,mode),available=ids=>Array.isArray(ids)&&ids.length===2&&ids[0]!==ids[1]&&ids.every(id=>options.includes(id));
  const warnings=[],fallback=mode==='hex'?['SummonerFlash','SummonerSnowball']:['SummonerFlash',role==='jungle'?'SummonerSmite':role==='support'?'SummonerExhaust':role==='bottom'?'SummonerBarrier':'SummonerTeleport'];
@@ -26,7 +33,7 @@ export function summonerPlan(data,mode,role,recommended,manual){
  if(manual!==undefined)validateSummonerIds(manual,mode);
  const selected=manual!==undefined&&available(manual);
  if(manual!==undefined&&!selected)warnings.push('已保存的召唤师技能在当前资料中不可用，保留原选择，暂显示来源配置。');
- const ids=selected?[...manual]:source;
+ const ids=preferredFlashOrder(selected?manual:source,['d','f'].includes(data.flashSlot)&&selected?undefined:configuredFlashSlot(data));
  if(mode==='rift'&&role==='jungle'&&!ids.includes('SummonerSmite'))warnings.push('打野配置没有惩戒，请先确认野区与召唤师技能分工。');
  if(mode==='rift'&&role!=='jungle'&&ids.includes('SummonerSmite'))warnings.push('非打野位携带惩戒，先与队友确认兵线与野区分工。');
  return {ids,options,selectedSummonerIds:selected?[...manual]:null,manual:!!selected,warnings};

@@ -24,11 +24,16 @@ async function run(){
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(350);};
  await until(()=>js('!!document.querySelector("#solo-role")'),'Creative UI missing');
+ // The adopted plan is generated automatically. The new "换一套" entry
+ // intentionally compares alternatives and would discard this source identity.
+ const openOriginalPlan=async label=>{await until(()=>js('!!document.querySelector("[data-action=result-detail][data-index=\\"0\\"]")'),label);await click('[data-action=result-detail][data-index="0"]');};
  if(reordered){
   if(restart){await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite][data-index="0"]');}
-  await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Reordered plan missing');await click('[data-action=result-detail][data-index="0"]');
+  const sourcePlan=(await js('window.buddy.bootstrap()')).state.draft.creativePlan;assert.ok(sourcePlan,'Reordered source plan missing');
+  await openOriginalPlan('Reordered plan missing');
   if(!restart){await click('[data-action=favorite-result]');await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.some(f=>f.type==="team"))'),'Reordered plan could not be saved');}
   const favorite=(await js('window.buddy.bootstrap()')).state.favorites.find(f=>f.type==='team'),plan=favorite.creativePlan;
+  assert.deepEqual(plan,sourcePlan,'Saving or reopening changed the original reordered plan');
   assert.notDeepEqual(plan.members.map(m=>m.champion),plan.ordered.map(m=>m.champion));assert.equal(favorite.configurations.length,3);
   for(const member of plan.members){
    await click('[data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');await until(()=>js('!!document.querySelector("#build-role")'),'Reordered member could not open');
@@ -42,7 +47,7 @@ async function run(){
  }
  let original;
  if(!restart){
-  await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Creative recommendation missing');await click('[data-action=result-detail][data-index="0"]');
+  await openOriginalPlan('Creative recommendation missing');
   assert.match(await js('document.querySelector(".plan-drawer h2").textContent'),/创意/);
   await click('[data-action=copy-result]');await until(()=>copied.length>0,'Original copy missing');assert.match(copied[0],/顺序：/);assert.match(copied[0],/保存资料/);
   await click('[data-action=favorite-result]');await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.some(f=>f.type==="team"&&f.creativePlan))'),'Creative favorite missing');
@@ -50,7 +55,7 @@ async function run(){
   await click('[data-action=use-result]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Accepted creative result was not refreshed');await click('[data-action=result-detail][data-index="0"]');assert.ok(await js('document.querySelector(".plan-drawer").textContent.includes('+JSON.stringify(original.window)+')'));
   await click('[data-action=close]');await click('[data-action=navigate][data-route=favorites]');assert.match(await js('document.querySelector(".favorite-card").textContent'),/原保存的创意分工/);await click('[data-action=open-favorite][data-index="0"]');
   await until(()=>js('window.buddy.bootstrap().then(b=>!!b.state.draft.creativePlan)'),'Loaded draft dropped its creative plan');
-  await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Locked creative recommendation missing');await click('[data-action=result-detail][data-index="0"]');
+  await openOriginalPlan('Locked creative recommendation missing');
   const detail=await js('document.querySelector(".plan-drawer").textContent');for(const m of original.ordered)assert.ok(detail.includes(m.job));assert.ok(detail.includes(original.window));assert.ok(detail.includes(original.rulesVersion));
   await capture(main,'creative-original-detail.png');
   await click('[data-action=build][data-id=Annie][data-role=mid]');assert.equal(await js('document.querySelector("#build-role").value'),'mid');assert.ok(await js('document.querySelector(".combo-config").textContent.includes('+JSON.stringify(original.window)+')'));
@@ -65,7 +70,7 @@ async function run(){
  }else{
   original=JSON.parse(await fs.readFile(path.join(root,'creative-plan-original.json'),'utf8'));await sync();await sync();
   const saved=await js('window.buddy.bootstrap()');assert.deepEqual(saved.state.draft.creativePlan,original);assert.deepEqual(saved.state.favorites.find(f=>f.type==='team').creativePlan,original);
-  await click('[data-action=recommend]');await until(()=>js('document.querySelectorAll("[data-action=result-detail]").length>0'),'Restart creative recommendation missing');await click('[data-action=result-detail][data-index="0"]');
+  await openOriginalPlan('Restart creative recommendation missing');
   const detail=await js('document.querySelector(".plan-drawer").textContent');for(const step of original.steps)assert.ok(detail.includes(step));assert.ok(detail.includes(original.window));await capture(main,'creative-reopened-detail.png');await click('[data-action=close]');
  }
  await click('[data-action=guide-current]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Creative guide missing');
@@ -79,7 +84,7 @@ async function run(){
  await fs.writeFile(path.join(root,restart?'creative-reopened.png':'creative-loaded.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  if(restart){
   support='Nami';await sync();await sync();const changed=await js('window.buddy.bootstrap()');assert.equal(changed.state.draft.creativePlan,undefined);assert.deepEqual(changed.state.favorites.find(f=>f.type==='team').creativePlan,original);
-  assert.match(await js('document.querySelector("[data-creative-plan-notice]").textContent'),/原分工不再适用/);
+  assert.match(await js('document.querySelector("[data-creative-plan-notice]").textContent'),/队伍选人已变化，请重新搭配。/);
   await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.combo?.id!=='+JSON.stringify(original.id)+')'),'Changed member retained the original confirmed guide');
  }
  assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));await fs.writeFile(path.join(root,'creative-plan-original.json'),JSON.stringify(original,null,2));

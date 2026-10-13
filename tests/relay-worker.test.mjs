@@ -82,10 +82,10 @@ test('worker: handshake, fan-out, spoof rejection and leave semantics',async()=>
  const a=(await hub.fetch(roomRequest('482913'))).webSocket;
  await hub.webSocketMessage(a,hello('甲'));
  assert.equal(a.sent.length,1);
- assert.deepEqual(JSON.parse(a.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[]});
+ assert.deepEqual(JSON.parse(a.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[],ballots:1});
  const b=(await hub.fetch(roomRequest('482913'))).webSocket;
  await hub.webSocketMessage(b,hello('乙'));
- assert.deepEqual(JSON.parse(b.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'}]});
+ assert.deepEqual(JSON.parse(b.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'}],ballots:1});
  assert.deepEqual(JSON.parse(a.sent[1]),{kind:'join',v:ROOM_PROTOCOL,from:'乙'});
  // State from 甲 reaches 乙 but never echoes back to 甲.
  await hub.webSocketMessage(a,state('甲'));

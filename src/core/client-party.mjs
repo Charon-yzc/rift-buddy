@@ -2,6 +2,11 @@
 // read chat messages, or carry lobby credentials into renderer/storage/rooms.
 import {sanitizePartyKey} from './room-auto.mjs';
 const clean = value => typeof value === 'string' ? value.trim().normalize('NFKC') : '';
+export function publicPlayerName(player){
+ if(!player||String(player.nameVisibilityType||'').toUpperCase()==='HIDDEN')return '';
+ const value=clean(player.gameName)||clean(player.summonerName)||clean(player.riotId).split('#')[0];
+ return /^[^\r\n\0]{1,64}$/.test(value)?value:'';
+}
 export function publicPlayerIdentity(player) {
  if (!player || String(player.nameVisibilityType || '').toUpperCase() === 'HIDDEN') return {};
  const identity = {}, puuid = clean(player.puuid);
@@ -24,13 +29,16 @@ const sameIdentity = (a, b) => {
 export function sanitizeLobbyParty(raw, receivedAt = Date.now()) {
  if (!raw || !Array.isArray(raw.members) || raw.members.length > 5 || raw.gameConfig?.isCustom === true) return null;
  const local = publicPlayerIdentity(raw.localMember);
- const members = raw.members.filter(p => !p.isBot && !p.isSpectator).map(p => ({identity:publicPlayerIdentity(p),
+ const members = raw.members.filter(p => !p.isBot && !p.isSpectator).map(p => ({identity:publicPlayerIdentity(p),displayName:publicPlayerName(p),
   firstPosition:String(p.firstPositionPreference || '').toUpperCase(), secondPosition:String(p.secondPositionPreference || '').toUpperCase()}));
  if (!Object.keys(local).length || !members.some(p => sameIdentity(p.identity, local))) return null;
  // partyId identifies the shared lobby across its members. chatRoomId,
  // chatRoomKey and mucJwtDto are credentials and are never read.
  const key = sanitizePartyKey(raw.partyId);
- return {local, members, receivedAt, ...(key ? {key} : {})};
+ return {local, localName:publicPlayerName(raw.localMember), members, receivedAt, ...(key ? {key} : {})};
+}
+export function lobbyPartyMembers(lobby){
+ return (lobby?.members||[]).map(m=>({displayName:m.displayName||'',local:sameIdentity(m.identity,lobby.local),source:'lobby',firstPosition:m.firstPosition,secondPosition:m.secondPosition}));
 }
 export function resolveClientParty(session, lobby, manualIds = [], now = Date.now()) {
  const team = session?.myTeam || [], localCell = session?.localPlayerCellId, own = team.find(p => p.cellId === localCell);
@@ -43,7 +51,7 @@ export function resolveClientParty(session, lobby, manualIds = [], now = Date.no
   const identity = identityOf(p), local = p.cellId === localCell;
   const matched = known && lobby.members.find(m => sameIdentity(identity, m.identity));
   const manual = ids.some(id => [identity.riotId, identity.summonerId].some(value => value?.toLowerCase() === id));
-  return local || matched || manual ? [{cellId:p.cellId, local, source:local?'self':manual?'manual-id':'lobby',
+  return local || matched || manual ? [{cellId:p.cellId, local, displayName:Object.keys(identity).length?(p.displayName||publicPlayerName(p)||matched?.displayName||''):'', source:local?'self':manual?'manual-id':'lobby',
    ...(matched?{firstPosition:matched.firstPosition,secondPosition:matched.secondPosition}:{})}] : [];
  });
  return {status:known?'known':'unknown', members, lobbyCount:known?lobby.members.length:null,

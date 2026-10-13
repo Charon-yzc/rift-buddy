@@ -5,7 +5,7 @@ export const DRAFT_SCOPES={
  party:{name:'只看我们',description:'只推荐标记“我们”的位置，只考虑我们之间的配合。'},
  bot:{name:'下路双人组',description:'只搭配下路与辅助，不受其他位置或“我们 / 队友”标记影响。'},
 };
-export const draftTargets=(slots,scope='context',soloRole='')=>slots.filter(s=>(scope==='solo'?(!soloRole||s.role===soloRole):scope==='bot'?['bottom','support'].includes(s.role):s.party)&&(!s.champion||!s.locked)).map(s=>s.role);
+export const draftTargets=(slots,scope='context',soloRole='')=>slots.filter(s=>(scope==='solo'?(!soloRole||s.role===soloRole):scope==='bot'?['bottom','support'].includes(s.role):s.party)&&(!s.champion||!s.locked&&!s.publicIntent)).map(s=>s.role);
 export const scopeSlots=(slots,scope='context')=>scope==='bot'?slots.filter(s=>['bottom','support'].includes(s.role)):scope==='party'?slots.filter(s=>s.party):slots;
 export const clearDraftPicks=slots=>slots.map(s=>({role:s.role,party:s.party,champion:null,locked:false}));
 export function clearClientPicks(slots){
@@ -23,7 +23,7 @@ export function reconcileClientDraft(draft,gameId,previousId=null){
  if(!draft||!gameId)return {draft,changed:false,newGame:false};
  const prior=clientGameId(draft.clientGameId)||clientGameId(previousId),newGame=!!prior&&prior!==gameId;
  if(!newGame&&draft.clientGameId===gameId)return {draft,changed:false,newGame:false};
- const clearSoloRole=newGame&&draft.scope==='solo'&&draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId));
+ const clearSoloRole=newGame&&(!!clientGameId(draft.clientGameId)||draft.playerPosition?.role===draft.soloRole||draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId)));
  const next={...draft,clientGameId:gameId,slots:newGame?clearClientPicks(draft.slots):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
  if(newGame)delete next.playerPosition;
  if(newGame&&next.creativePlan&&!next.creativePlan.members.every(m=>next.slots.some(s=>s.role===m.role&&s.champion===m.champion)))delete next.creativePlan;

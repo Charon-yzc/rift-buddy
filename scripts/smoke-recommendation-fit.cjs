@@ -43,7 +43,7 @@ async function run(){
  const sideIds=()=>js('[...document.querySelectorAll(".companion-candidate [data-action=companion-preview][data-role=mid]")].map(el=>el.dataset.id)');
  const fitIds=()=>js('[...document.querySelectorAll("[data-opponent-fit]")].map(el=>el.dataset.enemyIds)');
  const capture=async name=>{await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await delay(800);await fs.writeFile(path.join(root,name),(await main.webContents.capturePage({stayHidden:true,stayAwake:true})).toPNG());};
- await until(()=>js('!!document.querySelector("#solo-role")'),'App not loaded');await sync();
+ await until(()=>js('!!document.querySelector("#solo-role")'),'App not loaded');await sync();await click('[data-action=draft-scope][data-scope=solo]');
  assert.equal(await js('document.querySelector("#solo-role").value'),'mid');
  await generate();const frontline=await mainIds(),headingGeometry=[];
  for(const [width,zoom,textScale] of [[1180,1,1],[1051,1.25,1],[1180,1.5,1],[1180,1,1.25],[1051,1.25,1.25],[1180,1.5,1.25]]){

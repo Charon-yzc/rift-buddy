@@ -56,7 +56,7 @@ test('side preparation only renders an explicitly chosen public opponent and kee
  const html=companionPlanView(data,plan,[],{enemyIds:['Morgana','Janna','Yuumi'],opponentId:'Janna'});
  assert.match(html,/data-matchup-enemy="Janna"/);assert.doesNotMatch(html,/data-matchup-enemy="Morgana"/);
  assert.match(html,/data-matchup-target/);assert.match(html,/未指定 · 不猜对线/);
- assert.match(html,/当前搭配摘要/);assert.match(html,/查看当前完整符文页/);
+ assert.match(html,/aria-label="当前完整配置"/);assert.match(html,/data-companion-disclosure="edit-runes"/);
  const summary=html.slice(html.indexOf('companion-plan-summary'),html.indexOf('companion-row-actions'));
  for(const i of build.items.slice(0,3))assert.ok(summary.includes(i.name),i.name);
  assert.deepEqual(plan,before,'A condition plan must not change or apply the loadout');

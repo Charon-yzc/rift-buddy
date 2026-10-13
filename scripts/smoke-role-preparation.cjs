@@ -23,6 +23,7 @@ async function run(){
  const click=async selector=>{selector=await revealDraftAction(js,selector);return js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)throw Error("Control missing or disabled");el.click();})()');};
  const change=(selector,value)=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
  const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(250);},state=async()=>(await js('window.buddy.bootstrap()')).state;
+ const changeRole=async role=>{await click('[data-action=companion-tab][data-tab=recommend]');await change('#solo-role',role);await sync();await click('[data-action=companion-tab][data-tab=recommend]');await until(()=>js('document.querySelector("#solo-role")?.value==='+JSON.stringify(role)),'Explicit '+role+' position was lost');await click('[data-action=companion-tab][data-tab=plan]');};
  const capture=async name=>{await js('document.querySelector("#toast").classList.remove("show")');await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  await until(()=>js('!!document.querySelector("[data-action=sync]")'),'UI missing');await sync();await sync();await click('[data-action=my-build]');
  await change('#overlay-root [data-matchup-target]','Nautilus');
@@ -32,8 +33,7 @@ async function run(){
  await click('[data-action=close]');await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');await click('[data-action=companion-tab][data-tab=plan]');
  await js('document.querySelector("[data-companion-disclosure=coach]").open=true;document.querySelector("[data-companion-disclosure=coach-stages]").open=true;document.querySelector("[data-companion-disclosure=coach]").scrollIntoView({block:"start"});void 0');
  assert.match(await js('document.querySelector("[data-companion-disclosure=coach-stages]").textContent'),/不为叠层抢搭档安全发育/);await capture('chogath-support-sidebar.png');
- assigned='JUNGLE';await sync();await change('#solo-role','jungle');await sync();
- await until(()=>js('document.querySelector("#solo-role").value==="jungle"'),'Explicit jungle position was lost');
+ assigned='JUNGLE';await sync();await changeRole('jungle');
  await change('.companion-shell [data-matchup-target]','Nautilus');
  const jungleText=await js('document.querySelector(".companion-coach").textContent');assert.match(jungleText,/刷野 E 普攻尖刺覆盖营地/);assert.match(jungleText,/丛刃.*安全连续普攻/);assert.match(jungleText,/R、惩戒/);
  await click('[data-action=guide-current]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
@@ -47,14 +47,14 @@ async function run(){
  await fs.writeFile(path.join(root,'chogath-jungle-guide.png'),(await guide.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  const cases=[['Volibear','JUNGLE','jungle',/W 重复同一营地目标续航/],['Yunara','BOTTOM','bottom',/普通 E 是移速与穿单位/],['Hwei','UTILITY','support',/WE 回蓝后不能同时保证立即 WW/],['Kled','TOP','top',/斯嘎尔|骑乘/],['Khazix','JUNGLE','jungle',/孤立/],['Anivia','MIDDLE','mid',/冰冻|Q/]];
  for(const [id,position,role,expected]of cases){
-  picked=id;assigned=position;await sync();await change('#solo-role',role);await sync();
+  picked=id;assigned=position;await sync();await changeRole(role);
   await until(()=>js('!!document.querySelector(\'.companion-shell [data-plan="'+id+':'+role+':rift"]\')'),'Changed hero did not reach the sidebar');
   await change('.companion-shell [data-matchup-target]','Nautilus');await until(async()=>expected.test(await js('document.querySelector(".companion-coach").textContent')),'Changed role advice missing for '+id);
   assert.match(await js('document.querySelector(".companion-coach").textContent'),expected);await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+'&&b.model.selection.role==='+JSON.stringify(role)+')'),'Changed role did not reach guide');
  }
  const {rolePlay}=await import(require('node:url').pathToFileURL(path.resolve('src/core/role-plays.mjs')));
  for(const [id,position,role]of cases.slice(-3)){
-  picked=id;assigned=position;await sync();await change('#solo-role',role);await sync();await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+')'),'Personal guide missing');
+  picked=id;assigned=position;await sync();await changeRole(role);await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+')'),'Personal guide missing');
   await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=team]").click();void 0');
   for(const stage of ['opening','key','later']){
    await gjs('(()=>{const el=document.querySelector("#guide-stage");el.value='+JSON.stringify(stage)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');

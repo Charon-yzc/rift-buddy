@@ -31,5 +31,6 @@ test('transparent overlay resize uses OS cursor DIPs, clamps edges and commits o
 });
 test('reset controls explain scope and keep window reset distinct from text/content reset',()=>{
  const side=playerFlowSettings({}, {custom:true});assert.match(side,/当前侧栏使用你保存的布局/);for(const action of ['window-follow','window-reset-side','window-reset-all'])assert.match(side,new RegExp('data-action="'+action+'"'));
- assert.match(side,/不会改英雄、阵容、符文、出装、字号或收藏/);const guide=presentationSettings({}, {guide:true});assert.match(guide,/data-action="reset-layout"/);assert.match(guide,/data-action="presentation" data-field="reset"/);assert.match(guide,/每个窗口独立记住位置和尺寸/);
+ assert.match(side,/恢复侧栏只重置侧栏/);assert.match(side,/恢复全部.*主窗.*装备卡.*加点.*野区提示.*局内小窗/);assert.match(side,/(?:保留|不会改)[^<]*英雄[^<]*阵容[^<]*字号[^<]*收藏/);
+ const guide=presentationSettings({}, {guide:true});assert.match(guide,/data-action="reset-layout"/);assert.match(guide,/data-action="presentation" data-field="reset"/);assert.match(guide,/每个窗口独立记住位置和尺寸/);
 });

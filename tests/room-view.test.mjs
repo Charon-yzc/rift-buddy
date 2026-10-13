@@ -152,26 +152,26 @@ test('the relay form preserves a custom address and suggests the shared default 
  assert.match(html,/id="room-relay-url" value="wss:\/\/room\.example\.com"/);
  assert.match(html,/id="room-relay-room" value="482913"/);
  assert.match(html,/id="room-pin" value="123456"/);
- assert.match(html,/地址可改成你信任的自建中继/);
- assert.match(html,/哈希/);
+ assert.match(html,/id="room-relay-url"/);
+ assert.match(html,/强身份认证/);
  const empty=roomPanel({room:null,nick:'队友',transport:'relay',champ});
  assert.match(empty,/id="room-relay-url" value="wss:\/\/room\.riftbuddy\.dpdns\.org"/);
- assert.match(empty,/任意 6 位数字房间码/);assert.match(empty,/6 位数字口令/);assert.match(empty,/微信私聊/);
- assert.match(empty,/自动共享助手中所选公开阵容/);assert.match(empty,/中继支持时也会转发配置/);assert.match(empty,/点英雄头像/);
- assert.match(empty,/采用和写入符文由本人点击确认/);
+ assert.match(empty,/inputmode="numeric" maxlength="6"/);assert.match(empty,/type="password"/);assert.match(empty,/口令只私下告知/);
+ assert.match(empty,/阵容与配置会共享给同房间成员和中继运营者/);
+ assert.match(empty,/data-action="room-relay-join"/);
  const cleared=roomPanel({room:null,transport:'relay',relayUrl:'',champ});assert.match(cleared,/id="room-relay-url" value=""/,'editing/clearing must not silently refill the field');
 });
 
 test('the default relay shares full configuration while missing peer fields remain explicit',()=>{
  const idle=roomPanel({room:null,transport:'relay',champ});
- assert.match(idle,/公开阵容与所选配置会发送给该中继/);assert.doesNotMatch(idle,/仅共享英雄阵容|不转发装备/);
+ assert.match(idle,/阵容与配置会共享给同房间成员和中继运营者/);assert.doesNotMatch(idle,/仅共享英雄阵容|不转发装备/);
  const relay=snapshot({mode:'client',transport:'relay',relayUrl:'wss://room.riftbuddy.dpdns.org',link:'connected'});
  const active=roomPanel({room:relay,champ});
  assert.match(active,/room-link">已连接/);assert.match(active,/自动分享阵容、装备、完整符文、召唤师技能、加点与组合分工/);
  assert.match(active,/已收到阵容，尚未收到这位队友的配置/);
  assert.match(active,/仅展示实际收到的配置/);assert.doesNotMatch(active,/默认中继只发送阵容|不转发装备/);
  const custom=roomPanel({room:null,transport:'relay',relayUrl:'wss://example.com',champ});
- assert.match(custom,/公开阵容与所选配置会发送给该中继/);
+ assert.match(custom,/阵容与配置会共享给同房间成员和中继运营者/);
 });
 
 test('missing peer configuration requires a separate local reference click and cannot offer adoption',()=>{
@@ -218,19 +218,19 @@ test('a dropped relay link says so instead of pretending the room is fine',()=>{
 test('the automatic party room shows its derived code, pin and honest fallbacks',()=>{
  const idle=roomPanel({room:null,transport:'relay',champ});
  assert.match(idle,/id="room-auto"/);assert.doesNotMatch(idle,/id="room-auto" checked/);
- assert.match(idle,/自动连接组队房间/);assert.match(idle,/默认关闭/);
- assert.match(idle,/当前关闭：下面的房间码与口令仍可手动加入。/);
+ assert.match(idle,/自动连接组队房间/);assert.match(idle,/默认开启/);
+ assert.match(idle,/data-action="room-relay-join"/);
  const on=roomPanel({room:null,transport:'relay',autoEnabled:true,champ});
  assert.match(on,/id="room-auto" checked/);assert.doesNotMatch(on,/当前关闭/);
  const failed=roomPanel({room:null,transport:'relay',autoEnabled:true,autoError:'<b>中继没有回应</b>',champ});
- assert.match(failed,/上次自动连接失败：&lt;b&gt;中继没有回应&lt;\/b&gt;；稍后会自动重试，换一个组队也会重试。/);
+ assert.match(failed,/&lt;b&gt;中继没有回应&lt;\/b&gt;/);
  assert.doesNotMatch(failed,/<b>/);
  const revoked=roomPanel({room:null,transport:'relay',autoEnabled:false,autoError:'中继没有回应',champ});
  assert.doesNotMatch(revoked,/上次自动连接失败/,'a revoked switch must not promise a retry');
  const unsynced=roomPanel({room:null,transport:'relay',autoEnabled:true,autoSync:false,autoError:'中继没有回应',champ});
  assert.doesNotMatch(unsynced,/上次自动连接失败/,'no poll runs with sync off, so nothing will retry');
- assert.match(unsynced,/当前“自动同步”已关闭：自动连接不会触发，已连接的自动房间也会关闭。/);
- assert.ok(idle.indexOf('id="room-auto"')<idle.indexOf('id="room-relay-room"'),'the switch must come before the fields its note points at');
+ assert.match(unsynced,/自动同步已关闭，自动连接不会触发/);
+ assert.ok(idle.indexOf('id="room-relay-room"')<idle.indexOf('id="room-auto"'),'manual join is immediately available before optional automatic connection');
 });
 
 test('an automatic relay room copies the derived pin and admits when nobody else arrived',()=>{

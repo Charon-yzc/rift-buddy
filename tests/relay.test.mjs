@@ -27,7 +27,7 @@ test('relay hello is strict and must match the room message with its path',async
 
 test('welcome, join and leave builders carry only what the protocol needs',()=>{
  const welcome=relayWelcome('482913',['甲','乙']);
- assert.deepEqual(welcome,{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'},{nick:'乙'}]});
+ assert.deepEqual(welcome,{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'},{nick:'乙'}],ballots:1});
  const many=relayWelcome('482913',Array.from({length:20},(_,i)=>'客'+i));
  assert.equal(many.members.length,MAX_RELAY_MEMBERS);
  assert.deepEqual(relayJoin('甲'),{kind:'join',v:ROOM_PROTOCOL,from:'甲'});

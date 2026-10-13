@@ -34,15 +34,20 @@ test('compact choices retain each actual member job and source caveats inside th
  }
 });
 
-test('unknown eligibility stays ahead of candidate actions while verified eligibility moves behind comparison',()=>{
+test('eligibility stays in one closed status disclosure before candidate actions for unknown and checked ranges',()=>{
  const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:0,myTeam:[{cellId:0,championId:0,assignedPosition:'MIDDLE'}],theirTeam:[],bans:[],actions:[],allowDuplicatePicks:false}};
  const props={data,client,slots,unassigned:[],scope:'party',style:'fun',tab:'recommend',results};
  const unknown=companionView(props);
- assert.ok(unknown.indexOf('data-eligibility="unknown"')<unknown.indexOf('data-action="use-result"'));
  client.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(client.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
  const checked=companionView(props);
- assert.ok(checked.lastIndexOf('data-eligibility="checked"')>checked.lastIndexOf('data-action="use-result"'));
- assert.match(checked,/朋友的可选范围未知/);assert.match(checked,/data-tab="team" aria-label="调整阵容位置与开黑成员"/);
+ for(const html of [unknown,checked]){
+  const start=html.indexOf('<details class="companion-eligibility-status"'),end=html.indexOf('</details>',start);
+  assert.ok(start>0&&start<html.indexOf('data-action="use-result"'));
+  assert.equal((html.match(/data-companion-disclosure="eligibility"/g)||[]).length,1);
+  assert.doesNotMatch(html.slice(start,html.indexOf('>',start)),/\bopen\b/);
+  assert.match(html.slice(start,end),/data-eligibility=/,'The full eligibility message remains available without another status block');
+ }
+ assert.match(checked,/朋友的可选范围未知/);assert.match(checked,/data-action="companion-tab" data-tab="team"/);
 });
 
 test('candidate labels escape source text without changing their action identity',()=>{

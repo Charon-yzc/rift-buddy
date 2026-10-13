@@ -1,4 +1,4 @@
-import {invalidatePreparationStatuses,confirmPreparationResource,samePreparationPayload} from '../src/preparation-receipts.mjs';
+import {invalidatePreparationStatuses,confirmPreparationResource,samePreparationPayload,invalidateItemSetStatuses,itemSetSuccessStatus} from '../src/preparation-receipts.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -22,7 +22,11 @@ test('only the identical configuration in the known current game can display a c
  for(const changed of [{...client,phase:'Lobby'},{...client,connected:false},{...client,mode:{id:'unknown'}},{...client,session:{...client.session,gameId:992}},{...client,session:{...client.session,myTeam:[{cellId:0,championId:222}]}}]){const p=preparationProgress({data,plan,client:changed,statuses});assert.equal(p.complete,false);assert.equal(p.changed,false);}
 });
 test('unknown role has a direct read-only entry and busy operation belongs to one payload',()=>{
- assert.match(preparationProgressView({data,plan:null,client}),/我是这一位/);
+ assert.match(preparationProgressView({data,plan:null,client}),/data-action="task-members"/);
+ const guessed={...plan,positionKnown:false};
+ assert.match(preparationProgressView({data,plan:guessed,client,available:true}),/data-action="client-prepare"[^>]*disabled/);
+ assert.match(preparationProgressView({data,plan:guessed,client,available:true}),/位置待确认/);
+ assert.equal(preparationProgress({data,plan:guessed,client}).applicable,false);
  const pendingKey=clientPreparationKey(client,clientPreparationPlan(data,plan));assert.equal(preparationProgress({data,plan,client,pendingKey}).pending,true);
  const other=make({...selection,summonerIds:[...plan.build.summoners].reverse()});assert.equal(preparationProgress({data,plan:other,client,pendingKey}).pending,false);
 });
@@ -61,4 +65,28 @@ test('preflight rejection survives a shared receipt before any champion is hover
   assert.equal(p.complete,false);assert.deepEqual(p.failed,['hover']);assert.equal(p.status.steps.runes.status,'skipped');
   const html=preparationProgressView({data,plan,client:waiting,statuses,available:true});assert.match(html,/无法确认当前选人/);assert.match(html,/重新执行整套/);assert.doesNotMatch(html,/data-step-status="done"/);
  }
+});
+
+test('standalone equipment import confirms only that resource before any full preparation',()=>{
+ const waiting={...client,session:{...client.session,myTeam:[{cellId:0,championId:0}],actions:[]}},prepared=clientPreparationPlan(data,plan),key=clientPreparationKey(waiting,prepared),statuses=new Map();
+ confirmPreparationResource(statuses,'items',payload=>JSON.stringify(payload.itemSet)===JSON.stringify(prepared.value.itemSet),[{key,payload:prepared.value}]);
+ const p=preparationProgress({data,plan,client:waiting,statuses});assert.equal(p.complete,false);assert.equal(p.status.steps.items.status,'done');assert.equal(p.status.steps.runes,undefined);assert.equal(p.status.steps.hover,undefined);assert.match(p.title,/装备集已导入/);
+ const html=preparationProgressView({data,plan,client:waiting,statuses,available:true});assert.equal((html.match(/data-step-status="done"/g)||[]).length,1);assert.match(html,/data-preparation-step="items" data-step-status="done"/);assert.doesNotMatch(html,/配置完成，请/);
+ assert.equal(preparationProgress({data,plan,client:{...waiting,session:{...waiting.session,gameId:992}},statuses}).status,null);
+ invalidatePreparationStatuses(statuses,['items']);assert.equal(preparationProgress({data,plan,client:waiting,statuses}).status.steps.items.status,'superseded');
+});
+
+test('equipment receipt cannot seed a different payload or manufacture other completed steps',()=>{
+ const prepared=clientPreparationPlan(data,plan),key=clientPreparationKey(client,prepared),statuses=new Map(),other=structuredClone(prepared.value.itemSet);other.title+=' other';
+ confirmPreparationResource(statuses,'items',payload=>JSON.stringify(payload.itemSet)===JSON.stringify(other),[{key,payload:prepared.value}]);assert.equal(statuses.size,0);
+ statuses.set(key,{complete:false,steps:{hover:{status:'done'},runes:{status:'failed',message:'mock failure'},spells:{status:'skipped'}}});
+ confirmPreparationResource(statuses,'items',payload=>JSON.stringify(payload.itemSet)===JSON.stringify(prepared.value.itemSet),[{key,payload:prepared.value}]);
+ const p=preparationProgress({data,plan,client,statuses});assert.equal(p.complete,false);assert.deepEqual(p.failed,['runes']);assert.equal(p.status.steps.items.status,'done');assert.equal(p.status.steps.spells.status,'skipped');assert.equal(p.status.superseded,false);
+});
+
+test('shared equipment notices invalidate on replacement and clear on game reset',()=>{
+ const statuses=new Map([['actual',itemSetSuccessStatus({replaced:true})],['export',{text:'已导出 JSON'}]]);
+ assert.equal(statuses.get('actual').imported,true);assert.match(statuses.get('actual').text,/已更新/);
+ invalidateItemSetStatuses(statuses);assert.equal(statuses.get('actual').imported,false);assert.match(statuses.get('actual').text,/后续导入替换/);assert.equal(statuses.get('export').text,'已导出 JSON');
+ invalidateItemSetStatuses(statuses,{reset:true});assert.equal(statuses.size,0);
 });

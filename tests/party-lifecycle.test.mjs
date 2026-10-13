@@ -9,12 +9,12 @@ function fixture(){
  const calls=[],mock={discover:async()=>({port:23456,password:secret}),now:()=>at,request:async(_a,url)=>{calls.push(url);if(url.endsWith('gameflow-phase'))return phase;if(url==='/lol-lobby/v2/lobby'){if(lobby instanceof Error)throw lobby;return lobby;}if(url==='/lol-champ-select/v1/session')return {gameId,localPlayerCellId:1,myTeam:team,theirTeam:[],bans:{}};if(url.endsWith('champion-ids'))return [];return {gameData:{gameId,queue:{id:420},gameMode:'CLASSIC'}};}};
  return {mock,calls,set:v=>{({phase=phase,gameId=gameId,secret=secret,lobby=lobby,team=team,at=at}=v);},friend};
 }
-test('lobby public premade survives ready-check into champ-select without exporting identity or reading chat',async()=>{
- const f=fixture();assert.equal((await clientSnapshot('',f.mock)).party.lobbyCount,2);
+test('public premade names survive ready-check while raw identifiers and chat stay private',async()=>{
+ const f=fixture(),lobby=await clientSnapshot('',f.mock);assert.equal(lobby.party.lobbyCount,2);assert.deepEqual(lobby.party.members.map(m=>m.displayName),['Player11','Player22']);
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404})});await clientSnapshot('',f.mock);
  f.set({phase:'ChampSelect'});const selected=await clientSnapshot('',f.mock);
  assert.equal(selected.party.status,'known');assert.deepEqual(selected.party.members.map(m=>m.cellId),[1,2]);
- assert.ok(!JSON.stringify(selected).includes('public-player'));assert.ok(!JSON.stringify(selected).includes('Player22'));assert.ok(!JSON.stringify(selected).includes('do-not-export'));
+ assert.ok(!JSON.stringify(selected).includes('public-player'));assert.equal(selected.party.members[1].displayName,'Player22');assert.equal(selected.party.members[1].riotId,undefined);assert.equal(selected.party.members[1].summonerId,undefined);assert.ok(!JSON.stringify(selected).includes('do-not-export'));
  assert.ok(f.calls.every(url=>!url.includes('chat')));assert.equal(f.calls.filter(url=>url==='/lol-lobby/v2/lobby').length,2);
  f.set({gameId:456});assert.equal((await clientSnapshot('',f.mock)).party.status,'unknown');
 });
@@ -30,7 +30,7 @@ test('lobby auth failure disconnects, while unavailable optional lobby does not 
  const f=fixture();f.set({lobby:Object.assign(Error('mock no access'),{status:401})});assert.equal((await clientSnapshot('',f.mock)).connected,false);
  f.set({lobby:Object.assign(Error('optional missing'),{status:404})});const c=await clientSnapshot('',f.mock);assert.equal(c.connected,true);assert.equal(c.party.status,'unknown');
 });
-test('the lobby key and own public name appear only while the pre-match evidence is fresh',async()=>{
+test('the lobby key requires fresh pre-match evidence; the current own public name survives into selection',async()=>{
  const f=fixture();
  const lobby=await clientSnapshot('',f.mock);
  assert.equal(lobby.party.key,'party-3ee56b17');
@@ -41,7 +41,7 @@ test('the lobby key and own public name appear only while the pre-match evidence
  assert.ok(!JSON.stringify(lobby).includes('11111111-2222'),'a credential that looks like a party id must not surface either');
  f.set({phase:'ChampSelect'});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined);
- assert.equal((await clientSnapshot('',f.mock)).own,undefined);
+ assert.deepEqual((await clientSnapshot('',f.mock)).own,{riotId:'Player11#CN1'});
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:1000+120001});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'stale evidence must not derive a room');
 });

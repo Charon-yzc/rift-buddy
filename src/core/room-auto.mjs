@@ -10,7 +10,7 @@ export const LOBBY_PHASES=['None','Lobby','Matchmaking','ReadyCheck'];
 export const LOBBY_AUTO_FRESH_MS=120000;
 export const AUTO_PARTY_GONE_MS=30000;
 export const AUTO_OFFLINE_GRACE_MS=60000;
-export const AUTO_RETRY_MS=300000;
+export const AUTO_RETRY_MS=15000;
 export const AUTO_QUIET_MS=30000;
 const PARTY_KEY=/^[A-Za-z0-9-]{6,64}$/;
 // Domain separation keeps the code and the pin unrelated even though both
