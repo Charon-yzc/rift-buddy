@@ -1,6 +1,7 @@
 import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES, profile,conventionalRole } from './rules.mjs';
 import {draftTargets,scopeSlots,effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {recommendationDraft} from './draft-intents.mjs';
+import {clientContextDraft} from './client-context-draft.mjs';
 export {clearClientPicks} from './draft.mjs';
 import {comboLoadout,loadoutOptions} from './loadouts.mjs';
 import {generateCreativeTrios} from './creative-trios.mjs';
@@ -254,15 +255,18 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null}) {
+export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null}) {
+ if(Array.isArray(slots)&&slots.every(s=>s&&typeof s==='object'))slots=clientContextDraft(slots,champions,clientSession,{scope:effectiveDraftScope(slots,scope),soloRole,bans:publicBans,eligibleByRole});
  validateSlots(slots,champions);
  scope=effectiveDraftScope(slots,scope);
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
-  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan};
+  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession};
   const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
-  if(!targets.length)return recommend({...options,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
+  if(!targets.length){
+   return recommend({...options,clientSession:null,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
+  }
   const candidates=[],errors=[];
   for(const role of targets){
    try{candidates.push(...recommend({...options,slots:slots.map(s=>({...s,party:s.role===role})),limit:offset+limit,offset:0}).map(r=>({...r,scope:'solo',soloRole:role,title:`${ROLES.find(r=>r.id===role).name} · ${champions.find(c=>c.id===r.slots.find(s=>s.role===role).champion)?.name}`,slots:r.slots.map(s=>({...s,party:slots.find(prior=>prior.role===s.role).party}))})));}
