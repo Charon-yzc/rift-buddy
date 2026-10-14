@@ -231,6 +231,18 @@ async function run(){
   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'Selecting an actual candidate did not open configuration');
   const allies=(await state()).draft.slots.filter(slot=>slot.role!=='bottom').map(slot=>slot.champion).sort();assert.deepEqual(allies,['Ahri','Braum','Garen','Vi']);assert.equal(spell2Id,4);
  });
+ await checkpoint('solo-team-fit-retains-public-allies-with-automatic-placement-disabled',async()=>{
+  await click(side,'[data-action=player-flow-settings]');await click(side,'[data-action=player-flow-toggle][data-field=autoArrange]');
+  await until(async()=>(await state()).preferences.autoArrange===false,'Disabling automatic placement did not persist');await click(side,'[data-action=close]');
+  unknownAllyRoles=true;await resetRound(430);
+  await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo candidates missing without inferred ally lanes');
+  await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .lineup-fit")].every(el=>/契合 \d+/.test(el.querySelector("summary")?.textContent)&&/4 位公开队友分路未知/.test(el.textContent))'),'Public unplaced allies did not contribute to visible team fit');
+  await until(async()=>(await state()).draft.slots.filter(s=>s.role!=='bottom').every(s=>!s.champion),'Unknown public ally lanes were invented');
+  await capture(side,'solo-public-allies-unplaced.png');
+  const before=attempts.length;await click(side,'.companion-candidate [data-action=companion-preview]');
+  await until(()=>results.length===before+1&&results.at(-1).complete,'The public unplaced ally candidate did not complete preparation');
+  await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'The actual candidate did not open configuration');
+ });
  await checkpoint('default-client-flash-key-persists-in-guide-through-loading',async()=>{
   completed=true;picked=intent||picked;intent=0;await fresh(snapshot=>snapshot.session.actions.flat().find(a=>a.actorCellId===2)?.completed);
   const ownId=data.champions.find(c=>c.key===picked).id;
@@ -243,15 +255,6 @@ async function run(){
    assert.equal(snapshot.model.summoners[1].id,'SummonerFlash','The guide moved default Flash F in '+nextPhase);
    assert.equal(snapshot.model.selection.summonerIds,undefined,'The current client key must remain a per-game observation');
   }
- });
- await checkpoint('solo-team-fit-retains-public-allies-with-automatic-placement-disabled',async()=>{
-  await click(side,'[data-action=player-flow-settings]');await click(side,'[data-action=player-flow-toggle][data-field=autoArrange]');
-  await until(async()=>(await state()).preferences.autoArrange===false,'Disabling automatic placement did not persist');await click(side,'[data-action=close]');
-  unknownAllyRoles=true;await resetRound(430);
-  await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo candidates missing without inferred ally lanes');
-  await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .lineup-fit")].every(el=>/契合 \d+/.test(el.querySelector("summary")?.textContent)&&/4 位公开队友分路未知/.test(el.textContent))'),'Public unplaced allies did not contribute to visible team fit');
-  await until(async()=>(await state()).draft.slots.filter(s=>s.role!=='bottom').every(s=>!s.champion),'Unknown public ally lanes were invented');
-  await capture(side,'solo-public-allies-unplaced.png');
  });
  assert.ok(windows.every(window=>window.isDestroyed()||!window.isVisible()),'Smoke windows must stay hidden');
  report={...report,checks,passed:checks.every(check=>check.passed),source,archiveSha256:release?.archiveSha256||null,autoSync:true,manualSyncClicks:0,syntheticLcuOnly:true,observerMocked:true,actualRuneWrites:0,mockedWrites:writes.map(write=>({route:write.route,method:write.method})),preparationApiCalls:attempts.length};
