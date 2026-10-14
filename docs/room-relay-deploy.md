@@ -79,4 +79,4 @@ Cloudflare 当前允许 Free 计划使用 SQLite Durable Objects，但请求、�
 
 2026-10-14 默认服务 `wss://room.riftbuddy.dpdns.org` 已在用户授权的服务器更新：Caddy 负责 HTTPS/WSS，Node 中继仅监听回环地址，通过 systemd 自动启动与故障重启，保留旧服务备份。更新后用同一台机器的三条独立公网连接验证了五人完整配置、候选提议、另一成员投票、晚加入重发与离开通知。测试只使用合成公开英雄数据；没有把独立连接当成两台真实玩家电脑的验证。
 
-同域名的 [备用下载页](https://room.riftbuddy.dpdns.org/downloads/) 提供当前已公开的 **v0.51.0** 安装包。公网完整下载与 GitHub 的 SHA-256 一致，并验证了 HTTP Range 断点续传。`/downloads/latest.json` 记录文件版本、大小与校验值；桌面内置更新目前仍使用 GitHub/Gitee，这个备用下载页不会把未发布源码版本冒充新版安装包。
+安装包继续由 GitHub/Gitee 提供。为把 AWS 抵扣额度和带宽留给房间服务，`/downloads/` 及其原有子路径已改为跳转 Gitee 发行页，服务器不再公开提供安装包字节；原文件和配置备份保留。桌面内置更新仍使用 GitHub/Gitee，公开安装包版本为 **v0.51.0**。
