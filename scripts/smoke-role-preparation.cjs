@@ -23,7 +23,15 @@ async function run(){
  const click=async selector=>{selector=await revealDraftAction(js,selector);return js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)throw Error("Control missing or disabled");el.click();})()');};
  const change=(selector,value)=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
  const sync=async()=>{await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(250);},state=async()=>(await js('window.buddy.bootstrap()')).state;
- const changeRole=async role=>{await click('[data-action=companion-tab][data-tab=recommend]');await change('#solo-role',role);await sync();await click('[data-action=companion-tab][data-tab=recommend]');await until(()=>js('document.querySelector("#solo-role")?.value==='+JSON.stringify(role)),'Explicit '+role+' position was lost');await click('[data-action=companion-tab][data-tab=plan]');};
+ const changeRole=async role=>{
+  // Wait for the renderer to observe this pick and finish its automatic
+  // configuration-tab transition before using the recommendation controls.
+  await until(()=>js('!!document.querySelector('+JSON.stringify('.companion-shell [data-plan^="'+picked+':"]')+')'),'Latest picked hero has not reached the sidebar');
+  await click('[data-action=companion-tab][data-tab=recommend]');
+  await until(()=>js('!!document.querySelector("#solo-role")'),'Position control missing after opening recommendations');
+  await change('#solo-role',role);await sync();await click('[data-action=companion-tab][data-tab=recommend]');
+  await until(()=>js('document.querySelector("#solo-role")?.value==='+JSON.stringify(role)),'Explicit '+role+' position was lost');await click('[data-action=companion-tab][data-tab=plan]');
+ };
  const capture=async name=>{await js('document.querySelector("#toast").classList.remove("show")');await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  await until(()=>js('!!document.querySelector("[data-action=sync]")'),'UI missing');await sync();await sync();await click('[data-action=my-build]');
  await change('#overlay-root [data-matchup-target]','Nautilus');
