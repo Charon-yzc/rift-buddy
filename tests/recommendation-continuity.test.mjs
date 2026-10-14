@@ -662,6 +662,28 @@ test('changing the own public hover in the client leaves the previous accepted p
  assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Ashe','Public hover must not become a persisted selected hero');
 });
 
+test('clearing either public local pick representation withdraws its automatic proposal but keeps manual positions and teammates',async()=>{
+ for(const field of ['championPickIntent','championId']){
+  const current=client();current.session.myTeam[0][field]=hero('Ashe').key;
+  current.session.actions=[[{type:'pick',actorCellId:1,championId:hero('Ashe').key,completed:false}]];
+  const incoming=structuredClone(current),picks={mid:'Ahri',bottom:'Ashe',support:'Braum'};
+  const slots=createSlots().map(s=>({...s,party:!!picks[s.role],...(picks[s.role]?{champion:picks[s.role],locked:true,automaticPosition:true}:{})}));
+  const {context:c,calls}=setup({slots,current,incoming});
+  Object.assign(c,{creativePlanCompatible,currentCombo,comboContextKnown});
+  c.activeCreativePlan=captureCreativePlan(recommend(c.recommendationInput())[0],data);assert.ok(c.activeCreativePlan);
+  c.lastTaskSelection={id:'Ashe',role:'bottom',mode:'rift',comboId:c.activeCreativePlan.id};
+  c.saved.draft.playerPosition={role:'bottom',cellId:1};
+  vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo='),c);
+  incoming.session.myTeam[0][field]=0;incoming.session.actions[0][0].championId=0;
+  await c.sync(false,{fresh:true});
+  assert.equal(c.activeCreativePlan,null,field);assert.equal(c.lastTaskSelection,null,field);
+  assert.equal(c.slots.find(s=>s.role==='bottom').champion,null,field);
+  assert.deepEqual(structuredClone(c.saved.draft.playerPosition),{role:'bottom',cellId:1});
+  for(const role of ['mid','support'])assert.deepEqual(structuredClone(c.slots.find(s=>s.role===role)),slots.find(s=>s.role===role));
+  assert.equal(calls.prepared.length,0);
+ }
+});
+
 test('a real client hover change during preparation replaces stale configuration even when the operation finishes afterwards',async()=>{
  for(const candidateClick of [false,true])for(const backgroundRead of [false,true]){
   const current=client();current.session.myTeam[0].championPickIntent=hero('Ashe').key;

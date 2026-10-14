@@ -178,7 +178,9 @@ function reconcileCreativePlan({ownIntentChanged=false}={}){
  if(!ownIntentChanged)({slots:base,session}=editableLocalDraft(base,session,data.champions,taskOwnRole()));
  const context=recommendationDraft(base,session,data.champions,{ownRole:taskOwnRole()});
  const considered=scopeSlots(slots,effectiveDraftScope(slots,scope));
- if(activeCreativePlan&&(!creativePlanCompatible(activeCreativePlan,context)||activeCreativePlan.members.some(m=>!considered.some(s=>s.role===m.role)))){
+ const own=session?.myTeam?.find(p=>p.cellId===session.localPlayerCellId),ownId=data.champions.find(c=>c.key===Number(own?.championId||own?.championPickIntent))?.id;
+ const changedOwnMember=ownIntentChanged&&activeCreativePlan?.members.some(m=>m.role===taskOwnRole()&&m.champion!==ownId);
+ if(activeCreativePlan&&(changedOwnMember||!creativePlanCompatible(activeCreativePlan,context)||activeCreativePlan.members.some(m=>!considered.some(s=>s.role===m.role)))){
   if(lastTaskSelection?.comboId===activeCreativePlan.id)lastTaskSelection=null;
   activeCreativePlan=null;draftComparing=true;creativePlanNotice='队伍选人已变化，请重新搭配。';return true;
  }
@@ -423,7 +425,14 @@ function roomErrorMessage(error){
  return raw||'操作失败，请重试';
 }
 function roomSharePayload(){
- const visible=publicDraftContext(),role=roomOwnRole(),mode=client.connected?(client.mode?.id||null):'rift',share=shareFromSlots(visible,role,mode);if(!share)return null;
+ const role=roomOwnRole(),mode=client.connected?(client.mode?.id||null):'rift',own=client.connected&&client.phase==='ChampSelect'?client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId):null;
+ const ownId=data.champions.find(c=>c.key===Number(own?.championId||own?.championPickIntent))?.id;
+ let visible=publicDraftContext();
+ if(own&&!ownId&&!activeCreativePlan?.members.some(m=>m.role===role))visible=visible.map(s=>s.role===role&&s.automaticPosition&&!s.manualPosition&&(!Number.isInteger(s.clientCellId)||s.clientCellId===own.cellId)?{...s,champion:null,locked:false}:s);
+ const share=shareFromSlots(visible,role,mode);if(!share)return null;
+ // An adopted proposal may still be shared before its client hover. It is
+ // not the player's current public pick until the client reports that hero.
+ if(own&&share.pick?.champion!==ownId)share.pick=null;
  const candidate=captureRoomStrategy(visible,data,activeCreativePlan,mode);if(candidate?.id!==roomStrategySnapshot?.id)roomStrategySnapshot=candidate;
  return {...share,configurations:mode==='aram'?[]:captureRoomConfigurations(visible,data,preparations,{creativePlan:roomStrategySnapshot,guide:guideSelection,current:buildView?buildSelection():null,mode}),...(roomStrategySnapshot?{strategy:roomStrategySnapshot}:{})};
 }
@@ -1003,6 +1012,13 @@ async function performSync(manual=true,fresh=false){
    if(ownIntentChanged)lastTaskSelection=null;
    // Recognizing a party updates its members, not an explicit recommendation scope.
    const merged=mergeClientSession(slots,client.session,data.champions,clientSyncOptions());merged.slots=restorePlayerPosition(merged.slots,client.session,data.champions,saved.draft?.playerPosition);merged.unassigned=unassignedPublicPicks(merged.slots,client.session,data.champions);
+   if(ownIntentChanged&&!nextOwnIntent){
+    const previousId=data.champions.find(c=>c.key===previousOwnIntent)?.id,role=taskOwnRole();
+    merged.slots=merged.slots.map(s=>{
+     if(s.role!==role||s.champion!==previousId||!s.automaticPosition||s.manualPosition||Number.isInteger(s.clientCellId)&&s.clientCellId!==client.session.localPlayerCellId)return s;
+     const {automaticPosition,publicIntent,...rest}=s;return {...rest,champion:null,locked:false};
+    });
+   }
    changed=changed||JSON.stringify(slots)!==JSON.stringify(merged.slots)||JSON.stringify(unassigned)!==JSON.stringify(merged.unassigned);slots=merged.slots;changed=reconcileCreativePlan({ownIntentChanged})||changed||ownIntentChanged;unassigned=merged.unassigned;{
     const own=currentPlayerSelection(client.session,data.champions,slots),player=client.session.myTeam.find(p=>p.cellId===client.session.localPlayerCellId);
     // The client declares a lane before the player chooses a champion.

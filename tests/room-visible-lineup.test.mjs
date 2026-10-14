@@ -25,6 +25,7 @@ test('room publication follows the same live hover and configuration as the visi
   assert.deepEqual(share.configurations.map(s=>s.champion).sort(),['Ashe','Lux']);
   assert.ok(!share.strategy?.members.some(m=>m.champion==='Ahri'));assert.deepEqual(slots,before);
   client.session.myTeam[0].championPickIntent=0;
-  const cleared=context.roomSharePayload();assert.equal(cleared.lineup.find(s=>s.role==='mid').champion,previous);
+  const cleared=context.roomSharePayload();assert.equal(cleared.pick,null);assert.equal(cleared.lineup.find(s=>s.role==='mid').champion,null);
+  assert.ok(!cleared.configurations.some(c=>c.role==='mid'));assert.deepEqual(slots,before,'Sharing must not erase the saved local plan');
  }
 });
