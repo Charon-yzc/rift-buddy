@@ -32,6 +32,17 @@ test('sidebar hero shortcuts distinguish own configuration, public teammate pick
  assert.equal(companionHeroAction(client,hero('Graves'),false).prepare,false);assert.equal(companionHeroAction({...client,session:{...client.session,bans:[hero('Diana').key]}},hero('Diana')).prepare,false);assert.deepEqual(client,before);
 });
 
+test('disabling direct preparation preserves public teammate and locked hero read-only boundaries',()=>{
+ const hovered=structuredClone(client);hovered.session.myTeam[1]={cellId:1,championId:0,championPickIntent:hero('Vex').key};
+ const locked=structuredClone(client);locked.session.actions[0][0].completed=true;
+ for(const [live,id] of [[client,'Vex'],[hovered,'Vex'],[locked,'Diana']]){
+  const before=structuredClone(live),direct=companionHeroAction(live,hero(id),true),preview=companionHeroAction(live,hero(id),false);
+  assert.equal(direct.readOnly,true);assert.deepEqual(preview,direct);assert.deepEqual(live,before);
+ }
+ assert.deepEqual(companionHeroAction(hovered,hero('Graves'),false),{prepare:false,label:'查看配置'});
+ assert.deepEqual(companionHeroAction({...hovered,connected:false},hero('Vex'),false),{prepare:false,label:'查看配置'});
+});
+
 test('chosen sidebar keeps five slots, one range status and the local action before collapsed accepted play',()=>{
  const slots=createSlots().map(s=>({...s,champion:s.role==='jungle'?'Graves':s.role==='mid'?'Vex':null,party:['jungle','mid'].includes(s.role),locked:['jungle','mid'].includes(s.role)}));
  const [result]=recommend({slots,champions:data.champions,scope:'party'}),activePlan=captureCreativePlan(result,data),live=structuredClone(client);

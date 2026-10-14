@@ -16,6 +16,7 @@ async function run(){
  client.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(client.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
  const results=recommend({slots,champions:data.champions,scope:'party',limit:6});assert.equal(results.length,6);
  const props={data,client,slots,unassigned:[],scope:'party',style:'fun',tab:'recommend',results};
+ const fiveSlots=slots.map(slot=>({...slot,party:true})),fiveProps={...props,slots:fiveSlots,results:recommend({slots:fiveSlots,champions:data.champions,scope:'party',limit:6})};
  const index=await fs.readFile(path.join(base,'src/index.html'),'utf8'),styles=[...index.matchAll(/<link\b[^>]*\brel=["']stylesheet["'][^>]*>/gi)].map(match=>match[0]);assert.ok(styles.length,'Use the renderer stylesheet order from index.html');
  const html=(content,bodyClass='')=>`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><base href="${pathToFileURL(path.join(base,'src/')).href}">${styles.join('')}</head><body class="${bodyClass}">${content}</body></html>`;
  const w=new BrowserWindow({width:440,height:800,show:false,useContentSize:true,webPreferences:{contextIsolation:true,nodeIntegration:false}});
@@ -46,6 +47,9 @@ async function run(){
  };
  for(const [label,width,height,fixtureProps,scale] of [
   ['party-440x800',440,800,props,1],
+  ['five-440x800',440,800,fiveProps,1],
+  ['party-400x600',400,600,props,1],
+  ['five-400x600',400,600,fiveProps,1],
   ['unknown-440x900',440,900,{...props,client:{...client,eligibility:null}},1],
   ['solo-440x760',440,760,{...props,scope:'solo',soloRole:'mid',results:recommend({slots,champions:data.champions,scope:'solo',soloRole:'mid',limit:6})},1],
   ['large-text-440x900',440,900,props,1.25]

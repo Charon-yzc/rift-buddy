@@ -60,3 +60,31 @@
 .task-candidate-list .candidate-summary .candidate-source-state{display:inline;margin:0 5px 0 0;font-size:inherit}
 .task-candidate-list .compact-candidate:has(.lineup-fit[open])>.candidate-fit,.sidebar-focused .companion-candidate:has(.lineup-fit[open])>.candidate-fit{grid-column:1/-1;grid-row:3;margin-left:22px}
 @media(min-width:801px){.workspace:has(>.page[data-page=draft]){display:flex;flex-direction:column;height:100dvh;overflow:hidden}.workspace:has(>.page[data-page=draft])>.topbar,.workspace:has(>.page[data-page=draft])>.client-connection-status{flex:none}.workspace>.page[data-page=draft]{flex:1;width:100%;height:auto;margin:0 auto;min-height:0}}
+/* Keep five-member comparisons compact; button labels remain available to assistive tools. */
+.sidebar-focused .candidate-members:is([data-member-count="4"],[data-member-count="5"]) .candidate-action{display:none}
+.sidebar-focused .candidate-members:is([data-member-count="4"],[data-member-count="5"]) .candidate-member>.portrait{width:26px;height:26px}
+@media(max-height:700px){
+ .sidebar-focused .companion-persistent{padding:5px 10px 3px;max-height:calc(100dvh - 365px)}
+ .sidebar-focused .companion-header{min-height:36px;padding-block:2px}
+ .sidebar-focused .companion-tabs{min-height:34px}.sidebar-focused .companion-tabs>.btn{min-height:32px;padding-block:3px}
+ .sidebar-focused .companion-team-compact .companion-roster-hero{min-height:58px;padding:2px;gap:1px}
+ .sidebar-focused .companion-persistent .companion-roster-hero:is([data-action=pick-slot])>span>b{display:none}
+ .sidebar-focused .companion-persistent .companion-roster-hero .portrait,.sidebar-focused .companion-persistent .companion-roster-hero .empty-portrait{width:24px;height:24px}
+ .sidebar-focused .companion-persistent>.pregame-controls{margin-top:4px;display:grid;grid-template-columns:max-content minmax(0,1fr) max-content max-content;gap:3px}
+ .sidebar-focused .pregame-controls-compact .pregame-primary,.sidebar-focused .pregame-controls-compact .pregame-secondary{display:contents}
+ .sidebar-focused .pregame-role{grid-column:1/3;grid-row:1;width:fit-content}.sidebar-focused .pregame-modes{grid-column:3/5;grid-row:1;justify-self:end}
+ .sidebar-focused .pregame-styles{grid-column:1;grid-row:2}.sidebar-focused .pregame-controls-compact .pregame-members{grid-column:3;grid-row:2;margin:0;padding-inline:0}
+ .sidebar-focused .pregame-controls-compact .pregame-room{grid-column:2;grid-row:2;margin:0;padding-inline:0}.sidebar-focused .pregame-more{grid-column:4;grid-row:2}
+ .sidebar-focused .pregame-controls-compact .pregame-styles>.btn{padding-inline:5px}.sidebar-focused .pregame-more>summary{padding-inline:3px}
+ .sidebar-focused .pregame-more[open]{grid-column:1/-1;grid-row:3}
+ .sidebar-focused .pregame-role{padding:2px 4px}.sidebar-focused .pregame-role .select{min-height:30px}
+ .sidebar-focused .companion-eligibility-status>summary{min-height:26px;padding:3px 0}
+ .sidebar-focused .companion-content>.companion-section-head{margin-block:0 2px;min-height:32px}
+ .sidebar-focused .companion-candidates .companion-candidate{padding-block:1px}
+ .sidebar-focused .companion-candidate .candidate-member{padding-block:1px;gap:2px}
+ .sidebar-focused .companion-candidate .candidate-action{display:none}
+ .sidebar-focused .companion-candidate .candidate-member b,.sidebar-focused .companion-candidate .candidate-member small{font-size:calc(12px * var(--text-scale,1));line-height:1.25}
+ .sidebar-focused .companion-candidate .candidate-members .candidate-member{gap:1px}.sidebar-focused .companion-candidate .candidate-members .candidate-member>.portrait{width:24px;height:24px}
+ .sidebar-focused .companion-candidate>.candidate-summary,.sidebar-focused .companion-candidate>.candidate-fit{margin-top:0}
+ .sidebar-focused .candidate-fit .lineup-fit>summary{font-size:12px;line-height:1.4;min-height:30px;padding-block:2px}
+}
