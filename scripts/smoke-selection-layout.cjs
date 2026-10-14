@@ -24,7 +24,7 @@ async function run(){
  const metrics=[],failures=[];
  const check=(label,test)=>{try{test();}catch(error){failures.push({label,message:error.message});console.error(label+': '+error.message);}};
  const measure=(window,rowSelector,paneSelector)=>window.webContents.executeJavaScript(`(()=>{const pane=document.querySelector(${JSON.stringify(paneSelector)}),rows=[...document.querySelectorAll(${JSON.stringify(rowSelector)})],rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,right:r.right}},box=rect(pane),visible=r=>r.y>=box.y&&r.bottom<=Math.min(box.bottom,innerHeight),controls=[...pane.querySelectorAll('.candidate-row button,.lineup-fit>summary,.candidate-details>summary,[data-action=more-candidates]')].filter(el=>el.checkVisibility({contentVisibilityAuto:true}));return {viewport:{width:innerWidth,height:innerHeight},pane:box,rows:rows.map(rect),indices:rows.map(el=>Number(el.dataset.resultIndex)),threeVisible:rows.length===3&&rows.map(rect).every(visible),lastVisible:!!rows.length&&visible(rect(rows.at(-1))),bodyWidth:document.documentElement.scrollWidth,paneWidth:pane.clientWidth,paneScrollWidth:pane.scrollWidth,overflow:controls.filter(el=>{const r=rect(el);return r.right>innerWidth||r.x<0}).length,controls:controls.map(rect),more:!!pane.querySelector('[data-action=more-candidates]')}})()`);
- const assertLayout=(label,state,defaultChoices=true)=>check(label,()=>{assert.equal(state.rows.length,defaultChoices?3:6,label+' candidate count');assert.equal(state.overflow,0,label+' controls cannot cross the window edge');assert.ok(state.bodyWidth<=state.viewport.width&&state.paneScrollWidth<=state.paneWidth,label+' cannot overflow horizontally');assert.ok(state.controls.length&&state.controls.every(r=>r.height>=30),label+' candidate controls remain at least 30px high');assert.ok(state.more,label+' keeps remaining candidates accessible');if(defaultChoices)assert.ok(state.threeVisible,label+' all three default candidates must fit without scrolling: '+JSON.stringify(state));else{assert.deepEqual(state.indices,[0,1,2,3,4,5],label+' exposes every remaining candidate');assert.ok(state.lastVisible,label+' sixth candidate can be scrolled into view');}});
+ const assertLayout=(label,state,defaultChoices=true,expectThree=true)=>check(label,()=>{assert.equal(state.rows.length,defaultChoices?3:6,label+' candidate count');assert.equal(state.overflow,0,label+' controls cannot cross the window edge');assert.ok(state.bodyWidth<=state.viewport.width&&state.paneScrollWidth<=state.paneWidth,label+' cannot overflow horizontally');assert.ok(state.controls.length&&state.controls.every(r=>r.height>=30),label+' candidate controls remain at least 30px high');assert.ok(state.more,label+' keeps remaining candidates accessible');if(defaultChoices&&expectThree)assert.ok(state.threeVisible,label+' all three default candidates must fit without scrolling: '+JSON.stringify(state));else if(!defaultChoices){assert.deepEqual(state.indices,[0,1,2,3,4,5],label+' exposes every remaining candidate');assert.ok(state.lastVisible,label+' sixth candidate can be scrolled into view');}});
  const key=(window,keyCode)=>{window.webContents.sendInputEvent({type:'keyDown',keyCode});window.webContents.sendInputEvent({type:'keyUp',keyCode});};
  const openDetail=async(window,label)=>{
   const js=code=>window.webContents.executeJavaScript(code,true);
@@ -45,11 +45,13 @@ async function run(){
   if(label==='party-440x800')assert.ok(await js(`!!document.querySelector('.candidate-detail-content [aria-label="成员行动分工"]')&&!!document.querySelector('.candidate-detail-content .pair-statistics')`),label+' keeps member jobs and pair evidence in the details');
   key(window,'Tab');await delay(50);assert.ok(await js(`document.activeElement.matches('[data-action=result-detail]')`),label+' full detail action is reachable by Tab');
  };
- for(const [label,width,height,fixtureProps,scale] of [
+ for(const [label,width,height,fixtureProps,scale,expectThree=true] of [
   ['party-440x800',440,800,props,1],
   ['five-440x800',440,800,fiveProps,1],
   ['party-400x600',400,600,props,1],
   ['five-400x600',400,600,fiveProps,1],
+  ['narrow-five-280x600',280,600,fiveProps,1,false],
+  ['narrow-five-360x600',360,600,fiveProps,1,false],
   ['unknown-440x900',440,900,{...props,client:{...client,eligibility:null}},1],
   ['solo-440x760',440,760,{...props,scope:'solo',soloRole:'mid',results:recommend({slots,champions:data.champions,scope:'solo',soloRole:'mid',limit:6})},1],
   ['large-text-440x900',440,900,props,1.25]
@@ -59,7 +61,9 @@ async function run(){
   const state=await measure(w,'.companion-candidate','.companion-content');
   await fs.writeFile(path.join(root,label+'-metrics.json'),JSON.stringify(state,null,2));
   await fs.writeFile(path.join(root,label+'.png'),(await w.webContents.capturePage()).toPNG());
-  assertLayout(label,state);metrics.push({label,...state});
+  assertLayout(label,state,true,expectThree);metrics.push({label,...state});
+  const toolbar=await w.webContents.executeJavaScript("(()=>{const els=[...document.querySelectorAll('.companion-persistent .pregame-controls button,.companion-persistent .pregame-controls select,.companion-persistent .pregame-more>summary')].filter(el=>el.checkVisibility({contentVisibilityAuto:true})),boxes=els.map(el=>el.getBoundingClientRect());return {outside:boxes.some(r=>r.x<0||r.right>innerWidth),overlap:boxes.some((a,i)=>boxes.slice(i+1).some(b=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1))}})()");
+  check(label+' toolbar',()=>assert.deepEqual(toolbar,{outside:false,overlap:false}));
   if(label==='party-440x800'){
    await openDetail(w,label);
    await fs.writeFile(path.join(root,'party-detail-keyboard.png'),(await w.webContents.capturePage()).toPNG());

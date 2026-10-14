@@ -65,7 +65,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
   lastTaskSelection:null,companionPreview:null,companionTab:'recommend',companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',
-  preparationRevision:0,preparationPendingKey:'',clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
+  preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
   structuredClone,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,partyRoutePreparations,getBuild,localConfigurationPreview,configurationReadOnly,
@@ -606,4 +606,35 @@ test('changing the own public hover in the client leaves the previous accepted p
  assert.equal(c.activeCreativePlan,null);assert.equal(c.lastTaskSelection,null);assert.equal(c.draftComparing,true);
  assert.equal(c.ownTaskPreparation().selection.id,'Jinx');assert.equal(c.companionPreparation().selection.id,'Jinx');assert.equal(calls.prepared.length,0);
  assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Ashe','Public hover must not become a persisted selected hero');
+});
+
+test('a real client hover change during preparation replaces stale configuration even when the operation finishes afterwards',async()=>{
+ for(const candidateClick of [false,true])for(const backgroundRead of [false,true]){
+  const current=client();current.session.myTeam[0].championPickIntent=hero('Ashe').key;
+  const incoming=structuredClone(current),picks={mid:'Ahri',bottom:'Ashe',support:'Braum'};
+  const slots=createSlots().map(s=>({...s,...(picks[s.role]?{champion:picks[s.role],locked:true,automaticPosition:true}:{})}));
+  const {context:c,calls}=setup({slots,current,incoming});
+  Object.assign(c,{creativePlanCompatible,currentCombo,comboContextKnown,companionPickIntent,guideSelection:null});
+  c.results=recommend(c.recommendationInput());c.resultsSignature=recommendationKey(c.recommendationInput());
+  c.activeCreativePlan=captureCreativePlan(c.results[0],data);assert.ok(c.activeCreativePlan);
+  c.lastTaskSelection={id:'Ashe',role:'bottom',mode:'rift',...creativeComboContext(creativeMemberCombo(c.activeCreativePlan,'Ashe','bottom'))};
+  vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo=')+extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
+  c.resultsSignature=recommendationKey(c.recommendationInput());
+  c.api.prepareSelection=async value=>{
+   calls.prepared.push(value);
+   incoming.session.myTeam[0].championPickIntent=hero('Jinx').key;
+   if(backgroundRead)await c.sync(false,{fresh:true});
+   return {complete:false,steps:{hover:{status:'done'},runes:{status:'failed',message:'选人对象已变化'},spells:{status:'skipped'},items:{status:'skipped'}}};
+  };
+  if(candidateClick)await c.prepareCandidate({dataset:{id:'Ashe',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
+  else await c.useClientPreparation({dataset:{preparationView:'task'}},true);
+  await c.sync(false,{fresh:true});
+  const scenario=`candidate=${candidateClick}, backgroundRead=${backgroundRead}`;
+  assert.equal(c.currentPickIntent().selection.id,'Jinx',scenario);
+  assert.equal(c.ownTaskPreparation().selection.id,'Jinx',scenario);
+  assert.equal(c.companionPreparation().selection.id,'Jinx',scenario);
+  assert.equal(c.activeCreativePlan,null,scenario);assert.equal(c.lastTaskSelection,null,scenario);
+  assert.equal(c.clientPreparing,false);assert.equal(c.candidatePreparing,false);assert.equal(c.preparationTarget,null);
+  assert.equal(calls.prepared.length,1,'The intervening public hover must not dispatch another write');
+ }
 });
