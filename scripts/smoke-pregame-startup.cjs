@@ -18,10 +18,10 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(champion=>champion.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json')));
  assert.equal(initial.preferences.autoSync,true);assert.equal(initial.preferences.clickPrepare,true);assert.equal(initial.draft.playerPosition,undefined);assert.equal(initial.draft.soloRole,'');assert.equal(initial.draft.slots.filter(slot=>slot.champion).length,5,'Startup fixture needs a saved local lineup on every lane');
- let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,completed=false,requests=0,spell1Id=12,spell2Id=4;
+ let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4;
  let page={id:44,name:'Synthetic editable page',isEditable:true,isActive:true,current:true};
  const ownIdentity={puuid:'startup-synthetic-own-identity',summonerId:530001,gameName:'合成测试本人',tagLine:'TEST'},friendIdentity={puuid:'startup-synthetic-friend-identity',summonerId:530002,gameName:'合成测试队友',tagLine:'TEST'};
- const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:0,championPickIntent:friendIntent,assignedPosition:'',...friendIdentity},{cellId:1,championId:0,championPickIntent:0,assignedPosition:''},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:'',spell1Id,spell2Id,...ownIdentity},{cellId:3,championId:0,championPickIntent:0,assignedPosition:''},{cellId:4,championId:0,championPickIntent:0,assignedPosition:''}],theirTeam:[],actions:[[{id:22,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',adjustedTimeLeftInPhase:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
+ const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:0,championPickIntent:friendIntent,assignedPosition:friendAssigned,...friendIdentity},{cellId:1,championId:0,championPickIntent:0,assignedPosition:''},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:ownAssigned,spell1Id,spell2Id,...ownIdentity},{cellId:3,championId:0,championPickIntent:0,assignedPosition:''},{cellId:4,championId:0,championPickIntent:0,assignedPosition:''}],theirTeam:[],actions:[[{id:22,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',adjustedTimeLeftInPhase:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
  const output=options=>{
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   const method=options.method||'GET',route=options.path,body=options.body===undefined?undefined:JSON.parse(options.body);
@@ -165,6 +165,21 @@ async function run(){
    await delay(250);assert.equal(attempts.length-before,1,'The picker produced a delayed duplicate preparation call');
   });
  }
+ ownAssigned='BOTTOM';friendAssigned='MIDDLE';await resetRound(430);
+ await checkpoint('main-candidate-claims-different-plan-lane-without-losing-party-plan',async()=>{
+  await click(main,'[data-action=draft-filters]');await click(main,'[data-action=reset-draft]');await click(main,'[data-action=close]');
+  await until(async()=>(await state()).draft.slots.every(slot=>!slot.champion),'Explicit reset did not clear the previous local plan');
+  await until(()=>js(main,'!!document.querySelector(".result-card .candidate-member[data-role=mid]")'),'Known middle/bottom party candidates missing');
+  const candidate=await js(main,'(()=>{const card=[...document.querySelectorAll(".result-card")].find(card=>card.querySelector(".candidate-member[data-role=mid]"));const el=card.querySelector(".candidate-member[data-role=mid]");return {id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex,members:[...card.querySelectorAll(".candidate-member")].map(member=>({id:member.dataset.id,role:member.dataset.role}))};})()');
+  const before=attempts.length,resultBefore=results.length;
+  await click(main,'.result-card [data-action=build][data-id='+candidate.id+'][data-role='+candidate.role+'][data-result-index="'+candidate.index+'"]');
+  await until(()=>results.length===resultBefore+1,'Claiming another unpicked plan lane cancelled the same explicit click');
+  assert.equal(attempts.length-before,1);assert.equal(results.at(-1).complete,true);
+  for(const step of ['hover','runes','spells','items'])assert.equal(results.at(-1).steps[step].status,'done');
+  const saved=await state();assert.ok(saved.draft.creativePlan,'Automatic range recomputation discarded the just-adopted party plan');
+  assert.equal(saved.draft.playerPosition?.role,'mid');assert.equal(spell2Id,4);
+  for(const member of candidate.members)assert.ok(saved.draft.slots.some(slot=>slot.party&&slot.role===member.role&&slot.champion===member.id),'The explicit click lost a member of its adopted plan');
+ });
  assert.ok(windows.every(window=>window.isDestroyed()||!window.isVisible()),'Smoke windows must stay hidden');
  report={...report,checks,passed:checks.every(check=>check.passed),source,archiveSha256:release?.archiveSha256||null,autoSync:true,manualSyncClicks:0,syntheticLcuOnly:true,observerMocked:true,actualRuneWrites:0,mockedWrites:writes.map(write=>({route:write.route,method:write.method})),preparationApiCalls:attempts.length};
  await fs.writeFile(path.join(root,'pregame-startup.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));

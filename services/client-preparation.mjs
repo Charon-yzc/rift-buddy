@@ -49,6 +49,7 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   return {pickable,disabled};
  };
  const assertSelectable=(session,{pickable,disabled})=>{
+  if(session.myTeam.some(p=>p.cellId!==session.localPlayerCellId&&!p.championId&&p.championPickIntent===selected.championId))throw Error('队友已预选这位英雄，请查看队友配置或选择另一位');
   const banned=session.bans.includes(selected.championId),taken=session.myTeam.some(p=>p.cellId!==session.localPlayerCellId&&p.championId===selected.championId)||session.allowDuplicatePicks===false&&session.theirTeam.some(p=>p.championId===selected.championId);
   if(!pickable.includes(selected.championId)||disabled.includes(selected.championId)||banned||taken)throw Error('这个英雄本局不可选，请更换推荐');
  };

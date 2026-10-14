@@ -3,6 +3,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),assert=require('n
 const workspace=process.cwd(),root=path.resolve(process.env.RIFT_BUDDY_USER_DATA||path.join(workspace,'.local','selection-layout-'+Date.now()));
 process.env.RIFT_BUDDY_USER_DATA=root;
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const until=async(check,label)=>{for(let i=0;i<150;i++){if(await check())return;await delay(100);}throw Error(label);};
 app.setPath('userData',path.join(root,'user-data'));
 async function run(){
  await app.whenReady();await fs.mkdir(root,{recursive:true});
@@ -29,13 +30,15 @@ async function run(){
   assert.equal(await js(`document.querySelector('.candidate-detail-content').checkVisibility({contentVisibilityAuto:true})`),false,label+' details start collapsed');
   await js(`document.querySelector('.candidate-row>.btn').focus()`);key(window,'Tab');await delay(50);
   assert.ok(await js(`document.activeElement.matches('.lineup-fit>summary')`),label+' fit explanation is reachable by Tab');
-  key(window,'Space');await delay(60);
+  key(window,'Space');
+  await until(()=>js(`document.querySelector('.lineup-fit').open&&document.querySelector('.lineup-fit-explanation').checkVisibility({contentVisibilityAuto:true})`),label+' fit evidence did not become visible');
   assert.ok(await js(`document.querySelector('.lineup-fit').open&&document.querySelector('.lineup-fit-explanation').checkVisibility({contentVisibilityAuto:true})`),label+' keyboard opens fit evidence');
   key(window,'Space');await delay(60);
   assert.equal(await js(`document.querySelector('.lineup-fit').open`),false,label+' keyboard closes fit evidence');
   key(window,'Tab');await delay(50);
   assert.ok(await js(`document.activeElement.matches('.candidate-details>summary')`),label+' details summary is reachable by Tab');
-  key(window,'Space');await delay(100);
+  key(window,'Space');
+  await until(()=>js(`document.querySelector('.candidate-details').open&&document.querySelector('.candidate-detail-content').checkVisibility({contentVisibilityAuto:true})`),label+' candidate details did not become visible');
   const open=await js(`(()=>{const detail=document.querySelector('.candidate-details'),content=detail.querySelector('.candidate-detail-content');return {open:detail.open,visible:content.checkVisibility({contentVisibilityAuto:true}),action:!!content.querySelector('[data-action=result-detail]')}})()`);
   assert.deepEqual(open,{open:true,visible:true,action:true},label+' keyboard opens candidate details');
   if(label==='party-440x800')assert.ok(await js(`!!document.querySelector('.candidate-detail-content [aria-label="成员行动分工"]')&&!!document.querySelector('.candidate-detail-content .pair-statistics')`),label+' keeps member jobs and pair evidence in the details');
@@ -76,7 +79,6 @@ async function run(){
  cp.spawn=(file,...args)=>{if(!String(file).endsWith('window-observer.exe'))return originalSpawn(file,...args);const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;
  require(path.join(base,'electron/main.cjs'));
- const until=async(check,label)=>{for(let i=0;i<150;i++){if(await check())return;await delay(100);}throw Error(label);};
  let main;await until(()=>{main=windows.find(window=>window.webContents.getURL().endsWith('/src/index.html'));return main;},'Main renderer missing');
  main.setMinimumSize(640,600);main.setContentSize(1280,720);const js=code=>main.webContents.executeJavaScript(code,true);
  await until(()=>js('!!document.querySelector("[data-action=draft-scope]")'),'Main draft missing');

@@ -117,3 +117,16 @@ test('temporary slots avoid non-group public lanes and do not recover hidden or 
  const unknown=merge(createSlots(),session,{status:'unknown',members:[{cellId:0,local:true}]});
  assert.deepEqual(marked(unknown),['mid','bottom','support']);
 });
+
+test('claiming an adopted teammate lane before picking keeps the other unbound plan lane in our range',()=>{
+ const session=blank();session.myTeam[0].assignedPosition='BOTTOM';session.myTeam[1].assignedPosition='MIDDLE';
+ session.myTeam.push(...['TOP','JUNGLE','UTILITY'].map((assignedPosition,i)=>({cellId:i+2,championId:0,assignedPosition})));
+ const party=group([{cellId:0,local:true,firstPosition:'BOTTOM'},{cellId:1,firstPosition:'MIDDLE'}]);
+ const slots=createSlots().map(s=>({...s,party:['mid','bottom'].includes(s.role),...(['mid','bottom'].includes(s.role)?{champion:s.role==='mid'?'Seraphine':'Ashe',locked:true,automaticPosition:true}:{})})),before=structuredClone(slots);
+ const next=merge(slots,session,party,{ownRole:'mid'});
+ assert.deepEqual(marked(next),['mid','bottom']);
+ assert.deepEqual(next.map(s=>s.champion),slots.map(s=>s.champion));
+ assert.ok(next.every(s=>!Number.isInteger(s.clientCellId)),'Only temporary range flags change; no player binding is invented');
+ assert.deepEqual(merge(next,session,party,{ownRole:'mid'}),next);
+ assert.deepEqual(slots,before);
+});

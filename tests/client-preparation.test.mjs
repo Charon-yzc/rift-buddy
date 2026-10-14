@@ -37,7 +37,7 @@ test('explicit lane claim only preselects a representative, leaves runes/spells/
  assert.deepEqual(f.calls.filter(c=>c.method!=='GET').map(c=>c.route),['/lol-champ-select/v1/session/actions/4']);
 });
 test('locked same hero applies configuration without selecting or unlocking, locked other hero rejects before writes',async()=>{
- const f=fixture({locked:true});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
+ const f=fixture({locked:true});f.session.myTeam.push({cellId:1,championId:0,championPickIntent:22});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
  const other=fixture({locked:true});other.own.championId=1;other.value.context.championId=1;await assert.rejects(other.run(),/锁定其他英雄/);assert(!other.calls.some(c=>c.method!=='GET'));
 });
 test('default preparation preserves the latest client Flash key, including a change while runes are applied',async()=>{
@@ -119,6 +119,11 @@ test('unavailable heroes, missing availability and non-player turn produce no wr
   await assert.rejects(f.run());assert(!f.calls.some(c=>c.method!=='GET'));assert.equal(f.items,0);
  }
 });
+
+test('a public teammate hover already present at dispatch blocks all preparation writes',async()=>{
+ const f=fixture();f.session.myTeam.push({cellId:1,championId:0,championPickIntent:22});
+ await assert.rejects(f.run(),/队友已预选/);assert.equal(f.items,0);assert.ok(f.calls.every(c=>c.method==='GET'));
+});
 test('new bans while reading eligibility cancel before hover and a new game before a later step stops its writes',async()=>{
  const f=fixture(),request=f.deps.request;f.deps.request=async(auth,route,...args)=>{const result=await request(auth,route,...args);if(route.endsWith('/disabled-champion-ids'))f.session.bans.theirTeamBans=[22];return result;};const r=await f.run();assert.equal(r.steps.hover.status,'failed');assert.equal(r.steps.runes.status,'skipped');assert(!f.calls.some(c=>c.method!=='GET'));
  const g=fixture(),read=g.deps.request;g.deps.request=async(auth,route,method,body)=>{const result=await read(auth,route,method,body);if(method==='PUT'){g.session.gameId=778;g.game.gameData.gameId=778;}return result;};const p=await g.run();assert.equal(p.steps.spells.status,'failed');assert.equal(p.steps.items.status,'skipped');assert(!g.calls.some(c=>c.method==='PATCH'&&c.route.endsWith('my-selection')));
@@ -135,6 +140,7 @@ test('target availability, own action, game, mode and turn changes during eligib
  const changes={
   banned:f=>{f.session.bans.theirTeamBans=[22];},
   teammate:f=>{f.session.myTeam.push({cellId:1,championId:22});},
+  teammateHover:f=>{f.session.myTeam.push({cellId:1,championId:0,championPickIntent:22});},
   opponent:f=>{f.session.theirTeam.push({cellId:5,championId:22});},
   disabled:()=>{},unpickable:()=>{},missing:()=>{},
   game:f=>{f.session.gameId=778;},

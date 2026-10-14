@@ -594,19 +594,22 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
   const limit=Math.max(manualOn.length,count-infos.filter(info=>info.excluded).length);
   const available=(slot,cellId)=>slot&&!claimed.has(slot.role)&&!(slot.partyManual&&!slot.party)&&(!Number.isInteger(slot.clientCellId)||slot.clientCellId===cellId)&&(!reserved.has(slot.role)||reserved.get(slot.role)===cellId);
   const provisional=slot=>slot&&!slot.manualPosition&&!Number.isInteger(slot.clientCellId)&&(!slot.champion||slot.automaticPosition);
+  // A user can claim a different role in an adopted plan before anyone picks.
+  // Reuse that plan's remaining unbound lane before inventing a new range.
+  const fallback=known?next.filter(provisional).sort((a,b)=>Number(!!b.party&&!!b.automaticPosition)-Number(!!a.party&&!!a.automaticPosition)):[];
   for(const info of infos){
    if(info.excluded)continue;
    const {member,manual,declared,preview,at,usual,lobbyRoles}=info,role=manual||declared;
    const direct=[role&&next.find(s=>s.role===role),preview&&next.find(s=>s.role===preview.role),at].filter(Boolean);
    const preferred=[...usual,...lobbyRoles].filter((r,i,a)=>r&&a.indexOf(r)===i);
-   const candidates=[...direct,...preferred.map(r=>next.find(s=>s.role===r)).filter(provisional),...(known?next.filter(provisional):[])];
+   const candidates=[...direct,...preferred.map(r=>next.find(s=>s.role===r)).filter(provisional),...fallback];
    const target=candidates.find(s=>available(s,member.cellId)&&(!known||used.has(s.role)||used.size<limit));
    if(target){used.add(target.role);claimed.add(target.role);}
   }
   if(known){
    // Unlocated members still contribute to the range. These temporary slots
    // carry no player binding; later public picks, hovers and lanes replace them.
-   for(const slot of next)if(used.size<limit&&provisional(slot)&&available(slot,null)){used.add(slot.role);claimed.add(slot.role);}
+   for(const slot of fallback)if(used.size<limit&&available(slot,null)){used.add(slot.role);claimed.add(slot.role);}
    // Saved local plans may occupy every slot. A range flag does not bind a
    // player or replace a hero, so unbound planned slots can still count here.
    for(const slot of next)if(used.size<limit&&!Number.isInteger(slot.clientCellId)&&available(slot,null)){used.add(slot.role);claimed.add(slot.role);}
