@@ -366,6 +366,33 @@ test('adopting the own candidate preserves non-target manual plans while scoring
  }
 });
 
+test('public party hovers replace an unbound offline plan in candidates and the sidebar without erasing the saved plan',()=>{
+ for(const scope of ['party','bot'])for(const local of [false,true]){
+  const current=client();current.session.myTeam.push({cellId:2,championId:0,championPickIntent:hero('Lulu').key,assignedPosition:'UTILITY'});
+  if(local)current.session.localPlayerCellId=2;
+  const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true}:{})}));
+  const {context:c,calls}=setup({slots,current});c.scope=scope;c.soloRole=local?'support':'bottom';
+  const before=structuredClone(c.slots),input=c.recommendationInput();
+  assert.equal(input.slots.find(s=>s.role==='support').champion,'Lulu');
+  assert.equal(input.slots.find(s=>s.role==='support').publicIntent,true);
+  const results=recommend(input);assert.ok(results.length);
+  assert.ok(results.every(r=>r.slots.find(s=>s.role==='support').champion==='Lulu'));
+  const html=companionView({data,client:current,slots:c.slots,unassigned:[],scope,soloRole:c.soloRole,tab:'recommend',results});
+  assert.match(html,/data-action="companion-roster-plan" data-role="support" data-id="Lulu"/);
+  assert.doesNotMatch(html,/data-action="companion-roster-plan" data-role="support" data-id="Nami"/);
+  if(!local)assert.equal(companionHeroAction(current,hero('Lulu'),true).readOnly,true);
+  assert.deepEqual(structuredClone(c.slots),before);assert.equal(calls.prepared.length,0);
+ }
+});
+
+test('a public hover does not replace a conflicting manual lane or another player binding',()=>{
+ const current=client();current.session.myTeam.push({cellId:2,championId:0,championPickIntent:hero('Lulu').key,assignedPosition:'UTILITY'});
+ for(const markers of [{manualPosition:true},{clientCellId:3},{manualPosition:true,clientCellId:2}]){
+  const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true,...markers}:{})}));
+  assert.deepEqual(recommendationDraft(slots,current.session,data.champions).find(s=>s.role==='support'),slots.find(s=>s.role==='support'));
+ }
+});
+
 test('explicitly adopting a hero on another lane moves only that unbound plan and leaves no duplicate',async()=>{
  const current=client();current.session.myTeam.push({cellId:2,championId:0,championPickIntent:0,assignedPosition:'UTILITY'});
  const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(['mid','support'].includes(s.role)?{champion:s.role==='mid'?'Ashe':'Nami',locked:true}:{})}));
