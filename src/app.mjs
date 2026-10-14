@@ -325,7 +325,7 @@ function persist({throwOnError=false,derived=false}={}){
    // A background public snapshot may lose a race to a player's newer lane
    // choice in the other window. Keep that accepted choice, without retrying
    // or concealing conflicts from explicit edits or failures to write disk.
-   if(derived&&!throwOnError&&/选人配置同时发生变化|客户端已选英雄不能移除或解锁/.test(error.message)){
+   if(derived&&/选人配置同时发生变化|客户端已选英雄不能移除或解锁/.test(error.message)){
     const latest=await api.ready();if(!latest?.state)throw error;
     for(const queued of pendingSaves)if(queued!==pending)queued.snapshot=rebaseWindowState(before,queued.snapshot,latest.state);
     acceptSavedState(latest.state,latest.revision||stateRevision);return;
@@ -425,14 +425,21 @@ function roomErrorMessage(error){
  return raw||'操作失败，请重试';
 }
 function roomSharePayload(){
- const role=roomOwnRole(),mode=client.connected?(client.mode?.id||null):'rift',own=client.connected&&client.phase==='ChampSelect'?client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId):null;
+ const mode=client.connected?(client.mode?.id||null):'rift',own=client.connected&&client.phase==='ChampSelect'?client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId):null;
+ const plannedRole=own&&activeCreativePlan?taskOwnRole():'',plannedSlot=slots.find(s=>s.role===plannedRole);
+ const role=roomOwnRole()||(plannedSlot&&(!Number.isInteger(plannedSlot.clientCellId)||plannedSlot.clientCellId===own.cellId)?plannedRole:'');
  const ownId=data.champions.find(c=>c.key===Number(own?.championId||own?.championPickIntent))?.id;
  let visible=publicDraftContext();
+ // Share the adopted proposal while our replaceable old hover is still in
+ // the client. Public teammates and completed picks continue to constrain it.
+ if(own&&activeCreativePlan?.members.some(m=>m.role===role)){
+  const editable=editableLocalDraft(slots,client.session,data.champions,role),proposed=recommendationDraft(editable.slots,editable.session,data.champions,{ownRole:role});
+  if(editable.session!==client.session&&creativePlanCompatible(activeCreativePlan,proposed))visible=proposed.map(s=>{const member=activeCreativePlan.members.find(m=>m.role===s.role);return member&&!s.champion?{...s,champion:member.champion,locked:false}:s;});
+ }
  if(own&&!ownId&&!activeCreativePlan?.members.some(m=>m.role===role))visible=visible.map(s=>s.role===role&&s.automaticPosition&&!s.manualPosition&&(!Number.isInteger(s.clientCellId)||s.clientCellId===own.cellId)?{...s,champion:null,locked:false}:s);
  const share=shareFromSlots(visible,role,mode);if(!share)return null;
- // An adopted proposal may still be shared before its client hover. It is
- // not the player's current public pick until the client reports that hero.
- if(own&&share.pick?.champion!==ownId)share.pick=null;
+ // A proposed lineup and the actual public pick are separate facts.
+ if(own)share.pick=ownId&&role?{champion:ownId,role,mode}:null;
  const candidate=captureRoomStrategy(visible,data,activeCreativePlan,mode);if(candidate?.id!==roomStrategySnapshot?.id)roomStrategySnapshot=candidate;
  return {...share,configurations:mode==='aram'?[]:captureRoomConfigurations(visible,data,preparations,{creativePlan:roomStrategySnapshot,guide:guideSelection,current:buildView?buildSelection():null,mode}),...(roomStrategySnapshot?{strategy:roomStrategySnapshot}:{})};
 }
@@ -724,7 +731,7 @@ async function claimPosition(role){
    if(s.champion!==id||Number.isInteger(s.clientCellId)||s.manualPosition)return s;
    const {automaticPosition,publicIntent,...rest}=s;return {...rest,champion:null,locked:false};
   });
-  reconcileCreativePlan();await persist({throwOnError:true});scheduleRoomPublish();
+  reconcileCreativePlan();await persist({derived:true,throwOnError:true});scheduleRoomPublish();
  }
  companionTab=localPickLocked(client.session)?'plan':'recommend';draftComparing=!localPickLocked(client.session);companionPreview=null;creativePlanNotice='';toast('已预选'+champ(id).name+'占位，继续选择阵容');
  }finally{if(positionClaim?.pending)positionClaim=null;clientPreparing=false;preparationTarget=previousTarget;render();queueCompanionRecommendation();}

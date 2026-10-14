@@ -207,11 +207,14 @@ async function run(){
  await checkpoint('solo-party-composition-recommendations-after-lane-claim',async()=>{
   await until(async()=>(await state()).draft.slots.filter(slot=>slot.party).length===1,'Solo queue kept a multi-person recommendation range');
   await change(side,'#solo-role','bottom');await until(()=>intent===hero('Jinx').key&&results.length===attempts.length,'Solo lane claim did not settle');
+  await until(()=>js(side,'(()=>{const toast=document.querySelector("#toast");return /已预选.*占位/.test(toast?.textContent)&&!toast.classList.contains("error");})()'),'Successful lane claim reported a save error instead of completion');
   picked=intent;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(p=>p.cellId===2)?.championId===picked);
   await click(side,'[data-action=draft-scope][data-scope=solo]');
+  await until(async()=>(await state()).draft.scope==='solo','Explicit solo scope did not persist');
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Explicit solo mode treated an unlocked public championId as a completed pick');
   assert.ok((await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members [data-role]")].map(el=>el.dataset.role)')).every(role=>role==='bottom'));
   await click(side,'[data-action=draft-scope][data-scope=party]');
+  await until(async()=>(await state()).draft.scope==='party','Explicit party scope did not persist');
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo composition recommendations are missing');
   await until(()=>js(main,'document.querySelectorAll(".result-card").length>=2'),'Main solo composition recommendations are missing');
   for(const [window,selector] of [[side,'.companion-candidate'],[main,'.result-card']]){

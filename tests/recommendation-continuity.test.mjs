@@ -359,7 +359,9 @@ test('claiming a lane stays on recommendations and leaves the representative rep
  vm.runInContext(extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
  c.setCompanionRole('top');
  const before=structuredClone(c.slots);
+ const saves=[];c.persist=async options=>{saves.push(options);};
  await c.claimPosition('top');
+ assert.deepEqual(structuredClone(saves.at(-1)),{derived:true,throwOnError:true},'The completed public hover mirror must recover draft races while still propagating disk failures');
  assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].preselectOnly,true);assert.equal(s.calls.prepared[0].role,'top');
  assert.equal(c.slots.find(s=>s.role==='top').champion,'Gnar');assert.equal(c.slots.find(s=>s.role==='top').locked,false);
  assert.equal(c.slots.find(s=>s.role==='mid').champion,null);
@@ -370,6 +372,26 @@ test('claiming a lane stays on recommendations and leaves the representative rep
  const plan=c.companionPreparation();assert.equal(plan.selection.role,'top');assert.equal(!!c.readOnlyPreparation('companion',plan),false);
  await c.useClientPreparation({dataset:{preparationView:'companion'}},true);
  assert.equal(s.calls.prepared.length,2);assert.equal(s.calls.prepared[1].role,'top');assert.equal(s.calls.prepared[1].preselectOnly,undefined);
+});
+
+test('awaited public draft saves recover only known derived races without replaying old snapshots or hiding disk and explicit edit errors',async()=>{
+ for(const scenario of [
+  {derived:true,message:'选人配置同时发生变化，请重新同步',recovered:true},
+  {derived:true,message:'客户端已选英雄不能移除或解锁',recovered:true},
+  {derived:true,message:'ENOSPC: isolated disk write failed',recovered:false},
+  {derived:false,message:'选人配置同时发生变化，请重新同步',recovered:false},
+ ]){
+  const {context:c,calls}=setup(),accepted=defaultState();accepted.draft={slots:createSlots().map(s=>({...s,party:s.role==='mid',...(s.role==='mid'?{manualPosition:true,clientCellId:1}:{})})),scope:'party',style:'fun',soloRole:'mid'};
+  let writes=0,reads=0;
+  Object.assign(c,{pendingSaves:new Set(),savedBase:structuredClone(c.saved),stateRevision:0,rebaseWindowState:(_base,value)=>value,restoreRejectedSave:noop,
+   acceptSavedState:state=>{c.saved=structuredClone(state);c.savedBase=structuredClone(state);c.slots=c.saved.draft.slots;c.soloRole=c.saved.draft.soloRole;},
+   creativePlanCompatible,api:{...c.api,saveState:async()=>{writes++;throw Error(scenario.message);},ready:async()=>{reads++;return {state:accepted,revision:2};}}});
+  vm.runInContext(extract('function persist(','function acceptSavedState('),c);
+  const request=c.persist({derived:scenario.derived,throwOnError:true});
+  if(scenario.recovered){await request;assert.equal(c.soloRole,'mid');assert.equal(c.slots.find(s=>s.role==='mid').manualPosition,true);assert.equal(c.slots.find(s=>s.role==='bottom').champion,null);}
+  else await assert.rejects(request,error=>error.message===scenario.message);
+  assert.equal(writes,1,'A stale snapshot must never be retried');assert.equal(reads,Number(scenario.recovered));assert.equal(calls.prepared.length,0);assert.equal(c.pendingSaves.size,0);
+ }
 });
 
 test('a failed or outdated representative hover cannot migrate stored plans',async()=>{
