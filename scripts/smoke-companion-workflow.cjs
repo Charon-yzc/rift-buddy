@@ -320,7 +320,14 @@ async function run(){
  assert.equal(await js('drawerPosition.scrollTop'),500,'Fixture did not select the actual scroll container');
  await change('#build-skill',skill.id);
  assert.ok(Math.abs((await js('document.querySelector(".drawer").scrollTop'))-500)<=3,'Changing a configuration reset the drawer scroll');
- await js('window.buddy.openGuide('+JSON.stringify({...lateFavorite,id:'Volibear',role:'top',mode:'rift'})+')');await delay(150);
+ // Menu update checks must use our actual picked hero. The guide correctly
+ // follows Chogath, so a background update must not redraw a Volibear favorite.
+ await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');await click('[data-action=task-edit]');
+ await until(()=>js('!!document.querySelector(\'.drawer [data-plan="Chogath:jungle:rift"]\')'),'Own build drawer missing');
+ const ownDrawerSkill=await js('document.querySelector("#build-skill").value');
+ await js('document.querySelector(".drawer").scrollTop=500;void 0');
+ await click('.drawer [data-action=open-guide]');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.guide?.selection.id==="Chogath"&&b.state.guide.selection.role==="jungle")'),'Own guide must match the drawer before update checks');
  await js('window.backgroundDrawerSelect=document.querySelector("#build-role");backgroundDrawerSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
  await js('window.buddy.bootstrap().then(b=>window.buddy.updateGuide({...b.state.guide.selection,changedFields:[]}))');await delay(150);
  assert.equal(await js('backgroundDrawerSelect===document.querySelector("#build-role")'),true,'An unchanged guide update destroyed the open build menu');
@@ -331,7 +338,7 @@ async function run(){
  await js('window.backgroundDrawerSelect=document.querySelector("#build-skill");backgroundDrawerSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
  await js('window.buddy.bootstrap().then(b=>window.buddy.updateGuide({...b.state.guide.selection,changedFields:[]}))');await delay(100);
  assert.equal(await js('backgroundDrawerSelect.isConnected'),true);
- await change('#build-skill',skill.id);await delay(100);
+ await change('#build-skill',ownDrawerSkill);await delay(100);
  await until(()=>js('!backgroundDrawerSelect.isConnected'),'Finishing the build selection left its pending update behind');
  await toggleAutoSync();
  await js('window.backgroundDrawerSelect=document.querySelector("#build-role");backgroundDrawerSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
