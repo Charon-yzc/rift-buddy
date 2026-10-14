@@ -26,6 +26,19 @@ test('fragile four/five-player groups default to their supported side pressure a
  }
 });
 
+test('reordered protection groups keep identical route identities and retain explicitly edited member preparations',()=>{
+ const permutations=a=>a.length<2?[a]:a.flatMap((value,i)=>permutations(a.filter((_,j)=>i!==j)).map(rest=>[value,...rest]));
+ for(const picks of [{top:'Ornn',jungle:'Sejuani',mid:'Orianna',bottom:'Jinx',support:'Lulu'},{top:'Ornn',mid:'Orianna',bottom:'Jinx',support:'Lulu'}]){
+  const slots=setup(picks),plan=captureCreativePlan(recommend({slots,champions:data.champions,scope:'party'})[0],data,'2026-10-15T00:00:00Z');
+  const store=createPreparationStore();store.remember({id:'Jinx',role:'bottom',mode:'rift',comboId:plan.id,creativePlan:plan,summonerIds:['SummonerDot','SummonerFlash']});
+  for(const order of permutations(slots)){
+   const next=captureCreativePlan(recommend({slots:order,champions:data.champions,scope:'party'})[0],data,'2026-10-15T00:00:00Z');
+   assert.equal(next.id,plan.id);assert.deepEqual(next.shared.routes,plan.shared.routes);
+   assert.deepEqual(store.recall({id:'Jinx',role:'bottom',mode:'rift',comboId:next.id,creativePlan:next}).summonerIds,['SummonerDot','SummonerFlash']);
+  }
+ }
+});
+
 test('Vi Orianna Nautilus can choose either actual ball carrier and preserve one ultimate, member jobs and stages through disk',async()=>{
  const slots=setup({jungle:'Vi',mid:'Orianna',support:'Nautilus'}),[result]=recommend({slots,champions:data.champions,scope:'party'}),original=captureCreativePlan(result,data);
  assert.equal(original.archetype,'cooperation');assert.match(original.ordered.find(m=>m.champion==='Vi').job,/等泰坦.*一次 R 生效.*第二波/);

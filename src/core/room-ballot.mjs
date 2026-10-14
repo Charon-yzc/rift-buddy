@@ -4,7 +4,7 @@ import {analyzeTeam} from './recommend.mjs';
 import {createCooperationGraph} from './cooperation.mjs';
 import {compositionFit} from './composition-fit.mjs';
 import {effectiveDraftScope} from './draft.mjs';
-import {clientContextDraft} from './client-context-draft.mjs';
+import {clientContextDraft,publicAllyIds} from './client-context-draft.mjs';
 import {editableLocalDraft} from './draft-intents.mjs';
 
 // A lobby proposal survives entering that draft, but never carries into the
@@ -51,12 +51,14 @@ export function lineupFit(lineup,current,champions,options={}){
   if(options.editableRoles.includes(role)){const editable=editableLocalDraft(current,options.clientSession,champions,role);current=editable.slots;options={...options,clientSession:editable.session};}
  }
  current=clientContextDraft(current,champions,options.clientSession,{scope:effectiveDraftScope(current,options.scope||'party'),soloRole:options.soloRole||''});
- const context=options.context||fitContext(champions),range=fitLineupSlots(lineup,current,options);
+ const range=fitLineupSlots(lineup,current,options),context={...(options.context||fitContext(champions)),publicAllies:['context','solo'].includes(range.scope)?publicAllyIds(options.clientSession,champions):[]};
  const fixed=current.filter(s=>range.controlledRoles.includes(s.role)&&s.champion&&(Number.isInteger(s.clientCellId)||s.manualPosition||s.publicIntent||s.locked&&!s.automaticPosition));
  const heroMatches=fixed.filter(s=>lineup.some(m=>m.champion===s.champion)).length;
  const roleMatches=fixed.filter(s=>lineup.some(m=>m.champion===s.champion&&m.role===s.role)).length;
  const proposed=lineup.filter(s=>s.champion),unique=new Set(proposed.map(s=>s.champion)).size===proposed.length&&new Set(proposed.map(s=>s.role)).size===proposed.length;
- const compatible=unique&&heroMatches===fixed.length,exact=compatible&&roleMatches===fixed.length;
+ const unplacedAllies=context.publicAllies.filter(id=>!current.some(s=>s.champion===id));
+ const taken=proposed.some(s=>range.controlledRoles.includes(s.role)&&unplacedAllies.includes(s.champion));
+ const compatible=unique&&!taken&&heroMatches===fixed.length,exact=compatible&&roleMatches===fixed.length;
  const analysis=analyzeTeam(range.slots,champions,context,true);
  // analyzeTeam omits unknown IDs; retain their planned place in expectedSize.
  const fit=compositionFit(analysis,context.cooperationGraph,{expectedSize:range.expectedSize});

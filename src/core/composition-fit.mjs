@@ -136,7 +136,7 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
   if(size>=4&&sustained>=known-1&&!frontline)penalize(7,'持续输出成员过多，单一保护者难以同时照顾所有进场和输出位置。');
   if(minority<.08)penalize(size===3?3:6,'伤害类型明显集中，对手可集中购买一种防御。');
  }
- const duplicates=known-new Set(members.map(m=>m.role)).size;
+ const positioned=members.filter(m=>m.role),duplicates=positioned.length-new Set(positioned.map(m=>m.role)).size;
  if(duplicates)penalize(duplicates*12,'成员位置冲突，需要先确定各自分路。');
  const duplicateHeroes=known-new Set(members.map(m=>m.champion)).size;
  if(duplicateHeroes)penalize(duplicateHeroes*20,'同一英雄重复，阵容无法按这些成员同时执行。');
@@ -152,7 +152,8 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  if(tactics.quality>=.65)strengths.push(tactics.name);
  if(damage>=.8&&size>=3)strengths.push('物理与法术伤害均有实际来源');
  if(!connections.pairs.some(p=>p.quality>=.56))gaps.push('暂无已核对的专属联动，主要按共同职责或有条件接控估算，需约定共同目标。');
- if(laneCount<known)gaps.push('存在非常规分路，需另外确认对线与经济分配。');
+ if(laneCount<positioned.length)gaps.push('存在非常规分路，需另外确认对线与经济分配。');
+ if(positioned.length<known)gaps.push(`${known-positioned.length} 位公开队友分路未知：只参考英雄特征，不计其分路可执行分。`);
  if(known<requested)gaps.push(`仅 ${known}/${requested} 位成员有已核对资料，其余不按已有配合计分。`);
  const labels={connections:'成员衔接',lanes:'分路可执行',tactics:'共同战术',damage:'伤害来源'};
  const breakdown=Object.entries(weights).map(([key,max])=>({key,label:labels[key],points:round(max*components[key]),max}));

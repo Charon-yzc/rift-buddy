@@ -40,7 +40,7 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
   });
   const t=lead.curated;
   const loadoutGroup=t?{id:t.id,kind:'trio',reviewedAt:t.reviewedAt,early:t.early,economy:t.economy,sources:t.sources||[],members:t.members.map(m=>({role:m.role,champion:m.champion,loadoutId:m.loadoutId||'default'}))}:null;
-  return {id:lead.id,label:lead.actors.map(name).join(' / '),tempo:lead.curated?.tempo||lead.edge?.tempo||'teamfight',step:lead.step,condition:lead.condition,failure:lead.failure,memberJobs:jobs,...(loadoutGroup?{loadoutGroup}:{})};
+  return {id:lead.id,label:members.filter(m=>lead.actors.includes(m.champion)).map(m=>name(m.champion)).join(' / '),tempo:lead.curated?.tempo||lead.edge?.tempo||'teamfight',step:lead.step,condition:lead.condition,failure:lead.failure,memberJobs:jobs,...(loadoutGroup?{loadoutGroup}:{})};
  });
  const tactical=tacticalCooperationPlan(members,graph,{tempo:requestedTempo});
  const tacticalRoutes=['poke','protect','growth'].map(mode=>({mode,plan:tacticalCooperationPlan(members,graph,{tempo:mode})})).filter(({mode,plan})=>plan?.tempo===mode).map(({plan})=>plan);

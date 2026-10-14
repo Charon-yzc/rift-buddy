@@ -1,7 +1,7 @@
 import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES, profile,conventionalRole } from './rules.mjs';
 import {draftTargets,scopeSlots,effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {recommendationDraft} from './draft-intents.mjs';
-import {clientContextDraft} from './client-context-draft.mjs';
+import {clientContextDraft,publicAllyIds} from './client-context-draft.mjs';
 export {clearClientPicks} from './draft.mjs';
 import {comboLoadout,loadoutOptions} from './loadouts.mjs';
 import {generateCreativeTrios} from './creative-trios.mjs';
@@ -46,12 +46,15 @@ export function validateSlots(slots, champions) {
 }
 export function analyzeTeam(slots, champions, context,scoreOnly=false) {
  const byId=context?.byId||new Map(champions.map(c=>[c.id,c]));
+ const represented=new Set(slots.map(s=>s.champion));
+ const knownAllies=[...new Set(context?.publicAllies||[])].filter(id=>byId.has(id)&&!represented.has(id));
+ const analyzed=[...slots,...knownAllies.map(champion=>({champion,role:'',party:false,positionUnknown:true}))];
  const getProfile=s=>{
   const key=`${s.champion}:${s.role}`;
   if(context?.profiles?.has(key))return context.profiles.get(key);
   const value=profile(byId.get(s.champion),s.role);context?.profiles?.set(key,value);return value;
  };
- const members=slots.filter(s=>byId.has(s.champion)).map(s=>{const c=byId.get(s.champion),base=getProfile(s),combo=currentCombo(slots,c.id,s.role,context?.catalogStatus,context?.comboCache);
+ const members=analyzed.filter(s=>byId.has(s.champion)).map(s=>{const c=byId.get(s.champion),base=getProfile(s),combo=s.positionUnknown?null:currentCombo(slots,c.id,s.role,context?.catalogStatus,context?.comboCache);
   const loadoutId=comboLoadout(combo,c,s.role),cacheKey=loadoutId?c.id+':'+s.role+':'+loadoutId:null;
   let loadout;
   if(cacheKey){
@@ -255,14 +258,15 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null}) {
+export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null}) {
  if(Array.isArray(slots)&&slots.every(s=>s&&typeof s==='object'))slots=clientContextDraft(slots,champions,clientSession,{scope:effectiveDraftScope(slots,scope),soloRole,bans:publicBans,eligibleByRole});
  validateSlots(slots,champions);
  scope=effectiveDraftScope(slots,scope);
+ publicAllies=['context','solo'].includes(scope)?publicAllyIds(clientSession,champions).concat(publicAllies):[];
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
-  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession};
+  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession};
   const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
   if(!targets.length){
    return recommend({...options,clientSession:null,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
@@ -281,7 +285,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // Profiles are constant for one calculation; reuse them across the search beam.
  // Visibility affects fit in every draft; `enemy` separately controls which
  // heroes cannot be selected. Keep the legacy argument as the default.
- const context={byId:new Map(champions.map(c=>[c.id,c])),profiles:new Map(),pool:new Set(heroPool),poolMode,scope,play,rolePools,catalogStatus,enemyTraits:summarizeEnemyTraits(visibleEnemies,champions),comboCache:new Map(),scoreCache:new Map(),comboLoadouts:new Map()};
+ const context={byId:new Map(champions.map(c=>[c.id,c])),publicAllies,profiles:new Map(),pool:new Set(heroPool),poolMode,scope,play,rolePools,catalogStatus,enemyTraits:summarizeEnemyTraits(visibleEnemies,champions),comboCache:new Map(),scoreCache:new Map(),comboLoadouts:new Map()};
  context.cooperationGraph=createCooperationGraph(champions);
  context.pairStatistics=createPairStatisticsIndex(pairStatistics,champions,{source:buildSource,patch});
  // Rune-page samples are used only as a coarse position-frequency signal.
@@ -316,7 +320,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  }
  const fixed=slots.map(s=>{if(!targets.includes(s.role))return {...s};const {clientCellId,manualPosition,...draft}=s;return {...draft,champion:null};});
  if(poolMode==='only'&&!heroPool.some(id=>context.byId.has(id)))throw Error('先添加英雄池，或切换为“全部英雄”');
- const blocked=new Set([...excluded,...publicBans,...enemy.filter(Boolean),...publicPicks.filter(id=>context.byId.has(id)),...fixed.map(s=>s.champion).filter(Boolean)]);
+ const blocked=new Set([...excluded,...publicBans,...enemy.filter(Boolean),...publicPicks.filter(id=>context.byId.has(id)),...publicAllies.filter(id=>context.byId.has(id)),...fixed.map(s=>s.champion).filter(Boolean)]);
  const {byId}=context;
  const supportedBySource=new Set((Array.isArray(sourceRoles)?sourceRoles:[]).filter(r=>byId.has(r?.champion)&&ROLES.some(role=>role.id===r.role)).map(r=>r.champion+':'+r.role));
  const candidateSets={};
