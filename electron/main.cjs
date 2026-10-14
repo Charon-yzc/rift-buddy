@@ -402,7 +402,13 @@ async function boot(){
    // Protect accepted picks from this game, after the queued merge. A renderer
    // base from the previous game must not block releasing its old lane binding.
    const accepted=reconcileClientDraft(current.draft,gameId,current.guide?.match?.gameId).draft;
-   if(latestClient.connected&&latestClient.phase==='ChampSelect'&&merged.draft)for(const player of latestClient.session?.myTeam||[]){const id=data.champions.find(c=>c.key===Number(player.championId))?.id;if(id&&accepted?.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id)&&!merged.draft.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id&&s.locked))throw Error('客户端已选英雄不能移除或解锁，请同步后调整位置。');}
+   if(latestClient.connected&&latestClient.phase==='ChampSelect'&&merged.draft)for(const player of latestClient.session?.myTeam||[]){
+    // Some blind-pick clients put an unlocked hover in championId. The local
+    // player can compare another choice; teammate and locked picks stay fixed.
+    const actions=(latestClient.session.actions||[]).flat().filter(a=>a.type==='pick'&&a.actorCellId===player.cellId);
+    if(player.cellId===latestClient.session.localPlayerCellId&&player.pickState!=='locked'&&actions.length===1&&actions[0].completed===false)continue;
+    const id=data.champions.find(c=>c.key===Number(player.championId))?.id;if(id&&accepted?.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id)&&!merged.draft.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id&&s.locked))throw Error('客户端已选英雄不能移除或解锁，请同步后调整位置。');
+   }
    return merged;
   },sender);
    // Turning the switch (or client sync) off must not leave a room behind:

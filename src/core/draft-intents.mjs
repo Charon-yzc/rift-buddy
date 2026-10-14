@@ -1,6 +1,26 @@
 import {CLIENT_POSITION_ROLES,manualPlayerSlot} from './draft.mjs';
 import {profile,ROLES} from './rules.mjs';
 
+export function localPickLocked(session){
+ const own=session?.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
+ return !!own&&(own.pickState==='locked'||(session.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===own.cellId&&a.completed===true));
+}
+
+// Search-only copy. An unlocked local hover can be replaced while the actual
+// client, all teammates and the user's explicit lane remain untouched.
+export function editableLocalDraft(slots,session,champions,ownRole=''){
+ const own=session?.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
+ const action=(session?.actions||[]).flat().find(a=>a.type==='pick'&&a.actorCellId===own?.cellId);
+ if(!own||localPickLocked(session)||own.championId&&action?.completed!==false)return {slots,session};
+ const id=champions.find(c=>c.key===Number(own.championId||own.championPickIntent))?.id;
+ const role=manualPlayerSlot(slots,own.cellId)?.role||ownRole||CLIENT_POSITION_ROLES[String(own.assignedPosition||'').toUpperCase()];
+ if(!role)return {slots,session};
+ return {slots:slots.map(slot=>{
+  if(slot.role!==role||Number.isInteger(slot.clientCellId)&&slot.clientCellId!==own.cellId||slot.champion&&slot.champion!==id)return slot;
+  const {publicIntent,...rest}=slot;return {...rest,champion:null,locked:false};
+ }),session:{...session,myTeam:session.myTeam.map(p=>p===own?{...p,championId:0,championPickIntent:0}:p)}};
+}
+
 // Comparing another proposal must not erase the adopted lineup. Release only
 // the assistant's prospective members in this temporary search input; explicit
 // user choices and public client picks still constrain every candidate.

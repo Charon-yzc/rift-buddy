@@ -8,6 +8,15 @@ const selection=(gameId='777',cellId=0)=>({context:{...context(gameId,cellId),ch
 const complete=()=>({complete:true,steps:Object.fromEntries(['hover','runes','spells','items'].map(k=>[k,{status:'done'}]))});
 function ready(options){const ledger=createPreparationLedger(options);ledger.observe(client());return ledger;}
 
+test('lane-claim intent reaches both windows before the hover, remains replayable and clears on a full preparation',()=>{
+ const ledger=ready(),value={...selection(),preselectOnly:true};
+ const started=ledger.begin('selection',{value,selection:{id:'Ashe',role:'bottom',mode:'rift'},context:value.context});
+ assert.deepEqual(started.event.positionClaim,{...context(),championId:22,role:'bottom',pending:true});
+ const done=ledger.finish(started.token,{result:{complete:true,preselectOnly:true,steps:{hover:{status:'done'},runes:{status:'skipped'},spells:{status:'skipped'},items:{status:'skipped'}}}});
+ assert.equal(done.value.preselectOnly,true);assert.equal(ledger.snapshot().events.at(-1).value.preselectOnly,true);
+ const full=ledger.begin('selection',{value:{...value,preselectOnly:false},context:value.context});assert.equal(full.event.positionClaim,null);
+});
+
 test('snapshot starts unknown, retains only a known current game and cell, and never stores client credentials',()=>{
  const ledger=createPreparationLedger();assert.deepEqual(ledger.snapshot(),{context:null,revision:0,events:[]});
  assert.equal(ledger.observe({connected:false}),null);
