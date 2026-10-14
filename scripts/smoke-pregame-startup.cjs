@@ -236,7 +236,7 @@ async function run(){
   await until(async()=>(await state()).preferences.autoArrange===false,'Disabling automatic placement did not persist');await click(side,'[data-action=close]');
   unknownAllyRoles=true;await resetRound(430);
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo candidates missing without inferred ally lanes');
-  await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .lineup-fit")].every(el=>/契合 \d+/.test(el.querySelector("summary")?.textContent)&&/4 位公开队友分路未知/.test(el.textContent))'),'Public unplaced allies did not contribute to visible team fit');
+  await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .lineup-fit")].every(el=>/契合 [0-9]+/.test(el.querySelector("summary")?.textContent)&&/4 位公开队友分路未知/.test(el.textContent))'),'Public unplaced allies did not contribute to visible team fit');
   await until(async()=>(await state()).draft.slots.filter(s=>s.role!=='bottom').every(s=>!s.champion),'Unknown public ally lanes were invented');
   await capture(side,'solo-public-allies-unplaced.png');
   const before=attempts.length;await click(side,'.companion-candidate [data-action=companion-preview]');
