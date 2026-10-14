@@ -1,11 +1,15 @@
-import {recommendationDraft} from './draft-intents.mjs';
-import {CLIENT_POSITION_ROLES} from './draft.mjs';
+import {recommendationDraft,editableLocalDraft} from './draft-intents.mjs';
+import {CLIENT_POSITION_ROLES,manualPlayerSlot} from './draft.mjs';
 
 // A saved offline lineup is editable planning, not evidence of this client's
 // teammates. Normalize only the temporary whole-team recommendation input;
 // keep the user's controllable picks and every explicit position untouched.
 export function clientContextDraft(slots,champions,clientSession,{scope='context',soloRole='',bans=[],eligibleByRole={}}={}){
  if(!Array.isArray(clientSession?.myTeam)||!['context','solo'].includes(scope))return slots;
+ const localRole=manualPlayerSlot(slots,clientSession.localPlayerCellId)?.role||soloRole||CLIENT_POSITION_ROLES[String(clientSession.myTeam.find(p=>p.cellId===clientSession.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
+ if(scope==='context'&&slots.filter(slot=>slot.party).length===1&&slots.find(slot=>slot.party)?.role===localRole){
+  ({slots,session:clientSession}=editableLocalDraft(slots,clientSession,champions,localRole));
+ }
  const byId=new Map(champions.map(c=>[c.id,c])),team=clientSession.myTeam;
  const controlled=slot=>scope==='solo'?soloRole?slot.role===soloRole:Number.isInteger(clientSession.localPlayerCellId)&&slot.clientCellId===clientSession.localPlayerCellId:slot.party;
  const next=slots.map(slot=>{

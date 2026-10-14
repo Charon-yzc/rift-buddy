@@ -36,7 +36,8 @@ module.exports.createPreparationLedger=function createPreparationLedger({limit=6
    const bound=kind==='items'?context:same(contextOf(payload.context||payload.value?.context),context)?context:null;
    for(const step of affects)latest[step]=operationId;
    const token={kind,operationId,epoch,context:copy(bound),payload:copy(payload)};
-   const event=record({kind:'invalidate',operation:kind,operationId,context:copy(context),ledgerContext:copy(context),affects,reset:false,reason:kind+'-started'},!!context);
+   const positionClaim=kind==='selection'&&payload.value?.preselectOnly&&bound?{...copy(bound),championId:payload.value.championId,role:payload.value.role,pending:true}:null;
+   const event=record({kind:'invalidate',operation:kind,operationId,context:copy(context),ledgerContext:copy(context),affects,reset:false,reason:kind+'-started',...(kind==='selection'?{positionClaim}:{})},!!context);
    return {token,event};
   },
   finish(token,payload={}){

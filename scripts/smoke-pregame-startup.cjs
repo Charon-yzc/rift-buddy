@@ -12,13 +12,16 @@ const handle=ipcMain.handle.bind(ipcMain);
 ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(name==='prepare-selection')attempts.push(structuredClone(args[1]));const result=await handler(...args);if(name==='prepare-selection')results.push(structuredClone(result));return result;});};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label,timeout=18000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await check())return;await delay(100);}throw Error(label);}
-async function checkpoint(name,run){try{await run();checks.push({name,passed:true});}catch(error){checks.push({name,passed:false,message:error.message});console.error('FAIL '+name+': '+error.message);}}
+async function checkpoint(name,run){try{await run();checks.push({name,passed:true});}catch(error){
+ const ui=await Promise.all(windows.filter(window=>!window.isDestroyed()).map(async window=>({url:window.webContents.getURL(),details:await window.webContents.executeJavaScript('({toast:document.querySelector("#toast")?.textContent,activeTab:document.querySelector(".companion-tabs .active")?.textContent})').catch(()=>null)})));
+ checks.push({name,passed:false,message:error.message,ui});console.error('FAIL '+name+': '+error.message+' '+JSON.stringify(ui));
+}}
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(champion=>champion.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json')));
  assert.equal(initial.preferences.autoSync,true);assert.equal(initial.preferences.clickPrepare,true);assert.equal(initial.draft.playerPosition,undefined);assert.equal(initial.draft.soloRole,'');assert.equal(initial.draft.slots.filter(slot=>slot.champion).length,5,'Startup fixture needs a saved local lineup on every lane');
- let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4;
+ let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4,soloParty=false;
  let page={id:44,name:'Synthetic editable page',isEditable:true,isActive:true,current:true};
  const ownIdentity={puuid:'startup-synthetic-own-identity',summonerId:530001,gameName:'合成测试本人',tagLine:'TEST'},friendIdentity={puuid:'startup-synthetic-friend-identity',summonerId:530002,gameName:'合成测试队友',tagLine:'TEST'};
  const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:0,championPickIntent:friendIntent,assignedPosition:friendAssigned,...friendIdentity},{cellId:1,championId:0,championPickIntent:0,assignedPosition:''},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:ownAssigned,spell1Id,spell2Id,...ownIdentity},{cellId:3,championId:0,championPickIntent:0,assignedPosition:''},{cellId:4,championId:0,championPickIntent:0,assignedPosition:''}],theirTeam:[],actions:[[{id:22,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',adjustedTimeLeftInPhase:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
@@ -29,8 +32,12 @@ async function run(){
   if(method==='GET'){
    if(route==='/lol-gameflow/v1/gameflow-phase')return phase;
    if(route==='/lol-gameflow/v1/session')return {gameData:{gameId:phase==='ChampSelect'?gameId:0,mapId:11,isCustomGame:queueId===0,queue:{id:queueId,gameMode:queueId===0?'':'CLASSIC'}},map:{id:11,gameMode:'CLASSIC'}};
-   if(route==='/lol-lobby/v2/lobby')return {localMember:{...ownIdentity,isLeader:true},members:[{...ownIdentity,isLeader:true},friendIdentity]};
-   if(route==='/lol-champ-select/v1/session')return rawSession();
+   if(route==='/lol-lobby/v2/lobby')return {localMember:{...ownIdentity,isLeader:true},members:[{...ownIdentity,isLeader:true},...(!soloParty?[friendIdentity]:[])]};
+   if(route==='/lol-champ-select/v1/session'){
+    const snapshot=rawSession();
+    if(soloParty)for(const player of snapshot.myTeam){const ally={0:['Braum','UTILITY'],1:['Garen','TOP'],3:['Vi','JUNGLE'],4:['Ahri','MIDDLE']}[player.cellId];if(ally){player.championId=hero(ally[0]).key;player.assignedPosition=ally[1];}}
+    return snapshot;
+   }
    if(route.endsWith('/pickable-champion-ids'))return data.champions.map(champion=>champion.key);
    if(route.endsWith('/disabled-champion-ids'))return [];
    if(route==='/lol-perks/v1/pages')return [page];
@@ -146,13 +153,15 @@ async function run(){
  for(const nextQueue of [430,0]){
   await resetRound(nextQueue);
   await checkpoint('explicit-lane-preselection-queue-'+nextQueue,async()=>{
-   for(const [role,id]of [['top','Garen'],['mid','Ahri'],['jungle','LeeSin']]){
+   for(const [role,id]of [['top','Gnar'],['mid','Ahri'],['jungle','Hecarim']]){
     if(role==='jungle'){picked=hero('Ahri').key;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championId===picked&&!snapshot.session.actions.flat().find(action=>action.actorCellId===2)?.completed);}
-    const before=attempts.length,writeBefore=writes.length;await change(side,'#solo-role',role);
+    const before=attempts.length,writeBefore=writes.length;await change(role==='mid'?main:side,'#solo-role',role);
     await until(()=>intent===hero(id).key,'Explicit '+role+' lane did not replace the unlocked hover in queue '+nextQueue,7000);
     await until(()=>results.length===attempts.length,'Lane preselection did not settle');assert.equal(attempts.length-before,1,'Changing one lane must make one explicit preselection API call');assert.equal(attempts.at(-1).preselectOnly,true);assert.equal(attempts.at(-1).role,role);assert.equal(results.at(-1).steps.hover.status,'done','Lane replacement was not confirmed by the client');
-    await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'Successful lane preselection did not open configuration');
-    await until(()=>js(side,'JSON.parse(document.querySelector("[data-client-preparation-fingerprint]")?.dataset.clientPreparationFingerprint||"[{}]")[0].champion==='+JSON.stringify(id)),'Lane preselection opened a different hero configuration');
+    await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'Lane preselection left recommendations');
+    await until(()=>js(main,'!!document.querySelector(".draft-compare-workspace")'),'The other window treated a lane claim as a complete configuration');
+    await delay(450);assert.equal(await js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),true,'A later client/receipt event reopened configuration for a lane claim');
+    assert.equal(await js(side,'!!document.querySelector(".companion-persistent .preparation-task")'),false,'A lane placeholder must not push candidates down with a configuration card');
     const changed=writes.slice(writeBefore);assert.equal(changed.length,1,'Lane claim unexpectedly applied a full configuration');assert.equal(changed[0].route,'/lol-champ-select/v1/session/actions/22');assert.equal(changed[0].body.completed,false);
     await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championPickIntent===intent);
    }
@@ -193,6 +202,27 @@ async function run(){
   const saved=await state();assert.ok(saved.draft.creativePlan,'Automatic range recomputation discarded the just-adopted party plan');
   assert.equal(saved.draft.playerPosition?.role,'mid');assert.equal(spell2Id,4);
   for(const member of candidate.members)assert.ok(saved.draft.slots.some(slot=>slot.party&&slot.role===member.role&&slot.champion===member.id),'The explicit click lost a member of its adopted plan');
+ });
+ soloParty=true;ownAssigned='BOTTOM';await resetRound(430);
+ await checkpoint('solo-party-composition-recommendations-after-lane-claim',async()=>{
+  await until(async()=>(await state()).draft.slots.filter(slot=>slot.party).length===1,'Solo queue kept a multi-person recommendation range');
+  await change(side,'#solo-role','bottom');await until(()=>intent===hero('Jinx').key&&results.length===attempts.length,'Solo lane claim did not settle');
+  await click(side,'[data-action=draft-scope][data-scope=party]');
+  await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo composition recommendations are missing');
+  await until(()=>js(main,'document.querySelectorAll(".result-card").length>=2'),'Main solo composition recommendations are missing');
+  for(const [window,selector] of [[side,'.companion-candidate'],[main,'.result-card']]){
+   const candidates=await js(window,'[...document.querySelectorAll('+JSON.stringify(selector)+')].map(card=>({members:[...card.querySelectorAll(".candidate-members [data-role]")].map(el=>({id:el.dataset.id,role:el.dataset.role})),fit:card.querySelector(".lineup-fit summary")?.textContent}))');
+   assert.ok(candidates.every(row=>row.members.length===1&&row.members[0].role==='bottom'),'Only the local lane may change');
+   assert.ok(new Set(candidates.flatMap(row=>row.members.map(m=>m.id))).size>=2,'Solo candidates all repeat the placeholder');
+   assert.ok(candidates.every(row=>/契合 \d+/.test(row.fit)&&!/冲突/.test(row.fit)),'Known allies should produce a composition fit, not a hover conflict');
+  }
+  const before=attempts.length,candidate=await js(side,'(()=>{const el=[...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].find(el=>el.dataset.id!=="Jinx");return {id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex};})()');
+  assert.equal(await js(side,'!!document.querySelector(".companion-persistent .preparation-task")'),false);
+  await capture(side,'solo-composition-candidates.png');
+  await click(side,'.companion-candidate [data-id='+candidate.id+'][data-role='+candidate.role+'][data-result-index="'+candidate.index+'"]');
+  await until(()=>results.length===before+1,'Selecting a solo candidate did not apply it');assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
+  await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'Selecting an actual candidate did not open configuration');
+  const allies=(await state()).draft.slots.filter(slot=>slot.role!=='bottom').map(slot=>slot.champion).sort();assert.deepEqual(allies,['Ahri','Braum','Garen','Vi']);assert.equal(spell2Id,4);
  });
  assert.ok(windows.every(window=>window.isDestroyed()||!window.isVisible()),'Smoke windows must stay hidden');
  report={...report,checks,passed:checks.every(check=>check.passed),source,archiveSha256:release?.archiveSha256||null,autoSync:true,manualSyncClicks:0,syntheticLcuOnly:true,observerMocked:true,actualRuneWrites:0,mockedWrites:writes.map(write=>({route:write.route,method:write.method})),preparationApiCalls:attempts.length};

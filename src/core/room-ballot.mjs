@@ -5,6 +5,7 @@ import {createCooperationGraph} from './cooperation.mjs';
 import {compositionFit} from './composition-fit.mjs';
 import {effectiveDraftScope} from './draft.mjs';
 import {clientContextDraft} from './client-context-draft.mjs';
+import {editableLocalDraft} from './draft-intents.mjs';
 
 // A lobby proposal survives entering that draft, but never carries into the
 // next game. Unknown/disconnected reads alone are not a new round.
@@ -45,6 +46,10 @@ export function fitLineupSlots(lineup,current,{scope='party',soloRole=''}={}){
 
 export function lineupFit(lineup,current,champions,options={}){
  if(typeof options==='string')options={scope:options};
+ if(options.editableRoles?.length){
+  const cellId=options.clientSession?.localPlayerCellId,role=(Number.isInteger(cellId)?current.find(s=>s.clientCellId===cellId)?.role:'')||options.soloRole;
+  if(options.editableRoles.includes(role)){const editable=editableLocalDraft(current,options.clientSession,champions,role);current=editable.slots;options={...options,clientSession:editable.session};}
+ }
  current=clientContextDraft(current,champions,options.clientSession,{scope:effectiveDraftScope(current,options.scope||'party'),soloRole:options.soloRole||''});
  const context=options.context||fitContext(champions),range=fitLineupSlots(lineup,current,options);
  const fixed=current.filter(s=>range.controlledRoles.includes(s.role)&&s.champion&&(Number.isInteger(s.clientCellId)||s.manualPosition||s.publicIntent||s.locked&&!s.automaticPosition));

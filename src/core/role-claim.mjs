@@ -1,6 +1,23 @@
-// Recognisable lane representatives, curated for claiming a lane, not a tier list.
-export const ROLE_REPRESENTATIVES=Object.freeze({top:['Garen','Darius','Malphite','Sett','Renekton'],jungle:['LeeSin','MasterYi','XinZhao','JarvanIV','Amumu'],mid:['Ahri','Annie','Lux','Yasuo','Veigar'],bottom:['Ashe','Jinx','Caitlyn','MissFortune','Ezreal'],support:['Yuumi','Lulu','Nami','Leona','Nautilus']});
-export function roleClaimChoice(client,role,champions){
+import {validRankingReference} from './rankings.mjs';
+import {localPickLocked} from './draft-intents.mjs';
+
+// Offline fallback: OP.GG 16.20 global Gold+, checked 2026-10-14.
+// Rank by this champion's role share, never by win rate or lane popularity.
+export const ROLE_REPRESENTATIVES=Object.freeze({top:['Gnar','Illaoi','Fiora','KSante','Urgot'],jungle:['Hecarim','Khazix','Belveth','Lillia','Graves'],mid:['Ahri','Vex','Kassadin','Orianna','Azir'],bottom:['Jinx','Xayah','Yunara','Samira','Aphelios'],support:['Nami','Yuumi','Milio','Braum','Thresh']});
+export function roleRepresentatives(role,champions,{rankings={},patch}={}){
+ const fallback=ROLE_REPRESENTATIVES[role]||[],ref=rankings[`${patch}:global:gold_plus`];
+ if(!validRankingReference(ref,{champions,patch}))return [...fallback];
+ // Avoid a rare off-meta sample claiming perfect exclusivity. Five stable
+ // recognisable choices are preferable to filling a new patch's missing rows.
+ const candidates=(ref.boards[role]||[]).filter(r=>r.samples>=1000&&r.pickRate>=.01&&r.roleRate>=.85)
+  .sort((a,b)=>b.roleRate-a.roleRate||b.samples-a.samples||a.champion.localeCompare(b.champion));
+ return candidates.length>=5?candidates.slice(0,5).map(r=>r.champion):[...fallback];
+}
+export function activeRoleClaim(claim,client){
+ const session=client?.session,own=session?.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
+ return !!claim&&client.connected&&client.phase==='ChampSelect'&&String(session?.gameId||client.game?.gameId||'')===claim.gameId&&own?.cellId===claim.cellId&&!localPickLocked(session)&&Number(own.championId||own.championPickIntent)===claim.championId;
+}
+export function roleClaimChoice(client,role,champions,data={}){
  const unavailable=reason=>({champion:null,reason});
  if(!ROLE_REPRESENTATIVES[role])return unavailable('请选择预选位置');
  if(!client?.connected)return unavailable('未连接客户端，连接后才能预选英雄');
@@ -15,7 +32,7 @@ export function roleClaimChoice(client,role,champions){
  if(!Array.isArray(selectable))return unavailable('尚未取得可选英雄，请重新同步');
  const taken=[...(client.session.myTeam||[]).filter(p=>p.cellId!==own.cellId),...(client.session.allowDuplicatePicks===false?client.session.theirTeam||[]:[])].flatMap(p=>[p.championId,p.championPickIntent]);
  const blocked=[...disabled,...(client.session.bans||[]),...taken];
- const champion=ROLE_REPRESENTATIVES[role].find(id=>{const key=champions.find(c=>c.id===id)?.key;return key&&selectable.some(v=>Number(v)===key||v===id)&&!blocked.some(v=>Number(v)===key||v===id);});
+ const champion=roleRepresentatives(role,champions,data).find(id=>{const key=champions.find(c=>c.id===id)?.key;return key&&selectable.some(v=>Number(v)===key||v===id)&&!blocked.some(v=>Number(v)===key||v===id);});
  return champion?{champion,reason:''}:unavailable('这路的常见占位英雄本局均不可选，请直接选其他英雄');
 }
 export function roleClaimChampion(client,role,champions){return roleClaimChoice(client,role,champions).champion;}
