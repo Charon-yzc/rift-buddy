@@ -7,7 +7,7 @@ import {CLIENT_POSITION_ROLES,manualPlayerSlot} from './draft.mjs';
 export function clientContextDraft(slots,champions,clientSession,{scope='context',soloRole='',bans=[],eligibleByRole={}}={}){
  if(!Array.isArray(clientSession?.myTeam)||!['context','solo'].includes(scope))return slots;
  const localRole=manualPlayerSlot(slots,clientSession.localPlayerCellId)?.role||soloRole||CLIENT_POSITION_ROLES[String(clientSession.myTeam.find(p=>p.cellId===clientSession.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
- if(scope==='context'&&slots.filter(slot=>slot.party).length===1&&slots.find(slot=>slot.party)?.role===localRole){
+ if(localRole&&(scope==='solo'||scope==='context'&&slots.filter(slot=>slot.party).length===1&&slots.find(slot=>slot.party)?.role===localRole)){
   ({slots,session:clientSession}=editableLocalDraft(slots,clientSession,champions,localRole));
  }
  const byId=new Map(champions.map(c=>[c.id,c])),team=clientSession.myTeam;

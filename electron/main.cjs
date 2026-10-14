@@ -155,13 +155,13 @@ async function boot(){
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));publishWindows('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
- const getGuideModel=()=>{const m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,currentGuideSelection());if(m){const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
+ const getGuideModel=()=>{const selection=currentGuideSelection(),m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,selection);if(m){const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
  const recommendationCore=await import('../src/core/recommend.mjs');
  const {publicClientGameId,reconcileClientDraft}=await import('../src/core/draft.mjs');
  const {creativeComboContext}=await import('../src/core/creative-plan.mjs');
  const {mergeConfiguration,storedPreparation,upsertPreparation,preparationIdentity}=await import('../src/core/preparation.mjs');let guideRevision=0;
  const {isFreshBuildReference,rankedClientRoles}=await import('../src/core/builds.mjs');
- const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker();
+ const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker({flashId:Number(data.spells.SummonerFlash.key)});
  const {createOpponentFocusTracker}=await import('../src/core/opponent-focus.mjs');const opponentFocus=createOpponentFocusTracker({newToken:require('node:crypto').randomUUID});
  const currentGuideSelection=()=>{
   const own=currentGame.current(latestClient,latestLive,data.champions,state.draft?.slots||[]);if(!own)return null;

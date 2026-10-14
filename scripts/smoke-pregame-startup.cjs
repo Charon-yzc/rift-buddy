@@ -149,7 +149,7 @@ async function run(){
   await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championId===picked&&snapshot.session.actions.flat().some(action=>action.actorCellId===2&&action.completed));
   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'Locking the same hovered champion did not reopen configuration');assert.equal(attempts.length,before,'A player locking their champion caused another automatic configuration write');
  });
- const resetRound=async nextQueue=>{phase='Lobby';queueId=nextQueue;intent=0;picked=0;friendIntent=0;completed=false;await fresh(snapshot=>snapshot.phase==='Lobby');gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId)&&Number(snapshot.game.queueId)===queueId);await until(()=>{side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));return side;},'Automatic sidebar missing after new round');await until(()=>js(side,'!!document.querySelector(".companion-shell")'),'New-round sidebar did not load');await click(side,'[data-action=companion-tab][data-tab=recommend]');await until(()=>js(side,'!!document.querySelector("#solo-role")'),'Role picker missing after new round');};
+ const resetRound=async nextQueue=>{phase='Lobby';queueId=nextQueue;intent=0;picked=0;friendIntent=0;completed=false;await fresh(snapshot=>snapshot.phase==='Lobby');gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId)&&Number(snapshot.game.queueId)===queueId);await until(()=>{side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));return side;},'Automatic sidebar missing after new round');await until(()=>js(side,'!!document.querySelector(".companion-shell")'),'New-round sidebar did not load');await until(()=>js(side,'(()=>{const scope=document.querySelector(".companion-content")?.dataset.focusScope;return !!scope&&String(JSON.parse(scope)[2])==='+JSON.stringify(String(gameId))+';})()'),'Sidebar did not observe the new game before the next click');await click(side,'[data-action=companion-tab][data-tab=recommend]');await until(()=>js(side,'!!document.querySelector("#solo-role")'),'Role picker missing after new round');};
  for(const nextQueue of [430,0]){
   await resetRound(nextQueue);
   await checkpoint('explicit-lane-preselection-queue-'+nextQueue,async()=>{
@@ -207,6 +207,10 @@ async function run(){
  await checkpoint('solo-party-composition-recommendations-after-lane-claim',async()=>{
   await until(async()=>(await state()).draft.slots.filter(slot=>slot.party).length===1,'Solo queue kept a multi-person recommendation range');
   await change(side,'#solo-role','bottom');await until(()=>intent===hero('Jinx').key&&results.length===attempts.length,'Solo lane claim did not settle');
+  picked=intent;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(p=>p.cellId===2)?.championId===picked);
+  await click(side,'[data-action=draft-scope][data-scope=solo]');
+  await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Explicit solo mode treated an unlocked public championId as a completed pick');
+  assert.ok((await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members [data-role]")].map(el=>el.dataset.role)')).every(role=>role==='bottom'));
   await click(side,'[data-action=draft-scope][data-scope=party]');
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo composition recommendations are missing');
   await until(()=>js(main,'document.querySelectorAll(".result-card").length>=2'),'Main solo composition recommendations are missing');
@@ -223,6 +227,19 @@ async function run(){
   await until(()=>results.length===before+1,'Selecting a solo candidate did not apply it');assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'Selecting an actual candidate did not open configuration');
   const allies=(await state()).draft.slots.filter(slot=>slot.role!=='bottom').map(slot=>slot.champion).sort();assert.deepEqual(allies,['Ahri','Braum','Garen','Vi']);assert.equal(spell2Id,4);
+ });
+ await checkpoint('default-client-flash-key-persists-in-guide-through-loading',async()=>{
+  completed=true;picked=intent||picked;intent=0;await fresh(snapshot=>snapshot.session.actions.flat().find(a=>a.actorCellId===2)?.completed);
+  const ownId=data.champions.find(c=>c.key===picked).id;
+  await js(side,'window.buddy.openGuide({id:'+JSON.stringify(ownId)+',role:"bottom",mode:"rift"})');
+  let guide;await until(()=>{guide=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide window missing');
+  await until(()=>js(guide,'!!window.guide'),'Guide preload missing');
+  for(const nextPhase of ['ChampSelect','GameStart']){
+   if(nextPhase==='GameStart'){phase=nextPhase;await fresh(snapshot=>snapshot.phase==='GameStart');}
+   const snapshot=await js(guide,'window.guide.bootstrap()');
+   assert.equal(snapshot.model.summoners[1].id,'SummonerFlash','The guide moved default Flash F in '+nextPhase);
+   assert.equal(snapshot.model.selection.summonerIds,undefined,'The current client key must remain a per-game observation');
+  }
  });
  assert.ok(windows.every(window=>window.isDestroyed()||!window.isVisible()),'Smoke windows must stay hidden');
  report={...report,checks,passed:checks.every(check=>check.passed),source,archiveSha256:release?.archiveSha256||null,autoSync:true,manualSyncClicks:0,syntheticLcuOnly:true,observerMocked:true,actualRuneWrites:0,mockedWrites:writes.map(write=>({route:write.route,method:write.method})),preparationApiCalls:attempts.length};

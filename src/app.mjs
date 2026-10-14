@@ -174,8 +174,9 @@ function resultCreativePlan(result){const plan=captureCreativePlan(result,data);
 function reconcileCreativePlan({ownIntentChanged=false}={}){
  // The accepted candidate may intentionally differ from our previous hover.
  // An unrelated client-side hover takes precedence even during preparation.
- const session=client.connected&&client.session?!ownIntentChanged?editableLocalDraft(slots,client.session,data.champions,taskOwnRole()).session:client.session:null;
- const context=recommendationDraft(slots,session,data.champions,{ownRole:taskOwnRole()});
+ let base=slots,session=client.connected?client.session:null;
+ if(!ownIntentChanged)({slots:base,session}=editableLocalDraft(base,session,data.champions,taskOwnRole()));
+ const context=recommendationDraft(base,session,data.champions,{ownRole:taskOwnRole()});
  const considered=scopeSlots(slots,effectiveDraftScope(slots,scope));
  if(activeCreativePlan&&(!creativePlanCompatible(activeCreativePlan,context)||activeCreativePlan.members.some(m=>!considered.some(s=>s.role===m.role)))){
   if(lastTaskSelection?.comboId===activeCreativePlan.id)lastTaskSelection=null;
@@ -301,7 +302,15 @@ function restoreRejectedSave(before,failed){
  restoringSave=true;try{render();if(buildView)renderBuild();}finally{restoringSave=false;}
 }
 function persist({throwOnError=false,derived=false}={}){
- saved.draft={slots,style,scope,soloRole,...(activeCreativePlan&&creativePlanCompatible(activeCreativePlan,slots)?{creativePlan:activeCreativePlan}:{}),...(saved.draft?.clientGameId?{clientGameId:saved.draft.clientGameId}:{}),...(saved.draft?.playerPosition?{playerPosition:saved.draft.playerPosition}:{})};saved.preferences.style=style;saved.preparations=preparations.snapshot();
+ // A new proposal can precede its explicit client hover. Keep the plan while
+ // leaving that replaceable local pick unknown in its saved lineup. Teammate
+ // picks, locked heroes and manual lane ownership remain constraints.
+ let draftSlots=slots;
+ if(activeCreativePlan&&!creativePlanCompatible(activeCreativePlan,draftSlots)){
+  const editable=editableLocalDraft(slots,client.connected?client.session:null,data.champions,taskOwnRole()).slots;
+  if(creativePlanCompatible(activeCreativePlan,editable))draftSlots=editable;
+ }
+ saved.draft={slots:draftSlots,style,scope,soloRole,...(activeCreativePlan&&creativePlanCompatible(activeCreativePlan,draftSlots)?{creativePlan:activeCreativePlan}:{}),...(saved.draft?.clientGameId?{clientGameId:saved.draft.clientGameId}:{}),...(saved.draft?.playerPosition?{playerPosition:saved.draft.playerPosition}:{})};saved.preferences.style=style;saved.preparations=preparations.snapshot();
  const pending={snapshot:structuredClone(saved)};pendingSaves.add(pending);
  const request=saveChain.catch(()=>{}).then(async()=>{
   const before=structuredClone(savedBase);
@@ -414,9 +423,9 @@ function roomErrorMessage(error){
  return raw||'操作失败，请重试';
 }
 function roomSharePayload(){
- const role=roomOwnRole(),mode=client.connected?(client.mode?.id||null):'rift',share=shareFromSlots(slots,role,mode);if(!share)return null;
- const candidate=captureRoomStrategy(slots,data,activeCreativePlan,mode);if(candidate?.id!==roomStrategySnapshot?.id)roomStrategySnapshot=candidate;
- return {...share,configurations:mode==='aram'?[]:captureRoomConfigurations(slots,data,preparations,{creativePlan:roomStrategySnapshot,guide:guideSelection,current:buildView?buildSelection():null,mode}),...(roomStrategySnapshot?{strategy:roomStrategySnapshot}:{})};
+ const visible=publicDraftContext(),role=roomOwnRole(),mode=client.connected?(client.mode?.id||null):'rift',share=shareFromSlots(visible,role,mode);if(!share)return null;
+ const candidate=captureRoomStrategy(visible,data,activeCreativePlan,mode);if(candidate?.id!==roomStrategySnapshot?.id)roomStrategySnapshot=candidate;
+ return {...share,configurations:mode==='aram'?[]:captureRoomConfigurations(visible,data,preparations,{creativePlan:roomStrategySnapshot,guide:guideSelection,current:buildView?buildSelection():null,mode}),...(roomStrategySnapshot?{strategy:roomStrategySnapshot}:{})};
 }
 async function publishRoomShare({force=false}={}){
  if(!room||room.mode==='idle'||!api.roomPublish)return false;
@@ -935,12 +944,13 @@ function recommendationInput(){
  // A recommendation keeps the last range for this exact public draft. Its
  // display freshness and every client write still require a fresh read.
  const at=Date.parse(client.eligibility?.receivedAt),now=Date.now(),referenceTime=Number.isFinite(at)?Math.min(now,at+15000):now;
- const own=currentPlayerSelection(client.session,data.champions,slots),eligibility=localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition:saved.draft?.playerPosition,now:referenceTime});
+ const eligibility=localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition:saved.draft?.playerPosition,now:referenceTime});
  const session=client.connected?client.session:null,claiming=activeRoleClaim(positionClaim,client),singleParty=['party','context'].includes(scope)&&slots.filter(s=>s.party).length===1&&slots.find(s=>s.party)?.role===taskOwnRole();
  let contextSession=(scope==='solo'||draftComparing)&&session?{...session,myTeam:session.myTeam.map(p=>p.cellId===session.localPlayerCellId?{...p,championPickIntent:0}:p)}:session;
  let base=draftComparing||scope==='solo'||singleParty?comparisonDraft(slots,activeCreativePlan,session,data.champions):slots;
- if(claiming||singleParty)({slots:base,session:contextSession}=editableLocalDraft(base,session,data.champions,taskOwnRole()));
+ if(claiming||singleParty||scope==='solo')({slots:base,session:contextSession}=editableLocalDraft(base,session,data.champions,taskOwnRole()));
  const contextSlots=recommendationDraft(base,contextSession,data.champions,{ownRole:taskOwnRole(),bans:clientBans,disabled:client.eligibility?.disabled||[],eligibleByRole:eligibility.eligibleByRole});
+ const own=currentPlayerSelection(contextSession,data.champions,base);
  return {clientSession:contextSession,soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:eligibility.confirmedPick,publicPicks:[...new Set([...unassigned.map(p=>p.champion),...unassignedPublicPicks(slots,client.session,data.champions).map(p=>p.champion)])],enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:activeCreativePlan,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
 }
 function useCatalogResult(result){cancelRecommendation();data.catalog=configureCatalog(result.catalog);data.catalogInfo=result.info;results=[];offset=0;render();}
@@ -968,7 +978,7 @@ async function generate(next=false){
 const sync=createClientSync(performSync);
 let sharedClient=null;
 async function performSync(manual=true,fresh=false){
- const previousOwnIntent=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId)?.championPickIntent||0;
+ const previousOwn=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),previousOwnIntent=previousOwn?.championId||previousOwn?.championPickIntent||0;
  lastSyncStarted=Date.now();syncing=true;const before=lastRenderedClient||clientRenderIdentity(client),previousMatchups=matchupContext(),previousPhase=client.phase,previousRecommendation=recommendationKey(recommendationInput());let changed=false,newGame=false;if(manual)render();
  try{
   await saveChain;const incoming=sharedClient;sharedClient=null;client=!manual&&!fresh&&incoming?incoming:await api.client(manual||fresh);drainExternalState();
@@ -985,7 +995,7 @@ async function performSync(manual=true,fresh=false){
   const draftContext=reconcileClientDraft({...saved.draft,slots,style,scope,soloRole},publicClientGameId(client),saved.guide?.match?.gameId);
   if(draftContext.changed){saved.draft=draftContext.draft;slots=saved.draft.slots;soloRole=saved.draft.soloRole;changed=true;if(draftContext.newGame){newGame=true;lastTaskSelection=null;if(activeCreativePlan&&!saved.draft.creativePlan)creativePlanNotice='新局已开始，原组合不会自动沿用；可以从收藏重新选择。';activeCreativePlan=saved.draft.creativePlan||null;pendingIntentPreparation=null;companionPreview=null;matchupTargets.clear();unassigned=[];}persist({derived:!manual});}
   if(client.session){
-   const nextOwnIntent=client.session.myTeam.find(p=>p.cellId===client.session.localPlayerCellId)?.championPickIntent||0;
+   const nextOwn=client.session.myTeam.find(p=>p.cellId===client.session.localPlayerCellId),nextOwnIntent=nextOwn?.championId||nextOwn?.championPickIntent||0;
    // Only the explicitly requested hover belongs to this operation. A player
    // changing or clearing it in the client must still replace the old plan.
    const expectedHover=(candidatePreparing||clientPreparing)&&nextOwnIntent===champ(preparationTarget?.id)?.key;

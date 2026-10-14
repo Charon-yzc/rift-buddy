@@ -13,6 +13,19 @@ import {distinctPlayConditions} from '../src/duo-play-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 
+test('fragile four/five-player groups default to their supported side pressure and have the same plan for every input order',()=>{
+ for(const picks of [{top:'Fiora',jungle:'Khazix',mid:'Zed',bottom:'Vayne',support:'Pyke'},{top:'Fiora',jungle:'Khazix',mid:'Zed',support:'Pyke'}]){
+  const slots=setup(picks),[result]=recommend({slots,champions:data.champions,scope:'party'}),plan=captureCreativePlan(result,data);
+  assert.equal(plan.shared.routes[0].id,'side-pressure');assert.match(plan.steps[1],/菲奥娜.*边线/);
+  assert.ok(!plan.name.includes('团战连招'));assert.equal(plan.members.length,Object.keys(picks).length);
+  const reversed=recommend({slots:[...slots].reverse(),champions:data.champions,scope:'party'})[0],same=captureCreativePlan(reversed,data);
+  assert.equal(same.shared.routes[0].id,plan.shared.routes[0].id);assert.deepEqual(same.steps,plan.steps);assert.deepEqual(same.ordered,plan.ordered);
+  for(const member of plan.members){const combo=createGuideModel(data,selectGuide(null,{id:member.champion,role:member.role,mode:'rift',creativePlan:plan})).combo;
+   assert.deepEqual(combo.steps,plan.steps);assert.match(combo.ownJob,member.role==='top'?/边线/:/中路|中线|营地/);
+  }
+ }
+});
+
 test('Vi Orianna Nautilus can choose either actual ball carrier and preserve one ultimate, member jobs and stages through disk',async()=>{
  const slots=setup({jungle:'Vi',mid:'Orianna',support:'Nautilus'}),[result]=recommend({slots,champions:data.champions,scope:'party'}),original=captureCreativePlan(result,data);
  assert.equal(original.archetype,'cooperation');assert.match(original.ordered.find(m=>m.champion==='Vi').job,/等泰坦.*一次 R 生效.*第二波/);
@@ -94,7 +107,7 @@ test('four-person side pressure assigns the split, support and holding jobs with
  assert.deepEqual(plan.stagePlan.opening,original.stagePlan.opening);
  assert.deepEqual(plan.stagePlan.later.memberJobs,original.stagePlan.later.memberJobs);
  const summary=resultActionsView(result,data,{compact:true});
- assert.doesNotMatch(summary,/等主线实际生效/);for(const key of ['Q','金牌'])assert.ok(summary.includes(key),key);
+ assert.doesNotMatch(summary,/等主线实际生效/);assert.ok(summary.includes('Q'));assert.match(summary,/金牌|黄牌/);
  assert.equal(captureCreativePlan(recommend({slots:setup({top:'Garen',jungle:'Graves',mid:'TwistedFate',support:'Bard'}),champions:data.champions,scope:'party'})[0],data).shared.routes.some(r=>r.id==='side-pressure'),false);
 });
 

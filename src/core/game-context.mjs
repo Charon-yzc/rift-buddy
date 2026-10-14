@@ -1,20 +1,24 @@
 import {currentPlayerSelection} from './guide.mjs';
 import {profile} from './rules.mjs';
+import {publicClientGameId} from './draft.mjs';
 
 const inGame=phase=>['InProgress','Reconnect'].includes(phase);
 const activeGame=phase=>phase==='GameStart'||inGame(phase);
 const manualSlot=(slots,id)=>slots.find(s=>s.champion===id&&(s.manualPosition===true||!Number.isInteger(s.clientCellId)));
 const publicRole=role=>['top','jungle','mid','bottom','support'].includes(role)?role:null;
 // Ephemeral evidence for the current game only; no player identity or history.
-export function createCurrentGameTracker(){
- let own=null,mode=null,lastPhase=null,gameId=null,liveTime=null;
+export function createCurrentGameTracker({flashId=4}={}){
+ let own=null,mode=null,lastPhase=null,gameId=null,liveTime=null,flashSlot;
  return {
+  flashSlot:()=>flashSlot,
   observe(client,champions,slots=[]){
    if(!client?.connected)return;
-   const phase=client.phase,id=client.game?.gameId?String(client.game.gameId):null;
+   const phase=client.phase,id=publicClientGameId(client);
    // Loading no longer has a selection session, but it belongs to the same game.
-   if(phase==='ChampSelect'&&lastPhase!=='ChampSelect'||activeGame(phase)&&activeGame(lastPhase)&&id&&gameId&&id!==gameId||!activeGame(phase)&&phase!=='ChampSelect'){own=null;mode=null;liveTime=null;}
+   if(phase==='ChampSelect'&&lastPhase!=='ChampSelect'||id&&gameId&&id!==gameId||!activeGame(phase)&&phase!=='ChampSelect'){own=null;mode=null;liveTime=null;flashSlot=undefined;}
    if(phase==='ChampSelect'){
+    const player=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId);
+    if(player&&[player.spell1Id,player.spell2Id].every(Number.isInteger))flashSlot=player.spell1Id===flashId?'d':player.spell2Id===flashId?'f':undefined;
     const selected=currentPlayerSelection(client.session,champions,slots),formal=currentPlayerSelection(client.session,champions);
     own=selected?{...selected,formalKnown:formal?.positionKnown===true,...(formal?.positionKnown?{formalRole:formal.role}:{})}:null;
    }
@@ -24,8 +28,9 @@ export function createCurrentGameTracker(){
   current(client,live,champions,slots=[],now=Date.now()){
    const fresh=live?.available&&Number.isFinite(live.at)&&now>=live.at&&now-live.at<=12000;
    if(fresh){
-    if(own?.id===live.champion&&mode===live.mode&&Number.isFinite(live.gameTime)&&Number.isFinite(liveTime)&&live.gameTime+30<liveTime)own=null;
+    if(own?.id===live.champion&&mode===live.mode&&Number.isFinite(live.gameTime)&&Number.isFinite(liveTime)&&live.gameTime+30<liveTime){own=null;flashSlot=undefined;}
     if(own?.id!==live.champion){
+     if(own)flashSlot=undefined;
      const champion=champions.find(c=>c.id===live.champion),slot=manualSlot(slots,live.champion),position=publicRole(live.position);
      own=champion?{id:champion.id,role:slot?.role||position||profile(champion).roles[0],positionKnown:!!slot||!!position,formalKnown:false}:null;
      liveTime=null;

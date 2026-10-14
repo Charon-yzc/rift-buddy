@@ -12,7 +12,7 @@ import {recommendationKey,createPreparationStore,createRuneApplicationState,part
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
-import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible} from '../src/core/creative-plan.mjs';
+import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible,validateCreativePlan} from '../src/core/creative-plan.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {matchupTargetKey} from '../src/core/matchup-plans.mjs';
 import {getBuild} from '../src/core/builds.mjs';
@@ -271,6 +271,21 @@ test('solo comparison can replace an unconfirmed assistant choice but preserves 
   assert.equal(input.soloChampion,kind==='proposal'?null:'Ashe',kind);
   assert.ok(results.length,kind);assert.ok(results.every(result=>result.slots.find(slot=>slot.role==='bottom').champion===(kind==='proposal'?'Jinx':'Ashe')),kind);
   assert.deepEqual(s.context.slots,before,kind);
+ }
+});
+
+test('explicit solo mode compares both public unlocked hover representations and keeps a completed pick',()=>{
+ for(const selectedField of ['championId','championPickIntent']){
+  const current=client();Object.assign(current.session.myTeam[0],{[selectedField]:hero('Ashe').key});
+  current.session.actions=[[{id:1,type:'pick',actorCellId:1,championId:hero('Ashe').key,completed:false}]];
+  const slots=partySlots().map(s=>({...s,...(s.role==='bottom'?{manualPosition:true,clientCellId:1}:{})})),before=structuredClone(slots);
+  const {context:c}=setup({slots,current,incoming:structuredClone(current)});c.scope='solo';c.draftComparing=true;
+  c.saved.preferences.pool=['Jinx'];c.saved.preferences.poolMode='only';
+  let input=c.recommendationInput();assert.equal(input.soloChampion,null);
+  let rows=recommend(input);assert.ok(rows.length);assert.ok(rows.every(r=>r.targets.includes('bottom')&&r.slots.find(s=>s.role==='bottom').champion==='Jinx'));
+  current.session.myTeam[0].championId=hero('Ashe').key;current.session.actions[0][0].completed=true;
+  input=c.recommendationInput();assert.equal(input.soloChampion,'Ashe');rows=recommend(input);assert.ok(rows.every(r=>!r.targets.length&&r.slots.find(s=>s.role==='bottom').champion==='Ashe'));
+  assert.deepEqual(c.slots,before);
  }
 });
 
@@ -595,18 +610,40 @@ test('an explicit different candidate replaces the previous own hover without in
 });
 
 test('a solo party candidate keeps its cooperation with fixed allies through one-click preparation',async()=>{
+ for(const publicField of ['championPickIntent','championId']){
  const current=client();current.session.myTeam[0].championPickIntent=hero('Jinx').key;
+ current.session.myTeam[0][publicField]=hero('Jinx').key;
+ if(publicField==='championId')current.session.myTeam[0].championPickIntent=0;
+ current.session.actions=[[{id:22,type:'pick',actorCellId:1,championId:hero('Jinx').key,completed:false}]];
  current.session.myTeam.push({cellId:2,championId:hero('Braum').key,assignedPosition:'UTILITY'},{cellId:3,championId:hero('Ahri').key,assignedPosition:'MIDDLE'});
- const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='support'?{champion:'Braum',locked:true,clientCellId:2}:s.role==='mid'?{champion:'Ahri',locked:true,clientCellId:3}:{})}));
- const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
+ const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='support'?{champion:'Braum',locked:true,clientCellId:2}:s.role==='mid'?{champion:'Ahri',locked:true,clientCellId:3}:s.role==='bottom'&&publicField==='championId'?{champion:'Jinx',locked:true,clientCellId:1,manualPosition:true}:{})}));
+ const incoming=structuredClone(current),{context:c,calls}=setup({slots,current,incoming,results:[]});
  Object.assign(c,{creativePlanCompatible,currentCombo,comboContextKnown,positionClaim:{gameId:'123',cellId:1,championId:hero('Jinx').key,role:'bottom'},draftComparing:true});
  c.saved.preferences.pool=['Ashe'];c.saved.preferences.poolMode='only';
  vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo='),c);
+ // Exercise serialization as well as click dispatch: the previous unlocked
+ // championId must not drop the newly accepted plan during the fresh read.
+ const persisted=[];
+ Object.assign(c,{pendingSaves:new Set(),savedBase:structuredClone(c.saved),stateRevision:0,rebaseWindowState:(_base,value)=>value,restoreRejectedSave:()=>{},acceptSavedState:accepted=>{
+  persisted.push(accepted);c.saved=accepted;c.slots=accepted.draft.slots;c.activeCreativePlan=accepted.draft.creativePlan||null;
+ }});
+ c.api.saveState=async value=>{
+  if(value.draft.creativePlan)validateCreativePlan(value.draft.creativePlan,value.draft.slots,{allowUnknown:true});
+  return {state:structuredClone(value),revision:1};
+ };
+ const prepare=c.api.prepareSelection;c.api.prepareSelection=async value=>{
+  // The mock, like the client, replaces its earlier unlocked championId.
+  const result=await prepare(value);incoming.session.myTeam[0].championId=0;
+  return result;
+ };
+ vm.runInContext(extract('function persist(','function acceptSavedState('),c);
  c.results=recommend(c.recommendationInput());c.resultsSignature=recommendationKey(c.recommendationInput());
  const plan=c.resultCreativePlan(c.results[0]);assert.ok(plan?.members.some(m=>m.champion==='Braum'),'This candidate needs real ally cooperation');
  await c.prepareCandidate({dataset:{id:'Ashe',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
  assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');assert.equal(c.activeCreativePlan?.id,plan.id);
  assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),slots.find(s=>s.role==='support'));
+ assert.ok(persisted.some(state=>state.draft.creativePlan?.id===plan.id),publicField);
+ }
 });
 
 test('changing the own public hover in the client leaves the previous accepted plan and follows the new configuration without writes',async()=>{
