@@ -87,8 +87,8 @@ test('selected group members use champion role evidence while manual and locked 
  const protectedSession={...session,myTeam:[...session.myTeam,{cellId:2,championId:key('Ahri'),assignedPosition:'MIDDLE'}]};
  const protectedResult=mergeClientSession(protectedSlots,protectedSession,data.champions,{autoArrange:false,autoParty:true,party});
  assert.deepEqual(protectedResult.slots.find(s=>s.role==='mid'),{...protectedSlots.find(s=>s.role==='mid'),party:false});
- assert.deepEqual(protectedResult.slots.find(s=>s.role==='support'),protectedSlots.find(s=>s.role==='support'));
- assert.deepEqual(protectedResult.slots.filter(s=>s.party).map(s=>s.role),['top','bottom']);
+ assert.deepEqual(protectedResult.slots.find(s=>s.role==='support'),{...protectedSlots.find(s=>s.role==='support'),party:true});
+ assert.deepEqual(protectedResult.slots.filter(s=>s.party).map(s=>s.role),['bottom','support']);
  assert.equal(protectedResult.unassigned[0].champion,'Lux');
 });
 
