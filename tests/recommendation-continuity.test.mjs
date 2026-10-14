@@ -659,11 +659,11 @@ test('changing the own public hover in the client leaves the previous accepted p
  await c.sync(false,{fresh:true});
  assert.equal(c.activeCreativePlan,null);assert.equal(c.lastTaskSelection,null);assert.equal(c.draftComparing,true);
  assert.equal(c.ownTaskPreparation().selection.id,'Jinx');assert.equal(c.companionPreparation().selection.id,'Jinx');assert.equal(calls.prepared.length,0);
- assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Ashe','Public hover must not become a persisted selected hero');
+ assert.equal(c.slots.find(s=>s.role==='bottom').champion,null,'A changed public hover releases the expired automatic suggestion without persisting the new hover');
 });
 
-test('clearing either public local pick representation withdraws its automatic proposal but keeps manual positions and teammates',async()=>{
- for(const field of ['championPickIntent','championId']){
+test('changing and clearing either public local pick representation withdraws its automatic proposal but keeps manual positions and teammates',async()=>{
+ for(const field of ['championPickIntent','championId'])for(const changeFirst of [false,true]){
   const current=client();current.session.myTeam[0][field]=hero('Ashe').key;
   current.session.actions=[[{type:'pick',actorCellId:1,championId:hero('Ashe').key,completed:false}]];
   const incoming=structuredClone(current),picks={mid:'Ahri',bottom:'Ashe',support:'Braum'};
@@ -674,6 +674,11 @@ test('clearing either public local pick representation withdraws its automatic p
   c.lastTaskSelection={id:'Ashe',role:'bottom',mode:'rift',comboId:c.activeCreativePlan.id};
   c.saved.draft.playerPosition={role:'bottom',cellId:1};
   vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo='),c);
+  if(changeFirst){
+   incoming.session.myTeam[0][field]=hero('Jinx').key;incoming.session.actions[0][0].championId=hero('Jinx').key;
+   await c.sync(false,{fresh:true});assert.equal(c.activeCreativePlan,null);
+   if(field==='championPickIntent')assert.equal(c.slots.find(s=>s.role==='bottom').champion,null,'The old automatic champion cannot reappear after this new hover is cleared');
+  }
   incoming.session.myTeam[0][field]=0;incoming.session.actions[0][0].championId=0;
   await c.sync(false,{fresh:true});
   assert.equal(c.activeCreativePlan,null,field);assert.equal(c.lastTaskSelection,null,field);

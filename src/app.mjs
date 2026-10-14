@@ -1012,10 +1012,10 @@ async function performSync(manual=true,fresh=false){
    if(ownIntentChanged)lastTaskSelection=null;
    // Recognizing a party updates its members, not an explicit recommendation scope.
    const merged=mergeClientSession(slots,client.session,data.champions,clientSyncOptions());merged.slots=restorePlayerPosition(merged.slots,client.session,data.champions,saved.draft?.playerPosition);merged.unassigned=unassignedPublicPicks(merged.slots,client.session,data.champions);
-   if(ownIntentChanged&&!nextOwnIntent){
-    const previousId=data.champions.find(c=>c.key===previousOwnIntent)?.id,role=taskOwnRole();
+   if(ownIntentChanged){
+    const currentId=data.champions.find(c=>c.key===nextOwnIntent)?.id,role=taskOwnRole();
     merged.slots=merged.slots.map(s=>{
-     if(s.role!==role||s.champion!==previousId||!s.automaticPosition||s.manualPosition||Number.isInteger(s.clientCellId)&&s.clientCellId!==client.session.localPlayerCellId)return s;
+     if(s.role!==role||s.champion===currentId||!s.automaticPosition||s.manualPosition||Number.isInteger(s.clientCellId)&&s.clientCellId!==client.session.localPlayerCellId)return s;
      const {automaticPosition,publicIntent,...rest}=s;return {...rest,champion:null,locked:false};
     });
    }
