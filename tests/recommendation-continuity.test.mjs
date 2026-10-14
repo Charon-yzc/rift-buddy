@@ -397,6 +397,23 @@ test('direct preparation cannot move a manually assigned hero from a different p
  assert.equal(calls.prepared.length,0);assert.deepEqual(structuredClone(c.slots),before);
 });
 
+test('the hero picker allows one live click to move an unbound plan while keeping assigned or offline duplicates disabled',async()=>{
+ for(const kind of ['unbound','manual','bound','offline']){
+  const current=client();if(kind==='offline')Object.assign(current,{connected:false,phase:'Offline'});
+  const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='mid'?{champion:'Ashe',locked:true,...(kind==='manual'?{manualPosition:true}:kind==='bound'?{clientCellId:2}:{})}:{})}));
+  const {context:c,calls}=setup({slots,current,incoming:structuredClone(current)});
+  Object.assign(c,{picker:{kind:'slot',role:'bottom'},pickerMatches:()=>({champions:[hero('Ashe')]}),matchesSearch:()=>true,profile:()=>({}),e:v=>v,portrait:()=>'',currentCombo});
+  vm.runInContext(extract('function pickerTiles(){','function closeOverlay(){'),c);
+  assert.equal(/\sdisabled(?:\s|>)/.test(c.pickerTiles()),kind!=='unbound',kind);
+  if(kind==='unbound'){
+   c.persist=async()=>{validateState({...defaultState(),draft:{slots:c.slots,scope:'party',style:'wild',soloRole:'bottom'}});};
+   vm.runInContext(`async function clickPicker(el){const action='pick-champion';if(false){}${extract("else if(action==='pick-champion')","else if(action==='solo-role')")}}`,c);
+   await c.clickPicker({dataset:{id:'Ashe'}});
+   assert.equal(calls.prepared.length,1);assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Ashe');assert.equal(c.slots.find(s=>s.role==='mid').champion,null);
+  }else assert.equal(calls.prepared.length,0);
+ }
+});
+
 test('the main room view context follows reliable public hovers without persisting them',()=>{
  const live=client();live.session.myTeam.push({cellId:2,championId:0,championPickIntent:hero('Lux').key,assignedPosition:'MIDDLE'});
  const {context:c}=setup({current:live}),before=JSON.stringify(c.slots);
