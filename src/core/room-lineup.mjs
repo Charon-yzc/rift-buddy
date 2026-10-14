@@ -24,7 +24,7 @@ export function adoptRoomLineup(raw,data,current,client,availability={},syncOpti
  if(changed)throw Error(`当前已预选${data.champions.find(c=>c.id===changed.champion)?.name||changed.champion}，与这套阵容不同；请按当前选人重新推荐，或点击自己的英雄头像更换预选。`);
  const cells=new Set((inDraft?client.session.myTeam:[]).filter(p=>Number(p.championId)>0).map(p=>p.cellId));
  const reusable=current.map(s=>s.automaticPosition&&!s.manualPosition&&!cells.has(s.clientCellId)?{...s,locked:false}:s);
- const restored=restoreTeamFavorite({slots:desired,scope:'party',...(share.strategy?{creativePlan:share.strategy}:{})},reusable,data.champions,inDraft?client.session:null,availability);
+ const restored=restoreTeamFavorite({slots:desired,scope:'party',...(share.strategy?{creativePlan:share.strategy}:{})},reusable,data.champions,inDraft?client.session:null,{...availability,moveUnbound:true});
  // Lineup-only messages have no party identities. Keep the receiver's marks.
  for(const slot of restored.slots){const prior=current.find(s=>s.role===slot.role);if(!share.strategy||prior.partyManual){slot.party=prior.party;if(prior.partyManual)slot.partyManual=true;}}
  if(inDraft){const merged=mergeClientSession(restored.slots,client.session,data.champions,syncOptions);restored.slots=merged.slots;restored.unassigned=merged.unassigned;}

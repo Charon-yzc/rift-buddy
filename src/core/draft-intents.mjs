@@ -39,7 +39,10 @@ export function recommendationDraft(slots,session,champions,{ownRole='',bans=[],
   const available=slot=>{
    if(!slot||slot.publicIntent)return false;
    const proposal=slot.automaticPosition&&!slot.manualPosition&&!Number.isInteger(slot.clientCellId);
-   return !(slot.locked&&!proposal||Number.isInteger(slot.clientCellId)&&slot.clientCellId!==player.cellId||slot.champion&&slot.champion!==id&&(slot.manualPosition||Number.isInteger(slot.clientCellId)))&&(!Array.isArray(eligibleByRole[slot.role])||eligibleByRole[slot.role].includes(id));
+   // A reliable public lane takes precedence over an unbound offline plan in
+   // this temporary view. Player bindings and explicit positions stay fixed.
+   const publicLane=role===slot.role&&!slot.manualPosition&&!Number.isInteger(slot.clientCellId);
+   return !(slot.locked&&!proposal&&!publicLane||Number.isInteger(slot.clientCellId)&&slot.clientCellId!==player.cellId||slot.champion&&slot.champion!==id&&(slot.manualPosition||Number.isInteger(slot.clientCellId)))&&(!Array.isArray(eligibleByRole[slot.role])||eligibleByRole[slot.role].includes(id));
   };
   const preferred=role?[role]:[...profile(champions.find(c=>c.id===id)).roles,...ROLES.map(r=>r.id)].filter((r,i,a)=>a.indexOf(r)===i&&!reservedRoles.has(r));
   const target=preferred.map(r=>next.find(s=>s.role===r)).find(available);

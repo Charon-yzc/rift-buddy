@@ -3,6 +3,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),assert=require('n
 const workspace=process.cwd(),root=path.resolve(process.env.RIFT_BUDDY_USER_DATA||path.join(workspace,'.local','selection-layout-'+Date.now()));
 process.env.RIFT_BUDDY_USER_DATA=root;
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const until=async(check,label)=>{for(let i=0;i<150;i++){if(await check())return;await delay(100);}throw Error(label);};
 app.setPath('userData',path.join(root,'user-data'));
 async function run(){
  await app.whenReady();await fs.mkdir(root,{recursive:true});
@@ -15,28 +16,42 @@ async function run(){
  client.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(client.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
  const results=recommend({slots,champions:data.champions,scope:'party',limit:6});assert.equal(results.length,6);
  const props={data,client,slots,unassigned:[],scope:'party',style:'fun',tab:'recommend',results};
+ const fiveSlots=slots.map(slot=>({...slot,party:true})),fiveProps={...props,slots:fiveSlots,results:recommend({slots:fiveSlots,champions:data.champions,scope:'party',limit:6})};
  const index=await fs.readFile(path.join(base,'src/index.html'),'utf8'),styles=[...index.matchAll(/<link\b[^>]*\brel=["']stylesheet["'][^>]*>/gi)].map(match=>match[0]);assert.ok(styles.length,'Use the renderer stylesheet order from index.html');
  const html=(content,bodyClass='')=>`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><base href="${pathToFileURL(path.join(base,'src/')).href}">${styles.join('')}</head><body class="${bodyClass}">${content}</body></html>`;
  const w=new BrowserWindow({width:440,height:800,show:false,useContentSize:true,webPreferences:{contextIsolation:true,nodeIntegration:false}});
  // This harness loads rendered views only. It has no preload, app IPC or client transport.
  const metrics=[],failures=[];
  const check=(label,test)=>{try{test();}catch(error){failures.push({label,message:error.message});console.error(label+': '+error.message);}};
- const measure=(window,rowSelector,paneSelector)=>window.webContents.executeJavaScript(`(()=>{const pane=document.querySelector(${JSON.stringify(paneSelector)}),rows=[...document.querySelectorAll(${JSON.stringify(rowSelector)})],rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,right:r.right}},box=rect(pane),visible=r=>r.y>=box.y&&r.bottom<=Math.min(box.bottom,innerHeight),controls=[...pane.querySelectorAll('.candidate-row button,.candidate-details>summary,[data-action=more-candidates]')].filter(el=>el.checkVisibility({contentVisibilityAuto:true}));return {viewport:{width:innerWidth,height:innerHeight},pane:box,rows:rows.map(rect),indices:rows.map(el=>Number(el.dataset.resultIndex)),threeVisible:rows.length===3&&rows.map(rect).every(visible),lastVisible:!!rows.length&&visible(rect(rows.at(-1))),bodyWidth:document.documentElement.scrollWidth,paneWidth:pane.clientWidth,paneScrollWidth:pane.scrollWidth,overflow:controls.filter(el=>{const r=rect(el);return r.right>innerWidth||r.x<0}).length,controls:controls.map(rect),more:!!pane.querySelector('[data-action=more-candidates]')}})()`);
- const assertLayout=(label,state,defaultChoices=true)=>check(label,()=>{assert.equal(state.rows.length,defaultChoices?3:6,label+' candidate count');assert.equal(state.overflow,0,label+' controls cannot cross the window edge');assert.ok(state.bodyWidth<=state.viewport.width&&state.paneScrollWidth<=state.paneWidth,label+' cannot overflow horizontally');assert.ok(state.controls.length&&state.controls.every(r=>r.height>=30),label+' candidate controls remain at least 30px high');assert.ok(state.more,label+' keeps remaining candidates accessible');if(defaultChoices)assert.ok(state.threeVisible,label+' all three default candidates must fit without scrolling: '+JSON.stringify(state));else{assert.deepEqual(state.indices,[0,1,2,3,4,5],label+' exposes every remaining candidate');assert.ok(state.lastVisible,label+' sixth candidate can be scrolled into view');}});
+ const measure=(window,rowSelector,paneSelector)=>window.webContents.executeJavaScript(`(()=>{const pane=document.querySelector(${JSON.stringify(paneSelector)}),rows=[...document.querySelectorAll(${JSON.stringify(rowSelector)})],rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,right:r.right}},box=rect(pane),visible=r=>r.y>=box.y&&r.bottom<=Math.min(box.bottom,innerHeight),controls=[...pane.querySelectorAll('.candidate-row button,.lineup-fit>summary,.candidate-details>summary,[data-action=more-candidates]')].filter(el=>el.checkVisibility({contentVisibilityAuto:true}));return {viewport:{width:innerWidth,height:innerHeight},pane:box,rows:rows.map(rect),indices:rows.map(el=>Number(el.dataset.resultIndex)),threeVisible:rows.length===3&&rows.map(rect).every(visible),lastVisible:!!rows.length&&visible(rect(rows.at(-1))),bodyWidth:document.documentElement.scrollWidth,paneWidth:pane.clientWidth,paneScrollWidth:pane.scrollWidth,overflow:controls.filter(el=>{const r=rect(el);return r.right>innerWidth||r.x<0}).length,controls:controls.map(rect),more:!!pane.querySelector('[data-action=more-candidates]')}})()`);
+ const assertLayout=(label,state,defaultChoices=true,expectThree=true)=>check(label,()=>{assert.equal(state.rows.length,defaultChoices?3:6,label+' candidate count');assert.equal(state.overflow,0,label+' controls cannot cross the window edge');assert.ok(state.bodyWidth<=state.viewport.width&&state.paneScrollWidth<=state.paneWidth,label+' cannot overflow horizontally');assert.ok(state.controls.length&&state.controls.every(r=>r.height>=30),label+' candidate controls remain at least 30px high');assert.ok(state.more,label+' keeps remaining candidates accessible');if(defaultChoices&&expectThree)assert.ok(state.threeVisible,label+' all three default candidates must fit without scrolling: '+JSON.stringify(state));else if(!defaultChoices){assert.deepEqual(state.indices,[0,1,2,3,4,5],label+' exposes every remaining candidate');assert.ok(state.lastVisible,label+' sixth candidate can be scrolled into view');}});
  const key=(window,keyCode)=>{window.webContents.sendInputEvent({type:'keyDown',keyCode});window.webContents.sendInputEvent({type:'keyUp',keyCode});};
  const openDetail=async(window,label)=>{
   const js=code=>window.webContents.executeJavaScript(code,true);
   assert.equal(await js(`document.querySelector('.candidate-detail-content').checkVisibility({contentVisibilityAuto:true})`),false,label+' details start collapsed');
   await js(`document.querySelector('.candidate-row>.btn').focus()`);key(window,'Tab');await delay(50);
+  assert.ok(await js(`document.activeElement.matches('.lineup-fit>summary')`),label+' fit explanation is reachable by Tab');
+  key(window,'Space');
+  await until(()=>js(`document.querySelector('.lineup-fit').open&&document.querySelector('.lineup-fit-explanation').checkVisibility({contentVisibilityAuto:true})`),label+' fit evidence did not become visible');
+  assert.ok(await js(`document.querySelector('.lineup-fit').open&&document.querySelector('.lineup-fit-explanation').checkVisibility({contentVisibilityAuto:true})`),label+' keyboard opens fit evidence');
+  key(window,'Space');await delay(60);
+  assert.equal(await js(`document.querySelector('.lineup-fit').open`),false,label+' keyboard closes fit evidence');
+  key(window,'Tab');await delay(50);
   assert.ok(await js(`document.activeElement.matches('.candidate-details>summary')`),label+' details summary is reachable by Tab');
-  key(window,'Space');await delay(100);
+  key(window,'Space');
+  await until(()=>js(`document.querySelector('.candidate-details').open&&document.querySelector('.candidate-detail-content').checkVisibility({contentVisibilityAuto:true})`),label+' candidate details did not become visible');
   const open=await js(`(()=>{const detail=document.querySelector('.candidate-details'),content=detail.querySelector('.candidate-detail-content');return {open:detail.open,visible:content.checkVisibility({contentVisibilityAuto:true}),action:!!content.querySelector('[data-action=result-detail]')}})()`);
   assert.deepEqual(open,{open:true,visible:true,action:true},label+' keyboard opens candidate details');
   if(label==='party-440x800')assert.ok(await js(`!!document.querySelector('.candidate-detail-content [aria-label="成员行动分工"]')&&!!document.querySelector('.candidate-detail-content .pair-statistics')`),label+' keeps member jobs and pair evidence in the details');
   key(window,'Tab');await delay(50);assert.ok(await js(`document.activeElement.matches('[data-action=result-detail]')`),label+' full detail action is reachable by Tab');
  };
- for(const [label,width,height,fixtureProps,scale] of [
+ for(const [label,width,height,fixtureProps,scale,expectThree=true] of [
   ['party-440x800',440,800,props,1],
+  ['five-440x800',440,800,fiveProps,1],
+  ['party-400x600',400,600,props,1],
+  ['five-400x600',400,600,fiveProps,1],
+  ['narrow-five-280x600',280,600,fiveProps,1,false],
+  ['narrow-five-360x600',360,600,fiveProps,1,false],
   ['unknown-440x900',440,900,{...props,client:{...client,eligibility:null}},1],
   ['solo-440x760',440,760,{...props,scope:'solo',soloRole:'mid',results:recommend({slots,champions:data.champions,scope:'solo',soloRole:'mid',limit:6})},1],
   ['large-text-440x900',440,900,props,1.25]
@@ -46,7 +61,9 @@ async function run(){
   const state=await measure(w,'.companion-candidate','.companion-content');
   await fs.writeFile(path.join(root,label+'-metrics.json'),JSON.stringify(state,null,2));
   await fs.writeFile(path.join(root,label+'.png'),(await w.webContents.capturePage()).toPNG());
-  assertLayout(label,state);metrics.push({label,...state});
+  assertLayout(label,state,true,expectThree);metrics.push({label,...state});
+  const toolbar=await w.webContents.executeJavaScript("(()=>{const els=[...document.querySelectorAll('.companion-persistent .pregame-controls button,.companion-persistent .pregame-controls select,.companion-persistent .pregame-more>summary')].filter(el=>el.checkVisibility({contentVisibilityAuto:true})),boxes=els.map(el=>el.getBoundingClientRect());return {outside:boxes.some(r=>r.x<0||r.right>innerWidth),overlap:boxes.some((a,i)=>boxes.slice(i+1).some(b=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1))}})()");
+  check(label+' toolbar',()=>assert.deepEqual(toolbar,{outside:false,overlap:false}));
   if(label==='party-440x800'){
    await openDetail(w,label);
    await fs.writeFile(path.join(root,'party-detail-keyboard.png'),(await w.webContents.capturePage()).toPNG());
@@ -70,7 +87,6 @@ async function run(){
  cp.spawn=(file,...args)=>{if(!String(file).endsWith('window-observer.exe'))return originalSpawn(file,...args);const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;
  require(path.join(base,'electron/main.cjs'));
- const until=async(check,label)=>{for(let i=0;i<150;i++){if(await check())return;await delay(100);}throw Error(label);};
  let main;await until(()=>{main=windows.find(window=>window.webContents.getURL().endsWith('/src/index.html'));return main;},'Main renderer missing');
  main.setMinimumSize(640,600);main.setContentSize(1280,720);const js=code=>main.webContents.executeJavaScript(code,true);
  await until(()=>js('!!document.querySelector("[data-action=draft-scope]")'),'Main draft missing');

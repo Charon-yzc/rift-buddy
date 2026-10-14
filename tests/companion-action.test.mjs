@@ -21,7 +21,8 @@ test('sidebar candidate and room scores follow the same public hover as the rost
  const before=structuredClone(slots),fit=lineupFit(proposed,recommendationDraft(slots,live.session,data.champions,{ownRole:'bottom'}),data.champions);
  let html=companionView(props);assert.match(html,/data-id="Lux"/);assert.match(html,/room-ballot-row conflict/);assert.equal((html.match(new RegExp('契合 '+fit.score+'<','g'))||[]).length,2);
  live.session.myTeam[1].championPickIntent=0;html=companionView(props);
- assert.doesNotMatch(html,/room-ballot-row conflict/);assert.equal((html.match(/契合 100</g)||[]).length,2);assert.deepEqual(slots,before);
+ const cleared=lineupFit(proposed,recommendationDraft(slots,live.session,data.champions,{ownRole:'bottom'}),data.champions);
+ assert.doesNotMatch(html,/room-ballot-row conflict/);assert.equal((html.match(new RegExp('契合 '+cleared.score+'<','g'))||[]).length,2);assert.ok(cleared.score>fit.score);assert.deepEqual(slots,before);
 });
 
 test('sidebar hero shortcuts distinguish own configuration, public teammate picks, locks and display-only mode',()=>{
@@ -29,6 +30,17 @@ test('sidebar hero shortcuts distinguish own configuration, public teammate pick
  const locked=structuredClone(client);locked.session.actions[0][0].completed=true;assert.equal(companionHeroAction(locked,hero('Diana')).prepare,false);assert.equal(companionHeroAction(locked,hero('Graves')).label,'应用当前配置');
  for(const c of [{...client,connected:false},{...client,phase:'Lobby'},{...client,mode:{id:'hex'}},{...client,session:null}])assert.equal(companionHeroAction(c,hero('Graves')).prepare,false);
  assert.equal(companionHeroAction(client,hero('Graves'),false).prepare,false);assert.equal(companionHeroAction({...client,session:{...client.session,bans:[hero('Diana').key]}},hero('Diana')).prepare,false);assert.deepEqual(client,before);
+});
+
+test('disabling direct preparation preserves public teammate and locked hero read-only boundaries',()=>{
+ const hovered=structuredClone(client);hovered.session.myTeam[1]={cellId:1,championId:0,championPickIntent:hero('Vex').key};
+ const locked=structuredClone(client);locked.session.actions[0][0].completed=true;
+ for(const [live,id] of [[client,'Vex'],[hovered,'Vex'],[locked,'Diana']]){
+  const before=structuredClone(live),direct=companionHeroAction(live,hero(id),true),preview=companionHeroAction(live,hero(id),false);
+  assert.equal(direct.readOnly,true);assert.deepEqual(preview,direct);assert.deepEqual(live,before);
+ }
+ assert.deepEqual(companionHeroAction(hovered,hero('Graves'),false),{prepare:false,label:'查看配置'});
+ assert.deepEqual(companionHeroAction({...hovered,connected:false},hero('Vex'),false),{prepare:false,label:'查看配置'});
 });
 
 test('chosen sidebar keeps five slots, one range status and the local action before collapsed accepted play',()=>{
@@ -40,7 +52,7 @@ test('chosen sidebar keeps five slots, one range status and the local action bef
  assert(roster>0&&roster<status&&status<action&&action<play);
  assert.match(html,/companion-team-compact/);assert.equal((html.match(/data-drop-role=/g)||[]).length,5);
  assert.doesNotMatch(html,/class="companion-candidate"/);assert.match(html,/data-action="task-compare"/);
- assert.match(html,/队友配置 · 只读/);assert.doesNotMatch(companionView({...props,preferences:{compactTeam:false}}),/companion-team-now companion-team-compact/);
+ assert.match(html,/中路 · 队友已选 · 看配置/);assert.doesNotMatch(companionView({...props,preferences:{compactTeam:false}}),/companion-team-now companion-team-compact/);
  const unknown=companionView({...props,client:{...live,eligibility:null}});assert(unknown.indexOf('data-companion-disclosure="eligibility"')<unknown.indexOf('aria-label="我的下一步"'),'Unknown eligibility remains available ahead of the action');
  const state=validateState({...defaultState(),preferences:{compactTeam:false}});assert.equal(state.preferences.compactTeam,false);assert.equal(validateState(defaultState()).preferences.compactTeam,true);
 });

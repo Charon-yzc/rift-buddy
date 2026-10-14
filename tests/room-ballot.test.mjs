@@ -32,7 +32,7 @@ test('ballots survive the lobby-to-draft handoff but clear after a game or a dir
 test('a party hero in another proposed lane is a role mismatch, not a missing hero',()=>{
  const current=[{role:'mid',champion:'Ahri',party:true,clientCellId:0},{role:'support',champion:'Nami',party:true,clientCellId:1},{role:'bottom',champion:null,party:false}];
  const fit=lineupFit([{role:'bottom',champion:'Ahri'},{role:'support',champion:'Nami'}],current,champions);
- assert.equal(fit.compatible,true);assert.equal(fit.exact,false);assert.match(fit.reason,/已选英雄 40\/40/);
+ assert.equal(fit.compatible,true);assert.equal(fit.exact,false);assert.match(fit.reason,/固定位置冲突/);
 });
 
 test('manual fixed heroes affect compatibility and ranking while unconfirmed assistant choices stay replaceable',()=>{
@@ -43,10 +43,56 @@ test('manual fixed heroes affect compatibility and ranking while unconfirmed ass
  assert.equal(rows[0].key,proposalKey(a));assert.equal(rows[1].fit.compatible,false);assert.equal(rows[1].fit.exact,false);
  assert.ok(rows[0].fit.score>rows[1].fit.score);assert.doesNotMatch(rows[1].fit.reason,/尚未选人/);
  const moved=a.lineup.map(s=>s.role==='mid'?{...s,role:'top'}:s),fit=lineupFit(moved,current,champions);
- assert.equal(fit.compatible,true);assert.equal(fit.exact,false);assert.match(fit.reason,/已选英雄 40\/40/);
+ assert.equal(fit.compatible,true);assert.equal(fit.exact,false);assert.match(fit.reason,/固定位置冲突/);assert.ok(fit.score<=45);
  const proposals=current.map(s=>({...s,automaticPosition:true}));
  assert.equal(lineupFit(changed.lineup,proposals,champions).compatible,true);
  proposals[0].clientCellId=1;assert.equal(lineupFit(changed.lineup,proposals,champions).compatible,false,'Real client picks remain fixed even if they originated in a proposal');
+});
+test('fixed compatibility is a constraint and cannot supply the old free seventy points',()=>{
+ const current=[{role:'bottom',champion:'Jinx',party:true,locked:true},{role:'support',champion:'Lulu',party:true,locked:true}];
+ const matching=lineupFit(current,current,champions),replace=lineupFit([{role:'bottom',champion:'Ashe'},{role:'support',champion:'Lulu'}],current,champions);
+ assert.equal(matching.compatible,true);assert.equal(replace.compatible,false);assert.ok(replace.score<=20);
+ const unselected=current.map(s=>({...s,champion:null,locked:false})),single=lineupFit([{role:'bottom',champion:'Jinx'}],unselected,champions);
+ assert.equal(single.score,null);assert.doesNotMatch(single.reason,/70|无冲突计分/);
+ assert.equal(lineupFit([],[],champions).score,null);
+});
+
+test('two or more of us exclude ally proposal positions; one of us automatically uses only real selected allies',()=>{
+ const current=[{role:'bottom',champion:null,party:true},{role:'support',champion:'Lulu',party:true},{role:'top',champion:'Malphite',party:false},{role:'mid',champion:'Orianna',party:false},{role:'jungle',champion:null,party:false}];
+ const left=[{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'},{role:'top',champion:'Teemo'}];
+ const right=left.map(s=>s.role==='top'?{...s,champion:'Ornn'}:s);
+ assert.equal(lineupFit(left,current,champions).score,lineupFit(right,current,champions).score);
+ assert.equal(lineupFit(left,current,champions).known,2);
+ const solo=current.map(s=>({...s,party:s.role==='bottom'})),automatic=lineupFit(left,solo,champions),explicit=lineupFit(left,solo,champions,{scope:'context'});
+ assert.equal(automatic.scope,'context');assert.deepEqual(automatic,explicit);assert.equal(automatic.known,4);
+ assert.equal(automatic.size,4,'Empty jungle is not invented as a fifth member');
+ assert.equal(lineupFit(left,solo,champions).score,lineupFit(right,solo,champions).score,'An ally proposal cannot overwrite the actual Malphite');
+ const changed=solo.map(s=>s.role==='support'?{...s,champion:'Xerath'}:s);
+ assert.notEqual(lineupFit(left,changed,champions).rawScore,automatic.rawScore,'Actual ally changes affect contextual fit');
+});
+
+test('explicit context uses selected allies and incomplete proposals do not receive invented own picks',()=>{
+ const current=[{role:'bottom',champion:'Jinx',party:true},{role:'support',champion:'Lulu',party:true},{role:'mid',champion:'Orianna',party:false},{role:'top',champion:null,party:false}];
+ const proposal=[{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}];
+ assert.equal(lineupFit(proposal,current,champions,{scope:'party'}).known,2);
+ assert.equal(lineupFit(proposal,current,champions,{scope:'context'}).known,3);
+ const incomplete=lineupFit([{role:'bottom',champion:'Jinx'}],current,champions);
+ assert.equal(incomplete.score,null);assert.equal(incomplete.known,1,'Missing proposed support is not filled with the current Lulu');
+});
+
+test('a single controllable pick without selected allies has no composition score',()=>{
+ const current=[{role:'mid',champion:null,party:true},{role:'jungle',champion:null,party:false}];
+ const fit=lineupFit([{role:'mid',champion:'Galio'},{role:'jungle',champion:'Vi'}],current,champions);
+ assert.equal(fit.score,null);assert.equal(fit.known,1,'Suggested outside positions are not actual teammates');
+});
+test('explicit bot and solo constraints apply only to positions that scope can replace',()=>{
+ const current=[{role:'mid',champion:'Ahri',party:true,locked:true},{role:'bottom',champion:'Jinx',party:false,locked:true},{role:'support',champion:'Lulu',party:false,locked:true}];
+ const bot=lineupFit([{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],current,champions,{scope:'bot'});
+ assert.equal(bot.compatible,true);assert.equal(bot.exact,true);assert.equal(bot.known,2);
+ const changed=lineupFit([{role:'bottom',champion:'Ashe'},{role:'support',champion:'Lulu'}],current,champions,{scope:'bot'});
+ assert.equal(changed.compatible,false,'Locked bot picks constrain bot scope even if their party marker is off');
+ const solo=lineupFit([{role:'mid',champion:'Ahri'}],current.map(s=>({...s,party:true})),champions,{scope:'solo',soloRole:'mid'});
+ assert.equal(solo.compatible,true);assert.equal(solo.exact,true);assert.equal(solo.known,3);
 });
 test('relay preserves bounded proposal and votes without forwarding arbitrary private data',()=>{
  const raw={kind:'state',v:1,from:'甲',at:1,...state(a,proposalKey(a.lineup)),riotId:'private'};

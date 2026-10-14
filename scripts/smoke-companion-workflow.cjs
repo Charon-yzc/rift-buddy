@@ -95,7 +95,7 @@ async function run(){
  await click('[data-action=companion-tab][data-tab=plan]');
  // A declared lane exists before choosing a champion. Visible lane and
  // candidates follow the formal lane until the player explicitly overrides it.
- await change('#solo-role','top');assigned='JUNGLE';await sync();
+ await change('#solo-role','top');await until(()=>js('window.buddy.bootstrap().then(b=>b.state.draft.playerPosition?.role==="top")'),'Explicit before-pick lane was not saved');assigned='JUNGLE';await sync();
  assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.draft.soloRole)'),'top','Declared lane overwrote the explicit before-pick lane');
  await click('[data-action=position-auto]');await sync();
  assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.draft.soloRole)'),'jungle');
@@ -114,7 +114,7 @@ async function run(){
  await until(()=>js('!!document.querySelector("[data-action=more-candidates]")'),'More candidates missing');await click('[data-action=more-candidates]');
  await until(()=>js('new Set([...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].map(b=>b.dataset.role)).size===5'),'Unknown lane did not restore separate lane candidates');
  hovered='Volibear';await sync();
- assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'recommend','A client hover must preserve the selection and team view');
+ assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'plan','The local hover opens its current configuration');
  await click('[data-action=companion-tab][data-tab=plan]');
  assert.equal(await js('document.querySelector("[data-companion-field=rune]")?.dataset.plan==="Volibear:top:rift"'),true);assert.equal(await js('document.querySelectorAll("[data-action=my-runes]").length'),0);
  await change('#solo-role','top');
@@ -320,19 +320,26 @@ async function run(){
  assert.equal(await js('drawerPosition.scrollTop'),500,'Fixture did not select the actual scroll container');
  await change('#build-skill',skill.id);
  assert.ok(Math.abs((await js('document.querySelector(".drawer").scrollTop'))-500)<=3,'Changing a configuration reset the drawer scroll');
- await js('window.buddy.openGuide('+JSON.stringify({...lateFavorite,id:'Volibear',role:'top',mode:'rift'})+')');await delay(150);
+ // Menu update checks must use our actual picked hero. The guide correctly
+ // follows Chogath, so a background update must not redraw a Volibear favorite.
+ await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');await click('[data-action=task-edit]');
+ await until(()=>js('!!document.querySelector(\'.drawer [data-plan="Chogath:jungle:rift"]\')'),'Own build drawer missing');
+ const ownDrawerSkill=await js('document.querySelector("#build-skill").value');
+ await js('document.querySelector(".drawer").scrollTop=500;void 0');
+ await click('.drawer [data-action=open-guide]');
+ await until(()=>js('window.buddy.bootstrap().then(b=>b.state.guide?.selection.id==="Chogath"&&b.state.guide.selection.role==="jungle")'),'Own guide must match the drawer before update checks');
  await js('window.backgroundDrawerSelect=document.querySelector("#build-role");backgroundDrawerSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
  await js('window.buddy.bootstrap().then(b=>window.buddy.updateGuide({...b.state.guide.selection,changedFields:[]}))');await delay(150);
  assert.equal(await js('backgroundDrawerSelect===document.querySelector("#build-role")'),true,'An unchanged guide update destroyed the open build menu');
  await js('backgroundDrawerSelect.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}));void 0');await delay(100);
- assert.equal(await js('backgroundDrawerSelect.isConnected'),false,'Cancelling the build menu did not display the pending update');
+ await until(()=>js('!backgroundDrawerSelect.isConnected'),'Cancelling the build menu did not display the pending update');
  assert.equal(await js('!!document.querySelector(".drawer")'),true,'Cancelling a pending menu update closed the drawer');
  assert.ok(Math.abs((await js('document.querySelector(".drawer").scrollTop'))-500)<=3,'A pending update reset the reading position');
  await js('window.backgroundDrawerSelect=document.querySelector("#build-skill");backgroundDrawerSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
  await js('window.buddy.bootstrap().then(b=>window.buddy.updateGuide({...b.state.guide.selection,changedFields:[]}))');await delay(100);
  assert.equal(await js('backgroundDrawerSelect.isConnected'),true);
- await change('#build-skill',skill.id);await delay(100);
- assert.equal(await js('backgroundDrawerSelect.isConnected'),false,'Finishing the build selection left its pending update behind');
+ await change('#build-skill',ownDrawerSkill);await delay(100);
+ await until(()=>js('!backgroundDrawerSelect.isConnected'),'Finishing the build selection left its pending update behind');
  await toggleAutoSync();
  await js('window.backgroundDrawerSelect=document.querySelector("#build-role");backgroundDrawerSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
  picked='Ashe';assigned='bottom';await backgroundSync();
@@ -541,7 +548,7 @@ async function run(){
  await click('[data-action=player-flow-settings]');await click('[data-action=player-flow-toggle][data-field=clickPrepare]');await click('[data-action=close]');
  await click('[data-action=companion-tab][data-tab=recommend]');await until(()=>js('!!document.querySelector("[data-action=companion-preview][data-role=mid]")'),'No mid candidate for default preparation');
  const beforePrepareWrites=writes.length;await click('[data-action=companion-preview][data-role=mid]');
- await until(()=>js('document.querySelectorAll(".preparation-task [data-step-status=done]").length===4&&document.querySelector("#toast")?.textContent==="预选与配置已完成，锁定请在客户端确认"'),'Default click must confirm preselection and all three configuration writes');
+ await until(()=>js('document.querySelector(".companion-shell")?.dataset.tab==="plan"&&document.querySelectorAll(".client-preparation [data-step-status=done]").length===4'),'Default click must open the configuration with all four completed steps');
  await click('[data-action=companion-tab][data-tab=plan]');
  await until(()=>js('document.querySelectorAll(".client-preparation [data-step-status=done]").length===4'),'Default click did not complete all four steps');
  assert.equal(await js('document.querySelectorAll(".client-preparation-result [data-step-status=done]").length'),4,'All four preparation results must remain available in the receipt');

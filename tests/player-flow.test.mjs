@@ -48,7 +48,7 @@ test('declared lanes precede guesses; manual party overrides survive known-group
  assert.equal(mergeClientSession(restored,session,data.champions,options).slots.find(s=>s.clientCellId===1).party,false);
  assert.equal(currentPlayerSelection(session,data.champions,restored).role,'support');assert.equal(currentPlayerSelection(session,data.champions,restored).positionKnown,false);
 });
-test('unpicked players without declared lanes never invent party positions or erase saved draft targets',()=>{
+test('unknown unpicked players preserve saved targets; a known group receives temporary unbound positions',()=>{
  const slots=createSlots().map(s=>({...s,party:['mid','bottom'].includes(s.role)}));
  const session={localPlayerCellId:0,myTeam:[0,1,2].map(cellId=>({cellId,championId:0,assignedPosition:''}))};
  for(const party of [
@@ -56,21 +56,24 @@ test('unpicked players without declared lanes never invent party positions or er
   {status:'known',members:[{cellId:0,local:true,firstPosition:'TOP',secondPosition:'JUNGLE'},{cellId:1},{cellId:2}]},
  ]){
   const before=structuredClone(slots),result=mergeClientSession(slots,session,data.champions,{autoParty:true,party});
-  assert.deepEqual(result.slots,before);assert.deepEqual(slots,before);assert.equal(result.markedLocalRole,null);
+  if(party.status==='unknown')assert.deepEqual(result.slots,before);
+  else{assert.equal(result.slots.filter(s=>s.party).length,3);assert.equal(result.slots.find(s=>s.role==='top').party,true);assert.ok(result.slots.every(s=>!s.champion&&!s.locked&&!Number.isInteger(s.clientCellId)&&!s.manualPosition));}
+  assert.deepEqual(slots,before);assert.equal(result.markedLocalRole,null);
  }
 });
 
-test('partially located groups preserve existing targets and converge only after every lane is public',()=>{
+test('partially located groups replace stale targets with temporary positions and follow later public lanes',()=>{
  const slots=createSlots().map(s=>({...s,party:['mid','bottom'].includes(s.role)}));
  const session={localPlayerCellId:0,myTeam:[{cellId:0,championId:0,assignedPosition:'BOTTOM'},{cellId:1,championId:0,assignedPosition:''}]};
  const party={status:'known',members:[{cellId:0,local:true},{cellId:1}]};
  const first=mergeClientSession(slots,session,data.champions,{autoParty:true,party});
- assert.deepEqual(first.slots.filter(s=>s.party).map(s=>s.role),['mid','bottom']);
+ assert.deepEqual(first.slots.filter(s=>s.party).map(s=>s.role),['top','bottom']);
  session.myTeam[1].assignedPosition='JUNGLE';
  const second=mergeClientSession(first.slots,session,data.champions,{autoParty:true,party});
  assert.deepEqual(second.slots.filter(s=>s.party).map(s=>s.role),['jungle','bottom']);
- const unmatched=mergeClientSession(slots,session,data.champions,{autoParty:true,party:{...party,unmatched:1}});
- assert.deepEqual(unmatched.slots.filter(s=>s.party).map(s=>s.role),['jungle','mid','bottom']);
+ const unmatched=mergeClientSession(slots,session,data.champions,{autoParty:true,party:{...party,lobbyCount:3,unmatched:1}});
+ assert.deepEqual(unmatched.slots.filter(s=>s.party).map(s=>s.role),['top','jungle','bottom']);
+ assert.ok(unmatched.slots.every(s=>!Number.isInteger(s.clientCellId)));
 });
 
 test('selected group members use champion role evidence while manual and locked slots remain intact',()=>{
@@ -83,9 +86,9 @@ test('selected group members use champion role evidence while manual and locked 
  const protectedSlots=slots.map(s=>s.role==='mid'?{...s,champion:'Ahri',locked:true,manualPosition:true,clientCellId:2}:s.role==='support'?{...s,champion:'Nami',locked:true}:s);
  const protectedSession={...session,myTeam:[...session.myTeam,{cellId:2,championId:key('Ahri'),assignedPosition:'MIDDLE'}]};
  const protectedResult=mergeClientSession(protectedSlots,protectedSession,data.champions,{autoArrange:false,autoParty:true,party});
- assert.deepEqual(protectedResult.slots.find(s=>s.role==='mid'),protectedSlots.find(s=>s.role==='mid'));
- assert.deepEqual(protectedResult.slots.find(s=>s.role==='support'),protectedSlots.find(s=>s.role==='support'));
- assert.deepEqual(protectedResult.slots.filter(s=>s.party).map(s=>s.role),['mid','bottom']);
+ assert.deepEqual(protectedResult.slots.find(s=>s.role==='mid'),{...protectedSlots.find(s=>s.role==='mid'),party:false});
+ assert.deepEqual(protectedResult.slots.find(s=>s.role==='support'),{...protectedSlots.find(s=>s.role==='support'),party:true});
+ assert.deepEqual(protectedResult.slots.filter(s=>s.party).map(s=>s.role),['bottom','support']);
  assert.equal(protectedResult.unassigned[0].champion,'Lux');
 });
 

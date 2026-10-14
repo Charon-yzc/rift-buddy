@@ -7,6 +7,8 @@ import {draftTargets} from '../src/core/draft.mjs';
 import {conventionalRole,profile,TRIOS,DUOS} from '../src/core/rules.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
+import {resultCooperation} from '../src/core/creative-plan.mjs';
+import {escape as e} from '../src/ui.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const byId=new Map(data.champions.map(c=>[c.id,c]));
@@ -45,7 +47,6 @@ test('generator returns a few feasible, deterministic, non-catalog trios',()=>{
   assert.ok(def.window.length>0&&def.plan.length>0&&def.why.length>0);
   assert.ok(def.feasibility.includes('可行性'));
   assert.ok(!/胜率|必赢|counter/i.test(def.why+def.plan+def.window+def.caution));
-  assert.ok(Number.isFinite(def.bonus)&&def.bonus>=10&&def.bonus<33,'creative bonus stays below curated trio lead');
  }
 });
 
@@ -61,15 +62,20 @@ test('generator respects shape limits, blocks and pools',()=>{
  assert.ok(defs.every(d=>d.members.every(m=>m.champion!=='Ashe')));
 });
 
-test('creative discovery seeds retain specific actions without displacing curated trios',()=>{
+test('creative discovery seeds retain specific actions while composition fit can lead curated trios',()=>{
  const slots=locked(createSlots(),[['top','Garen'],['jungle','LeeSin']]);
  const rows=recommend({slots,champions:data.champions,limit:5});
  assert.equal(rows.length,5);
  const creative=rows.filter(r=>r.creative);
  assert.ok(creative.length>=1,'at least one creative idea is discoverable');
  for(const r of rows)assert.ok(['curated','creative','adaptive','generated'].includes(r.origin));
- // Curated combinations keep the lead.
- assert.equal(rows[0].origin,'curated');
+ const curated=rows.filter(r=>r.origin==='curated');
+ assert.ok(curated.length,'authored alternatives remain discoverable');
+ assert.ok(rows[0].compositionFit.score>Math.max(...curated.map(r=>r.compositionFit.score)),'the better-fitting first result does not need a catalog label');
+ for(const r of rows){
+  assert.ok(Number.isFinite(r.compositionFit.score));
+  for(const role of ['top','jungle'])assert.deepEqual(r.slots.find(s=>s.role===role),slots.find(s=>s.role===role));
+ }
  for(const r of creative){
   assert.equal(r.origin,'adaptive');assert.equal(r.title,r.adaptive.name);assert.ok(r.adaptive.memberJobs.every(m=>/[QWER]|普攻/.test(m.job)));
   assert.ok(r.creative.steps.length===3);
@@ -98,11 +104,13 @@ test('discovery-seeded result and play cards show actual conditional tactics hon
  assert.ok(creative);
  const data2={champions:data.champions,catalogInfo:{status:{}}};
  const card=renderResultCard(creative,4,{...data2}, {favorites:[]});
- assert.match(card,/共同分工|机制搭配/);for(const m of creative.adaptive.memberJobs)assert.ok(card.includes(m.job));
+ const execution=resultCooperation(creative),jobs=execution.routes?.[0]?.memberJobs||execution.memberJobs;
+ assert.equal(jobs.length,3);
+ assert.match(card,/共同分工|机制搭配/);for(const m of jobs)assert.ok(card.includes(e(m.job)),m.champion);
  const curatedCard=renderResultCard(rows.find(r=>r.origin==='curated'),0,{...data2},{favorites:[]});
  assert.ok(!curatedCard.includes('创意实验'));
  const play=resultPlayCard(creative,4,{...data2,catalogInfo:{status:{}}});
- assert.ok(play.includes('成立条件')&&play.includes('失败处理')&&play.includes('未经组合对局验证'));for(const m of creative.adaptive.memberJobs)assert.ok(play.includes(m.job));
+ assert.ok(play.includes('成立条件')&&play.includes('失败处理')&&play.includes('未经组合对局验证'));for(const m of jobs)assert.ok(play.includes(e(m.job)),m.champion);
 });
 
 test('requesting one result preserves the first choice instead of forcing a creative idea',()=>{
@@ -112,7 +120,13 @@ test('requesting one result preserves the first choice instead of forcing a crea
  const multiple=recommend({...input,limit:5});
  assert.equal(first.length,1);
  assert.equal(first[0].id,multiple[0].id);
- assert.equal(first[0].origin,'curated');
+ assert.deepEqual(first[0].slots,multiple[0].slots);
+ assert.deepEqual(first[0].compositionFit,multiple[0].compositionFit);
+ for(const limit of [3,6]){
+  const page=recommend({...input,limit});
+  assert.equal(page[0].id,first[0].id);
+  assert.deepEqual(page.slice(0,Math.min(limit,multiple.length)).map(r=>r.id),multiple.slice(0,limit).map(r=>r.id));
+ }
  assert.ok(multiple.some(r=>r.creative&&r.origin==='adaptive'));
  assert.deepEqual(recommend({...input,limit:0}),[]);
 });

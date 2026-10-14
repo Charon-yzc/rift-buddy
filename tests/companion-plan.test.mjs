@@ -65,6 +65,15 @@ test('only the local unselected intent prepares a labeled plan without creating 
  assert.match(html,/当前完整配置/);assert.match(html,/预选位置<select/);assert.match(html,/data-companion-field="rune"/);assert.doesNotMatch(html,/data-action="my-runes"|data-action="guide-current"/);
 });
 
+test('explicit current-player lane outranks an old unbound same-hero plan',()=>{
+ const slots=createSlots().map(s=>({...s,...(s.role==='mid'?{champion:'Garen',locked:true}:s.role==='top'?{champion:'Ahri',locked:true}:{})}));
+ const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:hero('Garen').key}]}};
+ const before=structuredClone(slots);
+ const intent=companionPickIntent(client,data.champions,slots,{soloRole:'top',playerPosition:{role:'top',cellId:1}});
+ assert.equal(intent.selection.role,'top');assert.equal(intent.positionKnown,true);assert.deepEqual(slots,before);
+ assert.equal(companionPickIntent(client,data.champions,slots,{playerPosition:{role:'top',cellId:2}}).selection.role,'mid','Another player cannot override the local plan');
+});
+
 test('inline rune and equipment choices stay independent and survive preparation recall',()=>{
  const original=build(base),store=createPreparationStore();
  const rune=original.runeOptions.find(o=>o.page.selectedPerkIds[0]!==original.runePage.selectedPerkIds[0]);assert.ok(rune);
@@ -148,17 +157,21 @@ test('the sidebar exposes all lane candidates and full configuration without ano
  assert.doesNotMatch(team,/\[object Object\]/);
 });
 
-test('candidate and adopted member actions visibly distinguish my configuration from teammates',()=>{
+test('unclaimed candidate positions offer one-click selection while actual teammate picks remain view-only',()=>{
  const slots=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role),champion:({mid:'Ahri',bottom:'Ashe',support:'Braum'})[s.role]||null,locked:true}));
  const results=recommend({slots,champions:data.champions,scope:'party',limit:1});
  const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:123,localPlayerCellId:0,myTeam:[{cellId:0,championId:0,assignedPosition:'BOTTOM'}]}};
  const props={data,client,slots,unassigned:[],scope:'party',soloRole:'bottom',style:'fun',tab:'recommend',results};
  const candidates=companionView(props);
  assert.match(candidates,/data-id="Ashe"[^>]*>[\s\S]*?candidate-action-own[^>]*>你 · 配置<\/em>/);
- for(const id of ['Ahri','Braum'])assert.match(candidates,new RegExp('data-id="'+id+'"[^>]*>[\\s\\S]*?candidate-action [^>]*>查看<\\/em>'));
+ for(const id of ['Ahri','Braum'])assert.match(candidates,new RegExp('data-id="'+id+'"[^>]*>[\\s\\S]*?candidate-action [^>]*>选这个<\\/em>'));
  const activePlan=captureCreativePlan(results[0],data),adopted=companionView({...props,activePlan});
  assert.match(adopted,/data-action="active-hero-prepare" data-id="Ashe"[^>]*>[\s\S]*?下路 · 预选并配置/);
- for(const id of ['Ahri','Braum'])assert.match(adopted,new RegExp('data-action="active-hero-prepare" data-id="'+id+'"[^>]*>[\\s\\S]*?队友配置 · 只读'));
+ for(const id of ['Ahri','Braum'])assert.match(adopted,new RegExp('data-action="active-hero-prepare" data-id="'+id+'"[^>]*>[\\s\\S]*?预选并配置'));
+ const occupied=structuredClone(props);
+ for(const [cellId,id,role]of [[1,'Ahri','mid'],[2,'Braum','support']]){occupied.slots.find(s=>s.role===role).clientCellId=cellId;occupied.client.session.myTeam.push({cellId,championId:data.champions.find(c=>c.id===id).key});}
+ const teammates=companionView(occupied);
+ for(const id of ['Ahri','Braum'])assert.match(teammates,new RegExp('data-id="'+id+'"[^>]*>[\\s\\S]*?candidate-action [^>]*>查看<\\/em>'));
 });
 
 test('accepted sidebar plans show one preparation receipt and reveal distinct alternatives only when comparing',()=>{

@@ -27,7 +27,7 @@ export function localPickEligibility(client,slots,champions,{scope='context',sol
  const explicit=playerPosition?.cellId===session.localPlayerCellId&&slots.some(s=>s.role===playerPosition.role)?playerPosition.role:'';
  const role=manualPlayerSlot(slots,session.localPlayerCellId)?.role||explicit||manuallyPlaced?.role||CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()]||soloRole;
  const roles=role?[role]:scope==='solo'?slots.map(s=>s.role):[];
- if(!roles.length)return none('position','已读取本机可选范围 · 请先确认“我的位置”；朋友的可选范围未知');
+ if(!roles.length)return none('position','已读取本机可选范围 · 选择英雄时确定分路；队友的可选范围未知');
  const allowed=champions.filter(c=>(pickable===null||pickable.includes(c.key))&&!(disabled||[]).includes(c.key)).map(c=>c.id).sort();
  const label=role?({top:'上路',jungle:'打野',mid:'中路',bottom:'下路',support:'辅助'})[role]:'各路单人候选';
  return {status:pickable!==null&&disabled!==null?'checked':'partial',role,confirmedPick:role&&selected?{role,champion:selected.id}:null,eligibleByRole:Object.fromEntries(roles.map(r=>[r,allowed])),message:`${label}仅推荐本机${pickable===null?'未禁用':'当前可选'}英雄${pickable!==null?' '+allowed.length+' 位':''} · ${pickable===null?'拥有/周免范围未核对；':disabled===null?'临时禁用范围未核对；':''}朋友的可选范围未知`};
