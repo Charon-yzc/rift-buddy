@@ -6,7 +6,7 @@ import {DATA_FEED_ORIGIN,DATA_FEED_KEYS,DATA_FEED_NAMES,DATA_FEED_MAX_PACKED,ver
 export async function downloadDataFeed(relative,{limit,fetcher=fetch}={}){
  if(!/^\/v1\/(?:patches\/[1-9]\d{0,2}\.[1-9]\d{0,2}\/latest\.json|assets\/[a-f0-9]{64}\.json\.gz)$/.test(relative))throw Error('资料下载地址无效');
  const response=await fetcher(DATA_FEED_ORIGIN+relative,{redirect:'error',credentials:'omit',signal:AbortSignal.timeout(20000),headers:{Accept:'application/json, application/octet-stream'}});
- if(!response.ok){await response.body?.cancel();throw Error('资料服务暂不可用');}
+ if(!response.ok){await response.body?.cancel();const error=Error('资料服务暂不可用');if(relative.startsWith('/v1/assets/')&&[404,410].includes(response.status))error.code='DATA_FEED_REPLACED';throw error;}
  if(Number(response.headers.get('content-length'))>limit){await response.body?.cancel();throw Error('资料响应过大');}
  const reader=response.body?.getReader(),parts=[];let bytes=0;
  if(!reader)throw Error('资料响应为空');
@@ -45,6 +45,9 @@ export async function createDataFeedCache({root,getData,canActivate=()=>false,re
    const patch=getData().patch;if(!validFeedPatch(patch))return {...status};
    publish({phase:'checking',message:'正在检查统计资料'});
    try{
+    // The server retains only the current snapshot. If publication removed an
+    // asset after we read its manifest, restart once with the fresh manifest.
+    for(let attempt=0;;attempt++){try{
     const bytes=await download('/v1/patches/'+patch+'/latest.json',{limit:65536});
     if(bytes.length>65536)throw Error('资料清单过大');
     const envelope=JSON.parse(bytes),next=verifyFeedEnvelope(envelope,{keys});
@@ -66,6 +69,8 @@ export async function createDataFeedCache({root,getData,canActivate=()=>false,re
     accepted=record;manifest=next;pending=activeRelease===next.release&&activeData===getData()?pending:bundle;
     if(pending&&!activate())publish({phase:'pending',checkedAt:record.checkedAt,updatedAt:next.publishedAt,message:'新资料已备好，将在空闲时启用'});
     else publish({phase:'ready',checkedAt:record.checkedAt,updatedAt:next.publishedAt,message:'统计资料已是最新'});
+    break;
+    }catch(error){if(attempt===0&&error.code==='DATA_FEED_REPLACED')continue;throw error;}}
    }catch{publish({phase:pending?'pending':'offline',checkedAt:new Date(clock()).toISOString(),message:pending?'新资料将在空闲时启用':'暂时无法更新，继续使用本地资料'});}
    return {...status};
   })().finally(()=>flight=null);return flight;
