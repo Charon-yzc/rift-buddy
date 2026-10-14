@@ -7,7 +7,7 @@ const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
 let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,windowObserver,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
-let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,rendererReady=false,pendingBuild=null,pendingMainPage=null;
+let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
 let stateRevision=0,dataRevision=0;
@@ -131,6 +131,13 @@ async function boot(){
   if(spellsFile.version!==data.version)diagnostic(`spellbook ${spellsFile.version} != game ${data.version} at boot; estimates use heuristics`);
  }catch{data.spellbook={};}
  data.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],data);
+ const {createDataFeedCache}=await import('../services/data-feed-cache.mjs');
+ const {createDataFeedActivationGate}=await import('../services/data-feed.mjs');
+ const observeFeedPhase=createDataFeedActivationGate();let feedIdle=false;
+ const dataFeed=await createDataFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,restoreAtStartup:true,
+  canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
+  onChange:info=>{data.dataFeed=info;publishData(['dataFeed','rankings','buildSources','builds','hexBuilds']);}});
+ data.dataFeed=dataFeed.summary();
  const imageCache=await import('../services/image-cache.mjs');
  data.imageOverrides=await imageCache.loadImageOverrides(path.join(storeRoot,'data/images'),data);
  for(const [key,value] of Object.entries(data))sharedDataFields.set(key,value);
@@ -409,6 +416,7 @@ async function boot(){
   if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:3000):5000))return latestClient;
   statusTask=(async()=>{const previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
    if(ballotRoundChanged(latestClient)){roomBallot=null;if(roomService&&roomService.snapshot().mode!=='idle'){try{const share=roomPublicShare||roomService.snapshot().members.find(m=>m.self)?.share||{lineup:[],pick:null};const {ballot,...clean}=share;roomService.publish(clean);}catch{}}}
+   feedIdle=observeFeedPhase(latestClient);dataFeed.activate();
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId);if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId).draft}));
    currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);
@@ -462,8 +470,10 @@ async function boot(){
   const focus=publishOpponentContext();guide.publish();return {selection:state.guide?.selection||null,focus:focus.focus,notice:focus.notice};
  });
  guard('update-data',async()=>{
+  if(!observeFeedPhase(latestClient))throw Error('请在本局结束后更新基础资料，当前配置保持不变');
   if(updating)throw new Error('资料更新正在进行');updating=true;
   try{const next=await dataService.collectSnapshot(msg=>publishWindows('data-progress',msg),data);
+   if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，基础资料留待本局结束后更新');
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
    delete next.abilityReference;delete next.rankings;delete next.patchNotes;delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
    next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
@@ -481,9 +491,11 @@ async function boot(){
     if(spellsFile.version!==next.version)diagnostic(`spellbook ${spellsFile.version} != game ${next.version}; estimates use heuristics until pnpm spells:enrich runs`);
    }catch{next.spellbook={};}
    const cached=await imageCache.cacheMissingImages({root:path.join(storeRoot,'data/images'),bundleRoot:path.join(root,'data/images'),data:next,progress:message=>publishWindows('data-progress',message)});
-   next.imageOverrides=cached.overrides;data=next;useCatalog(catalogStore.summary());publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
+   if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，当前窗口继续使用原资料');
+   next.imageOverrides=cached.overrides;next.dataFeed=dataFeed.summary();data=next;useCatalog(catalogStore.summary());publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
   }finally{updating=false;}
  });
+ guard('check-data-feed',()=>dataFeed.check({force:true}));
  guard('app-update-check',async(silent=false)=>{
   if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)return appUpdateStatus;
   const prev=appUpdateStatus;
@@ -615,6 +627,8 @@ async function boot(){
  statusTimer=setInterval(()=>{if(state.preferences.autoSync!==false)status().catch(()=>{});},1000);
  liveTimer=setInterval(()=>{if(state.preferences.autoLive===false&&latestLive){latestLive=null;guide.publish();}else pollLive().catch(()=>{});},3000);
  if(state.preferences.autoSync!==false)status().catch(()=>{});
+ const checkStatistics=()=>{if(state.preferences.autoCheck!==false&&!quitting)dataFeed.check().catch(()=>{});};
+ dataFeedStartup=setTimeout(checkStatistics,10000);dataFeedTimer=setInterval(checkStatistics,60000);
  diagnostic(`guide-hotkey-registered ${guideHotkeyAvailable}`);
  try{const {observeWindows}=await import('../services/window-observer.mjs');windowObserver=await observeWindows({root,onSnapshot:value=>{const dip=rect=>rect?{...rect,...screen.screenToDipRect(null,rect)}:null;const clientBounds=dip(value.client),gameBounds=dip(value.game);observedWindows={client:value.client?{pixels:value.client,dip:clientBounds,minimized:value.client.minimized,foreground:value.client.foreground}:null,game:value.game?{pixels:value.game,dip:gameBounds,minimized:value.game.minimized,foreground:value.game.foreground}:null};observedAt=Date.now();mainPeek.sync(true,!!clientBounds?.foreground||!!gameBounds?.foreground);companion.observe(clientBounds);guide.setGameBounds(gameBounds);},onError:message=>{observedWindows=null;observedAt=0;mainPeek.sync(true,false);companion.observe(null);diagnostic(message);}});}catch{diagnostic('window observer unavailable');}
  if(process.argv.includes('--show-guide'))guide.show();
@@ -622,7 +636,7 @@ async function boot(){
 }
 if(lock)app.whenReady().then(boot).catch(error=>{diagnostic(`startup error ${error.message}`);dialog.showErrorBox('开黑搭子启动失败',error.message);app.quit();});
 app.on('window-all-closed',()=>{if(!tray||quitting)app.quit();});
-app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
+app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
 app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
  event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;

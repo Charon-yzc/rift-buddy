@@ -39,15 +39,17 @@ B 的 SSH 入站仅允许维护电脑已核验的公网 IPv4 `/32`；安全组�
 | | A：房间服务器 | B：资料服务器 |
 | --- | --- | --- |
 | 登录 | `ssh rift-buddy-relay` | `ssh rift-buddy-data` |
-| 主要职责 | 实时房间消息、方案与投票转发；HTTPS/WSS；备用安装包下载 | 公开资料采集、格式校验、内容去重、版本候选保存 |
+| 主要职责 | 实时房间消息、方案与投票转发；HTTPS/WSS；备用安装包下载 | 公开资料采集、格式校验、内容去重、候选保存和统计文件签名 |
 | 当前进程 | Node 中继、Caddy、健康检查计时器 | systemd 定时启动 Node 采集，执行完成即退出 |
 | 数据 | 房间运行状态及公开下载文件 | 候选资料、来源、校验和、检查状态与旧版本 |
 | 对玩家的影响 | 重启中继可能断开正在使用的房间，应减少中断 | 采集失败继续保留有效资料，不阻塞玩家当前选人 |
-| 当前入口 | `wss://room.riftbuddy.dpdns.org` | 没有公开数据 API；维护 SSH 仅接受维护电脑的来源 |
+| 当前入口 | `wss://room.riftbuddy.dpdns.org` | 签名文件已生成，公网 HTTPS 待 DNS 与外部验证；维护 SSH 仅接受维护电脑的来源 |
 
 A 不执行批量资料抓取。B 不接收玩家 LCU 凭据、账号、战绩或游戏内存，也不承接本机英雄预选、符文写入等玩家操作。客户端保留离线资料和推荐计算。
 
-0.54 再明确公告、反馈和静态资料的独立接口。客户端应分别访问所需服务并保留有效缓存，房间请求不依赖 B 的实时响应，B 的采集也不依赖 A 在线。当前尚未接入这些客户端功能，也没有签名资料自动发布；现有房间协议仍是兼容转发，不能把候选资料或投票转发描述成完整的权威房间系统。本轮只完成独立运维与 0.53 发布。
+0.54 的第一阶段已加入基础资料、六份分路榜单、常用配置和海克斯参考的采集模块，详见 [资料更新说明](server-data-updates.md)。程序由 `/opt/rift-buddy-data/current` 指向实际版本目录，候选与状态写入 `/var/lib/rift-buddy-data/updates/`，此前基础资料任务的输出仍保留。
+
+客户端分别访问所需服务并保留有效缓存，房间请求不依赖 B 的实时响应，B 的采集也不依赖 A 在线。B 已在完整采集后签名发布三类统计文件到 `/srv/rift-buddy-data`，待独立域名就绪后接通 HTTPS。签名私钥只在 B 的非公开目录，客户端只含验签公钥。公告、反馈和权威房间系统尚未实现；现有房间协议仍是兼容转发。
 
 ## 维护前核对身份
 
@@ -73,7 +75,7 @@ $identityProbe | ssh rift-buddy-data 'bash -s'
 ssh rift-buddy-relay 'systemctl cat relay caddy rift-buddy-relay-health.timer'
 ssh rift-buddy-relay 'curl -fsS --max-time 5 http://127.0.0.1:8787/healthz'
 ssh rift-buddy-data 'systemctl cat rift-buddy-data.service rift-buddy-data.timer'
-ssh rift-buddy-data 'systemctl show rift-buddy-data.service -p Result -p ExecMainStatus; sudo -n cat /var/lib/rift-buddy-data/status.json'
+ssh rift-buddy-data 'systemctl show rift-buddy-data.service -p Result -p ExecMainStatus; sudo -n cat /var/lib/rift-buddy-data/updates/status.json'
 ```
 
 B 的 service 是一次性任务，运行完显示 `inactive` 正常；查看 timer 是否 active，以及最近的 Result、ExecMainStatus 和 status.json。当前计划为北京时间每天 10:17、22:17，另加最多 10 分钟随机延迟。
@@ -85,7 +87,7 @@ ssh rift-buddy-data 'sudo -n systemctl start --no-block rift-buddy-data.service'
 ssh rift-buddy-data 'sudo -n journalctl -u rift-buddy-data.service --no-pager -n 30'
 ```
 
-启动命令成功只代表已提交任务；等 service 执行结束后再次核对结果、status.json、current.json 和候选 manifest 的校验和。来源失败、版本倒退或空间超限时保留旧候选；不得以新日期冒充新资料。
+启动命令成功只代表已提交任务；等 service 执行结束后再次核对结果、`updates/status.json`、`updates/current.json` 和候选 manifest 的校验和。退出码 2 表示部分采集失败，必须查看具体类别，不能当作全部更新成功。来源失败、版本倒退或空间超限时保留有效旧资料；不得以新日期冒充新资料。
 
 改配置或部署代码时：
 

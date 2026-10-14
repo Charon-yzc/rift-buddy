@@ -1,0 +1,17 @@
+data.riftbuddy.dpdns.org {
+ root * /srv/rift-buddy-data
+ @manifest path /v1/patches/*/latest.json
+ header @manifest Cache-Control "no-cache"
+ @assets path /v1/assets/*.json.gz
+ header @assets Cache-Control "public, max-age=31536000, immutable"
+ @public {
+  method GET HEAD
+  path /v1/patches/*/latest.json /v1/assets/*.json.gz
+ }
+ handle @public {
+  file_server
+ }
+ handle {
+  respond 404
+ }
+}

@@ -19,15 +19,15 @@ export async function getJSON(url, timeout = 20000) {
 export function cleanText(text = '') {
   return String(text).replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
 }
-export async function collectSnapshot(progress = () => {}, previous = null) {
+export async function collectSnapshot(progress = () => {}, previous = null, {readJSON=getJSON,recheckVersion=false}={}) {
   progress('正在检查官方资料版本');
-  const versions = await getJSON(`${DD}/api/versions.json`);
+  const versions = await readJSON(`${DD}/api/versions.json`);
   const version = versions.find(v => /^\d+\.\d+\.\d+$/.test(v));
   if (!version) throw new Error('官方版本号不可用');
-  if(previous?.version===version&&previous.contentRevision>=7&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch))&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
+  if(!recheckVersion&&previous?.version===version&&previous.contentRevision>=7&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch))&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
     // Tencent's names can catch up after Data Dragon has already shipped this
     // patch. Checking the same static version must not pin that older CN data.
-    const cn=await getJSON(`${CN}/heroList/hero_list.js`).catch(()=>null);
+    const cn=await readJSON(`${CN}/heroList/hero_list.js`).catch(()=>null);
     const names=new Map((Array.isArray(cn?.hero)?cn.hero:[]).filter(h=>typeof h?.alias==='string'&&typeof h.title==='string'&&h.title.trim()&&typeof h.name==='string'&&h.name.trim()&&typeof h.keywords==='string').map(h=>[h.alias.toLowerCase(),h]));
     if(cn?.version===previous.patch&&previous.champions.every(c=>names.has(c.id.toLowerCase()))){
       progress('已核对同补丁国服英雄名称资料');
@@ -38,23 +38,23 @@ export async function collectSnapshot(progress = () => {}, previous = null) {
   }
   const base = `${DD}/cdn/${version}/data/zh_CN`;
   const [champions, items, runes, spells, cnResult] = await Promise.all([
-    getJSON(`${base}/championFull.json`), getJSON(`${base}/item.json`),
-    getJSON(`${base}/runesReforged.json`), getJSON(`${base}/summoner.json`),
-    getJSON(`${CN}/heroList/hero_list.js`).catch(() => null),
+    readJSON(`${base}/championFull.json`), readJSON(`${base}/item.json`),
+    readJSON(`${base}/runesReforged.json`), readJSON(`${base}/summoner.json`),
+    readJSON(`${CN}/heroList/hero_list.js`).catch(() => null),
   ]);
   if (Object.keys(champions.data || {}).length < 150 || runes.length !== 5 || !items.data) throw new Error('官方资料不完整，已保留原数据');
   const cnHeroes = new Map((cnResult?.hero || []).map(h => [h.alias.toLowerCase(), h]));
   const patch = version.split('.').slice(0,2).join('.');
   const cd = `https://raw.communitydragon.org/${patch}`;
-  const enrichedChampions=await enrichChampionStats(Object.values(champions.data),patch,getJSON,progress);
+  const enrichedChampions=await enrichChampionStats(Object.values(champions.data),patch,readJSON,progress);
   progress('正在读取海克斯资料清单');
   let augments = [], augmentSource = null, augmentError = null;
   try {
     const [lists, catalog, bin, dictionary] = await Promise.all([
-      getJSON(`${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`),
-      getJSON(`${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/cherry-augments.json`),
-      getJSON(`${cd}/game/maps/modespecificdata/kiwi.bin.json`,35000),
-      getJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000),
+      readJSON(`${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`),
+      readJSON(`${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/cherry-augments.json`),
+      readJSON(`${cd}/game/maps/modespecificdata/kiwi.bin.json`,35000),
+      readJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000),
     ]);
     const pool = lists.find(l => l.modeName === 'KIWI');
     if (!pool?.augmentList?.length) throw new Error('未找到海克斯大乱斗清单');
