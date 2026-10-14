@@ -580,7 +580,10 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
    return {at,manual,declared,preview};
   };
   const reserved=new Map();
-  for(const player of allEntries){const {manual,declared,preview}=publicRole(player),role=manual||declared||preview?.role;if(role&&!reserved.has(role))reserved.set(role,player.cellId);}
+  // Real bindings stay fixed; an explicit local lane outranks an unpicked
+  // teammate's declared lane. Apply that priority before reserving, too.
+  const reservations=allEntries.map(player=>({player,...publicRole(player)})).sort((a,b)=>(a.at?0:a.manual?1:a.declared?2:3)-(b.at?0:b.manual?1:b.declared?2:3)||a.player.cellId-b.player.cellId);
+  for(const {player,at,manual,declared,preview} of reservations){const role=at?.role||manual||declared||preview?.role;if(role&&!reserved.has(role))reserved.set(role,player.cellId);}
   const infos=members.map(member=>{
    const player=allEntries.find(p=>p.cellId===member.cellId),position=publicRole(player),champion=byKey.get(Number(player.championId))||byKey.get(Number(player.championPickIntent)),p=champion&&profile(champion);
    const usual=champion?[...(roleOrder[champion.id]||[]),...(p.reviewed?p.roles:[])]:[];

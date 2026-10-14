@@ -128,5 +128,11 @@ test('claiming an adopted teammate lane before picking keeps the other unbound p
  assert.deepEqual(next.map(s=>s.champion),slots.map(s=>s.champion));
  assert.ok(next.every(s=>!Number.isInteger(s.clientCellId)),'Only temporary range flags change; no player binding is invented');
  assert.deepEqual(merge(next,session,party,{ownRole:'mid'}),next);
+ session.myTeam[0].championPickIntent=key('Seraphine');
+ for(const myTeam of [session.myTeam,[...session.myTeam].reverse()]){
+  const afterHover=merge(next,{...session,myTeam},party,{ownRole:'mid',roleOrder:{Seraphine:['support']}});
+  assert.deepEqual(marked(afterHover),['mid','bottom'],'The confirmed own hover must not move our range to Seraphine support');
+  assert.deepEqual(afterHover.map(s=>s.champion),slots.map(s=>s.champion));
+ }
  assert.deepEqual(slots,before);
 });

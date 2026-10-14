@@ -107,6 +107,18 @@ async function run(){
    await delay(250);assert.equal(attempts.length,before,'A teammate hover click dispatched preparation');assert.equal(writes.length,writeBefore,'A teammate hover click wrote to the client');
   }finally{await click(side,'[data-action=companion-tab][data-tab=recommend]');}
  });
+ await checkpoint('picker-public-teammate-hover-is-readonly-and-keeps-local-plan',async()=>{
+  const before=attempts.length,writeBefore=writes.length,draftBefore=structuredClone((await state()).draft);
+  await click(side,'[data-action=pick-slot][data-role=mid]');
+  await until(()=>js(side,'!!document.querySelector("#picker-search")'),'Picker search missing');
+  await js(side,'(()=>{const input=document.querySelector("#picker-search");input.value="Nami";input.dispatchEvent(new Event("input",{bubbles:true}));})()');
+  await click(side,'#overlay-root [data-action=pick-champion][data-id=Nami]');
+  try{
+   await until(()=>js(side,'document.querySelector(".companion-preview")?.textContent.includes("队友配置 · 只读")'),'The picker did not open a readonly teammate preview');
+   await delay(350);assert.deepEqual((await state()).draft,draftBefore,'A readonly picker click changed the local lineup');
+   assert.equal(attempts.length,before);assert.equal(writes.length,writeBefore);
+  }finally{await click(side,'[data-action=companion-tab][data-tab=recommend]');}
+ });
  await checkpoint('one-click-claims-unknown-own-role-and-prepares',async()=>{
   assert.equal((await state()).draft.playerPosition,undefined,'Public teammate hover invented an own position');
   const candidate=await js(side,'(()=>{const el=[...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].find(button=>button.dataset.id!=="Nami");return el?{id:el.dataset.id,role:el.dataset.role,index:el.dataset.resultIndex}:null;})()');assert.ok(candidate,'An available candidate for the unassigned local player is required');
@@ -176,6 +188,8 @@ async function run(){
   await until(()=>results.length===resultBefore+1,'Claiming another unpicked plan lane cancelled the same explicit click');
   assert.equal(attempts.length-before,1);assert.equal(results.at(-1).complete,true);
   for(const step of ['hover','runes','spells','items'])assert.equal(results.at(-1).steps[step].status,'done');
+  await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championPickIntent===hero(candidate.id).key);
+  await delay(1200); // The next automatic public-hover sync must preserve this plan, too.
   const saved=await state();assert.ok(saved.draft.creativePlan,'Automatic range recomputation discarded the just-adopted party plan');
   assert.equal(saved.draft.playerPosition?.role,'mid');assert.equal(spell2Id,4);
   for(const member of candidate.members)assert.ok(saved.draft.slots.some(slot=>slot.party&&slot.role===member.role&&slot.champion===member.id),'The explicit click lost a member of its adopted plan');

@@ -69,10 +69,14 @@ Wrangler 不是本仓库已安装的开发依赖。未准备工具时，上述�
 pnpm exec wrangler deploy --config relay/wrangler.toml
 ```
 
-再使用输出地址进行 WebSocket 冒烟、实际客户端互通和退出清理检查。默认公网地址在 2026-10-12 的单机独立连接复测中，已完整转发二至五人配置、职责与晚加入快照；本次无需更改现有 Worker。没有取得该服务管理权限，不部署、不新建替代服务。两台 Windows、不同运营商及长时连接仍待验证，自有域名也不能保证连通。
+再使用输出地址进行 WebSocket 冒烟、实际客户端互通和退出清理检查。以上命令适用于自行部署 Worker；默认公网服务已于 2026-10-14 在用户授权的服务器更新，见下节。两台 Windows、不同运营商及长时连接仍待验证，自有域名也不能保证连通。
 
 Cloudflare 当前允许 Free 计划使用 SQLite Durable Objects，但请求、计算与存储都有额度，超限会失败；不要承诺永久免费或用不完。以[官方计费与额度](https://developers.cloudflare.com/durable-objects/platform/pricing/)、[WebSocket 休眠说明](https://developers.cloudflare.com/durable-objects/best-practices/websockets/)及部署账号的实际计划为准。
 
 ## 0.52 候选投票升级
 
-新的 `welcome` 声明 `ballots: 1`，`state.ballot` 携带有界候选与一人一票；只更换桌面程序不足以启用旧中继。部署本仓库最新 Worker（连同 `src/core/room*.mjs` 依赖）后重连。旧握手没有能力声明时客户端保留阵容分享并禁用投票。2026-10-14 默认线上中继实测仍丢弃新增字段，尚未部署本升级。
+新的 `welcome` 声明 `ballots: 1`，`state.ballot` 携带有界候选与一人一票；只更换桌面程序不足以启用旧中继。自部署 Worker 需同时更新 `src/core/room*.mjs` 依赖后重连。旧握手没有能力声明时客户端保留阵容分享并禁用投票。
+
+2026-10-14 默认服务 `wss://room.riftbuddy.dpdns.org` 已在用户授权的服务器更新：Caddy 负责 HTTPS/WSS，Node 中继仅监听回环地址，通过 systemd 自动启动与故障重启，保留旧服务备份。更新后用同一台机器的三条独立公网连接验证了五人完整配置、候选提议、另一成员投票、晚加入重发与离开通知。测试只使用合成公开英雄数据；没有把独立连接当成两台真实玩家电脑的验证。
+
+同域名的 [备用下载页](https://room.riftbuddy.dpdns.org/downloads/) 提供当前已公开的 **v0.51.0** 安装包。公网完整下载与 GitHub 的 SHA-256 一致，并验证了 HTTP Range 断点续传。`/downloads/latest.json` 记录文件版本、大小与校验值；桌面内置更新目前仍使用 GitHub/Gitee，这个备用下载页不会把未发布源码版本冒充新版安装包。
