@@ -64,6 +64,24 @@ test('public lanes reserve their place ahead of conflicting lobby preferences an
  assert.ok(next.every(s=>!Number.isInteger(s.clientCellId)&&!s.manualPosition));
 });
 
+test('public member hints update our range through a fully saved manual lineup without replacing it',()=>{
+ const heroes=['Garen','Vi','Ahri','Ashe','Nami'];
+ const slots=createSlots().map((s,i)=>({...s,party:i<2,champion:heroes[i],locked:true})),session=blank(),before=structuredClone(slots);
+ session.myTeam[1].championPickIntent=key('Nami');
+ const hovered=merge(slots,session);
+ assert.deepEqual(marked(hovered),['top','support']);
+ assert.deepEqual(hovered.map(({party,...s})=>s),slots.map(({party,...s})=>s));
+ assert.deepEqual(merge(hovered,session),hovered);
+ session.myTeam[1].championPickIntent=key('Ahri');
+ assert.deepEqual(marked(merge(hovered,session)),['top','mid']);
+ session.myTeam[1].championPickIntent=0;
+ assert.deepEqual(marked(merge(slots,session,group([{cellId:0,local:true},{cellId:1,firstPosition:'UTILITY'}]))),['top','support']);
+ const excluded=slots.map(s=>s.role==='support'?{...s,party:false,partyManual:true}:s);
+ session.myTeam[1].championPickIntent=key('Nami');
+ assert.equal(merge(excluded,session).find(s=>s.role==='support').party,false);
+ assert.deepEqual(slots,before);
+});
+
 test('a member with no position hints cannot take another member lobby preference as its arbitrary fallback',()=>{
  const next=merge(createSlots(),blank(),group([{cellId:0,local:true},{cellId:1,firstPosition:'TOP',secondPosition:'UTILITY'}]));
  assert.deepEqual(marked(next),['top','jungle']);

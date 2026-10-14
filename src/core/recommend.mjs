@@ -605,7 +605,9 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
    const {member,manual,declared,preview,at,usual,lobbyRoles}=info,role=manual||declared;
    const direct=[role&&next.find(s=>s.role===role),preview&&next.find(s=>s.role===preview.role),at].filter(Boolean);
    const preferred=[...usual,...lobbyRoles].filter((r,i,a)=>r&&a.indexOf(r)===i);
-   const candidates=[...direct,...preferred.map(r=>next.find(s=>s.role===r)).filter(provisional),...fallback];
+   // A saved, unbound hero constrains recommendations, not who occupies a lane.
+   // Public member hints may move the range flag without changing that plan.
+   const candidates=[...direct,...preferred.map(r=>next.find(s=>s.role===r)).filter(s=>s&&!s.manualPosition&&!Number.isInteger(s.clientCellId)),...fallback];
    const target=candidates.find(s=>available(s,member.cellId)&&(!known||used.has(s.role)||used.size<limit));
    if(target){used.add(target.role);claimed.add(target.role);}
   }
