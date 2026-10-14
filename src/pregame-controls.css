@@ -67,7 +67,7 @@
  .sidebar-focused .companion-persistent{padding:5px 10px 3px;max-height:calc(100dvh - 365px)}
  .sidebar-focused .companion-header{min-height:36px;padding-block:2px}
  .sidebar-focused .companion-tabs{min-height:34px}.sidebar-focused .companion-tabs>.btn{min-height:32px;padding-block:3px}
- .sidebar-focused .companion-team-compact .companion-roster-hero{min-height:58px;padding:2px;gap:1px}
+ .sidebar-focused .companion-team-compact .companion-roster-hero{min-height:50px;padding:2px;gap:1px}
  .sidebar-focused .companion-persistent .companion-roster-hero:is([data-action=pick-slot])>span>b{display:none}
  .sidebar-focused .companion-persistent .companion-roster-hero .portrait,.sidebar-focused .companion-persistent .companion-roster-hero .empty-portrait{width:24px;height:24px}
  .sidebar-focused .companion-persistent>.pregame-controls{margin-top:4px;display:grid;grid-template-columns:max-content minmax(0,1fr) max-content max-content;gap:3px}
@@ -79,6 +79,7 @@
  .sidebar-focused .pregame-more[open]{grid-column:1/-1;grid-row:3}
  .sidebar-focused .pregame-role{padding:2px 4px}.sidebar-focused .pregame-role .select{min-height:30px}
  .sidebar-focused .companion-eligibility-status>summary{min-height:26px;padding:3px 0}
+ .sidebar-focused.companion-shell[data-tab=recommend] .companion-content{padding-top:2px}
  .sidebar-focused .companion-content>.companion-section-head{margin-block:0 2px;min-height:32px}
  .sidebar-focused .companion-candidates .companion-candidate{padding-block:1px}
  .sidebar-focused .companion-candidate .candidate-member{padding-block:1px;gap:2px}
