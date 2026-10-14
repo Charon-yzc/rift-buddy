@@ -574,10 +574,19 @@ async function adoptResult(index,fromClick=false){
  const learnedEligibility=!Object.keys(input.eligibleByRole).length&&Object.keys(current.eligibleByRole).length&&withoutEligibility(input)===withoutEligibility(current)&&result.slots.every(s=>!s.champion||!Array.isArray(current.eligibleByRole[s.role])||current.eligibleByRole[s.role].includes(s.champion));
  if(inSelection&&(clickGame!==preparationGameId(client)||clickCell!==client.session?.localPlayerCellId||clickMode!==client.mode?.id||clickRole!==taskOwnRole()))throw Error('候选或选人已变化，尚未采用；请重新选择');
  if(!learnedEligibility&&(results[index]!==result||resultsSignature!==signature||signature!==recommendationKey(current))){const refreshed=inSelection&&refreshClickedResult(result,input,current,previousSlots);if(!refreshed)throw Error('候选或选人已变化，尚未采用；请重新选择');result=refreshed;}
+ const targetRoles=new Set(result.targets),adoptedHeroes=new Set(result.slots.filter(s=>targetRoles.has(s.role)).map(s=>s.champion).filter(Boolean));
+ if(slots.some(s=>!targetRoles.has(s.role)&&adoptedHeroes.has(s.champion)&&(Number.isInteger(s.clientCellId)||s.manualPosition)))throw Error('英雄已有客户端位置，请重新同步后选择');
+ // Scoring may omit unconfirmed allies. Keep those plans unless this explicit
+ // adoption moves the same unbound hero to one of the chosen target lanes.
+ const nextSlots=slots.map(slot=>{
+  if(!targetRoles.has(slot.role)){if(!adoptedHeroes.has(slot.champion))return slot;const {automaticPosition,publicIntent,...rest}=slot;return {...rest,champion:null,locked:false};}
+  const s=structuredClone(result.slots.find(next=>next.role===slot.role)),intent=s.publicIntent;delete s.publicIntent;if(intent){delete s.clientCellId;delete s.manualPosition;}
+  return {...s,locked:!!s.champion&&!intent,...(s.champion&&!Number.isInteger(s.clientCellId)&&!s.manualPosition?{automaticPosition:true}:{})};
+ });
  const nextPlan=resultCreativePlan(result),inherited=partyRoutePreparations(preparations,result.preparationOrigin,nextPlan);
  preservePlayerPosition();for(const selection of inherited)preparations.remember(selection);
  activeCreativePlan=nextPlan;lastTaskSelection=null;creativePlanNotice='';cancelRecommendation();if(scope==='solo')soloRole=result.targets[0]||soloRole;
- slots=structuredClone(result.slots).map(s=>{const intent=s.publicIntent;delete s.publicIntent;if(intent){delete s.clientCellId;delete s.manualPosition;}return {...s,locked:!!s.champion&&!intent,...((intent||result.targets.includes(s.role))&&s.champion&&!Number.isInteger(s.clientCellId)&&!s.manualPosition?{automaticPosition:true}:{})};});
+ slots=nextSlots;
  closeOverlay();draftComparing=false;companionPreview=null;companionTab='recommend';
  await persist({throwOnError:true});results=[result];resultsSignature=recommendationKey(recommendationInput());render();
  return result;

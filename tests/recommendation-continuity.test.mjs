@@ -335,6 +335,39 @@ test('adopting either a room proposal or a shared lineup exits comparison and ex
  }
 });
 
+test('adopting the own candidate preserves non-target manual plans while scoring only public allied evidence',async()=>{
+ for(const scope of ['party','solo']){
+  const current=client();current.session.myTeam.push({cellId:2,championId:0,championPickIntent:0,assignedPosition:'UTILITY'});
+  const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='support'?{champion:'Nami',locked:true}:{})}));
+  const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
+  c.scope=scope;c.saved.preferences.pool=['Ashe'];c.saved.preferences.poolMode='only';
+  const before=structuredClone(c.slots.find(s=>s.role==='support')),input=c.recommendationInput();
+  c.results=recommend(input);c.resultsSignature=recommendationKey(input);
+  assert.deepEqual(c.results[0].targets,['bottom']);
+  assert.equal(c.results[0].slots.find(s=>s.role==='support').champion,null,'The saved unconfirmed ally must not be treated as public team evidence');
+  await c.adoptResult(0);
+  assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),before,'Only the adopted target changes in the persisted draft');
+  assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Ashe');
+  assert.equal(calls.prepared.length,0,'Adopting a plan alone must not write client configuration');
+ }
+});
+
+test('explicitly adopting a hero on another lane moves only that unbound plan and leaves no duplicate',async()=>{
+ const current=client();current.session.myTeam.push({cellId:2,championId:0,championPickIntent:0,assignedPosition:'UTILITY'});
+ const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(['mid','support'].includes(s.role)?{champion:s.role==='mid'?'Ashe':'Nami',locked:true}:{})}));
+ const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
+ c.saved.preferences.pool=['Ashe'];c.saved.preferences.poolMode='only';
+ const before=structuredClone(c.slots.find(s=>s.role==='support')),input=c.recommendationInput();
+ c.results=recommend(input);c.resultsSignature=recommendationKey(input);
+ assert.deepEqual(c.results[0].targets,['bottom']);
+ await c.adoptResult(0);
+ assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Ashe');
+ assert.equal(c.slots.find(s=>s.role==='mid').champion,null);
+ assert.equal(c.slots.filter(s=>s.champion==='Ashe').length,1);
+ assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),before);
+ assert.equal(calls.prepared.length,0);
+});
+
 test('the main room view context follows reliable public hovers without persisting them',()=>{
  const live=client();live.session.myTeam.push({cellId:2,championId:0,championPickIntent:hero('Lux').key,assignedPosition:'MIDDLE'});
  const {context:c}=setup({current:live}),before=JSON.stringify(c.slots);
