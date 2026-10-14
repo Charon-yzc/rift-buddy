@@ -53,7 +53,7 @@ async function run(){
   assert.equal(new Set(Object.values(plans)).size,3);assert.ok(plans.Morgana.includes('黑盾'));assert.ok(plans.Janna.includes('W 不能阻止风女 R'));assert.ok(plans.Yuumi.includes('同一宿主'));
   await js('document.querySelector("[data-companion-section=opponent]").scrollIntoView({block:"start"})');await capture(main,'side-yuumi-plan.png');
   console.log('Side: three distinct plans and first-screen summary verified');
-  await js('(()=>{const b=document.createElement("button");b.dataset.action="auto-sync";document.body.append(b);b.click();b.remove();})()');
+  assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Connecting must already enable automatic synchronization');
   await js('window.openMatchupSelect=document.querySelector("[data-matchup-target]");openMatchupSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
   fixture.session.theirTeam=fixture.session.theirTeam.slice(0,2);main.webContents.send('client-update',structuredClone(fixture));
   console.log('Side: removed public target synchronized');

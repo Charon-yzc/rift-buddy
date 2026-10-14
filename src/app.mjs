@@ -637,13 +637,18 @@ async function useClientPreparation(el,directClick=false,expected=null){
   const dispatchPlan=selectedClientPreparation(view),dispatch=clientPreparationPlan(data,dispatchPlan);
   if(!dispatch||dispatch.fingerprint!==prepared.fingerprint||readOnlyPreparation(view,dispatchPlan)||preparationGameId(client)!==gameId||JSON.stringify(runeWriteContext(client))!==JSON.stringify(clickedContext)||expected&&(taskOwnRole()!==expected.role||expected.planId!==(activeCreativePlan?.id||'')))throw Error('本人位置、选人或方案已变化，尚未操作；请重新核对');
   if(directClick&&!memberHeroAction(selection.id,selection.role).prepare)throw Error('当前英雄或位置已由队友选择，请查看队友配置或选择另一位');
+  if(slots.some(s=>s.role!==selection.role&&s.champion===selection.id&&(Number.isInteger(s.clientCellId)||s.manualPosition)))throw Error('英雄已有客户端位置，请重新同步后选择');
   const result=await api.prepareSelection({...prepared.value,selection,sessionGameId:gameId,context:clickedContext});
   if(!result.preparationRevision||result.preparationRevision>=preparationRevision)clientPreparationStatuses.set(key,result);
   if(result.steps?.runes?.status==='done')runeAppliedKeys.clear();
   if(result.steps?.hover?.status==='done'&&preparationGameId(client)===gameId){
    const own=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),id=champ(selection.id)?.key,target=slots.find(s=>s.role===selection.role);
    if(target&&(!Number.isInteger(target.clientCellId)||target.clientCellId===own?.cellId)&&(!own?.championId||own.championId===id)){
-    if(target.champion!==selection.id)slots=slots.map(s=>s===target?{role:s.role,party:s.party,...(s.partyManual?{partyManual:true}:{}),champion:selection.id,locked:true,automaticPosition:true}:s);
+    if(target.champion!==selection.id)slots=slots.map(s=>{
+     if(s===target)return {role:s.role,party:s.party,...(s.partyManual?{partyManual:true}:{}),champion:selection.id,locked:true,automaticPosition:true};
+     if(s.champion!==selection.id||Number.isInteger(s.clientCellId)||s.manualPosition)return s;
+     const {automaticPosition,publicIntent,...rest}=s;return {...rest,champion:null,locked:false};
+    });
     reconcileCreativePlan();lastTaskSelection=selection;
    }
   }

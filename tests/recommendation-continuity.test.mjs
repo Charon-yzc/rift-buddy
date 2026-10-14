@@ -22,6 +22,7 @@ import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {ROLES} from '../src/core/rules.mjs';
 import {selectedBuildFields} from '../src/core/build-favorites.mjs';
+import {defaultState,validateState} from '../services/storage.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
@@ -366,6 +367,34 @@ test('explicitly adopting a hero on another lane moves only that unbound plan an
  assert.equal(c.slots.filter(s=>s.champion==='Ashe').length,1);
  assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),before);
  assert.equal(calls.prepared.length,0);
+});
+
+test('one ranking-avatar click moves an old unbound hero plan only after successful hover and persists a unique board',async()=>{
+ for(const docked of [false,true])for(const hovered of [false,true]){
+  const current=client(),slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(['mid','support'].includes(s.role)?{champion:s.role==='mid'?'Ashe':'Nami',locked:true}:{})}));
+  const {context:c,calls}=setup({slots,current,incoming:structuredClone(current)});
+  const before=structuredClone(c.slots),writes=[];
+  c.windowLayout.docked=docked;c.currentCombo=currentCombo;c.rankingSource=null;
+  c.rankingReference=()=>({boards:{bottom:[{champion:'Ashe'}]}});
+  c.companionPreparation=()=>c.companionPreview?{selection:c.companionPreview,build:getBuild(hero(c.companionPreview.id),c.companionPreview.role,data,c.companionPreview)}:null;
+  c.persist=async()=>{writes.push(validateState({...defaultState(),draft:{slots:c.slots,scope:'party',style:'wild',soloRole:'bottom'}}));};
+  if(!hovered)c.api.prepareSelection=async value=>{calls.prepared.push(value);return {complete:false,steps:{hover:{status:'error',message:'暂不可选'}}};};
+  vm.runInContext(`async function clickRanking(el){const action='ranking-hero';${extract("if(action==='ranking-hero'){","if(action==='task-compare')")}}`,c);
+  await c.clickRanking({dataset:{id:'Ashe',role:'bottom'}});
+  assert.equal(calls.prepared.length,1,'One click dispatches one preparation');
+  assert.equal(c.slots.filter(s=>s.champion==='Ashe').length,1);
+  assert.equal(c.slots.find(s=>s.role==='mid').champion,hovered?null:'Ashe');
+  assert.equal(c.slots.find(s=>s.role==='bottom').champion,hovered?'Ashe':null);
+  assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),before.find(s=>s.role==='support'));
+  assert.ok(writes.length>=2);assert.equal(calls.prepared[0].selection.id,'Ashe');
+ }
+});
+
+test('direct preparation cannot move a manually assigned hero from a different position',async()=>{
+ const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='mid'?{champion:'Ashe',locked:true,manualPosition:true}:{})}));
+ const {context:c,calls}=setup({slots}),before=structuredClone(slots);
+ await assert.rejects(c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'}),/英雄已有客户端位置/);
+ assert.equal(calls.prepared.length,0);assert.deepEqual(structuredClone(c.slots),before);
 });
 
 test('the main room view context follows reliable public hovers without persisting them',()=>{
