@@ -36,7 +36,7 @@ test('real teammate hovers supersede saved locks and share the same evidence in 
  const current=session();current.myTeam[4].championPickIntent=key('Lulu');
  const slots=merge(saved(),current),before=structuredClone(slots);
  const rendererDraft=recommendationDraft(slots,current,champions);
- assert.equal(rendererDraft.find(s=>s.role==='support').champion,'Nami','The saved lock previously prevented the real hover overlay');
+ assert.equal(rendererDraft.find(s=>s.role==='support').champion,'Lulu','The real public hover is visible before ranking and fit normalization');
  const results=recommend(input(rendererDraft,current)),clean=recommend(input(merge(createSlots(),current),current));
  assert.deepEqual(ranked(results),ranked(clean));
  for(const result of results){
