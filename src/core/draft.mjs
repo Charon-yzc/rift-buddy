@@ -24,7 +24,8 @@ export function reconcileClientDraft(draft,gameId,previousId=null){
  const prior=clientGameId(draft.clientGameId)||clientGameId(previousId),newGame=!!prior&&prior!==gameId;
  if(!newGame&&draft.clientGameId===gameId)return {draft,changed:false,newGame:false};
  const clearSoloRole=newGame&&(!!clientGameId(draft.clientGameId)||draft.playerPosition?.role===draft.soloRole||draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId)));
- const next={...draft,clientGameId:gameId,slots:newGame?clearClientPicks(draft.slots):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
+ // A manual party range belongs to this game; it must not overrule the next group.
+ const next={...draft,clientGameId:gameId,slots:newGame?clearClientPicks(draft.slots).map(({partyManual,...slot})=>slot):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
  if(newGame)delete next.playerPosition;
  if(newGame&&next.creativePlan&&!next.creativePlan.members.every(m=>next.slots.some(s=>s.role===m.role&&s.champion===m.champion)))delete next.creativePlan;
  return {draft:next,changed:true,newGame};

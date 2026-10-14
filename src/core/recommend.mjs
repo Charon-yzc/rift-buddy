@@ -14,6 +14,26 @@ import {strategyTraits,strategySummary,summarizeEnemyTraits,opponentFit,threatNo
 export function createSlots() {
  return ROLES.map(r=>({role:r.id, champion:null, locked:false, party:['mid','bottom','support'].includes(r.id)}));
 }
+// A lobby identifies the group before champion-select supplies player cells.
+// Only its provisional recommendation range changes; no player or lane is bound.
+export function applyLobbyPartyRange(slots,party){
+ const next=structuredClone(slots);
+ if(!['lobby','known'].includes(party?.status))return next;
+ const members=Array.isArray(party.members)?party.members:[],count=Math.min(next.length,Math.max(members.length,Number.isInteger(party.lobbyCount)?party.lobbyCount:0));
+ if(!count)return next;
+ const used=new Set(next.filter(s=>s.partyManual&&s.party).map(s=>s.role)),claimed=new Set(),limit=Math.max(count,used.size);
+ const available=slot=>slot&&!claimed.has(slot.role)&&!(slot.partyManual&&!slot.party);
+ for(const member of [...members].sort((a,b)=>Number(b.local===true)-Number(a.local===true))){
+  const preferred=[member.firstPosition,member.secondPosition].map(value=>CLIENT_POSITION_ROLES[String(value||'').toUpperCase()]).filter(Boolean);
+  const target=preferred.map(role=>next.find(s=>s.role===role)).find(s=>available(s)&&(used.has(s.role)||used.size<limit));
+  if(target){used.add(target.role);claimed.add(target.role);}
+ }
+ // Prefer empty positions for the remaining provisional range. Existing local
+ // heroes and manual positions stay intact even when the board is already full.
+ const fallback=[...next].sort((a,b)=>Number(!!a.champion||a.manualPosition||Number.isInteger(a.clientCellId))-Number(!!b.champion||b.manualPosition||Number.isInteger(b.clientCellId)));
+ for(const slot of fallback)if(used.size<limit&&available(slot)){used.add(slot.role);claimed.add(slot.role);}
+ return next.map(slot=>slot.partyManual?slot:{...slot,party:used.has(slot.role)});
+}
 export function validateSlots(slots, champions) {
  if(!Array.isArray(slots)||slots.length!==5||slots.some(s=>!s||typeof s!=='object')) throw new Error('阵容位置格式不正确');
  if(new Set(slots.map(s=>s.role)).size!==5||slots.some(s=>!ROLES.some(r=>r.id===s.role))) throw new Error('请为五个位置各保留一个槽位');
@@ -567,25 +587,45 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
  const previous=slots.some(s=>s.clientCellId===session?.localPlayerCellId),changed=!!(mine&&!mine.party&&!mine.partyManual&&!mine.manualPosition&&!previous);
  if(changed)mine.party=true;
  if(autoParty&&party){
-  const members=(party.members||[]).filter((m,i,all)=>allEntries.some(p=>p.cellId===m.cellId)&&all.findIndex(p=>p.cellId===m.cellId)===i&&(party.status==='known'||m.cellId===session?.localPlayerCellId||m.source==='manual-id'));
+  const known=party.status==='known';
+  const members=(party.members||[]).filter((m,i,all)=>allEntries.some(p=>p.cellId===m.cellId)&&all.findIndex(p=>p.cellId===m.cellId)===i&&(known||m.cellId===session?.localPlayerCellId||m.source==='manual-id'));
   const hoverContext=recommendationDraft(next,session,champions,{ownRole});
-  const used=new Set(),resolved=[];
-  for(const member of members.sort((a,b)=>Number(b.cellId===session?.localPlayerCellId)-Number(a.cellId===session?.localPlayerCellId)||a.cellId-b.cellId)){
-   const player=allEntries.find(p=>p.cellId===member.cellId),at=next.find(s=>s.clientCellId===member.cellId);
-   const declared=CLIENT_POSITION_ROLES[String(player?.assignedPosition||'').toUpperCase()],champion=byKey.get(Number(player?.championId)),p=champion&&profile(champion);
+  const publicRole=player=>{
+   const at=next.find(s=>s.clientCellId===player.cellId),declared=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
+   const manual=at?.manualPosition?at.role:player.cellId===session?.localPlayerCellId&&next.some(s=>s.role===ownRole)?ownRole:'';
+   const hover=byKey.get(Number(player.championPickIntent)),preview=hoverContext.find(s=>s.publicIntent&&s.champion===hover?.id);
+   return {at,manual,declared,preview};
+  };
+  const reserved=new Map();
+  for(const player of allEntries){const {manual,declared,preview}=publicRole(player),role=manual||declared||preview?.role;if(role&&!reserved.has(role))reserved.set(role,player.cellId);}
+  const infos=members.map(member=>{
+   const player=allEntries.find(p=>p.cellId===member.cellId),position=publicRole(player),champion=byKey.get(Number(player.championId))||byKey.get(Number(player.championPickIntent)),p=champion&&profile(champion);
    const usual=champion?[...(roleOrder[champion.id]||[]),...(p.reviewed?p.roles:[])]:[];
-   const preferred=[declared,...usual].filter(Boolean);
-   const bound=at&&(at.manualPosition||declared===at.role||usual.includes(at.role))?at:null;
-   const declaredSlot=declared&&next.find(s=>s.role===declared&&!s.manualPosition&&!Number.isInteger(s.clientCellId)&&!used.has(s.role));
-   const hover=byKey.get(Number(player?.championPickIntent)),preview=hoverContext.find(s=>s.publicIntent&&s.champion===hover?.id);
-   const target=bound||declaredSlot||(preview&&next.find(s=>s.role===preview.role))||preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!s.champion&&!s.locked&&!s.manualPosition&&!s.partyManual&&!Number.isInteger(s.clientCellId)&&!used.has(s.role));
-   if(target&&!used.has(target.role)){used.add(target.role);resolved.push(target);}
+   const lobbyRoles=known?[CLIENT_POSITION_ROLES[String(member.firstPosition||'').toUpperCase()],CLIENT_POSITION_ROLES[String(member.secondPosition||'').toUpperCase()]].filter(Boolean):[];
+   const fixed=position.manual||position.declared||position.at?.role;
+   const excluded=!!fixed&&next.some(s=>s.role===fixed&&s.partyManual&&!s.party);
+   return {member,...position,usual,lobbyRoles,excluded,priority:position.manual?0:position.declared?1:position.preview?2:position.at?3:usual.length?4:lobbyRoles.length?5:6};
+  }).sort((a,b)=>a.priority-b.priority||Number(b.member.cellId===session?.localPlayerCellId)-Number(a.member.cellId===session?.localPlayerCellId)||a.member.cellId-b.member.cellId);
+  const manualOn=next.filter(s=>s.partyManual&&s.party),used=new Set(known?manualOn.map(s=>s.role):[]),claimed=new Set();
+  const count=Math.min(next.length,Math.max(members.length,Number.isInteger(party.lobbyCount)?party.lobbyCount:0));
+  const limit=Math.max(manualOn.length,count-infos.filter(info=>info.excluded).length);
+  const available=(slot,cellId)=>slot&&!claimed.has(slot.role)&&!(slot.partyManual&&!slot.party)&&(!Number.isInteger(slot.clientCellId)||slot.clientCellId===cellId)&&(!reserved.has(slot.role)||reserved.get(slot.role)===cellId);
+  const provisional=slot=>slot&&!slot.manualPosition&&!Number.isInteger(slot.clientCellId)&&(!slot.champion||slot.automaticPosition);
+  for(const info of infos){
+   if(info.excluded)continue;
+   const {member,manual,declared,preview,at,usual,lobbyRoles}=info,role=manual||declared;
+   const direct=[role&&next.find(s=>s.role===role),preview&&next.find(s=>s.role===preview.role),at].filter(Boolean);
+   const preferred=[...usual,...lobbyRoles].filter((r,i,a)=>r&&a.indexOf(r)===i);
+   const candidates=[...direct,...preferred.map(r=>next.find(s=>s.role===r)).filter(provisional),...(known?next.filter(provisional):[])];
+   const target=candidates.find(s=>available(s,member.cellId)&&(!known||used.has(s.role)||used.size<limit));
+   if(target){used.add(target.role);claimed.add(target.role);}
   }
-  // Membership alone does not establish a lane. A public hover may provisionally
-  // locate a member using the same placement as the visible recommendation.
-  if(party.status==='known'&&!party.unmatched&&members.length&&resolved.length===members.length){
-   for(const s of next)if(!s.partyManual)s.party=used.has(s.role);
-  }else for(const s of resolved)if(!s.partyManual)s.party=true;
+  if(known){
+   // Unlocated members still contribute to the range. These temporary slots
+   // carry no player binding; later public picks, hovers and lanes replace them.
+   for(const slot of next)if(used.size<limit&&provisional(slot)&&available(slot,null)){used.add(slot.role);claimed.add(slot.role);}
+   for(const slot of next)if(!slot.partyManual)slot.party=used.has(slot.role);
+  }else for(const slot of next)if(used.has(slot.role)&&!slot.partyManual)slot.party=true;
  }
  return {slots:next,unassigned,displaced,markedLocalRole:localRole||null,markedLocalChanged:changed};
 }

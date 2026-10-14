@@ -40,7 +40,7 @@ test('chosen sidebar keeps five slots, one range status and the local action bef
  assert(roster>0&&roster<status&&status<action&&action<play);
  assert.match(html,/companion-team-compact/);assert.equal((html.match(/data-drop-role=/g)||[]).length,5);
  assert.doesNotMatch(html,/class="companion-candidate"/);assert.match(html,/data-action="task-compare"/);
- assert.match(html,/队友配置 · 只读/);assert.doesNotMatch(companionView({...props,preferences:{compactTeam:false}}),/companion-team-now companion-team-compact/);
+ assert.match(html,/中路 · 队友已选 · 看配置/);assert.doesNotMatch(companionView({...props,preferences:{compactTeam:false}}),/companion-team-now companion-team-compact/);
  const unknown=companionView({...props,client:{...live,eligibility:null}});assert(unknown.indexOf('data-companion-disclosure="eligibility"')<unknown.indexOf('aria-label="我的下一步"'),'Unknown eligibility remains available ahead of the action');
  const state=validateState({...defaultState(),preferences:{compactTeam:false}});assert.equal(state.preferences.compactTeam,false);assert.equal(validateState(defaultState()).preferences.compactTeam,true);
 });

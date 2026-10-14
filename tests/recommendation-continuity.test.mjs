@@ -2,13 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
-import {createSlots,mergeClientSession,recommend,clearClientPicks,currentCombo,comboContextKnown} from '../src/core/recommend.mjs';
+import {createSlots,mergeClientSession,recommend,clearClientPicks,currentCombo,comboContextKnown,applyLobbyPartyRange} from '../src/core/recommend.mjs';
 import {companionPickIntent,localConfigurationPreview,configurationReadOnly} from '../src/core/companion-plan.mjs';
 import {preparationProgressView} from '../src/preparation-progress-view.mjs';
 import {recommendationDraft,comparisonDraft} from '../src/core/draft-intents.mjs';
 import {reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,manualPlayerSlot,clearManualPlayerPosition,moveChampion,assignClientChampion} from '../src/core/draft.mjs';
 import {currentPlayerSelection} from '../src/core/guide.mjs';
-import {recommendationKey,createPreparationStore,createRuneApplicationState,partyRoutePreparations} from '../src/core/preparation.mjs';
+import {recommendationKey,createPreparationStore,createRuneApplicationState,partyRoutePreparations,configurationKey as buildChoiceKey} from '../src/core/preparation.mjs';
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible} from '../src/core/creative-plan.mjs';
@@ -20,6 +20,8 @@ import {clientPreparationPlan,preparationGameId,clientPreparationKey} from '../s
 import {runeApplicationKey} from '../src/preparation-view.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
+import {ROLES} from '../src/core/rules.mjs';
+import {selectedBuildFields} from '../src/core/build-favorites.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
@@ -39,7 +41,9 @@ const clickFunctions=extract('function resultCreativePlan(result){','function re
  extract('function taskOwnRole(){','function renderTaskMembers(')+
  extract('function memberHeroAction(','function readOnlyPreparation(')+
  extract('function readOnlyPreparation(','function clientControls(')+
- extract('function selectedClientPreparation(','function setCompanionRole(');
+ extract('function selectedClientPreparation(','async function loadCatalogCombo(')+
+ extract('function buildSelection(){','function buildSelectionContext(')+
+ extract('function buildSelectionContext(','function acceptGuideSelection(');
 const buildBranch=extract("else if(action==='build'){","else if(action==='build-partner'");
 
 function client(){
@@ -47,7 +51,7 @@ function client(){
 }
 const partySlots=()=>createSlots().map(s=>({...s,party:['mid','bottom'].includes(s.role),...(s.role==='bottom'?{champion:'Ashe',locked:true,automaticPosition:true}:{})}));
 function setup({slots=partySlots(),current=client(),incoming=client(),results=[{id:'existing candidate'}],now=Date.now()}={}){
- const timers=new Map(),calls={cancel:0,generated:[],prepared:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
+ const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
  const context=vm.createContext({
   Date:ClockDate,data,slots,client:current,saved:{draft:{clientGameId:'123'},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
@@ -56,21 +60,22 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   recommendationRun:0,activeRecommendation:null,cancelRecommendationReveal:noop,
   lastRenderedClient:'',lastMatchupSession:'',lastMatchupSync:'',lastMatchupGame:'123',matchupTargets:new Map(),lastClientRead:'',
   lastAutoPartyContext:'',pendingIntentPreparation:null,pendingIntentPlanId:'',lastMatchupOwn:'',saveChain:Promise.resolve(),sharedClient:null,
-  buildView:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
+  buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
-  lastTaskSelection:null,companionPreview:null,companionTab:'recommend',draftComparing:false,creativePlanNotice:'',
+  lastTaskSelection:null,companionPreview:null,companionTab:'recommend',companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',
   preparationRevision:0,preparationPendingKey:'',clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
-  structuredClone,mergeClientSession,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
+  structuredClone,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,captureCreativePlan,creativeMemberCombo,creativeComboContext,partyRoutePreparations,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
+  ROLES,moveChampion,assignClientChampion,clearManualPlayerPosition,selectedBuildFields,buildChoiceKey,
   clientSyncOptions:()=>({autoArrange:true,autoParty:false}),clientRenderIdentity:()=>'',matchupContext:()=>'',publicMatchupIds:()=>[],currentRoleEvidence:()=>[],
   scheduleRoomPublish:noop,drainExternalState:noop,persist:async()=>{},reconcileCreativePlan:noop,render:noop,myPreparation:()=>null,
   companionPreparation:()=>null,currentPickIntent:()=>null,rememberedPreparation:()=>null,preservePlayerPosition:noop,closeOverlay:noop,
-  syncPreparedGuide:noop,toast:noop,refreshClientClock:noop,
+  syncPreparedGuide:noop,toast:noop,refreshClientClock:noop,renderBuild:()=>{if(context.buildView)context.renderedBuildContext=context.buildSelectionContext(context.buildView.build);},invalidate:noop,
   markResultStale:()=>{calls.stale++;},
   setTimeout:callback=>{const id=++nextTimer;timers.set(id,callback);return id;},clearTimeout:id=>timers.delete(id),
-  showBuild:(id,role,mode,selection)=>calls.readOnly.push({id,role,mode,selection}),
+  showBuild:(id,role,mode,selection)=>{const opened={id,role,mode,selection};calls.opened.push(opened);if(selection?.readOnly)calls.readOnly.push(opened);context.buildView={variant:'default',conditions:[],coreIndex:0,id,role,mode,...selection,build:getBuild(hero(id),role,data,selection)};context.renderBuild();},
   champ:hero,
   api:{client:async fresh=>{calls.clients.push(fresh);return structuredClone(incoming);},prepareSelection:async value=>{
    calls.prepared.push(value);incoming.session.myTeam[0].championPickIntent=hero(value.champion).key;
@@ -119,16 +124,17 @@ function avatar(html,id){
  return {dataset:Object.fromEntries(Object.entries(attributes).filter(([name])=>name.startsWith('data-')).map(([name,value])=>[name.slice(5).replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase()),value])),hasAttribute:name=>Object.hasOwn(attributes,name)};
 }
 test('list and detailed avatars route an explicit own click through preparation while teammate clicks remain read only',async()=>{
- const slots=partySlots().map(s=>s.role==='mid'?{...s,champion:'Ahri',locked:true}:s);
+ const slots=partySlots().map(s=>s.role==='mid'?{...s,champion:'Ahri',locked:true,clientCellId:2}:s),live=client();
+ live.session.myTeam.push({cellId:2,championId:hero('Ahri').key,assignedPosition:'MIDDLE'});
  const [result]=recommend({slots,champions:data.champions,scope:'party',limit:1});
  for(const html of [renderResultCard(result,0,data,{favorites:[],preferences:{}},'wild'),resultPlayCard(result,0,data)]){
   const own=avatar(html,'Ashe');assert.equal(own.dataset.prepareClick,'true');
-  const s=setup({slots:structuredClone(slots),results:[structuredClone(result)]});
+  const s=setup({slots:structuredClone(slots),current:structuredClone(live),incoming:structuredClone(live),results:[structuredClone(result)]});
   await s.context.clickBuild(own);
   assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].champion,'Ashe');assert.equal(s.calls.prepared[0].role,'bottom');
   assert.equal(s.calls.prepared[0].sessionGameId,'123');assert.equal(s.calls.readOnly.length,0);
   const teammate=avatar(html,'Ahri');assert.equal(teammate.dataset.prepareClick,'true');
-  const other=setup({slots:structuredClone(slots),results:[structuredClone(result)]});
+  const other=setup({slots:structuredClone(slots),current:structuredClone(live),incoming:structuredClone(live),results:[structuredClone(result)]});
   await other.context.clickBuild(teammate);
   assert.equal(other.calls.prepared.length,0);assert.equal(other.calls.readOnly.length,1);assert.equal(other.calls.readOnly[0].selection.readOnly,true);
  }
@@ -139,8 +145,9 @@ function checkedClient(now,change=noop){
  value.eligibility={context:pickEligibilityContext(value.session),localPlayerCellId:value.session.localPlayerCellId,receivedAt:new Date(now).toISOString(),pickable:[hero('Ashe').key,hero('Ahri').key],disabled:[]};
  return value;
 }
-function candidateSetup({current,incoming,now}){
- const slots=partySlots().map(s=>s.role==='mid'?{...s,champion:'Ahri',locked:true}:s);
+function candidateSetup({current,incoming,now,teammate=false}){
+ if(teammate)for(const value of [current,incoming])value.session.myTeam.push({cellId:2,championId:hero('Ahri').key,assignedPosition:'MIDDLE'});
+ const slots=partySlots().map(s=>s.role==='mid'?{...s,champion:'Ahri',locked:true,...(teammate?{clientCellId:2}:{})}:s);
  const [result]=recommend({slots,champions:data.champions,scope:'party',limit:1});
  const s=setup({slots,current,incoming,results:[result],now});
  return {...s,html:renderResultCard(result,0,data,{favorites:[],preferences:{}},'wild')};
@@ -148,7 +155,7 @@ function candidateSetup({current,incoming,now}){
 test('eligibility age alone preserves candidate signatures and own or teammate avatar clicks',async()=>{
  const now=2000000;
  for(const id of ['Ashe','Ahri']){
-  const current=checkedClient(now),incoming=checkedClient(now+16001),s=candidateSetup({current,incoming,now});
+  const current=checkedClient(now),incoming=checkedClient(now+16001),s=candidateSetup({current,incoming,now,teammate:true});
   const signature=s.context.resultsSignature;s.clock.now+=16001;
   assert.equal(localPickEligibility(current,s.context.slots,data.champions,{scope:'party',now:s.clock.now}).status,'unknown','Display freshness must still expire');
   assert.equal(s.context.recommendationKey(s.context.recommendationInput()),signature,'Recommendation context must not expire solely with time');
@@ -156,6 +163,45 @@ test('eligibility age alone preserves candidate signatures and own or teammate a
   assert.equal(s.calls.prepared.length,id==='Ashe'?1:0);assert.equal(s.calls.readOnly.length,id==='Ahri'?1:0);
   if(id==='Ashe')assert.equal(s.calls.clients[0],true,'The click must force a fresh client read before preparing');
  }
+});
+
+test('an explicit free-role avatar click establishes unknown ownership and prepares in the main drawer or sidebar plan',async()=>{
+ for(const docked of [false,true])for(const picked of [false,true]){
+  const current=client();Object.assign(current.session.myTeam[0],{assignedPosition:'',championId:picked?hero('Graves').key:0,championPickIntent:picked?0:hero('Graves').key});
+  const slots=mergeClientSession(createSlots(),current.session,data.champions,{autoArrange:true}).slots;
+  const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
+  c.soloRole='';c.windowLayout.docked=docked;
+  c.companionPreparation=()=>c.companionPreview?{selection:c.companionPreview,build:getBuild(hero(c.companionPreview.id),c.companionPreview.role,data,c.companionPreview)}:null;
+  assert.equal(c.taskOwnRole(),'');
+  await c.prepareHeroClick({id:'Graves',role:'bottom',mode:'rift'});
+  assert.equal(c.taskOwnRole(),'bottom');assert.equal(c.saved.draft.playerPosition.role,'bottom');
+  assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Graves');assert.equal(calls.prepared[0].role,'bottom');
+  if(docked){assert.equal(c.companionTab,'plan');assert.equal(calls.opened.length,0);assert.equal(calls.prepared[0].selection.readOnly,false);}
+  else{assert.equal(calls.opened.length,1);assert.equal(c.buildSelection().readOnly,false);}
+ }
+});
+
+test('explicit avatar clicks remain read only for another player position, a public teammate pick and a different locked hero',async()=>{
+ for(const kind of ['position','teammate','locked']){
+  const current=client(),slots=partySlots(),id=kind==='teammate'?'Ahri':'Jinx';
+  if(kind==='position')slots[3]={...slots[3],champion:'Ahri',locked:true,clientCellId:2};
+  if(kind==='teammate'||kind==='position')current.session.myTeam.push({cellId:2,championId:hero('Ahri').key,assignedPosition:'MIDDLE'});
+  if(kind==='locked'){current.session.myTeam[0].championId=hero('Ashe').key;current.session.actions=[[{actorCellId:1,type:'pick',championId:hero('Ashe').key,completed:true}]];}
+  const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
+  await c.prepareHeroClick({id,role:'bottom',mode:'rift'});
+  assert.equal(calls.prepared.length,0,kind);assert.equal(calls.opened.length,1,kind);
+  assert.equal(c.buildSelection().readOnly,true,kind);
+ }
+});
+
+test('a blocked candidate in the local role opens a read-only drawer without adopting or preparing it',async()=>{
+ const current=client();current.session.myTeam[0].championId=hero('Ashe').key;
+ current.session.actions=[[{actorCellId:1,type:'pick',championId:hero('Ashe').key,completed:true}]];
+ const [result]=recommend({slots:createSlots(),champions:data.champions,scope:'party',pool:['Ahri','Jinx','Braum'],poolMode:'only',limit:1});
+ const {context:c,calls}=setup({current,incoming:structuredClone(current),slots:createSlots(),results:[result]});
+ await c.prepareCandidate({dataset:{id:'Jinx',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
+ assert.equal(calls.prepared.length,0);assert.equal(c.activeCreativePlan,null);assert.equal(calls.opened.length,1);
+ assert.equal(c.buildSelection().readOnly,true);
 });
 test('a stale candidate refresh rejects newly disabled targets, different games, players, roles and modes before preparation',async()=>{
  const now=2000000;
@@ -363,9 +409,9 @@ test('both room reference entry points make other roles and unknown ownership re
   const branch=action==='room-local-reference'?extract("if(action==='room-local-reference')","if(action==='room-copy-configuration')"):extract("if(action==='room-adopt-configuration')","if(action.startsWith('catalog-')");
   vm.runInContext(`async function roomReference(action,el){${branch}}`,c);
   await c.roomReference(action,{dataset:{id:'Ahri',role:'mid',mode:'rift'}});
-  assert.equal(calls.readOnly.length,1);assert.equal(calls.readOnly[0].selection.readOnly,ownRole!=='mid',action+': '+ownRole);
+  assert.equal(calls.opened.length,1);assert.equal(calls.opened[0].selection.readOnly,ownRole!=='mid',action+': '+ownRole);
   if(ownRole!=='mid'){
-   c.buildView={id:'Ahri',role:'mid',...calls.readOnly[0].selection};
+   c.buildView={id:'Ahri',role:'mid',...calls.opened[0].selection};
    const from=source.indexOf("else if(action==='apply-runes')"),branch=source.slice(from,source.indexOf("else if(",from+8));
    assert.ok(from>0);vm.runInContext(`async function writeRoomRunes(){const action='apply-runes';if(false){} ${branch}}`,c);
    await assert.rejects(c.writeRoomRunes(),/只读配置/);assert.equal(calls.prepared.length,0);

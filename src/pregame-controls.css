@@ -38,6 +38,7 @@
 .pregame-controls .pregame-role .select{width:100px;background:#172e27;border-color:#649881;color:#f0fff8;min-height:34px;font-weight:700}
 .pregame-controls-compact .pregame-primary{flex-wrap:wrap}
 .pregame-controls-compact .pregame-members{font-size:11px}
-.launch-actions{display:grid;gap:8px;margin:14px 0}
-.launch-actions .btn{width:100%;min-height:42px}
-.launch-actions .connect-client{background:#23463a;border-color:#8fceb4;color:#cdf6e2}
+.client-connection-status{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;margin:0 0 16px;border:1px solid var(--accent,#a8eacb);border-radius:10px;background:rgba(168,234,203,.06)}
+.client-connection-status>div:first-child{display:grid;gap:4px;min-width:0}.client-connection-status strong{font-size:15px;color:var(--text,#e6f2ed)}.client-connection-status span{font-size:13px;color:var(--muted,#9aafa8);overflow-wrap:anywhere}.client-connection-actions{display:flex;gap:8px;flex-shrink:0}
+.companion-shell>.client-connection-status{margin:10px 12px 0;flex-wrap:wrap;padding:10px 12px;gap:8px}.companion-shell>.client-connection-status .client-connection-actions{width:100%}.companion-shell>.client-connection-status .btn{flex:1}
+@media(max-width:650px){.client-connection-status{flex-wrap:wrap}.client-connection-actions{width:100%}}
