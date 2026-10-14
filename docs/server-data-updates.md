@@ -42,7 +42,7 @@ OP.GG 没有向第三方提供稳定的数据 API 契约。其帮助说明要求
 - 某份统计失败时，保留该范围的有效旧资料；有明确来源版本的旧配置保留其真实补丁。不会用另一个地区的统计冒充。
 - 新基础补丁缺少完整的六份榜单时，暂不替换既有完整候选。
 - 压缩文件和原始内容都保存 SHA-256，读取时重新验证；四类文件通过校验后才切换 `current.json`。
-- 历史文件保留，候选目录总预算 512 MiB。达到预算时停止新增并报告，维护者按具体授权决定归档或清理。
+- 候选只保留当前有效的一份。新候选完整校验并切换指针后，自动删除旧候选和遗留的采集中间目录；无内容变化的检查也会清理旧副本。更新期间允许新旧两份短暂共存，512 MiB 预算覆盖这段过程；达到上限时保留当前资料并报告。
 
 SHA-256 用于检查内容完整性；它不等同于数字签名。只有完整成功的一轮才会进一步生成 Ed25519 签名清单；采集候选和公开的签名统计资料分开保存。
 
@@ -58,7 +58,9 @@ SHA-256 用于检查内容完整性；它不等同于数字签名。只有完整
 
 签名私钥为 B 上的 `/var/lib/rift-buddy-data/signing/ed25519.pem`，目录权限 0700、文件 0600，用户为 `riftdata`；它与 Windows 上的 SSH 登录私钥用途不同。公钥固定在 `services/data-feed.mjs`，密钥 ID 为 `data-20261014`。不要重新生成同名签名密钥来修复访问问题；换钥需要同步发布客户端信任的公钥。
 
-公开目录为 `/srv/rift-buddy-data`，只含签名清单和按哈希命名的三个压缩数据文件，预算为 256 MiB。密钥、采集日志、状态和原始候选不放入这个目录。文件全部保存后才原子替换清单；未变化内容复用已有文件。完整采集与签名发布在同一个 `flock` 下串行完成。
+公开目录为 `/srv/rift-buddy-data`，只保留当前补丁的签名清单及其引用的三个压缩数据文件，预算为 256 MiB。密钥、采集日志、状态和原始候选不放入这个目录。文件全部保存后才原子替换清单，重新核验当前文件后删除旧补丁目录和未引用的旧文件；未变化内容复用已有文件。完整采集、签名发布和清理在同一个 `flock` 下串行完成。
+
+客户端下载时若恰逢更新、旧文件已被删除，收到 404/410 后会重新读取最新清单并重试一次；仍失败则继续使用本地有效资料。部分采集失败不替换公开版本，当前有效资料可以来自上次成功采集，但不额外保留历史副本。
 
 ## 目录与调度
 
@@ -68,7 +70,7 @@ SHA-256 用于检查内容完整性；它不等同于数字签名。只有完整
 | --- | --- |
 | `/opt/rift-buddy-data/current` | 指向当前采集程序的版本目录 |
 | `/opt/rift-buddy-data/current/data` | 发布时带入的有效基线，采集过程不修改它 |
-| `/var/lib/rift-buddy-data/updates/current.json` | 当前完整候选及上一候选的指针 |
+| `/var/lib/rift-buddy-data/updates/current.json` | 当前完整候选的指针 |
 | `/var/lib/rift-buddy-data/updates/releases/<版本>/` | 四份 `.json.gz` 及 `manifest.json` |
 | `/var/lib/rift-buddy-data/updates/status.json` | 检查时间、内容变化、覆盖数量、错误及网络预算 |
 | `/var/lib/rift-buddy-data/collect.lock` | `flock` 进程锁，防止并发维护覆盖候选 |
@@ -104,7 +106,7 @@ ssh rift-buddy-data 'sudo -n systemctl start --no-block rift-buddy-data.service'
 node --test tests/server-data-fetch.test.mjs tests/server-data-store.test.mjs tests/server-data-collector.test.mjs tests/data-feed.test.mjs
 ```
 
-生产程序入口是 `scripts/collect-server-data.mjs`，unit 模板在 `deploy/data/rift-buddy-data.service`。部署时只打包入口的实际依赖和四份基线资料，核对哈希后放入新版本目录；备份旧 unit，再切换程序链接。旧部署和旧资料保留，便于回退。
+生产程序入口是 `scripts/collect-server-data.mjs`，unit 模板在 `deploy/data/rift-buddy-data.service`。部署时只打包入口的实际依赖和四份基线资料，核对哈希后放入新版本目录；临时备份旧 unit，再切换程序链接。验证新部署、定时器和签名资料成功后，删除被替换的程序目录、旧备份和上传归档；更新失败时先恢复当前服务，不删除它。自动资料清理只处理生成目录与文件，跳过符号链接和无法识别的维护文件。
 
 ## 仍待接入
 

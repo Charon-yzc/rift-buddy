@@ -2,9 +2,29 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createPrivateKey,createPublicKey,sign,randomUUID} from 'node:crypto';
 import {loadServerData} from './server-data-store.mjs';
-import {DATA_FEED_NAMES,feedHash,verifyFeedEnvelope,validateFeedBundle,validateFeedManifest} from './data-feed.mjs';
+import {DATA_FEED_NAMES,feedHash,verifyFeedEnvelope,validateFeedBundle,validateFeedManifest,validFeedPatch,decodeFeedFile} from './data-feed.mjs';
 
 async function sizeOf(root){let bytes=0;for(const file of await fs.readdir(root,{withFileTypes:true}).catch(error=>{if(error.code==='ENOENT')return [];throw error;})){const name=path.join(root,file.name);if(file.isDirectory())bytes+=await sizeOf(name);else if(file.isFile())bytes+=(await fs.stat(name)).size;}return bytes;}
+async function prunePublishedData(publicRoot,manifest,keys){
+ const base=await fs.realpath(publicRoot),assets=path.join(base,'v1','assets'),patches=path.join(base,'v1','patches');
+ for(const folder of [path.join(base,'v1'),assets,patches,path.join(patches,manifest.patch)]){
+  const stat=await fs.lstat(folder);if(!stat.isDirectory()||stat.isSymbolicLink())throw Error('公开资料目录无效');
+ }
+ const current=verifyFeedEnvelope(JSON.parse(await fs.readFile(path.join(patches,manifest.patch,'latest.json'),'utf8')),{keys});
+ if(current.release!==manifest.release||current.sequence!==manifest.sequence)throw Error('公开资料已变化，本轮不清理');
+ // Finish verifying the active snapshot before removing any old asset.
+ for(const file of Object.values(current.files))await decodeFeedFile(await fs.readFile(path.join(assets,file.file)),file);
+ const keep=new Set(Object.values(current.files).map(file=>file.file)),removed=[];
+ for(const entry of await fs.readdir(assets,{withFileTypes:true})){
+  if(!entry.isFile()||entry.isSymbolicLink()||keep.has(entry.name)||! /^[a-f0-9]{64}\.json\.gz$/.test(entry.name))continue;
+  await fs.unlink(path.join(assets,entry.name));removed.push('assets/'+entry.name);
+ }
+ for(const entry of await fs.readdir(patches,{withFileTypes:true})){
+  if(entry.name===current.patch||!entry.isDirectory()||entry.isSymbolicLink()||!validFeedPatch(entry.name))continue;
+  await fs.rm(path.join(patches,entry.name),{recursive:true});removed.push('patches/'+entry.name);
+ }
+ return removed;
+}
 // Run under the same flock as collection. A separate immutable public tree
 // exposes only signed references, never operational logs or signing material.
 export async function publishServerData({root,publicRoot,keyFile,keyId='data-20261014',clock=()=>Date.now(),maxBytes=256*1024*1024}){
@@ -41,5 +61,6 @@ export async function publishServerData({root,publicRoot,keyFile,keyId='data-202
   try{await fs.writeFile(temporary,JSON.stringify(envelope),{flag:'wx',mode:0o644});await fs.chmod(temporary,0o644);await fs.rename(temporary,destination);}
   finally{await fs.unlink(temporary).catch(error=>{if(error.code!=='ENOENT')throw error;});}
  }
- return {changed,manifest};
+ const removed=await prunePublishedData(publicRoot,manifest,keys);
+ return {changed,manifest,removed};
 }

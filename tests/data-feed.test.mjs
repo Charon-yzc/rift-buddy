@@ -92,6 +92,34 @@ test('single-flight and interval prevent duplicate automatic downloads',async t=
  const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>true,download:f.download,keys,clock:()=>now});
  await Promise.all([cache.check(),cache.check(),cache.check()]);assert.equal(f.calls.length,4);await cache.check();assert.equal(f.calls.length,4);
 });
+test('publication during download retries the latest signed manifest once',async t=>{
+ const root=await temporary(t),game=data(),old=fixture(),changed=structuredClone(seed);
+ Object.values(changed.rankings.entries)[0].boards.top[0].samples++;
+ const next=fixture(changed,now+1);let switched=false,manifests=0;
+ const fetcher=async url=>{
+  if(url.endsWith('/latest.json')){manifests++;return new Response(JSON.stringify(switched?next.envelope:old.envelope));}
+  if(!switched){switched=true;return new Response('',{status:404});}
+  return new Response(next.assets[path.basename(url,'.json.gz')]);
+ };
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>true,download:(url,options)=>downloadDataFeed(url,{...options,fetcher}),keys,clock:()=>now+100});
+ assert.equal((await cache.check()).phase,'ready');assert.equal(manifests,2);
+ const saved=JSON.parse(await fs.readFile(path.join(root,'data-feed.json'),'utf8'));
+ assert.equal(verifyFeedEnvelope(saved.envelope,{keys}).release,next.manifest.release);
+});
+test('repeatedly missing server assets stop after one retry and retain offline data',async t=>{
+ const root=await temporary(t),game=data(),first=fixture();let failing=false,manifests=0;
+ const changed=structuredClone(seed);Object.values(changed.rankings.entries)[0].boards.top[0].samples++;
+ const next=fixture(changed,now+1);
+ const download=async(url,options)=>{
+  if(!failing)return first.download(url);
+  if(url.endsWith('/latest.json')){manifests++;return Buffer.from(JSON.stringify(next.envelope));}
+  return downloadDataFeed(url,{...options,fetcher:async()=>new Response('',{status:410})});
+ };
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>true,download,keys,clock:()=>now+100});
+ await cache.check();const saved=await fs.readFile(path.join(root,'data-feed.json'),'utf8');failing=true;
+ assert.equal((await cache.check({force:true})).phase,'offline');assert.equal(manifests,2);
+ assert.equal(await fs.readFile(path.join(root,'data-feed.json'),'utf8'),saved);
+});
 test('applying a feed preserves newer local references, filter and chosen preparation',()=>{
  const game=data();applyFeedBundle(game,seed);
  const key=Object.keys(game.buildSources)[0],local={...game.buildSources[key],fetchedAt:'2027-01-01T00:00:00Z'};game.buildSources[key]=local;
@@ -110,4 +138,13 @@ test('publisher exposes only signed complete references and preserves the previo
  assert.equal((await publishServerData({root,publicRoot,keyFile,keyId:'test',clock:()=>now+1})).changed,false);
  await fs.writeFile(statusFile,JSON.stringify({state:'partial',release:staged.pointer.release}));
  await assert.rejects(publishServerData({root,publicRoot,keyFile,keyId:'test'}),/完整/);assert.equal(await fs.readFile(latest,'utf8'),saved);
+ const next=structuredClone(seed);Object.values(next.rankings.entries)[0].boards.top[0].samples++;
+ const second=await stageServerData(root,next);await fs.writeFile(statusFile,JSON.stringify({state:'ok',limited:false,release:second.pointer.release}));
+ const obsolete=path.join(publicRoot,'v1/patches/16.19');await fs.mkdir(obsolete);await fs.writeFile(path.join(obsolete,'latest.json'),'old');
+ const sentinel=path.join(publicRoot,'v1/assets/maintenance.txt');await fs.writeFile(sentinel,'keep');
+ const published=await publishServerData({root,publicRoot,keyFile,keyId:'test',clock:()=>now+2});
+ assert.ok(published.removed.includes('assets/'+first.manifest.files.rankings.file));
+ assert.deepEqual(await fs.readdir(path.join(publicRoot,'v1/patches')),[seed.game.patch]);
+ assert.deepEqual((await fs.readdir(path.join(publicRoot,'v1/assets'))).sort(),[...Object.values(published.manifest.files).map(file=>file.file),'maintenance.txt'].sort());
+ assert.equal(await fs.readFile(sentinel,'utf8'),'keep');
 });

@@ -79,14 +79,33 @@ async function storageBytes(root){
   const file=path.join(root,entry.name);if(entry.isDirectory())total+=await storageBytes(file);else if(entry.isFile())total+=(await fs.stat(file)).size;
  }return total;
 }
+// Collection and pruning share the service's flock. Only generated directories
+// are removable; symlinks and unrecognized maintenance files are left alone.
+export async function pruneServerData(root,{expectedRelease}={}){
+ const current=await loadServerData(root);if(!current)return null;
+ if(expectedRelease!==undefined&&current.pointer.release!==expectedRelease)throw Error('已有另一轮资料更新完成，本轮不清理');
+ const folder=path.join(await fs.realpath(root),'releases'),stat=await fs.lstat(folder);
+ if(!stat.isDirectory()||stat.isSymbolicLink())throw Error('候选资料目录无效');
+ const entries=await fs.readdir(folder,{withFileTypes:true});
+ if(!entries.some(entry=>entry.name===current.pointer.release&&entry.isDirectory()&&!entry.isSymbolicLink()))throw Error('当前资料目录无效');
+ const pointer={schema:1,release:current.pointer.release,manifestSha256:current.pointer.manifestSha256};
+ if(Object.hasOwn(current.pointer,'previousRelease'))await atomicJSON(path.join(root,'current.json'),pointer);
+ const removed=[];
+ for(const entry of entries){
+  if(entry.name===pointer.release||!entry.isDirectory()||entry.isSymbolicLink()||!releasePattern.test(entry.name)&&!/^\.staging-[A-Za-z0-9]{6}$/.test(entry.name))continue;
+  await fs.rm(path.join(folder,entry.name),{recursive:true});removed.push(entry.name);
+ }
+ return {...current,pointer,removed};
+}
 export async function stageServerData(root,bundle,{expectedRelease,maxBytes=512*1024*1024,clock=()=>new Date().toISOString()}={}){
  validateServerData(bundle);
- const current=await loadServerData(root);
+ let current=await loadServerData(root);
  if(expectedRelease!==undefined&&(current?.pointer.release||null)!==expectedRelease)throw Error('已有另一轮资料更新完成，本轮不覆盖');
  if(current){
   const next=bundle.game.version.split('.').map(Number),prior=current.bundle.game.version.split('.').map(Number);
   const order=next[0]-prior[0]||next[1]-prior[1]||next[2]-prior[2];
   if(order<0||compareBuildPatches(bundle.game.patch,current.bundle.game.patch)<0)throw Error('拒绝资料版本回退');
+  current=await pruneServerData(root,{expectedRelease:current.pointer.release});
   if(contentEqual(bundle,current.bundle))return {...current,changed:false};
  }
  const files={},packedFiles={};
@@ -98,7 +117,7 @@ export async function stageServerData(root,bundle,{expectedRelease,maxBytes=512*
  }
  const release=bundle.game.version+'-'+dataHash(json(files)).slice(0,16);
  const manifest={schema:1,release,version:bundle.game.version,patch:bundle.game.patch,createdAt:clock(),status:'candidate-needs-release-review',files};
- const manifestBytes=json(manifest),pointer={schema:1,release,manifestSha256:dataHash(manifestBytes),previousRelease:current?.pointer.release||null};
+ const manifestBytes=json(manifest),pointer={schema:1,release,manifestSha256:dataHash(manifestBytes)};
  const folder=path.join(root,'releases');await fs.mkdir(folder,{recursive:true});
  const existing=await fs.readFile(path.join(folder,release,'manifest.json')).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
  if(existing){
@@ -106,7 +125,7 @@ export async function stageServerData(root,bundle,{expectedRelease,maxBytes=512*
   if(!contentEqual(saved.bundle,bundle))throw Error('既有资料版本不匹配');
  }else{
   const extra=Object.values(packedFiles).reduce((sum,bytes)=>sum+bytes.length,0)+manifestBytes.length+65536;
-  if(await storageBytes(root)+extra>maxBytes)throw Error('资料存储达到上限，保留所有有效版本');
+  if(await storageBytes(root)+extra>maxBytes)throw Error('资料存储达到上限，保留当前有效资料');
   const temporary=await fs.mkdtemp(path.join(folder,'.staging-'));
   try{
    for(const name of SERVER_DATA_FILES)await fs.writeFile(path.join(temporary,files[name].file),packedFiles[name],{flag:'wx'});
@@ -118,5 +137,5 @@ export async function stageServerData(root,bundle,{expectedRelease,maxBytes=512*
  const latest=await loadServerData(root);
  if((latest?.pointer.release||null)!==(current?.pointer.release||null))throw Error('已有另一轮资料更新完成，本轮不覆盖');
  await atomicJSON(path.join(root,'current.json'),pointer);
- return {...await loadRelease(root,pointer),changed:true};
+ return {...await pruneServerData(root,{expectedRelease:release}),changed:true};
 }
