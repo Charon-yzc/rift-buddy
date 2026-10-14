@@ -65,6 +65,15 @@ test('only the local unselected intent prepares a labeled plan without creating 
  assert.match(html,/当前完整配置/);assert.match(html,/预选位置<select/);assert.match(html,/data-companion-field="rune"/);assert.doesNotMatch(html,/data-action="my-runes"|data-action="guide-current"/);
 });
 
+test('explicit current-player lane outranks an old unbound same-hero plan',()=>{
+ const slots=createSlots().map(s=>({...s,...(s.role==='mid'?{champion:'Garen',locked:true}:s.role==='top'?{champion:'Ahri',locked:true}:{})}));
+ const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:hero('Garen').key}]}};
+ const before=structuredClone(slots);
+ const intent=companionPickIntent(client,data.champions,slots,{soloRole:'top',playerPosition:{role:'top',cellId:1}});
+ assert.equal(intent.selection.role,'top');assert.equal(intent.positionKnown,true);assert.deepEqual(slots,before);
+ assert.equal(companionPickIntent(client,data.champions,slots,{playerPosition:{role:'top',cellId:2}}).selection.role,'mid','Another player cannot override the local plan');
+});
+
 test('inline rune and equipment choices stay independent and survive preparation recall',()=>{
  const original=build(base),store=createPreparationStore();
  const rune=original.runeOptions.find(o=>o.page.selectedPerkIds[0]!==original.runePage.selectedPerkIds[0]);assert.ok(rune);

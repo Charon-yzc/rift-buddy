@@ -27,12 +27,13 @@ export function companionPickIntent(client,champions,slots=[],{scope='solo',solo
  if(!player||player.championId||!Number.isInteger(player.championPickIntent))return null;
  const champion=champions.find(c=>c.key===player.championPickIntent);if(!champion)return null;
  const assigned=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
- const manual=slots.find(s=>s.manualPosition&&s.clientCellId===session.localPlayerCellId)||slots.find(s=>s.champion===champion.id&&!s.automaticPosition&&!Number.isInteger(s.clientCellId));
+ const manual=slots.find(s=>s.manualPosition&&s.clientCellId===session.localPlayerCellId);
+ const planned=slots.find(s=>s.champion===champion.id&&!s.automaticPosition&&!Number.isInteger(s.clientCellId));
  const chosen=playerPosition?.cellId===session.localPlayerCellId&&ROLES.some(r=>r.id===playerPosition.role)?playerPosition.role:null;
  const preferred=ROLES.some(r=>r.id===soloRole)?soloRole:null;
- const role=manual?.role||chosen||assigned||preferred||profile(champion).roles[0];
+ const role=manual?.role||chosen||planned?.role||assigned||preferred||profile(champion).roles[0];
  const combo=mode==='rift'?currentCombo(slots,champion.id,role,catalogStatus,null,creativePlan):null;
- return {selection:{id:champion.id,role,mode,...creativeComboContext(combo)},positionKnown:!!(assigned||manual||chosen||preferred)};
+ return {selection:{id:champion.id,role,mode,...creativeComboContext(combo)},positionKnown:!!(assigned||manual||chosen||planned||preferred)};
 }
 
 // Inline controls edit the same preparation as the drawer and in-game guide.

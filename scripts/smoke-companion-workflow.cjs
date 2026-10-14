@@ -114,7 +114,7 @@ async function run(){
  await until(()=>js('!!document.querySelector("[data-action=more-candidates]")'),'More candidates missing');await click('[data-action=more-candidates]');
  await until(()=>js('new Set([...document.querySelectorAll(".companion-candidate [data-action=companion-preview]")].map(b=>b.dataset.role)).size===5'),'Unknown lane did not restore separate lane candidates');
  hovered='Volibear';await sync();
- assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'recommend','A client hover must preserve the selection and team view');
+ assert.equal(await js('document.querySelector(".companion-tabs .active").dataset.tab'),'plan','The local hover opens its current configuration');
  await click('[data-action=companion-tab][data-tab=plan]');
  assert.equal(await js('document.querySelector("[data-companion-field=rune]")?.dataset.plan==="Volibear:top:rift"'),true);assert.equal(await js('document.querySelectorAll("[data-action=my-runes]").length'),0);
  await change('#solo-role','top');

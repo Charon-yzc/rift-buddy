@@ -11,6 +11,7 @@ import {currentPlayerSelection} from '../src/core/guide.mjs';
 import {recommendationKey,createPreparationStore,createRuneApplicationState,partyRoutePreparations,configurationKey as buildChoiceKey} from '../src/core/preparation.mjs';
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
+import {roleClaimChoice} from '../src/core/role-claim.mjs';
 import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible} from '../src/core/creative-plan.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {matchupTargetKey} from '../src/core/matchup-plans.mjs';
@@ -67,7 +68,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   preparationRevision:0,preparationPendingKey:'',clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
   structuredClone,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
-  companionHeroAction,captureCreativePlan,creativeMemberCombo,creativeComboContext,partyRoutePreparations,getBuild,localConfigurationPreview,configurationReadOnly,
+  companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,partyRoutePreparations,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
   ROLES,moveChampion,assignClientChampion,clearManualPlayerPosition,selectedBuildFields,buildChoiceKey,
   clientSyncOptions:()=>({autoArrange:true,autoParty:false}),clientRenderIdentity:()=>'',matchupContext:()=>'',publicMatchupIds:()=>[],currentRoleEvidence:()=>[],
@@ -332,6 +333,45 @@ test('a chosen lane on an adopted proposal stays editable when the local player 
  const plan=c.companionPreparation();assert.equal(plan.selection.role,'bottom');assert.equal(!!c.readOnlyPreparation('companion',plan),false);
  await c.useClientPreparation({dataset:{preparationView:'companion'}},true);
  assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].role,'bottom');
+});
+
+test('claiming a lane moves the representative out of an unbound saved plan and opens the editable own configuration',async()=>{
+ const current=client();current.session.myTeam[0].assignedPosition='';current.eligibility={pickable:[hero('Garen').key],disabled:[]};
+ const incoming=structuredClone(current),heroes={top:'Ahri',jungle:'Vi',mid:'Garen',bottom:'Ashe',support:'Nami'};
+ const slots=createSlots().map(s=>({...s,party:true,champion:heroes[s.role],locked:true})),s=setup({slots,current,incoming}),c=s.context;
+ Object.assign(c,{currentCombo,comboContextKnown,guideSelection:null,companionPickIntent,windowLayout:{docked:true}});
+ c.rememberIntentPreparation=noop;
+ vm.runInContext(extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
+ c.setCompanionRole('top');
+ const before=structuredClone(c.slots);
+ await c.claimPosition('top');
+ assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].preselectOnly,true);assert.equal(s.calls.prepared[0].role,'top');
+ assert.equal(c.slots.find(s=>s.role==='top').champion,'Garen');assert.equal(c.slots.find(s=>s.role==='top').locked,false);
+ assert.equal(c.slots.find(s=>s.role==='mid').champion,null);
+ for(const role of ['jungle','bottom','support'])assert.deepEqual(c.slots.find(s=>s.role===role),before.find(s=>s.role===role));
+ assert.equal(c.currentPickIntent().selection.role,'top');assert.equal(c.companionTab,'plan');
+ const plan=c.companionPreparation();assert.equal(plan.selection.role,'top');assert.equal(!!c.readOnlyPreparation('companion',plan),false);
+ await c.useClientPreparation({dataset:{preparationView:'companion'}},true);
+ assert.equal(s.calls.prepared.length,2);assert.equal(s.calls.prepared[1].role,'top');assert.equal(s.calls.prepared[1].preselectOnly,undefined);
+});
+
+test('a failed or outdated representative hover cannot migrate stored plans',async()=>{
+ for(const outcome of ['failed','changed-game','changed-role','bound-hero']){
+  const current=client();current.session.myTeam[0].assignedPosition='';current.eligibility={pickable:[hero('Garen').key],disabled:[]};
+  if(outcome==='bound-hero')current.session.myTeam.push({cellId:2,championId:hero('Garen').key,assignedPosition:'MIDDLE'});
+  const incoming=structuredClone(current),slots=createSlots().map(s=>({...s,party:true,...(s.role==='mid'?{champion:'Garen',locked:true,...(outcome==='bound-hero'?{manualPosition:true,clientCellId:2}:{})}:s.role==='top'?{champion:'Ahri',locked:true}:{})}));
+  const s=setup({slots,current,incoming}),c=s.context;c.setCompanionRole('top');const before=structuredClone(c.slots);
+  c.api.prepareSelection=async value=>{
+   s.calls.prepared.push(value);
+   if(outcome==='changed-game'){incoming.game.gameId='456';incoming.session.gameId=456;}
+   if(outcome==='changed-role'){c.saved.draft.playerPosition.role='bottom';c.soloRole='bottom';}
+   return {steps:{hover:{status:outcome==='failed'?'failed':'done',message:'synthetic failure'}}};
+  };
+  await assert.rejects(c.claimPosition('top'),undefined,outcome);
+  if(outcome==='bound-hero')assert.equal(s.calls.prepared.length,0);
+  for(const role of ['top','mid'])assert.equal(c.slots.find(s=>s.role===role).champion,before.find(s=>s.role===role).champion,outcome);
+  assert.equal(c.clientPreparing,false);
+ }
 });
 
 test('adopting either a room proposal or a shared lineup exits comparison and exposes the accepted plan without client writes',async()=>{

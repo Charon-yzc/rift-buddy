@@ -675,12 +675,24 @@ async function claimPosition(role){
  if(clickedGame&&clickedGame!==preparationGameId(client)||Number.isInteger(clickedCell)&&clickedCell!==client.session?.localPlayerCellId)throw Error('选人会话已变化，请重新选择位置');
  const choice=roleClaimChoice(client,role,data.champions),id=choice.champion;if(!id)throw Error(choice.reason);
  if(taskOwnRole()!==role)throw Error('位置已变化，请重新选择');
- const context=runeWriteContext(client),gameId=preparationGameId(client);
+ const context=runeWriteContext(client),gameId=preparationGameId(client),cellId=client.session?.localPlayerCellId;
  const selection={id,role,mode:'rift'},prepared=clientPreparationPlan(data,{selection,build:getBuild(champ(id),role,data,selection)});
  if(!prepared)throw Error('占位英雄资料暂不可用，请直接选择英雄');
+ if(slots.some(s=>s.role!==role&&s.champion===id&&(Number.isInteger(s.clientCellId)||s.manualPosition)))throw Error('占位英雄已有手动位置，请直接选择其他英雄');
  const result=await api.prepareSelection({...prepared.value,selection,sessionGameId:gameId,context,preselectOnly:true});
  if(result.steps?.hover?.status!=='done')throw Error(result.steps?.hover?.message||'预选未完成');
- await sync(false,{fresh:true});companionTab='plan';companionPreview=null;companionScroll.clear();toast('已预选'+champ(id).name+'占位，仍可自由换英雄');
+ await sync(false,{fresh:true});
+ const own=client.session?.myTeam?.find(p=>p.cellId===cellId);
+ if(!client.connected||client.phase!=='ChampSelect'||preparationGameId(client)!==gameId||client.session?.localPlayerCellId!==cellId||taskOwnRole()!==role)throw Error('选人或位置已变化，请查看当前配置');
+ if((own?.championId||own?.championPickIntent)===champ(id).key){
+  slots=slots.map(s=>{
+   if(s.role===role)return {...s,champion:id,locked:!!own.championId,automaticPosition:true};
+   if(s.champion!==id||Number.isInteger(s.clientCellId)||s.manualPosition)return s;
+   const {automaticPosition,publicIntent,...rest}=s;return {...rest,champion:null,locked:false};
+  });
+  reconcileCreativePlan();await persist({throwOnError:true});scheduleRoomPublish();
+ }
+ companionTab='plan';companionPreview=null;companionScroll.clear();toast('已预选'+champ(id).name+'占位，仍可自由换英雄');
  }finally{clientPreparing=false;render();}
 }
 function setCompanionRole(role){
