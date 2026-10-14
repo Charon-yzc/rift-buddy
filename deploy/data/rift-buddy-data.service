@@ -1,0 +1,36 @@
+[Unit]
+Description=Rift Buddy public data candidate collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=riftdata
+Group=riftdata
+WorkingDirectory=/opt/rift-buddy-data/current
+StateDirectory=rift-buddy-data
+StateDirectoryMode=0750
+Environment=NODE_OPTIONS=--max-old-space-size=320
+ExecStart=/usr/bin/flock -n /var/lib/rift-buddy-data/collect.lock /opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node scripts/collect-server-data.mjs --root /var/lib/rift-buddy-data/updates --seed /opt/rift-buddy-data/current/data
+TimeoutStartSec=50min
+TimeoutStopSec=15s
+MemoryHigh=384M
+MemoryMax=512M
+CPUQuota=40%
+TasksMax=32
+Nice=10
+IOSchedulingClass=idle
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+LockPersonality=true
+LimitCORE=0
+LimitNOFILE=256

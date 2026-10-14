@@ -17,7 +17,7 @@ const paths=await packager({
  dir:root,out,platform:'win32',arch:'x64',name:'开黑搭子',executableName:'开黑搭子',
  appVersion:manifest.version,buildVersion:manifest.version,electronVersion:'44.5.1',icon:path.join(root,'assets/icon.ico'),
  asar:true,prune:false,overwrite:false,download:{mirrorOptions:{mirror:process.env.ELECTRON_MIRROR}},
- ignore:[/^\/(?:README\.md|CONTRIBUTING\.md|docs|relay|\.github)(?:\/|$)/,/^\/开黑搭子(?:\/|$)/,/^\/node_modules(?:\/|$)/,/^\/release(?:\/|$)/,/^\/\.local(?:\/|$)/,/^\/tests(?:\/|$)/,/^\/scripts(?:\/|$)/,/^\/test-results(?:\/|$)/,/^\/output(?:\/|$)/,/^\/\.playwright-mcp(?:\/|$)/,/^\/\.git(?:\/|$)/,/^\/AGENTS\.md$/,/^\/pnpm.*$/,/^\/\.gitignore$/],
+ ignore:[/^\/(?:README\.md|CONTRIBUTING\.md|docs|relay|deploy|\.github)(?:\/|$)/,/^\/services\/server-data-[^/]+\.mjs$/,/^\/开黑搭子(?:\/|$)/,/^\/node_modules(?:\/|$)/,/^\/release(?:\/|$)/,/^\/\.local(?:\/|$)/,/^\/tests(?:\/|$)/,/^\/scripts(?:\/|$)/,/^\/test-results(?:\/|$)/,/^\/output(?:\/|$)/,/^\/\.playwright-mcp(?:\/|$)/,/^\/\.git(?:\/|$)/,/^\/AGENTS\.md$/,/^\/pnpm.*$/,/^\/\.gitignore$/],
  win32metadata:{CompanyName:'个人开黑工具',FileDescription:'开黑搭子 — 选阵容、准备配置与局内参考',ProductName:'开黑搭子',InternalName:'RiftBuddy',OriginalFilename:'开黑搭子.exe'},
  });
 const directory=paths[0];
@@ -36,7 +36,7 @@ const observer=path.join(directory,'resources/window-observer.exe');await fs.cop
 const helperRoot=path.join(directory,'resources/connection');
 await fs.mkdir(helperRoot,{recursive:true});
 await fs.copyFile(process.execPath,path.join(helperRoot,'node.exe'));
-for(const folder of ['services','src/core'])await fs.cp(path.join(root,folder),path.join(helperRoot,folder),{recursive:true});
+for(const folder of ['services','src/core'])await fs.cp(path.join(root,folder),path.join(helperRoot,folder),{recursive:true,filter:source=>!/^server-data-.+\.mjs$/.test(path.basename(source))});
 await fs.mkdir(path.join(helperRoot,'electron'),{recursive:true});
 await fs.copyFile(path.join(root,'electron/client-helper-entry.mjs'),path.join(helperRoot,'electron/client-helper-entry.mjs'));
 await fs.mkdir(path.join(helperRoot,'data'),{recursive:true});
