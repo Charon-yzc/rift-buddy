@@ -1,5 +1,5 @@
 import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES, profile,conventionalRole } from './rules.mjs';
-import {draftTargets,scopeSlots,CLIENT_POSITION_ROLES} from './draft.mjs';
+import {draftTargets,scopeSlots,effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {recommendationDraft} from './draft-intents.mjs';
 export {clearClientPicks} from './draft.mjs';
 import {comboLoadout,loadoutOptions} from './loadouts.mjs';
@@ -8,6 +8,7 @@ import {creativePlanMatches,creativeMemberCombo,validateCreativePlan,creativePla
 import {createPartyCounterplay} from './party-counterplay.mjs';
 import {createCooperationGraph,cooperationPlan,cooperationSeeds} from './cooperation.mjs';
 import {createPairStatisticsIndex} from './pair-statistics.mjs';
+import {compositionFit} from './composition-fit.mjs';
 import {comboMembers,comboKey} from './combo-members.mjs';
 import {strategyTraits,strategySummary,summarizeEnemyTraits,opponentFit,threatNotes,describeCurve,describeForgiveness,controlChainLabel} from './strategy.mjs';
 
@@ -164,16 +165,8 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  // simultaneously. Source position frequency and player preferences remain
  // separate signals below; these weights are curated, not win probabilities.
  const ownWeights=a.members.length===1?SINGLE_ROLE_WEIGHTS[a.members[0].role]:null;
- let score=ownWeights?20+Object.entries(ownWeights).reduce((sum,[key,weight])=>sum+Math.min(t[key],1)*weight,0):
-  Math.min(t.frontline,1)*10+Math.min(t.engage,1)*10+Math.min(t.peel,1)*6+Math.min(t.sustain,1)*10+Math.min(t.ap,1)*8+Math.min(t.ad,1)*8+Math.min(t.aoe,1)*3;
- score-=Math.max(0,t.frontline-2)*4;
- // Overstacking the same function wastes picks; the curve stays shallow so
- // curated combinations keep their lead.
- score-=Math.max(0,t.engage-3)*2;
- if(a.members.length>=3){
-  if(t.ad>=.75&&t.ap>=.75)score+=6;
-  else if(t.ad<.4||t.ap<.4)score-=6;
- }
+ const composition=compositionFit(a,context?.cooperationGraph,{details:!scoreOnly});
+ let score=ownWeights?20+Object.entries(ownWeights).reduce((sum,[key,weight])=>sum+Math.min(t[key],1)*weight,0):composition.rawScore;
  const fit=opponentFit(a,context?.enemyTraits);
  score+=fit.adjustment;
  const foundDuo=findDuo(slots),foundTrio=findTrio(slots);
@@ -185,33 +178,19 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  if(comboDifficulty==='较高'&&style!=='wild')score-=trio?3:2;
  else if(comboDifficulty==='容易'&&style==='balanced')score+=2;
  if(a.members.length>=3&&style==='balanced'&&Number.isFinite(a.avgDifficulty))score-=Math.max(0,a.avgDifficulty-6)*2;
- // Control into AoE is the most reliable teamfight pattern in the data model.
- if(a.members.length>=3&&t.engage>=1&&t.aoe>=1)score+=3;
  const scope=context?.scope;
- if(scope==='party'&&trio)score+=4;
- if(scope==='bot'){
-  // Duo mode is about the lane: poke/sustain/engage decide the laning phase,
-  // and a mixed damage pair is harder to itemize against with one stat.
-  score+=Math.min(t.poke+t.sustain,2)*2+Math.min(t.engage,1)*2;
-  // Support damage counts less over a full game but matters a lot in lane,
-  // so the lane bonus uses lower mixed-damage bars than the team bonus.
-  if(t.ad>=.5&&t.ap>=.2)score+=3;
-  if(Number.isFinite(a.avgDifficulty))score-=a.avgDifficulty*(style==='balanced'?.4:0);
- }
- if(trio)score+=33+(style===trio.style?5:0);
- if(duo)score+=style==='wild'?(duo.style==='wild'?36:duo.style==='fun'?23:9):style==='fun'?(duo.style==='fun'?29:duo.style==='wild'?16:20):(duo.style==='balanced'?28:duo.style==='fun'?17:3);
+ // Fit is shared with the displayed score. A catalogue entry is evidence for
+ // an executable plan, never a flat 28/33 point reward for being in a library.
+ if((trio||duo)?.style===style)score+=5;
  const ids=new Set(slots.map(s=>s.champion));
  const linkHit=new Set(),{linkByChamp}=comboIndex();
  for(const id of ids)for(const link of linkByChamp.get(id)||[])if(ids.has(link[0])&&ids.has(link[1]))linkHit.add(link);
  const connections=CROSS_SYNERGIES.filter(l=>linkHit.has(l));
- score+=connections.length*7;
- if(duo)score+=(duo.partners||[]).filter(id=>ids.has(id)).length*7;
  const partyMembers=slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party).filter(s=>s.champion);
  const adaptive=context?.cooperationGraph&&scope!=='solo'&&partyMembers.length<=3?cooperationPlan(partyMembers,context.cooperationGraph,context.play):null;
- if(adaptive)score+=adaptive.bonus;
  const pairEvidence=scope==='solo'?null:context?.pairStatistics?.forMembers(slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party));
  score+=pairEvidence?.bonus||0;
- const tempo=context?.play?.tempo;if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,trio||duo||adaptive)[tempo]||0,12)*3;
+ const tempo=context?.play?.tempo;if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,trio||duo||adaptive)[tempo]||0,8);
  for(const m of a.members){
   if(!requestedIds.includes(m.champion))continue;
   if(context?.poolMode==='prefer'&&context.pool.has(m.champion))score+=12;
@@ -234,7 +213,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  };
  const partyDuo=valid(findDuo(party)),partyTrio=valid(findTrio(party));
  const planDuo=(relevant(partyDuo)?partyDuo:undefined)||(relevant(duo)?duo:undefined),planTrio=(relevant(partyTrio)?partyTrio:undefined)||(relevant(trio)?trio:undefined);
- const out={score,analysis:a,duo:planDuo,trio:planTrio,connections,opponentFit:fit,adaptive,pairEvidence};
+ const out={score,compositionFit:composition,analysis:a,duo:planDuo,trio:planTrio,connections,opponentFit:fit,adaptive,pairEvidence};
  return out;
 }
 const signature=slots=>slots.map(s=>`${s.role}:${s.champion||'-'}`).join('|');
@@ -277,6 +256,7 @@ function comboIndex(){
 }
 export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null}) {
  validateSlots(slots,champions);
+ scope=effectiveDraftScope(slots,scope);
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
@@ -370,10 +350,8 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   const seed=fixed.map(s=>{const member=members.find(m=>m.role===s.role);return member?{...s,champion:member.champion}:s;});
   const ids=seed.map(s=>s.champion).filter(Boolean);if(new Set(ids).size===ids.length)seeds.push(seed);
  }
- // Creative trios: trait-derived three-person ideas outside the catalog.
- // They fill all three open roles at once, so they only apply when exactly
- // three positions are being drafted. Curated trios keep their scoring lead;
- // creative entries earn a smaller flat bonus (see below) and are labeled.
+ // Trait-derived ideas fill all three open positions; the same fit model
+ // grades them and catalogue seeds without a bonus for their source label.
  const creativeBySig=new Map();
  for(const def of generateCreativeTrios({targets,candidateSets,champions,style})){
   const trioSlots=fixed.map(s=>{const m=def.members.find(m=>m.role===s.role);return m?{...s,champion:m.champion}:s;});
@@ -405,7 +383,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   if(unique.has(signature(entry.slots)))continue;
   const g=grade(entry.slots,champions,style,entry.slots.filter(s=>targets.includes(s.role)).map(s=>s.champion),roleWeights,context);
   const creative=creativeBySig.get(signature(entry.slots));
-  unique.set(signature(entry.slots),creative?{...entry,...g,score:g.score+creative.bonus,creative}:{...entry,...g});
+  unique.set(signature(entry.slots),creative?{...entry,...g,creative}:{...entry,...g});
  }
  // An executable plan for the whole party is
  // more useful than a higher count of generic team functions. All hard pick
@@ -424,11 +402,12 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   return entry.adaptive.edges.some(e=>e.current&&e.family.startsWith('skills:'))?1:2;
  };
  const matching=new Map([...unique.values()].map(entry=>[entry,play.tempo&&play.tempo!=='any'&&strategySummary(entry.analysis,summaryCombo(entry),play.tempo).matched]));
- // An explicit play preference must remain reachable on the first page.
- // Within matching choices, keep full-party and authored plans ahead of
- // general mechanisms. Without a matching candidate, retain normal fallback.
- const priority=entry=>Number(actionable(entry))+(matching.get(entry)?4:0);
- const order=(a,b)=>priority(b)-priority(a)||b.score-a.score||signature(a.slots).localeCompare(signature(b.slots));
+ // An explicit play preference remains first. Within it, actual fit and
+ // player preferences dominate; an executable full-party plan is a small
+ // tie-breaker, not an unconditional category above better compositions.
+ const priority=entry=>Number(!!matching.get(entry));
+ const rankScore=entry=>entry.score+Number(actionable(entry));
+ const order=(a,b)=>priority(b)-priority(a)||rankScore(b)-rankScore(a)||signature(a.slots).localeCompare(signature(b.slots));
  const sorted=[...unique.values()].sort(order);
  const chosen=[];
  // Keep the best result for every curated duo reachable on reroll. Filling
@@ -456,7 +435,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
    const entry=pool[j];
    const entryStyle=(entry.trio||entry.duo)?.style||'balanced';
    const similarity=chosen.reduce((sum,c)=>sum+targets.filter(r=>c.slots.find(s=>s.role===r).champion===entry.slots.find(s=>s.role===r).champion).length*9+(entry.duo&&c.duo?.id===entry.duo.id?18:0)+(entry.trio&&c.trio?.id===entry.trio.id?22:0)+(entry.trio&&c.trio?.tempo===entry.trio.tempo?6:0)+(((c.trio||c.duo)?.style||'balanced')===entryStyle?10:0)+(entry.creative&&c.creative?.archetype===entry.creative.archetype?14:0),0);
-   const v=entry.score-similarity;
+   const v=rankScore(entry)-similarity;
    const p=priority(entry);
    if(p>bestPriority||p===bestPriority&&v>best){best=v;winner=j;bestPriority=p;}
   }
@@ -624,6 +603,9 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
    // Unlocated members still contribute to the range. These temporary slots
    // carry no player binding; later public picks, hovers and lanes replace them.
    for(const slot of next)if(used.size<limit&&provisional(slot)&&available(slot,null)){used.add(slot.role);claimed.add(slot.role);}
+   // Saved local plans may occupy every slot. A range flag does not bind a
+   // player or replace a hero, so unbound planned slots can still count here.
+   for(const slot of next)if(used.size<limit&&!Number.isInteger(slot.clientCellId)&&available(slot,null)){used.add(slot.role);claimed.add(slot.role);}
    for(const slot of next)if(!slot.partyManual)slot.party=used.has(slot.role);
   }else for(const slot of next)if(used.has(slot.role)&&!slot.partyManual)slot.party=true;
  }

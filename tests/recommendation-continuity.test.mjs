@@ -181,11 +181,12 @@ test('an explicit free-role avatar click establishes unknown ownership and prepa
  }
 });
 
-test('explicit avatar clicks remain read only for another player position, a public teammate pick and a different locked hero',async()=>{
- for(const kind of ['position','teammate','locked']){
-  const current=client(),slots=partySlots(),id=kind==='teammate'?'Ahri':'Jinx';
+test('explicit avatar clicks remain read only for another player position, teammate pick or hover and a different locked hero',async()=>{
+ for(const kind of ['position','teammate','hover','locked']){
+  const current=client(),slots=partySlots(),id=['teammate','hover'].includes(kind)?'Ahri':'Jinx';
   if(kind==='position')slots[3]={...slots[3],champion:'Ahri',locked:true,clientCellId:2};
   if(kind==='teammate'||kind==='position')current.session.myTeam.push({cellId:2,championId:hero('Ahri').key,assignedPosition:'MIDDLE'});
+  if(kind==='hover')current.session.myTeam.push({cellId:2,championId:0,championPickIntent:hero('Ahri').key,assignedPosition:'MIDDLE'});
   if(kind==='locked'){current.session.myTeam[0].championId=hero('Ashe').key;current.session.actions=[[{actorCellId:1,type:'pick',championId:hero('Ashe').key,completed:true}]];}
   const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
   await c.prepareHeroClick({id,role:'bottom',mode:'rift'});

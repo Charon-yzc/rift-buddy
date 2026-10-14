@@ -17,7 +17,7 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(champion=>champion.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json')));
- assert.equal(initial.preferences.autoSync,true);assert.equal(initial.preferences.clickPrepare,true);assert.equal(initial.draft.playerPosition,undefined);assert.equal(initial.draft.soloRole,'');
+ assert.equal(initial.preferences.autoSync,true);assert.equal(initial.preferences.clickPrepare,true);assert.equal(initial.draft.playerPosition,undefined);assert.equal(initial.draft.soloRole,'');assert.equal(initial.draft.slots.filter(slot=>slot.champion).length,5,'Startup fixture needs a saved local lineup on every lane');
  let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,completed=false,requests=0,spell1Id=12,spell2Id=4;
  let page={id:44,name:'Synthetic editable page',isEditable:true,isActive:true,current:true};
  const ownIdentity={puuid:'startup-synthetic-own-identity',summonerId:530001,gameName:'合成测试本人',tagLine:'TEST'},friendIdentity={puuid:'startup-synthetic-friend-identity',summonerId:530002,gameName:'合成测试队友',tagLine:'TEST'};
@@ -71,18 +71,41 @@ async function run(){
  });
  phase='ChampSelect';await fresh(snapshot=>snapshot.connected&&snapshot.phase==='ChampSelect'&&snapshot.party?.status==='known'&&snapshot.party.lobbyCount===2);
  await until(()=>{side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));return side;},'Automatic sidebar missing');
+ await until(()=>js(side,'!!document.querySelector(".companion-shell")'),'Sidebar shell missing');
+ await checkpoint('saved-five-lane-lineup-keeps-two-person-range',async()=>{
+  await until(async()=>(await state()).draft.slots.filter(slot=>slot.party).length===2,'Saved local heroes removed the known two-person recommendation range');
+  const selected=(await state()).draft.slots;
+  assert.deepEqual(selected.map(({party,...slot})=>slot),initial.draft.slots.map(({party,...slot})=>slot),'Automatic party detection changed the saved local lineup');
+  assert.ok(selected.every(slot=>!Number.isInteger(slot.clientCellId)&&!slot.manualPosition),'Saved local heroes invented client player positions');
+ });
+ // Clear the saved local proposal through the real UI before testing a fresh
+ // unknown-lane recommendation. Automatic startup itself must not clear it.
+ await click(main,'[data-action=draft-filters]');await click(main,'[data-action=reset-draft]');await click(main,'[data-action=close]');
+ await until(async()=>(await state()).draft.slots.every(slot=>!slot.champion),'The explicit local reset did not clear the saved proposal');assert.equal(writes.length,0,'Resetting the local proposal wrote to the client');
  await until(()=>js(side,'!!document.querySelector(".companion-shell")&&!!document.querySelector("#solo-role")'),'Sidebar UI missing');
  await checkpoint('two-unassigned-party-members',async()=>{
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>0'),'Automatic initial candidates missing');
   assert.equal(await js(side,'document.querySelector("#solo-role").value'),'','A client with no lane must start with no own lane');
   assert.equal(await js(side,'document.querySelectorAll(".companion-team-now .companion-roster-row.in-scope").length'),2,'Known two-person party became three fallback lanes');
   const counts=await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].map(el=>Number(el.dataset.memberCount))');assert.ok(counts.length);assert.ok(counts.every(count=>count===2),'The initial candidates must contain two party members');
+  await capture(side,'candidates-fit-collapsed.png');
+  await click(side,'.companion-candidate .lineup-fit > summary');await until(()=>js(side,'document.querySelector(".companion-candidate .lineup-fit")?.open'),'Candidate fit explanation did not expand');await capture(side,'candidate-fit-expanded.png');await click(side,'.companion-candidate .lineup-fit > summary');
  });
  friendIntent=hero('Nami').key;await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===0)?.championPickIntent===friendIntent);
  await checkpoint('public-hover-follows-party-scope',async()=>{
   await until(()=>js(side,'!!document.querySelector(".companion-team-now .in-scope [data-id=Nami]")'),'The public teammate hover did not enter the party scope');
   assert.equal(await js(side,'document.querySelectorAll(".companion-team-now .companion-roster-row.in-scope").length'),2);
   await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].some(el=>el.querySelector("[data-id=Nami]"))'),'New candidates did not preserve the public teammate hover');
+ });
+ await checkpoint('public-teammate-hover-click-is-readonly',async()=>{
+  const before=attempts.length,writeBefore=writes.length;
+  await click(side,'.companion-candidate [data-action=companion-preview][data-id=Nami]');
+  try{
+   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")&&document.querySelector(".companion-preview")?.textContent.includes("队友配置 · 只读")'),'Public teammate hover did not open a readonly configuration');
+   assert.equal((await state()).draft.playerPosition,undefined,'A teammate hover click claimed the local player position');
+   assert.equal(await js(side,'[...document.querySelectorAll(".companion-content [data-action=client-prepare],.companion-content [data-action=my-runes],.companion-content [data-action=import-item-set]")].some(el=>!el.disabled)'),false,'A teammate hover exposes a client write');
+   await delay(250);assert.equal(attempts.length,before,'A teammate hover click dispatched preparation');assert.equal(writes.length,writeBefore,'A teammate hover click wrote to the client');
+  }finally{await click(side,'[data-action=companion-tab][data-tab=recommend]');}
  });
  await checkpoint('one-click-claims-unknown-own-role-and-prepares',async()=>{
   assert.equal((await state()).draft.playerPosition,undefined,'Public teammate hover invented an own position');
@@ -116,6 +139,8 @@ async function run(){
     const before=attempts.length,writeBefore=writes.length;await change(side,'#solo-role',role);
     await until(()=>intent===hero(id).key,'Explicit '+role+' lane did not replace the unlocked hover in queue '+nextQueue,7000);
     await until(()=>results.length===attempts.length,'Lane preselection did not settle');assert.equal(attempts.length-before,1,'Changing one lane must make one explicit preselection API call');assert.equal(attempts.at(-1).preselectOnly,true);assert.equal(attempts.at(-1).role,role);assert.equal(results.at(-1).steps.hover.status,'done','Lane replacement was not confirmed by the client');
+    await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'Successful lane preselection did not open configuration');
+    await until(()=>js(side,'JSON.parse(document.querySelector("[data-client-preparation-fingerprint]")?.dataset.clientPreparationFingerprint||"[{}]")[0].champion==='+JSON.stringify(id)),'Lane preselection opened a different hero configuration');
     const changed=writes.slice(writeBefore);assert.equal(changed.length,1,'Lane claim unexpectedly applied a full configuration');assert.equal(changed[0].route,'/lol-champ-select/v1/session/actions/22');assert.equal(changed[0].body.completed,false);
     await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championPickIntent===intent);
    }

@@ -9,6 +9,7 @@ export function companionHeroAction(client,champion,clickPrepare=true){
  const key=Number(champion.key),locked=(session.actions||[]).flat().find(a=>a.type==='pick'&&a.actorCellId===cell&&a.completed===true);
  if((locked||own.pickState==='locked')&&Number(locked?.championId||own.championId)!==key)return view('已锁定其他英雄 · 看配置',true);
  if((session.myTeam||[]).some(p=>p.cellId!==cell&&Number(p.championId)===key))return view('队友已选 · 看配置',true);
+ if((session.myTeam||[]).some(p=>p.cellId!==cell&&!p.championId&&Number(p.championPickIntent)===key))return view('队友预选 · 看配置',true);
  if((session.bans||[]).includes(key)||session.allowDuplicatePicks===false&&(session.theirTeam||[]).some(p=>Number(p.championId)===key))return view('本局不可选 · 看配置',true);
  return {prepare:true,label:locked?'应用当前配置':'预选并配置'};
 }

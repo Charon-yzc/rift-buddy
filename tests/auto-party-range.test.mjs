@@ -45,6 +45,17 @@ test('two known blank players replace legacy ranges with exactly two temporary p
  }
 });
 
+test('a fully saved local lineup keeps a two-person range on entering champion-select',()=>{
+ const heroes=['Garen','Vi','Ahri','Ashe','Nami'];
+ const slots=createSlots().map((s,i)=>({...s,champion:heroes[i],locked:true}));
+ const lobby=applyLobbyPartyRange(slots,{status:'lobby',lobbyCount:2,members:[{local:true},{local:false}]});
+ const selected=merge(lobby,blank());
+ assert.equal(marked(lobby).length,2);assert.equal(marked(selected).length,2);
+ assert.deepEqual(selected.map(({party,...s})=>s),slots.map(({party,...s})=>s));
+ assert.ok(selected.every(s=>!Number.isInteger(s.clientCellId)&&!s.manualPosition));
+ assert.deepEqual(merge(selected,blank()),selected);
+});
+
 test('public lanes reserve their place ahead of conflicting lobby preferences and use second preferences',()=>{
  const session=blank();session.myTeam[1].assignedPosition='TOP';
  const party=group([{cellId:0,local:true,firstPosition:'TOP',secondPosition:'UTILITY'},{cellId:1,firstPosition:'MIDDLE'}]);

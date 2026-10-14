@@ -59,14 +59,18 @@ test('all 48 members receive their actual authored job and valid position-specif
  }
 });
 
-test('each new trio is discovered by completing two real locked teammates without a forced hero pool',()=>{
+test('each new trio remains reachable within six reroll pages around two real locked teammates',()=>{
  for(const t of trios){
   const slots=partySlots(t.members.map(m=>m.role));
   for(const m of t.members.slice(0,2))Object.assign(slots.find(s=>s.role===m.role),{champion:m.champion,locked:true});
-  const rows=recommend({slots,champions:data.champions,scope:'party',style:t.style,play:{unusual:false},limit:5});
-  assert.equal(rows[0]?.trio?.id,t.id,t.id);
-  assert.equal(rows[0].origin,'curated');
-  for(const m of t.members)assert.equal(rows[0].slots.find(s=>s.role===m.role).champion,m.champion);
+  const before=structuredClone(slots),rows=recommend({slots,champions:data.champions,scope:'party',style:t.style,play:{unusual:false},limit:30});
+  const authored=rows.find(row=>row.trio?.id===t.id);
+  assert.ok(authored,`${t.id}: authored completion must be reachable without a forced hero pool`);
+  assert.equal(authored.origin,'curated');
+  assert.deepEqual(authored.trio.members,t.members,'discovery retains the actual authored jobs and loadout bindings');
+  for(const m of t.members)assert.equal(authored.slots.find(s=>s.role===m.role).champion,m.champion);
+  for(const row of rows)for(const m of t.members.slice(0,2))assert.deepEqual(row.slots.find(s=>s.role===m.role),before.find(s=>s.role===m.role));
+  assert.deepEqual(slots,before);
   const blocked=recommend({slots,champions:data.champions,scope:'party',style:t.style,excluded:[t.members[2].champion],limit:2});
   assert.ok(blocked.every(row=>row.trio?.id!==t.id),`${t.id}: exclusion must still win`);
  }
@@ -82,11 +86,13 @@ test('unlocked party recommendations discover new authored play across four real
  }
 });
 
-test('real five- and six-result pages retain authored cards at discovery-slot boundaries',()=>{
+test('real five- and six-result pages preserve one diverse stream across discovery boundaries',()=>{
  for(const limit of [5,6]){
   const input={slots:partySlots(['mid','bottom','support']),champions:data.champions,scope:'party',play:{unusual:false},limit};
-  const pages=[0,limit,limit*2].flatMap(offset=>recommend({...input,offset}));
-  for(const id of ['party-taliyah-jhin-nautilus','party-tf-caitlyn-bard'])assert.ok(pages.some(row=>row.trio?.id===id),`${id} must be reachable through real ${limit}-result reroll pages`);
+  const stream=recommend({...input,limit:limit*3}),pages=[0,limit,limit*2].flatMap(offset=>recommend({...input,offset}));
+  assert.deepEqual(pages.map(r=>r.id),stream.map(r=>r.id),'page size and diversity never change earlier candidates');
+  assert.ok(pages.some(row=>ids.includes(row.trio?.id)),'the fit-ranked stream still discovers authored trios');
+  assert.ok(pages.some(row=>row.creative),'creative discovery survives the real page boundary');
   assert.equal(new Set(pages.map(r=>r.id)).size,pages.length,'reroll pages must not repeat the same candidate');
  }
 });

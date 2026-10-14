@@ -21,7 +21,8 @@ test('sidebar candidate and room scores follow the same public hover as the rost
  const before=structuredClone(slots),fit=lineupFit(proposed,recommendationDraft(slots,live.session,data.champions,{ownRole:'bottom'}),data.champions);
  let html=companionView(props);assert.match(html,/data-id="Lux"/);assert.match(html,/room-ballot-row conflict/);assert.equal((html.match(new RegExp('契合 '+fit.score+'<','g'))||[]).length,2);
  live.session.myTeam[1].championPickIntent=0;html=companionView(props);
- assert.doesNotMatch(html,/room-ballot-row conflict/);assert.equal((html.match(/契合 100</g)||[]).length,2);assert.deepEqual(slots,before);
+ const cleared=lineupFit(proposed,recommendationDraft(slots,live.session,data.champions,{ownRole:'bottom'}),data.champions);
+ assert.doesNotMatch(html,/room-ballot-row conflict/);assert.equal((html.match(new RegExp('契合 '+cleared.score+'<','g'))||[]).length,2);assert.ok(cleared.score>fit.score);assert.deepEqual(slots,before);
 });
 
 test('sidebar hero shortcuts distinguish own configuration, public teammate picks, locks and display-only mode',()=>{

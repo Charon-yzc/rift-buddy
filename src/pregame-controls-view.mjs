@@ -12,12 +12,12 @@ export function pregameControls({scope='party',style='balanced',ownRole='',slots
   <div class="pregame-primary">
    <label class="pregame-role">预选位置<select id="solo-role" class="select" aria-label="预选位置"><option value="" ${ownRole?'':'selected'}>选择分路</option>${ROLES.map(role=>`<option value="${e(role.id)}" ${ownRole===role.id?'selected':''}>${e(role.name)}</option>`).join('')}</select></label>
    <div class="pregame-modes" role="group" aria-label="推荐任务">${choice('draft-scope','scope','solo','给我推荐',solo)}${choice('draft-scope','scope','party','开黑阵容',!solo)}</div>
-   ${button('task-members',lobbyCount?`组队 ${lobbyCount} 人`:`范围 ${partyCount} 路`,'','pregame-members',`aria-label="成员与开黑位置${partyCount?`，已标记 ${partyCount} 个位置`:''}"`)}
+   ${button('task-members',scope==='party'&&partyCount===1?'单人 · 参考全队':lobbyCount?`组队 ${lobbyCount} 人`:`范围 ${partyCount} 路`,'','pregame-members',`aria-label="成员与开黑位置${partyCount?`，已标记 ${partyCount} 个位置`:''}"`)}
   </div>
   <div class="pregame-secondary">
    <div class="pregame-styles" role="group" aria-label="推荐风格">${[['balanced','稳妥'],['fun','娱乐'],['wild','花活']].map(([id,label])=>choice('draft-style','style',id,label,selectedStyle===id)).join('')}</div>
    ${button('room-focus',roomLabel,'',`pregame-room${joined?' is-connected':''}`)}
-   <details class="pregame-more" data-companion-disclosure="pregame-options"><summary>更多选项</summary><div class="pregame-more-content"><div class="pregame-scopes" role="group" aria-label="开黑推荐范围">${[['context','考虑全队'],['party','只看开黑'],['bot','下路双排']].map(([id,label])=>choice('draft-scope','scope',id,label,scope===id)).join('')}</div>${button('draft-filters','英雄池与偏好','','pregame-preferences')}</div></details>
+   <details class="pregame-more" data-companion-disclosure="pregame-options"><summary>更多选项</summary><div class="pregame-more-content"><div class="pregame-scopes" role="group" aria-label="开黑推荐范围">${[['party','自动范围'],['context','始终参考全队'],['bot','下路双排']].map(([id,label])=>choice('draft-scope','scope',id,label,scope===id)).join('')}</div>${button('draft-filters','英雄池与偏好','','pregame-preferences')}</div></details>
   </div>
  </section>`;
 }
