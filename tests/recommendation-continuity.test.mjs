@@ -83,7 +83,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
    return {complete:true,steps:{hover:{status:'done'},runes:{status:'done',pageId:11},spells:{status:'done'},items:{status:'done'}}};
   }},
  });
- context.assignedPlayerRole=()=>CLIENT_POSITION_ROLES[context.client.session.myTeam.find(p=>p.cellId===context.client.session.localPlayerCellId)?.assignedPosition];
+ context.assignedPlayerRole=()=>CLIENT_POSITION_ROLES[context.client.session?.myTeam.find(p=>p.cellId===context.client.session.localPlayerCellId)?.assignedPosition];
  context.rememberPreparation=value=>context.preparations.remember(value);
  context.generate=()=>{calls.generated.push(context.autoRecommendationKey);context.generating=true;};
  vm.runInContext(syncFunctions+clickFunctions+`async function clickBuild(el){const action=el.dataset.action;if(false){} ${buildBranch}}`,context);
@@ -193,6 +193,19 @@ test('explicit avatar clicks remain read only for another player position, teamm
   await c.prepareHeroClick({id,role:'bottom',mode:'rift'});
   assert.equal(calls.prepared.length,0,kind);assert.equal(calls.opened.length,1,kind);
   assert.equal(c.buildSelection().readOnly,true,kind);
+ }
+});
+
+test('offline previews remain editable with retained client bindings and never write the client',async()=>{
+ for(const docked of [false,true]){
+  const slots=partySlots().map(s=>s.role==='mid'?{...s,champion:'Ahri',locked:true,clientCellId:2}:s);
+  const {context:c,calls}=setup({slots,current:{connected:false,phase:'Offline'},results:[]});
+  c.windowLayout.docked=docked;
+  await c.prepareHeroClick({id:'Ahri',role:'mid',mode:'rift'});
+  const selection=docked?c.companionPreview:calls.opened[0].selection;
+  assert.equal(selection.readOnly,false);assert.equal(selection.localReference,true);
+  assert.equal(calls.prepared.length,0);assert.equal(calls.readOnly.length,0);
+  assert.equal(c.slots.find(s=>s.role==='mid').clientCellId,2,'Preview must preserve the saved board');
  }
 });
 
