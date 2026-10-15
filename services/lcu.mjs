@@ -12,6 +12,13 @@ import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-summoner/v1/current-summoner','/data-store/v1/install-dir']);
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
+// A display name read back from the client: trimmed, bounded, no control
+// characters. Anything else is treated as no name, never guessed.
+const cleanDisplayName=value=>{const text=typeof value==='string'?value.trim().normalize('NFKC'):'';return /^[^\r\n\0]{1,64}$/.test(text)?text:'';};
+// Read-only summoner lookups by stable account id. Both stay on loopback and
+// carry no credentials; the puuid shape mirrors the identity validator.
+const SUMMONER_BY_ID=/^\/lol-summoner\/v1\/summoners\/[1-9]\d{0,19}$/;
+const SUMMONER_BY_PUUID=/^\/lol-summoner\/v2\/summoners\/puuid\/[A-Za-z0-9_-]{16,160}$/;
 export function parseLockfile(content) {
  const parts=String(content).trim().split(':');
  if(parts.length!==5||parts[0]!=='LeagueClient'||!/^\d+$/.test(parts[2])||!parts[3]||parts[4]!=='https')return null;
@@ -41,7 +48,7 @@ export function lcuRequest(auth,route,method='GET',body) {
  const keys=body&&typeof body==='object'&&!Array.isArray(body)?Object.keys(body).sort().join(','):'';
  const preview=method==='PATCH'&&/^\/lol-champ-select\/v1\/session\/actions\/\d+$/.test(route)&&keys==='championId,completed'&&Number.isSafeInteger(body.championId)&&body.championId>0&&body.completed===false;
  const spells=method==='PATCH'&&route==='/lol-champ-select/v1/session/my-selection'&&keys==='spell1Id,spell2Id'&&[body.spell1Id,body.spell2Id].every(n=>Number.isSafeInteger(n)&&n>0)&&body.spell1Id!==body.spell2Id;
- if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells)throw new Error('不支持此客户端操作');
+ if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='GET'&&SUMMONER_BY_ID.test(route))&&!(method==='GET'&&SUMMONER_BY_PUUID.test(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells)throw new Error('不支持此客户端操作');
  return new Promise((resolve,reject)=>{
   const payload=body?JSON.stringify(body):null;
   const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,
@@ -121,16 +128,23 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:lobbyFresh?'lobby':'unknown',members:lobbyFresh?lobbyPartyMembers(cache.lobby):[],lobbyCount:lobbyFresh?cache.lobby?.members.length:null,unmatched:0};
   const party=lobbyFresh&&cache.lobby.key?{...baseParty,key:cache.lobby.key}:baseParty;
   const ownIdentity=lobbyFresh?cache.lobby.local:publicPlayerIdentity(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId));
-  // Some lobbies carry the party identifier without any display names. The
-  // current summoner is this player's own public name in every phase; a
-  // failure here must not disturb the snapshot, lobby names still apply first.
+  const baseName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)))||'';
+  // Extra lookups run only while no name is known, so a healthy lobby costs
+  // no additional client reads. Every step fails soft back to the unique
+  // fallback nickname; lobby names always apply first.
+  const resolveDisplay=async route=>{try{return cleanDisplayName((await request(auth,route))?.displayName);}catch{return '';}};
   let summonerDisplay='';
-  try{
-   const summoner=await request(auth,'/lol-summoner/v1/current-summoner');
-   const shown=typeof summoner?.displayName==='string'?summoner.displayName.trim().normalize('NFKC'):'';
-   if(/^[^\r\n\0]{1,64}$/.test(shown))summonerDisplay=shown;
-  }catch{}
-  const ownName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)))||summonerDisplay;
+  if(!baseName){
+   try{
+    summonerDisplay=cleanDisplayName((await request(auth,'/lol-summoner/v1/current-summoner'))?.displayName);
+   }catch{}
+  }
+  let resolvedName='';
+  const numericId=/^[1-9]\d{0,19}$/.test(ownIdentity?.summonerId||'')?ownIdentity.summonerId:null;
+  if(!baseName&&!summonerDisplay&&numericId)resolvedName=await resolveDisplay(`/lol-summoner/v1/summoners/${numericId}`);
+  const localPuuid=!baseName&&!summonerDisplay&&!resolvedName&&/^[A-Za-z0-9_-]{16,160}$/.test(ownIdentity?.puuid||'')&&!/^[0-]+$/.test(ownIdentity.puuid)?ownIdentity.puuid:null;
+  if(localPuuid)resolvedName=await resolveDisplay(`/lol-summoner/v2/summoners/puuid/${localPuuid}`);
+  const ownName=baseName||summonerDisplay||resolvedName;
   // A stable numeric account id lets the room nickname stay unique when no
   // display name exists anywhere. It never leaves this process: forRenderer
   // strips `own` on every renderer-facing snapshot; it only seeds the
