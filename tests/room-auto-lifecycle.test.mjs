@@ -32,7 +32,7 @@ function harness({derive=auto.deriveAutoRoom}={}){
 test('fixed: pending auto handshake is cancelled after party loss grace',async t=>{
  const h=harness();t.after(()=>h.services.forEach(service=>service.dispose()));
  h.setClient(party());const joining=h.queueRoomAuto();await spin(()=>h.sockets.length===1);const socket=h.sockets[0];socket.open();
- h.clock.value=1010;h.setClient(party(undefined,1));const firstLossPoll=h.queueRoomAuto();
+ h.clock.value=1010;h.setClient(party(undefined,0));const firstLossPoll=h.queueRoomAuto();
  h.clock.value=31010;const expiredLossPoll=h.queueRoomAuto();await new Promise(resolve=>setImmediate(resolve));
  assert.equal(h.snapshot().key,null);assert.equal(h.snapshot().goneSince,1010);
  assert.equal(h.snapshot().room.mode,'idle');assert.equal(socket.readyState,3);
@@ -120,4 +120,24 @@ test('fixed: initial refusal backs off on the same party and a new party retries
  await h.queueRoomAuto();assert.equal(h.sockets.length,1,'backoff must suppress retrying the refused party');
  h.setClient(party('party-bbbbbb'));const next=h.queueRoomAuto();await spin(()=>h.sockets.length===2);h.sockets[1].open();h.sockets[1].welcome();await next;
  assert.equal(h.snapshot().key,'party-bbbbbb');assert.equal(h.snapshot().failedUntil,0);assert.equal(h.snapshot().error,'');
+});
+
+test('solo lobby derives its own room as owner with the public game id',async t=>{
+ const h=harness();t.after(()=>h.services.forEach(service=>service.dispose()));
+ h.setClient(party('party-solo1',1));const joining=h.queueRoomAuto();
+ await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await joining;
+ assert.equal(h.snapshot().key,'party-solo1');
+ assert.equal(h.snapshot().room.room,(await auto.deriveAutoRoom('party-solo1')).code);
+ assert.equal(h.snapshot().room.members[0]?.nick,'Test#CN1');
+});
+
+test('grouping abandons solo codes and converges on the new party room',async t=>{
+ const h=harness();t.after(()=>h.services.forEach(service=>service.dispose()));
+ h.setClient(party('party-solo1',1));const solo=h.queueRoomAuto();
+ await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await solo;
+ assert.equal(h.snapshot().key,'party-solo1');
+ h.setClient(party('party-group9',3));const grouped=h.queueRoomAuto();
+ await spin(()=>h.sockets.length===2);h.sockets[1].open();h.sockets[1].welcome();await grouped;
+ assert.equal(h.snapshot().key,'party-group9');
+ assert.equal(h.snapshot().room.room,(await auto.deriveAutoRoom('party-group9')).code);
 });

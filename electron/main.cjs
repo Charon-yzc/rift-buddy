@@ -268,7 +268,7 @@ async function boot(){
   const enabled=state.preferences?.roomAuto===true&&state.preferences?.autoSync!==false;
   if(!enabled){roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
   const inWindow=!!client?.connected&&LOBBY_PHASES.includes(client.phase);
-  if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=2&&client.party?.key)roomAutoGoneSince=null;
+  if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=1&&client.party?.key)roomAutoGoneSince=null;
   else if(inWindow)roomAutoGoneSince=roomAutoGoneSince??Date.now();
   else roomAutoGoneSince=null;
   // "标识变化即解除": seeing a different party lifts a manual-leave block.

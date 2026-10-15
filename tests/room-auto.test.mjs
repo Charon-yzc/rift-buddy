@@ -63,13 +63,14 @@ test('decorating keeps manual rooms untouched and marks only the auto room',()=>
  assert.equal(decorateAutoRoom(null,{}),null);
 });
 
-test('auto connect only joins a two-member lobby window with a fresh key',()=>{
+test('auto connect joins a solo or party lobby window with a fresh key',()=>{
  const base={enabled:true,connected:true,phase:'Lobby',lobbyKey:KEY,lobbyCount:2,now:1000};
  assert.deepEqual(autoRoomDecision(base),{action:'join',key:KEY,reason:'join'});
+ assert.deepEqual(autoRoomDecision({...base,lobbyCount:1}),{action:'join',key:KEY,reason:'join'});
  assert.deepEqual(autoRoomDecision({...base,enabled:false}),{action:'hold',reason:'disabled'});
  assert.deepEqual(autoRoomDecision({...base,connected:false}),{action:'hold',reason:'not-lobby'});
  assert.deepEqual(autoRoomDecision({...base,phase:'ChampSelect'}),{action:'hold',reason:'not-lobby'});
- assert.deepEqual(autoRoomDecision({...base,lobbyCount:1}),{action:'hold',reason:'waiting-party'});
+ assert.deepEqual(autoRoomDecision({...base,lobbyCount:0}),{action:'hold',reason:'waiting-party'});
  assert.deepEqual(autoRoomDecision({...base,lobbyCount:null}),{action:'hold',reason:'waiting-party'});
  assert.deepEqual(autoRoomDecision({...base,lobbyKey:null}),{action:'hold',reason:'no-key'});
  assert.deepEqual(autoRoomDecision({...base,manualRoomActive:true}),{action:'hold',reason:'room-busy'});
@@ -82,8 +83,9 @@ test('auto connect only joins a two-member lobby window with a fresh key',()=>{
 
 test('leaving needs a sustained absence, an expired offline grace or a revoked switch',()=>{
  const base={enabled:true,connected:true,phase:'Lobby',lobbyKey:KEY,lobbyCount:2,activeAutoKey:KEY,now:1000};
- assert.equal(autoRoomDecision({...base,lobbyCount:1,partyGoneForMs:AUTO_PARTY_GONE_MS-1}).action,'hold');
- assert.deepEqual(autoRoomDecision({...base,lobbyCount:1,partyGoneForMs:AUTO_PARTY_GONE_MS}),{action:'leave',key:KEY,reason:'party-ended'});
+ assert.equal(autoRoomDecision({...base,lobbyCount:0,partyGoneForMs:AUTO_PARTY_GONE_MS-1}).action,'hold');
+ assert.deepEqual(autoRoomDecision({...base,lobbyCount:0,partyGoneForMs:AUTO_PARTY_GONE_MS}),{action:'leave',key:KEY,reason:'party-ended'});
+ assert.deepEqual(autoRoomDecision({...base,lobbyCount:1,partyGoneForMs:AUTO_PARTY_GONE_MS}),{action:'hold',key:KEY,reason:'connected'},'a solo lobby is still evidence and must not close the room');
  assert.equal(autoRoomDecision({...base,connected:false,offlineForMs:AUTO_OFFLINE_GRACE_MS-1}).action,'hold');
  assert.deepEqual(autoRoomDecision({...base,connected:false,offlineForMs:AUTO_OFFLINE_GRACE_MS}),{action:'leave',key:KEY,reason:'offline'});
  // Connected but back at the home screen with the party gone: the sustained

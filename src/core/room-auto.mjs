@@ -1,5 +1,9 @@
 // Auto room core (CHA-71): every party member derives the same relay room
 // from one lobby identifier, so a premade converges without typing a code.
+// A solo lobby is its own owner: one member also derives a room, so teammates
+// invited later switch from their solo code to the new party code. When the
+// derived codes disagree (unverified partyId consistency, version skew), the
+// owner's copied code wins by manual join.
 // Pure helpers only: no sockets, no storage, no game client. The key comes
 // from /lol-lobby/v2/lobby's partyId; chat ids, chat keys and JWTs are never
 // read (src/core/client-party.mjs). The derived pin is a weak join filter,
@@ -62,12 +66,13 @@ export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,ac
   return {action:'hold',reason:'not-lobby'};
  }
  if(manualRoomActive)return {action:'hold',reason:'room-busy'};
- // Evidence means a usable identifier with at least two party members. An
+ // Evidence means a usable identifier with at least one party member: a solo lobby is its own owner and also derives a room. An
  // unreadable identifier counts as missing evidence on purpose: a room that
- // cannot be verified against the current party must not outlive it.
- if(!(Number.isFinite(lobbyCount)&&lobbyCount>=2&&key)){
+ // cannot be verified against the current party must not outlive it. Each
+ // machine derives its own code; grouping switches to the new party key.
+ if(!(Number.isFinite(lobbyCount)&&lobbyCount>=1&&key)){
   if(activeAutoKey&&Number.isFinite(partyGoneForMs)&&partyGoneForMs>=AUTO_PARTY_GONE_MS)return {action:'leave',key:activeAutoKey,reason:'party-ended'};
-  return {action:'hold',reason:Number.isFinite(lobbyCount)&&lobbyCount>=2?'no-key':'waiting-party'};
+  return {action:'hold',reason:Number.isFinite(lobbyCount)&&lobbyCount>=1?'no-key':'waiting-party'};
  }
  // A different party we are not allowed to join right now makes the active
  // room stale: it belongs to people the player has already left.

@@ -57,7 +57,7 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
  const results=Array.isArray(scanResults)?scanResults.slice(0,64):null;
  const forms=transport==='relay'
   ?`<label class="room-auto"><input type="checkbox" id="room-auto" ${autoEnabled?'checked':''} aria-label="自动连接组队房间"> 自动连接组队房间</label>
-   <p class="bottom-note">开启后，进入英雄联盟预组队大厅（非自定义、至少 2 名开黑成员）时，助手用大厅共享标识派生 6 位房间码与口令，自动连上中继并分享你的公开阵容与个人配置；房间昵称使用你的公开游戏 ID。派生口令知道组队数据即可算出，不是强认证。默认关闭；中继运营者与同房间成员能看到分享内容。${autoEnabled&&!autoSync?'当前“自动同步”已关闭：自动连接不会触发，已连接的自动房间也会关闭。':''}${autoEnabled?'':'当前关闭：下面的房间码与口令仍可手动加入。'}</p>
+   <p class="bottom-note">开启后，进入英雄联盟预组队大厅（非自定义、单人或组队）时，助手用大厅共享标识派生 6 位房间码与口令，自动连上中继并分享你的公开阵容与个人配置；单人时自己就是房主也会进房，房间昵称使用你的公开游戏 ID。每台机器都会按自己的大厅标识派生房间码，组队后一起切换到新组队标识的房间，单人码作废，最终以房主/当前组队的房间为准；若没汇合就复制房主的房间码与口令手动加入。派生口令知道组队数据即可算出，不是强认证。默认关闭；中继运营者与同房间成员能看到分享内容。${autoEnabled&&!autoSync?'当前“自动同步”已关闭：自动连接不会触发，已连接的自动房间也会关闭。':''}${autoEnabled?'':'当前关闭：下面的房间码与口令仍可手动加入。'}</p>
    ${autoError&&autoEnabled&&autoSync?`<p class="callout warning">${e(`上次自动连接失败：${autoError}；稍后会自动重试，换一个组队也会重试。`)}</p>`:''}
    <div class="room-join"><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="wss://room.你的域名" spellcheck="false" aria-label="中继地址"></label><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'处理中…':'加入中继房间','arrow','small',busy?'disabled':'')}</div>
    <p class="bottom-note">你和队友填同一个中继地址、房间码和口令，再各自点击加入；昵称是房间里显示的名字。地址可改成你信任的自建中继。</p>
