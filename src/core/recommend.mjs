@@ -550,7 +550,7 @@ export function buildReasonPoints(entry,scope){
  return points.filter(Boolean).slice(0,5);
 }
 
-export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={},ownRole=''}={}) {
+export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={},ownRole='',creativePlan=null}={}) {
  const byKey=new Map(champions.map(c=>[c.key,c])),next=structuredClone(slots),unassigned=[],displaced=[];
  const allEntries=(session?.myTeam||[]).filter((p,i,a)=>Number.isInteger(p.cellId)&&p.cellId>=0&&p.cellId<30&&a.findIndex(q=>q.cellId===p.cellId)===i).slice(0,5);
  const entries=allEntries.filter(p=>byKey.has(Number(p.championId))),placed=new Set();
@@ -645,9 +645,19 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
    for(const slot of next)if(!slot.partyManual)slot.party=used.has(slot.role);
   }else{
    // Missing the lobby is not evidence that the old default mid/bot/support
-   // range belongs to this party. Keep only located self/manual-ID members
-   // and explicit player markings; do not guess hidden teammate identities.
-   for(const slot of next)if(!slot.partyManual)slot.party=used.has(slot.role);
+   // range belongs to this party. A matching explicitly adopted plan is a
+   // saved recommendation range, not evidence about hidden player identities.
+   let planned=[];
+   if(creativePlan)try{
+    const plan=validateCreativePlan(creativePlan,next);
+    const conflict=allEntries.some(player=>{
+     if(player.cellId===session.localPlayerCellId)return false;
+     const {manual,declared,at}=publicRole(player),role=manual||declared||at?.role,member=plan.members.find(m=>m.role===role),hero=byKey.get(Number(player.championId||player.championPickIntent));
+     return member&&hero&&member.champion!==hero.id;
+    });
+    if(!conflict)planned=plan.members.filter(m=>slots.some(s=>s.role===m.role&&s.party&&s.champion===m.champion)).map(m=>m.role);
+   }catch{}
+   for(const slot of next)if(!slot.partyManual)slot.party=used.has(slot.role)||planned.includes(slot.role);
   }
  }
  return {slots:next,unassigned,displaced,markedLocalRole:localRole||null,markedLocalChanged:changed};

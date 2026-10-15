@@ -85,7 +85,7 @@ import {championReferenceView,referenceHeroTiles} from './champion-reference-vie
 
 let draftAdvanced=false,lastClientRead=null,lastRenderedClient='';
 let rankedRolesCache=null;const currentRankedRoles=()=>{if(rankedRolesCache?.builds!==data.builds||rankedRolesCache?.patch!==data.patch)rankedRolesCache={builds:data.builds,patch:data.patch,value:rankedClientRoles(data)};return rankedRolesCache.value;};
-const clientSyncOptions=()=>({autoArrange:saved.preferences.autoArrange!==false,autoParty:saved.preferences.autoParty!==false,party:client.party,roleOrder:currentRankedRoles(),ownRole:taskOwnRole()});
+const clientSyncOptions=()=>({autoArrange:saved.preferences.autoArrange!==false,autoParty:saved.preferences.autoParty!==false,party:client.party,roleOrder:currentRankedRoles(),ownRole:taskOwnRole(),creativePlan:activeCreativePlan});
 const selectedInClient=s=>!!s&&Number.isInteger(s.clientCellId)&&client.session?.myTeam?.some(p=>p.cellId===s.clientCellId&&Number(p.championId)>0);
 function guardClientSlot(s){if(selectedInClient(s))throw Error('这位英雄已在客户端选定，可以换位；更换或取消请在客户端操作。');}
 function refreshClientClock(){const remaining=clientDraftStatus(client,slots,data.champions).remaining;for(const el of document.querySelectorAll('[data-client-countdown]'))el.textContent=remaining===null?'':` · 约剩 ${remaining} 秒`;}
