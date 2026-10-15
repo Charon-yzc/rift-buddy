@@ -6,6 +6,7 @@
 
 import {validateCreativePlan} from './creative-plan.mjs';
 import {fingerprint} from './catalog-review.mjs';
+import {packRoomState,unpackRoomState,roomStateWithinBudget} from './room-frame.mjs';
 export const ROOM_PROTOCOL=1;
 export const ROLES=['top','jungle','mid','bottom','support'];
 const MODES=['rift','hex','aram'];
@@ -131,8 +132,14 @@ export function decodeRoomInvitation(text){
 // --- NDJSON framing -------------------------------------------------------
 export function encodeFrame(value){
  let line;
- try{line=JSON.stringify(value);}catch{return null;}
- if(typeof line!=='string'||new TextEncoder().encode(line).length+1>MAX_FRAME)return null;
+ try{
+  line=JSON.stringify(value);if(typeof line!=='string')return null;
+  if(new TextEncoder().encode(line).length+1>MAX_FRAME){
+   if(!roomStateWithinBudget(line)||!sanitizeShare(value))return null;
+   const packed=packRoomState(value);if(!packed)return null;line=JSON.stringify(packed);
+  }
+ }catch{return null;}
+ if(new TextEncoder().encode(line).length+1>MAX_FRAME)return null;
  return line+'\n';
 }
 // Split a stream buffer into complete lines plus the trailing partial line.
@@ -148,6 +155,7 @@ export function decodeFrame(line){
  if(new TextEncoder().encode(text).length>MAX_FRAME)return null;
  try{
   const value=JSON.parse(text);
+  if(value?.encoding!==undefined)return unpackRoomState(value);
   return value&&typeof value==='object'&&!Array.isArray(value)?value:null;
  }catch{return null;}
 }
@@ -165,7 +173,7 @@ export function validateWelcome(value){
  const room=String(value.room||'');
  if(!validRoomCode(room))return null;
  const members=Array.isArray(value.members)?value.members.map(m=>nick(m?.nick)).filter(Boolean).slice(0,12):[];
- return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{})};
+ return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===1?{packedStates:1}:{})};
 }
 // Votes identify the full sanitized proposal, including each member's setup.
 // The same champions with another route must remain a different choice.
