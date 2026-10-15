@@ -12,6 +12,7 @@ import {sanitizeRelayState} from '../src/core/room-relay.mjs';
 import {roomBallotBoard} from '../src/core/room-ballot.mjs';
 import {createRoomService} from '../services/room.mjs';
 import {roomBallotView} from '../src/room-ballot-view.mjs';
+import {roomPanel} from '../src/room-view.mjs';
 
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
 data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
@@ -90,10 +91,10 @@ test('legacy hosts retain small shares and explicitly refuse an unsupported full
  }finally{peer.dispose();for(const s of sockets)s.destroy();await new Promise(r=>server.close(r));}
 });
 
-test('relay reconnect resends the full plan and stops rather than dropping it on an incompatible downgrade',async()=>{
+for(const downgrade of ['relay','member'])test(`relay reconnect retains the full plan and shows an actionable ${downgrade} downgrade refusal`,async()=>{
  const sockets=[],factory=()=>{const socket={readyState:0,sent:[],bufferedAmount:0,send(text){this.sent.push(text);},close(code=1000,reason=''){if(this.readyState===3)return;this.readyState=3;this.onclose?.({code,reason});}};sockets.push(socket);return socket;};
  const peer=createRoomService({nick:'peer',webSocketFactory:factory,relayBackoffMs:5,relayOpenTimeoutMs:1000});
- const welcome=(socket,packedStates=1)=>{socket.readyState=1;socket.onopen?.({});socket.onmessage?.({data:JSON.stringify({kind:'welcome',v:1,room:'123456',members:[],ballots:1,adoptions:1,...(packedStates?{packedStates}:{} )})});};
+ const welcome=(socket,packedStates=1,members=[])=>{socket.readyState=1;socket.onopen?.({});socket.onmessage?.({data:JSON.stringify({kind:'welcome',v:1,room:'123456',members,ballots:1,adoptions:1,...(packedStates?{packedStates}:{} )})});};
  try{
   const pending=peer.relay({url:'wss://room.example.com',room:'123456',pin:'123456'});await until(()=>sockets.length===1);welcome(sockets[0]);await pending;
   peer.publish(state(a));assert.ok(sockets[0].sent.some(s=>JSON.parse(s).encoding==='dict1'));
@@ -101,10 +102,16 @@ test('relay reconnect resends the full plan and stops rather than dropping it on
   await until(()=>peer.snapshot().link==='connected'&&sockets[1].sent.some(s=>JSON.parse(s).kind==='state'));
   const restored=decodeFrame(sockets[1].sent.find(s=>JSON.parse(s).kind==='state'));
   assert.deepEqual(restored.strategy,a.strategy);assert.deepEqual(restored.ballot.proposal,a);
-  sockets[1].close(1006);await until(()=>sockets.length===3);welcome(sockets[2],0);
+  sockets[1].close(1006);await until(()=>sockets.length===3);welcome(sockets[2],downgrade==='relay'?0:1,downgrade==='member'?[{nick:'old'}]:[]);
   await until(()=>peer.snapshot().link==='failed');
+  const snapshot=peer.snapshot();
+  assert.match(snapshot.warning,/版本不支持.*更新助手与中继/);
+  assert.match(roomPanel({room:snapshot,champ:id=>data.champions.find(c=>c.id===id)}),/版本不支持.*更新助手与中继/);
+  for(const ballots of [true,false])assert.match(roomBallotView({...snapshot,ballots},[],data.champions),/版本不支持.*更新助手与中继/);
   assert.ok(sockets[2].sent.every(s=>JSON.parse(s).kind!=='state'));
   assert.deepEqual(peer.snapshot().members.find(m=>m.self).share.strategy,a.strategy);
+  await new Promise(resolve=>setTimeout(resolve,50));assert.equal(sockets.length,3,'A capability refusal must not loop reconnects');
+  peer.leave();assert.equal(peer.snapshot().warning,undefined,'Leaving clears stale refusal text');
  }finally{peer.dispose();}
 });
 

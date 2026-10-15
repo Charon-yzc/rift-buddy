@@ -215,6 +215,13 @@ test('a dropped relay link says so instead of pretending the room is fine',()=>{
  assert.match(html,/正在重连/);
 });
 
+test('a final relay refusal shows its specific escaped reason before generic retry advice',()=>{
+ const room=snapshot({mode:'client',transport:'relay',link:'failed',relayUrl:'wss://room.example.com',warning:'请更新助手 <b>完整方案</b>'});
+ const html=roomPanel({room,champ});
+ assert.match(html,/请更新助手 &lt;b&gt;完整方案&lt;\/b&gt;/);
+ assert.doesNotMatch(html,/<b>完整方案<\/b>|连续重连失败已停止/);
+});
+
 test('the automatic party room shows its derived code, pin and honest fallbacks',()=>{
  const idle=roomPanel({room:null,transport:'relay',champ});
  assert.match(idle,/id="room-auto"/);assert.doesNotMatch(idle,/id="room-auto" checked/);

@@ -385,7 +385,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    relayConnect().catch(error=>{
     diagnostic(`relay reconnect failed: ${error.message}`);
     if(relayStopped||mode!=='client')return;
-    if(error.final){relayStopped=true;relayLink='failed';emit();return;}
+    if(error.final){warning=error.message;relayStopped=true;relayLink='failed';emit();return;}
     // A failure the socket already charged must not be charged again, or the
     // breaker would trip at half its documented threshold.
     if(!error.charged&&++relayFailures>=RELAY_MAX_FAILURES){relayStopped=true;relayLink='failed';emit();return;}
