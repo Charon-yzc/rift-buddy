@@ -8,6 +8,7 @@ import {validateCreativePlan} from './creative-plan.mjs';
 import {fingerprint} from './catalog-review.mjs';
 import {packRoomState,unpackRoomState,roomStateWithinBudget} from './room-frame.mjs';
 export const ROOM_PROTOCOL=1;
+export const PACKED_STATES_VERSION=2;
 export const ROLES=['top','jungle','mid','bottom','support'];
 const MODES=['rift','hex','aram'];
 export const MAX_FRAME=65536;
@@ -166,15 +167,15 @@ export function validateHello(value){
  if(value?.kind!=='hello'||value.v!==ROOM_PROTOCOL)return null;
  const room=String(value.room||''),pin=String(value.pin||''),who=nick(value.nick);
  if(!validRoomCode(room)||!validPin(pin)||!who)return null;
- return {kind:'hello',v:ROOM_PROTOCOL,room,pin,nick:who,...(value.packedStates===1?{packedStates:1}:{})};
+ return {kind:'hello',v:ROOM_PROTOCOL,room,pin,nick:who,...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})};
 }
 export function validateWelcome(value){
  if(value?.kind!=='welcome'||value.v!==ROOM_PROTOCOL)return null;
  const room=String(value.room||'');
  if(!validRoomCode(room))return null;
  const members=Array.isArray(value.members)?value.members.map(m=>nick(m?.nick)).filter(Boolean).slice(0,12):[];
- const packedMembers=Array.isArray(value.members)?value.members.filter(m=>m?.packedStates===1&&members.includes(nick(m.nick))).map(m=>nick(m.nick)):[];
- return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===1?{packedStates:1,packedMembers}:{})};
+ const packedMembers=Array.isArray(value.members)?value.members.filter(m=>m?.packedStates===PACKED_STATES_VERSION&&members.includes(nick(m.nick))).map(m=>nick(m.nick)):[];
+ return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION,packedMembers}:{})};
 }
 // Votes identify the full sanitized proposal, including each member's setup.
 // The same champions with another route must remain a different choice.
@@ -230,7 +231,7 @@ export function validateLeave(value){
 export function validateJoin(value){
  if(value?.kind!=='join'||value.v!==ROOM_PROTOCOL)return null;
  const from=nick(value.from);
- return from?{kind:'join',v:ROOM_PROTOCOL,from,...(value.packedStates===1?{packedStates:1}:{})}:null;
+ return from?{kind:'join',v:ROOM_PROTOCOL,from,...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})}:null;
 }
 
 // Extract a shareable lineup from local slots, keeping only public fields.

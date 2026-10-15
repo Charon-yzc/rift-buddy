@@ -73,6 +73,8 @@ $identityProbe | ssh rift-buddy-data 'bash -s'
 
 自有服务器适配层源码为 `relay/node-server.mjs`，使用既有服务器 bundle 中的隔离依赖 `ws` 8.22.0，不是桌面运行依赖。更新协议时同时检查该适配层和 `relay/worker.js` 的成员接收能力协商；不要只替换 welcome 字段。旧成员可以收发普通消息，但不能静默收到其无法解码的大方案；有旧成员时拒绝大状态，已使用大状态的房间在 welcome 前拒绝不兼容成员。维护时先核验服务器现有 package.json 与依赖，使用独立版本目录验证握手、完整方案和旧成员边界后再切换 unit，不在桌面根目录安装服务器依赖。
 
+0.54.1 的完整方案使用 `dict2` 无损编码，握手能力值为 `packedStates: 2`。客户端、Node 中继与 Worker 必须同步支持该值；旧的 `1` 或休眠附件中的布尔值不能视为支持新版。小消息仍使用原 JSON，解码保留 `dict1` 读取；大消息仍受 64 KiB 限制，展开后上限 256 KiB，不删减反制条件、成员职责或配置来满足限制。
+
 ```powershell
 ssh rift-buddy-relay 'systemctl cat relay caddy rift-buddy-relay-health.timer'
 ssh rift-buddy-relay 'curl -fsS --max-time 5 http://127.0.0.1:8787/healthz'

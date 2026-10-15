@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ROOM_PROTOCOL,MAX_FRAME,validRoomCode,sanitizeShare} from '../src/core/room.mjs';
+import {ROOM_PROTOCOL,MAX_FRAME,validRoomCode,sanitizeShare,validateWelcome} from '../src/core/room.mjs';
 import {MAX_RELAY_MEMBERS,hashPin,validateRelayHello,relayWelcome,relayJoin,relayLeave,sanitizeRelayState,frameTooLarge} from '../relay/room-hub.mjs';
 
 test('hashPin is a deterministic SHA-256 that rejects malformed pins',async()=>{
@@ -27,7 +27,7 @@ test('relay hello is strict and must match the room message with its path',async
 
 test('welcome, join and leave builders carry only what the protocol needs',()=>{
  const welcome=relayWelcome('482913',['甲','乙']);
- assert.deepEqual(welcome,{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'},{nick:'乙'}],ballots:1,adoptions:1,packedStates:1});
+ assert.deepEqual(welcome,{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'},{nick:'乙'}],ballots:1,adoptions:1,packedStates:2});
  const many=relayWelcome('482913',Array.from({length:20},(_,i)=>'客'+i));
  assert.equal(many.members.length,MAX_RELAY_MEMBERS);
  assert.deepEqual(relayJoin('甲'),{kind:'join',v:ROOM_PROTOCOL,from:'甲'});
@@ -41,6 +41,17 @@ test('welcome, join and leave builders carry only what the protocol needs',()=>{
  // Dirty-but-cleanable input is sanitized, not rejected.
  assert.deepEqual(relayJoin('甲\u202e'),{kind:'join',v:ROOM_PROTOCOL,from:'甲'});
  assert.deepEqual(relayWelcome('482913',['甲\u202e乙']).members,[{nick:'甲乙'}]);
+});
+
+test('dict1, boolean and unknown capability claims do not imply dict2 receiver support',async()=>{
+ const hello={kind:'hello',v:1,room:'482913',pinHash:await hashPin('482913'),nick:'旧版'};
+ for(const packedStates of [undefined,1,true,3,'2']){
+  assert.equal(validateRelayHello({...hello,packedStates}).packedStates,undefined);
+  assert.equal(relayJoin('旧版',packedStates).packedStates,undefined);
+ }
+ const welcome=relayWelcome('482913',[{nick:'新',packedStates:2},{nick:'旧',packedStates:1},{nick:'旧附件',packedStates:true}]);
+ assert.deepEqual(validateWelcome(welcome).packedMembers,['新']);
+ assert.equal(validateWelcome({...welcome,packedStates:1}).packedStates,undefined);
 });
 
 test('sanitizeRelayState relays a rebuilt whitelist frame under the sender nick only',()=>{

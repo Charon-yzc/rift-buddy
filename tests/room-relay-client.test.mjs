@@ -113,7 +113,7 @@ test('the endpoint is the host plus the room path, and needs a real room code',(
 
 test('the hello frame carries the pin hash and never the pin',()=>{
  const hello=relayHello('482913',pinHash('482913'),'队友');
- assert.deepEqual(hello,{kind:'hello',v:ROOM_PROTOCOL,room:'482913',pinHash:pinHash('482913'),nick:'队友',packedStates:1});
+ assert.deepEqual(hello,{kind:'hello',v:ROOM_PROTOCOL,room:'482913',pinHash:pinHash('482913'),nick:'队友',packedStates:2});
  assert.ok(!('pin' in hello),'the plaintext pin must never reach the relay');
  assert.equal(hello.pinHash.length,64);
  assert.equal(relayHello('482913','abc','队友'),null);
@@ -144,7 +144,7 @@ test('joining a relay sends the hashed handshake and only resolves on welcome',a
  await tick();
  assert.equal(settled,false,'must not resolve before the relay welcomes');
  socket.open();
- assert.deepEqual(JSON.parse(socket.sent[0]),{kind:'hello',v:ROOM_PROTOCOL,room:'482913',pinHash:pinHash('482913'),nick:'我',packedStates:1});
+ assert.deepEqual(JSON.parse(socket.sent[0]),{kind:'hello',v:ROOM_PROTOCOL,room:'482913',pinHash:pinHash('482913'),nick:'我',packedStates:2});
  assert.equal(socket.sent[1],RELAY_PING,'the ping must match the relay byte for byte');
  socket.deliver({kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'我'},{nick:'乙'}]});
  const state=await joining;

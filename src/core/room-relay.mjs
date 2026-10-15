@@ -5,7 +5,7 @@
 // the relay, so the server cannot read it, and a 6-digit space is enumerable
 // anyway — the hash keeps out casual joiners, it is not a strong secret.
 
-import {ROOM_PROTOCOL,MAX_FRAME,validRoomCode,sanitizeNick,decodeFrame,encodeFrame,sanitizeShare} from './room.mjs';
+import {ROOM_PROTOCOL,PACKED_STATES_VERSION,MAX_FRAME,validRoomCode,sanitizeNick,decodeFrame,encodeFrame,sanitizeShare} from './room.mjs';
 
 export const MAX_RELAY_MEMBERS=12;
 // Suggested input only. It never opens a connection or replaces a saved
@@ -75,7 +75,7 @@ export function relayHello(room,pinHash,nick){
  const code=room,who=sanitizeNick(nick);
  if(typeof room!=='string'||typeof pinHash!=='string'||!PIN_HASH.test(pinHash))return null;
  if(!validRoomCode(code)||!who)return null;
- return {kind:'hello',v:ROOM_PROTOCOL,room:code,pinHash,nick:who,packedStates:1};
+ return {kind:'hello',v:ROOM_PROTOCOL,room:code,pinHash,nick:who,packedStates:PACKED_STATES_VERSION};
 }
 
 // The relay closes with a specific code for every refusal; the client turns
@@ -91,7 +91,7 @@ export function validateRelayHello(value,{room}={}){
  // Strict strings only: a number or single-element array must not coerce.
  if(typeof code!=='string'||typeof pinHash!=='string')return null;
  if(!validRoomCode(code)||(room!==undefined&&code!==room)||!PIN_HASH.test(pinHash)||!nick)return null;
- return {kind:'hello',v:ROOM_PROTOCOL,room:code,pinHash,nick,...(value.packedStates===1?{packedStates:1}:{})};
+ return {kind:'hello',v:ROOM_PROTOCOL,room:code,pinHash,nick,...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})};
 }
 
 // Client contract: the relay keeps no share state, so when a member receives
@@ -100,12 +100,12 @@ export function validateRelayHello(value,{room}={}){
 export function relayWelcome(room,nicks){
  const code=typeof room==='string'&&validRoomCode(room)?room:null;
  if(!code)return null;
- const members=(Array.isArray(nicks)?nicks:[]).map(m=>{const name=sanitizeNick(typeof m==='string'?m:m?.nick);return name?{nick:name,...(m?.packedStates===true||m?.packedStates===1?{packedStates:1}:{})}:null;}).filter(Boolean).slice(0,MAX_RELAY_MEMBERS);
- return {kind:'welcome',v:ROOM_PROTOCOL,room:code,members,ballots:1,adoptions:1,packedStates:1};
+ const members=(Array.isArray(nicks)?nicks:[]).map(m=>{const name=sanitizeNick(typeof m==='string'?m:m?.nick);return name?{nick:name,...(m?.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})}:null;}).filter(Boolean).slice(0,MAX_RELAY_MEMBERS);
+ return {kind:'welcome',v:ROOM_PROTOCOL,room:code,members,ballots:1,adoptions:1,packedStates:PACKED_STATES_VERSION};
 }
-export function relayJoin(nick,packedStates=false){
+export function relayJoin(nick,packedStates=0){
  const from=sanitizeNick(nick);
- return from?{kind:'join',v:ROOM_PROTOCOL,from,...(packedStates?{packedStates:1}:{})}:null;
+ return from?{kind:'join',v:ROOM_PROTOCOL,from,...(packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})}:null;
 }
 export function relayLeave(nick){
  const from=sanitizeNick(nick);

@@ -3,7 +3,7 @@
 import {createServer} from 'node:http';
 import {pathToFileURL} from 'node:url';
 import {WebSocketServer,WebSocket} from 'ws';
-import {ROOM_PROTOCOL,MAX_FRAME,validateLeave} from '../src/core/room.mjs';
+import {ROOM_PROTOCOL,PACKED_STATES_VERSION,MAX_FRAME,validateLeave} from '../src/core/room.mjs';
 import {MAX_RELAY_MEMBERS,RELAY_PING,RELAY_PONG,validateRelayHello,relayWelcome,relayJoin,relayLeave,sanitizeRelayState} from '../src/core/room-relay.mjs';
 import {MAX_SOCKETS,HANDSHAKE_TIMEOUT_MS,takeRelayBudget} from './room-hub.mjs';
 
@@ -11,7 +11,7 @@ export function createRelayServer(){
  const rooms=new Map();
  const server=createServer((req,res)=>{
   if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
-  if(req.url==='/healthz'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,service:'rift-buddy-relay',version:'0.54.1',protocol:ROOM_PROTOCOL,ballots:1,adoptions:1,packedStates:1,receiverCapabilities:1}));return;}
+  if(req.url==='/healthz'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,service:'rift-buddy-relay',version:'0.54.1',protocol:ROOM_PROTOCOL,ballots:1,adoptions:1,packedStates:PACKED_STATES_VERSION,receiverCapabilities:1}));return;}
   res.writeHead(req.url==='/'?200:404,{'Content-Type':'text/plain; charset=utf-8'});res.end(req.url==='/'?'rift-buddy room relay\n':'not found');
  });
  server.headersTimeout=10000;server.requestTimeout=15000;server.keepAliveTimeout=5000;server.maxConnections=300;
@@ -50,14 +50,14 @@ export function createRelayServer(){
    if(peer.state.pinHash!==undefined&&peer.state.pinHash!==hello.pinHash){close(peer,4002,'Wrong PIN');return;}
    if(active.some(other=>other.nick===hello.nick)){close(peer,4003,'Duplicate nickname');return;}
    if(active.length>=MAX_RELAY_MEMBERS){close(peer,4004,'Room full');return;}
-   if(hello.packedStates!==1&&active.some(other=>other.large)){close(peer,4010,'Update required for complete plans');return;}
-   peer.state.pinHash=hello.pinHash;peer.nick=hello.nick;clearTimeout(peer.timer);peer.packedStates=hello.packedStates===1;peer.large=false;
+   if(hello.packedStates!==PACKED_STATES_VERSION&&active.some(other=>other.large)){close(peer,4010,'Update required for complete plans');return;}
+   peer.state.pinHash=hello.pinHash;peer.nick=hello.nick;clearTimeout(peer.timer);peer.packedStates=hello.packedStates===PACKED_STATES_VERSION?PACKED_STATES_VERSION:0;peer.large=false;
    send(peer,JSON.stringify(relayWelcome(peer.room,active.map(other=>({nick:other.nick,packedStates:other.packedStates})))));
    fanout(peer.state,peer,JSON.stringify(relayJoin(peer.nick,peer.packedStates)));return;
   }
   if(frame?.kind==='state'){
    const clean=sanitizeRelayState(text,peer.nick);
-   if(clean){const large=JSON.parse(clean).encoding==='dict1';if(large&&(!peer.packedStates||joined(peer.state,peer).some(other=>!other.packedStates))){close(peer,4010,'Update required for complete plans');return;}peer.large=large;fanout(peer.state,peer,clean);}return;
+   if(clean){const large=JSON.parse(clean).encoding!==undefined;if(large&&(peer.packedStates!==PACKED_STATES_VERSION||joined(peer.state,peer).some(other=>other.packedStates!==PACKED_STATES_VERSION))){close(peer,4010,'Update required for complete plans');return;}peer.large=large;fanout(peer.state,peer,clean);}return;
   }
   const leave=validateLeave(frame);if(leave&&leave.from===peer.nick)close(peer,1000,'Leaving');
  };
