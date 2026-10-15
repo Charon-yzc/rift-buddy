@@ -60,7 +60,7 @@ function relayJoinForm({relayUrl,relayRoom,pin,busy,autoEnabled,autoSync,autoErr
  ${autoError&&autoEnabled&&autoSync?`<p class="callout warning">${e(autoError)}</p>`:''}`;
 }
 
-function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,autoEnabled=false,autoSync=true,autoError='',hasPreparationFile,preparationFileBusy}){
+function roomIdle({nick,detectedNick='',transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,autoEnabled=false,autoSync=true,autoError='',hasPreparationFile,preparationFileBusy}){
  const results=Array.isArray(scanResults)?scanResults.slice(0,64):null;
  const forms=transport==='relay'
   ?relayJoinForm({relayUrl,relayRoom,pin,busy,autoEnabled,autoSync,autoError})
@@ -70,7 +70,7 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
    <p class="bottom-note">公开阵容与配置会自动共享，仅在可信网络使用。</p><details class="ui-disclosure" data-companion-disclosure="room-lan-info"><summary>局域网连接说明</summary><p>房间不需要额外读取客户端数据。建房后自动发送所选公开阵容与配置，TCP 内容未加密；请在可信局域网或受信虚拟局域网使用。Windows 防火墙只允许当前可信网络。虚拟局域网不一定转发扫描公告，可粘贴房主从对应网卡复制的完整邀请加入。</p></details>`;
  return `<section class="panel room-panel"><div class="panel-head"><h3>${icon('link')}连接房间</h3><span class="badge">无需账号</span></div>
   <div class="panel-body">
-    <div class="room-nick"><label>房间昵称<input id="room-nick" value="${e(nick)}" maxlength="24" placeholder="队友" aria-label="房间昵称"></label><span class="bottom-note">能读到游戏 ID 时自动使用；读不到时用这里填的。</span></div>
+    <div class="room-nick"><label>房间昵称<input id="room-nick" value="${e(nick)}" maxlength="24" placeholder="队友" aria-label="房间昵称"></label>${detectedNick?`<span class="badge">本机游戏 ID · ${e(detectedNick)}</span>`:'<span class="bottom-note">能读到游戏 ID 时自动使用；读不到时用这里填的。</span>'}</div>
    ${transportSwitch(transport)}
    ${forms}
    ${error?`<p class="callout warning">${e(error)}</p>`:''}
@@ -104,8 +104,8 @@ function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy
   </div></section>`;
 }
 
-export function roomPanel({room,nick='队友',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl=DEFAULT_RELAY_URL,relayRoom='',addresses=[],champ,hasPreparationFile=false,preparationFileBusy=false,autoEnabled=false,autoSync=true,autoError='',autoQuiet=false}){
- if(!room||room.mode==='idle')return roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,autoEnabled,autoSync,autoError,hasPreparationFile,preparationFileBusy});
+export function roomPanel({room,nick='队友',detectedNick='',transport='lan',busy=false,scanning=false,scanResults=null,error='',invite='',pin='',relayUrl=DEFAULT_RELAY_URL,relayRoom='',addresses=[],champ,hasPreparationFile=false,preparationFileBusy=false,autoEnabled=false,autoSync=true,autoError='',autoQuiet=false}){
+ if(!room||room.mode==='idle')return roomIdle({nick,detectedNick,transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,autoEnabled,autoSync,autoError,hasPreparationFile,preparationFileBusy});
  return roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy,autoQuiet});
 }
 
