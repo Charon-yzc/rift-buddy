@@ -60,3 +60,18 @@ test('a hidden local identity or a clock step backwards cannot expose a key',asy
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:500});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'evidence read in the future must not count as fresh');
 });
+test('a nameless lobby still exposes the current summoner name for the room nickname',async()=>{
+ const mock={
+  discover:async()=>({port:23456,password:'mock-auth'}),
+  now:()=>1000,
+  request:async(_a,url)=>{
+   if(url.endsWith('gameflow-phase'))return 'Lobby';
+   if(url==='/lol-lobby/v2/lobby')return {localMember:{puuid:'public-player-id-11',summonerId:11},members:[{puuid:'public-player-id-11',summonerId:11}],partyId:'party-3ee56b17'};
+   if(url==='/lol-summoner/v1/current-summoner')return {displayName:'召唤师本人',summonerId:11};
+   return {gameData:{gameId:0,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
+  }};
+ const c=await clientSnapshot('',mock);
+ assert.equal(c.connected,true);
+ assert.equal(c.party.key,'party-3ee56b17');
+ assert.equal(c.own?.riotId,'召唤师本人');
+});

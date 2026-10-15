@@ -9,7 +9,7 @@ import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteConte
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
-const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
+const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-summoner/v1/current-summoner','/data-store/v1/install-dir']);
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
 export function parseLockfile(content) {
@@ -121,7 +121,16 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:lobbyFresh?'lobby':'unknown',members:lobbyFresh?lobbyPartyMembers(cache.lobby):[],lobbyCount:lobbyFresh?cache.lobby?.members.length:null,unmatched:0};
   const party=lobbyFresh&&cache.lobby.key?{...baseParty,key:cache.lobby.key}:baseParty;
   const ownIdentity=lobbyFresh?cache.lobby.local:publicPlayerIdentity(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId));
-  const ownName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)));
+  // Some lobbies carry the party identifier without any display names. The
+  // current summoner is this player's own public name in every phase; a
+  // failure here must not disturb the snapshot, lobby names still apply first.
+  let summonerDisplay='';
+  try{
+   const summoner=await request(auth,'/lol-summoner/v1/current-summoner');
+   const shown=typeof summoner?.displayName==='string'?summoner.displayName.trim().normalize('NFKC'):'';
+   if(/^[^\r\n\0]{1,64}$/.test(shown))summonerDisplay=shown;
+  }catch{}
+  const ownName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)))||summonerDisplay;
   const own=ownName?{riotId:ownName}:null;
   return {connected:true,phase,session,eligibility,game,party,...(own?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
