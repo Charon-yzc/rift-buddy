@@ -11,6 +11,7 @@ import {MAX_FRAME,encodeFrame,decodeFrame,sanitizeShare,proposalKey,validateWelc
 import {sanitizeRelayState} from '../src/core/room-relay.mjs';
 import {roomBallotBoard} from '../src/core/room-ballot.mjs';
 import {createRoomService} from '../services/room.mjs';
+import {roomBallotView} from '../src/room-ballot-view.mjs';
 
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
 data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
@@ -105,4 +106,30 @@ test('relay reconnect resends the full plan and stops rather than dropping it on
   assert.ok(sockets[2].sent.every(s=>JSON.parse(s).kind!=='state'));
   assert.deepEqual(peer.snapshot().members.find(m=>m.self).share.strategy,a.strategy);
  }finally{peer.dispose();}
+});
+
+test('mixed-version rooms keep small shares, reject unsupported publications visibly and refuse a stale late join',async()=>{
+ const host=createRoomService({nick:'host',listenHost:'127.0.0.1',discovery:false}),peer=createRoomService({nick:'new',listenHost:'127.0.0.1',discovery:false}),legacy=[];
+ const connectOld=async(target,nick)=>{
+  const socket=net.createConnection({host:'127.0.0.1',port:target.port}),frames=[];legacy.push(socket);let rest='';
+  socket.on('error',()=>{});socket.on('data',bytes=>{rest+=bytes;const lines=rest.split('\n');rest=lines.pop();for(const line of lines)if(line)frames.push(JSON.parse(line));});
+  const closed=once(socket,'close');await once(socket,'connect');socket.write(JSON.stringify({kind:'hello',v:1,room:target.room,pin:target.pin,nick})+'\n');return {socket,frames,closed};
+ };
+ try{
+  const target=await host.host(),old=await connectOld(target,'old');await until(()=>old.frames.some(f=>f.kind==='welcome'));
+  await peer.join({host:'127.0.0.1',port:target.port,room:target.room,pin:target.pin});
+  assert.equal(peer.snapshot().members.find(m=>m.nick==='host').packedStates,true);
+  assert.equal(peer.snapshot().members.find(m=>m.nick==='old').packedStates,false);
+  host.publish({lineup:[],pick:null,mode:'rift',ballot:{version:1,proposal:a,vote:null}});
+  await until(()=>old.frames.some(f=>f.ballot?.proposal?.strategy?.id===a.strategy.id));
+  assert.ok(old.frames.every(f=>f.encoding===undefined),'Old clients only receive legacy JSON');
+  assert.match(roomBallotView(host.snapshot(),[],data.champions),/1 位队友需更新助手/);
+  assert.throws(()=>host.publish(state(a)),/队友更新助手/);assert.throws(()=>peer.publish(state(a)),/队友更新助手/);
+  assert.deepEqual(host.snapshot().members.find(m=>m.self).share.lineup,[]);
+  old.socket.end();await old.closed;await until(()=>peer.snapshot().members.every(m=>m.nick!=='old'));
+  host.publish(state(a));await until(()=>peer.snapshot().members.find(m=>m.nick==='host')?.share?.strategy?.id===a.strategy.id);
+  const late=await connectOld(target,'late-old');await late.closed;
+  assert.ok(late.frames.every(f=>f.kind!=='welcome'),'An incompatible newcomer is refused before being shown as connected');
+  assert.equal(host.snapshot().members.length,2);assert.equal(peer.snapshot().mode,'client');
+ }finally{for(const socket of legacy)socket.destroy();peer.dispose();host.dispose();}
 });

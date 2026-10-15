@@ -26,6 +26,16 @@ test('the suggested relay is a valid opt-in input and saved custom addresses ret
  assert.equal(relayEndpoint(DEFAULT_RELAY_URL,'482913'),'wss://room.riftbuddy.dpdns.org/room/482913');
  assert.equal(relayEndpoint('', '482913'),null,'cleared input must still fail explicit join validation');
 });
+
+test('a joined relay capability refusal is final and visible, retaining the local share',async()=>{
+ const fake=fakeRelay(),service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:5});
+ try{
+  const socket=await joined(service,fake);service.publish({lineup:[{role:'mid',champion:'Ahri'}],pick:null});
+  socket.close(4010,'需要更新');await tick(40);
+  assert.equal(service.snapshot().link,'failed');assert.match(service.snapshot().warning,/更新助手/);
+  assert.equal(fake.sockets.length,1);assert.equal(service.snapshot().members.find(m=>m.self).share.lineup[0].champion,'Ahri');
+ }finally{service.dispose();}
+});
 const kinds=sent=>sent.map(text=>JSON.parse(text).kind);
 
 // A WebSocket stand-in that records what the client sent and lets a test push
@@ -103,7 +113,7 @@ test('the endpoint is the host plus the room path, and needs a real room code',(
 
 test('the hello frame carries the pin hash and never the pin',()=>{
  const hello=relayHello('482913',pinHash('482913'),'队友');
- assert.deepEqual(hello,{kind:'hello',v:ROOM_PROTOCOL,room:'482913',pinHash:pinHash('482913'),nick:'队友'});
+ assert.deepEqual(hello,{kind:'hello',v:ROOM_PROTOCOL,room:'482913',pinHash:pinHash('482913'),nick:'队友',packedStates:1});
  assert.ok(!('pin' in hello),'the plaintext pin must never reach the relay');
  assert.equal(hello.pinHash.length,64);
  assert.equal(relayHello('482913','abc','队友'),null);
@@ -134,7 +144,7 @@ test('joining a relay sends the hashed handshake and only resolves on welcome',a
  await tick();
  assert.equal(settled,false,'must not resolve before the relay welcomes');
  socket.open();
- assert.deepEqual(JSON.parse(socket.sent[0]),{kind:'hello',v:ROOM_PROTOCOL,room:'482913',pinHash:pinHash('482913'),nick:'我'});
+ assert.deepEqual(JSON.parse(socket.sent[0]),{kind:'hello',v:ROOM_PROTOCOL,room:'482913',pinHash:pinHash('482913'),nick:'我',packedStates:1});
  assert.equal(socket.sent[1],RELAY_PING,'the ping must match the relay byte for byte');
  socket.deliver({kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'我'},{nick:'乙'}]});
  const state=await joining;

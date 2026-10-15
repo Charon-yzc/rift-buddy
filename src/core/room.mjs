@@ -166,14 +166,15 @@ export function validateHello(value){
  if(value?.kind!=='hello'||value.v!==ROOM_PROTOCOL)return null;
  const room=String(value.room||''),pin=String(value.pin||''),who=nick(value.nick);
  if(!validRoomCode(room)||!validPin(pin)||!who)return null;
- return {kind:'hello',v:ROOM_PROTOCOL,room,pin,nick:who};
+ return {kind:'hello',v:ROOM_PROTOCOL,room,pin,nick:who,...(value.packedStates===1?{packedStates:1}:{})};
 }
 export function validateWelcome(value){
  if(value?.kind!=='welcome'||value.v!==ROOM_PROTOCOL)return null;
  const room=String(value.room||'');
  if(!validRoomCode(room))return null;
  const members=Array.isArray(value.members)?value.members.map(m=>nick(m?.nick)).filter(Boolean).slice(0,12):[];
- return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===1?{packedStates:1}:{})};
+ const packedMembers=Array.isArray(value.members)?value.members.filter(m=>m?.packedStates===1&&members.includes(nick(m.nick))).map(m=>nick(m.nick)):[];
+ return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===1?{packedStates:1,packedMembers}:{})};
 }
 // Votes identify the full sanitized proposal, including each member's setup.
 // The same champions with another route must remain a different choice.
@@ -229,7 +230,7 @@ export function validateLeave(value){
 export function validateJoin(value){
  if(value?.kind!=='join'||value.v!==ROOM_PROTOCOL)return null;
  const from=nick(value.from);
- return from?{kind:'join',v:ROOM_PROTOCOL,from}:null;
+ return from?{kind:'join',v:ROOM_PROTOCOL,from,...(value.packedStates===1?{packedStates:1}:{})}:null;
 }
 
 // Extract a shareable lineup from local slots, keeping only public fields.

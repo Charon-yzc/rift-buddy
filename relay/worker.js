@@ -85,16 +85,20 @@ export class RoomHub{
    else if(claimed!==hello.pinHash){ws.close(4002,'口令不正确');return;}
    if(this.busyNicks(ws).has(hello.nick)){ws.close(4003,'昵称重复');return;}
    if(this.busyNicks(ws).size>=MAX_RELAY_MEMBERS){ws.close(4004,'房间已满');return;}
-   ws.serializeAttachment({room:self.room,nick:hello.nick,budget});
-   const welcome=relayWelcome(self.room,[...this.busyNicks(ws)]);
+   if(hello.packedStates!==1&&this.members(ws).some(peer=>this.memberOf(peer).large)){ws.close(4010,'请更新助手以读取完整方案');return;}
+   ws.serializeAttachment({room:self.room,nick:hello.nick,budget,packedStates:hello.packedStates===1,large:false});
+   const welcome=relayWelcome(self.room,this.members(ws).map(peer=>this.memberOf(peer)));
    if(welcome)ws.send(JSON.stringify(welcome));
-   const join=relayJoin(hello.nick);
+   const join=relayJoin(hello.nick,hello.packedStates===1);
    if(join)this.send(this.members(ws),JSON.stringify(join));
    return;
   }
   if(frame?.kind==='state'){
    const line=sanitizeRelayState(message,self.nick);
    if(!line)return;
+   const large=JSON.parse(line).encoding==='dict1';
+   if(large&&(!self.packedStates||this.members(ws).some(peer=>!this.memberOf(peer).packedStates))){ws.close(4010,'队友需要更新助手以读取完整方案');return;}
+   ws.serializeAttachment({...this.memberOf(ws),large});
    this.send(this.members(ws),line);
    return;
   }

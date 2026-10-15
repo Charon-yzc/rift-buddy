@@ -51,7 +51,8 @@ export const RELAY_FRAME_REFILL_PER_SECOND=60;
 const HOST_NAME=/^[A-Za-z0-9.-]{1,253}$/;
 
 // One member as the UI sees it: online status plus the latest sanitized share.
-const memberView=({nick,share})=>({nick,online:true,share:share||null});
+const memberView=({nick,share,packedStates})=>({nick,online:true,share:share||null,packedStates:packedStates===true});
+const needsPacked=frame=>Buffer.byteLength(JSON.stringify(frame))+1>MAX_FRAME;
 const shareBody=share=>({lineup:share.lineup,pick:share.pick,at:share.at,...(share.mode!==undefined?{mode:share.mode}:{}),...(share.configurations!==undefined?{configurations:share.configurations}:{}),...(share.strategy?{strategy:share.strategy}:{}),...(share.ballot?{ballot:share.ballot}:{})});
 const send=(socket,frame)=>{const line=encodeFrame(frame);if(!line)return false;if(socket.destroyed)return false;if(socket.writableLength>MAX_FRAME*8){socket.destroy();return false;}try{socket.write(line);return true;}catch{socket.destroy();return false;}};
 const frameBudget=()=>{let start=Date.now(),count=0;return n=>{const now=Date.now();if(now-start>=1000){start=now;count=0;}count+=n;return count<=60;};};
@@ -66,7 +67,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  const guests=new Map(); // host: socket -> {nick,share}; client: 'nick:'+nick -> {nick,share}
  const waiting=new Set(); // host: accepted sockets that have not completed the handshake
  let upstream=null;
- let ownShare=null,ballots=false,adoptions=false,packedStates=false;
+ let ownShare=null,ballots=false,adoptions=false,packedStates=false,warning='';
  const failures=new Map(); // remote address -> consecutive failed handshakes
  // An address that keeps failing waits before its next hello is even read, so
  // one machine cannot guess pins at full LAN speed. The table is bounded so
@@ -81,9 +82,9 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
 
  const emit=()=>{try{onUpdate(snapshot());}catch{}};
  function snapshot(){
-  const members=[{nick:transport==='relay'?relayActiveNick:nick,online:true,share:ownShare,self:true}];
+  const members=[{nick:transport==='relay'?relayActiveNick:nick,online:true,share:ownShare,self:true,packedStates:true}];
   for(const g of guests.values())members.push({...memberView(g),self:false});
-  return {mode,transport,link:relayLink,ballots,adoptions,packedStates,room,pin:mode==='host'?pin:null,host:mode==='host'?null:upstream?.host||null,port,relayUrl,members};
+  return {mode,transport,link:relayLink,ballots,adoptions,packedStates,...(warning?{warning}:{}),room,pin:mode==='host'?pin:null,host:mode==='host'?null:upstream?.host||null,port,relayUrl,members};
  }
 
  function teardown({graceful=false}={}){
@@ -114,11 +115,12 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    }else try{socket.destroy();}catch{}
    upstream=null;
   }
-  guests.clear();ownShare=null;ballots=false;adoptions=false;packedStates=false;room=null;pin=null;port=null;mode='idle';transport=null;relayUrl=null;relayLink='idle';relayPinHash=null;relayActiveNick=nick;relayRenamed=false;relayFailures=0;relayStopped=false;
+  guests.clear();ownShare=null;ballots=false;adoptions=false;packedStates=false;warning='';room=null;pin=null;port=null;mode='idle';transport=null;relayUrl=null;relayLink='idle';relayPinHash=null;relayActiveNick=nick;relayRenamed=false;relayFailures=0;relayStopped=false;
  }
 
  function broadcast(frame,except){
-  for(const socket of guests.keys())if(typeof socket!=='string'&&socket!==except)send(socket,frame);
+  const packed=needsPacked(frame);
+  for(const [socket,guest] of guests)if(typeof socket!=='string'&&socket!==except&&(!packed||guest.packedStates))send(socket,frame);
  }
 
  // A frame handler bound to one host-side connection. Each connection owns its
@@ -155,23 +157,26 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
      const handshake=validateHello(frame);
      if(!handshake||handshake.room!==room||handshake.pin!==pin||nickTaken(handshake.nick)){dead=true;noteFailure(remote);socket.destroy();return;}
      if(guests.size>=MAX_MEMBERS-1){dead=true;socket.destroy();return;}
-     clearTimeout(handshakeTimer);hello=handshake;failures.delete(remote);
+     clearTimeout(handshakeTimer);failures.delete(remote);
      waiting.delete(socket);
-     guests.set(socket,{nick:handshake.nick,share:null});
-     const memberList=[{nick},...[...guests.values()].map(g=>({nick:g.nick}))];
+     const large=(share,from=nick)=>share&&needsPacked({kind:'state',v:ROOM_PROTOCOL,from,...shareBody(share)});
+     if(handshake.packedStates!==1&&(large(ownShare)||[...guests.values()].some(g=>large(g.share,g.nick)))){dead=true;socket.end();return;}
+     hello=handshake;
+     guests.set(socket,{nick:handshake.nick,share:null,packedStates:handshake.packedStates===1});
+     const memberList=[{nick,packedStates:1},...[...guests.values()].map(g=>({nick:g.nick,...(g.packedStates?{packedStates:1}:{})}))];
      send(socket,{kind:'welcome',v:ROOM_PROTOCOL,room,members:memberList,ballots:1,adoptions:1,packedStates:1});
      // Catch the newcomer up with the current table, then send the host's own
      // share. Writers only ever receive frames from other members.
      for(const g of guests.values())if(g.share)send(socket,{kind:'state',v:ROOM_PROTOCOL,from:g.nick,...shareBody(g.share)});
      send(socket,{kind:'state',v:ROOM_PROTOCOL,from:nick,...(ownShare?shareBody(ownShare):{lineup:[],pick:null,at:now()})});
-     broadcast({kind:'join',v:ROOM_PROTOCOL,from:hello.nick},socket);
+     broadcast({kind:'join',v:ROOM_PROTOCOL,from:hello.nick,...(hello.packedStates===1?{packedStates:1}:{})},socket);
      emit();
      continue;
     }
     const share=sanitizeShare(frame);
     if(share){
      const guest=guests.get(socket);
-     if(guest&&share.from===guest.nick){guest.share=shareBody(share);broadcast(share,socket);emit();}
+     if(guest&&share.from===guest.nick){if(needsPacked(share)&&[...guests.values()].some(g=>!g.packedStates)){dead=true;socket.end();return;}guest.share=shareBody(share);broadcast(share,socket);emit();}
      continue;
     }
     const leave=validateLeave(frame);
@@ -257,7 +262,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     if(socket===upstream?.socket&&mode==='client'){teardown();emit();}
    });
    socket.on('connect',()=>{
-    const hello=encodeFrame({kind:'hello',v:ROOM_PROTOCOL,room:targetCode,pin:targetSecret,nick});
+    const hello=encodeFrame({kind:'hello',v:ROOM_PROTOCOL,room:targetCode,pin:targetSecret,nick,packedStates:1});
     if(hello)socket.write(hello);else socket.destroy();
     // A wall-clock deadline: a chatty peer that never welcomes must not reset
     // it (socket.setTimeout is an inactivity timer and would).
@@ -280,7 +285,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
        welcomed=true;ballots=welcome.ballots===1;adoptions=welcome.adoptions===1;packedStates=welcome.packedStates===1;clearTimeout(deadline);
        // Seed the member list from the welcome so presence shows before any
        // share arrives (welcome.members are sanitized display names).
-       for(const name of [...new Set(welcome.members)].filter(name=>name!==nick).slice(0,MAX_MEMBERS-1))guests.set('nick:'+name,{nick:name,share:null});
+       for(const name of [...new Set(welcome.members)].filter(name=>name!==nick).slice(0,MAX_MEMBERS-1))guests.set('nick:'+name,{nick:name,share:null,packedStates:welcome.packedMembers?.includes(name)===true});
        settleOk();
        emit();
       }
@@ -289,11 +294,11 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
      const share=sanitizeShare(frame);
      if(share){
       if(share.from===nick)ownShare=shareBody(share);
-      else if(guests.has('nick:'+share.from))guests.set('nick:'+share.from,{nick:share.from,share:shareBody(share)});
+      else if(guests.has('nick:'+share.from))guests.set('nick:'+share.from,{...guests.get('nick:'+share.from),nick:share.from,share:shareBody(share)});
       emit();continue;
      }
      const join=validateJoin(frame);
-     if(join&&join.from!==nick){if(!guests.has('nick:'+join.from)&&guests.size<MAX_MEMBERS-1)guests.set('nick:'+join.from,{nick:join.from,share:null});emit();continue;}
+     if(join&&join.from!==nick){if(!guests.has('nick:'+join.from)&&guests.size<MAX_MEMBERS-1)guests.set('nick:'+join.from,{nick:join.from,share:null,packedStates:join.packedStates===1});emit();continue;}
      const leave=validateLeave(frame);
      if(leave){
       guests.delete('nick:'+leave.from);
@@ -320,7 +325,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   // missing; the view must never substitute a local build for a peer's choice.
   const line=encodeFrame(value);
   if(!line)return false;
-  if(!packedStates&&Buffer.byteLength(JSON.stringify(value))+1>MAX_FRAME)return false;
+  if(needsPacked(value)&&(!packedStates||[...guests.values()].some(g=>!g.packedStates)))return false;
   try{socket.send(line.slice(0,-1));return true;}catch{return false;}
  }
 
@@ -505,7 +510,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     const welcome=validateWelcome(frame);
     if(!welcome||welcome.room!==room)return;
     if(welcome.members.filter(name=>name!==relayNickFor(renamed)).length>=MAX_RELAY_MEMBERS){settleFail(relayRefusal('中继成员数量超限'));disposeSocket(socket);return;}
-    if(ownShare&&welcome.packedStates!==1&&Buffer.byteLength(JSON.stringify({kind:'state',v:ROOM_PROTOCOL,from:relayNickFor(renamed),...shareBody(ownShare)}))+1>MAX_FRAME){packedStates=false;settleFail(relayRefusal('中继版本不支持已保存的完整方案，请更新中继后重新连接'));disposeSocket(socket);return;}
+    if(ownShare&&(welcome.packedStates!==1||welcome.members.some(name=>name!==relayNickFor(renamed)&&!welcome.packedMembers?.includes(name)))&&needsPacked({kind:'state',v:ROOM_PROTOCOL,from:relayNickFor(renamed),...shareBody(ownShare)})){packedStates=false;settleFail(relayRefusal('中继或队友版本不支持已保存的完整方案，请更新助手与中继后重新连接'));disposeSocket(socket);return;}
     welcomed=true;ballots=welcome.ballots===1;adoptions=welcome.adoptions===1;packedStates=welcome.packedStates===1;settleOk();
     if(timers.welcome){clearTimeout(timers.welcome);timers.welcome=null;}
     // Forgive the streak only once this link has actually held for a while.
@@ -513,14 +518,14 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     if(timers.stable.unref)timers.stable.unref();
     relayLink='connected';relayActiveNick=relayNickFor(renamed);
     // welcome.members is a list of sanitized display names, not objects.
-    for(const name of welcome.members)if(name!==relayActiveNick&&guests.size<MAX_RELAY_MEMBERS-1&&!guests.has('nick:'+name))guests.set('nick:'+name,{nick:name,share:null});
+    for(const name of welcome.members)if(name!==relayActiveNick&&guests.size<MAX_RELAY_MEMBERS-1&&!guests.has('nick:'+name))guests.set('nick:'+name,{nick:name,share:null,packedStates:welcome.packedMembers?.includes(name)===true});
     relayAnnounce();
     emit();
     return;
    }
    const share=sanitizeShare(frame);
    if(share){
-    if(share.from!==relayActiveNick&&guests.has('nick:'+share.from))guests.set('nick:'+share.from,{nick:share.from,share:shareBody(share)});
+    if(share.from!==relayActiveNick&&guests.has('nick:'+share.from))guests.set('nick:'+share.from,{...guests.get('nick:'+share.from),nick:share.from,share:shareBody(share)});
     emit();
     return;
    }
@@ -529,7 +534,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    const join=validateJoin(frame);
    if(join&&join.from!==relayActiveNick){
     if(!guests.has('nick:'+join.from)&&guests.size>=MAX_RELAY_MEMBERS-1){retireSocket(socket,4004,'房间已满');return;}
-    if(!guests.has('nick:'+join.from))guests.set('nick:'+join.from,{nick:join.from,share:null});
+    if(!guests.has('nick:'+join.from))guests.set('nick:'+join.from,{nick:join.from,share:null,packedStates:join.packedStates===1});
     relayAnnounce();
     emit();
     return;
@@ -546,6 +551,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    relaySocket=null;
    if(mode!=='client'||relayStopped)return;
    const code=event?.code;
+   if(welcomed&&code===4010){warning=relayCloseReason(code);relayStopped=true;relayLink='failed';guests.clear();emit();diagnostic(warning);return;}
    if(!welcomed){
     // A duplicate nick on a reconnect is the one refusal a retry can clear:
     // our own stale connection may not have been released yet. On the very
@@ -627,6 +633,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   const clean=sanitizeShare({kind:'state',v:ROOM_PROTOCOL,from:nick,lineup:share?.lineup||[],pick:share?.pick??null,at:share?.at||now(),...(share?.mode!==undefined?{mode:share.mode}:{}),...(share?.configurations!==undefined?{configurations:share.configurations}:{}),...(share?.strategy?{strategy:share.strategy}:{}),...(share?.ballot?{ballot:share.ballot}:{})});
   if(!clean||!encodeFrame(clean))throw Error('分享内容格式不正确或过大');
   if(!packedStates&&Buffer.byteLength(JSON.stringify(clean))+1>MAX_FRAME)throw Error('当前房间版本不支持完整五人方案，请更新中继或房主后重新连接');
+  if(needsPacked(clean)&&[...guests.values()].some(g=>!g.packedStates))throw Error('有队友版本较旧，完整多人方案需要队友更新助手后再同步');
   if(mode==='host')broadcast(clean);
   else if(transport==='relay'){
    if(relayLink==='failed')throw Error('中继连接已失败，请重新加入');
