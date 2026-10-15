@@ -14,7 +14,9 @@ import {validatePreparation} from '../src/core/preparation.mjs';
 const customGame=process.argv.includes('--custom'),loadingNewGame=process.argv.includes('--loading-new-game'),loadingTransition=process.argv.includes('--loading-transition')||loadingNewGame,unadopted=process.argv.includes('--unadopted')||loadingTransition,root=await fs.mkdtemp(path.resolve('.local/party-preparation-smoke-')),state=defaultState();
 const picks={top:'Camille',jungle:'Vi',mid:'Galio'},data=JSON.parse(await fs.readFile('data/game.json'));
 const rolePools=Object.fromEntries(Object.entries(picks).map(([role,id])=>[role,{heroes:[id],mode:'only'}]));
-const slots=createSlots().map(s=>({...s,party:!!picks[s.role],champion:unadopted?null:picks[s.role]||null,locked:!unadopted&&!!picks[s.role],...(!unadopted?(s.role==='top'?{clientCellId:0,manualPosition:true}:s.role==='jungle'?{clientCellId:1,manualPosition:true}:s.role==='mid'?{automaticPosition:true}:{}):{})}));
+// This fixture starts after the lobby without public party identities. Its
+// three-player plan is explicit, rather than inferred from stale defaults.
+const slots=createSlots().map(s=>({...s,party:!!picks[s.role],partyManual:true,champion:unadopted?null:picks[s.role]||null,locked:!unadopted&&!!picks[s.role],...(!unadopted?(s.role==='top'?{clientCellId:0,manualPosition:true}:s.role==='jungle'?{clientCellId:1,manualPosition:true}:s.role==='mid'?{automaticPosition:true}:{}):{})}));
 const result=recommend({slots,champions:data.champions,scope:'party',limit:1,...(unadopted?{rolePools,style:'balanced'}:{})})[0],plan=captureCreativePlan(result,data,'2026-10-12T00:00:00Z');
 const alternativePlan=selectPartyRoute(captureCreativePlan({...result,trio:null,duo:null},data,'2026-10-12T00:00:00Z'),'side-pressure');
 data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
