@@ -1,6 +1,6 @@
 # 两台服务器的连接与维护
 
-本项目使用两台既有 t4g.small（ARM64 / 2 GiB）。这份文档说明固定连接约定和职责；实际连接参数保存在维护电脑的 `.ssh` 中。最后核对日期：2026-10-14。
+本项目使用两台既有 t4g.small（ARM64 / 2 GiB）。这份文档说明固定连接约定和职责；实际连接参数保存在维护电脑的 `.ssh` 中。资料服务器与公网入口最后核对日期：2026-10-15。
 
 ## 新会话从这里开始
 
@@ -11,7 +11,7 @@ Get-Content -LiteralPath "$env:USERPROFILE\.ssh\rift-buddy-servers.json"
 ssh -G rift-buddy-relay
 ssh -G rift-buddy-data
 ssh rift-buddy-relay 'hostname; uname -m; systemctl is-active relay caddy rift-buddy-relay-health.timer'
-ssh rift-buddy-data 'hostname; uname -m; systemctl is-active rift-buddy-data.timer'
+ssh rift-buddy-data 'hostname; uname -m; systemctl is-active caddy rift-buddy-data.timer'
 ```
 
 `ssh -G` 只解析配置，不连接；它不会输出私钥内容。确认 HostName、User、IdentityFile、UserKnownHostsFile、StrictHostKeyChecking 与本机记录一致。首次维护时按下面的方法核对实例身份，不依赖聊天记忆或早期交接中的 IP。
@@ -40,16 +40,16 @@ B 的 SSH 入站仅允许维护电脑已核验的公网 IPv4 `/32`；安全组�
 | --- | --- | --- |
 | 登录 | `ssh rift-buddy-relay` | `ssh rift-buddy-data` |
 | 主要职责 | 实时房间消息、方案与投票转发；HTTPS/WSS；备用安装包下载 | 公开资料采集、格式校验、内容去重、候选保存和统计文件签名 |
-| 当前进程 | Node 中继、Caddy、健康检查计时器 | systemd 定时启动 Node 采集，执行完成即退出 |
+| 当前进程 | Node 中继、Caddy、健康检查计时器 | Caddy 提供 HTTPS；systemd 定时启动 Node 采集，执行完成即退出 |
 | 数据 | 房间运行状态及最新安装包 | 当前有效候选、签名资料、来源、校验和及检查状态 |
 | 对玩家的影响 | 重启中继可能断开正在使用的房间，应减少中断 | 采集失败继续保留有效资料，不阻塞玩家当前选人 |
-| 当前入口 | `wss://room.riftbuddy.dpdns.org` | 签名文件已生成，公网 HTTPS 待 DNS 与外部验证；维护 SSH 仅接受维护电脑的来源 |
+| 当前入口 | `wss://room.riftbuddy.dpdns.org` | `https://data.riftbuddy.dpdns.org`；维护 SSH 仅接受维护电脑的来源 |
 
 A 不执行批量资料抓取。B 不接收玩家 LCU 凭据、账号、战绩或游戏内存，也不承接本机英雄预选、符文写入等玩家操作。客户端保留离线资料和推荐计算。
 
 0.54 的第一阶段已加入基础资料、六份分路榜单、常用配置和海克斯参考的采集模块，详见 [资料更新说明](server-data-updates.md)。程序由 `/opt/rift-buddy-data/current` 指向实际版本目录，候选与状态写入 `/var/lib/rift-buddy-data/updates/`。服务器只保留当前有效数据，旧任务输出和旧部署在替换成功后清理。
 
-客户端分别访问所需服务并保留有效缓存，房间请求不依赖 B 的实时响应，B 的采集也不依赖 A 在线。B 已在完整采集后签名发布三类统计文件到 `/srv/rift-buddy-data`，待独立域名就绪后接通 HTTPS。签名私钥只在 B 的非公开目录，客户端只含验签公钥。公告、反馈和权威房间系统尚未实现；现有房间协议仍是兼容转发。
+客户端分别访问所需服务并保留有效缓存，房间请求不依赖 B 的实时响应，B 的采集也不依赖 A 在线。B 已在完整采集后签名发布三类统计文件到 `/srv/rift-buddy-data`，独立域名的公网 HTTPS 已验证。本项目的资料路由仅开放清单与数据文件的 GET/HEAD，不提供目录首页；访问根路径得到 404 正常。签名私钥只在 B 的非公开目录，客户端只含验签公钥。公告、反馈和权威房间系统尚未实现；现有房间协议仍是兼容转发。
 
 ## 维护前核对身份
 
@@ -76,9 +76,12 @@ ssh rift-buddy-relay 'systemctl cat relay caddy rift-buddy-relay-health.timer'
 ssh rift-buddy-relay 'curl -fsS --max-time 5 http://127.0.0.1:8787/healthz'
 ssh rift-buddy-data 'systemctl cat rift-buddy-data.service rift-buddy-data.timer'
 ssh rift-buddy-data 'systemctl show rift-buddy-data.service -p Result -p ExecMainStatus; sudo -n cat /var/lib/rift-buddy-data/updates/status.json'
+ssh rift-buddy-data 'systemctl is-active caddy; sudo -n /opt/rift-buddy-runtime/caddy-2.11.7/caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile'
 ```
 
 B 的 service 是一次性任务，运行完显示 `inactive` 正常；查看 timer 是否 active，以及最近的 Result、ExecMainStatus 和 status.json。当前计划为北京时间每天 10:17、22:17，另加最多 10 分钟随机延迟。
+
+B 的 Caddy unit 为 `/etc/systemd/system/caddy.service`，配置为 `/etc/caddy/Caddyfile`，证书状态在 `/var/lib/caddy`；由 Caddy 自动续期。HTTP 80 用于证书签发与跳转，HTTPS 443 用于公开资料下载，SSH 22 继续限定维护来源。维护时先读取实际完整配置并保留其他项目的路由，不直接用本仓库的 `deploy/data/Caddyfile` 模板覆盖。当前补丁为 16.20 时，可用 `curl.exe --fail --head https://data.riftbuddy.dpdns.org/v1/patches/16.20/latest.json` 检查公网入口；补丁变化后使用实际清单路径。2026-10-15 已从维护电脑通过正常 TLS 校验下载清单及三份数据，使用客户端固定公钥验签，并在隔离客户端状态验证了选人期间暂存、回大厅启用及断网重启缓存；这不代表已发布或实测 0.54 安装版。
 
 用户要求刷新资料时可执行：
 
