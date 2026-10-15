@@ -11,6 +11,8 @@ export function publicPlayerIdentity(player) {
  const name = clean(player.gameName), tag = clean(player.tagLine), supplied = clean(player.riotId);
  const riotId = name && tag ? name + '#' + tag : supplied || clean(player.summonerName);
  if (/^[^#\r\n\0]{1,64}#[^#\r\n\0]{1,16}$/.test(riotId)) identity.riotId = riotId;
+ const display = clean(player.summonerName) || clean(player.gameName);
+ if (display.length >= 1 && display.length <= 64) identity.summonerName = display;
  return identity;
 }
 export function normalizePartyIds(value) {
@@ -18,7 +20,7 @@ export function normalizePartyIds(value) {
  return [...new Set(values.map(clean).filter(id => /^[^#\r\n\0]{1,64}#[^#\r\n\0]{1,16}$/.test(id) || /^[1-9]\d{0,19}$/.test(id)))].slice(0, 4);
 }
 const sameIdentity = (a, b) => {
- for (const key of ['puuid', 'summonerId', 'riotId']) if (a?.[key] && b?.[key]) return key === 'riotId' ? a[key].toLowerCase() === b[key].toLowerCase() : a[key] === b[key];
+ for (const key of ['puuid', 'summonerId', 'riotId', 'summonerName']) if (a?.[key] && b?.[key]) return key === 'puuid' || key === 'summonerId' ? a[key] === b[key] : a[key].toLowerCase() === b[key].toLowerCase();
  return false;
 };
 export function sanitizeLobbyParty(raw, receivedAt = Date.now()) {

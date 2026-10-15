@@ -119,7 +119,8 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   const lobbyFresh=!!cache.lobby&&Number.isFinite(cache.lobby.receivedAt)&&now()>=cache.lobby.receivedAt&&now()-cache.lobby.receivedAt<=LOBBY_AUTO_FRESH_MS&&LOBBY_PHASES.includes(phase);
   const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:cache.lobby?'lobby':'unknown',members:[],lobbyCount:cache.lobby?.members.length??null,unmatched:0};
   const party=lobbyFresh&&cache.lobby.key?{...baseParty,key:cache.lobby.key}:baseParty;
-  const own=lobbyFresh&&cache.lobby.local?.riotId?{riotId:cache.lobby.local.riotId}:null;
+  const localId=lobbyFresh?cache.lobby.local:null;
+  const own=localId&&(localId.riotId||localId.summonerName)?{...(localId.riotId?{riotId:localId.riotId}:{}),...(localId.summonerName?{summonerName:localId.summonerName}:{})}:null;
   return {connected:true,phase,session,eligibility,game,party,...(own?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }

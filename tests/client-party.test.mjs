@@ -7,6 +7,9 @@ test('only current public lobby members survive sanitization; no chat tokens or 
  assert(!JSON.stringify(lobby).includes('PRIVATE'));assert.equal(lobby.members.length,2);
  assert.deepEqual(publicPlayerIdentity({...friend,nameVisibilityType:'HIDDEN',obfuscatedPuuid:'decode-me'}),{});
  assert.deepEqual(publicPlayerIdentity({puuid:'00000000-0000-0000-0000-000000000000',summonerId:0}),{});
+ assert.equal(publicPlayerIdentity({puuid:'public-own-identity-0001',summonerId:10,summonerName:'本人召唤师'}).summonerName,'本人召唤师');
+ assert.equal(publicPlayerIdentity({puuid:'public-own-identity-0001',summonerId:10,summonerName:'本人召唤师'}).riotId,undefined);
+ assert.equal(sanitizeLobbyParty({localMember:{puuid:'public-own-identity-0001',summonerId:10,summonerName:'本人召唤师'},members:[{puuid:'public-own-identity-0001',summonerId:10,summonerName:'本人召唤师'}],partyId:'party-aaaaaa'}).local.summonerName,'本人召唤师');
  assert.equal(sanitizeLobbyParty({localMember:self,members:[self],gameConfig:{isCustom:true}}),null);
  assert.equal(sanitizeLobbyParty({localMember:self,members:[friend]}),null);
 });

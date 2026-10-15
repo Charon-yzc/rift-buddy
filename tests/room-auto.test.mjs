@@ -47,6 +47,7 @@ test('the code and pin domains are separated before hashing',async()=>{
 
 test('the room nickname prefers the public game id and falls back safely',()=>{
  assert.equal(autoRoomNick({identity:{riotId:'Player11#CN1'},savedNick:'小明'}),'Player11#CN1');
+ assert.equal(autoRoomNick({identity:{summonerName:'召唤师本人'},savedNick:'小明'}),'召唤师本人');
  assert.equal(autoRoomNick({identity:{},savedNick:'小明'}),'小明');
  assert.equal(autoRoomNick({identity:{riotId:'x'.repeat(25)},savedNick:'小明'}),'小明');
  assert.equal(autoRoomNick({identity:{riotId:'队友\u202e甲'},savedNick:''}),'队友甲');

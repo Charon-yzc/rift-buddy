@@ -52,6 +52,11 @@ test('a hidden local identity or a clock step backwards cannot expose a key',asy
  assert.equal(hidden.party.key,undefined);assert.equal(hidden.own,undefined);assert.equal(hidden.party.status,'unknown');
  f.set({lobby:{localMember:identity(11),members:[identity(11),identity(22)],partyId:'party-3ee56b17'}});
  assert.equal((await clientSnapshot('',f.mock)).party.key,'party-3ee56b17');
+ assert.equal((await clientSnapshot('',f.mock)).own.riotId,'Player11#CN1');
+ f.set({lobby:{localMember:{puuid:'public-player-id-11',summonerId:11,summonerName:'召唤师本人'},members:[{puuid:'public-player-id-11',summonerId:11,summonerName:'召唤师本人'}],partyId:'party-3ee56b17'}});
+ const named=await clientSnapshot('',f.mock);
+ assert.equal(named.party.key,'party-3ee56b17');
+ assert.equal(named.own?.summonerName,'召唤师本人');
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:500});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'evidence read in the future must not count as fresh');
 });

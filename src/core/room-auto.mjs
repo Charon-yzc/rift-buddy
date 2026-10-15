@@ -41,7 +41,7 @@ export async function deriveAutoRoom(partyKey,{digest}={}){
 }
 
 export function autoRoomNick({identity,savedNick,fallback='队友'}={}){
- return sanitizeNick(identity?.riotId)||sanitizeNick(savedNick)||sanitizeNick(fallback)||'队友';
+ return sanitizeNick(identity?.riotId)||sanitizeNick(identity?.summonerName)||sanitizeNick(savedNick)||sanitizeNick(fallback)||'队友';
 }
 
 // The room service knows nothing about parties: main adds the auto marker,
