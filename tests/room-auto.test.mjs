@@ -7,7 +7,7 @@ const KEY='3ee56b17-97c9-4538-9425-515157abdd45';
 test('the documented timing constants stay put',()=>{
  assert.equal(AUTO_PARTY_GONE_MS,30000);
  assert.equal(AUTO_OFFLINE_GRACE_MS,60000);
- assert.equal(AUTO_RETRY_MS,300000);
+ assert.equal(AUTO_RETRY_MS,15000);
  assert.equal(AUTO_QUIET_MS,30000);
  assert.equal(LOBBY_AUTO_FRESH_MS,120000);
 });

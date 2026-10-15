@@ -41,7 +41,7 @@ export function captureTeamConfigurations(result,data,store){
 }
 
 // Restore reusable members; previous non-party picks are never a current draft.
-export function restoreTeamFavorite(favorite,current,champions,session=null,{eligibleByRole={},confirmedPick=null}={}){
+export function restoreTeamFavorite(favorite,current,champions,session=null,{eligibleByRole={},confirmedPick=null,moveUnbound=false}={}){
  validateSlots(favorite.slots,champions);validateSlots(current,champions);
  if(favorite.scope==='solo'&&!favorite.soloRole)throw Error('旧单人收藏未保存位置，请重新推荐并收藏');
  const desired=favorite.slots.filter(s=>s.champion&&(favorite.scope==='solo'?s.role===favorite.soloRole:favorite.scope==='bot'?['bottom','support'].includes(s.role):s.party));
@@ -57,15 +57,19 @@ export function restoreTeamFavorite(favorite,current,champions,session=null,{eli
  if(['party','context'].includes(favorite.scope))for(const slot of next)if(!slot.champion&&!slot.manualPosition&&!Number.isInteger(slot.clientCellId))slot.party=favorite.slots.find(s=>s.role===slot.role).party;
  for(const member of desired){
   const slot=next.find(s=>s.role===member.role),existing=next.find(s=>s.champion===member.champion);
+  const movable=moveUnbound&&existing&&existing.role!==member.role&&!Number.isInteger(existing.clientCellId)&&!existing.manualPosition&&!publicIds.has(member.champion)&&!(session?.myTeam||[]).some(p=>champions.find(c=>c.key===Number(p.championPickIntent))?.id===member.champion);
   const manualTeammate=slot.champion&&slot.locked&&!slot.party;
   if(unavailable.bans.includes(member.champion)||unavailable.enemy.includes(member.champion)||Array.isArray(eligibleByRole[member.role])&&!eligibleByRole[member.role].includes(member.champion)&&!(confirmedPick?.role===member.role&&confirmedPick.champion===member.champion)){
    conflicts.push({role:member.role,champion:member.champion,current:slot.champion,reason:'unavailable'});continue;
   }
   if(slot.champion&&slot.locked&&slot.champion!==member.champion){conflicts.push({role:member.role,champion:member.champion,current:slot.champion,reason:manualTeammate?'teammate':'locked'});continue;}
-  if(manualTeammate||publicCells.has(slot.clientCellId)&&slot.champion!==member.champion||existing&&existing.role!==member.role||publicIds.has(member.champion)&&!existing){
+  if(manualTeammate||publicCells.has(slot.clientCellId)&&slot.champion!==member.champion||existing&&existing.role!==member.role&&!movable||publicIds.has(member.champion)&&!existing){
    conflicts.push({role:member.role,champion:member.champion,current:slot.champion,reason:manualTeammate?'teammate':existing&&existing.role!==member.role?'position':publicIds.has(member.champion)&&!existing?'unassigned':'current'});continue;
   }
   if(slot.champion===member.champion&&publicIds.has(member.champion)){slot.party=member.party;continue;}
+  // Only an explicit room adoption may move an unbound saved hero. Release
+  // its old lane after every destination check, so failed adoption loses none.
+  if(movable){existing.champion=null;existing.locked=false;delete existing.automaticPosition;delete existing.publicIntent;}
   const {clientCellId,manualPosition,...saved}=member;Object.assign(slot,saved,{locked:!!saved.champion});delete slot.clientCellId;delete slot.manualPosition;
  }
  validateSlots(next,champions);

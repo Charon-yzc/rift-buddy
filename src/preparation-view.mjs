@@ -1,11 +1,10 @@
-import {escape as e,button} from './ui.mjs';
-import {ROLES} from './core/rules.mjs';
+import {escape as e,asset} from './ui.mjs';
 import {dataStatus} from './core/data-status.mjs';
+import {preparationEquipment} from './core/complete-gear.mjs';
+import {attributePriority} from './attribute-plan-view.mjs';
 export const runeApplicationKey=(id,role,page)=>page?[id,role,page.selectedPerkIds.join('-')].join(':'):'';
-export function preparationSummary(data,build,champion,{own,appliedKey,refreshing,error}={}){
- const applied=!!build.runePage&&appliedKey===runeApplicationKey(champion.id,build.role,build.runePage);
- const target=own?(own.id===champion.id?'你当前选的英雄':'正在浏览搭档 / 其他英雄'):'选人尚未确认 · 当前浏览配置';
- const role=ROLES.find(r=>r.id===build.role)?.name;
- const status=dataStatus(data,build,{refreshing,error});
- return `<section class="preparation-summary" aria-label="本局准备摘要"><div class="preparation-title"><b>${e(target)}</b><span>${e(champion.name)} · ${build.mode==='hex'?'海克斯大乱斗':e(role)}</span></div><p><b>玩法</b> ${e(build.title)}${build.combo?' · '+e(build.combo.title):''}${build.combo?.play?button('build-jump','看分阶段配合','','quiet small','data-section="combo"'):''}</p><p><b>出装</b> ${e(build.items.slice(0,3).map(i=>i.name).join(' → '))}</p><p><b>符文</b> ${build.mode==='hex'?'此模式不应用峡谷符文':e(build.selectedRune?.name||'暂不可用')+' · '+(applied?'本次已应用这套选择，客户端修改后需重新应用':'尚未应用这套选择')}${build.mode==='rift'?button('build-jump','核对并应用','','quiet small','data-section="runes"'):''}</p><p class="bottom-note">带入指引只保存方案；应用符文需在下方点击。${own&&own.id!==champion.id?'浏览搭档时，符文应用对象仍是你自己的客户端。':''}</p><details class="preparation-status"><summary>资料与规则状态</summary>${Object.values(status).map(t=>`<p>${e(t)}</p>`).join('')}</details></section>`;
+export function preparationSummary(data,build,champion,{own,appliedKey,refreshing,error,selection={}}={}){
+ const applied=!!build.runePage&&appliedKey===runeApplicationKey(champion.id,build.role,build.runePage),status=dataStatus(data,build,{refreshing,error});
+ const runes=new Map(data.runes.flatMap(t=>t.slots.flatMap(s=>s.runes.map(r=>[r.id,r])))),perks=build.runePage?.selectedPerkIds.slice(0,6)||[];
+ return `<section class="preparation-summary preparation-overview" aria-label="本局准备摘要"><div class="preparation-title"><b>${e(build.title)}</b><span>${build.mode==='hex'?'海克斯大乱斗':applied?'本次已应用符文':'尚未应用符文'}</span></div><div class="overview-equipment" aria-label="有序完整出装">${preparationEquipment(data,build,selection).map((item,i)=>`<span title="${i+1}. ${e(item.name)}">${asset('item',item.id,item.name)}<small>${i+1}</small><b>${e(item.name)}</b></span>`).join('')}</div>${perks.length?`<div class="overview-runes" aria-label="当前符文">${perks.map(id=>`<span title="${e(runes.get(id)?.name)}">${asset('rune',id,runes.get(id)?.name)}${e(runes.get(id)?.name)}</span>`).join('')}</div>`:'<p>海克斯强化按局内选项决定</p>'}<div class="overview-skill-spells"><b>${build.attributePlan?'属性 '+e(attributePriority(build.attributePlan)):build.priority?'加点 '+e(build.priority.split('').join(' › ')):'加点待补'}</b><span>${build.first?'开局 '+e(build.first.split('').join(' › ')):''}</span><span>${(build.summoners||[]).map((id,i)=>`${i?'F':'D'} ${e(data.spells[id]?.name||id)}`).join(' · ')}</span></div>${error?`<p class="callout warning">配置刷新未完成：${e(error)}</p>`:''}<details class="preparation-status"><summary>来源与状态</summary>${Object.values(status).map(t=>`<p>${e(t)}</p>`).join('')}${own&&own.id!==champion.id?'<p>浏览其他英雄，应用对象仍是你自己的客户端。</p>':''}</details></section>`;
 }

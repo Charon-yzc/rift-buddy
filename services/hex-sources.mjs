@@ -16,9 +16,9 @@ export function parseHexBuildPage(html,{champion,data,url}){
   fetchedAt:new Date().toISOString(),core:core.slice(0,3),boots:extract('boots_').slice(0,2),start:extract('starter_items_').slice(0,2),later:[],
   augmentIds,priority:priority.length===3?priority:null,summoners:summoners.length===2?summoners:null};
 }
-export async function fetchHexBuild(champion,data){
+export async function fetchHexBuild(champion,data,{fetcher=fetch}={}){
  const url=`https://op.gg/lol/modes/aram-mayhem/${encodeURIComponent(champion.id.toLowerCase())}/build?region=global&tier=all&patch=${encodeURIComponent(data.patch)}`;
- const response=await fetch(url,{signal:AbortSignal.timeout(25000)});if(!response.ok)throw Error('海克斯版本配置来源暂时不可用');
+ const response=await fetcher(url,{signal:AbortSignal.timeout(25000),redirect:'error'});if(!response.ok)throw Error('海克斯版本配置来源暂时不可用');
  const html=await response.text();if(html.length>4_000_000)throw Error('海克斯来源响应异常');
  return parseHexBuildPage(html,{champion,data,url});
 }

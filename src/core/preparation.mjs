@@ -1,6 +1,7 @@
 import {validateGuideSelection} from './guide.mjs';
 import {validateCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext} from './creative-plan.mjs';
 import {champSelectGameId} from './rune-context.mjs';
+import {effectiveDraftScope} from './draft.mjs';
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
@@ -87,13 +88,18 @@ export function createRuneApplicationState(){
  };
 }
 export function recommendationKey(input){
- // Client bindings and page size can change without changing the draft.
- const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party}));
+ // Public bindings affect which saved allies are real in this selection.
+ // Names, credentials, timers and page size do not affect recommendation fit.
+ const tracksAllies=['context','solo'].includes(effectiveDraftScope(input.slots||[],input.scope));
+ const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party,...(s.publicIntent?{publicIntent:true}:{}),...(tracksAllies&&Number.isInteger(s.clientCellId)?{clientCellId:s.clientCellId}:{}),...(tracksAllies&&s.manualPosition?{manualPosition:true}:{})}));
+ const session=input.clientSession;
+ const team=players=>(players||[]).map(p=>[p.cellId,Number(p.championId)||0,Number(p.championPickIntent)||0,p.assignedPosition||'']).sort((a,b)=>a[0]-b[0]);
+ const publicContext=tracksAllies&&Array.isArray(session?.myTeam)?[session.localPlayerCellId,team(session.myTeam),team(session.theirTeam),session.allowDuplicatePicks,[...(session.bans||[])].sort()]:null;
  // These source fields affect position eligibility and frequency in recommend.
  // Fetch times, item routes and display labels do not affect lineup ranking.
  const sourceSamples=Object.values(input.builds||{}).map(ref=>[ref.champion,ref.role,Number.isFinite(ref.runeSamples)?ref.runeSamples:null]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
  const sourceRoles=[...new Set((input.sourceRoles||[]).map(ref=>[ref.champion,ref.role].join(':')))].sort();
- return JSON.stringify([slots,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.catalogStatus,input.version,input.catalogVersion,input.creativePlan?.id,sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics]);
+ return JSON.stringify([slots,publicContext,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.publicAllies,input.catalogStatus,input.version,input.catalogVersion,input.creativePlan?.id,sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics]);
 }
 // Only an explicitly adopted alternate route inherits this result's personal
 // choices. The frozen plan and any previously edited destination stay separate.

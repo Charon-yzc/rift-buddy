@@ -37,8 +37,8 @@ test('manual Lux support preparation persists through two syncs, restart and liv
   assert.equal(model.live.matched,true,phase);assert.equal(model.role,'辅助');assert.equal(model.coach.role,'support');assert.match(model.phase.tips[0],/搭档/);
  }
  const html=companionView({data,client:client(),slots:reopened.draft.slots,unassigned:[],scope:'solo',soloRole:'support',style:'balanced',tab:'plan',results:[],preparation:{own,selection,build}});
- assert.match(html,/<option value="support" selected>/);assert.match(html,/客户端分路：中路/);assert.match(html,/data-action="position-auto"/);
- assert.doesNotMatch(html,/<select id="solo-role"[^>]*disabled/);
+ assert.match(html,/<b>拉克丝 · 辅助<\/b>/);assert.match(html,/客户端分路：中路/);assert.match(html,/data-action="position-auto"/);
+ assert.doesNotMatch(html,/<select id="solo-role"/,'Known position is shown in the roster without a duplicate selector');
  assert.equal(reopened.guide.selection.role,'support');
 });
 

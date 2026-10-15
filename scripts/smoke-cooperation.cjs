@@ -27,7 +27,7 @@ async function run(){
  const state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
  const generate=async()=>{await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")&&!document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),'Worker result missing');};
  const capture=async name=>{await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
- await until(()=>js('!!document.querySelector("#solo-role")'),'UI missing');await generate();
+ await until(()=>js('!!document.querySelector("#solo-role")'),'UI missing');if(restart){const restored=await state();assert.deepEqual(restored.draft.creativePlan,restored.favorites.find(f=>f.type==='team').creativePlan,'Restart changed the adopted source plan');}await generate();
  const firstCardText=await js('document.querySelector(".result-card").textContent');
  assert.ok(firstCardText.includes(planLabel),'Expected '+planLabel+' in the completed first result: '+firstCardText.slice(0,600));
  let firstScreenActions=null;
@@ -58,11 +58,14 @@ async function run(){
   assert.deepEqual((await state()).draft.slots,initial.draft.slots,'Preview must not accept the suggested lineup');assert.deepEqual((await state()).draft.creativePlan,initial.draft.creativePlan);
   await click('[data-action=companion-full]');await until(()=>js('!!document.querySelector(".result-card")'),'Main results missing after preview');
  }
+ // Candidate checks above exercise "换一套". Re-enter the adopted task
+ // before checking the original saved conditions and member configurations.
+ if(restart){await click('[data-action=task-return]');await click('[data-action=sync]');await until(()=>js('!!document.querySelector("[data-action=result-detail][data-index=\\"0\\"]")'),'Adopted full play missing after comparison');}
  await click('[data-action=result-detail][data-index="0"]');const detail=await js('document.querySelector(".plan-drawer").textContent');
  for(const text of ['成立条件','失败处理',marker,crossLane||lockedFriends?'开局分工':'对应状态','兵线与资源','未经组合对局验证'])assert.ok(detail.includes(text),'Missing '+text);
  assert.ok(await js('document.querySelector(".cooperation-plan [data-action=link]").dataset.url.startsWith("https://ddragon.leagueoflegends.com/")'));
  let pairEvidence;if(adaptiveData){assert.match(detail,/OP.GG 同队参考/);assert.match(detail,/未提供三人组合或全队胜率/);const bootstrap=await js('window.buddy.bootstrap()'),{createPairStatisticsIndex}=await import(require('node:url').pathToFileURL(path.resolve('src/core/pair-statistics.mjs')));assert.ok(bootstrap.data.pairStatistics.snapshots.some(s=>s.region===bootstrap.data.buildSource.region&&s.tier===bootstrap.data.buildSource.tier&&s.patch===bootstrap.data.patch&&s.entries.length>0));assert.match(bootstrap.data.pairStatistics.revision,/^[a-f0-9]{64}$/);pairEvidence=createPairStatisticsIndex(bootstrap.data.pairStatistics,bootstrap.data.champions,{source:bootstrap.data.buildSource,patch:bootstrap.data.patch}).forMembers(expectedMembers.map(([role,champion])=>({role,champion})));assert.ok(pairEvidence.pairs.length>0);for(const p of pairEvidence.pairs){assert.ok(detail.includes(p.games.toLocaleString()+' 场'));assert.ok(detail.includes(p.winRate.toFixed(1)+'%'));}}
- await capture(restart?'cooperation-restart-detail.png':'cooperation-detail.png');await click('[data-action=copy-result][data-index="0"]');assert.ok(copies.at(-1).includes('成立条件')&&copies.at(-1).includes('失败处理'));
+ await capture(restart?'cooperation-restart-detail.png':'cooperation-detail.png');await click('[data-action=copy-result][data-index="0"]');await fs.writeFile(path.join(root,restart?'restart-copy.txt':'copy.txt'),copies.at(-1));assert.ok(copies.at(-1).includes('成立条件')&&copies.at(-1).includes('失败处理'));
  if(partySize||specific){for(const member of expectedCooperation.memberJobs)assert.ok(copies.at(-1).includes(member.job),'Copy omitted '+member.champion+' job');assert.ok(copies.at(-1).includes('个人技能与成装节点')&&copies.at(-1).includes('不是实时战力或胜率判断'),'Copy omitted personal windows or sustain prerequisites');}
  if(relay){for(const member of expectedCooperation.memberJobs)assert.ok(copies.at(-1).includes(member.job),'Relay copy omitted '+member.champion);assert.match(copies.at(-1),/同一轮不安排第二次自己的 R/);assert.match(copies.at(-1),/洛 W/);}
  if(adaptiveData)assert.ok(copies.at(-1).includes('OP.GG 同队参考')&&pairEvidence.pairs.every(p=>copies.at(-1).includes(p.winRate.toFixed(1)+'%')));
@@ -71,6 +74,7 @@ async function run(){
  const accepted=await state();for(const [role,id]of expectedMembers)assert.ok(accepted.draft.slots.some(s=>s.role===role&&s.champion===id&&s.locked));
  assert.ok(accepted.draft.slots.find(s=>s.role===anchorRole).manualPosition);assert.equal(accepted.draft.slots.find(s=>s.role===anchorRole).clientCellId,2);
  const plan=accepted.draft.creativePlan,planData=plan[planKind];assert.equal(plan.archetype,planKind);if(shared){assert.equal(planData.bonus,0);assert.deepEqual(planData.edges,[]);if(!partySize)assert.equal(plan.tempo,specific||poke?'poke':'growth');assert.equal(planData.memberJobs.length,expectedMembers.length);}const favorite=accepted.favorites.find(f=>f.type==='team');assert.deepEqual(favorite.creativePlan,plan);assert.equal(favorite.configurations.length,expectedMembers.length);assert.ok(favorite.configurations.every(c=>c.creativePlan.id===plan.id));
+  for(const condition of planData.conditions)assert.ok(detail.includes(condition),'Full play omitted a member condition');assert.ok(detail.includes(planData.economy),'Full play omitted the economy contract');
  if(retainedPair){assert.deepEqual(planData.edges,expectedCooperation.edges.map(({alreadyLinked,...edge})=>edge));assert.deepEqual(planData.memberJobs,expectedCooperation.memberJobs);assert.equal(planData.sourceNote,expectedCooperation.sourceNote);for(const text of [expectedCooperation.edges[0].step,expectedCooperation.edges[0].condition,expectedCooperation.edges[0].failure])assert.ok(detail.includes(text)&&copies.at(-1).includes(text),'Original pair contract missing from UI or copy');}
  if(previewRuneId)assert.equal(favorite.configurations.find(c=>c.role===previewRole).runeId,previewRuneId,'Accepting the plan must preserve the rune page edited in its sidebar preview');
  const expectedEditable=relay||partySize||specific?[]:shared||retainedPair?['mid']:shooters?['support']:farming?['mid']:lockedFriends?['jungle']:['jungle','mid'];assert.deepEqual(plan.editableTargets,expectedEditable);
@@ -108,13 +112,18 @@ async function run(){
   await click('[data-action=back-result]');
  }
  await click('[data-action=close]');
- await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")&&!!document.querySelector(".companion-candidate")'),'Sidebar missing');
- assert.equal(await js('document.querySelector(".companion-candidate .result-actions-summary")?.querySelectorAll(":scope > p").length'),expectedMembers.length,'Sidebar must show all member actions before expanding details');
- const side=await js('document.querySelector(".companion-candidate").textContent');assert.ok(side.includes('成立条件')&&side.includes(marker)&&side.includes('未经组合对局验证'));
- for(const condition of planData.conditions)assert.ok(side.includes(condition),'Sidebar omitted a member condition');assert.ok(side.includes(planData.economy));
- await js('[...document.querySelectorAll("details[data-companion-disclosure^=cooperation]")].forEach(d=>d.open=true)');
+ if(await js('!!document.querySelector("[data-action=task-return]")'))await click('[data-action=task-return]');
+ await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")&&!!document.querySelector("[data-companion-disclosure=chosen-play]")'),'Sidebar missing');
+ assert.equal(await js('document.querySelector("[data-companion-disclosure=chosen-play]").open'),false,'Adopted detail starts folded');
+ await click('[data-companion-disclosure=chosen-play] > summary');
+ assert.equal(await js('document.querySelector("[data-companion-disclosure=chosen-play]").querySelectorAll(":scope > p > b").length'),expectedMembers.length,'Adopted play details must retain every member action');
+ const side=await js('document.querySelector("[data-companion-disclosure=chosen-play]").textContent');
+ for(const member of plan.ordered)assert.ok(side.includes(member.job),'Sidebar omitted '+member.champion+' duty');
+ assert.ok(side.includes(plan.window)&&side.includes(plan.caution),'Sidebar must retain the accepted window and exit contract');
+ await click('[data-companion-disclosure=chosen-play] > summary');
  const sidebarLeads=[];
- const {memberActionSummary}=await import(require('node:url').pathToFileURL(path.join(base,'src/cooperation-view.mjs'))),expectedDuty=memberActionSummary(planData.memberJobs.find(m=>m.champion===friend&&m.role===anchorRole)?.job||'');
+ const {memberActionSummary}=await import(require('node:url').pathToFileURL(path.join(base,'src/cooperation-view.mjs'))),expectedDuty=memberActionSummary(plan.stagePlan.opening.memberJobs.find(m=>m.champion===friend&&m.role===anchorRole)?.job||planData.memberJobs.find(m=>m.champion===friend&&m.role===anchorRole)?.job||'');
+ if(partySize||specific||relay){await js('(()=>{const role=document.querySelector("#solo-role");role.value='+JSON.stringify(anchorRole)+';role.dispatchEvent(new Event("change",{bubbles:true}));})()');await until(()=>js('!!document.querySelector(".companion-own-duty p")'),'Declared member duty missing');}
  // Check the adopted member's first action, rather than a lower, folded alternative recommendation.
  for(const scale of [1,1.2])for(const width of [440,360,280]){await js('document.documentElement.style.setProperty("--text-scale",'+scale+')');main.setContentSize(width,850);await js('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false,'Sidebar overflow '+width);if(partySize||specific||relay){await js('document.querySelector(".companion-content").scrollTop=0');const lead=await js('(()=>{const l=document.querySelector(".companion-own-duty p");if(!l)throw Error("My next action must include the adopted member duty");const r=l.getBoundingClientRect(),footer=document.querySelector(".companion-footer").getBoundingClientRect();return {text:l.textContent,top:r.top,bottom:r.bottom,elementWidth:r.width,elementHeight:r.height,limit:footer.top};})()');assert.equal(lead.text,expectedDuty,'First-screen duty must belong to the declared local member');assert.match(lead.text,/[QWER]/,'First-screen duty needs an actual hero action');assert.ok(lead.elementWidth>0&&lead.elementHeight>0&&lead.top>=0&&lead.bottom<=lead.limit,'Concrete duty must fit before the footer '+JSON.stringify({width,scale,lead}));sidebarLeads.push({width,scale,...lead});await capture('first-screen-'+width+'-'+scale+'.png');}}
  await js('document.documentElement.style.setProperty("--text-scale",1)');main.setContentSize(440,850);await capture(restart?'cooperation-restart-sidebar.png':'cooperation-sidebar.png');assert.equal(runeWrites,0);assert.ok(windows.every(w=>!w.isVisible()));

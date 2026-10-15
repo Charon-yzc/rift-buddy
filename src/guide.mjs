@@ -13,7 +13,7 @@ const root=document.getElementById('guide-root');
 const isPreview=!window.guide;
 const api=window.guide||{
  bootstrap:async()=>{
-  const {data,state}=await (await fetch('/api/bootstrap')).json();
+  const {data,state}=await (await fetch('/api/bootstrap')).json();data.flashSlot=state.preferences?.flashSlot;
   const id=new URLSearchParams(location.search).get('hero')||'Ashe',mode=new URLSearchParams(location.search).get('mode')||'rift';
   const selection={id,role:new URLSearchParams(location.search).get('role')||(mode==='hex'?'mid':'bottom'),mode,coreIndex:0,conditions:[],augmentIds:[]};
   window.previewGuideData=data;window.previewGuideState=selectGuide(state.guide,selection);

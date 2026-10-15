@@ -28,7 +28,9 @@ test('adding fourth and fifth members retains the active reviewed trio preparati
 
 for(const picks of [{top:'Jax',jungle:'Sejuani',mid:'Ahri'},{top:'Fiora',jungle:'Graves',mid:'TwistedFate',support:'Bard'},{top:'Fiora',jungle:'Ivern',mid:'Zoe',bottom:'Jhin',support:'Bard'}]){
  test(`${Object.keys(picks).length}-person alternate route preserves actual personal choices through restart and favorite capture`,()=>{
-  const slots=setup(picks),[result]=recommend({slots,champions:data.champions,scope:'party'}),from=captureCreativePlan(result,data),to=selectPartyRoute(from,'side-pressure'),store=createPreparationStore();
+  const slots=setup(picks),[result]=recommend({slots,champions:data.champions,scope:'party'}),initial=captureCreativePlan(result,data);
+  const from=initial.shared?.routes[0].id==='side-pressure'?selectPartyRoute(initial,initial.shared.routes.find(r=>r.id!=='side-pressure').id):initial;
+  const to=selectPartyRoute(from,'side-pressure'),store=createPreparationStore();
   for(const m of from.members){const c=context(from,m),b=getBuild(data.champions.find(h=>h.id===m.champion),m.role,data,c);store.remember({...c,conditions:['ap'],customRunePage:{...b.runePage,patch:data.patch},customSkillOrder:{order:'QEW',priority:'EWQ',patch:data.patch},summonerIds:['SummonerFlash','SummonerExhaust'],sourceOpponent:'Ashe'});}
   const old=store.snapshot(),next=partyRoutePreparations(store,from,to);assert.deepEqual(store.snapshot(),old,'preview helper never writes');assert.equal(next.length,from.members.length);
   let preview=from;for(const route of from.shared?.routes||from.cooperation?.routes||[])preview=selectPartyRoute(preview,route.id);const repeated=selectPartyRoute(preview,'side-pressure');assert.equal(partyRoutePreparations(store,from,repeated).length,from.members.length,'repeated previews remain within the original route family');

@@ -7,7 +7,7 @@ const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
 let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,windowObserver,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
-let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,rendererReady=false,pendingBuild=null,pendingMainPage=null;
+let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
 let stateRevision=0,dataRevision=0;
@@ -131,6 +131,13 @@ async function boot(){
   if(spellsFile.version!==data.version)diagnostic(`spellbook ${spellsFile.version} != game ${data.version} at boot; estimates use heuristics`);
  }catch{data.spellbook={};}
  data.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],data);
+ const {createDataFeedCache}=await import('../services/data-feed-cache.mjs');
+ const {createDataFeedActivationGate}=await import('../services/data-feed.mjs');
+ const observeFeedPhase=createDataFeedActivationGate();let feedIdle=false;
+ const dataFeed=await createDataFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,restoreAtStartup:true,
+  canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
+  onChange:info=>{data.dataFeed=info;publishData(['dataFeed','rankings','buildSources','builds','hexBuilds']);}});
+ data.dataFeed=dataFeed.summary();
  const imageCache=await import('../services/image-cache.mjs');
  data.imageOverrides=await imageCache.loadImageOverrides(path.join(storeRoot,'data/images'),data);
  for(const [key,value] of Object.entries(data))sharedDataFields.set(key,value);
@@ -148,13 +155,13 @@ async function boot(){
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));publishWindows('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
- const getGuideModel=()=>{const m=guideCore.createGuideModel(data,state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,currentGuideSelection());if(m){const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
+ const getGuideModel=()=>{const selection=currentGuideSelection(),m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,selection);if(m){const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
  const recommendationCore=await import('../src/core/recommend.mjs');
  const {publicClientGameId,reconcileClientDraft}=await import('../src/core/draft.mjs');
  const {creativeComboContext}=await import('../src/core/creative-plan.mjs');
  const {mergeConfiguration,storedPreparation,upsertPreparation,preparationIdentity}=await import('../src/core/preparation.mjs');let guideRevision=0;
  const {isFreshBuildReference,rankedClientRoles}=await import('../src/core/builds.mjs');
- const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker();
+ const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker({flashId:Number(data.spells.SummonerFlash.key)});
  const {createOpponentFocusTracker}=await import('../src/core/opponent-focus.mjs');const opponentFocus=createOpponentFocusTracker({newToken:require('node:crypto').randomUUID});
  const currentGuideSelection=()=>{
   const own=currentGame.current(latestClient,latestLive,data.champions,state.draft?.slots||[]);if(!own)return null;
@@ -203,12 +210,15 @@ async function boot(){
  const {sanitizeNick}=await import('../src/core/room.mjs');
  const {initialRelayUrl}=await import('../src/core/room-relay.mjs');
  const {deriveAutoRoom,autoRoomNick,autoRoomDecision,decorateAutoRoom,LOBBY_PHASES,AUTO_RETRY_MS}=await import('../src/core/room-auto.mjs');
+ const {createBallotRoundObserver}=await import('../src/core/room-ballot.mjs');
+ const ballotRoundChanged=createBallotRoundObserver();
  let roomNickInUse='';
  // Automatic party room (CHA-71): the lobby identifier the current auto room
  // was derived from, plus the state needed to decide when to stop. Manual
  // rooms never set roomAutoKey and are never touched by the poll below.
  let roomAutoKey=null,roomAutoCode=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoCancelledKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve(),roomAutoRunning=false,roomAutoRequested=false;
- const decorateRoom=snapshot=>decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});
+ let roomBallot=null,roomPublicShare=null,ballotRoom='';
+ const decorateRoom=snapshot=>{const identity=snapshot?.mode==='idle'?'':snapshot?.room||'';if(identity!==ballotRoom){roomBallot=null;roomPublicShare=null;ballotRoom=identity;}return decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});};
  // The sandboxed renderer never needs the lobby identifier or the identity
  // used as the room nickname: only this process derives the room from them.
  const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(party?{party:cleanParty}:{})};};
@@ -260,7 +270,18 @@ async function boot(){
   else if(roomService){roomService.leave();roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
   return roomService?decorateRoom(roomService.snapshot()):null;
  });
- guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');return decorateRoom(roomService.publish(share));});
+ guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');const {ballot,...publicShare}=share||{};const result=roomService.publish({...publicShare,...(roomBallot?{ballot:roomBallot}:{})});roomPublicShare=publicShare;return decorateRoom(result);});
+ guard('room-ballot',async raw=>{
+  const service=roomService,snapshot=service?.snapshot();if(!snapshot||snapshot.mode==='idle')throw Error('请先连接房间');
+  if(!snapshot.ballots)throw Error('当前中继尚未支持投票，更新中继后重新连接即可使用');
+  const {sanitizeRoomBallot,proposalKey}=await import('../src/core/room.mjs'),ballot=sanitizeRoomBallot(raw);
+  if(service!==roomService||roomService.snapshot().mode==='idle'||roomService.snapshot().room!==snapshot.room)throw Error('房间已变化，请重新选择候选');
+  if(!ballot)throw Error('阵容候选已变化，请重新选择');
+  const keys=new Set(snapshot.members.map(m=>m.share?.ballot?.proposal).filter(Boolean).map(p=>proposalKey(p)));if(ballot.proposal)keys.add(proposalKey(ballot.proposal));
+  if(ballot.vote&&!keys.has(ballot.vote))throw Error('该候选已撤回，请重新选择');
+  const publicShare=roomPublicShare||snapshot.members.find(m=>m.self)?.share||{lineup:[],pick:null,mode:'rift'};
+  const result=roomService.publish({...publicShare,ballot});roomBallot=ballot;return decorateRoom(result);
+ });
  guard('room-scan',()=>ensureRoom(state.preferences.roomNick).scan());
  guard('room-addresses',()=>{const list=[];for(const [name,items] of Object.entries(os.networkInterfaces()))for(const item of items||[])if(item.family==='IPv4'&&!item.internal)list.push({name,address:item.address});return list;});
  // Runs after each client poll, never inside it: a relay handshake can take
@@ -385,18 +406,27 @@ async function boot(){
    // Protect accepted picks from this game, after the queued merge. A renderer
    // base from the previous game must not block releasing its old lane binding.
    const accepted=reconcileClientDraft(current.draft,gameId,current.guide?.match?.gameId).draft;
-   if(latestClient.connected&&latestClient.phase==='ChampSelect'&&merged.draft)for(const player of latestClient.session?.myTeam||[]){const id=data.champions.find(c=>c.key===Number(player.championId))?.id;if(id&&accepted?.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id)&&!merged.draft.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id&&s.locked))throw Error('客户端已选英雄不能移除或解锁，请同步后调整位置。');}
+   if(latestClient.connected&&latestClient.phase==='ChampSelect'&&merged.draft)for(const player of latestClient.session?.myTeam||[]){
+    // Some blind-pick clients put an unlocked hover in championId. The local
+    // player can compare another choice; teammate and locked picks stay fixed.
+    const actions=(latestClient.session.actions||[]).flat().filter(a=>a.type==='pick'&&a.actorCellId===player.cellId);
+    if(player.cellId===latestClient.session.localPlayerCellId&&player.pickState!=='locked'&&actions.length===1&&actions[0].completed===false)continue;
+    const id=data.champions.find(c=>c.key===Number(player.championId))?.id;if(id&&accepted?.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id)&&!merged.draft.slots.some(s=>s.clientCellId===player.cellId&&s.champion===id&&s.locked))throw Error('客户端已选英雄不能移除或解锁，请同步后调整位置。');
+   }
    return merged;
   },sender);
    // Turning the switch (or client sync) off must not leave a room behind:
    // with sync off no poll will run to notice the new preference.
    closeAutoRoomIfRevoked();
+   if(state.guide&&latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
    guide.publish();companion.sync();return {state,revision:stateRevision};
  },true);
  const {createClientSync}=await import('../src/core/async-tasks.mjs');
  const status=createClientSync(async(force=false)=>{
-  if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:6000):30000))return latestClient;
+  if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:3000):5000))return latestClient;
   statusTask=(async()=>{const previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
+   if(ballotRoundChanged(latestClient)){roomBallot=null;if(roomService&&roomService.snapshot().mode!=='idle'){try{const share=roomPublicShare||roomService.snapshot().members.find(m=>m.self)?.share||{lineup:[],pick:null};const {ballot,...clean}=share;roomService.publish(clean);}catch{}}}
+   feedIdle=observeFeedPhase(latestClient);dataFeed.activate();
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId);if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId).draft}));
    currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);
@@ -421,6 +451,17 @@ async function boot(){
  };
  guard('client-status',async force=>forRenderer(await status(force)));
  guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return forRenderer(await status(true));});
+ let launchingGame=false;
+ guard('launch-game',async()=>{
+  if(launchingGame)throw Error('正在启动，请稍候');launchingGame=true;
+  try{const current=await status(true);if(current.connected)return {connected:true};
+   const {launchGame}=await import('../services/game-launcher.mjs');
+   const result=await launchGame(state.preferences);
+   if(state.preferences.autoSync===false)await saveCurrentState(s=>({...s,preferences:{...s.preferences,autoSync:true}}));
+   return result;
+  }finally{launchingGame=false;}
+ });
+ guard('choose-launch-path',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择 WeGame 英雄联盟或客户端启动程序',properties:['openFile'],filters:[{name:'启动程序',extensions:['exe']}]});return result.canceled?null:result.filePaths[0];});
  guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
  guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
  guard('refresh-rankings',source=>refreshRankings(source));
@@ -439,8 +480,10 @@ async function boot(){
   const focus=publishOpponentContext();guide.publish();return {selection:state.guide?.selection||null,focus:focus.focus,notice:focus.notice};
  });
  guard('update-data',async()=>{
+  if(!observeFeedPhase(latestClient))throw Error('请在本局结束后更新基础资料，当前配置保持不变');
   if(updating)throw new Error('资料更新正在进行');updating=true;
   try{const next=await dataService.collectSnapshot(msg=>publishWindows('data-progress',msg),data);
+   if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，基础资料留待本局结束后更新');
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
    delete next.abilityReference;delete next.rankings;delete next.patchNotes;delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
    next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
@@ -458,9 +501,11 @@ async function boot(){
     if(spellsFile.version!==next.version)diagnostic(`spellbook ${spellsFile.version} != game ${next.version}; estimates use heuristics until pnpm spells:enrich runs`);
    }catch{next.spellbook={};}
    const cached=await imageCache.cacheMissingImages({root:path.join(storeRoot,'data/images'),bundleRoot:path.join(root,'data/images'),data:next,progress:message=>publishWindows('data-progress',message)});
-   next.imageOverrides=cached.overrides;data=next;useCatalog(catalogStore.summary());publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
+   if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，当前窗口继续使用原资料');
+   next.imageOverrides=cached.overrides;next.dataFeed=dataFeed.summary();data=next;useCatalog(catalogStore.summary());publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
   }finally{updating=false;}
  });
+ guard('check-data-feed',()=>dataFeed.check({force:true}));
  guard('app-update-check',async(silent=false)=>{
   if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)return appUpdateStatus;
   const prev=appUpdateStatus;
@@ -592,6 +637,8 @@ async function boot(){
  statusTimer=setInterval(()=>{if(state.preferences.autoSync!==false)status().catch(()=>{});},1000);
  liveTimer=setInterval(()=>{if(state.preferences.autoLive===false&&latestLive){latestLive=null;guide.publish();}else pollLive().catch(()=>{});},3000);
  if(state.preferences.autoSync!==false)status().catch(()=>{});
+ const checkStatistics=()=>{if(state.preferences.autoCheck!==false&&!quitting)dataFeed.check().catch(()=>{});};
+ dataFeedStartup=setTimeout(checkStatistics,10000);dataFeedTimer=setInterval(checkStatistics,60000);
  diagnostic(`guide-hotkey-registered ${guideHotkeyAvailable}`);
  try{const {observeWindows}=await import('../services/window-observer.mjs');windowObserver=await observeWindows({root,onSnapshot:value=>{const dip=rect=>rect?{...rect,...screen.screenToDipRect(null,rect)}:null;const clientBounds=dip(value.client),gameBounds=dip(value.game);observedWindows={client:value.client?{pixels:value.client,dip:clientBounds,minimized:value.client.minimized,foreground:value.client.foreground}:null,game:value.game?{pixels:value.game,dip:gameBounds,minimized:value.game.minimized,foreground:value.game.foreground}:null};observedAt=Date.now();mainPeek.sync(true,!!clientBounds?.foreground||!!gameBounds?.foreground);companion.observe(clientBounds);guide.setGameBounds(gameBounds);},onError:message=>{observedWindows=null;observedAt=0;mainPeek.sync(true,false);companion.observe(null);diagnostic(message);}});}catch{diagnostic('window observer unavailable');}
  if(process.argv.includes('--show-guide'))guide.show();
@@ -599,7 +646,7 @@ async function boot(){
 }
 if(lock)app.whenReady().then(boot).catch(error=>{diagnostic(`startup error ${error.message}`);dialog.showErrorBox('开黑搭子启动失败',error.message);app.quit();});
 app.on('window-all-closed',()=>{if(!tray||quitting)app.quit();});
-app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
+app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
 app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
  event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;

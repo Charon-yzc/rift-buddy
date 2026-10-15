@@ -19,7 +19,8 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
  if(curated.length){const t=curated[0];leads.unshift({id:'curated:'+t.id,curated:t,actors:t.members.map(m=>m.champion),step:t.steps.join(' → '),condition:t.window,failure:t.risk});}
  // Reviewed basic control is an alternative entry, never an inferred ready
  // spell or a claim of unique whole-team synergy.
- for(const m of members){const row=COOPERATION_SKILLS[m.champion];if(row[3]&&!leads.some(l=>l.actors.includes(m.champion)))leads.push({id:'skills:'+m.champion,actors:[m.champion],step:name(m.champion)+'：'+row[3],condition:row[4]||row[1],failure:row[2]});}
+ const initiators=[...members].sort((a,b)=>Number(graph.profile(b).engage)-Number(graph.profile(a).engage)||Number(graph.profile(b).frontline)-Number(graph.profile(a).frontline)||roles.indexOf(a.role)-roles.indexOf(b.role));
+ for(const m of initiators){const row=COOPERATION_SKILLS[m.champion];if(row[3]&&!leads.some(l=>l.actors.includes(m.champion)))leads.push({id:'skills:'+m.champion,actors:[m.champion],step:name(m.champion)+'：'+row[3],condition:row[4]||row[1],failure:row[2]});}
  const controlRoutes=leads.map(lead=>{
   const relay=!['protect','growth'].includes(lead.curated?.tempo||lead.edge?.tempo);
   const protectedMember=[...members].filter(m=>graph.profile(m).sustain).sort((a,b)=>Number(b.role==='bottom')-Number(a.role==='bottom')||Number(lead.actors.includes(b.champion))-Number(lead.actors.includes(a.champion))||roles.indexOf(a.role)-roles.indexOf(b.role))[0];
@@ -39,7 +40,7 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
   });
   const t=lead.curated;
   const loadoutGroup=t?{id:t.id,kind:'trio',reviewedAt:t.reviewedAt,early:t.early,economy:t.economy,sources:t.sources||[],members:t.members.map(m=>({role:m.role,champion:m.champion,loadoutId:m.loadoutId||'default'}))}:null;
-  return {id:lead.id,label:lead.actors.map(name).join(' / '),tempo:lead.curated?.tempo||lead.edge?.tempo||'teamfight',step:lead.step,condition:lead.condition,failure:lead.failure,memberJobs:jobs,...(loadoutGroup?{loadoutGroup}:{})};
+  return {id:lead.id,label:members.filter(m=>lead.actors.includes(m.champion)).map(m=>name(m.champion)).join(' / '),tempo:lead.curated?.tempo||lead.edge?.tempo||'teamfight',step:lead.step,condition:lead.condition,failure:lead.failure,memberJobs:jobs,...(loadoutGroup?{loadoutGroup}:{})};
  });
  const tactical=tacticalCooperationPlan(members,graph,{tempo:requestedTempo});
  const tacticalRoutes=['poke','protect','growth'].map(mode=>({mode,plan:tacticalCooperationPlan(members,graph,{tempo:mode})})).filter(({mode,plan})=>plan?.tempo===mode).map(({plan})=>plan);
@@ -49,9 +50,14 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
  // supported tactical preference; control is an alternative, never a gate
  // that every ranged member must wait for before using a poke skill.
  const original=basePlan?{id:'original-group',label:'原三人配合',tempo:basePlan.tempo,step:basePlan.steps.join(' '),condition:basePlan.conditions.join(' '),failure:basePlan.failures.join(' '),memberJobs:basePlan.memberJobs}:null;
- const available=[original,...controlRoutes,...uniqueTactics,sidePressureRoute(members,graph)].filter(Boolean);
+ const side=sidePressureRoute(members,graph);
+ const available=[original,...controlRoutes,...uniqueTactics,side].filter(Boolean);
  const requested=available.find(r=>r.tempo===requestedTempo&&!r.id.startsWith('curated:'))||available.find(r=>r.tempo===requestedTempo);
- const primary=requested||original||controlRoutes.find(r=>r.id.startsWith('curated:'))||uniqueTactics.find(r=>r.tempo===tactical?.tempo)||controlRoutes[0];
+ // A fragile larger group with a supported split-lane plan does not default
+ // to a conditional carry spell as a five-player initiation. Explicit tempo
+ // and authored subgroup choices still take precedence.
+ const splitDefault=members.length>=4&&!members.some(m=>graph.profile(m).frontline)&&tactical?.tempo!=='poke'?side:null;
+ const primary=requested||original||controlRoutes.find(r=>r.id.startsWith('curated:'))||splitDefault||uniqueTactics.find(r=>r.tempo===tactical?.tempo)||controlRoutes[0];
  const mainActors=leads.find(l=>l.id===primary?.id)?.actors;
  const alternative=uniqueTactics.find(r=>r.id!==primary?.id)||controlRoutes.find(r=>r.id!==primary?.id&&(!mainActors||leads.find(l=>l.id===r.id).actors.some(id=>!mainActors.includes(id))));
  const routes=[primary,alternative,...available.filter(r=>r.id!==primary?.id&&r.id!==alternative?.id)].filter(Boolean);
@@ -64,6 +70,7 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
 // does not claim that the whole group has a unique or measured advantage.
 export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:requestedTempo='any',basePlan=null}={}){
  if(![3,4,5].includes(members.length)||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
+ members=[...members].sort((a,b)=>roles.indexOf(a.role)-roles.indexOf(b.role));
  if(members.length===3&&(!basePlan?.memberJobs||[basePlan.steps,basePlan.conditions,basePlan.failures].some(rows=>rows.join(' ').length>400)))return null;
  const name=id=>graph.byId.get(id).name,edges=[];
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)edges.push(edge);}

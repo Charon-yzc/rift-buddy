@@ -41,6 +41,7 @@ await fs.writeFile(path.join(installPath,'lockfile'),'LeagueClient:1:23456:isola
 await fs.writeFile(path.join(installPath,'LeagueClient.exe'),'isolated fixture marker');await fs.writeFile(path.join(game,'League of Legends.exe'),'isolated fixture marker');
 await saveState(root,state);
 console.log('PARTY PREPARATION ROOT '+root);
+if(process.argv.includes('--standalone-items'))process.env.RIFT_BUDDY_STANDALONE_ITEMS='1';
 const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-party-preparation.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_SOURCE:process.argv.includes('--source')?'1':'0',RIFT_BUDDY_UNADOPTED:unadopted?'1':'0',RIFT_BUDDY_LOADING_TRANSITION:loadingTransition?'1':'0',RIFT_BUDDY_LOADING_NEW_GAME:loadingNewGame?'1':'0',RIFT_BUDDY_CUSTOM_GAME:customGame?'1':'0'},windowsHide:true,stdio:'inherit'});
 const timer=setTimeout(()=>child.kill(),150000);
 try{const [code]=await once(child,'exit');if(code!==0)throw Error('Party preparation smoke failed ('+code+'); '+root);await fs.writeFile('.local/latest-party-preparation-smoke.json',JSON.stringify({root,unadopted},null,2));}finally{clearTimeout(timer);}

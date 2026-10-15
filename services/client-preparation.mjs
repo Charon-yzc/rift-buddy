@@ -4,7 +4,7 @@ import {validateRunePage} from '../src/core/builds.mjs';
 import {validateItemSet} from '../src/core/item-sets.mjs';
 import {validateSummonerIds,summonerOptions} from '../src/core/summoner-selection.mjs';
 import {runeWriteContext,validateRuneWriteContext,sameRuneWriteContext,champSelectGameId} from '../src/core/rune-context.mjs';
-import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
+import {normalizeChampionIds} from '../src/core/pick-eligibility.mjs';
 import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
 
 // One explicit click, only this player's public selection. Never lock or ban.
@@ -21,7 +21,7 @@ export function validateClientPreparation(value,data){
  if(itemSet.associatedChampions[0]!==champion.key||itemSet.associatedMaps[0]!==11||itemSet.uid!==`rift-buddy-${champion.key}-${value.role}-rift`)throw Error('装备集与当前英雄、位置不一致');
  return {champion:champion.id,championId:champion.key,role:value.role,mode:'rift',context,sessionGameId,
   page:{name:champion.name,primaryStyleId:value.page.primaryStyleId,subStyleId:value.page.subStyleId,selectedPerkIds:[...value.page.selectedPerkIds]},
-  summoners:[...summoners],itemSet};
+  summoners:[...summoners],preserveFlashSlot:value.preserveFlashSlot!==false,preselectOnly:value.preselectOnly===true,itemSet};
 }
 export async function prepareClientSelection({value,data,installPath='',ownedPageId},{discover=discoverClient,request=lcuRequest,writeRunes=writeRunePage,writeItems=importItemSet}={}){
  const selected=validateClientPreparation(value,data),auth=await discover(installPath);
@@ -42,13 +42,18 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  const locked=initial.action.completed===true;
  if(locked&&initial.own.championId!==selected.championId)throw Error('客户端已锁定其他英雄，不能预选这位英雄');
  if(!locked&&initial.timer!=='PLANNING'&&initial.action.isInProgress!==true)throw Error('请在预选阶段或轮到本人选人时点击，不会自动等待或锁定');
- if(!locked){
+ const readEligibility=async()=>{
   const pickable=normalizeChampionIds(await request(auth,'/lol-champ-select/v1/pickable-champion-ids'));
   const disabled=normalizeChampionIds(await request(auth,'/lol-champ-select/v1/disabled-champion-ids'));
   if(pickable===null||disabled===null)throw Error('未能确认本局可选范围，尚未预选');
-  const banned=initial.session.bans.includes(selected.championId),taken=initial.session.myTeam.some(p=>p.cellId!==initial.session.localPlayerCellId&&p.championId===selected.championId)||initial.session.allowDuplicatePicks===false&&initial.session.theirTeam.some(p=>p.championId===selected.championId);
+  return {pickable,disabled};
+ };
+ const assertSelectable=(session,{pickable,disabled})=>{
+  if(session.myTeam.some(p=>p.cellId!==session.localPlayerCellId&&!p.championId&&p.championPickIntent===selected.championId))throw Error('队友已预选这位英雄，请查看队友配置或选择另一位');
+  const banned=session.bans.includes(selected.championId),taken=session.myTeam.some(p=>p.cellId!==session.localPlayerCellId&&p.championId===selected.championId)||session.allowDuplicatePicks===false&&session.theirTeam.some(p=>p.championId===selected.championId);
   if(!pickable.includes(selected.championId)||disabled.includes(selected.championId)||banned||taken)throw Error('这个英雄本局不可选，请更换推荐');
- }
+ };
+ if(!locked)assertSelectable(initial.session,await readEligibility());
  const result={champion:selected.champion,gameId:selected.sessionGameId,steps:Object.fromEntries(['hover','runes','spells','items'].map(k=>[k,{status:'pending'}]))};
  let expected=initial.context,confirmedTarget=false;
  const targetMatches=now=>now.action.championId===selected.championId&&typeof now.action.completed==='boolean'&&
@@ -69,24 +74,33 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  };
  let step='hover';
  try{
+  // Refresh target availability, then recheck this player's game and action.
+  // Unrelated teammates can select or ban without invalidating this click.
+  const eligibility=!locked?await readEligibility():null;
   const before=await ensure();
   if(!locked){
-   if(pickEligibilityContext(before.session)!==pickEligibilityContext(initial.session))throw Error('公开选人或禁选已变化，尚未预选；请重新点击');
+   assertSelectable(before.session,eligibility);
    if(before.action.completed===true||before.timer!=='PLANNING'&&before.action.isInProgress!==true)throw Error('选人轮次已变化，尚未预选');
    await request(auth,`/lol-champ-select/v1/session/actions/${before.action.id}`,'PATCH',{championId:selected.championId,completed:false});
   }
   const after=await read();
   if(after.context.cellId!==initial.context.cellId||after.context.assignedPosition!==initial.context.assignedPosition||after.action.id!==initial.action.id||!targetMatches(after))throw Error('客户端未确认目标英雄，已停止配置；请在客户端核对预选');
   expected=after.context;confirmedTarget=true;result.steps.hover={status:'done',locked:after.action.completed===true};
+  if(selected.preselectOnly){for(const key of ['runes','spells','items'])result.steps[key]={status:'skipped'};return {...result,preselectOnly:true,complete:true};}
   step='runes';await ensure();
   const rune=await writeRunes({page:selected.page,context:expected,ownedPageId,installPath,trees:data.runes},{discover:async()=>auth,request:runeRequest});
   result.steps.runes={status:'done',pageId:rune.pageId,name:rune.name};
-  step='spells';await ensure();
-  const [spell1Id,spell2Id]=selected.summoners.map(id=>Number(data.spells[id].key));
+  step='spells';
+  const beforeSpells=await ensure(),summoners=[...selected.summoners];
+  if(selected.preserveFlashSlot){
+   const flashId=Number(data.spells.SummonerFlash.key),current=[beforeSpells.own.spell1Id,beforeSpells.own.spell2Id],currentSlot=current.indexOf(flashId),targetSlot=summoners.indexOf('SummonerFlash');
+   if(currentSlot>=0&&targetSlot>=0&&currentSlot!==targetSlot)summoners.reverse();
+  }
+  const [spell1Id,spell2Id]=summoners.map(id=>Number(data.spells[id].key));
   await request(auth,'/lol-champ-select/v1/session/my-selection','PATCH',{spell1Id,spell2Id});
   await ensure();const spells=await request(auth,'/lol-champ-select/v1/session/my-selection');
   if(spells?.spell1Id!==spell1Id||spells?.spell2Id!==spell2Id)throw Error('客户端未确认召唤师技能，请手动核对');
-  result.steps.spells={status:'done'};
+  result.steps.spells={status:'done',summoners};
   step='items';await ensure();
   const items=await writeItems({itemSet:selected.itemSet,data,installPath},{discover:async()=>auth,request,beforeCommit:ensure});
   result.steps.items={status:'done',title:items.title};

@@ -18,6 +18,24 @@ const data=JSON.parse(await fs.readFile('data/game.json'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),base={id:'Ashe',role:'bottom',mode:'rift',coreIndex:0,conditions:[]},pair=['SummonerDot','SummonerFlash'];
 const build=(selection,fixture=data)=>getBuild(fixture.champions.find(c=>c.id===selection.id),selection.role,fixture,selection);
+test('player Flash preference follows new heroes and combo identities without overriding explicit pairs',()=>{
+ const fixture={...data,flashSlot:'f'};
+ for(const selection of [{id:'Galio',role:'mid',mode:'rift',comboId:'camille-galio-vi'},{id:'Galio',role:'mid',mode:'rift',comboId:'jarvan-galio-mf'},{id:'Vi',role:'jungle',mode:'rift'},base]){
+  const b=build(selection,fixture);assert.equal(b.summoners[1],'SummonerFlash');
+  if(selection.role==='jungle')assert.equal(b.summoners[0],'SummonerSmite');
+ }
+ const manual=['SummonerFlash','SummonerTeleport'];assert.deepEqual(build({...base,summonerIds:manual},fixture).summoners,manual);
+ const noFlash=['SummonerSmite','SummonerHaste'];assert.deepEqual(build({...base,summonerIds:noFlash},fixture).summoners,noFlash);
+ assert.equal(validateState({...defaultState(),preferences:{flashSlot:'f'}}).preferences.flashSlot,'f');
+ for(const flashSlot of [undefined,'invalid','source','current'])assert.equal(validateState({...defaultState(),preferences:{flashSlot}}).preferences.flashSlot,'current');
+});
+test('default preparation keeps the current client Flash slot for sources, saved pairs and shared choices',()=>{
+ for(const clientFlashSlot of ['d','f']){
+  const fixture={...data,flashSlot:'current',clientFlashSlot},index=clientFlashSlot==='d'?0:1;
+  for(const selection of [base,{...base,summonerIds:['SummonerFlash','SummonerBarrier']},{...base,summonerIds:['SummonerBarrier','SummonerFlash']}])assert.equal(build(selection,fixture).summoners[index],'SummonerFlash');
+  const chosen=changeCompanionPlan(fixture,base,'summoner-swap');assert.equal(chosen.summonerIds[1-index],'SummonerFlash','The explicit swap records the intended order');
+ }
+});
 test('D/F edits, duplicate swaps, explicit reset and separate position memory preserve unrelated preparation',()=>{
  const initial={...base,runeId:build(base).selectedRuneId},defaultPair=build(initial).summoners;
  const selected=changeCompanionPlan(data,initial,'summoner-d','SummonerDot');assert.equal(selected.summonerIds[0],'SummonerDot');assert.equal(selected.runeId,initial.runeId);

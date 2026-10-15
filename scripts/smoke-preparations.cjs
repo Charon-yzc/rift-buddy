@@ -1,3 +1,4 @@
+const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),cp=require('node:child_process'),https=require('node:https'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_PREPARATION_PHASE,windows=[];
@@ -24,7 +25,7 @@ async function run(){
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
  const js=code=>main.webContents.executeJavaScript(code,true);
  await until(()=>js('!!document.querySelector("[data-action=navigate]")'),'App not ready');
- const click=async selector=>{assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(80);};
+ const click=async selector=>{selector=await revealDraftAction(js,selector);assert.ok(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(80);};
  const change=async(selector,value)=>{await js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(100);};
  const open=async(id,role='bottom')=>{main.webContents.send('open-build',{id,role,mode:'rift'});await until(()=>js('document.querySelector(".rune-option.active")?.dataset.id'),'Build did not open');await delay(80);};
  const read=()=>js('({core:document.querySelector("[data-action=build-core].active")?.dataset.index,rune:document.querySelector(".rune-option.active")?.dataset.id,skill:document.querySelector("#build-skill")?.value||null,conditions:[...document.querySelectorAll("[data-action=build-condition].active")].map(el=>el.dataset.condition)})');

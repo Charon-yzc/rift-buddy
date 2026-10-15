@@ -55,9 +55,14 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  }
  for(const row of build.laterOptions||[])if(row.fitsRoute!==false&&row.items?.[0]&&!situationItemIssue({data,id:idOf(row.items[0]),inventory}))append(idOf(row.items[0]));
  const pinned=new Set([...(selection.laterIds||[]).map(String),...(selection.bootsId?[String(build.boots)]:[])]);
+ // These two templates use a conditional resistance item, not a combo
+ // interaction. Only an explicit physical-pressure choice may replace it.
+ const physicalBranch=['trio-frontline','trio-jungle-frontline'].includes(build.loadoutId)&&!selection.coreId&&!(selection.conditions||[]).includes('ap')&&signals.some(s=>s.kind==='physical'&&s.source==='manual')&&!signals.some(s=>s.kind==='magic'&&s.source==='manual');
+ const conditionalDefense=physicalBranch&&base[1]==='2504'&&!owns('2504')&&!pinned.has('2504')&&String(purchaseTarget)!=='2504'?'2504':null;
  // Preserve the selected combo's first two interaction items and every item
 // actually finished. Existing component investment also protects the next goal.
- const protectedIds=new Set([...base.filter(id=>!item(id)?.tags?.includes('Boots')).slice(0,2),...pinned,...held.filter(full),...(route.includes(String(purchaseTarget))?[String(purchaseTarget)]:[])]);
+ const protectedIds=new Set([...base.filter(id=>!item(id)?.tags?.includes('Boots')).slice(0,2).filter(id=>id!==conditionalDefense),...pinned,...held.filter(full),...(route.includes(String(purchaseTarget))?[String(purchaseTarget)]:[])]);
+ if(conditionalDefense&&inventoryKnown&&purchasePlan([{id:conditionalDefense}],records,inventory,live.gold)[0]?.credit>0)protectedIds.add(conditionalDefense);
  const originalNext=route.find(id=>!owns(id)),credit=originalNext&&inventoryKnown?purchasePlan([build.items.find(i=>idOf(i)===originalNext)||{id:originalNext}],records,inventory,live.gold)[0]:null;
  if(credit&&(credit.credit>=item(originalNext).gold.total*.5||Number.isFinite(live.gold)&&credit.remaining<=live.gold))protectedIds.add(originalNext);
  const automatic=enabled&&selection.mode==='rift'&&data.patch===COMPLETE_GEAR_PATCH&&!build.stale&&!build.referenceStale&&inventoryKnown&&live.teamKnown===true&&normalQueues.has(live.queueId);
@@ -113,10 +118,10 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  if(automatic){
   // Apply at most one primary diversion. All remaining slots are still an
 // ordered full build; alternatives remain explicit rather than a bag of components.
-  const chosen=candidates.find(c=>!c.blockedReason&&!c.teamAntiheal&&(c.source==='manual'||c.priority>=65)&&c.kind!=='physical');
+  const chosen=candidates.find(c=>!c.blockedReason&&!c.teamAntiheal&&(c.source==='manual'||c.priority>=65)&&(c.kind!=='physical'||conditionalDefense&&!protectedIds.has(conditionalDefense)));
   if(chosen){
    const id=chosen.id,oldIndex=route.indexOf(id),conflictIndex=route.findIndex(old=>old!==id&&itemConflicts(Number(id),[Number(old)]));
-   const replaceAt=conflictIndex>=0?conflictIndex:route.findIndex((old,n)=>n>=2&&!protectedIds.has(old)&&!owns(old)&&!item(old)?.tags?.includes('Boots'));
+   const replaceAt=conflictIndex>=0?conflictIndex:chosen.kind==='physical'&&conditionalDefense?route.indexOf(conditionalDefense):route.findIndex((old,n)=>n>=2&&!protectedIds.has(old)&&!owns(old)&&!item(old)?.tags?.includes('Boots'));
    if(oldIndex>=0&&!protectedIds.has(id)){
     const firstUnowned=route.findIndex(old=>!owns(old)&&!protectedIds.has(old)&&!item(old)?.tags?.includes('Boots'));
     if(firstUnowned>=0&&oldIndex>firstUnowned){route.splice(oldIndex,1);route.splice(firstUnowned,0,id);updates.push({...chosen,replaces:null,change:'提前'});}

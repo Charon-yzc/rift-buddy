@@ -8,6 +8,8 @@ import {profile} from '../src/core/rules.mjs';
 import {validateState} from '../services/storage.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
+import {resultCooperation} from '../src/core/creative-plan.mjs';
+import {escape as e} from '../src/ui.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const locked=(slots,pairs)=>{for(const [role,id] of pairs)Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});return slots;};
@@ -25,13 +27,23 @@ test('tempo preference mismatch is exposed, not silent',()=>{
  assert.ok(play.includes('偏好提示'));
 });
 
-test('structured reasons reach both the card and the drawer',()=>{
+test('cards retain structured reasons and adaptive drawers expose their underlying execution evidence',()=>{
  const slots=locked(createSlots(),[['top','Garen'],['jungle','LeeSin']]);
  const rows=recommend({slots,champions:data.champions,limit:3});
- const card=renderResultCard(rows[0],0,viewData,{favorites:[]});
- for(const point of rows[0].reasonPoints)assert.ok(card.includes(point.slice(0,12)));
- const play=resultPlayCard(rows[0],0,viewData);
- for(const point of rows[0].reasonPoints)assert.ok(play.includes(point.slice(0,12)));
+ assert.ok(rows.some(row=>resultCooperation(row))&&rows.some(row=>!resultCooperation(row)),'exercise adaptive and authored drawer paths');
+ for(const row of rows){
+  const card=renderResultCard(row,0,viewData,{favorites:[]}),play=resultPlayCard(row,0,viewData),execution=resultCooperation(row);
+  assert.ok(row.reasonPoints.length);
+  for(const point of row.reasonPoints)assert.ok(card.includes(e(point)),point);
+  if(row.origin!=='adaptive')for(const point of row.reasonPoints)assert.ok(play.includes(e(point)),point);
+  else{
+   assert.ok(execution);
+   // The adaptive drawer omits repeated summary bullets; its full execution
+   // plan must still supply the actions, conditions, exits and evidence note.
+   for(const text of [...execution.steps,...execution.conditions,...execution.failures,execution.sourceNote])assert.ok(play.includes(e(text)),text);
+   for(const member of execution.memberJobs)assert.ok(play.includes(e(member.job)),member.champion);
+  }
+ }
 });
 
 test('creative ideas carry distinct per-archetype plans and visible cautions',()=>{

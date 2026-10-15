@@ -10,7 +10,7 @@ const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));async function until(check,label){for(let n=0;n<150;n++){if(await check())return;await delay(70);}throw Error(label);}
 async function run(){
- app.setPath('userData',root);const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar');
+ app.setPath('userData',root);const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?{archiveSha256:null}:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  for(const file of ['src/core/curated-plan.mjs','src/core/creative-plan.mjs','src/core/party-cooperation.mjs','src/core/builds.mjs','src/core/catalog-data.json','src/core/champion-windows.mjs','src/core/role-plays-extra.mjs','src/app.mjs','src/companion-view.mjs','src/build-options-view.mjs'])assert.ok((await fs.readFile(path.join(base,file))).equals(await fs.readFile(file)),'Packaged source drift: '+file);
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
@@ -23,7 +23,12 @@ async function run(){
   await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await delay(100);
   await fs.writeFile(path.join(root,file),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  };
- await until(()=>js('!!document.querySelector("#solo-role")'),'UI missing');await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")'),'Results missing');
+ await until(()=>js('!!document.querySelector("#solo-role")'),'UI missing');
+ // The offline sample identifies a player through the same explicit position
+ // choice required by the live UI, rather than treating a fake cell as identity.
+ const declared=(await state()).draft,ownRole=declared.soloRole||declared.playerPosition?.role;
+ if(ownRole&&await js('document.querySelector("#solo-role").value')!==ownRole){await js('(()=>{const role=document.querySelector("#solo-role");role.value='+JSON.stringify(ownRole)+';role.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(120);}
+ await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")'),'Results missing');
  if(tactics){
   await click('[data-action=draft-filters]');const boot=await js('window.buddy.bootstrap()'),before=boot.state.draft.slots;pairCache=boot.data.pairStatistics;
   assert.equal(await js('document.querySelector("[data-action=refresh-pairs]").disabled'),false);await click('[data-action=refresh-pairs]');
@@ -33,12 +38,14 @@ async function run(){
   if(!restart){assert.match(body,/炮形 Q\/E.*加速门/);assert.doesNotMatch(body,/等主线实际生效/);}
  }
  if(independent&&!restart){const body=await js('document.querySelector(".result-card").textContent');assert.doesNotMatch(body,/接实际控制后|等主线实际生效/);assert.match(body,/能安全近身时 Q/);assert.match(body,/目标是否实际孤立/);if(independent===5)assert.match(body,/米利欧 W.*芸阿娜/);else assert.match(body,/成长成员实际等级.*玩家核对/);}
- await click('[data-action=companion-attach]');await until(()=>js('!!document.querySelector(".companion-candidate")'),'Sidebar missing');
- const {memberActionSummary}=await import(require('node:url').pathToFileURL(path.join(base,'src/cooperation-view.mjs'))),adopted=restart?(await state()).draft:null,expectedOwnDuty=restart?memberActionSummary(adopted.creativePlan.ordered.find(m=>m.role===adopted.playerPosition.role)?.job||''):null;
+ if(restart)await click('[data-action=task-return]');
+ await click('[data-action=companion-attach]');await until(()=>js(restart?'!!document.querySelector("[data-companion-disclosure=chosen-play]")':'!!document.querySelector(".companion-candidate")'),'Sidebar missing');
+ const {memberActionSummary}=await import(require('node:url').pathToFileURL(path.join(base,'src/cooperation-view.mjs'))),adopted=restart?(await state()).draft:null,expectedOwnDuty=restart?memberActionSummary(adopted.creativePlan.stagePlan.opening.memberJobs.find(m=>m.role===ownRole)?.job||adopted.creativePlan.ordered.find(m=>m.role===ownRole)?.job||''):null;
+ assert.equal(await js(restart?'document.querySelector("[data-companion-disclosure=chosen-play]").open':'document.querySelector(".companion-candidate .candidate-details").open'),false,'Complete sidebar play starts folded');
  const geometry=[];for(const width of [280,400,520,600]){main.setContentSize(width,850);await js('document.querySelector(".companion-content").scrollTop=0;new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
-  const row=await js('(()=>{const c=document.querySelector(".companion-candidate"),pane=document.querySelector(".companion-content").getBoundingClientRect(),buttons='+ (restart?'[document.querySelector(".companion-own-duty p")]':'[c.querySelector("[data-action=use-result]"),c.querySelector("[data-action=result-detail]")]') +',heroes=[...c.querySelectorAll("[data-action=companion-preview]")];const inspect=b=>{if(!b)throw Error("Expected sidebar control missing");const r=b.getBoundingClientRect();return {text:b.textContent,top:r.top,bottom:r.bottom,left:r.left,right:r.right,visible:r.width>0&&r.height>0&&r.top>=pane.top-1&&r.bottom<=pane.bottom+1&&r.left>=-1&&r.right<=innerWidth+1};};return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,buttons:buttons.map(inspect),heroes:heroes.map(b=>{const disclosure=b.closest("details[data-companion-disclosure=other-recommendations]");if(disclosure)disclosure.open=true;b.scrollIntoView({block:"nearest",behavior:"instant"});return inspect(b);})};})()');
+  const row=await js('(()=>{const c=document.querySelector('+JSON.stringify(restart?'[data-companion-disclosure=chosen-play]':'.companion-candidate')+'),pane=document.querySelector(".companion-content").getBoundingClientRect(),buttons='+ (restart?'[document.querySelector(".companion-own-duty p")]':'[c.querySelector("[data-action=use-result]")]') +',heroes=[...c.querySelectorAll('+JSON.stringify(restart?'[data-action=active-hero-prepare]':'[data-action=companion-preview]')+')];const inspect=b=>{if(!b)throw Error("Expected sidebar control missing");const r=b.getBoundingClientRect();return {text:b.textContent,top:r.top,bottom:r.bottom,left:r.left,right:r.right,visible:r.width>0&&r.height>0&&r.top>=pane.top-1&&r.bottom<=pane.bottom+1&&r.left>=-1&&r.right<=innerWidth+1};};const first=buttons.map(inspect);for(const d of c.querySelectorAll("details"))d.open=true;if(c.tagName==="DETAILS")c.open=true;const members=heroes.map(b=>{b.scrollIntoView({block:"nearest",behavior:"instant"});return inspect(b);});const detail=c.querySelector("[data-action=result-detail]");if(detail)detail.scrollIntoView({block:"nearest",behavior:"instant"});const reachable=detail?inspect(detail):null;for(const d of c.querySelectorAll("details"))d.open=false;if(c.tagName==="DETAILS")c.open=false;return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,buttons:first,heroes:members,detail:reachable};})()');
   if(restart)assert.equal(row.buttons[0].text,expectedOwnDuty,'Restart first-screen duty must belong to the declared local member');
-  assert.equal(row.overflow,false);assert.ok(row.buttons.every(b=>b.visible),'Sidebar first-screen '+(restart?'accepted duty':'adoption')+' clipped at '+width);assert.ok(row.heroes.length&&row.heroes.every(b=>b.visible),'Member preparation must remain reachable by scrolling '+JSON.stringify(row));geometry.push(row);
+  assert.equal(row.overflow,false);assert.ok(row.buttons.every(b=>b.visible),'Sidebar first-screen '+(restart?'accepted duty':'adoption')+' clipped at '+width);assert.ok(row.heroes.length&&row.heroes.every(b=>b.visible),'Member preparation must remain reachable by scrolling '+JSON.stringify(row));if(!restart)assert.ok(row.detail?.visible,'Full play must remain reachable after expanding details');geometry.push(row);
  }
  main.setContentSize(520,850);await fs.writeFile(path.join(root,restart?'restart-sidebar.png':'sidebar.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  const editVisibleRune=async(surface,slot)=>{
@@ -63,7 +70,7 @@ async function run(){
   else await click('.companion-candidate [data-action=use-result]');
   await until(async()=>!!(await state()).draft.creativePlan,'Adoption missing');
  }
- await click('[data-action=companion-full]');await until(()=>js('!!document.querySelector(".result-card")'),'Main results missing');
+ await click('[data-action=companion-full]');await until(()=>js('!!document.querySelector(".draft-task-workspace")'),'Adopted main plan missing');
  let plan=(await state()).draft.creativePlan;if(readiness)assert.ok(['shared','cooperation'].includes(plan.archetype));else assert.equal(plan.archetype,scenario==='yasuo-relay'?'cooperation':routes||independent?'shared':'curated');
  if(restart)assert.deepEqual(plan,JSON.parse(await fs.readFile(path.join(root,'accepted.json'),'utf8')));
  else await fs.writeFile(path.join(root,'accepted.json'),JSON.stringify(plan,null,2));
@@ -134,7 +141,7 @@ async function run(){
   await click('[data-action=back-result]');
  }
  assert.equal(writes,0);assert.ok(windows.every(w=>!w.isVisible()));
- const proof={passed:true,archiveSha256:release.archiveSha256,scenario,routes,tactics,independent,readiness,duoStages,customRunes,restart,planId:plan.id,memberGuides:plan.members.length,memberStages:plan.members.length*3,sameIdCatalogChange:!!plan.curated&&!readiness,refreshedMembers,sidebarGeometry:geometry,actualRuneWrites:0,realGame:'UNPROVEN'};
+ const proof={passed:true,source,archiveSha256:release.archiveSha256,scenario,routes,tactics,independent,readiness,duoStages,customRunes,restart,planId:plan.id,memberGuides:plan.members.length,memberStages:plan.members.length*3,sameIdCatalogChange:!!plan.curated&&!readiness,refreshedMembers,sidebarGeometry:geometry,actualRuneWrites:0,realGame:'UNPROVEN'};
  await fs.writeFile(path.join(root,restart?'restart.json':'select.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify(proof));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'error.txt'),error.stack).catch(()=>{});for(const [i,w]of windows.entries())if(!w.isDestroyed())await fs.writeFile(path.join(root,'failure-'+i+'.png'),(await w.webContents.capturePage()).toPNG()).catch(()=>{});app.exit(1);});

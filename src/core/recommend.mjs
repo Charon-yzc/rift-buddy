@@ -1,5 +1,7 @@
 import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES, profile,conventionalRole } from './rules.mjs';
-import {draftTargets,scopeSlots,CLIENT_POSITION_ROLES} from './draft.mjs';
+import {draftTargets,scopeSlots,effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
+import {recommendationDraft} from './draft-intents.mjs';
+import {clientContextDraft,publicAllyIds} from './client-context-draft.mjs';
 export {clearClientPicks} from './draft.mjs';
 import {comboLoadout,loadoutOptions} from './loadouts.mjs';
 import {generateCreativeTrios} from './creative-trios.mjs';
@@ -7,11 +9,32 @@ import {creativePlanMatches,creativeMemberCombo,validateCreativePlan,creativePla
 import {createPartyCounterplay} from './party-counterplay.mjs';
 import {createCooperationGraph,cooperationPlan,cooperationSeeds} from './cooperation.mjs';
 import {createPairStatisticsIndex} from './pair-statistics.mjs';
+import {compositionFit} from './composition-fit.mjs';
 import {comboMembers,comboKey} from './combo-members.mjs';
 import {strategyTraits,strategySummary,summarizeEnemyTraits,opponentFit,threatNotes,describeCurve,describeForgiveness,controlChainLabel} from './strategy.mjs';
 
 export function createSlots() {
  return ROLES.map(r=>({role:r.id, champion:null, locked:false, party:['mid','bottom','support'].includes(r.id)}));
+}
+// A lobby identifies the group before champion-select supplies player cells.
+// Only its provisional recommendation range changes; no player or lane is bound.
+export function applyLobbyPartyRange(slots,party){
+ const next=structuredClone(slots);
+ if(!['lobby','known'].includes(party?.status))return next;
+ const members=Array.isArray(party.members)?party.members:[],count=Math.min(next.length,Math.max(members.length,Number.isInteger(party.lobbyCount)?party.lobbyCount:0));
+ if(!count)return next;
+ const used=new Set(next.filter(s=>s.partyManual&&s.party).map(s=>s.role)),claimed=new Set(),limit=Math.max(count,used.size);
+ const available=slot=>slot&&!claimed.has(slot.role)&&!(slot.partyManual&&!slot.party);
+ for(const member of [...members].sort((a,b)=>Number(b.local===true)-Number(a.local===true))){
+  const preferred=[member.firstPosition,member.secondPosition].map(value=>CLIENT_POSITION_ROLES[String(value||'').toUpperCase()]).filter(Boolean);
+  const target=preferred.map(role=>next.find(s=>s.role===role)).find(s=>available(s)&&(used.has(s.role)||used.size<limit));
+  if(target){used.add(target.role);claimed.add(target.role);}
+ }
+ // Prefer empty positions for the remaining provisional range. Existing local
+ // heroes and manual positions stay intact even when the board is already full.
+ const fallback=[...next].sort((a,b)=>Number(!!a.champion||a.manualPosition||Number.isInteger(a.clientCellId))-Number(!!b.champion||b.manualPosition||Number.isInteger(b.clientCellId)));
+ for(const slot of fallback)if(used.size<limit&&available(slot)){used.add(slot.role);claimed.add(slot.role);}
+ return next.map(slot=>slot.partyManual?slot:{...slot,party:used.has(slot.role)});
 }
 export function validateSlots(slots, champions) {
  if(!Array.isArray(slots)||slots.length!==5||slots.some(s=>!s||typeof s!=='object')) throw new Error('阵容位置格式不正确');
@@ -23,12 +46,15 @@ export function validateSlots(slots, champions) {
 }
 export function analyzeTeam(slots, champions, context,scoreOnly=false) {
  const byId=context?.byId||new Map(champions.map(c=>[c.id,c]));
+ const represented=new Set(slots.map(s=>s.champion));
+ const knownAllies=[...new Set(context?.publicAllies||[])].filter(id=>byId.has(id)&&!represented.has(id));
+ const analyzed=[...slots,...knownAllies.map(champion=>({champion,role:'',party:false,positionUnknown:true}))];
  const getProfile=s=>{
   const key=`${s.champion}:${s.role}`;
   if(context?.profiles?.has(key))return context.profiles.get(key);
   const value=profile(byId.get(s.champion),s.role);context?.profiles?.set(key,value);return value;
  };
- const members=slots.filter(s=>byId.has(s.champion)).map(s=>{const c=byId.get(s.champion),base=getProfile(s),combo=currentCombo(slots,c.id,s.role,context?.catalogStatus,context?.comboCache);
+ const members=analyzed.filter(s=>byId.has(s.champion)).map(s=>{const c=byId.get(s.champion),base=getProfile(s),combo=s.positionUnknown?null:currentCombo(slots,c.id,s.role,context?.catalogStatus,context?.comboCache);
   const loadoutId=comboLoadout(combo,c,s.role),cacheKey=loadoutId?c.id+':'+s.role+':'+loadoutId:null;
   let loadout;
   if(cacheKey){
@@ -143,16 +169,8 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  // simultaneously. Source position frequency and player preferences remain
  // separate signals below; these weights are curated, not win probabilities.
  const ownWeights=a.members.length===1?SINGLE_ROLE_WEIGHTS[a.members[0].role]:null;
- let score=ownWeights?20+Object.entries(ownWeights).reduce((sum,[key,weight])=>sum+Math.min(t[key],1)*weight,0):
-  Math.min(t.frontline,1)*10+Math.min(t.engage,1)*10+Math.min(t.peel,1)*6+Math.min(t.sustain,1)*10+Math.min(t.ap,1)*8+Math.min(t.ad,1)*8+Math.min(t.aoe,1)*3;
- score-=Math.max(0,t.frontline-2)*4;
- // Overstacking the same function wastes picks; the curve stays shallow so
- // curated combinations keep their lead.
- score-=Math.max(0,t.engage-3)*2;
- if(a.members.length>=3){
-  if(t.ad>=.75&&t.ap>=.75)score+=6;
-  else if(t.ad<.4||t.ap<.4)score-=6;
- }
+ const composition=compositionFit(a,context?.cooperationGraph,{details:!scoreOnly});
+ let score=ownWeights?20+Object.entries(ownWeights).reduce((sum,[key,weight])=>sum+Math.min(t[key],1)*weight,0):composition.rawScore;
  const fit=opponentFit(a,context?.enemyTraits);
  score+=fit.adjustment;
  const foundDuo=findDuo(slots),foundTrio=findTrio(slots);
@@ -164,33 +182,19 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  if(comboDifficulty==='较高'&&style!=='wild')score-=trio?3:2;
  else if(comboDifficulty==='容易'&&style==='balanced')score+=2;
  if(a.members.length>=3&&style==='balanced'&&Number.isFinite(a.avgDifficulty))score-=Math.max(0,a.avgDifficulty-6)*2;
- // Control into AoE is the most reliable teamfight pattern in the data model.
- if(a.members.length>=3&&t.engage>=1&&t.aoe>=1)score+=3;
  const scope=context?.scope;
- if(scope==='party'&&trio)score+=4;
- if(scope==='bot'){
-  // Duo mode is about the lane: poke/sustain/engage decide the laning phase,
-  // and a mixed damage pair is harder to itemize against with one stat.
-  score+=Math.min(t.poke+t.sustain,2)*2+Math.min(t.engage,1)*2;
-  // Support damage counts less over a full game but matters a lot in lane,
-  // so the lane bonus uses lower mixed-damage bars than the team bonus.
-  if(t.ad>=.5&&t.ap>=.2)score+=3;
-  if(Number.isFinite(a.avgDifficulty))score-=a.avgDifficulty*(style==='balanced'?.4:0);
- }
- if(trio)score+=33+(style===trio.style?5:0);
- if(duo)score+=style==='wild'?(duo.style==='wild'?36:duo.style==='fun'?23:9):style==='fun'?(duo.style==='fun'?29:duo.style==='wild'?16:20):(duo.style==='balanced'?28:duo.style==='fun'?17:3);
+ // Fit is shared with the displayed score. A catalogue entry is evidence for
+ // an executable plan, never a flat 28/33 point reward for being in a library.
+ if((trio||duo)?.style===style)score+=5;
  const ids=new Set(slots.map(s=>s.champion));
  const linkHit=new Set(),{linkByChamp}=comboIndex();
  for(const id of ids)for(const link of linkByChamp.get(id)||[])if(ids.has(link[0])&&ids.has(link[1]))linkHit.add(link);
  const connections=CROSS_SYNERGIES.filter(l=>linkHit.has(l));
- score+=connections.length*7;
- if(duo)score+=(duo.partners||[]).filter(id=>ids.has(id)).length*7;
  const partyMembers=slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party).filter(s=>s.champion);
  const adaptive=context?.cooperationGraph&&scope!=='solo'&&partyMembers.length<=3?cooperationPlan(partyMembers,context.cooperationGraph,context.play):null;
- if(adaptive)score+=adaptive.bonus;
  const pairEvidence=scope==='solo'?null:context?.pairStatistics?.forMembers(slots.filter(s=>scope==='bot'?['bottom','support'].includes(s.role):s.party));
  score+=pairEvidence?.bonus||0;
- const tempo=context?.play?.tempo;if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,trio||duo||adaptive)[tempo]||0,12)*3;
+ const tempo=context?.play?.tempo;if(tempo&&tempo!=='any')score+=Math.min(strategyTraits(a,trio||duo||adaptive)[tempo]||0,8);
  for(const m of a.members){
   if(!requestedIds.includes(m.champion))continue;
   if(context?.poolMode==='prefer'&&context.pool.has(m.champion))score+=12;
@@ -213,7 +217,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  };
  const partyDuo=valid(findDuo(party)),partyTrio=valid(findTrio(party));
  const planDuo=(relevant(partyDuo)?partyDuo:undefined)||(relevant(duo)?duo:undefined),planTrio=(relevant(partyTrio)?partyTrio:undefined)||(relevant(trio)?trio:undefined);
- const out={score,analysis:a,duo:planDuo,trio:planTrio,connections,opponentFit:fit,adaptive,pairEvidence};
+ const out={score,compositionFit:composition,analysis:a,duo:planDuo,trio:planTrio,connections,opponentFit:fit,adaptive,pairEvidence};
  return out;
 }
 const signature=slots=>slots.map(s=>`${s.role}:${s.champion||'-'}`).join('|');
@@ -254,14 +258,19 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null}) {
+export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null}) {
+ if(Array.isArray(slots)&&slots.every(s=>s&&typeof s==='object'))slots=clientContextDraft(slots,champions,clientSession,{scope:effectiveDraftScope(slots,scope),soloRole,bans:publicBans,eligibleByRole});
  validateSlots(slots,champions);
+ scope=effectiveDraftScope(slots,scope);
+ publicAllies=['context','solo'].includes(scope)?publicAllyIds(clientSession,champions).concat(publicAllies):[];
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
-  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan};
+  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession};
   const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
-  if(!targets.length)return recommend({...options,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
+  if(!targets.length){
+   return recommend({...options,clientSession:null,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
+  }
   const candidates=[],errors=[];
   for(const role of targets){
    try{candidates.push(...recommend({...options,slots:slots.map(s=>({...s,party:s.role===role})),limit:offset+limit,offset:0}).map(r=>({...r,scope:'solo',soloRole:role,title:`${ROLES.find(r=>r.id===role).name} · ${champions.find(c=>c.id===r.slots.find(s=>s.role===role).champion)?.name}`,slots:r.slots.map(s=>({...s,party:slots.find(prior=>prior.role===s.role).party}))})));}
@@ -276,7 +285,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // Profiles are constant for one calculation; reuse them across the search beam.
  // Visibility affects fit in every draft; `enemy` separately controls which
  // heroes cannot be selected. Keep the legacy argument as the default.
- const context={byId:new Map(champions.map(c=>[c.id,c])),profiles:new Map(),pool:new Set(heroPool),poolMode,scope,play,rolePools,catalogStatus,enemyTraits:summarizeEnemyTraits(visibleEnemies,champions),comboCache:new Map(),scoreCache:new Map(),comboLoadouts:new Map()};
+ const context={byId:new Map(champions.map(c=>[c.id,c])),publicAllies,profiles:new Map(),pool:new Set(heroPool),poolMode,scope,play,rolePools,catalogStatus,enemyTraits:summarizeEnemyTraits(visibleEnemies,champions),comboCache:new Map(),scoreCache:new Map(),comboLoadouts:new Map()};
  context.cooperationGraph=createCooperationGraph(champions);
  context.pairStatistics=createPairStatisticsIndex(pairStatistics,champions,{source:buildSource,patch});
  // Rune-page samples are used only as a coarse position-frequency signal.
@@ -311,7 +320,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  }
  const fixed=slots.map(s=>{if(!targets.includes(s.role))return {...s};const {clientCellId,manualPosition,...draft}=s;return {...draft,champion:null};});
  if(poolMode==='only'&&!heroPool.some(id=>context.byId.has(id)))throw Error('先添加英雄池，或切换为“全部英雄”');
- const blocked=new Set([...excluded,...publicBans,...enemy.filter(Boolean),...publicPicks.filter(id=>context.byId.has(id)),...fixed.map(s=>s.champion).filter(Boolean)]);
+ const blocked=new Set([...excluded,...publicBans,...enemy.filter(Boolean),...publicPicks.filter(id=>context.byId.has(id)),...publicAllies.filter(id=>context.byId.has(id)),...fixed.map(s=>s.champion).filter(Boolean)]);
  const {byId}=context;
  const supportedBySource=new Set((Array.isArray(sourceRoles)?sourceRoles:[]).filter(r=>byId.has(r?.champion)&&ROLES.some(role=>role.id===r.role)).map(r=>r.champion+':'+r.role));
  const candidateSets={};
@@ -349,10 +358,8 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   const seed=fixed.map(s=>{const member=members.find(m=>m.role===s.role);return member?{...s,champion:member.champion}:s;});
   const ids=seed.map(s=>s.champion).filter(Boolean);if(new Set(ids).size===ids.length)seeds.push(seed);
  }
- // Creative trios: trait-derived three-person ideas outside the catalog.
- // They fill all three open roles at once, so they only apply when exactly
- // three positions are being drafted. Curated trios keep their scoring lead;
- // creative entries earn a smaller flat bonus (see below) and are labeled.
+ // Trait-derived ideas fill all three open positions; the same fit model
+ // grades them and catalogue seeds without a bonus for their source label.
  const creativeBySig=new Map();
  for(const def of generateCreativeTrios({targets,candidateSets,champions,style})){
   const trioSlots=fixed.map(s=>{const m=def.members.find(m=>m.role===s.role);return m?{...s,champion:m.champion}:s;});
@@ -384,7 +391,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   if(unique.has(signature(entry.slots)))continue;
   const g=grade(entry.slots,champions,style,entry.slots.filter(s=>targets.includes(s.role)).map(s=>s.champion),roleWeights,context);
   const creative=creativeBySig.get(signature(entry.slots));
-  unique.set(signature(entry.slots),creative?{...entry,...g,score:g.score+creative.bonus,creative}:{...entry,...g});
+  unique.set(signature(entry.slots),creative?{...entry,...g,creative}:{...entry,...g});
  }
  // An executable plan for the whole party is
  // more useful than a higher count of generic team functions. All hard pick
@@ -403,11 +410,12 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   return entry.adaptive.edges.some(e=>e.current&&e.family.startsWith('skills:'))?1:2;
  };
  const matching=new Map([...unique.values()].map(entry=>[entry,play.tempo&&play.tempo!=='any'&&strategySummary(entry.analysis,summaryCombo(entry),play.tempo).matched]));
- // An explicit play preference must remain reachable on the first page.
- // Within matching choices, keep full-party and authored plans ahead of
- // general mechanisms. Without a matching candidate, retain normal fallback.
- const priority=entry=>Number(actionable(entry))+(matching.get(entry)?4:0);
- const order=(a,b)=>priority(b)-priority(a)||b.score-a.score||signature(a.slots).localeCompare(signature(b.slots));
+ // An explicit play preference remains first. Within it, actual fit and
+ // player preferences dominate; an executable full-party plan is a small
+ // tie-breaker, not an unconditional category above better compositions.
+ const priority=entry=>Number(!!matching.get(entry));
+ const rankScore=entry=>entry.score+Number(actionable(entry));
+ const order=(a,b)=>priority(b)-priority(a)||rankScore(b)-rankScore(a)||signature(a.slots).localeCompare(signature(b.slots));
  const sorted=[...unique.values()].sort(order);
  const chosen=[];
  // Keep the best result for every curated duo reachable on reroll. Filling
@@ -435,7 +443,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
    const entry=pool[j];
    const entryStyle=(entry.trio||entry.duo)?.style||'balanced';
    const similarity=chosen.reduce((sum,c)=>sum+targets.filter(r=>c.slots.find(s=>s.role===r).champion===entry.slots.find(s=>s.role===r).champion).length*9+(entry.duo&&c.duo?.id===entry.duo.id?18:0)+(entry.trio&&c.trio?.id===entry.trio.id?22:0)+(entry.trio&&c.trio?.tempo===entry.trio.tempo?6:0)+(((c.trio||c.duo)?.style||'balanced')===entryStyle?10:0)+(entry.creative&&c.creative?.archetype===entry.creative.archetype?14:0),0);
-   const v=entry.score-similarity;
+   const v=rankScore(entry)-similarity;
    const p=priority(entry);
    if(p>bestPriority||p===bestPriority&&v>best){best=v;winner=j;bestPriority=p;}
   }
@@ -473,11 +481,14 @@ export function explainContributions(fixed,next,targets,champions,context,reuse=
  const before=reuse?.before||analyzeTeam(fixed,champions,context),labels={frontline:'前排承伤',engage:'先手控制',peel:'后排保护',sustain:'持续输出',poke:'远程消耗',aoe:'范围伤害'};
  const damageName={ad:'物理',ap:'法术',mixed:'混合'};
  const after=reuse?.after||analyzeTeam(next,champions,context);
+ const graph=context?.cooperationGraph||createCooperationGraph(champions);
+ const kept=new Set(fixed.filter(s=>s.champion&&!targets.includes(s.role)).map(s=>s.champion));
  return after.members.filter(m=>targets.includes(m.role)).map(m=>({
   hero:m.champion,role:m.role,name:m.c.name,unusual:!conventionalRole(m.c,m.role),
   damage:m.p.damage==='ap'?'法术':m.p.damage==='ad'?'物理':'混合',
   helps:Object.entries(labels).filter(([key])=>m.p[key]).map(([key,label])=>`${before.traits[key]?'增加':'补上'}${label}`),
   pairings:CROSS_SYNERGIES.filter(([a,b])=>[a,b].includes(m.champion)&&fixed.some(s=>s.champion===([a,b].find(id=>id!==m.champion)))).map(([, ,text])=>text),
+  interactions:after.members.filter(other=>other.champion!==m.champion).map(other=>{const edge=graph.edge(m,other);return edge?.current?{with:other.champion,kept:kept.has(other.champion),name:edge.name,step:edge.step,condition:edge.condition,failure:edge.failure}:null;}).filter(Boolean).sort((a,b)=>Number(b.kept)-Number(a.kept)),
  }));
 }
 // Structured, human-readable reasons. Curated texts (why/plan/risk) are reused
@@ -519,7 +530,7 @@ export function buildReasonPoints(entry,scope){
  return points.filter(Boolean).slice(0,5);
 }
 
-export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={}}={}) {
+export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={},ownRole=''}={}) {
  const byKey=new Map(champions.map(c=>[c.key,c])),next=structuredClone(slots),unassigned=[],displaced=[];
  const allEntries=(session?.myTeam||[]).filter((p,i,a)=>Number.isInteger(p.cellId)&&p.cellId>=0&&p.cellId<30&&a.findIndex(q=>q.cellId===p.cellId)===i).slice(0,5);
  const entries=allEntries.filter(p=>byKey.has(Number(p.championId))),placed=new Set();
@@ -550,7 +561,7 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
  for(const p of ordered){
   if(placed.has(p.cellId))continue;
   const champion=byKey.get(Number(p.championId)),declared=CLIENT_POSITION_ROLES[String(p.assignedPosition||'').toUpperCase()],prior=slots.find(s=>s.clientCellId===p.cellId);
-  const preferred=[declared,...(!declared&&prior?[prior.role]:[]),...(roleOrder[champion.id]||[]),...profile(champion).roles,...ROLES.map(r=>r.id)].filter((r,i,a)=>r&&a.indexOf(r)===i);
+  const preferred=[declared,...(!declared&&prior?.champion===champion.id?[prior.role]:[]),...(roleOrder[champion.id]||[]),...profile(champion).roles,...ROLES.map(r=>r.id)].filter((r,i,a)=>r&&a.indexOf(r)===i);
   let target=next.find(s=>s.role===declared&&!Number.isInteger(s.clientCellId)&&(!s.champion||autoArrange&&(s.automaticPosition||!s.locked)));
   if(!target&&autoArrange)target=preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!s.champion&&!Number.isInteger(s.clientCellId));
   // Public picks supersede only prospective local suggestions, never a bound pick.
@@ -563,14 +574,56 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
  const previous=slots.some(s=>s.clientCellId===session?.localPlayerCellId),changed=!!(mine&&!mine.party&&!mine.partyManual&&!mine.manualPosition&&!previous);
  if(changed)mine.party=true;
  if(autoParty&&party){
-  if(party.status==='known')for(const s of next)if(!s.partyManual)s.party=false;
-  const used=new Set();
-  for(const member of [...party.members].sort((a,b)=>Number(b.local)-Number(a.local)||a.cellId-b.cellId)){
-   const player=allEntries.find(p=>p.cellId===member.cellId),at=next.find(s=>s.clientCellId===member.cellId);
-   const preferred=[CLIENT_POSITION_ROLES[String(player?.assignedPosition||'').toUpperCase()],CLIENT_POSITION_ROLES[member.firstPosition],CLIENT_POSITION_ROLES[member.secondPosition],...ROLES.map(r=>r.id)].filter(Boolean);
-   const target=at||preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!Number.isInteger(s.clientCellId)&&!used.has(s.role));
-   if(target){used.add(target.role);if(!target.partyManual)target.party=true;}
+  const known=party.status==='known';
+  const members=(party.members||[]).filter((m,i,all)=>allEntries.some(p=>p.cellId===m.cellId)&&all.findIndex(p=>p.cellId===m.cellId)===i&&(known||m.cellId===session?.localPlayerCellId||m.source==='manual-id'));
+  const hoverContext=recommendationDraft(next,session,champions,{ownRole});
+  const publicRole=player=>{
+   const at=next.find(s=>s.clientCellId===player.cellId),declared=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
+   const manual=at?.manualPosition?at.role:player.cellId===session?.localPlayerCellId&&next.some(s=>s.role===ownRole)?ownRole:'';
+   const hover=byKey.get(Number(player.championPickIntent)),preview=hoverContext.find(s=>s.publicIntent&&s.champion===hover?.id);
+   return {at,manual,declared,preview};
+  };
+  const reserved=new Map();
+  // Real bindings stay fixed; an explicit local lane outranks an unpicked
+  // teammate's declared lane. Apply that priority before reserving, too.
+  const reservations=allEntries.map(player=>({player,...publicRole(player)})).sort((a,b)=>(a.at?0:a.manual?1:a.declared?2:3)-(b.at?0:b.manual?1:b.declared?2:3)||a.player.cellId-b.player.cellId);
+  for(const {player,at,manual,declared,preview} of reservations){const role=at?.role||manual||declared||preview?.role;if(role&&!reserved.has(role))reserved.set(role,player.cellId);}
+  const infos=members.map(member=>{
+   const player=allEntries.find(p=>p.cellId===member.cellId),position=publicRole(player),champion=byKey.get(Number(player.championId))||byKey.get(Number(player.championPickIntent)),p=champion&&profile(champion);
+   const usual=champion?[...(roleOrder[champion.id]||[]),...(p.reviewed?p.roles:[])]:[];
+   const lobbyRoles=known?[CLIENT_POSITION_ROLES[String(member.firstPosition||'').toUpperCase()],CLIENT_POSITION_ROLES[String(member.secondPosition||'').toUpperCase()]].filter(Boolean):[];
+   const fixed=position.manual||position.declared||position.at?.role;
+   const excluded=!!fixed&&next.some(s=>s.role===fixed&&s.partyManual&&!s.party);
+   return {member,...position,usual,lobbyRoles,excluded,priority:position.manual?0:position.declared?1:position.preview?2:position.at?3:usual.length?4:lobbyRoles.length?5:6};
+  }).sort((a,b)=>a.priority-b.priority||Number(b.member.cellId===session?.localPlayerCellId)-Number(a.member.cellId===session?.localPlayerCellId)||a.member.cellId-b.member.cellId);
+  const manualOn=next.filter(s=>s.partyManual&&s.party),used=new Set(known?manualOn.map(s=>s.role):[]),claimed=new Set();
+  const count=Math.min(next.length,Math.max(members.length,Number.isInteger(party.lobbyCount)?party.lobbyCount:0));
+  const limit=Math.max(manualOn.length,count-infos.filter(info=>info.excluded).length);
+  const available=(slot,cellId)=>slot&&!claimed.has(slot.role)&&!(slot.partyManual&&!slot.party)&&(!Number.isInteger(slot.clientCellId)||slot.clientCellId===cellId)&&(!reserved.has(slot.role)||reserved.get(slot.role)===cellId);
+  const provisional=slot=>slot&&!slot.manualPosition&&!Number.isInteger(slot.clientCellId)&&(!slot.champion||slot.automaticPosition);
+  // A user can claim a different role in an adopted plan before anyone picks.
+  // Reuse that plan's remaining unbound lane before inventing a new range.
+  const fallback=known?next.filter(provisional).sort((a,b)=>Number(!!b.party&&!!b.automaticPosition)-Number(!!a.party&&!!a.automaticPosition)):[];
+  for(const info of infos){
+   if(info.excluded)continue;
+   const {member,manual,declared,preview,at,usual,lobbyRoles}=info,role=manual||declared;
+   const direct=[role&&next.find(s=>s.role===role),preview&&next.find(s=>s.role===preview.role),at].filter(Boolean);
+   const preferred=[...usual,...lobbyRoles].filter((r,i,a)=>r&&a.indexOf(r)===i);
+   // A saved, unbound hero constrains recommendations, not who occupies a lane.
+   // Public member hints may move the range flag without changing that plan.
+   const candidates=[...direct,...preferred.map(r=>next.find(s=>s.role===r)).filter(s=>s&&!s.manualPosition&&!Number.isInteger(s.clientCellId)),...fallback];
+   const target=candidates.find(s=>available(s,member.cellId)&&(!known||used.has(s.role)||used.size<limit));
+   if(target){used.add(target.role);claimed.add(target.role);}
   }
+  if(known){
+   // Unlocated members still contribute to the range. These temporary slots
+   // carry no player binding; later public picks, hovers and lanes replace them.
+   for(const slot of fallback)if(used.size<limit&&available(slot,null)){used.add(slot.role);claimed.add(slot.role);}
+   // Saved local plans may occupy every slot. A range flag does not bind a
+   // player or replace a hero, so unbound planned slots can still count here.
+   for(const slot of next)if(used.size<limit&&!Number.isInteger(slot.clientCellId)&&available(slot,null)){used.add(slot.role);claimed.add(slot.role);}
+   for(const slot of next)if(!slot.partyManual)slot.party=used.has(slot.role);
+  }else for(const slot of next)if(used.has(slot.role)&&!slot.partyManual)slot.party=true;
  }
  return {slots:next,unassigned,displaced,markedLocalRole:localRole||null,markedLocalChanged:changed};
 }

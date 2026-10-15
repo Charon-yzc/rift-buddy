@@ -204,7 +204,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const gear=mode==='rift'?prepareGear({data,champion:champion.id,role,start:t.start,boots:t.boots,fallbackStart,fallbackBoots,reference:standardRef,startId,bootsId}):null;
  if(gear){t.start=gear.start;t.boots=gear.boots;selectionWarnings.push(...gear.warnings);}
  const map=mode==='hex'?'12':'11';
- const adaptive=adaptEquipment({items:t.items,boots:t.boots,late:t.late,key,support,champion:champion.id,conditions,data,map,bottomQuestPlan,bootsSelected:!!gear?.selectedBootsId});
+ const adaptive=adaptEquipment({items:t.items,boots:t.boots,late:t.late,key,support,champion:champion.id,conditions,data,map,bottomQuestPlan,bootsSelected:!!gear?.selectedBootsId,conditionalFrontline:['trio-frontline','trio-jungle-frontline'].includes(config?.id)&&!coreId});
  const {boots,adjustments}=adaptive;
  const resolve=id=>{
   const i=data.items[String(id)];

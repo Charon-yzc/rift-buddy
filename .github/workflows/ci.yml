@@ -51,6 +51,8 @@ jobs:
         run: node scripts/inspect-package.mjs --verify-current
       - name: Check real main and sidebar synchronization and idle-game resources
         run: node scripts/smoke-package-dual-windows.mjs
+      - name: Check automatic pregame startup, unknown party lanes and one-click preparation
+        run: node scripts/smoke-package-pregame-startup.mjs
       - name: Check accepted trio hover, explicit preparation and cross-window configuration
         run: |
           node scripts/smoke-package-party-preparation.mjs
@@ -67,7 +69,9 @@ jobs:
           node scripts/smoke-package-useful-guide.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-useful-guide.mjs --dpi-1
-      - name: Check six compact choices at common main and sidebar sizes
+      - name: Check independent equipment import and sidebar receipt replay
+        run: node scripts/smoke-package-party-preparation.mjs --standalone-items
+      - name: Check three visible choices, more candidates and keyboard details at main and sidebar sizes
         run: pnpm exec electron scripts/smoke-selection-layout.cjs
       - name: Check selection, loading and in-game transitions
         run: node scripts/smoke-package-game-transition.mjs

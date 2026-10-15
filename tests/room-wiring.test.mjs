@@ -10,7 +10,7 @@ test('every room IPC channel exposed by preload has a guarded handler in main',a
  const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
  const app=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
  const exposed=[...preload.matchAll(/ipcRenderer\.invoke\('([a-z-]+)'/g)].map(m=>m[1]).filter(name=>name.startsWith('room-'));
- assert.deepEqual(exposed.sort(),['room-addresses','room-host','room-join','room-leave','room-publish','room-relay','room-scan','room-status']);
+ assert.deepEqual(exposed.sort(),['room-addresses','room-ballot','room-host','room-join','room-leave','room-publish','room-relay','room-scan','room-status']);
  for(const channel of exposed)assert.match(main,new RegExp(`guard\\('${channel}'`),`${channel} is exposed but not guarded in main`);
  assert.match(main,/publishWindows\('room-update'/,'main must broadcast room updates to both app windows');
  assert.match(preload,/ipcRenderer\.on\('room-update'/,'preload must subscribe to room updates');
@@ -53,7 +53,8 @@ test('only this process keeps the lobby identifier and the auto room closes with
  assert.match(main,/const \{own,party,\.\.\.rest\}=client,\{key,\.\.\.cleanParty\}=party\|\|\{\};/,'the identity used as the room nickname must be stripped');
  assert.match(main,/return \{\.\.\.rest,\.\.\.\(party\?\{party:cleanParty\}:\{\}\)\};/,'a missing party must stay missing');
  for(const boundary of [/publishWindows\('client-update',forRenderer\(latestClient\)\)/,/guard\('client-status',async force=>forRenderer\(await status\(force\)\)\)/,/guard\('authorize-client'[\s\S]{0,200}?forRenderer\(await status\(true\)\)/,/guard\('bootstrap',[\s\S]{0,140}?client:forRenderer\(latestClient\)/,/guard\('window-info'[\s\S]{0,300}?client:forRenderer\(latestClient\)/])assert.match(main,boundary,'every renderer-facing client snapshot must be stripped');
- assert.match(main,/closeAutoRoomIfRevoked\(\);\s+guide\.publish\(\)/,'turning the switch or sync off must close the auto room');
+ const saveHandler=main.slice(main.indexOf("guard('save-state'"),main.indexOf("const {createClientSync}"));
+ assert.ok(saveHandler.indexOf('closeAutoRoomIfRevoked();')>=0&&saveHandler.indexOf('closeAutoRoomIfRevoked();')<saveHandler.indexOf('guide.publish()'),'turning the switch or sync off must close the auto room before publishing');
  assert.match(main,/if\(had\|\|hadError\)publishWindows\('room-update'/,'revoking must also refresh the panel');
  assert.match(main,/storage\.mergeState\(current,incoming,data\.champions\)\);closeAutoRoomIfRevoked\(\)/,'an imported backup must not leave an orphan room');
  assert.match(main,/state\.preferences\?\.roomAuto===true&&state\.preferences\?\.autoSync!==false/,'automatic rooms follow the client poll switch');

@@ -35,7 +35,13 @@ async function run(){
   await until(()=>js('document.querySelector(".pair-statistics")?.textContent.includes("65.0%")'),'New pair evidence missing');assert.ok(await js('document.querySelector(".pair-statistics").textContent.includes("韩国")'));
   const before=await fs.readFile(cacheFile),beforeData=(await boot()).data.pairStatistics;
   invalid=true;await js('document.querySelector("#toast").textContent=""');await click('[data-action=refresh-pairs]');await until(()=>js('document.querySelector("#toast").textContent.includes("原同队参考保留")'),'Partial failure not explained');assert.deepEqual(await fs.readFile(cacheFile),before);assert.deepEqual((await boot()).data.pairStatistics,beforeData);assert.ok(await js('!!document.querySelector(".result-card")'));
-  invalid=false;held=true;resume=null;await click('[data-action=refresh-pairs]');await until(()=>resume,'Changed-member request not held');await click('[data-action=reset-draft]');resume();await until(()=>requests.length===8,'Changed-member request unfinished');await delay(1000);assert.equal(await js('document.querySelectorAll(".result-card").length'),0);
+  invalid=false;held=true;resume=null;await click('[data-action=refresh-pairs]');await until(()=>resume,'Changed-member request not held');await click('[data-action=reset-draft]');
+  const cleared=(await state()).draft;assert.ok(cleared.slots.every(s=>!s.champion),'Reset did not clear the old refresh targets');
+  resume();await until(()=>requests.length===8,'Changed-member request unfinished');await delay(1000);
+  // Clearing the draft now generates fresh candidates automatically. A late
+  // response must preserve that cleared task and must not claim it was applied.
+  assert.deepEqual((await state()).draft,cleared,'Late member refresh restored the old draft');
+  assert.equal(await js('document.querySelector("#toast").textContent.includes("已刷新所选成员")'),false,'Late member refresh reported completion for the new draft');
   const current=await state(),original=JSON.parse(await fs.readFile(path.join(root,'initial-state.json')));current.draft=original.draft;await js('window.buddy.saveState('+JSON.stringify(current)+')');
   await new Promise(r=>{main.webContents.once('did-finish-load',r);main.webContents.reload();});await until(()=>js('!!document.querySelector("[data-action=draft-filters]")'),'Reload missing');await click('[data-action=draft-filters]');
   await openPairs();await fs.writeFile(path.join(root,'pair-refresh-main.png'),(await main.webContents.capturePage()).toPNG());
