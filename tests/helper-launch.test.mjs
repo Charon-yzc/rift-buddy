@@ -15,8 +15,9 @@ test('development PowerShell launch preserves Unicode and apostrophes without ch
  assert.ok(!/ExecutionPolicy|Bypass|Set-MpPreference/i.test(script));
  assert.equal(windowsArgument('ends\\'),'"ends\\\\"');
 });
-test('native launcher quotes real Windows arguments including Unicode, spaces, empty values and trailing slashes', {skip:process.platform!=='win32',timeout:15000},async()=>{
+test('native launcher quotes real Windows arguments including Unicode, spaces, empty values and trailing slashes', {skip:process.platform!=='win32',timeout:60000},async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-quote-')),harness=path.join(root,'QuoteProbe.cs'),exe=path.join(root,'quote.exe');
+ t.after(()=>fs.rm(root,{recursive:true,force:true,maxRetries:3,retryDelay:100}));
  await fs.writeFile(harness,`using System; using System.Text; using System.Diagnostics;
  internal class QuoteProbe { public static int Main(string[] args) {
  var text=ConnectionLauncher.Quote("-e")+" "+ConnectionLauncher.Quote("console.log(JSON.stringify(process.argv.slice(1)))")+" "+ConnectionLauncher.Quote("--");
@@ -25,7 +26,9 @@ test('native launcher quotes real Windows arguments including Unicode, spaces, e
  using(var child=Process.Start(info)){Console.OutputEncoding=new UTF8Encoding(false);Console.Write(child.StandardOutput.ReadToEnd());child.WaitForExit();return child.ExitCode;}
  } }`);
  const compiler=path.join(process.env.SystemRoot,'Microsoft.NET/Framework64/v4.0.30319/csc.exe');
- await exec(compiler,['/nologo','/target:exe','/main:QuoteProbe',`/out:${exe}`,path.resolve('electron/connection-launcher.cs'),harness],{windowsHide:true});
+ // Cold .NET compilation competes with the full suite on Windows CI. Give it
+ // its own bounded budget; a hung probe must still fail promptly and be killed.
+ await exec(compiler,['/nologo','/target:exe','/main:QuoteProbe',`/out:${exe}`,path.resolve('electron/connection-launcher.cs'),harness],{windowsHide:true,timeout:45000,signal:t.signal});
  const args=['','C:\\朋友的 游戏\\开黑搭子\\',"C:\\it's ours\\entry.mjs",'a\\\\"b','plain'];
- const {stdout}=await exec(exe,[process.execPath,...args],{windowsHide:true});assert.deepEqual(JSON.parse(stdout.replace(/^\uFEFF/,'')),args);
+ const {stdout}=await exec(exe,[process.execPath,...args],{windowsHide:true,timeout:10000,signal:t.signal});assert.deepEqual(JSON.parse(stdout.replace(/^\uFEFF/,'')),args);
 });
