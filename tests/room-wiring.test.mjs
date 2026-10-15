@@ -33,6 +33,7 @@ test('the automatic room decoration wraps updates, guards, leave state and the c
  assert.match(main,/queueRoomAuto\(\)/,'the client poll must feed the auto room step');
  assert.match(main,/auto:!!roomAutoKey&&!!roomAutoPin/,'only an established auto room may be marked as one');
  assert.match(main,/autoRoomDecision\(\{enabled,connected:!!client\?\.connected/);
+ assert.match(main,/forcedRoomNick=wanted=>autoRoomNick\(\{identity:latestClient\?\.own/,'manual rooms must force the detected game id over the typed nickname');
  assert.match(main,/status==='lobby'&&Number\(client\.party\.lobbyCount\)>=1&&client\.party\?\.key\)roomAutoGoneSince=null/,'an unreadable identifier counts as missing evidence');
  assert.match(main,/blockedKey:roomAutoBlockedKey,failedKey:roomAutoFailedKey,failedRetryAt:roomAutoFailedUntil/);
  assert.match(main,/identity:client\?\.own,savedNick:state\.preferences\.roomNick/,'the room nickname comes from the public game id');

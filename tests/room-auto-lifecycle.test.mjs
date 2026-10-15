@@ -141,3 +141,12 @@ test('grouping abandons solo codes and converges on the new party room',async t=
  assert.equal(h.snapshot().key,'party-group9');
  assert.equal(h.snapshot().room.room,(await auto.deriveAutoRoom('party-group9')).code);
 });
+
+test('manual relay forces the detected game id over the typed nickname',async t=>{
+ const h=harness();t.after(()=>h.services.forEach(service=>service.dispose()));
+ h.setClient(party());
+ const manual=h.handlers.get('room-relay')({url:'ws://127.0.0.1',room:'123456',pin:'654321'},'手动昵称');
+ await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await manual;
+ assert.equal(h.snapshot().room.members[0]?.nick,'Test#CN1');
+ assert.equal(h.sockets[0].sent[0]?.nick,'Test#CN1');
+});

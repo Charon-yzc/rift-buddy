@@ -246,9 +246,13 @@ async function boot(){
   return roomService;
  };
  guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):(roomAutoError?decorateAutoRoom({mode:'idle',members:[],transport:'relay'},{error:roomAutoError,retryAt:roomAutoFailedUntil||null}):null));
- guard('room-host',async nick=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).host());});
- guard('room-join',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).join(target||{}));});
- guard('room-relay',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).relay(target||{}));});
+ // Manual rooms use the same forced nickname as auto rooms: the detected
+ // public game id wins whenever the client provides one, and the typed
+ // "我的昵称" is only the fallback for when it does not.
+ const forcedRoomNick=wanted=>autoRoomNick({identity:latestClient?.own,savedNick:wanted||state.preferences.roomNick});
+ guard('room-host',async nick=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).host());});
+ guard('room-join',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).join(target||{}));});
+ guard('room-relay',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).relay(target||{}));});
  guard('room-leave',()=>{
   // Leaving by hand must not be undone by the next poll: remember the party
   // this auto room came from until the lobby identifier changes.

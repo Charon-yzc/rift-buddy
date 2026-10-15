@@ -60,7 +60,7 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
    <p class="bottom-note">开启后，进入英雄联盟预组队大厅（非自定义、单人或组队）时，助手用大厅共享标识派生 6 位房间码与口令，自动连上中继并分享你的公开阵容与个人配置；单人时自己就是房主也会进房，房间昵称优先使用你的公开游戏 ID，没有时用召唤师名，再没有才用“我的昵称”。每台机器都会按自己的大厅标识派生房间码，组队后一起切换到新组队标识的房间，单人码作废，最终以房主/当前组队的房间为准；若没汇合就复制房主的房间码与口令手动加入。派生口令知道组队数据即可算出，不是强认证。默认关闭；中继运营者与同房间成员能看到分享内容。${autoEnabled&&!autoSync?'当前“自动同步”已关闭：自动连接不会触发，已连接的自动房间也会关闭。':''}${autoEnabled?'':'当前关闭：下面的房间码与口令仍可手动加入。'}</p>
    ${autoError&&autoEnabled&&autoSync?`<p class="callout warning">${e(`上次自动连接失败：${autoError}；稍后会自动重试，换一个组队也会重试。`)}</p>`:''}
    <div class="room-join"><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="wss://room.你的域名" spellcheck="false" aria-label="中继地址"></label><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'处理中…':'加入中继房间','arrow','small',busy?'disabled':'')}</div>
-   <p class="bottom-note">你和队友填同一个中继地址、房间码和口令，再各自点击加入；昵称是房间里显示的名字。地址可改成你信任的自建中继。</p>
+   <p class="bottom-note">你和队友填同一个中继地址、房间码和口令，再各自点击加入；能读到游戏 ID 时自动用游戏 ID，读不到时用“我的昵称”。地址可改成你信任的自建中继。</p>
    <details class="more-builds room-relay-help"><summary>怎么用中继房间</summary><ol class="play-steps"><li>切到“中继”，使用预填地址 ${e(DEFAULT_RELAY_URL)}，或和队友约定同一个可信地址。</li><li>约定任意 6 位数字房间码，例如 482913，所有人填写相同的房间码。</li><li>另定 6 位数字口令，只在线下或微信私聊告诉队友，别发到公开的地方。</li><li>填写昵称后各自点击“加入中继房间”。加入后自动共享助手中所选公开阵容；中继支持时也会转发配置。队友点英雄头像，收到配置时查看发送方快照，未收到时先提示缺失，可主动打开本机参考。采用和写入符文由本人点击确认。</li></ol></details>
    <p class="bottom-note">公开阵容与所选配置会发送给该中继并转给房间成员，中继运营者也能看到所发内容。六位口令虽只发送哈希，仍可被枚举，不是强身份认证。</p>`
   :`<div class="room-actions">${button('room-host',busy?'处理中…':'创建房间','team','primary small',busy?'disabled':'')}${button('room-scan',scanning?'扫描中…':'扫描局域网房间','search','small',scanning?'disabled':'')}</div>
@@ -69,7 +69,7 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
    <p class="bottom-note">房间不需要额外读取客户端数据。建房后自动发送所选公开阵容与配置，TCP 内容未加密；请在可信局域网或受信虚拟局域网使用。Windows 防火墙只允许当前可信网络。虚拟局域网不一定转发扫描公告，可粘贴房主从对应网卡复制的完整邀请加入。</p>`;
  return `<section class="panel room-panel"><div class="panel-head"><div><h3>${icon('link')}开黑房间</h3><p>${transport==='relay'?'经中继跨网共享阵容':'同一网络或虚拟局域网内共享阵容，本机直连'}；全程无需账号。</p></div><span class="badge">无需账号</span></div>
   <div class="panel-body">
-   <div class="room-nick"><label>我的昵称<input id="room-nick" value="${e(nick)}" maxlength="24" placeholder="队友" aria-label="房间昵称"></label><span class="bottom-note">房间里显示的称呼，队友可见。</span></div>
+   <div class="room-nick"><label>我的昵称<input id="room-nick" value="${e(nick)}" maxlength="24" placeholder="队友" aria-label="房间昵称"></label><span class="bottom-note">能读到游戏 ID 时建房/加入自动用游戏 ID；读不到时用这里填的称呼，队友可见。</span></div>
    ${transportSwitch(transport)}
    ${forms}
    ${error?`<p class="callout warning">${e(error)}</p>`:''}
