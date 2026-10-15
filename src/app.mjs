@@ -461,9 +461,12 @@ function scheduleRoomPublish(){
 // connected auto room. A rebuilt room also has to hear the current share
 // again: the payload signature alone would suppress an unchanged one.
 function applyRoomSnapshot(snapshot){
+ const wasActive=!!(room&&room.mode!=='idle');
  room=snapshot;
  const identity=snapshot&&snapshot.mode!=='idle'?String(snapshot.room||''):'';
- if(identity!==roomShareRoom){roomShareRoom=identity;roomShareSig='';if(identity)scheduleRoomPublish();}
+ // A same-room reconnect (for example the automatic nickname upgrade) must
+ // republish: the relay keeps no share state for the returning member.
+ if(identity!==roomShareRoom||(!wasActive&&identity)){roomShareRoom=identity;roomShareSig='';if(identity)scheduleRoomPublish();}
  const quiet=!!(snapshot?.auto&&snapshot.mode!=='idle'&&snapshot.link==='connected');
  if(quiet&&!roomQuietTimer)roomQuietTimer=setTimeout(()=>{roomQuietTimer=null;roomAutoQuiet=true;if(windowLayout.docked||route==='draft'||route==='room')render();},AUTO_QUIET_MS);
  if(!quiet){if(roomQuietTimer){clearTimeout(roomQuietTimer);roomQuietTimer=null;}roomAutoQuiet=false;}

@@ -312,6 +312,15 @@ async function boot(){
  const roomAutoStep=async client=>{
   if(roomAutoKey&&roomService&&roomService.snapshot().mode==='idle'){roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;}
   const decision=observeRoomAuto(client);
+  // A room joined with a fallback nick upgrades to the detected game id as
+  // soon as one is known: rejoin the same key with the new name. Only a
+  // steady connected state may do this, never a backoff, a block, a manual
+  // room or a dying room, and only toward a detected name, never away from one.
+  if(decision.action==='hold'&&decision.key===roomAutoKey&&decision.reason==='connected'){
+   const detected=sanitizeNick(client?.own?.riotId)||sanitizeNick(client?.own?.summonerName);
+   const actual=roomService?.snapshot()?.members?.find(m=>m.self)?.nick||null;
+   if(detected&&actual&&actual!==detected){diagnostic(`auto room renaming ${actual} to ${detected}`);decision.action='switch';}
+  }
   if(decision.action==='hold')return;
   if(decision.action==='leave'){closeAutoRoom(decision.reason);return;}
   const key=decision.key;

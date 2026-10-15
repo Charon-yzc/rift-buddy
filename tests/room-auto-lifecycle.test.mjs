@@ -161,3 +161,20 @@ test('unnamed auto join stays joinable with a stable per-account fallback',async
  assert.match(nick,/^队友\d{4}$/);
  assert.equal(h.sockets[0].sent[0]?.nick,nick);
 });
+
+test('a detected game id upgrades a fallback nick by rejoining the same room',async t=>{
+ const h=harness();t.after(()=>h.services.forEach(service=>service.dispose()));
+ h.setPreferences({roomNick:'队友'});
+ h.setClient({connected:true,phase:'Lobby',party:{status:'lobby',key:'party-rename1',lobbyCount:1},own:{summonerId:'99'}});
+ const joining=h.queueRoomAuto();
+ await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await joining;
+ const fallback=h.snapshot().room.members[0]?.nick;
+ assert.match(fallback,/^队友\d{4}$/);
+ h.setClient({connected:true,phase:'Lobby',party:{status:'lobby',key:'party-rename1',lobbyCount:1},own:{riotId:'Test#CN1',summonerId:'99'}});
+ const upgrade=h.queueRoomAuto();
+ await spin(()=>h.sockets.length===2);h.sockets[1].open();h.sockets[1].welcome();await upgrade;
+ assert.equal(h.sockets[0].readyState,3,'the old nick must leave before rejoining');
+ assert.equal(h.snapshot().key,'party-rename1');
+ assert.equal(h.snapshot().room.members[0]?.nick,'Test#CN1');
+ assert.equal(h.sockets[1].sent[0]?.nick,'Test#CN1');
+});
