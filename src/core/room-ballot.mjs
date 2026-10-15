@@ -23,6 +23,21 @@ export function createBallotRoundObserver(){
 }
 
 const contexts=new WeakMap();
+// These are shared plan choices, never a receipt that runes reached the LCU.
+// Ignore display/source prose and each player's D/F ordering of the same spells.
+const setupKey=config=>JSON.stringify(['start','items','boots','runes','skills','priority','first','attributePlan','spells'].map(k=>k==='spells'?[...(config[k]||[])].sort():k==='first'?config.first??config.skills?.slice(0,3)??null:config[k]??null));
+export function memberAdoption(member,row){
+ const accepted=member.share?.ballot?.accepted;
+ if(accepted?.key!==row.key)return null;
+ const expected=row.proposal.lineup.find(s=>s.role===accepted.role&&s.champion);
+ if(!expected)return null;
+ const pick=member.share?.pick;
+ let state=!pick?'pending':pick.role!==expected.role||pick.champion!==expected.champion?'changed-pick':'matched';
+ const planned=row.proposal.configurations?.find(c=>c.role===expected.role&&c.champion===expected.champion);
+ const actual=member.share?.configurations?.find(c=>c.role===expected.role&&c.champion===expected.champion);
+ if(state==='matched'&&planned)state=!actual?'pending-configuration':setupKey(planned)!==setupKey(actual)?'changed-configuration':'matched';
+ return {nick:member.nick,role:accepted.role,state};
+}
 function fitContext(champions){
  let context=contexts.get(champions);
  if(!context||context.links!==CROSS_SYNERGIES||context.patch!==RULES_PATCH||context.reviewedAt!==RULES_VERSION){
@@ -71,9 +86,12 @@ export function lineupFit(lineup,current,champions,options={}){
 export function roomBallotBoard(room,current,champions,options={}){
  const members=(room?.members||[]).filter(m=>m.online!==false),groups=new Map();
  for(const member of members){const proposal=member.share?.ballot?.proposal;if(!proposal)continue;const key=proposalKey(proposal);let row=groups.get(key);
-  if(!row){row={key,proposal,from:member.nick,proposers:[],voters:[],mine:false,fit:lineupFit(proposal.lineup,current,champions,options)};groups.set(key,row);}row.proposers.push(member.nick);
+  if(!row){row={key,proposal,from:member.nick,proposers:[],voters:[],adopters:[],mine:false,fit:lineupFit(proposal.lineup,current,champions,options)};groups.set(key,row);}row.proposers.push(member.nick);
  }
  for(const member of members){const row=groups.get(member.share?.ballot?.vote);if(row){row.voters.push(member.nick);if(member.self)row.mine=true;}}
- for(const row of groups.values()){row.proposers.sort();row.voters.sort();row.from=row.proposers[0];}
+ for(const row of groups.values()){
+  row.proposers.sort();row.voters.sort();row.from=row.proposers[0];
+  row.adopters=members.map(m=>memberAdoption(m,row)).filter(Boolean).sort((a,b)=>a.nick.localeCompare(b.nick));
+ }
  return [...groups.values()].sort((a,b)=>Number(b.fit.compatible)-Number(a.fit.compatible)||Number(b.fit.exact)-Number(a.fit.exact)||b.voters.length-a.voters.length||(b.fit.score??-1)-(a.fit.score??-1)||a.key.localeCompare(b.key));
 }

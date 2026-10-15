@@ -165,7 +165,7 @@ export function validateWelcome(value){
  const room=String(value.room||'');
  if(!validRoomCode(room))return null;
  const members=Array.isArray(value.members)?value.members.map(m=>nick(m?.nick)).filter(Boolean).slice(0,12):[];
- return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{})};
+ return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{})};
 }
 // Votes identify the full sanitized proposal, including each member's setup.
 // The same champions with another route must remain a different choice.
@@ -189,7 +189,13 @@ export function sanitizeRoomBallot(value){
   let strategy;if(value.proposal.strategy){try{strategy=validateCreativePlan(value.proposal.strategy);if(!strategy.members.every(m=>team.some(s=>s.champion===m.champion&&s.role===m.role)))return null;}catch{return null;}}
   proposal={lineup:team,mode:'rift',...(builds?{configurations:builds}:{}),...(strategy?{strategy}:{})};
  }
- return {version:1,vote,proposal};
+ let accepted;
+ if(value.accepted!==undefined){
+  if(value.accepted===null)accepted=null;
+  else if(typeof value.accepted?.key==='string'&&/^[a-f0-9]{16}$/.test(value.accepted.key)&&ROLES.includes(value.accepted.role))accepted={key:value.accepted.key,role:value.accepted.role};
+  else return null;
+ }
+ return {version:1,vote,proposal,...(accepted!==undefined?{accepted}:{})};
 }
 // Shared state is sanitized by rebuild: unknown fields (riotId, scores,
 // clientCellId, ...) are stripped, and a bad core shape returns null whole.

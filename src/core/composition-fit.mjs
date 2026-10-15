@@ -12,15 +12,20 @@ const BUDGETS={
 const clamp=(value,min=0,max=1)=>Math.max(min,Math.min(max,value));
 const round=value=>Math.round(value*10)/10;
 const memberKey=m=>`${m.role}:${m.champion}`;
+const roleSort={bottom:0,jungle:1,mid:2,support:3,top:4};
+const memberOrder=(a,b)=>a.role!==b.role&&a.role in roleSort&&b.role in roleSort?roleSort[a.role]-roleSort[b.role]:memberKey(a).localeCompare(memberKey(b));
 const isTank=p=>['tank','supportTank'].includes(p.build);
 const offensive=m=>!isTank(m.p)&&m.p.build!=='enchanter';
 const ranged=m=>(m.c?.stats?.attackrange??0)>250;
 const carry=m=>!!m.p.sustain&&offensive(m);
 const name=m=>m.c?.name||m.champion;
+const relationshipKey=m=>memberKey(m)+':'+((m.p.peel?1:0)|(m.p.engage?2:0)|(m.p.frontline?4:0)|(m.p.poke?8:0)|(m.p.aoe?16:0)|(carry(m)?32:0)|(offensive(m)?64:0)|(ranged(m)?128:0));
 
 // Return the strongest supported relationship, never the sum of synonymous
 // tags. Protection and setup must come from a different member than output.
-function relationship(a,b,graph,details){
+function relationship(a,b,graph,details,key=null){
+ const cache=details?null:graph?.fitCache;
+ if(cache?.has(key))return cache.get(key);
  let quality=0,kind='',edge=null,control=0;
  const offer=(value,label)=>{if(value>quality){quality=value;kind=label;}};
  for(const [lead,follow] of [[a,b],[b,a]]){
@@ -44,13 +49,20 @@ function relationship(a,b,graph,details){
    }
   }
  }
- return {quality,kind,control,...(details?{edge}:{}),a:a.champion,b:b.champion};
+ const result={quality,kind,control,...(details?{edge}:{}),a:a.champion,b:b.champion};
+ // Search repeatedly grades the same pairs in many different whole teams.
+ // The cache belongs to this graph/input only and retains scalar relations,
+ // with all profile/range bits used above in the key; displayed details are
+ // always recomputed. Bound it instead of retaining every searched lineup.
+ if(cache&&cache.size<16384)cache.set(key,result);
+ return result;
 }
 
 function connectionQuality(members,graph,details){
  const best=members.map(()=>0),pairs=[],matrix=members.map(()=>members.map(()=>0));let control=0;
+ const keys=!details&&graph?.fitCache?members.map(relationshipKey):null;
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){
-  const link=relationship(members[i],members[j],graph,details);
+  const link=relationship(members[i],members[j],graph,details,keys?keys[i]+'|'+keys[j]:null);
   matrix[i][j]=matrix[j][i]=link.quality;best[i]=Math.max(best[i],link.quality);best[j]=Math.max(best[j],link.quality);
   control=Math.max(control,link.control);
   if(details&&link.quality)pairs.push(link);
@@ -105,7 +117,7 @@ function tacticalQuality(members,connections){
 export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  const all=(analysis?.members||[]).filter(m=>m?.champion);
  const requested=Math.max(all.length,Number.isFinite(expectedSize)?Math.floor(expectedSize):all.length);
- const members=all.filter(m=>m.p?.reviewed&&m.c).sort((a,b)=>memberKey(a).localeCompare(memberKey(b)));
+ const members=all.filter(m=>m.p?.reviewed&&m.c).sort(memberOrder);
  const known=members.length,size=Math.min(5,Math.max(2,requested)),confidence=requested?Math.round(100*known/requested)/100:0;
  const insufficient=known<2;
  if(insufficient)return {score:null,rawScore:0,known,size:requested,confidence,breakdown:[],strengths:[],gaps:['至少需要两位资料已核对的英雄，才能判断成员配合。'],reason:'配合资料不足：至少需要两位已知英雄。规则分，不是胜率。'};
@@ -125,8 +137,8 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  const damage=clamp(minority/({2:.14,3:.2,4:.23,5:.25}[size]));
  const lanes=laneCount/known;
  const components={connections:connections.quality,lanes,tactics:tactics.quality,damage};
- const gaps=[],penalties=[];
- const penalize=(points,text)=>{penalties.push({points,text});if(details)gaps.push(text);};
+ const gaps=[];let deduction=0;
+ const penalize=(points,text)=>{deduction+=points;if(details)gaps.push(text);};
  if(!damageDealers)penalize(20,'缺少能接控制兑现伤害的成员，控制或保护不能替代输出。');
  if(size>=3){
   if(!sustained)penalize(size===3?5:9,'持续输出缺口：一轮技能后不宜久战，资源争夺也需要额外处理。');
@@ -140,7 +152,7 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  if(duplicates)penalize(duplicates*12,'成员位置冲突，需要先确定各自分路。');
  const duplicateHeroes=known-new Set(members.map(m=>m.champion)).size;
  if(duplicateHeroes)penalize(duplicateHeroes*20,'同一英雄重复，阵容无法按这些成员同时执行。');
- const subtotal=Object.entries(weights).reduce((sum,[key,max])=>sum+max*components[key],0),deduction=penalties.reduce((sum,p)=>sum+p.points,0);
+ const subtotal=Object.entries(weights).reduce((sum,[key,max])=>sum+max*components[key],0);
  // Missing or unreviewed participants reduce both the observed score and its
  // ceiling, rather than allowing one good pair to stand in for unknown allies.
  const completeness=known/requested,rawScore=clamp((subtotal-deduction)*(.6+.4*completeness),0,100*completeness);

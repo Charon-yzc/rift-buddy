@@ -270,11 +270,17 @@ async function boot(){
  guard('room-ballot',async raw=>{
   const service=roomService,snapshot=service?.snapshot();if(!snapshot||snapshot.mode==='idle')throw Error('请先连接房间');
   if(!snapshot.ballots)throw Error('当前中继尚未支持投票，更新中继后重新连接即可使用');
-  const {sanitizeRoomBallot,proposalKey}=await import('../src/core/room.mjs'),ballot=sanitizeRoomBallot(raw);
+  const {sanitizeRoomBallot,proposalKey}=await import('../src/core/room.mjs');
+  const input=raw?.accepted===undefined&&roomBallot?.accepted?{...raw,accepted:roomBallot.accepted}:raw,ballot=sanitizeRoomBallot(input);
   if(service!==roomService||roomService.snapshot().mode==='idle'||roomService.snapshot().room!==snapshot.room)throw Error('房间已变化，请重新选择候选');
   if(!ballot)throw Error('阵容候选已变化，请重新选择');
   const keys=new Set(snapshot.members.map(m=>m.share?.ballot?.proposal).filter(Boolean).map(p=>proposalKey(p)));if(ballot.proposal)keys.add(proposalKey(ballot.proposal));
   if(ballot.vote&&!keys.has(ballot.vote))throw Error('该候选已撤回，请重新选择');
+  if(raw?.accepted){
+   if(!snapshot.adoptions)throw Error('此中继尚未支持采用状态，已采用的本机方案仍保留');
+   const proposal=[ballot.proposal,...snapshot.members.map(m=>m.share?.ballot?.proposal)].find(p=>p&&proposalKey(p)===ballot.accepted.key);
+   if(!proposal?.lineup.some(s=>s.role===ballot.accepted.role&&s.champion))throw Error('采用的候选或本人分路已变化，请重新选择');
+  }
   const publicShare=roomPublicShare||snapshot.members.find(m=>m.self)?.share||{lineup:[],pick:null,mode:'rift'};
   const result=roomService.publish({...publicShare,ballot});roomBallot=ballot;return decorateRoom(result);
  });

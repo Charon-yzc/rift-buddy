@@ -15,6 +15,15 @@ const entry=(m,p,games=1000,wins=550)=>({...m,url:pairApiUrl(data.champions.find
 const snapshot=()=>({schema:1,source:'OP.GG',...source,patch:data.patch,entries:[entry(a,b),entry(b,a)]});
 const slots=(members=[a,b])=>createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role),...(members.find(m=>m.role===s.role)||{}),locked:members.some(m=>m.role===s.role)}));
 
+test('search-only pair bonus matches the complete evidence for current, old, missing and wide groups',()=>{
+ for(const patch of [data.patch,'16.19','16.21']){
+  const index=createPairStatisticsIndex(snapshot(),data.champions,{source,patch});
+  for(const group of [[],[a],[a,b],[a,b,{champion:'Jinx',role:'bottom'}],[a,b,{champion:'Jinx',role:'bottom'},{champion:'Lulu',role:'support'}]]){
+   assert.equal(index.scoreForMembers(group),index.forMembers(group)?.bonus||0);
+  }
+ }
+});
+
 test('bundled same-team observations validate, load offline and retain role-specific provenance',async()=>{
  const s=await loadPairStatistics('data/pair-statistics.json',data);assert.ok(s);assert.match(s.revision,/^[a-f0-9]{64}$/);assert.equal(validatePairStatistics(s,data.champions),s);
  assert.equal(s.entries.length,309);assert.equal(s.entries.reduce((n,e)=>n+e.pairs.length,0),12360);

@@ -13,6 +13,19 @@ const duo=[['bottom','Jinx'],['support','Lulu']];
 const trio=[['top','Malphite'],['jungle','Diana'],['mid','Yasuo']];
 const full=[['top','Malphite'],['jungle','Vi'],['mid','Orianna'],...duo];
 
+test('bounded pair memoization is identical to fresh scalar and displayed fit across roles and profile changes',()=>{
+ const cached=createCooperationGraph(champions),fresh={...cached,fitCache:null},roles=['top','jungle','mid','bottom','support'];
+ for(let n=0;n<60;n++){
+  const rows=roles.slice(0,2+n%4).map((role,i)=>[role,champions[(n*7+i*19)%champions.length].id]);
+  const group=members(rows),analysis={members:group},options={details:false};
+  assert.deepEqual(compositionFit(analysis,cached,options),compositionFit(analysis,fresh,options));
+  const detailed=compositionFit(analysis,cached);assert.equal(compositionFit(analysis,cached,options).rawScore,detailed.rawScore);
+  group[0].p={...group[0].p,peel:!group[0].p.peel,engage:!group[0].p.engage,build:'enchanter'};
+  assert.deepEqual(compositionFit(analysis,cached,options),compositionFit(analysis,fresh,options));
+ }
+ assert.ok(cached.fitCache.size>0&&cached.fitCache.size<=16384);
+});
+
 test('a real protection partnership beats two self-sufficient carries without demanding five-person coverage',()=>{
  const protect=fit(duo),overlap=fit([['top','Yone'],['mid','Yasuo']]);
  assert.ok(protect.score>=80&&protect.score<100,protect.reason);

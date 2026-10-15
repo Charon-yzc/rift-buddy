@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {createSlots,mergeClientSession,applyLobbyPartyRange} from '../src/core/recommend.mjs';
+import {createSlots,mergeClientSession,applyLobbyPartyRange,recommend} from '../src/core/recommend.mjs';
+import {resolveClientParty} from '../src/core/client-party.mjs';
 import {reconcileClientDraft} from '../src/core/draft.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
@@ -133,7 +134,32 @@ test('temporary slots avoid non-group public lanes and do not recover hidden or 
  const next=merge(createSlots(),session,group([{cellId:0,local:true,firstPosition:'TOP'},{cellId:1}]));
  assert.deepEqual(marked(next),['jungle','mid']);assert.ok(next.every(s=>!Number.isInteger(s.clientCellId)));
  const unknown=merge(createSlots(),session,{status:'unknown',members:[{cellId:0,local:true}]});
- assert.deepEqual(marked(unknown),['mid','bottom','support']);
+ assert.deepEqual(marked(unknown),[],'Unknown membership and unknown self lane cannot confirm the legacy default trio');
+});
+
+test('starting during champion select confirms only self and recommends only that lane against the real team',()=>{
+ const session={localPlayerCellId:0,myTeam:['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'].map((assignedPosition,cellId)=>({cellId,championId:0,assignedPosition}))};
+ const party=resolveClientParty(session,null),slots=merge(createSlots(),session,party);
+ assert.equal(party.status,'unknown');assert.deepEqual(marked(slots),['top']);
+ const result=recommend({slots,champions:data.champions,scope:'party',clientSession:session,limit:1,rolePools:{top:{mode:'only',heroes:['Garen']}}})[0];
+ assert.deepEqual(result.targets,['top']);assert.equal(result.slots.filter(s=>s.champion).length,1);
+ session.myTeam[2].championId=key('Ahri');
+ const synced=merge(slots,session,resolveClientParty(session,null));
+ const next=recommend({slots:synced,champions:data.champions,scope:'party',clientSession:session,limit:1,rolePools:{top:{mode:'only',heroes:['Garen']}}})[0];
+ assert.deepEqual(next.targets,['top']);assert.equal(next.slots.find(s=>s.role==='mid').champion,'Ahri');
+ assert.equal(next.slots.find(s=>s.role==='mid').party,false);
+});
+
+test('unknown lobby clears automatic ranges across games while preserving explicit markings and manual-ID members',()=>{
+ const session={localPlayerCellId:0,myTeam:['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'].map((assignedPosition,cellId)=>({cellId,championId:0,assignedPosition}))};
+ const previous=createSlots().map(s=>({...s,party:true,...(s.role==='bottom'?{partyManual:true}:s.role==='support'?{party:false,partyManual:true}:{})}));
+ const party={status:'unknown',members:[{cellId:0,local:true,source:'self'},{cellId:2,source:'manual-id'}]};
+ const next=merge(previous,session,party);
+ assert.deepEqual(marked(next),['top','mid','bottom']);assert.equal(next[4].party,false);
+ assert.deepEqual(merge(next,session,party),next);
+ const draft=reconcileClientDraft({slots:next,clientGameId:'111',scope:'party'},'222').draft;
+ assert.deepEqual(marked(merge(draft.slots,session,resolveClientParty(session,null))),['top']);
+ assert.deepEqual(marked(merge(previous,session,party,{autoParty:false})),marked(previous));
 });
 
 test('claiming an adopted teammate lane before picking keeps the other unbound plan lane in our range',()=>{

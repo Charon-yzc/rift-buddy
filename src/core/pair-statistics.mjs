@@ -38,7 +38,15 @@ export function createPairStatisticsIndex(snapshot,champions,{source=DEFAULT_BUI
   // Opposite directions overlap. Keep one observation; never add their games.
   if(!prior||patchOrder(next.patch,prior.patch)>0||next.patch===prior.patch&&(next.games>prior.games||next.games===prior.games&&(next.fetchedAt>prior.fetchedAt||next.fetchedAt===prior.fetchedAt&&next.origin<prior.origin)))rows.set(identity,next);
  }
- return {forMembers(members){
+ return {scoreForMembers(members){
+  members=members.filter(m=>m.champion);if(members.length<2||members.length>3)return 0;
+  let count=0,bonus=0;
+  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){
+   const row=rows.get([key(members[i]),key(members[j])].sort().join('|'));
+   if(row){count++;if(row.current)bonus+=Math.max(-4,Math.min(4,(row.winRate-50)/2))*row.games/(row.games+500);}
+  }
+  return count?bonus/count:0;
+ },forMembers(members){
   members=members.filter(m=>m.champion);if(members.length<2||members.length>5)return null;
   const pairs=[],missingPairs=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const row=rows.get([key(members[i]),key(members[j])].sort().join('|'));if(row)pairs.push(row);else missingPairs.push([members[i],members[j]].map(({role,champion})=>({role,champion})));}
   // A small, sample-shrunk ordering signal. This is an observed pair win rate,

@@ -280,6 +280,7 @@
 .ballot-heroes>button{background:transparent;color:inherit;padding:2px;display:flex;flex-direction:column;gap:3px;align-items:center}
 .ballot-heroes small{font-size:11px;color:#bbcec5}
 .ballot-plan-summary{font-size:12px;line-height:1.5;margin:5px 0;color:#b5c9bf}
+.ballot-adoption{font-size:12px;margin:5px 0;color:#a8d7bd}.ballot-adoption.has-change{color:#f0c989}
 .task-party-list{padding:0;list-style:none;margin:8px 0 16px}
 .task-party-list>li{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #30443a}
 .task-party-list small{color:#9db4a7}

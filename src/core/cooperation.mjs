@@ -10,6 +10,7 @@ export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
 const pairKey=(a,b)=>[a,b].sort().join(':');
 const key=m=>m.role+':'+m.champion;
+const roleOrder={top:0,jungle:1,mid:2,bottom:3,support:4};
 const slowSetup={Ashe:'普攻或 W 的减速',Trundle:'E 柱子附近的减速',Karma:'Q 的减速',Lux:'Q 的禁锢',Morgana:'Q 的禁锢',Zyra:'E 的禁锢'};
 // These are conditional interactions, not inferred match results. A family
 // expands only to reviewed allies with the required role function or range.
@@ -55,6 +56,9 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
  const prof=m=>{const k=key(m);if(!profiles.has(k))profiles.set(k,profile(byId.get(m.champion),m.role));return profiles.get(k);};
  const edge=(a,b)=>{
   if(a.champion===b.champion||!byId.has(a.champion)||!byId.has(b.champion))return null;
+  // An undirected lookup must not let its first caller choose the saved
+  // family/third-member anchor. Authored a->b skill direction stays intact.
+  if((roleOrder[a.role]??5)>(roleOrder[b.role]??5)||(roleOrder[a.role]??5)===(roleOrder[b.role]??5)&&key(a)>key(b))[a,b]=[b,a];
   const k=[key(a),key(b)].sort().join('|');if(cache.has(k))return cache.get(k);
   let found=null;
   const reviewedPair=pairs.get(pairKey(a.champion,b.champion));
@@ -70,7 +74,7 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
   }
   found||=legacy.get(pairKey(a.champion,b.champion))||null;cache.set(k,found);return found;
  };
- return {edge,profile:prof,byId,skills:createSkillCooperation(byId)};
+ return {edge,profile:prof,byId,skills:createSkillCooperation(byId),fitCache:new Map()};
 }
 
 function connectedEdges(members,graph){
