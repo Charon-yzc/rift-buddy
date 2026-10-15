@@ -3,7 +3,7 @@
 <h1 align="center">开黑搭子 · Rift Buddy</h1>
 
 <p align="center"><strong>选好阵容，一起开黑。</strong></p>
-<p align="center">英雄联盟朋友开黑助手 · Windows x64 · 免费使用</p>
+<p align="center">英雄联盟朋友开黑助手 · Windows x64 · 免费使用 · <strong>v0.54.0</strong></p>
 
 <p align="center">
   <a href="https://room.riftbuddy.dpdns.org/downloads/"><strong>下载安装包</strong></a> ·

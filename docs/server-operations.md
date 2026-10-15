@@ -81,7 +81,7 @@ ssh rift-buddy-data 'systemctl is-active caddy; sudo -n /opt/rift-buddy-runtime/
 
 B 的 service 是一次性任务，运行完显示 `inactive` 正常；查看 timer 是否 active，以及最近的 Result、ExecMainStatus 和 status.json。当前计划为北京时间每天 10:17、22:17，另加最多 10 分钟随机延迟。
 
-B 的 Caddy unit 为 `/etc/systemd/system/caddy.service`，配置为 `/etc/caddy/Caddyfile`，证书状态在 `/var/lib/caddy`；由 Caddy 自动续期。HTTP 80 用于证书签发与跳转，HTTPS 443 用于公开资料下载，SSH 22 继续限定维护来源。维护时先读取实际完整配置并保留其他项目的路由，不直接用本仓库的 `deploy/data/Caddyfile` 模板覆盖。当前补丁为 16.20 时，可用 `curl.exe --fail --head https://data.riftbuddy.dpdns.org/v1/patches/16.20/latest.json` 检查公网入口；补丁变化后使用实际清单路径。2026-10-15 已从维护电脑通过正常 TLS 校验下载清单及三份数据，使用客户端固定公钥验签，并在隔离客户端状态验证了选人期间暂存、回大厅启用及断网重启缓存；这不代表已发布或实测 0.54 安装版。
+B 的 Caddy unit 为 `/etc/systemd/system/caddy.service`，配置为 `/etc/caddy/Caddyfile`，证书状态在 `/var/lib/caddy`；由 Caddy 自动续期。HTTP 80 用于证书签发与跳转，HTTPS 443 用于公开资料下载，SSH 22 继续限定维护来源。维护时先读取实际完整配置并保留其他项目的路由，不直接用本仓库的 `deploy/data/Caddyfile` 模板覆盖。当前补丁为 16.20 时，可用 `curl.exe --fail --head https://data.riftbuddy.dpdns.org/v1/patches/16.20/latest.json` 检查公网入口；补丁变化后使用实际清单路径。2026-10-15 已从维护电脑通过正常 TLS 校验下载清单及三份数据，使用客户端固定公钥验签，并在隔离客户端状态验证了选人期间暂存、回大厅启用及断网重启缓存；0.54.0 安装包现已同步发布到 GitHub、Gitee 与 A 的下载页；资料链路验证与安装包模拟验收不等同于真实国服整局实测。
 
 用户要求刷新资料时可执行：
 
