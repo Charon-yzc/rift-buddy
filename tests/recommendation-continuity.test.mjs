@@ -12,7 +12,7 @@ import {recommendationKey,createPreparationStore,createRuneApplicationState,part
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
-import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible} from '../src/core/creative-plan.mjs';
+import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible,validateCreativePlan} from '../src/core/creative-plan.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {matchupTargetKey} from '../src/core/matchup-plans.mjs';
 import {getBuild} from '../src/core/builds.mjs';
@@ -274,6 +274,21 @@ test('solo comparison can replace an unconfirmed assistant choice but preserves 
  }
 });
 
+test('explicit solo mode compares both public unlocked hover representations and keeps a completed pick',()=>{
+ for(const selectedField of ['championId','championPickIntent']){
+  const current=client();Object.assign(current.session.myTeam[0],{[selectedField]:hero('Ashe').key});
+  current.session.actions=[[{id:1,type:'pick',actorCellId:1,championId:hero('Ashe').key,completed:false}]];
+  const slots=partySlots().map(s=>({...s,...(s.role==='bottom'?{manualPosition:true,clientCellId:1}:{})})),before=structuredClone(slots);
+  const {context:c}=setup({slots,current,incoming:structuredClone(current)});c.scope='solo';c.draftComparing=true;
+  c.saved.preferences.pool=['Jinx'];c.saved.preferences.poolMode='only';
+  let input=c.recommendationInput();assert.equal(input.soloChampion,null);
+  let rows=recommend(input);assert.ok(rows.length);assert.ok(rows.every(r=>r.targets.includes('bottom')&&r.slots.find(s=>s.role==='bottom').champion==='Jinx'));
+  current.session.myTeam[0].championId=hero('Ashe').key;current.session.actions[0][0].completed=true;
+  input=c.recommendationInput();assert.equal(input.soloChampion,'Ashe');rows=recommend(input);assert.ok(rows.every(r=>!r.targets.length&&r.slots.find(s=>s.role==='bottom').champion==='Ashe'));
+  assert.deepEqual(c.slots,before);
+ }
+});
+
 test('unknown custom-game positions stay read only until the player confirms a role, for hovers and public picks',async()=>{
  for(const picked of [false,true]){
   const current=client();Object.assign(current.session.myTeam[0],{assignedPosition:'',championId:picked?hero('Graves').key:0,championPickIntent:hero('Graves').key});
@@ -344,7 +359,9 @@ test('claiming a lane stays on recommendations and leaves the representative rep
  vm.runInContext(extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
  c.setCompanionRole('top');
  const before=structuredClone(c.slots);
+ const saves=[];c.persist=async options=>{saves.push(options);};
  await c.claimPosition('top');
+ assert.deepEqual(structuredClone(saves.at(-1)),{derived:true,throwOnError:true},'The completed public hover mirror must recover draft races while still propagating disk failures');
  assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].preselectOnly,true);assert.equal(s.calls.prepared[0].role,'top');
  assert.equal(c.slots.find(s=>s.role==='top').champion,'Gnar');assert.equal(c.slots.find(s=>s.role==='top').locked,false);
  assert.equal(c.slots.find(s=>s.role==='mid').champion,null);
@@ -355,6 +372,26 @@ test('claiming a lane stays on recommendations and leaves the representative rep
  const plan=c.companionPreparation();assert.equal(plan.selection.role,'top');assert.equal(!!c.readOnlyPreparation('companion',plan),false);
  await c.useClientPreparation({dataset:{preparationView:'companion'}},true);
  assert.equal(s.calls.prepared.length,2);assert.equal(s.calls.prepared[1].role,'top');assert.equal(s.calls.prepared[1].preselectOnly,undefined);
+});
+
+test('awaited public draft saves recover only known derived races without replaying old snapshots or hiding disk and explicit edit errors',async()=>{
+ for(const scenario of [
+  {derived:true,message:'选人配置同时发生变化，请重新同步',recovered:true},
+  {derived:true,message:'客户端已选英雄不能移除或解锁',recovered:true},
+  {derived:true,message:'ENOSPC: isolated disk write failed',recovered:false},
+  {derived:false,message:'选人配置同时发生变化，请重新同步',recovered:false},
+ ]){
+  const {context:c,calls}=setup(),accepted=defaultState();accepted.draft={slots:createSlots().map(s=>({...s,party:s.role==='mid',...(s.role==='mid'?{manualPosition:true,clientCellId:1}:{})})),scope:'party',style:'fun',soloRole:'mid'};
+  let writes=0,reads=0;
+  Object.assign(c,{pendingSaves:new Set(),savedBase:structuredClone(c.saved),stateRevision:0,rebaseWindowState:(_base,value)=>value,restoreRejectedSave:noop,
+   acceptSavedState:state=>{c.saved=structuredClone(state);c.savedBase=structuredClone(state);c.slots=c.saved.draft.slots;c.soloRole=c.saved.draft.soloRole;},
+   creativePlanCompatible,api:{...c.api,saveState:async()=>{writes++;throw Error(scenario.message);},ready:async()=>{reads++;return {state:accepted,revision:2};}}});
+  vm.runInContext(extract('function persist(','function acceptSavedState('),c);
+  const request=c.persist({derived:scenario.derived,throwOnError:true});
+  if(scenario.recovered){await request;assert.equal(c.soloRole,'mid');assert.equal(c.slots.find(s=>s.role==='mid').manualPosition,true);assert.equal(c.slots.find(s=>s.role==='bottom').champion,null);}
+  else await assert.rejects(request,error=>error.message===scenario.message);
+  assert.equal(writes,1,'A stale snapshot must never be retried');assert.equal(reads,Number(scenario.recovered));assert.equal(calls.prepared.length,0);assert.equal(c.pendingSaves.size,0);
+ }
 });
 
 test('a failed or outdated representative hover cannot migrate stored plans',async()=>{
@@ -595,18 +632,40 @@ test('an explicit different candidate replaces the previous own hover without in
 });
 
 test('a solo party candidate keeps its cooperation with fixed allies through one-click preparation',async()=>{
+ for(const publicField of ['championPickIntent','championId']){
  const current=client();current.session.myTeam[0].championPickIntent=hero('Jinx').key;
+ current.session.myTeam[0][publicField]=hero('Jinx').key;
+ if(publicField==='championId')current.session.myTeam[0].championPickIntent=0;
+ current.session.actions=[[{id:22,type:'pick',actorCellId:1,championId:hero('Jinx').key,completed:false}]];
  current.session.myTeam.push({cellId:2,championId:hero('Braum').key,assignedPosition:'UTILITY'},{cellId:3,championId:hero('Ahri').key,assignedPosition:'MIDDLE'});
- const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='support'?{champion:'Braum',locked:true,clientCellId:2}:s.role==='mid'?{champion:'Ahri',locked:true,clientCellId:3}:{})}));
- const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
+ const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='support'?{champion:'Braum',locked:true,clientCellId:2}:s.role==='mid'?{champion:'Ahri',locked:true,clientCellId:3}:s.role==='bottom'&&publicField==='championId'?{champion:'Jinx',locked:true,clientCellId:1,manualPosition:true}:{})}));
+ const incoming=structuredClone(current),{context:c,calls}=setup({slots,current,incoming,results:[]});
  Object.assign(c,{creativePlanCompatible,currentCombo,comboContextKnown,positionClaim:{gameId:'123',cellId:1,championId:hero('Jinx').key,role:'bottom'},draftComparing:true});
  c.saved.preferences.pool=['Ashe'];c.saved.preferences.poolMode='only';
  vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo='),c);
+ // Exercise serialization as well as click dispatch: the previous unlocked
+ // championId must not drop the newly accepted plan during the fresh read.
+ const persisted=[];
+ Object.assign(c,{pendingSaves:new Set(),savedBase:structuredClone(c.saved),stateRevision:0,rebaseWindowState:(_base,value)=>value,restoreRejectedSave:()=>{},acceptSavedState:accepted=>{
+  persisted.push(accepted);c.saved=accepted;c.slots=accepted.draft.slots;c.activeCreativePlan=accepted.draft.creativePlan||null;
+ }});
+ c.api.saveState=async value=>{
+  if(value.draft.creativePlan)validateCreativePlan(value.draft.creativePlan,value.draft.slots,{allowUnknown:true});
+  return {state:structuredClone(value),revision:1};
+ };
+ const prepare=c.api.prepareSelection;c.api.prepareSelection=async value=>{
+  // The mock, like the client, replaces its earlier unlocked championId.
+  const result=await prepare(value);incoming.session.myTeam[0].championId=0;
+  return result;
+ };
+ vm.runInContext(extract('function persist(','function acceptSavedState('),c);
  c.results=recommend(c.recommendationInput());c.resultsSignature=recommendationKey(c.recommendationInput());
  const plan=c.resultCreativePlan(c.results[0]);assert.ok(plan?.members.some(m=>m.champion==='Braum'),'This candidate needs real ally cooperation');
  await c.prepareCandidate({dataset:{id:'Ashe',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
  assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');assert.equal(c.activeCreativePlan?.id,plan.id);
  assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),slots.find(s=>s.role==='support'));
+ assert.ok(persisted.some(state=>state.draft.creativePlan?.id===plan.id),publicField);
+ }
 });
 
 test('changing the own public hover in the client leaves the previous accepted plan and follows the new configuration without writes',async()=>{
@@ -622,7 +681,34 @@ test('changing the own public hover in the client leaves the previous accepted p
  await c.sync(false,{fresh:true});
  assert.equal(c.activeCreativePlan,null);assert.equal(c.lastTaskSelection,null);assert.equal(c.draftComparing,true);
  assert.equal(c.ownTaskPreparation().selection.id,'Jinx');assert.equal(c.companionPreparation().selection.id,'Jinx');assert.equal(calls.prepared.length,0);
- assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Ashe','Public hover must not become a persisted selected hero');
+ assert.equal(c.slots.find(s=>s.role==='bottom').champion,null,'A changed public hover releases the expired automatic suggestion without persisting the new hover');
+});
+
+test('changing and clearing either public local pick representation withdraws its automatic proposal but keeps manual positions and teammates',async()=>{
+ for(const field of ['championPickIntent','championId'])for(const changeFirst of [false,true]){
+  const current=client();current.session.myTeam[0][field]=hero('Ashe').key;
+  current.session.actions=[[{type:'pick',actorCellId:1,championId:hero('Ashe').key,completed:false}]];
+  const incoming=structuredClone(current),picks={mid:'Ahri',bottom:'Ashe',support:'Braum'};
+  const slots=createSlots().map(s=>({...s,party:!!picks[s.role],...(picks[s.role]?{champion:picks[s.role],locked:true,automaticPosition:true}:{})}));
+  const {context:c,calls}=setup({slots,current,incoming});
+  Object.assign(c,{creativePlanCompatible,currentCombo,comboContextKnown});
+  c.activeCreativePlan=captureCreativePlan(recommend(c.recommendationInput())[0],data);assert.ok(c.activeCreativePlan);
+  c.lastTaskSelection={id:'Ashe',role:'bottom',mode:'rift',comboId:c.activeCreativePlan.id};
+  c.saved.draft.playerPosition={role:'bottom',cellId:1};
+  vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo='),c);
+  if(changeFirst){
+   incoming.session.myTeam[0][field]=hero('Jinx').key;incoming.session.actions[0][0].championId=hero('Jinx').key;
+   await c.sync(false,{fresh:true});assert.equal(c.activeCreativePlan,null);
+   if(field==='championPickIntent')assert.equal(c.slots.find(s=>s.role==='bottom').champion,null,'The old automatic champion cannot reappear after this new hover is cleared');
+  }
+  incoming.session.myTeam[0][field]=0;incoming.session.actions[0][0].championId=0;
+  await c.sync(false,{fresh:true});
+  assert.equal(c.activeCreativePlan,null,field);assert.equal(c.lastTaskSelection,null,field);
+  assert.equal(c.slots.find(s=>s.role==='bottom').champion,null,field);
+  assert.deepEqual(structuredClone(c.saved.draft.playerPosition),{role:'bottom',cellId:1});
+  for(const role of ['mid','support'])assert.deepEqual(structuredClone(c.slots.find(s=>s.role===role)),slots.find(s=>s.role===role));
+  assert.equal(calls.prepared.length,0);
+ }
 });
 
 test('a real client hover change during preparation replaces stale configuration even when the operation finishes afterwards',async()=>{

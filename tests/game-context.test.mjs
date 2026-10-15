@@ -9,6 +9,30 @@ const data=JSON.parse(await fs.readFile('data/game.json','utf8')),now=1000000;
 const client=(phase,gameId='1',id='Ashe',position='BOTTOM')=>({connected:true,phase,game:{gameId},mode:{id:'rift'},session:phase==='ChampSelect'?{localPlayerCellId:1,myTeam:[{cellId:1,championId:data.champions.find(c=>c.id===id).key,assignedPosition:position}]}:null});
 const live=(patch={})=>({available:true,at:now,champion:'Ashe',mode:'rift',gameTime:600,...patch});
 const validateRoundTrip=state=>validateGuideState(JSON.parse(JSON.stringify(state)));
+
+test('current Flash key follows the public local player through loading and reconnect and never leaks to another game',()=>{
+ for(const expected of ['d','f']){
+  const tracker=createCurrentGameTracker(),selecting=client('ChampSelect');
+  Object.assign(selecting.session.myTeam[0],expected==='d'?{spell1Id:4,spell2Id:12}:{spell1Id:12,spell2Id:4});
+  selecting.session.myTeam.push({cellId:2,championId:1,spell1Id:4,spell2Id:12});
+  tracker.observe(selecting,data.champions);assert.equal(tracker.flashSlot(),expected);
+  for(const phase of ['GameStart','InProgress','Reconnect']){
+   const snapshot=client(phase);tracker.observe(snapshot,data.champions);
+   const guide=selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'});
+   const model=createGuideModel({...data,flashSlot:'current',clientFlashSlot:tracker.flashSlot()},guide,null,tracker.current(snapshot,null,data.champions));
+   assert.equal(model.summoners[expected==='d'?0:1].id,'SummonerFlash');assert.equal(tracker.flashSlot(),expected);
+  }
+  for(const gameId of [0,'0',null,undefined]){
+   tracker.observe({...client('GameStart'),game:{gameId}},data.champions);
+   assert.equal(tracker.flashSlot(),expected,'Unknown loading game ID must not clear the observed key');
+  }
+  tracker.observe({connected:false,phase:'Offline'},data.champions);assert.equal(tracker.flashSlot(),expected);
+  tracker.observe(client('InProgress','2'),data.champions);assert.equal(tracker.flashSlot(),undefined);
+  tracker.observe(selecting,data.champions);assert.equal(tracker.flashSlot(),expected);
+  tracker.observe(client('ChampSelect','3'),data.champions);assert.equal(tracker.flashSlot(),undefined);
+  tracker.observe(selecting,data.champions);tracker.observe(client('Lobby'),data.champions);assert.equal(tracker.flashSlot(),undefined);
+ }
+});
 test('starting mid-game uses current public position instead of a persisted automatic client slot',()=>{
  const slots=createSlots();Object.assign(slots[3],{champion:'Ashe',clientCellId:1});
  for(const position of ['top',null,'constructor']){

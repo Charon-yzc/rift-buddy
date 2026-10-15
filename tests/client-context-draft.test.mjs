@@ -99,6 +99,32 @@ test('offline lineup editing and multi-player party grading retain their existin
  assert.deepEqual(slots,before);
 });
 
+test('unplaced public allies affect solo team fit without inventing their lanes or making them editable',()=>{
+ for(const scope of ['party','solo']){
+  const current=session();current.myTeam.forEach(p=>{p.assignedPosition='';});
+  ['Malphite','Amumu','Orianna',null,'Lulu'].forEach((id,cell)=>{current.myTeam[cell].championId=id?key(id):0;});
+  const initial=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='bottom'?{manualPosition:true,clientCellId:3}:{})}));
+  const merged=mergeClientSession(initial,current,champions,{autoArrange:false,autoParty:false}),before=structuredClone(merged.slots);
+  assert.equal(merged.unassigned.length,4);
+  const [result]=recommend(input(merged.slots,current,{scope,soloRole:'bottom',pool:['Jinx']}));
+  const [blank]=recommend(input(merged.slots,session(),{scope,soloRole:'bottom',pool:['Jinx']}));
+  assert.deepEqual(result.targets,['bottom']);assert.equal(result.analysis.known,5);assert.notEqual(result.score,blank.score);
+  const allies=result.analysis.members.filter(m=>m.positionUnknown);assert.equal(allies.length,4);assert.ok(allies.every(m=>m.role===''));
+  assert.ok(result.slots.filter(s=>s.role!=='bottom').every(s=>s.champion===null),'Unknown ally lanes must remain empty');
+  assert.ok(result.compositionFit.gaps.some(text=>/4 位公开队友分路未知/.test(text)));assert.ok(!result.compositionFit.gaps.some(text=>/成员位置冲突/.test(text)));
+  assert.equal(lineupFit(result.slots,merged.slots,champions,{scope,soloRole:'bottom',clientSession:current}).score,result.compositionFit.score);
+  const conflicting=result.slots.map(s=>s.role==='bottom'?{...s,champion:'Malphite'}:s);
+  assert.equal(lineupFit(conflicting,merged.slots,champions,{scope,soloRole:'bottom',clientSession:current}).compatible,false,'An unplaced real ally is not a replacement for the local player');
+  assert.deepEqual(merged.slots,before,'Scoring must not persist inferred lanes');
+  const pools=['Jinx','Malphite','Amumu','Orianna','Lulu'],choices=recommend(input(merged.slots,current,{scope,soloRole:'bottom',pool:pools}));
+  assert.ok(choices.every(r=>r.slots.find(s=>s.role==='bottom').champion==='Jinx'),'Actual public allied heroes cannot become selectable candidates');
+  current.myTeam[3].championId=key('Jinx');current.myTeam[3].assignedPosition='BOTTOM';current.actions=[[{type:'pick',actorCellId:3,completed:true}]];
+  const selected=mergeClientSession(merged.slots,current,champions,{autoArrange:false,autoParty:false}).slots;
+  const [fixed]=recommend(input(selected,current,{scope:'solo',soloRole:'bottom',soloChampion:'Jinx'}));
+  assert.deepEqual(fixed.targets,[]);assert.equal(fixed.analysis.known,5);assert.equal(fixed.slots.find(s=>s.role==='bottom').champion,'Jinx');
+ }
+});
+
 test('normalizing a public hover retains bans and current own pick eligibility',()=>{
  const current=session();current.myTeam[4].championPickIntent=key('Lulu');current.myTeam[3].championPickIntent=key('Jinx');
  const results=recommend(input(merge(saved(),current),current,{publicBans:['Lulu'],eligibleByRole:{bottom:['Ashe']}}));

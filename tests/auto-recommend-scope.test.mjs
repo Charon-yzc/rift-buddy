@@ -8,21 +8,21 @@ const {champions}=JSON.parse(await fs.readFile(new URL('../data/game.json',impor
 
 test('solo party recommendations replace only an unlocked local hover and grade it with four real allies',()=>{
  const ids={top:'Garen',jungle:'Vi',mid:'Ahri',bottom:'Ashe',support:'Braum'},key=id=>champions.find(c=>c.id===id).key;
- for(const selectedField of ['championPickIntent','championId']){
+ for(const scope of ['party','solo'])for(const selectedField of ['championPickIntent','championId']){
   const slots=createSlots().map((s,cellId)=>({...s,party:s.role==='bottom',champion:ids[s.role],locked:true,clientCellId:cellId,manualPosition:s.role==='bottom'}));
   const session={localPlayerCellId:3,myTeam:slots.map((s,cellId)=>({cellId,championId:cellId===3?0:key(s.champion),...(cellId===3?{[selectedField]:key('Ashe')}:{}),assignedPosition:['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'][cellId]})),actions:[[{type:'pick',actorCellId:3,championId:key('Ashe'),completed:false}]],theirTeam:[],bans:[]};
   const before=structuredClone({slots,session});
-  const results=recommend({slots,champions,scope:'party',soloRole:'bottom',clientSession:session,pool:['Jinx','Caitlyn'],poolMode:'only',limit:2});
+  const results=recommend({slots,champions,scope,soloRole:'bottom',clientSession:session,pool:['Jinx','Caitlyn'],poolMode:'only',limit:2});
   assert.equal(results.length,2);assert.equal(new Set(results.map(r=>r.slots[3].champion)).size,2);
   for(const result of results){
-   assert.deepEqual(result.targets,['bottom']);assert.equal(result.scope,'context');
+   assert.deepEqual(result.targets,['bottom']);assert.equal(result.scope,scope==='solo'?'solo':'context');
    for(const slot of slots.filter(s=>!s.party))assert.deepEqual(result.slots.find(s=>s.role===slot.role),slot);
    const fit=lineupFit(result.slots,slots,champions,{scope:'party',soloRole:'bottom',clientSession:session});
    assert.equal(fit.compatible,true);assert.equal(fit.exact,true);assert.equal(fit.known,5);assert.ok(Number.isFinite(fit.score)&&fit.score>20,JSON.stringify(fit));
   }
   assert.deepEqual({slots,session},before);
   session.actions[0][0].completed=true;session.myTeam[3].championId=key('Ashe');
-  const [locked]=recommend({slots,champions,scope:'party',clientSession:session,pool:['Jinx'],poolMode:'only'});
+  const [locked]=recommend({slots,champions,scope,soloRole:'bottom',clientSession:session,pool:['Jinx'],poolMode:'only'});
   assert.deepEqual(locked.targets,[]);assert.equal(locked.slots[3].champion,'Ashe');
  }
 });

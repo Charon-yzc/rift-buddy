@@ -38,6 +38,11 @@ async function run(){
  assert.deepEqual(main.getBounds(),normal);assert.equal(await js(main,'window.buddy.bootstrap().then(b=>b.surface)'),'main');assert.equal(await js(side,'window.buddy.bootstrap().then(b=>b.surface)'),'companion');assert.equal(await js(main,'document.body.classList.contains("companion-mode")'),false);
  assert.ok(Math.abs(side.getBounds().width-440)<=3);assert.ok(Math.abs(side.getBounds().height-anchor.height)<=3);assert.equal(side.isAlwaysOnTop(),false);
  const initialBounds=side.getBounds();for(let n=0;n<30;n++)snapshot({...anchor,x:anchor.x+n%3,height:anchor.height+n%3});assert.deepEqual(side.getBounds(),initialBounds);assert.deepEqual(anchor,anchorBefore);
+ // The disconnected "connect" action enables auto-sync. Disable its normal
+ // polling for this isolated observer check, then drain any already-started read.
+ assert.equal(await js(main,'window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Connecting should enable automatic client synchronization');
+ await js(main,'window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,autoSync:false}},b.state))');
+ await js(main,'window.buddy.client(false)');
  const beforeBootstrap=bootstrapCalls,beforeRequests=requests;for(let n=0;n<5;n++)snapshot();await delay(350);assert.equal(bootstrapCalls,beforeBootstrap,'Observer ticks re-bootstrap full data');assert.equal(requests,beforeRequests,'Observer ticks duplicate client/source polling');
  // Each fold action targets its own window and has an independent restore tab.
  const mainHides=main.fixtureHideCount,sideHides=side.fixtureHideCount;
@@ -70,6 +75,10 @@ async function run(){
  await assert.rejects(handlers.get('bootstrap')({sender:main.webContents,senderFrame:{}}),/不允许/);await assert.rejects(handlers.get('bootstrap')({sender:{},senderFrame:{}}),/不允许/);
  // One explicit simulated UI click reaches only the mock LCU. The shared guard
  // also rejects the other window while that same rune operation is in flight.
+ // Windows keep independent navigation. Explicitly show the main preparation
+ // before testing that a rune write in the sidebar updates its visible receipt.
+ if(await js(main,'!!document.querySelector("[data-action=task-return]")'))await click(main,'[data-action=task-return]');
+ await until(()=>js(main,'!!document.querySelector(".preparation-task [data-preparation-step=runes]")'),'Main preparation receipt missing');
  await click(side,'[data-action=companion-tab][data-tab=plan]');await until(()=>js(side,'!!document.querySelector("[data-action=my-runes]")'),'Selected hero preparation missing');holdRune=true;await click(side,'[data-action=my-runes]');await until(()=>resumeRune,'Explicit rune click did not reach mocked write');
  const context=await js(main,'window.buddy.bootstrap().then(b=>({phase:b.client.phase,gameId:b.client.game.gameId,cellId:b.client.session.localPlayerCellId,championId:b.client.session.myTeam[0].championId,championPickIntent:0,assignedPosition:"MIDDLE"}))');
  await assert.rejects(handlers.get('apply-runes')(event(main),{},context),/正在应用|配置正在处理/);resumeRune();holdRune=false;await until(()=>writes===1,'Mock rune write missing');await until(()=>js(main,'document.querySelector(".preparation-task [data-preparation-step=runes]")?.dataset.stepStatus==="done"'),'Rune confirmation did not reach main');

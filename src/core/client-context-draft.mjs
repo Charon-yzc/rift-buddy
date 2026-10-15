@@ -1,13 +1,21 @@
 import {recommendationDraft,editableLocalDraft} from './draft-intents.mjs';
 import {CLIENT_POSITION_ROLES,manualPlayerSlot} from './draft.mjs';
 
+// Publicly selected allies are still team evidence when automatic placement
+// is disabled. Their lane stays unknown; never turn them into editable slots.
+export function publicAllyIds(clientSession,champions){
+ if(!Number.isInteger(clientSession?.localPlayerCellId)||!Array.isArray(clientSession.myTeam))return [];
+ const byKey=new Map(champions.map(c=>[c.key,c.id]));
+ return [...new Set(clientSession.myTeam.filter(p=>Number.isInteger(p.cellId)&&p.cellId!==clientSession.localPlayerCellId).map(p=>byKey.get(Number(p.championId))).filter(Boolean))];
+}
+
 // A saved offline lineup is editable planning, not evidence of this client's
 // teammates. Normalize only the temporary whole-team recommendation input;
 // keep the user's controllable picks and every explicit position untouched.
 export function clientContextDraft(slots,champions,clientSession,{scope='context',soloRole='',bans=[],eligibleByRole={}}={}){
  if(!Array.isArray(clientSession?.myTeam)||!['context','solo'].includes(scope))return slots;
  const localRole=manualPlayerSlot(slots,clientSession.localPlayerCellId)?.role||soloRole||CLIENT_POSITION_ROLES[String(clientSession.myTeam.find(p=>p.cellId===clientSession.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
- if(scope==='context'&&slots.filter(slot=>slot.party).length===1&&slots.find(slot=>slot.party)?.role===localRole){
+ if(localRole&&(scope==='solo'||scope==='context'&&slots.filter(slot=>slot.party).length===1&&slots.find(slot=>slot.party)?.role===localRole)){
   ({slots,session:clientSession}=editableLocalDraft(slots,clientSession,champions,localRole));
  }
  const byId=new Map(champions.map(c=>[c.id,c])),team=clientSession.myTeam;

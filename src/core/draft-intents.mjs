@@ -15,6 +15,8 @@ export function editableLocalDraft(slots,session,champions,ownRole=''){
  const id=champions.find(c=>c.key===Number(own.championId||own.championPickIntent))?.id;
  const role=manualPlayerSlot(slots,own.cellId)?.role||ownRole||CLIENT_POSITION_ROLES[String(own.assignedPosition||'').toUpperCase()];
  if(!role)return {slots,session};
+ const local=slots.find(slot=>slot.role===role);
+ if(local?.locked&&local.manualPosition&&!local.automaticPosition&&!own.championId&&action?.completed!==false)return {slots,session};
  return {slots:slots.map(slot=>{
   if(slot.role!==role||Number.isInteger(slot.clientCellId)&&slot.clientCellId!==own.cellId||slot.champion&&slot.champion!==id)return slot;
   const {publicIntent,...rest}=slot;return {...rest,champion:null,locked:false};

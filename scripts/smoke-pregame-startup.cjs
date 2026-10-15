@@ -21,7 +21,7 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(champion=>champion.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json')));
  assert.equal(initial.preferences.autoSync,true);assert.equal(initial.preferences.clickPrepare,true);assert.equal(initial.draft.playerPosition,undefined);assert.equal(initial.draft.soloRole,'');assert.equal(initial.draft.slots.filter(slot=>slot.champion).length,5,'Startup fixture needs a saved local lineup on every lane');
- let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4,soloParty=false;
+ let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4,soloParty=false,unknownAllyRoles=false;
  let page={id:44,name:'Synthetic editable page',isEditable:true,isActive:true,current:true};
  const ownIdentity={puuid:'startup-synthetic-own-identity',summonerId:530001,gameName:'合成测试本人',tagLine:'TEST'},friendIdentity={puuid:'startup-synthetic-friend-identity',summonerId:530002,gameName:'合成测试队友',tagLine:'TEST'};
  const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:0,championPickIntent:friendIntent,assignedPosition:friendAssigned,...friendIdentity},{cellId:1,championId:0,championPickIntent:0,assignedPosition:''},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:ownAssigned,spell1Id,spell2Id,...ownIdentity},{cellId:3,championId:0,championPickIntent:0,assignedPosition:''},{cellId:4,championId:0,championPickIntent:0,assignedPosition:''}],theirTeam:[],actions:[[{id:22,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',adjustedTimeLeftInPhase:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
@@ -35,7 +35,7 @@ async function run(){
    if(route==='/lol-lobby/v2/lobby')return {localMember:{...ownIdentity,isLeader:true},members:[{...ownIdentity,isLeader:true},...(!soloParty?[friendIdentity]:[])]};
    if(route==='/lol-champ-select/v1/session'){
     const snapshot=rawSession();
-    if(soloParty)for(const player of snapshot.myTeam){const ally={0:['Braum','UTILITY'],1:['Garen','TOP'],3:['Vi','JUNGLE'],4:['Ahri','MIDDLE']}[player.cellId];if(ally){player.championId=hero(ally[0]).key;player.assignedPosition=ally[1];}}
+    if(soloParty)for(const player of snapshot.myTeam){const ally={0:['Braum','UTILITY'],1:['Garen','TOP'],3:['Vi','JUNGLE'],4:['Ahri','MIDDLE']}[player.cellId];if(ally){player.championId=hero(ally[0]).key;player.assignedPosition=unknownAllyRoles?'':ally[1];}}
     return snapshot;
    }
    if(route.endsWith('/pickable-champion-ids'))return data.champions.map(champion=>champion.key);
@@ -149,7 +149,7 @@ async function run(){
   await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championId===picked&&snapshot.session.actions.flat().some(action=>action.actorCellId===2&&action.completed));
   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'Locking the same hovered champion did not reopen configuration');assert.equal(attempts.length,before,'A player locking their champion caused another automatic configuration write');
  });
- const resetRound=async nextQueue=>{phase='Lobby';queueId=nextQueue;intent=0;picked=0;friendIntent=0;completed=false;await fresh(snapshot=>snapshot.phase==='Lobby');gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId)&&Number(snapshot.game.queueId)===queueId);await until(()=>{side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));return side;},'Automatic sidebar missing after new round');await until(()=>js(side,'!!document.querySelector(".companion-shell")'),'New-round sidebar did not load');await click(side,'[data-action=companion-tab][data-tab=recommend]');await until(()=>js(side,'!!document.querySelector("#solo-role")'),'Role picker missing after new round');};
+ const resetRound=async nextQueue=>{phase='Lobby';queueId=nextQueue;intent=0;picked=0;friendIntent=0;completed=false;await fresh(snapshot=>snapshot.phase==='Lobby');gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId)&&Number(snapshot.game.queueId)===queueId);await until(()=>{side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));return side;},'Automatic sidebar missing after new round');await until(()=>js(side,'!!document.querySelector(".companion-shell")'),'New-round sidebar did not load');await until(()=>js(side,'(()=>{const scope=document.querySelector(".companion-content")?.dataset.focusScope;return !!scope&&String(JSON.parse(scope)[2])==='+JSON.stringify(String(gameId))+';})()'),'Sidebar did not observe the new game before the next click');await click(side,'[data-action=companion-tab][data-tab=recommend]');await until(()=>js(side,'!!document.querySelector("#solo-role")'),'Role picker missing after new round');};
  for(const nextQueue of [430,0]){
   await resetRound(nextQueue);
   await checkpoint('explicit-lane-preselection-queue-'+nextQueue,async()=>{
@@ -207,7 +207,14 @@ async function run(){
  await checkpoint('solo-party-composition-recommendations-after-lane-claim',async()=>{
   await until(async()=>(await state()).draft.slots.filter(slot=>slot.party).length===1,'Solo queue kept a multi-person recommendation range');
   await change(side,'#solo-role','bottom');await until(()=>intent===hero('Jinx').key&&results.length===attempts.length,'Solo lane claim did not settle');
+  await until(()=>js(side,'(()=>{const toast=document.querySelector("#toast");return /已预选.*占位/.test(toast?.textContent)&&!toast.classList.contains("error");})()'),'Successful lane claim reported a save error instead of completion');
+  picked=intent;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(p=>p.cellId===2)?.championId===picked);
+  await click(side,'[data-action=draft-scope][data-scope=solo]');
+  await until(async()=>(await state()).draft.scope==='solo','Explicit solo scope did not persist');
+  await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Explicit solo mode treated an unlocked public championId as a completed pick');
+  assert.ok((await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members [data-role]")].map(el=>el.dataset.role)')).every(role=>role==='bottom'));
   await click(side,'[data-action=draft-scope][data-scope=party]');
+  await until(async()=>(await state()).draft.scope==='party','Explicit party scope did not persist');
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo composition recommendations are missing');
   await until(()=>js(main,'document.querySelectorAll(".result-card").length>=2'),'Main solo composition recommendations are missing');
   for(const [window,selector] of [[side,'.companion-candidate'],[main,'.result-card']]){
@@ -223,6 +230,31 @@ async function run(){
   await until(()=>results.length===before+1,'Selecting a solo candidate did not apply it');assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
   await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'Selecting an actual candidate did not open configuration');
   const allies=(await state()).draft.slots.filter(slot=>slot.role!=='bottom').map(slot=>slot.champion).sort();assert.deepEqual(allies,['Ahri','Braum','Garen','Vi']);assert.equal(spell2Id,4);
+ });
+ await checkpoint('solo-team-fit-retains-public-allies-with-automatic-placement-disabled',async()=>{
+  await click(side,'[data-action=player-flow-settings]');await click(side,'[data-action=player-flow-toggle][data-field=autoArrange]');
+  await until(async()=>(await state()).preferences.autoArrange===false,'Disabling automatic placement did not persist');await click(side,'[data-action=close]');
+  unknownAllyRoles=true;await resetRound(430);
+  await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo candidates missing without inferred ally lanes');
+  await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .lineup-fit")].every(el=>/契合 [0-9]+/.test(el.querySelector("summary")?.textContent)&&/4 位公开队友分路未知/.test(el.textContent))'),'Public unplaced allies did not contribute to visible team fit');
+  await until(async()=>(await state()).draft.slots.filter(s=>s.role!=='bottom').every(s=>!s.champion),'Unknown public ally lanes were invented');
+  await capture(side,'solo-public-allies-unplaced.png');
+  const before=attempts.length;await click(side,'.companion-candidate [data-action=companion-preview]');
+  await until(()=>results.length===before+1&&results.at(-1).complete,'The public unplaced ally candidate did not complete preparation');
+  await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=plan]")?.classList.contains("active")'),'The actual candidate did not open configuration');
+ });
+ await checkpoint('default-client-flash-key-persists-in-guide-through-loading',async()=>{
+  completed=true;picked=intent||picked;intent=0;await fresh(snapshot=>snapshot.session.actions.flat().find(a=>a.actorCellId===2)?.completed);
+  const ownId=data.champions.find(c=>c.key===picked).id;
+  await js(side,'window.buddy.openGuide({id:'+JSON.stringify(ownId)+',role:"bottom",mode:"rift"})');
+  let guide;await until(()=>{guide=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide window missing');
+  await until(()=>js(guide,'!!window.guide'),'Guide preload missing');
+  for(const nextPhase of ['ChampSelect','GameStart']){
+   if(nextPhase==='GameStart'){phase=nextPhase;await fresh(snapshot=>snapshot.phase==='GameStart');}
+   const snapshot=await js(guide,'window.guide.bootstrap()');
+   assert.equal(snapshot.model.summoners[1].id,'SummonerFlash','The guide moved default Flash F in '+nextPhase);
+   assert.equal(snapshot.model.selection.summonerIds,undefined,'The current client key must remain a per-game observation');
+  }
  });
  assert.ok(windows.every(window=>window.isDestroyed()||!window.isVisible()),'Smoke windows must stay hidden');
  report={...report,checks,passed:checks.every(check=>check.passed),source,archiveSha256:release?.archiveSha256||null,autoSync:true,manualSyncClicks:0,syntheticLcuOnly:true,observerMocked:true,actualRuneWrites:0,mockedWrites:writes.map(write=>({route:write.route,method:write.method})),preparationApiCalls:attempts.length};
