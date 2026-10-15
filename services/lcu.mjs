@@ -131,7 +131,12 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
    if(/^[^\r\n\0]{1,64}$/.test(shown))summonerDisplay=shown;
   }catch{}
   const ownName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)))||summonerDisplay;
-  const own=ownName?{riotId:ownName}:null;
+  // A stable numeric account id lets the room nickname stay unique when no
+  // display name exists anywhere. It never leaves this process: forRenderer
+  // strips `own` on every renderer-facing snapshot; it only seeds the
+  // last-resort nickname suffix in autoRoomNick.
+  const ownSeed=/^[1-9]\d{0,19}$/.test(ownIdentity?.summonerId||'')?ownIdentity.summonerId:null;
+  const own=ownName?{riotId:ownName,...(ownSeed?{summonerId:ownSeed}:{})}:ownSeed?{summonerId:ownSeed}:null;
   return {connected:true,phase,session,eligibility,game,party,...(own?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }

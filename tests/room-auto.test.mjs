@@ -49,6 +49,14 @@ test('the room nickname prefers the public game id and falls back safely',()=>{
  assert.equal(autoRoomNick({identity:{riotId:'Player11#CN1'},savedNick:'小明'}),'Player11#CN1');
  assert.equal(autoRoomNick({identity:{summonerName:'召唤师本人'},savedNick:'小明'}),'召唤师本人');
  assert.equal(autoRoomNick({identity:{},savedNick:'小明'}),'小明');
+ const unnamed={puuid:'public-own-identity-0001',summonerId:'12'};
+ const fallbackNick=autoRoomNick({identity:unnamed});
+ assert.match(fallbackNick,/^队友\d{4}$/);
+ assert.equal(autoRoomNick({identity:unnamed}),fallbackNick,'the fallback stays stable per account');
+ assert.notEqual(autoRoomNick({identity:{puuid:'public-other-identity-0099',summonerId:'99'}}),fallbackNick);
+ assert.equal(autoRoomNick({identity:unnamed,savedNick:'手动名'}),'手动名','a deliberate nickname is never suffixed');
+ assert.match(autoRoomNick({identity:unnamed,savedNick:'队友'}),/^队友\d{4}$/,'the untouched default placeholder cannot deadlock a room');
+ assert.equal(autoRoomNick({}),'队友');
  assert.equal(autoRoomNick({identity:{riotId:'x'.repeat(25)},savedNick:'小明'}),'小明');
  assert.equal(autoRoomNick({identity:{riotId:'队友\u202e甲'},savedNick:''}),'队友甲');
  assert.equal(autoRoomNick({}),'队友');

@@ -150,3 +150,14 @@ test('manual relay forces the detected game id over the typed nickname',async t=
  assert.equal(h.snapshot().room.members[0]?.nick,'Test#CN1');
  assert.equal(h.sockets[0].sent[0]?.nick,'Test#CN1');
 });
+
+test('unnamed auto join stays joinable with a stable per-account fallback',async t=>{
+ const h=harness();t.after(()=>h.services.forEach(service=>service.dispose()));
+ h.setPreferences({roomNick:'队友'});
+ h.setClient({connected:true,phase:'Lobby',party:{status:'lobby',key:'party-noname1',lobbyCount:1},own:{summonerId:'99'}});
+ const joining=h.queueRoomAuto();
+ await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await joining;
+ const nick=h.snapshot().room.members[0]?.nick;
+ assert.match(nick,/^队友\d{4}$/);
+ assert.equal(h.sockets[0].sent[0]?.nick,nick);
+});

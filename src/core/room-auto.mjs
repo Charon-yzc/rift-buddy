@@ -41,7 +41,19 @@ export async function deriveAutoRoom(partyKey,{digest}={}){
 }
 
 export function autoRoomNick({identity,savedNick,fallback='队友'}={}){
- return sanitizeNick(identity?.riotId)||sanitizeNick(identity?.summonerName)||sanitizeNick(savedNick)||sanitizeNick(fallback)||'队友';
+ const named=sanitizeNick(identity?.riotId)||sanitizeNick(identity?.summonerName);
+ if(named)return named;
+ const typed=sanitizeNick(savedNick),placeholder=sanitizeNick(fallback)||'队友';
+ // A deliberately typed nickname stays untouched so a real duplicate is still
+ // reported loudly. The untouched default placeholder is not a choice: two
+ // unnamed clients would otherwise join with the same nick and the second
+ // first-handshake would die on 4003 forever. Key the last resort to the
+ // stable account id so it is distinct per player and stable per session.
+ if(typed&&typed!==placeholder)return typed;
+ const seed=String(identity?.puuid||identity?.summonerId||'');
+ if(!seed)return placeholder;
+ let h=0;for(const ch of seed)h=(h*31+ch.codePointAt(0))>>>0;
+ return `${placeholder}${String(h%10000).padStart(4,'0')}`;
 }
 
 // The room service knows nothing about parties: main adds the auto marker,

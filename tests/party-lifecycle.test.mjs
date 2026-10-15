@@ -41,7 +41,7 @@ test('the lobby key requires fresh pre-match evidence; the current own public na
  assert.ok(!JSON.stringify(lobby).includes('11111111-2222'),'a credential that looks like a party id must not surface either');
  f.set({phase:'ChampSelect'});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined);
- assert.deepEqual((await clientSnapshot('',f.mock)).own,{riotId:'Player11#CN1'});
+ assert.deepEqual((await clientSnapshot('',f.mock)).own,{riotId:'Player11#CN1',summonerId:'11'},'the numeric account id seeds the unique fallback nickname and never reaches the renderer');
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:1000+120001});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'stale evidence must not derive a room');
 });
