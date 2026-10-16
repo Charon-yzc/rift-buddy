@@ -25,7 +25,7 @@ function harness({derive=auto.deriveAutoRoom}={}){
   let roomService=null,state={preferences:{roomAuto:true,autoSync:true,roomNick:'Test#CN1',relayUrl:'ws://127.0.0.1'}},latestClient=null;
   const status=async()=>latestClient,saveCurrentState=async update=>{state=update(state);};
   ${snippet}
-  return {queueRoomAuto,roomAutoStep,closeAutoRoomIfRevoked,setClient:value=>latestClient=value,setPreferences:value=>Object.assign(state.preferences,value),advanceRound:()=>{roomBallotRound++;roomBallot=null;roomService.publish({lineup:[],pick:null});},snapshot:()=>({key:roomAutoKey,code:roomAutoCode,pin:roomAutoPin,blocked:roomAutoBlockedKey,error:roomAutoError,goneSince:roomAutoGoneSince,offlineSince:roomAutoOfflineSince,failedUntil:roomAutoFailedUntil,room:roomService?.snapshot()}),dispose:()=>roomService?.dispose()};`);
+  return {queueRoomAuto,roomAutoStep,closeAutoRoomIfRevoked,setClient:value=>latestClient=value,setPreferences:value=>Object.assign(state.preferences,value),advanceRound:clearRoomBallot,snapshot:()=>({key:roomAutoKey,code:roomAutoCode,pin:roomAutoPin,blocked:roomAutoBlockedKey,error:roomAutoError,goneSince:roomAutoGoneSince,offlineSince:roomAutoOfflineSince,failedUntil:roomAutoFailedUntil,room:roomService?.snapshot()}),dispose:()=>roomService?.dispose()};`);
  const api=create(createRoomService,sanitizeNick,initialRelayUrl,derive,auto.autoRoomNick,auto.autoRoomDecision,auto.decorateAutoRoom,auto.AUTO_ROOM_PHASES,auto.AUTO_RETRY_MS,(_name,value)=>updates.push(value),message=>reports.push(message),(name,handler)=>handlers.set(name,handler),{networkInterfaces:()=>({})},MockDate);
  return {...api,clock,sockets,updates,reports,handlers,services};
 }
@@ -277,6 +277,7 @@ test('nickname recovery against an older relay retains multi-votes and exposes a
  h.setClient(party());const rename=h.queueRoomAuto();await spin(()=>h.sockets.length===2);h.sockets[1].open();h.sockets[1].welcome({multiVotes:0});await rename;
  const current=h.handlers.get('room-status')();assert.equal(current.link,'failed');assert.match(current.warning,/已保留在本机/);
  assert.deepEqual(current.members.find(m=>m.self).share.ballot.votes,[ka,kb]);assert.equal(h.sockets[1].readyState,3);
+ h.advanceRound();const next=h.handlers.get('room-status')();assert.equal(next.link,'failed');assert.equal(next.members.find(m=>m.self).share.ballot,undefined,'A failed relay cannot retain previous-round votes');
 });
 
 test('a name detected during room derivation still upgrades the actual fallback nickname',async t=>{

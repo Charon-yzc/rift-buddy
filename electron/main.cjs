@@ -222,6 +222,7 @@ async function boot(){
  // rooms never set roomAutoKey and are never touched by the poll below.
  let roomAutoKey=null,roomAutoCode=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoCancelledKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve(),roomAutoRunning=false,roomAutoRequested=false;
  let roomBallot=null,roomPublicShare=null,ballotRoom='',roomBallotRound=0;
+ const clearRoomBallot=()=>{roomBallotRound++;roomBallot=null;roomService?.clearBallot();};
  const decorateRoom=snapshot=>{const identity=snapshot?.mode==='idle'?'':snapshot?.room||'';if(identity!==ballotRoom){roomBallot=null;roomPublicShare=null;ballotRoom=identity;}return decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});};
  // The sandboxed renderer never needs the lobby identifier or the raw identity
  // used as the room nickname: only this process derives the room from them.
@@ -482,7 +483,7 @@ async function boot(){
  const status=createClientSync(async(force=false)=>{
   if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:3000):5000))return latestClient;
   statusTask=(async()=>{const previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
-   if(ballotRoundChanged(latestClient)){roomBallotRound++;roomBallot=null;if(roomService&&roomService.snapshot().mode!=='idle'){try{const share=roomPublicShare||roomService.snapshot().members.find(m=>m.self)?.share||{lineup:[],pick:null};const {ballot,...clean}=share;roomService.publish(clean);}catch{}}}
+   if(ballotRoundChanged(latestClient))clearRoomBallot();
    feedIdle=observeFeedPhase(latestClient);dataFeed.activate();
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId,{phase:latestClient.phase,previousPhase});if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId,{phase:latestClient.phase,previousPhase}).draft}));

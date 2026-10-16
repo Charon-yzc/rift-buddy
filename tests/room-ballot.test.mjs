@@ -186,5 +186,7 @@ test('LAN host/guest round trip broadcasts votes and late joiners receive propos
   guest.publish({...state(null,null),ballot:{version:1,proposal:null,votes:[proposalKey(b)]}});
   await until(()=>roomBallotBoard(host.snapshot(),[],champions).find(row=>row.key===proposalKey(a))?.voters.length===1);
   assert.equal(roomBallotBoard(host.snapshot(),[],champions).find(row=>row.key===proposalKey(b)).voters.length,1);
+  host.clearBallot();await until(()=>guest.snapshot().members.find(m=>m.nick==='甲').share.ballot===undefined);
+  assert.deepEqual(guest.snapshot().members.find(m=>m.self).share.ballot.votes,[proposalKey(b)],'Another member retains their votes until their own round reset');
  }finally{host.dispose();guest.dispose();late.dispose();}
 });

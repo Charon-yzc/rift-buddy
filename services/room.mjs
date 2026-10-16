@@ -655,6 +655,15 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   return snapshot();
  }
 
+ function clearBallot(){
+  if(!ownShare?.ballot)return snapshot();
+  const {ballot,...share}=ownShare;ownShare=share;emit();
+  // Round reset is local even when the relay cannot accept another frame.
+  // A later announce/reconnect must never resurrect the previous round.
+  if(mode!=='idle')try{publish(share);}catch{}
+  return snapshot();
+ }
+
  function leave(){
   // teardown sends the leave frame and closes for a relay socket.
   if(mode==='client'&&transport!=='relay'&&upstream&&!upstream.socket.destroyed){
@@ -683,7 +692,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  }
 
  return {
-  host,join,relay,leave,publish,scan,snapshot,
+  host,join,relay,leave,publish,clearBallot,scan,snapshot,
   dispose(){teardown();},
   get state(){return snapshot();},
  };
