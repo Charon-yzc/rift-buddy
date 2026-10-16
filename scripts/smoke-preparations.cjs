@@ -57,6 +57,7 @@ async function run(){
   const expected=JSON.parse(await fs.readFile(expectedFile,'utf8'));
   await open('Aphelios');assert.deepEqual(await read(),expected.aphelios);await click('[data-action=close]');
   await open('Ashe');assert.deepEqual(await read(),expected.ashe);await click('[data-action=open-guide]');
+  await until(async()=>{const selected=(await state()).guide?.selection;return selected?.id==='Ashe'&&selected.role==='bottom'&&selected.mode==='rift'&&selected.runeId===expected.ashe.rune&&selected.skillId===expected.ashe.skill&&selected.coreIndex===Number(expected.ashe.core);},'Explicit guide choice was not saved');
   const guideBefore=(await state()).guide.selection;assert.ok(guideBefore.coreId&&guideBefore.runeId&&guideBefore.skillId);
   await change('[data-build-source-field=region]','kr');await change('[data-build-source-field=region]','global');
   assert.deepEqual(await read(),expected.ashe);
