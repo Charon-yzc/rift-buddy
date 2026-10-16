@@ -11,10 +11,10 @@ const a={lineup:[{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{r
 const b={lineup:[{role:'mid',champion:'Galio'},{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],mode:'rift'};
 const state=(proposal,vote)=>({lineup:[],pick:null,mode:'rift',ballot:{version:1,proposal,vote}});
 
-test('shared proposals are visible without expansion and voting sits beside adoption above details',()=>{
+test('shared proposals are visible, voting is primary and adoption stays in details',()=>{
  const key=proposalKey(a),room={mode:'client',ballots:true,members:[{nick:'伙伴',share:state(a,key)},{nick:'我',self:true,share:state(null,null)}]};
  const html=roomBallotView(room,[],champions),vote=html.indexOf('data-action="room-vote"'),adopt=html.indexOf('data-action="room-adopt-ballot"'),details=html.indexOf('data-action="room-ballot-details"');
- assert.match(html,/<section class="room-ballot-board"/);assert.doesNotMatch(html,/<details class="room-ballot-board"/);assert.ok(vote<adopt&&adopt<details);
+ assert.match(html,/<section class="room-ballot-board"/);assert.doesNotMatch(html,/<details class="room-ballot-board"/);assert.ok(vote<details);assert.equal(adopt,-1);
  const actions=candidateBallotActions(room,key,0);assert.ok(actions.indexOf('propose-result')<actions.indexOf('room-vote'));assert.match(actions,/投票 1/);
  assert.doesNotMatch(candidateBallotActions(room,proposalKey(b),1),/room-vote/,'A different proposal cannot inherit votes');
 });

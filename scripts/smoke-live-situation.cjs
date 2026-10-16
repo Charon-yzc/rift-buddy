@@ -16,6 +16,7 @@ async function run(){
    if(p==='/liveclientdata/eventdata')return {Events:[]};
   }
   assert.equal(options.port,23456);
+  if(p==='/lol-summoner/v1/current-summoner')return {gameName:'隔离局内玩家',tagLine:'TEST'};
   if(p==='/lol-gameflow/v1/gameflow-phase')return 'InProgress';
   if(p==='/lol-gameflow/v1/session')return {gameData:{gameId:'987',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(p==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:data.champions.find(c=>c.id===hero).key,assignedPosition:role}],theirTeam:[],actions:[],bans:{}};

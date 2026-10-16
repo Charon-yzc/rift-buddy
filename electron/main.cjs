@@ -163,8 +163,12 @@ async function boot(){
  const {isFreshBuildReference,rankedClientRoles}=await import('../src/core/builds.mjs');
  const {createCurrentGameTracker}=await import('../src/core/game-context.mjs');const currentGame=createCurrentGameTracker({flashId:Number(data.spells.SummonerFlash.key)});
  const {createOpponentFocusTracker}=await import('../src/core/opponent-focus.mjs');const opponentFocus=createOpponentFocusTracker({newToken:require('node:crypto').randomUUID});
+ let appliedGuideSelection=null;
  const currentGuideSelection=()=>{
   const own=currentGame.current(latestClient,latestLive,data.champions,state.draft?.slots||[]);if(!own)return null;
+  // A clicked reference lane may belong to an ally. Keep the configuration
+  // actually applied by this player without moving anyone's public position.
+  if(appliedGuideSelection?.gameId===publicClientGameId(latestClient)&&appliedGuideSelection.selection.id===own.id&&appliedGuideSelection.selection.mode===own.mode){const chosen=appliedGuideSelection.selection;return {...own,...chosen,...storedPreparation(state.preparations,chosen),name:data.champions.find(c=>c.id===own.id)?.name,comboKnown:false};}
   const prepared=state.guide?.selection,gameId=publicClientGameId(latestClient),preparedMatchesGame=!gameId||!state.guide?.match?.gameId||gameId===String(state.guide.match.gameId);if(!own.positionKnown){const bound=latestClient.phase==='ChampSelect'&&state.draft?.slots.find(s=>s.champion===own.id&&s.clientCellId===latestClient.session?.localPlayerCellId);if(bound)own.role=bound.role;else if(state.draft?.scope==='solo'&&state.draft.soloRole)own.role=state.draft.soloRole;else if(preparedMatchesGame&&prepared?.id===own.id&&prepared.mode===own.mode)own.role=prepared.role;}
   const draftSlots=state.draft?.slots||[],observedSlots=latestClient.session&&draftSlots.length===5?recommendationCore.mergeClientSession(draftSlots,latestClient.session,data.champions,{autoArrange:state.preferences.autoArrange!==false,autoParty:state.preferences.autoParty!==false,party:latestClient.party,roleOrder:rankedClientRoles(data)}).slots:draftSlots;
   const combo=own.mode==='rift'?recommendationCore.currentCombo(observedSlots,own.id,own.role,data.catalogInfo?.status,null,state.draft?.creativePlan):null;
@@ -615,6 +619,7 @@ async function boot(){
    operation=beginPreparation('selection',{value,selection,context:value.context});
    const written=helper.active()?await helper.request('prepareSelection',{value}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
    let event=finishPreparation(operation,{result:written});
+   if(written.complete&&selection&&!value.preselectOnly)appliedGuideSelection={gameId:String(value.sessionGameId),selection:structuredClone(selection)};
    // Loading can destroy the sidebar before its IPC reply. Commit the clicked
    // configuration in main so its guide survives that legitimate transition.
    const result=await preservePreparationResult(written,[['保存符文页记录',async()=>{if(written.steps?.runes?.status==='done')await saveCurrentState(current=>({...current,ownedPageId:written.steps.runes.pageId}));}],['刷新客户端',()=>status(true)],['同步本局指引',async()=>{if(written.complete&&selection&&inGame()&&publicClientGameId(latestClient)===String(value.sessionGameId)){

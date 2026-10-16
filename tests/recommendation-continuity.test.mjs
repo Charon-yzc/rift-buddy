@@ -780,3 +780,46 @@ test('a real client hover change during preparation replaces stale configuration
   assert.equal(calls.prepared.length,1,'The intervening public hover must not dispatch another write');
  }
 });
+
+async function prepareRetainedHover(docked){
+ const current=client();current.session.myTeam[0].assignedPosition='';
+ current.session.myTeam.push({cellId:0,championId:0,championPickIntent:hero('Nami').key,assignedPosition:''});
+ current.party={status:'known',lobbyCount:2,members:[{cellId:1,local:true,source:'self'},{cellId:0,local:false,source:'lobby'}]};
+ const incoming=structuredClone(current);
+ const slots=mergeClientSession(createSlots(),current.session,data.champions,{autoArrange:true,autoParty:true,party:current.party,ownRole:''}).slots;
+ const s=setup({slots,current,incoming,results:[]}),c=s.context;
+ Object.assign(c,{soloRole:'',creativePlanCompatible,currentCombo,comboContextKnown,companionPickIntent,guideSelection:null,recommendationError:''});
+ c.windowLayout.docked=docked;
+ c.clientSyncOptions=()=>({autoArrange:true,autoParty:true,party:c.client.party,ownRole:c.taskOwnRole(),creativePlan:c.activeCreativePlan});
+ // Use the real invalidation/reconciliation path: setup() normally stubs it.
+ vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo=')+extract('function invalidate(){','function render(){')+extract('function rememberIntentPreparation(selection){','function currentPickIntent(){')+extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
+ const actualReconcile=c.reconcileCreativePlan,trace=[];
+ c.reconcileCreativePlan=(...args)=>{
+  const before=c.activeCreativePlan?.id||'';
+  const result=actualReconcile(...args);
+  if(before!==(c.activeCreativePlan?.id||''))trace.push({event:'plan-reconciled',before,after:c.activeCreativePlan?.id||'',ownRole:c.taskOwnRole(),context:c.publicDraftContext().filter(s=>s.champion).map(s=>({role:s.role,id:s.champion,publicIntent:!!s.publicIntent}))});
+  return result;
+ };
+ c.results=recommend(c.recommendationInput());
+ c.resultsSignature=c.recommendationKey(c.recommendationInput());
+ const index=c.results.findIndex(r=>r.slots.some(s=>s.champion==='Nami'));
+ assert.ok(index>=0,'The fixture needs a candidate containing the teammate hover');
+ const result=c.results[index],member=result.slots.find(s=>s.champion==='Nami');
+ assert.equal(c.taskOwnRole(),'');assert.equal(member.publicIntent,true);assert.equal(member.role,'support');
+ const originalPlan=c.resultCreativePlan(result)?.id||'';
+ const clickedSelection={id:'Nami',role:member.role,mode:'rift',...creativeComboContext(creativeMemberCombo(c.resultCreativePlan(result),'Nami',member.role))};
+ const clickedBuild=getBuild(hero('Nami'),member.role,data,clickedSelection);
+ let error='';
+ try{await c.prepareCandidate({dataset:{id:'Nami',role:member.role,resultIndex:String(index)},hasAttribute:name=>name==='data-result-index'});}catch(caught){error=caught.message;}
+ const report={surface:docked?'sidebar':'main',originalPlan,targets:result.targets,clicked:{id:'Nami',role:member.role,publicIntent:true},error,apiCalls:s.calls.prepared.length,ownRole:c.taskOwnRole(),activePlan:c.activeCreativePlan?.id||'',playerPosition:c.saved.draft.playerPosition,trace};
+ console.log(JSON.stringify(report,null,2));
+ assert.equal(error,'','A legitimate internal role change must not reject the explicit hero click');
+ assert.equal(s.calls.prepared.length,1,'One hero click must dispatch exactly one complete preparation');
+ const written=s.calls.prepared[0];
+ assert.equal(written.champion,'Nami');assert.equal(written.role,'support');assert.notEqual(written.preselectOnly,true);
+ assert.deepEqual(written.page,clickedBuild.runePage,'The click must preserve the concrete candidate rune page');
+ assert.deepEqual(written.summoners,clickedBuild.summoners,'The click must preserve the concrete candidate summoner selection');
+ assert.equal(c.saved.draft.playerPosition.role,'support');
+ assert.equal(c.activeCreativePlan,null,'Preparing a retained teammate hover must not adopt the incompatible whole lineup');
+}
+test('unknown own lane and retained teammate hover prepare exactly once in both windows',async()=>{await prepareRetainedHover(false);await prepareRetainedHover(true);});

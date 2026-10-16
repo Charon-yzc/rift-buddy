@@ -309,4 +309,17 @@
 .ballot-row-detail{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px}
 .ballot-row-detail .lineup-fit{min-width:0}
 .room-panel>.panel-head{flex-wrap:wrap}
+.room-ballot-row{width:100%;padding:8px;border:1px solid #446358;border-radius:6px;background:#1b3029;margin-top:8px}
+.ballot-heroes{display:flex;align-items:center;gap:14px;min-width:0}
+.ballot-heroes>button{flex-direction:row;gap:7px;flex:1;min-width:0;text-align:left}
+.ballot-heroes>button>span{display:flex;flex-direction:column;min-width:0;align-items:flex-start}
+.ballot-heroes img{width:36px;height:36px;flex-shrink:0}
+.ballot-row-top{align-items:center;gap:8px}
+.ballot-row-top>b{width:14px;flex-shrink:0}
+.ballot-row-actions{margin-top:4px}
+.ballot-row-detail{margin:2px 0 0 22px}
+.sidebar-focused .room-ballot-board{margin-inline:0}
+.sidebar-focused .ballot-heroes{gap:7px}
+.sidebar-focused .ballot-heroes>button{gap:5px;flex-direction:column;align-items:center;text-align:center}
+.sidebar-focused .ballot-heroes>button>span{align-items:center}
 @media(prefers-reduced-motion:no-preference){.room-ballot-row{animation:proposal-arrive .16s ease-out}@keyframes proposal-arrive{from{opacity:.5;transform:translateY(-4px)}to{opacity:1;transform:none}}}

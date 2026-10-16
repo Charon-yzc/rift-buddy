@@ -90,15 +90,15 @@ async function run(){
   await click(main,'[data-action=task-edit]');await until(()=>js(main,'!!document.querySelector(".drawer [data-action=import-item-set]")'),'Own drawer missing');
   await click(main,'.drawer [data-action=import-item-set]');
   for(const win of [main,side]){
-   await until(()=>js(win,'document.querySelector(":is(.preparation-task,.client-preparation-result) [data-preparation-step=items]")?.dataset.stepStatus==="done"'),'Independent item receipt missing');
-   assert.equal(await js(win,'document.querySelectorAll(":is(.preparation-task,.client-preparation-result) [data-step-status=done]").length'),1,'Item-only write implied other steps completed');
+   await until(()=>js(win,'/已写入|已更新/.test(document.querySelector(".item-set-status")?.textContent||"")'),'Independent item field receipt missing');
+   assert.equal(await js(win,'document.querySelectorAll("[data-preparation-step=runes][data-step-status=done],[data-preparation-step=spells][data-step-status=done],[data-preparation-step=hover][data-step-status=done]").length'),0,'Item-only write implied other steps completed');
    assert.match(await js(win,'document.querySelector(".item-set-status")?.textContent||""'),/已写入|已更新/);
   }
   assert.equal(attempts.length,0);assert.equal(writes.length,0,'Independent item import wrote to client selection or runes');
   const previousSide=side;previousSide.destroy();await click(main,'[data-action=close]');await click(main,'[data-action=companion-attach]');
   await until(()=>{side=windows.find(w=>w!==previousSide&&!w.isDestroyed()&&w.webContents.getURL().includes('surface=companion'));return side;},'Sidebar did not rebuild');diagnosticSide=side;
-  await until(()=>js(side,'!!document.querySelector(".companion-shell")'),'Rebuilt sidebar UI missing');await ownPlan();await until(()=>js(side,'document.querySelector(":is(.preparation-task,.client-preparation-result) [data-preparation-step=items]")?.dataset.stepStatus==="done"'),'Item-only receipt was lost on rebuild');
-  assert.equal(await js(side,'document.querySelectorAll(":is(.preparation-task,.client-preparation-result) [data-step-status=done]").length'),1);
+  await until(()=>js(side,'!!document.querySelector(".companion-shell")'),'Rebuilt sidebar UI missing');await ownPlan();await until(()=>js(side,'/已写入|已更新/.test(document.querySelector(".item-set-status")?.textContent||"")'),'Item-only receipt was lost on rebuild');
+  assert.equal(await js(side,'document.querySelectorAll("[data-preparation-step=runes][data-step-status=done],[data-preparation-step=spells][data-step-status=done],[data-preparation-step=hover][data-step-status=done]").length'),0);
   // A new manual client hover supersedes the accepted hero, without applying
   // anything or carrying the previous hero's equipment receipt forward.
   intent=hero('Ashe').key;await click(side,'[data-action=sync]');
@@ -127,8 +127,8 @@ async function run(){
   await click(side,'[data-action=companion-tab][data-tab=recommend]');
   await until(()=>js(side,'!!document.querySelector("[data-action=propose-result]")'),'Candidate proposal control missing');
   await click(side,'[data-action=propose-result]');await until(()=>js(side,'!!document.querySelector(".room-ballot-board .room-ballot-row")'),'Proposal is not visible above candidates');
-  const layout=await js(side,'(()=>{const row=document.querySelector(".room-ballot-row"),candidate=document.querySelector(".companion-candidate"),box=selector=>row.querySelector(selector).getBoundingClientRect();return {boardY:row.getBoundingClientRect().top,candidateY:candidate.getBoundingClientRect().top,voteY:box("[data-action=room-vote]").top,adoptY:box("[data-action=room-adopt-ballot]").top,detailsY:box("[data-action=room-ballot-details]").top,candidateDetails: getComputedStyle(candidate.querySelector(".candidate-details>summary")).position};})()');
-  assert.ok(layout.boardY<layout.candidateY);assert.equal(layout.voteY,layout.adoptY);assert.ok(layout.detailsY>layout.adoptY);assert.equal(layout.candidateDetails,'static');
+  const layout=await js(side,'(()=>{const row=document.querySelector(".room-ballot-row"),candidate=document.querySelector(".companion-candidate"),box=selector=>row.querySelector(selector).getBoundingClientRect();return {boardY:row.getBoundingClientRect().top,candidateY:candidate.getBoundingClientRect().top,boardWidth:row.getBoundingClientRect().width,candidateWidth:candidate.getBoundingClientRect().width,adoptVisible:!!row.querySelector("[data-action=room-adopt-ballot]"),voteY:box("[data-action=room-vote]").top,detailsY:box("[data-action=room-ballot-details]").top,candidateDetails: getComputedStyle(candidate.querySelector(".candidate-details>summary")).position};})()');
+  assert.ok(layout.boardY<layout.candidateY);assert.equal(layout.adoptVisible,false);assert.ok(Math.abs(layout.boardWidth-layout.candidateWidth)<=2,JSON.stringify(layout));assert.ok(layout.detailsY>layout.voteY);assert.equal(layout.candidateDetails,'static');
   await delay(250);await capture(side,'proposal-sidebar.png');
   const candidate=await js(side,'(()=>{const el=document.querySelector("[data-action=companion-preview][data-id=Galio]");return {combo:el.dataset.combo,members:[...el.closest(".companion-candidate").querySelectorAll("[data-action=companion-preview]")].map(member=>member.dataset.role+":"+member.dataset.id)};})()');
   assert.equal(candidate.combo,'camille-galio-vi');assert.deepEqual(candidate.members,['top:Camille','jungle:Vi','mid:Galio']);

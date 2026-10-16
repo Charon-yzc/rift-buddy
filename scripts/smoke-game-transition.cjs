@@ -15,6 +15,7 @@ async function run(){
    if(p==='/liveclientdata/eventdata')return {value:{Events:[]}};
   }
   assert.equal(options.port,23456);assert.equal(options.method||'GET','GET','A real rune write must never occur in this test');
+  if(p==='/lol-summoner/v1/current-summoner')return {value:{gameName:'隔离阶段玩家',tagLine:'TEST'}};
   if(p==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
   if(p==='/lol-gameflow/v1/session')return {value:{gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}}};
   if(p==='/lol-champ-select/v1/session')return {value:{localPlayerCellId:1,myTeam:[{cellId:1,championId:data.champions.find(c=>c.id===hero).key,assignedPosition:role}],theirTeam:[],actions:[],bans:{}}};

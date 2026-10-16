@@ -594,7 +594,7 @@ async function prepareHeroClick(context,expected=null){
  if(action.prepare){selection.readOnly=false;lastTaskSelection=selection;draftComparing=false;positionClaim=null;}
  if(windowLayout.docked){companionPreview=selection;companionTab='plan';companionScroll.delete('plan');closeOverlay();render();}
  else{showBuild(context.id,context.role,context.mode||'rift',selection);}
- if(action.prepare)return useClientPreparation({dataset:{preparationView:windowLayout.docked?'companion':'build'}},true,expected);
+ if(action.prepare)return useClientPreparation({dataset:{preparationView:windowLayout.docked?'companion':'build'}},true,expected?{...expected,planId:activeCreativePlan?.id||''}:null);
 }
 function refreshClickedResult(result,input,current,previousSlots){
  const preferences=value=>recommendationKey({...value,slots:[],clientSession:null,soloChampion:null,publicBans:[],eligibleByRole:{},confirmedPick:null,enemy:[],visibleEnemies:[],publicPicks:[]});
@@ -651,13 +651,17 @@ async function prepareCandidate(el){
    const inherited=partyRoutePreparations(preparations,result.preparationOrigin,plan).find(s=>s.id===context.id&&s.role===context.role);
    const selection={...rememberedPreparation(context),...inherited,...context};
    const expected={...context,planId:plan?.id||'',fingerprint:clientPreparationPlan(data,{selection,build:getBuild(champ(context.id),context.role,data,selection)})?.fingerprint};
+   const clickGame=preparationGameId(client),clickCell=client.session?.localPlayerCellId,clickMode=client.mode?.id;
    const previousTarget=preparationTarget;preparationTarget=selection;
    candidatePreparing=true;try{
+    await sync(false,{fresh:true});
+    const key=champ(context.id).key,unavailable=client.eligibility?.disabled?.includes(key)||Array.isArray(client.eligibility?.pickable)&&!client.eligibility.pickable.includes(key);
+    if(!client.connected||client.phase!=='ChampSelect'||clickGame!==preparationGameId(client)||clickCell!==client.session?.localPlayerCellId||clickMode!==client.mode?.id||unavailable||!memberHeroAction(context.id,context.role).prepare)throw Error('选人或可选英雄已变化，尚未操作；请重新选择');
     // Applying one hero does not require replacing a whole incompatible lineup.
     // Keep the concrete candidate build even when its reference lane is occupied.
     const target=slots.find(s=>s.role===context.role),otherPlayer=Number.isInteger(target?.clientCellId)&&target.clientCellId!==client.session?.localPlayerCellId;
     let adopted=false;
-    if(!otherPlayer&&(!taskOwnRole()||taskOwnRole()===context.role)&&resultsSignature===recommendationKey(recommendationInput())){
+    if(!otherPlayer&&result.targets?.includes(context.role)&&!result.slots.find(s=>s.role===context.role)?.publicIntent&&(!taskOwnRole()||taskOwnRole()===context.role)&&resultsSignature===recommendationKey(recommendationInput())){
      const clickGame=preparationGameId(client),clickCell=client.session?.localPlayerCellId,clickMode=client.mode?.id;
      try{await adoptResult(index,true);adopted=true;}
      catch(error){
@@ -679,9 +683,9 @@ function renderRoom(){
  return `<section class="room-workspace"><header class="room-workspace-heading"><h1>开黑房间</h1>${button('room-to-draft','返回选阵容','','small')}</header>${roomError?`<p class="callout warning" role="alert">${e(roomError)}</p>`:''}${roomPanelHTML()}</section>`;
 }
 function selectedClientPreparation(view){if(view==='incoming-ballot'){const row=roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null}).find(r=>r.key===clickedRoomPlan?.ballotKey),config=row?.proposal.configurations?.find(c=>c.champion===clickedRoomPlan.id&&c.role===clickedRoomPlan.role);return config?roomClientPlan(config,data,row.proposal.strategy,{localStrategy:captureRoomStrategy(slots,data,activeCreativePlan,config.mode)}):null;}if(view==='incoming-room'){const member=room?.members.find(m=>m.nick===clickedRoomPlan?.member),config=member?.share?.configurations?.find(c=>c.champion===clickedRoomPlan.id&&c.role===clickedRoomPlan.role);return config?roomClientPlan(config,data,member.share.strategy,{localStrategy:captureRoomStrategy(slots,data,activeCreativePlan,config.mode)}):null;}return view==='task'?ownTaskPreparation():view==='room'?roomOwnPreparation():view==='companion'?companionPreparation():view==='build'&&buildView?{selection:buildSelection(),build:buildView.build}:null;}
-function returnToTeamAfterPreparation(selection){
+function returnToTeamAfterPreparation(selection,force=false){
  const current=companionPreparation()?.selection;
- if(windowLayout.docked&&['id','role','mode'].every(field=>current?.[field]===selection[field])){companionPreview=null;companionTab='plan';companionScroll.delete('plan');}
+ if(windowLayout.docked&&(force||['id','role','mode'].every(field=>current?.[field]===selection[field]))){companionPreview=null;companionTab='plan';companionScroll.delete('plan');}
 }
 async function useClientPreparation(el,directClick=false,expected=null){
  if(!api.prepareSelection)throw Error('客户端配置请在桌面版使用');
@@ -724,7 +728,7 @@ async function useClientPreparation(el,directClick=false,expected=null){
   if(preparationGameId(client)===gameId&&clickedPlanId===(activeCreativePlan?.id||'')&&intent&&['id','role','mode'].every(field=>intent.selection[field]===selection[field]))rememberIntentPreparation(preparations.recall(selection)||latestSelection);
   const own=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),target=data.champions.find(c=>c.id===selection.id)?.key;
   if(result.steps?.runes?.status==='done'&&client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='rift'&&preparationGameId(client)===gameId&&(own?.championId||own?.championPickIntent)===target)runeAppliedKeys.confirm(runeAppliedKeys.begin(runeApplicationKey(selection.id,selection.role,prepared.value.page)));
-  if(result.steps?.hover?.status==='done'&&preparationGameId(client)===gameId&&(own?.championId||own?.championPickIntent)===target){lastTaskSelection=selection;returnToTeamAfterPreparation(selection);}
+  if(result.steps?.hover?.status==='done'&&preparationGameId(client)===gameId&&(own?.championId||own?.championPickIntent)===target){lastTaskSelection=selection;returnToTeamAfterPreparation(selection,true);}
   toast(result.complete?'预选与配置已完成，锁定请在客户端确认':'部分步骤未完成，请查看操作结果',!result.complete);return result;
  }catch(error){const message=String(error.message||'操作未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');const completed=clientPreparationStatuses.get(key);clientPreparationStatuses.set(key,completed?{...completed,followUpError:message}:{message});throw error;}
  finally{clientPreparing=false;preparationTarget=previousTarget;preparationPendingKey='';while(clientPreparationStatuses.size>30)clientPreparationStatuses.delete(clientPreparationStatuses.keys().next().value);render();if(buildView)renderBuild();}
@@ -1322,13 +1326,14 @@ document.addEventListener('click',async event=>{
  }
  if(action==='room-ballot-details'){
  const row=roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null}).find(r=>r.key===el.dataset.key);if(!row)throw Error('候选已撤回');
- closeOverlay();overlay.innerHTML='<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="候选阵容详情"><header class="modal-header"><h3>'+e(row.from)+'的提议</h3>'+button('close','','close','quiet icon-only','aria-label="关闭"')+'</header><div class="modal-body"><p>'+e(row.proposal.strategy?.why||row.proposal.strategy?.name||'分路搭配')+'</p>'+row.proposal.lineup.filter(s=>s.champion).map(s=>'<div class="setting-row"><b>'+e(champ(s.champion)?.name||s.champion)+' · '+roleName(s.role)+'</b>'+button('room-ballot-hero','查看配置','','small','data-key="'+e(row.key)+'" data-id="'+e(s.champion)+'" data-role="'+s.role+'" data-readonly="true"')+'</div>').join('')+'<p class="bottom-note">'+e(row.fit.reason)+'</p></div></section></div>';return;
+ closeOverlay();overlay.innerHTML='<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="候选阵容详情"><header class="modal-header"><h3>'+e(row.from)+'的提议</h3>'+button('close','','close','quiet icon-only','aria-label="关闭"')+'</header><div class="modal-body"><p>'+e(row.proposal.strategy?.why||row.proposal.strategy?.name||'分路搭配')+'</p>'+row.proposal.lineup.filter(s=>s.champion).map(s=>'<div class="setting-row"><b>'+e(champ(s.champion)?.name||s.champion)+' · '+roleName(s.role)+'</b>'+button('room-ballot-hero','查看配置','','small','data-key="'+e(row.key)+'" data-id="'+e(s.champion)+'" data-role="'+s.role+'" data-readonly="true"')+'</div>').join('')+'<p class="bottom-note">'+e(row.fit.reason)+'</p>'+button('room-adopt-ballot','采用整套方案','','small','data-key="'+e(row.key)+'"')+'</div></section></div>';return;
  }
  if(action==='room-ballot-hero'){
  const row=roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null}).find(r=>r.key===el.dataset.key);if(!row)throw Error('候选已撤回');
  const config=row.proposal.configurations?.find(c=>c.champion===el.dataset.id&&c.role===el.dataset.role);
  if(config&&el.dataset.readonly!=='true'&&memberHeroAction(el.dataset.id,el.dataset.role).prepare){clickedRoomPlan={ballotKey:row.key,id:el.dataset.id,role:el.dataset.role};await useClientPreparation({dataset:{preparationView:'incoming-ballot'}},true);}
  else if(config){closeOverlay();roomConfigurationView={config:structuredClone(config),from:row.from,strategy:row.proposal.strategy?structuredClone(row.proposal.strategy):null,localStrategy:captureRoomStrategy(slots,data,activeCreativePlan,config.mode)};overlay.innerHTML=roomConfigurationDialog(roomConfigurationView.config,data,row.from,roomConfigurationView.strategy,{localStrategy:roomConfigurationView.localStrategy});}
+ else if(el.dataset.readonly!=='true'&&memberHeroAction(el.dataset.id,el.dataset.role).prepare){const combo=row.proposal.strategy&&creativeMemberCombo(row.proposal.strategy,el.dataset.id,el.dataset.role);await prepareHeroClick({id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(combo)});}
  else{closeOverlay();overlay.innerHTML=roomMissingConfigurationDialog({id:el.dataset.id,role:el.dataset.role,mode:'rift',nick:row.from,champ});}return;
  }
  if(action==='room-vote'){

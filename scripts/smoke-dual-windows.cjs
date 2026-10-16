@@ -18,6 +18,7 @@ async function run(){
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'4701',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
+  if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离同步玩家',tagLine:'TEST'};
   if(options.path==='/lol-champ-select/v1/session')return {gameId:4701,localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:0,assignedPosition:assigned}],theirTeam:[{cellId:6,championId:hero('Malphite').key}],actions:[],bans:{myTeamBans:[],theirTeamBans:[]}};
   if(options.path.endsWith('/pickable-champion-ids'))return data.champions.map(c=>c.key);if(options.path.endsWith('/disabled-champion-ids'))return [];
   if(options.path==='/lol-perks/v1/pages')return [page];
@@ -78,10 +79,10 @@ async function run(){
  // Windows keep independent navigation. Explicitly show the main preparation
  // before testing that a rune write in the sidebar updates its visible receipt.
  if(await js(main,'!!document.querySelector("[data-action=task-return]")'))await click(main,'[data-action=task-return]');
- await click(main,'[data-action=task-edit]');await until(()=>js(main,'!!document.querySelector(":is(.preparation-task,.client-preparation) [data-preparation-step=runes],.client-preparation [data-preparation-step=runes]")'),'Main preparation receipt missing');
+ await click(main,'[data-action=task-edit]');await until(()=>js(main,'!!document.querySelector(".drawer .client-preparation")'),'Main configuration controls missing');
  await click(side,'[data-action=companion-tab][data-tab=plan]');await until(()=>js(side,'!!document.querySelector("[data-action=my-runes]")'),'Selected hero preparation missing');holdRune=true;await click(side,'[data-action=my-runes]');await until(()=>resumeRune,'Explicit rune click did not reach mocked write');
  const context=await js(main,'window.buddy.bootstrap().then(b=>({phase:b.client.phase,gameId:b.client.game.gameId,cellId:b.client.session.localPlayerCellId,championId:b.client.session.myTeam[0].championId,championPickIntent:0,assignedPosition:"MIDDLE"}))');
- await assert.rejects(handlers.get('apply-runes')(event(main),{},context),/正在应用|配置正在处理/);resumeRune();holdRune=false;await until(()=>writes===1,'Mock rune write missing');await until(()=>js(main,'document.querySelector(":is(.preparation-task,.client-preparation) [data-preparation-step=runes]")?.dataset.stepStatus==="done"'),'Rune confirmation did not reach main');
+ await assert.rejects(handlers.get('apply-runes')(event(main),{},context),/正在应用|配置正在处理/);resumeRune();holdRune=false;await until(()=>writes===1,'Mock rune write missing');await until(()=>js(main,'/已应用/.test(document.querySelector(".drawer .preparation-title")?.textContent||"")'),'Rune confirmation did not reach main');
  const both=metrics(),heaps={};for(const [name,window] of [['main',main],['sidebar',side]]){window.webContents.debugger.attach('1.3');heaps[name]={before:await window.webContents.debugger.sendCommand('Runtime.getHeapUsage')};await window.webContents.debugger.sendCommand('HeapProfiler.collectGarbage');heaps[name].after=await window.webContents.debugger.sendCommand('Runtime.getHeapUsage');window.webContents.debugger.detach();}await delay(200);const afterGC=metrics();
  await fs.writeFile(path.join(root,'main.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());await fs.writeFile(path.join(root,'sidebar.png'),(await side.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  const savedBeforeGame=await js(main,'window.buddy.bootstrap().then(b=>b.state)'),busyDialog=js(main,'window.buddy.chooseDirectory()');await until(()=>resumeDialog,'In-flight dialog fixture did not start');
