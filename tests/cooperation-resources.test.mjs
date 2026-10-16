@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
-import {cooperationCoordination} from '../src/core/cooperation-pairs.mjs';
+import {COOPERATION_PAIRS,cooperationCoordination} from '../src/core/cooperation-pairs.mjs';
 import {sharedUltimateConflict} from '../src/core/cooperation-resources.mjs';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {captureCreativePlan,creativePlanId,validateCreativePlan} from '../src/core/creative-plan.mjs';
@@ -14,7 +14,7 @@ import {defaultState,saveState,readState} from '../services/storage.mjs';
 
 const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const roles=['jungle','mid','support'];
-const cases=[['Hecarim','Orianna','Rell'],['Zac','Orianna','Alistar'],['Hecarim','Galio','Rell'],['Zac','Galio','Alistar'],['LeeSin','Yasuo','Rakan']];
+const cases=[['Hecarim','Orianna','Rell'],['Zac','Orianna','Alistar'],['Hecarim','Galio','Rell'],['Zac','Galio','Alistar'],['LeeSin','Yasuo','Rakan'],['Hecarim','Galio','Camille'],['Diana','Yasuo','Rakan']];
 const members=ids=>ids.map((champion,i)=>({role:roles[i],champion}));
 const slotsFor=ids=>createSlots().map(s=>({...s,party:roles.includes(s.role),champion:ids[roles.indexOf(s.role)]||null,locked:roles.includes(s.role)}));
 
@@ -49,6 +49,31 @@ test('resource coordination preserves authored ball and airborne whole-party rel
   const graph=createCooperationGraph(data.champions),plan=cooperationPlan(members(ids),graph),authored=cooperationCoordination(members(ids),graph,plan.edges);
   assert.ok(authored.relaySteps);assert.deepEqual(plan.memberJobs,authored.memberJobs);assert.deepEqual(plan.steps,authored.relaySteps);
   assert.ok(captureCreativePlan({adaptive:plan,slots:slotsFor(ids)},data));
+ }
+});
+
+test('every currently reviewed ultimate entrance composes with every other entrance using the same resource',()=>{
+ const graph=createCooperationGraph(data.champions);
+ // These existing Yasuo pairs explicitly require his R. Build inputs from
+ // the reviewed table, independently of the production consumer whitelist.
+ const airborne=new Set(COOPERATION_PAIRS.filter(r=>r.slice(0,2).includes('Yasuo')).map(r=>r.slice(0,2).sort().join(':')));
+ const consumer=edge=>edge?.family==='ball'?'Orianna':edge?.family==='landing'||edge?.id==='pair:Camille:Galio'?'Galio':edge?.family.startsWith('pair:')&&airborne.has([edge.a,edge.b].sort().join(':'))?'Yasuo':null;
+ for(const owner of ['Orianna','Galio','Yasuo']){
+  const anchor={role:'mid',champion:owner},entrances=data.champions.filter(c=>c.id!==owner&&consumer(graph.edge(anchor,{role:'jungle',champion:c.id}))===owner);
+  assert.ok(entrances.length>1,owner+' must exercise overlapping entrances');
+  for(let a=0;a<entrances.length;a++)for(let b=a+1;b<entrances.length;b++){
+   const group=[{role:'top',champion:entrances[a].id},{role:'jungle',champion:entrances[b].id},anchor],plan=cooperationPlan(group,graph);
+   assert.ok(plan,group.map(m=>m.champion).join('/'));
+   assert.equal(sharedUltimateConflict(plan.edges)?.owner,owner);
+   const authored=cooperationCoordination(group,graph,plan.edges);
+   assert.equal(plan.steps.length,3);
+   if(authored.relaySteps)assert.deepEqual(plan.steps,authored.relaySteps);
+   else assert.match(plan.steps[2],/R 尚未使用.*可用.*R 已交就取消/);
+   const slots=createSlots().map(s=>({...s,party:group.some(m=>m.role===s.role),champion:group.find(m=>m.role===s.role)?.champion||null,locked:group.some(m=>m.role===s.role)}));
+   const saved=captureCreativePlan({adaptive:plan,slots},data);
+   assert.deepEqual(validateCreativePlan(saved,slots),saved);
+   assert.deepEqual(saved.cooperation.memberJobs,plan.memberJobs);
+  }
  }
 });
 

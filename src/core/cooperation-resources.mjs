@@ -4,10 +4,10 @@ import {independentCooperationAction} from './shared-cooperation.mjs';
 
 // Explicit resource consumers, not a heuristic that every repeated owner or
 // R means a conflict. Stacking passives and shared areas remain cooperative.
-const airbornePairs=new Set(['Gragas:Yasuo','Rakan:Yasuo','Malphite:Yasuo','Yasuo:Zac','LeeSin:Yasuo']);
+const airbornePairs=new Set(['Gragas:Yasuo','Rakan:Yasuo','Malphite:Yasuo','Yasuo:Zac','LeeSin:Yasuo','Diana:Yasuo']);
 function resource(edge){
  if(edge.family==='ball')return 'Orianna';
- if(edge.family==='landing')return 'Galio';
+ if(edge.family==='landing'||edge.family==='pair:Camille:Galio')return 'Galio';
  if(edge.family.startsWith('pair:')&&airbornePairs.has([edge.a,edge.b].sort().join(':')))return 'Yasuo';
  return null;
 }
