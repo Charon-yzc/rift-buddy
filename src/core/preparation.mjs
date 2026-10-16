@@ -91,7 +91,7 @@ export function recommendationKey(input){
  // Public bindings affect which saved allies are real in this selection.
  // Names, credentials, timers and page size do not affect recommendation fit.
  const tracksAllies=['context','solo'].includes(effectiveDraftScope(input.slots||[],input.scope));
- const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party,...(s.publicIntent?{publicIntent:true}:{}),...(tracksAllies&&Number.isInteger(s.clientCellId)?{clientCellId:s.clientCellId}:{}),...(tracksAllies&&s.manualPosition?{manualPosition:true}:{})}));
+ const slots=(input.slots||[]).map(s=>({role:s.role,champion:s.champion,locked:s.locked,party:s.party,...(s.publicIntent?{publicIntent:true}:{}),...(tracksAllies&&Number.isInteger(s.clientCellId)?{clientCellId:s.clientCellId}:{}),...(tracksAllies&&s.manualPosition?{manualPosition:true}:{})})).sort((a,b)=>a.role.localeCompare(b.role));
  const session=input.clientSession;
  const team=players=>(players||[]).map(p=>[p.cellId,Number(p.championId)||0,Number(p.championPickIntent)||0,p.assignedPosition||'']).sort((a,b)=>a[0]-b[0]);
  const publicContext=tracksAllies&&Array.isArray(session?.myTeam)?[session.localPlayerCellId,team(session.myTeam),team(session.theirTeam),session.allowDuplicatePicks,[...(session.bans||[])].sort()]:null;

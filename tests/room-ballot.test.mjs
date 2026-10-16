@@ -5,10 +5,42 @@ import {sanitizeShare,proposalKey,sanitizeRoomBallot} from '../src/core/room.mjs
 import {relayWelcome,sanitizeRelayState} from '../src/core/room-relay.mjs';
 import {roomBallotBoard,createBallotRoundObserver,lineupFit} from '../src/core/room-ballot.mjs';
 import {createRoomService} from '../services/room.mjs';
+import {roomBallotView} from '../src/room-ballot-view.mjs';
 const {champions}=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
 const a={lineup:[{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{role:'support',champion:'Braum'}],mode:'rift'};
 const b={lineup:[{role:'mid',champion:'Galio'},{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],mode:'rift'};
 const state=(proposal,vote)=>({lineup:[],pick:null,mode:'rift',ballot:{version:1,proposal,vote}});
+
+test('explicit adoption is separate from voting and retains its proposal when a member changes hero or setup',()=>{
+ const config={champion:'Ashe',role:'bottom',mode:'rift',patch:'16.20',start:[1055],items:[3031,3085],boots:[3006],runes:null,spells:['SummonerFlash','SummonerBarrier'],skills:'WQEW',priority:'WQE',first:'WQE'};
+ const proposal={lineup:[{role:'bottom',champion:'Ashe'},{role:'support',champion:'Nami'}],mode:'rift',configurations:[config]},key=proposalKey(proposal);
+ const host={nick:'甲',self:true,share:state(proposal,key)},guest={nick:'乙',share:{...state(null,key),pick:{champion:'Nami',role:'support',mode:'rift'}}};
+ const room={mode:'host',ballots:true,adoptions:true,members:[host,guest]};
+ assert.equal(roomBallotBoard(room,[],champions)[0].adopters.length,0,'A vote is not adoption');
+ host.share.ballot.accepted={key,role:'bottom'};
+ let row=roomBallotBoard(room,[],champions)[0];assert.equal(row.adopters[0].state,'pending');
+ host.share.pick={champion:'Ashe',role:'bottom',mode:'rift'};host.share.configurations=[{...config,spells:config.spells.toReversed()}];
+ row=roomBallotBoard(room,[],champions)[0];assert.equal(row.adopters[0].state,'matched','Each player keeps their D/F placement');
+ host.share.configurations[0].items=[3085,3031];
+ assert.equal(roomBallotBoard(room,[],champions)[0].adopters[0].state,'changed-configuration');
+ guest.share.ballot.accepted={key,role:'support'};guest.share.pick.champion='Lulu';guest.share.lineup=[{role:'support',champion:'Lulu'}];
+ row=roomBallotBoard(room,[],champions)[0];assert.equal(row.voters.length,2);assert.equal(row.adopters.find(m=>m.nick==='乙').state,'changed-pick');
+ const html=roomBallotView(room,[],champions);assert.match(html,/已采用 2/);assert.match(html,/2 人已改选或调整配置/);assert.match(html,/投票仅表示意向/);
+ guest.online=false;assert.equal(roomBallotBoard(room,[],champions)[0].adopters.length,1);
+});
+
+test('adoption metadata is bounded and old peers remain readable without inventing confirmation',()=>{
+ const key=proposalKey(a),ballot={version:1,proposal:a,vote:key,accepted:{key,role:'bottom',riotId:'private'}};
+ const clean=sanitizeRoomBallot(ballot);assert.deepEqual(clean.accepted,{key,role:'bottom'});
+ assert.equal(sanitizeRoomBallot({...ballot,accepted:{key:'x'.repeat(999),role:'bottom'}}),null);
+ assert.equal(sanitizeRoomBallot({...ballot,accepted:{key,role:'unknown'}}),null);
+ const share=sanitizeShare({kind:'state',v:1,from:'甲',at:1,lineup:[],pick:null,ballot:clean});assert.deepEqual(share.ballot.accepted,clean.accepted);
+ assert.deepEqual(JSON.parse(sanitizeRelayState(JSON.stringify(share),'甲')).ballot.accepted,clean.accepted);
+ assert.equal(relayWelcome('123456',[]).adoptions,1);
+ const old={mode:'client',ballots:true,members:[{nick:'甲',share:state(a,key)}]};
+ assert.equal(roomBallotBoard(old,[],champions)[0].adopters.length,0);
+ assert.doesNotMatch(roomBallotView(old,[],champions),/已采用/);
+});
 
 test('same heroes with different routes stay distinct on every member ordering',()=>{
  const runes={primaryStyleId:8000,subStyleId:8300,selectedPerkIds:[8005,8009,9104,8014,8304,8345,5005,5008,5001]};

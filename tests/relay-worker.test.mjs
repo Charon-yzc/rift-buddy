@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ROOM_PROTOCOL,MAX_FRAME} from '../src/core/room.mjs';
+import {ROOM_PROTOCOL,MAX_FRAME,encodeFrame,decodeFrame} from '../src/core/room.mjs';
 import {hashPin} from '../relay/room-hub.mjs';
 
 // The Worker module runs against Cloudflare globals (WebSocketPair, etc.).
@@ -82,10 +82,10 @@ test('worker: handshake, fan-out, spoof rejection and leave semantics',async()=>
  const a=(await hub.fetch(roomRequest('482913'))).webSocket;
  await hub.webSocketMessage(a,hello('甲'));
  assert.equal(a.sent.length,1);
- assert.deepEqual(JSON.parse(a.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[],ballots:1});
+ assert.deepEqual(JSON.parse(a.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[],ballots:1,adoptions:1,packedStates:2});
  const b=(await hub.fetch(roomRequest('482913'))).webSocket;
  await hub.webSocketMessage(b,hello('乙'));
- assert.deepEqual(JSON.parse(b.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'}],ballots:1});
+ assert.deepEqual(JSON.parse(b.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'}],ballots:1,adoptions:1,packedStates:2});
  assert.deepEqual(JSON.parse(a.sent[1]),{kind:'join',v:ROOM_PROTOCOL,from:'乙'});
  // State from 甲 reaches 乙 but never echoes back to 甲.
  await hub.webSocketMessage(a,state('甲'));
@@ -205,4 +205,30 @@ test('worker: duplicate nicks and a full room cannot join',async()=>{
  const extra=(await hub.fetch(roomRequest('482913'))).webSocket;
  await hub.webSocketMessage(extra,hello('陌生人'));
  assert.equal(extra.closed?.code,4004);
+});
+
+test('worker: receiver capabilities gate packed fanout and incompatible late joins',async()=>{
+ const fs=await import('node:fs/promises'),{createSlots,recommend}=await import('../src/core/recommend.mjs'),{captureCreativePlan}=await import('../src/core/creative-plan.mjs'),{captureRoomConfigurations}=await import('../src/core/room-configuration.mjs'),{createPreparationStore}=await import('../src/core/preparation.mjs');
+ const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
+ const slots=createSlots().map((s,i)=>({...s,party:true,champion:['Malphite','Vi','Orianna','Jinx','Nautilus'][i],locked:true})),strategy=captureCreativePlan(recommend({slots,champions:data.champions,scope:'party'})[0],data,'2026-10-16T00:00:00Z'),lineup=slots.map(({role,champion})=>({role,champion})),configurations=captureRoomConfigurations(slots,data,createPreparationStore(),{creativePlan:strategy});
+ const message={kind:'state',v:1,from:'new-a',at:1,lineup,pick:null,strategy,configurations,ballot:{version:1,vote:null,proposal:{lineup,mode:'rift',strategy,configurations}}},wire=encodeFrame(message).trimEnd();
+ assert.equal(JSON.parse(wire).encoding,'dict2');
+ const join=async(hub,name,packed=true)=>{const socket=(await hub.fetch(roomRequest('482913'))).webSocket;await hub.webSocketMessage(socket,JSON.stringify({...JSON.parse(hello(name)),...(packed?{packedStates:2}:{})}));return socket;};
+ const mixed=new RoomHub(fakeState()),a=await join(mixed,'new-a'),old=await join(mixed,'old',false),count=old.sent.length;
+ await mixed.webSocketMessage(a,wire);assert.equal(a.closed?.code,4010);assert.equal(old.sent.length,count,'No packed data is delivered to an old peer');
+ const modern=new RoomHub(fakeState()),sender=await join(modern,'new-a'),receiver=await join(modern,'new-b');
+ const welcome=JSON.parse(receiver.sent[0]);assert.equal(welcome.members[0].packedStates,2);
+ await modern.webSocketMessage(sender,wire);assert.deepEqual(decodeFrame(receiver.sent.at(-1)).strategy,strategy);
+ assert.equal(sender.deserializeAttachment().large,true);
+ const late=await join(modern,'old-late',false);assert.equal(late.closed?.code,4010);assert.equal(late.sent.length,0,'Refuse before welcoming an incompatible peer');
+ const newLate=await join(modern,'new-late');assert.equal(newLate.closed,null);
+ const small=JSON.stringify({kind:'state',v:1,from:'new-a',at:2,lineup:[],pick:null});await modern.webSocketMessage(sender,small);assert.equal(sender.deserializeAttachment().large,false);
+ const compatibleOld=await join(modern,'old-small',false);assert.equal(compatibleOld.closed,null,'Small legacy sharing remains supported');
+ for(const oldCapability of [1,true]){
+  const upgradedHub=new RoomHub(fakeState()),newSender=await join(upgradedHub,'new-a'),oldReceiver=await join(upgradedHub,'old-attachment',false);
+  oldReceiver.serializeAttachment({...oldReceiver.deserializeAttachment(),packedStates:oldCapability});
+  const before=oldReceiver.sent.length;
+  await upgradedHub.webSocketMessage(newSender,wire);
+  assert.equal(newSender.closed?.code,4010);assert.equal(oldReceiver.sent.length,before,'A hibernated old attachment cannot be upgraded from truthiness');
+ }
 });

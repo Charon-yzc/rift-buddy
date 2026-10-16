@@ -27,7 +27,7 @@ export function adoptRoomLineup(raw,data,current,client,availability={},syncOpti
  const restored=restoreTeamFavorite({slots:desired,scope:'party',...(share.strategy?{creativePlan:share.strategy}:{})},reusable,data.champions,inDraft?client.session:null,{...availability,moveUnbound:true});
  // Lineup-only messages have no party identities. Keep the receiver's marks.
  for(const slot of restored.slots){const prior=current.find(s=>s.role===slot.role);if(!share.strategy||prior.partyManual){slot.party=prior.party;if(prior.partyManual)slot.partyManual=true;}}
- if(inDraft){const merged=mergeClientSession(restored.slots,client.session,data.champions,syncOptions);restored.slots=merged.slots;restored.unassigned=merged.unassigned;}
+ if(inDraft){const merged=mergeClientSession(restored.slots,client.session,data.champions,{...syncOptions,creativePlan:restored.creativePlan});restored.slots=merged.slots;restored.unassigned=merged.unassigned;}
  if(restored.creativePlan&&(!creativePlanMatches(restored.creativePlan,restored.slots)||restored.creativePlan.members.some(m=>!restored.slots.some(s=>s.role===m.role&&s.party)))){restored.creativePlan=null;restored.conflicts.push({kind:'plan'});}
  if(!share.strategy)restored.creativePlan=captureRoomStrategy(restored.slots,data);
  const configurations=[],configurationErrors=[];

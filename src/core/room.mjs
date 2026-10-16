@@ -6,7 +6,9 @@
 
 import {validateCreativePlan} from './creative-plan.mjs';
 import {fingerprint} from './catalog-review.mjs';
+import {packRoomState,unpackRoomState,roomStateWithinBudget} from './room-frame.mjs';
 export const ROOM_PROTOCOL=1;
+export const PACKED_STATES_VERSION=2;
 export const ROLES=['top','jungle','mid','bottom','support'];
 const MODES=['rift','hex','aram'];
 export const MAX_FRAME=65536;
@@ -131,8 +133,14 @@ export function decodeRoomInvitation(text){
 // --- NDJSON framing -------------------------------------------------------
 export function encodeFrame(value){
  let line;
- try{line=JSON.stringify(value);}catch{return null;}
- if(typeof line!=='string'||new TextEncoder().encode(line).length+1>MAX_FRAME)return null;
+ try{
+  line=JSON.stringify(value);if(typeof line!=='string')return null;
+  if(new TextEncoder().encode(line).length+1>MAX_FRAME){
+   if(!roomStateWithinBudget(line)||!sanitizeShare(value))return null;
+   const packed=packRoomState(value);if(!packed)return null;line=JSON.stringify(packed);
+  }
+ }catch{return null;}
+ if(new TextEncoder().encode(line).length+1>MAX_FRAME)return null;
  return line+'\n';
 }
 // Split a stream buffer into complete lines plus the trailing partial line.
@@ -148,6 +156,7 @@ export function decodeFrame(line){
  if(new TextEncoder().encode(text).length>MAX_FRAME)return null;
  try{
   const value=JSON.parse(text);
+  if(value?.encoding!==undefined)return unpackRoomState(value);
   return value&&typeof value==='object'&&!Array.isArray(value)?value:null;
  }catch{return null;}
 }
@@ -158,14 +167,15 @@ export function validateHello(value){
  if(value?.kind!=='hello'||value.v!==ROOM_PROTOCOL)return null;
  const room=String(value.room||''),pin=String(value.pin||''),who=nick(value.nick);
  if(!validRoomCode(room)||!validPin(pin)||!who)return null;
- return {kind:'hello',v:ROOM_PROTOCOL,room,pin,nick:who};
+ return {kind:'hello',v:ROOM_PROTOCOL,room,pin,nick:who,...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})};
 }
 export function validateWelcome(value){
  if(value?.kind!=='welcome'||value.v!==ROOM_PROTOCOL)return null;
  const room=String(value.room||'');
  if(!validRoomCode(room))return null;
  const members=Array.isArray(value.members)?value.members.map(m=>nick(m?.nick)).filter(Boolean).slice(0,12):[];
- return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{})};
+ const packedMembers=Array.isArray(value.members)?value.members.filter(m=>m?.packedStates===PACKED_STATES_VERSION&&members.includes(nick(m.nick))).map(m=>nick(m.nick)):[];
+ return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION,packedMembers}:{})};
 }
 // Votes identify the full sanitized proposal, including each member's setup.
 // The same champions with another route must remain a different choice.
@@ -189,7 +199,13 @@ export function sanitizeRoomBallot(value){
   let strategy;if(value.proposal.strategy){try{strategy=validateCreativePlan(value.proposal.strategy);if(!strategy.members.every(m=>team.some(s=>s.champion===m.champion&&s.role===m.role)))return null;}catch{return null;}}
   proposal={lineup:team,mode:'rift',...(builds?{configurations:builds}:{}),...(strategy?{strategy}:{})};
  }
- return {version:1,vote,proposal};
+ let accepted;
+ if(value.accepted!==undefined){
+  if(value.accepted===null)accepted=null;
+  else if(typeof value.accepted?.key==='string'&&/^[a-f0-9]{16}$/.test(value.accepted.key)&&ROLES.includes(value.accepted.role))accepted={key:value.accepted.key,role:value.accepted.role};
+  else return null;
+ }
+ return {version:1,vote,proposal,...(accepted!==undefined?{accepted}:{})};
 }
 // Shared state is sanitized by rebuild: unknown fields (riotId, scores,
 // clientCellId, ...) are stripped, and a bad core shape returns null whole.
@@ -215,7 +231,7 @@ export function validateLeave(value){
 export function validateJoin(value){
  if(value?.kind!=='join'||value.v!==ROOM_PROTOCOL)return null;
  const from=nick(value.from);
- return from?{kind:'join',v:ROOM_PROTOCOL,from}:null;
+ return from?{kind:'join',v:ROOM_PROTOCOL,from,...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})}:null;
 }
 
 // Extract a shareable lineup from local slots, keeping only public fields.

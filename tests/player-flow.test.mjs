@@ -48,7 +48,7 @@ test('declared lanes precede guesses; manual party overrides survive known-group
  assert.equal(mergeClientSession(restored,session,data.champions,options).slots.find(s=>s.clientCellId===1).party,false);
  assert.equal(currentPlayerSelection(session,data.champions,restored).role,'support');assert.equal(currentPlayerSelection(session,data.champions,restored).positionKnown,false);
 });
-test('unknown unpicked players preserve saved targets; a known group receives temporary unbound positions',()=>{
+test('unknown unpicked players cannot confirm saved targets; a known group receives temporary unbound positions',()=>{
  const slots=createSlots().map(s=>({...s,party:['mid','bottom'].includes(s.role)}));
  const session={localPlayerCellId:0,myTeam:[0,1,2].map(cellId=>({cellId,championId:0,assignedPosition:''}))};
  for(const party of [
@@ -56,7 +56,7 @@ test('unknown unpicked players preserve saved targets; a known group receives te
   {status:'known',members:[{cellId:0,local:true,firstPosition:'TOP',secondPosition:'JUNGLE'},{cellId:1},{cellId:2}]},
  ]){
   const before=structuredClone(slots),result=mergeClientSession(slots,session,data.champions,{autoParty:true,party});
-  if(party.status==='unknown')assert.deepEqual(result.slots,before);
+  if(party.status==='unknown')assert.ok(result.slots.every(s=>!s.party));
   else{assert.equal(result.slots.filter(s=>s.party).length,3);assert.equal(result.slots.find(s=>s.role==='top').party,true);assert.ok(result.slots.every(s=>!s.champion&&!s.locked&&!Number.isInteger(s.clientCellId)&&!s.manualPosition));}
   assert.deepEqual(slots,before);assert.equal(result.markedLocalRole,null);
  }
@@ -97,9 +97,9 @@ test('unknown lobby membership adds only explicitly confirmed players and preser
  const session={localPlayerCellId:0,myTeam:[{cellId:0,championId:0,assignedPosition:'BOTTOM'},{cellId:1,championId:0,assignedPosition:'UTILITY'}]};
  const members=[{cellId:0,local:true},{cellId:1}];
  const unknown=mergeClientSession(slots,session,data.champions,{autoParty:true,party:{status:'unknown',members}});
- assert.deepEqual(unknown.slots.filter(s=>s.party).map(s=>s.role),['mid','bottom']);
+ assert.deepEqual(unknown.slots.filter(s=>s.party).map(s=>s.role),['bottom']);
  const manualId=mergeClientSession(slots,session,data.champions,{autoParty:true,party:{status:'unknown',members:[members[0],{...members[1],source:'manual-id'}]}});
- assert.deepEqual(manualId.slots.filter(s=>s.party).map(s=>s.role),['mid','bottom','support']);
+ assert.deepEqual(manualId.slots.filter(s=>s.party).map(s=>s.role),['bottom','support']);
  const owned=slots.map(s=>s.role==='bottom'?{...s,clientCellId:0,manualPosition:true,partyManual:true}:s);
  session.myTeam[0].assignedPosition='TOP';session.myTeam[1].assignedPosition='MIDDLE';
  const preserved=mergeClientSession(owned,session,data.champions,{autoParty:true,party:{status:'known',members}});

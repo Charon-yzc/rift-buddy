@@ -7,7 +7,7 @@
 // that the hash itself is not a strong secret; it only keeps out people who
 // do not know the pin. Deploy notes: docs/room-relay-deploy.md.
 
-import {ROOM_PROTOCOL,validateLeave} from '../src/core/room.mjs';
+import {ROOM_PROTOCOL,PACKED_STATES_VERSION,validateLeave} from '../src/core/room.mjs';
 import {MAX_RELAY_MEMBERS,RELAY_PING as PING,RELAY_PONG as PONG,validateRelayHello,relayWelcome,relayJoin,relayLeave,sanitizeRelayState,frameTooLarge} from '../src/core/room-relay.mjs';
 // The Worker entry module may only export handlers and classes, so the socket
 // budget and the handshake deadline live beside it rather than here.
@@ -85,16 +85,20 @@ export class RoomHub{
    else if(claimed!==hello.pinHash){ws.close(4002,'口令不正确');return;}
    if(this.busyNicks(ws).has(hello.nick)){ws.close(4003,'昵称重复');return;}
    if(this.busyNicks(ws).size>=MAX_RELAY_MEMBERS){ws.close(4004,'房间已满');return;}
-   ws.serializeAttachment({room:self.room,nick:hello.nick,budget});
-   const welcome=relayWelcome(self.room,[...this.busyNicks(ws)]);
+   if(hello.packedStates!==PACKED_STATES_VERSION&&this.members(ws).some(peer=>this.memberOf(peer).large)){ws.close(4010,'请更新助手以读取完整方案');return;}
+   ws.serializeAttachment({room:self.room,nick:hello.nick,budget,packedStates:hello.packedStates===PACKED_STATES_VERSION?PACKED_STATES_VERSION:0,large:false});
+   const welcome=relayWelcome(self.room,this.members(ws).map(peer=>this.memberOf(peer)));
    if(welcome)ws.send(JSON.stringify(welcome));
-   const join=relayJoin(hello.nick);
+   const join=relayJoin(hello.nick,hello.packedStates);
    if(join)this.send(this.members(ws),JSON.stringify(join));
    return;
   }
   if(frame?.kind==='state'){
    const line=sanitizeRelayState(message,self.nick);
    if(!line)return;
+   const large=JSON.parse(line).encoding!==undefined;
+   if(large&&(self.packedStates!==PACKED_STATES_VERSION||this.members(ws).some(peer=>this.memberOf(peer).packedStates!==PACKED_STATES_VERSION))){ws.close(4010,'队友需要更新助手以读取完整方案');return;}
+   ws.serializeAttachment({...this.memberOf(ws),large});
    this.send(this.members(ws),line);
    return;
   }

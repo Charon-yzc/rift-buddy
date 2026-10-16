@@ -11,10 +11,10 @@ Object.assign(state.preferences,{autoSync:false,autoCheck:false,appUpdateCheck:f
 state.preferences.rolePools={bottom:{heroes:['Aphelios'],mode:'only'},support:{heroes:['Thresh'],mode:'only'}};
 state.draft={slots:createSlots(),scope:'bot',style:'balanced'};
 await saveState(root,state);
-for(const phase of ['prepare','restore','team-restore']){
+for(const phase of ['prepare','restore','team-restore','shared-restore']){
  const logfile=await fs.open(path.join(root,phase+'.log'),'wx');
  const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-preparations.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_PREPARATION_PHASE:phase},windowsHide:true,stdio:['ignore',logfile.fd,logfile.fd]});
- const timer=setTimeout(()=>child.kill(),60000);
+ const timer=setTimeout(()=>child.kill(),phase==='team-restore'?120000:60000);
  try{const [code]=await once(child,'exit');if(code!==0)throw Error('Preparation smoke failed ('+phase+'): '+await fs.readFile(path.join(root,phase+'.log'),'utf8'));}
  finally{clearTimeout(timer);await logfile.close();}
 }
