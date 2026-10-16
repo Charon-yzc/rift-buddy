@@ -3,7 +3,7 @@ const {app,ipcMain}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),delay=ms=>new Promise(r=>setTimeout(r,ms));
 app.setPath('userData',root);
-app.on('browser-window-created',(_e,w)=>windows.push(w));
+app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);});
 async function until(check,label){for(let n=0;n<150;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
@@ -16,7 +16,13 @@ async function run(){
  ipcMain.handle=register;
  const click=async sel=>{sel=await revealDraftAction(js,sel);if(sel==='[data-action=result-detail]')await until(()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false'),'Recommendations still pending');assert.ok(await js(`!!document.querySelector(${JSON.stringify(sel)})`),sel);await js(`document.querySelector(${JSON.stringify(sel)}).click()`);};
  const active=()=>js('({loadout:document.querySelector(".loadout-option.active")?.dataset.id,rune:document.querySelector(".rune-option.active")?.dataset.id,conditions:[...document.querySelectorAll("[data-action=build-condition].active")].map(e=>e.dataset.condition)})');
- const capture=async(name,w=main)=>{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
+ const capture=async(name,w=main)=>{
+  await w.webContents.executeJavaScript('[...document.images].forEach(i=>i.loading="eager")');
+  await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});
+  await until(()=>w.webContents.executeJavaScript('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Missing screenshot image: '+name);
+  const captured=await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});assert.equal(captured.isEmpty(),false,'Empty screenshot: '+name);
+  await fs.writeFile(path.join(root,name),captured.toPNG());
+ };
  const state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
  // A normal library visit after boot must recover saved non-default choices.
  await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');

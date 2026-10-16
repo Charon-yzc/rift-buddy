@@ -68,7 +68,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
   structuredClone,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
-  companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,partyRoutePreparations,getBuild,localConfigurationPreview,configurationReadOnly,
+  companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
   ROLES,moveChampion,assignClientChampion,clearManualPlayerPosition,selectedBuildFields,buildChoiceKey,scopeSlots,effectiveDraftScope,
   clientSyncOptions:()=>({autoArrange:true,autoParty:false}),clientRenderIdentity:()=>'',matchupContext:()=>'',publicMatchupIds:()=>[],currentRoleEvidence:()=>[],
@@ -823,3 +823,16 @@ async function prepareRetainedHover(docked){
  assert.equal(c.activeCreativePlan,null,'Preparing a retained teammate hover must not adopt the incompatible whole lineup');
 }
 test('unknown own lane and retained teammate hover prepare exactly once in both windows',async()=>{await prepareRetainedHover(false);await prepareRetainedHover(true);});
+
+test('manual recommendation cancels the queued automatic run while new inputs can still schedule another',async()=>{
+ const s=setup({results:[]}),c=s.context;let calculations=0;
+ c.autoRecommendationKey='';c.resultsSignature='';c.recommendationError='';c.showAllCandidates=false;
+ c.queueCompanionRecommendation();assert.equal(s.timers.size,1,'Expected an automatic recommendation waiting to run');
+ c.calculateRecommendation=async()=>{calculations++;return [{id:'manual candidate'}];};c.resultCreativePlan=()=>null;
+ vm.runInContext(extract('async function generate(next=false){','const sync=createClientSync'),c);
+ await c.generate();
+ assert.equal(calculations,1);assert.equal(s.timers.size,0,'A completed manual recommendation must not leave a duplicate automatic worker queued');
+ assert.equal(c.autoRecommendTimer,null);assert.equal(c.generating,false);assert.equal(c.results[0].id,'manual candidate');
+ c.queueCompanionRecommendation();assert.equal(s.timers.size,0,'The unchanged accepted recommendation needs no duplicate calculation');
+ c.saved.excluded.push('Yone');c.queueCompanionRecommendation();assert.equal(s.timers.size,1,'Changed inputs must still be recommended automatically');
+});

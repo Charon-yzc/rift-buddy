@@ -588,6 +588,10 @@ async function prepareHeroClick(context,expected=null){
  // or silently move that ally; use the clicked build in the player's current lane.
  const target=slots.find(s=>s.role===context.role);
  if(action.prepare&&taskOwnRole()!==context.role&&(!Number.isInteger(target?.clientCellId)||target.clientCellId===client.session?.localPlayerCellId))setCompanionRole(context.role);
+ const mode=context.mode||'rift',combo=mode==='rift'?currentCombo(slots,context.id,context.role,data.catalogInfo?.status,null,activeCreativePlan):null;
+ // Resolve the lineup after a lane change, before recalling choices, so a
+ // solo default cannot override the combination's own avatar configuration.
+ context={...creativeComboContext(combo),...context,mode};
  const selection={...rememberedPreparation(context),...context,...localConfigurationPreview(context,client,taskOwnRole())};
  if(action.readOnly)selection.readOnly=true;
  if(action.prepare){selection.readOnly=false;lastTaskSelection=selection;draftComparing=false;positionClaim=null;}
@@ -1012,7 +1016,7 @@ function calculateRecommendation(input){
  });
 }
 async function generate(next=false){
- if(generating)return;cancelRecommendationReveal();recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();
+ if(generating)return;clearTimeout(autoRecommendTimer);autoRecommendTimer=null;cancelRecommendationReveal();recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();
  try{offset=next?offset+(results.length||6):0;const input=recommendationInput();
   const signature=recommendationKey(input);
   let result=await calculateRecommendation(input);if(!result.length&&offset){offset=0;result=await calculateRecommendation({...input,offset:0});}
