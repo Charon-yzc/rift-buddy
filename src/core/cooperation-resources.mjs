@@ -2,27 +2,52 @@ import {COOPERATION_SKILLS} from './cooperation-skills.mjs';
 import {cooperationCoordination} from './cooperation-pairs.mjs';
 import {independentCooperationAction} from './shared-cooperation.mjs';
 
-// Explicit resource consumers, not a heuristic that every repeated owner or
-// R means a conflict. Stacking passives and shared areas remain cooperative.
+// Explicit one-cast resources, not a heuristic that every repeated owner or
+// skill means a conflict. Stacking passives and shared areas remain cooperative.
 const airbornePairs=new Set(['Gragas:Yasuo','Rakan:Yasuo','Malphite:Yasuo','Yasuo:Zac','LeeSin:Yasuo','Diana:Yasuo']);
 function resource(edge){
  if(edge.family==='ball')return 'Orianna';
  if(edge.family==='landing'||edge.family==='pair:Camille:Galio')return 'Galio';
+ if(edge.family==='pix')return 'Lulu';
+ if(edge.family==='shield-zone'||edge.family==='pair:Ivern:Rengar')return 'Ivern';
  if(edge.family.startsWith('pair:')&&airbornePairs.has([edge.a,edge.b].sort().join(':')))return 'Yasuo';
  return null;
 }
-export function sharedUltimateConflict(edges){
+export function sharedResourceConflict(edges){
  const groups=new Map();
  for(const edge of edges){const owner=resource(edge);if(!owner)continue;if(!groups.has(owner))groups.set(owner,[]);groups.get(owner).push(edge);}
  for(const [owner,uses] of groups)if(uses.length>1)return {owner,uses:[...uses].sort((a,b)=>a.id.localeCompare(b.id))};
  return null;
 }
 
+function allyResourceCoordination(members,graph,{owner,uses}){
+ const primary=(owner==='Lulu'&&uses.find(e=>members.some(m=>m.role==='bottom'&&m.champion!==owner&&[e.a,e.b].includes(m.champion))))||uses[0];
+ const partner=[primary.a,primary.b].find(id=>id!==owner),other=members.find(m=>m.champion!==owner&&m.champion!==partner);
+ const name=id=>graph.byId.get(id).name,p=name(partner),o=name(other.champion),lulu=owner==='Lulu';
+ const first=lulu
+  ?`本轮优先保护${p}：E/Pix 默认给${p}，W 攻速也优先给${p}，需要对敌变形就保留 W。各技能已学会且当前可用、对象在范围并能安全普攻才交。`
+  :primary.family==='pair:Ivern:Rengar'
+   ?primary.step+` 本轮 E 默认先给${p}，技能当前可用、友军在施法范围且能安全退出才交。`
+   :`本轮 E 默认给${p}承接反击；先确认 E 已学会且可用、友军在范围并能安全接触目标，再等受盾者周围实际爆开。`;
+ const next=lulu
+  ?`改护${o}前，分别核对 E 或 W 当前可用，已交的先等其重新可用，再核范围与安全接应；E 改目标后皮克斯跟随新对象，${p}不再获得皮克斯协同，不把原护盾当成转移。`
+  :`需要改护${o}时，确认 E 当前可用，已交就等重新可用，再核承伤、施法范围与退路。这是下一次施放，原护盾和爆开不随新目标转移。`;
+ const otherAction=`${o}：${independentCooperationAction(other.champion)} ${lulu?'本轮不等待 E/W 增益，在安全距离独立输出并接应。':'本次护盾与爆开在另一位身上，先按自己的安全接触条件接应。'}不为拿增益深入。`;
+ const memberJobs=members.map(m=>{
+  const row=COOPERATION_SKILLS[m.champion];
+  const job=m.champion===owner?first+' '+next+(lulu?' E/W 分别按实际需要决定，不必同时交出；R 留给实际被近身的友军，须已学会可用且在范围。':' Q 命中不要求全员冲入，小菊与草丛留实际安全接应。')
+   :m.champion===partner?`本轮由自己接受默认${lulu?' E/Pix/W 增益':' E 护盾'}，实际生效才利用，不把技能当作必定就绪。${independentCooperationAction(m.champion)} ${lulu?'皮克斯转给另一位后改按自己的安全输出条件行动。':'围绕自身护盾的实际爆开范围行动，目标离开就取消追击。'}`:otherAction+' '+next;
+  return {role:m.role,champion:m.champion,job:job+' 成立前先确认：'+row[1]+' 停止条件：'+row[2]};
+ });
+ return {memberJobs,relaySteps:[first,otherAction,next]};
+}
+
 // Coordinate newly generated trios only. Already authored whole-party relays
 // and frozen plans are not rewritten; all original edge evidence is retained.
 export function resourceCoordination(members,graph,edges,coordination){
  if(members.length!==3||coordination.relaySteps||members.some(m=>!COOPERATION_SKILLS[m.champion]))return null;
- const conflict=sharedUltimateConflict(edges);if(!conflict)return null;
+ const conflict=sharedResourceConflict(edges);if(!conflict)return null;
+ if(conflict.owner==='Lulu'||conflict.owner==='Ivern')return allyResourceCoordination(members,graph,conflict);
  const {owner,uses}=conflict,primary=uses[0],partner=[primary.a,primary.b].find(id=>id!==owner);
  const other=members.find(m=>m.champion!==owner&&m.champion!==partner),name=id=>graph.byId.get(id).name;
  if(!other||!COOPERATION_SKILLS[owner]||!COOPERATION_SKILLS[other.champion])return null;

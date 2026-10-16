@@ -52,7 +52,7 @@ async function run(){
     const option=await js('(()=>{const s=document.querySelector("[data-companion-field=rune]");return [...s.options].find(o=>o.value!==s.value)?.value;})()');assert.ok(option,'Fixture requires an alternate complete rune page');
     await js('(()=>{const s=document.querySelector("[data-companion-field=rune]");s.value='+JSON.stringify(option)+';s.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(120);previewRuneId=option;
     assert.ok((await js('document.querySelector(".companion-note")?.textContent'))?.includes(expectedCooperation.name),'Editing runes lost the chosen cooperation');
-    await click('[data-action=companion-favorite]');const favorite=(await state()).favorites.find(f=>f.type==='build'&&f.champion===id);assert.equal(favorite.runeId,option);assert.equal(favorite.creativePlan?.archetype,planKind);
+    await click('[data-action=companion-favorite]');await until(async()=>(await state()).favorites.some(f=>f.type==='build'&&f.champion===id),'Preview favorite was not saved');const favorite=(await state()).favorites.find(f=>f.type==='build'&&f.champion===id);assert.equal(favorite.runeId,option);assert.equal(favorite.creativePlan?.archetype,planKind);
    }
    await click('[data-action=companion-tab][data-tab=recommend]');
   }
