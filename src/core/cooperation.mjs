@@ -5,6 +5,7 @@ import {preferredTempo} from './strategy.mjs';
 import {sharedCooperationPlan} from './shared-cooperation.mjs';
 import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
 import {partyCooperationPlan} from './party-cooperation.mjs';
+import {resourceCoordination} from './cooperation-resources.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -114,7 +115,8 @@ function baseCooperationPlan(members,graph,preferences={}){
   const profiles=members.map(m=>graph.profile(m)),traits=Object.fromEntries(['engage','aoe','peel','sustain','poke'].map(k=>[k,profiles.filter(p=>p[k]).length]));
   const tempo=preferredTempo({traits,members});edges=edges.map(e=>({...e,tempo}));
  }
- const current=edges.filter(e=>e.current),main=current[0],coordination=main.family.startsWith('skills:')?graph.skills.coordination(members,edges):cooperationCoordination(members,graph,edges),steps=coordination.relaySteps||edges.map(e=>e.step);
+ const current=edges.filter(e=>e.current),main=current[0],original=main.family.startsWith('skills:')?graph.skills.coordination(members,edges):cooperationCoordination(members,graph,edges);
+ const coordination={...original,...resourceCoordination(members,graph,edges,original)},steps=coordination.relaySteps||edges.map(e=>e.step);
  return {name:`配合 · ${main.name}${members.length===3?'三人联动':''}`,members:members.map(m=>({role:m.role,champion:m.champion})),edges,...coordination,
   why:steps.join(' '),steps,conditions:edges.map(e=>e.condition),failures:edges.map(e=>e.failure),tempo:main.tempo,
   bonus:Math.min(15,current.filter(e=>!e.alreadyLinked).length*4+(members.length===3?3:0)),

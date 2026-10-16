@@ -77,6 +77,9 @@ async function run(){
  observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor),foreground:false,minimized:false},game:null})+'\n');await sync();
  await selectSurface(true);
  await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');
+ await until(()=>js('document.querySelector("[data-action=task-members]")?.textContent==="选择本人分路"'),'Unknown local lane must ask for its position');
+ assert.ok((await js('window.buddy.bootstrap()')).state.draft.slots.every(s=>!s.party),'Unknown identities must not fabricate a three-member party');
+ await change('#solo-role','bottom');
  await until(()=>js('document.querySelectorAll(".companion-candidate").length===3'),'Three primary automatic candidates missing');
  assert.ok(main.getBounds().width>=438&&main.getBounds().width<=441,'Default sidebar must use 440 logical pixels when space is available');assert.ok(!fullMain.isDestroyed(),'Main and sidebar must coexist');assert.deepEqual(anchor,anchorBefore);assert.equal(main.isVisible(),false);assert.equal(writes.length,0);
  const capture=async name=>{

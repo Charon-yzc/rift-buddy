@@ -44,7 +44,8 @@ test('Malphite and Zac relays keep actual knockup to Yasuo R with separate actor
  const members=[member('Malphite','top'),member('Zac','jungle'),member('Yasuo','mid')],plan=cooperationPlan(members,createCooperationGraph(data.champions));
  assert.ok(plan.edges.some(e=>e.id==='pair:Malphite:Yasuo'));assert.ok(plan.edges.some(e=>e.id==='pair:Yasuo:Zac'));
  const jobs=Object.fromEntries(plan.memberJobs.map(m=>[m.champion,m.job]));
- assert.match(jobs.Malphite,/R 角度.*实际击飞/);assert.match(jobs.Zac,/E.*落点.*实际击飞/);
+ assert.match(jobs.Malphite,/R 角度.*实际击飞/);assert.match(jobs.Zac,/E.*(?:落点.*实际击飞|实际落地击飞)/);
+ assert.match(jobs.Zac,/第二波或接应/);assert.match(plan.steps.join(' '),/亚索 R 尚未使用.*R 已交就取消/);
  assert.match(jobs.Yasuo,/实际击飞.*R.*未学会|实际击飞.*R.*未击飞/s);
  const conditions=plan.conditions.join(' '),failure=plan.failures.join(' ');
  assert.match(conditions,/已学会且可用.*实际击飞.*范围/s);assert.match(failure,/没有实际击飞.*基础技能/s);

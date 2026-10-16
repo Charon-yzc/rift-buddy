@@ -5,6 +5,7 @@ import {preferredTempo,TEMPOS} from './strategy.mjs';
 import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
 import {independentCooperationAction} from './shared-cooperation.mjs';
 import {sidePressureRoute} from './side-pressure.mjs';
+import {sharedUltimateConflict} from './cooperation-resources.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
 const same=(a,b)=>a.role===b.role&&a.champion===b.champion;
@@ -74,7 +75,7 @@ export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:reque
  if(members.length===3&&(!basePlan?.memberJobs||[basePlan.steps,basePlan.conditions,basePlan.failures].some(rows=>rows.join(' ').length>400)))return null;
  const name=id=>graph.byId.get(id).name,edges=[];
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)edges.push(edge);}
- if(members.length===3&&!sidePressureRoute(members,graph)&&edges.filter(e=>e.family==='ball').length<2)return null;
+ if(members.length===3&&!sidePressureRoute(members,graph)&&!sharedUltimateConflict(edges))return null;
  const curated=TRIOS.filter(t=>!catalogStatus[t.id]?.invalid&&t.members.every(m=>members.some(p=>same(m,p))));
  const coordination=basePlan||cooperationCoordination(members,graph,[]);
  let memberJobs=members.map(m=>{
