@@ -27,7 +27,15 @@ async function run(){
  const js=async code=>{try{return await deadline(main.webContents.executeJavaScript(code,true),'Renderer deadline: '+code.slice(0,160));}catch(error){throw Error('Renderer probe failed: '+code,{cause:error});}},click=async selector=>{selector=await revealDraftAction(js,selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(120);};
  const state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
  const generate=async()=>{await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")&&!document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),'Worker result missing');};
- const capture=async name=>{console.log('Cooperation capture: '+name);await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await deadline(main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true}),'Capture deadline: '+name)).toPNG());};
+ const capture=async name=>{
+  console.log('Cooperation capture: '+name);await js('[...document.images].forEach(i=>i.loading="eager")');
+  // Hidden CI windows may stop requesting animation frames. Wake the native
+  // compositor, then check current images instead of awaiting a hidden rAF.
+  await deadline(main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true}),'Warm capture deadline: '+name);
+  await until(()=>js('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Capture images did not load: '+name);
+  const image=await deadline(main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true}),'Capture deadline: '+name);assert.equal(image.isEmpty(),false,'Empty capture: '+name);
+  await fs.writeFile(path.join(root,name),image.toPNG());
+ };
  await until(()=>js('!!document.querySelector("#solo-role")'),'UI missing');if(restart){const restored=await state();assert.deepEqual(restored.draft.creativePlan,restored.favorites.find(f=>f.type==='team').creativePlan,'Restart changed the adopted source plan');}await generate();
  const firstCardText=await js('document.querySelector(".result-card").textContent');
  assert.ok(firstCardText.includes(planLabel),'Expected '+planLabel+' in the completed first result: '+firstCardText.slice(0,600));
