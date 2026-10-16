@@ -1,4 +1,4 @@
-import {proposalKey} from './room.mjs';
+import {proposalKey,ballotVotes} from './room.mjs';
 import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION} from './rules.mjs';
 import {analyzeTeam} from './recommend.mjs';
 import {createCooperationGraph} from './cooperation.mjs';
@@ -88,7 +88,7 @@ export function roomBallotBoard(room,current,champions,options={}){
  for(const member of members){const proposal=member.share?.ballot?.proposal;if(!proposal)continue;const key=proposalKey(proposal);let row=groups.get(key);
   if(!row){row={key,proposal,from:member.nick,proposers:[],voters:[],adopters:[],mine:false,fit:lineupFit(proposal.lineup,current,champions,options)};groups.set(key,row);}row.proposers.push(member.nick);
  }
- for(const member of members){const row=groups.get(member.share?.ballot?.vote);if(row){row.voters.push(member.nick);if(member.self)row.mine=true;}}
+ for(const member of members)for(const key of ballotVotes(member.share?.ballot)){const row=groups.get(key);if(row){if(!row.voters.includes(member.nick))row.voters.push(member.nick);if(member.self)row.mine=true;}}
  for(const row of groups.values()){
   row.proposers.sort();row.voters.sort();row.from=row.proposers[0];
   row.adopters=members.map(m=>memberAdoption(m,row)).filter(Boolean).sort((a,b)=>a.nick.localeCompare(b.nick));

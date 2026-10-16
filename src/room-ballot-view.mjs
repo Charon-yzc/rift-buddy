@@ -1,13 +1,13 @@
 import {roomBallotBoard} from './core/room-ballot.mjs';
 import {escape as e,portrait,button} from './ui.mjs';
 import {lineupFitView} from './lineup-fit-view.mjs';
-import {proposalKey} from './core/room.mjs';
+import {proposalKey,ballotVotes} from './core/room.mjs';
 
 // Use the exact public proposal, including configuration choices, for votes.
 export function candidateBallotActions(room,key,index){
  if(!room||room.mode==='idle')return button('propose-result','提议','','small candidate-propose',`data-index="${index}"`);
  const proposals=(room.members||[]).filter(m=>m.share?.ballot?.proposal&&proposalKey(m.share.ballot.proposal)===key);
- const voters=(room.members||[]).filter(m=>m.online!==false&&m.share?.ballot?.vote===key),mine=voters.some(m=>m.self);
+ const voters=(room.members||[]).filter(m=>m.online!==false&&ballotVotes(m.share?.ballot).includes(key)),mine=voters.some(m=>m.self);
  return button('propose-result',proposals.some(m=>m.self)?'已提议':'提议','','small candidate-propose',`data-index="${index}" ${room.ballots?'':'disabled'}`)+
   (proposals.length?button('room-vote',`${mine?'已投':'投票'} ${voters.length}`,'',`small${mine?' active':''}`,`data-key="${e(key)}" aria-pressed="${mine}"`):'');
 }
@@ -27,5 +27,5 @@ export function roomBallotView(room,slots,champions,options={}){
  };
  const names={top:'上路',jungle:'打野',mid:'中路',bottom:'下路',support:'辅助'};
  if(!board.length)return warning+compatibility;
- return `${warning}${compatibility}<section class="room-ballot-board" aria-label="阵容投票"><header><h3>大家提议的阵容</h3><span>${board.length} 套</span></header><div class="room-ballot-scroll">${board.map((r,index)=>`<article class="room-ballot-row ${r.fit.compatible?'':'conflict'}"><div class="ballot-row-top"><b>${index+1}</b><div class="ballot-heroes">${r.proposal.lineup.filter(s=>s.champion).map(s=>{const c=champions.find(c=>c.id===s.champion);return `<button data-action="room-ballot-hero" data-key="${e(r.key)}" data-id="${e(s.champion)}" data-role="${s.role}" title="${e(c?.name||s.champion)} · ${names[s.role]} · 选择英雄">${c?portrait(c,'sm'):e(s.champion)}<span><b>${e(c?.name||s.champion)}</b><small>${names[s.role]}</small></span></button>`;}).join('')}</div></div><div class="ballot-row-actions"><small title="${e(r.proposers.join('、'))}">${e(r.proposers[0])}提议</small>${button('room-vote',`${r.mine?'已投':'投票'} ${r.voters.length}`,'',r.mine?'small active':'small',`data-key="${e(r.key)}" aria-pressed="${r.mine}" title="${e(r.voters.join('、')||'暂无投票')} · 投票仅表示意向"`)}</div>${adoptionView(r)}<div class="ballot-row-detail">${lineupFitView(r.fit,{disclosure:'ballot-fit-'+r.key})}${button('room-ballot-details','详情','','quiet small',`data-key="${e(r.key)}"`)}</div></article>`).join('')}</div></section>`;
+ return `${warning}${compatibility}<section class="room-ballot-board" aria-label="阵容投票"><header><h3>大家提议的阵容</h3><span>${board.length} 套</span></header><div class="room-ballot-scroll">${board.map((r,index)=>`<article class="room-ballot-row ${r.fit.compatible?'':'conflict'}"><div class="ballot-row-top"><b>${index+1}</b><div class="ballot-heroes">${r.proposal.lineup.filter(s=>s.champion).map(s=>{const c=champions.find(c=>c.id===s.champion);return `<button data-action="room-ballot-hero" data-key="${e(r.key)}" data-id="${e(s.champion)}" data-role="${s.role}" title="${e(c?.name||s.champion)} · ${names[s.role]} · 选择英雄">${c?portrait(c,'sm'):e(s.champion)}<span><b>${e(c?.name||s.champion)}</b><small>${names[s.role]}</small></span></button>`;}).join('')}</div></div><div class="ballot-row-actions"><small title="${e(r.proposers.join('、'))}">${e(r.proposers[0])}提议</small>${button('room-vote',`${r.mine?'已投':'投票'} ${r.voters.length}`,'',r.mine?'small active':'small',`data-key="${e(r.key)}" aria-pressed="${r.mine}" title="${e(r.voters.join('、')||'暂无投票')} · 投票仅表示意向；可多选，再点撤回本票"`)}</div>${adoptionView(r)}<div class="ballot-row-detail">${lineupFitView(r.fit,{disclosure:'ballot-fit-'+r.key})}${button('room-ballot-details','详情','','quiet small',`data-key="${e(r.key)}"`)}</div></article>`).join('')}</div></section>`;
 }

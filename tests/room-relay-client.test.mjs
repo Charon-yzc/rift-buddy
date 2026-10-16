@@ -79,6 +79,24 @@ async function joined(service,fake,{url='wss://room.example.com',room='482913',p
  return socket;
 }
 
+test('multi-votes round-trip over relay and reconnect refuses a relay that would discard the set',async()=>{
+ const fake=fakeRelay(),service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:5});
+ try{
+  const pending=service.relay({url:'wss://room.example.com',room:'482913',pin:'482913'}),socket=await fake.next();socket.open();
+  socket.deliver({kind:'welcome',v:1,room:'482913',members:[],ballots:1,multiVotes:1});await pending;
+  service.publish({lineup:[],pick:null,ballot:{version:1,proposal:null,votes:['a','b','b']}});
+  assert.deepEqual(JSON.parse(socket.sent.at(-1)).ballot.votes,['a','b']);
+  socket.deliver({kind:'join',v:1,from:'伙伴'});
+  socket.deliver({kind:'state',v:1,from:'伙伴',at:1,lineup:[],pick:null,ballot:{version:1,proposal:null,votes:['a','b']}});
+  assert.deepEqual(service.snapshot().members.find(m=>m.nick==='伙伴').share.ballot.votes,['a','b']);
+  socket.close(1006);const reconnect=await fake.next(2);reconnect.open();reconnect.deliver({kind:'welcome',v:1,room:'482913',members:[],ballots:1});
+  await tick(15);assert.equal(service.snapshot().link,'failed');assert.deepEqual(service.snapshot().members.find(m=>m.self).share.ballot.votes,['a','b']);
+ }finally{service.dispose();}
+ const old=fakeRelay(),legacy=createRoomService({nick:'我',webSocketFactory:old.factory});
+ try{await joined(legacy,old);assert.throws(()=>legacy.publish({lineup:[],pick:null,ballot:{version:1,proposal:null,votes:['a','b']}}),/只支持单选/);}
+ finally{legacy.dispose();}
+});
+
 test('relay addresses accept wss hosts and refuse everything that could downgrade or misroute',()=>{
  assert.equal(normalizeRelayUrl('wss://room.example.com'),'wss://room.example.com');
  assert.equal(normalizeRelayUrl('  wss://room.example.com/  '),'wss://room.example.com');

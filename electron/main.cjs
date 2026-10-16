@@ -278,14 +278,34 @@ async function boot(){
  });
  guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');const {ballot,...publicShare}=share||{};const result=roomService.publish({...publicShare,...(roomBallot?{ballot:roomBallot}:{})});roomPublicShare=publicShare;return decorateRoom(result);});
  guard('room-ballot',async raw=>{
-  const service=roomService,snapshot=service?.snapshot();if(!snapshot||snapshot.mode==='idle')throw Error('请先连接房间');
+  const service=roomService,initial=service?.snapshot(),round=roomBallotRound;if(!initial||initial.mode==='idle')throw Error('请先连接房间');
+  const {sanitizeRoomBallot,proposalKey,ballotVotes}=await import('../src/core/room.mjs');
+  const snapshot=roomService?.snapshot();
+  if(service!==roomService||snapshot?.mode==='idle'||snapshot?.room!==initial.room||round!==roomBallotRound)throw Error('房间或对局已变化，请重新选择候选');
   if(!snapshot.ballots)throw Error('当前中继尚未支持投票，更新中继后重新连接即可使用');
-  const {sanitizeRoomBallot,proposalKey}=await import('../src/core/room.mjs');
-  const input=raw?.accepted===undefined&&roomBallot?.accepted?{...raw,accepted:roomBallot.accepted}:raw,ballot=sanitizeRoomBallot(input);
-  if(service!==roomService||roomService.snapshot().mode==='idle'||roomService.snapshot().room!==snapshot.room)throw Error('房间已变化，请重新选择候选');
+  // Apply key-level intents to the latest state after the await. Two windows
+  // voting at once must not replace each other's votes with stale snapshots.
+  const previous=roomBallot||snapshot.members.find(m=>m.self)?.share?.ballot;
+  const input={version:raw?.version,proposal:raw?.proposal===undefined?previous?.proposal||null:raw.proposal,accepted:raw?.accepted===undefined?previous?.accepted:raw.accepted};
+  const proposal=sanitizeRoomBallot({...input,vote:null})?.proposal;
+  const keys=new Set(snapshot.members.filter(m=>!m.self&&m.online!==false).map(m=>m.share?.ballot?.proposal).filter(Boolean).map(p=>proposalKey(p)));if(proposal)keys.add(proposalKey(proposal));
+  const intents=['toggleVote','addVote'].filter(name=>raw?.[name]!==undefined);
+  if(intents.length>1||intents.length&&(raw.votes!==undefined||raw.vote!==undefined))throw Error('投票操作格式不正确');
+  let votes=ballotVotes(previous);
+  if(intents.length){
+   const key=raw[intents[0]],removing=intents[0]==='toggleVote'&&votes.includes(key);
+   if(typeof key!=='string'||!/^[A-Za-z0-9:|]{1,260}$/.test(key))throw Error('投票操作格式不正确');
+   if(!removing&&!keys.has(key))throw Error('该候选已撤回，请重新选择');
+   votes=votes.filter(value=>keys.has(value)&&(!removing||value!==key));
+   if(!removing&&!votes.includes(key))votes.push(key);
+  }else if(raw?.votes!==undefined||raw?.vote!==undefined){
+   const supplied=sanitizeRoomBallot({...input,...(raw.votes!==undefined?{votes:raw.votes}:{vote:raw.vote})});
+   if(!supplied)throw Error('阵容候选已变化，请重新选择');
+   votes=ballotVotes(supplied);if(votes.some(key=>!keys.has(key)))throw Error('该候选已撤回，请重新选择');
+  }else votes=votes.filter(key=>keys.has(key));
+  const ballot=sanitizeRoomBallot({...input,votes});
   if(!ballot)throw Error('阵容候选已变化，请重新选择');
-  const keys=new Set(snapshot.members.map(m=>m.share?.ballot?.proposal).filter(Boolean).map(p=>proposalKey(p)));if(ballot.proposal)keys.add(proposalKey(ballot.proposal));
-  if(ballot.vote&&!keys.has(ballot.vote))throw Error('该候选已撤回，请重新选择');
+  if(votes.length>1&&!snapshot.multiVotes)throw Error('当前中继或房主版本只支持单选投票，请更新后重新连接');
   if(raw?.accepted){
    if(!snapshot.adoptions)throw Error('此中继尚未支持采用状态，已采用的本机方案仍保留');
    const proposal=[ballot.proposal,...snapshot.members.map(m=>m.share?.ballot?.proposal)].find(p=>p&&proposalKey(p)===ballot.accepted.key);

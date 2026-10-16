@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createRoomService as actualCreateRoomService} from '../services/room.mjs';
-import {sanitizeNick,ROOM_PROTOCOL} from '../src/core/room.mjs';
+import {sanitizeNick,ROOM_PROTOCOL,proposalKey,ballotVotes} from '../src/core/room.mjs';
 import {initialRelayUrl} from '../src/core/room-relay.mjs';
 import * as auto from '../src/core/room-auto.mjs';
 
@@ -17,7 +17,7 @@ function harness({derive=auto.deriveAutoRoom}={}){
  class MockDate extends Date {static now(){return clock.value;}}
  const factory=url=>{
   const socket={url,readyState:0,bufferedAmount:0,sent:[],send(text){this.sent.push(JSON.parse(text));},close(code=1000){this.readyState=3;this.onclose?.({code});},
-   open(){this.readyState=1;this.onopen();},welcome(){const room=this.url.split('/').at(-1);this.onmessage({data:JSON.stringify({kind:'welcome',v:ROOM_PROTOCOL,room,ballots:1,members:[{nick:'Test#CN1'}]})});}};
+   open(){this.readyState=1;this.onopen();},welcome({multiVotes=1}={}){const room=this.url.split('/').at(-1);this.onmessage({data:JSON.stringify({kind:'welcome',v:ROOM_PROTOCOL,room,ballots:1,multiVotes,adoptions:1,members:[{nick:'Test#CN1'}]})});}};
   sockets.push(socket);return socket;
  };
  const createRoomService=options=>{const service=actualCreateRoomService({...options,webSocketFactory:factory,now:()=>clock.value,relayOpenTimeoutMs:600000,relaySilenceMs:600000,discovery:false,listenHost:'127.0.0.1'});services.push(service);return service;};
@@ -25,10 +25,40 @@ function harness({derive=auto.deriveAutoRoom}={}){
   let roomService=null,state={preferences:{roomAuto:true,autoSync:true,roomNick:'Test#CN1',relayUrl:'ws://127.0.0.1'}},latestClient=null;
   const status=async()=>latestClient,saveCurrentState=async update=>{state=update(state);};
   ${snippet}
-  return {queueRoomAuto,roomAutoStep,closeAutoRoomIfRevoked,setClient:value=>latestClient=value,setPreferences:value=>Object.assign(state.preferences,value),snapshot:()=>({key:roomAutoKey,code:roomAutoCode,pin:roomAutoPin,blocked:roomAutoBlockedKey,error:roomAutoError,goneSince:roomAutoGoneSince,offlineSince:roomAutoOfflineSince,failedUntil:roomAutoFailedUntil,room:roomService?.snapshot()}),dispose:()=>roomService?.dispose()};`);
+  return {queueRoomAuto,roomAutoStep,closeAutoRoomIfRevoked,setClient:value=>latestClient=value,setPreferences:value=>Object.assign(state.preferences,value),advanceRound:()=>{roomBallotRound++;roomBallot=null;roomService.publish({lineup:[],pick:null});},snapshot:()=>({key:roomAutoKey,code:roomAutoCode,pin:roomAutoPin,blocked:roomAutoBlockedKey,error:roomAutoError,goneSince:roomAutoGoneSince,offlineSince:roomAutoOfflineSince,failedUntil:roomAutoFailedUntil,room:roomService?.snapshot()}),dispose:()=>roomService?.dispose()};`);
  const api=create(createRoomService,sanitizeNick,initialRelayUrl,derive,auto.autoRoomNick,auto.autoRoomDecision,auto.decorateAutoRoom,auto.AUTO_ROOM_PHASES,auto.AUTO_RETRY_MS,(_name,value)=>updates.push(value),message=>reports.push(message),(name,handler)=>handlers.set(name,handler),{networkInterfaces:()=>({})},MockDate);
  return {...api,clock,sockets,updates,reports,handlers,services};
 }
+
+test('atomic vote intents retain different choices, deduplicate each lineup and preserve votes on adoption',async t=>{
+ const h=harness();t.after(()=>h.dispose());h.setClient(party());
+ const joining=h.queueRoomAuto();await spin(()=>h.sockets.length===1);const socket=h.sockets[0];socket.open();socket.welcome();await joining;
+ const a={lineup:[{role:'mid',champion:'Ahri'}]},b={lineup:[{role:'bottom',champion:'Ashe'}]},ka=proposalKey(a),kb=proposalKey(b);
+ socket.onmessage({data:JSON.stringify({kind:'join',v:1,from:'伙伴'})});
+ const other=proposal=>socket.onmessage({data:JSON.stringify({kind:'state',v:1,from:'伙伴',lineup:[],pick:null,at:1000,ballot:{version:1,proposal,vote:null}})});
+ const vote=raw=>h.handlers.get('room-ballot')({version:1,...raw}),mine=()=>h.snapshot().room.members.find(m=>m.self).share.ballot;
+ other(b);await vote({proposal:a,vote:null});
+ await Promise.all([vote({toggleVote:ka}),vote({toggleVote:kb})]);
+ assert.deepEqual(new Set(ballotVotes(mine())),new Set([ka,kb]),'Concurrent windows retain both choices');
+ await vote({votes:[ka,kb,kb]});assert.deepEqual(mine().votes,[ka,kb]);
+ await vote({accepted:{key:ka,role:'mid'}});assert.deepEqual(mine().votes,[ka,kb]);
+ await vote({toggleVote:ka});assert.deepEqual(mine().votes,[kb]);assert.deepEqual(mine().accepted,{key:ka,role:'mid'});
+ await vote({proposal:a,addVote:ka});assert.deepEqual(mine().votes,[kb,ka]);
+ other(null);await vote({toggleVote:kb});assert.deepEqual(mine().votes,[ka],'Withdrawn proposals do not block removing their vote');
+ const pending=vote({toggleVote:ka});h.advanceRound();await assert.rejects(pending,/对局已变化/);
+ assert.equal(h.snapshot().room.members.find(m=>m.self).share.ballot,undefined,'A late operation cannot revive votes in a new round');
+});
+
+test('a relay without multi-vote capability refuses a second choice without replacing the first',async t=>{
+ const h=harness();t.after(()=>h.dispose());h.setClient(party());
+ const joining=h.queueRoomAuto();await spin(()=>h.sockets.length===1);const socket=h.sockets[0];socket.open();socket.welcome({multiVotes:0});await joining;
+ const a={lineup:[{role:'mid',champion:'Ahri'}]},b={lineup:[{role:'bottom',champion:'Ashe'}]},ka=proposalKey(a),kb=proposalKey(b);
+ socket.onmessage({data:JSON.stringify({kind:'join',v:1,from:'伙伴'})});
+ socket.onmessage({data:JSON.stringify({kind:'state',v:1,from:'伙伴',lineup:[],pick:null,at:1000,ballot:{version:1,proposal:b,vote:null}})});
+ await h.handlers.get('room-ballot')({version:1,proposal:a,addVote:ka});
+ await assert.rejects(h.handlers.get('room-ballot')({version:1,toggleVote:kb}),/只支持单选/);
+ assert.deepEqual(h.snapshot().room.members.find(m=>m.self).share.ballot.votes,[ka]);
+});
 
 test('explicit reconnect rejoins the same verified party during selection and clears a manual leave block',async()=>{
  const a=harness(),b=harness();

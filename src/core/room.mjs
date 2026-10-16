@@ -175,7 +175,7 @@ export function validateWelcome(value){
  if(!validRoomCode(room))return null;
  const members=Array.isArray(value.members)?value.members.map(m=>nick(m?.nick)).filter(Boolean).slice(0,12):[];
  const packedMembers=Array.isArray(value.members)?value.members.filter(m=>m?.packedStates===PACKED_STATES_VERSION&&members.includes(nick(m.nick))).map(m=>nick(m.nick)):[];
- return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION,packedMembers}:{})};
+ return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.multiVotes===1?{multiVotes:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION,packedMembers}:{})};
 }
 // Votes identify the full sanitized proposal, including each member's setup.
 // The same champions with another route must remain a different choice.
@@ -187,9 +187,14 @@ export function proposalKey(value){
   ...(clean.configurations?{configurations:[...clean.configurations].sort((a,b)=>ROLES.indexOf(a.role)-ROLES.indexOf(b.role))}:{})};
  return fingerprint(ordered);
 }
+export function ballotVotes(value){return [...new Set(Array.isArray(value?.votes)?value.votes:value?.vote?[value.vote]:[])];}
 export function sanitizeRoomBallot(value){
  if(!value||value.version!==1)return null;
- const vote=value.vote===null?null:typeof value.vote==='string'&&/^[A-Za-z0-9:|]{1,260}$/.test(value.vote)?value.vote:undefined;
+ const validVote=key=>typeof key==='string'&&/^[A-Za-z0-9:|]{1,260}$/.test(key);
+ if(value.votes!==undefined&&(!Array.isArray(value.votes)||value.votes.length>12||!value.votes.every(validVote)))return null;
+ const votes=value.votes===undefined?undefined:ballotVotes(value);
+ // Keep a single-vote projection for older clients; new clients count the set.
+ const vote=votes?votes[0]||null:value.vote===null?null:validVote(value.vote)?value.vote:undefined;
  if(vote===undefined)return null;
  let proposal=null;
  if(value.proposal!=null){
@@ -205,7 +210,7 @@ export function sanitizeRoomBallot(value){
   else if(typeof value.accepted?.key==='string'&&/^[a-f0-9]{16}$/.test(value.accepted.key)&&ROLES.includes(value.accepted.role))accepted={key:value.accepted.key,role:value.accepted.role};
   else return null;
  }
- return {version:1,vote,proposal,...(accepted!==undefined?{accepted}:{})};
+ return {version:1,vote,...(votes?{votes}:{}),proposal,...(accepted!==undefined?{accepted}:{})};
 }
 // Shared state is sanitized by rebuild: unknown fields (riotId, scores,
 // clientCellId, ...) are stripped, and a bad core shape returns null whole.

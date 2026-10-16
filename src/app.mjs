@@ -450,8 +450,7 @@ function roomSharePayload(){
 async function confirmRoomAdoption(row,adopted){
  const role=taskOwnRole();
  if(!room?.adoptions||!api.roomBallot||adopted.conflicts.length||adopted.configurationErrors.length||!row.proposal.lineup.some(s=>s.role===role&&s.champion))return;
- const mine=room.members.find(m=>m.self)?.share?.ballot;
- try{room=await api.roomBallot({version:1,proposal:mine?.proposal||null,vote:mine?.vote||null,accepted:{key:row.key,role}});}
+ try{room=await api.roomBallot({version:1,accepted:{key:row.key,role}});}
  catch{creativePlanNotice=[creativePlanNotice,'采用状态暂未同步，请重新点击采用重试。'].filter(Boolean).join(' ');}
 }
 async function publishRoomShare({force=false}={}){
@@ -1322,7 +1321,7 @@ document.addEventListener('click',async event=>{
  const r=results[Number(el.dataset.index)];if(!r||resultsSignature!==recommendationKey(recommendationInput()))throw Error('候选已变化，请重新推荐');
  if(!room||room.mode==='idle'){closeOverlay();if(windowLayout.docked)companionTab='room';else route='room';render();toast('连接组队房间后即可提议阵容');return;}
  const proposal=roomResultProposal(r);
- room=await api.roomBallot({version:1,proposal,vote:proposalKey(proposal)});render();toast('已提议并投票，等待队友选择');return;
+ room=await api.roomBallot({version:1,proposal,addVote:proposalKey(proposal)});render();toast('已提议并投票，等待队友选择');return;
  }
  if(action==='room-ballot-details'){
  const row=roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null}).find(r=>r.key===el.dataset.key);if(!row)throw Error('候选已撤回');
@@ -1337,9 +1336,7 @@ document.addEventListener('click',async event=>{
  else{closeOverlay();overlay.innerHTML=roomMissingConfigurationDialog({id:el.dataset.id,role:el.dataset.role,mode:'rift',nick:row.from,champ});}return;
  }
  if(action==='room-vote'){
- const row=roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null}).find(r=>r.key===el.dataset.key);if(!row)throw Error('候选已撤回');
- const mine=room.members.find(m=>m.self)?.share?.ballot;
- room=await api.roomBallot({version:1,proposal:mine?.proposal||null,vote:row.mine?null:row.key});render();return;
+ room=await api.roomBallot({version:1,toggleVote:el.dataset.key});render();return;
  }
  if(action==='room-adopt-ballot'){
  const row=roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null}).find(r=>r.key===el.dataset.key);if(!row)throw Error('候选已撤回');
