@@ -410,13 +410,18 @@ async function run(){
  holdRuneWrite=true;resumeRuneWrite=null;await click('[data-action=apply-runes]');await until(()=>typeof resumeRuneWrite==='function','Pending drawer write missing');
  gameId='1505';holdRuneWrite=false;resumeRuneWrite();resumeRuneWrite=null;
  await until(()=>js('document.querySelector("#toast").textContent.includes("写入已完成")'),'Late drawer write did not explain changed context');
- await until(()=>js('!document.querySelector("[data-action=apply-runes]").disabled'),'Drawer action stayed pending');
+ // A newly detected round closes the old drawer. Reopen the current reference
+ // before checking its fresh receipt; keeping an old-round drawer is no longer expected.
+ const reopenOwnDrawer=async()=>{if(!await js('!!document.querySelector("[data-action=apply-runes]")'))await js('(()=>{const b=document.createElement("button");b.dataset.action="my-build";document.body.append(b);b.click();b.remove();})()');await until(()=>js('!!document.querySelector("[data-action=apply-runes]")&&!document.querySelector("[data-action=apply-runes]").disabled'),'Current drawer action stayed pending');};
+ await reopenOwnDrawer();
  assert.equal(await js('document.querySelector(".rune-application-status").textContent.includes("尚未")'),true,'Late drawer request confirmed a different draft');assert.equal(writes.length,startWrites+5);await capture('runes-drawer-new-draft');
  await click('[data-action=apply-runes]');await until(()=>js('document.querySelector(".rune-application-status").textContent.includes("本次已应用")'),'Drawer retry did not confirm');assert.equal(writes.length,startWrites+6);
  gameId='1506';await click('[data-action=apply-runes]');
- await until(()=>js('!document.querySelector("[data-action=apply-runes]").disabled'),'Fresh pre-write check did not settle');
+ await until(()=>js('document.querySelector("#toast").textContent.includes("选人会话已变化")'),'Cached pre-write status failed to detect the new draft');
+ await until(()=>js('!document.querySelector("[data-action=apply-runes]")||!document.querySelector("[data-action=apply-runes]").disabled'),'Fresh pre-write check did not settle');
  assert.ok(await js('document.querySelector("#toast").textContent.includes("选人会话已变化")'),'Cached pre-write status failed to detect the new draft');
  assert.equal(writes.length,startWrites+6,'A stale drawer click wrote to a newer draft before checking it');
+ await reopenOwnDrawer();
  assert.equal(await js('document.querySelector(".rune-application-status").textContent.includes("尚未")'),true,'Rejected stale click retained confirmation');
  // Choosing a region/tier reads only its cache, including in the actual sidebar.
  await click('[data-action=close]');await click('[data-action=companion-attach]');await sync();
