@@ -183,7 +183,7 @@ test('an explicit free-role avatar click establishes unknown ownership and prepa
  }
 });
 
-test('explicit avatar clicks remain read only for another player position, teammate pick or hover and a different locked hero',async()=>{
+test('explicit avatar clicks ignore lane ownership and replaceable hovers, while actual taken and locked heroes stay protected',async()=>{
  for(const kind of ['position','teammate','hover','locked']){
   const current=client(),slots=partySlots(),id=['teammate','hover'].includes(kind)?'Ahri':'Jinx';
   if(kind==='position')slots[3]={...slots[3],champion:'Ahri',locked:true,clientCellId:2};
@@ -192,9 +192,23 @@ test('explicit avatar clicks remain read only for another player position, teamm
   if(kind==='locked'){current.session.myTeam[0].championId=hero('Ashe').key;current.session.actions=[[{actorCellId:1,type:'pick',championId:hero('Ashe').key,completed:true}]];}
   const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
   await c.prepareHeroClick({id,role:'bottom',mode:'rift'});
-  assert.equal(calls.prepared.length,0,kind);assert.equal(calls.opened.length,1,kind);
-  assert.equal(c.buildSelection().readOnly,true,kind);
+  const blocked=['teammate','locked'].includes(kind);assert.equal(calls.prepared.length,blocked?0:1,kind);assert.equal(calls.opened.length,1,kind);
+  assert.equal(c.buildSelection().readOnly,blocked,kind);
  }
+});
+
+test('one candidate avatar applies its exact build even when its reference lane belongs to another player',async()=>{
+ const current=client();current.session.myTeam[0].assignedPosition='MIDDLE';current.session.myTeam.push({cellId:2,championId:hero('Jinx').key,assignedPosition:'BOTTOM'});
+ const slots=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role),...(s.role==='bottom'?{champion:'Jinx',clientCellId:2,locked:true}:{} )}));
+ const planned=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role),champion:({mid:'Ahri',bottom:'Ashe',support:'Braum'})[s.role]||null,locked:!!({mid:1,bottom:1,support:1})[s.role]}));
+ const result=recommend({slots:planned,champions:data.champions,scope:'party',limit:1})[0];result.creativePlan=captureCreativePlan(result,data);
+ const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[result]});c.soloRole='mid';c.resultsSignature=c.recommendationKey(c.recommendationInput());
+ const expected={id:'Ashe',role:'bottom',mode:'rift',...creativeComboContext(creativeMemberCombo(result.creativePlan,'Ashe','bottom'))};
+ await c.prepareCandidate({dataset:{id:'Ashe',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
+ assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');assert.equal(calls.prepared[0].role,'bottom');
+ assert.deepEqual(calls.prepared[0].page,getBuild(hero('Ashe'),'bottom',data,expected).runePage);
+ assert.equal(c.slots.find(s=>s.role==='bottom').champion,'Jinx');assert.equal(c.slots.find(s=>s.role==='bottom').clientCellId,2);
+ assert.equal(c.lastTaskSelection.id,'Ashe');assert.equal(c.activeCreativePlan,null,'Preparing one champion must not replace an incompatible whole lineup');
 });
 
 test('offline previews remain editable with retained client bindings and never write the client',async()=>{
@@ -219,9 +233,9 @@ test('a blocked candidate in the local role opens a read-only drawer without ado
  assert.equal(calls.prepared.length,0);assert.equal(c.activeCreativePlan,null);assert.equal(calls.opened.length,1);
  assert.equal(c.buildSelection().readOnly,true);
 });
-test('a stale candidate refresh rejects newly disabled targets, different games, players, roles and modes before preparation',async()=>{
+test('a stale candidate refresh rejects unavailable targets and different games, players or modes before preparation',async()=>{
  const now=2000000;
- for(const kind of ['disabled','banned','game','player','role','mode','teammate']){
+ for(const kind of ['disabled','banned','game','player','mode']){
   const current=checkedClient(now),incoming=checkedClient(now+16001);
   if(kind==='disabled')incoming.eligibility.disabled=[hero('Ashe').key];
   if(kind==='banned')incoming.session.bans=[hero('Ashe').key];
@@ -234,6 +248,21 @@ test('a stale candidate refresh rejects newly disabled targets, different games,
   const s=candidateSetup({current,incoming,now});s.clock.now+=16001;
   await assert.rejects(s.context.clickBuild(avatar(s.html,'Ashe')),/变化|无法确认/,kind);
   assert.equal(s.calls.prepared.length,0,kind);assert.equal(s.context.activeCreativePlan,null,kind);
+ }
+});
+
+test('one hero click survives a changed reference lane or incompatible ally pick without adopting the stale lineup',async()=>{
+ const now=2000000;
+ for(const kind of ['role','teammate']){
+  const current=checkedClient(now),incoming=checkedClient(now+16001);
+  if(kind==='role')incoming.session.myTeam[0].assignedPosition='MIDDLE';
+  else incoming.session.myTeam.push({cellId:2,championId:hero('Veigar').key,assignedPosition:'MIDDLE'});
+  incoming.eligibility.context=pickEligibilityContext(incoming.session);
+  const s=candidateSetup({current,incoming,now});s.clock.now+=16001;
+  await s.context.clickBuild(avatar(s.html,'Ashe'));
+  assert.equal(s.calls.prepared.length,1,kind);assert.equal(s.calls.prepared[0].champion,'Ashe',kind);
+  assert.equal(s.context.activeCreativePlan,null,'An incompatible lineup must not be adopted');
+  if(kind==='teammate')assert.equal(s.context.slots.find(slot=>slot.clientCellId===2).champion,'Veigar');
  }
 });
 test('the first click can learn previously unknown eligibility only when this candidate remains legal in the same draft',async()=>{
@@ -289,7 +318,7 @@ test('explicit solo mode compares both public unlocked hover representations and
  }
 });
 
-test('unknown custom-game positions stay read only until the player confirms a role, for hovers and public picks',async()=>{
+test('unknown custom-game lanes can apply a reference build without a second position confirmation',async()=>{
  for(const picked of [false,true]){
   const current=client();Object.assign(current.session.myTeam[0],{assignedPosition:'',championId:picked?hero('Graves').key:0,championPickIntent:hero('Graves').key});
   const slots=mergeClientSession(createSlots(),current.session,data.champions,{autoArrange:true}).slots;
@@ -299,14 +328,14 @@ test('unknown custom-game positions stay read only until the player confirms a r
   c.rememberIntentPreparation=noop;
   vm.runInContext(extract('function myPreparation(){','function roomRoleContext(){'),c);
   assert.equal(c.taskOwnRole(),'');const preview=c.ownTaskPreparation();assert.equal(preview.positionKnown,false);
-  assert.equal(c.readOnlyPreparation('task',preview),true);
-  assert.match(preparationProgressView({data,plan:preview,client:current,available:true}),/data-action="client-prepare"[^>]*disabled/);
-  await assert.rejects(c.useClientPreparation({dataset:{preparationView:'task'}},true),/确认本人位置/);
-  assert.equal(s.calls.prepared.length,0);assert.deepEqual(c.slots,slots,'Unknown public picks must remain in the roster');
-  c.soloRole='bottom';c.saved.draft.playerPosition={role:'bottom',cellId:1};
+  assert.equal(c.readOnlyPreparation('task',preview),false);
+  assert.doesNotMatch(preparationProgressView({data,plan:preview,client:current,available:true}),/data-action="client-prepare"[^>]*disabled/);
+  await c.useClientPreparation({dataset:{preparationView:'task'}},true);
+  assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].champion,'Graves');
+  c.soloRole='bottom';c.saved.draft.playerPosition={role:'bottom',cellId:1};c.lastTaskSelection=null;
   const confirmed=c.ownTaskPreparation();assert.equal(confirmed.positionKnown,true);assert.equal(confirmed.selection.role,'bottom');
   await c.useClientPreparation({dataset:{preparationView:'task'}},true);
-  assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].role,'bottom');assert.equal(s.calls.prepared[0].summoners.includes('SummonerSmite'),false);
+  assert.equal(s.calls.prepared.length,2);assert.equal(s.calls.prepared[1].role,'bottom');assert.equal(s.calls.prepared[1].summoners.includes('SummonerSmite'),false);
  }
 });
 
@@ -408,7 +437,7 @@ test('a failed or outdated representative hover cannot migrate stored plans',asy
   };
   await assert.rejects(c.claimPosition('top'),undefined,outcome);
   if(outcome==='bound-hero')assert.equal(s.calls.prepared.length,0);
-  for(const role of ['top','mid'])assert.equal(c.slots.find(s=>s.role===role).champion,before.find(s=>s.role===role).champion,outcome);
+  for(const role of ['top','mid'])assert.equal(c.slots.find(s=>s.role===role).champion,outcome==='changed-game'?null:before.find(s=>s.role===role).champion,outcome);
   assert.equal(c.clientPreparing,false);
  }
 });
@@ -459,7 +488,7 @@ test('public party hovers replace an unbound offline plan in candidates and the 
   const html=companionView({data,client:current,slots:c.slots,unassigned:[],scope,soloRole:c.soloRole,tab:'recommend',results});
   assert.match(html,/data-action="companion-roster-plan" data-role="support" data-id="Lulu"/);
   assert.doesNotMatch(html,/data-action="companion-roster-plan" data-role="support" data-id="Nami"/);
-  if(!local)assert.equal(companionHeroAction(current,hero('Lulu'),true).readOnly,true);
+  if(!local)assert.equal(companionHeroAction(current,hero('Lulu'),true).prepare,true);
   assert.deepEqual(structuredClone(c.slots),before);assert.equal(calls.prepared.length,0);
  }
 });
@@ -509,11 +538,11 @@ test('one ranking-avatar click moves an old unbound hero plan only after success
  }
 });
 
-test('direct preparation cannot move a manually assigned hero from a different position',async()=>{
+test('an explicit local hero click can replace its earlier manual plan position without leaving a duplicate',async()=>{
  const slots=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='mid'?{champion:'Ashe',locked:true,manualPosition:true}:{})}));
  const {context:c,calls}=setup({slots}),before=structuredClone(slots);
- await assert.rejects(c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'}),/英雄已有客户端位置/);
- assert.equal(calls.prepared.length,0);assert.deepEqual(structuredClone(c.slots),before);
+ await c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'});
+ assert.equal(calls.prepared.length,1);assert.equal(c.slots.filter(s=>s.champion==='Ashe').length,1);assert.equal(c.slots.find(s=>s.champion==='Ashe').role,'bottom');
 });
 
 test('the hero picker allows one live click to move an unbound plan while keeping assigned or offline duplicates disabled',async()=>{
@@ -558,6 +587,16 @@ test('a new game clears confirmed player positions in every recommendation scope
   const draft={slots,scope,soloRole:'bottom',clientGameId:'123',...(!cleaned?{playerPosition:{role:'bottom',cellId:1}}:{})};
   assert.equal(reconcileClientDraft(draft,'123').draft.soloRole,'bottom');
   const next=reconcileClientDraft(draft,'124');assert.equal(next.draft.soloRole,'');assert.equal(next.draft.playerPosition,undefined);
+ }
+});
+
+test('leaving a draft clears per-game room adoption and configuration references even if main already reset the saved draft',async()=>{
+ for(const alreadyReset of [false,true]){
+  const incoming={connected:true,phase:'Lobby',mode:{id:'rift'},party:{status:'unknown'},game:{gameId:'123'},session:null};
+  const {context:c}=setup({incoming});Object.assign(c,{lastAdoptedRoomShare:'old-share',clickedRoomPlan:{id:'Ashe'},roomRoleChoice:{role:'bottom'},itemSetStatuses:new Map()});
+  if(alreadyReset)delete c.saved.draft.clientGameId;
+  await c.performSync(false,true);
+  assert.equal(c.lastAdoptedRoomShare,'');assert.equal(c.clickedRoomPlan,null);assert.equal(c.roomRoleChoice,null);
  }
 });
 

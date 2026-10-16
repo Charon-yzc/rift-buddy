@@ -7,6 +7,7 @@
 import {sanitizeNick,validRoomCode,validPin} from './room.mjs';
 
 export const LOBBY_PHASES=['None','Lobby','Matchmaking','ReadyCheck'];
+export const AUTO_ROOM_PHASES=[...LOBBY_PHASES,'ChampSelect','GameStart','InProgress','Reconnect'];
 export const LOBBY_AUTO_FRESH_MS=120000;
 export const AUTO_PARTY_GONE_MS=30000;
 export const AUTO_OFFLINE_GRACE_MS=60000;
@@ -57,7 +58,7 @@ export function decorateAutoRoom(snapshot,{auto=false,pin=null,error='',retryAt=
 export function autoRoomDecision({enabled,connected,phase,lobbyKey,lobbyCount,activeAutoKey,manualRoomActive,blockedKey,failedKey,failedRetryAt,partyGoneForMs,offlineForMs,now}={}){
  const key=sanitizePartyKey(lobbyKey);
  if(!enabled)return activeAutoKey?{action:'leave',key:activeAutoKey,reason:'disabled'}:{action:'hold',reason:'disabled'};
- if(!connected||!LOBBY_PHASES.includes(phase)){
+ if(!connected||!AUTO_ROOM_PHASES.includes(phase)){
   if(activeAutoKey&&Number.isFinite(offlineForMs)&&offlineForMs>=AUTO_OFFLINE_GRACE_MS)return {action:'leave',key:activeAutoKey,reason:'offline'};
   return {action:'hold',reason:'not-lobby'};
  }

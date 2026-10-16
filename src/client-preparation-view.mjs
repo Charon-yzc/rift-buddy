@@ -15,7 +15,7 @@ export function clientPreparationControls({data,plan,client,view='build',availab
  const prepared=clientPreparationPlan(data,plan);if(!prepared)return '';
  const gameId=preparationGameId(client),own=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId);
  const champion=data.champions.find(c=>c.id===plan.selection.id),locked=(client.session?.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===own?.cellId&&a.completed===true);
- const reason=plan.positionKnown===false?'确认本人位置后可准备':!available?'客户端配置请在桌面版使用':!client.connected?'连接客户端后，在选人阶段使用':client.phase!=='ChampSelect'?'进入选人阶段后可预选并配置':client.mode?.id!=='rift'?'当前模式暂不支持一键配置':!gameId?'同步客户端以确认本局':locked&&own.championId!==champion.key?'已锁定其他英雄，请查看自己的方案':'';
+ const reason=!available?'客户端配置请在桌面版使用':!client.connected?'连接客户端后，在选人阶段使用':client.phase!=='ChampSelect'?'进入选人阶段后可预选并配置':client.mode?.id!=='rift'?'当前模式暂不支持一键配置':!gameId?'同步客户端以确认本局':locked&&own.championId!==champion.key?'已锁定其他英雄，请查看自己的方案':'';
  const status=statuses.get(clientPreparationKey(client,prepared));
  const labels={hover:'英雄预选',runes:'符文页',spells:'召唤师技能',items:'商店装备集'};
  return `<section class="client-preparation" data-client-preparation-fingerprint="${e(prepared.fingerprint)}" aria-label="客户端预选与配置">

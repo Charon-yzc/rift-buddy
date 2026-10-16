@@ -209,7 +209,7 @@ async function boot(){
  const {createRoomService}=await import('../services/room.mjs');
  const {sanitizeNick}=await import('../src/core/room.mjs');
  const {initialRelayUrl}=await import('../src/core/room-relay.mjs');
- const {deriveAutoRoom,autoRoomNick,autoRoomDecision,decorateAutoRoom,LOBBY_PHASES,AUTO_RETRY_MS}=await import('../src/core/room-auto.mjs');
+ const {deriveAutoRoom,autoRoomNick,autoRoomDecision,decorateAutoRoom,AUTO_ROOM_PHASES,AUTO_RETRY_MS}=await import('../src/core/room-auto.mjs');
  const {createBallotRoundObserver}=await import('../src/core/room-ballot.mjs');
  const ballotRoundChanged=createBallotRoundObserver();
  let roomNickInUse='';
@@ -221,7 +221,7 @@ async function boot(){
  const decorateRoom=snapshot=>{const identity=snapshot?.mode==='idle'?'':snapshot?.room||'';if(identity!==ballotRoom){roomBallot=null;roomPublicShare=null;ballotRoom=identity;}return decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});};
  // The sandboxed renderer never needs the lobby identifier or the identity
  // used as the room nickname: only this process derives the room from them.
- const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(party?{party:cleanParty}:{})};};
+ const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(own?.riotId?{playerName:own.riotId}:{}),...(party?{party:cleanParty}:{})};};
  // Closing the auto room always clears the whole auto state, so a later
  // re-enable starts clean instead of inheriting a stale failure or pin. The
  // cancelled key lets an in-flight handshake tell a local close apart from a
@@ -248,7 +248,8 @@ async function boot(){
   return true;
  };
  const ensureRoom=wanted=>{
-  const clean=sanitizeNick(wanted)||sanitizeNick(state.preferences.roomNick)||'队友';
+  const name=sanitizeNick(wanted);
+  const clean=name&&name!=='队友'?name:autoRoomNick({identity:latestClient?.own,savedNick:state.preferences.roomNick});
   if(roomService&&roomNickInUse===clean)return roomService;
   if(roomService){if(roomService.snapshot().mode!=='idle')throw Error('请先离开房间再修改昵称');roomService.dispose();roomService=null;}
   roomNickInUse=clean;
@@ -294,8 +295,8 @@ async function boot(){
   // with sync off there is nothing to follow, so the switch is off too.
   const enabled=state.preferences?.roomAuto===true&&state.preferences?.autoSync!==false;
   if(!enabled){roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
-  const inWindow=!!client?.connected&&LOBBY_PHASES.includes(client.phase);
-  if(inWindow&&client.party?.status==='lobby'&&Number(client.party.lobbyCount)>=2&&client.party?.key)roomAutoGoneSince=null;
+  const inWindow=!!client?.connected&&AUTO_ROOM_PHASES.includes(client.phase);
+  if(inWindow&&Number(client.party?.lobbyCount)>=2&&client.party?.key)roomAutoGoneSince=null;
   else if(inWindow)roomAutoGoneSince=roomAutoGoneSince??Date.now();
   else roomAutoGoneSince=null;
   // "标识变化即解除": seeing a different party lifts a manual-leave block.
@@ -363,6 +364,20 @@ async function boot(){
   roomAutoTask=(async()=>{try{while(roomAutoRequested){roomAutoRequested=false;await roomAutoStep(latestClient);}}catch(error){diagnostic(`auto room step failed: ${error?.message||'unknown'}`);}finally{roomAutoRunning=false;}})();
   return roomAutoTask;
  };
+ guard('room-reconnect',async()=>{
+  await status(true);await roomAutoTask;
+  const party=latestClient.party;
+  if(!latestClient.connected)throw Error('请先连接游戏客户端，再连接组队房间');
+  if(!party?.key||Number(party.lobbyCount)<2)throw Error('尚未读取到当前组队标识；请回到组队大厅同步，或使用房间码加入');
+  closeAutoRoom('reconnect');
+  // Explicit reconnect chooses the current game party over a manually joined room.
+  roomService?.leave();roomAutoBlockedKey=null;roomAutoFailedKey=null;roomAutoFailedUntil=0;roomAutoError='';
+  if(state.preferences.roomAuto!==true||state.preferences.autoSync===false)await saveCurrentState(current=>({...current,preferences:{...current.preferences,roomAuto:true,autoSync:true}}));
+  await queueRoomAuto();
+  const snapshot=roomService&&decorateRoom(roomService.snapshot());
+  if(!snapshot||snapshot.mode==='idle'||snapshot.link!=='connected')throw Error(roomAutoError||'房间暂未连接，请稍后重试');
+  return snapshot;
+ });
  guard('presentation',setPresentation);
  guard('bootstrap',({surface})=>({data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}),true);
  const {windowInfo}=await import('../services/window-info.mjs');
@@ -430,7 +445,7 @@ async function boot(){
    if(ballotRoundChanged(latestClient)){roomBallot=null;if(roomService&&roomService.snapshot().mode!=='idle'){try{const share=roomPublicShare||roomService.snapshot().members.find(m=>m.self)?.share||{lineup:[],pick:null};const {ballot,...clean}=share;roomService.publish(clean);}catch{}}}
    feedIdle=observeFeedPhase(latestClient);dataFeed.activate();
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
-   const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId);if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId).draft}));
+   const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId,{phase:latestClient.phase,previousPhase});if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId,{phase:latestClient.phase,previousPhase}).draft}));
    currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);
    if(latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
    const enemyIds=publicEnemyIds();observeOpponentContext();await bindPendingOpponent();

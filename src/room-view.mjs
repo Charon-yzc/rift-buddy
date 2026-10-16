@@ -68,7 +68,7 @@ function roomIdle({nick,transport,busy,scanning,scanResults,error,invite,pin,rel
    <div class="room-join"><label>邀请码<input id="room-invite" value="${e(invite)}" placeholder="粘贴完整邀请，或 地址:端口#房间号" aria-label="邀请码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" aria-label="房间口令"></label>${button('room-join',busy?'处理中…':'加入房间','arrow','small',busy?'disabled':'')}</div>
    ${results?`<div class="room-scan">${results.length?results.map(item=>`<button data-action="room-fill" data-invite="${e(`${item.host}:${item.port}#${item.room}`)}">房间 ${e(item.room)} · ${e(item.host)}</button>`).join(''):'<p class="bottom-note">没有发现房间。确认在同一网络，或让房主把邀请码发给你。</p>'}</div>`:''}
    <p class="bottom-note">公开阵容与配置会自动共享，仅在可信网络使用。</p><details class="ui-disclosure" data-companion-disclosure="room-lan-info"><summary>局域网连接说明</summary><p>房间不需要额外读取客户端数据。建房后自动发送所选公开阵容与配置，TCP 内容未加密；请在可信局域网或受信虚拟局域网使用。Windows 防火墙只允许当前可信网络。虚拟局域网不一定转发扫描公告，可粘贴房主从对应网卡复制的完整邀请加入。</p></details>`;
- return `<section class="panel room-panel"><div class="panel-head"><h3>${icon('link')}连接房间</h3><span class="badge">无需账号</span></div>
+ return `<section class="panel room-panel"><div class="panel-head"><h3>${icon('link')}连接房间</h3>${button('room-reconnect',busy?'连接中…':'连接当前组队','refresh','primary small',busy?'disabled':'')}</div>
   <div class="panel-body">
    <div class="room-nick"><label>房间昵称<input id="room-nick" value="${e(nick)}" maxlength="24" placeholder="队友" aria-label="房间昵称"></label></div>
    ${transportSwitch(transport)}
@@ -94,7 +94,7 @@ function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy
   ?`<div class="room-invites"><p>邀请队友（复制下面的地址${room.auto?'、房间码和口令':'和房间码'}${room.auto?'':'，口令请另行告知'}）：</p><div class="chips"><button data-action="room-copy-relay">${icon('copy')}${e(room.auto?`中继 ${room.relayUrl||''}｜房间 ${room.room}｜口令 ${room.pin||''}`:`中继 ${room.relayUrl||''}｜房间 ${room.room}`)}</button></div>${relayNotice?`<p class="callout warning" role="status">${relayNotice}</p>`:''}<details class="ui-disclosure" data-companion-disclosure="room-invite-info"><summary>邀请方式与口令说明</summary><p>${room.auto?'口令由大厅共享标识派生，只用于同队汇合，不是强认证。旧版队友或派生不一致时，可按上面的地址、房间码与口令手动加入。':'队友在“中继”里填同一个中继地址、房间码和口令即可加入。'}</p></details></div>`
   :isHost?`<div class="room-invites"><p>邀请队友（邀请码和口令一起发）：</p><div class="chips">${invites.length?invites.map(item=>`<button data-action="room-copy-invite" data-invite="${e(item.invite)}">${icon('copy')}${e(item.name)} · ${e(item.invite)}</button>`).join(''):'<span class="bottom-note">暂未检测到局域网地址；可让队友手动扫描。</span>'}</div><div class="room-invite-foot">${button('room-refresh-addresses','刷新本机地址','refresh','quiet small')}<span class="bottom-note">口令 ${e(room.pin||'')}。队友在“加入房间”里粘贴完整邀请即可；裸邀请码需另填口令。</span></div></div>`
   :'';
- return `<section class="panel room-panel"><div class="panel-head">${head}${badge}${button('room-leave','离开房间','','quiet small')}</div>
+ return `<section class="panel room-panel"><div class="panel-head">${head}${badge}${button('room-reconnect','重新连接','refresh','small')}${button('room-leave','离开房间','','quiet small')}</div>
   <div class="panel-body">
    ${inviteBlock}
    <div class="room-share-row">${button('room-publish',isRelay?'重新分享当前选择':'分享我的阵容与配置','upload','primary small')}<span class="bottom-note">加入后自动分享阵容与配置。</span></div>

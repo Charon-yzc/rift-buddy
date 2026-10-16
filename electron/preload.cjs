@@ -62,6 +62,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  roomJoin:(target,nick)=>ipcRenderer.invoke('room-join',target,nick),
  roomRelay:(target,nick)=>ipcRenderer.invoke('room-relay',target,nick),
  roomLeave:()=>ipcRenderer.invoke('room-leave'),
+ roomReconnect:()=>ipcRenderer.invoke('room-reconnect'),
  roomPublish:share=>ipcRenderer.invoke('room-publish',share),
  roomBallot:ballot=>ipcRenderer.invoke('room-ballot',ballot),
  roomScan:()=>ipcRenderer.invoke('room-scan'),

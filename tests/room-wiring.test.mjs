@@ -10,7 +10,7 @@ test('every room IPC channel exposed by preload has a guarded handler in main',a
  const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
  const app=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
  const exposed=[...preload.matchAll(/ipcRenderer\.invoke\('([a-z-]+)'/g)].map(m=>m[1]).filter(name=>name.startsWith('room-'));
- assert.deepEqual(exposed.sort(),['room-addresses','room-ballot','room-host','room-join','room-leave','room-publish','room-relay','room-scan','room-status']);
+ assert.deepEqual(exposed.sort(),['room-addresses','room-ballot','room-host','room-join','room-leave','room-publish','room-reconnect','room-relay','room-scan','room-status']);
  for(const channel of exposed)assert.match(main,new RegExp(`guard\\('${channel}'`),`${channel} is exposed but not guarded in main`);
  assert.match(main,/publishWindows\('room-update'/,'main must broadcast room updates to both app windows');
  assert.match(preload,/ipcRenderer\.on\('room-update'/,'preload must subscribe to room updates');
@@ -33,7 +33,7 @@ test('the automatic room decoration wraps updates, guards, leave state and the c
  assert.match(main,/queueRoomAuto\(\)/,'the client poll must feed the auto room step');
  assert.match(main,/auto:!!roomAutoKey&&!!roomAutoPin/,'only an established auto room may be marked as one');
  assert.match(main,/autoRoomDecision\(\{enabled,connected:!!client\?\.connected/);
- assert.match(main,/status==='lobby'&&Number\(client\.party\.lobbyCount\)>=2&&client\.party\?\.key\)roomAutoGoneSince=null/,'an unreadable identifier counts as missing evidence');
+ assert.match(main,/Number\(client\.party\?\.lobbyCount\)>=2&&client\.party\?\.key\)roomAutoGoneSince=null/,'an unreadable identifier counts as missing evidence');
  assert.match(main,/blockedKey:roomAutoBlockedKey,failedKey:roomAutoFailedKey,failedRetryAt:roomAutoFailedUntil/);
  assert.match(main,/identity:client\?\.own,savedNick:state\.preferences\.roomNick/,'the room nickname comes from the public game id');
  assert.match(main,/roomAutoGoneSince=roomAutoGoneSince\?\?Date\.now\(\)/);
@@ -50,7 +50,7 @@ test('only this process keeps the lobby identifier and the auto room closes with
  const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
  assert.match(main,/const forRenderer=client=>\{/,'the renderer must not receive the lobby identifier');
  assert.match(main,/const \{own,party,\.\.\.rest\}=client,\{key,\.\.\.cleanParty\}=party\|\|\{\};/,'the identity used as the room nickname must be stripped');
- assert.match(main,/return \{\.\.\.rest,\.\.\.\(party\?\{party:cleanParty\}:\{\}\)\};/,'a missing party must stay missing');
+ assert.match(main,/return \{\.\.\.rest,.*\.\.\.\(party\?\{party:cleanParty\}:\{\}\)\};/,'a missing party must stay missing');
  for(const boundary of [/publishWindows\('client-update',forRenderer\(latestClient\)\)/,/guard\('client-status',async force=>forRenderer\(await status\(force\)\)\)/,/guard\('authorize-client'[\s\S]{0,200}?forRenderer\(await status\(true\)\)/,/guard\('bootstrap',[\s\S]{0,140}?client:forRenderer\(latestClient\)/,/guard\('window-info'[\s\S]{0,300}?client:forRenderer\(latestClient\)/])assert.match(main,boundary,'every renderer-facing client snapshot must be stripped');
  const saveHandler=main.slice(main.indexOf("guard('save-state'"),main.indexOf("const {createClientSync}"));
  assert.ok(saveHandler.indexOf('closeAutoRoomIfRevoked();')>=0&&saveHandler.indexOf('closeAutoRoomIfRevoked();')<saveHandler.indexOf('guide.publish()'),'turning the switch or sync off must close the auto room before publishing');

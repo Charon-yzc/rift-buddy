@@ -10,7 +10,7 @@ export function preparationProgress({data,plan,client,statuses=new Map(),pending
  const hero=data.champions.find(c=>c.id===plan.selection.id),locked=(client.session?.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===own?.cellId&&a.completed===true),matches=Number(own?.championId||own?.championPickIntent)===Number(hero.key);
  // Results are local to one known game and concrete payload. Browsing another
  // candidate never erases them; a changed payload cannot inherit its green ticks.
- const applicable=client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='rift'&&!!game&&plan.positionKnown!==false&&(!locked||matches);
+ const applicable=client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='rift'&&!!game&&(!locked||matches);
  let previous=null;
  if(applicable)for(const [k,value] of statuses){try{const [id,fingerprint]=JSON.parse(k),payload=JSON.parse(fingerprint)[0];if(id===game&&payload.champion===plan.selection.id&&payload.role===plan.selection.role&&payload.mode===plan.selection.mode)previous=value;}catch{}}
  const rawReceipt=applicable?statuses.get(key):null;
@@ -20,7 +20,7 @@ export function preparationProgress({data,plan,client,statuses=new Map(),pending
  const status=recorded||(applicable&&runeApplied?{complete:false,message:'符文已单独应用；其余配置尚未核对',steps:{runes:{status:'done'}}}:null),pending=key===pendingKey,changed=!recorded&&!!previous;
  const complete=!!status?.complete&&Object.keys(labels).every(k=>status.steps?.[k]?.status==='done');
  const failed=Object.keys(labels).filter(k=>status?.steps?.[k]?.status==='failed');
- const title=plan.positionKnown===false?'先确认本人位置':pending?'正在预选并配置…':failed.length?labels[failed[0]]+'未完成':changed?'配置有修改，尚未应用':status?.superseded?'配置已被后续操作替换':complete?locked&&matches?'英雄已锁定，配置已完成':'配置完成，请在客户端锁定':status?.standalone&&status.steps.items?.status==='done'?'装备集已导入，请准备其余配置':locked&&matches?'英雄已锁定，配置尚未准备':'预选并配置你的英雄';
+ const title=pending?'正在预选并配置…':failed.length?labels[failed[0]]+'未完成':changed?'配置有修改，尚未应用':status?.superseded?'配置已被后续操作替换':complete?locked&&matches?'英雄已锁定，配置已完成':'配置完成，请在客户端锁定':status?.standalone&&status.steps.items?.status==='done'?'装备集已导入，请准备其余配置':locked&&matches?'英雄已锁定，配置尚未准备':'预选并配置你的英雄';
  return {prepared,key,status,pending,changed,complete,failed,title,locked:locked&&matches,previous,applicable};
 }
 export function configurationSource(build){
@@ -36,7 +36,7 @@ export function preparationProgressView(options){
  const {prepared,status,pending,changed,complete,failed,locked,title}=progress;
  const own=client.session?.myTeam?.find(p=>p.cellId===client.session?.localPlayerCellId);
  const otherLocked=(client.session?.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===own?.cellId&&a.completed===true)&&Number(own?.championId)!==Number(hero.key);
- const reason=plan.positionKnown===false?'确认本人位置后可准备':!available?'请在桌面版连接客户端':!client.connected?'连接客户端后可准备':client.phase!=='ChampSelect'?'进入选人阶段后可准备':client.mode?.id!=='rift'?'模式尚未确认或暂不支持配置':!preparationGameId(client)?'同步客户端以确认本局':otherLocked?'客户端已锁定其他英雄，此方案只读':'';
+ const reason=!available?'请在桌面版连接客户端':!client.connected?'连接客户端后可准备':client.phase!=='ChampSelect'?'进入选人阶段后可准备':client.mode?.id!=='rift'?'模式尚未确认或暂不支持配置':!preparationGameId(client)?'同步客户端以确认本局':otherLocked?'客户端已锁定其他英雄，此方案只读':'';
  const planKey=[selection.id,selection.role,selection.mode].join(':'),attrs=`data-preparation-view="${view}" data-plan="${e(planKey)}" ${reason||busy?'disabled':''}`;
  const error=failed.map(k=>labels[k]+'：'+(status.steps[k].message||'请在客户端核对')).join('；')||status?.followUpError&&'配置回执已保留；后续同步失败：'+status.followUpError||status?.message||'';
  const spells=(b.summoners||[]).map((id,i)=>`${i?'F':'D'} ${data.spells[id]?.name||id}`).join(' · ');

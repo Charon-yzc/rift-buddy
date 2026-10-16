@@ -68,7 +68,7 @@ test('auto connect only joins a two-member lobby window with a fresh key',()=>{
  assert.deepEqual(autoRoomDecision(base),{action:'join',key:KEY,reason:'join'});
  assert.deepEqual(autoRoomDecision({...base,enabled:false}),{action:'hold',reason:'disabled'});
  assert.deepEqual(autoRoomDecision({...base,connected:false}),{action:'hold',reason:'not-lobby'});
- assert.deepEqual(autoRoomDecision({...base,phase:'ChampSelect'}),{action:'hold',reason:'not-lobby'});
+ for(const phase of ['ChampSelect','GameStart','InProgress','Reconnect'])assert.deepEqual(autoRoomDecision({...base,phase}),{action:'join',key:KEY,reason:'join'});
  assert.deepEqual(autoRoomDecision({...base,lobbyCount:1}),{action:'hold',reason:'waiting-party'});
  assert.deepEqual(autoRoomDecision({...base,lobbyCount:null}),{action:'hold',reason:'waiting-party'});
  assert.deepEqual(autoRoomDecision({...base,lobbyKey:null}),{action:'hold',reason:'no-key'});
@@ -115,5 +115,5 @@ test('the decision table keeps the manual room and the blocked key safe',()=>{
  assert.deepEqual(autoRoomDecision({...base,lobbyKey:null,activeAutoKey:KEY,partyGoneForMs:AUTO_PARTY_GONE_MS-1}),{action:'hold',reason:'no-key'});
  assert.deepEqual(autoRoomDecision({...base,lobbyKey:null,activeAutoKey:KEY,partyGoneForMs:AUTO_PARTY_GONE_MS}),{action:'leave',key:KEY,reason:'party-ended'});
  // Entering champ select keeps the room: there is no lobby evidence to act on.
- assert.deepEqual(autoRoomDecision({...base,phase:'ChampSelect',activeAutoKey:KEY}),{action:'hold',reason:'not-lobby'});
+ assert.deepEqual(autoRoomDecision({...base,phase:'ChampSelect',activeAutoKey:KEY}),{action:'hold',key:KEY,reason:'connected'});
 });

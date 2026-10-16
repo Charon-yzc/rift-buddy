@@ -5,11 +5,19 @@ import {sanitizeShare,proposalKey,sanitizeRoomBallot} from '../src/core/room.mjs
 import {relayWelcome,sanitizeRelayState} from '../src/core/room-relay.mjs';
 import {roomBallotBoard,createBallotRoundObserver,lineupFit} from '../src/core/room-ballot.mjs';
 import {createRoomService} from '../services/room.mjs';
-import {roomBallotView} from '../src/room-ballot-view.mjs';
+import {roomBallotView,candidateBallotActions} from '../src/room-ballot-view.mjs';
 const {champions}=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
 const a={lineup:[{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{role:'support',champion:'Braum'}],mode:'rift'};
 const b={lineup:[{role:'mid',champion:'Galio'},{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],mode:'rift'};
 const state=(proposal,vote)=>({lineup:[],pick:null,mode:'rift',ballot:{version:1,proposal,vote}});
+
+test('shared proposals are visible without expansion and voting sits beside adoption above details',()=>{
+ const key=proposalKey(a),room={mode:'client',ballots:true,members:[{nick:'伙伴',share:state(a,key)},{nick:'我',self:true,share:state(null,null)}]};
+ const html=roomBallotView(room,[],champions),vote=html.indexOf('data-action="room-vote"'),adopt=html.indexOf('data-action="room-adopt-ballot"'),details=html.indexOf('data-action="room-ballot-details"');
+ assert.match(html,/<section class="room-ballot-board"/);assert.doesNotMatch(html,/<details class="room-ballot-board"/);assert.ok(vote<adopt&&adopt<details);
+ const actions=candidateBallotActions(room,key,0);assert.ok(actions.indexOf('propose-result')<actions.indexOf('room-vote'));assert.match(actions,/投票 1/);
+ assert.doesNotMatch(candidateBallotActions(room,proposalKey(b),1),/room-vote/,'A different proposal cannot inherit votes');
+});
 
 test('explicit adoption is separate from voting and retains its proposal when a member changes hero or setup',()=>{
  const config={champion:'Ashe',role:'bottom',mode:'rift',patch:'16.20',start:[1055],items:[3031,3085],boots:[3006],runes:null,spells:['SummonerFlash','SummonerBarrier'],skills:'WQEW',priority:'WQE',first:'WQE'};

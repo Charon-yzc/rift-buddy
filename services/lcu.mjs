@@ -9,7 +9,7 @@ import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteConte
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
-const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
+const GET_PATHS=new Set(['/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
 export function parseLockfile(content) {
@@ -119,10 +119,14 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   // identifier, never a credential, and it stays on this machine.
   const lobbyFresh=!!cache.lobby&&Number.isFinite(cache.lobby.receivedAt)&&now()>=cache.lobby.receivedAt&&now()-cache.lobby.receivedAt<=LOBBY_AUTO_FRESH_MS&&LOBBY_PHASES.includes(phase);
   const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:lobbyFresh?'lobby':'unknown',members:lobbyFresh?lobbyPartyMembers(cache.lobby):[],lobbyCount:lobbyFresh?cache.lobby?.members.length:null,unmatched:0};
-  const party=lobbyFresh&&cache.lobby.key?{...baseParty,key:cache.lobby.key}:baseParty;
+  const roomEvidence=lobbyFresh||session&&baseParty.status==='known'||['GameStart','InProgress','Reconnect'].includes(phase)&&cache.gameId===gameId;
+  const party=roomEvidence&&cache.lobby?.key?{...baseParty,key:cache.lobby.key,lobbyCount:baseParty.lobbyCount??cache.lobby.members.length}:baseParty;
   const ownIdentity=lobbyFresh?cache.lobby.local:publicPlayerIdentity(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId));
   const ownName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)));
-  const own=ownName?{riotId:ownName}:null;
+  if(!ownName&&(!cache.ownReadAt||now()-cache.ownReadAt>60000)){
+   cache.ownReadAt=now();try{const player=await request(auth,'/lol-summoner/v1/current-summoner');cache.own=publicPlayerIdentity(player).riotId||publicPlayerName(player);}catch{}
+  }
+  const own=ownName||cache.own?{riotId:ownName||cache.own}:null;
   return {connected:true,phase,session,eligibility,game,party,...(own?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }

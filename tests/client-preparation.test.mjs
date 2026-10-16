@@ -36,6 +36,11 @@ test('explicit lane claim only preselects a representative, leaves runes/spells/
  assert.equal(result.preselectOnly,true);assert.equal(result.steps.hover.status,'done');assert.equal(f.action.completed,false);assert.equal(f.items,0);assert.deepEqual(f.pages,before);assert.deepEqual([f.own.spell1Id,f.own.spell2Id],spells);
  assert.deepEqual(f.calls.filter(c=>c.method!=='GET').map(c=>c.route),['/lol-champ-select/v1/session/actions/4']);
 });
+
+test('reference lane differs from the actual client lane without preventing a complete explicit preparation',async()=>{
+ const f=fixture();f.own.assignedPosition='MIDDLE';f.value.context=runeWriteContext({connected:true,phase:'ChampSelect',session:f.session,game:{gameId:777}});
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(f.own.championPickIntent,22);assert.equal(f.own.assignedPosition,'MIDDLE');assert.equal(f.action.completed,false);assert.equal(f.items,1);
+});
 test('locked same hero applies configuration without selecting or unlocking, locked other hero rejects before writes',async()=>{
  const f=fixture({locked:true});f.session.myTeam.push({cellId:1,championId:0,championPickIntent:22});assert.equal((await f.run()).complete,true);assert(!f.calls.some(c=>c.route.includes('/actions/')));assert.equal(f.action.completed,true);
  const other=fixture({locked:true});other.own.championId=1;other.value.context.championId=1;await assert.rejects(other.run(),/锁定其他英雄/);assert(!other.calls.some(c=>c.method!=='GET'));
@@ -120,9 +125,9 @@ test('unavailable heroes, missing availability and non-player turn produce no wr
  }
 });
 
-test('a public teammate hover already present at dispatch blocks all preparation writes',async()=>{
+test('a teammate hover is not a locked pick and does not block an explicit local selection',async()=>{
  const f=fixture();f.session.myTeam.push({cellId:1,championId:0,championPickIntent:22});
- await assert.rejects(f.run(),/队友已预选/);assert.equal(f.items,0);assert.ok(f.calls.every(c=>c.method==='GET'));
+ const result=await f.run();assert.equal(result.complete,true);assert.equal(f.items,1);assert.equal(f.own.championPickIntent,22);assert.equal(f.session.myTeam[1].championPickIntent,22);assert.equal(f.action.completed,false);
 });
 test('new bans while reading eligibility cancel before hover and a new game before a later step stops its writes',async()=>{
  const f=fixture(),request=f.deps.request;f.deps.request=async(auth,route,...args)=>{const result=await request(auth,route,...args);if(route.endsWith('/disabled-champion-ids'))f.session.bans.theirTeamBans=[22];return result;};const r=await f.run();assert.equal(r.steps.hover.status,'failed');assert.equal(r.steps.runes.status,'skipped');assert(!f.calls.some(c=>c.method!=='GET'));
@@ -140,7 +145,6 @@ test('target availability, own action, game, mode and turn changes during eligib
  const changes={
   banned:f=>{f.session.bans.theirTeamBans=[22];},
   teammate:f=>{f.session.myTeam.push({cellId:1,championId:22});},
-  teammateHover:f=>{f.session.myTeam.push({cellId:1,championId:0,championPickIntent:22});},
   opponent:f=>{f.session.theirTeam.push({cellId:5,championId:22});},
   disabled:()=>{},unpickable:()=>{},missing:()=>{},
   game:f=>{f.session.gameId=778;},

@@ -21,13 +21,38 @@ function harness({derive=auto.deriveAutoRoom}={}){
   sockets.push(socket);return socket;
  };
  const createRoomService=options=>{const service=actualCreateRoomService({...options,webSocketFactory:factory,now:()=>clock.value,relayOpenTimeoutMs:600000,relaySilenceMs:600000,discovery:false,listenHost:'127.0.0.1'});services.push(service);return service;};
- const create=new Function('createRoomService','sanitizeNick','initialRelayUrl','deriveAutoRoom','autoRoomNick','autoRoomDecision','decorateAutoRoom','LOBBY_PHASES','AUTO_RETRY_MS','publishWindows','diagnostic','guard','os','Date',`
+ const create=new Function('createRoomService','sanitizeNick','initialRelayUrl','deriveAutoRoom','autoRoomNick','autoRoomDecision','decorateAutoRoom','AUTO_ROOM_PHASES','AUTO_RETRY_MS','publishWindows','diagnostic','guard','os','Date',`
   let roomService=null,state={preferences:{roomAuto:true,autoSync:true,roomNick:'Test#CN1',relayUrl:'ws://127.0.0.1'}},latestClient=null;
+  const status=async()=>latestClient,saveCurrentState=async update=>{state=update(state);};
   ${snippet}
   return {queueRoomAuto,roomAutoStep,closeAutoRoomIfRevoked,setClient:value=>latestClient=value,setPreferences:value=>Object.assign(state.preferences,value),snapshot:()=>({key:roomAutoKey,code:roomAutoCode,pin:roomAutoPin,blocked:roomAutoBlockedKey,error:roomAutoError,goneSince:roomAutoGoneSince,offlineSince:roomAutoOfflineSince,failedUntil:roomAutoFailedUntil,room:roomService?.snapshot()}),dispose:()=>roomService?.dispose()};`);
- const api=create(createRoomService,sanitizeNick,initialRelayUrl,derive,auto.autoRoomNick,auto.autoRoomDecision,auto.decorateAutoRoom,auto.LOBBY_PHASES,auto.AUTO_RETRY_MS,(_name,value)=>updates.push(value),message=>reports.push(message),(name,handler)=>handlers.set(name,handler),{networkInterfaces:()=>({})},MockDate);
+ const api=create(createRoomService,sanitizeNick,initialRelayUrl,derive,auto.autoRoomNick,auto.autoRoomDecision,auto.decorateAutoRoom,auto.AUTO_ROOM_PHASES,auto.AUTO_RETRY_MS,(_name,value)=>updates.push(value),message=>reports.push(message),(name,handler)=>handlers.set(name,handler),{networkInterfaces:()=>({})},MockDate);
  return {...api,clock,sockets,updates,reports,handlers,services};
 }
+
+test('explicit reconnect rejoins the same verified party during selection and clears a manual leave block',async()=>{
+ const a=harness(),b=harness();
+ try{
+  for(const h of [a,b]){
+   h.setClient({...party(),phase:'ChampSelect'});
+   const pending=h.handlers.get('room-reconnect')();
+   await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();
+   const connected=await pending;assert.equal(connected.link,'connected');assert.equal(connected.auto,true);
+  }
+  assert.equal(a.snapshot().code,b.snapshot().code);assert.equal(a.snapshot().pin,b.snapshot().pin);
+  a.handlers.get('room-leave')();assert.ok(a.snapshot().blocked);
+  const again=a.handlers.get('room-reconnect')();await spin(()=>a.sockets.length===2);a.sockets[1].open();a.sockets[1].welcome();
+  assert.equal((await again).room,b.snapshot().code);assert.equal(a.snapshot().blocked,null);
+ }finally{a.dispose();b.dispose();}
+});
+
+test('explicit party reconnect refuses missing client or group evidence without creating a room',async()=>{
+ const h=harness();try{
+  h.setClient({...party(),connected:false});await assert.rejects(h.handlers.get('room-reconnect')(),/连接游戏客户端/);
+  h.setClient({...party(),party:{status:'unknown',lobbyCount:2}});await assert.rejects(h.handlers.get('room-reconnect')(),/组队标识/);
+  assert.equal(h.sockets.length,0);
+ }finally{h.dispose();}
+});
 
 test('fixed: pending auto handshake is cancelled after party loss grace',async t=>{
  const h=harness();t.after(()=>h.services.forEach(service=>service.dispose()));

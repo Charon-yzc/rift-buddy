@@ -14,15 +14,16 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(c=>c.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json'))),originalPlan=initial.draft.creativePlan,fixture=JSON.parse(await fs.readFile(path.join(root,'party-fixture.json'))),unadopted=process.env.RIFT_BUDDY_UNADOPTED==='1';
  assert.equal(fixture.unadopted,unadopted,'Wrapper and renderer fixture variants differ');
- let observer,phase='ChampSelect',gameflowId=0,gameId=471001,intent=0,picked=0,friendIntent=0,completed=false,spell1Id=4,spell2Id=12,requests=0,holdRune=true,resumeRune=null;
+ let observer,phase='ChampSelect',gameflowId=0,gameId=471001,intent=0,picked=0,friendIntent=0,friendPicked=0,completed=false,spell1Id=4,spell2Id=12,requests=0,holdRune=true,resumeRune=null;
  const customGame=process.env.RIFT_BUDDY_CUSTOM_GAME==='1',loadingTransition=process.env.RIFT_BUDDY_LOADING_TRANSITION==='1',loadingNewGame=process.env.RIFT_BUDDY_LOADING_NEW_GAME==='1',rename=fs.rename;
  if(loadingTransition)fs.rename=async(from,to)=>{const result=await rename(from,to);if(String(to).endsWith('rift-buddy-3-mid-rift.json')){assert.ok(path.resolve(to).startsWith(root+path.sep));picked=intent;intent=0;completed=true;if(loadingNewGame)gameId++;gameflowId=gameId;phase='GameStart';}return result;};
  let page={id:44,name:'Isolated editable page',isEditable:true,isActive:true,current:true};
- const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:unadopted?0:hero('Camille').key,championPickIntent:friendIntent,assignedPosition:'TOP'},{cellId:1,championId:unadopted?0:hero('Vi').key,assignedPosition:'JUNGLE'},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:'MIDDLE'},{cellId:3,championId:0,assignedPosition:'BOTTOM'},{cellId:4,championId:0,assignedPosition:'UTILITY'}],theirTeam:[],actions:[[{id:2,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',remainingMs:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
+ const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:unadopted?friendPicked:hero('Camille').key,championPickIntent:friendIntent,assignedPosition:'TOP'},{cellId:1,championId:unadopted?0:hero('Vi').key,assignedPosition:'JUNGLE'},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:'MIDDLE'},{cellId:3,championId:0,assignedPosition:'BOTTOM'},{cellId:4,championId:0,assignedPosition:'UTILITY'}],theirTeam:[],actions:[[{id:2,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',remainingMs:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
  const output=options=>{
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   const method=options.method||'GET',route=options.path,body=options.body===undefined?undefined:JSON.parse(options.body);
   if(method==='GET'){
+   if(route==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
    if(route==='/lol-gameflow/v1/gameflow-phase')return phase;
    if(route==='/lol-gameflow/v1/session')return customGame?{gameData:{gameId:gameflowId,isCustomGame:true,queue:{id:0,gameMode:''}},map:{id:11,gameMode:'CLASSIC'}}:{gameData:{gameId:gameflowId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
    if(route==='/lol-champ-select/v1/session')return rawSession();
@@ -101,12 +102,6 @@ async function run(){
   assert.equal(writes.length,0);console.log('PASS independent item import: both windows, matching-hover retention, new-hover configuration, snapshot replay, new-game reset; all client writes mocked and none issued');app.quit();return;
  }
  if(unadopted){
-  friendIntent=hero('Camille').key;await click(side,'[data-action=sync]');await until(()=>js(side,'document.querySelector(".companion-candidate [data-action=companion-preview][data-id=Camille]")?.getAttribute("aria-label").includes("队友预选")'),'Public teammate hover candidate missing');
-  const beforeReadonly=await state(),beforeReadonlyWrites=writes.length;
-  await click(side,'[data-action=companion-preview][data-id=Camille]');
-  await until(()=>js(side,'document.querySelector(".companion-preview")?.textContent.includes("队友配置 · 只读")'),'Teammate preview is not labeled readonly');
-  await readonlyProbe(side,'.companion-content',beforeReadonly);assert.equal(writes.length,beforeReadonlyWrites,'Readonly preview wrote to the client');
-  friendIntent=0;await click(side,'[data-action=sync]');await click(side,'[data-action=companion-tab][data-tab=recommend]');await until(()=>js(side,'!!document.querySelector(".companion-candidate [data-action=companion-preview][data-id=Galio]")'),'Candidate did not return after teammate cleared their hover');
   const expected=fixture.candidateValue,assertConfiguration=(value,label)=>{assert.deepEqual(value.page,expected.page,label+' changed the full rune page');assert.deepEqual(value.summoners,expected.summoners,label+' changed D/F');assert.deepEqual(value.itemSet.blocks,expected.itemSet.blocks,label+' changed the full equipment plan');};
   const assertStoredSolo=async()=>{const current=await state();if(!attempts.length)assert.equal(current.draft.creativePlan,undefined);else if(current.draft.creativePlan)assert.ok(current.draft.creativePlan.members.some(m=>m.champion==='Galio'&&m.role==='mid'),'Candidate click adopts the same concrete party plan');assert.deepEqual(current.preparations.find(p=>p.id==='Galio'&&p.role==='mid'&&p.mode==='rift'&&!p.comboId),fixture.oldSolo,'Candidate flow overwrote the saved solo configuration');return current;};
   assert.equal(originalPlan,undefined);assert.deepEqual(initial.preparations,[fixture.oldSolo]);assert.ok(initial.draft.slots.every(s=>s.champion===null));
@@ -114,6 +109,13 @@ async function run(){
   assert.equal(fixture.oldSoloValue.page.selectedPerkIds[0],8230);assert.equal(expected.page.selectedPerkIds[0],8439);
   assert.notDeepEqual(expected.page,fixture.oldSoloValue.page);assert.notDeepEqual(expected.summoners,fixture.oldSoloValue.summoners);assert.notDeepEqual(expected.itemSet.blocks,fixture.oldSoloValue.itemSet.blocks);
   assert.ok((await assertStoredSolo()).draft.slots.every(s=>s.champion===null),'Client sync filled unknown teammate picks');
+  await until(()=>js(side,'!!document.querySelector(".companion-candidate")'),'Candidate capture missing');await delay(250);await fs.writeFile(path.join(root,'selection-sidebar.png'),(await side.webContents.capturePage()).toPNG());
+  assert.equal(await js(side,'!!document.querySelector(".preparation-task,.client-preparation-result")'),false,'Selection duplicates configuration');
+  await click(side,'[data-action=companion-tab][data-tab=room]');
+  assert.equal(await js(side,'!!document.querySelector("[data-action=room-reconnect]")&&!document.querySelector(".modal-backdrop,.companion-roster")'),true,'Room is not an independent page');
+  assert.equal(await js(side,'document.querySelector("#room-nick").value'),'隔离测试玩家#TEST');
+  await delay(250);await fs.writeFile(path.join(root,'room-sidebar.png'),(await side.webContents.capturePage()).toPNG());
+  await click(side,'[data-action=companion-tab][data-tab=recommend]');
   const candidate=await js(side,'(()=>{const el=document.querySelector("[data-action=companion-preview][data-id=Galio]");return {combo:el.dataset.combo,members:[...el.closest(".companion-candidate").querySelectorAll("[data-action=companion-preview]")].map(member=>member.dataset.role+":"+member.dataset.id)};})()');
   assert.equal(candidate.combo,'camille-galio-vi');assert.deepEqual(candidate.members,['top:Camille','jungle:Vi','mid:Galio']);
   // Use the real candidate button, renderer and preparation service. The
@@ -136,7 +138,7 @@ async function run(){
   }
   await settled();
   assert.equal(picked,0);assert.equal(intent,hero('Galio').key);assert.equal(completed,false);assert.equal(mockedRuneWrites(),1);
-  assertConfiguration(await ownPlan(),'Pending player hover');let clickedConfiguration;await until(async()=>{const current=await assertStoredSolo();clickedConfiguration=current.preparations.find(p=>p.id==='Galio'&&p.comboId&&p.creativePlan?.curated?.id===candidate.combo);return !!clickedConfiguration;},'Candidate combination was not retained separately from the solo preference');
+  assertConfiguration(await ownPlan(),'Pending player hover');await delay(250);await fs.writeFile(path.join(root,'configuration-sidebar.png'),(await side.webContents.capturePage()).toPNG());let clickedConfiguration;await until(async()=>{const current=await assertStoredSolo();clickedConfiguration=current.preparations.find(p=>p.id==='Galio'&&p.comboId&&p.creativePlan?.curated?.id===candidate.combo);return !!clickedConfiguration;},'Candidate combination was not retained separately from the solo preference');
   // Returning from recommendations and a stale gameflow response cannot
   // manufacture a known lineup or silently switch to the old solo default.
   const afterClick=writes.length;await click(side,'[data-action=companion-tab][data-tab=recommend]');assertConfiguration(await ownPlan(),'Returned pending hover');
@@ -144,8 +146,9 @@ async function run(){
   // Only the simulated player confirms Galio. Both real renderers must
   // display the same full preparation even with every teammate pick unknown.
   picked=intent;intent=0;completed=true;await click(main,'[data-action=sync]');await click(side,'[data-action=sync]');
-  await until(()=>js(main,'document.querySelector(":is(.preparation-task,.client-preparation-result) [data-preparation-step=runes]")?.dataset.stepStatus==="done"'),'Confirming the unadopted hero lost the rune confirmation');
+  assert.equal(await js(main,'!!document.querySelector(".preparation-task,.client-preparation-result")'),false,'Selection page duplicates configuration receipts');
   assertConfiguration(await ownPlan(),'Sidebar after player confirmation');await click(main,'[data-action=task-edit]');
+  await until(()=>js(main,'document.querySelector(".drawer [data-preparation-step=runes]")?.dataset.stepStatus==="done"'),'Configuration page lost the rune receipt');
   const confirmed=await js(main,'JSON.parse(document.querySelector("[data-client-preparation-fingerprint]").dataset.clientPreparationFingerprint)[0]');assertConfiguration(confirmed,'Main drawer after player confirmation');await click(main,'[data-action=close]');
   const confirmedState=await assertStoredSolo();assert.ok(confirmedState.draft.slots.filter(s=>s.role!=='mid').every(s=>!Number.isInteger(s.clientCellId)),'Proposed teammate heroes must not become confirmed public picks');assert.ok(rawSession().myTeam.filter(p=>p.cellId!==2).every(p=>p.championId===0));assert.equal(writes.length,afterClick,'Player confirmation performed an application write');
   await click(main,'[data-action=navigate][data-route=favorites]');await click(main,'[data-action=navigate][data-route=draft]');await click(side,'[data-action=companion-tab][data-tab=recommend]');assertConfiguration(await ownPlan(),'Navigation after confirmation');assert.equal(writes.length,afterClick,'Navigation reapplied the unadopted configuration');await assertStoredSolo();

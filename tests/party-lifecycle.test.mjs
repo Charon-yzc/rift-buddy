@@ -9,6 +9,21 @@ function fixture(){
  const calls=[],mock={discover:async()=>({port:23456,password:secret}),now:()=>at,request:async(_a,url)=>{calls.push(url);if(url.endsWith('gameflow-phase'))return phase;if(url==='/lol-lobby/v2/lobby'){if(lobby instanceof Error)throw lobby;return lobby;}if(url==='/lol-champ-select/v1/session')return {gameId,localPlayerCellId:1,myTeam:team,theirTeam:[],bans:{}};if(url.endsWith('champion-ids'))return [];return {gameData:{gameId,queue:{id:420},gameMode:'CLASSIC'}};}};
  return {mock,calls,set:v=>{({phase=phase,gameId=gameId,secret=secret,lobby=lobby,team=team,at=at}=v);},friend};
 }
+
+test('current summoner provides the default room name when lobby names are unavailable',async()=>{
+ const f=fixture();f.set({lobby:Object.assign(Error('no lobby'),{status:404})});
+ const request=f.mock.request,calls=[];
+ const c=await clientSnapshot('',{...f.mock,request:async(auth,url)=>{calls.push(url);return url==='/lol-summoner/v1/current-summoner'?identity(44):request(auth,url);}});
+ assert.equal(c.connected,true);assert.deepEqual(c.own,{riotId:'Player44#CN1'});assert.equal(c.party.status,'unknown');assert.equal(c.party.key,undefined);
+ assert.ok(calls.includes('/lol-summoner/v1/current-summoner'));assert.ok(calls.every(url=>!url.includes('chat')));
+});
+
+test('one verified group retains the same room key during selection and game, never across another game',async()=>{
+ const f=fixture();const lobby=await clientSnapshot('',f.mock);f.set({phase:'ChampSelect'});const draft=await clientSnapshot('',f.mock);
+ f.set({phase:'InProgress',at:200000});const playing=await clientSnapshot('',f.mock);
+ assert.equal(draft.party.key,lobby.party.key);assert.equal(playing.party.key,lobby.party.key);assert.equal(playing.party.lobbyCount,2);
+ f.set({gameId:456});assert.equal((await clientSnapshot('',f.mock)).party.key,undefined);
+});
 test('public premade names survive ready-check while raw identifiers and chat stay private',async()=>{
  const f=fixture(),lobby=await clientSnapshot('',f.mock);assert.equal(lobby.party.lobbyCount,2);assert.deepEqual(lobby.party.members.map(m=>m.displayName),['Player11','Player22']);
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404})});await clientSnapshot('',f.mock);
@@ -40,7 +55,7 @@ test('the lobby key requires fresh pre-match evidence; the current own public na
  assert.ok(!JSON.stringify(lobby).includes('do-not-export'),'chat credentials must never surface');
  assert.ok(!JSON.stringify(lobby).includes('11111111-2222'),'a credential that looks like a party id must not surface either');
  f.set({phase:'ChampSelect'});
- assert.equal((await clientSnapshot('',f.mock)).party.key,undefined);
+ assert.equal((await clientSnapshot('',f.mock)).party.key,'party-3ee56b17','A verified current party can reconnect during selection');
  assert.deepEqual((await clientSnapshot('',f.mock)).own,{riotId:'Player11#CN1'});
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:1000+120001});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'stale evidence must not derive a room');
