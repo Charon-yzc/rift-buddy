@@ -250,7 +250,11 @@ async function run(){
  assert.notEqual(await js('document.activeElement.dataset.action'),'my-runes','Changing champion carried keyboard focus onto another rune target');
  assert.equal(await js('document.querySelector("[data-companion-disclosure=later]").open'),false,'Another hero inherited the open options');
  assert.equal(await js('document.querySelectorAll(".companion-refresh-state").length'),0,'Another hero inherited a source error');
- await js('document.body.append(staleSelect);staleSelect.dispatchEvent(new Event("change",{bubbles:true}));staleSelect.remove()');assert.ok(await js('document.querySelector("#toast").textContent.includes("选人已变化")'));assert.equal(writes.length,1);
+ // Read this synchronous rejection in the same renderer turn. An unrelated
+ // completed sync may replace the shared toast before another IPC round trip.
+ const staleEdit=await js('(()=>{const current=document.querySelector("[data-companion-field=rune]"),before={plan:current.dataset.plan,value:current.value};document.body.append(staleSelect);staleSelect.dispatchEvent(new Event("change",{bubbles:true}));staleSelect.remove();const after=document.querySelector("[data-companion-field=rune]");return {original:staleSelect.dataset.plan,before,after:{plan:after.dataset.plan,value:after.value},toast:document.querySelector("#toast").textContent};})()');
+ assert.equal(staleEdit.original,'Volibear:top:rift');assert.equal(staleEdit.before.plan,'Ashe:bottom:rift');
+ assert.match(staleEdit.toast,/选人已变化/);assert.deepEqual(staleEdit.after,staleEdit.before,'A stale editor changed the new champion configuration');assert.equal(writes.length,1);
  await js('window.buddy.presentation({field:"textScale",value:1.25})');await delay(100);
  await click('[data-action=companion-jump][data-section=runes]');
  main.setSize(280,320);await delay(150);
