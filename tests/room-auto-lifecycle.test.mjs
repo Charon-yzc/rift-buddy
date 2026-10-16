@@ -218,3 +218,33 @@ test('nickname upgrade preserves a same-room proposal and cannot downgrade a det
  h.setClient({...party(),own:{riotId:'LegacyName',summonerId:'99'}});await h.queueRoomAuto();
  assert.equal(h.sockets.length,2,'A lower-quality name must not reconnect the room');
 });
+
+test('nickname upgrade keeps a newer share and ballot published during the handshake',async t=>{
+ const h=harness();t.after(()=>h.services.forEach(service=>service.dispose()));
+ h.setPreferences({roomNick:'Fallback'});h.setClient({...party(),own:{summonerId:'99'}});
+ const first=h.queueRoomAuto();await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await first;
+ const share=id=>({lineup:[{role:'mid',champion:id,party:true}],pick:null,mode:'rift',at:1000});
+ h.handlers.get('room-publish')(share('Ahri'));
+ await h.handlers.get('room-ballot')({version:1,proposal:{lineup:share('Ahri').lineup,mode:'rift'},vote:null});
+ h.setClient(party());const upgrade=h.queueRoomAuto();await spin(()=>h.sockets.length===2);h.sockets[1].open();
+ h.handlers.get('room-publish')(share('Lux'));
+ h.sockets[1].welcome();
+ await h.handlers.get('room-ballot')({version:1,proposal:{lineup:share('Lux').lineup,mode:'rift'},vote:null});
+ await upgrade;
+ const current=h.snapshot().room.members.find(m=>m.self).share;
+ assert.equal(current.lineup[0].champion,'Lux');assert.equal(current.ballot.proposal.lineup[0].champion,'Lux');
+ assert.equal(h.sockets[1].sent.at(-1).lineup[0].champion,'Lux');
+});
+
+test('a name detected during room derivation still upgrades the actual fallback nickname',async t=>{
+ const gate=deferred(),entered=deferred();let derives=0;
+ const h=harness({derive:async key=>{if(++derives===1){entered.resolve();await gate.promise;}return auto.deriveAutoRoom(key);}});
+ t.after(()=>h.services.forEach(service=>service.dispose()));
+ h.setPreferences({roomNick:'Fallback'});h.setClient({...party(),own:{summonerId:'99'}});
+ const first=h.queueRoomAuto();await entered.promise;
+ h.setClient(party());const later=h.queueRoomAuto();gate.resolve();
+ await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();
+ await spin(()=>h.sockets.length===2);h.sockets[1].open();h.sockets[1].welcome();await first;await later;
+ assert.equal(h.sockets[1].sent[0].nick,'Test#CN1');assert.equal(h.snapshot().room.members.find(m=>m.self).nick,'Test#CN1');
+ await h.queueRoomAuto();assert.equal(h.sockets.length,2,'the detected nickname stays connected');
+});

@@ -252,7 +252,8 @@ async function boot(){
   const clean=name&&name!=='队友'?name:autoRoomNick({identity:latestClient?.own,savedNick:state.preferences.roomNick});
   if(roomService&&roomNickInUse===clean)return roomService;
   if(roomService){if(roomService.snapshot().mode!=='idle')throw Error('请先离开房间再修改昵称');roomService.dispose();roomService=null;}
-  roomNickInUse=clean;roomNickSourceRank=latestClient?.own?.riotId?(latestClient.own.riotId.includes('#')?2:1):latestClient?.own?.summonerName?1:0;
+  const detected=sanitizeNick(latestClient?.own?.riotId)||sanitizeNick(latestClient?.own?.summonerName);
+  roomNickInUse=clean;roomNickSourceRank=clean===detected?(detected.includes('#')?2:1):0;
   roomService=createRoomService({nick:clean,onUpdate:snapshot=>publishWindows('room-update',decorateRoom(snapshot)),diagnostic});
   return roomService;
  };
@@ -352,7 +353,7 @@ async function boot(){
    await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
    // Revocation already closed this attempt. A later manual room owns the service.
    if(roomAutoKey!==key)return;
-   if(renamedShare&&renamedShare.round===roomBallotRound&&latestClient?.party?.key===key){roomBallot=renamedShare.ballot;roomPublicShare=renamedShare.share;if(roomPublicShare)roomService.publish({...roomPublicShare,...(roomBallot?{ballot:roomBallot}:{})});}
+   if(renamedShare&&renamedShare.round===roomBallotRound&&latestClient?.party?.key===key){roomBallot=roomBallot||renamedShare.ballot;roomPublicShare=roomPublicShare||renamedShare.share;if(roomPublicShare)roomService.publish({...roomPublicShare,...(roomBallot?{ballot:roomBallot}:{})});}
    roomAutoFailedKey=null;roomAutoFailedUntil=0;
    diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
   }catch(error){
