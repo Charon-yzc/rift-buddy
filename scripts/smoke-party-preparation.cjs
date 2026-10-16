@@ -1,6 +1,6 @@
 const {app,screen,globalShortcut,ipcMain,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),attempts=[],results=[],writes=[];
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),attempts=[],results=[],writes=[],roomSockets=[];
 let diagnosticMain,diagnosticSide;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);});
@@ -8,8 +8,8 @@ app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls
 global.fetch=async()=>{throw Error('External network disabled in isolated party fixture');};http.request=()=>{throw Error('Real sockets forbidden in isolated party fixture');};
 // Synthetic relay: exercise the room UI without opening any socket.
 global.WebSocket=class {
- constructor(url){this.url=url;this.readyState=0;this.bufferedAmount=0;queueMicrotask(()=>{this.readyState=1;this.onopen?.();});}
- send(text){const frame=JSON.parse(text);if(frame.kind==='hello'){queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'welcome',v:1,room:new URL(this.url).pathname.split('/').at(-1),members:[{nick:frame.nick}],ballots:1,adoptions:1,packedStates:2})}));}if(frame.kind==='ping')queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'pong',v:1})}));}
+ constructor(url){this.url=url;this.readyState=0;this.bufferedAmount=0;roomSockets.push(this);queueMicrotask(()=>{this.readyState=1;this.onopen?.();});}
+ send(text){const frame=JSON.parse(text);if(frame.kind==='hello'){queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'welcome',v:1,room:new URL(this.url).pathname.split('/').at(-1),members:[{nick:frame.nick}],ballots:1,multiVotes:1,adoptions:1,packedStates:2})}));}if(frame.kind==='ping')queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'pong',v:1})}));}
  close(code=1000){this.readyState=3;this.onclose?.({code});}
 };
 const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(name==='prepare-selection')attempts.push(structuredClone(args[1]));const result=await handler(...args);if(name==='prepare-selection')results.push(structuredClone(result));return result;});};
@@ -129,6 +129,15 @@ async function run(){
   await click(side,'[data-action=propose-result]');await until(()=>js(side,'!!document.querySelector(".room-ballot-board .room-ballot-row")'),'Proposal is not visible above candidates');
   const layout=await js(side,'(()=>{const row=document.querySelector(".room-ballot-row"),candidate=document.querySelector(".companion-candidate"),box=selector=>row.querySelector(selector).getBoundingClientRect();return {boardY:row.getBoundingClientRect().top,candidateY:candidate.getBoundingClientRect().top,boardWidth:row.getBoundingClientRect().width,candidateWidth:candidate.getBoundingClientRect().width,adoptVisible:!!row.querySelector("[data-action=room-adopt-ballot]"),voteY:box("[data-action=room-vote]").top,detailsY:box("[data-action=room-ballot-details]").top,candidateDetails: getComputedStyle(candidate.querySelector(".candidate-details>summary")).position};})()');
   assert.ok(layout.boardY<layout.candidateY);assert.equal(layout.adoptVisible,false);assert.ok(Math.abs(layout.boardWidth-layout.candidateWidth)<=2,JSON.stringify(layout));assert.ok(layout.detailsY>layout.voteY);assert.equal(layout.candidateDetails,'static');
+  const {proposalKey}=await import(require('node:url').pathToFileURL(path.join(base,'src/core/room.mjs')).href),other={lineup:[{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],mode:'rift'},otherKey=proposalKey(other);
+  const socket=roomSockets.at(-1);socket.onmessage({data:JSON.stringify({kind:'join',v:1,from:'测试队友'})});socket.onmessage({data:JSON.stringify({kind:'state',v:1,from:'测试队友',at:Date.now(),lineup:[],pick:null,ballot:{version:1,proposal:other,vote:null}})});
+  await until(()=>js(side,'document.querySelectorAll(".room-ballot-row").length===2'),'Second proposal missing');
+  const myVotes=()=>js(side,'window.buddy.roomStatus().then(r=>r.members.find(m=>m.self).share.ballot.votes)'),ownKey=(await myVotes())[0];
+  await click(side,'[data-action=room-vote][data-key="'+otherKey+'"]');await until(async()=>(await myVotes()).length===2,'Second vote replaced the first');
+  assert.deepEqual(new Set(await myVotes()),new Set([ownKey,otherKey]));
+  await click(side,'[data-action=room-vote][data-key="'+ownKey+'"]');await until(async()=>(await myVotes()).length===1,'Own vote was not cancelled');assert.deepEqual(await myVotes(),[otherKey]);
+  await click(side,'[data-action=room-vote][data-key="'+ownKey+'"]');await until(async()=>(await myVotes()).length===2,'Re-voting did not retain the other choice');
+  assert.equal(await js(side,'[...document.querySelectorAll(".room-ballot-row [data-action=room-vote]")].filter(b=>b.getAttribute("aria-pressed")==="true").length'),2);
   await delay(250);await capture(side,'proposal-sidebar.png');
   const candidate=await js(side,'(()=>{const el=document.querySelector("[data-action=companion-preview][data-id=Galio]");return {combo:el.dataset.combo,members:[...el.closest(".companion-candidate").querySelectorAll("[data-action=companion-preview]")].map(member=>member.dataset.role+":"+member.dataset.id)};})()');
   assert.equal(candidate.combo,'camille-galio-vi');assert.deepEqual(candidate.members,['top:Camille','jungle:Vi','mid:Galio']);

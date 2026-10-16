@@ -377,7 +377,7 @@ async function boot(){
    await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
    // Revocation already closed this attempt. A later manual room owns the service.
    if(roomAutoKey!==key)return;
-   if(renamedShare&&renamedShare.round===roomBallotRound&&latestClient?.party?.key===key){roomBallot=roomBallot||renamedShare.ballot;roomPublicShare=roomPublicShare||renamedShare.share;if(roomPublicShare)roomService.publish({...roomPublicShare,...(roomBallot?{ballot:roomBallot}:{})});}
+   if(renamedShare&&renamedShare.round===roomBallotRound&&latestClient?.party?.key===key){roomBallot=roomBallot||renamedShare.ballot;roomPublicShare=roomPublicShare||renamedShare.share;if(roomPublicShare)roomService.publish({...roomPublicShare,...(roomBallot?{ballot:roomBallot}:{})},{restoring:true});}
    roomAutoFailedKey=null;roomAutoFailedUntil=0;
    diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
   }catch(error){

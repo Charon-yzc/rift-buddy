@@ -266,6 +266,19 @@ test('nickname upgrade keeps a newer share and ballot published during the hands
  assert.equal(h.sockets[1].sent.at(-1).lineup[0].champion,'Lux');
 });
 
+test('nickname recovery against an older relay retains multi-votes and exposes a failed connection',async t=>{
+ const h=harness();t.after(()=>h.dispose());h.setPreferences({roomNick:'Fallback'});h.setClient({...party(),own:{summonerId:'99'}});
+ const joining=h.queueRoomAuto();await spin(()=>h.sockets.length===1);h.sockets[0].open();h.sockets[0].welcome();await joining;
+ const a={lineup:[{role:'mid',champion:'Ahri'}]},b={lineup:[{role:'bottom',champion:'Ashe'}]},ka=proposalKey(a),kb=proposalKey(b);
+ h.handlers.get('room-publish')({lineup:a.lineup,pick:null,mode:'rift'});
+ h.sockets[0].onmessage({data:JSON.stringify({kind:'join',v:1,from:'伙伴'})});
+ h.sockets[0].onmessage({data:JSON.stringify({kind:'state',v:1,from:'伙伴',at:1000,lineup:[],pick:null,ballot:{version:1,proposal:b,vote:null}})});
+ await h.handlers.get('room-ballot')({version:1,proposal:a,votes:[ka,kb]});
+ h.setClient(party());const rename=h.queueRoomAuto();await spin(()=>h.sockets.length===2);h.sockets[1].open();h.sockets[1].welcome({multiVotes:0});await rename;
+ const current=h.handlers.get('room-status')();assert.equal(current.link,'failed');assert.match(current.warning,/已保留在本机/);
+ assert.deepEqual(current.members.find(m=>m.self).share.ballot.votes,[ka,kb]);assert.equal(h.sockets[1].readyState,3);
+});
+
 test('a name detected during room derivation still upgrades the actual fallback nickname',async t=>{
  const gate=deferred(),entered=deferred();let derives=0;
  const h=harness({derive:async key=>{if(++derives===1){entered.resolve();await gate.promise;}return auto.deriveAutoRoom(key);}});

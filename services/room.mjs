@@ -629,11 +629,19 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  }
 
  // --- shared ---------------------------------------------------------------
- function publish(share){
+ function publish(share,{restoring=false}={}){
   if(mode==='idle')throw Error('尚未创建或加入房间');
   const clean=sanitizeShare({kind:'state',v:ROOM_PROTOCOL,from:nick,lineup:share?.lineup||[],pick:share?.pick??null,at:share?.at||now(),...(share?.mode!==undefined?{mode:share.mode}:{}),...(share?.configurations!==undefined?{configurations:share.configurations}:{}),...(share?.strategy?{strategy:share.strategy}:{}),...(share?.ballot?{ballot:share.ballot}:{})});
   if(!clean||!encodeFrame(clean))throw Error('分享内容格式不正确或过大');
-  if(ballotVotes(clean.ballot).length>1&&!multiVotes)throw Error('当前中继或房主版本只支持单选投票，请更新后重新连接');
+  if(ballotVotes(clean.ballot).length>1&&!multiVotes){
+   // A nickname upgrade creates a fresh service. If its relay has regressed,
+   // preserve the restored local set and show failure instead of an empty room.
+   if(restoring&&transport==='relay'){
+    ownShare=shareBody(clean);warning='中继版本不支持已保存的多选投票，已保留在本机；请更新中继后重新连接';
+    relayStop();relayLink='failed';const socket=relaySocket;relaySocket=null;if(socket)disposeSocket(socket);guests.clear();emit();
+   }
+   throw Error('当前中继或房主版本只支持单选投票，请更新后重新连接');
+  }
   if(!packedStates&&Buffer.byteLength(JSON.stringify(clean))+1>MAX_FRAME)throw Error('当前房间版本不支持完整五人方案，请更新中继或房主后重新连接');
   if(needsPacked(clean)&&[...guests.values()].some(g=>!g.packedStates))throw Error('有队友版本较旧，完整多人方案需要队友更新助手后再同步');
   if(mode==='host')broadcast(clean);
