@@ -24,6 +24,7 @@ async function run(){
  const response=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   if(options.method&&options.method!=='GET'){runeWrites++;throw Error('Real rune writes prohibited');}
+  if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId:'170035',mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:3,assignedPosition:'MIDDLE'},{cellId:2,championId:895,assignedPosition:'BOTTOM'},{cellId:3,championId:497,assignedPosition:'UTILITY'}],theirTeam:[{cellId:6,championId:hero(enemy).key},{cellId:7,championId:0,championPickIntent:hero('Zed').key}],actions:[],bans:{myTeamBans:[],theirTeamBans:[]},timer:{adjustedTimeLeftInPhase:65000}};

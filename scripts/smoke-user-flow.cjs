@@ -2,7 +2,8 @@ const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),delay=ms=>new Promise(r=>setTimeout(r,ms));
-app.on('browser-window-created',(_e,w)=>windows.push(w));
+app.setPath('userData',root);
+app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);});
 async function until(check,label){for(let n=0;n<150;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
@@ -15,7 +16,13 @@ async function run(){
  ipcMain.handle=register;
  const click=async sel=>{sel=await revealDraftAction(js,sel);if(sel==='[data-action=result-detail]')await until(()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false'),'Recommendations still pending');assert.ok(await js(`!!document.querySelector(${JSON.stringify(sel)})`),sel);await js(`document.querySelector(${JSON.stringify(sel)}).click()`);};
  const active=()=>js('({loadout:document.querySelector(".loadout-option.active")?.dataset.id,rune:document.querySelector(".rune-option.active")?.dataset.id,conditions:[...document.querySelectorAll("[data-action=build-condition].active")].map(e=>e.dataset.condition)})');
- const capture=async(name,w=main)=>{await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
+ const capture=async(name,w=main)=>{
+  await w.webContents.executeJavaScript('[...document.images].forEach(i=>i.loading="eager")');
+  await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});
+  await until(()=>w.webContents.executeJavaScript('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Missing screenshot image: '+name);
+  const captured=await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});assert.equal(captured.isEmpty(),false,'Empty screenshot: '+name);
+  await fs.writeFile(path.join(root,name),captured.toPNG());
+ };
  const state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
  // A normal library visit after boot must recover saved non-default choices.
  await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
@@ -79,21 +86,21 @@ async function run(){
  await until(()=>js('document.querySelector(".rune-target-warning")?.textContent.includes("盖伦")'),'Own champion mismatch warning missing');
  assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/萨勒芬妮.*替换符文/);
  assert.match(await js('document.querySelector(".rune-target-warning").textContent'),/你自己的客户端/);
- assert.equal(await js('document.querySelector("[data-action=open-guide]").disabled'),true,'Teammate configuration must not replace my guide');
+ assert.equal(await js('document.querySelector("[data-action=open-guide]").disabled'),false,'A different reference lane must not disable an explicit guide choice');
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.
  await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'None',message:'测试手动配置'}));
  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Manual planning sync missing');
  await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');await click('[data-action=close]');
  await js('{const role=document.querySelector("#solo-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');
- const pick=async(role,id)=>{if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
- await pick('bottom','Rengar');await pick('support','Ivern');await click('.slot-config[data-action=build][data-role=bottom]');
+ const pick=async(role,id)=>{if(await js('!!document.querySelector("[data-action=task-compare]")'))await click('[data-action=task-compare]');if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await until(()=>js(`!!document.querySelector('[data-action=pick-slot][data-role=${role}]')`),'Editable empty lane missing: '+role);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
+ await pick('bottom','Rengar');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
  await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Rengar Ivern private build missing');
  await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing');
- await click('[data-action=close]');await pick('support','Nami');await click('.slot-config[data-action=build][data-role=bottom]');
+ await click('[data-action=close]');await pick('support','Nami');await click('.champ-pick[data-action=build][data-role=bottom]');
  assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.notEqual((await active()).loadout,'rengar-bush');
  await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide');
- await click('[data-action=close]');await pick('support','Ivern');await click('.slot-config[data-action=build][data-role=bottom]');
+ await click('[data-action=close]');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
  await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Returning combo choice not restored');
  await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide');
  await capture('partner-context-isolation.png');

@@ -7,6 +7,9 @@ test('only current public lobby members survive sanitization; no chat tokens or 
  assert(!JSON.stringify(lobby).includes('PRIVATE'));assert.equal(lobby.members.length,2);
  assert.deepEqual(publicPlayerIdentity({...friend,nameVisibilityType:'HIDDEN',obfuscatedPuuid:'decode-me'}),{});
  assert.deepEqual(publicPlayerIdentity({puuid:'00000000-0000-0000-0000-000000000000',summonerId:0}),{});
+ assert.equal(publicPlayerIdentity({puuid:'public-own-identity-0001',summonerId:10,summonerName:'本人召唤师'}).summonerName,'本人召唤师');
+ assert.equal(publicPlayerIdentity({puuid:'public-own-identity-0001',summonerId:10,summonerName:'本人召唤师'}).riotId,undefined);
+ assert.equal(sanitizeLobbyParty({localMember:{puuid:'public-own-identity-0001',summonerId:10,summonerName:'本人召唤师'},members:[{puuid:'public-own-identity-0001',summonerId:10,summonerName:'本人召唤师'}],partyId:'party-aaaaaa'}).local.summonerName,'本人召唤师');
  assert.equal(sanitizeLobbyParty({localMember:self,members:[self],gameConfig:{isCustom:true}}),null);
  assert.equal(sanitizeLobbyParty({localMember:self,members:[friend]}),null);
 });
@@ -28,4 +31,12 @@ test('unchanged polling does not rebuild sidebar, while public selection or stal
  assert.equal(clientRenderIdentity(a,101000),clientRenderIdentity(b,101000));
  assert.notEqual(clientRenderIdentity(a,116000),clientRenderIdentity(b,116000));
  assert.notEqual(clientRenderIdentity(a,101000),clientRenderIdentity({...a,session:{...a.session,myTeam:[{...self,cellId:0,championId:22}]}},101000));
+});
+
+
+test('a same-name stranger is never added to a premade by display name alone',()=>{
+ const own={puuid:'public-own-player-001',gameName:'Same'},friend={puuid:'public-friend-player-002',gameName:'Same'};
+ const lobby=sanitizeLobbyParty({localMember:own,members:[own,friend],partyId:'party-same-name'},100);
+ const current={localPlayerCellId:0,myTeam:[{...own,cellId:0},{...friend,cellId:1},{puuid:'public-stranger-player-003',gameName:'Same',cellId:2}]};
+ assert.deepEqual(resolveClientParty(current,lobby,[],101).members.map(member=>member.cellId),[0,1]);
 });

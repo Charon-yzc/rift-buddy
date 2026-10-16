@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.13.2",
+  "version": "2026.10.16.1",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。 2026-10-13新增16套三人机制执行卡，覆盖中下辅、上野中、野下辅、上中辅；仅新增条目按 Riot 16.20.1 技能复核。复用配置保持各自复核日期，普通位置默认不伪装成专用配装；Mobalytics常驻指南只作打法参考，不提供本组合当前版本胜率或强度证据，原有旧条目与资料状态保留。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。 2026-10-13新增16套三人机制执行卡，覆盖中下辅、上野中、野下辅、上中辅；仅新增条目按 Riot 16.20.1 技能复核。复用配置保持各自复核日期，普通位置默认不伪装成专用配装；Mobalytics常驻指南只作打法参考，不提供本组合当前版本胜率或强度证据，原有旧条目与资料状态保留。 2026-10-16新增四套双人、四套三人机制配合；旧社区内容仅作玩法灵感，未沿用旧配装、胜率或强度结论，旧条目复核状态保留。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -11700,6 +11700,263 @@
         "rune:8451": "9e4f8837510e3998"
       },
       "tempo": "teamfight"
+    },
+    {
+      "id": "morgana-twitch-roam",
+      "carry": "Morgana",
+      "support": "Twitch",
+      "name": "守线与潜行换班",
+      "style": "wild",
+      "tempo": "early",
+      "difficulty": "较高",
+      "tags": [
+        "法核守线",
+        "潜行游走"
+      ],
+      "why": "莫甘娜守住下路兵线，辅助老鼠只在有线权和落点时短程游走；两人重新汇合后用禁锢限制目标，给老鼠叠毒输出。",
+      "plan": "莫甘娜补刀，老鼠走辅助任务经济。先约定离线和返回时间；莫甘娜 Q 命中后老鼠从安全角度输出，E 按实际毒层使用。没有可抓目标就留在线上，不拿队友经验和兵线换无效游走。",
+      "risk": "莫甘娜 E 只吸收魔法伤害并在盾存续时阻挡控制，不能挡物理普攻，也不保证一打二；老鼠低经济、下路要被越塔或兵线失控就立即回防。旧视频配装不直接沿用，使用本机位置默认参考。",
+      "partners": [
+        "Vi",
+        "TwistedFate",
+        "Shen"
+      ],
+      "loadouts": {
+        "bottom": "default",
+        "support": "default"
+      },
+      "sources": [
+        {
+          "name": "Riot · 莫甘娜 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Morgana.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 图奇 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Twitch.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Eno老师 · 莫甘娜与辅助老鼠（旧版社区灵感）",
+          "url": "https://www.douyin.com/video/6983345786771836167",
+          "kind": "旧版玩法启发，未沿用旧装备符文或强度结论",
+          "checkedAt": "2026-10-16"
+        }
+      ],
+      "patch": "16.20",
+      "reviewedAt": "2026-10-16",
+      "reviewBaseline": {
+        "champion:Morgana": "e0588c7ab7dba463",
+        "champion:Twitch": "ab3e76d629cf2787"
+      }
+    },
+    {
+      "id": "kalista-tahm-rescue",
+      "carry": "Kalista",
+      "support": "TahmKench",
+      "name": "互相捞一手",
+      "style": "fun",
+      "tempo": "protect",
+      "difficulty": "较高",
+      "tags": [
+        "契约救援",
+        "分段控制"
+      ],
+      "why": "卡莉丝塔的大招可收回契约塔姆，塔姆的大招可保护卡莉丝塔；先约谁留救援，避免两人同时交掉保命。",
+      "plan": "卡莉丝塔补刀，塔姆辅助。开局确认契约；卡莉丝塔 R 收回后由塔姆选择安全弹出方向，击飞落地再接 Q 和普攻。反打时塔姆优先把 R 留给受威胁的卡莉丝塔。",
+      "risk": "两种救援都依赖大招和距离，不能把现在的吞人当成旧版 W。塔姆 Q 眩晕要先有三层被动；无层数、被推线或塔姆大招未就绪时，以回撤为主。复用辅助保护配置，其复核状态独立。",
+      "partners": [
+        "Sejuani",
+        "Galio",
+        "Orianna"
+      ],
+      "loadouts": {
+        "bottom": "onhit-carry",
+        "support": "tank-peel"
+      },
+      "patch": "16.20",
+      "reviewedAt": "2026-10-16",
+      "sources": [
+        {
+          "name": "Riot · 卡莉丝塔 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Kalista.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 塔姆 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/TahmKench.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Kalista": "1793244f0dc8a65c",
+        "champion:TahmKench": "9635271a9add58c5",
+        "item:3124": "a5fa166d09295f8f",
+        "item:3153": "a6d836f7e8db72c4",
+        "item:3085": "fbd0dd92f5cc7425",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3091": "9fbf7a8b541265a4",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8008": "d8ed59948702367b",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8017": "50a79a13bce940f0",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8410": "da4ec8f245880032",
+        "rune:8005": "e05d6553b23e1d97",
+        "rune:8014": "04092c4f9754532b",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3050": "c3e25c9df9075147",
+        "item:3158": "72ca672b9221f063",
+        "item:3075": "6d456e96c01062c6",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8347": "def2a55844436c47",
+        "rune:8439": "b2c74fd18c4ad076",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8306": "68d4bd3d69d9d19c"
+      }
+    },
+    {
+      "id": "ziggs-zilean-bombs",
+      "carry": "Ziggs",
+      "support": "Zilean",
+      "name": "炸弹轮班",
+      "style": "fun",
+      "tempo": "poke",
+      "difficulty": "中等",
+      "tags": [
+        "双炸弹",
+        "推线消耗"
+      ],
+      "why": "基兰减速后更容易挂炸弹，双炸弹实际眩晕时，吉格斯再把伤害落在同一区域。",
+      "plan": "吉格斯补刀，基兰辅助任务经济。基兰先 E 减速再找 Q-W-Q，确认第二颗炸弹引爆眩晕后吉格斯跟 Q/E；吉格斯 W 优先留作脱离，不先把人炸出队友炸弹区域。",
+      "risk": "双炸弹要实际命中同一目标才眩晕；双法伤、缺少前排，容易被突进。推线先补河道视野，基兰 R 给真正受威胁的人；无大招或炸弹落空就后退。",
+      "partners": [
+        "JarvanIV",
+        "Poppy",
+        "Shen"
+      ],
+      "loadouts": {
+        "bottom": "default",
+        "support": "zilean-protect"
+      },
+      "patch": "16.20",
+      "reviewedAt": "2026-10-16",
+      "sources": [
+        {
+          "name": "Riot · 吉格斯 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ziggs.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 基兰 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Zilean.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Ziggs": "301986c8fed3e8fb",
+        "champion:Zilean": "60f40731a1259a4a",
+        "item:2065": "a30335c7d456f5fd",
+        "item:4005": "049fc32e0486e5b6",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:3158": "72ca672b9221f063",
+        "item:3190": "89cdf2838748dfc7",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8351": "6594874b24a7b00e",
+        "rune:8306": "68d4bd3d69d9d19c",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47",
+        "rune:8473": "ed2f46234183276d"
+      }
+    },
+    {
+      "id": "swain-renata-brawl",
+      "carry": "Swain",
+      "support": "Renata",
+      "name": "续命拉扯局",
+      "style": "fun",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "近距拉扯",
+        "分段救援"
+      ],
+      "why": "斯维因持续作战，烈娜塔用控制与救援为他争取输出时间；能继续接触目标时再投入下一轮保护。",
+      "plan": "斯维因补刀，烈娜塔辅助。斯维因 E 实际命中后，两人控制错开；烈娜塔 W 在即将承受集火时给，R 从侧角限制后续追兵，保留撤退方向。",
+      "risk": "烈娜塔 W 的延迟死亡救援要在规定时间内参与击杀才可能脱险，不能当稳定复活。斯维因大招离开敌人后不能无限维持；重伤、远程拉扯或无法跟进时退出，避免把两个救援同时浪费。",
+      "partners": [
+        "JarvanIV",
+        "Poppy",
+        "Vi"
+      ],
+      "loadouts": {
+        "bottom": "swain-brawl",
+        "support": "renata-rescue"
+      },
+      "patch": "16.20",
+      "reviewedAt": "2026-10-16",
+      "sources": [
+        {
+          "name": "Riot · 斯维因 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Swain.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 烈娜塔 · 戈拉斯克 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Renata.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Swain": "2df9ea554c5ac91d",
+        "champion:Renata": "040340652360d067",
+        "item:3118": "2bf87c4847cde85f",
+        "item:6653": "dae566be4a35ad25",
+        "item:3116": "1ca09887b440d0f6",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3504": "f6eed220149ca076",
+        "item:3158": "72ca672b9221f063",
+        "item:3107": "53bdbba0a53ca5c6",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8463": "3296414353df0e65",
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8214": "6d3b2bf192d500da",
+        "rune:8236": "a1bb7cfc15c3d089"
+      }
     }
   ],
   "links": [
@@ -20348,6 +20605,349 @@
         "rune:8351": "6594874b24a7b00e",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8453": "f9a0180e7f2f0432"
+      }
+    },
+    {
+      "id": "party-poppy-anivia-ziggs",
+      "name": "墙边施工队",
+      "style": "fun",
+      "tempo": "poke",
+      "difficulty": "较高",
+      "tags": [
+        "造墙角度",
+        "推线消耗",
+        "位移反制"
+      ],
+      "why": "艾尼维亚用冰墙压缩走位，波比寻找真正的撞墙角度，吉格斯在控制成立后补区域伤害；关键是墙与击退方向，而非无条件连控。",
+      "plan": "先报冰墙位置和撤退方向，波比 E 有撞墙角度才进；确认眩晕后吉格斯 Q/E 接伤害，W 留作拆塔或撤离，不提前把敌人炸走。",
+      "risk": "冰墙可能挡住自己人，波比 E 不撞墙不会眩晕，吉格斯 W 会改变落点；法伤过多或角度不成立就继续消耗。",
+      "members": [
+        {
+          "champion": "Poppy",
+          "role": "jungle",
+          "job": "先看冰墙与敌人相对位置，E 真撞墙才报控制；W 留给可阻挡的突进，R 用于拆散追兵。",
+          "loadoutId": "trio-jungle-frontline"
+        },
+        {
+          "champion": "Anivia",
+          "role": "mid",
+          "job": "保蓝与中线，墙要给队友留通道；Q 实际眩晕后再承诺跟进，别用墙封住波比退路。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Ziggs",
+          "role": "bottom",
+          "job": "按下路法核补刀，控制成立后 Q/E；W 留作退出，先核对全队物理输出。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "中下处理兵线，波比到场后由冰鸟报墙边角度。",
+        "波比确认 E 撞墙并命中，吉格斯再补区域伤害。",
+        "角度丢失就停，保留冰墙通道和吉格斯 W 撤离。"
+      ],
+      "early": "中下各自保线，波比正常刷野；没有安全墙角不为了联动强行入侵。",
+      "window": "有视野的窄口、可用冰墙和波比 E，且中下能在有效距离内跟进。",
+      "economy": "波比正常打野、中路冰鸟与下路吉格斯各自补刀。除波比复用前排配置外使用位置默认参考，未新增专用出装。",
+      "sources": [
+        {
+          "name": "Riot · 波比 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Poppy.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 艾尼维亚 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Anivia.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 吉格斯 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ziggs.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "小北冰鸟 · 冰鸟波比组合直播记录",
+          "url": "https://www.bilibili.com/video/BV1TFmUBeEM2/",
+          "kind": "社区配合灵感，未作当前版本胜率依据",
+          "checkedAt": "2026-10-16"
+        }
+      ],
+      "patch": "16.20",
+      "reviewedAt": "2026-10-16",
+      "reviewBaseline": {
+        "champion:Poppy": "af33a45e62ad30e5",
+        "champion:Anivia": "52343f9ffaa815a9",
+        "champion:Ziggs": "301986c8fed3e8fb",
+        "item:3068": "f23565139478f276",
+        "item:2504": "ead2f4757e3e6c8c",
+        "item:6665": "9693faf50145df4e",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3075": "6d456e96c01062c6",
+        "item:3083": "ea58e4b0407db9d2",
+        "rune:8439": "b2c74fd18c4ad076",
+        "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8306": "68d4bd3d69d9d19c",
+        "rune:8347": "def2a55844436c47",
+        "rune:8230": "b4da4b07836c5635",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8234": "018bc04903dfba25",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998"
+      }
+    },
+    {
+      "id": "party-fiddle-neeko-mf",
+      "name": "草丛谢幕",
+      "style": "wild",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "视野埋伏",
+        "分段范围控制",
+        "安全弹幕"
+      ],
+      "why": "费德提克从无视野角度先手，妮蔻接延迟范围控制，厄运小姐在安全射线上持续输出；开团位置比三人同时按 R 更重要。",
+      "plan": "先排进场位视野，费德提克确认未被发现再 R；妮蔻等敌人实际受控后接 E/R，厄运小姐站在敌方反打范围外开 R。",
+      "risk": "费德提克的恐惧需要满足自身被动条件，开 R 不代表必恐惧；妮蔻 R 有延迟，女枪 R 会被打断。敌方散开、看到埋伏或后排被切就取消。",
+      "members": [
+        {
+          "champion": "Fiddlesticks",
+          "role": "jungle",
+          "job": "先排眼与报落点，从未被看见且满足恐惧条件的位置 R；被发现就换角度，不假定关视野必恐惧。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Neeko",
+          "role": "mid",
+          "job": "先保中线，E 限制实际目标再用 R 接控制；伪装只是找位置，不承诺对手看不出来。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "MissFortune",
+          "role": "bottom",
+          "job": "保下路经济，确认身边安全后沿控制区开 R；遇突进立即停弹幕走位。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "三人先确认可到场位置，打野排视野，女枪报安全射线。",
+        "费德提克 R 落地后报实际恐惧，妮蔻再衔接控制。",
+        "女枪在安全角度输出；敌人脱离或反打后排就一起收手。"
+      ],
+      "early": "上下路各自正常发育，费德提克按刷野节奏升六；六级前仅利用附近可到场的基础控制。",
+      "window": "关键 R 可用、打野有未暴露的进场位，且女枪不会为跟大招走进敌方突进范围。",
+      "economy": "打野、中路与射手各自保发育；使用本机位置默认配置，不把未验证的双法核组合称作版本最优。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-16",
+      "sources": [
+        {
+          "name": "Riot · 费德提克 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Fiddlesticks.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 妮蔻 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Neeko.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 厄运小姐 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/MissFortune.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Fiddlesticks": "a90e07bce987ea67",
+        "champion:Neeko": "d6f4984cd7330b72",
+        "champion:MissFortune": "10b496d2ce7c344d"
+      }
+    },
+    {
+      "id": "party-nocturne-orianna-rakan",
+      "name": "进场接力班",
+      "style": "fun",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "分段进场",
+        "球体范围",
+        "回场接应"
+      ],
+      "why": "魔腾逼出后排位移，洛在可跟进范围内接控制，发条围绕球的实际位置接大招；三人先后行动，而非赌远距离带球必成功。",
+      "plan": "先报洛与发条能跟上的范围。魔腾切入后，洛 W 实际击飞再报发条接 R；发条始终核对球体位置，球返回自己时停止原连招。",
+      "risk": "魔腾大招可能飞出发条球的维持距离，不能把跨屏带球当保证。洛 R 魅惑不等于 W 命中，三人距离拉开或技能缺失时由魔腾取消深入。",
+      "members": [
+        {
+          "champion": "Nocturne",
+          "role": "jungle",
+          "job": "先核对两位队友可达范围，再决定 R 二段；E 的恐惧有持续条件，别把贴身当立即控制。",
+          "loadoutId": "trio-nocturne-commit"
+        },
+        {
+          "champion": "Orianna",
+          "role": "mid",
+          "job": "报球位置和可接区域，确认球仍在目标位置才 R；远距离飞行使球返回时不空接。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Rakan",
+          "role": "support",
+          "job": "W 命中才报击飞，保留能 E 返回的友军，技能不齐不追魔腾越过阵型。",
+          "loadoutId": "rakan-engage"
+        }
+      ],
+      "steps": [
+        "魔腾先报目标，发条与洛确认可到场距离。",
+        "魔腾压迫位移后洛 W 接实际控制，发条核对球体落点再 R。",
+        "洛保留回场 E，没接上就回收阵型，不追第二个远目标。"
+      ],
+      "early": "魔腾正常刷野，中路保线；洛先保证下路安全，不能长期离线等大招。",
+      "window": "三人关键技能可用、目标在共同可到场区域且洛有回场友军。",
+      "economy": "打野与中路保正常经济，洛用辅助任务经济。复用魔腾进场和洛开团配置；发条用中路默认参考。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-16",
+      "sources": [
+        {
+          "name": "Riot · 魔腾 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nocturne.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 奥莉安娜 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Orianna.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 洛 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rakan.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Nocturne": "2759f235cb713880",
+        "champion:Orianna": "a3ef9b02b9b57356",
+        "champion:Rakan": "69d7edc48cac55e5",
+        "item:3073": "fc0221a3ae08279d",
+        "item:6631": "0afacda99f318d21",
+        "item:3071": "8b44dc349847ea0e",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:6333": "60ed05035db8354d",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8008": "d8ed59948702367b",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8106": "bfb83fa22daf18de",
+        "rune:8140": "93302565a400fc06",
+        "item:3050": "c3e25c9df9075147",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3158": "72ca672b9221f063",
+        "item:2065": "a30335c7d456f5fd",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47",
+        "rune:8351": "6594874b24a7b00e",
+        "rune:8306": "68d4bd3d69d9d19c",
+        "rune:8439": "b2c74fd18c4ad076",
+        "rune:8242": "37935df8d31dd429"
+      }
+    },
+    {
+      "id": "party-jarvan-veigar-ziggs",
+      "name": "圈内请勿走动",
+      "style": "fun",
+      "tempo": "teamfight",
+      "difficulty": "中等",
+      "tags": [
+        "地形限制",
+        "延迟晕眩",
+        "法核推塔"
+      ],
+      "why": "嘉文的地形限制与维迦 E 的边缘晕眩压缩走位，吉格斯向实际受控区域补伤害；先区分围住与真正控制。",
+      "plan": "嘉文 EQ 命中后报位置，维迦 E 放在敌人撤退边缘；吉格斯 Q/E 补区域伤害。嘉文 R 要留意自己人通道，不利时及时解除地形。",
+      "risk": "维迦 E 中央不是眩晕区域，嘉文 R 可被位移逃出；双法核要核对物理输出，吉格斯 W 不要把敌人推出队友技能。",
+      "members": [
+        {
+          "champion": "JarvanIV",
+          "role": "jungle",
+          "job": "EQ 真击飞才报跟进，R 围住不等于持续控制；队友被卡住或需要撤退就拆地形。",
+          "loadoutId": "trio-jarvan-engage"
+        },
+        {
+          "champion": "Veigar",
+          "role": "mid",
+          "job": "E 边缘限制退路，确认敌人触边晕眩再报控制；没晕住别让队友误当稳定锁人。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Ziggs",
+          "role": "bottom",
+          "job": "按下路法核补刀，向实际受控区域放技能；W 留作保命或拆塔，别提前炸走目标。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "处理两条兵线，嘉文选不妨碍队友撤退的入口。",
+        "EQ 命中后维迦 E 卡边缘，吉格斯跟 Q/E，R 依实际命中机会使用。",
+        "对手交位移或自己人被卡住时解除地形，回去推线与布视野。"
+      ],
+      "early": "双法核优先保证蓝量与补刀，嘉文不要为追联动放弃全部野区；三级后仅抓实际前压目标。",
+      "window": "三人有可用基础控制与区域伤害，敌方关键位移已交或撤退路径明确。",
+      "economy": "野、中、下分别保正常经济；嘉文复用打野开团配置，其余采用位置默认参考，辅助与上路优先补物理持续输出和保护。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-16",
+      "sources": [
+        {
+          "name": "Riot · 嘉文四世 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/JarvanIV.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 维迦 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Veigar.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 吉格斯 16.20 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Ziggs.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-16"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:JarvanIV": "c9d96bc727699c9b",
+        "champion:Veigar": "b0c876605f73d7f8",
+        "champion:Ziggs": "301986c8fed3e8fb",
+        "item:6610": "93878c29ffe17b52",
+        "item:3071": "8b44dc349847ea0e",
+        "item:6333": "60ed05035db8354d",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3053": "6f40bd5cd29bb7d2",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8014": "04092c4f9754532b",
+        "rune:8304": "aa454bdce540cb11",
+        "rune:8347": "def2a55844436c47"
       }
     }
   ],

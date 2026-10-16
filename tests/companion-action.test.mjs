@@ -35,7 +35,7 @@ test('sidebar hero shortcuts distinguish own configuration, public teammate pick
 test('disabling direct preparation preserves public teammate and locked hero read-only boundaries',()=>{
  const hovered=structuredClone(client);hovered.session.myTeam[1]={cellId:1,championId:0,championPickIntent:hero('Vex').key};
  const locked=structuredClone(client);locked.session.actions[0][0].completed=true;
- for(const [live,id] of [[client,'Vex'],[hovered,'Vex'],[locked,'Diana']]){
+ for(const [live,id] of [[client,'Vex'],[locked,'Diana']]){
   const before=structuredClone(live),direct=companionHeroAction(live,hero(id),true),preview=companionHeroAction(live,hero(id),false);
   assert.equal(direct.readOnly,true);assert.deepEqual(preview,direct);assert.deepEqual(live,before);
  }
@@ -49,11 +49,11 @@ test('chosen sidebar keeps five slots, one range status and the local action bef
  live.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(live.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
  const props={data,client:live,slots,unassigned:[],scope:'party',soloRole:'jungle',style:'fun',tab:'recommend',results:[result],activePlan};
  const html=companionView(props),roster=html.indexOf('aria-label="全队当前选人"'),status=html.indexOf('data-companion-disclosure="eligibility"'),action=html.indexOf('aria-label="我的下一步"'),play=html.indexOf('data-companion-disclosure="chosen-play"');
- assert(roster>0&&roster<status&&status<action&&action<play);
+ assert(roster>0&&roster<status&&status<play);assert.equal(action,-1,'Preparation belongs only to My Configuration');
  assert.match(html,/companion-team-compact/);assert.equal((html.match(/data-drop-role=/g)||[]).length,5);
  assert.doesNotMatch(html,/class="companion-candidate"/);assert.match(html,/data-action="task-compare"/);
  assert.match(html,/中路 · 队友已选 · 看配置/);assert.doesNotMatch(companionView({...props,preferences:{compactTeam:false}}),/companion-team-now companion-team-compact/);
- const unknown=companionView({...props,client:{...live,eligibility:null}});assert(unknown.indexOf('data-companion-disclosure="eligibility"')<unknown.indexOf('aria-label="我的下一步"'),'Unknown eligibility remains available ahead of the action');
+ const unknown=companionView({...props,client:{...live,eligibility:null}});assert.match(unknown,/data-companion-disclosure="eligibility"/);assert.doesNotMatch(unknown,/aria-label="我的下一步"/);
  const state=validateState({...defaultState(),preferences:{compactTeam:false}});assert.equal(state.preferences.compactTeam,false);assert.equal(validateState(defaultState()).preferences.compactTeam,true);
 });
 
@@ -82,6 +82,6 @@ test('rankings reuse the persistent local action and five slots outside the scro
 test('a prepared hover stays visible on the team and ranking tabs without promoting it to a selected roster pick',()=>{
  const slots=createSlots(),live=structuredClone(client);live.session.myTeam[0].championId=0;live.session.myTeam[0].championPickIntent=hero('Graves').key;
  const before=structuredClone({slots,client:live}),props={data,client:live,slots,unassigned:[],scope:'party',soloRole:'jungle',style:'fun',results:[],preparation:null,plan:{preview:true,intent:true,selection:{id:'Graves',role:'jungle',mode:'rift'}},preparationStatus:{complete:true}};
- for(const tab of ['recommend','rankings'])for(const plan of [props.plan,{preview:true,selection:{id:'Vex',role:'mid',mode:'rift'}}]){const html=companionView({...props,tab,plan});assert.match(html,/data-action="companion-roster-plan"[^>]+data-id="Graves"/);assert.match(html,/预选配置已完成 · 尚未选定/);assert.doesNotMatch(html,/data-local="true"/);}
+ for(const tab of ['recommend','rankings'])for(const plan of [props.plan,{preview:true,selection:{id:'Vex',role:'mid',mode:'rift'}}]){const html=companionView({...props,tab,plan});assert.match(html,/data-action="companion-roster-plan"[^>]+data-id="Graves"/);if(tab==='rankings')assert.match(html,/预选配置已完成 · 尚未选定/);else assert.doesNotMatch(html,/aria-label="我的下一步"/);assert.doesNotMatch(html,/data-local="true"/);}
  assert.deepEqual({slots,client:live},before);assert(slots.every(s=>!s.champion));
 });

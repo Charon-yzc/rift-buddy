@@ -11,6 +11,7 @@ async function run(){
  let picked='Chogath',assigned='UTILITY',enemy='Nautilus',gameId='1530';
  const output=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('Rune writes prohibited in matchup selection smoke');}
+  if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return 'ChampSelect';
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:hero(picked).key,assignedPosition:assigned}],theirTeam:[...(enemy?[{cellId:6,championId:hero(enemy).key}]:[]),{cellId:7,championId:0,championPickIntent:hero('Janna').key}],actions:[],bans:{myTeamBans:[],theirTeamBans:[]},timer:{adjustedTimeLeftInPhase:65000}};

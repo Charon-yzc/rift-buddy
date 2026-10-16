@@ -9,9 +9,16 @@ import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteConte
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
-const GET_PATHS=new Set(['/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
+const GET_PATHS=new Set(['/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
+// A display name read back from the client: trimmed, bounded, no control
+// characters. Anything else is treated as no name, never guessed.
+const cleanDisplayName=value=>{const text=typeof value==='string'?value.trim().normalize('NFKC'):'';return /^[^\r\n\0]{1,64}$/.test(text)?text:'';};
+// Read-only summoner lookups by stable account id. Both stay on loopback and
+// carry no credentials; the puuid shape mirrors the identity validator.
+const SUMMONER_BY_ID=/^\/lol-summoner\/v1\/summoners\/[1-9]\d{0,19}$/;
+const SUMMONER_BY_PUUID=/^\/lol-summoner\/v2\/summoners\/puuid\/[A-Za-z0-9_-]{16,160}$/;
 export function parseLockfile(content) {
  const parts=String(content).trim().split(':');
  if(parts.length!==5||parts[0]!=='LeagueClient'||!/^\d+$/.test(parts[2])||!parts[3]||parts[4]!=='https')return null;
@@ -41,7 +48,7 @@ export function lcuRequest(auth,route,method='GET',body) {
  const keys=body&&typeof body==='object'&&!Array.isArray(body)?Object.keys(body).sort().join(','):'';
  const preview=method==='PATCH'&&/^\/lol-champ-select\/v1\/session\/actions\/\d+$/.test(route)&&keys==='championId,completed'&&Number.isSafeInteger(body.championId)&&body.championId>0&&body.completed===false;
  const spells=method==='PATCH'&&route==='/lol-champ-select/v1/session/my-selection'&&keys==='spell1Id,spell2Id'&&[body.spell1Id,body.spell2Id].every(n=>Number.isSafeInteger(n)&&n>0)&&body.spell1Id!==body.spell2Id;
- if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells)throw new Error('不支持此客户端操作');
+ if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='GET'&&SUMMONER_BY_ID.test(route))&&!(method==='GET'&&SUMMONER_BY_PUUID.test(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells)throw new Error('不支持此客户端操作');
  return new Promise((resolve,reject)=>{
   const payload=body?JSON.stringify(body):null;
   const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,
@@ -119,11 +126,29 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   // identifier, never a credential, and it stays on this machine.
   const lobbyFresh=!!cache.lobby&&Number.isFinite(cache.lobby.receivedAt)&&now()>=cache.lobby.receivedAt&&now()-cache.lobby.receivedAt<=LOBBY_AUTO_FRESH_MS&&LOBBY_PHASES.includes(phase);
   const baseParty=session?resolveClientParty(identities,cache.lobby,normalizePartyIds(partyIds),now()):{status:lobbyFresh?'lobby':'unknown',members:lobbyFresh?lobbyPartyMembers(cache.lobby):[],lobbyCount:lobbyFresh?cache.lobby?.members.length:null,unmatched:0};
-  const party=lobbyFresh&&cache.lobby.key?{...baseParty,key:cache.lobby.key}:baseParty;
+  const roomEvidence=lobbyFresh||session&&baseParty.status==='known'||['GameStart','InProgress','Reconnect'].includes(phase)&&cache.gameId===gameId;
+  const party=roomEvidence&&cache.lobby?.key?{...baseParty,key:cache.lobby.key,lobbyCount:baseParty.lobbyCount??cache.lobby.members.length}:baseParty;
   const ownIdentity=lobbyFresh?cache.lobby.local:publicPlayerIdentity(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId));
-  const ownName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)));
-  const own=ownName?{riotId:ownName}:null;
-  return {connected:true,phase,session,eligibility,game,party,...(own?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
+  const baseName=ownIdentity?.riotId||(lobbyFresh?cache.lobby.localName:publicPlayerName(rawSession?.myTeam?.find(p=>p.cellId===session?.localPlayerCellId)))||'';
+  let nameIdentity={...ownIdentity},detectedName=baseName;
+  const identityKey=value=>value?.puuid||value?.summonerId||'';
+  const seed=identityKey(nameIdentity);
+  if(seed&&cache.own?.seed&&seed!==cache.own.seed){cache.own=null;cache.ownReadAt=0;}
+  const readDisplay=async route=>{try{const player=await request(auth,route),identity=publicPlayerIdentity(player);nameIdentity={...nameIdentity,...identity};return identity.riotId||publicPlayerName(player)||cleanDisplayName(player?.displayName);}catch{return '';}};
+  // Optional name lookups are throttled and cached per account. A temporary
+  // legacy display name must not downgrade a previously verified Riot ID.
+  if(!baseName&&(!cache.ownReadAt||now()<cache.ownReadAt||now()-cache.ownReadAt>=60000)){
+   cache.ownReadAt=now();detectedName=await readDisplay('/lol-summoner/v1/current-summoner');
+   if(!detectedName&&nameIdentity.summonerId)detectedName=await readDisplay(`/lol-summoner/v1/summoners/${nameIdentity.summonerId}`);
+   if(!detectedName&&nameIdentity.puuid)detectedName=await readDisplay(`/lol-summoner/v2/summoners/puuid/${nameIdentity.puuid}`);
+  }
+  const rank=detectedName?(detectedName.includes('#')?2:1):0,account=identityKey(nameIdentity)||cache.own?.seed||'';
+  if(detectedName&&(!cache.own||account!==cache.own.seed||rank>=cache.own.rank))cache.own={name:detectedName,rank,seed:account};
+  const ownName=cache.own?.name||detectedName;
+  // Validated account IDs stay in main only, including PUUID-only clients.
+  // They seed a stable fallback nickname; forRenderer strips raw identity.
+  const own={...(ownName?{riotId:ownName}:{}),...(nameIdentity.summonerId?{summonerId:nameIdentity.summonerId}:{}),...(nameIdentity.puuid&&!nameIdentity.summonerId?{puuid:nameIdentity.puuid}:{})};
+  return {connected:true,phase,session,eligibility,game,party,...(Object.keys(own).length?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {

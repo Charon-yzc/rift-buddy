@@ -75,20 +75,31 @@ test('the current public game stamp survives storage and keeps the tactical lane
  assert.equal(same.draft.soloRole,'support');
 });
 
-test('a proven next game releases old client bindings without a lobby tick and preserves offline choices and position ownership',()=>{
+test('a proven next game releases all previous match choices and position ownership without a lobby tick',()=>{
  let slots=moveChampion(mergeClientSession(createSlots(),session(),data.champions).slots,'mid','support');
  slots=slots.map(s=>s.role==='top'?{...s,champion:'Garen',locked:true,manualPosition:true,party:false}:s);
  const draft={slots,scope:'solo',soloRole:'support',style:'balanced',clientGameId:'1506'},before=structuredClone(draft);
  const next=reconcileClientDraft(draft,'1507');assert.equal(next.newGame,true);assert.equal(next.draft.soloRole,'');
  assert.deepEqual(draft,before,'Reconciliation mutated the old snapshot');
- assert.deepEqual(next.draft.slots.find(s=>s.role==='top'),before.slots.find(s=>s.role==='top'));
- assert.deepEqual(next.draft.slots.map(s=>[s.role,s.party]),before.slots.map(s=>[s.role,s.party]));
+ assert.ok(next.draft.slots.every(s=>s.champion===null&&!s.locked&&!s.party&&!s.manualPosition),'A new match does not inherit this match’s manual hero plans or party range');
  assert.ok(next.draft.slots.every(s=>!Number.isInteger(s.clientCellId)));
  const merged=mergeClientSession(next.draft.slots,session(),data.champions).slots;
  assert.equal(currentPlayerSelection(session(),data.champions,merged).role,'mid');
  assert.equal(merged.find(s=>s.role==='support').champion,null);
  const tracker=createCurrentGameTracker();tracker.observe({...client(),game:{gameId:'1507'}},data.champions,merged);
  assert.equal(tracker.current({...client(),game:{gameId:'1507'}},null,data.champions,merged).role,'mid');
+});
+
+test('return to queue clears canceled draft plans once, ignoring stale gameflow IDs and preserving offline work without a match',()=>{
+ const saved={slots:createSlots().map(s=>({...s,champion:s.role==='mid'?'Ahri':null,locked:s.role==='mid',partyManual:true})),clientGameId:'1506',soloRole:'mid',playerPosition:{role:'mid',cellId:0},creativePlan:{id:'old-plan'}};
+ for(const phase of ['Lobby','Matchmaking','ReadyCheck','None']){
+  const next=reconcileClientDraft(saved,'1506',null,{phase,previousPhase:'ChampSelect'});
+  assert.equal(next.newGame,true);assert.ok(next.draft.slots.every(s=>!s.champion&&!s.party&&!s.partyManual));assert.equal(next.draft.creativePlan,undefined);assert.equal(next.draft.clientGameId,undefined);assert.equal(next.draft.playerPosition,undefined);
+  const repeat=reconcileClientDraft(next.draft,'1506',null,{phase,previousPhase:phase});assert.equal(repeat.changed,false);assert.deepEqual(repeat.draft,next.draft);
+ }
+ const offline={...saved};delete offline.clientGameId;delete offline.playerPosition;
+ assert.deepEqual(reconcileClientDraft(offline,'1506',null,{phase:'Lobby',previousPhase:'Offline'}).draft,offline);
+ const reopened=reconcileClientDraft(saved,'1506',null,{phase:'Lobby',previousPhase:'Offline'});assert.equal(reopened.newGame,true);
 });
 
 test('unknown and delayed public identifiers preserve manual work while a previous guide can prove a legacy draft belongs to an older game',()=>{

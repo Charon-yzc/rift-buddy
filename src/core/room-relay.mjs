@@ -101,7 +101,7 @@ export function relayWelcome(room,nicks){
  const code=typeof room==='string'&&validRoomCode(room)?room:null;
  if(!code)return null;
  const members=(Array.isArray(nicks)?nicks:[]).map(m=>{const name=sanitizeNick(typeof m==='string'?m:m?.nick);return name?{nick:name,...(m?.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})}:null;}).filter(Boolean).slice(0,MAX_RELAY_MEMBERS);
- return {kind:'welcome',v:ROOM_PROTOCOL,room:code,members,ballots:1,adoptions:1,packedStates:PACKED_STATES_VERSION};
+ return {kind:'welcome',v:ROOM_PROTOCOL,room:code,members,ballots:1,multiVotes:1,adoptions:1,packedStates:PACKED_STATES_VERSION};
 }
 export function relayJoin(nick,packedStates=0){
  const from=sanitizeNick(nick);

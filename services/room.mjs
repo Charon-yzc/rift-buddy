@@ -14,7 +14,7 @@ import {
  ROOM_PROTOCOL,PACKED_STATES_VERSION,MAX_FRAME,makeRoomCode,validRoomCode,validPin,
  encodeDiscovery,decodeDiscovery,
  encodeFrame,splitFrames,decodeFrame,
- validateHello,validateWelcome,sanitizeShare,validateLeave,validateJoin,sanitizeNick,
+ validateHello,validateWelcome,sanitizeShare,validateLeave,validateJoin,sanitizeNick,ballotVotes,
 } from '../src/core/room.mjs';
 import {MAX_RELAY_MEMBERS,RELAY_PING,hashPin,normalizeRelayUrl,relayEndpoint,relayHello,relayCloseReason,frameTooLarge} from '../src/core/room-relay.mjs';
 
@@ -67,7 +67,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  const guests=new Map(); // host: socket -> {nick,share}; client: 'nick:'+nick -> {nick,share}
  const waiting=new Set(); // host: accepted sockets that have not completed the handshake
  let upstream=null;
- let ownShare=null,ballots=false,adoptions=false,packedStates=false,warning='';
+ let ownShare=null,ballots=false,multiVotes=false,adoptions=false,packedStates=false,warning='';
  const failures=new Map(); // remote address -> consecutive failed handshakes
  // An address that keeps failing waits before its next hello is even read, so
  // one machine cannot guess pins at full LAN speed. The table is bounded so
@@ -84,7 +84,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  function snapshot(){
   const members=[{nick:transport==='relay'?relayActiveNick:nick,online:true,share:ownShare,self:true,packedStates:true}];
   for(const g of guests.values())members.push({...memberView(g),self:false});
-  return {mode,transport,link:relayLink,ballots,adoptions,packedStates,...(warning?{warning}:{}),room,pin:mode==='host'?pin:null,host:mode==='host'?null:upstream?.host||null,port,relayUrl,members};
+  return {mode,transport,link:relayLink,ballots,multiVotes,adoptions,packedStates,...(warning?{warning}:{}),room,pin:mode==='host'?pin:null,host:mode==='host'?null:upstream?.host||null,port,relayUrl,members};
  }
 
  function teardown({graceful=false}={}){
@@ -115,7 +115,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
    }else try{socket.destroy();}catch{}
    upstream=null;
   }
-  guests.clear();ownShare=null;ballots=false;adoptions=false;packedStates=false;warning='';room=null;pin=null;port=null;mode='idle';transport=null;relayUrl=null;relayLink='idle';relayPinHash=null;relayActiveNick=nick;relayRenamed=false;relayFailures=0;relayStopped=false;
+  guests.clear();ownShare=null;ballots=false;multiVotes=false;adoptions=false;packedStates=false;warning='';room=null;pin=null;port=null;mode='idle';transport=null;relayUrl=null;relayLink='idle';relayPinHash=null;relayActiveNick=nick;relayRenamed=false;relayFailures=0;relayStopped=false;
  }
 
  function broadcast(frame,except){
@@ -164,7 +164,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
      hello=handshake;
      guests.set(socket,{nick:handshake.nick,share:null,packedStates:handshake.packedStates===PACKED_STATES_VERSION});
      const memberList=[{nick,packedStates:PACKED_STATES_VERSION},...[...guests.values()].map(g=>({nick:g.nick,...(g.packedStates?{packedStates:PACKED_STATES_VERSION}:{})}))];
-     send(socket,{kind:'welcome',v:ROOM_PROTOCOL,room,members:memberList,ballots:1,adoptions:1,packedStates:PACKED_STATES_VERSION});
+     send(socket,{kind:'welcome',v:ROOM_PROTOCOL,room,members:memberList,ballots:1,multiVotes:1,adoptions:1,packedStates:PACKED_STATES_VERSION});
      // Catch the newcomer up with the current table, then send the host's own
      // share. Writers only ever receive frames from other members.
      for(const g of guests.values())if(g.share)send(socket,{kind:'state',v:ROOM_PROTOCOL,from:g.nick,...shareBody(g.share)});
@@ -189,7 +189,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  async function host({code}={}){
   if(mode!=='idle')throw Error('请先离开当前房间');
   if(code!==undefined&&!validRoomCode(code))throw Error('房间码格式不正确');
-  room=code===undefined?secureCode():String(code);pin=secureCode();mode='host';ballots=true;adoptions=true;packedStates=true;transport='lan';
+  room=code===undefined?secureCode():String(code);pin=secureCode();mode='host';ballots=true;multiVotes=true;adoptions=true;packedStates=true;transport='lan';
   server=net.createServer(socket=>{
    // Every accepted socket needs an error listener from the first tick: a
    // reset during the throttle window must never surface as an unhandled
@@ -282,7 +282,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
      if(!welcomed){
       const welcome=validateWelcome(frame);
       if(welcome&&welcome.room===room){
-       welcomed=true;ballots=welcome.ballots===1;adoptions=welcome.adoptions===1;packedStates=welcome.packedStates===PACKED_STATES_VERSION;clearTimeout(deadline);
+       welcomed=true;ballots=welcome.ballots===1;multiVotes=welcome.multiVotes===1;adoptions=welcome.adoptions===1;packedStates=welcome.packedStates===PACKED_STATES_VERSION;clearTimeout(deadline);
        // Seed the member list from the welcome so presence shows before any
        // share arrives (welcome.members are sanitized display names).
        for(const name of [...new Set(welcome.members)].filter(name=>name!==nick).slice(0,MAX_MEMBERS-1))guests.set('nick:'+name,{nick:name,share:null,packedStates:welcome.packedMembers?.includes(name)===true});
@@ -511,7 +511,8 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
     if(!welcome||welcome.room!==room)return;
     if(welcome.members.filter(name=>name!==relayNickFor(renamed)).length>=MAX_RELAY_MEMBERS){settleFail(relayRefusal('中继成员数量超限'));disposeSocket(socket);return;}
     if(ownShare&&(welcome.packedStates!==PACKED_STATES_VERSION||welcome.members.some(name=>name!==relayNickFor(renamed)&&!welcome.packedMembers?.includes(name)))&&needsPacked({kind:'state',v:ROOM_PROTOCOL,from:relayNickFor(renamed),...shareBody(ownShare)})){packedStates=false;settleFail(relayRefusal('中继或队友版本不支持已保存的完整方案，请更新助手与中继后重新连接'));disposeSocket(socket);return;}
-    welcomed=true;ballots=welcome.ballots===1;adoptions=welcome.adoptions===1;packedStates=welcome.packedStates===PACKED_STATES_VERSION;settleOk();
+    if(ownShare&&ballotVotes(ownShare.ballot).length>1&&welcome.multiVotes!==1){multiVotes=false;settleFail(relayRefusal('中继版本不支持已保存的多选投票，请更新中继后重新连接'));disposeSocket(socket);return;}
+    welcomed=true;ballots=welcome.ballots===1;multiVotes=welcome.multiVotes===1;adoptions=welcome.adoptions===1;packedStates=welcome.packedStates===PACKED_STATES_VERSION;settleOk();
     if(timers.welcome){clearTimeout(timers.welcome);timers.welcome=null;}
     // Forgive the streak only once this link has actually held for a while.
     timers.stable=setTimeout(()=>{if(relaySocket===socket)relayFailures=0;},relayStableMs);
@@ -628,10 +629,19 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  }
 
  // --- shared ---------------------------------------------------------------
- function publish(share){
+ function publish(share,{restoring=false}={}){
   if(mode==='idle')throw Error('尚未创建或加入房间');
   const clean=sanitizeShare({kind:'state',v:ROOM_PROTOCOL,from:nick,lineup:share?.lineup||[],pick:share?.pick??null,at:share?.at||now(),...(share?.mode!==undefined?{mode:share.mode}:{}),...(share?.configurations!==undefined?{configurations:share.configurations}:{}),...(share?.strategy?{strategy:share.strategy}:{}),...(share?.ballot?{ballot:share.ballot}:{})});
   if(!clean||!encodeFrame(clean))throw Error('分享内容格式不正确或过大');
+  if(ballotVotes(clean.ballot).length>1&&!multiVotes){
+   // A nickname upgrade creates a fresh service. If its relay has regressed,
+   // preserve the restored local set and show failure instead of an empty room.
+   if(restoring&&transport==='relay'){
+    ownShare=shareBody(clean);warning='中继版本不支持已保存的多选投票，已保留在本机；请更新中继后重新连接';
+    relayStop();relayLink='failed';const socket=relaySocket;relaySocket=null;if(socket)disposeSocket(socket);guests.clear();emit();
+   }
+   throw Error('当前中继或房主版本只支持单选投票，请更新后重新连接');
+  }
   if(!packedStates&&Buffer.byteLength(JSON.stringify(clean))+1>MAX_FRAME)throw Error('当前房间版本不支持完整五人方案，请更新中继或房主后重新连接');
   if(needsPacked(clean)&&[...guests.values()].some(g=>!g.packedStates))throw Error('有队友版本较旧，完整多人方案需要队友更新助手后再同步');
   if(mode==='host')broadcast(clean);
@@ -642,6 +652,15 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
   else if(!upstream||!send(upstream.socket,clean))throw Error('分享失败：房间连接不可用');
   ownShare=shareBody(clean);
   emit();
+  return snapshot();
+ }
+
+ function clearBallot(){
+  if(!ownShare?.ballot)return snapshot();
+  const {ballot,...share}=ownShare;ownShare=share;emit();
+  // Round reset is local even when the relay cannot accept another frame.
+  // A later announce/reconnect must never resurrect the previous round.
+  if(mode!=='idle')try{publish(share);}catch{}
   return snapshot();
  }
 
@@ -673,7 +692,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  }
 
  return {
-  host,join,relay,leave,publish,scan,snapshot,
+  host,join,relay,leave,publish,clearBallot,scan,snapshot,
   dispose(){teardown();},
   get state(){return snapshot();},
  };

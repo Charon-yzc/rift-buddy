@@ -20,14 +20,20 @@ const clientGameId=id=>(typeof id==='string'||Number.isSafeInteger(id))&&/^\d{1,
 export function publicClientGameId(client){return client?.connected?(client.phase==='ChampSelect'?clientGameId(client.session?.gameId)||clientGameId(client.game?.gameId):clientGameId(client.game?.gameId)||clientGameId(client.session?.gameId)):null;}
 // Keep one current public context, never a history. An unknown ID is not
 // evidence of a new game and must not erase an explicit position choice.
-export function reconcileClientDraft(draft,gameId,previousId=null){
+export function reconcileClientDraft(draft,gameId,previousId=null,{phase='',previousPhase=''}={}){
+ const queue=['None','Lobby','Matchmaking','ReadyCheck'];
+ if(draft&&queue.includes(phase)&&(draft.clientGameId||['ChampSelect','GameStart','InProgress','Reconnect','WaitingForStats','PreEndOfGame','EndOfGame'].includes(previousPhase))){
+  const {creativePlan,playerPosition,clientGameId:oldId,...rest}=draft;
+  return {draft:{...rest,slots:clearDraftPicks(draft.slots).map(s=>({...s,party:false})),soloRole:''},changed:true,newGame:true};
+ }
+ if(queue.includes(phase))return {draft,changed:false,newGame:false};
  gameId=clientGameId(gameId);
  if(!draft||!gameId)return {draft,changed:false,newGame:false};
  const prior=clientGameId(draft.clientGameId)||clientGameId(previousId),newGame=!!prior&&prior!==gameId;
  if(!newGame&&draft.clientGameId===gameId)return {draft,changed:false,newGame:false};
  const clearSoloRole=newGame&&(!!clientGameId(draft.clientGameId)||draft.playerPosition?.role===draft.soloRole||draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId)));
  // A manual party range belongs to this game; it must not overrule the next group.
- const next={...draft,clientGameId:gameId,slots:newGame?clearClientPicks(draft.slots).map(({partyManual,...slot})=>slot):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
+ const next={...draft,clientGameId:gameId,slots:newGame?clearDraftPicks(draft.slots).map(s=>({...s,party:false})):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
  if(newGame)delete next.playerPosition;
  if(newGame&&next.creativePlan&&!next.creativePlan.members.every(m=>next.slots.some(s=>s.role===m.role&&s.champion===m.champion)))delete next.creativePlan;
  return {draft:next,changed:true,newGame};

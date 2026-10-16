@@ -1,15 +1,46 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {sanitizeShare,proposalKey,sanitizeRoomBallot} from '../src/core/room.mjs';
+import {sanitizeShare,proposalKey,sanitizeRoomBallot,ballotVotes,encodeFrame,decodeFrame} from '../src/core/room.mjs';
 import {relayWelcome,sanitizeRelayState} from '../src/core/room-relay.mjs';
 import {roomBallotBoard,createBallotRoundObserver,lineupFit} from '../src/core/room-ballot.mjs';
 import {createRoomService} from '../services/room.mjs';
-import {roomBallotView} from '../src/room-ballot-view.mjs';
+import {roomBallotView,candidateBallotActions} from '../src/room-ballot-view.mjs';
 const {champions}=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
 const a={lineup:[{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{role:'support',champion:'Braum'}],mode:'rift'};
 const b={lineup:[{role:'mid',champion:'Galio'},{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],mode:'rift'};
 const state=(proposal,vote)=>({lineup:[],pick:null,mode:'rift',ballot:{version:1,proposal,vote}});
+
+test('multi-vote sets are bounded, unique and authoritative over the legacy projection',()=>{
+ const ka=proposalKey(a),kb=proposalKey(b);
+ assert.deepEqual(ballotVotes(sanitizeRoomBallot({version:1,proposal:a,votes:[ka,kb,ka],vote:kb})),[ka,kb]);
+ assert.deepEqual(sanitizeRoomBallot({version:1,proposal:null,votes:[],vote:ka}),{version:1,proposal:null,votes:[],vote:null});
+ assert.deepEqual(ballotVotes({version:1,vote:ka}),[ka]);
+ for(const votes of [null,'x',Array(13).fill(ka),['x'.repeat(261)],['invalid!']])assert.equal(sanitizeRoomBallot({version:1,proposal:null,votes}),null);
+ const clean=sanitizeShare({kind:'state',v:1,from:'甲',at:1,...state(a,ka),ballot:{version:1,proposal:a,votes:[ka,kb,ka]}});
+ assert.equal(clean.ballot.vote,ka);assert.deepEqual(clean.ballot.votes,[ka,kb]);
+ assert.deepEqual(JSON.parse(sanitizeRelayState(JSON.stringify(clean),'甲')).ballot,clean.ballot);
+ assert.deepEqual(decodeFrame(encodeFrame(clean)).ballot,clean.ballot);
+ assert.equal(relayWelcome('123456',[]).multiVotes,1);
+});
+
+test('one player can support multiple lineups without amplifying either score',()=>{
+ const ka=proposalKey(a),kb=proposalKey(b),self={nick:'我',self:true,share:{...state(a,ka),ballot:{version:1,proposal:a,votes:[ka,kb,ka],vote:ka}}};
+ const room={mode:'client',ballots:true,multiVotes:true,members:[self,{nick:'伙伴',share:state(b,null)}]};
+ let rows=roomBallotBoard(room,[],champions);assert.equal(rows.length,2);assert.ok(rows.every(row=>row.mine&&row.voters.length===1));
+ for(const key of [ka,kb])assert.match(candidateBallotActions(room,key,0),/已投 1/);
+ self.share.ballot.votes=[kb];rows=roomBallotBoard(room,[],champions);
+ assert.equal(rows.find(row=>row.key===ka).voters.length,0);assert.equal(rows.find(row=>row.key===kb).voters.length,1);
+ self.share.ballot.votes=[];assert.ok(roomBallotBoard(room,[],champions).every(row=>row.voters.length===0));
+});
+
+test('shared proposals are visible, voting is primary and adoption stays in details',()=>{
+ const key=proposalKey(a),room={mode:'client',ballots:true,members:[{nick:'伙伴',share:state(a,key)},{nick:'我',self:true,share:state(null,null)}]};
+ const html=roomBallotView(room,[],champions),vote=html.indexOf('data-action="room-vote"'),adopt=html.indexOf('data-action="room-adopt-ballot"'),details=html.indexOf('data-action="room-ballot-details"');
+ assert.match(html,/<section class="room-ballot-board"/);assert.doesNotMatch(html,/<details class="room-ballot-board"/);assert.ok(vote<details);assert.equal(adopt,-1);
+ const actions=candidateBallotActions(room,key,0);assert.ok(actions.indexOf('propose-result')<actions.indexOf('room-vote'));assert.match(actions,/投票 1/);
+ assert.doesNotMatch(candidateBallotActions(room,proposalKey(b),1),/room-vote/,'A different proposal cannot inherit votes');
+});
 
 test('explicit adoption is separate from voting and retains its proposal when a member changes hero or setup',()=>{
  const config={champion:'Ashe',role:'bottom',mode:'rift',patch:'16.20',start:[1055],items:[3031,3085],boots:[3006],runes:null,spells:['SummonerFlash','SummonerBarrier'],skills:'WQEW',priority:'WQE',first:'WQE'};
@@ -144,9 +175,18 @@ test('LAN host/guest round trip broadcasts votes and late joiners receive propos
  const host=createRoomService({nick:'甲',listenHost:'127.0.0.1',discovery:false}),guest=createRoomService({nick:'乙',discovery:false}),late=createRoomService({nick:'丙',discovery:false});
  const until=async fn=>{for(let i=0;i<80;i++){if(fn())return;await new Promise(r=>setTimeout(r,20));}throw Error('room did not converge');};
  try{const h=await host.host();const target={host:'127.0.0.1',port:h.port,room:h.room,pin:h.pin};
-  await guest.join(target);assert.equal(guest.snapshot().ballots,true);
+  await guest.join(target);assert.equal(guest.snapshot().ballots,true);assert.equal(guest.snapshot().multiVotes,true);
   host.publish(state(a,proposalKey(a.lineup)));guest.publish(state(null,proposalKey(a.lineup)));
   await until(()=>roomBallotBoard(host.snapshot(),[],champions)[0]?.voters.length===2);
   await late.join(target);await until(()=>roomBallotBoard(late.snapshot(),[],champions)[0]?.voters.length===2);
+  late.publish(state(b,null));await until(()=>roomBallotBoard(host.snapshot(),[],champions).length===2);
+  guest.publish({...state(null,null),ballot:{version:1,proposal:null,votes:[proposalKey(a),proposalKey(b),proposalKey(b)]}});
+  await until(()=>roomBallotBoard(late.snapshot(),[],champions).find(row=>row.key===proposalKey(b))?.voters.length===1);
+  assert.deepEqual(host.snapshot().members.find(m=>m.nick==='乙').share.ballot.votes,[proposalKey(a),proposalKey(b)]);
+  guest.publish({...state(null,null),ballot:{version:1,proposal:null,votes:[proposalKey(b)]}});
+  await until(()=>roomBallotBoard(host.snapshot(),[],champions).find(row=>row.key===proposalKey(a))?.voters.length===1);
+  assert.equal(roomBallotBoard(host.snapshot(),[],champions).find(row=>row.key===proposalKey(b)).voters.length,1);
+  host.clearBallot();await until(()=>guest.snapshot().members.find(m=>m.nick==='甲').share.ballot===undefined);
+  assert.deepEqual(guest.snapshot().members.find(m=>m.self).share.ballot.votes,[proposalKey(b)],'Another member retains their votes until their own round reset');
  }finally{host.dispose();guest.dispose();late.dispose();}
 });

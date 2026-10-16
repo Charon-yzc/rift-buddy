@@ -4,6 +4,7 @@ import {EXTRA_ROLE_PLAYS} from './role-plays-extra.mjs';
 export const ROLE_PLAYS_PATCH='16.20';
 export const ROLE_PLAYS_REVIEWED_AT='2026-10-10';
 export const BOTTOM_PLAYS={
+ Morgana:['W 兼顾补刀与安全消耗，辅助离开前先看兵线；E 留魔法控制，不能把黑盾当能承受两人的物理普攻。','Q 实际命中后报目标，让搭档跟伤害；E 给真正要承受控制的人，R 需维持连接，不为留人走进两面夹击。','围绕队友可接应的区域 W/Q 限制入口，E 分段保护核心；辅助游走失去安全线权时先退，不承诺独自守住越塔。'],
  "Corki":["Q 补刀短消耗，E 要持续朝目标扫射并穿插普攻；W 留搭档离开后的退路，当前没有炸药包转场计划。","搭档限制目标后 Q/R 接伤害与持续普攻，E 维持面向；W 优先规避反击，导弹遇兵阻挡就别按后排必中追近。","留在核心保护范围持续普攻与导弹，按实际 R 普通/超级次序输出；E 转身可能扫不到，W 出口须有接应而非冲敌阵。"],
  "Yunara":["用普攻积累灵蕴并补刀，达到可用条件后 Q 才安排强化换血，W 减速接搭档；普通 E 是移速与穿单位，不当作能穿墙的冲刺。","搭档限制目标后 Q 持续普攻，R 超凡形态再用强化 E 调位置和 W 射线；先确认形态，不把普通与强化技能同时当可用。","在搭档能保护的距离连续攻击可接触目标，R 期间强化 E 留退出；超凡结束就按普通 E 重算退路，不追到保护之外。"],
  "Hwei":["QE/Q 组处理兵线与短换血，搭档接近时 E 组控制衔接；W 组回蓝、护盾与加速共享冷却，补刀后留保护所需的一组。","搭档已控目标再 QQ/EE 和 R 接伤害，受突进保 EQ/WW；R 撞首个英雄，WE 已用时不要求自己立刻 WW 救两人。","从队友可保护的位置 QE 限制战区、R 接可靠控制，WQ 帮共同转场；同组技能已交就等实际可用，不为追 R 目标离开保护。"],
@@ -74,6 +75,7 @@ export const BOTTOM_PLAYS={
  Neeko:['Q 与被动强化普攻补刀，E 借实际单位延长控制；伪装不等于敌人不知道你在。','搭档控制后 Q/E 接续，R 进场先确认队友距离；不靠伪装独自进入多人范围。','从队友可跟的角度接 R，E 留反打路线；进场后缺少接应时不继续追第二个目标。']
 };
 export const SUPPORT_PLAYS={
+ TahmKench:['Q 短换血并护住搭档补刀，不为叠被动吃满远程消耗；W 留安全落点，R 未学会时不能承诺吞队友。','确认目标实际三层被动才按 Q 眩晕接力；R 优先留给受威胁的搭档，吞下后的放出方向先看敌方集火。','站在可救援核心的距离，Q/W 限制追击；与契约搭档约好谁先用 R，不同时交掉两段保命。'],
  "Brand":["W/E 安全消耗且不拿掉搭档兵线，目标已有燃烧再 Q 找眩晕；Q 留给逼近者，空了先拉开。","让搭档接已燃烧目标的 Q 控制，E/W 争取三层爆炸，R 看实际弹跳范围；低经济不为多弹一次独自贴近。","从核心附近用 Q 限制突进，E/R 处理聚集敌人；对手分散时结束追击，保留法力和安全施法距离。"],
  "Maokai":["E 树苗放可安全接近的草丛试探，W/Q 留给搭档能跟的短换血；树苗未触发不能证明入口无人。","R 先封队友准备进入的通道，W 实际禁锢后让搭档跟进，Q 击退方向避免把目标推出其射程；被动普攻只在安全时补。","围绕核心 W 留人、Q 推开近身威胁，R 可隔开增援；准备视野与同行队友一起，辅助经济不独自承受整队火力。"],
  "Camille":["W 外沿限制换血，E 保留可靠墙体和退路；Q 二段等强化窗口再用，不为补一次近身攻击抢搭档兵或独自深入。","先确认墙边 E 能实际命中且搭档可接，再用 R 限制同一目标；锁人后仍会受其他敌人攻击，低经济不照搬单人线单挑。","从核心可跟的侧面 E/R 接可靠控制，或限制突进者；队友射程断开就停止追后排，E 墙体与护盾类型不能当全伤害免疫。"],
@@ -167,5 +169,5 @@ export function rolePlay(champion,role,stage='opening'){
  const notes=role==='bottom'?BOTTOM_PLAYS[champion]:role==='support'?SUPPORT_PLAYS[champion]:(OTHER_ROLES[champion+':'+role]||EXTRA_ROLE_PLAYS[champion+':'+role]);
  if(!notes)return null;
  const id=stage==='opening'?'opening':stage==='later'?'later':'key';
- return {action:notes[{opening:0,key:1,later:2}[id]],opening:notes[0],key:notes[1],later:notes[2],stage:id,patch:ROLE_PLAYS_PATCH,reviewedAt:ROLE_PLAYS_REVIEWED_AT};
+ return {action:notes[{opening:0,key:1,later:2}[id]],opening:notes[0],key:notes[1],later:notes[2],stage:id,patch:ROLE_PLAYS_PATCH,reviewedAt:(champion==='Morgana'&&role==='bottom'||champion==='TahmKench'&&role==='support')?'2026-10-16':ROLE_PLAYS_REVIEWED_AT};
 }

@@ -17,6 +17,7 @@ async function run(){
  let phase='ChampSelect',gameId='1401',ownChampion=originalChampion,changeOnPages='',pages=[preset,{...old,id:21,name:'旧方案一',isEditable:true,current:false},{...old,id:22,name:'当前旧方案',isEditable:true,current:true}],writes=[],selections=[],selectionRejected=false;
  const response=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
+  if(options.path==='/lol-summoner/v1/current-summoner')return {value:{gameName:'隔离测试玩家',tagLine:'TEST'}};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return {value:phase};
   if(options.path==='/lol-gameflow/v1/session')return {value:{gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}}};
   if(options.path==='/lol-champ-select/v1/session')return {value:{localPlayerCellId:1,myTeam:[{cellId:1,championId:ownChampion,assignedPosition:'top'}],theirTeam:[],actions:[],bans:{}}};

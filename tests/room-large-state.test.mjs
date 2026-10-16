@@ -34,7 +34,8 @@ const until=async check=>{for(let n=0;n<300;n++){if(check())return;await new Pro
 
 test('complete five-player current and candidate plans round-trip losslessly inside the original wire limit',()=>{
  for(const current of [a,b,c])for(const proposed of [a,b,c]){
-  const clean=sanitizeShare(state(current,proposed)),raw=JSON.stringify(clean);
+  const input=state(current,proposed);input.ballot.votes=[proposalKey(a),proposalKey(b),proposalKey(a)];
+  const clean=sanitizeShare(input),raw=JSON.stringify(clean);assert.deepEqual(clean.ballot.votes,[proposalKey(a),proposalKey(b)]);
   assert.ok(Buffer.byteLength(raw)>MAX_FRAME);
   const wire=encodeFrame(clean);assert.ok(wire);assert.ok(Buffer.byteLength(wire)<=MAX_FRAME);
   assert.equal(JSON.parse(wire).encoding,'dict2');assert.deepEqual(decodeFrame(wire),clean);

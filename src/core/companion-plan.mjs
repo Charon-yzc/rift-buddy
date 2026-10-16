@@ -11,10 +11,10 @@ import {creativeComboContext} from './creative-plan.mjs';
 // live configuration. Shared snapshots keep their explicit read-only flag.
 export function localConfigurationPreview(selection,client,ownRole=''){
  const live=client?.connected&&client.phase==='ChampSelect';
- return {...selection,readOnly:!!live&&(!ownRole||selection.role!==ownRole),localReference:!live};
+ return {...selection,readOnly:selection.readOnly===true,localReference:!live};
 }
 export function configurationReadOnly(selection,client,ownRole=''){
- return !!selection?.readOnly||!!(selection?.localReference&&client?.connected&&client.phase==='ChampSelect'&&(!ownRole||selection.role!==ownRole));
+ return selection?.readOnly===true;
 }
 export function assertConfigurationEditable(selection){
  if(selection?.readOnly)throw Error('队友配置仅供查看，请回到本人的配置');

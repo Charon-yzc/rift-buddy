@@ -17,6 +17,9 @@ test('idle room panel offers create, scan and join with the saved nickname',()=>
  assert.match(html,/不需要额外读取客户端数据/);
  assert.match(html,/防火墙/);
  assert.doesNotMatch(html,/口令 123456/);
+ assert.doesNotMatch(html,/本机游戏 ID/);
+ const detected=roomPanel({room:null,nick:'小明',detectedNick:'Player11#CN1',champ});
+ assert.match(detected,/value="Player11#CN1"[^>]*readonly/);
 });
 
 test('scan results fill one invite and an empty scan stays honest',()=>{

@@ -34,6 +34,7 @@ async function run(){
  let page={...getBuild(hero('Ashe'),'bottom',data).runePage,id:44,isEditable:true},preparationAction=null,spells={spell1Id:4,spell2Id:7},hoverWrites=0,spellWrites=0;
  const output=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
+  if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:hovered?hero(hovered).key:0,assignedPosition:assigned},...(teammatePicked?[{cellId:2,championId:hero(teammatePicked).key,assignedPosition:"BOTTOM"}]:[])],theirTeam:[{cellId:6,championId:hero(enemyPicked).key}],actions:preparationAction?[[preparationAction]]:[],bans:{myTeamBans:[hero('Yone').key],theirTeamBans:[]},timer:{phase:'PLANNING',adjustedTimeLeftInPhase:65000}};
@@ -249,7 +250,11 @@ async function run(){
  assert.notEqual(await js('document.activeElement.dataset.action'),'my-runes','Changing champion carried keyboard focus onto another rune target');
  assert.equal(await js('document.querySelector("[data-companion-disclosure=later]").open'),false,'Another hero inherited the open options');
  assert.equal(await js('document.querySelectorAll(".companion-refresh-state").length'),0,'Another hero inherited a source error');
- await js('document.body.append(staleSelect);staleSelect.dispatchEvent(new Event("change",{bubbles:true}));staleSelect.remove()');assert.ok(await js('document.querySelector("#toast").textContent.includes("选人已变化")'));assert.equal(writes.length,1);
+ // Read this synchronous rejection in the same renderer turn. An unrelated
+ // completed sync may replace the shared toast before another IPC round trip.
+ const staleEdit=await js('(()=>{const current=document.querySelector("[data-companion-field=rune]"),before={plan:current.dataset.plan,value:current.value};document.body.append(staleSelect);staleSelect.dispatchEvent(new Event("change",{bubbles:true}));staleSelect.remove();const after=document.querySelector("[data-companion-field=rune]");return {original:staleSelect.dataset.plan,before,after:{plan:after.dataset.plan,value:after.value},toast:document.querySelector("#toast").textContent};})()');
+ assert.equal(staleEdit.original,'Volibear:top:rift');assert.equal(staleEdit.before.plan,'Ashe:bottom:rift');
+ assert.match(staleEdit.toast,/选人已变化/);assert.deepEqual(staleEdit.after,staleEdit.before,'A stale editor changed the new champion configuration');assert.equal(writes.length,1);
  await js('window.buddy.presentation({field:"textScale",value:1.25})');await delay(100);
  await click('[data-action=companion-jump][data-section=runes]');
  main.setSize(280,320);await delay(150);
@@ -409,13 +414,18 @@ async function run(){
  holdRuneWrite=true;resumeRuneWrite=null;await click('[data-action=apply-runes]');await until(()=>typeof resumeRuneWrite==='function','Pending drawer write missing');
  gameId='1505';holdRuneWrite=false;resumeRuneWrite();resumeRuneWrite=null;
  await until(()=>js('document.querySelector("#toast").textContent.includes("写入已完成")'),'Late drawer write did not explain changed context');
- await until(()=>js('!document.querySelector("[data-action=apply-runes]").disabled'),'Drawer action stayed pending');
+ // A newly detected round closes the old drawer. Reopen the current reference
+ // before checking its fresh receipt; keeping an old-round drawer is no longer expected.
+ const reopenOwnDrawer=async()=>{if(!await js('!!document.querySelector("[data-action=apply-runes]")'))await js('(()=>{const b=document.createElement("button");b.dataset.action="my-build";document.body.append(b);b.click();b.remove();})()');await until(()=>js('!!document.querySelector("[data-action=apply-runes]")&&!document.querySelector("[data-action=apply-runes]").disabled'),'Current drawer action stayed pending');};
+ await reopenOwnDrawer();
  assert.equal(await js('document.querySelector(".rune-application-status").textContent.includes("尚未")'),true,'Late drawer request confirmed a different draft');assert.equal(writes.length,startWrites+5);await capture('runes-drawer-new-draft');
  await click('[data-action=apply-runes]');await until(()=>js('document.querySelector(".rune-application-status").textContent.includes("本次已应用")'),'Drawer retry did not confirm');assert.equal(writes.length,startWrites+6);
  gameId='1506';await click('[data-action=apply-runes]');
- await until(()=>js('!document.querySelector("[data-action=apply-runes]").disabled'),'Fresh pre-write check did not settle');
+ await until(()=>js('document.querySelector("#toast").textContent.includes("选人会话已变化")'),'Cached pre-write status failed to detect the new draft');
+ await until(()=>js('!document.querySelector("[data-action=apply-runes]")||!document.querySelector("[data-action=apply-runes]").disabled'),'Fresh pre-write check did not settle');
  assert.ok(await js('document.querySelector("#toast").textContent.includes("选人会话已变化")'),'Cached pre-write status failed to detect the new draft');
  assert.equal(writes.length,startWrites+6,'A stale drawer click wrote to a newer draft before checking it');
+ await reopenOwnDrawer();
  assert.equal(await js('document.querySelector(".rune-application-status").textContent.includes("尚未")'),true,'Rejected stale click retained confirmation');
  // Choosing a region/tier reads only its cache, including in the actual sidebar.
  await click('[data-action=close]');await click('[data-action=companion-attach]');await sync();
@@ -507,7 +517,7 @@ async function run(){
  await click('[data-action=move-slot][data-role=mid]');await click('[data-action=move-confirm][data-role=support]');
  await sync();await sync();
  assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.draft.soloRole)'),'support');
- assert.match(await js('document.querySelector(".preparation-task").textContent'),/拉克丝.*辅助/);
+ assert.match(await js('document.querySelector(".slot[data-drop-role=support]").textContent'),/辅助.*拉克丝/);
  await click('[data-action=task-edit]');
  assert.equal(await js('document.querySelector("#build-role").value'),'support');
  const luxSupport=getBuild(hero('Lux'),'support',data);

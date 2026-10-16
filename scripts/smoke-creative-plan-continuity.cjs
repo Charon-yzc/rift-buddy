@@ -11,6 +11,7 @@ async function run(){
  let phase=restart?'ChampSelect':'Lobby',gameId=restart?'1510':'0',support='Rell',formalPosition=restart?'TOP':'MIDDLE';
  const output=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);if(options.method&&options.method!=='GET'){writes++;throw Error('No rune writes allowed in creative workflow');}
+  if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:hero('Annie').key,assignedPosition:formalPosition},{cellId:2,championId:hero('Ashe').key,assignedPosition:'BOTTOM'},{cellId:3,championId:hero(support).key,assignedPosition:'UTILITY'}],theirTeam:[],actions:[],bans:{myTeamBans:[],theirTeamBans:[]},timer:{adjustedTimeLeftInPhase:65000}};

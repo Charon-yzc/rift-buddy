@@ -3,6 +3,7 @@ import {partyCounterplayText} from './party-counterplay.mjs';
 
 // Windows are conditions to confirm in the game, never inferred cooldowns.
 const windows={
+ TahmKench:'契约者和大招可用性已确认，Q 眩晕需要真实三层被动；救援落点与搭档可接应距离先约好',
  Alistar:'双方距离能跟上，牛头 Q/W 可用且兵线不会让两人独自承受整波反击',
  Malphite:'石头人 R 实际就绪，落点在搭档能输出的距离内；六级前不套用击飞大招',
  Amumu:'Q 路径能命中英雄，队友可跟进；使用 R 前确认实际等级和就绪',

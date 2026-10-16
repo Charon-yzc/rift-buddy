@@ -3,20 +3,20 @@
 <h1 align="center">开黑搭子 · Rift Buddy</h1>
 
 <p align="center"><strong>选好阵容，一起开黑。</strong></p>
-<p align="center">英雄联盟朋友开黑助手 · Windows x64 · 免费使用 · <strong>v0.54.0</strong></p>
+<p align="center">英雄联盟朋友开黑助手 · Windows x64 · 免费使用 · <strong>v0.54.2</strong></p>
 
 <p align="center">
   <a href="https://room.riftbuddy.dpdns.org/downloads/"><strong>下载安装包</strong></a> ·
   <a href="https://gitee.com/legender134/rift-buddy/releases">Gitee 国内镜像</a> ·
   <a href="https://github.com/Legender134/rift-buddy/releases">GitHub Releases</a> ·
-  <a href="docs/releases/v0.54.0.md">本次更新</a>
+  <a href="docs/releases/v0.54.2.md">本次更新</a>
 </p>
 
 从组队大厅到选人，再到符文装备和开局分工，把开黑前的准备放在顺手的位置。支持单人参考和二至五人搭配，主界面与贴边侧栏可以同时使用。
 
-当前源码为 **0.54.1**，包含推荐与房间协作改进；上方下载入口仍是已发布的 **0.54.0** 安装包。
+当前版本 **0.54.2**：点击英雄直接预选并配置，提议与投票集中展示，开黑房间独立进入。
 
-![主界面：队伍选择与阵容候选](docs/images/v0.54.0/main.png)
+![主界面：队伍选择与阵容候选](docs/images/v0.54.2/main.png)
 
 ## 在侧栏里，选好这局怎么玩
 
@@ -28,12 +28,12 @@
 
 ## 点自己的英雄，接着选配置
 
-一次点击，采用方案并预选本人英雄，准备符文、召唤师技能和商店装备集。**默认保留闪现 D/F 键位，最终锁定由你确认。**
+点击可选英雄头像，直接预选并准备对应符文、召唤师技能和商店装备集，不受方案分路限制。**默认保留闪现 D/F 键位，最终锁定由你确认。**
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/v0.54.0/sidebar.png" alt="选人侧栏：比较阵容候选" /><br /><strong>先比较阵容</strong><br />队伍、位置和候选集中在侧栏。</td>
-    <td width="50%"><img src="docs/images/v0.54.0/configuration.png" alt="我的配置：装备、符文、D/F 与加点" /><br /><strong>再核对配置</strong><br />完整装备顺序、符文、D/F 和加点直接查看。</td>
+    <td width="50%"><img src="docs/images/v0.54.2/sidebar.png" alt="选人侧栏：比较阵容候选" /><br /><strong>先比较阵容</strong><br />队伍、位置和候选集中在侧栏。</td>
+    <td width="50%"><img src="docs/images/v0.54.2/configuration.png" alt="我的配置：装备、符文、D/F 与加点" /><br /><strong>再核对配置</strong><br />完整装备顺序、符文、D/F 和加点直接查看。</td>
   </tr>
 </table>
 
@@ -41,11 +41,13 @@
 
 ## 和队友，用同一套方案
 
-在支持的预组队大厅自动连接助手房间，也可以手动加入。向队友提议阵容、投票和共享配置；采用后查看每位成员的开局任务、配合条件和退出安排。
+在支持的单人或预组队大厅自动连接助手房间，昵称跟随游戏；房间页可重新连接当前组队，也可手动加入。向队友提议阵容、投票和共享配置。可同时支持多套阵容，每套最多一票，再点可撤回；采用后查看每位成员的开局任务、配合条件和退出安排。
 
 没有安装助手的朋友仍可作为公开队友参与阵容参考；房间在线成员与游戏组队成员分别显示。
 
-![开黑房间：加入队伍并共享准备](docs/images/v0.54.0/room.png)
+![队友提议：直接投票，点击英雄选择](docs/images/v0.54.2/proposal.png)
+
+![开黑房间：独立连接页面](docs/images/v0.54.2/room.png)
 
 ## 查资料，也看清来源
 
@@ -89,7 +91,7 @@
 - 通过本机公开接口连接客户端，不读取游戏内存。不会自动锁定、购买或升级技能；不提供敌方来抓检测或真实技能冷却追踪。
 - 契合分是机制规则参考，不是胜率；来源统计不等于国服统计，人工玩法按各自复核记录维护。
 - 不需要助手账号。个人配置和收藏保存在本机；房间共享内容可被房间成员与中继运营者看到。
-- 截图使用本版程序与演示阵容。真实客户端兼容、整局性能和多屏显示仍需持续实测；当前已知限制见[本次更新](docs/releases/v0.54.0.md)。
+- 截图使用本版程序与演示阵容。真实客户端兼容、整局性能和多屏显示仍需持续实测；当前已知限制见[本次更新](docs/releases/v0.54.2.md)。
 
 资料来源包括 Riot Data Dragon、CommunityDragon、腾讯中文资料与 OP.GG。[第三方来源与许可](THIRD_PARTY_NOTICES.md)。本项目不是 Riot Games 或腾讯的官方产品。
 

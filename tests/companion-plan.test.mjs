@@ -15,9 +15,15 @@ data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),base={id:'Volibear',role:'top',mode:'rift',conditions:[],coreIndex:0};
 const build=s=>getBuild(hero(s.id),s.role,data,s);
 
-test('live teammate previews reject configuration edits while offline lineup references remain editable',()=>{
+test('room is a first-level independent sidebar page without draft controls or duplicated configuration',()=>{
+ const html=companionView({data,client:{connected:false},slots:createSlots(),unassigned:[],scope:'party',style:'fun',tab:'room',results:[],roomContent:'<section data-room-only>房间成员</section>'});
+ assert.match(html,/data-tab="room" aria-pressed="true"/);assert.match(html,/data-room-only/);
+ assert.doesNotMatch(html,/class="pregame-controls|data-drop-role=|data-preparation-step=|class="companion-candidate"/);
+});
+
+test('explicit shared snapshots remain read-only while local reference lanes do not restrict configuration editing',()=>{
  const client={connected:true,phase:'ChampSelect'},selection={...base};
- const teammate=localConfigurationPreview(selection,client,'mid');
+ const teammate=localConfigurationPreview({...selection,readOnly:true},client,'mid');
  assert.equal(teammate.readOnly,true);
  for(const [field,value] of [['summoner-swap'],['rune','default'],['rune-custom:keystone',8439],['skill-custom:1','Q'],['core',0],['source-opponent-reset']])assert.throws(()=>changeCompanionPlan(data,teammate,field,value),/队友配置仅供查看/);
  const own=localConfigurationPreview(selection,client,'top');
@@ -25,7 +31,7 @@ test('live teammate previews reject configuration edits while offline lineup ref
  const local=localConfigurationPreview(selection,{connected:false,phase:'Offline'},'mid');
  assert.equal(local.localReference,true);assert.equal(local.readOnly,false);
  assert.equal(changeCompanionPlan(data,local,'summoner-swap').summonerIds.length,2);
- assert.equal(configurationReadOnly(local,client,'mid'),true,'An offline preview must become read-only if a teammate owns its lane after connection');
+ assert.equal(configurationReadOnly(local,client,'mid'),false,'Reference lane differences do not grant or remove client write permissions');
  assert.equal(configurationReadOnly(local,client,'top'),false);
  assert.equal(configurationReadOnly({...local,readOnly:true},{connected:false},'top'),true,'An explicitly shared read-only snapshot must remain read-only offline');
 });
@@ -163,15 +169,15 @@ test('unclaimed candidate positions offer one-click selection while actual teamm
  const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:123,localPlayerCellId:0,myTeam:[{cellId:0,championId:0,assignedPosition:'BOTTOM'}]}};
  const props={data,client,slots,unassigned:[],scope:'party',soloRole:'bottom',style:'fun',tab:'recommend',results};
  const candidates=companionView(props);
- assert.match(candidates,/data-id="Ashe"[^>]*>[\s\S]*?candidate-action-own[^>]*>你 · 配置<\/em>/);
- for(const id of ['Ahri','Braum'])assert.match(candidates,new RegExp('data-id="'+id+'"[^>]*>[\\s\\S]*?candidate-action [^>]*>选这个<\\/em>'));
+ assert.match(candidates,/data-action="companion-preview"[^>]*data-id="Ashe"/);assert.doesNotMatch(candidates,/<em class="candidate-action/);
+ for(const id of ['Ahri','Braum'])assert.match(candidates,new RegExp('data-action="companion-preview"[^>]*data-id="'+id+'"'));
  const activePlan=captureCreativePlan(results[0],data),adopted=companionView({...props,activePlan});
  assert.match(adopted,/data-action="active-hero-prepare" data-id="Ashe"[^>]*>[\s\S]*?下路 · 预选并配置/);
  for(const id of ['Ahri','Braum'])assert.match(adopted,new RegExp('data-action="active-hero-prepare" data-id="'+id+'"[^>]*>[\\s\\S]*?预选并配置'));
  const occupied=structuredClone(props);
  for(const [cellId,id,role]of [[1,'Ahri','mid'],[2,'Braum','support']]){occupied.slots.find(s=>s.role===role).clientCellId=cellId;occupied.client.session.myTeam.push({cellId,championId:data.champions.find(c=>c.id===id).key});}
  const teammates=companionView(occupied);
- for(const id of ['Ahri','Braum'])assert.match(teammates,new RegExp('data-id="'+id+'"[^>]*>[\\s\\S]*?candidate-action [^>]*>查看<\\/em>'));
+ for(const id of ['Ahri','Braum'])assert.match(teammates,new RegExp('data-id="'+id+'"[^>]*aria-label="[^"]*队友已选')) ;
 });
 
 test('accepted sidebar plans show one preparation receipt and reveal distinct alternatives only when comparing',()=>{
@@ -182,7 +188,7 @@ test('accepted sidebar plans show one preparation receipt and reveal distinct al
  const taskControls=preparationProgressView({data,client,plan:prepared,compact:true});
  const props={data,client,slots:results[0].slots,unassigned:[],scope:'party',soloRole:member.role,style:'fun',tab:'recommend',results,activePlan,preparation:prepared,taskPlan:prepared,taskControls};
  const accepted=companionView(props);
- assert.equal((accepted.match(/data-preparation-step=/g)||[]).length,4,'The actual four-step receipt is rendered once');
+ assert.equal((accepted.match(/data-preparation-step=/g)||[]).length,0,'Selection does not duplicate configuration receipts');
  assert.equal((accepted.match(/id="solo-role"/g)||[]).length,1,'The position control is shared with the persistent workspace');
  assert.doesNotMatch(accepted,/class="companion-candidate"/);assert.match(accepted,/data-action="task-compare"/);
  const play=accepted.indexOf('<details class="companion-chosen"');assert.ok(play>0);assert.doesNotMatch(accepted.slice(play,accepted.indexOf('>',play)),/\bopen\b/);
@@ -220,10 +226,10 @@ test('configuration keeps the actual receipt without recommendation controls and
  assert.equal((persistent.match(/data-preparation-step=/g)||[]).length,0,'Configuration starts with the actual build, not a duplicate hero/receipt card');assert.doesNotMatch(persistent,/data-action="draft-style"|data-action="draft-scope"/);
  const unknown=companionView({...props,tab:'plan',soloRole:'',preparation:{...prepared,own:{...prepared.own,positionKnown:false}}});assert.match(unknown,/<select id="solo-role"/);assert.doesNotMatch(unknown,/<select id="solo-role"[^>]*disabled/);
  assert.equal((companionView({...props,tab:'recommend',taskComparing:true}).match(/data-preparation-step=/g)||[]).length,0);
- assert.equal((companionView({...props,tab:'recommend',taskComparing:false}).match(/data-preparation-step=/g)||[]).length,4,'Returning to the plan restores the saved receipt');
+ assert.equal((companionView({...props,tab:'recommend',taskComparing:false}).match(/data-preparation-step=/g)||[]).length,0,'Selection keeps receipts in My Configuration');
  statuses.set(key,{complete:false,steps:{...steps,runes:{status:'failed',message:'符文写入未完成 <mock>'}}});
  const failureControls=preparationProgressView({data,client,plan:prepared,statuses,available:true,compact:true}),failure=companionView({...props,tab:'recommend',taskComparing:true,taskControls:failureControls});
- assert.equal((failure.match(/data-preparation-step=/g)||[]).length,4);assert.match(failure,/符文写入未完成 &lt;mock&gt;/);assert.match(failure,/data-action="client-prepare"/);
+ assert.equal((failure.match(/data-preparation-step=/g)||[]).length,0);assert.doesNotMatch(failure,/data-action="client-prepare"/);assert.match(failure,/data-tab="plan"/);
 });
 
 test('roster badges distinguish assistant arrangements from public hover, selection and lock',()=>{
