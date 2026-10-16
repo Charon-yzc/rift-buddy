@@ -34,6 +34,7 @@ async function run(){
  let page={...getBuild(hero('Ashe'),'bottom',data).runePage,id:44,isEditable:true},preparationAction=null,spells={spell1Id:4,spell2Id:7},hoverWrites=0,spellWrites=0;
  const output=options=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
+  if(options.path==='/lol-summoner/v1/current-summoner')return {gameName:'隔离测试玩家',tagLine:'TEST'};
   if(options.path==='/lol-gameflow/v1/gameflow-phase')return phase;
   if(options.path==='/lol-gameflow/v1/session')return {gameData:{gameId,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
   if(options.path==='/lol-champ-select/v1/session')return {localPlayerCellId:1,myTeam:[{cellId:1,championId:picked?hero(picked).key:0,championPickIntent:hovered?hero(hovered).key:0,assignedPosition:assigned},...(teammatePicked?[{cellId:2,championId:hero(teammatePicked).key,assignedPosition:"BOTTOM"}]:[])],theirTeam:[{cellId:6,championId:hero(enemyPicked).key}],actions:preparationAction?[[preparationAction]]:[],bans:{myTeamBans:[hero('Yone').key],theirTeamBans:[]},timer:{phase:'PLANNING',adjustedTimeLeftInPhase:65000}};
@@ -507,7 +508,7 @@ async function run(){
  await click('[data-action=move-slot][data-role=mid]');await click('[data-action=move-confirm][data-role=support]');
  await sync();await sync();
  assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.draft.soloRole)'),'support');
- assert.match(await js('document.querySelector(".preparation-task").textContent'),/拉克丝.*辅助/);
+ assert.match(await js('document.querySelector(".slot[data-drop-role=support]").textContent'),/辅助.*拉克丝/);
  await click('[data-action=task-edit]');
  assert.equal(await js('document.querySelector("#build-role").value'),'support');
  const luxSupport=getBuild(hero('Lux'),'support',data);

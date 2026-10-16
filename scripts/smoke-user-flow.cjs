@@ -2,6 +2,7 @@ const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),delay=ms=>new Promise(r=>setTimeout(r,ms));
+app.setPath('userData',root);
 app.on('browser-window-created',(_e,w)=>windows.push(w));
 async function until(check,label){for(let n=0;n<150;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
 async function run(){
@@ -86,7 +87,7 @@ async function run(){
  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Manual planning sync missing');
  await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');await click('[data-action=close]');
  await js('{const role=document.querySelector("#solo-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');
- const pick=async(role,id)=>{if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
+ const pick=async(role,id)=>{if(await js('!!document.querySelector("[data-action=task-compare]")'))await click('[data-action=task-compare]');if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await until(()=>js(`!!document.querySelector('[data-action=pick-slot][data-role=${role}]')`),'Editable empty lane missing: '+role);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
  await pick('bottom','Rengar');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
  await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Rengar Ivern private build missing');
  await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing');
