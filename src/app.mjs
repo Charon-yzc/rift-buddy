@@ -414,7 +414,7 @@ async function acceptSharedPreparation(event,fresh=true){
   }
   if(id&&event.result?.steps?.runes?.status==='done'&&page)runeAppliedKeys.confirm(runeAppliedKeys.begin(runeApplicationKey(id,event.value.role,page)));
  }
- render();
+ render();if(buildView)renderBuild();
 }
 
 function roomErrorMessage(error){

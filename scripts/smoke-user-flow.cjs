@@ -79,7 +79,7 @@ async function run(){
  await until(()=>js('document.querySelector(".rune-target-warning")?.textContent.includes("盖伦")'),'Own champion mismatch warning missing');
  assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/萨勒芬妮.*替换符文/);
  assert.match(await js('document.querySelector(".rune-target-warning").textContent'),/你自己的客户端/);
- assert.equal(await js('document.querySelector("[data-action=open-guide]").disabled'),true,'Teammate configuration must not replace my guide');
+ assert.equal(await js('document.querySelector("[data-action=open-guide]").disabled'),false,'A different reference lane must not disable an explicit guide choice');
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.
  await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'None',message:'测试手动配置'}));
