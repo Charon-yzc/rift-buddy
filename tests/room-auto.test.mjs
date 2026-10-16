@@ -47,7 +47,16 @@ test('the code and pin domains are separated before hashing',async()=>{
 
 test('the room nickname prefers the public game id and falls back safely',()=>{
  assert.equal(autoRoomNick({identity:{riotId:'Player11#CN1'},savedNick:'小明'}),'Player11#CN1');
+ assert.equal(autoRoomNick({identity:{summonerName:'召唤师本人'},savedNick:'小明'}),'召唤师本人');
  assert.equal(autoRoomNick({identity:{},savedNick:'小明'}),'小明');
+ const unnamed={puuid:'public-own-identity-0001',summonerId:'12'};
+ const fallbackNick=autoRoomNick({identity:unnamed});
+ assert.match(fallbackNick,/^队友\d{4}$/);
+ assert.equal(autoRoomNick({identity:unnamed}),fallbackNick,'the fallback stays stable per account');
+ assert.notEqual(autoRoomNick({identity:{puuid:'public-other-identity-0099',summonerId:'99'}}),fallbackNick);
+ assert.equal(autoRoomNick({identity:unnamed,savedNick:'手动名'}),'手动名','a deliberate nickname is never suffixed');
+ assert.match(autoRoomNick({identity:unnamed,savedNick:'队友'}),/^队友\d{4}$/,'the untouched default placeholder cannot deadlock a room');
+ assert.equal(autoRoomNick({}),'队友');
  assert.equal(autoRoomNick({identity:{riotId:'x'.repeat(25)},savedNick:'小明'}),'小明');
  assert.equal(autoRoomNick({identity:{riotId:'队友\u202e甲'},savedNick:''}),'队友甲');
  assert.equal(autoRoomNick({}),'队友');
@@ -63,13 +72,14 @@ test('decorating keeps manual rooms untouched and marks only the auto room',()=>
  assert.equal(decorateAutoRoom(null,{}),null);
 });
 
-test('auto connect only joins a two-member lobby window with a fresh key',()=>{
+test('auto connect joins a solo or party lobby window with a fresh key',()=>{
  const base={enabled:true,connected:true,phase:'Lobby',lobbyKey:KEY,lobbyCount:2,now:1000};
  assert.deepEqual(autoRoomDecision(base),{action:'join',key:KEY,reason:'join'});
+ assert.deepEqual(autoRoomDecision({...base,lobbyCount:1}),{action:'join',key:KEY,reason:'join'});
  assert.deepEqual(autoRoomDecision({...base,enabled:false}),{action:'hold',reason:'disabled'});
  assert.deepEqual(autoRoomDecision({...base,connected:false}),{action:'hold',reason:'not-lobby'});
  for(const phase of ['ChampSelect','GameStart','InProgress','Reconnect'])assert.deepEqual(autoRoomDecision({...base,phase}),{action:'join',key:KEY,reason:'join'});
- assert.deepEqual(autoRoomDecision({...base,lobbyCount:1}),{action:'hold',reason:'waiting-party'});
+ assert.deepEqual(autoRoomDecision({...base,lobbyCount:0}),{action:'hold',reason:'waiting-party'});
  assert.deepEqual(autoRoomDecision({...base,lobbyCount:null}),{action:'hold',reason:'waiting-party'});
  assert.deepEqual(autoRoomDecision({...base,lobbyKey:null}),{action:'hold',reason:'no-key'});
  assert.deepEqual(autoRoomDecision({...base,manualRoomActive:true}),{action:'hold',reason:'room-busy'});
@@ -82,8 +92,9 @@ test('auto connect only joins a two-member lobby window with a fresh key',()=>{
 
 test('leaving needs a sustained absence, an expired offline grace or a revoked switch',()=>{
  const base={enabled:true,connected:true,phase:'Lobby',lobbyKey:KEY,lobbyCount:2,activeAutoKey:KEY,now:1000};
- assert.equal(autoRoomDecision({...base,lobbyCount:1,partyGoneForMs:AUTO_PARTY_GONE_MS-1}).action,'hold');
- assert.deepEqual(autoRoomDecision({...base,lobbyCount:1,partyGoneForMs:AUTO_PARTY_GONE_MS}),{action:'leave',key:KEY,reason:'party-ended'});
+ assert.equal(autoRoomDecision({...base,lobbyCount:0,partyGoneForMs:AUTO_PARTY_GONE_MS-1}).action,'hold');
+ assert.deepEqual(autoRoomDecision({...base,lobbyCount:0,partyGoneForMs:AUTO_PARTY_GONE_MS}),{action:'leave',key:KEY,reason:'party-ended'});
+ assert.deepEqual(autoRoomDecision({...base,lobbyCount:1,partyGoneForMs:AUTO_PARTY_GONE_MS}),{action:'hold',key:KEY,reason:'connected'},'a solo lobby is still evidence and must not close the room');
  assert.equal(autoRoomDecision({...base,connected:false,offlineForMs:AUTO_OFFLINE_GRACE_MS-1}).action,'hold');
  assert.deepEqual(autoRoomDecision({...base,connected:false,offlineForMs:AUTO_OFFLINE_GRACE_MS}),{action:'leave',key:KEY,reason:'offline'});
  // Connected but back at the home screen with the party gone: the sustained

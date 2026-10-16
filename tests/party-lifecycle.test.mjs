@@ -14,7 +14,7 @@ test('current summoner provides the default room name when lobby names are unava
  const f=fixture();f.set({lobby:Object.assign(Error('no lobby'),{status:404})});
  const request=f.mock.request,calls=[];
  const c=await clientSnapshot('',{...f.mock,request:async(auth,url)=>{calls.push(url);return url==='/lol-summoner/v1/current-summoner'?identity(44):request(auth,url);}});
- assert.equal(c.connected,true);assert.deepEqual(c.own,{riotId:'Player44#CN1'});assert.equal(c.party.status,'unknown');assert.equal(c.party.key,undefined);
+ assert.equal(c.connected,true);assert.deepEqual(c.own,{riotId:'Player44#CN1',summonerId:'44'});assert.equal(c.party.status,'unknown');assert.equal(c.party.key,undefined);
  assert.ok(calls.includes('/lol-summoner/v1/current-summoner'));assert.ok(calls.every(url=>!url.includes('chat')));
 });
 
@@ -56,7 +56,7 @@ test('the lobby key requires fresh pre-match evidence; the current own public na
  assert.ok(!JSON.stringify(lobby).includes('11111111-2222'),'a credential that looks like a party id must not surface either');
  f.set({phase:'ChampSelect'});
  assert.equal((await clientSnapshot('',f.mock)).party.key,'party-3ee56b17','A verified current party can reconnect during selection');
- assert.deepEqual((await clientSnapshot('',f.mock)).own,{riotId:'Player11#CN1'});
+ assert.deepEqual((await clientSnapshot('',f.mock)).own,{riotId:'Player11#CN1',summonerId:'11'},'the numeric account id seeds the unique fallback nickname and never reaches the renderer');
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:1000+120001});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'stale evidence must not derive a room');
 });
@@ -67,6 +67,72 @@ test('a hidden local identity or a clock step backwards cannot expose a key',asy
  assert.equal(hidden.party.key,undefined);assert.equal(hidden.own,undefined);assert.equal(hidden.party.status,'unknown');
  f.set({lobby:{localMember:identity(11),members:[identity(11),identity(22)],partyId:'party-3ee56b17'}});
  assert.equal((await clientSnapshot('',f.mock)).party.key,'party-3ee56b17');
+ assert.equal((await clientSnapshot('',f.mock)).own.riotId,'Player11#CN1');
+ f.set({lobby:{localMember:{puuid:'public-player-id-11',summonerId:11,summonerName:'召唤师本人'},members:[{puuid:'public-player-id-11',summonerId:11,summonerName:'召唤师本人'}],partyId:'party-3ee56b17'}});
+ const named=await clientSnapshot('',f.mock);
+ assert.equal(named.party.key,'party-3ee56b17');
+ assert.equal(named.own?.riotId,'Player11#CN1','A transient legacy display name must not downgrade the same account Riot ID');
  f.set({phase:'ReadyCheck',lobby:Object.assign(Error('optional unavailable'),{status:404}),at:500});
  assert.equal((await clientSnapshot('',f.mock)).party.key,undefined,'evidence read in the future must not count as fresh');
+});
+test('a nameless lobby still exposes the current summoner name for the room nickname',async()=>{
+ const mock={
+  discover:async()=>({port:23456,password:'mock-auth'}),
+  now:()=>1000,
+  request:async(_a,url)=>{
+   if(url.endsWith('gameflow-phase'))return 'Lobby';
+   if(url==='/lol-lobby/v2/lobby')return {localMember:{puuid:'public-player-id-11',summonerId:11},members:[{puuid:'public-player-id-11',summonerId:11}],partyId:'party-3ee56b17'};
+   if(url==='/lol-summoner/v1/current-summoner')return {displayName:'召唤师本人',summonerId:11};
+   return {gameData:{gameId:0,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
+  }};
+ const c=await clientSnapshot('',mock);
+ assert.equal(c.connected,true);
+ assert.equal(c.party.key,'party-3ee56b17');
+ assert.equal(c.own?.riotId,'召唤师本人');
+});
+test('a member id resolves the display name when the lobby carries none',async()=>{
+ const mock={
+  discover:async()=>({port:23456,password:'mock-auth'}),
+  now:()=>1000,
+  request:async(_a,url)=>{
+   if(url.endsWith('gameflow-phase'))return 'Lobby';
+   if(url==='/lol-lobby/v2/lobby')return {localMember:{puuid:'public-player-id-11',summonerId:11},members:[{puuid:'public-player-id-11',summonerId:11}],partyId:'party-3ee56b17'};
+   if(url==='/lol-summoner/v1/summoners/11')return {displayName:'召唤师本人',summonerId:11};
+   return {gameData:{gameId:0,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
+  }};
+ const c=await clientSnapshot('',mock);
+ assert.equal(c.connected,true);
+ assert.equal(c.party.key,'party-3ee56b17');
+ assert.equal(c.own?.riotId,'召唤师本人');
+});
+test('a puuid-only member resolves through the puuid lookup',async()=>{
+ const mock={
+  discover:async()=>({port:23456,password:'mock-auth'}),
+  now:()=>1000,
+  request:async(_a,url)=>{
+   if(url.endsWith('gameflow-phase'))return 'Lobby';
+   if(url==='/lol-lobby/v2/lobby')return {localMember:{puuid:'public-player-id-11'},members:[{puuid:'public-player-id-11'}],partyId:'party-3ee56b17'};
+   if(url==='/lol-summoner/v2/summoners/puuid/public-player-id-11')return {displayName:'召唤师本人'};
+   return {gameData:{gameId:0,mapId:11,queue:{id:430,gameMode:'CLASSIC'}}};
+  }};
+ const c=await clientSnapshot('',mock);
+ assert.equal(c.connected,true);
+ assert.equal(c.party.key,'party-3ee56b17');
+ assert.equal(c.own?.riotId,'召唤师本人');
+});
+
+
+test('PUUID-only nameless clients retain distinct main-only fallback seeds and throttle failed lookups',async()=>{
+ for(const puuid of ['public-own-puuid-only-1','public-own-puuid-only-2']){
+  const calls=[],local={puuid};
+  const mock={discover:async()=>({port:23456,password:'mock-only'}),now:()=>1000,request:async(_auth,url)=>{
+   calls.push(url);if(url.endsWith('gameflow-phase'))return 'Lobby';
+   if(url==='/lol-lobby/v2/lobby')return {localMember:local,members:[local],partyId:'party-nonames'};
+   if(url.startsWith('/lol-summoner/'))throw Error('Unavailable optional name');
+   return {gameData:{gameId:0,mapId:11,queue:{id:430}}};
+  }};
+  const first=await clientSnapshot('',mock),second=await clientSnapshot('',mock);
+  assert.equal(first.own.puuid,puuid);assert.deepEqual(second.own,first.own);assert.equal(first.party.key,'party-nonames');
+  assert.equal(calls.filter(url=>url==='/lol-summoner/v1/current-summoner').length,1);
+ }
 });

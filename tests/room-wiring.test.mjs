@@ -33,7 +33,10 @@ test('the automatic room decoration wraps updates, guards, leave state and the c
  assert.match(main,/queueRoomAuto\(\)/,'the client poll must feed the auto room step');
  assert.match(main,/auto:!!roomAutoKey&&!!roomAutoPin/,'only an established auto room may be marked as one');
  assert.match(main,/autoRoomDecision\(\{enabled,connected:!!client\?\.connected/);
- assert.match(main,/Number\(client\.party\?\.lobbyCount\)>=2&&client\.party\?\.key\)roomAutoGoneSince=null/,'an unreadable identifier counts as missing evidence');
+ assert.match(main,/forcedRoomNick=wanted=>autoRoomNick\(\{identity:latestClient\?\.own/,'manual rooms must force the detected game id over the typed nickname');
+ assert.match(main,/decision\.key===roomAutoKey&&decision\.reason==='connected'/,'a nickname upgrade runs only in a steady connected auto room');
+ assert.match(main,/roomNickInUse!==detected&&rank>roomNickSourceRank/,'a fallback nick upgrades toward the detected game id, never away from a name');
+ assert.match(main,/Number\(client\.party\?\.lobbyCount\)>=1&&client\.party\?\.key\)roomAutoGoneSince=null/,'an unreadable identifier counts as missing evidence');
  assert.match(main,/blockedKey:roomAutoBlockedKey,failedKey:roomAutoFailedKey,failedRetryAt:roomAutoFailedUntil/);
  assert.match(main,/identity:client\?\.own,savedNick:state\.preferences\.roomNick/,'the room nickname comes from the public game id');
  assert.match(main,/roomAutoGoneSince=roomAutoGoneSince\?\?Date\.now\(\)/);
@@ -70,7 +73,7 @@ test('the renderer wires the automatic room toggle, copy text and quiet hint',as
  assert.match(app,/noteRoomSnapshot\(snapshot\)|applyRoomSnapshot\(snapshot\)/,'room updates must feed the quiet hint');
  assert.match(app,/onRoomUpdate\?\.\(snapshot=>\{applyRoomSnapshot\(snapshot\);/,'live updates must go through the shared snapshot handler');
  assert.match(app,/applyRoomSnapshot\(room\)/,'a rebuilt window must start the quiet hint from its boot snapshot');
- assert.match(app,/if\(identity!==roomShareRoom\)\{roomShareRoom=identity;roomShareSig='';if\(identity\)scheduleRoomPublish\(\);\}/,'a rebuilt room must hear the current share again');
+ assert.match(app,/if\(identity!==roomShareRoom\|\|\(\!wasActive&&identity\)\)\{roomShareRoom=identity;roomShareSig='';if\(identity\)scheduleRoomPublish\(\);\}/,'a rebuilt or reconnected room must hear the current share again');
  assert.match(app,/roomQuietTimer=setTimeout\(\(\)=>\{roomQuietTimer=null;roomAutoQuiet=true;/,'the quiet hint needs its timer');
  assert.match(app,/地址、房间码和口令已复制；可直接发给队友手动加入/,'the automatic copy toast is part of the contract');
  assert.match(app,/autoSync:saved\.preferences\.autoSync!==false/,'the panel must know whether client sync is on');

@@ -212,14 +212,14 @@ async function boot(){
  const {deriveAutoRoom,autoRoomNick,autoRoomDecision,decorateAutoRoom,AUTO_ROOM_PHASES,AUTO_RETRY_MS}=await import('../src/core/room-auto.mjs');
  const {createBallotRoundObserver}=await import('../src/core/room-ballot.mjs');
  const ballotRoundChanged=createBallotRoundObserver();
- let roomNickInUse='';
+ let roomNickInUse='',roomNickSourceRank=0;
  // Automatic party room (CHA-71): the lobby identifier the current auto room
  // was derived from, plus the state needed to decide when to stop. Manual
  // rooms never set roomAutoKey and are never touched by the poll below.
  let roomAutoKey=null,roomAutoCode=null,roomAutoPin=null,roomAutoBlockedKey=null,roomAutoCancelledKey=null,roomAutoFailedKey=null,roomAutoFailedUntil=0,roomAutoError='',roomAutoGoneSince=null,roomAutoOfflineSince=null,roomAutoTask=Promise.resolve(),roomAutoRunning=false,roomAutoRequested=false;
- let roomBallot=null,roomPublicShare=null,ballotRoom='';
+ let roomBallot=null,roomPublicShare=null,ballotRoom='',roomBallotRound=0;
  const decorateRoom=snapshot=>{const identity=snapshot?.mode==='idle'?'':snapshot?.room||'';if(identity!==ballotRoom){roomBallot=null;roomPublicShare=null;ballotRoom=identity;}return decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});};
- // The sandboxed renderer never needs the lobby identifier or the identity
+ // The sandboxed renderer never needs the lobby identifier or the raw identity
  // used as the room nickname: only this process derives the room from them.
  const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(own?.riotId?{playerName:own.riotId}:{}),...(party?{party:cleanParty}:{})};};
  // Closing the auto room always clears the whole auto state, so a later
@@ -252,14 +252,18 @@ async function boot(){
   const clean=name&&name!=='队友'?name:autoRoomNick({identity:latestClient?.own,savedNick:state.preferences.roomNick});
   if(roomService&&roomNickInUse===clean)return roomService;
   if(roomService){if(roomService.snapshot().mode!=='idle')throw Error('请先离开房间再修改昵称');roomService.dispose();roomService=null;}
-  roomNickInUse=clean;
+  roomNickInUse=clean;roomNickSourceRank=latestClient?.own?.riotId?(latestClient.own.riotId.includes('#')?2:1):latestClient?.own?.summonerName?1:0;
   roomService=createRoomService({nick:clean,onUpdate:snapshot=>publishWindows('room-update',decorateRoom(snapshot)),diagnostic});
   return roomService;
  };
  guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):(roomAutoError?decorateAutoRoom({mode:'idle',members:[],transport:'relay'},{error:roomAutoError,retryAt:roomAutoFailedUntil||null}):null));
- guard('room-host',async nick=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).host());});
- guard('room-join',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).join(target||{}));});
- guard('room-relay',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(nick).relay(target||{}));});
+ // Manual rooms use the same forced nickname as auto rooms: the detected
+ // public game id wins whenever the client provides one, and the typed
+ // "我的昵称" is only the fallback for when it does not.
+ const forcedRoomNick=wanted=>autoRoomNick({identity:latestClient?.own,savedNick:wanted||state.preferences.roomNick});
+ guard('room-host',async nick=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).host());});
+ guard('room-join',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).join(target||{}));});
+ guard('room-relay',async(target,nick)=>{closeAutoRoom('manual-replacement');return decorateRoom(await ensureRoom(forcedRoomNick(nick)).relay(target||{}));});
  guard('room-leave',()=>{
   // Leaving by hand must not be undone by the next poll: remember the party
   // this auto room came from until the lobby identifier changes.
@@ -296,7 +300,7 @@ async function boot(){
   const enabled=state.preferences?.roomAuto===true&&state.preferences?.autoSync!==false;
   if(!enabled){roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
   const inWindow=!!client?.connected&&AUTO_ROOM_PHASES.includes(client.phase);
-  if(inWindow&&Number(client.party?.lobbyCount)>=2&&client.party?.key)roomAutoGoneSince=null;
+  if(inWindow&&Number(client.party?.lobbyCount)>=1&&client.party?.key)roomAutoGoneSince=null;
   else if(inWindow)roomAutoGoneSince=roomAutoGoneSince??Date.now();
   else roomAutoGoneSince=null;
   // "标识变化即解除": seeing a different party lifts a manual-leave block.
@@ -312,7 +316,17 @@ async function boot(){
  };
  const roomAutoStep=async client=>{
   if(roomAutoKey&&roomService&&roomService.snapshot().mode==='idle'){roomAutoKey=null;roomAutoCode=null;roomAutoPin=null;}
-  const decision=observeRoomAuto(client);
+  const decision=observeRoomAuto(client);let renamedShare=null;
+  // A room joined with a fallback nick upgrades to the detected game id as
+  // soon as one is known: rejoin the same key with the new name. Only a
+  // steady connected state may do this, never a backoff, a block, a manual
+  // room or a dying room, and only toward a detected name, never away from one.
+  if(decision.action==='hold'&&decision.key===roomAutoKey&&decision.reason==='connected'){
+   const detected=sanitizeNick(client?.own?.riotId)||sanitizeNick(client?.own?.summonerName);
+   const rank=detected?(detected.includes('#')?2:1):0;
+   if(detected===roomNickInUse)roomNickSourceRank=Math.max(roomNickSourceRank,rank);
+   if(detected&&roomNickInUse!==detected&&rank>roomNickSourceRank){renamedShare={ballot:roomBallot,share:roomPublicShare,round:roomBallotRound};decision.action='switch';}
+  }
   if(decision.action==='hold')return;
   if(decision.action==='leave'){closeAutoRoom(decision.reason);return;}
   const key=decision.key;
@@ -338,6 +352,7 @@ async function boot(){
    await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
    // Revocation already closed this attempt. A later manual room owns the service.
    if(roomAutoKey!==key)return;
+   if(renamedShare&&renamedShare.round===roomBallotRound&&latestClient?.party?.key===key){roomBallot=renamedShare.ballot;roomPublicShare=renamedShare.share;if(roomPublicShare)roomService.publish({...roomPublicShare,...(roomBallot?{ballot:roomBallot}:{})});}
    roomAutoFailedKey=null;roomAutoFailedUntil=0;
    diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
   }catch(error){
@@ -368,7 +383,7 @@ async function boot(){
   await status(true);await roomAutoTask;
   const party=latestClient.party;
   if(!latestClient.connected)throw Error('请先连接游戏客户端，再连接组队房间');
-  if(!party?.key||Number(party.lobbyCount)<2)throw Error('尚未读取到当前组队标识；请回到组队大厅同步，或使用房间码加入');
+  if(!party?.key||Number(party.lobbyCount)<1)throw Error('尚未读取到当前组队标识；请回到组队大厅同步，或使用房间码加入');
   closeAutoRoom('reconnect');
   // Explicit reconnect chooses the current game party over a manually joined room.
   roomService?.leave();roomAutoBlockedKey=null;roomAutoFailedKey=null;roomAutoFailedUntil=0;roomAutoError='';
@@ -442,7 +457,7 @@ async function boot(){
  const status=createClientSync(async(force=false)=>{
   if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:3000):5000))return latestClient;
   statusTask=(async()=>{const previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
-   if(ballotRoundChanged(latestClient)){roomBallot=null;if(roomService&&roomService.snapshot().mode!=='idle'){try{const share=roomPublicShare||roomService.snapshot().members.find(m=>m.self)?.share||{lineup:[],pick:null};const {ballot,...clean}=share;roomService.publish(clean);}catch{}}}
+   if(ballotRoundChanged(latestClient)){roomBallotRound++;roomBallot=null;if(roomService&&roomService.snapshot().mode!=='idle'){try{const share=roomPublicShare||roomService.snapshot().members.find(m=>m.self)?.share||{lineup:[],pick:null};const {ballot,...clean}=share;roomService.publish(clean);}catch{}}}
    feedIdle=observeFeedPhase(latestClient);dataFeed.activate();
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId,{phase:latestClient.phase,previousPhase});if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId,{phase:latestClient.phase,previousPhase}).draft}));

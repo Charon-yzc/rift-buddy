@@ -472,9 +472,12 @@ function scheduleRoomPublish(){
 // connected auto room. A rebuilt room also has to hear the current share
 // again: the payload signature alone would suppress an unchanged one.
 function applyRoomSnapshot(snapshot){
+ const wasActive=!!(room&&room.mode!=='idle');
  room=snapshot;
  const identity=snapshot&&snapshot.mode!=='idle'?String(snapshot.room||''):'';
- if(identity!==roomShareRoom){roomShareRoom=identity;roomShareSig='';if(identity)scheduleRoomPublish();}
+ // A same-room reconnect (for example the automatic nickname upgrade) must
+ // republish: the relay keeps no share state for the returning member.
+ if(identity!==roomShareRoom||(!wasActive&&identity)){roomShareRoom=identity;roomShareSig='';if(identity)scheduleRoomPublish();}
  const quiet=!!(snapshot?.auto&&snapshot.mode!=='idle'&&snapshot.link==='connected');
  if(quiet&&!roomQuietTimer)roomQuietTimer=setTimeout(()=>{roomQuietTimer=null;roomAutoQuiet=true;if(windowLayout.docked||route==='draft'||route==='room')render();},AUTO_QUIET_MS);
  if(!quiet){if(roomQuietTimer){clearTimeout(roomQuietTimer);roomQuietTimer=null;}roomAutoQuiet=false;}
@@ -550,8 +553,8 @@ function chooseRoomRole(role){
  if(own){roomRoleChoice=null;setCompanionRole(role);return;}
  roomRoleChoice={role,context:roomRoleContext()};soloRole=role;persist();render();
 }
-function roomNickname(){const nick=saved.preferences.roomNick?.trim();return nick&&nick!=='队友'?nick:client.playerName||'队友';}
-function roomPanelHTML(){return api.roomStatus?roomPanel({room,transport:roomTransport,relayUrl:roomRelayUrl,relayRoom:roomRelayRoom,nick:roomNickname(),busy:roomBusy,scanning:roomScanning,scanResults:roomScanResults,error:roomError,invite:roomInvite,pin:roomPin,addresses:roomAddresses,champ,hasPreparationFile:!!roomPreparationFile,preparationFileBusy,autoEnabled:saved.preferences.roomAuto===true,autoSync:saved.preferences.autoSync!==false,autoError:room?.autoError||'',autoQuiet:roomAutoQuiet&&(room?.members?.length??0)<=1}):'<p>连接队友房间请使用桌面版。</p>';}
+function roomNickname(){const nick=saved.preferences.roomNick?.trim();return client.playerName||(nick&&nick!=='队友'?nick:'队友');}
+function roomPanelHTML(){return api.roomStatus?roomPanel({room,transport:roomTransport,relayUrl:roomRelayUrl,relayRoom:roomRelayRoom,nick:roomNickname(),detectedNick:client.playerName||'',busy:roomBusy,scanning:roomScanning,scanResults:roomScanResults,error:roomError,invite:roomInvite,pin:roomPin,addresses:roomAddresses,champ,hasPreparationFile:!!roomPreparationFile,preparationFileBusy,autoEnabled:saved.preferences.roomAuto===true,autoSync:saved.preferences.autoSync!==false,autoError:room?.autoError||'',autoQuiet:roomAutoQuiet&&(room?.members?.length??0)<=1}):'<p>连接队友房间请使用桌面版。</p>';}
 function roomOwnPreparation(){
  const role=roomOwnRole(),slot=slots.find(s=>s.role===role),mode=client.connected?client.mode?.id:'rift';
  if(!slot?.champion||!['rift','hex'].includes(mode))return null;

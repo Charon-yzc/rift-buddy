@@ -87,13 +87,13 @@ async function run(){
  await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');await click('[data-action=close]');
  await js('{const role=document.querySelector("#solo-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');
  const pick=async(role,id)=>{if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
- await pick('bottom','Rengar');await pick('support','Ivern');await click('.slot-config[data-action=build][data-role=bottom]');
+ await pick('bottom','Rengar');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
  await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Rengar Ivern private build missing');
  await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing');
- await click('[data-action=close]');await pick('support','Nami');await click('.slot-config[data-action=build][data-role=bottom]');
+ await click('[data-action=close]');await pick('support','Nami');await click('.champ-pick[data-action=build][data-role=bottom]');
  assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.notEqual((await active()).loadout,'rengar-bush');
  await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide');
- await click('[data-action=close]');await pick('support','Ivern');await click('.slot-config[data-action=build][data-role=bottom]');
+ await click('[data-action=close]');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
  await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Returning combo choice not restored');
  await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide');
  await capture('partner-context-isolation.png');

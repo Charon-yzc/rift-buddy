@@ -29,7 +29,7 @@ async function run(){
  const openDetail=async(window,label)=>{
   const js=code=>window.webContents.executeJavaScript(code,true);
   assert.equal(await js(`document.querySelector('.candidate-detail-content').checkVisibility({contentVisibilityAuto:true})`),false,label+' details start collapsed');
-  await js(`document.querySelector('.candidate-row>.btn').focus()`);key(window,'Tab');await delay(50);
+  await js(`document.querySelector('.candidate-actions [data-action=use-result]').focus()`);key(window,'Tab');await delay(50);
   assert.ok(await js(`document.activeElement.matches('.lineup-fit>summary')`),label+' fit explanation is reachable by Tab');
   key(window,'Space');
   await until(()=>js(`document.querySelector('.lineup-fit').open&&document.querySelector('.lineup-fit-explanation').checkVisibility({contentVisibilityAuto:true})`),label+' fit evidence did not become visible');

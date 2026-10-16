@@ -102,4 +102,18 @@
 .task-candidate-list .compact-candidate>.candidate-summary{margin:5px 0 0 24px}
 .task-candidate-list .compact-candidate>.candidate-fit{position:static;grid-row:auto;margin:5px 0 0 24px}
 .sidebar-focused .companion-candidate .candidate-row{padding-right:0}
-.task-candidate-list .candidate-details>summary,.sidebar-focused .companion-content .candidate-details>summary{position:static;width:fit-content;margin:4px 0 0 22px;min-height:28px;padding:4px 0}
+.task-candidate-list .candidate-details>summary,.sidebar-focused .companion-content .candidate-details>summary{position:static;width:fit-content;margin:2px 0 0 22px;min-height:30px;padding:4px 0}
+.sidebar-focused .companion-candidate>.candidate-details{margin:0;padding:0}
+@media(min-width:390px){.sidebar-focused .companion-candidate .candidate-row{flex-wrap:nowrap}.sidebar-focused .candidate-actions{flex-basis:auto;flex-shrink:0;margin-top:0}.sidebar-focused .candidate-actions .btn{padding-inline:8px}}
+
+/* Only heroes, actions and fit stay on the candidate face; gameplay is in details. */
+.task-candidate-list .compact-candidate{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;align-items:start}
+.task-candidate-list .candidate-row{grid-column:1/-1;grid-row:1}
+.task-candidate-list .compact-candidate>.candidate-fit,.sidebar-focused .companion-candidate>.candidate-fit{grid-column:2;grid-row:2;align-self:start;position:static;margin:2px 0 0;justify-content:flex-end}
+.task-candidate-list .candidate-details,.sidebar-focused .companion-candidate>.candidate-details{grid-column:1/-1;grid-row:2;align-self:start}
+
+.sidebar-focused .companion-candidate .candidate-row:has([data-action=room-vote]){flex-wrap:wrap}
+.sidebar-focused .candidate-actions:has([data-action=room-vote]){flex-basis:100%;margin-top:3px}
+.ballot-heroes:has(>button:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+.ballot-heroes:has(>button:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+.ballot-heroes:has(>button:only-child){grid-template-columns:minmax(0,1fr)}

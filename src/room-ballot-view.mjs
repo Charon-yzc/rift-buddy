@@ -19,7 +19,7 @@ export function roomBallotView(room,slots,champions,options={}){
  const compatibility=room.packedStates&&incompatible.length&&board.some(r=>r.proposal.strategy?.members.length>=4)?`<p class="ballot-adoption has-change" role="status" title="${e(incompatible.map(m=>m.nick).join('、'))}">${incompatible.length} 位队友需更新助手，才能同步完整多人方案</p>`:'';
  if(!room.ballots)return warning+'<details class="ballot-support"><summary>房间候选投票</summary><p>此中继尚未支持投票，阵容分享仍可使用。中继维护者升级后重新连接即可开启。</p></details>';
  const adoptionView=row=>{
-  if(!room.adoptions&&!row.adopters.length)return '';
+  if(!row.adopters.length)return '';
   const labels={pending:'已采用，待预选',matched:'方案一致','changed-pick':'已改选','changed-configuration':'配置已调整','pending-configuration':'配置待确认'};
   const changed=row.adopters.filter(m=>m.state.startsWith('changed')).length;
   const title=row.adopters.map(m=>m.nick+'：'+labels[m.state]).join('；')||'投票表示意向，采用由各位成员分别确认';

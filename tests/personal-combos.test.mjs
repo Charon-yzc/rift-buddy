@@ -31,9 +31,9 @@ test('cross-lane personal duos preserve actual roles, jobs and complete configs 
 test('pair uniqueness uses champion plus role and legacy pairs retain their identity',()=>{
  const pair=entry(),base=mergePersonal(BUNDLED_CATALOG,{duos:[pair]}),reversed={...pair,id:'local-reversed',members:[...pair.members].reverse()};
  assert.equal(comboKey(pair),comboKey(reversed));assert.throws(()=>validateCatalog({...base,duos:[...base.duos,reversed]},data),/双人英雄位置重复/);
- const otherRoles={...pair,id:'local-other-roles',members:pair.members.map((m,i)=>({...m,role:i?'support':'bottom'}))};assert.equal(validateCatalog(mergePersonal(base,{duos:[otherRoles]}),data).duos.length,202);
+ const otherRoles={...pair,id:'local-other-roles',members:pair.members.map((m,i)=>({...m,role:i?'support':'bottom'}))};assert.equal(validateCatalog(mergePersonal(base,{duos:[otherRoles]}),data).duos.length,BUNDLED_CATALOG.duos.length+2);
  const old=BUNDLED_CATALOG.duos[0],modern={...old,id:'local-modern-bot',members:comboMembers(old).map((m,i)=>({...m,job:'成员 '+i+' 分工'})),steps:['先沟通，再接力'],window:'双方都能跟',early:'保住经验',economy:'下路补刀，辅助支援'};delete modern.carry;delete modern.support;delete modern.loadouts;
- const merged=mergePersonal(BUNDLED_CATALOG,{duos:[modern]});assert.equal(merged.duos.length,200);assert.ok(!merged.duos.some(d=>d.id===old.id));assert.deepEqual(BUNDLED_CATALOG.duos[0],old);
+ const merged=mergePersonal(BUNDLED_CATALOG,{duos:[modern]});assert.equal(merged.duos.length,BUNDLED_CATALOG.duos.length);assert.ok(!merged.duos.some(d=>d.id===old.id));assert.deepEqual(BUNDLED_CATALOG.duos[0],old);
  for(const mutate of [p=>p.members[1].role=p.members[0].role,p=>p.members[1].champion=p.members[0].champion,p=>p.members[0].loadoutId='trio-ball',p=>p.carry='Graves']){const p=structuredClone(pair);mutate(p);assert.throws(()=>validateCatalog(mergePersonal(BUNDLED_CATALOG,{duos:[p]}),data),/组合库检查失败/);}
 });
 
