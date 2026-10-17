@@ -613,6 +613,17 @@ async function boot(){
    current.draft=draft;return current;
   });return {state,revision:stateRevision};
  });
+ guard('cancel-preselection',async()=>{
+  await saveCurrentState(current=>{
+   const intent=current.draft?.preselection;if(!intent?.champion)return current;
+   // Consumption and cancellation share the state queue. Once dispatched,
+   // clearing a local intent must not pretend to undo a client selection.
+   if(intent.attemptedGameId)throw Error('已进入选人，请在客户端更换英雄');
+   if(intent.role)current.draft.preselection={role:intent.role,champion:null,kind:'position'};
+   else delete current.draft.preselection;
+   return current;
+  });return {state,revision:stateRevision};
+ });
  guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return forRenderer(await status(true));});
  let launchingGame=false;
  guard('launch-game',async()=>{

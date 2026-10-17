@@ -161,7 +161,7 @@ test('starting during champion select confirms only self and recommends only tha
  assert.equal(party.status,'unknown');assert.deepEqual(marked(slots),['top']);
  const result=recommend({slots,champions:data.champions,scope:'party',clientSession:session,limit:1,rolePools:{top:{mode:'only',heroes:['Garen']}}})[0];
  assert.deepEqual(result.targets,['top']);assert.equal(result.slots.filter(s=>s.champion).length,1);
- session.myTeam[2].championId=key('Ahri');
+ session.myTeam[2].championId=key('Ahri');session.myTeam[2].pickState='locked';
  const synced=merge(slots,session,resolveClientParty(session,null));
  const next=recommend({slots:synced,champions:data.champions,scope:'party',clientSession:session,limit:1,rolePools:{top:{mode:'only',heroes:['Garen']}}})[0];
  assert.deepEqual(next.targets,['top']);assert.equal(next.slots.find(s=>s.role==='mid').champion,'Ahri');

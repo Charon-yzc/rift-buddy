@@ -109,7 +109,7 @@ test('duplicate party lane intentions retain both public hovers and fill another
  c.session.myTeam[0].championPickIntent=hero('Nami').key;c.session.myTeam[1].championPickIntent=hero('Ashe').key;
  const visible=recommendationDraft(createSlots(),c.session,data.champions,{party});
  assert.equal(visible.filter(slot=>slot.publicIntent).length,2);assert.equal(visible.find(slot=>slot.champion==='Nami').role,'support');assert.equal(visible.find(slot=>slot.champion==='Ashe').role,'bottom');
- const slots=reconcilePartyRange(createSlots(),c.session,data.champions,{count:2,party,initial:true});assert.deepEqual(slots.filter(slot=>slot.party).map(slot=>slot.role),['bottom','support']);
+ const slots=reconcilePartyRange(createSlots(),c.session,data.champions,{count:2,party,initial:true});assert.deepEqual(slots.filter(slot=>slot.party).map(slot=>slot.role),['top','support']);
 });
 
 // Run the main-process scheduler itself, delaying only its module-loading
@@ -140,9 +140,24 @@ test('a newer explicit configuration owns the client while a staged hover is loa
  }
 });
 test('a cleared preselection cannot dispatch after the player chooses another hero',async()=>{
- const scheduler=stagedScheduler(),pending=scheduler.run();await scheduler.started;
- delete scheduler.context.state.draft.preselection;scheduler.release();await pending;
- assert.equal(scheduler.writes.length,0);
+ for(const preserveRole of [false,true]){
+  const scheduler=stagedScheduler(),pending=scheduler.run();await scheduler.started;
+  if(preserveRole)scheduler.context.state.draft.preselection={role:'support',champion:null,kind:'position'};
+  else delete scheduler.context.state.draft.preselection;
+  scheduler.release();await pending;assert.equal(scheduler.writes.length,0);
+ }
+});
+
+test('hero cancellation preserves the latest lane and exact manual range without client access',async()=>{
+ const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),start=source.indexOf(" guard('cancel-preselection',"),end=source.indexOf(" guard('authorize-client',",start);
+ assert.ok(start>=0&&end>start);let handler;
+ const slots=createSlots().map(slot=>({...slot,party:slot.role!=='jungle',partyManual:true}));
+ const sandbox={state:{draft:{slots,partyCount:4,preselection:{role:'support',champion:'Ashe',kind:'hero',selection:{id:'Ashe',role:'support',mode:'rift'}}}},stateRevision:8,guard:(_channel,fn)=>{handler=fn;}};
+ const context=vm.createContext(sandbox);context.saveCurrentState=async update=>{context.state=update(structuredClone(context.state));context.stateRevision++;};
+ vm.runInContext(source.slice(start,end),context);
+ const before=structuredClone(context.state.draft),result=await handler();assert.equal(result.revision,9);assert.deepEqual(context.state.draft.slots,before.slots);assert.equal(context.state.draft.partyCount,4);assert.deepEqual(JSON.parse(JSON.stringify(context.state.draft.preselection)),{role:'support',champion:null,kind:'position'});
+ context.state.draft.preselection={role:'',champion:'Lux',kind:'hero'};await handler();assert.equal(context.state.draft.preselection,undefined);assert.deepEqual(context.state.draft.slots,before.slots);
+ context.state.draft.preselection={...before.preselection,attemptedGameId:'101'};const consumed=structuredClone(context.state);await assert.rejects(handler(),/已进入选人/);assert.deepEqual(context.state,consumed);
 });
 test('leaving selection while a staged hover is loading does not revive an old error',async()=>{
  const scheduler=stagedScheduler(),pending=scheduler.run();await scheduler.started;

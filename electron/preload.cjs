@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  applyRunes:(page,context)=>ipcRenderer.invoke('apply-runes',page,context),
  prepareSelection:value=>ipcRenderer.invoke('prepare-selection',value),
  stageSelection:value=>ipcRenderer.invoke('stage-selection',value),
+ cancelPreselection:()=>ipcRenderer.invoke('cancel-preselection'),
  partyRange:value=>ipcRenderer.invoke('party-range',value),
  onPreselection:callback=>ipcRenderer.on('preselection-status',(_event,value)=>callback(value)),
  importItemSet:itemSet=>ipcRenderer.invoke('import-item-set',itemSet),

@@ -32,7 +32,7 @@ test('blank public draft does not turn an unbound saved teammate into ranking or
  assert.deepEqual(slots,before,'Saved offline picks remain available for editing');
 });
 
-test('real teammate hovers supersede saved locks and share the same evidence in ranking and ballot fit',()=>{
+test('real teammate hovers remain visible without entering ranking or ballot fit',()=>{
  const current=session();current.myTeam[4].championPickIntent=key('Lulu');
  const slots=merge(saved(),current),before=structuredClone(slots);
  const rendererDraft=recommendationDraft(slots,current,champions);
@@ -40,9 +40,9 @@ test('real teammate hovers supersede saved locks and share the same evidence in 
  const results=recommend(input(rendererDraft,current)),clean=recommend(input(merge(createSlots(),current),current));
  assert.deepEqual(ranked(results),ranked(clean));
  for(const result of results){
-  assert.deepEqual(result.targets,['bottom']);assert.equal(result.analysis.known,2);
-  assert.equal(result.slots.find(s=>s.role==='support').champion,'Lulu');
-  assert.equal(result.slots.find(s=>s.role==='support').publicIntent,true);
+  assert.deepEqual(result.targets,['bottom']);assert.equal(result.analysis.known,1);
+  assert.equal(result.slots.find(s=>s.role==='support').champion,null);
+  assert.equal(result.slots.find(s=>s.role==='support').publicIntent,undefined);
   assert.equal(result.slots.find(s=>s.role==='support').locked,false);
   assert.equal(lineupFit(result.slots,slots,champions,{clientSession:current}).score,result.compositionFit.score);
  }
@@ -59,7 +59,7 @@ test('saved teammate heroes neither block controllable picks nor raise stale ban
 });
 
 test('actual client picks and explicit player positions survive contextual normalization',()=>{
- const current=session();current.myTeam[1].championId=key('Nami');current.myTeam[1].assignedPosition='UTILITY';
+ const current=session();current.myTeam[1].championId=key('Nami');current.myTeam[1].pickState='locked';current.myTeam[1].assignedPosition='UTILITY';
  const original=saved().map(s=>s.role==='jungle'?{...s,manualPosition:true,clientCellId:3}:s.role==='mid'?{...s,manualPosition:true,clientCellId:1}:s);
  const slots=merge(original,current),before=structuredClone(slots),results=recommend(input(slots,current,{pool:['Vi','Amumu']}));
  for(const result of results){
@@ -71,9 +71,9 @@ test('actual client picks and explicit player positions survive contextual norma
  }
  assert.equal(slots.find(s=>s.clientCellId===3).role,'jungle');assert.equal(slots.find(s=>s.clientCellId===3).manualPosition,true);
  assert.deepEqual(slots,before);
- const hovered=structuredClone(current);hovered.myTeam[1].championId=0;hovered.myTeam[1].championPickIntent=key('Nami');
+ const hovered=structuredClone(current);hovered.myTeam[1].championId=0;delete hovered.myTeam[1].pickState;hovered.myTeam[1].championPickIntent=key('Nami');
  const temporary=clientContextDraft(merge(original,hovered),champions,hovered);
- assert.equal(temporary.find(s=>s.role==='mid').champion,'Nami');assert.equal(temporary.find(s=>s.role==='mid').publicIntent,true);
+ assert.equal(temporary.find(s=>s.role==='mid').champion,null);assert.equal(temporary.find(s=>s.role==='mid').publicIntent,undefined);
  assert.equal(temporary.find(s=>s.role==='support').champion,null);
 });
 
@@ -82,7 +82,7 @@ test('known but unpicked own lane still receives solo recommendations, and a con
  const results=recommend(input(slots,current,{scope:'solo',soloRole:'bottom'}));
  assert.equal(results.length,3);
  for(const result of results){assert.deepEqual(result.targets,['bottom']);assert.equal(result.analysis.known,1);assert.equal(result.compositionFit.score,null);}
- current.myTeam[3].championId=key('Ashe');
+ current.myTeam[3].championId=key('Ashe');current.myTeam[3].pickState='locked';
  const fixed=merge(slots,current),[result]=recommend(input(fixed,current,{scope:'solo',soloRole:'bottom',soloChampion:'Ashe'}));
  assert.deepEqual(result.targets,[]);assert.equal(result.slots.find(s=>s.role==='bottom').champion,'Ashe');assert.equal(result.analysis.known,1);
  assert.equal(result.slots.find(s=>s.role==='support').champion,null);assert.deepEqual(slots,before);
@@ -95,14 +95,14 @@ test('offline lineup editing and multi-player party grading retain their existin
  assert.deepEqual(clientContextDraft(slots,champions,null),slots);
  const party=slots.map(s=>({...s,party:['bottom','support'].includes(s.role)}));
  const [group]=recommend(input(party,session()));
- assert.equal(group.scope,'party');assert.equal(group.analysis.known,2);assert.equal(group.slots.find(s=>s.role==='support').champion,'Nami');
+ assert.equal(group.scope,'party');assert.equal(group.analysis.known,2);assert.ok(group.slots.find(s=>s.role==='support').champion);assert.deepEqual(ranked([group]),ranked(recommend(input(party.map(s=>({...s,champion:null,locked:false})),session())).slice(0,1)));
  assert.deepEqual(slots,before);
 });
 
 test('unplaced public allies affect solo team fit without inventing their lanes or making them editable',()=>{
  for(const scope of ['party','solo']){
   const current=session();current.myTeam.forEach(p=>{p.assignedPosition='';});
-  ['Malphite','Amumu','Orianna',null,'Lulu'].forEach((id,cell)=>{current.myTeam[cell].championId=id?key(id):0;});
+  ['Malphite','Amumu','Orianna',null,'Lulu'].forEach((id,cell)=>{current.myTeam[cell].championId=id?key(id):0;if(id)current.myTeam[cell].pickState='locked';});
   const initial=createSlots().map(s=>({...s,party:s.role==='bottom',...(s.role==='bottom'?{manualPosition:true,clientCellId:3}:{})}));
   const merged=mergeClientSession(initial,current,champions,{autoArrange:false,autoParty:false}),before=structuredClone(merged.slots);
   assert.equal(merged.unassigned.length,4);
@@ -136,17 +136,17 @@ test('a manually marked single recommendation lane does not move the public loca
  const current=session();current.myTeam[3].championPickIntent=key('Ashe');
  const slots=createSlots().map(s=>({...s,party:s.role==='support'}));
  const normalized=clientContextDraft(slots,champions,current);
- assert.equal(normalized.find(s=>s.role==='bottom').champion,'Ashe');assert.equal(normalized.find(s=>s.role==='support').champion,null);
+ assert.equal(normalized.find(s=>s.role==='bottom').champion,null);assert.equal(normalized.find(s=>s.role==='support').champion,null);
 });
 
-test('solo recommendations with an unknown own lane retain public blind-pick hovers across lane recursion',()=>{
+test('solo recommendations with an unknown own lane ignore public blind-pick hovers across lane recursion',()=>{
  const current=session();current.myTeam.forEach(p=>p.assignedPosition='');current.myTeam[4].championPickIntent=key('Nami');
  const slots=merge(saved(),current),before=structuredClone(slots);
  const results=recommend(input(slots,current,{scope:'solo',soloRole:'',pool:[],poolMode:'off',limit:6}));
  assert.equal(results.length,6);assert.equal(new Set(results.slice(0,4).map(r=>r.soloRole)).size,4);
  for(const result of results){
-  assert.notEqual(result.soloRole,'support');assert.deepEqual(result.targets,[result.soloRole]);assert.equal(result.analysis.known,2);
-  const ally=result.slots.find(s=>s.role==='support');assert.equal(ally.champion,'Nami');assert.equal(ally.publicIntent,true);
+  assert.deepEqual(result.targets,[result.soloRole]);assert.equal(result.analysis.known,1);
+  assert.equal(result.slots.some(s=>s.publicIntent),false);
  }
  assert.deepEqual(slots,before);
 });

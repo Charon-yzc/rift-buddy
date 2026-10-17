@@ -36,11 +36,11 @@ test('fresh public lobby quantity survives hidden selection names without inferr
 
 test('count freezes through membership polls, public collisions, hover changes and player swaps',()=>{
  const s=session(),p=party(2);let slots=reconcilePartyRange(createSlots(),s,data.champions,{count:2,party:p,initial:true});
- s.myTeam[2].championId=key('Garen');slots=merge(slots,s,2,p);
+ s.myTeam[2].championId=key('Garen');s.myTeam[2].pickState='locked';slots=merge(slots,s,2,p);
  assert.deepEqual(roles(slots),['jungle','mid']);assert.equal(slots[0].clientCellId,2);
  s.myTeam[1].championPickIntent=key('Nami');slots=merge(slots,s,2,p);
- assert.equal(markedPartyCount(slots),2);assert.ok(roles(slots).includes('support'));
- s.myTeam[1].championId=key('Nami');s.myTeam[1].championPickIntent=0;
+ assert.equal(markedPartyCount(slots),2);assert.deepEqual(roles(slots),['jungle','mid'],'A hero-only preview cannot move marks');
+ s.myTeam[1].championId=key('Nami');s.myTeam[1].championPickIntent=0;s.myTeam[1].pickState='locked';
  slots=merge(slots,s,2,{...p,lobbyCount:5});assert.equal(markedPartyCount(slots),2);
  slots=moveChampion(slots,'support','bottom');
  for(let poll=0;poll<4;poll++)slots=merge(slots,s,2,p);
@@ -102,7 +102,7 @@ test('all 32 explicit ranges retain count under every public pick permutation',(
 });
 
 test('recommendations contain exactly the captured marked members while solo still scores known allies',()=>{
- const s=session(),p=party(1);s.myTeam[2].championId=key('Ahri');s.myTeam[2].assignedPosition='MIDDLE';
+ const s=session(),p=party(1);s.myTeam[2].championId=key('Ahri');s.myTeam[2].assignedPosition='MIDDLE';s.myTeam[2].pickState='locked';
  const slots=merge(createSlots(),s,1,p),[result]=recommend({slots,champions:data.champions,scope:'party',clientSession:s,limit:1});
  assert.equal(markedPartyCount(result.slots),1);assert.equal(result.scope,'context');assert.equal(result.analysis.known,2);
  assert.equal(result.slots[2].champion,'Ahri');assert.equal(result.slots[2].party,false);

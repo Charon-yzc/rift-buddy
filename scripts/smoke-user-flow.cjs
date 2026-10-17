@@ -95,15 +95,18 @@ async function run(){
  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Manual planning sync missing');
  await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');await click('[data-action=close]');
  await js('{const role=document.querySelector("#solo-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');
- const pick=async(role,id)=>{if(await js('!!document.querySelector("[data-action=task-compare]")'))await click('[data-action=task-compare]');if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await until(()=>js(`!!document.querySelector('[data-action=pick-slot][data-role=${role}]')`),'Editable empty lane missing: '+role);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
- await pick('bottom','Rengar');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
- await until(()=>js('document.querySelector(".configuration-current header b")?.textContent.includes("草丛")'),'Rengar Ivern private build missing');
+ // Simulate accepted offline teammate arrangements through isolated saved-state updates.
+ // The display roster no longer offers manual hero insertion or configuration clicks.
+ const arrange=async partner=>{const base=await state(),next=structuredClone(base);next.draft.slots=next.draft.slots.map(slot=>['bottom','support'].includes(slot.role)?{...slot,champion:slot.role==='bottom'?'Rengar':partner,locked:true}:slot);await js('window.buddy.saveState('+JSON.stringify(next)+','+JSON.stringify(base)+')');await until(async()=>(await state()).draft.slots.some(slot=>slot.role==='support'&&slot.champion===partner),'Partner fixture did not reach saved state');await new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.reload();});await until(()=>js('!!document.querySelector("[data-action=navigate][data-route=builds]")'),'Reloaded fixture UI missing');};
+ const openRengar=async()=>{await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=all]');await js('{const input=document.querySelector("#library-search");input.value="Rengar";input.dispatchEvent(new Event("input",{bubbles:true}));}');await click('.hero-tile[data-id=Rengar]');await until(()=>js('!!document.querySelector("#configuration-role,#build-role")'),'Configuration role control missing');await js('{const role=document.querySelector("#configuration-role,#build-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');};
+ await arrange('Ivern');await openRengar();await click('[data-action=build-loadout][data-id=rengar-bush]');
+ await until(()=>js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),'Rengar Ivern private build missing');
  await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing');
- await click('[data-action=close]');await pick('support','Nami');await click('.champ-pick[data-action=build][data-role=bottom]');
- assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.equal(await js('document.querySelector(".configuration-current header b")?.textContent.includes("草丛")'),false);
+ await click('[data-action=close]');await arrange('Nami');await openRengar();
+ assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.equal(await js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),false);
  await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide');
- await click('[data-action=close]');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
- await until(()=>js('document.querySelector(".configuration-current header b")?.textContent.includes("草丛")'),'Returning combo choice not restored');
+ await click('[data-action=close]');await arrange('Ivern');await openRengar();
+ await until(()=>js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),'Returning combo choice not restored');
  await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide');
  await capture('partner-context-isolation.png');
  // A full backend selection can remove fields. They must not be resurrected by

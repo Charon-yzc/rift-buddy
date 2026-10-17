@@ -1,6 +1,6 @@
 import {ROLES,profile} from './rules.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
-import {recommendationDraft} from './draft-intents.mjs';
+import {confirmedPlayerPick} from './draft-intents.mjs';
 
 export const validPartyCount=value=>Number.isInteger(value)&&value>=0&&value<=5;
 export const markedPartyCount=slots=>slots.filter(slot=>slot.party).length;
@@ -62,25 +62,21 @@ export function reconcilePartyRange(slots,session,champions,{count,party,ownRole
  if(Number.isInteger(localCell)&&!members.some(member=>member.cellId===localCell))members.unshift({cellId:localCell,local:true});
  const memberCells=new Set(members.map(member=>member.cellId));
  if(Number.isInteger(localCell))memberCells.add(localCell);
- const hover=recommendationDraft(slots,session,champions,{ownRole,party});
  const occupiedByOther=slot=>{
-  if(Number.isInteger(slot.clientCellId))return !memberCells.has(slot.clientCellId);
-  const intent=hover.find(value=>value.role===slot.role&&value.publicIntent);
-  if(!intent)return false;
-  const hero=champions.find(value=>value.id===intent.champion);
-  const player=team.find(value=>Number(value.championPickIntent)===hero?.key);
-  return player&&!memberCells.has(player.cellId);
+  if(!Number.isInteger(slot.clientCellId))return false;
+  const player=team.find(value=>value.cellId===slot.clientCellId);
+  const located=slot.manualPosition||roleOf(player?.assignedPosition)||confirmedPlayerPick(player,session);
+  return !!located&&!memberCells.has(slot.clientCellId);
  };
  const available=slot=>slot&&!(slot.partyManual&&!slot.party)&&!occupiedByOther(slot);
  const used=new Set();
  const use=role=>{const slot=ordered.find(value=>value.role===role);if(used.size<count&&available(slot))used.add(role);};
  const hints=members.map(member=>{
   const player=team.find(value=>value.cellId===member.cellId),bound=ordered.find(slot=>slot.clientCellId===member.cellId);
-  const hero=champions.find(value=>value.key===Number(player?.championId||player?.championPickIntent));
-  const preview=hero&&hover.find(slot=>slot.publicIntent&&slot.champion===hero.id);
-  const explicit=bound?.role||(member.cellId===localCell?ownRole:'')||roleOf(player?.assignedPosition);
+  const hero=confirmedPlayerPick(player,session)&&champions.find(value=>value.key===Number(player.championId));
+  const explicit=(bound?.manualPosition?bound.role:'')||(member.cellId===localCell?ownRole:'')||roleOf(player?.assignedPosition)||(hero?bound?.role:'');
   const usual=hero?(roleOrder[hero.id]||profile(hero).roles):[];
-  return {member,priority:explicit?0:preview?1:hero?2:3,roles:[explicit,preview?.role,...usual,roleOf(member.firstPosition),roleOf(member.secondPosition)]};
+  return {member,priority:explicit?0:hero?2:3,roles:[explicit,...usual,roleOf(member.firstPosition),roleOf(member.secondPosition)]};
  }).sort((a,b)=>a.priority-b.priority||Number(b.member.cellId===localCell)-Number(a.member.cellId===localCell)||a.member.cellId-b.member.cellId);
  // Lobby members have no cell yet. Their public lane preferences still count.
  if(!session)for(const member of party?.members||[])hints.push({roles:[member.local&&ownRole,roleOf(member.firstPosition),roleOf(member.secondPosition)]});
@@ -89,9 +85,9 @@ export function reconcilePartyRange(slots,session,champions,{count,party,ownRole
  // lanes. A user's explicit exclusions remain excluded during polling.
  for(const slot of ordered)if(slot.partyManual&&slot.party)use(slot.role);
  if(!initial)for(const slot of ordered)if(slot.party)use(slot.role);
- // Empty lanes first; when all are selected a mark still represents scope,
- // not permission to change anyone else's public selection.
- for(const slot of [...ordered.filter(slot=>!slot.champion),...ordered])use(slot.role);
+ // Fill from the left after reliable lanes. A preview or offline suggestion
+ // must not move the initial range just because its portrait is displayed.
+ for(const slot of ordered)use(slot.role);
  if(used.size<count)for(const slot of ordered)if(!used.has(slot.role)&&!(slot.partyManual&&!slot.party)){used.add(slot.role);if(used.size===count)break;}
  if(used.size<count)for(const slot of ordered){used.add(slot.role);if(used.size===count)break;}
  return slots.map(slot=>{
