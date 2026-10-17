@@ -1,11 +1,11 @@
 const {pathToFileURL}=require('node:url');
 const {app,screen,globalShortcut,ipcMain,Tray,dialog}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),shortcuts=new Map();let bootstrapCalls=0,trayMenu=null,resumeDialog=null,holdDerivedMainId=null,resumeDerived=null,derivedRaceRejections=0;
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),shortcuts=new Map();let bootstrapCalls=0,trayMenu=null,resumeDialog=null,holdDerivedMainId=null,resumeDerived=null,derivedRaceRejections=0,mockClientOffline=false,holdClientStatus=false,resumeClientStatus=null;
 // All test windows stay hidden. No real LCU, native observer or source requests.
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.fixtureHideCount=0;const hide=window.hide.bind(window);window.hide=()=>{window.fixtureHideCount++;hide();};window.webContents.setBackgroundThrottling(false);});globalShortcut.register=(key,callback)=>{shortcuts.set(key,callback);return false;};
 const setMenu=Tray.prototype.setContextMenu;Tray.prototype.setContextMenu=function(menu){trayMenu=menu;return setMenu.call(this,menu);};dialog.showOpenDialog=()=>new Promise(resolve=>{resumeDialog=resolve;});
-const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(name==='bootstrap')bootstrapCalls++;const held=name==='save-state'&&args[0].sender.id===holdDerivedMainId&&args[1]?.draft?.soloRole==='jungle'&&!args[1]?.draft?.playerPosition;if(held){holdDerivedMainId=null;await new Promise(resolve=>{resumeDerived=resolve;});}try{return await handler(...args);}catch(error){if(held&&/选人配置同时发生变化/.test(error.message))derivedRaceRejections++;throw error;}});};
+const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(name==='bootstrap')bootstrapCalls++;if(name==='client-status'&&mockClientOffline)return {connected:false,phase:'Offline',message:'隔离连接断开'};if(name==='client-status'&&holdClientStatus)await new Promise(resolve=>{resumeClientStatus=resolve;});const held=name==='save-state'&&args[0].sender.id===holdDerivedMainId&&args[1]?.draft?.soloRole==='jungle'&&!args[1]?.draft?.playerPosition;if(held){holdDerivedMainId=null;await new Promise(resolve=>{resumeDerived=resolve;});}try{return await handler(...args);}catch(error){if(held&&/选人配置同时发生变化/.test(error.message))derivedRaceRejections++;throw error;}});};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label){for(let n=0;n<180;n++){if(await check())return;await delay(100);}throw Error(label);}
 async function run(){
@@ -45,6 +45,25 @@ async function run(){
  assert.equal(await js(main,'window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Connecting should enable automatic client synchronization');
  await js(main,'window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,autoSync:false}},b.state))');
  await js(main,'window.buddy.client(false)');
+ // The footer status is a real connection action, including after a failed read.
+ const statusDot='.companion-footer .client-connection-indicator',statusWrites=writes;
+ await until(()=>js(side,'!!document.querySelector("'+statusDot+'.connected")'),'Connected footer indicator missing');
+ const footerHeight=await js(side,'document.querySelector(".companion-footer").getBoundingClientRect().height');
+ assert.ok(footerHeight<=30,'Connection footer must stay compact: '+footerHeight+' '+JSON.stringify(await js(side,'[...document.querySelectorAll(".companion-footer,.companion-footer-line,.companion-footer-menu>summary,.client-connection-control,.client-connection-indicator")].map(el=>{const s=getComputedStyle(el);return {class:el.className,height:el.getBoundingClientRect().height,padding:s.padding,minHeight:s.minHeight,fontSize:s.fontSize,lineHeight:s.lineHeight};})')));
+ const captureFooter=async name=>{const rect=await js(side,'(()=>{const r=document.querySelector(".companion-footer").getBoundingClientRect();return {x:Math.floor(r.x),y:Math.floor(r.y),width:Math.floor(r.width),height:Math.ceil(r.height)};})()');await fs.writeFile(path.join(root,name),(await side.webContents.capturePage(rect,{stayHidden:true,stayAwake:true})).toPNG());};
+ const connectedColor=await js(side,'getComputedStyle(document.querySelector("'+statusDot+'")).color');await captureFooter('client-connected.png');
+ mockClientOffline=true;await click(side,statusDot);await until(()=>js(side,'!!document.querySelector("'+statusDot+'.disconnected")'),'Failed read did not show disconnected status');
+ assert.notEqual(await js(side,'getComputedStyle(document.querySelector("'+statusDot+'")).color'),connectedColor);await captureFooter('client-disconnected.png');
+ mockClientOffline=false;holdClientStatus=true;await click(side,statusDot);
+ await until(()=>resumeClientStatus,'Disconnected dot did not request client connection');
+ assert.equal(await js(side,'document.querySelector("'+statusDot+'").disabled'),true);
+ assert.equal(await js(side,'document.querySelector("'+statusDot+'").classList.contains("connecting")'),true);await captureFooter('client-connecting.png');
+ assert.equal(await js(side,'document.querySelector(".client-connection-compact [data-client-connect]").disabled'),true,'Header connection action must share the in-flight state');
+ holdClientStatus=false;resumeClientStatus();resumeClientStatus=null;
+ await until(()=>js(side,'!!document.querySelector("'+statusDot+'.connected:not(:disabled)")'),'Reconnect did not restore connected indicator');
+ assert.equal(await js(side,'window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Disconnected dot must enable automatic connection');
+ assert.equal(writes,statusWrites,'Connection action must not write a rune page');
+ await js(main,'window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,autoSync:false}},b.state))');await js(main,'window.buddy.client(false)');
  // Palette changes use the shared settings channel, never game preparation.
  const {THEMES,DEFAULT_THEME}=await import(pathToFileURL(path.join(base,'src/core/themes.mjs'))),{readState}=await import(pathToFileURL(path.join(base,'services/storage.mjs')));
  const beforeThemeWrites=writes,modules=await js(side,'window.buddy.bootstrap().then(b=>b.state.preferences.presentation.guideModules)');
@@ -126,6 +145,7 @@ async function run(){
  phase='Lobby';const returnToLobby=handlers.get('client-status')(event(main),true);main.destroy();await returnToLobby;await until(()=>{main=mainWindow();return main;},'Returning from game did not recreate main');await until(()=>js(main,'!!document.querySelector("#solo-role")'),'Lobby main UI missing');assert.equal(writes,1);assert.equal(sourceFetches,0);
  const report={passed:true,source,archiveSha256:release?.archiveSha256||null,autoSync:savedBeforeGame.preferences.autoSync,dualSurfacesLoaded:true,fixedWidth:440,heightMatchesClient:true,stableRounding:true,mainBoundsPreserved:true,mutualLaneSync:true,concurrentUnrelatedSaveMerged:true,conflictingDraftRejected:true,topFrameGuard:true,explicitRuneClickOnly:true,crossWindowRuneConfirmation:true,sidebarRendererReleasedInGame:true,mainRendererReleasedInGame:true,inFlightOperationPreventsRelease:true,trayAndHotkeyRecreateMain:true,explicitReopenNotAutoHidden:true,savedStateRetainedAfterRecreate:true,lobbyRecreatesMain:true,noTickBootstrap:true,noTickRequests:true,actualRuneWrites:false,loopbackSocketsMocked:true,windowGeometryMocked:true,testWindowsHidden:true,memory:{mainOnly,both,afterGC,heaps,gameBeforeMainRelease,game}};
  report.initialCandidatesWithoutExtraRead=true;report.sidebarNavigationToMain=true;report.backgroundInferencePreservesExplicitLane=true;report.independentFoldAndRestore=true;report.restoredPeekRenderersReleased=true;report.restoreTabRecreatedOnNextFold=true;
+ report.footerConnectionAction=true;report.footerReconnectEnablesSync=true;report.footerHeight=footerHeight;report.connectionClickRuneWrites=0;
  await fs.writeFile(path.join(root,'dual-windows.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'dual-windows-error.txt'),error.stack).catch(()=>{});for(const window of windows.filter(w=>!w.isDestroyed()))await fs.writeFile(path.join(root,'failure-'+window.webContents.id+'.html'),await window.webContents.executeJavaScript('document.documentElement.outerHTML').catch(()=>''));app.exit(1);});

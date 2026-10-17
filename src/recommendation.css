@@ -135,7 +135,17 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 .recommendation-ui .companion-candidates>[data-action=more-candidates],
 .recommendation-ui .companion-recommend-options>summary {color:var(--rb-muted);font-size:calc(12px * var(--text-scale))}
 .recommendation-ui .companion-recommend-options {border:0;background:none}
-.recommendation-ui .companion-footer {border-color:var(--rb-line);background:var(--rb-panel);color:var(--rb-muted);padding:6px 12px}
+.recommendation-ui .companion-footer {border-color:var(--rb-line);background:var(--rb-panel);color:var(--rb-muted);padding:2px 12px}
+.recommendation-ui .companion-footer-line {min-height:24px}
+.recommendation-ui .companion-client-state {display:flex;align-items:center;gap:3px}
+.recommendation-ui .companion-footer-menu>summary {min-height:24px;padding:2px 5px}
+.client-connection-control {display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.recommendation-ui .client-connection-indicator {display:inline-grid;place-items:center;flex:none;width:24px;height:24px;min-width:24px;min-height:24px;padding:0;border:0;border-radius:50%;background:transparent;color:#79dbc0}
+.client-connection-indicator.disconnected {color:#f18288}
+.client-connection-indicator.connecting {color:#e4bf79}
+.client-connection-light {width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 7px currentColor}
+.client-connection-indicator:hover {background:color-mix(in srgb,currentColor 12%,transparent)}
+.client-connection-indicator:disabled {opacity:1}
 .recommendation-ui .companion-footer-line,
 .recommendation-ui .companion-client-state,
 .recommendation-ui .companion-footer-menu>summary {color:var(--rb-muted);font-size:calc(12px * var(--text-scale))}
@@ -549,10 +559,10 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 .configuration-choice>header .configuration-stale {color:var(--rb-warning)}
 .configuration-choice>header .btn {flex-shrink:0;min-height:30px;white-space:nowrap;padding:4px 8px;font-size:var(--ui-small)}
 .configuration-icons {display:grid;gap:7px}
-.configuration-equipment {display:flex;gap:5px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+.configuration-equipment {display:flex;justify-content:space-between;gap:5px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
 .configuration-equipment>li {display:flex}
 .configuration-equipment img {width:30px;height:30px;border-radius:4px}
-.configuration-runes {display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.configuration-runes {display:flex;align-items:center;justify-content:space-between;gap:3px;flex-wrap:wrap}
 .configuration-runes>span {display:flex;align-items:center;justify-content:center}
 .configuration-runes img {width:23px;height:23px}
 .configuration-runes>span:first-child img {width:28px;height:28px}
