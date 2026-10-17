@@ -46,7 +46,7 @@ async function run(){
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
  const js=code=>main.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});
- const click=async sel=>{sel=await revealDraftAction(js,sel);return js('(()=>{const el=document.querySelector('+JSON.stringify(sel)+');if(!el||el.disabled)throw Error("Control missing or disabled");el.click();})()');};
+ const click=async sel=>{sel=await revealDraftAction(js,sel);await js('(()=>{const el=document.querySelector('+JSON.stringify(sel)+');if(!el||el.disabled)throw Error("Control missing or disabled");el.click();})()');if(sel==='[data-action=task-edit]'){const boot=await js('window.buddy.bootstrap()'),champion=data.champions.find(c=>c.key===ownChampion);const reference=boot.state.preparations.findLast(p=>p.id===champion.id&&p.role==='top')||{id:champion.id,role:'top',mode:'rift'};main.webContents.send('open-build',{...reference,readOnly:false});await until(()=>js('!!document.querySelector("[data-action=apply-runes]")'),'Explicit rune reference missing');}};
  const applyRunes=async()=>{await click('[data-action=apply-runes]');await until(()=>js('document.querySelector("[data-action=apply-runes]")?.disabled===false'),'Rune application did not settle');};
  const sync=async()=>{
   if(await js('!!document.querySelector("[data-action=close]")'))await click('[data-action=close]');

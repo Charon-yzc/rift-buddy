@@ -53,7 +53,7 @@ const HOST_NAME=/^[A-Za-z0-9.-]{1,253}$/;
 // One member as the UI sees it: online status plus the latest sanitized share.
 const memberView=({nick,share,packedStates})=>({nick,online:true,share:share||null,packedStates:packedStates===true});
 const needsPacked=frame=>Buffer.byteLength(JSON.stringify(frame))+1>MAX_FRAME;
-const shareBody=share=>({lineup:share.lineup,pick:share.pick,at:share.at,...(share.mode!==undefined?{mode:share.mode}:{}),...(share.configurations!==undefined?{configurations:share.configurations}:{}),...(share.strategy?{strategy:share.strategy}:{}),...(share.ballot?{ballot:share.ballot}:{})});
+const shareBody=share=>({lineup:share.lineup,pick:share.pick,at:share.at,...(share.mode!==undefined?{mode:share.mode}:{}),...(share.configurations!==undefined?{configurations:share.configurations}:{}),...(share.strategy?{strategy:share.strategy}:{}),...(share.ballot?{ballot:share.ballot}:{}),...(share.intent?{intent:share.intent}:{})});
 const send=(socket,frame)=>{const line=encodeFrame(frame);if(!line)return false;if(socket.destroyed)return false;if(socket.writableLength>MAX_FRAME*8){socket.destroy();return false;}try{socket.write(line);return true;}catch{socket.destroy();return false;}};
 const frameBudget=()=>{let start=Date.now(),count=0;return n=>{const now=Date.now();if(now-start>=1000){start=now;count=0;}count+=n;return count<=60;};};
 
@@ -631,7 +631,7 @@ export function createRoomService({nick='队友',onUpdate=()=>{},diagnostic=()=>
  // --- shared ---------------------------------------------------------------
  function publish(share,{restoring=false}={}){
   if(mode==='idle')throw Error('尚未创建或加入房间');
-  const clean=sanitizeShare({kind:'state',v:ROOM_PROTOCOL,from:nick,lineup:share?.lineup||[],pick:share?.pick??null,at:share?.at||now(),...(share?.mode!==undefined?{mode:share.mode}:{}),...(share?.configurations!==undefined?{configurations:share.configurations}:{}),...(share?.strategy?{strategy:share.strategy}:{}),...(share?.ballot?{ballot:share.ballot}:{})});
+  const clean=sanitizeShare({kind:'state',v:ROOM_PROTOCOL,from:nick,lineup:share?.lineup||[],pick:share?.pick??null,at:share?.at||now(),...(share?.mode!==undefined?{mode:share.mode}:{}),...(share?.configurations!==undefined?{configurations:share.configurations}:{}),...(share?.strategy?{strategy:share.strategy}:{}),...(share?.ballot?{ballot:share.ballot}:{}),...(share?.intent?{intent:share.intent}:{})});
   if(!clean||!encodeFrame(clean))throw Error('分享内容格式不正确或过大');
   if(ballotVotes(clean.ballot).length>1&&!multiVotes){
    // A nickname upgrade creates a fresh service. If its relay has regressed,

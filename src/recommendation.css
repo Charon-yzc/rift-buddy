@@ -1,0 +1,568 @@
+/* Pregame workspace: black-gray surfaces, warm-white action state, champion-first rows. */
+:root {
+ --rb-bg:#151515;
+ --rb-panel:#1e1e1d;
+ --rb-raised:#2b2b29;
+ --rb-line:#3d3d39;
+ --rb-ink:#eeeae2;
+ --rb-muted:#b4b3ad;
+ --rb-subtle:#93968e;
+ --rb-accent:#e9e3d7;
+ --rb-accent-hover:#fffaf0;
+ --rb-tint:#353530;
+ --rb-warning:#d5b788;
+ --rb-success:#cec9bd;
+}
+body.companion-mode {background:var(--rb-bg);color:var(--rb-ink)}
+.companion-shell.recommendation-ui {--accent:var(--rb-accent);--muted:var(--rb-muted);--text:var(--rb-ink);--border:var(--rb-line);background:var(--rb-bg);color:var(--rb-ink)}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(.modal,.drawer,.plan-drawer) {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink)}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(.modal-header,.modal-footer,.modal-controls,.drawer-header) {border-color:var(--rb-line);background:transparent}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(input,select,.search-wrap,.champ-option) {background:var(--rb-bg);border-color:var(--rb-line);color:var(--rb-ink)}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root .champ-option:hover {background:var(--rb-tint);border-color:var(--rb-accent)}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(.chip,.btn) {background:var(--rb-raised);border-color:var(--rb-line);color:var(--rb-ink)}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root .chip.active {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root .btn.primary {background:var(--rb-accent);border-color:var(--rb-accent);color:var(--rb-bg);box-shadow:none}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(.modal-header p,.modal-footer,.search-wrap>.icon,.muted,small) {color:var(--rb-muted)}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root .portrait {background:var(--rb-raised);border-color:var(--rb-line)}
+body:has(.recommendation-ui,.recommendation-app) :is(#overlay-root,.recommendation-ui,.recommendation-app) ::-webkit-scrollbar-thumb {background:var(--rb-line)}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,select,summary,a):focus-visible {outline:2px solid var(--rb-accent);outline-offset:2px}
+.recommendation-ui .btn {background:var(--rb-raised);border-color:var(--rb-line);color:var(--rb-ink)}
+.recommendation-ui .btn.primary {background:var(--rb-accent);border-color:var(--rb-accent);color:#191b19;box-shadow:none}
+.recommendation-ui .btn.primary:hover {background:var(--rb-accent-hover);border-color:var(--rb-accent-hover)}
+.recommendation-ui .btn.quiet {background:transparent;border-color:transparent;color:var(--rb-muted)}
+.recommendation-ui .portrait {background:var(--rb-raised)}
+.recommendation-ui :is(.candidate-fit,.lineup-fit,.companion-eligibility-status,.client-connection-options) {color:var(--rb-muted)}
+.recommendation-ui .companion-content :is(.companion-section,.companion-source,.ui-disclosure)>summary {color:var(--rb-muted)}
+.recommendation-ui .preparation-extra>summary {color:var(--rb-muted)}
+.recommendation-ui .companion-content :is(.companion-section,.companion-source,.ui-disclosure) {border-color:var(--rb-line)}
+.recommendation-ui .client-preparation {border-color:var(--rb-line)}
+.recommendation-ui .client-preparation .ui-help,
+.recommendation-ui .client-preparation .preparation-contract {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));line-height:1.6}
+.recommendation-ui .client-preparation-result {color:var(--rb-ink)}
+.recommendation-ui :is(button,select,summary):focus-visible {outline:2px solid var(--rb-accent);outline-offset:2px}
+#app>.boot .brand-mark {background:none;transform:none;border-radius:0}
+.recommendation-ui .companion-tabs {padding:0 12px;min-height:40px;border-color:var(--rb-line);background:var(--rb-bg)}
+.recommendation-ui .companion-tabs>.btn {padding:8px 5px;font-size:var(--ui-small);font-weight:500;color:var(--rb-muted);background:transparent}
+.recommendation-ui .companion-tabs>.btn.active {color:var(--rb-accent);border-color:var(--rb-accent);font-weight:650}
+.recommendation-ui .companion-navigation-more>summary {color:var(--rb-muted)}
+.recommendation-ui .companion-navigation-more[open]>summary {background:var(--rb-tint);color:var(--rb-ink)}
+.recommendation-ui .companion-navigation-more>div>.btn {color:var(--rb-muted);background:transparent}
+.recommendation-ui .companion-navigation-more>div>.btn:hover,
+.recommendation-ui .companion-navigation-more>div>.btn.active {background:var(--rb-tint);color:var(--rb-ink)}
+.recommendation-ui .companion-persistent {padding:10px 12px;background:var(--rb-panel);border-color:var(--rb-line);max-height:none;overflow:visible}
+.recommendation-ui .companion-team-compact .companion-roster {gap:5px;grid-template-columns:repeat(5,minmax(0,1fr))}
+.recommendation-ui .companion-team-compact .companion-roster-row {border:1px solid transparent;border-radius:6px;background:transparent;min-width:0;padding:0}
+.recommendation-ui .companion-team-compact .companion-roster-row.in-scope {background:#2b2b28;border-color:#7b7970}
+.recommendation-ui .companion-team-compact .companion-roster-row.out-of-scope {background:transparent;border-color:var(--rb-line)}
+.recommendation-ui .companion-team-now:not(.companion-team-compact) .companion-roster-row {border-color:var(--rb-line)}
+.recommendation-ui .companion-team-now:not(.companion-team-compact) .companion-roster-hero {color:var(--rb-ink);border-color:var(--rb-line);background:transparent}
+.recommendation-ui .companion-team-now:not(.companion-team-compact) .companion-roster-hero:hover {background:var(--rb-tint)}
+.recommendation-ui .companion-team-now:not(.companion-team-compact) .companion-roster-hero :is(b,small) {color:var(--rb-muted)}
+.recommendation-ui .companion-team-now:not(.companion-team-compact) .companion-roster-hero .empty-portrait {background:var(--rb-bg);border-color:var(--rb-line);color:var(--rb-subtle)}
+.recommendation-ui .companion-roster-tools>.btn {color:var(--rb-muted);min-width:32px;min-height:32px}
+.recommendation-ui .companion-roster-tools>.btn[aria-pressed=true] {color:var(--rb-accent)}
+.recommendation-ui .companion-roster-top {display:flex;align-items:center;width:100%;min-width:0;gap:0}
+.recommendation-ui .sidebar-label-short {display:none}
+.recommendation-ui .companion-team-compact .companion-roster-hero {color:var(--rb-ink);border:0;border-radius:5px;background:transparent}
+.recommendation-ui .companion-team-compact .companion-roster-hero:hover {background:var(--rb-raised);color:var(--rb-ink)}
+.recommendation-ui .companion-team-compact .companion-roster-hero>span>b {font-size:calc(12px * var(--text-scale));line-height:1.4;font-weight:550;color:var(--rb-ink)}
+.recommendation-ui .companion-team-compact .companion-roster-hero>span>small {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));line-height:1.4}
+.recommendation-ui .companion-team-compact .companion-scope-toggle {position:static;width:24px;height:24px;min-height:24px;flex-shrink:0;font-size:12px;border-radius:4px;background:transparent;border:0;color:var(--rb-subtle)}
+.recommendation-ui .companion-team-compact .companion-scope-toggle[aria-pressed=true] {color:var(--rb-accent);background:transparent}
+.recommendation-ui .companion-scope-toggle .scope-check {width:13px;height:13px;border:1px solid var(--rb-subtle);border-radius:3px;display:grid;place-items:center;line-height:1;font-size:11px}
+.recommendation-ui .companion-scope-toggle[aria-pressed=true] .scope-check {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
+.recommendation-ui .companion-roster-state {background:var(--rb-raised);color:var(--rb-muted);border-color:var(--rb-line)}
+.recommendation-ui .companion-persistent .pregame-controls {display:flex;align-items:center;flex-wrap:nowrap;margin-top:8px;color:var(--rb-muted);gap:6px}
+.role-icon {fill:currentColor;stroke:none}
+:is(.recommendation-ui,.recommendation-app) .room-ballot-row {animation:none}
+.recommendation-ui .pregame-controls,
+.recommendation-app .page[data-page=draft] .pregame-controls {display:flex;align-items:center;flex-wrap:nowrap;gap:8px}
+:is(.recommendation-ui,.recommendation-app) .pregame-controls :is(.pregame-primary,.pregame-secondary) {display:contents}
+:is(.recommendation-ui,.recommendation-app) .pregame-styles {margin-left:auto;gap:2px}
+:is(.recommendation-ui,.recommendation-app) .pregame-style-select {display:none}
+:is(.recommendation-ui,.recommendation-app) .pregame-more {margin-left:0}
+.recommendation-app .sidebar-label-short {display:none}
+.recommendation-ui .pregame-role {background:transparent;border:0;padding:0;color:var(--rb-muted);font-size:calc(12px * var(--text-scale));font-weight:500;gap:6px}
+.recommendation-ui .pregame-role .select {background:var(--rb-bg);border-color:var(--rb-line);color:var(--rb-ink);min-height:34px;width:98px;border-radius:5px;font-size:var(--ui-small);font-weight:600}
+.recommendation-ui .pregame-role[data-role-needed=true] .select {border-color:var(--rb-accent);color:var(--rb-accent)}
+.recommendation-ui .pregame-modes {background:var(--rb-bg);border-radius:5px;padding:2px;gap:1px}
+.recommendation-ui .pregame-controls .btn,
+.recommendation-ui .pregame-more>summary {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));font-weight:500;border-color:transparent;border-radius:4px;background:transparent;min-height:30px;padding:5px 7px}
+.recommendation-ui .pregame-controls .pregame-choice.active {background:var(--rb-tint);border-color:transparent;color:var(--rb-accent)}
+.recommendation-ui .pregame-controls .pregame-members {color:var(--rb-muted);padding-inline:4px}
+.recommendation-ui .pregame-controls .btn:hover,
+.recommendation-ui .pregame-more>summary:hover {background:var(--rb-tint);color:var(--rb-ink);border-color:transparent}
+.recommendation-ui .pregame-more {margin-left:auto;position:relative}
+.recommendation-ui .pregame-more-content,
+.recommendation-ui .companion-navigation-more>div {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink);box-shadow:0 8px 22px #0005}
+.recommendation-ui .pregame-more[open]>.pregame-more-content {position:absolute;right:0;top:calc(100% + 6px);width:min(320px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:clamp(110px,calc(100dvh - 400px),380px);margin:0;overflow:auto;z-index:20}
+.recommendation-ui .pregame-more-content {grid-template-columns:minmax(0,1fr)}
+.recommendation-ui .pregame-more-content>.pregame-members {grid-area:auto;margin:0;justify-self:stretch;justify-content:flex-start}
+.recommendation-ui .pregame-more-content .companion-eligibility-status {font-size:var(--ui-small);color:var(--rb-muted);margin:0;padding:8px 0 0;border-top:1px solid var(--rb-line)}
+.recommendation-ui .companion-eligibility-status>summary {min-height:30px;color:var(--rb-muted)}
+.recommendation-ui .companion-content {padding:10px 12px;background:var(--rb-bg);min-height:0}
+.recommendation-ui .companion-section-head {margin-bottom:4px}
+.recommendation-ui .companion-section-head h3 {font-size:var(--ui-text);font-weight:650;color:var(--rb-ink)}
+.recommendation-ui .companion-section-head .btn {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));background:transparent}
+.recommendation-ui .companion-candidates .companion-candidate {grid-template-columns:minmax(0,1fr) auto;column-gap:8px;row-gap:1px;padding:10px 0;border-color:var(--rb-line)}
+.recommendation-ui .companion-candidate .candidate-row {padding-right:0;gap:6px;align-items:center}
+.recommendation-ui .companion-candidate .candidate-rank {color:var(--rb-subtle);font-size:calc(12px * var(--text-scale));font-weight:400}
+.recommendation-ui .companion-candidate .candidate-members {gap:8px}
+.recommendation-ui .companion-candidate .candidate-member {gap:5px;padding:3px 2px;border-radius:5px;background:transparent;min-width:0;color:var(--rb-ink)}
+.recommendation-ui .companion-candidate .candidate-members .candidate-member>.portrait {width:32px;height:32px;border:1px solid var(--rb-line);border-radius:5px}
+.recommendation-ui .companion-candidate .candidate-member b {font-size:var(--ui-small);line-height:1.4;font-weight:600;color:var(--rb-ink)}
+.recommendation-ui .companion-candidate .candidate-member small {font-size:calc(11px * var(--text-scale));line-height:1.4;font-weight:400;color:var(--rb-muted)}
+.recommendation-ui .companion-candidate .candidate-member:hover {background:var(--rb-tint)}
+.recommendation-ui .candidate-member:hover>.portrait {border-color:var(--rb-accent)}
+.recommendation-ui .candidate-member[data-own=true]>.portrait {border-color:var(--rb-accent)}
+.recommendation-ui .candidate-member[data-own=true] small {color:var(--rb-accent)}
+.candidate-role-mark {display:none}
+.recommendation-ui .candidate-actions .candidate-propose {border:1px solid var(--rb-line);color:var(--rb-muted);background:transparent;font-weight:500;font-size:calc(12px * var(--text-scale))}
+.recommendation-ui .candidate-actions .candidate-propose:hover {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
+.recommendation-ui .candidate-actions [data-action=room-vote] {border:1px solid var(--rb-line);background:var(--rb-raised);color:var(--rb-ink)}
+.recommendation-ui .candidate-actions [data-action=room-vote].active {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
+.recommendation-ui .companion-candidate>.candidate-fit {margin:1px 0 0}
+.recommendation-ui .candidate-details[open]>summary {border-color:var(--rb-line)}
+.recommendation-ui .candidate-fit .lineup-fit>summary {font-size:calc(12px * var(--text-scale));color:var(--rb-muted);font-weight:400}
+.recommendation-ui .companion-content .candidate-details>summary {display:flex;align-items:center;justify-content:flex-start;gap:10px;width:calc(100% - 104px);max-width:calc(100% - 104px);min-height:30px;padding:4px 0;margin:1px 0 0 20px;color:var(--rb-muted);font-size:calc(12px * var(--text-scale));list-style:none}
+.candidate-details>summary .candidate-plan-label {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.candidate-details>summary .candidate-details-label {display:inline-flex;align-items:center;gap:1px;flex-shrink:0;color:var(--rb-subtle);font-size:calc(11px * var(--text-scale))}
+.candidate-details-label .icon {width:12px;height:12px}
+.candidate-details[open]>summary .candidate-details-label .icon {transform:rotate(90deg)}
+.candidate-details>summary::-webkit-details-marker {display:none}
+.recommendation-ui .candidate-details[open]>summary {background:transparent}
+.recommendation-ui .candidate-details>summary:hover {color:var(--rb-accent)}
+:is(.recommendation-ui,.recommendation-app) .candidate-detail-content {color:var(--rb-muted)}
+:is(.recommendation-ui,.recommendation-app) .candidate-detail-content :is(.result-actions-summary,.cooperation-plan,.cooperation-member-jobs,.combo-source-link,.team-windows,.pair-statistics,ul) {color:var(--rb-muted)}
+:is(.recommendation-ui,.recommendation-app) .candidate-detail-content .callout:not(.warning) {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-muted)}
+:is(.recommendation-ui,.recommendation-app) .candidate-detail-content details>summary {color:var(--rb-muted)}
+:is(.recommendation-ui,.recommendation-app) .candidate-detail-content {border-color:var(--rb-line)}
+.recommendation-ui .companion-candidates>[data-action=more-candidates],
+.recommendation-ui .companion-recommend-options>summary {color:var(--rb-muted);font-size:calc(12px * var(--text-scale))}
+.recommendation-ui .companion-recommend-options {border:0;background:none}
+.recommendation-ui .companion-footer {border-color:var(--rb-line);background:var(--rb-panel);color:var(--rb-muted);padding:6px 12px}
+.recommendation-ui .companion-footer-line,
+.recommendation-ui .companion-client-state,
+.recommendation-ui .companion-footer-menu>summary {color:var(--rb-muted);font-size:calc(12px * var(--text-scale))}
+.recommendation-ui .companion-footer-menu>div {background:var(--rb-panel);border-color:var(--rb-line)}
+.recommendation-ui .room-ballot-row {border-color:var(--rb-line);background:var(--rb-panel)}
+.recommendation-ui .companion-incoming-wrap {border-color:var(--rb-line)}
+.recommendation-ui .room-ballot-board>header h3 {color:var(--rb-ink);font-size:var(--ui-text);font-weight:650}
+.recommendation-ui .room-ballot-board>header>span {color:var(--rb-muted);font-size:calc(12px * var(--text-scale))}
+.recommendation-ui .room-ballot-row {padding:8px;row-gap:1px}
+.recommendation-ui .ballot-row-top {gap:6px}
+.recommendation-ui .ballot-row-top>b {font-size:calc(12px * var(--text-scale));font-weight:400;color:var(--rb-subtle);width:12px}
+.recommendation-ui .ballot-heroes {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.recommendation-ui .ballot-heroes[data-member-count="1"] {grid-template-columns:minmax(0,1fr)}
+.recommendation-ui .ballot-heroes[data-member-count="2"] {grid-template-columns:repeat(2,minmax(0,1fr))}
+.recommendation-ui .ballot-heroes[data-member-count="4"] {grid-template-columns:repeat(4,minmax(0,1fr))}
+.recommendation-ui .ballot-heroes[data-member-count="5"] {grid-template-columns:repeat(5,minmax(0,1fr))}
+.recommendation-ui .ballot-heroes>.ballot-member {flex-direction:row;gap:5px;text-align:left;padding:3px 2px;border-radius:5px;color:var(--rb-ink);position:relative}
+.recommendation-ui .ballot-heroes>.ballot-member>span {align-items:flex-start}
+.recommendation-ui .ballot-member .portrait {width:32px;height:32px;border:1px solid var(--rb-line);border-radius:5px}
+.recommendation-ui .ballot-member b {font-size:var(--ui-small);font-weight:600;color:var(--rb-ink);line-height:1.4}
+.recommendation-ui .ballot-member small {font-size:calc(11px * var(--text-scale));color:var(--rb-muted);line-height:1.4}
+.recommendation-ui .ballot-member[data-own=true] small {color:var(--rb-accent)}
+.recommendation-ui .ballot-member[data-own=true] .portrait {border-color:var(--rb-accent)}
+.recommendation-ui .ballot-member:hover {background:var(--rb-tint)}
+.recommendation-ui .ballot-heroes:is([data-member-count="4"],[data-member-count="5"])>.ballot-member {flex-direction:column;text-align:center}
+.recommendation-ui .ballot-heroes:is([data-member-count="4"],[data-member-count="5"])>.ballot-member>span {align-items:center}
+.recommendation-ui :is(.ballot-heroes,.candidate-members):is([data-member-count="4"],[data-member-count="5"]) {align-items:start}
+.recommendation-ui :is(.ballot-heroes,.candidate-members):is([data-member-count="4"],[data-member-count="5"])>:is(.ballot-member,.candidate-member) {justify-content:flex-start}
+.recommendation-ui .ballot-row-actions .btn {min-height:32px;padding:5px 7px;font-size:calc(12px * var(--text-scale));background:var(--rb-raised);color:var(--rb-ink);border-color:var(--rb-line)}
+.recommendation-ui .room-ballot-row [data-action=room-vote].active {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
+.recommendation-ui .ballot-row-detail>.btn {min-height:30px;padding:4px 0;color:var(--rb-muted);background:transparent;font-size:calc(12px * var(--text-scale));max-width:calc(100% - 94px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.recommendation-ui .ballot-row-detail>.btn:hover {color:var(--rb-accent)}
+.recommendation-ui .ballot-row-detail .lineup-fit>summary {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));font-weight:400}
+.recommendation-ui .lineup-fit-explanation {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-muted)}
+:is(.recommendation-ui,.recommendation-app) .lineup-fit-explanation p {color:inherit;font-size:var(--ui-small);line-height:1.6}
+:is(.recommendation-ui,.recommendation-app) .lineup-fit-explanation .lineup-fit-gap {color:var(--rb-warning)}
+:is(.recommendation-ui,.recommendation-app) .lineup-fit>summary:hover {background:var(--rb-tint);color:var(--rb-ink)}
+:is(.recommendation-ui,.recommendation-app) .lineup-fit>summary:after {color:currentColor}
+:is(.recommendation-ui,.recommendation-app) .lineup-fit-breakdown {margin:9px 0;border-top:1px solid var(--rb-line);padding-top:6px;font-size:calc(12px * var(--text-scale));line-height:1.6}
+.lineup-fit-breakdown>div {display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.lineup-fit-breakdown dt {color:var(--rb-muted)}
+.lineup-fit-breakdown dd {margin:0;color:var(--rb-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lineup-fit-breakdown dd>span {color:var(--rb-subtle)}
+:is(.recommendation-ui,.recommendation-app) .lineup-fit-explanation .lineup-fit-note {font-size:calc(11px * var(--text-scale));color:var(--rb-subtle);line-height:1.6}
+.recommendation-ui>.client-connection-status {background:var(--rb-panel);border-color:var(--rb-line);border-radius:6px;color:var(--rb-ink)}
+.recommendation-ui .client-connection-heading strong {color:var(--rb-ink);font-size:var(--ui-small)}
+.recommendation-ui .client-connection-status .btn.primary {background:var(--rb-accent);color:#191b19;border-color:var(--rb-accent)}
+.recommendation-ui .client-connection-options>summary {color:var(--rb-muted)}
+.recommendation-ui .client-connection-options>div {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-muted)}
+
+/* The larger window keeps the same scan order as the client-side companion. */
+.recommendation-app {--accent:var(--rb-accent);--border:var(--rb-line);background:var(--rb-bg);color:var(--rb-ink)}
+.recommendation-app .sidebar {width:184px;padding:22px 12px;background:var(--rb-bg);border-color:var(--rb-line)}
+.recommendation-app .workspace {margin-left:184px;width:calc(100% - 184px);background:var(--rb-bg)}
+.recommendation-app .brand {padding:0 7px 28px;gap:10px}
+.recommendation-app .brand-mark {width:32px;height:32px;flex-shrink:0;background:none;transform:none;border-radius:0}
+.recommendation-app .brand-name {font-size:17px;letter-spacing:.4px}
+.recommendation-app .brand-en {font-size:10px;letter-spacing:1.6px;color:var(--rb-subtle);margin-top:2px}
+.recommendation-app .nav-item {min-height:40px;padding:9px 10px;gap:10px;margin:3px 0;border-radius:5px;font-size:var(--ui-small);color:var(--rb-muted);background:transparent}
+.recommendation-app .nav-item:hover {color:var(--rb-ink);background:var(--rb-panel)}
+.recommendation-app .nav-item.active {background:var(--rb-tint);color:var(--rb-accent);box-shadow:inset 2px 0 var(--rb-accent)}
+.recommendation-app .nav-item.active svg {color:var(--rb-accent)}
+.recommendation-app .nav-item .badge {margin-left:auto;background:var(--rb-panel);color:var(--rb-muted);font-size:11px}
+.navigation-tools {border-top:1px solid var(--rb-line);padding-top:12px;margin-top:16px}
+.navigation-tools>summary {display:flex;align-items:center;gap:10px;list-style:none;color:var(--rb-muted);padding:9px 10px;min-height:38px;cursor:pointer;font-size:var(--ui-small);border-radius:5px}
+.navigation-tools>summary::-webkit-details-marker {display:none}
+.navigation-tools>summary:hover {background:var(--rb-panel);color:var(--rb-ink)}
+.navigation-tools>summary>.icon:last-child {margin-left:auto;width:12px;height:12px}
+.navigation-tools[open]>summary>.icon:last-child {transform:rotate(90deg)}
+.navigation-tools>div {padding-top:5px}
+.recommendation-app .sidebar-footer {color:var(--rb-subtle);font-size:calc(11px * var(--text-scale));padding:10px 7px 0;flex-wrap:wrap;line-height:1.5}
+.recommendation-app .status-dot.connected {background:var(--rb-success);box-shadow:none}
+.recommendation-app .topbar {height:48px;flex-shrink:0;padding:0 24px;background:var(--rb-bg);border-color:var(--rb-line);justify-content:flex-end}
+.recommendation-app .topbar .btn {min-height:32px;font-size:calc(12px * var(--text-scale));color:var(--rb-muted);background:transparent;border-color:transparent}
+.recommendation-app .topbar [data-action=companion-attach] {border-color:var(--rb-line);background:var(--rb-panel);color:var(--rb-ink)}
+.recommendation-app :is(button,summary,input,select):focus-visible {outline:2px solid var(--rb-accent);outline-offset:2px}
+.recommendation-app .btn.primary {color:#191b19;background:var(--rb-accent);border-color:var(--rb-accent);box-shadow:none}
+.recommendation-app .btn.primary:hover {background:var(--rb-accent-hover);border-color:var(--rb-accent-hover)}
+.recommendation-app .workspace>.client-connection-status {margin:0;border:0;border-bottom:1px solid var(--rb-line);border-radius:0;background:var(--rb-panel);padding:10px 24px;min-height:62px}
+.recommendation-app .client-connection-status strong {font-size:var(--ui-text);color:var(--rb-ink)}
+.recommendation-app .client-connection-status span {font-size:var(--ui-small);color:var(--rb-muted)}
+.recommendation-app .client-connection-actions .btn:not(.primary) {background:var(--rb-raised);border-color:var(--rb-line);color:var(--rb-ink)}
+.recommendation-app .page[data-page=draft] {padding:16px 24px;overflow:hidden}
+.recommendation-app .draft-compare-workspace {height:100%;gap:10px;min-height:0}
+.recommendation-app .draft-compare-header h1 {font-size:calc(22px * var(--text-scale));letter-spacing:-.3px;font-weight:650;color:var(--rb-ink)}
+.recommendation-app .page[data-page=draft] .task-roster.slots {gap:8px;flex-shrink:0}
+.recommendation-app .page[data-page=draft] .task-roster .slot {padding:8px 9px;gap:4px;border:1px solid var(--rb-line);border-radius:6px;background:var(--rb-panel);min-height:94px;position:relative}
+.recommendation-app .page[data-page=draft] .task-roster .slot.party {background:#2b2b28;border-color:#7b7970}
+.recommendation-app .slot-heading {display:flex;align-items:center;justify-content:space-between;gap:3px;min-width:0}
+.recommendation-app .task-roster .slot-role {display:flex;align-items:center;justify-content:flex-start;gap:5px;color:var(--rb-muted);font-size:calc(12px * var(--text-scale));min-width:0}
+.recommendation-app .slot-role .role-icon {width:16px;height:16px;min-width:16px;padding:0;border-radius:0;background:none;color:var(--rb-muted)}
+.recommendation-app .slot-self {font-size:11px;color:var(--rb-accent);font-style:normal;font-weight:500}
+.recommendation-app .page[data-page=draft] .task-roster .slot-toggle {min-height:24px;padding:2px 5px;background:transparent;color:var(--rb-subtle);border:0;border-radius:4px;font-size:calc(11px * var(--text-scale));white-space:nowrap}
+.recommendation-app .page[data-page=draft] .task-roster .slot-toggle.on {background:var(--rb-bg);color:var(--rb-accent)}
+.recommendation-app .page[data-page=draft] .task-roster .champ-pick {display:flex;width:100%;min-height:42px;padding:4px 0;gap:7px;justify-content:flex-start;border-radius:5px;color:var(--rb-ink)}
+.recommendation-app .task-roster .champ-pick:hover {background:var(--rb-tint)}
+.recommendation-app .task-roster .champ-pick .portrait,
+.recommendation-app .task-roster .champ-pick .empty-portrait {width:32px;height:32px;border-radius:5px;background:var(--rb-bg);border-color:var(--rb-line);flex-shrink:0}
+.recommendation-app .task-roster .champ-pick .empty-portrait {display:grid;place-items:center;font-size:22px;line-height:1;color:var(--rb-subtle)}
+.recommendation-app .task-roster .champ-pick:has(.empty-portrait) {justify-content:center}
+.recommendation-app .task-roster .champ-pick:has(.empty-portrait) .champ-name {display:none}
+.recommendation-app .task-roster .champ-name {font-size:var(--ui-small);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recommendation-app .task-roster .slot-bottom {display:flex;align-items:center;gap:4px;margin:0;min-height:26px}
+.recommendation-app .task-roster .slot-bottom .slot-meta {margin-right:auto;color:var(--rb-subtle);font-size:11px;white-space:nowrap}
+.recommendation-app .task-roster .slot-bottom .slot-meta:empty {display:none}
+.recommendation-app .task-roster .slot-bottom :is(.slot-move,.slot-clear,.slot-lock) {position:static;background:transparent;color:var(--rb-muted);border:0;min-height:26px;padding:3px 5px;border-radius:4px;font-size:11px;line-height:1.4;margin:0}
+.recommendation-app .task-roster .slot-bottom .slot-clear {margin-left:auto}
+.recommendation-app .task-roster .slot-bottom .slot-move {display:inline-flex;align-items:center}
+.recommendation-app .task-roster .slot-bottom .slot-lock {width:26px;display:grid;place-items:center}
+.recommendation-app .task-roster .slot-lock.on {color:var(--rb-accent)}
+.recommendation-app .task-roster .slot-lock .icon {width:14px;height:14px}
+.recommendation-app .task-roster .slot[data-local=true] .portrait {border-color:var(--rb-accent)}
+.recommendation-app .page[data-page=draft] .pregame-controls {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;color:var(--rb-muted);margin:0}
+.recommendation-app .pregame-secondary {margin-left:auto}
+.recommendation-app .pregame-role {background:transparent;border:0;padding:0;color:var(--rb-muted);font-weight:500;font-size:var(--ui-small)}
+.recommendation-app .pregame-role .select {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink);font-size:var(--ui-small);font-weight:600;min-height:34px;border-radius:5px}
+.recommendation-app .pregame-role[data-role-needed=true] .select {border-color:var(--rb-accent);color:var(--rb-accent)}
+.recommendation-app .pregame-modes {background:var(--rb-panel);border-radius:5px}
+.recommendation-app .pregame-controls .btn,
+.recommendation-app .pregame-more>summary {border-color:transparent;background:transparent;color:var(--rb-muted);font-size:calc(12px * var(--text-scale));min-height:32px;border-radius:4px}
+.recommendation-app .pregame-controls .pregame-choice.active {background:var(--rb-tint);color:var(--rb-accent);border-color:transparent}
+.recommendation-app .pregame-controls .btn:hover {background:var(--rb-panel);color:var(--rb-ink)}
+.recommendation-app .pregame-more-content,
+.recommendation-app .window-tools-content {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink)}
+.recommendation-app .draft-list-heading h2 {font-size:var(--ui-text);font-weight:650;color:var(--rb-ink)}
+.recommendation-app .draft-list-heading>.draft-result-actions {margin:0;justify-content:flex-start;width:100%}
+.recommendation-app .recommendation-refresh {background:transparent;color:var(--rb-muted);border-color:var(--rb-line);font-size:calc(12px * var(--text-scale))}
+.recommendation-app .task-candidate-list {min-height:0;max-height:none;overflow:auto;border-color:var(--rb-line)}
+.recommendation-app .task-candidate-list>.draft-list-heading {padding:8px 0;margin:0;min-height:42px}
+.recommendation-app .task-candidate-list:has(.room-ballot-board)>.draft-list-heading {margin-top:12px}
+.recommendation-app .task-candidate-list .room-ballot-board {margin:0 0 10px}
+.recommendation-app .task-candidate-list .room-ballot-board>header h3 {color:var(--rb-ink);font-size:var(--ui-text)}
+.recommendation-app .task-candidate-list .room-ballot-board>header>span {color:var(--rb-muted);font-size:calc(12px * var(--text-scale))}
+.recommendation-app .task-candidate-list .room-ballot-row {border-color:var(--rb-line);background:var(--rb-panel)}
+.recommendation-app .ballot-member {color:var(--rb-ink);border-radius:5px}
+.recommendation-app .ballot-member small {color:var(--rb-muted)}
+.recommendation-app .ballot-member[data-own=true] small {color:var(--rb-accent)}
+.recommendation-app .ballot-member[data-own=true] .portrait {border:1px solid var(--rb-accent)}
+.recommendation-app .ballot-row-actions .btn {background:var(--rb-raised);color:var(--rb-ink);border-color:var(--rb-line)}
+.recommendation-app .ballot-row-actions [data-action=room-vote].active {background:var(--rb-tint);color:var(--rb-accent);border-color:var(--rb-accent)}
+.recommendation-app .ballot-row-detail>.btn {max-width:calc(100% - 94px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--rb-muted)}
+.recommendation-app .ballot-row-detail .lineup-fit>summary {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));font-weight:400}
+.recommendation-app .companion-incoming-wrap {border-color:var(--rb-line)}
+.recommendation-app .task-candidate-list .compact-candidate {min-height:84px;padding:8px 4px;background:transparent;border-color:var(--rb-line);row-gap:2px}
+.recommendation-app .task-candidate-list .candidate-members {min-width:0;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.recommendation-app .candidate-members[data-member-count="1"] {grid-template-columns:minmax(0,1fr)}
+.recommendation-app .candidate-members[data-member-count="2"] {grid-template-columns:repeat(2,minmax(0,1fr))}
+.recommendation-app .candidate-members[data-member-count="4"] {grid-template-columns:repeat(4,minmax(0,1fr))}
+.recommendation-app .candidate-members[data-member-count="5"] {grid-template-columns:repeat(5,minmax(0,1fr))}
+.recommendation-app :is(.candidate-members,.ballot-heroes)[data-member-count="1"] {max-width:230px}
+.recommendation-app :is(.candidate-members,.ballot-heroes)[data-member-count="2"] {max-width:460px}
+.recommendation-app :is(.candidate-members,.ballot-heroes)[data-member-count="3"] {max-width:690px}
+.recommendation-app :is(.candidate-members,.ballot-heroes)[data-member-count="4"] {max-width:920px}
+.recommendation-app .candidate-rank {font-size:calc(12px * var(--text-scale));color:var(--rb-subtle)}
+.recommendation-app .candidate-member {padding:4px;border-radius:5px;gap:7px;background:transparent;color:var(--rb-ink)}
+.recommendation-app .candidate-member .portrait {width:34px;height:34px;border:1px solid var(--rb-line);border-radius:5px}
+.recommendation-app .candidate-member b {font-size:var(--ui-small);font-weight:600;color:var(--rb-ink)}
+.recommendation-app .candidate-member small {font-size:calc(12px * var(--text-scale));color:var(--rb-muted)}
+.recommendation-app .candidate-member[data-own=true] .portrait {border-color:var(--rb-accent)}
+.recommendation-app .candidate-member[data-own=true] small {color:var(--rb-accent)}
+.recommendation-app .candidate-member:hover {background:var(--rb-tint)}
+.recommendation-app .candidate-member:hover .portrait {border-color:var(--rb-accent)}
+.recommendation-app .candidate-actions .btn {border-color:var(--rb-line);background:transparent;color:var(--rb-muted);font-weight:500;font-size:calc(12px * var(--text-scale))}
+.recommendation-app .candidate-actions [data-action=room-vote].active {background:var(--rb-tint);color:var(--rb-accent);border-color:var(--rb-accent)}
+.recommendation-app .candidate-fit .lineup-fit>summary {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));font-weight:400}
+.recommendation-app .task-candidate-list .candidate-details>summary {display:flex;justify-content:flex-start;align-items:center;gap:10px;max-width:calc(100% - 104px);min-height:30px;padding:4px 0;margin:0 0 0 20px;color:var(--rb-muted);background:transparent;list-style:none;font-size:calc(12px * var(--text-scale))}
+.recommendation-app .candidate-details>summary:hover {color:var(--rb-accent)}
+.recommendation-app .task-candidate-list>[data-action=more-candidates] {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));background:transparent}
+.recommendation-app .draft-compare-status {color:var(--rb-muted);border-color:var(--rb-line);font-size:calc(12px * var(--text-scale))}
+.recommendation-app .lineup-fit-explanation {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-muted)}
+.recommendation-app .candidate-detail-content :is(h3,h4,strong,b),
+.recommendation-ui .candidate-detail-content :is(h3,h4,strong,b) {color:var(--rb-ink)}
+.recommendation-app .candidate-detail-content :is(p,small,li),
+.recommendation-ui .candidate-detail-content :is(p,small,li) {color:var(--rb-muted)}
+
+/* After a champion click, keep the selected setup and its receipt in one scan. */
+.recommendation-ui[data-tab=plan] .companion-persistent:empty {display:none}
+.recommendation-ui .companion-complete-summary {background:var(--rb-panel);border-color:var(--rb-line);padding:10px;border-radius:6px}
+.recommendation-ui .companion-complete-summary .companion-summary-title {display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:3px 12px;line-height:1.4}
+.recommendation-ui .companion-summary-title>b {font-size:calc(16px * var(--text-scale));font-weight:650;color:var(--rb-ink)}
+.recommendation-ui .companion-complete-summary .companion-summary-title>small {margin:0;font-size:calc(11px * var(--text-scale));color:var(--rb-muted);line-height:1.5}
+.recommendation-ui .companion-complete-summary .companion-summary-title>.text-gold {color:var(--rb-warning)}
+.recommendation-ui .companion-summary-block {margin-top:8px}
+.recommendation-ui .companion-summary-section {font-size:var(--ui-small);font-weight:650;color:var(--rb-ink);min-height:30px;padding:2px 0}
+.recommendation-ui .companion-summary-section .adjust-button {padding:3px 9px;border:1px solid var(--rb-line);border-radius:4px;background:var(--rb-raised);color:var(--rb-accent);font-size:calc(12px * var(--text-scale));font-weight:600}
+.recommendation-ui .companion-summary-section:hover .adjust-button {background:var(--rb-tint);border-color:var(--rb-accent)}
+.recommendation-ui .companion-summary-equipment {gap:4px;margin-top:5px}
+.recommendation-ui .companion-summary-equipment>li {gap:3px}
+.recommendation-ui .companion-summary-equipment>li>img {width:30px;height:30px}
+.recommendation-ui .companion-summary-equipment>li>span {background:#151515e8;color:var(--rb-muted);font-size:calc(11px * var(--text-scale));left:0}
+.recommendation-ui .companion-summary-equipment>li>b {color:var(--rb-muted);font-size:calc(11px * var(--text-scale));line-height:1.4}
+.recommendation-ui .companion-summary-full-runes {gap:4px 7px;margin-top:5px}
+.recommendation-ui .companion-summary-full-runes>.companion-rune {min-height:28px;gap:5px;font-size:calc(12px * var(--text-scale));color:var(--rb-ink)}
+.recommendation-ui .companion-summary-full-runes>.companion-rune>img {width:22px;height:22px}
+.recommendation-ui .companion-complete-summary .companion-shards {color:var(--rb-muted);font-size:calc(11px * var(--text-scale));margin-top:6px}
+.recommendation-ui .companion-summary-bottom {border-color:var(--rb-line);margin-top:8px;padding-top:6px}
+.recommendation-ui .companion-summary-spells {font-size:var(--ui-small);color:var(--rb-ink);min-height:30px;gap:14px;flex-wrap:wrap}
+.recommendation-ui .companion-summary-spells b {color:var(--rb-muted)}
+.recommendation-ui .companion-summary-spells img {width:24px;height:24px}
+.recommendation-ui .companion-complete-summary .companion-summary-skills {font-size:var(--ui-small);color:var(--rb-ink);min-height:32px;padding:3px 0;margin-top:4px}
+.recommendation-ui .companion-complete-summary .companion-summary-skills>span {display:inline;font-size:calc(11px * var(--text-scale));color:var(--rb-muted);margin-left:8px}
+.recommendation-ui .companion-summary-note {font-size:calc(11px * var(--text-scale));color:var(--rb-warning);line-height:1.5}
+.recommendation-ui .companion-edit-section {border-color:var(--rb-line);color:var(--rb-ink)}
+.recommendation-ui .companion-edit-section>summary {font-size:var(--ui-small);font-weight:600;color:var(--rb-muted);min-height:36px;padding:8px 0}
+.recommendation-ui .companion-edit-section>summary:hover,
+.recommendation-ui .companion-edit-section[open]>summary {color:var(--rb-accent)}
+.recommendation-ui .companion-option {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink)}
+.recommendation-ui .companion-option:hover {background:var(--rb-raised)}
+.recommendation-ui .companion-option.active {background:var(--rb-tint);border-color:var(--rb-accent)}
+.recommendation-ui .companion-option>b em {color:var(--rb-accent)}
+.recommendation-ui .companion-option small {color:var(--rb-muted)}
+.recommendation-ui .companion-core-options h4 {font-size:var(--ui-small);font-weight:600;color:var(--rb-ink)}
+.recommendation-ui[data-tab=plan] .preparation-task {background:transparent;border-color:var(--rb-line);padding:9px 0;margin:8px 0}
+.recommendation-ui[data-tab=plan] .preparation-task-heading>.portrait,
+.recommendation-ui[data-tab=plan] .preparation-task-heading>div>b {display:none}
+.recommendation-ui[data-tab=plan] .preparation-task-heading {gap:8px;align-items:center;flex-wrap:wrap}
+.recommendation-ui[data-tab=plan] .preparation-task-heading>div {flex:1;min-width:100px}
+.recommendation-ui[data-tab=plan] .preparation-task-heading strong {color:var(--rb-ink);font-size:var(--ui-small);font-weight:500;line-height:1.6}
+.recommendation-ui[data-tab=plan] .preparation-task-heading>.btn {background:var(--rb-raised);border-color:var(--rb-line);color:var(--rb-ink);font-size:calc(12px * var(--text-scale));min-height:32px}
+.recommendation-ui[data-tab=plan] .preparation-task-heading>.btn.primary {background:var(--rb-accent);border-color:var(--rb-accent);color:#191b19}
+.recommendation-ui .preparation-step-summary {font-size:calc(11px * var(--text-scale));color:var(--rb-muted);gap:4px 10px;margin:6px 0}
+.recommendation-ui .preparation-step-summary .done {color:var(--rb-success)}
+.recommendation-ui .preparation-step-summary .failed {color:var(--rb-warning)}
+.recommendation-ui .preparation-extra {color:var(--rb-muted);font-size:calc(11px * var(--text-scale))}
+.recommendation-ui .preparation-extra>summary {min-height:28px;padding-block:5px}
+
+/* Room management remains a separate, quiet step in the pregame flow. */
+:is(.recommendation-ui,.recommendation-app) .room-panel {background:var(--rb-panel);border-color:var(--rb-line);border-radius:6px;box-shadow:none;margin:8px 0}
+:is(.recommendation-ui,.recommendation-app) .room-panel>.panel-head {padding:12px;gap:8px;background:transparent;border-color:var(--rb-line)}
+:is(.recommendation-ui,.recommendation-app) .room-panel>.panel-head h3 {font-size:var(--ui-text);font-weight:650;line-height:1.5;color:var(--rb-ink);margin:0}
+:is(.recommendation-ui,.recommendation-app) .room-panel>.panel-head p {font-size:calc(12px * var(--text-scale));color:var(--rb-muted);margin:3px 0 0}
+:is(.recommendation-ui,.recommendation-app) .room-panel>.panel-body {padding:12px}
+:is(.recommendation-ui,.recommendation-app) .room-panel .btn {background:var(--rb-raised);border-color:var(--rb-line);color:var(--rb-ink);font-size:var(--ui-small);min-height:32px}
+:is(.recommendation-ui,.recommendation-app) .room-panel .btn.primary {background:var(--rb-accent);border-color:var(--rb-accent);color:#191b19}
+:is(.recommendation-ui,.recommendation-app) .room-panel .btn.quiet {background:transparent;color:var(--rb-muted);border-color:transparent}
+:is(.recommendation-ui,.recommendation-app) .room-panel :is(input,.room-transport,.room-member,.room-champ) {background:var(--rb-bg);border-color:var(--rb-line);color:var(--rb-ink);border-radius:5px;font-size:var(--ui-small)}
+:is(.recommendation-ui,.recommendation-app) .room-panel input {min-height:34px;padding:6px 8px}
+:is(.recommendation-ui,.recommendation-app) .room-panel input[readonly] {border-color:transparent;background:transparent;padding-inline:0}
+:is(.recommendation-ui,.recommendation-app) .room-panel :is(label,.bottom-note,.ui-disclosure,.room-personal) {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));line-height:1.6}
+:is(.recommendation-ui,.recommendation-app) .room-panel .ui-disclosure>summary {min-height:32px;padding-block:6px;cursor:pointer}
+:is(.recommendation-ui,.recommendation-app) .room-panel .room-transport.on {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
+:is(.recommendation-ui,.recommendation-app) .room-panel .room-member {padding:10px;margin:0}
+:is(.recommendation-ui,.recommendation-app) .room-member header {gap:6px;flex-wrap:wrap}
+:is(.recommendation-ui,.recommendation-app) .room-member header>b {font-size:var(--ui-small);color:var(--rb-ink);overflow-wrap:anywhere}
+:is(.recommendation-ui,.recommendation-app) .room-member header>small {font-size:calc(11px * var(--text-scale));color:var(--rb-subtle)}
+:is(.recommendation-ui,.recommendation-app) .room-member .room-personal {margin:5px 0 0}
+:is(.recommendation-ui,.recommendation-app) .room-panel .badge {background:var(--rb-raised);color:var(--rb-muted);font-size:calc(11px * var(--text-scale));padding:3px 6px;border:0}
+:is(.recommendation-ui,.recommendation-app) .room-panel .room-share-row {margin:0 0 8px;gap:5px 10px}
+:is(.recommendation-ui,.recommendation-app) .room-panel .room-members {gap:8px;margin-top:8px}
+.recommendation-app .room-workspace {gap:12px}
+.recommendation-app .room-workspace-heading h1 {font-size:calc(22px * var(--text-scale));font-weight:650}
+@media(max-width:420px) {
+ .recommendation-ui .companion-candidates .companion-candidate {padding:7px 0}
+ .recommendation-ui .companion-candidate .candidate-members {gap:4px}
+ .recommendation-ui .companion-candidate .candidate-members .candidate-member>.portrait {width:28px;height:28px}
+ .recommendation-ui .companion-candidate .candidate-member b {font-size:calc(12px * var(--text-scale))}
+ .recommendation-ui .ballot-heroes {gap:4px}
+ .recommendation-ui .ballot-member .portrait {width:28px;height:28px}
+ .recommendation-ui .ballot-member b {font-size:calc(12px * var(--text-scale))}
+}
+
+/* Scope and champion are separate targets. The official lane mark lives on
+   the portrait, so no second lane label competes with the champion. */
+.roster-portrait {display:block;position:relative;flex:none;width:max-content;line-height:0}
+.roster-role-mark {position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;padding:2px;background:var(--rb-panel);color:var(--rb-ink);border-radius:3px;pointer-events:none}
+.recommendation-ui .companion-roster-top {justify-content:flex-end;padding:2px;min-height:28px}
+.recommendation-ui .companion-team-compact .companion-roster-hero {min-height:62px;padding:2px 3px 5px;gap:4px}
+.recommendation-ui .companion-team-compact .roster-portrait :is(.portrait,.empty-portrait) {width:44px;height:44px;border-radius:5px;border:1px solid var(--rb-line);background:var(--rb-bg);color:var(--rb-subtle);font-size:27px}
+.recommendation-ui .companion-team-compact .roster-portrait .empty-portrait {display:grid;place-items:center;line-height:1}
+.recommendation-ui .companion-team-compact .companion-roster-hero:has(.empty-portrait)>span:not(.roster-portrait) {display:none}
+.recommendation-ui .companion-team-compact .companion-roster-hero>.roster-portrait {display:block;width:44px;height:44px}
+.recommendation-ui .companion-team-compact .companion-roster-row.in-scope .roster-portrait :is(.portrait,.empty-portrait) {border-color:var(--rb-accent)}
+.recommendation-app .slot-heading {justify-content:space-between;min-height:24px}
+.recommendation-app .task-roster .slot-toggle {display:grid;place-items:center;width:24px;padding:0!important;border:1px solid var(--rb-line)!important;margin-left:auto}
+.recommendation-app .task-roster .slot-toggle.on {background:var(--rb-accent)!important;color:var(--rb-bg)!important}
+.recommendation-app .task-roster .champ-pick .roster-portrait :is(.portrait,.empty-portrait) {width:44px;height:44px}
+.recommendation-app .task-roster .slot .roster-role-mark {background:var(--rb-panel);color:var(--rb-ink)}
+:is(.recommendation-ui,.recommendation-app) .pregame-role .select {width:76px;min-width:0;padding-inline:7px}
+:is(.recommendation-ui,.recommendation-app) .pregame-controls .pregame-hero {display:grid;place-items:center;padding:0;width:34px;height:34px;min-width:34px;border:1px solid var(--rb-line);background:var(--rb-panel);color:var(--rb-muted);border-radius:5px}
+:is(.recommendation-ui,.recommendation-app) .pregame-hero>.portrait {width:30px;height:30px;border:0;border-radius:4px}
+:is(.recommendation-ui,.recommendation-app) .pregame-hero:hover {border-color:var(--rb-accent);color:var(--rb-ink)}
+:is(.recommendation-ui,.recommendation-app) .pregame-hero-empty {font-size:23px;line-height:1}
+.recommendation-ui .pregame-controls .pregame-styles {display:none}
+.recommendation-ui .pregame-controls .pregame-style-select {display:flex;margin-left:auto;min-width:0}
+.recommendation-ui .pregame-style-select .select {width:76px;min-height:34px;padding:4px 7px;border-radius:5px;font-size:var(--ui-small);background:var(--rb-tint);border:1px solid var(--rb-line);color:var(--rb-accent)}
+:is(.recommendation-ui,.recommendation-app) .pregame-controls[data-role-conflict=true] {flex-wrap:wrap}
+:is(.recommendation-ui,.recommendation-app) .pregame-conflict {flex-basis:100%;margin:0;color:var(--rb-warning);font-size:var(--ui-small);line-height:1.5}
+@media(max-width:360px) {
+ .recommendation-ui .companion-team-compact .roster-portrait :is(.portrait,.empty-portrait) {width:36px;height:36px}
+ .recommendation-ui .companion-team-compact .companion-roster-hero>.roster-portrait {width:36px;height:36px}
+}
+@media(max-width:321px) {
+ .recommendation-ui .pregame-role>span {display:none}
+ .recommendation-ui .pregame-controls {gap:4px}
+ .recommendation-ui .pregame-more>summary {padding-inline:3px}
+}
+@media(max-width:360px) {
+ .recommendation-ui .sidebar-label-long {display:none}
+ .recommendation-ui .sidebar-label-short {display:inline}
+ .recommendation-ui .pregame-role .select {width:85px}
+ .recommendation-ui .ballot-heroes>.ballot-member {flex-direction:column;text-align:center}
+ .recommendation-ui .ballot-heroes>.ballot-member>span {align-items:center}
+}
+@media(max-height:700px) {
+ .recommendation-ui .companion-persistent {padding-block:8px}
+ .recommendation-ui .companion-team-compact .companion-roster-hero {min-height:50px}
+ .recommendation-ui .companion-candidates .companion-candidate:has(.candidate-members[data-member-count="5"]) {padding-block:3px}
+}
+@media(prefers-reduced-motion:no-preference) {
+ :is(.recommendation-ui,.recommendation-app) .room-ballot-row[data-arrival=true] {animation:proposal-arrive .16s ease-out}
+ .recommendation-ui .candidate-member,
+ .recommendation-ui .companion-roster-hero,
+ .recommendation-ui .pregame-controls .btn {transition:background-color .12s ease,color .12s ease,border-color .12s ease}
+ .recommendation-ui .candidate-details-label .icon {transition:transform .12s ease}
+}
+
+/* Portraits and lane badges are enough to scan a lineup. Names stay in
+   button labels and tooltips, while both lists keep the same geometry. */
+:is(.recommendation-ui,.recommendation-app) {--lineup-avatar:36px}
+.recommendation-app .task-candidate-list {max-width:480px;width:100%;align-self:stretch}
+.recommendation-ui :is(.companion-section-head,.companion-candidates,.room-ballot-board) {width:100%;max-width:340px}
+.recommendation-ui .companion-candidates .companion-candidate,
+.recommendation-app .task-candidate-list .compact-candidate {padding:6px 8px;min-height:0;border:1px solid transparent;border-bottom-color:var(--rb-line);border-radius:6px}
+:is(.recommendation-ui,.recommendation-app) .room-ballot-row {padding:6px 8px}
+.recommendation-ui .companion-candidate .candidate-row,
+.recommendation-ui .companion-candidate .candidate-row:has([data-action=room-vote]) {flex-wrap:nowrap;min-height:40px}
+:is(.recommendation-ui,.recommendation-app) :is(.candidate-actions,.ballot-row-actions),
+.recommendation-ui .candidate-actions:has([data-action=room-vote]) {width:max(68px,calc(52px * var(--text-scale)));flex-basis:auto;flex-shrink:0;margin-top:0;justify-self:end}
+:is(.recommendation-ui,.recommendation-app) :is(.candidate-actions,.ballot-row-actions)>.btn {width:100%;min-height:32px;white-space:nowrap;font-size:clamp(12px,calc(12px * var(--text-scale)),16px)}
+.recommendation-ui .companion-candidate .candidate-members,
+.recommendation-app .task-candidate-list .candidate-members,
+:is(.recommendation-ui,.recommendation-app) .ballot-heroes {display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:10px;min-width:0;max-width:none}
+.recommendation-ui .companion-candidate .candidate-members[data-member-count="5"],
+.recommendation-ui .ballot-heroes[data-member-count="5"] {--lineup-avatar:32px;gap:7px}
+.recommendation-ui .companion-candidate .candidate-members>.candidate-member,
+.recommendation-app .task-candidate-list .candidate-members>.candidate-member,
+:is(.recommendation-ui,.recommendation-app) .ballot-heroes>.ballot-member {display:block;position:relative;flex:0 0 auto;width:calc(var(--lineup-avatar) + 4px);height:calc(var(--lineup-avatar) + 4px);min-height:32px;padding:2px;line-height:0}
+.recommendation-ui .companion-candidate .candidate-members>.candidate-member>.portrait,
+.recommendation-app .task-candidate-list .candidate-members>.candidate-member>.portrait,
+:is(.recommendation-ui,.recommendation-app) .ballot-heroes>.ballot-member>.portrait {width:var(--lineup-avatar);height:var(--lineup-avatar)}
+:is(.recommendation-ui,.recommendation-app) :is(.candidate-role-mark,.ballot-role-mark) {display:block;position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;padding:1px;background:var(--rb-panel);border-radius:3px;color:var(--rb-muted);pointer-events:none}
+:is(.recommendation-ui,.recommendation-app) :is(.candidate-member,.ballot-member) .candidate-self {position:absolute;top:0;left:0;display:block;padding:0 2px;background:var(--rb-accent);color:var(--rb-bg);font-size:calc(9px * var(--text-scale));line-height:calc(12px * var(--text-scale));border-radius:2px;z-index:1;pointer-events:none}
+.recommendation-ui .companion-candidate .candidate-members .candidate-self,
+:is(.recommendation-ui,.recommendation-app) .ballot-heroes .candidate-self {width:max-content!important}
+:is(.recommendation-ui,.recommendation-app) .candidate-unusual {position:absolute;right:0;top:0;font-style:normal;color:var(--rb-warning);background:var(--rb-bg);font-size:11px;font-weight:700;line-height:12px;border-radius:2px;padding:0 2px}
+.recommendation-loading-row {display:grid;grid-template-columns:minmax(0,1fr) 60px;align-items:center;gap:9px 8px;padding:8px;border-bottom:1px solid var(--rb-line)}
+.recommendation-loading-status {position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.recommendation-loading-members {display:flex;gap:10px;min-width:0}
+.recommendation-loading-members>span {display:block;flex:none;padding:2px}
+.recommendation-loading i {display:block;background:var(--rb-raised);border-radius:4px}
+.recommendation-loading-members i {width:var(--lineup-avatar);height:var(--lineup-avatar)}
+.recommendation-loading-action {height:32px}
+.recommendation-loading-caption {grid-column:1 / -1;width:42%;height:8px;margin-left:20px}
+@media(max-width:360px) {
+ .recommendation-ui .companion-candidate .candidate-members[data-member-count="5"],
+ .recommendation-ui :is(.ballot-heroes,.recommendation-loading-members)[data-member-count="5"] {--lineup-avatar:28px;gap:5px}
+ .recommendation-ui :is(.candidate-members,.ballot-heroes,.recommendation-loading-members)[data-member-count="4"] {--lineup-avatar:32px;gap:7px}
+}
+@media(max-width:321px) {
+ .recommendation-ui {--lineup-avatar:28px}
+ .recommendation-ui :is(.candidate-members,.ballot-heroes,.recommendation-loading-members)[data-member-count="4"] {--lineup-avatar:28px;gap:5px}
+ .recommendation-ui .companion-candidate .candidate-members[data-member-count="5"],
+ .recommendation-ui :is(.ballot-heroes,.recommendation-loading-members)[data-member-count="5"] {--lineup-avatar:26px;gap:1px}
+ .recommendation-ui .candidate-row:has(.candidate-members:is([data-member-count="4"],[data-member-count="5"]))>.candidate-rank,
+ .recommendation-ui .ballot-row-top:has(.ballot-heroes:is([data-member-count="4"],[data-member-count="5"]))>b {display:none}
+ .recommendation-ui .companion-candidate .candidate-row {gap:4px}
+ .recommendation-ui .ballot-row-top {gap:0}
+ .recommendation-ui .companion-candidates .companion-candidate,
+ .recommendation-ui .room-ballot-row {padding-inline:6px}
+}
+@media(prefers-reduced-motion:no-preference) {
+ .recommendation-loading {animation:recommendation-breathe 1.3s ease-in-out infinite alternate}
+ @keyframes recommendation-breathe {from{opacity:.5}to{opacity:1}}
+}
+
+/* Color indicates a job: amber membership, blue actions, teal a cast vote. */
+:root {--rb-bg:#11151b;--rb-panel:#1a2028;--rb-raised:#252e39;--rb-line:#3e4957;--rb-ink:#f3efe6;--rb-muted:#b5c0cd;--rb-subtle:#94a3b4;--rb-accent:#e5d8bc;--rb-accent-hover:#fff0cb;--rb-tint:#30384a;--rb-warning:#e9bc71;--rb-success:#a4d9cf;--rb-ours:#edc77e;--rb-action:#b4d8f4}
+:is(.recommendation-ui,.recommendation-app) :is(.companion-scope-toggle,.slot-toggle) {width:24px;height:24px;min-width:24px;display:grid;place-items:center;padding:0!important;background:transparent!important;border:0!important;color:var(--rb-muted)!important;box-shadow:none!important}
+:is(.recommendation-ui,.recommendation-app) .scope-check {display:block;width:7px!important;height:7px!important;min-width:7px;padding:0;border:1px solid #8391a2!important;border-radius:50%!important;background:transparent!important;box-shadow:none}
+:is(.recommendation-ui,.recommendation-app) :is(.companion-scope-toggle[aria-pressed=true],.slot-toggle[aria-pressed=true]) .scope-check {border-color:var(--rb-ours)!important;background:var(--rb-ours)!important;box-shadow:0 0 5px #edc77e,0 0 12px #edc77e70}
+.recommendation-ui .companion-roster-row.in-scope,.recommendation-app .task-roster .slot.party {background:#302b23!important;border-color:#826d48!important}
+.recommendation-ui .companion-roster-row.out-of-scope {background:#1a2028!important;border-color:#35404d!important}
+:is(.recommendation-ui,.recommendation-app) .roster-portrait {position:relative}
+:is(.recommendation-ui,.recommendation-app) .roster-lock {position:absolute;left:0;top:0;display:grid;place-items:center;width:17px;height:17px;background:#10151bea;color:var(--rb-ours);border:1px solid #b09156;border-radius:4px;pointer-events:none;z-index:2}
+.recommendation-ui .companion-roster-hero>.roster-lock {left:2px;top:2px}
+:is(.recommendation-ui,.recommendation-app) .roster-lock .icon {width:12px;height:12px;stroke-width:2}
+:is(.recommendation-ui,.recommendation-app) .room-ballot-row {background:#253348!important;border-color:#4a637d!important}
+:is(.recommendation-ui,.recommendation-app) [data-action=room-vote][aria-pressed=true] {background:#23423f!important;border-color:#659d94!important;color:#c2eee5!important}
+:is(.recommendation-ui,.recommendation-app) :is([data-action=room-propose],.configuration-choice .btn) {border-color:#749ab7!important;color:var(--rb-action)!important;background:#21364a!important}
+.recommendation-ui .companion-tabs .btn.active {color:var(--rb-action)!important;border-bottom-color:var(--rb-action)!important;background:#263345!important}
+.configuration-heading {display:flex;align-items:center;gap:9px;margin:0 0 12px;color:var(--rb-ink)}
+.configuration-heading>.portrait {width:32px;height:32px}
+.configuration-heading>.role-icon {width:20px;height:20px;color:var(--rb-muted)}
+.configuration-heading>small {margin-left:auto;color:var(--rb-muted)}
+.configuration-choice {padding:10px 0;border-bottom:1px solid var(--rb-line);color:var(--rb-ink)}
+.configuration-current {padding:10px;background:#273344;border:1px solid #526c85;border-radius:7px;margin-bottom:3px}
+.configuration-choice>header {display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:8px}
+.configuration-choice>header>div {display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;min-width:0}
+.configuration-choice>header b {font-size:var(--ui-small);line-height:1.5}
+.configuration-choice>header small {font-size:11px;color:var(--rb-muted)}
+.configuration-choice>header .configuration-stale {color:var(--rb-warning)}
+.configuration-choice>header .btn {flex-shrink:0;min-height:30px;white-space:nowrap;padding:4px 8px;font-size:var(--ui-small)}
+.configuration-icons {display:grid;gap:7px}
+.configuration-equipment {display:flex;gap:5px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+.configuration-equipment>li {display:flex}
+.configuration-equipment img {width:30px;height:30px;border-radius:4px}
+.configuration-runes {display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.configuration-runes>span {display:flex;align-items:center;justify-content:center}
+.configuration-runes img {width:23px;height:23px}
+.configuration-runes>span:first-child img {width:28px;height:28px}
+.configuration-shard {display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#3b4050;color:#e9dcae;font-size:12px;font-style:normal}
+.configuration-tail {display:flex;gap:14px;align-items:center;justify-content:space-between}
+.configuration-spells {display:flex;gap:10px;align-items:center}
+.configuration-spells>span {display:flex;align-items:center;gap:4px;font-size:11px;color:var(--rb-muted)}
+.configuration-spells img {width:23px;height:23px;border-radius:4px}
+.configuration-skills {display:flex;gap:8px;font-size:var(--ui-small);align-items:baseline;color:var(--rb-ink)}
+.configuration-skills small {font-size:11px;color:var(--rb-muted)}
+.configuration-more>summary,.configuration-receipt>summary {padding:10px 0;color:var(--rb-action);font-size:var(--ui-small);cursor:pointer}
+.configuration-more>summary>span {color:var(--rb-muted);font-size:11px}
+.configuration-drawer {max-width:560px}
+.configuration-drawer .drawer-content {padding:16px}
+@media(max-width:321px){.configuration-current{padding:8px}.configuration-equipment img{width:27px;height:27px}.configuration-skills{gap:4px;font-size:11px}.configuration-choice>header{align-items:flex-start}.configuration-choice>header>div{display:block}.configuration-choice>header small{display:block}}
+
+:is(.recommendation-ui,.recommendation-app) .roster-portrait>.roster-lock {width:17px!important;height:17px!important;left:-2px;top:-2px;padding:0!important;line-height:1;border-radius:4px}
+.recommendation-ui .companion-roster-state.sr-only {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;border:0}

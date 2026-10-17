@@ -6,7 +6,7 @@ const scenario=process.env.RIFT_CURATED_SCENARIO||'';
 globalShortcut.register=()=>false;global.fetch=async()=>{throw Error('Isolated smoke: network disabled');};https.request=()=>{throw Error('Isolated smoke: game sockets disabled');};
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
-const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(name,name==='client-status'?()=>({connected:false,phase:'Offline'}):name==='apply-runes'?()=>{writes++;throw Error('Rune writes prohibited');}:name==='refresh-pairs'&&tactics?(_event,members)=>{assert.equal(members.length,tactics);refreshedMembers=members;return pairCache;}:name==='copy'?(_event,text)=>{copied=text;return true;}:name==='companion-mode'?(_event,value)=>{const w=windows[0];w.setMinimumSize(value?280:820,480);w.setContentSize(value?440:1180,850);return {docked:!!value,overlap:false};}:handler);
+const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(name,name==='client-status'?()=>({connected:false,phase:'Offline'}):name==='apply-runes'?()=>{writes++;throw Error('Rune writes prohibited');}:name==='refresh-pairs'&&tactics?(_event,members)=>{assert.equal(members.length,tactics);refreshedMembers=members;return pairCache;}:name==='copy'?(_event,text)=>{copied=text;return true;}:name==='companion-mode'?(_event,value)=>{const w=windows[0];w.setMinimumSize(value?280:820,480);w.setContentSize(value?440:1180,850);const layout={docked:!!value,overlap:false};windows[0].webContents.send('window-layout',layout);return layout;}:handler);
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));async function until(check,label){for(let n=0;n<150;n++){if(await check())return;await delay(70);}throw Error(label);}
 async function run(){
@@ -53,9 +53,18 @@ async function run(){
  };
  if(customRunes&&!restart){
   await click('.companion-candidate [data-action=companion-preview][data-id="Galio"]');
-  await until(()=>js('!!document.querySelector("[data-rune-surface=companion]")'),'Sidebar editor missing');
-  await editVisibleRune('companion',1);await editVisibleRune('companion',6);
-  for(const width of [280,400,520,600]){main.setContentSize(width,850);await js('document.querySelector(".rune-editor").open=true;document.querySelector(".rune-editor").scrollIntoView({block:"start"});void 0');await delay(80);assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false);}
+  await until(()=>js('!!document.querySelector(".configuration-current")'),'Sidebar configuration missing');
+  // Import a validated personal page through the real preparation/guide API.
+  // Primary configuration no longer contains individual rune editors.
+  await click('[data-action=companion-favorite]');
+  const boot=await js('window.buddy.bootstrap()'),saved=boot.state.favorites.find(f=>f.type==='build'&&f.champion==='Galio');assert.ok(saved);
+  const {getBuild}=await import(require('node:url').pathToFileURL(path.join(base,'src/core/builds.mjs'))),{editRunePage}=await import(require('node:url').pathToFileURL(path.join(base,'src/core/rune-page.mjs')));
+  const b=getBuild(boot.data.champions.find(c=>c.id==='Galio'),saved.role,boot.data,saved),tree=boot.data.runes.find(t=>t.id===b.runePage.primaryStyleId);
+  let custom=editRunePage(b.runePage,'1',tree.slots[1].runes.find(r=>r.id!==b.runePage.selectedPerkIds[1]).id,boot.data.runes,boot.data.patch);
+  custom=editRunePage(custom,'6',custom.selectedPerkIds[6]===5008?5005:5008,boot.data.runes,boot.data.patch);
+  await js('window.buddy.openGuide('+JSON.stringify({...saved,id:'Galio',customRunePage:custom})+')');
+  await until(async()=>JSON.stringify((await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===saved.comboId)?.customRunePage)===JSON.stringify(custom),'Imported sidebar page not retained');
+  for(const width of [280,400,520,600]){main.setContentSize(width,850);await delay(80);assert.equal(await js('document.documentElement.scrollWidth>innerWidth'),false);}
   await fs.writeFile(path.join(root,'custom-rune-sidebar.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
   await click('[data-action=companion-tab][data-tab=recommend]');
  }
@@ -93,7 +102,7 @@ async function run(){
  let expectedCustom,expectedCustomSkill;
  if(customRunes){
   if(!restart){
-   await click('.plan-drawer [data-action=build][data-id="Galio"]');await until(()=>js('!!document.querySelector("[data-rune-surface=build]")'),'Drawer editor missing');
+   await click('.plan-drawer [data-action=build][data-id="Galio"]');const reference=(await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id);main.webContents.send('open-build',{...reference,readOnly:false});await until(()=>js('!!document.querySelector("[data-rune-surface=build]")'),'Drawer editor missing');
    const before=(await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id);assert.ok(before.customRunePage,'Sidebar edits lost during adoption');
    await editVisibleRune('build',8);expectedCustom=(await state()).preparations.find(p=>p.id==='Galio'&&p.comboId===plan.id).customRunePage;assert.equal(expectedCustom.selectedPerkIds[1],before.customRunePage.selectedPerkIds[1]);assert.equal(expectedCustom.selectedPerkIds[6],before.customRunePage.selectedPerkIds[6]);assert.notEqual(expectedCustom.selectedPerkIds[8],before.customRunePage.selectedPerkIds[8]);
    await js('(()=>{const el=document.querySelector("[data-skill-surface=build][data-skill-index=\\"0\\"]");el.value=[...el.options].find(o=>o.value!==el.value).value;el.dispatchEvent(new Event("change",{bubbles:true}));})()');

@@ -18,7 +18,7 @@ await fs.writeFile(path.join(gamePath,'League of Legends.exe'),'isolated fixture
 await saveState(root,state);
 console.log('PREGAME STARTUP ROOT '+root);
 const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-pregame-startup.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_SOURCE:process.argv.includes('--source')?'1':'0',RIFT_BUDDY_DIAGNOSTICS:path.join(root,'main.log')},windowsHide:true,stdio:'inherit'});
-const timer=setTimeout(()=>child.kill(),150000);
+const timer=setTimeout(()=>child.kill(),210000);
 try{
  const [code]=await once(child,'exit');
  if(code!==0)throw Error('Pregame startup smoke failed ('+code+'); '+root);

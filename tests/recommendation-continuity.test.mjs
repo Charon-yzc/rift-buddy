@@ -1,3 +1,4 @@
+import {heroClickSelection,configurationChoices} from '../src/core/configuration-choices.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,6 +13,10 @@ import {recommendationKey,createPreparationStore,createRuneApplicationState,part
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
+import {pregamePhase,restoredRoleClaim} from '../src/core/pregame-intent.mjs';
+import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,editPartyRange} from '../src/core/party-range.mjs';
+import {rebaseWindowState} from '../src/core/window-state.mjs';
+import {createDisclosureState} from '../src/disclosure-state.mjs';
 import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible,validateCreativePlan} from '../src/core/creative-plan.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {matchupTargetKey} from '../src/core/matchup-plans.mjs';
@@ -35,7 +40,7 @@ function extract(start,end){
  assert(from>=0&&to>from,`Missing application function boundaries: ${start}`);
  return source.slice(from,to);
 }
-const syncFunctions=extract('function cancelRecommendation(){','let client=')+
+const syncFunctions=extract('function clearSelectionUi(){','let activeAppSelect=')+extract('function cancelRecommendation(){','let client=')+
  extract('function queueCompanionRecommendation(){','function acceptWindowLayout(')+
  extract('function recommendationInput(){','function useCatalogResult(')+
  extract('async function performSync(','function reflectRunePending(');
@@ -56,7 +61,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
  const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
  const context=vm.createContext({
-  Date:ClockDate,data,slots,client:current,saved:{draft:{clientGameId:'123'},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
+  Date:ClockDate,data,slots,client:current,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
   generating:false,syncing:false,windowLayout:{docked:false},autoRecommendTimer:null,autoRecommendationKey:'',results,resultsSignature:'',
   recommendationRun:0,activeRecommendation:null,cancelRecommendationReveal:noop,
@@ -64,11 +69,11 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   lastAutoPartyContext:'',pendingIntentPreparation:null,pendingIntentPlanId:'',lastMatchupOwn:'',saveChain:Promise.resolve(),sharedClient:null,
   buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
-  lastTaskSelection:null,companionPreview:null,companionTab:'recommend',companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
+  lastTaskSelection:null,companionPreview:null,companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',lastCompanionLocked:'',showAllCandidates:false,recommendationError:'',renderedDraftResults:null,disclosureState:createDisclosureState(),renderedDisclosureScope:'',selectionUiReset:false,selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,clickedRoomPlan:null,roomRoleChoice:null,companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
   preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
-  structuredClone,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
+  structuredClone,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
-  companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,getBuild,localConfigurationPreview,configurationReadOnly,
+  companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
   ROLES,moveChampion,assignClientChampion,clearManualPlayerPosition,selectedBuildFields,buildChoiceKey,scopeSlots,effectiveDraftScope,
   clientSyncOptions:()=>({autoArrange:true,autoParty:false}),clientRenderIdentity:()=>'',matchupContext:()=>'',publicMatchupIds:()=>[],currentRoleEvidence:()=>[],
@@ -84,6 +89,8 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
    return {complete:true,steps:{hover:{status:'done'},runes:{status:'done',pageId:11},spells:{status:'done'},items:{status:'done'}}};
   }},
  });
+ context.currentParty=()=>context.client.party;
+ context.currentRankedRoles=()=>({});
  context.assignedPlayerRole=()=>CLIENT_POSITION_ROLES[context.client.session?.myTeam.find(p=>p.cellId===context.client.session.localPlayerCellId)?.assignedPosition];
  context.rememberPreparation=value=>context.preparations.remember(value);
  context.generate=()=>{calls.generated.push(context.autoRecommendationKey);context.generating=true;};
@@ -104,6 +111,23 @@ test('client identity bindings preserve candidates and an in-flight recommendati
  assert.equal(s.context.recommendationKey(s.context.recommendationInput()),signature);
  assert.equal(s.context.results,before);assert.equal(s.calls.stale,0);assert.equal(s.calls.cancel,0);
  assert.equal(s.context.activeRecommendation,s.worker);assert.equal(s.context.generating,true);assert.equal(s.context.recommendationRun,0);
+});
+
+test('a lobby role click crossing into selection remains a hover-only explicit claim',async()=>{
+ const incoming=client();incoming.eligibility={pickable:data.champions.map(value=>value.key),disabled:[]};
+ const s=setup({current:{connected:true,phase:'Lobby',mode:{id:'rift'},session:null},incoming});let staged=0;
+ s.context.api.stageSelection=async()=>{staged++;throw Error('The old lobby must not receive this selection action');};
+ await s.context.stagePregameIntent({role:'support'});
+ assert.equal(staged,0);assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].preselectOnly,true);
+ assert.equal(s.calls.prepared[0].role,'support');assert.equal(s.context.positionClaim.role,'support');
+});
+
+test('a lobby hero click crossing into selection applies the clicked hero configuration directly',async()=>{
+ const s=setup({current:{connected:true,phase:'Lobby',mode:{id:'rift'},session:null}});let staged=0;
+ s.context.api.stageSelection=async()=>{staged++;throw Error('The old lobby must not receive this selection action');};
+ await s.context.stagePregameIntent({champion:'Lux'});
+ assert.equal(staged,0);assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].champion,'Lux');
+ assert.notEqual(s.calls.prepared[0].preselectOnly,true);assert.equal(s.context.positionClaim,null);
 });
 
 test('real bans and selected-target changes invalidate old candidates and retry, including the same canceled input on the main draft page',async()=>{
@@ -368,7 +392,7 @@ test('a chosen lane on an adopted proposal stays editable when the local player 
  const incoming=structuredClone(current),slots=partySlots(),s=setup({slots,current,incoming}),c=s.context;
  Object.assign(c,{ROLES:slots.map(s=>({id:s.role})),clearManualPlayerPosition,moveChampion,assignClientChampion,invalidate:noop,currentCombo,comboContextKnown,guideSelection:null,companionPickIntent});
  c.rememberIntentPreparation=noop;
- vm.runInContext(extract('function setCompanionRole(','function preservePlayerPosition(')+extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
+ vm.runInContext(extract('function setCompanionRole(','function preservePlayerPosition(')+extract('function currentPickIntent(){','function invalidate(')+extract('function myPreparation(){','function roomRoleContext(){'),c);
  c.setCompanionRole('bottom');
  assert.equal(c.slots.find(s=>s.role==='bottom').clientCellId,undefined,'Assigning a proposed hero must not fabricate a public pick');
  incoming.session.myTeam[0].championPickIntent=hero('Ashe').key;
@@ -385,7 +409,7 @@ test('claiming a lane stays on recommendations and leaves the representative rep
  const slots=createSlots().map(s=>({...s,party:true,champion:heroes[s.role],locked:true})),s=setup({slots,current,incoming}),c=s.context;
  Object.assign(c,{currentCombo,comboContextKnown,guideSelection:null,companionPickIntent,windowLayout:{docked:true}});
  c.rememberIntentPreparation=noop;
- vm.runInContext(extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
+ vm.runInContext(extract('function currentPickIntent(){','function invalidate(')+extract('function myPreparation(){','function roomRoleContext(){'),c);
  c.setCompanionRole('top');
  const before=structuredClone(c.slots);
  const saves=[];c.persist=async options=>{saves.push(options);};
@@ -421,6 +445,30 @@ test('awaited public draft saves recover only known derived races without replay
   else await assert.rejects(request,error=>error.message===scenario.message);
   assert.equal(writes,1,'A stale snapshot must never be retried');assert.equal(reads,Number(scenario.recovered));assert.equal(calls.prepared.length,0);assert.equal(c.pendingSaves.size,0);
  }
+});
+
+test('rapid checkbox saves send range intents, retain newer public heroes, and finish with zero marks',async()=>{
+ const initial=createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role)}));
+ const {context:c}=setup({slots:initial});c.soloRole='';c.saved.draft.slots=structuredClone(c.slots);
+ const server=structuredClone(c.saved);server.draft.slots[0]={...server.draft.slots[0],champion:'Garen',locked:true,clientCellId:2};
+ server.draft.slots[0].party=false;server.draft.slots[2].party=true;
+ const requests=[];let release,started;const gate=new Promise(resolve=>{release=resolve;}),entered=new Promise(resolve=>{started=resolve;});
+ Object.assign(c,{pendingSaves:new Set(),savedBase:structuredClone(c.saved),stateRevision:0,rebaseWindowState,creativePlanCompatible,restoreRejectedSave:noop,
+  acceptSavedState:(accepted,revision,base)=>{c.saved=rebaseWindowState(base,c.saved,accepted);c.savedBase=structuredClone(accepted);c.stateRevision=revision;c.slots=c.saved.draft.slots;},
+  api:{...c.api,saveState:async()=>assert.fail('A checkbox must not submit the old whole draft'),partyRange:async value=>{
+   requests.push(value);if(requests.length===1){started();await gate;}
+   const edited=editPartyRange(server.draft.slots,value.role,value.checked,{count:server.draft.partyCount,session:null,champions:data.champions});
+   Object.assign(server.draft,edited);return {state:structuredClone(server),revision:requests.length};
+  }}});
+ vm.runInContext(extract('function persist(','function acceptSavedState('),c);
+ const change=role=>{
+  const target=c.slots.find(slot=>slot.role===role);target.party=false;target.partyManual=true;c.saved.draft.partyCount=markedPartyCount(c.slots);
+  return c.persist({throwOnError:true,rangeEdit:{role,checked:false,gameId:'123',cellId:1}});
+ };
+ const first=change('top');await entered;const second=change('jungle');release();await Promise.all([first,second]);
+ assert.deepEqual(requests.map(value=>Object.keys(value).sort()),Array(2).fill(['cellId','checked','gameId','role']));
+ assert.equal(c.saved.draft.partyCount,0);assert.equal(markedPartyCount(c.slots),0);assert.equal(c.slots[0].champion,'Garen');assert.equal(c.slots[0].clientCellId,2);
+ assert.equal(c.pendingSaves.size,0);
 });
 
 test('a failed or outdated representative hover cannot migrate stored plans',async()=>{
@@ -600,6 +648,38 @@ test('leaving a draft clears per-game room adoption and configuration references
  }
 });
 
+test('dodge clears selection UI caches while saved hero configurations and preferences survive',async()=>{
+ const incoming={connected:true,phase:'Lobby',mode:{id:'rift'},party:{status:'lobby',lobbyCount:2,members:[{local:true},{local:false}]},game:{gameId:'123'},session:null};
+ const {context:c}=setup({incoming});
+ const selection={id:'Ashe',role:'bottom',mode:'rift',coreIndex:1};c.preparations.remember(selection);
+ c.saved.preferences.flashSlot='d';c.saved.draft.preselection={role:'bottom',champion:'Ashe',attemptedGameId:'123'};
+ Object.assign(c,{lastCompanionOwn:'Ashe',lastCompanionIntent:'Ashe',lastCompanionLocked:'old-locked',showAllCandidates:true,pendingIntentPlanId:'old-plan',itemSetStatuses:new Map([['old',{}]])});
+ c.companionScroll.set('recommend',200);c.clientPreparationStatuses.set('old-game',{complete:true});
+ c.pairRefreshErrors.set('old','offline');c.opponentRefreshErrors.set('old','offline');c.buildErrors.set('old','offline');c.pairRefreshOpen=true;c.matchupFocusError={message:'old failure'};
+ await c.performSync(false,true);
+ assert.equal(c.saved.draft.preselection,undefined);assert.equal(c.saved.draft.partyCount,undefined);
+ assert.equal(c.lastCompanionOwn,'');assert.equal(c.lastCompanionIntent,'');assert.equal(c.lastCompanionLocked,'');assert.equal(c.showAllCandidates,false);
+ assert.equal(c.pendingIntentPlanId,'');assert.equal(c.companionScroll.size,0);assert.equal(c.clientPreparationStatuses.size,0);assert.equal(c.itemSetStatuses.size,0);
+ assert.equal(c.pairRefreshErrors.size,0);assert.equal(c.opponentRefreshErrors.size,0);assert.equal(c.buildErrors.size,0);assert.equal(c.pairRefreshOpen,false);assert.equal(c.matchupFocusError,null);assert.ok(c.selectionUiRevision>0);
+ assert.equal(c.preparations.recall(selection).coreIndex,1);assert.equal(c.saved.preferences.flashSlot,'d');
+});
+
+test('late completion from a previous game cannot revive its receipt, task or guide',async()=>{
+ for(const phase of ['Lobby','ChampSelect']){
+  const incoming=client(),{context:c,calls}=setup({incoming});
+  let guideWrites=0;c.syncPreparedGuide=()=>{guideWrites++;};c.itemSetStatuses=new Map();
+  c.api.prepareSelection=async value=>{
+   calls.prepared.push(value);incoming.phase=phase;incoming.game.gameId='124';
+   incoming.session=phase==='ChampSelect'?{...incoming.session,gameId:124,myTeam:incoming.session.myTeam.map(player=>({...player,championId:0,championPickIntent:0}))}:null;
+   return {complete:true,steps:{hover:{status:'done'},runes:{status:'done',pageId:11},spells:{status:'done'},items:{status:'done'}}};
+  };
+  c.selectedClientPreparation=()=>({selection:{id:'Ashe',role:'bottom',mode:'rift'},build:getBuild(hero('Ashe'),'bottom',data)});
+  await c.useClientPreparation({dataset:{preparationView:'task'}},true);
+  assert.equal(c.lastTaskSelection,null,phase);assert.equal(c.clientPreparationStatuses.size,0,phase);assert.equal(guideWrites,0,phase);
+  assert.equal(calls.prepared.length,1);assert.equal(c.clientPreparing,false);assert.equal(c.client.game.gameId,'124');
+ }
+});
+
 test('an incoming own configuration replaces the previous task after preselection and supplies its receipt',async()=>{
  const {context:c,calls}=setup();
  c.lastTaskSelection={id:'Ashe',role:'bottom',mode:'rift'};
@@ -715,7 +795,7 @@ test('changing the own public hover in the client leaves the previous accepted p
  Object.assign(c,{creativePlanCompatible,currentCombo,comboContextKnown,companionPickIntent,guideSelection:null});
  c.activeCreativePlan={id:'trio',members:Object.entries(picks).map(([role,champion])=>({role,champion}))};
  c.lastTaskSelection={id:'Ashe',role:'bottom',mode:'rift',comboId:'trio'};
- vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo=')+extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
+ vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo=')+extract('function currentPickIntent(){','function invalidate(')+extract('function myPreparation(){','function roomRoleContext(){'),c);
  incoming.session.myTeam[0].championPickIntent=hero('Jinx').key;
  await c.sync(false,{fresh:true});
  assert.equal(c.activeCreativePlan,null);assert.equal(c.lastTaskSelection,null);assert.equal(c.draftComparing,true);
@@ -760,7 +840,7 @@ test('a real client hover change during preparation replaces stale configuration
   c.results=recommend(c.recommendationInput());c.resultsSignature=recommendationKey(c.recommendationInput());
   c.activeCreativePlan=captureCreativePlan(c.results[0],data);assert.ok(c.activeCreativePlan);
   c.lastTaskSelection={id:'Ashe',role:'bottom',mode:'rift',...creativeComboContext(creativeMemberCombo(c.activeCreativePlan,'Ashe','bottom'))};
-  vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo=')+extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
+  vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo=')+extract('function currentPickIntent(){','function invalidate(')+extract('function myPreparation(){','function roomRoleContext(){'),c);
   c.resultsSignature=recommendationKey(c.recommendationInput());
   c.api.prepareSelection=async value=>{
    calls.prepared.push(value);
@@ -792,7 +872,7 @@ async function prepareRetainedHover(docked){
  c.windowLayout.docked=docked;
  c.clientSyncOptions=()=>({autoArrange:true,autoParty:true,party:c.client.party,ownRole:c.taskOwnRole(),creativePlan:c.activeCreativePlan});
  // Use the real invalidation/reconciliation path: setup() normally stubs it.
- vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo=')+extract('function invalidate(){','function render(){')+extract('function rememberIntentPreparation(selection){','function currentPickIntent(){')+extract('function currentPickIntent(){','function invalidate(){')+extract('function myPreparation(){','function roomRoleContext(){'),c);
+ vm.runInContext(extract('function reconcileCreativePlan(','let currentWindowInfo=')+extract('function invalidate(','function render(){')+extract('function rememberIntentPreparation(selection){','function currentPickIntent(){')+extract('function currentPickIntent(){','function invalidate(')+extract('function myPreparation(){','function roomRoleContext(){'),c);
  const actualReconcile=c.reconcileCreativePlan,trace=[];
  c.reconcileCreativePlan=(...args)=>{
   const before=c.activeCreativePlan?.id||'';

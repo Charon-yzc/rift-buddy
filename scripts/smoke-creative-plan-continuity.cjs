@@ -37,9 +37,9 @@ async function run(){
   assert.deepEqual(plan,sourcePlan,'Saving or reopening changed the original reordered plan');
   assert.notDeepEqual(plan.members.map(m=>m.champion),plan.ordered.map(m=>m.champion));assert.equal(favorite.configurations.length,3);
   for(const member of plan.members){
-   await click('[data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');await until(()=>js('!!document.querySelector("#build-role")'),'Reordered member could not open');
-   assert.equal(await js('document.querySelector("#build-role").value'),member.role);
-   for(const job of plan.ordered)assert.ok((await js('document.querySelector(".combo-config").textContent')).includes(job.job));
+   await click('[data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');await until(()=>js('!!document.querySelector("#build-role,.configuration-current")'),'Reordered member could not open');
+   assert.equal(await js('document.querySelector("#build-role")?.value||JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].role'),member.role);
+   for(const job of plan.ordered)assert.ok((await js('document.querySelector(".combo-config,.companion-note").textContent')).includes(job.job));
    await click('[data-action=close]');await click('[data-action=result-detail][data-index="0"]');
   }
   await capture(main,restart?'reordered-reopened.png':'reordered-saved.png');assert.equal(writes,0);

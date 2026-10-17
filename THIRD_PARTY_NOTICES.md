@@ -8,6 +8,8 @@ Sources: https://game.gtimg.cn/images/lol/act/img/js/hero/103.js ; https://devel
 
 `data/rankings.json` caches OP.GG public aggregate champion rankings. Original request scope, source URL, analysis time and fetch time are retained; these statistics are separate from curated combo recommendations and do not represent China-server results.
 
+The lane glyphs embedded in `src/ui.mjs` use Riot client SVG geometry distributed by CommunityDragon 16.20: https://raw.communitydragon.org/16.20/plugins/rcp-fe-lol-champ-select/global/default/svg/ . The original shapes are retained; their fills follow the app theme.
+
 This product is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
 
 `assets/summoners-rift.png` is Riot Data Dragon's static map11 diagram, downloaded from https://ddragon.leagueoflegends.com/cdn/16.20.1/img/map/map11.png. The app adds its own camp-order labels; the background and lines do not represent live terrain, camp availability, unit positions or navigable paths. See https://developer.riotgames.com/docs/lol#data-dragon .

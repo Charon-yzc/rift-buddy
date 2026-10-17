@@ -11,7 +11,7 @@ https.request=()=>{throw Error('Isolated recommendation smoke: game sockets disa
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
 const originalHandle=ipcMain.handle.bind(ipcMain);
-ipcMain.handle=(name,handler)=>originalHandle(name,name==='client-status'?()=>structuredClone(fixture):name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes prohibited');}:name==='refresh-build'?(_event,id,role)=>{const ref=structuredClone(sourceEntries[id+':'+role]);assert.ok(ref);sourceRefreshes++;ref.runeSamples+=sourceRefreshes*1000;ref.fetchedAt=new Date(Date.now()+sourceRefreshes*1000).toISOString();return ref;}:name==='companion-mode'?(_event,value)=>{const main=windows[0];main.setMinimumSize(value?360:820,480);main.setContentSize(value?440:1180,value?729:820);return {docked:!!value,overlap:false};}:handler);
+ipcMain.handle=(name,handler)=>originalHandle(name,name==='client-status'?()=>structuredClone(fixture):name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes prohibited');}:name==='refresh-build'?(_event,id,role)=>{const ref=structuredClone(sourceEntries[id+':'+role]);assert.ok(ref);sourceRefreshes++;ref.runeSamples+=sourceRefreshes*1000;ref.fetchedAt=new Date(Date.now()+sourceRefreshes*1000).toISOString();return ref;}:name==='companion-mode'?(_event,value)=>{const main=windows[0];main.setMinimumSize(value?360:820,480);main.setContentSize(value?440:1180,value?729:820);const layout={docked:!!value,overlap:false};windows[0].webContents.send('window-layout',layout);return layout;}:handler);
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{
  if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);
  const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;
@@ -43,7 +43,7 @@ async function run(){
  const sideIds=()=>js('[...document.querySelectorAll(".companion-candidate [data-action=companion-preview][data-role=mid]")].map(el=>el.dataset.id)');
  const fitIds=()=>js('[...document.querySelectorAll("[data-opponent-fit]")].map(el=>el.dataset.enemyIds)');
  const capture=async name=>{await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await delay(800);await fs.writeFile(path.join(root,name),(await main.webContents.capturePage({stayHidden:true,stayAwake:true})).toPNG());};
- await until(()=>js('!!document.querySelector("#solo-role")'),'App not loaded');await sync();await click('[data-action=draft-scope][data-scope=solo]');
+ await until(()=>js('!!document.querySelector("#solo-role")'),'App not loaded');await sync();await click('[data-action=draft-scope][data-scope=party]');
  assert.equal(await js('document.querySelector("#solo-role").value'),'mid');
  await generate();const frontline=await mainIds(),headingGeometry=[];
  for(const [width,zoom,textScale] of [[1180,1,1],[1051,1.25,1],[1180,1.5,1],[1180,1,1.25],[1051,1.25,1.25],[1180,1.5,1.25]]){

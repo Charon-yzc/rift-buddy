@@ -173,9 +173,9 @@ test('the sidebar shows the actual personal or fallback skill and can restore de
  const own={...base,runeId:rune,customSkillOrder:{order:'EQW',priority:'EWQ',patch:data.patch}};
  const selectedInSidebar=s=>{
   const b=getBuild(hero(s.id),s.role,data,s),html=companionPlanView(data,{build:b,selection:s});
-  const options=html.match(/<select[^>]*data-companion-field="skill"[^>]*>([\s\S]*?)<\/select>/)?.[1];
-  for(const option of b.skillChoices.filter(o=>o.source==='OP.GG'))assert(options.includes(`开局 ${option.order.slice(0,3)} · ${option.order.length} 点 · ${option.samples.toLocaleString()} 场`),'source candidates expose actual opening, coverage and sample before selection');
-  return {build:b,id:options?.match(/<option value="([^"]*)" selected[^>]*>/)?.[1]};
+  assert.doesNotMatch(html,/data-companion-field="skill"/);
+  assert.ok(html.includes(b.skillOrder));
+  return {build:b,id:html.match(/data-skill-id="([^"]*)"/)?.[1]};
  };
  const personal=selectedInSidebar(own);assert.equal(personal.id,personal.build.selectedSkillId);assert.equal(personal.build.skillOrder,'EQW');
  const reset=changeCompanionPlan(data,own,'skill',''),fallback=selectedInSidebar(reset);

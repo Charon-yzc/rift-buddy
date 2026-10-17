@@ -65,9 +65,48 @@ function uniqueDisclosures(root){
  return found;
 }
 
+function buttonIdentity(node,root){
+ const action=attr(node,'data-action');if(!action)return null;
+ const candidate=(()=>{for(let p=node.parentElement;p&&p!==root;p=p.parentElement)if(attr(p,'data-result-index'))return p;return null;})();
+ const detail=candidate&&descendants(candidate).find(child=>child.tagName==='DETAILS'&&classes(child).includes('candidate-details'));
+ const candidateContext=candidate?(detail?candidateKey(candidate,detail):null):null;
+ if(candidate&&!candidateContext)return null;
+ const names=node.getAttributeNames?.()||Object.keys(node.attributes||{});
+ const attributes=names.filter(name=>name==='id'||name.startsWith('data-')&&!(candidate&&['data-index','data-result-index'].includes(name))).sort().map(name=>[name,attr(node,name)]);
+ const parents=[];
+ for(let p=node.parentElement;p&&p!==root;p=p.parentElement)if(p.tagName==='DETAILS')parents.unshift(explicitKey(p)||text(summary(p)));
+ return JSON.stringify(['button',attributes,candidateContext,parents]);
+}
+
+function uniqueFocusTargets(root){
+ const found=new Map(),ambiguous=new Set();
+ const add=(key,target)=>{if(!key||ambiguous.has(key))return;if(found.has(key)){found.delete(key);ambiguous.add(key);}else found.set(key,target);};
+ for(const [key,detail]of uniqueDisclosures(root))add(key,summary(detail));
+ for(const node of root?.querySelectorAll('button')||[])add(buttonIdentity(node,root),node);
+ for(const node of root?.querySelectorAll('select')||[]){
+  const id=attr(node,'id');if(!id)continue;
+  const options=descendants(node).filter(child=>child.tagName==='OPTION').map(child=>[attr(child,'value'),child.getAttribute('disabled')!==null]);
+  add(JSON.stringify(['select',id,attr(node,'name'),options]),node);
+ }
+ return found;
+}
+
 export function createDisclosureState(){
  const scopes=new Map();
  return {
+  captureFocus(root){
+   const active=root?.ownerDocument?.activeElement;
+   if(!['SUMMARY','BUTTON','SELECT'].includes(active?.tagName))return null;
+   for(const [key,target] of uniqueFocusTargets(root))if(target===active)return key;
+   return null;
+  },
+  restoreFocus(key,root){
+   if(!key)return false;
+   const target=uniqueFocusTargets(root).get(key);
+   if(typeof target?.focus!=='function'||target.disabled||target.checkVisibility?.()===false)return false;
+   target.focus({preventScroll:true});
+   return true;
+  },
   capture(scope,root){
    if(!scope||!root)return 0;
    const current=uniqueDisclosures(root);
@@ -81,5 +120,6 @@ export function createDisclosureState(){
    for(const [key,detail]of uniqueDisclosures(root))if(saved.has(key)){detail.open=saved.get(key);restored++;}
    return restored;
   },
+  clear(){scopes.clear();},
  };
 }

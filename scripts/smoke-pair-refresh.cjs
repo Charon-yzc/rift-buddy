@@ -26,7 +26,7 @@ async function run(){
  const change=async(selector,value)=>{await js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(100);};
  const boot=()=>js('window.buddy.bootstrap()'),state=async()=>(await boot()).state;
  const cacheFile=path.join(root,'data/pair-statistics-cache.json');
- const openPairs=async()=>{await js('document.querySelector("[data-pair-refresh]").open=true');await delay(90);};
+ const openPairs=async()=>{await revealDraftAction(js,'[data-action=refresh-pairs]');await js('document.querySelector("[data-pair-refresh]").open=true');await delay(90);};
  if(phase==='refresh'){
   await openPairs();held=true;await click('[data-action=refresh-pairs]');await until(()=>resume,'First request not held');
   await change('[data-pair-refresh] [data-build-source-field=region]','kr');assert.equal(await js('document.querySelector("[data-action=refresh-pairs]").disabled'),false);
@@ -46,7 +46,7 @@ async function run(){
   await new Promise(r=>{main.webContents.once('did-finish-load',r);main.webContents.reload();});await until(()=>js('!!document.querySelector("[data-action=draft-filters]")'),'Reload missing');await click('[data-action=draft-filters]');
   await openPairs();await fs.writeFile(path.join(root,'pair-refresh-main.png'),(await main.webContents.capturePage()).toPNG());
   main.webContents.send('window-layout',{docked:true,overlap:false});await until(()=>js('!!document.querySelector(".companion-shell")'),'Sidebar missing');
-  for(const width of [280,360,440]){main.setMinimumSize(240,500);main.setBounds({x:20,y:30,width,height:850});await delay(100);await openPairs();const box=await js('(()=>{const el=document.querySelector("[data-pair-refresh]");return {width:el.clientWidth,scroll:el.scrollWidth,button:!!el.querySelector("[data-action=refresh-pairs]")};})()');assert.ok(box.scroll<=box.width+1);assert.ok(box.button);await fs.writeFile(path.join(root,'pair-refresh-sidebar-'+width+'.png'),(await main.webContents.capturePage()).toPNG());}
+  for(const width of [280,360,440]){main.setMinimumSize(240,500);main.setBounds({x:20,y:30,width,height:850});await delay(100);await openPairs();const box=await js('(()=>{const el=document.querySelector("[data-pair-refresh]");return {width:el.clientWidth,scroll:el.scrollWidth,button:!!el.querySelector("[data-action=refresh-pairs]")};})()');assert.ok(box.scroll<=box.width+1,JSON.stringify({viewport:width,...box}));assert.ok(box.button);await fs.writeFile(path.join(root,'pair-refresh-sidebar-'+width+'.png'),(await main.webContents.capturePage()).toPNG());}
   main.webContents.send('window-layout',{docked:false});await until(()=>js('!!document.querySelector("[data-action=navigate]")'),'Full view missing');main.setMinimumSize(1050,720);main.setBounds({x:20,y:20,width:1300,height:900});
   await click('[data-action=navigate][data-route=builds]');
   for(const [id,role]of [['Swain','top'],['Malphite','mid'],['Aatrox','jungle']]){await click('[data-action=library-role][data-role='+role+']');await js('(()=>{const el=document.querySelector("#library-search");el.value='+JSON.stringify(id)+';el.dispatchEvent(new Event("input",{bubbles:true}));})()');assert.ok(await js('!!document.querySelector(".hero-tile[data-id='+id+']")'),id+' source role hidden');}

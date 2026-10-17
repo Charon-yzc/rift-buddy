@@ -57,7 +57,7 @@ function relayJoinForm({relayUrl,relayRoom,pin,busy,autoEnabled,autoSync,autoErr
  <p class="bottom-note room-auto-summary">阵容与配置会共享给同房间成员和中继运营者。</p>
  <details class="ui-disclosure" data-companion-disclosure="relay-address"><summary>中继地址与连接说明</summary><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="${e(DEFAULT_RELAY_URL)}" spellcheck="false" aria-label="中继地址"></label><p>队友使用相同的地址、房间码和口令，分别点击加入。口令只私下告知；它不能替代强身份认证。</p></details>
  <details class="ui-disclosure room-auto-details" data-companion-disclosure="room-auto-info"><summary>自动连接同一组队</summary><label class="room-auto"><input type="checkbox" id="room-auto" ${autoEnabled?'checked':''} aria-label="自动连接组队房间"> 自动连接组队房间</label><p>默认开启，可在此关闭。开启后在非自定义预组队大厅（单人或组队）自动连房间并分享，单人也会连接；昵称优先使用公开游戏 ID，读不到时用上面的房间昵称。组队标识相同就进入同一房间，标识变化时切换。需要同时开启客户端自动同步。</p><p>房间码和口令由公开组队标识派生；知道组队数据的人也可推算，不是强认证。</p>${autoEnabled&&!autoSync?'<p class="callout warning">自动同步已关闭，自动连接不会触发。</p>':''}</details>
- ${autoError&&autoEnabled&&autoSync?`<p class="callout warning">${e(autoError)}</p>`:''}`;
+ `;
 }
 
 function roomIdle({nick,detectedNick='',transport,busy,scanning,scanResults,error,invite,pin,relayUrl,relayRoom,autoEnabled=false,autoSync=true,autoError='',hasPreparationFile,preparationFileBusy}){
@@ -71,8 +71,8 @@ function roomIdle({nick,detectedNick='',transport,busy,scanning,scanResults,erro
  return `<section class="panel room-panel"><div class="panel-head"><h3>${icon('link')}连接房间</h3>${button('room-reconnect',busy?'连接中…':'连接当前组队','refresh','primary small',busy?'disabled':'')}</div>
   <div class="panel-body">
     <div class="room-nick"><label>${detectedNick?'游戏昵称':'房间昵称'}<input id="room-nick" value="${e(detectedNick||nick)}" maxlength="24" placeholder="队友" aria-label="房间昵称" ${detectedNick?'readonly title="使用当前游戏昵称"':''}></label></div>
-   ${transportSwitch(transport)}
-   ${forms}
+   ${autoError&&autoEnabled&&autoSync?`<p class="callout warning" role="status">${e(autoError)}</p>`:''}
+   <details class="ui-disclosure room-manual" data-companion-disclosure="room-manual" ${!autoEnabled||error||autoError||invite||relayRoom||scanResults!==null?'open':''}><summary>手动连接房间</summary>${transportSwitch(transport)}${forms}</details>
    ${error?`<p class="callout warning">${e(error)}</p>`:''}
    ${preparationFileControls(hasPreparationFile,preparationFileBusy)}
   </div></section>`;

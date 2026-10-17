@@ -1,3 +1,4 @@
+import {heroClickSelection} from '../src/core/configuration-choices.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,6 +13,7 @@ import {creativeComboContext} from '../src/core/creative-plan.mjs';
 import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {localConfigurationPreview} from '../src/core/companion-plan.mjs';
+import {movePartyMark} from '../src/core/party-range.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const functions=source.slice(source.indexOf('async function prepareHeroClick('),source.indexOf('\nfunction refreshClickedResult'))+'\n'+source.slice(source.indexOf('function rememberedPreparation('),source.indexOf('\nfunction editBuildSummoners'))+'\n'+source.slice(source.indexOf('function setCompanionRole('),source.indexOf('\nfunction preservePlayerPosition'));
@@ -21,13 +23,13 @@ const selected=build=>({...base,conditions:[],coreIndex:0,...selectedBuildFields
 const solo=selected(getBuild(champ(base.id),base.role,data,base));
 const combo=selected(getBuild(champ(base.id),base.role,data,{...base,comboId:'rengar-ivern'}));
 
-async function click({partner='Ivern',docked=false,connected=false,moving=false,explicit={}}={}){
- const store=createPreparationStore();store.remember(combo);store.remember(solo);const storedSolo=store.recall(base);
+async function click({partner='Ivern',docked=false,connected=false,moving=false,explicit={},savedCombo={}}={}){
+ const store=createPreparationStore();store.remember({...combo,...savedCombo});store.remember(solo);const storedSolo=store.recall(base);
  const slots=createSlots().map(s=>({...s,champion:s.role===(moving?'mid':'bottom')?'Rengar':s.role==='support'?partner:null,...(moving&&s.role==='mid'?{clientCellId:1,manualPosition:true}:{})}));
  const client=connected?{connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:moving?champ('Rengar').key:0,assignedPosition:moving?'MIDDLE':'',championPickIntent:0}]}}:{connected:false};
  let rendered,writes=0,context;
  const render=()=>{const value=docked?context.companionPreview:context.buildView,build=getBuild(champ(value.id),value.role,data,value);value.build=build;rendered=selected(build);store.remember(rendered);};
- context=vm.createContext({data,slots,client,saved:{draft:{}},soloRole:'',unassigned:[],pendingIntentPreparation:null,activeCreativePlan:null,guideSelection:solo,preparations:store,detailResult:null,buildReturn:null,picker:null,comboView:null,buildView:null,windowLayout:{docked},companionPreview:null,companionTab:'recommend',companionScroll:new Map(),lastTaskSelection:null,draftComparing:true,positionClaim:null,champ,currentCombo,creativeComboContext,recallPreparation,localConfigurationPreview,ROLES,currentPlayerSelection,moveChampion,assignClientChampion,clearManualPlayerPosition,unassignedPublicPicks,mergeClientSession,taskOwnRole:()=>context.soloRole,memberHeroAction:id=>companionHeroAction(client,champ(id)),invalidate(){},renderBuild:render,render,closeOverlay(){},maybeRefreshBuild(){},useClientPreparation:async()=>{writes++;return true;}});
+ context=vm.createContext({clientPreparing:false,runeApplying:false,itemSetPending:null,heroClickSelection,data,slots,client,saved:{draft:{}},soloRole:'',unassigned:[],pendingIntentPreparation:null,activeCreativePlan:null,guideSelection:solo,preparations:store,detailResult:null,buildReturn:null,picker:null,comboView:null,buildView:null,windowLayout:{docked},companionPreview:null,companionTab:'recommend',companionScroll:new Map(),lastTaskSelection:null,draftComparing:true,positionClaim:null,champ,currentCombo,creativeComboContext,recallPreparation,localConfigurationPreview,ROLES,currentPlayerSelection,moveChampion,assignClientChampion,clearManualPlayerPosition,unassignedPublicPicks,mergeClientSession,movePartyMark,taskOwnRole:()=>context.soloRole,pregamePhase:phase=>['None','Lobby','Matchmaking','ReadyCheck'].includes(phase),memberHeroAction:id=>companionHeroAction(client,champ(id)),invalidate(){},renderBuild:render,render,closeOverlay(){},maybeRefreshBuild(){},useClientPreparation:async()=>{writes++;return true;}});
  vm.runInContext(functions,context);
  await context.prepareHeroClick({...base,...explicit});
  return {rendered,store,storedSolo,writes,context};
@@ -60,4 +62,12 @@ test('explicit configuration choices override the inferred combination defaults'
  const explicit={comboId:'rengar-ivern',loadoutId:solo.loadoutId,runeId:solo.runeId};
  const expected=selected(getBuild(champ(base.id),base.role,data,{...base,...explicit}));
  for(const docked of [false,true])assert.deepEqual((await click({docked,explicit})).rendered,expected);
+});
+
+test('a repeated active-lineup avatar retains that lineup whole choice without borrowing another lineup or solo preferences',async()=>{
+ const savedCombo={summonerIds:[...getBuild(champ(base.id),base.role,data,combo).summoners].reverse()};
+ for(const docked of [false,true]){
+  const same=await click({docked,savedCombo});assert.deepEqual(same.rendered.summonerIds,savedCombo.summonerIds);
+  const different=await click({docked,savedCombo,partner:'Nami'});assert.deepEqual(different.rendered,solo);
+ }
 });

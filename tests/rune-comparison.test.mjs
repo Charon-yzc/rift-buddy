@@ -38,7 +38,7 @@ test('full configuration and sidebar both compare against the current complete p
   const full=runeSelector(build,data),side=companionPlanView(data,{selection:{id:champion.id,role:'support',mode:'rift'},build});
   for(const html of [full,side])assert.ok(html.includes(runeComparisonView(build.runePage,build.runePage,data)));
   const expected=build.runeOptions.map(o=>runeComparisonView(o.page,build.runePage,data)).filter(text=>text.includes('与当前选择比较'));
-  assert.ok(expected.length);assert.ok(full.includes(expected[0]));assert.ok(side.includes('rune-page-difference'));
+  assert.ok(expected.length);assert.ok(full.includes(expected[0]));assert.ok(side.includes('configuration-comparison'));
  }
  assert.equal(first.selectedCoreId,selected.selectedCoreId,'Comparing and selecting runes must not change the item route');
 });

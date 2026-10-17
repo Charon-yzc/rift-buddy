@@ -65,7 +65,7 @@ export function lineupFit(lineup,current,champions,options={}){
   const cellId=options.clientSession?.localPlayerCellId,role=(Number.isInteger(cellId)?current.find(s=>s.clientCellId===cellId)?.role:'')||options.soloRole;
   if(options.editableRoles.includes(role)){const editable=editableLocalDraft(current,options.clientSession,champions,role);current=editable.slots;options={...options,clientSession:editable.session};}
  }
- current=clientContextDraft(current,champions,options.clientSession,{scope:effectiveDraftScope(current,options.scope||'party'),soloRole:options.soloRole||''});
+ current=clientContextDraft(current,champions,options.clientSession,{scope:effectiveDraftScope(current,options.scope||'party'),soloRole:options.soloRole||'',party:options.party});
  const range=fitLineupSlots(lineup,current,options),context={...(options.context||fitContext(champions)),publicAllies:['context','solo'].includes(range.scope)?publicAllyIds(options.clientSession,champions):[]};
  const fixed=current.filter(s=>range.controlledRoles.includes(s.role)&&s.champion&&(Number.isInteger(s.clientCellId)||s.manualPosition||s.publicIntent||s.locked&&!s.automaticPosition));
  const heroMatches=fixed.filter(s=>lineup.some(m=>m.champion===s.champion)).length;

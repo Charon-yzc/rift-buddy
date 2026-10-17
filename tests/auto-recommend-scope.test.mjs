@@ -52,7 +52,8 @@ test('a lobby shrinking to one member switches the recommendation context withou
  assert.deepEqual(single.filter(s=>s.party).map(s=>s.role),['bottom']);
  const [result]=recommend({slots:single,champions,scope:'party',pool:['Ashe'],poolMode:'only'});
  assert.deepEqual(result.targets,['bottom']);assert.equal(result.analysis.known,3);
- assert.match(pregameControls({slots:single,scope:'party'}),/单人 · 参考全队/);
+ assert.doesNotMatch(pregameControls({slots:single,scope:'party'}),/单人 · 参考全队/);
+ assert.match(pregameControls({slots:single,scope:'party'}),/<details class="pregame-more"[^>]*><summary>更多<\/summary>/);
  const pair=applyLobbyPartyRange(single,{status:'lobby',lobbyCount:2,members:[{local:true,firstPosition:'BOTTOM'},{firstPosition:'UTILITY'}]});
  const [again]=recommend({slots:pair,champions,scope:'party',pool:['Ashe'],poolMode:'only'});
  assert.equal(again.scope,'party');assert.equal(again.analysis.known,2);

@@ -40,11 +40,11 @@ async function run(){
  assert.match(drawerText,/E 普攻避免贯穿拿掉搭档兵线/);assert.doesNotMatch(drawerText,/刷野|覆盖营地/);
  await js('document.querySelector("#overlay-root [data-guide-section=coach-stages]").open=true;document.querySelector("#overlay-root .hero-coach").scrollIntoView({block:"start"});void 0');await capture('chogath-support-drawer.png');
  await click('[data-action=close]');await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar missing');await click('[data-action=companion-tab][data-tab=plan]');
- await js('document.querySelector("[data-companion-disclosure=coach]").open=true;document.querySelector("[data-companion-disclosure=coach-stages]").open=true;document.querySelector("[data-companion-disclosure=coach]").scrollIntoView({block:"start"});void 0');
+ await js('document.querySelector("[data-companion-disclosure=edit-opponent]").open=true;document.querySelector("[data-companion-disclosure=coach-stages]").open=true;document.querySelector("[data-companion-disclosure=edit-opponent]").scrollIntoView({block:"start"});void 0');
  assert.match(await js('document.querySelector("[data-companion-disclosure=coach-stages]").textContent'),/不为叠层抢搭档安全发育/);await capture('chogath-support-sidebar.png');
  assigned='JUNGLE';await sync();await changeRole('jungle');
  await change('.companion-shell [data-matchup-target]','Nautilus');
- const jungleText=await js('document.querySelector(".companion-coach").textContent');assert.match(jungleText,/刷野 E 普攻尖刺覆盖营地/);assert.match(jungleText,/丛刃.*安全连续普攻/);assert.match(jungleText,/R、惩戒/);
+ const jungleText=await js('document.querySelector(".hero-coach").textContent');assert.match(jungleText,/刷野 E 普攻尖刺覆盖营地/);assert.match(jungleText,/丛刃.*安全连续普攻/);assert.match(jungleText,/R、惩戒/);
  await click('[data-action=guide-current]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');
  await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model?.selection.id==="Chogath"&&b.model.selection.role==="jungle")'),'Role selection did not reach guide');
  const gjs=code=>guide.webContents.executeJavaScript(code,true);
@@ -58,8 +58,8 @@ async function run(){
  for(const [id,position,role,expected]of cases){
   picked=id;assigned=position;await sync();await changeRole(role);
   await until(()=>js('!!document.querySelector(\'.companion-shell [data-plan="'+id+':'+role+':rift"]\')'),'Changed hero did not reach the sidebar');
-  await change('.companion-shell [data-matchup-target]','Nautilus');await until(async()=>expected.test(await js('document.querySelector(".companion-coach").textContent')),'Changed role advice missing for '+id);
-  assert.match(await js('document.querySelector(".companion-coach").textContent'),expected);await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+'&&b.model.selection.role==='+JSON.stringify(role)+')'),'Changed role did not reach guide');
+  await change('.companion-shell [data-matchup-target]','Nautilus');await until(async()=>expected.test(await js('document.querySelector(".hero-coach").textContent')),'Changed role advice missing for '+id);
+  assert.match(await js('document.querySelector(".hero-coach").textContent'),expected);await click('[data-action=guide-current]');await until(()=>gjs('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(id)+'&&b.model.selection.role==='+JSON.stringify(role)+')'),'Changed role did not reach guide');
  }
  const {rolePlay}=await import(require('node:url').pathToFileURL(path.resolve('src/core/role-plays.mjs')));
  for(const [id,position,role]of cases.slice(-3)){
