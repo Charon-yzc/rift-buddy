@@ -48,7 +48,7 @@ async function run(){
   const plans={};
   for(const id of ['Morgana','Janna','Yuumi']){
    await change('[data-matchup-target]',id);await until(()=>js('document.querySelector("[data-matchup-enemy]")?.dataset.matchupEnemy==='+JSON.stringify(id)),id+' condition plan missing');
-   plans[id]=await js('document.querySelector(".hero-coach-compact").textContent');assert.equal(await js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].page.selectedPerkIds.join(",")'),selectedRune);
+   plans[id]=await js('document.querySelector(".hero-coach").textContent');assert.equal(await js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].page.selectedPerkIds.join(",")'),selectedRune);
   }
   assert.equal(new Set(Object.values(plans)).size,3);assert.ok(plans.Morgana.includes('黑盾'));assert.ok(plans.Janna.includes('W 不能阻止风女 R'));assert.ok(plans.Yuumi.includes('同一宿主'));
   await js('document.querySelector("[data-companion-section=opponent]").scrollIntoView({block:"start"})');await capture(main,'side-yuumi-plan.png');
