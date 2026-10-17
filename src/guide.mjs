@@ -46,7 +46,7 @@ function toast(message){clearTimeout(messageTimer);const el=document.getElementB
 function render(){
  if(snapshot?.openTab?.serial!==lastOpenTab&&['skills','rhythm'].includes(snapshot?.openTab?.tab)){tab=snapshot.openTab.tab;lastOpenTab=snapshot.openTab.serial;}
  activeSelect=null;pendingSelectUpdate=false;
- applyPresentation(snapshot?.presentation);
+ applyPresentation(snapshot?.presentation,{theme:false});
  const m=snapshot?.model,matchId=m?.matchId||null;
  if(matchId!==renderedMatchId){viewStates.clear();renderedView=null;renderedExpanded=false;renderedContext=null;renderedMatchId=matchId;}
  const oldMain=root.querySelector('main');
@@ -99,7 +99,7 @@ document.addEventListener('click',async event=>{
  try{const value=target.dataset.action==='presentation'?{field:target.dataset.field,value:target.dataset.field==='textScale'?Number(target.dataset.value):target.dataset.value}:target.dataset.id;const result=await api.control(target.dataset.action,value);if(result?.model!==undefined){if(target.dataset.action==='new-game'){viewStates.clear();renderedView=null;}snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
-document.addEventListener('change',async event=>{if(event.target.dataset.presentationTheme){try{snapshot=await api.control('presentation',{field:'theme',value:event.target.value});render();}catch(error){toast(error.message);}return;}if(event.target.dataset.presentationModule){try{snapshot=await api.control('presentation',{field:'toggleModule',value:event.target.dataset.presentationModule});render();}catch(error){toast(error.message);}return;}const actions={'guide-settings-opacity':'opacity','guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage','guide-threat':'threatId','guide-protect':'protectId','guide-focus':'combatFocus','guide-duel-own':'duel-own','guide-duel-foe':'duel-foe'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
+document.addEventListener('change',async event=>{if(event.target.dataset.presentationModule){try{snapshot=await api.control('presentation',{field:'toggleModule',value:event.target.dataset.presentationModule});render();}catch(error){toast(error.message);}return;}const actions={'guide-settings-opacity':'opacity','guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage','guide-threat':'threatId','guide-protect':'protectId','guide-focus':'combatFocus','guide-duel-own':'duel-own','guide-duel-foe':'duel-foe'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!activeSelect)api.control('hide').catch(error=>toast(error.message));});
 let hoverHeader=false,downPos=null,dragMoved=false;
 document.addEventListener('mousedown',event=>{downPos=[event.screenX,event.screenY];dragMoved=false;});

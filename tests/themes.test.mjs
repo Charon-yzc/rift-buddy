@@ -24,7 +24,7 @@ test('theme switching preserves font and module choices; invalid saved colors mi
   assert.equal(normalizeTheme(value),DEFAULT_THEME);assert.throws(()=>changePresentation(p,{field:'theme',value}));
  }
  assert.equal(normalizePresentation({theme:'removed-color'}).theme,DEFAULT_THEME);
- assert.equal(changePresentation(p,{field:'reset'}).theme,DEFAULT_THEME);
+ assert.equal(changePresentation(p,{field:'reset'}).theme,p.theme,'Resetting font/modules must preserve the separately selected palette');
 });
 test('picker exposes all themes with one selected choice and keeps earlier colors available',()=>{
  const html=themeDialog({theme:'daylight'});

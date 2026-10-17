@@ -17,16 +17,5 @@
 .theme-swatches i {display:block;width:16px;height:12px;border:1px solid #ffffff28;border-radius:3px}
 .theme-other {margin-top:14px}
 .theme-other>summary {padding:8px 0;color:var(--rb-muted);font-size:var(--ui-small);cursor:pointer}
-.theme-select {display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--rb-ink)}
-.theme-select select {min-height:32px;max-width:70%;padding:4px 7px;border:1px solid var(--rb-line);border-radius:5px;background:var(--rb-bg);color:var(--rb-ink)}
 @media(max-width:360px){.theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.theme-option{padding:10px 8px}}
 @media(prefers-reduced-motion:no-preference){.theme-option{transition:background-color .12s ease,border-color .12s ease}}
-
-:root[data-theme] .guide-mode {border-color:var(--rb-line);color:var(--rb-ink)}
-:root[data-theme] .guide-mode:not(.ball):not(.strip):not(.compact) {background:var(--rb-bg)}
-:root[data-theme] .guide-mode :is(header,.panel,.next-item,.tip,.route-item,.presentation-preview),
-:root[data-theme] .guide-mode.compact #guide-root {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink)}
-:root[data-theme] .guide-mode :is(small,.muted,.presentation-note) {color:var(--rb-muted)}
-:root[data-theme] .guide-mode :is(select,.chip) {background:var(--rb-raised);border-color:var(--rb-line);color:var(--rb-ink)}
-:root[data-theme] .guide-mode :is(.primary,.chip.active,.tabs button.active) {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
-:root[data-theme] .guide-mode .brand-dot {background:var(--rb-accent);color:var(--rb-on-accent)}

@@ -17,7 +17,7 @@ export function changePresentation(current,change){
  const next=normalizePresentation(current);
  if(!change||typeof change!=='object')throw Error('界面设置格式不正确');
  const {field,value}=change;
- if(field==='reset')return normalizePresentation(null);
+ if(field==='reset')return {...normalizePresentation(null),theme:next.theme};
  if(field==='theme'){
   if(typeof value!=='string'||normalizeTheme(value)!==value)throw Error('配色选项不正确');
   return {...next,theme:value};
