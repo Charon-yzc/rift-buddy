@@ -637,7 +637,7 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-pic
 .lineup-fit-hover i{font-style:normal;color:var(--rb-muted,#a6bac5)}
 .lineup-fit-hover strong{border-top:1px solid var(--rb-line,#416077);padding-top:5px}
 .lineup-fit-hover small{color:var(--rb-muted,#a6bac5);font-size:11px}
-:is(.recommendation-app,.recommendation-ui) .ballot-proposers{flex:0 0 62px;width:62px;align-self:flex-start;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--rb-muted);font-size:11px;line-height:18px;cursor:help}
+:is(.recommendation-app,.recommendation-ui) .ballot-proposers{flex:0 0 62px;width:62px;align-self:flex-start;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;max-height:36px;overflow:hidden;white-space:normal;word-break:break-all;color:var(--rb-muted);font-size:11px;line-height:18px;cursor:help}
 .recommendation-ui .ballot-heroes[data-member-count="5"]{gap:4px}
 :is(.recommendation-app,.recommendation-ui) .ballot-rank{display:none!important}
 .recommendation-app .page:not([data-page=draft]){padding:14px 18px}
