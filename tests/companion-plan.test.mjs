@@ -216,6 +216,9 @@ test('configuration shows current plus two whole alternatives before optional de
  for(const id of current.runePage.selectedPerkIds.slice(6))assert.ok(overview.includes(SHARDS[id]));
  assert.ok(overview.indexOf('alt="'+data.spells[current.summoners[0]].name)<overview.indexOf('alt="'+data.spells[current.summoners[1]].name));
  assert.ok(overview.includes(current.priority.split('').join(' › ')));assert.ok(overview.includes(current.first.split('').join(' → ')));
+ assert.match(overview,/>主升<\/small>/);assert.match(overview,/>开局<\/small>/);
+ assert.match(html,/<select[^>]*id="configuration-role"[^>]*aria-label="配置分路"/);
+ assert.equal((html.match(/<option value="(?:top|jungle|mid|bottom|support)"/g)||[]).length,5);
  assert.equal((html.slice(0,html.indexOf('class="configuration-more"')).match(/<section[^>]*class="configuration-choice/g)||[]).length,3);
  assert.doesNotMatch(html,/data-action="companion-jump"|data-companion-field=/);assert.match(overview,/title="[^"]*\d/);
  const warned=companionPlanView(data,{selection:selected,build:{...current,referenceStale:true,selectionWarnings:['原选择不可用 <mock>']}});
