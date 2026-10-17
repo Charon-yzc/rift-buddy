@@ -1,7 +1,23 @@
 import {escape as e} from './ui.mjs';
 import {GUIDE_MODULES,TEXT_SCALES,normalizePresentation} from './core/presentation.mjs';
-export function applyPresentation(value){
- document.documentElement.style.setProperty('--text-scale',normalizePresentation(value).textScale);
+import {THEMES,getTheme,themeVariables} from './core/themes.mjs';
+export function applyPresentation(value,{theme=true}={}){
+ const p=normalizePresentation(value),root=document.documentElement;
+ root.style.setProperty('--text-scale',p.textScale);
+ if(!theme)return;
+ for(const [key,color] of Object.entries(themeVariables(p.theme)))root.style.setProperty(key,color);
+ root.style.setProperty('--rb-on-accent',getTheme(p.theme).scheme==='light'?'#ffffff':'#07131b');
+ root.style.colorScheme=getTheme(p.theme).scheme;root.dataset.theme=p.theme;
+}
+export function themeDialog(value){
+ const selected=normalizePresentation(value).theme;
+ const choices=group=>`<div class="theme-grid">${THEMES.filter(theme=>theme.group===group).map(theme=>`<button class="theme-option ${selected===theme.id?'active':''}" data-action="presentation" data-field="theme" data-value="${theme.id}" aria-pressed="${selected===theme.id}"><span class="theme-swatches" aria-hidden="true">${[theme.bg,theme.panel,theme.accent,theme.ours,theme.ballot].map(color=>`<i style="background:${color}"></i>`).join('')}</span><b>${e(theme.name)}</b></button>`).join('')}</div>`;
+ return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer theme-drawer recommendation-ui" role="dialog" aria-modal="true" aria-label="配色"><header class="modal-header"><h3>配色</h3><button class="btn quiet small" data-action="close">关闭</button></header><div class="drawer-content theme-settings"><h4>客户端灵感</h4>${choices('client')}<details class="theme-other" ${getTheme(selected).group==='other'?'open':''}><summary>其他配色</summary>${choices('other')}</details></div></section></div>`;
+}
+export function updateThemeDialog(root,value){
+ const selected=root.querySelector(':focus')?.dataset.value,scroll=root.querySelector('.drawer-content')?.scrollTop||0;
+ root.innerHTML=themeDialog(value);root.querySelector('.drawer-content').scrollTop=scroll;
+ if(selected)[...root.querySelectorAll('[data-value]')].find(el=>el.dataset.value===selected)?.focus({preventScroll:true});
 }
 export function presentationSettings(value,{guide=false,opacity=1}={}){
  const p=normalizePresentation(value),lookup=new Map(GUIDE_MODULES.map(m=>[m[0],m]));

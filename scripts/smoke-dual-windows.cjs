@@ -1,3 +1,4 @@
+const {pathToFileURL}=require('node:url');
 const {app,screen,globalShortcut,ipcMain,Tray,dialog}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),shortcuts=new Map();let bootstrapCalls=0,trayMenu=null,resumeDialog=null,holdDerivedMainId=null,resumeDerived=null,derivedRaceRejections=0;
@@ -44,6 +45,34 @@ async function run(){
  assert.equal(await js(main,'window.buddy.bootstrap().then(b=>b.state.preferences.autoSync)'),true,'Connecting should enable automatic client synchronization');
  await js(main,'window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,autoSync:false}},b.state))');
  await js(main,'window.buddy.client(false)');
+ // Palette changes use the shared settings channel, never game preparation.
+ const {THEMES,DEFAULT_THEME}=await import(pathToFileURL(path.join(base,'src/core/themes.mjs'))),{readState}=await import(pathToFileURL(path.join(base,'services/storage.mjs')));
+ const beforeThemeWrites=writes,modules=await js(side,'window.buddy.bootstrap().then(b=>b.state.preferences.presentation.guideModules)');
+ const beforeThemeDraft=await js(side,'window.buddy.bootstrap().then(b=>b.state.draft)');
+ await js(side,'window.buddy.presentation({field:"textScale",value:1.1})');
+ await click(side,'.companion-navigation-more>summary');await click(side,'.companion-navigation-more [data-action=theme-open]');
+ const rgb=color=>'rgb('+color.slice(1).match(/../g).map(n=>parseInt(n,16)).join(', ')+')';
+ for(const theme of THEMES){
+  if(theme.group==='other'&&!await js(side,'document.querySelector(".theme-other").open'))await click(side,'.theme-other>summary');
+  await click(side,'[data-field=theme][data-value="'+theme.id+'"]');
+  await until(async()=>await js(main,'document.documentElement.dataset.theme')===theme.id&&await js(side,'document.documentElement.dataset.theme')===theme.id,'Palette did not synchronize: '+theme.id);
+  assert.equal(await js(main,'getComputedStyle(document.querySelector(".workspace")).backgroundColor'),rgb(theme.bg));
+  assert.equal(await js(side,'getComputedStyle(document.querySelector(".in-scope")).backgroundColor'),rgb(theme.scope));
+  assert.equal(await js(side,'document.querySelectorAll(".theme-option[aria-pressed=true]").length'),1);
+  if(['hextech','daylight'].includes(theme.id)){
+   await js(side,'new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await delay(100);
+   await fs.writeFile(path.join(root,'theme-'+theme.id+'-picker.png'),(await side.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
+   const width=side.getContentBounds().width,height=side.getContentBounds().height;side.setContentSize(280,height);await delay(80);
+   assert.ok(await js(side,'document.documentElement.scrollWidth<=innerWidth'),'Theme picker must not overflow a narrow sidebar');
+   await fs.writeFile(path.join(root,'theme-'+theme.id+'-narrow.png'),(await side.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());side.setContentSize(width,height);
+  }
+ }
+ assert.equal(writes,beforeThemeWrites,'Palette browsing must not apply a rune page');
+ assert.deepEqual((await readState(root)).draft,beforeThemeDraft,'Palette switching must not change the draft or group size');
+ assert.deepEqual((await readState(root)).preferences.presentation,{theme:'daylight',textScale:1.1,guideModules:modules});
+ await click(side,'[data-action=close]');await click(main,'[data-action=navigate][data-route=settings]');await click(main,'.settings-actions [data-action=theme-open]');
+ await click(main,'[data-field=theme][data-value="'+DEFAULT_THEME+'"]');await until(()=>js(side,'document.documentElement.dataset.theme==="'+DEFAULT_THEME+'"'),'Settings palette did not reach sidebar');
+ await click(main,'[data-action=close]');await click(main,'[data-action=navigate][data-route=draft]');await js(main,'window.buddy.presentation({field:"textScale",value:1})');
  const beforeBootstrap=bootstrapCalls,beforeRequests=requests;for(let n=0;n<5;n++)snapshot();await delay(350);assert.equal(bootstrapCalls,beforeBootstrap,'Observer ticks re-bootstrap full data');assert.equal(requests,beforeRequests,'Observer ticks duplicate client/source polling');
  // Each fold action targets its own window and has an independent restore tab.
  const mainHides=main.fixtureHideCount,sideHides=side.fixtureHideCount;
@@ -100,4 +129,3 @@ async function run(){
  await fs.writeFile(path.join(root,'dual-windows.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,'dual-windows-error.txt'),error.stack).catch(()=>{});for(const window of windows.filter(w=>!w.isDestroyed()))await fs.writeFile(path.join(root,'failure-'+window.webContents.id+'.html'),await window.webContents.executeJavaScript('document.documentElement.outerHTML').catch(()=>''));app.exit(1);});
-

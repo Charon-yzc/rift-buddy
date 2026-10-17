@@ -8,6 +8,7 @@ const release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
 const root=await fs.mkdtemp(path.resolve('.local/lifecycle-'));
 const log=path.join(root,'startup.log'),screenshot=path.join(root,'window.png');
 const state=defaultState();state.preferences.autoSync=false;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;
+state.preferences.presentation={...state.preferences.presentation,theme:'piltover'};
 await saveState(root,state);
 const env={...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_DIAGNOSTICS:log,RIFT_BUDDY_SCREENSHOT:screenshot};
 const children=[];
@@ -29,5 +30,6 @@ try{
  assert.equal((await timeout(reopened.exit,5000,'Reopened application did not quit'))[0],0);
  const persisted=JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8'));
  assert.equal(persisted.preferences.autoSync,false);assert.equal(persisted.preferences.autoCheck,false);
+ assert.equal(persisted.preferences.presentation.theme,'piltover','Saved palette must survive a genuine process restart');
  console.log(JSON.stringify({startup:'passed',nativeCapture:'passed',singleInstance:'passed',gracefulExit:'passed',reopen:'passed',preferences:'preserved',screenshot},null,2));
 }finally{for(const child of children)if(child.exitCode===null)child.kill();}

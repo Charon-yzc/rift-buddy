@@ -46,7 +46,7 @@ function toast(message){clearTimeout(messageTimer);const el=document.getElementB
 function render(){
  if(snapshot?.openTab?.serial!==lastOpenTab&&['skills','rhythm'].includes(snapshot?.openTab?.tab)){tab=snapshot.openTab.tab;lastOpenTab=snapshot.openTab.serial;}
  activeSelect=null;pendingSelectUpdate=false;
- applyPresentation(snapshot?.presentation);
+ applyPresentation(snapshot?.presentation,{theme:false});
  const m=snapshot?.model,matchId=m?.matchId||null;
  if(matchId!==renderedMatchId){viewStates.clear();renderedView=null;renderedExpanded=false;renderedContext=null;renderedMatchId=matchId;}
  const oldMain=root.querySelector('main');

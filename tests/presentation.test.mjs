@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {changePresentation,normalizePresentation} from '../src/core/presentation.mjs';
+import {DEFAULT_THEME} from '../src/core/themes.mjs';
 import {defaultState,validateState,mergeState,saveState,readState} from '../services/storage.mjs';
 import {publicEquipment} from '../src/core/scoreboard.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
@@ -17,16 +18,17 @@ test('existing settings migrate without losing favorites; presentation order sur
  let p=changePresentation(state.preferences.presentation,{field:'textScale',value:1.25});
  p=changePresentation(p,{field:'toggleModule',value:'purchase'});
  p=changePresentation(p,{field:'moveUp',value:'scoreboard'});
+ p=changePresentation(p,{field:'theme',value:'deep-gold'});
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-presentation-'));
  await saveState(root,{...state,preferences:{...state.preferences,presentation:p}});
  const restored=await readState(root);assert.deepEqual(restored.preferences.presentation,p);assert.equal(restored.preferences.autoCheck,false);
  assert.deepEqual(mergeState(restored,{schema:1,favorites:[],excluded:[],preferences:{}},[]).preferences.presentation,p);
- assert.deepEqual(mergeState(restored,{...defaultState(),preferences:{presentation:{textScale:1.1,guideModules:[]}}},[]).preferences.presentation,{textScale:1.1,guideModules:[]});
+ assert.deepEqual(mergeState(restored,{...defaultState(),preferences:{presentation:{textScale:1.1,guideModules:[]}}},[]).preferences.presentation,{theme:DEFAULT_THEME,textScale:1.1,guideModules:[]});
 });
 test('presentation rejects unsupported operations and bounded migration drops unknown modules',()=>{
- assert.deepEqual(normalizePresentation({textScale:99,guideModules:['skills','bad','skills','purchase']}),{textScale:1,guideModules:['skills','purchase']});
+ assert.deepEqual(normalizePresentation({textScale:99,guideModules:['skills','bad','skills','purchase']}),{theme:DEFAULT_THEME,textScale:1,guideModules:['skills','purchase']});
  for(const change of [{field:'textScale',value:0},{field:'toggleModule',value:'hidden-enemy'},{field:'openFile',value:'skills'},null])assert.throws(()=>changePresentation(null,change));
- const one={textScale:1,guideModules:['skills']};assert.deepEqual(changePresentation(one,{field:'moveUp',value:'skills'}),one);
+ const one={theme:DEFAULT_THEME,textScale:1,guideModules:['skills']};assert.deepEqual(changePresentation(one,{field:'moveUp',value:'skills'}),one);
 });
 const player=(id,side,inventory=[],itemsKnown=true)=>({champion:id,side,inventory,itemsKnown});
 test('public equipment compares complete inventories and identifies recovery and anti-heal sources',()=>{
