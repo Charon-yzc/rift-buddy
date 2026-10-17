@@ -45,8 +45,8 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 .recommendation-ui .companion-navigation-more>div>.btn:hover,
 .recommendation-ui .companion-navigation-more>div>.btn.active {background:var(--rb-tint);color:var(--rb-ink)}
 .recommendation-ui .companion-persistent {padding:10px 12px;background:var(--rb-panel);border-color:var(--rb-line);max-height:none;overflow:visible}
-.recommendation-ui .companion-team-compact .companion-roster {gap:5px;grid-template-columns:repeat(5,minmax(0,1fr));width:min(100%,320px)}
-.recommendation-ui .companion-team-compact .companion-roster-row {border:1px solid transparent;border-radius:6px;background:transparent;min-width:0;padding:0}
+.recommendation-ui .companion-team-compact .companion-roster {gap:5px;grid-template-columns:repeat(5,minmax(0,1fr));width:100%}
+.recommendation-ui .companion-team-compact .companion-roster-row {--roster-avatar:44px;position:relative;aspect-ratio:1;border:1px solid transparent;border-radius:8px;background:transparent;min-width:0;padding:0}
 .recommendation-ui .companion-team-compact .companion-roster-row.in-scope {background:#2b2b28;border-color:#7b7970}
 .recommendation-ui .companion-team-compact .companion-roster-row.out-of-scope {background:transparent;border-color:var(--rb-line)}
 .recommendation-ui .companion-team-now:not(.companion-team-compact) .companion-roster-row {border-color:var(--rb-line)}
@@ -221,8 +221,8 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 .recommendation-app .page[data-page=draft] {padding:16px 24px;overflow:hidden}
 .recommendation-app .draft-compare-workspace {height:100%;gap:10px;min-height:0}
 .recommendation-app .draft-compare-header h1 {font-size:calc(22px * var(--text-scale));letter-spacing:-.3px;font-weight:650;color:var(--rb-ink)}
-.recommendation-app .page[data-page=draft] .task-roster.slots {gap:6px;flex-shrink:0;width:min(100%,400px)}
-.recommendation-app .page[data-page=draft] .task-roster .slot {padding:6px 4px;gap:4px;border:1px solid var(--rb-line);border-radius:6px;background:var(--rb-panel);min-height:94px;position:relative}
+.recommendation-app .page[data-page=draft] .task-roster.slots {gap:6px;flex-shrink:0;width:100%}
+.recommendation-app .page[data-page=draft] .task-roster .slot {padding:4px;gap:4px;border:1px solid var(--rb-line);border-radius:6px;background:var(--rb-panel);min-height:0;position:relative}
 .recommendation-app .page[data-page=draft] .task-roster .slot.party {background:#2b2b28;border-color:#7b7970}
 .recommendation-app .slot-heading {display:flex;align-items:center;justify-content:space-between;gap:3px;min-width:0}
 .recommendation-app .task-roster .slot-role {display:flex;align-items:center;justify-content:flex-start;gap:5px;color:var(--rb-muted);font-size:calc(12px * var(--text-scale));min-width:0}
@@ -401,14 +401,16 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
    the portrait, so no second lane label competes with the champion. */
 .roster-portrait {display:block;position:relative;flex:none;width:max-content;line-height:0}
 .roster-role-mark {position:absolute;right:-3px;bottom:-3px;width:18px;height:18px;padding:2px;background:var(--rb-panel);color:var(--rb-ink);border-radius:3px;pointer-events:none}
-.recommendation-ui .companion-roster-top {justify-content:flex-end;padding:2px;min-height:28px}
-.recommendation-ui .companion-team-compact .companion-roster-hero {min-height:62px;padding:2px 3px 5px;gap:4px}
+.recommendation-ui .companion-roster-top {position:absolute;right:calc((100% - var(--roster-avatar))/2 - 18px);top:calc((100% - var(--roster-avatar))/2 - 18px);width:auto;justify-content:flex-end;padding:0;min-height:0;z-index:2}
+.recommendation-ui .companion-team-compact .companion-roster-hero {display:grid;place-items:center;flex:1;width:100%;height:100%;min-height:0;padding:0;gap:0}
+.recommendation-ui .companion-team-compact .companion-roster-hero>span:not(.roster-portrait) {display:none}
 .recommendation-ui .companion-team-compact .roster-portrait :is(.portrait,.empty-portrait) {width:44px;height:44px;border-radius:5px;border:1px solid var(--rb-line);background:var(--rb-bg);color:var(--rb-subtle);font-size:27px}
 .recommendation-ui .companion-team-compact .roster-portrait .empty-portrait {display:grid;place-items:center;line-height:1}
 .recommendation-ui .companion-team-compact .companion-roster-hero:has(.empty-portrait)>span:not(.roster-portrait) {display:none}
-.recommendation-ui .companion-team-compact .companion-roster-hero>.roster-portrait {display:block;width:44px;height:44px}
+.recommendation-ui .companion-team-compact .companion-roster-hero>.roster-portrait {display:block;width:44px;height:44px;transform:translate(-3px,3px)}
 .recommendation-ui .companion-team-compact .companion-roster-row.in-scope .roster-portrait :is(.portrait,.empty-portrait) {border-color:var(--rb-accent)}
-.recommendation-app .slot-heading {justify-content:space-between;min-height:24px}
+.recommendation-app .slot-heading {position:absolute;top:1px;left:1px;right:1px;justify-content:space-between;min-height:0;pointer-events:none;z-index:2}
+.recommendation-app .slot-heading>.slot-toggle {pointer-events:auto}
 .recommendation-app .task-roster .slot-toggle {display:grid;place-items:center;width:24px;padding:0!important;border:1px solid var(--rb-line)!important;margin-left:auto}
 .recommendation-app .task-roster .slot-toggle.on {background:var(--rb-accent)!important;color:var(--rb-bg)!important}
 .recommendation-app .task-roster .champ-pick .roster-portrait :is(.portrait,.empty-portrait) {width:44px;height:44px}
@@ -424,6 +426,7 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 :is(.recommendation-ui,.recommendation-app) .pregame-controls[data-role-conflict=true] {flex-wrap:wrap}
 :is(.recommendation-ui,.recommendation-app) .pregame-conflict {flex-basis:100%;margin:0;color:var(--rb-warning);font-size:var(--ui-small);line-height:1.5}
 @media(max-width:360px) {
+ .recommendation-ui .companion-team-compact .companion-roster-row {--roster-avatar:36px}
  .recommendation-ui .companion-team-compact .roster-portrait :is(.portrait,.empty-portrait) {width:36px;height:36px}
  .recommendation-ui .companion-team-compact .companion-roster-hero>.roster-portrait {width:36px;height:36px}
 }
@@ -441,7 +444,6 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 }
 @media(max-height:700px) {
  .recommendation-ui .companion-persistent {padding-block:8px}
- .recommendation-ui .companion-team-compact .companion-roster-hero {min-height:50px}
  .recommendation-ui .companion-candidates .companion-candidate:has(.candidate-members[data-member-count="5"]) {padding-block:3px}
 }
 @media(prefers-reduced-motion:no-preference) {
@@ -454,7 +456,7 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 
 /* Portraits and lane badges are enough to scan a lineup. Names stay in
    button labels and tooltips, while both lists keep the same geometry. */
-:is(.recommendation-ui,.recommendation-app) {--lineup-avatar:36px}
+:is(.recommendation-ui,.recommendation-app) {--lineup-avatar:44px}
 .recommendation-app .task-candidate-list {width:100%;align-self:stretch}
 .recommendation-ui :is(.companion-section-head,.companion-candidates,.room-ballot-board) {width:100%;max-width:none}
 .recommendation-ui .companion-candidates .companion-candidate,
@@ -467,44 +469,50 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 :is(.recommendation-ui,.recommendation-app) :is(.candidate-actions,.ballot-row-actions)>.btn {width:100%;min-height:32px;white-space:nowrap;font-size:clamp(12px,calc(12px * var(--text-scale)),16px)}
 .recommendation-ui .companion-candidate .candidate-members,
 .recommendation-app .task-candidate-list .candidate-members,
-:is(.recommendation-ui,.recommendation-app) .ballot-heroes {display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:10px;min-width:0;max-width:none}
+:is(.recommendation-ui,.recommendation-app) .ballot-heroes {display:flex;flex:1;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:10px;min-width:0;max-width:none}
+.recommendation-app :is(.candidate-members,.ballot-heroes)[data-member-count] {max-width:none}
 .recommendation-ui .companion-candidate .candidate-members[data-member-count="5"],
-.recommendation-ui .ballot-heroes[data-member-count="5"] {--lineup-avatar:32px;gap:7px}
+.recommendation-ui .ballot-heroes[data-member-count="5"] {gap:6px}
 .recommendation-ui .companion-candidate .candidate-members>.candidate-member,
 .recommendation-app .task-candidate-list .candidate-members>.candidate-member,
 :is(.recommendation-ui,.recommendation-app) .ballot-heroes>.ballot-member {display:block;position:relative;flex:0 0 auto;width:calc(var(--lineup-avatar) + 4px);height:calc(var(--lineup-avatar) + 4px);min-height:32px;padding:2px;line-height:0}
 .recommendation-ui .companion-candidate .candidate-members>.candidate-member>.portrait,
 .recommendation-app .task-candidate-list .candidate-members>.candidate-member>.portrait,
 :is(.recommendation-ui,.recommendation-app) .ballot-heroes>.ballot-member>.portrait {width:var(--lineup-avatar);height:var(--lineup-avatar)}
-:is(.recommendation-ui,.recommendation-app) :is(.candidate-role-mark,.ballot-role-mark) {display:block;position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;padding:1px;background:var(--rb-panel);border-radius:3px;color:var(--rb-muted);pointer-events:none}
+:is(.recommendation-ui,.recommendation-app) :is(.candidate-role-mark,.ballot-role-mark) {display:block;position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;padding:2px;background:var(--rb-panel);border-radius:3px;color:var(--rb-muted);pointer-events:none}
 :is(.recommendation-ui,.recommendation-app) :is(.candidate-member,.ballot-member) .candidate-self {position:absolute;top:0;left:0;display:block;padding:0 2px;background:var(--rb-accent);color:var(--rb-bg);font-size:calc(9px * var(--text-scale));line-height:calc(12px * var(--text-scale));border-radius:2px;z-index:1;pointer-events:none}
 .recommendation-ui .companion-candidate .candidate-members .candidate-self,
 :is(.recommendation-ui,.recommendation-app) .ballot-heroes .candidate-self {width:max-content!important}
 :is(.recommendation-ui,.recommendation-app) .candidate-unusual {position:absolute;right:0;top:0;font-style:normal;color:var(--rb-warning);background:var(--rb-bg);font-size:11px;font-weight:700;line-height:12px;border-radius:2px;padding:0 2px}
 .recommendation-loading-row {display:grid;grid-template-columns:minmax(0,1fr) 60px;align-items:center;gap:9px 8px;padding:8px;border-bottom:1px solid var(--rb-line)}
 .recommendation-loading-status {position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.recommendation-loading-members {display:flex;gap:10px;min-width:0}
+.recommendation-loading-members {display:flex;justify-content:space-between;gap:10px;min-width:0}
 .recommendation-loading-members>span {display:block;flex:none;padding:2px}
 .recommendation-loading i {display:block;background:var(--rb-raised);border-radius:4px}
 .recommendation-loading-members i {width:var(--lineup-avatar);height:var(--lineup-avatar)}
 .recommendation-loading-action {height:32px}
 .recommendation-loading-caption {grid-column:1 / -1;width:42%;height:8px;margin-left:20px}
 @media(max-width:360px) {
- .recommendation-ui .companion-candidate .candidate-members[data-member-count="5"],
- .recommendation-ui :is(.ballot-heroes,.recommendation-loading-members)[data-member-count="5"] {--lineup-avatar:28px;gap:5px}
- .recommendation-ui :is(.candidate-members,.ballot-heroes,.recommendation-loading-members)[data-member-count="4"] {--lineup-avatar:32px;gap:7px}
+ .recommendation-ui {--lineup-avatar:36px}
+ .recommendation-ui :is(.candidate-members,.ballot-heroes,.recommendation-loading-members):is([data-member-count="4"],[data-member-count="5"]) {gap:3px}
 }
 @media(max-width:321px) {
- .recommendation-ui {--lineup-avatar:28px}
- .recommendation-ui :is(.candidate-members,.ballot-heroes,.recommendation-loading-members)[data-member-count="4"] {--lineup-avatar:28px;gap:5px}
- .recommendation-ui .companion-candidate .candidate-members[data-member-count="5"],
- .recommendation-ui :is(.ballot-heroes,.recommendation-loading-members)[data-member-count="5"] {--lineup-avatar:26px;gap:1px}
+ .recommendation-ui .companion-team-compact .companion-roster-top {right:0;top:0}
+ .recommendation-ui .companion-team-compact .companion-scope-toggle .scope-check {transform:translate(8px,-8px)}
  .recommendation-ui .candidate-row:has(.candidate-members:is([data-member-count="4"],[data-member-count="5"]))>.candidate-rank,
  .recommendation-ui .ballot-row-top:has(.ballot-heroes:is([data-member-count="4"],[data-member-count="5"]))>b {display:none}
  .recommendation-ui .companion-candidate .candidate-row {gap:4px}
  .recommendation-ui .ballot-row-top {gap:0}
  .recommendation-ui .companion-candidates .companion-candidate,
  .recommendation-ui .room-ballot-row {padding-inline:6px}
+}
+@media(max-width:390px) {
+ .recommendation-ui .companion-candidate:has(.candidate-members[data-member-count="5"]) .candidate-row {display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 6px}
+ .recommendation-ui .companion-candidate:has(.candidate-members[data-member-count="5"]) .candidate-members {grid-column:2;grid-row:1;width:100%}
+ .recommendation-ui .companion-candidate:has(.candidate-members[data-member-count="5"]) .candidate-actions {grid-column:2;grid-row:2;justify-self:end}
+ .recommendation-ui .room-ballot-row:has(.ballot-heroes[data-member-count="5"]) .ballot-row-top {grid-column:1 / -1;grid-row:1}
+ .recommendation-ui .room-ballot-row:has(.ballot-heroes[data-member-count="5"]) .ballot-row-actions {grid-column:2;grid-row:2}
+ .recommendation-ui .room-ballot-row:has(.ballot-heroes[data-member-count="5"]) .ballot-row-detail {grid-column:1;grid-row:2;flex-wrap:wrap}
 }
 @media(prefers-reduced-motion:no-preference) {
  .recommendation-loading {animation:recommendation-breathe 1.3s ease-in-out infinite alternate}

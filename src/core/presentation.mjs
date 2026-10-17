@@ -1,3 +1,4 @@
+import {normalizeTheme} from './themes.mjs';
 export const TEXT_SCALES=[1,1.1,1.25];
 export const GUIDE_MODULES=[
  ['purchase','回城购买','组件、所需金币和完整路线'],
@@ -9,7 +10,7 @@ export const GUIDE_MODULES=[
 ];
 const moduleIds=GUIDE_MODULES.map(([id])=>id);
 export function normalizePresentation(value){
- return {textScale:TEXT_SCALES.includes(value?.textScale)?value.textScale:1,
+ return {theme:normalizeTheme(value?.theme),textScale:TEXT_SCALES.includes(value?.textScale)?value.textScale:1,
   guideModules:Array.isArray(value?.guideModules)?[...new Set(value.guideModules.filter(id=>moduleIds.includes(id)))]:[...moduleIds]};
 }
 export function changePresentation(current,change){
@@ -17,6 +18,10 @@ export function changePresentation(current,change){
  if(!change||typeof change!=='object')throw Error('界面设置格式不正确');
  const {field,value}=change;
  if(field==='reset')return normalizePresentation(null);
+ if(field==='theme'){
+  if(typeof value!=='string'||normalizeTheme(value)!==value)throw Error('配色选项不正确');
+  return {...next,theme:value};
+ }
  if(field==='textScale'){
   if(!TEXT_SCALES.includes(value))throw Error('字号选项不正确');
   return {...next,textScale:value};

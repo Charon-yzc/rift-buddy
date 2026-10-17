@@ -78,7 +78,7 @@ test('only the local unselected intent prepares a labeled plan without creating 
  const intent=companionPickIntent(client,data.champions,createSlots());
  const plan={preview:true,intent:true,positionKnown:intent.positionKnown,selection:intent.selection,build:build(intent.selection)};
  const html=companionView({data,client,slots:createSlots(),unassigned:[],scope:'solo',soloRole:'',style:'fun',tab:'plan',results:[],plan});
- assert.match(html,/当前完整配置/);assert.match(html,/配置分路<select id="configuration-role"/);assert.match(html,/data-action="configuration-switch"/);assert.doesNotMatch(html,/data-action="my-runes"|data-action="guide-current"/);
+ assert.match(html,/当前完整配置/);assert.match(html,/<select id="configuration-role"[^>]*data-plan=/);assert.equal((html.match(/id="configuration-role"/g)||[]).length,1);assert.match(html,/data-action="configuration-switch"/);assert.doesNotMatch(html,/data-action="my-runes"|data-action="guide-current"/);
 });
 
 test('explicit current-player lane outranks an old unbound same-hero plan',()=>{

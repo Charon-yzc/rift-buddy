@@ -1,0 +1,32 @@
+/* Shared palette surfaces; layout and gameplay state do not change with color. */
+:root[data-theme] body:not(.guide-mode) {background:var(--rb-bg);color:var(--rb-ink)}
+:root[data-theme] :is(.panel,.modal,.drawer) {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink)}
+:root[data-theme] :is(.panel-head,.modal-header,.modal-footer) {border-color:var(--rb-line)}
+:root[data-theme] :is(.btn.primary,.recommendation-ui .btn.primary) {color:var(--rb-on-accent)!important}
+:root[data-theme] :is(.select,input:not([type=checkbox]),.search-wrap) {background:var(--rb-bg);border-color:var(--rb-line);color:var(--rb-ink)}
+:root[data-theme] :is(button,input,select,summary,a):focus-visible {outline:2px solid var(--rb-accent);outline-offset:2px}
+.theme-drawer {max-width:560px}
+.theme-settings {padding:14px}
+.theme-settings h4 {font-size:var(--ui-small);color:var(--rb-muted);font-weight:500;margin:0 0 10px}
+.theme-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.theme-option {min-width:0;padding:12px 9px;border:1px solid var(--rb-line);border-radius:7px;background:var(--rb-bg);color:var(--rb-ink);text-align:left}
+.theme-option b {display:block;margin-top:7px;font-size:var(--ui-small);font-weight:500;line-height:1.5}
+.theme-option:hover {border-color:var(--rb-accent);background:var(--rb-raised)}
+.theme-option.active {border-color:var(--rb-accent);box-shadow:inset 0 0 0 1px var(--rb-accent);background:var(--rb-tint)}
+.theme-swatches {display:flex;gap:4px;pointer-events:none}
+.theme-swatches i {display:block;width:16px;height:12px;border:1px solid #ffffff28;border-radius:3px}
+.theme-other {margin-top:14px}
+.theme-other>summary {padding:8px 0;color:var(--rb-muted);font-size:var(--ui-small);cursor:pointer}
+.theme-select {display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--rb-ink)}
+.theme-select select {min-height:32px;max-width:70%;padding:4px 7px;border:1px solid var(--rb-line);border-radius:5px;background:var(--rb-bg);color:var(--rb-ink)}
+@media(max-width:360px){.theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.theme-option{padding:10px 8px}}
+@media(prefers-reduced-motion:no-preference){.theme-option{transition:background-color .12s ease,border-color .12s ease}}
+
+:root[data-theme] .guide-mode {border-color:var(--rb-line);color:var(--rb-ink)}
+:root[data-theme] .guide-mode:not(.ball):not(.strip):not(.compact) {background:var(--rb-bg)}
+:root[data-theme] .guide-mode :is(header,.panel,.next-item,.tip,.route-item,.presentation-preview),
+:root[data-theme] .guide-mode.compact #guide-root {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink)}
+:root[data-theme] .guide-mode :is(small,.muted,.presentation-note) {color:var(--rb-muted)}
+:root[data-theme] .guide-mode :is(select,.chip) {background:var(--rb-raised);border-color:var(--rb-line);color:var(--rb-ink)}
+:root[data-theme] .guide-mode :is(.primary,.chip.active,.tabs button.active) {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
+:root[data-theme] .guide-mode .brand-dot {background:var(--rb-accent);color:var(--rb-on-accent)}
