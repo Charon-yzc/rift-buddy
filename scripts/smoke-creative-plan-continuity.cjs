@@ -37,7 +37,7 @@ async function run(){
   assert.deepEqual(plan,sourcePlan,'Saving or reopening changed the original reordered plan');
   assert.notDeepEqual(plan.members.map(m=>m.champion),plan.ordered.map(m=>m.champion));assert.equal(favorite.configurations.length,3);
   for(const member of plan.members){
-   await click('[data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');await until(()=>js('!!document.querySelector("#build-role,.configuration-current")'),'Reordered member could not open');
+   await click('.plan-drawer [data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');await until(()=>js('!!document.querySelector("#build-role,.configuration-current")'),'Reordered member could not open');
    assert.equal(await js('document.querySelector("#build-role")?.value||JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].role'),member.role);
    for(const job of plan.ordered)assert.ok((await js('document.querySelector(".combo-config,.companion-note").textContent')).includes(job.job));
    await click('[data-action=close]');await click('[data-action=result-detail][data-index="0"]');
@@ -59,7 +59,7 @@ async function run(){
   await openOriginalPlan('Locked creative recommendation missing');
   const detail=await js('document.querySelector(".plan-drawer").textContent');for(const m of original.ordered)assert.ok(detail.includes(m.job));assert.ok(detail.includes(original.window));assert.ok(detail.includes(original.rulesVersion));
   await capture(main,'creative-original-detail.png');
-  await click('[data-action=build][data-id=Annie][data-role=mid]');assert.equal(await js('document.querySelector("#build-role").value'),'mid');assert.ok(await js('document.querySelector(".combo-config").textContent.includes('+JSON.stringify(original.window)+')'));
+  await click('.plan-drawer [data-action=build][data-id=Annie][data-role=mid]');assert.equal(await js('document.querySelector("#build-role").value'),'mid');assert.ok(await js('document.querySelector(".combo-config").textContent.includes('+JSON.stringify(original.window)+')'));
   await click('[data-action=favorite-build]');await until(()=>js('window.buddy.bootstrap().then(b=>b.state.favorites.some(f=>f.type==="build"&&f.creativePlan))'),'Creative member favorite dropped context');
   await click('[data-action=build-partner][data-role=bottom]');assert.equal(await js('document.querySelector("#build-role").value'),'bottom');assert.ok(await js('document.querySelector(".combo-config").textContent.includes('+JSON.stringify(original.ordered.find(m=>m.champion==='Ashe').job)+')'));
   await click('[data-action=close]');phase='ChampSelect';gameId='1510';await sync();

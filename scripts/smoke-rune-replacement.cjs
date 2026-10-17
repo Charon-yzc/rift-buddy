@@ -50,7 +50,7 @@ async function run(){
  const applyRunes=async()=>{await click('[data-action=apply-runes]');await until(()=>js('document.querySelector("[data-action=apply-runes]")?.disabled===false'),'Rune application did not settle');};
  const sync=async()=>{
   if(await js('!!document.querySelector("[data-action=close]")'))await click('[data-action=close]');
-  await click('[data-action=navigate][data-route=settings]');await click('[data-action=sync]');
+  await click('[data-action=navigate][data-route=settings]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Client sync not ready');await click('[data-action=sync]');
   await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Client sync stayed pending');
   await click('[data-action=navigate][data-route=draft]');
  };
