@@ -5,7 +5,7 @@ const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT
 globalShortcut.register=()=>false;global.fetch=async()=>{throw Error('Isolated eligibility smoke: network disabled');};https.request=()=>{throw Error('Isolated eligibility smoke: game sockets disabled');};
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
-const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(name,name==='client-status'?()=>{clientReads++;return makeClient();}:name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes prohibited');}:name==='companion-mode'?(_event,value)=>{const w=windows[0];w.setMinimumSize(value?280:820,480);w.setContentSize(value?440:1180,850);return {docked:!!value,overlap:false};}:handler);
+const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(name,name==='client-status'?()=>{clientReads++;return makeClient();}:name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes prohibited');}:name==='companion-mode'?(_event,value)=>{const w=windows[0];w.setMinimumSize(value?280:820,480);w.setContentSize(value?440:1180,850);const layout={docked:!!value,overlap:false};windows[0].webContents.send('window-layout',layout);return layout;}:handler);
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));async function until(check,label){for(let n=0;n<170;n++){if(await check())return;await delay(70);}throw Error(label);}
 async function run(){
@@ -25,8 +25,12 @@ async function run(){
  if(phase.endsWith('restart')){
   const expected=JSON.parse(await fs.readFile(path.join(root,'accepted.json')));assert.deepEqual(before.draft,expected.draft);assert.deepEqual(before.favorites,expected.favorites);assert.ok(!Object.hasOwn(before,'eligibility'));assert.equal(await js('document.querySelector("[data-eligibility]").dataset.eligibility'),'manual');
  }else if(phase==='library-solo'){
-  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-eligibility]").dataset.eligibility==="checked"'),'Solo scope not read');
-  await click('[data-action=combination-library]');await click('[data-action=load-duo][data-id=wind-cow]');await until(async()=>(await state()).draft.slots[3].champion==='Yasuo','Solo account scope leaked into friends library');assert.equal((await state()).draft.scope,'bot');assert.equal((await state()).draft.slots[4].champion,'Alistar');await capture('library-keeps-friends-ownership-unknown');
+  await click('[data-action=sync]');await click('[data-action=task-members]');await js('var role=document.querySelector("#task-own-role");role.value="mid";role.dispatchEvent(new Event("change",{bubbles:true}))');await click('[data-action=close]');await revealDraftAction(js,'[data-action=recommend]');await until(()=>js('document.querySelector("[data-eligibility]").dataset.eligibility==="checked"'),'Solo scope not read');
+  // Import an explicit two-member range through the real save API. This
+  // eligibility fixture mocks client-status; live party-range guards and dot
+  // clicks are covered by the two-window pregame startup fixture.
+  const range=await state(),expanded=structuredClone(range);expanded.draft.partyCount=2;expanded.draft.slots=expanded.draft.slots.map(s=>({...s,party:['bottom','support'].includes(s.role),partyManual:true}));await js('window.buddy.saveState('+JSON.stringify(expanded)+','+JSON.stringify(range)+')');await until(async()=>(await state()).draft.partyCount===2,'Imported explicit range missing');await new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.webContents.reload();});await until(()=>js('!!document.querySelector("#solo-role")'),'Imported range reload missing');await click('[data-action=sync]');
+  await click('[data-action=combination-library]');await click('[data-action=load-duo][data-id=wind-cow]');await until(async()=>(await state()).draft.slots[3].champion==='Yasuo','Local eligibility leaked into friends library');assert.equal((await state()).draft.scope,'party');assert.equal((await state()).draft.slots[4].champion,'Alistar');assert.equal((await state()).draft.partyCount,2);await capture('library-keeps-friends-ownership-unknown');
  }else if(phase==='library'){
   await click('[data-action=combination-library]');
   for(const [kind,id]of [['duos','wind-cow'],['trios','ball-delivery']]){
@@ -38,12 +42,12 @@ async function run(){
  }else{
   if(phase!=='offline'){await click('[data-action=sync]');await revealDraftAction(js,'[data-action=recommend]');await until(()=>js('document.querySelector("[data-eligibility]").dataset.eligibility!=="manual"'),'Client not synchronized');}
   if(phase.startsWith('position')){
-   assert.equal(await js('document.querySelector("[data-eligibility]").dataset.eligibility'),phase==='position-solo'?'checked':'position');
+   assert.equal(await js('document.querySelector("[data-eligibility]").dataset.eligibility'),'position');
    await click('[data-action=task-members]');await js('var role=document.querySelector("#task-own-role");role.value="mid";role.dispatchEvent(new Event("change",{bubbles:true}))');await click('[data-action=close]');await revealDraftAction(js,'[data-action=recommend]');await delay(150);assert.equal(await js('document.querySelector("[data-eligibility]").dataset.eligibility'),'checked');
   }
-  await click('[data-action=recommend]');
+  const synchronizedSlots=(await state()).draft.slots;await click('[data-action=recommend]');
   if(['empty','banned','enemy'].includes(phase)){
-   await until(()=>js('!!document.querySelector(".recommendation-error")'),'Unavailable selection did not explain the conflict');assert.equal(await js('document.querySelectorAll(".result-card").length'),0);assert.match(await js('document.querySelector(".recommendation-error").textContent'),phase==='empty'?/没有可选英雄/:phase==='banned'?/已被本局禁用/:/本局不能重复选择/);assert.deepEqual((await state()).draft.slots,before.draft.slots);
+   await until(()=>js('!!document.querySelector(".recommendation-error")'),'Unavailable selection did not explain the conflict');assert.equal(await js('document.querySelectorAll(".result-card").length'),0);assert.match(await js('document.querySelector(".recommendation-error").textContent'),phase==='empty'?/没有可选英雄/:phase==='banned'?/已被本局禁用/:/本局不能重复选择/);assert.deepEqual((await state()).draft.slots,synchronizedSlots);
    if(phase!=='empty'){await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite]');assert.match(await js('document.body.textContent'),/本局不可选/);assert.equal((await state()).draft.slots[2].champion,'Ahri');
     await click('[data-action=combination-library]');await click('[data-action=combo-kind][data-kind=trios]');const preserved=(await state()).draft.slots;await click('[data-action=load-trio][data-id=vi-ahri-nautilus]');await until(()=>js('document.body.textContent.includes("这套组合有本局不可选的英雄")'),'Library bypassed public conflict');assert.deepEqual((await state()).draft.slots,preserved);
    }

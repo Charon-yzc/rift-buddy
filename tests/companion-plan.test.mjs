@@ -21,6 +21,16 @@ test('room is a first-level independent sidebar page without draft controls or d
  assert.doesNotMatch(html,/class="pregame-controls|data-drop-role=|data-preparation-step=|class="companion-candidate"/);
 });
 
+test('both roster layouts expose exactly one party range control per lane',()=>{
+ for(const compactTeam of [true,false]){
+  const html=companionView({data,client:{connected:false},slots:createSlots(),unassigned:[],scope:'party',style:'fun',tab:'recommend',results:[],preferences:{compactTeam}});
+  const controls=[...html.matchAll(/<button\b[^>]*data-action="toggle-party"[^>]*>/g)].map(match=>match[0]);
+  assert.equal(controls.length,5);
+  for(const role of ['top','jungle','mid','bottom','support'])assert.equal(controls.filter(tag=>tag.includes(`data-role="${role}"`)).length,1);
+  assert.equal(controls.filter(tag=>tag.includes('aria-pressed="true"')).length,3);
+ }
+});
+
 test('explicit shared snapshots remain read-only while local reference lanes do not restrict configuration editing',()=>{
  const client={connected:true,phase:'ChampSelect'},selection={...base};
  const teammate=localConfigurationPreview({...selection,readOnly:true},client,'mid');
@@ -40,11 +50,11 @@ test('read-only configuration renders full references and navigation but disable
  const selection={...base,readOnly:true},html=companionPlanView(data,{preview:true,selection,build:build(selection)});
  assert.match(html,/队友配置 · 只读/);assert.match(html,/当前完整配置/);
  const tags=[...html.matchAll(/<(button|select|input|textarea)\b[^>]*>/g)].map(match=>({type:match[1],tag:match[0]}));
- assert.ok(tags.some(({tag})=>/data-action="companion-summoner"/.test(tag)));
+ assert.ok(tags.some(({tag})=>/data-action="configuration-switch"/.test(tag)));
  for(const {type,tag} of tags){const action=tag.match(/data-action="([^"]+)"/)?.[1];if(type==='button'&&readOnlyConfigurationAction(action))continue;assert.match(tag,/\sdisabled(?:\s|=|>)/,tag);}
- assert.match(html,/<button[^>]*data-action="companion-current"(?![^>]*disabled)[^>]*>/);
+ assert.doesNotMatch(html,/data-action="companion-jump"|data-companion-field=/);
  const local=localConfigurationPreview(base,{connected:false},'mid'),editable=companionPlanView(data,{preview:true,selection:local,build:build(local)});
- assert.match(editable,/本机配置参考 · 可编辑/);assert.match(editable,/<button[^>]*data-action="companion-summoner"(?![^>]*disabled)[^>]*>/);
+ assert.match(editable,/<button[^>]*data-action="configuration-switch"(?![^>]*disabled)[^>]*>/);
 });
 
 test('only the local unselected intent prepares a labeled plan without creating a client pick',()=>{
@@ -68,7 +78,7 @@ test('only the local unselected intent prepares a labeled plan without creating 
  const intent=companionPickIntent(client,data.champions,createSlots());
  const plan={preview:true,intent:true,positionKnown:intent.positionKnown,selection:intent.selection,build:build(intent.selection)};
  const html=companionView({data,client,slots:createSlots(),unassigned:[],scope:'solo',soloRole:'',style:'fun',tab:'plan',results:[],plan});
- assert.match(html,/当前完整配置/);assert.match(html,/预选位置<select/);assert.match(html,/data-companion-field="rune"/);assert.doesNotMatch(html,/data-action="my-runes"|data-action="guide-current"/);
+ assert.match(html,/当前完整配置/);assert.match(html,/配置分路<select id="configuration-role"/);assert.match(html,/data-action="configuration-switch"/);assert.doesNotMatch(html,/data-action="my-runes"|data-action="guide-current"/);
 });
 
 test('explicit current-player lane outranks an old unbound same-hero plan',()=>{
@@ -156,8 +166,8 @@ test('the sidebar exposes all lane candidates and full configuration without ano
  assert.equal(new Set(results.map(r=>r.targets[0])).size,5);
  const prepared={own:{id:'Volibear',role:'top'},selection:base,build:build(base)};
  const plan=companionView({...props,tab:'plan',preparation:prepared});
- assert.match(plan,/data-companion-field="core"/);assert.match(plan,/data-companion-field="rune"/);assert.match(plan,/data-companion-field="skill"/);
- assert.equal((plan.match(/class="companion-rune /g)||[]).length,6);assert.match(plan,/companion-shards/);assert.match(plan,/出门购买/);
+ assert.match(plan,/data-action="configuration-switch"/);assert.match(plan,/configuration-more/);
+ assert.doesNotMatch(plan,/调整装备|调整符文|调整 D\/F|data-companion-field=/);
  const team=companionView({...props,tab:'team',enemy:['Ashe'],bans:['Yone']});
  assert.match(team,/敌方公开已选/);assert.match(team,/公开禁选/);assert.match(team,/持续输出/);
  assert.doesNotMatch(team,/\[object Object\]/);
@@ -198,22 +208,18 @@ test('accepted sidebar plans show one preparation receipt and reveal distinct al
  const failed=companionView({...props,error:'推荐失败 <mock>'});assert.match(failed,/推荐失败 &lt;mock&gt;/);assert(failed.indexOf('推荐失败 &lt;mock&gt;')<failed.indexOf('<details class="companion-chosen"'),'Failure remains visible even when the recommendation list is not rendered');
 });
 
-test('configuration overview exposes the complete selected route, six runes, shards, D/F and opening before closed editors',()=>{
+test('configuration shows current plus two whole alternatives before optional details, with numeric icon tooltips',()=>{
  const selected=changeCompanionPlan(data,base,'summoner-swap'),current=build(selected),html=companionPlanView(data,{selection:selected,build:current});
  const start=html.indexOf('aria-label="当前完整配置"'),end=html.indexOf('</section>',start),overview=html.slice(start,end);
  assert.deepEqual([...overview.matchAll(/data-item-id="([^"]+)"/g)].map(m=>m[1]),preparationEquipment(data,current,selected).map(item=>String(item.id)));
- assert.deepEqual([...overview.matchAll(/data-rune-id="(\d+)"/g)].map(m=>Number(m[1])),current.runePage.selectedPerkIds.slice(0,6));
+ assert.deepEqual([...overview.matchAll(/data-rune-id="(\d+)"/g)].map(m=>Number(m[1])),current.runePage.selectedPerkIds);
  for(const id of current.runePage.selectedPerkIds.slice(6))assert.ok(overview.includes(SHARDS[id]));
- const spells=overview.slice(overview.indexOf('aria-label="调整当前 D/F"'));
- assert.ok(spells.indexOf(data.spells[current.summoners[0]].name)<spells.indexOf(data.spells[current.summoners[1]].name),'The displayed D/F order follows the selected preparation');
+ assert.ok(overview.indexOf('alt="'+data.spells[current.summoners[0]].name)<overview.indexOf('alt="'+data.spells[current.summoners[1]].name));
  assert.ok(overview.includes(current.priority.split('').join(' › ')));assert.ok(overview.includes(current.first.split('').join(' → ')));
- for(const section of ['items','runes','skills','opponent','source']){
-  const target=html.match(new RegExp(`<details[^>]*data-companion-section="${section}"[^>]*>`));
-  assert.ok(target,section+' remains a jump target');assert.doesNotMatch(target[0],/\bopen\b/);assert.ok(html.indexOf(target[0])>end);
- }
- for(const field of ['core','rune','skill','summoner-d','summoner-f'])assert.ok(html.includes(`data-companion-field="${field}"`),field+' remains editable');
+ assert.equal((html.slice(0,html.indexOf('class="configuration-more"')).match(/<section[^>]*class="configuration-choice/g)||[]).length,3);
+ assert.doesNotMatch(html,/data-action="companion-jump"|data-companion-field=/);assert.match(overview,/title="[^"]*\d/);
  const warned=companionPlanView(data,{selection:selected,build:{...current,referenceStale:true,selectionWarnings:['原选择不可用 <mock>']}});
- assert.ok(warned.indexOf('原选择不可用 &lt;mock&gt;')<warned.indexOf('aria-label="当前完整配置"'));assert.match(warned.slice(warned.indexOf('aria-label="当前完整配置"'),warned.indexOf('</section>',warned.indexOf('aria-label="当前完整配置"'))),/待复核/);
+ assert.ok(warned.indexOf('原选择不可用 &lt;mock&gt;')>warned.indexOf('来源与版本'));assert.match(warned,/旧版参考/);
 });
 
 test('configuration keeps the actual receipt without recommendation controls and comparison hides only a successful receipt',()=>{
@@ -224,7 +230,7 @@ test('configuration keeps the actual receipt without recommendation controls and
  const props={data,client,slots:createSlots(),unassigned:[],scope:'solo',soloRole:'top',style:'fun',results:[],preparation:prepared,taskPlan:prepared,taskControls};
  const plan=companionView({...props,tab:'plan'}),persistent=plan.slice(plan.indexOf('<div class="companion-persistent"'),plan.indexOf('<main class="companion-content"'));
  assert.equal((persistent.match(/data-preparation-step=/g)||[]).length,0,'Configuration starts with the actual build, not a duplicate hero/receipt card');assert.doesNotMatch(persistent,/data-action="draft-style"|data-action="draft-scope"/);
- const unknown=companionView({...props,tab:'plan',soloRole:'',preparation:{...prepared,own:{...prepared.own,positionKnown:false}}});assert.match(unknown,/<select id="solo-role"/);assert.doesNotMatch(unknown,/<select id="solo-role"[^>]*disabled/);
+ const unknown=companionView({...props,tab:'plan',soloRole:'',preparation:{...prepared,own:{...prepared.own,positionKnown:false}}});assert.match(unknown,/<select id="configuration-role"/);assert.doesNotMatch(unknown,/<select id="configuration-role"[^>]*disabled/);
  assert.equal((companionView({...props,tab:'recommend',taskComparing:true}).match(/data-preparation-step=/g)||[]).length,0);
  assert.equal((companionView({...props,tab:'recommend',taskComparing:false}).match(/data-preparation-step=/g)||[]).length,0,'Selection keeps receipts in My Configuration');
  statuses.set(key,{complete:false,steps:{...steps,runes:{status:'failed',message:'符文写入未完成 <mock>'}}});

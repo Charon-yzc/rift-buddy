@@ -10,7 +10,7 @@ https.request=()=>{throw Error('Isolated matchup smoke: all game sockets disable
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
 const originalHandle=ipcMain.handle.bind(ipcMain);
-ipcMain.handle=(name,handler)=>originalHandle(name,name==='client-status'?()=>structuredClone(fixture):name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes are prohibited in this smoke');}:name==='companion-mode'?(_event,value)=>{const main=windows[0];main.setMinimumSize(value?360:820,480);main.setContentSize(value?440:1180,value?729:820);return {docked:!!value,overlap:false};}:handler);
+ipcMain.handle=(name,handler)=>originalHandle(name,name==='client-status'?()=>structuredClone(fixture):name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes are prohibited in this smoke');}:name==='companion-mode'?(_event,value)=>{const main=windows[0];main.setMinimumSize(value?360:820,480);main.setContentSize(value?440:1180,value?729:820);const layout={docked:!!value,overlap:false};main.webContents.send('window-layout',layout);return layout;}:handler);
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{
  if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);
  const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;
@@ -24,7 +24,7 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'),'utf8'));data.builds=JSON.parse(await fs.readFile(path.join(base,'data/builds.json'),'utf8')).entries;
  const hero=id=>data.champions.find(c=>c.id===id);
- const actions=w=>{const js=code=>w.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});return {js,click:async selector=>{selector=await revealDraftAction(js,selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(80);},change:async(selector,value)=>{await js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(100);}};};
+ const actions=w=>{const js=code=>w.webContents.executeJavaScript(code,true).catch(error=>{throw Error('Renderer expression: '+code,{cause:error});});return {js,click:async selector=>{if(selector==='[data-action=companion-full]'){await js('window.buddy.companionMode(false)');return;}selector=await revealDraftAction(js,selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(80);},change:async(selector,value)=>{await js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(100);}};};
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('[...document.images].forEach(i=>i.loading="eager")');await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await w.webContents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
  let report;
  if(phase==='side'){
@@ -37,18 +37,18 @@ async function run(){
   await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar not entered');
   // Configuration has its own page and no longer repeats above selection.
   await click('[data-action=companion-tab][data-tab=plan]');
-  const geometry=await js('(()=>{const panel=document.querySelector(".companion-content").getBoundingClientRect(),summary=document.querySelector(".companion-plan-summary").getBoundingClientRect();return {width:innerWidth,height:innerHeight,panel:{top:panel.top,bottom:panel.bottom},summary:{top:summary.top,bottom:summary.bottom},overflow:document.documentElement.scrollWidth>innerWidth};})()');
+  const geometry=await js('(()=>{const panel=document.querySelector(".companion-content").getBoundingClientRect(),summary=document.querySelector(".configuration-current").getBoundingClientRect();return {width:innerWidth,height:innerHeight,panel:{top:panel.top,bottom:panel.bottom},summary:{top:summary.top,bottom:summary.bottom},overflow:document.documentElement.scrollWidth>innerWidth};})()');
   // Windows display scaling can round requested DIP content bounds by one pixel.
   assert.ok(Math.abs(geometry.width-440)<=1);assert.ok(Math.abs(geometry.height-729)<=1);assert.equal(geometry.overflow,false);assert.ok(geometry.summary.top>=geometry.panel.top&&geometry.summary.top<geometry.panel.bottom,'The configuration must start in the first viewport');
   await capture(main,'side-first-screen.png');
   await click('[data-action=companion-tab][data-tab=plan]');
   assert.equal(await js('!!document.querySelector("[data-duo-play=naut-samira]")'),true,'Prepared side plan omitted the actual duo stage tasks');
   assert.equal(await js('document.querySelectorAll("[data-matchup-enemy]").length'),0,'No enemy should be selected automatically');
-  await click('[data-action=companion-jump][data-section=runes]');const selectedRune=await js('document.querySelector("[data-companion-field=rune]").value');await click('[data-companion-disclosure=edit-opponent]>summary');
+  const selectedRune=await js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].page.selectedPerkIds.join(",")');await click('[data-companion-disclosure=edit-opponent]>summary');
   const plans={};
   for(const id of ['Morgana','Janna','Yuumi']){
    await change('[data-matchup-target]',id);await until(()=>js('document.querySelector("[data-matchup-enemy]")?.dataset.matchupEnemy==='+JSON.stringify(id)),id+' condition plan missing');
-   plans[id]=await js('document.querySelector(".hero-coach-compact").textContent');assert.equal(await js('document.querySelector("[data-companion-field=rune]").value'),selectedRune);
+   plans[id]=await js('document.querySelector(".hero-coach").textContent');assert.equal(await js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].page.selectedPerkIds.join(",")'),selectedRune);
   }
   assert.equal(new Set(Object.values(plans)).size,3);assert.ok(plans.Morgana.includes('黑盾'));assert.ok(plans.Janna.includes('W 不能阻止风女 R'));assert.ok(plans.Yuumi.includes('同一宿主'));
   await js('document.querySelector("[data-companion-section=opponent]").scrollIntoView({block:"start"})');await capture(main,'side-yuumi-plan.png');
@@ -69,10 +69,10 @@ async function run(){
   console.log('Side: expanded assistant');
   await click('[data-action=my-build]');await until(()=>js('document.querySelector("#overlay-root [data-matchup-enemy]")?.dataset.matchupEnemy==="Morgana"'),'Full configuration did not share the same manual target');
   assert.equal(await js('document.querySelectorAll("#overlay-root [data-duo-play=naut-samira] [data-duo-stage]").length'),3);
-  await click('[data-action=copy-build]');assert.ok(copiedTexts.at(-1).includes('经济分工'));assert.ok(copiedTexts.at(-1).includes('后期团战'));assert.ok(copiedTexts.at(-1).includes('莎弥拉'));
+  await click('#overlay-root [data-companion-disclosure=configuration-actions]>summary');await click('[data-action=copy-build]');assert.ok(copiedTexts.at(-1).includes('经济分工'));assert.ok(copiedTexts.at(-1).includes('后期团战'));assert.ok(copiedTexts.at(-1).includes('莎弥拉'));
   console.log('Side: full configuration shares the selected target');
   await change('#overlay-root [data-matchup-target]','Janna');assert.equal(await js('document.querySelector("#overlay-root [data-matchup-enemy]").dataset.matchupEnemy'),'Janna');
-  await click('[data-action=build-jump][data-section=opponent]');await capture(main,'full-janna-plan.png');
+  await click('#overlay-root [data-companion-disclosure=edit-opponent]>summary');await capture(main,'full-janna-plan.png');
   await js('window.openDrawerMatchupSelect=document.querySelector("#overlay-root [data-matchup-target]");openDrawerMatchupSelect.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));void 0');
   fixture.session.theirTeam=[];main.webContents.send('client-update',structuredClone(fixture));await until(()=>js('document.querySelectorAll("#overlay-root [data-matchup-enemy]").length===0'),'Open drawer retained vanished target');
   assert.equal(await js('openDrawerMatchupSelect.isConnected'),false,'Invalid full configuration target menu remained open');

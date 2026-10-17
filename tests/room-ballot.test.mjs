@@ -11,6 +11,21 @@ const a={lineup:[{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{r
 const b={lineup:[{role:'mid',champion:'Galio'},{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],mode:'rift'};
 const state=(proposal,vote)=>({lineup:[],pick:null,mode:'rift',ballot:{version:1,proposal,vote}});
 
+test('candidate actions show only the local vote state once a matching proposal is visible',()=>{
+ const key=proposalKey(a),room={mode:'client',ballots:true,members:[{nick:'伙伴',share:state(a,key)},{self:true,share:state(null,null)}]};
+ const actions=candidateBallotActions(room,key,3);assert.equal((actions.match(/<button /g)||[]).length,1);
+ assert.match(actions,/>未投<\/button>/);assert.doesNotMatch(actions,/propose-result|已提议|未投 1/);
+ room.members[1].share=state(null,key);assert.match(candidateBallotActions(room,key,3),/>已投<\/button>/);
+ const unavailable=candidateBallotActions({...room,ballots:false},key,3);assert.match(unavailable,/propose-result[^>]*disabled/);assert.doesNotMatch(unavailable,/room-vote/);
+});
+
+test('another configuration for the same champions remains a separately proposable candidate',()=>{
+ const config={champion:'Ashe',role:'bottom',mode:'rift',patch:'16.20',start:[1055],items:[3031,3085],boots:[3006],runes:null,spells:['SummonerFlash','SummonerBarrier'],skills:'WQEW',priority:'WQE',first:'WQE'};
+ const one={...a,configurations:[config]},two={...a,configurations:[{...config,items:[3085,3031]}]},keys=[proposalKey(one),proposalKey(two)];assert.notEqual(keys[0],keys[1]);
+ const room={mode:'client',ballots:true,members:[{share:state(one,keys[0])}]};
+ assert.match(candidateBallotActions(room,keys[0],0),/room-vote/);assert.match(candidateBallotActions(room,keys[1],1),/propose-result/);
+});
+
 test('multi-vote sets are bounded, unique and authoritative over the legacy projection',()=>{
  const ka=proposalKey(a),kb=proposalKey(b);
  assert.deepEqual(ballotVotes(sanitizeRoomBallot({version:1,proposal:a,votes:[ka,kb,ka],vote:kb})),[ka,kb]);
@@ -28,7 +43,7 @@ test('one player can support multiple lineups without amplifying either score',(
  const ka=proposalKey(a),kb=proposalKey(b),self={nick:'我',self:true,share:{...state(a,ka),ballot:{version:1,proposal:a,votes:[ka,kb,ka],vote:ka}}};
  const room={mode:'client',ballots:true,multiVotes:true,members:[self,{nick:'伙伴',share:state(b,null)}]};
  let rows=roomBallotBoard(room,[],champions);assert.equal(rows.length,2);assert.ok(rows.every(row=>row.mine&&row.voters.length===1));
- for(const key of [ka,kb])assert.match(candidateBallotActions(room,key,0),/已投 1/);
+ for(const key of [ka,kb])assert.match(candidateBallotActions(room,key,0),/>已投<\/button>/);
  self.share.ballot.votes=[kb];rows=roomBallotBoard(room,[],champions);
  assert.equal(rows.find(row=>row.key===ka).voters.length,0);assert.equal(rows.find(row=>row.key===kb).voters.length,1);
  self.share.ballot.votes=[];assert.ok(roomBallotBoard(room,[],champions).every(row=>row.voters.length===0));
@@ -38,7 +53,7 @@ test('shared proposals are visible, voting is primary and adoption stays in deta
  const key=proposalKey(a),room={mode:'client',ballots:true,members:[{nick:'伙伴',share:state(a,key)},{nick:'我',self:true,share:state(null,null)}]};
  const html=roomBallotView(room,[],champions),vote=html.indexOf('data-action="room-vote"'),adopt=html.indexOf('data-action="room-adopt-ballot"'),details=html.indexOf('data-action="room-ballot-details"');
  assert.match(html,/<section class="room-ballot-board"/);assert.doesNotMatch(html,/<details class="room-ballot-board"/);assert.ok(vote<details);assert.equal(adopt,-1);
- const actions=candidateBallotActions(room,key,0);assert.ok(actions.indexOf('propose-result')<actions.indexOf('room-vote'));assert.match(actions,/投票 1/);
+ const actions=candidateBallotActions(room,key,0);assert.doesNotMatch(actions,/propose-result/);assert.match(actions,/>未投<\/button>/);
  assert.doesNotMatch(candidateBallotActions(room,proposalKey(b),1),/room-vote/,'A different proposal cannot inherit votes');
 });
 

@@ -31,6 +31,15 @@ test('scan results fill one invite and an empty scan stays honest',()=>{
  assert.doesNotMatch(empty,/room-fill/);
 });
 
+test('automatic room flow keeps manual controls on demand and exposes manual failures',()=>{
+ const options={room:null,champ,transport:'relay',autoEnabled:true,autoSync:true};
+ const closed=roomPanel(options).match(/<details class="ui-disclosure room-manual"[^>]*>/)?.[0];
+ assert.ok(closed);assert.doesNotMatch(closed,/\bopen\b/);
+ for(const extra of [{error:'口令不匹配'},{autoError:'自动连接失败'},{relayRoom:'735291'},{autoEnabled:false},{scanResults:[]}]){
+  const html=roomPanel({...options,...extra});assert.match(html,/<details class="ui-disclosure room-manual"[^>]*\bopen\b/);
+ }
+});
+
 test('host room shows invite codes and members click through to local builds',()=>{
  const html=roomPanel({room:snapshot(),nick:'房主',addresses:[{name:'以太网',address:'192.168.1.5'},{name:'Radmin VPN',address:'26.31.0.7'}],champ});
  assert.match(html,/开黑房间 · 482913/);assert.match(html,/2 人在线 · 口令 123456/);

@@ -1,7 +1,7 @@
 const {app,screen,globalShortcut,ipcMain,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),attempts=[],results=[],writes=[],checks=[];
-let main,side,report;
+let main,side,report,suppressPreparationSnapshot=false,heldSideClient=null;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -9,7 +9,7 @@ global.fetch=async()=>{throw Error('External network disabled in isolated startu
 http.request=()=>{throw Error('Real sockets forbidden in isolated startup fixture');};
 global.WebSocket=class{constructor(){throw Error('Real relay connections forbidden in isolated startup fixture');}};
 const handle=ipcMain.handle.bind(ipcMain);
-ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(name==='prepare-selection')attempts.push(structuredClone(args[1]));const result=await handler(...args);if(name==='prepare-selection')results.push(structuredClone(result));return result;});};
+ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(heldSideClient&&name==='client-status'&&args[0].sender===side?.webContents)return structuredClone(heldSideClient);if(name==='prepare-selection')attempts.push(structuredClone(args[1]));const result=await handler(...args);if(name==='prepare-selection')results.push(structuredClone(result));return suppressPreparationSnapshot&&['bootstrap','main-ready'].includes(name)?{...result,preparationSnapshot:{revision:result.preparationSnapshot?.revision||0,events:[]}}:result;});};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label,timeout=18000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await check())return;await delay(100);}throw Error(label);}
 async function checkpoint(name,run){try{await run();checks.push({name,passed:true});}catch(error){
@@ -21,10 +21,10 @@ async function run(){
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),hero=id=>data.champions.find(champion=>champion.id===id),initial=JSON.parse(await fs.readFile(path.join(root,'settings.json')));
  assert.equal(initial.preferences.autoSync,true);assert.equal(initial.preferences.clickPrepare,true);assert.equal(initial.draft.playerPosition,undefined);assert.equal(initial.draft.soloRole,'');assert.equal(initial.draft.slots.filter(slot=>slot.champion).length,5,'Startup fixture needs a saved local lineup on every lane');
- let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4,soloParty=false,unknownAllyRoles=false;
+ let observer,phase='Offline',queueId=430,gameId=530001,intent=0,picked=0,friendIntent=0,outsidePicked=0,ownAssigned='',friendAssigned='',completed=false,requests=0,spell1Id=12,spell2Id=4,soloParty=false,unknownAllyRoles=false;
  let page={id:44,name:'Synthetic editable page',isEditable:true,isActive:true,current:true};
  const ownIdentity={puuid:'startup-synthetic-own-identity',summonerId:530001,gameName:'合成测试本人',tagLine:'TEST'},friendIdentity={puuid:'startup-synthetic-friend-identity',summonerId:530002,gameName:'合成测试队友',tagLine:'TEST'};
- const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:0,championPickIntent:friendIntent,assignedPosition:friendAssigned,...friendIdentity},{cellId:1,championId:0,championPickIntent:0,assignedPosition:''},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:ownAssigned,spell1Id,spell2Id,...ownIdentity},{cellId:3,championId:0,championPickIntent:0,assignedPosition:''},{cellId:4,championId:0,championPickIntent:0,assignedPosition:''}],theirTeam:[],actions:[[{id:22,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',adjustedTimeLeftInPhase:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
+ const rawSession=()=>({gameId,localPlayerCellId:2,myTeam:[{cellId:0,championId:0,championPickIntent:friendIntent,assignedPosition:friendAssigned,...friendIdentity},{cellId:1,championId:0,championPickIntent:0,assignedPosition:''},{cellId:2,championId:picked,championPickIntent:intent,assignedPosition:ownAssigned,spell1Id,spell2Id,...ownIdentity},{cellId:3,championId:outsidePicked,championPickIntent:0,assignedPosition:outsidePicked?'TOP':''},{cellId:4,championId:0,championPickIntent:0,assignedPosition:''}],theirTeam:[],actions:[[{id:22,type:'pick',actorCellId:2,championId:intent||picked,completed,isInProgress:!completed}]],timer:{phase:'PLANNING',adjustedTimeLeftInPhase:90000},bans:{myTeamBans:[],theirTeamBans:[]},allowDuplicatePicks:false});
  const output=options=>{
   requests++;assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);
   const method=options.method||'GET',route=options.path,body=options.body===undefined?undefined:JSON.parse(options.body);
@@ -60,12 +60,13 @@ async function run(){
  const bootstrap=()=>handlers.get('bootstrap')(event(main)),state=async()=>(await bootstrap()).state,client=async()=>(await bootstrap()).client;
  const click=async(window,selector)=>{assert.ok(!selector.includes('data-action=sync'),'This regression may not click manual sync');await until(()=>js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Enabled control missing: '+selector);};
  const change=async(window,selector,value)=>{await until(()=>js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el&&'+JSON.stringify(selector)+'==="#solo-role")document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.click();return !!el&&!el.disabled;})()'),'Enabled role control missing: '+selector);return js(window,'(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');};
- const capture=async(window,name)=>{await js(window,'new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await window.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());report.screenshots=[...(report.screenshots||[]),name];};
+ const capture=async(window,name)=>{await js(window,'Promise.race([Promise.all([...document.images].filter(image=>{const r=image.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}).map(image=>image.decode().catch(()=>{}))),new Promise(resolve=>setTimeout(resolve,2000))])');await js(window,'new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await window.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());report.screenshots=[...(report.screenshots||[]),name];};
  const fresh=async predicate=>until(async()=>predicate(await client()),'Automatic client snapshot did not follow the synthetic phase/selection');
  await until(()=>js(main,'!!window.buddy&&!!document.querySelector("#solo-role")'),'Main draft UI missing');await until(()=>observer,'Observer mock missing');
  const area=screen.getPrimaryDisplay().workArea,anchor={x:area.x+20,y:area.y+20,width:Math.max(600,area.width-500),height:Math.min(800,area.height-40)};
  observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor),foreground:false,minimized:false},game:null})+'\n');
  await fresh(snapshot=>requests>0&&snapshot.connected===false&&snapshot.phase==='Offline');
+ if(!process.env.RIFT_BUDDY_INTENT_ONLY){
  await checkpoint('visible-disconnected-notice',async()=>{
   await capture(main,'offline-reminder.png');
   const notice=await js(main,'(()=>{const el=document.querySelector("[data-client-connection-status]");if(!el)return null;const rect=el.getBoundingClientRect(),style=getComputedStyle(el);return {text:el.textContent,visible:rect.width>0&&rect.height>0&&rect.top<innerHeight&&rect.bottom>0&&style.visibility!=="hidden"&&style.display!=="none"};})()');
@@ -212,9 +213,10 @@ async function run(){
   await change(side,'#solo-role','bottom');await until(()=>intent===hero('Jinx').key&&results.length===attempts.length,'Solo lane claim did not settle');
   await until(()=>js(side,'(()=>{const toast=document.querySelector("#toast");return /已预选.*占位/.test(toast?.textContent)&&!toast.classList.contains("error");})()'),'Successful lane claim reported a save error instead of completion');
   picked=intent;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(p=>p.cellId===2)?.championId===picked);
-  await click(side,'[data-action=draft-scope][data-scope=solo]');
-  await until(async()=>(await state()).draft.scope==='solo','Explicit solo scope did not persist');
-  await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Explicit solo mode treated an unlocked public championId as a completed pick');
+  await click(side,'[data-action=draft-scope][data-scope=context]');
+  await until(async()=>(await state()).draft.scope==='context','Whole-team reference choice did not persist');
+  assert.equal((await state()).draft.partyCount,1,'Reference range must not change the captured recommendation quantity');
+  await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Whole-team reference treated an unlocked public championId as a completed pick');
   assert.ok((await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members [data-role]")].map(el=>el.dataset.role)')).every(role=>role==='bottom'));
   await click(side,'[data-action=draft-scope][data-scope=party]');
   await until(async()=>(await state()).draft.scope==='party','Explicit party scope did not persist');
@@ -258,6 +260,136 @@ async function run(){
    assert.equal(snapshot.model.summoners[1].id,'SummonerFlash','The guide moved default Flash F in '+nextPhase);
    assert.equal(snapshot.model.selection.summonerIds,undefined,'The current client key must remain a per-game observation');
   }
+ });
+ }
+ if(handlers.has('stage-selection')){
+  const lobby=async()=>{phase='Lobby';soloParty=false;unknownAllyRoles=false;intent=0;picked=0;completed=false;ownAssigned='';friendAssigned='';friendIntent=0;await fresh(snapshot=>snapshot.phase==='Lobby');await until(()=>js(main,'!!document.querySelector("#solo-role")&&/组队大厅/.test(document.querySelector(".draft-compare-status")?.textContent||"")'),'Main lobby UI did not observe the new phase');};
+  await checkpoint('lobby-role-choice-defers-one-hover-without-configuration',async()=>{
+   await lobby();assert.equal(await js(main,'document.querySelector("#solo-role").value'),'','A new lobby must not inherit last round\'s role');
+   const before=writes.length;await change(main,'#solo-role','bottom');
+   await until(async()=>(await state()).draft.preselection?.role==='bottom','Explicit lobby role was not saved');
+   await capture(main,'lobby-preselection.png');
+   assert.equal(writes.length,before,'Lobby preselection must not write to champ select');
+   gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId));
+   await until(()=>intent>0,'Staged lobby role did not hover on entering selection');
+   await until(async()=>(await state()).draft.preselection?.attemptedGameId===String(gameId),'Deferred hover was not consumed');
+   await delay(2800);assert.equal(writes.length,before+1,'Deferred role intent must hover exactly once without runes/spells/items');
+   assert.match(writes.at(-1).route,/\/lol-champ-select\/v1\/session\/actions\//);
+   side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
+   await until(()=>js(side,'!!document.querySelector(".companion-shell[data-tab=recommend]")'),'Role-only preselection incorrectly opened configuration');
+   const draft=(await state()).draft;assert.equal(draft.partyCount,2);assert.equal(draft.slots.filter(slot=>slot.party).length,2);
+  });
+  await checkpoint('two-windows-manual-scope-and-zero-survive-sync-until-next-draft',async()=>{
+   await click(main,'[data-action=toggle-party][data-role=support]');
+   await until(async()=>(await state()).draft.partyCount===3,'Main checkbox did not resize the captured count');
+   await until(()=>js(side,'document.querySelectorAll(".companion-team-now .in-scope").length===3'),'Sidebar did not receive main range edit');
+   const previousHover=intent;await change(side,'#solo-role','mid');await until(()=>intent>0&&intent!==previousHover,'Manual role claim did not settle');
+   await until(async()=>(await state()).draft.partyCount===3&&(await state()).draft.slots.filter(slot=>slot.party).length===3,'Role claim resized the range');
+   const selectedRoles=await js(side,'[...document.querySelectorAll(".companion-team-now .in-scope")].map(row=>row.dataset.dropRole)');
+   for(const role of selectedRoles)await click(side,'[data-action=toggle-party][data-role='+role+']');
+   await until(async()=>(await state()).draft.partyCount===0,'Checkboxes did not permit an empty manual range');await delay(2800);
+   const empty=(await state()).draft;assert.equal(empty.partyCount,0);assert.equal(empty.slots.filter(slot=>slot.party).length,0);
+   assert.equal(await js(main,'document.querySelectorAll(".task-roster .slot.party").length'),0,'Main window revived unchecked lanes');
+   await lobby();gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId));
+   await until(async()=>(await state()).draft.partyCount===2,'Next draft did not recapture the actual two-person lobby');
+  });
+  if(handlers.has('party-range'))await checkpoint('checkbox-survives-a-public-pick-before-sidebar-notification',async()=>{
+   side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
+   await until(()=>js(side,'document.querySelectorAll(".companion-team-now .in-scope").length===2'),'Sidebar range must settle before delaying notifications');
+   const oldRole=await js(side,'document.querySelector(".companion-team-now .in-scope").dataset.dropRole');assert.equal(oldRole,'top');
+   const send=side.webContents.send.bind(side.webContents),held=new Map(),writeCount=writes.length;heldSideClient=structuredClone(await client());
+   side.webContents.send=(channel,...args)=>{if(['state-update','client-update','guide-selection','preparation-update'].includes(channel)){held.set(channel,args);return;}return send(channel,...args);};
+   try{
+    outsidePicked=hero('Garen').key;
+    await fresh(snapshot=>snapshot.session?.myTeam.find(player=>player.cellId===3)?.championId===outsidePicked);
+    await until(async()=>(await state()).draft.slots.some(slot=>slot.champion==='Garen'&&slot.clientCellId===3),'Main did not import the new public ally before the sidebar click');
+    await click(side,'[data-action=toggle-party][data-role='+oldRole+']');
+    await until(async()=>(await state()).draft.partyCount===1,'The old visible checkbox did not decrease the frozen count');
+    const draft=(await state()).draft;assert.equal(draft.slots.filter(slot=>slot.party).length,1);assert.ok(draft.slots.some(slot=>slot.champion==='Garen'&&slot.clientCellId===3),'A checkbox replaced a newer public hero');
+    assert.equal(writes.length,writeCount,'Changing recommendation range wrote to the client');
+   }finally{heldSideClient=null;side.webContents.send=send;for(const [channel,args]of held)send(channel,...args);}
+   await js(main,'window.buddy.partyRange('+JSON.stringify({role:'jungle',checked:true,gameId:String(gameId),cellId:2})+')');
+   outsidePicked=0;await fresh(snapshot=>snapshot.session?.myTeam.find(player=>player.cellId===3)?.championId===0);
+   await until(async()=>(await state()).draft.partyCount===2,'Restoring the test range did not finish');
+  });
+  await checkpoint('confirmed-role-placeholder-restores-without-ledger-or-repeated-writes',async()=>{
+   await until(()=>{side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));return side;},'New draft sidebar missing');
+   await change(side,'#solo-role','support');
+   await until(async()=>(await state()).draft.preselection?.hoveredCellId===2,'Confirmed placeholder was not persisted');
+   const before=writes.length,disk=JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8'));
+   assert.equal(disk.draft.preselection.attemptedGameId,String(gameId));assert.equal(disk.draft.preselection.hoveredCellId,2);
+   suppressPreparationSnapshot=true;
+   try{
+    const loaded=new Promise(resolve=>side.webContents.once('did-finish-load',resolve));side.webContents.reload();await loaded;
+    await until(()=>js(side,'!!document.querySelector(".companion-shell[data-tab=recommend]")&&document.querySelector("#solo-role")?.value==="support"'),'Reload without runtime receipts misclassified the role placeholder as a completed choice');
+   }finally{suppressPreparationSnapshot=false;}
+   phase='Offline';await fresh(snapshot=>!snapshot.connected);phase='ChampSelect';await fresh(snapshot=>snapshot.connected&&String(snapshot.session?.gameId)===String(gameId));
+   await until(()=>{side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));return side;},'Same-game reconnect sidebar missing');await delay(2400);
+   assert.equal(await js(side,'document.querySelector(".companion-shell")?.dataset.tab'),'recommend','Same-game reconnect incorrectly opened configuration');
+   assert.equal(writes.length,before,'Restoring display state repeated the client hover or configuration');
+   assert.equal((await state()).draft.partyCount,2);
+  });
+  await checkpoint('lobby-hero-choice-and-dodge-reset-never-repeat-old-intent',async()=>{
+   await lobby();const before=writes.length;
+   await click(main,'[data-action=pregame-hero]');await capture(main,'lobby-hero-picker.png');await click(main,'.champ-option[data-id=Ahri]');
+   await until(async()=>(await state()).draft.preselection?.champion==='Ahri','Hero picker did not save the lobby intent');
+   gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId));
+   await until(()=>intent===hero('Ahri').key,'Explicit lobby hero did not hover on entry');await delay(2600);
+   assert.equal(writes.length,before+3,'Explicit lobby hero must prepare hover, runes and spells exactly once');
+   assert.equal(page.selectedPerkIds.length,9);
+   side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
+   await until(()=>js(side,'!!document.querySelector(".companion-shell[data-tab=plan] .configuration-current")'),'Explicit hero choice did not open configuration');
+   side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
+   const configurationWrites=writes.length;
+   await click(side,'.configuration-choice:not(.configuration-current) [data-action=configuration-switch]');
+   await until(()=>writes.length===configurationWrites+3,'Whole configuration switch did not prepare all client settings');
+   await until(()=>results.length===attempts.length,'Whole configuration switch did not finish');
+   assert.equal(intent,hero('Ahri').key,'Switching configuration changed the hero');
+   assert.equal(results.at(-1).complete,true);assert.notEqual(attempts.at(-1).preselectOnly,true);
+   const stale=structuredClone(await state());
+   await lobby();await until(async()=>!(await state()).draft.preselection,'Dodge did not clear the consumed intent');
+   // A delayed renderer can rebase on the accepted lobby state before its
+   // old whole-draft snapshot reaches main. The current phase still wins.
+   const lobbyBase=structuredClone(await state());
+   await js(main,'window.buddy.saveState('+JSON.stringify(stale)+','+JSON.stringify(lobbyBase)+')');
+   const afterLateSave=(await state()).draft;
+   assert.equal(afterLateSave.preselection,undefined);assert.equal(afterLateSave.partyCount,undefined);assert.equal(afterLateSave.clientGameId,undefined);
+   assert.equal(afterLateSave.slots.some(slot=>slot.champion||Number.isInteger(slot.clientCellId)),false,'Delayed old draft restored picks in the lobby');
+   gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId));await delay(2800);
+   assert.equal(intent,0);assert.equal(writes.length,configurationWrites+3,'A new draft repeated the previous round\'s preselection');
+  });
+ }
+ if(handlers.has('stage-selection'))await checkpoint('recommendation-popup-menus-dismiss-without-changing-the-draft',async()=>{
+  const before=structuredClone((await state()).draft),writeCount=writes.length;
+  side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
+  await click(side,'[data-action=companion-tab][data-tab=recommend]');
+  for(const [window,menu,other] of [[main,'.window-tools','.pregame-more'],[side,'.companion-navigation-more','.pregame-more']]){
+   await js(window,`document.querySelector('${menu}>summary').click()`);await delay(60);
+   await js(window,`document.querySelector('${other}>summary').click()`);await delay(60);
+   assert.equal(await js(window,`document.querySelector('${menu}').open`),false,'Opening a second menu left the previous popup open');
+   assert.equal(await js(window,`document.querySelector('${other}').open`),true);
+   await js(window,`document.querySelector('${other}>div button').focus()`);
+   window.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});window.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});await delay(60);
+   assert.equal(await js(window,`document.querySelector('${other}').open`),false);
+   assert.equal(await js(window,`document.activeElement===document.querySelector('${other}>summary')`),true,'Escape did not return focus to the opener');
+   await js(window,`document.querySelector('${menu}>summary').click();document.querySelector('${menu}>div button').focus()`);await delay(60);
+   window.webContents.send('room-update',{mode:'idle',members:[],ballots:false});await delay(120);
+   assert.equal(await js(window,`document.querySelector('${menu}').open`),true,'Background refresh closed a popup in use');
+   assert.equal(await js(window,`document.activeElement.closest('${menu}')!==null`),true);
+   const point=await js(window,'(()=>{const r=document.querySelector(".companion-section-head h3,.draft-compare-header h1").getBoundingClientRect();return {x:Math.round(r.x+3),y:Math.round(r.y+3)}})()');
+   window.webContents.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...point});window.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,...point});await delay(60);
+   assert.equal(await js(window,`document.querySelector('${menu}').open`),false,'Clicking the workspace did not close the popup');
+  }
+  assert.equal(writes.length,writeCount,'Popup navigation dispatched a client write');assert.deepEqual((await state()).draft,before,'Popup navigation changed the selection');
+ });
+ await checkpoint('closing-main-stays-closed-until-explicit-open',async()=>{
+  const before=windows.length,writeCount=writes.length;
+  main.close();await until(()=>main.isDestroyed(),'Main close did not finish');
+  for(let n=0;n<3;n++)await js(side,'window.buddy.client(true)');
+  assert.equal(windows.length,before,'Background polling recreated an explicitly closed main');
+  await js(side,'window.buddy.openMainPage({route:"settings"})');
+  await until(()=>{const reopened=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().endsWith('/src/index.html'));if(reopened){main=reopened;return true;}},'Explicit open did not restore main');
+  assert.equal(writes.length,writeCount,'Window operations wrote client state');
  });
  assert.ok(windows.every(window=>window.isDestroyed()||!window.isVisible()),'Smoke windows must stay hidden');
  report={...report,checks,passed:checks.every(check=>check.passed),source,archiveSha256:release?.archiveSha256||null,autoSync:true,manualSyncClicks:0,syntheticLcuOnly:true,observerMocked:true,actualRuneWrites:0,mockedWrites:writes.map(write=>({route:write.route,method:write.method})),preparationApiCalls:attempts.length};

@@ -38,8 +38,7 @@ test('HTML fallback cards preserve source identity without borrowing rune-family
  assert.equal(build.selectedRune.source,'OP.GG');assert.equal(build.selectedRune.samples,0);assert.ok(build.selectedRune.familySamples>0);
  const html=companionPlanView(fallback,{build,selection});
  assert.match(html,/OP.GG 来源参考 · 完整页样本未提供/);assert.match(html,/OP.GG 来源参考 · 核心路线样本未提供/);
- const sourceCards=[...html.matchAll(/<button class="companion-option[\s\S]*?<\/button>/g)].map(m=>m[0]).filter(h=>h.includes('data-id="source-'));
- assert.ok(sourceCards.length);assert.ok(sourceCards.every(h=>!h.includes('机制备选')));
+ assert.match(html,/data-action="configuration-switch"/);assert.doesNotMatch(html,/data-action="companion-rune"/);
  const mechanism=build.runeOptions.find(o=>o.source==='机制整理');assert.ok(mechanism);
  const chosen=getBuild(champion,'bottom',fallback,{...selection,runeId:mechanism.id});assert.equal(chosen.selectedRune.source,'机制整理');
  assert.match(companionPlanView(fallback,{build:chosen,selection}),/机制备选 · 无统计样本/);

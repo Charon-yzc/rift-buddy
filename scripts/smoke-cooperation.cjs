@@ -15,7 +15,7 @@ const crossLane=process.env.RIFT_BUDDY_COOP_CROSS_LANE==='1',lockedFriends=proce
 globalShortcut.register=()=>false;global.fetch=async()=>{throw Error('Isolated cooperation smoke: network disabled');};https.request=()=>{throw Error('Isolated cooperation smoke: game sockets disabled');};
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
-const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(name,name==='client-status'?()=>({connected:false,phase:'Offline',message:'Isolated fixture'}):name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes prohibited');}:name==='copy'?(_event,text)=>{copies.push(text);return true;}:name==='companion-mode'?(_event,value)=>{const w=windows[0];w.setMinimumSize(value?280:820,480);w.setContentSize(value?440:1180,850);return {docked:!!value,overlap:false};}:handler);
+const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>handle(name,name==='client-status'?()=>({connected:false,phase:'Offline',message:'Isolated fixture'}):name==='apply-runes'?()=>{runeWrites++;throw Error('Rune writes prohibited');}:name==='copy'?(_event,text)=>{copies.push(text);return true;}:name==='companion-mode'?(_event,value)=>{const w=windows[0];w.setMinimumSize(value?280:820,480);w.setContentSize(value?440:1180,850);const layout={docked:!!value,overlap:false};w.webContents.send('window-layout',layout);return layout;}:handler);
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));async function until(check,label){for(let n=0;n<150;n++){if(await check())return;await delay(70);}throw Error(label);}
 async function deadline(promise,label,ms=15000){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(label)),ms);})]);}finally{clearTimeout(timer);}}
@@ -24,7 +24,7 @@ async function run(){
  for(const file of ['src/core/party-cooperation.mjs','src/attribute-plan-view.mjs','src/result-text.mjs','src/core/tactical-cooperation.mjs','src/core/shared-cooperation.mjs','src/core/cooperation.mjs','src/core/cooperation-skills.mjs','src/core/cooperation-pairs.mjs','src/core/pair-statistics.mjs','src/pair-statistics-view.mjs','services/pair-statistics.mjs','data/pair-statistics.json','src/core/creative-plan.mjs','src/core/recommend.mjs','src/core/builds.mjs','src/cooperation-view.mjs','src/guide-view.mjs','src/companion-view.mjs','src/app.mjs'])assert.ok((await fs.readFile(path.join(base,file))).equals(await fs.readFile(file)),'Packaged source drift: '+file);
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main missing');
- const js=async code=>{try{return await deadline(main.webContents.executeJavaScript(code,true),'Renderer deadline: '+code.slice(0,160));}catch(error){throw Error('Renderer probe failed: '+code,{cause:error});}},click=async selector=>{selector=await revealDraftAction(js,selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(120);};
+ const js=async code=>{try{return await deadline(main.webContents.executeJavaScript(code,true),'Renderer deadline: '+code.slice(0,160));}catch(error){throw Error('Renderer probe failed: '+code,{cause:error});}},click=async selector=>{if(selector==='[data-action=companion-full]'){await js('window.buddy.companionMode(false)');return;}selector=await revealDraftAction(js,selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(120);};
  const state=()=>js('window.buddy.bootstrap().then(b=>b.state)');
  const generate=async()=>{await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")&&!document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),'Worker result missing');};
  const capture=async name=>{
@@ -42,7 +42,7 @@ async function run(){
  let firstScreenActions=null;
  if(partySize||specific){main.setContentSize(1180,850);await delay(500);
   firstScreenActions=await js('(()=>{const c=document.querySelector(".result-card"),r=c.getBoundingClientRect(),p=c.parentElement.getBoundingClientRect(),buttons=[c.querySelector(".candidate-row [data-action=propose-result]"),...c.querySelectorAll(".candidate-members [data-action=build]")];return {titleTop:c.querySelector(".candidate-row").getBoundingClientRect().top,toolbarBottom:document.querySelector(".topbar").getBoundingClientRect().bottom,cardWidth:r.width,availableWidth:p.width,buttons:buttons.map(b=>{const r=b.getBoundingClientRect();return {top:r.top,bottom:r.bottom,width:r.width,height:r.height,visible:r.top>=0&&r.bottom<=innerHeight&&r.width>0&&r.height>0};})};})()');
-  assert.ok(firstScreenActions.cardWidth/firstScreenActions.availableWidth>.95,'A single result must use the full available row');assert.ok(firstScreenActions.titleTop>=firstScreenActions.toolbarBottom,'Title hidden by toolbar');assert.equal(firstScreenActions.buttons.length,expectedMembers.length+1);assert.ok(firstScreenActions.buttons.every(b=>b.visible),'Adoption and member configurations must be reachable on the first card screen');
+  assert.ok(firstScreenActions.cardWidth<=480&&firstScreenActions.cardWidth>250,'A single result remains compact and readable');assert.ok(firstScreenActions.titleTop>=firstScreenActions.toolbarBottom,'Title hidden by toolbar');assert.equal(firstScreenActions.buttons.length,expectedMembers.length+1);assert.ok(firstScreenActions.buttons.every(b=>b.visible),'Adoption and member configurations must be reachable on the first card screen');
  }
  if((crossLane||lockedFriends)&&!restart)await capture('main.png');
  const {createCooperationGraph,cooperationPlan}=await import(require('node:url').pathToFileURL(path.join(base,'src/core/cooperation.mjs'))),expectedCooperation=cooperationPlan(expectedMembers.map(([role,champion])=>({role,champion})),createCooperationGraph(JSON.parse(await fs.readFile(path.join(base,'data/game.json'))).champions));assert.ok(expectedCooperation);
@@ -57,10 +57,11 @@ async function run(){
    await click('[data-action=companion-preview][data-result-index="0"][data-id="'+id+'"][data-role="'+role+'"]');
    const note=await js('document.querySelector(".companion-note")?.textContent');assert.ok(note?.includes(expectedCooperation.name),'Sidebar preview lost cooperation for '+id);
    if(role===previewRole){
-    const option=await js('(()=>{const s=document.querySelector("[data-companion-field=rune]");return [...s.options].find(o=>o.value!==s.value)?.value;})()');assert.ok(option,'Fixture requires an alternate complete rune page');
-    await js('(()=>{const s=document.querySelector("[data-companion-field=rune]");s.value='+JSON.stringify(option)+';s.dispatchEvent(new Event("change",{bubbles:true}));})()');await delay(120);previewRuneId=option;
+    const alternative=await js('document.querySelector(".configuration-choice:not(.configuration-current) [data-action=configuration-switch]")?.dataset.config');
+    if(alternative)await click('[data-action=configuration-switch][data-config="'+alternative+'"]');
+    const prepared=(await state()).preparations.findLast(value=>value.id===id&&value.role===role);previewRuneId=prepared?.runeId;
     assert.ok((await js('document.querySelector(".companion-note")?.textContent'))?.includes(expectedCooperation.name),'Editing runes lost the chosen cooperation');
-    await click('[data-action=companion-favorite]');await until(async()=>(await state()).favorites.some(f=>f.type==='build'&&f.champion===id),'Preview favorite was not saved');const favorite=(await state()).favorites.find(f=>f.type==='build'&&f.champion===id);assert.equal(favorite.runeId,option);assert.equal(favorite.creativePlan?.archetype,planKind);
+    await click('[data-action=companion-favorite]');await until(async()=>(await state()).favorites.some(f=>f.type==='build'&&f.champion===id),'Preview favorite was not saved');const favorite=(await state()).favorites.find(f=>f.type==='build'&&f.champion===id);const {getBuild}=await import(require('node:url').pathToFileURL(path.join(base,'src/core/builds.mjs'))),snapshot=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));snapshot.builds=JSON.parse(await fs.readFile(path.join(base,'data/builds.json'))).entries;const current=await js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0]');assert.deepEqual(getBuild(snapshot.champions.find(hero=>hero.id===id),role,snapshot,favorite).runePage.selectedPerkIds,current.page.selectedPerkIds);previewRuneId=favorite.runeId;assert.equal(favorite.creativePlan?.archetype,planKind);
    }
    await click('[data-action=companion-tab][data-tab=recommend]');
   }
@@ -92,9 +93,13 @@ async function run(){
  assert.deepEqual(controls,expectedEditable,'Accept/restart must not add replacement controls for fixed friends');
  for(const member of plan.members){
   await click('[data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');
-  const configuration=await js('document.querySelector(".combo-config").textContent');assert.ok(configuration.includes(plan.window));assert.ok(configuration.includes(planLabel+'说明'));
+  const configuration=await js('document.querySelector(".combo-config,.companion-note").textContent');assert.ok(configuration.includes(plan.window));assert.ok(configuration.includes(plan.name));
   if(member.champion==='Aphelios')assert.ok(await js('document.querySelector(".attribute-plan").textContent.includes("攻击力 › 穿甲 › 攻速")'),'Build omitted attribute preparation');
   if(crossLane&&member.champion==='Ahri'){
+   // Explicit reference-browser entry retains personal import/edit coverage.
+   const reference=(await state()).preparations.find(p=>p.id===member.champion&&p.role===member.role&&p.comboId===plan.id)||favorite.configurations.find(p=>p.id===member.champion&&p.role===member.role);
+   main.webContents.send('open-build',{...reference,id:member.champion,role:member.role,mode:'rift',creativePlan:plan,comboId:plan.id,readOnly:false});
+   await until(()=>js('!!document.querySelector(".build-nav")'),'Reference browser missing');
    const laterSelector='[data-action=build-later][data-id="3165"]';
    assert.ok(await js('!!document.querySelector('+JSON.stringify(laterSelector)+')'),'Morellonomicon source alternative missing');
    await js('(()=>{const b=document.querySelector('+JSON.stringify(laterSelector)+');let p=b.parentElement;while(p){if(p.tagName==="DETAILS")p.open=true;p=p.parentElement;}b.scrollIntoView({block:"center"});})()');

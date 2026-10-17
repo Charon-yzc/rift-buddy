@@ -1,6 +1,7 @@
 import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES, profile,conventionalRole } from './rules.mjs';
 import {draftTargets,scopeSlots,effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {recommendationDraft} from './draft-intents.mjs';
+import {validPartyCount,reconcilePartyRange} from './party-range.mjs';
 import {clientContextDraft,publicAllyIds} from './client-context-draft.mjs';
 export {clearClientPicks} from './draft.mjs';
 import {comboLoadout,loadoutOptions} from './loadouts.mjs';
@@ -268,13 +269,13 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null}) {
+export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null,party=null}) {
  // A saved board may serialize the five lanes in any order. New searches
  // must choose the same graph anchors and plan identity for that same board.
  // Frozen adopted plans retain their own content and execution order.
  if(Array.isArray(slots)&&slots.every(s=>s&&typeof s==='object')){
   slots=[...slots].sort((a,b)=>ROLES.findIndex(r=>r.id===a.role)-ROLES.findIndex(r=>r.id===b.role));
-  slots=clientContextDraft(slots,champions,clientSession,{scope:effectiveDraftScope(slots,scope),soloRole,bans:publicBans,eligibleByRole});
+  slots=clientContextDraft(slots,champions,clientSession,{scope:effectiveDraftScope(slots,scope),soloRole,bans:publicBans,eligibleByRole,party});
  }
  validateSlots(slots,champions);
  scope=effectiveDraftScope(slots,scope);
@@ -550,7 +551,7 @@ export function buildReasonPoints(entry,scope){
  return points.filter(Boolean).slice(0,5);
 }
 
-export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={},ownRole='',creativePlan=null}={}) {
+export function mergeClientSession(slots, session, champions, {autoArrange=true,autoParty=false,party=null,roleOrder={},ownRole='',creativePlan=null,partyCount}={}) {
  const byKey=new Map(champions.map(c=>[c.key,c])),next=structuredClone(slots),unassigned=[],displaced=[];
  const allEntries=(session?.myTeam||[]).filter((p,i,a)=>Number.isInteger(p.cellId)&&p.cellId>=0&&p.cellId<30&&a.findIndex(q=>q.cellId===p.cellId)===i).slice(0,5);
  const entries=allEntries.filter(p=>byKey.has(Number(p.championId))),placed=new Set();
@@ -581,7 +582,8 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
  for(const p of ordered){
   if(placed.has(p.cellId))continue;
   const champion=byKey.get(Number(p.championId)),declared=CLIENT_POSITION_ROLES[String(p.assignedPosition||'').toUpperCase()],prior=slots.find(s=>s.clientCellId===p.cellId);
-  const preferred=[declared,...(!declared&&prior?.champion===champion.id?[prior.role]:[]),...(roleOrder[champion.id]||[]),...profile(champion).roles,...ROLES.map(r=>r.id)].filter((r,i,a)=>r&&a.indexOf(r)===i);
+  const member=party?.status==='known'&&party.members?.find(value=>value.cellId===p.cellId),intentRole=ROLES.some(value=>value.id===member?.intentRole)?member.intentRole:'';
+  const preferred=[declared,...(!declared&&intentRole?[intentRole]:[]),...(!declared&&prior?.champion===champion.id?[prior.role]:[]),...(roleOrder[champion.id]||[]),...profile(champion).roles,...ROLES.map(r=>r.id)].filter((r,i,a)=>r&&a.indexOf(r)===i);
   let target=next.find(s=>s.role===declared&&!Number.isInteger(s.clientCellId)&&(!s.champion||autoArrange&&(s.automaticPosition||!s.locked)));
   if(!target&&autoArrange)target=preferred.map(r=>next.find(s=>s.role===r)).find(s=>s&&!s.champion&&!Number.isInteger(s.clientCellId));
   // Public picks supersede only prospective local suggestions, never a bound pick.
@@ -592,8 +594,8 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
  const local=allEntries.find(p=>p.cellId===session?.localPlayerCellId),bound=next.find(s=>s.clientCellId===session?.localPlayerCellId);
  const localRole=bound?.role||CLIENT_POSITION_ROLES[String(local?.assignedPosition||'').toUpperCase()],mine=next.find(s=>s.role===localRole);
  const previous=slots.some(s=>s.clientCellId===session?.localPlayerCellId),changed=!!(mine&&!mine.party&&!mine.partyManual&&!mine.manualPosition&&!previous);
- if(changed)mine.party=true;
- if(autoParty&&party){
+ if(changed&&!validPartyCount(partyCount))mine.party=true;
+ if(autoParty&&party&&!validPartyCount(partyCount)){
   const known=party.status==='known';
   const members=(party.members||[]).filter((m,i,all)=>allEntries.some(p=>p.cellId===m.cellId)&&all.findIndex(p=>p.cellId===m.cellId)===i&&(known||m.cellId===session?.localPlayerCellId||m.source==='manual-id'));
   const hoverContext=recommendationDraft(next,session,champions,{ownRole});
@@ -660,5 +662,6 @@ export function mergeClientSession(slots, session, champions, {autoArrange=true,
    for(const slot of next)if(!slot.partyManual)slot.party=used.has(slot.role)||planned.includes(slot.role);
   }
  }
- return {slots:next,unassigned,displaced,markedLocalRole:localRole||null,markedLocalChanged:changed};
+ const ranged=validPartyCount(partyCount)?reconcilePartyRange(next,session,champions,{count:partyCount,party,ownRole,roleOrder}):next;
+ return {slots:ranged,unassigned,displaced,markedLocalRole:localRole||null,markedLocalChanged:changed&&!!ranged.find(slot=>slot.role===localRole)?.party};
 }

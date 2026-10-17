@@ -6,7 +6,7 @@ let main,vendorCalls=0,runeWrites=0,vendorOffline=false,enemy='Ahri';
 app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
 globalShortcut.register=()=>false;clipboard.writeText=text=>copies.push(text);
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
-const realHandle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>realHandle(name,name==='companion-mode'?(_e,value)=>{windows[0].setMinimumSize(value?280:820,480);windows[0].setContentSize(value?440:1180,850);return {docked:!!value,overlap:false};}:handler);
+const realHandle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>realHandle(name,name==='companion-mode'?(_e,value)=>{windows[0].setMinimumSize(value?280:820,480);windows[0].setContentSize(value?440:1180,850);const layout={docked:!!value,overlap:false};windows[0].webContents.send('window-layout',layout);return layout;}:handler);
 const realSpawn=cp.spawn;cp.spawn=(file,...args)=>{if(!file.endsWith('window-observer.exe'))return realSpawn(file,...args);const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
 cp.execFile=(file,args,options,callback)=>{queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -49,6 +49,7 @@ async function run(){
   const guideModel=()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>b.model)');await until(async()=>(await guideModel())?.selection.sourceOpponent==='Ahri','Guide lost scoped source');
   await click('[data-action=matchup-core]:not(:disabled)');await until(async()=>(await latestPreparation())?.coreId,'Scoped core missing');assert.equal((await latestPreparation()).runeId,rune);
   await click('[data-action=matchup-skill]:not(:disabled)');await until(async()=>(await latestPreparation())?.skillId,'Scoped skill missing');
+  main.webContents.send('open-build',{...await latestPreparation(),readOnly:false});await until(()=>js('!!document.querySelector(".build-nav")'),'Explicit reference browser missing');
   await click('[data-action=build-summoner][data-field=summoner-pair][data-id*=SummonerDot]');await click('[data-action=build-summoner][data-field=summoner-swap]');
   await until(async()=>JSON.stringify((await latestPreparation())?.summonerIds)===JSON.stringify(['SummonerDot','SummonerFlash']),'Source spell pair not saved');
   await until(async()=>JSON.stringify((await guideModel())?.summoners.map(s=>s.id))===JSON.stringify(['SummonerDot','SummonerFlash']),'Guide lost source spell pair');

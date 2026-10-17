@@ -4,6 +4,13 @@ async function revealDraftAction(js,selector){
  let target=selector,openedComparison=false;
  const exists=sel=>js(`!!document.querySelector(${JSON.stringify(sel)})`);
  const click=sel=>js(`document.querySelector(${JSON.stringify(sel)}).click()`);
+ // Single-window fixtures use the actual layout API to leave the sidebar.
+ // The removed duplicate expansion button is not a product requirement.
+ if(selector==='[data-action=companion-full]'&&!await exists(selector)){
+  await js('window.buddy.companionMode(false)');
+  for(let n=0;n<150&&!await exists('[data-action=navigate][data-route=draft]');n++)await new Promise(resolve=>setTimeout(resolve,100));
+  return '[data-action=navigate][data-route=draft]';
+ }
  const advanced=/data-action=(role-pools|hero-pool|combination-library|exclusions|reset-draft|example|refresh-pairs|style)(?:\]|\b)/.test(selector);
  if(advanced||/data-action=(recommend|reroll|combination-library|draft-filters|draft-scope)/.test(selector)){
   // Favorites and other main pages expose the draft tools through navigation.

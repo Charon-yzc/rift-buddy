@@ -224,7 +224,9 @@ export function sanitizeShare(value){
  let strategy;
  if(value.strategy!==undefined){try{strategy=validateCreativePlan(value.strategy);if(!strategy.members.every(m=>team.some(s=>s.role===m.role&&s.champion===m.champion)))return null;}catch{return null;}}
  const ballot=value.ballot===undefined?undefined:sanitizeRoomBallot(value.ballot);if(ballot===null)return null;
- return {kind:'state',v:ROOM_PROTOCOL,from,lineup:team,pick:selected,at,...(value.mode!==undefined?{mode:value.mode}:{}),...(builds!==undefined?{configurations:builds}:{}),...(strategy?{strategy}:{}),...(ballot?{ballot}:{})};
+ let intent;
+ if(value.intent!=null){if(!['',...ROLES].includes(value.intent.role)||value.intent.champion!==null&&!(typeof value.intent.champion==='string'&&HERO.test(value.intent.champion)))return null;intent={role:value.intent.role,champion:value.intent.champion};}
+ return {kind:'state',v:ROOM_PROTOCOL,from,lineup:team,pick:selected,at,...(value.mode!==undefined?{mode:value.mode}:{}),...(builds!==undefined?{configurations:builds}:{}),...(strategy?{strategy}:{}),...(ballot?{ballot}:{}),...(intent?{intent}:{})};
 }
 export function validateLeave(value){
  if(value?.kind!=='leave'||value.v!==ROOM_PROTOCOL)return null;

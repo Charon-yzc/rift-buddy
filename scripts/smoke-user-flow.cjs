@@ -50,7 +50,7 @@ async function run(){
  await until(async()=>{const s=(await state()).guide.selection;return s.conditions.includes('heal')&&s.compareIds?.length===2;},'Hex context lost on sync');
  await click('[data-action=open-guide]');let h=(await state()).guide.selection;assert.deepEqual(h.augmentIds,[1048]);assert.deepEqual(h.compareIds,[1048,1002]);assert.deepEqual(h.ownedAugmentIds,[1047]);
  await gjs('window.guide.control("hide")');await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');
- await click('[data-action=example]');await click('[data-action=draft-scope][data-scope=bot]');await click('[data-action=recommend]');
+ await click('[data-action=example]');await click('[data-action=draft-scope][data-scope=party]');for(const role of ['top','jungle','mid','bottom','support']){const checked=await js('document.querySelector(".slot-toggle[data-role='+role+']")?.getAttribute("aria-pressed")==='+'"true"');if(checked!==['bottom','support'].includes(role))await click('.slot-toggle[data-role='+role+']');}await click('[data-action=recommend]');
  await until(()=>js('document.querySelectorAll(".result-card").length>=3&&document.querySelectorAll(".result-card").length<=6'),'No recommendations');await click('[data-action=result-detail]');
  const members=()=>js('[...document.querySelectorAll(".lineup-detail [data-action=build]")].map(e=>({role:e.dataset.role,id:e.dataset.id}))');
  let before=await members();await click('[data-action=replace-member][data-role=bottom]');
@@ -79,14 +79,16 @@ async function run(){
  await until(()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false'),'Updated exclusions left recommendation pending');
  assert.equal(await js('document.querySelectorAll(".result-card").length'),0,'Preference change allowed obsolete results after the only available champion was excluded');
  await js('window.Worker=window.testOriginalWorker;delete window.testOriginalWorker');await click('[data-action=close]');
- const champion=(await js('window.buddy.bootstrap()')).data.champions.find(c=>c.id==='Garen');
- ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:true,phase:'ChampSelect',message:'测试公开选人',mode:{id:'rift',label:'峡谷'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:champion.key,assignedPosition:'top'}],theirTeam:[],bans:[]}}));
- await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]").textContent.includes("同步选人")'),'Mock public pick not read');
+ const bootstrapData=(await js('window.buddy.bootstrap()')).data,champion=bootstrapData.champions.find(c=>c.id==='Garen');
+ let publicFixture={connected:true,phase:'ChampSelect',message:'测试公开选人',mode:{id:'rift',label:'峡谷'},game:{gameId:'6601'},session:{gameId:'6601',localPlayerCellId:1,myTeam:[{cellId:1,championId:champion.key,assignedPosition:'TOP',championPickIntent:0}],theirTeam:[],bans:[],actions:[[{id:4,type:'pick',actorCellId:1,championId:champion.key,completed:false,isInProgress:true}]]}};
+ const prepares=[];ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>structuredClone(publicFixture));
+ ipcMain.removeHandler('prepare-selection');ipcMain.handle('prepare-selection',(_event,value)=>{prepares.push(value);const selected=bootstrapData.champions.find(hero=>hero.id===value.champion);publicFixture.session.myTeam[0].championId=0;publicFixture.session.myTeam[0].championPickIntent=selected.key;return {complete:true,steps:Object.fromEntries(['hover','runes','spells','items'].map(step=>[step,{status:'done',...(step==='runes'?{pageId:44}:{})}]))};});
+ await click('[data-action=sync]');await until(()=>js('!!document.querySelector(".champ-pick[data-id=Garen]")'),'Mock public pick not read');
  await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
- await until(()=>js('document.querySelector(".rune-target-warning")?.textContent.includes("盖伦")'),'Own champion mismatch warning missing');
- assert.match(await js('document.querySelector("[data-action=apply-runes]").textContent'),/萨勒芬妮.*替换符文/);
- assert.match(await js('document.querySelector(".rune-target-warning").textContent'),/你自己的客户端/);
- assert.equal(await js('document.querySelector("[data-action=open-guide]").disabled'),false,'A different reference lane must not disable an explicit guide choice');
+ await until(()=>prepares.length===1,'A different unlocked reference hero was not prepared');
+ assert.equal(prepares[0].champion,'Seraphine');assert.equal(prepares[0].role,'bottom');assert.equal(prepares[0].page.selectedPerkIds.length,9);assert.ok(prepares[0].itemSet.blocks.length);
+ await until(()=>js('!!document.querySelector(".configuration-current [data-action=configuration-switch]")'),'Hero click did not open compact configuration');
+ assert.equal(await js('document.querySelectorAll(".rune-target-warning").length'),0,'The reference lane must not block an explicit unlocked hero choice');
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.
  await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'None',message:'测试手动配置'}));
@@ -95,20 +97,20 @@ async function run(){
  await js('{const role=document.querySelector("#solo-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');
  const pick=async(role,id)=>{if(await js('!!document.querySelector("[data-action=task-compare]")'))await click('[data-action=task-compare]');if(await js(`!!document.querySelector('[data-action=clear-slot][data-role=${role}]')`))await click(`[data-action=clear-slot][data-role=${role}]`);await until(()=>js(`!!document.querySelector('[data-action=pick-slot][data-role=${role}]')`),'Editable empty lane missing: '+role);await click(`[data-action=pick-slot][data-role=${role}]`);await js(`{const i=document.querySelector('#picker-search');i.value=${JSON.stringify(id)};i.dispatchEvent(new Event('input',{bubbles:true}));}`);await click(`[data-action=pick-champion][data-id=${id}]`);};
  await pick('bottom','Rengar');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
- await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Rengar Ivern private build missing');
+ await until(()=>js('document.querySelector(".configuration-current header b")?.textContent.includes("草丛")'),'Rengar Ivern private build missing');
  await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing');
  await click('[data-action=close]');await pick('support','Nami');await click('.champ-pick[data-action=build][data-role=bottom]');
- assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.notEqual((await active()).loadout,'rengar-bush');
+ assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.equal(await js('document.querySelector(".configuration-current header b")?.textContent.includes("草丛")'),false);
  await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide');
  await click('[data-action=close]');await pick('support','Ivern');await click('.champ-pick[data-action=build][data-role=bottom]');
- await until(()=>js('document.querySelector(".loadout-option.active")?.dataset.id==="rengar-bush"'),'Returning combo choice not restored');
+ await until(()=>js('document.querySelector(".configuration-current header b")?.textContent.includes("草丛")'),'Returning combo choice not restored');
  await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide');
  await capture('partner-context-isolation.png');
  // A full backend selection can remove fields. They must not be resurrected by
  // the already-open main-window configuration's next render/sync.
  await js('window.buddy.updateGuide({id:"Rengar",role:"bottom",mode:"rift",coreIndex:0,conditions:[],changedFields:["comboId","loadoutId","runeId"]})');
  await until(()=>js('!document.querySelector(".combo-config")'),'Backend combo removal did not reach configuration');await delay(600);assert.equal((await state()).guide.selection.comboId,undefined,'Main configuration restored a deleted backend combo');
- const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,restartRestore:true,partnerRoundTrip:true,interleavedGuideEdits:true,hexContextPreserved:true,successiveReplacements:true,failedReplacementRecovery:true,fixedFooter720:true,returnToScheme:true,cancelOnPreferenceEdit:true,runeHeroTargetWarning:true,changedPartnerClearsCombo:true,returningComboRestoresChoices:true,backendDeletedFieldsStayDeleted:true,actualRuneWrites:false,screenshots:root};
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,restartRestore:true,partnerRoundTrip:true,interleavedGuideEdits:true,hexContextPreserved:true,successiveReplacements:true,failedReplacementRecovery:true,fixedFooter720:true,returnToScheme:true,cancelOnPreferenceEdit:true,unlockedReferenceHeroPrepares:true,changedPartnerClearsCombo:true,returningComboRestoresChoices:true,backendDeletedFieldsStayDeleted:true,actualRuneWrites:false,screenshots:root};
  await fs.writeFile(path.join(root,'user-flow-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'user-flow-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

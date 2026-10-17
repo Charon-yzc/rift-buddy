@@ -15,11 +15,11 @@ export function publicUnavailableChampions(session,champions){
 }
 export function localPickEligibility(client,slots,champions,{scope='context',soloRole='',playerPosition=null,now=Date.now()}={}){
  const none=(status,message)=>({status,message,role:'',eligibleByRole:{},confirmedPick:null});
- if(!client?.connected||client.phase!=='ChampSelect'||!client.session)return none('manual','手动推荐 · 当前可选英雄未核对');
+ if(!client?.connected||client.phase!=='ChampSelect'||!client.session)return none('manual','尚未核对客户端可选英雄，当前使用本地英雄池推荐。');
  const session=client.session,read=client.eligibility,at=Date.parse(read?.receivedAt);
- if(!read||!Number.isFinite(at)||now-at>15000||at-now>5000||read.context!==pickEligibilityContext(session)||read.localPlayerCellId!==session.localPlayerCellId)return none('unknown','未读到本局可选范围 · 暂按手动英雄池推荐');
+ if(!read||!Number.isFinite(at)||now-at>15000||at-now>5000||read.context!==pickEligibilityContext(session)||read.localPlayerCellId!==session.localPlayerCellId)return none('unknown','未读到本局可选英雄，当前使用本地英雄池推荐。');
  const pickable=normalizeChampionIds(read.pickable),disabled=normalizeChampionIds(read.disabled);
- if(pickable===null&&disabled===null)return none('unknown','可选范围接口暂不可用 · 暂按手动英雄池推荐');
+ if(pickable===null&&disabled===null)return none('unknown','暂时无法核对客户端可选英雄，当前使用本地英雄池推荐。');
  const player=session.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
  if(!player||!Number.isInteger(session.localPlayerCellId))return none('unknown','尚未确认本机选人位置 · 可选范围未应用');
  const selected=champions.find(c=>c.key===Number(player.championId));

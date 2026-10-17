@@ -22,8 +22,8 @@ export function publicClientGameId(client){return client?.connected?(client.phas
 // evidence of a new game and must not erase an explicit position choice.
 export function reconcileClientDraft(draft,gameId,previousId=null,{phase='',previousPhase=''}={}){
  const queue=['None','Lobby','Matchmaking','ReadyCheck'];
- if(draft&&queue.includes(phase)&&(draft.clientGameId||['ChampSelect','GameStart','InProgress','Reconnect','WaitingForStats','PreEndOfGame','EndOfGame'].includes(previousPhase))){
-  const {creativePlan,playerPosition,clientGameId:oldId,...rest}=draft;
+ if(draft&&queue.includes(phase)&&(draft.clientGameId||Number.isInteger(draft.partyCount)||['ChampSelect','GameStart','InProgress','Reconnect','WaitingForStats','PreEndOfGame','EndOfGame'].includes(previousPhase))){
+  const {creativePlan,playerPosition,partyCount,preselection,clientGameId:oldId,...rest}=draft;
   return {draft:{...rest,slots:clearDraftPicks(draft.slots).map(s=>({...s,party:false})),soloRole:''},changed:true,newGame:true};
  }
  if(queue.includes(phase))return {draft,changed:false,newGame:false};
@@ -34,7 +34,12 @@ export function reconcileClientDraft(draft,gameId,previousId=null,{phase='',prev
  const clearSoloRole=newGame&&(!!clientGameId(draft.clientGameId)||draft.playerPosition?.role===draft.soloRole||draft.slots.some(s=>s.role===draft.soloRole&&Number.isInteger(s.clientCellId)));
  // A manual party range belongs to this game; it must not overrule the next group.
  const next={...draft,clientGameId:gameId,slots:newGame?clearDraftPicks(draft.slots).map(s=>({...s,party:false})):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
- if(newGame)delete next.playerPosition;
+ if(newGame){
+  delete next.playerPosition;delete next.partyCount;
+  // A previous guide may prove that old heroes need clearing on entry. A
+  // fresh, unconsumed lobby click was made after that game and must survive.
+  if(draft.clientGameId||next.preselection?.attemptedGameId)delete next.preselection;
+ }
  if(newGame&&next.creativePlan&&!next.creativePlan.members.every(m=>next.slots.some(s=>s.role===m.role&&s.champion===m.champion)))delete next.creativePlan;
  return {draft:next,changed:true,newGame};
 }

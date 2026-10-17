@@ -12,7 +12,7 @@ export function publicAllyIds(clientSession,champions){
 // A saved offline lineup is editable planning, not evidence of this client's
 // teammates. Normalize only the temporary whole-team recommendation input;
 // keep the user's controllable picks and every explicit position untouched.
-export function clientContextDraft(slots,champions,clientSession,{scope='context',soloRole='',bans=[],eligibleByRole={}}={}){
+export function clientContextDraft(slots,champions,clientSession,{scope='context',soloRole='',bans=[],eligibleByRole={},party=null}={}){
  if(!Array.isArray(clientSession?.myTeam)||!['context','solo'].includes(scope))return slots;
  const localRole=manualPlayerSlot(slots,clientSession.localPlayerCellId)?.role||soloRole||CLIENT_POSITION_ROLES[String(clientSession.myTeam.find(p=>p.cellId===clientSession.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
  if(localRole&&(scope==='solo'||scope==='context'&&slots.filter(slot=>slot.party).length===1&&slots.find(slot=>slot.party)?.role===localRole)){
@@ -31,5 +31,5 @@ export function clientContextDraft(slots,champions,clientSession,{scope='context
  const ownRole=soloRole||next.find(slot=>slot.clientCellId===clientSession.localPlayerCellId)?.role||CLIENT_POSITION_ROLES[String(local?.assignedPosition||'').toUpperCase()]||next.filter(slot=>slot.party).length===1&&next.find(slot=>slot.party)?.role||'';
  // Reapply current public hovers after releasing stale teammate locks, so a
  // stored Nami cannot prevent the real support's Lulu preview from entering.
- return recommendationDraft(next,clientSession,champions,{ownRole,bans,eligibleByRole});
+ return recommendationDraft(next,clientSession,champions,{ownRole,bans,eligibleByRole,party});
 }
