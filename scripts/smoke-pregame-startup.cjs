@@ -303,6 +303,7 @@ async function run(){
   });
   if(handlers.has('party-range'))await checkpoint('checkbox-survives-a-public-pick-before-sidebar-notification',async()=>{
    side=windows.find(window=>!window.isDestroyed()&&window.webContents.getURL().includes('surface=companion'));
+   await until(()=>js(side,'document.querySelector(".companion-shell")?.dataset.clientPhase==="ChampSelect"&&document.querySelector(".companion-shell")?.dataset.clientGame==='+JSON.stringify(String(gameId))),'Sidebar must enter this draft before freezing its client notifications');
    await until(()=>js(side,'document.querySelectorAll(".companion-team-now .in-scope").length===2'),'Sidebar range must settle before delaying notifications');
    const oldRole=await js(side,'document.querySelector(".companion-team-now .in-scope").dataset.dropRole');assert.equal(oldRole,'top');
    const send=side.webContents.send.bind(side.webContents),held=new Map(),writeCount=writes.length;heldSideClient=structuredClone(await client());
