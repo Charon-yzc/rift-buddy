@@ -15,7 +15,7 @@ async function run(){
  pickable=phase==='empty'?[]:[key('Ahri')];
  makeClient=()=>{
   if(['offline','locked','library','restart','position-restart'].includes(phase))return {connected:false,phase:'Offline',message:'Isolated manual fixture'};
-  const current={gameId:'12345',localPlayerCellId:1,myTeam:[{cellId:1,championId:ownChampion,assignedPosition:phase==='library-solo'?'':phase.startsWith('position')?ownChampion?'JUNGLE':'':'MIDDLE'},{cellId:2,championId:0,assignedPosition:'JUNGLE'}],theirTeam:['enemy','mirror'].includes(phase)?[{cellId:6,championId:key('Ahri'),assignedPosition:'MIDDLE'}]:[],bans:phase==='banned'?[key('Ahri')]:[],allowDuplicatePicks:phase==='mirror'};
+  const current={gameId:'12345',localPlayerCellId:1,myTeam:[{cellId:1,championId:ownChampion,...(ownChampion?{pickState:'locked'}:{}),assignedPosition:phase==='library-solo'?'':phase.startsWith('position')?ownChampion?'JUNGLE':'':'MIDDLE'},{cellId:2,championId:0,assignedPosition:'JUNGLE'}],theirTeam:['enemy','mirror'].includes(phase)?[{cellId:6,championId:key('Ahri'),assignedPosition:'MIDDLE'}]:[],bans:phase==='banned'?[key('Ahri')]:[],allowDuplicatePicks:phase==='mirror'};
   const receivedAt=new Date().toISOString();return {connected:true,phase:'ChampSelect',session:current,mode:{id:'rift',label:'峡谷模拟'},receivedAt,eligibility:{pickable,disabled:[],localPlayerCellId:1,context:pickEligibilityContext(current),receivedAt},message:'Isolated public selection'};
  };
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
@@ -47,7 +47,7 @@ async function run(){
   }
   const synchronizedSlots=(await state()).draft.slots;await click('[data-action=recommend]');
   if(['empty','banned','enemy'].includes(phase)){
-   await until(()=>js('!!document.querySelector(".recommendation-error")'),'Unavailable selection did not explain the conflict');assert.equal(await js('document.querySelectorAll(".result-card").length'),0);assert.match(await js('document.querySelector(".recommendation-error").textContent'),phase==='empty'?/没有可选英雄/:phase==='banned'?/已被本局禁用/:/本局不能重复选择/);assert.deepEqual((await state()).draft.slots,synchronizedSlots);
+   await until(()=>js('!!document.querySelector(".recommendation-error")'),'Unavailable selection did not explain the conflict');assert.equal(await js('document.querySelectorAll(".result-card").length'),0);assert.match(await js('document.querySelector(".recommendation-error").textContent'),/没有可选英雄/);assert.deepEqual((await state()).draft.slots,synchronizedSlots);
    if(phase!=='empty'){await click('[data-action=navigate][data-route=favorites]');await click('[data-action=open-favorite]');assert.match(await js('document.body.textContent'),/本局不可选/);assert.equal((await state()).draft.slots[2].champion,'Ahri');
     await click('[data-action=combination-library]');await click('[data-action=combo-kind][data-kind=trios]');const preserved=(await state()).draft.slots;await click('[data-action=load-trio][data-id=vi-ahri-nautilus]');await until(()=>js('document.body.textContent.includes("这套组合有本局不可选的英雄")'),'Library bypassed public conflict');assert.deepEqual((await state()).draft.slots,preserved);
    }
