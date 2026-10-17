@@ -38,7 +38,7 @@ async function run(){
   assert.ok(await js(`document.querySelector('.lineup-fit').open&&document.querySelector('.lineup-fit-explanation').checkVisibility({contentVisibilityAuto:true})`),label+' keyboard opens fit evidence');
   key(window,'Space');await delay(60);
   assert.equal(await js(`document.querySelector('.lineup-fit').open`),false,label+' keyboard closes fit evidence');
-  key(window,'Tab');await delay(50);
+  key(window,'Tab');await delay(50);assert.ok(await js(`document.activeElement.matches('.lineup-fit-number')`),label+' exact score is keyboard accessible');key(window,'Tab');await delay(50);
   assert.ok(await js(`document.activeElement.matches('.candidate-details>summary')`),label+' details summary is reachable by Tab');
   key(window,'Space');
   await until(()=>js(`document.querySelector('.candidate-details').open&&document.querySelector('.candidate-detail-content').checkVisibility({contentVisibilityAuto:true})`),label+' candidate details did not become visible');

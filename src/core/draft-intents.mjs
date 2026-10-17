@@ -12,22 +12,30 @@ export function confirmedPlayerPick(player,session){
 
 // Search evidence is separate from the visible roster. Neither a hover nor an
 // adopted/offline proposal is a confirmed pick in this live client session.
-export function confirmedClientDraft(slots,session,champions){
+export function clientRecommendationDraft(slots,session,champions,{includePreselected=false}={}){
  if(!Array.isArray(session?.myTeam))return {slots,session};
  const byKey=new Map(champions.map(champion=>[Number(champion.key),champion.id]));
- const picked=session.myTeam.filter(player=>confirmedPlayerPick(player,session)&&byKey.has(Number(player.championId)));
+ const visible=player=>Number(player.championId||player.championPickIntent);
+ const valid=player=>Number.isInteger(player.cellId)&&player.cellId>=0&&player.cellId<30&&session.myTeam.filter(p=>p.cellId===player.cellId).length===1;
+ const candidates=session.myTeam.filter(player=>valid(player)&&(confirmedPlayerPick(player,session)||includePreselected)&&byKey.has(visible(player)));
+ const picked=candidates.filter(player=>confirmedPlayerPick(player,session)||candidates.filter(other=>visible(other)===visible(player)).length===1);
  const placements=new Map();
  for(const player of [...picked].sort((a,b)=>Number(slots.some(slot=>slot.clientCellId===b.cellId))-Number(slots.some(slot=>slot.clientCellId===a.cellId)))){
-  const id=byKey.get(Number(player.championId)),assigned=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
+  const id=byKey.get(visible(player)),assigned=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
   const target=[slots.find(slot=>slot.clientCellId===player.cellId),slots.find(slot=>slot.champion===id&&slot.manualPosition&&!Number.isInteger(slot.clientCellId)),slots.find(slot=>slot.role===assigned),slots.find(slot=>slot.champion===id&&!Number.isInteger(slot.clientCellId))].find(slot=>slot&&!placements.has(slot.role)&&(!Number.isInteger(slot.clientCellId)||slot.clientCellId===player.cellId));
   if(target)placements.set(target.role,player);
  }
  const next=slots.map(slot=>{
   const {publicIntent,...rest}=slot;
   const player=placements.get(slot.role);
-  return player?{...rest,champion:byKey.get(Number(player.championId)),clientCellId:player.cellId,locked:true}:{...rest,champion:null,locked:false};
+  return player?{...rest,champion:byKey.get(visible(player)),clientCellId:player.cellId,locked:confirmedPlayerPick(player,session),...(!confirmedPlayerPick(player,session)?{publicIntent:true}:{})}:{...rest,champion:null,locked:false};
  });
- return {slots:next,session:{...session,myTeam:session.myTeam.map(player=>confirmedPlayerPick(player,session)?{...player,championPickIntent:0}:{...player,championId:0,championPickIntent:0})}};
+ return {slots:next,session:{...session,myTeam:session.myTeam.map(player=>picked.includes(player)?{...player,championId:visible(player),championPickIntent:0}:{...player,championId:0,championPickIntent:0})}};
+}
+export const confirmedClientDraft=(slots,session,champions)=>clientRecommendationDraft(slots,session,champions);
+export function lockedOwnSlot(slots,session){
+ const own=session?.myTeam?.find(player=>player.cellId===session.localPlayerCellId);
+ return confirmedPlayerPick(own,session)?slots.find(slot=>slot.clientCellId===own.cellId&&slot.champion)||null:null;
 }
 
 // Search-only copy. An unlocked local hover can be replaced while the actual
@@ -60,8 +68,8 @@ export function comparisonDraft(slots,plan,session,champions){
 
 // Temporary recommendation context only. Public hovers remain unlocked and
 // must not replace the canonical, persisted draft or authorize client writes.
-export function recommendationDraft(slots,session,champions,{ownRole='',bans=[],disabled=[],eligibleByRole={},party=null,confirmedOnly=false}={}){
- if(confirmedOnly)return confirmedClientDraft(slots,session,champions).slots;
+export function recommendationDraft(slots,session,champions,{ownRole='',bans=[],disabled=[],eligibleByRole={},party=null,confirmedOnly=false,includePreselected=false}={}){
+ if(confirmedOnly)return clientRecommendationDraft(slots,session,champions,{includePreselected}).slots;
  const next=structuredClone(slots).map(slot=>{
   if(!slot.publicIntent)return slot;
   const {publicIntent,...rest}=slot;return {...rest,champion:null,locked:false};

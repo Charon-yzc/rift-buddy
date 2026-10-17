@@ -11,7 +11,7 @@ export function referenceHeroTiles(data,{query='',role='all'}={}){
  const heroes=data.champions.filter(c=>matchesSearch(c,query)&&(role==='all'||profile(c).roles.includes(role)));
  return heroes.map(c=>{
   const recent=championPatchNotes(data,c.id)[0];
-  return `<button class="hero-tile reference-hero" data-action="reference-hero" data-id="${c.id}">${portrait(c)}<b>${e(c.name)}</b><small>${e(c.title)}</small>${recent?`<span class="reference-change ${recent.direction}">${e(recent.patch)} ${patchDirectionLabel(recent.direction)}</span>`:''}</button>`;
+  return `<button class="hero-tile reference-hero" data-action="reference-hero" data-id="${c.id}" title="${e(c.name)} · ${e(c.title)}">${portrait(c)}<b>${e(c.name)}</b>${recent?`<span class="reference-change ${recent.direction}">${e(recent.patch)} ${patchDirectionLabel(recent.direction)}</span>`:''}</button>`;
  }).join('')||'<p class="empty-state">没有匹配的英雄，试试简称或其他位置。</p>';
 }
 export function championReferenceView(data,{id='',query='',role='all',tab='skills',skill='Q',variant=0}={}){

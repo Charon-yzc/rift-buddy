@@ -6,7 +6,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {EventEmitter} from 'node:events';
 import {spawnSync} from 'node:child_process';
-import {GITEE_REPOSITORY_URL,GITEE_RELEASE_FEED_URL,RELEASE_FEED_URL,mirrorManifestName,mirrorPartName,setupFileName,giteeDownloadUrl,giteeReleaseUrl,parseMirrorManifest,parseGiteeReleases,isReleaseNotesUrl} from '../src/core/app-update.mjs';
+import {GITEE_REPOSITORY_URL,GITEE_RELEASE_FEED_URL,RELEASE_FEED_URL,mirrorManifestName,mirrorPartName,setupFileName,giteeDownloadUrl,giteeReleaseUrl,parseMirrorManifest,parseGiteeReleases,isReleaseNotesUrl,deltaManifestName,deltaFileName} from '../src/core/app-update.mjs';
 import {createAppUpdateService} from '../services/app-update.mjs';
 import {appUpdatePanel} from '../src/app-update-view.mjs';
 import {packageGiteeMirror,mergeCommand} from '../scripts/package-gitee-mirror.mjs';
@@ -76,6 +76,19 @@ test('release links only open this repository and its version pages',()=>{
  for(const value of [GITEE_REPOSITORY_URL+'/releases/download/v0.51.0/evil.cmd',GITEE_REPOSITORY_URL+'/releases/v0.51.0?next=evil','https://gitee.com/other/rift-buddy/releases','https://user:pass@gitee.com/legender134/rift-buddy/releases'])assert.equal(isReleaseNotesUrl(value),false);
  const row=JSON.parse(feed());row[0].assets[0].browser_download_url='https://evil.example/manifest.json';assert.equal(parseGiteeReleases(JSON.stringify(row))[0].manualOnly,true);
 });
+test('mirror packages identical incremental bytes and uploads descriptions after their binaries',async t=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-gitee-delta-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const file=path.join(root,manifest.file),name=deltaFileName('9.9.8',release.version),meta=deltaManifestName(release.version),deltaBytes=Buffer.from('changed payload');
+ await fs.writeFile(file,binary);await fs.writeFile(path.join(root,name),deltaBytes);
+ const deltaRaw=JSON.stringify({schema:1,version:release.version,packages:[{from:'9.9.8',file:name,bytes:deltaBytes.length,sha256:hash(deltaBytes),baseManifestSha256:hash('base')}]});
+ await fs.writeFile(path.join(root,meta),deltaRaw);
+ const result=await packageGiteeMirror({installer:{version:release.version,output:file,bytes:binary.length,sha256:hash(binary)},outputDir:path.join(root,'mirror')});
+ assert.deepEqual(await fs.readFile(path.join(result.outputDir,name)),deltaBytes);assert.equal(await fs.readFile(path.join(result.outputDir,meta),'utf8'),deltaRaw);
+ assert.ok(result.attachments.indexOf(name)<result.attachments.indexOf(meta));assert.equal(result.attachments.at(-1),mirrorManifestName(release.version));
+ assert.match(await fs.readFile(path.join(result.outputDir,'SHA256SUMS-'+release.version+'.txt'),'utf8'),new RegExp(hash(deltaBytes)));
+ await fs.writeFile(path.join(root,name),'modified');await assert.rejects(packageGiteeMirror({installer:{version:release.version,output:file,bytes:binary.length,sha256:hash(binary)},outputDir:path.join(root,'bad-mirror')}),/增量镜像/);
+});
+
 test('mirror packaging preserves bytes, enforces existing-version protection and creates truthful upload instructions',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-gitee-package-')),file=path.join(root,manifest.file),outputDir=path.join(root,'mirror');await fs.writeFile(file,binary);
  const result=await packageGiteeMirror({installer:{version:release.version,output:file,bytes:binary.length,sha256:hash(binary)},outputDir,partBytes:chunks[0].length});

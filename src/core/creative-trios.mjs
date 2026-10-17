@@ -1,5 +1,6 @@
 import {profile,conventionalRole,TRIOS,DUOS} from './rules.mjs';
 import {COOPERATION_SKILLS} from './cooperation-skills.mjs';
+import {explorationPool} from './recommendation-diversity.mjs';
 
 // Creative trio archetypes. Each one is defined only by role-function traits
 // (engage/peel/poke/sustain/aoe/damage) that already exist in the data model.
@@ -80,7 +81,7 @@ function orderMembers(members,profiles,order){
  });
 }
 
-export function generateCreativeTrios({targets,candidateSets,champions,style='fun'}){
+export function generateCreativeTrios({targets,candidateSets,champions,style='fun',randomSeed=''}){
  // Creative trios fill exactly the three open party roles. Anything else
  // (duo lane, single补位) is covered by the curated/duos path.
  if(!Array.isArray(targets)||targets.length!==3)return [];
@@ -89,7 +90,7 @@ export function generateCreativeTrios({targets,candidateSets,champions,style='fu
  // each needing three profiles, so sharing them matters.
  const profCache=new Map();
  const prof=(champId,role)=>{const k=`${champId}:${role}`;let p=profCache.get(k);if(!p){p=profile(byId.get(champId),role);profCache.set(k,p);}return p;};
- const pools=targets.map(role=>candidateSets[role]?.filter(c=>byId.has(c.id)&&conventionalRole(byId.get(c.id),role,profCache)).slice(0,10)??[]);
+ const pools=targets.map(role=>explorationPool(candidateSets[role]?.filter(c=>byId.has(c.id)&&conventionalRole(byId.get(c.id),role,profCache))||[],role,randomSeed));
  if(pools.some(p=>!p.length))return [];
  const curatedTrioSets=new Set(TRIOS.map(t=>t.members.map(m=>`${m.role}:${m.champion}`).sort().join('|')));
  const curatedDuoSets=new Set(DUOS.map(d=>`bottom:${d.carry}|support:${d.support}`));

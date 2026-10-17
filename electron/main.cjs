@@ -150,7 +150,7 @@ async function boot(){
  const liveService=await import('../services/live-client.mjs');
  const {createAppUpdateService}=await import('../services/app-update.mjs');
  const {compareVersions:compareAppVersion,releasePageUrl,isReleaseNotesUrl}=await import('../src/core/app-update.mjs');
- const appUpdateBase={currentVersion:app.getVersion(),tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||path.join(app.getPath('temp'),'rift-buddy-update'),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'};
+ const appUpdateBase={currentVersion:app.getVersion(),installDir:app.isPackaged?path.dirname(process.execPath):'',tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||path.join(app.getPath('temp'),'rift-buddy-update'),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'};
  const updater=()=>createAppUpdateService({...appUpdateBase,mirrorBase:state.preferences.updateMirror});
  const appUpdater=updater();
  await appUpdater.sweep().catch(()=>{});
@@ -491,7 +491,7 @@ async function boot(){
   await saveCurrentState(current=>{
    const own=latestClient.session?.myTeam?.find(player=>player.cellId===cellId);
    if(!current.draft||!latestClient.connected||latestClient.phase!=='ChampSelect'||publicClientGameId(latestClient)!==gameId||latestClient.session?.localPlayerCellId!==cellId||Number(own?.championId||own?.championPickIntent)!==value.championId)return current;
-   if(value.preselectOnly)current.draft.preselection={role:value.role,champion:value.champion,attemptedGameId:gameId,hoveredCellId:cellId};
+   if(value.preselectOnly||value.claimPosition)current.draft.preselection={role:value.role,champion:value.champion,attemptedGameId:gameId,hoveredCellId:cellId};
    else delete current.draft.preselection;
    return current;
   });
@@ -523,7 +523,7 @@ async function boot(){
    // An explicit configuration may have acquired the client while imports
    // loaded. Its lock and newer choice take precedence over this old hover.
    if(applyingRunes||importingItemSet||!latestClient.connected||latestClient.phase!=='ChampSelect'||publicClientGameId(latestClient)!==gameId||state.draft?.preselection?.attemptedGameId!==gameId||state.draft.preselection.champion!==choice.champion)return;
-   const value=service.validateClientPreparation({...plan.value,sessionGameId:gameId,context:runeWriteContext(latestClient),preselectOnly:intent.kind!=='hero'},data);
+   const value=service.validateClientPreparation({...plan.value,sessionGameId:gameId,context:runeWriteContext(latestClient),claimPosition:intent.kind!=='hero'},data);
    const operation=beginPreparation('selection',{value,selection,context:value.context});applyingRunes=true;importingItemSet=true;
    let hovered;
    try{
@@ -531,7 +531,8 @@ async function boot(){
     finishPreparation(operation,{result:written});
     if(intent.kind==='hero'&&written.complete)appliedGuideSelection={gameId,selection:structuredClone(selection)};
     const result=await preservePreparationResult(written,[
-     ...(intent.kind==='hero'?[['保存英雄配置',()=>saveCurrentState(current=>({...current,...(written.steps?.runes?.status==='done'?{ownedPageId:written.steps.runes.pageId}:{}),preparations:upsertPreparation(current.preparations,selection)}))]]:[]),
+     ...(written.steps?.runes?.status==='done'?[['保存已写符文页',()=>saveCurrentState(current=>({...current,ownedPageId:written.steps.runes.pageId}))]]:[]),
+     ...(intent.kind==='hero'?[['保存英雄配置',()=>saveCurrentState(current=>({...current,preparations:upsertPreparation(current.preparations,selection)}))]]:[]),
      ['保存预选位置',async()=>{if(written.steps?.hover?.status==='done'&&publicClientGameId(latestClient)===gameId)await saveCurrentState(current=>{if(current.draft?.preselection?.attemptedGameId===gameId&&Number.isInteger(cellId)&&(!current.draft.playerPosition||current.draft.playerPosition.role===choice.role)){current.draft.playerPosition={role:choice.role,cellId};current.draft.soloRole=choice.role;}return current;});}]
     ]);
     if(result.followUpError!==written.followUpError)finishPreparation(operation,{result});
@@ -687,7 +688,7 @@ async function boot(){
    publishAppUpdate({phase:'checking'});
    try{
     const kept=await updater().pending();
-    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,via:kept.via||'direct',fallback:kept.fallback||false}});}
+    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,kind:kept.kind,via:kept.via||'direct',fallback:kept.fallback||false}});}
     else{
      const result=await updater().check();
      if(silent&&result.status==='available'&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
@@ -707,8 +708,8 @@ async function boot(){
   let fellBack=false;
   try{
    publishAppUpdate({phase:'downloading',release,received:0,total:null});
-   const record=await updater().download(release,{signal:appUpdateAbort.signal,onProgress:p=>{if(p.note==='mirror-fallback')fellBack=true;publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total,via:p.via||null,fallbackNotice:fellBack});}});
-   publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256,via:record.via||'direct',fallback:fellBack}});
+   const record=await updater().download(release,{signal:appUpdateAbort.signal,onProgress:p=>{if(p.note==='mirror-fallback')fellBack=true;publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total,via:p.via||null,kind:p.kind||'full',fallbackNotice:fellBack});}});
+   publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256,kind:record.kind,via:record.via||'direct',fallback:fellBack}});
    return appUpdateStatus;
   }catch(error){publishAppUpdate({phase:'error',release,error:error.message});throw error;}
   finally{appUpdateAbort=null;}

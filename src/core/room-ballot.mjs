@@ -5,7 +5,7 @@ import {createCooperationGraph} from './cooperation.mjs';
 import {compositionFit} from './composition-fit.mjs';
 import {effectiveDraftScope} from './draft.mjs';
 import {clientContextDraft,publicAllyIds} from './client-context-draft.mjs';
-import {editableLocalDraft} from './draft-intents.mjs';
+import {editableLocalDraft,lockedOwnSlot,confirmedPlayerPick} from './draft-intents.mjs';
 
 // A lobby proposal survives entering that draft, but never carries into the
 // next game. Unknown/disconnected reads alone are not a new round.
@@ -65,21 +65,26 @@ export function lineupFit(lineup,current,champions,options={}){
   const cellId=options.clientSession?.localPlayerCellId,role=(Number.isInteger(cellId)?current.find(s=>s.clientCellId===cellId)?.role:'')||options.soloRole;
   if(options.editableRoles.includes(role)){const editable=editableLocalDraft(current,options.clientSession,champions,role);current=editable.slots;options={...options,clientSession:editable.session};}
  }
- current=clientContextDraft(current,champions,options.clientSession,{scope:effectiveDraftScope(current,options.scope||'party'),soloRole:options.soloRole||'',party:options.party});
- const range=fitLineupSlots(lineup,current,options),context={...(options.context||fitContext(champions)),publicAllies:['context','solo'].includes(range.scope)?publicAllyIds(options.clientSession,champions):[]};
+ current=clientContextDraft(current,champions,options.clientSession,{scope:effectiveDraftScope(current,options.scope||'party'),soloRole:options.soloRole||'',party:options.party,includePreselected:options.includePreselected===true});
+ const range=fitLineupSlots(lineup,current,options),mandatoryOwn=lockedOwnSlot(current,options.clientSession),context={...(options.context||fitContext(champions)),mandatoryOwn,publicAllies:['context','solo'].includes(range.scope)?publicAllyIds(options.clientSession,champions,{includePreselected:options.includePreselected===true}):[]};
+ const own=options.clientSession?.myTeam?.find(player=>player.cellId===options.clientSession.localPlayerCellId);
+ if(confirmedPlayerPick(own,options.clientSession)&&!mandatoryOwn)return {score:null,rawScore:0,known:0,size:range.expectedSize,compatible:false,exact:false,scope:range.scope,breakdown:[],strengths:[],gaps:['请先确认已锁定英雄的分路'],reason:'请先确认已锁定英雄的分路，再核对这套阵容'};
+ if(mandatoryOwn&&!range.slots.some(slot=>slot.champion===mandatoryOwn.champion))range.expectedSize++;
  const fixed=current.filter(s=>range.controlledRoles.includes(s.role)&&s.champion&&(Number.isInteger(s.clientCellId)||s.manualPosition||s.publicIntent||s.locked&&!s.automaticPosition));
  const heroMatches=fixed.filter(s=>lineup.some(m=>m.champion===s.champion)).length;
  const roleMatches=fixed.filter(s=>lineup.some(m=>m.champion===s.champion&&m.role===s.role)).length;
  const proposed=lineup.filter(s=>s.champion),unique=new Set(proposed.map(s=>s.champion)).size===proposed.length&&new Set(proposed.map(s=>s.role)).size===proposed.length;
  const unplacedAllies=context.publicAllies.filter(id=>!current.some(s=>s.champion===id));
  const taken=proposed.some(s=>range.controlledRoles.includes(s.role)&&unplacedAllies.includes(s.champion));
- const compatible=unique&&!taken&&heroMatches===fixed.length,exact=compatible&&roleMatches===fixed.length;
+ const ownConflict=mandatoryOwn&&lineup.some(slot=>slot.role===mandatoryOwn.role&&slot.champion&&slot.champion!==mandatoryOwn.champion);
+ const compatible=unique&&!taken&&!ownConflict&&heroMatches===fixed.length,exact=compatible&&roleMatches===fixed.length;
  const analysis=analyzeTeam(range.slots,champions,context,true);
  // analyzeTeam omits unknown IDs; retain their planned place in expectedSize.
  const fit=compositionFit(analysis,context.cooperationGraph,{expectedSize:range.expectedSize});
  const cap=compatible?(exact?100:45):20,score=fit.score===null?null:Math.min(cap,fit.score),rawScore=fit.score===null?0:Math.min(cap,fit.rawScore);
  const constraint=!unique?'同一英雄或位置重复，方案存在冲突。':!compatible?'与已固定英雄冲突。':!exact?'已选英雄保留，但固定位置冲突。':'';
- return {...fit,score,rawScore,compatible,exact,scope:range.scope,
+ const breakdown=[...fit.breakdown];if(Number.isFinite(score)&&score!==fit.score)breakdown.push({key:'constraint',label:'选人冲突限制',points:score-fit.score,max:0});
+ return {...fit,score,rawScore,breakdown,compatible,exact,scope:range.scope,
   gaps:constraint?[constraint,...fit.gaps]:fit.gaps,
   reason:`${constraint}${fit.reason}${constraint&&fit.score!==null?` 冲突方案最高计 ${cap} 分。`:''}`};
 }

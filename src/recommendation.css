@@ -624,3 +624,65 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-pic
 .preselection-picker .preselection-actions {display:flex;gap:6px;margin-left:auto}
 .preselection-picker .preselection-actions .btn {min-height:30px;padding:5px 10px;font-size:calc(12px * var(--text-scale))}
 @media(max-width:360px){.preselection-picker .preselection-roles .role-icon{display:none}.preselection-picker .champ-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.preselection-picker .modal-controls,.preselection-picker .champ-grid{padding-left:10px;padding-right:10px}.preselection-picker .modal-header,.preselection-picker .preselection-footer{padding-left:10px;padding-right:10px}}
+:is(.recommendation-app,.recommendation-ui) .pregame-intent-toggle{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;color:var(--rb-muted);cursor:pointer;min-height:28px}
+.pregame-intent-toggle input{appearance:none;width:25px;height:14px;flex:none;border:1px solid var(--rb-line);border-radius:8px;background:var(--rb-panel);margin:0;position:relative;cursor:pointer}
+.pregame-intent-toggle input:before{content:'';position:absolute;left:2px;top:2px;width:8px;height:8px;border-radius:50%;background:var(--rb-muted);transition:transform .12s}
+.pregame-intent-toggle input:checked{background:var(--rb-tint);border-color:var(--rb-accent)}
+.pregame-intent-toggle input:checked:before{transform:translateX(11px);background:var(--rb-accent)}
+.pregame-intent-toggle input:focus-visible{outline:2px solid var(--rb-accent);outline-offset:2px}
+.lineup-fit-number{position:relative;display:inline-block;cursor:help}
+.lineup-fit-hover{display:none;position:fixed;inset:auto;margin:0;right:12px;z-index:90;width:min(230px,calc(100vw - 24px));padding:10px 12px;border:1px solid var(--rb-line,#416077);border-radius:8px;background:var(--rb-bg,#0e1721);color:var(--rb-ink,#eff4f6);box-shadow:0 8px 30px #0008;text-align:left;white-space:normal;pointer-events:none;font-size:12px;line-height:1.5}
+.lineup-fit-hover:popover-open{display:grid;gap:4px}
+.lineup-fit-hover>span{display:flex;justify-content:space-between;gap:10px}
+.lineup-fit-hover i{font-style:normal;color:var(--rb-muted,#a6bac5)}
+.lineup-fit-hover strong{border-top:1px solid var(--rb-line,#416077);padding-top:5px}
+.lineup-fit-hover small{color:var(--rb-muted,#a6bac5);font-size:11px}
+:is(.recommendation-app,.recommendation-ui) .ballot-proposers{flex:0 0 62px;width:62px;align-self:flex-start;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--rb-muted);font-size:11px;line-height:18px;cursor:help}
+.recommendation-ui .ballot-heroes[data-member-count="5"]{gap:4px}
+:is(.recommendation-app,.recommendation-ui) .ballot-rank{display:none!important}
+.recommendation-app .page:not([data-page=draft]){padding:14px 18px}
+.recommendation-app .page-heading{margin-bottom:12px}
+.recommendation-app .page-heading h1{font-size:22px}
+.recommendation-app .library-toolbar{gap:8px;margin-bottom:10px}
+.recommendation-app .library-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:9px}
+.recommendation-app .hero-tile{min-height:0;padding:10px 6px;gap:6px;border-radius:8px}
+.recommendation-app .hero-tile .portrait{width:64px;height:64px}
+.recommendation-app .hero-tile>b{font-size:13px;line-height:1.35}
+.recommendation-app .hero-tile>small{display:none}
+.recommendation-app .library-rolebar,.recommendation-app .reference-rolebar{margin-block:8px 10px;gap:5px}
+.recommendation-app .settings-grid{gap:12px;align-items:start}
+.recommendation-app .settings-grid .panel-head{padding:10px 12px}
+.recommendation-app .settings-grid .panel-body{padding:10px 12px}
+.recommendation-app .settings-grid .setting-row{padding-block:7px;gap:8px}
+.recommendation-app .settings-grid .setting-row p{font-size:12px;margin-top:3px}
+.recommendation-app .settings-grid .btn{min-height:30px;padding:5px 8px;font-size:12px}
+.recommendation-app .settings-grid .settings-details{padding-block:8px}
+.recommendation-app .update-download-options{margin-bottom:0}
+.recommendation-app .patch-entry{padding:0 10px;margin-block:6px;border-radius:7px}
+.recommendation-app .patch-entry>summary{display:flex;align-items:center;gap:10px;min-height:52px;cursor:pointer;list-style:none}
+.recommendation-app .patch-entry>summary::-webkit-details-marker{display:none}
+.recommendation-app .patch-entry>summary:after{content:'⌄';margin-left:2px;color:var(--rb-muted)}
+.recommendation-app .patch-entry[open]>summary:after{transform:rotate(180deg)}
+.recommendation-app .patch-entry>summary .portrait{width:40px;height:40px}
+.recommendation-app .patch-entry>summary h3{font-size:14px;margin:0;flex:1;min-width:0}
+.recommendation-app .patch-count{font-size:12px;color:var(--rb-muted);white-space:nowrap}
+.recommendation-app .patch-entry .patch-table-scroll{margin-bottom:10px}
+.recommendation-app .patch-section-heading{font-size:15px;margin-block:14px 6px}
+:is(.recommendation-app,.recommendation-ui) .ranking-roles{margin-block:8px}
+:is(.recommendation-app,.recommendation-ui) .ranking-roles button{padding-block:7px}
+:is(.recommendation-app,.recommendation-ui) .ranking-meta{margin-block:6px 2px}
+.recommendation-app .ranking-source{margin-block:3px 8px}
+.recommendation-app .hex-comparison>summary{padding:10px 12px;cursor:pointer;font-size:13px;color:var(--rb-ink)}
+.recommendation-app .hex-comparison>summary small{float:right;color:var(--rb-muted);font-size:12px}
+.recommendation-app .hex-comparison .panel-head{padding:9px 12px}
+.recommendation-app .hex-comparison .panel-body{padding:10px 12px}
+.recommendation-app .hex-comparison .panel-head h3{font-size:14px}
+.recommendation-app .hex-comparison .panel-head p{font-size:12px}
+.recommendation-app .hex-side .detail-section{margin-top:10px!important}
+@media(max-width:340px){
+ .recommendation-ui .companion-persistent .pregame-controls{flex-wrap:wrap;gap:5px}
+ .recommendation-ui .pregame-controls .pregame-secondary{display:flex;align-items:center;flex-basis:100%;justify-content:space-between;gap:4px}
+ .recommendation-ui .pregame-role .select{width:86px}
+ .recommendation-ui .pregame-secondary .pregame-style-select{margin-left:0}
+ .recommendation-ui .pregame-secondary .pregame-more{margin-left:auto}
+}

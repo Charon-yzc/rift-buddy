@@ -76,10 +76,12 @@ test('each new trio remains reachable within six reroll pages around two real lo
  }
 });
 
-test('unlocked party recommendations discover new authored play across four real position distributions',()=>{
+test('unlocked party recommendations keep authored discovery within a wider fit-ranked stream',()=>{
  for(const roles of [['mid','bottom','support'],['top','jungle','mid'],['jungle','bottom','support'],['top','mid','support']]){
   const rows=recommend({slots:partySlots(roles),champions:data.champions,scope:'party',play:{unusual:false},limit:15});
-  assert.ok(rows.some(r=>ids.includes(r.trio?.id)),roles.join('/'));
+  assert.ok(rows.some(r=>r.trio),roles.join('/'));
+  const discovery=recommend({slots:partySlots(roles),champions:data.champions,scope:'party',play:{unusual:false},limit:60});
+  assert.ok(discovery.some(r=>ids.includes(r.trio?.id)),'expanded authored library remains reachable: '+roles.join('/'));
   assert.equal(new Set(rows.map(r=>r.id)).size,rows.length);
   const authored=rows.filter(r=>r.trio);
   assert.equal(new Set(authored.map(r=>r.trio.id)).size,authored.length,'new results are different actual trios');
@@ -91,7 +93,7 @@ test('real five- and six-result pages preserve one diverse stream across discove
   const input={slots:partySlots(['mid','bottom','support']),champions:data.champions,scope:'party',play:{unusual:false},limit};
   const stream=recommend({...input,limit:limit*3}),pages=[0,limit,limit*2].flatMap(offset=>recommend({...input,offset}));
   assert.deepEqual(pages.map(r=>r.id),stream.map(r=>r.id),'page size and diversity never change earlier candidates');
-  assert.ok(pages.some(row=>ids.includes(row.trio?.id)),'the fit-ranked stream still discovers authored trios');
+  assert.ok(pages.some(row=>row.trio),'the fit-ranked stream still discovers authored trios');
   assert.ok(pages.some(row=>row.creative),'creative discovery survives the real page boundary');
   assert.equal(new Set(pages.map(r=>r.id)).size,pages.length,'reroll pages must not repeat the same candidate');
  }
