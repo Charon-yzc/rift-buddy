@@ -1,5 +1,12 @@
 import {escape as e,button} from './ui.mjs';
 
+export function clientConnectionControl(client={},busy=false){
+ const connecting=busy||client.connecting,state=client.connected?'connected':connecting?'connecting':'disconnected';
+ const label=client.connected?'客户端已连接':connecting?'连接中…':'未连接客户端';
+ const action=client.connected?'同步客户端':connecting?'正在连接客户端':client.needsElevation?'授权连接客户端':'连接客户端';
+ return `<span class="client-connection-control"><button type="button" class="client-connection-indicator ${state}" data-action="sync" ${client.connected?'':'data-client-connect'} aria-label="${action}" title="${action}" ${connecting?'disabled aria-busy="true"':''}><span class="client-connection-light" aria-hidden="true"></span></button><span>${label}</span></span>`;
+}
+
 export function clientConnectionNotice(client={},preferences={},busy=false,{compact=false}={}){
  if(client.connected)return '';
  const connecting=busy||client.connecting,paused=preferences.autoSync===false;
