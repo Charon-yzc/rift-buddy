@@ -713,6 +713,14 @@ test('a teammate preview updates the visible roster while preserving recommendat
  assert.match(html,/class="companion-roster-hero roster-display"[^>]*data-role="mid" data-id="Veigar"/);
 });
 
+test('without an adopted member the current saved configuration wins over an older hover preview',()=>{
+ const current=client();current.session.myTeam[0].championId=hero('Ahri').key;
+ const {context:c,calls}=setup({current});
+ const saved={selection:{id:'Ahri',role:'bottom',mode:'rift',runeId:'loaded-favorite'}},preview={selection:{id:'Ahri',role:'bottom',mode:'rift',runeId:'older-hover'}};
+ c.myPreparation=()=>saved;c.companionPreparation=()=>preview;
+ assert.equal(c.ownTaskPreparation().selection.runeId,'loaded-favorite');assert.equal(calls.prepared.length,0);
+});
+
 test('both room reference entry points make other roles and unknown ownership read only',async()=>{
  for(const action of ['room-local-reference','room-adopt-configuration'])for(const ownRole of ['bottom','','mid']){
   const {context:c,calls}=setup();c.taskOwnRole=()=>ownRole;

@@ -20,9 +20,9 @@ async function run(){
  const release=JSON.parse(await fs.readFile('release/latest.json','utf8')),base=process.env.RIFT_BUDDY_SOURCE==='1'?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'),'utf8')),key=id=>data.champions.find(c=>c.id===id).key;
- const online=()=>({connected:true,phase:'ChampSelect',receivedAt:new Date().toISOString(),message:'隔离公开选人',mode:{id:'rift',label:'召唤师峡谷'},game:{gameId:'2501',mapId:11},session:{localPlayerCellId:1,myTeam:[{cellId:2,championId:key('Darius'),assignedPosition:'TOP'},{cellId:1,championId:key('Vi'),assignedPosition:'JUNGLE'}],theirTeam:[],bans:[]}});
+ const online=()=>({connected:true,phase:'ChampSelect',receivedAt:new Date().toISOString(),message:'隔离公开选人',mode:{id:'rift',label:'召唤师峡谷'},game:{gameId:'2501',mapId:11},session:{localPlayerCellId:1,myTeam:[{cellId:2,championId:key('Darius'),pickState:'locked',assignedPosition:'TOP'},{cellId:1,championId:key('Vi'),pickState:'locked',assignedPosition:'JUNGLE'}],theirTeam:[],bans:[]}});
  fixture=phase==='offline'?{connected:false,phase:'Offline',message:'隔离离线准备'}:online();
- if(phase==='blind')fixture.session.myTeam=[{cellId:1,championId:key('Ahri'),assignedPosition:''}];
+ if(phase==='blind')fixture.session.myTeam=[{cellId:1,championId:key('Ahri'),pickState:'locked',assignedPosition:''}];
  require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
  const js=code=>main.webContents.executeJavaScript(code,true);

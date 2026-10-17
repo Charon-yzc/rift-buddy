@@ -643,7 +643,7 @@ function ownTaskPreparation(){
  const slot=slots.find(s=>s.role===role);
  const publicOwn=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),publicOwnId=data.champions.find(c=>c.key===Number(publicOwn?.championId||publicOwn?.championPickIntent))?.id;
  if(lastTaskSelection&&(slot?.champion===lastTaskSelection.id||publicOwnId===lastTaskSelection.id)){const selection={...lastTaskSelection,...rememberedPreparation(lastTaskSelection)};return {selection,build:getBuild(champ(selection.id),selection.role,data,selection)};}
- if(publicOwnId&&member?.champion!==publicOwnId){if(intent?.selection.id===publicOwnId)return intent;if(own?.selection.id===publicOwnId)return own;}
+ if(publicOwnId&&member&&member.champion!==publicOwnId){if(intent?.selection.id===publicOwnId)return intent;if(own?.selection.id===publicOwnId)return own;}
  const context=member?{id:member.champion,role,mode:'rift',...creativeComboContext(creativeMemberCombo(activeCreativePlan,member.champion,role))}:null;
  if(context){const selection={...rememberedPreparation(context),...context};return {selection,build:getBuild(champ(selection.id),role,data,selection)};}
  if(own)return own;
