@@ -24,7 +24,7 @@ test('explicit room adoption preserves concrete equipment, rune, skill and D/F c
 
 test('public selected heroes and manual lanes survive a conflicting room plan; failed duties are not claimed active',()=>{
  const incoming=share(),current=lineup([['top','Garen'],['jungle','Graves']]);current[1]={...current[1],clientCellId:0,manualPosition:true,partyManual:true};
- const live={...client,session:{...client.session,myTeam:[{cellId:0,championId:hero('Graves').key,assignedPosition:'MIDDLE'},{cellId:1,championId:hero('Ahri').key,assignedPosition:'MIDDLE'}]}};
+ const live={...client,session:{...client.session,myTeam:[{cellId:0,championId:hero('Graves').key,pickState:'locked',assignedPosition:'MIDDLE'},{cellId:1,championId:hero('Ahri').key,pickState:'locked',assignedPosition:'MIDDLE'}]}};
  const adopted=adoptRoomLineup(incoming,data,current,live);assert.equal(adopted.slots.find(s=>s.clientCellId===0).champion,'Graves');assert.equal(adopted.slots.find(s=>s.clientCellId===0).role,'jungle');assert.equal(adopted.slots.find(s=>s.clientCellId===1).champion,'Ahri');assert.equal(adopted.slots[0].champion,'Garen');assert.equal(adopted.creativePlan,null);assert.ok(adopted.conflicts.some(c=>c.kind==='plan'));assert.equal(adopted.configurations.some(c=>['Diana','Yasuo'].includes(c.id)),false);
 });
 
@@ -35,17 +35,21 @@ test('an accepted prospective lineup can be replaced, while a manual lock and pu
  const banned={...client,session:{...client.session,bans:[hero('Diana').key],theirTeam:[{championId:hero('Yasuo').key}]}};const blocked=adoptRoomLineup(share(),data,createSlots(),banned);assert.equal(blocked.slots[1].champion,null);assert.equal(blocked.slots[2].champion,null);assert.equal(blocked.creativePlan,null);
 });
 
-test('room adoption rejects conflicting public hovers before saving a plan and allows cleared or matching hovers',()=>{
+test('room adoption ignores public previews but retains confirmed locks and the original client state',()=>{
  const current=createSlots(),incoming=share(),live=structuredClone(client);
  live.session.myTeam.push({cellId:1,championId:0,championPickIntent:hero('Lux').key,assignedPosition:'MIDDLE'});
- const before=structuredClone({current,incoming,live});
- assert.throws(()=>adoptRoomLineup(incoming,data,current,live),/已预选拉克丝/);assert.deepEqual({current,incoming,live},before);
- live.session.myTeam[1].championPickIntent=hero('Yasuo').key;
- assert.equal(adoptRoomLineup(incoming,data,current,live).creativePlan.id,incoming.strategy.id);
- live.session.myTeam[1].championPickIntent=0;
- assert.equal(adoptRoomLineup(incoming,data,current,live).creativePlan.id,incoming.strategy.id);
- live.session.myTeam[0].championPickIntent=hero('Lux').key;
- assert.throws(()=>adoptRoomLineup(incoming,data,current,live,{}, {ownRole:'mid'}),/已预选拉克丝/);
+ for(const positiveId of [false,true]){
+  live.session.myTeam[1].championId=positiveId?hero('Lux').key:0;
+  const before=structuredClone({current,incoming,live});
+  assert.equal(adoptRoomLineup(incoming,data,current,live).creativePlan.id,incoming.strategy.id);
+  assert.deepEqual({current,incoming,live},before);
+ }
+ const bound=createSlots().map(s=>s.role==='mid'?{...s,champion:'Lux',clientCellId:1,manualPosition:true,locked:true}:s);
+ const adopted=adoptRoomLineup(incoming,data,bound,live);assert.equal(adopted.creativePlan.id,incoming.strategy.id);assert.equal(adopted.slots[2].clientCellId,1);assert.equal(adopted.slots[2].manualPosition,true);
+ live.session.myTeam[1].pickState='locked';
+ const locked=adoptRoomLineup(incoming,data,current,live);
+ assert.equal(locked.slots.find(s=>s.role==='mid').champion,'Lux');assert.equal(locked.creativePlan,null);
+ assert.ok(locked.conflicts.some(c=>c.role==='mid'));
 });
 
 test('explicit room adoption moves an unbound same-hero plan without clearing unrelated roles',()=>{
@@ -61,14 +65,14 @@ test('explicit room adoption moves an unbound same-hero plan without clearing un
 });
 
 test('room migration preserves the old hero when its target is unavailable or any public/manual position protects it',()=>{
- for(const conflict of ['banned','unavailable','destination','manual','selected','hover']){
+ for(const conflict of ['banned','unavailable','destination','manual','selected']){
   const incoming={kind:'state',v:1,from:'队友',at:1000,mode:'rift',lineup:[{role:'bottom',champion:'Ashe'}]};
   const current=lineup([['mid','Ashe'],['support','Nami']]),live=structuredClone(client),availability={};
   if(conflict==='banned')live.session.bans=[hero('Ashe').key];
   if(conflict==='unavailable')availability.eligibleByRole={bottom:['Jinx']};
   if(conflict==='destination')Object.assign(current[3],{champion:'Jinx',locked:true});
   if(conflict==='manual')Object.assign(current[2],{manualPosition:true});
-  if(['selected','hover'].includes(conflict))live.session.myTeam.push({cellId:2,championId:conflict==='selected'?hero('Ashe').key:0,championPickIntent:conflict==='hover'?hero('Ashe').key:0,assignedPosition:'MIDDLE'});
+  if(['selected','hover'].includes(conflict))live.session.myTeam.push({cellId:2,championId:conflict==='selected'?hero('Ashe').key:0,pickState:'locked',championPickIntent:conflict==='hover'?hero('Ashe').key:0,assignedPosition:'MIDDLE'});
   const adopted=adoptRoomLineup(incoming,data,current,live,availability);
   assert.equal(adopted.loadedMembers,0,conflict);assert.ok(adopted.conflicts.some(c=>c.role==='bottom'),conflict);
   assert.equal(adopted.slots.find(s=>s.champion==='Ashe')?.role,'mid',conflict);

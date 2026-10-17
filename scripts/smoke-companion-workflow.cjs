@@ -67,7 +67,7 @@ async function run(){
  diagnosticMain=main;
  const selectSurface=async side=>{await until(()=>{main=side?windows.find(w=>!w.isDestroyed()&&new URL(w.webContents.getURL()||'about:blank').searchParams.get('surface')==='companion'):fullMain;return main&&!main.isDestroyed();},'Requested surface missing');await until(()=>main.webContents.executeJavaScript('!!document.querySelector('+(side?'".companion-shell"':'"[data-action=navigate]"')+')'),'Requested surface not ready');diagnosticMain=main;};
  const js=async code=>{const result=await main.webContents.executeJavaScript(code,true).catch(error=>{console.error('Failed smoke expression:',code);throw error;});if(code==='window.buddy.companionMode(false)')await selectSurface(false);if(code==='window.buddy.companionMode(true)')await selectSurface(true);return result;};
- const click=async selector=>{if(selector.includes('companion-roster-plan')&&!await js('!!document.querySelector('+JSON.stringify(selector)+')'))await js('document.querySelector("[data-action=companion-tab][data-tab=recommend]").click()');await js('document.querySelector('+JSON.stringify(selector)+').click()');if(selector==='[data-action=companion-full]')await selectSurface(false);if(selector==='[data-action=companion-attach]')await selectSurface(true);};
+ const click=async selector=>{await js('document.querySelector('+JSON.stringify(selector)+').click()');if(selector==='[data-action=companion-full]')await selectSurface(false);if(selector==='[data-action=companion-attach]')await selectSurface(true);};
  const change=async(selector,value)=>{if(selector==='#companion-scope'){await click('[data-action=draft-scope][data-scope='+value+']');return;}if(selector==='#solo-role'&&!await js('!!document.querySelector("#solo-role")'))await click('[data-action=companion-tab][data-tab=recommend]');if(selector.startsWith('[data-companion-field=')&&!await js('!!document.querySelector('+JSON.stringify(selector)+')'))await click('[data-action=companion-tab][data-tab=plan]');return js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');el.value='+JSON.stringify(String(value))+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');};
  let resumeSidebar=false;
  const sync=async()=>{if(main.isDestroyed()||phase!=='ChampSelect'||offline){if(main.isDestroyed()||main!==fullMain)resumeSidebar=true;await selectSurface(false);}await js('window.buddy.client(true)');await click('[data-action=sync]');await delay(180);if(phase==='ChampSelect'&&!offline&&resumeSidebar){await selectSurface(true);resumeSidebar=false;await click('[data-action=sync]');await delay(180);}};
@@ -114,16 +114,14 @@ async function run(){
  // A public teammate opens a read-only reference. My Configuration returns to
  // the actual local hero, without needing another preparation click.
  teammatePicked='Ashe';await sync();await click('[data-action=companion-tab][data-tab=recommend]');
- const beforeReadonly=writes.length;await click('[data-action=companion-roster-plan][data-id=Ashe]');
- assert.equal(await js('[...document.querySelectorAll("[data-action=configuration-switch]")].every(button=>button.disabled)'),true);
- assert.equal(await js('document.querySelector("#configuration-role").disabled'),true,'A teammate reference must not expose an editable lane');
+ const beforeReadonly=writes.length;assert.equal(await js('document.querySelector(".companion-roster-hero[data-id=Ashe]").hasAttribute("data-action")'),false);await js('document.querySelector(".companion-roster-hero[data-id=Ashe]").click()');assert.equal(await js('!!document.querySelector("#overlay-root>*")'),false,'Clicking a displayed teammate opened a picker');
  await click('[data-action=companion-tab][data-tab=plan]');assert.equal((await payload()).champion,'Volibear');assert.equal(writes.length,beforeReadonly);
  await click('[data-action=companion-tab][data-tab=recommend]');assert.equal(await js('document.querySelectorAll(".roster-lock").length'),1);
  await change('#solo-role','support');await sync();assert.equal(picked,'Volibear');assert.equal(hoverWrites,0,'Changing lane replaced the locked hero');
  const accepted=await state();assert.equal(accepted.draft.slots.find(value=>value.champion==='Volibear').role,'support');assert.equal(accepted.draft.slots.filter(value=>value.party).length,accepted.draft.partyCount);
  await js('window.buddy.companionMode(false)');
  await click('[data-action=navigate][data-route=draft]');
- await click('.task-roster [data-action=build][data-id=Volibear]');
+ await click('[data-action=pregame-hero]');await js('{const input=document.querySelector("#picker-search");input.value="Volibear";input.dispatchEvent(new Event("input",{bubbles:true}));}');await click('.champ-option[data-id=Volibear]');
  await until(()=>js('!!document.querySelector(".configuration-drawer #configuration-role")'),'Main configuration drawer missing');
  await until(()=>js('!document.querySelector(".configuration-current [data-action=configuration-switch]").disabled'),'Main preparation stayed busy');
  const mainBrowseWrites=writes.length,mainBrowseSpells=spellWrites,mainBrowseHovers=hoverWrites,mainBrowseDraft=(await state()).draft;

@@ -1,4 +1,4 @@
-import {escape as e,button} from './ui.mjs';
+import {escape as e,button,icon} from './ui.mjs';
 import {ROLES} from './core/rules.mjs';
 import {partyRoleConflicts} from './core/party-range.mjs';
 
@@ -13,7 +13,7 @@ export function pregameControls({scope='party',style='balanced',ownRole='',slots
  const choice=(action,field,id,label,active,extra='')=>button(action,e(label),'',`pregame-choice${active?' active':''}`,`data-${field}="${e(id)}" aria-pressed="${active}" ${extra}`);
  return `<section class="pregame-controls${compact?' pregame-controls-compact':''}" aria-label="选人条件" data-role-conflict="${!!conflicts.length}">
   <div class="pregame-primary">
-   <label class="pregame-role" data-role-needed="${!ownRole}"><span>预选</span><select id="solo-role" class="select" aria-label="预选分路"><option value="" ${ownRole?'':'selected'}>分路</option>${ROLES.map(role=>`<option value="${e(role.id)}" ${ownRole===role.id?'selected':''}>${e(role.name)}</option>`).join('')}</select></label>${button('pregame-hero',preselectionHero||'<span class="pregame-hero-empty" aria-hidden="true">+</span>','','pregame-hero',`aria-label="${preselection?.champion?'更换预选英雄':'预选英雄'}" title="选择英雄"`)}
+   <label class="pregame-role" data-role-needed="${!ownRole}"><span>预选</span><select id="solo-role" class="select" aria-label="预选分路"><option value="" ${ownRole?'':'selected'}>分路</option>${ROLES.map(role=>`<option value="${e(role.id)}" ${ownRole===role.id?'selected':''}>${e(role.name)}</option>`).join('')}</select></label><div class="pregame-hero-choice" data-selected="${!!preselection?.champion}">${button('pregame-hero',preselectionHero||icon('user')+'<span>英雄</span>','','pregame-hero',`aria-label="${preselection?.champion?'更换预选英雄':'预选英雄'}" title="选择英雄"`)}${preselection?.kind==='hero'&&preselection.champion&&!preselection.attemptedGameId?button('pregame-clear','','close','pregame-cancel','aria-label="取消预选英雄" title="取消预选英雄"'):''}</div>
   </div>
   <div class="pregame-secondary">
    <div class="pregame-styles" role="group" aria-label="推荐风格">${[['balanced','稳妥'],['fun','娱乐'],['wild','花活']].map(([id,label])=>choice('draft-style','style',id,label,selectedStyle===id)).join('')}</div>

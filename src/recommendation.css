@@ -582,3 +582,45 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 
 :is(.recommendation-ui,.recommendation-app) .roster-portrait>.roster-lock {width:17px!important;height:17px!important;left:-2px;top:-2px;padding:0!important;line-height:1;border-radius:4px}
 .recommendation-ui .companion-roster-state.sr-only {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;border:0}
+
+/* The roster displays picks; choosing a hero lives in the preselection entry. */
+:is(.recommendation-ui,.recommendation-app) .roster-display {cursor:default}
+:is(.recommendation-ui,.recommendation-app) .roster-display[draggable=true] {cursor:grab}
+:is(.recommendation-ui,.recommendation-app) .roster-display:hover {background:transparent}
+.recommendation-ui .companion-team-compact .companion-roster-hero.roster-display:hover,.recommendation-app .task-roster .champ-pick.roster-display:hover {background:transparent}
+:is(.recommendation-ui,.recommendation-app) .roster-empty>.icon {width:23px;height:23px;opacity:.55;stroke-width:1.4}
+:is(.recommendation-ui,.recommendation-app) .pregame-hero-choice {position:relative;flex:none}
+:is(.recommendation-ui,.recommendation-app) .pregame-controls .pregame-hero {display:flex;gap:5px;width:auto;min-width:34px;padding:0 7px}
+:is(.recommendation-ui,.recommendation-app) .pregame-hero-choice[data-selected=true] .pregame-hero {padding:0;width:34px}
+:is(.recommendation-ui,.recommendation-app) .pregame-hero>.icon {width:17px;height:17px}
+:is(.recommendation-ui,.recommendation-app) .pregame-controls .pregame-cancel {position:absolute;right:-5px;top:-5px;display:grid;place-items:center;width:17px;height:17px;min-height:17px;padding:0;border:1px solid var(--rb-line);border-radius:50%;background:var(--rb-panel);color:var(--rb-muted);z-index:1}
+:is(.recommendation-ui,.recommendation-app) .pregame-controls .pregame-cancel>.icon {width:11px;height:11px;stroke-width:2}
+:is(.recommendation-ui,.recommendation-app) .pregame-controls .pregame-cancel:hover {background:var(--rb-raised);color:var(--rb-ink);border-color:var(--rb-accent)}
+
+.preselection-picker {width:min(760px,calc(100vw - 24px));max-height:calc(100dvh - 24px);min-height:0;overflow:hidden}
+.preselection-picker .modal-header {flex:none;padding:12px 14px 8px;gap:8px}
+.preselection-picker .modal-header h2 {font-size:calc(17px * var(--text-scale));line-height:1.3;margin:0}
+.preselection-picker .modal-header .icon-only {min-height:28px;width:28px;padding:4px}
+.preselection-picker .modal-controls {flex:none;padding:0 14px 10px}
+.preselection-picker .search-wrap {padding:0 9px;gap:7px;border-radius:6px;min-width:0}
+.preselection-picker .search-wrap input {height:32px;padding:4px 0;min-width:0;font-size:calc(12px * var(--text-scale));border:0;background:transparent}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-picker .search-wrap input:focus-visible {outline:none;box-shadow:none}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-picker .search-wrap:focus-within {border-color:var(--rb-accent);box-shadow:0 0 0 1px var(--rb-accent)}
+.preselection-picker .preselection-roles {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-top:7px}
+.preselection-picker .preselection-roles .chip {display:flex;justify-content:center;align-items:center;gap:4px;margin:0;padding:5px 2px;min-height:28px;min-width:0;border-radius:5px;font-size:calc(11px * var(--text-scale))}
+.preselection-picker .preselection-roles .role-icon {width:15px;height:15px;flex:none}
+.preselection-picker .champ-grid {flex:1;min-height:0;padding:0 14px 12px;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:7px;align-content:start;overscroll-behavior:contain}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-picker .champ-option {border:1px solid transparent;background:transparent;padding:6px 3px 5px;gap:5px;border-radius:6px;box-shadow:none;transform:none}
+.preselection-picker .champ-option .portrait {width:60px;height:60px;max-width:100%;border-radius:6px}
+.preselection-picker .champ-option span {font-size:calc(11px * var(--text-scale));line-height:1.3}
+body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-picker .champ-option:is(:hover,.selected) {background:var(--rb-tint);border-color:var(--rb-accent)}
+.preselection-picker .picker-fallback,.preselection-picker .muted {grid-column:1/-1;font-size:calc(12px * var(--text-scale));margin:4px 0}
+.preselection-picker .preselection-footer {flex:none;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:9px 14px}
+.preselection-picker .preselection-current {display:flex;align-items:center;gap:8px;min-width:0;font-size:calc(11px * var(--text-scale))}
+.preselection-picker .preselection-current .portrait {width:30px;height:30px;border-radius:4px}
+.preselection-picker .preselection-current span {display:grid;gap:2px}
+.preselection-picker .preselection-current b {font-size:calc(12px * var(--text-scale));color:var(--rb-ink)}
+.preselection-picker .preselection-current small {font-size:calc(10px * var(--text-scale))}
+.preselection-picker .preselection-actions {display:flex;gap:6px;margin-left:auto}
+.preselection-picker .preselection-actions .btn {min-height:30px;padding:5px 10px;font-size:calc(12px * var(--text-scale))}
+@media(max-width:360px){.preselection-picker .preselection-roles .role-icon{display:none}.preselection-picker .champ-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.preselection-picker .modal-controls,.preselection-picker .champ-grid{padding-left:10px;padding-right:10px}.preselection-picker .modal-header,.preselection-picker .preselection-footer{padding-left:10px;padding-right:10px}}

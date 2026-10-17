@@ -1,6 +1,6 @@
 import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES, profile,conventionalRole } from './rules.mjs';
 import {draftTargets,scopeSlots,effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
-import {recommendationDraft} from './draft-intents.mjs';
+import {recommendationDraft,confirmedClientDraft} from './draft-intents.mjs';
 import {validPartyCount,reconcilePartyRange} from './party-range.mjs';
 import {clientContextDraft,publicAllyIds} from './client-context-draft.mjs';
 export {clearClientPicks} from './draft.mjs';
@@ -270,6 +270,14 @@ function comboIndex(){
  return comboIndexCache;
 }
 export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null,party=null}) {
+ if(Array.isArray(clientSession?.myTeam)){
+  ({slots,session:clientSession}=confirmedClientDraft(slots,clientSession,champions));
+  const picked=new Set(clientSession.myTeam.map(player=>champions.find(champion=>Number(champion.key)===Number(player.championId))?.id).filter(Boolean));
+  const own=clientSession.myTeam.find(player=>player.cellId===clientSession.localPlayerCellId),ownId=champions.find(champion=>Number(champion.key)===Number(own?.championId))?.id;
+  publicPicks=publicPicks.filter(id=>picked.has(id));publicAllies=publicAllies.filter(id=>picked.has(id));
+  if(!ownId)confirmedPick=null;
+  if(scope==='solo')soloChampion=ownId||null;
+ }
  // A saved board may serialize the five lanes in any order. New searches
  // must choose the same graph anchors and plan identity for that same board.
  // Frozen adopted plans retain their own content and execution order.

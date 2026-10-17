@@ -1,6 +1,7 @@
 export const escape = v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const gameDescription=v=>String(v??'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/@[^@]+@/g,'〔动态数值〕');
 const icons={
+ user:'<circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>',
  folder:'<path d="M3 5h6l2 3h10v12H3V5Z"/>',
  ranking:'<path d="M4 20V12h4v8M10 20V4h4v16M16 20v-6h4v6M2 20h20"/>',
  team:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M16 3a4 4 0 0 1 0 8"/><circle cx="9" cy="7" r="4"/>',
@@ -39,6 +40,7 @@ const roleIcons={
 };
 export const roleIcon=(role,cls='')=>roleIcons[role]?`<svg class="icon role-icon ${escape(cls)}" viewBox="0 0 34 34" aria-hidden="true">${roleIcons[role]}</svg>`:'';
 export const portrait=(c,cls='')=>c?`<img class="portrait ${cls}" src="${escape(localAssets[`champion/${c.id}`]||`../data/images/champion/${c.id}.png`)}" data-fallback="${escape(c.icon)}" alt="${escape(c.name)}" loading="lazy" />`:'<div class="empty-portrait">+</div>';
+export const rosterPortrait=(c,cls='')=>c?portrait(c,cls).replace('<img ','<img draggable="false" '):`<span class="empty-portrait roster-empty" aria-hidden="true">${icon('user')}</span>`;
 let fallbackAssets=new Map(),localAssets={};
 export function configureAssets(data){
  localAssets=data.imageOverrides||{};

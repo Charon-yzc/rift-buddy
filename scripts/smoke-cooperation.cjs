@@ -92,8 +92,8 @@ async function run(){
  const controls=await js('[...document.querySelectorAll(".plan-drawer [data-action=replace-member]")].map(b=>b.dataset.role)');
  assert.deepEqual(controls,expectedEditable,'Accept/restart must not add replacement controls for fixed friends');
  for(const member of plan.members){
-  await click('[data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');
-  const configuration=await js('document.querySelector(".combo-config,.companion-note").textContent');assert.ok(configuration.includes(plan.window));assert.ok(configuration.includes(plan.name));
+  await click('.plan-drawer [data-action=build][data-id="'+member.champion+'"][data-role="'+member.role+'"]');
+  const configuration=await js('(()=>{const e=document.querySelector(".drawer .combo-config,.drawer .companion-note");return (e.closest("details")||e).textContent})()');assert.ok(configuration.includes(plan.window));assert.ok(configuration.includes(plan.name),member.champion+' configuration lost its plan title');
   if(member.champion==='Aphelios')assert.ok(await js('document.querySelector(".attribute-plan").textContent.includes("攻击力 › 穿甲 › 攻速")'),'Build omitted attribute preparation');
   if(crossLane&&member.champion==='Ahri'){
    // Explicit reference-browser entry retains personal import/edit coverage.
