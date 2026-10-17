@@ -9,6 +9,7 @@ import {prepareClientSelection} from './client-preparation.mjs';
 import {loadSnapshot,atomicJSON} from './data.mjs';
 import {readState} from './storage.mjs';
 import {launchHelper} from './helper-launch.mjs';
+import {createMatchHistoryService} from './match-history.mjs';
 const pipePattern=/^\\\\\.\\pipe\\rift-buddy-[a-f0-9]{32}$/;
 const tokenPattern=/^[a-f0-9]{64}$/;
 function sameSecret(actual,expected){return typeof actual==='string'&&tokenPattern.test(actual)&&crypto.timingSafeEqual(Buffer.from(actual,'hex'),Buffer.from(expected,'hex'));}
@@ -17,7 +18,7 @@ export function requestHelper(config,operation,payload={},timeout=12000) {
   const socket=net.createConnection(config.pipe);let buffer='';
   socket.setTimeout(timeout,()=>socket.destroy(new Error('客户端授权连接超时')));
   socket.on('connect',()=>socket.write(JSON.stringify({secret:config.secret,operation,payload})+'\n'));
-  socket.on('data',chunk=>{buffer+=chunk;if(buffer.length>150000){socket.destroy(new Error('授权连接响应异常'));return;}
+  socket.on('data',chunk=>{buffer+=chunk;if(buffer.length>(operation==='matchHistory'?4_000_000:150000)){socket.destroy(new Error('授权连接响应异常'));return;}
    if(buffer.includes('\n')){try{const message=JSON.parse(buffer.slice(0,buffer.indexOf('\n')));socket.end();if(message.ok)resolve(message.result);else reject(new Error(message.error||'客户端操作失败'));}catch{socket.destroy(new Error('授权连接格式异常'));}}
   });
   socket.on('error',()=>reject(new Error('授权连接已断开，请重新连接客户端')));
@@ -32,6 +33,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
  if(!pipePattern.test(config.pipe)||!tokenPattern.test(config.secret)||!Number.isInteger(config.parentPid)||config.parentPid<=0||!Number.isFinite(config.createdAt)||Date.now()-config.createdAt>600000||config.createdAt>Date.now()+5000)throw new Error('连接会话已过期');
  // The helper only serves this app's explicit operations; neither command lines nor credentials leave it.
  let writing=false,itemSetWriting=false;
+ const matchHistory=createMatchHistoryService({installPath:()=>config.installPath});
  const server=net.createServer(socket=>{
   let buffer='',handled=false;socket.setTimeout(15000,()=>socket.destroy());
   socket.on('error',()=>{});
@@ -42,7 +44,8 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
    try{
     let result;
     if(request.operation==='ping')result={ready:true};
-    else if(request.operation==='status')result=await clientSnapshot(config.installPath,{partyIds:request.payload?.partyIds});
+     else if(request.operation==='status')result=await clientSnapshot(config.installPath,{partyIds:request.payload?.partyIds});
+     else if(request.operation==='matchHistory'){socket.setTimeout(60000,()=>socket.destroy());result=await matchHistory.execute(request.payload?.operation,request.payload?.payload);}
     else if(request.operation==='applyRunes'){
      if(writing)throw new Error('符文正在应用，请稍后');writing=true;
      try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data'));
@@ -119,7 +122,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
   })().finally(()=>{opening=null;});return opening;
  }
  return {ensure,active:()=>!!config,
-  request:(operation,payload)=>{if(!config)throw new Error('尚未授权客户端连接');return requestHelper(config,operation,payload,operation==='prepareSelection'?60000:12000);},
+   request:(operation,payload)=>{if(!config)throw new Error('尚未授权客户端连接');return requestHelper(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
   status:async (installPath,partyIds=[])=>{if(config){try{return await requestHelper(config,'status',{partyIds});}catch{}}return clientSnapshot(installPath,{partyIds});},
   shutdown:async()=>{closed=true;if(config){try{await requestHelper(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
  };

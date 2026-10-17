@@ -16,6 +16,8 @@ This product is not endorsed by Riot Games and does not reflect the views or opi
 
 ## LeagueAkari
 
+The match-history implementation in `src/core/match-history/`, `src/match-history-*.mjs` and `services/match-history*.mjs` adapts the LCU/SGP endpoints, field normalization, Arena placement rule, player relationship analysis, filtering scopes, scoring weights and history interaction structure from the locally supplied LeagueAkari revision `60f1584c3d3e45b2bb183aefcc615d35d7cffcb8` (version 1.5.1). Reference paths: `src/shared/http-api-axios-helper/{league-client,riot-client,sgp}/`, `src/shared/data-adapter/{match-history,analysis/player,predicates}/`, `src/main/shards/akari-api/builtin.ts`, `src/main/shards/league-client-ux/ux-command-line-parser.ts`, `src/renderer/src-main-window/views/player-tabs/`, and `src/renderer-shared/components/match-card/`. The UI and request lifecycle are adapted to this application's existing ESM/Electron architecture. No captured player identities, authentication material or Akari binary assets are bundled. Akari scores are labeled as reference scores, never official ratings.
+
 The matchup normalization in `src/core/matchups.mjs` adapts the public champion matchup representation from LeagueAkari. A recorded matchup keeps an unknown relationship; raw whole-game results do not become an asserted lane counter.
 
 Source: https://github.com/LeagueAkari/LeagueAkari/blob/5109b2f7fcce6e02312e534cd1729ed0f2142b51/src/shared/data-adapter/champion-data/opgg.ts

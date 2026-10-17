@@ -29,6 +29,7 @@ import {resultPlayCard} from '../src/play-card-view.mjs';
 import {ROLES} from '../src/core/rules.mjs';
 import {selectedBuildFields} from '../src/core/build-favorites.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
+import {createHistoryController} from '../src/match-history-controller.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
@@ -60,7 +61,8 @@ const partySlots=()=>createSlots().map(s=>({...s,party:['mid','bottom'].includes
 function setup({slots=partySlots(),current=client(),incoming=client(),results=[{id:'existing candidate'}],now=Date.now()}={}){
  const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
- const context=vm.createContext({
+  const context=vm.createContext({
+   history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
   Date:ClockDate,data,slots,client:current,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
   generating:false,syncing:false,windowLayout:{docked:false},autoRecommendTimer:null,autoRecommendationKey:'',results,resultsSignature:'',

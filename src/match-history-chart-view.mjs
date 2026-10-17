@@ -1,0 +1,14 @@
+import {escape as e} from './ui.mjs';
+import {timelineAnalysisView} from './match-history-timeline-view.mjs';
+import {historyStatsView} from './match-history-stats-view.mjs';
+const metrics={gold:'总金币',currentGold:'当前金币',cs:'补刀',xp:'经验',level:'等级',damage:'英雄伤害'};
+const time=v=>Math.floor(v/60000)+':'+String(Math.floor(v/1000)%60).padStart(2,'0');
+const num=v=>Number.isFinite(v)?v.toLocaleString('zh-CN'):'未读取';
+const controls=(d,key,label,options,value)=>`<label>${label}<select data-history-chart="${d.game.id}" data-chart-field="${key}">${options.map(([id,name])=>`<option value="${e(id)}" ${String(id)===String(value)?'selected':''}>${e(name)}</option>`).join('')}</select></label>`;
+export function historyTimelineChart(d){
+ const {game,timeline}=d;if(!timeline)return '<p>时间线尚未读取</p>';
+ const metric=Object.hasOwn(metrics,d.chartMetric)?d.chartMetric:'gold',player=game.participants.find(p=>p.id===Number(d.chartPlayer))||game.self||game.participants[0],other=game.participants.find(p=>p.id===Number(d.chartCompare));
+ const sample=(frame,id)=>frame.players.find(p=>p.id===id)?.[metric],rows=timeline.frames.map(f=>({timestamp:f.timestamp,a:sample(f,player?.id),b:other?sample(f,other.id):null})),values=rows.flatMap(r=>[r.a,r.b]).filter(Number.isFinite),max=Math.max(1,...values),end=Math.max(1,...rows.map(r=>r.timestamp));
+ const line=(key,color)=>{let path='';let drawing=false;for(const r of rows){if(!Number.isFinite(r[key])){drawing=false;continue;}path+=(drawing?'L':'M')+(20+r.timestamp/end*760)+','+(155-r[key]/max*140);drawing=true;}return `<path d="${path}" fill="none" stroke="${color}" stroke-width="2.5"/>`;};
+ return `<div class="history-chart-controls">${controls(d,'chartMetric','统计',Object.entries(metrics),metric)}${controls(d,'chartPlayer','玩家',game.participants.map(p=>[p.id,p.name||'玩家 '+p.id]),player?.id)}${controls(d,'chartCompare','对比',[['','不对比'],...game.participants.filter(p=>p.id!==player?.id).map(p=>[p.id,p.name||'玩家 '+p.id])],other?.id||'')}</div><p><span class="text-green">${e(player?.name||'玩家')}</span>${other?' / <span class="text-gold">'+e(other.name)+'</span>':''} · ${metrics[metric]}</p><svg class="history-chart" viewBox="0 0 800 180" role="img" aria-label="逐分钟数据对比"><path d="M20 10V155H790" fill="none" stroke="currentColor" opacity=".25"/>${line('a','var(--accent,#8dcab5)')}${other?line('b','#cfaa73'):''}</svg><div class="history-table-scroll"><table><thead><tr><th>时间</th><th>${e(player?.name||'玩家')}</th>${other?'<th>'+e(other.name)+'</th><th>差值</th>':''}</tr></thead><tbody>${rows.map(r=>`<tr><td>${time(r.timestamp)}</td><td>${num(r.a)}</td>${other?`<td>${num(r.b)}</td><td>${Number.isFinite(r.a)&&Number.isFinite(r.b)?num(r.a-r.b):'未读取'}</td>`:''}</tr>`).join('')}</tbody></table></div>${timeline.frames.some(f=>f.players.some(p=>p.stats))?historyStatsView(d):''}${timelineAnalysisView(game,timeline)}`;
+}

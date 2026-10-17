@@ -1,0 +1,64 @@
+const {app,globalShortcut,session}=require('electron');
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[];let main,offline=false;
+app.setPath('userData',root);globalShortcut.register=()=>false;
+app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',(_event,_level,message)=>{if(typeof message==='string'&&/TypeError|ReferenceError|SyntaxError/.test(message))errors.push(message);});});
+app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
+global.fetch=async()=>{throw Error('External network disabled');};http.request=()=>{throw Error('Real network forbidden');};
+const own={puuid:'fixture-own-player-0001',summonerId:1,gameName:'战绩测试玩家',tagLine:'TEST',summonerLevel:100},friend={puuid:'fixture-friend-player-2',summonerId:2,gameName:'示例队友',tagLine:'TEST'};
+function game(id){const identities=[own,friend,...Array.from({length:8},(_,i)=>({puuid:'fixture-public-player-'+(i+3),gameName:'模拟玩家'+(i+3),tagLine:'TEST'}))];return {gameId:id,gameCreation:Date.now()-id*3600000,gameDuration:1800,gameMode:'CLASSIC',gameType:'MATCHED_GAME',gameVersion:'16.20',queueId:420,mapId:11,teams:[],participantIdentities:identities.map((p,i)=>({participantId:i+1,player:p})),participants:identities.map((p,i)=>({participantId:i+1,championId:[22,412,99,86,64,103,51,89,122,17][i],teamId:i<5?100:200,spell1Id:4,spell2Id:7,stats:{kills:8,deaths:2,assists:10,win:i<5?id%2===1:id%2===0,totalDamageDealtToChampions:25000,totalDamageTaken:15000,goldEarned:12000,totalMinionsKilled:140,neutralMinionsKilled:20,totalHeal:2000,visionScore:30,champLevel:16,item0:3006,item1:3031,perk0:8005,perkPrimaryStyle:8000,perkSubStyle:8100}}))};}
+const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);const route=options.path,method=options.method||'GET';if(offline)throw Error('fixture offline');
+ if(route==='/lol-summoner/v1/current-summoner')return own;
+ if(route==='/riotclient/region-locale')return {region:'unconfigured-fixture'};
+ if(route==='/lol-gameflow/v1/gameflow-phase')return 'Lobby';
+ if(route.startsWith('/lol-summoner/v2/'))return route.endsWith(friend.puuid)?friend:own;
+ if(route==='/lol-summoner/v1/summoners/aliases')return [friend];
+ if(route.includes('/matches?')){const q=new URLSearchParams(route.split('?')[1]),start=Number(q.get('begIndex')),count=Number(q.get('endIndex'))-start+1;return {games:{games:Array.from({length:start===0?count:3},(_,i)=>game(start+i+1))}};}
+ if(route.startsWith('/lol-match-history/v1/games/'))return game(Number(route.split('/').at(-1)));
+ if(route.includes('/game-timelines/'))return {frames:[{timestamp:60000,participantFrames:{1:{participantId:1,totalGold:600,currentGold:200,minionsKilled:6,jungleMinionsKilled:0,level:2,xp:300}},events:[{type:'ITEM_PURCHASED',timestamp:20000,participantId:1,itemId:1001},{type:'SKILL_LEVEL_UP',timestamp:0,participantId:1,skillSlot:1},{type:'CHAMPION_KILL',timestamp:50000,killerId:1,victimId:2}]}]};
+ if(route.startsWith('/lol-ranked/'))return {queues:[{queueType:'RANKED_SOLO_5x5',tier:'GOLD',division:'I',leaguePoints:40,wins:30,losses:20}]};
+ if(route.startsWith('/lol-champion-mastery/'))return [{championId:22,championLevel:10,championPoints:100000}];
+ if(route.includes('/rofls/')&&method==='POST'){writes.push(route);return {};}
+ if(route.includes('/metadata/'))return {state:'readyToWatch',downloadProgress:100};
+ throw Error('Unexpected fixture route');
+};
+https.request=(options,callback)=>{assert.equal(typeof options,'object','External URL request forbidden');const req=new EventEmitter();req.write=body=>options.body=body;req.end=()=>queueMicrotask(()=>{try{const value=output(options),res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify(value)));res.emit('end');}catch(error){req.emit('error',error);}});req.destroy=error=>{if(error)req.emit('error',error);};return req;};
+cp.spawn=()=>{const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
+cp.execFile=(file,args,options,callback)=>{queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
+const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function until(check,label){for(let n=0;n<120;n++){if(await check())return;await delay(80);}throw Error(label);}
+async function run(){
+ const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
+ app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
+ await until(()=>{main=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
+ const js=code=>main.webContents.executeJavaScript(code,true),click=selector=>until(()=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Control missing '+selector);
+ await click('[data-action=navigate][data-route=history]');assert.equal(await js('!!document.querySelector("#history-search")'),true);
+ await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
+ assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);
+ await click('[data-action=history-detail][data-id="1"]');await until(()=>js('!!document.querySelector(".history-player")&&!document.querySelector(".history-details [role=status]")'),'Detail missing');
+ await click('[data-action=history-detail][data-section=runes]');assert.ok(await js('document.querySelectorAll(".history-runes").length')>0);
+ await click('[data-action=history-detail][data-section=builds]');await until(()=>js('!!document.querySelector(".history-skills span")'),'Build events missing');
+ await click('[data-action=history-detail][data-section=timeline]');await until(()=>js('!!document.querySelector(".history-chart")'),'Timeline missing');
+ await js('(()=>{const select=document.querySelector("[data-chart-field=chartMetric]");select.value="cs";select.dispatchEvent(new Event("change",{bubbles:true}));})()');
+ assert.equal(await js('document.querySelector("[data-chart-field=chartMetric]").value'),'cs');
+ await click('[data-action=history-detail][data-section=events]');await until(()=>js('!!document.querySelector(".history-event")'),'Event details missing');
+ await click('[data-action=history-replay][data-replay=download]');await until(()=>writes.length===1,'Mock replay write missing');assert.ok(writes[0].endsWith('/1/download'));
+ await click('[data-action=history-next]');await until(()=>js('document.querySelectorAll(".history-match").length===3'),'Pagination missing');
+ await click('[data-action=history-prev]');await until(()=>js('document.querySelectorAll(".history-match").length===20'),'Previous page missing');
+ await js('(()=>{document.querySelector(".history-filter-panel").open=true;const el=document.querySelector("[data-history-field=filter-result]");el.value="loss";el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+ assert.equal(await js('document.querySelectorAll(".history-match").length'),10);
+ await click('[data-action=history-filter-clear]');await click('[data-action=history-rule-add]');await until(()=>js('document.querySelectorAll(".history-rule").length===1'),'Advanced filter missing');
+ await click('[data-action=history-filter-clear]');
+ await js('(()=>{document.querySelector("#history-query").value="示例队友#TEST";document.querySelector("#history-search").dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));})()');
+ await until(()=>js('document.querySelectorAll(".history-tabs [role=tab]").length===2&&!document.querySelector(".history-loading")'),'Second player query missing');
+ await click('[data-action=history-tab][data-id="1"]');
+ await click('[data-action=history-collect]');await until(()=>js('document.querySelectorAll(".history-match").length===23&&!document.querySelector(".history-loading")'),'Batch collection missing');
+ await click('[data-action=history-refresh]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'Refresh after batch missing');
+ await js('document.querySelector(".history-filter-panel").open=false');
+ main.setSize(1460,980);await main.webContents.capturePage();await delay(400);await fs.writeFile(path.join(root,'history-desktop.png'),(await main.webContents.capturePage()).toPNG());
+ main.setSize(1050,760);await until(()=>js('!!document.querySelector(".history-compact-summary")'),'Compact statistics disappeared after resize');await js('document.querySelector(".history-compact-summary").open=true');assert.ok(await js('document.querySelector(".history-compact-summary .history-win").offsetHeight>0'));await js('document.querySelector(".history-compact-summary").open=false');await main.webContents.capturePage();await delay(400);await fs.writeFile(path.join(root,'history-laptop.png'),(await main.webContents.capturePage()).toPNG());
+ assert.equal(await js('document.documentElement.scrollWidth>window.innerWidth+2'),false,'Page overflows window');
+ offline=true;await click('[data-action=history-refresh]');await until(()=>js('document.querySelector(".history-error")?.textContent.includes("账号")'),'Offline failure missing');assert.equal(errors.length,0,errors.join('\n'));
+ await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,query:true,pagination:true,filters:true,advancedFilters:true,details:true,runes:true,builds:true,timeline:true,replayMocked:true,offlineError:true,screenshots:['history-desktop.png','history-laptop.png']},null,2));app.quit();
+}
+run().catch(async error=>{console.error(error.stack);if(main&&!main.isDestroyed()){await fs.writeFile(path.join(root,'failure.png'),(await main.webContents.capturePage()).toPNG()).catch(()=>{});console.error(await main.webContents.executeJavaScript('document.body.innerText').catch(()=>''));}app.exit(1);});

@@ -9,6 +9,7 @@ import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteConte
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
+import {allowedHistoryRoute} from './match-history-routes.mjs';
 const GET_PATHS=new Set(['/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
@@ -29,26 +30,29 @@ export function parseCommandLine(cmd) {
  const port=String(cmd).match(/--app-port=(\d+)/)?.[1];
  const password=String(cmd).match(/--remoting-auth-token=([^\s"]+)/)?.[1];
  if(!port||!password||Number(port)>65535||Number(port)<1)return null;
- return {port:Number(port),password};
+ const region=String(cmd).match(/--region=([\w-]+)/i)?.[1],rsoPlatformId=String(cmd).match(/--rso[_-]platform[_-]id=([\w-]+)/i)?.[1],riotClientPort=Number(String(cmd).match(/--riotclient-app-port=(\d+)/)?.[1]),riotClientAuthToken=String(cmd).match(/--riotclient-auth-token=([^\s"]+)/)?.[1];
+ return {port:Number(port),password,...(region?{region}:{}),...(rsoPlatformId?{rsoPlatformId}:{}),...(riotClientPort>0&&riotClientPort<=65535&&riotClientAuthToken?{riotClientPort,riotClientAuthToken}:{})};
 }
-export async function discoverClient(installPath='') {
+export async function discoverClient(installPath='',{includeRegion=false}={}) {
+ let lockAuth=null;
  const roots=[installPath,'C:/WeGameApps/英雄联盟','D:/WeGameApps/英雄联盟','D:/英雄联盟','C:/Riot Games/League of Legends'].filter(Boolean);
- for(const root of roots)for(const suffix of ['lockfile','LeagueClient/lockfile']) {
-  try {const auth=parseLockfile(await fs.readFile(path.join(root,suffix),'utf8'));if(auth)return auth;}catch{}
+ rootsLoop:for(const root of roots)for(const suffix of ['lockfile','LeagueClient/lockfile']) {
+    try {const auth=parseLockfile(await fs.readFile(path.join(root,suffix),'utf8'));if(auth){if(!includeRegion)return auth;lockAuth=auth;break rootsLoop;}}catch{}
  }
  if(process.platform==='win32') {
   try {
    const {stdout}=await execFileAsync('powershell.exe',['-NoProfile','-NonInteractive','-Command',"$p = Get-CimInstance Win32_Process -Filter \"Name = 'LeagueClientUx.exe'\"; if ($p) { if ($p.CommandLine) { $p.CommandLine } else { 'CLIENT_ACCESS_REQUIRED' } }"],{windowsHide:true,timeout:6000,maxBuffer:131072});
-   return stdout.includes('CLIENT_ACCESS_REQUIRED')?{unreadable:true}:parseCommandLine(stdout);
-  }catch{return null;}
+     if(stdout.includes('CLIENT_ACCESS_REQUIRED'))return lockAuth||{unreadable:true};
+     const found=parseCommandLine(stdout);return lockAuth&&found&&(lockAuth.port!==found.port||lockAuth.password!==found.password)?lockAuth:found||lockAuth;
+   }catch{return lockAuth;}
  }
- return null;
+  return lockAuth;
 }
 export function lcuRequest(auth,route,method='GET',body) {
  const keys=body&&typeof body==='object'&&!Array.isArray(body)?Object.keys(body).sort().join(','):'';
  const preview=method==='PATCH'&&/^\/lol-champ-select\/v1\/session\/actions\/\d+$/.test(route)&&keys==='championId,completed'&&Number.isSafeInteger(body.championId)&&body.championId>0&&body.completed===false;
  const spells=method==='PATCH'&&route==='/lol-champ-select/v1/session/my-selection'&&keys==='spell1Id,spell2Id'&&[body.spell1Id,body.spell2Id].every(n=>Number.isSafeInteger(n)&&n>0)&&body.spell1Id!==body.spell2Id;
- if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='GET'&&SUMMONER_BY_ID.test(route))&&!(method==='GET'&&SUMMONER_BY_PUUID.test(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells)throw new Error('不支持此客户端操作');
+  if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='GET'&&SUMMONER_BY_ID.test(route))&&!(method==='GET'&&SUMMONER_BY_PUUID.test(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells&&!allowedHistoryRoute(route,method,body))throw new Error('不支持此客户端操作');
  return new Promise((resolve,reject)=>{
   const payload=body?JSON.stringify(body):null;
   const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,
