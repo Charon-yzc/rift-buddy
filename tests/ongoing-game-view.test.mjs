@@ -12,6 +12,9 @@ const game=id=>({id,queue:420,created:1720000000000+id,duration:1800,self:{champ
 function state(members=[player()]){return {roster:{phase:'champ-select',queue:420,mode:'CLASSIC',players:members,teams:Object.fromEntries([...new Set(members.map(p=>p.team))].map(team=>[team,members.filter(p=>p.team===team).map(p=>p.key)]))},players:Object.fromEntries(members.map(p=>[p.key,{page:{games:[game(123)]},profile:{ranked:[{queue:'RANKED_SOLO_5x5',tier:'EMERALD',division:'II',lp:34,wins:30,losses:20}],mastery:[]},analysis:analysis()}])),settings:{},notes:{},met:{},groups:[],teamAnalysis:{}};}
 const card=html=>html.match(/<article class="ongoing-player-card[\s\S]*?<\/article>/)?.[0]||'';
 const tag=(html,id)=>card(html).includes(`data-ongoing-tag-id="${id}"`);
+test('live numeric spell IDs use the offline named catalog images and labels',()=>{
+ const html=ongoingGameView(state(),{...data,spells:{SummonerFlash:{key:'4',name:'闪现'},SummonerHeal:{key:'7',name:'治疗术'}}});assert.match(html,/spell\/SummonerFlash\.png/);assert.match(html,/D · 闪现/);assert.doesNotMatch(html,/spell\/4\.png/);
+});
 
 test('empty and partial records preserve missing values and provide usable settings',()=>{
  const html=ongoingGameView({},data);assert.match(html,/等待客户端公开阵容/);assert.doesNotMatch(html,/undefined|NaN|Infinity/);

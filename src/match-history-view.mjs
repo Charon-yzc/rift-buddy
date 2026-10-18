@@ -8,6 +8,7 @@ import {historyRunesView} from './match-history-runes-view.mjs';
 import {historyBuildsView} from './match-history-builds-view.mjs';
 import {historyComparisonView,historyDamageComposition} from './match-history-comparison-view.mjs';
 import {historyDetailTableView} from './match-history-detail-table-view.mjs';
+import {historicalSpell} from './match-history-spells.mjs';
 const num=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:d}):'未读取';
 const pct=v=>Number.isFinite(v)?(v*100).toFixed(0)+'%':'未读取';
 const time=v=>Number.isFinite(v)?`${Math.floor(v/60)}:${String(Math.floor(v%60)).padStart(2,'0')}`:'未读取';
@@ -15,7 +16,7 @@ const resultName={win:'胜利',loss:'失败',remake:'重开',abort:'已中止',u
 const options=(values,selected)=>values.map(([v,label])=>`<option value="${e(v)}" ${String(selected??'')===String(v)?'selected':''}>${e(label)}</option>`).join('');
 const select=(name,label,values,value)=>`<label>${label}<select data-history-field="${name}">${options(values,value)}</select></label>`;
 const hero=(data,id)=>data.champions.find(c=>Number(c.key)===id);
-function image(data,kind,id){if(!id)return `<span class="history-empty-icon" aria-label="${id===0?'空栏位':'未读取'}"></span>`;if(kind==='item'&&!data.items?.[id])return `<span class="history-empty-icon" title="历史装备 ${e(id)}">${e(id)}</span>`;const name=kind==='item'?data.items?.[id]?.name:kind==='rune'?(data.runes||[]).flatMap(t=>t.slots.flatMap(s=>s.runes)).find(r=>r.id===id)?.name:kind==='augment'?(data.augments||[]).find(a=>a.id===id)?.name:kind==='spell'?data.spells?.[id]?.name:'';return `<span title="${e(name||id)}">${asset(kind,id,name||String(id),'history-icon')}</span>`;}
+function image(data,kind,id){if(!id)return `<span class="history-empty-icon" aria-label="${id===0?'空栏位':'未读取'}"></span>`;if(kind==='item'&&!data.items?.[id])return `<span class="history-empty-icon" title="历史装备 ${e(id)}">${e(id)}</span>`;const spell=kind==='spell'?historicalSpell(data,id):null,name=kind==='item'?data.items?.[id]?.name:kind==='rune'?(data.runes||[]).flatMap(t=>t.slots.flatMap(s=>s.runes)).find(r=>r.id===id)?.name:kind==='augment'?(data.augments||[]).find(a=>a.id===id)?.name:spell?.name||'';return `<span title="${e(name||id)}">${asset(kind,spell?.id??id,name||String(id),'history-icon')}</span>`;}
 function playerHero(data,p){const c=hero(data,p?.champion);return c?portrait(c):'<span class="history-empty-icon">?</span>';}
 function gear(data,p){return `<span class="history-gear">${(p?.items||[]).map(id=>image(data,'item',id)).join('')}${p?.roleBoundItem>0?`<span data-history-role-item="${e(p.roleBoundItem)}" title="职责绑定装备">${image(data,'item',p.roleBoundItem)}</span>`:''}</span>`;}
 function loadout(data,p){
