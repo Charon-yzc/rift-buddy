@@ -49,7 +49,7 @@ test('match scores use original Akari single-game engine results and respect cac
  const complete={...game,gameType:'MATCHED_GAME',mode:'CLASSIC',queue:420,map:11,pve:false,completeTeams:true,participants,self:participants[0]},full=analyzeAkariHistory([complete]);
  assert.ok(Number.isFinite(full.map[42].akariScore.total));assert.deepEqual(historyMatchAkariScore(complete),full.map[42].akariScore);
  const cached={...full,map:{42:{akariScore:{total:12.345}}}};assert.equal(historyMatchAkariScore(complete,cached).total,12.345);assert.equal(historyMatchAkariScore(complete,{map:{42:{akariScore:{total:null}}}}),null);
- const current=state('summary',false);current.tabs[0].page.games=[complete];current.tabs[0].page.fullAnalysis=cached;assert.match(matchHistoryView(current,data),/Akari 12.35 \/ 17/);
+ const current=state('summary',false);current.tabs[0].page.games=[complete];current.tabs[0].page.fullAnalysis=cached;assert.match(matchHistoryView(current,data),/Akari 参考 12.35/);
  assert.equal(historyMatchAkariScore(game),null);assert.equal(historyMatchAkariScore({id:1}),null);
 });
 test('relationship records show ally and enemy win/loss from our perspective without counting remakes as losses',()=>{

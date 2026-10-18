@@ -133,12 +133,21 @@ test('cancelled Windows permission is requested once per manual click and automa
  for(const manual of [true,false]){
   const {context:c}=setup();let attempts=0,attempted=false;
   c.api.client=async force=>{
-   const scope={force,latestClient:{connected:false,phase:'Offline',needsElevation:true},elevatedReadAttempted:attempted,state:{preferences:{}},helper:{ensure:async()=>{attempts++;throw Error('模拟取消权限');}}};
+   const scope={force,latestClient:{connected:false,phase:'Offline',needsElevation:true},elevatedReadAttempted:attempted,state:{preferences:{}},observedWindows:null,mainExplicitInGame:false,helper:{ensure:async()=>{attempts++;throw Error('模拟取消权限');}},diagnostic:()=>{}};
    await vm.runInNewContext('(async()=>{'+authorization+'})()',scope);attempted=scope.elevatedReadAttempted;return scope.latestClient;
   };
   c.api.authorizeClient=async()=>{attempted=true;attempts++;throw Error('模拟取消权限');};
   await c.performSync(manual,manual);assert.equal(attempts,1,manual?'First manual click':'First automatic attempt');
   await c.performSync(manual,manual);assert.equal(attempts,manual?2:1,manual?'A second explicit click may retry':'Polling must wait for an explicit click');
+ }
+ // A running game window defers the automatic request even on the first poll.
+ {
+  const {context:c}=setup();let attempts=0;
+  c.api.client=async force=>{
+   const scope={force,latestClient:{connected:false,phase:'Offline',needsElevation:true},elevatedReadAttempted:false,state:{preferences:{}},observedWindows:{game:{foreground:true}},mainExplicitInGame:false,helper:{ensure:async()=>{attempts++;}},diagnostic:()=>{}};
+   await vm.runInNewContext('(async()=>{'+authorization+'})()',scope);return scope.latestClient;
+  };
+  await c.performSync(false,false);assert.equal(attempts,0,'A running game must not raise a permission prompt');
  }
 });
 

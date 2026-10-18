@@ -563,9 +563,10 @@ async function boot(){
    // once per run instead of making the player start an authorization step.
    // A forced/manual read leaves its single permission request to the
    // renderer. Otherwise cancelling it would immediately trigger a second UAC.
-   if(!force&&latestClient?.needsElevation&&!elevatedReadAttempted){
+   if(!force&&latestClient?.needsElevation&&!elevatedReadAttempted&&!observedWindows?.game&&!mainExplicitInGame){
     elevatedReadAttempted=true;
-    try{await helper.ensure(state.preferences?.installPath);latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{}
+    try{await helper.ensure(state.preferences?.installPath);latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}
+    catch(error){diagnostic(`automatic permission request failed: ${error?.message||'unknown'}`);}
    }
    if(ballotRoundChanged(latestClient))clearRoomBallot();
    feedIdle=observeFeedPhase(latestClient);dataFeed.activate();

@@ -1,6 +1,6 @@
 import {escape as e,gameDescription,portrait} from './ui.mjs';
 import {SHARDS} from './core/builds.mjs';
-import {historyAsset,historyTipAttributes} from './match-history-hover.mjs';
+import {historyAsset,historyTipAttributes,historyTextTip} from './match-history-hover.mjs';
 const validId=value=>Number.isSafeInteger(value)&&value>0;
 const valueText=value=>Number.isFinite(value)?String(value):'未读取';
 const SHARD_SLOTS=[['offense','进攻'],['flex','灵活'],['defense','防御']];
@@ -19,7 +19,7 @@ export function historyRunesView(data,game){
   }).join('');
    return `<section class="history-runes" data-runes-participant-id="${e(p.id)}"><div class="history-player">${champion?portrait(champion):''}<strong>${e(p.name||'玩家')}</strong></div><div>${styleViews}${fallback.map(perk=>runeDetail({perk},p)).join('')}${!styles.length?'<p>主系 / 副系：未读取</p>':''}<div class="history-rune-detail"><h4>属性碎片</h4><dl class="history-metrics">${SHARD_SLOTS.map(([key,label])=>{
    const id=p.statPerks?.[key],info=lookup.get(id);
-    return `<div><dt>${label}</dt><dd ${validId(id)?historyTipAttributes('rune',id,{participant:p,game}):''}>${validId(id)?`${e(info?.name||SHARDS[id]||'历史属性碎片')} · ${id}${info?.shortDesc?'<p>'+e(gameDescription(info.shortDesc))+'</p>':''}`:'未读取'}</dd></div>`;
+    return `<div><dt>${label}</dt><dd ${validId(id)?historyTextTip(info?.name||SHARDS[id]||'历史属性碎片',`${info?.shortDesc||'当前离线资料未收录此碎片。'}\n属性碎片没有逐局记录。`):''}>${validId(id)?`${e(info?.name||SHARDS[id]||'历史属性碎片')} · ${id}${info?.shortDesc?'<p>'+e(gameDescription(info.shortDesc))+'</p>':''}`:'未读取'}</dd></div>`;
    }).join('')}</dl></div>${augments.length?`<div class="history-rune-detail"><h4>本局强化</h4>${augments.map((id,index)=>{const a=(data.augments||[]).find(v=>v.id===id);return `<div class="history-rune-description">${historyAsset(data,'augment',id,{participant:p,game})}<div><b>${index+1}. ${e(a?.name||'历史强化 '+id)}</b><p>${e(gameDescription(a?.description||'当前资料未收录此强化'))}</p><small>强化 ID ${id}</small></div></div>`;}).join('')}</div>`:''}${!selections.length&&!fallback.length&&!augments.length?'<small>未读取到符文或强化</small>':''}<small>说明使用随程序提供的当前资料${data.version?'（'+e(data.version)+'）':''}；本局版本${game.version?' '+e(game.version):'未读取'}，历史版本的效果可能不同。本局记录仅显示数据源返回的数值。</small></div></section>`;
  }).join('');
 }
