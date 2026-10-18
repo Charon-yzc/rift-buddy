@@ -24,6 +24,13 @@ test('automatic hero preparation cannot rediscover an old duo, while an explicit
  assert.equal(currentCombo(slots,duo.carry,'bottom',{},null,null,{allowPending:true}).id,duo.id);
  assert.equal(getBuild(data.champions.find(hero=>hero.id===duo.carry),'bottom',data,{comboId:duo.id,loadoutId:duo.loadouts.bottom}).combo.id,duo.id);
 });
+
+test('individually reviewed current combinations remain discoverable beneath an older catalogue header',()=>{
+ const trio=BUNDLED_CATALOG.trios.find(row=>row.patch===data.patch);assert(trio);assert.notEqual(BUNDLED_CATALOG.patch,data.patch);
+ const own=trio.members[0],slots=createSlots().map(slot=>({...slot,champion:trio.members.find(member=>member.role===slot.role)?.champion||null}));
+ assert.equal(currentCombo(slots,own.champion,own.role)?.id,trio.id);
+ assert.equal(currentCombo(slots,own.champion,own.role,{},null,null,{patch:'16.21'}),null);
+});
 test('an explicitly selected independent skill survives an unavailable gear route with a source build present',()=>{
  const hero=data.champions.find(hero=>hero.id==='Orianna'),plan=BUNDLED_CATALOG.skillPlans.find(plan=>plan.champion===hero.id&&plan.role==='mid'&&plan.loadoutId==='trio-ball'),gear=BUNDLED_CATALOG.loadouts.find(row=>row.id===plan.loadoutId),changed=structuredClone({...data,builds});changed.items[gear.items[0]].requiredChampion='Garen';
  const build=getBuild(changed.champions.find(row=>row.id===hero.id),'mid',changed,{comboId:'ball-delivery',loadoutId:gear.id,skillId:'scoped-skill-'+plan.id});

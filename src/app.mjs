@@ -507,10 +507,11 @@ function drainExternalState(){
 function acceptSharedData(value){
  if(!value?.changes||value.revision<=dataRevision)return;dataRevision=value.revision;
  if(!value.replace&&Object.keys(value.changes).every(key=>key==='dataFeed')){data.dataFeed=value.changes.dataFeed;if(route==='settings')render();return;}
+ const baseChanged=value.replace||['champions','items','runes','spells','abilityReference','spellbook'].some(key=>Object.hasOwn(value.changes,key));
  const recommendationBefore=recommendationKey(recommendationInput());
  data=value.replace?value.changes:{...data,...value.changes};bindPlayerBuildPreferences();rankedRolesCache=null;
- data.catalog=configureCatalog(data.catalog||BUNDLED_CATALOG);data.catalogInfo||={...catalogIssues(data.catalog,data),version:data.catalog.version};configureAssets(data);selectBuildSource(data,saved.preferences.buildSource);
- if(recommendationBefore!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;}
+ data.catalog=configureCatalog(data.catalog||BUNDLED_CATALOG);if(baseChanged||!data.catalogInfo)data.catalogInfo={...data.catalogInfo,...catalogIssues(data.catalog,data),version:data.catalog.version};configureAssets(data);selectBuildSource(data,saved.preferences.buildSource);
+ if(baseChanged||recommendationBefore!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;resultsSignature='';}
  render();if(buildView)renderBuild();queueCompanionRecommendation();
 }
 async function restorePreparationSnapshot(snapshot){
@@ -709,7 +710,7 @@ function myPreparation(){
  const own=currentPlayerSelection(client.session,data.champions,slots),mode=client.mode?.id;
  if(!own||!['rift','hex'].includes(mode))return null;
  const prepared=guideSelection?.id===own.id&&guideSelection.mode===mode?guideSelection:null;
- const knownRole=taskOwnRole(),role=knownRole||prepared?.role||own.role,combo=mode==='rift'?currentCombo(slots,own.id,role,data.catalogInfo?.status,null,activeCreativePlan):null,context={id:own.id,role,mode,...creativeComboContext(combo)};
+ const knownRole=taskOwnRole(),role=knownRole||prepared?.role||own.role,combo=mode==='rift'?currentCombo(slots,own.id,role,data.catalogInfo?.status,null,activeCreativePlan,{patch:data.patch}):null,context={id:own.id,role,mode,...creativeComboContext(combo)};
  const selection={...rememberedPreparation(context,{allowSavedCombo:!combo&&!comboContextKnown(slots,own.id,role,prepared?.comboId,prepared?.creativePlan)}),...context};
  return {own,positionKnown:!!knownRole,selection,build:getBuild(champ(own.id),role,data,selection)};
 }
@@ -735,7 +736,7 @@ function roomPanelHTML(){return api.roomStatus?roomPanel({room,transport:roomTra
 function roomOwnPreparation(){
  const role=roomOwnRole(),slot=slots.find(s=>s.role===role),mode=client.connected?client.mode?.id:'rift';
  if(!slot?.champion||!['rift','hex'].includes(mode))return null;
- const combo=mode==='rift'?currentCombo(slots,slot.champion,role,data.catalogInfo?.status,null,activeCreativePlan):null;
+ const combo=mode==='rift'?currentCombo(slots,slot.champion,role,data.catalogInfo?.status,null,activeCreativePlan,{patch:data.patch}):null;
  const context={id:slot.champion,role,mode,...creativeComboContext(combo)},selection={...rememberedPreparation(context),...context};
  return {selection,build:getBuild(champ(slot.champion),role,data,selection)};
 }
@@ -756,7 +757,7 @@ function ownTaskPreparation(){
  if(context){const selection={...rememberedPreparation(context),...context};return {selection,build:getBuild(champ(selection.id),role,data,selection)};}
  if(own)return own;
  if(intent)return intent;
- if(slot?.champion){const combo=currentCombo(slots,slot.champion,role,data.catalogInfo?.status,null,activeCreativePlan),context={id:slot.champion,role,mode:'rift',...creativeComboContext(combo)},selection={...rememberedPreparation(context),...context};return {selection,build:getBuild(champ(slot.champion),role,data,selection)};}
+ if(slot?.champion){const combo=currentCombo(slots,slot.champion,role,data.catalogInfo?.status,null,activeCreativePlan,{patch:data.patch}),context={id:slot.champion,role,mode:'rift',...creativeComboContext(combo)},selection={...rememberedPreparation(context),...context};return {selection,build:getBuild(champ(slot.champion),role,data,selection)};}
  return null;
 }
 function renderTaskMembers(){overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal task-members-dialog" role="dialog" aria-modal="true" aria-label="成员与本人位置"><header class="modal-header"><h3>成员与位置</h3>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="modal-body"><label>你负责的位置<select id="task-own-role" class="select"><option value="">待确认</option>${ROLES.map(r=>`<option value="${r.id}" ${taskOwnRole()===r.id?'selected':''}>${r.name}</option>`).join('')}</select></label><p>${['known','lobby'].includes(client.party?.status)?`游戏组队 ${client.party.lobbyCount||client.party.members?.length||1} 人 · 助手房间 ${room?.mode!=='idle'?room?.members?.length||0:0} 人`:'暂未完整识别组队；下方可手动标记。'}</p><ul class="task-party-list">${(client.party?.members||[]).map((m,i)=>'<li><span>'+e(m.displayName||(m.local?'我':'队友 '+(i+1)))+(m.local?' · 你':'')+'</span><small>'+e(slots.find(s=>Number.isInteger(m.cellId)&&s.clientCellId===m.cellId)?roleName(slots.find(s=>s.clientCellId===m.cellId).role):CLIENT_POSITION_ROLES[m.firstPosition]?roleName(CLIENT_POSITION_ROLES[m.firstPosition]):'位置待定')+'</small></li>').join('')}</ul><div class="task-member-roles">${slots.map(s=>`<div>${roleName(s.role)} · ${e(champ(s.champion)?.name||'等待选择')} ${button('toggle-party',s.party?'我们':'队友','','small',`data-role="${s.role}" aria-pressed="${s.party}"`)}${s.champion?button('move-slot','换位','','quiet small',`data-role="${s.role}"`):''}</div>`).join('')}</div></div></section></div>`;}
@@ -771,7 +772,7 @@ async function prepareHeroClick(context,expected=null){
  // or silently move that ally; use the clicked build in the player's current lane.
  const target=slots.find(s=>s.role===context.role);
  if(action.prepare&&taskOwnRole()!==context.role&&(!Number.isInteger(target?.clientCellId)||target.clientCellId===client.session?.localPlayerCellId))setCompanionRole(context.role);
- const mode=context.mode||'rift',combo=mode==='rift'?currentCombo(slots,context.id,context.role,data.catalogInfo?.status,null,activeCreativePlan):null;
+ const mode=context.mode||'rift',combo=mode==='rift'?currentCombo(slots,context.id,context.role,data.catalogInfo?.status,null,activeCreativePlan,{patch:data.patch}):null;
  // Resolve the lineup after a lane change, before recalling choices, so a
  // solo default cannot override the combination's own avatar configuration.
  context={...creativeComboContext(combo),...context,mode};
@@ -1029,7 +1030,7 @@ function changeConfigurationRole(el){
  if(el.value===plan.selection.role)return;
  // Browse the new lane as a complete setup. The dropdown must not move
  // roster members, resize our group or apply any client configuration.
- const {id,mode}=plan.selection,role=el.value,combo=mode==='rift'?currentCombo(slots,id,role,data.catalogInfo?.status,null,activeCreativePlan):null;
+ const {id,mode}=plan.selection,role=el.value,combo=mode==='rift'?currentCombo(slots,id,role,data.catalogInfo?.status,null,activeCreativePlan,{patch:data.patch}):null;
  const selection=heroClickSelection(data,{id,role,mode,...creativeComboContext(combo)});
  if(inBuild)showBuild(id,role,mode,{...selection,quickConfiguration:true});
  else{companionPreview=selection;companionTab='plan';render();}
@@ -1156,7 +1157,7 @@ function rememberFlashPreference(selection,field){
  if(index===0||index===1){saved.preferences.flashSlot=index===0?'d':'f';persist();}
 }
 function rememberedPreparation(context,options){return recallPreparation(preparations,guideSelection,context,options);}
-function showBuild(id,role,mode='rift',selection={}){if(!champ(id))throw Error('当前资料没有这位英雄');const duo=mode==='rift'?currentCombo(slots,id,role,data.catalogInfo?.status,null,activeCreativePlan):null;const context={id,role,mode,...creativeComboContext(duo),...selection};if(selection.readOnly===undefined&&buildView?.readOnly)context.readOnly=true;if(detailResult)buildReturn={index:results.indexOf(detailResult),id:detailResult.id,signature:resultDraftSignature,scroll:overlay.querySelector('.drawer-content')?.scrollTop||0};picker=null;comboView=null;detailResult=null;buildView={variant:'default',conditions:[],coreIndex:0,...rememberedPreparation(context,{allowSavedCombo:slots.every(s=>!s.champion)&&!client.session?.myTeam?.some(p=>p.championId)}),...context};renderBuild();maybeRefreshBuild(id,role,mode);}
+function showBuild(id,role,mode='rift',selection={}){if(!champ(id))throw Error('当前资料没有这位英雄');const duo=mode==='rift'?currentCombo(slots,id,role,data.catalogInfo?.status,null,activeCreativePlan,{patch:data.patch}):null;const context={id,role,mode,...creativeComboContext(duo),...selection};if(selection.readOnly===undefined&&buildView?.readOnly)context.readOnly=true;if(detailResult)buildReturn={index:results.indexOf(detailResult),id:detailResult.id,signature:resultDraftSignature,scroll:overlay.querySelector('.drawer-content')?.scrollTop||0};picker=null;comboView=null;detailResult=null;buildView={variant:'default',conditions:[],coreIndex:0,...rememberedPreparation(context,{allowSavedCombo:slots.every(s=>!s.champion)&&!client.session?.myTeam?.some(p=>p.championId)}),...context};renderBuild();maybeRefreshBuild(id,role,mode);}
 function editBuildSummoners(el,field,value){
  if(!buildView||el.dataset.plan!==[buildView.id,buildView.role,buildView.mode].join(':'))throw Error('英雄或位置已变化，请重新确认召唤师技能');
  const next=changeCompanionPlan(data,buildSelection(),field,value);delete buildView.summonerIds;
@@ -1555,7 +1556,7 @@ document.addEventListener('click',async event=>{
  if(action==='ranking-hero'){
   const id=el.dataset.id,role=el.dataset.role,ref=rankingReference(data,rankingSource||data.buildSource);
   if(!ref?.boards[role]?.some(row=>row.champion===id)||!champ(id))throw Error('榜单已变化，请重新选择');
-  const combo=currentCombo(slots,id,role,data.catalogInfo?.status,null,activeCreativePlan);
+  const combo=currentCombo(slots,id,role,data.catalogInfo?.status,null,activeCreativePlan,{patch:data.patch});
   await prepareHeroClick({id,role,mode:'rift',...creativeComboContext(combo)});
   return;
  }

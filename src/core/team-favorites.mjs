@@ -32,7 +32,7 @@ export function captureTeamConfigurations(result,data,store){
  return members.map(slot=>{
   const champion=data.champions.find(c=>c.id===slot.champion);
   if(!champion)throw Error('当前资料没有这位组合成员');
-  const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
+  const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch}),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
   const selection={coreIndex:0,conditions:[],...recallPreparation(store,null,context),...context},build=getBuild(champion,slot.role,data,selection);
   const fields=selectedBuildFields({...selection,build},{preserveUnavailable:true});
   if(!fields.laterIds?.length){const existing=new Set(build.items.map(item=>String(item.id)));fields.laterIds=preparationEquipment(data,build,selection).filter(item=>!existing.has(String(item.id))).map(item=>Number(item.id));}

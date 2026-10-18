@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {publicClientGameId} from '../src/core/draft.mjs';
+import {recommendationKey} from '../src/core/preparation.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 function extract(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a);return source.slice(a,b);}
@@ -116,4 +117,40 @@ test('current ordinary build requests still report success and failure',async()=
   if(failure){assert.equal(f.context.buildErrors.size,1);assert.match(f.events[0],/current build unavailable/);}
   else{assert.equal(f.events[0],'invalidate');assert.match(f.events[1],/已缓存/);}
  }
+});
+
+function sharedDataFixture(){
+ const events=[],gate=deferred(),context=vm.createContext({
+  data:{patch:'16.20',version:'16.20.1',champions:[{id:'Aatrox',mechanics:{control:1}}],catalog:{version:1},catalogInfo:{status:{}}},dataRevision:0,
+  saved:{preferences:{buildSource:{region:'global'}}},BUNDLED_CATALOG:{version:1},rankedRolesCache:null,route:'draft',buildView:null,
+  recommendationKey,recommendationInput:()=>({slots:[],patch:context.data.patch,version:context.data.version,catalogStatus:context.data.catalogInfo.status}),
+  bindPlayerBuildPreferences(){},configureCatalog:value=>value,catalogIssues:()=>({status:{}}),configureAssets(){},selectBuildSource(){},
+  markResultStale:()=>events.push('stale'),queueCompanionRecommendation:()=>events.push('queue'),render(){},renderBuild(){},
+  generating:false,recommendationRun:0,autoRecommendationKey:'old-key',autoRecommendTimer:null,recommendationError:'',offset:0,
+  results:[{id:'cached'}],resultsSignature:'old-signature',showAllCandidates:false,activeRecommendation:{cancel:()=>events.push('cancel')},
+  clearTimeout,cancelRecommendationReveal(){},calculateRecommendation:()=>gate.promise,resultCreativePlan:()=>events.push('apply'),toast:message=>events.push(message)
+ });
+ vm.runInContext(extract('function cancelRecommendation(){','let client=')+extract('function acceptSharedData(value){','async function restorePreparationSnapshot(')+extract('async function generate(next=false){','const sync=createClientSync'),context);
+ return {context,gate,events};
+}
+
+test('same-patch base refresh invalidates cached and in-flight recommendations even when their key is unchanged',async()=>{
+ for(const replace of [false,true]){
+  const f=sharedDataFixture(),before=recommendationKey(f.context.recommendationInput()),pending=f.context.generate();
+  const champions=[{id:'Aatrox',mechanics:{control:2}}];
+  f.context.acceptSharedData({revision:1,replace,changes:replace?{...f.context.data,champions}:{champions}});
+  assert.equal(recommendationKey(f.context.recommendationInput()),before,'The kit change is intentionally absent from the lightweight key');
+  assert.equal(f.context.results.length,0);assert.equal(f.context.resultsSignature,'');assert.equal(f.context.autoRecommendationKey,'');assert.equal(f.context.generating,false);
+  assert.deepEqual(f.events,['stale','cancel','queue']);
+  f.gate.resolve([{id:'late-old-kit'}]);await pending;
+  assert.equal(f.context.results.length,0,'A late old worker result must not restore stale recommendations');assert.deepEqual(f.events,['stale','cancel','queue']);
+ }
+});
+
+test('feed status-only refresh preserves active recommendations and in-flight calculation',async()=>{
+ const f=sharedDataFixture(),pending=f.context.generate();
+ f.context.acceptSharedData({revision:1,changes:{dataFeed:{phase:'checking'}}});
+ assert.equal(f.context.results[0].id,'cached');assert.equal(f.context.generating,true);assert.deepEqual(f.events,[]);
+ f.gate.resolve([{id:'current-kit'}]);await pending;
+ assert.equal(f.context.results[0].id,'current-kit');assert.deepEqual(f.events,['apply']);
 });

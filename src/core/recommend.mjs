@@ -1,4 +1,4 @@
-import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES,RULES_PATCH,profile,conventionalRole } from './rules.mjs';
+import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES,profile,conventionalRole } from './rules.mjs';
 import {draftTargets,scopeSlots,effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {recommendationDraft,clientRecommendationDraft,lockedOwnSlot,confirmedPlayerPick} from './draft-intents.mjs';
 import {validPartyCount,reconcilePartyRange} from './party-range.mjs';
@@ -9,7 +9,7 @@ import {generateCreativeTrios} from './creative-trios.mjs';
 import {creativePlanMatches,creativeMemberCombo,validateCreativePlan,creativePlanId,resultCooperation} from './creative-plan.mjs';
 import {createRankedMatchupIndex} from './ranked-statistics.mjs';
 import {createPartyCounterplay} from './party-counterplay.mjs';
-import {createCooperationGraph,cooperationPlan,cooperationSeeds} from './cooperation.mjs';
+import {createCooperationGraph,cooperationPlan,cooperationSeeds,COOPERATION_PATCH} from './cooperation.mjs';
 import {reviewedCatalogEntry} from './mechanic-review.mjs';
 import {createPairStatisticsIndex} from './pair-statistics.mjs';
 import {compositionFit} from './composition-fit.mjs';
@@ -122,7 +122,7 @@ export function findTrio(slots){
  }
  return best??undefined;
 }
-export function currentCombo(slots,champion,role,status={},comboCache=null,creativePlan=null,{allowPending=false,patch=RULES_PATCH}={}){
+export function currentCombo(slots,champion,role,status={},comboCache=null,creativePlan=null,{allowPending=false,patch=COOPERATION_PATCH}={}){
  if(creativePlanMatches(creativePlan,slots)){const own=champion||creativePlan.members[0].champion,position=role||creativePlan.members[0].role,creative=creativeMemberCombo(creativePlan,own,position);if(creative)return creative;}
  const matches=matchingCombos(slots,comboCache).filter(c=>allowPending?!status?.[c.id]?.invalid:reviewedCatalogEntry(c,status,patch));
  return memberCombo(matches,champion,role);

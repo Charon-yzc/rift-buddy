@@ -350,3 +350,4 @@
 .hero-selection-hint{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;line-height:1.4;color:var(--text-muted,#9eb4c6);margin:3px 0 5px}.hero-selection-hint .icon-only{min-width:20px;min-height:20px;padding:0;font-size:14px}
 .candidate-reference{position:absolute;top:0;left:0;padding:0 2px;font-size:9px!important;line-height:12px!important;border-radius:2px;background:var(--rb-panel);color:var(--rb-muted);pointer-events:none}
 .candidate-empty>.empty-portrait{width:var(--lineup-avatar,42px);height:var(--lineup-avatar,42px);display:grid;place-items:center;border:1px dashed var(--rb-line);border-radius:5px;color:var(--rb-muted)}
+.candidate-reference-only{display:flex;align-items:center;justify-content:center;cursor:default;min-width:0;padding:0;border:0;background:transparent}
