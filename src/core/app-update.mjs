@@ -9,7 +9,7 @@ export function giteeReleaseUrl(tag){
  return `${GITEE_REPOSITORY_URL}/releases/${tag}`;
 }
 export function giteeDownloadUrl(tag,file){
- if(!TAG_PATTERN.test(tag)||!/^RiftBuddy-[\d.]+-(?:Setup\.exe(?:\.part\d{2})?|Mirror\.json)$/.test(file))throw Error('国内镜像附件名称不正确');
+ if(!TAG_PATTERN.test(tag)||!/^RiftBuddy-[\d.]+-(?:Setup\.exe(?:\.part\d{2})?|Mirror\.json|Delta\.json|From-\d+\.\d+\.\d+-Update\.exe)$/.test(file))throw Error('国内镜像附件名称不正确');
  return `${GITEE_REPOSITORY_URL}/releases/download/${tag}/${file}`;
 }
 export function parseGiteeReleases(text){
@@ -53,6 +53,17 @@ export const newestRelease=entries=>entries.reduce((best,e)=>!best||compareVersi
 export const isNewerThan=(latest,current)=>compareVersions(latest,current)>0;
 export const setupFileName=v=>`RiftBuddy-${v}-Setup.exe`;
 export const checksumFileName=v=>`SHA256SUMS-${v}.txt`;
+export const deltaManifestName=v=>`RiftBuddy-${v}-Delta.json`;
+export const deltaFileName=(from,to)=>`RiftBuddy-${to}-From-${from}-Update.exe`;
+export function parseDeltaManifest(text,release){
+ const value=JSON.parse(text);
+ if(value?.schema!==1||!/^\d+\.\d+\.\d+$/.test(value.version)||value.version!==release.version||!Array.isArray(value.packages)||!value.packages.length||value.packages.length>10)throw Error('增量更新清单不正确');
+ const seen=new Set();
+ for(const item of value.packages){
+  if(!/^\d+\.\d+\.\d+$/.test(item?.from)||compareVersions(item.from,value.version)>=0||seen.has(item.from)||item.file!==deltaFileName(item.from,value.version)||!Number.isSafeInteger(item.bytes)||item.bytes<=0||item.bytes>90*1024*1024||!/^([0-9a-f]{64})$/.test(item.sha256)||!/^([0-9a-f]{64})$/.test(item.baseManifestSha256))throw Error('增量更新文件不正确');seen.add(item.from);
+ }
+ return value;
+}
 export function releaseDownloadUrl(tag,file){
  if(!TAG_PATTERN.test(tag)||typeof file!=='string'||/[\r\n]/.test(file)||file.split(/[\\/]/).some(p=>!p||p==='.'||p==='..'))throw Error('更新地址格式不正确');
  return `https://github.com/Legender134/rift-buddy/releases/download/${tag}/${file}`;

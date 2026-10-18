@@ -6,7 +6,7 @@ import vm from 'node:vm';
 import {createSlots,mergeClientSession,recommend,clearClientPicks,currentCombo,comboContextKnown,applyLobbyPartyRange} from '../src/core/recommend.mjs';
 import {companionPickIntent,localConfigurationPreview,configurationReadOnly} from '../src/core/companion-plan.mjs';
 import {preparationProgressView} from '../src/preparation-progress-view.mjs';
-import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft} from '../src/core/draft-intents.mjs';
+import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft} from '../src/core/draft-intents.mjs';
 import {reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,manualPlayerSlot,clearManualPlayerPosition,moveChampion,assignClientChampion,scopeSlots,effectiveDraftScope} from '../src/core/draft.mjs';
 import {currentPlayerSelection} from '../src/core/guide.mjs';
 import {recommendationKey,createPreparationStore,createRuneApplicationState,partyRoutePreparations,configurationKey as buildChoiceKey} from '../src/core/preparation.mjs';
@@ -74,9 +74,9 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
   lastTaskSelection:null,companionPreview:null,companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',lastCompanionLocked:'',showAllCandidates:false,recommendationError:'',renderedDraftResults:null,disclosureState:createDisclosureState(),renderedDisclosureScope:'',selectionUiReset:false,selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,clickedRoomPlan:null,roomRoleChoice:null,companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
-  preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
+  recommendationSessionSeed:'test-session',clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
   structuredClone,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
-  currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
+  currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
   ROLES,moveChampion,assignClientChampion,clearManualPlayerPosition,selectedBuildFields,buildChoiceKey,scopeSlots,effectiveDraftScope,
@@ -117,12 +117,12 @@ test('client identity bindings preserve candidates and an in-flight recommendati
  assert.equal(s.context.activeRecommendation,s.worker);assert.equal(s.context.generating,true);assert.equal(s.context.recommendationRun,0);
 });
 
-test('a lobby role click crossing into selection remains a hover-only explicit claim',async()=>{
+test('a lobby role click crossing into selection applies a complete position claim without locking',async()=>{
  const incoming=client();incoming.eligibility={pickable:data.champions.map(value=>value.key),disabled:[]};
  const s=setup({current:{connected:true,phase:'Lobby',mode:{id:'rift'},session:null},incoming});let staged=0;
  s.context.api.stageSelection=async()=>{staged++;throw Error('The old lobby must not receive this selection action');};
  await s.context.stagePregameIntent({role:'support'});
- assert.equal(staged,0);assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].preselectOnly,true);
+ assert.equal(staged,0);assert.equal(s.calls.prepared.length,1);assert.notEqual(s.calls.prepared[0].preselectOnly,true);assert.equal(s.calls.prepared[0].claimPosition,true);
  assert.equal(s.calls.prepared[0].role,'support');assert.equal(s.context.positionClaim.role,'support');
 });
 
@@ -195,7 +195,7 @@ test('eligibility age alone preserves candidate signatures and own or teammate a
  }
 });
 
-test('an explicit free-role avatar click establishes unknown ownership and prepares in the main drawer or sidebar plan',async()=>{
+test('an explicit free-role avatar click establishes unknown ownership and prepares in the recommendation page without opening an editor',async()=>{
  for(const docked of [false,true])for(const picked of [false,true]){
   const current=client();Object.assign(current.session.myTeam[0],{assignedPosition:'',championId:picked?hero('Graves').key:0,championPickIntent:picked?0:hero('Graves').key});
   const slots=mergeClientSession(createSlots(),current.session,data.champions,{autoArrange:true}).slots;
@@ -206,8 +206,7 @@ test('an explicit free-role avatar click establishes unknown ownership and prepa
   await c.prepareHeroClick({id:'Graves',role:'bottom',mode:'rift'});
   assert.equal(c.taskOwnRole(),'bottom');assert.equal(c.saved.draft.playerPosition.role,'bottom');
   assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Graves');assert.equal(calls.prepared[0].role,'bottom');
-  if(docked){assert.equal(c.companionTab,'plan');assert.equal(calls.opened.length,0);assert.equal(calls.prepared[0].selection.readOnly,false);}
-  else{assert.equal(calls.opened.length,1);assert.equal(c.buildSelection().readOnly,false);}
+  assert.equal(c.companionTab,'recommend');assert.equal(calls.opened.length,0);assert.equal(calls.prepared[0].selection.readOnly,false);
  }
 });
 
@@ -219,9 +218,10 @@ test('explicit avatar clicks ignore lane ownership and replaceable hovers, while
   if(kind==='hover')current.session.myTeam.push({cellId:2,championId:0,championPickIntent:hero('Ahri').key,assignedPosition:'MIDDLE'});
   if(kind==='locked'){current.session.myTeam[0].championId=hero('Ashe').key;current.session.actions=[[{actorCellId:1,type:'pick',championId:hero('Ashe').key,completed:true}]];}
   const {context:c,calls}=setup({slots,current,incoming:structuredClone(current),results:[]});
+  if(kind==='locked'){await assert.rejects(c.prepareHeroClick({id,role:'bottom',mode:'rift'}),/锁定/);assert.equal(calls.opened.length,0);continue;}
   await c.prepareHeroClick({id,role:'bottom',mode:'rift'});
-  const blocked=['teammate','locked'].includes(kind);assert.equal(calls.prepared.length,blocked?0:1,kind);assert.equal(calls.opened.length,1,kind);
-  assert.equal(c.buildSelection().readOnly,blocked,kind);
+  const blocked=kind==='teammate';assert.equal(calls.prepared.length,blocked?0:1,kind);assert.equal(calls.opened.length,blocked?1:0,kind);
+  if(blocked)assert.equal(c.buildSelection().readOnly,true,kind);
  }
 });
 
@@ -252,14 +252,13 @@ test('offline previews remain editable with retained client bindings and never w
  }
 });
 
-test('a blocked candidate in the local role opens a read-only drawer without adopting or preparing it',async()=>{
+test('a locked candidate rejects another hero without adopting, preparing or navigating',async()=>{
  const current=client();current.session.myTeam[0].championId=hero('Ashe').key;
  current.session.actions=[[{actorCellId:1,type:'pick',championId:hero('Ashe').key,completed:true}]];
  const [result]=recommend({slots:createSlots(),champions:data.champions,scope:'party',pool:['Ahri','Jinx','Braum'],poolMode:'only',limit:1});
  const {context:c,calls}=setup({current,incoming:structuredClone(current),slots:createSlots(),results:[result]});
- await c.prepareCandidate({dataset:{id:'Jinx',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});
- assert.equal(calls.prepared.length,0);assert.equal(c.activeCreativePlan,null);assert.equal(calls.opened.length,1);
- assert.equal(c.buildSelection().readOnly,true);
+ await assert.rejects(c.prepareCandidate({dataset:{id:'Jinx',role:'bottom',resultIndex:'0'},hasAttribute:name=>name==='data-result-index'}),/锁定/);
+ assert.equal(calls.prepared.length,0);assert.equal(c.activeCreativePlan,null);assert.equal(calls.opened.length,0);
 });
 test('a stale candidate refresh rejects unavailable targets and different games, players or modes before preparation',async()=>{
  const now=2000000;
@@ -407,7 +406,7 @@ test('a chosen lane on an adopted proposal stays editable when the local player 
  assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].role,'bottom');
 });
 
-test('claiming a lane stays on recommendations and leaves the representative replaceable without configuring it',async()=>{
+test('claiming a lane stays on recommendations and leaves the representative replaceable with a complete configuration and no editor navigation',async()=>{
  const current=client();current.session.myTeam[0].assignedPosition='';current.eligibility={pickable:[hero('Gnar').key,hero('Fiora').key],disabled:[]};
  const incoming=structuredClone(current),heroes={top:'Ahri',jungle:'Vi',mid:'Gnar',bottom:'Ashe',support:'Nami'};
  const slots=createSlots().map(s=>({...s,party:true,champion:heroes[s.role],locked:true})),s=setup({slots,current,incoming}),c=s.context;
@@ -419,7 +418,7 @@ test('claiming a lane stays on recommendations and leaves the representative rep
  const saves=[];c.persist=async options=>{saves.push(options);};
  await c.claimPosition('top');
  assert.deepEqual(structuredClone(saves.at(-1)),{derived:true,throwOnError:true},'The completed public hover mirror must recover draft races while still propagating disk failures');
- assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].preselectOnly,true);assert.equal(s.calls.prepared[0].role,'top');
+ assert.equal(s.calls.prepared.length,1);assert.notEqual(s.calls.prepared[0].preselectOnly,true);assert.equal(s.calls.prepared[0].claimPosition,true);assert.equal(s.calls.prepared[0].role,'top');
  assert.equal(c.slots.find(s=>s.role==='top').champion,'Gnar');assert.equal(c.slots.find(s=>s.role==='top').locked,false);
  assert.equal(c.slots.find(s=>s.role==='mid').champion,null);
  for(const role of ['jungle','bottom','support'])assert.deepEqual(c.slots.find(s=>s.role===role),before.find(s=>s.role===role));

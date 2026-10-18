@@ -32,9 +32,9 @@ function memberCard(member,champ){
   const own=pickMatches&&slot.champion===selected.champion&&slot.role===selected.role;
   return `<button class="room-champ${own?' is-pick':''}" data-action="room-build" data-id="${e(slot.champion)}" data-role="${e(slot.role)}" data-mode="${e(config?.mode||mode||'')}" data-member="${e(member.nick)}" ${!config&&mode&&!(['rift','hex'].includes(mode))?'disabled':''} title="${own?'本人选择 · ':''}${e(roleName(slot.role))} · ${config?'查看发送方配置':'未收到配置，查看说明'}">${c?portrait(c,'sm'):''}<span>${own?'<strong class="room-pick-label">本人</strong> ':''}${e(c?.name||slot.champion)}${config?' · '+(config.mode==='hex'?'海克斯配置':'符文与加点'):!mode?' · 模式未知 · 未收到配置':!['rift','hex'].includes(mode)?' · 此模式暂不支持':' · 未收到配置'}</span></button>`;
  }).join('');
- const updated=share?.at?`更新于 ${new Date(share.at).toLocaleTimeString('zh-CN')}`:'还没分享阵容';
+ const updated=champions.length&&share?.at?`更新于 ${new Date(share.at).toLocaleTimeString('zh-CN')}`:'还没分享阵容';
  const configurationNote=!member.self&&champions.length&&!share?.configurations?.length?'<p class="bottom-note">已收到阵容，尚未收到这位队友的配置；本地参考不代表队友所选。</p>':'';
- return `<article class="room-member"><header><b>${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${personal}${configurationNote}${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
+ return `<article class="room-member"><header><b title="${e(member.nick)}">${e(member.nick)}</b>${member.self?'<span class="badge">我</span>':''}<small>${updated}</small></header>${personal}${configurationNote}${chips?`<div class="room-champs">${chips}</div>`:''}</article>`;
 }
 export function roomSharesView(room,champ,{clickPrepare=true,heroAction=null,compact=false,adoptedShare='',allowUnknownRift=false,allowRiftAdoption=true}={}){
  const members=(room?.members||[]).filter(m=>!m.self&&m.share?.lineup?.some(s=>s.champion));
@@ -84,21 +84,22 @@ function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy
  const link=LINK_TEXT[room.link]||'';
  const invites=isHost&&Number.isInteger(room.port)?(addresses||[]).map(item=>({name:item.name||'本机地址',invite:`${item.address}:${room.port}#${room.room}`})):[];
  const head=isRelay
-  ?`<div><h3>${icon('link')}开黑房间 · ${e(room.room)}</h3><p>${room.members.length} 人在线${room.auto?' · 自动连接':''} · 经中继</p></div>`
-  :`<div><h3>${icon('link')}开黑房间 · ${e(room.room)}</h3><p>${room.members.length} 人在线${isHost?` · 口令 ${e(room.pin||'')}`:''}</p></div>`;
+  ?`<div><h3 aria-label="开黑房间 · ${e(room.room)}">${icon('link')}${e(room.room)}</h3><p>${room.members.length} 人在线${room.auto?' · 自动连接':''} · 经中继</p></div>`
+  :`<div><h3 aria-label="开黑房间 · ${e(room.room)}">${icon('link')}${e(room.room)}</h3><p>${room.members.length} 人在线${isHost?` · 口令 ${e(room.pin||'')}`:''}</p></div>`;
  const badge=isRelay
   ?`<span class="badge room-link${room.link==='connected'?'':' warn'}">${room.auto?'自动 · 组队房间 · ':''}${link||'中继'}</span>`
   :`<span class="badge">${isHost?'房主':'成员'}</span>`;
  const relayNotice=room.warning?e(room.warning):room.link==='reconnecting'?'连接中断，正在重连，期间分享可能延迟。':room.link==='failed'?(room.auto?'连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连（重启助手后会重新尝试）。':'连续重连失败已停止，请离开房间后重新加入。'):room.auto&&autoQuiet?'暂时没看到队友：可以把上面的房间码和口令发给队友手动加入，或让队友确认也开启了自动连接。':'';
+ const relayInvite=room.auto?`中继 ${room.relayUrl||''}｜房间 ${room.room}｜口令 ${room.pin||''}`:`中继 ${room.relayUrl||''}｜房间 ${room.room}`;
+ const shareInfo=`<p>进入房间后自动分享阵容、装备、完整符文、召唤师技能、加点与组合分工；队友点英雄查看发送方配置。${isRelay?'仅展示实际收到的配置，旧版队友或中继未转发时会提示缺失。':''}不会自动改动队友的阵容或客户端。</p>`;
  const inviteBlock=isRelay
-  ?`<div class="room-invites"><p>邀请队友（复制下面的地址${room.auto?'、房间码和口令':'和房间码'}${room.auto?'':'，口令请另行告知'}）：</p><div class="chips"><button data-action="room-copy-relay">${icon('copy')}${e(room.auto?`中继 ${room.relayUrl||''}｜房间 ${room.room}｜口令 ${room.pin||''}`:`中继 ${room.relayUrl||''}｜房间 ${room.room}`)}</button></div>${relayNotice?`<p class="callout warning" role="status">${relayNotice}</p>`:''}<details class="ui-disclosure" data-companion-disclosure="room-invite-info"><summary>邀请方式与口令说明</summary><p>${room.auto?'口令由大厅共享标识派生，只用于同队汇合，不是强认证。旧版队友或派生不一致时，可按上面的地址、房间码与口令手动加入。':'队友在“中继”里填同一个中继地址、房间码和口令即可加入。'}</p></details></div>`
+  ?`<div class="room-invites room-invites-compact"><div class="room-invite-row"><button class="btn small" data-action="room-copy-relay" title="${e(relayInvite)}">${icon('copy')}邀请队友</button><details class="ui-disclosure" data-companion-disclosure="room-invite-info"><summary>邀请与共享说明</summary><p>邀请队友（复制下面的地址${room.auto?'、房间码和口令':'和房间码'}${room.auto?'':'，口令请另行告知'}）：</p><p>${room.auto?'口令由大厅共享标识派生，只用于同队汇合，不是强认证。旧版队友或派生不一致时，可按上面的地址、房间码与口令手动加入。':'队友在“中继”里填同一个中继地址、房间码和口令即可加入。'}</p>${shareInfo}</details></div>${relayNotice?`<p class="callout warning" role="status">${relayNotice}</p>`:''}</div>`
   :isHost?`<div class="room-invites"><p>邀请队友（邀请码和口令一起发）：</p><div class="chips">${invites.length?invites.map(item=>`<button data-action="room-copy-invite" data-invite="${e(item.invite)}">${icon('copy')}${e(item.name)} · ${e(item.invite)}</button>`).join(''):'<span class="bottom-note">暂未检测到局域网地址；可让队友手动扫描。</span>'}</div><div class="room-invite-foot">${button('room-refresh-addresses','刷新本机地址','refresh','quiet small')}<span class="bottom-note">口令 ${e(room.pin||'')}。队友在“加入房间”里粘贴完整邀请即可；裸邀请码需另填口令。</span></div></div>`
   :'';
- return `<section class="panel room-panel"><div class="panel-head">${head}${badge}${button('room-reconnect','重新连接','refresh','small')}${button('room-leave','离开房间','','quiet small')}</div>
+ return `<section class="panel room-panel"><div class="panel-head">${head}${badge}<details class="room-actions-menu" data-companion-disclosure="room-actions"><summary aria-label="房间操作">更多</summary><div>${button('room-reconnect','重新连接','refresh','small')}${button('room-publish','重新分享','upload','small')}${button('room-leave','离开房间','','quiet small')}</div></details></div>
   <div class="panel-body">
    ${inviteBlock}
-   <div class="room-share-row">${button('room-publish',isRelay?'重新分享当前选择':'分享我的阵容与配置','upload','primary small')}<span class="bottom-note">加入后自动分享阵容与配置。</span></div>
-   <details class="ui-disclosure" data-companion-disclosure="room-share-info"><summary>共享内容与操作范围</summary><p>进入房间后自动分享阵容、装备、完整符文、召唤师技能、加点与组合分工；队友点英雄查看发送方配置。${isRelay?'仅展示实际收到的配置，旧版队友或中继未转发时会提示缺失。':''}不会自动改动队友的阵容或客户端。</p></details>
+   ${!isRelay?`<details class="ui-disclosure" data-companion-disclosure="room-share-info"><summary>共享内容与操作范围</summary>${shareInfo}</details>`:''}
    <div class="room-members" aria-live="polite">${room.members.map(member=>memberCard(member,champ)).join('')}</div>
    ${preparationFileControls(hasPreparationFile,preparationFileBusy)}
   </div></section>`;

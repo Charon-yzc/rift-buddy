@@ -1,13 +1,14 @@
 import {conventionalRole} from './rules.mjs';
+import {sidePressureActors} from './side-pressure.mjs';
 
 // Curated mechanism fit, not match statistics or a win probability. Small
 // groups spend more of the budget on their actual partnership; larger groups
 // must also turn those partnerships into a usable team plan and damage mix.
 const BUDGETS={
- 2:{connections:50,lanes:20,tactics:25,damage:5},
- 3:{connections:42,lanes:18,tactics:28,damage:12},
- 4:{connections:36,lanes:16,tactics:32,damage:16},
- 5:{connections:32,lanes:15,tactics:35,damage:18},
+ 2:{connections:28,lanes:20,tactics:32,damage:10,readiness:10},
+ 3:{connections:25,lanes:18,tactics:32,damage:15,readiness:10},
+ 4:{connections:23,lanes:16,tactics:32,damage:16,readiness:13},
+ 5:{connections:22,lanes:15,tactics:32,damage:18,readiness:13},
 };
 const clamp=(value,min=0,max=1)=>Math.max(min,Math.min(max,value));
 const round=value=>Math.round(value*10)/10;
@@ -34,7 +35,9 @@ function relationship(a,b,graph,details,key=null){
   if(lead.p.frontline&&carry(follow))offer(ranged(follow)?.57:.48,'承伤接持续输出');
   if(lead.p.peel&&follow.p.poke&&offensive(follow))offer(.56,'消耗与接应');
  }
- if(a.p.poke&&b.p.poke)offer(.49,'共同远程消耗');
+ if(a.p.poke&&b.p.poke)offer(.73,'共同远程消耗');
+ if(offensive(a)&&offensive(b)&&a.p.sustain!==b.p.sustain)offer(.56,'短轮次与持续输出互补');
+ if(sidePressureActors([a,b]))offer(.76,'边线压力与接应');
  if(a.p.engage&&b.p.engage)offer(offensive(a)||offensive(b)?.48:.28,'控制错开接力');
  if(graph){
   const authored=graph.edge(a,b);
@@ -105,7 +108,22 @@ function tacticalQuality(members,connections){
   const cover=members.some(m=>m.p.peel||m.p.frontline),participation=members.reduce((sum,m)=>sum+(m.p.poke||m.p.peel||m.p.frontline?1:.35),0)/members.length;
   offer((members.length===2?.86:cover?.94:.72)*participation,'poke','共同消耗，保留接应距离');
  }
+ if(sidePressureActors(members)){
+  const holding=members.filter(m=>m.p.poke||m.p.peel||m.p.frontline).length;
+  offer(members.length===2?.9:.78+.16*Math.min(1,holding/2),'side-pressure','边线施压，队友接应或守线');
+ }
+ const sustained=members.filter(carry),protect=members.filter(m=>m.p.peel||m.p.frontline);
+ if(sustained.length&&protect.length)offer(.8+.14*Math.min(1,protect.length/Math.max(1,sustained.length)),'sustained','承接压力，持续输出安全目标');
  return best;
+}
+
+function readinessQuality(members){
+ const known=members.filter(m=>m.p.window),base=known.filter(m=>m.p.window.kind==='base').length;
+ const growing=known.filter(m=>m.p.window.kind==='growth'||m.p.window.kind==='items').length;
+ const cover=members.some(m=>m.p.peel||m.p.frontline||m.p.poke);
+ // A preparation checkpoint is a condition, not an assertion of power at a minute.
+ // Reward a bridge for growing partners; no kit is excluded for lacking hard CC.
+ return known.length/members.length*(growing&&base?.95:growing&&cover?.9:growing===members.length?.55:.85);
 }
 
 /**
@@ -136,7 +154,7 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  const minority=ad+ap?Math.min(ad,ap)/(ad+ap):0;
  const damage=clamp(minority/({2:.14,3:.2,4:.23,5:.25}[size]));
  const lanes=laneCount/known;
- const components={connections:connections.quality,lanes,tactics:tactics.quality,damage};
+ const components={connections:connections.quality,lanes,tactics:tactics.quality,damage,readiness:readinessQuality(members)};
  const gaps=[];let deduction=0;
  const penalize=(points,text)=>{deduction+=points;if(details)gaps.push(text);};
  if(!damageDealers)penalize(20,'缺少能接控制兑现伤害的成员，控制或保护不能替代输出。');
@@ -167,9 +185,11 @@ export function compositionFit(analysis,graph,{expectedSize,details=true}={}){
  if(laneCount<positioned.length)gaps.push('存在非常规分路，需另外确认对线与经济分配。');
  if(positioned.length<known)gaps.push(`${known-positioned.length} 位公开队友分路未知：只参考英雄特征，不计其分路可执行分。`);
  if(known<requested)gaps.push(`仅 ${known}/${requested} 位成员有已核对资料，其余不按已有配合计分。`);
- const labels={connections:'成员衔接',lanes:'分路可执行',tactics:'共同战术',damage:'伤害来源'};
+ const labels={connections:'成员衔接',lanes:'分路可执行',tactics:'共同战术',damage:'伤害来源',readiness:'行动条件'};
  const breakdown=Object.entries(weights).map(([key,max])=>({key,label:labels[key],points:round(max*components[key]),max}));
  if(deduction)breakdown.push({key:'gaps',label:'明显缺口',points:-deduction,max:0});
+ const correction=round(score-breakdown.reduce((sum,row)=>sum+row.points,0));
+ if(correction)breakdown.push({key:'confidence',label:'完整度与取整',points:correction,max:0});
  return {score,rawScore,known,size:requested,confidence,breakdown,strengths,gaps,tactic:tactics,
   relationships:strongest.map(({edge,...link})=>({...link,...(edge?.current?{condition:edge.condition,sourceUrls:edge.sourceUrls}:{} )})),
   reason:`${known} 人配合：${breakdown.map(row=>`${row.label} ${row.points}${row.max?'/'+row.max:''}`).join(' · ')}。${known<requested?'资料不全已降低分数。':''}规则分，不是胜率。`};

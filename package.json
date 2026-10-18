@@ -1,7 +1,7 @@
 {
   "name": "rift-buddy",
   "productName": "开黑搭子",
-  "version": "0.55.1",
+  "version": "0.56.1",
   "description": "英雄联盟开黑助手：阵容推荐、一键配置、房间协作与局内参考",
   "private": true,
   "packageManager": "pnpm@11.25.0",
@@ -24,6 +24,7 @@
     "catalog:expand": "node scripts/expand-catalog.mjs",
     "spells:enrich": "node scripts/enrich-spells.mjs",
     "installer": "node scripts/installer.mjs",
+    "installer:delta": "node scripts/package-delta-update.mjs",
     "sync-pairs": "node scripts/sync-pair-statistics.mjs",
     "sync-rankings": "node scripts/sync-rankings.mjs",
     "sync-abilities": "node scripts/sync-abilities.mjs"

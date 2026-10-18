@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {pathToFileURL} from 'node:url';
-import {MIRROR_PART_BYTES,setupFileName,mirrorPartName,mirrorManifestName,parseMirrorManifest,giteeReleaseUrl,releasePageUrl} from '../src/core/app-update.mjs';
+import {MIRROR_PART_BYTES,setupFileName,mirrorPartName,mirrorManifestName,parseMirrorManifest,giteeReleaseUrl,releasePageUrl,deltaManifestName,parseDeltaManifest} from '../src/core/app-update.mjs';
 
 const digest=data=>crypto.createHash('sha256').update(data).digest('hex');
 export function mergeCommand(manifest){
@@ -34,14 +34,26 @@ export async function packageGiteeMirror({installer,outputDir,partBytes=MIRROR_P
   const manifest={schema:1,version,tag,file:setupFileName(version),bytes:installer.bytes,sha256:installer.sha256,parts};
   parseMirrorManifest(JSON.stringify(manifest),manifest);
   const mergeName=`RiftBuddy-${version}-Merge.cmd`,manifestName=mirrorManifestName(version),merge=mergeCommand(manifest),json=JSON.stringify(manifest,null,2)+'\n';
+  const deltaName=deltaManifestName(version),deltaPath=path.join(path.dirname(installer.output),deltaName),deltaAssets=[];
+  const deltaRaw=await fs.readFile(deltaPath).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+  if(deltaRaw){
+   const delta=parseDeltaManifest(deltaRaw.toString('utf8'),{version});
+   for(const entry of delta.packages){
+    const sourceFile=path.join(path.dirname(installer.output),entry.file),stat=await fs.lstat(sourceFile);
+    if(!stat.isFile()||stat.isSymbolicLink()||stat.size!==entry.bytes)throw Error('增量镜像文件与清单不符');
+    const bytes=await fs.readFile(sourceFile);if(digest(bytes)!==entry.sha256)throw Error('增量镜像 SHA-256 不符');
+    await fs.writeFile(path.join(outputDir,entry.file),bytes,{flag:'wx'});deltaAssets.push({name:entry.file,sha256:entry.sha256});
+   }
+   await fs.writeFile(path.join(outputDir,deltaName),deltaRaw,{flag:'wx'});deltaAssets.push({name:deltaName,sha256:digest(deltaRaw)});
+  }
   await fs.writeFile(path.join(outputDir,mergeName),merge,{flag:'wx'});
   await fs.writeFile(path.join(outputDir,manifestName),json,{flag:'wx'});
   const checksumName=`SHA256SUMS-${version}.txt`;
-  const sums=[{name:manifest.file,sha256:manifest.sha256},...parts,{name:mergeName,sha256:digest(merge)},{name:manifestName,sha256:digest(json)}].map(p=>`${p.sha256}  ${p.name}`).join('\n')+'\n';
+  const sums=[{name:manifest.file,sha256:manifest.sha256},...parts,...deltaAssets,{name:mergeName,sha256:digest(merge)},{name:manifestName,sha256:digest(json)}].map(p=>`${p.sha256}  ${p.name}`).join('\n')+'\n';
   await fs.writeFile(path.join(outputDir,checksumName),sums,{flag:'wx'});
   const notes=`# 开黑搭子 v${version} 国内镜像\n\n与 [GitHub 同版安装包](${releasePageUrl(tag)}) 使用相同原始字节。\n\n下载 ${parts.length} 个分卷（${parts.map(p=>p.name).join('、')}）和 ${mergeName} 到同一文件夹，保留文件名。双击 Merge.cmd，逐段和整包 SHA-256 验证成功后生成 ${manifest.file}，再自行双击安装。无需 Node.js 或解压软件；脚本不会自动启动安装，也不会覆盖不匹配的安装包。\n\n完整安装包：${manifest.bytes} 字节；SHA-256：\n\n\`${manifest.sha256}\`\n\n校验清单：${checksumName}。应用内更新使用 ${manifestName} 自动合并分卷，不下载执行 Merge.cmd。\n\n[GitHub 发布页](${releasePageUrl(tag)}) · [Gitee 发布页](${giteeReleaseUrl(tag)})\n`;
   await fs.writeFile(path.join(outputDir,'release-notes.md'),notes,{flag:'wx'});
-  return {status:'prepared-not-published',version,outputDir:path.resolve(outputDir),manifest,attachments:[...parts.map(p=>p.name),mergeName,checksumName,manifestName],releaseNotes:path.join(outputDir,'release-notes.md'),publishManifestLast:true};
+  return {status:'prepared-not-published',version,outputDir:path.resolve(outputDir),manifest,attachments:[...parts.map(p=>p.name),mergeName,...deltaAssets.filter(p=>p.name!==deltaName).map(p=>p.name),checksumName,...deltaAssets.filter(p=>p.name===deltaName).map(p=>p.name),manifestName],releaseNotes:path.join(outputDir,'release-notes.md'),publishManifestLast:true};
  }finally{await source.close();}
 }
 
