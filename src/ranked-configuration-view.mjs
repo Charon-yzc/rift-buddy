@@ -1,0 +1,5 @@
+import {escape as e,button} from './ui.mjs';
+export function rankedConfigurationAdviceView(advice,data,selection,{pending=false}={}){
+ if(!advice?.suggestions.length||selection.readOnly)return '';
+ return `<details class="ranked-configuration-advice" data-companion-disclosure="ranked-advice"><summary>选人应对 · ${advice.suggestions.length} 项建议</summary><p>按公开英雄机制比较，采用后点击应用才写入客户端。</p>${advice.suggestions.map(suggestion=>`<div class="ranked-advice-row"><b>${e(suggestion.name)}</b>${button('ranked-advice-adopt','采用建议','','quiet small',`data-token="${e(advice.token)}" data-kind="${suggestion.kind}" data-id="${e(suggestion.id)}" data-plan="${e([selection.id,selection.role,selection.mode].join(':'))}" ${pending?'disabled':''}`)}<small>${e([...new Set(suggestion.hits.map(hit=>data.champions.find(hero=>hero.id===hit.enemy)?.name||hit.enemy))].join('、'))} · 同位置来源 ${suggestion.samples.toLocaleString()} 场；不是对位胜率。</small><p>${e(suggestion.hits[0].why)}</p><p>${e(suggestion.hits[0].cost)}</p></div>`).join('')}</details>`;
+}

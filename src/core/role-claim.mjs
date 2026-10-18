@@ -15,7 +15,7 @@ export function roleRepresentatives(role,champions,{rankings={},patch}={}){
 }
 export function activeRoleClaim(claim,client){
  const session=client?.session,own=session?.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
- return !!claim&&client.connected&&client.phase==='ChampSelect'&&String(session?.gameId||client.game?.gameId||'')===claim.gameId&&own?.cellId===claim.cellId&&!localPickLocked(session)&&Number(own.championId||own.championPickIntent)===claim.championId;
+ return !!claim&&client.connected&&client.phase==='ChampSelect'&&String(session?.gameId||client.game?.gameId||'')===claim.gameId&&own?.cellId===claim.cellId&&!localPickLocked(session)&&!(session.actions||[]).flat().some(action=>action.type==='pick'&&action.actorCellId===own.cellId&&action.completed===true)&&Number(own.championId||own.championPickIntent)===claim.championId;
 }
 export function roleClaimChoice(client,role,champions,data={}){
  const unavailable=reason=>({champion:null,reason});

@@ -5,6 +5,7 @@ import {legalSkillOrder} from '../src/core/skill-advice.mjs';
 import {adaptMatchups} from '../src/core/matchups.mjs';
 import {DEFAULT_BUILD_SOURCE,requireBuildSource} from '../src/core/build-source.mjs';
 import {summonerOptions} from '../src/core/summoner-selection.mjs';
+import {adaptRankedStatistics} from '../src/core/ranked-statistics.mjs';
 
 export {BUILD_PARSER_VERSION};
 export const BUILD_CORE_LIMIT=15;
@@ -61,6 +62,7 @@ export function parseBuildJSON(raw,{champion,role,data,url,buildSource=DEFAULT_B
   runePage:completeOptions[0].page,runeSamples:completeOptions[0].samples,runeOptions:completeOptions,skillOptions,priority:null,summoners,sourceSummonerOptions,
   availableRoles:[...new Set([role,...source.summary.positions.map(p=>Object.keys(BUILD_POSITIONS).find(r=>BUILD_POSITIONS[r]===p?.name?.toLowerCase())).filter(Boolean)])],
   roleSamples:source.summary.positions.find(p=>p.name?.toLowerCase()===BUILD_POSITIONS[role])?.stats?.play||null,
+  rankedStatistics:adaptRankedStatistics(source,BUILD_POSITIONS[role]),
   matchups:adaptMatchups(source.counters??source.summary.positions.find(p=>p.name?.toLowerCase()===BUILD_POSITIONS[role])?.counters,data.champions,champion.id)};
 }
 export async function readPublicJSON(url,{fetcher=fetch,timeout=20000,limit=3_000_000}={}){

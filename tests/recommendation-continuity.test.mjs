@@ -1,4 +1,6 @@
+import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
 import {heroClickSelection,configurationChoices} from '../src/core/configuration-choices.mjs';
+import {rankedDraftPolicy,publicRankedDraft} from '../src/core/ranked-draft.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -42,7 +44,7 @@ function extract(start,end){
  assert(from>=0&&to>from,`Missing application function boundaries: ${start}`);
  return source.slice(from,to);
 }
-const syncFunctions=extract('function clearSelectionUi(){','let activeAppSelect=')+extract('function cancelRecommendation(){','let client=')+
+const syncFunctions=extract('const includePublicPreselection=','const currentParty=')+extract('function clearSelectionUi(){','let activeAppSelect=')+extract('function cancelRecommendation(){','let client=')+
  extract('function queueCompanionRecommendation(){','function acceptWindowLayout(')+
  extract('function recommendationInput(){','function useCatalogResult(')+
  extract('async function performSync(','function reflectRunePending(');
@@ -63,7 +65,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
  const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
   const context=vm.createContext({
-    history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
+    rankedDraftPolicy,publicRankedDraft,prepareHeroWithSource,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
     ongoing:createOngoingGameController({request:async()=>{throw Error('Recommendation sync must not query ongoing histories');},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]}),
   Date:ClockDate,data,slots,client:current,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
@@ -890,6 +892,20 @@ test('a real client hover change during preparation replaces stale configuration
   assert.equal(c.clientPreparing,false);assert.equal(c.candidatePreparing,false);assert.equal(c.preparationTarget,null);
   assert.equal(calls.prepared.length,1,'The intervening public hover must not dispatch another write');
  }
+});
+
+test('a hero click with a missing source hovers first, keeps fallback runes unwritten during fetch, and then applies the fetched same-source configuration',async()=>{
+ const current=client(),incoming=structuredClone(current),{context:c,calls}=setup({current,incoming,slots:createSlots().map(slot=>({...slot,party:slot.role==='bottom'})),results:[]});
+ const oldBuilds=data.builds,reference=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries['Ashe:bottom'];
+ let resolve,started;const pending=new Promise(done=>resolve=done),fetchStarted=new Promise(done=>started=done);let runeWrites=0;
+ c.api.refreshBuild=async()=>reference;
+ c.refreshConfiguration=async()=>{started();await pending;data.builds={...data.builds,'Ashe:bottom':reference};return reference;};
+ c.api.prepareSelection=async value=>{calls.prepared.push(value);incoming.session.myTeam[0].championPickIntent=hero('Ashe').key;if(!value.preselectOnly)runeWrites++;return {complete:true,preselectOnly:value.preselectOnly,steps:{hover:{status:'done'},runes:{status:value.preselectOnly?'skipped':'done',pageId:11},spells:{status:value.preselectOnly?'skipped':'done'},items:{status:value.preselectOnly?'skipped':'done'}}};};
+ try{
+  const preparing=c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'});await fetchStarted;
+  assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].preselectOnly,true);assert.equal(runeWrites,0);assert.equal(c.clientPreparing,true);
+  resolve();await preparing;assert.equal(calls.prepared.length,2);assert.equal(calls.prepared[1].preselectOnly,undefined);assert.equal(runeWrites,1);assert.deepEqual(calls.prepared[1].page.selectedPerkIds,reference.runePage.selectedPerkIds);assert.equal(c.clientPreparing,false);
+ }finally{resolve();data.builds=oldBuilds;}
 });
 
 async function prepareRetainedHover(docked){

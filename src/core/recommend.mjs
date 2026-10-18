@@ -7,6 +7,7 @@ export {clearClientPicks} from './draft.mjs';
 import {comboLoadout,loadoutOptions} from './loadouts.mjs';
 import {generateCreativeTrios} from './creative-trios.mjs';
 import {creativePlanMatches,creativeMemberCombo,validateCreativePlan,creativePlanId,resultCooperation} from './creative-plan.mjs';
+import {createRankedMatchupIndex} from './ranked-statistics.mjs';
 import {createPartyCounterplay} from './party-counterplay.mjs';
 import {createCooperationGraph,cooperationPlan,cooperationSeeds} from './cooperation.mjs';
 import {createPairStatisticsIndex} from './pair-statistics.mjs';
@@ -180,7 +181,10 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  const composition=compositionFit(a,context?.cooperationGraph,{details:!scoreOnly});
  let score=ownWeights?20+Object.entries(ownWeights).reduce((sum,[key,weight])=>sum+Math.min(t[key],1)*weight,0):composition.rawScore;
  const fit=opponentFit(a,context?.enemyTraits);
- score+=fit.adjustment;
+ const ranked=a.members.map(member=>context?.rankedMatchup?.(member.champion,member.role)).filter(Boolean);
+ const rankedAdjustment=ranked.length?ranked.reduce((sum,row)=>sum+row.adjustment,0)/ranked.length:0;
+ fit.ranked={adjustment:rankedAdjustment,evidence:scoreOnly?[]:ranked.flatMap(row=>row.evidence)};
+ score+=fit.adjustment+rankedAdjustment;
  const foundDuo=catalog.find(c=>comboMembers(c).length===2),foundTrio=catalog.find(c=>comboMembers(c).length===3);
  const duo=context?.catalogStatus?.[foundDuo?.id]?.invalid?null:foundDuo;
  const trio=context?.catalogStatus?.[foundTrio?.id]?.invalid?null:foundTrio;
@@ -271,7 +275,7 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed=''}) {
+export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],rankedDraft=null,sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed=''}) {
  if(Array.isArray(clientSession?.myTeam)){
   ({slots,session:clientSession}=clientRecommendationDraft(slots,clientSession,champions,{includePreselected,ownRole:soloRole}));
   const picked=new Set(clientSession.myTeam.map(player=>champions.find(champion=>Number(champion.key)===Number(player.championId))?.id).filter(Boolean));
@@ -294,7 +298,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
-  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession,includePreselected,randomSeed};
+  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,rankedDraft,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession,includePreselected,randomSeed};
   const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
   if(!targets.length){
    return recommend({...options,clientSession:null,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
@@ -314,6 +318,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // Visibility affects fit in every draft; `enemy` separately controls which
  // heroes cannot be selected. Keep the legacy argument as the default.
  const context={byId:new Map(champions.map(c=>[c.id,c])),mandatoryOwn:lockedOwnSlot(slots,clientSession),publicAllies,profiles:new Map(),pool:new Set(heroPool),poolMode,scope,play,rolePools,catalogStatus,enemyTraits:summarizeEnemyTraits(visibleEnemies,champions),comboCache:new Map(),scoreCache:new Map(),comboLoadouts:new Map()};
+ context.rankedMatchup=rankedDraft?.ranked?createRankedMatchupIndex(rankedDraft.enemies,builds,{patch,source:buildSource}):null;
  context.cooperationGraph=createCooperationGraph(champions);
  context.pairStatistics=createPairStatisticsIndex(pairStatistics,champions,{source:buildSource,patch});
  // Rune-page samples are used only as a coarse position-frequency signal.

@@ -43,7 +43,7 @@ test('new trio defaults use six exact hero-role routes and full independently so
   assert.equal(b.loadoutId,row.loadout);assert.deepEqual(b.items.slice(0,3).map(i=>Number(i.id)),row.core);
   assert.deepEqual(b.runePage.selectedPerkIds,row.page);assert(validateRunePage(b.runePage,data.runes));
   assert.equal(b.selectedRune.source,'机制整理');assert.equal(b.selectedRune.samples,null);assert.equal(b.reference,null);
-  assert(b.configurationNote.includes(reference.fetchedAt));assert.equal(reference.fetchedAt,row.fetchedAt);
+  assert(b.configurationNote.includes(row.fetchedAt),'Authored loadout retains its original reviewed source date even when the live reference is refreshed');
   assert.match(b.configurationNote,/人工组合机制参考/);assert.match(b.configurationNote,/不代表组合胜率、最优路线或装备符文联合统计/);
   const source=b.configurationSources.find(s=>s.url===reference.sourceUrl);assert(source);assert.equal(source.checkedAt,'2026-10-07');
  }

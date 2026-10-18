@@ -74,6 +74,27 @@ function enemyPressures(enemy){
  return tags;
 }
 function matchingRule(rules,eligible,tags,role){return rules.filter(r=>(!r.role||r.role===role)&&r.tags.some(t=>tags.has(t))&&eligible(r)).sort((a,b)=>b.score-a.score)[0];}
+// Live draft suggestions are a separate preview. They neither select a
+// highest-probability enemy as the actual lane opponent nor mutate any saved
+// configuration. Use complete same-role source choices, never invented pages.
+export function contextualPreparationChoices({data,selection,build,enemies=[]}={}){
+ if(!build?.reference||!build.runePage||build.reference.patch!==data.patch||build.loadoutId!=='default'||selection.sharedEquipment||selection.readOnly)return [];
+ const threats=enemies.filter(enemy=>enemy.champion&&data.champions.some(champion=>champion.id===enemy.champion)).map(enemy=>({...enemy,hero:data.champions.find(champion=>champion.id===enemy.champion),weight:enemy.role===selection.role?2:1}));
+ if(!threats.length)return [];
+ const evaluate=(rules,eligible)=>{
+  const hits=threats.map(enemy=>({enemy,rule:matchingRule(rules,eligible,enemyPressures(enemy.hero),selection.role)})).filter(row=>row.rule);
+  const total=threats.reduce((sum,enemy)=>sum+enemy.weight,0);
+  return {score:hits.reduce((sum,row)=>sum+row.rule.score*row.enemy.weight,0)/total,hits};
+ };
+ const suggestions=[];
+ const currentRune=evaluate(runeRules,rule=>has(build.runePage,rule.perk));
+ const runes=build.runeOptions.filter(option=>option.source==='OP.GG'&&option.samples>=Math.max(200,(build.runeOptions[0]?.samples||0)*.05)&&validateRunePage(option.page,data.runes)).map(option=>({option,...evaluate(runeRules,rule=>has(option.page,rule.perk))})).sort((a,b)=>b.score-a.score||b.option.samples-a.option.samples);
+ const rune=runes[0];if(rune&&rune.option.id!==build.selectedRuneId&&rune.score>currentRune.score+2)suggestions.push({kind:'rune',id:rune.option.id,name:rune.hits[0].rule.title,page:rune.option.page,samples:rune.option.samples,hits:rune.hits.map(({enemy,rule})=>({enemy:enemy.champion,why:rule.why,cost:rule.cost})),fields:{runeId:rune.option.id,customRunePage:undefined}});
+ const currentCore=build.reference.core[build.selectedCoreIndex],currentEquipment=evaluate(coreRules,rule=>rule.ids.some(id=>currentCore.items.includes(id)));
+ const cores=build.reference.core.map((option,index)=>({option,index,...evaluate(coreRules,rule=>rule.ids.some(id=>option.items.includes(id)))})).filter(row=>row.option.samples>=Math.max(200,(build.reference.core[0]?.samples||0)*.05)).sort((a,b)=>b.score-a.score||b.option.samples-a.option.samples);
+ const core=cores[0];if(core&&core.index!==build.selectedCoreIndex&&core.score>currentEquipment.score+2)suggestions.push({kind:'core',id:'core-'+core.option.items.join('-'),name:core.hits[0].rule.title,items:core.option.items,samples:core.option.samples,hits:core.hits.map(({enemy,rule})=>({enemy:enemy.champion,why:rule.why,cost:rule.cost})),fields:{coreId:'core-'+core.option.items.join('-'),coreIndex:core.index}});
+ return suggestions;
+}
 function sourcePage(option,ref){return {...option,kind:option.source==='OP.GG'?ref?.opponent?'OP.GG 所选对手完整页':'OP.GG 同位置完整页':option.source==='个人自选'?'个人自选，无统计样本':'机制完整页',patch:option.patch||MATCHUP_PREPARATION_PATCH,opponent:option.source==='OP.GG'?ref?.opponent:null,samples:option.samples||0};}
 function coreSelection(data,selection,core,index){
  const next={...selection,variant:'default',loadoutId:'default',coreIndex:index,coreId:'core-'+core.items.join('-'),laterIds:[]};
@@ -107,7 +128,7 @@ export function matchupPreparation({data,selection,enemyIds=[],targetId='',publi
   cores.push({id,index,items:core.items.map(id=>data.items[id]),title:rule?.title||'同位置常用核心路线',why:rule?.why||'当前没有命中专门的对位装备取舍；保留常用核心或按实际局势比较其他路线。',cost:[rule?.cost||'当前三件来源不代表固定后期六件，核心与符文样本不是联合统计。',mechanism?.equipmentCondition,'选择核心会清除旧的后期装备计划。'].filter(Boolean).join(' '),source:{...core,kind:scoped?'OP.GG 所选对手核心':base.reference.source,patch:base.reference.patch,opponent:scoped?.opponent,samples:core.samples||0},selected:b.selectedCoreId===id&&b.loadoutId==='default'&&(!scoped||b.sourceOpponent===enemy.id),switchesLoadout:b.loadoutId!=='default',page:preview.build.runePage,priority:preview.build.priority,selection:preview.selection});
  }
  const skills=choices.skillChoices.filter(o=>o.source==='OP.GG').slice(0,3).map(o=>({...o,selected:b.selectedSkillId===o.id&&(!scoped||b.sourceOpponent===enemy.id),source:sourcePage(o,choices.reference),selection:{...choiceSelection,skillId:o.id}}));
- return {context,sourceScoped:!!scoped,sourceFilter:normalizeBuildSource(data.buildSource),sourcePatch:scoped?.patch,enemy:{id:enemy.id,name:enemy.name},champion:{id:champion.id,name:champion.name},role:selection.role,current:{page:b.runePage,runeName:b.selectedRune?.name,coreId:b.selectedCoreId,loadoutId:b.loadoutId,items:b.items.slice(0,3),triggers:b.runePage?triggerNotes(b.runePage,data):[]},runes,cores,skills,
+ return {context,sourceScoped:!!scoped,sourceFilter:normalizeBuildSource(data.buildSource),sourcePatch:scoped?.patch,enemy:{id:enemy.id,name:enemy.name},champion:{id:champion.id,name:champion.name},role:selection.role,current:{page:b.runePage,runeName:b.selectedRune?.name,coreId:b.selectedCoreId,loadoutId:b.loadoutId,items:b.items.filter(item=>!item.tags?.includes("Boots")).slice(0,3),triggers:b.runePage?triggerNotes(b.runePage,data):[]},runes,cores,skills,
   patch:MATCHUP_PREPARATION_PATCH,reviewedAt:MATCHUP_PREPARATION_REVIEWED_AT,stale:data.patch!==MATCHUP_PREPARATION_PATCH,sourceUrl:base?.reference?.sourceUrl||null,
   sourceNote:scoped?`OP.GG 对 ${enemy.name} 的条件统计；每套完整符文、核心与加点各有自己的样本。用途和代价仍按机制整理，不代表统计最优、联合配置胜率或三人组合胜率，也不推断敌方实际分路。`:'取舍按英雄、装备和符文机制整理；完整页与核心取自当前英雄位置的数据。来源样本不是针对所选对手的样本，也不是符文与核心联合胜率。',sourceUrls:[`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/champion/${enemy.id}.json`,`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/runesReforged.json`,`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/item.json`]};
 }

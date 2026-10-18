@@ -56,7 +56,7 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  if(!locked)assertSelectable(initial.session,await readEligibility());
  const result={champion:selected.champion,gameId:selected.sessionGameId,steps:Object.fromEntries(['hover','runes','spells','items'].map(k=>[k,{status:'pending'}]))};
  let expected=initial.context,confirmedTarget=false;
- const targetMatches=now=>now.action.championId===selected.championId&&typeof now.action.completed==='boolean'&&
+ const targetMatches=now=>(now.action.completed===true||now.action.championId===selected.championId)&&typeof now.action.completed==='boolean'&&
   (now.own.championId===selected.championId||now.own.championId===0&&now.action.completed===false&&now.own.championPickIntent===selected.championId);
  const ensure=async()=>{
   const now=await read();

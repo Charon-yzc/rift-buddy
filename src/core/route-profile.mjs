@@ -6,7 +6,7 @@ const physicalKeys=new Set(['crit','onhit','meleeCrit','jhin','senna','fighter',
 // damage. Kog'Maw Q / W / E / R contain magic damage in the bundled 16.20 data.
 const reviewedMagicRoutes=new Set(['KogMaw']);
 export function equipmentRoute({items=[],key,champion,data,support=false}){
- const records=items.slice(0,3).map(i=>data.items[typeof i==='object'?i.id:i]).filter(Boolean);
+ const records=items.map(i=>data.items[typeof i==='object'?i.id:i]).filter(item=>item&&!item.tags?.includes('Boots')).slice(0,3);
  let kind=['tank','supportTank'].includes(key)?'tank':key==='enchanter'?'enchanter':magicKeys.has(key)?'magic':physicalKeys.has(key)?'physical':'unknown';
  const base=kind;
  const ap=records.filter(i=>i.stats?.FlatMagicDamageMod>0&&!i.stats?.FlatPhysicalDamageMod).length;

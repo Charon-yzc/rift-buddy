@@ -20,7 +20,7 @@ import {sanitizeShare,encodeFrame,decodeFrame} from '../src/core/room.mjs';
 import {validateState,defaultState} from '../services/storage.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 const hero=id=>data.champions.find(champion=>champion.id===id);
-const client=()=>({connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'101',localPlayerCellId:0,myTeam:[{cellId:0,championId:0,championPickIntent:0,assignedPosition:''},{cellId:1,championId:0,championPickIntent:0}],theirTeam:[],bans:[],actions:[]},eligibility:{pickable:data.champions.map(champion=>champion.key),disabled:[]}});
+const client=()=>({connected:true,phase:'ChampSelect',mode:{id:'rift'},game:{queueId:430,mapId:11,gameMode:'CLASSIC'},session:{gameId:'101',localPlayerCellId:0,myTeam:[{cellId:0,championId:0,championPickIntent:0,assignedPosition:''},{cellId:1,championId:0,championPickIntent:0}],theirTeam:[],bans:[],actions:[]},eligibility:{pickable:data.champions.map(champion=>champion.key),disabled:[]}});
 
 test('pregame intent is bounded, defaults to no role, and strips unrelated data',()=>{
  assert.deepEqual(validatePregameIntent({role:'',champion:null,password:'ignored'}),{role:'',champion:null});
