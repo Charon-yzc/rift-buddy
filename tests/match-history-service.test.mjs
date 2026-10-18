@@ -80,3 +80,42 @@ test('a context started before clear cannot reset the replacement session when i
  await service.execute('clear');const page=await service.execute('page',{source:'lcu'});await service.execute('profile',{handle:page.handle});failOld(Error('late timeout'));await oldResult;
  await service.execute('profile',{handle:page.handle});
 });
+test('roster reads the current phase and returns only visible public members',async()=>{
+ const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only'}),request:async(_a,route)=>route.includes('current-summoner')?own:route.endsWith('gameflow-phase')?'Lobby':route==='/lol-lobby/v2/lobby'?{members:[own],gameConfig:{queueId:430}}:{}});
+ const roster=await service.execute('roster');assert.equal(roster.phase,'lobby');assert.equal(roster.players[0].name,'示例#CN1');assert.equal(JSON.stringify(roster).includes('mock-only'),false);
+});
+test('roster-bound history rejects players who are not in the latest public snapshot',async()=>{
+ const f=fixture();await assert.rejects(f.service.execute('page',{source:'lcu',puuid:own.puuid,rosterKey:'invented'}),/成员/);assert.equal(f.calls.some(c=>c.route.includes('/matches')),false);
+});
+test('challenge responses keep only whitelisted public progress fields',async()=>{
+ const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only',region:'TENCENT',rsoPlatformId:'HN10'}),request:async(_a,route)=>route.includes('current-summoner')?own:route.includes('entitlements')?{accessToken:'mock-entitlement'}:'mock-session',sgp:async({route})=>route.includes('/player/')?{games:[{json:raw}]}:{puuid:own.puuid,totalPoints:{level:'GOLD',current:200,max:1000},playerChallenges:[{id:1,currentValue:20,currentLevel:'GOLD',friendsAtLevels:['private-unneeded'],token:'private-unneeded'}]}});
+ const page=await service.execute('page');const result=await service.execute('challenges',{handle:page.handle});assert.equal(result.total.current,200);assert.equal(result.challenges[0].current,20);assert.ok(!JSON.stringify(result).includes('private-unneeded'));
+});
+test('a roster cannot publish stale champion-select members if the phase changes during identity reads',async()=>{
+ let phase='ChampSelect';const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only'}),request:async(_a,route)=>{
+  if(route.includes('current-summoner'))return own;if(route.endsWith('gameflow-phase'))return phase;if(route==='/lol-champ-select/v1/session')return {gameId:1,myTeam:[{cellId:1,summonerId:2}],theirTeam:[]};if(route==='/lol-summoner/v1/summoners/2'){phase='Lobby';return {...own,summonerId:2};}return {};
+ }});await assert.rejects(service.execute('roster'),/阶段/);
+});
+test('GSM roster checks its real game.id field and strips non-public credentials',async()=>{
+ const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only',region:'TENCENT',rsoPlatformId:'HN10'}),request:async(_a,route)=>route.includes('current-summoner')?own:route.endsWith('gameflow-phase')?'InProgress':route==='/lol-gameflow/v1/session'?{gameData:{gameId:123,teamOne:[],teamTwo:[]}}:route.includes('league-session-token')?'mock-session':{},sgp:async()=>({game:{id:123,teamOne:[own],teamTwo:[],playerChampionSelections:[{puuid:own.puuid,championId:22,spell1Id:7,spell2Id:4}]},playerCredentials:{encryptionKey:'never-copy'}})});
+ const result=await service.execute('roster');assert.equal(result.players[0].champion,22);assert.ok(!JSON.stringify(result).includes('never-copy'));
+});
+test('LCU replay initialization uses the configured client version only after a replay click',async()=>{
+ const calls=[],service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only'}),request:async(_auth,route,method,body)=>{calls.push({route,method,body});if(route.includes('current-summoner'))return own;if(route.includes('/matches'))return {games:{games:[{...raw,gameVersion:undefined}]}};if(route.includes('/games/'))return {...raw,gameVersion:undefined};if(route.includes('/configuration'))return {isReplaysEnabled:true,gameVersion:'16.20.123.4'};if(route.includes('/metadata/')){if(method==='POST')return {};if(!calls.some(c=>c.method==='POST'))throw Error('not initialized');return {state:'found'};}return {};}});
+ const page=await service.execute('page',{source:'lcu'});assert.equal(calls.some(c=>c.method==='POST'),false);await service.execute('replay',{handle:page.handle,id:raw.gameId,action:'status'});assert.equal(calls.find(c=>c.method==='POST').body.gameVersion,'16.20.123.4');
+});
+test('fuzzy aliases are verified against the selected region and return actual name/icon/level',async()=>{
+ const remoteCalls=[],service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only',region:'TENCENT',rsoPlatformId:'HN10'}),aliases:async()=>[{puuid:'synthetic-region-player-1',gameName:'匹配名',tagLine:'TEST'},{puuid:'synthetic-missing-player-2',gameName:'空号',tagLine:'TEST'}],request:async(_a,route)=>route.includes('current-summoner')?own:'mock-session',sgp:async p=>{remoteCalls.push(p);return [{puuid:'synthetic-region-player-1',name:'实际玩家',summonerLevel:200,profileIconId:123,privacy:'PUBLIC'}];}});
+ const result=await service.execute('search',{query:'匹配',server:'TENCENT_HN1'});assert.equal(result.players.length,1);assert.equal(result.players[0].name,'匹配名#TEST');assert.equal(result.players[0].level,200);assert.equal(result.players[0].icon,123);assert.equal(remoteCalls[0].body.length,2);
+});
+test('replay progress reads never initialize metadata or download a replay',async()=>{
+ const f=fixture();const page=await f.service.execute('page');const before=f.calls.length;await f.service.execute('replay-status',{handle:page.handle,id:raw.gameId});assert.ok(f.calls.slice(before).every(call=>call.method!=='POST'));
+});
+test('list pages stay compact while explicit details retain the complete public-stat whitelist',async()=>{
+ const f=fixture();const page=await f.service.execute('page');assert.ok(!Object.hasOwn(page.games[0].participants[0],'publicStats'));const detail=await f.service.execute('detail',{handle:page.handle,id:raw.gameId});assert.equal(detail.game.participants[0].publicStats.kills,raw.participants[0].stats.kills);
+});
+test('same-phase membership changes during identity reads invalidate the roster before publication',async()=>{
+ let replaced=false;const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only'}),request:async(_a,route)=>{
+  if(route.includes('current-summoner'))return own;if(route.endsWith('gameflow-phase'))return 'ChampSelect';if(route==='/lol-champ-select/v1/session')return {gameId:replaced?2:1,myTeam:[{cellId:0,summonerId:replaced?3:2}],theirTeam:[]};if(route==='/lol-summoner/v1/summoners/2'){replaced=true;return {...own,summonerId:2};}return {};
+ }});await assert.rejects(service.execute('roster'),/成员|对局/);
+});

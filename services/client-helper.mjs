@@ -15,7 +15,7 @@ const tokenPattern=/^[a-f0-9]{64}$/;
 function sameSecret(actual,expected){return typeof actual==='string'&&tokenPattern.test(actual)&&crypto.timingSafeEqual(Buffer.from(actual,'hex'),Buffer.from(expected,'hex'));}
 export function requestHelper(config,operation,payload={},timeout=12000) {
  return new Promise((resolve,reject)=>{
-  const socket=net.createConnection(config.pipe);let buffer='';
+  const socket=net.createConnection(config.pipe);socket.setEncoding('utf8');let buffer='';
   socket.setTimeout(timeout,()=>socket.destroy(new Error('客户端授权连接超时')));
   socket.on('connect',()=>socket.write(JSON.stringify({secret:config.secret,operation,payload})+'\n'));
   socket.on('data',chunk=>{buffer+=chunk;if(buffer.length>(operation==='matchHistory'?4_000_000:150000)){socket.destroy(new Error('授权连接响应异常'));return;}
@@ -34,8 +34,8 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
  // The helper only serves this app's explicit operations; neither command lines nor credentials leave it.
  let writing=false,itemSetWriting=false;
  const matchHistory=createMatchHistoryService({installPath:()=>config.installPath});
- const server=net.createServer(socket=>{
-  let buffer='',handled=false;socket.setTimeout(15000,()=>socket.destroy());
+  const server=net.createServer(socket=>{
+   socket.setEncoding('utf8');let buffer='',handled=false;socket.setTimeout(15000,()=>socket.destroy());
   socket.on('error',()=>{});
   socket.on('data',async chunk=>{
    if(handled)return;buffer+=chunk;if(buffer.length>50000){socket.destroy();return;}if(!buffer.includes('\n'))return;handled=true;

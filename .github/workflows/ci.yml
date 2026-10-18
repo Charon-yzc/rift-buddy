@@ -198,6 +198,8 @@ jobs:
         run: node scripts/smoke-package-pick-eligibility.mjs
       - name: Check standalone connection helper
         run: node scripts/smoke-package-helper.mjs
+      - name: Check match history and ongoing-game public data flows
+        run: node scripts/smoke-package-match-history.mjs
       - name: Check application lifecycle
         run: node scripts/smoke-package-lifecycle.mjs
       - name: Check application update discovery, verified download and install handoff

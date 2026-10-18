@@ -9,6 +9,7 @@ export function allowedHistoryRoute(route,method='GET',body){
   if(new RegExp(`^/lol-match-history/v1/(?:games|game-timelines)/${id}$`).test(route))return true;
   if(new RegExp(`^/lol-ranked/v1/ranked-stats/${puuid}$`).test(route)||new RegExp(`^/lol-champion-mastery/v1/${puuid}/champion-mastery$`).test(route)||new RegExp(`^/lol-replays/v1/metadata/${id}$`).test(route))return true;
   if(/^\/lol-summoner\/v1\/summoners\?name=[^&#]{1,300}$/.test(route))return true;
+  if(new RegExp(`^/lol-summoner/v1/summoner-profile\\?puuid=${puuid}$`).test(route))return true;
  }
  if(method==='POST'&&route==='/lol-summoner/v1/summoners/aliases')return Array.isArray(body)&&body.length===1&&Object.keys(body[0]||{}).sort().join(',')==='gameName,tagLine'&&typeof body[0].gameName==='string'&&body[0].gameName.length<=64&&typeof body[0].tagLine==='string'&&body[0].tagLine.length<=16;
  if(method==='POST'&&new RegExp(`^/lol-replays/v1/rofls/${id}/(?:download|watch)$`).test(route))return body?.componentType==='replay-button_match-history'&&Object.keys(body).length===1;

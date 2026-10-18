@@ -88,10 +88,20 @@ import {championReferenceView,referenceHeroTiles} from './champion-reference-vie
 import {createHistoryController} from './match-history-controller.mjs';
 import {matchHistoryView as baseHistoryView,matchHistorySearchView} from './match-history-view.mjs';
 import {advancedHistoryFilters} from './match-history-filters-view.mjs';
+import {createOngoingGameController} from './ongoing-game-controller.mjs';
+import {ongoingGameView} from './ongoing-game-view.mjs';
+import {ongoingGameAnalysisView} from './ongoing-game-analysis-view.mjs';
+import {analyzeAkariHistory,analyzeAkariTeam,inferHistoricalGroups} from './core/akari/bridge.mjs';
+import {matchHistoryToolsView,privateHistoryState,privateHistoryFilterTab} from './match-history-tools-view.mjs';
+import {parseHistoryFilterTree} from './core/match-history/filters.mjs';
+import {historyNavigationView} from './match-history-navigation-view.mjs';
+import {updateHistoryFilterTree,saveHistoryFilterPreset,loadHistoryFilterPreset,removeHistoryFilterPreset,historyRelativeTimeRange} from './match-history-filter-tree.mjs';
 function matchHistoryView(state,data){
- const tab=state.tabs.find(t=>t.id===state.current),html=baseHistoryView(state,data);if(!tab?.page)return html;
+  const shown=privateHistoryState(state),tab=shown.tabs.find(t=>t.id===state.current);for(const entry of shown.tabs)if(entry.page)entry.page={...entry.page,fullAnalysis:entry.analysis};const html=baseHistoryView(shown,data);if(!tab?.page)return html;
  const filtered=Object.entries(tab.filter).some(([key,value])=>key!=='excludePve'&&key!=='advanced'&&!!value)||!!tab.filter.advanced?.rules.length;
- const result=html.replace('<div class="history-filters">',`<details class="history-filter-panel" data-disclosure-key="history-filter-panel"><summary>筛选战绩${filtered?' · 已设置条件':''}</summary><div class="history-filters">`).replace('<div class="history-pagination">',advancedHistoryFilters(tab)+'</details><div class="history-pagination">');
+ const tools=matchHistoryToolsView(tab,{streamer:state.streamer,note:ongoing.state.notes[tab.page.player.puuid]||'',data,masteryQuery:tab.masteryQuery||''}),analysis=ongoingGameAnalysisView(tab.analysis,data,{streamer:state.streamer}),filterTab=state.streamer?privateHistoryFilterTab(tab):tab;
+ const filters=state.streamer?`<fieldset disabled style="border:0;padding:0;min-width:0"><small>隐私展示期间暂停编辑含身份的筛选条件</small>${advancedHistoryFilters(filterTab,data)}</fieldset>`:advancedHistoryFilters(filterTab,data);
+ const result=html.replace('<div class="history-filters">',tools+historyNavigationView(tab,state)+`<details class="history-filter-panel" data-disclosure-key="history-filter-panel"><summary>筛选战绩${filtered?' · 已设置条件':''}</summary><div class="history-filters">`).replace('<div class="history-pagination">',filters+'</details><details class="history-full-analysis" data-disclosure-key="history-full-analysis"><summary>完整战绩分析</summary>'+analysis+'</details><div class="history-pagination">');
  return window.innerWidth<=1050?result.replace('<aside class="history-summary">','<details class="history-compact-summary" data-disclosure-key="history-compact-summary"><summary>近期表现、常用英雄与共同对局</summary><aside class="history-summary">').replace('</aside>','</aside></details>'):result;
 }
 window.matchMedia('(max-width: 1050px)').addEventListener('change',()=>{if(route==='history'&&data)render();});
@@ -141,8 +151,31 @@ const previewAPI={
  importState:async()=>{throw Error('请在桌面版中导入备份');},
 };
 const api=window.buddy||previewAPI;
-const history=createHistoryController({request:(operation,payload)=>api.matchHistory?api.matchHistory(operation,payload):Promise.reject(Error('请在桌面版连接客户端后查询战绩')),onChange:()=>{if(route==='history'&&data){render();if(history.state.searchResults.length)overlay.innerHTML=matchHistorySearchView(history.state);if(history.state.error)toast(history.state.error,true);}}});
-async function historyAction(action,el){
+const historyRequest=(operation,payload)=>api.matchHistory?api.matchHistory(operation,payload):Promise.reject(Error('请在桌面版连接客户端后查询战绩'));
+const history=createHistoryController({request:historyRequest,analyze:analyzeAkariHistory,onChange:()=>{if(route==='history'&&data){render();if(history.state.searchResults.length)overlay.innerHTML=matchHistorySearchView(privateHistoryState(history.state));if(history.state.error)toast(history.state.streamer?'查询失败，请检查连接':history.state.error,true);}}});
+const ongoing=createOngoingGameController({request:historyRequest,analyze:analyzeAkariHistory,teamAnalyze:analyzeAkariTeam,infer:inferHistoricalGroups,onChange:()=>{if(route==='ongoing'&&data)render();}});
+let ongoingObservedPhase='Offline';
+function acceptOngoingClient(value){
+ ongoing.observeClient(value);
+ const phase=value?.phase||'Offline',starting=['ChampSelect','GameStart','InProgress'].includes(phase)&&!['ChampSelect','GameStart','InProgress','Reconnect'].includes(ongoingObservedPhase);ongoingObservedPhase=phase;
+ if(!windowLayout.docked&&ongoing.state.settings.autoRoute&&ongoing.state.settings.enabled&&starting){route='ongoing';closeOverlay();render();ongoing.start();}
+}
+async function ongoingAction(action,el){
+ const key=el.dataset.player,member=ongoing.state.roster?.players.find(p=>p.key===key),entry=ongoing.state.players[key];
+ if(action==='ongoing-refresh')await ongoing.refresh({force:true});
+ else if(action==='ongoing-player-refresh')await ongoing.reloadPlayer(key);
+ else if(action==='ongoing-exit-draft')await ongoing.exitDraft();
+ else if(action==='ongoing-clear'){ongoing.stop();ongoing.clear();ongoing.start();await ongoing.refresh();}
+ else if(action==='ongoing-history'&&member?.puuid){history.state.streamer=ongoing.state.settings.streamer;ongoing.stop();route='history';render();await history.open({puuid:member.puuid,server:ongoing.state.roster?.server||'',source:ongoing.state.settings.source});if(el.dataset.champion||el.dataset.position)await history.collect({champion:Number(el.dataset.champion)||null,position:el.dataset.position||'',expectedCount:ongoing.state.settings.count,useFilters:true,scanFromStart:true});}
+ else if(action==='ongoing-note'&&member?.puuid){overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal"><header class="modal-header"><h2>本次运行备注</h2>${button('close','','close','quiet icon-only')}</header><div class="panel-body"><label>仅保存在本机当前运行内存<input id="ongoing-note-input" maxlength="200" value="${e(ongoing.state.settings.streamer?'':ongoing.state.notes[member.puuid]||'')}"></label>${button('ongoing-note-save','保存','','',`data-player="${e(key)}"`)}</div></section></div>`;}
+ else if(action==='ongoing-note-save'){ongoing.note(key,document.getElementById('ongoing-note-input')?.value);closeOverlay();}
+ else if(action==='ongoing-preview'&&entry?.page){
+  const game=entry.page.games.find(g=>g.id===Number(el.dataset.id));if(!game)return;history.state.streamer=ongoing.state.settings.streamer;route='history';ongoing.stop();render();
+  const tab=await history.open({puuid:member.puuid,server:entry.page.server||'',source:entry.page.source,handle:entry.page.handle,start:entry.page.start,count:entry.page.count});
+  if(!tab.page)return;if(!tab.page.games.some(g=>g.id===game.id))tab.page.games.unshift(game);await history.detail(game.id,'summary');document.querySelector(`[data-history-match="${game.id}"]`)?.scrollIntoView({block:'start'});
+ }
+}
+async function historyAction(action,el,background=false){
  const tab=history.current(),id=Number(el.dataset.id);
  if(action==='history-self')await history.open({source:history.state.source,server:''});
  else if(action==='history-tab')history.select(id);
@@ -150,15 +183,29 @@ async function historyAction(action,el){
  else if(action==='history-refresh'&&tab)await history.load(tab,tab.page?{}:{handle:undefined});
  else if(action==='history-next'&&tab?.page)await history.load(tab,{start:tab.page.start+tab.page.count});
  else if(action==='history-prev'&&tab?.page)await history.load(tab,{start:Math.max(0,tab.page.start-tab.page.count)});
+ else if(action==='history-first'&&tab)await history.load(tab,{start:0});
+ else if(action==='history-page-go'&&tab?.page){const value=Number(document.querySelector('[data-history-page="number"]')?.value);if(!Number.isInteger(value)||value<1||value>Math.ceil(10000/tab.page.count))throw Error('请输入范围内的页数');await history.load(tab,{start:(value-1)*tab.page.count});}
  else if(action==='history-detail')await history.detail(id,el.dataset.section);
  else if(action==='history-collect')await history.collect();
+ else if(action==='history-collect-active')await history.collect({useFilters:true,scanFromStart:true,expectedCount:500});
+ else if(action==='history-search-cancel')history.cancelSearch();
+ else if(action==='history-collect-filtered'){const value=name=>document.querySelector(`[data-history-tool="${name}"]`)?.value;await history.collect({champion:Number(value('collect-champion'))||null,position:String(value('collect-position')||'').toUpperCase(),expectedCount:Number(value('collect-count'))||50,useFilters:true,scanFromStart:true});}
+ else if(action==='history-analysis-details')await history.loadAnalysisDetails();
+ else if(action==='history-challenges')await history.challenges();
+ else if(action==='history-copy-id'&&tab?.page)await api.copy(tab.page.player.name);
+ else if(action==='history-note-save'&&tab?.page){const notes=ongoing.state.notes;notes[tab.page.player.puuid]=String(document.querySelector('[data-history-tool="note"]')?.value||'').replace(/[\u0000-\u001f\u007f]/g,'').slice(0,200);for(const key of Object.keys(notes).slice(0,-300))delete notes[key];render();}
+ else if(action==='history-simulate'&&tab?.page){const game=tab.page.games.find(g=>g.id===id);if(game){route='ongoing';closeOverlay();await ongoing.setDraft({...game,server:tab.page.server});render();}}
  else if(action==='history-stop')history.stop();
  else if(action==='history-replay')await history.replay(id,el.dataset.replay);
  else if(action==='history-champion')history.filter('champion',id);
- else if(action==='history-filter-clear'&&tab){tab.filter={excludePve:true};render();}
+ else if(action==='history-filter-clear'&&tab){tab.filter={};history.filter('excludePve',true);}
  else if(action==='history-rule-add'&&tab){const advanced=tab.filter.advanced||{mode:'all',rules:[]};if(advanced.rules.length<20)history.filter('advanced',{...advanced,rules:[...advanced.rules,{scope:'self',field:'kills',measure:'value',operator:'>=',value:'0'}]});}
  else if(action==='history-rule-remove'&&tab){const advanced=tab.filter.advanced;history.filter('advanced',{...advanced,rules:advanced.rules.filter((_,i)=>i!==Number(el.dataset.index))});}
- else if(action==='history-player'){closeOverlay();await history.open({puuid:el.dataset.puuid,server:el.dataset.server||tab?.page?.server||'',source:history.state.source});}
+ else if(action==='history-filter-tree'&&tab){const value=document.querySelector('[data-history-tool="filter-tree"]')?.value||'',tree=parseHistoryFilterTree(value);history.filter('advanced',{mode:'all',rules:[],...tab.filter.advanced,tree});}
+ else if(['history-tree-add','history-tree-remove','history-tree-kind'].includes(action)&&tab){const advanced=tab.filter.advanced||{mode:'all',rules:[]},tree=updateHistoryFilterTree(advanced.tree,{action:action.slice('history-tree-'.length),path:el.dataset.path||'',kind:el.dataset.kind});history.filter('advanced',{...advanced,tree});}
+ else if(action==='history-tree-preset'&&tab){const operation=el.dataset.presetAction,name=operation==='save'?document.querySelector('[data-history-tool="filter-preset-name"]')?.value:el.dataset.name;if(operation==='save')tab.filterPresets=saveHistoryFilterPreset(tab.filterPresets,name,tab.filter);else if(operation==='remove')tab.filterPresets=removeHistoryFilterPreset(tab.filterPresets,name);else if(operation==='load'){tab.filter=loadHistoryFilterPreset(tab.filterPresets,name);history.filter('excludePve',tab.filter.excludePve!==false);}render();}
+ else if(action==='history-relative-time'&&tab){const range=historyRelativeTimeRange(el.dataset.value,Date.now());tab.filter={...tab.filter,...range};history.filter('excludePve',tab.filter.excludePve!==false);}
+ else if(action==='history-player'){closeOverlay();await history.open({puuid:el.dataset.puuid,server:el.dataset.server||tab?.page?.server||'',source:history.state.source,background});}
 }
 let stateRecovery=null;
 const initialSlots=()=>createSlots().map(slot=>({...slot,party:slot.role==='top'}));
@@ -355,7 +402,7 @@ const champ=id=>data.champions.find(c=>c.id===id);
 const roleName=id=>ROLES.find(r=>r.id===id)?.name||id;
 const assignedPlayerRole=()=>CLIENT_POSITION_ROLES[String(client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
 const rarityName={kSilver:'白银',kGold:'黄金',kPrismatic:'棱彩'};
-const nav=[['draft','开黑推荐','team'],['room','开黑房间','link'],['history','战绩查询','ranking'],['builds','符文与出装','sword'],['reference','英雄图鉴','book'],['rankings','各路排行','ranking'],['patches','版本改动','refresh'],['hex','海克斯手册','hex'],['favorites','我的收藏','star'],['settings','数据与连接','settings']];
+const nav=[['draft','开黑推荐','team'],['room','开黑房间','link'],['history','战绩查询','ranking'],['ongoing','实时对局','sword'],['builds','符文与出装','sword'],['reference','英雄图鉴','book'],['rankings','各路排行','ranking'],['patches','版本改动','refresh'],['hex','海克斯手册','hex'],['favorites','我的收藏','star'],['settings','数据与连接','settings']];
 function toast(message,error=false){clearTimeout(toastTimer);const el=document.getElementById('toast');el.textContent=message;el.className=`show ${error?'error':''}`;toastTimer=setTimeout(()=>el.className='',error?7000:3800);}
 function restoreRejectedSave(before,failed){
  saved.preparations=preparations.snapshot();
@@ -572,6 +619,7 @@ function markNewRoomProposals(previous){
  for(const row of app.querySelectorAll('.room-ballot-row'))if(!previous.has(row.dataset.proposalKey))row.dataset.arrival='true';
 }
 function render(){
+ const formFocus=app.contains(document.activeElement)&&['history','ongoing'].includes(route)&&document.activeElement.matches('input,textarea,select')?{tag:document.activeElement.tagName,id:document.activeElement.id,data:{...document.activeElement.dataset},value:document.activeElement.value,start:document.activeElement.selectionStart,end:document.activeElement.selectionEnd}:null;
  const rankingFocus=['ranking-search','patch-search','reference-search'].includes(document.activeElement?.id)?{id:document.activeElement.id,start:document.activeElement.selectionStart,end:document.activeElement.selectionEnd}:null;
  const disclosureFocus={scope:renderedDisclosureScope,context:renderedSelectContext,key:disclosureState.captureFocus(app)};
  if(dragPick){pendingDragRender=true;return;}
@@ -611,15 +659,16 @@ function render(){
   renderedSelectContext=appSelectionContext();reflectRunePending();
   if(focus&&old?.dataset.focusScope===focusScope){const target=focus.id?document.getElementById(focus.id):[...app.querySelectorAll('button,input,select')].find(control=>control.tagName===focus.tag&&Object.keys(focus.data).length&&Object.entries(focus.data).every(([key,value])=>control.dataset[key]===value));target?.focus({preventScroll:true});}return;
  }
-  app.innerHTML=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}">${stateRecoveryView(stateRecovery)}${route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}):route==='rankings'?rankingsView(data,rankingOptions()):route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`;
+  app.innerHTML=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}):route==='rankings'?rankingsView(data,rankingOptions()):route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`;
  renderedDisclosureScope='main:'+route+':'+(route==='draft'?activeCreativePlan?.id||'':route==='reference'?[referenceHero,referenceRole,referenceTab].join(':'):'');disclosureState.restore(renderedDisclosureScope,app);markNewRoomProposals(previousProposals);
  if(disclosureFocus.scope===renderedDisclosureScope&&disclosureFocus.context===selectContext)disclosureState.restoreFocus(disclosureFocus.key,app);
  restoreCandidateScroll(candidateScroll,selectContext);renderedDraftResults=route==='draft'?results:null;
  reflectRunePending();
- if(rankingFocus){const input=document.getElementById(rankingFocus.id);input?.focus({preventScroll:true});try{input?.setSelectionRange(rankingFocus.start,rankingFocus.end);}catch{}}
+  if(rankingFocus){const input=document.getElementById(rankingFocus.id);input?.focus({preventScroll:true});try{input?.setSelectionRange(rankingFocus.start,rankingFocus.end);}catch{}}
+  if(formFocus){const target=formFocus.id?document.getElementById(formFocus.id):[...app.querySelectorAll('input,textarea,select')].find(node=>node.tagName===formFocus.tag&&Object.keys(formFocus.data).length&&Object.entries(formFocus.data).every(([key,value])=>node.dataset[key]===value));if(target&&!target.disabled){if(target.tagName==='TEXTAREA'||['text','search','number','date'].includes(target.type))target.value=formFocus.value;target.focus({preventScroll:true});try{target.setSelectionRange(formFocus.start,formFocus.end);}catch{}}}
 }
 function mainNavigation(){
- const primary=new Set(['draft','room','history','favorites']);
+ const primary=new Set(['draft','room','history','ongoing','favorites']);
  const item=([id,name,ico])=>`<button class="nav-item ${route===id?'active':''}" data-action="navigate" data-route="${id}" ${route===id?'aria-current="page"':''}>${icon(ico)}<span>${name}</span>${id==='favorites'&&saved.favorites.length?`<span class="badge">${saved.favorites.length}</span>`:''}</button>`;
  const tools=nav.filter(([id])=>id!=='settings'&&!primary.has(id));
  return `<nav aria-label="主导航">${nav.filter(([id])=>primary.has(id)).map(item).join('')}<details class="navigation-tools" data-disclosure-key="navigation-tools" ${tools.some(([id])=>id===route)?'open':''}><summary>${icon('book')}<span>更多工具</span>${icon('chevron')}</summary><div>${tools.map(item).join('')}</div></details></nav>`;
@@ -1209,7 +1258,7 @@ async function performSync(manual=true,fresh=false){
  const previousClient=client,previousOwn=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),previousOwnIntent=previousOwn?.championId||previousOwn?.championPickIntent||0;
  lastSyncStarted=Date.now();syncing=true;const before=lastRenderedClient||clientRenderIdentity(client),previousMatchups=matchupContext(),previousPhase=client.phase,previousRecommendation=recommendationKey(recommendationInput());let changed=false,newGame=false;if(manual)render();
  try{
-  await saveChain;const incoming=sharedClient;sharedClient=null;client=!manual&&!fresh&&incoming?incoming:await api.client(manual||fresh);history.observeClient(client);drainExternalState();
+   await saveChain;const incoming=sharedClient;sharedClient=null;client=!manual&&!fresh&&incoming?incoming:await api.client(manual||fresh);history.observeClient(client);ongoing.observeClient(client);drainExternalState();
   if(positionClaim&&!positionClaim.pending&&!activeRoleClaim(positionClaim,client)){
    if(localPickLocked(client.session)&&preparationGameId(client)===positionClaim.gameId){draftComparing=false;companionTab='plan';}
    positionClaim=null;
@@ -1394,11 +1443,15 @@ document.addEventListener('change',event=>{
  event.preventDefault();event.stopImmediatePropagation();toast('队友配置仅供查看，请回到本人的配置',true);render();if(buildView)renderBuild();
 },true);
 
+function historyChartAction(event){const el=event.target.closest?.('[data-history-chart][data-value]');if(!el)return false;const detail=history.current()?.details[el.dataset.historyChart];if(detail&&['chartFrame','chartPlayer','rawStatsMetric'].includes(el.dataset.chartField)){detail[el.dataset.chartField]=el.dataset.value;render();return true;}return false;}
+document.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)&&event.target.matches?.('[data-history-chart][data-value]')){event.preventDefault();historyChartAction(event);}});
 document.addEventListener('click',async event=>{
+ if(historyChartAction(event))return;
  const el=event.target.closest('[data-action]');if(!el){if(event.target.dataset.backdrop)closeOverlay();return;}
  if(Date.now()-draggedAt<250)return;
  const action=el.dataset.action;try{
- if(action.startsWith('history-')){await historyAction(action,el);return;}
+ if(action.startsWith('history-')){await historyAction(action,el,event.ctrlKey||event.metaKey);return;}
+ if(action.startsWith('ongoing-')){await ongoingAction(action,el);return;}
  const configuration=configurationEventSelection(el);
  if(configuration?.readOnly&&!readOnlyConfigurationAction(action))assertConfigurationEditable(configuration);
  if(action==='window-info'||action==='window-info-refresh'){await showWindowInfo(action==='window-info-refresh');return;}
@@ -1591,7 +1644,7 @@ document.addEventListener('click',async event=>{
  }
  if(action==='room-adopt-configuration'){if(!roomConfigurationView)throw Error('共享配置已变化，请重新打开');const localStrategy=captureRoomStrategy(slots,data,activeCreativePlan,roomConfigurationView.config.mode);if((localStrategy?.id||'')!==(roomConfigurationView.localStrategy?.id||''))throw Error('本机组合已变化，请重新打开共享配置再采用');const selection=roomPreparation(roomConfigurationView.config,data,roomConfigurationView.strategy,{localStrategy});showBuild(selection.id,selection.role,selection.mode,{...selection,readOnly:!taskOwnRole()||taskOwnRole()!==selection.role});roomConfigurationView=null;toast('已载入本机配置参考');return;}
  if(action.startsWith('catalog-')&&!boot.desktop)throw Error('组合库管理请在桌面版使用');
- if(action==='navigate'){route=el.dataset.route;closeOverlay();render();window.scrollTo(0,0);}
+ if(action==='navigate'){if(route==='ongoing'&&el.dataset.route!=='ongoing')ongoing.stop();route=el.dataset.route;closeOverlay();render();if(route==='ongoing')ongoing.start();window.scrollTo(0,0);}
  else if(action==='catalog-import'||action==='catalog-check'){if(catalogBusy)return;catalogBusy=true;const request=++catalogRequest;try{const preview=action==='catalog-import'?await api.catalogPreview():await api.catalogCheck();if(preview&&request===catalogRequest){closeOverlay();catalogPreview=preview;overlay.innerHTML=catalogPreviewDialog(preview);}}finally{catalogBusy=false;}}
  else if(action==='catalog-source'){catalogRequest++;const result=await api.catalogSource(document.querySelector('#catalog-url').value.trim());useCatalogResult(result);toast('组合库地址已保存');}
  else if(action==='catalog-apply'){if(catalogBusy)return;catalogBusy=true;const request=++catalogRequest;try{const result=await api.catalogApply(catalogPreview?.token);useCatalogResult(result);if(request===catalogRequest)closeOverlay();toast('组合库已更新，推荐与配置已同步');}finally{catalogBusy=false;}}
@@ -1746,7 +1799,17 @@ else if(action==='app-update-mirror-clear'){saved.preferences.updateMirror='';aw
 });
 document.addEventListener('submit',event=>{if(event.target.id==='history-search'){event.preventDefault();history.state.query=document.getElementById('history-query').value;history.search().catch(error=>toast(error.message,true));return;}if(event.target.id==='catalog-form'){event.preventDefault();overlay.querySelector('[data-action=catalog-save]')?.click();}});
 document.addEventListener('input',event=>{if(event.target.id==='history-query')history.state.query=event.target.value;});
-document.addEventListener('change',event=>{const field=event.target.dataset.historyField,tab=history.current();if(event.target.dataset.historyChart&&tab){const detail=tab.details[event.target.dataset.historyChart];if(detail){detail[event.target.dataset.chartField]=event.target.value;render();}return;}if(event.target.hasAttribute('data-history-rule')&&tab){const advanced=tab.filter.advanced,index=Number(event.target.dataset.historyRule);history.filter('advanced',{...advanced,rules:advanced.rules.map((r,i)=>i===index?{...r,[event.target.dataset.ruleField]:event.target.value}:r)});return;}if(!field)return;if(field==='source'||field==='server'){history.state[field]=event.target.value;return;}if(field==='advanced-mode'&&tab){history.filter('advanced',{...tab.filter.advanced,mode:event.target.value});return;}if(field.startsWith('filter-'))history.filter(field.slice(7),event.target.type==='checkbox'?event.target.checked:event.target.value);});
+document.addEventListener('change',event=>{const el=event.target,tab=history.current();if(tab&&el.dataset.historyTool==='mastery-query'&&!history.state.streamer){tab.masteryQuery=String(el.value).slice(0,96);render();}});
+document.addEventListener('input',event=>{const el=event.target,tab=history.current(),detail=tab?.details[el.dataset.historyChart];if(!detail||el.dataset.chartField!=='rawStatsQuery')return;detail.rawStatsQuery=String(el.value).slice(0,96);render();});
+document.addEventListener('change',event=>{const tab=history.current(),field=event.target.dataset.historyPage;if(!tab?.page||!['count','queue'].includes(field))return;const change=field==='count'?{count:Number(event.target.value),start:0}:{queue:event.target.value?Number(event.target.value):'',start:0};if(field==='queue')history.filter('queue',change.queue);history.load(tab,change).catch(error=>toast(error.message,true));});
+document.addEventListener('change',event=>{const el=event.target,tab=history.current();if(!tab||!el.hasAttribute('data-history-tree-path'))return;try{const advanced=tab.filter.advanced||{mode:'all',rules:[]},tree=updateHistoryFilterTree(advanced.tree,{action:'set',path:el.dataset.historyTreePath,field:el.dataset.historyTreeField,value:el.value});history.filter('advanced',{...advanced,tree});}catch(error){toast(error.message,true);render();}});
+document.addEventListener('change',event=>{
+ const el=event.target;if(el.dataset.historyTool==='streamer'){history.state.streamer=el.checked;ongoing.configure({streamer:el.checked}).then(()=>{saved.preferences.ongoing=ongoing.state.settings;return persist();}).catch(error=>toast(error.message,true));render();return;}
+ const field=el.dataset.ongoingField,tag=el.dataset.ongoingTag;if(!field&&!tag)return;
+ const value=tag?{tags:el.checked?[...ongoing.state.settings.tags,tag]:ongoing.state.settings.tags.filter(v=>v!==tag)}:{[field]:el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value};
+ ongoing.configure(value).then(()=>{history.state.streamer=ongoing.state.settings.streamer;if(route==='ongoing'&&ongoing.state.settings.enabled)ongoing.start();saved.preferences.ongoing=ongoing.state.settings;return persist();}).catch(error=>toast(error.message,true));
+});
+document.addEventListener('change',event=>{const field=event.target.dataset.historyField,tab=history.current();if(event.target.dataset.historyChart&&tab){const detail=tab.details[event.target.dataset.historyChart];if(detail){detail[event.target.dataset.chartField]=event.target.multiple?[...event.target.selectedOptions].map(option=>option.value):event.target.value;render();}return;}if(event.target.hasAttribute('data-history-rule')&&tab){const advanced=tab.filter.advanced,index=Number(event.target.dataset.historyRule);history.filter('advanced',{...advanced,rules:advanced.rules.map((r,i)=>i===index?{...r,[event.target.dataset.ruleField]:event.target.value}:r)});return;}if(!field)return;if(field==='source'||field==='server'){history.state[field]=event.target.value;return;}if(field==='advanced-mode'&&tab){history.filter('advanced',{...tab.filter.advanced,mode:event.target.value});return;}if(field.startsWith('filter-'))history.filter(field.slice(7),event.target.type==='checkbox'?event.target.checked:event.target.value);});
 document.addEventListener('input',event=>{const el=event.target;if(el.id==='combo-search'&&comboView){comboView.query=el.value;document.getElementById('combo-list').innerHTML=combinationRows(data,comboView,slots);}if(el.id==='picker-search'){picker.query=el.value;document.getElementById('picker-grid').innerHTML=pickerTiles();}if(el.id==='library-search'){libraryQuery=el.value;document.getElementById('library-grid').innerHTML=libraryTiles();}if(el.id==='hex-search'){hexQuery=el.value;document.getElementById('augment-grid').innerHTML=augmentTiles();}if(el.id==='room-invite')roomInvite=el.value;if(el.id==='room-pin')roomPin=el.value;if(el.id==='room-relay-room')roomRelayRoom=el.value;if(el.id==='room-relay-url')roomRelayUrl=el.value;});
 document.addEventListener('change',event=>{const el=event.target;if(el.id==='flash-slot'){saved.preferences.flashSlot=el.value;persist();render();if(buildView)renderBuild();return;}if(el.id==='room-auto'){saved.preferences.roomAuto=el.checked;persist();render();return;}if(el.hasAttribute('data-matchup-target')){try{changeMatchupTarget(el);}catch(error){toast(error.message,true);render();if(buildView)renderBuild();}return;}if(el.dataset.buildSourceField){try{const source=requireBuildSource({...normalizeBuildSource(data.buildSource),[el.dataset.buildSourceField]:el.value});saved.preferences.buildSource=source;selectBuildSource(data,source);invalidate();if(buildView)renderBuild();}catch(error){toast(error.message,true);}return;}if(el.dataset.presentationModule){api.presentation({field:'toggleModule',value:el.dataset.presentationModule}).then(value=>{saved.preferences.presentation=value;render();updatePresentationDialog(overlay,value);}).catch(error=>toast(error.message,true));return;}if(el.id==='companion-width'){saved.preferences.companionWidth=Number(el.value);persist().then(()=>api.windowLayoutControl('follow')).then(acceptWindowLayout).catch(error=>toast(error.message,true));return;}if(el.id==='party-ids'){saved.preferences.partyIds=normalizePartyIds(el.value);persist().then(()=>sync(false,{fresh:true}));return;}if(el.id==='configuration-role'){try{changeConfigurationRole(el);}catch(error){toast(error.message,true);if(overlay.contains(el))renderBuild();else render();}return;}if(el.id==='solo-role'||el.id==='task-own-role'){if(el.id==='solo-role'&&client.connected&&pregamePhase(client.phase)){stagePregameIntent({role:el.value}).catch(error=>{toast(error.message,true);render();});return;}try{setCompanionRole(el.value);if(el.id==='solo-role'&&client.connected&&client.phase==='ChampSelect'&&!localPickLocked(client.session))claimPosition(el.value).catch(error=>toast(error.message,true));if(el.id==='task-own-role')renderTaskMembers();}catch(error){toast(error.message,true);render();}return;}if(el.dataset.buildSummoner){try{editBuildSummoners(el,'summoner-'+el.dataset.buildSummoner,el.value);}catch(error){toast(error.message,true);renderBuild();}return;}if(el.dataset.companionField){try{editCompanionPlan(el,el.dataset.companionField,el.value);}catch(error){toast(error.message,true);render();}return;}if(el.id==='companion-scope'){scope=el.value;invalidate();}if(el.id==='companion-style'){style=el.value;invalidate();}if(el.id==='build-skill'){buildView.skillId=el.value||undefined;renderBuild();}if(el.id==='guide-after-game'){saved.preferences.guideAfterGame=el.value;persist();}if(el.id==='update-mirror'){try{saved.preferences.updateMirror=normalizeMirrorBase(el.value);el.value=saved.preferences.updateMirror;persist();}catch(error){toast(error.message,true);}render();}if(['play-difficulty','play-tempo','play-unusual','play-meleeBottom'].includes(el.id)){saved.preferences.play[el.id.slice(5)]=el.type==='checkbox'?el.checked:el.value;invalidate();}if(el.dataset.rolePoolMode){saved.preferences.rolePools[el.dataset.rolePoolMode].mode=el.value;invalidate();}if(el.matches('[data-catalog-member],#catalog-form select[name^="role-"]')){const i=el.dataset.catalogMember??el.name.split('-')[1],form=el.closest('form'),id=form.querySelector('[name="hero-'+i+'"]').value,role=form.querySelector('[name="role-'+i+'"]').value;form.querySelector('[name="loadout-'+i+'"]').innerHTML=editorLoadouts(data,id,role);}if(comboView&&['combo-style','combo-fit','combo-source','combo-configured','combo-tempo'].includes(event.target.id)){if(event.target.id==='combo-tempo')comboView.tempo=event.target.value;else if(event.target.id==='combo-style')comboView.style=event.target.value;else if(event.target.id==='combo-source')comboView.source=event.target.value;else if(event.target.id==='combo-configured')comboView.configured=event.target.checked;else comboView.fit=event.target.checked;document.getElementById('combo-list').innerHTML=combinationRows(data,comboView,slots);}if(event.target.id==='pool-mode'){saved.preferences.poolMode=event.target.value;invalidate();}if(event.target.id==='hex-category'){hexCategory=event.target.value;document.getElementById('augment-grid').innerHTML=augmentTiles();}if(event.target.id==='build-role'){if(scope==='solo'&&currentPlayerSelection(client.session,data.champions,slots)?.id===buildView.id){soloRole=event.target.value;persist();}showBuild(buildView.id,event.target.value,buildView.mode,{conditions:[...buildView.conditions],coreIndex:buildView.coreIndex});}if(event.target.id==='hex-rarity'){hexRarity=event.target.value;document.getElementById('augment-grid').innerHTML=augmentTiles();}if(el.id==='room-nick'){const clean=sanitizeNick(el.value);saved.preferences.roomNick=clean||'队友';el.value=saved.preferences.roomNick;persist();}if(el.id==='room-relay-url'){roomRelayUrl=el.value;const clean=normalizeRelayUrl(el.value);if(clean){saved.preferences.relayUrl=clean;el.value=clean;persist();}}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(activeOverlaySelect?.isConnected){deferOverlaySelect();return;}if(!activeAppSelect){if(!overlay.firstElementChild&&closeRecommendationMenus({restoreFocus:true}))event.preventDefault();else closeOverlay();}}if(event.key==='Tab'&&overlay.firstElementChild){const focusable=[...overlay.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]')].filter(el=>el.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(!overlay.contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first)?.focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
@@ -1786,6 +1849,7 @@ document.addEventListener('input',event=>{
 document.addEventListener('error',event=>{const img=event.target;if(img.tagName!=='IMG')return;if(img.dataset.fallback){const url=img.dataset.fallback;delete img.dataset.fallback;img.src=url;}else{img.style.visibility='hidden';}},true);
 window.addEventListener('unhandledrejection',event=>{toast(event.reason?.message||'操作失败，请重试',true);event.preventDefault();});
 try{boot=await api.bootstrap();data=boot.data;saved=boot.state;bindPlayerBuildPreferences();savedBase=structuredClone(saved);stateRevision=boot.stateRevision||0;stateRecovery=saved.recovery||null;data.catalog=configureCatalog(data.catalog||BUNDLED_CATALOG);data.catalogInfo||={...catalogIssues(data.catalog,data),version:data.catalog.version};configureAssets(data);
+ ongoing.configure(saved.preferences.ongoing||{}).then(()=>history.state.streamer=ongoing.state.settings.streamer).catch(()=>{});
   client=boot.client||client;history.observeClient(client);runeAppliedKeys.observe(client);windowLayout=boot.windowLayout||{docked:false};api.onWindowLayout?.(acceptWindowLayout);
  room=await api.roomStatus?.()||null;if(room?.mode==='host')roomAddresses=await api.roomAddresses?.()||[];
  applyRoomSnapshot(room);
@@ -1807,7 +1871,8 @@ try{boot=await api.bootstrap();data=boot.data;saved=boot.state;bindPlayerBuildPr
  if(saved.preferences.autoSync===false)client.message='自动同步已关闭，可手动连接客户端';
  api.onState?.(value=>{if(value?.state&&value.revision>Math.max(stateRevision,externalState?.revision||0)){externalState=value;drainExternalState();}});
  api.onData?.(acceptSharedData);api.onPreparation?.(event=>{acceptSharedPreparation(event).catch(error=>toast('另一窗口的配置结果尚未同步：'+error.message,true));});
- await restorePreparationSnapshot(boot.preparationSnapshot);render();api.onClient?.(value=>{
+  await restorePreparationSnapshot(boot.preparationSnapshot);render();api.onClient?.(value=>{
+   acceptOngoingClient(value);
   if(value?.connecting&&syncing){client={...client,...value};render();return;}
   if(value?.receivedAt&&value.receivedAt!==client.receivedAt)sharedClient=value;
   if(!syncing&&(saved.preferences.autoSync!==false||sharedClient))sync(false);

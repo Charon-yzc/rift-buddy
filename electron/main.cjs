@@ -103,7 +103,7 @@ async function boot(){
   const {createMatchHistoryService}=await import('../services/match-history.mjs');
   const matchHistory=createMatchHistoryService({installPath:()=>state.preferences?.installPath});
   guard('match-history',async(operation,payload)=>{
-   if(!['page','search','detail','timeline','profile','replay','clear'].includes(operation))throw Error('不支持此战绩操作');
+   if(!['page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))throw Error('不支持此战绩操作');
    return helper.active()?helper.request('matchHistory',{operation,payload}):matchHistory.execute(operation,payload);
   });
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));

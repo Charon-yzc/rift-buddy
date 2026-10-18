@@ -8,6 +8,7 @@ import {normalizeRelayUrl} from '../src/core/room-relay.mjs';
 import {normalizePresentation} from '../src/core/presentation.mjs';
 import {normalizeBuildSource} from '../src/core/build-source.mjs';
 import {DEFAULT_UPDATE_MIRROR,normalizeMirrorBase} from '../src/core/app-update.mjs';
+import {normalizeOngoingSettings} from '../src/core/ongoing-game.mjs';
 import {validatePreparations,validatePreparation,storedPreparation,PREPARATION_LIMIT} from '../src/core/preparation.mjs';
 import {validateTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {validateCreativePlan} from '../src/core/creative-plan.mjs';
@@ -65,7 +66,7 @@ export function validateState(value) {
  const normalized={schema:1,favorites:value.favorites.map(favorite),excluded:[...new Set(value.excluded)],preparations:validatePreparations(value.preparations),
   preferences:{...(savedWindowBounds(p.mainBounds)?{mainBounds:savedWindowBounds(p.mainBounds)}:{}),...(savedWindowBounds(p.companionBounds)?{companionBounds:savedWindowBounds(p.companionBounds)}:{}),buildSource:normalizeBuildSource(p.buildSource),presentation:normalizePresentation(p.presentation),style:styles.includes(p.style)?p.style:'fun',autoCheck:p.autoCheck!==false,appUpdateCheck:p.appUpdateCheck!==false,updateMirror:mirrorPref(p.updateMirror),autoSync:p.autoSync!==false,installPath:p.installPath??defaultState().preferences.installPath,launchPath:p.launchPath||'',
    clientCompanion:p.clientCompanion!==false,companionWidth:[400,440,480,520,600].includes(p.companionWidth)?p.companionWidth:440,clickPrepare:p.clickPrepare!==false,flashSlot:['d','f'].includes(p.flashSlot)?p.flashSlot:'current',compactTeam:p.compactTeam!==false,autoArrange:p.autoArrange!==false,autoParty:p.autoParty!==false,partyIds:normalizePartyIds(p.partyIds),guideAutoShow:p.guideAutoShow!==false,guideAfterGame:['hide','collapse','keep'].includes(p.guideAfterGame)?p.guideAfterGame:'hide',roomNick:sanitizeNick(p.roomNick)||'队友',relayUrl:normalizeRelayUrl(p.relayUrl)||'',roomAuto:p.roomAuto===undefined||p.roomAuto===true,
-   autoLive:p.autoLive!==false,pool:Array.isArray(p.pool)?[...new Set(p.pool.filter(hero))].slice(0,200):[],poolMode:['off','prefer','only'].includes(p.poolMode)?p.poolMode:'off',
+    autoLive:p.autoLive!==false,ongoing:normalizeOngoingSettings(p.ongoing),pool:Array.isArray(p.pool)?[...new Set(p.pool.filter(hero))].slice(0,200):[],poolMode:['off','prefer','only'].includes(p.poolMode)?p.poolMode:'off',
    play:{difficulty:p.play?.difficulty==='easy'?'easy':'any',tempo:['early','teamfight','protect','poke','growth'].includes(p.play?.tempo)?p.play.tempo:'any',unusual:p.play?.unusual!==false,meleeBottom:p.play?.meleeBottom!==false},
    rolePools:Object.fromEntries(roles.map(role=>[role,{heroes:Array.isArray(p.rolePools?.[role]?.heroes)?[...new Set(p.rolePools[role].heroes.filter(hero))].slice(0,180):[],mode:['prefer','only'].includes(p.rolePools?.[role]?.mode)?p.rolePools[role].mode:'off'}])),
    ...(Number.isFinite(Date.parse(p.lastCheck))?{lastCheck:p.lastCheck}:{}),...(Number.isFinite(Date.parse(p.lastAppUpdateCheck))?{lastAppUpdateCheck:p.lastAppUpdateCheck}:{}),...(typeof p.dismissedAppVersion==='string'&&/^v?\d+\.\d+\.\d+$/.test(p.dismissedAppVersion)?{dismissedAppVersion:p.dismissedAppVersion}:{})},
