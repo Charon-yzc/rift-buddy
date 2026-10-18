@@ -11,7 +11,7 @@ import {preparationProgressView} from '../src/preparation-progress-view.mjs';
 import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft} from '../src/core/draft-intents.mjs';
 import {reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,manualPlayerSlot,clearManualPlayerPosition,moveChampion,assignClientChampion,scopeSlots,effectiveDraftScope} from '../src/core/draft.mjs';
 import {currentPlayerSelection} from '../src/core/guide.mjs';
-import {recommendationKey,createPreparationStore,createRuneApplicationState,partyRoutePreparations,configurationKey as buildChoiceKey} from '../src/core/preparation.mjs';
+import {recommendationKey,createPreparationStore,createRuneApplicationState,partyRoutePreparations,configurationKey as buildChoiceKey,validatePreparation} from '../src/core/preparation.mjs';
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
@@ -77,7 +77,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
   lastTaskSelection:null,companionPreview:null,companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',lastCompanionLocked:'',showAllCandidates:false,recommendationError:'',renderedDraftResults:null,disclosureState:createDisclosureState(),renderedDisclosureScope:'',selectionUiReset:false,selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,clickedRoomPlan:null,roomRoleChoice:null,companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
   recommendationSessionSeed:'test-session',clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
-  structuredClone,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
+  structuredClone,validatePreparation,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
@@ -906,6 +906,16 @@ test('a hero click with a missing source hovers first, keeps fallback runes unwr
   assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].preselectOnly,true);assert.equal(runeWrites,0);assert.equal(c.clientPreparing,true);
   resolve();await preparing;assert.equal(calls.prepared.length,2);assert.equal(calls.prepared[1].preselectOnly,undefined);assert.equal(runeWrites,1);assert.deepEqual(calls.prepared[1].page.selectedPerkIds,reference.runePage.selectedPerkIds);assert.equal(c.clientPreparing,false);
  }finally{resolve();data.builds=oldBuilds;}
+});
+
+test('a source-missing click whose hover finishes across a new draft never fetches or writes its old configuration',async()=>{
+ const current=client(),incoming=structuredClone(current),{context:c,calls}=setup({current,incoming,slots:createSlots().map(slot=>({...slot,party:slot.role==='bottom'})),results:[]});
+ Object.assign(c,{lastAdoptedRoomShare:'',itemSetStatuses:new Map()});
+ c.api.refreshBuild=async()=>assert.fail('Old click must not refresh in a new draft');
+ c.refreshConfiguration=async()=>assert.fail('Old click must not refresh in a new draft');
+ c.api.prepareSelection=async value=>{calls.prepared.push(value);assert.equal(value.preselectOnly,true);incoming.session.gameId='987654321';incoming.game={...incoming.game,gameId:'987654321'};return {complete:true,steps:{hover:{status:'done'},runes:{status:'skipped'},spells:{status:'skipped'},items:{status:'skipped'}}};};
+ await assert.rejects(()=>c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'}),/选人或配置已变化/);
+ assert.equal(calls.prepared.length,1);assert.equal(c.clientPreparing,false);
 });
 
 async function prepareRetainedHover(docked){

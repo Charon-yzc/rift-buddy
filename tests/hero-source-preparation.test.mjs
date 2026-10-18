@@ -11,3 +11,8 @@ test('failed source or changes to game, hero, filter or personal choices keep th
 test('cached sources, explicit authored routes and unavailable refresh retain one immediate explicit preparation',async()=>{
  for(const fixture of [{reference:{}},{loadoutId:'authored'},{canRefresh:false}]){const calls=[];await prepareHeroWithSource({build:{mode:'rift',loadoutId:'default',...fixture},canRefresh:fixture.canRefresh!==false,apply:async only=>calls.push(only),refresh:()=>assert.fail('No fetch'),snapshot:()=>'',rebuild:()=>{}});assert.deepEqual(calls,[false]);}
 });
+test('a successful hover followed by a new operation identity cannot fetch or apply in the new draft',async()=>{
+ let context='old-game';const calls=[];
+ await assert.rejects(()=>prepareHeroWithSource({build:{mode:'rift',loadoutId:'default'},canRefresh:true,apply:async only=>{calls.push(only);context='new-game';return {steps:{hover:{status:'done'}}};},snapshot:()=>context,refresh:()=>assert.fail('Old click must not fetch in the new draft'),rebuild:()=>assert.fail('Old click must not rebuild')}),/选人或配置已变化/);
+ assert.deepEqual(calls,[true]);
+});

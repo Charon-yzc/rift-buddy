@@ -84,7 +84,7 @@ import {renderHexComparison,renderHexSourceReference} from './hex-view.mjs';
 import {preserveOverlay,foldConfigurationSections} from './overlay.mjs';
 import {createClientSync} from './core/async-tasks.mjs';
 import {currentPlayerSelection,phaseLabel} from './core/guide.mjs';
-import {createPreparationStore,createRuneApplicationState,recommendationKey,configurationPatch,configurationKey as buildChoiceKey,CONFIGURATION_FIELDS,preparationIdentity,recallPreparation,partyRoutePreparations} from './core/preparation.mjs';
+import {createPreparationStore,createRuneApplicationState,recommendationKey,configurationPatch,configurationKey as buildChoiceKey,CONFIGURATION_FIELDS,preparationIdentity,recallPreparation,partyRoutePreparations,validatePreparation} from './core/preparation.mjs';
 import {renderResultCard,coreRouteChoices,recommendationLoading} from './draft-result-view.mjs';
 import {escape as e,icon,portrait,rosterPortrait,asset,button,dateLabel,configureAssets,gameDescription,roleIcon} from './ui.mjs';
 import {rankingsView} from './rankings-view.mjs';
@@ -782,6 +782,7 @@ async function prepareHeroClick(context,expected=null){
    return await prepareHeroWithSource({build:clickedHeroPreparation.build,canRefresh:typeof api.refreshBuild==='function',
     apply:preselectOnly=>{clickedHeroPreparation={selection,build:getBuild(champ(selection.id),selection.role,data,selection)};const checked=expected?{...expected,planId:activeCreativePlan?.id||'',...(sourceReloaded?{fingerprint:clientPreparationPlan(data,clickedHeroPreparation)?.fingerprint}:{})}:null;return useClientPreparation({dataset:{preparationView:'clicked'}},true,checked,preselectOnly);},
     refresh:async()=>{clientPreparing=true;render();try{const reference=await refreshConfiguration(selection.id,selection.role,mode,true);sourceReloaded=!!reference;return reference;}finally{clientPreparing=false;render();}},
+    operationSnapshot:()=>{const context=runeWriteContext(client);return JSON.stringify([preparationGameId(client),context.phase,context.cellId,context.assignedPosition,client.game?.queueId,data.patch,data.buildSource,activeCreativePlan?.id||'',buildChoiceKey(validatePreparation(preparations.recall(selection)||selection))]);},
     snapshot:()=>JSON.stringify([preparationGameId(client),runeWriteContext(client),data.patch,data.buildSource,activeCreativePlan?.id||'',buildChoiceKey(preparations.recall(selection)||selection)]),
     rebuild:()=>getBuild(champ(selection.id),selection.role,data,selection)});
   }finally{clickedHeroPreparation=null;}
