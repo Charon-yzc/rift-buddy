@@ -8,7 +8,7 @@ export function mechanicCoverageView(data,members){
  const champions=[...new Set(members.map(member=>member.champion))].map(id=>data.champions.find(champion=>champion.id===id)).filter(Boolean);
  if(!champions.length)return '';
  const monitored=champions.filter(champion=>mechanicSourceInput(champion,data.patch)),dates=monitored.map(champion=>champion.mechanicSource.observedAt).sort();
- return `<details class="more-builds mechanic-source-coverage"><summary>机制资料 · 已监测 ${monitored.length} / ${champions.length}</summary><p class="bottom-note">${monitored.length?`${e(dateLabel(dates[0]))}起监测角色数据与完整技能字段的变化；变化后需复核。`:'角色源不完整，当前机制规则待复核。'}原技能摘要的复核记录保留；共享法术依赖及具体玩法仍需人工核对。</p></details>`;
+ return `<details class="more-builds mechanic-source-coverage"><summary>机制资料 · 源快照 ${monitored.length} / ${champions.length}</summary><p class="bottom-note">${monitored.length?`角色源采集于 ${e(dateLabel(dates[0]))}；与固定检测记录比较，变化后需复核。`:'角色源不完整，当前机制规则待复核。'}保留原技能摘要复核记录；共享法术与实际玩法仍需人工核对。</p></details>`;
 }
 
 export function pairRefreshTargets(slots,scope,soloRole){

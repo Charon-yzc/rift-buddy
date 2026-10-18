@@ -18,8 +18,8 @@ export const dataHash=bytes=>createHash('sha256').update(bytes).digest('hex');
 // A successful recheck is recorded separately. It must not create new copies
 // merely because a local fetch timestamp changed.
 export function contentEqual(left,right){
- const stable=value=>Array.isArray(value)?value.map(stable):value&&typeof value==='object'?
-  Object.fromEntries(Object.keys(value).sort().filter(key=>!['fetchedAt','checkedAt','contentCheckedAt'].includes(key)).map(key=>[key,stable(value[key])])):value;
+ const stable=(value,at=[])=>Array.isArray(value)?value.map((row,index)=>stable(row,[...at,index])):value&&typeof value==='object'?
+  Object.fromEntries(Object.keys(value).sort().filter(key=>!['fetchedAt','checkedAt','contentCheckedAt'].includes(key)&&!(key==='observedAt'&&at.at(-1)==='mechanicSource'&&Number.isInteger(at.at(-2))&&at.at(-3)==='champions'&&value.schema===1&&value.normalizer===1)).map(key=>[key,stable(value[key],[...at,key])])):value;
  return JSON.stringify(stable(left))===JSON.stringify(stable(right));
 }
 export function validateServerGame(game){

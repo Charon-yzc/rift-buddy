@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {loadServerSeed} from '../services/server-data-collector.mjs';
-import {stageServerData,loadServerData,validateServerData,pruneServerData} from '../services/server-data-store.mjs';
+import {stageServerData,loadServerData,validateServerData,pruneServerData,contentEqual} from '../services/server-data-store.mjs';
 import {dataDragonMechanicURL} from '../src/core/mechanic-source.mjs';
 const seed=await loadServerSeed(fileURLToPath(new URL('../data/',import.meta.url)));
 async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-server-data-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;}
@@ -18,6 +18,17 @@ test('immutable compressed candidates round-trip and unchanged checks do not dup
  for(const ref of Object.values(checked['hex-builds'].entries))ref.fetchedAt=new Date().toISOString();
  const same=await stageServerData(root,checked);assert.equal(same.changed,false);assert.equal(same.pointer.release,first.pointer.release);
  assert.equal((await fs.readdir(path.join(root,'releases'))).length,1);
+});
+test('source observation alone reuses a candidate, while actual skill or character changes replace it',async t=>{
+ const root=await temporary(t),first=await stageServerData(root,seed),checked=structuredClone(seed);
+ for(const hero of checked.game.champions)hero.mechanicSource.observedAt='2026-10-20T00:00:00Z';
+ assert(contentEqual(seed.game,checked.game));assert(contentEqual(seed,checked));
+ const unchanged=await stageServerData(root,checked);assert.equal(unchanged.changed,false);assert.equal(unchanged.pointer.release,first.pointer.release);
+ const range=structuredClone(checked);range.game.champions[0].mechanicSource.spells[0].range=[9999];assert.equal(contentEqual(checked,range),false);
+ const replaced=await stageServerData(root,range);assert.equal(replaced.changed,true);assert.notEqual(replaced.pointer.release,first.pointer.release);
+ const character=structuredClone(range);character.game.champions[0].mechanicSource.character.sha256='a'.repeat(64);assert.equal(contentEqual(range,character),false);assert.equal((await stageServerData(root,character)).changed,true);
+ const field=structuredClone(character);field.game.champions[0].mechanicSource.spells[0].observedAt=12;assert.equal(contentEqual(character,field),false,'A real source field sharing the envelope timestamp name remains content');
+ assert.deepEqual(await fs.readdir(path.join(root,'releases')),[(await loadServerData(root)).pointer.release]);
 });
 test('changed statistics replace the candidate and remove the previous snapshot',async t=>{
  const root=await temporary(t),first=await stageServerData(root,seed),next=structuredClone(seed);
