@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  checkDataFeed:()=>ipcRenderer.invoke('check-data-feed'),
  checkAppUpdate:(silent)=>ipcRenderer.invoke('app-update-check',silent===true),
  downloadAppUpdate:()=>ipcRenderer.invoke('app-update-download'),
+ pauseAppUpdate:()=>ipcRenderer.invoke('app-update-pause'),
  cancelAppUpdate:()=>ipcRenderer.invoke('app-update-cancel'),
  installAppUpdate:()=>ipcRenderer.invoke('app-update-install'),
  deleteAppUpdate:()=>ipcRenderer.invoke('app-update-delete'),

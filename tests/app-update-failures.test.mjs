@@ -31,9 +31,9 @@ test('cancelling a stalled DNS lookup releases the main update lock and removes 
   lookup:()=>{lookups++;started.resolve();return late.promise;},request:()=>{requests++;throw Error('Cancelled DNS must not create a request');}});
  const {handlers,context,snapshots}=await mainFixture(service);context.release=release;
  vm.runInContext('appUpdateStatus={phase:"available",release};',context);
- const download=handlers.get('app-update-download')(),cancelled=assert.rejects(download,/下载已取消/);
- await started.promise;assert.equal(handlers.get('app-update-cancel')(),true);await cancelled;
- assert.equal(snapshots.at(-1).phase,'error');assert.equal(lookups,1);assert.equal(requests,0);
+ const download=handlers.get('app-update-download')();
+ await started.promise;assert.equal(await handlers.get('app-update-cancel')(),true);await download;
+ assert.equal(snapshots.at(-1).phase,'available');assert.equal(lookups,1);assert.equal(requests,0);
  assert.deepEqual(await fs.readdir(dir),[]);assert.equal(await handlers.get('app-update-delete')(),true);
  late.resolve([{address:'1.1.1.1',family:4}]);await Promise.resolve();assert.equal(requests,0);
 });
@@ -198,7 +198,7 @@ test('a timed-out mirror leaves a fresh direct attempt that can finish successfu
 test('slow timestamp saving cannot overwrite newer download progress or ready state',async()=>{
  const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');let receive,releaseSave,enteredSave;
  const saved=new Promise(resolve=>{releaseSave=resolve;}),entered=new Promise(resolve=>{enteredSave=resolve;});
- const context={appUpdate:{phase:'idle'},saved:{preferences:{}},Date,route:'settings',render:()=>{},toast:()=>{},persist:()=>{enteredSave();return saved;},api:{checkAppUpdate:async()=>({phase:'available',release}),onAppUpdate:handler=>{receive=handler;},downloadAppUpdate:async()=>{receive({phase:'ready',release,record:{version:release.version,bytes:bin.length}});}}};
+ const context={document:{},patchAppUpdateProgress:()=>false,appUpdate:{phase:'idle'},saved:{preferences:{}},Date,route:'settings',render:()=>{},toast:()=>{},persist:()=>{enteredSave();return saved;},api:{checkAppUpdate:async()=>({phase:'available',release}),onAppUpdate:handler=>{receive=handler;},downloadAppUpdate:async()=>{receive({phase:'ready',release,record:{version:release.version,bytes:bin.length}});}}};
  vm.createContext(context);
  vm.runInContext(source.slice(source.indexOf('async function checkAppUpdate('),source.indexOf('async function updateData(')),context);
  const start=source.indexOf(' api.onAppUpdate?.(');

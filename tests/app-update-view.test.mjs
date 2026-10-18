@@ -2,6 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {appUpdatePanel} from '../src/app-update-view.mjs';
 const base={version:'0.44.0',preferences:{appUpdateCheck:true},update:{phase:'idle'}};
+test('download and paused states distinguish preserving progress from discarding it',()=>{
+ const release={version:'0.57.3',tag:'v0.57.3'},transfer={release,kind:'incremental',received:524288,total:2097152};
+ const downloading=appUpdatePanel({...base,update:{...transfer,phase:'downloading'}}),paused=appUpdatePanel({...base,update:{...transfer,phase:'paused'}});
+ assert.match(downloading,/data-action="app-update-pause"/);assert.match(downloading,/data-action="app-update-cancel"/);
+ assert.match(paused,/已暂停增量包/);assert.match(paused,/继续下载/);assert.match(paused,/data-action="app-update-cancel"/);assert.doesNotMatch(paused,/data-action="app-update-pause"/);
+ for(const phase of ['pausing','cancelling'])assert.match(appUpdatePanel({...base,update:{...transfer,phase}}),/data-action="app-update-cancel"[^>]*disabled/);
+});
 test('panel escapes untrusted text and shows the current version',()=>{
  const html=appUpdatePanel({...base,version:'0.44.0<script>',update:{phase:'error',error:'<b>boom</b>'}});
  assert.ok(html.includes('软件更新'));assert.ok(!html.includes('<script>'));assert.ok(html.includes('&lt;script&gt;'));assert.ok(html.includes('&lt;b&gt;boom&lt;/b&gt;'));

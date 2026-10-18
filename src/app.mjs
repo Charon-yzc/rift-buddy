@@ -46,7 +46,7 @@ import {resultAsText} from './result-text.mjs';
 import {captureCreativePlan,selectPartyRoute,creativePlanMatches,creativePlanCompatible,validateCreativePlan,creativeMemberCombo,creativeComboContext} from './core/creative-plan.mjs';
 import {BUNDLED_CATALOG,configureCatalog,catalogIssues} from './core/catalog.mjs';
 import {catalogPanel,catalogPreviewDialog,catalogEditorDialog,editorLoadouts,playControls} from './catalog-view.mjs';
-import {appUpdatePanel} from './app-update-view.mjs';
+import {appUpdatePanel,patchAppUpdateProgress} from './app-update-view.mjs';
 import {resultPlayCard} from './play-card-view.mjs';
 import {applyPresentation,updatePresentationDialog,updateThemeDialog} from './presentation-view.mjs';
 import {changePresentation} from './core/presentation.mjs';
@@ -133,6 +133,7 @@ const previewAPI={
  updateData:async()=>{throw Error('请在桌面版中更新资料');},
  checkAppUpdate:async()=>{throw Error('请在桌面版中检查软件更新');},
  downloadAppUpdate:async()=>{throw Error('请在桌面版中下载软件更新');},
+ pauseAppUpdate:async()=>false,
  cancelAppUpdate:async()=>true,
  installAppUpdate:async()=>{throw Error('请在桌面版中安装软件更新');},
  deleteAppUpdate:async()=>true,
@@ -1810,6 +1811,7 @@ document.addEventListener('click',async event=>{
  else if(action==='app-update-check')await checkAppUpdate();
  else if(action==='app-update-download')await downloadAppUpdate();
  else if(action==='app-update-cancel'){try{await api.cancelAppUpdate();}catch(err){toast(err.message,true);}}
+ else if(action==='app-update-pause'){try{await api.pauseAppUpdate();}catch(err){toast(err.message,true);}}
  else if(action==='app-update-install')await installAppUpdate();
  else if(action==='app-update-delete'){try{await api.deleteAppUpdate();appUpdate={phase:'idle',release:null,received:0,total:null,error:'',via:null};render();}catch(err){toast(err.message,true);}}
  else if(action==='app-update-dismiss'){saved.preferences.dismissedAppVersion=appUpdate.release?.tag;await persist();appUpdate={phase:'current',dismissed:true,release:appUpdate.release,received:0,total:null,error:'',via:null};render();}
@@ -1880,7 +1882,7 @@ document.addEventListener('input',event=>{
 });
 document.addEventListener('error',event=>{const img=event.target;if(img.tagName!=='IMG')return;if(img.dataset.fallback){const url=img.dataset.fallback;delete img.dataset.fallback;img.src=url;}else{img.style.visibility='hidden';}},true);
 window.addEventListener('unhandledrejection',event=>{toast(event.reason?.message||'操作失败，请重试',true);event.preventDefault();});
-try{boot=await api.bootstrap();data=boot.data;saved=boot.state;bindPlayerBuildPreferences();savedBase=structuredClone(saved);stateRevision=boot.stateRevision||0;stateRecovery=saved.recovery||null;data.catalog=configureCatalog(data.catalog||BUNDLED_CATALOG);data.catalogInfo||={...catalogIssues(data.catalog,data),version:data.catalog.version};configureAssets(data);
+try{boot=await api.bootstrap();appUpdate=boot.appUpdate||appUpdate;data=boot.data;saved=boot.state;bindPlayerBuildPreferences();savedBase=structuredClone(saved);stateRevision=boot.stateRevision||0;stateRecovery=saved.recovery||null;data.catalog=configureCatalog(data.catalog||BUNDLED_CATALOG);data.catalogInfo||={...catalogIssues(data.catalog,data),version:data.catalog.version};configureAssets(data);
  ongoing.configure(saved.preferences.ongoing||{}).then(()=>history.state.streamer=ongoing.state.settings.streamer).catch(()=>{});
   client=boot.client||client;history.observeClient(client);runeAppliedKeys.observe(client);windowLayout=boot.windowLayout||{docked:false};api.onWindowLayout?.(acceptWindowLayout);
  room=await api.roomStatus?.()||null;if(room?.mode==='host')roomAddresses=await api.roomAddresses?.()||[];
@@ -1894,7 +1896,7 @@ try{boot=await api.bootstrap();data=boot.data;saved=boot.state;bindPlayerBuildPr
  api.onMainPage?.(destination=>{if(windowLayout.docked)return;if(destination?.route==='reference'&&champ(destination.id)){referenceHero=destination.id;referenceTab=destination.tab==='changes'?'changes':'skills';referenceSkill='Q';referenceVariant=0;route='reference';}else if(destination?.route==='settings')route='settings';else return;closeOverlay();render();});
  api.onProgress?.(message=>{updateMessage=message;const status=document.getElementById('update-message');if(status)status.textContent=message;});
  api.onPreselection?.(value=>{if(value?.message)toast(value.message,true);});
- api.onAppUpdate?.(snapshot=>{appUpdate={phase:snapshot.phase||'idle',release:snapshot.release||null,received:snapshot.received||0,total:snapshot.total??null,error:snapshot.error||'',via:snapshot.via||null,kind:snapshot.kind||snapshot.record?.kind||'full',fallbackNotice:snapshot.fallbackNotice||false,...(snapshot.record?{record:snapshot.record}:{}),...(snapshot.dismissed?{dismissed:true}:{})};if(route==='settings')render();});
+ api.onAppUpdate?.(snapshot=>{appUpdate={phase:snapshot.phase||'idle',release:snapshot.release||null,received:snapshot.received||0,total:snapshot.total??null,error:snapshot.error||'',via:snapshot.via||null,kind:snapshot.kind||snapshot.record?.kind||'full',fallbackNotice:snapshot.fallbackNotice||false,...(snapshot.record?{record:snapshot.record}:{}),...(snapshot.dismissed?{dismissed:true}:{})};if(route==='settings'&&!patchAppUpdateProgress(document,appUpdate))render();});
  saved.preferences={style:'fun',autoCheck:true,autoLive:true,appUpdateCheck:true,pool:[],poolMode:'off',...saved.preferences};saved.preferences.play={difficulty:'any',tempo:'any',unusual:true,meleeBottom:true,...saved.preferences.play};saved.preferences.rolePools=Object.fromEntries(ROLES.map(r=>[r.id,{heroes:[],mode:'off',...saved.preferences.rolePools?.[r.id]}]));saved.preferences.buildSource=normalizeBuildSource(saved.preferences.buildSource);selectBuildSource(data,saved.preferences.buildSource);saved.favorites=saved.favorites||[];saved.excluded=saved.excluded||[];
  if(saved.draft?.slots){try{validateSlots(saved.draft.slots,data.champions);slots=saved.draft.slots;}catch{}}
  activeCreativePlan=saved.draft?.creativePlan?validateCreativePlan(saved.draft.creativePlan,slots,{allowUnknown:true}):null;

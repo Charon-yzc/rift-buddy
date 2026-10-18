@@ -14,6 +14,12 @@ test('upgrading removes only retired Chromium language packs and preserves curre
  assert.throws(()=>installerScript({...options,files:[...options.files,'locales/ar.pak'],obsoleteLocales:['ar.pak']}),/语言资源/);
 });
 const args={version:'0.12.0',directory:'C:\\bundle',output:'C:\\output\\setup.exe',icon:'C:\\icon.ico',files:['开黑搭子.exe','resources/app.asar','resources/connection/node.exe']};
+test('interactive finish page offers launching the installed app',()=>{
+ const script=installerScript(args);
+ assert.ok(script.includes('!define MUI_FINISHPAGE_RUN "$INSTDIR\\开黑搭子.exe"'));
+ assert.match(script,/MUI_FINISHPAGE_RUN_TEXT "启动开黑搭子"/);
+ assert.ok(script.indexOf('!define MUI_FINISHPAGE_RUN ')<script.indexOf('!insertmacro MUI_PAGE_FINISH'));
+});
 test('installer removes only its enumerated payload while retaining unrelated files and personal preferences',()=>{
  const script=installerScript(args),uninstall=script.slice(script.indexOf('Section "Uninstall"'));
  assert.match(uninstall,/Delete "\$INSTDIR\\resources\\app\.asar"/);assert.match(uninstall,/RMDir "\$INSTDIR\\resources\\connection"/);

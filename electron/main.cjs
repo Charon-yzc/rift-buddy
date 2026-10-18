@@ -160,7 +160,7 @@ async function boot(){
  const updater=()=>createAppUpdateService({...appUpdateBase,mirrorBase:state.preferences.updateMirror});
  const appUpdater=updater();
  await appUpdater.sweep().catch(()=>{});
- let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null,appUpdateInstallFlight=null;
+ let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null,appUpdateInstallFlight=null,appUpdateStop=null;
  const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;publishWindows('app-update-progress',snapshot);};
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));publishWindows('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
@@ -430,7 +430,11 @@ async function boot(){
   return snapshot;
  });
  guard('presentation',setPresentation);
- guard('bootstrap',({surface})=>({data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable}),true);
+ guard('bootstrap',async({surface})=>{
+  const paused=appUpdateStatus.phase==='idle'&&!appUpdateFlight?await updater().partial().catch(()=>null):null;
+  if(paused&&appUpdateStatus.phase==='idle'&&!appUpdateFlight)appUpdateStatus={phase:'paused',release:paused.release,received:paused.received,total:paused.total,kind:paused.kind,via:paused.via};
+  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
+ },true);
  const {windowInfo}=await import('../services/window-info.mjs');
  guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:forRenderer(latestClient),companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
  guard('companion-mode',(value,{surface})=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');const operation=companion.setMode(value);return {...companion.layout(surface),opened:value?operation.docked:undefined,reason:operation.reason};},true);
@@ -704,7 +708,10 @@ async function boot(){
    try{
     const kept=await updater().pending();
     if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,kind:kept.kind,via:kept.via||'direct',fallback:kept.fallback||false}});}
-    else{
+    else if(await updater().partial?.()){
+     const paused=await updater().partial();
+     publishAppUpdate({phase:'paused',release:paused.release,received:paused.received,total:paused.total,kind:paused.kind,via:paused.via});
+    }else{
      const result=await updater().check();
      if(silent&&result.status==='available'&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
      else publishAppUpdate({phase:result.status,release:result.release||null});
@@ -718,18 +725,54 @@ async function boot(){
  guard('app-update-download',async()=>{
   if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)throw Error('软件更新正在处理，请等待本次完成');
   const release=appUpdateStatus.release;
-  if(appUpdateStatus.phase!=='available'||!release)throw Error('没有可下载的新版本，请先检查更新');
+  if(!['available','paused'].includes(appUpdateStatus.phase)||!release)throw Error('没有可下载的新版本，请先检查更新');
   appUpdateAbort=new AbortController();
+  appUpdateStop=null;
   let fellBack=false;
-  try{
-   publishAppUpdate({phase:'downloading',release,received:0,total:null});
-   const record=await updater().download(release,{signal:appUpdateAbort.signal,onProgress:p=>{if(p.note==='mirror-fallback')fellBack=true;publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total,via:p.via||null,kind:p.kind||'full',fallbackNotice:fellBack});}});
+  const prev=appUpdateStatus;
+  const settleStopped=async record=>{
+   let paused;
+   try{paused=appUpdateStop==='pause'?await updater().partial?.():null;}
+   catch(error){publishAppUpdate({...appUpdateStatus,phase:'paused',release,error:error.message});throw error;}
+   // Cancel can supersede pause while the checkpoint is being read.
+   if(appUpdateStop==='pause'){
+    publishAppUpdate({phase:'paused',release,received:paused?.received||record?.bytes||0,total:paused?.total??record?.bytes??null,kind:paused?.kind||record?.kind||appUpdateStatus.kind,via:paused?.via||record?.via||appUpdateStatus.via});return appUpdateStatus;
+   }
+   try{await updater().cleanup();}catch(error){publishAppUpdate({...appUpdateStatus,phase:'paused',release,error:error.message});throw error;}
+   publishAppUpdate({phase:'available',release,cancelled:true});return appUpdateStatus;
+  };
+  appUpdateFlight=Promise.resolve().then(async()=>{
+   let record;
+   try{
+    publishAppUpdate({phase:'downloading',release,received:prev.phase==='paused'?prev.received:0,total:prev.phase==='paused'?prev.total:null,kind:prev.kind});
+    record=await updater().download(release,{signal:appUpdateAbort.signal,onProgress:p=>{if(appUpdateStop)return;if(p.note==='mirror-fallback')fellBack=true;publishAppUpdate({phase:p.stage==='verifying'?'verifying':'downloading',release,received:p.received,total:p.total,via:p.via||null,kind:p.kind||'full',fallbackNotice:fellBack});}});
+   }catch(error){
+    if(appUpdateStop)return settleStopped();
+    publishAppUpdate({phase:'error',release,error:error.message});throw error;
+   }
+   if(appUpdateStop)return settleStopped(record);
    publishAppUpdate({phase:'ready',release,record:{version:record.version,bytes:record.bytes,sha256:record.sha256,kind:record.kind,via:record.via||'direct',fallback:fellBack}});
    return appUpdateStatus;
-  }catch(error){publishAppUpdate({phase:'error',release,error:error.message});throw error;}
-  finally{appUpdateAbort=null;}
+  }).finally(()=>{appUpdateAbort=null;appUpdateStop=null;appUpdateFlight=null;});
+  return appUpdateFlight;
  });
- guard('app-update-cancel',()=>{appUpdateAbort?.abort();return true;});
+ guard('app-update-pause',async()=>{
+  if(!appUpdateAbort||appUpdateStop||appUpdateStatus.phase!=='downloading')return false;
+  appUpdateStop='pause';publishAppUpdate({...appUpdateStatus,phase:'pausing'});appUpdateAbort.abort('pause');
+  await appUpdateFlight;return true;
+ });
+ guard('app-update-cancel',async()=>{
+  if(appUpdateAbort){appUpdateStop='cancel';publishAppUpdate({...appUpdateStatus,phase:'cancelling'});appUpdateAbort.abort('cancel');await appUpdateFlight;return true;}
+  if(appUpdateStatus.phase!=='paused'||appUpdateFlight||appUpdateInstallFlight)return false;
+  const release=appUpdateStatus.release;
+  const prev=appUpdateStatus;
+  appUpdateFlight=Promise.resolve().then(async()=>{
+   publishAppUpdate({...prev,phase:'cancelling'});
+   try{await updater().cleanup();publishAppUpdate({phase:'available',release,cancelled:true});return true;}
+   catch(error){publishAppUpdate({...prev,error:error.message});throw error;}
+  }).finally(()=>{appUpdateFlight=null;});
+  return appUpdateFlight;
+ });
  guard('app-update-install',async()=>{
   if(appUpdateInstallFlight)return appUpdateInstallFlight;
   if(appUpdateFlight||appUpdateAbort||appUpdateStatus.phase!=='ready')throw Error('请等待安装包下载并校验完成');

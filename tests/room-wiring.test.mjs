@@ -54,7 +54,9 @@ test('only this process keeps the lobby identifier and the auto room closes with
  assert.match(main,/const forRenderer=client=>\{/,'the renderer must not receive the lobby identifier');
  assert.match(main,/const \{own,party,\.\.\.rest\}=client,\{key,\.\.\.cleanParty\}=party\|\|\{\};/,'the identity used as the room nickname must be stripped');
  assert.match(main,/return \{\.\.\.rest,.*\.\.\.\(party\?\{party:cleanParty\}:\{\}\)\};/,'a missing party must stay missing');
- for(const boundary of [/publishWindows\('client-update',forRenderer\(latestClient\)\)/,/guard\('client-status',async force=>forRenderer\(await status\(force\)\)\)/,/guard\('authorize-client'[\s\S]{0,200}?forRenderer\(await status\(true\)\)/,/guard\('bootstrap',[\s\S]{0,140}?client:forRenderer\(latestClient\)/,/guard\('window-info'[\s\S]{0,300}?client:forRenderer\(latestClient\)/])assert.match(main,boundary,'every renderer-facing client snapshot must be stripped');
+ for(const boundary of [/publishWindows\('client-update',forRenderer\(latestClient\)\)/,/guard\('client-status',async force=>forRenderer\(await status\(force\)\)\)/,/guard\('authorize-client'[\s\S]{0,200}?forRenderer\(await status\(true\)\)/,/guard\('window-info'[\s\S]{0,300}?client:forRenderer\(latestClient\)/])assert.match(main,boundary,'every renderer-facing client snapshot must be stripped');
+ const bootstrap=main.slice(main.indexOf(" guard('bootstrap'"),main.indexOf(' const {windowInfo}'));
+ assert.match(bootstrap,/return \{[^\n]*client:forRenderer\(latestClient\)/,'bootstrap must return only the stripped client snapshot');
  const saveHandler=main.slice(main.indexOf("guard('save-state'"),main.indexOf("const {createClientSync}"));
  assert.ok(saveHandler.indexOf('closeAutoRoomIfRevoked();')>=0&&saveHandler.indexOf('closeAutoRoomIfRevoked();')<saveHandler.indexOf('guide.publish()'),'turning the switch or sync off must close the auto room before publishing');
  assert.match(main,/if\(had\|\|hadError\)publishWindows\('room-update'/,'revoking must also refresh the panel');

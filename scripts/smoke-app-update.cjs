@@ -31,16 +31,22 @@ async function run(){
   require('node:module').syncBuiltinESMExports();app.quit=()=>{quits++;};
  }
  dns.lookup=async()=>[{address:'8.8.8.8',family:4}];
- let mode='offline';
+ let mode='offline';const ranges=[];
  https.request=(url,options,callback)=>{
   const href=String(url.href||url);
-  const req=new EventEmitter();req.destroy=e=>{req.emit('error',e||Error('aborted'));req.emit('close');};
+  const req=new EventEmitter();req.destroy=e=>{req.destroyed=true;req.emit('error',e||Error('aborted'));req.emit('close');};
   req.end=()=>queueMicrotask(()=>{
    const res=new EventEmitter();res.resume=()=>{};
    if(mode==='offline'){req.emit('error',Error('Smoke offline'));req.emit('close');return;}
    const routes={[FEED_URL]:{status:200,body:Buffer.from(mode==='feed2'||mode==='mirror404'?FEED2:FEED)},[SUM_URL]:{status:200,body:Buffer.from(`${BIN_SHA}  RiftBuddy-99.0.0-Setup.exe\n`)},[SETUP_URL]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN,chunks:4},[SETUP100_URL]:{status:200,headers:{'content-length':String(BIN.length)},body:BIN},[SUM100_URL]:mode==='nocsum'?{status:404,body:''}:{status:200,body:Buffer.from(`${BIN_SHA}  RiftBuddy-100.0.0-Setup.exe\n`)},[MSETUP100_URL]:mode==='mirror404'?{status:404,body:''}:{status:200,headers:{'content-length':String(BIN.length)},body:BIN,chunks:2}};
    const route=routes[href];
    if(!route){res.statusCode=404;callback(res);res.emit('end');req.emit('close');return;}
+   if(mode==='slow'&&href===SETUP_URL){
+    const start=Number(/^bytes=(\d+)-$/.exec(options.headers.Range||'')?.[1]||0);ranges.push(start);
+    res.statusCode=start?206:200;res.headers={'content-length':String(BIN.length-start),...(start?{'content-range':`bytes ${start}-${BIN.length-1}/${BIN.length}`}:{})};res.destroy=()=>{req.destroyed=true;};
+    callback(res);let offset=start;
+    const send=()=>{if(req.destroyed)return;if(offset===BIN.length){res.emit('end');req.emit('close');return;}res.emit('data',BIN.subarray(offset,offset+4096));offset+=4096;setTimeout(send,40);};setTimeout(send,40);return;
+   }
    res.statusCode=route.status;res.headers=route.headers||{};callback(res);
    if(route.chunks){const n=Math.ceil(route.body.length/route.chunks);for(let i=0;i<route.body.length;i+=n)res.emit('data',route.body.subarray(i,i+n));}
    else res.emit('data',route.body);
@@ -62,6 +68,28 @@ async function run(){
  mode='feed';
  await click('[data-action=app-update-check]');
  await until(()=>js('document.querySelector("#app-update-message")?.textContent.includes("99.0.0")'),'Available version not shown');
+ mode='slow';
+ await click('[data-action=app-update-download]');
+ await until(()=>js('Number(document.querySelector("[data-app-update-phase] progress")?.value)>0'),'Download progress missing');
+ const nativeClickAcrossProgress=async action=>{
+  const point=await js(`{const b=document.querySelector('[data-action=${action}]');b.scrollIntoView({block:'center'});window.updateControl=b;const r=b.getBoundingClientRect();({x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)});}`);
+  main.webContents.sendInputEvent({type:'mouseMove',...point});main.webContents.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...point});
+  await delay(200);assert.ok(await js('window.updateControl.isConnected'),'Progress replaced the pressed control');
+  main.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,...point});
+ };
+ await nativeClickAcrossProgress('app-update-pause');
+ await until(()=>js('!!document.querySelector("[data-app-update-phase=paused]")'),'Pause click lost');
+ const paused=JSON.parse(await fs.readFile(path.join(root,'app-update.json.partial.json'),'utf8')),pausedBytes=(await fs.stat(paused.file)).size;
+ assert.ok(pausedBytes>0&&pausedBytes<BIN.length);
+ await fs.writeFile(path.join(root,'controls-paused.png'),(await main.webContents.capturePage()).toPNG());
+ await reload();await until(()=>js('!!document.querySelector("#solo-role")'),'Reload while paused failed');
+ await click('[data-action=navigate][data-route=settings]');await until(()=>js('!!document.querySelector("[data-app-update-phase=paused]")'),'Bootstrap did not restore paused status');
+ await click('[data-action=app-update-download]');await until(()=>ranges.length===2,'Resume request missing');assert.equal(ranges[1],pausedBytes);
+ await nativeClickAcrossProgress('app-update-cancel');
+ await until(()=>js('!!document.querySelector("[data-app-update-phase=available]")'),'Cancel click lost');
+ assert.equal(await fs.stat(paused.file).then(()=>true,()=>false),false);assert.equal(await fs.stat(path.join(root,'app-update.json.partial.json')).then(()=>true,()=>false),false);
+ await fs.writeFile(path.join(root,'update-controls.json'),JSON.stringify({pausePreservedBytes:pausedBytes,resumeOffset:ranges[1],nativeClicksSurvivedProgress:true,cancelCleaned:true},null,2));
+ mode='feed';
  await click('[data-action=app-update-download]');
  await until(()=>js('!!document.querySelector("[data-action=app-update-install]")'),'Ready state not reached');
  const record=JSON.parse(await fs.readFile(path.join(root,'app-update.json'),'utf8'));
@@ -82,12 +110,13 @@ async function run(){
  const witness=await until(async()=>fs.readFile(path.join(root,'app-update.json.dry-run.json'),'utf8').then(JSON.parse).catch(()=>null),'Dry-run witness missing');
  assert.equal(witness.sha256,BIN_SHA);assert.equal(witness.file,record.file);
  assert.ok(await js('document.body.textContent.length>0'),'App quit during dry run');
- // 阶段 4：重启后续装——renderer 重启后离线重查，pending 快捷方式不断网恢复 ready
+ // 阶段 4：窗口重载直接恢复 ready；离线复查仍能使用已校验的 pending。
  mode='offline';
  await reload();
  await until(()=>js('!!document.querySelector("#solo-role")'),'Restart missing');
  await click('[data-action=navigate][data-route=settings]');
- await click('[data-action=app-update-check]');
+ assert.ok(await js('!!document.querySelector("[data-action=app-update-install]")'),'Bootstrap did not restore ready status');
+ await js('window.buddy.checkAppUpdate(false)');
  await until(()=>js('!!document.querySelector("[data-action=app-update-install]")'),'Pending shortcut not restored');
  assert.ok(await js('!!document.querySelector("[data-action=app-update-install]")'));
  const notesLink=await js('[...document.querySelectorAll("[data-action=link]")].find(el=>el.textContent.includes("查看发布说明"))?.dataset.url');

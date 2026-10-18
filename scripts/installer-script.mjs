@@ -41,6 +41,8 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Rift Buddy contributors"
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
+!define MUI_FINISHPAGE_RUN "$INSTDIR\\开黑搭子.exe"
+!define MUI_FINISHPAGE_RUN_TEXT "启动开黑搭子"
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
