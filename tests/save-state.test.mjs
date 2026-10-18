@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {rollbackUnacceptedState} from '../src/core/save-state.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
+import {moveChampion} from '../src/core/draft.mjs';
+import {rebaseWindowState} from '../src/core/window-state.mjs';
 
 const hero=(id,extra={})=>({id,role:'mid',mode:'rift',runeId:'confirmed',...extra});
 const state=()=>({preferences:{play:{difficulty:'any',tempo:'any'}},draft:{soloRole:'mid',slots:[]},preparations:[hero('Ahri'),hero('Annie')],favorites:[],excluded:[]});
@@ -35,4 +37,21 @@ test('slot rollback follows role identity and preserves later edits to another l
  const later=structuredClone(failed);later.draft.slots.reverse();later.draft.slots.find(slot=>slot.role==='top').champion='Garen';later.draft.slots.find(slot=>slot.role==='bottom').party=false;
  const restored=rollbackUnacceptedState(before,failed,later);assert.equal(restored.draft.slots.find(slot=>slot.role==='bottom').champion,null);assert.equal(restored.draft.slots.find(slot=>slot.role==='bottom').party,false);assert.equal(restored.draft.slots.find(slot=>slot.role==='top').champion,'Garen');assert.equal(later.draft.slots.find(slot=>slot.role==='bottom').champion,'Ahri');
  const deliberate=structuredClone(later);deliberate.draft.slots.find(slot=>slot.role==='bottom').champion='Jinx';assert.equal(rollbackUnacceptedState(before,failed,deliberate).draft.slots.find(slot=>slot.role==='bottom').champion,'Jinx');
+});
+
+test('a later swapped hero keeps its lock and client binding through rollback and rebase',()=>{
+ const before=state();before.draft.slots=createSlots();Object.assign(before.draft.slots.find(slot=>slot.role==='top'),{champion:'Garen',locked:true,clientCellId:0});
+ const failed=structuredClone(before);Object.assign(failed.draft.slots.find(slot=>slot.role==='bottom'),{champion:'Ahri',locked:true,clientCellId:4});
+ const later=structuredClone(failed);later.draft.slots=moveChampion(later.draft.slots,'bottom','top');
+ const restored=rollbackUnacceptedState(before,failed,later),rebased=rebaseWindowState(before,restored,before);
+ for(const value of [restored,rebased])for(const role of ['top','bottom'])assert.deepEqual(value.draft.slots.find(slot=>slot.role===role),later.draft.slots.find(slot=>slot.role===role));
+ assert.equal(failed.draft.slots.find(slot=>slot.role==='bottom').champion,'Ahri');
+});
+
+test('a later selection is coherent while an inherited rejected party change is undone',()=>{
+ const before=state();before.draft.slots=createSlots();const failed=structuredClone(before),slot=failed.draft.slots.find(slot=>slot.role==='bottom');
+ Object.assign(slot,{champion:'Ahri',locked:true,clientCellId:4,automaticPosition:true,party:!slot.party});
+ const later=structuredClone(failed),choice=later.draft.slots.find(slot=>slot.role==='bottom');Object.assign(choice,{champion:'Jinx',manualPosition:true});delete choice.automaticPosition;
+ const restored=rollbackUnacceptedState(before,failed,later).draft.slots.find(slot=>slot.role==='bottom');
+ assert.deepEqual(restored,{...choice,party:before.draft.slots.find(slot=>slot.role==='bottom').party});
 });

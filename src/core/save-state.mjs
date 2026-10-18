@@ -20,6 +20,20 @@ function restoreValue(before,failed,current){
  }
  return structuredClone(current);
 }
+const selectionFields=['champion','locked','clientCellId','manualPosition','automaticPosition','publicIntent'];
+const selection=slot=>Object.fromEntries(selectionFields.filter(field=>slot&&Object.hasOwn(slot,field)).map(field=>[field,slot[field]]));
+function restoreSlot(before,failed,current){
+ const restored=restoreValue(before,failed,current);
+ if(object(restored)&&object(failed)&&object(current)){
+  // A later swap/selection owns its entire hero payload. A lock or binding
+  // equal to the rejected hero's value still belongs to that later hero.
+  const previous=selection(before),rejected=selection(failed),latest=selection(current);
+  const payload=!same(previous,rejected)&&same(latest,rejected)?previous:latest;
+  for(const field of selectionFields)delete restored[field];
+  Object.assign(restored,structuredClone(payload));
+ }
+ return restored;
+}
 // Undo only the rejected input. Later edits, including another field of the
 // same hero, remain intact and may still be submitted by their queued request.
 export function rollbackUnacceptedState(before,failed,current){
@@ -27,7 +41,7 @@ export function rollbackUnacceptedState(before,failed,current){
  if(Array.isArray(before.draft?.slots)&&Array.isArray(failed.draft?.slots)&&Array.isArray(current.draft?.slots)){
   const previous=new Map(before.draft.slots.map(slot=>[slot.role,slot])),rejected=new Map(failed.draft.slots.map(slot=>[slot.role,slot])),latest=new Map(current.draft.slots.map(slot=>[slot.role,slot]));
   for(const role of new Set([...previous.keys(),...rejected.keys()])){
-   const value=restoreValue(previous.get(role),rejected.get(role),latest.get(role));
+   const value=restoreSlot(previous.get(role),rejected.get(role),latest.get(role));
    if(value===undefined)latest.delete(role);else latest.set(role,value);
   }
   restored.draft.slots=[...latest.values()];

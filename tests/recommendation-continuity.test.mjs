@@ -492,6 +492,29 @@ test('a rejected derived slot cannot ride a later different-lane save over anoth
  assert.equal(submissions[1].draft.slots.find(slot=>slot.role==='top').champion,'Garen');assert.equal(c.saved.draft.slots.find(slot=>slot.role==='bottom').champion,'Ashe');assert.equal(c.pendingSaves.size,0);
 });
 
+test('a queued real hero swap retains locks and bindings after the earlier observation save fails',async()=>{
+ for(const derived of [false,true]){
+  const before=defaultState();before.draft={slots:createSlots(),scope:'party',style:'wild',soloRole:'bottom',clientGameId:'123'};
+  Object.assign(before.draft.slots.find(slot=>slot.role==='top'),{champion:'Garen',locked:true,clientCellId:0});
+  const {context:c}=setup({slots:structuredClone(before.draft.slots)});let entered,release;
+  const started=new Promise(resolve=>entered=resolve),gate=new Promise((_,reject)=>release=reject),submissions=[];
+  Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,selectBuildSource:noop,guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+   api:{...c.api,ready:async()=>({state:before,revision:2}),saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;}return {state:snapshot,revision:3};}}});
+  vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
+  Object.assign(c.slots.find(slot=>slot.role==='bottom'),{champion:'Ahri',locked:true,clientCellId:4});
+  const first=c.persist({derived,throwOnError:true}),result=first.then(()=>null,error=>error);await started;
+  c.slots=moveChampion(c.slots,'bottom','top');const expected=structuredClone(c.slots),next=c.persist({throwOnError:true});
+  release(Error(derived?'选人配置同时发生变化，请重新同步':'synthetic disk failure'));
+  const error=await result;if(derived)assert.equal(error,null);else assert.match(error.message,/disk failure/);
+  await next;assert.equal(submissions.length,2);
+  for(const role of ['top','bottom']){
+   assert.deepEqual(submissions[1].draft.slots.find(slot=>slot.role===role),expected.find(slot=>slot.role===role));
+   assert.deepEqual(structuredClone(c.saved.draft.slots.find(slot=>slot.role===role)),expected.find(slot=>slot.role===role));
+  }
+  assert.equal(c.pendingSaves.size,0);
+ }
+});
+
 test('rapid checkbox saves send range intents, retain newer public heroes, and finish with zero marks',async()=>{
  const initial=createSlots().map(slot=>({...slot,party:['top','jungle'].includes(slot.role)}));
  const {context:c}=setup({slots:initial});c.soloRole='';c.saved.draft.slots=structuredClone(c.slots);
