@@ -36,13 +36,14 @@ export function createItemSet(champion,build,data){
  add('后期备选 · 按局势选择',build.laterOptions?.filter(o=>o.fitsRoute!==false).flatMap(o=>o.items).filter(i=>!equipment.some(selected=>String(selected.id)===String(i.id))).slice(0,6),false);
  if(!blocks.length)throw Error('当前方案没有可购买装备，请刷新资料或切换方案');
  const patch=String(build.rulesPatch||data.patch),stale=build.referenceStale||build.stale;
- return validateItemSet({uid:`${ITEM_SET_PREFIX}${champion.key}-${build.role}-${build.mode}`,title:`${titlePrefix}${champion.name} · ${roles[build.role]} · ${build.mode==='hex'?'海克斯':'峡谷'} · ${patch}${stale?' 旧版本参考':''}`,sortrank:0,type:'global',map:'any',mode:'any',blocks,associatedChampions:[champion.key],associatedMaps:[map],preferredItemSlots:[]},data);
+ return validateItemSet({uid:`${ITEM_SET_PREFIX}${champion.key}-${build.role}-${build.mode}`,title:`${titlePrefix}${champion.name} · ${roles[build.role]} · ${build.mode==='hex'?'海克斯':'峡谷'} · ${patch}${stale?' 旧版本参考':''}`,sortrank:0,priority:true,type:'custom',map:map===11?'SR':'HA',mode:'any',blocks,associatedChampions:[champion.key],associatedMaps:[map],preferredItemSlots:[]},data);
 }
 // Both the UI process and the privileged connection process reconstruct this
 // narrow schema. No renderer-supplied path or arbitrary JSON reaches disk.
 export function validateItemSet(value,data){
  const match=typeof value?.uid==='string'&&value.uid.match(/^rift-buddy-(\d+)-(top|jungle|mid|bottom|support)-(rift|hex)$/),champion=match&&data.champions.find(c=>String(c.key)===match[1]),map=match?.[3]==='hex'?12:11;
- if(!champion||!cleanText(value.title,160)||!value.title.startsWith(titlePrefix+champion.name+' · ')||value.type!=='global'||value.map!=='any'||value.mode!=='any'||JSON.stringify(value.associatedChampions)!==JSON.stringify([champion.key])||JSON.stringify(value.associatedMaps)!==JSON.stringify([map]))throw Error('装备集的英雄或模式格式不正确');
+ // Accept older saved plans, then normalize priority and map ourselves.
+ if(!champion||!cleanText(value.title,160)||!value.title.startsWith(titlePrefix+champion.name+' · ')||!['global','custom'].includes(value.type)||!['any',map===11?'SR':'HA'].includes(value.map)||value.mode!=='any'||JSON.stringify(value.associatedChampions)!==JSON.stringify([champion.key])||JSON.stringify(value.associatedMaps)!==JSON.stringify([map]))throw Error('装备集的英雄或模式格式不正确');
  if(!Array.isArray(value.blocks)||value.blocks.length<1||value.blocks.length>8)throw Error('装备集分组格式不正确');
  const blocks=value.blocks.map(block=>{
   if(!cleanText(block?.type,100)||!Array.isArray(block.items)||!block.items.length||block.items.length>30)throw Error('装备集分组格式不正确');
@@ -51,5 +52,5 @@ export function validateItemSet(value,data){
    seen.add(item.id);return {id:item.id,count:item.count};
   })};
  });
- return {uid:value.uid,title:value.title,sortrank:0,type:'global',map:'any',mode:'any',blocks,associatedChampions:[champion.key],associatedMaps:[map],preferredItemSlots:[]};
+ return {uid:value.uid,title:value.title,sortrank:0,priority:true,type:'custom',map:map===11?'SR':'HA',mode:'any',blocks,associatedChampions:[champion.key],associatedMaps:[map],preferredItemSlots:[]};
 }

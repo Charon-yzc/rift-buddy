@@ -40,6 +40,12 @@ test('schema rejects path injection, other heroes, unavailable/map-limited items
  const result=validateItemSet(bad({filePath:'C:/Windows/anything',preferredItemSlots:[{anything:true}]}),data);assert.equal(result.filePath,undefined);assert.deepEqual(result.preferredItemSlots,[]);
 });
 
+test('old saved global plans normalize to champion-specific custom priority while renderer ordering is ignored',()=>{
+ const set=make({id:'Volibear',role:'top',mode:'rift'}),saved={...set,type:'global',map:'any',priority:false,sortrank:2147483647};
+ assert.deepEqual(validateItemSet(saved,data),set);assert.equal(set.type,'custom');assert.equal(set.priority,true);assert.equal(set.map,'SR');assert.equal(set.sortrank,0);
+ assert.throws(()=>validateItemSet({...set,map:'HA'},data),/格式/);
+});
+
 test('all currently exposed role and Hex plans produce legal hero/map-scoped shop sets',()=>{
  for(const ref of Object.values(data.builds)){const set=make({id:ref.champion,role:ref.role,mode:'rift'});assert.ok(set.blocks.length);assert.ok(set.blocks.every(g=>g.items.every(i=>data.items[i.id].maps[11]&&data.items[i.id].inStore)));}
  for(const ref of Object.values(data.hexBuilds)){const set=make({id:ref.champion,role:'bottom',mode:'hex'});assert.deepEqual(set.associatedMaps,[12]);assert.match(set.uid,/-hex$/);}
