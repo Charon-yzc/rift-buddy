@@ -63,15 +63,37 @@ export function createRankedMatchupIndex(players,builds,{patch,source}={}){
 // deliberately do not sum to 100% and are not a forecast for this exact game.
 export function rankedDurationReference(draft,builds,options){
  if(!draft.complete)return null;
+ const references=[];
  const resolve=players=>{
   const estimated=estimateEnemyRoles(players,builds,options),members=[];
   for(const player of estimated){
    const refs=roles.map(role=>({role,weight:player.roleWeights[role],ref:reference(builds,player.champion,role,options)})).filter(row=>row.weight>0&&row.ref?.rankedStatistics.duration.length===5);
    const coverage=refs.reduce((sum,row)=>sum+row.weight,0);if(coverage<.8)return null;
+   references.push(...refs.map(row=>row.ref));
    members.push({champion:player.champion,estimated:player.estimated,values:minutes.map((_,i)=>refs.reduce((sum,row)=>sum+row.weight*row.ref.rankedStatistics.duration[i].winRate,0)/coverage)});
   }
   return {members,points:minutes.map((minute,i)=>({minute,winRate:members.reduce((sum,member)=>sum+member.values[i],0)/5}))};
  };
  const allies=resolve(draft.allies),enemies=resolve(draft.enemies);
- return allies&&enemies?{allies,enemies,basis:'champion-position-average',estimatedRoles:[...allies.members,...enemies.members].some(member=>member.estimated),patch:options.patch,source:normalizeBuildSource(options.source)}:null;
+ if(!allies||!enemies)return null;
+ const oldest=field=>references.every(ref=>Number.isFinite(Date.parse(ref[field])))?new Date(Math.min(...references.map(ref=>Date.parse(ref[field])))).toISOString():null,now=options.now??Date.now();
+ return {allies,enemies,cacheStale:references.some(ref=>{const date=Math.max(Date.parse(ref.fetchedAt)||0,Date.parse(ref.serverCheckedAt)||0);return date>now||now-date>86400000;}),fetchedAt:oldest('fetchedAt'),serverCheckedAt:oldest('serverCheckedAt'),basis:'champion-position-average',estimatedRoles:[...allies.members,...enemies.members].some(member=>member.estimated),patch:options.patch,source:normalizeBuildSource(options.source)};
+}
+export function championDurationReference(champion,role,builds,options){
+ const ref=reference(builds,champion,role,options);
+ return ref?.rankedStatistics.duration.length===5?{champion,role,points:ref.rankedStatistics.duration,patch:ref.patch,source:normalizeBuildSource(ref),fetchedAt:ref.fetchedAt,serverCheckedAt:ref.serverCheckedAt}:null;
+}
+export function rankedLaneReferences(draft,builds,options){
+ if(!draft.complete)return [];
+ const enemies=estimateEnemyRoles(draft.enemies,builds,options);
+ return roles.map(role=>{
+  const own=draft.allies.filter(player=>player.role===role);if(own.length!==1)return {role,available:false};
+  const ref=reference(builds,own[0].champion,role,options),evidence=[];
+  if(ref?.rankedStatistics.counterScope==='opgg-position-counter-reference')for(const enemy of enemies){
+   const weight=enemy.roleWeights[role],row=ref.matchups?.find(row=>row.champion===enemy.champion);
+   if(weight>0&&row&&Number.isSafeInteger(row.samples)&&row.samples>=30&&Number.isSafeInteger(row.wins)&&row.wins>=0&&row.wins<=row.samples)evidence.push({enemy:enemy.champion,weight,samples:row.samples,winRate:row.wins/row.samples*100,estimated:enemy.estimated});
+  }
+  const coverage=evidence.reduce((sum,row)=>sum+row.weight,0);
+  return {role,champion:own[0].champion,available:coverage>=.8,coverage,estimated:evidence.some(row=>row.estimated),evidence,winRate:coverage>=.8?evidence.reduce((sum,row)=>sum+row.weight*row.winRate,0)/coverage:null};
+ });
 }

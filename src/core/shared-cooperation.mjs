@@ -23,6 +23,7 @@ const ACTIONS={
 const key=m=>m.role+':'+m.champion;
 export const independentCooperationAction=id=>ACTIONS[id]||COOPERATION_SKILLS[id]?.[0]||'';
 export function sharedCooperationPlan(members,graph){
+ if(members.some(member=>!graph.byId.has(member.champion)||!graph.profile(member).reviewed))return null;
  if(![2,3].includes(members.length)||members.some(m=>!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion]||COOPERATION_SKILLS[m.champion][3])||new Set(members.map(key)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length||new Set(members.map(m=>m.role)).size!==members.length)return null;
  const name=id=>graph.byId.get(id).name;
  const opening=members.map(m=>`${name(m.champion)}${m.role==='jungle'?'先按安全营地发育，报清野与到位时间':m.role==='support'?'围绕搭档安全补刀与经验，离线前报去向':'先处理自己的兵线，报可离线时间'}`).join('；')+'。会合前先确认实际技能、资源与退路，任何人不能到场就继续各自发育。';

@@ -43,7 +43,13 @@ export async function publishServerData({root,publicRoot,keyFile,keyId='data-202
  const files=Object.fromEntries(DATA_FEED_NAMES.map(name=>{const file=source.files[name];return [name,{...file,file:file.sha256+'.json.gz'}];}));
  const release=feedHash(JSON.stringify({patch:source.patch,files}));
  const changed=prior?.release!==release;
- const manifest=changed?validateFeedManifest({schema:1,patch:source.patch,release,sequence:Math.max(clock(),(prior?.sequence||0)+1),publishedAt:new Date(clock()).toISOString(),files}):prior;
+ // The start is a conservative lower bound for every successful source check
+ // in this complete round. Never promote a partial round or its end time.
+ const roundStart=Date.parse(status.startedAt),priorCheck=Date.parse(prior?.checkedAt),validRound=Number.isFinite(roundStart)&&roundStart>=0&&roundStart<=clock();
+ if(changed&&validRound&&Number.isFinite(priorCheck)&&roundStart<priorCheck)throw Error('采集轮次早于已发布复查时间，保留现有资料');
+ const checkedAt=validRound?new Date(Math.max(roundStart,Number.isFinite(priorCheck)?priorCheck:0)).toISOString():changed?undefined:prior?.checkedAt;
+ const refreshed=!!checkedAt&&checkedAt!==prior?.checkedAt;
+ const manifest=changed||refreshed?validateFeedManifest({schema:1,patch:source.patch,release,sequence:Math.max(clock(),(prior?.sequence||0)+1),publishedAt:changed?new Date(clock()).toISOString():prior.publishedAt,files,...(checkedAt?{checkedAt}:{})}):prior;
  const payload=Buffer.from(JSON.stringify(manifest)),envelope={keyId,payload:payload.toString('base64'),signature:sign(null,payload,privateKey).toString('base64')};
  verifyFeedEnvelope(envelope,{keys});
  if(await sizeOf(publicRoot)+Object.values(files).reduce((n,f)=>n+f.bytes,0)+65536>maxBytes)throw Error('公开资料目录达到存储上限');
@@ -56,11 +62,11 @@ export async function publishServerData({root,publicRoot,keyFile,keyId='data-202
   try{await fs.writeFile(output,bytes,{flag:'wx',mode:0o644});}catch(error){if(error.code!=='EEXIST')throw error;const existing=await fs.readFile(output);if(feedHash(existing)!==file.sha256)throw Error('既有公开文件校验失败');}
   await fs.chmod(output,0o644);
  }
- if(changed){
+ if(changed||refreshed){
   const temporary=destination+'.'+randomUUID()+'.tmp';
   try{await fs.writeFile(temporary,JSON.stringify(envelope),{flag:'wx',mode:0o644});await fs.chmod(temporary,0o644);await fs.rename(temporary,destination);}
   finally{await fs.unlink(temporary).catch(error=>{if(error.code!=='ENOENT')throw error;});}
  }
  const removed=await prunePublishedData(publicRoot,manifest,keys);
- return {changed,manifest,removed};
+ return {changed,refreshed,manifest,removed};
 }

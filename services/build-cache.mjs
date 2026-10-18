@@ -10,7 +10,9 @@ export async function loadBuildSources(roots,data){
  const result={};
  for(const root of roots){
   try{const parsed=JSON.parse(await fs.readFile(path.join(root,'builds.json'),'utf8'));
-   for(const [key,ref] of Object.entries(parsed.entries||{})){
+   for(const [key,stored] of Object.entries(parsed.entries||{})){
+    // Derived authority is restored only from the separately verified feed.
+    const {serverCheckedAt,...ref}=stored||{};
     const champion=data.champions.find(c=>c.id===ref?.champion);
     if(!champion||!validReference(ref,champion,ref.role,data,{allowOlder:true}))continue;
     const cacheKey=buildSourceKey(champion.id,ref.role,ref,ref.patch);
@@ -25,7 +27,8 @@ export async function loadHexBuilds(roots,data){
  const result={};
  for(const root of roots){
   try{const parsed=JSON.parse(await fs.readFile(path.join(root,'hex-builds.json'),'utf8'));
-   for(const [key,ref] of Object.entries(parsed.entries||{})){
+   for(const [key,stored] of Object.entries(parsed.entries||{})){
+    const {serverCheckedAt,...ref}=stored||{};
     const champion=data.champions.find(c=>c.id===key);
     const current=result[key],patchOrder=current?compareBuildPatches(ref?.patch,current.patch):1;
     if(champion&&validHexReference(ref,champion,data,{allowOlder:true})&&(!current||patchOrder>0||patchOrder===0&&Date.parse(ref.fetchedAt)>Date.parse(current.fetchedAt)))result[key]=ref;

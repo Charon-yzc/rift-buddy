@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {buildAugmentDescriptions} from './augments.mjs';
 import {enrichChampionStats,hasCurrentCombatStats} from './champion-stats.mjs';
+import {enrichItemDescriptions} from './item-descriptions.mjs';
 
 export const DD = 'https://ddragon.leagueoflegends.com';
 export const CN = 'https://game.gtimg.cn/images/lol/act/img/js';
@@ -19,12 +20,13 @@ export async function getJSON(url, timeout = 20000) {
 export function cleanText(text = '') {
   return String(text).replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
 }
-export async function collectSnapshot(progress = () => {}, previous = null, {readJSON=getJSON,recheckVersion=false}={}) {
+export async function collectSnapshot(progress = () => {}, previous = null, {readJSON=getJSON,recheckVersion=false,clock=()=>Date.now()}={}) {
   progress('正在检查官方资料版本');
   const versions = await readJSON(`${DD}/api/versions.json`);
   const version = versions.find(v => /^\d+\.\d+\.\d+$/.test(v));
   if (!version) throw new Error('官方版本号不可用');
-  if(!recheckVersion&&previous?.version===version&&previous.contentRevision>=7&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch))&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
+  const checkAge=clock()-Date.parse(previous?.contentCheckedAt||previous?.fetchedAt),recentCheck=Number.isFinite(checkAge)&&checkAge>=0&&checkAge<86400000;
+  if(!recheckVersion&&recentCheck&&previous?.version===version&&previous.itemTooltipRevision===1&&previous.contentRevision>=7&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch))&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
     // Tencent's names can catch up after Data Dragon has already shipped this
     // patch. Checking the same static version must not pin that older CN data.
     const cn=await readJSON(`${CN}/heroList/hero_list.js`).catch(()=>null);
@@ -34,7 +36,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
       previous={...previous,cnVersion:cn.version,champions:previous.champions.map(c=>{const h=names.get(c.id.toLowerCase());return {...c,name:h.title,title:h.name,keywords:h.keywords};})};
     }else progress('国服名称来源尚未提供完整同补丁资料，保留既有名称与版本记录');
     progress('当前已是最新资料版本');
-    return {...previous,checkedAt:new Date().toISOString()};
+    return {...previous,checkedAt:new Date(clock()).toISOString()};
   }
   const base = `${DD}/cdn/${version}/data/zh_CN`;
   const [champions, items, runes, spells, cnResult] = await Promise.all([
@@ -47,6 +49,9 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
   const patch = version.split('.').slice(0,2).join('.');
   const cd = `https://raw.communitydragon.org/${patch}`;
   const enrichedChampions=await enrichChampionStats(Object.values(champions.data),patch,readJSON,progress);
+  let itemDescriptions=null;
+  try{const [bin,strings]=await Promise.all([readJSON(`${cd}/game/items.cdtb.bin.json`,35000),readJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);itemDescriptions=enrichItemDescriptions(items.data,bin,strings,patch);progress('已解析当前版本装备数值与条件公式');}
+  catch{progress('装备详细公式暂不可用，保留官方基础描述');}
   progress('正在读取海克斯资料清单');
   let augments = [], augmentSource = null, augmentError = null;
   try {
@@ -68,7 +73,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:7, version, patch, fetchedAt: new Date().toISOString(),checkedAt:new Date().toISOString(),
+    schema: 1, contentRevision:7, itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,
@@ -85,7 +90,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     items:Object.fromEntries(Object.entries(items.data).map(([id,i]) => [id, {
       id:Number(id), name:i.name, description:cleanText(i.description), tags:i.tags, gold:i.gold, maps:i.maps,
       from:i.from || [], into:i.into || [], inStore:i.inStore !== false, requiredAlly:i.requiredAlly,requiredChampion:i.requiredChampion,stats:i.stats,specialRecipe:i.specialRecipe||null,
-      icon:`${DD}/cdn/${version}/img/item/${i.image.full}`,
+      icon:`${DD}/cdn/${version}/img/item/${i.image.full}`, ...(itemDescriptions?.[id]?.tooltip?{tooltip:itemDescriptions[id].tooltip}:{}),
     }])),
     runes, spells:spells.data, augments,
   };

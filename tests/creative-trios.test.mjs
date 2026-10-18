@@ -71,7 +71,7 @@ test('creative discovery seeds retain specific actions while composition fit can
  for(const r of rows)assert.ok(['curated','creative','adaptive','generated'].includes(r.origin));
  const curated=rows.filter(r=>r.origin==='curated');
  assert.ok(curated.length,'authored alternatives remain discoverable');
- assert.ok(rows[0].compositionFit.score>Math.max(...curated.map(r=>r.compositionFit.score)),'the better-fitting first result does not need a catalog label');
+ assert.ok(rows[0].score>=Math.max(...curated.map(r=>r.score)),'the first result must respect combined fit and player-style scoring among authored alternatives');
  for(const r of rows){
   assert.ok(Number.isFinite(r.compositionFit.score));
   for(const role of ['top','jungle'])assert.deepEqual(r.slots.find(s=>s.role===role),slots.find(s=>s.role===role));

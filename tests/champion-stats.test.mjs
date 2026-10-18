@@ -5,6 +5,7 @@ import {parseChampionCombatStats,enrichChampionStats,hasCurrentCombatStats,champ
 import {aggregateCombatStats,statAtLevel,applyLivePanel} from '../src/core/live-estimate.mjs';
 import {collectSnapshot} from '../services/data.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+data.contentCheckedAt=data.checkedAt=new Date().toISOString(); // Recently verified fixture for the fast-path cases.
 const hero=id=>data.champions.find(c=>c.id===id);
 // Independent source values from CharacterRecords/Root, checked against
 // Riot 26.20's Ashe/Lucian growth changes and 26.17's Vayne AS-ratio change.
@@ -65,4 +66,15 @@ test('partial, mismatched and failed CN dictionaries retain existing names and C
  const original=global.fetch;
  try{for(const cn of [null,{version:data.patch,hero:[]},{...cnNames(),version:'16.21'}]){const messages=[];global.fetch=async url=>{if(cn===null&&!url.endsWith('versions.json'))throw Error('CN unavailable');return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cn};};const result=await collectSnapshot(m=>messages.push(m),data);assert.deepEqual(result.champions,data.champions);assert.equal(result.cnVersion,data.cnVersion);assert(messages.some(m=>m.includes('保留既有名称')));}}
  finally{global.fetch=original;}
+});
+test('an unchanged version number cannot pin old mechanics past the daily full recheck',async()=>{
+ const previous=structuredClone(data),before=structuredClone(previous),calls=[],clock=()=>Date.parse(previous.contentCheckedAt)+86400000;
+ await assert.rejects(collectSnapshot(()=>{},previous,{clock,readJSON:async url=>{calls.push(url);if(url.endsWith('versions.json'))return [data.version];throw Error('isolated full refresh');}}),/isolated full refresh/);
+ assert(calls.some(url=>url.endsWith('/championFull.json')));assert(calls.some(url=>url.endsWith('/item.json')));assert.deepEqual(previous,before);
+});
+test('frequent version/CN checks do not slide the full-content recheck deadline',async()=>{
+ let previous=structuredClone(data),time=Date.parse(previous.contentCheckedAt)+10*3600000;const fullAt=previous.contentCheckedAt,readJSON=async url=>url.endsWith('versions.json')?[data.version]:cnNames();
+ previous=await collectSnapshot(()=>{},previous,{readJSON,clock:()=>time});assert.equal(previous.contentCheckedAt,fullAt);
+ time+=10*3600000;previous=await collectSnapshot(()=>{},previous,{readJSON,clock:()=>time});assert.equal(previous.contentCheckedAt,fullAt);
+ time+=5*3600000;await assert.rejects(collectSnapshot(()=>{},previous,{clock:()=>time,readJSON:async url=>{if(url.endsWith('versions.json'))return [data.version];throw Error('full recheck required');}}),/full recheck required/);
 });

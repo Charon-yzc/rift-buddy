@@ -8,7 +8,7 @@ export async function loadRankings(roots,data){
  const entries={};
  for(const root of roots){
   try{const saved=JSON.parse(await fs.readFile(path.join(root,'rankings.json'),'utf8'));
-   for(const [key,ref] of Object.entries(saved.entries||{}))if(key===ref?.key&&validRankingReference(ref,data)&&newerRanking(ref,entries[key]))entries[key]=ref;
+   for(const [key,stored] of Object.entries(saved.entries||{})){const {serverCheckedAt,...ref}=stored||{};if(key===ref.key&&validRankingReference(ref,data)&&newerRanking(ref,entries[key]))entries[key]=ref;}
   }catch{/* Missing or invalid user cache falls back to the bundled reference. */}
  }
  return entries;

@@ -76,7 +76,7 @@ test('sample shrink limits small-sample ordering and current evidence affects ra
  assert.equal(base.id,withSource.id);assert.ok(withSource.score>base.score&&withSource.score-base.score<=4);assert.equal(withSource.pairEvidence.pairs.length,1);
  const tiny=snapshot();for(const e of tiny.entries)Object.assign(e.pairs[0],{games:1,wins:1});assert.ok(Math.abs(createPairStatisticsIndex(tiny,data.champions,{source,patch:data.patch}).forMembers([a,b]).bonus)<.01);
  const open=slots().map(s=>s.role==='mid'?{...s,champion:null,locked:false}:s),filtered=recommend({...input,slots:open,pairStatistics:snapshot(),rolePools:{mid:{mode:'only',heroes:['Vex','Annie']}},excluded:['Vex']});assert.ok(filtered.length);assert.ok(filtered.every(r=>r.slots.find(s=>s.role==='mid').champion==='Annie'));assert.ok(filtered.every(r=>r.slots.find(s=>s.role==='jungle').champion==='Graves'));
- const stale=recommend({...input,patch:'16.21',pairStatistics:snapshot()})[0];assert.equal(stale.score,base.score);
+ const staleInput={...input,patch:'16.21'},stale=recommend({...staleInput,pairStatistics:snapshot()})[0];assert.equal(stale.score,recommend(staleInput)[0].score);assert.equal(stale.pairEvidence.current,false);assert.equal(stale.pairEvidence.bonus,0);
 });
 
 test('main cards, full plans and sidebar expose sample, version, filters and honest pair scope',()=>{

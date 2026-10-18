@@ -77,7 +77,7 @@ export function restoreTeamFavorite(favorite,current,champions,session=null,{eli
  const configurations=(favorite.configurations||[]).filter(selection=>{
   if(conflicts.some(c=>c.role===selection.role)||!desired.some(s=>s.role===selection.role&&s.champion===selection.id)||!next.some(s=>s.role===selection.role&&s.champion===selection.id))return false;
   if(selection.creativePlan)return creativePlan?.id===selection.creativePlan.id;
-  return (currentCombo(scopeSlots(next,favorite.scope),selection.id,selection.role,null,null,creativePlan)?.id||null)===(selection.comboId||null);
+  return (currentCombo(scopeSlots(next,favorite.scope),selection.id,selection.role,null,null,creativePlan,{allowPending:true})?.id||null)===(selection.comboId||null);
  }).map(s=>structuredClone(s));
  const merged=session?mergeClientSession(next,session,champions):{slots:next,unassigned:[]};
  return {...merged,creativePlan,configurations,conflicts,

@@ -90,8 +90,12 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 .recommendation-ui .pregame-more {margin-left:auto;position:relative}
 .recommendation-ui .pregame-more-content,
 .recommendation-ui .companion-navigation-more>div {background:var(--rb-panel);border-color:var(--rb-line);color:var(--rb-ink);box-shadow:0 8px 22px #0005}
-.recommendation-ui .pregame-more[open]>.pregame-more-content {position:absolute;right:0;top:calc(100% + 6px);width:min(320px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:clamp(110px,calc(100dvh - 400px),380px);margin:0;overflow:auto;z-index:20}
-.recommendation-ui .pregame-more-content {grid-template-columns:minmax(0,1fr)}
+.recommendation-ui .pregame-more[open]>.pregame-more-content {position:absolute;right:0;top:calc(100% + 4px);width:min(260px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:clamp(110px,calc(100dvh - 340px),380px);margin:0;overflow:auto;z-index:20}
+:is(.recommendation-ui,.recommendation-app) .pregame-more-content {grid-template-columns:minmax(0,1fr);gap:3px;padding:6px}
+:is(.recommendation-ui,.recommendation-app) .pregame-more-content .pregame-scopes {display:grid;grid-template-columns:1fr 1fr;gap:2px;padding-bottom:5px;margin-bottom:2px;border-bottom:1px solid var(--rb-line)}
+:is(.recommendation-ui,.recommendation-app) .pregame-more-content>.btn {width:100%;justify-content:flex-start;text-align:left;min-height:30px;padding:4px 7px}
+:is(.recommendation-ui,.recommendation-app) .pregame-more-content>details {border-top:1px solid var(--rb-line);margin-top:4px;padding-top:3px}
+:is(.recommendation-ui,.recommendation-app) .pregame-more-content>details>summary {min-height:30px;padding:5px 7px;font-size:var(--ui-small)}
 .recommendation-ui .pregame-more-content>.pregame-members {grid-area:auto;margin:0;justify-self:stretch;justify-content:flex-start}
 .recommendation-ui .pregame-more-content .companion-eligibility-status {font-size:var(--ui-small);color:var(--rb-muted);margin:0;padding:8px 0 0;border-top:1px solid var(--rb-line)}
 .recommendation-ui .companion-eligibility-status>summary {min-height:30px;color:var(--rb-muted)}

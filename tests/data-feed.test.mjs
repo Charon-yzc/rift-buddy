@@ -5,11 +5,15 @@ import os from 'node:os';
 import path from 'node:path';
 import {generateKeyPairSync,sign} from 'node:crypto';
 import {gzipSync} from 'node:zlib';
-import {DATA_FEED_NAMES,feedHash,verifyFeedEnvelope,decodeFeedFile,applyFeedBundle,createDataFeedActivationGate} from '../services/data-feed.mjs';
+import {DATA_FEED_NAMES,feedHash,verifyFeedEnvelope,decodeFeedFile,applyFeedBundle,createDataFeedActivationGate,validateFeedBundle} from '../services/data-feed.mjs';
+import {loadBuildSources,loadHexBuilds,createBuildCache} from '../services/build-cache.mjs';
+import {loadRankings} from '../services/rankings-cache.mjs';
+import {buildSourceKey} from '../src/core/build-source.mjs';
 import {createDataFeedCache,downloadDataFeed} from '../services/data-feed-cache.mjs';
 import {loadServerSeed} from '../services/server-data-collector.mjs';
 import {stageServerData} from '../services/server-data-store.mjs';
 import {publishServerData} from '../services/server-data-publish.mjs';
+import {isFreshBuildReference} from '../src/core/builds.mjs';
 
 const seed=await loadServerSeed(path.resolve('data'));
 const pair=generateKeyPairSync('ed25519'),publicKey=pair.publicKey.export({type:'spki',format:'pem'}),keys={test:publicKey};
@@ -147,4 +151,45 @@ test('publisher exposes only signed complete references and preserves the previo
  assert.deepEqual(await fs.readdir(path.join(publicRoot,'v1/patches')),[seed.game.patch]);
  assert.deepEqual((await fs.readdir(path.join(publicRoot,'v1/assets'))).sort(),[...Object.values(published.manifest.files).map(file=>file.file),'maintenance.txt'].sort());
  assert.equal(await fs.readFile(sentinel,'utf8'),'keep');
+});
+test('complete unchanged source rechecks advance only signed metadata and reuse the original assets',async t=>{
+ const parent=await temporary(t),root=path.join(parent,'candidate'),publicRoot=path.join(parent,'public'),keyFile=path.join(parent,'private.pem');await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}));
+ const staged=await stageServerData(root,seed),statusFile=path.join(root,'status.json'),status={state:'ok',limited:false,release:staged.pointer.release,startedAt:new Date(now-1000).toISOString()};await fs.writeFile(statusFile,JSON.stringify(status));
+ const first=await publishServerData({root,publicRoot,keyFile,keyId:'test',clock:()=>now});status.startedAt=new Date(now+1000).toISOString();await fs.writeFile(statusFile,JSON.stringify(status));
+ const next=await publishServerData({root,publicRoot,keyFile,keyId:'test',clock:()=>now+2000});assert.equal(next.changed,false);assert.equal(next.refreshed,true);assert.equal(next.manifest.release,first.manifest.release);assert.deepEqual(next.manifest.files,first.manifest.files);assert.equal(next.manifest.publishedAt,first.manifest.publishedAt);assert(next.manifest.sequence>first.manifest.sequence);assert.equal(next.manifest.checkedAt,status.startedAt);assert.equal((await fs.readdir(path.join(publicRoot,'v1/assets'))).length,3);
+ const repeated=await publishServerData({root,publicRoot,keyFile,keyId:'test',clock:()=>now+3000});assert.equal(repeated.manifest.sequence,next.manifest.sequence);assert.equal(repeated.refreshed,false);
+ await fs.writeFile(statusFile,JSON.stringify({...status,state:'partial',startedAt:new Date(now+4000).toISOString()}));await assert.rejects(publishServerData({root,publicRoot,keyFile,keyId:'test',clock:()=>now+5000}),/完整/);
+});
+test('metadata-only refresh waits for idle, verifies on restart, and never treats a client pull as a source recheck',async t=>{
+ const root=await temporary(t),bundle=structuredClone(seed);for(const group of DATA_FEED_NAMES)for(const ref of Object.values(bundle[group].entries))ref.fetchedAt=new Date(now-3*86400000).toISOString();
+ const f=fixture(bundle),game=data(),gate=createDataFeedActivationGate();let client={connected:true,phase:'Lobby'},current=f.envelope;
+ const calls=[],download=async url=>{calls.push(url);return url.endsWith('/latest.json')?Buffer.from(JSON.stringify(current)):f.assets[path.basename(url,'.json.gz')];};
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>gate(client),download,keys,clock:()=>now+10000});await cache.check();const key=Object.keys(game.buildSources)[0],fetchedAt=game.buildSources[key].fetchedAt;assert.equal(game.buildSources[key].serverCheckedAt,undefined);
+ const checkedAt=new Date(now+1000).toISOString();current=f.envelopeFor({...f.manifest,sequence:now+1000,checkedAt});calls.length=0;client={connected:true,phase:'ChampSelect'};assert.equal((await cache.check({force:true})).phase,'pending');assert.equal(calls.length,1);assert.equal(game.buildSources[key].serverCheckedAt,undefined);
+ client={connected:false,phase:'Offline'};assert.equal(cache.activate(),false);client={connected:true,phase:'Lobby'};assert.equal(cache.activate(),true);assert.equal(game.buildSources[key].serverCheckedAt,checkedAt);assert.equal(game.buildSources[key].fetchedAt,fetchedAt);assert(isFreshBuildReference(game.buildSources[key],game.patch,'rift',now+2000));
+ const restored=data();await createDataFeedCache({root,getData:()=>restored,restoreAtStartup:true,keys,clock:()=>now+10000});assert.equal(restored.buildSources[key].serverCheckedAt,checkedAt);
+ const saved=await fs.readFile(path.join(root,'data-feed.json'),'utf8');for(const manifest of [{...f.manifest,sequence:now+2000,checkedAt:new Date(now).toISOString()},{...f.manifest,sequence:now+1000,checkedAt:new Date(now+2000).toISOString()},{...f.manifest,sequence:now+2000,checkedAt:new Date(now+3600000).toISOString()}]){current=f.envelopeFor(manifest);assert.equal((await cache.check({force:true})).phase,'offline');assert.equal(await fs.readFile(path.join(root,'data-feed.json'),'utf8'),saved);}
+});
+test('server recheck metadata renews only matching default-scope content, never newer different local content',()=>{
+ const bundle=structuredClone(seed);for(const ref of Object.values(bundle.builds.entries))ref.fetchedAt=new Date(now-3*86400000).toISOString();const f=fixture(bundle),game=data();applyFeedBundle(game,bundle);
+ const key=Object.keys(game.buildSources)[0],old=game.buildSources[key],local={...old,fetchedAt:new Date(now-1000).toISOString(),core:structuredClone(old.core)};local.core[0].samples++;game.buildSources[key]=local;
+ applyFeedBundle(game,bundle,{...f.manifest,checkedAt:new Date(now).toISOString()});assert.equal(game.buildSources[key],local);assert.equal(local.serverCheckedAt,undefined);
+ const otherKey=Object.keys(game.buildSources).find(id=>id!==key);assert.equal(game.buildSources[otherKey].serverCheckedAt,new Date(now).toISOString());assert.equal(game.buildSources[otherKey].fetchedAt,new Date(now-3*86400000).toISOString());
+});
+test('recheck authority excludes alternate regions, previous patches and newer local captures',()=>{
+ const game=data();applyFeedBundle(game,seed);const key=Object.keys(game.buildSources)[0],ref=game.buildSources[key],checkedAt=new Date(now).toISOString();
+ const alternate={...ref,region:'kr'},old={...ref,patch:'16.19'},newer={...ref,fetchedAt:new Date(now+1000).toISOString()};
+ const alternateKey=buildSourceKey(ref.champion,ref.role,alternate,alternate.patch),oldKey=buildSourceKey(ref.champion,ref.role,old,old.patch);
+ game.buildSources={...game.buildSources,[key]:newer,[alternateKey]:alternate,[oldKey]:old};applyFeedBundle(game,seed,{patch:game.patch,checkedAt});
+ for(const id of [key,alternateKey,oldKey])assert.equal(game.buildSources[id].serverCheckedAt,undefined);
+ const malicious=structuredClone(seed);Object.values(malicious.builds.entries)[0].serverCheckedAt=checkedAt;assert.throws(()=>validateFeedBundle(malicious,game),/无效|复查|资料/);
+});
+test('unsigned caches cannot persist derived recheck authority after a signed feed is missing',async t=>{
+ const root=await temporary(t),game=data(),checkedAt=new Date(now).toISOString(),bundle=structuredClone(seed);for(const name of DATA_FEED_NAMES)for(const ref of Object.values(bundle[name].entries))ref.fetchedAt=new Date(now-3*86400000).toISOString();applyFeedBundle(game,bundle,{patch:game.patch,checkedAt});
+ const ref=Object.values(bundle.builds.entries).find(row=>row.champion==='Ashe'&&row.role==='bottom'),other=Object.values(game.buildSources).find(row=>row.champion!==ref.champion);assert.equal(other.serverCheckedAt,checkedAt);
+ const refresh=createBuildCache({root,getData:()=>game,interval:0,fetchRift:async()=>({...ref,fetchedAt:new Date(now+1000).toISOString()})});await refresh('Ashe','bottom');
+ await fs.writeFile(path.join(root,'hex-builds.json'),JSON.stringify({entries:game.hexBuilds}));await fs.writeFile(path.join(root,'rankings.json'),JSON.stringify({entries:game.rankings}));
+ const restored={...data(),buildSources:await loadBuildSources([root],game),hexBuilds:await loadHexBuilds([root],game),rankings:await loadRankings([root],game)};
+ for(const collection of [restored.buildSources,restored.hexBuilds,restored.rankings]){assert(Object.keys(collection).length);assert(Object.values(collection).every(row=>row.serverCheckedAt===undefined));}
+ applyFeedBundle(restored,bundle,{patch:game.patch,checkedAt});assert(Object.values(restored.buildSources).some(row=>row.serverCheckedAt===checkedAt));
 });

@@ -1,7 +1,13 @@
 import {escape as e,rosterPortrait,roleIcon,icon,button} from './ui.mjs';
 import {ROLES} from './core/rules.mjs';
 import {publicRankedDraft} from './core/ranked-draft.mjs';
-import {rankedDurationReference} from './core/ranked-statistics.mjs';
+import {rankedDurationReference,rankedLaneReferences} from './core/ranked-statistics.mjs';
+import {durationChart,statisticsSourceDates} from './duration-chart-view.mjs';
+
+function laneReferencesView(draft,data){
+ const rows=rankedLaneReferences(draft,data.builds,{patch:data.patch,source:data.buildSource}),hero=id=>data.champions.find(hero=>hero.id===id)?.name||id;
+ return `<details class="ranked-lanes" data-companion-disclosure="ranked-lanes"><summary>对位历史胜率 <small>${rows.some(row=>row.estimated)?'分路估计':'分路对手表'}</small></summary>${rows.map(row=>`<div class="ranked-lane-row"><span>${ROLES.find(role=>role.id===row.role)?.name} · ${e(hero(row.champion)||'未确认')}</span>${row.available?`<span class="ranked-lane-bar" role="img" aria-label="${row.winRate.toFixed(1)}% 历史对局胜率" title="${e(row.evidence.map(item=>hero(item.enemy)+'：'+item.winRate.toFixed(1)+'%，'+item.samples+'场'+(item.estimated?'，分路权重'+(item.weight*100).toFixed(0)+'%':'')).join('\n'))}"><i style="width:${row.winRate.toFixed(2)}%"></i><b>${row.winRate.toFixed(1)}%</b></span>`:'<small>暂无对应统计</small>'}</div>`).join('')}<p>来源分路对手表中的对局结果，不是对线击杀率或本局预测。未公开分路按频率加权；有效覆盖不足 80% 时留空，悬停可看具体对手与场次。</p></details>`;
+}
 
 export function rankedEnemyRoster(client,data){
  const draft=publicRankedDraft(client,data.champions);if(!draft.ranked||!client.connected||client.phase!=='ChampSelect')return '';
@@ -30,8 +36,8 @@ export function rankedCurveLink(client,data,{companion=false}={}){
 export function rankedCurveView(client,data){
  const draft=publicRankedDraft(client,data.champions);if(!draft.complete||client.phase!=='ChampSelect')return '';
  const curve=rankedDurationReference(draft,data.builds,{patch:data.patch,source:data.buildSource});
- if(!curve)return '<section class="ranked-curve" aria-label="分时胜率参考"><div class="ranked-roster-caption"><b>分时胜率参考</b><span role="status">暂无完整统计</span></div><p class="ranked-curve-note">缺少对应分路或时长数据，保留当前配置。</p></section>';
- const series=[['我方',curve.allies,'ally'],['敌方',curve.enemies,'enemy']],values=series.flatMap(([,team])=>team.points.map(point=>point.winRate)),low=Math.min(45,Math.floor(Math.min(...values)-1)),high=Math.max(55,Math.ceil(Math.max(...values)+1));
- const x=i=>38+i*68,y=value=>112-(value-low)/(high-low)*84,labels=['<25','25–30','30–35','35–40','40+'];
- return `<section class="ranked-curve" aria-label="双方分时胜率参考"><div class="ranked-roster-caption"><b>分时胜率参考</b><span><i class="curve-legend ally"></i>我方 <i class="curve-legend enemy"></i>敌方</span></div><svg class="ranked-curve-plot" viewBox="0 0 340 144" role="img" aria-label="双方英雄分路历史胜率平均；不是本场胜率预测">${[low,50,high].map(value=>`<line class="curve-grid" x1="38" x2="310" y1="${y(value)}" y2="${y(value)}"/><text class="curve-axis" x="3" y="${y(value)+3}">${value}%</text>`).join('')}${labels.map((label,i)=>`<text class="curve-axis" x="${x(i)}" y="136" text-anchor="middle">${label}</text>`).join('')}${series.map(([label,team,id])=>`<polyline class="curve-line ${id}" points="${team.points.map((point,i)=>`${x(i)},${y(point.winRate)}`).join(' ')}"/>${team.points.map((point,i)=>`<circle class="curve-point ${id}" cx="${x(i)}" cy="${y(point.winRate)}" r="3" tabindex="0"><title>${label} · ${labels[i]} 分钟 · ${point.winRate.toFixed(1)}%（五位英雄分路统计均值）</title></circle>`).join('')}`).join('')}</svg><details class="ranked-curve-method"><summary>统计口径 · 非本场预测${curve.estimatedRoles?' · 分路未确认':''}</summary><p>OP.GG ${curve.source.region==='kr'?'韩国':'全球'} · ${e(curve.source.tier)} · 单双排历史统计。两条线分别是各队五位英雄对应分路的分时胜率平均，未公开位置按分路频率加权。不是本场预测，双方不相加为 100%。</p><p>分钟表示对局结束时长区间；来源没有提供各区间样本量，不能据此计算置信区间。灵活排位沿用此单双排参考。未考虑玩家水平与局内局势。</p></details></section>`;
+ if(!curve)return '<section class="ranked-curve" aria-label="分时胜率参考"><div class="ranked-roster-caption"><b>分时胜率参考</b><span role="status">暂无完整统计</span></div><p class="ranked-curve-note">缺少对应分路或时长数据，保留当前配置。</p>'+laneReferencesView(draft,data)+'</section>';
+ const series=[{name:'我方',points:curve.allies.points,id:'ally'},{name:'敌方',points:curve.enemies.points,id:'enemy'}];
+ return `<section class="ranked-curve" aria-label="双方分时胜率参考"><div class="ranked-roster-caption"><b>分时胜率参考</b><span><i class="curve-legend ally"></i>我方 <i class="curve-legend enemy"></i>敌方</span></div>${durationChart(series,{label:'双方英雄分路历史胜率平均；不是本场胜率预测'})}<details class="ranked-curve-method"><summary>统计口径 · 非本场预测${curve.estimatedRoles?' · 分路未确认':''}</summary><p>OP.GG ${curve.source.region==='kr'?'韩国':'全球'} · ${e(curve.source.tier)} · ${e(curve.patch)} 单双排。两条线分别是五位英雄对应分路的历史胜率平均，未知位置按分路频率加权。不是本场预测，双方不相加为 100%。</p>${statisticsSourceDates(curve)}<p>横轴从 0 开始；0–25 分钟是同一结束时长区间，来源没有更早的细分，也没有各区间样本量。不是每分钟预测；灵活排位沿用单双排参考。</p></details>${laneReferencesView(draft,data)}</section>`;
+
 }

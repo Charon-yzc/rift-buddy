@@ -5,7 +5,7 @@ import {selectedOpponentBuild,validOpponentScope} from './opponent-build-source.
 import {validBuildSource,buildSourceLabel,selectedBuildReference,collectBuildSources} from './build-source.mjs';
 import {profile, RULES_PATCH, RULES_VERSION, DUOS, TRIOS} from './rules.mjs';
 import {dependencyChanges} from './catalog-review.mjs';
-import {LOADOUT_DATE,LOADOUT_PATCH,RUNE_PLANS,loadoutOptions,loadoutSkillPlans,comboLoadout,comboSources,mechanismRuneKeys} from './loadouts.mjs';
+import {LOADOUT_DATE,LOADOUT_PATCH,RUNE_PLANS,SKILL_PLANS,loadoutOptions,loadoutSkillPlans,comboLoadout,comboSources,mechanismRuneKeys} from './loadouts.mjs';
 import {itemConflicts,runeMechanicIssue} from './mechanics.mjs';
 import {adaptEquipment} from './adaptive-build.mjs';
 import {validRankedStatistics} from './ranked-statistics.mjs';
@@ -19,7 +19,7 @@ export {validateRunePage} from './rune-page.mjs';
 
 export const BUILD_PARSER_VERSION=10;
 export function isFreshBuildReference(ref,patch,mode='rift',now=Date.now()){
- const age=now-Date.parse(ref?.fetchedAt);
+ const age=now-Math.max(Date.parse(ref?.fetchedAt)||0,Date.parse(ref?.serverCheckedAt)||0);
  return !!ref&&ref.patch===patch&&['rift','hex'].includes(mode)&&(mode==='hex'||ref.parserVersion===BUILD_PARSER_VERSION)&&Number.isFinite(age)&&age>=0&&age<86400000;
 }
 const rune = (primary,secondary,ids,shards=[5008,5008,5001])=>({primaryStyleId:primary,subStyleId:secondary,selectedPerkIds:[...ids,...shards]});
@@ -124,7 +124,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(['Karma','Zilean'].includes(champion.id)&&role==='mid')key='mage';
  if(variant==='ap'&&['Malphite','Gragas','Chogath','Amumu'].includes(champion.id))key='apAssassin';
  if(variant==='tank')key=role==='support'?'supportTank':'tank';
- const availableLoadouts=loadoutOptions(champion,role,mode).filter(l=>[...l.items,l.boots,...l.late,...(l.early||[])].every(id=>{const i=data.items[id],base=data.items[i?.specialRecipe];return i?.maps?.['11']&&(i.inStore&&i.gold?.purchasable!==false||base?.maps?.['11']&&base.inStore&&base.gold?.purchasable!==false);})&&l.runes.every(k=>validateRunePage(RUNE_PLANS[k]?.page,data.runes)));
+ const availableLoadouts=loadoutOptions(champion,role,mode).filter(l=>[...l.items,l.boots,...l.late,...(l.early||[])].every(id=>{const i=data.items[id],base=data.items[i?.specialRecipe],purchase=i?.inStore&&i.gold?.purchasable!==false?i:base;return i?.maps?.['11']&&purchase?.maps?.['11']&&purchase.inStore&&purchase.gold?.purchasable!==false&&!i.requiredAlly&&!purchase.requiredAlly&&(!i.requiredChampion||i.requiredChampion===champion.id)&&(!purchase.requiredChampion||purchase.requiredChampion===champion.id);})&&l.runes.every(k=>validateRunePage(RUNE_PLANS[k]?.page,data.runes)));
  const creative=mode==='rift'&&creativePlan?.id===comboId?creativeMemberCombo(creativePlan,champion.id,role):null;
  const duo=creative||(mode==='rift'?[...TRIOS,...DUOS].find(d=>d.id===comboId&&comboLoadout(d,champion,role)!==null):null);
  const play=creative?(creative.play||fallbackMemberPlay(creative,data,champion.id,role)):duoPlay(duo,data,{champion:champion.id,role});
@@ -135,13 +135,13 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const standardRef=scopedRef||(validReference(generic,champion,role,data,{allowOlder:true})?generic:null);
  const referenceLabel=ref=>buildSourceLabel(ref)+(ref?.opponent?' · 对 '+(data.champions.find(c=>c.id===ref.opponent)?.name||ref.opponent)+' 的来源参考':'');
  const preferredLoadout=availableLoadouts.find(c=>c.id===preferred);
- const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&(preferredLoadout.patch||LOADOUT_PATCH)!==data.patch&&standardRef?.patch===data.patch;
+ const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&((preferredLoadout.patch||LOADOUT_PATCH)!==data.patch||data.catalogInfo?.loadoutStatus?.[preferredLoadout.id]?.stale||dependencyChanges(preferredLoadout,{runes:RUNE_PLANS},data).length>0)&&standardRef?.patch===data.patch;
  const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];
  if(creative?.archetype==='shared'&&!config)selectionWarnings.push('当前行动路线没有适用的专用配置，个人准备使用普通位置参考；可在“配置玩法”主动选择，已有个人选择优先保留。');
  if(mode==='rift'&&sourceOpponent&&!scopedRef)selectionWarnings.push(`原对 ${data.champions.find(c=>c.id===sourceOpponent)?.name||sourceOpponent} 的来源参考在当前筛选下暂不可用，保留原选择，暂显示普通同位置配置；可刷新对手参考或恢复普通来源。`);
- if(currentReferencePreferred)selectionWarnings.push(`原组合配装为 ${preferredLoadout.patch||LOADOUT_PATCH}，当前先展示 ${standardRef.patch} 同位置统计参考；组合专用配装可在“配置玩法”主动选择，统计不代表组合适配已经验证。`);
+ if(currentReferencePreferred)selectionWarnings.push(`原组合配装版本或依赖资料待复核，当前先展示${standardRef?` ${standardRef.patch} 同位置统计参考`:'同位置基础参考'}；组合专用配装可在“配置玩法”主动选择，统计不代表组合适配已经验证。`);
  if(comboId&&!duo)selectionWarnings.push('原组合已移出当前库，或不适用于这个英雄位置；请重新确认玩法。');
  if(duo?.patch&&duo.patch!==data.patch)selectionWarnings.push(`这套组合整理于 ${duo.patch}，当前资料 ${data.patch}；${creative?'旧版配合说明保留，机制待复核':'机制与专用配置待复核'}。`);
  if(requested!=='default'&&!config)selectionWarnings.push('原玩法不适用于当前英雄或位置，已使用通用配置。');
@@ -251,12 +251,20 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(runeId&&mode==='rift'&&!customRune&&!runeOptions.some(o=>o.id===runeId))selectionWarnings.push('原符文方案已不在当前列表，请重新核对选择。');
  const skillChoices=mode==='rift'?(standardRef?.skillOptions||[]).filter(o=>legalSkillOrder(o.order,champion.id)).map(o=>({...o,patch:standardRef.patch,sourceUrl:standardRef.sourceUrl,fetchedAt:standardRef.fetchedAt,name:`来源加点 · ${orderPriority(o.order,champion.id).split('').join(' › ')}`,when:`${referenceLabel(standardRef)} · ${standardRef.patch} · 获取 ${standardRef.fetchedAt}；样本 ${o.samples} 场${o.samples<200?'，样本较少':''}；仅覆盖前 ${o.order.length} 个技能点，不代表这套组合的最优加点。`,source:'OP.GG'})):[];
  if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,patch:config.patch||LOADOUT_PATCH,reviewedAt:config.reviewedAt||LOADOUT_DATE,when:config.skillReason||config.why,source:'机制整理',samples:null});
- const scopedSkills=mode==='rift'?loadoutSkillPlans(champion,role,config?.id||'default').map(p=>({stale:p.patch!==data.patch||dependencyChanges(p,null,data).length>0,id:'scoped-skill-'+p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,order:p.order,priority:p.continuationPriority,reason:p.reason,patch:p.patch,reviewedAt:p.reviewedAt,reference:p.reference,sources:p.sources||[],source:'机制整理',samples:null,when:`机制整理 ${p.patch}，复核 ${p.reviewedAt}；${p.reason}${p.reference?` 前 ${p.reference.order.length} 点参考 ${p.reference.patch} 同位置来源（获取 ${p.reference.fetchedAt}）；${p.reference.order.length<p.order.length?'后续节点为机制补齐，':''}整套整理无统计样本。来源：${p.reference.url}`:' 整套整理无统计样本。'}`})) : [];
+ const skillScope=config?.id||((currentReferencePreferred||skillId?.startsWith('scoped-skill-'))?preferredLoadout?.id:null)||'default';
+ let skillPlans=loadoutSkillPlans(champion,role,skillScope);
+ const requestedSkill=SKILL_PLANS.find(plan=>'scoped-skill-'+plan.id===skillId&&plan.champion===champion.id&&plan.role===role);
+ if(requestedSkill&&!skillPlans.includes(requestedSkill))skillPlans=[...skillPlans,requestedSkill];
+ // An unusual lane may have no population build. Independently reviewed
+ // nodes remain usable without reviving an old gear route; conflicting
+ // authored orders never choose a default just because one was listed first.
+ if(!config&&!standardRef&&!skillPlans.length){const rows=SKILL_PLANS.filter(plan=>plan.champion===champion.id&&plan.role===role&&plan.patch===data.patch&&!dependencyChanges(plan,null,data).length);if(new Set(rows.map(plan=>plan.order+':'+(plan.continuationPriority||''))).size===1)skillPlans=rows.slice(0,1);}
+ const scopedSkills=mode==='rift'?skillPlans.map(p=>({stale:p.patch!==data.patch||dependencyChanges(p,null,data).length>0,id:'scoped-skill-'+p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,order:p.order,priority:p.continuationPriority,reason:p.reason,patch:p.patch,reviewedAt:p.reviewedAt,reference:p.reference,sources:p.sources||[],source:'机制整理',samples:null,when:`机制整理 ${p.patch}，复核 ${p.reviewedAt}；${p.reason}${p.reference?` 前 ${p.reference.order.length} 点参考 ${p.reference.patch} 同位置来源（获取 ${p.reference.fetchedAt}）；${p.reference.order.length<p.order.length?'后续节点为机制补齐，':''}整套整理无统计样本。来源：${p.reference.url}`:' 整套整理无统计样本。'}`})) : [];
  if(config)skillChoices.unshift(...scopedSkills);else skillChoices.push(...scopedSkills);
  // A dedicated gear/rune route may have no authored skill nodes. Keep its
  // equipment while providing the independently labelled same-role source;
  // do not extend that partial order or imply it was measured for this combo.
- const defaultSkill=(config?skillChoices.find(o=>o.source==='机制整理')||skillChoices.find(o=>o.source==='OP.GG'):duo?scopedSkills[0]||skillChoices[0]:skillChoices[0])||null;
+ const defaultSkill=(config?skillChoices.find(o=>o.source==='机制整理'&&!o.stale)||skillChoices.find(o=>o.source==='OP.GG'):duo?scopedSkills.find(o=>!o.stale)||skillChoices.find(o=>!o.stale):skillChoices.find(o=>!o.stale))||null;
  let customSkill=null;
  if(mode==='rift'&&customSkillOrder){
   let stored;try{stored=validateCustomSkillOrder(customSkillOrder,champion.id);}catch{}

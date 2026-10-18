@@ -78,7 +78,6 @@
  .sidebar-focused .pregame-styles{grid-column:1;grid-row:2}.sidebar-focused .pregame-controls-compact .pregame-members{grid-column:3;grid-row:2;margin:0;padding-inline:0}
  .sidebar-focused .pregame-controls-compact .pregame-room{grid-column:2;grid-row:2;margin:0;padding-inline:0}.sidebar-focused .pregame-more{grid-column:4;grid-row:2}
  .sidebar-focused .pregame-controls-compact .pregame-styles>.btn{padding-inline:5px}.sidebar-focused .pregame-more>summary{padding-inline:3px}
- .sidebar-focused .pregame-more[open]{grid-column:1/-1;grid-row:3}
  }
  .sidebar-focused .pregame-role{padding:2px 4px}.sidebar-focused .pregame-role .select{min-height:30px}
  .sidebar-focused .companion-eligibility-status>summary{min-height:26px;padding:3px 0}

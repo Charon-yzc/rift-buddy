@@ -19,7 +19,7 @@ export const dataHash=bytes=>createHash('sha256').update(bytes).digest('hex');
 // merely because a local fetch timestamp changed.
 export function contentEqual(left,right){
  const stable=value=>Array.isArray(value)?value.map(stable):value&&typeof value==='object'?
-  Object.fromEntries(Object.keys(value).sort().filter(key=>!['fetchedAt','checkedAt'].includes(key)).map(key=>[key,stable(value[key])])):value;
+  Object.fromEntries(Object.keys(value).sort().filter(key=>!['fetchedAt','checkedAt','contentCheckedAt'].includes(key)).map(key=>[key,stable(value[key])])):value;
  return JSON.stringify(stable(left))===JSON.stringify(stable(right));
 }
 export function validateServerGame(game){

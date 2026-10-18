@@ -130,9 +130,10 @@ test('independent skill baselines notice changed champion data and ignore unvali
   assert.equal(b.priority,'QEW');assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.winRate,undefined);assert.equal(b.selectedSkill.pickRate,undefined);
   assert.equal(b.selectedSkill.stale,false);
   const changed=structuredClone(data);changed.champions.find(c=>c.id==='Malphite').stats.armor+=1;
-  const after=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery'});
+  const automatic=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery'});assert.notEqual(automatic.selectedSkill?.stale,true,'Pending nodes require an explicit selection');
+  const after=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery',skillId:b.selectedSkill.id});
   assert.equal(after.selectedSkill.stale,true);assert.match(after.selectedSkill.when,/内容已变化，待复核/);assert(after.selectionWarnings.some(w=>w.includes('所选组合加点')));
-  const m=createGuideModel(changed,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery'}));assert.equal(m.skillStale,true);
+  const m=createGuideModel(changed,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery',skillId:b.selectedSkill.id}));assert.equal(m.skillStale,true);
   assert.match(renderGuide({model:m,phase:'Offline',connected:false},'skills',false,()=>''),/机制整理 · 16.20 · 待复核/);
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });
