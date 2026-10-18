@@ -679,10 +679,11 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-pic
 .recommendation-app .hex-comparison .panel-head h3{font-size:14px}
 .recommendation-app .hex-comparison .panel-head p{font-size:12px}
 .recommendation-app .hex-side .detail-section{margin-top:10px!important}
+.recommendation-ui .companion-persistent .pregame-controls{flex-wrap:wrap;gap:5px}
+.recommendation-ui .pregame-controls .pregame-secondary{display:flex;align-items:center;flex:1 0 auto;width:auto;max-width:100%;justify-content:space-between;gap:6px}
+.recommendation-ui .pregame-secondary .pregame-style-select{flex:none;margin-left:0}
+.recommendation-ui .pregame-secondary .pregame-more{margin-left:auto}
 @media(max-width:340px){
- .recommendation-ui .companion-persistent .pregame-controls{flex-wrap:wrap;gap:5px}
- .recommendation-ui .pregame-controls .pregame-secondary{display:flex;align-items:center;flex-basis:100%;justify-content:space-between;gap:4px}
+ .recommendation-ui .pregame-controls .pregame-secondary{flex-basis:100%}
  .recommendation-ui .pregame-role .select{width:86px}
- .recommendation-ui .pregame-secondary .pregame-style-select{margin-left:0}
- .recommendation-ui .pregame-secondary .pregame-more{margin-left:auto}
 }
