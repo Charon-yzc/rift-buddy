@@ -61,7 +61,12 @@ test('teams are retained, champ-select labels do not assume actual side, and are
  const s=state([player('p1'),player('p2','TEAM-200')]);let html=ongoingGameView(s,data);
  assert.match(html,/data-ongoing-team="TEAM-100"/);assert.match(html,/data-ongoing-team="TEAM-200"/);assert.match(html,/我方队伍/);assert.match(html,/对方队伍/);assert.doesNotMatch(html,/<h2>蓝色方|<h2>红色方/);
  s.roster.phase='in-game';html=ongoingGameView(s,data);assert.match(html,/<h2>蓝色方/);assert.match(html,/<h2>红色方/);
- const arena=state(Array.from({length:16},(_,i)=>player(`arena${i}`,'TEAM-ALL')));arena.roster.mode='CHERRY';const rendered=ongoingGameView(arena,data);assert.equal((rendered.match(/<article class="ongoing-player-card/g)||[]).length,16);assert.match(rendered,/ongoing-team-scroll is-large/);
+ const arena=state(Array.from({length:16},(_,i)=>player(`arena${i}`,'TEAM-ALL')));arena.roster.mode='CHERRY';let rendered=ongoingGameView(arena,data);assert.equal((rendered.match(/<article class="ongoing-player-card/g)||[]).length,16);assert.match(rendered,/ongoing-team-scroll is-large/);
+ // The public subteam id separates the sixteen players: pairs stay pairs and no
+ // team average is invented across allies and opponents.
+ arena.roster.players.forEach((p,i)=>{p.group=Math.floor(i/2)+1;});rendered=ongoingGameView(arena,data);
+ assert.equal((rendered.match(/data-ongoing-team="CHERRY-\d+"/g)||[]).length,8);assert.equal((rendered.match(/<h2>斗魂小队 \d+/g)||[]).length,8);
+ assert.doesNotMatch(rendered,/is-large|队伍历史分析|历史胜率 <b>/);assert.equal((rendered.match(/--ongoing-cards:2/g)||[]).length,8);
  const css=await readFile(new URL('../src/ongoing-game.css',import.meta.url),'utf8');assert.match(css,/\.ongoing-team-scroll\{[^}]*overflow-x:auto/);assert.match(css,/width:240px;flex:0 0 240px/);assert.doesNotMatch(css,/100vw|position:fixed/);
 });
 

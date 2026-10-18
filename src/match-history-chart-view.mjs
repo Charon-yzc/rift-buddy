@@ -1,5 +1,4 @@
 import {escape as e} from './ui.mjs';
-import {historyTextTip} from './match-history-hover.mjs';
 import {timelineAnalysisView} from './match-history-timeline-view.mjs';
 import {historyStatsView} from './match-history-stats-view.mjs';
 

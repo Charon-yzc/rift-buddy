@@ -16,8 +16,7 @@ const game={id:42,source:'lcu',created:1700000000000,version:'16.20',queue:420,d
 const state=(section='summary',open=true)=>({tabs:[{id:1,options:{},filter:{},page:{player:{name:'本人'},source:'lcu',games:[game],start:0,count:1},details:{42:{game,open,section}}}],current:1,servers:[],query:'',source:'auto',server:''});
 test('compact match disclosure retains both team rosters and an independently labelled six-tab panel',()=>{
  const html=matchHistoryView(state(),data);
- assert.match(html,/history-roster-preview/);assert.match(html,/aria-controls="history-panel-42"/);assert.match(html,/id="history-panel-42"/);assert.match(html,/role="tabpanel"/);
- assert.match(html,/data-history-tip="item"/);assert.match(html,/data-history-tip="rune"/);
+ assert.match(html,/history-roster-preview/);assert.match(html,/aria-controls="history-panel-42"/);assert.match(html,/id="history-panel-42"/);assert.match(html,/role="tabpanel"/); assert.match(html,/data-history-tip="item"/);assert.match(html,/data-history-tip="rune"/);
  assert.match(html,/data-history-slot="sidebar-controls"/);assert.match(html,/data-history-slot="sidebar-extra"/);
  assert.match(historyMatchSummaryView(data,{game}),/history-team-heading/);
 });

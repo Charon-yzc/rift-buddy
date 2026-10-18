@@ -8,6 +8,21 @@ test('ongoing game automatically loads each actual visible player with the bound
  const calls=[];const c=createOngoingGameController({request:async(op,p)=>{calls.push([op,p]);return op==='roster'?roster():op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
  await c.refresh();assert.equal(c.state.players[member.key].loading,false);assert.equal(c.state.roster.key,'one');assert.equal(calls.find(([op])=>op==='page')[1].rosterKey,'one');
 });
+test('a background tick repaints only when the public roster actually changed',async()=>{
+ let current=roster(),changes=0;
+ const c=createOngoingGameController({request:async(op)=>op==='roster'?current:op==='page'?page:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{changes++;}});
+ await c.refresh();const afterFirst=changes;
+ await c.refresh({background:true});assert.equal(changes,afterFirst,'An unchanged background tick must not repaint the page');
+ current={...roster(),phase:'in-champ-select'};await c.refresh({background:true});assert.ok(changes>afterFirst,'A changed roster must repaint the page');
+ await c.refresh();assert.ok(c.state.loading===false);
+});
+test('a quiet tick still clears a resolved failure so the page stops claiming an error',async()=>{
+ let fail=true,changes=0;const good=roster();
+ const c=createOngoingGameController({request:async(op)=>{if(op==='roster'){if(fail)throw Error('读取未完成');return good;}return op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{changes++;}});
+ await c.refresh();assert.match(c.state.error,/读取未完成/);const afterError=changes;
+ fail=false;await c.refresh({background:true});
+ assert.equal(c.state.error,'','A successful background read clears the stale message');assert.ok(changes>afterError,'Clearing the message repaints once');
+});
 test('old player data cannot enter a replacement game even when its request completes last',async()=>{
  let release,next=roster();const c=createOngoingGameController({request:async(op)=>op==='roster'?next:op==='page'?new Promise(resolve=>release=resolve):{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
  const pending=c.refresh();while(!release)await new Promise(resolve=>setImmediate(resolve));next={...roster('two'),players:[],teams:{}};await c.refresh();release(page);await pending;

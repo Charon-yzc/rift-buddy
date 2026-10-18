@@ -13,6 +13,9 @@ https.request=(options,callback)=>{
  request.end=()=>queueMicrotask(()=>{try{
   if(!syntheticClient)throw Error('Synthetic client not connected');
   syntheticReads++;
+  // The app must never write through this fixture: every client mutation is a
+  // user-clicked action and belongs to a harness that mocks the writer.
+  assert.equal(options.method||'GET','GET','Synthetic client must only be read, saw '+(options.method||'GET')+' '+options.path);
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-user-flow');
   const route=options.path,champion=syntheticClient.session.myTeam[0];
   const value=
