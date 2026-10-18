@@ -13,7 +13,7 @@ ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label,timeout=18000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await check())return;await delay(100);}throw Error(label);}
 async function checkpoint(name,run){try{await run();checks.push({name,passed:true});}catch(error){
- const ui=await Promise.all(windows.filter(window=>!window.isDestroyed()).map(async window=>({url:window.webContents.getURL(),details:await window.webContents.executeJavaScript('({toast:document.querySelector("#toast")?.textContent,activeTab:document.querySelector(".companion-tabs .active")?.textContent})').catch(()=>null)})));
+ const ui=await Promise.all(windows.filter(window=>!window.isDestroyed()).map(async window=>({url:window.webContents.getURL(),details:await window.webContents.executeJavaScript('(async()=>{const b=await window.buddy.bootstrap();return {toast:document.querySelector("#toast")?.textContent,activeTab:document.querySelector(".companion-tabs .active")?.textContent,role:document.querySelector("#solo-role")?.value,roleDisabled:document.querySelector("#solo-role")?.disabled,savedRole:b.state?.draft?.playerPosition?.role,revision:b.revision,gameId:b.state?.draft?.clientGameId};})()').catch(()=>null)})));
  checks.push({name,passed:false,message:error.message,ui});console.error('FAIL '+name+': '+error.message+' '+JSON.stringify(ui));
 }}
 async function run(){
@@ -171,6 +171,11 @@ async function run(){
     const before=attempts.length,writeBefore=writes.length;await change(role==='mid'?main:side,'#solo-role',role);
     await until(()=>intent===hero(id).key,'Explicit '+role+' lane did not replace the unlocked hover in queue '+nextQueue,7000);
     await until(()=>results.length===attempts.length,'Lane preselection did not settle');assert.equal(attempts.length-before,1,'Changing one lane must make one explicit preselection API call');assert.notEqual(attempts.at(-1).preselectOnly,true);assert.equal(attempts.at(-1).claimPosition,true);assert.equal(attempts.at(-1).role,role);assert.equal(results.at(-1).steps.hover.status,'done','Lane replacement was not confirmed by the client');
+    // IPC success precedes the actor's fresh sync and save. Complete that
+    // action in both renderers before switching windows for the next click.
+    const actor=role==='mid'?main:side,notice='已预选'+hero(id).name+'占位';
+    await until(()=>js(actor,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return role?.value==='+JSON.stringify(role)+'&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith('+JSON.stringify(notice)+');})()'),'Lane action did not finish in its renderer: '+role);
+    await until(async()=>{if((await state()).draft.playerPosition?.role!==role)return false;return (await Promise.all([main,side].map(window=>js(window,'document.querySelector("#solo-role")?.value')))).every(value=>value===role);},'Lane position did not settle across both windows: '+role);
     await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'Lane preselection left recommendations');
     await until(()=>js(main,'!!document.querySelector(".draft-compare-workspace")'),'The other window treated a lane claim as a complete configuration');
     await delay(450);assert.equal(await js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),true,'A later client/receipt event reopened configuration for a lane claim');
