@@ -100,6 +100,8 @@ ssh rift-buddy-data 'sudo -n systemctl start --no-block rift-buddy-data.service'
 
 退出码 0 表示整轮完整；2 表示有部分失败或限定范围测试，有效来源仍可能产生新候选；1 表示无法保存完整候选或运行错误。`inactive` 可以是正常完成，必须同时查看退出码和 status。不能仅因 timer 显示 active 就认定资料已更新。
 
+采集服务的内存软／硬限额为 640／768 MiB，Node 堆上限仍为 320 MiB，为同补丁装备公式与字典解析留出进程内存。维护时结合 cgroup `memory.events` 的增量和整机可用内存判断节流，不能只凭单次累计计数解释全部耗时。在线调整须先保存有效 unit 和覆盖文件，核对 PID 不变、实际限额生效，再验证完整采集和签名发布；不要在占用高于旧硬限额时直接降低限额，也不要用广泛的 `systemctl revert` 清除其他覆盖。
+
 测试使用虚拟响应和临时目录，不向真实客户端写入。维护者本地可执行：
 
 ```powershell
