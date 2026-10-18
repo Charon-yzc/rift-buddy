@@ -42,6 +42,31 @@ test('confirmed local champion remains fixed with either switch and still leaves
  assert.equal(companionHeroAction({connected:true,phase:'ChampSelect',mode:{id:'rift'},session:live},hero('Jinx')).blocked,true);
 });
 
+test('blind-pick hovers participate before confirmation, including intent-only players without client lanes',()=>{
+ const board=createSlots().map(s=>({...s,party:['mid','bottom','support'].includes(s.role)}));
+ const live={localPlayerCellId:0,myTeam:[{cellId:0,championId:0,championPickIntent:hero('Ahri').key,assignedPosition:''},{cellId:1,championId:hero('Ashe').key,championPickIntent:0,assignedPosition:''}],theirTeam:[],actions:[[{actorCellId:1,type:'pick',championId:hero('Ashe').key,completed:false}]]};
+ const before=structuredClone({board,live});
+ const on=clientRecommendationDraft(board,live,champions,{includePreselected:true,ownRole:'mid'});
+ assert.equal(on.slots.find(s=>s.role==='mid').champion,'Ahri');assert.equal(on.slots.find(s=>s.role==='bottom').champion,'Ashe');
+ assert.ok(on.slots.filter(s=>s.champion).every(s=>s.publicIntent&&!s.locked));
+ assert.deepEqual(clientRecommendationDraft(on.slots,on.session,champions,{includePreselected:true,ownRole:'mid'}),on);
+ const input={slots:board,clientSession:live,champions,scope:'party',soloRole:'mid',includePreselected:true,rolePools:{support:{mode:'only',heroes:['Nami','Lulu']}},limit:2};
+ const rows=recommend(input);assert.ok(rows.length);assert.ok(rows.every(row=>row.slots.find(s=>s.role==='mid').champion==='Ahri'&&row.slots.find(s=>s.role==='bottom').champion==='Ashe'));
+ assert.ok(rows.every(row=>row.targets.includes('support')&&!row.targets.includes('mid')&&!row.targets.includes('bottom')));
+ assert.deepEqual({board,live},before);
+ live.myTeam[0].championPickIntent=hero('Lux').key;
+ assert.ok(recommend(input).every(row=>row.slots.find(s=>s.role==='mid').champion==='Lux'));
+ live.myTeam[0].championPickIntent=0;
+ assert.ok(recommend({...input,rolePools:{mid:{mode:'only',heroes:['Galio']},support:{mode:'only',heroes:['Nami']}}}).every(row=>row.slots.find(s=>s.role==='mid').champion==='Galio'));
+ assert.ok(clientRecommendationDraft(board,live,champions).slots.every(s=>!s.champion));
+});
+
+test('explicit local preselected lane and declared ally lanes outrank temporary hover inference',()=>{
+ const live={localPlayerCellId:0,myTeam:[{cellId:0,championId:0,championPickIntent:hero('Lux').key,assignedPosition:''},{cellId:1,championId:hero('Ahri').key,assignedPosition:'MIDDLE',pickState:'locked'}],theirTeam:[],actions:[]};
+ const draft=clientRecommendationDraft(slots(),live,champions,{includePreselected:true,ownRole:'support'});
+ assert.equal(draft.slots.find(s=>s.role==='support').champion,'Lux');assert.equal(draft.slots.find(s=>s.role==='mid').champion,'Ahri');assert.equal(draft.slots.find(s=>s.role==='mid').locked,true);
+});
+
 test('an unplaced locked self cannot be silently omitted when automatic lane arrangement is disabled',()=>{
  const board=createSlots().map(s=>({...s,party:['mid','support'].includes(s.role)})),live=session();
  live.myTeam[0].assignedPosition='';live.actions[0][0].completed=true;

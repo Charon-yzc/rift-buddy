@@ -273,7 +273,7 @@ function comboIndex(){
 }
 export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed=''}) {
  if(Array.isArray(clientSession?.myTeam)){
-  ({slots,session:clientSession}=clientRecommendationDraft(slots,clientSession,champions,{includePreselected}));
+  ({slots,session:clientSession}=clientRecommendationDraft(slots,clientSession,champions,{includePreselected,ownRole:soloRole}));
   const picked=new Set(clientSession.myTeam.map(player=>champions.find(champion=>Number(champion.key)===Number(player.championId))?.id).filter(Boolean));
   const own=clientSession.myTeam.find(player=>player.cellId===clientSession.localPlayerCellId),ownId=champions.find(champion=>Number(champion.key)===Number(own?.championId))?.id;
   if(ownId&&confirmedPlayerPick(own,clientSession)&&!lockedOwnSlot(slots,clientSession))throw Error('请先确认已锁定英雄的分路，再继续推荐');

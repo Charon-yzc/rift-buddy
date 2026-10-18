@@ -14,7 +14,7 @@ export function publicAllyIds(clientSession,champions,{includePreselected=false}
 // keep the user's controllable picks and every explicit position untouched.
 export function clientContextDraft(slots,champions,clientSession,{scope='context',soloRole='',bans=[],eligibleByRole={},party=null,includePreselected=false}={}){
  if(!Array.isArray(clientSession?.myTeam))return slots;
- ({slots,session:clientSession}=clientRecommendationDraft(slots,clientSession,champions,{includePreselected}));
+ ({slots,session:clientSession}=clientRecommendationDraft(slots,clientSession,champions,{includePreselected,ownRole:soloRole}));
  if(!['context','solo'].includes(scope))return slots;
  const localRole=manualPlayerSlot(slots,clientSession.localPlayerCellId)?.role||soloRole||CLIENT_POSITION_ROLES[String(clientSession.myTeam.find(p=>p.cellId===clientSession.localPlayerCellId)?.assignedPosition||'').toUpperCase()];
  if(!includePreselected&&localRole&&(scope==='solo'||scope==='context'&&slots.filter(slot=>slot.party).length===1&&slots.find(slot=>slot.party)?.role===localRole)){

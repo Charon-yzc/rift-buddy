@@ -43,3 +43,21 @@ test('tip attributes stay escaped and never carry credentials or hidden identiti
  const hiddenState={...state,roster:{...state.roster,players:[hidden]},players:{}};
  assert.doesNotMatch(ongoingTooltipView(hiddenState,target({ongoingTip:'premade',tipPlayers:'h1',tipCount:'3'}),data),/undefined|\[object Object\]/);
 });
+
+test('streamer mode anonymizes every premade tooltip member using the same roster indices as the cards',()=>{
+ const hidden={key:'hidden',hidden:true,name:'不能显示的昵称#TEST'};
+ const streaming={...state,settings:{...state.settings,streamer:true},roster:{...state.roster,players:[...state.roster.players,hidden]}};
+ const html=ongoingTooltipView(streaming,target({ongoingTip:'premade',tipPlayers:'k2,'+member.key+',hidden,missing',tipCount:'6'}),data);
+ for(const text of ['玩家 1','玩家 2'])assert.ok(html.includes(text),text);
+ assert.doesNotMatch(html,/样本玩家|队友#TEST|不能显示的昵称|undefined|玩家 0/);
+ const visible=ongoingTooltipView(state,target({ongoingTip:'premade',tipPlayers:member.key+',k2',tipCount:'6'}),data);
+ assert.match(visible,/样本玩家#TEST/);assert.match(visible,/队友#TEST/);
+});
+
+test('hidden or removed roster players cannot expose stale profile and analysis caches through hover targets',()=>{
+ for(const players of [[{...member,hidden:true}],[]]){
+  const stale={...state,roster:{...state.roster,players}};
+  for(const kind of ['rank','winrate','kda','position','champion','history'])assert.equal(ongoingTooltipView(stale,target({ongoingTip:kind,tipPlayer:member.key,tipChampion:'22',tipId:'77'}),data),'',kind);
+  assert.equal(ongoingTooltipView(stale,target({ongoingTip:'premade',tipPlayers:member.key,tipCount:'6'}),data),'');
+ }
+});

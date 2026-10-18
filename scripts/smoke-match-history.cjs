@@ -57,7 +57,7 @@ async function run(){
   // delegated pointer entry used by a visible window without stealing focus.
   await js('document.querySelector(".history-details [data-history-tip=item]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.matches(":popover-open")'),'Equipment hover detail missing');assert.match(await js('document.querySelector("#history-hover-detail").textContent'),/金|合成/);
   assert.equal(await js('(()=>{const r=document.querySelector("#history-hover-detail").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;})()'),true,'Equipment hover escapes viewport');
-  const visualRoot=path.join('C:/Users/Ankhron/AppData/Local/Temp/opencode',path.basename(root));await fs.mkdir(visualRoot,{recursive:true});await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(visualRoot,'history-expanded-equipment.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
+  const visualRoot=root;await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(visualRoot,'history-expanded-equipment.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
   await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');assert.equal(await js('!!document.querySelector("#history-hover-detail")'),false);
   assert.equal(await js('document.querySelectorAll(".history-detail-tabs [role=tab]").length'),6);assert.ok(await js('document.querySelector(".history-team-table tbody tr").getBoundingClientRect().height')<=58,'Team rows are not compact');
   await click('[data-action=history-detail][data-section=stats]');await until(()=>js('!!document.querySelector(".history-public-matrix")'),'Full statistics matrix missing');
@@ -110,6 +110,25 @@ async function run(){
   await until(()=>js('!document.querySelector("#history-hover-detail")'),'Ongoing hover did not close after Escape');
   try{await js('document.querySelector("[data-ongoing-tip=rank]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.length>0'),'Ongoing rank hover missing');}catch(error){console.error('ONGOING_RANK_HOVER',JSON.stringify(await js('(()=>{const el=document.querySelector("[data-ongoing-tip=rank]");return {targets:document.querySelectorAll("[data-ongoing-tip]").length,rankTarget:!!el,html:el?.outerHTML?.slice(0,240)};})()')));throw error;}await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
   await capture('ongoing-game.png');
+  await js('document.querySelector(".ongoing-settings").open=true');await click('[data-ongoing-field=streamer]');
+  assert.equal(await js('document.querySelector(".ongoing-page").classList.contains("is-streamer")'),true);
+  const groupTip=await js('!!document.querySelector("[data-ongoing-tip=premade]")');assert.ok(groupTip,'Shared-history fixture group missing');
+  await js('document.querySelector("[data-ongoing-tip=premade]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');
+  await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("玩家")'),'Anonymous group tooltip missing');
+  assert.doesNotMatch(await js('document.querySelector("#history-hover-detail").textContent'),/战绩测试玩家|示例队友|模拟玩家|#TEST/);
+  await capture('ongoing-streamer-hover.png');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');await click('[data-ongoing-field=streamer]');
+  // Exercise both SVG layers with synthetic historical coordinates; source
+  // fixtures do not otherwise have enough jungle frames to draw these maps.
+  const mapStyles=await js(`(async()=>{
+   const {ongoingJungleView}=await import('./ongoing-game-jungle-view.mjs');
+   const box=document.createElement('section');box.id='map-style-fixture';box.style.cssText='position:fixed;inset:80px auto auto 160px;width:500px;z-index:1000;background:var(--rb-panel);padding:12px';
+   box.innerHTML=ongoingJungleView({gamesAnalyzed:2,minutePositions:[{x:4000,y:6000,minute:3},{x:8000,y:9000,minute:4}],gankPositions:[{x:7000,y:8000,minute:5}]});
+   document.body.append(box);box.querySelectorAll('details').forEach(el=>el.open=true);
+   return Object.fromEntries(['lanes','river','heat','position','kill'].map(kind=>{const style=getComputedStyle(box.querySelector('.ongoing-map-'+kind));return [kind,{fill:style.fill,stroke:style.stroke}];}));
+  })()`);
+  assert.equal(mapStyles.lanes.fill,'none');assert.notEqual(mapStyles.lanes.stroke,'none');assert.notEqual(mapStyles.river.stroke,'none');
+  assert.equal(mapStyles.kill.fill,'none');assert.notEqual(mapStyles.kill.stroke,'none');assert.notEqual(mapStyles.heat.fill,'rgb(0, 0, 0)');assert.notEqual(mapStyles.position.fill,'rgb(0, 0, 0)');
+  await capture('ongoing-historical-maps.png');await js('document.querySelector("#map-style-fixture").remove()');
  assert.equal(writes.length,1,'Ongoing queries must not trigger writes');
  await click('.ongoing-history-row');await until(()=>js('!!document.querySelector(".history-details .history-player")'),'Ongoing history preview did not open a full match');
  await click('[data-action=history-simulate]');await until(()=>js('!!document.querySelector(".ongoing-draft-mark")'),'Historical roster was not labeled as preserved');

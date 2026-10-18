@@ -130,7 +130,10 @@ async function run(){
  assert.equal(await js('document.querySelectorAll(".rune-target-warning").length'),0,'The reference lane must not block an explicit unlocked hero choice');
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.
- await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'None',message:'测试手动配置'}));
+ // A disconnected client is Offline, not None (the connected lobby phase).
+ // Reporting None only to the renderer clears the offline arrangement again
+ // on reload, while the main process correctly retains it as Offline.
+ await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'Offline',message:'测试手动配置'}));
  // Keep the main process on the same fixture: it must report the same offline
  // client the renderer now sees, or its broadcast would resurrect the pick.
  syntheticClient=null;

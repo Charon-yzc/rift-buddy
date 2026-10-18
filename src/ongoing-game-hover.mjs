@@ -17,18 +17,22 @@ const metrics=rows=>`<dl class="history-hover-metrics">${rows.map(([label,value]
 const champion=(data,id)=>(data?.champions||[]).find(c=>Number(c.key)===Number(id));
 const heroName=(data,id)=>champion(data,id)?.name||(id>0?`英雄 ${id}`:'英雄未选择');
 const member=(state,key)=>(state.roster?.players||[]).find(p=>p.key===key);
-const playerName=(state,p,key)=>p?.hidden?'身份隐藏':p?.name||member(state,key)?.name||'玩家名称未读取';
+const playerName=(state,p,key)=>{
+ if(p?.hidden)return '身份隐藏';
+ if(state.settings?.streamer){const index=(state.roster?.players||[]).findIndex(player=>player.key===key);return index>=0?`玩家 ${index+1}`:'玩家';}
+ return p?.name||member(state,key)?.name||'玩家名称未读取';
+};
 
 /** Content for one ongoing-game tooltip target. Returns '' when nothing is known. */
 export function ongoingTooltipView(state={},element,data={}){
  const kind=element?.dataset?.ongoingTip,key=element?.dataset?.tipPlayer||'',entry=key?state.players?.[key]||{}:null,p=key?member(state,key):null;
  if(kind==='text'){const title=element.dataset.tipTitle,text=element.dataset.tipText;return title||text?`<h3>${e(title||'')}</h3>${text?`<div class="history-hover-description">${e(text)}</div>`:''}`:'';}
  if(kind==='premade'){
-  const keys=String(element.dataset.tipPlayers||'').split(',').filter(Boolean).slice(0,12);
+  const keys=[...new Set(String(element.dataset.tipPlayers||'').split(',').filter(id=>{const player=member(state,id);return player&&!player.hidden;}))].slice(0,12);
   if(!keys.length)return '';
   return `<h3>历史共同对局</h3>${metrics([['人数',num(keys.length)],['至少共同对局',num(Number(element.dataset.tipCount))+' 次']])}<div class="ongoing-hover-members">${keys.map(id=>{const player=member(state,id);return `<span>${champion(data,player?.champion)?portrait(champion(data,player?.champion)):'<span class="ongoing-empty-icon"></span>'}${e(playerName(state,player,id))}</span>`;}).join('')}</div><small>依据已加载历史的共同对局次数推断，不能证明当前预组队。</small>`;
  }
- if(!entry)return '';
+ if(!entry||!p||p.hidden)return '';
  const analysis=entry.analysis,scope=state.settings?.tag==='all'?'全部已加载队列':'当前队列';
  if(kind==='rank'){
   const ranks=(entry.profile?.ranked||[]).slice(0,8);

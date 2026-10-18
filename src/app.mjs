@@ -733,7 +733,7 @@ function taskOwnRole(){
  const own=currentPlayerSelection(client.session,data.champions,slots);
  return manualPlayerSlot(slots,client.session?.localPlayerCellId)?.role||(saved.draft?.playerPosition?.cellId===client.session?.localPlayerCellId?saved.draft?.playerPosition?.role:'')||assignedPlayerRole()||soloRole||(own?.positionKnown?own.role:'');
 }
-function publicDraftContext(){return clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected:saved.preferences.includePreselected===true}).slots;}
+function publicDraftContext(){return clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected:saved.preferences.includePreselected===true,ownRole:taskOwnRole()}).slots;}
 function ownTaskPreparation(){
  const own=myPreparation(),intent=companionPreparation({currentOnly:true}),role=taskOwnRole();
  const member=activeCreativePlan?.members.find(m=>m.role===role);
@@ -1243,7 +1243,7 @@ function recommendationInput(){
  // display freshness and every client write still require a fresh read.
  const at=Date.parse(client.eligibility?.receivedAt),now=Date.now(),referenceTime=Number.isFinite(at)?Math.min(now,at+15000):now;
  const eligibility=localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition:saved.draft?.playerPosition,now:referenceTime});
- const includePreselected=saved.preferences.includePreselected===true,confirmed=clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected}),session=confirmed.session,claiming=activeRoleClaim(positionClaim,client),singleParty=['party','context'].includes(scope)&&slots.filter(s=>s.party).length===1&&slots.find(s=>s.party)?.role===taskOwnRole();
+ const includePreselected=saved.preferences.includePreselected===true,confirmed=clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected,ownRole:taskOwnRole()}),session=confirmed.session,claiming=activeRoleClaim(positionClaim,client),singleParty=['party','context'].includes(scope)&&slots.filter(s=>s.party).length===1&&slots.find(s=>s.party)?.role===taskOwnRole();
  let contextSession=!includePreselected&&(scope==='solo'||draftComparing)&&session?{...session,myTeam:session.myTeam.map(p=>p.cellId===session.localPlayerCellId?{...p,championPickIntent:0}:p)}:session;
  let base=draftComparing||scope==='solo'||singleParty?comparisonDraft(confirmed.slots,activeCreativePlan,session,data.champions):confirmed.slots;
  if(!includePreselected&&(claiming||singleParty||scope==='solo'))({slots:base,session:contextSession}=editableLocalDraft(base,session,data.champions,taskOwnRole()));

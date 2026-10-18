@@ -123,3 +123,8 @@
  .ongoing-team-scroll.is-large .ongoing-player-card{width:224px;flex-basis:224px}
  .ongoing-card-stats strong{font-size:15px}
  .ongoing-heading-actions{width:100%}.ongoing-settings summary small{display:block;margin-left:14px}}
+.ongoing-map-lanes{fill:none;stroke:var(--rb-muted);stroke-width:2;opacity:.45}
+.ongoing-map-river{fill:none;stroke:var(--rb-accent);stroke-width:5;opacity:.16}
+.ongoing-map-heat{fill:var(--rb-accent)}
+.ongoing-map-position{fill:var(--rb-accent);opacity:.65}
+.ongoing-map-kill{fill:none;stroke:var(--rb-warning);stroke-width:1.1}
