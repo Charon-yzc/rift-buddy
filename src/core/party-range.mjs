@@ -4,6 +4,9 @@ import {confirmedPlayerPick} from './draft-intents.mjs';
 
 export const validPartyCount=value=>Number.isInteger(value)&&value>=0&&value<=5;
 export const markedPartyCount=slots=>slots.filter(slot=>slot.party).length;
+// One save must never pair a stale captured count with newer checkbox marks:
+// the persisted size always describes the slots being written.
+export const savedPartyCount=(slots,previous)=>validPartyCount(previous)?markedPartyCount(slots):undefined;
 // Capture once per selection. Five allies and assistant-room membership are
 // never evidence of a premade group. With no lobby evidence, only self is known.
 export function initialPartyCount(party){

@@ -14,7 +14,7 @@ import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-elig
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
 import {pregamePhase,restoredRoleClaim} from '../src/core/pregame-intent.mjs';
-import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,editPartyRange} from '../src/core/party-range.mjs';
+import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,editPartyRange,savedPartyCount} from '../src/core/party-range.mjs';
 import {rebaseWindowState} from '../src/core/window-state.mjs';
 import {createDisclosureState} from '../src/disclosure-state.mjs';
 import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible,validateCreativePlan} from '../src/core/creative-plan.mjs';
@@ -75,7 +75,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
   lastTaskSelection:null,companionPreview:null,companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',lastCompanionLocked:'',showAllCandidates:false,recommendationError:'',renderedDraftResults:null,disclosureState:createDisclosureState(),renderedDisclosureScope:'',selectionUiReset:false,selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,clickedRoomPlan:null,roomRoleChoice:null,companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
   recommendationSessionSeed:'test-session',clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
-  structuredClone,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
+  structuredClone,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,

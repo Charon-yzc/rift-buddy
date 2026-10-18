@@ -14,7 +14,7 @@ import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,c
 import {adoptedTaskView} from './draft-task-view.mjs';
 import {stateRecoveryView} from './state-recovery-view.mjs';
 import {clientRenderIdentity,normalizePartyIds} from './core/client-party.mjs';
-import {validPartyCount,markedPartyCount,initialPartyCount,selectionPartyCount,reconcilePartyRange,movePartyMark} from './core/party-range.mjs';
+import {validPartyCount,markedPartyCount,initialPartyCount,selectionPartyCount,reconcilePartyRange,movePartyMark,savedPartyCount} from './core/party-range.mjs';
 import {pregamePhase,partyWithPregameIntents,restoredRoleClaim} from './core/pregame-intent.mjs';
 import {companionHeroAction} from './core/companion-action.mjs';
 import {adoptRoomLineup,roomLineupIdentity} from './core/room-lineup.mjs';
@@ -443,7 +443,7 @@ function persist({throwOnError=false,derived=false,rangeEdit=null}={}){
   const editable=editableLocalDraft(slots,client.connected?client.session:null,data.champions,taskOwnRole()).slots.map(slot=>Number.isInteger(slot.clientCellId)&&!confirmed.find(value=>value.role===slot.role)?.champion?{...slot,champion:null,locked:false}:slot);
   if(creativePlanCompatible(activeCreativePlan,editable))draftSlots=editable;
  }
- saved.draft={slots:draftSlots,style,scope,soloRole,...(saved.draft?.preselection?{preselection:saved.draft.preselection}:{}),...(validPartyCount(saved.draft?.partyCount)?{partyCount:saved.draft.partyCount}:{}),...(activeCreativePlan&&creativePlanCompatible(activeCreativePlan,draftSlots)?{creativePlan:activeCreativePlan}:{}),...(saved.draft?.clientGameId?{clientGameId:saved.draft.clientGameId}:{}),...(saved.draft?.playerPosition?{playerPosition:saved.draft.playerPosition}:{})};saved.preferences.style=style;saved.preparations=preparations.snapshot();
+ saved.draft={slots:draftSlots,style,scope,soloRole,...(saved.draft?.preselection?{preselection:saved.draft.preselection}:{}),...(savedPartyCount(draftSlots,saved.draft?.partyCount)!==undefined?{partyCount:savedPartyCount(draftSlots,saved.draft?.partyCount)}:{}),...(activeCreativePlan&&creativePlanCompatible(activeCreativePlan,draftSlots)?{creativePlan:activeCreativePlan}:{}),...(saved.draft?.clientGameId?{clientGameId:saved.draft.clientGameId}:{}),...(saved.draft?.playerPosition?{playerPosition:saved.draft.playerPosition}:{})};saved.preferences.style=style;saved.preparations=preparations.snapshot();
  const pending={snapshot:structuredClone(saved)};pendingSaves.add(pending);
  const request=saveChain.catch(()=>{}).then(async()=>{
   const before=structuredClone(savedBase);
