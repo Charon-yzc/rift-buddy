@@ -74,7 +74,7 @@ async function shopConflicts(game,target,selected,io){
    if(!file.isFile()||!file.name.endsWith('.json')||file.name===selected.uid+'.json')continue;
    const filename=path.join(folder,file.name),stat=await io.lstat(filename);
    if(!stat.isFile()||stat.isSymbolicLink()||stat.size>50000)continue;
-   const content=await io.readFile(filename,'utf8');let value;try{value=JSON.parse(content);}catch{continue;}
+   const content=await io.readFile(filename);let value;try{value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(content));}catch{continue;}
    if(!value||!['custom','global'].includes(value.type)||typeof value.title!=='string'||!Array.isArray(value.blocks)||!value.blocks.length)continue;
    if(!['any',selected.map].includes(value.map)||!['any',selected.map==='SR'?'CLASSIC':'ARAM'].includes(value.mode))continue;
    entries.push({filename,content});
@@ -86,8 +86,8 @@ async function shopConflicts(game,target,selected,io){
  backupDirectory=path.join(backupDirectory,crypto.randomUUID());await io.mkdir(backupDirectory);await directory(backupDirectory,io);
  const manifest=[];
  for(const [index,entry] of entries.entries()){
-  const backup=String(index).padStart(3,'0')+'.json';await io.writeFile(path.join(backupDirectory,backup),entry.content,{encoding:'utf8',flag:'wx'});
-  if(await io.readFile(path.join(backupDirectory,backup),'utf8')!==entry.content)throw Error('旧配装备份未能确认，尚未清理');
+  const backup=String(index).padStart(3,'0')+'.json';await io.writeFile(path.join(backupDirectory,backup),entry.content,{flag:'wx'});
+  if(!(await io.readFile(path.join(backupDirectory,backup))).equals(entry.content))throw Error('旧配装备份未能确认，尚未清理');
   manifest.push({original:path.relative(game,entry.filename),backup,sha256:crypto.createHash('sha256').update(entry.content).digest('hex')});
  }
  await io.writeFile(path.join(backupDirectory,'manifest.json'),JSON.stringify(manifest,null,2),{encoding:'utf8',flag:'wx'});
@@ -100,12 +100,12 @@ async function removeShopConflicts(conflicts,io,beforeCommit){
   if(beforeCommit)await beforeCommit();
   for(const entry of conflicts.entries){
    await directory(path.dirname(entry.filename),io);const stat=await io.lstat(entry.filename);
-   if(!stat.isFile()||stat.isSymbolicLink()||await io.readFile(entry.filename,'utf8')!==entry.content)throw Error('其他配装发生变化，已停止清理');
+   if(!stat.isFile()||stat.isSymbolicLink()||!(await io.readFile(entry.filename)).equals(entry.content))throw Error('其他配装发生变化，已停止清理');
    await io.unlink(entry.filename);removed.push(entry);
   }
  }catch(error){
   let restored=true;
-  for(const entry of removed)try{await directory(path.dirname(entry.filename),io);await io.writeFile(entry.filename,entry.content,{encoding:'utf8',flag:'wx'});}catch{restored=false;}
+  for(const entry of removed)try{await directory(path.dirname(entry.filename),io);await io.writeFile(entry.filename,entry.content,{flag:'wx'});}catch{restored=false;}
   throw Error('当前配装已写入，但旧配装清理未完成；'+(restored?'已恢复本次移除的旧配装。':'部分旧配装需从备份恢复。')+'备份位于 '+conflicts.backupDirectory+'。'+error.message);
  }
 }

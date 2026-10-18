@@ -122,6 +122,15 @@ test('backup failure preserves competing sets and cleanup failure restores remov
  }
 });
 
+test('backup bytes and SHA match non-ASCII UTF-8 originals and non-UTF-8 files are never consumed',async()=>{
+ const f=await fixture();await fs.mkdir(f.target,{recursive:true});
+ const valid=Buffer.from(JSON.stringify({...itemSet,uid:'personal',title:'个人配装 🎮'})),invalid=Buffer.concat([Buffer.from('{"title":"'),Buffer.from([0xc4,0xe3,0xba,0xc3]),Buffer.from('","type":"custom","map":"SR","mode":"any","blocks":[{}]}')]);
+ await fs.writeFile(path.join(f.target,'valid.json'),valid);await fs.writeFile(path.join(f.target,'legacy-gbk.json'),invalid);
+ const result=await f.write();assert.equal(result.displacedSets,1);assert.deepEqual(await fs.readFile(path.join(f.target,'legacy-gbk.json')),invalid);
+ const manifest=JSON.parse(await fs.readFile(path.join(result.backupDirectory,'manifest.json'),'utf8')),bytes=await fs.readFile(path.join(result.backupDirectory,manifest[0].backup));
+ assert.deepEqual(bytes,valid);assert.equal(manifest[0].sha256,crypto.createHash('sha256').update(valid).digest('hex'));
+});
+
 test('a foreign or malformed legacy file is preserved and cannot be silently replaced by a competing duplicate UID',async()=>{
  for(const contents of [JSON.stringify({...itemSet,title:'My personal set'}),'unreadable user JSON']){
   const f=await fixture(),global=path.join(f.game,'Config','Global','Recommended'),filename=path.join(global,itemSet.uid+'.json');await fs.mkdir(global,{recursive:true});await fs.writeFile(filename,contents);
