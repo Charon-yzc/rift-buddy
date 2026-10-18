@@ -32,7 +32,10 @@ cp.spawn=file=>{assert.ok(String(file).endsWith('.exe'),'Unexpected native subpr
 cp.execFile=(file,args,options,callback)=>{queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
 app.setPath('userData',root);
 app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);const send=w.webContents.send.bind(w.webContents);w.webContents.send=(channel,payload)=>{recordClientBroadcast(channel,payload);return send(channel,payload);};});
-async function until(check,label){for(let n=0;n<150;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
+// Waits for an asynchronous write to land, so the budget only absorbs machine
+// speed. Assertions and their expected values are unchanged.
+async function until(check,label,tries=150){for(let n=0;n<tries;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
+const WRITE_SETTLED=300;
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
  const register=ipcMain.handle.bind(ipcMain);
@@ -140,13 +143,13 @@ async function run(){
  const openRengar=async()=>{await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=all]');await js('{const input=document.querySelector("#library-search");input.value="Rengar";input.dispatchEvent(new Event("input",{bubbles:true}));}');await click('.hero-tile[data-id=Rengar]');await until(()=>js('!!document.querySelector("#configuration-role,#build-role")'),'Configuration role control missing');await js('{const role=document.querySelector("#configuration-role,#build-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');};
  await arrange('Ivern');await openRengar();await click('[data-action=build-loadout][data-id=rengar-bush]');
  await until(()=>js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),'Rengar Ivern private build missing');
- await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing');
+ await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing',WRITE_SETTLED);
  await click('[data-action=close]');await arrange('Nami');await openRengar();
  assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.equal(await js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),false);
- await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide');
+ await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide',WRITE_SETTLED);
  await click('[data-action=close]');await arrange('Ivern');await openRengar();
  await until(()=>js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),'Returning combo choice not restored');
- await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide');
+ await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide',WRITE_SETTLED);
  await capture('partner-context-isolation.png');
  // A full backend selection can remove fields. They must not be resurrected by
  // the already-open main-window configuration's next render/sync.
