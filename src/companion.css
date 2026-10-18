@@ -294,6 +294,12 @@
 .sidebar-focused .companion-tabs>.btn{flex:1;min-width:0;padding:9px 5px;font-size:13px;white-space:nowrap}
 .sidebar-focused .companion-navigation-more{flex:none}
 .sidebar-focused[data-tab="room"] .companion-persistent:empty{display:none}
+.sidebar-focused .companion-ranking-context{padding:0;border:0;background:transparent}
+.sidebar-focused .companion-ranking-context>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px;cursor:pointer;font-size:calc(13px * var(--text-scale,1))}
+.sidebar-focused .companion-ranking-context>summary small{display:flex;align-items:center;gap:6px;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--rb-muted,#a9bbce);font-size:inherit}
+.sidebar-focused .companion-ranking-context>summary svg{width:14px;height:14px;flex:none}
+.sidebar-focused .companion-ranking-context[open]>summary svg{transform:rotate(90deg)}
+.sidebar-focused .companion-ranking-context>div{padding-top:5px}
 .companion-incoming-wrap{display:block}
 .room-ballot-board{margin-bottom:16px;padding:0 0 12px;border-bottom:1px solid #3b5049}
 .room-ballot-board h3{margin:0;font-size:15px}

@@ -65,13 +65,14 @@ test('received sidebar plans expose explicit lineup adoption, route friend click
  const missing={members:[{nick:'队友',share:{...share,mode:undefined}}]};assert.match(roomSharesView(missing,get,{compact:true}),/data-share="[0-9a-f]+" disabled/);assert.doesNotMatch(roomSharesView(missing,get,{compact:true,allowUnknownRift:true}),/data-share="[0-9a-f]+" disabled/);
 });
 
-test('rankings reuse the persistent local action and five slots outside the scrolling table, including incoming plans',()=>{
+test('rankings retain local actions and five slots in a collapsed context above the scrolling table',()=>{
  const slots=createSlots().map(s=>({...s,champion:s.role==='jungle'?'Graves':s.role==='mid'?'Vex':null,clientCellId:s.role==='jungle'?0:s.role==='mid'?1:null,manualPosition:s.role==='jungle',party:['jungle','mid'].includes(s.role),locked:['jungle','mid'].includes(s.role)}));
  const [result]=recommend({slots,champions:data.champions,scope:'party'}),activePlan=captureCreativePlan(result,data),live=structuredClone(client);
  live.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(live.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
  const props={data,client:live,slots,unassigned:[],scope:'party',soloRole:'jungle',style:'fun',tab:'rankings',results:[],activePlan,rankings:'<section data-test-table>排行内容</section>',room:{members:[{nick:'朋友',share:{kind:'state',v:1,from:'朋友',at:1000,mode:'rift',lineup:slots.map(s=>({role:s.role,champion:s.champion}))}}]}};
  const before=structuredClone({slots,client:live});const html=companionView(props),contextStart=html.indexOf('<div class="companion-persistent"'),main=html.indexOf('<main class="companion-content"');
  assert(contextStart>0&&contextStart<main);const context=html.slice(contextStart,main);
+ assert.match(context,/<details class="companion-ranking-context" data-companion-disclosure="ranking-draft"><summary>/);assert.match(context,/本局选人/);
  assert.deepEqual([...context.matchAll(/data-drop-role="([^"]+)"/g)].map(m=>m[1]),['top','jungle','mid','bottom','support']);
  assert.match(context,/data-action="active-hero-prepare"[^>]+data-id="Graves"/);assert.match(context,new RegExp(`title="打野 · ${hero('Graves').name} · 你 · 手动 · 已选"`));
  assert.match(context,/aria-label="我的下一步"/);assert.match(context,/现在先做：/);
