@@ -17,6 +17,12 @@ const state=(section='summary',open=true)=>({tabs:[{id:1,options:{},filter:{},pa
 test('compact match disclosure retains both team rosters and an independently labelled six-tab panel',()=>{
  const html=matchHistoryView(state(),data);
  assert.match(html,/history-roster-preview/);assert.match(html,/aria-controls="history-panel-42"/);assert.match(html,/id="history-panel-42"/);assert.match(html,/role="tabpanel"/); assert.match(html,/data-history-tip="item"/);assert.match(html,/data-history-tip="rune"/);
+ // Arena always summarizes: eight subteams cannot be read as columns, and a
+ // single unknown subteam key would otherwise collapse into one long column.
+ const arena={...game,arena:true,participants:players.map(p=>({...p,team:'CHERRY-unknown'}))};
+ const arenaState=state();arenaState.tabs[0].page.games=[arena];arenaState.tabs[0].details={42:{game:arena,open:true,section:'summary'}};
+ const arenaHtml=matchHistoryView(arenaState,data);
+ assert.match(arenaHtml,/history-roster-preview is-summary[^>]*>1 支小队 · 3 人/);assert.doesNotMatch(arenaHtml,/history-roster-member/);
  assert.match(html,/data-history-slot="sidebar-controls"/);assert.match(html,/data-history-slot="sidebar-extra"/);
  assert.match(historyMatchSummaryView(data,{game}),/history-team-heading/);
 });

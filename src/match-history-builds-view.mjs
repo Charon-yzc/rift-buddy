@@ -1,6 +1,8 @@
 import {escape as e,portrait} from './ui.mjs';
 import {historyAsset,historyItemLabel,historyTextTip} from './match-history-hover.mjs';
-const finalItemsTip=(data,p)=>{const names=(p.items||[]).map(id=>historyItemLabel(data,id));if(p.roleBoundItem>0)names.push(historyItemLabel(data,p.roleBoundItem)+'（职责绑定）');return names.length?historyTextTip('最终装备',names.join('、'),true):'';};
+// Empty inventory slots are recorded as 0, so they must not turn the one
+// keyboard-reachable summary into "历史装备 0、历史装备 0、…".
+const finalItemsTip=(data,p)=>{const names=(p.items||[]).filter(id=>Number(id)>0).map(id=>historyItemLabel(data,id));if(p.roleBoundItem>0)names.push(historyItemLabel(data,p.roleBoundItem)+'（职责绑定）');return names.length?historyTextTip('最终装备',names.join('、'),true):'';};
 const time=value=>Number.isFinite(value)?Math.floor(value/60000)+':'+String(Math.floor(value/1000)%60).padStart(2,'0'):'时间未读取';
 const TYPES={ITEM_PURCHASED:'购买',ITEM_SOLD:'出售',ITEM_DESTROYED:'移除',ITEM_UNDO:'撤销'};
 const ANVIL_ITEM_IDS=new Set([6032,220000]);

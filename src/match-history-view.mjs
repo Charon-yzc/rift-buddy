@@ -61,12 +61,14 @@ function detailView(data,d,id){
  const content=selected==='runes'?historyRunesView(data,d.game):selected==='timeline'?historyTimelineChart(d):selected==='builds'?historyBuildsView(d,data):selected==='events'?historyEventsView(d):selected==='stats'?historyDetailTableView(d,data):historyMatchSummaryView(data,d);
  return `<section class="history-details"><div class="history-detail-toolbar"><div class="history-detail-tabs" role="tablist" aria-label="本局详情">${tabs.map(([key,label])=>button('history-detail',label,'',selected===key?'active':'quiet',`role="tab" aria-selected="${selected===key}" data-id="${id}" data-section="${key}" id="history-tab-${id}-${key}" aria-controls="history-content-${id}"`)).join('')}</div><div class="history-detail-actions">${button('history-replay','','play','small quiet icon-only',`data-id="${id}" data-replay="status" aria-label="检查回放" title="检查回放"`)}${button('history-simulate','','sword','small quiet icon-only',`data-id="${id}" aria-label="用本局阵容演练实时对局" title="用本局阵容演练实时对局"`)}</div></div>${d.notice?`<p class="history-notice">${e(d.notice)}</p>`:''}${d.error?`<p class="history-error" role="alert">${e(d.error)} ${button('history-detail','重试','','small',`data-id="${id}" data-section="${selected}"`)}</p>`:''}${d.loading?'<p role="status">正在读取对局数据…</p>':''}<div id="history-content-${id}" role="tabpanel" aria-labelledby="history-tab-${id}-${selected}">${content}</div><div class="history-replay">${button('history-replay','下载回放','download','small quiet',`data-id="${id}" data-replay="download"`)}${button('history-replay','观看回放','','small quiet',`data-id="${id}" data-replay="watch"`)}${d.replay?`<small>${e(d.replay.state||'请求已发送')}${d.replay.progress!==null?' · '+num(d.replay.progress)+'%':''}</small>`:''}</div></section>`;
 }
-// The roster preview is a dense summary: portraits hover only (no tab stops)
-// and names are plain text, because the expanded team table already links them.
-// Arena games have up to eight subteams, which cannot be read as columns.
+// The roster preview is a dense summary: portraits are plain images (no tips,
+// no tab stops) and names are plain text, because the expanded team table still
+// links every name. Arena games have up to eight subteams, and even one unknown
+// subteam key would collapse into a single unreadable column, so Arena always
+// shows the summary instead.
 function rosterPreview(data,m){
  const teams=[...new Set((m.participants||[]).map(p=>p.team))];
- if(teams.length>2)return `<div class="history-roster-preview is-summary" aria-label="本局阵容">${teams.length} 支小队 · ${(m.participants||[]).length} 人</div>`;
+ if(m.arena||teams.length>2)return `<div class="history-roster-preview is-summary" aria-label="本局阵容">${teams.length} 支小队 · ${(m.participants||[]).length} 人</div>`;
  return `<div class="history-roster-preview" aria-label="本局阵容">${teams.slice(0,8).map(team=>`<div>${m.participants.filter(p=>p.team===team).map(p=>`<span class="history-roster-member">${playerHero(data,p,m,false)}<span>${e(p.name||'身份未读取')}</span></span>`).join('')}</div>`).join('')}</div>`;
 }
 function card(data,m,d,fullAnalysis){

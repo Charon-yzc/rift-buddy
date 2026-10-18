@@ -32,4 +32,10 @@ test('draft championId can be an unconfirmed preview until the public pick actio
 });
 test('Arena anonymous slots retain transport-team identity when displayed together',()=>{
  const hidden=()=>({nameVisibilityType:'HIDDEN'}),game={gameData:{gameId:123,queue:{id:1700,gameMode:'CHERRY'},teamOne:[hidden(),hidden()],teamTwo:[hidden(),hidden()]}};const value=ongoingRoster({phase:'InProgress',own,game});assert.equal(value.players.length,4);assert.equal(new Set(value.players.map(p=>p.key)).size,4);
+ // Arena players all share TEAM-ALL, so the public subteam id must survive as
+ // `group`: it is the only thing that separates allies from opponents there.
+ const arena=ongoingRoster({phase:'InProgress',own,game:{gameData:{gameId:123,queue:{id:1700,gameMode:'CHERRY'},teamOne:[{puuid:'a1',teamParticipantId:4},{puuid:'a2',teamParticipantId:4}],teamTwo:[{puuid:'a3',teamParticipantId:9}]}}});
+ assert.deepEqual(arena.players.map(p=>p.team),[ 'TEAM-ALL','TEAM-ALL','TEAM-ALL']);
+ assert.deepEqual(arena.players.map(p=>p.group),[4,4,9]);assert.equal(arena.players.every(p=>p.team==='TEAM-ALL'),true);
+ assert.equal(ongoingRoster({phase:'InProgress',own,game:{gameData:{gameId:123,queue:{id:420,gameMode:'CLASSIC'},teamOne:[{puuid:'b1'}],teamTwo:[]}}}).players[0].group,null,'A classic game has no subteam id to report');
 });

@@ -24,11 +24,13 @@ export function historyTipAttributes(kind,id,{participant,game,focusable=true}={
 // glyph a tab stop turns a twenty-game page into hundreds of stops.
 export function historyTextTip(label,text,focusable=false){return `data-history-tip="text" data-tip-title="${e(String(label).slice(0,160))}" data-tip-text="${e(String(text).slice(0,2500))}"${focusable?' tabindex="0"':''}`;}
 export function historyItemLabel(data,id){const info=reference(data,'item',id);return info?.name||SHARDS[id]||`历史装备 ${id}`;}
+/** An id the bundled catalog no longer has must not render a broken image. */
+const missingItemIcon=id=>`<span class="history-empty-icon" title="历史装备 ${e(id)}" aria-label="历史装备 ${e(id)}，当前资料未收录">${e(id)}</span>`;
+const recipeIcon=(data,id)=>{const info=reference(data,'item',id);return info?asset('item',id,info.name,'history-icon'):missingItemIcon(id);};
 export function historyAsset(data,kind,id,context={},cls='history-icon'){
  if(!(Number(id)>0))return `<span class="history-empty-icon" aria-label="${id===0?'空栏位':'未读取'}"></span>`;
  const info=reference(data,kind,id),name=info?.name||SHARDS[id]||`历史${kind==='item'?'装备':'资料'} ${id}`;
- // An id the bundled catalog no longer has must not render a broken image.
- if(kind==='item'&&!info)return `<span class="history-empty-icon" title="历史装备 ${e(id)}" aria-label="历史装备 ${e(id)}，当前资料未收录">${e(id)}</span>`;
+ if(kind==='item'&&!info)return missingItemIcon(id);
  const image=kind==='style'&&info?.icon?`<img class="${e(cls)}" src="../data/images/rune/${e(id)}.png" alt="${e(name)}" loading="lazy">`:asset(kind,kind==='spell'?info?.id??id:id,name,cls);
  return `<span class="history-tip-target" ${historyTipAttributes(kind,id,{...context,focusable:false})} aria-label="${e(name)}">${image}</span>`;
 }
@@ -39,7 +41,7 @@ export function historyTooltipView(data,{kind,id,participant,game,label:heading,
  const info=reference(data,kind,id),label=info?.name||SHARDS[id]||`历史${kind==='item'?'装备':'资料'} ${id}`;
  let body='';
  if(kind==='item'){
-  const gold=info?.gold;body=`${gold?`<p class="history-hover-cost">${num(gold.total)} 金 · 基础 ${num(gold.base)} 金 · 出售 ${num(gold.sell)} 金</p>`:''}${info?.from?.length?`<div class="history-hover-recipe"><span>合成路径</span>${info.from.slice(0,8).map(value=>asset('item',value,data.items?.[value]?.name||value,'history-icon')).join('')}</div>`:''}<div class="history-hover-description">${description(info?.description||info?.plaintext||'当前离线资料未收录此装备的效果。')}</div>`;
+  const gold=info?.gold;body=`${gold?`<p class="history-hover-cost">${num(gold.total)} 金 · 基础 ${num(gold.base)} 金 · 出售 ${num(gold.sell)} 金</p>`:''}${info?.from?.length?`<div class="history-hover-recipe"><span>合成路径</span>${info.from.slice(0,8).map(value=>recipeIcon(data,value)).join('')}</div>`:''}<div class="history-hover-description">${description(info?.description||info?.plaintext||'当前离线资料未收录此装备的效果。')}</div>`;
  }else if(kind==='rune'||kind==='style'){
   const selection=(participant?.styles||[]).flatMap(style=>style.selections||[]).find(value=>value.perk===Number(id));
   const values=[1,2,3].map(index=>selection?.['var'+index]);
