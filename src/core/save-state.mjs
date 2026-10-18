@@ -24,6 +24,14 @@ function restoreValue(before,failed,current){
 // same hero, remain intact and may still be submitted by their queued request.
 export function rollbackUnacceptedState(before,failed,current){
  const restored=restoreValue(before,failed,current);
+ if(Array.isArray(before.draft?.slots)&&Array.isArray(failed.draft?.slots)&&Array.isArray(current.draft?.slots)){
+  const previous=new Map(before.draft.slots.map(slot=>[slot.role,slot])),rejected=new Map(failed.draft.slots.map(slot=>[slot.role,slot])),latest=new Map(current.draft.slots.map(slot=>[slot.role,slot]));
+  for(const role of new Set([...previous.keys(),...rejected.keys()])){
+   const value=restoreValue(previous.get(role),rejected.get(role),latest.get(role));
+   if(value===undefined)latest.delete(role);else latest.set(role,value);
+  }
+  restored.draft.slots=[...latest.values()];
+ }
  const previous=new Map((before.preparations||[]).map(value=>[preparationIdentity(value),value]));
  const rejected=new Map((failed.preparations||[]).map(value=>[preparationIdentity(value),value]));
  const latest=new Map((current.preparations||[]).map(value=>[preparationIdentity(value),value]));

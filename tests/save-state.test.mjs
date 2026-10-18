@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {rollbackUnacceptedState} from '../src/core/save-state.mjs';
+import {createSlots} from '../src/core/recommend.mjs';
 
 const hero=(id,extra={})=>({id,role:'mid',mode:'rift',runeId:'confirmed',...extra});
 const state=()=>({preferences:{play:{difficulty:'any',tempo:'any'}},draft:{soloRole:'mid',slots:[]},preparations:[hero('Ahri'),hero('Annie')],favorites:[],excluded:[]});
@@ -27,4 +28,11 @@ test('failed additions and deletions restore independently of preparation recenc
 test('later edits to a new hero keep its identity without inheriting its rejected rune',()=>{
  const before=state(),failed=structuredClone(before);failed.preparations.push(hero('Lux',{runeId:'failed'}));const later=structuredClone(failed);later.preparations.at(-1).laterIds=['3102'];
  const restored=rollbackUnacceptedState(before,failed,later).preparations.find(p=>p.id==='Lux');assert.equal(restored.runeId,undefined);assert.equal(restored.role,'mid');assert.deepEqual(restored.laterIds,['3102']);
+});
+
+test('slot rollback follows role identity and preserves later edits to another lane or field',()=>{
+ const before=state();before.draft.slots=createSlots();const failed=structuredClone(before);failed.draft.slots.find(slot=>slot.role==='bottom').champion='Ahri';
+ const later=structuredClone(failed);later.draft.slots.reverse();later.draft.slots.find(slot=>slot.role==='top').champion='Garen';later.draft.slots.find(slot=>slot.role==='bottom').party=false;
+ const restored=rollbackUnacceptedState(before,failed,later);assert.equal(restored.draft.slots.find(slot=>slot.role==='bottom').champion,null);assert.equal(restored.draft.slots.find(slot=>slot.role==='bottom').party,false);assert.equal(restored.draft.slots.find(slot=>slot.role==='top').champion,'Garen');assert.equal(later.draft.slots.find(slot=>slot.role==='bottom').champion,'Ahri');
+ const deliberate=structuredClone(later);deliberate.draft.slots.find(slot=>slot.role==='bottom').champion='Jinx';assert.equal(rollbackUnacceptedState(before,failed,deliberate).draft.slots.find(slot=>slot.role==='bottom').champion,'Jinx');
 });

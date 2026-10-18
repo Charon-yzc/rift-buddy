@@ -18,6 +18,7 @@ import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
 import {pregamePhase,restoredRoleClaim} from '../src/core/pregame-intent.mjs';
 import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,editPartyRange,savedPartyCount} from '../src/core/party-range.mjs';
 import {rebaseWindowState} from '../src/core/window-state.mjs';
+import {rollbackUnacceptedState} from '../src/core/save-state.mjs';
 import {createDisclosureState} from '../src/disclosure-state.mjs';
 import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible,validateCreativePlan} from '../src/core/creative-plan.mjs';
 import {companionView} from '../src/companion-view.mjs';
@@ -475,6 +476,20 @@ test('awaited public draft saves recover only known derived races without replay
   else await assert.rejects(request,error=>error.message===scenario.message);
   assert.equal(writes,1,'A stale snapshot must never be retried');assert.equal(reads,Number(scenario.recovered));assert.equal(calls.prepared.length,0);assert.equal(c.pendingSaves.size,0);
  }
+});
+
+test('a rejected derived slot cannot ride a later different-lane save over another window selection',async()=>{
+ const {context:c}=setup({slots:createSlots()}),before=defaultState();before.draft={slots:createSlots(),scope:'party',style:'wild',soloRole:'bottom',clientGameId:'123'};
+ let entered,release;const started=new Promise(resolve=>entered=resolve),gate=new Promise((_,reject)=>release=reject),submissions=[];
+ const accepted=structuredClone(before);accepted.draft.slots.find(slot=>slot.role==='bottom').champion='Ashe';
+ Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,selectBuildSource:noop,guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+  api:{...c.api,ready:async()=>({state:accepted,revision:2}),saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;}return {state:snapshot,revision:3};}}});
+ vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
+ c.slots.find(slot=>slot.role==='bottom').champion='Ahri';const first=c.persist({derived:true,throwOnError:true});await started;
+ c.slots.find(slot=>slot.role==='top').champion='Garen';const next=c.persist({throwOnError:true});release(Error('选人配置同时发生变化，请重新同步'));
+ await first;await next;assert.equal(submissions.length,2);assert.equal(submissions[1].draft.clientGameId,'123');
+ assert.equal(submissions[1].draft.slots.find(slot=>slot.role==='bottom').champion,'Ashe','The rejected Ahri observation must not overwrite the other window\'s accepted Ashe');
+ assert.equal(submissions[1].draft.slots.find(slot=>slot.role==='top').champion,'Garen');assert.equal(c.saved.draft.slots.find(slot=>slot.role==='bottom').champion,'Ashe');assert.equal(c.pendingSaves.size,0);
 });
 
 test('rapid checkbox saves send range intents, retain newer public heroes, and finish with zero marks',async()=>{
