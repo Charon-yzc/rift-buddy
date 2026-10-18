@@ -128,3 +128,12 @@
 .ongoing-map-heat{fill:var(--rb-accent)}
 .ongoing-map-position{fill:var(--rb-accent);opacity:.65}
 .ongoing-map-kill{fill:none;stroke:var(--rb-warning);stroke-width:1.1}
+.ongoing-zone-bars{display:grid;gap:5px;margin:8px 0}
+.ongoing-zone-bars meter{width:100%;height:8px;accent-color:var(--rb-accent)}
+.ongoing-zone-bars small{grid-column:2/4;font-size:10px}
+.ongoing-map-toggle{margin:8px 0}
+.ongoing-map-toggle>summary,.ongoing-method>summary{cursor:pointer;color:var(--rb-muted)}
+.ongoing-jungle-map text{font-size:5px;fill:var(--rb-muted)}
+.ongoing-camps{display:grid;gap:3px;font-size:10px;color:var(--rb-muted);margin:5px 0}
+.ongoing-method{margin-top:7px}
+.ongoing-method p{color:var(--rb-muted);margin-top:6px;font-size:10px}

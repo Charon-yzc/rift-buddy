@@ -130,10 +130,11 @@ async function run(){
    const box=document.createElement('section');box.id='map-style-fixture';box.style.cssText='position:fixed;inset:80px auto auto 160px;width:500px;z-index:1000;background:var(--rb-panel);padding:12px';
    box.innerHTML=ongoingJungleView({gamesAnalyzed:2,minutePositions:[{x:4000,y:6000,minute:3},{x:8000,y:9000,minute:4}],gankPositions:[{x:7000,y:8000,minute:5}]});
    document.body.append(box);box.querySelectorAll('details').forEach(el=>el.open=true);
-   return Object.fromEntries(['lanes','river','heat','position','kill'].map(kind=>{const style=getComputedStyle(box.querySelector('.ongoing-map-'+kind));return [kind,{fill:style.fill,stroke:style.stroke}];}));
+   return {...Object.fromEntries(['lanes','river','heat','position','kill'].map(kind=>{const style=getComputedStyle(box.querySelector('.ongoing-map-'+kind));return [kind,{fill:style.fill,stroke:style.stroke}];})),label:getComputedStyle(box.querySelector('.ongoing-jungle-map text')).fontSize,zoneNote:getComputedStyle(box.querySelector('.ongoing-zone-bars small')).gridColumn};
   })()`);
   assert.equal(mapStyles.lanes.fill,'none');assert.notEqual(mapStyles.lanes.stroke,'none');assert.notEqual(mapStyles.river.stroke,'none');
   assert.equal(mapStyles.kill.fill,'none');assert.notEqual(mapStyles.kill.stroke,'none');assert.notEqual(mapStyles.heat.fill,'rgb(0, 0, 0)');assert.notEqual(mapStyles.position.fill,'rgb(0, 0, 0)');
+  assert.equal(mapStyles.label,'5px');assert.equal(mapStyles.zoneNote,'2 / 4');
   await capture('ongoing-historical-maps.png');await js('document.querySelector("#map-style-fixture").remove()');
  assert.equal(writes.length,1,'Ongoing queries must not trigger writes');
  await click('.ongoing-history-row');await until(()=>js('!!document.querySelector(".history-details .history-player")'),'Ongoing history preview did not open a full match');

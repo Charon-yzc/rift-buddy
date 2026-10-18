@@ -127,6 +127,21 @@ test('a hero click dispatches before an unrelated pending guide synchronization 
  assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');releaseGuide();await pending;
 });
 
+test('cancelled Windows permission is requested once per manual click and automatic polling never retries it',async()=>{
+ const mainSource=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),from=mainSource.indexOf('   // Reading public client data'),to=mainSource.indexOf('   if(ballotRoundChanged',from);
+ assert.ok(from>0&&to>from);const authorization=mainSource.slice(from,to);
+ for(const manual of [true,false]){
+  const {context:c}=setup();let attempts=0,attempted=false;
+  c.api.client=async force=>{
+   const scope={force,latestClient:{connected:false,phase:'Offline',needsElevation:true},elevatedReadAttempted:attempted,state:{preferences:{}},helper:{ensure:async()=>{attempts++;throw Error('模拟取消权限');}}};
+   await vm.runInNewContext('(async()=>{'+authorization+'})()',scope);attempted=scope.elevatedReadAttempted;return scope.latestClient;
+  };
+  c.api.authorizeClient=async()=>{attempted=true;attempts++;throw Error('模拟取消权限');};
+  await c.performSync(manual,manual);assert.equal(attempts,1,manual?'First manual click':'First automatic attempt');
+  await c.performSync(manual,manual);assert.equal(attempts,manual?2:1,manual?'A second explicit click may retry':'Polling must wait for an explicit click');
+ }
+});
+
 test('a lobby role click crossing into selection applies a complete position claim without locking',async()=>{
  const incoming=client();incoming.eligibility={pickable:data.champions.map(value=>value.key),disabled:[]};
  const s=setup({current:{connected:true,phase:'Lobby',mode:{id:'rift'},session:null},incoming});let staged=0;

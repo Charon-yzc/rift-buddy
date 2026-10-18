@@ -557,7 +557,9 @@ async function boot(){
    // Reading public client data is automatic. When the client runs with higher
    // privileges, Windows alone decides whether it will let us read it, so ask
    // once per run instead of making the player start an authorization step.
-   if(latestClient?.needsElevation&&!elevatedReadAttempted){
+   // A forced/manual read leaves its single permission request to the
+   // renderer. Otherwise cancelling it would immediately trigger a second UAC.
+   if(!force&&latestClient?.needsElevation&&!elevatedReadAttempted){
     elevatedReadAttempted=true;
     try{await helper.ensure(state.preferences?.installPath);latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{}
    }
