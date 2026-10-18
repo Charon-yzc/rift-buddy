@@ -229,11 +229,14 @@ async function run(){
   await until(async()=>(await state()).draft.scope==='context','Whole-team reference choice did not persist');
   assert.equal((await state()).draft.partyCount,1,'Reference range must not change the captured recommendation quantity');
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Whole-team reference treated an unlocked public championId as a completed pick');
-  assert.ok((await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members [data-role]")].map(el=>el.dataset.role)')).every(role=>role==='bottom'));
+  await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].every(el=>el.dataset.memberCount==="5")'),'Explicit whole-team reference did not display all five lanes');
+  const fullTeam=await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].map(el=>[...el.querySelectorAll("[data-role]")].map(member=>({id:member.dataset.id,role:member.dataset.role})))');
+  for(const members of fullTeam){assert.deepEqual(members.map(member=>member.role),['top','jungle','mid','bottom','support']);for(const [role,id] of Object.entries({top:'Garen',jungle:'Vi',mid:'Ahri',support:'Braum'}))assert.equal(members.find(member=>member.role===role).id,id,'Whole-team display changed a confirmed teammate');}
   await click(side,'[data-action=draft-scope][data-scope=party]');
   await until(async()=>(await state()).draft.scope==='party','Explicit party scope did not persist');
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo composition recommendations are missing');
   await until(()=>js(main,'document.querySelectorAll(".result-card").length>=2'),'Main solo composition recommendations are missing');
+  await until(async()=>await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].every(el=>el.dataset.memberCount==="1")')&&await js(main,'[...document.querySelectorAll(".result-card .candidate-members")].every(el=>el.dataset.memberCount==="1")'),'Automatic solo reference did not return to one displayed lane');
   for(const [window,selector] of [[side,'.companion-candidate'],[main,'.result-card']]){
    const candidates=await js(window,'[...document.querySelectorAll('+JSON.stringify(selector)+')].map(card=>({members:[...card.querySelectorAll(".candidate-members [data-role]")].map(el=>({id:el.dataset.id,role:el.dataset.role})),fit:card.querySelector(".lineup-fit summary")?.textContent}))');
    assert.ok(candidates.every(row=>row.members.length===1&&row.members[0].role==='bottom'),'Only the local lane may change');
