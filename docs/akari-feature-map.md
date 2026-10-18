@@ -15,7 +15,7 @@
 | 事件、伤害、逐帧/逐分钟复盘 | 击杀与目标事件、伤害双向明细、属性/位置、多人和队伍平均曲线、真实缺口 | `match-card/tabs/`、`tabs/timeline/` |
 | 回放检查、下载、观看 | 显式点击发起；只读进度轮询；测试模拟全部写入 | `player-tab/data/match-history.ts` |
 | 大厅、选人、游戏和结算成员 | 原始公开身份、预选/锁定区分、同游戏 GSM 补充、旧请求隔离 | `main/shards/ongoing-game/` |
-| 实时玩家卡与队伍统计 | 排位、历史统计、常用英雄、标签、位置、排序、刷新、样本/并发设置 | `renderer-shared/components/ongoing-game-panel/` |
+| 实时玩家卡与队伍统计 | 按 Akari 面板布局：阵营色点队伍头 + 平均胜率/KDA + 共同对局标签，固定 240px 玩家卡（圆形头像与等级、排位行、胜率/KDA/位置三格）、标签、常用英雄、近期战绩；各格可悬停查看详情 | `renderer-shared/components/ongoing-game-panel/`、`widgets/player-info-card/` |
 | 打野和早期阵亡 | 原始历史分钟采样/击杀参与/营地与三级四级倾向；完整性不足时未知 | `analysis/player/single/jungle.ts`、`early-deaths.ts` |
 | 历史共同对局、相遇、备注 | 原始共同计数推断，运行内相遇/备注，历史阵容演练 | `shared/utils/team-up-calc.ts`、`ongoing-game/` |
 

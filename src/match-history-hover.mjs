@@ -49,9 +49,11 @@ export function historyTooltipView(data,{kind,id,participant,game,label:heading,
  return `<header>${image}<div><h3>${e(label)} <small>(${e(id)})</small></h3></div></header>${body}<footer>效果说明：随包资料 ${e(data.version||'版本未读取')}${game?.version?' · 本局 '+e(game.version):''}。历史版本的效果可能不同。</footer>`;
 }
 
-// One top-layer tooltip for all six tabs; it is not clipped by card/table scrolls.
-export function bindHistoryTooltips({document:doc,getData,getGame,setTimer=setTimeout,clearTimer=clearTimeout}={}){
- let tip=null,target=null,showTimer=null,hideTimer=null;
+// One top-layer tooltip per page; it is not clipped by card/table scrolls.
+// Callers supply the attribute namespace and the content renderer, so the same
+// layer serves the history tabs and the ongoing-game page.
+export function bindHistoryTooltips({document:doc,attribute='data-history-tip',render,getData,getGame,setTimer=setTimeout,clearTimer=clearTimeout}={}){
+ const selector=`[${attribute}]`; let tip=null,target=null,showTimer=null,hideTimer=null;
  const cancel=()=>{clearTimer(showTimer);clearTimer(hideTimer);};
  function close(){cancel();target?.removeAttribute('aria-describedby');target=null;if(tip){tip.remove();tip=null;}}
  function position(){
@@ -61,17 +63,18 @@ export function bindHistoryTooltips({document:doc,getData,getGame,setTimer=setTi
   const top=Math.max(8,Math.min(view.innerHeight-height-8,bounds.top));tip.style.left=left+'px';tip.style.top=top+'px';
  }
  function show(next){
-  if(!next?.isConnected)return;close();target=next;const data=getData();if(!data)return close();
-  const game=getGame(next),participant=(game?.participants||[]).find(player=>String(player.id)===next.dataset.tipPlayer);
+  if(!next?.isConnected)return;close();target=next;const data=getData();
+  const custom=render?.(next,data);const html=custom??(data?historyTooltipView(data,{kind:next.dataset.historyTip,id:Number(next.dataset.tipId),label:next.dataset.tipTitle,text:next.dataset.tipText,participant:(getGame?.(next)?.participants||[]).find(player=>String(player.id)===next.dataset.tipPlayer),game:getGame?.(next)}):'');
+  if(!html)return close();
   tip=doc.createElement('div');tip.id='history-hover-detail';tip.className='history-hover';tip.setAttribute('role','tooltip');tip.setAttribute('popover','manual');
   const theme=doc.defaultView.getComputedStyle(next);for(const [key,source] of [['bg','--rb-panel'],['ink','--rb-ink'],['line','--rb-line'],['accent','--rb-accent']]){const value=theme.getPropertyValue(source);if(value.trim())tip.style.setProperty('--history-tip-'+key,value);}
-  tip.innerHTML=historyTooltipView(data,{kind:next.dataset.historyTip,id:Number(next.dataset.tipId),label:next.dataset.tipTitle,text:next.dataset.tipText,participant,game});doc.body.append(tip);tip.showPopover();next.setAttribute('aria-describedby',tip.id);position();
+  tip.innerHTML=html;doc.body.append(tip);tip.showPopover();next.setAttribute('aria-describedby',tip.id);position();
   tip.addEventListener('pointerenter',()=>clearTimer(hideTimer));tip.addEventListener('pointerleave',()=>{hideTimer=setTimer(close,100);});
  }
- function enter(event){const next=event.target.closest?.('[data-history-tip]');if(!next||event.relatedTarget&&next.contains(event.relatedTarget))return;cancel();if(next===target)return;showTimer=setTimer(()=>show(next),180);}
- function leave(event){const old=event.target.closest?.('[data-history-tip]');if(!old||old.contains(event.relatedTarget))return;clearTimer(showTimer);if(tip?.contains(event.relatedTarget))return;hideTimer=setTimer(close,120);}
+ function enter(event){const next=event.target.closest?.(selector);if(!next||event.relatedTarget&&next.contains(event.relatedTarget))return;cancel();if(next===target)return;showTimer=setTimer(()=>show(next),180);}
+ function leave(event){const old=event.target.closest?.(selector);if(!old||old.contains(event.relatedTarget))return;clearTimer(showTimer);if(tip?.contains(event.relatedTarget))return;hideTimer=setTimer(close,120);}
  doc.addEventListener('pointerover',enter);doc.addEventListener('pointerout',leave);
- doc.addEventListener('focusin',event=>{const next=event.target.closest?.('[data-history-tip]');if(next)show(next);});
+ doc.addEventListener('focusin',event=>{const next=event.target.closest?.(selector);if(next)show(next);});
  doc.addEventListener('focusout',leave);doc.addEventListener('keydown',event=>{if(event.key==='Escape')close();});
  doc.addEventListener('pointerdown',event=>{if(!target?.contains(event.target)&&!tip?.contains(event.target))close();});
  doc.addEventListener('scroll',()=>{if(tip)position();},true);doc.defaultView.addEventListener('resize',close);
