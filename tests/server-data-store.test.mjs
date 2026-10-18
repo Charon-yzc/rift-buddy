@@ -6,6 +6,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {loadServerSeed} from '../services/server-data-collector.mjs';
 import {stageServerData,loadServerData,validateServerData,pruneServerData} from '../services/server-data-store.mjs';
+import {dataDragonMechanicURL} from '../src/core/mechanic-source.mjs';
 const seed=await loadServerSeed(fileURLToPath(new URL('../data/',import.meta.url)));
 async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-server-data-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;}
 
@@ -45,7 +46,7 @@ test('wrong scope, missing rankings, version rollback and storage limits preserv
  const root=await temporary(t),first=await stageServerData(root,seed),invalid=structuredClone(seed);
  delete invalid.rankings.entries[Object.keys(invalid.rankings.entries)[0]];assert.throws(()=>validateServerData(invalid),/全部来源/);
  const badScope=structuredClone(seed);Object.values(badScope.builds.entries)[0].region='invalid';assert.throws(()=>validateServerData(badScope));
- const rollback=structuredClone(seed);rollback.game.version=seed.game.version.replace(/\d+$/,'0');await assert.rejects(stageServerData(root,rollback),/回退/);
+ const rollback=structuredClone(seed);rollback.game.version=seed.game.version.replace(/\d+$/,'0');for(const hero of rollback.game.champions)Object.assign(hero.mechanicSource,{version:rollback.game.version,dataDragonURL:dataDragonMechanicURL(rollback.game.version)});await assert.rejects(stageServerData(root,rollback),/回退/);
  const changed=structuredClone(seed);changed.game.champions[0].name+='测试';
  await assert.rejects(stageServerData(root,changed,{maxBytes:1}),/存储达到上限/);
  assert.equal((await loadServerData(root)).pointer.release,first.pointer.release);

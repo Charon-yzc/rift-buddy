@@ -4,6 +4,7 @@ import {configureLoadoutCatalog} from './loadouts.mjs';
 import {validateRunePage} from './builds.mjs';
 import {loadoutMechanicIssues} from './mechanics.mjs';
 import {dependencyChanges} from './catalog-review.mjs';
+import {validMechanicSourceAnchor} from './mechanic-source.mjs';
 import {legalSkillOrder} from './skill-advice.mjs';
 import {comboMembers,comboKey} from './combo-members.mjs';
 
@@ -17,6 +18,10 @@ const str=(v,max=1500)=>typeof v==='string'&&v.trim().length>0&&v.length<=max&&!
 const date=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;
 const assert=(ok,msg)=>{if(!ok)throw Error('组合库检查失败：'+msg);};
 const baseline=value=>assert(value===undefined||value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length<=300&&Object.entries(value).every(([id,hash])=>/^(champion:[A-Za-z][A-Za-z0-9]{0,39}|(?:item|rune):\d{1,8})$/.test(id)&&/^[a-f0-9]{16}$/.test(hash)),'资料依赖基线');
+function sourceAnchors(entry){
+ const anchors=entry.reviewSourceAnchors;if(anchors===undefined)return;
+ assert(anchors&&typeof anchors==='object'&&!Array.isArray(anchors)&&Object.keys(anchors).length<=180&&Object.entries(anchors).every(([id,anchor])=>hero(id)&&validMechanicSourceAnchor(anchor)&&anchor.input.champion===id&&anchor.legacyFingerprint===entry.reviewBaseline?.['champion:'+id]),'角色源检测锚点');
+}
 export function safeSourceURL(value){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&value.length<=1000;}catch{return false;}}
 const list=(v,max,check,label)=>{assert(Array.isArray(v)&&v.length<=max&&v.every(check),label);};
 function unique(v,key,label){assert(new Set(v.map(key)).size===v.length,label+'重复');}
@@ -36,7 +41,7 @@ export function validateCatalog(value,data){
  if(c.skillPlans!==undefined){
   list(c.skillPlans,500,p=>p&&typeof p==='object'&&!Array.isArray(p),'独立加点方案');unique(c.skillPlans,p=>p.id,'加点方案 ID');unique(c.skillPlans,p=>[p.champion,p.role,p.loadoutId].join(':'),'加点适用范围');
   for(const p of c.skillPlans){
-   baseline(p.reviewBaseline);
+   baseline(p.reviewBaseline);sourceAnchors(p);
    assert(id(p.id)&&str(p.name,120)&&hero(p.champion)&&roles.includes(p.role)&&id(p.loadoutId)&&legalSkillOrder(p.order,p.champion)&&str(p.reason,450),'独立加点内容');
    assert(p.continuationPriority===undefined||p.order.length===3&&/^(?!.*(.).*\1)[QWE]{3}$/.test(p.continuationPriority),'加点后续优先');
    assert(/^\d{2}\.\d{1,2}$/.test(p.patch)&&date(p.reviewedAt),'加点独立复核版本');
@@ -45,7 +50,7 @@ export function validateCatalog(value,data){
    if(p.reference!==undefined){const r=p.reference;assert(r&&legalSkillOrder(r.order,p.champion)&&p.order.startsWith(r.order)&&/^\d{2}\.\d{1,2}$/.test(r.patch)&&safeSourceURL(r.url)&&r.url.length<=300&&typeof r.fetchedAt==='string'&&r.fetchedAt.length<=40&&Number.isFinite(Date.parse(r.fetchedAt)),'加点来源覆盖');}
   }
  }
- for(const entry of [...c.loadouts,...c.duos,...c.trios])baseline(entry.reviewBaseline);
+ for(const entry of [...c.loadouts,...c.duos,...c.trios]){baseline(entry.reviewBaseline);sourceAnchors(entry);}
  for(const l of c.loadouts){assert(id(l.id)&&str(l.name,120)&&bases.includes(l.base)&&str(l.why),'出装内容');list(l.champions,180,hero,'出装英雄');list(l.roles,5,v=>roles.includes(v),'出装位置');assert(l.champions.length&&l.roles.length,'出装适用范围');
   sources(l.sources||[]);
   for(const field of ['items','late'])list(l[field],6,v=>Number.isInteger(v)&&v>0,'装备列表');assert(l.items.length===3&&Number.isInteger(l.boots)&&l.boots>0,'核心装与鞋子');

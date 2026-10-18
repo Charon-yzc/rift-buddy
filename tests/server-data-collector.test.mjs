@@ -8,6 +8,7 @@ import {loadServerSeed,collectServerData} from '../services/server-data-collecto
 import {stageServerData,loadServerData} from '../services/server-data-store.mjs';
 import {buildSourceKey,DEFAULT_BUILD_SOURCE} from '../src/core/build-source.mjs';
 import {rankingKey} from '../src/core/rankings.mjs';
+import {characterSourceURL,dataDragonMechanicURL} from '../src/core/mechanic-source.mjs';
 const seedRoot=fileURLToPath(new URL('../data/',import.meta.url)),seed=await loadServerSeed(seedRoot);
 const network={stats:()=>({requests:0,bytes:0,blocked:{}}),fetcher:()=>assert.fail('unit test must not use network')};
 function sources(){return {
@@ -41,7 +42,7 @@ test('new patch without matching complete statistics cannot replace a working ca
  const root=await temporary(t),first=await stageServerData(root,seed),providers=sources();
  providers.game=async()=>{
   const game=structuredClone(seed.game),[season,patch]=seed.game.patch.split('.').map(Number);game.patch=season+'.'+(patch+1);game.version=game.patch+'.1';
-  for(const hero of game.champions){hero.combatStatsSource.patch=game.patch;hero.combatStatsSource.url=hero.combatStatsSource.url.replace('/'+seed.game.patch+'/','/'+game.patch+'/');}return game;
+  for(const hero of game.champions){hero.combatStatsSource.patch=game.patch;hero.combatStatsSource.url=hero.combatStatsSource.url.replace('/'+seed.game.patch+'/','/'+game.patch+'/');Object.assign(hero.mechanicSource,{patch:game.patch,version:game.version,dataDragonURL:dataDragonMechanicURL(game.version)});hero.mechanicSource.character.url=characterSourceURL(game.patch,hero.id);}return game;
  };
  const result=await collectServerData({root,seedRoot,network,providers,maxChampions:1});
  assert.equal(result.state,'failed');assert.equal(result.release,first.pointer.release);

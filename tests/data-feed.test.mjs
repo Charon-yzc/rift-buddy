@@ -14,6 +14,7 @@ import {loadServerSeed} from '../services/server-data-collector.mjs';
 import {stageServerData} from '../services/server-data-store.mjs';
 import {publishServerData} from '../services/server-data-publish.mjs';
 import {isFreshBuildReference} from '../src/core/builds.mjs';
+import {mechanicReview} from '../src/core/mechanic-review.mjs';
 
 const seed=await loadServerSeed(path.resolve('data'));
 const pair=generateKeyPairSync('ed25519'),publicKey=pair.publicKey.export({type:'spki',format:'pem'}),keys={test:publicKey};
@@ -29,6 +30,14 @@ function fixture(bundle=seed,sequence=now){
 }
 function data(){return {...structuredClone(seed.game),rankings:{},buildSources:{},hexBuilds:{}};}
 async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-data-feed-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;}
+
+test('statistics activation cannot renew changed character sources or their review anchor',()=>{
+ const game=data(),hero=game.champions.find(hero=>hero.mechanicSource);assert(hero);
+ hero.mechanicSource.spells[0].range=[9999];const before=structuredClone(game.champions),fetchedAt=game.fetchedAt,contentCheckedAt=game.contentCheckedAt;
+ assert.equal(mechanicReview(hero,game.patch),'pending-review');
+ applyFeedBundle(game,seed,{patch:game.patch,checkedAt:'2026-10-20T00:00:00Z'});
+ assert.deepEqual(game.champions,before);assert.equal(game.fetchedAt,fetchedAt);assert.equal(game.contentCheckedAt,contentCheckedAt);assert.equal(mechanicReview(hero,game.patch),'pending-review');
+});
 
 test('signed manifest authenticates exact bytes; changed payload, key and paths fail',()=>{
  const f=fixture();assert.equal(verifyFeedEnvelope(f.envelope,{keys}).release,f.manifest.release);
