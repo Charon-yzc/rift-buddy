@@ -676,6 +676,8 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-pic
 .recommendation-app .settings-grid .setting-row p{font-size:12px;margin-top:3px}
 .recommendation-app .settings-grid .btn{min-height:30px;padding:5px 8px;font-size:12px}
 .recommendation-app .settings-grid .settings-details{padding-block:8px}
+.settings-launch-paths .setting-row{flex-wrap:wrap;align-items:flex-start}
+.settings-launch-paths .settings-path{min-width:0;flex:1 1 240px;overflow-wrap:anywhere}
 .recommendation-app .update-download-options{margin-bottom:0}
 .recommendation-app .patch-entry{padding:0 10px;margin-block:6px;border-radius:7px}
 .recommendation-app .patch-entry>summary{display:flex;align-items:center;gap:10px;min-height:52px;cursor:pointer;list-style:none}
