@@ -188,6 +188,10 @@ async function run(){
  for(const choice of [{surface:'main',id:'Darius',role:'top'},{surface:'sidebar',id:'Ashe',role:'bottom'}]){
   await resetRound(430);const pickerWindow=choice.surface==='main'?main:side,roleBefore=attempts.length;await change(pickerWindow,'#solo-role',choice.role);await until(()=>attempts.length>roleBefore&&results.length===attempts.length,'Role placeholder remained pending');
   await checkpoint('single-picker-click-complete-preparation-'+choice.surface,async()=>{
+   // The IPC result precedes the renderer's fresh sync and save. Its success
+   // notice marks the completed lane action before the next explicit click.
+   const placeholderNotice='已预选'+hero(attempts.at(-1).champion).name+'占位';
+   await until(()=>js(pickerWindow,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return role?.value==='+JSON.stringify(choice.role)+'&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith('+JSON.stringify(placeholderNotice)+');})()'),'Role placeholder did not finish in the '+choice.surface+' renderer');
    const window=choice.surface==='main'?main:side,before=attempts.length,resultBefore=results.length,writeBefore=writes.length;
    await click(window,'[data-action=pregame-hero]');await until(()=>js(window,'!!document.querySelector("#overlay-root [data-action=pick-champion][data-id='+choice.id+']")'),'Champion picker missing on '+choice.surface);assert.equal(attempts.length,before,'Opening the picker unexpectedly wrote to the client');
    await click(window,'#overlay-root [data-action=pick-champion][data-id='+choice.id+']');await until(()=>results.length===resultBefore+1,'One picker hero click did not complete a preparation API call on '+choice.surface,10000);

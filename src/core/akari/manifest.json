@@ -1,0 +1,184 @@
+{
+  "project": "League Akari",
+  "repository": "https://github.com/LeagueAkari/LeagueAkari",
+  "revision": "60f1584c",
+  "commit": "60f1584c3d3e45b2bb183aefcc615d35d7cffcb8",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2026 Hanxven",
+  "generator": "node scripts/vendor-akari-analysis.mjs [path-to-league-akari-party]",
+  "esbuildVersion": "0.25.12",
+  "engineSha256": "6324fe206cb441accb879f04a13a06b8a80d8a7c26cc802f8edd54a18c42cd8d",
+  "adaptations": [
+    {
+      "file": "src/shared/data-adapter/analysis/player/single/objectives.ts",
+      "reason": "Remove participant-ID 1–5 team guessing. The bridge resolves absent killerTeamId from verified roster team IDs; unresolved objective teams are skipped and objective availability is false."
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/single/jungle.ts",
+      "reason": "Skip champion kill positions that are absent instead of dereferencing null. The bridge marks position-dependent jungle metrics unavailable when relevant coordinates are missing."
+    },
+    {
+      "file": "src/shared/constants/common.ts",
+      "reason": "Omit unused API URL re-exports so the pure relationship module does not pull application network configuration into the bundle. EMPTY_PUUID remains verbatim."
+    }
+  ],
+  "bridgeSemantics": [
+    "Canonical SGP wrappers are reconstructed only from the normalized whitelist. No raw source object is retained.",
+    "Original numeric defaults are internal only. Missing dependencies null the affected single, aggregate and champion metrics. availability records metric sample counts and timeline limitations.",
+    "Timeline total CS is placed in a synthetic minionsKilled slot with jungleMinionsKilled=0 solely for the original total-CS calculation. The real split remains unknown and is never exposed as measured.",
+    "Original jungle geometry, minute sampling and gank heuristics are historical inference; they do not prove player intent.",
+    "Undefined zero-mean CV sentinels and non-finite team BSI are exposed as null. Historical inference is bounded to 16 visible identities because the original utility enumerates every subset.",
+    "Historical groups use original pairwise minimum together counts, not proof of a premade party or exact all-player simultaneous games. Caller supplies region/source-scoped identity; Arena is grouped by own subteam.",
+    "Input history must belong to one query target and one caller-managed source/region scope. Duplicate game IDs are counted once; mixed query targets throw."
+  ],
+  "sources": [
+    {
+      "file": "LICENSE",
+      "sha256": "10fc4e0b3b20c879b62e91ca87dc0a234fc31c323794b4b4729be8c8fd32295b"
+    },
+    {
+      "file": "src/shared/constants/common.ts",
+      "sha256": "839a8b51515533b5781e4769073ff9623be5a9a573366fe8d17fa8d0e7aff3e0"
+    },
+    {
+      "file": "src/shared/constants/summoner-spells.ts",
+      "sha256": "fa4842b65bbc118fb6742f9c638625139916f68e0d92be51ca333652fbc351a3"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/akari.ts",
+      "sha256": "d815f8477c18fc63da67fd0e19aec9c92cc2b862b6b4da67f35ae49c2ac78582"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/champions.ts",
+      "sha256": "82869b20cdcc7ee43ec1d37d38e5e3bd17ec73aab847196a038ca90c49db567f"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/details.ts",
+      "sha256": "2ea7f94e29f2796ef35399d03c14601998f255fd6b4b580c44f99c4544f1a0c7"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/jungle.ts",
+      "sha256": "bdad98846004e7f5a2163585079be0b921f94f916994deee806b7f79bdf7e4c5"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/positions.ts",
+      "sha256": "56b95981d199d41d500d0fd8285acd9387f2ff044bfdb9fc1ee9a7c5fc6fa0a3"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/spells.ts",
+      "sha256": "a9357be5fc3b92b53af4440382266d6408e513b358fa1cb219e771b14b23f3ef"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/summary.ts",
+      "sha256": "684719cb56300694e14584376f5948ec018af5aaf1270f468328e5d89f96cff7"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/team-side.ts",
+      "sha256": "d49617358703c150ac8803ecd7a237ed4a8072a0ab3b08c2a1c2e025a7372dcc"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/aggregate/win-loss.ts",
+      "sha256": "90a54eab8d8c758143b6456bac6726f5ad613e1723e360124135f9620c6a6f8f"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/constants.ts",
+      "sha256": "e6954c1cd111720a7b9fe53755c13f17aa680ba2ff6f46a7bdc693e0d8d79d0f"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/index.ts",
+      "sha256": "5c39d7d547627214d17734ee680a1bf6193a394c259327190670cbcfea121db5"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/scoring.ts",
+      "sha256": "2bbf93f988b0e47012e69753adc8934fbb6a03ee22b650bd03b4cc8d7fdcceaa"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/single/akari.ts",
+      "sha256": "120d64ef4e3760eb52cfae12745dd3b28286d366a0216da9f7bf106f7318bc57"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/single/details.ts",
+      "sha256": "cb8ad59b4ccf38c01e5381097a6bea21e5b91dd31d7011faa985c243a8b17c94"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/single/early-deaths.ts",
+      "sha256": "d0aa1ac6dcc9e1ccac3470d1a5d6b29de345a9df028ef9adf897ab952e158454"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/single/jungle.ts",
+      "sha256": "824c08ee64c70365bad61ff63b301a39949a51221a60ebbe08b648df9716cb49"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/single/objectives.ts",
+      "sha256": "8ba7fcd55a97b6527a8a32ba6f5bd6691d74efe93501e266e846ff86661a1604"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/single/summary.ts",
+      "sha256": "09718ad467c5bb5f032dca087c06dc6f17d9622bf8059306b38b1fd9ede3ea8d"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/types/aggregated.ts",
+      "sha256": "fb8ecca4da16e9d933b26934dbd7c4741b127ebcfc5d72766efd9178e19e9474"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/types/helpers.ts",
+      "sha256": "769f34b089778c4a9c701a18d9039a4109f0e3850e7b5cbd05ce82833f474b25"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/types/single.ts",
+      "sha256": "f981117de6db69df075b8e49111dacd1e4307c0ca11be7e0d72a07c06b8c13bd"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/utils/empty.ts",
+      "sha256": "bbdf43ffaed6837dd295f37248d61e66799c1fb5c81ca09303cf7c18c78635cf"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/utils/geometry.ts",
+      "sha256": "950ca1b08ba251319614ba0407c30a357244f6201df9c8c0fe1ee96e4cf00a73"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/player/utils/math.ts",
+      "sha256": "2c2aa80d40fec1d6b01336f6428883543556323b1165673c6124ba48a9897cd6"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/relationship/index.ts",
+      "sha256": "f89a1e5dd140f5c0c743f61c35620ed9b9d09f1569e417e379833c199c0a0a0d"
+    },
+    {
+      "file": "src/shared/data-adapter/analysis/team/index.ts",
+      "sha256": "b9a74a85fc8a5c16a033f83ea5ce106aa35aa48ebfc8d7f7542e9369dc40dc81"
+    },
+    {
+      "file": "src/shared/data-adapter/match-history/cherry.ts",
+      "sha256": "75347f8bd828ba16a4877541731bfb6ea41d02191edbfa31b31efa6bcecaed35"
+    },
+    {
+      "file": "src/shared/data-adapter/match-history/frames.ts",
+      "sha256": "482debd412d43233cdd7fb51fbe0bb6afed879909dc97b461d09c6e9ccdab071"
+    },
+    {
+      "file": "src/shared/data-adapter/match-history/match-basic.ts",
+      "sha256": "ab5d4b62bb0de3350f7d430bace91894099ac8e26dac0df001232171770edfa5"
+    },
+    {
+      "file": "src/shared/data-adapter/match-history/participants.ts",
+      "sha256": "a4f00e536e31836d642aa58ec06dd2422d0076d05914314906f7c7be8f1015fb"
+    },
+    {
+      "file": "src/shared/data-adapter/match-history/win-result.ts",
+      "sha256": "313ba5c33d3244736a4598330aa7a816d36a9159355006d19154f516d38ef62d"
+    },
+    {
+      "file": "src/shared/data-adapter/utils.ts",
+      "sha256": "e34f7b9e9e831e1e662ce107b7e8e93c6065650280cf9dc1ac213546564ec2ff"
+    },
+    {
+      "file": "src/shared/types/league-client/match-history.ts",
+      "sha256": "c69f0af6513b9c68813f9ff5fc1b574aea13d57cf97b6a3f30266a64f0a07736"
+    },
+    {
+      "file": "src/shared/utils/team-up-calc.ts",
+      "sha256": "7ca876fcf56b2c3fe1336f5ebb136a10f86ec245a2cd48ba1e3fac87c786d113"
+    }
+  ]
+}

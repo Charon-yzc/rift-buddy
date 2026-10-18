@@ -97,9 +97,15 @@ async function boot(){
  if(state.guide?.ball){state.guide={...state.guide,ball:false,collapsed:false};if(state.recovery?.backedUp!==false)await saveCurrentState();}
  const {createHelperManager}=await import('../services/client-helper.mjs');
  const helperRoot=path.join(process.resourcesPath,'connection');
- helper=createHelperManager({userData:storeRoot,bundleRoot:root,executable:process.execPath,isPackaged:app.isPackaged,
+  helper=createHelperManager({userData:storeRoot,bundleRoot:root,executable:process.execPath,isPackaged:app.isPackaged,
   ...(app.isPackaged?{helperExecutable:path.join(helperRoot,'node.exe'),helperEntry:path.join(helperRoot,'electron/client-helper-entry.mjs'),helperBundleRoot:helperRoot,launcherExecutable:path.join(helperRoot,'connection-launcher.exe')}:{}) ,
-  onProgress:message=>publishWindows('client-update',{connected:false,connecting:true,phase:'Offline',message})});
+   onProgress:message=>publishWindows('client-update',{connected:false,connecting:true,phase:'Offline',message})});
+  const {createMatchHistoryService}=await import('../services/match-history.mjs');
+  const matchHistory=createMatchHistoryService({installPath:()=>state.preferences?.installPath});
+  guard('match-history',async(operation,payload)=>{
+   if(!['page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))throw Error('不支持此战绩操作');
+   return helper.active()?helper.request('matchHistory',{operation,payload}):matchHistory.execute(operation,payload);
+  });
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));
  if(state.guide&&!data.champions.some(c=>c.id===state.guide.selection?.id)){state.guide=null;if(state.recovery?.backedUp!==false)await saveCurrentState();}
  const catalogCore=await import('../src/core/catalog.mjs');

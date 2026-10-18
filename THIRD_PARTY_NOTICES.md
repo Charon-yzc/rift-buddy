@@ -16,7 +16,13 @@ This product is not endorsed by Riot Games and does not reflect the views or opi
 
 ## LeagueAkari
 
+The match-history implementation in `src/core/match-history/`, `src/match-history-*.mjs` and `services/match-history*.mjs` adapts the LCU/SGP endpoints, field normalization, Arena placement rule, player relationship analysis, filtering scopes, scoring weights and history interaction structure from the locally supplied LeagueAkari revision `60f1584c3d3e45b2bb183aefcc615d35d7cffcb8` (version 1.5.1). Reference paths: `src/shared/http-api-axios-helper/{league-client,riot-client,sgp}/`, `src/shared/data-adapter/{match-history,analysis/player,predicates}/`, `src/main/shards/akari-api/builtin.ts`, `src/main/shards/league-client-ux/ux-command-line-parser.ts`, `src/renderer/src-main-window/views/player-tabs/`, and `src/renderer-shared/components/match-card/`. The UI and request lifecycle are adapted to this application's existing ESM/Electron architecture. No captured player identities, authentication material or Akari binary assets are bundled. Akari scores are labeled as reference scores, never official ratings.
+
 The matchup normalization in `src/core/matchups.mjs` adapts the public champion matchup representation from LeagueAkari. A recorded matchup keeps an unknown relationship; raw whole-game results do not become an asserted lane counter.
+
+The full dependency-free analysis runtime in `src/core/akari/engine.mjs` is generated from 37 immutable source files at the same pinned revision. `src/core/akari/manifest.json` records source hashes, the generated SHA-256, and the small adaptations for unavailable coordinates, verified objective ownership, and removal of unused application URL imports. `scripts/vendor-akari-analysis.mjs` reproduces this output using the locally supplied source checkout. The adjacent `LICENSE.akari.txt` retains the full upstream MIT license. The bridge reconstructs canonical inputs only from public whitelisted normalized data and marks unavailable metrics explicitly.
+
+The ongoing-game roster, controller and presentation in `src/core/ongoing-game.mjs` and `src/ongoing-game*` adapt `src/main/shards/ongoing-game/` and `src/renderer-shared/components/ongoing-game-panel/`. Hidden-identity deobfuscation, chat/game-input automation, persistent player databases and telemetry are not imported. Team-up labels describe historical inference rather than confirmed parties. The nested history filter UI, raw-stat comparison, timeline charts and profile widgets also reference the original player-tabs and match-card modules at this revision.
 
 Source: https://github.com/LeagueAkari/LeagueAkari/blob/5109b2f7fcce6e02312e534cd1729ed0f2142b51/src/shared/data-adapter/champion-data/opgg.ts
 
