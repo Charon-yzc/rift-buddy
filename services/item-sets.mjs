@@ -77,6 +77,10 @@ async function shopConflicts(game,target,selected,io){
    const content=await io.readFile(filename);let value;try{value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(content));}catch{continue;}
    if(!value||!['custom','global'].includes(value.type)||typeof value.title!=='string'||!Array.isArray(value.blocks)||!value.blocks.length)continue;
    if(!['any',selected.map].includes(value.map)||!['any',selected.map==='SR'?'CLASSIC':'ARAM'].includes(value.mode))continue;
+   // A set scoped to another champion or map cannot appear for this one, so it
+   // must not be moved out of the shop (it may belong to another tool's setup).
+   const scoped=(list,expected)=>!Array.isArray(list)||!list.length||list.some(name=>String(name)===String(expected));
+   if(!scoped(value.associatedChampions,selected.associatedChampions?.[0])||!scoped(value.associatedMaps,selected.associatedMaps?.[0]))continue;
    entries.push({filename,content});
   }
  }

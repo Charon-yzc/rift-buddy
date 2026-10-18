@@ -22,7 +22,7 @@ test('empty and partial records preserve missing values and provide usable setti
  assert.match(html,/data-disclosure-key="ongoing-settings"/);
  assert.match(html,/data-ongoing-tag="akari"/);
  const s=state();s.players.p1={};const missing=card(ongoingGameView(s,data));
- assert.match(missing,/历史胜率/);assert.match(missing,/>—<\/strong>/);assert.doesNotMatch(missing,/Akari 0|0%|NaN|undefined/);
+ assert.match(missing,/历史胜率/);assert.match(missing,/未读取/);assert.doesNotMatch(missing,/Akari 0|0%|NaN|undefined/);
  assert.match(missing,/没有可分析的有效历史样本/);
 });
 

@@ -47,7 +47,7 @@ export function ongoingTooltipView(state={},element,data={}){
  if(kind==='kda'){
   if(!analysis?.count>0)return `<h3>平均 KDA</h3><p>没有可用的已结束对局样本。</p>`;
   const s=analysis.summary||{};
-  return `<h3>平均 KDA · ${e(scope)}</h3>${metrics([['平均 KDA',num(s.avgKda,2)],['KDA 变异系数',num(s.kdaCv,2)],['累计 K / D / A',`${num(s.kills)} / ${num(s.deaths)} / ${num(s.assists)}`],['单杀',num(s.avgSoloKills,2)],['击杀伤害比',pct(s.avgKillDamageEfficiency)]])}<small>变异系数越大表示表现波动越大；缺失的测量不补零。</small>`;
+  return `<h3>平均 KDA · ${e(scope)}</h3>${metrics([['平均 KDA',num(s.avgKda,2)],['KDA 变异系数',num(s.kdaCv,2)],['累计 K / D / A',`${num(s.kills)} / ${num(s.deaths)} / ${num(s.assists)}`],['单杀',num(s.avgSoloKills,2)],['击杀伤害比',pct(s.avgKillDamageEfficiency)]])}<small>变异系数越大表示表现波动越大。卡片高亮来自本队至少 3 人样本的 IQR 异常值判断，只描述历史样本。</small>`;
  }
  if(kind==='position'){
   const role=p?.role&&typeof p.role==='object'?p.role:null,positions=analysis?.positions||null,current=p?.position||role?.current||'';

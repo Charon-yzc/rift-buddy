@@ -105,8 +105,13 @@ test('applicable personal and third-party shop sets are backed up while other ma
  await fs.writeFile(path.join(f.target,'personal.json'),local);await fs.writeFile(path.join(global,'third-party.json'),shared);
  const abyss=JSON.stringify({...itemSet,uid:'abyss',title:'大乱斗配装',map:'HA'});await fs.writeFile(path.join(f.target,'abyss.json'),abyss);
  const other=path.join(f.game,'Config','Champions','Ashe','Recommended');await fs.mkdir(other,{recursive:true});await fs.writeFile(path.join(other,'keep.json'),local);
+ // A set in the scanned folder that names another champion or map cannot be
+ // shown for this one, so it must be left where it is.
+ const otherChampion=JSON.stringify({...itemSet,uid:'aatrox',title:'其他英雄配装',associatedChampions:['266']}),otherMap=JSON.stringify({...itemSet,uid:'other-map',title:'另一张地图配装',associatedMaps:[12]});
+ await fs.writeFile(path.join(global,'other-champion.json'),otherChampion);await fs.writeFile(path.join(global,'other-map.json'),otherMap);
  const result=await f.write();assert.equal(result.displacedSets,2);assert.ok(!result.backupDirectory.includes('Recommended'));
  await assert.rejects(fs.stat(path.join(f.target,'personal.json')),{code:'ENOENT'});await assert.rejects(fs.stat(path.join(global,'third-party.json')),{code:'ENOENT'});
+ assert.equal(await fs.readFile(path.join(global,'other-champion.json'),'utf8'),otherChampion);assert.equal(await fs.readFile(path.join(global,'other-map.json'),'utf8'),otherMap);
  assert.equal(await fs.readFile(path.join(f.target,'abyss.json'),'utf8'),abyss);assert.equal(await fs.readFile(path.join(other,'keep.json'),'utf8'),local);
  const manifest=JSON.parse(await fs.readFile(path.join(result.backupDirectory,'manifest.json'),'utf8'));
  for(const entry of manifest){const bytes=await fs.readFile(path.join(result.backupDirectory,entry.backup),'utf8');assert.ok([local,shared].includes(bytes));assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),entry.sha256);assert.ok(!path.isAbsolute(entry.original)&&!entry.original.startsWith('..'));}
