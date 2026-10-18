@@ -16,3 +16,6 @@ test('a successful hover followed by a new operation identity cannot fetch or ap
  await assert.rejects(()=>prepareHeroWithSource({build:{mode:'rift',loadoutId:'default'},canRefresh:true,apply:async only=>{calls.push(only);context='new-game';return {steps:{hover:{status:'done'}}};},snapshot:()=>context,refresh:()=>assert.fail('Old click must not fetch in the new draft'),rebuild:()=>assert.fail('Old click must not rebuild')}),/选人或配置已变化/);
  assert.deepEqual(calls,[true]);
 });
+test('an intervening different public hero cannot become the baseline for an old source click',async()=>{
+ const calls=[];await assert.rejects(()=>prepareHeroWithSource({build:{mode:'rift',loadoutId:'default'},canRefresh:true,apply:async only=>{calls.push(only);return {steps:{hover:{status:'done'}}};},snapshot:()=>"same-game",isSelectedHero:()=>false,refresh:()=>assert.fail('Do not fetch for the overwritten click'),rebuild:()=>assert.fail('Do not rebuild')}),/选人或配置已变化/);assert.deepEqual(calls,[true]);
+});

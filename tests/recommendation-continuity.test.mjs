@@ -918,6 +918,14 @@ test('a source-missing click whose hover finishes across a new draft never fetch
  assert.equal(calls.prepared.length,1);assert.equal(c.clientPreparing,false);
 });
 
+test('changing to another public hero during hover prevents the old missing-source click from continuing',async()=>{
+ const current=client(),incoming=structuredClone(current),{context:c,calls}=setup({current,incoming,slots:createSlots().map(slot=>({...slot,party:slot.role==='bottom'})),results:[]});
+ c.api.refreshBuild=async()=>assert.fail('Overwritten click must not refresh');c.refreshConfiguration=async()=>assert.fail('Overwritten click must not refresh');
+ c.api.prepareSelection=async value=>{calls.prepared.push(value);assert.equal(value.preselectOnly,true);incoming.session.myTeam[0].championPickIntent=hero('Jinx').key;return {complete:true,steps:{hover:{status:'done'},runes:{status:'skipped'},spells:{status:'skipped'},items:{status:'skipped'}}};};
+ await assert.rejects(()=>c.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'}),/选人或配置已变化/);
+ assert.equal(calls.prepared.length,1);assert.equal(c.client.session.myTeam[0].championPickIntent,hero('Jinx').key);assert.equal(c.clientPreparing,false);
+});
+
 async function prepareRetainedHover(docked){
  const current=client();current.session.myTeam[0].assignedPosition='';
  current.session.myTeam.push({cellId:0,championId:0,championPickIntent:hero('Nami').key,assignedPosition:''});

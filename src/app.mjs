@@ -783,6 +783,7 @@ async function prepareHeroClick(context,expected=null){
     apply:preselectOnly=>{clickedHeroPreparation={selection,build:getBuild(champ(selection.id),selection.role,data,selection)};const checked=expected?{...expected,planId:activeCreativePlan?.id||'',...(sourceReloaded?{fingerprint:clientPreparationPlan(data,clickedHeroPreparation)?.fingerprint}:{})}:null;return useClientPreparation({dataset:{preparationView:'clicked'}},true,checked,preselectOnly);},
     refresh:async()=>{clientPreparing=true;render();try{const reference=await refreshConfiguration(selection.id,selection.role,mode,true);sourceReloaded=!!reference;return reference;}finally{clientPreparing=false;render();}},
     operationSnapshot:()=>{const context=runeWriteContext(client);return JSON.stringify([preparationGameId(client),context.phase,context.cellId,context.assignedPosition,client.game?.queueId,data.patch,data.buildSource,activeCreativePlan?.id||'',buildChoiceKey(validatePreparation(preparations.recall(selection)||selection))]);},
+    isSelectedHero:()=>{const own=client.session?.myTeam?.find(player=>player.cellId===client.session.localPlayerCellId);return Number(own?.championId||own?.championPickIntent)===Number(champ(selection.id)?.key);},
     snapshot:()=>JSON.stringify([preparationGameId(client),runeWriteContext(client),data.patch,data.buildSource,activeCreativePlan?.id||'',buildChoiceKey(preparations.recall(selection)||selection)]),
     rebuild:()=>getBuild(champ(selection.id),selection.role,data,selection)});
   }finally{clickedHeroPreparation=null;}
