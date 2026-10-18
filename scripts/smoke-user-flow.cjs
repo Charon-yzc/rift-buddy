@@ -87,7 +87,10 @@ async function run(){
  await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
  await until(()=>prepares.length===1,'A different unlocked reference hero was not prepared');
  assert.equal(prepares[0].champion,'Seraphine');assert.equal(prepares[0].role,'bottom');assert.equal(prepares[0].page.selectedPerkIds.length,9);assert.ok(prepares[0].itemSet.blocks.length);
- await until(()=>js('!!document.querySelector(".configuration-current [data-action=configuration-switch]")'),'Hero click did not open compact configuration');
+ await until(()=>js('!document.querySelector(".drawer")'),'Unconfirmed hero click must keep configuration closed');
+ await click('[data-action=navigate][data-route=draft]');await until(()=>js('!!document.querySelector("[data-action=task-configuration]")'),'Prepared hero configuration entry missing');await click('[data-action=task-configuration]');
+ await until(()=>js('!!document.querySelector(".configuration-current [data-action=configuration-switch]")'),'Explicit configuration navigation failed');
+ assert.equal(prepares.length,1,'Opening the configuration repeated the client preparation');
  assert.equal(await js('document.querySelectorAll(".rune-target-warning").length'),0,'The reference lane must not block an explicit unlocked hero choice');
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.

@@ -182,8 +182,7 @@ test('unclaimed candidate positions offer one-click selection while actual teamm
  assert.match(candidates,/data-action="companion-preview"[^>]*data-id="Ashe"/);assert.doesNotMatch(candidates,/<em class="candidate-action/);
  for(const id of ['Ahri','Braum'])assert.match(candidates,new RegExp('data-action="companion-preview"[^>]*data-id="'+id+'"'));
  const activePlan=captureCreativePlan(results[0],data),adopted=companionView({...props,activePlan});
- assert.match(adopted,/data-action="active-hero-prepare" data-id="Ashe"[^>]*>[\s\S]*?下路 · 预选并配置/);
- for(const id of ['Ahri','Braum'])assert.match(adopted,new RegExp('data-action="active-hero-prepare" data-id="'+id+'"[^>]*>[\\s\\S]*?预选并配置'));
+ for(const id of ['Ashe','Ahri','Braum'])assert.match(adopted,new RegExp('data-action="companion-preview"[^>]*data-id="'+id+'"[^>]*aria-label="[^"]*预选并配置'));
  const occupied=structuredClone(props);
  for(const [cellId,id,role]of [[1,'Ahri','mid'],[2,'Braum','support']]){occupied.slots.find(s=>s.role===role).clientCellId=cellId;occupied.client.session.myTeam.push({cellId,championId:data.champions.find(c=>c.id===id).key});}
  const teammates=companionView(occupied);

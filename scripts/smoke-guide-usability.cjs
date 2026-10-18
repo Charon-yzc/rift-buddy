@@ -3,7 +3,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),assert=require('n
 const output=path.resolve(process.env.RIFT_BUDDY_USER_DATA),baseline=process.env.RIFT_CAPTURE_BASELINE==='1';
 // Test only the guide controller and fixture data. Never connect to a client,
 // show test windows, or register shortcuts while a real game may be running.
-app.on('browser-window-created',(_e,w)=>{w.show=()=>{};w.showInactive=()=>{};});
+app.on('browser-window-created',(_e,w)=>{w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);});
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(check,label){for(let n=0;n<100;n++){if(await check())return;await delay(100);}throw Error(label);}
 async function run(){
@@ -11,11 +11,12 @@ async function run(){
  const release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
  const root=process.env.RIFT_BUDDY_SOURCE==='1'?path.resolve('.'):path.join(release.directory,'resources/app.asar');
  const core=await import(pathToFileURL(path.join(root,'src/core/guide.mjs')).href);
+ const detailedGuide=(...args)=>({...core.selectGuide(...args),compact:false});
  const data=JSON.parse(await fs.readFile(path.join(root,'data/game.json'),'utf8'));
  data.builds=JSON.parse(await fs.readFile(path.join(root,'data/builds.json'),'utf8')).entries;
  data.hexBuilds=JSON.parse(await fs.readFile(path.join(root,'data/hex-builds.json'),'utf8')).entries;
  data.spellbook=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8')).champions;
- let state=core.selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'});
+ let state=detailedGuide(null,{id:'Ashe',role:'bottom',mode:'rift'});
  state.bounds={x:0,y:0,width:400,height:740};
  let live={available:true,champion:'Ashe',mode:'rift',mapId:11,queueId:430,inventory:[],gold:800,level:9,skills:{Q:4,W:2,E:2,R:1},gameTime:650,at:Date.now(),teamKnown:true,scores:{kills:0},stats:{ad:120,ap:0,armor:50,mr:40,atkSpeed:1,crit:0,hp:1,maxHp:1700}};
  live.enemies=['Jhin','Jinx','Lux','Zed','Soraka'].map((id,n)=>({id,name:data.champions.find(c=>c.id===id).name,level:9,items:[{id:['3031','6672','3089','6692','3117'][n],count:1}]}));
@@ -26,7 +27,7 @@ async function run(){
  const guide=create({root,getState:()=>state,setState:async next=>{state=next;},getModel:()=>core.createGuideModel(data,state,{...live,at:Date.now()}),isQuitting:()=>false,showMain:()=>{},diagnostic:()=>{},getPreferences:()=>preferences,setPresentation:async change=>{preferences.presentation=changePresentation(preferences.presentation,change);return preferences.presentation;}});
  guide.setInteractionHotkey(true);await guide.phase('InProgress',true);guide.show();
  const win=guide.window(),js=c=>win.webContents.executeJavaScript(c,true);
- await until(()=>js('!!document.querySelector(".next-item")'),'Guide missing');
+ await until(()=>js('!!window.guide'),'Guide preload missing');await js('window.guide.control("layout","details")');await until(()=>js('!!document.querySelector(".next-item")'),'Guide missing');
  const painted=()=>js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');
  await painted();assert.equal(win.isVisible(),false);
  const metrics=()=>js('(()=>{const box=s=>{const r=document.querySelector(s)?.getBoundingClientRect();return r?{top:r.top,bottom:r.bottom,height:r.height}:null};return {width:innerWidth,height:innerHeight,main:box("main"),footer:box("footer"),purchase:box(".next-item"),scrollAreas:[...document.querySelectorAll("main,.quick-reminders")].filter(e=>getComputedStyle(e).overflowY==="auto"&&e.scrollHeight>e.clientHeight).length}})()');
@@ -98,7 +99,7 @@ async function run(){
   await fs.writeFile(path.join(output,'combat-small-metrics.json'),JSON.stringify(combatSmall,null,2));
   await js('window.guide.control("presentation",{field:"reset"})');win.setSize(400,740);await delay(150);
   const beforeMirrorState=structuredClone(state),beforeMirrorLive=structuredClone(live);
-  state=core.selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift',threatId:'Ashe'});
+  state=detailedGuide(null,{id:'Ashe',role:'bottom',mode:'rift',threatId:'Ashe'});
   live={...live,enemies:[{id:'Ashe',name:data.champions.find(c=>c.id==='Ashe').name,level:8,items:[{id:'1029',count:1}],itemsKnown:true}]};guide.publish();
   await until(()=>js('!!document.querySelector("#guide-duel-foe option[value=Ashe]")'),'Mirror opponent missing from its public side');
   await js('const own=document.querySelector("#guide-duel-own");own.value="Ashe";own.dispatchEvent(new Event("change",{bubbles:true}));');
@@ -163,7 +164,7 @@ async function run(){
   // Real packaged renderer, fixture-only skills: a stance R at level one
   // and an innate free R must not be handled as ordinary ultimate points.
   for(const sample of [{id:'Udyr',level:6,skills:{Q:0,W:1,E:1,R:3},text:'R不是普通大招'},{id:'Jayce',level:11,skills:{Q:5,W:3,E:2,R:1},text:'R自动学习'}]){
-   state=core.selectGuide(null,{id:sample.id,role:'top',mode:'rift'});
+   state=detailedGuide(null,{id:sample.id,role:'top',mode:'rift'});
    live={available:true,champion:sample.id,mode:'rift',mapId:11,inventory:[],inventoryKnown:true,gold:800,level:sample.level,skills:sample.skills,gameTime:650,at:Date.now(),enemies:[],allies:[]};
    guide.publish();win.setSize(400,740);await js('document.querySelector("[data-tab=overview]").click()');
    await until(()=>js('document.querySelector("[data-overview-module=skills] h2")?.textContent.includes("技能点可升 Q")'),'Special champion upgrade ignored');
@@ -175,13 +176,13 @@ async function run(){
    await fs.writeFile(path.join(output,'skills-'+sample.id.toLowerCase()+'.png'),(await win.webContents.capturePage()).toPNG());
    assert.equal(await js('document.querySelector("[data-overview-module=skills] > .overview-reason").textContent.includes("排位样本")'),false,'Source metadata crowded the default skill advice');
    await js('document.querySelector("[data-guide-section=overview-skills]").open=true;');await painted();
-   assert.equal(await js('document.querySelector("[data-guide-section=overview-skills]").textContent.includes("排位样本")'),true,'Source coverage missing from expanded details');
+   assert.equal(await js('document.querySelector("[data-guide-section=overview-skills]").textContent.includes('+JSON.stringify('1–'+model.skillOrder.length+' 级')+')'),true,'Selected-order coverage missing from expanded details');if(model.skillSource)assert.equal(await js('document.querySelector("[data-overview-module=skills]").textContent.includes('+JSON.stringify(model.skillSource)+')'),true,'Selected source missing from details');
    await fs.writeFile(path.join(output,'skills-'+sample.id.toLowerCase()+'-details.png'),(await win.webContents.capturePage()).toPNG());
   }
   // A transforming hero's public bag never establishes melee/ranged form.
   // Only the active player's whitelisted, sanitized Q id can resolve it.
   const {sanitizeLive}=await import(pathToFileURL(path.join(root,'services/live-client.mjs')).href);
-  state=core.selectGuide(null,{id:'Gnar',role:'top',mode:'rift',threatId:'Ahri'});
+  state=detailedGuide(null,{id:'Gnar',role:'top',mode:'rift',threatId:'Ahri'});
   const formLive=qId=>sanitizeLive({riotId:'fixture-form-only',level:9,currentGold:800,abilities:{Q:{id:qId,abilityLevel:4},W:{abilityLevel:2},E:{abilityLevel:2},R:{abilityLevel:1}},championStats:{attackDamage:100,abilityPower:0,attackSpeed:1}},
    [{riotId:'fixture-form-only',team:'ORDER',rawChampionName:'game_character_displayname_Gnar',items:[{itemID:3153,count:1}]},{team:'CHAOS',rawChampionName:'game_character_displayname_Ahri',level:9,items:[]}],{mapNumber:11,gameMode:'CLASSIC'},data.champions);
   live=formLive(null);guide.publish();await js('document.querySelector("[data-tab=combat]").click()');
@@ -198,7 +199,7 @@ async function run(){
   assert.equal(await js('document.querySelector("main").textContent.includes("近战或远程形态未确认")'),false);
   assert.equal(await js('document.documentElement.scrollWidth<=innerWidth'),true);await painted();
   await fs.writeFile(path.join(output,'combat-known-form.png'),(await win.webContents.capturePage()).toPNG());
-  state=core.selectGuide(null,{id:'Vayne',role:'bottom',mode:'rift',threatId:'Ahri'});
+  state=detailedGuide(null,{id:'Vayne',role:'bottom',mode:'rift',threatId:'Ahri'});
   live={available:true,champion:'Vayne',mode:'rift',mapId:11,inventory:[],inventoryKnown:true,gold:800,level:9,skills:{Q:1,W:5,E:1,R:1},gameTime:650,at:Date.now(),stats:{ad:100,ap:0,atkSpeed:2,crit:0},enemies:[{id:'Ahri',name:'阿狸',level:9,items:[],itemsKnown:true}],allies:[]};
   guide.publish();
   await until(()=>js('document.querySelector(".combat-summary small")?.textContent.includes("普攻 + W参考")'),'Vayne partial reference missing');
@@ -215,21 +216,21 @@ async function run(){
    await painted();await fs.writeFile(path.join(output,'combat-level-20-'+highLevel+'.png'),(await win.webContents.capturePage()).toPNG());
    live=baseLive;guide.publish();await until(()=>js('!!document.querySelector(".combat-summary")'),'Level range recovery missing');
   }
-  state={...core.selectGuide(null,{id:'Yone',role:'top',mode:'hex'}),duelPick:{own:'Yone',foe:'Ahri'}};
+  state={...detailedGuide(null,{id:'Yone',role:'top',mode:'hex'}),duelPick:{own:'Yone',foe:'Ahri'}};
   live={...live,champion:'Yone',mode:'hex',mapId:12,queueId:2400,skills:{Q:5,W:1,E:1,R:1}};guide.publish();
   await until(()=>js('document.querySelector("main").textContent.includes("平衡与强化效果尚未完整核对")'),'Hex mode used the Rift damage model');
   assert.equal(await js('!!document.querySelector(".combat-summary")'),false);
   assert.equal((await js('window.guide.bootstrap()')).model.customDuel.unresolved,true);
   await painted();await fs.writeFile(path.join(output,'combat-hex-range.png'),(await win.webContents.capturePage()).toPNG());
   // Scroll and disclosures belong to the hero/role/mode and current game.
-  state={...core.selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),match:{gameId:'900'}};
+  state={...detailedGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),match:{gameId:'900'}};
   live={available:true,champion:'Ashe',mode:'rift',mapId:11,inventory:[],inventoryKnown:true,gold:800,level:9,skills:{Q:4,W:2,E:2,R:1},at:Date.now(),enemies:[],allies:[]};
   guide.publish();await js('document.querySelector("[data-tab=items]").click()');
   await until(()=>js('document.querySelector("header b").textContent.includes('+JSON.stringify(data.champions.find(c=>c.id==='Ashe').name)+')'),'Ashe context missing');
   await js('document.querySelector("[data-guide-section=route]").open=true;document.querySelector("main").scrollTop=200;');
   const savedScroll=await js('document.querySelector("main").scrollTop');assert.ok(savedScroll>0);
   const savedState=structuredClone(state),savedLive=structuredClone(live);
-  state={...core.selectGuide(null,{id:'Jinx',role:'bottom',mode:'rift'}),match:{gameId:'900'}};live={...live,champion:'Jinx'};guide.publish();
+  state={...detailedGuide(null,{id:'Jinx',role:'bottom',mode:'rift'}),match:{gameId:'900'}};live={...live,champion:'Jinx'};guide.publish();
   await until(()=>js('document.querySelector("header b").textContent.includes('+JSON.stringify(data.champions.find(c=>c.id==='Jinx').name)+')'),'New hero context missing');
   assert.equal(await js('document.querySelector("main").scrollTop'),0);
   assert.equal(await js('document.querySelector("[data-guide-section=route]").open'),false,'New hero inherited another route disclosure');
@@ -273,7 +274,7 @@ async function run(){
   await until(()=>js('document.querySelector("#guide-purchase-target")!==window.fixtureSelect'),'Changed source left an obsolete purchase menu open');
   source.fetchedAt=previousFetchedAt;guide.publish();
   // Single-cast references use the current own panel, not inferred enemy HP.
-  state=core.selectGuide(state,{id:'Chogath',role:'jungle',mode:'rift'});
+  state=detailedGuide(state,{id:'Chogath',role:'jungle',mode:'rift'});
   live={...live,champion:'Chogath',inventory:[{id:'3089',count:1},{id:'3084',count:1}],inventoryKnown:true,level:9,skills:{Q:4,W:2,E:2,R:1},stats:{...live.stats,ap:200,maxHp:3000},roster:[]};guide.publish();
   await until(()=>js('document.querySelector("h1")?.textContent.includes("科加斯")'),'Cho guide did not prepare');await js('document.querySelector("[data-tab=combat]").click()');
   await until(()=>js('document.querySelector(".ultimate-reference")?.textContent.includes("572")'),'Cho R did not use the real panel');
@@ -287,7 +288,7 @@ async function run(){
   assert.equal(await js('document.querySelector(".ultimate-reference div").getBoundingClientRect().bottom<=document.querySelector("main").getBoundingClientRect().bottom'),true,'Single-R numbers fell below the first small-window viewport');
   assert.equal(await js('document.documentElement.scrollWidth<=innerWidth'),true);await painted();await fs.writeFile(path.join(output,'chogath-r-large-small.png'),(await win.webContents.capturePage()).toPNG());
   await js('window.guide.control("presentation",{field:"reset"})');win.setSize(400,740);
-  state=core.selectGuide(state,{id:'Garen',role:'top',mode:'rift'});live.champion='Garen';live.stats.ap=null;guide.publish();
+  state=detailedGuide(state,{id:'Garen',role:'top',mode:'rift'});live.champion='Garen';live.stats.ap=null;guide.publish();
   await until(()=>js('document.querySelector(".ultimate-reference")?.textContent.includes("125")'),'Garen R did not use current constants');
   assert.ok(await js('document.querySelector(".ultimate-reference").textContent.includes("25%")'));await painted();await fs.writeFile(path.join(output,'garen-r.png'),(await win.webContents.capturePage()).toPNG());
   live.skills.R=0;guide.publish();await until(()=>js('document.querySelector("main").textContent.includes("R 尚未学习")'),'Unlearned R still showed damage');assert.equal(await js('!!document.querySelector(".ultimate-reference")'),false);

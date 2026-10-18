@@ -15,6 +15,7 @@ import {clientPreparationPlan} from '../src/client-preparation-view.mjs';
 import {runeWriteContext} from '../src/core/rune-context.mjs';
 import {upsertPreparation} from '../src/core/preparation.mjs';
 import {validateClientPreparation} from '../services/client-preparation.mjs';
+import {writeRunePage} from '../services/lcu.mjs';
 import {sanitizeShare,encodeFrame,decodeFrame} from '../src/core/room.mjs';
 import {validateState,defaultState} from '../services/storage.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
@@ -122,7 +123,7 @@ assert.notEqual(stagedWithLoader,stagedSource,'The staged scheduler module bound
 function stagedScheduler(kind,{saveFailsAfterDispatch=false}={}){
  let loaded,entered;const loading=new Promise(resolve=>{loaded=resolve;}),started=new Promise(resolve=>{entered=resolve;});
  const writes=[],messages=[],events=[],current=client();current.party={key:'synthetic-party'};
- const service={validateClientPreparation,prepareClientSelection:async({value})=>{writes.push(value);return {complete:true,steps:{hover:{status:'done'},runes:{status:kind==='hero'?'done':'skipped',pageId:44},spells:{status:kind==='hero'?'done':'skipped'},items:{status:kind==='hero'?'done':'skipped'}}};}};
+ const service={validateClientPreparation,prepareClientSelection:async({value})=>{writes.push(value);return {complete:true,steps:{hover:{status:'done'},runes:{status:'done',pageId:44},spells:{status:'done'},items:{status:'done'}}};}};
  const modules=[{getBuild},{clientPreparationPlan},{runeWriteContext},service];
  const context=vm.createContext({state:{draft:{preselection:{role:'support',champion:'Nami',...(kind?{kind,selection:{id:'Nami',role:'support',mode:'rift'}}:{})}}},preservePreparationResult,upsertPreparation,structuredClone,appliedGuideSelection:null,latestClient:current,data,isDeepStrictEqual,publicClientGameId,pregameIntentChoice,
   stagedSelectionRunning:false,applyingRunes:false,importingItemSet:false,stagedSelectionParty:current.party.key,stagedPartyIdentity:()=>current.party.key,
@@ -164,11 +165,26 @@ test('leaving selection while a staged hover is loading does not revive an old e
  scheduler.context.latestClient.phase='Lobby';scheduler.release();await pending;
  assert.equal(scheduler.writes.length,0);assert.equal(scheduler.messages.length,0);
 });
-test('an unchanged staged choice dispatches once and only requests a hover',async()=>{
+test('an unchanged staged position dispatches a full configuration once without claiming a hero lock',async()=>{
  const scheduler=stagedScheduler(),pending=scheduler.run();await scheduler.started;scheduler.release();await pending;
- assert.equal(scheduler.writes.length,1);assert.equal(scheduler.writes[0].champion,'Nami');assert.equal(scheduler.writes[0].preselectOnly,true);
+ assert.equal(scheduler.writes.length,1);assert.equal(scheduler.writes[0].champion,'Nami');assert.equal(scheduler.writes[0].preselectOnly,false);assert.equal(scheduler.writes[0].claimPosition,true);
+ assert.equal(scheduler.context.state.ownedPageId,44,'Position preparation must remember the page actually written for later reuse');
  assert.equal(scheduler.context.applyingRunes,false);assert.equal(scheduler.context.importingItemSet,false);
  await scheduler.run();assert.equal(scheduler.writes.length,1,'Polling repeated an already attempted preselection');
+});
+
+test('a staged position records page A so the next explicit write reuses it after the player selects personal page B',async()=>{
+ const scheduler=stagedScheduler('position'),pending=scheduler.run();await scheduler.started;scheduler.release();await pending;
+ const ownedPageId=scheduler.context.state.ownedPageId,pages=[{id:44,isEditable:true,current:false},{id:55,isEditable:true,current:true,name:'Personal page B'}],before=structuredClone(pages[1]),calls=[];
+ const current=scheduler.context.latestClient,request=async(_auth,route,method='GET',body)=>{
+  if(route==='/lol-gameflow/v1/gameflow-phase')return current.phase;
+  if(route==='/lol-gameflow/v1/session')return {gameData:{gameId:publicClientGameId(current)}};
+  if(route==='/lol-champ-select/v1/session')return structuredClone(current.session);
+  if(route==='/lol-perks/v1/pages'&&method==='GET')return structuredClone(pages);
+  calls.push({route,method});assert.equal(route,'/lol-perks/v1/pages/44');Object.assign(pages[0],body);return {id:44};
+ };
+ const result=await writeRunePage({page:scheduler.writes[0].page,trees:data.runes,ownedPageId,context:runeWriteContext(current)},{discover:async()=>({port:1234}),request});
+ assert.equal(result.pageId,44);assert.deepEqual(pages[1],before);assert.equal(calls.length,1);
 });
 
 test('only an explicitly staged hero prepares the complete configuration once',async()=>{

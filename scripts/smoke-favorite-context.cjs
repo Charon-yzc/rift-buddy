@@ -34,6 +34,7 @@ async function run(){
  const ids=slots=>slots.map(s=>s.champion);
  const favoriteBefore=structuredClone((await state()).favorites[0]);
  if(phase!=='offline')await sync();
+ if(phase==='failed')await until(async()=>(await state()).preparations.some(p=>p.id==='Vi'&&p.role==='jungle'),'Lock navigation must finish saving the current default configuration before the failure baseline');
  const before=await state();
  if(phase!=='restart'){
   await click('[data-action=navigate][data-route=favorites]');

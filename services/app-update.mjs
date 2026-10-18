@@ -9,6 +9,8 @@ import {RELEASE_FEED_URL,parseReleaseFeed,newestRelease,isNewerThan,setupFileNam
 import {GITEE_REPOSITORY_URL,GITEE_RELEASE_FEED_URL,parseGiteeReleases,giteeDownloadUrl,mirrorManifestName,parseMirrorManifest} from '../src/core/app-update.mjs';
 import {publicAddress} from './catalog-store.mjs';
 import {atomicJSON} from './data.mjs';
+import {installedPayload} from './incremental-update.mjs';
+import {deltaManifestName,parseDeltaManifest} from '../src/core/app-update.mjs';
 export const UPDATE_HOSTS=['github.com','release-assets.githubusercontent.com','objects.githubusercontent.com'];
 export const UPDATE_REDIRECT_LIMIT=5;
 const FEED_TIMEOUT=15000,TEXT_BYTES_LIMIT=65536,SETUP_BYTES_LIMIT=512*1024*1024,FILE_TIMEOUT=600000;
@@ -78,7 +80,7 @@ function fetchOnce(url,{request,timeout,byteLimit,signal,lookup,insecureHosts,ex
   }catch(e){reject(e);}
  });
 }
-export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),storeFile=path.join(os.tmpdir(),'rift-buddy-app-update.json'),request=https.request,spawnImpl=defaultSpawn,feedUrl=RELEASE_FEED_URL,giteeFeedUrl=GITEE_RELEASE_FEED_URL,mirrorBase='',insecureHosts=[],dryRun=false,lookup=dns.lookup}={}){
+export function createAppUpdateService({currentVersion,installDir='',tempDir=os.tmpdir(),storeFile=path.join(os.tmpdir(),'rift-buddy-app-update.json'),request=https.request,spawnImpl=defaultSpawn,feedUrl=RELEASE_FEED_URL,giteeFeedUrl=GITEE_RELEASE_FEED_URL,mirrorBase='',insecureHosts=[],dryRun=false,lookup=dns.lookup}={}){
  if(typeof currentVersion!=='string'||!currentVersion)throw Error('当前版本格式不正确');
  const preferGitee=normalizeMirrorBase(mirrorBase||'')===GITEE_REPOSITORY_URL;
  const mirror=preferGitee?'':normalizeMirrorBase(mirrorBase||'');
@@ -127,11 +129,11 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   return removed;
  }
  const missingAsset=e=>/HTTP 404/.test(e?.message||'')?Error('新版安装包缺失，请等待维护者补传发布资产后重试'):e;
- async function downloadVia(release,{signal,onProgress,mirror,fallback=false,gitee=false}){
+ async function downloadVia(release,{signal,onProgress,mirror,fallback=false,gitee=false,delta=null}){
   const via=gitee?'gitee':mirror?'mirror':'direct';
-  const setup=setupFileName(release.version),sum=checksumFileName(release.version);
+  const setup=delta?.file||setupFileName(release.version),sum=checksumFileName(release.version);
   let manifest=null;
-  if(gitee){
+  if(gitee&&!delta){
    const {body}=await fetchOnce(giteeDownloadUrl(release.tag,mirrorManifestName(release.version)),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts:GITEE_HOSTS});
    manifest=parseMirrorManifest(body.toString('utf8'),release);
   }
@@ -140,10 +142,10 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   const removeLocal=async file=>{try{await removeFile(file);}catch(e){throw localFailure(e);}};
   let handle;
   try{await fs.mkdir(tempDir,{recursive:true});handle=await fs.open(target,'w');}catch(e){throw localFailure(e);}
-  const hash=crypto.createHash('sha256');let received=0,total=manifest?.bytes||null;
-  const progress=(stage,note)=>{if(onProgress)onProgress({received,total,stage,via,note});};
+  const hash=crypto.createHash('sha256');let received=0,total=delta?.bytes||manifest?.bytes||null;
+  const progress=(stage,note)=>{if(onProgress)onProgress({received,total,stage,via,note,kind:delta?'incremental':'full'});};
   try{
-   const assets=manifest?manifest.parts:[{name:setup}];
+   const assets=manifest?manifest.parts:[{name:setup,...(delta?{bytes:delta.bytes,sha256:delta.sha256}:{})}];
    for(const asset of assets){
     const partHash=crypto.createHash('sha256');let partBytes=0;
     await fetchOnce(gitee?giteeDownloadUrl(release.tag,asset.name):mirrorAssetUrl(mirror,releaseDownloadUrl(release.tag,setup)),{request,timeout:FILE_TIMEOUT,byteLimit:asset.bytes||SETUP_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts:gitee?GITEE_HOSTS:extraHosts,
@@ -168,17 +170,17 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
   progress('verifying');
   // 校验文件永远直连：否则镜像可同时伪造"坏包+配套哈希"，校验形同虚设。
   // 校验阶段失败不触发镜像重试（与直连无关，重下也一样；哈希不一致除外，它走篡改回落）。
-  let expected=manifest?.sha256;
+  let expected=delta?.sha256||manifest?.sha256;
   try{
-   if(!manifest){
+   if(!manifest&&!delta){
     const sumRes=await fetchOnce(releaseDownloadUrl(release.tag,sum),{request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts});
     expected=parseChecksumFile(sumRes.body.toString('utf8'),setup);
    }
   }catch(e){await removeLocal(target);if(/HTTP 404/.test(e.message||'')){const m=Error('新版安装包缺失，请等待维护者补传发布资产后重试');m.checksumStage=true;throw m;}if(e.message!=='下载已取消')e.checksumStage=true;throw e;}
   const digest=hash.digest('hex');
-  if(digest!==expected){await removeLocal(target);throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
+  if(digest!==expected||delta&&received!==delta.bytes){await removeLocal(target);throw Error('下载文件与发布校验不一致，已删除；请稍后重试');}
   const final=target.replace(/\.part$/,'');
-  const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,via,fallback,downloadedAt:new Date().toISOString()};
+  const record={schema:1,version:release.version,tag:release.tag,file:final,sha256:digest,bytes:received,via,fallback,kind:delta?'incremental':'full',...(delta?{fromVersion:delta.from,baseManifestSha256:delta.baseManifestSha256}:{}),downloadedAt:new Date().toISOString()};
   let recorded=false;
   const checkCancelled=()=>{if(signal?.aborted)throw Error('下载已取消');};
   try{
@@ -191,12 +193,29 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
    throw signal?.aborted?e:localFailure(e);
   }
  }
+ async function incrementalPackage(release,{signal}={}){
+  const installed=await installedPayload(installDir,currentVersion);if(!installed)return null;
+  const gitee=(release.source==='gitee'&&release.githubAvailable!==true)||preferGitee&&release.giteeAvailable!==false;
+  const name=deltaManifestName(release.version),options={request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts,extraHosts:gitee?GITEE_HOSTS:[]};
+  const {body}=await fetchOnce(gitee?giteeDownloadUrl(release.tag,name):releaseDownloadUrl(release.tag,name),options);
+  if(!gitee){const sums=await fetchOnce(releaseDownloadUrl(release.tag,checksumFileName(release.version)),options);if(crypto.createHash('sha256').update(body).digest('hex')!==parseChecksumFile(sums.body.toString('utf8'),name))throw Error('增量清单校验不一致');}
+  const delta=parseDeltaManifest(body.toString('utf8'),release).packages.find(item=>item.from===currentVersion&&item.baseManifestSha256===installed.sha256);
+  if(!delta||!await installedPayload(installDir,currentVersion,{expectedHash:delta.baseManifestSha256,verifyFiles:true}))return null;
+  return {delta,gitee};
+ }
  async function download(release,{signal,onProgress}={}){
   if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||![release.version,`v${release.version}`].includes(release.tag))throw Error('新版信息格式不正确');
   if(release.manualOnly)throw Error('此国内发行版仅支持网页下载，请按发布页说明还原安装包');
   const kept=await readRecord();
   if(kept&&kept.version===release.version&&await verify(kept)){if(onProgress)onProgress({received:kept.bytes,total:kept.bytes,stage:'verifying',via:kept.via||'direct'});return kept;}
   await cleanup();
+  try{
+   const candidate=await incrementalPackage(release,{signal});
+   if(candidate)return await downloadVia(release,{signal,onProgress,mirror:candidate.gitee?'':mirror,gitee:candidate.gitee,delta:candidate.delta});
+  }catch(error){
+   if(signal?.aborted||error.localFailure)throw error;
+   onProgress?.({received:0,total:null,stage:'downloading',via:'direct',note:'incremental-fallback',kind:'full'});
+  }
   if((release.source==='gitee'&&release.githubAvailable!==true)||preferGitee&&release.giteeAvailable!==false){
    try{return await downloadVia(release,{signal,onProgress,mirror:'',gitee:true});}
    catch(error){
@@ -221,6 +240,7 @@ export function createAppUpdateService({currentVersion,tempDir=os.tmpdir(),store
  async function install(){
   const record=await readRecord();
   if(!record)throw Error('没有已下载的安装包，请先下载新版');
+  if(record.kind==='incremental'&&!await installedPayload(installDir,record.fromVersion,{expectedHash:record.baseManifestSha256,verifyFiles:true})){await cleanup();throw Error('本地程序已变化，增量包已清除；重新下载将使用完整包');}
   const hash=crypto.createHash('sha256'),handle=await fs.open(record.file,'r');
   try{for await(const chunk of handle.createReadStream())hash.update(chunk);}finally{await handle.close();}
   if(hash.digest('hex')!==record.sha256){await cleanup();throw Error('安装包完整性复验不一致，已删除；请重新下载');}

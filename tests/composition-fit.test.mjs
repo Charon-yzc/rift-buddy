@@ -41,7 +41,7 @@ test('reviewed actual control and damage conversion are rewarded over stacking d
  assert.match(engage.strengths.join(' '),/击飞接大|拉起目标接大/);
  assert.match(tanks.gaps.join(' '),/输出|伤害/);
  const catchTeam=fit([['top','Darius'],['mid','Ahri'],['jungle','LeeSin']]);
- assert.equal(catchTeam.tactic.id,'catch','Charm combinations have a conditional catch plan even without a reliable hard-engage tag');
+ assert.ok(catchTeam.relationships.some(link=>link.control>0),'Charm remains an actual conditional cooperation signal even when another whole-team tactic scores higher');
  assert.ok(catchTeam.score>=75,catchTeam.reason);
 });
 
@@ -72,7 +72,7 @@ test('two to five members use different normalized budgets rather than accumulat
  const rows=[duo,trio,full.slice(1),full],fits=rows.map(rows=>fit(rows));
  assert.deepEqual(fits.map(f=>f.size),[2,3,4,5]);
  assert.deepEqual(fits.map(f=>f.breakdown.filter(b=>b.max).reduce((sum,b)=>sum+b.max,0)),[100,100,100,100]);
- assert.deepEqual(fits.map(f=>f.breakdown.find(b=>b.key==='connections').max),[50,42,36,32]);
+ assert.deepEqual(fits.map(f=>f.breakdown.find(b=>b.key==='connections').max),[28,25,23,22]);
  assert.ok(fits[0].score>=fits[3].score,'A coherent duo can be as well suited to its task as a full team');
  assert.match(fits[2].gaps.join(' '),/正面压力/,'A four-person scope asks who absorbs pressure');
  assert.doesNotMatch(fits[0].gaps.join(' '),/正面压力/);

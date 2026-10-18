@@ -53,6 +53,8 @@ jobs:
         run: node scripts/smoke-package-dual-windows.mjs
       - name: Check automatic pregame startup, unknown party lanes and one-click preparation
         run: node scripts/smoke-package-pregame-startup.mjs
+      - name: Check optional hover context, lock navigation, participant proposals and compact pages
+        run: node scripts/smoke-package-recommendation-experience.mjs
       - name: Check accepted trio hover, explicit preparation and cross-window configuration
         run: |
           node scripts/smoke-package-party-preparation.mjs

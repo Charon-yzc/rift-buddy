@@ -1,0 +1,27 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {spawn} from 'node:child_process';
+import {installerScript} from './installer-script.mjs';
+import {deltaPayload,validateInstallManifest,INSTALL_MANIFEST,manifestHash,payloadManifest} from './installer-payload.mjs';
+import {deltaFileName,deltaManifestName,checksumFileName} from '../src/core/app-update.mjs';
+const baseArg=process.argv.find(arg=>arg.startsWith('--base='));if(!baseArg)throw Error('指定 --base=上一版本安装清单路径');
+const baseFile=path.resolve(baseArg.slice(7)),base=validateInstallManifest(JSON.parse(await fs.readFile(baseFile,'utf8')));
+const latest=JSON.parse(await fs.readFile('release/installer-latest.json','utf8')),bundle=JSON.parse(await fs.readFile('release/latest.json','utf8'));
+const target=validateInstallManifest(JSON.parse(await fs.readFile(path.join(bundle.directory,INSTALL_MANIFEST),'utf8'))),delta=deltaPayload(base,target);
+if(latest.version!==target.version||bundle.archiveSha256!==latest.archiveSha256||base.version===target.version)throw Error('先生成并核验完整新版安装包');
+if(manifestHash(await payloadManifest(bundle.directory,target.version))!==manifestHash(target))throw Error('完整新版文件与安装清单不符，请重新打包');
+if(!delta.reusedBytes||delta.changed.reduce((sum,row)=>sum+row.bytes,0)>target.files.reduce((sum,row)=>sum+row.bytes,0)*.9)throw Error('本轮变化过大，完整安装包更适合');
+const output=path.join(path.dirname(latest.output),deltaFileName(base.version,target.version));if(await fs.stat(output).then(()=>true,()=>false))throw Error('增量安装包已存在');
+const script=path.resolve('.local',`installer-delta-${base.version}-${target.version}.nsi`),lifecycle=path.resolve('.local',`installer-lifecycle-${target.version}.ps1`);
+await fs.writeFile(script,installerScript({version:target.version,directory:bundle.directory,output,icon:path.resolve('assets/icon.ico'),files:target.files.map(row=>row.name).concat(INSTALL_MANIFEST),payloadFiles:delta.changed.map(row=>row.name).concat(INSTALL_MANIFEST),baseManifest:baseFile,lifecycle}));
+await new Promise((resolve,reject)=>{const child=spawn(process.env.RIFT_BUDDY_MAKENSIS||'makensis.exe',['/NOCONFIG','/INPUTCHARSET','UTF8',script],{stdio:'inherit',windowsHide:true});child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('增量安装包生成失败')));});
+const bytes=await fs.readFile(output);if(bytes.length>90*1024*1024)throw Error('增量包超过国内镜像单文件限制，请使用完整包');
+const entry={from:base.version,baseManifestSha256:delta.baseManifestSha256,file:path.basename(output),bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')};
+const manifestFile=path.join(path.dirname(output),deltaManifestName(target.version)),manifest={schema:1,version:target.version,packages:[entry]};
+// This manifest is the final asset: publication must upload it after the package.
+await fs.writeFile(manifestFile,JSON.stringify(manifest,null,2)+'\n');
+const manifestSha=crypto.createHash('sha256').update(await fs.readFile(manifestFile)).digest('hex');
+const checksumFile=path.resolve('release',checksumFileName(target.version)),lines=(await fs.readFile(checksumFile,'utf8')).split('\n').filter(line=>line&&!line.endsWith(entry.file)&&!line.endsWith(path.basename(manifestFile)));
+await fs.writeFile(checksumFile,[...lines,`${entry.sha256}  ${entry.file}`,`${manifestSha}  ${path.basename(manifestFile)}`,''].join('\n'));
+console.log(JSON.stringify({output,manifestFile,...entry,reusedBytes:delta.reusedBytes,changedFiles:delta.changed.length,removedFiles:delta.removed},null,2));

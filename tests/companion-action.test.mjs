@@ -44,15 +44,15 @@ test('disabling direct preparation preserves public teammate and locked hero rea
  assert.deepEqual(companionHeroAction({...hovered,connected:false},hero('Vex'),false),{prepare:false,label:'查看配置'});
 });
 
-test('chosen sidebar keeps five slots, one range status and the local action before collapsed accepted play',()=>{
+test('live adopted sidebar keeps five slots and range status while recommendations remain available',()=>{
  const slots=createSlots().map(s=>({...s,champion:s.role==='jungle'?'Graves':s.role==='mid'?'Vex':null,party:['jungle','mid'].includes(s.role),locked:['jungle','mid'].includes(s.role)}));
  const [result]=recommend({slots,champions:data.champions,scope:'party'}),activePlan=captureCreativePlan(result,data),live=structuredClone(client);
  live.eligibility={receivedAt:new Date().toISOString(),context:pickEligibilityContext(live.session),localPlayerCellId:0,pickable:data.champions.map(c=>c.key),disabled:[]};
  const props={data,client:live,slots,unassigned:[],scope:'party',soloRole:'jungle',style:'fun',tab:'recommend',results:[result],activePlan};
- const html=companionView(props),roster=html.indexOf('aria-label="全队当前选人"'),status=html.indexOf('data-companion-disclosure="eligibility"'),action=html.indexOf('aria-label="我的下一步"'),play=html.indexOf('data-companion-disclosure="chosen-play"');
- assert(roster>0&&roster<status&&status<play);assert.equal(action,-1,'Preparation belongs only to My Configuration');
+ const html=companionView(props),roster=html.indexOf('aria-label="全队当前选人"'),status=html.indexOf('data-companion-disclosure="eligibility"'),action=html.indexOf('aria-label="我的下一步"'),candidates=html.indexOf('class="companion-candidate"');
+ assert(roster>0&&roster<status&&status<candidates);assert.equal(action,-1,'Preparation belongs only to My Configuration');
  assert.match(html,/companion-team-compact/);assert.equal((html.match(/data-drop-role=/g)||[]).length,5);
- assert.doesNotMatch(html,/class="companion-candidate"/);assert.match(html,/data-action="task-compare"/);
+ assert.match(html,/class="companion-candidate"/);assert.match(html,/data-action="task-compare"/);
  assert.match(html,/中路 · 队友已选 · 看配置/);assert.doesNotMatch(companionView({...props,preferences:{compactTeam:false}}),/companion-team-now companion-team-compact/);
  const unknown=companionView({...props,client:{...live,eligibility:null}});assert.match(unknown,/data-companion-disclosure="eligibility"/);assert.doesNotMatch(unknown,/aria-label="我的下一步"/);
  const state=validateState({...defaultState(),preferences:{compactTeam:false}});assert.equal(state.preferences.compactTeam,false);assert.equal(validateState(defaultState()).preferences.compactTeam,true);
