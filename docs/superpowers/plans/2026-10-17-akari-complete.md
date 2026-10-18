@@ -12,4 +12,5 @@
 - [x] 独立定位并修复 `single-picker-click-complete-preparation-sidebar` 的 CI 根因，禁止用增加等待或削弱断言隐藏问题。已用受控延迟复现；源码侧栏 27 项通过。
 - [x] 主进程/preload/helper接线、主导航和跨页跳转、无身份设置持久化、说明与许可证同步。
 - [x] `pnpm test`、`pnpm check`、打包一致性、战绩/实时对局/生命周期/侧栏冒烟；提交推送更新 PR #64。已合入主线 `7beac13`，修复 Windows 生成文件换行与打包排除；真实客户端仍需授权。
-- [x] 远端 CI 已定位并修复失败点，完整 Windows 验收随 PR 更新运行。最终运行状态与本机产物记录在 PR 和本机 `.local/akari-complete-verification.json`，不把进行中状态写成通过。
+- [x] 远端 CI 已定位并修复失败点，完整 Windows 验收随 PR 更新运行。最终运行状态与本机产物记录在 PR 和本机 `.local/akari-complete-verification.json`，不把进行中状态写成失败或通过。
+- [x] 按用户提供的 Akari 截图重做战绩列表：紧凑玩家行、右侧阵容缩略图、本局卡内六个 Tab、下拉展开；新增 `src/match-history-hover.mjs` 顶层悬停浮层（装备价格/合成/效果、符文说明与本局记录、属性碎片、强化、技能、KDA/伤害分项），支持键盘聚焦与窗口边缘换向。窄窗口把分页/筛选/总览收进折叠区。已用实际页面验收覆盖 `compactRows`、`sixTabs`、`hoverDetails`、`keyboardTabs`。

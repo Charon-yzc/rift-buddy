@@ -7,7 +7,11 @@ import {defaultState,validateState,saveState} from '../services/storage.mjs';
 import {selectGuide} from '../src/core/guide.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 const root=await fs.mkdtemp(path.resolve('.local/user-flow-smoke-')),state=validateState(defaultState());
-state.preferences.autoSync=false;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;state.preferences.autoLive=false;
+// The synthetic League client is served from an isolated lockfile so the main
+// process and the renderer read the same fixture instead of disagreeing.
+const installPath=path.join(root,'client-fixture','LeagueClient');
+await fs.mkdir(installPath,{recursive:true});await fs.writeFile(path.join(installPath,'lockfile'),'LeagueClient:1:23456:isolated-user-flow:https');
+state.preferences.autoSync=false;state.preferences.autoCheck=false;state.preferences.appUpdateCheck=false;state.preferences.autoLive=false;state.preferences.roomAuto=false;state.preferences.installPath=installPath;
 state.preferences.rolePools.bottom={mode:'only',heroes:['Ashe','Jhin']};
 state.preferences.rolePools.support={mode:'only',heroes:['Nami','Lux']};
 state.draft={slots:createSlots(),scope:'party',style:'fun',soloRole:'bottom'};

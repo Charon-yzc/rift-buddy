@@ -96,13 +96,14 @@ import {analyzeAkariHistory,analyzeAkariTeam,inferHistoricalGroups} from './core
 import {matchHistoryToolsView,privateHistoryState,privateHistoryFilterTab} from './match-history-tools-view.mjs';
 import {parseHistoryFilterTree} from './core/match-history/filters.mjs';
 import {historyNavigationView} from './match-history-navigation-view.mjs';
+import {bindHistoryTooltips} from './match-history-hover.mjs';
 import {updateHistoryFilterTree,saveHistoryFilterPreset,loadHistoryFilterPreset,removeHistoryFilterPreset,historyRelativeTimeRange} from './match-history-filter-tree.mjs';
 function matchHistoryView(state,data){
-  const shown=privateHistoryState(state),tab=shown.tabs.find(t=>t.id===state.current);for(const entry of shown.tabs)if(entry.page)entry.page={...entry.page,fullAnalysis:entry.analysis};const html=baseHistoryView(shown,data);if(!tab?.page)return html;
+  const shown={...privateHistoryState(state),compact:window.innerWidth<=1050},tab=shown.tabs.find(t=>t.id===state.current);for(const entry of shown.tabs)if(entry.page)entry.page={...entry.page,fullAnalysis:entry.analysis};const html=baseHistoryView(shown,data);if(!tab?.page)return html;
  const filtered=Object.entries(tab.filter).some(([key,value])=>key!=='excludePve'&&key!=='advanced'&&!!value)||!!tab.filter.advanced?.rules.length;
  const tools=matchHistoryToolsView(tab,{streamer:state.streamer,note:ongoing.state.notes[tab.page.player.puuid]||'',data,masteryQuery:tab.masteryQuery||''}),analysis=ongoingGameAnalysisView(tab.analysis,data,{streamer:state.streamer}),filterTab=state.streamer?privateHistoryFilterTab(tab):tab;
  const filters=state.streamer?`<fieldset disabled style="border:0;padding:0;min-width:0"><small>隐私展示期间暂停编辑含身份的筛选条件</small>${advancedHistoryFilters(filterTab,data)}</fieldset>`:advancedHistoryFilters(filterTab,data);
- const result=html.replace('<div class="history-filters">',tools+historyNavigationView(tab,state)+`<details class="history-filter-panel" data-disclosure-key="history-filter-panel"><summary>筛选战绩${filtered?' · 已设置条件':''}</summary><div class="history-filters">`).replace('<div class="history-pagination">',filters+'</details><details class="history-full-analysis" data-disclosure-key="history-full-analysis"><summary>完整战绩分析</summary>'+analysis+'</details><div class="history-pagination">');
+  const result=html.replace('<div data-history-slot="sidebar-controls"></div>',historyNavigationView(tab,state)).replace('<div data-history-slot="advanced-filters"></div>',filters).replace('<div data-history-slot="sidebar-extra"></div>',tools+'<details class="history-full-analysis" data-disclosure-key="history-full-analysis"><summary>完整战绩分析</summary>'+analysis+'</details>').replace('<summary>页内筛选</summary>',`<summary>页内筛选${filtered?' · 已设置条件':''}</summary>`);
  return window.innerWidth<=1050?result.replace('<aside class="history-summary">','<details class="history-compact-summary" data-disclosure-key="history-compact-summary"><summary>近期表现、常用英雄与共同对局</summary><aside class="history-summary">').replace('</aside>','</aside></details>'):result;
 }
 window.matchMedia('(max-width: 1050px)').addEventListener('change',()=>{if(route==='history'&&data)render();});
@@ -154,6 +155,10 @@ const previewAPI={
 const api=window.buddy||previewAPI;
 const historyRequest=(operation,payload)=>api.matchHistory?api.matchHistory(operation,payload):Promise.reject(Error('请在桌面版连接客户端后查询战绩'));
 const history=createHistoryController({request:historyRequest,analyze:analyzeAkariHistory,onChange:()=>{if(route==='history'&&data){render();if(history.state.searchResults.length)overlay.innerHTML=matchHistorySearchView(privateHistoryState(history.state));if(history.state.error)toast(history.state.streamer?'查询失败，请检查连接':history.state.error,true);}}});
+const historyTooltips=bindHistoryTooltips({document,getData:()=>data,getGame:element=>{
+ const tab=privateHistoryState(history.state).tabs.find(value=>value.id===history.state.current),id=Number(element.dataset.tipGame??element.closest('[data-history-match]')?.dataset.historyMatch);
+ return tab?.details[id]?.game||tab?.page?.games.find(game=>game.id===id);
+}});
 const ongoing=createOngoingGameController({request:historyRequest,analyze:analyzeAkariHistory,teamAnalyze:analyzeAkariTeam,infer:inferHistoricalGroups,onChange:()=>{if(route==='ongoing'&&data)render();}});
 let ongoingObservedPhase='Offline';
 function acceptOngoingClient(value){
@@ -178,7 +183,7 @@ async function ongoingAction(action,el){
 }
 async function historyAction(action,el,background=false){
  const tab=history.current(),id=Number(el.dataset.id);
- if(action==='history-self')await history.open({source:history.state.source,server:''});
+  if(action==='history-self'){const search=document.querySelector('.history-search-disclosure');if(search)search.open=false;await history.open({source:history.state.source,server:''});}
  else if(action==='history-tab')history.select(id);
  else if(action==='history-close')history.close(id);
  else if(action==='history-refresh'&&tab)await history.load(tab,tab.page?{}:{handle:undefined});
@@ -186,7 +191,7 @@ async function historyAction(action,el,background=false){
  else if(action==='history-prev'&&tab?.page)await history.load(tab,{start:Math.max(0,tab.page.start-tab.page.count)});
  else if(action==='history-first'&&tab)await history.load(tab,{start:0});
  else if(action==='history-page-go'&&tab?.page){const value=Number(document.querySelector('[data-history-page="number"]')?.value);if(!Number.isInteger(value)||value<1||value>Math.ceil(10000/tab.page.count))throw Error('请输入范围内的页数');await history.load(tab,{start:(value-1)*tab.page.count});}
- else if(action==='history-detail')await history.detail(id,el.dataset.section);
+  else if(action==='history-detail'){const section=el.dataset.section;await history.detail(id,section);if(section==='toggle')document.querySelector(`[data-history-match="${id}"] .history-expand`)?.focus({preventScroll:true});else document.getElementById(`history-tab-${id}-${section}`)?.focus({preventScroll:true});}
  else if(action==='history-collect')await history.collect();
  else if(action==='history-collect-active')await history.collect({useFilters:true,scanFromStart:true,expectedCount:500});
  else if(action==='history-search-cancel')history.cancelSearch();
@@ -662,7 +667,7 @@ function render(){
   renderedSelectContext=appSelectionContext();reflectRunePending();
   if(focus&&old?.dataset.focusScope===focusScope){const target=focus.id?document.getElementById(focus.id):[...app.querySelectorAll('button,input,select')].find(control=>control.tagName===focus.tag&&Object.keys(focus.data).length&&Object.entries(focus.data).every(([key,value])=>control.dataset[key]===value));target?.focus({preventScroll:true});}return;
  }
-  app.innerHTML=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}):route==='rankings'?rankingsView(data,rankingOptions()):route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`;
+   historyTooltips.close();app.innerHTML=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}):route==='rankings'?rankingsView(data,rankingOptions()):route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`;
  renderedDisclosureScope='main:'+route+':'+(route==='draft'?activeCreativePlan?.id||'':route==='reference'?[referenceHero,referenceRole,referenceTab].join(':'):'');disclosureState.restore(renderedDisclosureScope,app);markNewRoomProposals(previousProposals);
  if(disclosureFocus.scope===renderedDisclosureScope&&disclosureFocus.context===selectContext)disclosureState.restoreFocus(disclosureFocus.key,app);
  restoreCandidateScroll(candidateScroll,selectContext);renderedDraftResults=route==='draft'?results:null;
@@ -1453,6 +1458,7 @@ document.addEventListener('change',event=>{
 
 function historyChartAction(event){const el=event.target.closest?.('[data-history-chart][data-value]');if(!el)return false;const detail=history.current()?.details[el.dataset.historyChart];if(detail&&['chartFrame','chartPlayer','rawStatsMetric'].includes(el.dataset.chartField)){detail[el.dataset.chartField]=el.dataset.value;render();return true;}return false;}
 document.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)&&event.target.matches?.('[data-history-chart][data-value]')){event.preventDefault();historyChartAction(event);}});
+document.addEventListener('keydown',event=>{const tab=event.target.closest?.('.history-detail-tabs [role=tab]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;const tabs=[...tab.parentElement.querySelectorAll('[role=tab]')],index=tabs.indexOf(tab),next=event.key==='Home'?tabs[0]:event.key==='End'?tabs.at(-1):tabs[(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];event.preventDefault();next.click();});
 document.addEventListener('click',async event=>{
  if(historyChartAction(event))return;
  const el=event.target.closest('[data-action]');if(!el){if(event.target.dataset.backdrop)closeOverlay();return;}
@@ -1807,7 +1813,7 @@ else if(action==='app-update-mirror-clear'){saved.preferences.updateMirror='';aw
  else if(action==='link')await api.openLink(el.dataset.url);
  }catch(err){toast(err.message||'操作没有完成，请重试',true);}
 });
-document.addEventListener('submit',event=>{if(event.target.id==='history-search'){event.preventDefault();history.state.query=document.getElementById('history-query').value;history.search().catch(error=>toast(error.message,true));return;}if(event.target.id==='catalog-form'){event.preventDefault();overlay.querySelector('[data-action=catalog-save]')?.click();}});
+document.addEventListener('submit',event=>{if(event.target.id==='history-search'){event.preventDefault();history.state.query=document.getElementById('history-query').value;const search=event.target.closest('details');if(search)search.open=false;history.search().catch(error=>toast(error.message,true));return;}if(event.target.id==='catalog-form'){event.preventDefault();overlay.querySelector('[data-action=catalog-save]')?.click();}});
 document.addEventListener('input',event=>{if(event.target.id==='history-query')history.state.query=event.target.value;});
 document.addEventListener('change',event=>{const el=event.target,tab=history.current();if(tab&&el.dataset.historyTool==='mastery-query'&&!history.state.streamer){tab.masteryQuery=String(el.value).slice(0,96);render();}});
 document.addEventListener('input',event=>{const el=event.target,tab=history.current(),detail=tab?.details[el.dataset.historyChart];if(!detail||el.dataset.chartField!=='rawStatsQuery')return;detail.rawStatsQuery=String(el.value).slice(0,96);render();});

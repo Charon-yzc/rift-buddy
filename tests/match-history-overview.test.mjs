@@ -14,6 +14,13 @@ const players=[
 ];
 const game={id:42,source:'lcu',created:1700000000000,version:'16.20',queue:420,duration:1800,participants:players,self:players[0],completeTeams:false,teams:[{key:'TEAM-100',result:'loss',kills:4,gold:19000,bans:[103],objectives:{baron:0,dragon:2,tower:null}},{key:'TEAM-200',result:'win',kills:4,gold:14000,bans:[],objectives:{}}]};
 const state=(section='summary',open=true)=>({tabs:[{id:1,options:{},filter:{},page:{player:{name:'本人'},source:'lcu',games:[game],start:0,count:1},details:{42:{game,open,section}}}],current:1,servers:[],query:'',source:'auto',server:''});
+test('compact match disclosure retains both team rosters and an independently labelled six-tab panel',()=>{
+ const html=matchHistoryView(state(),data);
+ assert.match(html,/history-roster-preview/);assert.match(html,/aria-controls="history-panel-42"/);assert.match(html,/id="history-panel-42"/);assert.match(html,/role="tabpanel"/);
+ assert.match(html,/data-history-tip="item"/);assert.match(html,/data-history-tip="rune"/);
+ assert.match(html,/data-history-slot="sidebar-controls"/);assert.match(html,/data-history-slot="sidebar-extra"/);
+ assert.match(historyMatchSummaryView(data,{game}),/history-team-heading/);
+});
 test('historical numeric spell IDs resolve the bundled named spell images',()=>{
  const catalog={...data,spells:{SummonerFlash:{key:'4',name:'闪现'},SummonerHeal:{key:'7',name:'治疗术'}}};
  const html=matchHistoryView(state(),catalog);assert.match(html,/spell\/SummonerFlash\.png/);assert.match(html,/spell\/SummonerHeal\.png/);assert.doesNotMatch(html,/spell\/4\.png|spell\/7\.png/);

@@ -1,9 +1,37 @@
 const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain}=require('electron');
-const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
-const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),delay=ms=>new Promise(r=>setTimeout(r,ms));
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
+const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),delay=ms=>new Promise(r=>setTimeout(r,ms)),clientBroadcasts=[];
+/** Record every client snapshot the main process pushes to a window. */
+function recordClientBroadcast(channel,payload){if(channel==='client-update')clientBroadcasts.push(payload?.phase||'Offline');}
+// One synthetic client for both the main process (loopback reads) and the
+// renderer (IPC). A divergent main-side snapshot must not silently replace the
+// fixture mid-flow: that is a harness inconsistency, not a product behavior.
+let syntheticClient=null,syntheticReads=0;
+https.request=(options,callback)=>{
+ const request=new EventEmitter();request.write=body=>{options.body=body;};
+ request.end=()=>queueMicrotask(()=>{try{
+  if(!syntheticClient)throw Error('Synthetic client not connected');
+  syntheticReads++;
+  assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-user-flow');
+  const route=options.path,champion=syntheticClient.session.myTeam[0];
+  const value=
+   route==='/lol-gameflow/v1/gameflow-phase'?'ChampSelect':
+   route==='/lol-gameflow/v1/session'?{map:{id:11,gameMode:'CLASSIC'},gameData:{gameId:Number(syntheticClient.session.gameId)||0,mapId:11,queue:{id:420,gameMode:'CLASSIC'}}}:
+   route==='/lol-champ-select/v1/session'?{gameId:syntheticClient.session.gameId,localPlayerCellId:syntheticClient.session.localPlayerCellId,myTeam:syntheticClient.session.myTeam,theirTeam:[],bans:{myTeamBans:[],theirTeamBans:[]},actions:syntheticClient.session.actions,timer:{phase:'PLANNING',adjustedTimeLeftInPhase:45000},allowDuplicatePicks:false}:
+   route==='/lol-summoner/v1/current-summoner'?{puuid:'isolated-user-flow-own',summonerId:1,gameName:'合成本人',tagLine:'TEST',summonerLevel:100}:
+   route==='/lol-champ-select/v1/pickable-champion-ids'||route==='/lol-champ-select/v1/disabled-champion-ids'?[]:
+   route==='/lol-lobby/v2/lobby'?{localMember:{puuid:'isolated-user-flow-own',gameName:'合成本人',tagLine:'TEST',isLeader:true},members:[]}:
+   route==='/riotclient/region-locale'?{region:'TEST'}:null;
+  const response=new EventEmitter();response.statusCode=200;callback(response);response.emit('data',Buffer.from(JSON.stringify(value)));response.emit('end');request.emit('close');
+ }catch(error){request.emit('error',error);}});
+ request.destroy=error=>{if(error)request.emit('error',error);};
+ return request;
+};
+cp.spawn=file=>{assert.ok(String(file).endsWith('.exe'),'Unexpected native subprocess');const child=new EventEmitter();child.stdout=new EventEmitter();child.stdout.setEncoding=()=>{};child.stderr=new EventEmitter();child.stderr.setEncoding=()=>{};child.exitCode=null;child.stdin={end(){child.exitCode=0;child.emit('exit',0);}};child.kill=()=>child.stdin.end();return child;};
+cp.execFile=(file,args,options,callback)=>{queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
 app.setPath('userData',root);
-app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);});
+app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);const send=w.webContents.send.bind(w.webContents);w.webContents.send=(channel,payload)=>{recordClientBroadcast(channel,payload);return send(channel,payload);};});
 async function until(check,label){for(let n=0;n<150;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
@@ -82,10 +110,15 @@ async function run(){
  const bootstrapData=(await js('window.buddy.bootstrap()')).data,champion=bootstrapData.champions.find(c=>c.id==='Garen');
  let publicFixture={connected:true,phase:'ChampSelect',message:'测试公开选人',mode:{id:'rift',label:'峡谷'},game:{gameId:'6601'},session:{gameId:'6601',localPlayerCellId:1,myTeam:[{cellId:1,championId:champion.key,assignedPosition:'TOP',championPickIntent:0}],theirTeam:[],bans:[],actions:[[{id:4,type:'pick',actorCellId:1,championId:champion.key,completed:false,isInProgress:true}]]}};
  const prepares=[];ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>structuredClone(publicFixture));
+ // From here the main process reads the same synthetic pick through the
+ // isolated lockfile, so no stale offline snapshot can replace it.
+ syntheticClient=publicFixture;
  ipcMain.removeHandler('prepare-selection');ipcMain.handle('prepare-selection',(_event,value)=>{prepares.push(value);const selected=bootstrapData.champions.find(hero=>hero.id===value.champion);publicFixture.session.myTeam[0].championId=0;publicFixture.session.myTeam[0].championPickIntent=selected.key;return {complete:true,steps:Object.fromEntries(['hover','runes','spells','items'].map(step=>[step,{status:'done',...(step==='runes'?{pageId:44}:{})}]))};});
- await click('[data-action=sync]');await until(()=>js('!!document.querySelector(".champ-pick[data-id=Garen]")'),'Mock public pick not read');
- await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
- await until(()=>prepares.length===1,'A different unlocked reference hero was not prepared');
+  await click('[data-action=sync]');await until(()=>js('!!document.querySelector(".champ-pick[data-id=Garen]")'),'Mock public pick not read');
+  assert.equal((await state()).preferences.autoSync,false,'Synthetic client-status fixture must not enable native background polling');
+  assert.ok(clientBroadcasts.every(phase=>phase==='ChampSelect'),'The main process published a client snapshot that disagrees with the synthetic pick');
+  await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
+ try{await until(()=>prepares.length===1,'A different unlocked reference hero was not prepared');}catch(error){console.error('UNLOCKED_REFERENCE_CONTEXT',JSON.stringify({prepares:prepares.map(p=>({champion:p.champion,role:p.role})),publicPhase:publicFixture.phase,syntheticReads,ui:await js('({toast:document.querySelector("#toast")?.textContent,route:document.querySelector("main[data-page]")?.dataset.page,pending:document.querySelector("[data-action=sync]")?.disabled,drawer:!!document.querySelector(".drawer")})')}));throw error;}
  assert.equal(prepares[0].champion,'Seraphine');assert.equal(prepares[0].role,'bottom');assert.equal(prepares[0].page.selectedPerkIds.length,9);assert.ok(prepares[0].itemSet.blocks.length);
  await until(()=>js('!document.querySelector(".drawer")'),'Unconfirmed hero click must keep configuration closed');
  await click('[data-action=navigate][data-route=draft]');await until(()=>js('!!document.querySelector("[data-action=task-configuration]")'),'Prepared hero configuration entry missing');await click('[data-action=task-configuration]');
@@ -95,6 +128,9 @@ async function run(){
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.
  await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'None',message:'测试手动配置'}));
+ // Keep the main process on the same fixture: it must report the same offline
+ // client the renderer now sees, or its broadcast would resurrect the pick.
+ syntheticClient=null;
  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Manual planning sync missing');
  await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');await click('[data-action=close]');
  await js('{const role=document.querySelector("#solo-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');

@@ -9,7 +9,8 @@
 | 基本和组合筛选 | 可视化嵌套 AND/OR/NOT/同一玩家范围，实际数值/占比/数量/槽位、资源搜索、JSON、运行内预设和日期快捷方式 | `widgets/match-history-filters/`、`shared/data-adapter/predicates/combinators.ts` |
 | 完整个人、英雄、位置、队伍统计 | 固定原始 ESM 引擎，完整 KDA CV、技能、队伍侧、胜负/竞技场、参考评分和可用性 | `shared/data-adapter/analysis/player/`、`analysis/team/` |
 | 排位、熟练度、挑战、主页 | 公开资料白名单、完整表格与按需挑战请求，接口缺失说明 | `player-tab/data/`、`widgets/PlayerChallenges.vue` |
-| 对局概览与队伍 | 公开阵容、装备/符文/强化、队伍目标、对比与详细统计 | `renderer-shared/components/match-card/` |
+| 对局概览与队伍 | 紧凑玩家行、右侧阵容缩略图、本局卡内六个 Tab、悬停详情浮层、队伍目标/禁用 | `renderer-shared/components/match-card/`、`widgets/TeamTable.vue` |
+| 悬停详情 | 顶层浮层显示装备价格/合成/效果、符文说明与本局记录、属性碎片、强化、技能、KDA/伤害分项；边缘自动换向，键盘可聚焦 | `widgets/DamageBarWithPopover.vue`、Akari 悬停组件 |
 | 符文、加点、购买事件 | 原始槽位和结果变量，购买/售出/撤销、技能升级与进化 | `match-card/tabs/MatchCardRunesTab.vue`、`MatchCardBuildsTab.vue` |
 | 事件、伤害、逐帧/逐分钟复盘 | 击杀与目标事件、伤害双向明细、属性/位置、多人和队伍平均曲线、真实缺口 | `match-card/tabs/`、`tabs/timeline/` |
 | 回放检查、下载、观看 | 显式点击发起；只读进度轮询；测试模拟全部写入 | `player-tab/data/match-history.ts` |
