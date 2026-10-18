@@ -117,6 +117,16 @@ test('client identity bindings preserve candidates and an in-flight recommendati
  assert.equal(s.context.activeRecommendation,s.worker);assert.equal(s.context.generating,true);assert.equal(s.context.recommendationRun,0);
 });
 
+test('a hero click dispatches before an unrelated pending guide synchronization finishes',async()=>{
+ const {context:c,calls}=setup();let releaseGuide,selected;
+ c.guideSyncChain=new Promise(resolve=>{releaseGuide=resolve;});const dispatched=new Promise(resolve=>{selected=resolve;});
+ const prepare=c.api.prepareSelection;c.api.prepareSelection=async value=>{selected();return prepare(value);};
+ c.selectedClientPreparation=()=>({selection:{id:'Ashe',role:'bottom',mode:'rift'},build:getBuild(hero('Ashe'),'bottom',data)});
+ const pending=c.useClientPreparation({dataset:{preparationView:'task'}},true);
+ await Promise.race([dispatched,new Promise((_,reject)=>setTimeout(()=>reject(Error('Selection waited for the guide')),1000))]);
+ assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');releaseGuide();await pending;
+});
+
 test('a lobby role click crossing into selection applies a complete position claim without locking',async()=>{
  const incoming=client();incoming.eligibility={pickable:data.champions.map(value=>value.key),disabled:[]};
  const s=setup({current:{connected:true,phase:'Lobby',mode:{id:'rift'},session:null},incoming});let staged=0;

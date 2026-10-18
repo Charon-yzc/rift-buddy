@@ -52,7 +52,10 @@ async function run(){
  }
   await until(()=>js('[...document.querySelectorAll(".history-loadout img[src*=SummonerFlash]")].some(img=>img.complete&&img.naturalWidth>0)'),'Offline history spell icon did not load');
   await click('[data-action=history-detail][data-id="1"]');await until(()=>js('!!document.querySelector(".history-player")&&!document.querySelector(".history-details [role=status]")'),'Detail missing');
-  main.setSize(1460,980);
+  // Consume the resize before starting the 180ms pointer-hover timer; resize
+  // intentionally closes existing popovers and cancels a pending hover.
+  const resized=main.getSize()[0]!==1460||main.getSize()[1]!==980;
+  if(resized){await js('window.__historyResize=new Promise(resolve=>addEventListener("resize",()=>resolve(true),{once:true}));true');main.setSize(1460,980);await js('window.__historyResize');}
   // Hidden test windows do not receive native focus events. Exercise the same
   // delegated pointer entry used by a visible window without stealing focus.
   await js('document.querySelector(".history-details [data-history-tip=item]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.matches(":popover-open")'),'Equipment hover detail missing');assert.match(await js('document.querySelector("#history-hover-detail").textContent'),/金|合成/);
@@ -111,10 +114,13 @@ async function run(){
   try{await js('document.querySelector("[data-ongoing-tip=rank]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.length>0'),'Ongoing rank hover missing');}catch(error){console.error('ONGOING_RANK_HOVER',JSON.stringify(await js('(()=>{const el=document.querySelector("[data-ongoing-tip=rank]");return {targets:document.querySelectorAll("[data-ongoing-tip]").length,rankTarget:!!el,html:el?.outerHTML?.slice(0,240)};})()')));throw error;}await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
   await capture('ongoing-game.png');
   await js('document.querySelector(".ongoing-settings").open=true');await click('[data-ongoing-field=streamer]');
+  await until(()=>js('window.buddy.bootstrap().then(b=>b.state.preferences.ongoing.streamer===true)'),'Streamer preference did not settle');
+  await until(()=>js('!document.querySelector(".ongoing-status")&&!document.querySelector(".ongoing-player-card[aria-busy=true]")'),'Streamer roster refresh did not settle');
+  await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
   assert.equal(await js('document.querySelector(".ongoing-page").classList.contains("is-streamer")'),true);
   const groupTip=await js('!!document.querySelector("[data-ongoing-tip=premade]")');assert.ok(groupTip,'Shared-history fixture group missing');
-  await js('document.querySelector("[data-ongoing-tip=premade]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');
-  await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("玩家")'),'Anonymous group tooltip missing');
+  await js('document.querySelector("[data-ongoing-tip=premade]").dispatchEvent(new FocusEvent("focusin",{bubbles:true}))');
+  try{await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("玩家")'),'Anonymous group tooltip missing');}catch(error){console.error('GROUP_TOOLTIP_DIAGNOSTIC',JSON.stringify(await js('({target:document.querySelector("[data-ongoing-tip=premade]")?.outerHTML,tip:document.querySelector("#history-hover-detail")?.textContent,streamer:document.querySelector("[data-ongoing-field=streamer]")?.checked,busy:document.querySelectorAll(".ongoing-player-card[aria-busy=true]").length})')));throw error;}
   assert.doesNotMatch(await js('document.querySelector("#history-hover-detail").textContent'),/战绩测试玩家|示例队友|模拟玩家|#TEST/);
   await capture('ongoing-streamer-hover.png');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');await click('[data-ongoing-field=streamer]');
   // Exercise both SVG layers with synthetic historical coordinates; source

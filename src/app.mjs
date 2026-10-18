@@ -883,11 +883,12 @@ async function useClientPreparation(el,directClick=false,expected=null){
   await sync(false,{fresh:true});
   const current=clientPreparationPlan(data,selectedClientPreparation(view));
   if(!current||current.fingerprint!==prepared.fingerprint||preparationGameId(client)!==gameId||JSON.stringify(runeWriteContext(client))!==JSON.stringify(clickedContext))throw Error('选人或方案已变化，尚未操作；请重新核对');
-  await persist({throwOnError:true});await guideSyncChain;
+  await persist({throwOnError:true});
   const dispatchPlan=selectedClientPreparation(view),dispatch=clientPreparationPlan(data,dispatchPlan);
   if(!dispatch||dispatch.fingerprint!==prepared.fingerprint||readOnlyPreparation(view,dispatchPlan)||preparationGameId(client)!==gameId||JSON.stringify(runeWriteContext(client))!==JSON.stringify(clickedContext)||expected&&expected.planId!==(activeCreativePlan?.id||''))throw Error('本人位置、选人或方案已变化，尚未操作；请重新核对');
   if(directClick&&!memberHeroAction(selection.id,selection.role).prepare)throw Error('当前英雄或位置已由队友选择，请查看队友配置或选择另一位');
   const result=await api.prepareSelection({...prepared.value,selection,sessionGameId:gameId,context:clickedContext});
+  await guideSyncChain;
   await sync(false,{fresh:true});
   if(!client.connected||client.phase!=='ChampSelect'||preparationGameId(client)!==gameId||client.session?.localPlayerCellId!==clickedContext.cellId){
    toast('选人已结束或进入新局，请按当前英雄重新选择配置');return result;

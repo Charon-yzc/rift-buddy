@@ -62,6 +62,53 @@ async function preferredSet(target,selected,io){
  if(rank===2147483647)throw Error('原装备集排序值异常，请使用导出 JSON');
  return {...selected,sortrank:Math.max(rank+1,Math.min(2147483647,Math.floor(Date.now()/1000)))};
 }
+// Only valid sets actually offered for this champion/map compete in the shop.
+// Keep recoverable bytes outside every Recommended directory before removing
+// a competitor, including sets made by other tools or by the player.
+async function shopConflicts(game,target,selected,io){
+ const entries=[];
+ for(const folder of [target,path.join(game,'Config','Global','Recommended')]){
+  try{await directory(folder,io);}catch(error){if(error.code==='ENOENT')continue;throw error;}
+  const files=await io.readdir(folder,{withFileTypes:true});if(files.length>512)throw Error('装备集数量异常，尚未清理旧配装');
+  for(const file of files){
+   if(!file.isFile()||!file.name.endsWith('.json')||file.name===selected.uid+'.json')continue;
+   const filename=path.join(folder,file.name),stat=await io.lstat(filename);
+   if(!stat.isFile()||stat.isSymbolicLink()||stat.size>50000)continue;
+   const content=await io.readFile(filename,'utf8');let value;try{value=JSON.parse(content);}catch{continue;}
+   if(!value||!['custom','global'].includes(value.type)||typeof value.title!=='string'||!Array.isArray(value.blocks)||!value.blocks.length)continue;
+   if(!['any',selected.map].includes(value.map)||!['any',selected.map==='SR'?'CLASSIC':'ARAM'].includes(value.mode))continue;
+   entries.push({filename,content});
+  }
+ }
+ if(!entries.length)return {entries,backupDirectory:null};
+ let backupDirectory=game;
+ for(const name of ['Config','RiftBuddyItemSetBackups']){backupDirectory=path.join(backupDirectory,name);await io.mkdir(backupDirectory,{recursive:true});await directory(backupDirectory,io);}
+ backupDirectory=path.join(backupDirectory,crypto.randomUUID());await io.mkdir(backupDirectory);await directory(backupDirectory,io);
+ const manifest=[];
+ for(const [index,entry] of entries.entries()){
+  const backup=String(index).padStart(3,'0')+'.json';await io.writeFile(path.join(backupDirectory,backup),entry.content,{encoding:'utf8',flag:'wx'});
+  if(await io.readFile(path.join(backupDirectory,backup),'utf8')!==entry.content)throw Error('旧配装备份未能确认，尚未清理');
+  manifest.push({original:path.relative(game,entry.filename),backup,sha256:crypto.createHash('sha256').update(entry.content).digest('hex')});
+ }
+ await io.writeFile(path.join(backupDirectory,'manifest.json'),JSON.stringify(manifest,null,2),{encoding:'utf8',flag:'wx'});
+ return {entries,backupDirectory};
+}
+async function removeShopConflicts(conflicts,io,beforeCommit){
+ if(!conflicts.entries.length)return;
+ const removed=[];
+ try{
+  if(beforeCommit)await beforeCommit();
+  for(const entry of conflicts.entries){
+   await directory(path.dirname(entry.filename),io);const stat=await io.lstat(entry.filename);
+   if(!stat.isFile()||stat.isSymbolicLink()||await io.readFile(entry.filename,'utf8')!==entry.content)throw Error('其他配装发生变化，已停止清理');
+   await io.unlink(entry.filename);removed.push(entry);
+  }
+ }catch(error){
+  let restored=true;
+  for(const entry of removed)try{await directory(path.dirname(entry.filename),io);await io.writeFile(entry.filename,entry.content,{encoding:'utf8',flag:'wx'});}catch{restored=false;}
+  throw Error('当前配装已写入，但旧配装清理未完成；'+(restored?'已恢复本次移除的旧配装。':'部分旧配装需从备份恢复。')+'备份位于 '+conflicts.backupDirectory+'。'+error.message);
+ }
+}
 async function writeItemSet({itemSet,data,installPath=''},{discover=discoverClient,request=lcuRequest,io=fs,beforeCommit}={}){
  const selected=validateItemSet(itemSet,data),auth=await discover(installPath);
  if(!auth?.port)throw Error('请先连接英雄联盟客户端；也可以直接导出 JSON');
@@ -74,6 +121,7 @@ async function writeItemSet({itemSet,data,installPath=''},{discover=discoverClie
   const legacyDirectory=path.join(game,'Config','Global','Recommended'),legacyFilename=path.join(legacyDirectory,selected.uid+'.json');let legacy=null;
   try{await directory(legacyDirectory,io);legacy=await existingFile(legacyFilename,selected,io);}catch(error){if(error.code!=='ENOENT')throw error;}
   const previous=await existingFile(filename,selected,io),content=JSON.stringify(await preferredSet(target,selected,io),null,2),temporary=filename+'.'+process.pid+'.'+crypto.randomBytes(8).toString('hex')+'.tmp';let created=false;
+  const conflicts=await shopConflicts(game,target,selected,io);
   try{
    await io.writeFile(temporary,content,{encoding:'utf8',flag:'wx'});created=true;
    await directory(target,io);
@@ -94,7 +142,8 @@ async function writeItemSet({itemSet,data,installPath=''},{discover=discoverClie
    if(await existingFile(legacyFilename,selected,io)!==legacy)throw Error('装备集已写入，但旧版同名文件发生变化，已保留；请重新导入核对');
    await io.unlink(legacyFilename);
   }
-  return {uid:selected.uid,title:selected.title,replaced:previous!==null||legacy!==null,confirmation:'disk',preferred:true,legacyMigrated:legacy!==null};
+  await removeShopConflicts(conflicts,io,beforeCommit);
+  return {uid:selected.uid,title:selected.title,replaced:previous!==null||legacy!==null,confirmation:'disk',preferred:true,legacyMigrated:legacy!==null,displacedSets:conflicts.entries.length,backupDirectory:conflicts.backupDirectory};
  })().catch(error=>{
   if(error.code==='EACCES'||error.code==='EPERM')throw Error('装备集写入被拒绝，请点击连接授权后重试，或导出 JSON');
   if(error.code)throw Error('未能读取或更新原装备集，请重试或导出 JSON');throw error;

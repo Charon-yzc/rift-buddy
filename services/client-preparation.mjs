@@ -28,9 +28,10 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  if(!auth?.port)throw Error('请先连接客户端并完成连接授权');
  const read=async()=>{
   if(await request(auth,'/lol-gameflow/v1/gameflow-phase')!=='ChampSelect')throw Error('已离开选人阶段，请在客户端核对');
-  const game=sanitizeGame(await request(auth,'/lol-gameflow/v1/session'));
+  const [gameValue,raw]=await Promise.all([request(auth,'/lol-gameflow/v1/session'),request(auth,'/lol-champ-select/v1/session')]);
+  const game=sanitizeGame(gameValue);
   if(identifyMode(game).id!=='rift')throw Error('当前模式尚不支持客户端预选并配置');
-  const raw=await request(auth,'/lol-champ-select/v1/session'),session=sanitizeSession(raw),gameId=champSelectGameId(session,game);
+  const session=sanitizeSession(raw),gameId=champSelectGameId(session,game);
   if(gameId!==selected.sessionGameId)throw Error('选人会话已变化，请同步客户端后重试');
   const context=runeWriteContext({connected:true,phase:'ChampSelect',session,game}),own=raw.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
   const actions=(Array.isArray(raw.actions)?raw.actions:[]).flat().filter(a=>a?.type==='pick'&&a.actorCellId===session.localPlayerCellId);
@@ -43,8 +44,8 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  if(locked&&initial.own.championId!==selected.championId)throw Error('客户端已锁定其他英雄，不能预选这位英雄');
  if(!locked&&initial.timer!=='PLANNING'&&initial.action.isInProgress!==true)throw Error('请在预选阶段或轮到本人选人时点击，不会自动等待或锁定');
  const readEligibility=async()=>{
-  const pickable=normalizeChampionIds(await request(auth,'/lol-champ-select/v1/pickable-champion-ids'));
-  const disabled=normalizeChampionIds(await request(auth,'/lol-champ-select/v1/disabled-champion-ids'));
+  const [pickableValue,disabledValue]=await Promise.all([request(auth,'/lol-champ-select/v1/pickable-champion-ids'),request(auth,'/lol-champ-select/v1/disabled-champion-ids')]);
+  const pickable=normalizeChampionIds(pickableValue),disabled=normalizeChampionIds(disabledValue);
   if(pickable===null||disabled===null)throw Error('未能确认本局可选范围，尚未预选');
   return {pickable,disabled};
  };

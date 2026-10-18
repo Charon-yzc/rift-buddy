@@ -79,12 +79,13 @@ test('file edits concurrent with preparation cancel the replacement instead of c
  await assert.rejects(f.write({...itemSet,title:itemSet.title+' Next'},io),/发生变化/);assert.equal(await fs.readFile(filename,'utf8'),changed);
 });
 
-test('the latest applied role sorts ahead of older roles even when clicks are concurrent, without changing their builds',async()=>{
+test('the latest applied role is the only active owned set for this map and earlier role bytes remain backed up',async()=>{
  const f=await fixture(),jungle=createItemSet(champion,getBuild(champion,'jungle',data),data),load=async set=>JSON.parse(await fs.readFile(path.join(f.target,set.uid+'.json'),'utf8'));
  await Promise.all([f.write(),f.write(jungle)]);
- const top=await load(itemSet),second=await load(jungle);assert.ok(second.sortrank>top.sortrank);assert.equal(second.type,'custom');assert.equal(second.priority,true);assert.equal(second.map,'SR');
- const before=await fs.readFile(path.join(f.target,jungle.uid+'.json'),'utf8');await f.write();
- assert.ok((await load(itemSet)).sortrank>second.sortrank);assert.equal(await fs.readFile(path.join(f.target,jungle.uid+'.json'),'utf8'),before);assert.deepEqual(top.blocks,itemSet.blocks);
+ await assert.rejects(load(itemSet),{code:'ENOENT'});const second=await load(jungle);assert.equal(second.type,'custom');assert.equal(second.priority,true);assert.equal(second.map,'SR');
+ const before=await fs.readFile(path.join(f.target,jungle.uid+'.json'),'utf8'),result=await f.write();
+ assert.ok((await load(itemSet)).sortrank>second.sortrank);await assert.rejects(load(jungle),{code:'ENOENT'});assert.deepEqual((await load(itemSet)).blocks,itemSet.blocks);
+ const manifest=JSON.parse(await fs.readFile(path.join(result.backupDirectory,'manifest.json'),'utf8'));assert.equal(manifest.length,1);assert.equal(await fs.readFile(path.join(result.backupDirectory,manifest[0].backup),'utf8'),before);
  await assert.rejects(fs.stat(path.join(f.game,'Config','Global')),{code:'ENOENT'});
 });
 
@@ -95,6 +96,29 @@ test('migration verifies the new champion-scoped set before removing only its ma
   const io={...fs,unlink:async file=>{if(file===filename){const actual=JSON.parse(await fs.readFile(path.join(f.target,itemSet.uid+'.json'),'utf8'));assert.equal(actual.type,'custom');assert.equal(actual.priority,true);assert.deepEqual(actual.blocks,itemSet.blocks);}return fs.unlink(file);}};
   const result=await f.write(legacy,io);assert.equal(result.legacyMigrated,true);assert.equal(result.replaced,true);assert.equal(result.preferred,true);await assert.rejects(fs.stat(filename),{code:'ENOENT'});
   assert.equal(await fs.readFile(path.join(global,'user-build.json'),'utf8'),'keep user build');assert.equal(await fs.readFile(path.join(global,'rift-buddy-22-bottom-rift.json'),'utf8'),'keep another champion');
+ }
+});
+
+test('applicable personal and third-party shop sets are backed up while other maps and champions stay intact',async()=>{
+ const f=await fixture();await fs.mkdir(f.target,{recursive:true});const global=path.join(f.game,'Config','Global','Recommended');await fs.mkdir(global,{recursive:true});
+ const local=JSON.stringify({...itemSet,uid:'personal',title:'个人配装'}),shared=JSON.stringify({...itemSet,uid:'other-tool',title:'其他工具',map:'any'});
+ await fs.writeFile(path.join(f.target,'personal.json'),local);await fs.writeFile(path.join(global,'third-party.json'),shared);
+ const abyss=JSON.stringify({...itemSet,uid:'abyss',title:'大乱斗配装',map:'HA'});await fs.writeFile(path.join(f.target,'abyss.json'),abyss);
+ const other=path.join(f.game,'Config','Champions','Ashe','Recommended');await fs.mkdir(other,{recursive:true});await fs.writeFile(path.join(other,'keep.json'),local);
+ const result=await f.write();assert.equal(result.displacedSets,2);assert.ok(!result.backupDirectory.includes('Recommended'));
+ await assert.rejects(fs.stat(path.join(f.target,'personal.json')),{code:'ENOENT'});await assert.rejects(fs.stat(path.join(global,'third-party.json')),{code:'ENOENT'});
+ assert.equal(await fs.readFile(path.join(f.target,'abyss.json'),'utf8'),abyss);assert.equal(await fs.readFile(path.join(other,'keep.json'),'utf8'),local);
+ const manifest=JSON.parse(await fs.readFile(path.join(result.backupDirectory,'manifest.json'),'utf8'));
+ for(const entry of manifest){const bytes=await fs.readFile(path.join(result.backupDirectory,entry.backup),'utf8');assert.ok([local,shared].includes(bytes));assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),entry.sha256);assert.ok(!path.isAbsolute(entry.original)&&!entry.original.startsWith('..'));}
+});
+
+test('backup failure preserves competing sets and cleanup failure restores removed sets without overwriting concurrent edits',async()=>{
+ for(const failure of ['backup','unlink','changed']){
+  const f=await fixture();await fs.mkdir(f.target,{recursive:true});const a=path.join(f.target,'a.json'),b=path.join(f.target,'b.json'),old=JSON.stringify({...itemSet,uid:'old',title:'个人旧配装'}),changed=old+' ';
+  await fs.writeFile(a,old);await fs.writeFile(b,old);
+  const io={...fs,writeFile:async(file,...args)=>{if(failure==='backup'&&path.basename(file)==='manifest.json')throw Error('模拟备份失败');return fs.writeFile(file,...args);},unlink:async file=>{if(failure==='unlink'&&file===b)throw Error('模拟删除失败');return fs.unlink(file);},rename:async(...args)=>{await fs.rename(...args);if(failure==='changed')await fs.writeFile(b,changed);}};
+  await assert.rejects(f.write(itemSet,io),/备份失败|清理未完成/);assert.equal(await fs.readFile(a,'utf8'),old);assert.equal(await fs.readFile(b,'utf8'),failure==='changed'?changed:old);
+  if(failure==='backup')await assert.rejects(fs.stat(path.join(f.target,itemSet.uid+'.json')),{code:'ENOENT'});
  }
 });
 

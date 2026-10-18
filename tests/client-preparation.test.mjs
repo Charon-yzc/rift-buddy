@@ -31,6 +31,17 @@ test('explicit client preparation previews only own pick and verifies actual run
  const f=fixture(),before=structuredClone(f.value),result=await f.run();assert.equal(result.complete,true);assert(Object.values(result.steps).every(s=>s.status==='done'));assert.equal(f.action.completed,false);assert.equal(f.own.championPickIntent,22);assert.equal(result.steps.runes.pageId,11);assert.equal(f.items,1);assert.deepEqual(f.pages[0],{id:2,current:false,isEditable:false});assert.deepEqual(f.value,before);
  assert.deepEqual(f.calls.filter(c=>c.method==='PATCH').map(c=>c.route),['/lol-champ-select/v1/session/actions/4','/lol-champ-select/v1/session/my-selection']);assert(!f.calls.some(c=>c.body?.completed===true));
 });
+
+test('hero selection is visible while slow configuration is pending and a changed game stops the remaining writes',async()=>{
+ const f=fixture();let startRunes,releaseRunes;
+ const started=new Promise(resolve=>{startRunes=resolve;}),gate=new Promise(resolve=>{releaseRunes=resolve;});
+ f.deps.writeRunes=async()=>{startRunes();await gate;return {pageId:11,name:'模拟符文'};};
+ const pending=f.run();await started;
+ assert.equal(f.own.championPickIntent,22);assert.equal(f.action.completed,false);assert.equal(f.items,0);
+ assert.ok(!f.calls.some(call=>call.route.endsWith('my-selection')&&call.method==='PATCH'));
+ f.setPhase('ReadyCheck');releaseRunes();const result=await pending;
+ assert.equal(result.steps.hover.status,'done');assert.equal(result.steps.spells.status,'failed');assert.equal(result.steps.items.status,'skipped');assert.equal(f.items,0);
+});
 test('explicit lane claim only preselects a representative, leaves runes/spells/items and lock untouched',async()=>{
  const f=fixture();f.value.preselectOnly=true;const before=structuredClone(f.pages),spells=[f.own.spell1Id,f.own.spell2Id];const result=await f.run();
  assert.equal(result.preselectOnly,true);assert.equal(result.steps.hover.status,'done');assert.equal(f.action.completed,false);assert.equal(f.items,0);assert.deepEqual(f.pages,before);assert.deepEqual([f.own.spell1Id,f.own.spell2Id],spells);
