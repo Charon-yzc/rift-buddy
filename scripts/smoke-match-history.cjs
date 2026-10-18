@@ -38,6 +38,10 @@ async function run(){
  await until(()=>{main=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
   const js=code=>main.webContents.executeJavaScript(code,true),click=selector=>until(()=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Control missing '+selector),capture=async name=>{await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  await click('[data-action=navigate][data-route=history]');assert.equal(await js('!!document.querySelector("#history-search")'),true);
+ // A live-data render can replace a hovered node during its dwell timer.
+ // Re-enter only its replacement, as native pointer targeting would; never
+ // restart the timer for a stable target or bypass the real hover handler.
+ const hover=async(selector,label)=>{await js('window.__historySmokeHoverTarget=null');await until(()=>js(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)return false;if(window.__historySmokeHoverTarget!==el){window.__historySmokeHoverTarget=el;el.dispatchEvent(new PointerEvent('pointerover',{bubbles:true}));}return el.getAttribute('aria-describedby')==='history-hover-detail'&&document.querySelector('#history-hover-detail')?.matches(':popover-open');})()`),label);};
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);
  for(const close of ['button','escape','backdrop']){
@@ -111,7 +115,7 @@ async function run(){
   await js('document.querySelector("[data-ongoing-tip=winrate]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("不代表本局获胜概率")'),'Ongoing win-rate hover missing');assert.equal(await js('(()=>{const r=document.querySelector("#history-hover-detail").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;})()'),true,'Ongoing hover escapes viewport');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
   await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
   await until(()=>js('!document.querySelector("#history-hover-detail")'),'Ongoing hover did not close after Escape');
-  try{await js('document.querySelector("[data-ongoing-tip=rank]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.length>0'),'Ongoing rank hover missing');}catch(error){console.error('ONGOING_RANK_HOVER',JSON.stringify(await js('(()=>{const el=document.querySelector("[data-ongoing-tip=rank]");return {targets:document.querySelectorAll("[data-ongoing-tip]").length,rankTarget:!!el,html:el?.outerHTML?.slice(0,240)};})()')));throw error;}await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  await hover('[data-ongoing-tip=rank]','Ongoing rank hover missing');assert.ok(await js('document.querySelector("#history-hover-detail").textContent.length>0'));await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
   await capture('ongoing-game.png');
   await js('document.querySelector(".ongoing-settings").open=true');await click('[data-ongoing-field=streamer]');
   await until(()=>js('window.buddy.bootstrap().then(b=>b.state.preferences.ongoing.streamer===true)'),'Streamer preference did not settle');
@@ -119,7 +123,7 @@ async function run(){
   await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
   assert.equal(await js('document.querySelector(".ongoing-page").classList.contains("is-streamer")'),true);
   const groupTip=await js('!!document.querySelector("[data-ongoing-tip=premade]")');assert.ok(groupTip,'Shared-history fixture group missing');
-  await js('document.querySelector("[data-ongoing-tip=premade]").dispatchEvent(new FocusEvent("focusin",{bubbles:true}))');
+  await hover('[data-ongoing-tip=premade]','Anonymous group hover missing');
   try{await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("玩家")'),'Anonymous group tooltip missing');}catch(error){console.error('GROUP_TOOLTIP_DIAGNOSTIC',JSON.stringify(await js('({target:document.querySelector("[data-ongoing-tip=premade]")?.outerHTML,tip:document.querySelector("#history-hover-detail")?.textContent,streamer:document.querySelector("[data-ongoing-field=streamer]")?.checked,busy:document.querySelectorAll(".ongoing-player-card[aria-busy=true]").length})')));throw error;}
   assert.doesNotMatch(await js('document.querySelector("#history-hover-detail").textContent'),/战绩测试玩家|示例队友|模拟玩家|#TEST/);
   await capture('ongoing-streamer-hover.png');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');await click('[data-ongoing-field=streamer]');
