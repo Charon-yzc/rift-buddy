@@ -85,12 +85,12 @@ test('only a complete compatible saved plan and its configurations activate, and
 });
 
 test('a matching champion cannot import a saved partner configuration when the public partner has changed',()=>{
- const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),champion:s.role==='bottom'?'Lucian':s.role==='support'?'Nami':null}));
+ const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),champion:s.role==='bottom'?'Morgana':s.role==='support'?'Twitch':null}));
  const configurations=captureTeamConfigurations({slots,scope:'bot'},data,createPreparationStore());
  assert.ok(configurations.every(s=>s.comboId),'Fixture must contain actual partner-specific choices');
- const draft={localPlayerCellId:1,myTeam:[{cellId:1,championId:key('Lucian'),assignedPosition:'BOTTOM'},{cellId:2,championId:key('Janna'),assignedPosition:'UTILITY'}]};
+ const draft={localPlayerCellId:1,myTeam:[{cellId:1,championId:key('Morgana'),assignedPosition:'BOTTOM'},{cellId:2,championId:key('Janna'),assignedPosition:'UTILITY'}]};
  const result=restoreTeamFavorite({slots,scope:'bot',configurations},createSlots(),champions,draft);
- assert.deepEqual(result.slots.slice(3).map(s=>s.champion),['Lucian','Janna']);assert.deepEqual(result.configurations,[]);assert.equal(result.skippedConfigurations,2);
+ assert.deepEqual(result.slots.slice(3).map(s=>s.champion),['Morgana','Janna']);assert.deepEqual(result.configurations,[]);assert.equal(result.skippedConfigurations,2);
 });
 
 test('locked manual teammates retain both their hero and ownership when loading old party favorites',()=>{

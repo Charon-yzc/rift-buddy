@@ -6,6 +6,7 @@ import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mj
 import {getBuild} from '../src/core/builds.mjs';
 import {currentCombo,createSlots} from '../src/core/recommend.mjs';
 import {BUNDLED_CATALOG,catalogIssues} from '../src/core/catalog.mjs';
+import {companionPickIntent} from '../src/core/companion-plan.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
 const builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
 const members=[{champion:'Trundle',role:'top'},{champion:'Sejuani',role:'jungle'},{champion:'Seraphine',role:'mid'}];
@@ -30,6 +31,13 @@ test('individually reviewed current combinations remain discoverable beneath an 
  const own=trio.members[0],slots=createSlots().map(slot=>({...slot,champion:trio.members.find(member=>member.role===slot.role)?.champion||null}));
  assert.equal(currentCombo(slots,own.champion,own.role)?.id,trio.id);
  assert.equal(currentCombo(slots,own.champion,own.role,{},null,null,{patch:'16.21'}),null);
+});
+
+test('companion hover preparation uses the actual data patch before inferring a combination',()=>{
+ const duo=BUNDLED_CATALOG.duos.find(row=>row.patch===data.patch),slots=createSlots().map(slot=>({...slot,champion:slot.role==='bottom'?duo.carry:slot.role==='support'?duo.support:null}));
+ const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:0,championPickIntent:data.champions.find(hero=>hero.id===duo.carry).key,assignedPosition:'BOTTOM'}]}};
+ assert.equal(companionPickIntent(client,data.champions,slots,{patch:data.patch}).selection.comboId,duo.id);
+ assert.equal(companionPickIntent(client,data.champions,slots,{patch:'16.21'}).selection.comboId,undefined);
 });
 test('an explicitly selected independent skill survives an unavailable gear route with a source build present',()=>{
  const hero=data.champions.find(hero=>hero.id==='Orianna'),plan=BUNDLED_CATALOG.skillPlans.find(plan=>plan.champion===hero.id&&plan.role==='mid'&&plan.loadoutId==='trio-ball'),gear=BUNDLED_CATALOG.loadouts.find(row=>row.id===plan.loadoutId),changed=structuredClone({...data,builds});changed.items[gear.items[0]].requiredChampion='Garen';

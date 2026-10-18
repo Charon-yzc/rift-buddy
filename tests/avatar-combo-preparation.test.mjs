@@ -1,7 +1,7 @@
 import {localPickLocked} from '../src/core/draft-intents.mjs';
 import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
 import {heroClickSelection} from '../src/core/configuration-choices.mjs';
-import test from 'node:test';
+import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
@@ -16,10 +16,13 @@ import {createPreparationStore,recallPreparation} from '../src/core/preparation.
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {localConfigurationPreview} from '../src/core/companion-plan.mjs';
 import {movePartyMark} from '../src/core/party-range.mjs';
+import {BUNDLED_CATALOG,configureCatalog} from '../src/core/catalog.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const functions=source.slice(source.indexOf('async function prepareHeroClick('),source.indexOf('\nfunction refreshClickedResult'))+'\n'+source.slice(source.indexOf('function rememberedPreparation('),source.indexOf('\nfunction editBuildSummoners'))+'\n'+source.slice(source.indexOf('function setCompanionRole('),source.indexOf('\nfunction preservePlayerPosition'));
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));data.builds={};
+// Exercise a current reviewed lineup without promoting the real legacy entry.
+const reviewed=structuredClone(BUNDLED_CATALOG);reviewed.duos.find(row=>row.id==='rengar-ivern').patch=data.patch;configureCatalog(reviewed);after(()=>configureCatalog(BUNDLED_CATALOG));
 const champ=id=>data.champions.find(c=>c.id===id),base={id:'Rengar',role:'bottom',mode:'rift'};
 const selected=build=>({...base,conditions:[],coreIndex:0,...selectedBuildFields({...base,build},{preserveUnavailable:true})});
 const solo=selected(getBuild(champ(base.id),base.role,data,base));

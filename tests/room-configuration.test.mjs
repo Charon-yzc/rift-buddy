@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots} from '../src/core/recommend.mjs';
 import {TRIOS} from '../src/core/rules.mjs';
+import {BUNDLED_CATALOG} from '../src/core/catalog.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {createRoomService} from '../services/room.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
@@ -52,7 +53,9 @@ test('offline room sharing keeps the explicit local role and ignores a disconnec
 
 test('a directly loaded catalog duo freezes its public instructions and exact recommended runes',()=>{
  const team=createSlots().map(s=>({...s,champion:s.role==='bottom'?'Seraphine':s.role==='support'?'Sona':null}));
- const plan=captureRoomStrategy(team,data);assert.equal(plan.curated.id,'double-song');assert.equal(plan.members.length,2);
+ assert.equal(captureRoomStrategy(team,data),null,'A legacy duo is not automatically activated');
+ const chosen=captureCreativePlan({slots:team,scope:'bot',duo:BUNDLED_CATALOG.duos.find(row=>row.id==='double-song')},data);
+ const plan=captureRoomStrategy(team,data,chosen);assert.equal(plan.curated.id,'double-song');assert.equal(plan.members.length,2);
  const config=captureRoomConfigurations(team,data,createPreparationStore(),{creativePlan:plan}).find(c=>c.champion==='Seraphine');
  const next=getBuild(data.champions.find(c=>c.id==='Seraphine'),'bottom',data,roomPreparation(config,data,plan));
  assert.deepEqual(next.runePage.selectedPerkIds,config.runes.selectedPerkIds);assert.equal(next.combo.creativePlan.curated.id,'double-song');

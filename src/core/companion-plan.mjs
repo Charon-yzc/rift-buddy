@@ -20,7 +20,7 @@ export function assertConfigurationEditable(selection){
  if(selection?.readOnly)throw Error('队友配置仅供查看，请回到本人的配置');
 }
 
-export function companionPickIntent(client,champions,slots=[],{scope='solo',soloRole='',playerPosition=null,creativePlan=null,catalogStatus={}}={}){
+export function companionPickIntent(client,champions,slots=[],{scope='solo',soloRole='',playerPosition=null,creativePlan=null,catalogStatus={},patch}={}){
  const session=client?.session,mode=client?.mode?.id;
  if(!client?.connected||client.phase!=='ChampSelect'||!['rift','hex'].includes(mode)||!Number.isInteger(session?.localPlayerCellId))return null;
  const player=session.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
@@ -32,7 +32,7 @@ export function companionPickIntent(client,champions,slots=[],{scope='solo',solo
  const chosen=playerPosition?.cellId===session.localPlayerCellId&&ROLES.some(r=>r.id===playerPosition.role)?playerPosition.role:null;
  const preferred=ROLES.some(r=>r.id===soloRole)?soloRole:null;
  const role=manual?.role||chosen||planned?.role||assigned||preferred||profile(champion).roles[0];
- const combo=mode==='rift'?currentCombo(slots,champion.id,role,catalogStatus,null,creativePlan):null;
+ const combo=mode==='rift'?currentCombo(slots,champion.id,role,catalogStatus,null,creativePlan,{patch}):null;
  return {selection:{id:champion.id,role,mode,...creativeComboContext(combo)},positionKnown:!!(assigned||manual||chosen||planned||preferred)};
 }
 

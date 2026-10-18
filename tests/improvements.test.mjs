@@ -14,10 +14,10 @@ import {itemConflicts} from '../src/core/mechanics.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(h=>h.id===id),clone=()=>structuredClone(BUNDLED_CATALOG);
-test('a simultaneous trio and bot pair route each member to their own playable loadout',()=>{
+test('explicit legacy trio and bot pair lookup route each member to their own playable loadout',()=>{
  const slots=createSlots();for(const [role,id] of [['top','Malphite'],['jungle','JarvanIV'],['mid','Orianna'],['bottom','Varus'],['support','Ashe']])Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});
- assert.equal(currentCombo(slots, 'Orianna','mid').id,'ball-delivery');
- const duo=currentCombo(slots,'Varus','bottom');assert.notEqual(duo.id,'ball-delivery');assert.equal(currentCombo(slots,'Varus','bottom',{'jarvan-varus-ashe':{invalid:true}}).id,'arrows-ice');
+ assert.equal(currentCombo(slots, 'Orianna','mid',{},null,null,{allowPending:true}).id,'ball-delivery');
+ const duo=currentCombo(slots,'Varus','bottom',{},null,null,{allowPending:true});assert.notEqual(duo.id,'ball-delivery');assert.equal(currentCombo(slots,'Varus','bottom',{'jarvan-varus-ashe':{invalid:true}},null,null,{allowPending:true}).id,'arrows-ice');
  const b=getBuild(hero('Varus'),'bottom',data,{comboId:duo.id});assert.equal(b.loadoutId,'spell-lethality');assert.equal(b.selectedSkill.source,'OP.GG');assert.equal(b.skillOrder.length,15);assert.ok(b.selectionWarnings.every(w=>w.includes('组合整理于')||w.includes('出门预算')||w.startsWith('当前加点使用同英雄同位置来源的部分序列')));assert.ok(b.start.reduce((n,i)=>n+i.gold.total,0)<=500);
  assert.equal(recommend({slots,champions:data.champions})[0].strategy.label,'团战连招');
 });
