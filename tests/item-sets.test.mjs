@@ -58,6 +58,6 @@ test('equipment actions show persistent errors and export instructions scoped to
 });
 
 test('permission failure has an explicit authorization/import action; ordinary failure does not request elevation',()=>{
- const s={id:'Volibear',role:'top',mode:'rift'},b=build(s),key=JSON.stringify(createItemSet(hero(s.id),b,data)),statuses=new Map([[key,{text:'写入被拒绝，请点击连接授权',error:true,needsAuthorization:true}]]);
+ const s={id:'Volibear',role:'top',mode:'rift'},b=build(s),key=JSON.stringify(createItemSet(hero(s.id),b,data)),statuses=new Map([[key,{text:'写入被拒绝，请确认 Windows 权限',error:true,needsAuthorization:true}]]);
  assert.match(itemSetControls(hero(s.id),b,data,{statuses}),/data-action="authorize-item-set"/);statuses.set(key,{text:'未发现客户端',error:true});assert.doesNotMatch(itemSetControls(hero(s.id),b,data,{statuses}),/data-action="authorize-item-set"/);
 });

@@ -48,6 +48,21 @@ test('count freezes through membership polls, public collisions, hover changes a
  assert.equal(slots[0].champion,'Garen');
 });
 
+test('a saved draft never pairs a stale range count with newer checkbox marks',async()=>{
+ const {savedPartyCount}=await import('../src/core/party-range.mjs');
+ const s=session(),p=party(3);let slots=reconcilePartyRange(createSlots(),s,data.champions,{count:3,party:p,initial:true});
+ const captured=markedPartyCount(slots);assert.equal(captured,3);
+ // A second window unchecks two lanes while the captured count is still 3.
+ const unchecked=slots.filter(slot=>slot.party).slice(0,2).map(slot=>slot.role);
+ slots=slots.map(slot=>unchecked.includes(slot.role)?{...slot,party:false,partyManual:true}:slot);
+ const stale={...defaultState().draft,slots,partyCount:captured};
+ assert.throws(()=>validateState({...defaultState(),draft:stale}),/勾选位置不一致/,'The stale pair must stay rejected');
+ const derived=savedPartyCount(slots,captured);assert.equal(derived,captured-2);
+ assert.doesNotThrow(()=>validateState({...defaultState(),draft:{...stale,partyCount:derived}}));
+ assert.equal(savedPartyCount(slots,undefined),undefined,'An uncaptured range stays absent');
+ assert.equal(savedPartyCount(slots.map(slot=>({...slot,party:false})),0),0,'An empty manual range still saves as zero');
+});
+
 test('only explicit checkbox changes resize the range, including clearing every mark',()=>{
  const s=session(),p=party(3);let count=3,slots=reconcilePartyRange(createSlots(),s,data.champions,{count,party:p,initial:true});
  for(const role of ['support','top','jungle','mid','support']){

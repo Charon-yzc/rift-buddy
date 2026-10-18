@@ -14,7 +14,7 @@ import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,c
 import {adoptedTaskView} from './draft-task-view.mjs';
 import {stateRecoveryView} from './state-recovery-view.mjs';
 import {clientRenderIdentity,normalizePartyIds} from './core/client-party.mjs';
-import {validPartyCount,markedPartyCount,initialPartyCount,selectionPartyCount,reconcilePartyRange,movePartyMark} from './core/party-range.mjs';
+import {validPartyCount,markedPartyCount,initialPartyCount,selectionPartyCount,reconcilePartyRange,movePartyMark,savedPartyCount} from './core/party-range.mjs';
 import {pregamePhase,partyWithPregameIntents,restoredRoleClaim} from './core/pregame-intent.mjs';
 import {companionHeroAction} from './core/companion-action.mjs';
 import {adoptRoomLineup,roomLineupIdentity} from './core/room-lineup.mjs';
@@ -96,13 +96,15 @@ import {analyzeAkariHistory,analyzeAkariTeam,inferHistoricalGroups} from './core
 import {matchHistoryToolsView,privateHistoryState,privateHistoryFilterTab} from './match-history-tools-view.mjs';
 import {parseHistoryFilterTree} from './core/match-history/filters.mjs';
 import {historyNavigationView} from './match-history-navigation-view.mjs';
+import {bindHistoryTooltips} from './match-history-hover.mjs';
+import {ongoingTooltipView} from './ongoing-game-hover.mjs';
 import {updateHistoryFilterTree,saveHistoryFilterPreset,loadHistoryFilterPreset,removeHistoryFilterPreset,historyRelativeTimeRange} from './match-history-filter-tree.mjs';
 function matchHistoryView(state,data){
-  const shown=privateHistoryState(state),tab=shown.tabs.find(t=>t.id===state.current);for(const entry of shown.tabs)if(entry.page)entry.page={...entry.page,fullAnalysis:entry.analysis};const html=baseHistoryView(shown,data);if(!tab?.page)return html;
+  const shown={...privateHistoryState(state),compact:window.innerWidth<=1050},tab=shown.tabs.find(t=>t.id===state.current);for(const entry of shown.tabs)if(entry.page)entry.page={...entry.page,fullAnalysis:entry.analysis};const html=baseHistoryView(shown,data);if(!tab?.page)return html;
  const filtered=Object.entries(tab.filter).some(([key,value])=>key!=='excludePve'&&key!=='advanced'&&!!value)||!!tab.filter.advanced?.rules.length;
  const tools=matchHistoryToolsView(tab,{streamer:state.streamer,note:ongoing.state.notes[tab.page.player.puuid]||'',data,masteryQuery:tab.masteryQuery||''}),analysis=ongoingGameAnalysisView(tab.analysis,data,{streamer:state.streamer}),filterTab=state.streamer?privateHistoryFilterTab(tab):tab;
  const filters=state.streamer?`<fieldset disabled style="border:0;padding:0;min-width:0"><small>隐私展示期间暂停编辑含身份的筛选条件</small>${advancedHistoryFilters(filterTab,data)}</fieldset>`:advancedHistoryFilters(filterTab,data);
- const result=html.replace('<div class="history-filters">',tools+historyNavigationView(tab,state)+`<details class="history-filter-panel" data-disclosure-key="history-filter-panel"><summary>筛选战绩${filtered?' · 已设置条件':''}</summary><div class="history-filters">`).replace('<div class="history-pagination">',filters+'</details><details class="history-full-analysis" data-disclosure-key="history-full-analysis"><summary>完整战绩分析</summary>'+analysis+'</details><div class="history-pagination">');
+  const result=html.replace('<div data-history-slot="sidebar-controls"></div>',historyNavigationView(tab,state)).replace('<div data-history-slot="advanced-filters"></div>',filters).replace('<div data-history-slot="sidebar-extra"></div>',tools+'<details class="history-full-analysis" data-disclosure-key="history-full-analysis"><summary>完整战绩分析</summary>'+analysis+'</details>').replace('<summary>页内筛选</summary>',`<summary>页内筛选${filtered?' · 已设置条件':''}</summary>`);
  return window.innerWidth<=1050?result.replace('<aside class="history-summary">','<details class="history-compact-summary" data-disclosure-key="history-compact-summary"><summary>近期表现、常用英雄与共同对局</summary><aside class="history-summary">').replace('</aside>','</aside></details>'):result;
 }
 window.matchMedia('(max-width: 1050px)').addEventListener('change',()=>{if(route==='history'&&data)render();});
@@ -154,7 +156,12 @@ const previewAPI={
 const api=window.buddy||previewAPI;
 const historyRequest=(operation,payload)=>api.matchHistory?api.matchHistory(operation,payload):Promise.reject(Error('请在桌面版连接客户端后查询战绩'));
 const history=createHistoryController({request:historyRequest,analyze:analyzeAkariHistory,onChange:()=>{if(route==='history'&&data){render();if(history.state.searchResults.length)overlay.innerHTML=matchHistorySearchView(privateHistoryState(history.state));if(history.state.error)toast(history.state.streamer?'查询失败，请检查连接':history.state.error,true);}}});
+const historyTooltips=bindHistoryTooltips({document,getData:()=>data,getGame:element=>{
+ const tab=privateHistoryState(history.state).tabs.find(value=>value.id===history.state.current),id=Number(element.dataset.tipGame??element.closest('[data-history-match]')?.dataset.historyMatch);
+ return tab?.details[id]?.game||tab?.page?.games.find(game=>game.id===id);
+}});
 const ongoing=createOngoingGameController({request:historyRequest,analyze:analyzeAkariHistory,teamAnalyze:analyzeAkariTeam,infer:inferHistoricalGroups,onChange:()=>{if(route==='ongoing'&&data)render();}});
+const ongoingTooltips=bindHistoryTooltips({document,attribute:'data-ongoing-tip',getData:()=>data,render:(element,value)=>value?ongoingTooltipView(ongoing.state,element,value):''});
 let ongoingObservedPhase='Offline';
 function acceptOngoingClient(value){
  ongoing.observeClient(value);
@@ -187,7 +194,7 @@ async function ongoingAction(action,el){
 }
 async function historyAction(action,el,background=false){
  const tab=history.current(),id=Number(el.dataset.id);
- if(action==='history-self')await history.open({source:history.state.source,server:''});
+  if(action==='history-self'){const search=document.querySelector('.history-search-disclosure');if(search)search.open=false;await history.open({source:history.state.source,server:''});}
  else if(action==='history-tab')history.select(id);
  else if(action==='history-close')history.close(id);
  else if(action==='history-refresh'&&tab)await history.load(tab,tab.page?{}:{handle:undefined});
@@ -195,7 +202,7 @@ async function historyAction(action,el,background=false){
  else if(action==='history-prev'&&tab?.page)await history.load(tab,{start:Math.max(0,tab.page.start-tab.page.count)});
  else if(action==='history-first'&&tab)await history.load(tab,{start:0});
  else if(action==='history-page-go'&&tab?.page){const value=Number(document.querySelector('[data-history-page="number"]')?.value);if(!Number.isInteger(value)||value<1||value>Math.ceil(10000/tab.page.count))throw Error('请输入范围内的页数');await history.load(tab,{start:(value-1)*tab.page.count});}
- else if(action==='history-detail')await history.detail(id,el.dataset.section);
+  else if(action==='history-detail'){const section=el.dataset.section;await history.detail(id,section);if(section==='toggle')document.querySelector(`[data-history-match="${id}"] .history-expand`)?.focus({preventScroll:true});else document.getElementById(`history-tab-${id}-${section}`)?.focus({preventScroll:true});}
  else if(action==='history-collect')await history.collect();
  else if(action==='history-collect-active')await history.collect({useFilters:true,scanFromStart:true,expectedCount:500});
  else if(action==='history-search-cancel')history.cancelSearch();
@@ -438,7 +445,7 @@ function persist({throwOnError=false,derived=false,rangeEdit=null}={}){
   const editable=editableLocalDraft(slots,client.connected?client.session:null,data.champions,taskOwnRole()).slots.map(slot=>Number.isInteger(slot.clientCellId)&&!confirmed.find(value=>value.role===slot.role)?.champion?{...slot,champion:null,locked:false}:slot);
   if(creativePlanCompatible(activeCreativePlan,editable))draftSlots=editable;
  }
- saved.draft={slots:draftSlots,style,scope,soloRole,...(saved.draft?.preselection?{preselection:saved.draft.preselection}:{}),...(validPartyCount(saved.draft?.partyCount)?{partyCount:saved.draft.partyCount}:{}),...(activeCreativePlan&&creativePlanCompatible(activeCreativePlan,draftSlots)?{creativePlan:activeCreativePlan}:{}),...(saved.draft?.clientGameId?{clientGameId:saved.draft.clientGameId}:{}),...(saved.draft?.playerPosition?{playerPosition:saved.draft.playerPosition}:{})};saved.preferences.style=style;saved.preparations=preparations.snapshot();
+ saved.draft={slots:draftSlots,style,scope,soloRole,...(saved.draft?.preselection?{preselection:saved.draft.preselection}:{}),...(savedPartyCount(draftSlots,saved.draft?.partyCount)!==undefined?{partyCount:savedPartyCount(draftSlots,saved.draft?.partyCount)}:{}),...(activeCreativePlan&&creativePlanCompatible(activeCreativePlan,draftSlots)?{creativePlan:activeCreativePlan}:{}),...(saved.draft?.clientGameId?{clientGameId:saved.draft.clientGameId}:{}),...(saved.draft?.playerPosition?{playerPosition:saved.draft.playerPosition}:{})};saved.preferences.style=style;saved.preparations=preparations.snapshot();
  const pending={snapshot:structuredClone(saved)};pendingSaves.add(pending);
  const request=saveChain.catch(()=>{}).then(async()=>{
   const before=structuredClone(savedBase);
@@ -671,7 +678,7 @@ function render(){
   renderedSelectContext=appSelectionContext();reflectRunePending();
   if(focus&&old?.dataset.focusScope===focusScope){const target=focus.id?document.getElementById(focus.id):[...app.querySelectorAll('button,input,select')].find(control=>control.tagName===focus.tag&&Object.keys(focus.data).length&&Object.entries(focus.data).every(([key,value])=>control.dataset[key]===value));target?.focus({preventScroll:true});}return;
  }
-  app.innerHTML=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}):route==='rankings'?rankingsView(data,rankingOptions()):route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`;
+   historyTooltips.close();ongoingTooltips.close();app.innerHTML=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}):route==='rankings'?rankingsView(data,rankingOptions()):route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`;
  renderedDisclosureScope='main:'+route+':'+(route==='draft'?activeCreativePlan?.id||'':route==='reference'?[referenceHero,referenceRole,referenceTab].join(':'):'');disclosureState.restore(renderedDisclosureScope,app);markNewRoomProposals(previousProposals);
  if(disclosureFocus.scope===renderedDisclosureScope&&disclosureFocus.context===selectContext)disclosureState.restoreFocus(disclosureFocus.key,app);
  restoreCandidateScroll(candidateScroll,selectContext);renderedDraftResults=route==='draft'?results:null;
@@ -726,7 +733,7 @@ function taskOwnRole(){
  const own=currentPlayerSelection(client.session,data.champions,slots);
  return manualPlayerSlot(slots,client.session?.localPlayerCellId)?.role||(saved.draft?.playerPosition?.cellId===client.session?.localPlayerCellId?saved.draft?.playerPosition?.role:'')||assignedPlayerRole()||soloRole||(own?.positionKnown?own.role:'');
 }
-function publicDraftContext(){return clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected:saved.preferences.includePreselected===true}).slots;}
+function publicDraftContext(){return clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected:saved.preferences.includePreselected===true,ownRole:taskOwnRole()}).slots;}
 function ownTaskPreparation(){
  const own=myPreparation(),intent=companionPreparation({currentOnly:true}),role=taskOwnRole();
  const member=activeCreativePlan?.members.find(m=>m.role===role);
@@ -876,11 +883,12 @@ async function useClientPreparation(el,directClick=false,expected=null){
   await sync(false,{fresh:true});
   const current=clientPreparationPlan(data,selectedClientPreparation(view));
   if(!current||current.fingerprint!==prepared.fingerprint||preparationGameId(client)!==gameId||JSON.stringify(runeWriteContext(client))!==JSON.stringify(clickedContext))throw Error('选人或方案已变化，尚未操作；请重新核对');
-  await persist({throwOnError:true});await guideSyncChain;
+  await persist({throwOnError:true});
   const dispatchPlan=selectedClientPreparation(view),dispatch=clientPreparationPlan(data,dispatchPlan);
   if(!dispatch||dispatch.fingerprint!==prepared.fingerprint||readOnlyPreparation(view,dispatchPlan)||preparationGameId(client)!==gameId||JSON.stringify(runeWriteContext(client))!==JSON.stringify(clickedContext)||expected&&expected.planId!==(activeCreativePlan?.id||''))throw Error('本人位置、选人或方案已变化，尚未操作；请重新核对');
   if(directClick&&!memberHeroAction(selection.id,selection.role).prepare)throw Error('当前英雄或位置已由队友选择，请查看队友配置或选择另一位');
   const result=await api.prepareSelection({...prepared.value,selection,sessionGameId:gameId,context:clickedContext});
+  await guideSyncChain;
   await sync(false,{fresh:true});
   if(!client.connected||client.phase!=='ChampSelect'||preparationGameId(client)!==gameId||client.session?.localPlayerCellId!==clickedContext.cellId){
    toast('选人已结束或进入新局，请按当前英雄重新选择配置');return result;
@@ -1076,7 +1084,7 @@ function renderSettings(){
  const toggle=(action,label,on)=>`<div class="setting-row"><b>${label}</b><button class="switch ${on?'on':''}" data-action="${action}" role="switch" aria-checked="${on}" aria-label="${label}"><i></i></button></div>`;
  return `${heading('','设置','','settings')}<div class="settings-grid">
  <section class="panel"><div class="panel-head"><h3>窗口与显示</h3></div><div class="panel-body"><div class="settings-actions">${button('player-flow-settings','选人与侧栏','settings','small')}${button('theme-open','配色','','small')}${button('presentation-open','字号与局内指引','settings','small')}${button('recover-guide','找回指引','book','quiet small')}</div>${toggle('client-companion','选人时显示侧栏',saved.preferences.clientCompanion!==false)}${toggle('guide-auto-show','进入对局时显示指引',saved.preferences.guideAutoShow!==false)}<div class="setting-row"><b>对局结束后</b><select class="select" id="guide-after-game" aria-label="游戏结束后的指引">${[['hide','隐藏指引'],['collapse','收起小窗'],['keep','保持显示']].map(([id,n])=>`<option value="${id}" ${(saved.preferences.guideAfterGame||'hide')===id?'selected':''}>${n}</option>`).join('')}</select></div><details class="ui-help"><summary>窗口与快捷键说明</summary><p>助手 Ctrl + Shift + Space；指引 Ctrl + Shift + G。窗口可移动、缩放，并在窗口设置恢复默认。</p><p>游戏建议使用无边框或窗口模式。独占全屏可能遮住指引。</p>${button('window-info','窗口检查','','small')}</details></div></section>
- <section class="panel"><div class="panel-head"><h3>游戏启动与连接</h3><span class="badge ${client.connected?'green':''}">${client.connected?'已连接':'未连接'}</span></div><div class="panel-body">${!client.connected?`<p class="callout warning">${e(client.message)}</p>`:''}<div class="setting-row"><div><b>启动程序</b><p>${e(saved.preferences.launchPath||'自动：优先 WeGame 英雄联盟')}</p></div>${button('choose-launch-path','选择程序','','small')}${button('reset-launch-path','恢复默认','','small')}</div><div class="settings-actions">${button('launch-game','打开英雄联盟','arrow','primary')}</div><div class="setting-row"><div><b>游戏目录</b><p style="word-break:break-all">${e(saved.preferences.installPath||'自动检测')}</p></div>${button('choose-dir','更改','','small')}</div><div class="settings-actions">${button('sync',syncing?'连接中…':'重新连接','refresh','small',syncing?'disabled':'')}</div>${toggle('auto-sync','自动同步选人',saved.preferences.autoSync!==false)}${toggle('auto-live','读取局内装备',saved.preferences.autoLive!==false)}<details class="ui-help"><summary>连接与权限说明</summary><p>只读取公开选人和本机局内接口，手动安排的位置会保留。配置客户端需要你点击。</p><p>若 Windows 提示授权，请确认后继续。连接失败时仍可手动搭配和查资料；也可退出助手后以管理员身份运行。</p></details></div></section>
+ <section class="panel"><div class="panel-head"><h3>游戏启动与连接</h3><span class="badge ${client.connected?'green':''}">${client.connected?'已连接':'未连接'}</span></div><div class="panel-body">${!client.connected?`<p class="callout warning">${e(client.message)}</p>`:''}<div class="setting-row"><div><b>启动程序</b><p>${e(saved.preferences.launchPath||'自动：优先 WeGame 英雄联盟')}</p></div>${button('choose-launch-path','选择程序','','small')}${button('reset-launch-path','恢复默认','','small')}</div><div class="settings-actions">${button('launch-game','打开英雄联盟','arrow','primary')}</div><div class="setting-row"><div><b>游戏目录</b><p style="word-break:break-all">${e(saved.preferences.installPath||'自动检测')}</p></div>${button('choose-dir','更改','','small')}</div><div class="settings-actions">${button('sync',syncing?'连接中…':'重新连接','refresh','small',syncing?'disabled':'')}</div>${toggle('auto-sync','自动同步选人',saved.preferences.autoSync!==false)}${toggle('auto-live','读取局内装备',saved.preferences.autoLive!==false)}<details class="ui-help"><summary>连接与权限说明</summary><p>读取公开选人和本机局内数据是自动的，不需要先授权。</p><p>仅当英雄联盟客户端以管理员身份运行时，Windows 会要求一次权限确认；确认后助手会自动继续读取。连接失败时仍可手动搭配和查资料。</p></details></div></section>
  ${appUpdatePanel({version:boot?.version,preferences:saved.preferences,update:appUpdate})}
  <section class="panel"><div class="panel-head"><h3>游戏资料</h3><span class="badge">${e(data.version)}</span></div><div class="panel-body">${toggle('auto-check','自动更新排行榜与配置',!!saved.preferences.autoCheck)}<div class="setting-row"><span role="status">${e(data.dataFeed?.message||'使用本地统计资料')}</span>${button('refresh-statistics',data.dataFeed?.phase==='checking'?'检查中…':'检查统计','refresh','small',data.dataFeed?.phase==='checking'?'disabled':'')}</div><div class="setting-row"><span>基础资料 · ${dateLabel(data.fetchedAt)}</span>${button('update',updating?'更新中…':'检查基础资料','refresh','small',updating?'disabled':'')}</div>${updateMessage?`<p id="update-message" role="status">${e(updateMessage)}</p>`:'<span id="update-message" role="status"></span>'}<details class="ui-help"><summary>版本与离线说明</summary><p>排行榜、常用配置和海克斯参考由资料服务器每天采集两次。助手后台检查，选人和对局期间暂存，回到大厅后启用；失败继续使用本地资料。资料按补丁匹配，来源的地域、段位和统计时间保留。</p><p>国服版本以客户端为准。基础资料可单独检查；人工搭配规则随软件更新。</p></details></div></section>
  <details class="settings-details"><summary>组合库管理</summary>${catalogPanel(data)}</details>
@@ -1236,7 +1244,7 @@ function recommendationInput(){
  // display freshness and every client write still require a fresh read.
  const at=Date.parse(client.eligibility?.receivedAt),now=Date.now(),referenceTime=Number.isFinite(at)?Math.min(now,at+15000):now;
  const eligibility=localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition:saved.draft?.playerPosition,now:referenceTime});
- const includePreselected=saved.preferences.includePreselected===true,confirmed=clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected}),session=confirmed.session,claiming=activeRoleClaim(positionClaim,client),singleParty=['party','context'].includes(scope)&&slots.filter(s=>s.party).length===1&&slots.find(s=>s.party)?.role===taskOwnRole();
+ const includePreselected=saved.preferences.includePreselected===true,confirmed=clientRecommendationDraft(slots,client.connected?client.session:null,data.champions,{includePreselected,ownRole:taskOwnRole()}),session=confirmed.session,claiming=activeRoleClaim(positionClaim,client),singleParty=['party','context'].includes(scope)&&slots.filter(s=>s.party).length===1&&slots.find(s=>s.party)?.role===taskOwnRole();
  let contextSession=!includePreselected&&(scope==='solo'||draftComparing)&&session?{...session,myTeam:session.myTeam.map(p=>p.cellId===session.localPlayerCellId?{...p,championPickIntent:0}:p)}:session;
  let base=draftComparing||scope==='solo'||singleParty?comparisonDraft(confirmed.slots,activeCreativePlan,session,data.champions):confirmed.slots;
  if(!includePreselected&&(claiming||singleParty||scope==='solo'))({slots:base,session:contextSession}=editableLocalDraft(base,session,data.champions,taskOwnRole()));
@@ -1285,7 +1293,7 @@ async function performSync(manual=true,fresh=false){
   if(matchupGame&&lastMatchupGame&&matchupGame!==lastMatchupGame||client.phase==='ChampSelect'&&!['Offline','ChampSelect'].includes(previousPhase)||['None','Lobby','Matchmaking','ReadyCheck'].includes(client.phase))matchupTargets.clear();
   if(matchupGame)lastMatchupGame=matchupGame;
   if(client.connected&&client.receivedAt)lastClientRead=client.receivedAt;else if(lastClientRead)client.receivedAt=lastClientRead;
-  if(manual&&client.needsElevation){toast('正在请求 Windows 连接授权…');client=await api.authorizeClient();}
+  if(manual&&client.needsElevation){toast('正在等待 Windows 权限确认…');client=await api.authorizeClient();}
   const draftContext=reconcileClientDraft({...saved.draft,slots,style,scope,soloRole},publicClientGameId(client),saved.guide?.match?.gameId,{phase:client.phase,previousPhase});
   if(draftContext.changed){saved.draft=draftContext.draft;slots=saved.draft.slots;soloRole=saved.draft.soloRole;changed=true;if(draftContext.newGame){newGame=true;clearSelectionUi();if(activeCreativePlan&&!saved.draft.creativePlan)creativePlanNotice='新局已开始，原组合不会自动沿用；可以从收藏重新选择。';activeCreativePlan=saved.draft.creativePlan||null;pendingIntentPreparation=null;companionPreview=null;matchupTargets.clear();unassigned=[];}persist({derived:!manual});}
   if(client.session){
@@ -1358,14 +1366,14 @@ async function useItemSet(action,el){
  if(action==='import-item-set'&&readOnlyPreparation(el.dataset.itemsetView==='companion'?'companion':'build',plan))throw Error('当前是只读配置，可导出参考；请回到本人的准备操作导入');
  const itemSet=createItemSet(champ(plan.selection.id),plan.build,data),key=JSON.stringify(itemSet),gameId=preparationGameId(client);
  if(el.closest('[data-itemset-fingerprint]')?.dataset.itemsetFingerprint!==key)throw Error('装备方案已变化，请查看当前方案后重新点击');
- itemSetPending=action;itemSetStatuses.set(key,{text:authorize?'正在等待 Windows 连接授权…':action==='import-item-set'?'正在写入当前装备集…':'正在导出当前装备集…'});render();if(buildView)renderBuild();
+ itemSetPending=action;itemSetStatuses.set(key,{text:authorize?'正在等待 Windows 权限确认…':action==='import-item-set'?'正在写入当前装备集…':'正在导出当前装备集…'});render();if(buildView)renderBuild();
  try{
   if(authorize)await api.authorizeClient();
   const result=await (action==='import-item-set'?api.importItemSet(itemSet):api.exportItemSet(itemSet));
   const text=action==='import-item-set'?itemSetSuccessStatus(result).text:result.exported?'已导出 JSON，可在客户端“藏品 → 装备”中导入。':'已取消导出，当前方案保留。';
   const current=action!=='import-item-set'||gameId===preparationGameId(client)&&(!result.preparationRevision||result.preparationRevision>=preparationRevision);
   if(current)itemSetStatuses.set(key,{...itemSetStatuses.get(key),text});if(current&&action==='import-item-set'&&el.dataset.itemsetView==='companion')returnToTeamAfterPreparation(plan.selection);toast(current?(result.title?text+' '+result.title:text):'装备集操作已结束，选人或配置已变化，请重新核对。');
- }catch(error){const text=String(error.message||'装备集操作未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');itemSetStatuses.set(key,{text:text+(action==='import-item-set'&&!text.includes('导出')?'；可点击“导出 JSON”手动导入。':''),error:true,needsAuthorization:text.includes('连接授权')});toast(text,true);
+ }catch(error){const text=String(error.message||'装备集操作未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');itemSetStatuses.set(key,{text:text+(action==='import-item-set'&&!text.includes('导出')?'；可点击“导出 JSON”手动导入。':''),error:true,needsAuthorization:text.includes('Windows 权限')||text.includes('连接授权')});toast(text,true);
  }finally{itemSetPending='';while(itemSetStatuses.size>50)itemSetStatuses.delete(itemSetStatuses.keys().next().value);render();if(buildView)renderBuild();}
 }
 async function applyPreparedRunes(page,ticket){
@@ -1462,6 +1470,7 @@ document.addEventListener('change',event=>{
 
 function historyChartAction(event){const el=event.target.closest?.('[data-history-chart][data-value]');if(!el)return false;const detail=history.current()?.details[el.dataset.historyChart];if(detail&&['chartFrame','chartPlayer','rawStatsMetric'].includes(el.dataset.chartField)){detail[el.dataset.chartField]=el.dataset.value;render();return true;}return false;}
 document.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)&&event.target.matches?.('[data-history-chart][data-value]')){event.preventDefault();historyChartAction(event);}});
+document.addEventListener('keydown',event=>{const tab=event.target.closest?.('.history-detail-tabs [role=tab]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;const tabs=[...tab.parentElement.querySelectorAll('[role=tab]')],index=tabs.indexOf(tab),next=event.key==='Home'?tabs[0]:event.key==='End'?tabs.at(-1):tabs[(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];event.preventDefault();next.click();});
 document.addEventListener('click',async event=>{
  if(historyChartAction(event))return;
  const el=event.target.closest('[data-action]');if(!el){if(event.target.dataset.backdrop)closeOverlay();return;}
@@ -1816,7 +1825,7 @@ else if(action==='app-update-mirror-clear'){saved.preferences.updateMirror='';aw
  else if(action==='link')await api.openLink(el.dataset.url);
  }catch(err){toast(err.message||'操作没有完成，请重试',true);}
 });
-document.addEventListener('submit',event=>{if(event.target.id==='history-search'){event.preventDefault();history.state.query=document.getElementById('history-query').value;history.search().catch(error=>toast(error.message,true));return;}if(event.target.id==='catalog-form'){event.preventDefault();overlay.querySelector('[data-action=catalog-save]')?.click();}});
+document.addEventListener('submit',event=>{if(event.target.id==='history-search'){event.preventDefault();history.state.query=document.getElementById('history-query').value;const search=event.target.closest('details');if(search)search.open=false;history.search().catch(error=>toast(error.message,true));return;}if(event.target.id==='catalog-form'){event.preventDefault();overlay.querySelector('[data-action=catalog-save]')?.click();}});
 document.addEventListener('input',event=>{if(event.target.id==='history-query')history.state.query=event.target.value;});
 document.addEventListener('change',event=>{const el=event.target,tab=history.current();if(tab&&el.dataset.historyTool==='mastery-query'&&!history.state.streamer){tab.masteryQuery=String(el.value).slice(0,96);render();}});
 document.addEventListener('input',event=>{const el=event.target,tab=history.current(),detail=tab?.details[el.dataset.historyChart];if(!detail||el.dataset.chartField!=='rawStatsQuery')return;detail.rawStatsQuery=String(el.value).slice(0,96);render();});

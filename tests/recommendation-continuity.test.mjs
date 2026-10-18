@@ -14,7 +14,7 @@ import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-elig
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
 import {pregamePhase,restoredRoleClaim} from '../src/core/pregame-intent.mjs';
-import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,editPartyRange} from '../src/core/party-range.mjs';
+import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,editPartyRange,savedPartyCount} from '../src/core/party-range.mjs';
 import {rebaseWindowState} from '../src/core/window-state.mjs';
 import {createDisclosureState} from '../src/disclosure-state.mjs';
 import {captureCreativePlan,creativeMemberCombo,creativeComboContext,creativePlanCompatible,validateCreativePlan} from '../src/core/creative-plan.mjs';
@@ -75,7 +75,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
   lastTaskSelection:null,companionPreview:null,companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',lastCompanionLocked:'',showAllCandidates:false,recommendationError:'',renderedDraftResults:null,disclosureState:createDisclosureState(),renderedDisclosureScope:'',selectionUiReset:false,selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,clickedRoomPlan:null,roomRoleChoice:null,companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
   recommendationSessionSeed:'test-session',clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
-  structuredClone,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
+  structuredClone,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
@@ -115,6 +115,31 @@ test('client identity bindings preserve candidates and an in-flight recommendati
  assert.equal(s.context.recommendationKey(s.context.recommendationInput()),signature);
  assert.equal(s.context.results,before);assert.equal(s.calls.stale,0);assert.equal(s.calls.cancel,0);
  assert.equal(s.context.activeRecommendation,s.worker);assert.equal(s.context.generating,true);assert.equal(s.context.recommendationRun,0);
+});
+
+test('a hero click dispatches before an unrelated pending guide synchronization finishes',async()=>{
+ const {context:c,calls}=setup();let releaseGuide,selected;
+ c.guideSyncChain=new Promise(resolve=>{releaseGuide=resolve;});const dispatched=new Promise(resolve=>{selected=resolve;});
+ const prepare=c.api.prepareSelection;c.api.prepareSelection=async value=>{selected();return prepare(value);};
+ c.selectedClientPreparation=()=>({selection:{id:'Ashe',role:'bottom',mode:'rift'},build:getBuild(hero('Ashe'),'bottom',data)});
+ const pending=c.useClientPreparation({dataset:{preparationView:'task'}},true);
+ await Promise.race([dispatched,new Promise((_,reject)=>setTimeout(()=>reject(Error('Selection waited for the guide')),1000))]);
+ assert.equal(calls.prepared.length,1);assert.equal(calls.prepared[0].champion,'Ashe');releaseGuide();await pending;
+});
+
+test('cancelled Windows permission is requested once per manual click and automatic polling never retries it',async()=>{
+ const mainSource=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),from=mainSource.indexOf('   // Reading public client data'),to=mainSource.indexOf('   if(ballotRoundChanged',from);
+ assert.ok(from>0&&to>from);const authorization=mainSource.slice(from,to);
+ for(const manual of [true,false]){
+  const {context:c}=setup();let attempts=0,attempted=false;
+  c.api.client=async force=>{
+   const scope={force,latestClient:{connected:false,phase:'Offline',needsElevation:true},elevatedReadAttempted:attempted,state:{preferences:{}},helper:{ensure:async()=>{attempts++;throw Error('模拟取消权限');}}};
+   await vm.runInNewContext('(async()=>{'+authorization+'})()',scope);attempted=scope.elevatedReadAttempted;return scope.latestClient;
+  };
+  c.api.authorizeClient=async()=>{attempted=true;attempts++;throw Error('模拟取消权限');};
+  await c.performSync(manual,manual);assert.equal(attempts,1,manual?'First manual click':'First automatic attempt');
+  await c.performSync(manual,manual);assert.equal(attempts,manual?2:1,manual?'A second explicit click may retry':'Polling must wait for an explicit click');
+ }
 });
 
 test('a lobby role click crossing into selection applies a complete position claim without locking',async()=>{

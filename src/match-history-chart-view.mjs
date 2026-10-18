@@ -1,4 +1,5 @@
 import {escape as e} from './ui.mjs';
+import {historyTextTip} from './match-history-hover.mjs';
 import {timelineAnalysisView} from './match-history-timeline-view.mjs';
 import {historyStatsView} from './match-history-stats-view.mjs';
 
@@ -69,7 +70,7 @@ export function historyTimelineChart(d){
  const line=s=>{
   let path='',drawing=false;
   for(const row of rows){if(!Number.isFinite(row.timestamp)||!Number.isFinite(row[s.key])){drawing=false;continue;}path+=(drawing?'L':'M')+x(row)+','+y(row[s.key]);drawing=true;}
-  return `<path data-chart-series="${e(s.name)}" d="${path}" fill="none" stroke="${s.color}" stroke-width="2.5"${s.dashed?' stroke-dasharray="7 4"':''}/>${rows.filter(row=>Number.isFinite(row.timestamp)&&Number.isFinite(row[s.key])).map(row=>`<circle cx="${x(row)}" cy="${y(row[s.key])}" r="2.5" fill="${s.color}"><title>${time(row.timestamp)} · ${e(s.label)}：${num(row[s.key])}${coverage(row,s)}</title></circle>`).join('')}`;
+   return `<path data-chart-series="${e(s.name)}" d="${path}" fill="none" stroke="${s.color}" stroke-width="2.5"${s.dashed?' stroke-dasharray="7 4"':''}/>${rows.filter(row=>Number.isFinite(row.timestamp)&&Number.isFinite(row[s.key])).map(row=>`<circle cx="${x(row)}" cy="${y(row[s.key])}" r="3.5" fill="${s.color}" ${historyTextTip(s.label,`${time(row.timestamp)} · ${metrics[metric]}：${num(row[s.key])}${coverage(row,s)}\n已结束对局的实际采样值`)}><title>${time(row.timestamp)} · ${e(s.label)}：${num(row[s.key])}${coverage(row,s)}</title></circle>`).join('')}`;
  };
  const playerChoices=(game.participants||[]).slice(0,30).map(p=>[p.id,playerName(p)]);
  const selector=`<div class="history-chart-controls">${controls(d,'chartMetric','统计',Object.entries(metrics),metric)}${controls(d,'chartMode','展示方式',[['player','玩家曲线'],['compare','玩家对比'],['difference','差值曲线'],['multi','多玩家同时对比'],['team','队伍平均对比']],mode)}${controls(d,'chartPlayer','玩家 / 属性快照',playerChoices,player?.id)}${controls(d,'chartCompare','对比',[['','不对比'],...playerChoices.filter(([id])=>id!==player?.id)],other?.id||'')}${mode==='multi'?controls(d,'chartPlayers','同时显示玩家（Ctrl / Shift 多选）',playerChoices,players.map(p=>p.id),true):''}${controls(d,'chartTeam','叠加队伍平均',[['','不显示'],['all','各队已知队员平均'],...teams.map(team=>[team,teamName(team)+'平均'])],chartTeam)}</div>`;

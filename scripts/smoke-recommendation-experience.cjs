@@ -56,6 +56,14 @@ async function run(){
  await click('#include-preselected');await until(()=>js('document.querySelectorAll(".companion-candidate").length>0&&[...document.querySelectorAll(".companion-candidate")].every(r=>r.querySelector("[data-id=Ashe]"))'),'Opt-in did not anchor hover');
  const state=JSON.parse(await fs.readFile(path.join(root,'settings.json')));assert.equal(state.preferences.includePreselected,true);assert.equal(state.draft.slots.filter(s=>s.party).length,3);
  await capture('sidebar-preselected-on.png');
+ // Blind pick may omit lanes and report the local choice only as an intent.
+ // The same opt-in must keep both that hero and an unbound ally in candidates.
+ fixture.session.myTeam[0].assignedPosition='';fixture.session.myTeam[2].assignedPosition='';
+ await sync();await generate();
+ assert.ok(await js('document.querySelectorAll(".companion-candidate").length>0&&[...document.querySelectorAll(".companion-candidate")].every(r=>r.querySelector("[data-id=Ashe]")&&r.querySelector("[data-id=Nami]"))'),'Blind-pick hovers were omitted from the recommendation');
+ assert.equal(fixture.session.myTeam[0].championId,0);assert.ok(fixture.session.myTeam[0].championPickIntent>0);
+ await capture('sidebar-blind-preselected-on.png');
+ fixture.session.myTeam[0].assignedPosition='BOTTOM';fixture.session.myTeam[2].assignedPosition='UTILITY';await sync();
  await click('#include-preselected');await until(()=>js('document.querySelectorAll(".companion-candidate").length>0&&[...document.querySelectorAll(".companion-candidate")].some(r=>!r.querySelector("[data-id=Ashe]"))'),'Opt-out retained hover anchor');
  fixture.session.myTeam[0].championId=hero('Ashe').key;fixture.session.myTeam[0].championPickIntent=0;fixture.session.myTeam[0].pickState='locked';fixture.session.actions[0][0]={actorCellId:0,type:'pick',championId:hero('Ashe').key,completed:true};await sync();
  await until(()=>js('document.querySelector(".companion-tabs .active")?.dataset.tab==="plan"'),'Lock did not navigate');await capture('sidebar-locked-configuration.png');

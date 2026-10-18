@@ -45,10 +45,13 @@ test('hidden identities cannot render a stale profile, history, groups, met coun
  const html=card(ongoingGameView(s,data));assert.match(html,/身份隐藏/);assert.doesNotMatch(html,/HIDDEN-NOTE|STALE-NOTICE|流光翡翠|data-id="123"|曾同局 42|历史共同对局 10/);assert.match(html,/data-action="ongoing-history"[^>]*disabled/);
 });
 
-test('parsed Riot role objects render Chinese assignment and autofill details without object coercion',()=>{
+test('parsed Riot role objects render Chinese assignment and autofill details without object coercion',async()=>{
+ const {ongoingTooltipView}=await import('../src/ongoing-game-hover.mjs');
  const s=state(),p=s.roster.players[0];p.position='';p.role={current:'UTILITY',assignmentReason:'AUTOFILL',primary:'BOTTOM',secondary:'MIDDLE',fill:'TOP'};
- let html=card(ongoingGameView(s,data));for(const label of ['系统补位','主选 下路','副选 中路','补位信息','辅助'])assert.ok(html.includes(label),label);assert.doesNotMatch(html,/\[object Object\]|AUTOFILL|UNSELECTED/);assert.match(html,/data-position="UTILITY"/);
- p.role={current:'BOTTOM',assignmentReason:'FILL_SECONDARY',primary:'BOTTOM',secondary:'UTILITY',fill:'NONE'};html=card(ongoingGameView(s,data));assert.match(html,/副选补位/);assert.doesNotMatch(html,/补位信息/);
+ let html=card(ongoingGameView(s,data));for(const label of ['系统补位','辅助'])assert.ok(html.includes(label),label);
+ assert.doesNotMatch(html,/\[object Object\]|AUTOFILL|UNSELECTED/);assert.match(html,/data-position="UTILITY"/);assert.match(html,/ongoing-role-reason is-fill/);
+ const hover=ongoingTooltipView(s,{dataset:{ongoingTip:'position',tipPlayer:p.key}},data);for(const label of ['辅助','主选位置','下路','副选位置','中路','补位信息','上路'])assert.ok(hover.includes(label),label);assert.doesNotMatch(hover,/\[object Object\]|AUTOFILL|UNSELECTED|NaN|undefined/);
+ p.role={current:'BOTTOM',assignmentReason:'FILL_SECONDARY',primary:'BOTTOM',secondary:'UTILITY',fill:'NONE'};html=card(ongoingGameView(s,data));assert.match(html,/副选补位/);assert.doesNotMatch(ongoingTooltipView(s,{dataset:{ongoingTip:'position',tipPlayer:p.key}},data),/补位信息/);
  p.role=null;html=card(ongoingGameView(s,data));assert.doesNotMatch(html,/系统补位|副选补位|ongoing-role-reason/);
  s.players.p1.page.player={privacy:'PRIVATE'};assert.equal(tag(ongoingGameView(s,data),'privacy'),true);
  s.players.p1.detailsLoading=true;s.players.p1.loadedDetails=2;html=card(ongoingGameView(s,data));assert.match(html,/aria-busy="true"/);assert.match(html,/正在读取详细样本 2 \/ 20/);

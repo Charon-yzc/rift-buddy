@@ -31,6 +31,13 @@ test('a reference build can be applied with an unknown lane and busy operation b
  const other=make({...selection,summonerIds:[...plan.build.summoners].reverse()});assert.equal(preparationProgress({data,plan:other,client,pendingKey}).pending,false);
 });
 
+test('busy preparation distinguishes choosing the hero from preparing the already visible hero',()=>{
+ const pendingKey=clientPreparationKey(client,clientPreparationPlan(data,plan));
+ assert.match(preparationProgress({data,plan,client,pendingKey}).title,/英雄已选，正在配置/);
+ const blank={...client,session:{...client.session,myTeam:[{cellId:0,championId:0}],actions:[]}};
+ assert.match(preparationProgress({data,plan,client:blank,pendingKey}).title,/正在选择英雄/);
+});
+
 test('A → B → A cannot revive overwritten resource confirmations; browsing alone can',()=>{
  const prepared=clientPreparationPlan(data,plan),key=clientPreparationKey(client,prepared),statuses=new Map([[key,record()]]);
  assert.equal(preparationProgress({data,plan,client,statuses}).complete,true);

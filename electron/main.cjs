@@ -7,7 +7,7 @@ const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
 let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,windowObserver,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
-let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null;
+let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
 let stateRevision=0,dataRevision=0;
@@ -554,6 +554,15 @@ async function boot(){
  const status=createClientSync(async(force=false)=>{
   if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:3000):5000))return latestClient;
   statusTask=(async()=>{const previousClient=latestClient,previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
+   // Reading public client data is automatic. When the client runs with higher
+   // privileges, Windows alone decides whether it will let us read it, so ask
+   // once per run instead of making the player start an authorization step.
+   // A forced/manual read leaves its single permission request to the
+   // renderer. Otherwise cancelling it would immediately trigger a second UAC.
+   if(!force&&latestClient?.needsElevation&&!elevatedReadAttempted){
+    elevatedReadAttempted=true;
+    try{await helper.ensure(state.preferences?.installPath);latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{}
+   }
    if(ballotRoundChanged(latestClient))clearRoomBallot();
    feedIdle=observeFeedPhase(latestClient);dataFeed.activate();
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
@@ -631,7 +640,7 @@ async function boot(){
    return current;
   });return {state,revision:stateRevision};
  });
- guard('authorize-client',async()=>{await helper.ensure(state.preferences?.installPath);return forRenderer(await status(true));});
+ guard('authorize-client',async()=>{elevatedReadAttempted=true;await helper.ensure(state.preferences?.installPath);return forRenderer(await status(true));});
  let launchingGame=false;
  guard('launch-game',async()=>{
   if(launchingGame)throw Error('正在启动，请稍候');launchingGame=true;

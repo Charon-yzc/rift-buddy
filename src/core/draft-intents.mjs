@@ -12,7 +12,7 @@ export function confirmedPlayerPick(player,session){
 
 // Search evidence is separate from the visible roster. Neither a hover nor an
 // adopted/offline proposal is a confirmed pick in this live client session.
-export function clientRecommendationDraft(slots,session,champions,{includePreselected=false}={}){
+export function clientRecommendationDraft(slots,session,champions,{includePreselected=false,ownRole=''}={}){
  if(!Array.isArray(session?.myTeam))return {slots,session};
  const byKey=new Map(champions.map(champion=>[Number(champion.key),champion.id]));
  const visible=player=>Number(player.championId||player.championPickIntent);
@@ -20,9 +20,20 @@ export function clientRecommendationDraft(slots,session,champions,{includePresel
  const candidates=session.myTeam.filter(player=>valid(player)&&(confirmedPlayerPick(player,session)||includePreselected)&&byKey.has(visible(player)));
  const picked=candidates.filter(player=>confirmedPlayerPick(player,session)||candidates.filter(other=>visible(other)===visible(player)).length===1);
  const placements=new Map();
+ const unplaced=[];
  for(const player of [...picked].sort((a,b)=>Number(slots.some(slot=>slot.clientCellId===b.cellId))-Number(slots.some(slot=>slot.clientCellId===a.cellId)))){
   const id=byKey.get(visible(player)),assigned=CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()];
-  const target=[slots.find(slot=>slot.clientCellId===player.cellId),slots.find(slot=>slot.champion===id&&slot.manualPosition&&!Number.isInteger(slot.clientCellId)),slots.find(slot=>slot.role===assigned),slots.find(slot=>slot.champion===id&&!Number.isInteger(slot.clientCellId))].find(slot=>slot&&!placements.has(slot.role)&&(!Number.isInteger(slot.clientCellId)||slot.clientCellId===player.cellId));
+  const target=[slots.find(slot=>slot.clientCellId===player.cellId),slots.find(slot=>slot.champion===id&&slot.manualPosition&&!Number.isInteger(slot.clientCellId)),slots.find(slot=>includePreselected&&!confirmedPlayerPick(player,session)&&player.cellId===session.localPlayerCellId&&slot.role===ownRole),slots.find(slot=>slot.role===assigned),slots.find(slot=>slot.champion===id&&!Number.isInteger(slot.clientCellId))].find(slot=>slot&&!placements.has(slot.role)&&(!Number.isInteger(slot.clientCellId)||slot.clientCellId===player.cellId));
+  if(target)placements.set(target.role,player);else unplaced.push(player);
+ }
+ // Blind pick often supplies only an intent, without a lane or roster binding.
+ // Reserve explicit lanes first, then place unlocked hovers in a temporary
+ // usual lane. This search copy never changes the player's saved position.
+ for(const player of unplaced){
+  if(!includePreselected||confirmedPlayerPick(player,session)||CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()]||player.cellId===session.localPlayerCellId&&ownRole||slots.some(slot=>slot.clientCellId===player.cellId))continue;
+  const champion=champions.find(value=>Number(value.key)===visible(player));
+  const preferred=[...profile(champion).roles,...ROLES.map(role=>role.id)];
+  const target=preferred.map(role=>slots.find(slot=>slot.role===role)).find(slot=>slot&&!placements.has(slot.role)&&!Number.isInteger(slot.clientCellId)&&!slot.manualPosition);
   if(target)placements.set(target.role,player);
  }
  const next=slots.map(slot=>{
@@ -69,7 +80,7 @@ export function comparisonDraft(slots,plan,session,champions){
 // Temporary recommendation context only. Public hovers remain unlocked and
 // must not replace the canonical, persisted draft or authorize client writes.
 export function recommendationDraft(slots,session,champions,{ownRole='',bans=[],disabled=[],eligibleByRole={},party=null,confirmedOnly=false,includePreselected=false}={}){
- if(confirmedOnly)return clientRecommendationDraft(slots,session,champions,{includePreselected}).slots;
+ if(confirmedOnly)return clientRecommendationDraft(slots,session,champions,{includePreselected,ownRole}).slots;
  const next=structuredClone(slots).map(slot=>{
   if(!slot.publicIntent)return slot;
   const {publicIntent,...rest}=slot;return {...rest,champion:null,locked:false};

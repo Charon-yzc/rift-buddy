@@ -1,10 +1,41 @@
 const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain}=require('electron');
-const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
-const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),delay=ms=>new Promise(r=>setTimeout(r,ms));
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
+const windows=[],root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),delay=ms=>new Promise(r=>setTimeout(r,ms)),clientBroadcasts=[];
+/** Record every client snapshot the main process pushes to a window. */
+function recordClientBroadcast(channel,payload){if(channel==='client-update')clientBroadcasts.push(payload?.phase||'Offline');}
+// One synthetic client for both the main process (loopback reads) and the
+// renderer (IPC). A divergent main-side snapshot must not silently replace the
+// fixture mid-flow: that is a harness inconsistency, not a product behavior.
+let syntheticClient=null,syntheticReads=0;
+https.request=(options,callback)=>{
+ const request=new EventEmitter();request.write=body=>{options.body=body;};
+ request.end=()=>queueMicrotask(()=>{try{
+  if(!syntheticClient)throw Error('Synthetic client not connected');
+  syntheticReads++;
+  assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-user-flow');
+  const route=options.path,champion=syntheticClient.session.myTeam[0];
+  const value=
+   route==='/lol-gameflow/v1/gameflow-phase'?'ChampSelect':
+   route==='/lol-gameflow/v1/session'?{map:{id:11,gameMode:'CLASSIC'},gameData:{gameId:Number(syntheticClient.session.gameId)||0,mapId:11,queue:{id:420,gameMode:'CLASSIC'}}}:
+   route==='/lol-champ-select/v1/session'?{gameId:syntheticClient.session.gameId,localPlayerCellId:syntheticClient.session.localPlayerCellId,myTeam:syntheticClient.session.myTeam,theirTeam:[],bans:{myTeamBans:[],theirTeamBans:[]},actions:syntheticClient.session.actions,timer:{phase:'PLANNING',adjustedTimeLeftInPhase:45000},allowDuplicatePicks:false}:
+   route==='/lol-summoner/v1/current-summoner'?{puuid:'isolated-user-flow-own',summonerId:1,gameName:'合成本人',tagLine:'TEST',summonerLevel:100}:
+   route==='/lol-champ-select/v1/pickable-champion-ids'||route==='/lol-champ-select/v1/disabled-champion-ids'?[]:
+   route==='/lol-lobby/v2/lobby'?{localMember:{puuid:'isolated-user-flow-own',gameName:'合成本人',tagLine:'TEST',isLeader:true},members:[]}:
+   route==='/riotclient/region-locale'?{region:'TEST'}:null;
+  const response=new EventEmitter();response.statusCode=200;callback(response);response.emit('data',Buffer.from(JSON.stringify(value)));response.emit('end');request.emit('close');
+ }catch(error){request.emit('error',error);}});
+ request.destroy=error=>{if(error)request.emit('error',error);};
+ return request;
+};
+cp.spawn=file=>{assert.ok(String(file).endsWith('.exe'),'Unexpected native subprocess');const child=new EventEmitter();child.stdout=new EventEmitter();child.stdout.setEncoding=()=>{};child.stderr=new EventEmitter();child.stderr.setEncoding=()=>{};child.exitCode=null;child.stdin={end(){child.exitCode=0;child.emit('exit',0);}};child.kill=()=>child.stdin.end();return child;};
+cp.execFile=(file,args,options,callback)=>{queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
 app.setPath('userData',root);
-app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);});
-async function until(check,label){for(let n=0;n<150;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
+app.on('browser-window-created',(_e,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.webContents.setBackgroundThrottling(false);const send=w.webContents.send.bind(w.webContents);w.webContents.send=(channel,payload)=>{recordClientBroadcast(channel,payload);return send(channel,payload);};});
+// Waits for an asynchronous write to land, so the budget only absorbs machine
+// speed. Assertions and their expected values are unchanged.
+async function until(check,label,tries=150){for(let n=0;n<tries;n++){const v=await check();if(v)return v;await delay(100);}throw Error(label);}
+const WRITE_SETTLED=300;
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=JSON.parse(await fs.readFile('release/latest.json','utf8'));
  const register=ipcMain.handle.bind(ipcMain);
@@ -82,10 +113,15 @@ async function run(){
  const bootstrapData=(await js('window.buddy.bootstrap()')).data,champion=bootstrapData.champions.find(c=>c.id==='Garen');
  let publicFixture={connected:true,phase:'ChampSelect',message:'测试公开选人',mode:{id:'rift',label:'峡谷'},game:{gameId:'6601'},session:{gameId:'6601',localPlayerCellId:1,myTeam:[{cellId:1,championId:champion.key,assignedPosition:'TOP',championPickIntent:0}],theirTeam:[],bans:[],actions:[[{id:4,type:'pick',actorCellId:1,championId:champion.key,completed:false,isInProgress:true}]]}};
  const prepares=[];ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>structuredClone(publicFixture));
+ // From here the main process reads the same synthetic pick through the
+ // isolated lockfile, so no stale offline snapshot can replace it.
+ syntheticClient=publicFixture;
  ipcMain.removeHandler('prepare-selection');ipcMain.handle('prepare-selection',(_event,value)=>{prepares.push(value);const selected=bootstrapData.champions.find(hero=>hero.id===value.champion);publicFixture.session.myTeam[0].championId=0;publicFixture.session.myTeam[0].championPickIntent=selected.key;return {complete:true,steps:Object.fromEntries(['hover','runes','spells','items'].map(step=>[step,{status:'done',...(step==='runes'?{pageId:44}:{})}]))};});
- await click('[data-action=sync]');await until(()=>js('!!document.querySelector(".champ-pick[data-id=Garen]")'),'Mock public pick not read');
- await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
- await until(()=>prepares.length===1,'A different unlocked reference hero was not prepared');
+  await click('[data-action=sync]');await until(()=>js('!!document.querySelector(".champ-pick[data-id=Garen]")'),'Mock public pick not read');
+  assert.equal((await state()).preferences.autoSync,false,'Synthetic client-status fixture must not enable native background polling');
+  assert.ok(clientBroadcasts.every(phase=>phase==='ChampSelect'),'The main process published a client snapshot that disagrees with the synthetic pick');
+  await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=bottom]');await click('[data-action=build][data-id=Seraphine]');
+ try{await until(()=>prepares.length===1,'A different unlocked reference hero was not prepared');}catch(error){console.error('UNLOCKED_REFERENCE_CONTEXT',JSON.stringify({prepares:prepares.map(p=>({champion:p.champion,role:p.role})),publicPhase:publicFixture.phase,syntheticReads,ui:await js('({toast:document.querySelector("#toast")?.textContent,route:document.querySelector("main[data-page]")?.dataset.page,pending:document.querySelector("[data-action=sync]")?.disabled,drawer:!!document.querySelector(".drawer")})')}));throw error;}
  assert.equal(prepares[0].champion,'Seraphine');assert.equal(prepares[0].role,'bottom');assert.equal(prepares[0].page.selectedPerkIds.length,9);assert.ok(prepares[0].itemSet.blocks.length);
  await until(()=>js('!document.querySelector(".drawer")'),'Unconfirmed hero click must keep configuration closed');
  await click('[data-action=navigate][data-route=draft]');await until(()=>js('!!document.querySelector("[data-action=task-configuration]")'),'Prepared hero configuration entry missing');await click('[data-action=task-configuration]');
@@ -94,7 +130,13 @@ async function run(){
  assert.equal(await js('document.querySelectorAll(".rune-target-warning").length'),0,'The reference lane must not block an explicit unlocked hero choice');
  // Changing the arranged partner must not leak a former combo's private build.
  // Return to manual planning and explicitly choose our own bottom role first.
- await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'None',message:'测试手动配置'}));
+ // A disconnected client is Offline, not None (the connected lobby phase).
+ // Reporting None only to the renderer clears the offline arrangement again
+ // on reload, while the main process correctly retains it as Offline.
+ await click('[data-action=close]');ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>({connected:false,phase:'Offline',message:'测试手动配置'}));
+ // Keep the main process on the same fixture: it must report the same offline
+ // client the renderer now sees, or its broadcast would resurrect the pick.
+ syntheticClient=null;
  await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Manual planning sync missing');
  await click('[data-action=navigate][data-route=draft]');await click('[data-action=reset-draft]');await click('[data-action=close]');
  await js('{const role=document.querySelector("#solo-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');
@@ -102,15 +144,18 @@ async function run(){
  // The display roster no longer offers manual hero insertion or configuration clicks.
  const arrange=async partner=>{const base=await state(),next=structuredClone(base);next.draft.slots=next.draft.slots.map(slot=>['bottom','support'].includes(slot.role)?{...slot,champion:slot.role==='bottom'?'Rengar':partner,locked:true}:slot);await js('window.buddy.saveState('+JSON.stringify(next)+','+JSON.stringify(base)+')');await until(async()=>(await state()).draft.slots.some(slot=>slot.role==='support'&&slot.champion===partner),'Partner fixture did not reach saved state');await new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.reload();});await until(()=>js('!!document.querySelector("[data-action=navigate][data-route=builds]")'),'Reloaded fixture UI missing');};
  const openRengar=async()=>{await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=all]');await js('{const input=document.querySelector("#library-search");input.value="Rengar";input.dispatchEvent(new Event("input",{bubbles:true}));}');await click('.hero-tile[data-id=Rengar]');await until(()=>js('!!document.querySelector("#configuration-role,#build-role")'),'Configuration role control missing');await js('{const role=document.querySelector("#configuration-role,#build-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');};
- await arrange('Ivern');await openRengar();await click('[data-action=build-loadout][data-id=rengar-bush]');
+ // Always perform the intended partner change before inspecting its result.
+ // Retrying based on the combo UI could skip the change or hide a regression.
+ const openPartner=async partner=>{await arrange(partner);await openRengar();const current=await state();assert.equal(current.draft.slots.find(slot=>slot.role==='bottom')?.champion,'Rengar','Arranged own hero was lost');assert.equal(current.draft.slots.find(slot=>slot.role==='support')?.champion,partner,'Arranged partner was lost');};
+ await openPartner('Ivern');await click('[data-action=build-loadout][data-id=rengar-bush]');
  await until(()=>js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),'Rengar Ivern private build missing');
- await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing');
- await click('[data-action=close]');await arrange('Nami');await openRengar();
+ await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing',WRITE_SETTLED);
+ await click('[data-action=close]');await openPartner('Nami');
  assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.equal(await js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),false);
- await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide');
- await click('[data-action=close]');await arrange('Ivern');await openRengar();
+ await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide',WRITE_SETTLED);
+ await click('[data-action=close]');await openPartner('Ivern');
  await until(()=>js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),'Returning combo choice not restored');
- await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide');
+ await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide',WRITE_SETTLED);
  await capture('partner-context-isolation.png');
  // A full backend selection can remove fields. They must not be resurrected by
  // the already-open main-window configuration's next render/sync.
@@ -119,4 +164,4 @@ async function run(){
  const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,restartRestore:true,partnerRoundTrip:true,interleavedGuideEdits:true,hexContextPreserved:true,successiveReplacements:true,failedReplacementRecovery:true,fixedFooter720:true,returnToScheme:true,cancelOnPreferenceEdit:true,unlockedReferenceHeroPrepares:true,changedPartnerClearsCombo:true,returningComboRestoresChoices:true,backendDeletedFieldsStayDeleted:true,actualRuneWrites:false,screenshots:root};
  await fs.writeFile(path.join(root,'user-flow-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
-run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'user-flow-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});
+run().catch(async e=>{console.error(e);try{const target=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));console.error('FAILURE_CONTEXT '+(target?await target.webContents.executeJavaScript('window.buddy.bootstrap().then(b=>JSON.stringify({selection:b.state.guide?.selection||null,toast:document.querySelector("#toast")?.textContent||"",page:document.body.innerText.slice(0,700)}))'):'{}'));}catch(error){console.error('FAILURE_CONTEXT '+String(error.message||error));}await fs.writeFile(path.join(root,'user-flow-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

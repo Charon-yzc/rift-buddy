@@ -92,15 +92,15 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
    const args=[...helperArgs,`--buddy-data=${userData}`,`--lcu-helper=${sessionFile}`];
    let launchError=null,launcher;
    try{
-   onProgress('正在启动连接授权；如果 Windows 出现系统确认，请选择“是”');
+   onProgress('正在请求 Windows 权限；如果出现系统确认，请选择“是”');
    launcher=await launch({executable:helperExecutable||executable,args,recordFile:nextRecord,launcherExecutable,bundleRoot:helperBundleRoot||bundleRoot,userData,sessionFile:nextFile,
-    onError:()=>{launchError='Windows 连接授权未能启动，请重试连接';},
+    onError:()=>{launchError='Windows 权限确认未能启动，请重试连接';},
     onExit:code=>{if(code!==0)launchError='Windows 未能启动连接助手，请重试连接';}});
    const deadline=Date.now()+startupTimeoutMs;let launched=false;
    while(Date.now()<deadline){
     if(closed)throw Error('连接已取消');
     let record;try{record=JSON.parse((await fs.readFile(nextRecord,'utf8')).replace(/^\uFEFF/,''));}catch{}
-    if(record?.phase==='failed')launchError=record.nativeCode===1223?'Windows 授权已取消，可重新点击连接':'Windows 未能启动连接助手，请重试连接';
+    if(record?.phase==='failed')launchError=record.nativeCode===1223?'Windows 权限确认已取消，可点击重试读取':'Windows 未能启动连接助手，请重试连接';
     if(launchError)throw new Error(launchError);
     if(record?.phase==='launched'&&!launched){launched=true;onProgress('授权进程已启动，正在建立本机连接…');}
     try{const ready=await requestHelper(next,'ping',{},750);if(ready.ready){
@@ -112,7 +112,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
     }catch(error){if(error.startupFailure)throw error;}
     await new Promise(r=>setTimeout(r,200));
    }
-   throw new Error('Windows 授权或连接进程启动未完成。可重试连接，或退出助手后从桌面以管理员身份运行');
+   throw new Error('Windows 权限确认或连接进程启动未完成。可点击重试读取，或退出助手后从桌面以管理员身份运行');
    }finally{
     // Deleting this one-time session also prevents a late consent response from
     // starting an abandoned helper. Terminate only our unelevated launcher.

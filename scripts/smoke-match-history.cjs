@@ -38,6 +38,10 @@ async function run(){
  await until(()=>{main=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
   const js=code=>main.webContents.executeJavaScript(code,true),click=selector=>until(()=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Control missing '+selector),capture=async name=>{await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  await click('[data-action=navigate][data-route=history]');assert.equal(await js('!!document.querySelector("#history-search")'),true);
+ // A live-data render can replace a hovered node during its dwell timer.
+ // Re-enter only its replacement, as native pointer targeting would; never
+ // restart the timer for a stable target or bypass the real hover handler.
+ const hover=async(selector,label)=>{await js('window.__historySmokeHoverTarget=null');await until(()=>js(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)return false;if(window.__historySmokeHoverTarget!==el){window.__historySmokeHoverTarget=el;el.dispatchEvent(new PointerEvent('pointerover',{bubbles:true}));}return el.getAttribute('aria-describedby')==='history-hover-detail'&&document.querySelector('#history-hover-detail')?.matches(':popover-open');})()`),label);};
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);
  for(const close of ['button','escape','backdrop']){
@@ -52,14 +56,32 @@ async function run(){
  }
   await until(()=>js('[...document.querySelectorAll(".history-loadout img[src*=SummonerFlash]")].some(img=>img.complete&&img.naturalWidth>0)'),'Offline history spell icon did not load');
   await click('[data-action=history-detail][data-id="1"]');await until(()=>js('!!document.querySelector(".history-player")&&!document.querySelector(".history-details [role=status]")'),'Detail missing');
+  // Consume the resize before starting the 180ms pointer-hover timer; resize
+  // intentionally closes existing popovers and cancels a pending hover.
+  const resized=main.getSize()[0]!==1460||main.getSize()[1]!==980;
+  if(resized){await js('window.__historyResize=new Promise(resolve=>addEventListener("resize",()=>resolve(true),{once:true}));true');main.setSize(1460,980);await js('window.__historyResize');}
+  // Hidden test windows do not receive native focus events. Exercise the same
+  // delegated pointer entry used by a visible window without stealing focus.
+  await js('document.querySelector(".history-details [data-history-tip=item]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.matches(":popover-open")'),'Equipment hover detail missing');assert.match(await js('document.querySelector("#history-hover-detail").textContent'),/金|合成/);
+  assert.equal(await js('(()=>{const r=document.querySelector("#history-hover-detail").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;})()'),true,'Equipment hover escapes viewport');
+  const visualRoot=root;await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(visualRoot,'history-expanded-equipment.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
+  await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');assert.equal(await js('!!document.querySelector("#history-hover-detail")'),false);
+  assert.equal(await js('document.querySelectorAll(".history-detail-tabs [role=tab]").length'),6);assert.ok(await js('document.querySelector(".history-team-table tbody tr").getBoundingClientRect().height')<=58,'Team rows are not compact');
   await click('[data-action=history-detail][data-section=stats]');await until(()=>js('!!document.querySelector(".history-public-matrix")'),'Full statistics matrix missing');
+  await js('document.querySelector(".history-public-matrix [data-history-tip=text]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("未提供的值不作为零")'),'Statistics hover missing');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
   await js('(()=>{const input=document.querySelector("[data-chart-field=rawStatsQuery]");input.focus();input.value="gold";input.dispatchEvent(new Event("input",{bubbles:true}));})()');assert.equal(await js('document.activeElement.dataset.chartField'),'rawStatsQuery');assert.equal(await js('[...document.querySelectorAll("[data-public-stat]")].every(row=>row.dataset.publicStat.toLowerCase().includes("gold"))'),true);
- await click('[data-action=history-detail][data-section=runes]');assert.ok(await js('document.querySelectorAll(".history-runes").length')>0);
- await click('[data-action=history-detail][data-section=builds]');await until(()=>js('!!document.querySelector(".history-skills span")'),'Build events missing');
+  await click('[data-action=history-detail][data-section=runes]');assert.ok(await js('document.querySelectorAll(".history-runes").length')>0);
+  await js('document.querySelector(".history-runes [data-history-tip=rune]").dispatchEvent(new FocusEvent("focusin",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("本局记录")'),'Rune hover missing match records');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  await click('[data-action=history-detail][data-section=builds]');await until(()=>js('!!document.querySelector(".history-skills span")'),'Build events missing');
+  await js('document.querySelector(".history-build [data-history-tip=item]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("合成")'),'Build item hover missing');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
  await click('[data-action=history-detail][data-section=timeline]');await until(()=>js('!!document.querySelector(".history-chart")'),'Timeline missing');
  await js('(()=>{const select=document.querySelector("[data-chart-field=chartMetric]");select.value="cs";select.dispatchEvent(new Event("change",{bubbles:true}));})()');
- assert.equal(await js('document.querySelector("[data-chart-field=chartMetric]").value'),'cs');
- await click('[data-action=history-detail][data-section=events]');await until(()=>js('!!document.querySelector(".history-event")'),'Event details missing');
+  assert.equal(await js('document.querySelector("[data-chart-field=chartMetric]").value'),'cs');
+  await js('document.querySelector(".history-chart circle[data-history-tip=text]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("实际采样")'),'Timeline hover missing');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  await click('[data-action=history-detail][data-section=events]');await until(()=>js('!!document.querySelector(".history-event")'),'Event details missing');
+  await js('document.querySelector(".history-event [data-history-tip=text]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("助攻")'),'Event hover missing');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  await js('document.querySelector("[data-section=events]").dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true}))');await until(()=>js('document.querySelector("[data-section=builds]")?.getAttribute("aria-selected")==="true"'),'Keyboard tab switch failed');
+  await click('[data-action=history-detail][data-section=toggle]');assert.equal(await js('!!document.querySelector(".history-details")'),false,'Collapse retained a visible detail panel');await click('[data-action=history-detail][data-id="1"]');await until(()=>js('!!document.querySelector(".history-details")'),'Reopen lost the saved match');
  await click('[data-action=history-replay][data-replay=download]');await until(()=>writes.length===1,'Mock replay write missing');assert.ok(writes[0].endsWith('/1/download'));
  await click('[data-action=history-next]');await until(()=>js('document.querySelectorAll(".history-match").length===3'),'Pagination missing');
  await click('[data-action=history-prev]');await until(()=>js('document.querySelectorAll(".history-match").length===20'),'Previous page missing');
@@ -72,7 +94,7 @@ async function run(){
   await click('[data-action=history-filter-clear]');
   await click('[data-action=history-collect-active]');await until(()=>js('document.querySelector(".history-navigation-tools").textContent.includes("匹配 23 局")&&!document.querySelector(".history-loading")'),'Active-filter collection count missing');
   await click('[data-action=history-refresh]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'Collection mode did not return to normal paging');
- await js('(()=>{document.querySelector("#history-query").value="示例队友#TEST";document.querySelector("#history-search").dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));})()');
+  await js('(()=>{document.querySelector(".history-search-disclosure").open=true;document.querySelector("#history-query").value="示例队友#TEST";document.querySelector("#history-search").dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));})()');
  await until(()=>js('document.querySelectorAll(".history-tabs [role=tab]").length===2&&!document.querySelector(".history-loading")'),'Second player query missing');
  await click('[data-action=history-tab][data-id="1"]');
  await click('[data-action=history-collect]');await until(()=>js('document.querySelectorAll(".history-match").length===23&&!document.querySelector(".history-loading")'),'Batch collection missing');
@@ -87,13 +109,43 @@ async function run(){
  clientPhase='ChampSelect';await click('[data-action=ongoing-refresh]');await until(()=>js('document.querySelectorAll("[data-ongoing-player]").length===3'),'Draft roster missing hidden slot');
  assert.equal(await js('document.body.innerText.includes("隐藏身份")||document.body.innerText.includes("身份隐藏")'),true,'Anonymous draft identity exposed or not labeled');
  clientPhase='InProgress';await click('[data-action=ongoing-refresh]');await until(()=>js('document.querySelectorAll("[data-ongoing-player]").length===10'),'Full in-game roster missing');
-  await until(()=>js('document.querySelectorAll("[data-ongoing-player]").length===10&&!document.querySelector(".ongoing-player-card[aria-busy=true]")'),'In-game player histories did not settle');await until(()=>js('[...document.querySelectorAll(".ongoing-spells img[src*=SummonerFlash]")].some(img=>img.complete&&img.naturalWidth>0)'),'Offline ongoing spell icon did not load');await capture('ongoing-game.png');
+  await until(()=>js('document.querySelectorAll("[data-ongoing-player]").length===10&&!document.querySelector(".ongoing-player-card[aria-busy=true]")'),'In-game player histories did not settle');await until(()=>js('[...document.querySelectorAll(".ongoing-spell-pair img[src*=SummonerFlash]")].some(img=>img.complete&&img.naturalWidth>0)'),'Offline ongoing spell icon did not load');
+  assert.equal(await js('document.querySelectorAll(".ongoing-card-stats .ongoing-stat").length===10*3'),true,'Ongoing cards must expose win rate, KDA and position cells');
+  assert.equal(await js('document.querySelector(".ongoing-player-grid").getBoundingClientRect().width<=240*5+16'),true,'Ongoing card grid must cap the fixed-width columns');
+  await js('document.querySelector("[data-ongoing-tip=winrate]").dispatchEvent(new PointerEvent("pointerover",{bubbles:true}))');await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("不代表本局获胜概率")'),'Ongoing win-rate hover missing');assert.equal(await js('(()=>{const r=document.querySelector("#history-hover-detail").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;})()'),true,'Ongoing hover escapes viewport');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  await until(()=>js('!document.querySelector("#history-hover-detail")'),'Ongoing hover did not close after Escape');
+  await hover('[data-ongoing-tip=rank]','Ongoing rank hover missing');assert.ok(await js('document.querySelector("#history-hover-detail").textContent.length>0'));await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  await capture('ongoing-game.png');
+  await js('document.querySelector(".ongoing-settings").open=true');await click('[data-ongoing-field=streamer]');
+  await until(()=>js('window.buddy.bootstrap().then(b=>b.state.preferences.ongoing.streamer===true)'),'Streamer preference did not settle');
+  await until(()=>js('!document.querySelector(".ongoing-status")&&!document.querySelector(".ongoing-player-card[aria-busy=true]")'),'Streamer roster refresh did not settle');
+  await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+  assert.equal(await js('document.querySelector(".ongoing-page").classList.contains("is-streamer")'),true);
+  const groupTip=await js('!!document.querySelector("[data-ongoing-tip=premade]")');assert.ok(groupTip,'Shared-history fixture group missing');
+  await hover('[data-ongoing-tip=premade]','Anonymous group hover missing');
+  try{await until(()=>js('document.querySelector("#history-hover-detail")?.textContent.includes("玩家")'),'Anonymous group tooltip missing');}catch(error){console.error('GROUP_TOOLTIP_DIAGNOSTIC',JSON.stringify(await js('({target:document.querySelector("[data-ongoing-tip=premade]")?.outerHTML,tip:document.querySelector("#history-hover-detail")?.textContent,streamer:document.querySelector("[data-ongoing-field=streamer]")?.checked,busy:document.querySelectorAll(".ongoing-player-card[aria-busy=true]").length})')));throw error;}
+  assert.doesNotMatch(await js('document.querySelector("#history-hover-detail").textContent'),/战绩测试玩家|示例队友|模拟玩家|#TEST/);
+  await capture('ongoing-streamer-hover.png');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');await click('[data-ongoing-field=streamer]');
+  // Exercise both SVG layers with synthetic historical coordinates; source
+  // fixtures do not otherwise have enough jungle frames to draw these maps.
+  const mapStyles=await js(`(async()=>{
+   const {ongoingJungleView}=await import('./ongoing-game-jungle-view.mjs');
+   const box=document.createElement('section');box.id='map-style-fixture';box.style.cssText='position:fixed;inset:80px auto auto 160px;width:500px;z-index:1000;background:var(--rb-panel);padding:12px';
+   box.innerHTML=ongoingJungleView({gamesAnalyzed:2,minutePositions:[{x:4000,y:6000,minute:3},{x:8000,y:9000,minute:4}],gankPositions:[{x:7000,y:8000,minute:5}]});
+   document.body.append(box);box.querySelectorAll('details').forEach(el=>el.open=true);
+   return {...Object.fromEntries(['lanes','river','heat','position','kill'].map(kind=>{const style=getComputedStyle(box.querySelector('.ongoing-map-'+kind));return [kind,{fill:style.fill,stroke:style.stroke}];})),label:getComputedStyle(box.querySelector('.ongoing-jungle-map text')).fontSize,zoneNote:getComputedStyle(box.querySelector('.ongoing-zone-bars small')).gridColumn};
+  })()`);
+  assert.equal(mapStyles.lanes.fill,'none');assert.notEqual(mapStyles.lanes.stroke,'none');assert.notEqual(mapStyles.river.stroke,'none');
+  assert.equal(mapStyles.kill.fill,'none');assert.notEqual(mapStyles.kill.stroke,'none');assert.notEqual(mapStyles.heat.fill,'rgb(0, 0, 0)');assert.notEqual(mapStyles.position.fill,'rgb(0, 0, 0)');
+  assert.equal(mapStyles.label,'5px');assert.equal(mapStyles.zoneNote,'2 / 4');
+  await capture('ongoing-historical-maps.png');await js('document.querySelector("#map-style-fixture").remove()');
  assert.equal(writes.length,1,'Ongoing queries must not trigger writes');
  await click('.ongoing-history-row');await until(()=>js('!!document.querySelector(".history-details .history-player")'),'Ongoing history preview did not open a full match');
  await click('[data-action=history-simulate]');await until(()=>js('!!document.querySelector(".ongoing-draft-mark")'),'Historical roster was not labeled as preserved');
  assert.ok(await js('document.querySelectorAll("[data-ongoing-player]").length')>0);await click('[data-action=ongoing-exit-draft]');await until(()=>js('!document.querySelector(".ongoing-draft-mark")&&document.querySelectorAll("[data-ongoing-player]").length===10'),'Return to live roster failed');
  await click('[data-action=navigate][data-route=history]');
  offline=true;await click('[data-action=history-refresh]');await until(()=>js('document.querySelector(".history-error")?.textContent.includes("账号")'),'Offline failure missing');assert.equal(errors.length,0,errors.join('\n'));
- await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,query:true,pagination:true,filters:true,advancedFilters:true,details:true,runes:true,builds:true,timeline:true,replayMocked:true,offlineError:true,ongoingLobby:true,ongoingDraft:true,ongoingInGame:true,screenshots:['history-desktop.png','history-laptop.png','ongoing-lobby.png','ongoing-game.png']},null,2));app.quit();
+  await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,query:true,pagination:true,filters:true,advancedFilters:true,details:true,runes:true,builds:true,timeline:true,compactRows:true,sixTabs:true,hoverDetails:true,keyboardTabs:true,ongoingCards:true,ongoingHover:true,replayMocked:true,offlineError:true,ongoingLobby:true,ongoingDraft:true,ongoingInGame:true,visualRoot,screenshots:['history-desktop.png','history-laptop.png','ongoing-lobby.png','ongoing-game.png']},null,2));app.quit();
 }
 run().catch(async error=>{console.error(error.stack);if(main&&!main.isDestroyed()){await fs.writeFile(path.join(root,'failure.png'),(await main.webContents.capturePage()).toPNG()).catch(()=>{});console.error(await main.webContents.executeJavaScript('document.body.innerText').catch(()=>''));}app.exit(1);});
