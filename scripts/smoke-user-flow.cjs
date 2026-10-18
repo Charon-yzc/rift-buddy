@@ -144,17 +144,16 @@ async function run(){
  // The display roster no longer offers manual hero insertion or configuration clicks.
  const arrange=async partner=>{const base=await state(),next=structuredClone(base);next.draft.slots=next.draft.slots.map(slot=>['bottom','support'].includes(slot.role)?{...slot,champion:slot.role==='bottom'?'Rengar':partner,locked:true}:slot);await js('window.buddy.saveState('+JSON.stringify(next)+','+JSON.stringify(base)+')');await until(async()=>(await state()).draft.slots.some(slot=>slot.role==='support'&&slot.champion===partner),'Partner fixture did not reach saved state');await new Promise(resolve=>{main.webContents.once('did-finish-load',resolve);main.reload();});await until(()=>js('!!document.querySelector("[data-action=navigate][data-route=builds]")'),'Reloaded fixture UI missing');};
  const openRengar=async()=>{await click('[data-action=navigate][data-route=builds]');await click('[data-action=library-role][data-role=all]');await js('{const input=document.querySelector("#library-search");input.value="Rengar";input.dispatchEvent(new Event("input",{bubbles:true}));}');await click('.hero-tile[data-id=Rengar]');await until(()=>js('!!document.querySelector("#configuration-role,#build-role")'),'Configuration role control missing');await js('{const role=document.querySelector("#configuration-role,#build-role");role.value="bottom";role.dispatchEvent(new Event("change",{bubbles:true}));}');};
- // The renderer owns the draft and may legitimately save over an external
- // fixture, so wait for the pair to actually resolve before using it.
- const openCombo=async partner=>{for(let attempt=0;attempt<3;attempt++){await openRengar();if(await js('!!document.querySelector(".combo-config")'))return;await arrange(partner);}throw Error('Partner combo did not resolve for '+partner);};
- const openWithoutCombo=async partner=>{for(let attempt=0;attempt<3;attempt++){await openRengar();if(!await js('!!document.querySelector(".combo-config")'))return;await arrange(partner);}throw Error('Former partner combo did not clear for '+partner);};
- await openCombo('Ivern');await click('[data-action=build-loadout][data-id=rengar-bush]');
+ // Always perform the intended partner change before inspecting its result.
+ // Retrying based on the combo UI could skip the change or hide a regression.
+ const openPartner=async partner=>{await arrange(partner);await openRengar();const current=await state();assert.equal(current.draft.slots.find(slot=>slot.role==='bottom')?.champion,'Rengar','Arranged own hero was lost');assert.equal(current.draft.slots.find(slot=>slot.role==='support')?.champion,partner,'Arranged partner was lost');};
+ await openPartner('Ivern');await click('[data-action=build-loadout][data-id=rengar-bush]');
  await until(()=>js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),'Rengar Ivern private build missing');
  await click('[data-action=open-guide]');await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Combo guide missing',WRITE_SETTLED);
- await click('[data-action=close]');await openWithoutCombo('Nami');
+ await click('[data-action=close]');await openPartner('Nami');
  assert.equal(await js('!!document.querySelector(".combo-config")'),false,'Former partner combo leaked');assert.equal(await js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),false);
  await until(async()=>!(await state()).guide.selection.comboId,'Former combo kept in guide',WRITE_SETTLED);
- await click('[data-action=close]');await openCombo('Ivern');
+ await click('[data-action=close]');await openPartner('Ivern');
  await until(()=>js('document.querySelector(".configuration-current header b,.loadout-option.active")?.textContent.includes("草丛")'),'Returning combo choice not restored');
  await until(async()=>(await state()).guide.selection.comboId==='rengar-ivern','Returning combo not sent to guide',WRITE_SETTLED);
  await capture('partner-context-isolation.png');
