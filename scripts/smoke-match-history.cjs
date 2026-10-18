@@ -17,6 +17,7 @@ const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(o
  if(route==='/lol-summoner/v1/summoner-profile?puuid='+own.puuid||route==='/lol-summoner/v1/summoner-profile?puuid='+friend.puuid)return {backgroundSkinId:22000,regalia:'fixture'};
  if(route.startsWith('/lol-summoner/v2/'))return route.endsWith(friend.puuid)?friend:own;
  if(route==='/lol-summoner/v1/summoners/aliases')return [friend];
+ if(route.startsWith('/lol-summoner/v1/summoners?name='))return friend;
  if(route.includes('/matches?')){const q=new URLSearchParams(route.split('?')[1]),start=Number(q.get('begIndex')),count=Number(q.get('endIndex'))-start+1;return {games:{games:Array.from({length:start===0?count:3},(_,i)=>game(start+i+1))}};}
  if(route.startsWith('/lol-match-history/v1/games/'))return game(Number(route.split('/').at(-1)));
  if(route.includes('/game-timelines/'))return {frames:[{timestamp:60000,participantFrames:{1:{participantId:1,totalGold:600,currentGold:200,minionsKilled:6,jungleMinionsKilled:0,level:2,xp:300}},events:[{type:'ITEM_PURCHASED',timestamp:20000,participantId:1,itemId:1001},{type:'SKILL_LEVEL_UP',timestamp:0,participantId:1,skillSlot:1},{type:'CHAMPION_KILL',timestamp:50000,killerId:1,victimId:2}]}]};
@@ -39,6 +40,16 @@ async function run(){
  await click('[data-action=navigate][data-route=history]');assert.equal(await js('!!document.querySelector("#history-search")'),true);
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);
+ for(const close of ['button','escape','backdrop']){
+  await js('(()=>{document.querySelector("#history-query").value="示例";document.querySelector("#history-search").dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));})()');
+  await until(()=>js('!!document.querySelector("[aria-label=玩家搜索结果]")'),'Search results missing');
+  if(close==='button')await click('[aria-label=玩家搜索结果] [data-action=close]');
+  else if(close==='escape')await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  else await js('document.querySelector(".modal-backdrop").click()');
+  await click('[data-action=history-tab][data-id="1"]');await click('[data-action=history-refresh]');
+  await until(()=>js('!document.querySelector(".history-loading")'),'History refresh missing after closing search');
+  assert.equal(await js('!!document.querySelector("[aria-label=玩家搜索结果]")'),false,'Closed search must stay closed: '+close);
+ }
   await until(()=>js('[...document.querySelectorAll(".history-loadout img[src*=SummonerFlash]")].some(img=>img.complete&&img.naturalWidth>0)'),'Offline history spell icon did not load');
   await click('[data-action=history-detail][data-id="1"]');await until(()=>js('!!document.querySelector(".history-player")&&!document.querySelector(".history-details [role=status]")'),'Detail missing');
   await click('[data-action=history-detail][data-section=stats]');await until(()=>js('!!document.querySelector(".history-public-matrix")'),'Full statistics matrix missing');

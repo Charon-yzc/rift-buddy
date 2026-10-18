@@ -3,24 +3,26 @@
 <h1 align="center">开黑搭子 · Rift Buddy</h1>
 
 <p align="center"><strong>朋友进房，阵容就位。点个英雄，配置一起备好。</strong></p>
-<p align="center">英雄联盟朋友开黑助手 · Windows x64 · 免费使用 · <strong>v0.55.1</strong></p>
+<p align="center">英雄联盟朋友开黑助手 · Windows x64 · 免费使用</p>
 
 <p align="center">
   <a href="https://room.riftbuddy.dpdns.org/downloads/"><strong>下载安装包</strong></a> ·
   <a href="https://gitee.com/legender134/rift-buddy/releases">Gitee 国内镜像</a> ·
   <a href="https://github.com/Legender134/rift-buddy/releases">GitHub Releases</a> ·
-  <a href="docs/releases/v0.55.1.md">本次更新</a>
+  <a href="docs/releases/v0.57.0.md">本次更新</a>
 </p>
 
-当前源码为 **0.56.1**，继续精简房间列表与连接操作；预选参与开关、推荐多样性与增量更新支持已加入。公开安装包及下方截图仍为 **0.55.1**。安装包版本与校验值以下载页为准。
+当前源码为 **0.57.0**，包含预选参与开关、更多阵容推荐、精简房间和增量更新支持，以及可选的战绩分析与实时对局。安装包版本与校验值以下载页为准。
 
-当前功能分支另外包含 [Akari 战绩与实时对局](docs/match-history.md)：本人及公开玩家查询、LCU/SGP 数据源、嵌套筛选与条件收集、原版分析引擎、单局复盘，以及大厅/选人/游戏中的玩家卡和历史阵容演练。这些功能尚未发布到上方安装包，国服真实接口兼容仍需授权客户端核验。
+[Akari 战绩与实时对局](docs/match-history.md)提供本人及公开玩家查询、筛选和单局复盘，也可查看大厅、选人和游戏中的公开玩家资料。个人战绩和备注只保留在本机当前运行内存；国服真实接口与回放兼容仍需授权客户端核验。
+
+下方界面截图来自本版程序的隔离演示数据，不包含真实玩家资料。
 
 **打开助手，跟着游戏走。** 客户端连接、组队识别、开黑人数同步和阵容推荐默认自动进行。和朋友进入游戏组队大厅后，自动连接同一助手房间；进入选人后，贴边侧栏把阵容、提议和配置放在手边。
 
 你主要做两件事：**挑自己想玩的英雄，在客户端确认锁定。** 点击推荐里的英雄头像时，对应英雄与整套配置一起准备，不用再逐个找符文、召唤师技能和商店装备集。支持单人参考与二至五人开黑，主界面和侧栏可以同时使用。
 
-![主界面：队伍选择与阵容候选](docs/images/v0.55.1/main.png)
+![主界面：队伍选择与阵容候选](docs/images/v0.57.0/main.png)
 
 ## 人数、分路和推荐，跟着这局走
 
@@ -37,8 +39,8 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/v0.55.1/sidebar.png" alt="选人侧栏：比较阵容候选" /><br /><strong>先比较阵容</strong><br />队伍、位置和候选集中在侧栏。</td>
-    <td width="50%"><img src="docs/images/v0.55.1/configuration.png" alt="我的配置：装备、符文、D/F 与加点" /><br /><strong>三套配置，整套切换</strong><br />装备、符文、D/F、主升与开局加点一眼看清。</td>
+    <td width="50%"><img src="docs/images/v0.57.0/sidebar.png" alt="选人侧栏：比较阵容候选" /><br /><strong>先比较阵容</strong><br />队伍、位置和候选集中在侧栏。</td>
+    <td width="50%"><img src="docs/images/v0.57.0/configuration.png" alt="我的配置：装备、符文、D/F 与加点" /><br /><strong>三套配置，整套切换</strong><br />装备、符文、D/F、主升与开局加点一眼看清。</td>
   </tr>
 </table>
 
@@ -56,9 +58,9 @@
 
 没有安装助手的朋友仍可作为公开队友参与阵容参考；房间在线成员与游戏组队成员分别显示。
 
-![队友提议：直接投票，点击英雄选择](docs/images/v0.55.1/proposal.png)
+![队友提议：直接投票，点击英雄选择](docs/images/v0.57.0/proposal.png)
 
-![开黑房间：独立连接页面](docs/images/v0.55.1/room.png)
+![开黑房间：独立连接页面](docs/images/v0.57.0/room.png)
 
 ## 紧凑侧栏，配色自己选
 
@@ -70,13 +72,22 @@
 
 英雄图鉴提供技能数值、冷却、消耗与近期改动；五路排行保留地区、段位、样本和统计时间，选人时也能查。
 
-![英雄图鉴：技能与英雄资料](docs/images/v0.55.1/champions.png)
+![英雄图鉴：技能与英雄资料](docs/images/v0.57.0/champions.png)
 
-![各路排行：查看对应地区和段位的英雄参考](docs/images/v0.55.1/rankings.png)
+![各路排行：查看对应地区和段位的英雄参考](docs/images/v0.57.0/rankings.png)
 
 榜单、常用配置和海克斯参考由资料服务每日两次检查。更新经过签名和完整性校验，选人、对局期间先暂存，空闲后启用；断网仍可使用有效缓存。
 
 进入对局后，按需使用小型装备、加点和野区路线参考窗口。窗口可以移动、调整大小、收起或关闭，设置中可恢复默认布局。
+
+<details>
+<summary><strong>战绩分析与实时对局</strong></summary>
+
+按玩家、英雄、分路和条件筛选已读取战绩，展开查看符文、装备事件、时间线和分析依据。实时玩家卡来自公开客户端资料，历史标签和共同对局属于历史参考；隐藏身份不补猜，缺失数值显示未读取。
+
+![实时对局：公开玩家卡与本机历史参考，使用演示数据](docs/images/v0.57.0/ongoing.png)
+
+</details>
 
 ## 更新与玩家资料
 
