@@ -114,7 +114,7 @@ async function writeItemSet({itemSet,data,installPath=''},{discover=discoverClie
  if(!auth?.port)throw Error('请先连接英雄联盟客户端；也可以直接导出 JSON');
  const champion=data.champions.find(c=>c.key===selected.associatedChampions[0]);let target,game;
  try{({target,game}=await recommendedDirectory(await request(auth,'/data-store/v1/install-dir'),champion,io));}catch(error){
-  if(error.code==='EACCES'||error.code==='EPERM')throw Error('没有写入游戏目录的权限，请点击连接授权后重试，或导出 JSON');
+  if(error.code==='EACCES'||error.code==='EPERM')throw Error('没有写入游戏目录的权限，请确认 Windows 权限后重试，或导出 JSON');
   if(error.code)throw Error('未能确认游戏装备集目录，请使用导出 JSON');throw error;
  }
  const filename=path.join(target,selected.uid+'.json'),task=(async()=>{
@@ -132,7 +132,7 @@ async function writeItemSet({itemSet,data,installPath=''},{discover=discoverClie
    await io.rename(temporary,filename);created=false;
   }catch(error){
    if(created)await io.unlink(temporary).catch(()=>{});
-   if(error.code==='EACCES'||error.code==='EPERM')throw Error('装备集写入被拒绝，请点击连接授权后重试，或导出 JSON');
+   if(error.code==='EACCES'||error.code==='EPERM')throw Error('装备集写入被拒绝，请确认 Windows 权限后重试，或导出 JSON');
    if(error.code)throw Error('装备集未能写入，原文件已保留；请重试或导出 JSON');throw error;
   }
   let confirmed;try{confirmed=await io.readFile(filename,'utf8');}catch{throw Error('装备集已写入，但未能读取确认；请在客户端或商店核对');}
@@ -145,7 +145,7 @@ async function writeItemSet({itemSet,data,installPath=''},{discover=discoverClie
   await removeShopConflicts(conflicts,io,beforeCommit);
   return {uid:selected.uid,title:selected.title,replaced:previous!==null||legacy!==null,confirmation:'disk',preferred:true,legacyMigrated:legacy!==null,displacedSets:conflicts.entries.length,backupDirectory:conflicts.backupDirectory};
  })().catch(error=>{
-  if(error.code==='EACCES'||error.code==='EPERM')throw Error('装备集写入被拒绝，请点击连接授权后重试，或导出 JSON');
+  if(error.code==='EACCES'||error.code==='EPERM')throw Error('装备集写入被拒绝，请确认 Windows 权限后重试，或导出 JSON');
   if(error.code)throw Error('未能读取或更新原装备集，请重试或导出 JSON');throw error;
  });
  return task;

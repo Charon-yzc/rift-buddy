@@ -92,7 +92,7 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
  const auth=cached?snapshotAuth:await discover(installPath);
  if(native&&auth?.port&&!cached){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=now();}
  if(!auth){lobbyCaches.delete(request);return {connected:false,phase:'Offline',message:'未发现客户端，可先手动选人'};}
- if(auth.unreadable)return {connected:false,phase:'Offline',needsElevation:true,message:'已发现客户端，需要授权连接才能读取选人信息'};
+ if(auth.unreadable)return {connected:false,phase:'Offline',needsElevation:true,message:'已发现客户端；需要 Windows 权限确认才能读取公开选人信息'};
  try{
   let cache=lobbyCaches.get(request);
   if(!cache||cache.port!==auth.port||cache.password!==auth.password||cache.installPath!==installPath){cache={port:auth.port,password:auth.password,installPath,lobby:null,gameId:null};lobbyCaches.set(request,cache);}
@@ -158,7 +158,7 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {
  const {validateRunePage}=await import('../src/core/builds.mjs');
  if(!validateRunePage(page,trees))throw new Error('符文组合与当前资料不匹配，已取消写入');
- const auth=await discover(installPath);if(!auth?.port)throw new Error('请先连接英雄联盟客户端，并完成必要的连接授权');
+ const auth=await discover(installPath);if(!auth?.port)throw new Error('请先连接英雄联盟客户端，并确认 Windows 权限');
  const phase=await request(auth,'/lol-gameflow/v1/gameflow-phase');
  const allowedPhases=RUNE_PHASES;
  if(!allowedPhases.includes(phase))throw new Error('请在大厅或选人阶段应用符文');

@@ -25,7 +25,7 @@ export function validateClientPreparation(value,data){
 }
 export async function prepareClientSelection({value,data,installPath='',ownedPageId},{discover=discoverClient,request=lcuRequest,writeRunes=writeRunePage,writeItems=importItemSet}={}){
  const selected=validateClientPreparation(value,data),auth=await discover(installPath);
- if(!auth?.port)throw Error('请先连接客户端并完成连接授权');
+ if(!auth?.port)throw Error('请先连接客户端并确认 Windows 权限');
  const read=async()=>{
   if(await request(auth,'/lol-gameflow/v1/gameflow-phase')!=='ChampSelect')throw Error('已离开选人阶段，请在客户端核对');
   const [gameValue,raw]=await Promise.all([request(auth,'/lol-gameflow/v1/session'),request(auth,'/lol-champ-select/v1/session')]);

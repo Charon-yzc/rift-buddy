@@ -1366,14 +1366,14 @@ async function useItemSet(action,el){
  if(action==='import-item-set'&&readOnlyPreparation(el.dataset.itemsetView==='companion'?'companion':'build',plan))throw Error('当前是只读配置，可导出参考；请回到本人的准备操作导入');
  const itemSet=createItemSet(champ(plan.selection.id),plan.build,data),key=JSON.stringify(itemSet),gameId=preparationGameId(client);
  if(el.closest('[data-itemset-fingerprint]')?.dataset.itemsetFingerprint!==key)throw Error('装备方案已变化，请查看当前方案后重新点击');
- itemSetPending=action;itemSetStatuses.set(key,{text:authorize?'正在等待 Windows 连接授权…':action==='import-item-set'?'正在写入当前装备集…':'正在导出当前装备集…'});render();if(buildView)renderBuild();
+ itemSetPending=action;itemSetStatuses.set(key,{text:authorize?'正在等待 Windows 权限确认…':action==='import-item-set'?'正在写入当前装备集…':'正在导出当前装备集…'});render();if(buildView)renderBuild();
  try{
   if(authorize)await api.authorizeClient();
   const result=await (action==='import-item-set'?api.importItemSet(itemSet):api.exportItemSet(itemSet));
   const text=action==='import-item-set'?itemSetSuccessStatus(result).text:result.exported?'已导出 JSON，可在客户端“藏品 → 装备”中导入。':'已取消导出，当前方案保留。';
   const current=action!=='import-item-set'||gameId===preparationGameId(client)&&(!result.preparationRevision||result.preparationRevision>=preparationRevision);
   if(current)itemSetStatuses.set(key,{...itemSetStatuses.get(key),text});if(current&&action==='import-item-set'&&el.dataset.itemsetView==='companion')returnToTeamAfterPreparation(plan.selection);toast(current?(result.title?text+' '+result.title:text):'装备集操作已结束，选人或配置已变化，请重新核对。');
- }catch(error){const text=String(error.message||'装备集操作未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');itemSetStatuses.set(key,{text:text+(action==='import-item-set'&&!text.includes('导出')?'；可点击“导出 JSON”手动导入。':''),error:true,needsAuthorization:text.includes('连接授权')});toast(text,true);
+ }catch(error){const text=String(error.message||'装备集操作未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');itemSetStatuses.set(key,{text:text+(action==='import-item-set'&&!text.includes('导出')?'；可点击“导出 JSON”手动导入。':''),error:true,needsAuthorization:text.includes('Windows 权限')||text.includes('连接授权')});toast(text,true);
  }finally{itemSetPending='';while(itemSetStatuses.size>50)itemSetStatuses.delete(itemSetStatuses.keys().next().value);render();if(buildView)renderBuild();}
 }
 async function applyPreparedRunes(page,ticket){

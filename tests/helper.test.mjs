@@ -49,7 +49,7 @@ test('authorization startup reports cancellation, removes the session and permit
   await fs.writeFile(options.recordFile,JSON.stringify({phase:'launched',pid:process.pid,nativeCode:0}));options.onExit(0);
  });
  try{
-  await assert.rejects(s.manager.ensure(),/授权已取消/);assert.equal(s.manager.active(),false);
+  await assert.rejects(s.manager.ensure(),/权限确认已取消/);assert.equal(s.manager.active(),false);
   await assert.rejects(fs.stat(launched[0].sessionFile),{code:'ENOENT'});
   await assert.rejects(fs.stat(launched[0].recordFile),{code:'ENOENT'});
   assert.deepEqual(await Promise.all([s.manager.ensure(),s.manager.ensure()]),[true,true]);assert.equal(attempts,2);

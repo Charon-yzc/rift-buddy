@@ -57,7 +57,7 @@ test('a selection guard is evaluated after a preceding item-set write and preser
 
 test('an existing set that requires read permission produces the same actionable authorization fallback before creating temporary files',async()=>{
  const f=await fixture();await f.write();const filename=path.join(f.target,itemSet.uid+'.json'),before=await fs.readFile(filename,'utf8'),io={...fs,readFile:async(file,...args)=>{if(file===filename)throw Object.assign(Error('isolated read denial'),{code:'EACCES'});return fs.readFile(file,...args);}};
- await assert.rejects(f.write({...itemSet,title:itemSet.title+' New'},io),/写入被拒绝.*连接授权/);assert.equal(await fs.readFile(filename,'utf8'),before);assert.deepEqual(await fs.readdir(f.target),[itemSet.uid+'.json']);
+ await assert.rejects(f.write({...itemSet,title:itemSet.title+' New'},io),/写入被拒绝.*Windows 权限/);assert.equal(await fs.readFile(filename,'utf8'),before);assert.deepEqual(await fs.readdir(f.target),[itemSet.uid+'.json']);
 });
 
 test('redirected game directory and redirected target file cannot write outside the resolved game installation',async()=>{
