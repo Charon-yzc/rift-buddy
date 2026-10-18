@@ -8,9 +8,11 @@ test('offline status offers connection and launch while a connected client remov
  assert.match(html,/data-action="sync" data-client-connect/);assert.match(html,/data-action="launch-game"/);
  assert.equal(clientConnectionNotice({connected:true}),'');
 });
-test('connection notice distinguishes disabled automatic connection and Windows authorization',()=>{
+test('connection notice distinguishes disabled automatic connection and a Windows permission request',()=>{
  assert.match(clientConnectionNotice({}, {autoSync:false}),/开启自动连接/);
- assert.match(clientConnectionNotice({needsElevation:true}),/授权连接/);
+ assert.match(clientConnectionNotice({needsElevation:true}),/需要 Windows 权限/);
+ assert.match(clientConnectionNotice({needsElevation:true}),/自动读取公开数据/);
+ assert.doesNotMatch(clientConnectionNotice({needsElevation:true}),/授权连接|请授权/);
  const busy=clientConnectionNotice({}, {},true);assert.match(busy,/data-client-connect disabled/);assert.match(busy,/正在连接客户端/);
  assert.doesNotMatch(clientConnectionNotice({message:'<script>bad()</script>'}),/<script>/);
 });
