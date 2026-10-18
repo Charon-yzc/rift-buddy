@@ -21,6 +21,7 @@ test('repeated bytes coalesce into bounded copy operations and unrelated data is
  assert.throws(()=>filePatch('../player.json',base,base),/路径/);
 });
 async function fixture(t){
+ await fs.mkdir(path.resolve('.local'),{recursive:true});
  const root=await fs.mkdtemp(path.resolve('.local/binary-patch-')),old=path.join(root,'old'),next=path.join(root,'next');await fs.mkdir(path.join(old,'resources'),{recursive:true});await fs.mkdir(path.join(next,'resources'),{recursive:true});
  const target=Buffer.concat([base.subarray(0,60000),Buffer.from('new feature'),base.subarray(60000)]);
  await fs.writeFile(path.join(old,'resources/runtime.bin'),base);await fs.writeFile(path.join(next,'resources/runtime.bin'),target);
@@ -33,7 +34,7 @@ test('patch packaging only selects verified manifested files and excludes unhelp
  await fs.writeFile(path.join(f.old,'resources/runtime.bin'),'modified');await assert.rejects(binaryPatches(f.old,f.next,f.before,f.after,f.after.files),/differs/);
  await fs.writeFile(path.join(f.old,'resources/runtime.bin'),Buffer.alloc(base.length));const before=await payloadManifest(f.old,'98.0.0');const unusable=await binaryPatches(f.old,f.next,before,f.after,f.after.files);assert.equal(unusable.patched.size,0);
 });
-const powershell=(file,args)=>new Promise((resolve,reject)=>{const child=spawn('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',file,...args],{windowsHide:true,stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',bytes=>output+=bytes);child.stderr.on('data',bytes=>output+=bytes);child.once('error',reject);child.once('exit',code=>resolve({code,output}));});
+const powershell=(file,args)=>new Promise((resolve,reject)=>{const child=spawn('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',file,...args],{windowsHide:true,stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',bytes=>output+=bytes);child.stderr.on('data',bytes=>output+=bytes);child.once('error',reject);child.once('exit',code=>resolve({code,output:output.replace(/\r?\n/g,'')}));});
 test('native decoder reconstructs exact changed-length bytes before installation and does not touch the base', {skip:process.platform!=='win32'},async t=>{
  const f=await fixture(t),stage=path.join(f.root,'stage'),descriptor=path.join(f.root,'blocks.json');await fs.mkdir(stage);await fs.copyFile(path.join(f.next,INSTALL_MANIFEST),path.join(stage,INSTALL_MANIFEST));await fs.writeFile(path.join(stage,'卸载开黑搭子.exe'),Buffer.alloc(2048));
  await fs.writeFile(descriptor,JSON.stringify({schema:1,files:[filePatch('resources/runtime.bin',base,f.target)]}));
