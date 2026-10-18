@@ -960,7 +960,7 @@ function renderDraft(){
  }
  const availableResults=results.map((result,index)=>({result,index})),noRange=['party','context'].includes(scope)&&!slots.some(slot=>slot.party);
  const live=clientDraftStatus(client,slots,data.champions);
- return `<section class="draft-compare-workspace" data-eligibility="${e(eligibility.status)}"><header class="draft-compare-header"><div><h1>开黑推荐</h1></div><div>${ready?button('task-configuration','我的配置','','small'):''}</div></header>
+ return `<section class="draft-compare-workspace" data-eligibility="${e(eligibility.status)}"><header class="draft-compare-header"><div><h1>开黑推荐</h1></div><div>${activeCreativePlan&&!(client.connected&&client.phase==='ChampSelect')?button('task-return','返回方案','','quiet small'):''}${ready?button('task-configuration','我的配置','','small'):''}</div></header>
  <div class="task-roster slots">${slots.map(s=>slotHTML(s)).join('')}</div>
  ${pregameControls({scope,style,busy:clientPreparing||runeApplying||!!itemSetPending,includePreselected:saved.preferences.includePreselected===true,ownRole:taskOwnRole(),slots,room,party:currentParty(),preselection:saved.draft?.preselection,preselectionHero:saved.draft?.preselection?.champion?portrait(champ(saved.draft.preselection.champion),'sm'):''})}
  ${eligibility.status==='checked'||eligibility.status==='manual'?'':pickEligibilityView(eligibility)}${recommendationError?`<section class="callout warning recommendation-error"><p>${e(recommendationError)}</p>${button('role-pools','调整位置英雄池','','small')}${button('exclusions','调整排除英雄','','small')}</section>`:''}
