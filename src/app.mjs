@@ -221,7 +221,7 @@ function finishAppSelect(version=appSelectVersion){if(version!==appSelectVersion
 function finishOverlaySelect(version=overlaySelectVersion){if(version!==overlaySelectVersion)return;activeOverlaySelect=null;overlaySelectVersion++;if(pendingBuildRender&&buildView)renderBuild();}
 const deferAppSelect=()=>{const version=appSelectVersion;setTimeout(()=>finishAppSelect(version),0);};
 const deferOverlaySelect=()=>{const version=overlaySelectVersion;setTimeout(()=>finishOverlaySelect(version),0);};
-const recommendationMenus=':is(.recommendation-ui,.recommendation-app) details:is(.pregame-more,.companion-navigation-more,.companion-footer-menu,.client-connection-options,.window-tools)';
+const recommendationMenus=':is(.recommendation-ui,.recommendation-app) details:is(.pregame-more,.companion-navigation-more,.companion-footer-menu,.client-connection-options,.window-tools,.room-actions-menu)';
 function closeRecommendationMenus({except=null,restoreFocus=false}={}){
  let closed=false;
  for(const menu of app.querySelectorAll(recommendationMenus+'[open]')){

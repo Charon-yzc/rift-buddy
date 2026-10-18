@@ -387,14 +387,29 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 :is(.recommendation-ui,.recommendation-app) .room-panel :is(label,.bottom-note,.ui-disclosure,.room-personal) {color:var(--rb-muted);font-size:calc(12px * var(--text-scale));line-height:1.6}
 :is(.recommendation-ui,.recommendation-app) .room-panel .ui-disclosure>summary {min-height:32px;padding-block:6px;cursor:pointer}
 :is(.recommendation-ui,.recommendation-app) .room-panel .room-transport.on {background:var(--rb-tint);border-color:var(--rb-accent);color:var(--rb-accent)}
-:is(.recommendation-ui,.recommendation-app) .room-panel .room-member {padding:10px;margin:0}
-:is(.recommendation-ui,.recommendation-app) .room-member header {gap:6px;flex-wrap:wrap}
-:is(.recommendation-ui,.recommendation-app) .room-member header>b {font-size:var(--ui-small);color:var(--rb-ink);overflow-wrap:anywhere}
-:is(.recommendation-ui,.recommendation-app) .room-member header>small {font-size:calc(11px * var(--text-scale));color:var(--rb-subtle)}
+:is(.recommendation-ui,.recommendation-app) .room-panel .room-member {padding:9px 0;margin:0;border:0;border-bottom:1px solid var(--rb-line);border-radius:0;background:transparent}
+:is(.recommendation-ui,.recommendation-app) .room-panel .room-member:last-child {border-bottom:0}
+:is(.recommendation-ui,.recommendation-app) .room-member header {gap:6px;flex-wrap:nowrap}
+:is(.recommendation-ui,.recommendation-app) .room-member header>b {min-width:0;flex:0 1 auto;font-size:var(--ui-small);color:var(--rb-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(.recommendation-ui,.recommendation-app) .room-member header>small {flex:none;font-size:calc(11px * var(--text-scale));color:var(--rb-subtle)}
 :is(.recommendation-ui,.recommendation-app) .room-member .room-personal {margin:5px 0 0}
+:is(.recommendation-ui,.recommendation-app) .room-member:not(:has(.room-champs)) .room-personal:not(:has(b)) {display:none}
 :is(.recommendation-ui,.recommendation-app) .room-panel .badge {background:var(--rb-raised);color:var(--rb-muted);font-size:calc(11px * var(--text-scale));padding:3px 6px;border:0}
 :is(.recommendation-ui,.recommendation-app) .room-panel .room-share-row {margin:0 0 8px;gap:5px 10px}
-:is(.recommendation-ui,.recommendation-app) .room-panel .room-members {gap:8px;margin-top:8px}
+:is(.recommendation-ui,.recommendation-app) .room-panel .room-members {gap:0;margin-top:4px}
+.room-actions-menu {position:relative;flex:none;margin-left:auto;font-size:var(--ui-small,13px)}
+.room-actions-menu>summary {display:flex;align-items:center;gap:5px;min-height:32px;padding:4px 7px;list-style:none;cursor:pointer;color:var(--rb-muted,#a6bac5);border-radius:5px}
+.room-actions-menu>summary::-webkit-details-marker {display:none}
+.room-actions-menu>summary:focus-visible {outline:2px solid var(--rb-accent,#9ed8e7);outline-offset:2px}
+.room-actions-menu>summary:after {content:'⌄'}
+.room-actions-menu[open]>summary,.room-actions-menu>summary:hover {background:var(--rb-tint,#1a3441);color:var(--rb-ink,#eff4f6)}
+.room-actions-menu>div {position:absolute;right:0;top:calc(100% + 4px);z-index:25;display:grid;gap:4px;min-width:150px;max-width:calc(100vw - 32px);padding:6px;border:1px solid var(--rb-line,#416077);border-radius:6px;background:var(--rb-bg,#07141d);box-shadow:0 8px 20px #0006}
+.room-actions-menu>div>.btn {justify-content:flex-start;min-height:32px}
+:is(.recommendation-ui,.recommendation-app) .room-panel .room-invites-compact {margin:0 0 4px}
+.room-invite-row {display:flex;align-items:flex-start;flex-wrap:wrap;gap:4px 12px}
+.room-invite-row>.btn {flex:none}
+.room-invite-row>.ui-disclosure {flex:1;min-width:140px;margin:0}
+.room-invite-row>.ui-disclosure[open] {flex-basis:100%}
 .recommendation-app .room-workspace {gap:12px}
 .recommendation-app .room-workspace-heading h1 {font-size:calc(22px * var(--text-scale));font-weight:650}
 @media(max-width:420px) {
