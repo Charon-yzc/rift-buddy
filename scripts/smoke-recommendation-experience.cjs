@@ -38,7 +38,7 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));const hero=id=>data.champions.find(c=>c.id===id);
  fixture={connected:true,phase:'ChampSelect',mode:{id:'rift',label:'召唤师峡谷'},receivedAt:new Date().toISOString(),game:{gameId:660001,mapId:11,queueId:430},party:{status:'known',lobbyCount:3,members:[{cellId:0,local:true,firstPosition:'BOTTOM'},{cellId:1,firstPosition:'MIDDLE'},{cellId:2,firstPosition:'UTILITY'}]},session:{gameId:660001,localPlayerCellId:0,myTeam:[{cellId:0,championId:0,championPickIntent:0,assignedPosition:'BOTTOM'},{cellId:1,championId:0,championPickIntent:0,assignedPosition:'MIDDLE'},{cellId:2,championId:0,championPickIntent:hero('Nami').key,assignedPosition:'UTILITY'},{cellId:3,championId:hero('Garen').key,assignedPosition:'TOP',pickState:'locked'}],theirTeam:[],actions:[[{actorCellId:0,type:'pick',completed:false}]],bans:[],allowDuplicatePicks:false},eligibility:{status:'checked',receivedAt:new Date().toISOString(),pickable:data.champions.map(c=>c.key),disabled:[]}};
- room={mode:'host',room:'884369',ballots:true,members:[{self:true,nick:'本人很长的昵称',online:true},{nick:'阿青的完整昵称',online:true},{nick:'第三位开黑朋友',online:true}],transport:'relay'};
+ room={mode:'host',room:'884369',ballots:true,link:'connected',members:[{self:true,nick:'本人很长的昵称',online:true},{nick:'阿青的完整昵称',online:true},{nick:'第三位开黑朋友',online:true}],transport:'relay'};
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;
  require(path.join(base,'electron/main.cjs'));await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main},'Main missing');main.webContents.on('console-message',(_event,level,message)=>console.log('RENDERER '+level+' '+message));
  const js=code=>main.webContents.executeJavaScript(code,true);
@@ -71,6 +71,22 @@ async function run(){
  room.members.push({nick:'第四位完整昵称',online:true},{nick:'第五位完整昵称',online:true});await click('[data-action=companion-tab][data-tab=recommend]');await click('[data-action=toggle-party][data-role=top]');await click('[data-action=toggle-party][data-role=jungle]');await generate();
  await click('.companion-candidate [data-action=propose-result]');await until(()=>js('[...document.querySelectorAll(".ballot-heroes")].some(e=>e.dataset.memberCount==="5")'),'Five-player proposal missing');
  for(const width of [360,440]){main.setContentSize(width,820);assert.ok(await js('[...document.querySelectorAll(".room-ballot-row")].every(r=>r.querySelector(".ballot-proposers").getBoundingClientRect().height<=r.querySelector(".ballot-member").getBoundingClientRect().height)'), 'Nickname summaries increased the roster row height');await capture('sidebar-five-'+width+'.png');geometry.push({surface:'sidebar-five',width,...await js('({viewport:innerWidth,scroll:document.documentElement.scrollWidth})')});}
+ main.setMinimumSize(280,480);await click('[data-action=companion-tab][data-tab=room]');
+ for(const scale of [1,1.25]){
+  await js('window.buddy.presentation({field:"textScale",value:'+scale+'})');await sleep(180);
+  for(const width of [280,360,440]){
+   main.setContentSize(width,820);await sleep(100);
+   const layout=await js('(()=>{const pane=document.querySelector(".companion-content").getBoundingClientRect();return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,top:pane.top,bottom:Math.min(pane.bottom,document.querySelector(".companion-footer").getBoundingClientRect().top),members:[...document.querySelectorAll(".room-member")].map(e=>({top:e.getBoundingClientRect().top,bottom:e.getBoundingClientRect().bottom,height:e.getBoundingClientRect().height,nick:e.querySelector("header>b").title}))}})()');
+   assert.equal(layout.members.length,5);assert.ok(layout.members.every(row=>row.top>=layout.top-1&&row.bottom<=layout.bottom+1),'Five-member room is clipped '+JSON.stringify({width,scale,...layout}));
+   await js('document.querySelector(".room-actions-menu>summary").focus()');main.webContents.sendInputEvent({type:'keyDown',keyCode:'Space'});main.webContents.sendInputEvent({type:'keyUp',keyCode:'Space'});
+   await until(()=>js('document.querySelector(".room-actions-menu").open'),'Room actions cannot open by keyboard');
+   assert.ok(await js('[...document.querySelectorAll(".room-actions-menu .btn")].every(e=>{const r=e.getBoundingClientRect();return e.checkVisibility()&&r.left>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight})'),'Room maintenance actions are clipped');
+   if(width===360&&scale===1)await capture('sidebar-room-menu.png');
+   main.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});main.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});await until(()=>js('!document.querySelector(".room-actions-menu").open'),'Room actions cannot close by keyboard');assert.ok(await js('document.activeElement===document.querySelector(".room-actions-menu>summary")'),'Escape must restore the room menu focus');
+   await capture('sidebar-room-five-'+width+'-'+scale+'.png');geometry.push({surface:'sidebar-room-five',width,scale,...layout});
+  }
+ }
+ await js('window.buddy.presentation({field:"textScale",value:1})');await sleep(180);
  await js('window.buddy.companionMode(false)');await until(()=>js('!document.querySelector(".companion-shell")'),'Main did not expand');
  for(const width of [1180,900]){main.setContentSize(width,820);for(const route of ['draft','room','builds','reference','rankings','patches','hex','favorites','settings']){await click(`[data-action=navigate][data-route=${route}]`);await until(()=>js(`document.querySelector("#main")?.dataset.page===${JSON.stringify(route)}`),'Wrong main route');await capture(`main-${route}-${width}.png`);geometry.push({surface:'main',route,width,...await js('({viewport:innerWidth,scroll:document.documentElement.scrollWidth})')});}}
  assert.ok(geometry.every(row=>row.scroll<=row.viewport+1),'Page overflow: '+JSON.stringify(geometry.filter(row=>row.scroll>row.viewport+1)));
