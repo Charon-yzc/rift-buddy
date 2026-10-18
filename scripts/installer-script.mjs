@@ -5,10 +5,11 @@ export function checksumRecord({version,sha256}){
  if(!/^[0-9a-f]{64}$/.test(sha256||''))throw Error('安装包校验值格式不正确');
  return `${sha256}  RiftBuddy-${version}-Setup.exe\n`;
 }
-export function installerScript({version,directory,output,icon,files,obsoleteLocales=[],lifecycle=path.resolve('scripts/installer-lifecycle.ps1'),baseManifest='',payloadFiles=files,registryId='RiftBuddy',shortcutName='开黑搭子',diagnosticFile=''}){
+export function installerScript({version,directory,output,icon,files,obsoleteLocales=[],lifecycle=path.resolve('scripts/installer-lifecycle.ps1'),baseManifest='',blockPatch='',payloadFiles=files,registryId='RiftBuddy',shortcutName='开黑搭子',diagnosticFile=''}){
  if(!/^\d+\.\d+\.\d+$/.test(version)||version.trim()!==version||!files.length)throw Error('安装包版本或文件清单不完整');
  if(files.some(file=>path.win32.isAbsolute(file)||/^[A-Za-z]:/.test(file)||file.split(/[\\/]/).some(p=>p==='..'||!p)||/[\r\n]/.test(file)))throw Error('安装包清单包含不合法路径');
  if(!Array.isArray(payloadFiles)||payloadFiles.some(file=>!files.includes(file)))throw Error('增量文件必须属于完整安装清单');
+ if(blockPatch&&!baseManifest)throw Error('数据块增量必须有已验证的安装基线');
  if(!/^[A-Za-z0-9-]{1,80}$/.test(registryId)||!shortcutName||/[\\/:*?"<>|\r\n$]/.test(shortcutName))throw Error('安装集成标识不正确');
  if(!Array.isArray(obsoleteLocales)||obsoleteLocales.length>200||obsoleteLocales.some(name=>typeof name!=='string'||!/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,4})?\.pak$/.test(name)||['en-US.pak','zh-CN.pak','zh-TW.pak'].includes(name)||files.some(file=>file.replaceAll('\\','/')==='locales/'+name)))throw Error('旧语言资源清单不正确');
  const removeLocales=obsoleteLocales.map(name=>`  Delete "$INSTDIR\\locales\\${name}"`).join('\n');
@@ -79,7 +80,8 @@ ${stageFiles}
   SetOutPath "$PLUGINSDIR"
   File /oname=lifecycle.ps1 ${quote(lifecycle)}
 ${baseManifest?`  File /oname=base-install.json ${quote(baseManifest)}`:''}
-  nsExec::ExecToStack /TIMEOUT=600000 '${ps} -RegistryId ${registryId} -ShortcutName "${shortcutName}" -InstallDir "$INSTDIR" -PreviousInstallDir "$PreviousInstallDir" -StagedDir "$PLUGINSDIR\\new"${baseManifest?' -BaseManifest "$PLUGINSDIR\\base-install.json"':''}'
+${blockPatch?`  File /oname=block-patch.json ${quote(blockPatch)}`:''}
+  nsExec::ExecToStack /TIMEOUT=600000 '${ps} -RegistryId ${registryId} -ShortcutName "${shortcutName}" -InstallDir "$INSTDIR" -PreviousInstallDir "$PreviousInstallDir" -StagedDir "$PLUGINSDIR\\new"${baseManifest?' -BaseManifest "$PLUGINSDIR\\base-install.json"':''}${blockPatch?' -BlockPatch "$PLUGINSDIR\\block-patch.json"':''}'
   Pop $0
   Pop $1
 ${diagnosticFile?`  FileOpen $2 ${quote(diagnosticFile)} w\n  FileWrite $2 "$0$\\r$\\n$1"\n  FileClose $2`:''}

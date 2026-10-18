@@ -172,13 +172,22 @@ async function ongoingAction(action,el){
  else if(action==='ongoing-player-refresh')await ongoing.reloadPlayer(key);
  else if(action==='ongoing-exit-draft')await ongoing.exitDraft();
  else if(action==='ongoing-clear'){ongoing.stop();ongoing.clear();ongoing.start();await ongoing.refresh();}
- else if(action==='ongoing-history'&&member?.puuid){history.state.streamer=ongoing.state.settings.streamer;ongoing.stop();route='history';render();await history.open({puuid:member.puuid,server:ongoing.state.roster?.server||'',source:ongoing.state.settings.source});if(el.dataset.champion||el.dataset.position)await history.collect({champion:Number(el.dataset.champion)||null,position:el.dataset.position||'',expectedCount:ongoing.state.settings.count,useFilters:true,scanFromStart:true});}
+ else if(action==='ongoing-history'&&member?.puuid){
+  history.state.streamer=ongoing.state.settings.streamer;ongoing.stop();route='history';render();
+  const opening=history.open({puuid:member.puuid,server:ongoing.state.roster?.server||'',source:ongoing.state.settings.source}),tab=history.current(),ticket=tab?.ticket;
+  await opening;
+  if(route!=='history'||history.current()!==tab||!history.state.tabs.includes(tab)||tab.ticket!==ticket)return;
+  if(el.dataset.champion||el.dataset.position)await history.collect({champion:Number(el.dataset.champion)||null,position:el.dataset.position||'',expectedCount:ongoing.state.settings.count,useFilters:true,scanFromStart:true});
+ }
  else if(action==='ongoing-note'&&member?.puuid){overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal"><header class="modal-header"><h2>本次运行备注</h2>${button('close','','close','quiet icon-only')}</header><div class="panel-body"><label>仅保存在本机当前运行内存<input id="ongoing-note-input" maxlength="200" value="${e(ongoing.state.settings.streamer?'':ongoing.state.notes[member.puuid]||'')}"></label>${button('ongoing-note-save','保存','','',`data-player="${e(key)}"`)}</div></section></div>`;}
  else if(action==='ongoing-note-save'){ongoing.note(key,document.getElementById('ongoing-note-input')?.value);closeOverlay();}
  else if(action==='ongoing-preview'&&entry?.page){
   const game=entry.page.games.find(g=>g.id===Number(el.dataset.id));if(!game)return;history.state.streamer=ongoing.state.settings.streamer;route='history';ongoing.stop();render();
-  const tab=await history.open({puuid:member.puuid,server:entry.page.server||'',source:entry.page.source,handle:entry.page.handle,start:entry.page.start,count:entry.page.count});
-  if(!tab.page)return;if(!tab.page.games.some(g=>g.id===game.id))tab.page.games.unshift(game);await history.detail(game.id,'summary');document.querySelector(`[data-history-match="${game.id}"]`)?.scrollIntoView({block:'start'});
+  const opening=history.open({puuid:member.puuid,server:entry.page.server||'',source:entry.page.source,handle:entry.page.handle,start:entry.page.start,count:entry.page.count}),tab=history.current(),ticket=tab?.ticket;
+  await opening;
+  if(route!=='history'||history.current()!==tab||!history.state.tabs.includes(tab)||tab.ticket!==ticket||!tab.page)return;
+  if(!tab.page.games.some(g=>g.id===game.id))tab.page.games.unshift(game);await history.detail(game.id,'summary');
+  if(route==='history'&&history.current()===tab&&tab.ticket===ticket)document.querySelector(`[data-history-match="${game.id}"]`)?.scrollIntoView({block:'start'});
  }
 }
 async function historyAction(action,el,background=false){
@@ -1094,7 +1103,7 @@ function pickerTiles(){
   return `<button type="button" class="champ-option ${selected?'selected':''}" data-action="pick-champion" data-id="${c.id}" aria-label="${e(c.name)}" aria-pressed="${selected}" title="${e(c.name)} · ${e(c.title)}">${portrait(c)}<span>${e(c.name)}</span></button>`;
  }).join('')||'<p class="muted">没有找到匹配英雄。</p>';
 }
-function closeOverlay(){roomConfigurationView=null;activeOverlaySelect=null;pendingBuildRender=false;renderedBuildContext=null;currentWindowInfo=null;catalogRequest++;comboView=null;picker=null;buildView=null;detailResult=null;buildReturn=null;overlay.innerHTML='';}
+function closeOverlay(){if(overlay.querySelector('[aria-label="玩家搜索结果"]'))history.cancelSearch();roomConfigurationView=null;activeOverlaySelect=null;pendingBuildRender=false;renderedBuildContext=null;currentWindowInfo=null;catalogRequest++;comboView=null;picker=null;buildView=null;detailResult=null;buildReturn=null;overlay.innerHTML='';}
 async function showWindowInfo(refresh=false){
  if(!refresh){closeOverlay();overlay.innerHTML=windowInfoDialog(null);}
  const restore=preserveOverlay(overlay),request=++catalogRequest;

@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$InstallDir,[string]$PreviousInstallDir='', [string]$StagedDir='', [string]$BaseManifest='', [switch]$StopOnly,[string]$RegistryId='RiftBuddy',[string]$ShortcutName='开黑搭子')
+param([Parameter(Mandatory=$true)][string]$InstallDir,[string]$PreviousInstallDir='', [string]$StagedDir='', [string]$BaseManifest='', [string]$BlockPatch='', [switch]$StopOnly,[string]$RegistryId='RiftBuddy',[string]$ShortcutName='开黑搭子')
 $ErrorActionPreference='Stop'
 # Use Windows PowerShell's own modules even when launched from pwsh/Node.
 $env:PSModulePath=Join-Path $PSHOME 'Modules'
@@ -27,6 +27,47 @@ function VerifyFile([string]$File,$Row){
  if(!(Test-Path -LiteralPath $File -PathType Leaf) -or (Get-Item -LiteralPath $File).Length -ne $Row.bytes -or (FileSha $File) -ine $Row.sha256){throw 'Payload integrity check failed'}
 }
 function CopyExact([string]$From,[string]$To){$Parent=Split-Path -Parent $To;if(!(Test-Path -LiteralPath $Parent)){New-Item -ItemType Directory -Path $Parent -Force|Out-Null};Copy-Item -LiteralPath $From -Destination $To -Force}
+function RestoreBlocks([string]$Descriptor,$Base,$Next,[string]$OriginalRoot,[string]$StageRoot){
+ $Info=Get-Item -LiteralPath $Descriptor
+ if($Info.PSIsContainer -or ($Info.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $Info.Length -gt 33554432){throw 'Invalid block patch descriptor'}
+ $Patch=Get-Content -LiteralPath $Descriptor -Raw -Encoding UTF8|ConvertFrom-Json
+ if($Patch.schema -ne 1 -or $Patch.files -isnot [array] -or $Patch.files.Count -lt 1 -or $Patch.files.Count -gt 200){throw 'Invalid block patch files'}
+ $BaseFiles=@{};$NextFiles=@{};$Seen=@{}
+ foreach($Row in $Base.files){$BaseFiles[$Row.name]=$Row};foreach($Row in $Next.files){$NextFiles[$Row.name]=$Row}
+ foreach($Entry in $Patch.files){
+  $Before=$BaseFiles[$Entry.name];$After=$NextFiles[$Entry.name]
+  if(!$Before -or !$After -or $Seen.ContainsKey($Entry.name) -or $Entry.baseBytes -ne $Before.bytes -or $Entry.baseSha256 -cne $Before.sha256 -or $Entry.targetBytes -ne $After.bytes -or $Entry.targetSha256 -cne $After.sha256){throw 'Block patch identity differs from manifests'}
+  $Seen[$Entry.name]=$true
+  $Original=ChildPath $OriginalRoot $Entry.name;$Destination=ChildPath $StageRoot $Entry.name
+  if(Test-Path -LiteralPath $Destination){throw 'Block patch conflicts with staged payload'}
+  VerifyFile $Original $Before
+  if($Entry.operations -isnot [array] -or $Entry.operations.Count -lt 1 -or $Entry.operations.Count -gt 100000){throw 'Invalid block patch operations'}
+  $Parent=Split-Path -Parent $Destination;if(!(Test-Path -LiteralPath $Parent)){New-Item -ItemType Directory -Path $Parent -Force|Out-Null}
+  $InputStream=[IO.File]::OpenRead($Original);$OutputStream=$null
+  try {
+   $OutputStream=[IO.File]::Open($Destination,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+   $Buffer=New-Object byte[] 65536;$Written=0L
+   foreach($Operation in $Entry.operations){
+    $Count=[long]$Operation.bytes
+    if($Count -le 0 -or $Count -ne $Operation.bytes -or $Count -gt $After.bytes-$Written){throw 'Invalid block patch length'}
+    $Copy=$Operation.PSObject.Properties.Name -contains 'copy';$Literal=$Operation.PSObject.Properties.Name -contains 'data'
+    if($Copy -eq $Literal){throw 'Ambiguous block patch operation'}
+    if($Copy){
+     $Offset=[long]$Operation.copy
+     if($Offset -lt 0 -or $Offset -ne $Operation.copy -or $Offset -gt $Before.bytes -or $Count -gt $Before.bytes-$Offset){throw 'Invalid block patch source range'}
+     $null=$InputStream.Seek($Offset,[IO.SeekOrigin]::Begin);$Remaining=$Count
+     while($Remaining -gt 0){$Read=$InputStream.Read($Buffer,0,[int][Math]::Min(65536,$Remaining));if($Read -le 0){throw 'Block patch source ended early'};$OutputStream.Write($Buffer,0,$Read);$Remaining-=$Read}
+    }else{
+     if($Operation.data -isnot [string] -or $Count -gt 65536 -or $Operation.data.Length -gt 87384){throw 'Invalid block patch literal'}
+     $Bytes=[Convert]::FromBase64String($Operation.data);if($Bytes.Length -ne $Count){throw 'Block patch literal length differs'};$OutputStream.Write($Bytes,0,$Bytes.Length)
+    }
+    $Written+=$Count
+   }
+   if($Written -ne $After.bytes){throw 'Block patch output is incomplete'}
+  }finally{if($OutputStream){$OutputStream.Dispose()};$InputStream.Dispose()}
+  VerifyFile $Destination $After
+ }
+}
 function StopInstalled([string]$Root){
  $Allowed=@('开黑搭子.exe','resources/window-observer.exe','resources/connection/node.exe','resources/connection/connection-launcher.exe')|ForEach-Object {ChildPath $Root $_}
  $Processes=@(Get-CimInstance Win32_Process|Where-Object {$_.ExecutablePath -and $Allowed -contains $_.ExecutablePath})
@@ -49,10 +90,12 @@ try {
  if($Target -eq $Stage -or $Stage.StartsWith($Target+'\',[StringComparison]::OrdinalIgnoreCase) -or $Target.StartsWith($Stage+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Staging overlaps installation'}
  $Old=if($PreviousInstallDir){CheckedRoot $PreviousInstallDir}else{$Target}
  $Manifest=ReadManifest (Join-Path $Stage 'rift-buddy-install.json')
+ if($BlockPatch -and !$BaseManifest){throw 'Block patch requires an incremental base'}
  if($BaseManifest){
   $Base=ReadManifest $BaseManifest
   $Installed=ReadManifest (Join-Path $Old 'rift-buddy-install.json')
   if($Installed.version -ne $Base.version -or (FileSha (Join-Path $Old 'rift-buddy-install.json')) -ne (FileSha $BaseManifest)){throw 'Incremental base changed; use full installer'}
+  if($BlockPatch){RestoreBlocks $BlockPatch $Base $Manifest $Old $Stage}
   foreach($Row in $Manifest.files){$Destination=ChildPath $Stage $Row.name;if(!(Test-Path -LiteralPath $Destination)){$Original=ChildPath $Old $Row.name;VerifyFile $Original $Row;CopyExact $Original $Destination}}
  }
  foreach($Row in $Manifest.files){VerifyFile (ChildPath $Stage $Row.name) $Row}

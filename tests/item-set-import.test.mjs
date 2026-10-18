@@ -16,13 +16,13 @@ async function fixture(tencent=false){
  const root=await fs.mkdtemp(path.resolve('.local/item-set-service-')),installDir=path.join(root,tencent?'LeagueClient':'League of Legends'),game=tencent?path.join(root,'Game'):installDir;
  await fs.mkdir(installDir);await fs.writeFile(path.join(installDir,'LeagueClient.exe'),'isolated test marker');if(tencent){await fs.mkdir(game);await fs.writeFile(path.join(game,'League of Legends.exe'),'isolated test marker');}
  const requests=[],deps={discover:async()=>({port:23456,password:'mock-only'}),request:async(_auth,route,method='GET')=>{requests.push({route,method});assert.equal(route,'/data-store/v1/install-dir');assert.equal(method,'GET');return installDir;}};
- const target=path.join(game,'Config','Global','Recommended'),write=(value=itemSet,io=fs)=>importItemSet({itemSet:value,data},{...deps,io});return {root,installDir,game,target,requests,deps,write};
+ const target=path.join(game,'Config','Champions','Volibear','Recommended'),write=(value=itemSet,io=fs)=>importItemSet({itemSet:value,data},{...deps,io});return {root,installDir,game,target,requests,deps,write};
 }
 
 test('Riot and Tencent layouts write one scoped set, read it back, update it atomically and preserve every other file',async()=>{
  for(const tencent of [false,true]){
   const f=await fixture(tencent),result=await f.write();assert.equal(result.confirmation,'disk');assert.equal(result.replaced,false);assert.equal(result.title,itemSet.title);
-  const filename=path.join(f.target,itemSet.uid+'.json');assert.deepEqual(JSON.parse(await fs.readFile(filename,'utf8')),itemSet);
+  const filename=path.join(f.target,itemSet.uid+'.json'),saved=JSON.parse(await fs.readFile(filename,'utf8'));assert.deepEqual({...saved,sortrank:0},itemSet);assert.ok(saved.sortrank>0);assert.equal(saved.priority,true);
   for(const name of ['user-build.json','akari1-106.json','rift-buddy-22-bottom-rift.json'])await fs.writeFile(path.join(f.target,name),'user content '+name);
   const changed={...structuredClone(itemSet),title:itemSet.title+' 自选'};assert.equal((await f.write(changed)).replaced,true);assert.equal(JSON.parse(await fs.readFile(filename)).title,changed.title);
   assert.deepEqual((await fs.readdir(f.target)).sort(),['user-build.json','akari1-106.json','rift-buddy-22-bottom-rift.json',itemSet.uid+'.json'].sort());
@@ -48,12 +48,11 @@ test('write permission and atomic rename failures retain the old set and remove 
 });
 
 test('a selection guard is evaluated after a preceding item-set write and preserves its committed file when the queued click expires',async()=>{
- const f=await fixture();let release,entered,queued;const ready=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve),waiting=new Promise(resolve=>queued=resolve);let current=true,guards=0;
+ const f=await fixture();let release,entered;const ready=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve);let current=true,guards=0;
  const first=importItemSet({itemSet,data},{...f.deps,beforeCommit:async()=>{entered();await gate;}});await ready;
- const disk={...fs,realpath:async filename=>{const result=await fs.realpath(filename);if(filename===f.target)setImmediate(queued);return result;}};
- const second=importItemSet({itemSet:{...itemSet,title:itemSet.title+' Queued'},data},{...f.deps,io:disk,beforeCommit:async()=>{guards++;if(!current)throw Error('选人会话已变化');}});
- await waiting;assert.equal(guards,0,'Second commit remains behind the first write');current=false;release();await first;await assert.rejects(second,/选人会话已变化/);assert.equal(guards,1);
- assert.deepEqual(JSON.parse(await fs.readFile(path.join(f.target,itemSet.uid+'.json'))),itemSet);assert.deepEqual(await fs.readdir(f.target),[itemSet.uid+'.json']);
+ const second=importItemSet({itemSet:{...itemSet,title:itemSet.title+' Queued'},data},{...f.deps,beforeCommit:async()=>{guards++;if(!current)throw Error('选人会话已变化');}});
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(guards,0,'Second commit remains behind the first write');current=false;release();await first;await assert.rejects(second,/选人会话已变化/);assert.equal(guards,1);
+ assert.deepEqual({...JSON.parse(await fs.readFile(path.join(f.target,itemSet.uid+'.json'))),sortrank:0},itemSet);assert.deepEqual(await fs.readdir(f.target),[itemSet.uid+'.json']);
 });
 
 test('an existing set that requires read permission produces the same actionable authorization fallback before creating temporary files',async()=>{
@@ -80,6 +79,51 @@ test('file edits concurrent with preparation cancel the replacement instead of c
  await assert.rejects(f.write({...itemSet,title:itemSet.title+' Next'},io),/发生变化/);assert.equal(await fs.readFile(filename,'utf8'),changed);
 });
 
+test('the latest applied role sorts ahead of older roles even when clicks are concurrent, without changing their builds',async()=>{
+ const f=await fixture(),jungle=createItemSet(champion,getBuild(champion,'jungle',data),data),load=async set=>JSON.parse(await fs.readFile(path.join(f.target,set.uid+'.json'),'utf8'));
+ await Promise.all([f.write(),f.write(jungle)]);
+ const top=await load(itemSet),second=await load(jungle);assert.ok(second.sortrank>top.sortrank);assert.equal(second.type,'custom');assert.equal(second.priority,true);assert.equal(second.map,'SR');
+ const before=await fs.readFile(path.join(f.target,jungle.uid+'.json'),'utf8');await f.write();
+ assert.ok((await load(itemSet)).sortrank>second.sortrank);assert.equal(await fs.readFile(path.join(f.target,jungle.uid+'.json'),'utf8'),before);assert.deepEqual(top.blocks,itemSet.blocks);
+ await assert.rejects(fs.stat(path.join(f.game,'Config','Global')),{code:'ENOENT'});
+});
+
+test('migration verifies the new champion-scoped set before removing only its matching owned global predecessor',async()=>{
+ for(const tencent of [false,true]){
+  const f=await fixture(tencent),global=path.join(f.game,'Config','Global','Recommended'),legacy={...itemSet,type:'global',map:'any',priority:false},filename=path.join(global,itemSet.uid+'.json');await fs.mkdir(global,{recursive:true});await fs.writeFile(filename,JSON.stringify(legacy));
+  await fs.writeFile(path.join(global,'user-build.json'),'keep user build');await fs.writeFile(path.join(global,'rift-buddy-22-bottom-rift.json'),'keep another champion');
+  const io={...fs,unlink:async file=>{if(file===filename){const actual=JSON.parse(await fs.readFile(path.join(f.target,itemSet.uid+'.json'),'utf8'));assert.equal(actual.type,'custom');assert.equal(actual.priority,true);assert.deepEqual(actual.blocks,itemSet.blocks);}return fs.unlink(file);}};
+  const result=await f.write(legacy,io);assert.equal(result.legacyMigrated,true);assert.equal(result.replaced,true);assert.equal(result.preferred,true);await assert.rejects(fs.stat(filename),{code:'ENOENT'});
+  assert.equal(await fs.readFile(path.join(global,'user-build.json'),'utf8'),'keep user build');assert.equal(await fs.readFile(path.join(global,'rift-buddy-22-bottom-rift.json'),'utf8'),'keep another champion');
+ }
+});
+
+test('a foreign or malformed legacy file is preserved and cannot be silently replaced by a competing duplicate UID',async()=>{
+ for(const contents of [JSON.stringify({...itemSet,title:'My personal set'}),'unreadable user JSON']){
+  const f=await fixture(),global=path.join(f.game,'Config','Global','Recommended'),filename=path.join(global,itemSet.uid+'.json');await fs.mkdir(global,{recursive:true});await fs.writeFile(filename,contents);
+  await assert.rejects(f.write(),/保留原文件/);assert.equal(await fs.readFile(filename,'utf8'),contents);assert.deepEqual(await fs.readdir(f.target),[]);
+ }
+});
+
+test('a changed legacy file or expired click is never deleted during migration',async()=>{
+ for(const expires of [false,true]){
+  const f=await fixture(),global=path.join(f.game,'Config','Global','Recommended'),filename=path.join(global,itemSet.uid+'.json'),original=JSON.stringify({...itemSet,type:'global',map:'any'}),changed=JSON.stringify({...itemSet,title:itemSet.title+' User edit'});await fs.mkdir(global,{recursive:true});await fs.writeFile(filename,original);
+  if(expires){await assert.rejects(importItemSet({itemSet,data},{...f.deps,beforeCommit:async()=>{throw Error('选人会话已变化');}}),/选人会话已变化/);assert.equal(await fs.readFile(filename,'utf8'),original);assert.deepEqual(await fs.readdir(f.target),[]);}
+  else{const io={...fs,rename:async(...args)=>{await fs.rename(...args);await fs.writeFile(filename,changed);}};await assert.rejects(f.write(itemSet,io),/旧版同名文件发生变化/);assert.equal(await fs.readFile(filename,'utf8'),changed);}
+ }
+});
+
+test('champion directory redirection is rejected before creating a recommended set outside the game',async()=>{
+ const f=await fixture(),outside=path.join(f.root,'outside');await fs.mkdir(outside);await fs.mkdir(path.join(f.game,'Config','Champions'),{recursive:true});await fs.symlink(outside,path.join(f.game,'Config','Champions','Volibear'),process.platform==='win32'?'junction':'dir');
+ await assert.rejects(f.write(),/重定向/);assert.deepEqual(await fs.readdir(outside),[]);
+});
+
+test('canonical champion directory names and map selectors scope Wukong and Howling Abyss correctly',async()=>{
+ const f=await fixture(),wukong=data.champions.find(c=>c.id==='MonkeyKing'),set=createItemSet(wukong,getBuild(wukong,'top',data),data);
+ await f.write(set);const saved=JSON.parse(await fs.readFile(path.join(f.game,'Config','Champions','MonkeyKing','Recommended',set.uid+'.json'),'utf8'));assert.equal(saved.map,'SR');assert.equal(saved.priority,true);
+ const hex=createItemSet(champion,getBuild(champion,'top',data,{mode:'hex'}),data);await f.write(hex);const abyss=JSON.parse(await fs.readFile(path.join(f.target,hex.uid+'.json'),'utf8'));assert.equal(abyss.map,'HA');assert.deepEqual(abyss.associatedMaps,[12]);
+});
+
 test('narrow LCU route is loopback-only; current-page writes and unrelated APIs keep their existing restrictions',async()=>{
  const original=https.request;let seen;
  https.request=(options,callback)=>{seen=options;const req=new EventEmitter();req.end=()=>queueMicrotask(()=>{const res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify('fixture')));res.emit('end');});return req;};
@@ -93,6 +137,6 @@ test('authenticated Windows helper revalidates item sets and imports into an iso
  const server=await startHelper(sessionFile,{userData:f.root,bundleRoot:path.resolve('.'),quit(){}});
  try{
   await assert.rejects(requestHelper(session,'importItemSet',{itemSet:{...itemSet,uid:'../../bad'}}),/格式/);assert.equal(requests.length,0);
-  const result=await requestHelper(session,'importItemSet',{itemSet,filePath:'C:/Windows/forbidden'});assert.equal(result.uid,itemSet.uid);assert.equal(result.confirmation,'disk');assert.deepEqual(JSON.parse(await fs.readFile(path.join(f.target,itemSet.uid+'.json'))),itemSet);assert.deepEqual(requests,['/data-store/v1/install-dir']);
+  const result=await requestHelper(session,'importItemSet',{itemSet,filePath:'C:/Windows/forbidden'});assert.equal(result.uid,itemSet.uid);assert.equal(result.confirmation,'disk');assert.deepEqual({...JSON.parse(await fs.readFile(path.join(f.target,itemSet.uid+'.json'))),sortrank:0},itemSet);assert.deepEqual(requests,['/data-store/v1/install-dir']);
  }finally{https.request=original;await requestHelper(session,'shutdown');if(server.listening)server.close();}
 });

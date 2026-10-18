@@ -114,7 +114,7 @@ test('a new game during installation lookup or temporary-file I/O cannot commit 
   let renames=0;const disk={...io,writeFile:async(...args)=>{await io.writeFile(...args);if(edge==='temporary'&&String(args[0]).endsWith('.tmp'))changeGame();},rename:async(...args)=>{renames++;return io.rename(...args);}};
   f.deps.writeItems=(args,deps)=>importItemSet(args,{...deps,io:disk});
   const result=await f.run();assert.equal(result.complete,false,edge);assert.equal(result.steps.items.status,'failed');assert.match(result.steps.items.message,/选人会话已变化/);assert.equal(result.steps.spells.status,'done');assert.equal(renames,0);
-  assert.deepEqual(await io.readdir(path.join(game,'Config','Global','Recommended')),[],'Failed selection must leave no visible or temporary item set');
+  assert.deepEqual(await io.readdir(path.join(game,'Config','Champions','Ashe','Recommended')),[],'Failed selection must leave no visible or temporary item set');
  }
 });
 
