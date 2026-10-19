@@ -11,6 +11,7 @@ const retainedPair=process.env.RIFT_BUDDY_COOP_RETAINED_PAIR==='1',shooters=proc
 const planLabel=shared||shooters?'共同分工':'机制搭配',planKind=shared||shooters?'shared':'cooperation';
 const coverageData=process.env.RIFT_BUDDY_COOP_COVERAGE==='1';
 const adaptiveData=process.env.RIFT_BUDDY_COOP_DATA==='1';
+const ordinaryLockedFriends=process.env.RIFT_BUDDY_COOP_LOCKED_FRIENDS==='1'&&![relay,partySize,specific,shared,retainedPair,shooters,farming,coverageData,adaptiveData].some(Boolean);
 const crossLane=process.env.RIFT_BUDDY_COOP_CROSS_LANE==='1',lockedFriends=process.env.RIFT_BUDDY_COOP_LOCKED_FRIENDS==='1',friend=relay?'Gragas':specific?'Xerath':partySize===4?'Gnar':partySize===5?'Urgot':shared?(poke?'Jayce':growth?'Kayle':'Garen'):retainedPair?'Kayle':shooters?'Lux':farming?'Garen':coverageData?'Shen':adaptiveData?'Gwen':lockedFriends?'Fiora':crossLane?'Darius':'Trundle',expectedMembers=relay?[['jungle','Gragas'],['mid','Yasuo'],['support','Rakan']]:specific?[['mid','Xerath'],['bottom','Ezreal'],['support','Soraka']]:partySize===4?[['top','Gnar'],['jungle','Lillia'],['mid','Velkoz'],['bottom','Kaisa']]:partySize===5?[['top','Urgot'],['jungle','Udyr'],['mid','Aurora'],['bottom','Aphelios'],['support','Zilean']]:shared?[['top',poke?'Jayce':growth?'Kayle':'Garen'],['jungle',poke?'Nidalee':growth?'Karthus':'MasterYi'],['mid',poke?(pokeGuard?'Galio':'Lux'):growth?'Vladimir':'Katarina']]:retainedPair?[['top','Kayle'],['jungle','Kindred'],['mid','Vladimir']]:shooters?[['mid','Lux'],['bottom','Jhin'],['support','Nautilus']]:farming?[['top','Garen'],['jungle','MasterYi'],['mid','Annie']]:[['top',friend],['jungle',coverageData?'Poppy':adaptiveData?'Graves':lockedFriends?'JarvanIV':crossLane?'LeeSin':'Sejuani'],['mid',coverageData?'Brand':adaptiveData?'Vex':lockedFriends?'Syndra':crossLane?'Ahri':'Seraphine']],marker=relay?'酒桶 E':partySize||specific?'成立条件':shared?(poke?'不以硬控为统一开场条件':'没有已核对的稳定控制衔接'):retainedPair?'千珏 R':shooters?'标记':farming?'击杀或助攻':coverageData?'撞墙':adaptiveData?'恐惧':lockedFriends?'破绽':crossLane?'魅惑':'四层';
 globalShortcut.register=()=>false;global.fetch=async()=>{throw Error('Isolated cooperation smoke: network disabled');};https.request=()=>{throw Error('Isolated cooperation smoke: game sockets disabled');};
 app.on('browser-window-created',(_event,w)=>{windows.push(w);w.show=()=>{};w.showInactive=()=>{};w.focus=()=>{};w.webContents.setBackgroundThrottling(false);});
@@ -36,7 +37,18 @@ async function run(){
   const image=await deadline(main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true}),'Capture deadline: '+name);assert.equal(image.isEmpty(),false,'Empty capture: '+name);
   await fs.writeFile(path.join(root,name),image.toPNG());
  };
- await until(()=>js('!!document.querySelector("#solo-role")'),'UI missing');if(restart){const restored=await state();assert.deepEqual(restored.draft.creativePlan,restored.favorites.find(f=>f.type==='team').creativePlan,'Restart changed the adopted source plan');}await generate();
+ let restoredPlan;
+ await until(()=>js('!!document.querySelector("#solo-role")'),'UI missing');if(restart){const restored=await state();restoredPlan=restored.draft.creativePlan;assert.deepEqual(restoredPlan,restored.favorites.find(f=>f.type==='team').creativePlan,'Restart changed the adopted source plan');}await generate();
+ if(ordinaryLockedFriends){
+  // The unpooled jungle varies with the session seed. Preview the actual first
+  // candidate, but on restart keep testing the original adopted plan.
+  const members=restart?restoredPlan.members.map(m=>[m.role,m.champion]):await js(`[...document.querySelectorAll('.result-card[data-result-index="0"] > .candidate-row > .candidate-members > [data-action=build][data-result-index="0"][data-role][data-id]')].map(b=>[b.dataset.role,b.dataset.id])`);
+  members.sort((a,b)=>['top','jungle','mid'].indexOf(a[0])-['top','jungle','mid'].indexOf(b[0]));
+  assert.deepEqual(members.map(m=>m[0]),['top','jungle','mid']);assert.equal(members[0][1],'Fiora');assert.equal(members[2][1],'Syndra');assert.equal(new Set(members.map(m=>m[1])).size,3);
+  const current=await state();assert.ok(Object.values(current.preferences.rolePools).every(p=>p.mode==='off'&&!p.heroes.length),'Unpooled friends fixture must not restrict the free jungle');
+  expectedMembers.splice(0,expectedMembers.length,...members);
+  if(restart){const first=JSON.parse(await fs.readFile(path.join(root,'select.json')));assert.equal(restoredPlan.id,first.savedPlanId,'Restart replaced the originally adopted plan');assert.deepEqual(restoredPlan.members.map(m=>m.champion),first.memberGuides,'Restart replaced the originally adopted members');}
+ }
  const firstCardText=await js('document.querySelector(".result-card").textContent');
  assert.ok(firstCardText.includes(planLabel),'Expected '+planLabel+' in the completed first result: '+firstCardText.slice(0,600));
  let firstScreenActions=null;
@@ -84,6 +96,7 @@ async function run(){
  const accepted=await state();for(const [role,id]of expectedMembers)assert.ok(accepted.draft.slots.some(s=>s.role===role&&s.champion===id&&s.locked));
  assert.ok(accepted.draft.slots.find(s=>s.role===anchorRole).manualPosition);assert.equal(accepted.draft.slots.find(s=>s.role===anchorRole).clientCellId,2);
  const plan=accepted.draft.creativePlan,planData=plan[planKind];assert.equal(plan.archetype,planKind);if(shared){assert.equal(planData.bonus,0);assert.deepEqual(planData.edges,[]);if(!partySize)assert.equal(plan.tempo,specific||poke?'poke':'growth');assert.equal(planData.memberJobs.length,expectedMembers.length);}const favorite=accepted.favorites.find(f=>f.type==='team');assert.deepEqual(favorite.creativePlan,plan);assert.equal(favorite.configurations.length,expectedMembers.length);assert.ok(favorite.configurations.every(c=>c.creativePlan.id===plan.id));
+ if(ordinaryLockedFriends&&restart)assert.deepEqual(plan,restoredPlan,'Returning to the adopted plan must preserve its complete contract');
   for(const condition of planData.conditions)assert.ok(detail.includes(condition),'Full play omitted a member condition');assert.ok(detail.includes(planData.economy),'Full play omitted the economy contract');
  if(retainedPair){assert.deepEqual(planData.edges,expectedCooperation.edges.map(({alreadyLinked,...edge})=>edge));assert.deepEqual(planData.memberJobs,expectedCooperation.memberJobs);assert.equal(planData.sourceNote,expectedCooperation.sourceNote);for(const text of [expectedCooperation.edges[0].step,expectedCooperation.edges[0].condition,expectedCooperation.edges[0].failure])assert.ok(detail.includes(text)&&copies.at(-1).includes(text),'Original pair contract missing from UI or copy');}
  if(previewRuneId)assert.equal(favorite.configurations.find(c=>c.role===previewRole).runeId,previewRuneId,'Accepting the plan must preserve the rune page edited in its sidebar preview');
