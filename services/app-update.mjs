@@ -129,7 +129,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
  async function verify(record){
   try{const hash=crypto.createHash('sha256'),handle=await fs.open(record.file,'r');
   try{for await(const chunk of handle.createReadStream())hash.update(chunk);}finally{await handle.close();}
-  if(hash.digest('hex')!==record.sha256){await cleanup();return false;}return true;}catch{await cleanup().catch(()=>{});return false;}
+  if(hash.digest('hex')!==record.sha256){await cleanup({partials:false});return false;}return true;}catch{await cleanup({partials:false}).catch(()=>{});return false;}
  }
  // Upgrade success is recognized by the running version. Keep retryable and
  // paused updates; discard only this updater's own direct-child artifacts.
@@ -139,7 +139,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
   let paused=await partials.read();
   if(paused&&!isNewerThan(paused.release.version,currentVersion)){await partials.clear();paused=null;}
   let raw=await readRecord();
-  if(raw&&!isNewerThan(raw.version,currentVersion)){await cleanup();removed.stale=raw.version;raw=null;}
+  if(raw&&!isNewerThan(raw.version,currentVersion)){await cleanup({partials:false});removed.stale=raw.version;raw=null;}
   if(!raw)await removeFile(storeFile);
   try{
    if((await fs.lstat(tempDir)).isSymbolicLink())return removed;
@@ -307,11 +307,11 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
  async function install(){
   const record=await readRecord();
   if(!record)throw Error('没有已下载的安装包，请先下载新版');
-  if(!isNewerThan(record.version,currentVersion)){await cleanup();throw Error('旧安装包已清理，请重新检查更新');}
-  if(record.kind==='incremental'&&!await installedPayload(installDir,record.fromVersion,{expectedHash:record.baseManifestSha256,verifyFiles:true})){await cleanup();throw Error('本地程序已变化，增量包已清除；重新下载将使用完整包');}
+  if(!isNewerThan(record.version,currentVersion)){await cleanup({partials:false});throw Error('旧安装包已清理，请重新检查更新');}
+  if(record.kind==='incremental'&&!await installedPayload(installDir,record.fromVersion,{expectedHash:record.baseManifestSha256,verifyFiles:true})){await cleanup({partials:false});throw Error('本地程序已变化，增量包已清除；重新下载将使用完整包');}
   const hash=crypto.createHash('sha256'),handle=await fs.open(record.file,'r');
   try{for await(const chunk of handle.createReadStream())hash.update(chunk);}finally{await handle.close();}
-  if(hash.digest('hex')!==record.sha256){await cleanup();throw Error('安装包完整性复验不一致，已删除；请重新下载');}
+  if(hash.digest('hex')!==record.sha256){await cleanup({partials:false});throw Error('安装包完整性复验不一致，已删除；请重新下载');}
   if(dryRun){const witness={file:record.file,sha256:record.sha256,bytes:record.bytes,at:new Date().toISOString()};await atomicJSON(storeFile+'.dry-run.json',witness);return {launched:false,dryRun:true,...witness};}
   return new Promise((resolve,reject)=>{
    const child=spawnImpl(record.file,{detached:true,stdio:'ignore'});

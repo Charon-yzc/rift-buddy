@@ -40,6 +40,12 @@ test('valid newer pending packages and paused progress survive cleanup together'
  const service=createAppUpdateService(f.options);assert.deepEqual(await service.sweep(),{parts:[],stale:null,installers:[]});assert.equal((await service.pending()).file,record.file);assert.equal((await service.partial()).received,12);assert.equal(await fs.readFile(raw.file,'utf8'),'paused bytes');
 });
 
+test('cleaning a stale completed installer preserves an independently newer paused update',async t=>{
+ const f=await fixture(t),record=await f.record('1.0.0'),partial=partialStore(f.tempDir,f.storeFile,1024*1024);
+ const {handle,raw}=await partial.open({release:{version:'3.0.0',tag:'v3.0.0'},key:'newer-paused',total:100,kind:'full',via:'direct'});await handle.write(Buffer.from('paused bytes'));await handle.close();
+ const service=createAppUpdateService({...f.options,currentVersion:'2.0.0'});assert.equal((await service.sweep()).stale,'1.0.0');await assert.rejects(fs.stat(record.file),{code:'ENOENT'});assert.equal((await service.partial()).received,12);assert.equal(await fs.readFile(raw.file,'utf8'),'paused bytes');
+});
+
 test('failed installation handoff retains its verified package for retry',async t=>{
  const f=await fixture(t),record=await f.record();
  const service=createAppUpdateService({...f.options,dryRun:false,spawnImpl:()=>{throw Error('Blocked by fixture');}});
@@ -78,11 +84,11 @@ test('same-version and older packages cannot be downloaded or installed',async t
  }
 });
 
-async function mainFixture({remote='3.0.0',paused=false,offline=false}={}){
+async function mainFixture({remote='3.0.0',paused=false,offline=false,serviceOverride=null}={}){
  const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlers=new Map(),snapshots=[],calls={check:0,cleanup:0,install:0,quit:0};
  const release=version=>({version,tag:'v'+version,url:releasePageUrl('v'+version)}),cached={...release('2.0.0'),bytes:10,sha256:'0'.repeat(64),kind:'full'};
  const service={pending:async()=>paused?null:cached,verify:async()=>true,partial:async()=>paused?{release:release('2.0.0'),received:5,total:10,kind:'full',via:'direct'}:null,check:async()=>{calls.check++;if(offline)throw Error('fixture offline');return {status:'available',release:release(remote)};},cleanup:async()=>{calls.cleanup++;},install:async()=>{calls.install++;return {dryRun:true,launched:false};}};
- const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences:{}},app:{getVersion:()=> '1.0.0',quit:()=>{calls.quit++;}},guard:(name,handler)=>handlers.set(name,handler),compareAppVersion:compareVersions,releasePageUrl,updater:()=>service,publishWindows:(_channel,status)=>snapshots.push(status),seed:{phase:'ready',release:release('2.0.0'),record:cached}};
+ const context={Promise,AbortController,AbortSignal,Error,quitting:false,win:null,state:{preferences:{}},app:{getVersion:()=> '1.0.0',quit:()=>{calls.quit++;}},guard:(name,handler)=>handlers.set(name,handler),compareAppVersion:compareVersions,releasePageUrl,updater:()=>serviceOverride||service,publishWindows:(_channel,status)=>snapshots.push(status),seed:{phase:'ready',release:release('2.0.0'),record:cached}};
  vm.createContext(context);vm.runInContext(source.slice(source.indexOf(' let appUpdateStatus='),source.indexOf(' const {changePresentation}'))+source.slice(source.indexOf(" guard('app-update-check'"),source.indexOf(" guard('apply-runes'")),context);
  return {handlers,snapshots,calls,context,ready:()=>vm.runInContext('appUpdateStatus=seed',context)};
 }
@@ -114,5 +120,30 @@ test('post-install cleanup retry is detached and skips active update operations'
  const context={appUpdateFlight:null,appUpdateInstallFlight:null,appUpdateAbort:null,appUpdater:{sweep:async()=>{sweeps++;}},setTimeout:(callback,ms)=>{assert.equal(ms,15000);retry=callback;return {unref:()=>{detached++;}};}};
  vm.runInNewContext(source.slice(source.indexOf(' const appUpdateCleanupTimer='),source.indexOf(' let appUpdateStatus=')),context);assert.equal(detached,1);
  for(const key of ['appUpdateFlight','appUpdateInstallFlight','appUpdateAbort']){context[key]={};retry();assert.equal(sweeps,0);context[key]=null;}
- retry();await Promise.resolve();assert.equal(sweeps,1);
+ retry();await context.appUpdateFlight;assert.equal(sweeps,1);assert.equal(context.appUpdateFlight,null);
+});
+
+test('cleanup retry holds the actual update mutex until its asynchronous filesystem work settles',async()=>{
+ const f=await mainFixture(),source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),started=Promise.withResolvers(),gate=Promise.withResolvers();let retry;
+ Object.assign(f.context,{appUpdater:{sweep:async()=>{started.resolve();await gate.promise;}},setTimeout:callback=>{retry=callback;return {unref(){}};}});
+ vm.runInContext(source.slice(source.indexOf(' const appUpdateCleanupTimer='),source.indexOf(' let appUpdateStatus=')),f.context);f.ready();retry();await started.promise;
+ await assert.rejects(f.handlers.get('app-update-download')(),/正在处理/);await assert.rejects(f.handlers.get('app-update-install')(),/请等待/);await f.handlers.get('app-update-check')();assert.equal(f.calls.check,0);assert.equal(f.calls.install,0);assert.equal(f.calls.cleanup,0);
+ const flight=vm.runInContext('appUpdateFlight',f.context);gate.resolve();await flight;assert.equal(vm.runInContext('appUpdateFlight',f.context),null);await f.handlers.get('app-update-check')();assert.equal(f.calls.check,1);
+});
+
+test('corrupt completed-package verification in the real main handler preserves a newer paused download',async t=>{
+ const f=await fixture(t),record=await f.record(),partial=partialStore(f.tempDir,f.storeFile,1024*1024);
+ const {handle,raw}=await partial.open({release:{version:'3.0.0',tag:'v3.0.0'},key:'future',total:100,kind:'full',via:'direct'});await handle.write(Buffer.from('paused bytes'));await handle.close();await fs.writeFile(record.file,Buffer.alloc(record.bytes,0));
+ const service=createAppUpdateService(f.options),main=await mainFixture({serviceOverride:service});await main.handlers.get('app-update-check')();
+ assert.equal(main.snapshots.at(-1).phase,'paused');assert.equal(main.snapshots.at(-1).release.version,'3.0.0');assert.equal(main.snapshots.at(-1).received,12);assert.equal(await fs.readFile(raw.file,'utf8'),'paused bytes');assert.equal(await service.pending(),null);
+});
+
+test('rejecting one completed installer leaves a separate newer paused update intact',async t=>{
+ for(const mode of ['old','hash','base']){
+  const f=await fixture(t),record=await f.record(mode==='old'?'1.0.0':'2.0.0'),partial=partialStore(f.tempDir,f.storeFile,1024*1024);
+  const {handle,raw}=await partial.open({release:{version:'3.0.0',tag:'v3.0.0'},key:mode,total:100,kind:'full',via:'direct'});await handle.write(Buffer.from('paused bytes'));await handle.close();
+  if(mode==='hash')await fs.writeFile(record.file,Buffer.alloc(record.bytes,0));
+  if(mode==='base')await fs.writeFile(f.storeFile,JSON.stringify({...record,kind:'incremental',fromVersion:'1.0.0',baseManifestSha256:'0'.repeat(64)}));
+  await assert.rejects(createAppUpdateService(f.options).install(),/旧安装包|完整性复验|本地程序已变化/);assert.equal(await fs.readFile(raw.file,'utf8'),'paused bytes');assert.equal((await partial.read()).received,12);
+ }
 });

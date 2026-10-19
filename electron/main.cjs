@@ -169,7 +169,10 @@ async function boot(){
  await appUpdater.sweep().catch(()=>{});
  // A freshly installed app can start just before the installer releases its
  // executable. Retry after that handoff, never during an active transfer.
- const appUpdateCleanupTimer=setTimeout(()=>{if(!appUpdateFlight&&!appUpdateInstallFlight&&!appUpdateAbort)appUpdater.sweep().catch(()=>{});},15000);
+ const appUpdateCleanupTimer=setTimeout(()=>{
+  if(appUpdateFlight||appUpdateInstallFlight||appUpdateAbort)return;
+  appUpdateFlight=Promise.resolve().then(()=>appUpdater.sweep()).catch(()=>{}).finally(()=>{appUpdateFlight=null;});
+ },15000);
  appUpdateCleanupTimer.unref?.();
  let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null,appUpdateInstallFlight=null,appUpdateStop=null;
  const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;publishWindows('app-update-progress',snapshot);};
