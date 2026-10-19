@@ -146,7 +146,9 @@ async function boot(){
  data.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],data);
  const {createDataFeedCache}=await import('../services/data-feed-cache.mjs');
  const {createDataFeedActivationGate}=await import('../services/data-feed.mjs');
- const observeFeedPhase=createDataFeedActivationGate();let feedIdle=false;
+ // Automatic statistics must wait for confirmed idle after restart. Explicit
+ // base-data refresh retains its existing initial-offline phase policy.
+ const observeFeedPhase=createDataFeedActivationGate(),observeSignedFeedPhase=createDataFeedActivationGate({requireIdleConfirmation:true});let feedIdle=false;
  const dataFeed=await createDataFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,restoreAtStartup:true,
   canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
   onChange:info=>{data.dataFeed=info;publishData(['dataFeed','rankings','buildSources','builds','hexBuilds']);}});
@@ -574,7 +576,7 @@ async function boot(){
     catch(error){diagnostic(`automatic permission request failed: ${error?.message||'unknown'}`);}
    }
    if(ballotRoundChanged(latestClient))clearRoomBallot();
-   feedIdle=observeFeedPhase(latestClient);dataFeed.activate();
+   observeFeedPhase(latestClient);feedIdle=observeSignedFeedPhase(latestClient);dataFeed.activate();
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId,{phase:latestClient.phase,previousPhase});if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId,{phase:latestClient.phase,previousPhase}).draft}));
    const claim=state.draft?.preselection;

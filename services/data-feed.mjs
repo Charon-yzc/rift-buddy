@@ -83,8 +83,8 @@ export function applyFeedBundle(data,bundle,manifest=null){
  }
  data.rankings=rankings;data.buildSources=builds;data.hexBuilds=hex;selectBuildSource(data,data.buildSource);
 }
-export function createDataFeedActivationGate(){
- let busy=false;
+export function createDataFeedActivationGate({requireIdleConfirmation=false}={}){
+ let busy=requireIdleConfirmation;
  return client=>{
   // A transient disconnect cannot clear an observed draft/game. Unknown
   // connected phases are held until the client reports an idle phase.

@@ -58,7 +58,13 @@ async function run(){
  const capture=async(name,w=main)=>{
   await w.webContents.executeJavaScript('[...document.images].forEach(i=>i.loading="eager")');
   await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});
-  await until(()=>w.webContents.executeJavaScript('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Missing screenshot image: '+name);
+  try{
+   // Guide synchronization can replace the drawer after the first layout.
+   // Start loading each current image, including newly rendered lazy images.
+   await until(()=>w.webContents.executeJavaScript('(()=>{const images=[...document.images];images.forEach(i=>i.loading="eager");return images.every(i=>i.complete&&i.naturalWidth>0);})()'),'Missing screenshot image: '+name);
+  }catch(error){
+   console.error('SCREENSHOT_IMAGES '+JSON.stringify(await w.webContents.executeJavaScript('[...document.images].filter(i=>!i.complete||!i.naturalWidth).map(i=>({src:i.src,currentSrc:i.currentSrc,loading:i.loading,complete:i.complete,naturalWidth:i.naturalWidth,fallback:i.dataset.fallback||null,inDocument:i.isConnected,detailsOpen:i.closest("details")?.open??null}))')));throw error;
+  }
   const captured=await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});assert.equal(captured.isEmpty(),false,'Empty screenshot: '+name);
   await fs.writeFile(path.join(root,name),captured.toPNG());
  };

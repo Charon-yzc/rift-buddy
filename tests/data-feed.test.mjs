@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {renameSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {generateKeyPairSync,sign} from 'node:crypto';
@@ -15,6 +16,7 @@ import {stageServerData} from '../services/server-data-store.mjs';
 import {publishServerData} from '../services/server-data-publish.mjs';
 import {isFreshBuildReference} from '../src/core/builds.mjs';
 import {mechanicReview} from '../src/core/mechanic-review.mjs';
+import {atomicJSON} from '../services/data.mjs';
 
 const seed=await loadServerSeed(path.resolve('data'));
 const pair=generateKeyPairSync('ed25519'),publicKey=pair.publicKey.export({type:'spki',format:'pem'}),keys={test:publicKey};
@@ -30,6 +32,104 @@ function fixture(bundle=seed,sequence=now){
 }
 function data(){return {...structuredClone(seed.game),rankings:{},buildSources:{},hexBuilds:{}};}
 async function temporary(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-data-feed-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));return root;}
+
+test('automatic feed activation requires a confirmed idle phase after restart',()=>{
+ const gate=createDataFeedActivationGate({requireIdleConfirmation:true});
+ assert.equal(gate({connected:false,phase:'Offline'}),false);
+ assert.equal(gate({connected:true,phase:'ChampSelect'}),false);
+ assert.equal(gate({connected:false,phase:'Offline'}),false);
+ assert.equal(gate({connected:true,phase:'Lobby'}),true);
+ // Explicit manual base refresh keeps its existing initial-offline policy.
+ assert.equal(createDataFeedActivationGate()({connected:false,phase:'Offline'}),true);
+});
+
+test('deferred feed survives restart without becoming active, including metadata-only updates',async t=>{
+ const root=await temporary(t),bundle=structuredClone(seed);for(const group of DATA_FEED_NAMES)for(const ref of Object.values(bundle[group].entries))ref.fetchedAt=new Date(now-3*86400000).toISOString();
+ const first=fixture(bundle),game=data();let idle=true,current=first;
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>idle,download:url=>current.download(url),keys,clock:()=>now+10000});
+ await cache.check();const active=await fs.readFile(path.join(root,'data-feed.json'),'utf8');
+ const checkedAt=new Date(now+1000).toISOString(),envelope=first.envelopeFor({...first.manifest,sequence:now+1000,checkedAt});
+ current={download:async url=>url.endsWith('/latest.json')?Buffer.from(JSON.stringify(envelope)):first.assets[path.basename(url,'.json.gz')]};idle=false;
+ assert.equal((await cache.check({force:true})).phase,'pending');assert.equal(await fs.readFile(path.join(root,'data-feed.json'),'utf8'),active);
+ const restored=data(),again=await createDataFeedCache({root,getData:()=>restored,restoreAtStartup:true,canActivate:()=>idle,keys,clock:()=>now+10000});
+ assert.equal(again.summary().phase,'pending');assert.equal(Object.keys(restored.rankings).length,6);
+ const key=Object.keys(restored.buildSources)[0];assert.equal(restored.buildSources[key].serverCheckedAt,undefined);assert.equal(again.activate(),false);
+ idle=true;assert.equal(again.activate(),true);assert.equal(restored.buildSources[key].serverCheckedAt,checkedAt);
+ const next=data();await createDataFeedCache({root,getData:()=>next,restoreAtStartup:true,keys,clock:()=>now+10000});assert.equal(next.buildSources[key].serverCheckedAt,checkedAt);
+});
+
+test('a first pending download is not restored before idle is known',async t=>{
+ const root=await temporary(t),f=fixture(),game=data();let idle=false;
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>idle,download:f.download,keys,clock:()=>now});await cache.check();
+ const restored=data(),again=await createDataFeedCache({root,getData:()=>restored,restoreAtStartup:true,canActivate:()=>idle,keys,clock:()=>now});
+ assert.equal(Object.keys(restored.rankings).length,0);assert.equal(again.summary().phase,'pending');idle=true;assert.equal(again.activate(),true);
+});
+
+test('failed promotion preserves the active disk and memory generation until retry',async t=>{
+ const root=await temporary(t),game=data(),a=fixture(),changed=structuredClone(seed),updated=Object.values(changed.rankings.entries)[0];updated.boards.top[0].samples++;updated.fetchedAt=new Date(now+1).toISOString();
+ const b=fixture(changed,now+1);let incoming=a,fail=false;
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>true,download:url=>incoming.download(url),keys,clock:()=>now+100,promote:(from,to)=>{if(fail&&to===path.join(root,'data-feed.json'))throw Object.assign(Error('busy'),{code:'EBUSY'});renameSync(from,to);}});
+ await cache.check();const active=await fs.readFile(path.join(root,'data-feed.json'),'utf8'),rankings=game.rankings;incoming=b;fail=true;
+ assert.equal((await cache.check({force:true})).phase,'pending');assert.equal(game.rankings,rankings);assert.equal(await fs.readFile(path.join(root,'data-feed.json'),'utf8'),active);
+ fail=false;assert.equal(cache.activate(),true);assert.notDeepEqual(game.rankings,rankings);
+});
+
+test('a new staged write cannot pair an older pending RAM bundle with newer active disk bytes',async t=>{
+ const root=await temporary(t),a=fixture(),changed=structuredClone(seed),updated=Object.values(changed.rankings.entries)[0];updated.boards.top[0].samples++;updated.fetchedAt=new Date(now+1).toISOString();
+ const b=fixture(changed,now+1),game=data();let incoming=a,idle=false,hold=false,release,staged;
+ const stagedPromise=new Promise(resolve=>{staged=resolve;}),resume=new Promise(resolve=>{release=resolve;});
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>idle,download:url=>incoming.download(url),keys,clock:()=>now+100,write:async(file,value)=>{await atomicJSON(file,value);if(hold){staged();await resume;}}});
+ await cache.check();hold=true;incoming=b;const flight=cache.check({force:true});let result;
+ try{await stagedPromise;idle=true;assert.equal(cache.activate(),true);const active=JSON.parse(await fs.readFile(path.join(root,'data-feed.json'),'utf8'));assert.equal(verifyFeedEnvelope(active.envelope,{keys}).sequence,a.manifest.sequence);}
+ finally{idle=false;release();result=await flight;}
+ assert.equal(result.phase,'pending');
+ const restored=data(),again=await createDataFeedCache({root,getData:()=>restored,restoreAtStartup:true,canActivate:()=>idle,keys,clock:()=>now+100});
+ assert.deepEqual(restored.rankings,game.rankings);assert.equal(again.summary().phase,'pending');idle=true;assert.equal(again.activate(),true);assert.notDeepEqual(restored.rankings,game.rankings);
+});
+
+test('ambiguous legacy cache is deferred then migrated to a restorable active generation',async t=>{
+ const root=await temporary(t),f=fixture(),legacy={schema:1,envelope:f.envelope,assets:Object.fromEntries(Object.entries(f.assets).map(([k,v])=>[k,v.toString('base64')])),checkedAt:new Date(now).toISOString()};
+ await atomicJSON(path.join(root,'data-feed.json'),legacy);const game=data();let idle=false;
+ const cache=await createDataFeedCache({root,getData:()=>game,restoreAtStartup:true,canActivate:()=>idle,keys,clock:()=>now});assert.equal(Object.keys(game.rankings).length,0);assert.equal(cache.summary().phase,'pending');
+ idle=true;assert.equal(cache.activate(),true);assert.equal(JSON.parse(await fs.readFile(path.join(root,'data-feed.json'),'utf8')).schema,2);
+ const restored=data();await createDataFeedCache({root,getData:()=>restored,restoreAtStartup:true,keys,clock:()=>now});assert.equal(Object.keys(restored.rankings).length,6);
+});
+
+test('a corrupt pending file cannot invalidate a verified active generation',async t=>{
+ const root=await temporary(t),f=fixture(),game=data();const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>true,download:f.download,keys,clock:()=>now});await cache.check();
+ const active=await fs.readFile(path.join(root,'data-feed.json'),'utf8');await fs.writeFile(path.join(root,'data-feed.pending.json'),'broken');
+ const restored=data(),again=await createDataFeedCache({root,getData:()=>restored,restoreAtStartup:true,keys,clock:()=>now});
+ assert.equal(again.summary().phase,'ready');assert.deepEqual(restored.rankings,game.rankings);assert.equal(await fs.readFile(path.join(root,'data-feed.json'),'utf8'),active);
+});
+
+test('restart preserves the pending sequence floor against a lower signed download',async t=>{
+ const root=await temporary(t),first=fixture(),higher=fixture(seed,now+2),lower=fixture(seed,now+1),game=data();let incoming=first,idle=true;
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>idle,download:url=>incoming.download(url),keys,clock:()=>now+100});await cache.check();idle=false;incoming=higher;await cache.check({force:true});
+ const active=await fs.readFile(path.join(root,'data-feed.json'),'utf8'),pending=await fs.readFile(path.join(root,'data-feed.pending.json'),'utf8'),restored=data();
+ const again=await createDataFeedCache({root,getData:()=>restored,restoreAtStartup:true,canActivate:()=>idle,download:lower.download,keys,clock:()=>now+100});
+ assert.equal((await again.check({force:true})).phase,'pending');assert.equal(lower.calls.length,1);assert.equal(await fs.readFile(path.join(root,'data-feed.json'),'utf8'),active);assert.equal(await fs.readFile(path.join(root,'data-feed.pending.json'),'utf8'),pending);
+ idle=true;assert.equal(again.activate(),true);assert.equal(verifyFeedEnvelope(JSON.parse(await fs.readFile(path.join(root,'data-feed.json'),'utf8')).envelope,{keys}).sequence,higher.manifest.sequence);
+});
+
+test('staging cannot commit across a replaced base object or a changed patch',async t=>{
+ for(const mode of ['same-patch','new-patch']){
+  const root=await temporary(t),first=fixture(),next=fixture(seed,now+1);let game=data(),incoming=first,hold=false,release,staged;
+  const ready=new Promise(resolve=>{staged=resolve;}),resume=new Promise(resolve=>{release=resolve;});
+  const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>true,download:url=>incoming.download(url),keys,clock:()=>now+100,write:async(file,value)=>{await atomicJSON(file,value);if(hold){staged();await resume;}}});
+  await cache.check();const active=await fs.readFile(path.join(root,'data-feed.json'),'utf8'),old=game,oldRankings=old.rankings;hold=true;incoming=next;const flight=cache.check({force:true});
+  try{await ready;game=data();if(mode==='new-patch')game.patch='16.21';}finally{release();}
+  assert.equal((await flight).phase,'offline');assert.equal(Object.keys(game.rankings).length,0);assert.equal(old.rankings,oldRankings);assert.equal(await fs.readFile(path.join(root,'data-feed.json'),'utf8'),active);
+  assert.deepEqual(await fs.readdir(root),['data-feed.json'],'A rejected stage must not become a pending generation');
+ }
+});
+
+test('a failed stage write preserves active bytes and supports an explicit successful retry',async t=>{
+ const root=await temporary(t),first=fixture(),next=fixture(seed,now+1),game=data();let incoming=first,fail=false;
+ const cache=await createDataFeedCache({root,getData:()=>game,canActivate:()=>true,download:url=>incoming.download(url),keys,clock:()=>now+100,write:async(file,value)=>{if(fail)throw Error('disk full');await atomicJSON(file,value);}});
+ await cache.check();const active=await fs.readFile(path.join(root,'data-feed.json'),'utf8'),rankings=game.rankings;incoming=next;fail=true;
+ assert.equal((await cache.check({force:true})).phase,'offline');assert.equal(await fs.readFile(path.join(root,'data-feed.json'),'utf8'),active);assert.equal(game.rankings,rankings);
+ fail=false;assert.equal((await cache.check({force:true})).phase,'ready');assert.equal(verifyFeedEnvelope(JSON.parse(await fs.readFile(path.join(root,'data-feed.json'),'utf8')).envelope,{keys}).sequence,next.manifest.sequence);
+});
 
 test('statistics activation cannot renew changed character sources or their review anchor',()=>{
  const game=data(),hero=game.champions.find(hero=>hero.mechanicSource);assert(hero);
