@@ -2,6 +2,9 @@
 /* Polished with taste-skill: high-contrast hierarchy, calibrated surfaces, clean visual rhythm. */
 .ongoing-page{min-width:0;max-width:100%;color:var(--rb-ink);font-size:12.5px;line-height:1.5;font-variant-numeric:tabular-nums}
 .ongoing-page small,.ongoing-muted{color:var(--rb-muted);font-size:11px}
+.ongoing-page .btn.quiet:not(.ongoing-player-name){color:var(--rb-muted)}
+.ongoing-page .btn.quiet:not(.ongoing-player-name):hover{color:var(--rb-ink);background:var(--rb-raised)}
+.ongoing-page .ongoing-level{color:#fff}
 .ongoing-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
 .ongoing-heading h1{font-size:22px;line-height:1.3;font-weight:750;letter-spacing:-0.4px}
 .ongoing-heading-actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -14,7 +17,7 @@
 .ongoing-setting{display:flex;flex-direction:column;gap:5px;color:var(--rb-muted);font-size:12px;min-width:0}
 .ongoing-settings-checks{display:flex;gap:12px 18px;flex-wrap:wrap;margin:16px 0}
 .ongoing-tag-settings{border:0;border-top:1px solid rgba(255,255,255,0.06);margin:0;padding:12px 0 0;display:flex;gap:10px 16px;flex-wrap:wrap;min-width:0}
-.ongoing-status,.ongoing-notice,.ongoing-error{padding:7px 10px;border-radius:6px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06);font-size:11.5px;overflow-wrap:anywhere}
+.ongoing-status,.ongoing-notice,.ongoing-error{padding:7px 10px;border-radius:6px;background:var(--rb-bg);border:1px solid rgba(255,255,255,0.06);font-size:11.5px;overflow-wrap:anywhere}
 .ongoing-empty{background:var(--rb-panel);padding:36px 24px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.2)}
 .ongoing-empty h2{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--rb-ink)}
 
@@ -72,7 +75,7 @@
 
 /* Stats Row: 3-column micro metric blocks */
 .ongoing-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:3px 0;align-items:stretch}
-.ongoing-stat{text-align:center;min-width:0;cursor:help;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:5px 2px;display:flex;flex-direction:column;justify-content:center}
+.ongoing-stat{text-align:center;min-width:0;cursor:help;background:var(--rb-bg);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:5px 2px;display:flex;flex-direction:column;justify-content:center}
 .ongoing-stat strong{display:block;font-size:14px;font-weight:750;color:var(--rb-ink);font-variant-numeric:tabular-nums;line-height:1.3}
 .ongoing-stat.is-good strong{color:var(--rb-success)}
 .ongoing-stat.is-bad strong{color:color-mix(in srgb,var(--rb-ink) 45%,#f43f5e)}
@@ -128,7 +131,7 @@
 .ongoing-page .ongoing-card-actions .btn{font-size:10.5px;font-weight:600;padding:3px 6px;min-height:24px;border-radius:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
 .ongoing-player-note{font-size:11px;color:var(--rb-warning);overflow-wrap:anywhere}
 
-.ongoing-analysis,.ongoing-jungle{background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:6px 8px;font-size:11px;min-width:0;max-width:100%}
+.ongoing-analysis,.ongoing-jungle{background:var(--rb-bg);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:6px 8px;font-size:11px;min-width:0;max-width:100%}
 .ongoing-analysis-content>section,.ongoing-jungle-content>section{margin:8px 0;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)}
 .ongoing-analysis summary,.ongoing-jungle summary{cursor:pointer;font-weight:600}
 .ongoing-metrics{margin:5px 0;display:grid;gap:4px;min-width:0}

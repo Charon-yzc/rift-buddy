@@ -2,6 +2,8 @@
 /* Refined with taste-skill: high-contrast hierarchy, calibrated surfaces, no muddy tints. */
 .history-page{--history-border:var(--rb-line,var(--border));--history-surface:var(--rb-panel,var(--surface));max-width:1200px;font-size:12px;line-height:1.45;font-variant-numeric:tabular-nums;color:var(--rb-ink)}
 .history-page .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;border:0}
+.history-page .muted,.history-page .btn.quiet:not(.active){color:var(--rb-muted)}
+.history-page .btn.quiet:not(.active):hover{color:var(--rb-ink);background:var(--rb-raised)}
 .history-heading{margin:0 0 12px;gap:12px;display:flex;align-items:center;justify-content:space-between}
 .history-heading h1{font-size:22px;line-height:1.3;font-weight:750;letter-spacing:-0.4px}
 .history-heading p{display:none}
@@ -13,7 +15,7 @@
 .history-search{position:absolute;right:0;top:38px;z-index:8;display:grid;grid-template-columns:1fr 1fr;width:450px;max-width:calc(100vw - 40px);padding:16px;background:var(--history-surface);box-shadow:0 16px 40px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;gap:10px}
 .history-query{grid-column:1/-1;max-width:none}
 .history-search .btn{align-self:end;min-height:32px}
-.history-page input,.history-page select{padding:6px 9px;font-size:12px;min-height:30px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.25);color:var(--rb-ink)}
+.history-page input,.history-page select{padding:6px 9px;font-size:12px;min-height:30px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:var(--rb-bg);color:var(--rb-ink)}
 .history-page input:focus,.history-page select:focus{border-color:var(--rb-accent);outline:none}
 .history-search select{min-width:0}
 
@@ -31,7 +33,7 @@
 .history-profile-avatar{display:grid;place-items:center;flex:0 0 54px;width:54px;height:54px;background:linear-gradient(135deg,rgba(56,189,248,0.2),rgba(99,102,241,0.15));border:1px solid rgba(56,189,248,0.3);border-radius:12px;color:var(--rb-accent);box-shadow:0 4px 12px rgba(0,0,0,0.25)}
 .history-profile-avatar .icon{width:28px;height:28px}
 .history-ranked{display:flex;flex-wrap:nowrap;gap:10px;margin:0}
-.history-rank-card{display:flex;flex-direction:column;justify-content:center;width:170px;min-height:76px;padding:10px 14px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.06);border-radius:8px;transition:border-color 0.15s ease}
+.history-rank-card{display:flex;flex-direction:column;justify-content:center;width:170px;min-height:76px;padding:10px 14px;background:var(--rb-bg);border:1px solid rgba(255,255,255,0.06);border-radius:8px;transition:border-color 0.15s ease}
 .history-rank-card:hover{border-color:rgba(255,255,255,0.14)}
 .history-rank-card small{font-size:10.5px;color:var(--rb-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
 .history-rank-card strong{font-size:15px;font-weight:700;line-height:1.6;color:var(--rb-ink)}
@@ -182,11 +184,11 @@
 /* ==========================================================================
    Expanded Details Inside Card
    ========================================================================== */
-.history-details{padding:10px 12px;border-top:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.22)}
+.history-details{padding:10px 12px;border-top:1px solid rgba(255,255,255,0.08);background:var(--rb-bg)}
 .history-detail-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-width:0}
 
 /* Segmented Control Tabs */
-.history-detail-tabs{display:flex;flex:1;gap:2px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.06);padding:3px;border-radius:6px;margin:0;flex-wrap:nowrap;min-width:0}
+.history-detail-tabs{display:flex;flex:1;gap:2px;background:var(--rb-panel);border:1px solid var(--rb-line);padding:3px;border-radius:6px;margin:0;flex-wrap:nowrap;min-width:0}
 .history-detail-tabs .btn{flex:1;border:0;border-radius:4px;min-height:26px;padding:3px 6px;font-size:11.5px;font-weight:550;color:var(--rb-muted);white-space:nowrap;background:transparent;transition:all 0.15s ease}
 .history-detail-tabs .btn:hover{color:var(--rb-ink);background:rgba(255,255,255,0.05)}
 .history-detail-tabs .active{background:var(--rb-tint);color:var(--rb-ink);font-weight:650;box-shadow:0 1px 3px rgba(0,0,0,0.3)}
@@ -208,7 +210,7 @@
 
 .history-team-scroll{max-height:none;overflow-x:auto}
 .history-team-table{table-layout:fixed;min-width:680px;border-collapse:collapse}
-.history-team-table thead{background:rgba(0,0,0,0.25)}
+.history-team-table thead{background:var(--rb-bg)}
 .history-page .history-team-table th{padding:6px 8px;font-size:10.5px;font-weight:600;color:var(--rb-muted);border:0;border-bottom:1px solid rgba(255,255,255,0.06);text-align:left;position:static;height:auto;line-height:1.4}
 .history-page .history-team-table th:nth-child(3),.history-page .history-team-table th:nth-child(4){text-align:right}
 .history-team-table th:first-child{width:28%}
