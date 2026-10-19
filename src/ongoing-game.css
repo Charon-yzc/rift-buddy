@@ -65,7 +65,7 @@
 
 .ongoing-player-identity{flex:1;min-width:0;overflow:hidden}
 .ongoing-page .ongoing-player-name{padding:0;display:block;font-size:13.5px;font-weight:750;letter-spacing:-0.2px;color:var(--rb-ink);min-height:19px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;border:0;border-radius:3px;cursor:pointer}
-.ongoing-page .ongoing-player-name:hover{color:var(--rb-accent)}
+.ongoing-page .ongoing-player-name:hover{color:var(--rb-accent);background:var(--rb-raised)}
 .ongoing-player-identity p{font-size:11px;color:var(--rb-muted);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .ongoing-rank-strip,.ongoing-rank-empty{font-size:11px;line-height:1.5;cursor:help;padding:1px 0}

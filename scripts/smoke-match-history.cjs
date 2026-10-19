@@ -152,6 +152,7 @@ async function run(){
    await chooseTheme(theme);await until(()=>js('document.querySelectorAll("[data-ongoing-player]").length===10'),'Themed live roster missing');
    await readable('.ongoing-player-name,.ongoing-stat strong,.ongoing-tag,.ongoing-role-reason,.ongoing-level,.ongoing-stat small,.ongoing-page .btn.quiet:not(:disabled)');await capture('ongoing-theme-'+theme+'.png');
    await readableControlHover('[data-action=ongoing-clear]','ongoing-control-hover-'+theme+'.png');
+   await readableControlHover('.ongoing-player-name','ongoing-name-hover-'+theme+'.png');
   }
   await js('document.querySelector(".ongoing-settings").open=true');await click('[data-ongoing-field=streamer]');
   await until(()=>js('window.buddy.bootstrap().then(b=>b.state.preferences.ongoing.streamer===true)'),'Streamer preference did not settle');
