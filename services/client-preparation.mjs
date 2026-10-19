@@ -21,7 +21,8 @@ export function validateClientPreparation(value,data){
  if(itemSet.associatedChampions[0]!==champion.key||itemSet.associatedMaps[0]!==11||itemSet.uid!==`rift-buddy-${champion.key}-${value.role}-rift`)throw Error('装备集与当前英雄、位置不一致');
  return {champion:champion.id,championId:champion.key,role:value.role,mode:'rift',context,sessionGameId,
   page:{name:champion.name,primaryStyleId:value.page.primaryStyleId,subStyleId:value.page.subStyleId,selectedPerkIds:[...value.page.selectedPerkIds]},
-  summoners:[...summoners],preserveFlashSlot:value.preserveFlashSlot!==false,preselectOnly:value.preselectOnly===true,claimPosition:value.claimPosition===true,itemSet};
+  summoners:[...summoners],preserveFlashSlot:value.preserveFlashSlot!==false,preselectOnly:value.preselectOnly===true,claimPosition:value.claimPosition===true,itemSet,
+  ...(value.notice?{notice:value.notice}:{})};
 }
 export async function prepareClientSelection({value,data,installPath='',ownedPageId},{discover=discoverClient,request=lcuRequest,writeRunes=writeRunePage,writeItems=importItemSet}={}){
  const selected=validateClientPreparation(value,data),auth=await discover(installPath);

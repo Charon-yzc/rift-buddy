@@ -36,7 +36,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  refreshBuild:(id,role,source)=>ipcRenderer.invoke('refresh-build',id,role,source),
  refreshOpponentBuild:(id,role,opponent,source)=>ipcRenderer.invoke('refresh-opponent-build',id,role,opponent,source),
  refreshPairs:(members,source)=>ipcRenderer.invoke('refresh-pairs',members,source),
- applyRunes:(page,context)=>ipcRenderer.invoke('apply-runes',page,context),
+ applyRunes:(page,context,notice)=>ipcRenderer.invoke('apply-runes',page,context,notice),
  prepareSelection:value=>ipcRenderer.invoke('prepare-selection',value),
  stageSelection:value=>ipcRenderer.invoke('stage-selection',value),
  cancelPreselection:()=>ipcRenderer.invoke('cancel-preselection'),

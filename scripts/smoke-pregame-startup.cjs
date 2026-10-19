@@ -51,7 +51,8 @@ async function run(){
    if(route.endsWith('/disabled-champion-ids'))return [];
    if(route==='/lol-perks/v1/pages')return [page];
    if(route==='/lol-champ-select/v1/session/my-selection')return {spell1Id,spell2Id};
-   if(route==='/data-store/v1/install-dir')return path.join(root,'client-fixture','LeagueClient');
+   if(route==='/lol-chat/v1/conversations')return [];
+    if(route==='/data-store/v1/install-dir')return path.join(root,'client-fixture','LeagueClient');
   }
   writes.push({route,method,body});
   if(route==='/lol-champ-select/v1/session/actions/22'&&method==='PATCH'){assert.equal(completed,false,'Locked champion must never be replaced');assert.equal(body.completed,false,'The helper must never lock a champion');picked=0;intent=body.championId;return {};}
