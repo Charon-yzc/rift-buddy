@@ -7,17 +7,38 @@
 .history-heading{margin:0 0 12px;gap:12px;display:flex;align-items:center;justify-content:space-between}
 .history-heading h1{font-size:22px;line-height:1.3;font-weight:750;letter-spacing:-0.4px}
 .history-heading p{display:none}
-.history-heading-actions{display:flex;align-items:center;gap:8px}
+.history-heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
+/* Inline Search Bar in Header */
+.history-search-bar{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:3px 4px 3px 10px;transition:border-color 0.15s ease,box-shadow 0.15s ease}
+.history-search-bar:focus-within{border-color:var(--rb-accent);box-shadow:0 0 0 2px rgba(141,241,194,0.15)}
+.history-search-input-wrap{display:flex;align-items:center;gap:8px;flex:1;min-width:220px}
+.history-search-input-wrap .icon{width:15px;height:15px;color:var(--rb-muted);flex-shrink:0}
+.history-search-input-wrap input{background:transparent;border:0;color:#f8fafc;font-size:12px;padding:4px 0;width:100%;outline:none;min-height:24px}
+.history-search-input-wrap input::placeholder{color:#64748b}
+.history-search-btn{border-radius:6px;font-weight:600;padding:4px 12px;min-height:28px}
+
+/* Advanced Options Dropdown */
 .history-search-disclosure{position:relative}
-.history-search-disclosure>summary{list-style:none;cursor:pointer;font-weight:550}
-.history-search-disclosure[open]>summary{color:var(--rb-accent)}
-.history-search{position:absolute;right:0;top:38px;z-index:8;display:grid;grid-template-columns:1fr 1fr;width:450px;max-width:calc(100vw - 40px);padding:16px;background:var(--history-surface);box-shadow:0 16px 40px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;gap:10px}
-.history-query{grid-column:1/-1;max-width:none}
-.history-search .btn{align-self:end;min-height:32px}
-.history-page input,.history-page select{padding:6px 9px;font-size:12px;min-height:30px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:var(--rb-bg);color:var(--rb-ink)}
+.history-search-disclosure>summary{list-style:none;cursor:pointer;padding:4px 6px;border-radius:4px;color:var(--rb-muted);line-height:1}
+.history-search-disclosure>summary::-webkit-details-marker{display:none}
+.history-search-disclosure>summary:hover{color:var(--rb-ink);background:rgba(255,255,255,0.06)}
+.history-search-options-dropdown{position:absolute;right:0;top:34px;z-index:20;width:240px;padding:12px;background:var(--rb-panel,rgba(15,23,42,0.96));backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.12);border-radius:8px;box-shadow:0 12px 32px rgba(0,0,0,0.6);display:grid;gap:8px}
+.history-search-options-dropdown label{font-size:11px;color:var(--rb-muted);display:flex;flex-direction:column;gap:4px}
+.history-search-options-dropdown select{background:var(--rb-bg,rgba(0,0,0,0.4));border:1px solid rgba(255,255,255,0.1);color:var(--rb-ink,#f1f5f9);border-radius:6px;padding:5px 8px;font-size:12px}
+
+/* Redesigned Empty State */
+.history-empty-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 24px;text-align:center;background:rgba(0,0,0,0.15);border:1px dashed rgba(255,255,255,0.08);border-radius:12px;margin:20px 0}
+.history-empty-icon-wrap{width:54px;height:54px;border-radius:14px;background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(99,102,241,0.1));border:1px solid rgba(56,189,248,0.25);display:grid;place-items:center;color:#38bdf8;margin-bottom:14px;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.history-empty-icon-wrap .icon{width:26px;height:26px}
+.history-empty-hero h2{font-size:19px;font-weight:750;letter-spacing:-0.3px;color:#f8fafc;margin-bottom:6px}
+.history-empty-sub{font-size:12.5px;color:var(--rb-muted);margin-bottom:18px;max-width:440px}
+.history-empty-actions{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.history-empty-actions .btn.large{padding:9px 22px;font-size:13.5px;font-weight:650;border-radius:8px}
+.history-empty-tip{font-size:11px;color:#64748b}
+
+.history-page input,.history-page select{padding:6px 9px;font-size:12px;min-height:30px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:var(--rb-bg,rgba(0,0,0,0.25));color:var(--rb-ink)}
 .history-page input:focus,.history-page select:focus{border-color:var(--rb-accent);outline:none}
-.history-search select{min-width:0}
 
 /* Top Navigation Tabs */
 .history-tabs{margin-bottom:14px;padding-bottom:6px;gap:6px;display:flex;align-items:center}
