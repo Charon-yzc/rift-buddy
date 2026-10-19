@@ -1,6 +1,7 @@
 const {app,BrowserWindow,ipcMain,Menu,Tray,nativeImage,globalShortcut,clipboard,shell,dialog,session,screen}=require('electron');
 const path=require('node:path');
 const fs=require('node:fs/promises');
+const {renameSync}=require('node:fs');
 const os=require('node:os');
 const {isDeepStrictEqual}=require('node:util');
 const {pathToFileURL}=require('node:url');
@@ -678,10 +679,11 @@ async function boot(){
  guard('update-data',async()=>{
   if(!observeFeedPhase(latestClient))throw Error('请在本局结束后更新基础资料，当前配置保持不变');
   if(updating)throw new Error('资料更新正在进行');updating=true;
+  const pendingSnapshot=path.join(storeRoot,'data',`game-update-${process.pid}.pending.json`);
   try{const next=await dataService.collectSnapshot(msg=>publishWindows('data-progress',msg),data);
    if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，基础资料留待本局结束后更新');
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
-   delete next.abilityReference;delete next.rankings;delete next.patchNotes;delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(path.join(storeRoot,'data/game.json'),next);
+   delete next.abilityReference;delete next.rankings;delete next.patchNotes;delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(pendingSnapshot,next);
    next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
    next.opponentBuildSources=await loadOpponentBuildSources(path.join(storeRoot,'data'),next);
    next.pairStatistics=await loadPairStatisticsCache(pairFiles,next);
@@ -697,9 +699,13 @@ async function boot(){
     if(spellsFile.version!==next.version)diagnostic(`spellbook ${spellsFile.version} != game ${next.version}; estimates use heuristics until pnpm spells:enrich runs`);
    }catch{next.spellbook={};}
    const cached=await imageCache.cacheMissingImages({root:path.join(storeRoot,'data/images'),bundleRoot:path.join(root,'data/images'),data:next,progress:message=>publishWindows('data-progress',message)});
+   next.imageOverrides=cached.overrides;next.dataFeed=dataFeed.summary();
    if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，当前窗口继续使用原资料');
-   next.imageOverrides=cached.overrides;next.dataFeed=dataFeed.summary();data=next;useCatalog(catalogStore.summary());publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
-  }finally{updating=false;}
+   // Keep disk promotion and the in-memory switch in one turn: an awaited
+   // rename could cross into a draft after the final phase check.
+   renameSync(pendingSnapshot,path.join(storeRoot,'data/game.json'));
+   data=next;useCatalog(catalogStore.summary());publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
+  }finally{await fs.unlink(pendingSnapshot).catch(()=>{});updating=false;}
  });
  guard('check-data-feed',()=>dataFeed.check({force:true}));
  guard('app-update-check',async(silent=false)=>{
