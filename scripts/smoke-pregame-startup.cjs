@@ -176,7 +176,11 @@ async function run(){
   await resetRound(nextQueue);
   await checkpoint('explicit-lane-preselection-queue-'+nextQueue,async()=>{
    for(const [role,id]of [['top','Gnar'],['mid','Ahri'],['jungle','Hecarim']]){
-    if(role==='jungle'){picked=hero('Ahri').key;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championId===picked&&!snapshot.session.actions.flat().find(action=>action.actorCellId===2)?.completed);}
+    if(role==='jungle'){
+     picked=hero('Ahri').key;intent=0;await fresh(snapshot=>snapshot.session.myTeam.find(player=>player.cellId===2)?.championId===picked&&!snapshot.session.actions.flat().find(action=>action.actorCellId===2)?.completed);
+     // Main's snapshot can precede renderer notification and its fresh sync/save.
+     await until(()=>js(side,'(()=>{const scope=document.querySelector(".companion-content")?.dataset.focusScope,role=document.querySelector("#solo-role"),sync=document.querySelector(".client-connection-indicator");return !!scope&&JSON.parse(scope)[3]==="Ahri"&&role?.value==="mid"&&!role.disabled&&!!sync&&!sync.disabled;})()'),'Sidebar did not finish observing the external picked champion');
+    }
     const before=attempts.length,writeBefore=writes.length;await change(role==='mid'?main:side,'#solo-role',role);
     await until(()=>intent===hero(id).key,'Explicit '+role+' lane did not replace the unlocked hover in queue '+nextQueue,7000);
     await until(()=>results.length===attempts.length,'Lane preselection did not settle');assert.equal(attempts.length-before,1,'Changing one lane must make one explicit preselection API call');assert.notEqual(attempts.at(-1).preselectOnly,true);assert.equal(attempts.at(-1).claimPosition,true);assert.equal(attempts.at(-1).role,role);assert.equal(results.at(-1).steps.hover.status,'done','Lane replacement was not confirmed by the client');
