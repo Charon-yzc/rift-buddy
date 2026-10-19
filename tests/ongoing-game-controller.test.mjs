@@ -16,6 +16,17 @@ test('a background tick repaints only when the public roster actually changed',a
  current={...roster(),phase:'in-champ-select'};await c.refresh({background:true});assert.ok(changes>afterFirst,'A changed roster must repaint the page');
  await c.refresh();assert.ok(c.state.loading===false);
 });
+
+test('a late or changed display name repaints once without reloading the player history',async()=>{
+ let current={...roster(),players:[{...member,name:''}]},changes=0,pages=0;
+ const c=createOngoingGameController({request:async op=>op==='roster'?current:op==='page'?(pages++,page):{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{changes++;}});
+ await c.refresh();const loaded=c.state.players[member.key];let prior=changes;
+ for(const name of ['已补齐#TEST','更新名字#TEST']){
+  current={...roster(),players:[{...member,name}]};await c.refresh({background:true});
+  assert.equal(changes,prior+1,'Name-only changes must repaint exactly once');assert.equal(c.state.roster.players[0].name,name);assert.equal(c.state.players[member.key],loaded);assert.equal(pages,1);
+  prior=changes;await c.refresh({background:true});assert.equal(changes,prior,'An unchanged name must still preserve the page');
+ }
+});
 test('a quiet tick still clears a resolved failure so the page stops claiming an error',async()=>{
  let fail=true,changes=0;const good=roster();
  const c=createOngoingGameController({request:async(op)=>{if(op==='roster'){if(fail)throw Error('读取未完成');return good;}return op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{changes++;}});

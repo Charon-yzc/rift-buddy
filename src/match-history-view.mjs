@@ -68,7 +68,11 @@ function detailView(data,d,id){
 // shows the summary instead.
 function rosterPreview(data,m){
  const teams=[...new Set((m.participants||[]).map(p=>p.team))];
- if(m.arena||teams.length>2)return `<div class="history-roster-preview is-summary" aria-label="本局阵容">${teams.length} 支小队 · ${(m.participants||[]).length} 人</div>`;
+ if(m.arena||teams.length>2){
+  const known=m.arena?teams.filter(team=>/^CHERRY-[1-9]\d*$/.test(team)):teams;
+  const label=!known.length?'小队未读取':known.length<teams.length?`已知 ${known.length} 队 · 部分未读取`:`${known.length} 支小队`;
+  return `<div class="history-roster-preview is-summary" aria-label="本局阵容">${label} · ${(m.participants||[]).length} 人</div>`;
+ }
  return `<div class="history-roster-preview" aria-label="本局阵容">${teams.slice(0,8).map(team=>`<div>${m.participants.filter(p=>p.team===team).map(p=>`<span class="history-roster-member">${playerHero(data,p,m,false)}<span>${e(p.name||'身份未读取')}</span></span>`).join('')}</div>`).join('')}</div>`;
 }
 function card(data,m,d,fullAnalysis){

@@ -22,9 +22,16 @@ test('compact match disclosure retains both team rosters and an independently la
  const arena={...game,arena:true,participants:players.map(p=>({...p,team:'CHERRY-unknown'}))};
  const arenaState=state();arenaState.tabs[0].page.games=[arena];arenaState.tabs[0].details={42:{game:arena,open:true,section:'summary'}};
  const arenaHtml=matchHistoryView(arenaState,data);
- assert.match(arenaHtml,/history-roster-preview is-summary[^>]*>1 支小队 · 3 人/);assert.doesNotMatch(arenaHtml,/history-roster-member/);
+ assert.match(arenaHtml,/history-roster-preview is-summary[^>]*>小队未读取 · 3 人/);assert.doesNotMatch(arenaHtml,/history-roster-member/);
  assert.match(html,/data-history-slot="sidebar-controls"/);assert.match(html,/data-history-slot="sidebar-extra"/);
  assert.match(historyMatchSummaryView(data,{game}),/history-team-heading/);
+});
+
+test('Arena roster counts only public subteams and marks partial grouping honestly',()=>{
+ const render=teams=>{const s=state();s.tabs[0].page.games=[{...game,arena:true,participants:players.map((p,i)=>({...p,team:teams[i]}))}];return matchHistoryView(s,data);};
+ const mixed=render(['CHERRY-1','CHERRY-1','CHERRY-unknown']);assert.match(mixed,/已知 1 队 · 部分未读取 · 3 人/);assert.doesNotMatch(mixed,/2 支小队/);
+ assert.match(render(['CHERRY-1','CHERRY-1','CHERRY-2']),/2 支小队 · 3 人/);
+ assert.match(render(['CHERRY-unknown','CHERRY-unknown','CHERRY-unknown']),/小队未读取 · 3 人/);
 });
 test('historical numeric spell IDs resolve the bundled named spell images',()=>{
  const catalog={...data,spells:{SummonerFlash:{key:'4',name:'闪现'},SummonerHeal:{key:'7',name:'治疗术'}}};

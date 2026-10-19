@@ -8,7 +8,7 @@ export function createOngoingGameController({request,analyze,teamAnalyze,infer,o
  // Everything a card shows from the roster itself; used to skip no-op repaints.
  // group drives the Arena subteam sections, role the position cells and level
  // the avatar badge, so a later snapshot that fills them must still repaint.
- const rosterIdentity=roster=>roster?JSON.stringify([roster.key,roster.phase,roster.queue,roster.mode,(roster.players||[]).map(p=>[p.key,p.team,p.champion,p.locked,p.position,p.hidden,p.spells,p.group,p.role,p.level,p.self])]):'';
+ const rosterIdentity=roster=>roster?JSON.stringify([roster.key,roster.phase,roster.queue,roster.mode,(roster.players||[]).map(p=>[p.key,p.name,p.team,p.champion,p.locked,p.position,p.hidden,p.spells,p.group,p.role,p.level,p.self])]):'';
  const current=(epoch,key,entry)=>epoch===generation&&state.roster?.key===key&&(!entry||state.players[entry.memberKey]===entry);
  function drainPlayers(){while(playerQueue.length){const next=playerQueue[0];if(!next.valid()){playerQueue.shift().resolve(false);continue;}if(loadingPlayers>=state.settings.concurrency)return;loadingPlayers++;playerQueue.shift().resolve(true);}}
  const acquirePlayer=valid=>new Promise(resolve=>{playerQueue.push({resolve,valid});drainPlayers();});
