@@ -13,6 +13,7 @@ export const GENERATION_NAMES=Object.freeze(['game',...DATA_FEED_NAMES]);
 export const GENERATION_MAX_MANIFEST=192*1024,GENERATION_MAX_PACKED=24*1024*1024,GENERATION_MAX_RAW=48*1024*1024;
 const hash=/^[a-f0-9]{64}$/,hero=/^[A-Za-z][A-Za-z0-9]+$/;
 const baseFields=new Set('schema contentRevision mechanicSourceRevision itemTooltipRevision version patch fetchedAt checkedAt contentCheckedAt sources cnVersion augmentVersion augmentError champions items runes spells augments'.split(' '));
+export const pureGameSnapshot=game=>structuredClone(Object.fromEntries([...baseFields].filter(key=>Object.hasOwn(game,key)).map(key=>[key,game[key]])));
 // Source observations and transport checks do not order two different manual
 // and automatic snapshots. Compare their actual base content separately from
 // the raw local-file token identifying an explicit manual update.

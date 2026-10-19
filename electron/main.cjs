@@ -110,56 +110,53 @@ async function boot(){
    return helper.active()?helper.request('matchHistory',{operation,payload}):matchHistory.execute(operation,payload);
   });
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));
- if(state.guide&&!data.champions.some(c=>c.id===state.guide.selection?.id)){state.guide=null;if(state.recovery?.backedUp!==false)await saveCurrentState();}
  const catalogCore=await import('../src/core/catalog.mjs');
  const {createCatalogStore}=await import('../services/catalog-store.mjs');
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
  const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;publishData(['catalog','catalogInfo']);guide?.publish();return result;};
- useCatalog(catalogStore.summary());
  const refreshReference=(refresh,keys)=>async(...args)=>{
   const before=data,patch=data.patch,version=data.version,result=await refresh(...args);
   if(data!==before||data.patch!==patch||data.version!==version)throw Error('基础资料已更新，请重新刷新参考');
   publishData(keys);return result;
  };
- const {loadBuildSources,loadHexBuilds,createBuildCache}=await import('../services/build-cache.mjs');
- const {loadOpponentBuildSources,createOpponentBuildCache}=await import('../services/opponent-build-cache.mjs');
- data.opponentBuildSources=await loadOpponentBuildSources(path.join(storeRoot,'data'),data);
+ const {createBuildCache}=await import('../services/build-cache.mjs');
+ const {createOpponentBuildCache}=await import('../services/opponent-build-cache.mjs');
  const opponentCache=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
- data.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],data);
- selectBuildSource(data,state.preferences.buildSource);synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;};
- const {loadPairStatisticsCache,createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
- const pairFiles=[path.join(root,'data/pair-statistics.json'),path.join(storeRoot,'data/pair-statistics-cache.json')];
- data.pairStatistics=await loadPairStatisticsCache(pairFiles,data);
+ synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;};
+ const {createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
  const pairCache=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshPairs=refreshReference(pairCache,['pairStatistics']);
- const {loadRankings,createRankingsCache}=await import('../services/rankings-cache.mjs');
- data.rankings=await loadRankings([path.join(root,'data'),path.join(storeRoot,'data')],data);
+ const {createRankingsCache}=await import('../services/rankings-cache.mjs');
  const rankingsCache=createRankingsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshRankings=refreshReference(rankingsCache,['rankings']);
- const {loadPatchNotes}=await import('../services/patch-notes.mjs');
- data.patchNotes=await loadPatchNotes(path.join(root,'data'),data);
- const {loadAbilities}=await import('../services/abilities.mjs');
- data.abilityReference=await loadAbilities(path.join(root,'data'),data);
- // A mismatched spell book must never be used silently (same gate as update-data).
- try{
-  const spellsFile=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8'));
-  data.spellbook=spellsFile.version===data.version?(spellsFile.champions||{}):{};
-  if(spellsFile.version!==data.version)diagnostic(`spellbook ${spellsFile.version} != game ${data.version} at boot; estimates use heuristics`);
- }catch{data.spellbook={};}
- data.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],data);
+ const {createGameDataPreparer,readManualBase}=await import('../services/game-data-prepare.mjs');
+ const {pureGameSnapshot,generationBaseIdentity}=await import('../services/data-generation.mjs');
+ const {feedHash}=await import('../services/data-feed.mjs');
+ const {createDataGenerationCache,preserveGameContext}=await import('../services/data-generation-cache.mjs');
+ const prepareBaseData=await createGameDataPreparer({bundleRoot:path.join(root,'data'),localRoot:path.join(storeRoot,'data'),catalogSummary:next=>catalogStore.summary(next),buildSource:()=>state.preferences.buildSource,progress:message=>publishWindows('data-progress',message)});
+ data=(await prepareBaseData(data,{restore:true})).data;
  const {createDataFeedCache}=await import('../services/data-feed-cache.mjs');
  const {createDataFeedActivationGate}=await import('../services/data-feed.mjs');
  // Automatic statistics must wait for confirmed idle after restart. Explicit
  // base-data refresh retains its existing initial-offline phase policy.
  const observeFeedPhase=createDataFeedActivationGate(),observeSignedFeedPhase=createDataFeedActivationGate({requireIdleConfirmation:true});let feedIdle=false;
- const dataFeed=await createDataFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,restoreAtStartup:true,
-  canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
-  onChange:info=>{data.dataFeed=info;publishData(['dataFeed','rankings','buildSources','builds','hexBuilds']);}});
+ let publishedBase=data,afterBaseChange=()=>{};
+ const generation=await createDataGenerationCache({root:path.join(storeRoot,'data'),getData:()=>data,manualBase:await readManualBase(path.join(storeRoot,'data')),
+  prepare:async(bundle,manifest,context)=>(await prepareBaseData(bundle.game,{...context,bundle,manifest})).data,
+  replace:next=>{data=next;},canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
+  onChange:info=>{data.dataFeed=info;if(data!==publishedBase){catalogCore.configureCatalog(data.catalog);publishedBase=data;publishData(Object.keys(data),true);guide?.publish();afterBaseChange();}else publishData(['dataFeed']);}});
+ publishedBase=data;catalogCore.configureCatalog(data.catalog);
+ // Do not discard a new hero's saved guide using the old bundled hero table.
+ if(state.guide&&!data.champions.some(c=>c.id===state.guide.selection?.id)){state.guide=null;if(state.recovery?.backedUp!==false)await saveCurrentState();}
+ const legacyFeed=generation.hasAccepted()?null:await createDataFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,restoreAtStartup:true,
+  canActivate:()=>!generation.hasAccepted()&&feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
+  onChange:info=>{if(!generation.hasAccepted()&&['idle','offline'].includes(generation.summary().phase)){data.dataFeed=info;publishData(['dataFeed','rankings','buildSources','builds','hexBuilds']);}}});
+ const dataFeed={summary:()=>!generation.hasAccepted()&&['idle','offline'].includes(generation.summary().phase)?legacyFeed?.summary()||generation.summary():generation.summary(),
+  check:async options=>{const info=await generation.check(options);return !generation.hasAccepted()&&info.phase==='offline'&&legacyFeed?legacyFeed.check(options):info;},
+  activate:async()=>{await generation.activate();if(!generation.hasAccepted()&&generation.summary().phase!=='pending')legacyFeed?.activate();}};
  data.dataFeed=dataFeed.summary();
- const imageCache=await import('../services/image-cache.mjs');
- data.imageOverrides=await imageCache.loadImageOverrides(path.join(storeRoot,'data/images'),data);
  for(const [key,value] of Object.entries(data))sharedDataFields.set(key,value);
  const buildCache=createBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshBuild=refreshReference(buildCache,['builds','buildSources','hexBuilds']);
@@ -221,6 +218,7 @@ async function boot(){
   guideRefresh.set(key,{pending:true,attemptedAt:Date.now()});guide.publish();
   refreshBuild(s.id,role).then(()=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now()})).catch(error=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now(),error:error.message})).finally(()=>guide.publish());
  };
+ afterBaseChange=refreshPreparedBuild;
  guide=require('./guide-window.cjs')({root,getState:()=>state.guide,getModel:getGuideModel,isQuitting:()=>quitting,diagnostic,
   currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
   showMain:selection=>{if(selection)pendingBuild=selection;showMainWindow();if(rendererReady&&pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}}});
@@ -548,7 +546,7 @@ async function boot(){
    const operation=beginPreparation('selection',{value,selection,context:value.context});applyingRunes=true;importingItemSet=true;
    let hovered;
    try{
-    const written=helper.active()?await helper.request('prepareSelection',{value}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
+    const written=helper.active()?await helper.request('prepareSelection',{value,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
     finishPreparation(operation,{result:written});
     if(intent.kind==='hero'&&written.complete)appliedGuideSelection={gameId,selection:structuredClone(selection)};
     const result=await preservePreparationResult(written,[
@@ -581,7 +579,7 @@ async function boot(){
     catch(error){diagnostic(`automatic permission request failed: ${error?.message||'unknown'}`);}
    }
    if(ballotRoundChanged(latestClient))clearRoomBallot();
-   observeFeedPhase(latestClient);feedIdle=observeSignedFeedPhase(latestClient);dataFeed.activate();
+   observeFeedPhase(latestClient);feedIdle=observeSignedFeedPhase(latestClient);dataFeed.activate().catch(()=>{});
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId,{phase:latestClient.phase,previousPhase});if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId,{phase:latestClient.phase,previousPhase}).draft}));
    const claim=state.draft?.preselection;
@@ -688,36 +686,26 @@ async function boot(){
  });
  guard('update-data',async()=>{
   if(!observeFeedPhase(latestClient))throw Error('请在本局结束后更新基础资料，当前配置保持不变');
+  if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，请完成后再更新资料');
   if(updating)throw new Error('资料更新正在进行');updating=true;
-  const pendingSnapshot=path.join(storeRoot,'data',`game-update-${process.pid}.pending.json`);
-  try{const next=await dataService.collectSnapshot(msg=>publishWindows('data-progress',msg),data);
+  const pendingSnapshot=path.join(storeRoot,'data',`game-update-${process.pid}.pending.json`),original=data,contextCurrent=preserveGameContext(()=>data,original);
+  try{const next=pureGameSnapshot(await dataService.collectSnapshot(msg=>publishWindows('data-progress',msg),data));
    if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，基础资料留待本局结束后更新');
    if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
-   delete next.abilityReference;delete next.rankings;delete next.patchNotes;delete next.builds;delete next.buildSources;delete next.opponentBuildSources;delete next.buildSource;delete next.hexBuilds;delete next.imageOverrides;delete next.catalog;delete next.catalogInfo;if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(pendingSnapshot,next);
-   next.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],next);selectBuildSource(next,state.preferences.buildSource);
-   next.opponentBuildSources=await loadOpponentBuildSources(path.join(storeRoot,'data'),next);
-   next.pairStatistics=await loadPairStatisticsCache(pairFiles,next);
-   next.rankings=await loadRankings([path.join(root,'data'),path.join(storeRoot,'data')],next);
-   next.patchNotes=await loadPatchNotes(path.join(root,'data'),next);
-   next.abilityReference=await loadAbilities(path.join(root,'data'),next);
-   next.hexBuilds=await loadHexBuilds([path.join(root,'data'),path.join(storeRoot,'data')],next);
-   // The spell book is versioned separately: a mismatched book must never be
-   // used silently, so it falls back to empty (heuristic estimates + UI note).
-   try{
-    const spellsFile=JSON.parse(await fs.readFile(path.join(root,'data/spells.json'),'utf8'));
-    next.spellbook=spellsFile.version===next.version?(spellsFile.champions||{}):{};
-    if(spellsFile.version!==next.version)diagnostic(`spellbook ${spellsFile.version} != game ${next.version}; estimates use heuristics until pnpm spells:enrich runs`);
-   }catch{next.spellbook={};}
-   const cached=await imageCache.cacheMissingImages({root:path.join(storeRoot,'data/images'),bundleRoot:path.join(root,'data/images'),data:next,progress:message=>publishWindows('data-progress',message)});
-   next.imageOverrides=cached.overrides;next.dataFeed=dataFeed.summary();
+   if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(pendingSnapshot,next);
+   const token=feedHash(await fs.readFile(pendingSnapshot)),prepared=await prepareBaseData(next,{current:original});
    if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，当前窗口继续使用原资料');
+   if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，基础资料未替换');
+   if(!contextCurrent())throw Error('配置或资料已变化，请重新检查基础资料');
    // Keep disk promotion and the in-memory switch in one turn: an awaited
    // rename could cross into a draft after the final phase check.
    renameSync(pendingSnapshot,path.join(storeRoot,'data/game.json'));
-   data=next;useCatalog(catalogStore.summary());publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:{saved:cached.saved,failed:cached.failed}};
+   data=prepared.data;generation.noteManual(data,token,{notify:false});data.dataFeed=dataFeed.summary();catalogCore.configureCatalog(data.catalog);publishedBase=data;
+   publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:prepared.imageCache};
   }finally{await fs.unlink(pendingSnapshot).catch(()=>{});updating=false;}
  });
  guard('check-data-feed',()=>dataFeed.check({force:true}));
+ guard('adopt-data-generation',async release=>{if(typeof release!=='string'||!/^[a-f0-9]{64}$/.test(release))throw Error('资料候选已变化，请重新检查');if(!await generation.activate({release,explicit:true}))throw Error('当前无法启用，请在大厅重新检查资料');return generation.summary();});
  guard('app-update-check',async(silent=false)=>{
   if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)return appUpdateStatus;
   const prev=appUpdateStatus;
@@ -818,7 +806,7 @@ async function boot(){
   if(applyingRunes||importingItemSet)throw new Error('客户端配置正在处理，请稍后');applyingRunes=true;
    let operation;
    try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);operation=beginPreparation('runes',{context,page:{primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:page.selectedPerkIds}});
-    const written=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});
+    const written=helper.active()?await helper.request('applyRunes',{page,context,baseIdentity:generationBaseIdentity(data)}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});
     let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['保存符文页记录',()=>saveCurrentState(current=>({...current,ownedPageId:written.pageId}))],['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};}
    catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'符文未完成')}});throw error;}
   finally{applyingRunes=false;}
@@ -831,7 +819,7 @@ async function boot(){
    const service=await import('../services/client-preparation.mjs'),selection=value?.selection===undefined?null:guideCore.validateGuideSelection(value.selection);value=service.validateClientPreparation(value,data);
    if(selection&&(selection.id!==value.champion||selection.role!==value.role||selection.mode!==value.mode))throw Error('准备配置与英雄或位置不一致，请重新点击');
    operation=beginPreparation('selection',{value,selection,context:value.context});
-   const written=helper.active()?await helper.request('prepareSelection',{value}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
+   const written=helper.active()?await helper.request('prepareSelection',{value,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
    let event=finishPreparation(operation,{result:written});
    if(written.complete&&selection&&!value.preselectOnly)appliedGuideSelection={gameId:String(value.sessionGameId),selection:structuredClone(selection)};
    // Loading can destroy the sidebar before its IPC reply. Commit the clicked
@@ -849,7 +837,7 @@ async function boot(){
   if(importingItemSet||applyingRunes)throw Error('客户端配置正在处理，请稍后');importingItemSet=true;
   let operation;
   try{const itemSet=itemSetCore.validateItemSet(value,data);operation=beginPreparation('items',{itemSet});
-   const written=helper.active()?await helper.request('importItemSet',{itemSet}):await itemSetService.importItemSet({itemSet,data,installPath:state.preferences?.installPath});let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};
+   const written=helper.active()?await helper.request('importItemSet',{itemSet,baseIdentity:generationBaseIdentity(data)}):await itemSetService.importItemSet({itemSet,data,installPath:state.preferences?.installPath});let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};
   }catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'装备集未完成')}});throw error;
   }finally{importingItemSet=false;}
  });

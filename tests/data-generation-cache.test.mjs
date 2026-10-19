@@ -98,3 +98,7 @@ test('download accepts only bounded fixed-origin v2 requests and disallows redir
  for(const relative of ['https://other.example/v2/latest.json','/v2/assets/../../private','/v1/latest.json','/v2/latest.json?redirect=x'])await assert.rejects(downloadDataGeneration(relative,{limit:100,fetcher}));
  await assert.rejects(downloadDataGeneration('/v2/latest.json',{limit:1,fetcher}),/过大/);assert.equal(requests.length,2);
 });
+test('a successful manual update clears old server authority and hides an older pending version',async t=>{
+ const f=await setup(t);await f.cache().check();const local={...structuredClone(seed.game),items:structuredClone(seed.game.items)};Object.values(local.items)[0].name+=' manual';f.set({...local,catalog:f.personal});f.cache().noteManual(local,'c'.repeat(64));assert.equal(f.cache().isActive(),false);assert.equal(f.cache().summary().source,'manual');assert.equal(f.cache().summary().serverCheckedAt,null);assert.equal(f.cache().summary().message,'当前使用手动资料');
+ f.idle(false);await f.cache().check({force:true});assert.equal(f.cache().summary().reason,'manual-base');const next=newPatch.bundle.game;f.set({...structuredClone(next),catalog:f.personal});f.cache().noteManual(next,'d'.repeat(64));assert.equal(f.cache().summary().availableVersion,null);await f.restart({manualBase:{token:'d'.repeat(64),version:next.version,baseHash:generationBaseIdentity(next)}});assert.equal(f.cache().summary().availableVersion,undefined);
+});

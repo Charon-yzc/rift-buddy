@@ -19,6 +19,10 @@ export async function downloadDataGeneration(relative,{limit,fetcher=fetch}={}){
 
 // prepare performs all awaited derivation without mutating active data.
 // replace is a synchronous, non-throwing reference assignment by the owner.
+export function preserveGameContext(getData,data=getData()){
+ const entries=Object.entries(data).filter(([key])=>key!=='dataFeed'),base=generationBaseIdentity(data),catalog=JSON.stringify(data.catalog);
+ return ()=>getData()===data&&Object.keys(data).filter(key=>key!=='dataFeed').length===entries.length&&entries.every(([key,value])=>data[key]===value)&&JSON.stringify(data.catalog)===catalog&&generationBaseIdentity(data)===base;
+}
 export async function createDataGenerationCache({root,getData,prepare,replace,canActivate=()=>false,manualBase=null,onChange=()=>{},restoreAtStartup=true,download=downloadDataGeneration,keys=DATA_FEED_KEYS,clock=()=>Date.now(),write=atomicJSON,promote=renameSync}){
  if(typeof prepare!=='function'||typeof replace!=='function')throw Error('整套资料缺少准备与启用操作');
  const filename=path.join(root,'data-generation.json'),pendingFile=path.join(root,'data-generation.pending.json');
@@ -33,13 +37,6 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
   return manual.version.split('.').slice(0,2).join('.')===value.manifest.patch&&manual.baseHash!==generationBaseIdentity(value.bundle.game);
  }
  function prepared(next,value){if(!next||generationBaseIdentity(next)!==generationBaseIdentity(value.bundle.game))throw Error('准备的整套资料基础身份不一致');return next;}
- function preserveContext(data){
-  const entries=Object.entries(data).filter(([key])=>key!=='dataFeed'),base=generationBaseIdentity(data),catalog=JSON.stringify(data.catalog);
-  // Refreshes and source/personal edits can commit to the same data object
-  // while preparation or its stage write awaits I/O. Reprepare next time;
-  // otherwise replacement would overwrite those completed local changes.
-  return ()=>getData()===data&&Object.keys(data).filter(key=>key!=='dataFeed').length===entries.length&&entries.every(([key,value])=>data[key]===value)&&JSON.stringify(data.catalog)===catalog&&generationBaseIdentity(data)===base;
- }
  function pendingStatus(){return pending?{phase:'pending',availableVersion:pending.manifest.version,release:pending.manifest.release,reason:manualConflict(pending)?'manual-base':'idle',message:manualConflict(pending)?'已有手动资料，可选择采用服务器资料':'整套新资料将在空闲时启用'}:{};}
  async function decode(record,file){
   if(record?.schema!==1||Object.keys(record).sort().join(',')!=='assets,checkedAt,envelope,manualToken,schema'||record.manualToken!==null&&!/^[a-f0-9]{64}$/.test(record.manualToken||'')||!Number.isFinite(Date.parse(record.checkedAt)))throw Error('整套资料缓存格式无效');
@@ -55,17 +52,17 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
   try{
    currentVersion(active.manifest);
    if(manualConflict(active))pending=active;
-   else{const original=getData(),contextCurrent=preserveContext(original),manualContext=manual,next=prepared(await prepare(active.bundle,active.manifest,{current:original,restore:true}),active);if(!contextCurrent()||manual!==manualContext)throw Error('基础资料已变化');replace(next);activeData=next;status={...status,phase:'ready',updatedAt:active.manifest.publishedAt,serverCheckedAt:active.manifest.checkedAt,message:'已载入本地整套资料'};}
+   else{const original=getData(),contextCurrent=preserveGameContext(getData,original),manualContext=manual,next=prepared(await prepare(active.bundle,active.manifest,{current:original,restore:true}),active);if(!contextCurrent()||manual!==manualContext)throw Error('基础资料已变化');replace(next);activeData=next;status={...status,phase:'ready',source:'server',updatedAt:active.manifest.publishedAt,serverCheckedAt:active.manifest.checkedAt,message:'已载入本地整套资料'};}
   }catch{status={...status,phase:'offline',message:'使用内置或本地有效资料'};}
  }
  const storedPending=await read(pendingFile);
- if(storedPending&&follows(storedPending.manifest,active?.manifest)&&(!active||storedPending.manifest.sequence>active.manifest.sequence))pending=storedPending;
+ if(storedPending&&follows(storedPending.manifest,active?.manifest)&&compareGenerationVersions(storedPending.manifest.version,getData().version)>=0&&(!active||storedPending.manifest.sequence>active.manifest.sequence))pending=storedPending;
  if(pending)status={...status,...pendingStatus()};
 
  function activate({release=null,explicit=false}={}){
   if(activation)return activation;
   if(!pending||!canActivate()||explicit&&release!==pending.manifest.release||manualConflict(pending)&&!explicit)return Promise.resolve(false);
-  const selected=pending,original=getData(),contextCurrent=preserveContext(original),manualContext=manual,stage=filename+'.'+process.pid+'-'+randomUUID()+'.stage';
+  const selected=pending,original=getData(),contextCurrent=preserveGameContext(getData,original),manualContext=manual,stage=filename+'.'+process.pid+'-'+randomUUID()+'.stage';
   activation=(async()=>{
    try{
     currentVersion(selected.manifest);
@@ -74,7 +71,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
     if(pending!==selected||!contextCurrent()||manual!==manualContext||!canActivate())return false;
     currentVersion(selected.manifest);
     promote(stage,filename);replace(next);active={...selected,record,file:filename};activeData=next;pending=null;
-    publish({phase:'ready',reason:null,release:null,availableVersion:null,updatedAt:selected.manifest.publishedAt,serverCheckedAt:selected.manifest.checkedAt,message:'整套资料已更新'});return true;
+    publish({phase:'ready',source:'server',reason:null,release:null,availableVersion:null,updatedAt:selected.manifest.publishedAt,serverCheckedAt:selected.manifest.checkedAt,message:'整套资料已更新'});return true;
    }catch{publish({...pendingStatus(),message:'整套资料暂未启用，保留当前资料并等待重试'});return false;}
    finally{await fs.unlink(stage).catch(()=>{});}
   })().finally(()=>activation=null);return activation;
@@ -107,5 +104,10 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
  }
  // Accepted history forbids falling back to an independent v1 generation;
  // current RAM may intentionally use a later manual base instead.
- return {check,activate,hasAccepted:()=>!!active,isActive:()=>activeData===getData(),summary:()=>({...status}),noteManual:(game,token)=>{if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))throw Error('手动资料文件身份无效');manual={token,version:game.version,baseHash:generationBaseIdentity(game)};lastAttempt=-Infinity;if(pending)publish(pendingStatus());}};
+ return {check,activate,hasAccepted:()=>!!active,isActive:()=>activeData===getData(),summary:()=>({...status}),noteManual:(game,token,{notify=true}={})=>{
+  if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))throw Error('手动资料文件身份无效');
+  manual={token,version:game.version,baseHash:generationBaseIdentity(game)};lastAttempt=-Infinity;activeData=null;
+  if(pending&&compareGenerationVersions(pending.manifest.version,game.version)<0)pending=null;
+  status={...status,phase:'ready',source:'manual',reason:null,release:null,availableVersion:null,serverCheckedAt:null,updatedAt:game.fetchedAt||null,message:'当前使用手动资料',...pendingStatus()};if(notify)onChange({...status});
+ }};
 }

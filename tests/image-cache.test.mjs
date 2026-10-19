@@ -22,3 +22,7 @@ test('broken downloads and unsupported destinations cannot replace the image cac
  let calls=0;await cacheMissingImages({root,bundleRoot:path.join(root,'bundle'),data:{...data,champions:[{id:'Example',icon:'https://example.com/image.png'}]},fetchImage:async()=>{calls++;}});
  assert.equal(calls,0);
 });
+test('an existing bundled image with a different source is downloaded into its new namespace',async t=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-image-source-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const bundleRoot=path.join(root,'bundle');await fs.mkdir(path.join(bundleRoot,'champion'),{recursive:true});await fs.writeFile(path.join(bundleRoot,'champion/Example.png'),png);let requests=0;
+ const result=await cacheMissingImages({root:path.join(root,'new-generation'),bundleRoot,data,bundledKeys:new Set(),fetchImage:async()=>{requests++;return new Response(png);}});assert.equal(requests,1);assert.equal(result.saved,1);assert.ok(result.overrides['champion/Example'].includes('new-generation'));
+});

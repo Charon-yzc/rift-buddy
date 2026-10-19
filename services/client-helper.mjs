@@ -6,7 +6,8 @@ import {clientSnapshot,writeRunePage} from './lcu.mjs';
 import {validateRuneWriteContext} from '../src/core/rune-context.mjs';
 import {importItemSet} from './item-sets.mjs';
 import {prepareClientSelection} from './client-preparation.mjs';
-import {loadSnapshot,atomicJSON} from './data.mjs';
+import {atomicJSON} from './data.mjs';
+import {createAcceptedGameReader} from './active-game.mjs';
 import {readState} from './storage.mjs';
 import {launchHelper} from './helper-launch.mjs';
 import {createMatchHistoryService} from './match-history.mjs';
@@ -25,7 +26,7 @@ export function requestHelper(config,operation,payload={},timeout=12000) {
   socket.on('end',()=>{if(!buffer.includes('\n'))reject(new Error('授权连接已结束'));});
  });
 }
-export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
+export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame=null}) {
  const filename=path.resolve(sessionFile),allowed=path.resolve(userData);
  if(path.dirname(filename)!==allowed||!/^client-session-[a-f0-9]{32}\.json$/.test(path.basename(filename)))throw new Error('无效连接会话');
  const stat=await fs.stat(filename);if(stat.size>4096)throw new Error('连接会话异常');
@@ -33,6 +34,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
  if(!pipePattern.test(config.pipe)||!tokenPattern.test(config.secret)||!Number.isInteger(config.parentPid)||config.parentPid<=0||!Number.isFinite(config.createdAt)||Date.now()-config.createdAt>600000||config.createdAt>Date.now()+5000)throw new Error('连接会话已过期');
  // The helper only serves this app's explicit operations; neither command lines nor credentials leave it.
  let writing=false,itemSetWriting=false;
+ const readCurrentGame=readGame||createAcceptedGameReader({root:path.join(userData,'data'),fallbackRoot:path.join(bundleRoot,'data')});
  const matchHistory=createMatchHistoryService({installPath:()=>config.installPath});
   const server=net.createServer(socket=>{
    socket.setEncoding('utf8');let buffer='',handled=false;socket.setTimeout(15000,()=>socket.destroy());
@@ -48,19 +50,19 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
      else if(request.operation==='matchHistory'){socket.setTimeout(60000,()=>socket.destroy());result=await matchHistory.execute(request.payload?.operation,request.payload?.payload);}
     else if(request.operation==='applyRunes'){
      if(writing)throw new Error('符文正在应用，请稍后');writing=true;
-     try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data'));
+     try{const data=await readCurrentGame(request.payload?.baseIdentity??null);
       const state=await readState(userData);
       result=await writeRunePage({page:request.payload.page,context:validateRuneWriteContext(request.payload.context),ownedPageId:state.ownedPageId,installPath:config.installPath,trees:data.runes});
       // The unelevated app is the sole settings writer; avoid racing a preference save.
      }finally{writing=false;}
     }else if(request.operation==='prepareSelection'){
      if(writing||itemSetWriting)throw Error('客户端配置正在处理，请稍后');writing=true;itemSetWriting=true;socket.setTimeout(60000,()=>socket.destroy());
-     try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data')),state=await readState(userData);
+     try{const data=await readCurrentGame(request.payload?.baseIdentity??null),state=await readState(userData);
       result=await prepareClientSelection({value:request.payload?.value,data,ownedPageId:state.ownedPageId,installPath:config.installPath});
      }finally{writing=false;itemSetWriting=false;}
     }else if(request.operation==='importItemSet'){
      if(itemSetWriting)throw Error('装备集正在写入，请稍后');itemSetWriting=true;
-     try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data'));
+     try{const data=await readCurrentGame(request.payload?.baseIdentity??null);
       result=await importItemSet({itemSet:request.payload?.itemSet,data,installPath:config.installPath});
      }finally{itemSetWriting=false;}
     }else if(request.operation==='shutdown'){socket.end(JSON.stringify({ok:true,result:true})+'\n');server.close();quit();return;}
