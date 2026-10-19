@@ -93,9 +93,9 @@ test('main pause and cancel wait for IO settlement and never replace their resul
  assert.ok(await f.service.partial());assert.equal(await handlers.get('app-update-cancel')(),true);
  assert.equal(snapshots.at(-1).phase,'available');assert.equal(await f.service.partial(),null);assert.deepEqual(await fs.readdir(f.dir),[]);
 });
-test('checking after a restart restores the paused download without a network request',async t=>{
- const f=await fixture(t);await pause(f.service);const before=f.hits.length,{handlers}=await mainFixture(createAppUpdateService(f.options));
- assert.equal((await handlers.get('app-update-check')()).phase,'paused');assert.equal(f.hits.length,before);
+test('manual checking after a restart checks publication but does not restart the paused binary download',async t=>{
+ const f=await fixture(t);await pause(f.service);const before=f.hits.filter(hit=>hit.name.endsWith('.exe')).length,{handlers}=await mainFixture(createAppUpdateService(f.options));
+ assert.equal((await handlers.get('app-update-check')()).phase,'paused');assert.equal(f.hits.filter(hit=>hit.name.endsWith('.exe')).length,before);
 });
 test('cold-start bootstrap restores the local checkpoint with automatic network checks disabled',async t=>{
  const f=await fixture(t),paused=await pause(f.service),before=f.hits.length,{context,handlers,source}=await mainFixture(createAppUpdateService(f.options));
