@@ -1333,7 +1333,7 @@ async function performSync(manual=true,fresh=false){
  const previousClient=client,previousOwn=client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId),previousOwnIntent=previousOwn?.championId||previousOwn?.championPickIntent||0;
  lastSyncStarted=Date.now();syncing=true;const before=lastRenderedClient||clientRenderIdentity(client),previousMatchups=matchupContext(),previousPhase=client.phase,previousRecommendation=recommendationKey(recommendationInput());let changed=false,newGame=false;if(manual)render();
  try{
-   await saveChain;const incoming=sharedClient;sharedClient=null;client=!manual&&!fresh&&incoming?incoming:await api.client(manual||fresh);history.observeClient(client);ongoing.observeClient(client);drainExternalState();
+   await saveChain;const incoming=sharedClient;sharedClient=null;client=!manual&&!fresh&&incoming?incoming:await api.client(manual||fresh);history.observeClient(client);ongoing.observeClient(client);if(route==='history'&&client.connected&&history.state.tabs.length===0){history.open({source:history.state.source,server:''}).catch(()=>{});}drainExternalState();
   if(positionClaim&&!positionClaim.pending&&!activeRoleClaim(positionClaim,client)){
    if(localPickLocked(client.session)&&preparationGameId(client)===positionClaim.gameId){draftComparing=false;companionTab='plan';}
    positionClaim=null;
@@ -1725,7 +1725,7 @@ document.addEventListener('click',async event=>{
  }
  if(action==='room-adopt-configuration'){if(!roomConfigurationView)throw Error('共享配置已变化，请重新打开');const localStrategy=captureRoomStrategy(slots,data,activeCreativePlan,roomConfigurationView.config.mode);if((localStrategy?.id||'')!==(roomConfigurationView.localStrategy?.id||''))throw Error('本机组合已变化，请重新打开共享配置再采用');const selection=roomPreparation(roomConfigurationView.config,data,roomConfigurationView.strategy,{localStrategy});showBuild(selection.id,selection.role,selection.mode,{...selection,readOnly:!taskOwnRole()||taskOwnRole()!==selection.role});roomConfigurationView=null;toast('已载入本机配置参考');return;}
  if(action.startsWith('catalog-')&&!boot.desktop)throw Error('组合库管理请在桌面版使用');
- if(action==='navigate'){if(route==='ongoing'&&el.dataset.route!=='ongoing')ongoing.stop();route=el.dataset.route;closeOverlay();render();if(route==='ongoing')ongoing.start();window.scrollTo(0,0);}
+ if(action==='navigate'){if(route==='ongoing'&&el.dataset.route!=='ongoing')ongoing.stop();route=el.dataset.route;closeOverlay();render();if(route==='ongoing')ongoing.start();if(route==='history'&&client.connected&&history.state.tabs.length===0){history.open({source:history.state.source,server:''}).catch(()=>{});}window.scrollTo(0,0);}
  else if(action==='catalog-import'||action==='catalog-check'){if(catalogBusy)return;catalogBusy=true;const request=++catalogRequest;try{const preview=action==='catalog-import'?await api.catalogPreview():await api.catalogCheck();if(preview&&request===catalogRequest){closeOverlay();catalogPreview=preview;overlay.innerHTML=catalogPreviewDialog(preview);}}finally{catalogBusy=false;}}
  else if(action==='catalog-source'){catalogRequest++;const result=await api.catalogSource(document.querySelector('#catalog-url').value.trim());useCatalogResult(result);toast('组合库地址已保存');}
  else if(action==='catalog-apply'){if(catalogBusy)return;catalogBusy=true;const request=++catalogRequest;try{const result=await api.catalogApply(catalogPreview?.token);useCatalogResult(result);if(request===catalogRequest)closeOverlay();toast('组合库已更新，推荐与配置已同步');}finally{catalogBusy=false;}}
@@ -1938,7 +1938,7 @@ document.addEventListener('error',event=>{const img=event.target;if(img.tagName!
 window.addEventListener('unhandledrejection',event=>{toast(event.reason?.message||'操作失败，请重试',true);event.preventDefault();});
 try{boot=await api.bootstrap();appUpdate=boot.appUpdate||appUpdate;data=boot.data;saved=boot.state;bindPlayerBuildPreferences();savedBase=structuredClone(saved);stateRevision=boot.stateRevision||0;stateRecovery=saved.recovery||null;data.catalog=configureCatalog(data.catalog||BUNDLED_CATALOG);data.catalogInfo||={...catalogIssues(data.catalog,data),version:data.catalog.version};configureAssets(data);
  ongoing.configure(saved.preferences.ongoing||{}).then(()=>history.state.streamer=ongoing.state.settings.streamer).catch(()=>{});
-  client=boot.client||client;history.observeClient(client);runeAppliedKeys.observe(client);windowLayout=boot.windowLayout||{docked:false};api.onWindowLayout?.(acceptWindowLayout);
+  client=boot.client||client;history.observeClient(client);if(route==='history'&&client.connected&&history.state.tabs.length===0){history.open({source:history.state.source,server:''}).catch(()=>{});}runeAppliedKeys.observe(client);windowLayout=boot.windowLayout||{docked:false};api.onWindowLayout?.(acceptWindowLayout);
  room=await api.roomStatus?.()||null;if(room?.mode==='host')roomAddresses=await api.roomAddresses?.()||[];
  applyRoomSnapshot(room);
  roomRelayUrl=initialRelayUrl(saved.preferences.relayUrl);roomTransport=room&&room.mode!=='idle'?(room.transport==='relay'?'relay':'lan'):'relay';
