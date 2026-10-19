@@ -34,6 +34,13 @@ test('patch packaging only selects verified manifested files and excludes unhelp
  await fs.writeFile(path.join(f.old,'resources/runtime.bin'),'modified');await assert.rejects(binaryPatches(f.old,f.next,f.before,f.after,f.after.files),/differs/);
  await fs.writeFile(path.join(f.old,'resources/runtime.bin'),Buffer.alloc(base.length));const before=await payloadManifest(f.old,'98.0.0');const unusable=await binaryPatches(f.old,f.next,before,f.after,f.after.files);assert.equal(unusable.patched.size,0);
 });
+test('large compressible source additions retain useful binary reuse instead of downloading the whole archive',async t=>{
+ const f=await fixture(t),target=Buffer.concat([base.subarray(0,60000),Buffer.from('public champion ability source with repeated numeric fields\n'.repeat(100000)),base.subarray(60000)]);
+ await fs.writeFile(path.join(f.next,'resources/runtime.bin'),target);const after=await payloadManifest(f.next,'98.0.1'),patch=filePatch('resources/runtime.bin',base,target);
+ assert(Buffer.byteLength(JSON.stringify(patch))>=target.length*.5,'This fixture must exercise the old uncompressed-size rejection');
+ const result=await binaryPatches(f.old,f.next,f.before,after,after.files);assert.deepEqual([...result.patched],['resources/runtime.bin']);assert.deepEqual(reconstruct(base,result.descriptor.files[0]),target);assert(result.reusedBytes>1048576);
+ const unrelated=Buffer.concat([base.subarray(0,1500000),crypto.randomBytes(6*1024*1024)]);await fs.writeFile(path.join(f.next,'resources/runtime.bin'),unrelated);const noisy=await payloadManifest(f.next,'98.0.1');assert.equal((await binaryPatches(f.old,f.next,f.before,noisy,noisy.files)).patched.size,0,'Large incompressible literals should still use the ordinary payload');
+});
 const powershell=(file,args)=>new Promise((resolve,reject)=>{const child=spawn('powershell.exe',['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',file,...args],{windowsHide:true,stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',bytes=>output+=bytes);child.stderr.on('data',bytes=>output+=bytes);child.once('error',reject);child.once('exit',code=>resolve({code,output:output.replace(/\r?\n/g,'')}));});
 test('native decoder reconstructs exact changed-length bytes before installation and does not touch the base', {skip:process.platform!=='win32'},async t=>{
  const f=await fixture(t),stage=path.join(f.root,'stage'),descriptor=path.join(f.root,'blocks.json');await fs.mkdir(stage);await fs.copyFile(path.join(f.next,INSTALL_MANIFEST),path.join(stage,INSTALL_MANIFEST));await fs.writeFile(path.join(stage,'卸载开黑搭子.exe'),Buffer.alloc(2048));

@@ -1,6 +1,7 @@
 // Data Dragon 16.20 reports zero AD growth for every champion and does not
 // expose the attack-speed ratio or melee/ranged identity. Read these fields
 // from the same-patch character records; never reuse older patch numbers.
+import {characterSourceRecord} from './champion-mechanics.mjs';
 export function championStatsURL(patch,id){
  if(!/^\d+\.\d+$/.test(patch)||!/^[A-Za-z][A-Za-z0-9]+$/.test(id))throw Error('英雄属性版本或编号无效');
  const name=id.toLowerCase();
@@ -35,8 +36,8 @@ export async function enrichChampionStats(champions,patch,getJSON,progress=()=>{
   while(cursor<champions.length&&!failure){
    const index=cursor++,champion=champions[index],url=championStatsURL(patch,champion.id);
    try{
-    const stats=parseChampionCombatStats(await getJSON(url,15000),champion.id);
-    result[index]={...champion,stats:{...champion.stats,...stats},combatStatsSource:{patch,url}};
+    const raw=await getJSON(url,15000),stats=parseChampionCombatStats(raw,champion.id);
+    result[index]={...champion,stats:{...champion.stats,...stats},combatStatsSource:{patch,url},characterSource:characterSourceRecord(raw,patch,champion.id)};
     completed++;if(completed%25===0||completed===champions.length)progress(`正在核对英雄成长属性 ${completed}/${champions.length}`);
    }catch(error){failure=Error(`${champion.name||champion.id}的成长属性暂不可用：${error.message}；已保留原资料`);}
    if(!failure&&cursor<champions.length&&delayMs>0)await new Promise(resolve=>setTimeout(resolve,delayMs));

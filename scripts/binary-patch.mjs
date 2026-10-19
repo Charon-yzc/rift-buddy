@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {gzipSync} from 'node:zlib';
 import {payloadPath,validateInstallManifest} from '../src/core/install-manifest.mjs';
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const minChunk=4096,maxChunk=65536;
@@ -42,8 +43,13 @@ export async function binaryPatches(baseDirectory,targetDirectory,base,target,ch
  const old=new Map(base.files.map(row=>[row.name,row])),files=[];let reusedBytes=0;
  for(const row of changed){
   const previous=old.get(row.name);if(!previous||Math.min(previous.bytes,row.bytes)<1048576||Math.max(previous.bytes,row.bytes)>536870912)continue;
-  const patch=filePatch(row.name,await readPayload(baseDirectory,previous),await readPayload(targetDirectory,row));
-  if(patch.reusedBytes<1048576||Buffer.byteLength(JSON.stringify(patch))>=row.bytes*.5)continue;
+  const targetBytes=await readPayload(targetDirectory,row),patch=filePatch(row.name,await readPayload(baseDirectory,previous),targetBytes);
+  if(patch.reusedBytes<1048576)continue;
+  const descriptor=Buffer.from(JSON.stringify(patch));
+  if(descriptor.length>32*1024*1024)continue;
+  // Repetitive JSON literals can be large before compression but much smaller
+  // than re-downloading app.asar. Require a clear compressed saving in that case.
+  if(descriptor.length>=row.bytes*.5&&gzipSync(descriptor).length>=gzipSync(targetBytes).length*.5)continue;
   reusedBytes+=patch.reusedBytes;files.push(patch);
  }
  const descriptor={schema:1,files};if(files.length>200||Buffer.byteLength(JSON.stringify(descriptor))>32*1024*1024)throw Error('Binary patch descriptor exceeds installer limits');

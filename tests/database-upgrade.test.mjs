@@ -6,7 +6,7 @@ import {getBuild} from '../src/core/builds.mjs';
 import {createGuideModel,selectGuide,validateGuideSelection,reconcileGuide} from '../src/core/guide.mjs';
 import {legalSkillOrder,nextSkill,recommendSkill} from '../src/core/skill-advice.mjs';
 import {sanitizeLive} from '../services/live-client.mjs';
-import {reviewBaseline} from '../src/core/catalog-review.mjs';
+import {reviewBaseline,reviewSourceAnchors} from '../src/core/catalog-review.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),selection={id:'Ashe',role:'bottom',mode:'rift'};
@@ -24,10 +24,10 @@ test('a refreshed source preserves the exact selected core when sample sorting c
  assert.equal(validateGuideSelection({...selection,coreIndex:14,coreId:b.selectedCoreId}).coreIndex,14);
 });
 test('same-patch recipe and skill changes flag their dependents without changing any review date',()=>{
- const baseline={...data,patch:BUNDLED_CATALOG.patch},next=structuredClone(baseline),c=structuredClone(BUNDLED_CATALOG);
+ const baseline=data,next=structuredClone(baseline),c=structuredClone(BUNDLED_CATALOG);
  // Isolate these changes from legitimate differences between the bundled
  // historical review and today's source data (including corrected growth).
- for(const row of [...c.loadouts,...c.duos,...c.trios]){row.patch=baseline.patch;row.reviewBaseline=reviewBaseline(row,c,baseline);}
+ for(const row of [...c.loadouts,...c.duos,...c.trios]){row.patch=baseline.patch;row.reviewBaseline=reviewBaseline(row,c,baseline);row.reviewSourceAnchors=reviewSourceAnchors(row,c,baseline);}
  const entry=c.duos.find(d=>d.carry==='Nilah'&&d.support==='Taric');
  next.items[3190].gold.total+=100;next.champions.find(c=>c.id==='Taric').mechanics.spells[2].cooldown[0]+=1;
  const issue=catalogIssues(c,next);assert.equal(issue.status[entry.id].stale,true);assert.ok(issue.status[entry.id].changedDependencies.some(d=>d.kind==='item'&&d.id==='3190'));assert.ok(issue.status[entry.id].changedDependencies.some(d=>d.kind==='champion'&&d.id==='Taric'));

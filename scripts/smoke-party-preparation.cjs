@@ -171,6 +171,11 @@ async function run(){
   // Only the simulated player confirms Galio. Both real renderers must
   // display the same full preparation even with every teammate pick unknown.
   picked=intent;intent=0;completed=true;await click(main,'[data-action=sync]');await click(side,'[data-action=sync]');
+  // Locking legitimately opens configuration; inspect that drawer before
+  // returning to the selection page whose body must not duplicate receipts.
+  await until(()=>js(main,'!!document.querySelector(".configuration-drawer [data-preparation-step=runes][data-step-status=done]")'),'Locking did not open the completed configuration');
+  assertConfiguration(await js(main,'JSON.parse(document.querySelector(".configuration-drawer [data-client-preparation-fingerprint]").dataset.clientPreparationFingerprint)[0]'),'Automatic configuration after player confirmation');
+  await click(main,'.configuration-drawer [data-action=close]');await until(()=>js(main,'!document.querySelector(".configuration-drawer")'),'Automatic configuration did not close');
   assert.equal(await js(main,'!!document.querySelector(".preparation-task,.client-preparation-result")'),false,'Selection page duplicates configuration receipts');
   assertConfiguration(await ownPlan(),'Sidebar after player confirmation');await click(main,'[data-action=task-edit],[data-action=task-configuration]');
   await until(()=>js(main,'document.querySelector(".drawer [data-preparation-step=runes]")?.dataset.stepStatus==="done"'),'Configuration page lost the rune receipt');

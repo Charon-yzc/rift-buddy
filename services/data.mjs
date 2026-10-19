@@ -4,6 +4,8 @@ import crypto from 'node:crypto';
 import {buildAugmentDescriptions} from './augments.mjs';
 import {enrichChampionStats,hasCurrentCombatStats} from './champion-stats.mjs';
 import {enrichItemDescriptions} from './item-descriptions.mjs';
+import {captureChampionMechanicSource} from './champion-mechanics.mjs';
+import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
 
 export const DD = 'https://ddragon.leagueoflegends.com';
 export const CN = 'https://game.gtimg.cn/images/lol/act/img/js';
@@ -26,7 +28,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
   const version = versions.find(v => /^\d+\.\d+\.\d+$/.test(v));
   if (!version) throw new Error('官方版本号不可用');
   const checkAge=clock()-Date.parse(previous?.contentCheckedAt||previous?.fetchedAt),recentCheck=Number.isFinite(checkAge)&&checkAge>=0&&checkAge<86400000;
-  if(!recheckVersion&&recentCheck&&previous?.version===version&&previous.itemTooltipRevision===1&&previous.contentRevision>=7&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch))&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
+  if(!recheckVersion&&recentCheck&&previous?.version===version&&previous.itemTooltipRevision===1&&previous.contentRevision>=8&&previous.mechanicSourceRevision===1&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch)&&mechanicSourceInput(c,previous.patch)?.version===version)&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
     // Tencent's names can catch up after Data Dragon has already shipped this
     // patch. Checking the same static version must not pin that older CN data.
     const cn=await readJSON(`${CN}/heroList/hero_list.js`).catch(()=>null);
@@ -73,7 +75,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:7, itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
+    schema: 1, contentRevision:8, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,
@@ -83,6 +85,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
       id:c.id, key:Number(c.key), name:cnHeroes.get(c.id.toLowerCase())?.title || c.name,
       title:cnHeroes.get(c.id.toLowerCase())?.name || c.title, tags:c.tags, info:c.info, stats:c.stats,
       combatStatsSource:c.combatStatsSource,
+      mechanicSource:captureChampionMechanicSource(c,patch,version,new Date(clock()).toISOString()),
       mechanics:{passive:{name:c.passive?.name,description:cleanText(c.passive?.description)},spells:c.spells.map(s=>({name:s.name,description:cleanText(s.description),maxrank:s.maxrank,cooldown:s.cooldown,cost:s.cost,effect:s.effect}))},
       keywords:cnHeroes.get(c.id.toLowerCase())?.keywords || `${c.id},${c.name},${c.title}`,
       icon:`${DD}/cdn/${version}/img/champion/${c.image.full}`,
@@ -122,6 +125,7 @@ export function validSnapshot(d){
  return !!(d&&d.schema===1&&/^\d+\.\d+\.\d+$/.test(d.version)&&d.patch===d.version.split('.').slice(0,2).join('.')&&
   Array.isArray(d.champions)&&d.champions.length>=150&&new Set(d.champions.map(c=>c.id)).size===d.champions.length&&
   d.champions.every(c=>/^[A-Za-z][A-Za-z0-9]+$/.test(c.id)&&Number.isInteger(c.key)&&typeof c.name==='string'&&Array.isArray(c.tags))&&
+  (d.contentRevision<8||d.contentRevision===undefined||d.mechanicSourceRevision===1&&d.champions.every(c=>mechanicSourceInput(c,d.patch)?.version===d.version))&&
   d.items&&typeof d.items==='object'&&Object.keys(d.items).length>=100&&Object.values(d.items).every(i=>Number.isInteger(i.id)&&typeof i.name==='string'&&i.gold&&i.maps&&Array.isArray(i.tags))&&
   Array.isArray(d.runes)&&d.runes.length===5&&d.runes.every(t=>Number.isInteger(t.id)&&Array.isArray(t.slots)&&t.slots.length===4&&t.slots.every(s=>Array.isArray(s.runes)&&s.runes.length&&s.runes.every(r=>Number.isInteger(r.id)&&typeof r.name==='string')))&&
   d.spells?.SummonerFlash?.image?.full&&Array.isArray(d.augments)&&d.augments.every(a=>Number.isInteger(a.id)&&typeof a.name==='string')&&d.sources);

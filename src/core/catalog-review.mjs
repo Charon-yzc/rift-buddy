@@ -1,6 +1,6 @@
-// Content fingerprints detect review work; they never prove a strategy works.
-const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().filter(k=>value[k]!==undefined).map(k=>[k,canonical(value[k])])):value;
-export function fingerprint(value){let hash=14695981039346656037n;for(const c of JSON.stringify(canonical(value??null))){hash^=BigInt(c.charCodeAt(0));hash=BigInt.asUintN(64,hash*1099511628211n);}return hash.toString(16).padStart(16,'0');}
+import {fingerprint} from './content-fingerprint.mjs';
+import {captureMechanicSourceAnchor,mechanicSourceMatches} from './mechanic-source.mjs';
+export {fingerprint} from './content-fingerprint.mjs';
 export function dependencyRecords(entry,catalog,data){
  const members=entry.champion?[{champion:entry.champion}]:entry.members|| (entry.carry?[{champion:entry.carry,loadoutId:entry.loadouts.bottom},{champion:entry.support,loadoutId:entry.loadouts.support}]:entry.champions.map(champion=>({champion,loadoutId:entry.id})));
  const configs=entry.champion?[]:entry.champions?[entry]:members.map(m=>catalog.loadouts.find(l=>l.id===m.loadoutId)).filter(Boolean);
@@ -12,11 +12,24 @@ export function dependencyRecords(entry,catalog,data){
  return result;
 }
 export function reviewBaseline(entry,catalog,data){return Object.fromEntries(Object.entries(dependencyRecords(entry,catalog,data)).map(([id,value])=>[id,fingerprint(value)]));}
+export function reviewSourceAnchors(entry,catalog,data,options){
+ const records=dependencyRecords(entry,catalog,data);
+ return Object.fromEntries(Object.entries(records).filter(([id])=>id.startsWith('champion:')).map(([id,value])=>{
+  const champion=data.champions.find(row=>row.id===id.slice(9));if(!champion)throw Error('英雄资料不完整，保留原复核记录');
+  return [champion.id,captureMechanicSourceAnchor(champion,data.patch,fingerprint(value),options)];
+ }));
+}
 export function dependencyChanges(entry,catalog,data){
- if(!entry.reviewBaseline)return [];
- const current=reviewBaseline(entry,catalog,data),ids=new Set([...Object.keys(current),...Object.keys(entry.reviewBaseline)]);
- return [...ids].filter(id=>current[id]!==entry.reviewBaseline[id]).map(id=>{
+ const current=reviewBaseline(entry,catalog,data),prior=entry.reviewBaseline,ids=new Set([...Object.keys(current),...Object.keys(prior||{})]);
+ const changes=[...ids].filter(id=>prior&&current[id]!==prior[id]).map(id=>{
   const [kind,key]=id.split(':');const name=kind==='champion'?data.champions.find(c=>c.id===key)?.name:kind==='item'?data.items[key]?.name:data.runes.flatMap(t=>t.slots.flatMap(s=>s.runes)).find(r=>r.id===Number(key))?.name;
-  return {kind,id:key,name:name||key,reason:!(id in current)?'方案依赖已变化':Object.hasOwn(entry.reviewBaseline,id)?'资料内容发生变化':'新增依赖，需复核'};
+  return {kind,id:key,name:name||key,reason:!(id in current)?'方案依赖已变化':Object.hasOwn(prior,id)?'资料内容发生变化':'新增依赖，需复核'};
  });
+ for(const id of Object.keys(current).filter(id=>id.startsWith('champion:'))){
+  const key=id.slice(9),champion=data.champions.find(row=>row.id===key);
+  const monitored=data.mechanicSourceRevision!==undefined||entry.reviewSourceAnchors||champion?.mechanicSource;
+  const compatible=(data.mechanicSourceRevision===undefined||data.mechanicSourceRevision===1)&&mechanicSourceMatches(champion,data.patch,entry.reviewSourceAnchors?.[key],prior?.[id]);
+  if(monitored&&!compatible&&!changes.some(row=>row.kind==='champion'&&row.id===key))changes.push({kind:'champion',id:key,name:champion?.name||key,reason:'角色源变化或检测锚点缺失，需复核'});
+ }
+ return changes;
 }
