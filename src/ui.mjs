@@ -21,6 +21,7 @@ const icons={
  check:'<path d="m5 12 4 4L19 6"/>',
  pin:'<path d="m8 3 8 0-1 6 3 4H6l3-4-1-6ZM12 13v8"/>',
  spark:'<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3ZM20 2v4m-2-2h4"/>',
+ play:'<path d="M8 5.5v13l10-6.5z"/>',
  chevron:'<path d="m8 4 8 8-8 8"/>',
  shield:'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/>',
  trash:'<path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/>',

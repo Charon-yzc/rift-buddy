@@ -13,7 +13,7 @@ test('hover equipment details expose recorded identity, costs and recipe with es
 test('rune hover substitutes this participant’s recorded variables and keeps missing records unknown',()=>{
  const html=historyTooltipView(data,{kind:'rune',id:8005,participant:{styles:[{selections:[{perk:8005,var1:431,var2:0,var3:null}]}]}});
  assert.match(html,/额外伤害：431/);assert.match(html,/本局记录/);assert.match(html,/未读取/);assert.doesNotMatch(html,/@eogvar/);
- const missing=historyTooltipView(data,{kind:'rune',id:8005});assert.match(missing,/额外伤害：未读取/);assert.doesNotMatch(missing,/额外伤害：0/);
+ const missing=historyTooltipView(data,{kind:'rune',id:8005});assert.match(missing,/额外伤害：未读取/);assert.doesNotMatch(missing,/额外伤害：0|本局记录/);
  const spell=historyTooltipView(data,{kind:'spell',id:4});assert.match(spell,/闪现/);assert.match(spell,/300/);assert.match(spell,/SummonerFlash\.png/);
  const unknown=historyTooltipView(data,{kind:'item',id:9999});assert.match(unknown,/未收录/);assert.doesNotMatch(unknown,/0 金/);
 });

@@ -28,7 +28,7 @@ Source: https://github.com/LeagueAkari/LeagueAkari/blob/5109b2f7fcce6e02312e534c
 
 Pinned revision: `5109b2f7fcce6e02312e534cd1729ed0f2142b51`.
 
-The item-set JSON schema and League client install-directory layout in `src/core/item-sets.mjs` and `services/item-sets.mjs` reference the same revision's `src/renderer/src-opgg-window/opgg/utils/loadout.ts` and `src/main/shards/league-client/index.ts`. This app exports the currently chosen equipment and updates only its own hero/position/mode file; it does not adopt LeagueAkari's deletion of previous sets or chat messages.
+The item-set JSON schema and League client install-directory layout in `src/core/item-sets.mjs` and `services/item-sets.mjs` reference the same revision's `src/renderer/src-opgg-window/opgg/utils/loadout.ts` and `src/main/shards/league-client/index.ts`. This app exports the currently chosen equipment; it writes only its own hero/position/mode file, copies competing shop sets for the same champion and map into `Config/RiftBuddyItemSetBackups`, and then moves them out of the shop (it never adopts LeagueAkari's chat messages or its handling of other champions' and maps' files).
 
 The client preview and summoner-spell endpoints in `services/client-preparation.mjs` reference the same pinned revision's `src/shared/http-api-axios-helper/league-client/champ-select.ts`. Only the local player's pick is previewed; no pick completion, ban, or automatic background configuration is implemented.
 

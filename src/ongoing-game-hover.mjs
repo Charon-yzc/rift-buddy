@@ -3,14 +3,15 @@
 // shown; anything the source did not return stays "未读取".
 import {escape as e,portrait} from './ui.mjs';
 import {queueName} from './core/match-history/model.mjs';
+import {rankTierLabel} from './core/rank-display.mjs';
 import {ongoingPositionName} from './ongoing-game-analysis-view.mjs';
 
 const num=(value,digits=0)=>Number.isFinite(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:digits}):'未读取';
 const pct=value=>Number.isFinite(value)?(value*100).toFixed(0)+'%':'未读取';
-const TIERS={IRON:'黑铁',BRONZE:'青铜',SILVER:'白银',GOLD:'黄金',PLATINUM:'铂金',EMERALD:'翡翠',DIAMOND:'钻石',MASTER:'大师',GRANDMASTER:'宗师',CHALLENGER:'王者',UNRANKED:'未定级',NONE:'未定级'};
+const TIER_NONE='未定级';
 const RANK_QUEUES=[['RANKED_SOLO_5x5','单 / 双排'],['RANKED_FLEX_SR','灵活组排'],['RANKED_CHERRY','斗魂竞技场'],['CHERRY','斗魂竞技场']];
 const rankLabel=queue=>RANK_QUEUES.find(([id])=>id===queue)?.[1]||'排位';
-const tierText=(tier,division)=>{const name=TIERS[String(tier||'').toUpperCase()]||'段位未读取';const part=['I','II','III','IV'].includes(division)?` ${division}`:'';return name+part;};
+const tierText=(tier,division)=>rankTierLabel(tier,{division,missing:'段位未读取',none:TIER_NONE});
 
 const ROLE_REASONS={PRIMARY:'主选',SECONDARY:'副选',FILL_PRIMARY:'主选补位',FILL_SECONDARY:'副选补位',AUTOFILL:'系统补位'};
 const metrics=rows=>`<dl class="history-hover-metrics">${rows.map(([label,value])=>`<div><dt>${e(label)}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
@@ -47,7 +48,7 @@ export function ongoingTooltipView(state={},element,data={}){
  if(kind==='kda'){
   if(!analysis?.count>0)return `<h3>平均 KDA</h3><p>没有可用的已结束对局样本。</p>`;
   const s=analysis.summary||{};
-  return `<h3>平均 KDA · ${e(scope)}</h3>${metrics([['平均 KDA',num(s.avgKda,2)],['KDA 变异系数',num(s.kdaCv,2)],['累计 K / D / A',`${num(s.kills)} / ${num(s.deaths)} / ${num(s.assists)}`],['单杀',num(s.avgSoloKills,2)],['击杀伤害比',pct(s.avgKillDamageEfficiency)]])}<small>变异系数越大表示表现波动越大；缺失的测量不补零。</small>`;
+  return `<h3>平均 KDA · ${e(scope)}</h3>${metrics([['平均 KDA',num(s.avgKda,2)],['KDA 变异系数',num(s.kdaCv,2)],['累计 K / D / A',`${num(s.kills)} / ${num(s.deaths)} / ${num(s.assists)}`],['单杀',num(s.avgSoloKills,2)],['击杀伤害比',pct(s.avgKillDamageEfficiency)]])}<small>变异系数越大表示表现波动越大。卡片高亮来自本队至少 3 人样本的 IQR 异常值判断，只描述历史样本。</small>`;
  }
  if(kind==='position'){
   const role=p?.role&&typeof p.role==='object'?p.role:null,positions=analysis?.positions||null,current=p?.position||role?.current||'';

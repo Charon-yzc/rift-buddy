@@ -94,6 +94,10 @@ test('equipment receipt cannot seed a different payload or manufacture other com
 test('shared equipment notices invalidate on replacement and clear on game reset',()=>{
  const statuses=new Map([['actual',itemSetSuccessStatus({replaced:true})],['export',{text:'已导出 JSON'}]]);
  assert.equal(statuses.get('actual').imported,true);assert.match(statuses.get('actual').text,/已更新/);
+ // A write that displaced old store sets must say so, and point at its backup.
+ const displaced=itemSetSuccessStatus({replaced:true,displacedSets:2,backupDirectory:'C:/backup/item-sets-1'});
+ assert.match(displaced.text,/已备份并移出商店 2 个旧配装/);assert.match(displaced.text,/C:\/backup\/item-sets-1/);
+ assert.doesNotMatch(itemSetSuccessStatus({replaced:true}).text,/旧配装/,'Nothing is claimed when nothing was displaced');
  invalidateItemSetStatuses(statuses);assert.equal(statuses.get('actual').imported,false);assert.match(statuses.get('actual').text,/后续导入替换/);assert.equal(statuses.get('export').text,'已导出 JSON');
  invalidateItemSetStatuses(statuses,{reset:true});assert.equal(statuses.size,0);
 });
