@@ -163,7 +163,7 @@ async function boot(){
  const liveService=await import('../services/live-client.mjs');
  const {createAppUpdateService}=await import('../services/app-update.mjs');
  const {compareVersions:compareAppVersion,releasePageUrl,isReleaseNotesUrl}=await import('../src/core/app-update.mjs');
- const appUpdateBase={currentVersion:app.getVersion(),installDir:app.isPackaged?path.dirname(process.execPath):'',tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||path.join(app.getPath('temp'),'rift-buddy-update'),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'};
+ const appUpdateBase={currentVersion:app.getVersion(),installDir:app.isPackaged?path.dirname(process.execPath):'',tempDir:process.env.RIFT_BUDDY_UPDATE_TEMPDIR||(process.env.RIFT_BUDDY_USER_DATA?path.join(storeRoot,'update-tmp'):path.join(app.getPath('temp'),'rift-buddy-update')),storeFile:path.join(storeRoot,'app-update.json'),...(process.env.RIFT_BUDDY_UPDATE_FEED?{feedUrl:process.env.RIFT_BUDDY_UPDATE_FEED,insecureHosts:['127.0.0.1','::1','localhost']}:{}),dryRun:process.env.RIFT_BUDDY_UPDATE_DRY_RUN==='1'};
  const updater=()=>createAppUpdateService({...appUpdateBase,mirrorBase:state.preferences.updateMirror});
  const appUpdater=updater();
  await appUpdater.sweep().catch(()=>{});

@@ -147,3 +147,9 @@ test('rejecting one completed installer leaves a separate newer paused update in
   await assert.rejects(createAppUpdateService(f.options).install(),/旧安装包|完整性复验|本地程序已变化/);assert.equal(await fs.readFile(raw.file,'utf8'),'paused bytes');assert.equal((await partial.read()).received,12);
  }
 });
+
+test('isolated application profiles never sweep the real updater cache',async()=>{
+ const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8'),code=source.slice(source.indexOf(' const appUpdateBase='),source.indexOf(' const updater='))+'appUpdateBase',profile=path.join(os.tmpdir(),'isolated-profile'),globalTemp=path.join(os.tmpdir(),'real-temp');
+ const options=env=>vm.runInNewContext(code,{path,storeRoot:profile,app:{getVersion:()=> '2.0.0',isPackaged:false,getPath:()=>globalTemp},process:{env,execPath:process.execPath}});
+ assert.equal(options({RIFT_BUDDY_USER_DATA:profile}).tempDir,path.join(profile,'update-tmp'));assert.equal(options({}).tempDir,path.join(globalTemp,'rift-buddy-update'));assert.equal(options({RIFT_BUDDY_USER_DATA:profile,RIFT_BUDDY_UPDATE_TEMPDIR:path.join(profile,'custom')}).tempDir,path.join(profile,'custom'));
+});
