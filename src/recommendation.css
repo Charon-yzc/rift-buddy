@@ -642,6 +642,12 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-pic
 .preselection-picker .preselection-current small {font-size:calc(10px * var(--text-scale))}
 .preselection-picker .preselection-actions {display:flex;gap:6px;margin-left:auto}
 .preselection-picker .preselection-actions .btn {min-height:30px;padding:5px 10px;font-size:calc(12px * var(--text-scale))}
+.hero-picker .modal-footer {font-size:calc(12px * var(--text-scale));line-height:1.4}
+.hero-picker .champ-option span {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero-picker .picker-help {margin-left:auto;color:var(--rb-muted);font-size:calc(11px * var(--text-scale))}
+.hero-picker .picker-help summary {cursor:pointer;padding:3px 0}
+.hero-picker .picker-help[open] {flex-basis:100%;margin-left:0}
+.hero-picker .picker-help p {margin-top:5px}
 @media(max-width:360px){.preselection-picker .preselection-roles .role-icon{display:none}.preselection-picker .champ-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.preselection-picker .modal-controls,.preselection-picker .champ-grid{padding-left:10px;padding-right:10px}.preselection-picker .modal-header,.preselection-picker .preselection-footer{padding-left:10px;padding-right:10px}}
 :is(.recommendation-app,.recommendation-ui) .pregame-intent-toggle{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;color:var(--rb-muted);cursor:pointer;min-height:28px}
 .pregame-intent-toggle input{appearance:none;width:25px;height:14px;flex:none;border:1px solid var(--rb-line);border-radius:8px;background:var(--rb-panel);margin:0;position:relative;cursor:pointer}
