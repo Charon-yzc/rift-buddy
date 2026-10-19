@@ -13,6 +13,7 @@ let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
 let stateRevision=0,dataRevision=0;
 const {createPreparationLedger,preservePreparationResult}=require('./preparation-ledger.cjs');
+const {shouldRequestElevatedRead}=require('./elevated-read-gate.cjs');
 const preparationLedger=createPreparationLedger();
 const sharedDataFields=new Map();
 function appWindows(){return [win,companion?.getWindow()].filter(w=>w&&!w.isDestroyed());}
@@ -564,11 +565,13 @@ async function boot(){
    // Reading public client data is automatic. When the client runs with higher
    // privileges, Windows alone decides whether it will let us read it, so ask
    // once per run instead of making the player start an authorization step.
-   // A forced/manual read leaves its single permission request to the
-   // renderer. Otherwise cancelling it would immediately trigger a second UAC.
-   if(!force&&latestClient?.needsElevation&&!elevatedReadAttempted){
+   // A forced/manual read leaves its permission request to the renderer, and
+   // electron/elevated-read-gate.cjs holds the conditions for the one ask.
+   const allowed=shouldRequestElevatedRead({force,needsElevation:!!latestClient?.needsElevation,attempted:elevatedReadAttempted,observedWindows,observedAt,explicitInGame:mainExplicitInGame});
+   if(allowed){
     elevatedReadAttempted=true;
-    try{await helper.ensure(state.preferences?.installPath);latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{}
+    try{await helper.ensure(state.preferences?.installPath);latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}
+    catch(error){diagnostic(`automatic permission request failed: ${error?.message||'unknown'}`);}
    }
    if(ballotRoundChanged(latestClient))clearRoomBallot();
    feedIdle=observeFeedPhase(latestClient);dataFeed.activate();

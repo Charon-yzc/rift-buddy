@@ -7,12 +7,16 @@ function recordClientBroadcast(channel,payload){if(channel==='client-update')cli
 // One synthetic client for both the main process (loopback reads) and the
 // renderer (IPC). A divergent main-side snapshot must not silently replace the
 // fixture mid-flow: that is a harness inconsistency, not a product behavior.
-let syntheticClient=null,syntheticReads=0;
+let syntheticClient=null,syntheticReads=0,syntheticWriteAttempts=0;
 https.request=(options,callback)=>{
  const request=new EventEmitter();request.write=body=>{options.body=body;};
  request.end=()=>queueMicrotask(()=>{try{
   if(!syntheticClient)throw Error('Synthetic client not connected');
   syntheticReads++;
+  // The app must never write through this fixture: every client mutation is a
+  // user-clicked action and belongs to a harness that mocks the writer.
+  if((options.method||'GET')!=='GET')syntheticWriteAttempts++;
+  assert.equal(options.method||'GET','GET','Synthetic client must only be read, saw '+(options.method||'GET')+' '+options.path);
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-user-flow');
   const route=options.path,champion=syntheticClient.session.myTeam[0];
   const value=
@@ -173,7 +177,8 @@ async function run(){
  // the already-open main-window configuration's next render/sync.
  await js('window.buddy.updateGuide({id:"Rengar",role:"bottom",mode:"rift",coreIndex:0,conditions:[],changedFields:["comboId","loadoutId","runeId"]})');
  await until(()=>js('!document.querySelector(".combo-config")'),'Backend combo removal did not reach configuration');await delay(600);assert.equal((await state()).guide.selection.comboId,undefined,'Main configuration restored a deleted backend combo');
- const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,restartRestore:true,partnerRoundTrip:true,interleavedGuideEdits:true,hexContextPreserved:true,successiveReplacements:true,failedReplacementRecovery:true,fixedFooter720:true,returnToScheme:true,cancelOnPreferenceEdit:true,unlockedReferenceHeroPrepares:true,changedPartnerClearsCombo:true,returningComboRestoresChoices:true,backendDeletedFieldsStayDeleted:true,actualRuneWrites:false,rejectedSaves,screenshots:root};
+ assert.equal(syntheticWriteAttempts,0,'Synthetic client received '+syntheticWriteAttempts+' write attempt(s); it must stay read-only');
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,restartRestore:true,partnerRoundTrip:true,interleavedGuideEdits:true,hexContextPreserved:true,successiveReplacements:true,failedReplacementRecovery:true,fixedFooter720:true,returnToScheme:true,cancelOnPreferenceEdit:true,unlockedReferenceHeroPrepares:true,changedPartnerClearsCombo:true,returningComboRestoresChoices:true,backendDeletedFieldsStayDeleted:true,actualRuneWrites:false,syntheticWriteAttempts,rejectedSaves,screenshots:root};
  await fs.writeFile(path.join(root,'user-flow-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);try{const target=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));console.error('FAILURE_CONTEXT '+(target?await target.webContents.executeJavaScript('window.buddy.bootstrap().then(b=>JSON.stringify({selection:b.state.guide?.selection||null,toast:document.querySelector("#toast")?.textContent||"",page:document.body.innerText.slice(0,700)}))'):'{}'));}catch(error){console.error('FAILURE_CONTEXT '+String(error.message||error));}await fs.writeFile(path.join(root,'user-flow-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

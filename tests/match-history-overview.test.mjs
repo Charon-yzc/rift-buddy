@@ -16,10 +16,22 @@ const game={id:42,source:'lcu',created:1700000000000,version:'16.20',queue:420,d
 const state=(section='summary',open=true)=>({tabs:[{id:1,options:{},filter:{},page:{player:{name:'本人'},source:'lcu',games:[game],start:0,count:1},details:{42:{game,open,section}}}],current:1,servers:[],query:'',source:'auto',server:''});
 test('compact match disclosure retains both team rosters and an independently labelled six-tab panel',()=>{
  const html=matchHistoryView(state(),data);
- assert.match(html,/history-roster-preview/);assert.match(html,/aria-controls="history-panel-42"/);assert.match(html,/id="history-panel-42"/);assert.match(html,/role="tabpanel"/);
- assert.match(html,/data-history-tip="item"/);assert.match(html,/data-history-tip="rune"/);
+ assert.match(html,/history-roster-preview/);assert.match(html,/aria-controls="history-panel-42"/);assert.match(html,/id="history-panel-42"/);assert.match(html,/role="tabpanel"/); assert.match(html,/data-history-tip="item"/);assert.match(html,/data-history-tip="rune"/);
+ // Arena always summarizes: eight subteams cannot be read as columns, and a
+ // single unknown subteam key would otherwise collapse into one long column.
+ const arena={...game,arena:true,participants:players.map(p=>({...p,team:'CHERRY-unknown'}))};
+ const arenaState=state();arenaState.tabs[0].page.games=[arena];arenaState.tabs[0].details={42:{game:arena,open:true,section:'summary'}};
+ const arenaHtml=matchHistoryView(arenaState,data);
+ assert.match(arenaHtml,/history-roster-preview is-summary[^>]*>小队未读取 · 3 人/);assert.doesNotMatch(arenaHtml,/history-roster-member/);
  assert.match(html,/data-history-slot="sidebar-controls"/);assert.match(html,/data-history-slot="sidebar-extra"/);
  assert.match(historyMatchSummaryView(data,{game}),/history-team-heading/);
+});
+
+test('Arena roster counts only public subteams and marks partial grouping honestly',()=>{
+ const render=teams=>{const s=state();s.tabs[0].page.games=[{...game,arena:true,participants:players.map((p,i)=>({...p,team:teams[i]}))}];return matchHistoryView(s,data);};
+ const mixed=render(['CHERRY-1','CHERRY-1','CHERRY-unknown']);assert.match(mixed,/已知 1 队 · 部分未读取 · 3 人/);assert.doesNotMatch(mixed,/2 支小队/);
+ assert.match(render(['CHERRY-1','CHERRY-1','CHERRY-2']),/2 支小队 · 3 人/);
+ assert.match(render(['CHERRY-unknown','CHERRY-unknown','CHERRY-unknown']),/小队未读取 · 3 人/);
 });
 test('historical numeric spell IDs resolve the bundled named spell images',()=>{
  const catalog={...data,spells:{SummonerFlash:{key:'4',name:'闪现'},SummonerHeal:{key:'7',name:'治疗术'}}};
@@ -49,7 +61,7 @@ test('match scores use original Akari single-game engine results and respect cac
  const complete={...game,gameType:'MATCHED_GAME',mode:'CLASSIC',queue:420,map:11,pve:false,completeTeams:true,participants,self:participants[0]},full=analyzeAkariHistory([complete]);
  assert.ok(Number.isFinite(full.map[42].akariScore.total));assert.deepEqual(historyMatchAkariScore(complete),full.map[42].akariScore);
  const cached={...full,map:{42:{akariScore:{total:12.345}}}};assert.equal(historyMatchAkariScore(complete,cached).total,12.345);assert.equal(historyMatchAkariScore(complete,{map:{42:{akariScore:{total:null}}}}),null);
- const current=state('summary',false);current.tabs[0].page.games=[complete];current.tabs[0].page.fullAnalysis=cached;assert.match(matchHistoryView(current,data),/Akari 12.35 \/ 17/);
+ const current=state('summary',false);current.tabs[0].page.games=[complete];current.tabs[0].page.fullAnalysis=cached;assert.match(matchHistoryView(current,data),/Akari 参考 12.35/);
  assert.equal(historyMatchAkariScore(game),null);assert.equal(historyMatchAkariScore({id:1}),null);
 });
 test('relationship records show ally and enemy win/loss from our perspective without counting remakes as losses',()=>{

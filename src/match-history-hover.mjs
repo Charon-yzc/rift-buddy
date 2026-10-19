@@ -17,15 +17,22 @@ function reference(data,kind,id){
  if(kind==='champion')return (data.champions||[]).find(value=>Number(value.key)===Number(id));
  return null;
 }
-export function historyTipAttributes(kind,id,{participant,game}={}){
- return `data-history-tip="${e(kind)}" data-tip-id="${e(id)}"${participant?.id!=null?` data-tip-player="${e(participant.id)}"`:''}${game?.id!=null?` data-tip-game="${e(game.id)}"`:''} tabindex="0"`;
+export function historyTipAttributes(kind,id,{participant,game,focusable=true}={}){
+ return `data-history-tip="${e(kind)}" data-tip-id="${e(id)}"${participant?.id!=null?` data-tip-player="${e(participant.id)}"`:''}${game?.id!=null?` data-tip-game="${e(game.id)}"`:''}${focusable?' tabindex="0"':''}`;
 }
-export function historyTextTip(label,text){return `data-history-tip="text" data-tip-title="${e(String(label).slice(0,160))}" data-tip-text="${e(String(text).slice(0,2500))}" tabindex="0"`;}
+// Dense lists (purchase icons, events, samples) stay hover-only: making every
+// glyph a tab stop turns a twenty-game page into hundreds of stops.
+export function historyTextTip(label,text,focusable=false){return `data-history-tip="text" data-tip-title="${e(String(label).slice(0,160))}" data-tip-text="${e(String(text).slice(0,2500))}"${focusable?' tabindex="0"':''}`;}
+export function historyItemLabel(data,id){const info=reference(data,'item',id);return info?.name||SHARDS[id]||`历史装备 ${id}`;}
+/** An id the bundled catalog no longer has must not render a broken image. */
+const missingItemIcon=id=>`<span class="history-empty-icon" title="历史装备 ${e(id)}" aria-label="历史装备 ${e(id)}，当前资料未收录">${e(id)}</span>`;
+const recipeIcon=(data,id)=>{const info=reference(data,'item',id);return info?asset('item',id,info.name,'history-icon'):missingItemIcon(id);};
 export function historyAsset(data,kind,id,context={},cls='history-icon'){
  if(!(Number(id)>0))return `<span class="history-empty-icon" aria-label="${id===0?'空栏位':'未读取'}"></span>`;
  const info=reference(data,kind,id),name=info?.name||SHARDS[id]||`历史${kind==='item'?'装备':'资料'} ${id}`;
+ if(kind==='item'&&!info)return missingItemIcon(id);
  const image=kind==='style'&&info?.icon?`<img class="${e(cls)}" src="../data/images/rune/${e(id)}.png" alt="${e(name)}" loading="lazy">`:asset(kind,kind==='spell'?info?.id??id:id,name,cls);
- return `<span class="history-tip-target" ${historyTipAttributes(kind,id,context)} aria-label="${e(name)}">${image}</span>`;
+ return `<span class="history-tip-target" ${historyTipAttributes(kind,id,{...context,focusable:false})} aria-label="${e(name)}">${image}</span>`;
 }
 const description=value=>e(gameDescription(String(value||'').replace(/<(?:br\s*\/?|\/p|\/div|\/stats|\/mainText)>/gi,'\n')));
 function metrics(rows){return `<dl class="history-hover-metrics">${rows.map(([label,value])=>`<div><dt>${e(label)}</dt><dd>${num(value)}</dd></div>`).join('')}</dl>`;}
@@ -34,11 +41,11 @@ export function historyTooltipView(data,{kind,id,participant,game,label:heading,
  const info=reference(data,kind,id),label=info?.name||SHARDS[id]||`历史${kind==='item'?'装备':'资料'} ${id}`;
  let body='';
  if(kind==='item'){
-  const gold=info?.gold;body=`${gold?`<p class="history-hover-cost">${num(gold.total)} 金 · 合成 ${num(gold.base)} 金 · 出售 ${num(gold.sell)} 金</p>`:''}${info?.from?.length?`<div class="history-hover-recipe"><span>合成路径</span>${info.from.slice(0,8).map(value=>asset('item',value,data.items?.[value]?.name||value,'history-icon')).join('')}</div>`:''}<div class="history-hover-description">${description(info?.description||info?.plaintext||'当前离线资料未收录此装备的效果。')}</div>`;
+  const gold=info?.gold;body=`${gold?`<p class="history-hover-cost">${num(gold.total)} 金 · 基础 ${num(gold.base)} 金 · 出售 ${num(gold.sell)} 金</p>`:''}${info?.from?.length?`<div class="history-hover-recipe"><span>合成路径</span>${info.from.slice(0,8).map(value=>recipeIcon(data,value)).join('')}</div>`:''}<div class="history-hover-description">${description(info?.description||info?.plaintext||'当前离线资料未收录此装备的效果。')}</div>`;
  }else if(kind==='rune'||kind==='style'){
   const selection=(participant?.styles||[]).flatMap(style=>style.selections||[]).find(value=>value.perk===Number(id));
   const values=[1,2,3].map(index=>selection?.['var'+index]);
-  body=`<div class="history-hover-description">${description(info?.longDesc||info?.shortDesc||SHARDS[id]||'当前离线资料未收录此符文。')}</div>${(info?.endOfGameStatDescriptions||[]).map(value=>`<p>${description(String(value).replace(/@eogvar([123])@/gi,(_,index)=>num(values[Number(index)-1])))}</p>`).join('')}${kind==='rune'?`<p class="history-hover-record">本局记录：${values.map(num).join(' / ')}</p>`:''}`;
+  body=`<div class="history-hover-description">${description(info?.longDesc||info?.shortDesc||SHARDS[id]||'当前离线资料未收录此符文。')}</div>${(info?.endOfGameStatDescriptions||[]).map(value=>`<p>${description(String(value).replace(/@eogvar([123])@/gi,(_,index)=>num(values[Number(index)-1])))}</p>`).join('')}${kind==='rune'&&values.some(Number.isFinite)?`<p class="history-hover-record">本局记录：${values.map(num).join(' / ')}</p>`:''}`;
  }else if(kind==='spell')body=`<div class="history-hover-description">${description(info?.description||'当前离线资料未收录此技能。')}</div>${info?.cooldown?.length?`<p>基础冷却 ${info.cooldown.map(num).join(' / ')} 秒</p>`:''}`;
  else if(kind==='augment')body=`<div class="history-hover-description">${description(info?.description||'当前离线资料未收录此强化。')}</div>`;
  else if(kind==='champion')body=`<p>${e(info?.title||'')}</p>${participant?metrics([['等级',participant.level],['击杀',participant.kills],['阵亡',participant.deaths],['助攻',participant.assists],['补刀',participant.cs],['视野',participant.vision]]):''}`;
@@ -52,7 +59,7 @@ export function historyTooltipView(data,{kind,id,participant,game,label:heading,
 // One top-layer tooltip per page; it is not clipped by card/table scrolls.
 // Callers supply the attribute namespace and the content renderer, so the same
 // layer serves the history tabs and the ongoing-game page.
-export function bindHistoryTooltips({document:doc,attribute='data-history-tip',render,getData,getGame,setTimer=setTimeout,clearTimer=clearTimeout}={}){
+export function bindHistoryTooltips({document:doc,attribute='data-history-tip',render,getData,getGame,setTimer=setTimeout,clearTimer=clearTimeout,tooltipId='history-hover-detail'}={}){
  const selector=`[${attribute}]`; let tip=null,target=null,showTimer=null,hideTimer=null;
  const cancel=()=>{clearTimer(showTimer);clearTimer(hideTimer);};
  function close(){cancel();target?.removeAttribute('aria-describedby');target=null;if(tip){tip.remove();tip=null;}}
@@ -63,16 +70,16 @@ export function bindHistoryTooltips({document:doc,attribute='data-history-tip',r
   const top=Math.max(8,Math.min(view.innerHeight-height-8,bounds.top));tip.style.left=left+'px';tip.style.top=top+'px';
  }
  function show(next){
-  if(!next?.isConnected)return;close();target=next;const data=getData();
-  const custom=render?.(next,data);const html=custom??(data?historyTooltipView(data,{kind:next.dataset.historyTip,id:Number(next.dataset.tipId),label:next.dataset.tipTitle,text:next.dataset.tipText,participant:(getGame?.(next)?.participants||[]).find(player=>String(player.id)===next.dataset.tipPlayer),game:getGame?.(next)}):'');
+  if(!next?.isConnected)return;close();target=next;const data=getData(),game=getGame?.(next);
+  const custom=render?.(next,data);const html=custom??(data?historyTooltipView(data,{kind:next.dataset.historyTip,id:Number(next.dataset.tipId),label:next.dataset.tipTitle,text:next.dataset.tipText,participant:(game?.participants||[]).find(player=>String(player.id)===next.dataset.tipPlayer),game}):'');
   if(!html)return close();
-  tip=doc.createElement('div');tip.id='history-hover-detail';tip.className='history-hover';tip.setAttribute('role','tooltip');tip.setAttribute('popover','manual');
+  tip=doc.createElement('div');tip.id=tooltipId;tip.className='history-hover';tip.setAttribute('role','tooltip');tip.setAttribute('popover','manual');
   const theme=doc.defaultView.getComputedStyle(next);for(const [key,source] of [['bg','--rb-panel'],['ink','--rb-ink'],['line','--rb-line'],['accent','--rb-accent']]){const value=theme.getPropertyValue(source);if(value.trim())tip.style.setProperty('--history-tip-'+key,value);}
   tip.innerHTML=html;doc.body.append(tip);tip.showPopover();next.setAttribute('aria-describedby',tip.id);position();
   tip.addEventListener('pointerenter',()=>clearTimer(hideTimer));tip.addEventListener('pointerleave',()=>{hideTimer=setTimer(close,100);});
  }
  function enter(event){const next=event.target.closest?.(selector);if(!next||event.relatedTarget&&next.contains(event.relatedTarget))return;cancel();if(next===target)return;showTimer=setTimer(()=>show(next),180);}
- function leave(event){const old=event.target.closest?.(selector);if(!old||old.contains(event.relatedTarget))return;clearTimer(showTimer);if(tip?.contains(event.relatedTarget))return;hideTimer=setTimer(close,120);}
+ function leave(event){const old=event.target.closest?.(selector);if(!old||old.contains(event.relatedTarget))return;clearTimer(showTimer);if(tip?.contains(event.relatedTarget))return;clearTimer(hideTimer);hideTimer=setTimer(close,120);}
  doc.addEventListener('pointerover',enter);doc.addEventListener('pointerout',leave);
  doc.addEventListener('focusin',event=>{const next=event.target.closest?.(selector);if(next)show(next);});
  doc.addEventListener('focusout',leave);doc.addEventListener('keydown',event=>{if(event.key==='Escape')close();});

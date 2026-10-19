@@ -8,6 +8,49 @@ test('ongoing game automatically loads each actual visible player with the bound
  const calls=[];const c=createOngoingGameController({request:async(op,p)=>{calls.push([op,p]);return op==='roster'?roster():op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
  await c.refresh();assert.equal(c.state.players[member.key].loading,false);assert.equal(c.state.roster.key,'one');assert.equal(calls.find(([op])=>op==='page')[1].rosterKey,'one');
 });
+test('a background tick repaints only when the public roster actually changed',async()=>{
+ let current=roster(),changes=0;
+ const c=createOngoingGameController({request:async(op)=>op==='roster'?current:op==='page'?page:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{changes++;}});
+ await c.refresh();const afterFirst=changes;
+ await c.refresh({background:true});assert.equal(changes,afterFirst,'An unchanged background tick must not repaint the page');
+ current={...roster(),phase:'in-champ-select'};await c.refresh({background:true});assert.ok(changes>afterFirst,'A changed roster must repaint the page');
+ await c.refresh();assert.ok(c.state.loading===false);
+});
+
+test('a late or changed display name repaints once without reloading the player history',async()=>{
+ let current={...roster(),players:[{...member,name:''}]},changes=0,pages=0;
+ const c=createOngoingGameController({request:async op=>op==='roster'?current:op==='page'?(pages++,page):{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{changes++;}});
+ await c.refresh();const loaded=c.state.players[member.key];let prior=changes;
+ for(const name of ['已补齐#TEST','更新名字#TEST']){
+  current={...roster(),players:[{...member,name}]};await c.refresh({background:true});
+  assert.equal(changes,prior+1,'Name-only changes must repaint exactly once');assert.equal(c.state.roster.players[0].name,name);assert.equal(c.state.players[member.key],loaded);assert.equal(pages,1);
+  prior=changes;await c.refresh({background:true});assert.equal(changes,prior,'An unchanged name must still preserve the page');
+ }
+});
+test('a quiet tick still clears a resolved failure so the page stops claiming an error',async()=>{
+ let fail=true,changes=0;const good=roster();
+ const c=createOngoingGameController({request:async(op)=>{if(op==='roster'){if(fail)throw Error('读取未完成');return good;}return op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{changes++;}});
+ await c.refresh();assert.match(c.state.error,/读取未完成/);const afterError=changes;
+ fail=false;await c.refresh({background:true});
+ assert.equal(c.state.error,'','A successful background read clears the stale message');assert.ok(changes>afterError,'Clearing the message repaints once');
+});
+test('a later snapshot that fills the Arena subteam id or role still repaints the page',async()=>{
+ const good=roster(),changes=[];let current={...good,players:[{...member,group:null,role:null,level:null}]};
+ const c=createOngoingGameController({request:async(op)=>op==='roster'?current:op==='page'?page:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{changes.push(current.players[0].group);}});
+ await c.refresh();const afterFirst=changes.length;
+ await c.refresh({background:true});assert.equal(changes.length,afterFirst,'An unchanged roster stays unpainted');
+ current={...good,players:[{...member,group:3}]};await c.refresh({background:true});
+ assert.equal(changes.at(-1),3,'A newly reported subteam id must reach the page');
+});
+test('a superseded foreground refresh never leaves the page painted as loading',async()=>{
+ const good=roster(),paints=[];let deferNext=false,release=null;
+ const c=createOngoingGameController({request:async(op)=>{if(op==='roster'){if(deferNext){deferNext=false;return new Promise(resolve=>{release=()=>resolve(good);});}return good;}return op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{paints.push(c.state.loading);}});
+ await c.refresh();deferNext=true;
+ const pending=c.refresh();assert.equal(paints.at(-1),true,'The manual refresh paints its loading state');
+ await c.refresh({background:true});   // a tick takes a newer ticket while the manual answer is in flight
+ release();await pending;
+ assert.equal(c.state.loading,false);assert.equal(paints.at(-1),false,'The last painted state must not still claim a load in progress');
+});
 test('old player data cannot enter a replacement game even when its request completes last',async()=>{
  let release,next=roster();const c=createOngoingGameController({request:async(op)=>op==='roster'?next:op==='page'?new Promise(resolve=>release=resolve):{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
  const pending=c.refresh();while(!release)await new Promise(resolve=>setImmediate(resolve));next={...roster('two'),players:[],teams:{}};await c.refresh();release(page);await pending;

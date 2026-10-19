@@ -3,8 +3,12 @@ import {ongoingRoster} from './core/ongoing-game.mjs';
 
 export function createOngoingGameController({request,analyze,teamAnalyze,infer,onChange=()=>{},settings={},setTimer=setInterval,clearTimer=clearInterval}){
  const state={roster:null,players:{},settings:normalizeOngoingSettings(settings),loading:false,error:'',draft:false,notes:{},met:{},groups:[],teamAnalysis:{}};
- let generation=0,rosterTicket=0,timer=null,active=false,rosterPending=false,timelineBytes=0,loadingPlayers=0,observedSession='',observedName='';const visited=new Set(),flights=new Map(),playerQueue=[];
+ let generation=0,rosterTicket=0,timer=null,active=false,rosterPending=false,timelineBytes=0,loadingPlayers=0,observedSession='',observedName='',paintedLoading=false;const visited=new Set(),flights=new Map(),playerQueue=[];
  const message=error=>String(error?.message||'读取未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');
+ // Everything a card shows from the roster itself; used to skip no-op repaints.
+ // group drives the Arena subteam sections, role the position cells and level
+ // the avatar badge, so a later snapshot that fills them must still repaint.
+ const rosterIdentity=roster=>roster?JSON.stringify([roster.key,roster.phase,roster.queue,roster.mode,(roster.players||[]).map(p=>[p.key,p.name,p.team,p.champion,p.locked,p.position,p.hidden,p.spells,p.group,p.role,p.level,p.self])]):'';
  const current=(epoch,key,entry)=>epoch===generation&&state.roster?.key===key&&(!entry||state.players[entry.memberKey]===entry);
  function drainPlayers(){while(playerQueue.length){const next=playerQueue[0];if(!next.valid()){playerQueue.shift().resolve(false);continue;}if(loadingPlayers>=state.settings.concurrency)return;loadingPlayers++;playerQueue.shift().resolve(true);}}
  const acquirePlayer=valid=>new Promise(resolve=>{playerQueue.push({resolve,valid});drainPlayers();});
@@ -56,17 +60,28 @@ export function createOngoingGameController({request,analyze,teamAnalyze,infer,o
  }
   async function refresh({force=false,background=false}={}){
   if(!state.settings.enabled)return;if(state.draft){await loadMembers({force});return;}
-  const ticket=++rosterTicket,epoch=generation;state.loading=true;state.error='';onChange();
+  const ticket=++rosterTicket,epoch=generation;
+  // A background tick must not repaint an unchanged page: that would drop the
+  // open hover detail, the rail scroll position and keyboard focus every few
+  // seconds while players and matches keep loading.
+  const quiet=background&&!force,previous=state.roster;
+  if(!quiet){state.loading=true;state.error='';paintedLoading=true;onChange();}
   try{const roster=await request('roster',{});if(ticket!==rosterTicket||epoch!==generation)return;
     if(observedSession&&roster.session&&observedSession!==roster.session)clearPersonal();if(roster.session)observedSession=roster.session;
     if(roster.key!==state.roster?.key){generation++;state.players={};state.groups=[];state.teamAnalysis={};drainPlayers();}
-  state.roster=roster;remember(roster);state.loading=false;onChange();
+  state.roster=roster;remember(roster);state.loading=false;
+    // A quiet tick must still repaint when the page is currently painted in the
+    // loading state (a foreground refresh can be superseded by a tick) and must
+    // clear a stale failure message, otherwise the page would keep claiming an
+    // error or a load that is already resolved.
+    const recovered=!!state.error;if(recovered)state.error='';
+    if(!quiet||recovered||paintedLoading||!previous||rosterIdentity(previous)!==rosterIdentity(roster)){paintedLoading=false;onChange();}
     if(roster.phase==='lobby'&&!state.settings.lobby)return;const work=loadMembers({force});if(background)work.catch(()=>{});else await work;
-   }catch(error){if(ticket===rosterTicket){state.error=message(error);state.loading=false;if(/账号|会话|登录|连接客户端/.test(state.error)){generation++;state.roster=null;state.players={};state.groups=[];state.teamAnalysis={};drainPlayers();}onChange();}}
+   }catch(error){if(ticket===rosterTicket){state.error=message(error);state.loading=false;if(/账号|会话|登录|连接客户端/.test(state.error)){generation++;state.roster=null;state.players={};state.groups=[];state.teamAnalysis={};drainPlayers();}paintedLoading=false;onChange();}}
  }
- function stop(){active=false;generation++;rosterTicket++;state.loading=false;for(const entry of Object.values(state.players)){entry.cancelled=entry.loading||entry.detailsLoading;entry.loading=false;entry.detailsLoading=false;}drainPlayers();if(timer!==null){clearTimer(timer);timer=null;}onChange();}
+ function stop(){active=false;generation++;rosterTicket++;state.loading=false;for(const entry of Object.values(state.players)){entry.cancelled=entry.loading||entry.detailsLoading;entry.loading=false;entry.detailsLoading=false;}drainPlayers();if(timer!==null){clearTimer(timer);timer=null;}paintedLoading=false;onChange();}
  function start(){if(active)return;active=true;if(state.draft){loadMembers().catch(()=>{});return;}const poll=async()=>{if(rosterPending||state.draft||!active)return;rosterPending=true;try{await refresh({background:true});}finally{rosterPending=false;}};poll().catch(()=>{});timer=setTimer(()=>poll().catch(()=>{}),5000);}
- function clear(){generation++;rosterTicket++;state.roster=null;state.draft=false;state.players={};state.groups=[];state.teamAnalysis={};drainPlayers();onChange();}
+ function clear(){generation++;rosterTicket++;state.roster=null;state.draft=false;state.players={};state.groups=[];state.teamAnalysis={};drainPlayers();paintedLoading=false;onChange();}
  function observeClient(client){const name=client?.connected?client.playerName||'':'';if(name&&observedName&&name!==observedName){clearPersonal();clear();}if(name)observedName=name;}
  async function configure(change){const previous=state.settings;state.settings=normalizeOngoingSettings({...previous,...change});
   const reload=['enabled','count','details','source','tag','lobby'].some(key=>previous[key]!==state.settings[key]);

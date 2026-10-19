@@ -13,7 +13,7 @@ export function invalidateItemSetStatuses(statuses,{reset=false}={}){
  if(reset){statuses.clear();return;}
  for(const [key,status] of statuses)if(status.imported)statuses.set(key,{...status,imported:false,text:'原装备集已被后续导入替换，请重新核对。'});
 }
-export function itemSetSuccessStatus(result){return {imported:true,text:`${result.replaced?'已更新':'已写入'}装备集${result.preferred?'，已设为当前英雄优先配装，下局生效。':'，请在游戏商店核对。'}`};}
+export function itemSetSuccessStatus(result){const moved=Number.isFinite(result?.displacedSets)&&result.displacedSets>0?`，已备份并移出商店 ${result.displacedSets} 个旧配装`:'',backup=moved&&result.backupDirectory?'（备份：'+result.backupDirectory+'）':'';return {imported:true,text:`${result.replaced?'已更新':'已写入'}装备集${result.preferred?'，已设为当前英雄优先配装，下局生效。':'，请在游戏商店核对。'}${moved}${backup}`};}
 export function samePreparationPayload(a,b){
  const pick=v=>v&&({champion:v.champion,role:v.role,mode:v.mode,page:{primaryStyleId:v.page?.primaryStyleId,subStyleId:v.page?.subStyleId,selectedPerkIds:v.page?.selectedPerkIds},summoners:v.summoners,itemSet:v.itemSet});
  return JSON.stringify(pick(a))===JSON.stringify(pick(b));

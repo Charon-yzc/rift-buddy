@@ -34,7 +34,7 @@
 ## 交付 4：发布前核验
 
 - [x] 更新 AGENTS、开发说明与 Akari 版权来源，明确用户此次授权的本机战绩和 SGP 边界。
-- [x] 运行 `pnpm test`（1603 通过）、`pnpm check`（436 个文件）、`pnpm package`、`node scripts/inspect-package.mjs --verify-current`、生命周期、授权辅助进程和战绩页面打包冒烟。最后验收包：`release/build-2026-10-17T20-25-44-824Z/开黑搭子-win32-x64/开黑搭子.exe`。
+- [x] 运行 `pnpm test`（当时 1603 通过）、`pnpm check`（当时 436 个文件）、`pnpm package`、`node scripts/inspect-package.mjs --verify-current`、生命周期、授权辅助进程和战绩页面打包冒烟。这份计划记录的是当时的中间版本，当前数字与最终包见 `.local/akari-complete-verification.json` 和 PR。
 - [x] 尝试只读真实客户端核验；探测返回 `authorization-required`，真实国服接口核验未通过，待用户在程序中完成 Windows 连接授权。未用模拟结果代替兼容结论。
 - [x] 审阅 diff 并将已验证代码交付到 `feature/match-history` 分支；PR 创建后立即关联会话。二进制保留本地，安装器编译因本机缺少 `makensis.exe` 受阻。
 

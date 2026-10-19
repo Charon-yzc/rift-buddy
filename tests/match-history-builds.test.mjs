@@ -25,3 +25,10 @@ test('build navigation targets unique participant anchors and Arena anvil totals
  const classic=historyBuildsView({...d,game:{...d.game,arena:false}},{champions:[],items:{}});assert.doesNotMatch(classic,/data-history-anvils/);
  assert.match(historyBuildsView({game:d.game},{champions:[],items:{}}),/尚未读取/);
 });
+test('the final-items line is one keyboard-reachable text tip, not a wall of icon tab stops',()=>{
+ const participants=[{id:1,name:'玩家',items:[6032],roleBoundItem:3869}],html=historyBuildsView({game:{id:42,participants},timeline:{events:[]}},{champions:[],items:{}});
+ assert.match(html,/<small data-history-tip="text" data-tip-title="最终装备" data-tip-text="[^"]*6032[^"]*职责绑定[^"]*" tabindex="0">最终装备<\/small>/);
+ assert.doesNotMatch(html,/data-history-tip="item"[^>]*tabindex="0"/,'Dense item icons stay hover-only');
+ const empty=historyBuildsView({game:{id:42,participants:[{id:1,name:'玩家',items:[]}]},timeline:{events:[]}},{champions:[],items:{}});
+ assert.doesNotMatch(empty,/data-tip-title="最终装备"/,'No tip is offered when nothing was read');
+});

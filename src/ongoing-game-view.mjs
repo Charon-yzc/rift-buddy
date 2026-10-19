@@ -9,6 +9,7 @@ import {ongoingGameAnalysisView,ongoingPositionName,ongoingTeamAnalysisView} fro
 import {ongoingJungleView} from './ongoing-game-jungle-view.mjs';
 import {historicalSpell} from './match-history-spells.mjs';
 import {findOutliersByIqr} from './core/akari/bridge.mjs';
+import {rankTierLabel} from './core/rank-display.mjs';
 import {ongoingTipAttributes} from './ongoing-game-hover.mjs';
 
 const finite=Number.isFinite;
@@ -17,7 +18,6 @@ const pct=v=>finite(v)?`${(v*100).toFixed(0)}%`:'未读取';
 const champion=(data,id)=>(data?.champions||[]).find(c=>Number(c.key)===Number(id));
 const heroName=(data,id)=>champion(data,id)?.name||(id>0?`英雄 ${id}`:'英雄未选择');
 const heroPortrait=(data,id)=>champion(data,id)?portrait(champion(data,id)):'<span class="ongoing-empty-icon" aria-label="英雄未读取">?</span>';
-const RANKS={IRON:'坚韧黑铁',BRONZE:'英勇黄铜',SILVER:'不屈白银',GOLD:'荣耀黄金',PLATINUM:'华贵铂金',EMERALD:'流光翡翠',DIAMOND:'璀璨钻石',MASTER:'超凡大师',GRANDMASTER:'傲世宗师',CHALLENGER:'最强王者',UNRANKED:'未定级',NONE:'未定级'};
 const RESULT={win:'胜',loss:'负',remake:'重开',abort:'中止',unknown:'未知'};
 const PHASES={lobby:'组队大厅','champ-select':'英雄选择','in-game':'对局进行中',draft:'已保留的对局',unavailable:'等待客户端'};
 const POSITION_ORDER={TOP:1,JUNGLE:2,MIDDLE:3,MID:3,BOTTOM:4,UTILITY:5,SUPPORT:5};
@@ -40,9 +40,9 @@ function settingsView(s){
 
 /** One compact rank line per queue, with the full table on hover. */
 function rankView(p,entry){
- const ranks=(entry.profile?.ranked||[]).slice(0,4),tip=ongoingTipAttributes('rank',{player:p.key});
+ const ranks=(entry.profile?.ranked||[]).slice(0,4),tip=p.hidden?'':ongoingTipAttributes('rank',{player:p.key});
  if(!ranks.length)return `<p class="ongoing-rank-empty" ${entry.loading?'':tip}>${entry.loading?'正在读取排位资料…':'排位资料未读取'}</p>`;
- return `<div class="ongoing-rank-strip" ${tip} aria-label="排位资料，查看详情">${ranks.map(r=>{const tier=String(r.tier||'').toUpperCase(),label=['RANKED_SOLO_5x5','RANKED_SOLO_5X5','420',420].includes(r.queue)?'单 / 双排':['RANKED_FLEX_SR','440',440].includes(r.queue)?'灵活组排':r.queue==='CHERRY'?'斗魂竞技场':'排位',division=['I','II','III','IV'].includes(r.division)?` ${r.division}`:'';return `<p title="${e(label)} · ${num(r.wins)} 胜 / ${num(r.losses)} 负"><small>${e(label)}</small><span>${e(RANKS[tier]||'段位未读取')}${e(division)}${finite(r.lp)?` · ${num(r.lp)} LP`:''}</span></p>`;}).join('')}</div>`;
+ return `<div class="ongoing-rank-strip" ${tip} aria-label="排位资料，查看详情">${ranks.map(r=>{const label=['RANKED_SOLO_5x5','RANKED_SOLO_5X5','420',420].includes(r.queue)?'单 / 双排':['RANKED_FLEX_SR','440',440].includes(r.queue)?'灵活组排':r.queue==='CHERRY'?'斗魂竞技场':'排位';return `<p title="${e(label)} · ${num(r.wins)} 胜 / ${num(r.losses)} 负"><small>${e(label)}</small><span>${e(rankTierLabel(r.tier,{division:r.division,honorific:true,missing:'段位未读取'}))}${finite(r.lp)?` · ${num(r.lp)} LP`:''}</span></p>`;}).join('')}</div>`;
 }
 
 /** Win rate, KDA and position cells; each opens its own detail on hover. */
@@ -50,14 +50,14 @@ function statsView(p,entry,state,s,outliers){
  const a=entry.analysis,hasAnalysis=a?.count>0,w=state.roster?.mode==='CHERRY'?a?.winLoss?.cherry:a?.winLoss?.all,scope=s.tag==='all'?'全部已加载队列':'当前队列';
  const rate=hasAnalysis&&w?.count>0?w.winRate:null,tone=finite(rate)?rate>=.53?'is-good':rate<=.47?'is-bad':'':'',kda=hasAnalysis&&finite(a.summary?.avgKda)?a.summary.avgKda:null,kdaTone=kda===null?'':outliers?.over?.includes(kda)?'is-good':outliers?.below?.includes(kda)?'is-bad':'';
  const role=p.role&&typeof p.role==='object'?p.role:null,reason=ROLE_REASONS[role?.assignmentReason],position=currentPosition(p);
- const history=a?.positions?Object.entries(a.positions).sort((x,y)=>(y[1]?.count||0)-(x[1]?.count||0)).slice(0,3):[];
- return `<div class="ongoing-card-stats"><div class="ongoing-stat ${tone}" ${ongoingTipAttributes('winrate',{player:p.key})} aria-label="历史胜率，查看详情"><strong>${finite(rate)?pct(rate):'—'}</strong><small>历史胜率${state.roster?.mode==='CHERRY'&&w?.count>0?' · 第一 '+pct(w.top1Rate):''}${finite(w?.count)?` (${num(w.count)})`:''}</small></div><div class="ongoing-stat ${kdaTone}" ${ongoingTipAttributes('kda',{player:p.key})} aria-label="平均 KDA，查看详情"><strong>${kda===null?'N/A':num(kda,2)}</strong><small>平均 KDA</small></div><div class="ongoing-stat ongoing-stat-position" ${ongoingTipAttributes('position',{player:p.key})} aria-label="位置资料，查看详情">${reason?`<span class="ongoing-role-reason${role.assignmentReason.includes('FILL')?' is-fill':''}">${e(reason)}</span>`:''}${position?`<span class="ongoing-position-now" title="${e(ongoingPositionName(position))}">${positionIcon(position)}</span>`:''}${history.length?`<span class="ongoing-position-history">${history.map(([id,value])=>`<span title="历史 ${e(ongoingPositionName(id))} ${num(value?.count)} 局">${positionIcon(id)}</span>`).join('')}</span>`:''}${!position&&!history.length&&!reason?'<small>位置未读取</small>':''}</div></div><p class="ongoing-sample">${e(scope)} · 有效 ${num(hasAnalysis?a.count:0)} / 已加载 ${Math.min(s.count,entry.page?.games?.length||0)} 局 · 详细 ${num(hasAnalysis?a.detailsCount:0)} 局</p>`;
+ const history=a?.positions?Object.entries(a.positions).sort((x,y)=>(y[1]?.count||0)-(x[1]?.count||0)).slice(0,3):[],tip=kind=>p.hidden?'':ongoingTipAttributes(kind,{player:p.key}),loaded=Math.min(s.count,entry.page?.games?.length||0);
+ return `<div class="ongoing-card-stats"><div class="ongoing-stat ${tone}" ${tip('winrate')} aria-label="历史胜率，查看详情"><strong>${finite(rate)?pct(rate):'未读取'}</strong><small>历史胜率${state.roster?.mode==='CHERRY'&&w?.count>0?' · 第一 '+pct(w.top1Rate):''}${finite(w?.count)?` (${num(w.count)})`:''}</small></div><div class="ongoing-stat ${kdaTone}" ${tip('kda')} aria-label="平均 KDA，查看详情"><strong>${kda===null?'未读取':num(kda,2)}</strong><small>平均 KDA</small></div><div class="ongoing-stat ongoing-stat-position" ${tip('position')} aria-label="位置资料，查看详情">${reason?`<span class="ongoing-role-reason${role.assignmentReason.includes('FILL')?' is-fill':''}">${e(reason)}</span>`:''}${position?`<span class="ongoing-position-now" title="${e(ongoingPositionName(position))}">${positionIcon(position)}</span>`:''}${history.length?`<span class="ongoing-position-history">${history.map(([id,value])=>`<span title="历史 ${e(ongoingPositionName(id))} ${num(value?.count)} 局">${positionIcon(id)}</span>`).join('')}</span>`:''}${!position&&!history.length&&!reason?'<small>位置未读取</small>':''}</div></div><p class="ongoing-sample">${e(scope)} · ${hasAnalysis?`有效 ${num(a.count)} / 已加载 ${loaded} 局 · 详细 ${num(a.detailsCount)} 局`:loaded?`有效 0 / 已加载 ${loaded} 局 · 详细 0 局`:'样本未读取'}</p>`;
 }
 
 function isJungler(p){return currentPosition(p)==='JUNGLE'||(p.spells||[]).includes(11);}
 function tagsView(p,entry,state,s){
  const a=entry.analysis?.count>0?entry.analysis:null,summary=a?.summary||{},w=a?.winLoss?.all||{},score=a?.akariScore,enabled=new Set(s.tags),tags=[];
- const add=(id,label,title,tone='')=>{if(enabled.has(id))tags.push(`<span class="ongoing-tag ${tone}" data-ongoing-tag-id="${id}" ${ongoingTipAttributes('text',{title,text:title})}>${e(label)}</span>`);};
+ const add=(id,label,title,tone='')=>{if(enabled.has(id))tags.push(`<span class="ongoing-tag ${tone}" data-ongoing-tag-id="${id}" ${ongoingTipAttributes('text',{title})}>${e(label)}</span>`);};
  const scope=s.tag==='current'?'当前队列':'全部已加载队列',basis=`${scope} · ${num(a?.count)} 场有效历史样本`;
  if(p.self||p.puuid&&p.puuid===state.roster?.selfPuuid)add('self','自己','当前客户端玩家','self');
  if(p.hidden||entry.page?.player?.privacy==='PRIVATE'||entry.profile?.privacy==='PRIVATE')add('privacy',p.hidden?'身份隐藏':'生涯隐藏','仅显示客户端公开提供的资料','warning');
@@ -92,7 +92,7 @@ function usageView(p,entry,data,s){
  if(s.usage==='none')return '';
  let rows;
  if(s.usage==='mastery')rows=[...(entry.profile?.mastery||[])].sort((a,b)=>(b.points||0)-(a.points||0)).map(m=>({id:m.champion,title:`${heroName(data,m.champion)} · 成就 ${num(m.level)} 级 · ${num(m.points)} 点`,text:`${num(m.level)} 级`,star:m.level>=60}));
- else rows=Object.values(entry.analysis?.champions||{}).sort((a,b)=>(b.winLoss?.all?.count||0)-(a.winLoss?.all?.count||0)).map(c=>({id:c.championId,title:`${heroName(data,c.championId)} · ${num(c.winLoss?.all?.count)} 局`,text:`${num(c.winLoss?.all?.count)} 局`,rate:c.winLoss?.all?.winRate}));
+ else rows=Object.values(entry.analysis?.champions||{}).sort((a,b)=>(b.winLoss?.all?.count||0)-(a.winLoss?.all?.count||0)).map(c=>({id:c.championId,title:`${heroName(data,c.championId)} · ${num(c.winLoss?.all?.count)} 局 · 胜率 ${pct(c.winLoss?.all?.winRate)}`,text:`${num(c.winLoss?.all?.count)} 局`,rate:c.winLoss?.all?.winRate}));
  return `<section class="ongoing-usage"><h4>${s.usage==='mastery'?'英雄成就':'近期常用'}<small>最多 9 位</small></h4><div>${rows.slice(0,9).map(c=>`<button type="button" data-action="ongoing-history" ${playerAttr(p)} data-champion="${e(c.id)}" ${ongoingTipAttributes('champion',{player:p.key,champion:c.id,title:c.title})} aria-label="查看${e(heroName(data,c.id))}战绩">${heroPortrait(data,c.id)}${c.star?'<span class="ongoing-mastery-star" title="成就至少 60 级">★</span>':''}${finite(c.rate)?`<i class="ongoing-usage-rate ${c.rate>=.5?'is-good':'is-bad'}" aria-hidden="true"></i>`:''}<small>${e(c.text)}</small></button>`).join('')||'<span class="ongoing-muted">暂无样本</span>'}</div></section>`;
 }
 
@@ -146,14 +146,25 @@ function kdaOutliers(members,state){
  return values.length>=3?findOutliersByIqr(values,null,.65):null;
 }
 
+/** Arena subteams: two public players per小队, from the public subteam id. */
+function cherrySections(players){
+ const groups=new Map();
+ for(const p of players){const id=Number.isInteger(p.group)&&p.group>0?p.group:0;if(!groups.has(id))groups.set(id,[]);groups.get(id).push(p);}
+ return [...groups.entries()].sort((a,b)=>a[0]-b[0]).map(([id,members])=>({team:id?`CHERRY-${id}`:'CHERRY-unknown',name:id?`斗魂小队 ${id}`:'斗魂小队未读取',members}));
+}
+
 function teamsView(state,data,s){
  const roster=state.roster||{},players=(roster.players||[]).slice(0,30),keys=[...new Set([...Object.keys(roster.teams||{}),...players.map(p=>p.team||'UNKNOWN')])];
- return keys.map(team=>{
-  const members=players.filter(p=>p.team===team||(roster.teams?.[team]||[]).includes(p.key));if(!members.length)return '';
+ const cherry=roster.mode==='CHERRY';
+ // Arena: 16 players share TEAM-ALL, but the public subteam id still separates
+ // them. Averaging all sixteen as one team would mix allies with opponents.
+ const sections=cherry?cherrySections(players):keys.map(team=>{const members=players.filter(p=>p.team===team||(roster.teams?.[team]||[]).includes(p.key));return {team,name:teamName(team,roster,members),members};});
+ return sections.map(({team,name,members})=>{
+  if(!members.length)return '';
   const sorted=sortedPlayers(members,state,s),analyzed=members.filter(p=>!p.hidden&&state.players?.[p.key]?.analysis?.count>0).length,outliers=kdaOutliers(members,state);
   const names=new Set(members.map(p=>p.puuid).filter(Boolean)),groups=(state.groups||[]).filter(g=>g.count>=s.threshold&&(g.players||[]).length>1&&g.players.every(id=>names.has(id)));
-  const label=teamName(team,roster,members),dot=TEAM_COLORS[team]?`<span class="ongoing-team-dot is-${TEAM_COLORS[team]}" aria-hidden="true"></span>`:'';
-  return `<section class="ongoing-team" data-ongoing-team="${e(team)}" data-disclosure-context="ongoing-team:${e(team)}"><header class="ongoing-team-heading"><div class="ongoing-team-title">${dot}<h2>${e(label)}<small>${members.length} 人</small></h2>${ongoingTeamAnalysisView(state.teamAnalysis?.[team],{members:members.length,analyzed})}</div>${groups.length?`<div class="ongoing-team-groups">${groups.map((g,i)=>{const keys=g.players.filter(id=>members.some(p=>p.puuid===id));return `<span class="ongoing-tag group" ${ongoingTipAttributes('premade',{players:keys.map(id=>members.find(p=>p.puuid===id)?.key||'').filter(Boolean).join(','),count:g.count,title:`历史共同对局 ${String.fromCharCode(65+i)}`})}>历史共同对局 ${String.fromCharCode(65+i)} · ${g.players.length} 人 / ${num(g.count)}+ 次</span>`;}).join('')}</div>`:''}</header><div class="ongoing-team-scroll${members.length>5?' is-large':''}" tabindex="0" aria-label="${e(label)}玩家卡片" style="--ongoing-cards:${members.length}"><div class="ongoing-player-grid">${sorted.map(p=>playerCard(p,players.indexOf(p),state,data,s,outliers)).join('')}</div></div></section>`;
+  const label=name||teamName(team,roster,members),dot=TEAM_COLORS[team]?`<span class="ongoing-team-dot is-${TEAM_COLORS[team]}" aria-hidden="true"></span>`:'';
+  return `<section class="ongoing-team" data-ongoing-team="${e(team)}" data-disclosure-context="ongoing-team:${e(team)}"><header class="ongoing-team-heading"><div class="ongoing-team-title">${dot}<h2>${e(label)}<small>${members.length} 人</small></h2>${cherry?'':ongoingTeamAnalysisView(state.teamAnalysis?.[team],{members:members.length,analyzed})}</div>${groups.length?`<div class="ongoing-team-groups">${groups.map((g,i)=>{const keys=g.players.filter(id=>members.some(p=>p.puuid===id));return `<span class="ongoing-tag group" ${ongoingTipAttributes('premade',{players:keys.map(id=>members.find(p=>p.puuid===id)?.key||'').filter(Boolean).join(','),count:g.count,title:`历史共同对局 ${String.fromCharCode(65+i)}`})}>历史共同对局 ${String.fromCharCode(65+i)} · ${g.players.length} 人 / ${num(g.count)}+ 次</span>`;}).join('')}</div>`:''}</header><div class="ongoing-team-scroll${members.length>5?' is-large':''}" tabindex="0" aria-label="${e(label)}玩家卡片" style="--ongoing-cards:${members.length}"><div class="ongoing-player-grid">${sorted.map(p=>playerCard(p,players.indexOf(p),state,data,s,outliers)).join('')}</div></div></section>`;
  }).join('');
 }
 

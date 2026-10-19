@@ -16,12 +16,12 @@ function sameSecret(actual,expected){return typeof actual==='string'&&tokenPatte
 export function requestHelper(config,operation,payload={},timeout=12000) {
  return new Promise((resolve,reject)=>{
   const socket=net.createConnection(config.pipe);socket.setEncoding('utf8');let buffer='';
-  socket.setTimeout(timeout,()=>socket.destroy(new Error('客户端授权连接超时')));
+  socket.setTimeout(timeout,()=>socket.destroy(new Error('连接助手响应超时，请重试读取')));
   socket.on('connect',()=>socket.write(JSON.stringify({secret:config.secret,operation,payload})+'\n'));
-  socket.on('data',chunk=>{buffer+=chunk;if(buffer.length>(operation==='matchHistory'?4_000_000:150000)){socket.destroy(new Error('授权连接响应异常'));return;}
-   if(buffer.includes('\n')){try{const message=JSON.parse(buffer.slice(0,buffer.indexOf('\n')));socket.end();if(message.ok)resolve(message.result);else reject(new Error(message.error||'客户端操作失败'));}catch{socket.destroy(new Error('授权连接格式异常'));}}
+  socket.on('data',chunk=>{buffer+=chunk;if(buffer.length>(operation==='matchHistory'?4_000_000:150000)){socket.destroy(new Error('连接助手响应过大'));return;}
+   if(buffer.includes('\n')){try{const message=JSON.parse(buffer.slice(0,buffer.indexOf('\n')));socket.end();if(message.ok)resolve(message.result);else reject(new Error(message.error||'客户端操作失败'));}catch{socket.destroy(new Error('连接助手返回格式异常'));}}
   });
-  socket.on('error',()=>reject(new Error('授权连接已断开，请重新连接客户端')));
+  socket.on('error',()=>reject(new Error('连接助手已断开，请重试读取')));
   socket.on('end',()=>{if(!buffer.includes('\n'))reject(new Error('授权连接已结束'));});
  });
 }
@@ -102,7 +102,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
     let record;try{record=JSON.parse((await fs.readFile(nextRecord,'utf8')).replace(/^\uFEFF/,''));}catch{}
     if(record?.phase==='failed')launchError=record.nativeCode===1223?'Windows 权限确认已取消，可点击重试读取':'Windows 未能启动连接助手，请重试连接';
     if(launchError)throw new Error(launchError);
-    if(record?.phase==='launched'&&!launched){launched=true;onProgress('授权进程已启动，正在建立本机连接…');}
+    if(record?.phase==='launched'&&!launched){launched=true;onProgress('连接助手已启动，正在建立本机连接…');}
     try{const ready=await requestHelper(next,'ping',{},750);if(ready.ready){
      if(closed){await requestHelper(next,'shutdown',{},750).catch(()=>{});throw Object.assign(Error('连接已取消'),{startupFailure:true});}
      config=next;return true;
@@ -122,7 +122,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
   })().finally(()=>{opening=null;});return opening;
  }
  return {ensure,active:()=>!!config,
-   request:(operation,payload)=>{if(!config)throw new Error('尚未授权客户端连接');return requestHelper(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
+   request:(operation,payload)=>{if(!config)throw new Error('连接助手尚未就绪，请重试读取');return requestHelper(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
   status:async (installPath,partyIds=[])=>{if(config){try{return await requestHelper(config,'status',{partyIds});}catch{}}return clientSnapshot(installPath,{partyIds});},
   shutdown:async()=>{closed=true;if(config){try{await requestHelper(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
  };

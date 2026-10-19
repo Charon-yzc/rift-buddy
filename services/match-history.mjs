@@ -17,7 +17,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
  async function context(generation){
   const startedEpoch=epoch,assertCurrent=()=>{if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');};
   let auth;try{if(!discovery||now()-discoveredAt>3000||now()<discoveredAt){discoveredAt=now();discovery=discover(typeof installPath==='function'?installPath():installPath,{includeRegion:true});}auth=await discovery;}catch{assertCurrent();discovery=null;fail('暂时无法读取客户端连接');}assertCurrent();
-  if(!auth?.port){if(startedEpoch===epoch)resetSession();fail(auth?.unreadable?'请先点击连接客户端并完成 Windows 授权':'请先登录并连接英雄联盟客户端');}
+  if(!auth?.port){if(startedEpoch===epoch)resetSession();fail(auth?.unreadable?'需要先确认 Windows 权限，再读取战绩':'请先登录并连接英雄联盟客户端');}
   let own;try{own=await request(auth,'/lol-summoner/v1/current-summoner');}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('无法确认当前账号，请重新连接客户端');}assertCurrent();
   if(!validPuuid(own?.puuid))fail('客户端尚未返回当前账号，请等待登录完成后重试');
   let locale={};if(!auth.region)try{locale=await request(auth,'/riotclient/region-locale');}catch{}assertCurrent();
