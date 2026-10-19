@@ -28,12 +28,23 @@ async function run(){
  const capture=async(w,name)=>{await w.webContents.executeJavaScript('[...document.images].forEach(i=>i.loading="eager")');await w.webContents.executeJavaScript('Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))');await w.webContents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await w.webContents.capturePage()).toPNG());};
  let report;
  if(phase==='side'){
-  fixture={connected:true,phase:'ChampSelect',receivedAt:Date.now(),mode:{id:'rift',label:'召唤师峡谷'},game:{gameId:'2101',mapId:11},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:hero('Nautilus').key,assignedPosition:'UTILITY',pickState:'locked'},{cellId:2,championId:hero('Samira').key,assignedPosition:'BOTTOM',pickState:'locked'}],theirTeam:['Morgana','Janna','Yuumi'].map((id,i)=>({cellId:6+i,championId:hero(id).key})),bans:[],timer:{adjustedTimeLeftInPhase:65000}}};
+  fixture={connected:true,phase:'ChampSelect',receivedAt:Date.now(),mode:{id:'rift',label:'召唤师峡谷'},game:{gameId:'2101',mapId:11},party:{status:'known',lobbyCount:2,unmatched:0,members:[{cellId:1,local:true,source:'self'},{cellId:2,local:false,source:'lobby'}]},session:{localPlayerCellId:1,myTeam:[{cellId:1,championId:hero('Nautilus').key,assignedPosition:'UTILITY',pickState:'locked'},{cellId:2,championId:hero('Samira').key,assignedPosition:'BOTTOM',pickState:'locked'}],theirTeam:['Morgana','Janna','Yuumi'].map((id,i)=>({cellId:6+i,championId:hero(id).key})),bans:[],timer:{adjustedTimeLeftInPhase:65000}}};
   require(path.join(base,'electron/main.cjs'));
   let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
   const {js,click,change}=actions(main);
+  const restoreHistorical=async()=>{
+   await click('[data-action=navigate][data-route=favorites]');
+   const index=await js('window.buddy.bootstrap().then(b=>b.state.favorites.findIndex(f=>f.id==="legacy-naut-samira-matchups"))');assert.ok(index>=0,'Historical matchup favorite missing');
+   await click('[data-action=open-favorite][data-index="'+index+'"]');
+   await until(()=>js('window.buddy.bootstrap().then(b=>b.state.draft?.creativePlan?.curated?.id==="naut-samira")'),'Explicit historical matchup plan not restored');
+  };
   await until(()=>js('!!document.querySelector("[data-action=sync]")'),'Main not loaded');await click('[data-action=sync]');
   await until(()=>js('!!document.querySelector(".champ-pick[data-id=Nautilus]")'),'Public pick not synchronized');
+  await until(()=>js('window.buddy.bootstrap().then(b=>b.state.draft?.slots.filter(s=>s.locked&&s.party).length===2)'),'Public party locks not saved');
+  assert.equal(await js('window.buddy.bootstrap().then(b=>b.data.catalogInfo.status["naut-samira"].stale)'),true,'Historical fixture must remain pending review');
+  await click('[data-action=my-build]');assert.equal(await js('!!document.querySelector("#overlay-root [data-duo-play]")'),false,'A historical pending plan must not be adopted automatically');await click('#overlay-root [data-action=close]');
+  await restoreHistorical();
+  const adoptedPlan=await js('window.buddy.bootstrap().then(b=>b.state.draft.creativePlan)');
   await click('[data-action=companion-attach]');await until(()=>js('document.body.classList.contains("companion-mode")'),'Sidebar not entered');
   // Configuration has its own page and no longer repeats above selection.
   await click('[data-action=companion-tab][data-tab=plan]');
@@ -42,7 +53,7 @@ async function run(){
   assert.ok(Math.abs(geometry.width-440)<=1);assert.ok(Math.abs(geometry.height-729)<=1);assert.equal(geometry.overflow,false);assert.ok(geometry.summary.top>=geometry.panel.top&&geometry.summary.top<geometry.panel.bottom,'The configuration must start in the first viewport');
   await capture(main,'side-first-screen.png');
   await click('[data-action=companion-tab][data-tab=plan]');
-  assert.equal(await js('!!document.querySelector("[data-duo-play=naut-samira]")'),true,'Prepared side plan omitted the actual duo stage tasks');
+  assert.equal(await js('document.querySelectorAll(\'[data-duo-play="'+adoptedPlan.id+'"] [data-duo-stage]\').length'),3,'Prepared side plan omitted the explicitly restored duo stages');
   assert.equal(await js('document.querySelectorAll("[data-matchup-enemy]").length'),0,'No enemy should be selected automatically');
   const selectedRune=await js('JSON.parse(document.querySelector(".configuration-current").dataset.clientPreparationFingerprint)[0].page.selectedPerkIds.join(",")');await click('[data-companion-disclosure=edit-opponent]>summary');
   const plans={};
@@ -65,10 +76,12 @@ async function run(){
   console.log('Side: selected Janna before new game');
   fixture.game.gameId='2102';await click('[data-action=sync]');await until(()=>js('document.querySelector("[data-matchup-target]").value===""'),'New draft retained previous-game target');
   console.log('Side: new-game target cleared');
+  assert.equal(await js('window.buddy.bootstrap().then(b=>!!b.state.draft?.creativePlan)'),false,'New draft retained the previously adopted historical plan');
+  await click('[data-action=companion-full]');await restoreHistorical();await click('[data-action=companion-attach]');await click('[data-action=companion-tab][data-tab=plan]');
   await change('[data-matchup-target]','Morgana');await click('[data-action=companion-full]');await until(()=>js('!document.body.classList.contains("companion-mode")'),'Full assistant missing');
   console.log('Side: expanded assistant');
   await click('[data-action=my-build]');await until(()=>js('document.querySelector("#overlay-root [data-matchup-enemy]")?.dataset.matchupEnemy==="Morgana"'),'Full configuration did not share the same manual target');
-  assert.equal(await js('document.querySelectorAll("#overlay-root [data-duo-play=naut-samira] [data-duo-stage]").length'),3);
+  assert.equal(await js('document.querySelectorAll(\'#overlay-root [data-duo-play="'+adoptedPlan.id+'"] [data-duo-stage]\').length'),3);
   await click('#overlay-root [data-companion-disclosure=configuration-actions]>summary');await click('[data-action=copy-build]');assert.ok(copiedTexts.at(-1).includes('经济分工'));assert.ok(copiedTexts.at(-1).includes('后期团战'));assert.ok(copiedTexts.at(-1).includes('莎弥拉'));
   console.log('Side: full configuration shares the selected target');
   await change('#overlay-root [data-matchup-target]','Janna');assert.equal(await js('document.querySelector("#overlay-root [data-matchup-enemy]").dataset.matchupEnemy'),'Janna');
@@ -83,7 +96,7 @@ async function run(){
   assert.equal(await js('document.querySelectorAll(".combo-row [data-duo-play=naut-samira] [data-duo-stage]").length'),3);
   const expandedWidth=await js('(()=>{const row=document.querySelector(".combo-row [data-duo-play=naut-samira]").closest(".combo-row"),list=row.parentElement;return {row:row.getBoundingClientRect().width,list:list.getBoundingClientRect().width,available:list.clientWidth-parseFloat(getComputedStyle(list).paddingLeft)-parseFloat(getComputedStyle(list).paddingRight),column:getComputedStyle(row).gridColumn,layout:getComputedStyle(list).display,open:row.querySelector(":scope>details").open};})()');assert.ok(Math.abs(expandedWidth.row-expandedWidth.available)<=2&&expandedWidth.column==='1 / -1','Expanded pair explanation should use the available list width: '+JSON.stringify(expandedWidth));
   await js('document.querySelector(".combo-row [data-duo-play=naut-samira]").closest(".combo-row").scrollIntoView({block:"start"});void 0');await capture(main,'library-naut-samira.png');
-  report={passed:true,archiveSha256:release.archiveSha256,geometry,ownPlans:plans,explicitPublicTargetOnly:true,vanishedTargetCleared:true,activeTargetMenuInvalidated:true,newDraftCleared:true,fullDrawerSharesTarget:true,loadoutUnchanged:true,duoSideFullAndLibrary:true,duoCopy:true,clipboardMocked:true,runeWrites};
+  report={passed:true,archiveSha256:release.archiveSha256,geometry,ownPlans:plans,historicalPlanExplicitlyRestored:true,pendingPlanNotAutomaticallyAdopted:true,newDraftClearsHistoricalPlan:true,explicitPublicTargetOnly:true,vanishedTargetCleared:true,activeTargetMenuInvalidated:true,newDraftCleared:true,fullDrawerSharesTarget:true,loadoutUnchanged:true,duoSideFullAndLibrary:true,duoCopy:true,clipboardMocked:true,runeWrites};
  }else if(phase.startsWith('team-order')){
   await app.whenReady();
   const core=await import(pathToFileURL(path.join(base,'src/core/guide.mjs')).href);
