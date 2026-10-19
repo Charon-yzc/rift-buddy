@@ -7,13 +7,14 @@ import {createGuideModel,selectGuide,validateGuideSelection,reconcileGuide} from
 import {legalSkillOrder,nextSkill,recommendSkill} from '../src/core/skill-advice.mjs';
 import {sanitizeLive} from '../services/live-client.mjs';
 import {reviewBaseline,reviewSourceAnchors} from '../src/core/catalog-review.mjs';
+import {comboKey} from '../src/core/combo-members.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),selection={id:'Ashe',role:'bottom',mode:'rift'};
 const p=(champion,side,items=[])=>({champion,side,inventory:items.map(id=>({id:String(id),count:1})),itemsKnown:true,scores:{kills:0}});
 const live=(extra={})=>({available:true,at:Date.now(),champion:'Ashe',mode:'rift',mapId:11,gold:800,level:7,skills:{Q:1,W:3,E:1,R:1},inventory:[],teamKnown:true,roster:[p('Jhin','enemy',[3031]),p('Jinx','enemy',[6672])],...extra});
 test('new database contains executable sourced plans with multiple builds rather than duplicate pair inflation',()=>{
- validateCatalog(BUNDLED_CATALOG,data);assert.equal(new Set(BUNDLED_CATALOG.duos.map(d=>d.carry+':'+d.support)).size,BUNDLED_CATALOG.duos.length);
+ validateCatalog(BUNDLED_CATALOG,data);assert.equal(new Set(BUNDLED_CATALOG.duos.map(comboKey)).size,BUNDLED_CATALOG.duos.length);
  assert.ok(BUNDLED_CATALOG.duos.every(d=>d.sources.length&&d.plan&&d.risk));assert.ok(data.builds['Ashe:bottom'].core.length>3);assert.ok(data.builds['Ashe:bottom'].runeOptions.length>6);
  const b=getBuild(hero('Taric'),'support',data,{comboId:BUNDLED_CATALOG.duos.find(d=>d.carry==='Nilah'&&d.support==='Taric').id});assert.equal(b.loadoutId,'taric-guardian');assert.equal(b.skillOrder[3],'Q');assert.ok(b.runeOptions.some(r=>r.page.selectedPerkIds[0]===8465));
 });

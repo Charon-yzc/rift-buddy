@@ -6,6 +6,7 @@ import {moveChampion,assignClientChampion,draftTargets,scopeSlots} from '../src/
 import {DUOS,CROSS_SYNERGIES} from '../src/core/rules.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 import {currentPlayerSelection} from '../src/core/guide.mjs';
+import {comboMembers,comboKey} from '../src/core/combo-members.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 const key=id=>data.champions.find(c=>c.id===id).key;
 const session=(a='Ashe',b='Lux')=>({myTeam:[{cellId:1,championId:key(a),assignedPosition:'BOTTOM'},{cellId:2,championId:key(b),assignedPosition:'UTILITY'}],localPlayerCellId:1});
@@ -74,14 +75,14 @@ test('bot scope only replaces bot slots, preserves fixed picks and obeys pool, b
 });
 test('expanded library entries reference real distinct champions and explain mechanism, play and risk',()=>{
  const ids=new Set(data.champions.map(c=>c.id));assert.ok(DUOS.length>23);assert.ok(CROSS_SYNERGIES.length>12);
- assert.equal(new Set(DUOS.map(d=>d.id)).size,DUOS.length);assert.equal(new Set(DUOS.map(d=>`${d.carry}:${d.support}`)).size,DUOS.length);
- for(const d of DUOS){assert.notEqual(d.carry,d.support);for(const id of [d.carry,d.support,...d.partners])assert.ok(ids.has(id),id);for(const key of ['why','plan','risk'])assert.ok(d[key].length>10,`${d.id}:${key}`);assert.ok(['balanced','fun','wild'].includes(d.style));}
+ assert.equal(new Set(DUOS.map(d=>d.id)).size,DUOS.length);assert.equal(new Set(DUOS.map(comboKey)).size,DUOS.length);
+ for(const d of DUOS){const members=comboMembers(d);assert.equal(new Set(members.map(m=>m.champion)).size,2);for(const id of [...members.map(m=>m.champion),...d.partners])assert.ok(ids.has(id),id);for(const key of ['why','plan','risk'])assert.ok(d[key].length>10,`${d.id}:${key}`);assert.ok(['balanced','fun','wild'].includes(d.style));}
  assert.equal(new Set(CROSS_SYNERGIES.map(([a,b])=>[a,b].sort().join(':'))).size,CROSS_SYNERGIES.length);
  for(const [a,b,text] of CROSS_SYNERGIES){assert.ok(ids.has(a)&&ids.has(b));assert.notEqual(a,b);assert.ok(text.trim().length>0);}
 });
 test('every viable curated bot pair remains reachable instead of only minor top-ranked variants',()=>{
  const all=recommend({slots:createSlots(),champions:data.champions,scope:'bot',limit:240});
- const seen=new Set(all.map(r=>r.duo?.id));for(const d of DUOS)if(d.patch===data.patch)assert.ok(seen.has(d.id),d.id);else assert(!seen.has(d.id),'Pending old entries cannot receive a current curated recommendation');
+ const seen=new Set(all.map(r=>r.duo?.id));for(const d of DUOS)if(!comboMembers(d).every(m=>['bottom','support'].includes(m.role)))assert(!seen.has(d.id),'Cross-role entries cannot be recommended as bot pairs');else if(d.patch===data.patch)assert.ok(seen.has(d.id),d.id);else assert(!seen.has(d.id),'Pending old entries cannot receive a current curated recommendation');
 });
 test('recommending a replacement never gives the suggestion the old client cell binding',()=>{
  const slots=mergeClientSession(createSlots(),session(),data.champions).slots;slots[3].locked=false;

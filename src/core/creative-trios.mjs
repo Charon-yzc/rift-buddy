@@ -1,6 +1,7 @@
 import {profile,conventionalRole,TRIOS,DUOS} from './rules.mjs';
 import {COOPERATION_SKILLS} from './cooperation-skills.mjs';
 import {explorationPool} from './recommendation-diversity.mjs';
+import {comboMembers,comboKey} from './combo-members.mjs';
 
 // Creative trio archetypes. Each one is defined only by role-function traits
 // (engage/peel/poke/sustain/aoe/damage) that already exist in the data model.
@@ -93,8 +94,8 @@ export function generateCreativeTrios({targets,candidateSets,champions,style='fu
  const pools=targets.map(role=>explorationPool(candidateSets[role]?.filter(c=>byId.has(c.id)&&conventionalRole(byId.get(c.id),role,profCache))||[],role,randomSeed));
  if(pools.some(p=>!p.length))return [];
  const curatedTrioSets=new Set(TRIOS.map(t=>t.members.map(m=>`${m.role}:${m.champion}`).sort().join('|')));
- const curatedDuoSets=new Set(DUOS.map(d=>`bottom:${d.carry}|support:${d.support}`));
- const curatedChampions=new Set([...TRIOS.flatMap(t=>t.members.map(m=>m.champion)),...DUOS.flatMap(d=>[d.carry,d.support])]);
+ const curatedDuoSets=new Set(DUOS.map(comboKey));
+ const curatedChampions=new Set([...TRIOS.flatMap(t=>t.members.map(m=>m.champion)),...DUOS.flatMap(d=>comboMembers(d).map(m=>m.champion))]);
  const diffCap=style==='wild'?8:7;
  const best=new Map();
  const keyOf=ids=>ids.slice().sort().join('|');
@@ -106,8 +107,8 @@ export function generateCreativeTrios({targets,candidateSets,champions,style='fu
   if(t.difficulty>diffCap)continue;
   const sig=roles.map((role,i)=>`${role}:${[a,b,c][i].id}`).sort().join('|');
   if(curatedTrioSets.has(sig))continue;
-  const bottomIdx=roles.indexOf('bottom'),supportIdx=roles.indexOf('support');
-  if(bottomIdx>=0&&supportIdx>=0&&curatedDuoSets.has(`bottom:${[a,b,c][bottomIdx].id}|support:${[a,b,c][supportIdx].id}`))continue;
+  const members=roles.map((role,i)=>`${role}:${[a,b,c][i].id}`);
+  if([[0,1],[0,2],[1,2]].some(([i,j])=>curatedDuoSets.has([members[i],members[j]].sort().join('|'))))continue;
   for(const arch of ARCHETYPES){
    if(!arch.need(t))continue;
    if(t.ad<arch.floor.ad||t.ap<arch.floor.ap)continue;
