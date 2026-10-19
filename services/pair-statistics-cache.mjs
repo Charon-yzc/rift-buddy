@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {atomicJSON} from './data.mjs';
+import {createReferenceContext,commitReferenceCache} from './reference-cache-write.mjs';
 import {readPublicJSON} from './build-json.mjs';
 import {parsePairStatisticsJSON} from './pair-statistics.mjs';
 import {pairApiUrl,validatePairStatistics} from '../src/core/pair-statistics.mjs';
@@ -39,30 +40,28 @@ export async function fetchPairStatistics(champion,role,data,source,{fetcher=fet
  return parsePairStatisticsJSON(raw,{champion,role,data,source,rawSha256:sha(JSON.stringify(raw))});
 }
 export function createPairStatisticsCache({root,getData,fetchEntry=fetchPairStatistics,write=atomicJSON,interval=600}){
- const pending=new Map();let queue=Promise.resolve(),lastStart=0;
+ const pending=new Map(),context=createReferenceContext(getData);let queue=Promise.resolve(),lastStart=0;
  return function refresh(targets,requestedSource){
-  const data=getData(),source=requireBuildSource(requestedSource),patch=data.patch;
+  const request=context(),data=request.data,source=requireBuildSource(requestedSource),patch=data.patch;
   if(!Array.isArray(targets)||targets.length<1||targets.length>5)throw Error('请先选择一至五位开黑成员及位置');
   const members=targets.map(t=>({champion:t?.champion,role:t?.role})).sort((a,b)=>(a.champion+':'+a.role).localeCompare(b.champion+':'+b.role));
   if(members.some(t=>!data.champions.some(c=>c.id===t.champion)||!['top','jungle','mid','bottom','support'].includes(t.role))||new Set(members.map(t=>t.champion)).size!==members.length||new Set(members.map(t=>t.role)).size!==members.length)throw Error('开黑成员英雄或位置不正确');
-  const key=JSON.stringify([source,patch,members]);if(pending.has(key))return pending.get(key);
+  const key=request.key+':'+JSON.stringify([source,patch,members]);if(pending.has(key))return pending.get(key);
   if(pending.size>=4)throw Error('同队统计正在刷新，请稍后再试');
   const task=queue.catch(()=>{}).then(async()=>{
    const entries=[];
    for(const member of members){
     const wait=interval-(Date.now()-lastStart);if(wait>0)await new Promise(r=>setTimeout(r,wait));lastStart=Date.now();
-    if(getData().patch!==patch)throw Error('基础资料版本已变化，请重新刷新同队统计');
+    if(!request.current())throw Error('基础资料版本已变化，请重新刷新同队统计');
     const champion=data.champions.find(c=>c.id===member.champion),entry=await fetchEntry(champion,member.role,data,source);
     if(entry?.champion!==member.champion||entry.role!==member.role)throw Error('同队统计返回了其他成员，已保留原资料');
     entries.push(entry);
    }
-   const current=getData();if(current.patch!==patch)throw Error('基础资料版本已变化，请重新刷新同队统计');
+   const current=getData();if(!request.current())throw Error('基础资料版本已变化，请重新刷新同队统计');
    const snapshot={schema:1,source:'OP.GG',...source,patch,entries};validatePairStatistics(snapshot,current.champions);
-   const existing=current.pairStatistics?.snapshots||(current.pairStatistics?[current.pairStatistics]:[]),next=mergePairStatistics([...existing,snapshot],current);
+   const previous=current.pairStatistics,existing=previous?.snapshots||(previous?[previous]:[]),next=mergePairStatistics([...existing,snapshot],current);
    // Publish only after every member and the complete persisted candidate pass.
-   await write(path.join(root,'pair-statistics-cache.json'),{schema:1,snapshots:next.snapshots});
-   if(getData().patch!==patch)throw Error('统计已缓存为原版本，基础资料已变化，请重新刷新');
-   getData().pairStatistics=next;return next;
+   await commitReferenceCache(path.join(root,'pair-statistics-cache.json'),{schema:1,snapshots:next.snapshots},{write,current:()=>request.current()&&current.pairStatistics===previous,message:'基础资料或原版本统计已变化，请重新刷新',commit:()=>{current.pairStatistics=next;}});return next;
   }).finally(()=>pending.delete(key));pending.set(key,task);queue=task;return task;
  };
 }

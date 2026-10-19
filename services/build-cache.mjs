@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
 import {atomicJSON} from './data.mjs';
+import {createReferenceContext,commitReferenceCache} from './reference-cache-write.mjs';
 import {fetchChampionBuild} from './build-sources.mjs';
 import {fetchHexBuild} from './hex-sources.mjs';
 import {buildSourceKey,buildSourcePendingKey,collectBuildSources,normalizeBuildSource,preferBuildReference,projectBuildSources,requireBuildSource,sameBuildSource} from '../src/core/build-source.mjs';
@@ -37,31 +38,31 @@ export async function loadHexBuilds(roots,data){
  }
  return result;
 }
-export function createBuildCache({root,getData,fetchRift=fetchChampionBuild,fetchHex=fetchHexBuild,interval=1200}){
- const pending=new Map();let lastStart=0,queue=Promise.resolve();
+export function createBuildCache({root,getData,fetchRift=fetchChampionBuild,fetchHex=fetchHexBuild,interval=1200,write=atomicJSON}){
+ const pending=new Map(),context=createReferenceContext(getData);let lastStart=0,queue=Promise.resolve();
  return async function refresh(id,role,source){
-  const data=getData(),requestPatch=data.patch,champion=data.champions.find(c=>c.id===id);
+  const request=context(),data=request.data,requestPatch=data.patch,champion=data.champions.find(c=>c.id===id);
   if(!champion||!['top','jungle','mid','bottom','support','hex'].includes(role))throw new Error('英雄或位置不正确');
   const selected=role==='hex'?null:source===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(source);
-  const key=`${id}:${role}`,pendingKey=buildSourcePendingKey(requestPatch,id,role,selected);
+  const key=`${id}:${role}`,pendingKey=request.key+':'+buildSourcePendingKey(requestPatch,id,role,selected);
   if(pending.has(pendingKey))return pending.get(pendingKey);
   if(pending.size>=5)throw new Error('已有多个配置正在刷新，请稍后再试');
   const task=queue.catch(()=>{}).then(async()=>{
    const wait=interval-(Date.now()-lastStart);if(wait>0)await new Promise(r=>setTimeout(r,wait));lastStart=Date.now();
-   if(getData().patch!==requestPatch)throw new Error('资料版本已更新，请重新刷新配置');
+   if(!request.current())throw new Error('资料版本已更新，请重新刷新配置');
    const ref=role==='hex'?await fetchHex(champion,data):await fetchRift(champion,role,data,{allowOlder:true,...selected});
-   const current=getData();if(current.patch!==requestPatch)throw new Error('资料版本已更新，请重新刷新配置');
+   const current=getData();if(!request.current())throw new Error('资料版本已更新，请重新刷新配置');
    if(!(role==='hex'?validHexReference(ref,champion,current,{allowOlder:true}):validReference(ref,champion,role,current,{allowOlder:true})))throw new Error('来源配置不完整，已保留本地方案');
    if(role!=='hex'&&!sameBuildSource(ref,selected))throw Error('来源地域或段位不一致，已保留本地方案');
    const entries=role==='hex'?null:collectBuildSources(current);
    const existing=role==='hex'?current.hexBuilds?.[id]:projectBuildSources(entries,selected,current.patch)[key];
    if(existing&&(compareBuildPatches(existing.patch,ref.patch)>0||existing.patch===ref.patch&&!preferBuildReference(ref,existing)))return existing;
    if(role==='hex'){
-    const next={...current.hexBuilds,[id]:ref};await atomicJSON(path.join(root,'hex-builds.json'),{schema:1,entries:next});current.hexBuilds=next;
+    const previous=current.hexBuilds,next={...previous,[id]:ref};
+    await commitReferenceCache(path.join(root,'hex-builds.json'),{schema:1,entries:next},{write,current:()=>request.current()&&current.hexBuilds===previous,commit:()=>{current.hexBuilds=next;}});
    }else{
-    const next={...entries,[buildSourceKey(id,role,selected,ref.patch)]:ref};
-    await atomicJSON(path.join(root,'builds.json'),{schema:2,entries:next});
-    current.buildSources=next;current.builds=projectBuildSources(next,current.buildSource,current.patch);
+    const previous=current.buildSources,previousBuilds=current.builds,previousSource=current.buildSource,next={...entries,[buildSourceKey(id,role,selected,ref.patch)]:ref},projected=projectBuildSources(next,previousSource,current.patch);
+    await commitReferenceCache(path.join(root,'builds.json'),{schema:2,entries:next},{write,current:()=>request.current()&&current.buildSources===previous&&current.builds===previousBuilds&&current.buildSource===previousSource,commit:()=>{current.buildSources=next;current.builds=projected;}});
    }
    return ref;
   }).finally(()=>pending.delete(pendingKey));queue=task;
