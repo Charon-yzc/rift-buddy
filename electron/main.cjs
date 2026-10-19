@@ -11,7 +11,7 @@ let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
-let stateRevision=0,dataRevision=0;
+let stateRevision=0,dataRevision=0,latestNoticeOperation=null;
 const {createPreparationLedger,preservePreparationResult}=require('./preparation-ledger.cjs');
 const {shouldRequestElevatedRead}=require('./elevated-read-gate.cjs');
 const preparationLedger=createPreparationLedger();
@@ -20,7 +20,7 @@ function appWindows(){return [win,companion?.getWindow()].filter(w=>w&&!w.isDest
 function publishWindows(channel,value,exclude){for(const window of appWindows())if(window.webContents!==exclude)window.webContents.send(channel,value);}
 function publishPreparation(event){if(event)for(const window of appWindows())try{window.webContents.send('preparation-update',event);}catch{diagnostic('preparation result notification unavailable');}return event;}
 function observePreparation(){publishPreparation(preparationLedger.observe(latestClient));}
-function beginPreparation(kind,payload){observePreparation();const operation=preparationLedger.begin(kind,payload);publishPreparation(operation.event);return operation.token;}
+function beginPreparation(kind,payload){observePreparation();const operation=preparationLedger.begin(kind,payload);publishPreparation(operation.event);if(kind!=='items')latestNoticeOperation=operation.token.operationId;return operation.token;}
 function finishPreparation(token,payload){return publishPreparation(preparationLedger.finish(token,payload));}
 function publishData(keys,replace=false){
  if(replace)sharedDataFields.clear();
@@ -546,7 +546,7 @@ async function boot(){
    const operation=beginPreparation('selection',{value,selection,context:value.context});applyingRunes=true;importingItemSet=true;
    let hovered;
    try{
-    const written=helper.active()?await helper.request('prepareSelection',{value,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
+    const written=helper.active()?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
     finishPreparation(operation,{result:written});
     if(intent.kind==='hero'&&written.complete)appliedGuideSelection={gameId,selection:structuredClone(selection)};
     const result=await preservePreparationResult(written,[
@@ -802,12 +802,26 @@ async function boot(){
   appUpdateFlight=Promise.resolve().then(async()=>{await updater().cleanup();publishAppUpdate({phase:'idle'});return true;}).finally(()=>{appUpdateFlight=null;});
   return appUpdateFlight;
  });
- guard('apply-runes',async(page,context)=>{
+  async function broadcastChampSelectNotice(notice,binding,operation){
+   const allowed=()=>state.preferences?.chatNotice===true&&preparationLedger.snapshot().revision>=operation.operationId&&latestNoticeOperation===operation.operationId;
+   if(!notice||!allowed())return;
+   try{
+    const {formatChampSelectAnnouncement,sendChampSelectAnnouncement}=await import('../services/lcu-chat.mjs');
+    const text=typeof notice==='string'?notice:formatChampSelectAnnouncement(notice);
+    if(!text)return;
+    const value={text,...binding,championId:notice.championId,operationId:operation.operationId};
+    if(helper.active())await helper.request('chatAnnouncement',value);
+    else await sendChampSelectAnnouncement({...value,installPath:state.preferences?.installPath},{allowed});
+   }catch(error){
+    diagnostic(`champ select chat notice failed ${error?.message||'unknown'}`);
+   }
+  }
+ guard('apply-runes',async(page,context,notice)=>{
   if(applyingRunes||importingItemSet)throw new Error('客户端配置正在处理，请稍后');applyingRunes=true;
    let operation;
    try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);operation=beginPreparation('runes',{context,page:{primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:page.selectedPerkIds}});
-    const written=helper.active()?await helper.request('applyRunes',{page,context,baseIdentity:generationBaseIdentity(data)}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});
-    let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['保存符文页记录',()=>saveCurrentState(current=>({...current,ownedPageId:written.pageId}))],['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};}
+    const written=helper.active()?await helper.request('applyRunes',{page,context,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});
+    let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['保存符文页记录',()=>saveCurrentState(current=>({...current,ownedPageId:written.pageId}))],['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});if(written.pageId&&notice)broadcastChampSelectNotice(notice,{context,pageId:written.pageId,page},operation).catch(()=>{});return {...result,preparationRevision:event.revision};}
    catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'符文未完成')}});throw error;}
   finally{applyingRunes=false;}
  });
@@ -819,7 +833,7 @@ async function boot(){
    const service=await import('../services/client-preparation.mjs'),selection=value?.selection===undefined?null:guideCore.validateGuideSelection(value.selection);value=service.validateClientPreparation(value,data);
    if(selection&&(selection.id!==value.champion||selection.role!==value.role||selection.mode!==value.mode))throw Error('准备配置与英雄或位置不一致，请重新点击');
    operation=beginPreparation('selection',{value,selection,context:value.context});
-   const written=helper.active()?await helper.request('prepareSelection',{value,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
+   const written=helper.active()?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
    let event=finishPreparation(operation,{result:written});
    if(written.complete&&selection&&!value.preselectOnly)appliedGuideSelection={gameId:String(value.sessionGameId),selection:structuredClone(selection)};
    // Loading can destroy the sidebar before its IPC reply. Commit the clicked
@@ -828,7 +842,7 @@ async function boot(){
     const chosen={...selection,...storedPreparation(state.preparations,selection)},next=guideCore.selectGuide(state.guide,chosen);
     next.match={...(next.match||{}),gameId:String(value.sessionGameId),phase:latestClient.phase};await setGuideState(next);guide.publish();await guide.phase(latestClient.phase,latestClient.connected);
    }}]]);
-   if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};
+   if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});if(written.complete&&value?.notice)broadcastChampSelectNotice(value.notice,{context:value.context,pageId:written.steps?.runes?.pageId,page:value.page},operation).catch(()=>{});return {...result,preparationRevision:event.revision};
   }catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'配置未完成')}});throw error;
   }finally{applyingRunes=false;importingItemSet=false;}
  });

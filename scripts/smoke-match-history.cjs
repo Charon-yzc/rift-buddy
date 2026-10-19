@@ -46,6 +46,12 @@ async function run(){
  // restart the timer for a stable target or bypass the real hover handler.
  const hover=async(selector,label)=>{await js('window.__historySmokeHoverTarget=null');await until(()=>js(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});if(!el)return false;if(window.__historySmokeHoverTarget!==el){window.__historySmokeHoverTarget=el;(el.querySelector('img')||el).dispatchEvent(new PointerEvent('pointerover',{bubbles:true}));}const tip=document.querySelector('#history-hover-detail');return !!(tip&&tip.matches(':popover-open')&&el.getAttribute('aria-describedby')==='history-hover-detail');})()`),label);};
  const hoverText=()=>js('document.querySelector("#history-hover-detail")?.textContent||""');
+ const originalTheme=await js('document.documentElement.dataset.theme');
+ const chooseTheme=async theme=>{await click('[data-action=theme-open]');await click(`[data-action=presentation][data-field=theme][data-value="${theme}"]`);await until(()=>js(`document.documentElement.dataset.theme===${JSON.stringify(theme)}`),'Theme did not apply');await click('[aria-label=配色] [data-action=close]');};
+ const readable=async selectors=>{
+  const samples=await js(`(()=>{const ctx=document.createElement('canvas').getContext('2d'),rgb=color=>{ctx.clearRect(0,0,1,1);ctx.fillStyle=color;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data].slice(0,3);},lum=color=>rgb(color).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0),bg=lum(getComputedStyle(document.documentElement).getPropertyValue('--rb-panel'));return [...document.querySelectorAll(${JSON.stringify(selectors)})].filter(el=>el.textContent.trim()).map(el=>{const fg=lum(getComputedStyle(el).color);return {selector:el.className||el.tagName,ratio:(Math.max(bg,fg)+.05)/(Math.min(bg,fg)+.05)};});})()`);
+  assert(samples.length>0,'No actual text sampled');assert(samples.every(s=>s.ratio>=4.5),'Theme text contrast: '+JSON.stringify(samples.filter(s=>s.ratio<4.5)));
+ };
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);
  for(const close of ['button','escape','backdrop']){
@@ -72,6 +78,11 @@ async function run(){
   assert.equal(await js('!!document.querySelector("#game-tooltip:popover-open")'),false,'Hovering inside the contextual detail must not stack another tooltip');
   assert.equal(await js('(()=>{const r=document.querySelector("#history-hover-detail").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;})()'),true,'Equipment hover escapes viewport');
   const visualRoot=root;await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(visualRoot,'history-expanded-equipment.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
+  for(const theme of ['daylight',originalTheme]){
+   await chooseTheme(theme);await hover('.history-details [data-history-tip=item]','Themed equipment hover missing');
+   await readable('.history-profile-identity h2,.history-kda strong,.history-card-damage strong,.history-hover-cost,.history-hover-description,.history-hover-record');
+   await capture('history-theme-'+theme+'.png');await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  }
   await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');assert.equal(await js('!!document.querySelector("#history-hover-detail")'),false);
   // Leaving the target must also close the layer, not only Escape.
   await hover('.history-details [data-history-tip=item]','Equipment hover did not reopen');await js('document.querySelector(".history-details [data-history-tip=item]").dispatchEvent(new PointerEvent("pointerout",{bubbles:true,relatedTarget:document.body}))');await until(()=>js('!document.querySelector("#history-hover-detail")'),'Hover detail did not close on pointer leave');
@@ -130,6 +141,10 @@ async function run(){
   await until(()=>js('!document.querySelector("#history-hover-detail")'),'Ongoing hover did not close after Escape');
   await hover('[data-ongoing-tip=rank]','Ongoing rank hover missing');assert.ok((await hoverText()).length>0);await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');ongoingHover=true;
   await capture('ongoing-game.png');
+  for(const theme of ['daylight',originalTheme]){
+   await chooseTheme(theme);await until(()=>js('document.querySelectorAll("[data-ongoing-player]").length===10'),'Themed live roster missing');
+   await readable('.ongoing-player-name,.ongoing-stat strong,.ongoing-tag,.ongoing-role-reason');await capture('ongoing-theme-'+theme+'.png');
+  }
   await js('document.querySelector(".ongoing-settings").open=true');await click('[data-ongoing-field=streamer]');
   await until(()=>js('window.buddy.bootstrap().then(b=>b.state.preferences.ongoing.streamer===true)'),'Streamer preference did not settle');
   await until(()=>js('!document.querySelector(".ongoing-status")&&!document.querySelector(".ongoing-player-card[aria-busy=true]")'),'Streamer roster refresh did not settle');

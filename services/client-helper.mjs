@@ -33,7 +33,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
  const config=JSON.parse(await fs.readFile(filename,'utf8'));
  if(!pipePattern.test(config.pipe)||!tokenPattern.test(config.secret)||!Number.isInteger(config.parentPid)||config.parentPid<=0||!Number.isFinite(config.createdAt)||Date.now()-config.createdAt>600000||config.createdAt>Date.now()+5000)throw new Error('连接会话已过期');
  // The helper only serves this app's explicit operations; neither command lines nor credentials leave it.
- let writing=false,itemSetWriting=false;
+ let writing=false,itemSetWriting=false,latestNoticeOperation=null;
  const readCurrentGame=readGame||createAcceptedGameReader({root:path.join(userData,'data'),fallbackRoot:path.join(bundleRoot,'data')});
  const matchHistory=createMatchHistoryService({installPath:()=>config.installPath});
   const server=net.createServer(socket=>{
@@ -49,6 +49,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
      else if(request.operation==='status')result=await clientSnapshot(config.installPath,{partyIds:request.payload?.partyIds});
      else if(request.operation==='matchHistory'){socket.setTimeout(60000,()=>socket.destroy());result=await matchHistory.execute(request.payload?.operation,request.payload?.payload);}
     else if(request.operation==='applyRunes'){
+     latestNoticeOperation=request.payload?.operationId??null;
      if(writing)throw new Error('符文正在应用，请稍后');writing=true;
      try{const data=await readCurrentGame(request.payload?.baseIdentity??null);
       const state=await readState(userData);
@@ -56,6 +57,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
       // The unelevated app is the sole settings writer; avoid racing a preference save.
      }finally{writing=false;}
     }else if(request.operation==='prepareSelection'){
+     latestNoticeOperation=request.payload?.operationId??null;
      if(writing||itemSetWriting)throw Error('客户端配置正在处理，请稍后');writing=true;itemSetWriting=true;socket.setTimeout(60000,()=>socket.destroy());
      try{const data=await readCurrentGame(request.payload?.baseIdentity??null),state=await readState(userData);
       result=await prepareClientSelection({value:request.payload?.value,data,ownedPageId:state.ownedPageId,installPath:config.installPath});
@@ -65,6 +67,9 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
      try{const data=await readCurrentGame(request.payload?.baseIdentity??null);
       result=await importItemSet({itemSet:request.payload?.itemSet,data,installPath:config.installPath});
      }finally{itemSetWriting=false;}
+    }else if(request.operation==='chatAnnouncement'){
+     const {sendChampSelectAnnouncement}=await import('./lcu-chat.mjs');
+     result=await sendChampSelectAnnouncement({...request.payload,installPath:config.installPath},{allowed:async()=>{const saved=await readState(userData);return saved.preferences.chatNotice===true&&Number.isSafeInteger(request.payload?.operationId)&&request.payload.operationId===latestNoticeOperation;}});
     }else if(request.operation==='shutdown'){socket.end(JSON.stringify({ok:true,result:true})+'\n');server.close();quit();return;}
     else throw new Error('不支持的客户端操作');
     socket.end(JSON.stringify({ok:true,result})+'\n');
