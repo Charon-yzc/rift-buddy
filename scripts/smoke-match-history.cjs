@@ -68,6 +68,8 @@ async function run(){
   // delegated pointer entry used by a visible window without stealing focus.
   await hover('.history-details [data-history-tip=item]','Equipment hover detail missing');assert.match(await hoverText(),/基础 \d+ 金 · 出售/);
   assert.equal(await js('!!document.querySelector("#game-tooltip:popover-open")'),false,'A historical item image must open only its contextual detail');
+  assert.equal(await js('(()=>{const img=document.querySelector("#history-hover-detail img");if(!img)return false;img.dispatchEvent(new PointerEvent("pointerover",{bubbles:true}));return true;})()'),true,'Contextual item detail icon missing');await delay(160);
+  assert.equal(await js('!!document.querySelector("#game-tooltip:popover-open")'),false,'Hovering inside the contextual detail must not stack another tooltip');
   assert.equal(await js('(()=>{const r=document.querySelector("#history-hover-detail").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;})()'),true,'Equipment hover escapes viewport');
   const visualRoot=root;await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(visualRoot,'history-expanded-equipment.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
   await js('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');assert.equal(await js('!!document.querySelector("#history-hover-detail")'),false);

@@ -47,7 +47,7 @@ export function createGameTooltips({document,getData,getMode=()=> 'rift'}){
    assignOwner(focusOwner);
   },100);
  }
- const contextual='[data-history-tip],[data-ongoing-tip]';
+ const contextual='[data-history-tip],[data-ongoing-tip],.history-hover';
  const find=target=>{const node=target.closest?.(selector)||target.closest?.('button,a,[tabindex]')?.querySelector(selector);return node&&!node.closest(contextual)?node:null;};
  document.addEventListener('pointerover',event=>{if(card.contains(event.target)){view.clearTimeout(closeTimer);return;}const node=find(event.target);if(node)show(node);else if(event.target.closest?.(contextual))hide();});
  document.addEventListener('pointerout',event=>{if(anchor&&!anchor.contains(event.relatedTarget)&&!card.contains(event.relatedTarget)&&!event.relatedTarget?.closest?.(selector)){view.clearTimeout(closeTimer);closeTimer=view.setTimeout(()=>hide(),180);}});
