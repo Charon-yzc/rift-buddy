@@ -1,9 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {parseDeltaManifest} from '../src/core/app-update.mjs';
 import {INSTALL_MANIFEST,payloadPath,validateInstallManifest,installManifestText} from '../src/core/install-manifest.mjs';
 export {INSTALL_MANIFEST,payloadPath,validateInstallManifest,installManifestText};
 export const manifestHash=value=>crypto.createHash('sha256').update(installManifestText(value)).digest('hex');
+export function appendDeltaPackage(previous,entry,version){
+ const release={version},packages=previous?parseDeltaManifest(previous,release).packages:[];
+ return parseDeltaManifest(JSON.stringify({schema:1,version,packages:[...packages,entry]}),release);
+}
 export async function payloadManifest(directory,currentVersion){
  const files=[];
  async function walk(root){for(const entry of await fs.readdir(root,{withFileTypes:true})){

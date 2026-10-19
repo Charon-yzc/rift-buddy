@@ -6,12 +6,21 @@ import os from 'node:os';
 import crypto from 'node:crypto';
 import http from 'node:http';
 import {once} from 'node:events';
-import {payloadManifest,deltaPayload,installManifestText,INSTALL_MANIFEST,validateInstallManifest} from '../scripts/installer-payload.mjs';
+import {payloadManifest,deltaPayload,installManifestText,INSTALL_MANIFEST,validateInstallManifest,appendDeltaPackage} from '../scripts/installer-payload.mjs';
 import {installedPayload} from '../services/incremental-update.mjs';
 import {createAppUpdateService} from '../services/app-update.mjs';
 import {parseDeltaManifest,deltaManifestName,deltaFileName} from '../src/core/app-update.mjs';
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const release={version:'99.0.1',tag:'v99.0.1'};
+test('publishing another base retains existing deltas and rejects invalid or duplicate bases',()=>{
+ const entry=from=>({from,baseManifestSha256:sha(from),file:deltaFileName(from,release.version),bytes:100,sha256:sha('delta')});
+ const first=appendDeltaPackage(null,entry('98.0.0'),release.version),next=appendDeltaPackage(JSON.stringify(first),entry('99.0.0'),release.version);
+ assert.deepEqual(next.packages.map(p=>p.from),['98.0.0','99.0.0']);assert.deepEqual(next.packages[0],first.packages[0]);
+ assert.throws(()=>appendDeltaPackage(JSON.stringify(next),entry('99.0.0'),release.version));
+ assert.throws(()=>appendDeltaPackage(JSON.stringify(next),entry('98.1.0'),'99.0.2'));
+ assert.throws(()=>appendDeltaPackage('{broken',entry('98.1.0'),release.version));
+ assert.throws(()=>appendDeltaPackage(JSON.stringify(next),{...entry('98.1.0'),file:'../escape.exe'},release.version));
+});
 async function fixture(t){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-incremental-')),installDir=path.join(root,'installed'),tempDir=path.join(root,'download');await fs.mkdir(installDir);await fs.writeFile(path.join(installDir,'app.bin'),'unchanged native runtime');
  const base=await payloadManifest(installDir,'99.0.0');await fs.writeFile(path.join(installDir,INSTALL_MANIFEST),installManifestText(base));

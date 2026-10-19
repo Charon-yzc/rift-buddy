@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {installerScript} from './installer-script.mjs';
-import {deltaPayload,validateInstallManifest,INSTALL_MANIFEST,manifestHash,payloadManifest} from './installer-payload.mjs';
+import {deltaPayload,validateInstallManifest,INSTALL_MANIFEST,manifestHash,payloadManifest,appendDeltaPackage} from './installer-payload.mjs';
 import {deltaFileName,deltaManifestName,checksumFileName} from '../src/core/app-update.mjs';
 import {binaryPatches} from './binary-patch.mjs';
 const baseArg=process.argv.find(arg=>arg.startsWith('--base='));if(!baseArg)throw Error('指定 --base=上一版本安装清单路径');
@@ -23,7 +23,13 @@ await fs.writeFile(script,installerScript({version:target.version,directory:bund
 await new Promise((resolve,reject)=>{const child=spawn(process.env.RIFT_BUDDY_MAKENSIS||'makensis.exe',['/NOCONFIG','/INPUTCHARSET','UTF8',script],{stdio:'inherit',windowsHide:true});child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('增量安装包生成失败')));});
 const bytes=await fs.readFile(output);if(bytes.length>90*1024*1024)throw Error('增量包超过国内镜像单文件限制，请使用完整包');
 const entry={from:base.version,baseManifestSha256:delta.baseManifestSha256,file:path.basename(output),bytes:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex')};
-const manifestFile=path.join(path.dirname(output),deltaManifestName(target.version)),manifest={schema:1,version:target.version,packages:[entry]};
+const manifestFile=path.join(path.dirname(output),deltaManifestName(target.version));
+const previous=await fs.readFile(manifestFile,'utf8').catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+const manifest=appendDeltaPackage(previous,entry,target.version);
+for(const retained of manifest.packages){
+ const bytes=await fs.readFile(path.join(path.dirname(output),retained.file));
+ if(bytes.length!==retained.bytes||crypto.createHash('sha256').update(bytes).digest('hex')!==retained.sha256)throw Error('已有增量包与清单不符，拒绝覆盖发布清单');
+}
 // This manifest is the final asset: publication must upload it after the package.
 await fs.writeFile(manifestFile,JSON.stringify(manifest,null,2)+'\n');
 const manifestSha=crypto.createHash('sha256').update(await fs.readFile(manifestFile)).digest('hex');

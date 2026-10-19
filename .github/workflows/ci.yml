@@ -211,3 +211,5 @@ jobs:
           node scripts/smoke-package-app-update.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-app-update.mjs --handoff
+      - name: Check physical ASAR incremental updates in real Electron
+        run: node scripts/smoke-package-incremental-update.mjs
