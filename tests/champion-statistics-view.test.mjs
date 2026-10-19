@@ -3,7 +3,7 @@ import {championStatisticsView} from '../src/champion-statistics-view.mjs';
 import {durationChart} from '../src/duration-chart-view.mjs';
 import {rankedLaneReferences} from '../src/core/ranked-statistics.mjs';
 const roles=['top','jungle','mid','bottom','support'],source={region:'global',tier:'emerald_plus'},points=[0,25,30,35,40].map(minute=>({minute,winRate:52,average:50}));
-const reference=(champion,role)=>({champion,role,patch:'16.20',...source,fetchedAt:'2026-10-19T00:00:00Z',rankedStatistics:{basis:'opgg-position-reference',counterScope:'opgg-position-counter-reference',role:{winRate:52,samples:1000},positions:[{role,samples:1000}],duration:points},matchups:[]});
+const reference=(champion,role)=>({champion,role,patch:'16.20',...source,fetchedAt:'2026-10-19T12:00:00Z',rankedStatistics:{basis:'opgg-position-reference',counterScope:'opgg-position-counter-reference',role:{winRate:52,samples:1000},positions:[{role,samples:1000}],duration:points},matchups:[]});
 test('matching personal duration reference appears only after own confirmation, including a trade',()=>{
  const data={patch:'16.20',buildSource:source,champions:[{id:'Ahri',key:103,name:'阿狸'},{id:'Ashe',key:22,name:'艾希'}],builds:{'Ahri:mid':reference('Ahri','mid')}},selection={id:'Ahri',role:'mid',mode:'rift'};
  const client={connected:true,phase:'ChampSelect',game:{queueId:430},session:{localPlayerCellId:0,myTeam:[{cellId:0,championId:103}],actions:[]}};

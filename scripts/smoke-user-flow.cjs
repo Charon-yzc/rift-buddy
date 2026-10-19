@@ -26,6 +26,7 @@ https.request=(options,callback)=>{
    route==='/lol-summoner/v1/current-summoner'?{puuid:'isolated-user-flow-own',summonerId:1,gameName:'合成本人',tagLine:'TEST',summonerLevel:100}:
    route==='/lol-champ-select/v1/pickable-champion-ids'||route==='/lol-champ-select/v1/disabled-champion-ids'?[]:
    route==='/lol-lobby/v2/lobby'?{localMember:{puuid:'isolated-user-flow-own',gameName:'合成本人',tagLine:'TEST',isLeader:true},members:[]}:
+   route==='/lol-chat/v1/conversations'?[]:
    route==='/riotclient/region-locale'?{region:'TEST'}:null;
   const response=new EventEmitter();response.statusCode=200;callback(response);response.emit('data',Buffer.from(JSON.stringify(value)));response.emit('end');request.emit('close');
  }catch(error){request.emit('error',error);}});
@@ -58,7 +59,7 @@ async function run(){
  const capture=async(name,w=main)=>{
   await w.webContents.executeJavaScript('[...document.images].forEach(i=>i.loading="eager")');
   await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});
-  await until(()=>w.webContents.executeJavaScript('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Missing screenshot image: '+name);
+  await until(()=>w.webContents.executeJavaScript('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Missing screenshot image: '+name,15000);
   const captured=await w.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true});assert.equal(captured.isEmpty(),false,'Empty screenshot: '+name);
   await fs.writeFile(path.join(root,name),captured.toPNG());
  };

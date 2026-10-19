@@ -807,12 +807,25 @@ async function boot(){
   appUpdateFlight=Promise.resolve().then(async()=>{await updater().cleanup();publishAppUpdate({phase:'idle'});return true;}).finally(()=>{appUpdateFlight=null;});
   return appUpdateFlight;
  });
- guard('apply-runes',async(page,context)=>{
+  async function broadcastChampSelectNotice(notice){
+   if(!notice||state.preferences?.chatNotice===false)return;
+   try{
+    const {formatChampSelectAnnouncement,sendChampSelectAnnouncement}=await import('../services/lcu-chat.mjs');
+    const text=typeof notice==='string'?notice:formatChampSelectAnnouncement(notice);
+    if(!text)return;
+    if(helper.active())await helper.request('chatAnnouncement',{text});
+    else await sendChampSelectAnnouncement({text,installPath:state.preferences?.installPath});
+   }catch(error){
+    diagnostic(`champ select chat notice failed ${error?.message||'unknown'}`);
+   }
+  }
+  guard('send-chat-notice',async notice=>{await broadcastChampSelectNotice(notice);return true;});
+ guard('apply-runes',async(page,context,notice)=>{
   if(applyingRunes||importingItemSet)throw new Error('客户端配置正在处理，请稍后');applyingRunes=true;
    let operation;
    try{const {validateRuneWriteContext}=await import('../src/core/rune-context.mjs');context=validateRuneWriteContext(context);operation=beginPreparation('runes',{context,page:{primaryStyleId:page.primaryStyleId,subStyleId:page.subStyleId,selectedPerkIds:page.selectedPerkIds}});
     const written=helper.active()?await helper.request('applyRunes',{page,context}):await lcu.writeRunePage({page,context,ownedPageId:state.ownedPageId,installPath:state.preferences?.installPath,trees:data.runes});
-    let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['保存符文页记录',()=>saveCurrentState(current=>({...current,ownedPageId:written.pageId}))],['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};}
+    let event=finishPreparation(operation,{result:written});const result=await preservePreparationResult(written,[['保存符文页记录',()=>saveCurrentState(current=>({...current,ownedPageId:written.pageId}))],['刷新客户端',()=>status(true)]]);if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});if(written.pageId&&notice)broadcastChampSelectNotice(notice).catch(()=>{});return {...result,preparationRevision:event.revision};}
    catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'符文未完成')}});throw error;}
   finally{applyingRunes=false;}
  });
@@ -833,7 +846,7 @@ async function boot(){
     const chosen={...selection,...storedPreparation(state.preparations,selection)},next=guideCore.selectGuide(state.guide,chosen);
     next.match={...(next.match||{}),gameId:String(value.sessionGameId),phase:latestClient.phase};await setGuideState(next);guide.publish();await guide.phase(latestClient.phase,latestClient.connected);
    }}]]);
-   if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});return {...result,preparationRevision:event.revision};
+   if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});if(written.complete&&value?.notice)broadcastChampSelectNotice(value.notice).catch(()=>{});return {...result,preparationRevision:event.revision};
   }catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'配置未完成')}});throw error;
   }finally{applyingRunes=false;importingItemSet=false;}
  });

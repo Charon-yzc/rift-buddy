@@ -63,6 +63,9 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit}) {
      try{const data=await loadSnapshot(path.join(userData,'data'),path.join(bundleRoot,'data'));
       result=await importItemSet({itemSet:request.payload?.itemSet,data,installPath:config.installPath});
      }finally{itemSetWriting=false;}
+    }else if(request.operation==='chatAnnouncement'){
+     const {sendChampSelectAnnouncement}=await import('./lcu-chat.mjs');
+     result=await sendChampSelectAnnouncement({text:request.payload?.text,installPath:config.installPath});
     }else if(request.operation==='shutdown'){socket.end(JSON.stringify({ok:true,result:true})+'\n');server.close();quit();return;}
     else throw new Error('不支持的客户端操作');
     socket.end(JSON.stringify({ok:true,result})+'\n');

@@ -11,7 +11,7 @@ import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-elig
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 import {allowedHistoryRoute} from './match-history-routes.mjs';
-const GET_PATHS=new Set(['/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/data-store/v1/install-dir']);
+const GET_PATHS=new Set(['/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/data-store/v1/install-dir']);
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
 // A display name read back from the client: trimmed, bounded, no control
@@ -53,7 +53,8 @@ export function lcuRequest(auth,route,method='GET',body) {
  const keys=body&&typeof body==='object'&&!Array.isArray(body)?Object.keys(body).sort().join(','):'';
  const preview=method==='PATCH'&&/^\/lol-champ-select\/v1\/session\/actions\/\d+$/.test(route)&&keys==='championId,completed'&&Number.isSafeInteger(body.championId)&&body.championId>0&&body.completed===false;
  const spells=method==='PATCH'&&route==='/lol-champ-select/v1/session/my-selection'&&keys==='spell1Id,spell2Id'&&[body.spell1Id,body.spell2Id].every(n=>Number.isSafeInteger(n)&&n>0)&&body.spell1Id!==body.spell2Id;
-  if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='GET'&&SUMMONER_BY_ID.test(route))&&!(method==='GET'&&SUMMONER_BY_PUUID.test(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells&&!allowedHistoryRoute(route,method,body))throw new Error('不支持此客户端操作');
+ const chatMessage=method==='POST'&&/^\/lol-chat\/v1\/conversations\/[a-zA-Z0-9_@.-]+\/messages$/.test(route)&&keys==='body,type'&&body.type==='chat'&&typeof body.body==='string'&&body.body.length>0&&body.body.length<=300&&!/[\r\n\0]/.test(body.body);
+  if(!auth||!Number.isInteger(auth.port)||auth.port<1||auth.port>65535||!(method==='GET'&&GET_PATHS.has(route))&&!(method==='GET'&&SUMMONER_BY_ID.test(route))&&!(method==='GET'&&SUMMONER_BY_PUUID.test(route))&&!(method==='POST'&&route==='/lol-perks/v1/pages')&&!(method==='PUT'&&/^\/lol-perks\/v1\/pages\/\d+$/.test(route))&&!(method==='PUT'&&route==='/lol-perks/v1/currentpage'&&Number.isSafeInteger(body)&&body>0)&&!preview&&!spells&&!chatMessage&&!allowedHistoryRoute(route,method,body))throw new Error('不支持此客户端操作');
  return new Promise((resolve,reject)=>{
   const payload=body?JSON.stringify(body):null;
   const request=https.request({hostname:'127.0.0.1',port:auth.port,path:route,method,
