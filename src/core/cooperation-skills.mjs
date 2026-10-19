@@ -182,10 +182,10 @@ export const COOPERATION_SKILLS={
 
 const memberKey=m=>m.role+':'+m.champion;
 const source=id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`;
-export function createSkillCooperation(byId){
+export function createSkillCooperation(byId,{isCurrent=()=>false}={}){
  const cache=new Map(),name=id=>byId.get(id).name;
  function edges(members){
-  if(members.some(m=>!COOPERATION_SKILLS[m.champion]||!byId.has(m.champion)))return null;
+  if(members.some(m=>!COOPERATION_SKILLS[m.champion]||!byId.has(m.champion)||!isCurrent(m.champion)))return null;
   const leader=[...members].filter(m=>COOPERATION_SKILLS[m.champion][3]).sort((a,b)=>Number(a.champion==='Lillia')-Number(b.champion==='Lillia')||['jungle','top','mid','support','bottom'].indexOf(a.role)-['jungle','top','mid','support','bottom'].indexOf(b.role)||memberKey(a).localeCompare(memberKey(b)))[0];
   if(!leader)return null;
   return members.filter(m=>m!==leader).map(ally=>{
@@ -210,7 +210,7 @@ export function createSkillCooperation(byId){
  // inferred from statistics or an invented control opener.
  function followup(pair,ally){
   const row=COOPERATION_SKILLS[ally.champion];
-  if(!row||![pair.a,pair.b,ally.champion].every(id=>byId.has(id))||[pair.a,pair.b].includes(ally.champion))return null;
+  if(!row||![pair.a,pair.b,ally.champion].every(id=>byId.has(id)&&isCurrent(id))||[pair.a,pair.b].includes(ally.champion))return null;
   const pairNames=[pair.a,pair.b].map(name).join('与');
   return {id:'follow:'+pair.a+':'+ally.champion,family:'follow:'+pair.a,name:'双人计划与第三人跟进',a:pair.a,b:ally.champion,
    step:`${name(ally.champion)}：先确认${pairNames}的双人条件成立，再${row[0]}`,

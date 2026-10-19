@@ -2,7 +2,7 @@ import {itemConflicts} from './mechanics.mjs';
 import {equipmentRoute} from './route-profile.mjs';
 
 // Conditions come from the user, never from inferred or hidden enemy information.
-export function adaptEquipment({items=[],boots=null,late=[],key,support,champion,conditions=[],data,map='11',bottomQuestPlan=false,bootsSelected=false,conditionalFrontline=false}) {
+export function adaptEquipment({items=[],boots=null,late=[],key,support,champion,conditions=[],data,map='11',bottomQuestPlan=false,bootsSelected=false,conditionalFrontline=false,sourceCombination=false}) {
  const activeConditions=Array.isArray(conditions)?conditions:[];
  let core=[...items],tail=[...late],shoe=boots;
  const required=[];
@@ -47,6 +47,10 @@ export function adaptEquipment({items=[],boots=null,late=[],key,support,champion
  }
  const first=core.slice(0,2).filter(id=>!required.some(next=>next!==id&&itemConflicts(next,[id])));
  let sequence=required.length?[...first,...(shoe?[shoe]:[]),...required,...core.slice(2),...tail]:[...core,...(shoe?[shoe]:[]),...tail];
+ if(sourceCombination&&shoe===3006&&['Yasuo','Yone'].includes(champion)&&!(data.items[core[0]]?.stats?.PercentAttackSpeedMod>0)){
+  sequence=[shoe,...sequence.filter(id=>id!==shoe)];
+  adjustments.push({title:'攻速鞋提前参考',text:'当前首件核心没有攻速，先把狂战士胫甲放在目标前列。核心组合和鞋子分别统计，这个安排是机制参考，并非来源记录的完整购买顺序；可自行调整购买目标。'});
+ }
  const unique=[];for(const id of sequence)if(!itemConflicts(id,unique))unique.push(id);
  // Keep boots and condition items before optional late damage; support reserves one slot for its quest item.
  const limit=support?5:bottomQuestPlan&&map==='11'&&shoe?7:6;

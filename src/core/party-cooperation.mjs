@@ -70,13 +70,14 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
 // only a subgroup has a reviewed interaction. This adds no synergy bonus and
 // does not claim that the whole group has a unique or measured advantage.
 export function partyCooperationPlan(members,graph,{catalogStatus={},tempo:requestedTempo='any',basePlan=null}={}){
+ if(members.some(member=>!graph.byId.has(member.champion)||!graph.profile(member).reviewed))return null;
  if(![3,4,5].includes(members.length)||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
  members=[...members].sort((a,b)=>roles.indexOf(a.role)-roles.indexOf(b.role));
  if(members.length===3&&(!basePlan?.memberJobs||[basePlan.steps,basePlan.conditions,basePlan.failures].some(rows=>rows.join(' ').length>400)))return null;
  const name=id=>graph.byId.get(id).name,edges=[];
  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)edges.push(edge);}
  if(members.length===3&&!sidePressureRoute(members,graph)&&!sharedResourceConflict(edges))return null;
- const curated=TRIOS.filter(t=>!catalogStatus[t.id]?.invalid&&t.members.every(m=>members.some(p=>same(m,p))));
+ const curated=TRIOS.filter(t=>!catalogStatus[t.id]?.invalid&&!catalogStatus[t.id]?.stale&&t.patch===SKILL_COOPERATION_PATCH&&t.members.every(m=>members.some(p=>same(m,p))));
  const coordination=basePlan||cooperationCoordination(members,graph,[]);
  let memberJobs=members.map(m=>{
   const row=COOPERATION_SKILLS[m.champion],original=curated.find(t=>t.members.some(p=>same(m,p))),authored=original?.members.find(p=>same(m,p));

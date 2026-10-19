@@ -63,6 +63,7 @@ const choose=(members,tempo)=>{
  return possible.poke?'poke':possible.protect?'protect':null;
 };
 export function tacticalCooperationPlan(members,graph,{tempo='any'}={}){
+ if(members.some(member=>!graph.byId.has(member.champion)||!graph.profile(member).reviewed))return null;
  if(members.length<2||members.length>5||members.some(m=>!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(key)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length||new Set(members.map(m=>m.role)).size!==members.length)return null;
  const mode=choose(members,tempo);if(!mode)return null;
  const name=id=>graph.byId.get(id).name,labels={poke:'消耗与拉扯',protect:'保护与持续输出',growth:'成长与约定会合'};

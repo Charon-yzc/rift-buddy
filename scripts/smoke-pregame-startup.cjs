@@ -1,7 +1,7 @@
 const {app,screen,globalShortcut,ipcMain,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),attempts=[],results=[],writes=[],checks=[];
-let main,side,report,suppressPreparationSnapshot=false,heldSideClient=null;
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),attempts=[],results=[],writes=[],checks=[],rangeEdits=[];
+let main,side,report,suppressPreparationSnapshot=false,heldSideClient=null,preparationResponseGate=null;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -9,12 +9,20 @@ global.fetch=async()=>{throw Error('External network disabled in isolated startu
 http.request=()=>{throw Error('Real sockets forbidden in isolated startup fixture');};
 global.WebSocket=class{constructor(){throw Error('Real relay connections forbidden in isolated startup fixture');}};
 const handle=ipcMain.handle.bind(ipcMain);
-ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(heldSideClient&&name==='client-status'&&args[0].sender===side?.webContents)return structuredClone(heldSideClient);if(name==='prepare-selection')attempts.push(structuredClone(args[1]));const result=await handler(...args);if(name==='prepare-selection')results.push(structuredClone(result));return suppressPreparationSnapshot&&['bootstrap','main-ready'].includes(name)?{...result,preparationSnapshot:{revision:result.preparationSnapshot?.revision||0,events:[]}}:result;});};
+ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{
+ if(heldSideClient&&name==='client-status'&&args[0].sender===side?.webContents)return structuredClone(heldSideClient);
+ if(name==='prepare-selection')attempts.push(structuredClone(args[1]));
+ const edit=name==='party-range'?{request:structuredClone(args[1])}:null;if(edit)rangeEdits.push(edit);
+ const result=await handler(...args);
+ if(edit){edit.partyCount=result.state?.draft?.partyCount;edit.roles=result.state?.draft?.slots.filter(slot=>slot.party).map(slot=>slot.role);}
+ if(name==='prepare-selection'){results.push(structuredClone(result));if(preparationResponseGate)await preparationResponseGate;}
+ return suppressPreparationSnapshot&&['bootstrap','main-ready'].includes(name)?{...result,preparationSnapshot:{revision:result.preparationSnapshot?.revision||0,events:[]}}:result;
+});};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label,timeout=18000){const deadline=Date.now()+timeout;while(Date.now()<deadline){if(await check())return;await delay(100);}throw Error(label);}
 async function checkpoint(name,run){try{await run();checks.push({name,passed:true});}catch(error){
- const ui=await Promise.all(windows.filter(window=>!window.isDestroyed()).map(async window=>({url:window.webContents.getURL(),details:await window.webContents.executeJavaScript('({toast:document.querySelector("#toast")?.textContent,activeTab:document.querySelector(".companion-tabs .active")?.textContent})').catch(()=>null)})));
- checks.push({name,passed:false,message:error.message,ui});console.error('FAIL '+name+': '+error.message+' '+JSON.stringify(ui));
+ const ui=await Promise.all(windows.filter(window=>!window.isDestroyed()).map(async window=>({url:window.webContents.getURL(),details:await window.webContents.executeJavaScript('(async()=>{const b=await window.buddy.bootstrap();return {toast:document.querySelector("#toast")?.textContent,activeTab:document.querySelector(".companion-tabs .active")?.textContent,role:document.querySelector("#solo-role")?.value,roleDisabled:document.querySelector("#solo-role")?.disabled,savedRole:b.state?.draft?.playerPosition?.role,revision:b.revision,gameId:b.state?.draft?.clientGameId};})()').catch(()=>null)})));
+ checks.push({name,passed:false,message:error.message,ui,rangeEdits:structuredClone(rangeEdits)});console.error('FAIL '+name+': '+error.message+' '+JSON.stringify({ui,rangeEdits}));
 }}
 async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
@@ -171,6 +179,11 @@ async function run(){
     const before=attempts.length,writeBefore=writes.length;await change(role==='mid'?main:side,'#solo-role',role);
     await until(()=>intent===hero(id).key,'Explicit '+role+' lane did not replace the unlocked hover in queue '+nextQueue,7000);
     await until(()=>results.length===attempts.length,'Lane preselection did not settle');assert.equal(attempts.length-before,1,'Changing one lane must make one explicit preselection API call');assert.notEqual(attempts.at(-1).preselectOnly,true);assert.equal(attempts.at(-1).claimPosition,true);assert.equal(attempts.at(-1).role,role);assert.equal(results.at(-1).steps.hover.status,'done','Lane replacement was not confirmed by the client');
+    // IPC success precedes the actor's fresh sync and save. Complete that
+    // action in both renderers before switching windows for the next click.
+    const actor=role==='mid'?main:side,notice='已预选'+hero(id).name+'占位';
+    await until(()=>js(actor,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return role?.value==='+JSON.stringify(role)+'&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith('+JSON.stringify(notice)+');})()'),'Lane action did not finish in its renderer: '+role);
+    await until(async()=>{if((await state()).draft.playerPosition?.role!==role)return false;return (await Promise.all([main,side].map(window=>js(window,'document.querySelector("#solo-role")?.value')))).every(value=>value===role);},'Lane position did not settle across both windows: '+role);
     await until(()=>js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),'Lane preselection left recommendations');
     await until(()=>js(main,'!!document.querySelector(".draft-compare-workspace")'),'The other window treated a lane claim as a complete configuration');
     await delay(450);assert.equal(await js(side,'document.querySelector("[data-action=companion-tab][data-tab=recommend]")?.classList.contains("active")'),true,'A later client/receipt event reopened configuration for a lane claim');
@@ -229,11 +242,14 @@ async function run(){
   await until(async()=>(await state()).draft.scope==='context','Whole-team reference choice did not persist');
   assert.equal((await state()).draft.partyCount,1,'Reference range must not change the captured recommendation quantity');
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Whole-team reference treated an unlocked public championId as a completed pick');
-  assert.ok((await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members [data-role]")].map(el=>el.dataset.role)')).every(role=>role==='bottom'));
+  await until(()=>js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].every(el=>el.dataset.memberCount==="5")'),'Explicit whole-team reference did not display all five lanes');
+  const fullTeam=await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].map(el=>[...el.querySelectorAll("[data-role]")].map(member=>({id:member.dataset.id,role:member.dataset.role})))');
+  for(const members of fullTeam){assert.deepEqual(members.map(member=>member.role),['top','jungle','mid','bottom','support']);for(const [role,id] of Object.entries({top:'Garen',jungle:'Vi',mid:'Ahri',support:'Braum'}))assert.equal(members.find(member=>member.role===role).id,id,'Whole-team display changed a confirmed teammate');}
   await click(side,'[data-action=draft-scope][data-scope=party]');
   await until(async()=>(await state()).draft.scope==='party','Explicit party scope did not persist');
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>=2'),'Solo composition recommendations are missing');
   await until(()=>js(main,'document.querySelectorAll(".result-card").length>=2'),'Main solo composition recommendations are missing');
+  await until(async()=>await js(side,'[...document.querySelectorAll(".companion-candidate .candidate-members")].every(el=>el.dataset.memberCount==="1")')&&await js(main,'[...document.querySelectorAll(".result-card .candidate-members")].every(el=>el.dataset.memberCount==="1")'),'Automatic solo reference did not return to one displayed lane');
   for(const [window,selector] of [[side,'.companion-candidate'],[main,'.result-card']]){
    const candidates=await js(window,'[...document.querySelectorAll('+JSON.stringify(selector)+')].map(card=>({members:[...card.querySelectorAll(".candidate-members [data-role]")].map(el=>({id:el.dataset.id,role:el.dataset.role})),fit:card.querySelector(".lineup-fit summary")?.textContent}))');
    assert.ok(candidates.every(row=>row.members.length===1&&row.members[0].role==='bottom'),'Only the local lane may change');
@@ -295,11 +311,27 @@ async function run(){
    await click(main,'[data-action=toggle-party][data-role=support]');
    await until(async()=>(await state()).draft.partyCount===3,'Main checkbox did not resize the captured count');
    await until(()=>js(side,'document.querySelectorAll(".companion-team-now .in-scope").length===3'),'Sidebar did not receive main range edit');
-   const previousHover=intent;await change(side,'#solo-role','mid');await until(()=>intent>0&&intent!==previousHover,'Manual role claim did not settle');
+   const previousHover=intent,resultBefore=results.length;let releasePreparation;
+   preparationResponseGate=new Promise(resolve=>{releasePreparation=resolve;});
+   try{
+    await change(side,'#solo-role','mid');await until(()=>intent>0&&intent!==previousHover&&results.length===resultBefore+1,'Manual role claim did not reach its held response');
+    assert.equal(await js(side,'document.querySelector("#solo-role")?.disabled'),true,'The held response must leave the renderer action unfinished');
+   }finally{preparationResponseGate=null;releasePreparation();}
+   // A hover PATCH and unchanged count of three do not complete a role claim.
+   // Its renderer must finish fresh sync/save before we read the moved marks.
+   await until(()=>js(side,'(()=>{const role=document.querySelector("#solo-role"),toast=document.querySelector("#toast");return role?.value==="mid"&&!role.disabled&&toast?.classList.contains("show")&&!toast.classList.contains("error")&&toast.textContent.startsWith("已预选'+hero('Ahri').name+'占位");})()'),'Manual role claim did not finish in its renderer');
+   await until(async()=>{if((await state()).draft.playerPosition?.role!=='mid')return false;return (await Promise.all([main,side].map(window=>js(window,'document.querySelector("#solo-role")?.value')))).every(value=>value==='mid');},'Manual role claim did not settle across both windows');
    await until(async()=>(await state()).draft.partyCount===3&&(await state()).draft.slots.filter(slot=>slot.party).length===3,'Role claim resized the range');
    const selectedRoles=await js(side,'[...document.querySelectorAll(".companion-team-now .in-scope")].map(row=>row.dataset.dropRole)');
-   for(const role of selectedRoles)await click(side,'[data-action=toggle-party][data-role='+role+']');
+   await until(async()=>{const savedRoles=(await state()).draft.slots.filter(slot=>slot.party).map(slot=>slot.role);const mainRoles=await js(main,'[...document.querySelectorAll(".task-roster [data-action=toggle-party][aria-pressed=true]")].map(el=>el.dataset.role)');return [savedRoles,mainRoles].every(roles=>JSON.stringify([...roles].sort())===JSON.stringify([...selectedRoles].sort()));},'Role claim marks did not converge across both windows');
+   const editBefore=rangeEdits.length;
+   for(const role of selectedRoles){
+    const selector='[data-action=toggle-party][data-role='+role+']';
+    assert.equal(await js(side,'document.querySelector('+JSON.stringify(selector)+')?.getAttribute("aria-pressed")'),'true','A cached role is no longer checked: '+role);
+    await click(side,selector);
+   }
    await until(async()=>(await state()).draft.partyCount===0,'Checkboxes did not permit an empty manual range');await delay(2800);
+   assert.deepEqual(rangeEdits.slice(editBefore).map(edit=>({role:edit.request.role,checked:edit.request.checked,partyCount:edit.partyCount})),selectedRoles.map((role,index)=>({role,checked:false,partyCount:2-index})),'Rapid cancellations must reach main as three accepted false intents');
    const empty=(await state()).draft;assert.equal(empty.partyCount,0);assert.equal(empty.slots.filter(slot=>slot.party).length,0);
    assert.equal(await js(main,'document.querySelectorAll(".task-roster .slot.party").length'),0,'Main window revived unchecked lanes');
    await lobby();gameId++;phase='ChampSelect';await fresh(snapshot=>snapshot.phase==='ChampSelect'&&String(snapshot.session.gameId)===String(gameId));
@@ -420,7 +452,7 @@ async function run(){
   assert.equal(writes.length,writeCount,'Window operations wrote client state');
  });
  assert.ok(windows.every(window=>window.isDestroyed()||!window.isVisible()),'Smoke windows must stay hidden');
- report={...report,checks,passed:checks.every(check=>check.passed),source,archiveSha256:release?.archiveSha256||null,autoSync:true,manualSyncClicks:0,syntheticLcuOnly:true,observerMocked:true,actualRuneWrites:0,mockedWrites:writes.map(write=>({route:write.route,method:write.method})),preparationApiCalls:attempts.length};
+ report={...report,checks,passed:checks.every(check=>check.passed),source,archiveSha256:release?.archiveSha256||null,autoSync:true,manualSyncClicks:0,syntheticLcuOnly:true,observerMocked:true,actualRuneWrites:0,mockedWrites:writes.map(write=>({route:write.route,method:write.method})),preparationApiCalls:attempts.length,rangeEdits};
  await fs.writeFile(path.join(root,'pregame-startup.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
  assert.equal(report.passed,true,'Pregame startup regression failures: '+checks.filter(check=>!check.passed).map(check=>check.name).join(', '));app.quit();
 }

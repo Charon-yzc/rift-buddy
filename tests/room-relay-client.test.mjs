@@ -716,7 +716,7 @@ test('the default relay sends full mode, configuration and duties after publish,
  data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
  const trio=TRIOS.find(row=>row.id==='ball-delivery');
  const lineup=createSlots().map(s=>({...s,champion:trio.members.find(m=>m.role===s.role)?.champion||null,party:trio.members.some(m=>m.role===s.role)}));
- const strategy=captureRoomStrategy(lineup,data),configurations=captureRoomConfigurations(lineup,data,createPreparationStore());
+ const chosen=captureCreativePlan({slots:lineup,scope:'party',trio},data),strategy=captureRoomStrategy(lineup,data,chosen),configurations=captureRoomConfigurations(lineup,data,createPreparationStore(),{creativePlan:strategy});
  assert(strategy);assert.equal(configurations.length,3);
  const full={lineup,mode:'rift',pick:{champion:'Malphite',role:'top',mode:'rift'},configurations,strategy,at:123};
  assert(Buffer.byteLength(JSON.stringify(full))>10000,'exercise a realistic full trio, not a tiny lineup frame');

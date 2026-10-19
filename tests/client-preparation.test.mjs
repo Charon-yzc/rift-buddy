@@ -31,6 +31,12 @@ test('explicit client preparation previews only own pick and verifies actual run
  const f=fixture(),before=structuredClone(f.value),result=await f.run();assert.equal(result.complete,true);assert(Object.values(result.steps).every(s=>s.status==='done'));assert.equal(f.action.completed,false);assert.equal(f.own.championPickIntent,22);assert.equal(result.steps.runes.pageId,11);assert.equal(f.items,1);assert.deepEqual(f.pages[0],{id:2,current:false,isEditable:false});assert.deepEqual(f.value,before);
  assert.deepEqual(f.calls.filter(c=>c.method==='PATCH').map(c=>c.route),['/lol-champ-select/v1/session/actions/4','/lol-champ-select/v1/session/my-selection']);assert(!f.calls.some(c=>c.body?.completed===true));
 });
+test('explicit configuration uses the current traded champion, and a second trade stops remaining writes',async()=>{
+ const swapped=fixture({locked:true});swapped.action.championId=1;assert.equal((await swapped.run()).complete,true);assert.equal(swapped.items,1);
+ const racing=fixture({locked:true});racing.action.championId=1;const request=racing.deps.request;
+ racing.deps.request=async(auth,route,method,...args)=>{const result=await request(auth,route,method,...args);if(route==='/lol-perks/v1/pages/11'&&method==='PUT')racing.own.championId=1;return result;};
+ const result=await racing.run();assert.equal(result.complete,false);assert.equal(racing.items,0);assert(!racing.calls.some(call=>call.route==='/lol-champ-select/v1/session/actions/4'&&call.method==='PATCH'));
+});
 
 test('hero selection is visible while slow configuration is pending and a changed game stops the remaining writes',async()=>{
  const f=fixture();let startRunes,releaseRunes;

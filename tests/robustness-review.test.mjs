@@ -6,6 +6,8 @@ import {validateState} from '../services/storage.mjs';
 import {mergePersonal,BUNDLED_CATALOG} from '../src/core/catalog.mjs';
 import {buildAugmentDescriptions} from '../services/augments.mjs';
 import {itemRows} from '../services/source-parser.mjs';
+import {reviewedCatalogEntry} from '../src/core/mechanic-review.mjs';
+import {COOPERATION_PATCH} from '../src/core/cooperation.mjs';
 
 test('null draft entries fail with a business error, not a TypeError',()=>{
  assert.throws(()=>validateSlots([null,null,null,null,null],[]),/阵容位置格式不正确/);
@@ -49,7 +51,7 @@ test('indexed trio/duo lookup matches brute-force scan',()=>{
  for(const slots of scenarios){
   assert.equal(findTrio(slots)?.id||null,bruteTrio(slots)?.id||null);
   assert.equal(currentCombo(slots)?.id||null,(()=>{
-   const matches=[...TRIOS.filter(t=>t.members.every(m=>slots.some(s=>s.role===m.role&&s.champion===m.champion))),bruteDuo(slots)].filter(Boolean);
+   const matches=[...TRIOS.filter(t=>t.members.every(m=>slots.some(s=>s.role===m.role&&s.champion===m.champion))),bruteDuo(slots)].filter(row=>reviewedCatalogEntry(row,{},COOPERATION_PATCH));
    return matches[0]?.id||null;
   })());
  }

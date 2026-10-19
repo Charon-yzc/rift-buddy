@@ -1,0 +1,10 @@
+.game-tooltip{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:min(284px,calc(100vw - 16px));max-height:calc(100dvh - 16px);overflow:auto;padding:10px 12px;border:1px solid var(--rb-line,#355063);border-radius:8px;background:var(--rb-panel,#0c1d29);color:var(--rb-ink,#e8f0f5);box-shadow:0 8px 28px #0007;font-family:inherit;font-size:calc(12px * var(--text-scale,1));line-height:1.55;overscroll-behavior:contain}
+.game-tooltip>header{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.game-tooltip>header>img{width:34px;height:34px;border-radius:5px;flex:none}
+.game-tooltip>header>div{display:grid;gap:2px;min-width:0}.game-tooltip>header b{font-size:calc(13px * var(--text-scale,1))}
+.game-tooltip small{color:var(--rb-muted,#9cb5c7);font-size:calc(11px * var(--text-scale,1))}
+.game-tooltip p{margin:0 0 8px;white-space:pre-line;overflow-wrap:anywhere}.game-tooltip p:last-child{margin-bottom:0}
+.game-tooltip strong{color:var(--rb-accent,#92e1ee);font-weight:600}
+.game-tooltip-basics{margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid var(--rb-line,#355063)}
+.game-tooltip-note{display:block;margin-top:8px}.game-tooltip-changes{border-top:1px solid var(--rb-line,#355063);padding-top:8px;margin-top:9px}
+.game-tooltip-changes>div{margin-top:5px}.game-tooltip-changes p{display:grid;gap:2px;margin-top:4px}.game-tooltip-changes i{font-style:normal;color:var(--rb-muted,#9cb5c7)}

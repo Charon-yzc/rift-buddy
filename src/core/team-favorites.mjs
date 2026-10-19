@@ -32,7 +32,7 @@ export function captureTeamConfigurations(result,data,store){
  return members.map(slot=>{
   const champion=data.champions.find(c=>c.id===slot.champion);
   if(!champion)throw Error('当前资料没有这位组合成员');
-  const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
+  const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch}),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
   const selection={coreIndex:0,conditions:[],...recallPreparation(store,null,context),...context},build=getBuild(champion,slot.role,data,selection);
   const fields=selectedBuildFields({...selection,build},{preserveUnavailable:true});
   if(!fields.laterIds?.length){const existing=new Set(build.items.map(item=>String(item.id)));fields.laterIds=preparationEquipment(data,build,selection).filter(item=>!existing.has(String(item.id))).map(item=>Number(item.id));}
@@ -77,7 +77,7 @@ export function restoreTeamFavorite(favorite,current,champions,session=null,{eli
  const configurations=(favorite.configurations||[]).filter(selection=>{
   if(conflicts.some(c=>c.role===selection.role)||!desired.some(s=>s.role===selection.role&&s.champion===selection.id)||!next.some(s=>s.role===selection.role&&s.champion===selection.id))return false;
   if(selection.creativePlan)return creativePlan?.id===selection.creativePlan.id;
-  return (currentCombo(scopeSlots(next,favorite.scope),selection.id,selection.role,null,null,creativePlan)?.id||null)===(selection.comboId||null);
+  return (currentCombo(scopeSlots(next,favorite.scope),selection.id,selection.role,null,null,creativePlan,{allowPending:true})?.id||null)===(selection.comboId||null);
  }).map(s=>structuredClone(s));
  const merged=session?mergeClientSession(next,session,champions):{slots:next,unassigned:[]};
  return {...merged,creativePlan,configurations,conflicts,

@@ -1,19 +1,22 @@
 import {CLIENT_POSITION_ROLES,manualPlayerSlot} from './draft.mjs';
 import {profile,ROLES} from './rules.mjs';
+import {publicDraftTeam} from './ranked-draft.mjs';
 
 export function localPickLocked(session){
- const own=session?.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
- return !!own&&(own.pickState==='locked'||(session.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===own.cellId&&a.completed===true));
+ const own=publicDraftTeam(session).find(p=>p.cellId===session?.localPlayerCellId);
+ return own?.pickState==='locked';
 }
 
 export function confirmedPlayerPick(player,session){
- return Number.isInteger(player?.cellId)&&player.cellId>=0&&player.cellId<30&&(session?.myTeam||[]).filter(value=>value.cellId===player.cellId).length===1&&Number(player.championId)>0&&(player.pickState==='locked'||(session?.actions||[]).flat().some(action=>action.type==='pick'&&action.actorCellId===player.cellId&&action.completed===true&&(!action.championId||Number(action.championId)===Number(player.championId))));
+ const current=publicDraftTeam(session).find(value=>value.cellId===player?.cellId);
+ return Number.isInteger(player?.cellId)&&player.cellId>=0&&player.cellId<30&&(session?.myTeam||[]).filter(value=>value.cellId===player.cellId).length===1&&Number(player.championId)>0&&current?.championId===Number(player.championId)&&current.pickState==='locked';
 }
 
 // Search evidence is separate from the visible roster. Neither a hover nor an
 // adopted/offline proposal is a confirmed pick in this live client session.
 export function clientRecommendationDraft(slots,session,champions,{includePreselected=false,ownRole=''}={}){
  if(!Array.isArray(session?.myTeam))return {slots,session};
+ session={...session,myTeam:publicDraftTeam(session)};
  const byKey=new Map(champions.map(champion=>[Number(champion.key),champion.id]));
  const visible=player=>Number(player.championId||player.championPickIntent);
  const valid=player=>Number.isInteger(player.cellId)&&player.cellId>=0&&player.cellId<30&&session.myTeam.filter(p=>p.cellId===player.cellId).length===1;
@@ -41,7 +44,7 @@ export function clientRecommendationDraft(slots,session,champions,{includePresel
   const player=placements.get(slot.role);
   return player?{...rest,champion:byKey.get(visible(player)),clientCellId:player.cellId,locked:confirmedPlayerPick(player,session),...(!confirmedPlayerPick(player,session)?{publicIntent:true}:{})}:{...rest,champion:null,locked:false};
  });
- return {slots:next,session:{...session,myTeam:session.myTeam.map(player=>picked.includes(player)?{...player,championId:visible(player),championPickIntent:0}:{...player,championId:0,championPickIntent:0})}};
+ return {slots:next,session:{...session,myTeam:session.myTeam.map(player=>picked.includes(player)?{...player,championId:visible(player),championPickIntent:0,pickState:confirmedPlayerPick(player,session)?'locked':'selecting'}:{...player,championId:0,championPickIntent:0,pickState:'empty'})}};
 }
 export const confirmedClientDraft=(slots,session,champions)=>clientRecommendationDraft(slots,session,champions);
 export function lockedOwnSlot(slots,session){

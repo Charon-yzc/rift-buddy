@@ -9,10 +9,10 @@ const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.
 const hero=id=>data.champions.find(champion=>champion.id===id);
 const session=()=>({localPlayerCellId:0,myTeam:[{cellId:0,championId:hero('Nami').key,championPickIntent:hero('Nami').key,assignedPosition:'UTILITY'}],theirTeam:[],actions:[[{actorCellId:0,type:'pick',completed:false,championId:hero('Nami').key}]]});
 
-test('only explicit completion or locked state with the same known hero is recommendation evidence',()=>{
+test('explicit completion confirms the current roster champion even after a trade, never an empty or unknown hero',()=>{
  const current=session(),player=current.myTeam[0];assert.equal(confirmedPlayerPick(player,current),false);
  current.actions[0][0].completed=true;assert.equal(confirmedPlayerPick(player,current),true);
- current.actions[0][0].championId=hero('Ashe').key;assert.equal(confirmedPlayerPick(player,current),false);
+ current.actions[0][0].championId=hero('Ashe').key;assert.equal(confirmedPlayerPick(player,current),true,'Completed actions keep the original pick after a champion trade');
  player.pickState='locked';assert.equal(confirmedPlayerPick(player,current),true);
  player.championId=0;assert.equal(confirmedPlayerPick(player,current),false);
 });

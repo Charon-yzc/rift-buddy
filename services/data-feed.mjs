@@ -3,7 +3,7 @@ import {gunzip} from 'node:zlib';
 import {promisify} from 'node:util';
 import {validRankingReference,rankingKey,newerRanking} from '../src/core/rankings.mjs';
 import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
-import {BUILD_REGIONS,BUILD_TIERS,buildSourceKey,preferBuildReference,selectBuildSource} from '../src/core/build-source.mjs';
+import {BUILD_REGIONS,BUILD_TIERS,DEFAULT_BUILD_SOURCE,sameBuildSource,buildSourceKey,preferBuildReference,selectBuildSource} from '../src/core/build-source.mjs';
 
 export const DATA_FEED_ORIGIN='https://data.riftbuddy.dpdns.org';
 export const DATA_FEED_KEYS=Object.freeze({'data-20261014':`-----BEGIN PUBLIC KEY-----
@@ -18,6 +18,7 @@ export const validFeedPatch=value=>typeof value==='string'&&/^[1-9]\d{0,2}\.[1-9
 
 export function validateFeedManifest(value){
  if(value?.schema!==1||!validFeedPatch(value.patch)||!Number.isSafeInteger(value.sequence)||value.sequence<1||!hashPattern.test(value.release||'')||!Number.isFinite(Date.parse(value.publishedAt)))throw Error('资料清单格式无效');
+ if(value.checkedAt!==undefined&&(typeof value.checkedAt!=='string'||!Number.isFinite(Date.parse(value.checkedAt))))throw Error('来源复查时间无效');
  if(!value.files||Object.keys(value.files).length!==3)throw Error('资料清单不完整');
  for(const name of DATA_FEED_NAMES){
   const file=value.files[name];
@@ -53,7 +54,7 @@ export function validateFeedBundle(bundle,game){
     valid=champion&&validReference(ref,champion,ref.role,game,{allowOlder:true})&&key===buildSourceKey(champion.id,ref.role,ref,ref.patch)&&ref.scope===undefined&&ref.opponent===undefined;
    }
    if(name==='hex-builds')valid=heroes.has(key)&&validHexReference(ref,heroes.get(key),game,{allowOlder:true});
-   if(!valid)throw Error('资料与当前游戏版本不兼容');
+   if(!valid||Object.hasOwn(ref,'serverCheckedAt'))throw Error('资料与当前游戏版本不兼容');
   }
  }
  for(const region of BUILD_REGIONS)for(const tier of BUILD_TIERS)if(!bundle.rankings.entries[rankingKey(game.patch,{region:region.id,tier:tier.id})])throw Error('资料缺少来源榜单');
@@ -61,7 +62,7 @@ export function validateFeedBundle(bundle,game){
 }
 // Mutates only reference collections. Saved drafts, accepted loadouts and LCU
 // state are deliberately outside this operation.
-export function applyFeedBundle(data,bundle){
+export function applyFeedBundle(data,bundle,manifest=null){
  validateFeedBundle(bundle,data);
  const rankings={...data.rankings},builds={...data.buildSources},hex={...data.hexBuilds};
  for(const [key,ref] of Object.entries(bundle.rankings.entries))if(newerRanking(ref,rankings[key]))rankings[key]=ref;
@@ -69,6 +70,16 @@ export function applyFeedBundle(data,bundle){
  for(const [key,ref] of Object.entries(bundle['hex-builds'].entries)){
   const old=hex[key],order=old?compareBuildPatches(ref.patch,old.patch):1;
   if(!old||order>0||order===0&&Date.parse(ref.fetchedAt)>Date.parse(old.fetchedAt))hex[key]=ref;
+ }
+ // Freshness authority comes only from the verified manifest. An asset may
+ // retain other scopes or old patches which this collector never rechecked.
+ if(manifest?.patch===data.patch&&Number.isFinite(Date.parse(manifest.checkedAt))){
+  const stable=value=>Array.isArray(value)?value.map(stable):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().filter(key=>!['fetchedAt','checkedAt','serverCheckedAt'].includes(key)).map(key=>[key,stable(value[key])])):value;
+  for(const [name,target] of [['rankings',rankings],['builds',builds],['hex-builds',hex]])for(const [key,ref] of Object.entries(bundle[name].entries)){
+   const local=target[key];if(!local||ref.patch!==data.patch||name==='builds'&&(!sameBuildSource(ref,DEFAULT_BUILD_SOURCE)||ref.scope!==undefined||ref.opponent!==undefined))continue;
+   if(Date.parse(manifest.checkedAt)<=Math.max(Date.parse(local.fetchedAt)||0,Date.parse(local.serverCheckedAt)||0)||JSON.stringify(stable(local))!==JSON.stringify(stable(ref)))continue;
+   target[key]={...local,serverCheckedAt:manifest.checkedAt};
+  }
  }
  data.rankings=rankings;data.buildSources=builds;data.hexBuilds=hex;selectBuildSource(data,data.buildSource);
 }

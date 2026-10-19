@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots} from '../src/core/recommend.mjs';
 import {BUNDLED_CATALOG,configureCatalog} from '../src/core/catalog.mjs';
-import {creativeMemberCombo,creativeComboContext} from '../src/core/creative-plan.mjs';
+import {creativeMemberCombo,creativeComboContext,captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 import {captureRoomStrategy,captureRoomConfigurations,roomPreparation} from '../src/core/room-configuration.mjs';
 import {roomConfigurationDialog} from '../src/room-view.mjs';
@@ -13,8 +13,10 @@ const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.pars
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 test('explicit mixed-catalog adoption stays in the current same-group configuration through restart and reshare',()=>{
  try{
-  const slots=setup({jungle:'Ivern',bottom:'KogMaw',support:'Lulu'}),old=structuredClone(BUNDLED_CATALOG);old.version='2026.10.10.1';configureCatalog(old);const incoming=captureRoomStrategy(slots,{...data,catalog:old});
-  configureCatalog(BUNDLED_CATALOG);const local=captureRoomStrategy(slots,data);assert.notEqual(incoming.id,local.id);
+  const slots=setup({jungle:'Ivern',bottom:'KogMaw',support:'Lulu'}),old=structuredClone(BUNDLED_CATALOG);old.version='2026.10.10.1';configureCatalog(old);
+  const selected=(catalog)=>captureCreativePlan({slots,scope:'party',trio:catalog.trios.find(row=>row.id==='ivern-kog-lulu')},{...data,catalog});
+  const incoming=captureRoomStrategy(slots,{...data,catalog:old},selected(old));
+  configureCatalog(BUNDLED_CATALOG);const local=captureRoomStrategy(slots,data,selected(BUNDLED_CATALOG));assert.notEqual(incoming.id,local.id);
   const receiver=createPreparationStore(),context={id:'Lulu',role:'support',mode:'rift',...creativeComboContext(creativeMemberCombo(local,'Lulu','support'))};
   receiver.remember({...context,conditions:['ap'],bootsId:'boots-3111',loadoutId:'lulu-onhit',sourceOpponent:'Ashe'});
   const before=getBuild(data.champions.find(c=>c.id==='Lulu'),'support',data,receiver.recall(context)),raw=captureRoomConfigurations(slots,data,createPreparationStore(),{creativePlan:incoming}).find(c=>c.champion==='Lulu');

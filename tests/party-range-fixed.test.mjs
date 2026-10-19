@@ -7,6 +7,7 @@ import {initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,r
 import {reconcileClientDraft,moveChampion,publicClientGameId} from '../src/core/draft.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 import {partyWithPregameIntents} from '../src/core/pregame-intent.mjs';
+import {rankedDraftPolicy} from '../src/core/ranked-draft.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 const key=id=>data.champions.find(c=>c.id===id).key;
 const roles=slots=>slots.filter(slot=>slot.party).map(slot=>slot.role);
@@ -170,7 +171,7 @@ test('main range handler changes only this draft, preserves newer champions, and
  const from=source.indexOf(" guard('party-range',"),to=source.indexOf(" guard('stage-selection',",from);assert.ok(from>=0&&to>from);
  const s=session(),p=party(2);s.myTeam[2].championId=key('Garen');s.myTeam[2].assignedPosition='TOP';
  const board=merge(createSlots(),s,2,p),current=validateState({...defaultState(),draft:{slots:board,partyCount:2,clientGameId:'101',scope:'party',soloRole:''}});
- let handler;const context=vm.createContext({state:current,stateRevision:1,data,validPartyCount,editPartyRange,partyWithPregameIntents,roomService:null,publicClientGameId,rankedClientRoles:()=>({}),
+ let handler;const context=vm.createContext({state:current,stateRevision:1,data,validPartyCount,editPartyRange,partyWithPregameIntents,rankedDraftPolicy,roomService:null,publicClientGameId,rankedClientRoles:()=>({}),
   latestClient:{connected:true,phase:'ChampSelect',mode:{id:'rift'},session:s,party:p},status:async()=>{},guard:(name,run)=>{assert.equal(name,'party-range');handler=run;},
   saveCurrentState:async update=>{context.state=validateState(update(structuredClone(context.state)));context.stateRevision++;}});
  vm.runInContext(source.slice(from,to),context);

@@ -90,6 +90,7 @@ async function boot(){
  const itemSetCore=await import('../src/core/item-sets.mjs'),itemSetService=await import('../services/item-sets.mjs');
  const {changeCompanionPlan}=await import('../src/core/companion-plan.mjs');
  const {pregamePhase,validatePregameIntent,pregameIntentChoice,restoredRoleClaim,partyWithPregameIntents}=await import('../src/core/pregame-intent.mjs');
+ const {rankedDraftPolicy}=await import('../src/core/ranked-draft.mjs');
  const {createSlots}=await import('../src/core/recommend.mjs');
  const {initialPartyCount,selectionPartyCount,validPartyCount,reconcilePartyRange,editPartyRange}=await import('../src/core/party-range.mjs');
  storeRoot=app.getPath('userData');state=await storage.readState(storeRoot);
@@ -181,7 +182,7 @@ async function boot(){
   if(appliedGuideSelection?.gameId===publicClientGameId(latestClient)&&appliedGuideSelection.selection.id===own.id&&appliedGuideSelection.selection.mode===own.mode){const chosen=appliedGuideSelection.selection;return {...own,...chosen,...storedPreparation(state.preparations,chosen),name:data.champions.find(c=>c.id===own.id)?.name,comboKnown:false};}
   const prepared=state.guide?.selection,gameId=publicClientGameId(latestClient),preparedMatchesGame=!gameId||!state.guide?.match?.gameId||gameId===String(state.guide.match.gameId);if(!own.positionKnown){const bound=latestClient.phase==='ChampSelect'&&state.draft?.slots.find(s=>s.champion===own.id&&s.clientCellId===latestClient.session?.localPlayerCellId);if(bound)own.role=bound.role;else if(state.draft?.scope==='solo'&&state.draft.soloRole)own.role=state.draft.soloRole;else if(preparedMatchesGame&&prepared?.id===own.id&&prepared.mode===own.mode)own.role=prepared.role;}
   const draftSlots=state.draft?.slots||[],observedSlots=latestClient.session&&draftSlots.length===5?recommendationCore.mergeClientSession(draftSlots,latestClient.session,data.champions,{autoArrange:state.preferences.autoArrange!==false,autoParty:state.preferences.autoParty!==false,party:latestClient.party,roleOrder:rankedClientRoles(data)}).slots:draftSlots;
-  const combo=own.mode==='rift'?recommendationCore.currentCombo(observedSlots,own.id,own.role,data.catalogInfo?.status,null,state.draft?.creativePlan):null;
+  const combo=own.mode==='rift'?recommendationCore.currentCombo(observedSlots,own.id,own.role,data.catalogInfo?.status,null,state.draft?.creativePlan,{patch:data.patch}):null;
   const prior=state.guide?.selection,same=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own),comboKnown=!!combo||own.mode!=='rift'||!!(gameId&&state.guide?.match?.gameId&&gameId!==String(state.guide.match.gameId))||recommendationCore.comboContextKnown(observedSlots,own.id,own.role,same?prior.comboId:null,same?prior.creativePlan:null);
   const context={id:own.id,role:own.role,mode:own.mode,...creativeComboContext(combo)};
   return {coreIndex:0,conditions:[],...storedPreparation(state.preparations,context),...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,...creativeComboContext(combo)};
@@ -205,11 +206,11 @@ async function boot(){
  const observeOpponentContext=()=>{opponentFocus.observe({connected:latestClient.connected,phase:latestClient.phase,gameId:publicClientGameId(latestClient),selection:currentGuideSelection(),enemyIds:publicEnemyIds()});return publishOpponentContext();};
  const bindPendingOpponent=async()=>{const binding=opponentFocus.binding(),own=currentGuideSelection();if(!binding||!own||guideCore.guideIdentity(own)!==guideCore.guideIdentity(binding))return;await setGuideState(guideCore.prepareGuideOpponent(state.guide,own,binding.opponentId,binding));opponentFocus.confirm(binding);publishOpponentContext();};
  const refreshPreparedBuild=()=>{
-  const s=state.guide?.selection;if(!s||s.mode!=='hex'||state.preferences.autoCheck===false)return;
+  const s=state.guide?.selection;if(!s||!['rift','hex'].includes(s.mode)||state.preferences.autoCheck===false)return;
   const role=s.mode==='hex'?'hex':s.role,key=guideRefreshKey(s),ref=s.mode==='hex'?data.hexBuilds?.[s.id]:data.builds?.[s.id+':'+s.role];
-  if(isFreshBuildReference(ref,data.patch,s.mode)||guideRefresh.get(key)?.pending)return;
-  guideRefresh.set(key,{pending:true});guide.publish();
-  refreshBuild(s.id,role).then(()=>guideRefresh.set(key,{pending:false})).catch(error=>guideRefresh.set(key,{pending:false,error:error.message})).finally(()=>guide.publish());
+  if(isFreshBuildReference(ref,data.patch,s.mode)||guideRefresh.get(key)?.pending||Date.now()-(guideRefresh.get(key)?.attemptedAt||0)<3600000)return;
+  guideRefresh.set(key,{pending:true,attemptedAt:Date.now()});guide.publish();
+  refreshBuild(s.id,role).then(()=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now()})).catch(error=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now(),error:error.message})).finally(()=>guide.publish());
  };
  guide=require('./guide-window.cjs')({root,getState:()=>state.guide,getModel:getGuideModel,isQuitting:()=>quitting,diagnostic,
   currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
@@ -521,6 +522,7 @@ async function boot(){
    // does not silently revive an unconsumed choice from another lobby.
    if(!stagedSelectionParty||stagedSelectionParty!==stagedPartyIdentity()){await saveCurrentState(current=>{if(current.draft)delete current.draft.preselection;return current;});return;}
    const choice=pregameIntentChoice(intent,latestClient,data),cellId=latestClient.session?.localPlayerCellId;
+   if(choice.waiting)return;
    await saveCurrentState(current=>{
     if(latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&isDeepStrictEqual(current.draft?.preselection,intent))current.draft.preselection={...intent,champion:choice.champion||intent.champion,attemptedGameId:gameId};
     return current;
@@ -580,7 +582,7 @@ async function boot(){
     await saveCurrentState(current=>{
      if(validPartyCount(current.draft?.partyCount))return current;
      const draft=current.draft||{slots:createSlots(),style:current.preferences.style,soloRole:''};
-     const ownRole=draft.playerPosition?.cellId===latestClient.session.localPlayerCellId?draft.playerPosition.role:draft.preselection?.role||'';
+     const ownRole=draft.playerPosition?.cellId===latestClient.session.localPlayerCellId?draft.playerPosition.role:rankedDraftPolicy(latestClient).ranked?'':draft.preselection?.role||'';
      current.draft={...draft,slots:reconcilePartyRange(draft.slots,latestClient.session,data.champions,{count,party:latestClient.party,ownRole,initial:true}),partyCount:count,scope:'party',...(gameId?{clientGameId:gameId}:{})};return current;
     });
    }
@@ -613,7 +615,7 @@ async function boot(){
   await saveCurrentState(current=>{
    if(!sameSelection()||!validPartyCount(current.draft?.partyCount))throw Error('选人已变化，请按当前页面重新调整开黑位置');
    const ownRole=current.draft.playerPosition?.cellId===value.cellId?current.draft.playerPosition.role:current.draft.soloRole||'';
-   const party=partyWithPregameIntents(latestClient.party,roomService?.snapshot(),current.draft.preselection);
+   const party=rankedDraftPolicy(latestClient).ranked?latestClient.party:partyWithPregameIntents(latestClient.party,roomService?.snapshot(),current.draft.preselection);
    const edited=editPartyRange(current.draft.slots,value.role,value.checked,{count:current.draft.partyCount,session:latestClient.session,champions:data.champions,party,ownRole,roleOrder:rankedClientRoles(data)});
    current.draft={...current.draft,...edited};
    if(current.draft.scope!=='context'&&edited.partyCount!==1&&current.draft.creativePlan?.members.some(member=>!edited.slots.some(slot=>slot.role===member.role&&slot.party)))delete current.draft.creativePlan;

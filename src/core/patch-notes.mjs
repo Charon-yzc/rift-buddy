@@ -16,3 +16,8 @@ export function validPatchNotes(notes,data){
  return true;
 }
 export function championPatchNotes(data,id){return (data.patchNotes?.patches||[]).flatMap(patch=>patch.champions.filter(row=>row.champion===id).map(row=>({...row,patch:patch.patch,officialPatch:patch.officialPatch,publishedAt:patch.publishedAt,sourceURL:patch.sourceURL})));}
+export function itemPatchNotes(data,id){
+ const name=data.items[id]?.name;if(!name)return [];
+ const normalize=value=>String(value||'').replace(/[\s·•・]/g,'');
+ return (data.patchNotes?.patches||[]).flatMap(patch=>patch.items.filter(row=>row.itemId===Number(id)||normalize(row.item)===normalize(name)).map(row=>({...row,patch:patch.patch,officialPatch:patch.officialPatch,publishedAt:patch.publishedAt,sourceURL:patch.sourceURL})));
+}

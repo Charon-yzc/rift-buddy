@@ -5,6 +5,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 const execFileAsync=promisify(execFile);
 import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
+import {publicDraftTeam} from '../src/core/ranked-draft.mjs';
 import {RUNE_PHASES,runeWriteContext,validateRuneWriteContext,sameRuneWriteContext} from '../src/core/rune-context.mjs';
 import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
@@ -74,12 +75,12 @@ export function lcuRequest(auth,route,method='GET',body) {
 }
 export function sanitizeSession(session) {
  const actions=(Array.isArray(session.actions)?session.actions:[]).flat().filter(a=>a&&Number.isInteger(a.actorCellId)&&['pick','ban'].includes(a.type)).map(a=>({actorCellId:a.actorCellId,championId:Number(a.championId)||0,type:a.type,completed:a.completed===true,isInProgress:a.isInProgress===true}));
- const team=arr=>(Array.isArray(arr)?arr:[]).map(p=>{
+ const team=arr=>publicDraftTeam({myTeam:arr,actions},'myTeam').map(p=>{
   const cellId=Number(p.cellId),pick=actions.find(a=>a.type==='pick'&&a.actorCellId===cellId);
   return {championId:Number(p.championId)||0,cellId,assignedPosition:String(p.assignedPosition||''),
    ...(cellId===session.localPlayerCellId&&Number.isSafeInteger(p.spell1Id)&&Number.isSafeInteger(p.spell2Id)?{spell1Id:p.spell1Id,spell2Id:p.spell2Id}:{}),
    ...(Number(p.championPickIntent)>0?{championPickIntent:Number(p.championPickIntent)}:{}),
-   ...(pick?{pickState:pick.completed?'locked':'selecting'}:{})};
+   ...(pick?{pickState:p.pickState}:{})};
  });
  return {myTeam:team(session.myTeam),theirTeam:team(session.theirTeam),localPlayerCellId:session.localPlayerCellId,allowDuplicatePicks:session.allowDuplicatePicks===false?false:true,
   ...(/^[1-9]\d{0,19}$/.test(String(session.gameId||''))?{gameId:String(session.gameId)}:{}),

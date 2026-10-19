@@ -2,6 +2,7 @@ import {validateGuideSelection} from './guide.mjs';
 import {ROLES,profile} from './rules.mjs';
 import {roleClaimChoice,activeRoleClaim} from './role-claim.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
+import {rankedDraftPolicy} from './ranked-draft.mjs';
 
 export const pregamePhase=phase=>['None','Lobby','Matchmaking','ReadyCheck'].includes(phase);
 export function validatePregameIntent(value){
@@ -27,6 +28,8 @@ export function restoredRoleClaim(intent,client,champions){
 export function pregameIntentChoice(intent,client,data){
  const own=client.session?.myTeam?.find(player=>player.cellId===client.session.localPlayerCellId);
  const unavailable=reason=>({champion:null,role:intent?.role||'',reason});
+ if(rankedDraftPolicy(client).ranked)return unavailable('排位按客户端选人，不使用大厅预选');
+ if(!rankedDraftPolicy(client).consumePreselection)return {...unavailable('等待确认本局队列'),waiting:true};
  if(!client.connected||client.phase!=='ChampSelect'||client.mode?.id!=='rift'||!own)return unavailable('等待进入峡谷选人');
  if(intent?.kind!=='hero'&&(own.championId||own.championPickIntent))return unavailable('客户端已有选择，保留当前英雄');
  if(!intent?.champion)return {...roleClaimChoice(client,intent?.role,data.champions,data),role:intent?.role||''};

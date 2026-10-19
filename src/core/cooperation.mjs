@@ -6,6 +6,7 @@ import {sharedCooperationPlan} from './shared-cooperation.mjs';
 import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
 import {partyCooperationPlan} from './party-cooperation.mjs';
 import {resourceCoordination} from './cooperation-resources.mjs';
+import {mechanicReview} from './mechanic-review.mjs';
 
 export const COOPERATION_PATCH='16.20';
 export const COOPERATION_REVIEWED_AT='2026-10-09';
@@ -51,10 +52,11 @@ const FAMILIES=[
   failure:'目标离开爆开范围就没有这段减速；不要为了引爆追进危险位置，Q 命中也不要求全员强行冲入。'},
 ];
 
-export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RULES_PATCH,reviewedAt=RULES_VERSION}={}){
+export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RULES_PATCH,currentPatch=champions[0]?.combatStatsSource?.patch,reviewedAt=RULES_VERSION}={}){
  const byId=new Map(champions.map(c=>[c.id,c])),legacy=new Map(),cache=new Map(),profiles=new Map(),pairs=new Map(COOPERATION_PAIRS.map(row=>[pairKey(row[0],row[1]),row]));
  for(const [a,b,text] of links)if(byId.has(a)&&byId.has(b))legacy.set(pairKey(a,b),{id:'catalog:'+pairKey(a,b),family:'catalog',name:'已整理两两联动',a,b,step:text,condition:'双方实际具备对应技能与接近条件后再衔接。',failure:'原说明没有确认当前技能可用或对手站位；关键技能落空就停止强接。',patch,reviewedAt,current:false,tempo:'teamfight',sourceUrls:[]});
- const prof=m=>{const k=key(m);if(!profiles.has(k))profiles.set(k,profile(byId.get(m.champion),m.role));return profiles.get(k);};
+ const reviews=new Map(),isCurrent=id=>{if(!reviews.has(id))reviews.set(id,mechanicReview(byId.get(id),currentPatch));return reviews.get(id)==='current';};
+ const prof=m=>{const k=key(m);if(!profiles.has(k)){const value=profile(byId.get(m.champion),m.role);profiles.set(k,{...value,reviewed:value.reviewed&&isCurrent(m.champion),reviewState:reviews.get(m.champion)});}return profiles.get(k);};
  const edge=(a,b)=>{
   if(a.champion===b.champion||!byId.has(a.champion)||!byId.has(b.champion))return null;
   // An undirected lookup must not let its first caller choose the saved
@@ -75,7 +77,7 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
   }
   found||=legacy.get(pairKey(a.champion,b.champion))||null;cache.set(k,found);return found;
  };
- return {edge,profile:prof,byId,skills:createSkillCooperation(byId),fitCache:new Map()};
+ return {edge,profile:prof,byId,skills:createSkillCooperation(byId,{isCurrent}),fitCache:new Map()};
 }
 
 function connectedEdges(members,graph){

@@ -33,14 +33,14 @@ export function captureRoomStrategy(slots,data,active=null,mode='rift'){
  // A cleared slot can retain a local plan for later restoration. Publish the
  // current public lineup now, without claiming its incomplete plan is active.
  if(active){const plan=validateCreativePlan(active);return creativePlanMatches(plan,slots)?plan:null;}
- const combo=currentCombo(slots,null,null,data.catalogInfo?.status);if(!combo)return null;
+ const combo=currentCombo(slots,null,null,data.catalogInfo?.status,null,null,{patch:data.patch});if(!combo)return null;
  return captureCreativePlan({slots,scope:'party',...(combo.members?.length===3?{trio:combo}:{duo:combo})},data);
 }
 
 export function captureRoomConfigurations(slots,data,store,{creativePlan=null,guide=null,current=null,mode='rift'}={}){
  return slots.filter(s=>s.champion).map(slot=>{
   const champion=data.champions.find(c=>c.id===slot.champion);if(!champion)return null;
-  const combo=mode==='rift'?currentCombo(slots,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan):null;
+  const combo=mode==='rift'?currentCombo(slots,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch}):null;
   const context={id:champion.id,role:slot.role,mode,...creativeComboContext(combo)};
   const selection=current&&preparationIdentity(current)===preparationIdentity(context)?current:{coreIndex:0,conditions:[],...recallPreparation(store,guide,context),...context};
   const b=getBuild(champion,slot.role,data,selection);

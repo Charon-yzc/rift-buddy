@@ -19,6 +19,7 @@ import {skillMilestones} from '../src/skill-plan-view.mjs';
 import {changeCompanionPlan} from '../src/core/companion-plan.mjs';
 import {catalogPreviewDialog} from '../src/catalog-view.mjs';
 import {createCatalogStore} from '../services/catalog-store.mjs';
+import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import os from 'node:os';
 import path from 'node:path';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
@@ -86,7 +87,8 @@ test('a current skill review cannot promote old gear/rune metadata and baselines
 
 test('actual selected nodes and basis survive shared trio adoption and recapture',()=>{
  const slots=createSlots().map(s=>({...s,champion:({top:'Malphite',jungle:'JarvanIV',mid:'Orianna'})[s.role]||null,party:['top','jungle','mid'].includes(s.role)}));
- const strategy=captureRoomStrategy(slots,data),configs=captureRoomConfigurations(slots,data,createPreparationStore(),{creativePlan:strategy}),store=createPreparationStore();
+ const chosen=captureCreativePlan({slots,scope:'party',trio:BUNDLED_CATALOG.trios.find(row=>row.id==='ball-delivery')},data);
+ const strategy=captureRoomStrategy(slots,data,chosen),configs=captureRoomConfigurations(slots,data,createPreparationStore(),{creativePlan:strategy}),store=createPreparationStore();
  assert.equal(configs.length,3);
  for(const c of configs){assert.equal(c.skills.length,18);assert.match(c.basis.skill,/16\.20/);assert.match(c.basis.skill,/无统计样本/);assert.match(roomConfigurationText(c,data,'队友',strategy),/18级/);store.remember(roomPreparation(c,data,strategy));}
  const again=captureRoomConfigurations(slots,data,store,{creativePlan:strategy});
@@ -130,9 +132,10 @@ test('independent skill baselines notice changed champion data and ignore unvali
   assert.equal(b.priority,'QEW');assert.equal(b.selectedSkill.samples,null);assert.equal(b.selectedSkill.winRate,undefined);assert.equal(b.selectedSkill.pickRate,undefined);
   assert.equal(b.selectedSkill.stale,false);
   const changed=structuredClone(data);changed.champions.find(c=>c.id==='Malphite').stats.armor+=1;
-  const after=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery'});
+  const automatic=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery'});assert.notEqual(automatic.selectedSkill?.stale,true,'Pending nodes require an explicit selection');
+  const after=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery',skillId:b.selectedSkill.id});
   assert.equal(after.selectedSkill.stale,true);assert.match(after.selectedSkill.when,/内容已变化，待复核/);assert(after.selectionWarnings.some(w=>w.includes('所选组合加点')));
-  const m=createGuideModel(changed,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery'}));assert.equal(m.skillStale,true);
+  const m=createGuideModel(changed,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery',skillId:b.selectedSkill.id}));assert.equal(m.skillStale,true);
   assert.match(renderGuide({model:m,phase:'Offline',connected:false},'skills',false,()=>''),/机制整理 · 16.20 · 待复核/);
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });

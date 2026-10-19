@@ -5,6 +5,7 @@ import path from 'node:path';
 import {createSlots,recommend,currentCombo} from '../src/core/recommend.mjs';
 import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
 import {TRIOS} from '../src/core/rules.mjs';
+import {BUNDLED_CATALOG,configureCatalog} from '../src/core/catalog.mjs';
 import {generateCreativeTrios} from '../src/core/creative-trios.mjs';
 import {captureCreativePlan,creativePlanId,validateCreativePlan,resultCooperation,selectPartyRoute} from '../src/core/creative-plan.mjs';
 import {captureTeamConfigurations,restoreTeamFavorite} from '../src/core/team-favorites.mjs';
@@ -19,6 +20,9 @@ import {companionView} from '../src/companion-view.mjs';
 import {resultAsText} from '../src/result-text.mjs';
 
 const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+// Job/route tests use simulated current reviews; old real catalog records are
+// separately covered by the stale/invalid boundary test below.
+const fixtureCatalog=structuredClone(BUNDLED_CATALOG);for(const trio of fixtureCatalog.trios)trio.patch=data.patch;configureCatalog(fixtureCatalog);test.after(()=>configureCatalog(BUNDLED_CATALOG));
 const hero=id=>data.champions.find(c=>c.id===id),member=(champion,role)=>({champion,role});
 const setup=members=>createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role),champion:members.find(m=>m.role===s.role)?.champion||null,locked:members.some(m=>m.role===s.role)}));
 
@@ -117,11 +121,10 @@ test('wide-draft bounds preserve locked manual friends and exact role pools whil
  assert.deepEqual(slots,before);
 });
 
-test('an invalid curated subgroup cannot supply full-party jobs, while valid old subgroup content keeps its version label',()=>{
+test('pending or invalid curated subgroups cannot supply current full-party jobs',()=>{
  const members=[member('Urgot','top'),member('Udyr','jungle'),member('Orianna','mid'),member('Varus','bottom'),member('Milio','support')],slots=setup(members),trio=TRIOS.find(t=>t.id==='expand-orianna-varus-milio');
- const [valid]=recommend({slots,champions:data.champions,scope:'party'});assert.ok(valid.adaptive.memberJobs.find(m=>m.champion==='Orianna').job.includes(trio.members[0].job));assert.match(valid.adaptive.memberJobs.find(m=>m.champion==='Orianna').job,/16\.19 · 旧版本说明保留/);
- const [invalid]=recommend({slots,champions:data.champions,scope:'party',catalogStatus:{[trio.id]:{invalid:true}}});
- for(const m of trio.members)assert.ok(!invalid.adaptive.memberJobs.find(j=>j.champion===m.champion).job.includes(m.job));
+ const [valid]=recommend({slots,champions:data.champions,scope:'party'});assert.ok(valid.adaptive.memberJobs.find(m=>m.champion==='Orianna').job.includes(trio.members[0].job));
+ for(const flag of ['invalid','stale']){const [invalid]=recommend({slots,champions:data.champions,scope:'party',catalogStatus:{[trio.id]:{[flag]:true}}});for(const m of trio.members)assert.ok(!invalid.adaptive.memberJobs.find(j=>j.champion===m.champion).job.includes(m.job));}
 });
 
 test('full-party route changes preserve curated defaults and carry chosen jobs and conditions through favorites and guides',async()=>{

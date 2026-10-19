@@ -81,7 +81,7 @@ test('expanded library entries reference real distinct champions and explain mec
 });
 test('every viable curated bot pair remains reachable instead of only minor top-ranked variants',()=>{
  const all=recommend({slots:createSlots(),champions:data.champions,scope:'bot',limit:240});
- const seen=new Set(all.map(r=>r.duo?.id));for(const d of DUOS)assert.ok(seen.has(d.id),d.id);
+ const seen=new Set(all.map(r=>r.duo?.id));for(const d of DUOS)if(d.patch===data.patch)assert.ok(seen.has(d.id),d.id);else assert(!seen.has(d.id),'Pending old entries cannot receive a current curated recommendation');
 });
 test('recommending a replacement never gives the suggestion the old client cell binding',()=>{
  const slots=mergeClientSession(createSlots(),session(),data.champions).slots;slots[3].locked=false;

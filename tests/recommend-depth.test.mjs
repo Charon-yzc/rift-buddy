@@ -49,7 +49,8 @@ test('bot scope emphasizes the lane while party scope rewards trio completeness'
  const partySlots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role)}));
  locked(partySlots,[['top','Malphite'],['jungle','JarvanIV']]);
  const partyRows=recommend({slots:partySlots,champions:data.champions,limit:10});
- assert.ok(partyRows.some(r=>r.trio?.id==='ball-delivery'));
+ assert.ok(partyRows.some(r=>r.slots.find(slot=>slot.role==='mid').champion==='Orianna'&&r.adaptive?.edges.some(edge=>edge.family==='ball')));
+ assert(!partyRows.some(r=>r.trio?.id==='ball-delivery'),'The older named catalog entry remains pending while its current mechanical interaction is available');
 });
 
 test('successive results diversify styles instead of repeating one combo',()=>{
