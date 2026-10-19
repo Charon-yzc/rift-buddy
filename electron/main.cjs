@@ -116,11 +116,16 @@ async function boot(){
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
  const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;publishData(['catalog','catalogInfo']);guide?.publish();return result;};
  useCatalog(catalogStore.summary());
+ const refreshReference=(refresh,keys)=>async(...args)=>{
+  const before=data,patch=data.patch,version=data.version,result=await refresh(...args);
+  if(data!==before||data.patch!==patch||data.version!==version)throw Error('基础资料已更新，请重新刷新参考');
+  publishData(keys);return result;
+ };
  const {loadBuildSources,loadHexBuilds,createBuildCache}=await import('../services/build-cache.mjs');
  const {loadOpponentBuildSources,createOpponentBuildCache}=await import('../services/opponent-build-cache.mjs');
  data.opponentBuildSources=await loadOpponentBuildSources(path.join(storeRoot,'data'),data);
  const opponentCache=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
- const refreshOpponentBuild=async(...args)=>{const result=await opponentCache(...args);publishData(['opponentBuildSources']);return result;};
+ const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
  data.buildSources=await loadBuildSources([path.join(root,'data'),path.join(storeRoot,'data')],data);
  selectBuildSource(data,state.preferences.buildSource);synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;};
@@ -128,11 +133,11 @@ async function boot(){
  const pairFiles=[path.join(root,'data/pair-statistics.json'),path.join(storeRoot,'data/pair-statistics-cache.json')];
  data.pairStatistics=await loadPairStatisticsCache(pairFiles,data);
  const pairCache=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
- const refreshPairs=async(...args)=>{const result=await pairCache(...args);publishData(['pairStatistics']);return result;};
+ const refreshPairs=refreshReference(pairCache,['pairStatistics']);
  const {loadRankings,createRankingsCache}=await import('../services/rankings-cache.mjs');
  data.rankings=await loadRankings([path.join(root,'data'),path.join(storeRoot,'data')],data);
  const rankingsCache=createRankingsCache({root:path.join(storeRoot,'data'),getData:()=>data});
- const refreshRankings=async(...args)=>{const result=await rankingsCache(...args);publishData(['rankings']);return result;};
+ const refreshRankings=refreshReference(rankingsCache,['rankings']);
  const {loadPatchNotes}=await import('../services/patch-notes.mjs');
  data.patchNotes=await loadPatchNotes(path.join(root,'data'),data);
  const {loadAbilities}=await import('../services/abilities.mjs');
@@ -157,7 +162,7 @@ async function boot(){
  data.imageOverrides=await imageCache.loadImageOverrides(path.join(storeRoot,'data/images'),data);
  for(const [key,value] of Object.entries(data))sharedDataFields.set(key,value);
  const buildCache=createBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
- const refreshBuild=async(...args)=>{const result=await buildCache(...args);publishData(['builds','buildSources','hexBuilds']);return result;};
+ const refreshBuild=refreshReference(buildCache,['builds','buildSources','hexBuilds']);
  const liveService=await import('../services/live-client.mjs');
  const {createAppUpdateService}=await import('../services/app-update.mjs');
  const {compareVersions:compareAppVersion,releasePageUrl,isReleaseNotesUrl}=await import('../src/core/app-update.mjs');

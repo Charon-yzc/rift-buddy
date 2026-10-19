@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {atomicJSON} from './data.mjs';
+import {createReferenceContext,commitReferenceCache} from './reference-cache-write.mjs';
 import {requireBuildSource} from '../src/core/build-source.mjs';
 import {rankingKey,rankingURL,parseRankings,validRankingReference,newerRanking} from '../src/core/rankings.mjs';
 
@@ -26,22 +27,22 @@ export async function fetchRankings(data,source,{fetcher=fetch,clock=()=>new Dat
  return parseRankings(JSON.parse(await readResponse(response)),{data,source,requestURL:url,fetchedAt:clock()});
 }
 export function createRankingsCache({root,getData,fetcher=fetch,write=atomicJSON}){
- const pending=new Map();let writes=Promise.resolve();
+ const pending=new Map(),context=createReferenceContext(getData);let writes=Promise.resolve();
  return function refresh(source){
-  const data=getData(),selected=requireBuildSource(source),key=rankingKey(data.patch,selected);
-  if(pending.has(key))return pending.get(key);
+  const request=context(),data=request.data,selected=requireBuildSource(source),key=rankingKey(data.patch,selected),pendingKey=request.key+':'+key;
+  if(pending.has(pendingKey))return pending.get(pendingKey);
   if(pending.size>=6)throw Error('多个榜单正在刷新，请稍后再试');
   const task=(async()=>{
    try{
     const ref=await fetchRankings(data,selected,{fetcher});
     const save=writes.catch(()=>{}).then(async()=>{
-     const current=getData();if(current.patch!==data.patch)throw Error('资料版本已变化，请重新刷新榜单');
+     const current=getData();if(!request.current())throw Error('资料版本已变化，请重新刷新榜单');
      const existing=current.rankings?.[key];if(!newerRanking(ref,existing))return {reference:existing,refreshError:null,usedLastValid:true};
-     const entries={...current.rankings,[key]:ref};await write(path.join(root,'rankings.json'),{schema:1,entries});
-     if(getData()!==current||getData().patch!==data.patch)throw Error('资料版本已变化，请重新刷新榜单');
-     current.rankings=entries;return {reference:ref,refreshError:null,usedLastValid:false};
+     const previous=current.rankings,entries={...previous,[key]:ref};
+     await commitReferenceCache(path.join(root,'rankings.json'),{schema:1,entries},{write,current:()=>request.current()&&current.rankings===previous,commit:()=>{current.rankings=entries;}});
+     return {reference:ref,refreshError:null,usedLastValid:false};
     });writes=save;return await save;
    }catch(error){const current=getData(),ref=current.patch===data.patch?current.rankings?.[key]:null;return {reference:validRankingReference(ref,current)?ref:null,refreshError:error.message,usedLastValid:validRankingReference(ref,current)};}
-  })().finally(()=>pending.delete(key));pending.set(key,task);return task;
+  })().finally(()=>pending.delete(pendingKey));pending.set(pendingKey,task);return task;
  };
 }
