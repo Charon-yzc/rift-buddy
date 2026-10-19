@@ -13,6 +13,7 @@ const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snaps
 import {duoPlayView} from '../src/duo-play-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
+import {comboMembers} from '../src/core/combo-members.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),duo=id=>DUOS.find(d=>d.id===id);
@@ -20,10 +21,12 @@ const hero=id=>data.champions.find(c=>c.id===id),duo=id=>DUOS.find(d=>d.id===id)
 test('every bundled duo gives both actual member roles different actionable stages through the real build resolver',()=>{
  const before=JSON.stringify(DUOS);
  for(const d of DUOS){
-  for(const [champion,role,other]of [[d.carry,'bottom',d.support],[d.support,'support',d.carry]]){
+  for(const {champion,role}of comboMembers(d)){
+   const other=comboMembers(d).find(m=>m.champion!==champion).champion;
    const build=getBuild(hero(champion),role,data,{comboId:d.id}),play=build.combo?.play;
    assert.equal(build.combo?.id,d.id);assert.ok(play,d.id+':'+role);
    assert.deepEqual(build.combo.members.map(m=>m.champion),[other]);
+   if(d.members){const own=d.members.find(m=>m.champion===champion&&m.role===role);assert.equal(play.stages.opening.ownAction,d.early);assert.equal(play.stages.key.ownAction,own.job);assert.equal(play.stages.later.ownAction,own.job);assert.deepEqual(play.steps,d.steps);assert.deepEqual(play.sources,d.sources);assert.equal(play.window,d.window);assert.equal(play.economy,d.economy);continue;}
    assert.equal(new Set(Object.values(play.stages).map(s=>s.ownAction)).size,3,d.id+':'+role);
    for(const phase of ['opening','key','later']){
     const stage=play.stages[phase];assert.ok(stage.ownAction?.trim());assert.ok(stage.steps.length>=2);assert.ok(stage.window.includes('确认')||stage.window.includes('搭档'));

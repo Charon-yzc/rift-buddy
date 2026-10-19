@@ -101,14 +101,6 @@ export function analyzeTeam(slots, champions, context,scoreOnly=false,catalogMat
   control,avgDifficulty,
   damageMix:!traits.ad&&!traits.ap?'none':balancedDamage?'mixed':traits.ad>=traits.ap?'ad':'ap'};
 }
-function findDuos(slots){
- const filled=slots.filter(s=>s.champion).map(s=>`${s.role}:${s.champion}`),{duoByMembers,duoOrder}=comboIndex(),found=[];
- for(let i=0;i<filled.length;i++)for(let j=i+1;j<filled.length;j++){
-  const duo=duoByMembers.get([filled[i],filled[j]].sort().join('|'));if(duo)found.push(duo);
- }
- return found.sort((a,b)=>duoOrder.get(a)-duoOrder.get(b));
-}
-const findDuo=slots=>findDuos(slots)[0];
 export function findTrio(slots){
  // Catalog trios have unique member sets, so subset lookup is equivalent to
  // the old linear scan and returns the same single match.
@@ -186,9 +178,9 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  const rankedAdjustment=ranked.length?ranked.reduce((sum,row)=>sum+row.adjustment,0)/ranked.length:0;
  fit.ranked={adjustment:rankedAdjustment,evidence:scoreOnly?[]:ranked.flatMap(row=>row.evidence)};
  score+=fit.adjustment+rankedAdjustment;
- const foundDuo=catalog.find(c=>comboMembers(c).length===2),foundTrio=catalog.find(c=>comboMembers(c).length===3);
- const duo=reviewedCatalogEntry(foundDuo,context?.catalogStatus,context?.patch)?foundDuo:null;
- const trio=reviewedCatalogEntry(foundTrio,context?.catalogStatus,context?.patch)?foundTrio:null;
+ const valid=combo=>reviewedCatalogEntry(combo,context?.catalogStatus,context?.patch);
+ const duo=catalog.find(c=>comboMembers(c).length===2&&valid(c))||null;
+ const trio=catalog.find(c=>comboMembers(c).length===3&&valid(c))||null;
  // Curated difficulty is authored per combination, not a win-rate claim:
  // hard combos cost practice time, easy ones fit a steady style.
  const comboDifficulty=(trio||duo)?.difficulty;
@@ -221,19 +213,19 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
   if(context?.play?.difficulty==='easy')score-=m.p.difficulty*2;
   const rolePool=context?.rolePools?.[m.role];if(rolePool?.mode==='prefer'&&rolePool.heroes.includes(m.champion))score+=15;
   score+=(roleWeights[`${m.champion}:${m.role}`]||0)*(style==='balanced'?8:style==='fun'?3:0);
-  if(m.role==='support'&&['crit','onhit','meleeCrit','fighter'].includes(m.p.build)&&!duo)score-=9;
+  if(m.role==='support'&&['crit','onhit','meleeCrit','fighter'].includes(m.p.build)&&!catalog.some(c=>comboMembers(c).length===2&&valid(c)&&comboMembers(c).some(member=>member.role===m.role&&member.champion===m.champion)))score-=9;
  }
  if(scoreOnly){if(cacheKey)rememberSearchValue(context.scoreCache,cacheKey,score,8192);return score;}
  // Score the known team, but name the plan around controllable party members.
  // Keep useful mixed-party catalog plans when no full-party mechanism exists.
- const party=slots.filter(s=>s.party),valid=combo=>reviewedCatalogEntry(combo,context?.catalogStatus,context?.patch)?combo:undefined;
+ const party=slots.filter(s=>s.party);
  const relevant=combo=>{
   if(!combo||party.length<2)return !!combo;
   const members=combo.members||[{role:'bottom',champion:combo.carry},{role:'support',champion:combo.support}];
   const belongs=m=>party.some(s=>s.role===m.role&&s.champion===m.champion);
   return adaptive?members.length===party.length&&members.every(belongs):members.some(belongs);
  };
- const partyDuo=valid(findDuo(party)),partyTrio=valid(findTrio(party));
+ const partyCombos=matchingCombos(party),partyDuo=partyCombos.find(c=>comboMembers(c).length===2&&valid(c)),partyTrio=partyCombos.find(c=>comboMembers(c).length===3&&valid(c));
  const planDuo=(relevant(partyDuo)?partyDuo:undefined)||(relevant(duo)?duo:undefined),planTrio=(relevant(partyTrio)?partyTrio:undefined)||(relevant(trio)?trio:undefined);
  const out={score,compositionFit:composition,analysis:a,duo:planDuo,trio:planTrio,connections,opponentFit:fit,adaptive,pairEvidence};
  return out;

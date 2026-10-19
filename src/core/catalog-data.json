@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.16.1",
+  "version": "2026.10.19.1",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。 2026-10-13新增16套三人机制执行卡，覆盖中下辅、上野中、野下辅、上中辅；仅新增条目按 Riot 16.20.1 技能复核。复用配置保持各自复核日期，普通位置默认不伪装成专用配装；Mobalytics常驻指南只作打法参考，不提供本组合当前版本胜率或强度证据，原有旧条目与资料状态保留。 2026-10-16新增四套双人、四套三人机制配合；旧社区内容仅作玩法灵感，未沿用旧配装、胜率或强度结论，旧条目复核状态保留。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。 2026-10-13新增16套三人机制执行卡，覆盖中下辅、上野中、野下辅、上中辅；仅新增条目按 Riot 16.20.1 技能复核。复用配置保持各自复核日期，普通位置默认不伪装成专用配装；Mobalytics常驻指南只作打法参考，不提供本组合当前版本胜率或强度证据，原有旧条目与资料状态保留。 2026-10-16新增四套双人、四套三人机制配合；旧社区内容仅作玩法灵感，未沿用旧配装、胜率或强度结论，旧条目复核状态保留。 2026-10-19新增三套跨位置双人执行卡：造墙配合、中野收割和双支援；仅新增条目对照当前16.20角色源复核，历史社区资料只作线索，不沿用其旧符文、配装或强度断言；原条目版本与复核锚点不变。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -12053,6 +12053,348 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
               "fingerprint": "849f2ea81ec5e47e"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "poppy-top-anivia-mid",
+      "name": "冰墙定点",
+      "style": "fun",
+      "tempo": "teamfight",
+      "difficulty": "较高",
+      "tags": [
+        "上中配合",
+        "造墙角度",
+        "反突进"
+      ],
+      "why": "冰鸟造墙，波比找推向墙体的角度；波比阻挡突进，给冰鸟留输出位置。",
+      "plan": "先报冰墙与英勇冲锋是否可用，确认站位后先造墙、再推墙；角度不成立就改为保护冰鸟。",
+      "risk": "冰墙会挡双方走位；波比 E 方向不对会把目标推离输出区，蓄力 R 也可能把目标送出冰鸟大招。没有角度就停手，不保证撞墙。",
+      "members": [
+        {
+          "champion": "Poppy",
+          "role": "top",
+          "loadoutId": "default",
+          "job": "先确认目标、冰墙和自己的推进方向；E 确认能推向墙体才交，W 留给可阻挡的突进。冰鸟跟不上时回身保护，不盲追。"
+        },
+        {
+          "champion": "Anivia",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先报冰墙落点，给波比和己方留路；目标被限制后再接 Q/R，E 按自身冰冻条件使用。墙会隔断队友或自己没蓝时取消。"
+        }
+      ],
+      "steps": [
+        "两人先靠近同一战区，确认 E/W、冰鸟 Q/R 与蓝量。",
+        "冰鸟在目标撤退方向布墙，波比确认实际角度再 E 推墙。",
+        "确认控制命中后接冰鸟 Q/R/E；没撞墙或目标脱离时回到保护站位。"
+      ],
+      "window": "两人已在同一战区、冰墙和波比 E 可用且角度成立时。无需等六级才可尝试，小技能未学或距离不够时不强行执行。",
+      "early": "各自保住上中兵线；先学到需要的技能，利用回城、河道或目标争夺会合，不为凑配合长期弃线。",
+      "economy": "波比保上路、冰鸟保中路补刀与经验；用各自当前位置配置，不套用历史攻略的下路或辅助经济。",
+      "partners": [],
+      "sources": [
+        {
+          "name": "MOBAFire · Diamond Anivia Guide for Mid/Top（历史指南）",
+          "url": "https://www.mobafire.com/league-of-legends/build/diamond-anivia-guide-for-mid-top-551953",
+          "kind": "历史社区玩法线索；不沿用旧配装或强度结论",
+          "checkedAt": "2026-10-19"
+        },
+        {
+          "name": "Riot Poppy 技能说明",
+          "url": "https://www.leagueoflegends.com/en-us/champions/poppy/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-10-19"
+        },
+        {
+          "name": "Riot Anivia 技能说明",
+          "url": "https://www.leagueoflegends.com/en-us/champions/anivia/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-10-19"
+        }
+      ],
+      "patch": "16.20",
+      "reviewedAt": "2026-10-19",
+      "reviewBaseline": {
+        "champion:Poppy": "af33a45e62ad30e5",
+        "champion:Anivia": "52343f9ffaa815a9"
+      },
+      "reviewSourceAnchors": {
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-10-18T23:15:23.567Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "29a2eca7564e4ed5a2b059b99172130f8a9e2d4d27a149b940932e9fd646cffd"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        },
+        "Anivia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "52343f9ffaa815a9",
+          "observedAt": "2026-10-18T23:14:16.885Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Anivia",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/anivia/anivia.bin.json",
+              "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "d7796f24d403cc8c"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "viego-jungle-lissandra-mid",
+      "name": "冰封接收割",
+      "style": "balanced",
+      "tempo": "teamfight",
+      "difficulty": "适中",
+      "tags": [
+        "中野配合",
+        "首个击杀",
+        "收割接力"
+      ],
+      "why": "丽桑卓先限制同一目标，佛耶戈跟进；首个击杀后分别利用幽魂和冰封奴仆继续作战。",
+      "plan": "先确认佛耶戈能到场，丽桑卓再用 W 或对敌 R 留人；集中同一目标，击杀后观察幽魂与后续站位再续战。",
+      "risk": "丽桑卓自 R 不能定住敌人；没有首个击杀就没有这轮收割窗口。幽魂位置危险、控制被解或队友跟不上时撤，不为附身走进集火。",
+      "members": [
+        {
+          "champion": "Viego",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先清野到能支援的位置，等丽桑卓确认控制再跟同一目标；W 注意小兵阻挡。击杀后先看幽魂是否安全，再决定附身与下一次 R。"
+        },
+        {
+          "champion": "Lissandra",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理兵线并报 E/W/R，确认佛耶戈跟得到再进场；对敌 R 与自 R 分清。首个敌人倒下后利用奴仆逼位，危险时自保退出。"
+        }
+      ],
+      "steps": [
+        "丽桑卓报兵线与控制，佛耶戈报到场路线和跟进距离。",
+        "丽桑卓 W 或对敌 R 实际命中后，两人集中同一目标，控制错开。",
+        "有击杀再判断幽魂和奴仆的实际位置；能安全跟进才续战，否则撤离。"
+      ],
+      "window": "控制、伤害和到场距离足够的同目标机会；六级前可用 W 与佛耶戈 W 配合，不把自 R 当敌方眩晕。",
+      "early": "佛耶戈保清野等级，丽桑卓保中路线；先用小技能接力，不为等大招放弃可安全处理的兵线和野区。",
+      "economy": "佛耶戈吃野区经济、丽桑卓保中路经济；支援后恢复各自发育，不绑定过时的专用符文或固定出装。",
+      "partners": [],
+      "sources": [
+        {
+          "name": "Mobalytics · 双排组合指南（Lissandra & Viego）",
+          "url": "https://mobalytics.gg/lol/guides/best-duo-combos-to-climb",
+          "kind": "历史社区玩法线索；不沿用旧配装或强度结论",
+          "checkedAt": "2026-10-19"
+        },
+        {
+          "name": "Riot Viego 技能说明",
+          "url": "https://www.leagueoflegends.com/en-us/champions/viego/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-10-19"
+        },
+        {
+          "name": "Riot Lissandra 技能说明",
+          "url": "https://www.leagueoflegends.com/en-us/champions/lissandra/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-10-19"
+        }
+      ],
+      "patch": "16.20",
+      "reviewedAt": "2026-10-19",
+      "reviewBaseline": {
+        "champion:Viego": "61185e81ee691f67",
+        "champion:Lissandra": "599da97edcf817b9"
+      },
+      "reviewSourceAnchors": {
+        "Viego": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "61185e81ee691f67",
+          "observedAt": "2026-10-18T23:16:00.238Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Viego",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/viego/viego.bin.json",
+              "sha256": "36b40b37291f0d6d157691933427c3d9966b51d6cde748ad62f53e8de8045e79"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "d5b6622648148ffc"
+            }
+          }
+        },
+        "Lissandra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "599da97edcf817b9",
+          "observedAt": "2026-10-18T23:15:03.729Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lissandra",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/lissandra/lissandra.bin.json",
+              "sha256": "d2c0392ab0f7ca1f827dfc16416803253caf66be6899ebb771ec3b34ef48c0eb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "f6bc405fcfcae9d6"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "nocturne-jungle-twistedfate-mid",
+      "name": "关灯双支援",
+      "style": "fun",
+      "tempo": "early",
+      "difficulty": "较高",
+      "tags": [
+        "中野配合",
+        "边线支援",
+        "到场接力"
+      ],
+      "why": "卡牌侦察并准备落点，两人从各自大招范围内支援同一路，黄牌给梦魇跟进留时间。",
+      "plan": "先确认边线能接战、双方大招范围和卡牌落点，再选同一目标；卡牌准备黄牌，梦魇按实际距离跟进并维持 E 连线。",
+      "risk": "两人大招都有限距，开大不代表能到场；卡牌引导可能被打断、落点可能被蹲，黄牌也可能被挡或解除。关灯不保证切断所有反应，无法同时到场就取消。",
+      "members": [
+        {
+          "champion": "Nocturne",
+          "role": "jungle",
+          "loadoutId": "default",
+          "job": "先报自己大招的可达目标和边线队友位置，卡牌落点安全且能跟上才二段突进；W 留给关键技能，E 要维持范围。进不去就不独自飞。"
+        },
+        {
+          "champion": "TwistedFate",
+          "role": "mid",
+          "loadoutId": "default",
+          "job": "先处理中路线、查看敌人位置和侧翼，准备黄牌并选安全可达落点；引导会被打断时先退。落地后确认黄牌命中，再让梦魇接续。"
+        }
+      ],
+      "steps": [
+        "六级后先报双方大招、边线兵线和各自能到的范围。",
+        "卡牌侦察并准备黄牌，确认安全落点与同一目标；梦魇确认自己能跟进。",
+        "卡牌安全落地、黄牌命中后接梦魇突进与 E；目标已逃或反蹲出现时及时停手。"
+      ],
+      "window": "双方六级、大招可用且同一目标处于各自可达范围，边线队友能配合时；不是全地图无条件双飞。",
+      "early": "六级前各自保清野和中路线；卡牌可用黄牌配合近距离支援，不能提前按双大招到场安排打法。",
+      "economy": "卡牌保中路补刀、梦魇保野区等级；支援后及时回线和清野，不长期分掉被支援队友的兵线。",
+      "partners": [],
+      "sources": [
+        {
+          "name": "Mobalytics · 双排组合指南（Twisted Fate & Nocturne）",
+          "url": "https://mobalytics.gg/lol/guides/best-duo-combos-to-climb",
+          "kind": "历史社区玩法线索；不沿用旧配装或强度结论",
+          "checkedAt": "2026-10-19"
+        },
+        {
+          "name": "Riot Nocturne 技能说明",
+          "url": "https://www.leagueoflegends.com/en-us/champions/nocturne/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-10-19"
+        },
+        {
+          "name": "Riot TwistedFate 技能说明",
+          "url": "https://www.leagueoflegends.com/en-us/champions/twistedfate/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-10-19"
+        }
+      ],
+      "patch": "16.20",
+      "reviewedAt": "2026-10-19",
+      "reviewBaseline": {
+        "champion:Nocturne": "2759f235cb713880",
+        "champion:TwistedFate": "4b3a9807b94dcc47"
+      },
+      "reviewSourceAnchors": {
+        "Nocturne": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2759f235cb713880",
+          "observedAt": "2026-10-18T23:15:19.330Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nocturne",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "ead50283b87590564919c6df79e48cf2d9f65ce5768b8748a3c41507065864ac"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "7e6432fe64cf372b"
+            }
+          }
+        },
+        "TwistedFate": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4b3a9807b94dcc47",
+          "observedAt": "2026-10-18T23:15:53.155Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TwistedFate",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/twistedfate/twistedfate.bin.json",
+              "sha256": "0bd50cf5bca7c6fb7e59408bddb72da6e78a3736d7cbd02bca7e8c556eda422b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "f83bddbc2f7bb85b"
             }
           }
         }
