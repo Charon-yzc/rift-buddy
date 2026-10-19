@@ -47,8 +47,9 @@ export function createGameTooltips({document,getData,getMode=()=> 'rift'}){
    assignOwner(focusOwner);
   },100);
  }
- const find=target=>target.closest?.(selector)||target.closest?.('button,a,[tabindex]')?.querySelector(selector);
- document.addEventListener('pointerover',event=>{if(card.contains(event.target)){view.clearTimeout(closeTimer);return;}const node=find(event.target);if(node)show(node);});
+ const contextual='[data-history-tip],[data-ongoing-tip]';
+ const find=target=>{const node=target.closest?.(selector)||target.closest?.('button,a,[tabindex]')?.querySelector(selector);return node&&!node.closest(contextual)?node:null;};
+ document.addEventListener('pointerover',event=>{if(card.contains(event.target)){view.clearTimeout(closeTimer);return;}const node=find(event.target);if(node)show(node);else if(event.target.closest?.(contextual))hide();});
  document.addEventListener('pointerout',event=>{if(anchor&&!anchor.contains(event.relatedTarget)&&!card.contains(event.relatedTarget)&&!event.relatedTarget?.closest?.(selector)){view.clearTimeout(closeTimer);closeTimer=view.setTimeout(()=>hide(),180);}});
  document.addEventListener('focusin',event=>{const node=find(event.target);if(node)show(node,event.target);else hide();});
  document.addEventListener('focusout',()=>hide());
