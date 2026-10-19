@@ -1,7 +1,11 @@
-import fs from 'node:fs/promises';
+import nodeFs from 'node:fs/promises';
+import {createRequire} from 'node:module';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {INSTALL_MANIFEST,validateInstallManifest} from '../src/core/install-manifest.mjs';
+// Electron's virtual filesystem reports an ASAR archive as a directory. Base
+// verification must hash the physical installation, without changing noAsar globally.
+const fs=process.versions.electron?createRequire(import.meta.url)('original-fs').promises:nodeFs;
 export async function installedPayload(directory,version,{expectedHash,verifyFiles=false}={}){
  if(!directory)return null;
  try{

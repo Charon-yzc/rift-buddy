@@ -9,12 +9,12 @@
   <a href="https://room.riftbuddy.dpdns.org/downloads/"><strong>下载安装包</strong></a> ·
   <a href="https://gitee.com/legender134/rift-buddy/releases">Gitee 国内镜像</a> ·
   <a href="https://github.com/Legender134/rift-buddy/releases">GitHub Releases</a> ·
-  <a href="docs/releases/v0.58.7.md">本次更新</a>
+  <a href="docs/releases/v0.58.8.md">本次更新</a>
 </p>
 
 本轮更新 **0.58.7**：单双排、灵活排位可参考公开敌方阵容、分路对手和选人应对建议，双方锁定后查看分时胜率参考。新增三套有出处的[跨位置双人方案](docs/cross-role-combinations.md)，英雄池连续勾选保留滚动位置。签名整套资料在选人、对局中暂存，回大厅后启用；机制资料变动后，相关组合重新复核。队伍配置播报默认关闭，开启后仅播报当前操作；一级完成加点后取消首点高亮。战绩与实时页修复刷新、异步状态和深浅配色。[排位功能与统计口径](docs/ranked-recommendations.md)。
 
-安装包以[下载页](https://room.riftbuddy.dpdns.org/downloads/)实际发布版本为准。**0.57.3 → 0.58.7** 提供约 **3 MB** 的增量，软件更新自动选择适用补丁；首次安装或本机文件不匹配时使用约 148 MB 的完整包。暂停保留进度，取消清理下载；收藏、配置与配色保留。
+当前源码 **0.58.8** 修复增量更新误判：旧版在 Electron 中把程序归档当成目录，导致有小补丁仍下载完整包。安装包以[下载页](https://room.riftbuddy.dpdns.org/downloads/)实际发布版本为准；0.57.1、0.57.3、0.58.7 用户请选对应版本的小补丁完成这次更新器修复，之后适用的小版本更新自动走增量。暂停保留进度，取消清理下载；收藏、配置与配色保留。
 
 [Akari 战绩与实时对局](docs/match-history.md)提供本人及公开玩家查询、筛选和单局复盘，也可查看大厅、选人和游戏中的公开玩家资料。个人战绩和备注只保留在本机当前运行内存；国服真实接口与回放兼容仍需授权客户端核验。
 

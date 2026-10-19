@@ -1,0 +1,22 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
+import {electronExecutable} from './electron-runtime.mjs';
+import {payloadManifest,installManifestText,INSTALL_MANIFEST} from './installer-payload.mjs';
+const root=await fs.mkdtemp(path.resolve('.local/incremental-electron-')),source=path.join(root,'archive-source'),install=path.join(root,'installed');
+const require=createRequire(import.meta.url),asar=await import(pathToFileURL(require.resolve('@electron/asar',{paths:[await fs.realpath('node_modules/@electron/packager')]})));
+await fs.mkdir(source);await fs.mkdir(path.join(install,'resources'),{recursive:true});
+await fs.writeFile(path.join(source,'package.json'),JSON.stringify({name:'isolated-update-fixture',version:'99.0.0'}));
+await fs.writeFile(path.join(source,'index.js'),'module.exports="fixture";');
+await asar.createPackage(source,path.join(install,'resources/app.asar'));
+await fs.writeFile(path.join(install,'runtime.bin'),'unchanged fixture runtime');
+await fs.writeFile(path.join(install,INSTALL_MANIFEST),installManifestText(await payloadManifest(install,'99.0.0')));
+await fs.writeFile(path.join(root,'player.json'),'{"favorites":["Ashe"]}');
+const override=process.argv.find(arg=>arg.startsWith('--asar='));
+const archive=override?path.resolve(override.slice(7)):path.join(JSON.parse(await fs.readFile('release/latest.json')).directory,'resources/app.asar');
+const config=path.join(root,'config.json');await fs.writeFile(config,JSON.stringify({root,install,archive}));
+const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-incremental-update.cjs'),config],{windowsHide:true,stdio:'inherit'}),timer=setTimeout(()=>child.kill(),60000);
+try{const [code]=await once(child,'exit');if(code!==0)throw Error(`Incremental Electron smoke failed (${code}); ${root}`);await fs.writeFile('.local/latest-incremental-electron-smoke.json',JSON.stringify({root},null,2));}finally{clearTimeout(timer);}
