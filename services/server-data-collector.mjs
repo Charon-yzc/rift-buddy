@@ -10,9 +10,9 @@ import {contentEqual,validateServerGame,validateServerData,loadServerData,stageS
 import {BUILD_REGIONS,BUILD_TIERS,DEFAULT_BUILD_SOURCE,buildSourceKey,sameBuildSource} from '../src/core/build-source.mjs';
 import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
 import {rankingKey,validRankingReference} from '../src/core/rankings.mjs';
-import {PRIMARY_ROLES,profile} from '../src/core/rules.mjs';
+import {defaultBuildJobs} from '../src/core/default-build-jobs.mjs';
+import {createGenerationRecipe} from './data-generation.mjs';
 
-const roles=['top','jungle','mid','bottom','support'];
 const scopes=BUILD_REGIONS.flatMap(region=>BUILD_TIERS.map(tier=>({region:region.id,tier:tier.id})));
 const counts=bundle=>Object.fromEntries(['rankings','builds','hex-builds'].map(name=>[name,Object.keys(bundle[name].entries).length]));
 const errorText=error=>String(error?.message||error).replace(/[\r\n]/g,' ').slice(0,240);
@@ -31,13 +31,7 @@ function compatibleBundle(previous,game){
   'hex-builds':{schema:1,entries:Object.fromEntries(Object.entries(previous['hex-builds'].entries).filter(([id,ref])=>heroes.has(id)&&validHexReference(ref,heroes.get(id),game,{allowOlder:true})))}};
 }
 export function serverBuildJobs(bundle,champions=bundle.game.champions){
- const rank=bundle.rankings.entries[rankingKey(bundle.game.patch,DEFAULT_BUILD_SOURCE)];
- return champions.flatMap(champion=>{
-  const reported=roles.filter(role=>rank?.boards[role]?.some(row=>row.champion===champion.id));
-  const saved=Object.values(bundle.builds.entries).filter(ref=>ref.champion===champion.id&&sameBuildSource(ref,DEFAULT_BUILD_SOURCE)).map(ref=>ref.role);
-  const primary=PRIMARY_ROLES[champion.id]||profile(champion).roles[0];
-  return [...new Set([primary,...reported,...saved])].filter(role=>roles.includes(role)).map(role=>({champion,role}));
- });
+ return defaultBuildJobs(bundle.game,bundle.rankings.entries,bundle.builds.entries,champions);
 }
 // Called under an OS-held flock by the deployment. Every refresh keeps source
 // patch/scope; a new base patch is held back until all ranking scopes validate.
@@ -79,7 +73,8 @@ export async function collectServerData({root,seedRoot,clock=()=>new Date().toIS
   }catch(error){fail(rankings,key,error);if(['SOURCE_PAUSED','ROUND_LIMIT'].includes(error.code)){rankings.skipped=scopes.length-rankings.checked;break;}}
  }
  finish(rankings);await checkpoint();
- const champions=game.champions.slice(0,maxChampions??game.champions.length),jobs=serverBuildJobs(bundle,champions),totalJobs=serverBuildJobs(bundle).length,builds=begin('builds',totalJobs);await checkpoint();
+ const champions=game.champions.slice(0,maxChampions??game.champions.length),allJobs=serverBuildJobs(bundle),jobs=allJobs.filter(job=>champions.includes(job.champion)),totalJobs=allJobs.length,builds=begin('builds',totalJobs);
+ try{status.generationRecipe=createGenerationRecipe(bundle,allJobs);}catch(error){status.generationError=errorText(error);}await checkpoint();
  for(const {champion,role} of jobs){
   const key=buildSourceKey(champion.id,role,DEFAULT_BUILD_SOURCE,game.patch);builds.checked++;
   try{
@@ -108,7 +103,7 @@ export async function collectServerData({root,seedRoot,clock=()=>new Date().toIS
  try{
   const result=await stageServerData(root,bundle,{expectedRelease:current?.pointer.release||null,clock});
   status.release=result.pointer.release;status.changed=result.changed;status.coverage=counts(result.bundle);
-  status.state=maxChampions!==null||Object.values(status.datasets).some(state=>state.state!=='ok')?'partial':'ok';
+  status.state=maxChampions!==null||status.generationError||Object.values(status.datasets).some(state=>state.state!=='ok')?'partial':'ok';
  }catch(error){status.state='failed';status.error=errorText(error);}
  status.checkedAt=clock();await checkpoint();return status;
 }

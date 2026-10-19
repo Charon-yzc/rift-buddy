@@ -32,10 +32,10 @@ export async function loadImageOverrides(root,data){
  });
  return overrides;
 }
-export async function cacheMissingImages({root,bundleRoot,data,progress=()=>{},fetchImage=fetch,budgetMs=60000}){
+export async function cacheMissingImages({root,bundleRoot,data,progress=()=>{},fetchImage=fetch,budgetMs=60000,bundledKeys=null}){
  const jobs=[];
  await mapConcurrent(imageEntries(data),32,async([key,url])=>{
-  if(await exists(path.join(bundleRoot,`${key}.png`))||await exists(path.join(root,`${key}.png`)))return;
+  if((!bundledKeys||bundledKeys.has(key))&&await exists(path.join(bundleRoot,`${key}.png`))||await exists(path.join(root,`${key}.png`)))return;
   let parsed;try{parsed=new URL(url);}catch{return;}if(parsed.protocol!=='https:'||!imageHosts.has(parsed.hostname))return;
   jobs.push({key,url});
  });
