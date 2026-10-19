@@ -86,18 +86,19 @@ test('reuse re-hashes and recovers from a same-size swapped binary',async()=>{
 });
 test('startup sweep removes orphan parts and stale records but keeps valid pendings',async()=>{
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-update-'));
- await fs.writeFile(path.join(dir,'rift-buddy-update-1.exe.part'),'orphan');
+ const orphan='rift-buddy-update-1-11111111-1111-4111-8111-111111111111.exe.part',old='rift-buddy-update-2-22222222-2222-4222-8222-222222222222.exe';
+ await fs.writeFile(path.join(dir,orphan),'orphan');
  await fs.writeFile(path.join(dir,'keep.txt'),'keep');
  const stale=createAppUpdateService({currentVersion:'9.9.9',tempDir:dir,storeFile:path.join(dir,'app-update.json'),request:fakeRequest({}),...iso});
- await fs.writeFile(path.join(dir,'app-update.json'),JSON.stringify({schema:1,version:'0.1.0',tag:'v0.1.0',file:path.join(dir,'old.exe'),sha256:'0'.repeat(64),bytes:1,downloadedAt:new Date().toISOString()}));
- await fs.writeFile(path.join(dir,'old.exe'),'x');
+ await fs.writeFile(path.join(dir,'app-update.json'),JSON.stringify({schema:1,version:'0.1.0',tag:'v0.1.0',file:path.join(dir,old),sha256:'0'.repeat(64),bytes:1,downloadedAt:new Date().toISOString()}));
+ await fs.writeFile(path.join(dir,old),'x');
  const swept=await stale.sweep();
- assert.deepEqual(swept.parts,['rift-buddy-update-1.exe.part']);assert.equal(swept.stale,'0.1.0');
+ assert.deepEqual(swept.parts,[orphan]);assert.equal(swept.stale,'0.1.0');
  assert.deepEqual(await fs.readdir(dir),['keep.txt']);
  const s=dlService(setupRoutes(BIN,BIN_SHA),{tempDir:dir});
  await s.download({version:'9.9.9',tag:'v9.9.9'},{});
  const kept=await s.sweep();
- assert.deepEqual(kept,{parts:[],stale:null});
+ assert.deepEqual(kept,{parts:[],stale:null,installers:[]});
  assert.ok(await s.pending());
 });
 test('an aborted download leaves no record',async()=>{

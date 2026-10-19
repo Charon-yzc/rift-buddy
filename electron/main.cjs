@@ -167,6 +167,10 @@ async function boot(){
  const updater=()=>createAppUpdateService({...appUpdateBase,mirrorBase:state.preferences.updateMirror});
  const appUpdater=updater();
  await appUpdater.sweep().catch(()=>{});
+ // A freshly installed app can start just before the installer releases its
+ // executable. Retry after that handoff, never during an active transfer.
+ const appUpdateCleanupTimer=setTimeout(()=>{if(!appUpdateFlight&&!appUpdateInstallFlight&&!appUpdateAbort)appUpdater.sweep().catch(()=>{});},15000);
+ appUpdateCleanupTimer.unref?.();
  let appUpdateStatus={phase:'idle'},appUpdateFlight=null,appUpdateAbort=null,appUpdateInstallFlight=null,appUpdateStop=null;
  const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;publishWindows('app-update-progress',snapshot);};
  const {changePresentation}=await import('../src/core/presentation.mjs');
@@ -713,12 +717,17 @@ async function boot(){
    publishAppUpdate({phase:'checking'});
    try{
     const kept=await updater().pending();
-    if(kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept)){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,kind:kept.kind,via:kept.via||'direct',fallback:kept.fallback||false}});}
-    else if(await updater().partial?.()){
-     const paused=await updater().partial();
+    const validKept=kept&&compareAppVersion(kept.version,app.getVersion())>0&&await updater().verify(kept),paused=await updater().partial?.();
+    const cachedVersion=validKept&&(!paused||compareAppVersion(kept.version,paused.release.version)>=0)?kept.version:paused?.release.version;
+    let result;try{result=await updater().check();}catch(error){if(!cachedVersion)throw error;}
+    if(result?.status==='available'&&(!cachedVersion||compareAppVersion(result.release.version,cachedVersion)>0)){
+     if(cachedVersion)await updater().cleanup();
+     if(silent&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
+     else publishAppUpdate({phase:'available',release:result.release});
+    }else if(validKept&&cachedVersion===kept.version){publishAppUpdate({phase:'ready',release:{version:kept.version,tag:kept.tag,url:releasePageUrl(kept.tag),publishedAt:null},record:{version:kept.version,bytes:kept.bytes,sha256:kept.sha256,kind:kept.kind,via:kept.via||'direct',fallback:kept.fallback||false}});}
+    else if(paused){
      publishAppUpdate({phase:'paused',release:paused.release,received:paused.received,total:paused.total,kind:paused.kind,via:paused.via});
     }else{
-     const result=await updater().check();
      if(silent&&result.status==='available'&&state.preferences.dismissedAppVersion===result.release.tag)publishAppUpdate({phase:'current',release:result.release,dismissed:true});
      else publishAppUpdate({phase:result.status,release:result.release||null});
     }
@@ -786,6 +795,10 @@ async function boot(){
   appUpdateInstallFlight=Promise.resolve().then(async()=>{
    publishAppUpdate({...prev,phase:'installing',error:''});
    try{
+    let latest;try{latest=await updater().check();}catch{}
+    if(latest?.status==='available'&&compareAppVersion(latest.release.version,prev.release?.version||prev.record?.version)>0){
+     await updater().cleanup();publishAppUpdate({phase:'available',release:latest.release});return {launched:false,newerAvailable:true};
+    }
     const record=await updater().install();
     if(record.dryRun){publishAppUpdate(prev);return record;}
     quitting=true;app.quit();return record;

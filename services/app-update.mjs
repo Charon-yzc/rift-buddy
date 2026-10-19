@@ -92,6 +92,8 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
  const mirrorHost=mirror?new URL(mirror).hostname:null;
  const extraHosts=mirrorHost?[mirrorHost]:[];
  const partials=partialStore(tempDir,storeFile,SETUP_BYTES_LIMIT);
+ const ownsInstaller=file=>typeof file==='string'&&path.dirname(path.resolve(file))===path.resolve(tempDir)&&/^rift-buddy-update-\d+-[0-9a-f-]{36}\.exe$/.test(path.basename(file));
+ const safeTempRoot=async()=>{try{const stat=await fs.lstat(tempDir);return stat.isDirectory()&&!stat.isSymbolicLink();}catch(error){if(error.code==='ENOENT')return true;throw error;}};
  async function check({signal}={}){
   const options={request,timeout:FEED_TIMEOUT,byteLimit:TEXT_BYTES_LIMIT,signal,lookup,insecureHosts};
   const results=await Promise.allSettled([
@@ -111,10 +113,12 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
  const removeFile=async file=>{try{await fs.unlink(file);}catch(error){if(error.code!=='ENOENT')throw error;}};
  const readRecord=async()=>{
   let raw;
+  if(!await safeTempRoot())return null;
   try{raw=JSON.parse(await fs.readFile(storeFile,'utf8'));}catch(error){if(error.code==='ENOENT'||error instanceof SyntaxError)return null;throw error;}
-  if(raw?.schema!==1||typeof raw.file!=='string'||typeof raw.sha256!=='string')return null;
+  if(raw?.schema!==1||!ownsInstaller(raw.file)||!/^\d+\.\d+\.\d+$/.test(raw.version||'')||![raw.version,`v${raw.version}`].includes(raw.tag)||!/^[0-9a-f]{64}$/.test(raw.sha256||'')||!Number.isSafeInteger(raw.bytes)||raw.bytes<=0||raw.bytes>SETUP_BYTES_LIMIT)return null;
   let stat;
-  try{stat=await fs.stat(raw.file);}catch(error){if(error.code!=='ENOENT')throw error;}
+  try{stat=await fs.lstat(raw.file);}catch(error){if(error.code!=='ENOENT')throw error;}
+  if(stat&&(!stat.isFile()||stat.isSymbolicLink()))return null;
   if(!stat||stat.size!==raw.bytes){await removeFile(raw.file);await removeFile(storeFile);return null;}
   return raw;
  };
@@ -127,14 +131,25 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
   try{for await(const chunk of handle.createReadStream())hash.update(chunk);}finally{await handle.close();}
   if(hash.digest('hex')!==record.sha256){await cleanup();return false;}return true;}catch{await cleanup().catch(()=>{});return false;}
  }
- // 启动时清扫：崩溃残留的 .part + 本地已赶上（升级后）的过期记录。有效 pending 保留。
+ // Upgrade success is recognized by the running version. Keep retryable and
+ // paused updates; discard only this updater's own direct-child artifacts.
  async function sweep(){
-  const removed={parts:[],stale:null};
+  const removed={parts:[],stale:null,installers:[]};
+  if(!await safeTempRoot())return removed;
   let paused=await partials.read();
   if(paused&&!isNewerThan(paused.release.version,currentVersion)){await partials.clear();paused=null;}
-  try{for(const n of await fs.readdir(tempDir))if(/^rift-buddy-update-.*\.exe\.part$/.test(n)&&path.join(tempDir,n)!==paused?.file){await fs.unlink(path.join(tempDir,n)).catch(()=>{});removed.parts.push(n);}}catch{}
-  const raw=await readRecord();
-  if(raw&&!isNewerThan(raw.version,currentVersion)){await cleanup();removed.stale=raw.version;}
+  let raw=await readRecord();
+  if(raw&&!isNewerThan(raw.version,currentVersion)){await cleanup();removed.stale=raw.version;raw=null;}
+  if(!raw)await removeFile(storeFile);
+  try{
+   if((await fs.lstat(tempDir)).isSymbolicLink())return removed;
+   for(const name of await fs.readdir(tempDir)){
+    const file=path.join(tempDir,name),part=/^rift-buddy-update-\d+-[0-9a-f-]{36}\.exe\.part$/.test(name);
+    if(file===raw?.file||file===paused?.file||!part&&!ownsInstaller(file))continue;
+    const stat=await fs.lstat(file);if(!stat.isFile()||stat.isSymbolicLink())continue;
+    try{await fs.unlink(file);removed[part?'parts':'installers'].push(name);}catch{}
+   }
+  }catch{}
   return removed;
  }
  const missingAsset=e=>/HTTP 404/.test(e?.message||'')?Error('新版安装包缺失，请等待维护者补传发布资产后重试'):e;
@@ -247,6 +262,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
  }
  async function download(release,{signal,onProgress}={}){
   if(!release||!/^\d+\.\d+\.\d+$/.test(release.version)||![release.version,`v${release.version}`].includes(release.tag))throw Error('新版信息格式不正确');
+  if(!isNewerThan(release.version,currentVersion))throw Error('此版本不比当前程序新，请重新检查更新');
   if(release.manualOnly)throw Error('此国内发行版仅支持网页下载，请按发布页说明还原安装包');
   const kept=await readRecord();
   if(kept&&kept.version===release.version&&await verify(kept)){if(onProgress)onProgress({received:kept.bytes,total:kept.bytes,stage:'verifying',via:kept.via||'direct'});return kept;}
@@ -291,6 +307,7 @@ export function createAppUpdateService({currentVersion,installDir='',tempDir=os.
  async function install(){
   const record=await readRecord();
   if(!record)throw Error('没有已下载的安装包，请先下载新版');
+  if(!isNewerThan(record.version,currentVersion)){await cleanup();throw Error('旧安装包已清理，请重新检查更新');}
   if(record.kind==='incremental'&&!await installedPayload(installDir,record.fromVersion,{expectedHash:record.baseManifestSha256,verifyFiles:true})){await cleanup();throw Error('本地程序已变化，增量包已清除；重新下载将使用完整包');}
   const hash=crypto.createHash('sha256'),handle=await fs.open(record.file,'r');
   try{for await(const chunk of handle.createReadStream())hash.update(chunk);}finally{await handle.close();}
