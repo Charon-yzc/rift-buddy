@@ -39,6 +39,10 @@ async function run(){
    if(route==='/lol-perks/v1/pages')return [page];
    if(route==='/lol-champ-select/v1/session/my-selection')return {spell1Id,spell2Id};
    if(route==='/data-store/v1/install-dir')return path.join(root,'client-fixture','LeagueClient');
+   // Completion notices read conversations asynchronously after preparation.
+   // A missing chat room is a valid read, never an application write.
+   if(route==='/lol-chat/v1/conversations')return [];
+   throw Error('Unsupported mocked read '+route);
   }
   writes.push({route,method,body});
   if(route==='/lol-champ-select/v1/session/actions/2'&&method==='PATCH'){assert.equal(body.completed,false,'Application must never lock a champion');intent=body.championId;return {};}
@@ -210,7 +214,7 @@ async function run(){
  assert.deepEqual(attempts[1].page.selectedPerkIds,perks);assert.deepEqual(attempts[1].itemSet.blocks,attempts[0].itemSet.blocks);assert.deepEqual(attempts[1].summoners,attempts[0].summoners);
  // Edit D/F in one renderer; the other renderer must retain the same combo
  // and its equipment while observing the explicit personal choice.
- const beforeConfiguration=writes.length;await click(main,'[data-action=task-edit],[data-action=task-configuration]');await until(()=>js(main,'!!document.querySelector("[data-client-preparation-fingerprint]")'),'Main Galio drawer missing');assert.equal(writes.length,beforeConfiguration,'Viewing slot configuration must not prepare');
+ const beforeConfiguration=writes.length;await click(main,'[data-action=task-edit],[data-action=task-configuration]');await until(()=>js(main,'!!document.querySelector("[data-client-preparation-fingerprint]")'),'Main Galio drawer missing');assert.equal(writes.length,beforeConfiguration,'Viewing slot configuration must not prepare: '+JSON.stringify(writes.slice(beforeConfiguration)));
  await ownPlan();const currentBeforeSwap=(await state()).preparations.findLast(value=>value.id==='Galio'&&value.comboId===originalPlan.id);assert.ok(currentBeforeSwap);await js(main,'window.buddy.openGuide('+JSON.stringify(currentBeforeSwap)+')');await js(side,'window.buddy.updateGuide('+JSON.stringify({...currentBeforeSwap,summonerIds:[...attempts[0].summoners].reverse(),changedFields:['summonerIds']})+')');
  const swapped=[...attempts[0].summoners].reverse();const flashBase=await state(),flashNext=structuredClone(flashBase);flashNext.preferences.flashSlot=swapped[0]==='SummonerFlash'?'d':'f';await handlers.get('save-state')(event(main),flashNext,flashBase);await until(async()=>{const s=await state();return s.preparations.some(p=>p.id==='Galio'&&p.comboId===originalPlan.id&&JSON.stringify(p.summonerIds)===JSON.stringify(swapped));},'D/F personal choice was not saved');
  await until(()=>js(main,'JSON.stringify(JSON.parse(document.querySelector("[data-client-preparation-fingerprint]").dataset.clientPreparationFingerprint)[0].summoners)==='+JSON.stringify(JSON.stringify(swapped))),'Already-open main drawer did not accept the other window D/F choice');
