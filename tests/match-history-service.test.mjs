@@ -38,6 +38,27 @@ test('an unknown SGP configuration cannot disable otherwise working local LCU hi
  const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only',region:'UNCONFIGURED'}),request:async(_a,route)=>route==='/lol-summoner/v1/current-summoner'?own:{games:{games:[raw]}}});
  const page=await service.execute('page',{source:'lcu'});assert.equal(page.source,'lcu');assert.equal(page.games.length,1);
 });
+test('when the game backend and the client match list both fail, the reason is named instead of a raw client status',async()=>{
+  const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only',region:'TENCENT',rsoPlatformId:'HN10'}),request:async(_a,route)=>{
+    if(route.includes('current-summoner'))return own;
+    if(route.includes('entitlements'))return {accessToken:'mock-entitlement'};
+    if(route.includes('/matches'))throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
+    return {};
+  },sgp:async()=>{throw Object.assign(Error('战绩后台暂不可用（500）'),{status:500});}});
+  await assert.rejects(service.execute('page',{source:'sgp'}),/战绩数据源|暂时不可用/);
+  await assert.rejects(service.execute('page',{source:'sgp'}),error=>!/\（500\）/.test(error.message));
+  await assert.rejects(service.execute('page',{source:'lcu'}),/战绩数据源|暂时不可用/);
+  await assert.rejects(service.execute('page',{source:'lcu'}),error=>!/\（500\）/.test(error.message));
+});
+test('a client match list failure that is not an upstream outage keeps its own reason',async()=>{
+  const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only',region:'TENCENT',rsoPlatformId:'HN10'}),request:async(_a,route)=>{
+    if(route.includes('current-summoner'))return own;
+    if(route.includes('entitlements'))return {accessToken:'mock-entitlement'};
+    if(route.includes('/matches'))throw Object.assign(Error('客户端连接已变化，请重新连接'),{status:401});
+    return {};
+  },sgp:async()=>{throw Object.assign(Error('战绩后台暂不可用（500）'),{status:500});}});
+  await assert.rejects(service.execute('page',{source:'sgp'}),/客户端连接已变化/);
+});
 test('a summary page is completed with bounded game reads so actual teammates and self identity are usable',async()=>{
  const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only'}),request:async(_a,route)=>route==='/lol-summoner/v1/current-summoner'?own:route==='/riotclient/region-locale'?{}:route.includes('/matches?')?{games:{games:[{...raw,participantIdentities:[],participants:[]}]}}:route.includes('/games/')?raw:{}});
  const page=await service.execute('page',{source:'lcu'});assert.equal(page.games[0].self.name,'示例#CN1');assert.equal(page.games[0].participants.length,1);

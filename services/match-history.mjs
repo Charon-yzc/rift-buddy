@@ -9,6 +9,12 @@ import {cleanPlayerChallenges,cleanPlayerProfile,normalizePublicRanked,normalize
 
 const profile=p=>({puuid:p.puuid,name:text(p.gameName||p.displayName||p.summonerName||p.name)+(p.tagLine?'#'+text(p.tagLine):''),level:number(p.summonerLevel||p.level),icon:number(p.profileIconId),privacy:['PUBLIC','PRIVATE'].includes(p.privacy)?p.privacy:'unknown'});
 const fail=message=>{throw Error(message);};
+// A match-list source can fail because the upstream match service is down for
+// this account. Both the game backend and the local client then report the same
+// outage, and the raw client status code alone tells the player nothing.
+const UPSTREAM_HISTORY_FAILURE=/^(?:客户端暂未接受操作|战绩后台暂不可用|战绩后台认证失效|无法连接战绩后台|战绩后台读取中断|战绩后台数据格式异常|游戏后台返回的战绩格式异常)/;
+const historySourceUnavailable=error=>UPSTREAM_HISTORY_FAILURE.test(String(error?.message||''));
+const HISTORY_SOURCE_UNAVAILABLE='战绩数据源暂时不可用：游戏后台和当前大区客户端的战绩接口都返回了错误。这通常是战绩服务正在维护或暂时不可达，请稍后重试；若持续失败，请先在游戏客户端内确认能否打开战绩列表。';
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now}={}){
  let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map();let totalCacheBytes=0;
  function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();tokens.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;}
@@ -123,7 +129,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    try{const result=await remote(c,c.localServer,'entitlements',`/match-history-query/v1/products/lol/player/${c.own.puuid}/SUMMARY?startIndex=${start}&count=${count}`);if(!Array.isArray(result?.games))fail('游戏后台返回的战绩格式异常');entries=result.games;}
    catch{await check(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');if(start)fail('英雄统计暂时中断，已保留读取结果，请重试');source='lcu';count=Math.min(100,500);}
   }
-  if(source==='lcu'){const result=await request(c.auth,`/lol-match-history/v1/products/lol/${c.own.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);if(!Array.isArray(result?.games?.games))fail('客户端尚未返回有效战绩，请稍后重试');entries=result.games.games;}
+  if(source==='lcu'){let result;try{result=await request(c.auth,`/lol-match-history/v1/products/lol/${c.own.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);}catch(error){if(!historySourceUnavailable(error))throw error;fail('战绩数据源暂时不可用：游戏后台和当前大区客户端的战绩接口都返回了错误，英雄统计无法读取。请稍后重试。');}if(!Array.isArray(result?.games?.games))fail('客户端尚未返回有效战绩，请稍后重试');entries=result.games.games;}
   const next={...scan,cursor:crypto.randomBytes(16).toString('hex'),source,counts:{...scan.counts},seen:new Set(scan.seen)};
   for(const entry of entries.slice(0,count)){
    next.scanned++;const game=source==='sgp'?entry?.json:entry;
@@ -144,12 +150,15 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    if(p.rosterKey&&t.player.puuid!==p.puuid)fail('对局成员与查询句柄不匹配');
   if(t.epoch!==c.epoch)fail('战绩会话已变化，请重新查询');if(t.cross&&t.preferred==='lcu')fail('客户端数据源不支持跨区查询，请选择游戏后台');
   const local=()=>request(c.auth,`/lol-match-history/v1/products/lol/${t.player.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);
+  // A local list read that fails because the upstream service is down must not
+  // surface as a bare client status code. Other failures keep their own reason.
+  const localOrExplain=async()=>{try{return await local();}catch(error){if(!historySourceUnavailable(error))throw error;fail(HISTORY_SOURCE_UNAVAILABLE);}};
   const tag=p.queue?`q_${Number(p.queue)}`:'';if(p.queue!==undefined&&p.queue!==''&&(!Number.isInteger(Number(p.queue))||Number(p.queue)<0||Number(p.queue)>10000))fail('战绩模式参数不正确');
   let raw,source='lcu',notice='';
   if(t.preferred!=='lcu'&&SGP_SERVERS[t.server]){
     try{const games=[];for(let offset=0;offset<count;offset+=20){const chunk=Math.min(20,count-offset),result=await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/player/${t.player.puuid}/SUMMARY?startIndex=${start+offset}&count=${chunk}${tag?'&tag='+tag:''}`);if(!Array.isArray(result?.games))fail('游戏后台返回的战绩格式异常');games.push(...result.games.slice(0,chunk));if(result.games.length<chunk)break;}raw={games};source='sgp';}
-   catch(error){if(t.cross)throw error;notice='游戏后台暂不可用，已改用当前大区客户端数据';raw=await local();}
-  }else{if(t.cross)fail('该大区战绩后台不可用');raw=await local();if(t.preferred==='sgp')notice='未检测到可用的后台大区配置，已使用客户端数据';}
+   catch(error){if(t.cross)throw error;notice='游戏后台暂不可用，已改用当前大区客户端数据';raw=await localOrExplain();}
+  }else{if(t.cross)fail('该大区战绩后台不可用');raw=await localOrExplain();if(t.preferred==='sgp')notice='未检测到可用的后台大区配置，已使用客户端数据';}
   const entries=source==='sgp'?raw?.games:raw?.games?.games;if(!Array.isArray(entries))fail('客户端尚未返回有效战绩，请稍后重试');
   const games=entries.slice(0,count).map(g=>normalizeMatch(g,source,t.player.puuid)).filter(Boolean);
   // LCU pages can omit identities/full teams. Match Akari's completion pass,
