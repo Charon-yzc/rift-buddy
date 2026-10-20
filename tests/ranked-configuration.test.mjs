@@ -2,6 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import {getBuild} from '../src/core/builds.mjs';
 import {rankedConfigurationAdvice,adoptRankedConfigurationAdvice} from '../src/core/ranked-configuration.mjs';
 import {rankedConfigurationAdviceView} from '../src/ranked-configuration-view.mjs';
+import {changeEnemyRole,enemyRoleContext} from '../src/core/enemy-roles.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
 const key=id=>data.champions.find(champion=>champion.id===id).key,selection={id:'Nami',role:'support',mode:'rift',laterIds:[3107],summonerIds:['SummonerFlash','SummonerHeal'],bootsId:'boots-3158',conditions:['ap']};
 const fixture=()=>({connected:true,phase:'ChampSelect',game:{queueId:420,mapId:11,gameMode:'CLASSIC',gameId:'800'},session:{gameId:'800',localPlayerCellId:0,myTeam:[{cellId:0,championId:key('Nami'),assignedPosition:'UTILITY'}],theirTeam:['Vladimir','Zed','Tristana','Morgana','Soraka'].map((id,i)=>({cellId:i+5,championId:key(id)})),actions:[]}});
@@ -22,4 +23,9 @@ test('ranked advice remains compact, is absent in matching/read-only views and n
  assert.equal(rankedConfigurationAdvice({...client,game:{...client.game,queueId:430}},data,selection),null);
  assert.equal(rankedConfigurationAdviceView(advice,data,{...selection,readOnly:true}),'');
  const build=getBuild(data.champions.find(champion=>champion.id==='Nami'),'support',data,selection);assert.equal(rankedConfigurationAdvice(client,data,{...selection,readOnly:true},build).suggestions.length,0);
+});
+test('manual enemy lane changes invalidate the exact previous configuration suggestion token',()=>{
+ const client=fixture(),advice=rankedConfigurationAdvice(client,data,selection),suggestion=advice.suggestions[0],enemyRoles=changeEnemyRole(client,data,[],{gameId:'800',cellId:5,champion:'Vladimir',role:'support',context:enemyRoleContext(client,data)});
+ assert(suggestion);assert.notEqual(rankedConfigurationAdvice(client,data,selection,undefined,enemyRoles).token,advice.token);
+ assert.throws(()=>adoptRankedConfigurationAdvice({client,data,selection,enemyRoles,token:advice.token,kind:suggestion.kind,id:suggestion.id}),/已变化/);
 });

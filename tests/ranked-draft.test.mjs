@@ -85,8 +85,8 @@ test('ranked omits preselection controls and cannot consume a saved lobby intent
  assert.match(pregameControls(),/id="include-preselected"/);
  assert.equal(pregameIntentChoice({role:'mid',champion:'Hero0',kind:'hero'},client,{champions}).champion,null);
 });
-test('enemy roster shows public champions and unknown lanes without invented position icons',()=>{
+test('enemy roster orders five fixed lanes and clearly labels inferred positions',()=>{
  const markup=rankedEnemyRoster({...client,session:{...client.session,theirTeam:[{cellId:5,championId:1,pickState:'locked'}]}},{champions});
- assert.match(markup,/英雄0/);assert.match(markup,/分路未知/);assert.equal((markup.match(/class="ranked-enemy-cell"/g)||[]).length,5);assert.doesNotMatch(markup,/roster-role-mark/);
+ assert.match(markup,/英雄0/);assert.match(markup,/推测/);assert.equal((markup.match(/class="ranked-enemy-cell"/g)||[]).length,5);assert.doesNotMatch(markup,/roster-role-mark/);assert.match(markup,/data-enemy-role="top"/);assert.match(markup,/data-role-source="estimated"/);
  assert.equal(rankedEnemyRoster({...client,game:{...client.game,queueId:430}},{champions}),'');
 });

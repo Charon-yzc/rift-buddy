@@ -20,7 +20,7 @@
 
 [常用英雄推荐](docs/releases/v0.59.0.md)只向房间共享本人的有界英雄次数和偏好比例，不共享逐局战绩。偏好会影响候选，不增加机制契合分，也不代表胜率或固定展示比例。排位可参考公开双方阵容、对位和[分时统计](docs/ranked-recommendations.md)，也可浏览有出处的[跨位置双人方案](docs/cross-role-combinations.md)。
 
-公开安装包 **0.59.1** 已同步 GitHub、Gitee 和下载页。当前源码 **0.59.3** 正在验收[匹配与排位曲线](docs/releases/v0.59.3.md)，并包含[战绩读取与搜索优化](docs/releases/v0.59.2.md)。
+公开安装包 **0.59.1** 已同步 GitHub、Gitee 和下载页。当前源码 **0.59.4** 正在验收[敌方分路与推荐上下文](docs/releases/v0.59.4.md)，并包含[匹配与排位曲线](docs/releases/v0.59.3.md)及[战绩读取与搜索优化](docs/releases/v0.59.2.md)。
 
 下方截图为 0.57.0 的隔离演示数据，不包含真实玩家资料。
 

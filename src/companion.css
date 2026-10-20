@@ -333,10 +333,12 @@
 @media(prefers-reduced-motion:no-preference){.room-ballot-row{animation:proposal-arrive .16s ease-out}@keyframes proposal-arrive{from{opacity:.5;transform:translateY(-4px)}to{opacity:1;transform:none}}}
 .ranked-enemy-roster{margin:4px 0 8px;min-width:0}
 .ranked-roster-caption{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-muted,#9eb4c6);margin-bottom:5px}
+.ranked-enemy-roster .ranked-roster-caption{align-items:center}.ranked-enemy-roster .ranked-roster-caption>span{display:inline-flex;align-items:center;gap:5px}.ranked-enemy-roster [data-action=enemy-roles-auto]{width:20px;height:20px;min-width:20px;min-height:20px;padding:0}
 .ranked-enemy-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
 .ranked-enemy-cell{display:flex;min-width:0;align-items:center;flex-direction:column;gap:3px}
 .ranked-enemy-cell b,.ranked-enemy-cell small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:1.3}
 .ranked-enemy-cell small{font-size:10px;color:var(--text-muted,#9eb4c6)}
+.ranked-enemy-cell .enemy-role-select{max-width:100%;min-width:0;width:100%;font-size:10px;line-height:1.4;padding:2px 1px;color:var(--rb-ink,var(--text,#f0ead6));background:transparent;border:0;border-radius:3px;text-align:center;cursor:pointer}.enemy-role-select:hover,.enemy-role-select:focus-visible{background:color-mix(in srgb,var(--rb-ink,#f0ead6) 9%,transparent);outline:1px solid var(--rb-accent,var(--accent,#78d9ea))}.enemy-role-select:disabled{opacity:.55;cursor:wait}
 .ranked-enemy-cell .portrait,.ranked-enemy-cell .empty-portrait{width:var(--roster-portrait-size,42px);height:var(--roster-portrait-size,42px)}
 .ranked-curve{margin:7px 0 10px;min-width:0}.ranked-curve-plot{display:block;width:100%;max-height:210px;overflow:visible}
 .duration-chart{position:relative;max-width:496px;margin-inline:auto}.duration-chart-compact{max-width:401px}.duration-hit{position:absolute;top:16%;height:68%;min-width:0;padding:0;border:0;border-radius:0;background:transparent;cursor:crosshair;outline-offset:-2px}.duration-hit:hover,.duration-hit:focus-visible{background:color-mix(in srgb,var(--accent,#78d9ea) 7%,transparent)}.duration-hit:focus-visible{outline:1px solid var(--accent,#78d9ea)}

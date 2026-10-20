@@ -93,6 +93,7 @@ async function boot(){
  const {changeCompanionPlan}=await import('../src/core/companion-plan.mjs');
  const {pregamePhase,validatePregameIntent,pregameIntentChoice,restoredRoleClaim,partyWithPregameIntents}=await import('../src/core/pregame-intent.mjs');
  const {rankedDraftPolicy}=await import('../src/core/ranked-draft.mjs');
+ const {currentEnemyRoles,changeEnemyRole}=await import('../src/core/enemy-roles.mjs');
  const {createSlots}=await import('../src/core/recommend.mjs');
  const {initialPartyCount,selectionPartyCount,validPartyCount,reconcilePartyRange,editPartyRange}=await import('../src/core/party-range.mjs');
  storeRoot=app.getPath('userData');state=await storage.readState(storeRoot);
@@ -478,9 +479,12 @@ async function boot(){
   next=storage.validateState(next);
   // A delayed renderer snapshot cannot restore a binding from an earlier game.
   const gameId=publicClientGameId(latestClient),draftContext=reconcileClientDraft(next.draft,gameId,state.draft?.clientGameId||state.guide?.match?.gameId,{phase:latestClient.phase});
-  next.draft=draftContext.newGame&&state.draft?.clientGameId===gameId?state.draft:draftContext.draft;
+  next.draft=draftContext.newGame&&state.draft?.clientGameId===gameId?structuredClone(state.draft):draftContext.draft;
   // The renderer cannot claim ownership of existing user rune pages.
   const before=base?storage.validateState(base):structuredClone(state),same=isDeepStrictEqual;
+  // Enemy-role constraints belong to the main-owned edit operation. A stale
+  // ordinary renderer save cannot resurrect a withdrawn/traded hero binding.
+  if(next.draft)delete next.draft.enemyRoles;if(before.draft)delete before.draft.enemyRoles;
   await saveCurrentState(current=>{
    const merged={...current,preferences:{...current.preferences}};
    for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(key==='draft'&&next.draft&&before.draft&&current.draft){
@@ -498,6 +502,7 @@ async function boot(){
    }
    for(const key of Object.keys(next.preferences)){if(['presentation','mainBounds','companionBounds'].includes(key)||same(next.preferences[key],before.preferences[key]))continue;if(!same(current.preferences[key],before.preferences[key])&&!same(current.preferences[key],next.preferences[key]))throw Error('偏好同时发生变化，请刷新后重新保存');merged.preferences[key]=next.preferences[key];}
    const gameId=publicClientGameId(latestClient),context=reconcileClientDraft(merged.draft,gameId,current.draft?.clientGameId||current.guide?.match?.gameId,{phase:latestClient.phase});merged.draft=context.newGame&&current.draft?.clientGameId===gameId?current.draft:context.draft;
+   if(merged.draft){const roles=currentEnemyRoles(latestClient,data.champions,current.draft?.enemyRoles);if(roles.length)merged.draft.enemyRoles=roles;else delete merged.draft.enemyRoles;}
    // Protect accepted picks from this game, after the queued merge. A renderer
    // base from the previous game must not block releasing its old lane binding.
    const accepted=reconcileClientDraft(current.draft,gameId,current.guide?.match?.gameId,{phase:latestClient.phase}).draft;
@@ -598,6 +603,7 @@ async function boot(){
    observeFeedPhase(latestClient);feedIdle=observeSignedFeedPhase(latestClient);dataFeed.activate().catch(()=>{});
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId,{phase:latestClient.phase,previousPhase});if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId,{phase:latestClient.phase,previousPhase}).draft}));
+   if(state.draft?.enemyRoles&&!isDeepStrictEqual(state.draft.enemyRoles,currentEnemyRoles(latestClient,data.champions,state.draft.enemyRoles)))await saveCurrentState(current=>{const roles=currentEnemyRoles(latestClient,data.champions,current.draft?.enemyRoles);if(current.draft){if(roles.length)current.draft.enemyRoles=roles;else delete current.draft.enemyRoles;}return current;});
    const claim=state.draft?.preselection;
    if(latestClient.connected&&latestClient.phase==='ChampSelect'&&Number.isInteger(claim?.hoveredCellId)&&!restoredRoleClaim(claim,latestClient,data.champions))await saveCurrentState(current=>{if(isDeepStrictEqual(current.draft?.preselection,claim))delete current.draft.preselection;return current;});
    if(latestClient.connected&&latestClient.phase==='ChampSelect'&&latestClient.session&&!validPartyCount(state.draft?.partyCount)){
@@ -632,6 +638,15 @@ async function boot(){
   liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,latestClient.game?.gameId])){latestLive=result;await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
  };
  guard('client-status',async force=>forRenderer(await status(force)));
+ guard('enemy-role',async value=>{
+  await status(true);
+  await saveCurrentState(current=>{
+   const enemyRoles=changeEnemyRole(latestClient,data,current.draft?.enemyRoles,value);
+   if(!current.draft)throw Error('选人已变化，请重新同步');
+   if(enemyRoles.length)current.draft={...current.draft,enemyRoles};else delete current.draft.enemyRoles;
+   return current;
+  });return {state,revision:stateRevision};
+ });
  guard('party-range',async value=>{
   if(!value||!['top','jungle','mid','bottom','support'].includes(value.role)||typeof value.checked!=='boolean')throw Error('请确认要调整的开黑位置');
   await status(true);
