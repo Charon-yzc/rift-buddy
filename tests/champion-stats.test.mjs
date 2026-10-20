@@ -31,7 +31,7 @@ test('growth refresh returns a complete new snapshot and retains the old input o
  assert.deepEqual(champions.map(c=>c.stats.attackdamageperlevel),[0,0]);
 });
 test('bundled current stats include real level AD and distinct AS ratios for all champions',()=>{
- assert.equal(data.contentRevision,8);assert.equal(data.mechanicSourceRevision,1);assert.ok(data.champions.every(c=>hasCurrentCombatStats(c,data.patch)));
+ assert.ok(data.contentRevision>=8);assert.equal(data.mechanicSourceRevision,1);assert.ok(data.champions.every(c=>hasCurrentCombatStats(c,data.patch)));
  assert.equal(statAtLevel(hero('Ashe').stats,18).ad,110);
  assert.equal(statAtLevel(hero('Lucian').stats,18).ad,109.3);
  assert.equal(statAtLevel(hero('Vayne').stats,18).ad,100);
@@ -51,7 +51,7 @@ const cnNames=()=>({version:data.patch,hero:data.champions.map(c=>({alias:c.id,t
 test('an already enriched snapshot checks global and CN versions without fetching every champion again',async()=>{
  const original=global.fetch,calls=[];
  global.fetch=async url=>{calls.push(url);return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cnNames()};};
- try{const result=await collectSnapshot(()=>{},data);assert.equal(result.contentRevision,8);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
+ try{const result=await collectSnapshot(()=>{},data);assert.equal(result.contentRevision,data.contentRevision);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
  finally{global.fetch=original;}
 });
 

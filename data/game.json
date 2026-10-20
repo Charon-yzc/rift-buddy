@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "contentRevision": 8,
+  "contentRevision": 9,
   "version": "16.20.1",
   "patch": "16.20",
   "fetchedAt": "2026-10-19T05:15:33.206Z",
@@ -173340,7 +173340,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/2503.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "80法术强度\n 〔数值未解析〕法力\n20技能急速\n\n邪焰\n伤害型技能造成每秒〔数值未解析〕额外魔法伤害，持续3秒。\n\n黯炎\n被你的邪焰影响的每个敌方英雄、史诗级野怪和大型野怪都会为你提供4%法术强度。 \n\n'黑雾需要一团程度与之相配的火焰。'",
+        "description": "80法术强度\n 〔数值未解析〕法力\n20技能急速\n\n邪焰\n伤害型技能造成每秒20 + 2%法术强度额外魔法伤害，持续3秒。\n\n黯炎\n被你的邪焰影响的每个敌方英雄、史诗级野怪和大型野怪都会为你提供4%法术强度。 \n\n'黑雾需要一团程度与之相配的火焰。'",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -173467,8 +173467,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/2510.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "300生命值\n60法术强度\n20技能急速\n20%攻击速度\n\n咒刃 \n施放技能后，你的下一次攻击会造成〔数值未解析〕额外魔法伤害并治疗你自身〔数值未解析〕 攻击特效然后将攻击特效施加额外的一次。",
-        "status": "partial",
+        "description": "300生命值\n60法术强度\n20技能急速\n20%攻击速度\n\n咒刃 \n施放技能后，你的下一次攻击会造成75%基础攻击力 + 10%法术强度额外魔法伤害并治疗你自身10%法术强度 + 3%额外生命值 攻击特效然后将攻击特效施加额外的一次。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -176242,8 +176242,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3100.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "100法术强度\n6%移动速度\n10技能急速\n\n咒刃 (1.5秒)\n施放技能后，你在10秒内的下一次攻击会获得50%攻击速度并造成〔数值未解析〕额外魔法伤害攻击特效。",
-        "status": "partial",
+        "description": "100法术强度\n6%移动速度\n10技能急速\n\n咒刃 (1.5秒)\n施放技能后，你在10秒内的下一次攻击会获得50%攻击速度并造成75%基础攻击力 + 45%法术强度额外魔法伤害攻击特效。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -176738,8 +176738,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3115.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "80法术强度\n50%攻击速度\n15技能急速\n\n艾卡西亚之咬\n普攻造成〔数值未解析〕额外魔法伤害 攻击特效。",
-        "status": "partial",
+        "description": "80法术强度\n50%攻击速度\n15技能急速\n\n艾卡西亚之咬\n普攻造成15 + 15%法术强度额外魔法伤害 攻击特效。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -176858,7 +176858,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3118.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "90法术强度\n 〔数值未解析〕法力\n15技能急速\n\n蔑视\n获得20终极技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面3秒，每秒造成〔数值未解析〕魔法伤害并削减其10魔法抗性。",
+        "description": "90法术强度\n 〔数值未解析〕法力\n15技能急速\n\n蔑视\n获得20终极技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面3秒，每秒造成60 + 5%法术强度魔法伤害并削减其10魔法抗性。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -177298,8 +177298,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3137.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "75法术强度\n30%法术穿透\n20技能急速\n\n死中焕生  (60秒)\n每当一个敌方英雄在被你造成伤害后的3秒内阵亡时，在其所在位置生成一个新星，来为友军们治疗〔数值未解析〕生命值。\n\n来自死亡的，是生命。",
-        "status": "partial",
+        "description": "75法术强度\n30%法术穿透\n20技能急速\n\n死中焕生  (60秒)\n每当一个敌方英雄在被你造成伤害后的3秒内阵亡时，在其所在位置生成一个新星，来为友军们治疗100 + 20%法术强度生命值。\n\n来自死亡的，是生命。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -177604,7 +177604,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3146.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "80法术强度\n40攻击力\n 〔数值未解析〕%全能吸血\n\n 主动  (60秒)\n闪电弹\n震击目标敌方英雄，造成〔数值未解析〕魔法伤害和持续1.5秒的25%减速。",
+        "description": "80法术强度\n40攻击力\n 〔数值未解析〕%全能吸血\n\n 主动  (60秒)\n闪电弹\n震击目标敌方英雄，造成175–253（随等级） + 30%法术强度魔法伤害和持续1.5秒的25%减速。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -177693,8 +177693,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3152.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "60法术强度\n350生命值\n10技能急速\n\n 超音速  (50秒)\n朝着目标方向冲刺，释放多颗魔法弹，魔法弹造成〔数值未解析〕魔法伤害。",
-        "status": "partial",
+        "description": "60法术强度\n350生命值\n10技能急速\n\n 超音速  (50秒)\n朝着目标方向冲刺，释放多颗魔法弹，魔法弹造成135 + 15%法术强度魔法伤害。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -178688,7 +178688,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3302.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "30攻击力\n35%攻击速度\n\n晦影\n攻击造成〔数值未解析〕额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的〔数值未解析〕 护甲和魔抗(至多至〔数值未解析〕)。附带黑暗特效的攻击提供持续5秒的10%护甲穿透和法术穿透(至多至30%)。",
+        "description": "30攻击力\n35%攻击速度\n\n晦影\n攻击造成30 + 10%额外攻击力 + 10%法术强度额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的〔数值未解析〕 护甲和魔抗(至多至〔数值未解析〕)。附带黑暗特效的攻击提供持续5秒的10%护甲穿透和法术穿透(至多至30%)。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -179047,8 +179047,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3430.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "50法术强度\n15技能急速\n25%暴击几率\n\n怒火与破坏\n在施放技能时，获得持续6秒的 2.5%暴击几率，最多可叠加至 20%。\n\n打捞残骸\n你的技能有几率(等同于你的暴击几率)给你或你的目标友军提供持续3秒的〔数值未解析〕护盾值。",
-        "status": "partial",
+        "description": "50法术强度\n15技能急速\n25%暴击几率\n\n怒火与破坏\n在施放技能时，获得持续6秒的 2.5%暴击几率，最多可叠加至 20%。\n\n打捞残骸\n你的技能有几率(等同于你的暴击几率)给你或你的目标友军提供持续3秒的70–210（随等级） + 15%法术强度 + 25%额外攻击力护盾值。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -180229,7 +180229,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/3871.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "需要完成来自云游图鉴的辅助任务\n\n200生命值\n75%基础生命回复\n〔数值未解析〕%基础法力回复\n9金币/10秒\n\n虚空扩爆  (10秒)\n对英雄造成技能伤害会引发一次爆炸，造成 〔数值未解析〕 + 3%最大生命值的魔法伤害。\n\n 主动 (4层充能)\n放置一个隐形的侦察守卫来提供视野。\n\n只有非常勇敢或非常愚蠢的人才敢让虚空与自己为敌。幸运的是，扎兹沙克二者兼有。",
+        "description": "需要完成来自云游图鉴的辅助任务\n\n200生命值\n75%基础生命回复\n〔数值未解析〕%基础法力回复\n9金币/10秒\n\n虚空扩爆  (10秒)\n对英雄造成技能伤害会引发一次爆炸，造成 10 + 15%法术强度 + 3%最大生命值的魔法伤害。\n\n 主动 (4层充能)\n放置一个隐形的侦察守卫来提供视野。\n\n只有非常勇敢或非常愚蠢的人才敢让虚空与自己为敌。幸运的是，扎兹沙克二者兼有。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -180655,8 +180655,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/4011.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "45法术强度\n200生命值\n 12%治疗和护盾强度\n15技能急速\n\n欢腾\n你每拥有1%治疗和护盾强度，就会获得+ 1.2%攻击速度。\n\n薄荷\n攻击特效，为你附近生命值最低的那个友方英雄治疗〔数值未解析〕生命值，优先治疗更低生命值的友军。",
-        "status": "partial",
+        "description": "45法术强度\n200生命值\n 12%治疗和护盾强度\n15技能急速\n\n欢腾\n你每拥有1%治疗和护盾强度，就会获得+ 1.2%攻击速度。\n\n薄荷\n攻击特效，为你附近生命值最低的那个友方英雄治疗15–45（随等级） + 10%额外攻击力 + 10%法术强度生命值，优先治疗更低生命值的友军。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -181332,7 +181332,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/4636.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "90法术强度\n300生命值\n25技能急速\n\n灵魂撕裂：用攻击或技能对一名英雄造成伤害时会造成额外的〔数值未解析〕魔法伤害并为你提供25%移动速度，持续1.5秒(对每个英雄有30 (〔数值未解析〕秒))。\n\n神话被动：你每装备一件传说装备，就会获得  5技能急速。\n\n对一名未受影响的英雄造成伤害时会延长移动速度加成的持续时间。",
+        "description": "90法术强度\n300生命值\n25技能急速\n\n灵魂撕裂：用攻击或技能对一名英雄造成伤害时会造成额外的125 + 15%法术强度魔法伤害并为你提供25%移动速度，持续1.5秒(对每个英雄有30 (〔数值未解析〕秒))。\n\n神话被动：你每装备一件传说装备，就会获得  5技能急速。\n\n对一名未受影响的英雄造成伤害时会延长移动速度加成的持续时间。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -181682,8 +181682,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/4646.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "90法术强度\n15法术穿透\n6%移动速度\n\n风暴掠袭  (30秒)\n在2.5秒内对一个英雄造成相当于其25%最大生命值的伤害时，对其施加风啸。\n\n风啸\n在2秒后，造成〔数值未解析〕魔法伤害。如果目标在风啸触发前阵亡，那么它会对附近的敌人们造成伤害。",
-        "status": "partial",
+        "description": "90法术强度\n15法术穿透\n6%移动速度\n\n风暴掠袭  (30秒)\n在2.5秒内对一个英雄造成相当于其25%最大生命值的伤害时，对其施加风啸。\n\n风啸\n在2秒后，造成125 + 10%法术强度魔法伤害。如果目标在风啸触发前阵亡，那么它会对附近的敌人们造成伤害。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -182328,7 +182328,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/6655.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "100法术强度\n 〔数值未解析〕法力\n10技能急速\n\n回声  (12秒)\n伤害型技能会发射6道回声，对目标和附近的敌人造成额外的〔数值未解析〕魔法伤害。剩余回声会对主要目标发射，造成20%伤害。(最大值：〔数值未解析〕)",
+        "description": "100法术强度\n 〔数值未解析〕法力\n10技能急速\n\n回声  (12秒)\n伤害型技能会发射6道回声，对目标和附近的敌人造成额外的75 + 5%法术强度魔法伤害。剩余回声会对主要目标发射，造成20%伤害。(最大值：〔数值未解析〕)",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -182375,7 +182375,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/6656.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "70法术强度\n250生命值\n 〔数值未解析〕法力\n20技能急速\n\n神话被动：你每装备一件传说装备，就会获得10法术强度。\n\n主动 - 冰川覆盖：在一个锥形范围内造成〔数值未解析〕魔法伤害，并使其中的敌人减速65%，持续1秒。锥形范围中心的敌人会被禁锢而非被减速(30 (30秒))。",
+        "description": "70法术强度\n250生命值\n 〔数值未解析〕法力\n20技能急速\n\n神话被动：你每装备一件传说装备，就会获得10法术强度。\n\n主动 - 冰川覆盖：在一个锥形范围内造成100 + 30%法术强度魔法伤害，并使其中的敌人减速65%，持续1秒。锥形范围中心的敌人会被禁锢而非被减速(30 (30秒))。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -185503,8 +185503,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/123430.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "55法术强度\n10技能急速\n25%暴击几率\n4%移动速度\n\n怒火与破坏\n在施放技能时，获得持续6秒的 2.5%暴击几率，最多可叠加至 20%。\n\n打捞残骸\n你的技能有几率(等同于你的暴击几率)给你或你的目标友军提供持续3秒的〔数值未解析〕护盾值。",
-        "status": "partial",
+        "description": "55法术强度\n10技能急速\n25%暴击几率\n4%移动速度\n\n怒火与破坏\n在施放技能时，获得持续6秒的 2.5%暴击几率，最多可叠加至 20%。\n\n打捞残骸\n你的技能有几率(等同于你的暴击几率)给你或你的目标友军提供持续3秒的70–210（随等级） + 15%法术强度 + 25%额外攻击力护盾值。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -185547,8 +185547,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/124011.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "45法术强度\n200生命值\n 12%治疗和护盾强度\n15技能急速\n\n欢腾\n你每拥有1%治疗和护盾强度，就会获得+ 1.2%攻击速度。\n\n薄荷\n攻击特效，为你附近生命值最低的那个友方英雄治疗〔数值未解析〕生命值，优先治疗更低生命值的友军。",
-        "status": "partial",
+        "description": "45法术强度\n200生命值\n 12%治疗和护盾强度\n15技能急速\n\n欢腾\n你每拥有1%治疗和护盾强度，就会获得+ 1.2%攻击速度。\n\n薄荷\n攻击特效，为你附近生命值最低的那个友方英雄治疗15–45（随等级） + 10%额外攻击力 + 7%法术强度生命值，优先治疗更低生命值的友军。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -186550,7 +186550,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/222503.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "60法术强度\n 〔数值未解析〕法力\n20技能急速\n\n邪焰\n造成技能伤害时会灼烧敌人，每秒造成〔数值未解析〕魔法伤害，持续3秒。\n\n黯炎\n被你的【邪焰】影响的每个敌方英雄都会为你提供4%法术强度。 \n\n'黑雾需要一团程度与之相配的火焰。'",
+        "description": "60法术强度\n 〔数值未解析〕法力\n20技能急速\n\n邪焰\n造成技能伤害时会灼烧敌人，每秒造成4%法术强度 + 20魔法伤害，持续3秒。\n\n黯炎\n被你的【邪焰】影响的每个敌方英雄都会为你提供4%法术强度。 \n\n'黑雾需要一团程度与之相配的火焰。'",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -186629,8 +186629,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/222510.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "300生命值\n60法术强度\n20技能急速\n20%攻击速度\n\n咒刃 \n施放技能后，你的下一次攻击会造成〔数值未解析〕额外魔法伤害并治疗你自身〔数值未解析〕 攻击特效然后将攻击特效施加额外的一次。",
-        "status": "partial",
+        "description": "300生命值\n60法术强度\n20技能急速\n20%攻击速度\n\n咒刃 \n施放技能后，你的下一次攻击会造成100%基础攻击力 + 10%法术强度额外魔法伤害并治疗你自身10%法术强度 + 3%额外生命值 攻击特效然后将攻击特效施加额外的一次。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -187732,8 +187732,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223050.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "300生命值\n25护甲\n15技能急速\n30魔法抗性\n\n霜火风暴  (15秒)\n施放你的终极技能时会召唤一个风暴环绕于你5秒。这个风暴对敌方英雄们造成每秒〔数值未解析〕魔法伤害和30%减速。",
-        "status": "partial",
+        "description": "300生命值\n25护甲\n15技能急速\n30魔法抗性\n\n霜火风暴  (15秒)\n施放你的终极技能时会召唤一个风暴环绕于你5秒。这个风暴对敌方英雄们造成每秒75 + 10%法术强度 + 4%总生命值魔法伤害和30%减速。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -188124,8 +188124,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223074.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "70攻击力\n15技能急速\n15%生命偷取\n\n顺劈\n攻击会对附近的敌人们造成〔数值未解析〕物理伤害。\n\n 血斩  (10秒)\n对你周围的敌人们造成130%总攻击力物理伤害。\n你的生命偷取会作用于此伤害。",
-        "status": "partial",
+        "description": "70攻击力\n15技能急速\n15%生命偷取\n\n顺劈\n攻击会对附近的敌人们造成（近战 40%总攻击力 + 28%法术强度 / 远程 20%总攻击力 + 14%法术强度）物理伤害。\n\n 血斩  (10秒)\n对你周围的敌人们造成130%总攻击力物理伤害。\n你的生命偷取会作用于此伤害。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -188279,8 +188279,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223085.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "必须是远程英雄\n\n45%攻击速度\n25%暴击几率\n4%移动速度\n\n风怒\n你的普通攻击会朝目标附近的至多2个敌人发射弩箭，每支弩箭造成〔数值未解析〕物理伤害。这些弩箭能够附带攻击特效特效，且可以触发 暴击。",
-        "status": "partial",
+        "description": "必须是远程英雄\n\n45%攻击速度\n25%暴击几率\n4%移动速度\n\n风怒\n你的普通攻击会朝目标附近的至多2个敌人发射弩箭，每支弩箭造成70%总攻击力 + 42%法术强度物理伤害。这些弩箭能够附带攻击特效特效，且可以触发 暴击。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -188510,8 +188510,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223100.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "80法术强度\n10%移动速度\n20技能急速\n\n咒刃 (1.5秒)\n施放技能后，你在10秒内的下一次攻击会获得50%攻击速度并造成〔数值未解析〕额外魔法伤害攻击特效。",
-        "status": "partial",
+        "description": "80法术强度\n10%移动速度\n20技能急速\n\n咒刃 (1.5秒)\n施放技能后，你在10秒内的下一次攻击会获得50%攻击速度并造成75%基础攻击力 + 70%法术强度额外魔法伤害攻击特效。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -188820,8 +188820,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223115.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "70法术强度\n45%攻击速度\n10技能急速\n\n艾卡西亚之咬\n攻击附带〔数值未解析〕魔法伤害攻击特效。",
-        "status": "partial",
+        "description": "70法术强度\n45%攻击速度\n10技能急速\n\n艾卡西亚之咬\n攻击附带15 + 20%法术强度魔法伤害攻击特效。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -188896,7 +188896,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223118.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "70法术强度\n 〔数值未解析〕法力\n20技能急速\n\n蔑视\n你的终极技能获得20技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面，造成〔数值未解析〕魔法伤害并削减其25魔法抗性。",
+        "description": "70法术强度\n 〔数值未解析〕法力\n20技能急速\n\n蔑视\n你的终极技能获得20技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面，造成115 + 5%法术强度魔法伤害并削减其25魔法抗性。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -189085,8 +189085,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223137.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "60法术强度\n30%法术穿透\n15技能急速\n\n死中焕生  (60秒)\n每当一个敌方英雄在被你造成伤害后的3秒内阵亡时，在其所在位置生成一个新星，来为友军们治疗〔数值未解析〕生命值。\n\n来自死亡的，是生命。",
-        "status": "partial",
+        "description": "60法术强度\n30%法术穿透\n15技能急速\n\n死中焕生  (60秒)\n每当一个敌方英雄在被你造成伤害后的3秒内阵亡时，在其所在位置生成一个新星，来为友军们治疗450 + 50%法术强度生命值。\n\n来自死亡的，是生命。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -189245,7 +189245,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223146.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "90法术强度\n45攻击力\n 〔数值未解析〕%全能吸血\n\n 主动  (30秒)\n闪电弹\n震击目标敌方英雄，造成〔数值未解析〕魔法伤害和持续1.5秒的25%减速。",
+        "description": "90法术强度\n45攻击力\n 〔数值未解析〕%全能吸血\n\n 主动  (30秒)\n闪电弹\n震击目标敌方英雄，造成175–253（随等级） + 30%法术强度魔法伤害和持续1.5秒的25%减速。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -189286,8 +189286,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223152.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "95法术强度\n400生命值\n10技能急速\n\n 主动  (25秒)\n超音速\n朝着目标方向冲刺，释放一道魔法弹圆弧，造成〔数值未解析〕魔法伤害。",
-        "status": "partial",
+        "description": "95法术强度\n400生命值\n10技能急速\n\n 主动  (25秒)\n超音速\n朝着目标方向冲刺，释放一道魔法弹圆弧，造成135 + 15%法术强度魔法伤害。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -189876,7 +189876,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/223302.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "30攻击力\n40%攻击速度\n\n晦影\n攻击造成〔数值未解析〕额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的〔数值未解析〕 护甲和魔抗(至多至〔数值未解析〕)。附带黑暗特效的攻击提供持续5秒的8%护甲穿透和法术穿透(至多至324%)。",
+        "description": "30攻击力\n40%攻击速度\n\n晦影\n攻击造成30 + 10%额外攻击力 + 10%法术强度额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的〔数值未解析〕 护甲和魔抗(至多至〔数值未解析〕)。附带黑暗特效的攻击提供持续5秒的8%护甲穿透和法术穿透(至多至324%)。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -190396,7 +190396,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/224636.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "90法术强度\n300生命值\n25技能急速\n\n夺魂\n用攻击或技能对一名英雄造成伤害时会造成额外的〔数值未解析〕魔法伤害并为你提供25%移动速度，持续1.5秒(对每个英雄有30 (〔数值未解析〕秒))。\n\n对一名未受影响的英雄造成伤害时会延长移动速度加成的持续时间。",
+        "description": "90法术强度\n300生命值\n25技能急速\n\n夺魂\n用攻击或技能对一名英雄造成伤害时会造成额外的125 + 15%法术强度魔法伤害并为你提供25%移动速度，持续1.5秒(对每个英雄有30 (〔数值未解析〕秒))。\n\n对一名未受影响的英雄造成伤害时会延长移动速度加成的持续时间。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -190548,8 +190548,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/224646.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "90法术强度\n15法术穿透\n4%移动速度\n\n风暴掠袭  (30秒)\n在2.5秒内对一个英雄造成相当于其25%最大生命值的伤害时，对其施加风啸。\n\n风啸\n在2秒后，造成〔数值未解析〕魔法伤害。如果目标在风啸触发前阵亡，那么它会立刻散发出一个电场来震击它附近的所有敌方英雄，对他们造成相同的伤害。",
-        "status": "partial",
+        "description": "90法术强度\n15法术穿透\n4%移动速度\n\n风暴掠袭  (30秒)\n在2.5秒内对一个英雄造成相当于其25%最大生命值的伤害时，对其施加风啸。\n\n风啸\n在2秒后，造成180 + 30%法术强度魔法伤害。如果目标在风啸触发前阵亡，那么它会立刻散发出一个电场来震击它附近的所有敌方英雄，对他们造成相同的伤害。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -190627,7 +190627,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/226333.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "60攻击力\n10技能急速\n45护甲\n\n无视痛苦\n所受的〔数值未解析〕伤害会以流血形式在3秒里持续扣除。\n\n蔑视\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，会净化无视痛苦的剩余伤害，并在2秒里持续为你治疗共〔数值未解析〕生命值。\n\n装备对近战携带者和远程携带者会有不同的性能。",
+        "description": "60攻击力\n10技能急速\n45护甲\n\n无视痛苦\n所受的〔数值未解析〕伤害会以流血形式在3秒里持续扣除。\n\n蔑视\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，会净化无视痛苦的剩余伤害，并在2秒里持续为你治疗共50%额外攻击力 + 30%法术强度生命值。\n\n装备对近战携带者和远程携带者会有不同的性能。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -190940,8 +190940,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/226631.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "40攻击力\n15%攻击速度\n375生命值\n\n顺劈\n攻击会对附近的敌人们造成（近战 40%总攻击力 / 远程 20%总攻击力）物理伤害。\n\n 破阵冲击波  (15秒)\n对附近的敌人们造成〔数值未解析〕物理伤害和40%减速。\n每命中一个英雄就会获得持续衰减的40%移动速度，持续3秒。",
-        "status": "partial",
+        "description": "40攻击力\n15%攻击速度\n375生命值\n\n顺劈\n攻击会对附近的敌人们造成（近战 40%总攻击力 / 远程 20%总攻击力）物理伤害。\n\n 破阵冲击波  (15秒)\n对附近的敌人们造成175%总攻击力 + 105%法术强度物理伤害和40%减速。\n每命中一个英雄就会获得持续衰减的40%移动速度，持续3秒。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -191058,7 +191058,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/226655.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "85法术强度\n 〔数值未解析〕法力\n25技能急速\n\n回声  (6秒)\n伤害型技能会消耗6层射击充能来对目标和目标附近的其它敌人(其它敌人的数量相当于【射击充能】层数)造成〔数值未解析〕魔法伤害。每剩余一次射击，就会对主要目标重复造成一次35%效能的伤害。\n\n“法师的最佳好友！今天就带它回家！”——皮尔特沃夫商人，推测已故",
+        "description": "85法术强度\n 〔数值未解析〕法力\n25技能急速\n\n回声  (6秒)\n伤害型技能会消耗6层射击充能来对目标和目标附近的其它敌人(其它敌人的数量相当于【射击充能】层数)造成80 + 5%法术强度魔法伤害。每剩余一次射击，就会对主要目标重复造成一次35%效能的伤害。\n\n“法师的最佳好友！今天就带它回家！”——皮尔特沃夫商人，推测已故",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -191101,7 +191101,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/226656.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "70法术强度\n250生命值\n 〔数值未解析〕法力\n20技能急速\n\n 主动 (30秒)\n冰川覆盖：\n在一个锥形范围内造成〔数值未解析〕魔法伤害，并使其中的敌人减速65%，持续1秒。锥形范围中心的敌人会被禁锢而非被减速。",
+        "description": "70法术强度\n250生命值\n 〔数值未解析〕法力\n20技能急速\n\n 主动 (30秒)\n冰川覆盖：\n在一个锥形范围内造成100 + 30%法术强度魔法伤害，并使其中的敌人减速65%，持续1秒。锥形范围中心的敌人会被禁锢而非被减速。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -194123,8 +194123,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/444636.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "90法术强度\n300生命值\n25技能急速\n\n夺魂 每个英雄 (10秒)\n用攻击或技能对一名英雄造成伤害时会造成额外的〔数值未解析〕魔法伤害并为你提供40%移动速度，持续1.5秒。\n\n对一名未受影响的英雄造成伤害时会延长移动速度加成的持续时间。",
-        "status": "partial",
+        "description": "90法术强度\n300生命值\n25技能急速\n\n夺魂 每个英雄 (10秒)\n用攻击或技能对一名英雄造成伤害时会造成额外的160 + 40%法术强度魔法伤害并为你提供40%移动速度，持续1.5秒。\n\n对一名未受影响的英雄造成伤害时会延长移动速度加成的持续时间。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -194285,7 +194285,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/446656.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "100法术强度\n250生命值\n 〔数值未解析〕法力\n25技能急速\n\n 主动 (30秒)\n冰川覆盖：\n在一个锥形范围内造成〔数值未解析〕魔法伤害，并使其中的敌人减速70%，持续1.5秒。锥形范围中心的敌人会被禁锢而非被减速。",
+        "description": "100法术强度\n250生命值\n 〔数值未解析〕法力\n25技能急速\n\n 主动 (30秒)\n冰川覆盖：\n在一个锥形范围内造成300 + 85%法术强度魔法伤害，并使其中的敌人减速70%，持续1.5秒。锥形范围中心的敌人会被禁锢而非被减速。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -194564,8 +194564,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/447102.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "80法术强度\n40%攻击速度\n300生命值\n\n兹若特  (12秒)\n在攻击或用技能对一个敌人造成伤害时，召唤8个虚空巢虫去攻击该目标。虚空巢虫造成〔数值未解析〕魔法伤害并且存活至多3秒。\n\n在你阵亡时，生成6个虚空巢虫。",
-        "status": "partial",
+        "description": "80法术强度\n40%攻击速度\n300生命值\n\n兹若特  (12秒)\n在攻击或用技能对一个敌人造成伤害时，召唤8个虚空巢虫去攻击该目标。虚空巢虫造成6 + 8%法术强度 + 4%总攻击力魔法伤害并且存活至多3秒。\n\n在你阵亡时，生成6个虚空巢虫。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -194676,7 +194676,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/447105.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "70法术强度\n 18%治疗和护盾强度\n30技能急速\n〔数值未解析〕%基础法力回复\n\n 主动 (20秒)\n警惕\n传送至你的友军并在着陆时提供持续5秒的〔数值未解析〕护盾值。可在友军处于濒死状态时使用。",
+        "description": "70法术强度\n 18%治疗和护盾强度\n30技能急速\n〔数值未解析〕%基础法力回复\n\n 主动 (20秒)\n警惕\n传送至你的友军并在着陆时提供持续5秒的100–250（随等级） + 100%法术强度 + 10%额外生命值护盾值。可在友军处于濒死状态时使用。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -194791,8 +194791,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/447108.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "80法术强度\n20技能急速\n4%移动速度\n\n螺旋\n移动、攻击以及用一个技能造成伤害时会提供30盈能层数并且在就绪时触发盈能行动。\n\n螺旋式扩散\n在盈能行动时，获得一个符文层数，持续到回合结束。随后每层符文对目标发射一个弹体，造成〔数值未解析〕魔法伤害。",
-        "status": "partial",
+        "description": "80法术强度\n20技能急速\n4%移动速度\n\n螺旋\n移动、攻击以及用一个技能造成伤害时会提供30盈能层数并且在就绪时触发盈能行动。\n\n螺旋式扩散\n在盈能行动时，获得一个符文层数，持续到回合结束。随后每层符文对目标发射一个弹体，造成20–45（随等级） + 11%额外攻击力 + 8%法术强度 + 0.3%额外生命值魔法伤害。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -194830,8 +194830,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/447109.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "80法术强度\n30护甲\n30魔法抗性\n\n观测星落\n在你对一名敌方英雄施加定身或缚地时，召唤一颗彗星至敌人上方。彗星会在1秒后着陆，在区域内造成额外的〔数值未解析〕魔法伤害。这个效果对每次技能施放和每个目标都有6秒冷却时间。",
-        "status": "partial",
+        "description": "80法术强度\n30护甲\n30魔法抗性\n\n观测星落\n在你对一名敌方英雄施加定身或缚地时，召唤一颗彗星至敌人上方。彗星会在1秒后着陆，在区域内造成额外的50–150（随等级） + 40%法术强度 + 4%总生命值魔法伤害。这个效果对每次技能施放和每个目标都有6秒冷却时间。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -195174,8 +195174,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/447119.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "500生命值\n30护甲\n30魔法抗性\n20技能急速\n\n召唤闪电\n每16秒，在你的上方自动施放一团雷云，雷云会在短暂延迟后发射一个闪电弹，造成〔数值未解析〕外加10%最大生命值的魔法伤害和持续2秒的30%减速。\n\n如果你被这个闪电弹击中，则会获得持续2秒的〔数值未解析〕护盾值。\n\n全自动化\n你的自动施放技能受益于你的技能急速。\n\n【召唤闪电】的最小冷却时间为5秒。",
-        "status": "partial",
+        "description": "500生命值\n30护甲\n30魔法抗性\n20技能急速\n\n召唤闪电\n每16秒，在你的上方自动施放一团雷云，雷云会在短暂延迟后发射一个闪电弹，造成135–230（随等级） + 50%法术强度 + 30%额外攻击力外加10%最大生命值的魔法伤害和持续2秒的30%减速。\n\n如果你被这个闪电弹击中，则会获得持续2秒的14%总生命值 + 75%法术强度护盾值。\n\n全自动化\n你的自动施放技能受益于你的技能急速。\n\n【召唤闪电】的最小冷却时间为5秒。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -195992,7 +195992,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/663146.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "90法术强度\n45攻击力\n 〔数值未解析〕%全能吸血\n\n 主动  (20秒)\n闪电弹\n震击目标敌方英雄，造成〔数值未解析〕魔法伤害和持续2秒的40%减速。",
+        "description": "90法术强度\n45攻击力\n 〔数值未解析〕%全能吸血\n\n 主动  (20秒)\n闪电弹\n震击目标敌方英雄，造成175–253（随等级） + 30%法术强度 + 30%额外攻击力魔法伤害和持续2秒的40%减速。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -196113,8 +196113,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/664011.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "35法术强度\n150生命值\n 10%治疗和护盾强度\n10技能急速\n\n欢腾\n你每拥有1%治疗和护盾强度，就会获得+ 1%攻击速度。\n\n薄荷\n攻击特效，为你附近生命值最低的那个友方英雄治疗〔数值未解析〕生命值，优先治疗更低生命值的友军。",
-        "status": "partial",
+        "description": "35法术强度\n150生命值\n 10%治疗和护盾强度\n10技能急速\n\n欢腾\n你每拥有1%治疗和护盾强度，就会获得+ 1%攻击速度。\n\n薄荷\n攻击特效，为你附近生命值最低的那个友方英雄治疗10–25（随等级） + 5%额外攻击力 + 3.5%法术强度生命值，优先治疗更低生命值的友军。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -196286,8 +196286,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/667109.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "60法术强度\n25护甲\n25魔法抗性\n\n观测星落\n在你对一名敌方英雄施加定身或缚地时，召唤一颗彗星至敌人上方。彗星会在1秒后着陆，在区域内造成额外的〔数值未解析〕魔法伤害。这个效果对每次技能施放和每个目标都有6秒冷却时间。",
-        "status": "partial",
+        "description": "60法术强度\n25护甲\n25魔法抗性\n\n观测星落\n在你对一名敌方英雄施加定身或缚地时，召唤一颗彗星至敌人上方。彗星会在1秒后着陆，在区域内造成额外的40–150（随等级） + 40%法术强度 + 4%总生命值魔法伤害。这个效果对每次技能施放和每个目标都有6秒冷却时间。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -200399,7 +200399,7 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/773100.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "80法术强度\n 〔数值未解析〕法力\n5%移动速度\n\n奥术之咒刃：施放技能后，你的下一次普通攻击命中时会造成〔数值未解析〕额外魔法伤害(2秒冷却时间)。",
+        "description": "80法术强度\n 〔数值未解析〕法力\n5%移动速度\n\n奥术之咒刃：施放技能后，你的下一次普通攻击命中时会造成50 + 75%法术强度额外魔法伤害(2秒冷却时间)。",
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
@@ -200828,8 +200828,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/773114.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "25法术强度\n45%攻击速度\n\n诅咒之刃：普通攻击命中时会造成〔数值未解析〕额外魔法伤害，并降低目标4魔法抗性，持续8秒(最多叠加7层)。",
-        "status": "partial",
+        "description": "25法术强度\n45%攻击速度\n\n诅咒之刃：普通攻击命中时会造成15 + 10%法术强度额外魔法伤害，并降低目标4魔法抗性，持续8秒(最多叠加7层)。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },
@@ -201646,8 +201646,8 @@
       "icon": "https://ddragon.leagueoflegends.com/cdn/16.20.1/img/item/773146.png",
       "tooltip": {
         "patch": "16.20",
-        "description": "65法术强度\n45攻击力\n12%生命偷取\n\n海克斯加农炮：20%法术吸血\n装填：对英雄的普通攻击(命中时)和单体目标技能会使该装备的冷却时间减少3秒。\n\n主动60秒\n对目标英雄造成〔数值未解析〕魔法伤害和持续2秒的40%移动速度减缓。",
-        "status": "partial",
+        "description": "65法术强度\n45攻击力\n12%生命偷取\n\n海克斯加农炮：20%法术吸血\n装填：对英雄的普通攻击(命中时)和单体目标技能会使该装备的冷却时间减少3秒。\n\n主动60秒\n对目标英雄造成150 + 40%法术强度魔法伤害和持续2秒的40%移动速度减缓。",
+        "status": "complete",
         "source": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json"
       }
     },

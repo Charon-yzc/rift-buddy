@@ -20,6 +20,7 @@ function fixture(value=seed,{sequence=100,checkedAt='2026-10-18T23:00:00Z',publi
  return {manifest,envelope,assets:packed.assets,bundle};
 }
 const original=fixture(),newPatch=fixture(JSON.parse(JSON.stringify(seed).replaceAll('16.20','16.21')),{sequence:102,checkedAt:'2026-10-18T23:30:00Z'}),newerCheck=fixture(seed,{sequence:101,checkedAt:'2026-10-18T23:30:00Z'});
+const oldFormulaSeed=structuredClone(seed);oldFormulaSeed.game.contentRevision=8;oldFormulaSeed.game.items[3115].tooltip.description='old unresolved formula';const oldFormulas=fixture(oldFormulaSeed,{sequence:105});
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 async function setup(t,{initial=seed.game,manualBase=null,prepareHook=async()=>{},write=atomicJSON,promote,initialIdle=true}={}){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-generation-cache-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
@@ -36,6 +37,29 @@ test('global discovery atomically switches base and all statistics to a new patc
  assert.equal(f.get().patch,'16.21');assert.equal(prior.patch,'16.20');assert.equal(f.replacements(),1);assert.equal(f.requests[0],'/v2/latest.json');assert.ok(f.cache().hasAccepted());assert.ok(f.cache().isActive());
  assert.deepEqual(f.get().catalog,f.personal);assert.equal(await fs.readFile(path.join(f.root,'personal.json'),'utf8'),JSON.stringify(f.personal));
  for(const ref of Object.values(f.get().buildSources))assert.equal(ref.patch,'16.21');for(const ref of Object.values(f.get().hexBuilds))assert.equal(ref.patch,'16.21');
+});
+
+test('a signed same-version older content revision cannot replace corrected bundled formulas',async t=>{
+ const initial=structuredClone(seed.game);initial.contentRevision=9;const f=await setup(t,{initial});f.serve(oldFormulas);const before=f.get();await f.cache().check();
+ assert.equal(f.get(),before);assert.equal(f.replacements(),0);assert.equal(f.cache().summary().phase,'offline');assert.equal(await f.cache().activate(),false);
+});
+
+test('accepted and pending old formulas cannot override a newer bundled revision after restart',async t=>{
+ for(const idle of [true,false]){
+  const f=await setup(t,{initial:oldFormulaSeed.game,initialIdle:idle});f.serve(oldFormulas);await f.cache().check();const original=structuredClone(seed.game);original.contentRevision=9;f.set({...original,catalog:f.personal});const before=f.get();await f.restart();
+  assert.equal(f.get(),before);assert.equal(f.cache().isActive(),false);assert.equal(await f.cache().activate(),false);assert.notEqual(f.cache().summary().phase,'pending');
+ }
+});
+
+test('a corrected manual base discards the old same-version pending formula candidate',async t=>{
+ const f=await setup(t,{initial:oldFormulaSeed.game,initialIdle:false});f.serve(oldFormulas);await f.cache().check();assert.equal(f.cache().summary().phase,'pending');const corrected={...structuredClone(seed.game),contentRevision:9,catalog:f.personal};f.set(corrected);f.cache().noteManual(corrected,'a'.repeat(64));
+ assert.equal(f.cache().summary().phase,'ready');assert.equal(await f.cache().activate({explicit:true,release:oldFormulas.manifest.release}),false);assert.equal(f.get(),corrected);
+});
+
+test('content revision ordering does not block an actually newer game version',async t=>{
+ const f=await setup(t,{initial:{...structuredClone(seed.game),contentRevision:10}}),next=structuredClone(seed);next.game=JSON.parse(JSON.stringify(next.game).replaceAll('16.20','16.21'));next.game.contentRevision=8;
+ for(const name of ['rankings','builds','hex-builds'])next[name]=JSON.parse(JSON.stringify(next[name]).replaceAll('16.20','16.21'));
+ f.serve(fixture(next,{sequence:106}));await f.cache().check();assert.equal(f.get().version,'16.21.1');assert.equal(f.get().contentRevision,8);assert.equal(f.replacements(),1);
 });
 test('pending survives restart and a draft/disconnect/game sequence until a confirmed lobby',async t=>{
  const f=await setup(t,{initialIdle:false});f.serve(newPatch);await f.cache().check();assert.equal(f.get().patch,'16.20');await assert.rejects(fs.access(path.join(f.root,'data-generation.json')),{code:'ENOENT'});

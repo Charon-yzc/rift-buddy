@@ -58,6 +58,13 @@ async function run(){
  const beforeManualSwitch=await gj('window.guide.bootstrap().then(s=>s.model.hexRound)');await js("window.buddy.openGuide({id:'Sona',role:'support',mode:'hex'})");manual=await js('window.buddy.hexRound().then(s=>s.manual)');await js(`window.buddy.hexRound({...${JSON.stringify(manual)},operation:'own',id:1141})`);const afterSwitch=await js('window.buddy.hexRound().then(s=>s.manual)');assert.equal(await gj(`window.guide.control('new-game',${JSON.stringify(beforeManualSwitch)}).then(()=>false,()=>true)`),true);assert.deepEqual(await js('window.buddy.hexRound().then(s=>s.manual)'),afterSwitch);
  await js("window.buddy.openGuide({id:'Sona',role:'support',mode:'hex'})");}
  await js('window.buddy.client(true)');await until(()=>js('window.buddy.hexRound().then(s=>!!s.live)'),'Live owner missing');
+ // Saving an unrelated preference must keep a deliberately opened reference.
+ await js("window.buddy.openGuide({id:'Brand',role:'mid',mode:'hex'})");const previewBefore=await js('window.buddy.hexRound()');
+ await js("window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,preferences:{...b.state.preferences,roomNick:'测试偏好'}},b.state))");
+ assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.guide.selection.id)'),'Brand','An unrelated preference save replaced the manual reference');assert.deepEqual(await js('window.buddy.hexRound()'),previewBefore);await capture('manual-guide-after-preference.png',guide);
+ await js("window.buddy.openGuide({id:'Sona',role:'support',mode:'hex'})");
+ const swapOwnLane=()=>js("window.buddy.bootstrap().then(b=>window.buddy.saveState({...b.state,draft:{...b.state.draft,slots:b.state.draft.slots.map(s=>({...s,role:s.role==='mid'?'support':s.role==='support'?'mid':s.role}))}},b.state))");
+ await swapOwnLane();assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.guide.selection.role)'),'mid','Same-hero lane change was blocked');await swapOwnLane();assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.guide.selection.role)'),'support');
  const live=await js('window.buddy.hexRound().then(s=>s.live)');assert.equal(live.hero,'Sona');
  await js(`window.buddy.hexRound({...${JSON.stringify(live)},operation:'own',id:1002})`);await until(()=>gj('window.guide.bootstrap().then(s=>s.model.ownedAugments.some(a=>a.id===1002))'),'Live guide not synchronized');
 

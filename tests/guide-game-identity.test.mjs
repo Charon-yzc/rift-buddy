@@ -13,7 +13,7 @@ const slice=(start,end)=>main.slice(main.indexOf(start),main.indexOf(end,main.in
 const own={id:'Nautilus',role:'support',mode:'rift',conditions:[],coreIndex:0,runeId:'source-guardian'};
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 function setup({fresh=false,phase='ChampSelect'}={}){
- const handlers=new Map();let queue=Promise.resolve();
+ const handlers=new Map();let queue=Promise.resolve(),writeError=null;
  const selected=guideCore.selectGuide(null,own);selected.match={phase,gameId:'471001'};
  const context=vm.createContext({isDeepStrictEqual,structuredClone,publicClientGameId,mergeConfiguration,upsertPreparation,
   guideCore:{...guideCore,createGuideModel:(_data,guide)=>({completedItems:guide.completedItems})},data:{champions:[]},
@@ -21,11 +21,23 @@ function setup({fresh=false,phase='ChampSelect'}={}){
   latestClient:{connected:true,phase,game:{gameId:470000},session:{gameId:471001}},latestLive:null,liveTask:null,
   hexRounds:createHexRoundStore(),currentGame:{current:()=>own},guideHexContext:null,currentGuideSelection:()=>own,appWindows:()=>[],guide:{show:()=>({}),publish(){},isVisible:()=>true,needsAutoShow:()=>false},
   liveService:{liveSnapshot:async()=>({available:false})},guard:(name,handler)=>handlers.set(name,handler)});
- context.saveCurrentState=update=>{const task=queue.catch(()=>{}).then(()=>{context.state=structuredClone(update(structuredClone(context.state)));});queue=task;return task;};
+ context.saveCurrentState=update=>{const task=queue.catch(()=>{}).then(()=>{if(writeError){const error=writeError;writeError=null;throw error;}context.state=structuredClone(update(structuredClone(context.state)));});queue=task;return task;};
  vm.runInContext(slice('function mergeSavedFields(', 'function saveCurrentState(')+slice(' const setGuideState=', ' const publicEnemyIds=')+slice(' const pollLive=', " guard('client-status'")+slice(" guard('open-guide'", " guard('matchup-focus'"),context);
  const sync=vm.runInContext('(async()=>{const enemyIds=[];'+slice('   const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:publicClientGameId', '   if(state.preferences.guideAutoShow')+'})',context);
- return {context,handlers,sync,prepare:()=>vm.runInContext('prepareCurrentGuide()',context),live:()=>vm.runInContext('pollLive()',context),hold(){const gate=deferred();queue=queue.catch(()=>{}).then(()=>gate.promise);return gate;}};
+ return {context,handlers,sync,prepare:()=>vm.runInContext('prepareCurrentGuide()',context),live:()=>vm.runInContext('pollLive()',context),failNextWrite:error=>{writeError=error;},hold(){const gate=deferred();queue=queue.catch(()=>{}).then(()=>gate.promise);return gate;}};
 }
+
+test('an old automatic guide queued after an explicit opening yields to the newer reference',async()=>{
+ const s=setup();s.context.state.guide.selection.role='top';const gate=s.hold();
+ const opening=s.handlers.get('open-guide')({...own,id:'Brand',role:'mid'}),automatic=s.prepare();gate.resolve();
+ await opening;assert.equal(await automatic,false);assert.equal(s.context.state.guide.selection.id,'Brand');assert.equal(s.context.state.guide.selection.role,'mid');
+});
+
+test('automatic guide disk failures remain errors when a new reference is queued behind them',async()=>{
+ const s=setup();s.context.state.guide.selection.role='top';const gate=s.hold(),error=Object.assign(Error('Synthetic guide write failed'),{code:'EACCES'});s.failNextWrite(error);
+ const automatic=s.prepare(),rejected=assert.rejects(automatic,value=>value===error),opening=s.handlers.get('open-guide')({...own,id:'Brand',role:'mid'});gate.resolve();
+ await rejected;await opening;assert.equal(s.context.state.guide.selection.id,'Brand');
+});
 
 test('opening an existing or fresh guide uses the current draft session rather than stale gameflow',async()=>{
  for(const fresh of [false,true]){const s=setup({fresh});await s.handlers.get('open-guide')(own);assert.equal(s.context.state.guide.match.gameId,'471001');}
