@@ -236,7 +236,7 @@ async function boot(){
   await saveCurrentState(current=>{
    let accepted=valid;
    if(previous){
-    if(!valid||!current.guide||guideCore.guideIdentity(current.guide.selection)!==guideCore.guideIdentity(previous.selection)||current.guide.match?.gameId!==previous.match?.gameId)throw Error('本局指引已变化，请核对后重新操作');
+    if(!valid||!current.guide||guideCore.guideIdentity(current.guide.selection)!==guideCore.guideIdentity(previous.selection)||current.guide.match?.gameId!==previous.match?.gameId)throw Object.assign(Error('本局指引已变化，请核对后重新操作'),{code:'GUIDE_CONTEXT_CHANGED'});
     const message='指引设置同时发生变化，请核对后重新操作',selection=guideCore.validateGuideSelection(current.guide.selection);
     accepted=mergeSavedFields(current.guide,{...previous,selection},{...valid,selection},message);
     accepted.selection=mergeSavedFields(selection,previous.selection,valid.selection,message);
@@ -270,7 +270,16 @@ async function boot(){
   hexRounds.observe({connected:latestClient.connected,phase:latestClient.phase,mode:latestClient.mode?.id||own?.mode,gameId:publicClientGameId(latestClient),hero:own?.id},data);
   if(hexRounds.snapshot().revision!==before){publishHexRound();await syncHexGuide();}
  };
- const prepareCurrentGuide=async()=>{const own=currentGuideSelection();if(!own)return false;if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(own)||own.comboKnown&&(state.guide.selection.comboId||'')!==(own.comboId||'')){const next=guideCore.selectGuide(state.guide,own),gameId=publicClientGameId(latestClient);if(latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};await setGuideState(next);}return true;};
+ const prepareCurrentGuide=async({matchingOnly=false}={})=>{
+  const own=currentGuideSelection(),previous=state.guide;
+  // An ordinary preference save can refresh this hero's role/configuration,
+  // but is not a request to replace a deliberately opened manual reference.
+  if(!own||matchingOnly&&previous&&(previous.selection.id!==own.id||previous.selection.mode!==own.mode))return false;
+  if(!previous||guideCore.guideIdentity(previous.selection)!==guideCore.guideIdentity(own)||own.comboKnown&&(previous.selection.comboId||'')!==(own.comboId||'')){
+   const next=guideCore.selectGuide(previous,own),gameId=publicClientGameId(latestClient);if(latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};
+   try{await setGuideState(next,previous);}catch(error){if(error.code==='GUIDE_CONTEXT_CHANGED')return false;throw error;}
+  }return true;
+ };
  const publicEnemyIds=()=>latestClient.connected&&latestClient.phase==='ChampSelect'&&Array.isArray(latestClient.session?.theirTeam)?latestClient.session.theirTeam.map(p=>data.champions.find(c=>c.key===p.championId)?.id).filter(Boolean):undefined;
  const publishOpponentContext=()=>{const focus=opponentFocus.snapshot();latestClient={...latestClient,selectionContext:focus.selectionContext,opponentFocus:focus.focus,opponentFocusNotice:focus.notice};return focus;};
  const observeOpponentContext=()=>{opponentFocus.observe({connected:latestClient.connected,phase:latestClient.phase,gameId:publicClientGameId(latestClient),selection:currentGuideSelection(),enemyIds:publicEnemyIds()});return publishOpponentContext();};
@@ -576,7 +585,7 @@ async function boot(){
    // Turning the switch (or client sync) off must not leave a room behind:
    // with sync off no poll will run to notice the new preference.
    closeAutoRoomIfRevoked();
-   if(state.guide&&latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
+   if(state.guide&&latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide({matchingOnly:true});
    guide.publish();companion.sync();return {state,revision:stateRevision};
  },true);
  const {createClientSync}=await import('../src/core/async-tasks.mjs');

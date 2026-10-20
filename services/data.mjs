@@ -37,6 +37,23 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
       progress('已核对同补丁国服英雄名称资料');
       previous={...previous,cnVersion:cn.version,champions:previous.champions.map(c=>{const h=names.get(c.id.toLowerCase());return {...c,name:h.title,title:h.name,keywords:h.keywords};})};
     }else progress('国服名称来源尚未提供完整同补丁资料，保留既有名称与版本记录');
+    if(previous.contentRevision<9){
+      try{
+        const cd=`https://raw.communitydragon.org/${previous.patch}`,[bin,strings]=await Promise.all([readJSON(`${cd}/game/items.cdtb.bin.json`,35000),readJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);
+        if(!bin||!Object.keys(bin).length||!strings?.entries||!Object.keys(strings.entries).length)throw Error('装备公式来源不完整');
+        const items=enrichItemDescriptions(previous.items,bin,strings,previous.patch);
+        if(!Object.entries(items).some(([id,item])=>item!==previous.items[id])||Object.entries(previous.items).some(([id,item])=>item.tooltip?.patch===previous.patch&&items[id]===item))throw Error('装备公式来源未覆盖已有记录');
+        const bundled=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+        if(bundled.version!==previous.version||bundled.contentRevision<9)throw Error('缺少同版本公式复核基线');
+        const count=(description,pattern)=>(description?.match(pattern)||[]).length;
+        for(const [id,item]of Object.entries(previous.items)){
+          const next=items[id]?.tooltip,known=bundled.items[id]?.tooltip;if(known?.patch!==previous.patch)continue;
+          if(item.tooltip?.status==='complete'&&next?.status!=='complete'||count(next?.description,/%法术强度/g)<count(known.description,/%法术强度/g)||count(next?.description,/〔数值未解析〕/g)>count(known.description,/〔数值未解析〕/g))throw Error('已核对的装备公式未补齐');
+        }
+        previous={...previous,items,contentRevision:9};
+        progress('已补齐当前版本法强装备公式');
+      }catch{progress('装备公式暂未补齐，保留原公式并等待重试');}
+    }
     progress('当前已是最新资料版本');
     return {...previous,checkedAt:new Date(clock()).toISOString()};
   }
@@ -75,7 +92,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:8, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
+    schema: 1, contentRevision:9, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,
