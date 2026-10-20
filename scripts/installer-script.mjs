@@ -49,6 +49,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Rift Buddy contributors"
 !insertmacro MUI_LANGUAGE "SimpChinese"
 Function .onInit
   SetShellVarContext current
+  SetRegView 32
   ReadRegStr $PreviousInstallDir HKCU "Software\\${registryId}" "InstallDir"
   \${If} $PreviousInstallDir == ""
     StrCpy $PreviousInstallDir $INSTDIR
@@ -59,6 +60,7 @@ Function .onInit
   \${EndIf}
 FunctionEnd
 Function un.onInit
+  SetRegView 32
   InitPluginsDir
   SetOutPath "$PLUGINSDIR"
   File /oname=lifecycle.ps1 ${quote(lifecycle)}
@@ -95,24 +97,6 @@ ${diagnosticFile?`  FileOpen $2 ${quote(diagnosticFile)} w\n  FileWrite $2 "$0$\
   \${EndIf}
   SetOutPath "$INSTDIR"
 ${removeLocales}
-  ClearErrors
-  CreateDirectory "$SMPROGRAMS\\${shortcutName}"
-  CreateShortcut "$SMPROGRAMS\\${shortcutName}\\开黑搭子.lnk" "$INSTDIR\\开黑搭子.exe"
-  CreateShortcut "$SMPROGRAMS\\${shortcutName}\\卸载.lnk" "$INSTDIR\\卸载开黑搭子.exe"
-  CreateShortcut "$DESKTOP\\${shortcutName}.lnk" "$INSTDIR\\开黑搭子.exe"
-  WriteRegStr HKCU "Software\\${registryId}" "InstallDir" "$INSTDIR"
-  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${registryId}" "DisplayName" "开黑搭子"
-  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${registryId}" "DisplayVersion" "${version}"
-  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${registryId}" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${registryId}" "DisplayIcon" "$INSTDIR\\开黑搭子.exe"
-  WriteRegStr HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${registryId}" "UninstallString" '$\\"$INSTDIR\\卸载开黑搭子.exe$\\"'
-  WriteRegDWORD HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${registryId}" "NoModify" 1
-  WriteRegDWORD HKCU "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${registryId}" "NoRepair" 1
-  IfErrors 0 +5
-    IfSilent +2
-    MessageBox MB_OK|MB_ICONSTOP "程序文件已安装，但快捷方式或卸载登记失败，请重新运行安装包修复。"
-    SetErrorLevel 1
-    Abort
 SectionEnd
 Section "Uninstall"
   SetShellVarContext current
