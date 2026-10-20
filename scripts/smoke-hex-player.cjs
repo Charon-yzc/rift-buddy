@@ -54,9 +54,11 @@ async function run(){
  const live=await js('window.buddy.hexRound().then(s=>s.live)');assert.equal(live.hero,'Sona');
  await js(`window.buddy.hexRound({...${JSON.stringify(live)},operation:'own',id:1002})`);await until(()=>gj('window.guide.bootstrap().then(s=>s.model.ownedAugments.some(a=>a.id===1002))'),'Live guide not synchronized');
 
+ // A core-index change must also clear its previous stable core ID, just as
+ // the real configuration switch does; contradictory selectors resolve by ID.
  // Hold an actual settings rename while configuration and round changes race.
  // Round notes must project the eventual current guide, not an old snapshot.
- const queuedConfig=async(coreIndex)=>js(`void (window.hexConfig=window.buddy.bootstrap().then(b=>window.buddy.updateGuide({...b.state.guide.selection,coreIndex:${coreIndex},changedFields:['coreIndex']})).then(()=>({ok:true}),e=>({ok:false,error:e.message})))`);
+ const queuedConfig=async(coreIndex)=>js(`void (window.hexConfig=window.buddy.bootstrap().then(b=>{const selection={...b.state.guide.selection,coreIndex:${coreIndex}};delete selection.coreId;return window.buddy.updateGuide({...selection,changedFields:['coreIndex','coreId']});}).then(()=>({ok:true}),e=>({ok:false,error:e.message})))`);
  const queuedOwn=async(id)=>{const row=await js('window.buddy.hexRound().then(s=>s.live)');await js(`void (window.hexNote=window.buddy.hexRound({...${JSON.stringify(row)},operation:'own',id:${id}}).then(()=>({ok:true}),e=>({ok:false,error:e.message})))`);};
  let gate=holdSave(1);await queuedConfig(1);await until(()=>gate.hit,'Configuration disk gate not reached').catch(async error=>{console.error('GATE_DEBUG',gate.seen,await js('window.hexConfig'));throw error;});await queuedOwn(2005);await until(()=>js('window.buddy.hexRound().then(s=>s.live.owned.includes(2005))'),'Note did not enter queue');gate.release();assert.equal((await js('window.hexConfig')).ok,true);assert.equal((await js('window.hexNote')).ok,true);saveGate=null;
  assert.equal(await js('window.buddy.bootstrap().then(b=>b.state.guide.selection.coreIndex)'),1);assert.ok(await gj('window.guide.bootstrap().then(b=>b.model.ownedAugments.some(a=>a.id===2005))'));
