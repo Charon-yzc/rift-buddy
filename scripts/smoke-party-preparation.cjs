@@ -2,6 +2,8 @@ const {app,screen,globalShortcut,ipcMain,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],handlers=new Map(),attempts=[],results=[],writes=[],roomSockets=[];
 let diagnosticMain,diagnosticSide;
+const selectionLatency=process.env.RIFT_BUDDY_SELECTION_LATENCY==='1';
+let measuringSelection=false,firstSelectionPatchAt=0;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -12,7 +14,7 @@ global.WebSocket=class {
  send(text){const frame=JSON.parse(text);if(frame.kind==='hello'){queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'welcome',v:1,room:new URL(this.url).pathname.split('/').at(-1),members:[{nick:frame.nick}],ballots:1,multiVotes:1,adoptions:1,packedStates:2})}));}if(frame.kind==='ping')queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'pong',v:1})}));}
  close(code=1000){this.readyState=3;this.onclose?.({code});}
 };
-const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(name==='prepare-selection')attempts.push(structuredClone(args[1]));const result=await handler(...args);if(name==='prepare-selection')results.push(structuredClone(result));return result;});};
+const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(measuringSelection&&['client-status','save-state'].includes(name))await new Promise(resolve=>setTimeout(resolve,1500));if(name==='prepare-selection')attempts.push(structuredClone(args[1]));const result=await handler(...args);if(name==='prepare-selection')results.push(structuredClone(result));return result;});};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label){for(let n=0;n<180;n++){if(await check())return;await delay(100);}throw Error(label);}
 async function run(){
@@ -45,12 +47,12 @@ async function run(){
    throw Error('Unsupported mocked read '+route);
   }
   writes.push({route,method,body});
-  if(route==='/lol-champ-select/v1/session/actions/2'&&method==='PATCH'){assert.equal(body.completed,false,'Application must never lock a champion');intent=body.championId;return {};}
+  if(route==='/lol-champ-select/v1/session/actions/2'&&method==='PATCH'){if(measuringSelection&&!firstSelectionPatchAt)firstSelectionPatchAt=Date.now();assert.equal(body.completed,false,'Application must never lock a champion');intent=body.championId;return {};}
   if(route==='/lol-perks/v1/pages/44'&&method==='PUT'){page={...body,id:44,isEditable:true,isActive:true,current:true};return page;}
   if(route==='/lol-champ-select/v1/session/my-selection'&&method==='PATCH'){({spell1Id,spell2Id}=body);return {};}
   throw Error('Unsupported mocked route '+method+' '+route);
  };
- https.request=(options,callback)=>{const request=new EventEmitter();request.write=body=>{options.body=body;};request.end=()=>queueMicrotask(()=>{const send=()=>{try{const value=output(options),response=new EventEmitter();response.statusCode=200;callback(response);response.emit('data',Buffer.from(JSON.stringify(value)));response.emit('end');request.emit('close');}catch(error){request.emit('error',error);}};if(holdRune&&options.method==='PUT'&&options.path==='/lol-perks/v1/pages/44')resumeRune=send;else send();});request.destroy=error=>{if(error)request.emit('error',error);};return request;};
+ https.request=(options,callback)=>{const request=new EventEmitter();request.write=body=>{options.body=body;};request.end=()=>queueMicrotask(()=>{const send=()=>{try{const value=output(options),response=new EventEmitter();response.statusCode=200;callback(response);response.emit('data',Buffer.from(JSON.stringify(value)));response.emit('end');request.emit('close');}catch(error){request.emit('error',error);}};if(holdRune&&options.method==='PUT'&&options.path==='/lol-perks/v1/pages/44')resumeRune=send;else if(measuringSelection)setTimeout(send,20);else send();});request.destroy=error=>{if(error)request.emit('error',error);};return request;};
  cp.spawn=file=>{assert.ok(file.endsWith('window-observer.exe'),'Unexpected native subprocess');observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
  cp.execFile=(file,args,options,callback)=>{assert.ok(file.endsWith('csc.exe'),'Unexpected native compilation');queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
  require(path.join(base,'electron/main.cjs'));
@@ -136,7 +138,22 @@ async function run(){
   const layout=await js(side,'(()=>{const row=document.querySelector(".room-ballot-row"),candidate=document.querySelector(".companion-candidate"),box=selector=>row.querySelector(selector).getBoundingClientRect();return {boardY:row.getBoundingClientRect().top,candidateY:candidate.getBoundingClientRect().top,boardWidth:row.getBoundingClientRect().width,candidateWidth:candidate.getBoundingClientRect().width,adoptVisible:!!row.querySelector("[data-action=room-adopt-ballot]"),voteY:box("[data-action=room-vote]").top,detailsY:box("[data-action=room-ballot-details]").top,candidateDetails: getComputedStyle(candidate.querySelector(".candidate-details>summary")).position};})()');
   assert.ok(layout.boardY<layout.candidateY);assert.equal(layout.adoptVisible,false);assert.ok(Math.abs(layout.boardWidth-layout.candidateWidth)<=2,JSON.stringify(layout));assert.ok(layout.detailsY>layout.voteY);assert.equal(layout.candidateDetails,'static');
   const {proposalKey}=await import(require('node:url').pathToFileURL(path.join(base,'src/core/room.mjs')).href),other={lineup:[{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],mode:'rift'},otherKey=proposalKey(other);
-  const socket=roomSockets.at(-1);socket.onmessage({data:JSON.stringify({kind:'join',v:1,from:'测试队友'})});socket.onmessage({data:JSON.stringify({kind:'state',v:1,from:'测试队友',at:Date.now(),lineup:[],pick:null,ballot:{version:1,proposal:other,vote:null}})});
+  const socket=roomSockets.at(-1);socket.onmessage({data:JSON.stringify({kind:'join',v:1,from:'测试队友'})});
+  // A legacy peer's automatic snapshot must not create another kind of list.
+  socket.onmessage({data:JSON.stringify({kind:'state',v:1,from:'测试队友',at:Date.now(),lineup:other.lineup,pick:null,mode:'rift'})});
+  await until(()=>js(side,'window.buddy.roomStatus().then(r=>r.members.some(m=>m.nick==="测试队友"&&m.share?.lineup.length===2))'),'Legacy peer snapshot missing');
+  await delay(100);assert.equal(await js(side,'document.querySelectorAll(".room-ballot-row").length'),1,'Unproposed state created a proposal');
+  assert.equal(await js(side,'!!document.querySelector(".companion-room-shares,[data-companion-disclosure=room-shares],[data-action=room-adopt-lineup]")'),false,'Legacy shared lineup appeared');
+  await capture(side,'legacy-peer-sidebar.png');
+  await click(side,'[data-action=companion-tab][data-tab=room]');
+  await until(()=>js(side,'document.querySelectorAll(".room-member").length===2'),'Room member presence missing');
+  assert.equal(await js(side,'!!document.querySelector(".room-champs,[data-action=room-publish],[data-action=room-build]")'),false,'Room tab still exposes legacy sharing');
+  assert.equal(await js(side,'document.querySelectorAll(".room-ballot-row").length'),1);await capture(side,'proposal-room-sidebar.png');
+  await click(main,'[data-action=navigate][data-route=room]');
+  await until(()=>js(main,'document.querySelectorAll(".room-member").length===2'),'Main room member presence missing');
+  assert.equal(await js(main,'!!document.querySelector(".room-champs,[data-action=room-publish],[data-action=room-build]")'),false);assert.equal(await js(main,'document.querySelectorAll(".room-ballot-row").length'),1);await capture(main,'proposal-room-main.png');
+  await click(main,'[data-action=navigate][data-route=draft]');await click(side,'[data-action=companion-tab][data-tab=recommend]');
+  socket.onmessage({data:JSON.stringify({kind:'state',v:1,from:'测试队友',at:Date.now(),lineup:other.lineup,pick:null,mode:'rift',ballot:{version:1,proposal:other,vote:null}})});
   await until(()=>js(side,'document.querySelectorAll(".room-ballot-row").length===2'),'Second proposal missing');
   const myVotes=()=>js(side,'window.buddy.roomStatus().then(r=>r.members.find(m=>m.self).share.ballot.votes)'),ownKey=(await myVotes())[0];
   await click(side,'[data-action=room-vote][data-key="'+otherKey+'"]');await until(async()=>(await myVotes()).length===2,'Second vote replaced the first');
@@ -149,7 +166,14 @@ async function run(){
   assert.equal(candidate.combo,'camille-galio-vi');assert.deepEqual(candidate.members,['top:Camille','jungle:Vi','mid:Galio']);
   // Use the real candidate button, renderer and preparation service. The
   // fixture does not inject a guide/party plan; the one hero click adopts it.
+  if(selectionLatency){measuringSelection=true;await js(side,'document.addEventListener("click",()=>window.selectionClickAt=Date.now(),{once:true,capture:true})');}
   await click(side,'[data-action=companion-preview][data-id=Galio]');await until(()=>resumeRune,'Unadopted candidate click did not reach the mock rune write');
+  if(selectionLatency){
+   const clickedAt=await js(side,'window.selectionClickAt'),elapsedMs=firstSelectionPatchAt-clickedAt;measuringSelection=false;
+   const latency={source,archiveSha256:release?.archiveSha256||null,clickedAt,firstSelectionPatchAt,elapsedMs,loopbackResponseDelayMs:20,unrelatedStatusAndSaveDelayMs:1500,actualRendererAndMain:true,realClientWrites:0};
+   await fs.writeFile(path.join(root,'selection-latency.json'),JSON.stringify(latency,null,2));console.log('SELECTION LATENCY '+JSON.stringify(latency));
+   assert.ok(firstSelectionPatchAt>0&&elapsedMs>=0&&elapsedMs<1000,'Actual candidate click waited '+elapsedMs+'ms before its selection PATCH');
+  }
   assertConfiguration(attempts[0],'Initial candidate click');assert.equal(attempts[0].sessionGameId,String(gameId));assert.equal(attempts[0].context.gameId,String(gameId));
   resumeRune();holdRune=false;await until(()=>results.length===1,'Unadopted candidate did not prepare');assert.equal(results[0].complete,true);
   if(loadingTransition){
