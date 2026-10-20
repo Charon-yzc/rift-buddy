@@ -577,7 +577,7 @@ test('adopting either a room proposal or a shared lineup exits comparison and ex
   Object.assign(c,{draftComparing:true,room:{members:[{nick:'朋友',share}]},roomBallotBoard:()=>[row],roomLineupIdentity:()=> 'friend-share',
    adoptRoomLineup:()=>({slots:c.slots,unassigned:[],creativePlan:plan,configurations:[selection],conflicts:[],configurationErrors:[],loadedMembers:3}),
    publishRoomShare:async()=>{},companionScroll:new Map(),lastAdoptedRoomShare:'',roleName:r=>r});
-  const body=kind==='ballot'?extract("if(action==='room-adopt-ballot'){","if(action==='room-publish')"):extract("if(action==='room-adopt-lineup'){","if(action==='room-build')");
+  const body=kind==='ballot'?extract("if(action==='room-adopt-ballot'){","if(action==='room-copy-relay')"):extract("if(action==='room-adopt-lineup'){","if(action==='room-build')");
   vm.runInContext(`async function adoptFromRoom(el){const action='room-adopt-${kind}';${body}}`,c);
   await c.adoptFromRoom({dataset:{key:'friend-key',member:'朋友',share:'friend-share'}});
   assert.equal(c.draftComparing,false,kind);assert.equal(c.activeCreativePlan.id,'friend-plan');assert.equal(c.companionTab,'recommend');
@@ -662,7 +662,7 @@ test('one ranking-avatar click moves an old unbound hero plan only after success
   assert.equal(c.slots.find(s=>s.role==='mid').champion,hovered?null:'Ashe');
   assert.equal(c.slots.find(s=>s.role==='bottom').champion,hovered?'Ashe':null);
   assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),before.find(s=>s.role==='support'));
-  assert.ok(writes.length>=2);assert.equal(calls.prepared[0].selection.id,'Ashe');
+  assert.ok(writes.length>=1);assert.deepEqual(writes.at(-1).draft.slots,validateState({...defaultState(),draft:{slots:c.slots,scope:'party',style:'wild',soloRole:'bottom'}}).draft.slots);assert.equal(calls.prepared[0].selection.id,'Ashe');
  }
 });
 
@@ -1019,6 +1019,21 @@ async function prepareRetainedHover(docked){
  assert.equal(c.slots.filter(s=>s.party).length,2);
 }
 test('unknown own lane and a teammate preview allow one independent candidate preparation in both windows',async()=>{await prepareRetainedHover(false);await prepareRetainedHover(true);});
+
+test('a fresh candidate avatar dispatches in both windows while full sync and lineup saves are blocked',async()=>{
+ for(const docked of [false,true]){
+  const now=Date.now(),current=checkedClient(now),s=setup({slots:createSlots(),current,incoming:structuredClone(current),now,results:[]}),c=s.context,events=[];
+  c.saved.preferences.pool=['Ahri','Ashe','Braum'];c.saved.preferences.poolMode='only';c.results=recommend(c.recommendationInput());c.resultsSignature=recommendationKey(c.recommendationInput());
+  const html=renderResultCard(c.results[0],0,data,{favorites:[],preferences:{}},'wild');
+  c.windowLayout.docked=docked;let release;const gate=new Promise(resolve=>release=resolve);
+  c.sync=async()=>{events.push('sync');await gate;};c.persist=async()=>{events.push('save');await gate;};
+  c.api.prepareSelection=async()=>{events.push('dispatch');throw Error('isolated stop after dispatch');};
+  const pending=assert.rejects(c.clickBuild(avatar(html,'Ashe')),/isolated stop after dispatch/);
+  await new Promise(resolve=>setImmediate(resolve));const atClick=[...events];release();await pending;
+  assert.ok(atClick.includes('dispatch'),'The real candidate entry must not await status or disk: '+JSON.stringify({atClick,events,status:localPickEligibility(current,c.slots,data.champions,{scope:c.scope,soloRole:c.soloRole,now}).status}));assert.ok(!atClick.includes('sync'));assert.ok(c.activeCreativePlan,'Keep whole-lineup adoption');
+  assert.equal(c.clientPreparing,false);assert.equal(c.candidatePreparing,false);
+ }
+});
 
 test('an enemy role change prevents the old actual worker completion from publishing recommendations',async()=>{
  const current=client();current.game={...current.game,queueId:420,mapId:11,gameMode:'CLASSIC'};current.session.theirTeam=['Darius','LeeSin','Yasuo','Jinx','Leona'].map((id,i)=>({cellId:i+5,championId:hero(id).key}));

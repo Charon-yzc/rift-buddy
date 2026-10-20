@@ -4,11 +4,10 @@ import {companionView} from '../src/companion-view.mjs';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
-import {roomSharesView} from '../src/room-view.mjs';
-import {roomLineupIdentity} from '../src/core/room-lineup.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 import {recommendationDraft} from '../src/core/draft-intents.mjs';
 import {lineupFit} from '../src/core/room-ballot.mjs';
+import {roomBallotView} from '../src/room-ballot-view.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json')),hero=id=>data.champions.find(c=>c.id===id);
 const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:77,localPlayerCellId:0,myTeam:[{cellId:0,championId:hero('Graves').key,assignedPosition:'JUNGLE'},{cellId:1,championId:hero('Vex').key,assignedPosition:'MIDDLE'}],theirTeam:[],bans:[],actions:[[{type:'pick',actorCellId:0,championId:hero('Graves').key,completed:false}]],allowDuplicatePicks:false}};
 
@@ -58,11 +57,16 @@ test('live adopted sidebar keeps five slots and range status while recommendatio
  const state=validateState({...defaultState(),preferences:{compactTeam:false}});assert.equal(state.preferences.compactTeam,false);assert.equal(validateState(defaultState()).preferences.compactTeam,true);
 });
 
-test('received sidebar plans expose explicit lineup adoption, route friend clicks to view, and suppress unchanged adopted content',()=>{
- const share={kind:'state',v:1,from:'队友',at:1000,mode:'rift',lineup:createSlots().map(s=>({role:s.role,champion:s.role==='jungle'?'Graves':s.role==='mid'?'Vex':null}))},room={members:[{nick:'队友',share}]},get=id=>hero(id),action=id=>companionHeroAction(client,hero(id));
- const html=roomSharesView(room,get,{compact:true,heroAction:action});assert.match(html,/data-action="room-adopt-lineup"/);assert.match(html,/data-action="room-build" data-id="Vex"/);assert.match(html,/data-action="room-prepare" data-id="Graves"/);assert.match(html,/未收到配置/);
- assert.equal(roomSharesView(room,get,{compact:true,adoptedShare:roomLineupIdentity({...share,at:9999})}), '');
- const missing={members:[{nick:'队友',share:{...share,mode:undefined}}]};assert.match(roomSharesView(missing,get,{compact:true}),/data-share="[0-9a-f]+" disabled/);assert.doesNotMatch(roomSharesView(missing,get,{compact:true,allowUnknownRift:true}),/data-share="[0-9a-f]+" disabled/);
+test('both sidebar tabs show only explicit proposals even when an old peer sends automatic lineup snapshots',()=>{
+ const slots=createSlots(),lineup=slots.filter(s=>['jungle','mid'].includes(s.role)).map(s=>({role:s.role,champion:s.role==='jungle'?'Graves':'Vex'}));
+ const share={kind:'state',v:1,from:'队友',at:1000,mode:'rift',lineup},room={mode:'client',ballots:true,members:[{nick:'队友',share}]};
+ const props={data,client,slots,unassigned:[],scope:'party',soloRole:'jungle',style:'fun',results:[],room};
+ for(const tab of ['recommend','rankings','room']){
+  const quiet=companionView({...props,tab});assert.doesNotMatch(quiet,/room-ballot-board|room-adopt-lineup|room-prepare|room-shares|队友分享的阵容|发来的阵容/);
+  share.ballot={version:1,proposal:{mode:'rift',lineup},votes:[]};
+  const proposed=companionView({...props,tab,roomContent:roomBallotView(room,slots,data.champions)});assert.equal((proposed.match(/class="room-ballot-board"/g)||[]).length,1);assert.match(proposed,/大家提议的阵容/);assert.match(proposed,/data-action="room-vote"/);assert.match(proposed,/data-action="room-ballot-hero"/);assert.doesNotMatch(proposed,/room-adopt-lineup|room-shares/);
+  delete share.ballot;
+ }
 });
 
 test('rankings retain local actions and five slots in a collapsed context above the scrolling table',()=>{
@@ -76,7 +80,7 @@ test('rankings retain local actions and five slots in a collapsed context above 
  assert.deepEqual([...context.matchAll(/data-drop-role="([^"]+)"/g)].map(m=>m[1]),['top','jungle','mid','bottom','support']);
  assert.match(context,/data-action="active-hero-prepare"[^>]+data-id="Graves"/);assert.match(context,new RegExp(`title="打野 · ${hero('Graves').name} · 你 · 手动 · 已选"`));
  assert.match(context,/aria-label="我的下一步"/);assert.match(context,/现在先做：/);
- assert.match(html,/data-action="room-adopt-lineup"/);assert(html.indexOf('data-action="room-adopt-lineup"')<html.indexOf('data-test-table'));
+ assert.doesNotMatch(html,/data-action="room-adopt-lineup"|room-shares|发来的阵容/);
  const unknown=companionView({...props,client:{...live,eligibility:null}});assert(unknown.indexOf('data-eligibility="unknown"')<unknown.indexOf('data-test-table'));
  assert.deepEqual({slots,client:live},before);
 });
