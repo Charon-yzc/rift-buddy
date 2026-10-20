@@ -1,6 +1,8 @@
 const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('buddy',Object.freeze({
  bootstrap:()=>ipcRenderer.invoke('bootstrap'),
+ hexRound:value=>ipcRenderer.invoke('hex-round',value),
+ onHexRound:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('hex-round',listener);return()=>ipcRenderer.removeListener('hex-round',listener);},
  dataSnapshot:()=>ipcRenderer.invoke('data-snapshot'),
  windowInfo:()=>ipcRenderer.invoke('window-info'),
  presentation:change=>ipcRenderer.invoke('presentation',change),

@@ -1110,6 +1110,12 @@ test('prospective single-role familiarity is revoked when its ownership proof be
  }
 });
 
+test('a new round clears actual Hex choices while preserving the hero wish list',async()=>{
+ const current=client(),incoming=client();current.mode=incoming.mode={id:'hex'};incoming.session.gameId=124;incoming.game.gameId='124';
+ const {context:c}=setup({current,incoming});c.itemSetStatuses=new Map();c.hexHero='Ashe';c.hexOptions=[1048,2005];c.hexOwned=[1047];c.hexSelected=[1048];
+ await c.performSync(false,true);assert.equal(c.client.connected,true,c.client.message);assert.equal(c.client.session.gameId,124);assert.deepEqual(Array.from(c.hexOptions),[]);assert.deepEqual(Array.from(c.hexOwned),[]);assert.deepEqual(c.hexSelected,[1048]);assert.equal(c.hexHero,'Ashe');
+});
+
 test('a frozen room profile revokes immediately and rejects its late worker on withdrawal or endpoint change',async()=>{
  for(const change of ['withdraw','offline','endpoint','account']){
   const f=setup({results:[]}),c=f.context;c.client.party={status:'known',members:[{local:true,cellId:1}]};

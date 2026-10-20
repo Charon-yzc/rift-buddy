@@ -23,7 +23,7 @@ export function mergeConfiguration(current,next,fields=CONFIGURATION_FIELDS){
 // Actual current opponents, match IDs and purchase progress are not retained.
 export function validatePreparation(value){
  const s=validateGuideSelection(value);
- const {threatId,protectId,combatFocus,matchupGameId,...configuration}=s;
+ const {threatId,protectId,combatFocus,matchupGameId,compareIds,ownedAugmentIds,...configuration}=s;
  return configuration;
 }
 export function validatePreparations(value){

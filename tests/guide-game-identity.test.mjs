@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {isDeepStrictEqual} from 'node:util';
 import * as guideCore from '../src/core/guide.mjs';
+import {createHexRoundStore} from '../src/core/hex-round.mjs';
 import {publicClientGameId} from '../src/core/draft.mjs';
 import {mergeConfiguration,upsertPreparation} from '../src/core/preparation.mjs';
 
@@ -18,7 +19,7 @@ function setup({fresh=false,phase='ChampSelect'}={}){
   guideCore:{...guideCore,createGuideModel:(_data,guide)=>({completedItems:guide.completedItems})},data:{champions:[]},
   state:{guide:fresh?null:selected,preparations:[],preferences:{autoLive:false}},guideRevision:0,
   latestClient:{connected:true,phase,game:{gameId:470000},session:{gameId:471001}},latestLive:null,liveTask:null,
-  currentGuideSelection:()=>own,appWindows:()=>[],guide:{show:()=>({}),publish(){},isVisible:()=>true,needsAutoShow:()=>false},
+  hexRounds:createHexRoundStore(),currentGame:{current:()=>own},guideHexContext:null,currentGuideSelection:()=>own,appWindows:()=>[],guide:{show:()=>({}),publish(){},isVisible:()=>true,needsAutoShow:()=>false},
   liveService:{liveSnapshot:async()=>({available:false})},guard:(name,handler)=>handlers.set(name,handler)});
  context.saveCurrentState=update=>{const task=queue.catch(()=>{}).then(()=>{context.state=structuredClone(update(structuredClone(context.state)));});queue=task;return task;};
  vm.runInContext(slice('function mergeSavedFields(', 'function saveCurrentState(')+slice(' const setGuideState=', ' const publicEnemyIds=')+slice(' const pollLive=', " guard('client-status'")+slice(" guard('open-guide'", " guard('matchup-focus'"),context);
