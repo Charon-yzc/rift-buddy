@@ -9,7 +9,9 @@ import {createRoomService} from '../services/room.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
 const usage=(counts={Ashe:400,Jinx:100},mass=.85)=>({version:1,mass,usage:{sampled:Object.values(counts).reduce((a,b)=>a+b,0),counts}});
-const summary=value=>({status:'ready',session:'a'.repeat(32),usage:value.usage});
+// A shared summary always comes from a live scan; a cached or estimated
+// distribution is private and must never be shared.
+const summary=value=>({status:'ready',origin:'live',session:'a'.repeat(32),usage:value.usage});
 const frame=value=>({kind:'state',v:1,from:'本人',at:1000,lineup:[],pick:null,championUsage:value});
 const spin=async fn=>{for(let n=0;n<250;n++){if(fn())return;await new Promise(resolve=>setTimeout(resolve,20));}throw Error('Isolated room did not reach expected state');};
 
@@ -20,6 +22,11 @@ test('room protocol rebuilds anonymous bounded summary and rejects malformed cou
  assert.equal(validateWelcome({kind:'welcome',v:1,room:'482913',members:[],championUsage:1}).championUsage,1);
  for(const invalid of [usage({Ashe:501}),{...usage(),mass:1.1},{...usage(),mass:'0.85'},{...usage(),version:2},usage({'invalid;hero':1})])assert.equal(sanitizeShare(frame(invalid)),null);
  assert.equal(ownSharedChampionUsage({status:'offline'},.85),null);assert.deepEqual(ownSharedChampionUsage({...summary(usage()),puuid:'PRIVATE',records:['PRIVATE']},.6),usage(undefined,.6));
+  // A cached or estimated distribution is private and never shared.
+  assert.equal(ownSharedChampionUsage({...summary(usage()),origin:'cache'},.85),null);
+  assert.equal(ownSharedChampionUsage({...summary(usage()),origin:'mastery'},.85),null);
+  assert.equal(ownSharedChampionUsage({status:'ready',session:'a'.repeat(32),usage:usage().usage},.85),null,'an unknown origin is never shared');
+  assert.equal(ownSharedChampionUsage({...summary(usage()),usage:{sampled:0,counts:{}}},.85),null,'an empty distribution is never shared');
 });
 
 test('main publisher overrides renderer-forged usage, coalesces batches, applies latest mass and revokes immediately',()=>{

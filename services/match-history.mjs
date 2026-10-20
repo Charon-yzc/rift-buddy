@@ -6,7 +6,7 @@ import {normalizeAkariMatch as normalizeMatch} from '../src/core/akari/bridge.mj
 import {riotAliasRequest} from './match-history-riot.mjs';
 import {ongoingRoster} from '../src/core/ongoing-game.mjs';
 import {cleanPlayerChallenges,cleanPlayerProfile,normalizePublicRanked,normalizePublicMastery} from './match-history-profile.mjs';
-import {USAGE_BASIS,isUpstreamHistoryFailure} from '../src/core/champion-usage.mjs';
+import {USAGE_BASIS,isUpstreamHistoryFailure,UPSTREAM_HISTORY_PREFIX} from '../src/core/champion-usage.mjs';
 
 const profile=p=>({puuid:p.puuid,name:text(p.gameName||p.displayName||p.summonerName||p.name)+(p.tagLine?'#'+text(p.tagLine):''),level:number(p.summonerLevel||p.level),icon:number(p.profileIconId),privacy:['PUBLIC','PRIVATE'].includes(p.privacy)?p.privacy:'unknown'});
 const fail=message=>{throw Error(message);};
@@ -14,7 +14,7 @@ const fail=message=>{throw Error(message);};
 // this account. Both the game backend and the local client then report the same
 // outage, and the raw client status code alone tells the player nothing.
 const historySourceUnavailable=isUpstreamHistoryFailure;
-const HISTORY_SOURCE_UNAVAILABLE='战绩数据源暂时不可用：游戏后台和当前大区客户端的战绩接口都返回了错误。这通常是战绩服务正在维护或暂时不可达，请稍后重试；若持续失败，请先在游戏客户端内确认能否打开战绩列表。';
+const HISTORY_SOURCE_UNAVAILABLE=UPSTREAM_HISTORY_PREFIX+'：游戏后台和当前大区客户端的战绩接口都返回了错误。这通常是战绩服务正在维护或暂时不可达，请稍后重试；若持续失败，请先在游戏客户端内确认能否打开战绩列表。';
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now}={}){
  let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map();let totalCacheBytes=0;
  function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();tokens.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;}
@@ -129,7 +129,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    try{const result=await remote(c,c.localServer,'entitlements',`/match-history-query/v1/products/lol/player/${c.own.puuid}/SUMMARY?startIndex=${start}&count=${count}`);if(!Array.isArray(result?.games))fail('游戏后台返回的战绩格式异常');entries=result.games;}
    catch{await check(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');if(start)fail('英雄统计暂时中断，已保留读取结果，请重试');source='lcu';count=Math.min(100,500);}
   }
-  if(source==='lcu'){let result;try{result=await request(c.auth,`/lol-match-history/v1/products/lol/${c.own.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);}catch(error){if(!historySourceUnavailable(error))throw error;fail('战绩数据源暂时不可用：游戏后台和当前大区客户端的战绩接口都返回了错误，英雄统计无法读取。请稍后重试。');}if(!Array.isArray(result?.games?.games))fail('客户端尚未返回有效战绩，请稍后重试');entries=result.games.games;}
+  if(source==='lcu'){let result;try{result=await request(c.auth,`/lol-match-history/v1/products/lol/${c.own.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);}catch(error){if(!historySourceUnavailable(error))throw error;fail(HISTORY_SOURCE_UNAVAILABLE);}if(!Array.isArray(result?.games?.games))fail('客户端尚未返回有效战绩，请稍后重试');entries=result.games.games;}
   const next={...scan,cursor:crypto.randomBytes(16).toString('hex'),source,counts:{...scan.counts},seen:new Set(scan.seen)};
   for(const entry of entries.slice(0,count)){
    next.scanned++;const game=source==='sgp'?entry?.json:entry;

@@ -1,4 +1,4 @@
-import {cleanChampionUsage,championUsageWeights,familiarMass} from './champion-usage.mjs';
+import {cleanChampionUsage,championUsageWeights,familiarMass,USAGE_ORIGIN} from './champion-usage.mjs';
 import {seededFraction} from './recommendation-diversity.mjs';
 const roles=['top','jungle','mid','bottom','support'];
 
@@ -14,7 +14,18 @@ export function canonicalFamiliarity(value={}){
 }
 
 export function localChampionFamiliarity({client,slots,scope,ownRole,summary,mass}){
- if(!client?.connected||!summary?.session||!['loading','ready','partial'].includes(summary.status)||!summary.usage?.sampled)return {};
+ if(!client?.connected||!summary?.usage?.sampled)return {};
+ // A local cache is this account's own real game counts, so it may guide the
+ // recommendation while the match service is unreachable. A proxy may not.
+ if(summary.origin===USAGE_ORIGIN.CACHE){
+  const cell=client.session?.localPlayerCellId,bound=Number.isInteger(cell)?slots.filter(slot=>slot.clientCellId===cell):[];
+  const mine=roles.includes(ownRole)?ownRole:bound.length===1?bound[0].role:'';
+  const targets=scope==='solo'?roles:mine?[mine]:[];
+  const member={member:'local:cache',mass:familiarMass(mass),usage:cleanChampionUsage(summary.usage)};
+  return Object.fromEntries(targets.filter(role=>{const slot=slots.find(s=>s.role===role);return slot&&(scope==='solo'||!Number.isInteger(slot.clientCellId)||slot.clientCellId===cell);}).map(role=>[role,member]));
+ }
+ if(!summary.session||!['loading','ready','partial'].includes(summary.status))return {};
+ if(summary.origin&&summary.origin!==USAGE_ORIGIN.LIVE)return {};
  const cell=client.session?.localPlayerCellId,bound=Number.isInteger(cell)?slots.filter(slot=>slot.clientCellId===cell):[];
  const mine=roles.includes(ownRole)?ownRole:bound.length===1?bound[0].role:'';
  const targets=scope==='solo'?roles:mine?[mine]:[];

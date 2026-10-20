@@ -1,5 +1,7 @@
 import {escape as e,portrait,button} from './ui.mjs';
 import {championUsageWeights,familiarMass} from './core/champion-usage.mjs';
+// A cached distribution is older, so the age is stated in plain words.
+const formatAge=ms=>{if(!Number.isFinite(ms)||ms<0)return '';const hours=Math.floor(ms/3600000);if(hours<1)return `${Math.max(1,Math.floor(ms/60000))} 分钟前`;if(hours<24)return `${hours} 小时前`;const days=Math.floor(hours/24);return days<30?`${days} 天前`:'超过 30 天前';};
 // Summary pages arrive independently of user input. Update their read-only
 // region without replacing a live search field or an actively dragged range.
 export function patchChampionUsage(root,value,data,options){
@@ -21,12 +23,13 @@ export function championUsageView(value,data,{mass=.85}={}){
  if(!value||value.status==='offline')return '';
  const usage=value.usage||{sampled:0,counts:{}},rows=Object.entries(usage.counts).map(([id,count])=>({hero:data.champions.find(hero=>hero.id===id),count})).filter(row=>row.hero).sort((a,b)=>b.count-a.count||a.hero.id.localeCompare(b.hero.id));
  const weights=championUsageWeights(data.champions,usage,mass),percent=Math.round(familiarMass(mass)*100);
- const mastery=value.basis==='mastery'||usage.basis==='mastery';
- const cached=value.status==='cached';
+ const mastery=value.basis==='mastery'||usage.basis==='mastery'||value.status==='estimated';
+ const cached=value.status==='cached'||value.origin==='cache';
  const stamp=value.at?new Date(value.at).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+ const age=Number.isFinite(value.ageMs)?formatAge(value.ageMs):'';
  const label=value.status==='loading'?`正在读取 ${value.scanned} / ${value.target} 场`:
   value.status==='error'?'统计暂不可用':
-  cached?`本地缓存${stamp?' · '+stamp:''}`:
+  cached?`本地缓存${age?' · '+age:''}${stamp?' · '+stamp:''}`:
   mastery?'按熟练度估算':value.scanned?`近 ${value.scanned} 场${usage.sampled!==value.scanned?' · 可用 '+usage.sampled+' 场':''}${value.status==='partial'?' · 未读完':''}`:'暂无历史场次';
  const note=mastery?'熟练度不是对局场次，只是熟悉度参考；恢复读取后会自动换成真实场次。':cached?'客户端战绩接口不可用时使用本机缓存的匿名英雄计数。':'';
  const hero=row=>`<div class="usage-hero" title="${e(row.hero.name)} · ${mastery?'熟练度权重':'场次'} ${mastery?row.count+'%':row.count+' 场'} · 偏好权重 ${(weights[row.hero.id]*100).toFixed(2)}%（分路限制后重新分配）">${portrait(row.hero)}<span>${e(row.hero.name)}</span><small>${mastery?row.count+'%':row.count+' 场'}</small></div>`;

@@ -1,13 +1,20 @@
 export const DEFAULT_HISTORY_WINDOW=500;
 export const DEFAULT_FAMILIAR_MASS=.85;
 export const USAGE_BASIS={GAMES:'games',MASTERY:'mastery'};
+// Where a distribution came from. Only a live scan carries real game counts.
+export const USAGE_ORIGIN={LIVE:'live',CACHE:'cache',MASTERY:'mastery'};
 // A match list can fail because the upstream match service is unavailable for
 // this account. Only that class of failure may fall back to another source.
-const UPSTREAM_HISTORY_FAILURE=/^(?:客户端暂未接受操作|战绩后台暂不可用|战绩后台认证失效|无法连接战绩后台|战绩后台读取中断|战绩后台数据格式异常|游戏后台返回的战绩格式异常)/;
+// The helper process forwards only the message, so the wording is the contract
+// on both sides of the process boundary.
+export const UPSTREAM_HISTORY_PREFIX='战绩数据源暂时不可用';
+const UPSTREAM_HISTORY_FAILURE=new RegExp(`^(?:${UPSTREAM_HISTORY_PREFIX}|战绩后台暂不可用|战绩后台读取中断|无法连接战绩后台|客户端连接超时|客户端读取已中断|未能连接客户端|连接助手已断开|连接助手响应超时)`);
+const CLIENT_SERVER_FAILURE=/^客户端暂未接受操作（5\d\d）$/;
 export function isUpstreamHistoryFailure(error){
  const status=Number(error?.status);
- if(status===500||status===502||status===503||status===504)return true;
- return UPSTREAM_HISTORY_FAILURE.test(String(error?.message||''));
+ if(status>=500&&status<=599)return true;
+ const message=String(error?.message||'');
+ return UPSTREAM_HISTORY_FAILURE.test(message)||CLIENT_SERVER_FAILURE.test(message);
 }
 const id=value=>typeof value==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value);
 export function familiarMass(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1?value:DEFAULT_FAMILIAR_MASS;}
@@ -34,14 +41,17 @@ export function cleanChampionUsage(value){
 export function masteryUsageDistribution(rows,{total=100}={}){
  if(!Array.isArray(rows)||rows.length>300)throw Error('熟练度数据格式不正确');
  if(!Number.isInteger(total)||total<1||total>DEFAULT_HISTORY_WINDOW)throw Error('熟练度权重总量不正确');
- const weights=[];
+ const merged=new Map();
  for(const row of rows){
   const champion=row?.champion??row?.id,points=Number(row?.points??row?.championPoints);
   if(!id(champion)||!Number.isFinite(points)||points<=0)continue;
-  weights.push({champion,points});
+  // A repeated hero adds up instead of replacing the earlier row.
+  merged.set(champion,(merged.get(champion)||0)+points);
  }
+ const weights=[...merged].map(([champion,points])=>({champion,points}));
  if(!weights.length)throw Error('没有可用的熟练度数据');
  const sum=weights.reduce((total,row)=>total+row.points,0);
+ if(!Number.isFinite(sum)||sum<=0)throw Error('熟练度数据超出范围');
  const shares=weights.map(row=>({champion:row.champion,exact:row.points/sum*total,count:Math.floor(row.points/sum*total)}));
  // Largest remainder keeps the shares exact instead of losing a point per hero.
  let remaining=total-shares.reduce((sum,row)=>sum+row.count,0);

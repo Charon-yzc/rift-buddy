@@ -52,7 +52,7 @@ test('the automatic room decoration wraps updates, guards, leave state and the c
 test('only this process keeps the lobby identifier and the auto room closes with its switch',async()=>{
  const main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
  assert.match(main,/const forRenderer=client=>\{/,'the renderer must not receive the lobby identifier');
- assert.match(main,/const \{own,party,\.\.\.rest\}=client,\{key,\.\.\.cleanParty\}=party\|\|\{\};/,'the identity used as the room nickname must be stripped');
+ assert.match(main,/const \{own,party,account,\.\.\.rest\}=client,\{key,\.\.\.cleanParty\}=party\|\|\{\};/,'the identity used as the room nickname and the local account digest must be stripped');
  assert.match(main,/return \{\.\.\.rest,.*\.\.\.\(party\?\{party:cleanParty\}:\{\}\)\};/,'a missing party must stay missing');
  for(const boundary of [/publishWindows\('client-update',forRenderer\(latestClient\)\)/,/guard\('client-status',async force=>forRenderer\(await status\(force\)\)\)/,/guard\('authorize-client'[\s\S]{0,200}?forRenderer\(await status\(true\)\)/,/guard\('window-info'[\s\S]{0,300}?client:forRenderer\(latestClient\)/])assert.match(main,boundary,'every renderer-facing client snapshot must be stripped');
  const bootstrap=main.slice(main.indexOf(" guard('bootstrap'"),main.indexOf(' const {windowInfo}'));

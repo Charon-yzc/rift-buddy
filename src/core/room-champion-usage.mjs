@@ -1,4 +1,4 @@
-import {cleanChampionUsage,familiarMass} from './champion-usage.mjs';
+import {cleanChampionUsage,familiarMass,USAGE_ORIGIN} from './champion-usage.mjs';
 export const CHAMPION_USAGE_VERSION=1;
 
 // The explicit sharing exception contains aggregate own counts only. Rebuild
@@ -13,5 +13,9 @@ export function cleanSharedChampionUsage(value){
 }
 export function ownSharedChampionUsage(summary,mass){
  if(!summary||!['loading','ready','partial'].includes(summary.status)||!(/^[a-f0-9]{32}$/).test(summary.session||''))return null;
+ // Only a live scan is shared. A local cache or a mastery proxy is a private
+ // fallback and must never reach another player.
+ if(summary.origin!==USAGE_ORIGIN.LIVE)return null;
+ if(!summary.usage?.sampled||!Object.keys(summary.usage.counts||{}).length)return null;
  return cleanSharedChampionUsage({version:CHAMPION_USAGE_VERSION,mass:familiarMass(mass),usage:summary.usage});
 }

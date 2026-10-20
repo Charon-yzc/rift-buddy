@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import https from 'node:https';
+import crypto from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 const execFileAsync=promisify(execFile);
@@ -66,7 +67,7 @@ export function lcuRequest(auth,route,method='GET',body) {
     res.on('error',()=>reject(new Error('客户端读取已中断')));
     res.on('data',chunk=>{size+=chunk.length;if(size>2_000_000){request.destroy();reject(new Error('客户端响应过大'));return;}raw+=chunk;});
     res.on('end',()=>{let value;try{value=raw?JSON.parse(raw):null;}catch{return reject(new Error('客户端返回格式异常'));}
-     if(res.statusCode>=400){const error=new Error(res.statusCode===404?'当前没有可读取的选人信息':res.statusCode===401?'客户端连接已变化，请重新连接':`客户端暂未接受操作（${res.statusCode}）`);error.status=res.statusCode;return reject(error);}
+     if(res.statusCode>=400){const error=new Error(res.statusCode===404?'当前没有可读取的选人信息':res.statusCode===401?'客户端连接已变化，请重新连接':res.statusCode===403?'客户端拒绝了本次读取，请稍后重试':res.statusCode===429?'客户端查询过于频繁，请稍后重试':`客户端暂未接受操作（${res.statusCode}）`);error.status=res.statusCode;return reject(error);}
      resolve(value);
     });
    });
@@ -155,7 +156,13 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   // Validated account IDs stay in main only, including PUUID-only clients.
   // They seed a stable fallback nickname; forRenderer strips raw identity.
   const own={...(ownName?{riotId:ownName}:{}),...(nameIdentity.summonerId?{summonerId:nameIdentity.summonerId}:{}),...(nameIdentity.puuid&&!nameIdentity.summonerId?{puuid:nameIdentity.puuid}:{})};
-  return {connected:true,phase,session,eligibility,game,party,...(Object.keys(own).length?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
+  // A stable, non-reversible account key binds local caches to one player even
+  // when a client phase only reports a different id kind. Only the puuid is
+  // used: it never changes for one account, while a summoner id can be absent
+  // in some phases and would otherwise flip the key.
+  const accountSeed=nameIdentity.puuid||'';
+  const accountKey=accountSeed?crypto.createHash('sha256').update(String(accountSeed)).digest('hex'):'';
+  return {connected:true,phase,session,eligibility,game,party,...(Object.keys(own).length?{own}:{}),...(accountKey?{account:accountKey}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {

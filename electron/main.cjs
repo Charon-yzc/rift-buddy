@@ -116,7 +116,7 @@ async function boot(){
  const {createUsageCache}=await import('../services/champion-usage-cache.mjs');
  const usageCache=createUsageCache({root:storeRoot});
  usageCollector=createChampionUsageCollector({request:(transport,operation,payload)=>helper.history(operation,payload,transport),champions:()=>data.champions,transportCurrent:token=>helper.transportCurrent(token),cache:usageCache,onChange:value=>{if(!quitting){publishWindows('champion-usage',value);roomUsagePublisher?.sync();}}});
- await usageCollector.loadCache().then(()=>{usageCollector.applyCached();}).catch(()=>{});
+ await usageCollector.loadCache().then(()=>usageCollector.applyCached()).catch(()=>{});
  const {createRoomUsagePublisher}=await import('../services/room-champion-usage.mjs');
  roomUsagePublisher=createRoomUsagePublisher({getService:()=>roomService,getSummary:()=>usageCollector.snapshot(),getMass:()=>state.preferences.familiarityMass});
  guard('champion-usage',()=>usageCollector.snapshot());
@@ -265,7 +265,7 @@ async function boot(){
  const decorateRoom=snapshot=>{const identity=snapshot?.mode==='idle'?'':snapshot?.room||'';if(identity!==ballotRoom){roomBallot=null;roomPublicShare=null;ballotRoom=identity;}return decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});};
  // The sandboxed renderer never needs the lobby identifier or the raw identity
  // used as the room nickname: only this process derives the room from them.
- const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(own?.riotId?{playerName:own.riotId}:{}),...(party?{party:cleanParty}:{})};};
+ const forRenderer=client=>{if(!client)return client;const {own,party,account,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(own?.riotId?{playerName:own.riotId}:{}),...(party?{party:cleanParty}:{})};};
  // Closing the auto room always clears the whole auto state, so a later
  // re-enable starts clean instead of inheriting a stale failure or pin. The
  // cancelled key lets an in-flight handshake tell a local close apart from a
