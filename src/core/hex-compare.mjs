@@ -34,7 +34,8 @@ const cooldownRules=[
 const cooldownById=new Map(cooldownRules.flatMap(([ids,pattern,scope,reason])=>ids.map(id=>[id,{pattern,scope,reason}])));
 function cooldownEffect(augment){const effect=cooldownById.get(augment.id);return effect?.pattern.test(augment.description||'')?effect:null;}
 export function augmentCategories(augment){const text=`${augment.name} ${augment.description}`,effect=cooldownEffect(augment);return AUGMENT_CATEGORIES.filter(([id])=>id==='haste'?!!effect:patterns[id]?.test(text)).map(([id])=>id);}
-const allyHealers=new Set(['Alistar','Bard','Ivern','Janna','Karma','Kayle','Lulu','Lux','Milio','Nami','Nidalee','Orianna','Rakan','Renata','Senna','Seraphine','Shen','Sona','Soraka','Taric','Yuumi']);
+const allyHealers=new Set(['Alistar','Bard','Ivern','Janna','Karma','Kayle','LeeSin','Lulu','Lux','Milio','Nami','Nidalee','Orianna','Rakan','Renata','Senna','Seraphine','Shen','Sona','Soraka','Taric','Thresh','Yuumi']);
+const selfHealers=new Set(['Aatrox','Briar','Darius','DrMundo','Fiora','Garen','Hecarim','Illaoi','Kayn','Kayle','Maokai','Mordekaiser','Nasus','Nidalee','Olaf','Renekton','Sett','Swain','Sylas','Trundle','Tryndamere','Vladimir','Volibear','Warwick','Zac']);
 // The lists below are curated mechanics groups, not win-rate or pick-rate data.
 // They only answer "does this effect connect with this champion or with a card
 // already taken", so a ranking never implies that a combination is stronger.
@@ -43,11 +44,11 @@ const onhitBuilds=new Set(['onhit','ezreal']);
 const apBuilds=new Set(['mage','burn','apAssassin','enchanter']);
 const adBuilds=new Set(['crit','meleeCrit','jhin','senna','onhit','adAssassin','fighter','ezreal']);
 const critIds=new Set([1047,1048,1356,1328,1092,1118,1080,1077,2010,2024,1415,2009,2016]);
-const critPenaltyIds=new Set([1047,1048,1356,1328,1092,1077,2010,2024,2009,1415]);
+const critPenaltyIds=new Set([1047,1356,1328,1077,2010,2024,2009,1415]);
 const onhitIds=new Set([1225,1029,1058,1087,1220,1022,1081,2096,2148,1051,2010,2016]);
 const burnIds=new Set([1045,1036,2128,2102,1092]);
 const tankCoreIds=new Set([1013,1041,1001,1064,1057,1353,1327,1375,1020,1333,2139,1181,1018]);
-const supportNeedsHealIds=new Set([1141,1005,1076,1095,2104,2004,2133,2108,1015]);
+const supportNeedsHealIds=new Set([1141,1005,1076,1095,2104,2004,2133,2108]);
 const supportPowerIds=new Set([1037,1324,1118]);
 const supportIds=new Set([...supportNeedsHealIds,...supportPowerIds,1420,1331]);
 const executeIds=new Set([2006,2004,2135]);
@@ -85,7 +86,7 @@ export function compareAugments({champion,options=[],owned=[],augments=[],buildK
  });
 }
 
-function fitSignals({champion,augment,chosen,buildKey,p}){
+function fitSignals({champion,augment,chosen,buildKey,p,existingReasons=[]}){
  const build=buildKey||p?.build||null,reasons=[],cautions=[],interactions=[];let score=0;
  const reason=(text,weight)=>{uniquePush(reasons,text);score+=weight;};
  const caution=(text,weight)=>{uniquePush(cautions,text);score+=weight;};
@@ -112,12 +113,16 @@ function fitSignals({champion,augment,chosen,buildKey,p}){
   else if(onhitBuilds.has(build)||critBuilds.has(build))caution('灼烧依赖技能或持续伤害，普攻路线未必充分利用',-1);
  }
  if(tankCoreIds.has(augment.id)){
-  if(build==='tank'||build==='supportTank'||p?.frontline)reason('当前偏前排，生存属性更容易转化为持续作战',3);
-  else if(critBuilds.has(build)||onhitBuilds.has(build)||build==='enchanter')caution('当前不是前排定位，防御属性会挤占输出强化的位置',-2);
+  if(build==='tank'||build==='supportTank'||p?.frontline){
+   if(existingReasons.some(text=>/前排/.test(text)))score+=3;
+   else reason('当前偏前排，生存属性更容易转化为持续作战',3);
+  }else if(critBuilds.has(build)||onhitBuilds.has(build)||build==='enchanter')caution('当前不是前排定位，防御属性会挤占输出强化的位置',-2);
  }
  if(supportNeedsHealIds.has(augment.id)){
-  if(support)reason('英雄本身能治疗或护盾队友，强化条件有触发手段',3);
-  else caution('需要治疗或护盾队友才能触发，当前英雄缺少稳定手段',-3);
+  if(support){
+   if(existingReasons.some(text=>/队友|友方|治疗|护盾/.test(text)))score+=3;
+   else reason('英雄本身能治疗或护盾队友，强化条件有触发手段',3);
+  }else caution('需要治疗或护盾队友才能触发，当前英雄缺少稳定手段',-3);
  }
  if(supportPowerIds.has(augment.id)){
   if(support)reason('治疗或护盾强度能直接放大英雄的辅助能力',3);
@@ -157,7 +162,11 @@ function fitSignals({champion,augment,chosen,buildKey,p}){
  if(itemUpgradeIds.has(augment.id))caution('需要先做出对应装备才能触发，注意当前路线是否会买',-1);
  if([2042,2043].includes(augment.id))caution('依赖草丛位置；嚎哭深渊可用草丛有限',-1);
  if(augment.id===1332)caution('施放技能会消耗当前生命值，低血量时风险更高',-1);
- if(augment.id===1048&&apBuilds.has(build))reason('技能可以暴击，适合以技能伤害为主的英雄',2);
+ if(augment.id===1048&&apBuilds.has(build))reason('技能可以暴击，适合以技能伤害为主的英雄',3);
+ if(augment.id===1092&&apBuilds.has(build)&&build!=='burn'&&build!=='mage')reason('持续伤害可以暴击，适合法术持续输出',2);
+ if(augment.id===1015){
+  if(selfHealers.has(champion?.id))reason('英雄有稳定的自身回复或生命偷取，可以触发死亡之环的伤害',3);
+ }
  if(augment.id===1118&&support)reason('治疗或护盾暴击能直接放大辅助收益',2);
  if(augment.id===1077&&critBuilds.has(build))reason('暴击伤害转为治疗，适合持续普攻的暴击输出',2);
  if(augment.id===1181&&(p?.frontline||build==='tank'||build==='supportTank'))reason('把最大生命值转成普攻伤害，前排也能补输出',2);
@@ -183,6 +192,8 @@ function fitSignals({champion,augment,chosen,buildKey,p}){
  if(augment.id===2010&&has(1225))interaction('攻击特效与暴击附加的额外攻击特效可以叠加',2);
  if(augment.id===1141&&has(1037))interaction('队友治疗或护盾强度会放大“全心为你”的条件收益',2);
  if(augment.id===1037&&has(1141))interaction('队友治疗或护盾强度会放大“全心为你”的条件收益',2);
+ if(augment.id===1015&&has(1346))interaction('全能吸血提供自身回复，可以触发死亡之环的伤害',2);
+ if(augment.id===1346&&has(1015))interaction('全能吸血提供自身回复，可以触发死亡之环的伤害',2);
  if(snowballIds.has(augment.id)&&any([...snowballIds])&&!has(augment.id))interaction('同属雪球路线，注意是否真的会频繁使用雪球',1);
  return {score,reasons,cautions,interactions};
 }
@@ -190,7 +201,7 @@ function fitSignals({champion,augment,chosen,buildKey,p}){
 function evaluateOptions({champion,options=[],owned=[],augments=[],buildKey=null}){
  const p=champion?profile(champion):null,chosen=new Set(owned),records=new Map(augments.map(a=>[a.id,a]));
  return compareAugments({champion,options,owned,augments,buildKey}).map((row,index)=>{
-  const augment=records.get(row.id),fit=fitSignals({champion,augment,chosen,buildKey,p});
+  const augment=records.get(row.id),fit=fitSignals({champion,augment,chosen,buildKey,p,existingReasons:row.reasons});
   return {row:{...row,reasons:[...new Set([...row.reasons,...fit.reasons])],cautions:[...new Set([...row.cautions,...fit.cautions])],interactions:[...new Set([...row.interactions,...fit.interactions])]},score:fit.score,index};
  });
 }
@@ -199,6 +210,7 @@ export function rankAugmentOptions(args={}){
  return evaluated.map(({row,score},index)=>({...row,rank:index+1,priority:score>=3?'优先':score>=1?'次选':'备选',top:index===0&&score>=3}));
 }
 export function recommendAugmentReroll(args={}){
+ if(!args.champion)return {recommended:false,text:'选择英雄后再看重随建议；当前没有英雄机制可用于比较。'};
  const ranked=evaluateOptions(args).sort((a,b)=>b.score-a.score||a.index-b.index);
  if(ranked.length<2)return {recommended:false,text:'只有一张候选；先按英雄机制和已选强化判断，没有对比就不谈重随收益。'};
  const best=ranked[0],strong=ranked.filter(row=>row.score>=3).length;
@@ -233,6 +245,7 @@ export function analyzeAugmentSet({champion,owned=[],augments=[],buildKey=null})
  if(chosen.has(1029)&&chosen.has(1058))synergies.push('技能施加攻击特效，攻击特效再缩短技能冷却。');
  if(chosen.has(1225)&&chosen.has(2010))synergies.push('攻击特效与暴击附加的额外攻击特效可以叠加。');
  if(chosen.has(1141)&&chosen.has(1037))synergies.push('队友治疗或护盾强度会放大“全心为你”的条件收益。');
+ if(chosen.has(1015)&&chosen.has(1346))synergies.push('全能吸血提供自身回复，可以触发死亡之环的伤害。');
  if(chosen.has(1205)&&chosen.has(1030))synergies.push('物理转魔法后，法强还能继续转成技能急速。');
  if(chosen.has(1206)&&[...chosen].some(id=>[1047,1356,1328].includes(id)))synergies.push('法术转攻击力后，暴击装备的收益更直接。');
  if(chosen.has(1004)&&[...chosen].some(id=>ultimateIds.has(id)))conflicts.push('“回归基本功”不能使用终极技能，和已选终极技能强化的触发条件冲突。');

@@ -54,6 +54,45 @@ test('combo analysis reports an ultimate conflict and an AD conversion mismatch'
  assert.ok(mismatch.conflicts.some(text=>/攻击力|法术强度/.test(text)));
 });
 
+test('mage skill-crit augment is not contradicted by a caster penalty',()=>{
+ const row=ranked(hero('Veigar'),[1048])[0];
+ assert.equal(row.priority,'优先');
+ assert.ok(!row.cautions.some(text=>/暴击强化/.test(text)));
+ assert.ok(row.reasons.some(text=>/技能.*暴击/.test(text)));
+});
+
+test('burn damage crit augment fits a burn mage without a caster penalty',()=>{
+ const row=ranked(hero('Brand'),[1092])[0];
+ assert.notEqual(row.priority,'备选');
+ assert.ok(!row.cautions.some(text=>/暴击强化/.test(text)));
+});
+
+test('self-healing frontline can use death ring without a support penalty or conflict',()=>{
+ const row=ranked(hero('DrMundo'),[1015])[0];
+ assert.notEqual(row.priority,'备选');
+ assert.ok(!row.cautions.some(text=>/队友/.test(text)));
+ assert.ok(row.reasons.some(text=>/自身回复|生命回复/.test(text)));
+ const set=analyzeAugmentSet({champion:hero('DrMundo'),owned:[1015,1346],augments:data.augments,buildKey:'tank'});
+ assert.equal(set.conflicts.some(text=>/治疗|护盾|队友/.test(text)),false);
+});
+
+test('ally shield champions are recognized as support triggers',()=>{
+ const row=ranked(hero('Thresh'),[1141])[0];
+ assert.notEqual(row.priority,'备选');
+ assert.ok(!row.cautions.some(text=>/缺少稳定手段/.test(text)));
+});
+
+test('front-line survival reason is not repeated after ranking',()=>{
+ const row=ranked(hero('Malphite'),[1041])[0];
+ assert.equal(row.reasons.filter(text=>/前排/.test(text)).length,1);
+});
+
+test('reroll advice asks for a champion before judging',()=>{
+ const advice=recommendAugmentReroll({champion:null,options:[1047,1041],owned:[],augments:data.augments});
+ assert.equal(advice.recommended,false);
+ assert.match(advice.text,/选择英雄/);
+});
+
 test('a defensive crit augment is not treated as a carry-only crit pick',()=>{
  const rows=ranked(hero('Malphite'),[1080]);
  assert.notEqual(rows[0].priority,'备选');
