@@ -71,7 +71,7 @@ test('actual worker entry configures a changed catalog and preserves request ide
 });
 test('application calculation and cancellation keep the latest task through old promise cleanup',async t=>{
  const f=fixture();t.after(()=>f.runner.dispose());const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
- const calculate=source.slice(source.indexOf('function calculateRecommendation(input){'),source.indexOf('async function generate(next=false)'));
+ const calculate=source.slice(source.indexOf('function calculateRecommendation(input){'),source.indexOf('async function generate(next=false,automatic=false)'));
  const cancel=source.match(/function cancelRecommendation\(\)\{[^\n]+\}/)[0];
  const context=vm.createContext({recommendationRunner:f.runner,activeRecommendation:null,recommendationRun:0,autoRecommendationKey:'old',generating:true,cancelRecommendationReveal:()=>{}});vm.runInContext(calculate+cancel,context);
  const first=context.calculateRecommendation(f.input),rejected=assert.rejects(first,error=>error.cancelled===true);context.cancelRecommendation();

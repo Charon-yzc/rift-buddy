@@ -56,6 +56,20 @@ test('a local lane remains reserved before any own history is available, while a
  }
 });
 
+test('all twelve room members can contribute a normalized pool without inventing individual player bindings',()=>{
+ const f=binding();f.client.party={status:'unknown',members:[]};f.room.members=[{self:true,nick:'本人'},...Array.from({length:11},(_,i)=>({nick:'伙伴'+i,online:true,share:{championUsage:usage({Lux:i+1})}}))];
+ const result=roomFamiliarityContext(f);assert.equal(result.roomFamiliarity.length,12);assert.deepEqual(Object.keys(result.familiarityByRole),['mid']);
+ const weights=roomChampionUsageWeights(['Ahri','Lux','Ashe'],result.roomFamiliarity);assert.ok(Math.abs(Object.values(weights).reduce((a,b)=>a+b,0)-1)<1e-9);assert.ok(weights.Lux>weights.Ahri);
+});
+
+test('case and NFKC nickname aliases cannot bind one public player to two provisional lanes',()=>{
+ for(const alias of ['foo#cn1','Ｆｏｏ#CN1']){
+  const f=binding();f.client.phase='Lobby';delete f.client.session;f.client.party={status:'lobby',members:[{local:false,publicRiotId:'Foo#CN1'}]};f.slots=createSlots();
+  f.room.members=[{self:true,nick:'我'},...['Foo#CN1',alias].map((nick,i)=>({nick,online:true,share:{intent:{role:i?'jungle':'top'},championUsage:usage({Lux:10})}}))];
+  const result=roomFamiliarityContext(f);assert.equal(result.familiarityByRole.top,undefined);assert.equal(result.familiarityByRole.jungle,undefined);assert.equal(result.roomFamiliarity.length,3);
+ }
+});
+
 test('unavailable own history retry cycles do not change room recommendation inputs or restart the actual app worker',async()=>{
  const source=fs.readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a))),f=binding();
  let cancelled=0,queued=0;f.summary={revision:1,status:'error',session:'a'.repeat(32),usage:{sampled:0,counts:{}}};
@@ -86,7 +100,7 @@ test('actual app room RPC and notifications clear changed candidates once and re
    recommendationKey,roomFamiliarityContext,results:[{id:'visible-old'}],offset:6,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},scheduleRoomPublish(){},queueCompanionRecommendation(){queued++;},roomSharePayload:()=>({lineup:[],pick:null}),resultCreativePlan(){throw Error('A stale worker was committed');},
    calculateRecommendation(){c.activeRecommendation={cancel(){cancelled++;}};return new Promise(resolve=>finish=resolve);},
    recommendationInput(){return {slots:c.slots,...roomFamiliarityContext({client:c.client,room:c.room,slots:c.slots,scope:'party',ownRole:'mid',summary:c.championUsage,mass:.85})};},api:{roomPublish:async()=>next,roomLeave:async()=>next}});
-  vm.runInContext(extract('function applyRoomSnapshot(','function rememberPreparation(')+extract('async function publishRoomShare(','function scheduleRoomPublish(')+extract('function cancelRecommendation(){','\n')+extract('async function generate(next=false){','const sync=createClientSync')+`async function leaveRoom(){const action='room-leave';${extract("if(action==='room-leave'){","if(action==='room-transport')")}}`,c);
+  vm.runInContext(extract('function applyRoomSnapshot(','function rememberPreparation(')+extract('async function publishRoomShare(','function scheduleRoomPublish(')+extract('function cancelRecommendation(){','\n')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync')+`async function leaveRoom(){const action='room-leave';${extract("if(action==='room-leave'){","if(action==='room-transport')")}}`,c);
   const pending=c.generate(),metadata=structuredClone(f.room);metadata.members[1].share.at=99999;metadata.members[1].lastSeen=99999;
   c.applyRoomSnapshot(metadata);assert.equal(cancelled,0);assert.equal(queued,0);assert.equal(c.results[0].id,'visible-old');
   if(notificationFirst)c.applyRoomSnapshot(next);

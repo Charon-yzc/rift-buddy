@@ -3,7 +3,7 @@ import {COOPERATION_PAIRS,cooperationCoordination} from './cooperation-pairs.mjs
 import {createSkillCooperation} from './cooperation-skills.mjs';
 import {preferredTempo} from './strategy.mjs';
 import {sharedCooperationPlan} from './shared-cooperation.mjs';
-import {tacticalCooperationPlan} from './tactical-cooperation.mjs';
+import {tacticalCooperationPlan,tacticalCooperationMode} from './tactical-cooperation.mjs';
 import {partyCooperationPlan} from './party-cooperation.mjs';
 import {resourceCoordination} from './cooperation-resources.mjs';
 import {mechanicReview} from './mechanic-review.mjs';
@@ -84,8 +84,7 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
 }
 
 function connectedEdges(members,graph){
- const edges=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge)edges.push(edge);}
- const current=edges.filter(e=>e.current);
+ const current=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)current.push(edge);}
  if(!current.length)return graph.skills.edges(members);
  const missing=members.filter(m=>!current.some(e=>[e.a,e.b].includes(m.champion)));
  if(current.length>=members.length-1&&!missing.length)return current;
@@ -136,15 +135,16 @@ export function cooperationSeeds({members,targets,candidateSets,graph,limit=24,p
  if(![2,3].includes(members.length)||!targets.length||targets.some(r=>!members.some(m=>m.role===r)))return [];
  const pools=members.map(m=>targets.includes(m.role)?(candidateSets[m.role]||[]).map((c,rank)=>({role:m.role,champion:c.id,rank})):graph.byId.has(m.champion)?[{role:m.role,champion:m.champion,rank:0}]:[]);
  if(pools.some(p=>!p.length))return [];
+ const profiles=new Map(pools.flat().map(m=>[key(m),graph.profile(m)]));
  const best=new Map();
  const visit=picks=>{
   if(new Set(picks.map(m=>m.champion)).size!==picks.length)return;
-  const connected=connectedEdges(picks,graph),tactical=!connected||connected.every(e=>e.family.startsWith('skills:'))?tacticalCooperationPlan(picks,graph,preferences):null;
+  const connected=connectedEdges(picks,graph),tactical=!connected||connected.every(e=>e.family.startsWith('skills:'))?tacticalCooperationMode(picks,graph,preferences):null;
   if(!connected&&!tactical)return;
   const edges=tactical?[]:connected;
-  const traits=picks.map(m=>graph.profile(m)),ad=traits.reduce((n,p)=>n+p.damageWeights.ad,0),ap=traits.reduce((n,p)=>n+p.damageWeights.ap,0);
+  const traits=picks.map(m=>profiles.get(key(m))),ad=traits.reduce((n,p)=>n+p.damageWeights.ad,0),ap=traits.reduce((n,p)=>n+p.damageWeights.ap,0);
   const score=edges.length*8+edges.filter(e=>e.current).length*3+(ad>=.75&&ap>=.75?6:0)+['frontline','sustain','peel','engage'].filter(k=>traits.some(p=>p[k])).length*2-picks.reduce((n,m)=>n+m.rank,0)/8-traits.reduce((n,p)=>n+p.difficulty,0)/4;
-  const family=tactical?'tactical:'+tactical.tempo+':'+picks.map(m=>m.role+':'+(graph.profile(m).frontline?'frontline':graph.profile(m).peel?'peel':'damage')).join('|'):edges.map(e=>e.family).sort().join('|'),signature=picks.map(key).join('|'),previous=best.get(family);
+  const family=tactical?'tactical:'+tactical+':'+picks.map((m,i)=>m.role+':'+(traits[i].frontline?'frontline':traits[i].peel?'peel':'damage')).join('|'):edges.map(e=>e.family).sort().join('|'),signature=picks.map(key).join('|'),previous=best.get(family);
   if(!previous||score>previous.score||score===previous.score&&signature<previous.signature)best.set(family,{score,signature,members:picks});
  };
  for(const a of pools[0])for(const b of pools[1]){if(pools.length===2)visit([a,b]);else for(const c of pools[2])visit([a,b,c]);}

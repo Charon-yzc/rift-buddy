@@ -483,7 +483,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   const priorityCeiling=Math.max(...pool.map(priority)),bestFit=Math.max(...pool.filter(entry=>priority(entry)===priorityCeiling).map(entry=>entry.score));
   // One preference sampler covers curated, creative and generated lineups.
   // Source/discovery reservations cannot silently bypass a member's heroes.
-  const preferred=familiarityWinner(pool.filter(entry=>priority(entry)===priorityCeiling&&entry.score>=bestFit-18),targets,familiarity,randomSeed,i);
+  const preferred=familiarityWinner(pool.filter(entry=>priority(entry)===priorityCeiling&&entry.score>=bestFit-18),targets,exploration,randomSeed,i);
   if(preferred){chosen.push(pool.splice(pool.indexOf(preferred),1)[0]);continue;}
   const authoredDiscovery=partyMembers.length===3&&i%6===3?pool.filter(entry=>entry.trio&&actionable(entry)===3&&!usedCombos.has(entry.trio.id)&&priority(entry)===priorityCeiling&&entry.score>=bestFit-16).sort((a,b)=>{
    const novelty=entry=>rankScore(entry)-chosen.reduce((sum,c)=>sum+targets.filter(role=>c.slots.find(s=>s.role===role).champion===entry.slots.find(s=>s.role===role).champion).length*12+(c.compositionFit?.tactic?.id===entry.compositionFit?.tactic?.id?8:0),0);

@@ -62,10 +62,15 @@ const choose=(members,tempo)=>{
  if(['poke','protect','growth'].includes(tempo)&&possible[tempo])return tempo;
  return possible.poke?'poke':possible.protect?'protect':null;
 };
-export function tacticalCooperationPlan(members,graph,{tempo='any'}={}){
+// Search needs only eligibility/tempo. Build player-facing instructions once
+// a complete candidate is retained, rather than for every intermediate trio.
+export function tacticalCooperationMode(members,graph,{tempo='any'}={}){
  if(members.some(member=>!graph.byId.has(member.champion)||!graph.profile(member).reviewed))return null;
  if(members.length<2||members.length>5||members.some(m=>!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(key)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length||new Set(members.map(m=>m.role)).size!==members.length)return null;
- const mode=choose(members,tempo);if(!mode)return null;
+ return choose(members,tempo);
+}
+export function tacticalCooperationPlan(members,graph,preferences={}){
+ const mode=tacticalCooperationMode(members,graph,preferences);if(!mode)return null;
  const name=id=>graph.byId.get(id).name,labels={poke:'消耗与拉扯',protect:'保护与持续输出',growth:'成长与约定会合'};
  const functions=members.map(m=>{const kit=actions[m.champion]||{};return mode==='poke'?(kit.poke?'poke':kit.guard?'guard':kit.carry?'carry':'growth'):mode==='protect'?(kit.guard?'guard':kit.carry?'carry':kit.poke?'poke':'growth'):(kit.growth?'growth':kit.guard?'guard':kit.carry?'carry':'poke');});
  const memberJobs=members.map((m,i)=>{const row=COOPERATION_SKILLS[m.champion];return {...m,job:actions[m.champion]?.[functions[i]]||`先守远程队友能接应的位置与退路，不独自进场；${independentCooperationAction(m.champion)} 玩家确认：${row[1]} 退出条件：${row[2]}`};});

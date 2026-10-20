@@ -2,6 +2,7 @@ import {proposalKey} from './core/room.mjs';
 import {roomBallotView} from './room-ballot-view.mjs';
 import {recommendationMembers} from './core/recommendation-diversity.mjs';
 import {roomFamiliarityContext} from './core/room-familiarity.mjs';
+import {createRecommendationFamiliarityState} from './core/recommendation-familiarity-state.mjs';
 import {roomBallotBoard} from './core/room-ballot.mjs';
 import {roleClaimChoice,activeRoleClaim,roleRepresentatives} from './core/role-claim.mjs';
 import {clientConnectionNotice} from './client-connection-view.mjs';
@@ -385,7 +386,7 @@ function queueCompanionRecommendation(){
  clearTimeout(autoRecommendTimer);
  if((!windowLayout.docked&&route!=='draft')||generating||syncing||['party','context'].includes(scope)&&!slots.some(slot=>slot.party)||['InProgress','GameStart','Reconnect','WaitingForStats','PreEndOfGame','EndOfGame'].includes(client.phase)||client.mode?.id==='hex')return;
  const key=recommendationKey(recommendationInput());if(key===autoRecommendationKey||key===resultsSignature&&results.length)return;
- autoRecommendTimer=setTimeout(()=>{if((!windowLayout.docked&&route!=='draft')||generating||syncing)return;autoRecommendationKey=key;generate();},250);
+ autoRecommendTimer=setTimeout(()=>{if((!windowLayout.docked&&route!=='draft')||generating||syncing)return;autoRecommendationKey=key;generate(false,true);},250);
 }
 function acceptWindowLayout(value){if(JSON.stringify(windowLayout)===JSON.stringify(value))return;windowLayout=value;render();queueCompanionRecommendation();}
 const refreshingBuilds=new Map(),refreshAttempts=new Map(),buildErrors=new Map();let recommendationError='';
@@ -1303,12 +1304,13 @@ function markResultStale(){if(detailResult){const notice=document.getElementById
 // Client status ticks only inspect a recommendation signature. Keep immutable
 // source references here; postMessage takes the isolated worker snapshot once.
 let roleEvidenceCache=null;
+const recommendationFamiliarity=createRecommendationFamiliarityState();
 function currentRoleEvidence(){
  const keys=[data.champions,data.runes,data.items,data.buildSources,data.builds,data.patch];
  if(!roleEvidenceCache||keys.some((value,index)=>value!==roleEvidenceCache.keys[index]))roleEvidenceCache={keys,value:buildRoleEvidence(data)};
  return roleEvidenceCache.value;
 }
-function recommendationInput(){
+function recommendationInput(refreshFamiliarity=false){
  // A recommendation keeps the last range for this exact public draft. Its
  // display freshness and every client write still require a fresh read.
  const at=Date.parse(client.eligibility?.receivedAt),now=Date.now(),referenceTime=Number.isFinite(at)?Math.min(now,at+15000):now;
@@ -1321,8 +1323,10 @@ function recommendationInput(){
  const own=currentPlayerSelection(contextSession,data.champions,base);
  const knownPicks=new Set((contextSession?.myTeam||[]).map(player=>data.champions.find(champion=>Number(champion.key)===Number(player.championId))?.id).filter(Boolean));
  const publicPicks=[...new Set([...unassigned.map(p=>p.champion),...unassignedPublicPicks(base,contextSession,data.champions).map(p=>p.champion)])].filter(id=>!contextSession||knownPicks.has(id));
- const {familiarityByRole,roomFamiliarity}=roomFamiliarityContext({client,room,slots:contextSlots,scope,ownRole:taskOwnRole(),summary:championUsage,mass:saved.preferences.familiarityMass});
- return {includePreselected,familiarityByRole,roomFamiliarity,rankedDraft:resolvedRankedDraft(client,data,saved.draft?.enemyRoles),randomSeed:String(publicClientGameId(client)||recommendationSessionSeed),clientSession:contextSession,party:currentParty(),soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:localPickLocked(session)?eligibility.confirmedPick:null,publicPicks,enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:activeCreativePlan,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
+ const liveFamiliarity=roomFamiliarityContext({client,room,slots:contextSlots,scope,ownRole:taskOwnRole(),summary:championUsage,mass:saved.preferences.familiarityMass});
+ const input={includePreselected,rankedDraft:resolvedRankedDraft(client,data,saved.draft?.enemyRoles),randomSeed:String(publicClientGameId(client)||recommendationSessionSeed),clientSession:contextSession,party:currentParty(),soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:localPickLocked(session)?eligibility.confirmedPick:null,publicPicks,enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:activeCreativePlan,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
+ const condition=recommendationKey(input)+'|'+liveFamiliarity.bindingKey;
+ return {...input,...recommendationFamiliarity.read({...liveFamiliarity,condition},refreshFamiliarity)};
 }
 function useCatalogResult(result){if(hasDataRevision(result))return;cancelRecommendation();dataState.local({catalog:result.catalog,catalogInfo:result.info});results=[];offset=0;render();}
 function rolePoolsDialog(){closeOverlay();overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="各位置英雄池"><header class="modal-header"><div><h2>各位置英雄池</h2><p>只限制本次需要推荐的位置，保留已经锁定的英雄。</p></div>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="panel-body">${ROLES.map(r=>`<div class="setting-row"><div><b>${r.name}</b><p>${saved.preferences.rolePools[r.id].heroes.map(id=>champ(id)?.name||id).join('、')||'未设置英雄池'}</p></div><select class="select" data-role-pool-mode="${r.id}" aria-label="${r.name}英雄池模式">${[['off','全部英雄'],['prefer','优先这个池'],['only','仅使用这个池']].map(([id,name])=>`<option value="${id}" ${saved.preferences.rolePools[r.id].mode===id?'selected':''}>${name}</option>`).join('')}</select>${button('role-pool-edit','选英雄','','small',`data-role="${r.id}"`)}</div>`).join('')}<p class="bottom-note">与全局英雄池同时限制时取交集；空池设为“仅使用”会提示你调整。</p></div></section></div>`;}
@@ -1334,9 +1338,9 @@ function calculateRecommendation(input){
  const task=recommendationRunner.run(input);activeRecommendation=task;
  return task.promise.finally(()=>{if(activeRecommendation===task)activeRecommendation=null;});
 }
-async function generate(next=false){
+async function generate(next=false,automatic=false){
  if(generating)return;clearTimeout(autoRecommendTimer);autoRecommendTimer=null;cancelRecommendationReveal();recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();
- try{offset=next?offset+(results.length||6):0;const input=recommendationInput();
+ try{offset=next?offset+(results.length||6):0;const input=recommendationInput(!automatic);
   const signature=recommendationKey(input);
   let result=await calculateRecommendation(input);if(!result.length&&offset){offset=0;result=await calculateRecommendation({...input,offset:0});}
   if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;
