@@ -1,9 +1,21 @@
 export const DEFAULT_HISTORY_WINDOW=500;
 export const DEFAULT_FAMILIAR_MASS=.85;
+export const USAGE_BASIS={GAMES:'games',MASTERY:'mastery'};
+// A match list can fail because the upstream match service is unavailable for
+// this account. Only that class of failure may fall back to another source.
+const UPSTREAM_HISTORY_FAILURE=/^(?:客户端暂未接受操作|战绩后台暂不可用|战绩后台认证失效|无法连接战绩后台|战绩后台读取中断|战绩后台数据格式异常|游戏后台返回的战绩格式异常)/;
+export function isUpstreamHistoryFailure(error){
+ const status=Number(error?.status);
+ if(status===500||status===502||status===503||status===504)return true;
+ return UPSTREAM_HISTORY_FAILURE.test(String(error?.message||''));
+}
 const id=value=>typeof value==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value);
 export function familiarMass(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1?value:DEFAULT_FAMILIAR_MASS;}
+export function usageBasis(value){return value===USAGE_BASIS.MASTERY?USAGE_BASIS.MASTERY:USAGE_BASIS.GAMES;}
 
 // Only anonymous hero counts leave this model. No match IDs, player IDs or notes.
+// The basis label (real games or a mastery proxy) is metadata beside the
+// counts, never part of the shared counts payload.
 export function cleanChampionUsage(value){
  if(!value||typeof value!=='object'||Array.isArray(value)||!Number.isInteger(value.sampled)||value.sampled<0||value.sampled>DEFAULT_HISTORY_WINDOW||!value.counts||typeof value.counts!=='object'||Array.isArray(value.counts))throw Error('英雄使用统计格式不正确');
  const entries=Object.entries(value.counts);if(entries.length>300)throw Error('英雄使用统计超出范围');
@@ -14,6 +26,29 @@ export function cleanChampionUsage(value){
  }
  if(games>value.sampled)throw Error('英雄场次超过已读取场数');
  return {sampled:value.sampled,counts:Object.fromEntries(Object.entries(counts).sort(([a],[b])=>a.localeCompare(b,'en')))};
+}
+
+// A match list can be unreachable while the client still knows the account's
+// champion mastery. Mastery points are a real familiarity signal, never a game
+// count: the distribution is normalized and stays labelled as a mastery proxy.
+export function masteryUsageDistribution(rows,{total=100}={}){
+ if(!Array.isArray(rows)||rows.length>300)throw Error('熟练度数据格式不正确');
+ if(!Number.isInteger(total)||total<1||total>DEFAULT_HISTORY_WINDOW)throw Error('熟练度权重总量不正确');
+ const weights=[];
+ for(const row of rows){
+  const champion=row?.champion??row?.id,points=Number(row?.points??row?.championPoints);
+  if(!id(champion)||!Number.isFinite(points)||points<=0)continue;
+  weights.push({champion,points});
+ }
+ if(!weights.length)throw Error('没有可用的熟练度数据');
+ const sum=weights.reduce((total,row)=>total+row.points,0);
+ const shares=weights.map(row=>({champion:row.champion,exact:row.points/sum*total,count:Math.floor(row.points/sum*total)}));
+ // Largest remainder keeps the shares exact instead of losing a point per hero.
+ let remaining=total-shares.reduce((sum,row)=>sum+row.count,0);
+ const order=shares.map((row,index)=>({index,fraction:row.exact-row.count})).sort((a,b)=>b.fraction-a.fraction||shares[a.index].champion.localeCompare(shares[b.index].champion));
+ for(const {index} of order){if(remaining<=0)break;shares[index].count++;remaining--;}
+ const counts={};for(const row of shares)if(row.count>0)counts[row.champion]=row.count;
+ return {...cleanChampionUsage({sampled:total,counts}),basis:USAGE_BASIS.MASTERY};
 }
 function heroIds(champions){
  if(!Array.isArray(champions)||champions.length>300)throw Error('英雄列表不正确');

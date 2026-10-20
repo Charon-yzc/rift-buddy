@@ -110,7 +110,13 @@ async function boot(){
   });
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));
  const {createChampionUsageCollector}=await import('../services/champion-usage-collector.mjs');
- usageCollector=createChampionUsageCollector({request:(transport,operation,payload)=>helper.history(operation,payload,transport),champions:()=>data.champions,transportCurrent:token=>helper.transportCurrent(token),onChange:value=>{if(!quitting){publishWindows('champion-usage',value);roomUsagePublisher?.sync();}}});
+ // The familiar-hero statistics are cached locally so the recommendation
+ // keeps working while the client or the match service is unavailable. Only
+ // anonymous hero counts are stored and they never leave this machine.
+ const {createUsageCache}=await import('../services/champion-usage-cache.mjs');
+ const usageCache=createUsageCache({root:storeRoot});
+ usageCollector=createChampionUsageCollector({request:(transport,operation,payload)=>helper.history(operation,payload,transport),champions:()=>data.champions,transportCurrent:token=>helper.transportCurrent(token),cache:usageCache,onChange:value=>{if(!quitting){publishWindows('champion-usage',value);roomUsagePublisher?.sync();}}});
+ await usageCollector.loadCache().then(()=>{usageCollector.applyCached();}).catch(()=>{});
  const {createRoomUsagePublisher}=await import('../services/room-champion-usage.mjs');
  roomUsagePublisher=createRoomUsagePublisher({getService:()=>roomService,getSummary:()=>usageCollector.snapshot(),getMass:()=>state.preferences.familiarityMass});
  guard('champion-usage',()=>usageCollector.snapshot());

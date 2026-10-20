@@ -6,14 +6,14 @@ import {normalizeAkariMatch as normalizeMatch} from '../src/core/akari/bridge.mj
 import {riotAliasRequest} from './match-history-riot.mjs';
 import {ongoingRoster} from '../src/core/ongoing-game.mjs';
 import {cleanPlayerChallenges,cleanPlayerProfile,normalizePublicRanked,normalizePublicMastery} from './match-history-profile.mjs';
+import {USAGE_BASIS,isUpstreamHistoryFailure} from '../src/core/champion-usage.mjs';
 
 const profile=p=>({puuid:p.puuid,name:text(p.gameName||p.displayName||p.summonerName||p.name)+(p.tagLine?'#'+text(p.tagLine):''),level:number(p.summonerLevel||p.level),icon:number(p.profileIconId),privacy:['PUBLIC','PRIVATE'].includes(p.privacy)?p.privacy:'unknown'});
 const fail=message=>{throw Error(message);};
 // A match-list source can fail because the upstream match service is down for
 // this account. Both the game backend and the local client then report the same
 // outage, and the raw client status code alone tells the player nothing.
-const UPSTREAM_HISTORY_FAILURE=/^(?:客户端暂未接受操作|战绩后台暂不可用|战绩后台认证失效|无法连接战绩后台|战绩后台读取中断|战绩后台数据格式异常|游戏后台返回的战绩格式异常)/;
-const historySourceUnavailable=error=>UPSTREAM_HISTORY_FAILURE.test(String(error?.message||''));
+const historySourceUnavailable=isUpstreamHistoryFailure;
 const HISTORY_SOURCE_UNAVAILABLE='战绩数据源暂时不可用：游戏后台和当前大区客户端的战绩接口都返回了错误。这通常是战绩服务正在维护或暂时不可达，请稍后重试；若持续失败，请先在游戏客户端内确认能否打开战绩列表。';
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now}={}){
  let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map();let totalCacheBytes=0;
@@ -143,6 +143,17 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   await checkUsage(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');usageReplay=p.cursor?{cursor:p.cursor,scan:next}:null;usageScan=next;return usageResult(next);
  }
  function usageResult(scan){return {session:sessionId,cursor:scan.cursor,scanned:scan.scanned,identified:scan.identified,target:500,complete:scan.complete,source:scan.source,counts:{...scan.counts}};}
+ // The match list can be unreachable while the client still knows the
+ // account's champion mastery. Mastery points are a real familiarity signal
+ // from the client; they are never presented as a game count.
+ async function ownSummaryMastery(c,p){
+  if(Object.keys(p).some(key=>!['session'].includes(key))||p.session!==undefined&&p.session!==sessionId)fail('英雄统计参数不正确');
+  const raw=await request(c.auth,`/lol-champion-mastery/v1/${c.own.puuid}/champion-mastery`);
+  const mastery=normalizePublicMastery(raw).mastery.filter(row=>row.champion>0&&row.points>0);
+  if(!mastery.length)fail('客户端尚未返回英雄熟练度，请稍后重试');
+  await checkUsage(c);
+  return {session:sessionId,server:c.localServer,source:'mastery',basis:USAGE_BASIS.MASTERY,mastery:mastery.map(row=>({champion:row.champion,points:row.points,level:row.level}))};
+ }
  async function page(c,p){
   const start=p.start??0,count=p.count??20;if(!Number.isInteger(start)||start<0||start>9900||!Number.isInteger(count)||count<1||count>100||start+count>10000)fail('战绩分页参数不正确');
   if(p.rosterKey&&(!rosterCache||rosterCache.key!==p.rosterKey||now()-rosterCache.at>15000||!rosterCache.players.some(v=>v.puuid===p.puuid&&!v.hidden)))fail('当前对局成员已变化，请刷新实时对局');
@@ -195,7 +206,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   return {handle,session:sessionId,player:t.player,server:t.server,localServer:c.localServer,cross:t.cross,source,notice,start,count,hasMore:entries.length>=count,games,servers:Object.entries(SGP_SERVERS).map(([id,s])=>({id,name:s.name})),receivedAt:now()};
  }
  async function execute(operation,payload={}){
-    if(!['own-summary-context','own-summary-page','page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))fail('不支持此战绩操作');
+    if(!['own-summary-context','own-summary-page','own-summary-mastery','page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))fail('不支持此战绩操作');
   if(!payload||typeof payload!=='object'||Array.isArray(payload))fail('战绩查询参数不正确');if(operation==='clear'){clear();return true;}
   const generation=clearGeneration;return limited(async()=>{
   if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
@@ -203,6 +214,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
    if(operation==='own-summary-context')return {session:sessionId,server:c.localServer};
    if(operation==='own-summary-page')return ownSummaryPage(c,payload);
+   if(operation==='own-summary-mastery')return ownSummaryMastery(c,payload);
    if(operation==='roster')return roster(c,payload);
   if(operation==='search'){
    const query=text(payload.query);if(!query||query.length>81)fail('请输入游戏名字或完整游戏 ID');

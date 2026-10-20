@@ -1,16 +1,39 @@
-import {cleanChampionUsage,DEFAULT_HISTORY_WINDOW} from '../src/core/champion-usage.mjs';
+import {cleanChampionUsage,masteryUsageDistribution,isUpstreamHistoryFailure,DEFAULT_HISTORY_WINDOW,USAGE_BASIS} from '../src/core/champion-usage.mjs';
+import {cachedUsageSnapshot} from './champion-usage-cache.mjs';
 const token=value=>typeof value==='string'&&/^[a-f0-9]{32}$/.test(value);
-const empty=()=>({status:'offline',session:'',scanned:0,identified:0,target:DEFAULT_HISTORY_WINDOW,complete:false,source:'',usage:{sampled:0,counts:{}},error:''});
+const empty=()=>({status:'offline',session:'',scanned:0,identified:0,target:DEFAULT_HISTORY_WINDOW,complete:false,source:'',usage:{sampled:0,counts:{}},basis:USAGE_BASIS.GAMES,error:''});
 
 // Main owns one collector for both renderers. Context/cursor/transport stay here;
 // only anonymous counts and an opaque account session appear in snapshots.
-export function createChampionUsageCollector({request,champions,transportCurrent=()=>true,onChange=()=>{},now=Date.now,yieldTurn=()=>new Promise(resolve=>setImmediate(resolve))}){
- let state=empty(),generation=0,revision=0,connected=false,transport=null,hint='',phase='',session='',server='',cursor='',flight=null,retryAt=0,failures=0;
+export function createChampionUsageCollector({request,champions,transportCurrent=()=>true,onChange=()=>{},now=Date.now,yieldTurn=()=>new Promise(resolve=>setImmediate(resolve)),cache=null}){
+ let state=empty(),generation=0,revision=0,connected=false,transport=null,hint='',phase='',session='',server='',account='',cursor='',flight=null,retryAt=0,failures=0,cached=null;
  const snapshot=()=>({...structuredClone(state),revision}),emit=()=>{revision++;onChange(snapshot());};
  function current(g,t){if(!connected||generation!==g||transport!==t)return false;if(!transportCurrent(t)){connected=false;transport=null;hint='';reset();return false;}return true;}
  function reset(status='offline',keepFlight=false,keepIdentity=false){
   generation++;if(!keepIdentity){session='';server='';}cursor='';retryAt=0;failures=0;if(!keepFlight)flight=null;
   const next={...empty(),status,session},changed=JSON.stringify(state)!==JSON.stringify(next);state=next;if(changed)emit();
+ }
+ // The cached snapshot only stands in for the same account and region. A
+ // different player must never inherit the previous account's familiar heroes.
+ // Without a live client the account cannot be re-confirmed, so the cache is
+ // still served, but it stays visibly labelled as a local cache.
+ function applyCached(){
+  if(!cached)return false;
+  if(account&&!cache.matches(cached,{account,server}))return false;
+  const cachedState=cachedUsageSnapshot(cached,{now});
+  if(!cachedState)return false;
+  state={...empty(),...cachedState,session};
+  emit();
+  return true;
+ }
+ async function loadCache(){
+  if(!cache)return null;
+  const record=await cache.load().catch(()=>null);
+  cached=record;return record;
+ }
+ async function saveCache(){
+  if(!cache||!account||!session||state.status!=='ready'||!state.usage||!Object.keys(state.usage.counts||{}).length)return;
+  await cache.save({account,server,source:state.source||'lcu',basis:state.basis||USAGE_BASIS.GAMES,sampled:state.usage.sampled,counts:state.usage.counts,at:new Date(now()).toISOString()}).then(record=>{cached=record;}).catch(()=>{});
  }
  function context(value){if(!token(value?.session)||typeof value.server!=='string'||value.server.length>40)throw Error('invalid context');return value;}
  function page(value,expected,previous){
@@ -21,6 +44,20 @@ export function createChampionUsageCollector({request,champions,transportCurrent
   return cleanChampionUsage({sampled:Object.values(counts).reduce((a,b)=>a+b,0),counts});
  }
  function failed(){failures++;retryAt=now()+Math.min(60000,5000*2**Math.min(failures-1,4));state={...state,status:state.scanned?'partial':'error',error:'英雄统计暂未读完，稍后重试'};emit();}
+ // A match list can be unreachable while the client still knows the account's
+ // champion mastery. That keeps the familiar-hero preference usable.
+ async function collectMastery(g,t){
+  const identity=context(await request(t,'own-summary-context',{}));if(!current(g,t))return;
+  const result=await request(t,'own-summary-mastery',{session:identity.session});
+  if(!current(g,t))return;
+  const byKey=new Map(champions().map(hero=>[Number(hero.key),hero.id]));
+  const rows=(Array.isArray(result?.mastery)?result.mastery:[]).map(row=>({champion:byKey.get(Number(row.champion)),points:Number(row.points)})).filter(row=>row.champion&&row.points>0);
+  const usage=masteryUsageDistribution(rows);
+  if(!Object.keys(usage.counts).length)throw Error('empty mastery');
+  state={status:'ready',session:identity.session,scanned:usage.sampled,identified:usage.sampled,target:DEFAULT_HISTORY_WINDOW,complete:true,source:'mastery',usage,basis:USAGE_BASIS.MASTERY,at:new Date(now()).toISOString(),error:''};
+  emit();
+  await saveCache();
+ }
  async function collect(g,t){
   try{
    const identity=context(await request(t,'own-summary-context',{}));if(!current(g,t))return;
@@ -31,15 +68,19 @@ export function createChampionUsageCollector({request,champions,transportCurrent
    do{
     const result=await request(t,'own-summary-page',{session,...(cursor?{cursor}:{})});if(!current(g,t))return;
     const usage=page(result,session,state.scanned);cursor=result.cursor;failures=0;retryAt=0;
-    state={status:result.complete?'ready':'loading',session,scanned:result.scanned,identified:result.identified,target:DEFAULT_HISTORY_WINDOW,complete:result.complete,source:result.source,usage,error:''};emit();
-    if(result.complete)return;await yieldTurn();if(!current(g,t))return;
+    state={status:result.complete?'ready':'loading',session,scanned:result.scanned,identified:result.identified,target:DEFAULT_HISTORY_WINDOW,complete:result.complete,source:result.source,usage,basis:USAGE_BASIS.GAMES,at:new Date(now()).toISOString(),error:''};emit();
+    if(result.complete){await saveCache();return;}await yieldTurn();if(!current(g,t))return;
    }while(true);
-  }catch{
+  }catch(error){
    if(!current(g,t))return;
+   // The cache and the mastery proxy both keep the preference usable while the
+   // match list is unreachable. Neither invents match data, and neither may
+   // replace a failure that has another cause.
+   if(isUpstreamHistoryFailure(error)){try{await collectMastery(g,t);if(!current(g,t))return;failures=0;retryAt=0;return;}catch{}}
    // A failed page is reusable only while the same account/region is confirmed.
    try{const after=context(await request(t,'own-summary-context',{}));if(!current(g,t))return;if(after.session!==session||after.server!==server){reset('loading',true);return;}}
    catch{if(!current(g,t))return;reset('error',true);failed();return;}
-   if(current(g,t))failed();
+   if(current(g,t)){if(!applyCached())failed();}
   }
  }
  function observe(client,nextTransport,{refresh=false}={}){
@@ -47,6 +88,11 @@ export function createChampionUsageCollector({request,champions,transportCurrent
   // A throttled optional status lookup can omit IDs. Absence is not a new
   // account; the fresh summary context still verifies its actual identity.
   const nextHint=identity?JSON.stringify([client.own.summonerId||'',client.own.puuid||'']):hint;
+  const nextAccount=String(client?.own?.summonerId||client?.own?.puuid||'');
+  if(nextAccount&&account&&nextAccount!==account){
+   // A different account must not inherit the previous player's cached heroes.
+   account=nextAccount;cached=null;Promise.resolve(cache?.clear()).catch(()=>{});
+  }else if(nextAccount)account=nextAccount;
   const ended=nextConnected&&client.phase==='EndOfGame'&&phase!=='EndOfGame';phase=client?.phase||'';
   if(!nextConnected||!nextTransport||!transportCurrent(nextTransport)){connected=false;transport=null;hint='';reset();return Promise.resolve(snapshot());}
   if(!connected||transport!==nextTransport||hint!==nextHint||refresh||ended){const sameIdentity=connected&&transport===nextTransport&&hint===nextHint;connected=true;transport=nextTransport;hint=nextHint;reset('loading',false,sameIdentity);}
@@ -54,5 +100,5 @@ export function createChampionUsageCollector({request,champions,transportCurrent
   const g=generation,t=transport;
   const work=collect(g,t).finally(()=>{if(flight===work)flight=null;});flight=work;return work;
  }
- return {observe,snapshot};
+ return {observe,snapshot,loadCache,applyCached};
 }
