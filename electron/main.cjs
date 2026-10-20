@@ -484,7 +484,10 @@ async function boot(){
   await saveCurrentState(current=>{
    const merged={...current,preferences:{...current.preferences}};
    for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(key==='draft'&&next.draft&&before.draft&&current.draft){
-     merged.draft=mergeSavedFields(current.draft,before.draft,next.draft,'选人配置同时发生变化，请重新同步');continue;
+     merged.draft=mergeSavedFields(current.draft,before.draft,next.draft,'选人配置同时发生变化，请重新同步');
+     // An explicit same-visible-value click is an intent even when scope
+     // itself equals the stale window base. Keep its target atomic.
+     if(['party','context'].includes(merged.draft.scopeSelection))merged.draft.scope=merged.draft.scopeSelection;continue;
     }if(!same(current[key],before[key])&&!same(current[key],next[key]))throw Error('配置同时发生变化，请刷新后重新保存');merged[key]=next[key];}
    // Remembering a guide changes preparation recency. Merge actual per-hero
    // changes so that reordering or another hero's update cannot block a save.

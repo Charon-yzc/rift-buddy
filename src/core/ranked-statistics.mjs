@@ -59,25 +59,29 @@ export function createRankedMatchupIndex(players,builds,{patch,source}={}){
   const value={adjustment:clamp(evidence.reduce((sum,row)=>sum+row.adjustment,0),-4,4),evidence};cache.set(key,value);return value;
  };
 }
-// Independent averages of public champion/position duration statistics. They
-// deliberately do not sum to 100% and are not a forecast for this exact game.
-export function rankedDurationReference(draft,builds,options){
- if(!draft.complete)return null;
+// Historical member means remain useful on their own. A paired comparison
+// instead compares mean log odds and derives BOTH sides from one difference.
+// This relative index is not fitted or calibrated to ten-player match results.
+export function teamDurationReference(players,builds,options){
+ if(players.length!==5||players.some(player=>!player.champion)||new Set(players.map(player=>player.champion)).size!==5)return null;
  const references=[];
- const resolve=players=>{
   const estimated=estimateEnemyRoles(players,builds,options),members=[];
   for(const player of estimated){
    const refs=roles.map(role=>({role,weight:player.roleWeights[role],ref:reference(builds,player.champion,role,options)})).filter(row=>row.weight>0&&row.ref?.rankedStatistics.duration.length===5);
    const coverage=refs.reduce((sum,row)=>sum+row.weight,0);if(coverage<.8)return null;
    references.push(...refs.map(row=>row.ref));
-   members.push({champion:player.champion,estimated:player.estimated,values:minutes.map((_,i)=>refs.reduce((sum,row)=>sum+row.weight*row.ref.rankedStatistics.duration[i].winRate,0)/coverage)});
+   members.push({champion:player.champion,estimated:player.estimated,coverage,values:minutes.map((_,i)=>refs.reduce((sum,row)=>sum+row.weight*row.ref.rankedStatistics.duration[i].winRate,0)/coverage),logOdds:minutes.map((_,i)=>refs.some(row=>[0,100].includes(row.ref.rankedStatistics.duration[i].winRate))?null:refs.reduce((sum,row)=>sum+row.weight*logit(row.ref.rankedStatistics.duration[i].winRate/100),0)/coverage)});
   }
-  return {members,points:minutes.map((minute,i)=>({minute,winRate:members.reduce((sum,member)=>sum+member.values[i],0)/5}))};
- };
- const allies=resolve(draft.allies),enemies=resolve(draft.enemies);
- if(!allies||!enemies)return null;
  const oldest=field=>references.every(ref=>Number.isFinite(Date.parse(ref[field])))?new Date(Math.min(...references.map(ref=>Date.parse(ref[field])))).toISOString():null,now=options.now??Date.now();
- return {allies,enemies,cacheStale:references.some(ref=>{const date=Math.max(Date.parse(ref.fetchedAt)||0,Date.parse(ref.serverCheckedAt)||0);return date>now||now-date>86400000;}),fetchedAt:oldest('fetchedAt'),serverCheckedAt:oldest('serverCheckedAt'),basis:'champion-position-average',estimatedRoles:[...allies.members,...enemies.members].some(member=>member.estimated),patch:options.patch,source:normalizeBuildSource(options.source)};
+ return {members,points:minutes.map((minute,i)=>({minute,winRate:members.reduce((sum,member)=>sum+member.values[i],0)/5})),cacheStale:references.some(ref=>{const date=Math.max(Date.parse(ref.fetchedAt)||0,Date.parse(ref.serverCheckedAt)||0);return date>now||now-date>86400000;}),fetchedAt:oldest('fetchedAt'),serverCheckedAt:oldest('serverCheckedAt'),basis:'champion-position-average',estimatedRoles:members.some(member=>member.estimated),patch:options.patch,source:normalizeBuildSource(options.source)};
+}
+export function rankedDurationReference(draft,builds,options){
+ if(!draft.complete)return null;
+ const allies=teamDurationReference(draft.allies,builds,options),enemies=teamDurationReference(draft.enemies,builds,options);
+ if(!allies||!enemies||[...allies.members,...enemies.members].some(member=>member.logOdds.some(value=>!Number.isFinite(value))))return null;
+ const points=minutes.map((minute,i)=>({minute,winRate:100*sigmoid(allies.members.reduce((sum,row)=>sum+row.logOdds[i],0)/5-enemies.members.reduce((sum,row)=>sum+row.logOdds[i],0)/5)}));
+ const oldest=field=>allies[field]&&enemies[field]?new Date(Math.min(Date.parse(allies[field]),Date.parse(enemies[field]))).toISOString():null;
+ return {allies:{...allies,historicalPoints:allies.points,points},enemies:{...enemies,historicalPoints:enemies.points,points:points.map(point=>({...point,winRate:100-point.winRate}))},cacheStale:allies.cacheStale||enemies.cacheStale,fetchedAt:oldest('fetchedAt'),serverCheckedAt:oldest('serverCheckedAt'),basis:'relative-duration-index-v1',calibrated:false,estimatedRoles:allies.estimatedRoles||enemies.estimatedRoles,patch:options.patch,source:normalizeBuildSource(options.source)};
 }
 export function championDurationReference(champion,role,builds,options){
  const ref=reference(builds,champion,role,options);

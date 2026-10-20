@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {adaptRankedStatistics,validRankedStatistics,estimateEnemyRoles,createRankedMatchupIndex,rankedDurationReference} from '../src/core/ranked-statistics.mjs';
+import {adaptRankedStatistics,validRankedStatistics,estimateEnemyRoles,createRankedMatchupIndex,rankedDurationReference,teamDurationReference} from '../src/core/ranked-statistics.mjs';
 const roles=['top','jungle','mid','bottom','support'],options={patch:'16.20',source:{region:'global',tier:'emerald_plus'}};
 const stat=(winRate=50,samples=1000)=>({basis:'opgg-position-reference',counterScope:'opgg-position-counter-reference',role:{winRate,samples},duration:[0,25,30,35,40].map(minute=>({minute,winRate,average:50}))});
 const ref=(champion,role,winRate=50,samples=1000)=>({champion,role,patch:'16.20',region:'global',tier:'emerald_plus',rankedStatistics:{...stat(winRate,samples),positions:[{role,samples}]},matchups:[]});
@@ -34,10 +34,17 @@ test('role estimates use full source distribution and do not depend on which rol
  assert.deepEqual(estimateEnemyRoles([{champion:'Yasuo'}],builds,options)[0].roleWeights,before);
  delete builds['Yasuo:mid'].rankedStatistics.positions;delete builds['Yasuo:top'];delete builds['Yasuo:bottom'];const unknown=estimateEnemyRoles([{champion:'Yasuo'}],builds,options)[0].roleWeights;assert(Math.abs(unknown.mid-.2)<1e-9);
 });
-test('duration reference requires complete draft and source coverage, keeps independent means rather than fake complementary probabilities',()=>{
+test('paired duration index complements both sides and retains historical means separately',()=>{
  const allies=roles.map((role,i)=>({role,champion:'A'+i})),enemies=roles.map((role,i)=>({role,champion:'B'+i}));
  const builds=Object.fromEntries([...allies.map(row=>[row.champion+':'+row.role,ref(row.champion,row.role,52)]),...enemies.map(row=>[row.champion+':'+row.role,ref(row.champion,row.role,51)])]);
  assert.equal(rankedDurationReference({complete:false,allies,enemies},builds,options),null);
- const curve=rankedDurationReference({complete:true,allies,enemies},builds,options);assert.equal(curve.allies.points[0].winRate,52);assert.equal(curve.enemies.points[0].winRate,51);
+ const draft={complete:true,allies,enemies},curve=rankedDurationReference(draft,builds,options);assert.equal(curve.basis,'relative-duration-index-v1');assert.equal(curve.calibrated,false);assert.equal(curve.allies.historicalPoints[0].winRate,52);assert.equal(curve.enemies.historicalPoints[0].winRate,51);
+ for(let i=0;i<5;i++)assert.equal(curve.allies.points[i].winRate+curve.enemies.points[i].winRate,100);
+ const swapped=rankedDurationReference({...draft,allies:enemies,enemies:allies},builds,options);assert(Math.abs(swapped.allies.points[0].winRate-curve.enemies.points[0].winRate)<1e-10);
+ const mirrored=rankedDurationReference({...draft,enemies:allies},builds,options);assert.equal(mirrored.allies.points[0].winRate,50);
+ const reordered=rankedDurationReference({...draft,allies:[...allies].reverse()},builds,options);assert.deepEqual(reordered.allies.points,curve.allies.points);
+ assert.equal(teamDurationReference(allies,builds,options).points[0].winRate,52);
+ builds['B0:top'].rankedStatistics.duration[0].winRate=0;assert.equal(rankedDurationReference(draft,builds,options),null);builds['B0:top'].rankedStatistics.duration[0].winRate=51;
+ builds['B0:top'].patch='16.19';assert.equal(rankedDurationReference(draft,builds,options),null);builds['B0:top'].patch='16.20';
  delete builds['A0:top'];assert.equal(rankedDurationReference({complete:true,allies,enemies},builds,options),null);
 });
