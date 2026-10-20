@@ -8,3 +8,5 @@
 .game-tooltip-basics{margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid var(--rb-line,#355063)}
 .game-tooltip-note{display:block;margin-top:8px}.game-tooltip-changes{border-top:1px solid var(--rb-line,#355063);padding-top:8px;margin-top:9px}
 .game-tooltip-changes>div{margin-top:5px}.game-tooltip-changes p{display:grid;gap:2px;margin-top:4px}.game-tooltip-changes i{font-style:normal;color:var(--rb-muted,#9cb5c7)}
+.guide-mode .game-tooltip>header{height:auto;padding:0;border:0;background:transparent;justify-content:flex-start;-webkit-app-region:no-drag}
+.guide-mode .game-tooltip>header small{display:block}.guide-mode .game-tooltip{font-size:calc(12px * var(--text-scale,1));line-height:1.55}

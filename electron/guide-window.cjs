@@ -21,7 +21,7 @@ function cursorInBounds(cursor,bounds,margin=2){
      &&cursor.y>=bounds.y-m&&cursor.y<=bounds.y+bounds.height+m;
 }
 
-module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,showHexSource=()=>{},diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
+module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,showHexSource=()=>{},getReference=()=>null,referenceRevision=()=>0,diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
@@ -43,7 +43,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
 const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&getModel()?.live.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough();win.setIgnoreMouseEvents(ignore,{forward:true});win.setFocusable(!pass);if(ignore&&win.isFocused())win.blur();}};
-const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,openTab,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
+const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,referenceRevision:referenceRevision(),openTab,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
 const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
 const jungle=createJungleWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
 function publish(){if(peek.active())peek.sync(visibilityRequested);const value=payload();if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);jungle.publish(value);if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
@@ -129,6 +129,7 @@ function publish(){if(peek.active())peek.sync(visibilityRequested);const value=p
   return handler(...args);
  });}
  guard('guide-bootstrap',payload);
+ guard('guide-reference',value=>{const current=getState();if(!current||!value||value.revision!==referenceRevision()||!['hex','rift'].includes(value.mode)||value.mode!==current.selection.mode)return null;return getReference(value.kind,value.id);});
  guard('guide-hover',value=>{const next=!!value;if(next!==hoverHeader){hoverHeader=next;inputMode();}return hoverHeader;});
  guard('guide-control',async(action,value)=>{
   if(action==='presentation'){await setPresentation(value);publish();return payload();}
