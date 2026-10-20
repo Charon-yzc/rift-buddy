@@ -34,7 +34,7 @@ const cooldownRules=[
 const cooldownById=new Map(cooldownRules.flatMap(([ids,pattern,scope,reason])=>ids.map(id=>[id,{pattern,scope,reason}])));
 function cooldownEffect(augment){const effect=cooldownById.get(augment.id);return effect?.pattern.test(augment.description||'')?effect:null;}
 export function augmentCategories(augment){const text=`${augment.name} ${augment.description}`,effect=cooldownEffect(augment);return AUGMENT_CATEGORIES.filter(([id])=>id==='haste'?!!effect:patterns[id]?.test(text)).map(([id])=>id);}
-const allyHealers=new Set(['Alistar','Bard','Ivern','Janna','Karma','Kayle','LeeSin','Lulu','Lux','Milio','Nami','Nidalee','Orianna','Rakan','Renata','Senna','Seraphine','Shen','Sona','Soraka','Taric','Thresh','Yuumi']);
+const allyHealers=new Set(['Alistar','Bard','Ivern','Janna','Karma','Kayle','LeeSin','Lulu','Lux','Milio','Morgana','Nami','Nidalee','Orianna','Rakan','Renata','Senna','Seraphine','Shen','Sona','Soraka','Taric','Thresh','Yuumi']);
 const selfHealers=new Set(['Aatrox','Briar','Darius','DrMundo','Fiora','Garen','Hecarim','Illaoi','Kayn','Kayle','Maokai','Mordekaiser','Nasus','Nidalee','Olaf','Renekton','Sett','Swain','Sylas','Trundle','Tryndamere','Vladimir','Volibear','Warwick','Zac']);
 // The lists below are curated mechanics groups, not win-rate or pick-rate data.
 // They only answer "does this effect connect with this champion or with a card

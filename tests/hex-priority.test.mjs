@@ -77,9 +77,11 @@ test('self-healing frontline can use death ring without a support penalty or con
 });
 
 test('ally shield champions are recognized as support triggers',()=>{
- const row=ranked(hero('Thresh'),[1141])[0];
- assert.notEqual(row.priority,'备选');
- assert.ok(!row.cautions.some(text=>/缺少稳定手段/.test(text)));
+ for(const id of ['Thresh','Morgana']){
+  const row=ranked(hero(id),[1141])[0];
+  assert.notEqual(row.priority,'备选');
+  assert.ok(!row.cautions.some(text=>/缺少稳定手段/.test(text)));
+ }
 });
 
 test('front-line survival reason is not repeated after ranking',()=>{
