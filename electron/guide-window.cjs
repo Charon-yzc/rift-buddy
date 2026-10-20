@@ -21,7 +21,7 @@ function cursorInBounds(cursor,bounds,margin=2){
      &&cursor.y>=bounds.y-m&&cursor.y<=bounds.y+bounds.height+m;
 }
 
-module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
+module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,showHexSource=()=>{},diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
@@ -140,6 +140,7 @@ function publish(){if(peek.active())peek.sync(visibilityRequested);const value=p
   if(action==='main'){showMain(getState()?.selection);return true;}
   if(action==='current'){if(!await prepareCurrent())throw Error('尚未确认当前英雄与模式，请在完整助手中选择');inputMode();publish();return payload();}
   const current=getState();if(!current)throw Error('先在配置页选择“本局指引”');
+  if(action==='hex-source'){const route=current.selection.mode==='hex'&&getModel()?.hexRoutes?.find(row=>row.id===value);if(!route)throw Error('强化路线已变化，请按当前页面重试');showHexSource(route.hero,route.id);return true;}
   if(action==='layout'){if(!['compact','details'].includes(value))throw Error('指引布局不正确');await save({...current,compact:value==='compact',ball:false,strip:false,collapsed:false});applyMode();return payload();}
   if(action==='jungle-widget'){await save({...current,jungleWidget:{...current.jungleWidget,enabled:current.jungleWidget?.enabled===false}});if(getState()?.jungleWidget?.enabled===false)jungle.hide();else jungle.show();return payload();}
   if(action==='skill-widget'){await save({...current,skillWidget:{...current.skillWidget,enabled:current.skillWidget?.enabled===false}});if(getState()?.skillWidget?.enabled===false)skill.hide();else skill.show();return payload();}
