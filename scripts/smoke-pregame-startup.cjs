@@ -39,6 +39,8 @@ async function run(){
   if(phase==='Offline')throw Error('Synthetic client not running yet');
   if(method==='GET'){
    if(route==='/lol-summoner/v1/current-summoner')return ownIdentity;
+   if(route==='/riotclient/region-locale')return {region:'unconfigured-fixture'};
+   if(route==='/lol-match-history/v1/products/lol/'+ownIdentity.puuid+'/matches?begIndex=0&endIndex=99')return {games:{games:[]}};
    if(route==='/lol-gameflow/v1/gameflow-phase')return phase;
    if(route==='/lol-gameflow/v1/session')return {gameData:{gameId:phase==='ChampSelect'?gameId:0,mapId:11,isCustomGame:queueId===0,queue:{id:queueId,gameMode:queueId===0?'':'CLASSIC'}},map:{id:11,gameMode:'CLASSIC'}};
    if(route==='/lol-lobby/v2/lobby')return {localMember:{...ownIdentity,isLeader:true},members:[{...ownIdentity,isLeader:true},...(!soloParty?[friendIdentity]:[])]};
@@ -100,7 +102,7 @@ async function run(){
  // Clear the saved local proposal through the real UI before testing a fresh
  // unknown-lane recommendation. Automatic startup itself must not clear it.
  await click(main,'[data-action=draft-filters]');await click(main,'[data-action=reset-draft]');await click(main,'[data-action=close]');
- await until(async()=>(await state()).draft.slots.every(slot=>!slot.champion),'The explicit local reset did not clear the saved proposal');assert.equal(writes.length,0,'Resetting the local proposal wrote to the client');
+ await until(async()=>(await state()).draft.slots.every(slot=>!slot.champion),'The explicit local reset did not clear the saved proposal');assert.equal(writes.length,0,'Resetting the local proposal wrote to the client: '+JSON.stringify(writes));
  await until(()=>js(side,'!!document.querySelector(".companion-shell")&&!!document.querySelector("#solo-role")'),'Sidebar UI missing');
  await checkpoint('two-unassigned-party-members',async()=>{
   await until(()=>js(side,'document.querySelectorAll(".companion-candidate").length>0'),'Automatic initial candidates missing');
