@@ -6,9 +6,17 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
   let win = null;
   let currentReport = null;
 
+  function displayArea() {
+    try {
+      if (screen.getDisplayNearestPoint && screen.getCursorScreenPoint) {
+        return screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
+      }
+    } catch {}
+    return screen.getPrimaryDisplay().workArea;
+  }
+
   function calculateBounds() {
-    const primary = screen.getPrimaryDisplay();
-    const area = primary.workArea;
+    const area = displayArea();
     const width = Math.min(760, area.width);
     const height = Math.min(540, area.height);
     const x = Math.round(area.x + (area.width - width) / 2);
@@ -46,8 +54,11 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
 
     win.once('ready-to-show', () => {
       if (currentReport) {
-        win.show();
+        // Loading screen shows first so readiness is visible before the final settlement panel
         publish();
+        win.show();
+        // Late async publish as insurance in case the renderer was not ready on first send
+        setImmediate(() => publish());
       }
     });
 
@@ -70,15 +81,29 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
     } else {
       const bounds = calculateBounds();
       win.setBounds(bounds);
-      win.show();
+      // Send data before showing so reuse never flashes the previous game's stale panel
       publish();
+      if (!win.isVisible()) {
+        win.show();
+      }
+      // Late async publish as insurance in case the renderer missed the synchronous send
+      setImmediate(() => publish());
     }
   }
 
   function hide() {
     if (win && !win.isDestroyed()) {
       win.hide();
+      // Clear stale panel so reuse never flashes the last game before update arrives
+      try {
+        win.webContents.send('postgame-reset');
+      } catch {}
     }
+  }
+
+  function reset() {
+    currentReport = null;
+    hide();
   }
 
   function guard(name, handler) {
@@ -91,6 +116,10 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
   }
 
   guard('postgame-bootstrap', () => currentReport);
+  guard('postgame-reset', () => {
+    currentReport = null;
+    return true;
+  });
   guard('postgame-close', () => {
     hide();
     return true;
@@ -104,11 +133,12 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
   return {
     show,
     hide,
+    reset,
     isVisible: () => !!win && !win.isDestroyed() && win.isVisible(),
     destroy: () => {
       if (win && !win.isDestroyed()) win.destroy();
       win = null;
-      for (const name of ['postgame-bootstrap', 'postgame-close', 'postgame-open-history']) {
+      for (const name of ['postgame-bootstrap', 'postgame-reset', 'postgame-close', 'postgame-open-history']) {
         ipcMain.removeHandler(name);
       }
     }

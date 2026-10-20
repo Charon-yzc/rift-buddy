@@ -7,7 +7,7 @@ const {isDeepStrictEqual}=require('node:util');
 const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
-let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,latestHistoryTransport,postgame,lastHandledEogGameId=null,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
+let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,latestHistoryTransport,postgame,lastHandledEogGameId=null,postgameFetchPending=false,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
@@ -624,13 +624,16 @@ async function boot(){
    else if(!inGame()){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
    const isEogPhase=latestClient.connected&&['EndOfGame','WaitingForStats','PreEndOfGame'].includes(latestClient.phase);
    const gameJustEnded=!inGame()&&['GameStart','InProgress','Reconnect'].includes(previousPhase);
-   if(state.preferences?.postGamePopup!==false&&(isEogPhase||gameJustEnded)){
+   const eogGameId=latestClient.game?.gameId||publicClientGameId(latestClient)||null;
+   const alreadyHandledCurrentEog=isEogPhase&&eogGameId!==null&&String(eogGameId)===String(lastHandledEogGameId);
+   if(state.preferences?.postGamePopup!==false&&(isEogPhase||gameJustEnded)&&!alreadyHandledCurrentEog&&!postgameFetchPending){
+    postgameFetchPending=true;
     fetchPostGameReport({installPath:state.preferences?.installPath,ownPuuid:latestClient.summoner?.puuid||latestClient.own?.puuid,champions:data?.champions||[]}).then(report=>{
      if(report&&report.gameId&&report.gameId!==lastHandledEogGameId){
       lastHandledEogGameId=report.gameId;
       postgame?.show(report);
      }
-    }).catch(error=>diagnostic(`post-game report failed ${error?.message||'unknown'}`));
+    }).catch(error=>diagnostic(`post-game report failed ${error?.message||'unknown'}`)).finally(()=>{postgameFetchPending=false;});
    }else if(latestClient.connected&&['ChampSelect','GameStart','InProgress'].includes(latestClient.phase)){
     postgame?.hide();
    }

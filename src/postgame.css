@@ -295,6 +295,11 @@ body.postgame-body {
   align-items: baseline;
   gap: 5px;
   min-width: 0;
+  overflow: hidden;
+}
+
+.postgame-player-kda {
+  flex-shrink: 0;
 }
 
 .postgame-player-name {
@@ -325,6 +330,8 @@ body.postgame-body {
   gap: 3px;
   flex-wrap: nowrap;
   align-items: center;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .postgame-badge {
@@ -397,12 +404,21 @@ body.postgame-body {
   border: 1px solid rgba(99, 102, 241, 0.35);
 }
 
-/* Items row */
+/* Items row: compact 2x3 grid + standalone trinket column to free horizontal space */
 .postgame-items {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 17px) 17px;
+  grid-template-rows: 17px 17px;
   gap: 2px;
   flex-shrink: 0;
   align-items: center;
+}
+
+.postgame-item-icon.trinket,
+.postgame-empty-item.trinket {
+  grid-column: 4;
+  grid-row: 1 / span 2;
+  align-self: center;
 }
 
 .postgame-item-icon,

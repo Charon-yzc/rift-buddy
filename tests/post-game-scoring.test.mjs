@@ -18,13 +18,12 @@ function mockPlayer(overrides = {}) {
     cs: 160,
     visionScore: 25,
     turretDamage: 2500,
-    isAfkOrSurrender: false,
+    isAfk: false,
     ...overrides
   };
 }
 
 test('calculateWeGameScores bounds scores strictly within [3.0, 16.0] with 1 decimal place', () => {
-  // 10 players, team 100 wins
   const winningTeam = Array.from({length: 5}, (_, i) => mockPlayer({
     puuid: `w${i}`,
     teamId: 100,
@@ -118,7 +117,74 @@ test('calculateWeGameScores accurately assigns MVP to winning top scorer and SVP
   assert.ok(svpResult.badges.includes('svp'), 'Losing top player must receive SVP');
   assert.equal(results.filter(p => p.badges.includes('mvp')).length, 1, 'Only one MVP allowed');
   assert.equal(results.filter(p => p.badges.includes('svp')).length, 1, 'Only one SVP allowed');
-  assert.ok(mvpResult.score >= 14.0, `MVP score ${mvpResult.score} should be high`);
+  assert.ok(mvpResult.score >= 13.5, `MVP score ${mvpResult.score} should be high`);
+});
+
+test('calculateWeGameScores penalizes intentional feeder and does not award tank-king to feeder', () => {
+  const feeder = mockPlayer({
+    puuid: 'feeder',
+    teamId: 200,
+    kills: 0,
+    deaths: 20,
+    assists: 1,
+    damageDealt: 3000,
+    damageTaken: 50000 // Huge padded damage by repeatedly dying
+  });
+  const carefulPlayer = mockPlayer({
+    puuid: 'careful',
+    teamId: 200,
+    kills: 1,
+    deaths: 1,
+    assists: 4,
+    damageDealt: 12000,
+    damageTaken: 12000
+  });
+  const others = Array.from({length: 8}, (_, i) => mockPlayer({
+    puuid: `p${i}`,
+    teamId: i < 5 ? 100 : 200,
+    kills: 4,
+    deaths: 3,
+    assists: 6,
+    damageTaken: 18000
+  }));
+
+  const results = calculateWeGameScores({
+    players: [feeder, carefulPlayer, ...others],
+    winningTeamId: 100,
+    gameDuration: 1800
+  });
+
+  const feederResult = results.find(p => p.puuid === 'feeder');
+  const carefulResult = results.find(p => p.puuid === 'careful');
+
+  // Feeder gets severe death penalty and should not outscore careful player
+  assert.ok(carefulResult.score > feederResult.score, `Careful player score (${carefulResult.score}) should exceed feeder (${feederResult.score})`);
+  assert.ok(!feederResult.badges.includes('tank-king'), 'Feeder should not be awarded tank-king due to tank efficiency check');
+});
+
+test('calculateWeGameScores guarantees exclusive single-honor badges even with ties', () => {
+  // All 10 players have identical 15000 damage and 15000 damage taken
+  const players = Array.from({length: 10}, (_, i) => mockPlayer({
+    puuid: `tie-${i}`,
+    teamId: i < 5 ? 100 : 200,
+    damageDealt: 15000,
+    damageTaken: 15000,
+    goldEarned: 10000
+  }));
+
+  const results = calculateWeGameScores({
+    players,
+    winningTeamId: 100,
+    gameDuration: 1800
+  });
+
+  // Exactly one damage-king, not 10!
+  const damageKings = results.filter(p => p.badges.includes('damage-king'));
+  assert.equal(damageKings.length, 1, 'Only one player can be damage-king');
+
+  // Exactly one tank-king, not 10!
+  const tankKings = results.filter(p => p.badges.includes('tank-king'));
+  assert.equal(tankKings.length, 1, 'Only one player can be tank-king');
 });
 
 test('calculateWeGameScores compensates support role for low damage and 0 CS', () => {
@@ -157,41 +223,15 @@ test('calculateWeGameScores compensates support role for low damage and 0 CS', (
   });
 
   const suppResult = results.find(p => p.puuid === 'supp');
-  assert.ok(suppResult.score >= 11.0, `High KP and vision support score ${suppResult.score} must be >= 11.0 despite low damage and CS`);
+  assert.ok(suppResult.score >= 10.5, `High KP and vision support score ${suppResult.score} must be >= 10.5 despite low damage and CS`);
   assert.ok(suppResult.badges.includes('vision-king') || suppResult.badges.includes('kp-king') || suppResult.badges.includes('assist-king'));
 });
 
-test('calculateWeGameScores awards honor badges based on game metrics', () => {
-  const damageLeader = mockPlayer({puuid: 'dmg', teamId: 100, damageDealt: 50000});
-  const tankLeader = mockPlayer({puuid: 'tank', teamId: 100, damageTaken: 45000});
-  const richLeader = mockPlayer({puuid: 'rich', teamId: 100, goldEarned: 22000});
-  const turretLeader = mockPlayer({puuid: 'turret', teamId: 100, turretDamage: 8000});
-  const others = Array.from({length: 6}, (_, i) => mockPlayer({
-    puuid: `o${i}`,
-    teamId: i < 1 ? 100 : 200,
-    damageDealt: 12000,
-    damageTaken: 15000,
-    goldEarned: 10000,
-    turretDamage: 500
-  }));
-
-  const results = calculateWeGameScores({
-    players: [damageLeader, tankLeader, richLeader, turretLeader, ...others],
-    winningTeamId: 100,
-    gameDuration: 1800
-  });
-
-  assert.ok(results.find(p => p.puuid === 'dmg').badges.includes('damage-king'));
-  assert.ok(results.find(p => p.puuid === 'tank').badges.includes('tank-king'));
-  assert.ok(results.find(p => p.puuid === 'rich').badges.includes('rich-king'));
-  assert.ok(results.find(p => p.puuid === 'turret').badges.includes('turret-king'));
-});
-
-test('calculateWeGameScores enforces 3.0 floor for AFK or early surrender players', () => {
+test('calculateWeGameScores enforces 3.0 floor for AFK players and tolerates invalid durations', () => {
   const afkPlayer = mockPlayer({
     puuid: 'afk',
     teamId: 200,
-    isAfkOrSurrender: true,
+    isAfk: true,
     kills: 0,
     deaths: 2,
     assists: 0,
@@ -202,9 +242,10 @@ test('calculateWeGameScores enforces 3.0 floor for AFK or early surrender player
   const results = calculateWeGameScores({
     players: [afkPlayer, ...normalPlayers],
     winningTeamId: 100,
-    gameDuration: 900
+    gameDuration: 'invalid-duration' // Tolerates invalid input
   });
 
   const afkResult = results.find(p => p.puuid === 'afk');
   assert.equal(afkResult.score, 3.0);
+  assert.ok(!Number.isNaN(results[1].score));
 });

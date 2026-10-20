@@ -88,6 +88,7 @@ test('postgame-window manages window lifecycle and registers guarded IPC handler
 
   // Verify IPC registrations
   assert.ok(ipcHandlers.has('postgame-bootstrap'));
+  assert.ok(ipcHandlers.has('postgame-reset'));
   assert.ok(ipcHandlers.has('postgame-close'));
   assert.ok(ipcHandlers.has('postgame-open-history'));
 
@@ -116,10 +117,30 @@ test('postgame-window manages window lifecycle and registers guarded IPC handler
   // Unauthorized caller fails
   assert.throws(() => bootstrapHandler({sender: {}}), /不允许此操作/);
 
-  // Close via IPC
+  // Reuse: showing a new report before displaying never flashes stale panel
+  const secondReport = {gameId: 9989, isWin: false, teams: []};
+  manager.show(secondReport);
+  assert.deepEqual(createdWindow.lastSent, {channel: 'postgame-update', payload: secondReport});
+  assert.equal(manager.isVisible(), true);
+  // Bootstrap reflects the newest report
+  assert.deepEqual(bootstrapHandler(mockSenderEvent), secondReport);
+
+  // Close via IPC also emits a UI reset to clear the stale panel
+  const sentChannels = [];
+  const originalSend = createdWindow.webContents.send;
+  createdWindow.webContents.send = (channel, payload) => {
+    sentChannels.push(channel);
+    return originalSend.call(createdWindow.webContents, channel, payload);
+  };
   const closeHandler = ipcHandlers.get('postgame-close');
   closeHandler(mockSenderEvent);
   assert.equal(manager.isVisible(), false);
+  assert.ok(sentChannels.includes('postgame-reset'));
+
+  // Reset clears bootstrap state without leaking IPC
+  const resetHandler = ipcHandlers.get('postgame-reset');
+  assert.equal(resetHandler(mockSenderEvent), true);
+  assert.equal(bootstrapHandler(mockSenderEvent), null);
 
   // Open history via IPC
   const openHistoryHandler = ipcHandlers.get('postgame-open-history');
@@ -130,6 +151,7 @@ test('postgame-window manages window lifecycle and registers guarded IPC handler
   manager.destroy();
   assert.equal(createdWindow.isDestroyed(), true);
   assert.equal(ipcHandlers.has('postgame-bootstrap'), false);
+  assert.equal(ipcHandlers.has('postgame-reset'), false);
   assert.equal(ipcHandlers.has('postgame-close'), false);
   assert.equal(ipcHandlers.has('postgame-open-history'), false);
 });

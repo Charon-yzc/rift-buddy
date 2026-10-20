@@ -1,6 +1,5 @@
 // Post-game settlement & WeGame-style rating renderer.
 // Clean, modern, anti-slop presentation conforming to Rift Buddy's design system.
-
 const root = document.getElementById('postgame-root');
 const api = window.postGame;
 
@@ -25,7 +24,7 @@ const BADGE_NAMES = {
 function renderItems(items = []) {
   const main = items.slice(0, 6);
   const trinket = items[6] || 0;
-  return `<div class="postgame-items">${main.map(id => id > 0 ? `<img class="postgame-item-icon" src="../data/images/item/${id}.png" alt="" onerror="this.style.visibility='hidden'">` : '<span class="postgame-empty-item"></span>').join('')}${trinket > 0 ? `<img class="postgame-item-icon trinket" src="../data/images/item/${trinket}.png" alt="" onerror="this.style.visibility='hidden'">` : '<span class="postgame-empty-item trinket"></span>'}</div>`;
+  return `<div class="postgame-items">${main.map(id => id > 0 ? `<img class="postgame-item-icon" src="../data/images/item/${id}.png" alt="">` : '<span class="postgame-empty-item"></span>').join('')}${trinket > 0 ? `<img class="postgame-item-icon trinket" src="../data/images/item/${trinket}.png" alt="">` : '<span class="postgame-empty-item trinket"></span>'}</div>`;
 }
 
 function renderPlayerRow(p, isWinTeam) {
@@ -37,13 +36,13 @@ function renderPlayerRow(p, isWinTeam) {
 
   return `<div class="postgame-player-row ${isSelf ? 'is-self' : ''}">
     <div class="postgame-avatar">
-      <img class="postgame-avatar-img" src="../data/images/champion/${e(avatarKey)}.png" alt="" onerror="this.style.visibility='hidden'">
-      <span class="postgame-level">${p.level || 1}</span>
+      <img class="postgame-avatar-img" src="../data/images/champion/${e(avatarKey)}.png" alt="">
+      <span class="postgame-level">${Number(p.level) || 1}</span>
     </div>
     <div class="postgame-player-info">
       <div class="postgame-player-name-row">
-        <span class="postgame-player-name" title="${e(p.summonerName)}">${isSelf ? '你 (' + e(p.summonerName || p.championName) + ')' : e(p.summonerName || p.championName || '玩家')}</span>
-        <span class="postgame-player-kda">${p.kills} / <em>${p.deaths}</em> / ${p.assists} · 参团 ${pct(p.killParticipation)}</span>
+        <span class="postgame-player-name" title="${e(p.summonerName || p.championName || '玩家')}">${isSelf ? '你 (' + e(p.summonerName || p.championName || '玩家') + ')' : e(p.summonerName || p.championName || '玩家')}</span>
+        <span class="postgame-player-kda">${Number(p.kills) || 0} / <em>${Number(p.deaths) || 0}</em> / ${Number(p.assists) || 0} · 参团 ${pct(Number(p.killParticipation) || 0)}</span>
       </div>
       <div class="postgame-badge-cluster">
         ${badges.map(b => `<span class="postgame-badge ${e(b)}">${e(BADGE_NAMES[b] || b)}</span>`).join('')}
@@ -62,11 +61,12 @@ function renderTeamCard(team, isWinTeam) {
   const teamTitleClass = isWinTeam ? 'win-text' : 'loss-text';
   const teamName = team.teamId === 100 ? '蓝色方' : '红色方';
   const resultText = isWinTeam ? '胜方' : '败方';
-  const goldK = (team.totalGold / 1000).toFixed(1);
+  const goldK = ((Number(team.totalGold) || 0) / 1000).toFixed(1);
+  const totalKills = Number(team.totalKills) || 0;
 
   return `<div class="postgame-team-card ${teamClass}">
     <div class="postgame-team-bar">
-      <span class="team-title ${teamTitleClass}">${teamName} ${resultText} · ${team.totalKills} 击杀 · ${goldK}k 经济</span>
+      <span class="team-title ${teamTitleClass}">${teamName} ${resultText} · ${totalKills} 击杀 · ${goldK}k 经济</span>
       <span class="team-objectives">小龙 ${team.objectives?.dragon ?? 0} · 大龙 ${team.objectives?.baron ?? 0} · 塔 ${team.objectives?.tower ?? 0}</span>
     </div>
     <div class="postgame-player-list">
@@ -85,8 +85,9 @@ export function render(report) {
   }
 
   const isWin = report.isWin;
-  const resultTagClass = isWin ? 'win' : 'loss';
-  const resultTagText = isWin ? '胜利 VICTORY' : '失败 DEFEAT';
+  const isRemake = Number(report.gameDuration) > 0 && Number(report.gameDuration) < 300;
+  const resultTagClass = isRemake ? 'remake' : isWin ? 'win' : 'loss';
+  const resultTagText = isRemake ? '重开 REMAKE' : isWin ? '胜利 VICTORY' : '失败 DEFEAT';
   const queueLabel = report.queueName || report.gameMode || '对局';
   const durationText = time(report.gameDuration);
 
@@ -118,6 +119,15 @@ export function render(report) {
     </footer>
   `;
 }
+
+// CSP-safe image fallback: capture phase interception, no inline onerror
+root.addEventListener('error', event => {
+  const target = event.target;
+  if (target && target.tagName === 'IMG') {
+    target.style.visibility = 'hidden';
+    target.classList.add('postgame-load-failed');
+  }
+}, true);
 
 // Global actions
 root.addEventListener('click', async event => {
@@ -151,5 +161,14 @@ if (api?.bootstrap) {
 if (api?.onUpdate) {
   api.onUpdate(report => {
     if (report) render(report);
+  });
+}
+
+if (api?.onReset) {
+  api.onReset(() => {
+    root.innerHTML = `<div class="postgame-loading">
+      <div class="postgame-spinner"></div>
+      <p>正在计算对局表现与 WeGame 评分…</p>
+    </div>`;
   });
 }

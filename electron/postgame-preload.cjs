@@ -8,5 +8,11 @@ contextBridge.exposeInMainWorld('postGame', Object.freeze({
     const listener = (_, report) => handler(report);
     ipcRenderer.on('postgame-update', listener);
     return () => ipcRenderer.removeListener('postgame-update', listener);
-  }
+  },
+  onReset: (handler) => {
+    const listener = () => handler();
+    ipcRenderer.on('postgame-reset', listener);
+    return () => ipcRenderer.removeListener('postgame-reset', listener);
+  },
+  clear: () => ipcRenderer.invoke('postgame-reset')
 }));

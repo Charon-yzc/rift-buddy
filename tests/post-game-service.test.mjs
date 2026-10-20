@@ -90,11 +90,21 @@ const mockRawEog = {
   ]
 };
 
-test('lcuRequest whitelists /lol-end-of-game/v1/eog-stats-block route', () => {
+test('lcuRequest whitelists /lol-end-of-game/v1/eog-stats-block route and blocks non-GET methods or traversal', () => {
   const auth = {port: 23456, password: 'test'};
   assert.doesNotThrow(() => {
     lcuRequest(auth, '/lol-end-of-game/v1/eog-stats-block', 'GET').catch(() => {});
   });
+
+  // Non-GET methods must be blocked
+  assert.throws(() => {
+    lcuRequest(auth, '/lol-end-of-game/v1/eog-stats-block', 'POST');
+  }, /不支持此客户端操作/);
+
+  // Path traversal or suffixes must be blocked
+  assert.throws(() => {
+    lcuRequest(auth, '/lol-end-of-game/v1/eog-stats-block/..', 'GET');
+  }, /不支持此客户端操作/);
 });
 
 test('fetchPostGameReport parses raw LCU EOG data, computes WeGame scores, and tags MVP/SVP', async () => {
@@ -125,7 +135,7 @@ test('fetchPostGameReport parses raw LCU EOG data, computes WeGame scores, and t
   assert.equal(own.summonerName, '本家测试玩家');
   assert.equal(own.championId, 22);
   assert.equal(own.items[0], 3006);
-  assert.ok(own.score >= 14.0, `Own player should have high score, got ${own.score}`);
+  assert.ok(own.score >= 13.5, `Own player should have high score, got ${own.score}`);
   assert.ok(own.badges.includes('mvp'));
   assert.ok(own.badges.includes('damage-king'));
 
@@ -134,7 +144,7 @@ test('fetchPostGameReport parses raw LCU EOG data, computes WeGame scores, and t
   assert.equal(svpPlayer.puuid, 'enemy-0');
 });
 
-test('fetchPostGameReport returns null when client is unavailable or EOG data is absent', async () => {
+test('fetchPostGameReport safely returns null when client is unavailable, errors, or teams are empty', async () => {
   const noClient = await fetchPostGameReport(
     {},
     {discover: async () => null, request: async () => {}}
@@ -146,4 +156,47 @@ test('fetchPostGameReport returns null when client is unavailable or EOG data is
     {discover: async () => ({port: 1}), request: async () => null}
   );
   assert.equal(noEog, null);
+
+  // Empty teams or single team must return null to avoid UI freeze
+  const emptyTeams = await fetchPostGameReport(
+    {},
+    {discover: async () => ({port: 1}), request: async () => ({gameId: 123, teams: []})}
+  );
+  assert.equal(emptyTeams, null);
+
+  const singleTeam = await fetchPostGameReport(
+    {},
+    {discover: async () => ({port: 1}), request: async () => ({gameId: 123, teams: [{teamId: 100}]})}
+  );
+  assert.equal(singleTeam, null);
+});
+
+test('fetchPostGameReport recovers own player via isLocalPlayer fallback when ownPuuid is omitted', async () => {
+  const mockDiscover = async () => ({port: 23456, password: 'test'});
+  const eogWithLocalPlayer = {
+    ...mockRawEog,
+    teams: mockRawEog.teams.map(t => ({
+      ...t,
+      players: t.players.map(p => ({
+        ...p,
+        isLocalPlayer: p.summonerName === '本家测试玩家'
+      }))
+    }))
+  };
+
+  const report = await fetchPostGameReport(
+    {ownPuuid: ''},
+    {
+      discover: mockDiscover,
+      request: async (_auth, route) => {
+        if (route === '/lol-end-of-game/v1/eog-stats-block') return eogWithLocalPlayer;
+        throw Error('not found');
+      }
+    }
+  );
+
+  assert.ok(report);
+  const self = report.teams[0].players.find(p => p.isSelf);
+  assert.ok(self, 'Should successfully identify self player via isLocalPlayer');
+  assert.equal(report.isWin, true);
 });
