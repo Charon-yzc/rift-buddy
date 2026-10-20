@@ -24,7 +24,9 @@ test('installer removes only its enumerated payload while retaining unrelated fi
  const script=installerScript(args),uninstall=script.slice(script.indexOf('Section "Uninstall"'));
  assert.match(uninstall,/Delete "\$INSTDIR\\resources\\app\.asar"/);assert.match(uninstall,/RMDir "\$INSTDIR\\resources\\connection"/);
  assert.doesNotMatch(uninstall,/RMDir \/r|Delete .*\*|\$APPDATA|Roaming|settings\.json/);assert.match(script,/RequestExecutionLevel user/);assert.doesNotMatch(script,/ExecShell|SetAutoClose true/);
- assert.ok(script.includes(String.raw`"UninstallString" '$\"$INSTDIR\卸载开黑搭子.exe$\"'`));
+ const install=script.slice(script.indexOf('Section "开黑搭子"'),script.indexOf('Section "Uninstall"'));
+ assert.doesNotMatch(install,/WriteReg(?:Str|DWORD)|CreateShortcut/,'Integration must stay inside the lifecycle rollback boundary');
+ assert.match(script,/SetRegView 32/);
 });
 test('installer manifest rejects path traversal, absolute targets and malformed versions',()=>{
  for(const file of ['../personal.txt','C:\\Users\\personal.txt','resources/../../x','resources\nDelete *'])assert.throws(()=>installerScript({...args,files:[file]}),/不合法/);

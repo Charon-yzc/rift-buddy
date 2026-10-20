@@ -81,6 +81,50 @@ function ClearBackup([string]$Root){
  foreach($Directory in Get-ChildItem -LiteralPath $Root -Recurse -Directory|Sort-Object { $_.FullName.Length } -Descending){Remove-Item -LiteralPath $Directory.FullName -ErrorAction SilentlyContinue}
  Remove-Item -LiteralPath $Root -ErrorAction SilentlyContinue
 }
+function ReadRegistration([string]$Path,[string[]]$Touched){
+ $Key=$RegistryRoot.OpenSubKey($Path)
+ try {
+  if($Key -and $Path -eq $UninstallKey -and $Key.SubKeyCount){throw 'Previous uninstall registration has nested entries; the old application has not been changed'}
+  $Values=@();if($Key){foreach($Name in $Key.GetValueNames()){
+   if($Path -eq $ProductKey -and $Name -ne 'InstallDir'){continue}
+   $Values+=@{name=$Name;value=$Key.GetValue($Name,$null,[Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames);kind=$Key.GetValueKind($Name)}
+  }}
+  return @{path=$Path;existed=($null -ne $Key);values=$Values;touched=$Touched}
+ }finally{if($Key){$Key.Dispose()}}
+}
+function CheckRegistryValue($Key,$Row){
+ if($Key.GetValueNames() -notcontains $Row.name -or $Key.GetValueKind($Row.name) -ne $Row.kind){throw 'Installation registration type differs'}
+ $Actual=$Key.GetValue($Row.name,$null,[Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+ if($Actual -is [Array] -or $Row.value -is [Array]){
+  if($Actual -isnot [Array] -or $Row.value -isnot [Array] -or $Actual.Length -ne $Row.value.Length){throw 'Installation registration value differs'}
+  for($Index=0;$Index -lt $Actual.Length;$Index++){if(![object]::Equals($Actual[$Index],$Row.value[$Index])){throw 'Installation registration value differs'}}
+ }elseif(![object]::Equals($Actual,$Row.value)){throw 'Installation registration value differs'}
+}
+function WriteRegistration([string]$Path,$Rows){
+ $Key=$RegistryRoot.CreateSubKey($Path)
+ try{foreach($Row in $Rows){$Key.SetValue($Row.name,$Row.value,$Row.kind);CheckRegistryValue $Key $Row}}finally{$Key.Dispose()}
+}
+function RestoreRegistration($Snapshot){
+ $Key=$RegistryRoot.OpenSubKey($Snapshot.path,$true)
+ try {
+  if(!$Key -and $Snapshot.existed){$Key=$RegistryRoot.CreateSubKey($Snapshot.path)}
+  if($Key){
+   foreach($Name in $Snapshot.touched){if(@($Snapshot.values|Where-Object {$_.name -eq $Name}).Count -eq 0){$Key.DeleteValue($Name,$false)}}
+   foreach($Row in $Snapshot.values){$Key.SetValue($Row.name,$Row.value,$Row.kind);CheckRegistryValue $Key $Row}
+   $Empty=$Key.ValueCount -eq 0 -and $Key.SubKeyCount -eq 0
+  }else{$Empty=$true}
+ }finally{if($Key){$Key.Dispose()}}
+ if(!$Snapshot.existed -and $Empty){$RegistryRoot.DeleteSubKey($Snapshot.path,$false)}
+}
+function WriteShortcut([string]$File,[string]$Executable){
+ $Shell=$null;$Shortcut=$null;$Readback=$null
+ try {
+  $Shell=New-Object -ComObject WScript.Shell
+  $Shortcut=$Shell.CreateShortcut($File);$Shortcut.TargetPath=$Executable;$Shortcut.WorkingDirectory=$Target;$Shortcut.IconLocation=$Executable+',0';$Shortcut.Save()
+  $Readback=$Shell.CreateShortcut($File)
+  if(!(Test-Path -LiteralPath $File -PathType Leaf) -or $Readback.TargetPath -ine $Executable -or $Readback.WorkingDirectory -ine $Target){throw 'Installed shortcut verification failed'}
+ }finally{foreach($Object in @($Readback,$Shortcut,$Shell)){if($Object -and [Runtime.InteropServices.Marshal]::IsComObject($Object)){$null=[Runtime.InteropServices.Marshal]::FinalReleaseComObject($Object)}}}
+}
 try {
  if($RegistryId -notmatch '^[A-Za-z0-9-]{1,80}$'){throw 'Invalid registry identity'}
  if(!$ShortcutName -or $ShortcutName -match '[\\/:*?"<>|\r\n$]'){throw 'Invalid shortcut identity'}
@@ -111,19 +155,34 @@ try {
  if((Test-Path -LiteralPath (Join-Path $Old '开黑搭子.exe')) -and !$Existing){throw 'Previous uninstaller is missing; repair the existing installation first'}
  # Keep recovery outside the installer's ephemeral directory until restoration succeeds.
  $Backup=CheckedRoot ($Old+'.rollback-'+[Guid]::NewGuid().ToString('N'))
- $OldFiles=@();$Written=@();$Removed=$false
- $UninstallKey='HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\'+$RegistryId
- $OldRegistration=if(Test-Path -LiteralPath $UninstallKey){Get-ItemProperty -LiteralPath $UninstallKey}else{$null}
- $ShortcutFiles=@((Join-Path ([Environment]::GetFolderPath('Desktop')) ($ShortcutName+'.lnk')),(Join-Path ([Environment]::GetFolderPath('StartMenu')) ('Programs\'+$ShortcutName+'\开黑搭子.lnk')),(Join-Path ([Environment]::GetFolderPath('StartMenu')) ('Programs\'+$ShortcutName+'\卸载.lnk')))
- $ShortcutBackups=@()
+ $OldFiles=@();$Written=@();$Removed=$false;$IntegrationStarted=$false;$ShortcutDirectories=@()
+ # Match NSIS's explicit 32-bit view; these HKCU Software paths are shared on x64.
+ $RegistryRoot=[Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::CurrentUser,[Microsoft.Win32.RegistryView]::Registry32)
+ $ProductKey='Software\'+$RegistryId;$UninstallKey='Software\Microsoft\Windows\CurrentVersion\Uninstall\'+$RegistryId
+ $RegistrationRows=@(
+  @{name='DisplayName';value='开黑搭子';kind=[Microsoft.Win32.RegistryValueKind]::String},
+  @{name='DisplayVersion';value=$Manifest.version;kind=[Microsoft.Win32.RegistryValueKind]::String},
+  @{name='InstallLocation';value=$Target;kind=[Microsoft.Win32.RegistryValueKind]::String},
+  @{name='DisplayIcon';value=(Join-Path $Target '开黑搭子.exe');kind=[Microsoft.Win32.RegistryValueKind]::String},
+  @{name='UninstallString';value=('"'+(Join-Path $Target '卸载开黑搭子.exe')+'"');kind=[Microsoft.Win32.RegistryValueKind]::String},
+  @{name='NoModify';value=1;kind=[Microsoft.Win32.RegistryValueKind]::DWord},
+  @{name='NoRepair';value=1;kind=[Microsoft.Win32.RegistryValueKind]::DWord})
+ $RegistrationBackups=@((ReadRegistration $ProductKey @('InstallDir')),(ReadRegistration $UninstallKey @($RegistrationRows|ForEach-Object {$_.name})))
+ $ShortcutFiles=@((ChildPath ([Environment]::GetFolderPath('Desktop')) ($ShortcutName+'.lnk')),(ChildPath ([Environment]::GetFolderPath('StartMenu')) ('Programs/'+$ShortcutName+'/开黑搭子.lnk')),(ChildPath ([Environment]::GetFolderPath('StartMenu')) ('Programs/'+$ShortcutName+'/卸载.lnk')))
+ $null=New-Item -ItemType Directory -Path $Backup
+ try {
+ $ShortcutBackups=@();for($Index=0;$Index -lt $ShortcutFiles.Count;$Index++){
+  $File=$ShortcutFiles[$Index];$Existed=Test-Path -LiteralPath $File
+  if($Existed -and !(Test-Path -LiteralPath $File -PathType Leaf)){throw 'Shortcut path is not a regular file'}
+  $Copy=ChildPath $Backup ('shortcuts/'+$Index+'.lnk');if($Existed){CopyExact $File $Copy}
+  $ShortcutBackups+=@{source=$Copy;target=$File;existed=$Existed}
+ }
+ $RegistrationBackups|Export-Clixml -LiteralPath (Join-Path $Backup 'registration.xml')
  if($Existing){
   if(!(Test-Path -LiteralPath (Join-Path $Old 'resources\app.asar'))){throw 'Previous application identity is incomplete'}
   $OldFiles=@(Get-ChildItem -LiteralPath $Old -Recurse -File|ForEach-Object {$Relative=$_.FullName.Substring($Old.Length+1).Replace('\','/');$null=ChildPath $Old $Relative;$Relative})
   foreach($Name in $OldFiles){CopyExact (ChildPath $Old $Name) (ChildPath $Backup ('files/'+$Name))}
-  for($Index=0;$Index -lt $ShortcutFiles.Count;$Index++){if(Test-Path -LiteralPath $ShortcutFiles[$Index] -PathType Leaf){$Copy=ChildPath $Backup ('shortcuts/'+$Index+'.lnk');CopyExact $ShortcutFiles[$Index] $Copy;$ShortcutBackups+=@{source=$Copy;target=$ShortcutFiles[$Index]}}}
-  if($OldRegistration){$OldRegistration|Export-Clixml -LiteralPath (Join-Path $Backup 'registration.xml')}
  }
- try {
   StopInstalled $Old
   if($Existing){
    $Removed=$true
@@ -137,18 +196,30 @@ try {
   foreach($Row in $Manifest.files){$Destination=ChildPath $Target $Row.name;$Written+=$Destination;CopyExact (ChildPath $Stage $Row.name) $Destination;VerifyFile $Destination $Row}
   $Destination=ChildPath $Target 'rift-buddy-install.json';$Written+=$Destination;CopyExact (Join-Path $Stage 'rift-buddy-install.json') $Destination
   $Destination=ChildPath $Target '卸载开黑搭子.exe';$Written+=$Destination;CopyExact $StagedUninstaller $Destination;VerifyFile $Destination $UninstallerRow
+  $IntegrationStarted=$true
+  for($Index=0;$Index -lt $ShortcutFiles.Count;$Index++){
+   $Parent=Split-Path -Parent $ShortcutFiles[$Index]
+   if(!(Test-Path -LiteralPath $Parent)){$null=New-Item -ItemType Directory -Path $Parent;$ShortcutDirectories+=$Parent}
+   WriteShortcut $ShortcutFiles[$Index] (Join-Path $Target $(if($Index -eq 2){'卸载开黑搭子.exe'}else{'开黑搭子.exe'}))
+  }
+  WriteRegistration $ProductKey @(@{name='InstallDir';value=$Target;kind=[Microsoft.Win32.RegistryValueKind]::String})
+  WriteRegistration $UninstallKey $RegistrationRows
  } catch {
   $Failure=$_.Exception.Message;$RestoreErrors=@()
   foreach($File in $Written){try{if(Test-Path -LiteralPath $File){Remove-Item -LiteralPath $File -Force}}catch{$RestoreErrors+=$_.Exception.Message}}
   if($Removed){
    foreach($Name in $OldFiles){try{$Source=ChildPath $Backup ('files/'+$Name);$Destination=ChildPath $Old $Name;if(!(Test-Path -LiteralPath $Destination -PathType Leaf) -or (FileSha $Destination) -ne (FileSha $Source)){CopyExact $Source $Destination}}catch{$RestoreErrors+=$_.Exception.Message}}
-   foreach($Shortcut in $ShortcutBackups){try{CopyExact $Shortcut.source $Shortcut.target}catch{$RestoreErrors+=$_.Exception.Message}}
-   try{if($OldRegistration){New-Item -Path $UninstallKey -Force|Out-Null;foreach($Property in $OldRegistration.PSObject.Properties|Where-Object {$_.Name -notlike 'PS*'}){Set-ItemProperty -LiteralPath $UninstallKey -Name $Property.Name -Value $Property.Value};New-Item -Path ('HKCU:\Software\'+$RegistryId) -Force|Out-Null;Set-ItemProperty -LiteralPath ('HKCU:\Software\'+$RegistryId) -Name InstallDir -Value $Old}}catch{$RestoreErrors+=$_.Exception.Message}
   }
+  if($Removed -or $IntegrationStarted){
+   foreach($Shortcut in $ShortcutBackups){try{if($Shortcut.existed){CopyExact $Shortcut.source $Shortcut.target}else{if(Test-Path -LiteralPath $Shortcut.target){Remove-Item -LiteralPath $Shortcut.target -Force}}}catch{$RestoreErrors+=$_.Exception.Message}}
+   foreach($Snapshot in $RegistrationBackups){try{RestoreRegistration $Snapshot}catch{$RestoreErrors+=$_.Exception.Message}}
+  }
+  foreach($Directory in $ShortcutDirectories|Sort-Object Length -Descending){try{if((Test-Path -LiteralPath $Directory) -and !(Get-ChildItem -LiteralPath $Directory -Force)) {Remove-Item -LiteralPath $Directory}}catch{$RestoreErrors+=$_.Exception.Message}}
   if($RestoreErrors.Count){throw ($Failure+'. Recovery requires attention; backup: '+$Backup+'. '+($RestoreErrors -join '; '))}
-  try{ClearBackup $Backup}catch{[Console]::WriteLine('Restoration succeeded; temporary backup retained: '+$Backup)}
-  throw ($Failure+'. Previous installation restored.')
+  $RecoveryMessage=if($Removed -or $IntegrationStarted){'Previous installation restored.'}else{'Previous installation was not changed.'}
+  try{ClearBackup $Backup}catch{[Console]::WriteLine($RecoveryMessage+' Temporary backup retained: '+$Backup)}
+  throw ($Failure+'. '+$RecoveryMessage)
  }
  try{ClearBackup $Backup}catch{[Console]::WriteLine('Installation succeeded; temporary backup retained: '+$Backup)}
  exit 0
-} catch { Write-Error $_.Exception.Message;exit 1 }
+} catch { [Console]::Error.WriteLine($_.Exception.Message);exit 1 }finally{if($RegistryRoot){$RegistryRoot.Dispose()}}
