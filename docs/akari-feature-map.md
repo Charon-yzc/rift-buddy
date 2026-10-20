@@ -1,6 +1,6 @@
 # Akari 战绩与实时对局来源映射
 
-固定来源：League Akari 1.5.1，`60f1584c3d3e45b2bb183aefcc615d35d7cffcb8`。本文记录迁移功能和明确边界，不以表格代替真实客户端验收。
+固定来源：League Akari 1.5.1，`60f1584c3d3e45b2bb183aefcc615d35d7cffcb8`。完整的底层架构解构、并发队列调度、多级缓存与组件实现机理详见 [Akari 源码架构深度调研文档](research/2026-10-20-league-akari-source-architecture.md)。本文记录迁移功能和明确边界，不以表格代替真实客户端验收。
 
 | 来源能力 | 当前实现 | 来源路径（Akari 根目录下） |
 | --- | --- | --- |
