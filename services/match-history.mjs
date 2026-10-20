@@ -10,8 +10,8 @@ import {cleanPlayerChallenges,cleanPlayerProfile,normalizePublicRanked,normalize
 const profile=p=>({puuid:p.puuid,name:text(p.gameName||p.displayName||p.summonerName||p.name)+(p.tagLine?'#'+text(p.tagLine):''),level:number(p.summonerLevel||p.level),icon:number(p.profileIconId),privacy:['PUBLIC','PRIVATE'].includes(p.privacy)?p.privacy:'unknown'});
 const fail=message=>{throw Error(message);};
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now}={}){
- let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map();let totalCacheBytes=0;
- function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;}
+ let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,cachedToken=null,cachedTokenKind='',cachedTokenAt=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),globalCompletedGames=new Map();let totalCacheBytes=0;
+ function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;cachedToken=null;cachedTokenAt=0;}
  function clear(){clearGeneration++;discovery=null;discoveredAt=0;resetSession();}
  async function limited(fn){if(waiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>waiting.push(resolve));running++;try{return await fn();}finally{running--;waiting.shift()?.();}}
  async function context(generation){
@@ -28,8 +28,14 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
  async function check(c){if(c.epoch!==epoch||connection!==c.key)fail('账号或客户端会话已变化，请重新加载战绩');let own;try{own=await request(c.auth,'/lol-summoner/v1/current-summoner');}catch{if(c.epoch===epoch)clear();fail('客户端会话已变化，请重新加载战绩');}if(own?.puuid!==c.own.puuid||c.epoch!==epoch||connection!==c.key){if(c.epoch===epoch)clear();fail('账号或客户端会话已变化，请重新加载战绩');}}
  function put(key,value){const current=cache.get(key);const merged=current?.origin===value.origin?{...current,...value}:value;totalCacheBytes-=cacheBytes.get(key)||0;cache.delete(key);cacheBytes.delete(key);const bytes=JSON.stringify(merged).length*2;if(bytes<=48_000_000){cache.set(key,merged);cacheBytes.set(key,bytes);totalCacheBytes+=bytes;}while(cache.size>128||totalCacheBytes>48_000_000){const oldest=cache.keys().next().value;totalCacheBytes-=cacheBytes.get(oldest)||0;cache.delete(oldest);cacheBytes.delete(oldest);}return merged;}
  async function remote(c,server,kind,path,body){
-  const response=await request(c.auth,kind==='entitlements'?'/entitlements/v1/token':'/lol-league-session/v1/league-session-token'),token=kind==='entitlements'?response?.accessToken:response;
-  if(typeof token!=='string'||!token)fail('战绩后台认证尚未就绪，请稍后重试或使用客户端数据源');
+  let token;
+  if(cachedToken&&cachedTokenKind===kind&&now()-cachedTokenAt<60000){token=cachedToken;}
+  else{
+   const response=await request(c.auth,kind==='entitlements'?'/entitlements/v1/token':'/lol-league-session/v1/league-session-token');
+   token=kind==='entitlements'?response?.accessToken:response;
+   if(typeof token!=='string'||!token)fail('战绩后台认证尚未就绪，请稍后重试或使用客户端数据源');
+   cachedToken=token;cachedTokenKind=kind;cachedTokenAt=now();
+  }
   return sgp({server,route:path,token,common:kind!=='entitlements',...(body?{method:'POST',body}:{})});
  }
  async function roster(c,p){
@@ -107,11 +113,31 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   const games=entries.slice(0,count).map(g=>normalizeMatch(g,source,t.player.puuid)).filter(Boolean);
   // LCU pages can omit identities/full teams. Match Akari's completion pass,
   // bounded to three reads at once and one page, before computing statistics.
-  if(source==='lcu')for(let index=0;index<games.length;index+=3)await Promise.all(games.slice(index,index+3).map(async(game,offset)=>{
-   if(game.self&&game.participants.length>=10)return;
-   try{const complete=normalizeMatch(await request(c.auth,'/lol-match-history/v1/games/'+game.id),'lcu',t.player.puuid);if(complete?.id===game.id)games[index+offset]=complete;}catch{}
-  }));
-   if(games.some(g=>!g.completeTeams))notice+=(notice?'；':'')+'部分对局队伍资料不完整，参团率、队伍占比和评分暂不可用';
+  if(source==='lcu'){
+   const pending=[];
+   for(let i=0;i<games.length;i++){
+    const game=games[i];
+    if(game.self&&game.participants.length>=10)continue;
+    const raw=globalCompletedGames.get(game.id);
+    if(raw){
+     const complete=normalizeMatch(raw,'lcu',t.player.puuid);
+     if(complete?.id===game.id){games[i]=complete;continue;}
+    }
+    pending.push({game,index:i});
+   }
+   for(let index=0;index<pending.length;index+=8){
+    await Promise.all(pending.slice(index,index+8).map(async({game,index:i})=>{
+     try{
+      const raw=await request(c.auth,'/lol-match-history/v1/games/'+game.id);
+      if(globalCompletedGames.size>512)globalCompletedGames.delete(globalCompletedGames.keys().next().value);
+      globalCompletedGames.set(game.id,raw);
+      const complete=normalizeMatch(raw,'lcu',t.player.puuid);
+      if(complete?.id===game.id)games[i]=complete;
+     }catch{}
+    }));
+   }
+  }
+  if(games.some(g=>!g.completeTeams))notice+=(notice?'；':'')+'部分对局队伍资料不完整，参团率、队伍占比和评分暂不可用';
    // The all-player raw matrix is fetched with the explicit detail action.
    // Keep hundred-game pages small enough for the bounded authorized pipe.
    for(const game of games)for(const player of game.participants)delete player.publicStats;
@@ -151,7 +177,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   const source=t.ids.get(id),key=`${payload.handle}:${id}`,cached=cache.get(key);
   if(operation==='detail'){
    let game=cached?.complete?cached.game:null,notice=cached?.detailNotice||'';
-   if(!game){let raw,actual=source;try{raw=source==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/SUMMARY`):await request(c.auth,'/lol-match-history/v1/games/'+id);}catch(error){if(source!=='sgp'||t.cross)throw error;raw=await request(c.auth,'/lol-match-history/v1/games/'+id);actual='lcu';notice='后台详情暂不可用，已使用当前大区客户端数据';}game=normalizeMatch(raw,actual,t.player.puuid);if(!game||game.id!==id)fail('对局详情与当前对局不匹配');}
+   if(!game){let raw,actual=source;try{if(source==='sgp'){raw=await remote(c,t.server,'entitlements','/match-history-query/v1/products/lol/'+SGP_SERVERS[t.server].region+'_'+id+'/SUMMARY');}else{raw=globalCompletedGames.get(id);if(!raw){raw=await request(c.auth,'/lol-match-history/v1/games/'+id);if(globalCompletedGames.size>512)globalCompletedGames.delete(globalCompletedGames.keys().next().value);globalCompletedGames.set(id,raw);}}}catch(error){if(source!=='sgp'||t.cross)throw error;raw=await request(c.auth,'/lol-match-history/v1/games/'+id);actual='lcu';notice='后台详情暂不可用，已使用当前大区客户端数据';}game=normalizeMatch(raw,actual,t.player.puuid);if(!game||game.id!==id)fail('对局详情与当前对局不匹配');}
    await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取详情');put(key,{origin:source,game,complete:true,detailNotice:notice});return {game,notice};
   }
   if(operation==='timeline'){
