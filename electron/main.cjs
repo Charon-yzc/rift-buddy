@@ -119,7 +119,8 @@ async function boot(){
  const catalogCore=await import('../src/core/catalog.mjs');
  const {createCatalogStore}=await import('../services/catalog-store.mjs');
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
- const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;publishData(['catalog','catalogInfo']);guide?.publish();return result;};
+ const dataResult=result=>({...result,dataRevision});
+ const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;publishData(['catalog','catalogInfo']);guide?.publish();return dataResult(result);};
  const refreshReference=(refresh,keys)=>async(...args)=>{
   const before=data,patch=data.patch,version=data.version,result=await refresh(...args);
   if(data!==before||data.patch!==patch||data.version!==version)throw Error('基础资料已更新，请重新刷新参考');
@@ -456,6 +457,7 @@ async function boot(){
   if(paused&&appUpdateStatus.phase==='idle'&&!appUpdateFlight)appUpdateStatus={phase:'paused',release:paused.release,received:paused.received,total:paused.total,kind:paused.kind,via:paused.via};
   return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),championUsage:usageCollector.snapshot(),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
  },true);
+ guard('data-snapshot',()=>({data,revision:dataRevision}));
  const {windowInfo}=await import('../services/window-info.mjs');
  guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:forRenderer(latestClient),companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
  guard('companion-mode',(value,{surface})=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');const operation=companion.setMode(value);return {...companion.layout(surface),opened:value?operation.docked:undefined,reason:operation.reason};},true);
@@ -698,13 +700,13 @@ async function boot(){
   }finally{launchingGame=false;}
  });
  guard('choose-launch-path',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择 WeGame 英雄联盟或客户端启动程序',properties:['openFile'],filters:[{name:'启动程序',extensions:['exe']}]});return result.canceled?null:result.filePaths[0];});
- guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
- guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
- guard('refresh-rankings',source=>refreshRankings(source));
+ guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return dataResult(result);});
+ guard('refresh-pairs',async(members,source)=>dataResult(await refreshPairs(members,source)));
+ guard('refresh-rankings',async source=>dataResult(await refreshRankings(source)));
  guard('refresh-opponent-build',async(id,role,opponent,source)=>{
   const target=data.champions.find(c=>c.id===opponent);
   if(!latestClient.connected||latestClient.phase!=='ChampSelect'||!target||!latestClient.session?.theirTeam?.some(p=>p.championId===target.key))throw Error('所选对手已不在当前公开选人中，请同步后重试');
-  const result=await refreshOpponentBuild(id,role,opponent,source);guide.publish();return result;
+  const result=await refreshOpponentBuild(id,role,opponent,source);guide.publish();return dataResult(result);
  });
  guard('open-guide',async selection=>{if(selection){const gameId=publicClientGameId(latestClient),previous=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId,live:latestLive}).guide,next=guideCore.selectGuide(previous,selection);if(!next.match&&latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};await setGuideState(next);}else await prepareCurrentGuide();const result=guide.show();pollLive();return {...result,selection:state.guide?.selection||null,revision:guideRevision};});
  guard('update-guide',async selection=>{const s=guideCore.validateGuideSelection(selection);if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(s))return {updated:false};await setGuideState(guideCore.selectGuide(state.guide,mergeConfiguration(state.guide.selection,s,Array.isArray(selection.changedFields)?selection.changedFields:undefined)),state.guide);guide.publish();return {updated:true,selection:state.guide.selection,revision:guideRevision};});
@@ -732,11 +734,11 @@ async function boot(){
    // rename could cross into a draft after the final phase check.
    renameSync(pendingSnapshot,path.join(storeRoot,'data/game.json'));
    data=prepared.data;generation.noteManual(data,token,{notify:false});data.dataFeed=dataFeed.summary();catalogCore.configureCatalog(data.catalog);publishedBase=data;
-   publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:prepared.imageCache};
+   publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:prepared.imageCache,dataRevision};
   }finally{await fs.unlink(pendingSnapshot).catch(()=>{});updating=false;}
  });
- guard('check-data-feed',()=>dataFeed.check({force:true}));
- guard('adopt-data-generation',async release=>{if(typeof release!=='string'||!/^[a-f0-9]{64}$/.test(release))throw Error('资料候选已变化，请重新检查');if(!await generation.activate({release,explicit:true}))throw Error('当前无法启用，请在大厅重新检查资料');return generation.summary();});
+ guard('check-data-feed',async()=>dataResult(await dataFeed.check({force:true})));
+ guard('adopt-data-generation',async release=>{if(typeof release!=='string'||!/^[a-f0-9]{64}$/.test(release))throw Error('资料候选已变化，请重新检查');if(!await generation.activate({release,explicit:true}))throw Error('当前无法启用，请在大厅重新检查资料');return dataResult(generation.summary());});
  guard('app-update-check',async(silent=false)=>{
   if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)return appUpdateStatus;
   const prev=appUpdateStatus;

@@ -43,17 +43,18 @@ export const roleIcon=(role,cls='')=>roleIcons[role]?`<svg class="icon role-icon
 export const portrait=(c,cls='')=>c?`<img class="portrait ${cls}" src="${escape(localAssets[`champion/${c.id}`]||`../data/images/champion/${c.id}.png`)}" data-fallback="${escape(c.icon)}" alt="${escape(c.name)}" loading="lazy" />`:'<div class="empty-portrait">+</div>';
 export const rosterPortrait=(c,cls='')=>c?portrait(c,cls).replace('<img ','<img draggable="false" '):`<span class="empty-portrait roster-empty" aria-hidden="true">${icon('user')}</span>`;
 let fallbackAssets=new Map(),localAssets={};
-export function configureAssets(data){
- localAssets=data.imageOverrides||{};
+export function prepareAssets(data){
  const dd='https://ddragon.leagueoflegends.com';
- fallbackAssets=new Map([
+ const fallback=new Map([
   ...Object.values(data.items).map(i=>[`item/${i.id}`,i.icon]),
   ...data.augments.map(a=>[`augment/${a.id}`,a.icon]),
   ...(data.abilityReference?.champions||[]).flatMap(c=>c.abilities.map(a=>[`ability/${c.id}-${a.key}`,a.icon])),
   ...Object.entries(data.spells).map(([id,s])=>[`spell/${id}`,`${dd}/cdn/${data.version}/img/spell/${s.image.full}`]),
   ...data.runes.flatMap(t=>t.slots.flatMap(s=>s.runes.map(r=>[`rune/${r.id}`,`${dd}/cdn/img/${r.icon}`]))),
- ]);
+ ]);return {local:data.imageOverrides||{},fallback};
 }
+export function installAssets(prepared){localAssets=prepared.local;fallbackAssets=prepared.fallback;}
+export function configureAssets(data){installAssets(prepareAssets(data));}
 export const asset=(kind,id,alt='',cls='')=>`<img class="${cls}" ${['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${escape(id)}"`:''} src="${escape(localAssets[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" ${fallbackAssets.get(`${kind}/${id}`)?`data-fallback="${escape(fallbackAssets.get(`${kind}/${id}`))}"`:''} alt="${escape(alt)}" loading="lazy" />`;
 export const button=(action,label,ico='',cls='',extra='')=>`<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${ico?icon(ico):''}${label}</button>`;
 export const dateLabel=v=>v?new Date(v).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}):'未知';
