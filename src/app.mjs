@@ -96,6 +96,9 @@ import {createPreparationStore,createRuneApplicationState,recommendationKey,conf
 import {renderResultCard,coreRouteChoices,recommendationLoading} from './draft-result-view.mjs';
 import {escape as e,icon,portrait,rosterPortrait,asset,button,dateLabel,gameDescription,roleIcon} from './ui.mjs';
 import {rankingsView} from './rankings-view.mjs';
+import {nationalRankingsView,nationalBuildView} from './national-reference-view.mjs';
+import {createNationalReferenceController} from './national-reference-controller.mjs';
+import {NATIONAL_TIERS,nationalRequest} from './core/national-reference.mjs';
 import {rankingKey,rankingReference,validRankingReference} from './core/rankings.mjs';
 import {patchNotesView} from './patch-notes-view.mjs';
 import {championReferenceView,referenceHeroTiles} from './champion-reference-view.mjs';
@@ -253,6 +256,15 @@ let stateRecovery=null;
 const initialSlots=()=>createSlots().map(slot=>({...slot,party:slot.role==='top'}));
 let data,saved,savedBase,boot,slots=initialSlots(),results=[],resultsSignature='',route='draft',style='fun',offset=0,scope='solo',soloRole='',showAllCandidates=false;
 let rankingSource=null,rankingRole='top',rankingQuery='',rankingSort='rank';
+let rankingProvider='opgg',nationalTier='emerald_plus',nationalController=null,nationalDetail=null;
+const nationalRankInput=()=>({kind:'rankings',tier:nationalTier});
+const nationalState=()=>nationalController||=createNationalReferenceController({request:input=>{if(!api.nationalReference)throw Error('此预览不支持国服查询');return api.nationalReference(input);},getData:()=>data,getGeneration:()=>dataState.baseGeneration(),onChange:()=>{render();repaintNationalDetail();}});
+const rankingContent=(compact=false)=>rankingProvider==='tencent101'?nationalRankingsView(data,{tier:nationalTier,role:rankingRole,query:rankingQuery,sort:rankingSort,state:nationalState().snapshot(nationalRankInput()),compact}):rankingsView(data,{...rankingOptions(),compact});
+function repaintNationalDetail(){
+ if(!nationalDetail||!overlay.querySelector('[data-national-detail]'))return;
+ const current=nationalDetail.generation===dataState.baseGeneration(),input=nationalDetail.input;
+ overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="国服配置参考">${nationalBuildView(data,input,current?nationalState().snapshot(input):{error:'基础资料已变化，请关闭后重新打开国服参考。'})}</section></div>`;
+}
 let patchVersion='',patchQuery='';
 let referenceHero='',referenceQuery='',referenceRole='all',referenceTab='skills',referenceSkill='Q',referenceVariant=0;
 const rankingPending=new Set(),rankingErrors=new Map();
@@ -530,7 +542,7 @@ function acceptDataState(change,before){
  if(!dataReady||change.origin!=='remote')return;
  if(change.statusOnly){if(route==='settings')render();return;}
  if(change.baseChanged||change.catalogChanged||before!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;resultsSignature='';}
- render();if(buildView)renderBuild();queueCompanionRecommendation();
+ render();if(buildView)renderBuild();if(change.baseChanged)repaintNationalDetail();queueCompanionRecommendation();
 }
 function acceptSharedData(value){dataState.accept(value);}
 const dataOperation=operation=>awaitDataOperation(operation,dataState);
@@ -704,7 +716,7 @@ function render(){
   const ownPrepared=clientPreparationPlan(data,preparation||prepared.currentOnly);
   const focusScope=JSON.stringify([client.connected,client.phase,client.game?.gameId||'',own,client.mode?.id||'']);
   if(plan)maybeRefreshBuild(plan.selection.id,plan.selection.role,plan.selection.mode);
-  lastRenderedClient=clientRenderIdentity(client);app.innerHTML=companionView({data,client,enemyRoles:saved.draft?.enemyRoles,connectionBusy:syncing,slots,unassigned,enemy,bans:clientBans,scope,soloRole,playerPosition:saved.draft?.playerPosition,preselection:saved.draft?.preselection,style,tab:companionTab,results,ballotKeys:room?.mode!=='idle'&&room?.ballots?results.map(r=>proposalKey(roomResultProposal(r))):[],generating,error:recommendationError,preparation,plan,favorites:saved.favorites,preferences:saved.preferences,room,roomContent:companionTab==='room'?roomPanelHTML():'',rankings:companionTab==='rankings'?rankingsView(data,{...rankingOptions(),compact:true}):'',activePlan:activeCreativePlan,adoptedShare:lastAdoptedRoomShare,draftNotice:creativePlanNotice,preparationStatus:clientPreparing?{message:'正在预选并配置…'}:ownPrepared&&clientPreparationStatuses.get(clientPreparationKey(client,ownPrepared)),configurationStatus:{heroStatistics:plan?championStatisticsView(client,data,plan.selection):'',rankedAdvice:plan?rankedConfigurationAdvice(client,data,plan.selection,plan.build,saved.draft?.enemyRoles):null,pending:clientPreparing||runeApplying||!!itemSetPending,itemSetStatuses,clientControls:clientControls(plan,'companion'),refreshing:refreshingBuilds.has(configurationKey),error:buildErrors.get(configurationKey),enemyIds:publicMatchupIds(),publicContext:matchupPreparationContext(),opponentId:plan?chosenMatchupOpponent(plan.selection)?.id||'':'',matchupStatus:plan?matchupFocusStatus(plan.selection):'',opponentRefresh:plan?opponentRefreshStatus(plan.selection):{}},applied:!!preparation&&runeAppliedKeys.has(runeApplicationKey(own,preparation.build.role,preparation.build.runePage)),guideAutoShow:saved.preferences.guideAutoShow!==false,appVersion:boot.version,pairRefresh:pairRefreshStatus(),overlap:windowLayout.overlap,recovery:stateRecovery,taskControls:taskControls(prepared.task),taskPlan:prepared.task,taskComparing:draftComparing,claimingPosition:claiming,showAllCandidates}).replaceAll('loading="lazy"','loading="eager"');
+  lastRenderedClient=clientRenderIdentity(client);app.innerHTML=companionView({data,client,enemyRoles:saved.draft?.enemyRoles,connectionBusy:syncing,slots,unassigned,enemy,bans:clientBans,scope,soloRole,playerPosition:saved.draft?.playerPosition,preselection:saved.draft?.preselection,style,tab:companionTab,results,ballotKeys:room?.mode!=='idle'&&room?.ballots?results.map(r=>proposalKey(roomResultProposal(r))):[],generating,error:recommendationError,preparation,plan,favorites:saved.favorites,preferences:saved.preferences,room,roomContent:companionTab==='room'?roomPanelHTML():'',rankings:companionTab==='rankings'?rankingContent(true):'',activePlan:activeCreativePlan,adoptedShare:lastAdoptedRoomShare,draftNotice:creativePlanNotice,preparationStatus:clientPreparing?{message:'正在预选并配置…'}:ownPrepared&&clientPreparationStatuses.get(clientPreparationKey(client,ownPrepared)),configurationStatus:{heroStatistics:plan?championStatisticsView(client,data,plan.selection):'',rankedAdvice:plan?rankedConfigurationAdvice(client,data,plan.selection,plan.build,saved.draft?.enemyRoles):null,pending:clientPreparing||runeApplying||!!itemSetPending,itemSetStatuses,clientControls:clientControls(plan,'companion'),refreshing:refreshingBuilds.has(configurationKey),error:buildErrors.get(configurationKey),enemyIds:publicMatchupIds(),publicContext:matchupPreparationContext(),opponentId:plan?chosenMatchupOpponent(plan.selection)?.id||'':'',matchupStatus:plan?matchupFocusStatus(plan.selection):'',opponentRefresh:plan?opponentRefreshStatus(plan.selection):{}},applied:!!preparation&&runeAppliedKeys.has(runeApplicationKey(own,preparation.build.role,preparation.build.runePage)),guideAutoShow:saved.preferences.guideAutoShow!==false,appVersion:boot.version,pairRefresh:pairRefreshStatus(),overlap:windowLayout.overlap,recovery:stateRecovery,taskControls:taskControls(prepared.task),taskPlan:prepared.task,taskComparing:draftComparing,claimingPosition:claiming,showAllCandidates}).replaceAll('loading="lazy"','loading="eager"');
   const content=document.querySelector('.companion-content');content.dataset.view=view;content.dataset.disclosureScope=disclosureScope;content.dataset.focusScope=focusScope;
   renderedDisclosureScope='companion:'+disclosureScope;disclosureState.restore(renderedDisclosureScope,app);markNewRoomProposals(previousProposals);
   if(disclosureFocus.scope===renderedDisclosureScope&&old?.dataset.focusScope===focusScope)disclosureState.restoreFocus(disclosureFocus.key,app);
@@ -712,7 +724,7 @@ function render(){
   renderedSelectContext=appSelectionContext(prepared);reflectRunePending();
   if(focus&&old?.dataset.focusScope===focusScope){const target=focus.id?document.getElementById(focus.id):[...app.querySelectorAll('button,input,select')].find(control=>control.tagName===focus.tag&&Object.keys(focus.data).length&&Object.entries(focus.data).every(([key,value])=>control.dataset[key]===value));target?.focus({preventScroll:true});}return;
  }
-   historyTooltips.close();ongoingTooltips.close();app.innerHTML=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}):route==='rankings'?rankingsView(data,rankingOptions()):route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`;
+   historyTooltips.close();ongoingTooltips.close();app.innerHTML=`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}):route==='rankings'?rankingContent():route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`;
  renderedDisclosureScope='main:'+route+':'+(route==='draft'?activeCreativePlan?.id||'':route==='reference'?[referenceHero,referenceRole,referenceTab].join(':'):'');disclosureState.restore(renderedDisclosureScope,app);markNewRoomProposals(previousProposals);
  if(disclosureFocus.scope===renderedDisclosureScope&&disclosureFocus.context===selectContext)disclosureState.restoreFocus(disclosureFocus.key,app);
  restoreCandidateScroll(candidateScroll,selectContext);renderedDraftResults=route==='draft'?results:null;
@@ -1555,6 +1567,14 @@ document.addEventListener('click',async event=>{
  if(action==='reference-skill'){if(!['P','Q','W','E','R'].includes(el.dataset.skill))return;referenceSkill=el.dataset.skill;referenceVariant=0;render();return;}
  if(action==='reference-variant'){const index=Number(el.dataset.variant);if(!Number.isInteger(index)||index<0||index>11)return;referenceVariant=index;render();return;}
  if(action==='ranking-refresh'){await refreshRanking();return;}
+ if(action==='national-refresh'){await nationalState().refresh(nationalRankInput(),{force:true});return;}
+ if(action==='national-source'){await api.openLink('https://101.qq.com/');return;}
+ if(action==='national-hero'){
+  const ref=nationalState().snapshot(nationalRankInput()).reference,id=el.dataset.id,role=el.dataset.role;
+  if(rankingProvider!=='tencent101'||!ref?.boards[role]?.some(row=>row.champion===id))throw Error('国服榜单已变化，请重新选择');
+  const input=nationalRequest({kind:'build',tier:nationalTier,champion:id,role},data);nationalDetail={input,generation:dataState.baseGeneration()};
+  overlay.innerHTML='<div data-national-detail></div>';repaintNationalDetail();await nationalState().refresh(input);return;
+ }
  if(action==='ranking-hero'){
   const id=el.dataset.id,role=el.dataset.role,ref=rankingReference(data,rankingSource||data.buildSource);
   if(!ref?.boards[role]?.some(row=>row.champion===id)||!champ(id))throw Error('榜单已变化，请重新选择');
@@ -1920,6 +1940,8 @@ document.addEventListener('pointerout',hideFitTooltip);document.addEventListener
 document.addEventListener('change',event=>{
  if(event.target.id==='patch-version'){patchVersion=event.target.value;render();return;}
  const field=event.target.dataset.rankingFilter;if(!field)return;
+ if(field==='provider'){rankingProvider=event.target.value==='tencent101'?'tencent101':'opgg';if(rankingProvider==='tencent101'&&rankingSort==='samples')rankingSort='rank';companionScroll.delete('rankings');render();if(rankingProvider==='tencent101')nationalState().refresh(nationalRankInput());return;}
+ if(field==='national-tier'){if(!NATIONAL_TIERS.some(t=>t.id===event.target.value))return;nationalTier=event.target.value;companionScroll.delete('rankings');render();nationalState().refresh(nationalRankInput());return;}
  if(field==='sort')rankingSort=['rank','winRate','pickRate','samples'].includes(event.target.value)?event.target.value:'rank';
  else if(['region','tier'].includes(field))rankingSource=normalizeBuildSource({...rankingSource||data.buildSource,[field]:event.target.value});
  companionScroll.delete('rankings');render();

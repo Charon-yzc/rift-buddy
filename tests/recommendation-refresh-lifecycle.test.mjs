@@ -129,7 +129,7 @@ function sharedDataFixture(){
   saved:{preferences:{buildSource:{region:'global'}}},BUNDLED_CATALOG:{version:1},rankedRolesCache:null,route:'draft',buildView:null,
   recommendationKey,recommendationInput:()=>({slots:[],patch:context.data.patch,version:context.data.version,catalogStatus:context.data.catalogInfo.status}),
   bindPlayerBuildPreferences(){},configureCatalog:value=>value,catalogIssues:()=>({status:{}}),configureAssets(){},selectBuildSource(){},
-  markResultStale:()=>events.push('stale'),queueCompanionRecommendation:()=>events.push('queue'),render(){},renderBuild(){},
+  markResultStale:()=>events.push('stale'),queueCompanionRecommendation:()=>events.push('queue'),render(){},renderBuild(){},repaintNationalDetail(){},
   generating:false,recommendationRun:0,autoRecommendationKey:'old-key',autoRecommendTimer:null,recommendationError:'',offset:0,
   results:[{id:'cached'}],resultsSignature:'old-signature',showAllCandidates:false,activeRecommendation:{cancel:()=>events.push('cancel')},
   clearTimeout,cancelRecommendationReveal(){},calculateRecommendation:()=>gate.promise,resultCreativePlan:()=>events.push('apply'),toast:message=>events.push(message)

@@ -138,6 +138,9 @@ async function boot(){
  const {createRankingsCache}=await import('../services/rankings-cache.mjs');
  const rankingsCache=createRankingsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshRankings=refreshReference(rankingsCache,['rankings']);
+ const {createNationalReferenceCache}=await import('../services/national-reference.mjs');
+ const nationalReference=createNationalReferenceCache({root:path.join(storeRoot,'data'),getData:()=>data});
+ guard('national-reference',input=>nationalReference(input));
  const {createGameDataPreparer,readManualBase}=await import('../services/game-data-prepare.mjs');
  const {pureGameSnapshot,generationBaseIdentity}=await import('../services/data-generation.mjs');
  const {feedHash}=await import('../services/data-feed.mjs');
@@ -904,7 +907,7 @@ async function boot(){
  guard('toggle-pin',({window})=>{window.setAlwaysOnTop(!window.isAlwaysOnTop());return window.isAlwaysOnTop();},true);
  guard('choose-directory',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择英雄联盟安装目录',properties:['openDirectory']});return result.canceled?null:result.filePaths[0];});
  guard('open-link',async url=>{
-  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com','gitee.com'];
+  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','101.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com','gitee.com'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
   if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');
   if(['github.com','gitee.com'].includes(parsed.hostname)&&!isReleaseNotesUrl(url)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;

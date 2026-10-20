@@ -13,6 +13,7 @@ import {createBuildCache} from '../services/build-cache.mjs';
 import {createOpponentBuildCache} from '../services/opponent-build-cache.mjs';
 import {createPairStatisticsCache} from '../services/pair-statistics-cache.mjs';
 import {createRankingsCache} from '../services/rankings-cache.mjs';
+import {createNationalReferenceCache} from '../services/national-reference.mjs';
 import {createGameDataPreparer,readManualBase} from '../services/game-data-prepare.mjs';
 import {createDataGenerationCache,preserveGameContext} from '../services/data-generation-cache.mjs';
 import {createAcceptedGameReader} from '../services/active-game.mjs';
@@ -45,7 +46,7 @@ async function mainFixture(t,{old=seed.game,accepted=null,guide=null,manual=null
  if(accepted){served=accepted;let data=old;const cache=await createDataGenerationCache({root:cacheRoot,getData:()=>data,prepare:async bundle=>pureGameSnapshot(bundle.game),replace:next=>{data=next;},canActivate:()=>true,download,keys,clock:()=>now});await cache.check();assert.equal(cache.isActive(),true);}
  const images={...imageCache,loadImageOverrides:async()=>({}),cacheMissingImages:async options=>{await imageHook(options);return {overrides:{},saved:0,failed:0};}};
  const context=vm.createContext({path,fs,process:{pid:process.pid},root:appRoot,storeRoot,state,data:null,guide:{publish(){}},latestClient:{connected:false},latestLive:null,synchronizeSavedState:null,updating:false,applyingRunes:false,importingItemSet:false,
-  dataService,catalogCore,createCatalogStore,createBuildCache,createOpponentBuildCache,createPairStatisticsCache,createRankingsCache,createChampionUsageCollector,createRoomUsagePublisher,roomService:null,...sourceCore,createDataFeedActivationGate,pureGameSnapshot,generationBaseIdentity,feedHash,preserveGameContext,readManualBase,
+  dataService,catalogCore,createCatalogStore,createBuildCache,createOpponentBuildCache,createPairStatisticsCache,createRankingsCache,createNationalReferenceCache,createChampionUsageCollector,createRoomUsagePublisher,roomService:null,...sourceCore,createDataFeedActivationGate,pureGameSnapshot,generationBaseIdentity,feedHash,preserveGameContext,readManualBase,
   createGameDataPreparer:options=>createGameDataPreparer({...options,images}),createDataGenerationCache:options=>createDataGenerationCache({...options,keys,clock:()=>now,download}),createDataFeedCache:options=>createDataFeedCache({...options,keys,clock:()=>now,download}),
   dataRevision:0,publishData:(fields,replace=false)=>{context.dataRevision++;publications.push({fields:[...fields],replace});},publishWindows(){},guard:(name,fn)=>handlers.set(name,fn),saveCurrentState:async()=>dataService.atomicJSON(stateFile,context.state)});
  const main=await vm.runInContext('(async()=>{'+bootSource+'\n'+adoptionSource+'\n'+catalogSource+'\nreturn {generation,dataFeed,catalogStore,observe:client=>{latestClient=client;observeFeedPhase(client);feedIdle=observeSignedFeedPhase(client);return dataFeed.activate();}};})()',context);
