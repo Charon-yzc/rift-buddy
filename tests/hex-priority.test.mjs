@@ -43,8 +43,10 @@ test('combo analysis names a formed package and its direction without synthetic 
  assert.ok(crit?.formed);
  assert.ok(set.synergies.some(text=>/暴击/.test(text)));
  assert.match(set.buildDirection,/暴击/);
- assert.ok(!('score' in set));
- assert.ok(!('winRate' in set));
+ for(const key of ['score','winRate','pickRate']){
+  assert.ok(!(key in set));
+  for(const row of set.packages)assert.ok(!(key in row));
+ }
 });
 
 test('combo analysis reports an ultimate conflict and an AD conversion mismatch',()=>{
@@ -63,23 +65,31 @@ test('mage skill-crit augment is not contradicted by a caster penalty',()=>{
 
 test('burn damage crit augment fits a burn mage without a caster penalty',()=>{
  const row=ranked(hero('Brand'),[1092])[0];
- assert.notEqual(row.priority,'备选');
+ assert.equal(row.priority,'优先');
+ assert.equal(row.top,true);
+ assert.ok(row.reasons.some(text=>/持续伤害/.test(text)));
  assert.ok(!row.cautions.some(text=>/暴击强化/.test(text)));
+ const offBuild=ranked(hero('Zed'),[1092])[0];
+ assert.equal(offBuild.priority,'备选');
 });
 
 test('self-healing frontline can use death ring without a support penalty or conflict',()=>{
  const row=ranked(hero('DrMundo'),[1015])[0];
- assert.notEqual(row.priority,'备选');
+ assert.equal(row.priority,'优先');
+ assert.equal(row.top,true);
  assert.ok(!row.cautions.some(text=>/队友/.test(text)));
  assert.ok(row.reasons.some(text=>/自身回复|生命回复/.test(text)));
  const set=analyzeAugmentSet({champion:hero('DrMundo'),owned:[1015,1346],augments:data.augments,buildKey:'tank'});
  assert.equal(set.conflicts.some(text=>/治疗|护盾|队友/.test(text)),false);
+ assert.ok(set.synergies.some(text=>/死亡之环/.test(text)));
 });
 
 test('ally shield champions are recognized as support triggers',()=>{
- for(const id of ['Thresh','Morgana']){
+ for(const id of ['Thresh','Morgana','LeeSin']){
   const row=ranked(hero(id),[1141])[0];
-  assert.notEqual(row.priority,'备选');
+  assert.equal(row.priority,'优先');
+  assert.equal(row.top,true);
+  assert.ok(row.reasons.some(text=>/治疗或护盾/.test(text)));
   assert.ok(!row.cautions.some(text=>/缺少稳定手段/.test(text)));
  }
 });
@@ -87,6 +97,8 @@ test('ally shield champions are recognized as support triggers',()=>{
 test('front-line survival reason is not repeated after ranking',()=>{
  const row=ranked(hero('Malphite'),[1041])[0];
  assert.equal(row.reasons.filter(text=>/前排/.test(text)).length,1);
+ const support=ranked(hero('Thresh'),[1141])[0];
+ assert.equal(support.reasons.filter(text=>/队友|友方/.test(text)).length,1);
 });
 
 test('reroll advice asks for a champion before judging',()=>{
@@ -95,6 +107,18 @@ test('reroll advice asks for a champion before judging',()=>{
  assert.match(advice.text,/选择英雄/);
 });
 
+test('non-caster burn augment keeps its trigger check on an off-build',()=>{
+ const row=ranked(hero('Zed'),[1092])[0];
+ assert.equal(row.priority,'备选');
+ assert.ok(row.reasons.some(text=>/触发条件/.test(text)));
+ assert.ok(!row.cautions.some(text=>/暴击强化/.test(text)));
+});
+
+test('non-mage caster burn augment fits a sustained AP build',()=>{
+ const row=ranked(hero('Lux'),[1092])[0];
+ assert.equal(row.priority,'优先');
+ assert.equal(row.top,true);
+});
 test('a defensive crit augment is not treated as a carry-only crit pick',()=>{
  const rows=ranked(hero('Malphite'),[1080]);
  assert.notEqual(rows[0].priority,'备选');
