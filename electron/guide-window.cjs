@@ -21,7 +21,7 @@ function cursorInBounds(cursor,bounds,margin=2){
      &&cursor.y>=bounds.y-m&&cursor.y<=bounds.y+bounds.height+m;
 }
 
-module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
+module.exports=function createGuideWindow({root,getState,setState,getModel,isQuitting,showMain,diagnostic,resetHexRound=()=>undefined,currentSelection=()=>null,prepareCurrent=async()=>false,getPreferences=()=>({}),setPresentation=async()=>{throw Error('界面设置暂不可用');},adjustPlan=()=>{throw Error('方案调整暂不可用');}}){
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
@@ -47,7 +47,7 @@ const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(
 const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
 const jungle=createJungleWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
 function publish(){if(peek.active())peek.sync(visibilityRequested);const value=payload();if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);jungle.publish(value);if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
- async function save(next){await setState(next,getState());publish();return payload();}
+ async function save(next,hexContext){await setState(next,getState(),hexContext);publish();return payload();}
  function adjustHeight(){if(win&&!isBall()&&!isStrip()&&!isCompact()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
  function applyMode(){
   if(!win||win.isDestroyed())return;
@@ -175,7 +175,7 @@ function publish(){if(peek.active())peek.sync(visibilityRequested);const value=p
   if(action==='condition'){if(!['ad','ap','control','heal','burst'].includes(value))throw Error('局势选项不正确');const conditions=current.selection.conditions.includes(value)?current.selection.conditions.filter(c=>c!==value):[...current.selection.conditions,value];return save({...current,selection:{...current.selection,conditions}});}
   if(action==='bottom-quest'){if(!current.selection.bottomQuestPlan)throw Error('当前不是下路任务后装备计划');const quest=getModel().bottomQuest;if(!current.bottomQuestConfirmed&&quest?.eligible===false)throw Error(quest.reason);return save({...current,bottomQuestConfirmed:!current.bottomQuestConfirmed,completedItems:current.completedItems.filter(id=>id!==quest?.itemId)});}
   if(action==='reset')return save({...current,completedItems:[]});
-  if(action==='new-game'){const result=await save({...current,jungleNotes:undefined,completedItems:[],bottomQuestConfirmed:false,clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,matchupGameId:undefined,protectId:undefined,combatFocus:undefined}});inputMode();return result;}
+  if(action==='new-game'){const hexContext=resetHexRound(current,value),result=await save({...current,jungleNotes:undefined,completedItems:[],bottomQuestConfirmed:false,clickThrough:true,purchaseTarget:undefined,purchaseTargetKind:undefined,stage:undefined,duelPick:undefined,selection:{...current.selection,compareIds:[],ownedAugmentIds:[],threatId:undefined,matchupGameId:undefined,protectId:undefined,combatFocus:undefined}},hexContext);inputMode();return result;}
   if(action==='purchase-target'){const target=getModel().shoppingTargets.find(i=>i.id===value&&!i.owned&&!i.blockedReason);if(value!==''&&!target)throw Error('目标已变化，请重新选择');return save({...current,purchaseTarget:value||undefined,purchaseTargetKind:target?.kind==='局势备选'?'situation':undefined});}
   if(action==='stage'){if(!['auto','opening','key','later'].includes(value))throw Error('配合阶段不正确');return save({...current,stage:value==='auto'?undefined:value});}
   if(action==='duel-own'||action==='duel-foe'){

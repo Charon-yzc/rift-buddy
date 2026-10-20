@@ -89,8 +89,9 @@ async function run(){
  assert.ok(accepted.preparations.findLast(s=>s.id==='Seraphine'&&s.role==='bottom'&&s.comboId==='double-song').conditions.includes('ap'),'Saved preparation lost the accepted guide choice');
  assert.ok((await active()).conditions.includes('ap'),'Main window reverted the accepted guide choice');
  await capture('prepared-configuration.png');
- // A saved Hex context must survive ordinary equipment changes and reopening.
- await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"hex",augmentIds:[1048],compareIds:[1048,1002],ownedAugmentIds:[1047]})');
+ // Current-round Hex notes survive configuration edits and guide reopening;
+ // seed the canonical owner instead of importing a previous game through a build.
+ await js(`(async()=>{await window.buddy.hexRound({operation:'select',hero:'Ashe'});for(const [operation,id]of [['own',1047],['compare',1048],['compare',1002]]){const snapshot=await window.buddy.hexRound(),record=snapshot.manual;await window.buddy.hexRound({...record,operation,id});}return window.buddy.openGuide({id:'Ashe',role:'bottom',mode:'hex',augmentIds:[1048]});})()`);
  await gjs('window.guide.control("main")');await until(()=>js('document.querySelector(".champ-summary")?.textContent.includes("艾希")'),'Hex return missing');
  await click('[data-action=build-condition][data-condition=heal]');
  await until(async()=>{const s=(await state()).guide.selection;return s.conditions.includes('heal')&&s.compareIds?.length===2;},'Hex context lost on sync');

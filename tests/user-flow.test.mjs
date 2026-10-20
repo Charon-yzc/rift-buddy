@@ -104,7 +104,7 @@ test('three-person jobs, sequence and windows reach the per-member guide',()=>{
  const fields=configurationPatch(original,next);assert.deepEqual(fields,['coreIndex']);
  const merged=mergeConfiguration({...original,conditions:['heal']},next,fields);
  assert.equal(merged.coreIndex,1);assert.deepEqual(merged.conditions,['heal']);assert.deepEqual(merged.compareIds,[1048,1002]);assert.deepEqual(merged.ownedAugmentIds,[1047]);assert.deepEqual(merged.augmentIds,[1048]);
- const store=createPreparationStore();store.remember(merged);assert.deepEqual(store.recall(original),merged);
+ const store=createPreparationStore();store.remember(merged);const recalled=store.recall(original);assert.deepEqual(recalled,{...next,conditions:['heal'],augmentIds:[1048]});assert.equal(recalled.compareIds,undefined);assert.equal(recalled.ownedAugmentIds,undefined);
  });
 
 test('live estimate handles missing data, enemy level changes and always degrades politely', async () => {

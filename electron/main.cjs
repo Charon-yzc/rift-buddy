@@ -198,9 +198,18 @@ async function boot(){
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));publishWindows('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
- const getGuideModel=()=>{const selection=currentGuideSelection(),m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,selection);if(m){const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
+ const getGuideModel=()=>{const selection=currentGuideSelection(),m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,selection);if(m){if(m.mode==='hex'){const record=hexGuideRecord(m.selection);m.hexRound=record?{context:record.context,revision:record.revision}:null;}const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
  const recommendationCore=await import('../src/core/recommend.mjs');
  const {publicClientGameId,reconcileClientDraft}=await import('../src/core/draft.mjs');
+ const {createHexRoundStore,hexRoundSelection}=await import('../src/core/hex-round.mjs');
+ const hexRounds=createHexRoundStore({newToken:require('node:crypto').randomUUID});let guideHexContext=null;
+ if(state.guide?.selection.mode==='hex')state.guide={...state.guide,selection:hexRoundSelection(state.guide.selection,null)};
+ const hexGuideRecord=(selection,context=guideHexContext)=>{
+  if(selection?.mode!=='hex')return null;
+  const snapshot=hexRounds.snapshot();
+  return snapshot.live?.hero===selection.id?snapshot.live:[snapshot.live,snapshot.manual].find(row=>row?.context===context&&row.hero===selection.id)||null;
+ };
+ const publishHexRound=()=>publishWindows('hex-round',hexRounds.snapshot());
  const {creativeComboContext}=await import('../src/core/creative-plan.mjs');
  const {mergeConfiguration,storedPreparation,upsertPreparation,preparationIdentity}=await import('../src/core/preparation.mjs');let guideRevision=0;
  const {isFreshBuildReference,rankedClientRoles}=await import('../src/core/builds.mjs');
@@ -219,18 +228,44 @@ async function boot(){
   const context={id:own.id,role:own.role,mode:own.mode,...creativeComboContext(combo)};
   return {coreIndex:0,conditions:[],...storedPreparation(state.preparations,context),...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,...creativeComboContext(combo)};
  };
- const setGuideState=async(next,base)=>{
+ const setGuideState=async(next,base,hexContext)=>{
   const valid=guideCore.validateGuideState(next),previous=base?guideCore.validateGuideState(base):null;if(valid)valid.completedItems=guideCore.createGuideModel(data,valid).completedItems;
   await saveCurrentState(current=>{
    let accepted=valid;
    if(previous){
     if(!valid||!current.guide||guideCore.guideIdentity(current.guide.selection)!==guideCore.guideIdentity(previous.selection)||current.guide.match?.gameId!==previous.match?.gameId)throw Error('本局指引已变化，请核对后重新操作');
-    const message='指引设置同时发生变化，请核对后重新操作',selection=current.guide.selection;
+    const message='指引设置同时发生变化，请核对后重新操作',selection=guideCore.validateGuideSelection(current.guide.selection);
     accepted=mergeSavedFields(current.guide,{...previous,selection},{...valid,selection},message);
     accepted.selection=mergeSavedFields(selection,previous.selection,valid.selection,message);
    }
+   if(accepted?.selection.mode==='hex'){
+    const record=hexGuideRecord(accepted.selection,hexContext);accepted={...accepted,selection:hexRoundSelection(accepted.selection,record)};guideHexContext=record?.context||null;
+   }else guideHexContext=null;
    return {...current,guide:accepted,preparations:accepted?upsertPreparation(current.preparations,accepted.selection):current.preparations};
   });const revision=++guideRevision;for(const window of appWindows())window.webContents.send('guide-selection',state.guide?.selection||null,{revision});
+ };
+ const syncHexGuide=binding=>{
+  // Round notes are ephemeral. Join the same serialization queue as config
+  // writes, but never make accepting a note depend on a settings disk write.
+  // Project the guide that exists when the queue runs, not a captured guide.
+  saveTask=saveTask.catch(()=>{}).then(()=>{
+   if(state.guide?.selection.mode!=='hex')return;
+   if(binding&&guideHexContext===binding.from&&state.guide.selection.id===binding.hero)guideHexContext=binding.to;
+   const record=hexGuideRecord(state.guide.selection),projected=hexRoundSelection(state.guide.selection,record);
+   if(JSON.stringify(projected)===JSON.stringify(state.guide.selection))return;
+   guideHexContext=record?.context||null;state={...state,guide:{...state.guide,selection:projected}};
+   const revision=++guideRevision;for(const window of appWindows())window.webContents.send('guide-selection',state.guide.selection,{revision});guide.publish();
+  });return saveTask;
+ };
+ guard('hex-round',async value=>{
+  if(!value||value.operation==='snapshot')return hexRounds.snapshot();
+  if(value.operation==='select')hexRounds.select(value.hero,data);else hexRounds.change(value,data);
+  publishHexRound();await syncHexGuide();return hexRounds.snapshot();
+ });
+ const observeHexRound=async()=>{
+  const own=currentGame.current(latestClient,latestLive,data.champions,state.draft?.slots||[]),before=hexRounds.snapshot().revision;
+  hexRounds.observe({connected:latestClient.connected,phase:latestClient.phase,mode:latestClient.mode?.id||own?.mode,gameId:publicClientGameId(latestClient),hero:own?.id},data);
+  if(hexRounds.snapshot().revision!==before){publishHexRound();await syncHexGuide();}
  };
  const prepareCurrentGuide=async()=>{const own=currentGuideSelection();if(!own)return false;if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(own)||own.comboKnown&&(state.guide.selection.comboId||'')!==(own.comboId||'')){const next=guideCore.selectGuide(state.guide,own),gameId=publicClientGameId(latestClient);if(latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};await setGuideState(next);}return true;};
  const publicEnemyIds=()=>latestClient.connected&&latestClient.phase==='ChampSelect'&&Array.isArray(latestClient.session?.theirTeam)?latestClient.session.theirTeam.map(p=>data.champions.find(c=>c.key===p.championId)?.id).filter(Boolean):undefined;
@@ -245,8 +280,13 @@ async function boot(){
   refreshBuild(s.id,role).then(()=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now()})).catch(error=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now(),error:error.message})).finally(()=>guide.publish());
  };
  afterBaseChange=refreshPreparedBuild;
+ const resetHexGuideRound=(current,expected)=>{
+  const record=hexGuideRecord(current?.selection);if(!record)return;
+  if(expected?.context!==record.context||expected?.revision!==record.revision)throw Error('本局强化记录已变化，请按当前页面重试');
+  const next=hexRounds.reset(expected);publishHexRound();syncHexGuide({from:record.context,to:next.context,hero:record.hero}).catch(error=>diagnostic('hex guide projection unavailable: '+error.message));return next.context;
+ };
  guide=require('./guide-window.cjs')({root,getState:()=>state.guide,getModel:getGuideModel,isQuitting:()=>quitting,diagnostic,
-  currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
+  currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,resetHexRound:resetHexGuideRound,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
   showMain:selection=>{if(selection)pendingBuild=selection;showMainWindow();if(rendererReady&&pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}}});
  diagnostic(`loaded data ${data.version}`);
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
@@ -467,7 +507,7 @@ async function boot(){
  guard('bootstrap',async({surface})=>{
   const paused=appUpdateStatus.phase==='idle'&&!appUpdateFlight?await updater().partial().catch(()=>null):null;
   if(paused&&appUpdateStatus.phase==='idle'&&!appUpdateFlight)appUpdateStatus={phase:'paused',release:paused.release,received:paused.received,total:paused.total,kind:paused.kind,via:paused.via};
-  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),championUsage:usageCollector.snapshot(),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
+  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),hexRound:hexRounds.snapshot(),surface,client:forRenderer(latestClient),championUsage:usageCollector.snapshot(),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
  },true);
  guard('data-snapshot',()=>({data,revision:dataRevision}));
  const {windowInfo}=await import('../services/window-info.mjs');
@@ -631,7 +671,7 @@ async function boot(){
      current.draft={...draft,slots:reconcilePartyRange(draft.slots,latestClient.session,data.champions,{count,party:latestClient.party,ownRole,initial:true}),partyCount:count,scope:'party',...(gameId?{clientGameId:gameId}:{})};return current;
     });
    }
-   currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);
+   currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);await observeHexRound();
    if(latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
    const enemyIds=publicEnemyIds();observeOpponentContext();await bindPendingOpponent();
    const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),enemyIds});
@@ -649,7 +689,7 @@ async function boot(){
   if(liveTask){await liveTask;if(!force)return;}
   if(!force&&!guide.isVisible()&&!guide.needsAutoShow()||state.preferences.autoLive===false)return;
   const context=JSON.stringify([latestClient.phase,publicClientGameId(latestClient)]);
-  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,publicClientGameId(latestClient)])){latestLive=result;await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
+  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,publicClientGameId(latestClient)])){latestLive=result;await observeHexRound();await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
  };
  guard('client-status',async force=>forRenderer(await status(force)));
  guard('enemy-role',async value=>{
@@ -720,7 +760,7 @@ async function boot(){
   if(!latestClient.connected||latestClient.phase!=='ChampSelect'||!target||!latestClient.session?.theirTeam?.some(p=>p.championId===target.key))throw Error('所选对手已不在当前公开选人中，请同步后重试');
   const result=await refreshOpponentBuild(id,role,opponent,source);guide.publish();return dataResult(result);
  });
- guard('open-guide',async selection=>{if(selection){const gameId=publicClientGameId(latestClient),previous=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId,live:latestLive}).guide,next=guideCore.selectGuide(previous,selection);if(!next.match&&latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};await setGuideState(next);}else await prepareCurrentGuide();const result=guide.show();pollLive();return {...result,selection:state.guide?.selection||null,revision:guideRevision};});
+ guard('open-guide',async selection=>{let hexContext;if(selection?.mode==='hex'){hexContext=hexRounds.select(selection.id,data).context;publishHexRound();}if(selection){const gameId=publicClientGameId(latestClient),previous=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId,live:latestLive}).guide,next=guideCore.selectGuide(previous,selection);if(!next.match&&latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};await setGuideState(next,undefined,hexContext);}else await prepareCurrentGuide();const result=guide.show();pollLive();return {...result,selection:state.guide?.selection||null,revision:guideRevision};});
  guard('update-guide',async selection=>{const s=guideCore.validateGuideSelection(selection);if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(s))return {updated:false};await setGuideState(guideCore.selectGuide(state.guide,mergeConfiguration(state.guide.selection,s,Array.isArray(selection.changedFields)?selection.changedFields:undefined)),state.guide);guide.publish();return {updated:true,selection:state.guide.selection,revision:guideRevision};});
  guard('matchup-focus',async context=>{
   const own=currentGuideSelection();
