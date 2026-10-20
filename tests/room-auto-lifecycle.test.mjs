@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createRoomService as actualCreateRoomService} from '../services/room.mjs';
+import {createRoomUsagePublisher} from '../services/room-champion-usage.mjs';
 import {sanitizeNick,ROOM_PROTOCOL,proposalKey,ballotVotes} from '../src/core/room.mjs';
 import {initialRelayUrl} from '../src/core/room-relay.mjs';
 import * as auto from '../src/core/room-auto.mjs';
@@ -21,12 +22,13 @@ function harness({derive=auto.deriveAutoRoom}={}){
   sockets.push(socket);return socket;
  };
  const createRoomService=options=>{const service=actualCreateRoomService({...options,webSocketFactory:factory,now:()=>clock.value,relayOpenTimeoutMs:600000,relaySilenceMs:600000,discovery:false,listenHost:'127.0.0.1'});services.push(service);return service;};
- const create=new Function('createRoomService','sanitizeNick','initialRelayUrl','deriveAutoRoom','autoRoomNick','autoRoomDecision','decorateAutoRoom','AUTO_ROOM_PHASES','AUTO_RETRY_MS','publishWindows','diagnostic','guard','os','Date',`
+ const create=new Function('createRoomUsagePublisher','createRoomService','sanitizeNick','initialRelayUrl','deriveAutoRoom','autoRoomNick','autoRoomDecision','decorateAutoRoom','AUTO_ROOM_PHASES','AUTO_RETRY_MS','publishWindows','diagnostic','guard','os','Date',`
   let roomService=null,state={preferences:{roomAuto:true,autoSync:true,roomNick:'Test#CN1',relayUrl:'ws://127.0.0.1'}},latestClient=null;
+  const roomUsagePublisher=createRoomUsagePublisher({getService:()=>roomService,getSummary:()=>({status:'offline'}),getMass:()=>.85});
   const status=async()=>latestClient,saveCurrentState=async update=>{state=update(state);};
   ${snippet}
   return {queueRoomAuto,roomAutoStep,closeAutoRoomIfRevoked,setClient:value=>latestClient=value,setPreferences:value=>Object.assign(state.preferences,value),advanceRound:clearRoomBallot,snapshot:()=>({key:roomAutoKey,code:roomAutoCode,pin:roomAutoPin,blocked:roomAutoBlockedKey,error:roomAutoError,goneSince:roomAutoGoneSince,offlineSince:roomAutoOfflineSince,failedUntil:roomAutoFailedUntil,room:roomService?.snapshot()}),dispose:()=>roomService?.dispose()};`);
- const api=create(createRoomService,sanitizeNick,initialRelayUrl,derive,auto.autoRoomNick,auto.autoRoomDecision,auto.decorateAutoRoom,auto.AUTO_ROOM_PHASES,auto.AUTO_RETRY_MS,(_name,value)=>updates.push(value),message=>reports.push(message),(name,handler)=>handlers.set(name,handler),{networkInterfaces:()=>({})},MockDate);
+ const api=create(createRoomUsagePublisher,createRoomService,sanitizeNick,initialRelayUrl,derive,auto.autoRoomNick,auto.autoRoomDecision,auto.decorateAutoRoom,auto.AUTO_ROOM_PHASES,auto.AUTO_RETRY_MS,(_name,value)=>updates.push(value),message=>reports.push(message),(name,handler)=>handlers.set(name,handler),{networkInterfaces:()=>({})},MockDate);
  return {...api,clock,sockets,updates,reports,handlers,services};
 }
 

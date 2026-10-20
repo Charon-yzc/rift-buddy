@@ -1,25 +1,33 @@
 const {app,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[];let main,offline=false,clientPhase='Lobby';
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[],usageSmoke=process.env.RIFT_BUDDY_USAGE_SMOKE==='1',roomUsageSmoke=process.env.RIFT_BUDDY_ROOM_USAGE_SMOKE==='1',historyReads=[],roomSockets=[],roomFrames=[];let main,observer,offline=false,clientPhase='Lobby',holdUsage=false,releaseUsage=null;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',(_event,_level,message)=>{if(typeof message==='string'&&/TypeError|ReferenceError|SyntaxError/.test(message))errors.push(message);});});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
 global.fetch=async()=>{throw Error('External network disabled');};http.request=()=>{throw Error('Real network forbidden');};
+// No WebSocket or relay request leaves this isolated process. Real main IPC,
+// room service, publisher and renderer workers still run unchanged.
+if(roomUsageSmoke)global.WebSocket=class {
+ constructor(url){this.url=url;this.readyState=0;this.bufferedAmount=0;roomSockets.push(this);queueMicrotask(()=>{this.readyState=1;this.onopen?.();});}
+ receive(frame){this.onmessage?.({data:JSON.stringify(frame)});}
+ send(text){const frame=JSON.parse(text);roomFrames.push(frame);if(frame.kind==='hello')queueMicrotask(()=>this.receive({kind:'welcome',v:1,room:new URL(this.url).pathname.split('/').at(-1),members:[{nick:frame.nick,packedStates:2},{nick:'示例队友#TEST',packedStates:2}],ballots:1,multiVotes:1,adoptions:1,packedStates:2,championUsage:1}));if(frame.kind==='ping')queueMicrotask(()=>this.receive({kind:'pong',v:1}));}
+ close(code=1000){this.readyState=3;this.onclose?.({code});}
+};
 const own={puuid:'fixture-own-player-0001',summonerId:1,gameName:'战绩测试玩家',tagLine:'TEST',summonerLevel:100},friend={puuid:'fixture-friend-player-2',summonerId:2,gameName:'示例队友',tagLine:'TEST'};
 function game(id){const identities=[own,friend,...Array.from({length:8},(_,i)=>({puuid:'fixture-public-player-'+(i+3),gameName:'模拟玩家'+(i+3),tagLine:'TEST'}))];return {gameId:id,gameCreation:Date.now()-id*3600000,gameDuration:1800,gameMode:'CLASSIC',gameType:'MATCHED_GAME',gameVersion:'16.20',queueId:420,mapId:11,teams:[],participantIdentities:identities.map((p,i)=>({participantId:i+1,player:p})),participants:identities.map((p,i)=>({participantId:i+1,championId:[22,412,99,86,64,103,51,89,122,17][i],teamId:i<5?100:200,spell1Id:4,spell2Id:7,stats:{kills:8,deaths:2,assists:10,win:i<5?id%2===1:id%2===0,totalDamageDealtToChampions:25000,totalDamageTaken:15000,goldEarned:12000,totalMinionsKilled:140,neutralMinionsKilled:20,totalHeal:2000,visionScore:30,champLevel:16,item0:3006,item1:3031,perk0:8005,perkPrimaryStyle:8000,perkSubStyle:8100}}))};}
 const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);const route=options.path,method=options.method||'GET';if(offline)throw Error('fixture offline');
  if(route==='/lol-summoner/v1/current-summoner')return own;
  if(route==='/riotclient/region-locale')return {region:'unconfigured-fixture'};
  if(route==='/lol-gameflow/v1/gameflow-phase')return clientPhase;
- if(route==='/lol-lobby/v2/lobby')return {members:[own,friend],gameConfig:{queueId:420}};
+ if(route==='/lol-lobby/v2/lobby')return {localMember:own,members:[own,friend],gameConfig:{queueId:420}};
  if(route==='/lol-gameflow/v1/session'){const g=game(100),player=p=>({...g.participantIdentities.find(v=>v.participantId===p.participantId).player,championId:p.championId,spell1Id:p.spell1Id,spell2Id:p.spell2Id,selectedPosition:p.participantId===1?'BOTTOM':p.participantId===2?'UTILITY':'MIDDLE',selectedRole:'BOTTOM.PRIMARY.BOTTOM.UTILITY.NONE'});return {map:{id:11,gameMode:'CLASSIC'},gameData:{gameId:100,queue:{id:420,gameMode:'CLASSIC'},teamOne:g.participants.slice(0,5).map(player),teamTwo:g.participants.slice(5).map(player)}};}
  if(route==='/lol-champ-select/v1/session')return {gameId:100,localPlayerCellId:0,myTeam:[{...own,cellId:0,championId:22,assignedPosition:'BOTTOM'},{...friend,cellId:1,championId:412,assignedPosition:'UTILITY'}],theirTeam:[{cellId:5,nameVisibilityType:'HIDDEN',championId:99}]};
  if(route==='/lol-summoner/v1/summoner-profile?puuid='+own.puuid||route==='/lol-summoner/v1/summoner-profile?puuid='+friend.puuid)return {backgroundSkinId:22000,regalia:'fixture'};
  if(route.startsWith('/lol-summoner/v2/'))return route.endsWith(friend.puuid)?friend:own;
  if(route==='/lol-summoner/v1/summoners/aliases')return [friend];
  if(route.startsWith('/lol-summoner/v1/summoners?name='))return friend;
- if(route.includes('/matches?')){const q=new URLSearchParams(route.split('?')[1]),start=Number(q.get('begIndex')),count=Number(q.get('endIndex'))-start+1;return {games:{games:Array.from({length:start===0?count:3},(_,i)=>game(start+i+1))}};}
- if(route.startsWith('/lol-match-history/v1/games/'))return game(Number(route.split('/').at(-1)));
+ if(route.includes('/matches?')){const q=new URLSearchParams(route.split('?')[1]),start=Number(q.get('begIndex')),count=Number(q.get('endIndex'))-start+1;historyReads.push({start,count});const value={games:{games:Array.from({length:usageSmoke?Math.max(0,Math.min(count,500-start)):start===0?count:3},(_,i)=>{const row=game(start+i+1);if(usageSmoke)row.participants[0].championId=[22,103,99,64,412,86][(start+i)%6];return row;})}};return holdUsage&&count===100&&start>0?new Promise(resolve=>releaseUsage=()=>{releaseUsage=null;resolve(value);}):value;}
+ if(route.startsWith('/lol-match-history/v1/games/')){if(usageSmoke)throw Error('Summary must not fetch individual games');return game(Number(route.split('/').at(-1)));}
  if(route.includes('/game-timelines/'))return {frames:[{timestamp:60000,participantFrames:{1:{participantId:1,totalGold:600,currentGold:200,minionsKilled:6,jungleMinionsKilled:0,level:2,xp:300}},events:[{type:'ITEM_PURCHASED',timestamp:20000,participantId:1,itemId:1001},{type:'SKILL_LEVEL_UP',timestamp:0,participantId:1,skillSlot:1},{type:'CHAMPION_KILL',timestamp:50000,killerId:1,victimId:2}]}]};
  if(route.startsWith('/lol-ranked/'))return {queues:[{queueType:'RANKED_SOLO_5x5',tier:'GOLD',division:'I',leaguePoints:40,wins:30,losses:20}]};
  if(route.startsWith('/lol-champion-mastery/'))return [{championId:22,championLevel:10,championPoints:100000}];
@@ -27,8 +35,8 @@ const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(o
  if(route.includes('/metadata/'))return {state:'readyToWatch',downloadProgress:100};
  throw Error('Unexpected fixture route');
 };
-https.request=(options,callback)=>{assert.equal(typeof options,'object','External URL request forbidden');const req=new EventEmitter();req.write=body=>options.body=body;req.end=()=>queueMicrotask(()=>{try{const value=output(options),res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify(value)));res.emit('end');}catch(error){req.emit('error',error);}});req.destroy=error=>{if(error)req.emit('error',error);};return req;};
-cp.spawn=()=>{const observer=new EventEmitter();observer.stdout=new EventEmitter();observer.stdout.setEncoding=()=>{};observer.exitCode=null;observer.stdin={end(){observer.exitCode=0;observer.emit('exit',0);}};observer.kill=()=>observer.stdin.end();return observer;};
+https.request=(options,callback)=>{assert.equal(typeof options,'object','External URL request forbidden');const req=new EventEmitter();req.write=body=>options.body=body;req.end=()=>queueMicrotask(async()=>{try{const value=await output(options),res=new EventEmitter();res.statusCode=200;callback(res);res.emit('data',Buffer.from(JSON.stringify(value)));res.emit('end');}catch(error){req.emit('error',error);}});req.destroy=error=>{if(error)req.emit('error',error);};return req;};
+cp.spawn=()=>{observer=new EventEmitter();const current=observer;current.stdout=new EventEmitter();current.stdout.setEncoding=()=>{};current.exitCode=null;current.stdin={end(){current.exitCode=0;current.emit('exit',0);}};current.kill=()=>current.stdin.end();return current;};
 cp.execFile=(file,args,options,callback)=>{queueMicrotask(()=>(typeof options==='function'?options:callback)?.(null,'',''));return new EventEmitter();};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(check,label){for(let n=0;n<120;n++){if(await check())return;await delay(80);}throw Error(label);}
@@ -36,7 +44,7 @@ async function run(){
  const source=process.env.RIFT_BUDDY_SOURCE==='1',release=source?null:JSON.parse(await fs.readFile('release/latest.json')),base=source?process.cwd():path.join(release.directory,'resources/app.asar');
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'),'utf8')).version;require(path.join(base,'electron/main.cjs'));
  await until(()=>{main=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));return main;},'Main window missing');
-  const js=code=>main.webContents.executeJavaScript(code,true),click=selector=>until(()=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Control missing '+selector),capture=async name=>{await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
+  const js=code=>main.webContents.executeJavaScript(code,true),click=selector=>until(()=>js('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el||el.disabled)return false;el.click();return true;})()'),'Control missing '+selector),capture=async name=>{await until(()=>js('[...document.querySelectorAll("img.portrait")].filter(img=>{const r=img.getBoundingClientRect();return img.offsetParent&&r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;}).every(img=>img.complete&&img.naturalWidth>0)'),'Visible bundled portraits not loaded');await js('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
   // Recorded only after the matching assertion ran, so the artifact cannot
   // claim a page behaviour that was never checked.
   let compactRows=false,sixTabs=false,hoverDetails=false,keyboardTabs=false,ongoingCards=false,ongoingHover=false;
@@ -58,6 +66,58 @@ async function run(){
   await until(()=>js(`document.querySelector(${JSON.stringify(selector)}).matches(':hover')`),'Control did not enter real hover: '+selector);
   await delay(200);await readable(selector);await capture(name);main.webContents.sendInputEvent({type:'mouseMove',x:0,y:0});
  };
+ if(usageSmoke){
+  await js('window.buddy.client(true)');
+  await until(()=>js('window.buddy.championUsage().then(value=>value.complete&&value.scanned===500)'),'Automatic500 summary missing');
+  await until(()=>js('document.querySelectorAll(".history-match").length===20'),'Own history did not load automatically');
+  assert.deepEqual(historyReads.slice(0,5),[0,100,200,300,400].map(start=>({start,count:100})));assert.equal(historyReads[5].count,20,'History detail must follow priority statistics');
+  assert.match(await js('document.querySelector(".champion-usage").textContent'),/近 500 场/);assert.equal(await js('document.querySelector(".usage-details").open'),false);assert.equal(await js('document.querySelector(".history-search-disclosure").open'),false);
+  main.setSize(1460,980);await capture('usage-main.png');
+  const screen=require('electron').screen,area=screen.getPrimaryDisplay().workArea;
+  await until(()=>observer,'Observer mock missing');observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,{x:area.x+20,y:area.y+20,width:Math.max(600,area.width-500),height:Math.min(800,area.height-40)}),foreground:false,minimized:false},game:null})+'\n');
+  await js('window.buddy.windowLayoutControl("follow")');let side;await until(()=>{side=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().includes('surface=companion'));return side;},'Companion missing');
+  const sideJS=code=>side.webContents.executeJavaScript(code,true);await until(()=>sideJS('!!window.buddy'),'Companion preload missing');
+  await Promise.all([js('window.buddy.client(true)'),sideJS('window.buddy.client(true)')]);assert.equal(historyReads.filter(v=>v.count===100).length,5,'Two windows started another500 scan');
+  assert.deepEqual(await sideJS('window.buddy.championUsage()'),await js('window.buddy.championUsage()'));
+  const before=await js('window.buddy.championUsage().then(value=>value.revision)');holdUsage=true;await click('[data-action=champion-usage-refresh]');
+  await until(()=>releaseUsage,'Controlled second summary page missing');
+  await js('document.querySelector(".history-search-disclosure").open=true;window.__usageQuery=document.getElementById("history-query");window.__usageQuery.focus();true');await main.webContents.insertText('测');releaseUsage();
+  await until(()=>releaseUsage,'Controlled third summary page missing');
+  await until(()=>js('document.querySelector(".champion-usage header small").textContent.includes("200 / 500")'),'Second summary not rendered');assert.equal(await js('document.activeElement===window.__usageQuery&&document.getElementById("history-query")===window.__usageQuery'),true,'Summary replaced focused search');await main.webContents.insertText('试');assert.equal(await js('window.__usageQuery.value'),'测试');
+  await js('document.querySelector(".usage-details").open=true;window.__usageRange=document.getElementById("familiarity-mass");window.__usageRange.focus();window.__usageRange.value="60";window.__usageRange.dispatchEvent(new Event("input",{bubbles:true}));true');releaseUsage();
+  await until(()=>releaseUsage,'Controlled fourth summary page missing');await until(()=>js('document.querySelector(".champion-usage header small").textContent.includes("300 / 500")'),'Third summary not rendered');assert.equal(await js('document.activeElement===window.__usageRange&&document.getElementById("familiarity-mass")===window.__usageRange&&window.__usageRange.value==="60"'),true,'Summary interrupted active range node');holdUsage=false;releaseUsage();
+  await until(()=>js('window.buddy.championUsage().then(value=>value.complete&&value.revision>'+before+')'),'Real document click did not refresh summary');assert.equal(historyReads.filter(v=>v.count===100).length,10);
+  await js('document.querySelector(".usage-details").open=true;const el=document.getElementById("familiarity-mass");el.value="60";el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));true');
+  await until(async()=>{try{return JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8')).preferences.familiarityMass===.6;}catch{return false;}},'Slider did not persist');
+  assert.match(await js('document.querySelector(".familiarity-control").textContent'),/60%/);assert.match(await js('document.querySelector(".familiarity-control").textContent'),/40%/);
+  await chooseTheme('daylight');await readable('.champion-usage>header>b,.champion-usage>header>small,.usage-hero>span,.usage-hero>small,.usage-details>summary,.familiarity-control>span,.familiarity-control output,.familiarity-control>small,.usage-details>p');await capture('usage-daylight.png');
+  await chooseTheme('hextech');await readable('.champion-usage>header>b,.champion-usage>header>small,.usage-hero>span,.usage-hero>small,.usage-details>summary,.familiarity-control>span,.familiarity-control output,.familiarity-control>small,.usage-details>p');
+  main.setSize(1080,760);await capture('usage-compact.png');assert.equal(await js('document.documentElement.scrollWidth<=innerWidth'),true,'Usage caused document overflow');
+  const saved=JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8'));assert.equal(Object.hasOwn(saved,'championUsage'),false);assert.equal(Object.hasOwn(saved.preferences,'championUsage'),false);
+  let roomVerified=false;
+  if(roomUsageSmoke){
+   await js('window.__usageInputs=[];const originalPost=Worker.prototype.postMessage;Worker.prototype.postMessage=function(input,...rest){if(input?.slots)window.__usageInputs.push(structuredClone(input));return originalPost.call(this,input,...rest);};true');
+   await js('window.buddy.roomRelay({url:"wss://room.riftbuddy.dpdns.org",room:"482913",pin:"123456"},"战绩测试玩家#TEST")');
+   await until(()=>roomFrames.some(frame=>frame.kind==='state'&&frame.championUsage?.usage?.sampled===500),'Main did not publish its own summary');
+   const published=roomFrames.findLast(frame=>frame.kind==='state'&&frame.championUsage?.usage?.sampled===500);assert.equal(published.championUsage.mass,.6);
+   await js('window.buddy.roomPublish({lineup:[],pick:null,championUsage:{version:1,mass:1,usage:{sampled:500,counts:{Lux:500}},puuid:"PRIVATE",games:["PRIVATE"]}})');
+   assert.deepEqual(roomFrames.findLast(frame=>frame.kind==='state').championUsage,published.championUsage,'Renderer forged a main-owned summary');assert.ok(!JSON.stringify(roomFrames).includes('PRIVATE'));
+   const socket=roomSockets.at(-1),peerShare=counts=>({kind:'state',v:1,from:'示例队友#TEST',at:Date.now(),lineup:[],pick:{role:'support',champion:'Nami',mode:'rift'},championUsage:{version:1,mass:.85,usage:{sampled:Object.values(counts).reduce((a,b)=>a+b,0),counts}}});
+   socket.receive(peerShare({Nami:40,Lulu:10}));clientPhase='ChampSelect';await js('window.buddy.client(true)');await click('[data-action=navigate][data-route=draft]');await click('[data-action=task-compare]');
+   await until(()=>js('window.__usageInputs.some(input=>input.familiarityByRole?.bottom&&input.familiarityByRole?.support)'),'Real worker did not receive separate own and peer preferences');
+   const worker=await js('window.__usageInputs.findLast(input=>input.familiarityByRole?.bottom&&input.familiarityByRole?.support)');assert.equal(worker.familiarityByRole.bottom.mass,.6);assert.deepEqual(worker.familiarityByRole.support.usage.counts,{Lulu:10,Nami:40});assert.equal(worker.roomFamiliarity.length,2);assert.equal(worker.familiarityByRole.bottom.usage.sampled,500);
+   await click('[data-action=navigate][data-route=room]');await until(()=>js('document.querySelector("[data-room-usage]")?.textContent.includes("2 / 2")'),'Room details did not show actual shared-summary availability');
+   assert.equal(await js('document.querySelector("[data-room-usage]").closest("details").open'),false);await js('document.querySelector("[data-room-usage]").closest("details").open=true;true');await capture('usage-room-details.png');await click('[data-action=navigate][data-route=draft]');
+   const beforeLeave=await js('window.__usageInputs.length');socket.receive({kind:'leave',v:1,from:'示例队友#TEST'});
+   await until(()=>js('window.__usageInputs.length>'+beforeLeave+'&&!window.__usageInputs.at(-1).familiarityByRole.support&&window.__usageInputs.at(-1).roomFamiliarity.length===1'),'Peer departure did not invalidate and recalculate the real worker');
+   await until(()=>js('!!document.querySelector(".result-card[data-result-index]")&&!document.querySelector("[data-action=reroll]:disabled,[data-action=recommend]:disabled")'),'New recommendation did not finish after peer departure');
+   await capture('usage-room-draft.png');await click('[data-action=navigate][data-route=history]');await until(()=>js('document.querySelectorAll(".history-match").length===20'),'History unavailable after room verification');roomVerified=true;
+  }
+  offline=true;await js('window.buddy.client(true)');await until(()=>js('!document.querySelector(".champion-usage")&&!document.querySelector(".history-match")'),'Disconnect retained personal counts/history');
+  if(roomUsageSmoke)await until(()=>roomFrames.findLast(frame=>frame.kind==='state')?.championUsage===null,'Disconnect did not revoke the main-owned room summary');
+  assert.equal(writes.length,0);assert.equal(errors.length,0,errors.join('\n'));
+  await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,automatic500:true,priorityBeforeHistory:true,sharedTwoWindows:true,realRefreshClick:true,searchFocusAcrossBatches:true,activeRangeNodePreserved:true,sliderPersisted:true,disconnectCleared:true,...(roomVerified?{roomMainPublisher:true,roomRendererForgeryRejected:true,roomRealWorkerOwnership:true,roomUsageDetails:true,roomLeaveRecalculated:true,roomDisconnectRevoked:true}:{}),realWrites:0,screenshots:['usage-main.png','usage-daylight.png','usage-compact.png',...(roomVerified?['usage-room-details.png','usage-room-draft.png']:[])]},null,2));app.quit();return;
+ }
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);
  for(const close of ['button','escape','backdrop']){
@@ -182,7 +242,7 @@ async function run(){
  await click('[data-action=history-simulate]');await until(()=>js('!!document.querySelector(".ongoing-draft-mark")'),'Historical roster was not labeled as preserved');
  assert.ok(await js('document.querySelectorAll("[data-ongoing-player]").length')>0);await click('[data-action=ongoing-exit-draft]');await until(()=>js('!document.querySelector(".ongoing-draft-mark")&&document.querySelectorAll("[data-ongoing-player]").length===10'),'Return to live roster failed');
  await click('[data-action=navigate][data-route=history]');
- offline=true;await click('[data-action=history-refresh]');await until(()=>js('document.querySelector(".history-error")?.textContent.includes("账号")'),'Offline failure missing');assert.equal(errors.length,0,errors.join('\n'));
+ offline=true;await js('window.buddy.client(true)');await until(()=>js('!document.querySelector(".history-match")'),'Disconnect retained history');await click('[data-action=history-self]');await until(()=>js('/连接|账号|客户端/.test(document.querySelector(".history-error")?.textContent||"")'),'Offline query failure missing');assert.equal(errors.length,0,errors.join('\n'));
   await fs.writeFile(path.join(root,'result.json'),JSON.stringify({note:'This file is written only after every named assertion in scripts/smoke-match-history.cjs passed; the flags below report page behaviour that was asserted during this run.',packaged:!source,query:true,pagination:true,filters:true,advancedFilters:true,details:true,runes:true,builds:true,timeline:true,compactRows,sixTabs,hoverDetails,keyboardTabs,ongoingCards,ongoingHover,replayMocked:true,offlineError:true,ongoingLobby:true,ongoingDraft:true,ongoingInGame:true,screenshots:['history-desktop.png','history-laptop.png','history-expanded-equipment.png','ongoing-lobby.png','ongoing-game.png','ongoing-streamer-hover.png','ongoing-historical-maps.png']},null,2));app.quit();
 }
-run().catch(async error=>{console.error(error.stack);if(main&&!main.isDestroyed()){await fs.writeFile(path.join(root,'failure.png'),(await main.webContents.capturePage()).toPNG()).catch(()=>{});console.error(await main.webContents.executeJavaScript('document.body.innerText').catch(()=>''));}app.exit(1);});
+run().catch(async error=>{console.error(error.stack);if(usageSmoke)await fs.writeFile(path.join(root,'usage-reads.json'),JSON.stringify(historyReads,null,2));if(main&&!main.isDestroyed()){if(roomUsageSmoke)await fs.writeFile(path.join(root,'usage-room-debug.json'),JSON.stringify(await main.webContents.executeJavaScript('window.buddy.roomStatus().then(room=>({room,inputs:window.__usageInputs?.map(input=>({slots:input.slots,familiarityByRole:input.familiarityByRole,roomFamiliarity:input.roomFamiliarity}))}))').catch(()=>null),null,2));await fs.writeFile(path.join(root,'failure.png'),(await main.webContents.capturePage()).toPNG()).catch(()=>{});console.error(await main.webContents.executeJavaScript('document.body.innerText').catch(()=>''));}app.exit(1);});

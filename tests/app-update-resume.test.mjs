@@ -99,7 +99,7 @@ test('manual checking after a restart checks publication but does not restart th
 });
 test('cold-start bootstrap restores the local checkpoint with automatic network checks disabled',async t=>{
  const f=await fixture(t),paused=await pause(f.service),before=f.hits.length,{context,handlers,source}=await mainFixture(createAppUpdateService(f.options));
- Object.assign(context,{data:{},state:{preferences:{appUpdateCheck:false}},stateRevision:0,dataRevision:0,preparationLedger:{snapshot:()=>null},latestClient:{connected:false},forRenderer:v=>v,companion:{layout:()=>({})},storeRoot:f.dir,hotkeyAvailable:false,guideHotkeyAvailable:false});
+ Object.assign(context,{data:{},state:{preferences:{appUpdateCheck:false}},stateRevision:0,dataRevision:0,preparationLedger:{snapshot:()=>null},usageCollector:{snapshot:()=>({status:'offline'})},latestClient:{connected:false},forRenderer:v=>v,companion:{layout:()=>({})},storeRoot:f.dir,hotkeyAvailable:false,guideHotkeyAvailable:false});
  vm.runInContext(source.slice(source.indexOf(" guard('bootstrap'"),source.indexOf(' const {windowInfo}'))+'appUpdateStatus={phase:"idle"};',context);
  const boot=await handlers.get('bootstrap')({surface:'main'});
  assert.equal(boot.appUpdate.phase,'paused');assert.equal(boot.appUpdate.received,paused.received);assert.equal(f.hits.length,before);

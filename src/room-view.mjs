@@ -7,6 +7,7 @@ import {creativeMemberCombo} from './core/creative-plan.mjs';
 import {duoPlayView} from './duo-play-view.mjs';
 import {DEFAULT_RELAY_URL} from './core/room-relay.mjs';
 import {roomLineupIdentity} from './core/room-lineup.mjs';
+import {cleanSharedChampionUsage} from './core/room-champion-usage.mjs';
 
 const roleName=id=>ROLES.find(r=>r.id===id)?.name||id;
 const LINK_TEXT={connecting:'连接中',connected:'已连接',reconnecting:'重连中',failed:'连接失败',idle:''};
@@ -54,7 +55,7 @@ function transportSwitch(current){
 }
 function relayJoinForm({relayUrl,relayRoom,pin,busy,autoEnabled,autoSync,autoError}){
  return `<div class="room-join"><label>房间码<input id="room-relay-room" value="${e(relayRoom)}" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="中继房间码"></label><label>口令<input id="room-pin" value="${e(pin)}" type="password" placeholder="6 位数字" inputmode="numeric" maxlength="6" aria-label="房间口令"></label>${button('room-relay-join',busy?'加入中…':'加入房间','arrow','primary',busy?'disabled':'')}</div>
- <p class="bottom-note room-auto-summary">阵容与配置会共享给同房间成员和中继运营者。</p>
+ <p class="bottom-note room-auto-summary">阵容、配置与英雄场次摘要会共享给同房间成员和中继运营者。</p>
  <details class="ui-disclosure" data-companion-disclosure="relay-address"><summary>中继地址与连接说明</summary><label>中继地址<input id="room-relay-url" value="${e(relayUrl)}" placeholder="${e(DEFAULT_RELAY_URL)}" spellcheck="false" aria-label="中继地址"></label><p>队友使用相同的地址、房间码和口令，分别点击加入。口令只私下告知；它不能替代强身份认证。</p></details>
  <details class="ui-disclosure room-auto-details" data-companion-disclosure="room-auto-info"><summary>自动连接同一组队</summary><label class="room-auto"><input type="checkbox" id="room-auto" ${autoEnabled?'checked':''} aria-label="自动连接组队房间"> 自动连接组队房间</label><p>默认开启，可在此关闭。开启后在非自定义预组队大厅（单人或组队）自动连房间并分享，单人也会连接；昵称优先使用公开游戏 ID，读不到时用上面的房间昵称。组队标识相同就进入同一房间，标识变化时切换。需要同时开启客户端自动同步。</p><p>房间码和口令由公开组队标识派生；知道组队数据的人也可推算，不是强认证。</p>${autoEnabled&&!autoSync?'<p class="callout warning">自动同步已关闭，自动连接不会触发。</p>':''}</details>
  `;
@@ -67,7 +68,7 @@ function roomIdle({nick,detectedNick='',transport,busy,scanning,scanResults,erro
   :`<div class="room-actions">${button('room-host',busy?'处理中…':'创建房间','team','primary small',busy?'disabled':'')}${button('room-scan',scanning?'扫描中…':'扫描局域网房间','search','small',scanning?'disabled':'')}</div>
    <div class="room-join"><label>邀请码<input id="room-invite" value="${e(invite)}" placeholder="粘贴完整邀请，或 地址:端口#房间号" aria-label="邀请码"></label><label>口令<input id="room-pin" value="${e(pin)}" placeholder="6 位数字" inputmode="numeric" aria-label="房间口令"></label>${button('room-join',busy?'处理中…':'加入房间','arrow','small',busy?'disabled':'')}</div>
    ${results?`<div class="room-scan">${results.length?results.map(item=>`<button data-action="room-fill" data-invite="${e(`${item.host}:${item.port}#${item.room}`)}">房间 ${e(item.room)} · ${e(item.host)}</button>`).join(''):'<p class="bottom-note">没有发现房间。确认在同一网络，或让房主把邀请码发给你。</p>'}</div>`:''}
-   <p class="bottom-note">公开阵容与配置会自动共享，仅在可信网络使用。</p><details class="ui-disclosure" data-companion-disclosure="room-lan-info"><summary>局域网连接说明</summary><p>房间不需要额外读取客户端数据。建房后自动发送所选公开阵容与配置，TCP 内容未加密；请在可信局域网或受信虚拟局域网使用。Windows 防火墙只允许当前可信网络。虚拟局域网不一定转发扫描公告，可粘贴房主从对应网卡复制的完整邀请加入。</p></details>`;
+   <p class="bottom-note">公开阵容、配置与英雄场次摘要会自动共享，仅在可信网络使用。</p><details class="ui-disclosure" data-companion-disclosure="room-lan-info"><summary>局域网连接说明</summary><p>建房后自动发送公开阵容、配置与本人的英雄场次摘要，不发送逐局战绩。TCP 内容未加密；请在可信局域网或受信虚拟局域网使用。Windows 防火墙只允许当前可信网络。虚拟局域网不一定转发扫描公告，可粘贴房主从对应网卡复制的完整邀请加入。</p></details>`;
  return `<section class="panel room-panel"><div class="panel-head"><h3>${icon('link')}连接房间</h3>${button('room-reconnect',busy?'连接中…':'连接当前组队','refresh','primary small',busy?'disabled':'')}</div>
   <div class="panel-body">
     <div class="room-nick"><label>${detectedNick?'游戏昵称':'房间昵称'}<input id="room-nick" value="${e(detectedNick||nick)}" maxlength="24" placeholder="队友" aria-label="房间昵称" ${detectedNick?'readonly title="使用当前游戏昵称"':''}></label></div>
@@ -91,7 +92,9 @@ function roomActive({room,addresses,champ,hasPreparationFile,preparationFileBusy
   :`<span class="badge">${isHost?'房主':'成员'}</span>`;
  const relayNotice=room.warning?e(room.warning):room.link==='reconnecting'?'连接中断，正在重连，期间分享可能延迟。':room.link==='failed'?(room.auto?'连续重连失败已停止；可先复制上面的房间码与口令，离开后本组队不再自动重连（重启助手后会重新尝试）。':'连续重连失败已停止，请离开房间后重新加入。'):room.auto&&autoQuiet?'暂时没看到队友：可以把上面的房间码和口令发给队友手动加入，或让队友确认也开启了自动连接。':'';
  const relayInvite=room.auto?`中继 ${room.relayUrl||''}｜房间 ${room.room}｜口令 ${room.pin||''}`:`中继 ${room.relayUrl||''}｜房间 ${room.room}`;
- const shareInfo=`<p>进入房间后自动分享阵容、装备、完整符文、召唤师技能、加点与组合分工；队友点英雄查看发送方配置。${isRelay?'仅展示实际收到的配置，旧版队友或中继未转发时会提示缺失。':''}不会自动改动队友的阵容或客户端。</p>`;
+ const online=room.members.filter(member=>member.online!==false),usageCount=online.filter(member=>{try{return cleanSharedChampionUsage(member.share?.championUsage)?.usage.sampled>0;}catch{return false;}}).length;
+ const usageInfo=!room.championUsage?'当前房间未同步英雄偏好，请更新房主或中继。':isRelay&&room.link!=='connected'?'英雄偏好等待重连后同步。':`英雄偏好 ${usageCount} / ${online.length} 人（含本人）。每人先归一化，再合并参考；本人位置优先使用本人的偏好。`;
+ const shareInfo=`<p>进入房间后自动分享阵容、装备、完整符文、召唤师技能、加点与组合分工；队友点英雄查看发送方配置。${isRelay?'仅展示实际收到的配置，旧版队友或中继未转发时会提示缺失。':''}不会自动改动队友的阵容或客户端。</p><p data-room-usage>${usageInfo}只共享英雄场次与偏好，不含逐局战绩。</p>`;
  const inviteBlock=isRelay
   ?`<div class="room-invites room-invites-compact"><div class="room-invite-row"><button class="btn small" data-action="room-copy-relay" title="${e(relayInvite)}">${icon('copy')}邀请队友</button><details class="ui-disclosure" data-companion-disclosure="room-invite-info"><summary>邀请与共享说明</summary><p>邀请队友（复制下面的地址${room.auto?'、房间码和口令':'和房间码'}${room.auto?'':'，口令请另行告知'}）：</p><p>${room.auto?'口令由大厅共享标识派生，只用于同队汇合，不是强认证。旧版队友或派生不一致时，可按上面的地址、房间码与口令手动加入。':'队友在“中继”里填同一个中继地址、房间码和口令即可加入。'}</p>${shareInfo}</details></div>${relayNotice?`<p class="callout warning" role="status">${relayNotice}</p>`:''}</div>`
   :isHost?`<div class="room-invites"><p>邀请队友（邀请码和口令一起发）：</p><div class="chips">${invites.length?invites.map(item=>`<button data-action="room-copy-invite" data-invite="${e(item.invite)}">${icon('copy')}${e(item.name)} · ${e(item.invite)}</button>`).join(''):'<span class="bottom-note">暂未检测到局域网地址；可让队友手动扫描。</span>'}</div><div class="room-invite-foot">${button('room-refresh-addresses','刷新本机地址','refresh','quiet small')}<span class="bottom-note">口令 ${e(room.pin||'')}。队友在“加入房间”里粘贴完整邀请即可；裸邀请码需另填口令。</span></div></div>`

@@ -8,7 +8,7 @@ test('matching personal duration reference appears only after own confirmation, 
  const data={patch:'16.20',buildSource:source,champions:[{id:'Ahri',key:103,name:'阿狸'},{id:'Ashe',key:22,name:'艾希'}],builds:{'Ahri:mid':reference('Ahri','mid')}},selection={id:'Ahri',role:'mid',mode:'rift'};
  const client={connected:true,phase:'ChampSelect',game:{queueId:430},session:{localPlayerCellId:0,myTeam:[{cellId:0,championId:103}],actions:[]}};
  assert.equal(championStatisticsView(client,data,selection),'');client.session.actions=[{type:'pick',actorCellId:0,championId:22,completed:true}];
- const html=championStatisticsView(client,data,selection);assert.match(html,/阿狸走势/);assert.match(html,/0–25 分钟/);assert.match(html,/2026\/10\/19/);assert(!html.includes('<details class="champion-statistics" open'));
+ const html=championStatisticsView(client,data,selection);assert.match(html,/阿狸走势/);assert.match(html,/0–25 分钟/);assert.ok(html.includes(new Date(data.builds['Ahri:mid'].fetchedAt).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'})));assert(!html.includes('<details class="champion-statistics" open'));
  assert.equal(championStatisticsView(client,data,{...selection,id:'Ashe'}),'');data.builds['Ahri:mid'].patch='16.19';assert.match(championStatisticsView(client,data,selection),/暂无完整统计/);assert(!championStatisticsView(client,data,selection).includes('<svg'));
 });
 test('duration chart begins at zero and represents full source intervals without invented early knots',()=>{

@@ -40,7 +40,7 @@ export function sanitizeLobbyParty(raw, receivedAt = Date.now()) {
  return {local, localName:publicPlayerName(raw.localMember), members, receivedAt, ...(key ? {key} : {})};
 }
 export function lobbyPartyMembers(lobby){
- return (lobby?.members||[]).map(m=>({displayName:m.displayName||'',local:sameIdentity(m.identity,lobby.local),source:'lobby',firstPosition:m.firstPosition,secondPosition:m.secondPosition}));
+ return (lobby?.members||[]).map(m=>({displayName:m.displayName||'',...(m.identity?.riotId?{publicRiotId:m.identity.riotId}:{}),local:sameIdentity(m.identity,lobby.local),source:'lobby',firstPosition:m.firstPosition,secondPosition:m.secondPosition}));
 }
 export function resolveClientParty(session, lobby, manualIds = [], now = Date.now()) {
  const team = session?.myTeam || [], localCell = session?.localPlayerCellId, own = team.find(p => p.cellId === localCell);
@@ -53,7 +53,8 @@ export function resolveClientParty(session, lobby, manualIds = [], now = Date.no
   const identity = identityOf(p), local = p.cellId === localCell;
   const matched = known && lobby.members.find(m => sameIdentity(identity, m.identity));
   const manual = ids.some(id => [identity.riotId, identity.summonerId].some(value => value?.toLowerCase() === id));
-  return local || matched || manual ? [{cellId:p.cellId, local, displayName:Object.keys(identity).length?(p.displayName||publicPlayerName(p)||matched?.displayName||''):'', source:local?'self':manual?'manual-id':'lobby',
+  const publicRiotId=identity.riotId||matched?.identity?.riotId;
+  return local || matched || manual ? [{cellId:p.cellId, local, displayName:Object.keys(identity).length?(p.displayName||publicPlayerName(p)||matched?.displayName||''):'',...(publicRiotId?{publicRiotId}:{}),source:local?'self':manual?'manual-id':'lobby',
    ...(matched?{firstPosition:matched.firstPosition,secondPosition:matched.secondPosition}:{})}] : [];
  });
  return {status:known?'known':'unknown', members, lobbyCount:known?lobby.members.length:null,

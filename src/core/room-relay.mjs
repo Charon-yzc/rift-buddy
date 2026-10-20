@@ -6,6 +6,7 @@
 // anyway — the hash keeps out casual joiners, it is not a strong secret.
 
 import {ROOM_PROTOCOL,PACKED_STATES_VERSION,MAX_FRAME,validRoomCode,sanitizeNick,decodeFrame,encodeFrame,sanitizeShare} from './room.mjs';
+import {CHAMPION_USAGE_VERSION} from './room-champion-usage.mjs';
 
 export const MAX_RELAY_MEMBERS=12;
 // Suggested input only. It never opens a connection or replaces a saved
@@ -101,7 +102,7 @@ export function relayWelcome(room,nicks){
  const code=typeof room==='string'&&validRoomCode(room)?room:null;
  if(!code)return null;
  const members=(Array.isArray(nicks)?nicks:[]).map(m=>{const name=sanitizeNick(typeof m==='string'?m:m?.nick);return name?{nick:name,...(m?.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION}:{})}:null;}).filter(Boolean).slice(0,MAX_RELAY_MEMBERS);
- return {kind:'welcome',v:ROOM_PROTOCOL,room:code,members,ballots:1,multiVotes:1,adoptions:1,packedStates:PACKED_STATES_VERSION};
+ return {kind:'welcome',v:ROOM_PROTOCOL,room:code,members,ballots:1,multiVotes:1,adoptions:1,packedStates:PACKED_STATES_VERSION,championUsage:CHAMPION_USAGE_VERSION};
 }
 export function relayJoin(nick,packedStates=0){
  const from=sanitizeNick(nick);

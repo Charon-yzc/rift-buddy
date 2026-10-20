@@ -84,11 +84,33 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
  server.once('close',()=>clearInterval(timer));
  timer.unref();return server;
 }
-export function createHelperManager({userData,bundleRoot,executable,isPackaged,helperExecutable,helperEntry,helperBundleRoot,launcherExecutable,onProgress=()=>{},startupTimeoutMs=45000,launch=launchHelper}) {
- let config=null,opening=null,sessionFile=null,launchRecord=null,closed=false;
+export function createHelperManager({userData,bundleRoot,executable,isPackaged,helperExecutable,helperEntry,helperBundleRoot,launcherExecutable,onProgress=()=>{},startupTimeoutMs=45000,launch=launchHelper,getInstallPath=()=>'',readClient=clientSnapshot,send=requestHelper,historyService=null}) {
+ let config=null,opening=null,sessionFile=null,launchRecord=null,closed=false,transport=null,lifecycle=0;
+ const directHistory=historyService||createMatchHistoryService({installPath:getInstallPath});
+ const revokeTransport=()=>{transport=null;lifecycle++;directHistory.clear();};
+ function bindTransport(kind,installPath,helperConfig=null){
+  if(!transport||transport.kind!==kind||transport.installPath!==installPath||transport.config!==helperConfig){revokeTransport();transport={token:Object.freeze({}),kind,installPath,config:helperConfig};}
+  return transport.token;
+ }
+ const transportCurrent=token=>!closed&&transport?.token===token&&String(transport.installPath||'')===String(getInstallPath()||'')&&(!transport.config||transport.config===config);
+ async function history(operation,payload={},token){
+  if(token===undefined)token=transport?.token||bindTransport('direct',getInstallPath());
+  if(!transportCurrent(token))throw Error('战绩读取通道已变化，请重新查询');
+  const route=transport;
+  const result=route.kind==='helper'?await send(route.config,'matchHistory',{operation,payload},60000):await directHistory.execute(operation,payload);
+  if(!transportCurrent(token))throw Error('战绩读取通道已变化，请重新查询');return result;
+ }
+ async function statusWithTransport(installPath,partyIds=[]){
+  if(closed)throw Error('连接已取消');const version=lifecycle,captured=config;
+  if(captured&&captured.installPath===installPath){
+   try{const client=await send(captured,'status',{partyIds});if(version!==lifecycle||captured!==config)throw Error('连接已变化');return {client,transport:bindTransport('helper',installPath,captured)};}catch{if(version!==lifecycle)throw Error('连接已变化，请重新读取');}
+  }
+  const client=await readClient(installPath,{partyIds});if(version!==lifecycle)throw Error('连接已变化，请重新读取');return {client,transport:bindTransport('direct',installPath)};
+ }
  async function ensure(installPath){
   if(closed)throw Error('连接已取消');
-  if(config){try{await requestHelper(config,'ping',{},1000);return true;}catch{config=null;}}
+  if(config&&config.installPath!==installPath){const previous=config;config=null;revokeTransport();await send(previous,'shutdown',{},1000).catch(()=>{});}
+  if(config){try{await send(config,'ping',{},1000);return true;}catch{config=null;revokeTransport();}}
   if(opening)return opening;
   opening=(async()=>{
    const key=crypto.randomBytes(16).toString('hex');
@@ -110,9 +132,9 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
     if(record?.phase==='failed')launchError=record.nativeCode===1223?'Windows 权限确认已取消，可点击重试读取':'Windows 未能启动连接助手，请重试连接';
     if(launchError)throw new Error(launchError);
     if(record?.phase==='launched'&&!launched){launched=true;onProgress('连接助手已启动，正在建立本机连接…');}
-    try{const ready=await requestHelper(next,'ping',{},750);if(ready.ready){
-     if(closed){await requestHelper(next,'shutdown',{},750).catch(()=>{});throw Object.assign(Error('连接已取消'),{startupFailure:true});}
-     config=next;return true;
+    try{const ready=await send(next,'ping',{},750);if(ready.ready){
+     if(closed){await send(next,'shutdown',{},750).catch(()=>{});throw Object.assign(Error('连接已取消'),{startupFailure:true});}
+     config=next;revokeTransport();return true;
     }}catch(error){if(error.startupFailure)throw error;}
     try{const status=JSON.parse(await fs.readFile(path.join(userData,'client-helper-status.json'),'utf8'));
      if(Date.parse(status.at)>=next.createdAt&&status.stage&&!['starting','ready'].includes(status.stage))throw Object.assign(Error('连接辅助进程启动失败，请重新点击连接'),{startupFailure:true});
@@ -128,9 +150,9 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
    }
   })().finally(()=>{opening=null;});return opening;
  }
- return {ensure,active:()=>!!config,
-   request:(operation,payload)=>{if(!config)throw new Error('连接助手尚未就绪，请重试读取');return requestHelper(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
-  status:async (installPath,partyIds=[])=>{if(config){try{return await requestHelper(config,'status',{partyIds});}catch{}}return clientSnapshot(installPath,{partyIds});},
-  shutdown:async()=>{closed=true;if(config){try{await requestHelper(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
+ return {ensure,active:()=>!!config,history,statusWithTransport,transportCurrent,
+   request:(operation,payload)=>{if(!config)throw new Error('连接助手尚未就绪，请重试读取');return send(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
+  status:async(installPath,partyIds=[])=> (await statusWithTransport(installPath,partyIds)).client,
+  shutdown:async()=>{closed=true;revokeTransport();if(config){try{await send(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
  };
 }

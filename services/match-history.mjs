@@ -10,22 +10,23 @@ import {cleanPlayerChallenges,cleanPlayerProfile,normalizePublicRanked,normalize
 const profile=p=>({puuid:p.puuid,name:text(p.gameName||p.displayName||p.summonerName||p.name)+(p.tagLine?'#'+text(p.tagLine):''),level:number(p.summonerLevel||p.level),icon:number(p.profileIconId),privacy:['PUBLIC','PRIVATE'].includes(p.privacy)?p.privacy:'unknown'});
 const fail=message=>{throw Error(message);};
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now}={}){
- let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map();let totalCacheBytes=0;
- function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;}
+ let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map();let totalCacheBytes=0;
+ function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;}
  function clear(){clearGeneration++;discovery=null;discoveredAt=0;resetSession();}
  async function limited(fn){if(waiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>waiting.push(resolve));running++;try{return await fn();}finally{running--;waiting.shift()?.();}}
- async function context(generation){
+ async function context(generation,fresh=false){
   const startedEpoch=epoch,assertCurrent=()=>{if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');};
-  let auth;try{if(!discovery||now()-discoveredAt>3000||now()<discoveredAt){discoveredAt=now();discovery=discover(typeof installPath==='function'?installPath():installPath,{includeRegion:true});}auth=await discovery;}catch{assertCurrent();discovery=null;fail('暂时无法读取客户端连接');}assertCurrent();
+  let auth;try{if(fresh||!discovery||now()-discoveredAt>3000||now()<discoveredAt){discoveredAt=now();discovery=discover(typeof installPath==='function'?installPath():installPath,{includeRegion:true});}auth=await discovery;}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('暂时无法读取客户端连接');}assertCurrent();
   if(!auth?.port){if(startedEpoch===epoch)resetSession();fail(auth?.unreadable?'需要先确认 Windows 权限，再读取战绩':'请先登录并连接英雄联盟客户端');}
   let own;try{own=await request(auth,'/lol-summoner/v1/current-summoner');}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('无法确认当前账号，请重新连接客户端');}assertCurrent();
-  if(!validPuuid(own?.puuid))fail('客户端尚未返回当前账号，请等待登录完成后重试');
-  let locale={};if(!auth.region)try{locale=await request(auth,'/riotclient/region-locale');}catch{}assertCurrent();
+  if(!validPuuid(own?.puuid)){if(startedEpoch===epoch)resetSession();fail('客户端尚未返回当前账号，请等待登录完成后重试');}
+  let locale={};if(!auth.region)try{locale=await request(auth,'/riotclient/region-locale');}catch{if(fresh){assertCurrent();if(startedEpoch===epoch)resetSession();fail('无法确认当前大区，请重新连接客户端');}}assertCurrent();
   const localServer=sgpServerId(auth,locale),key=crypto.createHash('sha256').update(JSON.stringify([auth.port,auth.password,own.puuid,localServer])).digest('hex');
   if(connection!==key){if(startedEpoch!==epoch)fail('客户端会话已变化，请重新查询');resetSession();connection=key;}
   return {auth,own,localServer,key,epoch};
  }
  async function check(c){if(c.epoch!==epoch||connection!==c.key)fail('账号或客户端会话已变化，请重新加载战绩');let own;try{own=await request(c.auth,'/lol-summoner/v1/current-summoner');}catch{if(c.epoch===epoch)clear();fail('客户端会话已变化，请重新加载战绩');}if(own?.puuid!==c.own.puuid||c.epoch!==epoch||connection!==c.key){if(c.epoch===epoch)clear();fail('账号或客户端会话已变化，请重新加载战绩');}}
+ async function checkUsage(c){if(c.epoch!==epoch||connection!==c.key)fail('英雄统计会话已变化，请重新读取');const fresh=await context(clearGeneration,true);if(c.epoch!==fresh.epoch||c.key!==fresh.key)fail('英雄统计会话已变化，请重新读取');}
  function put(key,value){const current=cache.get(key);const merged=current?.origin===value.origin?{...current,...value}:value;totalCacheBytes-=cacheBytes.get(key)||0;cache.delete(key);cacheBytes.delete(key);const bytes=JSON.stringify(merged).length*2;if(bytes<=48_000_000){cache.set(key,merged);cacheBytes.set(key,bytes);totalCacheBytes+=bytes;}while(cache.size>128||totalCacheBytes>48_000_000){const oldest=cache.keys().next().value;totalCacheBytes-=cacheBytes.get(oldest)||0;cache.delete(oldest);cacheBytes.delete(oldest);}return merged;}
  async function remote(c,server,kind,path,body){
   const response=await request(c.auth,kind==='entitlements'?'/entitlements/v1/token':'/lol-league-session/v1/league-session-token'),token=kind==='entitlements'?response?.accessToken:response;
@@ -90,6 +91,37 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    if(cross||!player.name){try{if(cross){const s=SGP_SERVERS[server];const result=await remote(c,server,'league-session',`/summoner-ledge/v1/regions/${s.region}/summoners/puuids`,[player.puuid]);if(!result?.length||result[0].puuid!==player.puuid)fail('此大区未找到该玩家');const found=profile(result[0]);player={...player,...found,name:player.name||found.name||'玩家'};}else{const raw=await request(c.auth,'/lol-summoner/v2/summoners/puuid/'+player.puuid);if(raw?.puuid===player.puuid)player=profile(raw);}}catch{if(cross)fail('无法读取该大区玩家资料，请核对大区');}}
   return {player,server,cross,preferred:['auto','lcu','sgp'].includes(p.source)?p.source:'auto',ids:new Map(),epoch:c.epoch};
  }
+ // Recommendation counts deliberately bypass page(): its missing-team completion
+ // fetches individual games. This scan reads at most500 summary records only.
+ async function ownSummaryPage(c,p){
+  if(Object.keys(p).some(key=>!['cursor','source','session'].includes(key))||p.source!==undefined&&!['auto','lcu','sgp'].includes(p.source))fail('英雄统计参数不正确');
+  if(p.session!==undefined&&p.session!==sessionId)fail('英雄统计会话已变化，请重新读取');
+  // A helper response can be lost after commit. Replaying the one previous
+  // request returns its immutable cumulative result; it never reads/advances.
+  if(typeof p.cursor==='string'&&usageReplay?.cursor===p.cursor){const replay=usageReplay.scan;await checkUsage(c);return usageResult(replay);}
+  if(p.cursor!==undefined&&(typeof p.cursor!=='string'||!usageScan||p.cursor!==usageScan.cursor||usageScan.epoch!==c.epoch))fail('英雄统计会话已变化，请重新读取');
+  const scan=p.cursor?usageScan:{cursor:crypto.randomBytes(16).toString('hex'),epoch:c.epoch,scanned:0,identified:0,counts:{},seen:new Set(),source:p.source==='lcu'||!SGP_SERVERS[c.localServer]?'lcu':'sgp',complete:false};
+  const revision=++usageRevision;
+  if(scan.complete){await checkUsage(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');return usageResult(scan);}
+  const start=scan.scanned;let source=scan.source,count=Math.min(source==='sgp'?20:100,500-start),entries;
+  if(source==='sgp'){
+   try{const result=await remote(c,c.localServer,'entitlements',`/match-history-query/v1/products/lol/player/${c.own.puuid}/SUMMARY?startIndex=${start}&count=${count}`);if(!Array.isArray(result?.games))fail('游戏后台返回的战绩格式异常');entries=result.games;}
+   catch{await check(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');if(start)fail('英雄统计暂时中断，已保留读取结果，请重试');source='lcu';count=Math.min(100,500);}
+  }
+  if(source==='lcu'){const result=await request(c.auth,`/lol-match-history/v1/products/lol/${c.own.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);if(!Array.isArray(result?.games?.games))fail('客户端尚未返回有效战绩，请稍后重试');entries=result.games.games;}
+  const next={...scan,cursor:crypto.randomBytes(16).toString('hex'),source,counts:{...scan.counts},seen:new Set(scan.seen)};
+  for(const entry of entries.slice(0,count)){
+   next.scanned++;const game=source==='sgp'?entry?.json:entry;
+   if(!Number.isSafeInteger(game?.gameId)||game.gameId<=0||next.seen.has(game.gameId))continue;next.seen.add(game.gameId);
+   const players=Array.isArray(game.participants)?game.participants.slice(0,30):[],identities=Array.isArray(game.participantIdentities)?game.participantIdentities.slice(0,30):[];
+   const ownPlayers=source==='sgp'?players.filter(player=>player?.puuid===c.own.puuid):players.filter(player=>{if(!Number.isSafeInteger(player?.participantId)||player.participantId<=0)return false;const matches=identities.filter(identity=>identity?.participantId===player.participantId);return matches.length===1&&matches[0]?.player?.puuid===c.own.puuid;});
+   if(ownPlayers.length!==1)continue;const hero=ownPlayers[0].championId;if(!Number.isSafeInteger(hero)||hero<=0||hero>10000)continue;
+   next.identified++;next.counts[hero]=(next.counts[hero]||0)+1;
+  }
+  next.complete=next.scanned>=500||entries.length<count;
+  await checkUsage(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');usageReplay=p.cursor?{cursor:p.cursor,scan:next}:null;usageScan=next;return usageResult(next);
+ }
+ function usageResult(scan){return {session:sessionId,cursor:scan.cursor,scanned:scan.scanned,identified:scan.identified,target:500,complete:scan.complete,source:scan.source,counts:{...scan.counts}};}
  async function page(c,p){
   const start=p.start??0,count=p.count??20;if(!Number.isInteger(start)||start<0||start>9900||!Number.isInteger(count)||count<1||count>100||start+count>10000)fail('战绩分页参数不正确');
   if(p.rosterKey&&(!rosterCache||rosterCache.key!==p.rosterKey||now()-rosterCache.at>15000||!rosterCache.players.some(v=>v.puuid===p.puuid&&!v.hidden)))fail('当前对局成员已变化，请刷新实时对局');
@@ -120,12 +152,14 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   return {handle,session:sessionId,player:t.player,server:t.server,localServer:c.localServer,cross:t.cross,source,notice,start,count,hasMore:entries.length>=count,games,servers:Object.entries(SGP_SERVERS).map(([id,s])=>({id,name:s.name})),receivedAt:now()};
  }
  async function execute(operation,payload={}){
-    if(!['page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))fail('不支持此战绩操作');
+    if(!['own-summary-context','own-summary-page','page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))fail('不支持此战绩操作');
   if(!payload||typeof payload!=='object'||Array.isArray(payload))fail('战绩查询参数不正确');if(operation==='clear'){clear();return true;}
   const generation=clearGeneration;return limited(async()=>{
   if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
-   const c=await context(generation);
+   const c=await context(generation,operation==='own-summary-context');
    if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
+   if(operation==='own-summary-context')return {session:sessionId,server:c.localServer};
+   if(operation==='own-summary-page')return ownSummaryPage(c,payload);
    if(operation==='roster')return roster(c,payload);
   if(operation==='search'){
    const query=text(payload.query);if(!query||query.length>81)fail('请输入游戏名字或完整游戏 ID');

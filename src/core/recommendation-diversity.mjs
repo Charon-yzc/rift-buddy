@@ -8,9 +8,12 @@ export function seededFraction(seed,key){
  return (hash>>>0)/4294967296;
 }
 
-export function explorationPool(candidates,role,seed='',limit=12){
+export function explorationPool(candidates,role,seed='',limit=12,weights=null){
  const selected=new Map();const add=c=>{if(c&&selected.size<limit)selected.set(c.id,c);};
  candidates.slice(0,4).forEach(add);
+ // Keep strong anchors, then give familiar legal heroes access to creative
+ // archetypes before trait coverage consumes the small exploration pool.
+ if(weights)[...candidates].filter(c=>weights[c.id]>0).sort((a,b)=>-Math.log(1-seededFraction(seed,'familiar-creative:'+role+':'+a.id))/weights[a.id]+Math.log(1-seededFraction(seed,'familiar-creative:'+role+':'+b.id))/weights[b.id]).slice(0,4).forEach(add);
  for(const trait of ['poke','peel','sustain','frontline','engage','aoe']){
   const choices=candidates.filter(c=>profile(c,role)[trait]&&!selected.has(c.id));
   choices.sort((a,b)=>seededFraction(seed,role+':'+a.id)-seededFraction(seed,role+':'+b.id));add(choices[0]);

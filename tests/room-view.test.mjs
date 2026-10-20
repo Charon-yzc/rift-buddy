@@ -14,7 +14,7 @@ test('idle room panel offers create, scan and join with the saved nickname',()=>
  assert.match(html,/id="room-nick" value="小明"/);
  assert.match(html,/id="room-invite"/);assert.match(html,/id="room-pin"/);
  assert.match(html,/data-action="room-join"/);
- assert.match(html,/不需要额外读取客户端数据/);
+ assert.match(html,/不发送逐局战绩/);
  assert.match(html,/防火墙/);
  assert.doesNotMatch(html,/口令 123456/);
  assert.doesNotMatch(html,/本机游戏 ID/);
@@ -50,6 +50,16 @@ test('host room shows invite codes and members click through to local builds',()
  assert.match(html,/盖伦/);assert.match(html,/艾希/);assert.match(html,/更新于/);
  assert.match(html,/房主/);assert.match(html,/队友甲/);assert.match(html,/我/);
  assert.match(html,/还没分享阵容/);
+});
+
+test('room preference status stays inside existing details and distinguishes actual summaries, old capability and reconnect',()=>{
+ const room=snapshot({championUsage:true}),valid={version:1,mass:.85,usage:{sampled:50,counts:{Ashe:50}}};
+ room.members[0].share={championUsage:valid};room.members[1].share.championUsage=valid;
+ const html=roomPanel({room,champ});assert.match(html,/<details[^>]*data-companion-disclosure="room-share-info"[^>]*><summary>[\s\S]*<p data-room-usage>英雄偏好 2 \/ 2 人（含本人）/);assert.match(html,/不含逐局战绩/);
+ assert.doesNotMatch(html,/<details[^>]*data-companion-disclosure="room-share-info"[^>]*\bopen\b/);
+ room.members[1].share.championUsage={...valid,usage:{sampled:501,counts:{Ashe:501}}};assert.match(roomPanel({room,champ}),/英雄偏好 1 \/ 2 人/);
+ assert.match(roomPanel({room:{...room,championUsage:false},champ}),/当前房间未同步英雄偏好/);
+ assert.match(roomPanel({room:{...room,transport:'relay',link:'reconnecting'},champ}),/英雄偏好等待重连后同步/);
 });
 
 test('a host without detected addresses asks guests to scan instead of inventing one',()=>{
@@ -169,21 +179,21 @@ test('the relay form preserves a custom address and suggests the shared default 
  const empty=roomPanel({room:null,nick:'队友',transport:'relay',champ});
  assert.match(empty,/id="room-relay-url" value="wss:\/\/room\.riftbuddy\.dpdns\.org"/);
  assert.match(empty,/inputmode="numeric" maxlength="6"/);assert.match(empty,/type="password"/);assert.match(empty,/口令只私下告知/);
- assert.match(empty,/阵容与配置会共享给同房间成员和中继运营者/);
+ assert.match(empty,/阵容、配置与英雄场次摘要会共享给同房间成员和中继运营者/);
  assert.match(empty,/data-action="room-relay-join"/);
  const cleared=roomPanel({room:null,transport:'relay',relayUrl:'',champ});assert.match(cleared,/id="room-relay-url" value=""/,'editing/clearing must not silently refill the field');
 });
 
 test('the default relay shares full configuration while missing peer fields remain explicit',()=>{
  const idle=roomPanel({room:null,transport:'relay',champ});
- assert.match(idle,/阵容与配置会共享给同房间成员和中继运营者/);assert.doesNotMatch(idle,/仅共享英雄阵容|不转发装备/);
+ assert.match(idle,/阵容、配置与英雄场次摘要会共享给同房间成员和中继运营者/);assert.doesNotMatch(idle,/仅共享英雄阵容|不转发装备/);
  const relay=snapshot({mode:'client',transport:'relay',relayUrl:'wss://room.riftbuddy.dpdns.org',link:'connected'});
  const active=roomPanel({room:relay,champ});
  assert.match(active,/room-link">已连接/);assert.match(active,/自动分享阵容、装备、完整符文、召唤师技能、加点与组合分工/);
  assert.match(active,/已收到阵容，尚未收到这位队友的配置/);
  assert.match(active,/仅展示实际收到的配置/);assert.doesNotMatch(active,/默认中继只发送阵容|不转发装备/);
  const custom=roomPanel({room:null,transport:'relay',relayUrl:'wss://example.com',champ});
- assert.match(custom,/阵容与配置会共享给同房间成员和中继运营者/);
+ assert.match(custom,/阵容、配置与英雄场次摘要会共享给同房间成员和中继运营者/);
 });
 
 test('missing peer configuration requires a separate local reference click and cannot offer adoption',()=>{

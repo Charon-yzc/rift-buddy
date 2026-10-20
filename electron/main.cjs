@@ -7,7 +7,7 @@ const {isDeepStrictEqual}=require('node:util');
 const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
-let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,windowObserver,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
+let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,latestHistoryTransport,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
@@ -100,16 +100,21 @@ async function boot(){
  if(state.guide?.ball){state.guide={...state.guide,ball:false,collapsed:false};if(state.recovery?.backedUp!==false)await saveCurrentState();}
  const {createHelperManager}=await import('../services/client-helper.mjs');
  const helperRoot=path.join(process.resourcesPath,'connection');
-  helper=createHelperManager({userData:storeRoot,bundleRoot:root,executable:process.execPath,isPackaged:app.isPackaged,
+  helper=createHelperManager({userData:storeRoot,bundleRoot:root,executable:process.execPath,isPackaged:app.isPackaged,getInstallPath:()=>state.preferences?.installPath,
   ...(app.isPackaged?{helperExecutable:path.join(helperRoot,'node.exe'),helperEntry:path.join(helperRoot,'electron/client-helper-entry.mjs'),helperBundleRoot:helperRoot,launcherExecutable:path.join(helperRoot,'connection-launcher.exe')}:{}) ,
-   onProgress:message=>publishWindows('client-update',{connected:false,connecting:true,phase:'Offline',message})});
-  const {createMatchHistoryService}=await import('../services/match-history.mjs');
-  const matchHistory=createMatchHistoryService({installPath:()=>state.preferences?.installPath});
+   onProgress:message=>{usageCollector?.observe({connected:false},null);publishWindows('client-update',{connected:false,connecting:true,phase:'Offline',message});}});
+  const readClientStatus=async()=>{const read=await helper.statusWithTransport(state.preferences?.installPath,state.preferences?.partyIds);latestHistoryTransport=read.transport;return read.client;};
   guard('match-history',async(operation,payload)=>{
    if(!['page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))throw Error('不支持此战绩操作');
-   return helper.active()?helper.request('matchHistory',{operation,payload}):matchHistory.execute(operation,payload);
+   return helper.history(operation,payload);
   });
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));
+ const {createChampionUsageCollector}=await import('../services/champion-usage-collector.mjs');
+ usageCollector=createChampionUsageCollector({request:(transport,operation,payload)=>helper.history(operation,payload,transport),champions:()=>data.champions,transportCurrent:token=>helper.transportCurrent(token),onChange:value=>{if(!quitting){publishWindows('champion-usage',value);roomUsagePublisher?.sync();}}});
+ const {createRoomUsagePublisher}=await import('../services/room-champion-usage.mjs');
+ roomUsagePublisher=createRoomUsagePublisher({getService:()=>roomService,getSummary:()=>usageCollector.snapshot(),getMass:()=>state.preferences.familiarityMass});
+ guard('champion-usage',()=>usageCollector.snapshot());
+ guard('champion-usage-refresh',()=>{usageCollector.observe(latestClient,latestHistoryTransport,{refresh:true}).catch(()=>{});return usageCollector.snapshot();});
  const catalogCore=await import('../src/core/catalog.mjs');
  const {createCatalogStore}=await import('../services/catalog-store.mjs');
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
@@ -124,7 +129,7 @@ async function boot(){
  const opponentCache=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
- synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;};
+ synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();};
  const {createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
  const pairCache=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshPairs=refreshReference(pairCache,['pairStatistics']);
@@ -284,7 +289,7 @@ async function boot(){
   if(roomService){if(roomService.snapshot().mode!=='idle')throw Error('请先离开房间再修改昵称');roomService.dispose();roomService=null;}
   const detected=sanitizeNick(latestClient?.own?.riotId)||sanitizeNick(latestClient?.own?.summonerName);
   roomNickInUse=clean;roomNickSourceRank=clean===detected?(detected.includes('#')?2:1):0;
-  roomService=createRoomService({nick:clean,onUpdate:snapshot=>publishWindows('room-update',decorateRoom(snapshot)),diagnostic});
+  roomService=createRoomService({nick:clean,onUpdate:snapshot=>{publishWindows('room-update',decorateRoom(snapshot));roomUsagePublisher?.sync();},diagnostic});
   return roomService;
  };
  guard('room-status',()=>roomService?decorateRoom(roomService.snapshot()):(roomAutoError?decorateAutoRoom({mode:'idle',members:[],transport:'relay'},{error:roomAutoError,retryAt:roomAutoFailedUntil||null}):null));
@@ -302,7 +307,7 @@ async function boot(){
   else if(roomService){roomService.leave();roomAutoError='';roomAutoFailedKey=null;roomAutoFailedUntil=0;}
   return roomService?decorateRoom(roomService.snapshot()):null;
  });
- guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');const {ballot,...publicShare}=share||{};const result=roomService.publish({...publicShare,...(roomBallot?{ballot:roomBallot}:{})});roomPublicShare=publicShare;return decorateRoom(result);});
+ guard('room-publish',share=>{if(!roomService||roomService.snapshot().mode==='idle')throw Error('尚未创建或加入房间');const {ballot,championUsage,...publicShare}=share||{};const result=roomUsagePublisher.publish({...publicShare,...(roomBallot?{ballot:roomBallot}:{})});roomPublicShare=publicShare;return decorateRoom(result);});
  guard('room-ballot',async raw=>{
   const service=roomService,initial=service?.snapshot(),round=roomBallotRound;if(!initial||initial.mode==='idle')throw Error('请先连接房间');
   const {sanitizeRoomBallot,proposalKey,ballotVotes}=await import('../src/core/room.mjs');
@@ -338,7 +343,7 @@ async function boot(){
    if(!proposal?.lineup.some(s=>s.role===ballot.accepted.role&&s.champion))throw Error('采用的候选或本人分路已变化，请重新选择');
   }
   const publicShare=roomPublicShare||snapshot.members.find(m=>m.self)?.share||{lineup:[],pick:null,mode:'rift'};
-  const result=roomService.publish({...publicShare,ballot});roomBallot=ballot;return decorateRoom(result);
+  const result=roomUsagePublisher.publish({...publicShare,ballot});roomBallot=ballot;return decorateRoom(result);
  });
  guard('room-scan',()=>ensureRoom(state.preferences.roomNick).scan());
  guard('room-addresses',()=>{const list=[];for(const [name,items] of Object.entries(os.networkInterfaces()))for(const item of items||[])if(item.family==='IPv4'&&!item.internal)list.push({name,address:item.address});return list;});
@@ -403,7 +408,7 @@ async function boot(){
    await ensureRoom(autoRoomNick({identity:client?.own,savedNick:state.preferences.roomNick})).relay({url:initialRelayUrl(state.preferences.relayUrl),room:derived.code,pin:derived.pin});
    // Revocation already closed this attempt. A later manual room owns the service.
    if(roomAutoKey!==key)return;
-   if(renamedShare&&renamedShare.round===roomBallotRound&&latestClient?.party?.key===key){roomBallot=roomBallot||renamedShare.ballot;roomPublicShare=roomPublicShare||renamedShare.share;if(roomPublicShare)roomService.publish({...roomPublicShare,...(roomBallot?{ballot:roomBallot}:{})},{restoring:true});}
+   if(renamedShare&&renamedShare.round===roomBallotRound&&latestClient?.party?.key===key){roomBallot=roomBallot||renamedShare.ballot;roomPublicShare=roomPublicShare||renamedShare.share;if(roomPublicShare)roomUsagePublisher.publish({...roomPublicShare,...(roomBallot?{ballot:roomBallot}:{})},{restoring:true});}
    roomAutoFailedKey=null;roomAutoFailedUntil=0;
    diagnostic(`auto room joined ${derived.code} (${decision.reason})`);
   }catch(error){
@@ -448,7 +453,7 @@ async function boot(){
  guard('bootstrap',async({surface})=>{
   const paused=appUpdateStatus.phase==='idle'&&!appUpdateFlight?await updater().partial().catch(()=>null):null;
   if(paused&&appUpdateStatus.phase==='idle'&&!appUpdateFlight)appUpdateStatus={phase:'paused',release:paused.release,received:paused.received,total:paused.total,kind:paused.kind,via:paused.via};
-  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
+  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),championUsage:usageCollector.snapshot(),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
  },true);
  const {windowInfo}=await import('../services/window-info.mjs');
  guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:forRenderer(latestClient),companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
@@ -573,7 +578,7 @@ async function boot(){
  }
  const status=createClientSync(async(force=false)=>{
   if(!force&&Date.now()-lastStatus<(latestClient.connected?(latestClient.phase==='ChampSelect'?2000:3000):5000))return latestClient;
-  statusTask=(async()=>{const previousClient=latestClient,previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}catch{latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
+  statusTask=(async()=>{const previousClient=latestClient,previousPhase=latestClient.phase,previousGame=latestClient.game?.gameId;try{latestClient=await readClientStatus();}catch{latestHistoryTransport=null;latestClient={connected:false,phase:'Offline',message:'连接暂不可用，手动选人可用'};}
    // Reading public client data is automatic. When the client runs with higher
    // privileges, Windows alone decides whether it will let us read it, so ask
    // once per run instead of making the player start an authorization step.
@@ -582,9 +587,10 @@ async function boot(){
    const allowed=shouldRequestElevatedRead({force,needsElevation:!!latestClient?.needsElevation,attempted:elevatedReadAttempted,observedWindows,observedAt,explicitInGame:mainExplicitInGame});
    if(allowed){
     elevatedReadAttempted=true;
-    try{await helper.ensure(state.preferences?.installPath);latestClient=await helper.status(state.preferences?.installPath,state.preferences?.partyIds);}
+    try{await helper.ensure(state.preferences?.installPath);latestClient=await readClientStatus();}
     catch(error){diagnostic(`automatic permission request failed: ${error?.message||'unknown'}`);}
    }
+   usageCollector.observe(latestClient,latestHistoryTransport).catch(()=>{});
    if(ballotRoundChanged(latestClient))clearRoomBallot();
    observeFeedPhase(latestClient);feedIdle=observeSignedFeedPhase(latestClient);dataFeed.activate().catch(()=>{});
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
@@ -916,7 +922,7 @@ async function boot(){
 }
 if(lock)app.whenReady().then(boot).catch(error=>{diagnostic(`startup error ${error.message}`);dialog.showErrorBox('开黑搭子启动失败',error.message);app.quit();});
 app.on('window-all-closed',()=>{if(!tray||quitting)app.quit();});
-app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
+app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);roomUsagePublisher?.dispose();windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
 app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
  event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;

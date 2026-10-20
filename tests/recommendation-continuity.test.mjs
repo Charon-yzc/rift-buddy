@@ -1,4 +1,5 @@
 import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
+import {roomFamiliarityContext} from '../src/core/room-familiarity.mjs';
 import {heroClickSelection,configurationChoices} from '../src/core/configuration-choices.mjs';
 import {rankedDraftPolicy,publicRankedDraft} from '../src/core/ranked-draft.mjs';
 import test from 'node:test';
@@ -66,9 +67,9 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
  const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
   const context=vm.createContext({
-    rankedDraftPolicy,publicRankedDraft,prepareHeroWithSource,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
+    rankedDraftPolicy,publicRankedDraft,prepareHeroWithSource,roomFamiliarityContext,room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
     ongoing:createOngoingGameController({request:async()=>{throw Error('Recommendation sync must not query ongoing histories');},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]}),
-  Date:ClockDate,data,slots,client:current,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
+  Date:ClockDate,data,slots,client:current,championUsage:null,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
   generating:false,syncing:false,windowLayout:{docked:false},autoRecommendTimer:null,autoRecommendationKey:'',results,resultsSignature:'',
   recommendationRun:0,activeRecommendation:null,cancelRecommendationReveal:noop,
