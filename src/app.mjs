@@ -2005,7 +2005,7 @@ document.addEventListener('change',event=>{
 document.addEventListener('click',event=>{
  const el=event.target.closest('[data-action="enemy-roles-auto"]');if(el)editEnemyRole({gameId:el.dataset.game,role:'reset',context:el.dataset.context});
 });
-document.addEventListener('input',event=>{if(event.target.id!=='familiarity-mass')return;const label=event.target.closest('label'),mass=Number(event.target.value);label.querySelector('output').value=mass+'%';label.querySelector('small').textContent='未玩英雄合计 '+(100-mass)+'% · 无历史时均匀分配';});
+document.addEventListener('input',event=>{if(event.target.id!=='familiarity-mass')return;const label=event.target.closest('label'),mass=Number(event.target.value);label.querySelector('output').value=mass+'%';const caption=label.querySelector('small');caption.textContent=caption.textContent.replace(/\d+%/,(100-mass)+'%');});
 document.addEventListener("toggle",event=>{if(event.target.matches?.(".draft-preferences"))draftAdvanced=event.target.open;if(event.target.matches?.('[data-pair-refresh]'))pairRefreshOpen=event.target.open;},true);
 
 

@@ -49,8 +49,27 @@ test('import binds only to the freshly verified current account, survives restar
  const request=async(_t,op)=>op==='own-summary-context'?{session:actual,server:'KR',cacheKey:actual===session?key:other}:online?page(7,true):Promise.reject(Error('outage'));
  const collector=createChampionUsageCollector({cache,champions:()=>heroes,request}),transport={};await collector.observe(client,transport);const value=await collector.importUsage(imported);
  assert.equal(value.usage.sampled,18);assert.equal(value.cached,true);assert.equal(value.basis,'current-season-screenshot');assert.equal(value.complete,false);assert.equal((await createChampionUsageCache({root})).get(key).source,'wegame');
- actual=second;await assert.rejects(collector.importUsage(imported),/账号或大区/);assert.equal(cache.get(other),null);actual=session;online=true;await collector.observe(client,transport,{refresh:true});assert.equal(collector.snapshot().usage.sampled,7);assert.equal(collector.snapshot().basis,'recent');assert.equal(cache.get(key).usage.sampled,7);
+ actual=second;await assert.rejects(collector.importUsage(imported),/账号或大区/);assert.equal(cache.get(other),null);assert.equal(collector.snapshot().usage.sampled,0);actual=session;online=true;await collector.observe(client,transport,{refresh:true});assert.equal(collector.snapshot().usage.sampled,7);assert.equal(collector.snapshot().basis,'recent');assert.equal(cache.get(key).usage.sampled,7);
 });
 test('disk failure does not erase usable live statistics or pretend persistence succeeded',async()=>{
  const collector=createChampionUsageCollector({cache:{get:()=>null,put:async()=>{throw Error('PRIVATE path');}},champions:()=>heroes,request:async(_t,op)=>op==='own-summary-context'?{session,server:'KR',cacheKey:key}:page(7,true)});await collector.observe(client,{});const value=collector.snapshot();assert.equal(value.status,'ready');assert.equal(value.usage.sampled,7);assert.match(value.cacheError,/保存失败/);assert.ok(!JSON.stringify(value).includes('PRIVATE'));
+});
+
+test('an import revokes an in-flight page before saving and blocks polling/concurrent imports until disk commits',async()=>{
+ for(const complete of [false,true]){
+  const {root,cache}=await cacheFixture();let releasePage,releaseImport,started=false,pages=0;
+  const gated={...cache,put:async(k,record)=>{if(record.source==='wegame'){started=true;await new Promise(resolve=>releaseImport=resolve);}return cache.put(k,record);}};
+  const collector=createChampionUsageCollector({cache:gated,champions:()=>heroes,request:async(_t,op)=>op==='own-summary-context'?{session,server:'KR',cacheKey:key}:(pages++,new Promise(resolve=>releasePage=resolve))}),transport={};
+  const scan=collector.observe(client,transport);while(!releasePage)await pause();const importing=collector.importUsage(imported);while(!started)await pause();
+  await assert.rejects(collector.importUsage(imported),/正在导入/);const polling=collector.observe(client,transport);releasePage(page(100,complete));await scan;assert.equal(pages,1);releaseImport();await Promise.all([importing,polling]);await cache.flush();
+  assert.deepEqual(collector.snapshot().usage,imported.usage);assert.deepEqual((await createChampionUsageCache({root})).get(key).usage,imported.usage);assert.equal(collector.snapshot().basis,'current-season-screenshot');
+ }
+});
+
+test('failed import preserves current/disk counts and permits a later successful import',async()=>{
+ const {root,cache}=await cacheFixture();let fail=true;
+ const wrapped={...cache,put:(k,record)=>record.source==='wegame'&&fail?Promise.reject(Error('PRIVATE path')):cache.put(k,record)};
+ const collector=createChampionUsageCollector({cache:wrapped,champions:()=>heroes,request:async(_t,op)=>op==='own-summary-context'?{session,server:'KR',cacheKey:key}:page(7,true)});await collector.observe(client,{});
+ await assert.rejects(collector.importUsage(imported),/原统计已保留/);assert.equal(collector.snapshot().usage.sampled,7);assert.equal((await createChampionUsageCache({root})).get(key).usage.sampled,7);assert.ok(!JSON.stringify(collector.snapshot()).includes('PRIVATE'));
+ fail=false;await collector.importUsage(imported);assert.deepEqual(collector.snapshot().usage,imported.usage);assert.deepEqual((await createChampionUsageCache({root})).get(key).usage,imported.usage);
 });

@@ -85,6 +85,7 @@ async function run(){
   await until(()=>js('document.querySelector(".champion-usage header small")?.textContent.includes("本地缓存")'),'Cached counts not shown');
   const value=await js('window.buddy.championUsage()');assert.equal(value.usage.sampled,18);assert.equal(value.basis,'current-season-screenshot');assert.equal(value.cached,true);assert.deepEqual(value.usage.counts,{Ahri:12,Ashe:6});
   await js('document.querySelector(".usage-details").open=true;true');assert.match(await js('document.querySelector(".usage-details").textContent'),/未收录英雄合计 15%/);await capture('usage-cache-'+cacheSmoke+'.png');
+  await js('(()=>{const slider=document.getElementById("familiarity-mass");slider.value="60";slider.dispatchEvent(new Event("input",{bubbles:true}));true;return true;})()');assert.match(await js('document.querySelector(".familiarity-control>small").textContent'),/未收录英雄合计 40%/);assert.equal(await js('document.querySelector(".familiarity-control output").value'),'60%');await js('(()=>{const slider=document.getElementById("familiarity-mass");slider.value="85";slider.dispatchEvent(new Event("input",{bubbles:true}));true;return true;})()');
   const persisted=JSON.parse(await fs.readFile(path.join(root,'champion-usage.json'),'utf8'));assert.equal(persisted.entries.length,1);assert.ok(!/puuid|fixture-|gameId|password|session/.test(JSON.stringify(persisted)));
   assert.ok(!JSON.stringify(JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8'))).includes('championUsage'));
   if(cacheSmoke==='restore'){
