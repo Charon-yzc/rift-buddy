@@ -36,5 +36,7 @@ export function canonicalRoomFamiliarity(value=[]){
  const seen=new Set();return value.map(member=>{
   if(typeof member?.member!=='string'||!member.member||member.member.length>96||seen.has(member.member))throw Error('房间英雄统计成员重复或不正确');seen.add(member.member);
   const clean=cleanSharedChampionUsage({version:1,mass:member.mass,usage:member.usage});return {member:member.member,...clean};
- }).sort((a,b)=>a.member.localeCompare(b.member));
+ // A retry/status-only empty summary carries no preference. Older peers can
+ // alternate empty/null during maintenance; neither should invalidate results.
+ }).filter(member=>Object.keys(member.usage.counts).length).sort((a,b)=>a.member.localeCompare(b.member));
 }

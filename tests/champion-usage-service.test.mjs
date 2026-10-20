@@ -68,6 +68,14 @@ test('account switches and clear revoke in-flight counts without poisoning a rep
 test('summary context probes bypass discovery cache without reading histories or authentication tokens',async()=>{
  let discoveries=0;const f=fixture({discover:async()=>{discoveries++;return {port:23456,password:'synthetic',region:'KR'};}}),a=await f.service.execute('own-summary-context'),b=await f.service.execute('own-summary-context');assert.equal(a.session,b.session);assert.equal(a.server,'KR');assert.equal(discoveries,2);assert.equal(f.calls.every(c=>c.route.includes('current-summoner')),true);assert.equal(f.remoteCalls.length,0);
 });
+
+test('private cache identity is stable across credential/port/session changes and differs by actual player and region',async()=>{
+ let port=23456,password='synthetic',region='HN1';const discover=async()=>({port,password,region:'TENCENT',rsoPlatformId:region}),f=fixture({discover});
+ const first=await f.service.execute('own-summary-context');assert.match(first.cacheKey,/^[a-f0-9]{64}$/);assert.ok(!JSON.stringify(first).includes(own.puuid));
+ port=23457;password='replacement';const reconnect=await f.service.execute('own-summary-context');assert.notEqual(first.session,reconnect.session);assert.equal(first.cacheKey,reconnect.cacheKey);
+ assert.equal((await fixture({discover}).service.execute('own-summary-context')).cacheKey,first.cacheKey);f.account(other);assert.notEqual((await f.service.execute('own-summary-context')).cacheKey,first.cacheKey);f.account(own);region='HN10';assert.notEqual((await f.service.execute('own-summary-context')).cacheKey,first.cacheKey);
+ assert.equal((await fixture().service.execute('own-summary-context')).cacheKey,'','Unknown regions cannot share a persistent key');
+});
 test('same PUUID changing region during a summary request rejects the old page before commit',async()=>{
  let region='HN10',release;const f=fixture({discover:async()=>({port:23456,password:'mock-secret',region:'TENCENT',rsoPlatformId:region}),sgp:()=>new Promise(resolve=>release=resolve)}),identity=await f.service.execute('own-summary-context'),old=f.service.execute('own-summary-page',{session:identity.session}),rejected=assert.rejects(old,/会话/);while(!release)await pause();region='HN1';release({games:[remote(1)]});await rejected;
  const next=await f.service.execute('own-summary-context');assert.notEqual(next.session,identity.session);assert.equal(next.server,'TENCENT_HN1');const before=f.remoteCalls.length;await assert.rejects(f.service.execute('own-summary-page',{session:identity.session}),/会话/);assert.equal(f.remoteCalls.length,before);
