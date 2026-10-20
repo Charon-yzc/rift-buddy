@@ -25,7 +25,7 @@ test('tank champion ranks a survival augment above a crit augment',()=>{
  const rows=ranked(hero('Malphite'),[1047,1041]);
  assert.equal(rows[0].id,1041);
  assert.equal(rows[0].top,true);
- assert.notEqual(rows.find(row=>row.id===1047).priority,'优先');
+ assert.equal(rows.find(row=>row.id===1047).priority,'备选');
 });
 
 test('reroll advice is positive only when every offered augment lacks a mechanical fit',()=>{
@@ -114,14 +114,17 @@ test('non-caster burn augment keeps its trigger check on an off-build',()=>{
  assert.ok(!row.cautions.some(text=>/暴击强化/.test(text)));
 });
 
-test('non-mage caster burn augment fits a sustained AP build',()=>{
- const row=ranked(hero('Lux'),[1092])[0];
- assert.equal(row.priority,'优先');
- assert.equal(row.top,true);
+test('non-burn non-mage caster burn augment fits a sustained AP build',()=>{
+ for(const id of ['Nami','Akali']){
+  const row=ranked(hero(id),[1092])[0];
+  assert.equal(row.priority,'次选');
+  assert.equal(row.top,false);
+  assert.ok(row.reasons.some(text=>/持续伤害可以暴击/.test(text)));
+ }
 });
 test('a defensive crit augment is not treated as a carry-only crit pick',()=>{
  const rows=ranked(hero('Malphite'),[1080]);
- assert.notEqual(rows[0].priority,'备选');
+ assert.equal(rows[0].priority,'次选');
  assert.ok(rows[0].reasons.some(text=>/减伤|防御/.test(text)));
 });
 
