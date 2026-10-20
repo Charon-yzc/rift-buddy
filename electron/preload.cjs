@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  deleteAppUpdate:()=>ipcRenderer.invoke('app-update-delete'),
  onAppUpdate:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('app-update-progress',listener);return()=>ipcRenderer.removeListener('app-update-progress',listener);},
  refreshRankings:source=>ipcRenderer.invoke('refresh-rankings',source),
+ nationalReference:input=>ipcRenderer.invoke('national-reference',input),
  catalogSource:url=>ipcRenderer.invoke('catalog-source',url),
  catalogCheck:()=>ipcRenderer.invoke('catalog-check'),
  catalogPreview:raw=>ipcRenderer.invoke('catalog-preview',raw),
