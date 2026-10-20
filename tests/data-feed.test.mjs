@@ -20,7 +20,7 @@ import {atomicJSON} from '../services/data.mjs';
 
 const seed=await loadServerSeed(path.resolve('data'));
 const pair=generateKeyPairSync('ed25519'),publicKey=pair.publicKey.export({type:'spki',format:'pem'}),keys={test:publicKey};
-const now=Date.parse('2026-10-14T20:00:00Z');
+const now=Math.max(...Object.values(seed.rankings.entries).map(r=>Date.parse(r.fetchedAt)))+3600000;
 function fixture(bundle=seed,sequence=now){
  const assets={},files={};
  for(const name of DATA_FEED_NAMES){const raw=Buffer.from(JSON.stringify(bundle[name])),bytes=gzipSync(raw),sha256=feedHash(bytes);assets[sha256]=bytes;files[name]={file:sha256+'.json.gz',sha256,bytes:bytes.length,rawBytes:raw.length,rawSha256:feedHash(raw)};}

@@ -15,7 +15,7 @@ export function createNationalReferenceController({request,getData,getGeneration
    try{
     const result=await request({...selected,force});if(generation!==getGeneration()||data.patch!==getData().patch)return;
     if(result.reference&&(!validNationalReference(result.reference,getData())||result.reference.key!==nationalKey(selected,getData())))throw Error('国服响应与当前筛选不一致');
-    entries.set(key,{reference:result.reference||null,pending:false,error:result.refreshError||''});
+    entries.set(key,{reference:result.reference||null,pending:false,error:result.refreshError||'',bundled:result.bundled===true});
    }catch(error){if(generation===getGeneration())entries.set(key,{...snapshot(selected),pending:false,error:String(error.message||'国服资料暂不可用')});}
    finally{pending.delete(key);if(generation===getGeneration())onChange();}
   })();pending.set(key,task);return task;

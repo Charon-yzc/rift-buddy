@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.19.1",
+  "version": "2026.10.20.1",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -3509,39 +3509,141 @@
         "稳定先手",
         "突进跟进"
       ],
-      "why": "泰坦硬控协助卡莎叠电浆，并提供大招接近目标的机会。",
-      "plan": "卡莎补刀；控制命中后跟进，确认落点安全再用 R。",
-      "risk": "R 飞太深会孤立自己，泰坦控制也有冷却。",
+      "why": "泰坦实际定身给卡莎叠电浆并制造跟普攻/W的窗口；卡莎R只用于安全接应，不承诺控制命中就必杀。",
+      "plan": "卡莎吃线与主要经济；泰坦错开Q、被动普攻和R，卡莎跟进补电浆，音管与鸟盾覆盖她的输出窗口。项目按近期作者内容与当前机制改编。",
+      "risk": "兵线会分摊卡莎Q和挡W，定住不等于孤立Q；黑盾/法术护盾、净化、反开和打野包夹都可破坏接力。E减速、W伤害、沉默不当作额外友军定身层。",
       "partners": [
         "Galio",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-20",
       "sources": [
         {
-          "name": "Riot · 卡莎技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Kaisa.json",
-          "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "name": "Demonsedge90 · Attack Damage / On-Hit（目录更新10/15）",
+          "url": "https://www.mobafire.com/league-of-legends/build/exploit-their-weaknesses-615677",
+          "kind": "作者攻略",
+          "checkedAt": "2026-10-20"
         },
         {
-          "name": "Riot · 诺提勒斯技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nautilus.json",
+          "name": "PykEugeo · 泰坦与卡莎分支（目录更新10/14）",
+          "url": "https://www.mobafire.com/league-of-legends/build/nautilus-support-the-unstoppable-anchor-of-the-team-639082",
+          "kind": "作者攻略",
+          "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "Riot · Kaisa 16.20.1",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Kaisa.json",
           "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "Riot · Nautilus 16.20.1",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Nautilus.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "16.20 装备条件与公式",
+          "url": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-20"
         }
       ],
       "loadouts": {
-        "bottom": "default",
-        "support": "default"
+        "bottom": "kaisa-naut-onhit",
+        "support": "naut-kaisa-engage"
       },
       "reviewBaseline": {
-        "champion:Kaisa": "c5aaf2939b58e718",
-        "champion:Nautilus": "89b73fd1b583624c"
+        "champion:Kaisa": "792e7d85c3acdc09",
+        "champion:Nautilus": "67da151a84906467",
+        "item:3087": "84e4dae75d4d4953",
+        "item:3124": "a5fa166d09295f8f",
+        "item:3302": "c3e9201cb2cb4ba1",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3115": "627135c117eaf20a",
+        "item:3089": "a8a9b060b253391c",
+        "item:1037": "87659086affe2008",
+        "rune:8008": "d8ed59948702367b",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9103": "7d88abbfc22dd0df",
+        "rune:8017": "50a79a13bce940f0",
+        "rune:8143": "c3f9de836bc96957",
+        "rune:8106": "bfb83fa22daf18de",
+        "item:2524": "94b653f97efb42b2",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3075": "6d456e96c01062c6",
+        "item:3067": "125eedc86e016adb",
+        "rune:8439": "b2c74fd18c4ad076",
+        "rune:8401": "0c0323486ace9a0c",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8306": "68d4bd3d69d9d19c",
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "early": "卡莎补刀，泰坦用草丛与走位争取控制入口；未赢兵线或大波敌兵时不强抢二；第一次回城按各自预算分购组件，先确认打野位置再压线。",
+      "window": "双方能跟进、控制入口不被兵线挡、敌方关键解控/保护已确认；六级后先确认电浆标记与R安全落点，飞行不等于脱离敌方反开范围。",
+      "economy": "卡莎保留补刀经济，泰坦走辅助任务并留视野；音管增益与鸟盾需保持实际友军范围，不以双方同时拥有整套装备为前提。",
+      "steps": [
+        "先确认兵线、打野和保护技能；贴身可普攻定身，远处Q需无遮挡。",
+        "泰坦将Q、被动普攻与R分开衔接；E用于减速，不虚算友军定身电浆。",
+        "卡莎在射程内普攻与W补层，Q尽量避开可分摊单位；R仅飞到能活着持续输出的落点。",
+        "泰坦音管接应、鸟盾挡爆发；没收掉就借控制撤回，不因一层标记追进多人。"
+      ],
+      "reviewSourceAnchors": {
+        "Kaisa": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "792e7d85c3acdc09",
+          "observedAt": "2026-10-19T05:15:33.398Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kaisa",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/kaisa/kaisa.bin.json",
+              "sha256": "afa45fece8ca5edb61d12432df11c5dfb2f6b08979daa35b05b193aa60ae85f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "e793368118ed867a"
+            }
+          }
+        },
+        "Nautilus": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "67da151a84906467",
+          "observedAt": "2026-10-19T05:15:33.484Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nautilus",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/nautilus/nautilus.bin.json",
+              "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "21ceeeee51e3b384"
+            }
+          }
+        }
+      }
     },
     {
       "id": "kaisa-alistar",
@@ -23865,6 +23967,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rakan.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot 26.20 · 发条球抵达前R判定修复",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
+          "kind": "补丁机制说明",
+          "checkedAt": "2026-10-20"
         }
       ],
       "reviewBaseline": {
@@ -30315,6 +30423,211 @@
           }
         }
       }
+    },
+    {
+      "id": "kaisa-naut-onhit",
+      "name": "卡莎 · 电浆跟进路线",
+      "champions": [
+        "Kaisa"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "onhit",
+      "items": [
+        3087,
+        3124,
+        3302
+      ],
+      "boots": 3006,
+      "late": [
+        3115,
+        3089
+      ],
+      "early": [
+        1037
+      ],
+      "runes": [
+        "kaisa-naut-onhit"
+      ],
+      "damage": "mixed",
+      "first": "QWE",
+      "priority": "QEW",
+      "skillOrder": "QWEQQRQEQEREEWWRWW",
+      "skillReason": "项目补全的主Q副E节点；作者公开可读技能格无法确认逐级选点，不署为作者原序列。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "why": "近期作者 AD / On-Hit 思路，项目按16.20取舍，非整套统计最优。多兰剑＋一药；首回城875金可十字镐，不足时短剑/长剑分购；电刀→鬼索→界弓，基础鞋按躲技能需求提前，攻速鞋尽量在核心成型前补齐。纳什后按伤害选帽子，怕突进用中娅或复活甲替换后期位；不可把所有备选同时购买。进化以游戏内属性门槛为准，不承诺某件或某分钟必进化。下路任务完成后鞋可移入独立栏，再考虑第六大件。原文电刀链与沉默叠电浆的概括不作组合前提。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-20",
+      "sources": [
+        {
+          "name": "Demonsedge90 · Attack Damage / On-Hit（目录更新10/15）",
+          "url": "https://www.mobafire.com/league-of-legends/build/exploit-their-weaknesses-615677",
+          "kind": "作者攻略",
+          "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "PykEugeo · 泰坦与卡莎分支（目录更新10/14）",
+          "url": "https://www.mobafire.com/league-of-legends/build/nautilus-support-the-unstoppable-anchor-of-the-team-639082",
+          "kind": "作者攻略",
+          "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "Riot · Kaisa 16.20.1",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Kaisa.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "16.20 装备条件与公式",
+          "url": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-20"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Kaisa": "792e7d85c3acdc09",
+        "item:3087": "84e4dae75d4d4953",
+        "item:3124": "a5fa166d09295f8f",
+        "item:3302": "c3e9201cb2cb4ba1",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3115": "627135c117eaf20a",
+        "item:3089": "a8a9b060b253391c",
+        "item:1037": "87659086affe2008",
+        "rune:8008": "d8ed59948702367b",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9103": "7d88abbfc22dd0df",
+        "rune:8017": "50a79a13bce940f0",
+        "rune:8143": "c3f9de836bc96957",
+        "rune:8106": "bfb83fa22daf18de"
+      },
+      "reviewSourceAnchors": {
+        "Kaisa": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "792e7d85c3acdc09",
+          "observedAt": "2026-10-19T05:15:33.398Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kaisa",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/kaisa/kaisa.bin.json",
+              "sha256": "afa45fece8ca5edb61d12432df11c5dfb2f6b08979daa35b05b193aa60ae85f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "e793368118ed867a"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "naut-kaisa-engage",
+      "name": "泰坦 · 音管接应卡莎",
+      "champions": [
+        "Nautilus"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "supportTank",
+      "items": [
+        2524,
+        3190,
+        3109
+      ],
+      "boots": 3047,
+      "late": [
+        3075
+      ],
+      "early": [
+        3067
+      ],
+      "runes": [
+        "naut-kaisa-engage"
+      ],
+      "first": "QWE",
+      "priority": "QWE",
+      "skillOrder": "QWEQQRQWQWRWWEEREE",
+      "skillReason": "项目补全主Q副W节点；一级Q无可靠命中条件可先W保命，再手动调整，不冒充作者逐级序列。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerDot"
+      ],
+      "why": "项目采用作者明确适配卡莎的班德尔音管分支，非页首原生质固定路线。辅助任务装由当前规则获得，出门药水；首回城800金可燃烧宝石，未够先红水晶400金，真眼另需75金；不照搬不服务本路线的月板甲。基础鞋按躲技能需求提前，普攻压力选铁板，法伤与可减免控制多改水银。音管→鸟盾→骑士之誓，绑定附近实际输出的卡莎；被迫承伤可先鸟盾。任务升级星界据守，保留视野位，后期反甲只应对能靠普攻触发的治疗；暴击/法伤压力分别用兰顿/败魔替换。音管减速也可触发，但E减速本身不给卡莎友军定身层。坚定提供当前双抗，不是旧韧性；护盾猛击不按旧版额外双抗计算。",
+      "patch": "16.20",
+      "reviewedAt": "2026-10-20",
+      "sources": [
+        {
+          "name": "PykEugeo · 泰坦与卡莎分支（目录更新10/14）",
+          "url": "https://www.mobafire.com/league-of-legends/build/nautilus-support-the-unstoppable-anchor-of-the-team-639082",
+          "kind": "作者攻略",
+          "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "Riot · Nautilus 16.20.1",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/champion/Nautilus.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "16.20 装备条件与公式",
+          "url": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-20"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Nautilus": "67da151a84906467",
+        "item:2524": "94b653f97efb42b2",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3075": "6d456e96c01062c6",
+        "item:3067": "125eedc86e016adb",
+        "rune:8439": "b2c74fd18c4ad076",
+        "rune:8401": "0c0323486ace9a0c",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8306": "68d4bd3d69d9d19c",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Nautilus": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "67da151a84906467",
+          "observedAt": "2026-10-19T05:15:33.484Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nautilus",
+            "patch": "16.20",
+            "version": "16.20.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.20/game/data/characters/nautilus/nautilus.bin.json",
+              "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "fingerprint": "21ceeeee51e3b384"
+            }
+          }
+        }
+      }
     }
   ],
   "runes": {
@@ -30714,6 +31027,44 @@
           5005,
           5008,
           5011
+        ]
+      }
+    },
+    "kaisa-naut-onhit": {
+      "name": "卡莎 · 友军定身后持续普攻",
+      "when": "作者 AD 页致命节奏方案；泰坦已制造可持续攻击窗口时跟进，副系猛然冲击需实际使用位移，R 不为触发符文而硬飞。",
+      "page": {
+        "primaryStyleId": 8000,
+        "subStyleId": 8100,
+        "selectedPerkIds": [
+          8008,
+          9111,
+          9103,
+          8017,
+          8143,
+          8106,
+          5005,
+          5008,
+          5001
+        ]
+      }
+    },
+    "naut-kaisa-engage": {
+      "name": "泰坦 · 先手接卡莎",
+      "when": "采用作者海克斯闪现页和页首攻速、双成长生命碎片；余震需定身，护盾猛击配合W后普攻，坚定按当前受控时双抗理解，不按旧韧性说明。",
+      "page": {
+        "primaryStyleId": 8400,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8439,
+          8401,
+          8473,
+          8242,
+          8306,
+          8347,
+          5005,
+          5001,
+          5001
         ]
       }
     }

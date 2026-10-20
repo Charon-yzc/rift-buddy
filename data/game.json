@@ -3,8 +3,8 @@
   "contentRevision": 8,
   "version": "16.20.1",
   "patch": "16.20",
-  "fetchedAt": "2026-10-07T10:31:36.651Z",
-  "checkedAt": "2026-10-11T09:33:41.917Z",
+  "fetchedAt": "2026-10-19T05:15:33.206Z",
+  "checkedAt": "2026-10-19T05:15:33.206Z",
   "sources": {
     "champions": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
     "items": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/item.json",
@@ -420,7 +420,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:12.586Z",
+        "observedAt": "2026-10-19T05:15:33.206Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/aatrox/aatrox.bin.json",
@@ -1392,7 +1392,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:12.610Z",
+        "observedAt": "2026-10-19T05:15:33.210Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ahri/ahri.bin.json",
@@ -2357,7 +2357,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:14.009Z",
+        "observedAt": "2026-10-19T05:15:33.212Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/akali/akali.bin.json",
@@ -3329,7 +3329,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:14.033Z",
+        "observedAt": "2026-10-19T05:15:33.277Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/akshan/akshan.bin.json",
@@ -4303,7 +4303,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:15.418Z",
+        "observedAt": "2026-10-19T05:15:33.292Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/alistar/alistar.bin.json",
@@ -5275,7 +5275,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:15.448Z",
+        "observedAt": "2026-10-19T05:15:33.293Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ambessa/ambessa.bin.json",
@@ -6251,7 +6251,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:16.846Z",
+        "observedAt": "2026-10-19T05:15:33.377Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/amumu/amumu.bin.json",
@@ -7218,7 +7218,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:16.885Z",
+        "observedAt": "2026-10-19T05:15:33.378Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/anivia/anivia.bin.json",
@@ -8192,7 +8192,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:18.263Z",
+        "observedAt": "2026-10-19T05:15:33.378Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/annie/annie.bin.json",
@@ -9203,7 +9203,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:18.307Z",
+        "observedAt": "2026-10-19T05:15:33.379Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/aphelios/aphelios.bin.json",
@@ -10194,7 +10194,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:19.680Z",
+        "observedAt": "2026-10-19T05:15:33.379Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ashe/ashe.bin.json",
@@ -11161,7 +11161,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:19.730Z",
+        "observedAt": "2026-10-19T05:15:33.380Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/aurelionsol/aurelionsol.bin.json",
@@ -12135,7 +12135,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:21.108Z",
+        "observedAt": "2026-10-19T05:15:33.380Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/aurora/aurora.bin.json",
@@ -13105,7 +13105,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:21.154Z",
+        "observedAt": "2026-10-19T05:15:33.380Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/azir/azir.bin.json",
@@ -14083,7 +14083,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:22.523Z",
+        "observedAt": "2026-10-19T05:15:33.381Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/bard/bard.bin.json",
@@ -15050,7 +15050,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:22.566Z",
+        "observedAt": "2026-10-19T05:15:33.381Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/belveth/belveth.bin.json",
@@ -16032,7 +16032,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:23.941Z",
+        "observedAt": "2026-10-19T05:15:33.381Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/blitzcrank/blitzcrank.bin.json",
@@ -17000,7 +17000,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:24.001Z",
+        "observedAt": "2026-10-19T05:15:33.382Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/brand/brand.bin.json",
@@ -17970,7 +17970,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:25.367Z",
+        "observedAt": "2026-10-19T05:15:33.382Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/braum/braum.bin.json",
@@ -18946,7 +18946,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:25.412Z",
+        "observedAt": "2026-10-19T05:15:33.383Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/briar/briar.bin.json",
@@ -19927,7 +19927,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:26.782Z",
+        "observedAt": "2026-10-19T05:15:33.383Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/caitlyn/caitlyn.bin.json",
@@ -20899,7 +20899,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:26.848Z",
+        "observedAt": "2026-10-19T05:15:33.383Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/camille/camille.bin.json",
@@ -21874,7 +21874,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:28.201Z",
+        "observedAt": "2026-10-19T05:15:33.384Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/cassiopeia/cassiopeia.bin.json",
@@ -22846,7 +22846,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:28.264Z",
+        "observedAt": "2026-10-19T05:15:33.384Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/chogath/chogath.bin.json",
@@ -23824,7 +23824,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:29.612Z",
+        "observedAt": "2026-10-19T05:15:33.384Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/corki/corki.bin.json",
@@ -24794,7 +24794,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:29.672Z",
+        "observedAt": "2026-10-19T05:15:33.385Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/darius/darius.bin.json",
@@ -25764,7 +25764,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:31.029Z",
+        "observedAt": "2026-10-19T05:15:33.385Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/diana/diana.bin.json",
@@ -26737,7 +26737,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:31.120Z",
+        "observedAt": "2026-10-19T05:15:33.385Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/draven/draven.bin.json",
@@ -27711,7 +27711,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:32.445Z",
+        "observedAt": "2026-10-19T05:15:33.385Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/drmundo/drmundo.bin.json",
@@ -28689,7 +28689,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:32.527Z",
+        "observedAt": "2026-10-19T05:15:33.386Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ekko/ekko.bin.json",
@@ -29679,7 +29679,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:33.860Z",
+        "observedAt": "2026-10-19T05:15:33.386Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/elise/elise.bin.json",
@@ -30672,7 +30672,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:33.936Z",
+        "observedAt": "2026-10-19T05:15:33.386Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/evelynn/evelynn.bin.json",
@@ -31654,7 +31654,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:35.281Z",
+        "observedAt": "2026-10-19T05:15:33.387Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ezreal/ezreal.bin.json",
@@ -32622,7 +32622,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:35.347Z",
+        "observedAt": "2026-10-19T05:15:33.387Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/fiddlesticks/fiddlesticks.bin.json",
@@ -33598,7 +33598,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:36.692Z",
+        "observedAt": "2026-10-19T05:15:33.387Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/fiora/fiora.bin.json",
@@ -34570,7 +34570,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:36.773Z",
+        "observedAt": "2026-10-19T05:15:33.388Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/fizz/fizz.bin.json",
@@ -35552,7 +35552,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:38.102Z",
+        "observedAt": "2026-10-19T05:15:33.388Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/galio/galio.bin.json",
@@ -36527,7 +36527,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:38.178Z",
+        "observedAt": "2026-10-19T05:15:33.392Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/gangplank/gangplank.bin.json",
@@ -37503,7 +37503,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:39.507Z",
+        "observedAt": "2026-10-19T05:15:33.392Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/garen/garen.bin.json",
@@ -38475,7 +38475,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:39.611Z",
+        "observedAt": "2026-10-19T05:15:33.393Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/gnar/gnar.bin.json",
@@ -39457,7 +39457,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:40.926Z",
+        "observedAt": "2026-10-19T05:15:33.393Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/gragas/gragas.bin.json",
@@ -40424,7 +40424,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:41.022Z",
+        "observedAt": "2026-10-19T05:15:33.393Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/graves/graves.bin.json",
@@ -41399,7 +41399,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:42.334Z",
+        "observedAt": "2026-10-19T05:15:33.393Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/gwen/gwen.bin.json",
@@ -42371,7 +42371,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:42.452Z",
+        "observedAt": "2026-10-19T05:15:33.394Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/hecarim/hecarim.bin.json",
@@ -43343,7 +43343,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:43.755Z",
+        "observedAt": "2026-10-19T05:15:33.394Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/heimerdinger/heimerdinger.bin.json",
@@ -44317,7 +44317,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:43.869Z",
+        "observedAt": "2026-10-19T05:15:33.395Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/hwei/hwei.bin.json",
@@ -45319,7 +45319,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:45.170Z",
+        "observedAt": "2026-10-19T05:15:33.395Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/illaoi/illaoi.bin.json",
@@ -46289,7 +46289,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:45.292Z",
+        "observedAt": "2026-10-19T05:15:33.395Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/irelia/irelia.bin.json",
@@ -47261,7 +47261,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:46.591Z",
+        "observedAt": "2026-10-19T05:15:33.396Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ivern/ivern.bin.json",
@@ -48237,7 +48237,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:46.715Z",
+        "observedAt": "2026-10-19T05:15:33.396Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/janna/janna.bin.json",
@@ -49215,7 +49215,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:48.003Z",
+        "observedAt": "2026-10-19T05:15:33.396Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/jarvaniv/jarvaniv.bin.json",
@@ -50188,7 +50188,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:48.126Z",
+        "observedAt": "2026-10-19T05:15:33.396Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/jax/jax.bin.json",
@@ -51178,7 +51178,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:49.413Z",
+        "observedAt": "2026-10-19T05:15:33.397Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/jayce/jayce.bin.json",
@@ -52151,7 +52151,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:49.529Z",
+        "observedAt": "2026-10-19T05:15:33.397Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/jhin/jhin.bin.json",
@@ -53122,7 +53122,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:50.835Z",
+        "observedAt": "2026-10-19T05:15:33.397Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/jinx/jinx.bin.json",
@@ -54096,7 +54096,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:50.942Z",
+        "observedAt": "2026-10-19T05:15:33.398Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kaisa/kaisa.bin.json",
@@ -55069,7 +55069,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:52.251Z",
+        "observedAt": "2026-10-19T05:15:33.399Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kalista/kalista.bin.json",
@@ -56057,7 +56057,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:52.363Z",
+        "observedAt": "2026-10-19T05:15:33.399Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/karma/karma.bin.json",
@@ -57047,7 +57047,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:53.665Z",
+        "observedAt": "2026-10-19T05:15:33.399Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/karthus/karthus.bin.json",
@@ -58015,7 +58015,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:53.767Z",
+        "observedAt": "2026-10-19T05:15:33.400Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kassadin/kassadin.bin.json",
@@ -58993,7 +58993,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:55.078Z",
+        "observedAt": "2026-10-19T05:15:33.400Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/katarina/katarina.bin.json",
@@ -59961,7 +59961,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:55.183Z",
+        "observedAt": "2026-10-19T05:15:33.400Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kayle/kayle.bin.json",
@@ -60939,7 +60939,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:56.502Z",
+        "observedAt": "2026-10-19T05:15:33.400Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kayn/kayn.bin.json",
@@ -61910,7 +61910,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:56.600Z",
+        "observedAt": "2026-10-19T05:15:33.401Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kennen/kennen.bin.json",
@@ -62885,7 +62885,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:57.914Z",
+        "observedAt": "2026-10-19T05:15:33.401Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/khazix/khazix.bin.json",
@@ -63850,7 +63850,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:58.042Z",
+        "observedAt": "2026-10-19T05:15:33.401Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kindred/kindred.bin.json",
@@ -64815,7 +64815,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:59.320Z",
+        "observedAt": "2026-10-19T05:15:33.402Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kled/kled.bin.json",
@@ -65791,7 +65791,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:14:59.475Z",
+        "observedAt": "2026-10-19T05:15:33.402Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/kogmaw/kogmaw.bin.json",
@@ -66765,7 +66765,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:00.751Z",
+        "observedAt": "2026-10-19T05:15:33.403Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ksante/ksante.bin.json",
@@ -67737,7 +67737,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:00.883Z",
+        "observedAt": "2026-10-19T05:15:33.403Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/leblanc/leblanc.bin.json",
@@ -68711,7 +68711,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:02.181Z",
+        "observedAt": "2026-10-19T05:15:33.403Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/leesin/leesin.bin.json",
@@ -69683,7 +69683,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:02.301Z",
+        "observedAt": "2026-10-19T05:15:33.404Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/leona/leona.bin.json",
@@ -70655,7 +70655,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:03.601Z",
+        "observedAt": "2026-10-19T05:15:33.404Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/lillia/lillia.bin.json",
@@ -71626,7 +71626,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:03.729Z",
+        "observedAt": "2026-10-19T05:15:33.477Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/lissandra/lissandra.bin.json",
@@ -72604,7 +72604,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:05.013Z",
+        "observedAt": "2026-10-19T05:15:33.477Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/locke/locke.bin.json",
@@ -73578,7 +73578,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:05.150Z",
+        "observedAt": "2026-10-19T05:15:33.478Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/lucian/lucian.bin.json",
@@ -74548,7 +74548,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:06.419Z",
+        "observedAt": "2026-10-19T05:15:33.478Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/lulu/lulu.bin.json",
@@ -75522,7 +75522,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:06.555Z",
+        "observedAt": "2026-10-19T05:15:33.478Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/lux/lux.bin.json",
@@ -76492,7 +76492,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:07.827Z",
+        "observedAt": "2026-10-19T05:15:33.479Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/malphite/malphite.bin.json",
@@ -77467,7 +77467,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:07.982Z",
+        "observedAt": "2026-10-19T05:15:33.479Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/malzahar/malzahar.bin.json",
@@ -78441,7 +78441,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:09.252Z",
+        "observedAt": "2026-10-19T05:15:33.479Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/maokai/maokai.bin.json",
@@ -79419,7 +79419,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:09.397Z",
+        "observedAt": "2026-10-19T05:15:33.480Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/masteryi/masteryi.bin.json",
@@ -80387,7 +80387,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:10.666Z",
+        "observedAt": "2026-10-19T05:15:33.480Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/mel/mel.bin.json",
@@ -81373,7 +81373,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:10.810Z",
+        "observedAt": "2026-10-19T05:15:33.480Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/milio/milio.bin.json",
@@ -82349,7 +82349,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:12.081Z",
+        "observedAt": "2026-10-19T05:15:33.481Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/missfortune/missfortune.bin.json",
@@ -83317,7 +83317,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:12.215Z",
+        "observedAt": "2026-10-19T05:15:33.481Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/monkeyking/monkeyking.bin.json",
@@ -84293,7 +84293,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:13.509Z",
+        "observedAt": "2026-10-19T05:15:33.481Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/mordekaiser/mordekaiser.bin.json",
@@ -85261,7 +85261,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:13.642Z",
+        "observedAt": "2026-10-19T05:15:33.483Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/morgana/morgana.bin.json",
@@ -86233,7 +86233,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:14.939Z",
+        "observedAt": "2026-10-19T05:15:33.483Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/naafiri/naafiri.bin.json",
@@ -87211,7 +87211,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:15.065Z",
+        "observedAt": "2026-10-19T05:15:33.484Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/nami/nami.bin.json",
@@ -88181,7 +88181,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:16.347Z",
+        "observedAt": "2026-10-19T05:15:33.484Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/nasus/nasus.bin.json",
@@ -89155,7 +89155,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:16.478Z",
+        "observedAt": "2026-10-19T05:15:33.484Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/nautilus/nautilus.bin.json",
@@ -90133,7 +90133,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:17.755Z",
+        "observedAt": "2026-10-19T05:15:33.485Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/neeko/neeko.bin.json",
@@ -91127,7 +91127,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:17.915Z",
+        "observedAt": "2026-10-19T05:15:33.485Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/nidalee/nidalee.bin.json",
@@ -92118,7 +92118,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:19.166Z",
+        "observedAt": "2026-10-19T05:15:33.485Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/nilah/nilah.bin.json",
@@ -93086,7 +93086,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:19.330Z",
+        "observedAt": "2026-10-19T05:15:33.485Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/nocturne/nocturne.bin.json",
@@ -94062,7 +94062,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:20.585Z",
+        "observedAt": "2026-10-19T05:15:33.486Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/nunu/nunu.bin.json",
@@ -95038,7 +95038,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:20.743Z",
+        "observedAt": "2026-10-19T05:15:33.486Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/olaf/olaf.bin.json",
@@ -96014,7 +96014,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:21.995Z",
+        "observedAt": "2026-10-19T05:15:33.486Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/orianna/orianna.bin.json",
@@ -96987,7 +96987,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:22.153Z",
+        "observedAt": "2026-10-19T05:15:33.487Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ornn/ornn.bin.json",
@@ -97963,7 +97963,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:23.420Z",
+        "observedAt": "2026-10-19T05:15:33.487Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/pantheon/pantheon.bin.json",
@@ -98933,7 +98933,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:23.567Z",
+        "observedAt": "2026-10-19T05:15:33.487Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/poppy/poppy.bin.json",
@@ -99911,7 +99911,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:24.844Z",
+        "observedAt": "2026-10-19T05:15:33.488Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/pyke/pyke.bin.json",
@@ -100874,7 +100874,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:24.975Z",
+        "observedAt": "2026-10-19T05:15:33.488Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/qiyana/qiyana.bin.json",
@@ -101844,7 +101844,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:26.256Z",
+        "observedAt": "2026-10-19T05:15:33.488Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/quinn/quinn.bin.json",
@@ -102817,7 +102817,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:26.394Z",
+        "observedAt": "2026-10-19T05:15:33.489Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/rakan/rakan.bin.json",
@@ -103788,7 +103788,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:27.667Z",
+        "observedAt": "2026-10-19T05:15:33.489Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/rammus/rammus.bin.json",
@@ -104762,7 +104762,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:27.806Z",
+        "observedAt": "2026-10-19T05:15:33.489Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/reksai/reksai.bin.json",
@@ -105738,7 +105738,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:29.077Z",
+        "observedAt": "2026-10-19T05:15:33.490Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/rell/rell.bin.json",
@@ -106708,7 +106708,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:29.216Z",
+        "observedAt": "2026-10-19T05:15:33.490Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/renata/renata.bin.json",
@@ -107678,7 +107678,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:30.496Z",
+        "observedAt": "2026-10-19T05:15:33.490Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/renekton/renekton.bin.json",
@@ -108656,7 +108656,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:30.631Z",
+        "observedAt": "2026-10-19T05:15:33.490Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/rengar/rengar.bin.json",
@@ -109628,7 +109628,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:31.902Z",
+        "observedAt": "2026-10-19T05:15:33.491Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/riven/riven.bin.json",
@@ -110596,7 +110596,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:32.039Z",
+        "observedAt": "2026-10-19T05:15:33.491Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/rumble/rumble.bin.json",
@@ -111565,7 +111565,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:33.304Z",
+        "observedAt": "2026-10-19T05:15:33.491Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ryze/ryze.bin.json",
@@ -112537,7 +112537,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:33.460Z",
+        "observedAt": "2026-10-19T05:15:33.492Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/samira/samira.bin.json",
@@ -113502,7 +113502,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:34.719Z",
+        "observedAt": "2026-10-19T05:15:33.492Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/sejuani/sejuani.bin.json",
@@ -114472,7 +114472,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:34.879Z",
+        "observedAt": "2026-10-19T05:15:33.492Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/senna/senna.bin.json",
@@ -115446,7 +115446,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:36.153Z",
+        "observedAt": "2026-10-19T05:15:33.493Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/seraphine/seraphine.bin.json",
@@ -116418,7 +116418,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:36.289Z",
+        "observedAt": "2026-10-19T05:15:33.493Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/sett/sett.bin.json",
@@ -117387,7 +117387,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:37.566Z",
+        "observedAt": "2026-10-19T05:15:33.493Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/shaco/shaco.bin.json",
@@ -118360,7 +118360,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:37.700Z",
+        "observedAt": "2026-10-19T05:15:33.494Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/shen/shen.bin.json",
@@ -119334,7 +119334,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:38.979Z",
+        "observedAt": "2026-10-19T05:15:33.494Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/shyvana/shyvana.bin.json",
@@ -120310,7 +120310,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:39.113Z",
+        "observedAt": "2026-10-19T05:15:33.494Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/singed/singed.bin.json",
@@ -121280,7 +121280,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:40.397Z",
+        "observedAt": "2026-10-19T05:15:33.495Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/sion/sion.bin.json",
@@ -122265,7 +122265,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:40.531Z",
+        "observedAt": "2026-10-19T05:15:33.495Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/sivir/sivir.bin.json",
@@ -123235,7 +123235,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:41.815Z",
+        "observedAt": "2026-10-19T05:15:33.495Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/skarner/skarner.bin.json",
@@ -124209,7 +124209,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:41.938Z",
+        "observedAt": "2026-10-19T05:15:33.495Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/smolder/smolder.bin.json",
@@ -125181,7 +125181,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:43.234Z",
+        "observedAt": "2026-10-19T05:15:33.496Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/sona/sona.bin.json",
@@ -126149,7 +126149,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:43.356Z",
+        "observedAt": "2026-10-19T05:15:33.496Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/soraka/soraka.bin.json",
@@ -127129,7 +127129,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:44.650Z",
+        "observedAt": "2026-10-19T05:15:33.496Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/swain/swain.bin.json",
@@ -128105,7 +128105,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:44.764Z",
+        "observedAt": "2026-10-19T05:15:33.497Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/sylas/sylas.bin.json",
@@ -129076,7 +129076,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:46.078Z",
+        "observedAt": "2026-10-19T05:15:33.497Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/syndra/syndra.bin.json",
@@ -130044,7 +130044,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:46.176Z",
+        "observedAt": "2026-10-19T05:15:33.497Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/tahmkench/tahmkench.bin.json",
@@ -131024,7 +131024,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:47.495Z",
+        "observedAt": "2026-10-19T05:15:33.498Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/taliyah/taliyah.bin.json",
@@ -131995,7 +131995,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:47.600Z",
+        "observedAt": "2026-10-19T05:15:33.498Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/talon/talon.bin.json",
@@ -132967,7 +132967,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:48.905Z",
+        "observedAt": "2026-10-19T05:15:33.498Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/taric/taric.bin.json",
@@ -133931,7 +133931,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:49.015Z",
+        "observedAt": "2026-10-19T05:15:33.501Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/teemo/teemo.bin.json",
@@ -134907,7 +134907,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:50.317Z",
+        "observedAt": "2026-10-19T05:15:33.501Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/thresh/thresh.bin.json",
@@ -135881,7 +135881,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:50.428Z",
+        "observedAt": "2026-10-19T05:15:33.502Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/tristana/tristana.bin.json",
@@ -136857,7 +136857,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:51.731Z",
+        "observedAt": "2026-10-19T05:15:33.502Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/trundle/trundle.bin.json",
@@ -137829,7 +137829,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:51.842Z",
+        "observedAt": "2026-10-19T05:15:33.502Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/tryndamere/tryndamere.bin.json",
@@ -138799,7 +138799,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:53.155Z",
+        "observedAt": "2026-10-19T05:15:33.503Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/twistedfate/twistedfate.bin.json",
@@ -139777,7 +139777,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:53.260Z",
+        "observedAt": "2026-10-19T05:15:33.503Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/twitch/twitch.bin.json",
@@ -140815,7 +140815,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:54.580Z",
+        "observedAt": "2026-10-19T05:15:33.503Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/udyr/udyr.bin.json",
@@ -141865,7 +141865,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:54.671Z",
+        "observedAt": "2026-10-19T05:15:33.503Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/urgot/urgot.bin.json",
@@ -142839,7 +142839,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:56.013Z",
+        "observedAt": "2026-10-19T05:15:33.504Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/varus/varus.bin.json",
@@ -143811,7 +143811,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:56.085Z",
+        "observedAt": "2026-10-19T05:15:33.504Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/vayne/vayne.bin.json",
@@ -144782,7 +144782,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:57.418Z",
+        "observedAt": "2026-10-19T05:15:33.504Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/veigar/veigar.bin.json",
@@ -145758,7 +145758,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:57.496Z",
+        "observedAt": "2026-10-19T05:15:33.505Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/velkoz/velkoz.bin.json",
@@ -146731,7 +146731,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:58.821Z",
+        "observedAt": "2026-10-19T05:15:33.505Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/vex/vex.bin.json",
@@ -147707,7 +147707,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:15:58.907Z",
+        "observedAt": "2026-10-19T05:15:33.505Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/vi/vi.bin.json",
@@ -148679,7 +148679,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:00.238Z",
+        "observedAt": "2026-10-19T05:15:33.506Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/viego/viego.bin.json",
@@ -149648,7 +149648,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:00.325Z",
+        "observedAt": "2026-10-19T05:15:33.506Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/viktor/viktor.bin.json",
@@ -150624,7 +150624,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:01.654Z",
+        "observedAt": "2026-10-19T05:15:33.506Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/vladimir/vladimir.bin.json",
@@ -151594,7 +151594,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:01.753Z",
+        "observedAt": "2026-10-19T05:15:33.506Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/volibear/volibear.bin.json",
@@ -152572,7 +152572,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:03.079Z",
+        "observedAt": "2026-10-19T05:15:33.507Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/warwick/warwick.bin.json",
@@ -153543,7 +153543,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:03.170Z",
+        "observedAt": "2026-10-19T05:15:33.507Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/xayah/xayah.bin.json",
@@ -154511,7 +154511,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:04.503Z",
+        "observedAt": "2026-10-19T05:15:33.507Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/xerath/xerath.bin.json",
@@ -155489,7 +155489,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:04.592Z",
+        "observedAt": "2026-10-19T05:15:33.508Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/xinzhao/xinzhao.bin.json",
@@ -156457,7 +156457,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:05.928Z",
+        "observedAt": "2026-10-19T05:15:33.508Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/yasuo/yasuo.bin.json",
@@ -157423,7 +157423,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:05.996Z",
+        "observedAt": "2026-10-19T05:15:33.508Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/yone/yone.bin.json",
@@ -158387,7 +158387,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:07.340Z",
+        "observedAt": "2026-10-19T05:15:33.509Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/yorick/yorick.bin.json",
@@ -159364,7 +159364,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:07.416Z",
+        "observedAt": "2026-10-19T05:15:33.509Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/yunara/yunara.bin.json",
@@ -160346,7 +160346,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:08.758Z",
+        "observedAt": "2026-10-19T05:15:33.509Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/yuumi/yuumi.bin.json",
@@ -161336,7 +161336,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:08.827Z",
+        "observedAt": "2026-10-19T05:15:33.510Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/zaahen/zaahen.bin.json",
@@ -162316,7 +162316,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:10.171Z",
+        "observedAt": "2026-10-19T05:15:33.510Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/zac/zac.bin.json",
@@ -163283,7 +163283,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:10.249Z",
+        "observedAt": "2026-10-19T05:15:33.510Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/zed/zed.bin.json",
@@ -164252,7 +164252,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:11.582Z",
+        "observedAt": "2026-10-19T05:15:33.510Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/zeri/zeri.bin.json",
@@ -165227,7 +165227,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:11.665Z",
+        "observedAt": "2026-10-19T05:15:33.511Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/ziggs/ziggs.bin.json",
@@ -166205,7 +166205,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:12.997Z",
+        "observedAt": "2026-10-19T05:15:33.511Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/zilean/zilean.bin.json",
@@ -167174,7 +167174,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:13.093Z",
+        "observedAt": "2026-10-19T05:15:33.511Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/zoe/zoe.bin.json",
@@ -168146,7 +168146,7 @@
         "patch": "16.20",
         "version": "16.20.1",
         "locale": "zh_CN",
-        "observedAt": "2026-10-18T23:16:14.407Z",
+        "observedAt": "2026-10-19T05:15:33.512Z",
         "character": {
           "algorithm": "canonical-json-sha256-v1",
           "url": "https://raw.communitydragon.org/16.20/game/data/characters/zyra/zyra.bin.json",
@@ -210011,5 +210011,6 @@
     }
   ],
   "itemTooltipRevision": 1,
-  "mechanicSourceRevision": 1
+  "mechanicSourceRevision": 1,
+  "contentCheckedAt": "2026-10-19T05:15:33.206Z"
 }
