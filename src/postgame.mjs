@@ -25,7 +25,7 @@ const BADGE_NAMES = {
 function renderItems(items = []) {
   const main = items.slice(0, 6);
   const trinket = items[6] || 0;
-  return `<div class="postgame-items">${main.map(id => id > 0 ? `<img class="postgame-item-icon" src="../data/images/item/${id}.png" alt="" onerror="this.style.visibility='hidden'">` : '<span class="postgame-empty-item"></span>').join('')}${trinket > 0 ? `<img class="postgame-item-icon trinket" src="../data/images/item/${id}.png" alt="" onerror="this.style.visibility='hidden'">` : '<span class="postgame-empty-item trinket"></span>'}</div>`;
+  return `<div class="postgame-items">${main.map(id => id > 0 ? `<img class="postgame-item-icon" src="../data/images/item/${id}.png" alt="" onerror="this.style.visibility='hidden'">` : '<span class="postgame-empty-item"></span>').join('')}${trinket > 0 ? `<img class="postgame-item-icon trinket" src="../data/images/item/${trinket}.png" alt="" onerror="this.style.visibility='hidden'">` : '<span class="postgame-empty-item trinket"></span>'}</div>`;
 }
 
 function renderPlayerRow(p, isWinTeam) {
@@ -33,15 +33,16 @@ function renderPlayerRow(p, isWinTeam) {
   const scoreClass = score >= 13.0 ? 'high' : score >= 10.0 ? 'mid' : 'low';
   const badges = (p.badges || []).slice(0, 3);
   const isSelf = !!p.isSelf;
+  const avatarKey = p.championKey || p.championId;
 
   return `<div class="postgame-player-row ${isSelf ? 'is-self' : ''}">
     <div class="postgame-avatar">
-      <img class="postgame-avatar-img" src="../data/images/champion/${e(p.championId)}.png" alt="" onerror="this.style.visibility='hidden'">
+      <img class="postgame-avatar-img" src="../data/images/champion/${e(avatarKey)}.png" alt="" onerror="this.style.visibility='hidden'">
       <span class="postgame-level">${p.level || 1}</span>
     </div>
     <div class="postgame-player-info">
       <div class="postgame-player-name-row">
-        <span class="postgame-player-name" title="${e(p.summonerName)}">${isSelf ? '你 (' + e(p.summonerName) + ')' : e(p.summonerName || '玩家')}</span>
+        <span class="postgame-player-name" title="${e(p.summonerName)}">${isSelf ? '你 (' + e(p.summonerName || p.championName) + ')' : e(p.summonerName || p.championName || '玩家')}</span>
         <span class="postgame-player-kda">${p.kills} / <em>${p.deaths}</em> / ${p.assists} · 参团 ${pct(p.killParticipation)}</span>
       </div>
       <div class="postgame-badge-cluster">

@@ -11,7 +11,7 @@ import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-elig
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 import {allowedHistoryRoute} from './match-history-routes.mjs';
-const GET_PATHS=new Set(['/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/data-store/v1/install-dir']);
+const GET_PATHS=new Set(['/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/lol-end-of-game/v1/eog-stats-block','/data-store/v1/install-dir']);
 const lcuAgent=new https.Agent({keepAlive:true,maxSockets:16,maxFreeSockets:8,timeout:10000,rejectUnauthorized:false});
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;

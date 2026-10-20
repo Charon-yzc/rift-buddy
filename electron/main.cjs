@@ -7,7 +7,7 @@ const {isDeepStrictEqual}=require('node:util');
 const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
-let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,latestHistoryTransport,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
+let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,latestHistoryTransport,postgame,lastHandledEogGameId=null,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
@@ -238,6 +238,9 @@ async function boot(){
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
  const placement=await import('../src/core/window-placement.mjs');
  companion=require('./client-companion.cjs')({root,getWindow:()=>win,showMain:showMainWindow,getClient:()=>latestClient,getPreferences:()=>state.preferences,savePlacement:patch=>saveCurrentState(current=>{const preferences={...current.preferences};for(const [key,value] of Object.entries(patch)){if(value===undefined)delete preferences[key];else preferences[key]=value;}return {...current,preferences};}),placement,diagnostic});
+ const createPostgameWindow=require('./postgame-window.cjs');
+ const {fetchPostGameReport}=await import('../services/post-game.mjs');
+ postgame=createPostgameWindow({root,onOpenHistory:gameId=>{showMainWindow();publishWindows('main-page',{route:'history',gameId});},diagnostic});
  // Optional rooms (CHA-31): invited peers share public draft/configuration
  // snapshots over LAN/VPN or their own trusted relay. Never logs credentials.
  const {createRoomService}=await import('../services/room.mjs');
@@ -619,6 +622,18 @@ async function boot(){
    companion.sync();
    if(inGame()&&!['GameStart','InProgress','Reconnect'].includes(previousPhase)){mainExplicitInGame=false;if(win){win.hide();mainRelease.request(win);}}
    else if(!inGame()){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
+   const isEogPhase=latestClient.connected&&['EndOfGame','WaitingForStats','PreEndOfGame'].includes(latestClient.phase);
+   const gameJustEnded=!inGame()&&['GameStart','InProgress','Reconnect'].includes(previousPhase);
+   if(state.preferences?.postGamePopup!==false&&(isEogPhase||gameJustEnded)){
+    fetchPostGameReport({installPath:state.preferences?.installPath,ownPuuid:latestClient.summoner?.puuid||latestClient.own?.puuid,champions:data?.champions||[]}).then(report=>{
+     if(report&&report.gameId&&report.gameId!==lastHandledEogGameId){
+      lastHandledEogGameId=report.gameId;
+      postgame?.show(report);
+     }
+    }).catch(error=>diagnostic(`post-game report failed ${error?.message||'unknown'}`));
+   }else if(latestClient.connected&&['ChampSelect','GameStart','InProgress'].includes(latestClient.phase)){
+    postgame?.hide();
+   }
    queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));setImmediate(()=>applyStagedSelection());return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
@@ -922,7 +937,7 @@ async function boot(){
 }
 if(lock)app.whenReady().then(boot).catch(error=>{diagnostic(`startup error ${error.message}`);dialog.showErrorBox('开黑搭子启动失败',error.message);app.quit();});
 app.on('window-all-closed',()=>{if(!tray||quitting)app.quit();});
-app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);roomUsagePublisher?.dispose();windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
+app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);roomUsagePublisher?.dispose();windowObserver?.stop();companion?.destroy();guide?.destroy();postgame?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
 app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
  event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;
