@@ -56,6 +56,23 @@ test('a local lane remains reserved before any own history is available, while a
  }
 });
 
+test('unavailable own history retry cycles do not change room recommendation inputs or restart the actual app worker',async()=>{
+ const source=fs.readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a))),f=binding();
+ let cancelled=0,queued=0;f.summary={revision:1,status:'error',session:'a'.repeat(32),usage:{sampled:0,counts:{}}};
+ const context=vm.createContext({data:{},client:f.client,room:f.room,championUsage:f.summary,saved:{preferences:{familiarityMass:.85}},history:{observeClient(){}},windowLayout:{docked:false},route:'draft',recommendationKey,
+  results:[{id:'existing'}],offset:0,generating:true,recommendationRun:0,autoRecommendationKey:'existing',activeRecommendation:{cancel(){cancelled++;}},cancelRecommendationReveal(){},clearTimeout,markResultStale(){},render(){},queueCompanionRecommendation(){queued++;},
+  recommendationInput(){return {slots:f.slots,...roomFamiliarityContext({...f,summary:context.championUsage})};}});
+ vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(){','\n'),context);
+ const before=recommendationKey(context.recommendationInput());
+ for(let n=2;n<12;n++){context.acceptChampionUsage({...f.summary,revision:n,status:n%2?'error':'loading',scanned:0,target:500,error:'后台维护'});assert.equal(recommendationKey(context.recommendationInput()),before);}
+ assert.equal(cancelled,0);assert.equal(queued,0);assert.equal(context.results[0].id,'existing');assert.equal(context.generating,true);
+ // A first real hero distribution must still invalidate the old recommendation.
+ context.acceptChampionUsage({...f.summary,revision:12,status:'ready',usage:usage({Ahri:10}).usage});assert.equal(cancelled,1);assert.equal(queued,1);assert.equal(context.results.length,0);
+ // Peers on older versions may still send empty summaries while retrying.
+ const peer=f.room.members[1];peer.share.championUsage=null;const absent=recommendationKey(context.recommendationInput());peer.share.championUsage=usage({});assert.equal(recommendationKey(context.recommendationInput()),absent);
+ for(const status of ['loading','ready','partial','error'])assert.equal(ownSharedChampionUsage({...f.summary,status},.85),null);
+});
+
 test('actual app room RPC and notifications clear changed candidates once and reject a late worker in either IPC order',async()=>{
  const source=fs.readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(a,b)=>{const from=source.indexOf(a),to=source.indexOf(b,from);assert.ok(from>=0&&to>from);return source.slice(from,to);};
  for(const change of ['counts','revoke','role','leave'])for(const notificationFirst of [false,true]){

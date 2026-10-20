@@ -9,6 +9,6 @@ export function cleanSharedChampionUsage(value){
  return {version:CHAMPION_USAGE_VERSION,mass:value.mass,usage:cleanChampionUsage(value.usage)};
 }
 export function ownSharedChampionUsage(summary,mass){
- if(!summary||!['loading','ready','partial'].includes(summary.status)||!(/^[a-f0-9]{32}$/).test(summary.session||''))return null;
+ if(!summary||!summary.usage?.sampled||!['loading','ready','partial'].includes(summary.status)||!(/^[a-f0-9]{32}$/).test(summary.session||''))return null;
  return cleanSharedChampionUsage({version:CHAMPION_USAGE_VERSION,mass:familiarMass(mass),usage:summary.usage});
 }

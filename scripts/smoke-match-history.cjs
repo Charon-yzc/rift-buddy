@@ -71,7 +71,15 @@ async function run(){
   await js('window.buddy.client(true)');await until(()=>js('window.buddy.championUsage().then(v=>v.session&&v.status!=="loading")'),'Account context was not confirmed');
   await until(()=>js('!!document.querySelector(".champion-usage")'),'Usage controls missing');
   if(cacheSmoke==='seed'){
-   await capture('usage-cache-before.png');require('electron').dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,'import-usage.json')]});
+   await capture('usage-cache-before.png');
+   await js('window.__usageRecommendationRuns=0;const originalPost=Worker.prototype.postMessage;Worker.prototype.postMessage=function(input,...rest){if(input?.input?.slots)window.__usageRecommendationRuns++;return originalPost.call(this,input,...rest);};true');
+   await js('window.buddy.roomRelay({url:"wss://room.riftbuddy.dpdns.org",room:"482913",pin:"123456"},"战绩测试玩家#TEST")');clientPhase='ChampSelect';await js('window.buddy.client(true)');await click('[data-action=navigate][data-route=draft]');
+   await until(()=>js('window.__usageRecommendationRuns>0&&!document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled'),'Initial recommendation did not finish');
+   const runs=await js('window.__usageRecommendationRuns');
+   for(let n=0;n<4;n++){await js('window.buddy.refreshChampionUsage()');await until(()=>js('window.buddy.championUsage().then(v=>v.status==="error")'),'Maintenance retry did not settle');await js('window.buddy.client(true)');await delay(350);}
+   assert.equal(await js('window.__usageRecommendationRuns'),runs,'Maintenance retries restarted the actual recommendation worker');await capture('usage-maintenance-stable-recommendation.png');
+   clientPhase='Lobby';await js('window.buddy.client(true)');await click('[data-action=navigate][data-route=history]');
+   require('electron').dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,'import-usage.json')]});
    await js('document.querySelector(".usage-details").open=true;true');await click('[data-action=champion-usage-import]');
   }
   await until(()=>js('document.querySelector(".champion-usage header small")?.textContent.includes("本地缓存")'),'Cached counts not shown');
@@ -82,7 +90,7 @@ async function run(){
   if(cacheSmoke==='restore'){
    const prior=value.session;own.puuid='fixture-replacement-player';own.summonerId=21;await js('window.buddy.client(true)');await until(()=>js('window.buddy.championUsage().then(v=>v.session!=='+JSON.stringify(prior)+'&&v.status!=="loading"&&v.usage.sampled===0)'),'Another account inherited the cache');await capture('usage-cache-other-account.png');
   }
-  assert.equal(errors.length,0,errors.join('\n'));assert.equal(writes.length,0);await fs.writeFile(path.join(root,'cache-'+cacheSmoke+'-result.json'),JSON.stringify({packaged:!source,step:cacheSmoke,maintenance:true,importedOrRestored:18,separateCache:true,noRawMatches:true,accountIsolation:cacheSmoke==='restore'},null,2));app.quit();return;
+  assert.equal(errors.length,0,errors.join('\n'));assert.equal(writes.length,0);await fs.writeFile(path.join(root,'cache-'+cacheSmoke+'-result.json'),JSON.stringify({packaged:!source,step:cacheSmoke,maintenance:true,maintenanceNoRecalculation:cacheSmoke==='seed',importedOrRestored:18,separateCache:true,noRawMatches:true,accountIsolation:cacheSmoke==='restore'},null,2));app.quit();return;
  }
  if(usageSmoke){
   await js('window.buddy.client(true)');
