@@ -1,5 +1,6 @@
 import {recommend,replaceMember} from './core/recommend.mjs';
-import {configureCatalog} from './core/catalog.mjs';
+import {configureCatalog,BUNDLED_CATALOG} from './core/catalog.mjs';
 self.onmessage=({data})=>{
- try{if(data.catalog)configureCatalog(data.catalog);self.postMessage({results:data.replace?replaceMember(data.replace.result,data.replace.role,data):recommend(data)});}catch(error){self.postMessage({error:error.message});}
+ const {requestId,input,initialize}=data;
+ try{if(initialize)configureCatalog(input.catalog||BUNDLED_CATALOG);self.postMessage({requestId,results:input.replace?replaceMember(input.replace.result,input.replace.role,input):recommend(input)});}catch(error){self.postMessage({requestId,error:error.message});}
 };

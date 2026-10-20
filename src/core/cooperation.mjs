@@ -58,11 +58,11 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
  const reviews=new Map(),isCurrent=id=>{if(!reviews.has(id))reviews.set(id,mechanicReview(byId.get(id),currentPatch));return reviews.get(id)==='current';};
  const prof=m=>{const k=key(m);if(!profiles.has(k)){const value=profile(byId.get(m.champion),m.role);profiles.set(k,{...value,reviewed:value.reviewed&&isCurrent(m.champion),reviewState:reviews.get(m.champion)});}return profiles.get(k);};
  const edge=(a,b)=>{
+  const ak=key(a),bk=key(b),known=cache.get(ak);if(known?.has(bk))return known.get(bk);
   if(a.champion===b.champion||!byId.has(a.champion)||!byId.has(b.champion))return null;
   // An undirected lookup must not let its first caller choose the saved
   // family/third-member anchor. Authored a->b skill direction stays intact.
   if((roleOrder[a.role]??5)>(roleOrder[b.role]??5)||(roleOrder[a.role]??5)===(roleOrder[b.role]??5)&&key(a)>key(b))[a,b]=[b,a];
-  const k=[key(a),key(b)].sort().join('|');if(cache.has(k))return cache.get(k);
   let found=null;
   const reviewedPair=pairs.get(pairKey(a.champion,b.champion));
   if(reviewedPair&&prof(a).reviewed&&prof(b).reviewed){
@@ -75,7 +75,10 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
    if(!owner||!prof(owner).reviewed||!prof(ally).reviewed||!family.accept(byId.get(ally.champion),prof(ally)))continue;
    const c=byId.get(ally.champion);found={id:family.id+':'+pairKey(a.champion,b.champion),family:family.id,name:family.name,a:a.champion,b:b.champion,step:family.step(c.name,c),condition:family.condition,failure:family.failure,patch:COOPERATION_PATCH,reviewedAt:COOPERATION_REVIEWED_AT,current:true,tempo:family.tempo,alreadyLinked:legacy.has(pairKey(a.champion,b.champion)),sourceUrls:[family.owner,ally.champion].map(id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`)};break;
   }
-  found||=legacy.get(pairKey(a.champion,b.champion))||null;cache.set(k,found);return found;
+  found||=legacy.get(pairKey(a.champion,b.champion))||null;
+  // Cache both directions before canonicalization on the next lookup. Search
+  // revisits the same role/hero pairs; keep this cache inside this one graph.
+  if(!cache.has(ak))cache.set(ak,new Map());if(!cache.has(bk))cache.set(bk,new Map());cache.get(ak).set(bk,found);cache.get(bk).set(ak,found);return found;
  };
  return {edge,profile:prof,byId,skills:createSkillCooperation(byId,{isCurrent}),fitCache:new Map()};
 }

@@ -12,6 +12,7 @@ import {createDisclosureState} from './disclosure-state.mjs';
 import {pregameControls} from './pregame-controls-view.mjs';
 import {rankedDraftPolicy,selectionReferenceScope} from './core/ranked-draft.mjs';
 import {resolvedRankedDraft,enemyRolesSignature} from './core/enemy-roles.mjs';
+import {createRecommendationRunner} from './recommendation-runner.mjs';
 let enemyRolePending=false;
 import {rankedRefreshTargets} from './core/ranked-refresh.mjs';
 import {rankedConfigurationAdvice,adoptRankedConfigurationAdvice} from './core/ranked-configuration.mjs';
@@ -1325,14 +1326,11 @@ function useCatalogResult(result){cancelRecommendation();data.catalog=configureC
 function rolePoolsDialog(){closeOverlay();overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="各位置英雄池"><header class="modal-header"><div><h2>各位置英雄池</h2><p>只限制本次需要推荐的位置，保留已经锁定的英雄。</p></div>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="panel-body">${ROLES.map(r=>`<div class="setting-row"><div><b>${r.name}</b><p>${saved.preferences.rolePools[r.id].heroes.map(id=>champ(id)?.name||id).join('、')||'未设置英雄池'}</p></div><select class="select" data-role-pool-mode="${r.id}" aria-label="${r.name}英雄池模式">${[['off','全部英雄'],['prefer','优先这个池'],['only','仅使用这个池']].map(([id,name])=>`<option value="${id}" ${saved.preferences.rolePools[r.id].mode===id?'selected':''}>${name}</option>`).join('')}</select>${button('role-pool-edit','选英雄','','small',`data-role="${r.id}"`)}</div>`).join('')}<p class="bottom-note">与全局英雄池同时限制时取交集；空池设为“仅使用”会提示你调整。</p></div></section></div>`;}
 function showAugment(id){const a=data.augments.find(x=>x.id===id);if(!a)return;picker=null;buildView=null;detailResult=null;overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal" style="width:530px" role="dialog" aria-modal="true" aria-label="强化详情"><header class="modal-header"><div class="augment-title">${asset('augment',a.id,a.name)}<div><h2>${e(a.name)}</h2><span class="rarity-${a.rarity}">${rarityName[a.rarity]}</span></div></div>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="panel-body"><p class="section-copy" style="white-space:pre-line">${e(a.description||'已确认收录于当前海克斯大乱斗模式清单。详细效果尚未补充，以游戏内说明为准。')}</p>${a.descriptionStatus==='partial'?'<div class="callout warning">“适用技能”与“动态数值”取决于英雄和局内条件，请看游戏里的具体技能及数值。</div>':''}<div class="callout">资料 ${e(data.augmentVersion||data.version)}。可出现的强化还可能受英雄、已选强化与热更新影响。</div><div class="detail-actions">${button('compare-augment',hexOptions.includes(id)?'移出本次比较':'加入本次比较','hex','',`data-id="${id}"`)}${button('own-augment',hexOwned.includes(id)?'本局已选':'标记本局已选','check','',`data-id="${id}" ${hexOwned.includes(id)?'disabled':''}`)}</div>${button('toggle-augment',hexSelected.includes(id)?'移出我的备选':'加入我的备选',hexSelected.includes(id)?'close':'check','primary',`data-id="${id}"`)}</div></section></div>`;}
 
+const recommendationRunner=createRecommendationRunner(()=>new Worker(new URL('./recommend-worker.mjs',import.meta.url),{type:'module'}));
+window.addEventListener('pagehide',()=>recommendationRunner.dispose());
 function calculateRecommendation(input){
- return new Promise((resolve,reject)=>{
-  const worker=new Worker(new URL('./recommend-worker.mjs',import.meta.url),{type:'module'});
-  const task={cancel:()=>{worker.terminate();reject(Object.assign(Error('条件已变化'),{cancelled:true}));}};activeRecommendation=task;
-  const finish=()=>{worker.terminate();if(activeRecommendation===task)activeRecommendation=null;};
-  worker.onmessage=({data})=>{finish();data.error?reject(Error(data.error)):resolve(data.results);};
-  worker.onerror=()=>{finish();reject(Error('搭配计算未完成，请重试'));};worker.postMessage(input);
- });
+ const task=recommendationRunner.run(input);activeRecommendation=task;
+ return task.promise.finally(()=>{if(activeRecommendation===task)activeRecommendation=null;});
 }
 async function generate(next=false){
  if(generating)return;clearTimeout(autoRecommendTimer);autoRecommendTimer=null;cancelRecommendationReveal();recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();

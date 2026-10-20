@@ -119,12 +119,12 @@ async function run(){
  await until(()=>js('document.querySelector("#toast").classList.contains("error")'),'Expected replacement failure missing');
  assert.deepEqual(await members(),before);await until(()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false'),'Replacement failure left recommendation pending');assert.equal(await js('document.querySelector("[data-action=use-result]").disabled'),false);
  await click('[data-action=close]');
- await js('window.testOriginalWorker=window.Worker;window.Worker=class extends window.testOriginalWorker{postMessage(...args){setTimeout(()=>super.postMessage(...args),350);}};true');
+ await js('window.testOriginalWorkerPost=Worker.prototype.postMessage;Worker.prototype.postMessage=function(...args){setTimeout(()=>window.testOriginalWorkerPost.apply(this,args),350);};true');
  await click('[data-action=recommend]');assert.equal(await js('document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),true);
  await click('[data-action=exclusions]');await click('[data-action=pick-champion][data-id=Ashe]');await delay(700);
  await until(()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false'),'Updated exclusions left recommendation pending');
  assert.equal(await js('document.querySelectorAll(".result-card").length'),0,'Preference change allowed obsolete results after the only available champion was excluded');
- await js('window.Worker=window.testOriginalWorker;delete window.testOriginalWorker');await click('[data-action=close]');
+ await js('Worker.prototype.postMessage=window.testOriginalWorkerPost;true');await click('[data-action=close]');
  const bootstrapData=(await js('window.buddy.bootstrap()')).data,champion=bootstrapData.champions.find(c=>c.id==='Garen');
  let publicFixture={connected:true,phase:'ChampSelect',message:'测试公开选人',mode:{id:'rift',label:'峡谷'},game:{gameId:'6601'},session:{gameId:'6601',localPlayerCellId:1,myTeam:[{cellId:1,championId:champion.key,assignedPosition:'TOP',championPickIntent:0}],theirTeam:[],bans:[],actions:[[{id:4,type:'pick',actorCellId:1,championId:champion.key,completed:false,isInProgress:true}]]}};
  const prepares=[];let publicReads=0;ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>{publicReads++;return structuredClone(publicFixture);});
