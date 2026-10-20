@@ -5,6 +5,7 @@ import {createSlots,mergeClientSession,recommend} from '../src/core/recommend.mj
 import {lineupFit,roomBallotBoard} from '../src/core/room-ballot.mjs';
 import {clientContextDraft} from '../src/core/client-context-draft.mjs';
 import {recommendationDraft} from '../src/core/draft-intents.mjs';
+import {sanitizeSession} from '../services/lcu.mjs';
 
 const {champions}=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 const key=id=>champions.find(c=>c.id===id).key;
@@ -13,6 +14,23 @@ const saved=(champion='Nami',role='support')=>createSlots().map(s=>({...s,party:
 const merge=(slots,clientSession)=>mergeClientSession(slots,clientSession,champions,{autoParty:true,party:{status:'known',lobbyCount:1,members:[{cellId:3,local:true}]}}).slots;
 const input=(slots,clientSession,extra={})=>({slots,clientSession,champions,scope:'party',pool:['Ashe','Jinx','Kaisa'],poolMode:'only',limit:3,...extra});
 const ranked=results=>results.map(r=>[r.slots.find(s=>s.party).champion,r.score,r.compositionFit.score,r.analysis.members.map(m=>[m.role,m.champion])]);
+
+test('whole-team displayed fit preserves explicit locks and labels actionless public references without promoting intents',()=>{
+ const ids=['Garen','Amumu','TwistedFate','Ashe',null],positions=['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'];
+ const raw={localPlayerCellId:4,myTeam:ids.map((id,cellId)=>({cellId,assignedPosition:positions[cellId],championId:id?key(id):0})),actions:[]};
+ const visible=createSlots().map((s,i)=>({...s,champion:ids[i],party:s.role==='support',clientCellId:i})),candidate=visible.map(s=>({...s,champion:s.role==='support'?'Pyke':null}));
+ const get=value=>lineupFit(candidate,visible,champions,{scope:'context',soloRole:'support',clientSession:sanitizeSession(value)}),before=structuredClone({raw,visible,candidate});
+ const unconfirmed=get(raw);assert.equal(unconfirmed.known,5);assert.equal(unconfirmed.referenceCount,4);assert.ok(Number.isFinite(unconfirmed.score));assert.match(unconfirmed.reason,/含 4 位未确认/);
+ const locked=structuredClone(raw);locked.myTeam.slice(0,4).forEach(p=>p.pickState='locked');const confirmed=get(locked);assert.equal(confirmed.known,5);assert.equal(confirmed.referenceCount,0);assert.equal(confirmed.score,unconfirmed.score);
+ for(const kind of ['intent','unfinished']){
+  const value=structuredClone(raw);if(kind==='intent')value.myTeam.forEach(p=>{p.championPickIntent=p.championId;p.championId=0;});
+  else value.actions=value.myTeam.slice(0,4).map(p=>({type:'pick',actorCellId:p.cellId,championId:p.championId,completed:false}));
+  const fit=get(value);assert.equal(fit.referenceCount,0,kind);assert.equal(fit.score,null,kind);
+ }
+ const duplicate=candidate.map(s=>s.role==='support'?{...s,champion:'Garen'}:s),conflict=lineupFit(duplicate,visible,champions,{scope:'context',soloRole:'support',clientSession:sanitizeSession(raw)});assert.equal(conflict.compatible,false);assert.ok(conflict.score<=20);assert.equal(conflict.known,4,'The same hero must never count as two members');
+ const unknown=structuredClone(raw);unknown.myTeam.forEach(p=>p.assignedPosition='');const fit=get(unknown);assert.equal(fit.known,5);assert.ok(fit.gaps.some(text=>/分路未知/.test(text)));
+ assert.deepEqual({raw,visible,candidate},before);
+});
 
 test('blank public draft does not turn an unbound saved teammate into ranking or displayed fit evidence',()=>{
  const current=session(),slots=merge(saved(),current),before=structuredClone(slots),clean=merge(createSlots(),current);

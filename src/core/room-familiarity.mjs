@@ -11,9 +11,9 @@ export function roomFamiliarityContext({client,room,slots,scope,ownRole,summary,
  const ownCell=client?.session?.localPlayerCellId,reserved=new Set(scope==='solo'?roles:[...(roles.includes(ownRole)?[ownRole]:[]),...slots.filter(slot=>Number.isInteger(ownCell)&&slot.clientCellId===ownCell).map(slot=>slot.role)]);
  const joined=client?.connected&&room?.championUsage&&room.mode!=='idle'&&(room.transport!=='relay'||room.link==='connected');
  const roomIdentity=()=>joined?[room.transport,room.mode,room.relayUrl,room.host,room.port,room.room,room.members?.find(m=>m.self)?.nick]:null;
- const ownershipKey=()=>JSON.stringify([!!client?.connected,client?.selectionContext,client?.session?.gameId||client?.game?.gameId,summary?.session,ownCell,roomIdentity()]);
+ const ownershipKey=()=>JSON.stringify([!!client?.connected,client?.selectionContext,client?.session?.gameId||client?.game?.gameId,summary?.session,ownCell,client?.session?.myTeam?.filter(player=>player.cellId===ownCell).length,roomIdentity()]);
  const finish=()=>({familiarityByRole,roomFamiliarity:joined?members:[],validMembers,ownershipKey:ownershipKey(),bindingKey:JSON.stringify([
-  !!client?.connected,client?.selectionContext,client?.session?.gameId||client?.game?.gameId,summary?.session,ownCell,ownRole,mass,
+  ownershipKey(),ownRole,mass,
   slots.map(s=>[s.role,s.clientCellId,!!s.manualPosition]),
   joined?[roomIdentity(),client.party?.status,bindings]:null
  ])});

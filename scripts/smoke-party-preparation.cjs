@@ -152,7 +152,13 @@ async function run(){
    assert.equal(await js(side,'document.querySelector(".companion-candidates").textContent'),before,'Progress reordered visible candidates');assert.equal(await js(side,'document.querySelector(".companion-content").scrollTop'),scrollBefore,'Progress jumped scroll');await capture(side,'usage-after.png');
    await click(side,'[data-action=reroll]');await until(()=>js(side,'window.__usageRequests.length>'+initialRequests+'&&document.querySelector(".companion-candidates")?.getAttribute("aria-busy")==="false"'),'Explicit refresh busy');
    assert.deepEqual(await js(side,'window.__usageRequests.at(-1).roomFamiliarity.map(m=>m.usage.sampled)'),[500,500,500]);await capture(side,'usage-refreshed.png');
-   assert.equal(writes.length,0);assert.equal(attempts.length,0);console.log(JSON.stringify({passed:true,progressBatches:20,roomMembers:3,progressWorkerRuns:0,scrollBefore,scrollAfter:scrollBefore,explicitRefreshSamples:[500,500,500],clientWrites:0}));app.quit();return;
+   const seeds=[await js(side,'window.__usageRequests.at(-1).randomSeed')];
+   for(let batch=0;batch<3;batch++){
+    const count=await js(side,'window.__usageRequests.length');await click(side,'[data-action=reroll]');await until(()=>js(side,'window.__usageRequests.length>'+count+'&&document.querySelector(".companion-candidates")?.getAttribute("aria-busy")==="false"'),'Repeated familiar refresh busy');
+    seeds.push(await js(side,'window.__usageRequests.at(-1).randomSeed'));assert.equal(await js(side,'window.__usageRequests.at(-1).offset'),0);assert(await js(side,'!!document.querySelector(".candidate-member[data-id=Galio]")'),'Known hero disappeared on reroll');
+   }
+   assert.equal(new Set(seeds).size,4,'Each weighted reroll needs a fresh draw');
+   assert.equal(writes.length,0);assert.equal(attempts.length,0);console.log(JSON.stringify({passed:true,progressBatches:20,roomMembers:3,progressWorkerRuns:0,scrollBefore,scrollAfter:scrollBefore,explicitRefreshSamples:[500,500,500],independentRerolls:3,clientWrites:0}));app.quit();return;
   }
   await click(side,'[data-action=propose-result]');await until(()=>js(side,'!!document.querySelector(".room-ballot-board .room-ballot-row")'),'Proposal is not visible above candidates');
   const layout=await js(side,'(()=>{const row=document.querySelector(".room-ballot-row"),candidate=document.querySelector(".companion-candidate"),box=selector=>row.querySelector(selector).getBoundingClientRect();return {boardY:row.getBoundingClientRect().top,candidateY:candidate.getBoundingClientRect().top,boardWidth:row.getBoundingClientRect().width,candidateWidth:candidate.getBoundingClientRect().width,adoptVisible:!!row.querySelector("[data-action=room-adopt-ballot]"),voteY:box("[data-action=room-vote]").top,detailsY:box("[data-action=room-ballot-details]").top,candidateDetails: getComputedStyle(candidate.querySelector(".candidate-details>summary")).position};})()');

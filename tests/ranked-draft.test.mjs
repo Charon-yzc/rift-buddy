@@ -13,6 +13,12 @@ import {teamDurationReference} from '../src/core/ranked-statistics.mjs';
 
 const champions=Array.from({length:10},(_,i)=>({id:'Hero'+i,key:i+1,name:'英雄'+i}));
 const client={connected:true,phase:'ChampSelect',game:{queueId:420,mapId:11,gameMode:'CLASSIC'},mode:{id:'rift'},session:{localPlayerCellId:0,myTeam:[{cellId:0,championId:0}],theirTeam:[{cellId:5,championId:0}],actions:[]}};
+test('sanitization preserves an explicit public row lock without actions and does not promote an unfinished pick',()=>{
+ const raw={localPlayerCellId:0,myTeam:[{cellId:0,championId:1,pickState:'locked'}],actions:[]};
+ assert.equal(sanitizeSession(raw).myTeam[0].pickState,'locked');assert.equal(localPickLocked(sanitizeSession(raw)),true);
+ raw.actions=[{type:'pick',actorCellId:0,championId:1,completed:false}];assert.equal(sanitizeSession(raw).myTeam[0].pickState,'selecting');assert.equal(localPickLocked(sanitizeSession(raw)),false);
+ delete raw.myTeam[0].pickState;raw.actions=[];assert.equal(localPickLocked(sanitizeSession(raw)),false);
+});
 test('ranked policy requires supported explicit ranked queue metadata',()=>{
  for(const queueId of [420,440])assert.equal(rankedDraftPolicy({...client,game:{...client.game,queueId}}).ranked,true);
  for(const queueId of [400,430,490,450,2400,undefined])assert.equal(rankedDraftPolicy({...client,game:{...client.game,queueId}}).ranked,false);

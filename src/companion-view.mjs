@@ -7,7 +7,7 @@ import {recommendationDraft} from './core/draft-intents.mjs';
 import {preparationEquipment} from './core/complete-gear.mjs';
 import {pregameControls} from './pregame-controls-view.mjs';
 import {rankedDraftPolicy} from './core/ranked-draft.mjs';
-import {rankedEnemyRoster,rankedCurveReady,rankedCurveView,rankedCurveLink} from './ranked-draft-view.mjs';
+import {rankedEnemyRoster,rankedCurveReady,rankedCurveView,rankedCurveReplacesProposals,rankedCurveLink} from './ranked-draft-view.mjs';
 import {rankedConfigurationAdviceView} from './ranked-configuration-view.mjs';
 import {candidateRoster} from './core/candidate-roster.mjs';
 import {candidateReferencePortrait,heroClickAffordance,heroSelectionHint} from './hero-selection-affordance.mjs';
@@ -101,7 +101,8 @@ export function companionView({data,client,enemyRoles=[],slots,unassigned,enemy=
  const eligibility=localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition});
  const eligibilityLabel=({checked:'本机可选范围已核对',manual:'尚未核对客户端可选英雄',partial:'本机可选范围部分核对',position:'可选英雄与分路',unknown:'尚未核对客户端可选英雄'})[eligibility.status]||'查看可选范围';
  const eligibilityInfo=`<details class="companion-eligibility-status" data-companion-disclosure="eligibility" data-eligibility="${e(eligibility.status)}"><summary><span role="status">${e(eligibilityLabel)}</span></summary>${pickEligibilityView(eligibility)}${manual&&assigned&&manual.role!==assigned?`<p class="companion-position-note">方案：${roleName(manual.role)} · 客户端分路：${roleName(assigned)}。任务权益按客户端分路。</p>`:''}${manual?button('position-auto','恢复客户端位置','','quiet small'):''}${!['checked','manual'].includes(eligibility.status)?button('sync','重新同步','','quiet small'):''}</details>`;
- const incoming=rankedCurveView(client,data,{slots,enemyRoles})+(rankedCurveReady(client,data,{slots})?'':roomBallotView(room,visibleRoster,data.champions,{scope,soloRole:ownRole,clientSession:client.connected?client.session:null,party,includePreselected}));
+ const curvesReady=rankedCurveReady(client,data,{slots});
+ const incoming=rankedCurveView(client,data,{slots,enemyRoles})+(rankedCurveReplacesProposals(client,data,{slots})?'':roomBallotView(room,visibleRoster,data.champions,{scope,soloRole:ownRole,clientSession:client.connected?client.session:null,party,includePreselected}));
  const chosen=companionChosenViews({data,client,activePlan,own:actionOwn,ownRole,heroAction,preparationStatus,pending:!!pendingOwn});
  const compact=preferences.compactTeam!==false;
  const rosterState=slot=>{
@@ -118,12 +119,12 @@ export function companionView({data,client,enemyRoles=[],slots,unassigned,enemy=
  const receiptFailed=/data-step-status="failed"|class="preparation-recovery"/.test(taskControls);
  const receiptComplete=(taskControls.match(/data-step-status="done"/g)||[]).length===4;
  const visibleAction=['recommend','room'].includes(tab)?'':nextAction;
- const persistent=['room','plan'].includes(tab)?'':roster+rankedEnemyRoster(client,data,enemyRoles)+pregameControls({scope,style,ranked,busy:!!configurationStatus.pending,includePreselected,ownRole,slots,room,party,preselection,preselectionHero:preselection?.champion?portrait(hero(preselection.champion),'sm'):'',compact:true,moreContent:eligibilityInfo+recommendationOptions})+visibleAction;
+ const persistent=['room','plan'].includes(tab)||curvesReady?'':roster+rankedEnemyRoster(client,data,enemyRoles)+pregameControls({scope,style,ranked,busy:!!configurationStatus.pending,includePreselected,ownRole,slots,room,party,preselection,preselectionHero:preselection?.champion?portrait(hero(preselection.champion),'sm'):'',compact:true,moreContent:eligibilityInfo+recommendationOptions})+visibleAction;
  const adopted=activePlan?`<div class="companion-adopted-row"><span title="${e(activePlan.name)}">已采用 · ${e(activePlan.name)}</span>${button(client.connected&&client.phase==='ChampSelect'?'task-compare':taskComparing?'task-return':'task-compare',client.connected&&client.phase==='ChampSelect'?'重新搭配':taskComparing?'返回方案':'换一套','','quiet small')}</div>`:'';
  const duty=activePlan?.stagePlan?.opening?.memberJobs.find(m=>m.role===taskPlan?.selection.role&&m.champion===taskPlan?.selection.id)?.job||activePlan?.ordered?.find(m=>m.role===taskPlan?.selection.role&&m.champion===taskPlan?.selection.id)?.job;
- const selection=incoming+(rankedCurveReady(client,data,{slots})?'':activePlan&&!taskComparing&&!(client.connected&&client.phase==='ChampSelect')?chosen.details:recommendations);
+ const selection=incoming+(curvesReady?`<details class="curve-roster-details" data-companion-disclosure="curve-roster"><summary>阵容信息</summary>${roster}${rankedEnemyRoster(client,data,enemyRoles)}</details>`:activePlan&&!taskComparing&&!(client.connected&&client.phase==='ChampSelect')?chosen.details:recommendations);
  const footer=`<footer class="companion-footer"><div class="companion-footer-line"><span class="companion-client-state" role="status">${clientConnectionControl(client,connectionBusy)}<span data-client-countdown>${Number.isFinite(live.remaining)?` · ${live.remaining} 秒`:''}</span></span><details class="companion-footer-menu" data-companion-disclosure="footer-tools"><summary>操作</summary><div>${own?button('guide-current','本局指引','book','quiet small'):''}${own&&b?.runePage?button('my-runes',applied?'重新应用符文':'单独替换符文','check','small',`data-id="${e(own.id)}" ${client.connected&&client.phase==='ChampSelect'&&preparation?.positionKnown!==false?'':'disabled'}`):''}${button('guide-auto-show',guideAutoShow?'关闭自动指引':'开启自动指引','','quiet small')}${button('window-info','窗口资料','','quiet small')}${button('sync','同步客户端','','quiet small')}</div></details></div></footer>`;
- const persistentContent=persistent+(['plan','room'].includes(tab)?'':adopted);
+ const persistentContent=persistent+(['plan','room'].includes(tab)||curvesReady?'':adopted);
  const persistentView=tab==='rankings'?`<details class="companion-ranking-context" data-companion-disclosure="ranking-draft"><summary><span>本局选人</span><small>${e(hero(actionOwn?.id)?.name||'五路阵容')}${icon('chevron')}</small></summary><div>${persistentContent}${incoming}</div></details>`:persistentContent;
  const extraTabs=[['team','阵容详情'],['rankings','各路排行']];
  const tabLabel=extraTabs.find(([id])=>id===tab)?.[1];

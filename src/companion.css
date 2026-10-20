@@ -348,7 +348,7 @@
 .curve-point.ally{fill:var(--accent,#78d9ea)}.curve-point.enemy{fill:#dfaa91}.curve-point:focus{outline:none;stroke:currentColor;stroke-width:3}
 .curve-legend{display:inline-block;width:8px;height:3px;vertical-align:middle;margin:0 3px 2px 7px;background:var(--accent,#78d9ea)}.curve-legend.enemy{background:#dfaa91}
 .ranked-curve-method,.ranked-curve-note{font-size:11px;color:var(--text-muted,#9eb4c6);line-height:1.5}.ranked-curve-method p{margin:6px 0}.ranked-curve-link{margin:0 0 7px;width:100%;border-color:var(--accent,#78d9ea)}
-@media(prefers-reduced-motion:no-preference){.ranked-curve-link[data-attention=true]{animation:curve-ready 1s ease-in-out 3}@keyframes curve-ready{50%{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#78d9ea) 35%,transparent)}}}
+@media(prefers-reduced-motion:no-preference){.ranked-curve-link[data-attention=true]{animation:curve-ready 1.6s ease-in-out infinite}@keyframes curve-ready{50%{transform:translateY(-2px);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#78d9ea) 35%,transparent)}}}
 .ranked-configuration-advice{font-size:12px;margin:5px 0 9px}.ranked-configuration-advice>summary{color:var(--accent,#78d9ea)}.ranked-configuration-advice p{margin:5px 0;line-height:1.5;color:var(--text-muted,#9eb4c6)}
 .ranked-advice-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;margin:8px 0}.ranked-advice-row>b{align-self:center}.ranked-advice-row>small,.ranked-advice-row>p{grid-column:1/-1}
 .champion-statistics,.ranked-lanes{font-size:12px;margin:6px 0 9px}.champion-statistics>summary,.ranked-lanes>summary{color:var(--accent,#78d9ea)}.champion-statistics small,.ranked-lanes small{font-size:11px;color:var(--text-muted,#9eb4c6)}
@@ -368,3 +368,6 @@
 .ranked-curve,.champion-statistics{--duration-enemy:color-mix(in srgb,#dfaa91 65%,var(--rb-ink,#f0ead6))}.ranked-curve .ranked-roster-caption{color:var(--rb-muted,var(--text-muted,#9eb4c6))}.ranked-curve .ranked-roster-caption>b{color:var(--rb-ink,var(--text,#f0ead6))}.duration-chart .curve-axis{fill:var(--rb-muted,var(--text-muted,#9eb4c6))}.curve-line.enemy{stroke:var(--duration-enemy,#dfaa91)}.curve-point.enemy{fill:var(--duration-enemy,#dfaa91)}.curve-legend.enemy{background:var(--duration-enemy,#dfaa91)}.ranked-curve-method>summary,.ranked-lanes>summary,.champion-statistics>summary{color:var(--rb-accent,var(--accent,#78d9ea))}.ranked-curve-method,.ranked-curve-note,.ranked-lanes p,.champion-statistics p{color:var(--rb-muted,var(--text-muted,#9eb4c6))}.duration-chart .duration-hit:focus-visible{outline:1px solid var(--rb-accent,var(--accent,#78d9ea));outline-offset:-2px;box-shadow:none}
 
 .ranked-curve .ranked-curve-method>summary,.ranked-curve .ranked-lanes>summary,.companion-content .champion-statistics>summary{color:var(--rb-accent,var(--accent,#78d9ea))}
+
+.champion-statistics>header{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--text,#f0ead6)}
+.curve-roster-details{margin-top:12px;font-size:12px}.curve-roster-details>summary{cursor:pointer;color:var(--text-muted,#9eb4c6);padding:8px 0}
