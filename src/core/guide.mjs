@@ -9,6 +9,7 @@ import {ROLES,profile} from './rules.mjs';
 import {purchasePlan,liveGuideStatus,purchaseAction} from './purchase.mjs';
 import {compareAugments} from './hex-compare.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
+import {hexPlayerRoutes} from './hex-routes.mjs';
 import {comboStage,playStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {validateCreativePlan,creativeMemberCombo} from './creative-plan.mjs';
@@ -262,7 +263,7 @@ export function createGuideModel(data,value,live=null,current=null){
   priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,attributePlan:build.attributePlan,skillTitle:build.selectedSkill?.name,skillPatch:build.selectedSkill?.patch,skillStale:build.selectedSkill?.stale,skillSources:build.selectedSkill?.sources,skillReference:build.selectedSkill?.reference,skillSourceUrl:build.selectedSkill?.sourceUrl,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
   title:build.title,sourceOpponentName:s.sourceOpponent?(data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent):null,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,configurationNote:build.configurationNote,configurationSources:build.configurationSources,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
-  rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,ownedAugments,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',comparison:compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key,patch:data.patch,mode:s.mode}),
+  rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,ownedAugments,hexRoutes:s.mode==='hex'?hexPlayerRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds}):[],augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',comparison:compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key,patch:data.patch,mode:s.mode}),
   collapsed:guide.collapsed,clickThrough:guide.clickThrough,opacity:guide.opacity,imageOverrides:data.imageOverrides||{}};
 }
 export function currentPlayerSelection(session,champions,slots=[]){

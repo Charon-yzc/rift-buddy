@@ -287,6 +287,7 @@ async function boot(){
  };
  guide=require('./guide-window.cjs')({root,getState:()=>state.guide,getModel:getGuideModel,isQuitting:()=>quitting,diagnostic,
   currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,resetHexRound:resetHexGuideRound,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
+  showHexSource:(id,routeId)=>{pendingBuild=null;pendingMainPage={route:'hex-source',id,routeId};showMainWindow();if(rendererReady){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}},
   showMain:selection=>{if(selection)pendingBuild=selection;showMainWindow();if(rendererReady&&pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}}});
  diagnostic(`loaded data ${data.version}`);
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
