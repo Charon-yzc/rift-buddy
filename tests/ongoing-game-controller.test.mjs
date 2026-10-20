@@ -4,6 +4,27 @@ import {createOngoingGameController} from '../src/ongoing-game-controller.mjs';
 const member={key:'mock-public-player-1',puuid:'mock-public-player-1',name:'本人',self:true,team:'LOBBY'};
 const roster=(key='one')=>({key,session:'account-one',phase:'lobby',queue:430,players:[member],teams:{LOBBY:[member.key]},selfPuuid:member.puuid});
 const page={handle:'handle-one',games:[],count:20,start:0,hasMore:false,player:{puuid:member.puuid}};
+
+test('parallel timeline fallbacks retain their data warning once alongside the page warning',async()=>{
+ const notice='后台时间线暂不可用，已使用客户端数据；部分属性和出装事件可能缺失';
+ const c=createOngoingGameController({settings:{details:4},request:async op=>op==='roster'?roster():op==='page'?{...page,notice:'部分队伍资料不完整',games:[1,2,3,4].map(id=>({id,queue:430}))}:op==='timeline'?{timeline:{frames:[]},notice}:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ await c.refresh();const entry=c.state.players[member.key];assert.equal(entry.loadedDetails,4);
+ assert.equal(entry.notice,'部分队伍资料不完整；'+notice);
+});
+
+test('a cancelled timeline batch cannot repaint the replacement roster',async()=>{
+ let next=roster(),paints=0;const releases=[];
+ const c=createOngoingGameController({settings:{details:4},request:async op=>{
+  if(op==='roster')return next;
+  if(op==='page')return {...page,games:[1,2,3,4].map(id=>({id,queue:430}))};
+  if(op==='timeline')return new Promise(resolve=>releases.push(()=>resolve({timeline:{frames:[]}})));
+  return {};
+ },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{paints++;}});
+ const previous=c.refresh();while(releases.length<4)await new Promise(resolve=>setImmediate(resolve));
+ next={...roster('new-game'),players:[],teams:{}};await c.refresh();const accepted=paints;
+ for(const release of releases)release();await previous;
+ assert.equal(c.state.roster.key,'new-game');assert.equal(paints,accepted,'Cancelled work must not replace the new page DOM');
+});
 test('ongoing game automatically loads each actual visible player with the bounded current roster',async()=>{
  const calls=[];const c=createOngoingGameController({request:async(op,p)=>{calls.push([op,p]);return op==='roster'?roster():op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
  await c.refresh();assert.equal(c.state.players[member.key].loading,false);assert.equal(c.state.roster.key,'one');assert.equal(calls.find(([op])=>op==='page')[1].rosterKey,'one');
