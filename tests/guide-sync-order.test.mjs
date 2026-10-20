@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {publicClientGameId} from '../src/core/draft.mjs';
 import * as guideCore from '../src/core/guide.mjs';
 import {createPreparationStore,configurationKey,configurationPatch,CONFIGURATION_FIELDS,preparationIdentity} from '../src/core/preparation.mjs';
 
@@ -15,7 +16,7 @@ async function tick(){await new Promise(r=>setImmediate(r));}
 test('failed guide opening does not retry an old configuration over a queued newer edit',async()=>{
  const main=fs.readFileSync(new URL('../electron/main.cjs',import.meta.url),'utf8'),handlerStart=main.indexOf(" guard('open-guide'"),helperStart=main.indexOf(' const openGuideSelection='),handlers=new Map(),failure=deferred();
  const newer=guideCore.selectGuide(null,hero({runeId:'source-newer'}));let queue=Promise.resolve(),writes=0,shown=0;
- const context=vm.createContext({guideCore,latestClient:{phase:'Offline',connected:false},latestLive:null,guideRevision:3,state:{guide:guideCore.selectGuide(null,page)},
+ const context=vm.createContext({guideCore,publicClientGameId,latestClient:{phase:'Offline',connected:false},latestLive:null,guideRevision:3,state:{guide:guideCore.selectGuide(null,page)},
   guard:(name,handler)=>handlers.set(name,handler),guide:{show(){shown++;return {};}},pollLive(){},prepareCurrentGuide(){throw Error('Unexpected implicit selection');}});
  context.setGuideState=next=>{const attempt=++writes,task=queue.then(async()=>{if(attempt===1){await failure.promise;throw Error('storage failed');}context.state.guide=next;});queue=task.catch(()=>{});return task;};
  vm.runInContext(main.slice(helperStart>=0&&helperStart<handlerStart?helperStart:handlerStart,main.indexOf(" guard('update-guide'",handlerStart)),context);
