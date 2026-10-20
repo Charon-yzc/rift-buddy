@@ -98,6 +98,9 @@ export function createUsageCache({root,now=()=>Date.now(),io=fs,write=atomicJSON
   const secret=await ensureKey();
   const record=normalizeUsageCache({schema:1,account:accountDigest(secret,account),server:currentServer,source,basis,sampled,counts,at:at||new Date(now()).toISOString()},{now:now()});
   if(!record)throw Error('英雄统计缓存格式不正确');
+  // The account key is remembered with the record so a later start can verify
+  // the binding before the client reports an account.
+  await rememberAccount(account);
   await write(filename,record);return record;
  }
  async function clear(){await io.unlink(filename).catch(()=>{});}

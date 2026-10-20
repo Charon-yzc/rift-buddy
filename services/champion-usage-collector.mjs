@@ -23,12 +23,18 @@ export function createChampionUsageCollector({request,champions,transportCurrent
  async function applyCached(){
   if(!cached&&cache&&!cacheLoaded)await loadCache();
   if(!cached)return false;
-  if(account&&!(await cache.matches(cached,{account,server})))return false;
+  // Without a confirmed account the cache is not offered at all: a shared
+  // machine must never show the previous player's familiar heroes.
+  if(!account||!(await cache.matches(cached,{account,server})))return false;
   const cachedState=cachedUsageSnapshot(cached,{now});
   if(!cachedState)return false;
   // The cached distribution has no live scan session of its own.
   const next={...empty(),...cachedState,session:''};
-  if(JSON.stringify(next)===JSON.stringify(state))return true;
+  // The age changes every millisecond, so it is compared apart from the
+  // published state. Otherwise a polling client would republish the snapshot
+  // every second and make the history page re-render.
+  const comparable=({ageMs,...rest})=>rest;
+  if(JSON.stringify(comparable(next))===JSON.stringify(comparable(state)))return true;
   state=next;emit();
   return true;
  }
@@ -117,8 +123,8 @@ export function createChampionUsageCollector({request,champions,transportCurrent
    connected=false;transport=null;hint='';
    // The client is gone: the cached statistics stay usable instead of the
    // screen going blank. The scan session itself is dropped.
-   if(state.status!=='cached'){reset('offline',false,true);state={...state,session:''};}
-   else{generation++;cursor='';scanScanned=0;scanIdentified=0;scanSource='';}
+   generation++;cursor='';scanScanned=0;scanIdentified=0;scanSource='';if(!flight)flight=null;
+   if(state.status!=='cached'){state={...empty(),status:'offline',session:''};emit();}
    // The snapshot is published only when it really changes, so a polling
    // client cannot make the history page re-render every second.
    return applyCached().then(()=>snapshot());

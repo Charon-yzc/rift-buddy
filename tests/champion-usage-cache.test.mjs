@@ -17,7 +17,7 @@ const cacheStub=(initial=null)=>{
   let current=initial,remembered='';
   return {
     load:async()=>current,
-    save:async value=>{current={...value,schema:1,account:accountDigest(key,String(value.account))};return current;},
+    save:async value=>{current={...value,schema:1,account:accountDigest(key,String(value.account))};remembered=String(value.account);return current;},
     clear:async()=>{current=null;},
     matches:(value,context)=>cacheMatches(value,context,key),
     rememberAccount:async value=>{remembered=String(value);},
@@ -236,6 +236,7 @@ test('the cached statistics stay usable while the client is unreachable',async()
     },
     champions:()=>champions,cache,onChange:()=>{}
   });
+  await cache.rememberAccount('a'.repeat(64));
   await collector.loadCache();
   await collector.observe({connected:false},null);
   const snapshot=collector.snapshot();
@@ -252,12 +253,64 @@ test('a polling client does not make the history page re-render every second',as
       if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
       throw Object.assign(Error('未能连接客户端，请确认游戏已登录到大厅'),{status:0});
     },
-    champions:()=>champions,cache,onChange:()=>{published++;},now:()=>1000
+    champions:()=>champions,cache,onChange:()=>{published++;}
   });
+  await cache.rememberAccount('a'.repeat(64));
   await collector.loadCache();
   for(let n=0;n<5;n++)await collector.observe({connected:false},null);
   // The first pass may publish the cached state once; the rest must be silent.
   assert.ok(published<=2,`the snapshot must not be republished every poll, got ${published}`);
+});
+
+test('the startup path only offers the cache to the account that wrote it',async()=>{
+  const fsPromises=await import('node:fs/promises');
+  const os=await import('node:os');
+  const path=await import('node:path');
+  const root=await fsPromises.mkdtemp(path.join(os.tmpdir(),'rift-usage-bind-'));
+  try{
+   const account='b'.repeat(64);
+   const cache=createUsageCache({root});
+   await cache.rememberAccount(account);
+   await cache.save({account,server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.GAMES,sampled:40,counts:{Ahri:20}});
+   const collector=createChampionUsageCollector({
+    request:async(_t,operation)=>{if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});},
+    champions:()=>champions,cache,onChange:()=>{}
+   });
+   // A fresh start knows the remembered account, so the cache is offered.
+   await collector.loadCache();
+   assert.equal(await collector.applyCached(),true);
+   assert.equal(collector.snapshot().usage.counts.Ahri,20);
+   // Another account reports in: the cached heroes are not offered.
+   const other=createChampionUsageCollector({
+    request:async(_t,operation)=>{if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});},
+    champions:()=>champions,cache,onChange:()=>{}
+   });
+   await other.loadCache();
+   await other.observe({connected:true,account:'c'.repeat(64)},{id:'t'});
+   assert.notEqual(other.snapshot().status,'cached','another account must not see the cache');
+   assert.equal(other.snapshot().usage.counts.Ahri,undefined);
+  }finally{await fsPromises.rm(root,{recursive:true,force:true});}
+});
+
+test('a cache without a remembered account is not offered at all',async()=>{
+  const fsPromises=await import('node:fs/promises');
+  const os=await import('node:os');
+  const path=await import('node:path');
+  const root=await fsPromises.mkdtemp(path.join(os.tmpdir(),'rift-usage-nobind-'));
+  try{
+   const cache=createUsageCache({root});
+   const account='d'.repeat(64);
+   await cache.save({account,server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.GAMES,sampled:40,counts:{Ahri:20}});
+   // The remembered account is gone, so the binding cannot be verified.
+   await fsPromises.rm(path.join(root,'champion-usage','champion-usage.account'),{force:true});
+   const collector=createChampionUsageCollector({
+    request:async(_t,operation)=>{if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});},
+    champions:()=>champions,cache,onChange:()=>{}
+   });
+   await collector.loadCache();
+   assert.equal(await collector.applyCached(),false,'an unbound cache is never offered');
+   assert.equal(collector.snapshot().usage.counts.Ahri,undefined);
+  }finally{await fsPromises.rm(root,{recursive:true,force:true});}
 });
 
 test('the cache key file survives a restart and still binds the account',async()=>{
@@ -356,6 +409,7 @@ test('the collector falls back to the local cache when neither the list nor mast
     },
     champions:()=>champions,cache,onChange:()=>{}
   });
+  await cache.rememberAccount('a'.repeat(64));
   await collector.loadCache();
   assert.equal(await collector.applyCached(),true);
   const snapshot=collector.snapshot();
