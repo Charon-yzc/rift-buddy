@@ -50,6 +50,13 @@ const state=from=>JSON.stringify({kind:'state',v:ROOM_PROTOCOL,from,at:1,lineup:
 
 const PIN=await hashPin('482913');
 
+test('worker: bounded own usage is rebuilt and forwarded without persisting private fields or raw histories',async()=>{
+ const store=fakeState(),hub=new RoomHub(store),a=(await hub.fetch(roomRequest('482913'))).webSocket;await hub.webSocketMessage(a,hello('甲'));const b=(await hub.fetch(roomRequest('482913'))).webSocket;await hub.webSocketMessage(b,hello('乙'));
+ assert.equal(JSON.parse(a.sent[0]).championUsage,1);
+ await hub.webSocketMessage(a,JSON.stringify({...JSON.parse(state('甲')),championUsage:{version:1,mass:.85,usage:{sampled:500,counts:{Ashe:500},records:['PRIVATE']},puuid:'PRIVATE',session:'PRIVATE'},records:['PRIVATE']}));
+ const share=decodeFrame(b.sent.at(-1));assert.deepEqual(share.championUsage,{version:1,mass:.85,usage:{sampled:500,counts:{Ashe:500}}});assert.ok(!JSON.stringify(share).includes('PRIVATE'));assert.ok(!JSON.stringify([...store.store]).includes('Ashe'));assert.ok(!JSON.stringify(a.attachment).includes('Ashe'));
+});
+
 test('worker: authenticated flooding is isolated and survives object reconstruction',async()=>{
  const store=fakeState(),hub=new RoomHub(store);
  const a=(await hub.fetch(roomRequest('482913'))).webSocket;await hub.webSocketMessage(a,hello('甲'));
@@ -82,10 +89,10 @@ test('worker: handshake, fan-out, spoof rejection and leave semantics',async()=>
  const a=(await hub.fetch(roomRequest('482913'))).webSocket;
  await hub.webSocketMessage(a,hello('甲'));
  assert.equal(a.sent.length,1);
- assert.deepEqual(JSON.parse(a.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[],ballots:1,multiVotes:1,adoptions:1,packedStates:2});
+ assert.deepEqual(JSON.parse(a.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[],ballots:1,multiVotes:1,adoptions:1,packedStates:2,championUsage:1});
  const b=(await hub.fetch(roomRequest('482913'))).webSocket;
  await hub.webSocketMessage(b,hello('乙'));
- assert.deepEqual(JSON.parse(b.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'}],ballots:1,multiVotes:1,adoptions:1,packedStates:2});
+ assert.deepEqual(JSON.parse(b.sent[0]),{kind:'welcome',v:ROOM_PROTOCOL,room:'482913',members:[{nick:'甲'}],ballots:1,multiVotes:1,adoptions:1,packedStates:2,championUsage:1});
  assert.deepEqual(JSON.parse(a.sent[1]),{kind:'join',v:ROOM_PROTOCOL,from:'乙'});
  // State from 甲 reaches 乙 but never echoes back to 甲.
  await hub.webSocketMessage(a,state('甲'));

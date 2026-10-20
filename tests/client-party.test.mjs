@@ -1,7 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {publicPlayerIdentity,normalizePartyIds,sanitizeLobbyParty,resolveClientParty,clientRenderIdentity} from '../src/core/client-party.mjs';
+import {publicPlayerIdentity,normalizePartyIds,sanitizeLobbyParty,lobbyPartyMembers,resolveClientParty,clientRenderIdentity} from '../src/core/client-party.mjs';
 const self={puuid:'public-own-identity-0001',summonerId:10,gameName:'本人',tagLine:'CN'},friend={puuid:'public-friend-identity-002',summonerId:11,gameName:'队友',tagLine:'CN'};
 const session={localPlayerCellId:0,myTeam:[{...self,cellId:0},{...friend,cellId:1},{cellId:2,summonerId:12}]};
+
+test('only existing public complete Riot IDs provide exact room identity evidence, never hidden or guessed tags',()=>{
+ const lobby=sanitizeLobbyParty({localMember:self,members:[self,friend]},100);assert.equal(lobbyPartyMembers(lobby).find(m=>!m.local).publicRiotId,'队友#CN');
+ const partial={...session,myTeam:[session.myTeam[0],{cellId:1,puuid:friend.puuid}]};assert.equal(resolveClientParty(partial,lobby,[],101).members.find(m=>m.cellId===1).publicRiotId,'队友#CN');
+ const hidden={...session,myTeam:[session.myTeam[0],{...friend,cellId:1,nameVisibilityType:'HIDDEN'}]};assert.equal(resolveClientParty(hidden,lobby,[],101).members.some(m=>m.publicRiotId==='队友#CN'),false);
+ const noTag=sanitizeLobbyParty({localMember:self,members:[self,{puuid:friend.puuid,gameName:'队友'}]},100);assert.equal(lobbyPartyMembers(noTag).find(m=>!m.local).publicRiotId,undefined);
+});
 test('only current public lobby members survive sanitization; no chat tokens or hidden recovery',()=>{
  const lobby=sanitizeLobbyParty({localMember:self,members:[self,friend],multiUserChatPassword:'PRIVATE',mucJwtDto:{jwt:'PRIVATE'}},100);
  assert(!JSON.stringify(lobby).includes('PRIVATE'));assert.equal(lobby.members.length,2);

@@ -6,12 +6,13 @@ import {WebSocketServer,WebSocket} from 'ws';
 import {ROOM_PROTOCOL,PACKED_STATES_VERSION,MAX_FRAME,validateLeave} from '../src/core/room.mjs';
 import {MAX_RELAY_MEMBERS,RELAY_PING,RELAY_PONG,validateRelayHello,relayWelcome,relayJoin,relayLeave,sanitizeRelayState} from '../src/core/room-relay.mjs';
 import {MAX_SOCKETS,HANDSHAKE_TIMEOUT_MS,takeRelayBudget} from './room-hub.mjs';
+import {CHAMPION_USAGE_VERSION} from '../src/core/room-champion-usage.mjs';
 
 export function createRelayServer(){
  const rooms=new Map();
  const server=createServer((req,res)=>{
   if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
-  if(req.url==='/healthz'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,service:'rift-buddy-relay',version:'0.54.2',protocol:ROOM_PROTOCOL,ballots:1,multiVotes:1,adoptions:1,packedStates:PACKED_STATES_VERSION,receiverCapabilities:1}));return;}
+  if(req.url==='/healthz'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,service:'rift-buddy-relay',version:'0.54.2',protocol:ROOM_PROTOCOL,ballots:1,multiVotes:1,adoptions:1,packedStates:PACKED_STATES_VERSION,receiverCapabilities:1,championUsage:CHAMPION_USAGE_VERSION}));return;}
   res.writeHead(req.url==='/'?200:404,{'Content-Type':'text/plain; charset=utf-8'});res.end(req.url==='/'?'rift-buddy room relay\n':'not found');
  });
  server.headersTimeout=10000;server.requestTimeout=15000;server.keepAliveTimeout=5000;server.maxConnections=300;

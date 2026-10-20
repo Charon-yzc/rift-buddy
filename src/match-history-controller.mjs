@@ -1,6 +1,6 @@
 import {filterMatches,looksLikePuuid} from './core/match-history/model.mjs';
 export function createHistoryController({request,onChange=()=>{},analyze=null,setTimer=setInterval,clearTimer=clearInterval}){
- const state={tabs:[],current:null,query:'',source:'auto',server:'',servers:[],error:'',searchResults:[],searching:false};let next=0,searchTicket=0,observedName='';
+ const state={tabs:[],current:null,query:'',source:'auto',server:'',servers:[],error:'',searchResults:[],searching:false};let next=0,searchTicket=0,observedName='',observedSession='',observedConnected=false,autoSession='';
  const current=()=>state.tabs.find(t=>t.id===state.current);
  const replayTimers=new Map(),cancelReplay=tab=>{const timer=replayTimers.get(tab);if(timer!==undefined)clearTimer(timer);replayTimers.delete(tab);};
  const alive=(tab,ticket)=>state.tabs.includes(tab)&&tab.ticket===ticket;
@@ -16,7 +16,7 @@ export function createHistoryController({request,onChange=()=>{},analyze=null,se
    try{const profile=await request('profile',{handle:page.handle});if(alive(tab,ticket)){tab.profile=profile;onChange();}}catch{}
   }catch(error){if(alive(tab,ticket)){tab.error=message(error);tab.loading=false;onChange();}}
  }
- async function open(options={}){searchTicket++;state.searching=false;state.searchResults=[];state.error='';const {background=false,...query}={source:state.source,...options},server=query.server??state.server,previous=state.tabs.find(tab=>(tab.page?.server??tab.options.server??'')===server&&(query.puuid?tab.page?.player?.puuid===query.puuid||tab.options.puuid===query.puuid:query.query?tab.options.query?.toLowerCase()===query.query.toLowerCase():!tab.options.query&&!tab.options.puuid));
+ async function open(options={}){if(!options.background){searchTicket++;state.searching=false;state.searchResults=[];state.error='';}const {background=false,...query}={source:state.source,...options},server=query.server??state.server,previous=state.tabs.find(tab=>(server?(tab.page?.server??tab.options.server??'')===server:!tab.options.server&&!tab.page?.cross)&&(query.puuid?tab.page?.player?.puuid===query.puuid||tab.options.puuid===query.puuid:query.query?tab.options.query?.toLowerCase()===query.query.toLowerCase():!tab.options.query&&!tab.options.puuid));
   if(previous){if(!background)state.current=previous.id;if(query.source&&query.source!==previous.options.source){previous.profile=null;previous.challenges=undefined;await load(previous,{...query,handle:undefined,start:0});}else if(query.handle&&query.start!==undefined)await load(previous,query);else onChange();return previous;}
   const tab={id:++next,ticket:0,options:{source:state.source,server,...query},page:null,filter:{excludePve:true},details:{},profile:null,loading:false,error:''};state.tabs.push(tab);if(!background||state.current===null)state.current=tab.id;if(state.tabs.length>10)close(state.tabs[0].id);await load(tab);return tab;}
  async function search(){const query=state.query.trim();if(query.includes('#'))return open({query});if(looksLikePuuid(query))return open({puuid:query});const ticket=++searchTicket;state.searching=true;state.error='';state.searchResults=[];onChange();try{const result=await request('search',{query,server:state.server,source:state.source});if(ticket!==searchTicket)return;state.servers=result.servers||state.servers;state.searchResults=result.players;if(!result.players.length)state.error='没有找到匹配玩家，请输入完整游戏 ID';}catch(error){if(ticket===searchTicket)state.error=message(error);}finally{if(ticket===searchTicket){state.searching=false;onChange();}}}
@@ -47,7 +47,19 @@ export function createHistoryController({request,onChange=()=>{},analyze=null,se
     recalculate(tab);onChange();}
  }finally{if(alive(tab,ticket)){tab.analysisLoading=false;onChange();}}}
  async function challenges(){const tab=current();if(!tab?.page||tab.challengesLoading)return;const ticket=tab.ticket;tab.challengesLoading=true;onChange();try{const value=await request('challenges',{handle:tab.page.handle});if(alive(tab,ticket)){tab.challenges=value;tab.challengesError='';}}catch(error){if(alive(tab,ticket))tab.challengesError=message(error);}finally{if(alive(tab,ticket)){tab.challengesLoading=false;onChange();}}}
- function clear(){for(const tab of state.tabs){tab.ticket++;cancelReplay(tab);}state.tabs=[];state.current=null;searchTicket++;state.searchResults=[];state.searching=false;onChange();}
- function observeClient(client){const name=client?.connected?client.playerName||'':'';if(name&&observedName&&name!==observedName)clear();if(name)observedName=name;}
-  return {state,current,open,search,load,close,detail,collect,replay,loadAnalysisDetails,challenges,clear,observeClient,cancelSearch:()=>{searchTicket++;state.searching=false;state.searchResults=[];onChange();},select:id=>{state.current=id;onChange();},stop:()=>{const tab=current();if(tab){tab.collection=(tab.collection||0)+1;tab.loading=false;tab.collecting=false;onChange();}},filter:(key,value)=>{const tab=current();if(tab){tab.filter={...tab.filter,[key]:value};recalculate(tab);onChange();}},visible:()=>{const tab=current();return filterMatches(tab?.page?.games||[],tab?.filter);}};
+ function clear(){for(const tab of state.tabs){tab.ticket++;cancelReplay(tab);}state.tabs=[];state.current=null;state.session='';autoSession='';searchTicket++;state.searchResults=[];state.searching=false;onChange();}
+ function observeClient(client){
+  if(!client?.connected){if(observedConnected||state.tabs.length)clear();observedConnected=false;observedName='';observedSession='';return;}
+  const name=client.playerName||'',session=typeof client.historySession==='string'?client.historySession:observedSession;
+  if(name&&observedName&&name!==observedName||observedSession&&session!==observedSession)clear();
+  observedConnected=true;if(name)observedName=name;observedSession=session;
+ }
+ function autoLoadOwn(client,summary){
+  observeClient({...client,historySession:summary?.session||''});
+  if(!client?.connected||!summary?.session||!['ready','partial'].includes(summary.status)||autoSession===summary.session)return Promise.resolve();
+  autoSession=summary.session;
+  if(state.tabs.some(tab=>!tab.options.query&&!tab.options.puuid&&!tab.options.server))return Promise.resolve();
+  return open({source:state.source==='auto'?summary.source||'auto':state.source,server:'',background:true});
+ }
+  return {state,current,open,search,load,close,detail,collect,replay,loadAnalysisDetails,challenges,clear,observeClient,autoLoadOwn,cancelSearch:()=>{searchTicket++;state.searching=false;state.searchResults=[];onChange();},select:id=>{state.current=id;onChange();},stop:()=>{const tab=current();if(tab){tab.collection=(tab.collection||0)+1;tab.loading=false;tab.collecting=false;onChange();}},filter:(key,value)=>{const tab=current();if(tab){tab.filter={...tab.filter,[key]:value};recalculate(tab);onChange();}},visible:()=>{const tab=current();return filterMatches(tab?.page?.games||[],tab?.filter);}};
 }

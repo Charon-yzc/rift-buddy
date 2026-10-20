@@ -7,6 +7,7 @@
 import {validateCreativePlan} from './creative-plan.mjs';
 import {fingerprint} from './catalog-review.mjs';
 import {packRoomState,unpackRoomState,roomStateWithinBudget} from './room-frame.mjs';
+import {CHAMPION_USAGE_VERSION,cleanSharedChampionUsage} from './room-champion-usage.mjs';
 export const ROOM_PROTOCOL=1;
 export const PACKED_STATES_VERSION=2;
 export const ROLES=['top','jungle','mid','bottom','support'];
@@ -175,7 +176,7 @@ export function validateWelcome(value){
  if(!validRoomCode(room))return null;
  const members=Array.isArray(value.members)?value.members.map(m=>nick(m?.nick)).filter(Boolean).slice(0,12):[];
  const packedMembers=Array.isArray(value.members)?value.members.filter(m=>m?.packedStates===PACKED_STATES_VERSION&&members.includes(nick(m.nick))).map(m=>nick(m.nick)):[];
- return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.multiVotes===1?{multiVotes:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION,packedMembers}:{})};
+ return {kind:'welcome',v:ROOM_PROTOCOL,room,members,...(value.ballots===1?{ballots:1}:{}),...(value.multiVotes===1?{multiVotes:1}:{}),...(value.adoptions===1?{adoptions:1}:{}),...(value.championUsage===CHAMPION_USAGE_VERSION?{championUsage:CHAMPION_USAGE_VERSION}:{}),...(value.packedStates===PACKED_STATES_VERSION?{packedStates:PACKED_STATES_VERSION,packedMembers}:{})};
 }
 // Votes identify the full sanitized proposal, including each member's setup.
 // The same champions with another route must remain a different choice.
@@ -226,7 +227,8 @@ export function sanitizeShare(value){
  const ballot=value.ballot===undefined?undefined:sanitizeRoomBallot(value.ballot);if(ballot===null)return null;
  let intent;
  if(value.intent!=null){if(!['',...ROLES].includes(value.intent.role)||value.intent.champion!==null&&!(typeof value.intent.champion==='string'&&HERO.test(value.intent.champion)))return null;intent={role:value.intent.role,champion:value.intent.champion};}
- return {kind:'state',v:ROOM_PROTOCOL,from,lineup:team,pick:selected,at,...(value.mode!==undefined?{mode:value.mode}:{}),...(builds!==undefined?{configurations:builds}:{}),...(strategy?{strategy}:{}),...(ballot?{ballot}:{}),...(intent?{intent}:{})};
+ let championUsage;if(value.championUsage!==undefined)try{championUsage=cleanSharedChampionUsage(value.championUsage);}catch{return null;}
+ return {kind:'state',v:ROOM_PROTOCOL,from,lineup:team,pick:selected,at,...(value.mode!==undefined?{mode:value.mode}:{}),...(builds!==undefined?{configurations:builds}:{}),...(strategy?{strategy}:{}),...(ballot?{ballot}:{}),...(intent?{intent}:{}),...(championUsage!==undefined?{championUsage}:{})};
 }
 export function validateLeave(value){
  if(value?.kind!=='leave'||value.v!==ROOM_PROTOCOL)return null;

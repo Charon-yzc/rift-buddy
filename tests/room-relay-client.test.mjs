@@ -79,6 +79,25 @@ async function joined(service,fake,{url='wss://room.example.com',room='482913',p
  return socket;
 }
 
+test('summary capability downgrade strips cached statistics before reconnect announcement and preserves ordinary sharing',async()=>{
+ const fake=fakeRelay(),service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:5});
+ try{
+  const pending=service.relay({url:'wss://room.example.com',room:'482913',pin:'482913'}),first=await fake.next();first.open();first.deliver({kind:'welcome',v:1,room:'482913',members:[],ballots:1,multiVotes:1,championUsage:1});await pending;
+  service.publish({lineup:[{role:'bottom',champion:'Ashe'}],pick:null,championUsage:{version:1,mass:.85,usage:{sampled:500,counts:{Ashe:500}}},ballot:{version:1,vote:'voteA',proposal:null}});
+  assert.ok(first.sent.some(text=>JSON.parse(text).championUsage));first.close(1006);const second=await fake.next(2);second.open();second.deliver({kind:'welcome',v:1,room:'482913',members:[],ballots:1,multiVotes:1});await tick(15);
+  const states=second.sent.map(text=>JSON.parse(text)).filter(frame=>frame.kind==='state');assert.ok(states.length);assert.ok(states.every(frame=>!Object.hasOwn(frame,'championUsage')));assert.deepEqual(states.at(-1).lineup,[{role:'bottom',champion:'Ashe'}]);assert.equal(states.at(-1).ballot.vote,'voteA');assert.equal(service.snapshot().championUsage,false);
+ }finally{service.dispose();}
+});
+
+test('revoked account counts cannot survive a failed clear send and return in a later reconnect announcement',async()=>{
+ const fake=fakeRelay(),service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:5});
+ try{
+  const pending=service.relay({url:'wss://room.example.com',room:'482913',pin:'482913'}),first=await fake.next();first.open();first.deliver({kind:'welcome',v:1,room:'482913',members:[],championUsage:1});await pending;
+  service.publish({lineup:[{role:'bottom',champion:'Ashe'}],pick:null,championUsage:{version:1,mass:.85,usage:{sampled:500,counts:{Ashe:500}}}});const original=first.send;first.send=()=>{throw Error('Synthetic send failure');};service.clearChampionUsage();assert.equal(service.snapshot().members.find(m=>m.self).share.championUsage,null);first.send=original;
+  first.close(1006);const next=await fake.next(2);next.open();next.deliver({kind:'welcome',v:1,room:'482913',members:[],championUsage:1});await tick(10);const shares=next.sent.map(JSON.parse).filter(frame=>frame.kind==='state');assert.ok(shares.length);assert.ok(shares.every(frame=>frame.championUsage===null));
+ }finally{service.dispose();}
+});
+
 test('multi-votes round-trip over relay and reconnect refuses a relay that would discard the set',async()=>{
  const fake=fakeRelay(),service=createRoomService({nick:'我',webSocketFactory:fake.factory,relayBackoffMs:5});
  try{
