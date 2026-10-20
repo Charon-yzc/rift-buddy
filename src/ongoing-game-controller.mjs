@@ -42,14 +42,29 @@ export function createOngoingGameController({request,analyze,teamAnalyze,infer,o
    try{const profile=await request('profile',{handle:page.handle});if(!current(epoch,key,entry))return;entry.profile=profile;}catch(error){entry.notice+=(entry.notice?'；':'')+message(error);}
    if(!current(epoch,key,entry))return;entry.loading=false;recalculate();onChange();
    const timelines={},maxDetails=Math.min(state.settings.details,games.length);let heldBytes=0;
-   try{for(const game of games.slice(0,maxDetails)){
-    if(!current(epoch,key,entry))return;
-    entry.detailsLoading=true;onChange();
-    try{const result=await request('timeline',{handle:page.handle,id:game.id});if(!current(epoch,key,entry))return;const bytes=JSON.stringify(result.timeline).length*2;
-     if(timelineBytes+bytes>48_000_000){entry.notice+=(entry.notice?'；':'')+'时间线已达到本次内存上限';break;}
-     timelines[game.id]=result.timeline;heldBytes+=bytes;timelineBytes+=bytes;entry.loadedDetails++;entry.analysis=analyze(games,{timelines});entry.notice=result.notice||entry.notice;recalculate();onChange();
-    }catch(error){entry.detailsError=message(error);}
-   }}finally{timelineBytes-=heldBytes;}
+    const targetGames=games.slice(0,maxDetails);
+    try{
+     for(let i=0;i<targetGames.length;i+=4){
+      if(!current(epoch,key,entry))return;
+      entry.detailsLoading=true;
+      const batch=targetGames.slice(i,i+4);
+      let memoryExceeded=false;
+      await Promise.all(batch.map(async game=>{
+       if(memoryExceeded)return;
+       try{
+        const result=await request('timeline',{handle:page.handle,id:game.id});
+        if(!current(epoch,key,entry))return;
+        const bytes=JSON.stringify(result.timeline).length*2;
+        if(timelineBytes+bytes>48_000_000){memoryExceeded=true;entry.notice+=(entry.notice?'；':'')+'时间线已达到本次内存上限';return;}
+        timelines[game.id]=result.timeline;heldBytes+=bytes;timelineBytes+=bytes;entry.loadedDetails++;
+       }catch(error){entry.detailsError=message(error);}
+      }));
+      entry.analysis=analyze(games,{timelines});
+      recalculate();
+      onChange();
+      if(memoryExceeded)break;
+     }
+    }finally{timelineBytes-=heldBytes;}
   }catch(error){if(current(epoch,key,entry)){entry.error=message(error);}}
    finally{loadingPlayers--;drainPlayers();if(current(epoch,key,entry)){entry.loading=false;entry.detailsLoading=false;recalculate();onChange();}}})();
   flights.set(member.key,task);try{await task;}finally{if(flights.get(member.key)===task)flights.delete(member.key);}
