@@ -1,3 +1,4 @@
+import {createPreparationContext} from '../src/core/preparation-context.mjs';
 import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
 import {roomFamiliarityContext} from '../src/core/room-familiarity.mjs';
 import {heroClickSelection,configurationChoices} from '../src/core/configuration-choices.mjs';
@@ -52,7 +53,7 @@ const syncFunctions=extract('const includePublicPreselection=','const currentPar
  extract('function recommendationInput(){','function useCatalogResult(')+
  extract('async function performSync(','function reflectRunePending(');
 const clickFunctions=extract('function resultCreativePlan(result){','function reconcileCreativePlan(')+
- extract('function taskOwnRole(){','function renderTaskMembers(')+
+ extract('function taskOwnRole(){','function renderTaskMembers(')+extract('function preparationContext(){','function roomRoleContext(){')+
  extract('function memberHeroAction(','function readOnlyPreparation(')+
  extract('function readOnlyPreparation(','function clientControls(')+
  extract('function selectedClientPreparation(','async function loadCatalogCombo(')+
@@ -68,7 +69,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
  const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
   const context=vm.createContext({
-    rankedDraftPolicy,publicRankedDraft,selectionReferenceScope,resolvedRankedDraft,enemyRolesSignature,prepareHeroWithSource,roomFamiliarityContext,room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
+    createPreparationContext,guideSelection:null,rankedDraftPolicy,publicRankedDraft,selectionReferenceScope,resolvedRankedDraft,enemyRolesSignature,prepareHeroWithSource,roomFamiliarityContext,room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
     ongoing:createOngoingGameController({request:async()=>{throw Error('Recommendation sync must not query ongoing histories');},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]}),
   Date:ClockDate,data,slots,client:current,championUsage:null,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
@@ -482,7 +483,7 @@ test('an old-game explicit reference queued behind a real persist cannot migrate
  const {context:c}=setup({slots:createSlots()}),before=defaultState();before.draft={slots:createSlots(),scope:'party',style:'wild',soloRole:'bottom',clientGameId:'123'};
  const accepted=structuredClone(before);accepted.draft.clientGameId='124';accepted.draft.scope='context';accepted.draft.referenceQueue=420;
  let entered,release;const started=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve),submissions=[];
- Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,itemSetStatuses:new Map(),rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,selectBuildSource:noop,guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+ Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,itemSetStatuses:new Map(),rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,dataState:{selectSource:noop},guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
   api:{...c.api,saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;return {state:accepted,revision:2};}return {state:snapshot,revision:3};}}});
  vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
  const first=c.persist({derived:true,throwOnError:true});await started;c.saved.draft.scopeSelection='party';c.scope='party';c.saved.preferences.autoCheck=false;const next=c.persist({throwOnError:true});release();await first;await next;
@@ -493,7 +494,7 @@ test('a rejected derived slot cannot ride a later different-lane save over anoth
  const {context:c}=setup({slots:createSlots()}),before=defaultState();before.draft={slots:createSlots(),scope:'party',style:'wild',soloRole:'bottom',clientGameId:'123'};
  let entered,release;const started=new Promise(resolve=>entered=resolve),gate=new Promise((_,reject)=>release=reject),submissions=[];
  const accepted=structuredClone(before);accepted.draft.slots.find(slot=>slot.role==='bottom').champion='Ashe';
- Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,selectBuildSource:noop,guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+ Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,dataState:{selectSource:noop},guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
   api:{...c.api,ready:async()=>({state:accepted,revision:2}),saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;}return {state:snapshot,revision:3};}}});
  vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
  c.slots.find(slot=>slot.role==='bottom').champion='Ahri';const first=c.persist({derived:true,throwOnError:true});await started;
@@ -509,7 +510,7 @@ test('a queued real hero swap retains locks and bindings after the earlier obser
   Object.assign(before.draft.slots.find(slot=>slot.role==='top'),{champion:'Garen',locked:true,clientCellId:0});
   const {context:c}=setup({slots:structuredClone(before.draft.slots)});let entered,release;
   const started=new Promise(resolve=>entered=resolve),gate=new Promise((_,reject)=>release=reject),submissions=[];
-  Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,selectBuildSource:noop,guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+  Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,dataState:{selectSource:noop},guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
    api:{...c.api,ready:async()=>({state:before,revision:2}),saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;}return {state:snapshot,revision:3};}}});
   vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
   Object.assign(c.slots.find(slot=>slot.role==='bottom'),{champion:'Ahri',locked:true,clientCellId:4});
@@ -796,7 +797,7 @@ test('without an adopted member the current saved configuration wins over an old
  const current=client();current.session.myTeam[0].championId=hero('Ahri').key;
  const {context:c,calls}=setup({current});
  const saved={selection:{id:'Ahri',role:'bottom',mode:'rift',runeId:'loaded-favorite'}},preview={selection:{id:'Ahri',role:'bottom',mode:'rift',runeId:'older-hover'}};
- c.myPreparation=()=>saved;c.companionPreparation=()=>preview;
+ c.rememberedPreparation=()=>saved.selection;c.currentPickIntent=()=>({selection:preview.selection,positionKnown:true});
  assert.equal(c.ownTaskPreparation().selection.runeId,'loaded-favorite');assert.equal(calls.prepared.length,0);
 });
 

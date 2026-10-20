@@ -99,7 +99,10 @@ export function catalogIssues(c,data){
  for(const entry of [...c.duos,...c.trios]){const changed=dependencyChanges(entry,c,data),s=status[entry.id];s.changedDependencies=changed;if(changed.length){s.stale=true;s.reasons.push('关联资料变化：'+changed.map(x=>x.name).join('、'));}const members=entry.members||[{loadoutId:entry.loadouts.bottom},{loadoutId:entry.loadouts.support}];if(members.some(m=>loadoutStatus[m.loadoutId]?.stale)){s.stale=true;if(!s.reasons.includes('关联配置版本待复核'))s.reasons.push('关联配置资料待复核');}if(s.stale||s.invalid)reviewTasks.push({id:entry.id,name:entry.name,reasons:s.reasons,changedDependencies:changed});}
  return {errors:[...new Set(errors)],status,loadoutStatus,reviewTasks,skillPlanStatus,skillReviewTasks,staleSkillPlans:Object.values(skillPlanStatus).filter(s=>s.stale).length,staleLoadouts:Object.values(loadoutStatus).filter(s=>s.stale).length,stale:Object.values(status).filter(s=>s.stale).length,invalid:Object.values(status).filter(s=>s.invalid).length};
 }
-export function configureCatalog(c){const catalog=validateCatalog(c);configureRuleCatalog(catalog);configureLoadoutCatalog(catalog);return catalog;}
+// Installation follows validation, so renderer data transitions can prepare
+// all dependent views before replacing the active rule and loadout catalogs.
+export function installValidatedCatalog(catalog){configureRuleCatalog(catalog);configureLoadoutCatalog(catalog);return catalog;}
+export function configureCatalog(c){return installValidatedCatalog(validateCatalog(c));}
 export function mergePersonal(base,personal={duos:[],trios:[],loadouts:[],runes:{}}){
  const result=structuredClone(base);for(const key of ['duos','trios','loadouts','skillPlans']){const additions=personal[key]||[];const ids=new Set(additions.map(x=>x.id));result[key]=(result[key]||[]).filter(x=>!ids.has(x.id)&&!(['duos','trios'].includes(key)&&additions.some(a=>comboKey(a)===comboKey(x)))&&!(key==='skillPlans'&&additions.some(a=>a.champion===x.champion&&a.role===x.role&&a.loadoutId===x.loadoutId))).concat(structuredClone(additions));}
  result.runes={...result.runes,...structuredClone(personal.runes||{})};return validateCatalog(result);

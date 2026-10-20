@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {publicClientGameId} from '../src/core/draft.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
+import {createRendererDataState,awaitDataOperation,hasDataRevision} from '../src/renderer-data-state.mjs';
 import {resolvedRankedDraft,enemyRolesSignature} from '../src/core/enemy-roles.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
@@ -18,6 +19,7 @@ function fixture(){
   data:{patch:'16.20',buildSource:{region:'global'},pairStatistics:{revision:'cached'},opponentBuildSources:{}},pairRefreshKey:()=> 'same-heroes-source',currentPairTargets:()=>[],pairRefreshes:new Set(),pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshes:new Set(),opponentRefreshErrors:new Map(),
   overlay:{contains:()=>false},companionPreparation:()=>({selection}),chosenMatchupOpponent:()=>target,matchupPreparation:()=>({context:'original-ui-context'}),publicMatchupIds:()=>['Lux'],matchupPreparationContext:()=> 'original-ui-context',opponentBuildKey:()=> 'same-opponent-source',opponentRequestKey:()=> 'same-opponent-source',sameBuildSource:()=>true,validReference:()=>true,champ:()=>({id:'Ashe'}),buildView:null,
   render(){},renderBuild(){},invalidate:()=>events.push('invalidate'),generate:async()=>events.push('generate'),toast:message=>events.push(message),api:{refreshPairs:()=>gate.promise,refreshOpponentBuild:()=>gate.promise}});
+ context.hasDataRevision=hasDataRevision;context.dataState={baseGeneration:()=>0,waitForRevision:async()=>{},local:changes=>Object.assign(context.data,changes)};context.dataOperation=operation=>awaitDataOperation(operation,context.dataState);
  vm.runInContext(contextFunction+extract('const pairRefreshStatus=','async function refreshPairData(')+extract('const opponentRefreshStatus=','async function refreshOpponentConfiguration(')+pairFunction+opponentFunction,context);
  return {context,gate,events,element:{dataset:{plan:'Ashe:bottom:rift',context:'original-ui-context'}}};
 }
@@ -95,6 +97,7 @@ function buildFixture(){
   normalizeBuildSource:value=>value,buildKey:()=> 'same-hero-source',buildSourceKey:()=> 'cached-public-reference',sameBuildSource:()=>true,buildSourceLabel:()=> '公开参考',selectBuildSource(){},
   recommendationInput:()=>Object.keys(context.data.buildSources).length,recommendationKey:value=>value,invalidate:()=>events.push('invalidate'),toast:message=>events.push(message),
   windowLayout:{docked:false},buildView:null,route:'draft',document:{activeElement:null},render(){},renderBuild(){},api:{refreshBuild:()=>gate.promise}});
+ context.hasDataRevision=hasDataRevision;context.dataState={baseGeneration:()=>0,waitForRevision:async()=>{},local:changes=>Object.assign(context.data,changes)};context.dataOperation=operation=>awaitDataOperation(operation,context.dataState);
  vm.runInContext(contextFunction+extract('async function refreshConfiguration(','function renderBuild('),context);
  return {context,gate,events};
 }
@@ -122,7 +125,7 @@ test('current ordinary build requests still report success and failure',async()=
 
 function sharedDataFixture(){
  const events=[],gate=deferred(),context=vm.createContext({
-  data:{patch:'16.20',version:'16.20.1',champions:[{id:'Aatrox',mechanics:{control:1}}],catalog:{version:1},catalogInfo:{status:{}}},dataRevision:0,
+  data:{patch:'16.20',version:'16.20.1',champions:[{id:'Aatrox',mechanics:{control:1}}],catalog:{version:1},catalogInfo:{status:{}}},dataRevision:0,api:{},hasDataRevision,awaitDataOperation,createRendererDataState:options=>createRendererDataState({...options,catalog:{prepare:v=>v,install(){},inspect:()=>({status:{}})},images:{prepare:()=>({}),install(){}},projectSource(){}}),
   saved:{preferences:{buildSource:{region:'global'}}},BUNDLED_CATALOG:{version:1},rankedRolesCache:null,route:'draft',buildView:null,
   recommendationKey,recommendationInput:()=>({slots:[],patch:context.data.patch,version:context.data.version,catalogStatus:context.data.catalogInfo.status}),
   bindPlayerBuildPreferences(){},configureCatalog:value=>value,catalogIssues:()=>({status:{}}),configureAssets(){},selectBuildSource(){},
@@ -131,7 +134,8 @@ function sharedDataFixture(){
   results:[{id:'cached'}],resultsSignature:'old-signature',showAllCandidates:false,activeRecommendation:{cancel:()=>events.push('cancel')},
   clearTimeout,cancelRecommendationReveal(){},calculateRecommendation:()=>gate.promise,resultCreativePlan:()=>events.push('apply'),toast:message=>events.push(message)
  });
- vm.runInContext(extract('function cancelRecommendation(){','let client=')+extract('function acceptSharedData(value){','async function restorePreparationSnapshot(')+extract('async function generate(next=false){','const sync=createClientSync'),context);
+ vm.runInContext(extract('function cancelRecommendation(){','let client=')+extract('let dataReady=false;','async function restorePreparationSnapshot(')+extract('async function generate(next=false){','const sync=createClientSync'),context);
+ vm.runInContext('dataState.bootstrap({data,revision:0});dataReady=true;',context);
  return {context,gate,events};
 }
 
@@ -148,10 +152,31 @@ test('same-patch base refresh invalidates cached and in-flight recommendations e
  }
 });
 
+test('same-version catalog text edits invalidate cached and in-flight recommendations',async()=>{
+ const f=sharedDataFixture(),before=recommendationKey(f.context.recommendationInput()),pending=f.context.generate();
+ f.context.acceptSharedData({revision:1,changes:{catalog:{version:1,duos:[{id:'same',name:'new name',plan:'new steps'}]},catalogInfo:{status:{}}}});
+ assert.equal(recommendationKey(f.context.recommendationInput()),before,'Text edits must not depend on the lightweight key');
+ assert.equal(f.context.results.length,0);assert.equal(f.context.autoRecommendationKey,'');assert.deepEqual(f.events,['stale','cancel','queue']);
+ f.gate.resolve([{id:'late-old-text'}]);await pending;assert.equal(f.context.results.length,0);assert.deepEqual(f.events,['stale','cancel','queue']);
+});
+
 test('feed status-only refresh preserves active recommendations and in-flight calculation',async()=>{
  const f=sharedDataFixture(),pending=f.context.generate();
  f.context.acceptSharedData({revision:1,changes:{dataFeed:{phase:'checking'}}});
  assert.equal(f.context.results[0].id,'cached');assert.equal(f.context.generating,true);assert.deepEqual(f.events,[]);
  f.gate.resolve([{id:'current-kit'}]);await pending;
  assert.equal(f.context.results[0].id,'current-kit');assert.deepEqual(f.events,['apply']);
+});
+
+test('late feed check and adoption replies never replace newer authoritative status',async()=>{
+ for(const action of ['refresh-statistics','adopt-server-data']){
+  const f=sharedDataFixture(),response=deferred();f.context.api.checkDataFeed=()=>response.promise;f.context.api.adoptDataGeneration=()=>response.promise;
+  const branch=extract("else if(action==='refresh-statistics')","else if(action==='update')");
+  vm.runInContext(`async function feedAction(action,el){if(false){}${branch}}`,f.context);
+  const pending=f.context.feedAction(action,{dataset:{release:'isolated-release'}});
+  f.context.acceptSharedData({revision:1,changes:{dataFeed:{phase:'checking',message:'checking'}}});
+  f.context.acceptSharedData({revision:2,changes:{dataFeed:{phase:'ready',message:'current ready'}}});
+  response.resolve({dataRevision:1,phase:'offline',message:'old reply'});await pending;
+  assert.equal(f.context.data.dataFeed.phase,'ready');assert.equal(f.context.data.dataFeed.message,'current ready');assert.deepEqual(f.events,['current ready']);
+ }
 });
