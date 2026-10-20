@@ -25,6 +25,12 @@ export function createHexRoundStore({newToken=()=>crypto.randomUUID()}={}){
    if(manual?.hero!==hero){manual=make(hero);revision++;}
    return structuredClone(manual);
   },
+  reset(value){
+   const record=[live,manual].find(row=>row&&row.context===value?.context);
+   if(!record||record.revision!==value?.revision)throw Error('本局强化记录已变化，请按当前页面重试');
+   record.context=newToken();record.revision++;record.options=[];record.owned=[];revision++;
+   return structuredClone(record);
+  },
   change(value,data){
    const record=[live,manual].find(row=>row&&row.context===value?.context);
    if(!record||record.revision!==value?.revision)throw Error('本局强化记录已变化，请按当前页面重试');

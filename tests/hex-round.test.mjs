@@ -45,3 +45,13 @@ test('reusable preparations retain wishlists but omit live round choices',()=>{
  const saved=validatePreparation({id:'Ashe',role:'bottom',mode:'hex',augmentIds:[1048],compareIds:[1002],ownedAugmentIds:[1047]});
  assert.deepEqual(saved.augmentIds,[1048]);assert.equal(saved.compareIds,undefined);assert.equal(saved.ownedAugmentIds,undefined);
 });
+
+test('an explicit guide reset invalidates old clicks and leaves the other context intact',()=>{
+ const store=fixture();store.observe(active,data);store.select('Sona',data);
+ change(store,'own',1141,store.snapshot().manual);change(store,'own',1047,store.snapshot().live);
+ const old=store.snapshot().manual,next=store.reset(old);
+ assert.notEqual(next.context,old.context);assert.deepEqual(next.options,[]);assert.deepEqual(next.owned,[]);
+ assert.deepEqual(store.snapshot().live.owned,[1047]);assert.throws(()=>store.reset(old),/已变化/);
+ change(store,'own',2005,next);assert.deepEqual(store.snapshot().manual.owned,[2005]);
+ assert.throws(()=>store.reset({...next,revision:next.revision+100}),/已变化/);
+});

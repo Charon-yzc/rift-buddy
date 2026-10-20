@@ -198,7 +198,7 @@ async function boot(){
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));publishWindows('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
- const getGuideModel=()=>{const selection=currentGuideSelection(),m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,selection);if(m){const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
+ const getGuideModel=()=>{const selection=currentGuideSelection(),m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,selection);if(m){if(m.mode==='hex'){const record=hexGuideRecord(m.selection);m.hexRound=record?{context:record.context,revision:record.revision}:null;}const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
  const recommendationCore=await import('../src/core/recommend.mjs');
  const {publicClientGameId,reconcileClientDraft}=await import('../src/core/draft.mjs');
  const {createHexRoundStore,hexRoundSelection}=await import('../src/core/hex-round.mjs');
@@ -234,7 +234,7 @@ async function boot(){
    let accepted=valid;
    if(previous){
     if(!valid||!current.guide||guideCore.guideIdentity(current.guide.selection)!==guideCore.guideIdentity(previous.selection)||current.guide.match?.gameId!==previous.match?.gameId)throw Error('本局指引已变化，请核对后重新操作');
-    const message='指引设置同时发生变化，请核对后重新操作',selection=current.guide.selection;
+    const message='指引设置同时发生变化，请核对后重新操作',selection=guideCore.validateGuideSelection(current.guide.selection);
     accepted=mergeSavedFields(current.guide,{...previous,selection},{...valid,selection},message);
     accepted.selection=mergeSavedFields(selection,previous.selection,valid.selection,message);
    }
@@ -244,12 +244,13 @@ async function boot(){
    return {...current,guide:accepted,preparations:accepted?upsertPreparation(current.preparations,accepted.selection):current.preparations};
   });const revision=++guideRevision;for(const window of appWindows())window.webContents.send('guide-selection',state.guide?.selection||null,{revision});
  };
- const syncHexGuide=()=>{
+ const syncHexGuide=binding=>{
   // Round notes are ephemeral. Join the same serialization queue as config
   // writes, but never make accepting a note depend on a settings disk write.
   // Project the guide that exists when the queue runs, not a captured guide.
   saveTask=saveTask.catch(()=>{}).then(()=>{
    if(state.guide?.selection.mode!=='hex')return;
+   if(binding&&guideHexContext===binding.from&&state.guide.selection.id===binding.hero)guideHexContext=binding.to;
    const record=hexGuideRecord(state.guide.selection),projected=hexRoundSelection(state.guide.selection,record);
    if(JSON.stringify(projected)===JSON.stringify(state.guide.selection))return;
    guideHexContext=record?.context||null;state={...state,guide:{...state.guide,selection:projected}};
@@ -279,8 +280,13 @@ async function boot(){
   refreshBuild(s.id,role).then(()=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now()})).catch(error=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now(),error:error.message})).finally(()=>guide.publish());
  };
  afterBaseChange=refreshPreparedBuild;
+ const resetHexGuideRound=(current,expected)=>{
+  const record=hexGuideRecord(current?.selection);if(!record)return;
+  if(expected?.context!==record.context||expected?.revision!==record.revision)throw Error('本局强化记录已变化，请按当前页面重试');
+  const next=hexRounds.reset(expected);publishHexRound();syncHexGuide({from:record.context,to:next.context,hero:record.hero}).catch(error=>diagnostic('hex guide projection unavailable: '+error.message));return next.context;
+ };
  guide=require('./guide-window.cjs')({root,getState:()=>state.guide,getModel:getGuideModel,isQuitting:()=>quitting,diagnostic,
-  currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
+  currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,resetHexRound:resetHexGuideRound,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
   showMain:selection=>{if(selection)pendingBuild=selection;showMainWindow();if(rendererReady&&pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}}});
  diagnostic(`loaded data ${data.version}`);
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
