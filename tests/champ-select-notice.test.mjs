@@ -12,8 +12,11 @@ const source=await fs.readFile('src/skill.mjs','utf8');
 const renderSource=source.slice(source.indexOf('function render(value)'),source.indexOf('root.addEventListener'));
 function widget(model){const root={innerHTML:''},context=vm.createContext({root,windowResizeGrip:'',applyPresentation(){},e:String});vm.runInContext(renderSource,context);context.render({model});return root.innerHTML;}
 
-test('chat consent defaults off and explicit on/off survives real disk saves and re-reads',async()=>{
- assert.equal(validateState(defaultState()).preferences.chatNotice,false);
+test('chat notice defaults on and explicit on/off survives real disk saves and re-reads',async()=>{
+ assert.equal(validateState(defaultState()).preferences.chatNotice,true);
+ const missing=defaultState();delete missing.preferences.chatNotice;assert.equal(validateState(missing).preferences.chatNotice,true);
+ const optedOut=defaultState();optedOut.preferences.chatNotice=false;assert.equal(validateState(optedOut).preferences.chatNotice,false);
+ const invalid=defaultState();invalid.preferences.chatNotice='true';assert.equal(validateState(invalid).preferences.chatNotice,false);
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-chat-consent-')),state=defaultState();
  for(const enabled of [true,false,true,false]){state.preferences.chatNotice=enabled;await saveState(root,state);assert.equal((await readState(root)).preferences.chatNotice,enabled);}
 });

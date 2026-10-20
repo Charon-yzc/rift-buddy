@@ -1,7 +1,7 @@
 import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
 import {roomFamiliarityContext} from '../src/core/room-familiarity.mjs';
 import {heroClickSelection,configurationChoices} from '../src/core/configuration-choices.mjs';
-import {rankedDraftPolicy,publicRankedDraft} from '../src/core/ranked-draft.mjs';
+import {rankedDraftPolicy,publicRankedDraft,selectionReferenceScope} from '../src/core/ranked-draft.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -67,7 +67,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
  const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
   const context=vm.createContext({
-    rankedDraftPolicy,publicRankedDraft,prepareHeroWithSource,roomFamiliarityContext,room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
+    rankedDraftPolicy,publicRankedDraft,selectionReferenceScope,prepareHeroWithSource,roomFamiliarityContext,room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
     ongoing:createOngoingGameController({request:async()=>{throw Error('Recommendation sync must not query ongoing histories');},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]}),
   Date:ClockDate,data,slots,client:current,championUsage:null,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
@@ -475,6 +475,17 @@ test('awaited public draft saves recover only known derived races without replay
   else await assert.rejects(request,error=>error.message===scenario.message);
   assert.equal(writes,1,'A stale snapshot must never be retried');assert.equal(reads,Number(scenario.recovered));assert.equal(calls.prepared.length,0);assert.equal(c.pendingSaves.size,0);
  }
+});
+
+test('an old-game explicit reference queued behind a real persist cannot migrate onto the new game',async()=>{
+ const {context:c}=setup({slots:createSlots()}),before=defaultState();before.draft={slots:createSlots(),scope:'party',style:'wild',soloRole:'bottom',clientGameId:'123'};
+ const accepted=structuredClone(before);accepted.draft.clientGameId='124';accepted.draft.scope='context';accepted.draft.referenceQueue=420;
+ let entered,release;const started=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve),submissions=[];
+ Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,itemSetStatuses:new Map(),rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,selectBuildSource:noop,guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+  api:{...c.api,saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;return {state:accepted,revision:2};}return {state:snapshot,revision:3};}}});
+ vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
+ const first=c.persist({derived:true,throwOnError:true});await started;c.saved.draft.scopeSelection='party';c.scope='party';c.saved.preferences.autoCheck=false;const next=c.persist({throwOnError:true});release();await first;await next;
+ assert.equal(submissions.length,2);assert.equal(submissions[1].draft.clientGameId,'124');assert.equal(submissions[1].draft.scope,'context');assert.equal(submissions[1].draft.scopeSelection,undefined);assert.equal(submissions[1].draft.referenceQueue,420);assert.equal(submissions[1].preferences.autoCheck,false);assert.equal(c.saved.draft.scopeSelection,undefined);assert.equal(c.pendingSaves.size,0);
 });
 
 test('a rejected derived slot cannot ride a later different-lane save over another window selection',async()=>{
