@@ -7,7 +7,7 @@ const {isDeepStrictEqual}=require('node:util');
 const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
-let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,latestHistoryTransport,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
+let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,usageCache,latestHistoryTransport,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
@@ -111,11 +111,18 @@ async function boot(){
   });
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));
  const {createChampionUsageCollector}=await import('../services/champion-usage-collector.mjs');
- usageCollector=createChampionUsageCollector({request:(transport,operation,payload)=>helper.history(operation,payload,transport),champions:()=>data.champions,transportCurrent:token=>helper.transportCurrent(token),onChange:value=>{if(!quitting){publishWindows('champion-usage',value);roomUsagePublisher?.sync();}}});
+ const {createChampionUsageCache}=await import('../services/champion-usage-cache.mjs');
+ usageCache=await createChampionUsageCache({root:storeRoot});
+ usageCollector=createChampionUsageCollector({cache:usageCache,request:(transport,operation,payload)=>helper.history(operation,payload,transport),champions:()=>data.champions,transportCurrent:token=>helper.transportCurrent(token),onChange:value=>{if(!quitting){publishWindows('champion-usage',value);roomUsagePublisher?.sync();}}});
  const {createRoomUsagePublisher}=await import('../services/room-champion-usage.mjs');
  roomUsagePublisher=createRoomUsagePublisher({getService:()=>roomService,getSummary:()=>usageCollector.snapshot(),getMass:()=>state.preferences.familiarityMass});
  guard('champion-usage',()=>usageCollector.snapshot());
  guard('champion-usage-refresh',()=>{usageCollector.observe(latestClient,latestHistoryTransport,{refresh:true}).catch(()=>{});return usageCollector.snapshot();});
+ guard('champion-usage-import',async()=>{
+  const selected=await dialog.showOpenDialog(win,{title:'导入当前账号的英雄场次统计',properties:['openFile'],filters:[{name:'英雄统计 JSON',extensions:['json']}]});if(selected.canceled)return null;
+  let value;try{const file=await fs.open(selected.filePaths[0],'r');try{if((await file.stat()).size>32000)throw Error('oversized');const bytes=Buffer.alloc(32001),{bytesRead}=await file.read(bytes,0,bytes.length,0);if(bytesRead>32000)throw Error('oversized');value=JSON.parse(bytes.subarray(0,bytesRead).toString('utf8'));}finally{await file.close();}}catch{throw Error('无法读取英雄统计文件，请选择有效的小型 JSON 文件');}
+  return usageCollector.importUsage(value);
+ });
  const catalogCore=await import('../src/core/catalog.mjs');
  const {createCatalogStore}=await import('../services/catalog-store.mjs');
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
@@ -952,5 +959,5 @@ app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
  event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;
  const stopHelper=Promise.race([helper.shutdown(),new Promise(resolve=>setTimeout(resolve,1500))]);
- Promise.allSettled([stopHelper,saveTask]).then(results=>{if(results[1].status==='rejected')diagnostic('settings-save-before-quit failed');}).finally(()=>{cleanupDone=true;app.quit();});
+ Promise.allSettled([stopHelper,saveTask,usageCache?.flush()]).then(results=>{if(results[1].status==='rejected')diagnostic('settings-save-before-quit failed');}).finally(()=>{cleanupDone=true;app.quit();});
 });

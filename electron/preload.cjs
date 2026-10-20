@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
   matchHistory:(operation,payload)=>ipcRenderer.invoke('match-history',operation,payload),
  championUsage:()=>ipcRenderer.invoke('champion-usage'),
  refreshChampionUsage:()=>ipcRenderer.invoke('champion-usage-refresh'),
+ importChampionUsage:()=>ipcRenderer.invoke('champion-usage-import'),
  onChampionUsage:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('champion-usage',listener);return()=>ipcRenderer.removeListener('champion-usage',listener);},
  ready:()=>ipcRenderer.invoke('main-ready'),
  onClient:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('client-update',listener);return()=>ipcRenderer.removeListener('client-update',listener);},

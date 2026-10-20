@@ -1,6 +1,6 @@
 const {app,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[],usageSmoke=process.env.RIFT_BUDDY_USAGE_SMOKE==='1',roomUsageSmoke=process.env.RIFT_BUDDY_ROOM_USAGE_SMOKE==='1',historyReads=[],roomSockets=[],roomFrames=[];let main,observer,offline=false,clientPhase='Lobby',holdUsage=false,releaseUsage=null;
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[],cacheSmoke=process.env.RIFT_BUDDY_USAGE_CACHE_SMOKE,usageSmoke=process.env.RIFT_BUDDY_USAGE_SMOKE==='1',roomUsageSmoke=process.env.RIFT_BUDDY_ROOM_USAGE_SMOKE==='1',historyReads=[],roomSockets=[],roomFrames=[];let main,observer,offline=false,clientPhase='Lobby',holdUsage=false,releaseUsage=null;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',(_event,_level,message)=>{if(typeof message==='string'&&/TypeError|ReferenceError|SyntaxError/.test(message))errors.push(message);});});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -17,7 +17,8 @@ const own={puuid:'fixture-own-player-0001',summonerId:1,gameName:'战绩测试�
 function game(id){const identities=[own,friend,...Array.from({length:8},(_,i)=>({puuid:'fixture-public-player-'+(i+3),gameName:'模拟玩家'+(i+3),tagLine:'TEST'}))];return {gameId:id,gameCreation:Date.now()-id*3600000,gameDuration:1800,gameMode:'CLASSIC',gameType:'MATCHED_GAME',gameVersion:'16.20',queueId:420,mapId:11,teams:[],participantIdentities:identities.map((p,i)=>({participantId:i+1,player:p})),participants:identities.map((p,i)=>({participantId:i+1,championId:[22,412,99,86,64,103,51,89,122,17][i],teamId:i<5?100:200,spell1Id:4,spell2Id:7,stats:{kills:8,deaths:2,assists:10,win:i<5?id%2===1:id%2===0,totalDamageDealtToChampions:25000,totalDamageTaken:15000,goldEarned:12000,totalMinionsKilled:140,neutralMinionsKilled:20,totalHeal:2000,visionScore:30,champLevel:16,item0:3006,item1:3031,perk0:8005,perkPrimaryStyle:8000,perkSubStyle:8100}}))};}
 const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);const route=options.path,method=options.method||'GET';if(offline)throw Error('fixture offline');
  if(route==='/lol-summoner/v1/current-summoner')return own;
- if(route==='/riotclient/region-locale')return {region:'unconfigured-fixture'};
+ if(route==='/riotclient/region-locale')return {region:cacheSmoke?'KR':'unconfigured-fixture'};
+ if(cacheSmoke&&route.includes('/matches?'))throw Error('Isolated match-history maintenance');
  if(route==='/lol-gameflow/v1/gameflow-phase')return clientPhase;
  if(route==='/lol-lobby/v2/lobby')return {localMember:own,members:[own,friend],gameConfig:{queueId:420}};
  if(route==='/lol-gameflow/v1/session'){const g=game(100),player=p=>({...g.participantIdentities.find(v=>v.participantId===p.participantId).player,championId:p.championId,spell1Id:p.spell1Id,spell2Id:p.spell2Id,selectedPosition:p.participantId===1?'BOTTOM':p.participantId===2?'UTILITY':'MIDDLE',selectedRole:'BOTTOM.PRIMARY.BOTTOM.UTILITY.NONE'});return {map:{id:11,gameMode:'CLASSIC'},gameData:{gameId:100,queue:{id:420,gameMode:'CLASSIC'},teamOne:g.participants.slice(0,5).map(player),teamTwo:g.participants.slice(5).map(player)}};}
@@ -66,6 +67,23 @@ async function run(){
   await until(()=>js(`document.querySelector(${JSON.stringify(selector)}).matches(':hover')`),'Control did not enter real hover: '+selector);
   await delay(200);await readable(selector);await capture(name);main.webContents.sendInputEvent({type:'mouseMove',x:0,y:0});
  };
+ if(cacheSmoke){
+  await js('window.buddy.client(true)');await until(()=>js('window.buddy.championUsage().then(v=>v.session&&v.status!=="loading")'),'Account context was not confirmed');
+  await until(()=>js('!!document.querySelector(".champion-usage")'),'Usage controls missing');
+  if(cacheSmoke==='seed'){
+   await capture('usage-cache-before.png');require('electron').dialog.showOpenDialog=async()=>({canceled:false,filePaths:[path.join(root,'import-usage.json')]});
+   await js('document.querySelector(".usage-details").open=true;true');await click('[data-action=champion-usage-import]');
+  }
+  await until(()=>js('document.querySelector(".champion-usage header small")?.textContent.includes("本地缓存")'),'Cached counts not shown');
+  const value=await js('window.buddy.championUsage()');assert.equal(value.usage.sampled,18);assert.equal(value.basis,'current-season-screenshot');assert.equal(value.cached,true);assert.deepEqual(value.usage.counts,{Ahri:12,Ashe:6});
+  await js('document.querySelector(".usage-details").open=true;true');assert.match(await js('document.querySelector(".usage-details").textContent'),/未收录英雄合计 15%/);await capture('usage-cache-'+cacheSmoke+'.png');
+  const persisted=JSON.parse(await fs.readFile(path.join(root,'champion-usage.json'),'utf8'));assert.equal(persisted.entries.length,1);assert.ok(!/puuid|fixture-|gameId|password|session/.test(JSON.stringify(persisted)));
+  assert.ok(!JSON.stringify(JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8'))).includes('championUsage'));
+  if(cacheSmoke==='restore'){
+   const prior=value.session;own.puuid='fixture-replacement-player';own.summonerId=21;await js('window.buddy.client(true)');await until(()=>js('window.buddy.championUsage().then(v=>v.session!=='+JSON.stringify(prior)+'&&v.status!=="loading"&&v.usage.sampled===0)'),'Another account inherited the cache');await capture('usage-cache-other-account.png');
+  }
+  assert.equal(errors.length,0,errors.join('\n'));assert.equal(writes.length,0);await fs.writeFile(path.join(root,'cache-'+cacheSmoke+'-result.json'),JSON.stringify({packaged:!source,step:cacheSmoke,maintenance:true,importedOrRestored:18,separateCache:true,noRawMatches:true,accountIsolation:cacheSmoke==='restore'},null,2));app.quit();return;
+ }
  if(usageSmoke){
   await js('window.buddy.client(true)');
   await until(()=>js('window.buddy.championUsage().then(value=>value.complete&&value.scanned===500)'),'Automatic500 summary missing');

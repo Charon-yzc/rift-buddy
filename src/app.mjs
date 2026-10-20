@@ -222,6 +222,7 @@ async function ongoingAction(action,el){
 async function historyAction(action,el,background=false){
  const tab=history.current(),id=Number(el.dataset.id);
   if(action==='champion-usage-refresh'){acceptChampionUsage(await api.refreshChampionUsage());return;}
+  if(action==='champion-usage-import'){if(!api.importChampionUsage)throw Error('请在桌面版导入英雄统计');const value=await api.importChampionUsage();if(value){acceptChampionUsage(value);toast('已导入当前账号的英雄统计');}return;}
   if(action==='history-self'){const search=document.querySelector('.history-search-disclosure');if(search)search.open=false;await history.open({source:history.state.source,server:''});}
  else if(action==='history-tab')history.select(id);
  else if(action==='history-close')history.close(id);
@@ -1534,7 +1535,7 @@ document.addEventListener('click',async event=>{
  const el=event.target.closest('[data-action]');if(!el){if(event.target.dataset.backdrop)closeOverlay();return;}
  if(Date.now()-draggedAt<250)return;
  const action=el.dataset.action;try{
- if(action.startsWith('history-')||action==='champion-usage-refresh'){await historyAction(action,el,event.ctrlKey||event.metaKey);return;}
+ if(action.startsWith('history-')||action==='champion-usage-refresh'||action==='champion-usage-import'){await historyAction(action,el,event.ctrlKey||event.metaKey);return;}
  if(action.startsWith('ongoing-')){await ongoingAction(action,el);return;}
  const configuration=configurationEventSelection(el);
  if(configuration?.readOnly&&!readOnlyConfigurationAction(action))assertConfigurationEditable(configuration);
