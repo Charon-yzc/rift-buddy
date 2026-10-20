@@ -31,7 +31,7 @@ test('a changed image source cannot silently reuse an old bundled or legacy over
 });
 test('newer in-memory source references and the selected region survive preparation',async t=>{
  const f=await fixture(t),ref=structuredClone(Object.values(builds).find(row=>row.champion==='Ashe'&&row.role==='bottom'&&row.region==='global'&&row.tier==='emerald_plus'));
- ref.fetchedAt='2026-10-19T00:00:00Z';ref.serverCheckedAt='2026-10-19T01:00:00Z';const key='Ashe:bottom:global:emerald_plus:'+game.patch;
+ ref.fetchedAt=new Date(Date.parse(ref.fetchedAt)+3600000).toISOString();ref.serverCheckedAt=new Date(Date.parse(ref.fetchedAt)+3600000).toISOString();const key='Ashe:bottom:global:emerald_plus:'+game.patch;
  const {data}=await f.prepare(game,{current:{buildSources:{[key]:ref},buildSource:{region:'kr',tier:'emerald_plus'}}});assert.equal(data.buildSources[key],ref);assert.deepEqual(data.buildSource,{region:'kr',tier:'emerald_plus'});
 });
 test('manual action token uses actual file bytes while its content identity ignores runtime fields',async t=>{

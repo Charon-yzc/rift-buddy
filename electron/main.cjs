@@ -139,7 +139,9 @@ async function boot(){
  const rankingsCache=createRankingsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshRankings=refreshReference(rankingsCache,['rankings']);
  const {createNationalReferenceCache}=await import('../services/national-reference.mjs');
- const nationalReference=createNationalReferenceCache({root:path.join(storeRoot,'data'),getData:()=>data});
+ let bundledNational=null;
+ try{const bytes=await fs.readFile(path.join(root,'data/national-feed.json'));if(bytes.length<=1000000)bundledNational=JSON.parse(bytes);}catch{}
+ const nationalReference=createNationalReferenceCache({root:path.join(storeRoot,'data'),getData:()=>data,bundled:bundledNational});
  guard('national-reference',input=>nationalReference(input));
  const {createGameDataPreparer,readManualBase}=await import('../services/game-data-prepare.mjs');
  const {pureGameSnapshot,generationBaseIdentity}=await import('../services/data-generation.mjs');
