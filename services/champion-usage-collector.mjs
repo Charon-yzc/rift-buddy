@@ -26,19 +26,27 @@ export function createChampionUsageCollector({request,champions,transportCurrent
   if(account&&!(await cache.matches(cached,{account,server})))return false;
   const cachedState=cachedUsageSnapshot(cached,{now});
   if(!cachedState)return false;
-  state={...empty(),...cachedState,session};
-  emit();
+  // The cached distribution has no live scan session of its own.
+  const next={...empty(),...cachedState,session:''};
+  if(JSON.stringify(next)===JSON.stringify(state))return true;
+  state=next;emit();
   return true;
  }
  async function loadCache(){
   if(!cache)return null;
   const record=await cache.load().catch(()=>null);
-  cached=record;cacheLoaded=true;return record;
+  cached=record;cacheLoaded=true;
+  // The remembered account key lets the startup path verify the binding before
+  // the client reports an account, so a shared machine cannot show another
+  // player's cached heroes.
+  if(!account)account=await Promise.resolve(cache?.knownAccount?.()).catch(()=>'')||'';
+  return record;
  }
  // Only a real scan writes the cache. A mastery proxy is never stored as if it
  // were a game count.
  async function saveCache(){
   if(!cache||!account||!session||state.origin!==USAGE_ORIGIN.LIVE||state.status!=='ready'||!state.usage||!Object.keys(state.usage.counts||{}).length)return;
+  await Promise.resolve(cache?.rememberAccount?.(account)).catch(()=>{});
   await cache.save({account,server,source:state.source==='sgp'?'sgp':'lcu',basis:USAGE_BASIS.GAMES,sampled:state.usage.sampled,counts:state.usage.counts,at:new Date(now()).toISOString()}).then(record=>{cached=record;}).catch(()=>{});
  }
  function context(value){if(!token(value?.session)||typeof value.server!=='string'||value.server.length>40)throw Error('invalid context');return value;}
@@ -109,8 +117,10 @@ export function createChampionUsageCollector({request,champions,transportCurrent
    connected=false;transport=null;hint='';
    // The client is gone: the cached statistics stay usable instead of the
    // screen going blank. The scan session itself is dropped.
-   reset('offline',false,true);
-   state={...state,session:''};emit();
+   if(state.status!=='cached'){reset('offline',false,true);state={...state,session:''};}
+   else{generation++;cursor='';scanScanned=0;scanIdentified=0;scanSource='';}
+   // The snapshot is published only when it really changes, so a polling
+   // client cannot make the history page re-render every second.
    return applyCached().then(()=>snapshot());
   }
   if(nextAccount&&account&&nextAccount!==account){

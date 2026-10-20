@@ -14,12 +14,14 @@ const record={
   sampled:40,counts:{Ahri:20,Ashe:12,LeeSin:8},at:'2026-10-20T10:00:00.000Z'
 };
 const cacheStub=(initial=null)=>{
-  let current=initial;
+  let current=initial,remembered='';
   return {
     load:async()=>current,
     save:async value=>{current={...value,schema:1,account:accountDigest(key,String(value.account))};return current;},
     clear:async()=>{current=null;},
     matches:(value,context)=>cacheMatches(value,context,key),
+    rememberAccount:async value=>{remembered=String(value);},
+    knownAccount:async()=>remembered,
     current:()=>current
   };
 };
@@ -211,10 +213,13 @@ test('the real scan resumes after a cached fallback without inheriting its basel
     },
     champions:()=>champions,cache,onChange:()=>{}
   });
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t'});
+  const transport={id:'same'};
+  await collector.observe({connected:true,account:'a'.repeat(64)},transport);
   assert.equal(collector.snapshot().status,'cached');
   mode='live';
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t2'});
+  // The transport stays the same, so nothing resets the scan baseline and the
+  // live page really has to be accepted on its own.
+  await collector.observe({connected:true,account:'a'.repeat(64)},transport);
   const recovered=collector.snapshot();
   assert.equal(recovered.status,'ready','the live scan must replace the cached fallback');
   assert.equal(recovered.origin,USAGE_ORIGIN.LIVE);
@@ -236,6 +241,23 @@ test('the cached statistics stay usable while the client is unreachable',async()
   const snapshot=collector.snapshot();
   assert.equal(snapshot.status,'cached','the cache must survive a client that is gone');
   assert.equal(snapshot.usage.counts.Ahri,20);
+  assert.equal(snapshot.session,'','a cached distribution carries no live scan session');
+});
+
+test('a polling client does not make the history page re-render every second',async()=>{
+  const cache=cacheStub(record);
+  let published=0;
+  const collector=createChampionUsageCollector({
+    request:async(_t,operation)=>{
+      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
+      throw Object.assign(Error('未能连接客户端，请确认游戏已登录到大厅'),{status:0});
+    },
+    champions:()=>champions,cache,onChange:()=>{published++;},now:()=>1000
+  });
+  await collector.loadCache();
+  for(let n=0;n<5;n++)await collector.observe({connected:false},null);
+  // The first pass may publish the cached state once; the rest must be silent.
+  assert.ok(published<=2,`the snapshot must not be republished every poll, got ${published}`);
 });
 
 test('the cache key file survives a restart and still binds the account',async()=>{

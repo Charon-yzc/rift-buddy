@@ -8,6 +8,7 @@ import {cleanChampionUsage,usageBasis,USAGE_BASIS,DEFAULT_HISTORY_WINDOW} from '
 // identifiers, no notes. It stays on this machine and is never uploaded.
 export const USAGE_CACHE_FILE='champion-usage.json';
 export const USAGE_CACHE_KEY_FILE='champion-usage.key';
+export const USAGE_CACHE_ACCOUNT_FILE='champion-usage.account';
 export const USAGE_CACHE_MAX_BYTES=256*1024;
 // A cached distribution is a fallback, not a permanent profile.
 export const USAGE_CACHE_MAX_AGE_DAYS=30;
@@ -60,7 +61,7 @@ export function createUsageCache({root,now=()=>Date.now(),io=fs,write=atomicJSON
  // A dedicated directory keeps the cache away from the settings file and makes
  // it obvious which files belong to the familiar-hero statistics.
  const directory=path.join(root,'champion-usage');
- const filename=path.join(directory,USAGE_CACHE_FILE),keyFile=path.join(directory,USAGE_CACHE_KEY_FILE);
+ const filename=path.join(directory,USAGE_CACHE_FILE),keyFile=path.join(directory,USAGE_CACHE_KEY_FILE),accountFile=path.join(directory,USAGE_CACHE_ACCOUNT_FILE);
  let key=null;
  async function loadKey(){
   if(key)return key;
@@ -104,5 +105,18 @@ export function createUsageCache({root,now=()=>Date.now(),io=fs,write=atomicJSON
   const secret=await loadKey();
   return secret?cacheMatches(record,context,secret):false;
  }
- return {load,save,clear,filename,keyFile,matches,loadKey};
+ // The account key is a digest, not an identifier. Remembering it lets the
+ // startup path verify the cache binding before the client reports an account.
+ async function rememberAccount(accountKeyValue){
+  if(typeof accountKeyValue!=='string'||!/^[a-f0-9]{64}$/.test(accountKeyValue))return;
+  try{await io.mkdir(directory,{recursive:true});await io.writeFile(accountFile,accountKeyValue,{encoding:'utf8',mode:0o600});}catch{}
+ }
+ async function knownAccount(){
+  try{
+   const stat=await io.stat(accountFile);if(stat.size>256)return '';
+   const raw=String(await io.readFile(accountFile,'utf8')).trim();
+   return /^[a-f0-9]{64}$/.test(raw)?raw:'';
+  }catch{return '';}
+ }
+ return {load,save,clear,filename,keyFile,matches,loadKey,rememberAccount,knownAccount};
 }
