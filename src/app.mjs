@@ -23,7 +23,7 @@ import {prepareHeroWithSource} from './core/hero-source-preparation.mjs';
 import {championStatisticsView} from './champion-statistics-view.mjs';
 import {heroSelectionHint} from './hero-selection-affordance.mjs';
 import {createGameTooltips} from './game-tooltip-view.mjs';
-import {rankedEnemyRoster,rankedCurveReady,rankedCurveView,rankedCurveLink} from './ranked-draft-view.mjs';
+import {rankedEnemyRoster,rankedCurveReady,rankedCurveView,rankedCurveReplacesProposals,rankedCurveLink,acknowledgeRankedCurve} from './ranked-draft-view.mjs';
 import {preselectionPicker} from './preselection-picker-view.mjs';
 import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft} from './core/draft-intents.mjs';
 import {adoptedTaskView} from './draft-task-view.mjs';
@@ -1100,8 +1100,9 @@ function draftTargetLabel(){const targets=draftTargets(slots,scope,soloRole);ret
 function restrictionSummary(){const p=saved.preferences,labels=[];if(p.poolMode!=='off')labels.push((p.poolMode==='only'?'仅用':'优先')+'全局英雄池 '+p.pool.length+' 位');for(const r of ROLES){const pool=p.rolePools[r.id];if(pool.mode!=='off')labels.push(r.name+(pool.mode==='only'?'仅用':'优先')+' '+pool.heroes.length+' 位');}if(p.play.difficulty==='easy')labels.push('操作轻松');if(p.play.unusual===false)labels.push('仅常规位置');if(p.play.meleeBottom===false)labels.push('下路不推荐近战');if(clientBans.length)labels.push('公开禁选 '+clientBans.length+' 位');if(unassigned.length)labels.push('待安排已选 '+unassigned.length+' 位');if(client.session?.allowDuplicatePicks===false&&enemy.length)labels.push('不可镜像 '+enemy.length+' 位');if(saved.excluded.length)labels.push('排除 '+saved.excluded.length+' 位');return labels.join(' · ')||'全部英雄 · 允许娱乐搭配';}
 function renderDraft(){
  const eligibility=localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition:saved.draft?.playerPosition});
- const incoming=rankedCurveView(client,data,{slots,enemyRoles:saved.draft?.enemyRoles})+(rankedCurveReady(client,data,{slots})?'':roomBallotView(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null,party:currentParty(),includePreselected:includePublicPreselection()}));
+ const incoming=rankedCurveView(client,data,{slots,enemyRoles:saved.draft?.enemyRoles})+(rankedCurveReplacesProposals(client,data,{slots})?'':roomBallotView(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null,party:currentParty(),includePreselected:includePublicPreselection()}));
  const notice=creativePlanNotice?`<p class="callout warning" data-creative-plan-notice role="status">${e(creativePlanNotice)}</p>`:'';
+ if(rankedCurveReady(client,data,{slots}))return `<section class="draft-compare-workspace draft-curves-workspace"><header class="draft-compare-header"><h1>阵容走势</h1>${button('task-configuration','我的配置','','small')}</header>${notice}${incoming}<details class="curve-roster-details"><summary>阵容信息</summary><div class="task-roster slots">${slots.map(s=>slotHTML(s)).join('')}</div>${rankedEnemyRoster(client,data,saved.draft?.enemyRoles)}</details></section>`;
  const plan=ownTaskPreparation(),ready=!!activeCreativePlan||!activeRoleClaim(positionClaim,client)&&(!!myPreparation()||!!currentPickIntent()||!!lastTaskSelection&&!!plan);
  if(ready&&!draftComparing&&!rankedCurveReady(client,data,{slots})){
   const selected=(client.session?.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===client.session?.localPlayerCellId&&a.completed===true),ownRole=taskOwnRole();
@@ -1304,6 +1305,7 @@ function markResultStale(){if(detailResult){const notice=document.getElementById
 // Client status ticks only inspect a recommendation signature. Keep immutable
 // source references here; postMessage takes the isolated worker snapshot once.
 let roleEvidenceCache=null;
+let recommendationBatch=0;
 const recommendationFamiliarity=createRecommendationFamiliarityState();
 function currentRoleEvidence(){
  const keys=[data.champions,data.runes,data.items,data.buildSources,data.builds,data.patch];
@@ -1324,7 +1326,7 @@ function recommendationInput(refreshFamiliarity=false){
  const knownPicks=new Set((contextSession?.myTeam||[]).map(player=>data.champions.find(champion=>Number(champion.key)===Number(player.championId))?.id).filter(Boolean));
  const publicPicks=[...new Set([...unassigned.map(p=>p.champion),...unassignedPublicPicks(base,contextSession,data.champions).map(p=>p.champion)])].filter(id=>!contextSession||knownPicks.has(id));
  const liveFamiliarity=roomFamiliarityContext({client,room,slots:contextSlots,scope,ownRole:taskOwnRole(),summary:championUsage,mass:saved.preferences.familiarityMass});
- const input={includePreselected,rankedDraft:resolvedRankedDraft(client,data,saved.draft?.enemyRoles),randomSeed:String(publicClientGameId(client)||recommendationSessionSeed),clientSession:contextSession,party:currentParty(),soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:localPickLocked(session)?eligibility.confirmedPick:null,publicPicks,enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:activeCreativePlan,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
+ const input={includePreselected,rankedDraft:resolvedRankedDraft(client,data,saved.draft?.enemyRoles),randomSeed:String(publicClientGameId(client)||recommendationSessionSeed)+(recommendationBatch?":batch:"+recommendationBatch:""),clientSession:contextSession,party:currentParty(),soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:localPickLocked(session)?eligibility.confirmedPick:null,publicPicks,enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:activeCreativePlan,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
  const condition=recommendationKey(input)+'|'+liveFamiliarity.bindingKey;
  return {...input,...recommendationFamiliarity.read({...liveFamiliarity,condition},refreshFamiliarity)};
 }
@@ -1340,11 +1342,14 @@ function calculateRecommendation(input){
 }
 async function generate(next=false,automatic=false){
  if(generating)return;clearTimeout(autoRecommendTimer);autoRecommendTimer=null;cancelRecommendationReveal();recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();
- try{offset=next?offset+(results.length||6):0;const input=recommendationInput(!automatic);
+ try{
+  let input=recommendationInput(!automatic);const weighted=Object.keys(input.familiarityByRole||{}).length||(input.roomFamiliarity||[]).length;
+  if(next&&weighted)recommendationBatch++;
+  offset=next&&!weighted?offset+(results.length||6):0;input=recommendationInput();
   const signature=recommendationKey(input);
   let result=await calculateRecommendation(input);if(!result.length&&offset){offset=0;result=await calculateRecommendation({...input,offset:0});}
   if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;
-  for(const r of result)resultCreativePlan(r);results=result;showAllCandidates=false;resultsSignature=signature;if(!result.length)recommendationError='当前位置英雄池与公开选人无法组成不重复的阵容，请调整限制';if(!results.length)toast(recommendationError,true);else reveal=true;
+  for(const r of result)resultCreativePlan(r);results=result;showAllCandidates=false;resultsSignature=signature;if(!result.length)recommendationError=weighted?'没有同时符合位置、玩法与英雄偏好的方案，请调整限制':'当前位置英雄池与公开选人无法组成不重复的阵容，请调整限制';if(!results.length)toast(recommendationError,true);else reveal=true;
  }catch(err){if(!err.cancelled&&run===recommendationRun){recommendationError=err.message;toast(err.message,true);}}finally{if(run===recommendationRun){generating=false;render();}}
 }
 const sync=createClientSync(performSync);
@@ -1795,7 +1800,7 @@ document.addEventListener('click',async event=>{
  else if(action==='back-result'){const origin=buildReturn;closeOverlay();if(origin&&origin.signature===recommendationKey(recommendationInput())&&results[origin.index]?.id===origin.id){showResult(origin.index);overlay.querySelector('.drawer-content').scrollTop=origin.scroll;}else toast('原方案已变化，请重新推荐',true);}
   else if(action==='close')closeOverlay();
  else if(action==='picker-role'){picker.filter=el.dataset.role;renderPicker();document.getElementById('picker-search')?.focus();}
- else if(action==='ranked-curve'){closeOverlay();if(windowLayout.docked){companionTab='recommend';companionScroll.delete('recommend');}else route='draft';render();app.querySelector('.ranked-curve')?.scrollIntoView({block:'nearest'});return;}
+ else if(action==='ranked-curve'){acknowledgeRankedCurve(client,{companion:!!windowLayout.docked});closeOverlay();if(windowLayout.docked){companionTab='recommend';companionScroll.delete('recommend');}else route='draft';render();app.querySelector('.ranked-curve')?.scrollIntoView({block:'nearest'});return;}
  else if(action==='pick-champion'){const id=el.dataset.id;if(picker.kind==='rolepool'){const pool=saved.preferences.rolePools[picker.role];pool.heroes=pool.heroes.includes(id)?pool.heroes.filter(x=>x!==id):[...pool.heroes,id];invalidate();renderPicker();}else if(picker.kind==='pool'){saved.preferences.pool=saved.preferences.pool.includes(id)?saved.preferences.pool.filter(x=>x!==id):[...saved.preferences.pool,id];invalidate();renderPicker();}else if(picker.kind==='excluded'){saved.excluded=saved.excluded.includes(id)?saved.excluded.filter(x=>x!==id):[...saved.excluded,id];invalidate();renderPicker();}else if(picker.kind==='preselection'){const role=picker.role||taskOwnRole()||profile(champ(id)).roles[0];if(pregamePhase(client.phase)){closeOverlay();await stagePregameIntent({champion:id});render();}else{closeOverlay();await prepareHeroClick({id,role,mode:'rift'});}return;}else if(picker.kind==='hex'){if(hexHero!==id){hexOptions=[];hexOwned=[];}hexHero=id;closeOverlay();render();maybeRefreshBuild(id,profile(champ(id)).roles[0],'hex');}}
  else if(action==='solo-role'){setCompanionRole(el.dataset.role);}
  else if(action==='position-auto'){setCompanionRole('');}

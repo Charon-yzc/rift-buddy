@@ -476,6 +476,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // never change which earlier candidates exist.
  const discoveryIndex=4;
  const count=Math.min(Math.max(0,limit+offset),pool.length);
+ const preferencePriority=Math.max(...pool.map(priority)),preferencePool=pool.filter(entry=>priority(entry)===preferencePriority),preferencePage=[],hasPreference=targets.some(role=>exploration[role]);
  for(let i=0;i<count;i++) {
   let winner=0,best=-Infinity,bestPriority=-1;
   const usedCombos=new Set(chosen.map(entry=>(entry.trio||entry.duo)?.id));
@@ -483,8 +484,12 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   const priorityCeiling=Math.max(...pool.map(priority)),bestFit=Math.max(...pool.filter(entry=>priority(entry)===priorityCeiling).map(entry=>entry.score));
   // One preference sampler covers curated, creative and generated lineups.
   // Source/discovery reservations cannot silently bypass a member's heroes.
-  const preferred=familiarityWinner(pool.filter(entry=>priority(entry)===priorityCeiling&&entry.score>=bestFit-18),targets,exploration,randomSeed,i);
-  if(preferred){chosen.push(pool.splice(pool.indexOf(preferred),1)[0]);continue;}
+  // Draw from the original legal population every time. Removing a familiar
+  // hero must not redistribute its probability to unfamiliar heroes. A repeat
+  // within this batch leaves fewer cards instead of forcing a zero/low-weight
+  // alternative into view. Fit stays visible, separate from player preference.
+  const preferred=hasPreference?familiarityWinner(preferencePool,targets,exploration,randomSeed,i,{bestVariant:true}):null;
+  if(hasPreference){if(preferred&&pool.includes(preferred)){chosen.push(pool.splice(pool.indexOf(preferred),1)[0]);if(i>=offset)preferencePage.push(preferred);}continue;}
   const authoredDiscovery=partyMembers.length===3&&i%6===3?pool.filter(entry=>entry.trio&&actionable(entry)===3&&!usedCombos.has(entry.trio.id)&&priority(entry)===priorityCeiling&&entry.score>=bestFit-16).sort((a,b)=>{
    const novelty=entry=>rankScore(entry)-chosen.reduce((sum,c)=>sum+targets.filter(role=>c.slots.find(s=>s.role===role).champion===entry.slots.find(s=>s.role===role).champion).length*12+(c.compositionFit?.tactic?.id===entry.compositionFit?.tactic?.id?8:0),0);
    return novelty(b)-novelty(a)||signature(a.slots).localeCompare(signature(b.slots));
@@ -509,7 +514,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   chosen.push(pool.splice(winner,1)[0]);
  }
  const sharedBefore=analyzeTeam(scopeSlots(fixed,scope),champions,context);
- return chosen.slice(offset,offset+limit).map(entry=>{
+ return (hasPreference?preferencePage:chosen.slice(offset,offset+limit)).map(entry=>{
   entry=completePartyPlan(entry,entry.slots,context);
   const execution=resultCooperation(entry),origin=execution?'adaptive':entry.trio||entry.duo?'curated':entry.creative?'creative':'generated';
   const points=buildReasonPoints(entry,scope);

@@ -2,13 +2,13 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {championStatisticsView} from '../src/champion-statistics-view.mjs';
 import {durationChart} from '../src/duration-chart-view.mjs';
 import {rankedLaneReferences} from '../src/core/ranked-statistics.mjs';
-import {rankedCurveView,rankedCurveReady,rankedCurveLink} from '../src/ranked-draft-view.mjs';
+import {rankedCurveView,rankedCurveReady,rankedCurveLink,acknowledgeRankedCurve} from '../src/ranked-draft-view.mjs';
 const roles=['top','jungle','mid','bottom','support'],source={region:'global',tier:'emerald_plus'},points=[0,25,30,35,40].map(minute=>({minute,winRate:52,average:50}));
 const reference=(champion,role)=>({champion,role,patch:'16.20',...source,fetchedAt:new Date().toISOString(),rankedStatistics:{basis:'opgg-position-reference',counterScope:'opgg-position-counter-reference',role:{winRate:52,samples:1000},positions:[{role,samples:1000}],duration:points},matchups:[]});
-test('matching personal duration reference appears only after own confirmation, including a trade',()=>{
+test('the matching personal duration chart is directly visible after selection, including a trade',()=>{
  const data={patch:'16.20',buildSource:source,champions:[{id:'Ahri',key:103,name:'阿狸'},{id:'Ashe',key:22,name:'艾希'}],builds:{'Ahri:mid':reference('Ahri','mid')}},selection={id:'Ahri',role:'mid',mode:'rift'};
  const client={connected:true,phase:'ChampSelect',game:{queueId:430},session:{localPlayerCellId:0,myTeam:[{cellId:0,championId:103}],actions:[]}};
- assert.equal(championStatisticsView(client,data,selection),'');client.session.actions=[{type:'pick',actorCellId:0,championId:22,completed:true}];
+ assert.match(championStatisticsView(client,data,selection),/<section class="champion-statistics"/);client.session.actions=[{type:'pick',actorCellId:0,championId:22,completed:true}];
  const html=championStatisticsView(client,data,selection);assert.match(html,/阿狸走势/);assert.match(html,/0–25 分钟/);assert.ok(html.includes(new Date(data.builds['Ahri:mid'].fetchedAt).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'})));assert(!html.includes('<details class="champion-statistics" open'));
  assert.equal(championStatisticsView(client,data,{...selection,id:'Ashe'}),'');data.builds['Ahri:mid'].patch='16.19';assert.match(championStatisticsView(client,data,selection),/暂无完整统计/);assert(!championStatisticsView(client,data,selection).includes('<svg'));
 });
@@ -25,9 +25,10 @@ test('lane history uses actual samples when positions are public and leaves insu
 test('recommendation page and configuration cue follow personal, matching-team and paired stages',()=>{
  const champions=Array.from({length:10},(_,i)=>({id:'Hero'+i,key:i+1,name:'英雄'+i})),builds=Object.fromEntries(champions.map((hero,i)=>[hero.id+':'+roles[i%5],reference(hero.id,roles[i%5])])),data={champions,builds,patch:'16.20',buildSource:source};
  const positions=['TOP','JUNGLE','MID','BOTTOM','UTILITY'],client={connected:true,phase:'ChampSelect',game:{queueId:430},session:{gameId:'curve-stage-fixture',localPlayerCellId:0,myTeam:champions.slice(0,5).map((hero,i)=>({cellId:i,championId:hero.key,pickState:i===0?'locked':'selecting',assignedPosition:positions[i]})),theirTeam:[],actions:[]}};
- assert.match(rankedCurveView(client,data),/英雄0走势/);assert.equal(rankedCurveReady(client,data),false);assert.match(rankedCurveLink(client,data),/我的英雄/);
- client.session.myTeam.forEach(player=>player.pickState='locked');assert.equal(rankedCurveReady(client,data),false);assert.match(rankedCurveView(client,data),/全队时长走势/);assert.match(rankedCurveLink(client,data),/全队阵容/);
+ assert.equal(rankedCurveView(client,data),'');assert.equal(rankedCurveReady(client,data),false);assert.equal(rankedCurveLink(client,data),'');
+ client.session.myTeam.forEach(player=>player.pickState='locked');assert.equal(rankedCurveReady(client,data),true);assert.match(rankedCurveView(client,data),/全队时长走势/);assert.match(rankedCurveView(client,data),/个人英雄胜率曲线/);assert.match(rankedCurveLink(client,data),/全队曲线已生成/);
  client.game.queueId=420;client.session.theirTeam=champions.slice(5).map((hero,i)=>({cellId:i+5,championId:hero.key,pickState:'locked',assignedPosition:positions[i]}));
  const html=rankedCurveView(client,data);assert.match(html,/双方相对走势/);assert.match(html,/相对模型 · 非本场胜率/);assert.match(html,/我方 50.0%，敌方 50.0%/);assert.match(rankedCurveLink(client,data),/data-attention="true"/);
+ acknowledgeRankedCurve(client);assert.match(rankedCurveLink(client,data),/data-attention="false"/);
  client.connected=false;assert.equal(rankedCurveView(client,data),'');assert.equal(rankedCurveLink(client,data),'');
 });

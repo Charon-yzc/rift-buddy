@@ -82,7 +82,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
   lastTaskSelection:null,companionPreview:null,companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',lastCompanionLocked:'',showAllCandidates:false,recommendationError:'',renderedDraftResults:null,disclosureState:createDisclosureState(),renderedDisclosureScope:'',selectionUiReset:false,selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,clickedRoomPlan:null,roomRoleChoice:null,companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
-  recommendationSessionSeed:'test-session',clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
+  recommendationSessionSeed:'test-session',recommendationBatch:0,clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
   structuredClone,validatePreparation,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
@@ -1084,12 +1084,30 @@ test('actual app stages own and every room member scan until reroll without clea
  assert.deepEqual(inputs[0].roomFamiliarity.map(m=>m.usage.sampled),[1,1,1]);
  finish([{id:'same-snapshot'}]);await pending;assert.equal(c.results[0].id,'same-snapshot');
  const reroll=c.generate(true);assert.deepEqual(inputs[1].roomFamiliarity.map(m=>m.usage.sampled),[500,500,500]);finish([{id:'latest-batch'}]);await reroll;
- assert.equal(c.results[0].id,'latest-batch');
+ assert.equal(c.results[0].id,'latest-batch');assert.equal(inputs[1].offset,0);assert.notEqual(inputs[1].randomSeed,inputs[0].randomSeed);
+ const again=c.generate(true);assert.equal(inputs[2].offset,0);assert.notEqual(inputs[2].randomSeed,inputs[1].randomSeed);finish([{id:'another-batch'}]);await again;
  // An automatic retry/route repaint keeps the chosen snapshot, even if a new
  // peer batch arrives after the user refresh. A real preference edit adopts it.
  const next=structuredClone(c.room);next.members[1].share.championUsage=shared(100);c.applyRoomSnapshot(next);
  assert.deepEqual(c.recommendationInput().roomFamiliarity.map(m=>m.usage.sampled),[500,500,500]);
  c.saved.preferences.familiarityMass=.6;assert.ok(c.recommendationInput().roomFamiliarity.some(m=>m.usage.sampled===100));
+});
+
+test('prospective single-role familiarity is revoked when its ownership proof becomes ambiguous',async()=>{
+ for(const change of ['multi-target','duplicate-cell','foreign-binding']){
+  const current=client();current.session.myTeam[0].assignedPosition='';
+  const f=setup({slots:createSlots().map(s=>({...s,party:s.role==='support'})),current,results:[]}),c=f.context;
+  c.scope='context';c.soloRole='';c.championUsage={revision:1,status:'ready',session:'a'.repeat(32),usage:{sampled:10,counts:{Pyke:10}}};
+  vm.runInContext(extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);
+  const initial=c.recommendationInput(true);assert.deepEqual(Object.keys(initial.familiarityByRole),['support']);const key=recommendationKey(initial);
+  let finish;c.calculateRecommendation=()=>new Promise(resolve=>finish=resolve);c.resultCreativePlan=()=>assert.fail('Expired ownership accepted');
+  const pending=c.generate(false,true);
+  if(change==='multi-target')c.slots=c.slots.map(s=>s.role==='bottom'?{...s,party:true}:s);
+  if(change==='duplicate-cell')c.client.session.myTeam.push({...c.client.session.myTeam[0]});
+  if(change==='foreign-binding')c.slots=c.slots.map(s=>s.role==='support'?{...s,clientCellId:2}:s);
+  assert.deepEqual(Object.keys(c.recommendationInput().familiarityByRole),[],change);assert.notEqual(recommendationKey(c.recommendationInput()),key,change);
+  finish([{id:'late'}]);await pending;assert.equal(c.results.length,0,change);
+ }
 });
 
 test('a frozen room profile revokes immediately and rejects its late worker on withdrawal or endpoint change',async()=>{
