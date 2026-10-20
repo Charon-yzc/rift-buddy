@@ -11,7 +11,7 @@ global.fetch=async()=>{throw Error('External network disabled in isolated party 
 // Synthetic relay: exercise the room UI without opening any socket.
 global.WebSocket=class {
  constructor(url){this.url=url;this.readyState=0;this.bufferedAmount=0;roomSockets.push(this);queueMicrotask(()=>{this.readyState=1;this.onopen?.();});}
- send(text){const frame=JSON.parse(text);if(frame.kind==='hello'){queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'welcome',v:1,room:new URL(this.url).pathname.split('/').at(-1),members:[{nick:frame.nick}],ballots:1,multiVotes:1,adoptions:1,packedStates:2})}));}if(frame.kind==='ping')queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'pong',v:1})}));}
+ send(text){const frame=JSON.parse(text);if(frame.kind==='hello'){queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'welcome',v:1,room:new URL(this.url).pathname.split('/').at(-1),members:[{nick:frame.nick}],ballots:1,multiVotes:1,adoptions:1,packedStates:2,championUsage:1})}));}if(frame.kind==='ping')queueMicrotask(()=>this.onmessage?.({data:JSON.stringify({kind:'pong',v:1})}));}
  close(code=1000){this.readyState=3;this.onclose?.({code});}
 };
 const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(name,handler)=>{handlers.set(name,handler);handle(name,async(...args)=>{if(measuringSelection&&['client-status','save-state'].includes(name))await new Promise(resolve=>setTimeout(resolve,1500));if(name==='prepare-selection')attempts.push(structuredClone(args[1]));const result=await handler(...args);if(name==='prepare-selection')results.push(structuredClone(result));return result;});};
@@ -134,6 +134,26 @@ async function run(){
   await click(side,'[data-action=room-relay-join]');await until(()=>js(side,'!!document.querySelector("[data-action=room-leave]")'),'Synthetic room did not join');
   await click(side,'[data-action=companion-tab][data-tab=recommend]');
   await until(()=>js(side,'!!document.querySelector("[data-action=propose-result]")'),'Candidate proposal control missing');
+  if(process.env.RIFT_BUDDY_USAGE_STABILITY==='1'){
+   await js(side,'(()=>{window.__usageRequests=[];const post=Worker.prototype.postMessage;Worker.prototype.postMessage=function(value,...rest){window.__usageRequests.push(structuredClone(value.input));return post.call(this,value,...rest);};return true;})()');
+   const own=n=>({revision:100000+n,status:n===500?'ready':'loading',session:'a'.repeat(32),usage:{sampled:n,counts:{Galio:n}}});
+   const peer=(nick,n)=>({kind:'state',v:1,from:nick,at:100000+n,lineup:[],pick:null,mode:'rift',championUsage:{version:1,mass:.85,usage:{sampled:n,counts:{Lux:n}}}}),socket=roomSockets.at(-1);
+   for(const nick of ['伙伴甲','伙伴乙'])socket.onmessage({data:JSON.stringify({kind:'join',v:1,from:nick})});
+   for(const nick of ['伙伴甲','伙伴乙'])socket.onmessage({data:JSON.stringify(peer(nick,1))});
+   side.webContents.send('champion-usage',own(1));await delay(200);
+   await until(()=>js(side,'document.querySelector(".companion-candidates")?.getAttribute("aria-busy")==="false"'),'Initial pool busy');
+   await click(side,'[data-action=reroll]');await until(()=>js(side,'document.querySelector(".companion-candidates")?.getAttribute("aria-busy")==="false"'),'Initial snapshot busy');
+   await click(side,'.candidate-details>summary');await delay(100);
+   const initialRequests=await js(side,'window.__usageRequests.length'),before=await js(side,'document.querySelector(".companion-candidates").textContent');
+   const sampled=await js(side,'window.__usageRequests.at(-1).roomFamiliarity.map(m=>m.usage.sampled)');assert.deepEqual(sampled,[1,1,1]);
+   await js(side,'document.querySelector(".companion-content").scrollTop=80');const scrollBefore=await js(side,'document.querySelector(".companion-content").scrollTop');assert.ok(scrollBefore>0,'Expanded candidate must provide real scroll coverage');await capture(side,'usage-before.png');
+   for(let n=25;n<=500;n+=25){side.webContents.send('champion-usage',own(n));for(const nick of ['伙伴甲','伙伴乙'])socket.onmessage({data:JSON.stringify(peer(nick,n))});await delay(35);}
+   await delay(400);assert.equal(await js(side,'window.__usageRequests.length'),initialRequests,'Progress restarted the actual worker');
+   assert.equal(await js(side,'document.querySelector(".companion-candidates").textContent'),before,'Progress reordered visible candidates');assert.equal(await js(side,'document.querySelector(".companion-content").scrollTop'),scrollBefore,'Progress jumped scroll');await capture(side,'usage-after.png');
+   await click(side,'[data-action=reroll]');await until(()=>js(side,'window.__usageRequests.length>'+initialRequests+'&&document.querySelector(".companion-candidates")?.getAttribute("aria-busy")==="false"'),'Explicit refresh busy');
+   assert.deepEqual(await js(side,'window.__usageRequests.at(-1).roomFamiliarity.map(m=>m.usage.sampled)'),[500,500,500]);await capture(side,'usage-refreshed.png');
+   assert.equal(writes.length,0);assert.equal(attempts.length,0);console.log(JSON.stringify({passed:true,progressBatches:20,roomMembers:3,progressWorkerRuns:0,scrollBefore,scrollAfter:scrollBefore,explicitRefreshSamples:[500,500,500],clientWrites:0}));app.quit();return;
+  }
   await click(side,'[data-action=propose-result]');await until(()=>js(side,'!!document.querySelector(".room-ballot-board .room-ballot-row")'),'Proposal is not visible above candidates');
   const layout=await js(side,'(()=>{const row=document.querySelector(".room-ballot-row"),candidate=document.querySelector(".companion-candidate"),box=selector=>row.querySelector(selector).getBoundingClientRect();return {boardY:row.getBoundingClientRect().top,candidateY:candidate.getBoundingClientRect().top,boardWidth:row.getBoundingClientRect().width,candidateWidth:candidate.getBoundingClientRect().width,adoptVisible:!!row.querySelector("[data-action=room-adopt-ballot]"),voteY:box("[data-action=room-vote]").top,detailsY:box("[data-action=room-ballot-details]").top,candidateDetails: getComputedStyle(candidate.querySelector(".candidate-details>summary")).position};})()');
   assert.ok(layout.boardY<layout.candidateY);assert.equal(layout.adoptVisible,false);assert.ok(Math.abs(layout.boardWidth-layout.candidateWidth)<=2,JSON.stringify(layout));assert.ok(layout.detailsY>layout.voteY);assert.equal(layout.candidateDetails,'static');

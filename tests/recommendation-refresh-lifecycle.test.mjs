@@ -134,7 +134,7 @@ function sharedDataFixture(){
   results:[{id:'cached'}],resultsSignature:'old-signature',showAllCandidates:false,activeRecommendation:{cancel:()=>events.push('cancel')},
   clearTimeout,cancelRecommendationReveal(){},calculateRecommendation:()=>gate.promise,resultCreativePlan:()=>events.push('apply'),toast:message=>events.push(message)
  });
- vm.runInContext(extract('function cancelRecommendation(){','let client=')+extract('let dataReady=false;','async function restorePreparationSnapshot(')+extract('async function generate(next=false){','const sync=createClientSync'),context);
+ vm.runInContext(extract('function cancelRecommendation(){','let client=')+extract('let dataReady=false;','async function restorePreparationSnapshot(')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),context);
  vm.runInContext('dataState.bootstrap({data,revision:0});dataReady=true;',context);
  return {context,gate,events};
 }

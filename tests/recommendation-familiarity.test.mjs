@@ -56,6 +56,18 @@ test('local binding never spreads a teammate profile or guesses a provisional pa
  assert.deepEqual(localChampionFamiliarity({client:{connected:false},slots,scope:'solo',summary}),{});
 });
 
+test('the real recommender uses the shared pool for unbound lanes and preserves an explicitly bound personal pool',()=>{
+ const slots=createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role)})),base={slots,champions,scope:'party',style:'balanced',limit:1,
+  rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx']},support:{mode:'only',heroes:['Lulu','Lux']}},familiarityByRole:{bottom:profile({Ashe:100},1)}};
+ const counts={Lulu:0,Lux:0};
+ for(const preferred of ['Lulu','Lux'])for(let seed=0;seed<24;seed++){
+  const [result]=recommend({...base,randomSeed:'shared-'+seed,roomFamiliarity:[profile({[preferred]:50},1,'room:friend')]});assert.ok(result);
+  assert.equal(result.slots.find(s=>s.role==='bottom').champion,'Ashe','A public average must not replace the own lane profile');
+  if(result.slots.find(s=>s.role==='support').champion===preferred)counts[preferred]++;
+ }
+ assert.ok(counts.Lulu>=20&&counts.Lux>=20,JSON.stringify(counts));
+});
+
 test('preference cache identity changes for member, mass, lane or counts but not scan metadata or insertion order',()=>{
  const rows={mid:profile({Lux:100,Ahri:400}),support:profile({Nami:50},.6,'friend:b')},base={slots:createSlots(),familiarityByRole:rows},key=recommendationKey(base);
  const reordered={support:rows.support,mid:{...rows.mid,usage:{...rows.mid.usage,counts:{Ahri:400,Lux:100}},scanned:500,receivedAt:'later'}};assert.equal(recommendationKey({...base,familiarityByRole:reordered}),key);
@@ -69,7 +81,7 @@ test('actual app summary notifications cancel an old worker only for changed pre
  const context=vm.createContext({data:{champions},client:{connected:true,session:{localPlayerCellId:1}},slots:createSlots().map(s=>s.role==='mid'?{...s,clientCellId:1}:s),scope:'party',saved:{preferences:{familiarityMass:.85}},championUsage:summary,route:'draft',windowLayout:{docked:false},history:{observeClient(){}},
   recommendationKey,localChampionFamiliarity,results:[{id:'old'}],offset:0,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},queueCompanionRecommendation(){queued++;},resultCreativePlan(){throw Error('stale completion was accepted');},
   calculateRecommendation(){context.activeRecommendation={cancel(){cancelled++;}};return new Promise(resolve=>finish=resolve);},recommendationInput(){return {slots:context.slots,familiarityByRole:localChampionFamiliarity({client:context.client,slots:context.slots,scope:'party',ownRole:'mid',summary:context.championUsage,mass:.85})};}});
- vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(){','\n',)+extract('async function generate(next=false){','const sync=createClientSync'),context);
+ vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(){','\n',)+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),context);
  const pending=context.generate();context.acceptChampionUsage({...summary,revision:2,scanned:500});assert.equal(cancelled,0);assert.equal(context.generating,true);
  context.acceptChampionUsage({...summary,revision:3,usage:profile({Ahri:400,Lux:100}).usage});assert.equal(cancelled,1);assert.equal(queued,1);assert.equal(context.results.length,0);
  finish([{id:'late'}]);await pending;assert.equal(context.results.length,0);assert.equal(context.generating,false);
