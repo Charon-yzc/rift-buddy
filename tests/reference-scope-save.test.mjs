@@ -8,6 +8,7 @@ import {isDeepStrictEqual} from 'node:util';
 import * as storage from '../services/storage.mjs';
 import {publicClientGameId,reconcileClientDraft} from '../src/core/draft.mjs';
 import {rebaseWindowState} from '../src/core/window-state.mjs';
+import {currentEnemyRoles} from '../src/core/enemy-roles.mjs';
 import {preparationIdentity,upsertPreparation} from '../src/core/preparation.mjs';
 
 const source=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
@@ -17,7 +18,7 @@ const slots=()=>['top','jungle','mid','bottom','support'].map(role=>({role,champ
 function base(){const value=storage.defaultState();value.draft={slots:slots(),partyCount:0,scope:'party',style:'fun',clientGameId:'123'};return storage.validateState(value);}
 async function setup(current=base(),gameId='123'){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-scope-save-'));let save;
- const context=vm.createContext({state:current,stateRevision:0,storage,structuredClone,isDeepStrictEqual,publicClientGameId,reconcileClientDraft,preparationIdentity,upsertPreparation,data:{champions:[]},latestClient:{connected:true,phase:'ChampSelect',game:{gameId},session:{gameId,localPlayerCellId:0,myTeam:[],actions:[]}},guard(name,callback){assert.equal(name,'save-state');save=callback;},closeAutoRoomIfRevoked(){},guide:{publish(){}},companion:{sync(){}}});
+ const context=vm.createContext({state:current,stateRevision:0,storage,structuredClone,isDeepStrictEqual,publicClientGameId,reconcileClientDraft,currentEnemyRoles,preparationIdentity,upsertPreparation,data:{champions:[]},latestClient:{connected:true,phase:'ChampSelect',game:{gameId},session:{gameId,localPlayerCellId:0,myTeam:[],actions:[]}},guard(name,callback){assert.equal(name,'save-state');save=callback;},closeAutoRoomIfRevoked(){},guide:{publish(){}},companion:{sync(){}}});
  context.saveCurrentState=async update=>{const next=update(structuredClone(context.state));await storage.saveState(root,next);context.state=next;context.stateRevision++;};
  vm.runInContext(merge+handler,context);
  return {context,save:(next,previous)=>save(next,previous,{sender:null}),read:()=>storage.readState(root)};

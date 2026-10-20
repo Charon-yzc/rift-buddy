@@ -51,6 +51,25 @@ async function run(){
  const capture=async filename=>{await js('Promise.all([...document.images].map(image=>{image.loading="eager";return image.decode().catch(()=>{});}));');await delay(100);await fs.writeFile(path.join(root,filename),(await surface.webContents.capturePage()).toPNG());};
  await click('[data-action=companion-tab][data-tab=recommend]');assert.equal(await js('!!document.querySelector("#include-preselected,#solo-role,[data-action=pregame-hero]")'),false);assert.equal(await js('document.querySelectorAll(".ranked-enemy-cell").length'),5);assert(await js(`document.querySelector(".ranked-enemy-roster").textContent.includes(${JSON.stringify(data.champions.find(champion=>champion.id===enemies[0]).name)})`));
  if(unlocked){await until(()=>js('!!document.querySelector("[data-action=dismiss-hero-click-hint]")'),'Avatar discovery hint missing');await js('document.querySelector(".candidate-member").focus()');await capture('avatar-affordance-sidebar.png');await click('[data-action=dismiss-hero-click-hint]');await until(()=>js('window.buddy.bootstrap().then(value=>value.state.preferences.heroClickHintDismissed===true)'),'Hint dismissal was not saved');assert.equal(await js('!!document.querySelector(".hero-selection-hint")'),false);}await capture('ranked-draft-sidebar.png');
+ if(process.env.RIFT_BUDDY_ENEMY_ROLES_SMOKE==='1'){
+  const assignment=()=>js('([...document.querySelectorAll(".ranked-enemy-cell")].map(el=>({cell:el.dataset.enemyCell,role:el.dataset.enemyRole,source:el.dataset.roleSource})))');
+  assert.deepEqual((await assignment()).map(row=>row.role),['top','jungle','mid','bottom','support']);
+  await js('(()=>{const el=[...document.querySelectorAll("[data-enemy-role-change]")].find(el=>el.dataset.cell==="5");el.value="mid";el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+  await until(()=>js('window.buddy.bootstrap().then(value=>value.state.draft.enemyRoles?.some(row=>row.cellId===5&&row.role==="mid"))'),'Manual enemy role not saved');
+  await until(()=>js('[...document.querySelectorAll(".ranked-enemy-cell")].find(el=>el.dataset.enemyCell==="5")?.dataset.enemyRole==="mid"'),'Sidebar enemy role not synchronized');
+  await until(()=>main.webContents.executeJavaScript('[...document.querySelectorAll(".ranked-enemy-cell")].find(el=>el.dataset.enemyCell==="5")?.dataset.enemyRole==="mid"',true),'Main enemy role not synchronized');
+  assert.equal((await assignment()).find(row=>row.cell==='5').source,'manual');assert.equal(new Set((await assignment()).map(row=>row.role)).size,5);
+  await js('window.buddy.client(true)');await click('[data-action=sync]');assert.equal((await assignment()).find(row=>row.cell==='5').role,'mid');
+  await capture('enemy-role-adjusted-sidebar.png');surface.focus();await delay(100);await js('document.querySelector("[data-action=enemy-roles-auto]").focus()');assert.equal(await js('document.activeElement?.dataset.action'),'enemy-roles-auto');surface.webContents.sendInputEvent({type:'keyDown',keyCode:'Return'});surface.webContents.sendInputEvent({type:'char',keyCode:'Return'});surface.webContents.sendInputEvent({type:'keyUp',keyCode:'Return'});
+  await until(()=>js('window.buddy.bootstrap().then(value=>!value.state.draft.enemyRoles?.length)'),'Automatic enemy roles were not restored');
+  await until(()=>js('!document.querySelector("[data-action=enemy-roles-auto]")'),'Manual role controls not cleared');await capture('enemy-role-auto-sidebar.png');assert.equal(writes,0);
+  await js('(()=>{const el=[...document.querySelectorAll("[data-enemy-role-change]")].find(el=>el.dataset.cell==="5");el.value="mid";el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+  await until(()=>js('window.buddy.bootstrap().then(value=>value.state.draft.enemyRoles?.some(row=>row.cellId===5))'),'Second manual constraint missing');
+  const original=[...enemies];[enemies[0],enemies[2]]=[enemies[2],enemies[0]];await js('window.buddy.client(true)');await click('[data-action=sync]');
+  await until(()=>js('window.buddy.bootstrap().then(value=>!value.state.draft.enemyRoles?.length)'),'Traded enemy constraints survived the main poll');
+  enemies.splice(0,enemies.length,...original);await js('window.buddy.client(true)');await click('[data-action=sync]');assert.equal(await js('window.buddy.bootstrap().then(value=>!!value.state.draft.enemyRoles?.length)'),false,'Returning hero resurrected the old manual constraint');
+ }
+
  await js('document.querySelector(".pregame-more").open=true');await capture('more-draft-sidebar.png');await js('document.querySelector(".pregame-more").open=false;document.querySelector(".companion-navigation-more").open=true');await capture('more-navigation-sidebar.png');await js('document.querySelector(".companion-navigation-more").open=false');
  if(data.mechanicSourceRevision===1){
   await js('document.querySelector(".pregame-more").open=true;document.querySelector(".companion-recommend-options").open=true');

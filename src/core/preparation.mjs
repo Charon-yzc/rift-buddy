@@ -4,6 +4,7 @@ import {champSelectGameId} from './rune-context.mjs';
 import {effectiveDraftScope} from './draft.mjs';
 import {canonicalFamiliarity} from './recommendation-familiarity.mjs';
 import {canonicalRoomFamiliarity} from './room-familiarity.mjs';
+import {enemyRolesSignature} from './enemy-roles.mjs';
 
 export const preparationIdentity=s=>[s.id,s.role,s.mode,s.comboId||''].join(':');
 export const PREPARATION_LIMIT=500;
@@ -100,7 +101,7 @@ export function recommendationKey(input){
  // These source fields affect position eligibility and frequency in recommend.
  // Fetch times, item routes and display labels do not affect lineup ranking.
  const sourceSamples=Object.values(input.builds||{}).map(ref=>[ref.champion,ref.role,Number.isFinite(ref.runeSamples)?ref.runeSamples:null]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
- const rankedContext=input.rankedDraft?.ranked?[input.rankedDraft.queue,(input.rankedDraft.enemies||[]).map(player=>[player.champion,player.role]),Object.values(input.builds||{}).filter(ref=>ref.rankedStatistics).map(ref=>[ref.champion,ref.role,ref.patch,ref.region,ref.tier,ref.rankedStatistics,ref.matchups])]:null;
+ const rankedContext=input.rankedDraft?.ranked?[input.rankedDraft.queue,enemyRolesSignature(input.rankedDraft),Object.values(input.builds||{}).filter(ref=>ref.rankedStatistics).map(ref=>[ref.champion,ref.role,ref.patch,ref.region,ref.tier,ref.rankedStatistics,ref.matchups])]:null;
  const sourceRoles=[...new Set((input.sourceRoles||[]).map(ref=>[ref.champion,ref.role].join(':')))].sort();
  return JSON.stringify([slots,publicContext,rankedContext,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.publicAllies,input.catalogStatus,input.version,input.catalogVersion,input.creativePlan?.id,input.includePreselected===true,input.randomSeed||'',sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics,canonicalFamiliarity(input.familiarityByRole),canonicalRoomFamiliarity(input.roomFamiliarity)]);
 }

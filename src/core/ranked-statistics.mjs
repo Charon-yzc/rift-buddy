@@ -19,8 +19,8 @@ function reference(builds,champion,role,{patch,source}={}){
 // Exact enumeration of the five role assignments (at most 120). Frequencies
 // are population priors, not evidence of the opponent's actual assigned lane.
 export function estimateEnemyRoles(players,builds,options){
- const team=Array.from({length:5},(_,i)=>players[i]||{}),explicit=team.map(player=>{
-  if(!roles.includes(player.role)||team.filter(other=>other.role===player.role).length!==1)return null;
+ const team=Array.from({length:5},(_,i)=>players[i]||{}),claimed=new Set(team.filter(player=>player.manualRole&&roles.includes(player.role)).map(player=>player.role)),explicit=team.map(player=>{
+  if(!roles.includes(player.role)||!player.manualRole&&claimed.has(player.role)||team.filter(other=>other.role===player.role&&(other.manualRole||!claimed.has(player.role))).length!==1)return null;
   return player.role;
  });
  const priors=team.map(player=>{
@@ -37,7 +37,12 @@ export function estimateEnemyRoles(players,builds,options){
  }
  visit(0,roles,[],1);
  const total=assignments.reduce((sum,entry)=>sum+entry.weight,0)||1;
- return team.map((player,index)=>({...player,role:explicit[index],estimated:!explicit[index],roleWeights:Object.fromEntries(roles.map(role=>[role,assignments.reduce((sum,entry)=>sum+(entry.order[index]===role?entry.weight:0),0)/total]))}));
+ // Choose one joint assignment. Independent marginal maxima can duplicate a
+ // lane; public cell order makes equal-prior ties stable across roster polls.
+ const order=team.map((player,index)=>({index,cell:Number.isInteger(player.cellId)?player.cellId:30+index})).sort((a,b)=>a.cell-b.cell||a.index-b.index).map(row=>row.index);
+ const tie=entry=>order.map(index=>roles.indexOf(entry.order[index])).join('');
+ const best=[...assignments].sort((a,b)=>b.weight-a.weight||tie(a).localeCompare(tie(b)))[0];
+ return team.map((player,index)=>({...player,role:explicit[index],estimated:!explicit[index],estimatedRole:best?.order[index]||null,roleSource:explicit[index]?(player.manualRole?'manual':'public'):'estimated',roleWeights:Object.fromEntries(roles.map(role=>[role,assignments.reduce((sum,entry)=>sum+(entry.order[index]===role?entry.weight:0),0)/total]))}));
 }
 const logit=p=>Math.log(p/(1-p)),sigmoid=x=>1/(1+Math.exp(-x)),clamp=(value,low,high)=>Math.max(low,Math.min(high,value));
 // This is a bounded ranking signal, not a calibrated winning probability.

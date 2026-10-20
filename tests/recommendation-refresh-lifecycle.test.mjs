@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {publicClientGameId} from '../src/core/draft.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
+import {resolvedRankedDraft,enemyRolesSignature} from '../src/core/enemy-roles.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 function extract(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert.ok(a>=0&&b>a);return source.slice(a,b);}
@@ -13,7 +14,7 @@ const opponentFunction=extract('async function refreshOpponentConfiguration(el){
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
 function fixture(){
  const events=[],gate=deferred(),selection={id:'Ashe',role:'bottom',mode:'rift'},target={id:'Lux'};
- const context=vm.createContext({client:{connected:true,phase:'ChampSelect',mode:{id:'rift'},game:{gameId:'old-gameflow-id'},session:{gameId:'101',localPlayerCellId:0}},selectionUiRevision:0,publicClientGameId,
+ const context=vm.createContext({client:{connected:true,phase:'ChampSelect',mode:{id:'rift'},game:{gameId:'old-gameflow-id'},session:{gameId:'101',localPlayerCellId:0}},selectionUiRevision:0,publicClientGameId,resolvedRankedDraft,enemyRolesSignature,saved:{draft:null},
   data:{patch:'16.20',buildSource:{region:'global'},pairStatistics:{revision:'cached'},opponentBuildSources:{}},pairRefreshKey:()=> 'same-heroes-source',currentPairTargets:()=>[],pairRefreshes:new Set(),pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshes:new Set(),opponentRefreshErrors:new Map(),
   overlay:{contains:()=>false},companionPreparation:()=>({selection}),chosenMatchupOpponent:()=>target,matchupPreparation:()=>({context:'original-ui-context'}),publicMatchupIds:()=>['Lux'],matchupPreparationContext:()=> 'original-ui-context',opponentBuildKey:()=> 'same-opponent-source',opponentRequestKey:()=> 'same-opponent-source',sameBuildSource:()=>true,validReference:()=>true,champ:()=>({id:'Ashe'}),buildView:null,
   render(){},renderBuild(){},invalidate:()=>events.push('invalidate'),generate:async()=>events.push('generate'),toast:message=>events.push(message),api:{refreshPairs:()=>gate.promise,refreshOpponentBuild:()=>gate.promise}});

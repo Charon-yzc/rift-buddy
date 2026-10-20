@@ -44,6 +44,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  stageSelection:value=>ipcRenderer.invoke('stage-selection',value),
  cancelPreselection:()=>ipcRenderer.invoke('cancel-preselection'),
  partyRange:value=>ipcRenderer.invoke('party-range',value),
+ enemyRole:value=>ipcRenderer.invoke('enemy-role',value),
  onPreselection:callback=>ipcRenderer.on('preselection-status',(_event,value)=>callback(value)),
  importItemSet:itemSet=>ipcRenderer.invoke('import-item-set',itemSet),
  exportItemSet:itemSet=>ipcRenderer.invoke('export-item-set',itemSet),

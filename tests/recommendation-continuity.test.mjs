@@ -2,6 +2,7 @@ import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
 import {roomFamiliarityContext} from '../src/core/room-familiarity.mjs';
 import {heroClickSelection,configurationChoices} from '../src/core/configuration-choices.mjs';
 import {rankedDraftPolicy,publicRankedDraft,selectionReferenceScope} from '../src/core/ranked-draft.mjs';
+import {resolvedRankedDraft,enemyRolesSignature,changeEnemyRole,enemyRoleContext} from '../src/core/enemy-roles.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -67,7 +68,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
  const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
   const context=vm.createContext({
-    rankedDraftPolicy,publicRankedDraft,selectionReferenceScope,prepareHeroWithSource,roomFamiliarityContext,room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
+    rankedDraftPolicy,publicRankedDraft,selectionReferenceScope,resolvedRankedDraft,enemyRolesSignature,prepareHeroWithSource,roomFamiliarityContext,room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
     ongoing:createOngoingGameController({request:async()=>{throw Error('Recommendation sync must not query ongoing histories');},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]}),
   Date:ClockDate,data,slots,client:current,championUsage:null,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
@@ -1017,6 +1018,14 @@ async function prepareRetainedHover(docked){
  assert.equal(c.slots.filter(s=>s.party).length,2);
 }
 test('unknown own lane and a teammate preview allow one independent candidate preparation in both windows',async()=>{await prepareRetainedHover(false);await prepareRetainedHover(true);});
+
+test('an enemy role change prevents the old actual worker completion from publishing recommendations',async()=>{
+ const current=client();current.game={...current.game,queueId:420,mapId:11,gameMode:'CLASSIC'};current.session.theirTeam=['Darius','LeeSin','Yasuo','Jinx','Leona'].map((id,i)=>({cellId:i+5,championId:hero(id).key}));
+ const f=setup({current,incoming:structuredClone(current)}),c=f.context;let resolve;const gate=new Promise(done=>resolve=done);c.calculateRecommendation=()=>gate;c.resultCreativePlan=()=>assert.fail('Old enemy-role results were committed');
+ vm.runInContext(extract('async function generate(next=false){','const sync=createClientSync'),c);const pending=c.generate(),oldKey=recommendationKey(c.recommendationInput());
+ c.saved.draft.enemyRoles=changeEnemyRole(current,data,[],{gameId:'123',cellId:5,champion:'Darius',role:'mid',context:enemyRoleContext(current,data)});
+ assert.notEqual(recommendationKey(c.recommendationInput()),oldKey);resolve([{id:'old enemy roles'}]);await pending;assert.equal(c.results.some(row=>row.id==='old enemy roles'),false);
+});
 
 test('manual recommendation cancels the queued automatic run while new inputs can still schedule another',async()=>{
  const s=setup({results:[]}),c=s.context;let calculations=0;
