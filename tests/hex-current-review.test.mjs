@@ -50,7 +50,7 @@ test('changed gear withdraws the complete conditional group and equipment-advice
 });
 
 test('a real owned disabled core is retained with its warning, while preview routes withdraw',()=>{
- const changed=structuredClone(data);changed.augments.find(a=>a.id===1141).catalogEnabled=false;assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Sona'}),[]);const [route]=hexPlayerRoutes({data:changed,hero:'Sona',owned:[1141]});assert(route.catalogDisabled);assert.equal(route.state,'owned');
+ const changed=structuredClone(data);changed.augments.find(a=>a.id===1141).catalogEnabled=false;assert(hexPlayerRoutes({data:changed,hero:'Sona'}).every(r=>r.augment.id!==1141));const [route]=hexPlayerRoutes({data:changed,hero:'Sona',owned:[1141]});assert(route.catalogDisabled);assert.equal(route.state,'owned');
 });
 
 test('guide projects the same 16.21 routes, owned priority and original-source labels',async()=>{

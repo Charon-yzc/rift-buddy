@@ -68,7 +68,7 @@ test('reviewed hero mechanism routes reach the micro guide with conditions and p
  const pairs=[['Gwen',1129],['Kayle',1129],['Teemo',1129],['Sona',1141],['Soraka',1141],['Jax',1058],['Volibear',1058],['Brand',1045],['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]];
  for(const [hero,core] of pairs){
   const state=selectGuide(null,{id:hero,role:'mid',mode:'hex',ownedAugmentIds:[core]}),before=JSON.stringify(state),model=createGuideModel(bundled,state),[micro]=model.hexMicroRoutes,[full]=model.hexRoutes;
-  assert.equal(micro.kind,'mechanism',hero);assert.equal(micro.id,full.id);assert.equal(micro.augments.length,1);assert.equal(micro.augments[0].id,core);assert(micro.augments[0].owned&&micro.augments[0].core);
+  assert.equal(micro.kind,'mechanism',hero);assert.equal(micro.id,full.id);assert.equal(micro.augments.length,['Sona','Soraka'].includes(hero)?2:1);assert.equal(micro.augments[0].id,core);assert(micro.augments[0].owned&&micro.augments[0].core);
   assert.deepEqual(micro.sources,full.sources);assert.match(micro.basis,/不是胜率/);assert(micro.items.length>0);assert(micro.items.every(i=>!i.core));
   for(const group of full.gear)for(const item of group.items)assert(micro.items.find(i=>i.id===item.id)?.brief.startsWith(group.when+'。'));
   assert.equal(JSON.stringify(state),before,'References never change the prepared configuration');

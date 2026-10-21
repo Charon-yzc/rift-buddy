@@ -12,6 +12,7 @@ export function renderHexRoutes(routes,{guide=false,image=asset}={}){
    ${route.pendingItems?'<small class="hex-route-pending">部分装备效果有变化，相关装备组待核对。</small>':''}
    <details class="hex-route-details" data-guide-section="hex-route-${e(route.id)}"><summary>打法与条件</summary>
     <ol>${route.play.map(step=>`<li>${e(step)}</li>`).join('')}</ol><p class="hex-route-caution">${e(route.caution)}</p>
+    ${(route.optionalAugments||[]).map(a=>`<p><b>可搭配 ${e(a.name)}：</b>${e(a.brief)}</p>`).join('')}
     ${route.gear.map(group=>`<p><b>${e(group.when)}：</b>${e(group.why)}</p>`).join('')}
     <p>${e(route.basis)}</p><div class="hex-route-sources"><small>资料 ${e(route.patch)} · 机制路线</small>${sources}</div>
    </details></article>`;
