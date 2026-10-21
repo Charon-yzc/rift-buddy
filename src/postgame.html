@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://ddragon.leagueoflegends.com https://raw.communitydragon.org https://game.gtimg.cn; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <title>开黑搭子 · 赛后结算与评分</title>
+  <link rel="stylesheet" href="./postgame.css" />
+</head>
+<body class="postgame-body">
+  <div id="postgame-root" class="postgame-shell" aria-live="polite">
+    <div class="postgame-loading">
+      <div class="postgame-spinner"></div>
+      <p>正在计算对局表现与 表现参考…</p>
+    </div>
+  </div>
+  <script type="module" src="./postgame.mjs"></script>
+</body>
+</html>
