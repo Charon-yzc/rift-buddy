@@ -57,6 +57,10 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
  function suppressLegacy(){peek.unfold();resize.cancel();hoverHeader=false;win?.hide();skill.hide();jungle.hide();}
  function publish(){
   const value=payload(),family=usesHexMicro()?'hex':'rift';
+  // The game tracker may clear its identity before phase() receives the exit.
+  // Losing a real Hex context must not turn a visible micro guide into a large
+  // editable preview. Opening that preview again requires an explicit show().
+  if(activeFamily==='hex'&&family!=='hex'&&isHex())hide();
   // A refresh changes content only. Migrate an existing display intent once
   // when switching families; never reopen a player-closed window on a poll.
   if(activeFamily!==family){if(activeFamily!==null)displayEpoch++;activeFamily=family;if(family==='hex'){suppressLegacy();if(visibilityRequested&&!ended()){if(micro.requested())micro.resume(value);else micro.show(value);}}else{micro.suspend();if(visibilityRequested)showLegacy();}}
@@ -228,7 +232,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   throw Error('不支持此操作');
  });
  async function changePhase(next,isConnected){
-  const previous=lastConnectedPhase,id=getState()?.match?.gameId,newGame=!!(id&&lastGameId&&id!==lastGameId),wasMicro=usesHexMicro();phase=next;connected=!!isConnected;if(newGame){displayEpoch++;micro.suspend();}if(isHex()&&(ended()||connected&&wasMicro&&!usesHexMicro()))hide();inputMode();publish();
+  const previous=lastConnectedPhase,id=getState()?.match?.gameId,newGame=!!(id&&lastGameId&&id!==lastGameId),wasMicro=activeFamily==='hex';phase=next;connected=!!isConnected;if(newGame){displayEpoch++;micro.suspend();}if(isHex()&&(ended()||connected&&wasMicro&&!usesHexMicro()))hide();inputMode();publish();
   // Same-game loading must not turn a deliberately hidden reconnect into a
   // first entry. A changed id still starts a new game's visibility decision.
   if(connected){if(next!=='GameStart'||newGame||!inGame(previous))lastConnectedPhase=next;if(id)lastGameId=id;}

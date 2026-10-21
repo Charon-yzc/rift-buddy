@@ -120,10 +120,12 @@ test('Hex manual preview is editable; entering a game replaces it with only two 
 });
 
 test('Hex game exits hide every overlay instead of resurrecting the editable preview',async()=>{
- for(const exit of ['Lobby','ChampSelect','EndOfGame']){
+ for(const exit of ['Lobby','ChampSelect','EndOfGame'])for(const clearBeforePublish of [false,true]){
   const s=guideOwner();try{
    await s.guide.phase('InProgress',true);s.ready();assert(s.micro().every(w=>w.isVisible()));
-   await s.guide.phase('Offline',false);await s.guide.phase(exit,true);s.guide.publish();s.ready();assert(!s.guide.isVisible(),exit);
+   await s.guide.phase('Offline',false);
+   if(clearBeforePublish){s.current(null);s.guide.publish();assert(!s.guide.isVisible(),'identity cleared before phase notification');}
+   await s.guide.phase(exit,true);s.guide.publish();s.ready();assert(!s.guide.isVisible(),exit);
    s.guide.show();s.ready();assert(s.legacy().isVisible(),'an explicit out-of-game preview is still available');
    await s.call(s.legacy(),'guide-control','condition','heal');assert(s.state().selection.conditions.includes('heal'));
   }finally{s.guide.destroy();}
