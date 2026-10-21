@@ -15,7 +15,7 @@ import {preparationProgressView} from '../src/preparation-progress-view.mjs';
 import {recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft} from '../src/core/draft-intents.mjs';
 import {reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,manualPlayerSlot,clearManualPlayerPosition,moveChampion,assignClientChampion,scopeSlots,effectiveDraftScope} from '../src/core/draft.mjs';
 import {currentPlayerSelection} from '../src/core/guide.mjs';
-import {recommendationKey,createPreparationStore,createRuneApplicationState,partyRoutePreparations,configurationKey as buildChoiceKey,validatePreparation} from '../src/core/preparation.mjs';
+import {recommendationKey,createPreparationStore,createRuneApplicationState,configurationKey as buildChoiceKey,validatePreparation} from '../src/core/preparation.mjs';
 import {localPickEligibility,pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {roleClaimChoice,activeRoleClaim} from '../src/core/role-claim.mjs';
@@ -44,6 +44,30 @@ const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.
 data.builds={};data.catalog={version:'mock'};
 const hero=id=>data.champions.find(c=>c.id===id);
 const noop=()=>{};
+
+test('actual route adoption and candidate clicks keep each route configuration independent',async()=>{
+ const preparation=await import('../src/core/preparation.mjs'),{selectPartyRoute}=await import('../src/core/creative-plan.mjs');
+ const picks={top:'Fiora',jungle:'Graves',mid:'TwistedFate',support:'Bard'},slots=createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
+ const [result]=recommend({slots,champions:data.champions,scope:'party'}),initial=captureCreativePlan(result,data);
+ const from=initial.shared.routes[0].id==='side-pressure'?selectPartyRoute(initial,initial.shared.routes.find(r=>r.id!=='side-pressure').id):initial,to=selectPartyRoute(from,'side-pressure'),member=to.members.find(m=>m.champion==='Bard');
+ const routeContext=plan=>({id:member.champion,role:member.role,mode:'rift',...creativeComboContext(creativeMemberCombo(plan,member.champion,member.role))});
+ const origin=routeContext(from),target=routeContext(to),base=getBuild(hero(member.champion),member.role,data,origin);
+ for(const docked of [false,true])for(const entry of ['adopt','candidate'])for(const savedTarget of [false,true]){
+  const now=Date.now(),current=checkedClient(now,value=>{value.session.myTeam[0].assignedPosition='UTILITY';});current.eligibility.pickable=data.champions.map(h=>h.key);
+  const s=setup({slots:structuredClone(slots),current,incoming:structuredClone(current),now,results:[]}),c=s.context;c.windowLayout.docked=docked;c.soloRole=member.role;
+  c.rememberedPreparation=(context,options)=>preparation.recallPreparation(c.preparations,c.guideSelection,context,options);
+  if(preparation.partyRoutePreparations)c.partyRoutePreparations=preparation.partyRoutePreparations;
+  c.preparations.remember({...origin,coreId:'core-3078-3053-6333',customRunePage:{...structuredClone(base.runePage),patch:data.patch},summonerIds:['SummonerFlash','SummonerExhaust']});const old=c.preparations.recall(origin);
+  if(savedTarget)c.preparations.remember({...target,summonerIds:['SummonerFlash','SummonerHeal'],customRunePage:{...structuredClone(base.runePage),patch:data.patch}});
+  const expectedSelection=savedTarget?c.preparations.recall(target):target,expected=getBuild(hero(member.champion),member.role,data,expectedSelection);
+  c.results=[{...result,creativePlan:to,preparationOrigin:from}];c.resultsSignature=recommendationKey(c.recommendationInput());c.sync=async()=>{};let selected;
+  if(entry==='adopt'){await c.adoptResult(0);selected=c.ownTaskPreparation().selection;}
+  else{c.prepareHeroClick=async selection=>{selected=structuredClone(selection);};await c.prepareCandidate({dataset:{id:member.champion,role:member.role,resultIndex:'0'},hasAttribute:name=>name==='data-result-index'});}
+  assert(selected,`${entry}/${docked}/${savedTarget}`);const actual=getBuild(hero(member.champion),member.role,data,selected);
+  assert.deepEqual(structuredClone(actual.items),structuredClone(expected.items));assert.deepEqual(structuredClone(actual.runePage),structuredClone(expected.runePage));assert.deepEqual(structuredClone(actual.summoners),structuredClone(expected.summoners));assert.equal(actual.skillOrder,expected.skillOrder);
+  assert.equal(selected.coreId,expectedSelection.coreId);assert.deepEqual(structuredClone(selected.customRunePage),structuredClone(expectedSelection.customRunePage));assert.deepEqual(c.preparations.recall(origin),old);
+ }
+});
 function extract(start,end){
  const from=source.indexOf(start),to=source.indexOf(end,from);
  assert(from>=0&&to>from,`Missing application function boundaries: ${start}`);
@@ -85,7 +109,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   recommendationSessionSeed:'test-session',recommendationBatch:0,clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
   structuredClone,validatePreparation,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
-  companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
+  companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
   runeWriteContext,clientPreparationPlan,preparationGameId,clientPreparationKey,runeApplicationKey,
   ROLES,moveChampion,assignClientChampion,clearManualPlayerPosition,selectedBuildFields,buildChoiceKey,scopeSlots,effectiveDraftScope,
   clientSyncOptions:()=>({autoArrange:true,autoParty:false}),clientRenderIdentity:()=>'',matchupContext:()=>'',publicMatchupIds:()=>[],currentRoleEvidence:()=>[],

@@ -26,7 +26,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
- let gameBounds=null,openTab=null,displayEpoch=0,activeFamily=null;
+ let gameBounds=null,openTab=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null;
  const isHex=()=>getState()?.selection?.mode==='hex';
  const inGame=value=>['GameStart','InProgress','Reconnect'].includes(value);
  // Manual Hex previews keep their editable guide. Only a real game switches
@@ -49,7 +49,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const needsAutoShow=()=>autoShowUntil>Date.now()&&getPreferences().guideAutoShow!==false;
 const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnect'].includes(phase)||!connected&&getModel()?.live.matched)&&interactionHotkeyAvailable);
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
-const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough();win.setIgnoreMouseEvents(ignore,{forward:true});win.setFocusable(!pass);if(ignore&&win.isFocused())win.blur();}};
+const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough(),focusable=!pass&&!passiveDisplay;win.setIgnoreMouseEvents(ignore,{forward:true});if(win.isFocusable?.()!==focusable)win.setFocusable(focusable);if(ignore&&win.isFocused())win.blur();}};
 const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,referenceRevision:referenceRevision(),openTab,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
 const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{if(usesHexMicro())return;const epoch=displayEpoch,current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});if(epoch!==displayEpoch||usesHexMicro())return;openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
 const jungle=createJungleWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{if(usesHexMicro())return;const epoch=displayEpoch,current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});if(epoch!==displayEpoch||usesHexMicro())return;openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
@@ -63,7 +63,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   if(activeFamily==='hex'&&family!=='hex'&&isHex())hide();
   // A refresh changes content only. Migrate an existing display intent once
   // when switching families; never reopen a player-closed window on a poll.
-  if(activeFamily!==family){if(activeFamily!==null)displayEpoch++;activeFamily=family;if(family==='hex'){suppressLegacy();if(visibilityRequested&&!ended()){if(micro.requested())micro.resume(value);else micro.show(value);}}else{micro.suspend();if(visibilityRequested)showLegacy();}}
+  if(activeFamily!==family){if(activeFamily!==null)displayEpoch++;activeFamily=family;if(family==='hex'){suppressLegacy();if(visibilityRequested&&!ended()){if(micro.requested())micro.resume(value);else micro.show(value);}}else{micro.suspend();if(visibilityRequested)showLegacy(true);}}
   micro.publish(value);
   if(family==='hex'){suppressLegacy();return;}
   if(peek.active())peek.sync(visibilityRequested);
@@ -101,7 +101,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   const ball=isBall(),strip=isStrip();
   const width=compact?placed.width:ball?BALL_SIZE:strip?saved?.width||stripWidth():Math.min(saved?.width||400,area.width),height=compact?placed.height:ball?BALL_SIZE:Math.min(strip?saved?.height||stripHeight():getState()?.collapsed?280:saved?.height||740,area.height);
   win=new BrowserWindow({width,height,minWidth:compact?guideWindowLimits('compact',area,stripScale()).minWidth:ball?BALL_SIZE:strip?280:360,minHeight:compact?guideWindowLimits('compact',area,stripScale()).minHeight:ball?BALL_SIZE:strip?160:getState()?.collapsed?280:480,maxWidth:1000,maxHeight:1200,
-   x:Math.max(area.x,Math.min(saved?.x??area.x+area.width-440,area.x+area.width-width)),y:Math.max(area.y,Math.min(saved?.y??area.y+40,area.y+area.height-height)),frame:false,show:false,alwaysOnTop:true,skipTaskbar:true,transparent:true,
+   x:Math.max(area.x,Math.min(saved?.x??area.x+area.width-440,area.x+area.width-width)),y:Math.max(area.y,Math.min(saved?.y??area.y+40,area.y+area.height-height)),frame:false,show:false,focusable:false,alwaysOnTop:true,skipTaskbar:true,transparent:true,
    backgroundColor:'#00000000',title:'开黑搭子 · 本局指引',icon:path.join(root,'assets/icon.png'),resizable:!ball&&!strip&&!compact,
    webPreferences:{preload:path.join(root,'electron/guide-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   win.setAlwaysOnTop(true,'screen-saver');win.setOpacity(getState()?.opacity||1);inputMode();
@@ -141,8 +141,8 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
  }
  function hideGear(){displayEpoch++;peek.unfold();resize.cancel();autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
  function hide(){hideGear();skill.hide();jungle.hide();micro.hide();}
- function showLegacy(){skill.show();jungle.show();if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();}}
- function show(){displayEpoch++;peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;activeFamily=usesHexMicro()?'hex':'rift';if(usesHexMicro()){suppressLegacy();micro.show(payload());}else{micro.suspend();showLegacy();}publish();return payload();}
+ function showLegacy(automatic=false){if(automatic)passiveDisplay=true;skill.show();jungle.show();if(!win)create();else{inputMode();if(!automatic&&win.isMinimized())win.restore();fit();win.showInactive();}}
+ function show(automatic=false){displayEpoch++;peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;passiveDisplay=automatic;activeFamily=usesHexMicro()?'hex':'rift';if(usesHexMicro()){suppressLegacy();micro.show(payload());}else{micro.suspend();showLegacy(automatic);}publish();return payload();}
  async function recover(reset=false){const epoch=++displayEpoch,identity=getState()?.selection?.mode,gameId=getState()?.match?.gameId;peek.unfold();resize.cancel();clearTimeout(boundsTimer);boundsTimer=null;const current=getState();
   if(usesHexMicro()){
    await micro.reset(async()=>{if(epoch!==displayEpoch||!usesHexMicro()||gameId!==getState()?.match?.gameId)return;const latest=getState();if(latest)await save({...latest,hexWindows:undefined});});
@@ -153,11 +153,13 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   if(epoch!==displayEpoch||identity!==getState()?.selection?.mode||gameId!==getState()?.match?.gameId)return payload();
   show();applyMode();fit(true);skill.reset();jungle.reset();return payload();
  }
- function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;micro.fit();skill.fit();jungle.fit();if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
+ // Observation can position overlays, never restore or raise a window over a
+ // foreground game. Exclusive fullscreen must not trigger a focus tug-of-war.
+ function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;micro.fit();skill.fit();jungle.fit();if(win&&changed)fit(true);}
  const displayChanged=()=>{fit();skill.fit();jungle.fit();micro.fit();};
  for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
  function toggle(){if(usesHexMicro()){if(micro.visible())hide();else show();return;}if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||skill.visible()||jungle.visible())hide();else show();}
- async function interact(){const current=getState();if(!current)return;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
+ async function interact(){const current=getState();if(!current)return;passiveDisplay=false;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{
   if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');
   return handler(...args);
@@ -238,12 +240,16 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   if(connected){if(next!=='GameStart'||newGame||!inGame(previous))lastConnectedPhase=next;if(id)lastGameId=id;}
   if(!connected)return;
   const preferences=getPreferences();
-  if(next==='InProgress'&&(newGame||!['InProgress','Reconnect'].includes(previous))&&preferences.guideAutoShow!==false)autoShowUntil=Date.now()+30000;
+  // Transient lobby/None snapshots may still carry this game's identity.
+  // Only an unknown-ID round needs a fresh selection phase to reset its token.
+  if(autoShowGame==='unknown'&&!id&&next==='ChampSelect'&&previous!=='ChampSelect')autoShowGame=null;
+  const autoGame=String(id||'unknown');
+  if(next==='InProgress'&&(newGame||!['InProgress','Reconnect'].includes(previous))&&autoShowGame!==autoGame&&preferences.guideAutoShow!==false){autoShowGame=autoGame;autoShowUntil=Date.now()+30000;}
   if(!['InProgress','Reconnect'].includes(next))autoShowUntil=0;
   if(next===previous&&!newGame&&!needsAutoShow())return;
   if(next==='InProgress'&&needsAutoShow()&&currentSelection()){
    const epoch=displayEpoch,gameId=getState()?.match?.gameId;
-   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getState()?.match?.gameId&&phase===next&&connected&&needsAutoShow())show();
+   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getState()?.match?.gameId&&phase===next&&connected&&needsAutoShow())show(true);
   }
   if(getState()&&['WaitingForStats','PreEndOfGame','EndOfGame'].includes(next)&&!['WaitingForStats','PreEndOfGame','EndOfGame'].includes(previous)){
    const behavior=preferences.guideAfterGame||'hide';if(behavior==='hide')hide();

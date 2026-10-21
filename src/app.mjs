@@ -98,7 +98,7 @@ import {resolveHexAugmentInput} from './core/hex-recommendations.mjs';
 import {preserveOverlay,foldConfigurationSections} from './overlay.mjs';
 import {createClientSync} from './core/async-tasks.mjs';
 import {currentPlayerSelection,phaseLabel} from './core/guide.mjs';
-import {createPreparationStore,createRuneApplicationState,recommendationKey,configurationPatch,configurationKey as buildChoiceKey,CONFIGURATION_FIELDS,preparationIdentity,recallPreparation,partyRoutePreparations,validatePreparation} from './core/preparation.mjs';
+import {createPreparationStore,createRuneApplicationState,recommendationKey,configurationPatch,configurationKey as buildChoiceKey,CONFIGURATION_FIELDS,preparationIdentity,recallPreparation,validatePreparation} from './core/preparation.mjs';
 import {renderResultCard,coreRouteChoices,recommendationLoading} from './draft-result-view.mjs';
 import {escape as e,icon,portrait,rosterPortrait,asset,button,dateLabel,gameDescription,roleIcon} from './ui.mjs';
 import {rankingsView} from './rankings-view.mjs';
@@ -871,8 +871,8 @@ async function adoptResult(index,fromClick=false){
   const s=structuredClone(result.slots.find(next=>next.role===slot.role)),intent=s.publicIntent;delete s.publicIntent;if(intent){delete s.clientCellId;delete s.manualPosition;}
   return {...s,locked:!!s.champion&&!intent,...(s.champion&&!Number.isInteger(s.clientCellId)&&!s.manualPosition?{automaticPosition:true}:{})};
  });
- const nextPlan=resultCreativePlan(result),inherited=partyRoutePreparations(preparations,result.preparationOrigin,nextPlan);
- preservePlayerPosition();for(const selection of inherited)preparations.remember(selection);
+ const nextPlan=resultCreativePlan(result);
+ preservePlayerPosition();
  activeCreativePlan=nextPlan;lastTaskSelection=null;creativePlanNotice='';cancelRecommendation();if(scope==='solo')soloRole=result.targets[0]||soloRole;
  slots=nextSlots;
  closeOverlay();draftComparing=false;companionPreview=null;companionTab='recommend';
@@ -891,8 +891,7 @@ async function prepareCandidate(el){
   if(action.blocked)throw Error('英雄已锁定，不能选择其他英雄；仍可推荐、提议和投票');
   if(action.prepare){
    const context=heroClickSelection(data,{id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(combo)}),index=Number(el.dataset.resultIndex);
-   const inherited=partyRoutePreparations(preparations,result.preparationOrigin,plan).find(s=>s.id===context.id&&s.role===context.role);
-   const selection={...rememberedPreparation(context),...inherited,...context};
+   const selection={...rememberedPreparation(context),...context};
    const expected={...context,planId:plan?.id||'',fingerprint:clientPreparationPlan(data,{selection,build:getBuild(champ(context.id),context.role,data,selection)})?.fingerprint};
    const clickGame=preparationGameId(client),clickCell=client.session?.localPlayerCellId,clickMode=client.mode?.id;
    const previousTarget=preparationTarget;preparationTarget=selection;
