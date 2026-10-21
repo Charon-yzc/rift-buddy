@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {createRecommendationRunner} from '../src/recommendation-runner.mjs';
+import {orderRecommendationPage} from '../src/core/recommendation-policy.mjs';
 
 function fixture(){
  const workers=[],timers=new Map();let timerId=0,constructionError=false;
@@ -62,7 +63,7 @@ test('an unserializable catalog rejects without leaving a pending task or reusab
 });
 test('actual worker entry configures a changed catalog and preserves request identity on errors',async()=>{
  const source=await fs.readFile(new URL('../src/recommend-worker.mjs',import.meta.url),'utf8'),messages=[],calls=[];
- const context=vm.createContext({self:{postMessage:message=>messages.push(message)},BUNDLED_CATALOG:{version:'bundled'},configureCatalog:catalog=>{calls.push(catalog);if(catalog.invalid)throw Error('invalid catalog');},recommend:input=>[{id:input.offset}],replaceMember:(result,role,input)=>[{id:result.id,role,offset:input.offset}]});
+ const context=vm.createContext({orderRecommendationPage,self:{postMessage:message=>messages.push(message)},BUNDLED_CATALOG:{version:'bundled'},configureCatalog:catalog=>{calls.push(catalog);if(catalog.invalid)throw Error('invalid catalog');},recommend:input=>{assert.equal(input.minimumFitScore,60);assert.equal(input.stylePolicy,true);return [{id:input.offset}];},replaceMember:(result,role,input)=>[{id:result.id,role,offset:input.offset}]});
  vm.runInContext(source.replace(/^import .*;\r?\n/gm,''),context);
  context.self.onmessage({data:{requestId:1,initialize:true,input:{catalog:{version:'one'},offset:0}}});context.self.onmessage({data:{requestId:2,initialize:false,input:{offset:6}}});
  assert.equal(calls.length,1);assert.equal(messages[1].requestId,2);assert.equal(messages[1].results[0].id,6);

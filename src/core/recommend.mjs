@@ -18,6 +18,7 @@ import {discoveryLineups,seededFraction} from './recommendation-diversity.mjs';
 import {roleFamiliarityWeights,familiarityLineups,familiarityWinner} from './recommendation-familiarity.mjs';
 import {roomChampionUsageWeights} from './champion-usage.mjs';
 import {canonicalRoomFamiliarity} from './room-familiarity.mjs';
+import {recommendationFit,meetsRecommendationFit,recommendationStyleTier} from './recommendation-policy.mjs';
 import {strategyTraits,strategySummary,summarizeEnemyTraits,opponentFit,threatNotes,describeCurve,describeForgiveness,controlChainLabel} from './strategy.mjs';
 
 export function createSlots() {
@@ -271,7 +272,7 @@ function comboIndex(){
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],rankedDraft=null,sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed='',familiarityByRole={},roomFamiliarity=[]}) {
+export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],rankedDraft=null,sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed='',familiarityByRole={},roomFamiliarity=[],minimumFitScore=null,fitSlots=null,fitSession=null,fitScope='',fitSoloRole='',stylePolicy=false}) {
  if(Array.isArray(clientSession?.myTeam)){
   ({slots,session:clientSession}=clientRecommendationDraft(slots,clientSession,champions,{includePreselected,ownRole:soloRole}));
   const picked=new Set(clientSession.myTeam.map(player=>champions.find(champion=>Number(champion.key)===Number(player.championId))?.id).filter(Boolean));
@@ -294,14 +295,14 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
-  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,rankedDraft,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession,includePreselected,randomSeed,familiarityByRole,roomFamiliarity};
+  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,rankedDraft,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession,party,includePreselected,randomSeed,familiarityByRole,roomFamiliarity,minimumFitScore,fitSlots,fitSession,fitScope:'solo',stylePolicy};
   const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
   if(!targets.length){
    return recommend({...options,clientSession:null,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
   }
   const candidates=[],errors=[];
   for(const role of targets){
-   try{candidates.push(...recommend({...options,slots:slots.map(s=>({...s,party:s.role===role})),limit:offset+limit,offset:0}).map(r=>({...r,scope:'solo',soloRole:role,title:`${ROLES.find(r=>r.id===role).name} · ${champions.find(c=>c.id===r.slots.find(s=>s.role===role).champion)?.name}`,slots:r.slots.map(s=>({...s,party:slots.find(prior=>prior.role===s.role).party}))})));}
+   try{candidates.push(...recommend({...options,fitSoloRole:role,slots:slots.map(s=>({...s,party:s.role===role})),limit:offset+limit,offset:0}).map(r=>({...r,scope:'solo',soloRole:role,title:`${ROLES.find(r=>r.id===role).name} · ${champions.find(c=>c.id===r.slots.find(s=>s.role===role).champion)?.name}`,slots:r.slots.map(s=>({...s,party:slots.find(prior=>prior.role===s.role).party}))})));}
    catch(error){errors.push(error);}
   }
   if(!candidates.length&&errors.length)throw errors[0];
@@ -426,7 +427,13 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   if(unique.has(signature(entry.slots)))continue;
   const g=grade(entry.slots,champions,style,entry.slots.filter(s=>targets.includes(s.role)).map(s=>s.champion),roleWeights,context);
   const creative=creativeBySig.get(signature(entry.slots));
-  unique.set(signature(entry.slots),creative?{...entry,...g,creative}:{...entry,...g});
+  const row={...entry,...g,...(creative?{creative}:{})};
+  if(Number.isFinite(minimumFitScore)){
+   const fit=recommendationFit({...row,targets,scope},{slots:fitSlots||slots,champions,scope:fitScope||scope,soloRole:fitSoloRole||soloRole,clientSession:fitSession||clientSession,party,includePreselected,patch:context.patch,catalogStatus});
+   if(!meetsRecommendationFit(fit,minimumFitScore))continue;
+   row.recommendationFit=fit;
+  }
+  unique.set(signature(entry.slots),row);
  }
  // An executable plan for the whole party is
  // more useful than a higher count of generic team functions. All hard pick
@@ -448,7 +455,8 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // An explicit play preference remains first. Within it, actual fit and
  // player preferences dominate; an executable full-party plan is a small
  // tie-breaker, not an unconditional category above better compositions.
- const priority=entry=>Number(!!matching.get(entry));
+ const styleRanks=stylePolicy?new Map([...unique.values()].map(entry=>[entry,recommendationStyleTier({...entry,targets},style)])):null;
+ const priority=entry=>Number(!!matching.get(entry))*4+(styleRanks?.get(entry)||0);
  const rankScore=entry=>entry.score+Number(actionable(entry))+(randomSeed?seededFraction(randomSeed,signature(entry.slots))*(style==='balanced'?5:style==='fun'?8:11):0);
  const order=(a,b)=>priority(b)-priority(a)||rankScore(b)-rankScore(a)||signature(a.slots).localeCompare(signature(b.slots));
  const sorted=[...unique.values()].sort(order);
@@ -476,33 +484,34 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // never change which earlier candidates exist.
  const discoveryIndex=4;
  const count=Math.min(Math.max(0,limit+offset),pool.length);
- const preferencePriority=Math.max(...pool.map(priority)),preferencePool=pool.filter(entry=>priority(entry)===preferencePriority),preferencePage=[],hasPreference=targets.some(role=>exploration[role]);
+ const preferencePriority=Math.max(...pool.map(entry=>Number(!!matching.get(entry)))),preferencePool=pool.filter(entry=>Number(!!matching.get(entry))===preferencePriority),preferencePage=[],hasPreference=targets.some(role=>exploration[role]);
  for(let i=0;i<count;i++) {
   let winner=0,best=-Infinity,bestPriority=-1;
   const usedCombos=new Set(chosen.map(entry=>(entry.trio||entry.duo)?.id));
-  const botDiscovery=scope==='bot'&&i>0&&i%8!==7?new Set([...anchors.values()].filter(entry=>pool.includes(entry)&&!usedCombos.has(entry.duo?.id))):null;
-  const priorityCeiling=Math.max(...pool.map(priority)),bestFit=Math.max(...pool.filter(entry=>priority(entry)===priorityCeiling).map(entry=>entry.score));
+  const bestByPriority=new Map();for(const entry of pool){const p=priority(entry);bestByPriority.set(p,Math.max(bestByPriority.get(p)??-Infinity,entry.score));}
+  const priorityCeiling=Math.max(...bestByPriority.keys()),bestFit=bestByPriority.get(priorityCeiling);
+  const botDiscovery=scope==='bot'&&i>0&&i%8!==7?new Set([...anchors.values()].filter(entry=>pool.includes(entry)&&!usedCombos.has(entry.duo?.id)&&(!stylePolicy||priority(entry)===priorityCeiling))):null;
   // One preference sampler covers curated, creative and generated lineups.
   // Source/discovery reservations cannot silently bypass a member's heroes.
   // Draw from the original legal population every time. Removing a familiar
   // hero must not redistribute its probability to unfamiliar heroes. A repeat
   // within this batch leaves fewer cards instead of forcing a zero/low-weight
   // alternative into view. Fit stays visible, separate from player preference.
-  const preferred=hasPreference?familiarityWinner(preferencePool,targets,exploration,randomSeed,i,{bestVariant:true}):null;
+  const preferred=hasPreference?familiarityWinner(preferencePool,targets,exploration,randomSeed,i,{bestVariant:true,variantPriority:stylePolicy?priority:null}):null;
   if(hasPreference){if(preferred&&pool.includes(preferred)){chosen.push(pool.splice(pool.indexOf(preferred),1)[0]);if(i>=offset)preferencePage.push(preferred);}continue;}
   const authoredDiscovery=partyMembers.length===3&&i%6===3?pool.filter(entry=>entry.trio&&actionable(entry)===3&&!usedCombos.has(entry.trio.id)&&priority(entry)===priorityCeiling&&entry.score>=bestFit-16).sort((a,b)=>{
    const novelty=entry=>rankScore(entry)-chosen.reduce((sum,c)=>sum+targets.filter(role=>c.slots.find(s=>s.role===role).champion===entry.slots.find(s=>s.role===role).champion).length*12+(c.compositionFit?.tactic?.id===entry.compositionFit?.tactic?.id?8:0),0);
    return novelty(b)-novelty(a)||signature(a.slots).localeCompare(signature(b.slots));
   })[0]:null;
   if(authoredDiscovery){chosen.push(pool.splice(pool.indexOf(authoredDiscovery),1)[0]);continue;}
-  const discovery=i===discoveryIndex&&creativeBySig.size&&!chosen.some(entry=>entry.creative)?pool.filter(entry=>entry.creative).sort((a,b)=>b.score-a.score||signature(a.slots).localeCompare(signature(b.slots)))[0]:null;
+  const discovery=i===discoveryIndex&&creativeBySig.size&&!chosen.some(entry=>entry.creative)?pool.filter(entry=>entry.creative&&(!stylePolicy||priority(entry)===priorityCeiling)).sort((a,b)=>b.score-a.score||signature(a.slots).localeCompare(signature(b.slots)))[0]:null;
   if(discovery){chosen.push(pool.splice(pool.indexOf(discovery),1)[0]);continue;}
   for(let j=0;j<pool.length;j++) {
    const entry=pool[j];
    if(botDiscovery?.size&&!botDiscovery.has(entry))continue;
    const entryStyle=(entry.trio||entry.duo)?.style||'balanced';
    const similarity=chosen.reduce((sum,c)=>sum+targets.filter(r=>c.slots.find(s=>s.role===r).champion===entry.slots.find(s=>s.role===r).champion).length*9+(entry.duo&&c.duo?.id===entry.duo.id?18:0)+(entry.trio&&c.trio?.id===entry.trio.id?22:0)+(entry.trio&&c.trio?.tempo===entry.trio.tempo?6:0)+(((c.trio||c.duo)?.style||'balanced')===entryStyle?10:0)+(entry.creative&&c.creative?.archetype===entry.creative.archetype?14:0),0);
-   const bestFit=pool.filter(c=>priority(c)===priority(entry)).reduce((best,c)=>Math.max(best,c.score),-Infinity);
+   const bestFit=bestByPriority.get(priority(entry));
    // Sample only within a useful fit band. Discovery must not buy novelty by
    // recommending a clearly worse or non-executable team.
    const lowFit=entry.score<bestFit-18;

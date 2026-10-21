@@ -837,7 +837,7 @@ async function prepareHeroClick(context,expected=null){
  if(action.prepare)return useClientPreparation({dataset:{preparationView:windowLayout.docked?'companion':'build'}},true,expected?{...expected,planId:activeCreativePlan?.id||''}:null);
 }
 function refreshClickedResult(result,input,current,previousSlots){
- const preferences=value=>recommendationKey({...value,slots:[],clientSession:null,soloChampion:null,publicBans:[],eligibleByRole:{},confirmedPick:null,enemy:[],visibleEnemies:[],publicPicks:[]});
+ const preferences=value=>recommendationKey({...value,slots:[],clientSession:null,fitSlots:[],fitSession:null,soloChampion:null,publicBans:[],eligibleByRole:{},confirmedPick:null,enemy:[],visibleEnemies:[],publicPicks:[]});
  if(preferences(input)!==preferences(current))return null;
  const members=result.creativePlan?.members||resultCreativePlan(result)?.members||[],targets=new Set([...(result.targets||[]),...members.map(m=>m.role),...result.slots.filter(s=>input.scope==='solo'?s.role===input.soloRole:input.scope==='bot'?['bottom','support'].includes(s.role):s.party).map(s=>s.role)]);
  const publicPick=slot=>Number.isInteger(slot.clientCellId)&&client.session?.myTeam.some(p=>p.cellId===slot.clientCellId&&Number(p.championId)===champ(slot.champion)?.key);
@@ -1355,6 +1355,7 @@ function recommendationInput(refreshFamiliarity=false){
  const publicPicks=[...new Set([...unassigned.map(p=>p.champion),...unassignedPublicPicks(base,contextSession,data.champions).map(p=>p.champion)])].filter(id=>!contextSession||knownPicks.has(id));
  const liveFamiliarity=roomFamiliarityContext({client,room,slots:contextSlots,scope,ownRole:taskOwnRole(),summary:championUsage,mass:saved.preferences.familiarityMass});
  const input={includePreselected,rankedDraft:resolvedRankedDraft(client,data,saved.draft?.enemyRoles),randomSeed:String(publicClientGameId(client)||recommendationSessionSeed)+(recommendationBatch?":batch:"+recommendationBatch:""),clientSession:contextSession,party:currentParty(),soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:localPickLocked(session)?eligibility.confirmedPick:null,publicPicks,enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:activeCreativePlan,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
+ input.fitSlots=recommendationDraft(slots,client.connected?client.session:null,data.champions,{ownRole:taskOwnRole(),party:currentParty()});input.fitSession=client.connected?client.session:null;
  const condition=recommendationKey(input)+'|'+liveFamiliarity.bindingKey;
  return {...input,...recommendationFamiliarity.read({...liveFamiliarity,condition},refreshFamiliarity)};
 }
@@ -1373,11 +1374,11 @@ async function generate(next=false,automatic=false){
  try{
   let input=recommendationInput(!automatic);const weighted=Object.keys(input.familiarityByRole||{}).length||(input.roomFamiliarity||[]).length;
   if(next&&weighted)recommendationBatch++;
-  offset=next&&!weighted?offset+(results.length||6):0;input=recommendationInput();
+  offset=next&&!weighted?offset+6:0;input=recommendationInput();
   const signature=recommendationKey(input);
   let result=await calculateRecommendation(input);if(!result.length&&offset){offset=0;result=await calculateRecommendation({...input,offset:0});}
   if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;
-  for(const r of result)resultCreativePlan(r);results=result;showAllCandidates=false;resultsSignature=signature;if(!result.length)recommendationError=weighted?'没有同时符合位置、玩法与英雄偏好的方案，请调整限制':'当前位置英雄池与公开选人无法组成不重复的阵容，请调整限制';if(!results.length)toast(recommendationError,true);else reveal=true;
+  for(const r of result)resultCreativePlan(r);results=result;showAllCandidates=false;resultsSignature=signature;if(!result.length)recommendationError=weighted?'没有达到60分且符合位置、玩法与英雄偏好的阵容，请调整限制':'没有达到60分且符合当前选人条件的阵容，请调整限制';if(!results.length)toast(recommendationError,true);else reveal=true;
  }catch(err){if(!err.cancelled&&run===recommendationRun){recommendationError=err.message;toast(err.message,true);}}finally{if(run===recommendationRun){generating=false;render();}}
 }
 const sync=createClientSync(performSync);

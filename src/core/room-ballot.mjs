@@ -38,10 +38,10 @@ export function memberAdoption(member,row){
  if(state==='matched'&&planned)state=!actual?'pending-configuration':setupKey(planned)!==setupKey(actual)?'changed-configuration':'matched';
  return {nick:member.nick,role:accepted.role,state};
 }
-function fitContext(champions){
+function fitContext(champions,{patch=champions[0]?.combatStatsSource?.patch||RULES_PATCH,catalogStatus}={}){
  let context=contexts.get(champions);
- if(!context||context.links!==CROSS_SYNERGIES||context.patch!==RULES_PATCH||context.reviewedAt!==RULES_VERSION){
-  context={byId:new Map(champions.map(c=>[c.id,c])),profiles:new Map(),cooperationGraph:createCooperationGraph(champions),comboCache:new Map(),comboLoadouts:new Map(),links:CROSS_SYNERGIES,patch:RULES_PATCH,reviewedAt:RULES_VERSION};
+ if(!context||context.links!==CROSS_SYNERGIES||context.patch!==patch||context.catalogStatus!==catalogStatus||context.reviewedAt!==RULES_VERSION){
+  context={byId:new Map(champions.map(c=>[c.id,c])),profiles:new Map(),cooperationGraph:createCooperationGraph(champions,{currentPatch:patch}),comboCache:new Map(),comboLoadouts:new Map(),links:CROSS_SYNERGIES,patch,catalogStatus,reviewedAt:RULES_VERSION};
   contexts.set(champions,context);
  }
  return context;
@@ -67,7 +67,7 @@ export function lineupFit(lineup,current,champions,options={}){
   if(options.editableRoles.includes(role)){const editable=editableLocalDraft(current,options.clientSession,champions,role);current=editable.slots;options={...options,clientSession:editable.session};}
  }
  current=clientContextDraft(current,champions,options.clientSession,{scope:effectiveDraftScope(current,options.scope||'party'),soloRole:options.soloRole||'',party:options.party,includePreselected:options.includePreselected===true});
- const range=fitLineupSlots(lineup,current,options),mandatoryOwn=lockedOwnSlot(current,options.clientSession),context={...(options.context||fitContext(champions)),mandatoryOwn,publicAllies:['context','solo'].includes(range.scope)?publicAllyIds(options.clientSession,champions,{includePreselected:options.includePreselected===true}):[]};
+ const range=fitLineupSlots(lineup,current,options),mandatoryOwn=lockedOwnSlot(current,options.clientSession),context={...(options.context||fitContext(champions,options)),mandatoryOwn,publicAllies:['context','solo'].includes(range.scope)?publicAllyIds(options.clientSession,champions,{includePreselected:options.includePreselected===true}):[]};
  const own=options.clientSession?.myTeam?.find(player=>player.cellId===options.clientSession.localPlayerCellId);
  if(confirmedPlayerPick(own,options.clientSession)&&!mandatoryOwn)return {score:null,rawScore:0,known:0,size:range.expectedSize,compatible:false,exact:false,scope:range.scope,breakdown:[],strengths:[],gaps:['请先确认已锁定英雄的分路'],reason:'请先确认已锁定英雄的分路，再核对这套阵容'};
  if(mandatoryOwn&&!range.slots.some(slot=>slot.champion===mandatoryOwn.champion))range.expectedSize++;

@@ -48,7 +48,7 @@ export function familiarityLineups(fixed,targets,candidates,weights,seed='',limi
 
 // Use log probabilities so a five-person product cannot underflow. This changes
 // selection frequency only, never the composition's mechanism score.
-export function familiarityWinner(entries,targets,weights,seed,index,{bestVariant=false}={}){
+export function familiarityWinner(entries,targets,weights,seed,index,{bestVariant=false,variantPriority=null}={}){
  const weighted=targets.filter(role=>weights[role]);if(!weighted.length)return null;
  const groups=new Map();
  for(const entry of entries){
@@ -62,6 +62,9 @@ export function familiarityWinner(entries,targets,weights,seed,index,{bestVarian
  let winner=null,best=Infinity;
  for(const group of groups.values()){const rank=race(seed,`preference:${index}:${group.key}`,Math.exp(group.log-max));if(rank<best){best=rank;winner=group;}}
  const fit=entry=>entry.compositionFit?.rawScore??entry.score??0,ceiling=Math.max(...winner.entries.map(fit));
- const variants=bestVariant?winner.entries.filter(entry=>fit(entry)>=ceiling-5):winner.entries;
+ let variants=bestVariant?winner.entries.filter(entry=>fit(entry)>=ceiling-5):winner.entries;
+ // Style chooses among teammate variants only after the familiar heroes have
+ // been sampled. It must never confiscate that member's probability mass.
+ if(variantPriority){const priority=Math.max(...variants.map(variantPriority));variants=variants.filter(entry=>variantPriority(entry)===priority);}
  return variants.map(entry=>({entry,rank:seededFraction(seed,`variant:${index}:`+entry.slots.map(s=>s.role+':'+(s.champion||'')).sort().join('|'))})).sort((a,b)=>a.rank-b.rank)[0].entry;
 }
