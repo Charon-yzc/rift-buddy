@@ -82,8 +82,11 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     ]);
     const pool = lists.find(l => l.modeName === 'KIWI');
     if (!pool?.augmentList?.length) throw new Error('未找到海克斯大乱斗清单');
-    const keys = new Set(pool.augmentList.map(s => s.split('/').at(-1).toLowerCase()));
-    augments = catalog.filter(a => keys.has(a.augmentNameId?.toLowerCase())).map(a => {
+    const listKeys=pool.augmentList.map(s=>s.split('/').at(-1).toLowerCase()),keys=new Set(listKeys);
+    if(keys.has('')||keys.size!==listKeys.length)throw Error('海克斯清单含有重复或不完整记录');
+    const selected=catalog.filter(a=>keys.has(a.augmentNameId?.toLowerCase())),found=new Set(selected.map(a=>a.augmentNameId.toLowerCase()));
+    if(found.size!==keys.size||selected.length!==keys.size||new Set(selected.map(a=>a.id)).size!==selected.length)throw Error('海克斯目录缺失或重复，保留完整本地资料');
+    augments = selected.map(a => {
       return { id:a.id, key:a.augmentNameId, name:a.nameTRA, rarity: a.rarity,
         description:'',
         icon: `${cd}/plugins/rcp-be-lol-game-data/global/default/${a.augmentSmallIconPath.replace('/lol-game-data/assets/', '').toLowerCase()}` };
@@ -92,7 +95,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:9, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
+    schema: 1, contentRevision:10, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,

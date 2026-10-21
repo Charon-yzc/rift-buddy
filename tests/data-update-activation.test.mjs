@@ -9,7 +9,7 @@ import {createHash} from 'node:crypto';
 import * as dataService from '../services/data.mjs';
 import {createDataFeedActivationGate} from '../services/data-feed.mjs';
 import {preserveGameContext} from '../services/data-generation-cache.mjs';
-import {pureGameSnapshot} from '../services/data-generation.mjs';
+import {pureGameSnapshot,validateGenerationGame} from '../services/data-generation.mjs';
 import {createGameDataPreparer} from '../services/game-data-prepare.mjs';
 import * as imageCache from '../services/image-cache.mjs';
 import {BUNDLED_CATALOG} from '../src/core/catalog.mjs';
@@ -35,7 +35,7 @@ async function fixture(t,{write=dataService.atomicJSON,promote=renameSync}={}){
   guard:(name,fn)=>handlers.set(name,fn),publishWindows(){},diagnostic(){},state:{preferences:{}},selectBuildSource(){},pairFiles:[],
   loadBuildSources:async()=>({}),loadOpponentBuildSources:async()=>({}),loadPairStatisticsCache:async()=>({}),loadRankings:async()=>({}),loadPatchNotes:async()=>({}),loadAbilities:async()=>({}),loadHexBuilds:async()=>({}),
   imageCache:{cacheMissingImages:async()=>{imageEntered.resolve();await images.promise;return {overrides:{},saved:0,failed:0};}},
-  dataFeed:{summary:()=>({phase:'idle'})},catalogCore:{configureCatalog(){}},generation:{noteManual:(_game,token)=>manualTokens.push(token)},pureGameSnapshot,preserveGameContext,feedHash:bytesHash,publishedBase:old,
+  dataFeed:{summary:()=>({phase:'idle'})},catalogCore:{configureCatalog(){}},generation:{noteManual:(_game,token)=>manualTokens.push(token)},pureGameSnapshot,validateGenerationGame,preserveGameContext,feedHash:bytesHash,publishedBase:old,
   itemSetCore,itemSetService:{importItemSet:async options=>{itemData=options.data;itemEntered.resolve();await itemRelease.promise;return {complete:true};}},helper:{active:()=>false},beginPreparation:()=>({}),finishPreparation:()=>({revision:1}),preservePreparationResult:async written=>written,status:async()=>{},
   dataRevision:0,publishData:()=>{context.dataRevision++;published.push(digest(context.data));},guide:{publish(){}},refreshPreparedBuild(){}});
  Object.assign(context.imageCache,{imageEntries:imageCache.imageEntries,loadImageOverrides:async()=>({})});
@@ -44,6 +44,18 @@ async function fixture(t,{write=dataService.atomicJSON,promote=renameSync}={}){
  const hero=old.champions.find(row=>row.id==='Ashe'),itemSet=itemSetCore.createItemSet(hero,getBuild(hero,'bottom',old),old);
  return {root,cache,bundle,old,next,context,images,imageEntered,published,manualTokens,itemEntered,itemRelease,itemData:()=>itemData,importItems:()=>handlers.get('import-item-set')(itemSet),update:handlers.get('update-data'),restart:()=>dataService.loadSnapshot(cache,bundle)};
 }
+
+for(const issue of ['empty augments','missing description','missing source','source failed','older source','older augment version'])test(`manual update retains the complete base when ${issue} makes Hex data incomplete`,async t=>{
+ const f=await fixture(t),before=await fs.readFile(path.join(f.cache,'game.json')),candidate=structuredClone(f.next);
+ if(issue==='empty augments')candidate.augments=[];
+ if(issue==='missing description')candidate.augments[0].description='';
+ if(issue==='missing source')candidate.sources.augmentDescriptions=null;
+ if(issue==='source failed')candidate.augmentError='isolated source 404';
+ if(issue==='older source')candidate.sources.augments=candidate.sources.augments.replace(candidate.patch,'16.19');
+ if(issue==='older augment version')candidate.augmentVersion='16.19.1';
+ f.context.dataService.collectSnapshot=async()=>candidate;f.images.resolve();await assert.rejects(f.update(),/新.*资料|来源.*不完整/);
+ assert.equal((await fs.readFile(path.join(f.cache,'game.json'))).equals(before),true);assert.equal(f.context.data,f.old);assert.deepEqual(f.published,[]);assert.deepEqual(f.manualTokens,[]);assert.equal(f.context.updating,false);assert.deepEqual(await fs.readdir(f.cache),['game.json']);
+});
 
 test('entering draft during image preparation leaves the active cache unchanged across restart',async t=>{
  const f=await fixture(t),before=await fs.readFile(path.join(f.cache,'game.json'),'utf8'),update=f.update();await f.imageEntered.promise;
