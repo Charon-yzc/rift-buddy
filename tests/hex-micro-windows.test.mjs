@@ -159,6 +159,15 @@ test('a feature opt-out dismisses visible and delayed native hover cards',async(
  }finally{s.micro.destroy();}
 });
 
+test('closing only Rift equipment keeps economy and cannot restore equipment through readiness or preferences',async()=>{
+ const preferences={guideAutoShow:true},s=guideOwner({mode:'rift',preferences});try{
+  await s.guide.phase('InProgress',true);s.ready();const gear=s.legacy(),economy=s.micro()[0];assert(gear.visible&&economy.visible);
+  await s.call(gear,'guide-control','hide');for(let i=0;i<6;i++)s.guide.publish();assert(!gear.visible);assert(economy.visible);s.ready();assert(!gear.visible);
+  preferences.guideEquipment=false;s.guide.publish();preferences.guideEquipment=true;s.guide.publish();s.ready();assert(!gear.visible);assert(economy.visible);
+  s.guide.toggle();s.guide.publish();assert(!s.guide.isVisible());
+ }finally{s.guide.destroy();}
+});
+
 test('automatic game overlays never restore or raise a window on foreground observations',async()=>{
  const s=guideOwner({mode:'rift'});try{
   s.guide.show();s.ready();const w=s.legacy();w.minimized=true;w.hide();

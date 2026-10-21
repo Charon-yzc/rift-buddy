@@ -145,7 +145,8 @@ async function boot(){
  const opponentCache=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
- synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();guide?.publish();};
+ const guideFeatureSignature=()=>JSON.stringify(['guideEconomy','guideEquipment','guideSkills','guideJungle'].map(key=>state.preferences[key]!==false));let lastGuideFeatures=guideFeatureSignature();
+ synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();const signature=guideFeatureSignature();if(signature!==lastGuideFeatures){lastGuideFeatures=signature;guide?.publish();}};
  const {createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
  const pairCache=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshPairs=refreshReference(pairCache,['pairStatistics']);

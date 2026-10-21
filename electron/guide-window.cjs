@@ -26,7 +26,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
- let gameBounds=null,openTab=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null;
+ let gameBounds=null,openTab=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null,equipmentRequested=false;
  const isHex=()=>getState()?.selection?.mode==='hex';
  const inGame=value=>['GameStart','InProgress','Reconnect'].includes(value);
  // Manual Hex previews keep their editable guide. Only a real game switches
@@ -35,7 +35,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const usesEconomy=()=>!isHex()&&currentSelection()?.mode==='rift'&&currentSelection()?.id===getState()?.selection?.id&&(inGame(phase)||!connected&&inGame(lastConnectedPhase));
  const ended=()=>['WaitingForStats','PreEndOfGame','EndOfGame'].includes(phase);
  const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
- const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{if(usesHexMicro())return;displayEpoch++;visibilityRequested=true;win?.showInactive();inputMode();publish();}});
+ const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{if(usesHexMicro()||getPreferences().guideEquipment===false)return;displayEpoch++;visibilityRequested=true;equipmentRequested=true;win?.showInactive();inputMode();publish();}});
  const resize=require('./window-resize.cjs')({getWindow:()=>win,getArea:workArea,getLimits:area=>guideWindowLimits(isCompact()?'compact':isStrip()?'strip':'details',area,stripScale()),onStart:()=>{clearTimeout(boundsTimer);boundsTimer=null;hoverHeader=true;inputMode();},onEnd:rememberBounds});
  async function rememberBounds(){clearTimeout(boundsTimer);boundsTimer=null;if(!win||win.isDestroyed()||!getState()||isBall())return;const b=win.getBounds(),current=getState();if(isCompact()){await save({...current,compactBounds:b});return;}if(isStrip()){await save({...current,stripBounds:b});return;}await save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}});}
  function fit(recover=false){if(!win||win.isDestroyed()||resize.active()||boundsTimer)return;const area=workArea(),current=win.getBounds();
@@ -65,7 +65,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   // restores that intent once. Polling never overrides a player's close.
   if(visibilityRequested){
    if((changes.economy||changes.gear)&&(usesHexMicro()||usesEconomy()))micro.resume(value);
-   if(family==='rift'){if(changes.skills)skill.show();if(changes.jungle)jungle.show();if(changes.gear)showEquipment(true);}
+   if(family==='rift'){if(changes.skills)skill.show();if(changes.jungle)jungle.show();if(changes.gear&&equipmentRequested)showEquipment(true);}
   }
   // The game tracker may clear its identity before phase() receives the exit.
   // Losing a real Hex context must not turn a visible micro guide into a large
@@ -121,7 +121,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   win.webContents.on('will-navigate',(event,url)=>{if(url!==pathToFileURL(path.join(root,'src/guide.html')).href)event.preventDefault();});
   win.webContents.on('render-process-gone',(_e,detail)=>diagnostic(`guide renderer gone ${detail.reason}`));
   win.webContents.on('did-fail-load',(_e,code)=>diagnostic(`guide load failed ${code}`));
-  const created=win;win.once('ready-to-show',()=>{if(created!==win||created.isDestroyed())return;if(visibilityRequested&&!usesHexMicro()&&getPreferences().guideEquipment!==false)created.showInactive();diagnostic(`guide-ready visible=${created.isVisible()}`);});
+  const created=win;win.once('ready-to-show',()=>{if(created!==win||created.isDestroyed())return;if(visibilityRequested&&equipmentRequested&&!usesHexMicro()&&getPreferences().guideEquipment!==false)created.showInactive();diagnostic(`guide-ready visible=${created.isVisible()}`);});
   win.webContents.on('did-finish-load',()=>{
    diagnostic('guide loaded');
    if(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT)setTimeout(async()=>{try{await fs.writeFile(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT,(await win.webContents.capturePage()).toPNG());diagnostic('guide screenshot saved');}catch(e){diagnostic(`guide capture failed ${e.message}`);}},1500);
@@ -150,10 +150,10 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   if(hoverPoll.unref)hoverPoll.unref();
   win.on('closed',()=>{peek.destroy();clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
- function hideGear(){displayEpoch++;peek.unfold();resize.cancel();autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
- function hide(){hideGear();skill.hide();jungle.hide();micro.hide();}
+ function hideGear(){displayEpoch++;peek.unfold();resize.cancel();autoShowUntil=0;equipmentRequested=false;hoverHeader=false;win?.hide();}
+ function hide(){hideGear();visibilityRequested=false;skill.hide();jungle.hide();micro.hide();}
  function showEquipment(automatic=false){if(automatic)passiveDisplay=true;if(getPreferences().guideEquipment===false){win?.hide();return;}if(!win)create();else{inputMode();if(!automatic&&win.isMinimized())win.restore();fit();win.showInactive();}}
- function showLegacy(automatic=false){if(usesEconomy())micro.show(payload());else micro.suspend();skill.show();jungle.show();showEquipment(automatic);}
+ function showLegacy(automatic=false){equipmentRequested=true;if(usesEconomy())micro.show(payload());else micro.suspend();skill.show();jungle.show();showEquipment(automatic);}
  function show(automatic=false){displayEpoch++;peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;passiveDisplay=automatic;activeFamily=usesHexMicro()?'hex':'rift';if(usesHexMicro()){suppressLegacy();micro.show(payload());}else{showLegacy(automatic);}publish();return payload();}
  async function recover(reset=false){const epoch=++displayEpoch,identity=getState()?.selection?.mode,gameId=getState()?.match?.gameId;peek.unfold();resize.cancel();clearTimeout(boundsTimer);boundsTimer=null;const current=getState();
   if(usesHexMicro()){
