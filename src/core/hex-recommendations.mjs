@@ -3,7 +3,7 @@ import {validHexReference} from './builds.mjs';
 import {compareAugments} from './hex-compare.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
 import {mechanicReview} from './mechanic-review.mjs';
-import {reviewedHexMechanic as reviewed,hexMechanicIds,HEX_MECHANIC_PATCH as reviewedPatch} from './hex-mechanics.mjs';
+import {reviewedHexMechanic as reviewed,hexMechanicIds,hexUltimateRequirement,HEX_MECHANIC_PATCH as reviewedPatch} from './hex-mechanics.mjs';
 
 // These are reviewed mechanic prerequisites, not occurrence eligibility or a
 // win-rate model. Unknown versions/keys remain browsable without these claims.
@@ -20,9 +20,9 @@ function mechanicAdvice(data,champion,a,owned){
  const kitCurrent=mechanicReview(champion,data.patch)==='current',p=kitCurrent?profile(champion):null,reasons=[],cautions=[];let affinity=0,conflict=false,conditional=false;
  if(!reviewed(a,data.patch))return {affinity,reasons,cautions,conflict,reviewed:false};
  const has=id=>owned.some(other=>other.id===id&&reviewed(other,data.patch));
- if([1088,2118].includes(a.id)&&has(1004)||a.id===1004&&(has(1088)||has(2118))){
-  conflict=true;cautions.push('回归基本功禁用终极技能，与需要施放终极技能的已选强化冲突。');
- }
+ const requirement=hexUltimateRequirement(a,data.patch),dependencies=a.id===1004?owned.filter(other=>hexUltimateRequirement(other,data.patch)):requirement&&has(1004)?[a]:[];
+ if(dependencies.length){conflict=true;cautions.push(...dependencies.map(other=>`回归基本功禁用终极技能，${other.name}的主要收益将无法利用。`));}
+ if(requirement)reasons.push(requirement);
  if(p&&a.id===1141){
   if(allyHealers.has(champion.id)){affinity+=p.build==='enchanter'?4:1;conditional=p.build!=='enchanter';reasons.push('英雄有已核实的友方治疗或护盾，可满足强化的对象条件；收益取决于实际保护队友的频率。');}
   else cautions.push('英雄自身未核实友方治疗或护盾；自身吸血不能替代这个条件，需要另有可用手段。');

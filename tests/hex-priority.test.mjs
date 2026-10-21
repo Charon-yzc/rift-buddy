@@ -63,3 +63,30 @@ test('main/sidebar and in-game guide expose the same compact decision without re
 });
 
  test('one mark without a reviewed relation does not create an empty analysis disclosure',()=>{const html=renderHexComparison(args('Ashe',[],[1048]));assert.doesNotMatch(html,/aria-label="本局组合"/);assert.match(html,/珠光护手/);});
+
+test('reviewed ultimate prerequisites conflict symmetrically with an owned ultimate lock, without classifying names as effects',()=>{
+ const ids=[1011,1112,1194,1211,1344,1349,1413,2134];
+ for(const id of ids){
+  const name=data.augments.find(a=>a.id===id).name,row=rankAugmentOptions(args('Ashe',[id],[1004]))[0],reverse=rankAugmentOptions(args('Ashe',[1004],[id]))[0];
+  assert.equal(row.level,'conflict',name);assert.equal(row.priority,'有冲突');assert.equal(row.top,false);assert.equal(reverse.level,'conflict');assert.ok(row.cautions.some(text=>text.includes(name)&&text.includes('禁用终极技能')));assert.deepEqual(analyzeAugmentSet(args('Ashe',[],[1004,id])).conflicts,[row.cautions[0]]);
+  const unowned=rankAugmentOptions(args('Ashe',[id,1004]))[0];assert.notEqual(unowned.level,'conflict','An offered1004 is not an owned lock');
+ }
+ const options=[1011,1349,2134],decision=hexDecision(args('Ashe',options,[1004]));assert.deepEqual(decision.rows.map(r=>r.id),options);assert.equal(decision.reroll.recommended,true);assert.equal(decision.reroll.status,'conflict');
+ for(const id of [1113,1214,1421,2141])assert.notEqual(rankAugmentOptions(args('Ashe',[id],[1004]))[0].level,'conflict','Do not guess full conflicts from non-ultimate, partial benefit or item/automatic names');
+});
+
+test('ultimate conflict review gates both effects and never recommends reroll for a stale or unknown card',()=>{
+ const options=[1011,1349,2134];
+ for(const id of [1004,...options])for(const change of [{key:'OtherEffect'},{description:'不同效果' }]){
+  const changed={...data,augments:data.augments.map(a=>a.id===id?{...a,...change}:a)},result=hexDecision(args('Ashe',options,[1004],{data:changed}));assert.equal(result.reroll.recommended,false);
+  if(id===1004)assert.ok(result.rows.every(row=>row.level!=='conflict'));else assert.notEqual(result.rows.find(row=>row.id===id).level,'conflict');
+ }
+ for(const extra of [{data:{...data,patch:'16.21'}},{mode:'rift'},{mode:'arena'},{data:{...data,champions:data.champions.map(c=>c.id==='Ashe'?{...c,mechanicSource:undefined}:c)}}]){
+  const result=hexDecision(args('Ashe',options,[1004],extra));assert.equal(result.reroll.recommended,false);assert.ok(result.rows.every(row=>row.priority==='待核对'));assert.deepEqual(result.set.conflicts,[]);
+ }
+});
+
+test('a conflict is the visible main/sidebar headline and the first guide warning, before positive trigger instructions',()=>{
+ const input=args('Ashe',[1088],[1004]),html=renderHexComparison(input),headline=html.match(/class="hex-advice-summary"[^>]*>([^<]*)<\/p>/)?.[1];assert.match(headline,/回归基本功.*禁用.*终极/);
+ const model=createGuideModel(data,{...selectGuide(null,{id:'Ashe',role:'bottom',mode:'hex',compareIds:[1088],ownedAugmentIds:[1004]}),compact:false}),rendered=renderGuide({model},'augments',false,()=>'<img>');assert.ok(rendered.includes('本次选项比较'));const card=rendered.slice(rendered.indexOf('本次选项比较'));assert.match(card,/<small>有冲突<\/small><p class="caution">回归基本功/);
+});
