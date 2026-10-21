@@ -26,7 +26,7 @@ test('actual choices use reviewed trigger conditions and known conflicts instead
 
 test('unresolved ability targets, unknown versions and changed game keys do not receive confident mechanic recommendations',()=>{
  const skill=hexRecommendations({data,hero:'Lux',options:[2072]});assert.equal(skill.rows[0].level,'conditional');assert.equal(skill.bestChoice,null);assert.match(skill.rows[0].cautions.join(' '),/尚未核实.*技能/);
- const future={...data,patch:'16.21'},advice=hexRecommendations({data:future,hero:'Sona',options:[1141,1088],owned:[1004]});assert.equal(advice.source,null);assert.equal(advice.bestChoice,null);assert.ok(advice.rows.every(row=>!row.mechanicReviewed&&row.level!=='conflict'));
+ const future={...data,patch:'16.22'},advice=hexRecommendations({data:future,hero:'Sona',options:[1141,1088],owned:[1004]});assert.equal(advice.source,null);assert.equal(advice.bestChoice,null);assert.ok(advice.rows.every(row=>!row.mechanicReviewed&&row.level!=='conflict'));
  assert.deepEqual(hexEquipmentImpact({data:future,hero:'Gwen',owned:[1129]}),[]);
  const changed={...data,augments:data.augments.map(a=>a.id===1004?{...a,key:'Changed_Key'}:a)};
  assert.notEqual(hexRecommendations({data:changed,hero:'Ashe',options:[1088],owned:[1004]}).rows[0].level,'conflict');

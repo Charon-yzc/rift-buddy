@@ -1,6 +1,6 @@
 import itemsReview from './hex-route-items.json' with {type:'json'};
 import {fingerprint} from './content-fingerprint.mjs';
-import {mechanicReview} from './mechanic-review.mjs';
+import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {reviewedHexMechanic} from './hex-mechanics.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 
@@ -24,7 +24,8 @@ const routes=[
 export const hexRouteItemFingerprint=item=>fingerprint({name:item?.name,description:item?.description,stats:item?.stats});
 export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  const champion=data.champions.find(c=>c.id===hero);
- if(!champion||data.patch!==itemsReview.patch||mechanicReview(champion,data.patch)!=='current')return [];
+ const itemReview=currentHexReview(data.patch)||(data.patch===itemsReview.patch?itemsReview:null);
+ if(!champion||!itemReview||hexChampionReview(champion,data.patch)!=='current')return [];
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
  return routes.filter(route=>route.hero===hero).flatMap(route=>{
   const augment=data.augments.find(a=>a.id===route.augment);
@@ -33,7 +34,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   const gear=route.gear.flatMap(([when,ids,why])=>{
    const items=ids.flatMap(id=>{
     const item=data.items[id];
-    if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||itemsReview.items[id]!==hexRouteItemFingerprint(item)){pendingItems++;return [];}
+    if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||itemReview.items[id]!==hexRouteItemFingerprint(item)){pendingItems++;return [];}
     return [{id,name:item.name,description:item.description}];
    });
    // A group explanation can depend on every listed item. Never leave old

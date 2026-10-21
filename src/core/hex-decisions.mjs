@@ -1,10 +1,10 @@
 import {hexRecommendations} from './hex-recommendations.mjs';
 import {compareAugments} from './hex-compare.mjs';
-import {mechanicReview} from './mechanic-review.mjs';
+import {hexChampionReview} from './hex-review.mjs';
 
 const unique=(values,limit)=>[...new Set(Array.isArray(values)?values:[])].slice(0,limit);
 const championOf=({data,hero})=>data.champions.find(c=>c.id===hero);
-const current=args=>(args.mode===undefined||args.mode==='hex')&&mechanicReview(championOf(args),args.data.patch)==='current';
+const current=args=>(args.mode===undefined||args.mode==='hex')&&hexChampionReview(championOf(args),args.data.patch)==='current';
 function optionAdvice(args){
  const {data,hero,options=[],owned=[],mode='hex'}=args;
  if(mode==='hex')return hexRecommendations({data,hero,options,owned});

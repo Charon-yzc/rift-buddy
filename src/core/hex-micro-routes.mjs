@@ -1,6 +1,6 @@
 import review from './hex-micro-routes.json' with {type:'json'};
 import {fingerprint} from './content-fingerprint.mjs';
-import {mechanicReview} from './mechanic-review.mjs';
+import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {hexRouteItemFingerprint} from './hex-routes.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 
@@ -8,15 +8,16 @@ import {hexCatalogDisabled} from './hex-catalog.mjs';
 // A changed dependency withdraws its explanation until explicitly reviewed.
 export function hexMicroRoutes({data,hero,mode='hex',owned=[]}){
  const champion=data.champions.find(c=>c.id===hero);
- if(mode!=='hex'||data.patch!==review.patch||mechanicReview(champion,data.patch)!=='current')return [];
- const augment=id=>{const a=data.augments.find(a=>a.id===id);return (!hexCatalogDisabled(data,a)||owned.includes(id))&&a?.descriptionStatus==='complete'&&review.augments[id]===fingerprint({key:a.key,description:a.description})?a:null;};
- const item=id=>{const i=data.items[id];return i?.maps?.['12']&&i.inStore&&i.gold?.purchasable!==false&&review.items[id]===hexRouteItemFingerprint(i)?i:null;};
- return review.routes.filter(r=>r.hero===hero).slice(0,3).flatMap(r=>{
+ const current=currentHexReview(data.patch),selected=current|| (data.patch===review.patch?review:null);
+ if(mode!=='hex'||!selected||hexChampionReview(champion,data.patch)!=='current')return [];
+ const augment=id=>{const a=data.augments.find(a=>a.id===id),hash=current?current.micro.augmentIds.includes(id)&&current.effects[id]:review.augments[id];return (!hexCatalogDisabled(data,a)||owned.includes(id))&&a?.descriptionStatus==='complete'&&hash===fingerprint({key:a.key,description:a.description})?a:null;};
+ const item=id=>{const i=data.items[id],hash=current?current.micro.itemIds.includes(id)&&current.items[id]:review.items[id];return i?.maps?.['12']&&i.inStore&&i.gold?.purchasable!==false&&hash===hexRouteItemFingerprint(i)?i:null;};
+ return review.routes.filter(r=>r.hero===hero&&(!current||current.micro.routeIds.includes(r.id))).slice(0,3).flatMap(r=>{
   // Do not retain a paired route after its core effect or item disappears.
   if(r.augments.some(a=>a.core&&!augment(a.id))||r.items.some(i=>i.core&&!item(i.id)))return [];
   const augments=r.augments.flatMap(a=>{const current=augment(a.id);return current?[{...a,name:current.name,owned:owned.includes(a.id),catalogDisabled:hexCatalogDisabled(data,current)}]:[];});
   const items=r.items.flatMap(i=>{const current=item(i.id);return current?[{...i,name:current.name}]:[];});
-  return [{id:r.id,title:r.title,patch:r.patch,basis:r.basis,source:r.source,sourceFields:r.sourceFields,augments,items}];
+  return [{id:r.id,title:r.title,patch:data.patch,basis:current?current.micro.basis:r.basis,source:r.source,sourceFields:r.sourceFields,augments,items}];
  });
 }
 

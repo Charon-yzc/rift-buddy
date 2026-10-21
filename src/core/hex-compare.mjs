@@ -1,5 +1,6 @@
 import {profile} from './rules.mjs';
 import {mechanicReview} from './mechanic-review.mjs';
+import {hexChampionReview} from './hex-review.mjs';
 import {reviewedHexMechanic,hexEffectMatches} from './hex-mechanics.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
 export const AUGMENT_CATEGORIES=[['damage','伤害'],['crit','暴击'],['haste','冷却'],['defense','生存'],['support','治疗 / 护盾'],['mobility','移速 / 位移'],['economy','金币 / 装备'],['quest','任务 / 成长']];
@@ -40,7 +41,7 @@ export function augmentCategories(augment){const text=`${augment.name} ${augment
 const allyHealers=new Set(['Alistar','Bard','Ivern','Janna','Karma','Kayle','Lulu','Lux','Milio','Nami','Nidalee','Orianna','Rakan','Renata','Senna','Seraphine','Shen','Sona','Soraka','Taric','Yuumi']);
 export function compareAugments({champion,options=[],owned=[],augments=[],buildKey=null,patch,mode='hex'}){
  patch??=champion?.combatStatsSource?.patch;
- const kitCurrent=mechanicReview(champion,patch)==='current',p=kitCurrent?profile(champion):null,chosen=new Set(owned),records=new Map(augments.map(a=>[a.id,hexAugmentReference(a,{patch,mode})]));
+ const kitCurrent=(mode==='hex'?hexChampionReview(champion,patch):mechanicReview(champion,patch))==='current',p=kitCurrent?profile(champion):null,chosen=new Set(owned),records=new Map(augments.map(a=>[a.id,hexAugmentReference(a,{patch,mode})]));
 
  return [...new Set(options)].slice(0,3).map(id=>records.get(id)).filter(Boolean).map(a=>{
   const categories=augmentCategories(a),reasons=[],cautions=[],interactions=[],reviewed=mode==='hex'&&reviewedHexMechanic(a,patch),hasReviewed=id=>chosen.has(id)&&reviewedHexMechanic(records.get(id),patch);
