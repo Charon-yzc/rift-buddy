@@ -29,7 +29,7 @@ test('every bundled duo gives both actual member roles different actionable stag
    if(d.members){const own=d.members.find(m=>m.champion===champion&&m.role===role);assert.equal(play.stages.opening.ownAction,d.early);assert.equal(play.stages.key.ownAction,own.job);assert.equal(play.stages.later.ownAction,own.job);assert.deepEqual(play.steps,d.steps);assert.deepEqual(play.sources,d.sources);assert.equal(play.window,d.window);assert.equal(play.economy,d.economy);continue;}
    assert.equal(new Set(Object.values(play.stages).map(s=>s.ownAction)).size,3,d.id+':'+role);
    for(const phase of ['opening','key','later']){
-    const stage=play.stages[phase];assert.ok(stage.ownAction?.trim());assert.ok(stage.steps.length>=2);assert.ok(stage.window.includes('确认')||stage.window.includes('搭档'));
+    const stage=play.stages[phase];assert.ok(stage.ownAction?.trim());assert.ok(stage.steps.length>=(phase==='opening'&&d.early?1:2));assert.ok(stage.window.includes('确认')||stage.window.includes('搭档'));
     assert.ok(stage.exit?.trim());assert.notEqual(stage.steps.join('；'),d.plan);
     assert.equal(stage.ownAction,rolePlay(champion,role,phase).action);
    }

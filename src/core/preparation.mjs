@@ -23,7 +23,7 @@ export function mergeConfiguration(current,next,fields=CONFIGURATION_FIELDS){
 // Actual current opponents, match IDs and purchase progress are not retained.
 export function validatePreparation(value){
  const s=validateGuideSelection(value);
- const {threatId,protectId,combatFocus,matchupGameId,...configuration}=s;
+ const {threatId,protectId,combatFocus,matchupGameId,compareIds,ownedAugmentIds,...configuration}=s;
  return configuration;
 }
 export function validatePreparations(value){
@@ -103,7 +103,7 @@ export function recommendationKey(input){
  const sourceSamples=Object.values(input.builds||{}).map(ref=>[ref.champion,ref.role,Number.isFinite(ref.runeSamples)?ref.runeSamples:null]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
  const rankedContext=input.rankedDraft?.ranked?[input.rankedDraft.queue,enemyRolesSignature(input.rankedDraft),Object.values(input.builds||{}).filter(ref=>ref.rankedStatistics).map(ref=>[ref.champion,ref.role,ref.patch,ref.region,ref.tier,ref.rankedStatistics,ref.matchups])]:null;
  const sourceRoles=[...new Set((input.sourceRoles||[]).map(ref=>[ref.champion,ref.role].join(':')))].sort();
- return JSON.stringify([slots,publicContext,rankedContext,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.publicAllies,input.catalogStatus,input.version,input.catalogVersion,input.creativePlan?.id,input.includePreselected===true,input.randomSeed||'',sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics,canonicalFamiliarity(input.familiarityByRole),canonicalRoomFamiliarity(input.roomFamiliarity)]);
+ return JSON.stringify([slots,publicContext,rankedContext,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.publicAllies,input.catalogStatus,input.version,input.catalogVersion,input.creativePlan?.id,input.includePreselected===true,input.randomSeed||'',sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics,canonicalFamiliarity(input.familiarityByRole),canonicalRoomFamiliarity(input.roomFamiliarity),input.familiarityRevision||0]);
 }
 // Only an explicitly adopted alternate route inherits this result's personal
 // choices. The frozen plan and any previously edited destination stay separate.

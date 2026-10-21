@@ -11,7 +11,7 @@ WorkingDirectory=/opt/rift-buddy-data/current
 StateDirectory=rift-buddy-data
 StateDirectoryMode=0750
 Environment=NODE_OPTIONS=--max-old-space-size=320
-ExecStart=/usr/bin/flock -n /var/lib/rift-buddy-data/collect.lock /opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node scripts/collect-server-data.mjs --root /var/lib/rift-buddy-data/updates --seed /opt/rift-buddy-data/current/data --public-root /srv/rift-buddy-data --key /var/lib/rift-buddy-data/signing/ed25519.pem
+ExecStart=/usr/bin/flock -n /var/lib/rift-buddy-data/collect.lock /opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node scripts/collect-server-data.mjs --root /var/lib/rift-buddy-data/updates --seed /opt/rift-buddy-data/current/data --public-root /srv/rift-buddy-data --key /var/lib/rift-buddy-data/signing/ed25519.pem --national-rankings
 ReadWritePaths=/srv/rift-buddy-data
 TimeoutStartSec=50min
 TimeoutStopSec=15s

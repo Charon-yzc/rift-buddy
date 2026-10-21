@@ -3,15 +3,18 @@ import {changeJungleNotes} from './core/jungle-guidance.mjs';
 import {applyPresentation} from './presentation-view.mjs';
 import {changePresentation} from './core/presentation.mjs';
 import {renderGuide} from './guide-view.mjs';
+import {createGameTooltips,gameTooltipView} from './game-tooltip-view.mjs';
+import {gameReference} from './core/game-reference.mjs';
 import {escape as e,icon} from './ui.mjs';
 import {createGuideModel,selectGuide} from './core/guide.mjs';
 import {changeCompanionPlan} from './core/companion-plan.mjs';
 let snapshot,tab='overview',messageTimer,renderedView=null,renderedExpanded=false,renderedContext=null,renderedMatchId=null,renderedStateWritable=true;
-let activeSelect=null,pendingSelectUpdate=false,lastOpenTab=null;
+let activeSelect=null,pendingSelectUpdate=false,lastOpenTab=null,referenceContext=null;
 const viewStates=new Map();
 const root=document.getElementById('guide-root');
 const isPreview=!window.guide;
 const api=window.guide||{
+ reference:async(kind,id)=>gameReference(window.previewGuideData,kind,id),
  bootstrap:async()=>{
   const {data,state}=await (await fetch('/api/bootstrap')).json();data.flashSlot=state.preferences?.flashSlot;
   const id=new URLSearchParams(location.search).get('hero')||'Ashe',mode=new URLSearchParams(location.search).get('mode')||'rift';
@@ -41,7 +44,8 @@ const api=window.guide||{
   return {...snapshot,ball:!!s.ball,strip:!!s.strip,model:createGuideModel(window.previewGuideData,s)};
  },
 };
-const image=(kind,id,name)=>`<img src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}" />`;
+const image=(kind,id,name)=>`<img ${['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${e(id)}"`:''} src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}" />`;
+const gameTooltips=createGameTooltips({document,observeRoots:[root],getMode:()=>snapshot?.model?.mode||'rift',getContent:async(kind,id,mode)=>{const reference=await api.reference?.(kind,id,mode,snapshot?.referenceRevision);return reference?gameTooltipView(reference,kind,id,{mode,image}):'';}});
 function toast(message){clearTimeout(messageTimer);const el=document.getElementById('guide-toast');el.textContent=message;el.className='visible';messageTimer=setTimeout(()=>el.className='',4000);}
 function render(){
  if(snapshot?.openTab?.serial!==lastOpenTab&&['skills','rhythm'].includes(snapshot?.openTab?.tab)){tab=snapshot.openTab.tab;lastOpenTab=snapshot.openTab.serial;}
@@ -56,6 +60,9 @@ function render(){
   viewStates.set(renderedView,{scroll:oldMain.scrollTop,details:[...details]});
  }
  const context=[m?.champion?.id||'',m?.selection?.role||'',m?.mode||''].join(':'),view=context+':'+tab;
+ const nextReferenceContext=JSON.stringify([view,matchId,snapshot?.referenceRevision,m?.version,m?.fetchedAt,m?.compact,m?.collapsed,snapshot?.ball,snapshot?.strip]);
+ const retainReference=referenceContext===nextReferenceContext;referenceContext=nextReferenceContext;
+ if(!retainReference)gameTooltips.close();
  const saved=viewStates.get(view)||{scroll:0,details:[]},focused=document.activeElement;
  const focus=renderedContext===context&&root.contains(focused)?{id:focused.id,data:{...focused.dataset}}:null;
  renderedView=view;renderedContext=context;
@@ -66,12 +73,15 @@ function render(){
  root.className=strip?'strip':ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
  root.dataset.tab=tab;
  root.dataset.workspace=['skills','combat','scoreboard','rhythm','team','augments','settings'].includes(tab)?'focused':'overview';
+ gameTooltips.repaint(root,()=>{
  root.innerHTML=renderGuide(snapshot,tab,isPreview,image)+(ball?'':windowResizeGrip);
+ for(const node of root.querySelectorAll('[data-game-tooltip-kind]')){const owner=node.closest('button,a,[tabindex]')||node;if(owner===node)node.tabIndex=0;if(!owner.dataset.referenceFocus)owner.dataset.referenceFocus=node.dataset.gameTooltipKind+'/'+node.dataset.gameTooltipId;}
  const navigation=root.querySelector('nav[aria-label="指引内容"]'),activeTab=navigation?.querySelector('button.active');
  if(activeTab){const left=activeTab.offsetLeft-navigation.offsetLeft;if(left+activeTab.offsetWidth>navigation.clientWidth)navigation.scrollLeft=left+activeTab.offsetWidth-navigation.clientWidth;}
  for(const [key,open] of saved.details){const d=[...root.querySelectorAll('details[data-guide-section]')].find(d=>d.dataset.guideSection===key);if(d)d.open=open;}
  const main=root.querySelector('main');if(main)main.scrollTop=saved.scroll;
- if(focus){const target=focus.id?document.getElementById(focus.id):[...root.querySelectorAll('button,input,select')].find(b=>Object.keys(focus.data).length&&Object.entries(focus.data).every(([k,v])=>b.dataset[k]===v));target?.focus({preventScroll:true});}
+ });
+ if(focus){const target=focus.id?document.getElementById(focus.id):[...root.querySelectorAll('button,input,select,a,[tabindex]')].find(b=>Object.keys(focus.data).length&&Object.entries(focus.data).every(([k,v])=>b.dataset[k]===v));target?.focus({preventScroll:true});}
 }
 
 // Replacing a native select while its menu is open closes it on each poll.
@@ -96,11 +106,11 @@ document.addEventListener('click',async event=>{
  // window, never toggle it. Only a near-stationary press counts as a click.
  if(target.dataset.action==='ball'||target.dataset.action==='strip'){const moved=dragMoved;dragMoved=false;if(moved)return;}
  target.disabled=true;
- try{const value=target.dataset.action==='presentation'?{field:target.dataset.field,value:target.dataset.field==='textScale'?Number(target.dataset.value):target.dataset.value}:target.dataset.id;const result=await api.control(target.dataset.action,value);if(result?.model!==undefined){if(target.dataset.action==='new-game'){viewStates.clear();renderedView=null;}snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
+ try{const value=target.dataset.action==='new-game'?snapshot?.model?.hexRound:target.dataset.action==='presentation'?{field:target.dataset.field,value:target.dataset.field==='textScale'?Number(target.dataset.value):target.dataset.value}:target.dataset.id;const result=await api.control(target.dataset.action,value);if(result?.model!==undefined){if(target.dataset.action==='new-game'){viewStates.clear();renderedView=null;}snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
 document.addEventListener('change',async event=>{if(event.target.dataset.presentationModule){try{snapshot=await api.control('presentation',{field:'toggleModule',value:event.target.dataset.presentationModule});render();}catch(error){toast(error.message);}return;}const actions={'guide-settings-opacity':'opacity','guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage','guide-threat':'threatId','guide-protect':'protectId','guide-focus':'combatFocus','guide-duel-own':'duel-own','guide-duel-foe':'duel-foe'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!activeSelect)api.control('hide').catch(error=>toast(error.message));});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented&&!activeSelect)api.control('hide').catch(error=>toast(error.message));});
 let hoverHeader=false,downPos=null,dragMoved=false;
 document.addEventListener('mousedown',event=>{downPos=[event.screenX,event.screenY];dragMoved=false;});
 document.addEventListener('mousemove',event=>{if(event.buttons&&downPos&&Math.hypot(event.screenX-downPos[0],event.screenY-downPos[1])>6)dragMoved=true;});
@@ -109,7 +119,7 @@ function trackHeaderHover(event){
  // mousemove still reaches the page while the window passes clicks through
  // (forward:true). Report header hover on change only, so the main process
  // can lift pass-through for the drag bar + window buttons.
- const over=!!event.target?.closest?.('header,[data-window-resize]');
+ const over=!!event.target?.closest?.('#guide-root>header,[data-window-resize]');
  if(over!==hoverHeader){hoverHeader=over;api.hover?.(over).catch(()=>{});}
 }
 document.addEventListener('mousemove',trackHeaderHover);
@@ -119,7 +129,7 @@ installWindowResize(root,(action,value)=>api.control(action,value));
 api.onUpdate?.(next=>{
  if(next.model?.mode!=='hex'&&tab==='augments'||next.model?.mode==='hex'&&tab==='team')tab='overview';
  const before=snapshot?.model,after=next.model,missingField=['gold','level'].some(k=>before?.live?.[k]!==null&&after?.live?.[k]===null);
- const urgent=selectionContext(snapshot)!==selectionContext(next)||before?.fetchedAt!==after?.fetchedAt||before?.live?.matched!==after?.live?.matched||before?.live?.kind!==after?.live?.kind||
+ const urgent=snapshot?.referenceRevision!==next.referenceRevision||selectionContext(snapshot)!==selectionContext(next)||before?.fetchedAt!==after?.fetchedAt||before?.live?.matched!==after?.live?.matched||before?.live?.kind!==after?.live?.kind||
   before?.live?.inventoryKnown!==after?.live?.inventoryKnown||missingField||JSON.stringify(before?.duelOptions)!==JSON.stringify(after?.duelOptions)||
   before?.estimate?.targetSelected!==after?.estimate?.targetSelected||before?.estimate?.mineSkillBasis!==after?.estimate?.mineSkillBasis||before?.combatUnavailable!==after?.combatUnavailable||before?.ultimateReference?.available!==after?.ultimateReference?.available||before?.ultimateReference?.rank!==after?.ultimateReference?.rank||before?.customDuel?.unresolved!==after?.customDuel?.unresolved;
  snapshot=next;

@@ -2,6 +2,7 @@ import {escape as e,portrait,button} from './ui.mjs';
 import {BUILD_REGIONS,BUILD_TIERS,normalizeBuildSource,buildSourceLabel} from './core/build-source.mjs';
 import {rankingReference} from './core/rankings.mjs';
 import {ROLES} from './core/rules.mjs';
+import {rankingProviderControl} from './national-reference-view.mjs';
 
 const percent=v=>(v*100).toFixed(2)+'%';
 const number=v=>v.toLocaleString('zh-CN');
@@ -20,7 +21,7 @@ export function rankingsView(data,{source=data.buildSource,role='top',query='',s
  return `<section class="ranking-workspace ${compact?'ranking-compact':''}" aria-label="各路英雄排行榜" data-ranking-scope="${e(ref?.key||[data.patch,source.region,source.tier].join(':'))}">
  ${compact?'<h3>各路排行</h3>':'<div class="page-heading"><div><h1>各路排行榜</h1></div></div>'}
  <nav class="ranking-roles" aria-label="排行榜位置">${ROLES.map(r=>`<button data-action="ranking-role" data-role="${r.id}" class="${r.id===role?'active':''}" aria-pressed="${r.id===role}">${compact?({top:'上',jungle:'野',mid:'中',bottom:'下',support:'辅'})[r.id]:r.name}</button>`).join('')}</nav>
- <div class="ranking-filters">${filter('region','地区',BUILD_REGIONS,source.region)}${filter('tier','段位',BUILD_TIERS,source.tier)}${filter('sort','排序',[{id:'rank',name:'来源名次'},{id:'winRate',name:'胜率'},{id:'pickRate',name:'登场率'},{id:'samples',name:'样本数'}],sort)}${button('ranking-refresh',pending?'刷新中…':'刷新','refresh','small',pending?'disabled':'')}</div>
+ <div class="ranking-filters">${rankingProviderControl('opgg')}${filter('region','地区',BUILD_REGIONS,source.region)}${filter('tier','段位',BUILD_TIERS,source.tier)}${filter('sort','排序',[{id:'rank',name:'来源名次'},{id:'winRate',name:'胜率'},{id:'pickRate',name:'登场率'},{id:'samples',name:'样本数'}],sort)}${button('ranking-refresh',pending?'刷新中…':'刷新','refresh','small',pending?'disabled':'')}</div>
  <p class="ranking-meta" data-ranking-status>${e(`${ref?.patch||data.patch} · ${buildSourceLabel(source)}${ref?`${compact?'':' · '+number(ref.totalMatches)+' 场'} · ${time(ref.analyzedAt)}`:' · 暂无缓存'}${stale?' · 统计已超过36小时，请刷新':''}`)}</p>
  <details class="ranking-source ui-disclosure" ${compact?'data-companion-disclosure="ranking-source"':''}><summary>统计范围与更新时间</summary><p class="ranking-scope-note">OP.GG公开排位统计 · 不代表国服或组合胜率。</p><p>${e(summary)}</p><p>${source.region==='global'?'全球':'韩国'}样本；胜率排序会受样本量影响，请同时看场次。</p></details>
  ${error?`<p class="callout warning" role="status">刷新未完成：${e(error)}${ref?'。下方保留上次有效榜单。':'。没有使用其他筛选的数据代替。'}</p>`:''}

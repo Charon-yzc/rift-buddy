@@ -25,7 +25,7 @@ export function publicDraftTeam(session,side='myTeam'){
   // Completed actions retain the original pick after a champion trade. The
   // current nonzero roster is therefore authoritative over the action's ID.
   const locked=completed.length===1?completed[0]:0,championId=championKey(player.championId)||locked;
-  const confirmed=!!championId&&completed.length<=1&&(picks.some(action=>action.completed===true)||player.pickState==='locked');
+  const confirmed=!!championId&&completed.length<=1&&!picks.some(action=>action.completed===false)&&(picks.some(action=>action.completed===true)||player.pickState==='locked');
   return {...player,championId,pickState:confirmed?'locked':championId?'selecting':'empty',role:CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()]||null};
  });
 }

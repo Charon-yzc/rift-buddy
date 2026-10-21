@@ -4,6 +4,7 @@ const origins=new Map([
  ['https://raw.communitydragon.org',64*1024*1024],
  ['https://lol-api-champion.op.gg',4_000_000],
  ['https://op.gg',4_000_000],
+ ['https://mlol.qt.qq.com',4_000_000],
 ]);
 const sourceFor=url=>url.hostname==='op.gg'||url.hostname.endsWith('.op.gg')?'OP.GG':url.origin;
 const failure=(message,code)=>Object.assign(Error(message),{code});

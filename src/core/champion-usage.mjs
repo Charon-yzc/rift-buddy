@@ -33,7 +33,7 @@ export function championUsageWeights(champions,usage={sampled:0,counts:{}},mass=
 // Normalize each member before adding: history length never buys more room weight.
 // Keep each member's distribution too; a room average cannot assign their hero.
 export function roomChampionUsageWeights(champions,members=[]){
- const ids=heroIds(champions);if(!Array.isArray(members)||members.length>10)throw Error('成员英雄统计超出范围');
+ const ids=heroIds(champions);if(!Array.isArray(members)||members.length>12)throw Error('成员英雄统计超出范围');
  if(!members.length)return championUsageWeights(ids);
  const weights=members.map(member=>championUsageWeights(ids,member.usage,member.mass));
  const combined=unitWeights(ids,champion=>weights.reduce((sum,row)=>sum+row[champion],0)),total=Object.values(combined).reduce((sum,value)=>sum+value,0);

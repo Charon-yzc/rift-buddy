@@ -192,7 +192,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
    const c=await context(generation,operation==='own-summary-context');
    if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
-   if(operation==='own-summary-context')return {session:sessionId,server:c.localServer};
+   if(operation==='own-summary-context')return {session:sessionId,server:c.localServer,cacheKey:SGP_SERVERS[c.localServer]?crypto.createHash('sha256').update(JSON.stringify(['own-champion-usage-v1',c.localServer,c.own.puuid])).digest('hex'):''};
    if(operation==='own-summary-page')return ownSummaryPage(c,payload);
    if(operation==='roster')return roster(c,payload);
   if(operation==='search'){

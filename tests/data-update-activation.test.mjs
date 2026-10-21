@@ -37,7 +37,7 @@ async function fixture(t,{write=dataService.atomicJSON,promote=renameSync}={}){
   imageCache:{cacheMissingImages:async()=>{imageEntered.resolve();await images.promise;return {overrides:{},saved:0,failed:0};}},
   dataFeed:{summary:()=>({phase:'idle'})},catalogCore:{configureCatalog(){}},generation:{noteManual:(_game,token)=>manualTokens.push(token)},pureGameSnapshot,preserveGameContext,feedHash:bytesHash,publishedBase:old,
   itemSetCore,itemSetService:{importItemSet:async options=>{itemData=options.data;itemEntered.resolve();await itemRelease.promise;return {complete:true};}},helper:{active:()=>false},beginPreparation:()=>({}),finishPreparation:()=>({revision:1}),preservePreparationResult:async written=>written,status:async()=>{},
-  publishData:()=>published.push(digest(context.data)),guide:{publish(){}},refreshPreparedBuild(){}});
+  dataRevision:0,publishData:()=>{context.dataRevision++;published.push(digest(context.data));},guide:{publish(){}},refreshPreparedBuild(){}});
  Object.assign(context.imageCache,{imageEntries:imageCache.imageEntries,loadImageOverrides:async()=>({})});
  context.prepareBaseData=await createGameDataPreparer({bundleRoot:bundle,localRoot:cache,catalogSummary:()=>({catalog:BUNDLED_CATALOG,info:{}}),images:context.imageCache});
  vm.runInContext(handler+'\n'+importHandler,context);
@@ -70,7 +70,7 @@ test('a blocked atomic promotion keeps the old disk and memory generation',async
 
 test('an idle completed update promotes the validated base and restart sees the same source',async t=>{
  const f=await fixture(t);f.images.resolve();const result=await f.update();
- assert.equal(digest(result.data),digest(f.next));assert.equal(digest(await f.restart()),digest(f.next));assert.deepEqual(f.published,[digest(f.next)]);assert.equal(f.context.updating,false);
+ assert.equal(digest(result.data),digest(f.next));assert.equal(result.dataRevision,1);assert.equal(digest(await f.restart()),digest(f.next));assert.deepEqual(f.published,[digest(f.next)]);assert.equal(f.context.updating,false);
  const saved=JSON.parse(await fs.readFile(path.join(f.cache,'game.json'),'utf8'));assert.equal(saved.builds,undefined);assert.equal(saved.catalog,undefined);assert.deepEqual(await fs.readdir(f.cache),['game.json']);
  assert.deepEqual(f.manualTokens,[bytesHash(await fs.readFile(path.join(f.cache,'game.json')))]);
 });

@@ -3,7 +3,7 @@ import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION} from './rules.mjs';
 import {analyzeTeam} from './recommend.mjs';
 import {createCooperationGraph} from './cooperation.mjs';
 import {compositionFit} from './composition-fit.mjs';
-import {effectiveDraftScope} from './draft.mjs';
+import {effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {clientContextDraft,publicAllyIds} from './client-context-draft.mjs';
 import {editableLocalDraft,lockedOwnSlot,confirmedPlayerPick} from './draft-intents.mjs';
 
@@ -61,6 +61,7 @@ export function fitLineupSlots(lineup,current,{scope='party',soloRole=''}={}){
 
 export function lineupFit(lineup,current,champions,options={}){
  if(typeof options==='string')options={scope:options};
+ const visible=current;
  if(options.editableRoles?.length){
   const cellId=options.clientSession?.localPlayerCellId,role=(Number.isInteger(cellId)?current.find(s=>s.clientCellId===cellId)?.role:'')||options.soloRole;
   if(options.editableRoles.includes(role)){const editable=editableLocalDraft(current,options.clientSession,champions,role);current=editable.slots;options={...options,clientSession:editable.session};}
@@ -78,15 +79,34 @@ export function lineupFit(lineup,current,champions,options={}){
  const taken=proposed.some(s=>range.controlledRoles.includes(s.role)&&unplacedAllies.includes(s.champion));
  const ownConflict=mandatoryOwn&&lineup.some(slot=>slot.role===mandatoryOwn.role&&slot.champion&&slot.champion!==mandatoryOwn.champion);
  const compatible=unique&&!taken&&!ownConflict&&heroMatches===fixed.length,exact=compatible&&roleMatches===fixed.length;
- const analysis=analyzeTeam(range.slots,champions,context,true);
+ // The displayed full team may contain a public championId without a lock
+ // action. Use it only as labelled fit evidence, never as confirmation or a
+ // selectable/proposable member. Explicit unfinished picks still obey the
+ // preselection switch. Unknown lanes retain unknown-lane scoring.
+ const references=[];let referenceConflict=false;
+ if(range.scope==='context')for(const slot of visible){
+  if(!slot.champion||range.controlledRoles.includes(slot.role)||range.slots.some(row=>row.champion===slot.champion&&!row.publicIntent&&!range.controlledRoles.includes(row.role)))continue;
+  const hero=champions.find(c=>c.id===slot.champion),team=options.clientSession?.myTeam||[];
+  const matching=team.filter(p=>Number(p.championId)===Number(hero?.key)&&(!Number.isInteger(slot.clientCellId)||slot.clientCellId===p.cellId));
+  if(!hero||matching.length!==1||team.filter(p=>p.championId&&Number(p.championId)===Number(hero.key)).length!==1)continue;
+  const player=matching[0];if(!Number.isInteger(player.cellId)||player.cellId===options.clientSession.localPlayerCellId||team.filter(p=>p.cellId===player.cellId).length!==1||confirmedPlayerPick(player,options.clientSession))continue;
+  if(!options.includePreselected&&(options.clientSession.actions||[]).flat().some(a=>a.type==='pick'&&a.actorCellId===player.cellId&&a.completed===false))continue;
+  if(references.some(row=>row.clientCellId===player.cellId))continue;
+  if(range.slots.some(row=>row.champion===slot.champion&&range.controlledRoles.includes(row.role))||references.some(row=>row.champion===slot.champion)){referenceConflict=true;continue;}
+  const role=slot.manualPosition&&slot.clientCellId===player.cellId||CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()]===slot.role?slot.role:'';
+  if(role&&([...range.slots,...references].some(row=>row.role===role&&row.champion&&row.champion!==slot.champion))){referenceConflict=true;continue;}
+  references.push({...slot,role,clientCellId:player.cellId,publicIntent:false,referenceOnly:true,locked:false});
+ }
+ const analysis=analyzeTeam([...range.slots.filter(row=>!references.some(ref=>ref.champion===row.champion)),...references],champions,context,true);
  // analyzeTeam omits unknown IDs; retain their planned place in expectedSize.
- const fit=compositionFit(analysis,context.cooperationGraph,{expectedSize:range.expectedSize});
- const cap=compatible?(exact?100:45):20,score=fit.score===null?null:Math.min(cap,fit.score),rawScore=fit.score===null?0:Math.min(cap,fit.rawScore);
+ const fit=compositionFit(analysis,context.cooperationGraph,{expectedSize:range.expectedSize+references.filter(ref=>!range.slots.some(row=>row.champion===ref.champion)).length});
+ const cap=compatible&&!referenceConflict?(exact?100:45):20,score=fit.score===null?null:Math.min(cap,fit.score),rawScore=fit.score===null?0:Math.min(cap,fit.rawScore);
  const constraint=!unique?'同一英雄或位置重复，方案存在冲突。':!compatible?'与已固定英雄冲突。':!exact?'已选英雄保留，但固定位置冲突。':'';
  const breakdown=[...fit.breakdown];if(Number.isFinite(score)&&score!==fit.score)breakdown.push({key:'constraint',label:'选人冲突限制',points:score-fit.score,max:0});
- return {...fit,score,rawScore,breakdown,compatible,exact,scope:range.scope,
-  gaps:constraint?[constraint,...fit.gaps]:fit.gaps,
-  reason:`${constraint}${fit.reason}${constraint&&fit.score!==null?` 冲突方案最高计 ${cap} 分。`:''}`};
+ const referenceNote=references.length?`含 ${references.length} 位未确认的公开已选英雄，仅作阵容参考。`:'';
+ return {...fit,score,rawScore,breakdown,compatible:compatible&&!referenceConflict,exact:exact&&!referenceConflict,scope:range.scope,referenceCount:references.length,
+  gaps:[...(referenceConflict?['与未确认的公开已选英雄或位置冲突。']:[]),...(constraint?[constraint]:[]),...fit.gaps],
+  reason:`${referenceNote}${constraint}${fit.reason}${constraint&&fit.score!==null?` 冲突方案最高计 ${cap} 分。`:''}`};
 }
 export function roomBallotBoard(room,current,champions,options={}){
  const members=(room?.members||[]).filter(m=>m.online!==false),groups=new Map();

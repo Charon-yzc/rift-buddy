@@ -3,7 +3,7 @@ import {fieldHash,formatNumber} from './augments.mjs';
 // without live player stats. Unknown calculations stay explicitly dynamic.
 export function enrichItemDescriptions(items,bin,strings,patch){
  const dictionary=new Map(Object.entries(strings.entries||{}).map(([key,value])=>[key.toLowerCase(),value]));
- const statName=part=>{const name={2:'攻击力',12:'生命值'}[part.mStat];return name&&[undefined,0,1,2].includes(part.mStatFormula)?({1:'基础',2:'额外'}[part.mStatFormula]||'总')+name:null;};
+ const statName=part=>{const stat=part.mStat===undefined?0:part.mStat;if(stat===0&&[undefined,0].includes(part.mStatFormula))return '法术强度';const name={2:'攻击力',12:'生命值'}[stat];return name&&[undefined,0,1,2].includes(part.mStatFormula)?({1:'基础',2:'额外'}[part.mStatFormula]||'总')+name:null;};
  return Object.fromEntries(Object.entries(items).map(([id,item])=>{
   const source=bin['Items/'+id],template=dictionary.get(source?.mItemDataClient?.mDescription?.toLowerCase());
   if(!source||source.itemID!==Number(id)||typeof template!=='string')return [id,item];

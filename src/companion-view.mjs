@@ -1,3 +1,4 @@
+import {renderHexAdvice,renderHexComparison} from './hex-view.mjs';
 import {itemSetControls} from './item-sets-view.mjs';
 import {roomBallotView,candidateBallotActions} from './room-ballot-view.mjs';
 import {clientConnectionNotice,clientConnectionControl} from './client-connection-view.mjs';
@@ -7,13 +8,12 @@ import {recommendationDraft} from './core/draft-intents.mjs';
 import {preparationEquipment} from './core/complete-gear.mjs';
 import {pregameControls} from './pregame-controls-view.mjs';
 import {rankedDraftPolicy} from './core/ranked-draft.mjs';
-import {rankedEnemyRoster,rankedCurveReady,rankedCurveView,rankedCurveLink} from './ranked-draft-view.mjs';
+import {rankedEnemyRoster,rankedCurveReady,rankedCurveView,rankedCurveReplacesProposals,rankedCurveLink} from './ranked-draft-view.mjs';
 import {rankedConfigurationAdviceView} from './ranked-configuration-view.mjs';
 import {candidateRoster} from './core/candidate-roster.mjs';
 import {candidateReferencePortrait,heroClickAffordance,heroSelectionHint} from './hero-selection-affordance.mjs';
 import {pregamePhase,partyWithPregameIntents} from './core/pregame-intent.mjs';
 import {memberActionSummary} from './cooperation-view.mjs';
-import {roomSharesView} from './room-view.mjs';
 import {companionHeroAction} from './core/companion-action.mjs';
 import {clientPreparationPlan} from './client-preparation-view.mjs';
 import {configurationChoices} from './core/configuration-choices.mjs';
@@ -75,7 +75,8 @@ export function companionPlanView(data,plan,favorites=[],{surface='companion',it
  return s.readOnly?readOnlyConfigurationMarkup(html):html;
 }
 
-export function companionView({data,client,enemyRoles=[],slots,unassigned,enemy=[],bans=[],scope,soloRole,playerPosition=null,style,tab,results,ballotKeys=[],generating,error,preparation,plan=preparation,favorites=[],configurationStatus={},applied=false,guideAutoShow=true,appVersion='',preferences={},room=null,roomContent='',rankings='',activePlan=null,pairRefresh={},overlap,recovery,adoptedShare='',draftNotice='',preparationStatus=null,taskControls='',taskPlan=null,taskComparing=false,claimingPosition=false,showAllCandidates=false,preselection=null,connectionBusy=false}){
+export function companionView({data,client,hexRound=null,enemyRoles=[],slots,unassigned,enemy=[],bans=[],scope,soloRole,playerPosition=null,style,tab,results,ballotKeys=[],generating,error,preparation,plan=preparation,favorites=[],configurationStatus={},applied=false,guideAutoShow=true,appVersion='',preferences={},room=null,roomContent='',rankings='',activePlan=null,pairRefresh={},overlap,recovery,adoptedShare='',draftNotice='',preparationStatus=null,taskControls='',taskPlan=null,taskComparing=false,claimingPosition=false,showAllCandidates=false,preselection=null,connectionBusy=false}){
+ if(client.mode?.id==='hex')return hexCompanionView({data,client,round:hexRound,tab,plan,favorites,configurationStatus,roomContent,preferences,connectionBusy});
  const ranked=rankedDraftPolicy(client).ranked,includePreselected=!ranked&&preferences.includePreselected===true;
  const hero=id=>data.champions.find(c=>c.id===id),analysis=analyzeTeam(slots,data.champions),live=clientDraftStatus(client,slots,data.champions);
  const own=preparation?.own,b=preparation?.build;
@@ -102,8 +103,8 @@ export function companionView({data,client,enemyRoles=[],slots,unassigned,enemy=
  const eligibility=localPickEligibility(client,slots,data.champions,{scope,soloRole,playerPosition});
  const eligibilityLabel=({checked:'本机可选范围已核对',manual:'尚未核对客户端可选英雄',partial:'本机可选范围部分核对',position:'可选英雄与分路',unknown:'尚未核对客户端可选英雄'})[eligibility.status]||'查看可选范围';
  const eligibilityInfo=`<details class="companion-eligibility-status" data-companion-disclosure="eligibility" data-eligibility="${e(eligibility.status)}"><summary><span role="status">${e(eligibilityLabel)}</span></summary>${pickEligibilityView(eligibility)}${manual&&assigned&&manual.role!==assigned?`<p class="companion-position-note">方案：${roleName(manual.role)} · 客户端分路：${roleName(assigned)}。任务权益按客户端分路。</p>`:''}${manual?button('position-auto','恢复客户端位置','','quiet small'):''}${!['checked','manual'].includes(eligibility.status)?button('sync','重新同步','','quiet small'):''}</details>`;
- const shared=roomSharesView(room,hero,{clickPrepare:preferences.clickPrepare!==false,heroAction,compact:true,adoptedShare,allowRiftAdoption:!client.connected||client.phase!=='ChampSelect'||client.mode?.id==='rift',allowUnknownRift:client.connected&&client.phase==='ChampSelect'&&client.mode?.id==='rift'});
- const incoming=rankedCurveView(client,data,{slots,enemyRoles})+(rankedCurveReady(client,data,{slots})?'':'<div class="companion-incoming-wrap">'+roomBallotView(room,visibleRoster,data.champions,{scope,soloRole:ownRole,clientSession:client.connected?client.session:null,party,includePreselected})+(shared?'<details class="companion-incoming" data-companion-disclosure="room-shares"><summary>队友分享的阵容</summary>'+shared+'</details>':'')+'</div>');
+ const curvesReady=rankedCurveReady(client,data,{slots});
+ const incoming=rankedCurveView(client,data,{slots,enemyRoles})+(rankedCurveReplacesProposals(client,data,{slots})?'':roomBallotView(room,visibleRoster,data.champions,{scope,soloRole:ownRole,clientSession:client.connected?client.session:null,party,includePreselected}));
  const chosen=companionChosenViews({data,client,activePlan,own:actionOwn,ownRole,heroAction,preparationStatus,pending:!!pendingOwn});
  const compact=preferences.compactTeam!==false;
  const rosterState=slot=>{
@@ -120,12 +121,12 @@ export function companionView({data,client,enemyRoles=[],slots,unassigned,enemy=
  const receiptFailed=/data-step-status="failed"|class="preparation-recovery"/.test(taskControls);
  const receiptComplete=(taskControls.match(/data-step-status="done"/g)||[]).length===4;
  const visibleAction=['recommend','room'].includes(tab)?'':nextAction;
- const persistent=['room','plan'].includes(tab)?'':roster+rankedEnemyRoster(client,data,enemyRoles)+pregameControls({scope,style,ranked,busy:!!configurationStatus.pending,includePreselected,ownRole,slots,room,party,preselection,preselectionHero:preselection?.champion?portrait(hero(preselection.champion),'sm'):'',compact:true,moreContent:eligibilityInfo+recommendationOptions})+visibleAction;
+ const persistent=['room','plan'].includes(tab)||curvesReady?'':roster+rankedEnemyRoster(client,data,enemyRoles)+pregameControls({scope,style,ranked,busy:!!configurationStatus.pending,includePreselected,ownRole,slots,room,party,preselection,preselectionHero:preselection?.champion?portrait(hero(preselection.champion),'sm'):'',compact:true,moreContent:eligibilityInfo+recommendationOptions})+visibleAction;
  const adopted=activePlan?`<div class="companion-adopted-row"><span title="${e(activePlan.name)}">已采用 · ${e(activePlan.name)}</span>${button(client.connected&&client.phase==='ChampSelect'?'task-compare':taskComparing?'task-return':'task-compare',client.connected&&client.phase==='ChampSelect'?'重新搭配':taskComparing?'返回方案':'换一套','','quiet small')}</div>`:'';
  const duty=activePlan?.stagePlan?.opening?.memberJobs.find(m=>m.role===taskPlan?.selection.role&&m.champion===taskPlan?.selection.id)?.job||activePlan?.ordered?.find(m=>m.role===taskPlan?.selection.role&&m.champion===taskPlan?.selection.id)?.job;
- const selection=incoming+(rankedCurveReady(client,data,{slots})?'':activePlan&&!taskComparing&&!(client.connected&&client.phase==='ChampSelect')?chosen.details:recommendations);
+ const selection=incoming+(curvesReady?`<details class="curve-roster-details" data-companion-disclosure="curve-roster"><summary>阵容信息</summary>${roster}${rankedEnemyRoster(client,data,enemyRoles)}</details>`:activePlan&&!taskComparing&&!(client.connected&&client.phase==='ChampSelect')?chosen.details:recommendations);
  const footer=`<footer class="companion-footer"><div class="companion-footer-line"><span class="companion-client-state" role="status">${clientConnectionControl(client,connectionBusy)}<span data-client-countdown>${Number.isFinite(live.remaining)?` · ${live.remaining} 秒`:''}</span></span><details class="companion-footer-menu" data-companion-disclosure="footer-tools"><summary>操作</summary><div>${own?button('guide-current','本局指引','book','quiet small'):''}${own&&b?.runePage?button('my-runes',applied?'重新应用符文':'单独替换符文','check','small',`data-id="${e(own.id)}" ${client.connected&&client.phase==='ChampSelect'&&preparation?.positionKnown!==false?'':'disabled'}`):''}${button('guide-auto-show',guideAutoShow?'关闭自动指引':'开启自动指引','','quiet small')}${button('window-info','窗口资料','','quiet small')}${button('sync','同步客户端','','quiet small')}</div></details></div></footer>`;
- const persistentContent=persistent+(['plan','room'].includes(tab)?'':adopted);
+ const persistentContent=persistent+(['plan','room'].includes(tab)||curvesReady?'':adopted);
  const persistentView=tab==='rankings'?`<details class="companion-ranking-context" data-companion-disclosure="ranking-draft"><summary><span>本局选人</span><small>${e(hero(actionOwn?.id)?.name||'五路阵容')}${icon('chevron')}</small></summary><div>${persistentContent}${incoming}</div></details>`:persistentContent;
  const extraTabs=[['team','阵容详情'],['rankings','各路排行']];
  const tabLabel=extraTabs.find(([id])=>id===tab)?.[1];
@@ -134,3 +135,9 @@ export function companionView({data,client,enemyRoles=[],slots,unassigned,enemy=
 
 
 
+
+function hexCompanionView({data,client,round,tab,plan,favorites,configurationStatus,roomContent,preferences,connectionBusy}){
+ const hero=data.champions.find(c=>c.id===round?.hero),boundPlan=plan?.selection.mode==='hex'&&plan.selection.id===hero?.id?plan:null;
+ const workbench=hero?renderHexComparison({data,hero:hero.id,options:round.options,owned:round.owned,round})+renderHexAdvice({data,hero:hero.id,owned:round.owned,round}):'<p class="companion-empty">选好英雄后显示本局强化参考</p>';
+ return `<div class="companion-shell sidebar-focused recommendation-ui hex-companion" data-tab="${e(tab)}" data-client-phase="${e(client.phase||'')}" data-client-game="${e(publicClientGameId(client)||'')}">${clientConnectionNotice(client,preferences,connectionBusy,{compact:true})}<nav class="companion-tabs" aria-label="海克斯侧栏">${[['recommend','选强化'],['plan','我的配置'],['room','开黑房间']].map(([id,label])=>button('companion-tab',label,'',tab===id?'active':'',`data-tab="${id}" aria-pressed="${tab===id}"`)).join('')}<details class="companion-navigation-more"><summary>更多</summary><div>${button('theme-open','配色','','quiet small')}${button('window-fold','收起侧栏','','quiet small')}</div></details></nav><div class="companion-persistent">${hero?`<div class="hex-current-hero">${portrait(hero,'sm')}<b>${e(hero.name)}</b><small>本局英雄 · 资料 ${e(data.patch)}</small>${button('guide-current','本局指引','book','quiet small')}</div>`:''}</div><main class="companion-content" id="main">${tab==='room'?roomContent:tab==='plan'?(boundPlan?companionPlanView(data,boundPlan,favorites,configurationStatus):'<p class="companion-empty">配置准备中，强化记录会保留</p>')+workbench:workbench}</main><footer class="companion-footer"><span class="companion-client-state" role="status">${clientConnectionControl(client,connectionBusy)}</span></footer></div>`;
+}

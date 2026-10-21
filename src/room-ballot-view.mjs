@@ -22,7 +22,7 @@ export function roomBallotView(room,slots,champions,options={}){
  const warning=room.warning?`<p class="ballot-adoption has-change" role="alert">${e(room.warning)}</p>`:'';
  const incompatible=(room.members||[]).filter(m=>!m.self&&m.online!==false&&m.packedStates===false);
  const compatibility=room.packedStates&&incompatible.length&&board.some(r=>r.proposal.strategy?.members.length>=4)?`<p class="ballot-adoption has-change" role="status" title="${e(incompatible.map(m=>m.nick).join('、'))}">${incompatible.length} 位队友需更新助手，才能同步完整多人方案</p>`:'';
- if(!room.ballots)return warning+'<details class="ballot-support"><summary>房间候选投票</summary><p>此中继尚未支持投票，阵容分享仍可使用。中继维护者升级后重新连接即可开启。</p></details>';
+ if(!room.ballots)return warning+'<details class="ballot-support"><summary>房间候选投票</summary><p>此房间尚未支持提议和投票，请更新房主或中继后重新连接。</p></details>';
  const adoptionView=row=>{
   if(!row.adopters.length)return '';
   const labels={pending:'已采用，待预选',matched:'方案一致','changed-pick':'已改选','changed-configuration':'配置已调整','pending-configuration':'配置待确认'};

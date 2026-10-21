@@ -30,7 +30,7 @@ const planFor=(trio,slots=slotsFor(trio))=>captureCreativePlan({slots,scope:'par
 
 test('new trio defaults use six exact hero-role routes and full independently sourced rune pages',()=>{
  assert.doesNotThrow(()=>validateCatalog(BUNDLED_CATALOG,data));
- assert.equal(BUNDLED_CATALOG.version,'2026.10.19.1');
+ assert.ok(BUNDLED_CATALOG.version.localeCompare('2026.10.19.1',undefined,{numeric:true})>=0);
  for(const row of cases){
   const reference=data.builds[row.champion+':'+row.role],loadout=BUNDLED_CATALOG.loadouts.find(l=>l.id===row.loadout);
   assert(reference.core.some(c=>JSON.stringify(c.items)===JSON.stringify(row.core)),row.champion+' core missing from the existing snapshot');

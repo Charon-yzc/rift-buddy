@@ -1,4 +1,17 @@
 .ranking-workspace{min-width:0;animation:reference-enter .16s ease-out}
+.national-reference{padding:14px 20px;overflow-wrap:anywhere}
+.national-reference details.ui-disclosure>summary{color:var(--rb-accent,#c8aa6e);cursor:pointer}
+[data-ranking-provider=tencent101] :is(.ranking-filters label,.ranking-meta,.ranking-source,.ranking-search,.ranking-count,.ranking-table th,.ranking-position){color:var(--rb-muted,#a9bdd0)}
+[data-ranking-provider=tencent101] .ranking-champion{color:var(--rb-ink,#f0e6d2)}
+[data-ranking-provider=tencent101] :is(.ranking-tier,.ranking-roles button.active){color:var(--rb-accent,#c8aa6e)}
+[data-ranking-provider=tencent101] .ranking-roles button{color:var(--rb-muted,#a9bdd0)}
+.national-reference ol{list-style:none;padding:0;margin:6px 0 16px}
+.national-reference li{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--rb-line,#263747);font-size:13px;font-variant-numeric:tabular-nums}
+.national-reference h4{margin:14px 0 6px}
+.national-reference p{font-size:12px;line-height:1.6;color:var(--rb-muted,#a9bdd0)}
+.national-gear{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.national-gear img{width:32px;height:32px;object-fit:contain;border-radius:4px}
+.national-gear small{font-size:11px;color:var(--rb-muted,#a9bdd0)}
 .ranking-roles{display:flex;gap:5px;border-bottom:1px solid #304050;margin:14px 0}
 .ranking-roles button{flex:1;background:none;color:#9db0c4;border-bottom:2px solid transparent;padding:10px 7px;transition:color .15s,border-color .15s}
 .ranking-roles button.active{color:#b2edcb;border-bottom-color:#b2edcb}

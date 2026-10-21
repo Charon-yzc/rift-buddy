@@ -43,9 +43,9 @@ async function run(){
  await until(()=>guideJS('!!document.querySelector(".augment")'),'Hex augment tab missing');
  await until(()=>guideJS('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Hex images missing');
  await painted(guideJS);await fs.writeFile(path.join(root,'guide-hex.png'),(await guide.webContents.capturePage()).toPNG());
- await mainJS(`window.buddy.openGuide({id:'Ashe',role:'bottom',mode:'hex',compareIds:[1048,1002,1141],ownedAugmentIds:[1047]})`);
+ await mainJS(`(async()=>{await window.buddy.hexRound({operation:'select',hero:'Ashe'});for(const [operation,id]of [['own',1047],['compare',1048],['compare',1002],['compare',1141]]){const snapshot=await window.buddy.hexRound(),record=snapshot.manual;await window.buddy.hexRound({...record,operation,id});}return window.buddy.openGuide({id:'Ashe',role:'bottom',mode:'hex'});})()`);
  await until(()=>guideJS('document.querySelector("main").textContent.includes("本次选项比较")'),'Guide comparison missing');
- const fresh=await guideJS("window.guide.control('new-game')");assert.equal(fresh.model.comparison.length,0);assert.equal(fresh.model.completedItems.length,0);assert.equal(fresh.model.selection.ownedAugmentIds,undefined);
+ const fresh=await guideJS("window.guide.bootstrap().then(s=>window.guide.control('new-game',s.model.hexRound))");assert.equal(fresh.model.comparison.length,0);assert.equal(fresh.model.completedItems.length,0);assert.equal(fresh.model.selection.ownedAugmentIds,undefined);
  await guideJS("window.guide.control('main')");
  await until(()=>mainJS('!!document.querySelector("[data-action=open-guide]")'),'Guide return to full config failed');
  await painted(mainJS);await fs.writeFile(path.join(root,'main-config.png'),(await main.webContents.capturePage()).toPNG());
