@@ -79,3 +79,49 @@ test('late Rift widget ready, peek restore and controls cannot create a third He
   const win=windows[0];await assert.rejects(handlers[kind+'-control']({sender:win.webContents,senderFrame:win.webContents.mainFrame},'details'),/当前模式/);widget.destroy();
  }
 });
+
+
+// Exercise the real guide owner and micro windows together: manual previews
+// must stay editable without allowing a late legacy window over the game.
+function guideOwner(){
+ const file=new URL('../electron/guide-window.cjs',import.meta.url),nativeRequire=createRequire(file),handlers={},windows=[];let restore;
+ let state={selection:{id:'Yasuo',mode:'hex',conditions:[]},compact:true,match:{gameId:'1'}};
+ class Window extends EventEmitter{
+  constructor(options){super();this.options=options;this.bounds={x:options.x||0,y:options.y||0,width:options.width,height:options.height};this.visible=false;this.webContents=new EventEmitter();this.webContents.mainFrame={};this.webContents.send=()=>{};this.webContents.setWindowOpenHandler=()=>{};windows.push(this);}
+  getBounds(){return this.bounds;}setBounds(b){this.bounds=b;}getSize(){return [this.bounds.width,this.bounds.height];}setSize(width,height){Object.assign(this.bounds,{width,height});}setPosition(x,y){Object.assign(this.bounds,{x,y});}setMinimumSize(){}setResizable(){}setOpacity(){}setFocusable(){}isFocused(){return false;}isMinimized(){return false;}isDestroyed(){return !!this.destroyed;}isVisible(){return this.visible;}showInactive(){this.visible=true;}hide(){this.visible=false;}setAlwaysOnTop(){}setIgnoreMouseEvents(){}loadFile(){}async loadURL(){}destroy(){this.destroyed=true;this.emit('closed');}
+ }
+ const display={workArea:area,bounds:area},screen=Object.assign(new EventEmitter(),{getDisplayMatching:()=>display,getPrimaryDisplay:()=>display,getCursorScreenPoint:()=>({x:-100,y:-100})});
+ const electron={BrowserWindow:Window,ipcMain:{handle:(name,fn)=>{handlers[name]=fn;}},screen,clipboard:{}};
+ const widget=()=>({show(){},hide(){},publish(){},fit(){},destroy(){},reset(){},visible:()=>false,info:()=>null});
+ function load(url){const module={exports:{}};vm.runInNewContext(fs.readFileSync(url,'utf8'),{module,process,Buffer,setTimeout:()=>1,clearTimeout(){},setInterval:()=>({unref(){}}),clearInterval(){},require:name=>name==='electron'?electron:name==='./hex-micro-windows.cjs'?load(new URL('../electron/hex-micro-windows.cjs',import.meta.url)):['./skill-window.cjs','./jungle-window.cjs'].includes(name)?widget:name==='./window-peek.cjs'?options=>{restore=options.onRestore;return {unfold(){},destroy(){},active:()=>false,visible:()=>false,sync(){}};}:name==='./window-resize.cjs'?()=>({cancel(){},active:()=>false}):nativeRequire(name)});return module.exports;}
+ const guide=load(file)({root,getState:()=>state,setState:async next=>{state=next;},getModel:()=>({mode:'hex',live:{matched:false},champion:{id:'Yasuo'},hexMicroRoutes:[]}),isQuitting:()=>false,showMain(){},diagnostic(){},currentSelection:()=>state.selection,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:true})});
+ const legacy=()=>windows.find(w=>w.options.webPreferences.preload.endsWith('guide-preload.cjs'));
+ const micro=()=>windows.filter(w=>w.options.webPreferences.additionalArguments?.some(a=>a.startsWith('--rift-hex-window=')));
+ const call=(w,name,...args)=>handlers[name]({sender:w.webContents,senderFrame:w.webContents.mainFrame},...args);
+ return {guide,windows,legacy,micro,call,state:()=>state,restore:()=>restore(),ready:()=>windows.forEach(w=>w.emit('ready-to-show'))};
+}
+
+test('Hex manual preview is editable; entering a game replaces it with only two micro windows',async()=>{
+ const s=guideOwner();try{
+  s.guide.show();s.ready();assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
+  await s.call(s.legacy(),'guide-control','condition','ap');assert.deepEqual([...s.state().selection.conditions],['ap']);
+  await s.guide.phase('InProgress',true);s.ready();assert.equal(s.micro().length,2);assert(s.micro().every(w=>w.isVisible()));assert(!s.legacy().isVisible());
+  s.restore();s.legacy().emit('ready-to-show');assert(!s.legacy().isVisible());
+  await assert.rejects(s.call(s.legacy(),'guide-control','main'),/两个精简窗口/);
+  await s.guide.phase('Offline',false);s.guide.publish();assert(s.micro().every(w=>w.isVisible()));assert(!s.legacy().isVisible());
+  await s.guide.phase('Reconnect',true);assert(s.micro().every(w=>w.isVisible()));
+  for(const w of s.micro()){const kind=w.options.webPreferences.additionalArguments[0].split('=').at(-1);s.call(w,'hex-micro-control',kind,'hide');}
+  await s.guide.phase('GameStart',true);await s.guide.phase('InProgress',true);s.ready();assert(!s.guide.isVisible(),'same-game reconnect must preserve manual hide');
+ }finally{s.guide.destroy();}
+});
+
+test('Hex game exits hide every overlay instead of resurrecting the editable preview',async()=>{
+ for(const exit of ['Lobby','ChampSelect','EndOfGame']){
+  const s=guideOwner();try{
+   await s.guide.phase('InProgress',true);s.ready();assert(s.micro().every(w=>w.isVisible()));
+   await s.guide.phase('Offline',false);await s.guide.phase(exit,true);s.guide.publish();s.ready();assert(!s.guide.isVisible(),exit);
+   s.guide.show();s.ready();assert(s.legacy().isVisible(),'an explicit out-of-game preview is still available');
+   await s.call(s.legacy(),'guide-control','condition','heal');assert(s.state().selection.conditions.includes('heal'));
+  }finally{s.guide.destroy();}
+ }
+});
