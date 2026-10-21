@@ -5,7 +5,7 @@ import {validHexPoolRecord} from '../src/core/hex-pool-evidence.mjs';
 import {atomicJSON} from '../services/data.mjs';
 
 export async function syncHexPools({data,file,fetcher=fetch,wait=350,clock=Date.now,onProgress=()=>{}}){
- const patch=data.patch,index=await fetchHexPoolIndex({fetcher});let previous={};
+ const patch=data.patch,index=await fetchHexPoolIndex({patch,fetcher});let previous={};
  try{const value=JSON.parse(await fs.readFile(file));if(value.schema===1&&value.patch===patch&&value.kind==='selected-game-counts')previous=value.entries||{};}catch{}
  const entries=Object.fromEntries(data.champions.flatMap(c=>validHexPoolRecord(previous[c.id],c.id,patch)?[[c.id,previous[c.id]]]:[])),jobs=data.champions;let cursor=0,done=0,failed=0;
  await Promise.all(Array.from({length:2},async()=>{while(cursor<jobs.length){const champion=jobs[cursor++],slug=index.get(champion.key);

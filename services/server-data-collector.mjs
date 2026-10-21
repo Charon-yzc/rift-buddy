@@ -107,7 +107,7 @@ export async function collectServerData({root,seedRoot,clock=()=>new Date().toIS
   // signed Hex file. Their outage must not freeze valid base/build updates.
   const pools=begin('hex-pools',game.champions.length);pools.optional=true;await checkpoint();
   try{
-   const index=await (providers.hexPoolIndex||fetchHexPoolIndex)({fetcher:network.fetcher});
+   const index=await (providers.hexPoolIndex||fetchHexPoolIndex)({patch:game.patch,fetcher:network.fetcher});
    for(const champion of champions){
     pools.checked++;try{
      const ref=bundle['hex-builds'].entries[champion.id],slug=index.get(champion.key);

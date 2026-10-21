@@ -27,7 +27,7 @@ test('disabled catalogue entries leave automatic advice while actual player-ente
 });
 
 import {hexAcquisitionRules} from '../src/core/hex-mode-rules.mjs';
-import {parseHexPoolPage} from '../services/hex-pool-sources.mjs';
+import {parseHexPoolPage,fetchHexPoolIndex} from '../services/hex-pool-sources.mjs';
 import {validHexPoolEvidence} from '../src/core/hex-pool.mjs';
 import {validHexPoolRecord} from '../src/core/hex-pool-evidence.mjs';
 import {syncHexPools} from '../scripts/sync-hex-pools.mjs';
@@ -58,12 +58,26 @@ test('collector reads inert selected-count rows, rejects cross-patch pages, and 
 
 const flight=node=>'<script>self.__next_f.push([1,'+JSON.stringify('1:'+JSON.stringify(node)+'\n')+'])</script>';
 const poolHTML=(hero,patch='16.20')=>'<title>'+hero+' ARAM: Mayhem Build '+patch+' — Test</title><link rel="canonical" href="https://mayhemmeta.com/champions/'+hero.toLowerCase()+'">'+flight({title:'All Augments',rows:[{id:1058,games:9}],extraFilter:{rows:[{id:1118,games:0}]}});
+
+test('pool index stops an unavailable patch before hero requests and validates supplied patch metadata',async()=>{
+ const index=Array.from({length:103},(_,i)=>({champion_id:i+1,slug:'hero-'+i})),metadata={defaultPatch:'16.20',servablePatches:['16.20','16.19','16.18','16.17']};let requests=0;
+ const load=async(patch,config=metadata)=>fetchHexPoolIndex({patch,fetcher:async url=>{requests++;assert.equal(url,'https://mayhemmeta.com/');return new Response(flight(index)+flight(config));}});
+ await assert.rejects(load('16.21'),error=>error.code==='SOURCE_PATCH_UNAVAILABLE'&&/16.21/.test(error.message));assert.equal(requests,1);
+ assert.equal((await load('16.20')).size,103);assert.equal((await load('16.19')).get(1),'hero-0','An explicitly available older patch is allowed');
+ for(const config of[{...metadata,servablePatches:[]},{...metadata,servablePatches:['16.20','16.20']},{...metadata,servablePatches:['16.21']},{...metadata,servablePatches:['unknown']},[metadata,{defaultPatch:'16.21',servablePatches:['16.21']}]] )await assert.rejects(load('16.20',config),/补丁索引/);
+ // Older page formats lack this summary; exact per-hero identity/patch checks
+ // still decide adoption, so absence is never taken as patch confirmation.
+ assert.equal((await load('16.20',{})).size,103);
+ const referenced=flight(index)+flight(metadata)+flight({defaultPatch:'16.20',servablePatches:'$2:props:servablePatches'})+'<script>self.__next_f.push([1,'+JSON.stringify('2:'+JSON.stringify(['$','Provider',null,metadata])+'\n')+'])</script>';
+ const fetcher=async()=>new Response(referenced);assert.equal((await fetchHexPoolIndex({patch:'16.20',fetcher})).size,103);await assert.rejects(fetchHexPoolIndex({patch:'16.21',fetcher}),error=>error.code==='SOURCE_PATCH_UNAVAILABLE');
+});
 test('collector preserves failed heroes and leaves the file byte-identical on total failure',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-hex-pool-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const file=path.join(root,'pools.json'),previous={...observations,entries:{Yasuo:observations.entries.Yasuo,Lux:observations.entries.Lux}};await fs.writeFile(file,JSON.stringify(previous));
  const index=[{champion_id:157,slug:'yasuo'},{champion_id:99,slug:'lux'},...Array.from({length:101},(_,i)=>({champion_id:10000+i,slug:'hero-'+i}))],fetcher=async url=>new Response(url==='https://mayhemmeta.com/'?flight(index):url.includes('/yasuo?')?poolHTML('Yasuo'):'offline',{status:url.includes('/lux?')?503:200});
  const input={data:{patch:'16.20',champions:[{id:'Yasuo',key:157},{id:'Lux',key:99}]},file,fetcher,wait:0},result=await syncHexPools(input);assert.equal(result.done,1);assert.equal(result.failed,1);
  const saved=JSON.parse(await fs.readFile(file));assert.deepEqual(saved.entries.Lux,previous.entries.Lux);assert.equal(saved.entries.Yasuo.rows[0].games,9);
  const before=await fs.readFile(file);await assert.rejects(syncHexPools({...input,fetcher:async url=>new Response(url==='https://mayhemmeta.com/'?flight(index):'offline',{status:url==='https://mayhemmeta.com/'?200:503})}),/保留原文件/);assert.deepEqual(await fs.readFile(file),before);
+ let unavailableRequests=0;await assert.rejects(syncHexPools({...input,fetcher:async url=>{unavailableRequests++;assert.equal(url,'https://mayhemmeta.com/');return new Response(flight(index)+flight({defaultPatch:'16.19',servablePatches:['16.19']}));}}),error=>error.code==='SOURCE_PATCH_UNAVAILABLE');assert.equal(unavailableRequests,1);assert.deepEqual(await fs.readFile(file),before);
  const invalid=structuredClone(previous.entries.Yasuo);invalid.rows[0].player='must-not-enter-the-feed';assert.equal(validHexPoolRecord(invalid,'Yasuo','16.20'),null);
 });
 
