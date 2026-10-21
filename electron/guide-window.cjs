@@ -31,7 +31,7 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const inGame=value=>['GameStart','InProgress','Reconnect'].includes(value);
  // Manual Hex previews keep their editable guide. Only a real game switches
  // to micro windows; a transient client disconnect retains that game family.
- const usesHexMicro=()=>isHex()&&(inGame(phase)||!connected&&inGame(lastConnectedPhase));
+ const usesHexMicro=()=>isHex()&&currentSelection()?.mode==='hex'&&(inGame(phase)||!connected&&inGame(lastConnectedPhase));
  const ended=()=>['WaitingForStats','PreEndOfGame','EndOfGame'].includes(phase);
  const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
  const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{if(usesHexMicro())return;displayEpoch++;visibilityRequested=true;win?.showInactive();inputMode();publish();}});

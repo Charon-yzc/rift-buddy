@@ -85,7 +85,7 @@ test('late Rift widget ready, peek restore and controls cannot create a third He
 // must stay editable without allowing a late legacy window over the game.
 function guideOwner(){
  const file=new URL('../electron/guide-window.cjs',import.meta.url),nativeRequire=createRequire(file),handlers={},windows=[];let restore;
- let state={selection:{id:'Yasuo',mode:'hex',conditions:[]},compact:true,match:{gameId:'1'}};
+ let state={selection:{id:'Yasuo',mode:'hex',conditions:[]},compact:true,match:{gameId:'1'}},current={id:'Yasuo',mode:'hex'};
  class Window extends EventEmitter{
   constructor(options){super();this.options=options;this.bounds={x:options.x||0,y:options.y||0,width:options.width,height:options.height};this.visible=false;this.webContents=new EventEmitter();this.webContents.mainFrame={};this.webContents.send=()=>{};this.webContents.setWindowOpenHandler=()=>{};windows.push(this);}
   getBounds(){return this.bounds;}setBounds(b){this.bounds=b;}getSize(){return [this.bounds.width,this.bounds.height];}setSize(width,height){Object.assign(this.bounds,{width,height});}setPosition(x,y){Object.assign(this.bounds,{x,y});}setMinimumSize(){}setResizable(){}setOpacity(){}setFocusable(){}isFocused(){return false;}isMinimized(){return false;}isDestroyed(){return !!this.destroyed;}isVisible(){return this.visible;}showInactive(){this.visible=true;}hide(){this.visible=false;}setAlwaysOnTop(){}setIgnoreMouseEvents(){}loadFile(){}async loadURL(){}destroy(){this.destroyed=true;this.emit('closed');}
@@ -94,11 +94,11 @@ function guideOwner(){
  const electron={BrowserWindow:Window,ipcMain:{handle:(name,fn)=>{handlers[name]=fn;}},screen,clipboard:{}};
  const widget=()=>({show(){},hide(){},publish(){},fit(){},destroy(){},reset(){},visible:()=>false,info:()=>null});
  function load(url){const module={exports:{}};vm.runInNewContext(fs.readFileSync(url,'utf8'),{module,process,Buffer,setTimeout:()=>1,clearTimeout(){},setInterval:()=>({unref(){}}),clearInterval(){},require:name=>name==='electron'?electron:name==='./hex-micro-windows.cjs'?load(new URL('../electron/hex-micro-windows.cjs',import.meta.url)):['./skill-window.cjs','./jungle-window.cjs'].includes(name)?widget:name==='./window-peek.cjs'?options=>{restore=options.onRestore;return {unfold(){},destroy(){},active:()=>false,visible:()=>false,sync(){}};}:name==='./window-resize.cjs'?()=>({cancel(){},active:()=>false}):nativeRequire(name)});return module.exports;}
- const guide=load(file)({root,getState:()=>state,setState:async next=>{state=next;},getModel:()=>({mode:'hex',live:{matched:false},champion:{id:'Yasuo'},hexMicroRoutes:[]}),isQuitting:()=>false,showMain(){},diagnostic(){},currentSelection:()=>state.selection,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:true})});
+ const guide=load(file)({root,getState:()=>state,setState:async next=>{state=next;},getModel:()=>({mode:'hex',live:{matched:false},champion:{id:'Yasuo'},hexMicroRoutes:[]}),isQuitting:()=>false,showMain(){},diagnostic(){},currentSelection:()=>current,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:true})});
  const legacy=()=>windows.find(w=>w.options.webPreferences.preload.endsWith('guide-preload.cjs'));
  const micro=()=>windows.filter(w=>w.options.webPreferences.additionalArguments?.some(a=>a.startsWith('--rift-hex-window=')));
  const call=(w,name,...args)=>handlers[name]({sender:w.webContents,senderFrame:w.webContents.mainFrame},...args);
- return {guide,windows,legacy,micro,call,state:()=>state,restore:()=>restore(),ready:()=>windows.forEach(w=>w.emit('ready-to-show'))};
+ return {guide,windows,legacy,micro,call,state:()=>state,current:value=>{current=value;},restore:()=>restore(),ready:()=>windows.forEach(w=>w.emit('ready-to-show'))};
 }
 
 test('Hex manual preview is editable; entering a game replaces it with only two micro windows',async()=>{
@@ -128,4 +128,13 @@ test('Hex game exits hide every overlay instead of resurrecting the editable pre
    await s.call(s.legacy(),'guide-control','condition','heal');assert(s.state().selection.conditions.includes('heal'));
   }finally{s.guide.destroy();}
  }
+});
+
+test('a manual Hex reference during an actual Rift game stays editable',async()=>{
+ const s=guideOwner();try{
+  s.current({id:'Ashe',mode:'rift'});await s.guide.phase('InProgress',true);s.guide.show();s.ready();
+  assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
+  await s.call(s.legacy(),'guide-control','condition','heal');assert(s.state().selection.conditions.includes('heal'));
+  await s.guide.phase('Offline',false);s.guide.publish();assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
+ }finally{s.guide.destroy();}
 });
