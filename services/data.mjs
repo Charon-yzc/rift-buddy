@@ -119,13 +119,14 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
   };
 }
 const writeQueues=new Map();
-export function atomicJSON(filename, value, {space=0}={}) {
+export function atomicJSON(filename, value, {space=0,mode}={}) {
   const key=path.resolve(filename),content=JSON.stringify(value,null,space);
   const pending=(writeQueues.get(key)||Promise.resolve()).catch(()=>{}).then(async()=>{
     await fs.mkdir(path.dirname(key),{recursive:true});
     const tmp=`${key}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.tmp`;
     try{
       await fs.writeFile(tmp,content,'utf8');
+      if(mode!==undefined)await fs.chmod(tmp,mode);
       // Windows readers/indexers can briefly hold the destination open. Keep
       // the old file intact and the write queue ordered while retrying rename;
       // never delete the destination or replace it with a non-atomic write.

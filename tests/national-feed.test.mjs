@@ -7,6 +7,7 @@ import vm from 'node:vm';
 import {generateKeyPairSync,sign} from 'node:crypto';
 import {parseNationalRankings,NATIONAL_TIERS,nationalKey} from '../src/core/national-reference.mjs';
 import {publishNationalFeed} from '../services/national-feed-publish.mjs';
+import {atomicJSON} from '../services/data.mjs';
 import {verifyNationalEnvelope,fetchNationalFeed,NATIONAL_FEED_PATH} from '../services/national-feed.mjs';
 import {createNationalReferenceCache} from '../services/national-reference.mjs';
 import {nationalBuildView} from '../src/national-reference-view.mjs';
@@ -26,6 +27,31 @@ test('real Ed25519 publication succeeds twice and retains signed bytes on a part
  await assert.rejects(publishNationalFeed({...options,fetchReference:async input=>{if(input.tier==='diamond_plus')throw Error('partial');return rank(input.tier);}}),/partial/);assert.deepEqual(await fs.readFile(destination),bytes);
  const other=generateKeyPairSync('ed25519');await assert.rejects(publishNationalFeed({...options,keys:{test:other.publicKey.export({format:'pem',type:'spki'})}}),/固定公钥/);assert.deepEqual(await fs.readFile(destination),bytes);
  await assert.rejects(publishNationalFeed({...options,fetchReference:async input=>({...rank(input.tier),sourceDate:'2026-10-18'})}),/日期倒退/);assert.deepEqual(await fs.readFile(destination),bytes);
+});
+
+test('public national feed remains readable by a separate web-server user under the service umask',{skip:process.platform==='win32'},async t=>{
+ const root=await temporary(t),keyFile=path.join(root,'key.pem'),destination=path.join(root,NATIONAL_FEED_PATH);
+ await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}),{mode:0o600});
+ const before=process.umask(0o027);
+ try{
+  const options={data,publicRoot:root,keyFile,keyId:'test',keys,clock,network:{fetcher:()=>{throw Error('unexpected network');},stats:()=>({})},fetchReference:async input=>rank(input.tier)};
+  for(let i=0;i<2;i++){
+   await publishNationalFeed(options);
+   assert.equal((await fs.stat(destination)).mode&0o777,0o644);
+   for(const dir of [path.dirname(path.dirname(destination)),path.dirname(destination)])assert.equal((await fs.stat(dir)).mode&0o777,0o755);
+   assert.equal(verifyNationalEnvelope(JSON.parse(await fs.readFile(destination)),data,{keys}).sequence,Date.parse(now)+i);
+  }
+  assert.equal((await fs.stat(keyFile)).mode&0o777,0o600);
+  const privateCache=path.join(root,'private-cache.json');await atomicJSON(privateCache,{local:true});
+  assert.equal((await fs.stat(privateCache)).mode&0o777,0o640);
+ }finally{process.umask(before);}
+});
+
+test('permission preparation failure leaves the previous atomic JSON bytes intact',async t=>{
+ const root=await temporary(t),file=path.join(root,'feed.json');await atomicJSON(file,{sequence:1});
+ const bytes=await fs.readFile(file);
+ await assert.rejects(atomicJSON(file,{sequence:2},{mode:-1}));assert.deepEqual(await fs.readFile(file),bytes);
+ assert.deepEqual((await fs.readdir(root)).sort(),['feed.json']);
 });
 
 test('signature verification rejects tampering, missing scopes and fabricated samples',()=>{
