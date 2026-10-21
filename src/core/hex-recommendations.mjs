@@ -3,8 +3,9 @@ import {hexCatalogDisabled} from './hex-catalog.mjs';
 import {validHexReference} from './builds.mjs';
 import {compareAugments} from './hex-compare.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
-import {mechanicReview} from './mechanic-review.mjs';
-import {reviewedHexMechanic as reviewed,hexMechanicIds,hexUltimateRequirement,HEX_MECHANIC_PATCH as reviewedPatch} from './hex-mechanics.mjs';
+import {currentHexReview,hexChampionReview} from './hex-review.mjs';
+import {hexRouteItemFingerprint} from './hex-routes.mjs';
+import {reviewedHexMechanic as reviewed,hexMechanicIds,hexUltimateRequirement} from './hex-mechanics.mjs';
 
 // These are reviewed mechanic prerequisites, not occurrence eligibility or a
 // win-rate model. Unknown versions/keys remain browsable without these claims.
@@ -15,10 +16,10 @@ const labels={preferred:'优先参考',conditional:'看条件选',reference:'资
 const activeRecord=(data,id)=>{
  const raw=data.augments.find(a=>a.id===id);return raw?hexAugmentReference(raw,{patch:data.patch}):null;
 };
-const itemRows=(data,ids)=>ids.flatMap(id=>{const item=data.items[id];return item?.maps?.['12']&&item.inStore&&item.gold?.purchasable!==false?[{id,name:item.name}]:[];});
+const itemRows=(data,ids)=>ids.flatMap(id=>{const item=data.items[id],review=currentHexReview(data.patch);return item?.maps?.['12']&&item.inStore&&item.gold?.purchasable!==false&&(!review||review.items[id]===hexRouteItemFingerprint(item))?[{id,name:item.name}]:[];});
 
 function mechanicAdvice(data,champion,a,owned){
- const kitCurrent=mechanicReview(champion,data.patch)==='current',p=kitCurrent?profile(champion):null,reasons=[],cautions=[];let affinity=0,conflict=false,conditional=false;
+ const kitCurrent=hexChampionReview(champion,data.patch)==='current',p=kitCurrent?profile(champion):null,reasons=[],cautions=[];let affinity=0,conflict=false,conditional=false;
  if(!reviewed(a,data.patch))return {affinity,reasons,cautions,conflict,reviewed:false};
  const has=id=>owned.some(other=>other.id===id&&reviewed(other,data.patch));
  const requirement=hexUltimateRequirement(a,data.patch),dependencies=a.id===1004?owned.filter(other=>hexUltimateRequirement(other,data.patch)):requirement&&has(1004)?[a]:[];
@@ -64,8 +65,8 @@ function mechanicAdvice(data,champion,a,owned){
 
 export function hexEquipmentImpact({data,hero,owned=[]}){
  const champion=data.champions.find(c=>c.id===hero);if(!champion)return [];
- const p=mechanicReview(champion,data.patch)==='current'?profile(champion):null,records=[...new Set(owned)].slice(0,6).map(id=>activeRecord(data,id)).filter(a=>reviewed(a,data.patch)),has=id=>records.some(a=>a.id===id),rows=[];
- const add=(id,title,why,ids=[])=>rows.push({augment:id,title,why,items:itemRows(data,ids),patch:reviewedPatch,kind:'mechanic'});
+ const p=hexChampionReview(champion,data.patch)==='current'?profile(champion):null,records=[...new Set(owned)].slice(0,6).map(id=>activeRecord(data,id)).filter(a=>reviewed(a,data.patch)),has=id=>records.some(a=>a.id===id),rows=[];
+ const add=(id,title,why,ids=[])=>rows.push({augment:id,title,why,items:itemRows(data,ids),patch:data.patch,kind:'mechanic'});
  if(has(1002))add(1002,'优先检查装备效果冷却','装备急速只影响可适用的装备效果。法强路线可把中娅作为自保备选，不能据此认为所有装备都值得买。',p?.damageWeights.ap>=.5?[3157]:[]);
  if(has(1129))add(1129,'保留法强，确认普攻空间','强化收益来自法强与实际普攻。当前本来就穿插普攻的法强英雄可比较纳什；纯远程施法不要为此强行近身。',p?.damageWeights.ap>=.5&&apAttackers.has(champion.id)?[3115]:[]);
  if(has(1047))add(1047,'重新比较暴击属性','已经获得暴击几率后，再比较攻击力、攻速和暴击伤害。英雄被动的暴击、溢出与转化规则需要分别核对。');

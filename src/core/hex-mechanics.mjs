@@ -1,7 +1,7 @@
 import baseline from './hex-effect-baseline.json' with {type:'json'};
 import {fingerprint} from './content-fingerprint.mjs';
+import {currentHexReview} from './hex-review.mjs';
 // Reviewed prerequisites, not a claim about occurrence eligibility or win rate.
-export const HEX_MECHANIC_PATCH='16.20';
 // Exact reviewed effect prerequisites, not a keyword classifier. Some other
 // augments mention ultimates but retain basic-skill or automatic/item effects.
 const ultimateRules={
@@ -29,12 +29,13 @@ const rules={
 export const hexMechanicIds=Object.keys(rules).map(Number);
 export function reviewedHexMechanic(augment,patch){
  const rule=rules[augment?.id];
- return !!rule&&hexEffectMatches(augment,patch)&&patch===HEX_MECHANIC_PATCH&&augment.key===rule[0]&&rule[1].test(augment.description||'');
+ return !!rule&&hexEffectMatches(augment,patch)&&augment.key===rule[0]&&rule[1].test(augment.description||'');
 }
 export function hexUltimateRequirement(augment,patch){return reviewedHexMechanic(augment,patch)?ultimateRules[augment.id]?.[2]||null:null;}
 
 // Frozen alongside authored explanations, never refreshed by collectors. A
 // changed trigger or number invalidates the explanation until reviewed again.
 export function hexEffectMatches(augment,patch){
- return !!augment&&patch===baseline.patch&&baseline.effects[augment.id]===fingerprint({key:augment.key,description:augment.description});
+ const selected=currentHexReview(patch)||(patch===baseline.patch?baseline:null);
+ return !!augment&&!!selected&&selected.effects[augment.id]===fingerprint({key:augment.key,description:augment.description});
 }
