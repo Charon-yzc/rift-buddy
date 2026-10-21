@@ -23,7 +23,7 @@ export function publicClientGameId(client){return client?.connected?(client.phas
 export function reconcileClientDraft(draft,gameId,previousId=null,{phase='',previousPhase=''}={}){
  const queue=['None','Lobby','Matchmaking','ReadyCheck'];
  if(draft&&queue.includes(phase)&&(draft.clientGameId||Number.isInteger(draft.partyCount)||['ChampSelect','GameStart','InProgress','Reconnect','WaitingForStats','PreEndOfGame','EndOfGame'].includes(previousPhase))){
-  const {creativePlan,playerPosition,partyCount,preselection,clientGameId:oldId,...rest}=draft;
+  const {creativePlan,playerPosition,partyCount,preselection,referenceQueue,scopeSelection,enemyRoles,clientGameId:oldId,...rest}=draft;
   return {draft:{...rest,slots:clearDraftPicks(draft.slots).map(s=>({...s,party:false})),soloRole:''},changed:true,newGame:true};
  }
  if(queue.includes(phase))return {draft,changed:false,newGame:false};
@@ -35,7 +35,7 @@ export function reconcileClientDraft(draft,gameId,previousId=null,{phase='',prev
  // A manual party range belongs to this game; it must not overrule the next group.
  const next={...draft,clientGameId:gameId,slots:newGame?clearDraftPicks(draft.slots).map(s=>({...s,party:false})):draft.slots,...(clearSoloRole?{soloRole:''}:{})};
  if(newGame){
-  delete next.playerPosition;delete next.partyCount;
+  delete next.playerPosition;delete next.partyCount;delete next.referenceQueue;delete next.scopeSelection;delete next.enemyRoles;
   // A previous guide may prove that old heroes need clearing on entry. A
   // fresh, unconsumed lobby click was made after that game and must survive.
   if(draft.clientGameId||next.preselection?.attemptedGameId)delete next.preselection;

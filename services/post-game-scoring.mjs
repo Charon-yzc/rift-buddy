@@ -1,8 +1,8 @@
-// WeGame-style 3.0 ~ 16.0 post-game scoring and badge attribution engine.
+// Local reference 3.0 ~ 16.0 post-game scoring and badge attribution engine.
 // Pure function, zero side-effects. Refactored for robust edge cases, role equity, and badge integrity.
 
 function clamp(val, min, max) {
-  if (Number.isNaN(val)) return min;
+  if (!Number.isFinite(val)) return min;
   return Math.max(min, Math.min(max, val));
 }
 
@@ -27,14 +27,14 @@ const BADGE_PRIORITIES = [
 ];
 
 /**
- * Calculate WeGame-style 3.0 ~ 16.0 scores, MVP/SVP, and exclusive honor badges.
+ * Calculate Local reference 3.0 ~ 16.0 scores, MVP/SVP, and exclusive honor badges.
  * @param {Object} options
  * @param {Array} options.players - Array of 10 player data objects
  * @param {number} options.winningTeamId - 100 or 200
  * @param {number} options.gameDuration - Match duration in seconds
  * @returns {Array} Array of players with score (3.0~16.0) and badges array
  */
-export function calculateWeGameScores({players = [], winningTeamId = 100, gameDuration = 1800} = {}) {
+export function calculatePerformanceScores({players = [], winningTeamId = 100, gameDuration = 1800} = {}) {
   if (!Array.isArray(players) || !players.length) return [];
 
   const rawDur = Number(gameDuration);
@@ -42,21 +42,22 @@ export function calculateWeGameScores({players = [], winningTeamId = 100, gameDu
   const durationMin = Math.max(1, safeGameDuration / 60);
 
   // 1. Data sanitization & type enforcement
+  const amount=value=>Number.isFinite(Number(value))?Math.max(0,Number(value)):0;
   const sanitizedPlayers = players.map(p => ({
     ...p,
     teamId: Number(p.teamId) || 100,
-    kills: Math.max(0, Number(p.kills) || 0),
-    deaths: Math.max(0, Number(p.deaths) || 0),
-    assists: Math.max(0, Number(p.assists) || 0),
-    damageDealt: Math.max(0, Number(p.damageDealt) || 0),
-    damageTaken: Math.max(0, Number(p.damageTaken) || 0),
-    goldEarned: Math.max(0, Number(p.goldEarned) || 0),
-    cs: Math.max(0, Number(p.cs) || 0),
-    visionScore: Math.max(0, Number(p.visionScore) || 0),
-    turretDamage: Math.max(0, Number(p.turretDamage) || 0),
-    heal: Math.max(0, Number(p.heal) || 0),
-    ccTime: Math.max(0, Number(p.ccTime) || 0),
-    isAfk: !!(p.isAfk || p.isAfkOrSurrender)
+    kills: amount(p.kills),
+    deaths: amount(p.deaths),
+    assists: amount(p.assists),
+    damageDealt: amount(p.damageDealt),
+    damageTaken: amount(p.damageTaken),
+    goldEarned: amount(p.goldEarned),
+    cs: amount(p.cs),
+    visionScore: amount(p.visionScore),
+    turretDamage: amount(p.turretDamage),
+    heal: amount(p.heal),
+    ccTime: amount(p.ccTime),
+    isAfk: p.isAfk === true
   }));
 
   const teamTotals = new Map();
@@ -78,7 +79,7 @@ export function calculateWeGameScores({players = [], winningTeamId = 100, gameDu
     const isSupport = p.position === 'UTILITY' || p.role === 'support' ||
       ((p.cs / durationMin) < 2.0 && (p.visionScore / durationMin) >= 0.8);
     const isJungle = p.position === 'JUNGLE';
-    const isTank = p.position === 'TOP' || (isSupport && p.damageTaken > p.damageDealt);
+    const isTank = p.damageTaken > p.damageDealt * 1.3 && p.damageTaken / Math.max(1,team.damageTaken) >= 0.24;
 
     const kda = (p.kills + p.assists) / Math.max(1, p.deaths);
     const damageShare = p.damageDealt / Math.max(1, team.damage);
@@ -122,6 +123,7 @@ export function calculateWeGameScores({players = [], winningTeamId = 100, gameDu
       ...p,
       rawScore,
       score: finalScore,
+      breakdown: {基础:sBase,战斗:sKda,输出:sDmg,承伤:sTank,参团:sKp,发育:sEco,视野:sVision,治疗控制:sCare,推塔:sObj,胜负:sWin,死亡:-deathPenalty,...(p.isAfk?{离开对局调整:3-(sBase+sKda+sDmg+sTank+sKp+sEco+sVision+sCare+sObj+sWin-deathPenalty)}:{})},
       kdaRatio: Number(kda.toFixed(2)),
       killParticipation: Number(clamp(kp, 0, 1.0).toFixed(2)),
       damageShare: Number(clamp(damageShare, 0, 1.0).toFixed(2)),

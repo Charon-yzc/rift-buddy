@@ -1,4 +1,4 @@
-/* Post-game settlement & WeGame-style rating window. */
+/* Post-game settlement & Local reference rating window. */
 /* Refined with taste-skill: modern gaming aesthetics, anti-slop, calibrated theme tokens. */
 :root {
   --rb-bg: #10151e;
@@ -528,3 +528,17 @@ body.postgame-body {
   background: linear-gradient(135deg, #34d399, #10b981);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);
 }
+
+.postgame-score-box {position:relative;outline-offset:2px;}
+.postgame-score-detail {display:none;position:absolute;right:0;bottom:calc(100% + 8px);z-index:10;width:190px;padding:10px 12px;border:1px solid var(--rb-line);border-radius:8px;background:#0b1722;color:var(--rb-ink);font-size:11px;line-height:1.6;text-align:left;font-weight:400;box-shadow:0 8px 24px #0008;pointer-events:none;}
+.postgame-score-box:hover .postgame-score-detail,.postgame-score-box:focus .postgame-score-detail {display:block;}
+
+/* Keep a readable name even with a long KDA and show the local score model on demand. */
+.postgame-team-card {overflow:visible;}
+.postgame-player-row {position:relative;height:60px;}
+.postgame-player-row:focus-within {z-index:2;}
+.postgame-player-name-row {flex-direction:column;align-items:flex-start;gap:0;}
+.postgame-player-name {width:100%;max-width:100%;}
+.postgame-player-kda {font-size:10px;}
+.postgame-score-detail {bottom:auto;top:calc(100% + 8px);}
+.postgame-player-row:nth-last-child(-n+2) .postgame-score-detail {top:auto;bottom:calc(100% + 8px);}

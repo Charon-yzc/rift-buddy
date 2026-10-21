@@ -186,7 +186,8 @@ export function createSkillCooperation(byId,{isCurrent=()=>false}={}){
  const cache=new Map(),name=id=>byId.get(id).name;
  function edges(members){
   if(members.some(m=>!COOPERATION_SKILLS[m.champion]||!byId.has(m.champion)||!isCurrent(m.champion)))return null;
-  const leader=[...members].filter(m=>COOPERATION_SKILLS[m.champion][3]).sort((a,b)=>Number(a.champion==='Lillia')-Number(b.champion==='Lillia')||['jungle','top','mid','support','bottom'].indexOf(a.role)-['jungle','top','mid','support','bottom'].indexOf(b.role)||memberKey(a).localeCompare(memberKey(b)))[0];
+  const compare=(a,b)=>Number(a.champion==='Lillia')-Number(b.champion==='Lillia')||['jungle','top','mid','support','bottom'].indexOf(a.role)-['jungle','top','mid','support','bottom'].indexOf(b.role)||memberKey(a).localeCompare(memberKey(b));
+  let leader;for(const member of members)if(COOPERATION_SKILLS[member.champion][3]&&(!leader||compare(member,leader)<0))leader=member;
   if(!leader)return null;
   return members.filter(m=>m!==leader).map(ally=>{
    const identity=memberKey(leader)+'|'+memberKey(ally);if(cache.has(identity))return cache.get(identity);

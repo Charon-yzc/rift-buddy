@@ -1,452 +1,75 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {cleanChampionUsage,masteryUsageDistribution,isUpstreamHistoryFailure,USAGE_BASIS,USAGE_ORIGIN,championUsageWeights} from '../src/core/champion-usage.mjs';
-import {createUsageCache,normalizeUsageCache,cacheMatches,cachedUsageSnapshot,accountDigest} from '../services/champion-usage-cache.mjs';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createChampionUsageCache,cleanUsageImport} from '../services/champion-usage-cache.mjs';
 import {createChampionUsageCollector} from '../services/champion-usage-collector.mjs';
 import {ownSharedChampionUsage} from '../src/core/room-champion-usage.mjs';
-import {localChampionFamiliarity} from '../src/core/recommendation-familiarity.mjs';
-
-const champions=[{id:'Ahri',key:222},{id:'Ashe',key:22},{id:'LeeSin',key:524},{id:'Lux',key:99}];
-const key='c'.repeat(64);
-const account='a'.repeat(64);
-const record={
-  schema:1,account:accountDigest(key,account),server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.GAMES,
-  sampled:40,counts:{Ahri:20,Ashe:12,LeeSin:8},at:'2026-10-20T10:00:00.000Z'
-};
-const cacheStub=(initial=null)=>{
-  let current=initial,remembered='';
-  return {
-    load:async()=>current,
-    save:async value=>{current={...value,schema:1,account:accountDigest(key,String(value.account))};remembered=String(value.account);return current;},
-    clear:async()=>{current=null;},
-    matches:(value,context)=>cacheMatches(value,context,key),
-    rememberAccount:async value=>{remembered=String(value);},
-    knownAccount:async()=>remembered,
-    current:()=>current
-  };
-};
-
-test('the usage cache keeps only anonymous hero counts and rejects unusable records',()=>{
-  const valid=normalizeUsageCache(record,{now:Date.parse('2026-10-20T11:00:00.000Z')});
-  assert.equal(valid.sampled,40);
-  assert.deepEqual(valid.counts,{Ahri:20,Ashe:12,LeeSin:8});
-  assert.equal(JSON.stringify(valid).includes('puuid'),false);
-  assert.equal(JSON.stringify(valid).includes('gameId'),false);
-  // The stored digest is not the account identifier itself.
-  assert.equal(valid.account.includes(account),false);
-  assert.notEqual(valid.account,account);
-  // A tampered or foreign file is ignored instead of being trusted.
-  assert.equal(normalizeUsageCache({...record,source:'evil'},{now:Date.parse('2026-10-20T11:00:00.000Z')}),null);
-  assert.equal(normalizeUsageCache({...record,at:'not-a-date'},{now:Date.parse('2026-10-20T11:00:00.000Z')}),null);
-  assert.equal(normalizeUsageCache({...record,counts:{Ahri:'x'}},{now:Date.parse('2026-10-20T11:00:00.000Z')}),null);
-  assert.equal(normalizeUsageCache({...record,schema:2},{now:Date.parse('2026-10-20T11:00:00.000Z')}),null);
-  assert.equal(normalizeUsageCache({...record,account:'short'},{now:Date.parse('2026-10-20T11:00:00.000Z')}),null);
-  assert.equal(normalizeUsageCache({...record,server:'not a server'},{now:Date.parse('2026-10-20T11:00:00.000Z')}),null);
-  // A record older than the retention window is not used as a recommendation.
-  assert.equal(normalizeUsageCache(record,{now:Date.parse('2026-12-20T10:00:00.000Z')}),null);
+const key='a'.repeat(64),other='b'.repeat(64),session='c'.repeat(32),second='d'.repeat(32),heroes=[{id:'Ahri',key:103},{id:'Ashe',key:22}],client={connected:true,phase:'Lobby',own:{summonerId:1}},pause=()=>new Promise(resolve=>setImmediate(resolve));
+const saved={usage:{sampled:100,counts:{Ahri:70,Ashe:30}},scanned:100,complete:true,source:'lcu',basis:'recent',updatedAt:1000};
+const imported={version:1,basis:'current-season-screenshot',observedAt:'2026-10-20T00:00:00.000Z',usage:{sampled:18,counts:{Ahri:12,Ashe:6}}};
+const page=(n,complete=false)=>({session,cursor:n.toString(16).padStart(32,'0'),scanned:n,identified:n,target:500,source:'lcu',complete,counts:{103:n}});
+async function cacheFixture(){const root=await fs.mkdtemp(path.resolve('.local/usage-cache-'));return {root,cache:await createChampionUsageCache({root})};}
+test('counts survive process restart, isolate account/region keys, and never persist arbitrary identity or matches',async()=>{
+ const {root,cache}=await cacheFixture();await cache.put(key,{...saved,puuid:'PRIVATE',password:'PRIVATE',games:['PRIVATE'],notes:'PRIVATE'});
+ const loaded=await createChampionUsageCache({root});assert.deepEqual(loaded.get(key),saved);assert.equal(loaded.get(other),null);assert.equal(loaded.get('PRIVATE'),null);
+ const json=await fs.readFile(path.join(root,'champion-usage.json'),'utf8');assert.ok(!/PRIVATE|games|password|puuid|notes/.test(json));const copy=loaded.get(key);copy.usage.counts.Ahri=1;assert.equal(loaded.get(key).usage.counts.Ahri,70);
+ await assert.rejects(cache.put('PRIVATE',saved),/账号和大区/);
+});
+test('atomic concurrent saves retain only six account summaries; corrupt and oversized files fail closed',async()=>{
+ const {root,cache}=await cacheFixture();await Promise.all(Array.from({length:8},(_,i)=>cache.put(i.toString(16).repeat(64),{...saved,updatedAt:1000+i})));
+ const loaded=await createChampionUsageCache({root}),text=JSON.parse(await fs.readFile(path.join(root,'champion-usage.json'),'utf8'));assert.equal(text.entries.length,6);assert.equal(loaded.get('0'.repeat(64)),null);assert.equal(loaded.get('7'.repeat(64)).updatedAt,1007);assert.deepEqual((await fs.readdir(root)).filter(n=>n.endsWith('.tmp')),[]);
+ for(const invalid of ['{broken',JSON.stringify({version:1,entries:[{key,summary:{...saved,usage:{sampled:501,counts:{Ahri:501}}}}]}),' '.repeat(64001)]){await fs.writeFile(path.join(root,'champion-usage.json'),invalid);assert.equal((await createChampionUsageCache({root})).get(key),null);}
+});
+test('screenshot import accepts only consistent bounded counts and retains the actual observation window',()=>{
+ const record=cleanUsageImport({...imported,gameIds:['PRIVATE'],puuid:'PRIVATE'});assert.equal(record.basis,'current-season-screenshot');assert.equal(record.complete,false);assert.ok(!JSON.stringify(record).includes('PRIVATE'));
+ for(const bad of [{...imported,basis:'recent-500'},{...imported,observedAt:'invalid'},{...imported,observedAt:'2099-01-01'},{...imported,usage:{sampled:20,counts:{Ahri:18}}},{...imported,usage:{sampled:501,counts:{Ahri:501}}}])assert.throws(()=>cleanUsageImport(bad));
+});
+test('a confirmed account restores counts before the first history response and keeps them through an outage and restart',async()=>{
+ const {root,cache}=await cacheFixture();await cache.put(key,saved);let release;
+ const loaded=await createChampionUsageCache({root}),events=[],collector=createChampionUsageCollector({cache:loaded,champions:()=>heroes,onChange:s=>events.push(s),request:async(_t,op)=>op==='own-summary-context'?{session,server:'KR',cacheKey:key}:new Promise((_,reject)=>release=reject)});
+ const work=collector.observe(client,{});while(!release)await pause();assert.equal(collector.snapshot().cached,true);assert.deepEqual(collector.snapshot().usage,saved.usage);assert.equal(collector.snapshot().complete,false);
+ release(Error('PRIVATE credentials'));await work;assert.equal(collector.snapshot().status,'partial');assert.deepEqual(ownSharedChampionUsage(collector.snapshot(),.85).usage,saved.usage);assert.ok(!/PRIVATE|cacheKey|KR/.test(JSON.stringify(events)));
+ await collector.observe({connected:false},null);assert.equal(collector.snapshot().usage.sampled,0);assert.deepEqual((await createChampionUsageCache({root})).get(key),saved);
+});
+test('a partial refresh cannot overwrite the previous complete cache; a complete response replaces instead of adding',async()=>{
+ const {root,cache}=await cacheFixture();await cache.put(key,saved);let fail=true;
+ const collector=createChampionUsageCollector({cache,champions:()=>heroes,request:async(_t,op,p)=>{if(op==='own-summary-context')return {session,server:'KR',cacheKey:key};if(p.cursor&&fail)throw Error('outage');return page(p.cursor?200:100,!!p.cursor);}}),transport={};
+ await collector.observe(client,transport);assert.deepEqual(collector.snapshot().usage,saved.usage);assert.deepEqual((await createChampionUsageCache({root})).get(key),saved);
+ fail=false;await collector.observe(client,transport,{refresh:true});assert.equal(collector.snapshot().cached,false);assert.equal(collector.snapshot().usage.sampled,200);assert.deepEqual(collector.snapshot().usage.counts,{Ahri:200});assert.equal((await createChampionUsageCache({root})).get(key).usage.sampled,200);
+});
+test('changed or unconfirmed accounts never inherit cached data, even when display identity remains the same',async()=>{
+ for(const changed of ['account','region','unconfirmed']){const {cache}=await cacheFixture();await cache.put(key,saved);let probes=0;
+  const collector=createChampionUsageCollector({cache,champions:()=>heroes,request:async(_t,op)=>{if(op!=='own-summary-context')throw Error('outage');if(changed==='unconfirmed'&&probes++)throw Error('identity missing');return {session:changed==='unconfirmed'||!probes++?session:second,server:changed==='region'&&probes>1?'JP':'KR',cacheKey:probes>1?other:key};}});
+  await collector.observe(client,{});assert.equal(collector.snapshot().usage.sampled,0);assert.equal(cache.get(key).usage.sampled,100);
+ }
+});
+test('import binds only to the freshly verified current account, survives restart, and is replaced by real recent counts',async()=>{
+ const {root,cache}=await cacheFixture();let actual=session,online=false;
+ const request=async(_t,op)=>op==='own-summary-context'?{session:actual,server:'KR',cacheKey:actual===session?key:other}:online?page(7,true):Promise.reject(Error('outage'));
+ const collector=createChampionUsageCollector({cache,champions:()=>heroes,request}),transport={};await collector.observe(client,transport);const value=await collector.importUsage(imported);
+ assert.equal(value.usage.sampled,18);assert.equal(value.cached,true);assert.equal(value.basis,'current-season-screenshot');assert.equal(value.complete,false);assert.equal((await createChampionUsageCache({root})).get(key).source,'wegame');
+ actual=second;await assert.rejects(collector.importUsage(imported),/账号或大区/);assert.equal(cache.get(other),null);assert.equal(collector.snapshot().usage.sampled,0);actual=session;online=true;await collector.observe(client,transport,{refresh:true});assert.equal(collector.snapshot().usage.sampled,7);assert.equal(collector.snapshot().basis,'recent');assert.equal(cache.get(key).usage.sampled,7);
+});
+test('disk failure does not erase usable live statistics or pretend persistence succeeded',async()=>{
+ const collector=createChampionUsageCollector({cache:{get:()=>null,put:async()=>{throw Error('PRIVATE path');}},champions:()=>heroes,request:async(_t,op)=>op==='own-summary-context'?{session,server:'KR',cacheKey:key}:page(7,true)});await collector.observe(client,{});const value=collector.snapshot();assert.equal(value.status,'ready');assert.equal(value.usage.sampled,7);assert.match(value.cacheError,/保存失败/);assert.ok(!JSON.stringify(value).includes('PRIVATE'));
 });
 
-test('the cache file holds no key material, so a copied file cannot be brute-forced',()=>{
-  const valid=normalizeUsageCache(record,{now:Date.parse('2026-10-20T11:00:00.000Z')});
-  assert.equal(Object.hasOwn(valid,'salt'),false);
-  assert.equal(Object.hasOwn(valid,'key'),false);
-  // The digest only matches when the out-of-file key is presented.
-  assert.equal(cacheMatches(record,{account,server:'TENCENT_HN1'},key),true);
-  assert.equal(cacheMatches(record,{account,server:'TENCENT_HN1'},'d'.repeat(64)),false);
-  assert.equal(cacheMatches(record,{account:'9999',server:'TENCENT_HN1'},key),false);
-  assert.equal(cacheMatches(record,{account,server:'TENCENT_HJ100'},key),false);
-  assert.equal(cacheMatches(record,{account:'',server:'TENCENT_HN1'},key),false);
+test('an import revokes an in-flight page before saving and blocks polling/concurrent imports until disk commits',async()=>{
+ for(const complete of [false,true]){
+  const {root,cache}=await cacheFixture();let releasePage,releaseImport,started=false,pages=0;
+  const gated={...cache,put:async(k,record)=>{if(record.source==='wegame'){started=true;await new Promise(resolve=>releaseImport=resolve);}return cache.put(k,record);}};
+  const collector=createChampionUsageCollector({cache:gated,champions:()=>heroes,request:async(_t,op)=>op==='own-summary-context'?{session,server:'KR',cacheKey:key}:(pages++,new Promise(resolve=>releasePage=resolve))}),transport={};
+  const scan=collector.observe(client,transport);while(!releasePage)await pause();const importing=collector.importUsage(imported);while(!started)await pause();
+  await assert.rejects(collector.importUsage(imported),/正在导入/);const polling=collector.observe(client,transport);releasePage(page(100,complete));await scan;assert.equal(pages,1);releaseImport();await Promise.all([importing,polling]);await cache.flush();
+  assert.deepEqual(collector.snapshot().usage,imported.usage);assert.deepEqual((await createChampionUsageCache({root})).get(key).usage,imported.usage);assert.equal(collector.snapshot().basis,'current-season-screenshot');
+ }
 });
 
-test('a cached record only serves the account and region that produced it',()=>{
-  const snapshot=cachedUsageSnapshot(record,{now:()=>Date.parse('2026-10-20T12:00:00.000Z')});
-  assert.equal(snapshot.status,'cached');
-  assert.equal(snapshot.origin,USAGE_ORIGIN.CACHE);
-  assert.equal(snapshot.complete,false);
-  assert.equal(snapshot.usage.sampled,40);
-  assert.equal(snapshot.ageMs,2*3600000);
-});
-
-test('the cache file round trips through the local store',async()=>{
-  const files=new Map();
-  const io={
-    stat:async()=>({size:100}),
-    readFile:async()=>JSON.stringify(record),
-    unlink:async()=>{files.delete('f');},
-    mkdir:async()=>{},
-    writeFile:async(name,value)=>{files.set(name,value);}
-  };
-  const cache=createUsageCache({root:'C:/tmp',io,write:async(name,value)=>{files.set(name,value);}});
-  const loaded=await cache.load();
-  assert.equal(loaded.account,record.account);
-  await cache.save({account,server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.GAMES,sampled:40,counts:{Ahri:21}});
-  const written=[...files.values()].find(value=>value&&value.counts&&value.counts.Ahri===21);
-  assert.ok(written);
-  assert.equal(Object.hasOwn(written,'key'),false);
-  await assert.rejects(cache.save({account,server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.GAMES,sampled:40,counts:{Ahri:'bad'}}),/格式/);
-  // A mastery proxy is never stored as if it were a game count.
-  await assert.rejects(cache.save({account,server:'TENCENT_HN1',source:'mastery',basis:USAGE_BASIS.MASTERY,sampled:40,counts:{Ahri:21}}),/来源/);
-  await assert.rejects(cache.save({account,server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.MASTERY,sampled:40,counts:{Ahri:21}}),/真实场次/);
-});
-
-test('mastery points become a bounded familiarity distribution and are never game counts',()=>{
-  const usage=masteryUsageDistribution([
-    {champion:'Ahri',points:900},{champion:'Ashe',points:600},{champion:'LeeSin',points:300}
-  ]);
-  assert.equal(usage.basis,USAGE_BASIS.MASTERY);
-  assert.equal(usage.sampled,100);
-  assert.equal(Object.values(usage.counts).reduce((a,b)=>a+b,0),100);
-  assert.equal(usage.counts.Ahri,50);
-  assert.equal(usage.counts.Ashe,33);
-  const weights=championUsageWeights(champions,usage,.85);
-  assert.ok(weights.Ahri>weights.Ashe&&weights.Ashe>weights.LeeSin);
-  assert.throws(()=>masteryUsageDistribution([]),/熟练度/);
-  // A repeated hero adds up instead of replacing the earlier row.
-  const repeated=masteryUsageDistribution([{champion:'Ahri',points:50},{champion:'Ahri',points:50}]);
-  assert.equal(Object.values(repeated.counts).reduce((a,b)=>a+b,0),100);
-  assert.throws(()=>masteryUsageDistribution([{champion:'Ahri',points:1e308},{champion:'Ashe',points:1e308}]),/范围/);
-});
-
-test('only an upstream match service failure may fall back to another source',()=>{
-  assert.equal(isUpstreamHistoryFailure(new Error('战绩数据源暂时不可用：游戏后台和当前大区客户端的战绩接口都返回了错误。')),true);
-  assert.equal(isUpstreamHistoryFailure(new Error('客户端暂未接受操作（500）')),true);
-  assert.equal(isUpstreamHistoryFailure(new Error('客户端暂未接受操作（503）')),true);
-  assert.equal(isUpstreamHistoryFailure(new Error('客户端连接超时')),true);
-  assert.equal(isUpstreamHistoryFailure(Object.assign(new Error('boom'),{status:500})),true);
-  // A local refusal, a rate limit or a session change is not an outage.
-  assert.equal(isUpstreamHistoryFailure(new Error('客户端暂未接受操作（429）')),false);
-  assert.equal(isUpstreamHistoryFailure(new Error('客户端暂未接受操作（403）')),false);
-  assert.equal(isUpstreamHistoryFailure(new Error('客户端连接已变化，请重新连接')),false);
-  assert.equal(isUpstreamHistoryFailure(new Error('客户端尚未返回有效战绩，请稍后重试')),false);
-  assert.equal(isUpstreamHistoryFailure(new Error('invalid summary')),false);
-});
-
-test('the collector caches a live scan and serves it when the match list is unavailable',async()=>{
-  const cache=cacheStub();
-  let mode='live';
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      if(operation==='own-summary-page'){
-        if(mode!=='live')throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
-        return {session:'a'.repeat(32),cursor:'b'.repeat(32),scanned:30,identified:30,target:500,complete:true,source:'lcu',counts:{222:20,22:10}};
-      }
-      throw Error('unexpected operation');
-    },
-    champions:()=>champions,cache,
-    onChange:()=>{}
-  });
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t'});
-  const live=collector.snapshot();
-  assert.equal(live.status,'ready');
-  assert.equal(live.origin,USAGE_ORIGIN.LIVE);
-  assert.equal(live.complete,true);
-  assert.equal(live.usage.counts.Ahri,20);
-  assert.ok(cache.current(), 'the live scan is cached locally');
-
-  // The match list goes down: the collector keeps serving the cached counts.
-  mode='down';
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t2'});
-  const failed=collector.snapshot();
-  assert.equal(failed.status,'cached');
-  assert.equal(failed.origin,USAGE_ORIGIN.CACHE);
-  assert.equal(failed.complete,false);
-  assert.equal(failed.usage.counts.Ahri,20);
-  assert.equal(failed.basis,USAGE_BASIS.GAMES);
-});
-
-test('a cached or provisional distribution is never promoted to a live scan',async()=>{
-  const cache=cacheStub(record);
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
-    },
-    champions:()=>champions,cache,onChange:()=>{}
-  });
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t'});
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t2'});
-  const snapshot=collector.snapshot();
-  assert.equal(snapshot.status,'cached');
-  assert.notEqual(snapshot.status,'ready');
-  // A cached distribution never reaches the room.
-  assert.equal(ownSharedChampionUsage(snapshot,.85),null);
-});
-
-test('the live scan is retried after an upstream outage and replaces the fallback',async()=>{
-  const cache=cacheStub();
-  let mode='down';
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      if(operation==='own-summary-page'){
-        if(mode==='down')throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
-        return {session:'a'.repeat(32),cursor:'b'.repeat(32),scanned:30,identified:30,target:500,complete:true,source:'lcu',counts:{222:20,22:10}};
-      }
-      throw Error('unexpected operation');
-    },
-    champions:()=>champions,cache,onChange:()=>{}
-  });
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t'});
-  assert.notEqual(collector.snapshot().status,'ready');
-  mode='live';
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t2'});
-  const recovered=collector.snapshot();
-  assert.equal(recovered.status,'ready');
-  assert.equal(recovered.origin,USAGE_ORIGIN.LIVE);
-  assert.equal(recovered.complete,true);
-  assert.equal(recovered.scanned,30);
-});
-
-test('the real scan resumes after a cached fallback without inheriting its baseline',async()=>{
-  const cache=cacheStub(record);
-  let mode='down';
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      if(operation==='own-summary-page'){
-        if(mode==='down')throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
-        // A live page may report fewer games than the cached record.
-        return {session:'a'.repeat(32),cursor:'b'.repeat(32),scanned:10,identified:6,target:500,complete:true,source:'lcu',counts:{222:4,22:2}};
-      }
-      throw Error('unexpected operation');
-    },
-    champions:()=>champions,cache,onChange:()=>{}
-  });
-  const transport={id:'same'};
-  await collector.observe({connected:true,account:'a'.repeat(64)},transport);
-  assert.equal(collector.snapshot().status,'cached');
-  mode='live';
-  // The transport stays the same, so nothing resets the scan baseline and the
-  // live page really has to be accepted on its own.
-  await collector.observe({connected:true,account:'a'.repeat(64)},transport);
-  const recovered=collector.snapshot();
-  assert.equal(recovered.status,'ready','the live scan must replace the cached fallback');
-  assert.equal(recovered.origin,USAGE_ORIGIN.LIVE);
-  assert.equal(recovered.usage.counts.Ahri,4);
-  assert.equal(recovered.scanned,10);
-});
-
-test('the cached statistics stay usable while the client is unreachable',async()=>{
-  const cache=cacheStub(record);
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      throw Object.assign(Error('未能连接客户端，请确认游戏已登录到大厅'),{status:0});
-    },
-    champions:()=>champions,cache,onChange:()=>{}
-  });
-  await cache.rememberAccount('a'.repeat(64));
-  await collector.loadCache();
-  await collector.observe({connected:false},null);
-  const snapshot=collector.snapshot();
-  assert.equal(snapshot.status,'cached','the cache must survive a client that is gone');
-  assert.equal(snapshot.usage.counts.Ahri,20);
-  assert.equal(snapshot.session,'','a cached distribution carries no live scan session');
-});
-
-test('a polling client does not make the history page re-render every second',async()=>{
-  const cache=cacheStub(record);
-  let published=0;
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      throw Object.assign(Error('未能连接客户端，请确认游戏已登录到大厅'),{status:0});
-    },
-    champions:()=>champions,cache,onChange:()=>{published++;}
-  });
-  await cache.rememberAccount('a'.repeat(64));
-  await collector.loadCache();
-  for(let n=0;n<5;n++)await collector.observe({connected:false},null);
-  // The first pass may publish the cached state once; the rest must be silent.
-  assert.ok(published<=2,`the snapshot must not be republished every poll, got ${published}`);
-});
-
-test('the startup path only offers the cache to the account that wrote it',async()=>{
-  const fsPromises=await import('node:fs/promises');
-  const os=await import('node:os');
-  const path=await import('node:path');
-  const root=await fsPromises.mkdtemp(path.join(os.tmpdir(),'rift-usage-bind-'));
-  try{
-   const account='b'.repeat(64);
-   const cache=createUsageCache({root});
-   await cache.rememberAccount(account);
-   await cache.save({account,server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.GAMES,sampled:40,counts:{Ahri:20}});
-   const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});},
-    champions:()=>champions,cache,onChange:()=>{}
-   });
-   // A fresh start knows the remembered account, so the cache is offered.
-   await collector.loadCache();
-   assert.equal(await collector.applyCached(),true);
-   assert.equal(collector.snapshot().usage.counts.Ahri,20);
-   // Another account reports in: the cached heroes are not offered.
-   const other=createChampionUsageCollector({
-    request:async(_t,operation)=>{if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});},
-    champions:()=>champions,cache,onChange:()=>{}
-   });
-   await other.loadCache();
-   await other.observe({connected:true,account:'c'.repeat(64)},{id:'t'});
-   assert.notEqual(other.snapshot().status,'cached','another account must not see the cache');
-   assert.equal(other.snapshot().usage.counts.Ahri,undefined);
-  }finally{await fsPromises.rm(root,{recursive:true,force:true});}
-});
-
-test('a cache without a remembered account is not offered at all',async()=>{
-  const fsPromises=await import('node:fs/promises');
-  const os=await import('node:os');
-  const path=await import('node:path');
-  const root=await fsPromises.mkdtemp(path.join(os.tmpdir(),'rift-usage-nobind-'));
-  try{
-   const cache=createUsageCache({root});
-   const account='d'.repeat(64);
-   await cache.save({account,server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.GAMES,sampled:40,counts:{Ahri:20}});
-   // The remembered account is gone, so the binding cannot be verified.
-   await fsPromises.rm(path.join(root,'champion-usage','champion-usage.account'),{force:true});
-   const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});},
-    champions:()=>champions,cache,onChange:()=>{}
-   });
-   await collector.loadCache();
-   assert.equal(await collector.applyCached(),false,'an unbound cache is never offered');
-   assert.equal(collector.snapshot().usage.counts.Ahri,undefined);
-  }finally{await fsPromises.rm(root,{recursive:true,force:true});}
-});
-
-test('the cache key file survives a restart and still binds the account',async()=>{
-  const fsPromises=await import('node:fs/promises');
-  const os=await import('node:os');
-  const path=await import('node:path');
-  const root=await fsPromises.mkdtemp(path.join(os.tmpdir(),'rift-usage-cache-'));
-  try{
-   const first=createUsageCache({root});
-   await first.save({account:'a'.repeat(64),server:'TENCENT_HN1',source:'lcu',basis:USAGE_BASIS.GAMES,sampled:40,counts:{Ahri:20}});
-   // A fresh instance reads the same key file back.
-   const second=createUsageCache({root});
-   const loaded=await second.load();
-   assert.ok(loaded,'the cache must load after a restart');
-   assert.equal(await second.matches(loaded,{account:'a'.repeat(64),server:'TENCENT_HN1'}),true);
-   assert.equal(await second.matches(loaded,{account:'b'.repeat(64),server:'TENCENT_HN1'}),false);
-   const keyRaw=await fsPromises.readFile(path.join(root,'champion-usage','champion-usage.key'),'utf8');
-   assert.match(keyRaw.trim(),/^[a-f0-9]{64}$/,'the key file holds bare hex, not JSON');
-  }finally{await fsPromises.rm(root,{recursive:true,force:true});}
-});
-
-test('a different account never inherits the previous account cache',async()=>{
-  const cache=cacheStub();
-  let mode='live';
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      if(operation==='own-summary-page'){
-        if(mode!=='live')throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
-        return {session:'a'.repeat(32),cursor:'b'.repeat(32),scanned:30,identified:30,target:500,complete:true,source:'lcu',counts:{222:20,22:10}};
-      }
-      throw Error('unexpected operation');
-    },
-    champions:()=>champions,cache,onChange:()=>{}
-  });
-  // The cache is really written first, so the switch below is meaningful.
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t'});
-  assert.ok(cache.current(),'the live scan must reach the cache');
-  mode='down';
-  // Another player signs in on the same machine.
-  await collector.observe({connected:true,account:'b'.repeat(64)},{id:'t2'});
-  await new Promise(resolve=>setImmediate(resolve));
-  const snapshot=collector.snapshot();
-  assert.notEqual(snapshot.status,'cached','the other account must not see the previous cache');
-  assert.equal(snapshot.usage.counts.Ahri,undefined);
-});
-
-test('the account key does not flip when the client reports a different id kind',async()=>{
-  const cache=cacheStub();
-  let mode='live';
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      if(operation==='own-summary-page'){
-        if(mode!=='live')throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
-        return {session:'a'.repeat(32),cursor:'b'.repeat(32),scanned:30,identified:30,target:500,complete:true,source:'lcu',counts:{222:20,22:10}};
-      }
-      throw Error('unexpected operation');
-    },
-    champions:()=>champions,cache,onChange:()=>{}
-  });
-  // The client layer hands over a stable digest, not a raw identifier.
-  const digest='a'.repeat(64);
-  await collector.observe({connected:true,account:digest},{id:'t'});
-  assert.ok(cache.current(),'the live scan is cached');
-  mode='down';
-  await collector.observe({connected:true,account:digest},{id:'t2'});
-  await new Promise(resolve=>setImmediate(resolve));
-  assert.ok(cache.current(),'the same player must not clear the cache');
-});
-
-test('the client layer exposes a stable account digest and keeps the raw ids out of the snapshot',async()=>{
-  const {clientSnapshot}=await import('../services/lcu.mjs');
-  const own={summonerId:11,puuid:'public-player-id-11',gameName:'Player11',tagLine:'CN1'};
-  const mock={discover:async()=>({port:23456,password:'mock'}),now:()=>1000,request:async(_a,url)=>{
-    if(url.endsWith('gameflow-phase'))return 'Lobby';
-    if(url==='/lol-lobby/v2/lobby')return {localMember:own,members:[own],partyId:'party-1'};
-    if(url==='/lol-summoner/v1/current-summoner')return own;
-    return {gameData:{gameId:1,queue:{id:420},gameMode:'CLASSIC'}};
-  }};
-  const client=await clientSnapshot('',mock);
-  assert.ok(client.account&&/^[a-f0-9]{64}$/.test(client.account),'a stable digest is exposed to the main process');
-  assert.equal(client.account.includes('public-player'),false);
-  // The digest is stable across a phase change for the same player.
-  const changed={...mock,request:async(_a,url)=>{if(url.endsWith('gameflow-phase'))return 'ChampSelect';if(url==='/lol-champ-select/v1/session')return {gameId:2,localPlayerCellId:1,myTeam:[{...own,cellId:1,championId:0}],theirTeam:[],bans:{}};if(url.endsWith('champion-ids'))return [];if(url==='/lol-summoner/v1/current-summoner')return own;return {gameData:{gameId:2,queue:{id:420},gameMode:'CLASSIC'}};}};
-  const next=await clientSnapshot('',changed);
-  assert.equal(next.account,client.account,'the account digest must not change between phases');
-});
-
-test('the collector falls back to the local cache when neither the list nor mastery is readable',async()=>{
-  const cache=cacheStub(record);
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
-    },
-    champions:()=>champions,cache,onChange:()=>{}
-  });
-  await cache.rememberAccount('a'.repeat(64));
-  await collector.loadCache();
-  assert.equal(await collector.applyCached(),true);
-  const snapshot=collector.snapshot();
-  assert.equal(snapshot.status,'cached');
-  assert.equal(snapshot.usage.counts.Ahri,20);
-  assert.equal(snapshot.basis,USAGE_BASIS.GAMES);
-});
-
-test('the collector uses the mastery proxy when the match list is unreachable',async()=>{
-  const cache=cacheStub();
-  const collector=createChampionUsageCollector({
-    request:async(_t,operation)=>{
-      if(operation==='own-summary-context')return {session:'a'.repeat(32),server:'TENCENT_HN1'};
-      if(operation==='own-summary-page')throw Object.assign(Error('客户端暂未接受操作（500）'),{status:500});
-      if(operation==='own-summary-mastery')return {session:'a'.repeat(32),server:'TENCENT_HN1',source:'mastery',basis:USAGE_BASIS.MASTERY,mastery:[{champion:222,points:900},{champion:22,points:100}]};
-      throw Error('unexpected operation');
-    },
-    champions:()=>champions,cache,onChange:()=>{}
-  });
-  await collector.observe({connected:true,account:'a'.repeat(64)},{id:'t'});
-  const snapshot=collector.snapshot();
-  assert.equal(snapshot.status,'estimated','a proxy is not a finished scan');
-  assert.equal(snapshot.origin,USAGE_ORIGIN.MASTERY);
-  assert.equal(snapshot.complete,false);
-  assert.equal(snapshot.basis,USAGE_BASIS.MASTERY);
-  assert.ok(snapshot.usage.counts.Ahri>snapshot.usage.counts.Ashe);
-  // A mastery proxy is a private fallback: it never reaches the room and it
-  // never overwrites the cached real game counts.
-  assert.equal(ownSharedChampionUsage(snapshot,.85),null);
-  assert.equal(cache.current(),null);
-});
-
-test('the cached distribution may guide the local recommendation but a proxy may not',()=>{
-  const cachedSummary={status:'cached',origin:USAGE_ORIGIN.CACHE,session:'a'.repeat(32),usage:{sampled:40,counts:{Ahri:20}},scanned:40};
-  const proxySummary={status:'ready',origin:USAGE_ORIGIN.MASTERY,session:'a'.repeat(32),usage:{sampled:100,counts:{Ahri:50}},scanned:100};
-  const client={connected:true,session:{localPlayerCellId:0}};
-  const slots=[{role:'mid',champion:null,clientCellId:0}];
-  assert.ok(Object.keys(localChampionFamiliarity({client,slots,scope:'solo',ownRole:'mid',summary:cachedSummary,mass:.85})).length);
-  assert.equal(Object.keys(localChampionFamiliarity({client,slots,scope:'solo',ownRole:'mid',summary:proxySummary,mass:.85})).length,0);
+test('failed import preserves current/disk counts and permits a later successful import',async()=>{
+ const {root,cache}=await cacheFixture();let fail=true;
+ const wrapped={...cache,put:(k,record)=>record.source==='wegame'&&fail?Promise.reject(Error('PRIVATE path')):cache.put(k,record)};
+ const collector=createChampionUsageCollector({cache:wrapped,champions:()=>heroes,request:async(_t,op)=>op==='own-summary-context'?{session,server:'KR',cacheKey:key}:page(7,true)});await collector.observe(client,{});
+ await assert.rejects(collector.importUsage(imported),/原统计已保留/);assert.equal(collector.snapshot().usage.sampled,7);assert.equal((await createChampionUsageCache({root})).get(key).usage.sampled,7);assert.ok(!JSON.stringify(collector.snapshot()).includes('PRIVATE'));
+ fail=false;await collector.importUsage(imported);assert.deepEqual(collector.snapshot().usage,imported.usage);assert.deepEqual((await createChampionUsageCache({root})).get(key).usage,imported.usage);
 });

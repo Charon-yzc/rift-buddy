@@ -9,9 +9,7 @@ import {createRoomService} from '../services/room.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
 const usage=(counts={Ashe:400,Jinx:100},mass=.85)=>({version:1,mass,usage:{sampled:Object.values(counts).reduce((a,b)=>a+b,0),counts}});
-// A shared summary always comes from a live scan; a cached or estimated
-// distribution is private and must never be shared.
-const summary=value=>({status:'ready',origin:'live',session:'a'.repeat(32),usage:value.usage});
+const summary=value=>({status:'ready',session:'a'.repeat(32),usage:value.usage});
 const frame=value=>({kind:'state',v:1,from:'本人',at:1000,lineup:[],pick:null,championUsage:value});
 const spin=async fn=>{for(let n=0;n<250;n++){if(fn())return;await new Promise(resolve=>setTimeout(resolve,20));}throw Error('Isolated room did not reach expected state');};
 
@@ -22,11 +20,6 @@ test('room protocol rebuilds anonymous bounded summary and rejects malformed cou
  assert.equal(validateWelcome({kind:'welcome',v:1,room:'482913',members:[],championUsage:1}).championUsage,1);
  for(const invalid of [usage({Ashe:501}),{...usage(),mass:1.1},{...usage(),mass:'0.85'},{...usage(),version:2},usage({'invalid;hero':1})])assert.equal(sanitizeShare(frame(invalid)),null);
  assert.equal(ownSharedChampionUsage({status:'offline'},.85),null);assert.deepEqual(ownSharedChampionUsage({...summary(usage()),puuid:'PRIVATE',records:['PRIVATE']},.6),usage(undefined,.6));
-  // A cached or estimated distribution is private and never shared.
-  assert.equal(ownSharedChampionUsage({...summary(usage()),origin:'cache'},.85),null);
-  assert.equal(ownSharedChampionUsage({...summary(usage()),origin:'mastery'},.85),null);
-  assert.equal(ownSharedChampionUsage({status:'ready',session:'a'.repeat(32),usage:usage().usage},.85),null,'an unknown origin is never shared');
-  assert.equal(ownSharedChampionUsage({...summary(usage()),usage:{sampled:0,counts:{}}},.85),null,'an empty distribution is never shared');
 });
 
 test('main publisher overrides renderer-forged usage, coalesces batches, applies latest mass and revokes immediately',()=>{
@@ -63,6 +56,37 @@ test('a local lane remains reserved before any own history is available, while a
  }
 });
 
+test('all twelve room members can contribute a normalized pool without inventing individual player bindings',()=>{
+ const f=binding();f.client.party={status:'unknown',members:[]};f.room.members=[{self:true,nick:'本人'},...Array.from({length:11},(_,i)=>({nick:'伙伴'+i,online:true,share:{championUsage:usage({Lux:i+1})}}))];
+ const result=roomFamiliarityContext(f);assert.equal(result.roomFamiliarity.length,12);assert.deepEqual(Object.keys(result.familiarityByRole),['mid']);
+ const weights=roomChampionUsageWeights(['Ahri','Lux','Ashe'],result.roomFamiliarity);assert.ok(Math.abs(Object.values(weights).reduce((a,b)=>a+b,0)-1)<1e-9);assert.ok(weights.Lux>weights.Ahri);
+});
+
+test('case and NFKC nickname aliases cannot bind one public player to two provisional lanes',()=>{
+ for(const alias of ['foo#cn1','Ｆｏｏ#CN1']){
+  const f=binding();f.client.phase='Lobby';delete f.client.session;f.client.party={status:'lobby',members:[{local:false,publicRiotId:'Foo#CN1'}]};f.slots=createSlots();
+  f.room.members=[{self:true,nick:'我'},...['Foo#CN1',alias].map((nick,i)=>({nick,online:true,share:{intent:{role:i?'jungle':'top'},championUsage:usage({Lux:10})}}))];
+  const result=roomFamiliarityContext(f);assert.equal(result.familiarityByRole.top,undefined);assert.equal(result.familiarityByRole.jungle,undefined);assert.equal(result.roomFamiliarity.length,3);
+ }
+});
+
+test('unavailable own history retry cycles do not change room recommendation inputs or restart the actual app worker',async()=>{
+ const source=fs.readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a))),f=binding();
+ let cancelled=0,queued=0;f.summary={revision:1,status:'error',session:'a'.repeat(32),usage:{sampled:0,counts:{}}};
+ const context=vm.createContext({data:{},client:f.client,room:f.room,championUsage:f.summary,saved:{preferences:{familiarityMass:.85}},history:{observeClient(){}},windowLayout:{docked:false},route:'draft',recommendationKey,
+  results:[{id:'existing'}],offset:0,generating:true,recommendationRun:0,autoRecommendationKey:'existing',activeRecommendation:{cancel(){cancelled++;}},cancelRecommendationReveal(){},clearTimeout,markResultStale(){},render(){},queueCompanionRecommendation(){queued++;},
+  recommendationInput(){return {slots:f.slots,...roomFamiliarityContext({...f,summary:context.championUsage})};}});
+ vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function cancelRecommendation(){','\n'),context);
+ const before=recommendationKey(context.recommendationInput());
+ for(let n=2;n<12;n++){context.acceptChampionUsage({...f.summary,revision:n,status:n%2?'error':'loading',scanned:0,target:500,error:'后台维护'});assert.equal(recommendationKey(context.recommendationInput()),before);}
+ assert.equal(cancelled,0);assert.equal(queued,0);assert.equal(context.results[0].id,'existing');assert.equal(context.generating,true);
+ // A first real hero distribution must still invalidate the old recommendation.
+ context.acceptChampionUsage({...f.summary,revision:12,status:'ready',usage:usage({Ahri:10}).usage});assert.equal(cancelled,1);assert.equal(queued,1);assert.equal(context.results.length,0);
+ // Peers on older versions may still send empty summaries while retrying.
+ const peer=f.room.members[1];peer.share.championUsage=null;const absent=recommendationKey(context.recommendationInput());peer.share.championUsage=usage({});assert.equal(recommendationKey(context.recommendationInput()),absent);
+ for(const status of ['loading','ready','partial','error'])assert.equal(ownSharedChampionUsage({...f.summary,status},.85),null);
+});
+
 test('actual app room RPC and notifications clear changed candidates once and reject a late worker in either IPC order',async()=>{
  const source=fs.readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(a,b)=>{const from=source.indexOf(a),to=source.indexOf(b,from);assert.ok(from>=0&&to>from);return source.slice(from,to);};
  for(const change of ['counts','revoke','role','leave'])for(const notificationFirst of [false,true]){
@@ -76,7 +100,7 @@ test('actual app room RPC and notifications clear changed candidates once and re
    recommendationKey,roomFamiliarityContext,results:[{id:'visible-old'}],offset:6,generating:false,recommendationRun:0,autoRecommendationKey:'old',activeRecommendation:null,autoRecommendTimer:null,recommendationError:'',resultsSignature:'',showAllCandidates:false,clearTimeout,render(){},markResultStale(){},cancelRecommendationReveal(){},toast(){},scheduleRoomPublish(){},queueCompanionRecommendation(){queued++;},roomSharePayload:()=>({lineup:[],pick:null}),resultCreativePlan(){throw Error('A stale worker was committed');},
    calculateRecommendation(){c.activeRecommendation={cancel(){cancelled++;}};return new Promise(resolve=>finish=resolve);},
    recommendationInput(){return {slots:c.slots,...roomFamiliarityContext({client:c.client,room:c.room,slots:c.slots,scope:'party',ownRole:'mid',summary:c.championUsage,mass:.85})};},api:{roomPublish:async()=>next,roomLeave:async()=>next}});
-  vm.runInContext(extract('function applyRoomSnapshot(','function rememberPreparation(')+extract('async function publishRoomShare(','function scheduleRoomPublish(')+extract('function cancelRecommendation(){','\n')+extract('async function generate(next=false){','const sync=createClientSync')+`async function leaveRoom(){const action='room-leave';${extract("if(action==='room-leave'){","if(action==='room-transport')")}}`,c);
+  vm.runInContext(extract('function applyRoomSnapshot(','function rememberPreparation(')+extract('async function publishRoomShare(','function scheduleRoomPublish(')+extract('function cancelRecommendation(){','\n')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync')+`async function leaveRoom(){const action='room-leave';${extract("if(action==='room-leave'){","if(action==='room-transport')")}}`,c);
   const pending=c.generate(),metadata=structuredClone(f.room);metadata.members[1].share.at=99999;metadata.members[1].lastSeen=99999;
   c.applyRoomSnapshot(metadata);assert.equal(cancelled,0);assert.equal(queued,0);assert.equal(c.results[0].id,'visible-old');
   if(notificationFirst)c.applyRoomSnapshot(next);

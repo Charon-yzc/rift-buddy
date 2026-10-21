@@ -73,12 +73,12 @@ async function run(){
  // Hold a real worker before dispatch to prove refresh cancels an unfinished
  // recommendation rather than only clearing an already completed card list.
  await click('.result-card [data-action=build][data-role=mid]');
- await js('window.__originalWorker=window.Worker;window.__heldWorkers=[];window.__terminatedWorkers=0;window.Worker=class extends window.__originalWorker {postMessage(...args){this.heldMessage=args;window.__heldWorkers.push(this);}terminate(){window.__terminatedWorkers++;return super.terminate();}};true');
+ await js('window.__originalPostMessage=Worker.prototype.postMessage;window.__originalTerminate=Worker.prototype.terminate;window.__heldWorkers=[];window.__terminatedWorkers=0;Worker.prototype.postMessage=function(...args){this.heldMessage=args;window.__heldWorkers.push(this);};Worker.prototype.terminate=function(){window.__terminatedWorkers++;return window.__originalTerminate.call(this);};true');
  await click('[data-action=recommend]');await until(()=>js('window.__heldWorkers.length===1'),'Pending source worker missing');
  await click('[data-action=refresh-build]');await until(()=>sourceRefreshes===1,'Source refresh did not reach isolated fixture');
  await until(()=>js('window.__terminatedWorkers===1'),'Source refresh did not cancel old worker');
  assert.equal(await js('document.querySelectorAll(".result-card").length'),0,'Source refresh kept old main cards');
- await js('window.Worker=window.__originalWorker;true');await click('[data-action=close]');await generate();
+ await js('Worker.prototype.postMessage=window.__originalPostMessage;Worker.prototype.terminate=window.__originalTerminate;true');await click('[data-action=close]');await generate();
  fixture.session=draft(['Galio']);await sync();await generate();assert.ok((await mainIds()).includes('Galio'),'Mirror draft wrongly excluded public enemy');
  fixture.session.allowDuplicatePicks=false;await sync();
  assert.equal(await js('document.querySelectorAll(".result-card").length'),0,'Changing only mirror rules retained stale results');

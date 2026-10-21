@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import https from 'node:https';
-import crypto from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 const execFileAsync=promisify(execFile);
@@ -12,10 +11,11 @@ import {normalizeChampionIds,pickEligibilityContext} from '../src/core/pick-elig
 import {publicPlayerIdentity,publicPlayerName,lobbyPartyMembers,sanitizeLobbyParty,resolveClientParty,normalizePartyIds} from '../src/core/client-party.mjs';
 import {LOBBY_PHASES,LOBBY_AUTO_FRESH_MS} from '../src/core/room-auto.mjs';
 import {allowedHistoryRoute} from './match-history-routes.mjs';
-const GET_PATHS=new Set(['/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/lol-end-of-game/v1/eog-stats-block','/data-store/v1/install-dir']);
+const GET_PATHS=new Set(['/lol-end-of-game/v1/eog-stats-block','/lol-summoner/v1/current-summoner','/lol-gameflow/v1/gameflow-phase','/lol-gameflow/v1/session','/lol-lobby/v2/lobby','/lol-champ-select/v1/session','/lol-champ-select/v1/session/my-selection','/lol-champ-select/v1/pickable-champion-ids','/lol-champ-select/v1/disabled-champion-ids','/lol-perks/v1/pages','/lol-chat/v1/conversations','/data-store/v1/install-dir']);
 const lcuAgent=new https.Agent({keepAlive:true,maxSockets:16,maxFreeSockets:8,timeout:10000,rejectUnauthorized:false});
 const lobbyCaches=new WeakMap();
 let snapshotAuth=null,snapshotPath='',snapshotAuthAt=0;
+const failedConnections=new WeakSet();
 // A display name read back from the client: trimmed, bounded, no control
 // characters. Anything else is treated as no name, never guessed.
 const cleanDisplayName=value=>{const text=typeof value==='string'?value.trim().normalize('NFKC'):'';return /^[^\r\n\0]{1,64}$/.test(text)?text:'';};
@@ -36,7 +36,11 @@ export function parseCommandLine(cmd) {
  const region=String(cmd).match(/--region=([\w-]+)/i)?.[1],rsoPlatformId=String(cmd).match(/--rso[_-]platform[_-]id=([\w-]+)/i)?.[1],riotClientPort=Number(String(cmd).match(/--riotclient-app-port=(\d+)/)?.[1]),riotClientAuthToken=String(cmd).match(/--riotclient-auth-token=([^\s"]+)/)?.[1];
  return {port:Number(port),password,...(region?{region}:{}),...(rsoPlatformId?{rsoPlatformId}:{}),...(riotClientPort>0&&riotClientPort<=65535&&riotClientAuthToken?{riotClientPort,riotClientAuthToken}:{})};
 }
-export async function discoverClient(installPath='',{includeRegion=false}={}) {
+export async function discoverClient(installPath='',{includeRegion=false,reuseSnapshot=false}={}) {
+ // A recent successful status read already verified this loopback connection.
+ // Explicit selection still re-reads its game/action before writing, and never
+ // retries a write on another connection if this one has expired.
+ if(reuseSnapshot&&!includeRegion&&snapshotAuth&&snapshotPath===installPath&&Date.now()>=snapshotAuthAt&&Date.now()-snapshotAuthAt<30000)return snapshotAuth;
  let lockAuth=null;
  const roots=[installPath,'C:/WeGameApps/英雄联盟','D:/WeGameApps/英雄联盟','D:/英雄联盟','C:/Riot Games/League of Legends'].filter(Boolean);
  rootsLoop:for(const root of roots)for(const suffix of ['lockfile','LeagueClient/lockfile']) {
@@ -67,13 +71,19 @@ export function lcuRequest(auth,route,method='GET',body) {
     res.on('error',()=>reject(new Error('客户端读取已中断')));
     res.on('data',chunk=>{size+=chunk.length;if(size>2_000_000){request.destroy();reject(new Error('客户端响应过大'));return;}raw+=chunk;});
     res.on('end',()=>{let value;try{value=raw?JSON.parse(raw):null;}catch{return reject(new Error('客户端返回格式异常'));}
-     if(res.statusCode>=400){const error=new Error(res.statusCode===404?'当前没有可读取的选人信息':res.statusCode===401?'客户端连接已变化，请重新连接':res.statusCode===403?'客户端拒绝了本次读取，请稍后重试':res.statusCode===429?'客户端查询过于频繁，请稍后重试':`客户端暂未接受操作（${res.statusCode}）`);error.status=res.statusCode;return reject(error);}
+     if(res.statusCode>=400){const error=new Error(res.statusCode===404?'当前没有可读取的选人信息':res.statusCode===401?'客户端连接已变化，请重新连接':`客户端暂未接受操作（${res.statusCode}）`);error.status=res.statusCode;return reject(error);}
      resolve(value);
     });
    });
   request.on('timeout',()=>request.destroy(new Error('客户端连接超时')));
   request.on('error',()=>reject(new Error('未能连接客户端，请确认游戏已登录到大厅')));
   if(payload)request.write(payload);request.end();
+ }).catch(error=>{
+  if(error.status===401||!error.status){
+   failedConnections.add(auth);
+   if(snapshotAuth?.port===auth.port&&snapshotAuth?.password===auth.password){failedConnections.add(snapshotAuth);snapshotAuth=null;snapshotAuthAt=0;}
+  }
+  throw error;
  });
 }
 export function sanitizeSession(session) {
@@ -83,7 +93,7 @@ export function sanitizeSession(session) {
   return {championId:Number(p.championId)||0,cellId,assignedPosition:String(p.assignedPosition||''),
    ...(cellId===session.localPlayerCellId&&Number.isSafeInteger(p.spell1Id)&&Number.isSafeInteger(p.spell2Id)?{spell1Id:p.spell1Id,spell2Id:p.spell2Id}:{}),
    ...(Number(p.championPickIntent)>0?{championPickIntent:Number(p.championPickIntent)}:{}),
-   ...(pick?{pickState:p.pickState}:{})};
+   ...(pick||p.pickState==='locked'?{pickState:p.pickState}:{})};
  });
  return {myTeam:team(session.myTeam),theirTeam:team(session.theirTeam),localPlayerCellId:session.localPlayerCellId,allowDuplicatePicks:session.allowDuplicatePicks===false?false:true,
   ...(/^[1-9]\d{0,19}$/.test(String(session.gameId||''))?{gameId:String(session.gameId)}:{}),
@@ -92,9 +102,8 @@ export function sanitizeSession(session) {
 }
 export async function clientSnapshot(installPath='',{discover=discoverClient,request=lcuRequest,now=Date.now,partyIds=[]}={}) {
  const native=discover===discoverClient&&request===lcuRequest;
- const cached=native&&!!snapshotAuth&&snapshotPath===installPath&&now()-snapshotAuthAt<30000;
+ const cached=native&&!!snapshotAuth&&snapshotPath===installPath&&now()>=snapshotAuthAt&&now()-snapshotAuthAt<30000;
  const auth=cached?snapshotAuth:await discover(installPath);
- if(native&&auth?.port&&!cached){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=now();}
  if(!auth){lobbyCaches.delete(request);return {connected:false,phase:'Offline',message:'未发现客户端，可先手动选人'};}
  if(auth.unreadable)return {connected:false,phase:'Offline',needsElevation:true,message:'已发现客户端；需要 Windows 权限确认才能读取公开选人信息'};
  try{
@@ -156,13 +165,8 @@ export async function clientSnapshot(installPath='',{discover=discoverClient,req
   // Validated account IDs stay in main only, including PUUID-only clients.
   // They seed a stable fallback nickname; forRenderer strips raw identity.
   const own={...(ownName?{riotId:ownName}:{}),...(nameIdentity.summonerId?{summonerId:nameIdentity.summonerId}:{}),...(nameIdentity.puuid&&!nameIdentity.summonerId?{puuid:nameIdentity.puuid}:{})};
-  // A stable, non-reversible account key binds local caches to one player even
-  // when a client phase only reports a different id kind. Only the puuid is
-  // used: it never changes for one account, while a summoner id can be absent
-  // in some phases and would otherwise flip the key.
-  const accountSeed=nameIdentity.puuid||'';
-  const accountKey=accountSeed?crypto.createHash('sha256').update(String(accountSeed)).digest('hex'):'';
-  return {connected:true,phase,session,eligibility,game,party,...(Object.keys(own).length?{own}:{}),...(accountKey?{account:accountKey}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
+  if(native&&!failedConnections.has(auth)){snapshotAuth=auth;snapshotPath=installPath;snapshotAuthAt=now();}
+  return {connected:true,phase,session,eligibility,game,party,...(Object.keys(own).length?{own}:{}),mode:identifyMode(game),receivedAt:new Date(now()).toISOString(),message:phase==='ChampSelect'?'已连接选人阶段':'已连接客户端'};
  }catch(e){lobbyCaches.delete(request);if(native){snapshotAuth=null;snapshotAuthAt=0;}return {connected:false,phase:'Offline',message:e.message};}
 }
 export async function writeRunePage({page,context,ownedPageId,installPath='',trees},{discover=discoverClient,request=lcuRequest}={}) {

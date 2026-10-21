@@ -5,6 +5,7 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
   const {BrowserWindow, ipcMain, screen} = electron;
   let win = null;
   let currentReport = null;
+  let ready = false;
 
   function displayArea() {
     try {
@@ -25,6 +26,7 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
   }
 
   function create() {
+    ready = false;
     const bounds = calculateBounds();
     win = new BrowserWindow({
       ...bounds,
@@ -46,17 +48,18 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
       }
     });
 
-    win.setAlwaysOnTop(true, 'screen-saver');
+    win.setAlwaysOnTop(true, 'floating');
     win.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
     win.webContents.on('will-navigate', (event, url) => {
       if (url !== pathToFileURL(path.join(root, 'src/postgame.html')).href) event.preventDefault();
     });
 
     win.once('ready-to-show', () => {
+      ready = true;
       if (currentReport) {
         // Loading screen shows first so readiness is visible before the final settlement panel
         publish();
-        win.show();
+        win.showInactive();
         // Late async publish as insurance in case the renderer was not ready on first send
         setImmediate(() => publish());
       }
@@ -83,8 +86,8 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
       win.setBounds(bounds);
       // Send data before showing so reuse never flashes the previous game's stale panel
       publish();
-      if (!win.isVisible()) {
-        win.show();
+      if (ready && !win.isVisible()) {
+        win.showInactive();
       }
       // Late async publish as insurance in case the renderer missed the synchronous send
       setImmediate(() => publish());
@@ -92,6 +95,7 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
   }
 
   function hide() {
+    currentReport = null;
     if (win && !win.isDestroyed()) {
       win.hide();
       // Clear stale panel so reuse never flashes the last game before update arrives
@@ -125,8 +129,10 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
     return true;
   });
   guard('postgame-open-history', (gameId) => {
+    if (!currentReport || String(gameId) !== String(currentReport.gameId)) throw Error('结算对局已变化');
+    const acceptedId = currentReport.gameId;
     hide();
-    if (onOpenHistory) onOpenHistory(gameId);
+    if (onOpenHistory) onOpenHistory(acceptedId);
     return true;
   });
 
@@ -136,6 +142,7 @@ module.exports = function createPostgameWindow({root, onOpenHistory, diagnostic 
     reset,
     isVisible: () => !!win && !win.isDestroyed() && win.isVisible(),
     destroy: () => {
+      currentReport = null;
       if (win && !win.isDestroyed()) win.destroy();
       win = null;
       for (const name of ['postgame-bootstrap', 'postgame-reset', 'postgame-close', 'postgame-open-history']) {

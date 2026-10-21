@@ -35,8 +35,7 @@ export function normalizePublicRanked(raw){
 // https://developer.riotgames.com/apis#champion-mastery-v4/GET_getChampionMasteryScoreByPUUID
 // A returned score is authoritative; derived totals require every row.
 export function normalizePublicMastery(raw){
- // The live client returns "championMasteries"; some builds use "masteries".
- const source=Array.isArray(raw)?raw:Array.isArray(raw?.championMasteries)?raw.championMasteries:Array.isArray(raw?.masteries)?raw.masteries:null;
+ const source=Array.isArray(raw)?raw:Array.isArray(raw?.masteries)?raw.masteries:null;
  const mastery=(source||[]).slice(0,300).filter(m=>object(m)&&positiveId(m.championId)!==null).map(m=>({
   champion:positiveId(m.championId),level:number(m.championLevel),points:number(m.championPoints),sinceLastLevel:number(m.championPointsSinceLastLevel),untilNextLevel:number(m.championPointsUntilNextLevel),
   tokens:number(m.tokensEarned),marksRequired:number(m.markRequiredForNextLevel),milestone:number(m.championSeasonMilestone),lastPlay:number(m.lastPlayTime),grade:grade(m.highestGrade),

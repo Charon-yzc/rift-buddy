@@ -13,11 +13,11 @@ const data=JSON.parse(await fs.readFile('data/game.json'));
 const page=getBuild(data.champions.find(c=>c.id==='Ashe'),'bottom',data).runePage;
 const context={phase:'ChampSelect',gameId:'123',cellId:1,championId:22,championPickIntent:0,assignedPosition:'BOTTOM'};
 
-test('real helper pipe enforces saved opt-in and cancels an older operation with identical rune contents',{skip:process.platform!=='win32'},async t=>{
+test('real helper pipe enforces saved opt-out and cancels an older operation with identical rune contents',{skip:process.platform!=='win32'},async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-chat-helper-')),key=crypto.randomBytes(16).toString('hex'),file=path.join(root,'client-session-'+key+'.json');
  const config={pipe:'\\\\.\\pipe\\rift-buddy-'+key,secret:crypto.randomBytes(32).toString('hex'),parentPid:process.pid,createdAt:Date.now(),installPath:root};
  await fs.writeFile(file,JSON.stringify(config));await fs.writeFile(path.join(root,'lockfile'),'LeagueClient:1:23456:isolated-chat-only:https');
- const state=defaultState();await saveState(root,state);
+ const state=defaultState();state.preferences.chatNotice=false;await saveState(root,state);
  let posts=0,held=null;const room='isolated@champ-select';
  t.mock.method(https,'request',(options,callback)=>{
   assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);

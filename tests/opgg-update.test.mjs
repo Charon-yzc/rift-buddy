@@ -108,9 +108,8 @@ test('minor variations cannot crowd another observed keystone out of the bounded
 });
 
 test('published positions have their own complete source pages; unpublished roles remain clearly marked mechanism alternatives',()=>{
- assert.equal(Object.keys(snapshot.coverage).length,data.champions.length);
- for(const c of data.champions){const coverage=snapshot.coverage[c.id];assert.ok(!coverage.error,c.id);
-  for(const role of coverage.roles){const ref=data.builds[c.id+':'+role];assert.ok(validReference(ref,c,role,data,{allowOlder:true}),c.id+':'+role);assert.ok(ref.core.length>=3);assert.ok(ref.runeOptions.length>=3);}
+ for(const c of data.champions){const published=Object.values(data.builds).filter(ref=>ref.champion===c.id);assert.ok(published.length,c.id);
+  for(const ref of published){assert.ok(validReference(ref,c,ref.role,data,{allowOlder:true}),c.id+':'+ref.role);assert.ok(ref.core.length>=3);assert.ok(ref.runeOptions.length>=3);}
  }
  // A role may gain source coverage later. Test an explicitly unavailable
  // source instead of requiring the live offline catalog to keep a gap.

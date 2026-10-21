@@ -7,7 +7,8 @@ const {isDeepStrictEqual}=require('node:util');
 const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
-let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,latestHistoryTransport,postgame,lastHandledEogGameId=null,postgameFetchPending=false,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
+let postgame,postgameLifecycle;
+let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,usageCache,latestHistoryTransport,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
 let observedWindows=null,observedAt=0;
 let saveTask=Promise.resolve();
@@ -93,6 +94,7 @@ async function boot(){
  const {changeCompanionPlan}=await import('../src/core/companion-plan.mjs');
  const {pregamePhase,validatePregameIntent,pregameIntentChoice,restoredRoleClaim,partyWithPregameIntents}=await import('../src/core/pregame-intent.mjs');
  const {rankedDraftPolicy}=await import('../src/core/ranked-draft.mjs');
+ const {currentEnemyRoles,changeEnemyRole}=await import('../src/core/enemy-roles.mjs');
  const {createSlots}=await import('../src/core/recommend.mjs');
  const {initialPartyCount,selectionPartyCount,validPartyCount,reconcilePartyRange,editPartyRange}=await import('../src/core/party-range.mjs');
  storeRoot=app.getPath('userData');state=await storage.readState(storeRoot);
@@ -110,21 +112,23 @@ async function boot(){
   });
  data=await dataService.loadSnapshot(path.join(storeRoot,'data'),path.join(root,'data'));
  const {createChampionUsageCollector}=await import('../services/champion-usage-collector.mjs');
- // The familiar-hero statistics are cached locally so the recommendation
- // keeps working while the client or the match service is unavailable. Only
- // anonymous hero counts are stored and they never leave this machine.
- const {createUsageCache}=await import('../services/champion-usage-cache.mjs');
- const usageCache=createUsageCache({root:storeRoot});
- usageCollector=createChampionUsageCollector({request:(transport,operation,payload)=>helper.history(operation,payload,transport),champions:()=>data.champions,transportCurrent:token=>helper.transportCurrent(token),cache:usageCache,onChange:value=>{if(!quitting){publishWindows('champion-usage',value);roomUsagePublisher?.sync();}}});
- await usageCollector.loadCache().then(()=>usageCollector.applyCached()).catch(()=>{});
+ const {createChampionUsageCache}=await import('../services/champion-usage-cache.mjs');
+ usageCache=await createChampionUsageCache({root:storeRoot});
+ usageCollector=createChampionUsageCollector({cache:usageCache,request:(transport,operation,payload)=>helper.history(operation,payload,transport),champions:()=>data.champions,transportCurrent:token=>helper.transportCurrent(token),onChange:value=>{if(!quitting){publishWindows('champion-usage',value);roomUsagePublisher?.sync();}}});
  const {createRoomUsagePublisher}=await import('../services/room-champion-usage.mjs');
  roomUsagePublisher=createRoomUsagePublisher({getService:()=>roomService,getSummary:()=>usageCollector.snapshot(),getMass:()=>state.preferences.familiarityMass});
  guard('champion-usage',()=>usageCollector.snapshot());
  guard('champion-usage-refresh',()=>{usageCollector.observe(latestClient,latestHistoryTransport,{refresh:true}).catch(()=>{});return usageCollector.snapshot();});
+ guard('champion-usage-import',async()=>{
+  const selected=await dialog.showOpenDialog(win,{title:'导入当前账号的英雄场次统计',properties:['openFile'],filters:[{name:'英雄统计 JSON',extensions:['json']}]});if(selected.canceled)return null;
+  let value;try{const file=await fs.open(selected.filePaths[0],'r');try{if((await file.stat()).size>32000)throw Error('oversized');const bytes=Buffer.alloc(32001),{bytesRead}=await file.read(bytes,0,bytes.length,0);if(bytesRead>32000)throw Error('oversized');value=JSON.parse(bytes.subarray(0,bytesRead).toString('utf8'));}finally{await file.close();}}catch{throw Error('无法读取英雄统计文件，请选择有效的小型 JSON 文件');}
+  return usageCollector.importUsage(value);
+ });
  const catalogCore=await import('../src/core/catalog.mjs');
  const {createCatalogStore}=await import('../services/catalog-store.mjs');
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
- const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;publishData(['catalog','catalogInfo']);guide?.publish();return result;};
+ const dataResult=result=>({...result,dataRevision});
+ const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;publishData(['catalog','catalogInfo']);guide?.publish();return dataResult(result);};
  const refreshReference=(refresh,keys)=>async(...args)=>{
   const before=data,patch=data.patch,version=data.version,result=await refresh(...args);
   if(data!==before||data.patch!==patch||data.version!==version)throw Error('基础资料已更新，请重新刷新参考');
@@ -135,13 +139,18 @@ async function boot(){
  const opponentCache=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
- synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();};
+ synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();};
  const {createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
  const pairCache=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshPairs=refreshReference(pairCache,['pairStatistics']);
  const {createRankingsCache}=await import('../services/rankings-cache.mjs');
  const rankingsCache=createRankingsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshRankings=refreshReference(rankingsCache,['rankings']);
+ const {createNationalReferenceCache}=await import('../services/national-reference.mjs');
+ let bundledNational=null;
+ try{const bytes=await fs.readFile(path.join(root,'data/national-feed.json'));if(bytes.length<=1000000)bundledNational=JSON.parse(bytes);}catch{}
+ const nationalReference=createNationalReferenceCache({root:path.join(storeRoot,'data'),getData:()=>data,bundled:bundledNational});
+ guard('national-reference',input=>nationalReference(input));
  const {createGameDataPreparer,readManualBase}=await import('../services/game-data-prepare.mjs');
  const {pureGameSnapshot,generationBaseIdentity}=await import('../services/data-generation.mjs');
  const {feedHash}=await import('../services/data-feed.mjs');
@@ -189,10 +198,22 @@ async function boot(){
  const publishAppUpdate=snapshot=>{appUpdateStatus=snapshot;publishWindows('app-update-progress',snapshot);};
  const {changePresentation}=await import('../src/core/presentation.mjs');
  const setPresentation=async change=>{await saveCurrentState(current=>({...current,preferences:{...current.preferences,presentation:changePresentation(current.preferences.presentation,change)}}));publishWindows('presentation-update',state.preferences.presentation);guide?.publish();return state.preferences.presentation;};
+ const {gameReference}=await import('../src/core/game-reference.mjs');
+ let guideReferenceBase=data,guideReferenceRevision=1;
+ const getGuideReferenceRevision=()=>{if(data!==guideReferenceBase){guideReferenceBase=data;guideReferenceRevision++;}return guideReferenceRevision;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
- const getGuideModel=()=>{const selection=currentGuideSelection(),m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,selection);if(m){const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
+ const getGuideModel=()=>{const selection=currentGuideSelection(),m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,selection);if(m){if(m.mode==='hex'){const record=hexGuideRecord(m.selection);m.hexRound=record?{context:record.context,revision:record.revision}:null;}const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;}return m;};
  const recommendationCore=await import('../src/core/recommend.mjs');
  const {publicClientGameId,reconcileClientDraft}=await import('../src/core/draft.mjs');
+ const {createHexRoundStore,hexRoundSelection}=await import('../src/core/hex-round.mjs');
+ const hexRounds=createHexRoundStore({newToken:require('node:crypto').randomUUID});let guideHexContext=null;
+ if(state.guide?.selection.mode==='hex')state.guide={...state.guide,selection:hexRoundSelection(state.guide.selection,null)};
+ const hexGuideRecord=(selection,context=guideHexContext)=>{
+  if(selection?.mode!=='hex')return null;
+  const snapshot=hexRounds.snapshot();
+  return snapshot.live?.hero===selection.id?snapshot.live:[snapshot.live,snapshot.manual].find(row=>row?.context===context&&row.hero===selection.id)||null;
+ };
+ const publishHexRound=()=>publishWindows('hex-round',hexRounds.snapshot());
  const {creativeComboContext}=await import('../src/core/creative-plan.mjs');
  const {mergeConfiguration,storedPreparation,upsertPreparation,preparationIdentity}=await import('../src/core/preparation.mjs');let guideRevision=0;
  const {isFreshBuildReference,rankedClientRoles}=await import('../src/core/builds.mjs');
@@ -211,20 +232,55 @@ async function boot(){
   const context={id:own.id,role:own.role,mode:own.mode,...creativeComboContext(combo)};
   return {coreIndex:0,conditions:[],...storedPreparation(state.preparations,context),...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,...creativeComboContext(combo)};
  };
- const setGuideState=async(next,base)=>{
+ const setGuideState=async(next,base,hexContext)=>{
   const valid=guideCore.validateGuideState(next),previous=base?guideCore.validateGuideState(base):null;if(valid)valid.completedItems=guideCore.createGuideModel(data,valid).completedItems;
   await saveCurrentState(current=>{
    let accepted=valid;
    if(previous){
-    if(!valid||!current.guide||guideCore.guideIdentity(current.guide.selection)!==guideCore.guideIdentity(previous.selection)||current.guide.match?.gameId!==previous.match?.gameId)throw Error('本局指引已变化，请核对后重新操作');
-    const message='指引设置同时发生变化，请核对后重新操作',selection=current.guide.selection;
+    if(!valid||!current.guide||guideCore.guideIdentity(current.guide.selection)!==guideCore.guideIdentity(previous.selection)||current.guide.match?.gameId!==previous.match?.gameId)throw Object.assign(Error('本局指引已变化，请核对后重新操作'),{code:'GUIDE_CONTEXT_CHANGED'});
+    const message='指引设置同时发生变化，请核对后重新操作',selection=guideCore.validateGuideSelection(current.guide.selection);
     accepted=mergeSavedFields(current.guide,{...previous,selection},{...valid,selection},message);
     accepted.selection=mergeSavedFields(selection,previous.selection,valid.selection,message);
    }
+   if(accepted?.selection.mode==='hex'){
+    const record=hexGuideRecord(accepted.selection,hexContext);accepted={...accepted,selection:hexRoundSelection(accepted.selection,record)};guideHexContext=record?.context||null;
+   }else guideHexContext=null;
    return {...current,guide:accepted,preparations:accepted?upsertPreparation(current.preparations,accepted.selection):current.preparations};
   });const revision=++guideRevision;for(const window of appWindows())window.webContents.send('guide-selection',state.guide?.selection||null,{revision});
  };
- const prepareCurrentGuide=async()=>{const own=currentGuideSelection();if(!own)return false;if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(own)||own.comboKnown&&(state.guide.selection.comboId||'')!==(own.comboId||'')){const next=guideCore.selectGuide(state.guide,own);if(latestClient.connected)next.match={phase:latestClient.phase,...(latestClient.game?.gameId?{gameId:latestClient.game.gameId}:{})};await setGuideState(next);}return true;};
+ const syncHexGuide=binding=>{
+  // Round notes are ephemeral. Join the same serialization queue as config
+  // writes, but never make accepting a note depend on a settings disk write.
+  // Project the guide that exists when the queue runs, not a captured guide.
+  saveTask=saveTask.catch(()=>{}).then(()=>{
+   if(state.guide?.selection.mode!=='hex')return;
+   if(binding&&guideHexContext===binding.from&&state.guide.selection.id===binding.hero)guideHexContext=binding.to;
+   const record=hexGuideRecord(state.guide.selection),projected=hexRoundSelection(state.guide.selection,record);
+   if(JSON.stringify(projected)===JSON.stringify(state.guide.selection))return;
+   guideHexContext=record?.context||null;state={...state,guide:{...state.guide,selection:projected}};
+   const revision=++guideRevision;for(const window of appWindows())window.webContents.send('guide-selection',state.guide.selection,{revision});guide.publish();
+  });return saveTask;
+ };
+ guard('hex-round',async value=>{
+  if(!value||value.operation==='snapshot')return hexRounds.snapshot();
+  if(value.operation==='select')hexRounds.select(value.hero,data);else hexRounds.change(value,data);
+  publishHexRound();await syncHexGuide();return hexRounds.snapshot();
+ });
+ const observeHexRound=async()=>{
+  const own=currentGame.current(latestClient,latestLive,data.champions,state.draft?.slots||[]),before=hexRounds.snapshot().revision;
+  hexRounds.observe({connected:latestClient.connected,phase:latestClient.phase,mode:latestClient.mode?.id||own?.mode,gameId:publicClientGameId(latestClient),hero:own?.id},data);
+  if(hexRounds.snapshot().revision!==before){publishHexRound();await syncHexGuide();}
+ };
+ const prepareCurrentGuide=async({matchingOnly=false}={})=>{
+  const own=currentGuideSelection(),previous=state.guide;
+  // An ordinary preference save can refresh this hero's role/configuration,
+  // but is not a request to replace a deliberately opened manual reference.
+  if(!own||matchingOnly&&previous&&(previous.selection.id!==own.id||previous.selection.mode!==own.mode))return false;
+  if(!previous||guideCore.guideIdentity(previous.selection)!==guideCore.guideIdentity(own)||own.comboKnown&&(previous.selection.comboId||'')!==(own.comboId||'')){
+   const next=guideCore.selectGuide(previous,own),gameId=publicClientGameId(latestClient);if(latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};
+   try{await setGuideState(next,previous);}catch(error){if(error.code==='GUIDE_CONTEXT_CHANGED')return false;throw error;}
+  }return true;
+ };
  const publicEnemyIds=()=>latestClient.connected&&latestClient.phase==='ChampSelect'&&Array.isArray(latestClient.session?.theirTeam)?latestClient.session.theirTeam.map(p=>data.champions.find(c=>c.key===p.championId)?.id).filter(Boolean):undefined;
  const publishOpponentContext=()=>{const focus=opponentFocus.snapshot();latestClient={...latestClient,selectionContext:focus.selectionContext,opponentFocus:focus.focus,opponentFocusNotice:focus.notice};return focus;};
  const observeOpponentContext=()=>{opponentFocus.observe({connected:latestClient.connected,phase:latestClient.phase,gameId:publicClientGameId(latestClient),selection:currentGuideSelection(),enemyIds:publicEnemyIds()});return publishOpponentContext();};
@@ -237,16 +293,30 @@ async function boot(){
   refreshBuild(s.id,role).then(()=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now()})).catch(error=>guideRefresh.set(key,{pending:false,attemptedAt:Date.now(),error:error.message})).finally(()=>guide.publish());
  };
  afterBaseChange=refreshPreparedBuild;
+ const resetHexGuideRound=(current,expected)=>{
+  const record=hexGuideRecord(current?.selection);if(!record)return;
+  if(expected?.context!==record.context||expected?.revision!==record.revision)throw Error('本局强化记录已变化，请按当前页面重试');
+  const next=hexRounds.reset(expected);publishHexRound();syncHexGuide({from:record.context,to:next.context,hero:record.hero}).catch(error=>diagnostic('hex guide projection unavailable: '+error.message));return next.context;
+ };
  guide=require('./guide-window.cjs')({root,getState:()=>state.guide,getModel:getGuideModel,isQuitting:()=>quitting,diagnostic,
-  currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
+  currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,resetHexRound:resetHexGuideRound,getReference:(kind,id)=>gameReference(data,kind,id),referenceRevision:getGuideReferenceRevision,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
+  showHexSource:(id,routeId)=>{pendingBuild=null;pendingMainPage={route:'hex-source',id,routeId};showMainWindow();if(rendererReady){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}},
   showMain:selection=>{if(selection)pendingBuild=selection;showMainWindow();if(rendererReady&&pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}}});
  diagnostic(`loaded data ${data.version}`);
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
  const placement=await import('../src/core/window-placement.mjs');
  companion=require('./client-companion.cjs')({root,getWindow:()=>win,showMain:showMainWindow,getClient:()=>latestClient,getPreferences:()=>state.preferences,savePlacement:patch=>saveCurrentState(current=>{const preferences={...current.preferences};for(const [key,value] of Object.entries(patch)){if(value===undefined)delete preferences[key];else preferences[key]=value;}return {...current,preferences};}),placement,diagnostic});
- const createPostgameWindow=require('./postgame-window.cjs');
- const {fetchPostGameReport}=await import('../services/post-game.mjs');
- postgame=createPostgameWindow({root,onOpenHistory:gameId=>{showMainWindow();publishWindows('main-page',{route:'history',gameId});},diagnostic});
+ let postgameOwner=null,postgameTransport=null;
+ const {createPostGameLifecycle}=await import('../services/post-game-lifecycle.mjs');
+ postgame=require('./postgame-window.cjs')({root,diagnostic,onOpenHistory:gameId=>{
+  pendingMainPage={route:'history',gameId};showMainWindow();
+  if(rendererReady&&pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}
+ }});
+ postgameLifecycle=createPostGameLifecycle({
+  current:()=>({connected:!quitting&&!cleaningUp&&latestClient.connected,phase:latestClient.phase,game:latestClient.game,gameId:publicClientGameId(latestClient),account:postgameOwner?JSON.stringify(postgameOwner):'',transport:helper.transportCurrent(latestHistoryTransport)?latestHistoryTransport:null,enabled:state.preferences.postGamePopup!==false}),
+  read:context=>helper.postGame(JSON.parse(context.account),context.game,context.transport),hide:()=>postgame.reset(),
+  show:report=>{for(const team of report.teams)for(const player of team.players){const champion=data.champions.find(c=>Number(c.key)===player.championId);player.championKey=champion?.id||'';player.championName=champion?.name||'英雄';}postgame.show(report);}
+ });
  // Optional rooms (CHA-31): invited peers share public draft/configuration
  // snapshots over LAN/VPN or their own trusted relay. Never logs credentials.
  const {createRoomService}=await import('../services/room.mjs');
@@ -265,7 +335,7 @@ async function boot(){
  const decorateRoom=snapshot=>{const identity=snapshot?.mode==='idle'?'':snapshot?.room||'';if(identity!==ballotRoom){roomBallot=null;roomPublicShare=null;ballotRoom=identity;}return decorateAutoRoom(snapshot,{auto:!!roomAutoKey&&!!roomAutoPin,pin:roomAutoPin,error:roomAutoError,retryAt:roomAutoFailedUntil||null});};
  // The sandboxed renderer never needs the lobby identifier or the raw identity
  // used as the room nickname: only this process derives the room from them.
- const forRenderer=client=>{if(!client)return client;const {own,party,account,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(own?.riotId?{playerName:own.riotId}:{}),...(party?{party:cleanParty}:{})};};
+ const forRenderer=client=>{if(!client)return client;const {own,party,...rest}=client,{key,...cleanParty}=party||{};return {...rest,...(own?.riotId?{playerName:own.riotId}:{}),...(party?{party:cleanParty}:{})};};
  // Closing the auto room always clears the whole auto state, so a later
  // re-enable starts clean instead of inheriting a stale failure or pin. The
  // cancelled key lets an in-flight handshake tell a local close apart from a
@@ -462,8 +532,9 @@ async function boot(){
  guard('bootstrap',async({surface})=>{
   const paused=appUpdateStatus.phase==='idle'&&!appUpdateFlight?await updater().partial().catch(()=>null):null;
   if(paused&&appUpdateStatus.phase==='idle'&&!appUpdateFlight)appUpdateStatus={phase:'paused',release:paused.release,received:paused.received,total:paused.total,kind:paused.kind,via:paused.via};
-  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),surface,client:forRenderer(latestClient),championUsage:usageCollector.snapshot(),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
+  return {data,state,stateRevision,dataRevision,preparationSnapshot:preparationLedger.snapshot(),hexRound:hexRounds.snapshot(),surface,client:forRenderer(latestClient),championUsage:usageCollector.snapshot(),windowLayout:companion.layout(surface),desktop:true,version:app.getVersion(),dataPath:storeRoot,hotkeyAvailable,guideHotkeyAvailable,appUpdate:appUpdateStatus};
  },true);
+ guard('data-snapshot',()=>({data,revision:dataRevision}));
  const {windowInfo}=await import('../services/window-info.mjs');
  guard('window-info',()=>windowInfo({version:app.getVersion(),dataVersion:data.version,displays:screen.getAllDisplays(),primaryDisplayId:screen.getPrimaryDisplay().id,client:forRenderer(latestClient),companion:companion.layout(),main:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized()}:null,guide:guide.windowInfo(),observedAt,observedClient:observedWindows?.client,observedGame:observedWindows?.game}));
  guard('companion-mode',(value,{surface})=>{if(typeof value!=='boolean')throw Error('窗口模式格式不正确');const operation=companion.setMode(value);return {...companion.layout(surface),opened:value?operation.docked:undefined,reason:operation.reason};},true);
@@ -487,13 +558,19 @@ async function boot(){
   next=storage.validateState(next);
   // A delayed renderer snapshot cannot restore a binding from an earlier game.
   const gameId=publicClientGameId(latestClient),draftContext=reconcileClientDraft(next.draft,gameId,state.draft?.clientGameId||state.guide?.match?.gameId,{phase:latestClient.phase});
-  next.draft=draftContext.newGame&&state.draft?.clientGameId===gameId?state.draft:draftContext.draft;
+  next.draft=draftContext.newGame&&state.draft?.clientGameId===gameId?structuredClone(state.draft):draftContext.draft;
   // The renderer cannot claim ownership of existing user rune pages.
   const before=base?storage.validateState(base):structuredClone(state),same=isDeepStrictEqual;
+  // Enemy-role constraints belong to the main-owned edit operation. A stale
+  // ordinary renderer save cannot resurrect a withdrawn/traded hero binding.
+  if(next.draft)delete next.draft.enemyRoles;if(before.draft)delete before.draft.enemyRoles;
   await saveCurrentState(current=>{
    const merged={...current,preferences:{...current.preferences}};
    for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(key==='draft'&&next.draft&&before.draft&&current.draft){
-     merged.draft=mergeSavedFields(current.draft,before.draft,next.draft,'选人配置同时发生变化，请重新同步');continue;
+     merged.draft=mergeSavedFields(current.draft,before.draft,next.draft,'选人配置同时发生变化，请重新同步');
+     // An explicit same-visible-value click is an intent even when scope
+     // itself equals the stale window base. Keep its target atomic.
+     if(['party','context'].includes(merged.draft.scopeSelection))merged.draft.scope=merged.draft.scopeSelection;continue;
     }if(!same(current[key],before[key])&&!same(current[key],next[key]))throw Error('配置同时发生变化，请刷新后重新保存');merged[key]=next[key];}
    // Remembering a guide changes preparation recency. Merge actual per-hero
    // changes so that reordering or another hero's update cannot block a save.
@@ -504,6 +581,7 @@ async function boot(){
    }
    for(const key of Object.keys(next.preferences)){if(['presentation','mainBounds','companionBounds'].includes(key)||same(next.preferences[key],before.preferences[key]))continue;if(!same(current.preferences[key],before.preferences[key])&&!same(current.preferences[key],next.preferences[key]))throw Error('偏好同时发生变化，请刷新后重新保存');merged.preferences[key]=next.preferences[key];}
    const gameId=publicClientGameId(latestClient),context=reconcileClientDraft(merged.draft,gameId,current.draft?.clientGameId||current.guide?.match?.gameId,{phase:latestClient.phase});merged.draft=context.newGame&&current.draft?.clientGameId===gameId?current.draft:context.draft;
+   if(merged.draft){const roles=currentEnemyRoles(latestClient,data.champions,current.draft?.enemyRoles);if(roles.length)merged.draft.enemyRoles=roles;else delete merged.draft.enemyRoles;}
    // Protect accepted picks from this game, after the queued merge. A renderer
    // base from the previous game must not block releasing its old lane binding.
    const accepted=reconcileClientDraft(current.draft,gameId,current.guide?.match?.gameId,{phase:latestClient.phase}).draft;
@@ -519,7 +597,7 @@ async function boot(){
    // Turning the switch (or client sync) off must not leave a room behind:
    // with sync off no poll will run to notice the new preference.
    closeAutoRoomIfRevoked();
-   if(state.guide&&latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
+   if(state.guide&&latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide({matchingOnly:true});
    guide.publish();companion.sync();return {state,revision:stateRevision};
  },true);
  const {createClientSync}=await import('../src/core/async-tasks.mjs');
@@ -600,10 +678,15 @@ async function boot(){
     catch(error){diagnostic(`automatic permission request failed: ${error?.message||'unknown'}`);}
    }
    usageCollector.observe(latestClient,latestHistoryTransport).catch(()=>{});
+   if(!latestClient.connected||postgameTransport!==latestHistoryTransport)postgameOwner=null;
+   postgameTransport=latestHistoryTransport;
+   if(latestClient.connected&&(latestClient.own?.summonerId||latestClient.own?.puuid))postgameOwner={...(latestClient.own.summonerId?{summonerId:latestClient.own.summonerId}:{}),...(latestClient.own.puuid?{puuid:latestClient.own.puuid}:{})};
+   postgameLifecycle.observe();
    if(ballotRoundChanged(latestClient))clearRoomBallot();
    observeFeedPhase(latestClient);feedIdle=observeSignedFeedPhase(latestClient);dataFeed.activate().catch(()=>{});
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
    const draftContext=reconcileClientDraft(state.draft,publicClientGameId(latestClient),state.guide?.match?.gameId,{phase:latestClient.phase,previousPhase});if(draftContext.changed)await saveCurrentState(current=>({...current,draft:reconcileClientDraft(current.draft,publicClientGameId(latestClient),current.guide?.match?.gameId,{phase:latestClient.phase,previousPhase}).draft}));
+   if(state.draft?.enemyRoles&&!isDeepStrictEqual(state.draft.enemyRoles,currentEnemyRoles(latestClient,data.champions,state.draft.enemyRoles)))await saveCurrentState(current=>{const roles=currentEnemyRoles(latestClient,data.champions,current.draft?.enemyRoles);if(current.draft){if(roles.length)current.draft.enemyRoles=roles;else delete current.draft.enemyRoles;}return current;});
    const claim=state.draft?.preselection;
    if(latestClient.connected&&latestClient.phase==='ChampSelect'&&Number.isInteger(claim?.hoveredCellId)&&!restoredRoleClaim(claim,latestClient,data.champions))await saveCurrentState(current=>{if(isDeepStrictEqual(current.draft?.preselection,claim))delete current.draft.preselection;return current;});
    if(latestClient.connected&&latestClient.phase==='ChampSelect'&&latestClient.session&&!validPartyCount(state.draft?.partyCount)){
@@ -617,7 +700,7 @@ async function boot(){
      current.draft={...draft,slots:reconcilePartyRange(draft.slots,latestClient.session,data.champions,{count,party:latestClient.party,ownRole,initial:true}),partyCount:count,scope:'party',...(gameId?{clientGameId:gameId}:{})};return current;
     });
    }
-   currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);
+   currentGame.observe(latestClient,data.champions,state.draft?.slots||[]);await observeHexRound();
    if(latestClient.connected&&latestClient.phase==='ChampSelect')await prepareCurrentGuide();
    const enemyIds=publicEnemyIds();observeOpponentContext();await bindPendingOpponent();
    const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),enemyIds});
@@ -628,31 +711,25 @@ async function boot(){
    companion.sync();
    if(inGame()&&!['GameStart','InProgress','Reconnect'].includes(previousPhase)){mainExplicitInGame=false;if(win){win.hide();mainRelease.request(win);}}
    else if(!inGame()){mainExplicitInGame=false;mainRelease.cancel();if(!win&&!mainDismissed)createWindow({automatic:true});}
-   const isEogPhase=latestClient.connected&&['EndOfGame','WaitingForStats','PreEndOfGame'].includes(latestClient.phase);
-   const gameJustEnded=!inGame()&&['GameStart','InProgress','Reconnect'].includes(previousPhase);
-   const eogGameId=latestClient.game?.gameId||publicClientGameId(latestClient)||null;
-   const alreadyHandledCurrentEog=isEogPhase&&eogGameId!==null&&String(eogGameId)===String(lastHandledEogGameId);
-   if(state.preferences?.postGamePopup!==false&&(isEogPhase||gameJustEnded)&&!alreadyHandledCurrentEog&&!postgameFetchPending){
-    postgameFetchPending=true;
-    fetchPostGameReport({installPath:state.preferences?.installPath,ownPuuid:latestClient.summoner?.puuid||latestClient.own?.puuid,champions:data?.champions||[]}).then(report=>{
-     if(report&&report.gameId&&report.gameId!==lastHandledEogGameId){
-      lastHandledEogGameId=report.gameId;
-      postgame?.show(report);
-     }
-    }).catch(error=>diagnostic(`post-game report failed ${error?.message||'unknown'}`)).finally(()=>{postgameFetchPending=false;});
-   }else if(latestClient.connected&&['ChampSelect','GameStart','InProgress'].includes(latestClient.phase)){
-    postgame?.hide();
-   }
    queueRoomAuto();publishWindows('client-update',forRenderer(latestClient));setImmediate(()=>applyStagedSelection());return latestClient;})().finally(()=>statusTask=null);
   return statusTask;
  });
  const pollLive=async(force=false)=>{
   if(liveTask){await liveTask;if(!force)return;}
   if(!force&&!guide.isVisible()&&!guide.needsAutoShow()||state.preferences.autoLive===false)return;
-  const context=JSON.stringify([latestClient.phase,latestClient.game?.gameId]);
-  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,latestClient.game?.gameId])){latestLive=result;await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
+  const context=JSON.stringify([latestClient.phase,publicClientGameId(latestClient)]);
+  liveTask=liveService.liveSnapshot(data.champions,latestClient.game||{}).then(async result=>{if(state.preferences.autoLive!==false&&(force||guide.isVisible()||guide.needsAutoShow())&&context===JSON.stringify([latestClient.phase,publicClientGameId(latestClient)])){latestLive=result;await observeHexRound();await prepareCurrentGuide();const reconciled=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),live:result});if(reconciled.changed)await saveCurrentState(current=>({...current,guide:guideCore.reconcileGuide(current.guide,{phase:latestClient.phase,gameId:publicClientGameId(latestClient),live:result}).guide}));guide.publish();if(guide.needsAutoShow())await guide.phase(latestClient.phase,latestClient.connected);}}).finally(()=>liveTask=null);await liveTask;
  };
  guard('client-status',async force=>forRenderer(await status(force)));
+ guard('enemy-role',async value=>{
+  await status(true);
+  await saveCurrentState(current=>{
+   const enemyRoles=changeEnemyRole(latestClient,data,current.draft?.enemyRoles,value);
+   if(!current.draft)throw Error('选人已变化，请重新同步');
+   if(enemyRoles.length)current.draft={...current.draft,enemyRoles};else delete current.draft.enemyRoles;
+   return current;
+  });return {state,revision:stateRevision};
+ });
  guard('party-range',async value=>{
   if(!value||!['top','jungle','mid','bottom','support'].includes(value.role)||typeof value.checked!=='boolean')throw Error('请确认要调整的开黑位置');
   await status(true);
@@ -704,15 +781,15 @@ async function boot(){
   }finally{launchingGame=false;}
  });
  guard('choose-launch-path',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择 WeGame 英雄联盟或客户端启动程序',properties:['openFile'],filters:[{name:'启动程序',extensions:['exe']}]});return result.canceled?null:result.filePaths[0];});
- guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return result;});
- guard('refresh-pairs',(members,source)=>refreshPairs(members,source));
- guard('refresh-rankings',source=>refreshRankings(source));
+ guard('refresh-build',async(id,role,source)=>{const selected=source===undefined?normalizeBuildSource(data.buildSource):source,key=buildSourcePendingKey(data.patch,id,role,selected),result=await refreshBuild(id,role,selected);guideRefresh.set(key,{pending:false});guide.publish();return dataResult(result);});
+ guard('refresh-pairs',async(members,source)=>dataResult(await refreshPairs(members,source)));
+ guard('refresh-rankings',async source=>dataResult(await refreshRankings(source)));
  guard('refresh-opponent-build',async(id,role,opponent,source)=>{
   const target=data.champions.find(c=>c.id===opponent);
   if(!latestClient.connected||latestClient.phase!=='ChampSelect'||!target||!latestClient.session?.theirTeam?.some(p=>p.championId===target.key))throw Error('所选对手已不在当前公开选人中，请同步后重试');
-  const result=await refreshOpponentBuild(id,role,opponent,source);guide.publish();return result;
+  const result=await refreshOpponentBuild(id,role,opponent,source);guide.publish();return dataResult(result);
  });
- guard('open-guide',async selection=>{if(selection){const previous=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId:latestClient.game?.gameId,live:latestLive}).guide,next=guideCore.selectGuide(previous,selection);if(!next.match&&latestClient.connected)next.match={phase:latestClient.phase,...(latestClient.game?.gameId?{gameId:latestClient.game.gameId}:{})};await setGuideState(next);}else await prepareCurrentGuide();const result=guide.show();pollLive();return {...result,selection:state.guide?.selection||null,revision:guideRevision};});
+ guard('open-guide',async selection=>{let hexContext;if(selection?.mode==='hex'){hexContext=hexRounds.select(selection.id,data).context;publishHexRound();}if(selection){const gameId=publicClientGameId(latestClient),previous=guideCore.reconcileGuide(state.guide,{phase:latestClient.phase,gameId,live:latestLive}).guide,next=guideCore.selectGuide(previous,selection);if(!next.match&&latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};await setGuideState(next,undefined,hexContext);}else await prepareCurrentGuide();const result=guide.show();pollLive();return {...result,selection:state.guide?.selection||null,revision:guideRevision};});
  guard('update-guide',async selection=>{const s=guideCore.validateGuideSelection(selection);if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(s))return {updated:false};await setGuideState(guideCore.selectGuide(state.guide,mergeConfiguration(state.guide.selection,s,Array.isArray(selection.changedFields)?selection.changedFields:undefined)),state.guide);guide.publish();return {updated:true,selection:state.guide.selection,revision:guideRevision};});
  guard('matchup-focus',async context=>{
   const own=currentGuideSelection();
@@ -738,11 +815,11 @@ async function boot(){
    // rename could cross into a draft after the final phase check.
    renameSync(pendingSnapshot,path.join(storeRoot,'data/game.json'));
    data=prepared.data;generation.noteManual(data,token,{notify:false});data.dataFeed=dataFeed.summary();catalogCore.configureCatalog(data.catalog);publishedBase=data;
-   publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:prepared.imageCache};
+   publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:prepared.imageCache,dataRevision};
   }finally{await fs.unlink(pendingSnapshot).catch(()=>{});updating=false;}
  });
- guard('check-data-feed',()=>dataFeed.check({force:true}));
- guard('adopt-data-generation',async release=>{if(typeof release!=='string'||!/^[a-f0-9]{64}$/.test(release))throw Error('资料候选已变化，请重新检查');if(!await generation.activate({release,explicit:true}))throw Error('当前无法启用，请在大厅重新检查资料');return generation.summary();});
+ guard('check-data-feed',async()=>dataResult(await dataFeed.check({force:true})));
+ guard('adopt-data-generation',async release=>{if(typeof release!=='string'||!/^[a-f0-9]{64}$/.test(release))throw Error('资料候选已变化，请重新检查');if(!await generation.activate({release,explicit:true}))throw Error('当前无法启用，请在大厅重新检查资料');return dataResult(generation.summary());});
  guard('app-update-check',async(silent=false)=>{
   if(appUpdateFlight||appUpdateAbort||appUpdateInstallFlight)return appUpdateStatus;
   const prev=appUpdateStatus;
@@ -908,7 +985,7 @@ async function boot(){
  guard('toggle-pin',({window})=>{window.setAlwaysOnTop(!window.isAlwaysOnTop());return window.isAlwaysOnTop();},true);
  guard('choose-directory',async()=>{const result=await dialog.showOpenDialog(win,{title:'选择英雄联盟安装目录',properties:['openDirectory']});return result.canceled?null:result.filePaths[0];});
  guard('open-link',async url=>{
-  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com','gitee.com'];
+  const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','101.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com','gitee.com'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
   if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url))throw new Error('不支持的链接');
   if(['github.com','gitee.com'].includes(parsed.hostname)&&!isReleaseNotesUrl(url)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
@@ -946,10 +1023,10 @@ async function boot(){
 }
 if(lock)app.whenReady().then(boot).catch(error=>{diagnostic(`startup error ${error.message}`);dialog.showErrorBox('开黑搭子启动失败',error.message);app.quit();});
 app.on('window-all-closed',()=>{if(!tray||quitting)app.quit();});
-app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);roomUsagePublisher?.dispose();windowObserver?.stop();companion?.destroy();guide?.destroy();postgame?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
+app.on('will-quit',()=>{postgameLifecycle?.dispose();postgame?.destroy();mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);roomUsagePublisher?.dispose();windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
 app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
- event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;
+ event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;postgameLifecycle?.dispose();
  const stopHelper=Promise.race([helper.shutdown(),new Promise(resolve=>setTimeout(resolve,1500))]);
- Promise.allSettled([stopHelper,saveTask]).then(results=>{if(results[1].status==='rejected')diagnostic('settings-save-before-quit failed');}).finally(()=>{cleanupDone=true;app.quit();});
+ Promise.allSettled([stopHelper,saveTask,usageCache?.flush()]).then(results=>{if(results[1].status==='rejected')diagnostic('settings-save-before-quit failed');}).finally(()=>{cleanupDone=true;app.quit();});
 });

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {calculateWeGameScores} from '../services/post-game-scoring.mjs';
+import {calculatePerformanceScores} from '../services/post-game-scoring.mjs';
 
 function mockPlayer(overrides = {}) {
   return {
@@ -23,7 +23,7 @@ function mockPlayer(overrides = {}) {
   };
 }
 
-test('calculateWeGameScores bounds scores strictly within [3.0, 16.0] with 1 decimal place', () => {
+test('calculatePerformanceScores bounds scores strictly within [3.0, 16.0] with 1 decimal place', () => {
   const winningTeam = Array.from({length: 5}, (_, i) => mockPlayer({
     puuid: `w${i}`,
     teamId: 100,
@@ -50,7 +50,7 @@ test('calculateWeGameScores bounds scores strictly within [3.0, 16.0] with 1 dec
   }));
 
   const players = [...winningTeam, ...losingTeam];
-  const results = calculateWeGameScores({players, winningTeamId: 100, gameDuration: 1800});
+  const results = calculatePerformanceScores({players, winningTeamId: 100, gameDuration: 1800});
 
   assert.equal(results.length, 10);
   for (const p of results) {
@@ -61,7 +61,7 @@ test('calculateWeGameScores bounds scores strictly within [3.0, 16.0] with 1 dec
   }
 });
 
-test('calculateWeGameScores accurately assigns MVP to winning top scorer and SVP to losing top scorer', () => {
+test('calculatePerformanceScores accurately assigns MVP to winning top scorer and SVP to losing top scorer', () => {
   const winMvp = mockPlayer({
     puuid: 'mvp',
     teamId: 100,
@@ -104,7 +104,7 @@ test('calculateWeGameScores accurately assigns MVP to winning top scorer and SVP
     goldEarned: 6000
   }));
 
-  const results = calculateWeGameScores({
+  const results = calculatePerformanceScores({
     players: [winMvp, ...winOthers, lossSvp, ...lossOthers],
     winningTeamId: 100,
     gameDuration: 1800
@@ -120,7 +120,7 @@ test('calculateWeGameScores accurately assigns MVP to winning top scorer and SVP
   assert.ok(mvpResult.score >= 13.5, `MVP score ${mvpResult.score} should be high`);
 });
 
-test('calculateWeGameScores penalizes intentional feeder and does not award tank-king to feeder', () => {
+test('calculatePerformanceScores penalizes intentional feeder and does not award tank-king to feeder', () => {
   const feeder = mockPlayer({
     puuid: 'feeder',
     teamId: 200,
@@ -148,7 +148,7 @@ test('calculateWeGameScores penalizes intentional feeder and does not award tank
     damageTaken: 18000
   }));
 
-  const results = calculateWeGameScores({
+  const results = calculatePerformanceScores({
     players: [feeder, carefulPlayer, ...others],
     winningTeamId: 100,
     gameDuration: 1800
@@ -162,7 +162,7 @@ test('calculateWeGameScores penalizes intentional feeder and does not award tank
   assert.ok(!feederResult.badges.includes('tank-king'), 'Feeder should not be awarded tank-king due to tank efficiency check');
 });
 
-test('calculateWeGameScores guarantees exclusive single-honor badges even with ties', () => {
+test('calculatePerformanceScores guarantees exclusive single-honor badges even with ties', () => {
   // All 10 players have identical 15000 damage and 15000 damage taken
   const players = Array.from({length: 10}, (_, i) => mockPlayer({
     puuid: `tie-${i}`,
@@ -172,7 +172,7 @@ test('calculateWeGameScores guarantees exclusive single-honor badges even with t
     goldEarned: 10000
   }));
 
-  const results = calculateWeGameScores({
+  const results = calculatePerformanceScores({
     players,
     winningTeamId: 100,
     gameDuration: 1800
@@ -187,7 +187,7 @@ test('calculateWeGameScores guarantees exclusive single-honor badges even with t
   assert.equal(tankKings.length, 1, 'Only one player can be tank-king');
 });
 
-test('calculateWeGameScores compensates support role for low damage and 0 CS', () => {
+test('calculatePerformanceScores compensates support role for low damage and 0 CS', () => {
   const support = mockPlayer({
     puuid: 'supp',
     position: 'UTILITY',
@@ -216,7 +216,7 @@ test('calculateWeGameScores compensates support role for low damage and 0 CS', (
   const allies = Array.from({length: 3}, (_, i) => mockPlayer({puuid: `a${i}`, teamId: 100, kills: 4, deaths: 4, assists: 8}));
   const enemies = Array.from({length: 5}, (_, i) => mockPlayer({puuid: `e${i}`, teamId: 200, kills: 2, deaths: 6, assists: 3}));
 
-  const results = calculateWeGameScores({
+  const results = calculatePerformanceScores({
     players: [support, adc, ...allies, ...enemies],
     winningTeamId: 100,
     gameDuration: 1800
@@ -227,7 +227,7 @@ test('calculateWeGameScores compensates support role for low damage and 0 CS', (
   assert.ok(suppResult.badges.includes('vision-king') || suppResult.badges.includes('kp-king') || suppResult.badges.includes('assist-king'));
 });
 
-test('calculateWeGameScores enforces 3.0 floor for AFK players and tolerates invalid durations', () => {
+test('calculatePerformanceScores enforces 3.0 floor for AFK players and tolerates invalid durations', () => {
   const afkPlayer = mockPlayer({
     puuid: 'afk',
     teamId: 200,
@@ -239,7 +239,7 @@ test('calculateWeGameScores enforces 3.0 floor for AFK players and tolerates inv
   });
   const normalPlayers = Array.from({length: 9}, (_, i) => mockPlayer({puuid: `n${i}`, teamId: i < 5 ? 100 : 200}));
 
-  const results = calculateWeGameScores({
+  const results = calculatePerformanceScores({
     players: [afkPlayer, ...normalPlayers],
     winningTeamId: 100,
     gameDuration: 'invalid-duration' // Tolerates invalid input
@@ -248,4 +248,8 @@ test('calculateWeGameScores enforces 3.0 floor for AFK players and tolerates inv
   const afkResult = results.find(p => p.puuid === 'afk');
   assert.equal(afkResult.score, 3.0);
   assert.ok(!Number.isNaN(results[1].score));
+});
+
+test('every displayed breakdown totals its bounded rounded reference score, including an AFK adjustment',()=>{
+ const players=[mockPlayer({teamId:100,isAfk:true}),mockPlayer({teamId:200,kills:Infinity,damageDealt:NaN})];const scored=calculatePerformanceScores({players,winningTeamId:100,gameDuration:1800});for(const player of scored){const total=Object.values(player.breakdown).reduce((sum,n)=>sum+n,0);assert.ok(Number.isFinite(player.score));assert.equal(player.score,Number(Math.max(3,Math.min(16,total)).toFixed(1)));}
 });

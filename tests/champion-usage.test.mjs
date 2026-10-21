@@ -34,5 +34,5 @@ test('shared summaries contain only bounded anonymous counts and do not retain c
  const raw={sampled:2,counts:{Ahri:2,Ashe:0},puuid:'private-player',matches:[{id:123}],notes:'private',token:'private'};
  const clean=cleanChampionUsage(raw);assert.deepEqual(clean,{sampled:2,counts:{Ahri:2}});raw.counts.Ahri=1;assert.equal(clean.counts.Ahri,2);
  for(const value of [{sampled:501,counts:{}},{sampled:1,counts:{Ahri:2}},{sampled:1,counts:{Ahri:-1}},{sampled:1,counts:{Ahri:.5}},{sampled:1,counts:{Ahri:Infinity}},{sampled:1,counts:{'../escape':1}},{sampled:1,counts:[]},{sampled:1,counts:null}])assert.throws(()=>cleanChampionUsage(value));
- assert.throws(()=>championUsageWeights(['Ahri','Ahri']));assert.throws(()=>roomChampionUsageWeights(heroes,Array(11).fill({})));
+ assert.throws(()=>championUsageWeights(['Ahri','Ahri']));assert.throws(()=>roomChampionUsageWeights(heroes,Array(13).fill({})));
 });

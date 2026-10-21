@@ -1,7 +1,10 @@
+import {createRecommendationFamiliarityState} from '../src/core/recommendation-familiarity-state.mjs';
+import {createPreparationContext} from '../src/core/preparation-context.mjs';
 import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
 import {roomFamiliarityContext} from '../src/core/room-familiarity.mjs';
 import {heroClickSelection,configurationChoices} from '../src/core/configuration-choices.mjs';
-import {rankedDraftPolicy,publicRankedDraft} from '../src/core/ranked-draft.mjs';
+import {rankedDraftPolicy,publicRankedDraft,selectionReferenceScope} from '../src/core/ranked-draft.mjs';
+import {resolvedRankedDraft,enemyRolesSignature,changeEnemyRole,enemyRoleContext} from '../src/core/enemy-roles.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -48,10 +51,10 @@ function extract(start,end){
 }
 const syncFunctions=extract('const includePublicPreselection=','const currentParty=')+extract('function clearSelectionUi(){','let activeAppSelect=')+extract('function cancelRecommendation(){','let client=')+
  extract('function queueCompanionRecommendation(){','function acceptWindowLayout(')+
- extract('function recommendationInput(){','function useCatalogResult(')+
+ extract('function recommendationInput(refreshFamiliarity=false){','function useCatalogResult(')+
  extract('async function performSync(','function reflectRunePending(');
 const clickFunctions=extract('function resultCreativePlan(result){','function reconcileCreativePlan(')+
- extract('function taskOwnRole(){','function renderTaskMembers(')+
+ extract('function taskOwnRole(){','function renderTaskMembers(')+extract('function preparationContext(){','function roomRoleContext(){')+
  extract('function memberHeroAction(','function readOnlyPreparation(')+
  extract('function readOnlyPreparation(','function clientControls(')+
  extract('function selectedClientPreparation(','async function loadCatalogCombo(')+
@@ -67,10 +70,11 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
  const timers=new Map(),calls={cancel:0,generated:[],prepared:[],opened:[],readOnly:[],clients:[],stale:0};let nextTimer=0;
  const clock={now};class ClockDate extends Date{static now(){return clock.now;}}
   const context=vm.createContext({
-    rankedDraftPolicy,publicRankedDraft,prepareHeroWithSource,roomFamiliarityContext,room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
+    createPreparationContext,guideSelection:null,rankedDraftPolicy,publicRankedDraft,selectionReferenceScope,resolvedRankedDraft,enemyRolesSignature,prepareHeroWithSource,roomFamiliarityContext,recommendationFamiliarity:createRecommendationFamiliarityState(),room:null,prefetchRankedDraft:async()=>{},history:createHistoryController({request:async()=>{throw Error('Recommendation sync must not query match history');}}),
     ongoing:createOngoingGameController({request:async()=>{throw Error('Recommendation sync must not query ongoing histories');},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]}),
   Date:ClockDate,data,slots,client:current,championUsage:null,saved:{draft:{clientGameId:'123',partyCount:markedPartyCount(slots)},preferences:{autoParty:true,clickPrepare:true,pool:[],poolMode:'prefer',play:{},rolePools:{}},excluded:[]},
   route:'draft',scope:'party',soloRole:'bottom',style:'wild',offset:0,activeCreativePlan:null,unassigned:[],enemy:[],clientBans:[],
+  roomShareRoom:'123456',roomShareSig:'',roomShareWarned:false,roomQuietTimer:null,roomAutoQuiet:false,roomScanResults:[],roomError:'',AUTO_QUIET_MS:60000,
   generating:false,syncing:false,windowLayout:{docked:false},autoRecommendTimer:null,autoRecommendationKey:'',results,resultsSignature:'',
   recommendationRun:0,activeRecommendation:null,cancelRecommendationReveal:noop,
   lastRenderedClient:'',lastMatchupSession:'',lastMatchupSync:'',lastMatchupGame:'123',matchupTargets:new Map(),lastClientRead:'',
@@ -78,7 +82,7 @@ function setup({slots=partySlots(),current=client(),incoming=client(),results=[{
   buildView:null,renderedBuildContext:null,activeAppSelect:null,dragPick:null,document:{activeElement:{matches:()=>false}},
   preparations:createPreparationStore(),clientPreparing:false,runeApplying:false,itemSetPending:'',candidatePreparing:false,
   lastTaskSelection:null,companionPreview:null,companionTab:'recommend',lastCompanionOwn:'',lastCompanionIntent:'',lastCompanionLocked:'',showAllCandidates:false,recommendationError:'',renderedDraftResults:null,disclosureState:createDisclosureState(),renderedDisclosureScope:'',selectionUiReset:false,selectionUiRevision:0,pairRefreshErrors:new Map(),pairRefreshOpen:false,opponentRefreshErrors:new Map(),buildErrors:new Map(),matchupFocusError:null,clickedRoomPlan:null,roomRoleChoice:null,companionScroll:new Map(),draftComparing:false,creativePlanNotice:'',positionClaim:null,
-  recommendationSessionSeed:'test-session',clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
+  recommendationSessionSeed:'test-session',recommendationBatch:0,clickedHeroPreparation:null,preparationRevision:0,preparationPendingKey:'',preparationTarget:null,clientPreparationStatuses:new Map(),guideSyncChain:Promise.resolve(),runeAppliedKeys:createRuneApplicationState(),
   structuredClone,validatePreparation,pregamePhase,restoredRoleClaim,initialPartyCount,selectionPartyCount,markedPartyCount,validPartyCount,savedPartyCount,reconcilePartyRange,movePartyMark,mergeClientSession,applyLobbyPartyRange,reconcileClientDraft,restorePlayerPosition,unassignedPublicPicks,publicClientGameId,CLIENT_POSITION_ROLES,
   currentPlayerSelection,recommendationDraft,comparisonDraft,editableLocalDraft,localPickLocked,confirmedClientDraft,clientRecommendationDraft,activeRoleClaim,recommendationKey,localPickEligibility,manualPlayerSlot,clearClientPicks,matchupTargetKey,
   companionHeroAction,roleClaimChoice,captureCreativePlan,creativeMemberCombo,creativeComboContext,currentCombo,partyRoutePreparations,heroClickSelection,configurationChoices,getBuild,localConfigurationPreview,configurationReadOnly,
@@ -202,11 +206,16 @@ function checkedClient(now,change=noop){
  value.eligibility={context:pickEligibilityContext(value.session),localPlayerCellId:value.session.localPlayerCellId,receivedAt:new Date(now).toISOString(),pickable:[hero('Ashe').key,hero('Ahri').key],disabled:[]};
  return value;
 }
-function candidateSetup({current,incoming,now,teammate=false}){
+function candidateSetup({current,incoming,now,teammate=false,withStats=false}){
  if(teammate)for(const value of [current,incoming])value.session.myTeam.push({cellId:2,championId:hero('Ahri').key,pickState:'locked',assignedPosition:'MIDDLE'});
  const slots=partySlots().map(s=>s.role==='mid'?{...s,champion:'Ahri',locked:true,...(teammate?{clientCellId:2}:{})}:s);
  const [result]=recommend({slots,champions:data.champions,scope:'party',limit:1});
  const s=setup({slots,current,incoming,results:[result],now});
+ if(withStats){
+  s.context.championUsage={revision:1,status:'ready',session:'a'.repeat(32),usage:{sampled:100,counts:{Ashe:100}}};
+  s.context.room={mode:'client',transport:'relay',link:'connected',relayUrl:'wss://one.example',room:'123456',championUsage:true,members:[{self:true,nick:'本人'},{nick:'伙伴',online:true,share:{championUsage:{version:1,mass:.85,usage:{sampled:50,counts:{Lux:50}}}}}]};
+  s.context.resultsSignature=s.context.autoRecommendationKey=recommendationKey(s.context.recommendationInput());
+ }
  return {...s,html:renderResultCard(result,0,data,{favorites:[],preferences:{}},'wild')};
 }
 test('eligibility age alone preserves candidate signatures and own or teammate avatar clicks',async()=>{
@@ -321,9 +330,9 @@ test('one hero click survives a changed reference lane or incompatible ally pick
 });
 test('the first click can learn previously unknown eligibility only when this candidate remains legal in the same draft',async()=>{
  const now=2000000;
- for(const legal of [true,false]){
+ for(const legal of [true,false])for(const withStats of [false,true]){
   const current=client(),incoming=checkedClient(now);if(!legal)incoming.eligibility.disabled=[hero('Ashe').key];
-  const s=candidateSetup({current,incoming,now});
+  const s=candidateSetup({current,incoming,now,withStats});
   if(legal){await s.context.clickBuild(avatar(s.html,'Ashe'));assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].champion,'Ashe');assert.equal(s.calls.clients[0],true);}
   else{await assert.rejects(s.context.clickBuild(avatar(s.html,'Ashe')),/变化/);assert.equal(s.calls.prepared.length,0);}
  }
@@ -477,11 +486,22 @@ test('awaited public draft saves recover only known derived races without replay
  }
 });
 
+test('an old-game explicit reference queued behind a real persist cannot migrate onto the new game',async()=>{
+ const {context:c}=setup({slots:createSlots()}),before=defaultState();before.draft={slots:createSlots(),scope:'party',style:'wild',soloRole:'bottom',clientGameId:'123'};
+ const accepted=structuredClone(before);accepted.draft.clientGameId='124';accepted.draft.scope='context';accepted.draft.referenceQueue=420;
+ let entered,release;const started=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve),submissions=[];
+ Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,itemSetStatuses:new Map(),rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,dataState:{selectSource:noop},guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+  api:{...c.api,saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;return {state:accepted,revision:2};}return {state:snapshot,revision:3};}}});
+ vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
+ const first=c.persist({derived:true,throwOnError:true});await started;c.saved.draft.scopeSelection='party';c.scope='party';c.saved.preferences.autoCheck=false;const next=c.persist({throwOnError:true});release();await first;await next;
+ assert.equal(submissions.length,2);assert.equal(submissions[1].draft.clientGameId,'124');assert.equal(submissions[1].draft.scope,'context');assert.equal(submissions[1].draft.scopeSelection,undefined);assert.equal(submissions[1].draft.referenceQueue,420);assert.equal(submissions[1].preferences.autoCheck,false);assert.equal(c.saved.draft.scopeSelection,undefined);assert.equal(c.pendingSaves.size,0);
+});
+
 test('a rejected derived slot cannot ride a later different-lane save over another window selection',async()=>{
  const {context:c}=setup({slots:createSlots()}),before=defaultState();before.draft={slots:createSlots(),scope:'party',style:'wild',soloRole:'bottom',clientGameId:'123'};
  let entered,release;const started=new Promise(resolve=>entered=resolve),gate=new Promise((_,reject)=>release=reject),submissions=[];
  const accepted=structuredClone(before);accepted.draft.slots.find(slot=>slot.role==='bottom').champion='Ashe';
- Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,selectBuildSource:noop,guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+ Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,dataState:{selectSource:noop},guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
   api:{...c.api,ready:async()=>({state:accepted,revision:2}),saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;}return {state:snapshot,revision:3};}}});
  vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
  c.slots.find(slot=>slot.role==='bottom').champion='Ahri';const first=c.persist({derived:true,throwOnError:true});await started;
@@ -497,7 +517,7 @@ test('a queued real hero swap retains locks and bindings after the earlier obser
   Object.assign(before.draft.slots.find(slot=>slot.role==='top'),{champion:'Garen',locked:true,clientCellId:0});
   const {context:c}=setup({slots:structuredClone(before.draft.slots)});let entered,release;
   const started=new Promise(resolve=>entered=resolve),gate=new Promise((_,reject)=>release=reject),submissions=[];
-  Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,selectBuildSource:noop,guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
+  Object.assign(c,{saved:structuredClone(before),savedBase:structuredClone(before),slots:structuredClone(before.draft.slots),pendingSaves:new Set(),stateRevision:0,rebaseWindowState,rollbackUnacceptedState,creativePlanCompatible,dataState:{selectSource:noop},guideSyncPending:0,guideSyncBase:null,guideSelection:null,initialSlots:createSlots,
    api:{...c.api,ready:async()=>({state:before,revision:2}),saveState:async snapshot=>{submissions.push(structuredClone(snapshot));if(submissions.length===1){entered();await gate;}return {state:snapshot,revision:3};}}});
   vm.runInContext(extract('function restoreRejectedSave(','function persist(')+extract('function persist(','function acceptSavedState(')+extract('function acceptSavedState(','function drainExternalState('),c);
   Object.assign(c.slots.find(slot=>slot.role==='bottom'),{champion:'Ahri',locked:true,clientCellId:4});
@@ -564,7 +584,7 @@ test('adopting either a room proposal or a shared lineup exits comparison and ex
   Object.assign(c,{draftComparing:true,room:{members:[{nick:'朋友',share}]},roomBallotBoard:()=>[row],roomLineupIdentity:()=> 'friend-share',
    adoptRoomLineup:()=>({slots:c.slots,unassigned:[],creativePlan:plan,configurations:[selection],conflicts:[],configurationErrors:[],loadedMembers:3}),
    publishRoomShare:async()=>{},companionScroll:new Map(),lastAdoptedRoomShare:'',roleName:r=>r});
-  const body=kind==='ballot'?extract("if(action==='room-adopt-ballot'){","if(action==='room-publish')"):extract("if(action==='room-adopt-lineup'){","if(action==='room-build')");
+  const body=kind==='ballot'?extract("if(action==='room-adopt-ballot'){","if(action==='room-copy-relay')"):extract("if(action==='room-adopt-lineup'){","if(action==='room-build')");
   vm.runInContext(`async function adoptFromRoom(el){const action='room-adopt-${kind}';${body}}`,c);
   await c.adoptFromRoom({dataset:{key:'friend-key',member:'朋友',share:'friend-share'}});
   assert.equal(c.draftComparing,false,kind);assert.equal(c.activeCreativePlan.id,'friend-plan');assert.equal(c.companionTab,'recommend');
@@ -649,7 +669,7 @@ test('one ranking-avatar click moves an old unbound hero plan only after success
   assert.equal(c.slots.find(s=>s.role==='mid').champion,hovered?null:'Ashe');
   assert.equal(c.slots.find(s=>s.role==='bottom').champion,hovered?'Ashe':null);
   assert.deepEqual(structuredClone(c.slots.find(s=>s.role==='support')),before.find(s=>s.role==='support'));
-  assert.ok(writes.length>=2);assert.equal(calls.prepared[0].selection.id,'Ashe');
+  assert.ok(writes.length>=1);assert.deepEqual(writes.at(-1).draft.slots,validateState({...defaultState(),draft:{slots:c.slots,scope:'party',style:'wild',soloRole:'bottom'}}).draft.slots);assert.equal(calls.prepared[0].selection.id,'Ashe');
  }
 });
 
@@ -680,14 +700,16 @@ test('the main room view context follows reliable public hovers without persisti
 });
 
 test('a click survives an unrelated teammate pick while adopting its fresh public champion',async()=>{
+ for(const withStats of [false,true]){
  const now=2000000,current=checkedClient(now),incoming=checkedClient(now+16001);
  incoming.session.myTeam.push({cellId:2,championId:hero('Garen').key,assignedPosition:'TOP'});
  incoming.eligibility.context=pickEligibilityContext(incoming.session);
- const s=candidateSetup({current,incoming,now});
+ const s=candidateSetup({current,incoming,now,withStats});if(withStats)s.clock.now+=16001;
  await s.context.clickBuild(avatar(s.html,'Ashe'));
  assert.equal(s.calls.prepared.length,1);assert.equal(s.calls.prepared[0].champion,'Ashe');
  assert.equal(s.context.slots.find(slot=>slot.role==='top').champion,'Garen');
  assert.equal(s.context.slots.find(slot=>slot.role==='top').clientCellId,2);
+ }
 });
 
 test('a new game clears confirmed player positions in every recommendation scope, including after lobby cleanup',()=>{
@@ -784,7 +806,7 @@ test('without an adopted member the current saved configuration wins over an old
  const current=client();current.session.myTeam[0].championId=hero('Ahri').key;
  const {context:c,calls}=setup({current});
  const saved={selection:{id:'Ahri',role:'bottom',mode:'rift',runeId:'loaded-favorite'}},preview={selection:{id:'Ahri',role:'bottom',mode:'rift',runeId:'older-hover'}};
- c.myPreparation=()=>saved;c.companionPreparation=()=>preview;
+ c.rememberedPreparation=()=>saved.selection;c.currentPickIntent=()=>({selection:preview.selection,positionKnown:true});
  assert.equal(c.ownTaskPreparation().selection.runeId,'loaded-favorite');assert.equal(calls.prepared.length,0);
 });
 
@@ -1007,15 +1029,106 @@ async function prepareRetainedHover(docked){
 }
 test('unknown own lane and a teammate preview allow one independent candidate preparation in both windows',async()=>{await prepareRetainedHover(false);await prepareRetainedHover(true);});
 
+test('a fresh candidate avatar dispatches in both windows while full sync and lineup saves are blocked',async()=>{
+ for(const docked of [false,true]){
+  const now=Date.now(),current=checkedClient(now),s=setup({slots:createSlots(),current,incoming:structuredClone(current),now,results:[]}),c=s.context,events=[];
+  c.saved.preferences.pool=['Ahri','Ashe','Braum'];c.saved.preferences.poolMode='only';c.results=recommend(c.recommendationInput());c.resultsSignature=recommendationKey(c.recommendationInput());
+  const html=renderResultCard(c.results[0],0,data,{favorites:[],preferences:{}},'wild');
+  c.windowLayout.docked=docked;let release;const gate=new Promise(resolve=>release=resolve);
+  c.sync=async()=>{events.push('sync');await gate;};c.persist=async()=>{events.push('save');await gate;};
+  c.api.prepareSelection=async()=>{events.push('dispatch');throw Error('isolated stop after dispatch');};
+  const pending=assert.rejects(c.clickBuild(avatar(html,'Ashe')),/isolated stop after dispatch/);
+  await new Promise(resolve=>setImmediate(resolve));const atClick=[...events];release();await pending;
+  assert.ok(atClick.includes('dispatch'),'The real candidate entry must not await status or disk: '+JSON.stringify({atClick,events,status:localPickEligibility(current,c.slots,data.champions,{scope:c.scope,soloRole:c.soloRole,now}).status}));assert.ok(!atClick.includes('sync'));assert.ok(c.activeCreativePlan,'Keep whole-lineup adoption');
+  assert.equal(c.clientPreparing,false);assert.equal(c.candidatePreparing,false);
+ }
+});
+
+test('an enemy role change prevents the old actual worker completion from publishing recommendations',async()=>{
+ const current=client();current.game={...current.game,queueId:420,mapId:11,gameMode:'CLASSIC'};current.session.theirTeam=['Darius','LeeSin','Yasuo','Jinx','Leona'].map((id,i)=>({cellId:i+5,championId:hero(id).key}));
+ const f=setup({current,incoming:structuredClone(current)}),c=f.context;let resolve;const gate=new Promise(done=>resolve=done);c.calculateRecommendation=()=>gate;c.resultCreativePlan=()=>assert.fail('Old enemy-role results were committed');
+ vm.runInContext(extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);const pending=c.generate(),oldKey=recommendationKey(c.recommendationInput());
+ c.saved.draft.enemyRoles=changeEnemyRole(current,data,[],{gameId:'123',cellId:5,champion:'Darius',role:'mid',context:enemyRoleContext(current,data)});
+ assert.notEqual(recommendationKey(c.recommendationInput()),oldKey);resolve([{id:'old enemy roles'}]);await pending;assert.equal(c.results.some(row=>row.id==='old enemy roles'),false);
+});
+
 test('manual recommendation cancels the queued automatic run while new inputs can still schedule another',async()=>{
  const s=setup({results:[]}),c=s.context;let calculations=0;
  c.autoRecommendationKey='';c.resultsSignature='';c.recommendationError='';c.showAllCandidates=false;
  c.queueCompanionRecommendation();assert.equal(s.timers.size,1,'Expected an automatic recommendation waiting to run');
  c.calculateRecommendation=async()=>{calculations++;return [{id:'manual candidate'}];};c.resultCreativePlan=()=>null;
- vm.runInContext(extract('async function generate(next=false){','const sync=createClientSync'),c);
+ vm.runInContext(extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);
  await c.generate();
  assert.equal(calculations,1);assert.equal(s.timers.size,0,'A completed manual recommendation must not leave a duplicate automatic worker queued');
  assert.equal(c.autoRecommendTimer,null);assert.equal(c.generating,false);assert.equal(c.results[0].id,'manual candidate');
  c.queueCompanionRecommendation();assert.equal(s.timers.size,0,'The unchanged accepted recommendation needs no duplicate calculation');
  c.saved.excluded.push('Yone');c.queueCompanionRecommendation();assert.equal(s.timers.size,1,'Changed inputs must still be recommended automatically');
+});
+
+test('actual app stages own and every room member scan until reroll without clearing rows or cancelling the worker',async()=>{
+ const f=setup({results:[]}),c=f.context,usage=n=>({sampled:n,counts:{Ahri:n}}),shared=n=>({version:1,mass:.85,usage:usage(n)});
+ c.client.party={status:'known',members:[{local:true,cellId:1}]};
+ c.championUsage={revision:1,status:'loading',session:'a'.repeat(32),usage:usage(1)};
+ c.room={mode:'client',transport:'relay',link:'connected',relayUrl:'wss://room.example',room:'123456',championUsage:true,members:[{self:true,nick:'我'},...['伙伴甲','伙伴乙'].map(nick=>({nick,online:true,share:{championUsage:shared(1)}}))]};
+ Object.assign(c,{scheduleRoomPublish(){},roomSharePayload:()=>({lineup:[],pick:null})});
+ vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function applyRoomSnapshot(','function rememberPreparation(')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);
+ const inputs=[];let finish;c.calculateRecommendation=input=>{inputs.push(input);return new Promise(resolve=>finish=resolve);};c.resultCreativePlan=()=>null;
+ c.results=[{id:'keep-visible'}];c.resultsSignature=recommendationKey(c.recommendationInput(true));
+ const pending=c.generate(false,true),signature=c.resultsSignature;
+ for(let n=25;n<=500;n+=25){
+  c.acceptChampionUsage({revision:n,status:n===500?'ready':'loading',session:'a'.repeat(32),usage:usage(n)});
+  const next=structuredClone(c.room);for(const peer of next.members.filter(m=>!m.self))peer.share.championUsage=shared(n);c.applyRoomSnapshot(next);
+  assert.equal(recommendationKey(c.recommendationInput()),signature);assert.equal(c.generating,true);assert.equal(c.results[0].id,'keep-visible');
+ }
+ assert.equal(f.calls.cancel,0);assert.equal(inputs.length,1);assert.equal(f.timers.size,0);
+ assert.deepEqual(inputs[0].roomFamiliarity.map(m=>m.usage.sampled),[1,1,1]);
+ finish([{id:'same-snapshot'}]);await pending;assert.equal(c.results[0].id,'same-snapshot');
+ const reroll=c.generate(true);assert.deepEqual(inputs[1].roomFamiliarity.map(m=>m.usage.sampled),[500,500,500]);finish([{id:'latest-batch'}]);await reroll;
+ assert.equal(c.results[0].id,'latest-batch');assert.equal(inputs[1].offset,0);assert.notEqual(inputs[1].randomSeed,inputs[0].randomSeed);
+ const again=c.generate(true);assert.equal(inputs[2].offset,0);assert.notEqual(inputs[2].randomSeed,inputs[1].randomSeed);finish([{id:'another-batch'}]);await again;
+ // An automatic retry/route repaint keeps the chosen snapshot, even if a new
+ // peer batch arrives after the user refresh. A real preference edit adopts it.
+ const next=structuredClone(c.room);next.members[1].share.championUsage=shared(100);c.applyRoomSnapshot(next);
+ assert.deepEqual(c.recommendationInput().roomFamiliarity.map(m=>m.usage.sampled),[500,500,500]);
+ c.saved.preferences.familiarityMass=.6;assert.ok(c.recommendationInput().roomFamiliarity.some(m=>m.usage.sampled===100));
+});
+
+test('prospective single-role familiarity is revoked when its ownership proof becomes ambiguous',async()=>{
+ for(const change of ['multi-target','duplicate-cell','foreign-binding']){
+  const current=client();current.session.myTeam[0].assignedPosition='';
+  const f=setup({slots:createSlots().map(s=>({...s,party:s.role==='support'})),current,results:[]}),c=f.context;
+  c.scope='context';c.soloRole='';c.championUsage={revision:1,status:'ready',session:'a'.repeat(32),usage:{sampled:10,counts:{Pyke:10}}};
+  vm.runInContext(extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);
+  const initial=c.recommendationInput(true);assert.deepEqual(Object.keys(initial.familiarityByRole),['support']);const key=recommendationKey(initial);
+  let finish;c.calculateRecommendation=()=>new Promise(resolve=>finish=resolve);c.resultCreativePlan=()=>assert.fail('Expired ownership accepted');
+  const pending=c.generate(false,true);
+  if(change==='multi-target')c.slots=c.slots.map(s=>s.role==='bottom'?{...s,party:true}:s);
+  if(change==='duplicate-cell')c.client.session.myTeam.push({...c.client.session.myTeam[0]});
+  if(change==='foreign-binding')c.slots=c.slots.map(s=>s.role==='support'?{...s,clientCellId:2}:s);
+  assert.deepEqual(Object.keys(c.recommendationInput().familiarityByRole),[],change);assert.notEqual(recommendationKey(c.recommendationInput()),key,change);
+  finish([{id:'late'}]);await pending;assert.equal(c.results.length,0,change);
+ }
+});
+
+test('a new round clears actual Hex choices while preserving the hero wish list',async()=>{
+ const current=client(),incoming=client();current.mode=incoming.mode={id:'hex'};incoming.session.gameId=124;incoming.game.gameId='124';
+ const {context:c}=setup({current,incoming});c.itemSetStatuses=new Map();c.hexHero='Ashe';c.hexOptions=[1048,2005];c.hexOwned=[1047];c.hexSelected=[1048];
+ await c.performSync(false,true);assert.equal(c.client.connected,true,c.client.message);assert.equal(c.client.session.gameId,124);assert.deepEqual(Array.from(c.hexOptions),[]);assert.deepEqual(Array.from(c.hexOwned),[]);assert.deepEqual(c.hexSelected,[1048]);assert.equal(c.hexHero,'Ashe');
+});
+
+test('a frozen room profile revokes immediately and rejects its late worker on withdrawal or endpoint change',async()=>{
+ for(const change of ['withdraw','offline','endpoint','account']){
+  const f=setup({results:[]}),c=f.context;c.client.party={status:'known',members:[{local:true,cellId:1}]};
+  c.championUsage={revision:1,status:'ready',session:'a'.repeat(32),usage:{sampled:10,counts:{Ashe:10}}};
+  c.room={mode:'client',transport:'relay',link:'connected',relayUrl:'wss://one.example',room:'123456',championUsage:true,members:[{self:true,nick:'我'},{nick:'伙伴',online:true,share:{championUsage:{version:1,mass:.85,usage:{sampled:10,counts:{Lux:10}}}}}]};
+  Object.assign(c,{scheduleRoomPublish(){},roomSharePayload:()=>({lineup:[],pick:null})});
+  vm.runInContext(extract('function acceptChampionUsage(','const historyTooltips=')+extract('function applyRoomSnapshot(','function rememberPreparation(')+extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);
+  let finish;c.calculateRecommendation=()=>{c.activeRecommendation=f.worker;return new Promise(resolve=>finish=resolve);};c.resultCreativePlan=()=>assert.fail('Expired snapshot committed');
+  const pending=c.generate(false,true);const next=structuredClone(c.room);
+  if(change==='withdraw')next.members[1].share.championUsage=null;
+  if(change==='offline')next.members[1].online=false;
+  if(change==='endpoint')next.relayUrl='wss://two.example';
+  if(change==='account')c.acceptChampionUsage({...c.championUsage,revision:2,session:'b'.repeat(32)});else c.applyRoomSnapshot(next);
+  assert.equal(f.calls.cancel,1,change);finish([{id:'late'}]);await pending;assert.equal(c.results.length,0,change);
+ }
 });

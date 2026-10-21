@@ -1,6 +1,9 @@
 const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('buddy',Object.freeze({
  bootstrap:()=>ipcRenderer.invoke('bootstrap'),
+ hexRound:value=>ipcRenderer.invoke('hex-round',value),
+ onHexRound:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('hex-round',listener);return()=>ipcRenderer.removeListener('hex-round',listener);},
+ dataSnapshot:()=>ipcRenderer.invoke('data-snapshot'),
  windowInfo:()=>ipcRenderer.invoke('window-info'),
  presentation:change=>ipcRenderer.invoke('presentation',change),
  onPresentation:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('presentation-update',listener);return()=>ipcRenderer.removeListener('presentation-update',listener);},
@@ -12,6 +15,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
   matchHistory:(operation,payload)=>ipcRenderer.invoke('match-history',operation,payload),
  championUsage:()=>ipcRenderer.invoke('champion-usage'),
  refreshChampionUsage:()=>ipcRenderer.invoke('champion-usage-refresh'),
+ importChampionUsage:()=>ipcRenderer.invoke('champion-usage-import'),
  onChampionUsage:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('champion-usage',listener);return()=>ipcRenderer.removeListener('champion-usage',listener);},
  ready:()=>ipcRenderer.invoke('main-ready'),
  onClient:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('client-update',listener);return()=>ipcRenderer.removeListener('client-update',listener);},
@@ -29,6 +33,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  deleteAppUpdate:()=>ipcRenderer.invoke('app-update-delete'),
  onAppUpdate:handler=>{const listener=(_,value)=>handler(value);ipcRenderer.on('app-update-progress',listener);return()=>ipcRenderer.removeListener('app-update-progress',listener);},
  refreshRankings:source=>ipcRenderer.invoke('refresh-rankings',source),
+ nationalReference:input=>ipcRenderer.invoke('national-reference',input),
  catalogSource:url=>ipcRenderer.invoke('catalog-source',url),
  catalogCheck:()=>ipcRenderer.invoke('catalog-check'),
  catalogPreview:raw=>ipcRenderer.invoke('catalog-preview',raw),
@@ -44,6 +49,7 @@ contextBridge.exposeInMainWorld('buddy',Object.freeze({
  stageSelection:value=>ipcRenderer.invoke('stage-selection',value),
  cancelPreselection:()=>ipcRenderer.invoke('cancel-preselection'),
  partyRange:value=>ipcRenderer.invoke('party-range',value),
+ enemyRole:value=>ipcRenderer.invoke('enemy-role',value),
  onPreselection:callback=>ipcRenderer.on('preselection-status',(_event,value)=>callback(value)),
  importItemSet:itemSet=>ipcRenderer.invoke('import-item-set',itemSet),
  exportItemSet:itemSet=>ipcRenderer.invoke('export-item-set',itemSet),

@@ -89,8 +89,9 @@ async function run(){
  assert.ok(accepted.preparations.findLast(s=>s.id==='Seraphine'&&s.role==='bottom'&&s.comboId==='double-song').conditions.includes('ap'),'Saved preparation lost the accepted guide choice');
  assert.ok((await active()).conditions.includes('ap'),'Main window reverted the accepted guide choice');
  await capture('prepared-configuration.png');
- // A saved Hex context must survive ordinary equipment changes and reopening.
- await js('window.buddy.openGuide({id:"Ashe",role:"bottom",mode:"hex",augmentIds:[1048],compareIds:[1048,1002],ownedAugmentIds:[1047]})');
+ // Current-round Hex notes survive configuration edits and guide reopening;
+ // seed the canonical owner instead of importing a previous game through a build.
+ await js(`(async()=>{await window.buddy.hexRound({operation:'select',hero:'Ashe'});for(const [operation,id]of [['own',1047],['compare',1048],['compare',1002]]){const snapshot=await window.buddy.hexRound(),record=snapshot.manual;await window.buddy.hexRound({...record,operation,id});}return window.buddy.openGuide({id:'Ashe',role:'bottom',mode:'hex',augmentIds:[1048]});})()`);
  await gjs('window.guide.control("main")');await until(()=>js('document.querySelector(".champ-summary")?.textContent.includes("艾希")'),'Hex return missing');
  await click('[data-action=build-condition][data-condition=heal]');
  await until(async()=>{const s=(await state()).guide.selection;return s.conditions.includes('heal')&&s.compareIds?.length===2;},'Hex context lost on sync');
@@ -119,12 +120,12 @@ async function run(){
  await until(()=>js('document.querySelector("#toast").classList.contains("error")'),'Expected replacement failure missing');
  assert.deepEqual(await members(),before);await until(()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false'),'Replacement failure left recommendation pending');assert.equal(await js('document.querySelector("[data-action=use-result]").disabled'),false);
  await click('[data-action=close]');
- await js('window.testOriginalWorker=window.Worker;window.Worker=class extends window.testOriginalWorker{postMessage(...args){setTimeout(()=>super.postMessage(...args),350);}};true');
+ await js('window.testOriginalWorkerPost=Worker.prototype.postMessage;Worker.prototype.postMessage=function(...args){setTimeout(()=>window.testOriginalWorkerPost.apply(this,args),350);};true');
  await click('[data-action=recommend]');assert.equal(await js('document.querySelector("[data-action=recommend],[data-action=reroll]").disabled'),true);
  await click('[data-action=exclusions]');await click('[data-action=pick-champion][data-id=Ashe]');await delay(700);
  await until(()=>js('document.querySelector("[data-action=recommend],[data-action=reroll]")?.disabled===false'),'Updated exclusions left recommendation pending');
  assert.equal(await js('document.querySelectorAll(".result-card").length'),0,'Preference change allowed obsolete results after the only available champion was excluded');
- await js('window.Worker=window.testOriginalWorker;delete window.testOriginalWorker');await click('[data-action=close]');
+ await js('Worker.prototype.postMessage=window.testOriginalWorkerPost;true');await click('[data-action=close]');
  const bootstrapData=(await js('window.buddy.bootstrap()')).data,champion=bootstrapData.champions.find(c=>c.id==='Garen');
  let publicFixture={connected:true,phase:'ChampSelect',message:'测试公开选人',mode:{id:'rift',label:'峡谷'},game:{gameId:'6601'},session:{gameId:'6601',localPlayerCellId:1,myTeam:[{cellId:1,championId:champion.key,assignedPosition:'TOP',championPickIntent:0}],theirTeam:[],bans:[],actions:[[{id:4,type:'pick',actorCellId:1,championId:champion.key,completed:false,isInProgress:true}]]}};
  const prepares=[];let publicReads=0;ipcMain.removeHandler('client-status');ipcMain.handle('client-status',()=>{publicReads++;return structuredClone(publicFixture);});

@@ -2,8 +2,10 @@ import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {collectServerData} from '../services/server-data-collector.mjs';
 import {publishServerData} from '../services/server-data-publish.mjs';
+import {loadServerData} from '../services/server-data-store.mjs';
+import {publishNationalFeed} from '../services/national-feed-publish.mjs';
 
-const {values}=parseArgs({options:{root:{type:'string'},seed:{type:'string'},'max-champions':{type:'string'},'public-root':{type:'string'},key:{type:'string'},'legacy-only':{type:'boolean'}}});
+const {values}=parseArgs({options:{root:{type:'string'},seed:{type:'string'},'max-champions':{type:'string'},'public-root':{type:'string'},key:{type:'string'},'legacy-only':{type:'boolean'},'national-rankings':{type:'boolean'}}});
 if(!values.root||!values.seed)throw Error('用法：node scripts/collect-server-data.mjs --root <候选保存目录> --seed <基线资料目录>');
 const root=path.resolve(values.root),seedRoot=path.resolve(values.seed),maxChampions=values['max-champions']===undefined?null:Number(values['max-champions']);
 if(root===seedRoot||root.startsWith(seedRoot+path.sep)||seedRoot.startsWith(root+path.sep))throw Error('候选目录与基线目录不能重叠');
@@ -20,4 +22,8 @@ process.exitCode=status.state==='ok'?0:status.state==='partial'?2:1;
 if(status.state==='ok'&&values['public-root']){
  const published=await publishServerData({root,publicRoot:values['public-root'],keyFile:values.key,generations:!values['legacy-only']});
  console.log(JSON.stringify({published:published.changed,release:published.manifest.release,patch:published.manifest.patch,...(published.generation?{generation:{changed:published.generation.changed,refreshed:published.generation.refreshed,version:published.generation.manifest.version,release:published.generation.manifest.release}}:{})}));
+}
+if(values['national-rankings']&&values['public-root']&&maxChampions===null){
+ try{const current=await loadServerData(root);if(!current)throw Error('缺少已验证基础资料');const national=await publishNationalFeed({data:current.bundle.game,publicRoot:values['public-root'],keyFile:values.key});console.log(JSON.stringify({nationalRankings:national}));}
+ catch(error){console.error(JSON.stringify({nationalRankingsError:String(error.message||'国服资料发布失败').slice(0,240),retainedPrevious:true}));if(!process.exitCode)process.exitCode=2;}
 }

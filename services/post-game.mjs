@@ -1,120 +1,50 @@
-import {discoverClient, lcuRequest} from './lcu.mjs';
-import {calculateWeGameScores} from './post-game-scoring.mjs';
-import {QUEUES, queueName} from '../src/core/match-history/model.mjs';
+import {discoverClient,lcuRequest} from './lcu.mjs';
+import {calculatePerformanceScores} from './post-game-scoring.mjs';
+import {queueName} from '../src/core/match-history/model.mjs';
+const stat=(s,...keys)=>{for(const key of keys){const v=s[key];if((typeof v==='number'||typeof v==='string'&&v.trim()!=='')&&Number.isFinite(Number(v))&&Number(v)>=0)return Number(v);}return null;};
+const id=value=>/^[1-9]\d{0,19}$/.test(String(value??''))?String(value):'';
+const samePlayer=(p,own)=>!!(own.puuid&&p.puuid===own.puuid||id(own.summonerId)&&id(p.summonerId)===id(own.summonerId));
 
-/**
- * Fetch and parse the latest EndOfGame stats block from LCU, compute WeGame scores,
- * and format a clean settlement report.
- */
-export async function fetchPostGameReport({installPath = '', ownPuuid = '', champions = []} = {}, {discover = discoverClient, request = lcuRequest} = {}) {
-  try {
-    const auth = await discover(installPath);
-    if (!auth?.port) return null;
-
-    const raw = await request(auth, '/lol-end-of-game/v1/eog-stats-block', 'GET');
-    // Must have a valid gameId and at least two teams
-    if (!raw || !raw.gameId || !Array.isArray(raw.teams) || raw.teams.length < 2) return null;
-
-    let selfId = ownPuuid;
-    if (!selfId) {
-      const own = await request(auth, '/lol-summoner/v1/current-summoner', 'GET').catch(() => null);
-      selfId = own?.puuid || '';
-    }
-
-    const champLookup = new Map(champions.map(c => [Number(c.key), c]));
-    const winTeamRaw = raw.teams.find(t => t.isWinningTeam) || raw.teams[0];
-    const winningTeamId = winTeamRaw?.teamId || 100;
-
-    const allPlayers = [];
-    for (let idx = 0; idx < raw.teams.length; idx++) {
-      const t = raw.teams[idx];
-      const tid = t.teamId || (idx === 0 ? 100 : 200);
-
-      for (const p of (t.players || [])) {
-        if (!p) continue;
-        const s = p.stats || {};
-        const items = [0, 1, 2, 3, 4, 5, 6].map(i => Number(s['ITEM' + i] ?? s['item' + i]) || 0);
-        const cs = (Number(s.MINIONS_KILLED ?? s.minionsKilled ?? s.totalMinionsKilled) || 0) +
-                   (Number(s.NEUTRAL_MINIONS_KILLED ?? s.neutralMinionsKilled) || 0);
-        const champ = champLookup.get(Number(p.championId));
-
-        // Dual identification: puuid matching + native LCU isLocalPlayer flag
-        const isSelf = !!((selfId && p.puuid === selfId) || p.isLocalPlayer);
-        if (isSelf && !selfId && p.puuid) {
-          selfId = p.puuid;
-        }
-
-        allPlayers.push({
-          puuid: p.puuid || '',
-          // Modern Riot ID naming precedence
-          summonerName: p.riotIdGameName || p.gameName || p.summonerName || '玩家',
-          championId: Number(p.championId) || 0,
-          championKey: champ?.id || String(p.championId || ''),
-          championName: champ?.name || p.skinName || '英雄',
-          skinName: p.skinName || '',
-          level: Number(p.level) || Number(s.LEVEL) || Number(s.CHAMP_LEVEL) || 1,
-          position: String(s.POSITION || p.selectedPosition || p.detectedTeamPosition || '').toUpperCase(),
-          teamId: tid,
-          isSelf,
-          kills: Number(s.CHAMPIONS_KILLED) || 0,
-          deaths: Number(s.NUM_DEATHS) || 0,
-          assists: Number(s.ASSISTS) || 0,
-          damageDealt: Number(s.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS ?? s.totalDamageDealtToChampions) || 0,
-          damageTaken: Number(s.TOTAL_DAMAGE_TAKEN ?? s.totalDamageTaken) || 0,
-          goldEarned: Number(s.GOLD_EARNED ?? s.goldEarned) || 0,
-          cs,
-          visionScore: Number(s.VISION_SCORE ?? s.visionScore) || 0,
-          turretDamage: Number(s.DAMAGE_DEALT_TO_TURRETS ?? s.damageDealtToTurrets) || 0,
-          heal: Number(s.TOTAL_HEAL ?? s.totalHeal) || 0,
-          ccTime: Number(s.TIME_CCING_OTHERS ?? s.timeCCingOthers) || 0,
-          isAfk: !!(s.WAS_SURRENDER_OR_AFK || p.leaver || p.isLeaver),
-          items
-        });
-      }
-    }
-
-    if (allPlayers.length === 0) return null;
-
-    const scored = calculateWeGameScores({
-      players: allPlayers,
-      winningTeamId,
-      gameDuration: Number(raw.gameLength || raw.gameDuration) || 1800
-    });
-
-    const ownPlayer = scored.find(p => p.isSelf);
-    // Never blindly assume winningTeamId === 100 is a victory for the player
-    const isWin = ownPlayer ? (ownPlayer.teamId === winningTeamId) : false;
-
-    const teams = raw.teams.map((t, idx) => {
-      const tid = t.teamId || (idx === 0 ? 100 : 200);
-      const tPlayers = scored.filter(p => p.teamId === tid);
-      const tStats = t.stats || {};
-      return {
-        teamId: tid,
-        isWin: tid === winningTeamId,
-        totalKills: tPlayers.reduce((sum, p) => sum + (p.kills || 0), 0),
-        totalDamage: tPlayers.reduce((sum, p) => sum + (p.damageDealt || 0), 0),
-        totalGold: tPlayers.reduce((sum, p) => sum + (p.goldEarned || 0), 0),
-        objectives: {
-          dragon: Number(tStats.DRAGON_KILLS ?? tStats.dragonKills) || 0,
-          baron: Number(tStats.BARON_KILLS ?? tStats.baronKills) || 0,
-          tower: Number(tStats.TURRETS_KILLED ?? tStats.towerKills) || 0
-        },
-        players: tPlayers
-      };
-    });
-
-    return {
-      gameId: raw.gameId,
-      gameMode: raw.gameMode || 'CLASSIC',
-      queueId: raw.queueId || 0,
-      queueName: QUEUES[raw.queueId] || raw.queueName || (raw.queueId ? queueName(raw.queueId) : '对局'),
-      gameDuration: Number(raw.gameLength || raw.gameDuration) || 1800,
-      isWin,
-      ownPuuid: selfId,
-      teams
-    };
-  } catch {
-    return null;
-  }
+// Raw results never leave the authenticated local connection. No match is saved.
+// Only complete, standard two-team Rift games are eligible for this local model.
+export function parsePostGameReport(raw,{own,game={},champions=[]}={}){
+ if(!raw||!id(raw.gameId)||game.gameId!==undefined&&id(game.gameId)!==id(raw.gameId))return null;
+ const mode=raw.gameMode??game.gameMode,queue=raw.queueId??game.queueId,map=raw.mapId??game.mapId;
+ if(mode!=='CLASSIC'||![400,420,430,440,480,490,700].includes(Number(queue))||map!==undefined&&Number(map)!==11||raw.queueId!==undefined&&game.queueId!==undefined&&Number(raw.queueId)!==Number(game.queueId))return null;
+ const duration=stat(raw,'gameLength','gameDuration');
+ if(duration===null||duration<300||duration>21600||!Array.isArray(raw.teams)||raw.teams.length!==2)return null;
+ const teams=raw.teams;
+ if(!teams.every(t=>[100,200].includes(t.teamId)&&typeof t.isWinningTeam==='boolean'&&Array.isArray(t.players)&&t.players.length===5)||new Set(teams.map(t=>t.teamId)).size!==2||teams.filter(t=>t.isWinningTeam).length!==1)return null;
+ if(!own||!own.puuid&&!id(own.summonerId))return null;
+ const champs=new Map(champions.map(c=>[Number(c.key),c])),players=[];
+ for(const team of teams)for(const p of team.players){
+  if(!p||!Number.isInteger(p.championId)||p.championId<=0||!p.stats||typeof p.stats!=='object'||Array.isArray(p.stats))return null;
+  const s=p.stats,champ=champs.get(p.championId);
+  const row={puuid:typeof p.puuid==='string'?p.puuid:'',summonerId:id(p.summonerId),summonerName:String(p.riotIdGameName||p.gameName||p.summonerName||'玩家').slice(0,96),championId:p.championId,championKey:champ?.id||'',championName:champ?.name||'英雄',teamId:team.teamId,isSelf:samePlayer(p,own),level:stat(s,'LEVEL','CHAMP_LEVEL')??null,position:String(s.POSITION||p.selectedPosition||p.detectedTeamPosition||'').toUpperCase(),
+   kills:stat(s,'CHAMPIONS_KILLED','kills'),deaths:stat(s,'NUM_DEATHS','deaths'),assists:stat(s,'ASSISTS','assists'),
+   damageDealt:stat(s,'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS','totalDamageDealtToChampions'),damageTaken:stat(s,'TOTAL_DAMAGE_TAKEN','totalDamageTaken'),goldEarned:stat(s,'GOLD_EARNED','goldEarned'),
+   cs:stat(s,'MINIONS_KILLED','minionsKilled','totalMinionsKilled'),visionScore:stat(s,'VISION_SCORE','visionScore'),
+   turretDamage:stat(s,'DAMAGE_DEALT_TO_TURRETS','damageDealtToTurrets'),heal:stat(s,'TOTAL_HEAL','totalHeal'),ccTime:stat(s,'TIME_CCING_OTHERS','timeCCingOthers'),isAfk:p.leaver===true||p.isLeaver===true||p.wasAfk===true||stat(s,'WAS_AFK')===1,
+   items:Array.from({length:7},(_,i)=>Array.isArray(p.items)&&Number.isSafeInteger(p.items[i])&&p.items[i]>=0?p.items[i]:stat(s,'ITEM'+i,'item'+i))};
+  if(['kills','deaths','assists','damageDealt','damageTaken','goldEarned','cs','visionScore'].some(k=>row[k]===null))return null;
+  const neutral=stat(s,'NEUTRAL_MINIONS_KILLED','neutralMinionsKilled');if(neutral!==null)row.cs+=neutral;
+  players.push(row);
+ }
+ if(players.filter(p=>p.isSelf).length!==1)return null;
+ const winningTeamId=teams.find(t=>t.isWinningTeam).teamId;
+ const scored=calculatePerformanceScores({players,winningTeamId,gameDuration:duration});
+ return {gameId:raw.gameId,gameMode:mode,queueId:Number(queue),queueName:queueName(Number(queue)),gameDuration:duration,isWin:scored.find(p=>p.isSelf).teamId===winningTeamId,
+  teams:teams.map(t=>{const rows=scored.filter(p=>p.teamId===t.teamId);return {teamId:t.teamId,isWin:t.isWinningTeam,totalKills:rows.reduce((n,p)=>n+p.kills,0),totalDamage:rows.reduce((n,p)=>n+p.damageDealt,0),totalGold:rows.reduce((n,p)=>n+p.goldEarned,0),objectives:{dragon:stat(t.stats||{},'DRAGON_KILLS','dragonKills'),baron:stat(t.stats||{},'BARON_KILLS','baronKills'),tower:stat(t.stats||{},'TURRETS_KILLED','towerKills')},players:rows};})};
+}
+export async function fetchPostGameReport({installPath='',own,game={},ownPuuid='',champions=[]}={}, {discover=discoverClient,request=lcuRequest}={}){
+ try{
+  const auth=await discover(installPath);if(!auth?.port)return null;
+  const current=await request(auth,'/lol-summoner/v1/current-summoner');
+  const expected=own||(ownPuuid?{puuid:ownPuuid}:null);
+  if(!current||expected&&!samePlayer(current,expected))return null;
+  const raw=await request(auth,'/lol-end-of-game/v1/eog-stats-block');
+  const after=await request(auth,'/lol-summoner/v1/current-summoner');
+  if(!after||!samePlayer(after,current))return null;
+  return parsePostGameReport(raw,{own:current,game,champions});
+ }catch{return null;}
 }

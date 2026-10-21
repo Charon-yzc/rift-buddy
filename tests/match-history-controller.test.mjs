@@ -86,3 +86,15 @@ test('reusing a player after a data-source switch creates a fresh query target',
 test('the actual search flow applies the currently selected data source to reused tabs',async()=>{
  const calls=[],c=createHistoryController({request:async(op,p)=>op==='profile'?{}:(calls.push(p),{...page('one'),server:'NA1'})});c.state.server='NA1';c.state.query='12345678-1234-1234-1234-123456789abc';c.state.source='lcu';await c.search();c.state.source='sgp';await c.search();assert.equal(calls.length,2);assert.equal(calls[1].source,'sgp');
 });
+
+test('postgame review selects and refreshes own history before opening the exact match',async()=>{
+ const calls=[];let latest=1;
+ const c=createHistoryController({request:async(op,p)=>{calls.push({op,p});if(op==='profile')return {};if(op==='page')return page(p.query||'self',latest);if(op==='detail')return {game:{...page('self',99).games[0]}};throw Error('Unexpected operation');}});
+ await c.open();await c.open({query:'other'});latest=99;await c.openOwnGame('99');
+ assert.equal(c.current().page.player.name,'self');assert.equal(c.current().options.query,undefined);assert.equal(c.current().options.start,0);assert.equal(c.current().page.games[0].id,99);assert.ok(c.current().details[99].complete);assert.ok(c.current().page.games.some(g=>g.id===99));
+ const detailCall=calls.find(v=>v.op==='detail');assert.equal(detailCall.p.handle,'self');
+});
+
+test('a not-yet-synchronized settlement shows a useful own-history status without bypassing the loaded-game boundary',async()=>{
+ let detailReads=0;const c=createHistoryController({request:async(op)=>{if(op==='profile')return {};if(op==='detail'){detailReads++;throw Error('Must not read');}return page('self',1);}});await c.openOwnGame(99);assert.equal(c.current().page.player.name,'self');assert.match(c.current().error,/尚未同步/);assert.equal(detailReads,0);
+});

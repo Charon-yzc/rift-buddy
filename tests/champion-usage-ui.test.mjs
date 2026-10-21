@@ -14,6 +14,12 @@ test('empty, partial and unidentified histories keep distinct honest states',()=
  const unknown=championUsageView({...summary,identified:0,usage:{sampled:0,counts:{}}},data);assert.match(unknown,/近 100 场 · 可用 0 场/);assert.ok(!unknown.includes('暂无历史场次'));
  const partial=championUsageView({...summary,status:'partial',error:'稍后重试'},data);assert.match(partial,/未读完/);assert.match(partial,/aria-label="重试英雄统计"/);
 });
+
+test('cached and screenshot summaries show their source without claiming recent500 or unplayed heroes',()=>{
+ const html=championUsageView({...summary,status:'partial',cached:true,basis:'current-season-screenshot',updatedAt:Date.parse('2026-10-20'),error:'暂时无法更新'},data);
+ assert.match(html,/本地缓存 · 100 场 · 当前赛季/);assert.match(html,/仅含已展示英雄/);assert.match(html,/未收录英雄合计 15%/);assert.match(html,/导入我的统计/);assert.ok(!/近 100 场|未玩英雄/.test(html));assert.ok(!/<details[^>]* open/.test(html));
+ const cached=championUsageView({...summary,cached:true,status:'loading'},data);assert.match(cached,/本地缓存/);assert.match(cached,/正在更新 100 \/ 500 场/);assert.match(cached,/完整读取后替换/);
+});
 test('automatic own history waits for priority summary and reuses the actual local-server tab',async()=>{
  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:page();}});
  await history.autoLoadOwn(client,{...summary,status:'loading'});assert.equal(calls.length,0);await history.autoLoadOwn(client,summary);assert.deepEqual(calls.map(c=>c.op),['page','profile']);assert.equal(calls[0].p.server,'');

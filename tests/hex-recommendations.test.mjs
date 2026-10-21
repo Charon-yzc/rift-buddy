@@ -1,0 +1,79 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {hexRecommendations,hexEquipmentImpact,resolveHexAugmentInput} from '../src/core/hex-recommendations.mjs';
+import {renderHexAdvice,renderHexComparison} from '../src/hex-view.mjs';
+const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
+
+test('current hero recommendations cover the bundled roster without inventing samples or changing source records',()=>{
+ const before=JSON.stringify(data.hexBuilds);
+ for(const hero of data.champions){
+  const advice=hexRecommendations({data,hero:hero.id});assert.ok(advice.rows.length>0,hero.id);assert.ok(advice.rows.length<=6);
+  assert.equal(new Set(advice.rows.map(row=>row.id)).size,advice.rows.length);assert.equal(advice.source.patch,data.patch);
+  for(const row of advice.rows){assert.ok(data.hexBuilds[hero.id].augmentIds.includes(row.id));assert.equal(row.fromSource,true);assert.equal(row.winRate,undefined);assert.equal(row.score,undefined);}
+ }
+ assert.equal(JSON.stringify(data.hexBuilds),before);
+});
+
+test('actual choices use reviewed trigger conditions and known conflicts instead of blindly copying the source list',()=>{
+ const support=hexRecommendations({data,hero:'Sona',options:[1141,1205,1004]});assert.equal(support.bestChoice,1141);assert.match(support.rows[0].reasons.join(' '),/友方治疗或护盾/);
+ const mage=hexRecommendations({data,hero:'Lux',options:[1141,2072]});assert.equal(mage.rows[0].level,'conditional');assert.equal(mage.bestChoice,null,'Having a shield does not establish a protection-first game plan');
+ const clash=hexRecommendations({data,hero:'Ashe',owned:[1004],options:[1088,1047,2072]});assert.equal(clash.rows[0].level,'conflict');assert.equal(clash.bestChoice,1047);assert.match(clash.rows[0].cautions.join(' '),/禁用终极/);
+ const reverse=hexRecommendations({data,hero:'Karthus',owned:[1088],options:[1004]});assert.equal(reverse.rows[0].level,'conflict');assert.equal(reverse.bestChoice,null);
+ assert.equal(hexRecommendations({data,hero:'Brand',owned:[1047],options:[1048,2072]}).bestChoice,1048);
+});
+
+test('unresolved ability targets, unknown versions and changed game keys do not receive confident mechanic recommendations',()=>{
+ const skill=hexRecommendations({data,hero:'Lux',options:[2072]});assert.equal(skill.rows[0].level,'conditional');assert.equal(skill.bestChoice,null);assert.match(skill.rows[0].cautions.join(' '),/尚未核实.*技能/);
+ const future={...data,patch:'16.21'},advice=hexRecommendations({data:future,hero:'Sona',options:[1141,1088],owned:[1004]});assert.equal(advice.source,null);assert.equal(advice.bestChoice,null);assert.ok(advice.rows.every(row=>!row.mechanicReviewed&&row.level!=='conflict'));
+ assert.deepEqual(hexEquipmentImpact({data:future,hero:'Gwen',owned:[1129]}),[]);
+ const changed={...data,augments:data.augments.map(a=>a.id===1004?{...a,key:'Changed_Key'}:a)};
+ assert.notEqual(hexRecommendations({data:changed,hero:'Ashe',options:[1088],owned:[1004]}).rows[0].level,'conflict');
+ const changedEffect={...data,augments:data.augments.map(a=>a.id===1004?{...a,description:'不同机制'}:a)};
+ assert.notEqual(hexRecommendations({data:changedEffect,hero:'Ashe',options:[1088],owned:[1004]}).rows[0].level,'conflict');
+});
+
+test('equipment advice is conditional, map-legal and separate from automatic build changes',()=>{
+ const before=JSON.stringify(data.hexBuilds.Gwen),gwen=hexEquipmentImpact({data,hero:'Gwen',owned:[1129,1002]}),brand=hexEquipmentImpact({data,hero:'Brand',owned:[1129]});
+ assert.ok(gwen.some(row=>row.items.some(item=>item.id===3115)));assert.ok(gwen.some(row=>row.items.some(item=>item.id===3157)));assert.equal(brand[0].items.length,0,'Pure spell casters must not be told to buy Nashor just for AP');
+ const unavailable={...data,items:{...data.items,3115:{...data.items[3115],maps:{'12':false}},3157:{...data.items[3157],inStore:false}}};
+ assert.ok(hexEquipmentImpact({data:unavailable,hero:'Gwen',owned:[1129,1002]}).every(row=>row.items.length===0));assert.equal(JSON.stringify(data.hexBuilds.Gwen),before);
+});
+
+test('changed augment identities suppress old comparison claims including interactions on either side',()=>{
+ const changedCooldown={...data,augments:data.augments.map(a=>a.id===1088?{...a,key:'NewEffect',description:'参与击杀时刷新你的终极技能'}:a)};
+ const cooldown=hexRecommendations({data:changedCooldown,hero:'Ashe',options:[1088]}).rows[0];
+ assert.doesNotMatch([...cooldown.reasons,...cooldown.interactions].join(' '),/施放终极技能后才刷新/);
+ for(const id of [1047,1048]){
+  const changed={...data,augments:data.augments.map(a=>a.id===id?{...a,key:'NewEffect',description:'新的移速效果'}:a)};
+  for(const [options,owned]of [[[1048],[1047]],[[1047],[1048]]]){
+   const row=hexRecommendations({data:changed,hero:'Brand',options,owned}).rows[0];
+   assert.doesNotMatch([...row.reasons,...row.interactions].join(' '),/技能可暴击|共用暴击|适用技能能暴击/);
+  }
+ }
+ const changed={...data,augments:data.augments.map(a=>a.id===1141?{...a,key:'NewHealing',description:'新的移速效果'}:a)};
+ const row=hexRecommendations({data:changed,hero:'Sona',options:[1141]}).rows[0];
+ assert.doesNotMatch(row.reasons.join(' '),/友方治疗或护盾|强化条件/);
+});
+
+test('same-patch kit changes disable hero affinity and concrete equipment, while observation timestamps do not',()=>{
+ for(const mutate of [c=>{c.mechanicSource.character.sha256='0'.repeat(64);},c=>{delete c.mechanicSource;},c=>{c.mechanicSource.spells[0].description='Changed ability';}]){
+  const changed=structuredClone(data);for(const id of ['Sona','Gwen'])mutate(changed.champions.find(c=>c.id===id));
+  const row=hexRecommendations({data:changed,hero:'Sona',options:[1141]}).rows[0];
+  assert.notEqual(row.level,'preferred');assert.doesNotMatch(row.reasons.join(' '),/已核实的友方|这个英雄有对友方/);
+  assert.ok(hexEquipmentImpact({data:changed,hero:'Gwen',owned:[1129,1002]}).every(row=>row.items.length===0));
+  assert.equal(hexRecommendations({data:changed,hero:'Gwen',options:[1088],owned:[1004]}).rows[0].level,'conflict','Augment-only conflicts remain useful');
+ }
+ const newer=structuredClone(data);newer.champions.find(c=>c.id==='Sona').mechanicSource.observedAt='2026-10-21T00:00:00Z';
+ assert.equal(hexRecommendations({data:newer,hero:'Sona',options:[1141]}).bestChoice,1141);
+});
+
+test('option entry resolves only exact known choices and the UI exposes short advice with expandable evidence',()=>{
+ const a=data.augments.find(a=>a.id===2005);assert.equal(resolveHexAugmentInput(a.name,data.augments),2005);assert.equal(resolveHexAugmentInput(a.name+' · #2005',data.augments),2005);
+ for(const value of ['炼狱','<img src=x onerror=alert(1)>',a.name+' · #2072',''])assert.throws(()=>resolveHexAugmentInput(value,data.augments));
+ assert.throws(()=>resolveHexAugmentInput(a.name,[a,{...a,id:999999}]));
+ const html=renderHexComparison({data,hero:'Sona',options:[1141,1205],owned:[1002]});assert.match(html,/data-hex-option-input/);assert.match(html,/优先看这项/);assert.match(html,/已选强化的装备影响/);assert.match(html,/效果与依据/);assert.doesNotMatch(html,/class="compare-grid"/);
+ assert.match(renderHexAdvice({data,hero:'Brand'}),/炼狱导管/);assert.match(renderHexAdvice({data,hero:'Brand'}),/不是胜率榜/);
+ const withoutHero=hexRecommendations({data,options:[2005,2072]});assert.equal(withoutHero.rows.length,2);assert.equal(withoutHero.bestChoice,null);
+});

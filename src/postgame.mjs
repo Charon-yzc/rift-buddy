@@ -1,4 +1,4 @@
-// Post-game settlement & WeGame-style rating renderer.
+// Post-game settlement & Local reference rating renderer.
 // Clean, modern, anti-slop presentation conforming to Rift Buddy's design system.
 const root = document.getElementById('postgame-root');
 const api = window.postGame;
@@ -49,9 +49,9 @@ function renderPlayerRow(p, isWinTeam) {
       </div>
     </div>
     ${renderItems(p.items)}
-    <div class="postgame-score-box">
+    <div class="postgame-score-box" tabindex="0">
       <span class="postgame-score-num ${scoreClass}">${score.toFixed(1)}</span>
-      <span class="postgame-score-label">WeGame分</span>
+      <span class="postgame-score-label">表现参考</span><span class="postgame-score-detail">${Object.entries(p.breakdown||{}).map(([label,value])=>e(label)+' '+(value>=0?'+':'')+Number(value).toFixed(2)).join('<br>')}<br>区间 3–16 分 · 保留一位</span>
     </div>
   </div>`;
 }
@@ -67,7 +67,7 @@ function renderTeamCard(team, isWinTeam) {
   return `<div class="postgame-team-card ${teamClass}">
     <div class="postgame-team-bar">
       <span class="team-title ${teamTitleClass}">${teamName} ${resultText} · ${totalKills} 击杀 · ${goldK}k 经济</span>
-      <span class="team-objectives">小龙 ${team.objectives?.dragon ?? 0} · 大龙 ${team.objectives?.baron ?? 0} · 塔 ${team.objectives?.tower ?? 0}</span>
+      <span class="team-objectives">小龙 ${num(team.objectives?.dragon)} · 大龙 ${num(team.objectives?.baron)} · 塔 ${num(team.objectives?.tower)}</span>
     </div>
     <div class="postgame-player-list">
       ${(team.players || []).map(p => renderPlayerRow(p, isWinTeam)).join('')}
@@ -111,7 +111,7 @@ export function render(report) {
       ${renderTeamCard(lossTeam, false)}
     </main>
     <footer class="postgame-footer">
-      <span class="postgame-footer-hint">可在设置中随时关闭自动弹窗，按 Esc 快速关闭</span>
+      <span class="postgame-footer-hint">本地规则评分 · 非官方评分 · Esc 关闭</span>
       <div class="postgame-footer-actions">
         <button type="button" class="postgame-btn quiet" data-action="close">关闭</button>
         <button type="button" class="postgame-btn primary" data-action="review" data-game-id="${e(report.gameId)}">在主程序中完整复盘</button>
@@ -168,7 +168,7 @@ if (api?.onReset) {
   api.onReset(() => {
     root.innerHTML = `<div class="postgame-loading">
       <div class="postgame-spinner"></div>
-      <p>正在计算对局表现与 WeGame 评分…</p>
+      <p>正在计算对局表现与 表现参考…</p>
     </div>`;
   });
 }

@@ -79,7 +79,7 @@ function matchingRule(rules,eligible,tags,role){return rules.filter(r=>(!r.role|
 // configuration. Use complete same-role source choices, never invented pages.
 export function contextualPreparationChoices({data,selection,build,enemies=[]}={}){
  if(!build?.reference||!build.runePage||build.reference.patch!==data.patch||build.loadoutId!=='default'||selection.sharedEquipment||selection.readOnly)return [];
- const threats=enemies.filter(enemy=>enemy.champion&&data.champions.some(champion=>champion.id===enemy.champion)).map(enemy=>({...enemy,hero:data.champions.find(champion=>champion.id===enemy.champion),weight:enemy.role===selection.role?2:1}));
+ const threats=enemies.filter(enemy=>enemy.champion&&data.champions.some(champion=>champion.id===enemy.champion)).map(enemy=>({...enemy,hero:data.champions.find(champion=>champion.id===enemy.champion),weight:1+(enemy.roleWeights?.[selection.role]??(enemy.role===selection.role?1:0))}));
  if(!threats.length)return [];
  const evaluate=(rules,eligible)=>{
   const hits=threats.map(enemy=>({enemy,rule:matchingRule(rules,eligible,enemyPressures(enemy.hero),selection.role)})).filter(row=>row.rule);

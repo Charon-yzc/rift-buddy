@@ -24,7 +24,7 @@ export function validateClientPreparation(value,data){
   summoners:[...summoners],preserveFlashSlot:value.preserveFlashSlot!==false,preselectOnly:value.preselectOnly===true,claimPosition:value.claimPosition===true,itemSet,
   ...(value.notice?{notice:value.notice}:{})};
 }
-export async function prepareClientSelection({value,data,installPath='',ownedPageId},{discover=discoverClient,request=lcuRequest,writeRunes=writeRunePage,writeItems=importItemSet}={}){
+export async function prepareClientSelection({value,data,installPath='',ownedPageId},{discover=path=>discoverClient(path,{reuseSnapshot:true}),request=lcuRequest,writeRunes=writeRunePage,writeItems=importItemSet}={}){
  const selected=validateClientPreparation(value,data),auth=await discover(installPath);
  if(!auth?.port)throw Error('请先连接客户端并确认 Windows 权限');
  const read=async()=>{

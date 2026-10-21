@@ -31,7 +31,9 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
  const publish=patch=>{status={...status,...patch};onChange({...status});return {...status};};
  const future=manifest=>{if(Date.parse(manifest.publishedAt)>clock()+300000||Date.parse(manifest.checkedAt)>clock()+300000)throw Error('整套资料发布时间无效');};
  const follows=(next,prior)=>!prior||compareGenerationVersions(next.version,prior.version)>=0&&next.sequence>=prior.sequence&&Date.parse(next.checkedAt)>=Date.parse(prior.checkedAt)&&(next.sequence!==prior.sequence||JSON.stringify(next)===JSON.stringify(prior));
- const currentVersion=manifest=>{if(compareGenerationVersions(manifest.version,getData().version)<0)throw Error('整套资料版本倒退，保留当前资料');};
+ const revision=game=>Number.isSafeInteger(game?.contentRevision)?game.contentRevision:0;
+ const baseRevisionCurrent=game=>compareGenerationVersions(game.version,getData().version)!==0||revision(game)>=revision(getData());
+ const currentVersion=(manifest,game)=>{if(compareGenerationVersions(manifest.version,getData().version)<0||game&&!baseRevisionCurrent(game))throw Error('整套资料版本或内容修订倒退，保留当前资料');};
  function manualConflict(value){
   if(!manual||manual.token===active?.record.manualToken)return false;
   return manual.version.split('.').slice(0,2).join('.')===value.manifest.patch&&manual.baseHash!==generationBaseIdentity(value.bundle.game);
@@ -50,13 +52,13 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
  active=await read(filename);
  if(active&&restoreAtStartup){
   try{
-   currentVersion(active.manifest);
+   currentVersion(active.manifest,active.bundle.game);
    if(manualConflict(active))pending=active;
    else{const original=getData(),contextCurrent=preserveGameContext(getData,original),manualContext=manual,next=prepared(await prepare(active.bundle,active.manifest,{current:original,restore:true}),active);if(!contextCurrent()||manual!==manualContext)throw Error('基础资料已变化');replace(next);activeData=next;status={...status,phase:'ready',source:'server',updatedAt:active.manifest.publishedAt,serverCheckedAt:active.manifest.checkedAt,message:'已载入本地整套资料'};}
   }catch{status={...status,phase:'offline',message:'使用内置或本地有效资料'};}
  }
  const storedPending=await read(pendingFile);
- if(storedPending&&follows(storedPending.manifest,active?.manifest)&&compareGenerationVersions(storedPending.manifest.version,getData().version)>=0&&(!active||storedPending.manifest.sequence>active.manifest.sequence))pending=storedPending;
+ if(storedPending&&follows(storedPending.manifest,active?.manifest)&&compareGenerationVersions(storedPending.manifest.version,getData().version)>=0&&baseRevisionCurrent(storedPending.bundle.game)&&(!active||storedPending.manifest.sequence>active.manifest.sequence))pending=storedPending;
  if(pending)status={...status,...pendingStatus()};
 
  function activate({release=null,explicit=false}={}){
@@ -65,11 +67,11 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
   const selected=pending,original=getData(),contextCurrent=preserveGameContext(getData,original),manualContext=manual,stage=filename+'.'+process.pid+'-'+randomUUID()+'.stage';
   activation=(async()=>{
    try{
-    currentVersion(selected.manifest);
+    currentVersion(selected.manifest,selected.bundle.game);
     const next=prepared(await prepare(selected.bundle,selected.manifest,{current:original,restore:false}),selected);
     const record={...selected.record,manualToken:manualContext?.token||null};await write(stage,record);
     if(pending!==selected||!contextCurrent()||manual!==manualContext||!canActivate())return false;
-    currentVersion(selected.manifest);
+    currentVersion(selected.manifest,selected.bundle.game);
     promote(stage,filename);replace(next);active={...selected,record,file:filename};activeData=next;pending=null;
     publish({phase:'ready',source:'server',reason:null,release:null,availableVersion:null,updatedAt:selected.manifest.publishedAt,serverCheckedAt:selected.manifest.checkedAt,message:'整套资料已更新'});return true;
    }catch{publish({...pendingStatus(),message:'整套资料暂未启用，保留当前资料并等待重试'});return false;}
@@ -91,6 +93,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
      const assets={},record={schema:1,envelope,assets:{},checkedAt:new Date(clock()).toISOString(),manualToken:manualContext?.token||null};
      for(const name of GENERATION_NAMES){const file=manifest.files[name],cached=pending?.record.assets[file.sha256]||active?.record.assets[file.sha256];assets[file.sha256]=cached?Buffer.from(cached,'base64'):await download('/v2/assets/'+file.file,{limit:file.bytes});record.assets[file.sha256]=assets[file.sha256].toString('base64');}
      const bundle=await decodeGenerationAssets(manifest,assets);
+     currentVersion(manifest,bundle.game);
      if(getData()!==original||manual!==manualContext)throw Error('基础资料已变化');
      if(active&&JSON.stringify(manifest)===JSON.stringify(active.manifest)&&!pending&&activeData===getData()){publish({phase:'ready',checkedAt:record.checkedAt,serverCheckedAt:manifest.checkedAt,message:'整套资料已是最新'});break;}
      const stage=pendingFile+'.'+process.pid+'-'+randomUUID()+'.stage';
@@ -107,7 +110,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
  return {check,activate,hasAccepted:()=>!!active,isActive:()=>activeData===getData(),summary:()=>({...status}),noteManual:(game,token,{notify=true}={})=>{
   if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))throw Error('手动资料文件身份无效');
   manual={token,version:game.version,baseHash:generationBaseIdentity(game)};lastAttempt=-Infinity;activeData=null;
-  if(pending&&compareGenerationVersions(pending.manifest.version,game.version)<0)pending=null;
+  if(pending&&(compareGenerationVersions(pending.manifest.version,game.version)<0||!baseRevisionCurrent(pending.bundle.game)))pending=null;
   status={...status,phase:'ready',source:'manual',reason:null,release:null,availableVersion:null,serverCheckedAt:null,updatedAt:game.fetchedAt||null,message:'当前使用手动资料',...pendingStatus()};if(notify)onChange({...status});
  }};
 }

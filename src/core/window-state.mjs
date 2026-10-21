@@ -39,6 +39,15 @@ function rebase(base,local,accepted,field=''){
 // Replay only edits made after this request's snapshot. Accepted changes from
 // the other window stay present in both the visible state and queued saves.
 // This does not resolve write conflicts: main still checks each request's base.
-export function rebaseWindowState(base,local,accepted){return rebase(base,local,accepted);}
+export function rebaseWindowState(base,local,accepted){
+ const merged=rebase(base,local,accepted),localGame=String(local.draft?.clientGameId||base.draft?.clientGameId||''),acceptedGame=String(accepted.draft?.clientGameId||'');
+ // A queued click made in the old game must not acquire a fresh game ID by
+ // rebasing. Independently edited preferences still replay normally.
+ if(merged.draft&&localGame&&localGame!==acceptedGame)for(const field of ['scope','scopeSelection','referenceQueue','enemyRoles']){
+  if(accepted.draft?.[field]===undefined)delete merged.draft[field];else merged.draft[field]=structuredClone(accepted.draft[field]);
+ }
+ if(['party','context'].includes(merged.draft?.scopeSelection))merged.draft.scope=merged.draft.scopeSelection;
+ return merged;
+}
 // Stored snapshots may normalize object-key order without changing any values.
 export {same as equalWindowState};

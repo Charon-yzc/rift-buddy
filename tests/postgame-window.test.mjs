@@ -44,7 +44,7 @@ test('postgame-window manages window lifecycle and registers guarded IPC handler
     on(event, cb) {
       this.eventListeners.set(event, cb);
     }
-    show() {
+    showInactive() {
       this.visible = true;
     }
     hide() {
@@ -125,6 +125,8 @@ test('postgame-window manages window lifecycle and registers guarded IPC handler
   // Bootstrap reflects the newest report
   assert.deepEqual(bootstrapHandler(mockSenderEvent), secondReport);
 
+  manager.hide();createdWindow.eventListeners.get('ready-to-show')?.();assert.equal(manager.isVisible(),false);
+  manager.show(secondReport);
   // Close via IPC also emits a UI reset to clear the stale panel
   const sentChannels = [];
   const originalSend = createdWindow.webContents.send;
@@ -143,6 +145,8 @@ test('postgame-window manages window lifecycle and registers guarded IPC handler
   assert.equal(bootstrapHandler(mockSenderEvent), null);
 
   // Open history via IPC
+  assert.throws(()=>ipcHandlers.get('postgame-open-history')(mockSenderEvent,9988),/已变化/);
+  manager.show(sampleReport);
   const openHistoryHandler = ipcHandlers.get('postgame-open-history');
   openHistoryHandler(mockSenderEvent, 9988);
   assert.equal(openedHistoryGameId, 9988);
@@ -154,33 +158,4 @@ test('postgame-window manages window lifecycle and registers guarded IPC handler
   assert.equal(ipcHandlers.has('postgame-reset'), false);
   assert.equal(ipcHandlers.has('postgame-close'), false);
   assert.equal(ipcHandlers.has('postgame-open-history'), false);
-});
-
-test('postgame lifecycle trigger helper decides when to pop up or hide settlement window', () => {
-  const EOG_PHASES = ['EndOfGame', 'WaitingForStats', 'PreEndOfGame'];
-  const shouldShow = (client, previousPhase, popupPreference) => {
-    const isEogPhase = client.connected && EOG_PHASES.includes(client.phase);
-    const gameJustEnded = client.connected && !['GameStart', 'InProgress', 'Reconnect'].includes(client.phase) && ['GameStart', 'InProgress', 'Reconnect'].includes(previousPhase);
-    return popupPreference !== false && (isEogPhase || gameJustEnded);
-  };
-
-  const shouldHide = (client) => {
-    return client.connected && ['ChampSelect', 'GameStart', 'InProgress'].includes(client.phase);
-  };
-
-  // When game enters EndOfGame and popup preference is enabled
-  assert.equal(shouldShow({connected: true, phase: 'EndOfGame'}, 'InProgress', true), true);
-  // Default preference (undefined) is considered true
-  assert.equal(shouldShow({connected: true, phase: 'WaitingForStats'}, 'InProgress', undefined), true);
-  // When user disables popup in settings
-  assert.equal(shouldShow({connected: true, phase: 'EndOfGame'}, 'InProgress', false), false);
-  // When leaving InProgress back to lobby directly
-  assert.equal(shouldShow({connected: true, phase: 'Lobby'}, 'InProgress', true), true);
-  // In middle of match, do not show
-  assert.equal(shouldShow({connected: true, phase: 'InProgress'}, 'InProgress', true), false);
-
-  // Next game begins, auto-hide
-  assert.equal(shouldHide({connected: true, phase: 'ChampSelect'}), true);
-  assert.equal(shouldHide({connected: true, phase: 'InProgress'}), true);
-  assert.equal(shouldHide({connected: true, phase: 'Lobby'}), false);
 });

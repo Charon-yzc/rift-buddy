@@ -1,4 +1,4 @@
-import {cleanChampionUsage,championUsageWeights,familiarMass,USAGE_ORIGIN} from './champion-usage.mjs';
+import {cleanChampionUsage,championUsageWeights,familiarMass} from './champion-usage.mjs';
 import {seededFraction} from './recommendation-diversity.mjs';
 const roles=['top','jungle','mid','bottom','support'];
 
@@ -14,23 +14,15 @@ export function canonicalFamiliarity(value={}){
 }
 
 export function localChampionFamiliarity({client,slots,scope,ownRole,summary,mass}){
- if(!client?.connected||!summary?.usage?.sampled)return {};
- // A local cache is this account's own real game counts, so it may guide the
- // recommendation while the match service is unreachable. A proxy may not.
- if(summary.origin===USAGE_ORIGIN.CACHE){
-  const cell=client.session?.localPlayerCellId,bound=Number.isInteger(cell)?slots.filter(slot=>slot.clientCellId===cell):[];
-  const mine=roles.includes(ownRole)?ownRole:bound.length===1?bound[0].role:'';
-  const targets=scope==='solo'?roles:mine?[mine]:[];
-  const member={member:'local:cache',mass:familiarMass(mass),usage:cleanChampionUsage(summary.usage)};
-  return Object.fromEntries(targets.filter(role=>{const slot=slots.find(s=>s.role===role);return slot&&(scope==='solo'||!Number.isInteger(slot.clientCellId)||slot.clientCellId===cell);}).map(role=>[role,member]));
- }
- if(!summary.session||!['loading','ready','partial'].includes(summary.status))return {};
- if(summary.origin&&summary.origin!==USAGE_ORIGIN.LIVE)return {};
+ if(!client?.connected||!summary?.session||!['loading','ready','partial'].includes(summary.status)||!summary.usage?.sampled)return {};
  const cell=client.session?.localPlayerCellId,bound=Number.isInteger(cell)?slots.filter(slot=>slot.clientCellId===cell):[];
- const mine=roles.includes(ownRole)?ownRole:bound.length===1?bound[0].role:'';
+ if(Number.isInteger(cell)&&client.session?.myTeam?.filter(player=>player.cellId===cell).length>1)return {};
+ const planned=slots.filter(slot=>slot.party),single=['party','context'].includes(scope)&&Number.isInteger(cell)&&cell>=0&&cell<30&&client.session?.myTeam?.filter(player=>player.cellId===cell).length===1&&planned.length===1&&!planned[0].locked&&(!Number.isInteger(planned[0].clientCellId)||planned[0].clientCellId===cell)?planned[0].role:'';
+ const mine=roles.includes(ownRole)?ownRole:bound.length===1?bound[0].role:single;
  const targets=scope==='solo'?roles:mine?[mine]:[];
  const member={member:'local:'+summary.session,mass:familiarMass(mass),usage:cleanChampionUsage(summary.usage)};
- // A provisional range or a room nickname alone never proves player ownership.
+ // A lone prospective local candidate may use own preferences before its lane
+ // is confirmed. This is a search preference, never a client lane binding.
  return Object.fromEntries(targets.filter(role=>{const slot=slots.find(s=>s.role===role);return slot&&(scope==='solo'||!Number.isInteger(slot.clientCellId)||slot.clientCellId===cell);}).map(role=>[role,member]));
 }
 
@@ -56,7 +48,7 @@ export function familiarityLineups(fixed,targets,candidates,weights,seed='',limi
 
 // Use log probabilities so a five-person product cannot underflow. This changes
 // selection frequency only, never the composition's mechanism score.
-export function familiarityWinner(entries,targets,weights,seed,index){
+export function familiarityWinner(entries,targets,weights,seed,index,{bestVariant=false}={}){
  const weighted=targets.filter(role=>weights[role]);if(!weighted.length)return null;
  const groups=new Map();
  for(const entry of entries){
@@ -69,5 +61,7 @@ export function familiarityWinner(entries,targets,weights,seed,index){
  const max=Math.max(...[...groups.values()].map(group=>group.log));if(!Number.isFinite(max))return null;
  let winner=null,best=Infinity;
  for(const group of groups.values()){const rank=race(seed,`preference:${index}:${group.key}`,Math.exp(group.log-max));if(rank<best){best=rank;winner=group;}}
- return winner.entries.map(entry=>({entry,rank:seededFraction(seed,`variant:${index}:`+entry.slots.map(s=>s.role+':'+(s.champion||'')).sort().join('|'))})).sort((a,b)=>a.rank-b.rank)[0].entry;
+ const fit=entry=>entry.compositionFit?.rawScore??entry.score??0,ceiling=Math.max(...winner.entries.map(fit));
+ const variants=bestVariant?winner.entries.filter(entry=>fit(entry)>=ceiling-5):winner.entries;
+ return variants.map(entry=>({entry,rank:seededFraction(seed,`variant:${index}:`+entry.slots.map(s=>s.role+':'+(s.champion||'')).sort().join('|'))})).sort((a,b)=>a.rank-b.rank)[0].entry;
 }

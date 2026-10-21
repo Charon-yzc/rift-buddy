@@ -23,6 +23,20 @@ const member=(champion,role)=>({champion,role}),graph=()=>createCooperationGraph
 const setup=(roles,picks=[])=>createSlots().map(s=>({...s,party:roles.includes(s.role),...(picks.some(p=>p[0]===s.role)?{champion:picks.find(p=>p[0]===s.role)[1],locked:true}:{} )}));
 const trio=[member('Trundle','top'),member('Sejuani','jungle'),member('Seraphine','mid')];
 
+test('pair cache preserves first-call direction, role bindings and null hits within one graph',()=>{
+ const a=member('Sejuani','jungle'),b=member('Trundle','top'),forward=graph(),reverse=graph();
+ const expected=forward.edge(a,b);assert.ok(expected?.current);assert.deepEqual(reverse.edge(b,a),expected);assert.equal(forward.edge(b,a),expected);
+ assert.notEqual(forward.edge({...a,role:'support'},b),expected,'different role bindings must have independent cached entries');
+ const empty=createCooperationGraph(data.champions,{links:[]});let lookups=0;const has=empty.byId.has.bind(empty.byId);empty.byId.has=id=>{lookups++;return has(id);};
+ const first=member('Ahri','mid'),second=member('Ashe','bottom');assert.equal(empty.edge(first,second),null);const initial=lookups;assert.ok(initial>0);assert.equal(empty.edge(second,first),null);assert.equal(lookups,initial,'a cached missing edge should not be recomputed');
+});
+test('pair caches never carry catalog links or mechanic review across graph instances',()=>{
+ const a=member('Ahri','mid'),b=member('Ashe','bottom');
+ assert.equal(createCooperationGraph(data.champions,{links:[['Ahri','Ashe','first source']]}).edge(a,b).step,'first source');
+ assert.equal(createCooperationGraph(data.champions,{links:[['Ahri','Ashe','changed source']]}).edge(b,a).step,'changed source');
+ const own=member('Sejuani','jungle'),ally=member('Trundle','top');assert.equal(graph().edge(own,ally).current,true);assert.notEqual(createCooperationGraph(data.champions,{currentPatch:'16.21'}).edge(ally,own)?.current,true);
+});
+
 test('ordinary locked-friend searches expose a complete current plan on the first page without restrictive pools',()=>{
  const scenarios=[
   [['jungle','mid'],[['mid','Ahri']]],

@@ -11,7 +11,7 @@ import {getBuild} from '../src/core/builds.mjs';
 import {clientPreparationPlan} from '../src/client-preparation-view.mjs';
 import {validatePreparation} from '../src/core/preparation.mjs';
 
-const customGame=process.argv.includes('--custom'),loadingNewGame=process.argv.includes('--loading-new-game'),loadingTransition=process.argv.includes('--loading-transition')||loadingNewGame,unadopted=process.argv.includes('--unadopted')||loadingTransition,root=await fs.mkdtemp(path.resolve('.local/party-preparation-smoke-')),state=defaultState();
+const customGame=process.argv.includes('--custom'),loadingNewGame=process.argv.includes('--loading-new-game'),loadingTransition=process.argv.includes('--loading-transition')||loadingNewGame,unadopted=process.argv.includes('--unadopted')||loadingTransition||process.argv.includes('--selection-latency')||process.argv.includes('--usage-stability'),root=await fs.mkdtemp(path.resolve('.local/party-preparation-smoke-')),state=defaultState();
 const picks={top:'Camille',jungle:'Vi',mid:'Galio'},data=JSON.parse(await fs.readFile('data/game.json'));
 const rolePools=Object.fromEntries(Object.entries(picks).map(([role,id])=>[role,{heroes:[id],mode:'only'}]));
 // This fixture starts after the lobby without public party identities. Its
@@ -44,6 +44,7 @@ await fs.writeFile(path.join(installPath,'LeagueClient.exe'),'isolated fixture m
 await saveState(root,state);
 console.log('PARTY PREPARATION ROOT '+root);
 if(process.argv.includes('--standalone-items'))process.env.RIFT_BUDDY_STANDALONE_ITEMS='1';
-const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-party-preparation.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_SOURCE:process.argv.includes('--source')?'1':'0',RIFT_BUDDY_UNADOPTED:unadopted?'1':'0',RIFT_BUDDY_LOADING_TRANSITION:loadingTransition?'1':'0',RIFT_BUDDY_LOADING_NEW_GAME:loadingNewGame?'1':'0',RIFT_BUDDY_CUSTOM_GAME:customGame?'1':'0'},windowsHide:true,stdio:'inherit'});
+if(process.argv.includes('--selection-latency'))process.env.RIFT_BUDDY_SELECTION_LATENCY='1';
+const child=spawn(electronExecutable(),[path.resolve('scripts/smoke-party-preparation.cjs')],{cwd:process.cwd(),env:{...process.env,RIFT_BUDDY_USER_DATA:root,RIFT_BUDDY_USAGE_STABILITY:process.argv.includes('--usage-stability')?'1':'0',RIFT_BUDDY_SOURCE:process.argv.includes('--source')?'1':'0',RIFT_BUDDY_UNADOPTED:unadopted?'1':'0',RIFT_BUDDY_LOADING_TRANSITION:loadingTransition?'1':'0',RIFT_BUDDY_LOADING_NEW_GAME:loadingNewGame?'1':'0',RIFT_BUDDY_CUSTOM_GAME:customGame?'1':'0'},windowsHide:true,stdio:'inherit'});
 const timer=setTimeout(()=>child.kill(),150000);
 try{const [code]=await once(child,'exit');if(code!==0)throw Error('Party preparation smoke failed ('+code+'); '+root);await fs.writeFile('.local/latest-party-preparation-smoke.json',JSON.stringify({root,unadopted},null,2));}finally{clearTimeout(timer);}
