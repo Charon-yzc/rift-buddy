@@ -91,6 +91,23 @@ test('lost frozen saved-role coverage prevents publication of either channel',as
  const missing=structuredClone(seed);delete missing.builds.entries[recipe.builds.find(key=>key.startsWith('Brand:jungle:'))];f.advance();await f.candidate(missing,recipe);
  await assert.rejects(f.publish(),/完整|范围/);assert.equal(await f.latest(),before);assert.equal(await f.legacy(seed.game.patch),legacy);
 });
+
+test('optional Hex pool failures do not block a complete signed generation',async t=>{
+ const f=await publication(t),status=await f.candidate(seed);
+ status.datasets['hex-pools']={optional:true,state:'partial',total:173,checked:173,failed:173,skipped:0,checkedAt:status.checkedAt};
+ await fs.writeFile(path.join(f.root,'status.json'),JSON.stringify(status));const result=await f.publish();
+ assert.equal(result.generation.manifest.recipe.builds.length,recipe.builds.length);
+ const current=verifyGenerationEnvelope(JSON.parse(await f.latest()),{keys}),assets={};for(const file of Object.values(current.files))assets[file.sha256]=await fs.readFile(path.join(f.publicRoot,'v2/assets',file.file));
+ assert.deepEqual(await decodeGenerationAssets(current,assets),bundle);
+});
+
+test('optional status cannot hide a required failure or allow an unknown dataset',async t=>{
+ const f=await publication(t);await f.candidate(seed);await f.publish();const before=await f.latest(),legacy=await f.legacy(seed.game.patch);
+ for(const change of [s=>s.datasets['hex-pools']={state:'ok'},s=>s.datasets['hex-pools']={optional:false,state:'partial'},s=>s.datasets.unknown={optional:true,state:'ok'},s=>{s.datasets['hex-pools']={optional:true,state:'partial'};s.datasets.builds={...s.datasets.builds,optional:true,state:'partial',failed:1};},s=>{s.datasets['hex-pools']={optional:true,state:'ok'};delete s.datasets.game;}]){
+  f.advance();const status=await f.candidate(seed);change(status);await fs.writeFile(path.join(f.root,'status.json'),JSON.stringify(status));
+  await assert.rejects(f.publish(),/未完整完成/);assert.equal(await f.latest(),before);assert.equal(await f.legacy(seed.game.patch),legacy);
+ }
+});
 test('new patch is published globally only with current valid coverage, and replaces only generated old assets',async t=>{
  const f=await publication(t);await f.candidate(seed);const first=await f.publish(),before=await f.latest(),legacy=await f.legacy(seed.game.patch);
  const next=JSON.parse(JSON.stringify(seed).replaceAll('16.20','16.21')),oldHex=structuredClone(next);oldHex['hex-builds'].entries.Ahri=seed['hex-builds'].entries.Ahri;f.advance();await f.candidate(oldHex);
