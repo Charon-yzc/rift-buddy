@@ -13,7 +13,7 @@ test('independent window sizes survive storage, hero changes and display recover
  const saved=validateGuideState(JSON.parse(JSON.stringify(guide))),other=selectGuide(saved,{...selection,id:'Ashe',role:'bottom'});
  for(const key of ['compactBounds','stripBounds','skillWidget','jungleWidget'])assert.deepEqual(other[key],guide[key]);
  const compact=compactGuidePlacement(saved.compactBounds,area,null);assert.deepEqual(compact,saved.compactBounds);
- const skill=skillWidgetPlacement(saved.skillWidget.offset,area,null,1,saved.skillWidget.size);assert.equal(skill.width,320);assert.equal(skill.height,70);
+ const skill=skillWidgetPlacement(saved.skillWidget.offset,area,null,1,saved.skillWidget.size);assert.equal(skill.width,320);assert.equal(skill.height,28,'Saved tall skill prompts migrate to one line');
  const jungle=jungleWidgetPlacement(saved.jungleWidget.offset,area,null,1,saved.jungleWidget.size);assert.equal(jungle.width,380);assert.equal(jungle.height,260);
  const smaller={x:0,y:0,width:360,height:300},recovered=compactGuidePlacement(saved.compactBounds,smaller,null);assert.equal(recovered.width,360);assert.equal(recovered.height,300);assert.equal(recovered.x,0);assert.equal(recovered.y,0);
  const bad=validateGuideState({...guide,skillWidget:{size:{width:Infinity,height:100}},compactBounds:{x:1,y:2,width:'500',height:300}});assert.equal(bad.skillWidget.size,undefined);assert.deepEqual(bad.compactBounds,{x:1,y:2});

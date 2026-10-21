@@ -16,7 +16,7 @@ export function hexMicroPlacement(kind,offset,area,game,scale=1,routes=[]){
 export function hexMicroOffset(bounds,area,game){const anchor=game||area;return {x:Math.round(bounds.x-anchor.x),y:Math.round(bounds.y-anchor.y)};}
 export function hexMicroPayload(value,kind){
  const m=value?.model,context=JSON.stringify([m?.mode,m?.champion?.id,m?.matchId||null,value?.referenceRevision]);
- if(m?.mode!=='hex')return {kind,context,active:false};
+ if(!['hex','rift'].includes(m?.mode)||kind==='routes'&&m.mode!=='hex')return {kind,context,active:false};
  const mismatch=['champion','mode','role','combo'].includes(m.live?.kind);
  const side=name=>({players:(m.equipment?.[name]?.players||[]).slice(0,5).map(p=>({id:p.id,name:p.name,known:p.known,value:p.value}))});
  return {kind,context,active:true,scale:scaleOf(value?.presentation?.textScale),hero:{id:m.champion?.id,name:m.champion?.name},images:m.imageOverrides||{},

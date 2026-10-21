@@ -1,0 +1,14 @@
+# Insert inside the existing room host, before its fallback handle.
+# Preserve all other routes. This host is reached directly, without a CDN.
+handle /v1/feedback {
+    request_body {
+        max_size 14MB
+    }
+    reverse_proxy 127.0.0.1:8790 {
+        header_up X-Feedback-Client-IP {http.request.remote.host}
+        transport http {
+            dial_timeout 3s
+            response_header_timeout 25s
+        }
+    }
+}

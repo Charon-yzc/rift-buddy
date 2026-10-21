@@ -4,13 +4,14 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
+import {skillSummary} from '../src/core/skill-summary.mjs';
 import {defaultState,saveState,readState,validateState} from '../services/storage.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {sendChampSelectAnnouncement} from '../services/lcu-chat.mjs';
 const data=JSON.parse(await fs.readFile('data/game.json'));
 const source=await fs.readFile('src/skill.mjs','utf8');
 const renderSource=source.slice(source.indexOf('function render(value)'),source.indexOf('root.addEventListener'));
-function widget(model){const root={innerHTML:''},context=vm.createContext({root,windowResizeGrip:'',applyPresentation(){},e:String});vm.runInContext(renderSource,context);context.render({model});return root.innerHTML;}
+function widget(model){const root={innerHTML:''},context=vm.createContext({root,windowResizeGrip:'',applyPresentation(){},skillSummary,e:String});vm.runInContext(renderSource,context);context.render({model});return root.innerHTML;}
 
 test('chat notice defaults on and explicit on/off survives real disk saves and re-reads',async()=>{
  assert.equal(validateState(defaultState()).preferences.chatNotice,true);
@@ -21,9 +22,9 @@ test('chat notice defaults on and explicit on/off survives real disk saves and r
  for(const enabled of [true,false,true,false]){state.preferences.chatNotice=enabled;await saveState(root,state);assert.equal((await readState(root)).preferences.chatNotice,enabled);}
 });
 
-test('actual skill-widget render stops opening highlight after first point and for unknown/special skills',()=>{
+test('actual skill widget preserves a single opening and priority line after points are spent',()=>{
  const selection=selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),live={available:true,champion:'Ashe',mode:'rift',at:Date.now(),level:1,skills:{Q:0,W:0,E:0,R:0},inventory:[],gold:500};
- const opening=createGuideModel(data,selection,live);assert.equal(opening.nextSkill,'W');assert.match(widget(opening),/1级首选 \[ W \]/);
+ const opening=createGuideModel(data,selection,live);assert.equal(opening.nextSkill,'W');assert.match(widget(opening),/W→Q→E · 主W 副Q/);assert.doesNotMatch(widget(opening),/<small>/);
  const spent=createGuideModel(data,selection,{...live,skills:{Q:0,W:1,E:0,R:0}});assert.equal(spent.nextSkill,null);assert.doesNotMatch(widget(spent),/1级首点推荐|is-level1/);
  const unknown=createGuideModel(data,selection,{...live,skills:{}});assert.equal(unknown.nextSkill,null);assert.doesNotMatch(widget(unknown),/1级首点推荐|is-level1/);
  const special=createGuideModel(data,selectGuide(null,{id:'Aphelios',role:'bottom',mode:'rift'}),{...live,champion:'Aphelios'});assert.doesNotMatch(widget(special),/1级首点推荐|is-level1/);
