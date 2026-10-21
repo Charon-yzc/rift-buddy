@@ -1,0 +1,135 @@
+{
+  "source": {
+    "url": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+    "bytes": 15958710,
+    "sha256": "8c7b798a7a8ddf4bd7238c05c0864cc6fa29d33b7c57041ae24230f2d26514ec",
+    "fetchedAt": "2026-10-21T19:25:19.971Z"
+  },
+  "bin": {
+    "Items/6697": {
+      "itemID": 6697,
+      "mDataValues": [
+        {
+          "mName": "LethalityAmount",
+          "mValue": 18,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MSDuration",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MinHealthThreshold",
+          "mValue": 0.30000001192092896,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "SpellMaxAmp",
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "TakedownWindow",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "SpeedAmount",
+          "mValue": 0.30000001192092896,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BonusLethality",
+          "mValue": 15,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BuffDuration",
+          "mValue": 90,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BaseADBonusMelee",
+          "mValue": 15,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BaseADRangedMult",
+          "mValue": 0.6669999957084656,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "ADPerStatueMelee",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "ADPerStatueRangedMult",
+          "mValue": 0.6669999957084656,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "mItemCalculations": {
+        "{5974e68a}": {
+          "mFormulaParts": [
+            {
+              "mBuffName": "{10f4da91}",
+              "mCoefficient": 1,
+              "__type": "BuffCounterByCoefficientCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "BaseADBonus": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "{6c8d1758}",
+              "__type": "NamedDataValueCalculationPart"
+            }
+          ],
+          "mRangedMultiplier": {
+            "mDataValue": "{4270a530}",
+            "__type": "NamedDataValueCalculationPart"
+          },
+          "__type": "{e9a3c91d}"
+        },
+        "{619bce2f}": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "{e7b48421}",
+              "__type": "NamedDataValueCalculationPart"
+            }
+          ],
+          "mRangedMultiplier": {
+            "mDataValue": "{4325747e}",
+            "__type": "NamedDataValueCalculationPart"
+          },
+          "__type": "{e9a3c91d}"
+        }
+      },
+      "mAbilityHasteMod": 10,
+      "mFlatPhysicalDamageMod": 55,
+      "PhysicalLethality": 18,
+      "mItemDataClient": {
+        "mDescription": "GeneratedTip_Item_6697_Description"
+      }
+    }
+  },
+  "strings": {
+    "entries": {
+      "GeneratedTip_Item_6697_Description": "<section></section><section><attention>%i:scaleAD%@FlatPhysicalDamageMod@</attention>攻击力<br><attention>%i:scaleAPen% @PhysicalLethality@</attention>穿甲<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速</section><section><passive>盛名</passive><br>如果一名在过去@TakedownWindow@秒内曾被你造成过伤害的英雄阵亡，则获得持续@BuffDuration@秒的<physicalDamage>@BaseADBonus@+@ADPerStatue@x已击杀英雄数的攻击力</physicalDamage>。</section><section></section><section><flavorText>已征服的英雄：@f2@</flavorText></section>"
+    }
+  },
+  "items": {
+    "6697": {
+      "name": "狂妄",
+      "description": "55攻击力\n18穿甲\n10技能急速\n\n盛名\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，则获得持续90秒的0+0x已击杀英雄数的攻击力。",
+      "gold": {
+        "base": 750,
+        "purchasable": true,
+        "total": 2800,
+        "sell": 1960
+      }
+    }
+  }
+}
