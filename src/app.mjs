@@ -1638,6 +1638,7 @@ document.addEventListener('click',async event=>{
  if(action==='task-rankings'){rankingRole=taskOwnRole()||'top';if(windowLayout.docked)companionTab='rankings';else route='rankings';render();return;}
  if(action==='task-edit'){const plan=ownTaskPreparation();if(!plan)throw Error('请先确认本人英雄与位置');if(windowLayout.docked){companionPreview=structuredClone(plan.selection);companionTab='plan';render();}else showBuild(plan.selection.id,plan.selection.role,plan.selection.mode,{...plan.selection,readOnly:false,quickConfiguration:true});return;}
  if(action==='companion-tab'){if(el.dataset.tab==='plan'&&companionPreview?.readOnly)companionPreview=null;companionTab=el.dataset.tab;closeOverlay();render();return;}
+ if(action==='hex-bench-preview'){const hero=champ(el.dataset.id);if(!hero||!client.connected||client.phase!=='ChampSelect'||client.mode?.id!=='hex'||!client.session?.bench?.championIds.includes(hero.key)||client.session.myTeam.some(p=>p.championId===hero.key))throw Error('本局备选池已变化，请按当前页面查看');showBuild(hero.id,profile(hero).roles[0],'hex',{readOnly:true});return;}
  if(action==='companion-current'){companionPreview=null;companionTab='plan';closeOverlay();render();return;}
  if(action==='companion-preview'){await prepareCandidate(el);return;}
  if(action==='configuration-switch'){

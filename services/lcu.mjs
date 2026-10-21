@@ -96,6 +96,7 @@ export function sanitizeSession(session) {
    ...(pick||p.pickState==='locked'?{pickState:p.pickState}:{})};
  });
  return {myTeam:team(session.myTeam),theirTeam:team(session.theirTeam),localPlayerCellId:session.localPlayerCellId,allowDuplicatePicks:session.allowDuplicatePicks===false?false:true,
+  ...(session.benchEnabled===true&&Array.isArray(session.benchChampions)?{bench:{championIds:[...new Set(session.benchChampions.slice(0,50).map(row=>row?.championId).filter(id=>Number.isSafeInteger(id)&&id>0&&id<=100000))]}}:{}),
   ...(/^[1-9]\d{0,19}$/.test(String(session.gameId||''))?{gameId:String(session.gameId)}:{}),
   bans:[...(session.bans?.myTeamBans||[]),...(session.bans?.theirTeamBans||[])].filter(Number.isInteger),
   actions,timer:{phase:session.timer?.phase||'',...(Number.isFinite(session.timer?.adjustedTimeLeftInPhase)?{remainingMs:Math.max(0,session.timer.adjustedTimeLeftInPhase)}:{})}};
