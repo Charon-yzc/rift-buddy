@@ -6,6 +6,7 @@ import {compositionFit} from './composition-fit.mjs';
 import {effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {clientContextDraft,publicAllyIds} from './client-context-draft.mjs';
 import {editableLocalDraft,lockedOwnSlot,confirmedPlayerPick} from './draft-intents.mjs';
+import {publicDraftTeam} from './ranked-draft.mjs';
 
 // A lobby proposal survives entering that draft, but never carries into the
 // next game. Unknown/disconnected reads alone are not a new round.
@@ -108,9 +109,31 @@ export function lineupFit(lineup,current,champions,options={}){
   gaps:[...(referenceConflict?['与未确认的公开已选英雄或位置冲突。']:[]),...(constraint?[constraint]:[]),...fit.gaps],
   reason:`${referenceNote}${constraint}${fit.reason}${constraint&&fit.score!==null?` 冲突方案最高计 ${cap} 分。`:''}`};
 }
+// A proposal cannot assign a public pick to another player, or replace a
+// confirmed pick. Offline plans and ignored hovers are not client evidence.
+function proposalAvailable(lineup,current,champions,{clientSession,includePreselected=false}={}){
+ if(!Array.isArray(clientSession?.myTeam))return true;
+ const team=publicDraftTeam(clientSession),byKey=new Map(champions.map(c=>[Number(c.key),c.id]));
+ for(const player of team){
+  const confirmed=confirmedPlayerPick(player,clientSession);
+  if(!confirmed&&!includePreselected)continue;
+  if(!Number.isInteger(player.cellId)||player.cellId<0||player.cellId>=30||team.filter(p=>p.cellId===player.cellId).length!==1)continue;
+  const key=Number(player.championId||player.championPickIntent),hero=byKey.get(key);
+  if(!hero)continue;
+  const same=team.filter(p=>Number(p.championId||p.championPickIntent)===key),locked=same.filter(p=>confirmedPlayerPick(p,clientSession));
+  if(confirmed?locked.length!==1:locked.length||same.length!==1)continue;
+  const bound=current.filter(s=>s.clientCellId===player.cellId);
+  if(bound.length>1)continue;
+  const role=bound[0]?.role||CLIENT_POSITION_ROLES[String(player.assignedPosition||'').toUpperCase()],proposed=lineup.find(s=>s.champion===hero);
+  const owner=proposed&&current.find(s=>s.role===proposed.role)?.clientCellId;
+  if(proposed&&Number.isInteger(owner)&&owner!==player.cellId)return false;
+  if(role&&(proposed&&proposed.role!==role||lineup.some(s=>s.role===role&&s.champion&&s.champion!==hero)))return false;
+ }
+ return true;
+}
 export function roomBallotBoard(room,current,champions,options={}){
  const members=(room?.members||[]).filter(m=>m.online!==false),groups=new Map();
- for(const member of members){const proposal=member.share?.ballot?.proposal;if(!proposal)continue;const key=proposalKey(proposal);let row=groups.get(key);
+ for(const member of members){const proposal=member.share?.ballot?.proposal;if(!proposal||!proposalAvailable(proposal.lineup,current,champions,options))continue;const key=proposalKey(proposal);let row=groups.get(key);
   if(!row){row={key,proposal,from:member.nick,proposers:[],voters:[],adopters:[],mine:false,fit:lineupFit(proposal.lineup,current,champions,options)};groups.set(key,row);}row.proposers.push(member.nick);
  }
  for(const member of members)for(const key of ballotVotes(member.share?.ballot)){const row=groups.get(key);if(row){if(!row.voters.includes(member.nick))row.voters.push(member.nick);if(member.self)row.mine=true;}}

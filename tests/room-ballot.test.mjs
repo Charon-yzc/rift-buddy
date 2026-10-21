@@ -11,6 +11,46 @@ const a={lineup:[{role:'mid',champion:'Ahri'},{role:'bottom',champion:'Ashe'},{r
 const b={lineup:[{role:'mid',champion:'Galio'},{role:'bottom',champion:'Jinx'},{role:'support',champion:'Lulu'}],mode:'rift'};
 const state=(proposal,vote)=>({lineup:[],pick:null,mode:'rift',ballot:{version:1,proposal,vote}});
 
+test('later public teammate picks remove conflicting proposals and votes on both compact boards',()=>{
+ const key=proposalKey(a),room={mode:'client',ballots:true,members:[{nick:'甲',share:state(a,key)},{nick:'乙',share:state(b,proposalKey(b))}]};
+ const current=[{role:'mid',party:true,clientCellId:0},{role:'bottom',party:true,clientCellId:1},{role:'support',party:true,clientCellId:2},{role:'top',party:false,clientCellId:3}];
+ const player={cellId:3,championId:champions.find(c=>c.id==='Ashe').key,assignedPosition:'TOP',pickState:'locked'},session={localPlayerCellId:0,myTeam:[{cellId:0,championId:0},player]};
+ assert.equal(roomBallotBoard(room,current,champions).length,2);
+ const rows=roomBallotBoard(room,current,champions,{scope:'party',clientSession:session});assert.deepEqual(rows.map(r=>r.key),[proposalKey(b)]);assert.equal(rows[0].voters.length,1);
+ const html=roomBallotView(room,current,champions,{scope:'party',clientSession:session});assert.doesNotMatch(html,new RegExp('data-proposal-key="'+key+'"'));assert.match(html,/1 套/);
+ assert.equal(room.members[0].share.ballot.proposal,a,'Only filter availability; do not erase another member’s proposal');
+});
+
+test('a member choosing their proposed hero keeps the proposal, but a different fixed hero removes it',()=>{
+ const room={members:[{nick:'甲',share:state(a,null)}]},current=a.lineup.map((s,i)=>({...s,champion:null,party:true,clientCellId:i})),key=champions.find(c=>c.id==='Ashe').key;
+ const session={localPlayerCellId:0,myTeam:[{cellId:0,championId:0},{cellId:1,championId:key,pickState:'locked',assignedPosition:'BOTTOM'}]};
+ assert.equal(roomBallotBoard(room,current,champions,{clientSession:session}).length,1);
+ session.myTeam[1].championId=champions.find(c=>c.id==='Jinx').key;assert.deepEqual(roomBallotBoard(room,current,champions,{clientSession:session}),[]);
+});
+
+test('ignored hovers and incomplete identity do not withdraw proposals; preselection is explicit',()=>{
+ const room={members:[{nick:'甲',share:state(a,null)}]},current=a.lineup.map((s,i)=>({...s,party:true,clientCellId:i})),key=champions.find(c=>c.id==='Ashe').key;
+ const session={localPlayerCellId:0,myTeam:[{cellId:0,championId:0},{cellId:3,championId:key,assignedPosition:'TOP'}],actions:[[{type:'pick',actorCellId:3,championId:key,completed:false}]]};
+ assert.equal(roomBallotBoard(room,current,champions,{clientSession:session}).length,1);assert.deepEqual(roomBallotBoard(room,current,champions,{clientSession:session,includePreselected:true}),[]);
+ session.actions=[];session.myTeam[1]={cellId:3,championId:key,pickState:'locked',assignedPosition:''};assert.equal(roomBallotBoard(room,[],champions,{clientSession:session}).length,1,'Unknown ownership is not an invented lane');
+ session.myTeam.push({...session.myTeam[1]});assert.equal(roomBallotBoard(room,current,champions,{clientSession:session}).length,1);
+});
+
+test('manual player positions take precedence over assigned lanes when checking proposal availability',()=>{
+ const room={members:[{nick:'甲',share:state(a,null)}]},current=a.lineup.map((s,i)=>({...s,party:true,clientCellId:i,manualPosition:true})),key=champions.find(c=>c.id==='Ashe').key;
+ const session={localPlayerCellId:0,myTeam:[{cellId:0,championId:0},{cellId:1,championId:key,pickState:'locked',assignedPosition:'SUPPORT'}]};
+ assert.equal(roomBallotBoard(room,current,champions,{clientSession:session}).length,1);
+ current[1].clientCellId=2;current[2].clientCellId=1;assert.deepEqual(roomBallotBoard(room,current,champions,{clientSession:session}),[]);
+});
+
+test('a confirmed teammate pick cannot be hidden by another member intent or unfinished pick',()=>{
+ const room={members:[{nick:'甲',share:state(a,null)}]},current=a.lineup.map((s,i)=>({...s,party:true,clientCellId:i})),key=champions.find(c=>c.id==='Ashe').key;
+ for(const unfinished of [false,true])for(const includePreselected of [false,true]){
+  const session={localPlayerCellId:0,myTeam:[{cellId:0,championId:0},{cellId:1,championId:unfinished?key:0,championPickIntent:key},{cellId:3,championId:key,assignedPosition:'TOP',pickState:'locked'}],actions:unfinished?[[{type:'pick',actorCellId:1,championId:key,completed:false}]]:[]};
+  assert.deepEqual(roomBallotBoard(room,current,champions,{clientSession:session,includePreselected}),[]);
+ }
+});
+
 test('candidate actions show only the local vote state once a matching proposal is visible',()=>{
  const key=proposalKey(a),room={mode:'client',ballots:true,members:[{nick:'伙伴',share:state(a,key)},{self:true,share:state(null,null)}]};
  const actions=candidateBallotActions(room,key,3);assert.equal((actions.match(/<button /g)||[]).length,1);
