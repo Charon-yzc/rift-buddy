@@ -83,18 +83,18 @@ test('late Rift widget ready, peek restore and controls cannot create a third He
 
 // Exercise the real guide owner and micro windows together: manual previews
 // must stay editable without allowing a late legacy window over the game.
-function guideOwner(){
+function guideOwner({mode='hex',prepare=async()=>true}={}){
  const file=new URL('../electron/guide-window.cjs',import.meta.url),nativeRequire=createRequire(file),handlers={},windows=[];let restore;
- let state={selection:{id:'Yasuo',mode:'hex',conditions:[]},compact:true,match:{gameId:'1'}},current={id:'Yasuo',mode:'hex'};
+ let state={selection:{id:'Yasuo',mode,conditions:[]},compact:true,match:{gameId:'1'}},current={id:'Yasuo',mode};
  class Window extends EventEmitter{
   constructor(options){super();this.options=options;this.bounds={x:options.x||0,y:options.y||0,width:options.width,height:options.height};this.visible=false;this.webContents=new EventEmitter();this.webContents.mainFrame={};this.webContents.send=()=>{};this.webContents.setWindowOpenHandler=()=>{};windows.push(this);}
-  getBounds(){return this.bounds;}setBounds(b){this.bounds=b;}getSize(){return [this.bounds.width,this.bounds.height];}setSize(width,height){Object.assign(this.bounds,{width,height});}setPosition(x,y){Object.assign(this.bounds,{x,y});}setMinimumSize(){}setResizable(){}setOpacity(){}setFocusable(){}isFocused(){return false;}isMinimized(){return false;}isDestroyed(){return !!this.destroyed;}isVisible(){return this.visible;}showInactive(){this.visible=true;}hide(){this.visible=false;}setAlwaysOnTop(){}setIgnoreMouseEvents(){}loadFile(){}async loadURL(){}destroy(){this.destroyed=true;this.emit('closed');}
+  getBounds(){return this.bounds;}setBounds(b){this.bounds=b;}getSize(){return [this.bounds.width,this.bounds.height];}setSize(width,height){Object.assign(this.bounds,{width,height});}setPosition(x,y){Object.assign(this.bounds,{x,y});}setMinimumSize(){}setResizable(){}setOpacity(){}setFocusable(value){this.focusable=value;}isFocusable(){return this.focusable;}isFocused(){return false;}isMinimized(){return !!this.minimized;}restore(){this.restores=(this.restores||0)+1;this.minimized=false;}moveTop(){this.raises=(this.raises||0)+1;}isDestroyed(){return !!this.destroyed;}isVisible(){return this.visible;}showInactive(){this.visible=true;this.shows=(this.shows||0)+1;}hide(){this.visible=false;}setAlwaysOnTop(){}setIgnoreMouseEvents(){}loadFile(){}async loadURL(){}destroy(){this.destroyed=true;this.emit('closed');}
  }
  const display={workArea:area,bounds:area},screen=Object.assign(new EventEmitter(),{getDisplayMatching:()=>display,getPrimaryDisplay:()=>display,getCursorScreenPoint:()=>({x:-100,y:-100})});
  const electron={BrowserWindow:Window,ipcMain:{handle:(name,fn)=>{handlers[name]=fn;}},screen,clipboard:{}};
  const widget=()=>({show(){},hide(){},publish(){},fit(){},destroy(){},reset(){},visible:()=>false,info:()=>null});
  function load(url){const module={exports:{}};vm.runInNewContext(fs.readFileSync(url,'utf8'),{module,process,Buffer,setTimeout:()=>1,clearTimeout(){},setInterval:()=>({unref(){}}),clearInterval(){},require:name=>name==='electron'?electron:name==='./hex-micro-windows.cjs'?load(new URL('../electron/hex-micro-windows.cjs',import.meta.url)):['./skill-window.cjs','./jungle-window.cjs'].includes(name)?widget:name==='./window-peek.cjs'?options=>{restore=options.onRestore;return {unfold(){},destroy(){},active:()=>false,visible:()=>false,sync(){}};}:name==='./window-resize.cjs'?()=>({cancel(){},active:()=>false}):nativeRequire(name)});return module.exports;}
- const guide=load(file)({root,getState:()=>state,setState:async next=>{state=next;},getModel:()=>({mode:'hex',live:{matched:false},champion:{id:'Yasuo'},hexMicroRoutes:[]}),isQuitting:()=>false,showMain(){},diagnostic(){},currentSelection:()=>current,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:true})});
+ const guide=load(file)({root,getState:()=>state,setState:async next=>{state=next;},getModel:()=>({mode,live:{matched:false},champion:{id:'Yasuo'},hexMicroRoutes:[]}),isQuitting:()=>false,showMain(){},diagnostic(){},currentSelection:()=>current,prepareCurrent:prepare,getPreferences:()=>({guideAutoShow:true})});
  const legacy=()=>windows.find(w=>w.options.webPreferences.preload.endsWith('guide-preload.cjs'));
  const micro=()=>windows.filter(w=>w.options.webPreferences.additionalArguments?.some(a=>a.startsWith('--rift-hex-window=')));
  const call=(w,name,...args)=>handlers[name]({sender:w.webContents,senderFrame:w.webContents.mainFrame},...args);
@@ -138,5 +138,24 @@ test('a manual Hex reference during an actual Rift game stays editable',async()=
   assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
   await s.call(s.legacy(),'guide-control','condition','heal');assert(s.state().selection.conditions.includes('heal'));
   await s.guide.phase('Offline',false);s.guide.publish();assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
+ }finally{s.guide.destroy();}
+});
+
+test('automatic game overlays never restore or raise a window on foreground observations',async()=>{
+ const s=guideOwner({mode:'rift'});try{
+  s.guide.show();s.ready();const w=s.legacy();w.minimized=true;w.hide();
+  await s.guide.phase('InProgress',true);s.ready();assert.equal(w.focusable,false);assert.equal(w.restores||0,0);
+  const shows=w.shows;for(let i=0;i<12;i++){s.guide.setGameBounds(i%3===0?null:{...area,foreground:i%3===2});await s.guide.phase('InProgress',true);s.guide.publish();}
+  assert.equal(w.raises||0,0);assert.equal(w.restores||0,0);assert.equal(w.shows,shows);
+  s.guide.toggle();assert(!s.guide.isVisible());for(const phase of ['EndOfGame','None','Lobby','ChampSelect']){await s.guide.phase(phase,true);await s.guide.phase('InProgress',true);s.ready();assert(!s.guide.isVisible(),'same game '+phase+' jitter cannot rearm automatic display');}
+  s.guide.show();assert.equal(w.restores,1,'explicit user recovery remains available');
+  s.state().match.gameId='2';await s.guide.phase('InProgress',true);assert.equal(w.focusable,false);
+ }finally{s.guide.destroy();}
+});
+
+test('a failed or delayed automatic preparation cannot loop window displays or override a manual hide',async()=>{
+ let release,calls=0;const s=guideOwner({mode:'rift',prepare:async()=>{calls++;return new Promise(r=>{release=r;});}});try{
+  const flight=s.guide.phase('InProgress',true);await tick();assert.equal(calls,1);s.guide.toggle();await s.call(s.legacy(),'guide-control','hide');release(true);await flight;s.ready();assert(!s.guide.isVisible());
+  for(let i=0;i<10;i++)await s.guide.phase('InProgress',true);assert.equal(calls,1);assert(s.windows.every(w=>!(w.raises||w.restores)));
  }finally{s.guide.destroy();}
 });

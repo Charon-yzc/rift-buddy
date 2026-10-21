@@ -1,5 +1,4 @@
 import {validateGuideSelection} from './guide.mjs';
-import {validateCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext} from './creative-plan.mjs';
 import {champSelectGameId} from './rune-context.mjs';
 import {effectiveDraftScope} from './draft.mjs';
 import {canonicalFamiliarity} from './recommendation-familiarity.mjs';
@@ -104,25 +103,4 @@ export function recommendationKey(input){
  const rankedContext=input.rankedDraft?.ranked?[input.rankedDraft.queue,enemyRolesSignature(input.rankedDraft),Object.values(input.builds||{}).filter(ref=>ref.rankedStatistics).map(ref=>[ref.champion,ref.role,ref.patch,ref.region,ref.tier,ref.rankedStatistics,ref.matchups])]:null;
  const sourceRoles=[...new Set((input.sourceRoles||[]).map(ref=>[ref.champion,ref.role].join(':')))].sort();
  return JSON.stringify([slots,publicContext,rankedContext,input.scope,input.soloRole,input.soloChampion,input.style,input.pool,input.poolMode,input.play,input.rolePools,input.excluded,input.publicBans,input.eligibleByRole,input.confirmedPick,input.enemy,input.visibleEnemies,input.publicPicks,input.publicAllies,input.catalogStatus,input.version,input.catalogVersion,input.creativePlan?.id,input.includePreselected===true,input.randomSeed||'',sourceSamples,sourceRoles,input.patch,input.buildSource,input.pairStatistics?.revision||input.pairStatistics,canonicalFamiliarity(input.familiarityByRole),canonicalRoomFamiliarity(input.roomFamiliarity),input.familiarityRevision||0]);
-}
-// Only an explicitly adopted alternate route inherits this result's personal
-// choices. The frozen plan and any previously edited destination stay separate.
-export function partyRoutePreparations(store,original,selected){
- if(!original||!selected)return [];
- const from=validateCreativePlan(original),to=validateCreativePlan(selected);
- if(from.id===to.id)return [];
- const routes=to.shared?.routes;
- if(!routes?.length)throw Error('个人配置只能随当前方案的备选路线保留');
- // Repeated previews also reorder the remaining alternatives. Reconstruct
- // that exact order from the original family, without weakening plan identity.
- let candidate=from;
- for(const route of [...routes].reverse())candidate=selectPartyRoute(candidate,route.id);
- if(candidate.id!==to.id)throw Error('个人配置只能随当前方案的备选路线保留');
- return to.members.flatMap(member=>{
-  const context=plan=>({id:member.champion,role:member.role,mode:'rift',...creativeComboContext(creativeMemberCombo(plan,member.champion,member.role))});
-  const target=context(to);if(store.recall(target))return [];
-  const previous=recallPreparation(store,null,context(from));if(!previous)return [];
-  const fields=Object.fromEntries(CONFIGURATION_FIELDS.filter(field=>!['comboId','creativePlan'].includes(field)&&previous[field]!==undefined).map(field=>[field,structuredClone(previous[field])]));
-  return [validatePreparation({...fields,...target})];
- });
 }

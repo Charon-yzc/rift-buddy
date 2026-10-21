@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {captureCreativePlan,selectPartyRoute,creativeMemberCombo,creativeComboContext,validateCreativePlan,creativePlanId} from '../src/core/creative-plan.mjs';
-import {createPreparationStore,partyRoutePreparations,recallPreparation} from '../src/core/preparation.mjs';
+import {createPreparationStore,recallPreparation} from '../src/core/preparation.mjs';
 import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {validateState,defaultState} from '../services/storage.mjs';
@@ -27,24 +27,22 @@ test('adding fourth and fifth members retains the active reviewed trio preparati
 });
 
 for(const picks of [{top:'Jax',jungle:'Sejuani',mid:'Ahri'},{top:'Fiora',jungle:'Graves',mid:'TwistedFate',support:'Bard'},{top:'Fiora',jungle:'Ivern',mid:'Zoe',bottom:'Jhin',support:'Bard'}]){
- test(`${Object.keys(picks).length}-person alternate route preserves actual personal choices through restart and favorite capture`,()=>{
+ test(`${Object.keys(picks).length}-person unconfigured route uses each hero position default without copying another route`,()=>{
   const slots=setup(picks),[result]=recommend({slots,champions:data.champions,scope:'party'}),initial=captureCreativePlan(result,data);
   const from=initial.shared?.routes[0].id==='side-pressure'?selectPartyRoute(initial,initial.shared.routes.find(r=>r.id!=='side-pressure').id):initial;
   const to=selectPartyRoute(from,'side-pressure'),store=createPreparationStore();
   for(const m of from.members){const c=context(from,m),b=getBuild(data.champions.find(h=>h.id===m.champion),m.role,data,c);store.remember({...c,conditions:['ap'],customRunePage:{...b.runePage,patch:data.patch},customSkillOrder:{order:'QEW',priority:'EWQ',patch:data.patch},summonerIds:['SummonerFlash','SummonerExhaust'],sourceOpponent:'Ashe'});}
-  const old=store.snapshot(),next=partyRoutePreparations(store,from,to);assert.deepEqual(store.snapshot(),old,'preview helper never writes');assert.equal(next.length,from.members.length);
-  let preview=from;for(const route of from.shared?.routes||from.cooperation?.routes||[])preview=selectPartyRoute(preview,route.id);const repeated=selectPartyRoute(preview,'side-pressure');assert.equal(partyRoutePreparations(store,from,repeated).length,from.members.length,'repeated previews remain within the original route family');
-  for(const p of next)store.remember(p);
+  const old=store.snapshot();
   const restarted=createPreparationStore();restarted.restore(validateState({...defaultState(),preparations:store.snapshot()}).preparations);
-  for(const m of to.members){const p=recallPreparation(restarted,null,context(to,m)),b=getBuild(data.champions.find(h=>h.id===m.champion),m.role,data,p);assert.equal(p.creativePlan.id,to.id);assert.equal(b.skillOrder,'QEW');assert.equal(b.priority,'EWQ');assert.deepEqual(p.conditions,['ap']);assert.deepEqual(b.summoners,['SummonerFlash','SummonerExhaust']);assert.equal(p.sourceOpponent,'Ashe');assert.deepEqual(restarted.recall(context(from,m)),old.find(p=>p.id===m.champion));}
-  const configs=captureTeamConfigurations({...result,creativePlan:to},data,restarted);assert.equal(configs.length,to.members.length);for(const p of configs){assert.equal(p.customSkillOrder.order,'QEW');assert.deepEqual(p.summonerIds,['SummonerFlash','SummonerExhaust']);assert.equal(p.creativePlan.id,to.id);}
+  const fingerprints=new Set();
+  for(const m of to.members){const target=context(to,m),hero=data.champions.find(h=>h.id===m.champion);assert.equal(recallPreparation(restarted,old.find(p=>p.id===m.champion),target),null);const b=getBuild(hero,m.role,data,target),ordinary=getBuild(hero,m.role,data,{mode:'rift',loadoutId:'default'});assert.equal(b.loadoutId,'default');assert.deepEqual(b.items,ordinary.items);assert.deepEqual(b.runePage,ordinary.runePage);fingerprints.add(JSON.stringify([b.items,b.runePage]));assert.deepEqual(restarted.recall(context(from,m)),old.find(p=>p.id===m.champion));}
+  assert(fingerprints.size>1,'Different heroes must not share one generic preparation');assert.deepEqual(restarted.snapshot(),old);
+  const configs=captureTeamConfigurations({...result,creativePlan:to},data,restarted);assert.equal(configs.length,to.members.length);for(const p of configs){assert.equal(p.customSkillOrder,undefined);assert.equal(p.customRunePage,undefined);assert.equal(p.sourceOpponent,undefined);assert.equal(p.creativePlan.id,to.id);}
  });
 }
 test('destination edits win, while unrelated plans, positions and modes never supply route choices',()=>{
- const slots=setup({top:'Fiora',jungle:'Graves',mid:'TwistedFate',support:'Bard'}),[result]=recommend({slots,champions:data.champions,scope:'party'}),from=captureCreativePlan(result,data),to=selectPartyRoute(from,'side-pressure'),store=createPreparationStore(),m=from.members.find(m=>m.champion==='Bard'),old=context(from,m),target=context(to,m);
+ const slots=setup({top:'Fiora',jungle:'Graves',mid:'TwistedFate',support:'Bard'}),[result]=recommend({slots,champions:data.champions,scope:'party'}),initial=captureCreativePlan(result,data),from=initial.shared.routes[0].id==='side-pressure'?selectPartyRoute(initial,initial.shared.routes.find(r=>r.id!=='side-pressure').id):initial,to=selectPartyRoute(from,'side-pressure'),store=createPreparationStore(),m=from.members.find(m=>m.champion==='Bard'),old=context(from,m),target=context(to,m);
  store.remember({...old,customSkillOrder:{order:'QEW',patch:data.patch}});store.remember({...target,customSkillOrder:{order:'EQW',patch:data.patch}});
- assert.deepEqual(partyRoutePreparations(store,from,to),[]);assert.equal(store.recall(target).customSkillOrder.order,'EQW');assert.deepEqual(partyRoutePreparations(store,from,from),[]);
- const isolated=createPreparationStore();isolated.remember({...old,mode:'hex',creativePlan:undefined});isolated.remember({...old,role:'mid',creativePlan:undefined});isolated.remember({...old,comboId:'unrelated',creativePlan:undefined});assert.deepEqual(partyRoutePreparations(isolated,from,to),[]);
- const [other]=recommend({slots:setup({top:'Garen',jungle:'Graves',mid:'TwistedFate',support:'Bard'}),champions:data.champions,scope:'party'});assert.throws(()=>partyRoutePreparations(store,captureCreativePlan(other,data),to),/路线/);
- assert.deepEqual(partyRoutePreparations(store,null,to),[]);
+ assert.equal(recallPreparation(store,null,target).customSkillOrder.order,'EQW');assert.equal(recallPreparation(store,null,old).customSkillOrder.order,'QEW');
+ const isolated=createPreparationStore();isolated.remember({...old,mode:'hex',creativePlan:undefined});isolated.remember({...old,role:'mid',creativePlan:undefined});isolated.remember({...old,comboId:'unrelated',creativePlan:undefined});assert.equal(recallPreparation(isolated,null,target),null);
 });
