@@ -140,3 +140,8 @@ test('native EOG items and AFK fields are read; same-game gameflow supplies the 
   assert.equal(await read({gameId:123,gameMode:'CLASSIC',queueId:420,mapId:11}),null);
  }
 });
+
+test('native root player level is retained and missing level remains unknown',async()=>{
+ const raw=structuredClone(mockRawEog),player=raw.teams[0].players[0];delete player.stats.LEVEL;player.level=16;
+ let report=await fetchFixture(raw);assert.equal(report.teams[0].players[0].level,16);delete player.level;report=await fetchFixture(raw);assert.equal(report.teams[0].players[0].level,null);
+});

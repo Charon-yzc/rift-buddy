@@ -26,3 +26,10 @@ test('popup preference survives the actual settings disk round trip',async()=>{
  await saveState(root,state);const read=await readState(root);assert.equal(read.preferences.postGamePopup,false);
  let reads=0;const client={...valid(),enabled:read.preferences.postGamePopup};const lifecycle=createPostGameLifecycle({current:()=>client,read:async()=>{reads++;return {gameId:111};},show(){assert.fail();},hide(){}});await lifecycle.observe();assert.equal(reads,0);
 });
+
+test('same-game queue metadata can finish loading before the next real report retry',async()=>{
+ const {mockRawEog}=await import('./fixtures/post-game.mjs'),{parsePostGameReport}=await import('../services/post-game.mjs');const raw=structuredClone(mockRawEog);delete raw.queueId;delete raw.gameMode;
+ let clock=0;const shown=[],snapshots=[],client={...valid(),gameId:raw.gameId,game:{gameId:raw.gameId,gameMode:''}};
+ const lifecycle=createPostGameLifecycle({now:()=>clock,current:()=>client,hide(){},show:r=>shown.push(r),read:async context=>{snapshots.push(context.game);return parsePostGameReport(raw,{own:{puuid:'own-puuid-123'},game:context.game});}});
+ await lifecycle.observe();assert.equal(shown.length,0);client.game={gameId:raw.gameId,gameMode:'CLASSIC',queueId:420,mapId:11};clock+=3000;await lifecycle.observe();assert.equal(shown.length,1);assert.equal(snapshots[0].gameMode,'');assert.equal(snapshots[1].queueId,420);await lifecycle.observe();assert.equal(shown.length,1);
+});

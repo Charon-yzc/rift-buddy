@@ -20,7 +20,7 @@ export function parsePostGameReport(raw,{own,game={},champions=[]}={}){
  for(const team of teams)for(const p of team.players){
   if(!p||!Number.isInteger(p.championId)||p.championId<=0||!p.stats||typeof p.stats!=='object'||Array.isArray(p.stats))return null;
   const s=p.stats,champ=champs.get(p.championId);
-  const row={puuid:typeof p.puuid==='string'?p.puuid:'',summonerId:id(p.summonerId),summonerName:String(p.riotIdGameName||p.gameName||p.summonerName||'玩家').slice(0,96),championId:p.championId,championKey:champ?.id||'',championName:champ?.name||'英雄',teamId:team.teamId,isSelf:samePlayer(p,own),level:stat(s,'LEVEL','CHAMP_LEVEL')??null,position:String(s.POSITION||p.selectedPosition||p.detectedTeamPosition||'').toUpperCase(),
+  const row={puuid:typeof p.puuid==='string'?p.puuid:'',summonerId:id(p.summonerId),summonerName:String(p.riotIdGameName||p.gameName||p.summonerName||'玩家').slice(0,96),championId:p.championId,championKey:champ?.id||'',championName:champ?.name||'英雄',teamId:team.teamId,isSelf:samePlayer(p,own),level:stat(p,'level')??stat(s,'LEVEL','CHAMP_LEVEL'),position:String(s.POSITION||p.selectedPosition||p.detectedTeamPosition||'').toUpperCase(),
    kills:stat(s,'CHAMPIONS_KILLED','kills'),deaths:stat(s,'NUM_DEATHS','deaths'),assists:stat(s,'ASSISTS','assists'),
    damageDealt:stat(s,'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS','totalDamageDealtToChampions'),damageTaken:stat(s,'TOTAL_DAMAGE_TAKEN','totalDamageTaken'),goldEarned:stat(s,'GOLD_EARNED','goldEarned'),
    cs:stat(s,'MINIONS_KILLED','minionsKilled','totalMinionsKilled'),visionScore:stat(s,'VISION_SCORE','visionScore'),

@@ -12,8 +12,8 @@ export function createPostGameLifecycle({read,show,hide,current,now=Date.now}){
   const next=disposed?null:identity(current());
   if(!same(context,next)){context=next;handled='';attempts=0;retryAt=0;hide();}
   if(!context||flight||handled||now()<retryAt||attempts>=12)return flight;
-  const captured=context;attempts++;
-  const task=Promise.resolve().then(()=>read(captured)).then(report=>{
+  const captured=context,requestContext={...captured,game:structuredClone(current()?.game)};attempts++;
+  const task=Promise.resolve().then(()=>read(requestContext)).then(report=>{
    if(disposed||context!==captured||!same(captured,identity(current()))||!report||gameId(report.gameId)!==captured.gameId)return;
    show(report);handled=captured.gameId;
   }).catch(()=>{}).finally(()=>{if(flight===task)flight=null;if(context===captured)retryAt=now()+Math.min(15000,1500*attempts);});

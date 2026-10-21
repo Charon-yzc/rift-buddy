@@ -37,7 +37,7 @@ function renderPlayerRow(p, isWinTeam) {
   return `<div class="postgame-player-row ${isSelf ? 'is-self' : ''}">
     <div class="postgame-avatar">
       <img class="postgame-avatar-img" src="../data/images/champion/${e(avatarKey)}.png" alt="">
-      <span class="postgame-level">${Number(p.level) || 1}</span>
+      <span class="postgame-level">${num(p.level)}</span>
     </div>
     <div class="postgame-player-info">
       <div class="postgame-player-name-row">
