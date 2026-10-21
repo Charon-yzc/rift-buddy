@@ -143,3 +143,7 @@
 遇到问题，请附上**操作步骤、客户端阶段、助手版本和相关截图**，不要上传客户端连接文件、口令或带令牌的日志。
 
 [GitHub Issues](https://github.com/Legender134/rift-buddy/issues) · [Gitee Issues](https://gitee.com/legender134/rift-buddy/issues) · [开发指南](CONTRIBUTING.md) · [组合库维护](组合库维护说明.txt)
+
+## 开源许可
+
+本仓库代码以 [MIT 许可](LICENSE) 发布。游戏素材、数据与第三方依赖的权利归属见 [NOTICE.md](NOTICE.md) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
