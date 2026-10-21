@@ -59,7 +59,7 @@ export function buildAugmentDescriptions(catalog,bin,entries){
   function render(input){
    let s=String(input||'');
    for(let depth=0;depth<6&&s.includes('{{');depth++)s=s.replace(/\{\{\s*([^{}]+?)\s*\}\}/g,(_,key)=>{const value=lookup(key.trim().toLowerCase());if(value)return value;unresolved.add(key);return '〔效果详见游戏〕';});
-   s=s.replace(/@([^@]+)@/g,(_,expr)=>{
+   s=s.replace(/@([^@]+)@/g,(token,expr,offset,input)=>{
     if(expr==='SpellName'){
      const slot={ARAM_BreadAndButter:'Q',ARAM_BreadAndCheese:'E',ARAM_BreadAndJam:'W'}[a.key];
      if(slot)return slot;unresolved.add(expr);return '适用技能';
@@ -67,7 +67,10 @@ export function buildAugmentDescriptions(catalog,bin,entries){
     const match=expr.match(/^([A-Za-z_][\w.]*)(?:\*([+-]?[\d.]+))?$/);
     const hasCalculation=match&&(calculations.has(match[1].toLowerCase())||calculations.has(fieldHash(match[1])));
     const value=match?(!match[2]&&hasCalculation?calculation(match[1]):named(match[1],match[2]?Number(match[2]):1)):null;
-    if(value!==null)return value;
+    // Some current templates include the percent sign after a calculation
+    // that already declares its display unit. Preserve one unit at that
+    // boundary without changing literal text or multiplying the value again.
+    if(value!==null)return value.endsWith('%')&&/^[%％]/.test(input.slice(offset+token.length))?value.slice(0,-1):value;
     unresolved.add(expr);return '〔动态数值〕';
    });
    return s.replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').replace(/%i:gold(?:Coins)?%/gi,'金币').replace(/%i:[^%\s]+[%％]/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\n{3,}/g,'\n\n').trim();

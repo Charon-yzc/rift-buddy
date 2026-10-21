@@ -78,3 +78,12 @@ test('a reviewed owned ultimate lock changes the mage play instructions without 
   assert.deepEqual(hexPlayerRoutes({data,hero,owned:[1048],options:[1004]})[0].play,normal.play,'An offered lock is not an owned lock');
  }
 });
+
+
+test('disabled cores leave offered and preview routes while actual owned records stay clearly qualified',()=>{
+ const changed=structuredClone(data);changed.augments.find(a=>a.id===1141).catalogEnabled=false;
+ assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Sona'}),[]);assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Sona',options:[1141]}),[]);
+ const [owned]=hexPlayerRoutes({data:changed,hero:'Sona',owned:[1141]});assert.equal(owned.state,'owned');assert(owned.catalogDisabled);
+ const micro=createGuideModel(changed,selectGuide(null,{id:'Sona',role:'support',mode:'hex',ownedAugmentIds:[1141]})).hexMicroRoutes[0];assert.equal(micro.kind,'mechanism');assert(micro.augments[0].owned&&micro.augments[0].catalogDisabled);
+ changed.augments.find(a=>a.id===1141).descriptionStatus='partial';assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Sona',owned:[1141]}),[]);
+});

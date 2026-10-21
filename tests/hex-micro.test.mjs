@@ -28,12 +28,20 @@ test('three micro routes preserve their own core and optional icons without visi
 test('micro positions stay independent of Rift layout and follow the game display at both text scales',()=>{
  const area={x:-1920,y:0,width:1920,height:1040},game={x:-1800,y:40,width:1600,height:900};
  const small=hexMicroPlacement('economy',null,area,game),large=hexMicroPlacement('routes',null,area,game,1.25);
- assert.deepEqual(small,{x:-1788,y:52,width:168,height:84});assert.equal(large.width,253);assert.equal(large.height,53);
+ assert.deepEqual(small,{x:-1788,y:52,width:168,height:84});assert.equal(large.width,80);assert.equal(large.height,64);
  const offset=hexMicroOffset({...large,x:-1600,y:120},area,game);assert.deepEqual(offset,{x:200,y:80});
  assert.equal(hexMicroPlacement('routes',offset,area,game).x,-1600);
  assert.deepEqual(validateHexWindows({economy:{x:10,y:20,width:900},routes:{x:Infinity,y:3},extra:'private'}),{economy:{x:10,y:20}});
  const original=selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'}),state=validateGuideState({...original,hexWindows:{economy:{x:10,y:20}},bounds:{x:500,y:50,width:400,height:700}});
  const next=selectGuide(state,{id:'Ashe',role:'bottom',mode:'rift'});assert.deepEqual(next.hexWindows,state.hexWindows);assert.deepEqual(next.bounds,state.bounds);
+});
+
+test('micro routes take only the width required by real icons while full rows still fit',()=>{
+ const area={x:0,y:0,width:1920,height:1080},route=(a,i)=>({augments:Array(a).fill({}),items:Array(i).fill({})});
+ const narrow=hexMicroPlacement('routes',null,area,null,1,[route(1,3)]),full=hexMicroPlacement('routes',null,area,null,1,[route(9,9)]);
+ assert.equal(narrow.width,66);assert.equal(narrow.x+narrow.width,1908);
+ assert.equal(full.width,198);assert.equal(full.height,106);assert.equal(full.x+full.width,1908);
+ assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(1,3)]).width,83);
 });
 
 test('micro payloads ignore timers, wallets and unrelated combat changes so stable hovers do not flicker',()=>{
@@ -48,12 +56,45 @@ test('micro payloads ignore timers, wallets and unrelated combat changes so stab
 const bundled=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
 bundled.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
 test('heroes without paired recipes retain their actual configuration and distinct single augment references',()=>{
- for(const hero of ['Lux','Ashe','Sona']){
+ for(const hero of ['Ahri','Ashe','Garen']){
   const model=createGuideModel(bundled,selectGuide(null,{id:hero,role:'mid',mode:'hex'})),fallback=model.hexMicroRoutes;
   assert.equal(fallback.length,1,hero);assert.equal(fallback[0].kind,'reference');assert.match(fallback[0].title,/非配套/);
   assert(fallback[0].augments.length>0);assert(fallback[0].items.length>0);assert(fallback[0].items.every(i=>model.route.some(r=>r.id===i.id)));assert(fallback[0].items.every(i=>!i.core));
   assert(fallback[0].augments.every(a=>!a.core&&a.brief.includes('单项')));
  }
+});
+
+test('reviewed hero mechanism routes reach the micro guide with conditions and provenance intact',()=>{
+ const pairs=[['Gwen',1129],['Kayle',1129],['Teemo',1129],['Sona',1141],['Soraka',1141],['Jax',1058],['Volibear',1058],['Brand',1045],['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]];
+ for(const [hero,core] of pairs){
+  const state=selectGuide(null,{id:hero,role:'mid',mode:'hex',ownedAugmentIds:[core]}),before=JSON.stringify(state),model=createGuideModel(bundled,state),[micro]=model.hexMicroRoutes,[full]=model.hexRoutes;
+  assert.equal(micro.kind,'mechanism',hero);assert.equal(micro.id,full.id);assert.equal(micro.augments.length,1);assert.equal(micro.augments[0].id,core);assert(micro.augments[0].owned&&micro.augments[0].core);
+  assert.deepEqual(micro.sources,full.sources);assert.match(micro.basis,/不是胜率/);assert(micro.items.length>0);assert(micro.items.every(i=>!i.core));
+  for(const group of full.gear)for(const item of group.items)assert(micro.items.find(i=>i.id===item.id)?.brief.startsWith(group.when+'。'));
+  assert.equal(JSON.stringify(state),before,'References never change the prepared configuration');
+ }
+ const sona=createGuideModel(bundled,selectGuide(null,{id:'Sona',mode:'hex',role:'support',ownedAugmentIds:[1141]}));
+ assert.match(sona.hexMicroRoutes[0].items.find(i=>i.id===3504).brief,/^队友靠普攻/);
+ const lux=createGuideModel(bundled,selectGuide(null,{id:'Lux',mode:'hex',role:'mid',ownedAugmentIds:[1048,1004]}));
+ assert(lux.hexRoutes[0].ultimateUnavailable);assert.match(lux.hexMicroRoutes[0].augments[0].brief,/^终极技能不可使用/);assert.doesNotMatch(lux.hexMicroRoutes[0].augments[0].brief,/Q 命中后衔接 E、R/);
+});
+
+test('micro pairing withdraws changed prerequisites as whole groups and never upgrades fallback references',()=>{
+ for(const mutate of [d=>d.patch='16.21',d=>d.champions.find(h=>h.id==='Gwen').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===1129).description+=' changed']){
+  const changed=structuredClone(bundled);mutate(changed);const model=createGuideModel(changed,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]}));assert(model.hexMicroRoutes.every(r=>r.kind==='reference'));
+ }
+ const changed=structuredClone(bundled);changed.items[3115].description+=' changed';const [micro]=createGuideModel(changed,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]})).hexMicroRoutes;
+ assert.equal(micro.kind,'mechanism');assert(!micro.items.some(i=>i.id===3115||i.id===3089));assert(!micro.items.some(i=>i.brief.includes('纳什')));assert.match(micro.augments[0].brief,/部分装备待核对/);
+});
+
+test('owned cores outrank offered routes and actual choices never create three unoffered recipes',()=>{
+ const model=selection=>createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex',...selection}));
+ assert.equal(model({ownedAugmentIds:[1118]}).hexMicroRoutes[0].id,'yasuo-crit-sustain');
+ assert.deepEqual(model({compareIds:[1315]}).hexMicroRoutes.map(r=>r.id),['yasuo-dash-shield']);
+ const both=model({ownedAugmentIds:[1058],compareIds:[1315]});assert.deepEqual(both.hexMicroRoutes.map(r=>r.id),['yasuo-attack-cycle','yasuo-dash-shield']);
+ assert.equal(both.hexMicroRoutes[0].augments.find(a=>a.id===1058).owned,true);
+ assert.deepEqual(model({ownedAugmentIds:[]}).hexMicroRoutes.map(r=>r.id),hexMicroRoutes({data:bundled,hero:'Yasuo'}).map(r=>r.id));
+ assert.equal(model({compareIds:[1002]}).hexMicroRoutes[0].kind,'reference');
 });
 test('actual paired routes retain provenance and independent cores; no popularity or unsupported infinite effects',()=>{
  const routes=hexMicroRoutes({data:bundled,hero:'Yasuo'});assert.equal(routes.length,3);assert.equal(new Set(routes.map(r=>r.augments.find(a=>a.core).id)).size,3);

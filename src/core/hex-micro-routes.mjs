@@ -6,18 +6,36 @@ import {hexCatalogDisabled} from './hex-catalog.mjs';
 
 // Authored paired directions, never a join of independent popularity tables.
 // A changed dependency withdraws its explanation until explicitly reviewed.
-export function hexMicroRoutes({data,hero,mode='hex'}){
+export function hexMicroRoutes({data,hero,mode='hex',owned=[]}){
  const champion=data.champions.find(c=>c.id===hero);
  if(mode!=='hex'||data.patch!==review.patch||mechanicReview(champion,data.patch)!=='current')return [];
- const augment=id=>{const a=data.augments.find(a=>a.id===id);return !hexCatalogDisabled(data,a)&&a?.descriptionStatus==='complete'&&review.augments[id]===fingerprint({key:a.key,description:a.description})?a:null;};
+ const augment=id=>{const a=data.augments.find(a=>a.id===id);return (!hexCatalogDisabled(data,a)||owned.includes(id))&&a?.descriptionStatus==='complete'&&review.augments[id]===fingerprint({key:a.key,description:a.description})?a:null;};
  const item=id=>{const i=data.items[id];return i?.maps?.['12']&&i.inStore&&i.gold?.purchasable!==false&&review.items[id]===hexRouteItemFingerprint(i)?i:null;};
  return review.routes.filter(r=>r.hero===hero).slice(0,3).flatMap(r=>{
   // Do not retain a paired route after its core effect or item disappears.
   if(r.augments.some(a=>a.core&&!augment(a.id))||r.items.some(i=>i.core&&!item(i.id)))return [];
-  const augments=r.augments.flatMap(a=>{const current=augment(a.id);return current?[{...a,name:current.name}]:[];});
+  const augments=r.augments.flatMap(a=>{const current=augment(a.id);return current?[{...a,name:current.name,owned:owned.includes(a.id),catalogDisabled:hexCatalogDisabled(data,current)}]:[];});
   const items=r.items.flatMap(i=>{const current=item(i.id);return current?[{...i,name:current.name}]:[];});
   return [{id:r.id,title:r.title,patch:r.patch,basis:r.basis,source:r.source,sourceFields:r.sourceFields,augments,items}];
  });
+}
+
+// Project the already validated full-guide rules, keeping conditional gear
+// groups intact. A gear group is not a separate build or a mandatory purchase.
+export function hexMechanismMicroRoutes(routes){
+ return routes.flatMap(route=>{
+  const items=[...new Map(route.gear.flatMap(group=>group.items.map(item=>({id:item.id,name:item.name,core:false,brief:group.when+'。'+group.why}))).map(item=>[item.id,item])).values()].slice(0,8);
+  if(!items.length)return [];
+  return [{id:route.id,title:route.title,kind:'mechanism',patch:route.patch,basis:route.basis,source:route.sources[0]?.url,sources:route.sources,state:route.state,
+   augments:[{...route.augment,core:true,owned:route.state==='owned',catalogDisabled:route.catalogDisabled,brief:(route.ultimateUnavailable?'终极技能不可使用。':'')+(route.pendingItems?'部分装备待核对。':'')+route.play[0]}],items}];
+ });
+}
+
+export function rankHexMicroRoutes(routes,{owned=[],options=[]}={}){
+ const has=(route,ids,core=false)=>route.augments.filter(a=>(!core||a.core)&&ids.includes(a.id)).length;
+ return routes.map((route,index)=>({route,index,owned:has(route,owned,true),offered:has(route,options,true),shared:has(route,owned)}))
+  .filter(row=>!options.length||row.owned||row.offered)
+  .sort((a,b)=>b.owned-a.owned||b.offered-a.offered||b.shared-a.shared||a.index-b.index).slice(0,3).map(row=>row.route);
 }
 
 // When no paired recipe has been reviewed, retain the player's actual loadout
