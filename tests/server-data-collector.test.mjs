@@ -80,3 +80,13 @@ test('supplementary source failure is visible but cannot freeze valid primary co
  const root=await temporary(t),providers=sources();providers.hexPoolIndex=async()=>{throw Error('optional source unavailable');};
  const result=await collectServerData({root,seedRoot,network,providers,collectHexPools:true});assert.equal(result.state,'ok');assert.equal(result.datasets['hex-pools'].state,'partial');assert.equal(result.datasets['hex-pools'].optional,true);
 });
+
+test('unavailable pool patch uses one index request, keeps observations and allows complete primary publication',async t=>{
+ const root=await temporary(t),first=await stageServerData(root,seed),providers=sources();let requests=0,heroRequests=0;
+ const index=seed.game.champions.map(c=>({champion_id:c.key,slug:c.id.toLowerCase()})),flight=value=>'<script>self.__next_f.push([1,'+JSON.stringify('1:'+JSON.stringify(value)+'\n')+'])</script>';
+ const bounded={stats:()=>({requests,bytes:0,blocked:{}}),fetcher:async url=>{requests++;assert.equal(url,'https://mayhemmeta.com/');return new Response(flight(index)+flight({defaultPatch:'16.19',servablePatches:['16.19']}));}};
+ providers.hexPool=async()=>{heroRequests++;assert.fail('Unavailable patch must not query heroes');};
+ const result=await collectServerData({root,seedRoot,network:bounded,providers,collectHexPools:true});
+ assert.equal(result.state,'ok');assert.equal(requests,1);assert.equal(heroRequests,0);const optional=result.datasets['hex-pools'];assert.equal(optional.optional,true);assert.equal(optional.state,'partial');assert.equal(optional.checked,0);assert.equal(optional.failed,1);assert.equal(optional.skipped,seed.game.champions.length);assert.match(optional.errors[0].message,new RegExp(seed.game.patch.replace('.','\\.')));
+ assert.equal(result.release,first.pointer.release);assert.deepEqual((await loadServerData(root)).bundle['hex-builds'],seed['hex-builds']);
+});
