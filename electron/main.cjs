@@ -7,6 +7,7 @@ const {isDeepStrictEqual}=require('node:util');
 const {pathToFileURL}=require('node:url');
 const root=path.join(__dirname,'..');
 function diagnostic(message){if(process.env.RIFT_BUDDY_DIAGNOSTICS)fs.appendFile(process.env.RIFT_BUDDY_DIAGNOSTICS,`${new Date().toISOString()} ${message}\n`).catch(()=>{});}
+let postgame,postgameLifecycle;
 let win,tray,state,data,storeRoot,dataService,storage,lcu,helper,guide,guideCore,companion,roomService,roomUsagePublisher,windowObserver,usageCollector,usageCache,latestHistoryTransport,updating=false,quitting=false,applyingRunes=false,cleanupDone=false,cleaningUp=false,hotkeyAvailable=false,guideHotkeyAvailable=false;
 let latestClient={connected:false,phase:'Offline',message:'正在检查客户端…'},latestLive=null,statusTask=null,liveTask=null,lastStatus=0,statusTimer,liveTimer,dataFeedTimer,dataFeedStartup,rendererReady=false,pendingBuild=null,pendingMainPage=null,elevatedReadAttempted=false;
 let observedWindows=null,observedAt=0;
@@ -138,7 +139,7 @@ async function boot(){
  const opponentCache=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
- synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();};
+ synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();};
  const {createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
  const pairCache=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshPairs=refreshReference(pairCache,['pairStatistics']);
@@ -305,6 +306,17 @@ async function boot(){
  session.defaultSession.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
  const placement=await import('../src/core/window-placement.mjs');
  companion=require('./client-companion.cjs')({root,getWindow:()=>win,showMain:showMainWindow,getClient:()=>latestClient,getPreferences:()=>state.preferences,savePlacement:patch=>saveCurrentState(current=>{const preferences={...current.preferences};for(const [key,value] of Object.entries(patch)){if(value===undefined)delete preferences[key];else preferences[key]=value;}return {...current,preferences};}),placement,diagnostic});
+ let postgameOwner=null,postgameTransport=null;
+ const {createPostGameLifecycle}=await import('../services/post-game-lifecycle.mjs');
+ postgame=require('./postgame-window.cjs')({root,diagnostic,onOpenHistory:gameId=>{
+  pendingMainPage={route:'history',gameId};showMainWindow();
+  if(rendererReady&&pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}
+ }});
+ postgameLifecycle=createPostGameLifecycle({
+  current:()=>({connected:!quitting&&!cleaningUp&&latestClient.connected,phase:latestClient.phase,game:latestClient.game,gameId:publicClientGameId(latestClient),account:postgameOwner?JSON.stringify(postgameOwner):'',transport:helper.transportCurrent(latestHistoryTransport)?latestHistoryTransport:null,enabled:state.preferences.postGamePopup!==false}),
+  read:context=>helper.postGame(JSON.parse(context.account),context.game,context.transport),hide:()=>postgame.reset(),
+  show:report=>{for(const team of report.teams)for(const player of team.players){const champion=data.champions.find(c=>Number(c.key)===player.championId);player.championKey=champion?.id||'';player.championName=champion?.name||'英雄';}postgame.show(report);}
+ });
  // Optional rooms (CHA-31): invited peers share public draft/configuration
  // snapshots over LAN/VPN or their own trusted relay. Never logs credentials.
  const {createRoomService}=await import('../services/room.mjs');
@@ -666,6 +678,10 @@ async function boot(){
     catch(error){diagnostic(`automatic permission request failed: ${error?.message||'unknown'}`);}
    }
    usageCollector.observe(latestClient,latestHistoryTransport).catch(()=>{});
+   if(!latestClient.connected||postgameTransport!==latestHistoryTransport)postgameOwner=null;
+   postgameTransport=latestHistoryTransport;
+   if(latestClient.connected&&(latestClient.own?.summonerId||latestClient.own?.puuid))postgameOwner={...(latestClient.own.summonerId?{summonerId:latestClient.own.summonerId}:{}),...(latestClient.own.puuid?{puuid:latestClient.own.puuid}:{})};
+   postgameLifecycle.observe();
    if(ballotRoundChanged(latestClient))clearRoomBallot();
    observeFeedPhase(latestClient);feedIdle=observeSignedFeedPhase(latestClient);dataFeed.activate().catch(()=>{});
    observePreparation();lastStatus=Date.now();if(latestClient.connected&&(!['InProgress','Reconnect'].includes(latestClient.phase)||previousGame&&latestClient.game?.gameId&&previousGame!==latestClient.game.gameId))latestLive=null;
@@ -1007,10 +1023,10 @@ async function boot(){
 }
 if(lock)app.whenReady().then(boot).catch(error=>{diagnostic(`startup error ${error.message}`);dialog.showErrorBox('开黑搭子启动失败',error.message);app.quit();});
 app.on('window-all-closed',()=>{if(!tray||quitting)app.quit();});
-app.on('will-quit',()=>{mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);roomUsagePublisher?.dispose();windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
+app.on('will-quit',()=>{postgameLifecycle?.dispose();postgame?.destroy();mainRelease.cancel();mainPeek.destroy();clearInterval(statusTimer);clearInterval(liveTimer);clearTimeout(dataFeedStartup);clearInterval(dataFeedTimer);roomUsagePublisher?.dispose();windowObserver?.stop();companion?.destroy();guide?.destroy();try{roomService?.leave();}catch{}globalShortcut.unregisterAll();});
 app.on('before-quit',event=>{
  if(cleanupDone||!helper)return;
- event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;
+ event.preventDefault();if(cleaningUp)return;cleaningUp=true;quitting=true;postgameLifecycle?.dispose();
  const stopHelper=Promise.race([helper.shutdown(),new Promise(resolve=>setTimeout(resolve,1500))]);
  Promise.allSettled([stopHelper,saveTask,usageCache?.flush()]).then(results=>{if(results[1].status==='rejected')diagnostic('settings-save-before-quit failed');}).finally(()=>{cleanupDone=true;app.quit();});
 });

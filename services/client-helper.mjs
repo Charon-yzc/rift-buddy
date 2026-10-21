@@ -11,6 +11,7 @@ import {createAcceptedGameReader} from './active-game.mjs';
 import {readState} from './storage.mjs';
 import {launchHelper} from './helper-launch.mjs';
 import {createMatchHistoryService} from './match-history.mjs';
+import {fetchPostGameReport} from './post-game.mjs';
 const pipePattern=/^\\\\\.\\pipe\\rift-buddy-[a-f0-9]{32}$/;
 const tokenPattern=/^[a-f0-9]{64}$/;
 function sameSecret(actual,expected){return typeof actual==='string'&&tokenPattern.test(actual)&&crypto.timingSafeEqual(Buffer.from(actual,'hex'),Buffer.from(expected,'hex'));}
@@ -26,7 +27,7 @@ export function requestHelper(config,operation,payload={},timeout=12000) {
   socket.on('end',()=>{if(!buffer.includes('\n'))reject(new Error('授权连接已结束'));});
  });
 }
-export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame=null}) {
+export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame=null,readPostGame=fetchPostGameReport}) {
  const filename=path.resolve(sessionFile),allowed=path.resolve(userData);
  if(path.dirname(filename)!==allowed||!/^client-session-[a-f0-9]{32}\.json$/.test(path.basename(filename)))throw new Error('无效连接会话');
  const stat=await fs.stat(filename);if(stat.size>4096)throw new Error('连接会话异常');
@@ -47,6 +48,7 @@ export async function startHelper(sessionFile,{userData,bundleRoot,quit,readGame
     let result;
     if(request.operation==='ping')result={ready:true};
      else if(request.operation==='status')result=await clientSnapshot(config.installPath,{partyIds:request.payload?.partyIds});
+     else if(request.operation==='postGame')result=await readPostGame({installPath:config.installPath,own:request.payload?.own,game:request.payload?.game});
      else if(request.operation==='matchHistory'){socket.setTimeout(60000,()=>socket.destroy());result=await matchHistory.execute(request.payload?.operation,request.payload?.payload);}
     else if(request.operation==='applyRunes'){
      latestNoticeOperation=request.payload?.operationId??null;
@@ -100,6 +102,12 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
   const result=route.kind==='helper'?await send(route.config,'matchHistory',{operation,payload},60000):await directHistory.execute(operation,payload);
   if(!transportCurrent(token))throw Error('战绩读取通道已变化，请重新查询');return result;
  }
+ async function postGame(own,game,token){
+  if(!transportCurrent(token))throw Error('赛后读取通道已变化');
+  const route=transport;
+  const result=route.kind==='helper'?await send(route.config,'postGame',{own,game}):await fetchPostGameReport({installPath:route.installPath,own,game});
+  if(!transportCurrent(token))throw Error('赛后读取通道已变化');return result;
+ }
  async function statusWithTransport(installPath,partyIds=[]){
   if(closed)throw Error('连接已取消');const version=lifecycle,captured=config;
   if(captured&&captured.installPath===installPath){
@@ -150,7 +158,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
    }
   })().finally(()=>{opening=null;});return opening;
  }
- return {ensure,active:()=>!!config,history,statusWithTransport,transportCurrent,
+ return {ensure,active:()=>!!config,history,postGame,statusWithTransport,transportCurrent,
    request:(operation,payload)=>{if(!config)throw new Error('连接助手尚未就绪，请重试读取');return send(config,operation,payload,['prepareSelection','matchHistory'].includes(operation)?60000:12000);},
   status:async(installPath,partyIds=[])=> (await statusWithTransport(installPath,partyIds)).client,
   shutdown:async()=>{closed=true;revokeTransport();if(config){try{await send(config,'shutdown');}catch{}config=null;}if(sessionFile){try{await fs.unlink(sessionFile);}catch{}sessionFile=null;}if(launchRecord){await fs.unlink(launchRecord).catch(()=>{});launchRecord=null;}},
