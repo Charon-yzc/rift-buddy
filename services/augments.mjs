@@ -1,8 +1,9 @@
+import {stringTableLookup} from './riot-stringtable.mjs';
 // Render game-authored tooltip text without executing expressions from downloaded data.
 export function formatNumber(n){if(!Number.isFinite(n))return null;const scaled=n*1000;return String(Number.isFinite(scaled)?Math.round(scaled)/1000:n);}
 export function fieldHash(name){let h=2166136261;for(const c of String(name).toLowerCase())h=Math.imul(h^c.charCodeAt(0),16777619);return `{${(h>>>0).toString(16).padStart(8,'0')}}`;}
 export function buildAugmentDescriptions(catalog,bin,entries){
- const dictionary=new Map(Object.entries(entries||{}).map(([k,v])=>[k.toLowerCase(),v]));
+ const lookup=stringTableLookup(entries);
  const objects=Object.values(bin).filter(v=>v?.__type==='AugmentData');
  const byKey=new Map(objects.map(a=>[a.AugmentNameId?.toLowerCase(),a]));
  return catalog.map(a=>{
@@ -57,7 +58,7 @@ export function buildAugmentDescriptions(catalog,bin,entries){
   }
   function render(input){
    let s=String(input||'');
-   for(let depth=0;depth<6&&s.includes('{{');depth++)s=s.replace(/\{\{\s*([^{}]+?)\s*\}\}/g,(_,key)=>{const value=dictionary.get(key.trim().toLowerCase());if(value)return value;unresolved.add(key);return '〔效果详见游戏〕';});
+   for(let depth=0;depth<6&&s.includes('{{');depth++)s=s.replace(/\{\{\s*([^{}]+?)\s*\}\}/g,(_,key)=>{const value=lookup(key.trim().toLowerCase());if(value)return value;unresolved.add(key);return '〔效果详见游戏〕';});
    s=s.replace(/@([^@]+)@/g,(_,expr)=>{
     if(expr==='SpellName'){
      const slot={ARAM_BreadAndButter:'Q',ARAM_BreadAndCheese:'E',ARAM_BreadAndJam:'W'}[a.key];
@@ -71,7 +72,7 @@ export function buildAugmentDescriptions(catalog,bin,entries){
    });
    return s.replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').replace(/%i:gold(?:Coins)?%/gi,'金币').replace(/%i:[^%\s]+[%％]/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\n{3,}/g,'\n\n').trim();
   }
-  const raw=dictionary.get(String(source.DescriptionTra||source.AugmentTooltipTra).toLowerCase());
+  const raw=lookup(String(source.DescriptionTra||source.AugmentTooltipTra).toLowerCase());
   const description=render(raw);
   return {...a,description,descriptionStatus:description?(unresolved.size?'partial':'complete'):'missing',
    // This client catalogue flag is not champion/round offer eligibility.
