@@ -15,3 +15,10 @@
    the hover card and the expanded conditions. */
 .hex-companion .hex-route-gear>div>span>span{display:none}
 .hex-companion .hex-route{padding:8px 0}.hex-companion .hex-route-gear{gap:5px 10px}
+.hex-decision{-webkit-app-region:no-drag;border-top:1px solid var(--rb-line,#304b59);margin-top:12px;padding-top:10px}
+.hex-decision-heading{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.hex-decision-heading small,.hex-decision details small{color:var(--rb-muted,#a8bdcd)}
+.hex-decision p,.hex-decision-reroll{margin:6px 0;line-height:1.65;font-size:13px}
+.hex-decision details{margin-top:6px}.hex-decision details>summary{cursor:pointer;color:var(--rb-accent,#9bcfc9)}
+.hex-decision summary:focus-visible{outline:2px solid var(--rb-accent,#7ce2dc);outline-offset:3px}
+.guide-mode .hex-decision details{border:0;padding:4px 0;background:none}.guide-mode .hex-decision details p{margin:6px 0}

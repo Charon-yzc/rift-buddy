@@ -1,0 +1,6 @@
+import {escape as e} from './ui.mjs';
+
+export function renderHexDecision({reroll,set},{options=0}={}){
+ const showSet=set.count>=2||set.missing||set.next.length,headline=set.conflicts[0]||set.synergies.find(text=>!text.startsWith('已选强化'))||set.synergies[0]||'按当前效果继续比较。';
+ return `${options?`<p class="hex-decision-reroll" role="status">${e(reroll.text)}</p>`:''}${showSet?`<section class="hex-decision" aria-label="本局组合"><div class="hex-decision-heading"><b>本局组合</b><small>${set.count}项已标记${set.conflicts.length?' · 有冲突':''}</small></div><p class="${set.conflicts.length?'compare-caution':''}">${e(headline)}</p><details data-disclosure-key="hex-decision" data-guide-section="hex-decision"><summary tabindex="0" data-guide-focus="hex-decision">${set.next.length?'联动与下一张':'查看依据'}</summary>${set.conflicts.slice(1).map(text=>`<p class="compare-caution">${e(text)}</p>`).join('')}${set.synergies.filter(text=>text!==headline).map(text=>`<p>${e(text)}</p>`).join('')}${set.next.length?`<p>若局内出现，可比较${set.next.map(row=>e(row.name)).join('、')}。</p>`:''}${set.next.map(row=>`<p><b>${e(row.name)}</b> · ${e(row.reason)}</p>`).join('')}${set.pending||set.missing?`<p>${set.pending+set.missing}项组合关系尚待核对。</p>`:''}<small>${e(set.note)}</small></details></section>`:''}`;
+}
