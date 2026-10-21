@@ -8,7 +8,7 @@ export function gameTooltipView(data,kind,id,{mode='rift',image=asset}={}){
   const item=data.items[id];if(!item)return '';
   const detailed=item.tooltip?.patch===data.patch&&typeof item.tooltip.description==='string'?item.tooltip:null;
   name=item.name;description=detailed?.description||item.description;partial=detailed?.status==='partial';
-  if(partial){const official=gameDescription(item.description).split(/\n\s*\n/).find(block=>/^\s*\d/.test(block));if(official&&official.trim()!==gameDescription(description).split(/\n\s*\n/)[0].trim())basic=official;}
+  if(partial){const official=gameDescription(item.description).split(/\n\s*\n/).find(block=>/^\s*\d/.test(block));if(official&&official.replace(/\s/g,'')!==gameDescription(description).split(/\n\s*\n/)[0].replace(/\s/g,''))basic=official;}
   meta=['峡谷',data.patch,Number.isFinite(item.gold?.total)?item.gold.total+' 金':''].filter(Boolean).join(' · ');
   changes=itemPatchNotes(data,id).filter(row=>compareBuildPatches(row.patch,data.patch)<=0).slice(0,2);
  }else if(kind==='rune'){
