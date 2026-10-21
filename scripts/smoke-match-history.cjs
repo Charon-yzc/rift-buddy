@@ -123,7 +123,7 @@ async function run(){
   const saved=JSON.parse(await fs.readFile(path.join(root,'settings.json'),'utf8'));assert.equal(Object.hasOwn(saved,'championUsage'),false);assert.equal(Object.hasOwn(saved.preferences,'championUsage'),false);
   let roomVerified=false;
   if(roomUsageSmoke){
-   await js('window.__usageInputs=[];const originalPost=Worker.prototype.postMessage;Worker.prototype.postMessage=function(input,...rest){if(input?.slots)window.__usageInputs.push(structuredClone(input));return originalPost.call(this,input,...rest);};true');
+   await js('window.__usageInputs=[];const originalPost=Worker.prototype.postMessage;Worker.prototype.postMessage=function(message,...rest){const input=message?.input||message;if(input?.slots)window.__usageInputs.push(structuredClone(input));return originalPost.call(this,message,...rest);};true');
    await js('window.buddy.roomRelay({url:"wss://room.riftbuddy.dpdns.org",room:"482913",pin:"123456"},"战绩测试玩家#TEST")');
    await until(()=>roomFrames.some(frame=>frame.kind==='state'&&frame.championUsage?.usage?.sampled===500),'Main did not publish its own summary');
    const published=roomFrames.findLast(frame=>frame.kind==='state'&&frame.championUsage?.usage?.sampled===500);assert.equal(published.championUsage.mass,.6);
