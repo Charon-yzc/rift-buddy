@@ -20,9 +20,12 @@ test('500 LCU counts require five list reads, zero per-game/detail reads, and no
  assert.equal(f.calls.filter(c=>c.route.includes('/matches?')).length,5);assert.ok(f.calls.every(c=>!c.route.includes('/games/')&&!c.route.includes('timeline')&&!c.method));
  assert.ok(!/mock-|puuid|gameId|participants|token|password/.test(JSON.stringify(result)));assert.equal(result.target,500);
 });
-test('SGP publishes the first20 counts before the rest and uses25 summary requests for500',async()=>{
- const f=fixture({region:true}),first=await f.service.execute('own-summary-page');assert.equal(first.identified,20);assert.equal(first.complete,false);assert.equal(f.remoteCalls.length,1);
- let result=first;while(!result.complete)result=await f.service.execute('own-summary-page',{cursor:result.cursor});assert.equal(result.identified,500);assert.deepEqual(result.counts,{22:500});assert.equal(f.remoteCalls.length,25);assert.ok(f.remoteCalls.every(c=>c.server==='TENCENT_HN10'&&c.token==='mock-entitlement'&&!c.common&&c.route.includes('/player/'+own.puuid+'/SUMMARY')));assert.equal(f.calls.some(c=>c.route.includes('/matches?')),false);
+test('SGP publishes a bounded batch per call and reads the window in concurrent pages',async()=>{
+ // Four 20-game pages are fetched concurrently per call, so 500 games need
+ // 7 calls instead of 25 serial round trips of ~1.3s each.
+  const f=fixture({region:true}),first=await f.service.execute('own-summary-page');assert.equal(first.identified,80);assert.equal(first.complete,false);assert.equal(f.remoteCalls.length,4);
+  let result=first,calls=1;while(!result.complete){result=await f.service.execute('own-summary-page',{cursor:result.cursor});assert.ok(++calls<=7);}
+  assert.equal(result.identified,500);assert.deepEqual(result.counts,{22:500});assert.equal(f.remoteCalls.length,25,'the same 25 backend pages, read in 7 concurrent batches');assert.ok(f.remoteCalls.every(c=>c.server==='TENCENT_HN10'&&c.token==='mock-entitlement'&&!c.common&&c.route.includes('/player/'+own.puuid+'/SUMMARY')));assert.equal(f.calls.some(c=>c.route.includes('/matches?')),false);
 });
 test('short/no history terminates at the real source boundary without inventing500 games',async()=>{
  for(const games of [0,7,50]){const {result,pages}=await scan(fixture({games}).service);assert.equal(result.scanned,games);assert.equal(result.identified,games);assert.equal(pages,1);assert.equal(Object.values(result.counts).reduce((a,b)=>a+b,0),games);}
@@ -42,9 +45,11 @@ test('only the first failed SGP page can fall back, starting LCU at zero',async(
  const f=fixture({region:true,games:7,sgp:()=>{throw Error('unavailable');}}),{result}=await scan(f.service);assert.equal(result.source,'lcu');assert.equal(result.identified,7);assert.ok(f.calls.some(c=>c.route.endsWith('begIndex=0&endIndex=99')));
 });
 test('a later SGP failure preserves its cursor and never splices a different source ordering',async()=>{
- let failSecond=true;const f=fixture({region:true,sgp:start=>{if(start&&failSecond)throw Error('unavailable');return {games:start?[]:Array.from({length:20},(_,i)=>remote(i+1))};}}),first=await f.service.execute('own-summary-page');
- await assert.rejects(f.service.execute('own-summary-page',{cursor:first.cursor}),/中断/);assert.equal(f.calls.some(c=>c.route.includes('/matches?')),false);failSecond=false;
- const result=await f.service.execute('own-summary-page',{cursor:first.cursor});assert.equal(result.scanned,20);assert.equal(result.identified,20);assert.equal(result.complete,true);
+  let failSecond=true;const f=fixture({region:true,sgp:start=>{if(start>=80&&failSecond)throw Error('unavailable');return {games:Array.from({length:20},(_,i)=>remote(start+i+1))};}}),first=await f.service.execute('own-summary-page');
+  assert.equal(first.scanned,80);assert.equal(first.complete,false);
+  await assert.rejects(f.service.execute('own-summary-page',{cursor:first.cursor}),/中断/);assert.equal(f.calls.some(c=>c.route.includes('/matches?')),false,'a failed later batch must not switch to the client source');
+  failSecond=false;
+  const result=await f.service.execute('own-summary-page',{cursor:first.cursor});assert.equal(result.scanned,160);assert.equal(result.identified,160);assert.equal(result.source,'sgp');assert.equal(f.calls.some(c=>c.route.includes('/matches?')),false);
 });
 test('last consumed cursor replays its committed response without advancing or allowing another account/offset/filter',async()=>{
  const f=fixture(),first=await f.service.execute('own-summary-page'),second=await f.service.execute('own-summary-page',{cursor:first.cursor});assert.notEqual(first.cursor,second.cursor);
@@ -77,7 +82,7 @@ test('private cache identity is stable across credential/port/session changes an
  assert.equal((await fixture().service.execute('own-summary-context')).cacheKey,'','Unknown regions cannot share a persistent key');
 });
 test('same PUUID changing region during a summary request rejects the old page before commit',async()=>{
- let region='HN10',release;const f=fixture({discover:async()=>({port:23456,password:'mock-secret',region:'TENCENT',rsoPlatformId:region}),sgp:()=>new Promise(resolve=>release=resolve)}),identity=await f.service.execute('own-summary-context'),old=f.service.execute('own-summary-page',{session:identity.session}),rejected=assert.rejects(old,/会话/);while(!release)await pause();region='HN1';release({games:[remote(1)]});await rejected;
+  let region='HN10',releases=[];const f=fixture({discover:async()=>({port:23456,password:'mock-secret',region:'TENCENT',rsoPlatformId:region}),sgp:()=>new Promise(resolve=>releases.push(resolve))}),identity=await f.service.execute('own-summary-context'),old=f.service.execute('own-summary-page',{session:identity.session}),rejected=assert.rejects(old,/会话/);while(releases.length<4)await pause();region='HN1';for(const release of releases)release({games:[remote(1)]});await rejected;
  const next=await f.service.execute('own-summary-context');assert.notEqual(next.session,identity.session);assert.equal(next.server,'TENCENT_HN1');const before=f.remoteCalls.length;await assert.rejects(f.service.execute('own-summary-page',{session:identity.session}),/会话/);assert.equal(f.remoteCalls.length,before);
 });
 test('late discovery failure cannot revoke the session established by a newer successful fresh probe',async()=>{
