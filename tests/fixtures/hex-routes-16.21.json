@@ -1,6 +1,6 @@
 {
   "sourceRelease": "0325f09ff11b0c63cccd1cd9937c22ac15c61561714ac35eeb9856c40f91ddcb",
-  "basis": "Explicit compatibility review of these 14 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
+  "basis": "Explicit compatibility review of these 15 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
   "game": {
     "version": "16.21.1",
     "patch": "16.21",
@@ -13572,6 +13572,964 @@
           "patch": "16.21",
           "url": "https://raw.communitydragon.org/16.21/game/data/characters/hecarim/hecarim.bin.json"
         }
+      },
+      {
+        "id": "Jhin",
+        "name": "烬",
+        "stats": {
+          "hp": 655,
+          "hpperlevel": 107,
+          "mp": 300,
+          "mpperlevel": 50,
+          "movespeed": 330,
+          "armor": 24,
+          "armorperlevel": 4.7,
+          "spellblock": 33,
+          "spellblockperlevel": 1.1,
+          "attackrange": 550,
+          "hpregen": 3.75,
+          "hpregenperlevel": 0.55,
+          "mpregen": 6,
+          "mpregenperlevel": 0.8,
+          "crit": 0,
+          "critperlevel": 0,
+          "attackdamage": 61,
+          "attackdamageperlevel": 4.4,
+          "attackspeedperlevel": 0,
+          "attackspeed": 0.625,
+          "attackspeedratio": 0,
+          "attacktype": "ranged"
+        },
+        "mechanics": {
+          "passive": {
+            "name": "低语",
+            "description": "烬的手枪，“低语”，是一台精密的设备，用来造成出色的伤害。它会以一个固定的频率发射子弹，并且只能装四颗子弹。烬会将黑暗魔法注入最后一颗子弹，来让它产生暴击并造成额外斩杀伤害。当“低语”暴击时，它会为烬提供一个爆发性的移动速度加成。"
+          },
+          "spells": [
+            {
+              "name": "曼舞手雷",
+              "description": "烬朝敌人扔出一颗迷人的手雷。它最多可以命中四个目标，并在每次击杀单位后获得伤害提升。",
+              "maxrank": 5,
+              "cooldown": [
+                7,
+                6.5,
+                6,
+                5.5,
+                5
+              ],
+              "cost": [
+                40,
+                45,
+                50,
+                55,
+                60
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "致命华彩",
+              "description": "烬挥舞他的长枪，进行一次射程极远的射击。它可穿透小兵和野怪，但会在命中第一个敌方英雄后停下。如果目标最近踩到了烬的陷阱、承受过烬的伤害或被烬的队友给命中过，那么还会受到禁锢效果。",
+              "maxrank": 5,
+              "cooldown": [
+                12,
+                12,
+                12,
+                12,
+                12
+              ],
+              "cost": [
+                50,
+                55,
+                60,
+                65,
+                70
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "万众倾倒",
+              "description": "烬放置一个隐形的莲花陷阱，陷阱会在敌人经过时绽放。它会减速附近的敌人，然后爆炸为一阵飘零的花瓣并对敌人造成伤害。\n\n绚葬之华 - 当烬击杀掉一名敌方英雄时，一个莲花陷阱将在该英雄的尸体附近爆炸。",
+              "maxrank": 5,
+              "cooldown": [
+                2,
+                2,
+                2,
+                2,
+                2
+              ],
+              "cost": [
+                30,
+                30,
+                30,
+                30,
+                30
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "完美谢幕",
+              "description": "烬开始引导，将“低语”切换成一个肩扛式重炮。它能够进行四次超级射击，超级射击的射程极远，可穿透小兵和野怪，但会在命中第一个敌方英雄后停下。“低语”会让命中的敌方单位怯场，也就是对它们造成减速效果和斩杀伤害。第四次射击是经过精心调制的，所以威力特别大，并且必定会造成暴击。",
+              "maxrank": 3,
+              "cooldown": [
+                120,
+                105,
+                90
+              ],
+              "cost": [
+                100,
+                100,
+                100
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        "mechanicSource": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Jhin",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "observedAt": "2026-10-21T19:28:20.430Z",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
+            "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+          },
+          "dataDragonURL": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "passive": {
+            "name": "低语",
+            "description": "烬的手枪，“低语”，是一台精密的设备，用来造成出色的伤害。它会以一个固定的频率发射子弹，并且只能装四颗子弹。烬会将黑暗魔法注入最后一颗子弹，来让它产生暴击并造成额外斩杀伤害。当“低语”暴击时，它会为烬提供一个爆发性的移动速度加成。",
+            "image": {
+              "full": "Jhin_P.png",
+              "sprite": "passive1.png",
+              "group": "passive",
+              "x": 144,
+              "y": 96,
+              "w": 48,
+              "h": 48
+            }
+          },
+          "spells": [
+            {
+              "id": "JhinQ",
+              "name": "曼舞手雷",
+              "description": "烬朝敌人扔出一颗迷人的手雷。它最多可以命中四个目标，并在每次击杀单位后获得伤害提升。",
+              "tooltip": "烬扔出一颗手雷，手雷会造成<physicalDamage>{{ totaldamage }}物理伤害</physicalDamage>，然后弹跳到附近的一个还未被此技能命中的目标上。<br /><br />手雷最多可命中{{ tooltipmaxtargetshit }}个目标。手雷每击杀一个单位，它的后续弹跳伤害就会提升{{ percentamponkill*100 }}%。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "伤害",
+                  "总攻击力收益",
+                  "冷却时间",
+                  "@AbilityResourceName@消耗"
+                ],
+                "effect": [
+                  "{{ basedamage }} -> {{ basedamageNL }}",
+                  "{{ adratio*100.000000 }}% -> {{ adrationl*100.000000 }}%",
+                  "{{ cooldown }} -> {{ cooldownNL }}",
+                  "{{ cost }} -> {{ costNL }}"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                7,
+                6.5,
+                6,
+                5.5,
+                5
+              ],
+              "cooldownBurn": "7/6.5/6/5.5/5",
+              "cost": [
+                40,
+                45,
+                50,
+                55,
+                60
+              ],
+              "costBurn": "40/45/50/55/60",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                550,
+                550,
+                550,
+                550,
+                550
+              ],
+              "rangeBurn": "550",
+              "image": {
+                "full": "JhinQ.png",
+                "sprite": "spell6.png",
+                "group": "spell",
+                "x": 288,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "JhinW",
+              "name": "致命华彩",
+              "description": "烬挥舞他的长枪，进行一次射程极远的射击。它可穿透小兵和野怪，但会在命中第一个敌方英雄后停下。如果目标最近踩到了烬的陷阱、承受过烬的伤害或被烬的队友给命中过，那么还会受到禁锢效果。",
+              "tooltip": "烬进行一次远程射击，对命中的第一个英雄和沿途的其它敌人造成<physicalDamage>{{ totaldamage }}物理伤害</physicalDamage>。<br /><br />如果被【W致命华彩】命中的敌方英雄在前{{ spottingduration }}秒受到过来自烬的友方英雄的伤害，那么这个英雄还会被<status>禁锢</status>{{ rootduration }}秒，并为烬提供<spellName>低语</spellName>的移动速度加成。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "伤害",
+                  "禁锢时长",
+                  "@AbilityResourceName@消耗"
+                ],
+                "effect": [
+                  "{{ basedamage }} -> {{ basedamageNL }}",
+                  "{{ rootduration }} -> {{ rootdurationNL }}",
+                  "{{ cost }} -> {{ costNL }}"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                12,
+                12,
+                12,
+                12,
+                12
+              ],
+              "cooldownBurn": "12",
+              "cost": [
+                50,
+                55,
+                60,
+                65,
+                70
+              ],
+              "costBurn": "50/55/60/65/70",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                3000,
+                3000,
+                3000,
+                3000,
+                3000
+              ],
+              "rangeBurn": "3000",
+              "image": {
+                "full": "JhinW.png",
+                "sprite": "spell6.png",
+                "group": "spell",
+                "x": 336,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "JhinE",
+              "name": "万众倾倒",
+              "description": "烬放置一个隐形的莲花陷阱，陷阱会在敌人经过时绽放。它会减速附近的敌人，然后爆炸为一阵飘零的花瓣并对敌人造成伤害。<br><br><font color='#FFFFFF'>绚葬之华 -</font> 当烬击杀掉一名敌方英雄时，一个莲花陷阱将在该英雄的尸体附近爆炸。",
+              "tooltip": "<passive>被动：</passive>被烬击杀的英雄，将在其所在位置生成并引爆一个莲花陷阱。<br /><br /><active>主动：</active>烬放置一个持续{{ trapduration }}分钟的隐形莲花陷阱，陷阱会在被敌人踩中时生成一个区域，使区域内的敌人<status>减速</status>{{ trapslowamount*100 }}%。在{{ trapdetonationtime }}秒后，陷阱会爆炸，造成<magicDamage>{{ totaldamage }}魔法伤害</magicDamage>。<br /><br />这个技能有2层充能({{ ammorechargeratetooltip }}秒刷新时间)。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "伤害",
+                  "充能时间"
+                ],
+                "effect": [
+                  "{{ basedamage }} -> {{ basedamageNL }}",
+                  "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                2,
+                2,
+                2,
+                2,
+                2
+              ],
+              "cooldownBurn": "2",
+              "cost": [
+                30,
+                30,
+                30,
+                30,
+                30
+              ],
+              "costBurn": "30",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "2",
+              "range": [
+                750,
+                750,
+                750,
+                750,
+                750
+              ],
+              "rangeBurn": "750",
+              "image": {
+                "full": "JhinE.png",
+                "sprite": "spell6.png",
+                "group": "spell",
+                "x": 384,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "JhinR",
+              "name": "完美谢幕",
+              "description": "烬开始引导，将“低语”切换成一个肩扛式重炮。它能够进行四次超级射击，超级射击的射程极远，可穿透小兵和野怪，但会在命中第一个敌方英雄后停下。“低语”会让命中的敌方单位怯场，也就是对它们造成减速效果和斩杀伤害。第四次射击是经过精心调制的，所以威力特别大，并且必定会造成暴击。",
+              "tooltip": "烬架好武器，固定在原地，并获得4颗超级子弹。每颗超级子弹会在命中第一个敌方英雄时对其造成<physicalDamage>{{ damagecalc }}</physicalDamage>到<physicalDamage>{{ maxincreasecalc }}物理伤害（伤害会基于目标的已损失生命值而提升）</physicalDamage>并使其<status>减速</status>{{ slowpercent*100 }}%，持续{{ slowduration }}秒。第四颗子弹会暴击，造成{{ fourthshotmultiplier*100 }}%伤害。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "伤害",
+                  "冷却时间"
+                ],
+                "effect": [
+                  "{{ damage }} -> {{ damageNL }}",
+                  "{{ cooldown }} -> {{ cooldownNL }}"
+                ]
+              },
+              "maxrank": 3,
+              "cooldown": [
+                120,
+                105,
+                90
+              ],
+              "cooldownBurn": "120/105/90",
+              "cost": [
+                100,
+                100,
+                100
+              ],
+              "costBurn": "100",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                25000,
+                25000,
+                25000
+              ],
+              "rangeBurn": "25000",
+              "image": {
+                "full": "JhinR.png",
+                "sprite": "spell6.png",
+                "group": "spell",
+                "x": 432,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            }
+          ]
+        },
+        "combatStatsSource": {
+          "patch": "16.21",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json"
+        }
       }
     ],
     "augments": [
@@ -14534,6 +15492,48 @@
           "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
         }
       },
+      "3094": {
+        "id": 3094,
+        "name": "疾射火炮",
+        "description": "35%攻击速度\n25%暴击几率\n4%移动速度\n\n神射手\n你的盈能攻击造成40额外魔法伤害并获得35%额外攻击距离。",
+        "tags": [
+          "CriticalStrike",
+          "AttackSpeed",
+          "NonbootsMovement"
+        ],
+        "gold": {
+          "base": 850,
+          "purchasable": true,
+          "total": 2650,
+          "sell": 1855
+        },
+        "maps": {
+          "11": true,
+          "12": true,
+          "22": false,
+          "30": false,
+          "453": true
+        },
+        "from": [
+          "3086",
+          "3144"
+        ],
+        "into": [],
+        "inStore": true,
+        "stats": {
+          "FlatCritChanceMod": 0.25,
+          "PercentAttackSpeedMod": 0.35,
+          "PercentMovementSpeedMod": 0.04
+        },
+        "specialRecipe": null,
+        "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3094.png",
+        "tooltip": {
+          "patch": "16.21",
+          "description": "35%攻击速度\n25%暴击几率\n4%移动速度\n\n神射手\n你的盈能攻击造成40额外魔法伤害并获得35%额外攻击距离。",
+          "status": "complete",
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+        }
+      },
       "3115": {
         "id": 3115,
         "name": "纳什之牙",
@@ -14947,6 +15947,88 @@
           "patch": "16.21",
           "description": "60法术强度\n300生命值\n\n折磨\n伤害型技能会灼烧敌人，每秒造成2%最大生命值的魔法伤害，持续3秒。\n\n受苦\n在与敌方英雄作战时，每过1秒，就会造成2%额外伤害，至多至6%。",
           "status": "complete",
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+        }
+      },
+      "6676": {
+        "id": 6676,
+        "name": "收集者",
+        "description": "50攻击力\n10穿甲\n25%暴击几率\n\n死\n你的伤害会处决低于5%生命值的英雄。\n\n税\n击杀英雄时提供25额外金币。",
+        "tags": [
+          "Damage",
+          "CriticalStrike",
+          "ArmorPenetration"
+        ],
+        "gold": {
+          "base": 525,
+          "purchasable": true,
+          "total": 3000,
+          "sell": 2100
+        },
+        "maps": {
+          "11": true,
+          "12": true,
+          "22": false,
+          "30": false,
+          "453": true
+        },
+        "from": [
+          "1037",
+          "3134",
+          "1018"
+        ],
+        "into": [],
+        "inStore": true,
+        "stats": {
+          "FlatCritChanceMod": 0.25,
+          "FlatPhysicalDamageMod": 50
+        },
+        "specialRecipe": null,
+        "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6676.png",
+        "tooltip": {
+          "patch": "16.21",
+          "description": "50攻击力\n 〔数值未解析〕穿甲\n25%暴击几率\n\n死\n你的伤害会处决低于5%生命值的英雄。\n\n税\n击杀英雄时提供25额外金币。",
+          "status": "partial",
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+        }
+      },
+      "6696": {
+        "id": 6696,
+        "name": "公理圆弧",
+        "description": "55攻击力\n18穿甲\n20技能急速\n\n涌动\n在你对一名敌方英雄造成伤害后，如果该英雄在3秒内阵亡，则会返还你的终极技能的一些总冷却时间。",
+        "tags": [
+          "Damage",
+          "ArmorPenetration",
+          "AbilityHaste"
+        ],
+        "gold": {
+          "base": 363,
+          "purchasable": true,
+          "total": 2750,
+          "sell": 1925
+        },
+        "maps": {
+          "11": true,
+          "12": true,
+          "22": false,
+          "30": false,
+          "453": true
+        },
+        "from": [
+          "2020",
+          "3133"
+        ],
+        "into": [],
+        "inStore": true,
+        "stats": {
+          "FlatPhysicalDamageMod": 55
+        },
+        "specialRecipe": null,
+        "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6696.png",
+        "tooltip": {
+          "patch": "16.21",
+          "description": "55攻击力\n 〔数值未解析〕穿甲\n20技能急速\n\n涌动\n在你对一名敌方英雄造成伤害后，如果该英雄在3秒内阵亡，则会返还你〔数值未解析〕%的终极技能总冷却时间。",
+          "status": "partial",
           "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
         }
       },

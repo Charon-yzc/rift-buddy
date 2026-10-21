@@ -3,7 +3,7 @@
   "scope": "hex-routes-and-choices",
   "patch": "16.21",
   "reviewedAt": "2026-10-22",
-  "basis": "Explicit compatibility review of these 14 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
+  "basis": "Explicit compatibility review of these 15 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
   "sources": {
     "notes": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
     "characters": "https://raw.communitydragon.org/16.21/game/data/characters/",
@@ -27,7 +27,8 @@
       "Veigar": "b0c876605f73d7f8",
       "Lux": "50314ad04c92f1a6",
       "Yasuo": "d36ebea001e3d1cb",
-      "Hecarim": "f9c4c9b8aea59e68"
+      "Hecarim": "f9c4c9b8aea59e68",
+      "Jhin": "226e6c11b8a992f5"
     },
     "sourceAnchors": {
       "Gwen": {
@@ -365,6 +366,30 @@
             "fingerprint": "2a4e6af555abb6c6"
           }
         }
+      },
+      "Jhin": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "226e6c11b8a992f5",
+        "observedAt": "2026-10-21T19:28:20.430Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Jhin",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
+            "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "3aaa1bcaed04d760"
+          }
+        }
       }
     }
   },
@@ -411,6 +436,7 @@
     "3072": "025dc8a402ea9021",
     "3078": "521032faa395a097",
     "3089": "999d4b976fe2d546",
+    "3094": "29f19115313f6301",
     "3115": "ef85e0677b1ae84c",
     "3116": "0527cd04d01e94a8",
     "3135": "4ccdf3ad2cfbc06c",
@@ -421,6 +447,8 @@
     "6333": "65943886b530ef44",
     "6617": "85c508b874bbbc69",
     "6653": "af920af056ef62d1",
+    "6676": "2227ece5ba86c42d",
+    "6696": "c7d6e8cf7987593a",
     "123430": "24b48c9ae384a467"
   },
   "micro": {
