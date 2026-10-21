@@ -83,8 +83,8 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
  return {edge,profile:prof,byId,skills:createSkillCooperation(byId,{isCurrent}),fitCache:new Map()};
 }
 
-function connectedEdges(members,graph){
- const current=[];for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)current.push(edge);}
+function connectedEdges(members,graph,pairs=null){
+ const current=[];if(pairs){for(const edge of pairs)if(edge?.current)current.push(edge);}else for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){const edge=graph.edge(members[i],members[j]);if(edge?.current)current.push(edge);}
  if(!current.length)return graph.skills.edges(members);
  const missing=members.filter(m=>!current.some(e=>[e.a,e.b].includes(m.champion)));
  if(current.length>=members.length-1&&!missing.length)return current;
@@ -137,9 +137,9 @@ export function cooperationSeeds({members,targets,candidateSets,graph,limit=24,p
  if(pools.some(p=>!p.length))return [];
  const profiles=new Map(pools.flat().map(m=>[key(m),graph.profile(m)]));
  const best=new Map();
- const visit=picks=>{
+ const visit=(picks,pairs=null)=>{
   if(new Set(picks.map(m=>m.champion)).size!==picks.length)return;
-  const connected=connectedEdges(picks,graph),tactical=!connected||connected.every(e=>e.family.startsWith('skills:'))?tacticalCooperationMode(picks,graph,preferences):null;
+  const connected=connectedEdges(picks,graph,pairs),tactical=!connected||connected.every(e=>e.family.startsWith('skills:'))?tacticalCooperationMode(picks,graph,preferences):null;
   if(!connected&&!tactical)return;
   const edges=tactical?[]:connected;
   const traits=picks.map(m=>profiles.get(key(m))),ad=traits.reduce((n,p)=>n+p.damageWeights.ad,0),ap=traits.reduce((n,p)=>n+p.damageWeights.ap,0);
@@ -147,6 +147,13 @@ export function cooperationSeeds({members,targets,candidateSets,graph,limit=24,p
   const family=tactical?'tactical:'+tactical+':'+picks.map((m,i)=>m.role+':'+(traits[i].frontline?'frontline':traits[i].peel?'peel':'damage')).join('|'):edges.map(e=>e.family).sort().join('|'),signature=picks.map(key).join('|'),previous=best.get(family);
   if(!previous||score>previous.score||score===previous.score&&signature<previous.signature)best.set(family,{score,signature,members:picks});
  };
- for(const a of pools[0])for(const b of pools[1]){if(pools.length===2)visit([a,b]);else for(const c of pools[2])visit([a,b,c]);}
+ if(pools.length===2){for(const a of pools[0])for(const b of pools[1])visit([a,b]);}
+ else{
+  // Preserve [0,1], [0,2], [1,2] edge order: the first real pair owns the
+  // third member's follow-up. Each pair lookup is independent of that third.
+  const matrix=(a,b)=>a.map(first=>b.map(second=>first.champion===second.champion?null:graph.edge(first,second)));
+  const ab=matrix(pools[0],pools[1]),ac=matrix(pools[0],pools[2]),bc=matrix(pools[1],pools[2]);
+  for(let i=0;i<pools[0].length;i++)for(let j=0;j<pools[1].length;j++)for(let k=0;k<pools[2].length;k++)visit([pools[0][i],pools[1][j],pools[2][k]],[ab[i][j],ac[i][k],bc[j][k]]);
+ }
  return [...best.values()].sort((a,b)=>b.score-a.score||a.signature.localeCompare(b.signature)).slice(0,limit).map(r=>r.members.map(({rank,...m})=>m));
 }

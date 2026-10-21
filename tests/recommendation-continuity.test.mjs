@@ -149,6 +149,20 @@ test('client identity bindings preserve candidates and an in-flight recommendati
  assert.equal(s.context.activeRecommendation,s.worker);assert.equal(s.context.generating,true);assert.equal(s.context.recommendationRun,0);
 });
 
+test('a pending actual app worker cannot publish fit based on an outdated unconfirmed public ally',async()=>{
+ for(const next of ['Veigar',null]){
+  const current=client();current.session.localPlayerCellId=4;current.session.myTeam=['Garen','Amumu','Ahri','Ashe',null].map((id,cellId)=>({cellId,championId:id?hero(id).key:0,assignedPosition:['TOP','JUNGLE','MIDDLE','BOTTOM','UTILITY'][cellId]}));
+  const incoming=structuredClone(current);incoming.session.myTeam[2].championId=next?hero(next).key:0;
+  const slots=createSlots().map((slot,i)=>({...slot,champion:['Garen','Amumu','Ahri','Ashe',null][i],party:slot.role==='support',clientCellId:i}));
+  const s=setup({slots,current,incoming,results:[]}),c=s.context;Object.assign(c,{scope:'context',soloRole:'support'});c.saved.preferences.autoParty=false;
+  let finish,accepted=0;c.calculateRecommendation=()=>{c.activeRecommendation=s.worker;return new Promise(resolve=>finish=resolve);};c.resultCreativePlan=()=>{accepted++;};
+  vm.runInContext(extract('async function generate(next=false,automatic=false){','const sync=createClientSync'),c);
+  const pending=c.generate(),before=recommendationKey(c.recommendationInput());await c.performSync(false,true);
+  assert.notEqual(recommendationKey(c.recommendationInput()),before);assert.equal(s.calls.cancel,1);
+  finish([{id:'stale-fit',slots:[]}]);await pending;assert.equal(accepted,0);assert.equal(c.results.length,0);
+ }
+});
+
 test('a hero click dispatches before an unrelated pending guide synchronization finishes',async()=>{
  const {context:c,calls}=setup();let releaseGuide,selected;
  c.guideSyncChain=new Promise(resolve=>{releaseGuide=resolve;});const dispatched=new Promise(resolve=>{selected=resolve;});
