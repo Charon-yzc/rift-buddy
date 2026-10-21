@@ -41,7 +41,10 @@ async function prepareGeneration(candidate,status,publicRoot,privateKey,keyId,ke
  if(status.generationError||!recipe||recipe.baseSha256!==candidate.manifest.files.game.rawSha256||!Number.isFinite(started)||started<0||started>clock())throw Error('整套资料缺少完整采集记录');
  validateGenerationRecipe(recipe,game.patch);
  const totals={game:1,rankings:recipe.rankings.length,builds:recipe.builds.length,'hex-builds':recipe.hex.length};
- if(Object.keys(status.datasets||{}).length!==4||Object.entries(totals).some(([name,total])=>{const d=status.datasets[name],checked=Date.parse(d?.checkedAt);return !d||d.state!=='ok'||d.total!==total||d.checked!==total||d.failed!==0||d.skipped!==0||!Number.isFinite(checked)||checked<started||checked>clock();}))throw Error('整套资料本轮采集未完整完成');
+ const datasets=status.datasets||{};
+ // Hero offer observations are optional; their presence must not block the
+ // four required datasets or let other/mislabeled datasets evade coverage.
+ if(Object.keys(datasets).some(name=>!Object.hasOwn(totals,name)&&(name!=='hex-pools'||datasets[name]?.optional!==true))||Object.entries(totals).some(([name,total])=>{const d=datasets[name],checked=Date.parse(d?.checkedAt);return !d||d.state!=='ok'||d.total!==total||d.checked!==total||d.failed!==0||d.skipped!==0||!Number.isFinite(checked)||checked<started||checked>clock();}))throw Error('整套资料本轮采集未完整完成');
  const bundle=projectGenerationBundle(candidate.bundle,recipe),{files,assets}=packGenerationBundle(bundle,recipe),destination=path.join(publicRoot,'v2','latest.json');let prior=null;
  try{prior=verifyGenerationEnvelope(JSON.parse(await fs.readFile(destination,'utf8')),{keys});}catch(error){if(error.code!=='ENOENT')throw error;}
  if(prior&&(compareGenerationVersions(game.version,prior.version)<0||started<Date.parse(prior.checkedAt)))throw Error('整套资料版本或复查时间倒退');
