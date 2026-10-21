@@ -4,11 +4,17 @@ import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {reviewedHexMechanic} from './hex-mechanics.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 
-const supportComplements={1118:'提供25%暴击几率；治疗护盾实际暴击时多40%效果。',1141:'用于友军的治疗和护盾增强。'};
+const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击时多40%效果。',1141:'用于友军的治疗和护盾增强。',
+ 1029:'技能命中可施加攻击特效；同一目标每1秒一次。',1058:'实际攻击特效使技能冷却缩短1.25秒；没有命中就没有收益。',
+ 1004:'强化基础技能，但禁用终极技能；接受不能使用R再考虑。',1214:'旋转类基础技能30急速、增伤30%；不覆盖其他技能。',
+ 1311:'法力消耗翻倍；技能增效取决于最大法力值，缺蓝时无法持续收益。',1056:'增加最大生命值，数额为法力值的一半；没有直接减冷却。'};
 
 // Authored mechanism routes, not creator builds or statistical rankings. Each
 // route requires the exact reviewed hero kit, augment effect and item effects.
 const routes=[
+ {hero:'Hecarim',patch:'16.21',augment:1058,optional:[1029,1214,1004,1311,1056],title:'攻击特效循环',summary:'用实际命中缩短技能空档，保持 Q 层数与贴身距离。',play:['攻击特效减冷却1.25秒；在安全窗口普攻衔接 Q，E 强化攻击也要命中。','W 留在能贴近敌人交战时使用，E 用于进退；被拉开时先保住自己。'],caution:'没有攻击特效命中就没有强化减冷却；不保证无缝 Q，也不保证一直有蓝。',community:'https://arammayhem.com/zh-cn/combo/hecarim-ethereal-weapon-706/',gear:[['技能接普攻',[3078],'能持续穿插普攻时比较三相；咒刃有自身冷却，不能把每次 Q 都算作额外触发。'],['需要法力',[3004],'频繁施法缺蓝时考虑魔宗；法力流仍需叠层，按实际层数安排升级。'],['物理交战压力',[6333],'需要护甲并有参与击杀机会时比较死舞；延后承伤不是免伤。'],['魔法交战压力',[3065],'需要魔抗且能利用 W 恢复时比较振奋；无法贴近敌人时不能承诺持续治疗。']]},
+ {hero:'Hecarim',patch:'16.21',augment:1004,optional:[1214,1058,1029,1311,1056],title:'基础技能续战',summary:'接受失去大招，围绕 Q 层数、W 恢复与 E 进退作战。',play:['Q 命中维持层数；在能持续接触敌人时开启 W，保留 E 调整位置。','基础技能仍有空档和法力消耗，无法贴住时先撤出，不追求原来的大招进场。'],caution:'选择后不能使用 R 的突进和恐惧；不要照搬原来的进场连招。',community:'https://arammayhem.com/zh-cn/combo/hecarim-back-to-basics-703/',gear:[['基础技能轮转',[3161],'接受失去大招后比较朔极之矛的基础技能方向；急速不提供无敌或无限蓝量。'],['持续施法缺蓝',[3004],'考虑魔宗补法力，法力流仍需叠层；不要为追求轮转丢掉生存。'],['需要抗爆发',[3053],'需要生命值与低血护盾时比较血手；护盾不等于免疫伤害。'],['需要魔抗',[3065],'有魔法压力且能利用 W 恢复时比较振奋；保住进退空间。']]},
+ {hero:'Hecarim',patch:'16.21',augment:1311,optional:[1056,1004,1058,1029,1214],title:'法力增效续战',summary:'围绕最大法力与持续交战，先保证技能还能放出来。',play:['法力消耗翻倍；先确认蓝量够用，再以 Q 和 W 持续交战。','E 留作进退手段，别为追伤害耗光下一次 W 的法力。'],caution:'法力消耗翻倍；更大的法力上限不等于无限回蓝，也不保证更高胜率。',gear:[['法力与攻击力',[3004],'以魔宗补法力并保留攻击力方向；法力流需要叠层，按实际层数安排升级。'],['能持续施法',[3161],'法力足够并能以技能持续命中时比较朔极之矛；先处理断蓝问题。'],['需要魔抗与恢复',[3065],'有魔法压力且能通过 W 恢复时考虑振奋；不要只堆法力而忽略承伤。']]},
  {hero:'Gwen',augment:1129,title:'法强普攻',summary:'E 后穿插普攻，法强同时服务技能与强化。',play:['用 E 接近后普攻叠 Q，Q 中心命中；别只放技能。','W 留给关键反击，能持续贴身时再考虑续航装。'],caution:'强化附加的是物理伤害；不能把这部分按技能魔法伤害计算。',gear:[['输出骨架',[3115,3089],'纳什补攻速与攻击特效，帽子补法强；这是方向，不是固定购买顺序。'],['能持续作战',[4633],'有足够交战时间再考虑裂隙。'],['需要自保',[3157],'对物理爆发或关键伤害考虑中娅；凝滞时不能继续普攻。']]},
  {hero:'Kayle',augment:1129,title:'成长型法强普攻',summary:'等攻击形态成型，用安全距离兑现法强普攻。',play:['前期先保住发育，不为触发强化强行走近。','获得远程攻击后持续普攻，E 留给合适的攻击窗口。'],caution:'强化不会让你提前获得远程形态；没有安全输出空间时先保命。',gear:[['法强与攻速',[3115,3089],'纳什与法强装备兼顾普通攻击和强化；不据此承诺固定六神装。'],['需要自保',[3157],'有法强路线且需要规避爆发时再考虑中娅。']]},
  {hero:'Teemo',augment:1129,title:'普攻提莫',summary:'有普攻空间才转，别照搬只放蘑菇的打法。',play:['先用 Q 限制对方普攻，再以攻击触发强化。','蘑菇负责区域限制；只依赖蘑菇不能兑现这项攻击强化。'],caution:'对手能持续强开、自己无法安全攻击时，这条路线不成立。',gear:[['普攻法强',[3115,3089],'纳什提供攻击频率，法强同时提高强化附加伤害。'],['需要自保',[3157],'需要规避突进爆发时考虑中娅；不要把它当持续输出装。']]},
@@ -31,12 +37,12 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  const itemReview=currentHexReview(data.patch)||(data.patch===itemsReview.patch?itemsReview:null);
  if(!champion||!itemReview||hexChampionReview(champion,data.patch)!=='current')return [];
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
- return routes.filter(route=>route.hero===hero).flatMap(route=>{
+ return routes.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{
   const augment=data.augments.find(a=>a.id===route.augment);
   if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
    const a=data.augments.find(a=>a.id===id),disabled=hexCatalogDisabled(data,a);
-   return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+supportComplements[id]}]:[];
+   return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+augmentComplements[id]}]:[];
   });
   let pendingItems=0;
   const gear=route.gear.flatMap(([when,ids,why])=>{
@@ -50,6 +56,6 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
    return items.length===ids.length?[{when,why,items}]:[];
   });
   return [{id:hero+'-'+augment.id,hero,family:route.family,optionalAugments,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
-   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`}],basis:'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
+   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
  }).sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered')).filter((route,index,all)=>!route.family||!all.slice(0,index).some(other=>other.family===route.family));
 }

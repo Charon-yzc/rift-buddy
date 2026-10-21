@@ -33,7 +33,12 @@ function mechanicAdvice(data,champion,a,owned){
   if(p.build==='burn'||p.damageWeights.ap>=.5&&p.sustain){affinity+=3;reasons.push('适合反复施法命中，利用强化灼烧降低基础技能冷却；不把脱战或未命中算作持续收益。');}
  }
  if(p&&a.id===1058){
-  if(sustainedAttackers.has(champion.id)){affinity+=3;reasons.push('当前英雄有持续普攻打法，可用实际攻击特效衔接基础技能；仍需安全攻击距离。');}
+  if(champion.id==='Hecarim'){
+   const partner=owned.find(other=>other.id===1029&&other.descriptionStatus==='complete'&&reviewed(other,data.patch));
+   if(a.descriptionStatus==='complete'&&partner){affinity+=4;reasons.push('已拿到虚幻武器，技能命中可施加攻击特效，再联动秘术冲拳；同一目标仍有1秒间隔，不保证无限循环。');}
+   else{conditional=true;reasons.push('先靠实际普攻或 E 的强化攻击触发；没有虚幻武器时，不能把所有技能伤害都算作攻击特效。');}
+  }
+  else if(sustainedAttackers.has(champion.id)){affinity+=3;reasons.push('当前英雄有持续普攻打法，可用实际攻击特效衔接基础技能；仍需安全攻击距离。');}
   else cautions.push('需要实际触发攻击特效；当前技能是否能触发不能只看技能造成伤害。');
  }
  if(p&&a.id===1129){

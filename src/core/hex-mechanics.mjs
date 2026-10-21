@@ -20,11 +20,13 @@ const rules={
  ...ultimateRules,
  1002:['ARAM_ApexInventor',/装备急速/],1004:['ARAM_BacktoBasics',/不能使用.*终极/],
  1006:['ARAM_BladeWaltz',/利刃华尔兹.*召唤师技能/],1045:['ARAM_InfernalConduit',/灼烧.*基础技能/s],
+ 1029:['ARAM_EtherealWeapon',/技能.*攻击特效.*1秒/s],1056:['ARAM_MindtoMatter',/最大生命值.*一半.*法力值/s],
  1047:['ARAM_ItsCritical',/暴击几率/],1048:['ARAM_JeweledGauntlet',/技能.*暴击/s],
  1058:['ARAM_MysticPunch',/攻击特效.*冷却/s],
  1118:['ARAM_CriticalHealing',/治疗.*护盾.*暴击/s],
  1129:['ARAM_Marksmage',/攻击.*法术强度/s],1141:['ARAM_AllForYou',/治疗.*护盾.*友军/s],
  1205:['ARAM_ADAPt',/额外攻击力.*法术强度/s],1328:['CriticalRhythm',/普攻.*暴击.*攻击速度/s],
+ 1214:['ARAM_SpinToWin',/旋转类技能.*技能急速.*额外伤害/s],1311:['ARAM_Overflow',/法力消耗翻倍.*最大法力值/s],
  1356:['CriticalMissile',/暴击.*飞弹.*暴击几率/s],
 };
 export const hexMechanicIds=Object.keys(rules).map(Number);

@@ -1,6 +1,6 @@
 {
-  "sourceRelease": "9fa68a7aff3083c9e576974ada30ebbb835351c418eb363ce69b480e2accbb5d",
-  "basis": "Explicit compatibility review of these 13 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
+  "sourceRelease": "0325f09ff11b0c63cccd1cd9937c22ac15c61561714ac35eeb9856c40f91ddcb",
+  "basis": "Explicit compatibility review of these 14 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
   "game": {
     "version": "16.21.1",
     "patch": "16.21",
@@ -12614,6 +12614,964 @@
           "magic": 4,
           "difficulty": 10
         }
+      },
+      {
+        "id": "Hecarim",
+        "name": "赫卡里姆",
+        "stats": {
+          "hp": 625,
+          "hpperlevel": 106,
+          "mp": 280,
+          "mpperlevel": 40,
+          "movespeed": 345,
+          "armor": 32,
+          "armorperlevel": 5.45,
+          "spellblock": 32,
+          "spellblockperlevel": 2.05,
+          "attackrange": 175,
+          "hpregen": 7,
+          "hpregenperlevel": 0.75,
+          "mpregen": 7,
+          "mpregenperlevel": 0.8,
+          "crit": 0,
+          "critperlevel": 0,
+          "attackdamage": 66,
+          "attackdamageperlevel": 3.7,
+          "attackspeedperlevel": 2.5,
+          "attackspeed": 0.67,
+          "attackspeedratio": 0.67,
+          "attacktype": "melee"
+        },
+        "mechanics": {
+          "passive": {
+            "name": "征战之路",
+            "description": "赫卡里姆获得相当于他一部分额外移动速度的攻击力加成。"
+          },
+          "spells": [
+            {
+              "name": "暴走",
+              "description": "赫卡里姆猛劈周围的敌人，同时造成物理伤害。如果这个技能对至少一名敌人造成伤害，那么赫卡里姆会提升【暴走】的伤害并为随后施放的【暴走】缩短冷却时间。",
+              "maxrank": 5,
+              "cooldown": [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              "cost": [
+                28,
+                26,
+                24,
+                22,
+                20
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ],
+                [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                [
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ],
+                [
+                  60,
+                  60,
+                  60,
+                  60,
+                  60
+                ],
+                [
+                  8,
+                  8,
+                  8,
+                  8,
+                  8
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "恐惧之灵",
+              "description": "赫卡里姆获得护甲和魔抗。赫卡里姆对附近敌人造成魔法伤害，并基于敌人所受的伤害来恢复生命值。",
+              "maxrank": 5,
+              "cooldown": [
+                14,
+                14,
+                14,
+                14,
+                14
+              ],
+              "cost": [
+                50,
+                55,
+                60,
+                65,
+                70
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "毁灭冲锋",
+              "description": "赫卡里姆获得不断提升的移动速度加成并且移动时可以无视单位的碰撞体积。他的下一次攻击将会击退目标，并且造成额外物理伤害，伤害值基于他在激活该技能后所移动的距离。",
+              "maxrank": 5,
+              "cooldown": [
+                20,
+                19,
+                18,
+                17,
+                16
+              ],
+              "cost": [
+                60,
+                60,
+                60,
+                60,
+                60
+              ],
+              "effect": [
+                null,
+                [
+                  150,
+                  150,
+                  150,
+                  150,
+                  150
+                ],
+                [
+                  350,
+                  350,
+                  350,
+                  350,
+                  350
+                ],
+                [
+                  60,
+                  90,
+                  120,
+                  150,
+                  180
+                ],
+                [
+                  30,
+                  45,
+                  60,
+                  75,
+                  90
+                ],
+                [
+                  4,
+                  4,
+                  4,
+                  4,
+                  4
+                ],
+                [
+                  0.65,
+                  0.65,
+                  0.65,
+                  0.65,
+                  0.65
+                ],
+                [
+                  1200,
+                  1200,
+                  1200,
+                  1200,
+                  1200
+                ],
+                [
+                  0.25,
+                  0.25,
+                  0.25,
+                  0.25,
+                  0.25
+                ],
+                [
+                  2.5,
+                  2.5,
+                  2.5,
+                  2.5,
+                  2.5
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "暗影冲击",
+              "description": "赫卡里姆召唤幽魂骑兵向前冲锋，对一条直线上的敌人造成魔法伤害。赫卡里姆会在完成他的冲锋时发出一道冲击波，来使周围的敌人惊慌失措地逃命。",
+              "maxrank": 3,
+              "cooldown": [
+                140,
+                120,
+                100
+              ],
+              "cost": [
+                100,
+                100,
+                100
+              ],
+              "effect": [
+                null,
+                [
+                  150,
+                  250,
+                  350
+                ],
+                [
+                  0.75,
+                  0.75,
+                  0.75
+                ],
+                [
+                  1.5,
+                  1.5,
+                  1.5
+                ],
+                [
+                  1100,
+                  1100,
+                  1100
+                ],
+                [
+                  1000,
+                  1000,
+                  1000
+                ],
+                [
+                  950,
+                  950,
+                  950
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        "mechanicSource": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Hecarim",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "observedAt": "2026-10-21T19:28:20.427Z",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/hecarim/hecarim.bin.json",
+            "sha256": "8107a10cc214af38a79ff9f0551fd3a8c77231a1998aeda6f8b5a6c0bf8a4dc1"
+          },
+          "dataDragonURL": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "passive": {
+            "name": "征战之路",
+            "description": "赫卡里姆获得相当于他一部分额外移动速度的攻击力加成。",
+            "image": {
+              "full": "Hecarim_Passive.png",
+              "sprite": "passive1.png",
+              "group": "passive",
+              "x": 144,
+              "y": 48,
+              "w": 48,
+              "h": 48
+            }
+          },
+          "spells": [
+            {
+              "id": "HecarimRapidSlash",
+              "name": "暴走",
+              "description": "赫卡里姆猛劈周围的敌人，同时造成物理伤害。如果这个技能对至少一名敌人造成伤害，那么赫卡里姆会提升【暴走】的伤害并为随后施放的【暴走】缩短冷却时间。",
+              "tooltip": "赫卡里姆猛劈周围的敌人，造成<physicalDamage>{{ damage }}物理伤害</physicalDamage>。如果这个技能命中了敌人，那么他会获得一层效果，来使这次技能的冷却时间缩短{{ rampagecooldownreduction }}秒并提升此技能{{ rampagebonusdamageperc }}%伤害，持续{{ buffduration }}秒。至多可叠加{{ maxstacks }}层。<br />{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "伤害",
+                  "法力消耗"
+                ],
+                "effect": [
+                  "{{ basedamage }} -> {{ basedamageNL }}",
+                  "{{ cost }} -> {{ costNL }}"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                4,
+                4,
+                4,
+                4,
+                4
+              ],
+              "cooldownBurn": "4",
+              "cost": [
+                28,
+                26,
+                24,
+                22,
+                20
+              ],
+              "costBurn": "28/26/24/22/20",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ],
+                [
+                  1,
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                [
+                  3,
+                  3,
+                  3,
+                  3,
+                  3
+                ],
+                [
+                  60,
+                  60,
+                  60,
+                  60,
+                  60
+                ],
+                [
+                  8,
+                  8,
+                  8,
+                  8,
+                  8
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "3",
+                "1",
+                "3",
+                "60",
+                "8",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                350,
+                350,
+                350,
+                350,
+                350
+              ],
+              "rangeBurn": "350",
+              "image": {
+                "full": "HecarimRapidSlash.png",
+                "sprite": "spell5.png",
+                "group": "spell",
+                "x": 288,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "HecarimW",
+              "name": "恐惧之灵",
+              "description": "赫卡里姆获得护甲和魔抗。赫卡里姆对附近敌人造成魔法伤害，并基于敌人所受的伤害来恢复生命值。",
+              "tooltip": "赫卡里姆在{{ buffduration }}秒里对附近的敌人们持续造成共<magicDamage>{{ totaldamage }}魔法伤害</magicDamage>。<br /><br />赫卡里姆获得<passive>{{ resistamount }}</passive> <scaleArmor>护甲</scaleArmor>和<scaleMR>魔法抗性</scaleMR>并治疗自身，治疗数额相当于这些敌人受到的来自赫卡里姆的<healing>{{ leechamount }}%伤害</healing>和来自赫卡里姆友军的<healing>{{ allytooltipleachvalue }}%伤害</healing>。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "伤害",
+                  "额外双抗",
+                  "治疗效果封顶值",
+                  "@AbilityResourceName@消耗"
+                ],
+                "effect": [
+                  "{{ damage }} -> {{ damageNL }}",
+                  "{{ resistamount }} -> {{ resistamountNL }}",
+                  "{{ minionhealcap }} -> {{ minionhealcapNL }}",
+                  "{{ cost }} -> {{ costNL }}"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                14,
+                14,
+                14,
+                14,
+                14
+              ],
+              "cooldownBurn": "14",
+              "cost": [
+                50,
+                55,
+                60,
+                65,
+                70
+              ],
+              "costBurn": "50/55/60/65/70",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                525,
+                525,
+                525,
+                525,
+                525
+              ],
+              "rangeBurn": "525",
+              "image": {
+                "full": "HecarimW.png",
+                "sprite": "spell5.png",
+                "group": "spell",
+                "x": 336,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "HecarimRamp",
+              "name": "毁灭冲锋",
+              "description": "赫卡里姆获得不断提升的移动速度加成并且移动时可以无视单位的碰撞体积。他的下一次攻击将会击退目标，并且造成额外物理伤害，伤害值基于他在激活该技能后所移动的距离。",
+              "tooltip": "赫卡里姆变为幽灵状态，并获得<speed>{{ minmovespeed*100 }}%移动速度</speed>，在{{ duration }}秒里持续提升至<speed>{{ maxmovespeed*100 }}%</speed>。他的下次攻击会<status>击退</status>目标并造成<physicalDamage>{{ mindamage }}</physicalDamage>到<physicalDamage>{{ maxdamage }}物理伤害</physicalDamage>。<status>击退</status>距离和伤害随此技能期间的位移距离而增长。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "最小伤害",
+                  "最大伤害",
+                  "冷却时间"
+                ],
+                "effect": [
+                  "{{ minbasedamage }} -> {{ minbasedamageNL }}",
+                  "{{ maxbasedamage }} -> {{ maxbasedamageNL }}",
+                  "{{ cooldown }} -> {{ cooldownNL }}"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                20,
+                19,
+                18,
+                17,
+                16
+              ],
+              "cooldownBurn": "20/19/18/17/16",
+              "cost": [
+                60,
+                60,
+                60,
+                60,
+                60
+              ],
+              "costBurn": "60",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  150,
+                  150,
+                  150,
+                  150,
+                  150
+                ],
+                [
+                  350,
+                  350,
+                  350,
+                  350,
+                  350
+                ],
+                [
+                  60,
+                  90,
+                  120,
+                  150,
+                  180
+                ],
+                [
+                  30,
+                  45,
+                  60,
+                  75,
+                  90
+                ],
+                [
+                  4,
+                  4,
+                  4,
+                  4,
+                  4
+                ],
+                [
+                  0.65,
+                  0.65,
+                  0.65,
+                  0.65,
+                  0.65
+                ],
+                [
+                  1200,
+                  1200,
+                  1200,
+                  1200,
+                  1200
+                ],
+                [
+                  0.25,
+                  0.25,
+                  0.25,
+                  0.25,
+                  0.25
+                ],
+                [
+                  2.5,
+                  2.5,
+                  2.5,
+                  2.5,
+                  2.5
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "150",
+                "350",
+                "60/90/120/150/180",
+                "30/45/60/75/90",
+                "4",
+                "0.65",
+                "1200",
+                "0.25",
+                "2.5",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                300,
+                300,
+                300,
+                300,
+                300
+              ],
+              "rangeBurn": "300",
+              "image": {
+                "full": "HecarimRamp.png",
+                "sprite": "spell5.png",
+                "group": "spell",
+                "x": 384,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "HecarimUlt",
+              "name": "暗影冲击",
+              "description": "赫卡里姆召唤幽魂骑兵向前冲锋，对一条直线上的敌人造成魔法伤害。赫卡里姆会在完成他的冲锋时发出一道冲击波，来使周围的敌人惊慌失措地逃命。",
+              "tooltip": "赫卡里姆召唤幽魂骑兵并向前冲锋，造成<magicDamage>{{ damagedone }}魔法伤害</magicDamage>。赫卡里姆会在他冲锋的终点释放一道冲击波，来使敌人们<status>恐惧</status>{{ feardurationmin }}到{{ feardurationmax }}秒，随冲锋距离提升。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "伤害",
+                  "冷却时间"
+                ],
+                "effect": [
+                  "{{ basedamage }} -> {{ basedamageNL }}",
+                  "{{ cooldown }} -> {{ cooldownNL }}"
+                ]
+              },
+              "maxrank": 3,
+              "cooldown": [
+                140,
+                120,
+                100
+              ],
+              "cooldownBurn": "140/120/100",
+              "cost": [
+                100,
+                100,
+                100
+              ],
+              "costBurn": "100",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  150,
+                  250,
+                  350
+                ],
+                [
+                  0.75,
+                  0.75,
+                  0.75
+                ],
+                [
+                  1.5,
+                  1.5,
+                  1.5
+                ],
+                [
+                  1100,
+                  1100,
+                  1100
+                ],
+                [
+                  1000,
+                  1000,
+                  1000
+                ],
+                [
+                  950,
+                  950,
+                  950
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "150/250/350",
+                "0.75",
+                "1.5",
+                "1100",
+                "1000",
+                "950",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                50000,
+                50000,
+                50000
+              ],
+              "rangeBurn": "50000",
+              "image": {
+                "full": "HecarimUlt.png",
+                "sprite": "spell5.png",
+                "group": "spell",
+                "x": 432,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            }
+          ]
+        },
+        "combatStatsSource": {
+          "patch": "16.21",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/hecarim/hecarim.bin.json"
+        }
       }
     ],
     "augments": [
@@ -13091,6 +14049,67 @@
         "tags": [
           2
         ]
+      },
+      {
+        "id": 1029,
+        "key": "ARAM_EtherealWeapon",
+        "name": "虚幻武器",
+        "rarity": "kGold",
+        "description": "你的技能可施加攻击特效。每个目标有1秒冷却时间。",
+        "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/cherry/augments/icons/etherealweapon_small.png",
+        "descriptionStatus": "complete",
+        "catalogEnabled": true,
+        "unresolved": [],
+        "sourceKey": "Kiwi_EtherealWeapon_Summary",
+        "tags": [
+          1,
+          5
+        ]
+      },
+      {
+        "id": 1056,
+        "key": "ARAM_MindtoMatter",
+        "name": "由心及物",
+        "rarity": "kSilver",
+        "description": "使你的最大生命值提升，数额相当于你一半的法力值。",
+        "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/cherry/augments/icons/mindtomatter_small.png",
+        "descriptionStatus": "complete",
+        "catalogEnabled": true,
+        "unresolved": [],
+        "sourceKey": "Cherry_MindtoMatter_Summary",
+        "tags": [
+          3
+        ]
+      },
+      {
+        "id": 1311,
+        "key": "ARAM_Overflow",
+        "name": "溢流",
+        "rarity": "kGold",
+        "description": "你的法力消耗翻倍。\n\n你的技能的治疗效果、护盾效果和伤害获得提升，提升幅度基于你的最大法力值。",
+        "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/cherry/augments/icons/overflow_small.png",
+        "descriptionStatus": "complete",
+        "catalogEnabled": true,
+        "unresolved": [],
+        "sourceKey": "Cherry_Overflow_Summary",
+        "tags": [
+          1
+        ]
+      },
+      {
+        "id": 1214,
+        "key": "ARAM_SpinToWin",
+        "name": "旋转至胜",
+        "rarity": "kSilver",
+        "description": "你的旋转类技能获得30技能急速并且造成30%额外伤害，对于终极技能，该额外伤害提升至50%。",
+        "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/cherry/augments/icons/spintowin_small.png",
+        "descriptionStatus": "complete",
+        "catalogEnabled": true,
+        "unresolved": [],
+        "sourceKey": "Kiwi_SpinToWin_Summary",
+        "tags": [
+          1
+        ]
       }
     ],
     "items": {
@@ -13132,6 +14151,50 @@
         "tooltip": {
           "patch": "16.21",
           "description": "70法术强度\n 〔数值未解析〕法力\n25技能急速\n\n敬畏\n获得相当于1%额外法力值的法术强度。\n\n法力流 (8秒，最大5层充能)\n技能在命中时提供5最大法力值(对英雄时翻倍)。\n在360最大法力值时转变为炽天使之拥。",
+          "status": "partial",
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+        }
+      },
+      "3004": {
+        "id": 3004,
+        "name": "魔宗",
+        "description": "35攻击力\n500法力\n15技能急速\n\n敬畏\n获得0额外攻击力。\n\n法力流 (8秒，最大4层)\n普攻和技能在命中时会提供3最大法力值(对英雄时翻倍)。\n在360最大法力值时转变为魔切。",
+        "tags": [
+          "Damage",
+          "Mana",
+          "CooldownReduction",
+          "OnHit",
+          "AbilityHaste"
+        ],
+        "gold": {
+          "base": 1100,
+          "purchasable": true,
+          "total": 2900,
+          "sell": 2030
+        },
+        "maps": {
+          "11": true,
+          "12": true,
+          "22": false,
+          "30": false,
+          "453": true
+        },
+        "from": [
+          "3070",
+          "3133",
+          "1036"
+        ],
+        "into": [],
+        "inStore": true,
+        "stats": {
+          "FlatMPPoolMod": 500,
+          "FlatPhysicalDamageMod": 35
+        },
+        "specialRecipe": null,
+        "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3004.png",
+        "tooltip": {
+          "patch": "16.21",
+          "description": "35攻击力\n 〔数值未解析〕法力\n15技能急速\n\n敬畏\n获得〔数值未解析〕额外攻击力。\n\n法力流  (8秒，最大4层)\n普攻和技能在命中时会提供3最大法力值(对英雄时翻倍)。\n在360最大法力值时转变为魔切。",
           "status": "partial",
           "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
         }
@@ -13632,6 +14695,48 @@
         "tooltip": {
           "patch": "16.21",
           "description": "105法术强度\n50护甲\n\n 时间停止  (120秒)\n进入凝滞状态2.5秒。",
+          "status": "complete",
+          "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+        }
+      },
+      "3161": {
+        "id": 3161,
+        "name": "朔极之矛",
+        "description": "45攻击力\n450生命值\n\n龙之力量\n获得25基础技能急速。\n\n专注意志\n使用技能造成伤害会使你的英雄技能和被动伤害提升3%，持续6秒。（叠加4次）。",
+        "tags": [
+          "Health",
+          "Damage",
+          "AbilityHaste"
+        ],
+        "gold": {
+          "base": 675,
+          "purchasable": true,
+          "total": 3100,
+          "sell": 2170
+        },
+        "maps": {
+          "11": true,
+          "12": true,
+          "22": false,
+          "30": false,
+          "453": true
+        },
+        "from": [
+          "1037",
+          "2021",
+          "1028"
+        ],
+        "into": [],
+        "inStore": true,
+        "stats": {
+          "FlatHPPoolMod": 450,
+          "FlatPhysicalDamageMod": 45
+        },
+        "specialRecipe": null,
+        "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3161.png",
+        "tooltip": {
+          "patch": "16.21",
+          "description": "45攻击力\n450生命值\n\n龙之力量\n获得25基础技能急速。\n\n专注意志\n使用技能造成伤害会使你的英雄技能和被动伤害提升3%，持续6秒。（叠加4次）。",
           "status": "complete",
           "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
         }
