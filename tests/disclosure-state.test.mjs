@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createDisclosureState} from '../src/disclosure-state.mjs';
+import fs from 'node:fs/promises';import vm from 'node:vm';import {escape} from '../src/ui.mjs';
 
 // Minimal DOM-shaped fixtures; only standard Element properties are used by the module.
 class Element{
@@ -26,6 +27,14 @@ const candidate=(index,hero,{role='mid',combo='team-a',plan='接控',open=false,
  return {disclosure,node:el('article',{class:`companion-candidate ${index===0?'featured':''}`,'data-result-index':String(index)},
   el('button',{'data-id':hero,'data-role':role,'data-combo':combo}),el('p',{class:'candidate-summary',title:plan},plan),disclosure)};
 };
+
+test('actual Hex tools render opens the first owned note through disclosure restoration, then respects explicit closing',async()=>{
+ const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8'),start=source.indexOf('function renderHexTools(){'),end=source.indexOf('\n',start),state=createDisclosureState();let round='first';
+ const context=vm.createContext({e:escape,hexOptions:[],hexOwned:[],hexHero:'Sona',data:{},currentHexRound:()=>({context:round}),renderHexComparison:()=>'',renderHexReference:()=>''});vm.runInContext(source.slice(start,end),context);
+ const rendered=()=>{const html=context.renderHexTools(),match=/<details class="hex-handbook-tools"([^>]*)><summary>([^<]*)<\/summary>/.exec(html);assert(match);const key=/data-disclosure-key="([^"]+)"/.exec(match[1])?.[1];return detail(match[2],{class:'hex-handbook-tools',...(key?{'data-disclosure-key':key}:{}),open:/\sopen(?:\s|$)/.test(match[1])});};
+ const empty=rendered();assert.equal(empty.open,false);state.capture('hex',root(empty));context.hexOwned=[1141];const first=rendered();state.restore('hex',root(first));assert.equal(first.open,true,'initial closed empty panel must not hide the first owned note');
+ first.open=false;state.capture('hex',root(first));context.hexOwned=[1141,1048];const closed=rendered();state.restore('hex',root(closed));assert.equal(closed.open,false,'a deliberate close is respected within the same game');round='next';const next=rendered();state.restore('hex',root(next));assert.equal(next.open,true,'another game cannot inherit a closed panel');
+});
 
 test('rendered open and closed choices survive per page and sidebar scope',()=>{
  const state=createDisclosureState(),settings=detail('连接说明',{'data-companion-disclosure':'help',open:true});
