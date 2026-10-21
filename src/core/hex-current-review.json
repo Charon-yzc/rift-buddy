@@ -3,7 +3,7 @@
   "scope": "hex-routes-and-choices",
   "patch": "16.21",
   "reviewedAt": "2026-10-22",
-  "basis": "Explicit compatibility review of these 13 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
+  "basis": "Explicit compatibility review of these 14 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
   "sources": {
     "notes": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
     "characters": "https://raw.communitydragon.org/16.21/game/data/characters/",
@@ -26,7 +26,8 @@
       "Caitlyn": "d19bdcd858382502",
       "Veigar": "b0c876605f73d7f8",
       "Lux": "50314ad04c92f1a6",
-      "Yasuo": "d36ebea001e3d1cb"
+      "Yasuo": "d36ebea001e3d1cb",
+      "Hecarim": "f9c4c9b8aea59e68"
     },
     "sourceAnchors": {
       "Gwen": {
@@ -340,6 +341,30 @@
             "fingerprint": "5c4d9aa5346ca2f7"
           }
         }
+      },
+      "Hecarim": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "f9c4c9b8aea59e68",
+        "observedAt": "2026-10-21T19:28:20.427Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Hecarim",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/hecarim/hecarim.bin.json",
+            "sha256": "8107a10cc214af38a79ff9f0551fd3a8c77231a1998aeda6f8b5a6c0bf8a4dc1"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "2a4e6af555abb6c6"
+          }
+        }
       }
     }
   },
@@ -349,9 +374,11 @@
     "1006": "14eb693646ab808a",
     "1011": "875e5f339120b690",
     "1022": "f9a340a945b0ef7d",
+    "1029": "cea5e62837932d77",
     "1045": "45f67c9c58d41f19",
     "1047": "f399682185614aef",
     "1048": "618f747d50e3039c",
+    "1056": "4e2d61bdf7c0e4e3",
     "1058": "d51dae206a24d183",
     "1077": "5c8235dd21ddee01",
     "1080": "300d567292578364",
@@ -363,6 +390,8 @@
     "1194": "22915c624608c9fe",
     "1205": "f17a627ad7e21e23",
     "1211": "d963d75ae1e9b2bb",
+    "1214": "d10779ed0f10b84c",
+    "1311": "f31174789bb24e9e",
     "1314": "f9b04d2fe7aadef8",
     "1315": "1cee2338a5490aee",
     "1328": "730654a0bb845761",
@@ -373,6 +402,7 @@
   },
   "items": {
     "3003": "6e4dddc2dc647407",
+    "3004": "8dcf37b4538a7a3c",
     "3006": "a91edf4d1fd8d2bc",
     "3031": "399e9523f1b7d20a",
     "3036": "638d1f3db688cb2e",
@@ -385,6 +415,7 @@
     "3116": "0527cd04d01e94a8",
     "3135": "4ccdf3ad2cfbc06c",
     "3157": "b2f73e80d3e77fe7",
+    "3161": "ef48fd76ee21d277",
     "3504": "4d964e703de16015",
     "4633": "ca994325451939bb",
     "6333": "65943886b530ef44",
