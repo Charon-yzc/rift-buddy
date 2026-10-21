@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {sanitizeSession} from '../services/lcu.mjs';
 import {hexDraft} from '../src/core/hex-draft.mjs';
+import {pickEligibilityContext} from '../src/core/pick-eligibility.mjs';
 import {hexDraftView} from '../src/hex-draft-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8')),key=id=>data.champions.find(c=>c.id===id).key;
@@ -27,5 +28,19 @@ test('bench projection is bounded, deduplicated and drops all private fields',()
 test('Hex lineup and configuration pages have separate content and preserve round context',()=>{
  const c=client(),round={hero:'Lux',context:'one',revision:2,gameId:'1',options:[],owned:[]},props={data,client:c,hexRound:round,tab:'recommend',configurationStatus:{},preferences:{}};
  const lineup=companionView(props);assert.match(lineup,/选阵容/);assert.match(lineup,/海克斯阵容/);assert.doesNotMatch(lineup,/本轮强化三选一|data-hex-option-input|英雄强化建议/);
- const plan=companionView({...props,tab:'plan'});assert.match(plan,/data-hex-option-input/);assert.match(plan,/英雄强化建议/);assert.doesNotMatch(plan,/海克斯阵容|可换阵容/);assert.match(plan,/data-hex-context="one"/);
+ const plan=companionView({...props,tab:'plan'});assert.match(plan,/data-hex-option-input/);assert.match(plan,/英雄强化建议/);assert.doesNotMatch(plan,/海克斯阵容|阵容备选/);assert.match(plan,/data-hex-context="one"/);
+});
+
+test('same-patch hero source changes withdraw mechanical claims without hiding the real bench',()=>{
+ for(const id of ['Malphite','Ashe'])for(const change of [h=>{h.mechanicSource.character.sha256='0'.repeat(64);},h=>{delete h.mechanicSource;}]){
+  const changed=structuredClone(data);change(changed.champions.find(c=>c.id===id));const m=hexDraft({data:changed,client:client()}),row=m.candidates.find(c=>c.hero.id==='Malphite');assert.equal(row.comparable,false);assert.deepEqual(row.added,[]);assert.deepEqual(row.lost,[]);assert.equal(row.priority,0);assert.equal(m.candidates.length,2);
+  if(id==='Ashe'){assert.equal(m.reviewed,false);assert.equal(m.coverage.length,0);assert(m.candidates.every(c=>!c.comparable));}
+ }
+ const transport=structuredClone(data);transport.champions.find(c=>c.id==='Malphite').mechanicSource.observedAt='2026-10-21T00:00:00Z';assert.deepEqual(hexDraft({data:transport,client:client()}).candidates.map(c=>[c.hero.id,c.priority]),hexDraft({data,client:client()}).candidates.map(c=>[c.hero.id,c.priority]));
+ const partial=client();partial.session.myTeam[4].championId=0;const m=hexDraft({data,client:partial});assert(m.candidates.every(c=>!c.comparable&&!c.added.length&&!c.lost.length));assert.doesNotMatch(hexDraftView({data,client:partial}),/前排 缺/);
+});
+test('fresh own availability removes unowned and disabled bench heroes; stale eligibility is never reused',()=>{
+ const c=client();c.eligibility={context:pickEligibilityContext(c.session),localPlayerCellId:0,receivedAt:new Date().toISOString(),pickable:[key('Xerath')],disabled:[]};assert.deepEqual(hexDraft({data,client:c}).candidates.map(c=>c.hero.id),['Xerath']);
+ c.eligibility.pickable=null;c.eligibility.disabled=[key('Malphite')];assert.deepEqual(hexDraft({data,client:c}).candidates.map(c=>c.hero.id),['Xerath']);
+ c.eligibility.receivedAt=new Date(Date.now()-60000).toISOString();assert.equal(hexDraft({data,client:c}).candidates.length,2);
 });
