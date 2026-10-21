@@ -51,6 +51,15 @@ test('60 is inclusive; conflicts cannot leak through and fixed current lineups a
  const current=fitSlots.map(s=>({...s,champion:s.role==='support'?'Lulu':s.champion,locked:true}));assert.equal(worker({...input,slots:current,fitSlots:current}).length,1,'A current locked lineup is not a new recommendation to delete');
 });
 
+test('low-fit retained pairs are filtered as new suggestions but chosen growth lineups remain readable',()=>{
+ const slots=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role),...(['top','jungle'].includes(s.role)?{champion:s.role==='top'?'Kayle':'Kindred',locked:true,manualPosition:true}:{})}));
+ const input={slots,champions,patch,scope:'party',style:'fun',rolePools:{mid:{mode:'only',heroes:['Vladimir']}}};
+ const [legacy]=recommend(input);assert.equal(legacy.adaptive.edges[0].id,'pair:Kayle:Kindred');assert.match(legacy.adaptive.sourceNote,/未确认额外三人协同/);
+ assert.ok(lineupFit(legacy.slots,slots,champions,{scope:'party',editableRoles:legacy.targets,patch}).score<60);assert.deepEqual(worker(input),[]);
+ const growth=createSlots().map(s=>({...s,party:['top','jungle','mid'].includes(s.role),...({top:'Kayle',jungle:'Karthus',mid:'Vladimir'}[s.role]?{champion:{top:'Kayle',jungle:'Karthus',mid:'Vladimir'}[s.role],locked:true,manualPosition:true}:{})}));
+ const [chosen]=worker({...input,slots:growth});assert.ok(chosen);assert.deepEqual(chosen.targets,[]);assert.equal(chosen.adaptive.kind,'shared');assert.equal(chosen.adaptive.tempo,'growth');
+});
+
 test('fit evidence changes cache identity while ignored hovers and timer refreshes do not',()=>{
  const ids=['Garen','Amumu','Ahri','Ashe',null],fitSlots=visibleRoster(ids),fitSession=rawRoster(ids),confirmed=clientRecommendationDraft(fitSlots,fitSession,champions,{ownRole:'support'}),base={slots:confirmed.slots,clientSession:confirmed.session,champions,scope:'context',soloRole:'support',fitSlots,fitSession},before=recommendationKey(base);
  for(const id of ['Veigar',null]){const next=structuredClone(base);next.fitSession.myTeam[2].championId=id?key(id):0;next.fitSlots[2].champion=id;assert.notEqual(recommendationKey(next),before);}
