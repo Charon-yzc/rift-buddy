@@ -105,6 +105,10 @@ test('Hex manual preview is editable; entering a game replaces it with only two 
  const s=guideOwner();try{
   s.guide.show();s.ready();assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
   await s.call(s.legacy(),'guide-control','condition','ap');assert.deepEqual([...s.state().selection.conditions],['ap']);
+  await s.guide.phase('GameStart',true);s.ready();assert(s.micro().every(w=>w.isVisible()));
+  await s.guide.phase('Offline',false);s.guide.publish();s.restore();s.legacy().emit('ready-to-show');assert(!s.legacy().isVisible());
+  assert(s.micro().every(w=>w.isVisible()),'disconnect during first loading must retain micro windows');
+  await assert.rejects(s.call(s.legacy(),'guide-control','main'),/两个精简窗口/);
   await s.guide.phase('InProgress',true);s.ready();assert.equal(s.micro().length,2);assert(s.micro().every(w=>w.isVisible()));assert(!s.legacy().isVisible());
   s.restore();s.legacy().emit('ready-to-show');assert(!s.legacy().isVisible());
   await assert.rejects(s.call(s.legacy(),'guide-control','main'),/两个精简窗口/);

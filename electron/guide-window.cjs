@@ -231,7 +231,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   const previous=lastConnectedPhase,id=getState()?.match?.gameId,newGame=!!(id&&lastGameId&&id!==lastGameId),wasMicro=usesHexMicro();phase=next;connected=!!isConnected;if(newGame){displayEpoch++;micro.suspend();}if(isHex()&&(ended()||connected&&wasMicro&&!usesHexMicro()))hide();inputMode();publish();
   // Same-game loading must not turn a deliberately hidden reconnect into a
   // first entry. A changed id still starts a new game's visibility decision.
-  if(connected){if(next!=='GameStart'||newGame)lastConnectedPhase=next;if(id)lastGameId=id;}
+  if(connected){if(next!=='GameStart'||newGame||!inGame(previous))lastConnectedPhase=next;if(id)lastGameId=id;}
   if(!connected)return;
   const preferences=getPreferences();
   if(next==='InProgress'&&(newGame||!['InProgress','Reconnect'].includes(previous))&&preferences.guideAutoShow!==false)autoShowUntil=Date.now()+30000;
