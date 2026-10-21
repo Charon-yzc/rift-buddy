@@ -1,4 +1,5 @@
 import {profile} from './rules.mjs';
+import {hexCatalogDisabled} from './hex-catalog.mjs';
 import {validHexReference} from './builds.mjs';
 import {compareAugments} from './hex-compare.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
@@ -82,10 +83,12 @@ export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
  const ownedRecords=[...ownedIds].slice(0,6).map(id=>activeRecord(data,id)).filter(Boolean);
  const rows=ids.map(id=>{
   const a=activeRecord(data,id);if(!a)return null;
+  if(hexCatalogDisabled(data,a)&&!actual&&!ownedIds.has(id))return null;
   const advice=mechanicAdvice(data,champion,a,ownedRecords),[base]=compareAugments({champion,options:[id],owned,augments:data.augments,patch:data.patch});
   const unknownSkill=a.unresolved?.includes('SpellName')||/适用技能/.test(a.description||'');
   const level=advice.conflict?'conflict':ownedIds.has(id)?'owned':unknownSkill||advice.conditional?'conditional':advice.affinity>0?'preferred':sourceIds.has(id)?'reference':'conditional';
   const reasons=[...advice.reasons],cautions=[...advice.cautions];
+  if(hexCatalogDisabled(data,a))cautions.push('当前目录标记禁用；这里保留你录入的实际选项，以本局服务器提供的选项为准。');
   if(sourceIds.has(id))reasons.push('当前版本 OP.GG 该英雄的强化参考清单包含此项；来源未提供该项正样本数。');
   if(unknownSkill)cautions.push('尚未核实本英雄具体适用哪项技能，先核对局内技能标记，不当作全技能生效。');
   if(!actual&&!sourceIds.has(id)&&advice.affinity<=0)return null;

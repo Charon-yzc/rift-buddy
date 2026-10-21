@@ -12,6 +12,8 @@ import {validReference,validHexReference,compareBuildPatches} from '../src/core/
 import {rankingKey,validRankingReference} from '../src/core/rankings.mjs';
 import {defaultBuildJobs} from '../src/core/default-build-jobs.mjs';
 import {createGenerationRecipe} from './data-generation.mjs';
+import {fetchHexPoolIndex,fetchHexPoolEvidence} from './hex-pool-sources.mjs';
+import {validHexPoolRecord,mergeHexPoolEvidence} from '../src/core/hex-pool-evidence.mjs';
 
 const scopes=BUILD_REGIONS.flatMap(region=>BUILD_TIERS.map(tier=>({region:region.id,tier:tier.id})));
 const counts=bundle=>Object.fromEntries(['rankings','builds','hex-builds'].map(name=>[name,Object.keys(bundle[name].entries).length]));
@@ -36,7 +38,7 @@ export function serverBuildJobs(bundle,champions=bundle.game.champions){
 // Called under an OS-held flock by the deployment. Every refresh keeps source
 // patch/scope; a new base patch is held back until all ranking scopes validate.
 export async function collectServerData({root,seedRoot,clock=()=>new Date().toISOString(),network=createServerDataFetch(),
- providers={},maxChampions=null,onProgress=()=>{}}){
+ providers={},maxChampions=null,collectHexPools=false,onProgress=()=>{}}){
  if(maxChampions!==null&&(!Number.isInteger(maxChampions)||maxChampions<1))throw Error('采集数量无效');
  const current=await loadServerData(root),previous=current?.bundle||await loadServerSeed(seedRoot);
  let priorStatus={};try{priorStatus=JSON.parse(await fs.readFile(path.join(root,'status.json'),'utf8'));}catch{}
@@ -94,16 +96,35 @@ export async function collectServerData({root,seedRoot,clock=()=>new Date().toIS
    if(ref.patch!==game.patch||!validHexReference(ref,champion,game))throw Error('海克斯资料版本或英雄不匹配');
    const old=bundle['hex-builds'].entries[champion.id];
    if(old&&compareBuildPatches(ref.patch,old.patch)<0)throw Error('拒绝海克斯资料版本回退');
-   if(!contentEqual(ref,old)){bundle['hex-builds'].entries[champion.id]=ref;hex.changed++;}
+   const next=mergeHexPoolEvidence(ref,old);if(!contentEqual(next,old)){bundle['hex-builds'].entries[champion.id]=next;hex.changed++;}
   }catch(error){fail(hex,champion.id,error);if(['SOURCE_PAUSED','ROUND_LIMIT'].includes(error.code)){hex.skipped=champions.length-hex.checked;break;}}
   if(hex.checked%25===0)await checkpoint();
  }
  if(maxChampions!==null)hex.skipped+=Math.max(0,game.champions.length-champions.length);
  finish(hex);
+ if(collectHexPools){
+  // Supplementary public observations use the same lock/network budgets and
+  // signed Hex file. Their outage must not freeze valid base/build updates.
+  const pools=begin('hex-pools',game.champions.length);pools.optional=true;await checkpoint();
+  try{
+   const index=await (providers.hexPoolIndex||fetchHexPoolIndex)({fetcher:network.fetcher});
+   for(const champion of champions){
+    pools.checked++;try{
+     const ref=bundle['hex-builds'].entries[champion.id],slug=index.get(champion.key);
+     if(ref?.patch!==game.patch||!slug)throw Error('缺少同版本英雄来源，保留已有记录');
+     const evidence=await (providers.hexPool||fetchHexPoolEvidence)(champion,{patch:game.patch,slug,fetcher:network.fetcher});
+     if(!validHexPoolRecord(evidence,champion.id,game.patch))throw Error('英雄选取记录不匹配');
+     const next=mergeHexPoolEvidence(ref,{poolEvidence:evidence});if(!contentEqual(next,ref)){bundle['hex-builds'].entries[champion.id]=next;pools.changed++;}
+    }catch(error){fail(pools,champion.id,error);if(['SOURCE_PAUSED','ROUND_LIMIT'].includes(error.code)){pools.skipped=champions.length-pools.checked;break;}}
+    if(pools.checked%25===0)await checkpoint();
+   }
+  }catch(error){fail(pools,'index',error);pools.skipped=champions.length;}
+  if(maxChampions!==null)pools.skipped+=Math.max(0,game.champions.length-champions.length);finish(pools);await checkpoint();
+ }
  try{
   const result=await stageServerData(root,bundle,{expectedRelease:current?.pointer.release||null,clock});
   status.release=result.pointer.release;status.changed=result.changed;status.coverage=counts(result.bundle);
-  status.state=maxChampions!==null||status.generationError||Object.values(status.datasets).some(state=>state.state!=='ok')?'partial':'ok';
+  status.state=maxChampions!==null||status.generationError||Object.values(status.datasets).some(state=>!state.optional&&state.state!=='ok')?'partial':'ok';
  }catch(error){status.state='failed';status.error=errorText(error);}
  status.checkedAt=clock();await checkpoint();return status;
 }

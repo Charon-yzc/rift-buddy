@@ -15,6 +15,7 @@ import {duoPlay,duoPlayText} from './duo-plays.mjs';
 import {creativeMemberCombo,validateCreativePlan} from './creative-plan.mjs';
 import {fallbackMemberPlay} from './plan-stages.mjs';
 import {validateRunePage,validateCustomRunePage} from './rune-page.mjs';
+import {validHexPoolRecord} from './hex-pool-evidence.mjs';
 export {validateRunePage} from './rune-page.mjs';
 
 export const BUILD_PARSER_VERSION=10;
@@ -88,7 +89,8 @@ export function validHexReference(ref,champion,data,{allowOlder=false}={}){
  const older=allowOlder&&compareBuildPatches(ref?.patch,data.patch)===-1;
  return !!(ref&&ref.schema===1&&ref.mode==='hex'&&ref.champion===champion.id&&usableBuildPatch(ref.patch,data.patch,allowOlder)&&ref.region==='global'&&ref.tier==='all'&&
   Array.isArray(ref.core)&&ref.core.length&&ref.core.every(c=>Array.isArray(c.items)&&c.items.length===3&&c.items.every(id=>Number.isSafeInteger(id)&&id>0&&(older||data.items[id]?.maps?.['12'])))&&
-  validSourceMetadata(ref,data,older)&&validSourceRows(ref.core,data,'12',older)&&validSourceRows(ref.boots,data,'12',older)&&validSourceRows(ref.start,data,'12',older)&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'12',older))&&Array.isArray(ref.augmentIds)&&ref.augmentIds.every(Number.isInteger));
+  validSourceMetadata(ref,data,older)&&validSourceRows(ref.core,data,'12',older)&&validSourceRows(ref.boots,data,'12',older)&&validSourceRows(ref.start,data,'12',older)&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'12',older))&&Array.isArray(ref.augmentIds)&&ref.augmentIds.every(Number.isInteger)&&
+  (ref.poolEvidence===undefined||validHexPoolRecord(ref.poolEvidence,champion.id,ref.patch)));
 }
 // Position eligibility may come from an existing validated source, even when
 // the local mechanism profile has not yet declared that secondary position.
