@@ -1,5 +1,5 @@
 // Render game-authored tooltip text without executing expressions from downloaded data.
-export function formatNumber(n){return Number.isFinite(n)?String(Math.round(n*1000)/1000):null;}
+export function formatNumber(n){if(!Number.isFinite(n))return null;const scaled=n*1000;return String(Number.isFinite(scaled)?Math.round(scaled)/1000:n);}
 export function fieldHash(name){let h=2166136261;for(const c of String(name).toLowerCase())h=Math.imul(h^c.charCodeAt(0),16777619);return `{${(h>>>0).toString(16).padStart(8,'0')}}`;}
 export function buildAugmentDescriptions(catalog,bin,entries){
  const dictionary=new Map(Object.entries(entries||{}).map(([k,v])=>[k.toLowerCase(),v]));
@@ -14,13 +14,14 @@ export function buildAugmentDescriptions(catalog,bin,entries){
   function named(name,factor=1){
    const seq=values.get(name.toLowerCase())||values.get(fieldHash(name));
    if(!seq?.length||seq.some(v=>!Number.isFinite(v)))return null;
-   const unique=[...new Set(seq.map(v=>formatNumber(v*factor)).filter(v=>v!==null))];
-   if(!unique.length)return null;
+   const formatted=seq.map(v=>formatNumber(v*factor));if(formatted.some(v=>v===null))return null;
+   const unique=[...new Set(formatted)];
    return unique.length===1?unique[0]:`${unique[0]}–${unique.at(-1)}（随等级）`;
   }
   function calculation(name){
    const calc=calculations.get(name.toLowerCase())||calculations.get(fieldHash(name));
    if(!Array.isArray(calc?.mFormulaParts)||!calc.mFormulaParts.length||calc.mFormulaParts.length>16)return null;
+   if(calc.__type&&!['GameCalculation','{e9a3c91d}'].includes(calc.__type))return null;
    const namedScalar=name=>{const seq=values.get(String(name).toLowerCase())||values.get(fieldHash(name));return seq?.length&&seq.every(n=>Number.isFinite(n)&&n===seq[0])?seq[0]:null;};
    const scalar=part=>part?.__type==='NumberCalculationPart'?Number.isFinite(part.mNumber===undefined?0:part.mNumber)?part.mNumber===undefined?0:part.mNumber:null:part?.__type==='NamedDataValueCalculationPart'?namedScalar(part.mDataValue):null;
    const multiplier=calc.mMultiplier===undefined?1:scalar(calc.mMultiplier),ranged=calc.mRangedMultiplier===undefined?1:scalar(calc.mRangedMultiplier);
@@ -28,14 +29,14 @@ export function buildAugmentDescriptions(catalog,bin,entries){
    if(calc.__type&&calc.__type!=='GameCalculation'&&calc.mMultiplier!==undefined)return null;
    const percent=calc.mDisplayAsPercent===true;
    function renderCalculation(scale){
-    const factor=scale*(percent?100:1),numeric=calc.mFormulaParts.map(scalar);
-    if(numeric.every(n=>n!==null))return formatNumber(numeric.reduce((sum,n)=>sum+n,0)*factor)+(percent?'%':'');
+    const factor=scale*(percent?100:1),numeric=calc.mFormulaParts.map(scalar);if(!Number.isFinite(factor))return null;
+    if(numeric.every(n=>n!==null)){const value=formatNumber(numeric.reduce((sum,n)=>sum+n,0)*factor);return value===null?null:value+(percent?'%':'');}
     // Existing numeric melee/ranged wrappers remain supported. New live-stat
     // expressions require the reviewed GameCalculation structure.
     if(calc.__type&&calc.__type!=='GameCalculation')return null;
     let hasStat=false;
     const parts=calc.mFormulaParts.map(part=>{
-     if(part.__type==='ByCharLevelInterpolationCalculationPart')return Number.isFinite(part.mStartValue)&&Number.isFinite(part.mEndValue)?`${formatNumber(part.mStartValue*factor)}–${formatNumber(part.mEndValue*factor)}（随等级）`:null;
+     if(part.__type==='ByCharLevelInterpolationCalculationPart'){if(!Number.isFinite(part.mStartValue)||!Number.isFinite(part.mEndValue))return null;const start=formatNumber(part.mStartValue*factor),end=formatNumber(part.mEndValue*factor);return start===null||end===null?null:`${start}–${end}（随等级）`;}
      if(part.__type==='NumberCalculationPart'){const n=scalar(part);return n===null?null:formatNumber(n*factor);}
      if(part.__type==='NamedDataValueCalculationPart')return named(part.mDataValue,factor);
      if(!['StatByNamedDataValueCalculationPart','StatByCoefficientCalculationPart'].includes(part.__type))return null;
@@ -43,8 +44,8 @@ export function buildAugmentDescriptions(catalog,bin,entries){
      // unknown stats/formulas must not borrow a plausible-looking coefficient.
      const stat=part.mStat===undefined?0:part.mStat,formula=part.mStatFormula===undefined?0:part.mStatFormula,label=stat===0&&formula===0?'法术强度':stat===12&&formula===0?'最大生命值':stat===12&&formula===2?'额外生命值':null;
      const coefficient=part.__type==='StatByNamedDataValueCalculationPart'?namedScalar(part.mDataValue):part.mCoefficient;
-     if(!label||!Number.isFinite(coefficient))return null;hasStat=true;
-     return formatNumber(coefficient*factor*(percent?1:100))+(percent?'×':'%')+label;
+     if(!label||!Number.isFinite(coefficient))return null;const value=formatNumber(coefficient*factor*(percent?1:100));if(value===null)return null;hasStat=true;
+     return value+(percent?'×':'%')+label;
     });
     if(parts.some(part=>part===null))return null;
     const text=parts.join(' + ').replace(/ \+ -/g,' - ');

@@ -94,7 +94,7 @@ export function createHelperManager({userData,bundleRoot,executable,isPackaged,h
   if(!transport||transport.kind!==kind||transport.installPath!==installPath||transport.config!==helperConfig){revokeTransport();transport={token:Object.freeze({}),kind,installPath,config:helperConfig};}
   return transport.token;
  }
- const transportCurrent=token=>!closed&&transport?.token===token&&String(transport.installPath||'')===String(getInstallPath()||'')&&(!transport.config||transport.config===config);
+ const transportCurrent=token=>Boolean(!closed&&transport&&transport.token===token&&String(transport.installPath||'')===String(getInstallPath()||'')&&(!transport.config||transport.config===config));
  async function history(operation,payload={},token){
   if(token===undefined)token=transport?.token||bindTransport('direct',getInstallPath());
   if(!transportCurrent(token))throw Error('战绩读取通道已变化，请重新查询');

@@ -13,15 +13,27 @@ test('actual shielding distinguishes bonus health from maximum health and applie
  assert.ok(byId(1061).unresolved.includes('Cooldown'),'BaseCooldown is not blindly substituted for live cooldown');assert.ok(byId(1415).unresolved.includes('AdditionalMis'),'Unverified stat8 missile behavior stays explicit');
 });
 test('missing coefficient, unknown stat or formula and unknown multiplier never emit partial invented formulas',()=>{
- for(const change of ['coefficient','stat','formula','multiplier','wrapper','invalid base','null stat']){
+ for(const change of ['coefficient','stat','formula','multiplier','wrapper','numeric wrapper','invalid base','null stat']){
   const fixture=structuredClone(source),entry=Object.values(fixture.bin).find(row=>row?.AugmentNameId==='ARAM_JeweledGauntlet'),spell=fixture.bin[entry.RootSpell].mSpell,calc=spell.mSpellCalculations.CritGranted;
   if(change==='coefficient')spell.DataValues=spell.DataValues.filter(row=>row.name!=='CritConverRatio');
   if(change==='stat')calc.mFormulaParts[1].mStat=999;
   if(change==='formula')calc.mFormulaParts[1].mStatFormula=999;
   if(change==='multiplier')calc.mMultiplier={__type:'UnknownCalculationPart',mNumber:2};
   if(change==='wrapper')calc.__type='UnknownGameCalculation';
+  if(change==='numeric wrapper'){calc.__type='UnknownGameCalculation';calc.mFormulaParts=[{__type:'NumberCalculationPart',mNumber:5}];}
   if(change==='invalid base')spell.DataValues.find(row=>row.name==='CritChance').values[2]=null;
   if(change==='null stat')calc.mFormulaParts[1].mStat=null;
   const row=render(fixture).find(a=>a.id===1048);assert.equal(row.descriptionStatus,'partial',change);assert.ok(row.unresolved.includes('CritGranted'));assert.doesNotMatch(row.description,/（25|0\.045/);
+ }
+});
+
+test('overflowing arithmetic stays unresolved instead of becoming a complete null or Infinity formula',()=>{
+ for(const kind of ['stat','sum','range','named range']){
+  const fixture=structuredClone(source),entry=Object.values(fixture.bin).find(row=>row?.AugmentNameId==='ARAM_JeweledGauntlet'),spell=fixture.bin[entry.RootSpell].mSpell,calc=spell.mSpellCalculations.CritGranted;
+  if(kind==='stat'){calc.mFormulaParts[1]={__type:'StatByCoefficientCalculationPart',mCoefficient:1e308};calc.mMultiplier={__type:'NumberCalculationPart',mNumber:100};}
+  if(kind==='sum')calc.mFormulaParts=[{__type:'NumberCalculationPart',mNumber:1e308},{__type:'NumberCalculationPart',mNumber:1e308}];
+  if(kind==='range')calc.mFormulaParts=[{__type:'ByCharLevelInterpolationCalculationPart',mStartValue:1,mEndValue:1e308}];
+  if(kind==='named range')spell.DataValues.find(row=>row.name==='CritChance').values=[.25,1e308];
+  const row=render(fixture).find(a=>a.id===1048);assert.equal(row.descriptionStatus,'partial',kind);assert.ok(row.unresolved.includes('CritGranted'),kind);assert.doesNotMatch(row.description,/null|Infinity|NaN/,kind);
  }
 });
