@@ -77,3 +77,14 @@ test('option entry resolves only exact known choices and the UI exposes short ad
  assert.match(renderHexAdvice({data,hero:'Brand'}),/炼狱导管/);assert.match(renderHexAdvice({data,hero:'Brand'}),/不是胜率榜/);
  const withoutHero=hexRecommendations({data,options:[2005,2072]});assert.equal(withoutHero.rows.length,2);assert.equal(withoutHero.bestChoice,null);
 });
+
+test('reviewed attack-crit and AP spell-crit advice is hero-specific and cannot survive a changed kit or effect',()=>{
+ for(const [hero,id]of [['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]]){
+  const result=hexRecommendations({data,hero,options:[2072,id,1205]});assert.deepEqual(result.rows.map(r=>r.id),[2072,id,1205]);assert.equal(result.bestChoice,id);assert.equal(result.rows[1].level,'preferred');assert.equal(result.rows[1].score,undefined);
+  for(const mutate of [d=>d.patch='16.21',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
+   const changed=structuredClone(data);mutate(changed);const degraded=hexRecommendations({data:changed,hero,options:[id]});assert.equal(degraded.bestChoice,null);assert.notEqual(degraded.rows[0].level,'preferred');
+  }
+ }
+ for(const hero of ['Jhin','Ashe','Brand'])assert.equal(hexRecommendations({data,hero,options:[1328]}).bestChoice,null,'No blanket crit/marksman endorsement for '+hero);
+ assert.equal(hexRecommendations({data,hero:'Brand',options:[1048]}).bestChoice,null,'Keep other spell casters conditional until reviewed');
+});
