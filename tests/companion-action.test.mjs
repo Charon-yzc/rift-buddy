@@ -22,7 +22,7 @@ test('sidebar candidate and room scores ignore a visible preview until that hero
  live.session.myTeam[1].championPickIntent=0;html=companionView(props);
  const cleared=lineupFit(proposed,recommendationDraft(slots,live.session,data.champions,{ownRole:'bottom'}),data.champions,{clientSession:live.session});
  assert.doesNotMatch(html,/room-ballot-row conflict/);assert.equal((html.match(new RegExp('契合 '+cleared.score+'<','g'))||[]).length,2);assert.equal(cleared.score,fit.score);assert.deepEqual(slots,before);
- live.session.myTeam[1].championId=hero('Lux').key;live.session.myTeam[1].pickState='locked';html=companionView(props);assert.match(html,/room-ballot-row conflict/);
+ live.session.myTeam[1].championId=hero('Lux').key;live.session.myTeam[1].pickState='locked';html=companionView(props);assert.doesNotMatch(html,/class="room-ballot-row /);assert.match(html,/class="companion-candidate"/);
 });
 
 test('sidebar hero shortcuts distinguish own configuration, public teammate picks, locks and display-only mode',()=>{

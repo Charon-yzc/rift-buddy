@@ -712,6 +712,8 @@ function markNewRoomProposals(previous){
  for(const row of app.querySelectorAll('.room-ballot-row'))if(!previous.has(row.dataset.proposalKey))row.dataset.arrival='true';
 }
 function render(){
+ const ballotKey=overlay.querySelector('[data-action="room-adopt-ballot"][data-key]')?.dataset.key;
+ if(ballotKey&&!roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null,party:currentParty(),includePreselected:includePublicPreselection()}).some(row=>row.key===ballotKey))closeOverlay();
  const formFocus=app.contains(document.activeElement)&&['history','ongoing'].includes(route)&&document.activeElement.matches('input,textarea,select')?{tag:document.activeElement.tagName,id:document.activeElement.id,data:{...document.activeElement.dataset},value:document.activeElement.value,start:document.activeElement.selectionStart,end:document.activeElement.selectionEnd}:null;
  const rankingFocus=['ranking-search','patch-search','reference-search'].includes(document.activeElement?.id)?{id:document.activeElement.id,start:document.activeElement.selectionStart,end:document.activeElement.selectionEnd}:null;
  const disclosureFocus={scope:renderedDisclosureScope,context:renderedSelectContext,key:disclosureState.captureFocus(app)};
@@ -1731,6 +1733,7 @@ document.addEventListener('click',async event=>{
  else{closeOverlay();overlay.innerHTML=roomMissingConfigurationDialog({id:el.dataset.id,role:el.dataset.role,mode:'rift',nick:row.from,champ});}return;
  }
  if(action==='room-vote'){
+ if(!roomBallotBoard(room,publicDraftContext(),data.champions,{scope,soloRole:taskOwnRole(),clientSession:client.connected?client.session:null,party:currentParty(),includePreselected:includePublicPreselection()}).some(row=>row.key===el.dataset.key))throw Error('提议已失效，请重新选择');
  applyRoomSnapshot(await api.roomBallot({version:1,toggleVote:el.dataset.key}));render();return;
  }
  if(action==='room-adopt-ballot'){

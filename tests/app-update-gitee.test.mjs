@@ -40,6 +40,18 @@ test('Gitee discovers an update when GitHub is unavailable and old manual releas
   if(!automated){await assert.rejects(s.download(r.release),/网页下载/);const html=appUpdatePanel({version:'0.51.0',preferences:{},update:{phase:'available',release:r.release}});assert.ok(!html.includes('data-action="app-update-download"'));assert.match(html,/网页分卷下载/);}
  }
 });
+
+test('more than ten retained Gitee releases cannot hide the newest update when GitHub is unavailable',async()=>{
+ const releases=Array.from({length:11},(_,i)=>JSON.parse(feed('0.59.'+(i+1)))[0]),hits=[];
+ const request=(url,options,callback)=>{
+  const ordered=url.searchParams.get('direction')==='desc'?[...releases].reverse():releases;
+  const rows=ordered.slice(0,Number(url.searchParams.get('per_page'))||20);
+  return fake({[key(GITEE_RELEASE_FEED_URL)]:{status:200,body:JSON.stringify(rows)}},hits)(url,options,callback);
+ };
+ const s=await service({}, {request,mirrorBase:GITEE_REPOSITORY_URL});const result=await s.check();
+ assert.equal(result.status,'available');assert.equal(result.release.version,'0.59.11');assert.equal(result.release.source,'gitee');assert.equal(result.release.manualOnly,false);
+ assert.equal(releases.length,11,'Discovery must preserve historical releases');assert.equal(hits.filter(url=>url.includes('gitee.com')).length,1,'Newest records fit the bounded first page');
+});
 test('Gitee streams and validates each part and the full installer without GitHub or a remote script',async()=>{
  const hits=[],progress=[],s=await service(routesFor(),{hits});
  const result=await s.download(release,{onProgress:p=>progress.push(p)});
