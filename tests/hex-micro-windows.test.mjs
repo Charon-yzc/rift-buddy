@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 
 const area={x:0,y:0,width:1920,height:1040};
 const root=fileURLToPath(new URL('..',import.meta.url));
-function setup(){
+function setup(preferences={}){
  const file=new URL('../electron/hex-micro-windows.cjs',import.meta.url),nativeRequire=createRequire(file),handlers={},windows=[],intervals=[],timers=new Map();let nextTimer=0;
  let state={selection:{mode:'hex'},hexWindows:{}},active=true,cursor={x:0,y:0},height=()=>Promise.resolve(70),saves=0,write=async next=>{state=next;};
  const value={referenceRevision:1,model:{mode:'hex',champion:{id:'Yasuo',name:'亚索'},matchId:'5',equipment:{available:true,ally:{players:[{id:'Yasuo',name:'亚索',known:true,value:300}]},enemy:{players:[]}},hexMicroRoutes:[]}};
@@ -17,7 +17,7 @@ function setup(){
   getBounds(){return this.bounds;}setBounds(b){this.bounds=b;this.emit('move');}isDestroyed(){return this.destroyed===true;}isVisible(){return this.visible;}showInactive(){this.visible=true;this.shows++;}hide(){assert(!this.isDestroyed(),'must not touch a destroyed window');this.visible=false;}setAlwaysOnTop(){}setIgnoreMouseEvents(value){this.ignore=value;}loadFile(){}async loadURL(){}destroy(){this.destroyed=true;this.emit('closed');}
  }
  const module={exports:{}};vm.runInNewContext(fs.readFileSync(file,'utf8'),{module,require:name=>name==='electron'?{BrowserWindow:Window,ipcMain:{handle:(name,fn)=>{handlers[name]=fn;}},screen:{getCursorScreenPoint:()=>cursor}}:nativeRequire(name),setInterval:fn=>{intervals.push(fn);return {unref(){}};},clearInterval(){},setTimeout:fn=>{timers.set(++nextTimer,fn);return nextTimer;},clearTimeout:id=>timers.delete(id)});
- const micro=module.exports({root,getState:()=>state,setState:async(next,base)=>{saves++;await write(next,base);},getPayload:()=>value,getArea:()=>area,getGameBounds:()=>null,getScale:()=>1,isActive:()=>active,isQuitting:()=>false,onHide(){},onChange(){},showMain(){},diagnostic(){}});
+ const micro=module.exports({root,getState:()=>state,setState:async(next,base)=>{saves++;await write(next,base);},getPayload:()=>value,getArea:()=>area,getGameBounds:()=>null,getScale:()=>1,getPreferences:()=>preferences,isActive:()=>active,isQuitting:()=>false,onHide(){},onChange(){},showMain(){},diagnostic(){}});
  const call=(kind,name,input)=>{const win=windows.find(w=>w.options.webPreferences.additionalArguments?.includes('--rift-hex-window='+kind));return handlers[name]({sender:win.webContents,senderFrame:win.webContents.mainFrame},kind,input);};
  return {micro,windows,value,handlers,call,ready:()=>windows.filter(w=>w.options.webPreferences.preload).forEach(w=>w.emit('ready-to-show')),active:v=>{active=v;},state:v=>{if(v)state=v;return state;},writer:fn=>{write=fn;},height:fn=>{height=fn;},pointer:p=>{cursor=p;intervals.forEach(fn=>fn());},timers,saveCount:()=>saves};
 }
@@ -83,7 +83,7 @@ test('late Rift widget ready, peek restore and controls cannot create a third He
 
 // Exercise the real guide owner and micro windows together: manual previews
 // must stay editable without allowing a late legacy window over the game.
-function guideOwner({mode='hex',prepare=async()=>true}={}){
+function guideOwner({mode='hex',prepare=async()=>true,preferences={guideAutoShow:true}}={}){
  const file=new URL('../electron/guide-window.cjs',import.meta.url),nativeRequire=createRequire(file),handlers={},windows=[];let restore;
  let state={selection:{id:'Yasuo',mode,conditions:[]},compact:true,match:{gameId:'1'}},current={id:'Yasuo',mode};
  class Window extends EventEmitter{
@@ -92,13 +92,13 @@ function guideOwner({mode='hex',prepare=async()=>true}={}){
  }
  const display={workArea:area,bounds:area},screen=Object.assign(new EventEmitter(),{getDisplayMatching:()=>display,getPrimaryDisplay:()=>display,getCursorScreenPoint:()=>({x:-100,y:-100})});
  const electron={BrowserWindow:Window,ipcMain:{handle:(name,fn)=>{handlers[name]=fn;}},screen,clipboard:{}};
- const widget=()=>({show(){},hide(){},publish(){},fit(){},destroy(){},reset(){},visible:()=>false,info:()=>null});
+ const widgets=[];const widget=options=>{let visible=false;const w={show(){if(options.isActive()&&options.getState()?.skillWidget?.enabled!==false)visible=true;},hide(){visible=false;},publish(){if(!options.isActive())visible=false;},fit(){},destroy(){},reset(){},visible:()=>visible,info:()=>null};widgets.push(w);return w;};
  function load(url){const module={exports:{}};vm.runInNewContext(fs.readFileSync(url,'utf8'),{module,process,Buffer,setTimeout:()=>1,clearTimeout(){},setInterval:()=>({unref(){}}),clearInterval(){},require:name=>name==='electron'?electron:name==='./hex-micro-windows.cjs'?load(new URL('../electron/hex-micro-windows.cjs',import.meta.url)):['./skill-window.cjs','./jungle-window.cjs'].includes(name)?widget:name==='./window-peek.cjs'?options=>{restore=options.onRestore;return {unfold(){},destroy(){},active:()=>false,visible:()=>false,sync(){}};}:name==='./window-resize.cjs'?()=>({cancel(){},active:()=>false}):nativeRequire(name)});return module.exports;}
- const guide=load(file)({root,getState:()=>state,setState:async next=>{state=next;},getModel:()=>({mode,live:{matched:false},champion:{id:'Yasuo'},hexMicroRoutes:[]}),isQuitting:()=>false,showMain(){},diagnostic(){},currentSelection:()=>current,prepareCurrent:prepare,getPreferences:()=>({guideAutoShow:true})});
+ const guide=load(file)({root,getState:()=>state,setState:async next=>{state=next;},getModel:()=>({mode,live:{matched:false},champion:{id:'Yasuo'},hexMicroRoutes:[]}),isQuitting:()=>false,showMain(){},diagnostic(){},currentSelection:()=>current,prepareCurrent:prepare,getPreferences:()=>preferences});
  const legacy=()=>windows.find(w=>w.options.webPreferences.preload.endsWith('guide-preload.cjs'));
  const micro=()=>windows.filter(w=>w.options.webPreferences.additionalArguments?.some(a=>a.startsWith('--rift-hex-window=')));
  const call=(w,name,...args)=>handlers[name]({sender:w.webContents,senderFrame:w.webContents.mainFrame},...args);
- return {guide,windows,legacy,micro,call,state:()=>state,current:value=>{current=value;},restore:()=>restore(),ready:()=>windows.forEach(w=>w.emit('ready-to-show'))};
+ return {guide,windows,widgets,legacy,micro,call,state:()=>state,current:value=>{current=value;},restore:()=>restore(),ready:()=>windows.forEach(w=>w.emit('ready-to-show'))};
 }
 
 test('Hex manual preview is editable; entering a game replaces it with only two micro windows',async()=>{
@@ -141,6 +141,33 @@ test('a manual Hex reference during an actual Rift game stays editable',async()=
  }finally{s.guide.destroy();}
 });
 
+test('Rift economy-only hotkey closes and restores; feature opt-outs restore only existing display intent',async()=>{
+ const preferences={guideAutoShow:true,guideEconomy:true,guideEquipment:false,guideSkills:false,guideJungle:false},s=guideOwner({mode:'rift',preferences});try{
+  await s.guide.phase('InProgress',true);s.ready();assert.equal(s.micro().length,1);const economy=s.micro()[0];assert(economy.visible);assert.equal(s.legacy(),undefined);
+  s.guide.toggle();assert(!economy.visible);for(let i=0;i<4;i++)s.guide.publish();assert(!economy.visible);s.guide.toggle();assert(economy.visible);
+  preferences.guideEconomy=false;s.guide.publish();assert(!economy.visible);preferences.guideEconomy=true;s.guide.publish();assert(economy.visible);
+  for(const key of ['guideEquipment','guideSkills','guideJungle']){preferences[key]=true;s.guide.publish();s.ready();assert(key==='guideEquipment'?s.legacy().visible:s.widgets[key==='guideSkills'?0:1].visible());preferences[key]=false;s.guide.publish();assert(key==='guideEquipment'?!s.legacy().visible:!s.widgets[key==='guideSkills'?0:1].visible());preferences[key]=true;s.guide.publish();s.ready();assert(key==='guideEquipment'?s.legacy().visible:s.widgets[key==='guideSkills'?0:1].visible());}
+  s.call(economy,'hex-micro-control','economy','hide');preferences.guideEconomy=false;s.guide.publish();preferences.guideEconomy=true;s.guide.publish();assert(!economy.visible,'Re-enable must not override the player closing that window');s.guide.toggle();for(let i=0;i<6;i++)s.guide.publish();assert(!s.guide.isVisible());
+ }finally{s.guide.destroy();}
+});
+
+test('a feature opt-out dismisses visible and delayed native hover cards',async()=>{
+ const preferences={},s=setup(preferences);try{
+  s.micro.show();s.ready();const p=s.call('economy','hex-micro-bootstrap');await s.call('economy','hex-micro-hover',{...hover,context:p.context});const tip=s.windows[2];assert(tip.visible);
+  preferences.guideEconomy=false;s.micro.publish();assert(!tip.visible);assert(!s.windows[0].visible);preferences.guideEconomy=true;s.micro.resume();
+  let resolve;s.height(()=>new Promise(r=>{resolve=r;}));const flight=s.call('economy','hex-micro-hover',{...hover,context:p.context});await tick();preferences.guideEconomy=false;s.micro.publish();resolve(70);assert.equal(await flight,false);assert(!tip.visible);
+ }finally{s.micro.destroy();}
+});
+
+test('closing only Rift equipment keeps economy and cannot restore equipment through readiness or preferences',async()=>{
+ const preferences={guideAutoShow:true},s=guideOwner({mode:'rift',preferences});try{
+  await s.guide.phase('InProgress',true);s.ready();const gear=s.legacy(),economy=s.micro()[0];assert(gear.visible&&economy.visible);
+  await s.call(gear,'guide-control','hide');for(let i=0;i<6;i++)s.guide.publish();assert(!gear.visible);assert(economy.visible);s.ready();assert(!gear.visible);
+  preferences.guideEquipment=false;s.guide.publish();preferences.guideEquipment=true;s.guide.publish();s.ready();assert(!gear.visible);assert(economy.visible);
+  s.guide.toggle();s.guide.publish();assert(!s.guide.isVisible());
+ }finally{s.guide.destroy();}
+});
+
 test('automatic game overlays never restore or raise a window on foreground observations',async()=>{
  const s=guideOwner({mode:'rift'});try{
   s.guide.show();s.ready();const w=s.legacy();w.minimized=true;w.hide();
@@ -155,7 +182,7 @@ test('automatic game overlays never restore or raise a window on foreground obse
 
 test('a failed or delayed automatic preparation cannot loop window displays or override a manual hide',async()=>{
  let release,calls=0;const s=guideOwner({mode:'rift',prepare:async()=>{calls++;return new Promise(r=>{release=r;});}});try{
-  const flight=s.guide.phase('InProgress',true);await tick();assert.equal(calls,1);s.guide.toggle();await s.call(s.legacy(),'guide-control','hide');release(true);await flight;s.ready();assert(!s.guide.isVisible());
+  const flight=s.guide.phase('InProgress',true);await tick();assert.equal(calls,1);s.guide.toggle();await s.call(s.legacy(),'guide-control','hide');s.guide.toggle();release(true);await flight;s.ready();assert(!s.guide.isVisible());
   for(let i=0;i<10;i++)await s.guide.phase('InProgress',true);assert.equal(calls,1);assert(s.windows.every(w=>!(w.raises||w.restores)));
  }finally{s.guide.destroy();}
 });

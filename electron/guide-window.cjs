@@ -26,15 +26,16 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
- let gameBounds=null,openTab=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null;
+ let gameBounds=null,openTab=null,displayEpoch=0,activeFamily=null,passiveDisplay=false,autoShowGame=null,equipmentRequested=false;
  const isHex=()=>getState()?.selection?.mode==='hex';
  const inGame=value=>['GameStart','InProgress','Reconnect'].includes(value);
  // Manual Hex previews keep their editable guide. Only a real game switches
  // to micro windows; a transient client disconnect retains that game family.
  const usesHexMicro=()=>isHex()&&currentSelection()?.mode==='hex'&&(inGame(phase)||!connected&&inGame(lastConnectedPhase));
+ const usesEconomy=()=>!isHex()&&currentSelection()?.mode==='rift'&&currentSelection()?.id===getState()?.selection?.id&&(inGame(phase)||!connected&&inGame(lastConnectedPhase));
  const ended=()=>['WaitingForStats','PreEndOfGame','EndOfGame'].includes(phase);
  const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
- const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{if(usesHexMicro())return;displayEpoch++;visibilityRequested=true;win?.showInactive();inputMode();publish();}});
+ const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{if(usesHexMicro()||getPreferences().guideEquipment===false)return;displayEpoch++;visibilityRequested=true;equipmentRequested=true;win?.showInactive();inputMode();publish();}});
  const resize=require('./window-resize.cjs')({getWindow:()=>win,getArea:workArea,getLimits:area=>guideWindowLimits(isCompact()?'compact':isStrip()?'strip':'details',area,stripScale()),onStart:()=>{clearTimeout(boundsTimer);boundsTimer=null;hoverHeader=true;inputMode();},onEnd:rememberBounds});
  async function rememberBounds(){clearTimeout(boundsTimer);boundsTimer=null;if(!win||win.isDestroyed()||!getState()||isBall())return;const b=win.getBounds(),current=getState();if(isCompact()){await save({...current,compactBounds:b});return;}if(isStrip()){await save({...current,stripBounds:b});return;}await save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}});}
  function fit(recover=false){if(!win||win.isDestroyed()||resize.active()||boundsTimer)return;const area=workArea(),current=win.getBounds();
@@ -51,20 +52,30 @@ const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnec
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough(),focusable=!pass&&!passiveDisplay;win.setIgnoreMouseEvents(ignore,{forward:true});if(win.isFocusable?.()!==focusable)win.setFocusable(focusable);if(ignore&&win.isFocused())win.blur();}};
 const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,referenceRevision:referenceRevision(),openTab,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
-const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{if(usesHexMicro())return;const epoch=displayEpoch,current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});if(epoch!==displayEpoch||usesHexMicro())return;openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
-const jungle=createJungleWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{if(usesHexMicro())return;const epoch=displayEpoch,current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});if(epoch!==displayEpoch||usesHexMicro())return;openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
-const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isActive:()=>visibilityRequested&&usesHexMicro()&&!ended(),isQuitting,diagnostic,showMain,onChange:()=>publish(),onHide:()=>{displayEpoch++;autoShowUntil=0;if(!micro.requested())visibilityRequested=false;}});
+const skill=createSkillWindow({isActive:()=>getState()?.selection?.mode==='rift'&&!usesHexMicro()&&getPreferences().guideSkills!==false,root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{if(usesHexMicro())return;const epoch=displayEpoch,current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});if(epoch!==displayEpoch||usesHexMicro())return;openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
+const jungle=createJungleWindow({isActive:()=>getState()?.selection?.mode==='rift'&&!usesHexMicro()&&getPreferences().guideJungle!==false,root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{if(usesHexMicro())return;const epoch=displayEpoch,current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});if(epoch!==displayEpoch||usesHexMicro())return;openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
+const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,getPreferences,isActive:()=>visibilityRequested&&(usesHexMicro()||usesEconomy())&&!ended(),isQuitting,diagnostic,showMain,onChange:()=>publish(),onHide:()=>{displayEpoch++;autoShowUntil=0;if(!micro.requested())visibilityRequested=false;}});
+ let previousFeatures={...getPreferences()};
  function suppressLegacy(){peek.unfold();resize.cancel();hoverHeader=false;win?.hide();skill.hide();jungle.hide();}
  function publish(){
   const value=payload(),family=usesHexMicro()?'hex':'rift';
+  const preferences={...getPreferences()},restored=key=>previousFeatures[key]===false&&preferences[key]!==false;
+  const changes={economy:restored('guideEconomy'),gear:restored('guideEquipment'),skills:restored('guideSkills'),jungle:restored('guideJungle')};previousFeatures=preferences;
+  // A preference opt-out suppresses an existing display intent; enabling it
+  // restores that intent once. Polling never overrides a player's close.
+  if(visibilityRequested){
+   if((changes.economy||changes.gear)&&(usesHexMicro()||usesEconomy()))micro.resume(value);
+   if(family==='rift'){if(changes.skills)skill.show();if(changes.jungle)jungle.show();if(changes.gear&&equipmentRequested)showEquipment(true);}
+  }
   // The game tracker may clear its identity before phase() receives the exit.
   // Losing a real Hex context must not turn a visible micro guide into a large
   // editable preview. Opening that preview again requires an explicit show().
   if(activeFamily==='hex'&&family!=='hex'&&isHex())hide();
   // A refresh changes content only. Migrate an existing display intent once
   // when switching families; never reopen a player-closed window on a poll.
-  if(activeFamily!==family){if(activeFamily!==null)displayEpoch++;activeFamily=family;if(family==='hex'){suppressLegacy();if(visibilityRequested&&!ended()){if(micro.requested())micro.resume(value);else micro.show(value);}}else{micro.suspend();if(visibilityRequested)showLegacy(true);}}
+  if(activeFamily!==family){if(activeFamily!==null)displayEpoch++;activeFamily=family;if(family==='hex'){suppressLegacy();if(visibilityRequested&&!ended()){if(micro.requested())micro.resume(value);else micro.show(value);}}else{if(visibilityRequested)showLegacy(true);else micro.suspend();}}
   micro.publish(value);
+  if(getPreferences().guideEquipment===false){peek.unfold();win?.hide();}
   if(family==='hex'){suppressLegacy();return;}
   if(peek.active())peek.sync(visibilityRequested);
   if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);jungle.publish(value);
@@ -110,7 +121,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   win.webContents.on('will-navigate',(event,url)=>{if(url!==pathToFileURL(path.join(root,'src/guide.html')).href)event.preventDefault();});
   win.webContents.on('render-process-gone',(_e,detail)=>diagnostic(`guide renderer gone ${detail.reason}`));
   win.webContents.on('did-fail-load',(_e,code)=>diagnostic(`guide load failed ${code}`));
-  const created=win;win.once('ready-to-show',()=>{if(created!==win||created.isDestroyed())return;if(visibilityRequested&&!usesHexMicro())created.showInactive();diagnostic(`guide-ready visible=${created.isVisible()}`);});
+  const created=win;win.once('ready-to-show',()=>{if(created!==win||created.isDestroyed())return;if(visibilityRequested&&equipmentRequested&&!usesHexMicro()&&getPreferences().guideEquipment!==false)created.showInactive();diagnostic(`guide-ready visible=${created.isVisible()}`);});
   win.webContents.on('did-finish-load',()=>{
    diagnostic('guide loaded');
    if(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT)setTimeout(async()=>{try{await fs.writeFile(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT,(await win.webContents.capturePage()).toPNG());diagnostic('guide screenshot saved');}catch(e){diagnostic(`guide capture failed ${e.message}`);}},1500);
@@ -139,10 +150,11 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   if(hoverPoll.unref)hoverPoll.unref();
   win.on('closed',()=>{peek.destroy();clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
- function hideGear(){displayEpoch++;peek.unfold();resize.cancel();autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
- function hide(){hideGear();skill.hide();jungle.hide();micro.hide();}
- function showLegacy(automatic=false){if(automatic)passiveDisplay=true;skill.show();jungle.show();if(!win)create();else{inputMode();if(!automatic&&win.isMinimized())win.restore();fit();win.showInactive();}}
- function show(automatic=false){displayEpoch++;peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;passiveDisplay=automatic;activeFamily=usesHexMicro()?'hex':'rift';if(usesHexMicro()){suppressLegacy();micro.show(payload());}else{micro.suspend();showLegacy(automatic);}publish();return payload();}
+ function hideGear(){displayEpoch++;peek.unfold();resize.cancel();autoShowUntil=0;equipmentRequested=false;hoverHeader=false;win?.hide();}
+ function hide(){hideGear();visibilityRequested=false;skill.hide();jungle.hide();micro.hide();}
+ function showEquipment(automatic=false){if(automatic)passiveDisplay=true;if(getPreferences().guideEquipment===false){win?.hide();return;}if(!win)create();else{inputMode();if(!automatic&&win.isMinimized())win.restore();fit();win.showInactive();}}
+ function showLegacy(automatic=false){equipmentRequested=true;if(usesEconomy())micro.show(payload());else micro.suspend();skill.show();jungle.show();showEquipment(automatic);}
+ function show(automatic=false){displayEpoch++;peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;passiveDisplay=automatic;activeFamily=usesHexMicro()?'hex':'rift';if(usesHexMicro()){suppressLegacy();micro.show(payload());}else{showLegacy(automatic);}publish();return payload();}
  async function recover(reset=false){const epoch=++displayEpoch,identity=getState()?.selection?.mode,gameId=getState()?.match?.gameId;peek.unfold();resize.cancel();clearTimeout(boundsTimer);boundsTimer=null;const current=getState();
   if(usesHexMicro()){
    await micro.reset(async()=>{if(epoch!==displayEpoch||!usesHexMicro()||gameId!==getState()?.match?.gameId)return;const latest=getState();if(latest)await save({...latest,hexWindows:undefined});});
@@ -158,7 +170,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
  function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;micro.fit();skill.fit();jungle.fit();if(win&&changed)fit(true);}
  const displayChanged=()=>{fit();skill.fit();jungle.fit();micro.fit();};
  for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
- function toggle(){if(usesHexMicro()){if(micro.visible())hide();else show();return;}if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||skill.visible()||jungle.visible())hide();else show();}
+ function toggle(){if(usesHexMicro()){if(micro.visible())hide();else show();return;}if(isStrip()){if(win?.isVisible()||micro.visible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||micro.visible()||skill.visible()||jungle.visible())hide();else show();}
  async function interact(){const current=getState();if(!current)return;passiveDisplay=false;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{
   if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');

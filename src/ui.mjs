@@ -6,6 +6,7 @@ const icons={
  ranking:'<path d="M4 20V12h4v8M10 20V4h4v16M16 20v-6h4v6M2 20h20"/>',
  team:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M16 3a4 4 0 0 1 0 8"/><circle cx="9" cy="7" r="4"/>',
  sword:'<path d="m14 5 5-3 3 3-3 5L8 21l-5-5L14 5ZM12 7l5 5M2 22l4-4M4 13l7 7"/>',
+ feedback:'<path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6 4V6a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h7"/>',
  book:'<path d="M4 3h12a3 3 0 0 1 3 3v15H6a3 3 0 0 1-3-3V4a1 1 0 0 1 1-1ZM3 17h16M8 7h6M8 11h4"/>',
  hex:'<path d="m12 2 9 5v10l-9 5-9-5V7l9-5Zm0 5 4 5-4 5-4-5 4-5Z"/>',
  star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/>',

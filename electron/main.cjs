@@ -90,6 +90,12 @@ async function boot(){
  diagnostic('boot');
  [dataService,storage,lcu]=await Promise.all([import('../services/data.mjs'),import('../services/storage.mjs'),import('../services/lcu.mjs')]);
  guideCore=await import('../src/core/guide.mjs');
+ const {createFeedbackClient}=await import('../services/feedback.mjs');
+ const {feedbackImageDimensions}=await import('../services/feedback-images.mjs');
+ const feedback=createFeedbackClient({version:app.getVersion(),chooseFiles:async()=>{const result=await dialog.showOpenDialog(win,{title:'选择反馈截图',properties:['openFile','multiSelections'],filters:[{name:'截图',extensions:['png','jpg','jpeg']}]});return result.canceled?null:result.filePaths;},encodeImage:async bytes=>{const dimensions=feedbackImageDimensions(bytes),image=nativeImage.createFromBuffer(bytes);if(image.isEmpty())throw Error('无法读取这张图片');const size=image.getSize();if(size.width!==dimensions.width||size.height!==dimensions.height)throw Error('图片尺寸无法确认');const ratio=Math.min(1,2560/size.width,2560/size.height),resized=ratio<1?image.resize({width:Math.round(size.width*ratio),height:Math.round(size.height*ratio)}):image;return {bytes:resized.toPNG(),preview:resized.resize({width:160}).toDataURL()};}});
+ guard('feedback-images',context=>{if(context.surface!=='main')throw Error('请在完整助手中反馈');return feedback.choose();},true);
+ guard('feedback-send',(value,context)=>{if(context.surface!=='main')throw Error('请在完整助手中反馈');return feedback.send(value);},true);
+ guard('feedback-clear',context=>{if(context.surface!=='main')throw Error('请在完整助手中反馈');feedback.clear();return true;},true);
  const itemSetCore=await import('../src/core/item-sets.mjs'),itemSetService=await import('../services/item-sets.mjs');
  const {changeCompanionPlan}=await import('../src/core/companion-plan.mjs');
  const {pregamePhase,validatePregameIntent,pregameIntentChoice,restoredRoleClaim,partyWithPregameIntents}=await import('../src/core/pregame-intent.mjs');
@@ -139,7 +145,8 @@ async function boot(){
  const opponentCache=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
- synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();};
+ const guideFeatureSignature=()=>JSON.stringify(['guideEconomy','guideEquipment','guideSkills','guideJungle'].map(key=>state.preferences[key]!==false));let lastGuideFeatures=guideFeatureSignature();
+ synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();const signature=guideFeatureSignature();if(signature!==lastGuideFeatures){lastGuideFeatures=signature;guide?.publish();}};
  const {createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
  const pairCache=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshPairs=refreshReference(pairCache,['pairStatistics']);

@@ -4,7 +4,7 @@ const scaleOf=value=>[1,1.1,1.25].includes(value)?value:1;
 // 100% DPI. The previous height only fit when native rounding added a few pixels.
 export const compactGuideSize=scale=>({width:Math.ceil(320*scaleOf(scale)),height:Math.ceil(236*scaleOf(scale))});
 export function guideWindowLimits(kind,area,scale=1){
- const s=scaleOf(scale),[w,h]=kind==='skill'?[176,48]:kind==='jungle'?[230,144]:kind==='compact'?[280,214]:kind==='strip'?[280,160]:[360,480];
+ const s=scaleOf(scale),[w,h]=kind==='skill'?[208,26]:kind==='jungle'?[230,144]:kind==='compact'?[280,214]:kind==='strip'?[280,160]:[360,480];
  return {minWidth:Math.min(Math.ceil(w*s),area.width),minHeight:Math.min(Math.ceil(h*s),area.height),maxWidth:Math.min(kind==='skill'?640:1000,area.width),maxHeight:Math.min(kind==='skill'?200:1200,area.height)};
 }
 export function compactGuidePlacement(saved,area,game,scale=1){
@@ -12,7 +12,7 @@ export function compactGuidePlacement(saved,area,game,scale=1){
  return fitWindow({...size,...saved,x:saved?.x??anchor.x+anchor.width-(saved?.width||size.width)-12,y:saved?.y??anchor.y+24},area,{...size,...guideWindowLimits('compact',area,scale)});
 }
 export function skillWidgetPlacement(offset,area,game,scale=1,size){
- const width=size?.width||Math.ceil(208*scaleOf(scale)),height=size?.height||Math.ceil(48*scaleOf(scale)),anchor=game||area;
+ const width=size?.width||Math.ceil(286*scaleOf(scale)),height=Math.ceil(28*scaleOf(scale)),anchor=game||area;
  return fitWindow({width,height,x:anchor.x+anchor.width/2+(offset?.x??-width/2),y:anchor.y+anchor.height+(offset?.y??-anchor.height*.15-height)},area,{width,height,...guideWindowLimits('skill',area,scale)});
 }
 export function skillWidgetOffset(bounds,area,game){const anchor=game||area;return {x:Math.round(bounds.x-anchor.x-anchor.width/2),y:Math.round(bounds.y-anchor.y-anchor.height)};}
