@@ -44,3 +44,9 @@ test('three upstream errors open the circuit and response header limits reject b
  const large=createServerDataFetch({intervalMs:0,transport:async()=>new Response('small',{headers:{'content-length':'999999999'}})});
  await assert.rejects(large.fetcher(vendor),{code:'RESPONSE_LIMIT'});assert.equal(large.stats().bytes,0);
 });
+
+test('hero observation collection allows only the homepage and bounded champion patch paths',async()=>{
+ let calls=0;const network=createServerDataFetch({intervalMs:0,transport:async()=>{calls++;return new Response('ok');}});
+ for(const url of ['https://mayhemmeta.com/api/players','https://mayhemmeta.com/?token=secret','https://mayhemmeta.com/champions/yasuo?patch=16.20&player=x','https://mayhemmeta.com/champions/yasuo'])await assert.rejects(network.fetcher(url),{code:'SOURCE_NOT_ALLOWED'});
+ assert.equal(calls,0);await network.fetcher('https://mayhemmeta.com/');await network.fetcher('https://mayhemmeta.com/champions/yasuo?patch=16.20');assert.equal(calls,2);
+});

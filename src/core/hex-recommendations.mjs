@@ -1,9 +1,10 @@
 import {profile} from './rules.mjs';
+import {hexCatalogDisabled} from './hex-catalog.mjs';
 import {validHexReference} from './builds.mjs';
 import {compareAugments} from './hex-compare.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
 import {mechanicReview} from './mechanic-review.mjs';
-import {reviewedHexMechanic as reviewed,hexMechanicIds,HEX_MECHANIC_PATCH as reviewedPatch} from './hex-mechanics.mjs';
+import {reviewedHexMechanic as reviewed,hexMechanicIds,hexUltimateRequirement,HEX_MECHANIC_PATCH as reviewedPatch} from './hex-mechanics.mjs';
 
 // These are reviewed mechanic prerequisites, not occurrence eligibility or a
 // win-rate model. Unknown versions/keys remain browsable without these claims.
@@ -20,9 +21,9 @@ function mechanicAdvice(data,champion,a,owned){
  const kitCurrent=mechanicReview(champion,data.patch)==='current',p=kitCurrent?profile(champion):null,reasons=[],cautions=[];let affinity=0,conflict=false,conditional=false;
  if(!reviewed(a,data.patch))return {affinity,reasons,cautions,conflict,reviewed:false};
  const has=id=>owned.some(other=>other.id===id&&reviewed(other,data.patch));
- if([1088,2118].includes(a.id)&&has(1004)||a.id===1004&&(has(1088)||has(2118))){
-  conflict=true;cautions.push('回归基本功禁用终极技能，与需要施放终极技能的已选强化冲突。');
- }
+ const requirement=hexUltimateRequirement(a,data.patch),dependencies=a.id===1004?owned.filter(other=>hexUltimateRequirement(other,data.patch)):requirement&&has(1004)?[a]:[];
+ if(dependencies.length){conflict=true;cautions.push(...dependencies.map(other=>`回归基本功禁用终极技能，${other.name}的主要收益将无法利用。`));}
+ if(requirement)reasons.push(requirement);
  if(p&&a.id===1141){
   if(allyHealers.has(champion.id)){affinity+=p.build==='enchanter'?4:1;conditional=p.build!=='enchanter';reasons.push('英雄有已核实的友方治疗或护盾，可满足强化的对象条件；收益取决于实际保护队友的频率。');}
   else cautions.push('英雄自身未核实友方治疗或护盾；自身吸血不能替代这个条件，需要另有可用手段。');
@@ -82,10 +83,12 @@ export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
  const ownedRecords=[...ownedIds].slice(0,6).map(id=>activeRecord(data,id)).filter(Boolean);
  const rows=ids.map(id=>{
   const a=activeRecord(data,id);if(!a)return null;
+  if(hexCatalogDisabled(data,a)&&!actual&&!ownedIds.has(id))return null;
   const advice=mechanicAdvice(data,champion,a,ownedRecords),[base]=compareAugments({champion,options:[id],owned,augments:data.augments,patch:data.patch});
   const unknownSkill=a.unresolved?.includes('SpellName')||/适用技能/.test(a.description||'');
   const level=advice.conflict?'conflict':ownedIds.has(id)?'owned':unknownSkill||advice.conditional?'conditional':advice.affinity>0?'preferred':sourceIds.has(id)?'reference':'conditional';
   const reasons=[...advice.reasons],cautions=[...advice.cautions];
+  if(hexCatalogDisabled(data,a))cautions.push('当前目录标记禁用；这里保留你录入的实际选项，以本局服务器提供的选项为准。');
   if(sourceIds.has(id))reasons.push('当前版本 OP.GG 该英雄的强化参考清单包含此项；来源未提供该项正样本数。');
   if(unknownSkill)cautions.push('尚未核实本英雄具体适用哪项技能，先核对局内技能标记，不当作全技能生效。');
   if(!actual&&!sourceIds.has(id)&&advice.affinity<=0)return null;

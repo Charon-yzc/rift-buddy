@@ -37,6 +37,15 @@ test('newer in-memory source references and the selected region survive preparat
 test('manual action token uses actual file bytes while its content identity ignores runtime fields',async t=>{
  const f=await fixture(t),saved={...game,pairStatistics:{runtime:true},catalog:{anchors:['private']}};await fs.writeFile(path.join(f.root,'game.json'),JSON.stringify(saved,null,2));const first=await readManualBase(f.root);assert.equal(first.baseHash,generationBaseIdentity(game));assert.equal(Object.hasOwn(pureGameSnapshot(saved),'catalog'),false);await fs.writeFile(path.join(f.root,'game.json'),JSON.stringify(saved));const second=await readManualBase(f.root);assert.notEqual(first.token,second.token);assert.equal(first.baseHash,second.baseHash);
 });
+
+test('manual same-patch preparation retains newer verified pool evidence independently of build timestamps',async t=>{
+ const f=await fixture(t),hex=JSON.parse(await fs.readFile('data/hex-builds.json')).entries,observations=JSON.parse(await fs.readFile('data/hex-hero-observations.json')),disk=structuredClone(hex.Yasuo);
+ disk.poolEvidence=observations.entries.Yasuo;disk.fetchedAt=new Date(Date.parse(disk.fetchedAt)+86400000).toISOString();disk.core[0].samples=123456;await fs.mkdir(path.join(f.root,'data'),{recursive:true});await fs.writeFile(path.join(f.root,'data/hex-builds.json'),JSON.stringify({schema:1,entries:{Yasuo:disk}}));
+ for(const delta of [0,-3600000]){
+  const memory=structuredClone(disk);memory.fetchedAt=new Date(Date.parse(disk.fetchedAt)+delta).toISOString();memory.poolEvidence.fetchedAt=new Date(Date.parse(disk.poolEvidence.fetchedAt)+3600000).toISOString();memory.poolEvidence.rows[0].games++;
+  const {data}=await f.prepare(game,{current:{hexBuilds:{Yasuo:memory}},bundle:null});assert.equal(data.hexBuilds.Yasuo.fetchedAt,disk.fetchedAt);assert.equal(data.hexBuilds.Yasuo.core[0].samples,123456);assert.deepEqual(data.hexBuilds.Yasuo.poolEvidence,memory.poolEvidence);
+ }
+});
 for(const restore of [true,false])test(`legacy same-ID images cannot override a matching bundled source (restore=${restore})`,async t=>{
  const f=await fixture(t),localRoot=path.join(f.root,'data'),legacy=path.join(localRoot,'images/champion/Ahri.png');await fs.mkdir(path.dirname(legacy),{recursive:true});await fs.writeFile(legacy,Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),Buffer.alloc(120,7)]));
  const images={...imageCache,cacheMissingImages:options=>imageCache.cacheMissingImages({...options,fetchImage:async()=>{throw Error('isolated offline images');}})},prepare=await createGameDataPreparer({bundleRoot,localRoot,catalogSummary:()=>({catalog:BUNDLED_CATALOG,info:{}}),images});

@@ -74,6 +74,8 @@ export function buildAugmentDescriptions(catalog,bin,entries){
   const raw=dictionary.get(String(source.DescriptionTra||source.AugmentTooltipTra).toLowerCase());
   const description=render(raw);
   return {...a,description,descriptionStatus:description?(unresolved.size?'partial':'complete'):'missing',
+   // This client catalogue flag is not champion/round offer eligibility.
+   catalogEnabled:source.Enabled!==false,
    unresolved:[...unresolved],sourceKey:source.DescriptionTra,
    // Useful for browsing categories, not for predicting strength.
    tags:source.AugmentDisplayTags||[],};

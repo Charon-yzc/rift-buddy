@@ -11,7 +11,7 @@ const root=path.resolve(values.root),seedRoot=path.resolve(values.seed),maxChamp
 if(root===seedRoot||root.startsWith(seedRoot+path.sep)||seedRoot.startsWith(root+path.sep))throw Error('候选目录与基线目录不能重叠');
 if(!!values['public-root']!==!!values.key)throw Error('签名发布需同时指定 --public-root 与 --key');
 let phase='';
-const status=await collectServerData({root,seedRoot,maxChampions,onProgress:value=>{
+const status=await collectServerData({root,seedRoot,maxChampions,collectHexPools:true,onProgress:value=>{
  const next=Object.entries(value.datasets).find(([,state])=>state.state==='running')?.[0]||value.state;
  if(next!==phase){console.log(JSON.stringify({phase:next,requests:value.network.requests,bytes:value.network.bytes}));phase=next;}
 }});

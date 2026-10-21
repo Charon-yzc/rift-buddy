@@ -4,6 +4,7 @@ import {promisify} from 'node:util';
 import {validRankingReference,rankingKey,newerRanking} from '../src/core/rankings.mjs';
 import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
 import {BUILD_REGIONS,BUILD_TIERS,DEFAULT_BUILD_SOURCE,sameBuildSource,buildSourceKey,preferBuildReference,selectBuildSource} from '../src/core/build-source.mjs';
+import {mergeHexPoolEvidence} from '../src/core/hex-pool-evidence.mjs';
 
 export const DATA_FEED_ORIGIN='https://data.riftbuddy.dpdns.org';
 export const DATA_FEED_KEYS=Object.freeze({'data-20261014':`-----BEGIN PUBLIC KEY-----
@@ -69,7 +70,8 @@ export function applyFeedBundle(data,bundle,manifest=null){
  for(const [key,ref] of Object.entries(bundle.builds.entries))if(preferBuildReference(ref,builds[key]))builds[key]=ref;
  for(const [key,ref] of Object.entries(bundle['hex-builds'].entries)){
   const old=hex[key],order=old?compareBuildPatches(ref.patch,old.patch):1;
-  if(!old||order>0||order===0&&Date.parse(ref.fetchedAt)>Date.parse(old.fetchedAt))hex[key]=ref;
+  if(!old||order>0||order===0&&Date.parse(ref.fetchedAt)>Date.parse(old.fetchedAt))hex[key]=mergeHexPoolEvidence(ref,old);
+  else if(order===0)hex[key]=mergeHexPoolEvidence(old,ref);
  }
  // Freshness authority comes only from the verified manifest. An asset may
  // retain other scopes or old patches which this collector never rechecked.

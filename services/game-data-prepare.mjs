@@ -14,6 +14,7 @@ import {validReference,validHexReference,compareBuildPatches} from '../src/core/
 import {validRankingReference,newerRanking} from '../src/core/rankings.mjs';
 import {buildSourceKey,preferBuildReference,selectBuildSource} from '../src/core/build-source.mjs';
 import {validateCatalog} from '../src/core/catalog.mjs';
+import {mergeHexPoolEvidence} from '../src/core/hex-pool-evidence.mjs';
 
 export async function readManualBase(root){
  try{const bytes=await fs.readFile(path.join(root,'game.json'));const game=JSON.parse(bytes);if(!validSnapshot(game))return null;return {token:feedHash(bytes),version:game.version,baseHash:generationBaseIdentity(game)};}catch{return null;}
@@ -37,7 +38,10 @@ export async function createGameDataPreparer({bundleRoot,localRoot,catalogSummar
   for(const [key,ref] of Object.entries(current.rankings||{}))if(key===ref.key&&validRankingReference(ref,next)&&newerRanking(ref,next.rankings[key]))next.rankings[key]=ref;
   for(const [key,ref] of Object.entries(current.hexBuilds||{})){
    const prior=next.hexBuilds[key],order=prior?compareBuildPatches(ref.patch,prior.patch):1;
-   if(heroes.has(key)&&validHexReference(ref,heroes.get(key),next,{allowOlder:true})&&(!prior||order>0||order===0&&Date.parse(ref.fetchedAt)>Date.parse(prior.fetchedAt)))next.hexBuilds[key]=ref;
+   if(heroes.has(key)&&validHexReference(ref,heroes.get(key),next,{allowOlder:true})){
+    if(!prior||order>0||order===0&&Date.parse(ref.fetchedAt)>Date.parse(prior.fetchedAt))next.hexBuilds[key]=mergeHexPoolEvidence(ref,prior);
+    else if(order===0)next.hexBuilds[key]=mergeHexPoolEvidence(prior,ref);
+   }
   }
   selectBuildSource(next,buildSource()||current.buildSource);
   if(bundle)applyFeedBundle(next,bundle,manifest);

@@ -9,6 +9,8 @@ import {stageServerData,loadServerData} from '../services/server-data-store.mjs'
 import {buildSourceKey,DEFAULT_BUILD_SOURCE} from '../src/core/build-source.mjs';
 import {rankingKey} from '../src/core/rankings.mjs';
 import {characterSourceURL,dataDragonMechanicURL} from '../src/core/mechanic-source.mjs';
+import {applyFeedBundle,validateFeedBundle} from '../services/data-feed.mjs';
+const pools=JSON.parse(await fs.readFile(new URL('../data/hex-hero-observations.json',import.meta.url)));
 const seedRoot=fileURLToPath(new URL('../data/',import.meta.url)),seed=await loadServerSeed(seedRoot);
 const network={stats:()=>({requests:0,bytes:0,blocked:{}}),fetcher:()=>assert.fail('unit test must not use network')};
 function sources(){return {
@@ -61,4 +63,20 @@ test('older analysis is rejected even when fetched today; bad data never changes
  providers.rankings=async(data,source)=>{const ref=structuredClone(seed.rankings.entries[rankingKey(data.patch,source)]);ref.analyzedAt='2020-01-01T00:00:00Z';ref.fetchedAt=new Date().toISOString();return ref;};
  const result=await collectServerData({root,seedRoot,network,providers,maxChampions:1});
  assert.equal(result.datasets.rankings.failed,6);assert.equal(result.changed,false);assert.equal(result.release,first.pointer.release);
+});
+
+test('optional hero pools follow signed Hex data without overwriting a newer local build or admitting player records',async t=>{
+ const root=await temporary(t),providers=sources(),hero=seed.game.champions[0],evidence=structuredClone(pools.entries[hero.id]);evidence.fetchedAt=new Date(Date.parse(evidence.fetchedAt)+1000).toISOString();
+ providers.hexPoolIndex=async()=>new Map([[hero.key,hero.id.toLowerCase()]]);providers.hexPool=async()=>evidence;
+ const result=await collectServerData({root,seedRoot,network,providers,maxChampions:1,collectHexPools:true});assert.equal(result.datasets['hex-pools'].changed,1);
+ const bundle=(await loadServerData(root)).bundle;assert.deepEqual(bundle['hex-builds'].entries[hero.id].poolEvidence,evidence);validateFeedBundle(bundle,seed.game);
+ const local={...structuredClone(seed.game),rankings:{},buildSources:{},hexBuilds:structuredClone(seed['hex-builds'].entries)},before=local.hexBuilds[hero.id];before.fetchedAt=new Date(Date.parse(before.fetchedAt)+86400000).toISOString();before.core[0].samples=987654;
+ applyFeedBundle(local,bundle);assert.equal(local.hexBuilds[hero.id].core[0].samples,987654);assert.deepEqual(local.hexBuilds[hero.id].poolEvidence,evidence);
+ const invalid=structuredClone(bundle);invalid['hex-builds'].entries[hero.id].poolEvidence.rows[0].player='not-allowed';assert.throws(()=>validateFeedBundle(invalid,seed.game),/不兼容/);
+ providers.hexPool=async()=>{throw Error('source unavailable');};const retained=await collectServerData({root,seedRoot,network,providers,maxChampions:1,collectHexPools:true});assert.equal(retained.datasets['hex-pools'].failed,1);assert.deepEqual((await loadServerData(root)).bundle['hex-builds'].entries[hero.id].poolEvidence,evidence);
+});
+
+test('supplementary source failure is visible but cannot freeze valid primary collection',async t=>{
+ const root=await temporary(t),providers=sources();providers.hexPoolIndex=async()=>{throw Error('optional source unavailable');};
+ const result=await collectServerData({root,seedRoot,network,providers,collectHexPools:true});assert.equal(result.state,'ok');assert.equal(result.datasets['hex-pools'].state,'partial');assert.equal(result.datasets['hex-pools'].optional,true);
 });

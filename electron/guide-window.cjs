@@ -5,6 +5,7 @@ const {fitWindow,guidePlacement}=require('../src/core/window-placement.mjs');
 const {compactGuidePlacement,guideWindowLimits}=require('../src/core/guide-placement.mjs');
 const createSkillWindow=require('./skill-window.cjs');
 const createJungleWindow=require('./jungle-window.cjs');
+const createHexMicroWindows=require('./hex-micro-windows.cjs');
 
 // Pure pass-through decision, extracted for testability: hovering the header
 // (drag bar + window buttons) always wins so the panel stays movable and
@@ -25,9 +26,15 @@ module.exports=function createGuideWindow({root,getState,setState,getModel,isQui
  const {BrowserWindow,ipcMain,screen,clipboard}=require('electron');
  let win=null,phase='Offline',lastConnectedPhase='Offline',lastGameId=null,connected=false,hotkeyAvailable=false,interactionHotkeyAvailable=false,lastPublished='',boundsTimer,adjusting=false,visibilityRequested=false,autoShowUntil=0,hoverHeader=false;
  const BALL_SIZE=76;
- let gameBounds=null,openTab=null;
+ let gameBounds=null,openTab=null,displayEpoch=0,activeFamily=null;
+ const isHex=()=>getState()?.selection?.mode==='hex';
+ const inGame=value=>['GameStart','InProgress','Reconnect'].includes(value);
+ // Manual Hex previews keep their editable guide. Only a real game switches
+ // to micro windows; a transient client disconnect retains that game family.
+ const usesHexMicro=()=>isHex()&&currentSelection()?.mode==='hex'&&(inGame(phase)||!connected&&inGame(lastConnectedPhase));
+ const ended=()=>['WaitingForStats','PreEndOfGame','EndOfGame'].includes(phase);
  const workArea=()=>screen.getDisplayMatching(gameBounds||win?.getBounds()||getState()?.bounds||screen.getPrimaryDisplay().bounds).workArea;
- const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{visibilityRequested=true;win?.showInactive();inputMode();publish();}});
+ const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea:workArea,title:'本局指引',onRestore:()=>{if(usesHexMicro())return;displayEpoch++;visibilityRequested=true;win?.showInactive();inputMode();publish();}});
  const resize=require('./window-resize.cjs')({getWindow:()=>win,getArea:workArea,getLimits:area=>guideWindowLimits(isCompact()?'compact':isStrip()?'strip':'details',area,stripScale()),onStart:()=>{clearTimeout(boundsTimer);boundsTimer=null;hoverHeader=true;inputMode();},onEnd:rememberBounds});
  async function rememberBounds(){clearTimeout(boundsTimer);boundsTimer=null;if(!win||win.isDestroyed()||!getState()||isBall())return;const b=win.getBounds(),current=getState();if(isCompact()){await save({...current,compactBounds:b});return;}if(isStrip()){await save({...current,stripBounds:b});return;}await save({...current,bounds:{...b,height:current.collapsed?current.bounds?.height||680:Math.max(480,b.height)}});}
  function fit(recover=false){if(!win||win.isDestroyed()||resize.active()||boundsTimer)return;const area=workArea(),current=win.getBounds();
@@ -44,12 +51,29 @@ const mousePassThrough=()=>!!(getState()?.clickThrough&&(['InProgress','Reconnec
 const shouldIgnore=()=>resolveGuideIgnoreMouse(mousePassThrough(),hoverHeader);
 const inputMode=()=>{if(win&&!win.isDestroyed()){const ball=isBall(),strip=isStrip(),ignore=strip||ball?false:shouldIgnore(),pass=strip||ball?true:mousePassThrough();win.setIgnoreMouseEvents(ignore,{forward:true});win.setFocusable(!pass);if(ignore&&win.isFocused())win.blur();}};
 const payload=()=>{let model=null;try{model=getModel();}catch(error){diagnostic(`guide model failed ${error.message}`);}return {model,referenceRevision:referenceRevision(),openTab,phase,connected,hotkeyAvailable,interactionHotkeyAvailable,mousePassThrough:mousePassThrough(),ball:isBall(),strip:isStrip(),presentation:getPreferences().presentation,current:currentSelection()};};
-const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
-const jungle=createJungleWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{const current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
-function publish(){if(peek.active())peek.sync(visibilityRequested);const value=payload();if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);jungle.publish(value);if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}}
+const skill=createSkillWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{if(usesHexMicro())return;const epoch=displayEpoch,current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});if(epoch!==displayEpoch||usesHexMicro())return;openTab={tab:'skills',serial:Date.now()};show();applyMode();}});
+const jungle=createJungleWindow({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isQuitting,diagnostic,onChange:()=>publish(),showDetails:async()=>{if(usesHexMicro())return;const epoch=displayEpoch,current=getState();if(current)await save({...current,compact:false,ball:false,strip:false,collapsed:false});if(epoch!==displayEpoch||usesHexMicro())return;openTab={tab:'rhythm',serial:Date.now()};show();applyMode();}});
+const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,getArea:workArea,getGameBounds:()=>gameBounds,getScale:stripScale,isActive:()=>visibilityRequested&&usesHexMicro()&&!ended(),isQuitting,diagnostic,showMain,onChange:()=>publish(),onHide:()=>{displayEpoch++;autoShowUntil=0;if(!micro.requested())visibilityRequested=false;}});
+ function suppressLegacy(){peek.unfold();resize.cancel();hoverHeader=false;win?.hide();skill.hide();jungle.hide();}
+ function publish(){
+  const value=payload(),family=usesHexMicro()?'hex':'rift';
+  // The game tracker may clear its identity before phase() receives the exit.
+  // Losing a real Hex context must not turn a visible micro guide into a large
+  // editable preview. Opening that preview again requires an explicit show().
+  if(activeFamily==='hex'&&family!=='hex'&&isHex())hide();
+  // A refresh changes content only. Migrate an existing display intent once
+  // when switching families; never reopen a player-closed window on a poll.
+  if(activeFamily!==family){if(activeFamily!==null)displayEpoch++;activeFamily=family;if(family==='hex'){suppressLegacy();if(visibilityRequested&&!ended()){if(micro.requested())micro.resume(value);else micro.show(value);}}else{micro.suspend();if(visibilityRequested)showLegacy();}}
+  micro.publish(value);
+  if(family==='hex'){suppressLegacy();return;}
+  if(peek.active())peek.sync(visibilityRequested);
+  if(getState()?.skillWidget?.enabled===false)skill.hide();skill.publish(value);jungle.publish(value);
+  if(win&&!win.isDestroyed()){inputMode();if(isStrip()||isCompact())fit();const key=JSON.stringify(value);if(key!==lastPublished){lastPublished=key;win.webContents.send('guide-update',value);}}
+ }
  async function save(next,hexContext){await setState(next,getState(),hexContext);publish();return payload();}
  function adjustHeight(){if(win&&!isBall()&&!isStrip()&&!isCompact()){adjusting=true;const collapsed=getState()?.collapsed,[width]=win.getSize(),area=workArea(),height=Math.min(collapsed?280:getState()?.bounds?.height||740,area.height);win.setMinimumSize(Math.min(360,area.width),Math.min(collapsed?280:480,area.height));win.setSize(Math.min(width,area.width),height);fit();adjusting=false;}}
  function applyMode(){
+  if(usesHexMicro()){suppressLegacy();return;}
   if(!win||win.isDestroyed())return;
   clearTimeout(boundsTimer);boundsTimer=null;resize.cancel();
   adjusting=true;
@@ -86,7 +110,7 @@ function publish(){if(peek.active())peek.sync(visibilityRequested);const value=p
   win.webContents.on('will-navigate',(event,url)=>{if(url!==pathToFileURL(path.join(root,'src/guide.html')).href)event.preventDefault();});
   win.webContents.on('render-process-gone',(_e,detail)=>diagnostic(`guide renderer gone ${detail.reason}`));
   win.webContents.on('did-fail-load',(_e,code)=>diagnostic(`guide load failed ${code}`));
-  win.once('ready-to-show',()=>{if(visibilityRequested)win.showInactive();diagnostic(`guide-ready visible=${win.isVisible()}`);});
+  const created=win;win.once('ready-to-show',()=>{if(created!==win||created.isDestroyed())return;if(visibilityRequested&&!usesHexMicro())created.showInactive();diagnostic(`guide-ready visible=${created.isVisible()}`);});
   win.webContents.on('did-finish-load',()=>{
    diagnostic('guide loaded');
    if(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT)setTimeout(async()=>{try{await fs.writeFile(process.env.RIFT_BUDDY_GUIDE_SCREENSHOT,(await win.webContents.capturePage()).toPNG());diagnostic('guide screenshot saved');}catch(e){diagnostic(`guide capture failed ${e.message}`);}},1500);
@@ -115,14 +139,24 @@ function publish(){if(peek.active())peek.sync(visibilityRequested);const value=p
   if(hoverPoll.unref)hoverPoll.unref();
   win.on('closed',()=>{peek.destroy();clearTimeout(boundsTimer);clearInterval(hoverPoll);win=null;lastPublished='';});win.loadFile(path.join(root,'src/guide.html'));
  }
- function hideGear(){peek.unfold();resize.cancel();autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
- function hide(){hideGear();skill.hide();jungle.hide();}
- function show(){peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;skill.show();jungle.show();if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();publish();}return payload();}
- async function recover(reset=false){peek.unfold();resize.cancel();clearTimeout(boundsTimer);boundsTimer=null;const current=getState();if(current)await save({...current,ball:false,strip:false,collapsed:false,compact:true,compactBounds:undefined,stripBounds:undefined,bounds:undefined,jungleWidget:{...current.jungleWidget,...(reset?{enabled:true}:{}),offset:undefined,size:undefined},skillWidget:{...current.skillWidget,...(reset?{enabled:true}:{}),offset:undefined,size:undefined}});show();applyMode();fit(true);skill.reset();jungle.reset();return payload();}
- function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;skill.fit();jungle.fit();if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
- const displayChanged=()=>{fit();skill.fit();jungle.fit();};
+ function hideGear(){displayEpoch++;peek.unfold();resize.cancel();autoShowUntil=0;visibilityRequested=false;hoverHeader=false;win?.hide();}
+ function hide(){hideGear();skill.hide();jungle.hide();micro.hide();}
+ function showLegacy(){skill.show();jungle.show();if(!win)create();else{if(win.isMinimized())win.restore();fit();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();inputMode();}}
+ function show(){displayEpoch++;peek.unfold();autoShowUntil=0;visibilityRequested=true;hoverHeader=false;activeFamily=usesHexMicro()?'hex':'rift';if(usesHexMicro()){suppressLegacy();micro.show(payload());}else{micro.suspend();showLegacy();}publish();return payload();}
+ async function recover(reset=false){const epoch=++displayEpoch,identity=getState()?.selection?.mode,gameId=getState()?.match?.gameId;peek.unfold();resize.cancel();clearTimeout(boundsTimer);boundsTimer=null;const current=getState();
+  if(usesHexMicro()){
+   await micro.reset(async()=>{if(epoch!==displayEpoch||!usesHexMicro()||gameId!==getState()?.match?.gameId)return;const latest=getState();if(latest)await save({...latest,hexWindows:undefined});});
+   if(epoch!==displayEpoch||!usesHexMicro()||gameId!==getState()?.match?.gameId)return payload();
+   show();micro.fit();return payload();
+  }
+  if(current)await save({...current,ball:false,strip:false,collapsed:false,compact:true,compactBounds:undefined,stripBounds:undefined,bounds:undefined,jungleWidget:{...current.jungleWidget,...(reset?{enabled:true}:{}),offset:undefined,size:undefined},skillWidget:{...current.skillWidget,...(reset?{enabled:true}:{}),offset:undefined,size:undefined}});
+  if(epoch!==displayEpoch||identity!==getState()?.selection?.mode||gameId!==getState()?.match?.gameId)return payload();
+  show();applyMode();fit(true);skill.reset();jungle.reset();return payload();
+ }
+ function setGameBounds(next){const old=gameBounds,changed=next&&(!old||screen.getDisplayMatching(next).id!==screen.getDisplayMatching(old).id);gameBounds=next;micro.fit();skill.fit();jungle.fit();if(win&&changed)fit(true);if(win?.isVisible()&&next?.foreground&&!old?.foreground){win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}
+ const displayChanged=()=>{fit();skill.fit();jungle.fit();micro.fit();};
  for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,displayChanged);
- function toggle(){if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||skill.visible()||jungle.visible())hide();else show();}
+ function toggle(){if(usesHexMicro()){if(micro.visible())hide();else show();return;}if(isStrip()){if(win?.isVisible())hide();else show();return;}if(isBall()||getState()?.collapsed){recover().catch(error=>diagnostic(`guide recovery failed ${error.message}`));return;}if(win?.isVisible()||skill.visible()||jungle.visible())hide();else show();}
  async function interact(){const current=getState();if(!current)return;await save({...current,clickThrough:!current.clickThrough});inputMode();publish();}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{
   if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');
@@ -132,6 +166,7 @@ function publish(){if(peek.active())peek.sync(visibilityRequested);const value=p
  guard('guide-reference',value=>{const current=getState();if(!current||!value||value.revision!==referenceRevision()||!['hex','rift'].includes(value.mode)||value.mode!==current.selection.mode)return null;return getReference(value.kind,value.id);});
  guard('guide-hover',value=>{const next=!!value;if(next!==hoverHeader){hoverHeader=next;inputMode();}return hoverHeader;});
  guard('guide-control',async(action,value)=>{
+  if(usesHexMicro())throw Error('海克斯局内使用两个精简窗口，请从主界面调整');
   if(action==='presentation'){await setPresentation(value);publish();return payload();}
   if(['resize-start','resize','resize-end','resize-key'].includes(action)){if(isBall())throw Error('请先展开指引');return resize.control(action,value);}
   if(action==='fold'){resize.cancel();peek.fold();return true;}
@@ -197,24 +232,25 @@ function publish(){if(peek.active())peek.sync(visibilityRequested);const value=p
   throw Error('不支持此操作');
  });
  async function changePhase(next,isConnected){
-  const previous=lastConnectedPhase,id=getState()?.match?.gameId,newGame=!!(id&&lastGameId&&id!==lastGameId);phase=next;connected=!!isConnected;inputMode();publish();
+  const previous=lastConnectedPhase,id=getState()?.match?.gameId,newGame=!!(id&&lastGameId&&id!==lastGameId),wasMicro=activeFamily==='hex';phase=next;connected=!!isConnected;if(newGame){displayEpoch++;micro.suspend();}if(isHex()&&(ended()||connected&&wasMicro&&!usesHexMicro()))hide();inputMode();publish();
   // Same-game loading must not turn a deliberately hidden reconnect into a
   // first entry. A changed id still starts a new game's visibility decision.
-  if(connected){if(next!=='GameStart'||newGame)lastConnectedPhase=next;if(id)lastGameId=id;}
+  if(connected){if(next!=='GameStart'||newGame||!inGame(previous))lastConnectedPhase=next;if(id)lastGameId=id;}
   if(!connected)return;
   const preferences=getPreferences();
   if(next==='InProgress'&&(newGame||!['InProgress','Reconnect'].includes(previous))&&preferences.guideAutoShow!==false)autoShowUntil=Date.now()+30000;
   if(!['InProgress','Reconnect'].includes(next))autoShowUntil=0;
   if(next===previous&&!newGame&&!needsAutoShow())return;
   if(next==='InProgress'&&needsAutoShow()&&currentSelection()){
-   if(await prepareCurrent()&&phase===next&&connected&&needsAutoShow())show();
+   const epoch=displayEpoch,gameId=getState()?.match?.gameId;
+   if(await prepareCurrent()&&epoch===displayEpoch&&gameId===getState()?.match?.gameId&&phase===next&&connected&&needsAutoShow())show();
   }
   if(getState()&&['WaitingForStats','PreEndOfGame','EndOfGame'].includes(next)&&!['WaitingForStats','PreEndOfGame','EndOfGame'].includes(previous)){
    const behavior=preferences.guideAfterGame||'hide';if(behavior==='hide')hide();
-   else if(behavior==='collapse'&&!isStrip()){await save({...getState(),compact:true,collapsed:false});applyMode();}
+   else if(behavior==='collapse'&&!isHex()&&!isStrip()){await save({...getState(),compact:true,collapsed:false});applyMode();}
   }
  }
- return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);peek.destroy();skill.destroy();jungle.destroy();win?.destroy();},isVisible:()=>peek.visible()||!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win,windowInfo:()=>win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),jungleWidget:jungle.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
+ return {show,recover,setGameBounds,toggle,publish,interact,phase:changePhase,needsAutoShow,setHotkey:value=>{hotkeyAvailable=!!value;},setInteractionHotkey:value=>{interactionHotkeyAvailable=!!value;inputMode();publish();},destroy:()=>{for(const event of ['display-added','display-removed','display-metrics-changed'])screen.removeListener(event,displayChanged);peek.destroy();skill.destroy();jungle.destroy();micro.destroy();win?.destroy();},isVisible:()=>micro.visible()||peek.visible()||!!win?.isVisible()||skill.visible()||jungle.visible(),window:()=>win,windowInfo:()=>usesHexMicro()?{hexWindows:micro.info(),visible:micro.visible(),mode:'hex'}:win&&!win.isDestroyed()?{bounds:win.getBounds(),visible:win.isVisible(),minimized:win.isMinimized(),collapsed:getState()?.collapsed===true,ball:isBall(),strip:isStrip(),compact:isCompact(),skillWidget:skill.info(),jungleWidget:jungle.info(),clickThrough:!isBall()&&!isStrip()&&shouldIgnore()}:null};
 };
 module.exports.resolveGuideIgnoreMouse=resolveGuideIgnoreMouse;
 module.exports.cursorInBounds=cursorInBounds;
