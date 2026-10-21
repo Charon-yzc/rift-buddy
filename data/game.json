@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "contentRevision": 9,
+  "contentRevision": 10,
   "version": "16.20.1",
   "patch": "16.20",
   "fetchedAt": "2026-10-19T05:15:33.206Z",
@@ -207637,12 +207637,10 @@
       "key": "ARAM_JeweledGauntlet",
       "name": "珠光护手",
       "rarity": "kPrismatic",
-      "description": "你的技能可以造成暴击。\n\n获得 〔动态数值〕暴击几率。",
+      "description": "你的技能可以造成暴击。\n\n获得 （25 + 0.045×法术强度）%暴击几率。",
       "icon": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/assets/ux/cherry/augments/icons/jeweledgauntlet_small.png",
-      "descriptionStatus": "partial",
-      "unresolved": [
-        "CritGranted"
-      ],
+      "descriptionStatus": "complete",
+      "unresolved": [],
       "sourceKey": "Cherry_JeweledGauntlet_Summary",
       "tags": [
         1
@@ -208270,13 +208268,12 @@
       "key": "ARAM_SpecializedRecursion",
       "name": "急速之追求",
       "rarity": "kGold",
-      "description": "任务：用【适用技能】技能命中敌方英雄〔动态数值〕次\n\n奖励：【适用技能】技能获得技能急速，基于任务等级，至多至〔动态数值〕。",
+      "description": "任务：用【适用技能】技能命中敌方英雄〔动态数值〕次\n\n奖励：【适用技能】技能获得技能急速，基于任务等级，至多至160。",
       "icon": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/genericabilityaugmenticon_gold.png",
       "descriptionStatus": "partial",
       "unresolved": [
         "SpellName",
-        "QuestRequirement",
-        "MaxAbilityHasteReward"
+        "QuestRequirement"
       ],
       "sourceKey": "Augment_SpecializedRecursion_Desc",
       "tags": [
@@ -208746,13 +208743,10 @@
       "key": "ARAM_Zealot",
       "name": "狂热者",
       "rarity": "kSilver",
-      "description": "获得〔动态数值〕暴击几率和〔动态数值〕攻击速度（随法术强度变化）。",
+      "description": "获得（25 + 0.05×法术强度）%暴击几率和（35 + 0.05×法术强度）%攻击速度（随法术强度变化）。",
       "icon": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/zealot_small.png",
-      "descriptionStatus": "partial",
-      "unresolved": [
-        "Calc_Crit_Chance",
-        "Calc_AS"
-      ],
+      "descriptionStatus": "complete",
+      "unresolved": [],
       "sourceKey": "Kiwi_Zealot_Summary",
       "tags": [
         2
@@ -209027,12 +209021,10 @@
       "key": "EmpyreanPromise",
       "name": "至高天诺言",
       "rarity": "kPrismatic",
-      "description": "获得15%治疗和护盾强度。获得至高天诺言作为一个召唤师技能。\n\n警惕\n传送至你的友军并在着陆时提供持续3秒的〔动态数值〕护盾值。",
+      "description": "获得15%治疗和护盾强度。获得至高天诺言作为一个召唤师技能。\n\n警惕\n传送至你的友军并在着陆时提供持续3秒的100–250（随等级） + 100%法术强度 + 10%额外生命值护盾值。",
       "icon": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/empyreampromise_small.png",
-      "descriptionStatus": "partial",
-      "unresolved": [
-        "ShieldAmount"
-      ],
+      "descriptionStatus": "complete",
+      "unresolved": [],
       "sourceKey": "Kiwi_EmpyreanPromise_Summary",
       "tags": [
         3,
@@ -209984,12 +209976,10 @@
       "key": "WarlockJuicebox",
       "name": "术士果汁盒",
       "rarity": "kGold",
-      "description": "获得〔动态数值〕全能吸血。",
+      "description": "获得（10 + 0.035×法术强度）%全能吸血。",
       "icon": "https://raw.communitydragon.org/16.20/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/warlockjuicebox_small.png",
-      "descriptionStatus": "partial",
-      "unresolved": [
-        "Calc_Vamp"
-      ],
+      "descriptionStatus": "complete",
+      "unresolved": [],
       "sourceKey": "Augment_WarlockJuicebox_Summary",
       "tags": [
         3

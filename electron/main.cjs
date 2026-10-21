@@ -151,7 +151,7 @@ async function boot(){
  const nationalReference=createNationalReferenceCache({root:path.join(storeRoot,'data'),getData:()=>data,bundled:bundledNational});
  guard('national-reference',input=>nationalReference(input));
  const {createGameDataPreparer,readManualBase}=await import('../services/game-data-prepare.mjs');
- const {pureGameSnapshot,generationBaseIdentity}=await import('../services/data-generation.mjs');
+ const {pureGameSnapshot,generationBaseIdentity,validateGenerationGame}=await import('../services/data-generation.mjs');
  const {feedHash}=await import('../services/data-feed.mjs');
  const {createDataGenerationCache,preserveGameContext}=await import('../services/data-generation-cache.mjs');
  const prepareBaseData=await createGameDataPreparer({bundleRoot:path.join(root,'data'),localRoot:path.join(storeRoot,'data'),catalogSummary:next=>catalogStore.summary(next),buildSource:()=>state.preferences.buildSource,progress:message=>publishWindows('data-progress',message)});
@@ -789,8 +789,8 @@ async function boot(){
   const pendingSnapshot=path.join(storeRoot,'data',`game-update-${process.pid}.pending.json`),original=data,contextCurrent=preserveGameContext(()=>data,original);
   try{const next=pureGameSnapshot(await dataService.collectSnapshot(msg=>publishWindows('data-progress',msg),data));
    if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，基础资料留待本局结束后更新');
-   if(!next.augments.length&&data.augments.length){next.augments=data.augments;next.augmentVersion=data.augmentVersion||data.version;next.sources.augments=data.sources.augments;}
-   if(!dataService.validSnapshot(next))throw Error('新资料不完整，已保留原数据');await dataService.atomicJSON(pendingSnapshot,next);
+   try{validateGenerationGame(next);}catch{throw Error(`新版本 ${next.patch} 资料尚未完整，继续使用 ${data.patch} 本地资料`);}
+   await dataService.atomicJSON(pendingSnapshot,next);
    const token=feedHash(await fs.readFile(pendingSnapshot)),prepared=await prepareBaseData(next,{current:original});
    if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，当前窗口继续使用原资料');
    if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，基础资料未替换');

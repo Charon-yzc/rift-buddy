@@ -1,0 +1,625 @@
+{
+  "patch": "16.20",
+  "source": "https://raw.communitydragon.org/16.20/game/maps/modespecificdata/kiwi.bin.json",
+  "stringSource": "https://raw.communitydragon.org/16.20/game/zh_cn/data/menu/en_us/lol.stringtable.json",
+  "sourceSha256": "41d8cf58a5b2bb25d7cc69b94e3f78c98d337135bf0263d35a093eca3c284101",
+  "stringSha256": "a70e6f8ae91f90ca7c6cc558258d254d02f18b7b035afa351427c377918843c7",
+  "catalog": [
+    {
+      "id": 1048,
+      "key": "ARAM_JeweledGauntlet",
+      "name": "珠光护手"
+    },
+    {
+      "id": 2009,
+      "key": "ARAM_Zealot",
+      "name": "狂热者"
+    },
+    {
+      "id": 1331,
+      "key": "EmpyreanPromise",
+      "name": "至高天诺言"
+    },
+    {
+      "id": 2132,
+      "key": "WarlockJuicebox",
+      "name": "术士果汁盒"
+    },
+    {
+      "id": 2100,
+      "key": "ARAM_SpecializedRecursion",
+      "name": "急速之追求"
+    },
+    {
+      "id": 1061,
+      "key": "ARAM_OkBoomerang",
+      "name": "回力OK镖"
+    },
+    {
+      "id": 1415,
+      "key": "Twinfire",
+      "name": "双生火焰"
+    }
+  ],
+  "bin": {
+    "Maps/ModeSpecificData/Augments/ARAM_JeweledGauntlet": {
+      "__type": "AugmentData",
+      "AugmentNameId": "ARAM_JeweledGauntlet",
+      "RootSpell": "Maps/ModeSpecificData/Augments/ARAM_JeweledGauntlet/Augment_ARAM_JeweledGauntlet",
+      "DescriptionTra": "Cherry_JeweledGauntlet_Summary",
+      "AugmentTooltipTra": "Kiwi_JeweledGauntlet_Tooltip"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_JeweledGauntlet/Augment_ARAM_JeweledGauntlet": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "CritDamage",
+            "values": [
+              1.4500000476837158,
+              1.4500000476837158,
+              1.4500000476837158,
+              1.4500000476837158,
+              1.4500000476837158,
+              1.4500000476837158,
+              1.4500000476837158
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "CritChance",
+            "values": [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "CritConverRatio",
+            "values": [
+              0.00044999999227002263,
+              0.00044999999227002263,
+              0.00044999999227002263,
+              0.00044999999227002263,
+              0.00044999999227002263,
+              0.00044999999227002263,
+              0.00044999999227002263
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "CritGranted": {
+            "mFormulaParts": [
+              {
+                "mDataValue": "CritChance",
+                "__type": "NamedDataValueCalculationPart"
+              },
+              {
+                "mDataValue": "CritConverRatio",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "mDisplayAsPercent": true,
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_Zealot": {
+      "__type": "AugmentData",
+      "AugmentNameId": "ARAM_Zealot",
+      "RootSpell": "Maps/ModeSpecificData/Augments/ARAM_Zealot/Augment_ARAM_Zealot",
+      "DescriptionTra": "Kiwi_Zealot_Summary",
+      "AugmentTooltipTra": "Kiwi_Zealot_Tooltip"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_Zealot/Augment_ARAM_Zealot": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "ASAPRatio",
+            "values": [
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "CritAPRatio",
+            "values": [
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257,
+              0.0005000000237487257
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "MaxLevel",
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "BaseAttackSpd",
+            "values": [
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "BaseCritChance",
+            "values": [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "Calc_AS": {
+            "mFormulaParts": [
+              {
+                "mDataValue": "BaseAttackSpd",
+                "__type": "NamedDataValueCalculationPart"
+              },
+              {
+                "mDataValue": "ASAPRatio",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "mDisplayAsPercent": true,
+            "__type": "GameCalculation"
+          },
+          "Calc_Crit_Chance": {
+            "mFormulaParts": [
+              {
+                "mDataValue": "BaseCritChance",
+                "__type": "NamedDataValueCalculationPart"
+              },
+              {
+                "mDataValue": "CritAPRatio",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "mDisplayAsPercent": true,
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    },
+    "Maps/ModeSpecificData/Augments/EmpyreanPromise": {
+      "__type": "AugmentData",
+      "AugmentNameId": "EmpyreanPromise",
+      "RootSpell": "Maps/ModeSpecificData/Augments/EmpyreanPromise/Augment_EmpyreanPromise",
+      "DescriptionTra": "Kiwi_EmpyreanPromise_Summary",
+      "AugmentTooltipTra": "Kiwi_EmpyreanPromise_Summary"
+    },
+    "Maps/ModeSpecificData/Augments/EmpyreanPromise/Augment_EmpyreanPromise": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "ShieldDuration",
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "ShieldRatioAP",
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "ShieldRatioBHealth",
+            "values": [
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612,
+              0.10000000149011612
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "DelayMovingTime",
+            "values": [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "HSAmp",
+            "values": [
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448,
+              0.15000000596046448
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "MoveSpeed",
+            "values": [
+              4000,
+              4000,
+              4000,
+              4000,
+              4000,
+              4000,
+              4000
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "ShieldAmount": {
+            "mFormulaParts": [
+              {
+                "mStartValue": 100,
+                "mEndValue": 250,
+                "__type": "ByCharLevelInterpolationCalculationPart"
+              },
+              {
+                "mDataValue": "ShieldRatioAP",
+                "__type": "StatByNamedDataValueCalculationPart"
+              },
+              {
+                "mStat": 12,
+                "mStatFormula": 2,
+                "mDataValue": "ShieldRatioBHealth",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    },
+    "Maps/ModeSpecificData/Augments/WarlockJuicebox": {
+      "__type": "AugmentData",
+      "AugmentNameId": "WarlockJuicebox",
+      "RootSpell": "Maps/ModeSpecificData/Augments/WarlockJuicebox/Augment_WarlockJuicebox",
+      "DescriptionTra": "Augment_WarlockJuicebox_Summary",
+      "AugmentTooltipTra": "Augment_WarlockJuicebox_Tooltip"
+    },
+    "Maps/ModeSpecificData/Augments/WarlockJuicebox/Augment_WarlockJuicebox": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "MaxLevel",
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "Calc_Vamp": {
+            "mFormulaParts": [
+              {
+                "mNumber": 0.10000000149011612,
+                "__type": "NumberCalculationPart"
+              },
+              {
+                "mCoefficient": 0.0003499999875202775,
+                "__type": "StatByCoefficientCalculationPart"
+              }
+            ],
+            "mDisplayAsPercent": true,
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_SpecializedRecursion": {
+      "__type": "AugmentData",
+      "AugmentNameId": "ARAM_SpecializedRecursion",
+      "RootSpell": "Maps/ModeSpecificData/Augments/ARAM_SpecializedRecursion/Augment_ARAM_SpecializedRecursion",
+      "DescriptionTra": "Augment_SpecializedRecursion_Desc",
+      "AugmentTooltipTra": "Augment_ARAM_QQQuest_Tooltip"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_SpecializedRecursion/Augment_ARAM_SpecializedRecursion": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "AbilityHastePer10CD",
+            "values": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "AbilityHasteReward",
+            "values": [
+              80,
+              80,
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "QuestNumerator",
+            "values": [
+              250,
+              625,
+              1562.5,
+              3906.25,
+              9765.625,
+              24414.0625,
+              61035.15625
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "MaxAbilityHasteReward": {
+            "mMultiplier": {
+              "mDataValue": "AbilityHasteReward",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            "mFormulaParts": [
+              {
+                "mNumber": 2,
+                "__type": "NumberCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_OkBoomerang": {
+      "__type": "AugmentData",
+      "AugmentNameId": "ARAM_OkBoomerang",
+      "RootSpell": "Maps/ModeSpecificData/Augments/ARAM_OkBoomerang/Augment_ARAM_OkBoomerang",
+      "DescriptionTra": "Cherry_OkBoomerang_Summary",
+      "AugmentTooltipTra": "Kiwi_OkBoomerang_Tooltip"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_OkBoomerang/Augment_ARAM_OkBoomerang": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "BaseCooldown",
+            "values": [
+              7,
+              7,
+              7,
+              7,
+              7,
+              7,
+              7
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "Damage": {
+            "mFormulaParts": [
+              {
+                "mStartValue": 40,
+                "mEndValue": 200,
+                "__type": "ByCharLevelInterpolationCalculationPart"
+              },
+              {
+                "mStat": 2,
+                "mStatFormula": 2,
+                "mCoefficient": 0.30000001192092896,
+                "__type": "StatByCoefficientCalculationPart"
+              },
+              {
+                "mCoefficient": 0.20000000298023224,
+                "__type": "StatByCoefficientCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    },
+    "Maps/ModeSpecificData/Augments/Twinfire": {
+      "__type": "AugmentData",
+      "AugmentNameId": "Twinfire",
+      "RootSpell": "Maps/ModeSpecificData/Augments/Twinfire/Augment_Twinfire",
+      "DescriptionTra": "Kiwi_TwinFire_Summary",
+      "AugmentTooltipTra": "Kiwi_TwinFire_Tooltip"
+    },
+    "Maps/ModeSpecificData/Augments/Twinfire/Augment_Twinfire": {
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "ADRatio",
+            "values": [
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "CrtiChance",
+            "values": [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "AdditionalMisDivision",
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "APRatio",
+            "values": [
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322,
+              0.07000000029802322
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "Cooldown",
+            "values": [
+              5,
+              5,
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "MaxLevel",
+            "values": [
+              3,
+              3,
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mSpellCalculations": {
+          "Damage": {
+            "mFormulaParts": [
+              {
+                "mStartValue": 10,
+                "mEndValue": 30,
+                "__type": "ByCharLevelInterpolationCalculationPart"
+              },
+              {
+                "mStat": 2,
+                "mStatFormula": 2,
+                "mDataValue": "ADRatio",
+                "__type": "StatByNamedDataValueCalculationPart"
+              },
+              {
+                "mDataValue": "APRatio",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "AdditionalMis": {
+            "mFormulaParts": [
+              {
+                "mStat": 8,
+                "mDataValue": "AdditionalMisDivision",
+                "__type": "StatByNamedDataValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          }
+        }
+      }
+    }
+  },
+  "entries": {
+    "cherry_jeweledgauntlet_summary": "你的技能可以造成<crit>暴击</crit>。<br><br>获得<crit>%i:scaleCrit% @CritGranted@暴击几率</crit>。",
+    "kiwi_zealot_summary": "获得<attention>@Calc_Crit_Chance@暴击几率</attention>和<attackSpeed>@Calc_AS@攻击速度</attackSpeed>（随法术强度变化）。",
+    "kiwi_empyreanpromise_summary": "获得%i:scaleHealShield%@HSAmp*100@%治疗和护盾强度。获得<spellName>至高天诺言</spellName>作为一个召唤师技能。<br><br><rules><active>警惕</active><br>传送至你的友军并在着陆时提供持续@ShieldDuration@秒的<shield>@ShieldAmount@护盾值</shield>。</rules>",
+    "augment_warlockjuicebox_summary": "获得<lifeSteal>@Calc_Vamp@全能吸血</lifeSteal>。",
+    "augment_specializedrecursion_desc": "<font color='#F0C200'>任务：</font>用【{{SpellName}}】技能命中敌方英雄@QuestRequirement@次<br><br><font color='#F0C200'>奖励：</font>【{{SpellName}}】技能获得技能急速，基于任务等级，至多至@MaxAbilityHasteReward@。",
+    "spellname": "<font color='#F0C200'>@SpellName@</font>",
+    "cherry_okboomerang_summary": "每@Cooldown@秒朝着一个附近的敌人<keywordMajor>自动施放</keywordMajor>投掷一个回力镖。",
+    "kiwi_twinfire_summary": "造成技能伤害时，发射1+@AdditionalMis@个飞弹，每个造成<magicDamage>@Damage@魔法伤害</magicDamage>。<br><br>此外，获得<attention>%i:scaleCrit%@CrtiChance*100@%暴击几率</attention>。"
+  }
+}
