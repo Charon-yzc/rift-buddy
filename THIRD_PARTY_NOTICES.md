@@ -54,3 +54,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+
+## xxHash
+
+`services/riot-stringtable.mjs` adapts the seed-zero short-key paths from xxHash v0.8.3, copyright Yann Collet, under the BSD 2-Clause license. The full upstream copyright, license and disclaimer are retained at the beginning of that module in both desktop and connection-helper bundles. The bounded implementation resolves Riot translation keys; it is not a security checksum.
+
+Source: https://github.com/Cyan4973/xxHash/blob/v0.8.3/xxhash.h . Riot RST lowercase hashing and the current 38-bit mask follow https://github.com/CommunityDragon/CDTB/blob/master/cdtb/rstfile.py .

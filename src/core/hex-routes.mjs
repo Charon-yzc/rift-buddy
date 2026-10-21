@@ -2,6 +2,7 @@ import itemsReview from './hex-route-items.json' with {type:'json'};
 import {fingerprint} from './content-fingerprint.mjs';
 import {mechanicReview} from './mechanic-review.mjs';
 import {reviewedHexMechanic} from './hex-mechanics.mjs';
+import {hexCatalogDisabled} from './hex-catalog.mjs';
 
 // Authored mechanism routes, not creator builds or statistical rankings. Each
 // route requires the exact reviewed hero kit, augment effect and item effects.
@@ -27,7 +28,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
  return routes.filter(route=>route.hero===hero).flatMap(route=>{
   const augment=data.augments.find(a=>a.id===route.augment);
-  if(!reviewedHexMechanic(augment,data.patch)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
+  if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   let pendingItems=0;
   const gear=route.gear.flatMap(([when,ids,why])=>{
    const items=ids.flatMap(id=>{
@@ -39,7 +40,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
    // combined claims behind when one of those item effects changes.
    return items.length===ids.length?[{when,why,items}]:[];
   });
-  return [{id:hero+'-'+augment.id,hero,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
+  return [{id:hero+'-'+augment.id,hero,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
    sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`}],basis:'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
  });
 }

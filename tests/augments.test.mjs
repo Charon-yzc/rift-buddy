@@ -19,3 +19,13 @@ test('unsupported live calculations stay marked instead of displaying a fabricat
  const incomplete=render({Amount:{mFormulaParts:[{__type:'NamedDataValueCalculationPart',mDataValue:'Missing'}],mDisplayAsPercent:true}});
  assert.equal(incomplete.descriptionStatus,'partial');
 });
+
+test('current templates keep one percent unit for calculated values and keep scalar units',()=>{
+ const percent={Amount:{__type:'GameCalculation',mDisplayAsPercent:true,mFormulaParts:[{__type:'NumberCalculationPart',mNumber:0.25},{__type:'StatByCoefficientCalculationPart',mCoefficient:0.00045}]}};
+ // 16.21 Jeweled Gauntlet has a literal percent after the calculated token.
+ assert.equal(render(percent,'获得@Amount@%暴击几率。').description,'获得（25 + 0.045×法术强度）%暴击几率。');
+ assert.equal(render(percent,'获得@Amount@暴击几率。').description,'获得（25 + 0.045×法术强度）%暴击几率。');
+ assert.equal(render(percent,'获得@Amount@％暴击几率。').description,'获得（25 + 0.045×法术强度）％暴击几率。');
+ assert.equal(render({},'获得@Amount@%暴击几率。',[{name:'Amount',values:[25]}]).description,'获得25%暴击几率。');
+ assert.equal(render({},'未知@Missing@%，显示100%文本。').description,'未知〔动态数值〕%，显示100%文本。');
+});

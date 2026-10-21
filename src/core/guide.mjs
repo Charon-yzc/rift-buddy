@@ -11,7 +11,7 @@ import {purchasePlan,liveGuideStatus,purchaseAction} from './purchase.mjs';
 import {compareAugments} from './hex-compare.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
 import {hexPlayerRoutes} from './hex-routes.mjs';
-import {hexMicroRoutes,hexMicroFallback} from './hex-micro-routes.mjs';
+import {hexMicroRoutes,hexMicroFallback,hexMechanismMicroRoutes,rankHexMicroRoutes} from './hex-micro-routes.mjs';
 import {hexDecision} from './hex-decisions.mjs';
 import {comboStage,playStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
@@ -153,7 +153,8 @@ export function createGuideModel(data,value,live=null,current=null){
  const augments=augmentIds.map(augmentRecord).filter(Boolean);
  const ownedAugments=s.mode==='hex'?(s.ownedAugmentIds||[]).map(id=>augmentRecord(id)||{id,name:'未收录强化 #'+id,description:'当前资料未收录，请核对局内强化。',status:'missing'}):[];
  const hexChoices=s.mode==='hex'?hexDecision({data,hero:s.id,options:s.compareIds,owned:s.ownedAugmentIds}):null;
- const paired=s.mode==='hex'?hexMicroRoutes({data,hero:s.id}):[],microRoutes=paired.length?paired:s.mode==='hex'?hexMicroFallback({data,hero:s.id,items:preparedRoute,augments:[...ownedAugments.map(a=>({...a,owned:true})),...augments]}):[];
+ const hexRoutes=s.mode==='hex'?hexPlayerRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds}):[];
+ const paired=s.mode==='hex'?rankHexMicroRoutes([...hexMicroRoutes({data,hero:s.id,owned:s.ownedAugmentIds}),...hexMechanismMicroRoutes(hexRoutes)],{owned:s.ownedAugmentIds,options:s.compareIds}):[],microRoutes=paired.length?paired:s.mode==='hex'?hexMicroFallback({data,hero:s.id,items:preparedRoute,augments:[...ownedAugments.map(a=>({...a,owned:true})),...augments]}):[];
  const formalRole=current?.formalRole||(['top','jungle','mid','bottom','support'].includes(matched&&live?.position)?live.position:null);
  const bottomQuestEligible=live?.queueId!==480&&(!formalRole||formalRole==='bottom');
  const bottomQuestReason=!bottomQuestEligible?live?.queueId===480?'当前快速模式不提供普通峡谷下路任务额外装备位。':`本局客户端分路为${ROLES.find(r=>r.id===formalRole)?.name}，手动方案位置不会授予下路任务额外装备位。`:'先确认本局正式下路任务已完成，鞋子已移入任务位，再使用额外装备位。';
@@ -268,7 +269,7 @@ export function createGuideModel(data,value,live=null,current=null){
   priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,attributePlan:build.attributePlan,skillTitle:build.selectedSkill?.name,skillPatch:build.selectedSkill?.patch,skillStale:build.selectedSkill?.stale,skillSources:build.selectedSkill?.sources,skillReference:build.selectedSkill?.reference,skillSourceUrl:build.selectedSkill?.sourceUrl,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
   title:build.title,sourceOpponentName:s.sourceOpponent?(data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent):null,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,configurationNote:build.configurationNote,configurationSources:build.configurationSources,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
-  rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,ownedAugments,hexMicroRoutes:microRoutes,hexMicroPending:'该英雄的配套路线尚待核对；可在主界面查看单项强化与装备来源。',hexRoutes:s.mode==='hex'?hexPlayerRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds}):[],augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',hexDecision:hexChoices?{reroll:hexChoices.reroll,set:hexChoices.set}:null,comparison:hexChoices?.rows||compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key,patch:data.patch,mode:s.mode}),
+  rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,ownedAugments,hexMicroRoutes:microRoutes,hexMicroPending:'该英雄的配套路线尚待核对；可在主界面查看单项强化与装备来源。',hexRoutes,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',hexDecision:hexChoices?{reroll:hexChoices.reroll,set:hexChoices.set}:null,comparison:hexChoices?.rows||compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key,patch:data.patch,mode:s.mode}),
   collapsed:guide.collapsed,clickThrough:guide.clickThrough,opacity:guide.opacity,imageOverrides:data.imageOverrides||{}};
 }
 export function currentPlayerSelection(session,champions,slots=[]){
