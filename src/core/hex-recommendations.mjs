@@ -43,6 +43,14 @@ function mechanicAdvice(data,champion,a,owned){
   if(has(1048)){affinity+=3;reasons.push('已选珠光护手使适用技能能暴击，新增暴击率可共用；具体技能仍须核对。');}
  }
  if(a.id===1048&&has(1047)){affinity+=3;reasons.push('已选关键暴击提供暴击率，可供适用技能暴击使用；不保证每种技能都适用。');}
+ if(p&&a.id===1328&&['Jinx','Caitlyn'].includes(champion.id)){
+  affinity+=3;reasons.push('这个英雄已核实有持续暴击普攻路线，可利用普攻暴击叠攻速；只用技能消耗不能替代触发。');
+  if(champion.id==='Caitlyn')cautions.push('爆头和暴击不是同一条件；陷阱或绳网提供爆头，不代表普攻必定暴击。');
+ }
+ if(p&&a.id===1048&&['Veigar','Lux'].includes(champion.id)){
+  affinity+=3;reasons.push('保留已核实的法强伤害技能路线，法强还会提高珠光提供的暴击率；无需为技能暴击整套改买AD装备。');
+  cautions.push(champion.id==='Lux'?'W 护盾不是伤害，不能按暴击伤害计算。':'E 控制没有伤害，不能按暴击伤害计算。');
+ }
  if(a.id===1004){
   cautions.push('代价是不能使用终极技能，别把基础技能收益理解为保留原来的大招连招。');
   if(p?.window?.kind==='ultimate')cautions.push('这个英雄的已核实主要窗口依赖终极技能，选择前要接受玩法改变。');

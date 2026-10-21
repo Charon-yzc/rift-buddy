@@ -5,7 +5,7 @@ import {renderHexRoutes} from '../src/hex-routes-view.mjs';
 import {renderHexComparison} from '../src/hex-view.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
-const pairs=[['Gwen',1129],['Kayle',1129],['Teemo',1129],['Sona',1141],['Soraka',1141],['Jax',1058],['Volibear',1058],['Brand',1045]];
+const pairs=[['Gwen',1129],['Kayle',1129],['Teemo',1129],['Sona',1141],['Soraka',1141],['Jax',1058],['Volibear',1058],['Brand',1045],['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]];
 
 test('reviewed routes distinguish a future idea, a real option and an owned augment without mutating a build',()=>{
  const before=JSON.stringify(data.hexBuilds);
@@ -48,4 +48,33 @@ test('main, sidebar shared comparison and guide project the same current-owned r
  const html=renderHexComparison({data,hero:'Gwen',owned:[1129],options:[]});assert.match(html,/data-route-state="owned"/);assert.match(html,/打法与条件/);assert.match(html,/纳什之牙/);assert.doesNotMatch(html,/已选后，装备怎么搭/,'Do not duplicate the replaced generic paragraph');
  const guide=renderHexRoutes(model.hexRoutes,{guide:true});assert.match(guide,/data-action="hex-source" data-id="Gwen-1129"/);assert.doesNotMatch(guide,/data-action="link"/);
  const rift=createGuideModel(data,selectGuide(null,{id:'Gwen',role:'top',mode:'rift'}));assert.deepEqual(rift.hexRoutes,[]);
+});
+
+test('crit routes keep normal attacks and spell damage separate, with conditional equipment and fail-closed reviews',()=>{
+ const [jinx]=hexPlayerRoutes({data,hero:'Jinx',owned:[1328]}),[cait]=hexPlayerRoutes({data,hero:'Caitlyn',owned:[1328]}),[veigar]=hexPlayerRoutes({data,hero:'Veigar',owned:[1048]}),[lux]=hexPlayerRoutes({data,hero:'Lux',owned:[1048]});
+ assert.match(jinx.play.join(' '),/机枪.*火箭/);assert.match(cait.play.join(' '),/陷阱.*绳网/);
+ assert.match(veigar.summary,/法强/);assert.match(lux.caution,/护盾/);
+ for(const route of [veigar,lux]){assert.ok(route.gear.some(g=>g.items.some(i=>i.id===3089)));assert.ok(route.gear.every(g=>g.items.every(i=>![3031,3036,3072].includes(i.id))),'Spell crit does not prescribe an AD conversion');}
+ assert.deepEqual(hexPlayerRoutes({data,hero:'Jhin',owned:[1328]}),[]);assert.deepEqual(hexPlayerRoutes({data,hero:'Ashe',owned:[1328]}),[]);
+ for(const [hero,id]of pairs.slice(-4)){
+  for(const mutate of [d=>d.patch='16.21',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
+   const changed=structuredClone(data);mutate(changed);assert.deepEqual(hexPlayerRoutes({data:changed,hero,owned:[id]}),[]);
+  }
+  for(const itemId of hexPlayerRoutes({data,hero,owned:[id]})[0].gear.flatMap(g=>g.items.map(i=>i.id))){
+   const changed=structuredClone(data);changed.items[itemId].description+=' changed';const [route]=hexPlayerRoutes({data:changed,hero,owned:[id]});assert.equal(route.pendingItems,1);assert.ok(route.gear.every(g=>g.items.every(i=>i.id!==itemId)));assert.ok(route.play.length);
+  }
+  const model=createGuideModel(data,selectGuide(null,{id:hero,role:'bottom',mode:'hex',ownedAugmentIds:[id],compareIds:[]}));assert.equal(model.hexRoutes[0].state,'owned');assert.equal(model.hexRoutes[0].hero,hero);
+ }
+});
+
+test('a reviewed owned ultimate lock changes the mage play instructions without discarding useful AP gear',()=>{
+ for(const hero of ['Lux','Veigar']){
+  const [normal]=hexPlayerRoutes({data,hero,owned:[1048]}),[locked]=hexPlayerRoutes({data,hero,owned:[1004,1048]}),[offered]=hexPlayerRoutes({data,hero,owned:[1004],options:[1048]});
+  assert.match(normal.play.join(' '),/R/);assert.doesNotMatch(locked.play.join(' '),/\bR\b/);assert.match(locked.caution,/终极技能不可使用/);assert.deepEqual(locked.gear,normal.gear);assert.deepEqual(offered.play,locked.play);assert.equal(offered.state,'offered');
+  assert.deepEqual(createGuideModel(data,selectGuide(null,{id:hero,role:'mid',mode:'hex',ownedAugmentIds:[1004,1048],compareIds:[]})).hexRoutes[0].play,locked.play);
+  for(const mutate of [d=>d.augments=d.augments.filter(a=>a.id!==1004),d=>d.augments.find(a=>a.id===1004).key='Changed_Key',d=>d.augments.find(a=>a.id===1004).description+=' changed']){
+   const changed=structuredClone(data);mutate(changed);const [unknown]=hexPlayerRoutes({data:changed,hero,owned:[1004,1048]});assert.deepEqual(unknown.play,normal.play);assert.doesNotMatch(unknown.caution,/终极技能不可使用/);
+  }
+  assert.deepEqual(hexPlayerRoutes({data,hero,owned:[1048],options:[1004]})[0].play,normal.play,'An offered lock is not an owned lock');
+ }
 });
