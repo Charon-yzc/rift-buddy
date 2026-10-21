@@ -14,6 +14,19 @@ const players=[
 ];
 const game={id:42,source:'lcu',created:1700000000000,version:'16.20',queue:420,duration:1800,participants:players,self:players[0],completeTeams:false,teams:[{key:'TEAM-100',result:'loss',kills:4,gold:19000,bans:[103],objectives:{baron:0,dragon:2,tower:null}},{key:'TEAM-200',result:'win',kills:4,gold:14000,bans:[],objectives:{}}]};
 const state=(section='summary',open=true)=>({tabs:[{id:1,options:{},filter:{},page:{player:{name:'本人'},source:'lcu',games:[game],start:0,count:1},details:{42:{game,open,section}}}],current:1,servers:[],query:'',source:'auto',server:''});
+test('a failed history source never blames the client connection and keeps the cached hero statistics usable',()=>{
+  const failed={tabs:[{id:1,options:{},filter:{},error:'战绩数据源暂时不可用：游戏后台与当前大区客户端的战绩接口都返回了错误。',page:null,details:{}}],current:1,servers:[],query:'',source:'auto',server:'',
+   championUsage:{status:'ready',cached:true,basis:'recent',scanned:500,usage:{sampled:500,counts:{Ahri:20}},at:Date.parse('2026-10-20')}};
+  const html=matchHistoryView(failed,data);
+  assert.match(html,/战绩数据源暂时不可用/);
+  assert.doesNotMatch(html,/连接客户端后重试查询/);
+  assert.match(html,/常用英雄统计来自本机缓存/);
+  assert.match(html,/本地缓存/);
+  const plain=matchHistoryView({...failed,championUsage:null},data);
+  assert.match(plain,/战绩数据源暂时不可用/);
+  assert.doesNotMatch(plain,/连接客户端后重试查询/);
+});
+
 test('compact match disclosure retains both team rosters and an independently labelled six-tab panel',()=>{
  const html=matchHistoryView(state(),data);
  assert.match(html,/history-roster-preview/);assert.match(html,/aria-controls="history-panel-42"/);assert.match(html,/id="history-panel-42"/);assert.match(html,/role="tabpanel"/); assert.match(html,/data-history-tip="item"/);assert.match(html,/data-history-tip="rune"/);
