@@ -905,11 +905,9 @@
       ],
       "tooltip": {
         "revision": 1,
-        "description": "风暴狂涌 - 风啸现在总会在一个区域内引爆，对附近所有敌人造成相当于〔动态数值〕最大生命值的魔法伤害。\n\n被初段引爆命中的敌方英雄会被风啸标记。\n\n获得金币500金币。",
-        "status": "partial",
-        "unresolved": [
-          "PercentHealthDamage"
-        ],
+        "description": "风暴狂涌 - 风啸现在总会在一个区域内引爆，对附近所有敌人造成相当于（10 + 0.02×法术强度）%最大生命值的魔法伤害。\n\n被初段引爆命中的敌方英雄会被风啸标记。\n\n获得金币500金币。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_Augment_Upgrade_Stormsurge_Tooltip"
       }
     },

@@ -93,17 +93,17 @@ test('upgrade advice retains missing numerical fields rather than inventing grow
  assert.match(by(1320).brief,/0.5个百分点.*50金币/);assert.match(by(1320).play[0],/被动实际处决/);assert.match(by(1320).caution,/不预报本人已叠层数/);
  assert.match(by(1336).brief,/上限为暴击几率的50%.*非固定收益/);assert.match(by(1336).caution,/未给分布和均值.*不.*合成期望伤害/);
  assert.match(by(1319).brief,/12金币.*不推算每秒收入/);assert.deepEqual(by(1319).gear[0].items.map(i=>i.id),[3068,6664]);assert.match(by(1319).caution,/不把所有技能灼烧/);
- assert.match(by(3150).play[1],/初段.*敌方英雄.*标记/);assert.match(by(3150).brief,/初段.*命中.*标记/);assert.match(by(3150).caution,/未给出.*生命值伤害比例.*无限连锁/);
+ assert.match(by(3150).play[1],/初段.*敌方英雄.*标记/);assert.match(by(3150).brief,/初段.*命中.*标记/);assert.match(by(3150).play[1],/（10 \+ 0\.02×法术强度）%最大生命值/);assert.match(by(3150).caution,/未指明生命值归属.*再次触发间隔.*无限连锁/);
  assert.match(by(1379).brief,/100%攻速.*对英雄攻击.*250%.*不扩大为全治疗/);assert.match(by(1379).play[0],/攻击速度来自强化本身/);
  for(const row of rows){const micro=hexMechanismMicroRoutes([row])[0];assert.equal(micro.kind,'item-synergy');assert.equal(micro.augments[0].brief,row.brief);assert.match(renderHexRoutes([row]),/条件联动/);assert(row.brief.length<60,'Keep the complete important condition within the narrow hover budget');}
  const changed=structuredClone(data);changed.items[3068].tooltip.description+=' changed';assert.deepEqual(run({data:changed,owned:[1319],preparedItems:[3068,6664]})[0].gear[0].items.map(i=>i.id),[6664]);
 });
 
 test('detail-only values withdraw independently when the full tooltip is missing or changes',()=>{
- for(const [id,item,numeric] of [[1320,6676,/0\.5个百分点|(?<!\d)50金币/],[1336,3031,/50%/]]){
+ for(const [id,item,numeric] of [[1320,6676,/0\.5个百分点|(?<!\d)50金币/],[1336,3031,/50%/],[3150,4646,/0\.02×|（10 \+/]]){
   for(const mutate of [a=>delete a.tooltip,a=>a.tooltip.description+=' changed',a=>a.tooltip.status='missing',a=>a.tooltip.unresolved.push('other'),a=>a.tooltip.revision=2]){
    const changed=structuredClone(data);mutate(changed.augments.find(a=>a.id===id));
-   const [row]=run({data:changed,owned:[id],preparedItems:[item]});assert(row,'Valid summary still supports conditional advice');assert.doesNotMatch([row.brief,...row.play,row.caution].join(' '),numeric);assert.match(row.brief,/完整说明核对/);
+   const [row]=run({data:changed,owned:[id],preparedItems:[item]});assert(row,'Valid summary still supports conditional advice');assert.doesNotMatch([row.brief,...row.play,row.caution].join(' '),numeric);if(id===3150)assert.match(row.caution,/未给出完整的生命值伤害比例/);else assert.match(row.brief,/完整说明核对/);
   }
  }
 });
