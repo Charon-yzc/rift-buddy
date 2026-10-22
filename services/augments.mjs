@@ -7,7 +7,8 @@ export function buildAugmentDescriptions(catalog,bin,entries){
  const objects=Object.values(bin).filter(v=>v?.__type==='AugmentData');
  const byKey=new Map(objects.map(a=>[a.AugmentNameId?.toLowerCase(),a]));
  return catalog.map(a=>{
-  const source=byKey.get(a.key.toLowerCase());if(!source)return {...a,description:'',descriptionStatus:'missing'};
+  const {tooltip:oldTooltip,...record}=a;
+  const source=byKey.get(a.key.toLowerCase());if(!source)return {...record,description:'',descriptionStatus:'missing'};
   const spell=bin[source.RootSpell]?.mSpell||{};
   const values=new Map((spell.DataValues||[]).map(v=>[v.name.toLowerCase(),v.values]));
   const calculations=new Map(Object.entries(spell.mSpellCalculations||{}).map(([k,v])=>[k.toLowerCase(),v]));
@@ -56,10 +57,11 @@ export function buildAugmentDescriptions(catalog,bin,entries){
    if(calc.mRangedMultiplier===undefined)return base;
    const distant=renderCalculation(multiplier*ranged);return distant===null?null:`近战 ${base} / 远程 ${distant}`;
   }
-  function render(input){
+  function render(input,full=false){
    let s=String(input||'');
    for(let depth=0;depth<6&&s.includes('{{');depth++)s=s.replace(/\{\{\s*([^{}]+?)\s*\}\}/g,(_,key)=>{const value=lookup(key.trim().toLowerCase());if(value)return value;unresolved.add(key);return '〔效果详见游戏〕';});
    s=s.replace(/@([^@]+)@/g,(token,expr,offset,input)=>{
+    if(full&&/^f\d+$/i.test(expr)){unresolved.add(expr);return '〔动态数值〕';}
     if(expr==='SpellName'){
      const slot={ARAM_BreadAndButter:'Q',ARAM_BreadAndCheese:'E',ARAM_BreadAndJam:'W'}[a.key];
      if(slot)return slot;unresolved.add(expr);return '适用技能';
@@ -77,10 +79,16 @@ export function buildAugmentDescriptions(catalog,bin,entries){
   }
   const raw=lookup(String(source.DescriptionTra||source.AugmentTooltipTra).toLowerCase());
   const description=render(raw);
-  return {...a,description,descriptionStatus:description?(unresolved.size?'partial':'complete'):'missing',
+  const descriptionStatus=description?(unresolved.size?'partial':'complete'):'missing',summaryUnresolved=[...unresolved];
+  // The short summary and full tooltip have separate completeness. In-game
+  // counters or hero-specific slots in the latter must not renew the former's
+  // reviewed effect, nor conceal available static coefficients.
+  unresolved.clear();const tooltipRaw=source.AugmentTooltipTra&&lookup(String(source.AugmentTooltipTra).toLowerCase()),detail=tooltipRaw?render(tooltipRaw,true):'';
+  return {...record,description,descriptionStatus,
    // This client catalogue flag is not champion/round offer eligibility.
    catalogEnabled:source.Enabled!==false,
-   unresolved:[...unresolved],sourceKey:source.DescriptionTra,
+   unresolved:summaryUnresolved,sourceKey:source.DescriptionTra,
+   ...(detail?{tooltip:{revision:1,description:detail,status:unresolved.size?'partial':'complete',unresolved:[...unresolved],sourceKey:source.AugmentTooltipTra}}:{}),
    // Useful for browsing categories, not for predicting strength.
    tags:source.AugmentDisplayTags||[],};
  });
