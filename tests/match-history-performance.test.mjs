@@ -72,17 +72,21 @@ test('a rejected credential is retried on the next query instead of being cooled
  assert.deepEqual(sent,[1,2]);
 });
 
-test('an outage does earn a cooldown so the failing source is not retried every page',async()=>{
+test('a backend outage on a deeper page is remembered instead of retried on every page',async()=>{
  let backendCalls=0;
  const f=service({
   backend:async()=>{backendCalls++;throw Object.assign(Error('后台 503'),{status:503});},
   local:async()=>({body:localBody})
  });
  const first=await f.service.execute('page',{source:'auto'});
- assert.equal(first.source,'lcu');
- const second=await f.service.execute('page',{source:'auto',handle:first.handle});
+ assert.equal(first.source,'lcu','the first page stays on the client and never wakes the backend');
+ assert.equal(backendCalls,0);
+ const second=await f.service.execute('page',{source:'auto',handle:first.handle,start:20});
  assert.equal(second.source,'lcu');
- assert.equal(backendCalls,1,'the backend outage is remembered for its cooldown window');
+ assert.equal(backendCalls,1,'a deeper page tries the backend once');
+ const third=await f.service.execute('page',{source:'auto',handle:first.handle,start:40});
+ assert.equal(third.source,'lcu');
+ assert.equal(backendCalls,1,'the remembered client source keeps later pages off the failing backend');
 });
 
 test('the hero-statistics batch is fetched concurrently instead of one page at a time',async()=>{
@@ -185,7 +189,7 @@ test('the background scan waits for a running foreground read instead of sharing
   if(started.length===1)return new Promise(resolve=>{releaseForeground=()=>resolve({games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))});});
   return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:100+i}}))};
  }});
- const page=f.service.execute('page',{source:'auto'});
+ const page=f.service.execute('page',{source:'sgp'});
  await new Promise(r=>setTimeout(r,20));
  assert.equal(started.length,1,'the foreground read reached the backend');
  const scan=f.service.execute('own-summary-page',{source:'sgp'});
@@ -204,7 +208,7 @@ test('a stalled foreground read cannot hold the background scan forever',async()
   if(calls===1)return new Promise(()=>{});
   return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))};
  }});
- f.service.execute('page',{source:'auto'});
+ f.service.execute('page',{source:'sgp'});
  await new Promise(r=>setTimeout(r,20));
  const started=Date.now();
  const result=await f.service.execute('own-summary-page',{source:'sgp'});

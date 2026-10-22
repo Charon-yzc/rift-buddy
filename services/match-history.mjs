@@ -198,7 +198,13 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   const localAllowed=!t.cross;
   const readLocal=async()=>{const raw=await request(c.auth,`/lol-match-history/v1/products/lol/${t.player.puuid}/matches?begIndex=${start}&endIndex=${start+count-1}`);const entries=raw?.games?.games;if(!Array.isArray(entries))fail('客户端尚未返回有效战绩，请稍后重试');return {raw,source:'lcu',entries};};
   const readBackend=async()=>{const games=await summaryPages(c,server,t.player.puuid,start,count,tag);return {raw:{games},source:'sgp',entries:games};};
-  const preferred=t.preferred==='sgp'?'sgp':preferredSource.get(server),order=preferred==='lcu'?['lcu','sgp']:['sgp','lcu'];
+  // The first page is what the user waits for. A healthy client answers it in
+  // tens of milliseconds, while the game backend needs about a second and shares
+  // a rate limit with the usage scan. Deeper pages keep the order that last
+  // worked: the client route cannot page past its own recent window on every
+  // build, so it is only trusted for the first page.
+  const localFirst=t.preferred==='lcu'||t.preferred==='auto'&&start===0;
+  const preferred=t.preferred==='sgp'?'sgp':localFirst?'lcu':preferredSource.get(server),order=preferred==='lcu'?['lcu','sgp']:['sgp','lcu'];
   const attempts=order.filter(source=>(source==='sgp'?backendAllowed:localAllowed)&&!sourceBlocked(server,source));
   if(!attempts.length){
    if(t.cross)fail('该大区战绩后台不可用');
@@ -206,7 +212,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    fail(HISTORY_SOURCES_ALL_FAILED);
   }
   let lastError=null,emptyLocal=null,backendFailed=sourceBlocked(server,'sgp');
-  const resultOf=result=>{assertSession(c);rememberSource(server,result.source);const notice=result.source==='lcu'&&backendAllowed&&backendFailed?'游戏后台暂不可用，已改用当前大区客户端数据':result.source==='lcu'&&t.preferred==='sgp'&&!hasBackend?'未检测到可用的后台大区配置，已使用客户端数据':'';return {raw:result.raw,source:result.source,notice};};
+  const resultOf=result=>{assertSession(c);if(start>0)rememberSource(server,result.source);const notice=result.source==='lcu'&&backendAllowed&&backendFailed?'游戏后台暂不可用，已改用当前大区客户端数据':result.source==='lcu'&&t.preferred==='sgp'&&!hasBackend?'未检测到可用的后台大区配置，已使用客户端数据':'';return {raw:result.raw,source:result.source,notice};};
   for(const source of attempts){
    assertSession(c);
    try{
