@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -19,7 +20,7 @@ import {resultPlayCard} from '../src/play-card-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
 import {resultAsText} from '../src/result-text.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 // Job/route tests use simulated current reviews; old real catalog records are
 // separately covered by the stale/invalid boundary test below.
 const fixtureCatalog=structuredClone(BUNDLED_CATALOG);for(const trio of fixtureCatalog.trios)trio.patch=data.patch;configureCatalog(fixtureCatalog);test.after(()=>configureCatalog(BUNDLED_CATALOG));

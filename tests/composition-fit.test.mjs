@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -5,7 +6,7 @@ import {profile} from '../src/core/rules.mjs';
 import {createCooperationGraph} from '../src/core/cooperation.mjs';
 import {compositionFit} from '../src/core/composition-fit.mjs';
 
-const {champions}=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
+const {champions}=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 const byId=new Map(champions.map(c=>[c.id,c])),graph=createCooperationGraph(champions);
 const members=rows=>rows.map(([role,champion])=>{const c=byId.get(champion);return {role,champion,c,p:c?profile(c,role):null};});
 const fit=(rows,options)=>compositionFit({members:members(rows)},graph,options);

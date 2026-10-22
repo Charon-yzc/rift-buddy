@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -22,8 +23,8 @@ import {createCatalogStore} from '../services/catalog-store.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import os from 'node:os';
 import path from 'node:path';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
+data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
 const hero=id=>data.champions.find(c=>c.id===id),clone=()=>structuredClone(BUNDLED_CATALOG);
 
 test('key skill nodes use the selected order, including partial openings and six-rank stances',()=>{

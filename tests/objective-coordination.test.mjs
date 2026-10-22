@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {BUNDLED_CATALOG,configureCatalog,catalogIssues} from '../src/core/catalog.mjs';
 import {TRIOS,DUOS} from '../src/core/rules.mjs';
@@ -8,7 +9,7 @@ import {objectiveRhythm} from '../src/core/live-rhythm.mjs';
 import {objectiveCoordination} from '../src/core/objective-coordination.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(fs.readFileSync('data/game.json'));data.builds=JSON.parse(fs.readFileSync('data/builds.json')).entries;data.catalog=configureCatalog(BUNDLED_CATALOG);data.catalogInfo=catalogIssues(data.catalog,data);
+const data=JSON.parse(fs.readFileSync('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(fs.readFileSync('tests/fixtures/snapshot-16.20/builds.json')).entries;data.catalog=configureCatalog(BUNDLED_CATALOG);data.catalogInfo=catalogIssues(data.catalog,data);
 const resource={id:'dragon',name:'元素亚龙',remaining:50,state:'prepare'};
 const slotsFor=members=>createSlots().map(s=>({...s,champion:members.find(m=>m.role===s.role)?.champion||null,party:members.some(m=>m.role===s.role),locked:members.some(m=>m.role===s.role)}));
 const curated=combo=>{const members=combo.members||[{champion:combo.carry,role:'bottom'},{champion:combo.support,role:'support'}];return captureCreativePlan({scope:'party',slots:slotsFor(members),...(members.length===3?{trio:combo}:{duo:combo})},data);};

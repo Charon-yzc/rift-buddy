@@ -13,7 +13,7 @@ import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {loadBuilds,loadBuildSources} from '../services/build-cache.mjs';
-const dir=new URL('../data/',import.meta.url),data=JSON.parse(await fs.readFile(new URL('game.json',dir)));
+const dir=new URL('./fixtures/snapshot-16.20/',import.meta.url),data=JSON.parse(await fs.readFile(new URL('game.json',dir)));
 data.buildSources=await loadBuildSources([fileURLToPath(dir)],data);
 data.builds=await loadBuilds([fileURLToPath(dir)],data);data.catalog=BUNDLED_CATALOG;data.catalogInfo=catalogIssues(BUNDLED_CATALOG,data);
 const hero=id=>data.champions.find(c=>c.id===id);

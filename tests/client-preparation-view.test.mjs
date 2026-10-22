@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {clientPreparationPlan,clientPreparationControls,clientPreparationKey} from '../src/client-preparation-view.mjs';
 import {roomWorkspace} from '../src/room-workspace-view.mjs';
@@ -6,7 +7,7 @@ import {createSlots} from '../src/core/recommend.mjs';
 import {captureRoomStrategy,captureRoomConfigurations} from '../src/core/room-configuration.mjs';
 import {creativeMemberCombo,creativeComboContext} from '../src/core/creative-plan.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
-const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
+const data=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
 const slots=createSlots().map(s=>({...s,champion:({jungle:'Ivern',bottom:'Rengar',support:'Lulu'})[s.role]||null}));
 const strategy=captureRoomStrategy(slots,data),hero=data.champions.find(c=>c.id==='Rengar');
 const selection={id:hero.id,role:'bottom',mode:'rift',...creativeComboContext(creativeMemberCombo(strategy,hero.id,'bottom'))};

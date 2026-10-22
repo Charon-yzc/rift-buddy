@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,7 +13,7 @@ import {createPreparationStore} from '../src/core/preparation.mjs';
 import {captureRoomConfigurations,roomPreparation} from '../src/core/room-configuration.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {defaultState,validateState,saveState,readState,createBackup,mergeState} from '../services/storage.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const azir=data.champions.find(c=>c.id==='Azir');
 // Independent game-data oracle, CharacterRecords/Root.SpellLevelUpInfoList.
 // https://raw.communitydragon.org/16.20/game/data/characters/azir/azir.bin.json

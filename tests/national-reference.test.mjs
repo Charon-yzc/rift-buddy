@@ -7,7 +7,7 @@ import {parseNationalRankings,parseNationalBuild,validNationalReference,national
 import {createNationalReferenceCache,fetchNationalReference} from '../services/national-reference.mjs';
 import {createNationalReferenceController} from '../src/national-reference-controller.mjs';
 import {nationalRankingsView,nationalBuildView} from '../src/national-reference-view.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/national-reference-16.20.json',import.meta.url)));
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/national-reference-16.20.json',import.meta.url)));
 const fetchedAt='2026-10-20T10:30:00.000Z',clock=()=>fetchedAt,rankInput={kind:'rankings',tier:'emerald_plus'},buildInput={kind:'build',tier:'emerald_plus',champion:'Yasuo',role:'mid'};
 const rank=()=>parseNationalRankings(fixture.rankings,{data,fetchedAt});
 const build=()=>parseNationalBuild(fixture.build,fixture.runes,{data,...buildInput,fetchedAt});

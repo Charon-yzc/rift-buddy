@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -14,7 +15,7 @@ import {cooperationText,cooperationView} from '../src/cooperation-view.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {companionView} from '../src/companion-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const graph=createCooperationGraph(data.champions),member=(champion,role)=>({champion,role}),hero=id=>data.champions.find(c=>c.id===id);
 const setup=(members,open=[])=>createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role)||open.includes(s.role),champion:members.find(m=>m.role===s.role)?.champion||null,locked:members.some(m=>m.role===s.role),...(members.some(m=>m.role===s.role)?{manualPosition:true,clientCellId:['top','jungle','mid','bottom','support'].indexOf(s.role)}:{})}));
 const friends=[member('Jayce','top'),member('Nidalee','jungle')];

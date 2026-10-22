@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -15,7 +16,7 @@ import {createGuideModel,selectGuide,validateGuideSelection,currentPlayerSelecti
 import {defaultState,saveState,readState,validateState} from '../services/storage.mjs';
 import {favoriteTeamSummary} from '../src/favorites-view.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),roles=['mid','bottom','support'],ids=['Annie','Ashe','Rell'];
 function fixture(){
  const creative=generateCreativeTrios({targets:roles,candidateSets:Object.fromEntries(roles.map((r,i)=>[r,[hero(ids[i])]])),champions:data.champions}).find(c=>c.archetype==='chain');

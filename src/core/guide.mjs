@@ -14,6 +14,7 @@ import {hexPlayerRoutes} from './hex-routes.mjs';
 import {hexItemSynergies} from './hex-item-synergies.mjs';
 import {hexMicroRoutes,hexMicroFallback,hexMechanismMicroRoutes,rankHexMicroRoutes} from './hex-micro-routes.mjs';
 import {hexDecision} from './hex-decisions.mjs';
+import {isCurrentHexData,HEX_DATA_PENDING} from './hex-data-current.mjs';
 import {comboStage,playStage,guideMismatch,GUIDE_STAGES,gamePhase} from './guide-stage.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {validateCreativePlan,creativeMemberCombo} from './creative-plan.mjs';
@@ -137,7 +138,7 @@ const clean=v=>String(v??'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'')
 const item=i=>({id:String(i.id),name:i.name,cost:i.gold.total,description:clean(i.description),...(i.purchaseBase?{purchaseBase:{id:String(i.purchaseBase.id),name:i.purchaseBase.name,cost:i.purchaseBase.gold.total}}:{})});
 export function createGuideModel(data,value,live=null,current=null){
  const guide=validateGuideState(value);if(!guide)return null;
- const s=guide.selection,champion=data.champions.find(c=>c.id===s.id);
+ const s=guide.selection,hexReady=s.mode==='hex'&&isCurrentHexData(data),champion=data.champions.find(c=>c.id===s.id);
  if(!champion)throw Error('当前资料没有这位英雄，请重新选择');
  const build=getBuild(champion,s.role,data,s);
  if(s.sourceOpponent&&s.threatId&&s.sourceOpponent!==s.threatId)build.selectionWarnings.push(`配置来源仍筛选对 ${data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent}，当前关注 ${data.champions.find(c=>c.id===s.threatId)?.name||s.threatId}；请在助手刷新并选择新参考，已有装备与符文不会自动更改。`);
@@ -148,20 +149,21 @@ export function createGuideModel(data,value,live=null,current=null){
  const referenceIds=build.reference?.augmentIds||[];
  const augmentIds=s.augmentIds.length?s.augmentIds:referenceIds.slice(0,5);
  const augmentRecord=id=>{
+  if(s.mode==='hex'&&!hexReady)return null;
   const a=hexAugmentReference(data.augments.find(a=>a.id===id),{patch:data.patch,mode:s.mode});
   return a?{id:a.id,name:a.name,rarity:a.rarity,description:a.description,status:a.descriptionStatus||'complete',...(a.review?{review:a.review}:{})}:null;
  };
  const augments=augmentIds.map(augmentRecord).filter(Boolean);
  const ownedAugments=s.mode==='hex'?(s.ownedAugmentIds||[]).map(id=>augmentRecord(id)||{id,name:'未收录强化 #'+id,description:'当前资料未收录，请核对局内强化。',status:'missing'}):[];
- const hexChoices=s.mode==='hex'?hexDecision({data,hero:s.id,options:s.compareIds,owned:s.ownedAugmentIds}):null;
- const authored=s.mode==='hex'?hexPlayerRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds}):[];
+ const hexChoices=hexReady?hexDecision({data,hero:s.id,options:s.compareIds,owned:s.ownedAugmentIds}):null;
+ const authored=hexReady?hexPlayerRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds}):[];
  const synergies=hexItemSynergies({data,hero:s.id,mode:s.mode,owned:s.ownedAugmentIds,options:s.compareIds,preparedItems:preparedRoute,inventory,inventoryKnown}).filter(route=>!authored.some(other=>other.augment.id===route.augment.id));
  const hexRoutes=[...authored,...synergies].sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered'));
- const curated=s.mode==='hex'?hexMicroRoutes({data,hero:s.id,owned:s.ownedAugmentIds}):[],projected=hexMechanismMicroRoutes(hexRoutes);
+ const curated=hexReady?hexMicroRoutes({data,hero:s.id,owned:s.ownedAugmentIds}):[],projected=hexMechanismMicroRoutes(hexRoutes);
  const specific=[...curated,...projected.filter(r=>r.kind!=='item-synergy')],specificCores=new Set(specific.flatMap(r=>r.augments.filter(a=>a.core).map(a=>a.id)));
  const paired=rankHexMicroRoutes([...specific,...projected.filter(r=>r.kind==='item-synergy'&&!r.augments.some(a=>a.core&&specificCores.has(a.id)))],{owned:s.ownedAugmentIds,options:s.compareIds});
  const remaining=paired.some(r=>r.kind==='item-synergy')&&paired.length<3?hexMicroFallback({data,hero:s.id,items:preparedRoute.filter(i=>!paired.some(r=>r.items.some(p=>String(p.id)===String(i.id)))),augments:ownedAugments.filter(a=>!paired.some(r=>r.augments.some(p=>p.id===a.id))).map(a=>({...a,owned:true}))}):[];
- const microRoutes=paired.length?[...paired,...remaining].slice(0,3):s.mode==='hex'?hexMicroFallback({data,hero:s.id,items:preparedRoute,augments:[...ownedAugments.map(a=>({...a,owned:true})),...augments]}):[];
+ const microRoutes=paired.length?[...paired,...remaining].slice(0,3):hexReady?hexMicroFallback({data,hero:s.id,items:preparedRoute,augments:[...ownedAugments.map(a=>({...a,owned:true})),...augments]}):[];
  const formalRole=current?.formalRole||(['top','jungle','mid','bottom','support'].includes(matched&&live?.position)?live.position:null);
  const bottomQuestEligible=live?.queueId!==480&&(!formalRole||formalRole==='bottom');
  const bottomQuestReason=!bottomQuestEligible?live?.queueId===480?'当前快速模式不提供普通峡谷下路任务额外装备位。':`本局客户端分路为${ROLES.find(r=>r.id===formalRole)?.name}，手动方案位置不会授予下路任务额外装备位。`:'先确认本局正式下路任务已完成，鞋子已移入任务位，再使用额外装备位。';
@@ -192,7 +194,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const suggested=inventoryKnown&&!targetBlockedReason?chooseSituationTarget({situation,mainNext,purchase:mainPurchase,gold:live.gold}):null;
  const next=chosen||(suggested?choices.find(i=>i.id===suggested.id):null)||mainNext,targetPlan=next?purchasePlan([next],data.items,inventory,inventoryKnown?live.gold:null)[0]:null;
  const liveModel=matched?{matched:true,inventoryKnown,gold:live.gold,level:live.level,skills:live.skills,inventory:live.inventory,gameTime:live.gameTime,mapId:live.mapId,queueId:live.queueId,objectives:live.objectives,at:live.at}:liveStatus;
- const skillAdvice=recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,live:liveModel,signals:situation.signals,custom:!!s.customSkillOrder||!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
+ const skillAdvice=build.unavailable?{next:null,base:null,changed:false,priority:null,reason:build.configurationNote,caution:''}:recommendSkill({champion:champion.id,role:s.role,priority:build.priority,first:build.first,order:build.skillOrder,live:liveModel,signals:situation.signals,custom:!!s.customSkillOrder||!!build.combo||build.loadoutId!=='default'||!!s.skillId&&s.skillId!==build.skillChoices[0]?.id,reviewed:!situation.stale});
  const nextCandidate=situation.candidates.find(c=>c.id===next?.id);
  const nextReason=nextCandidate?.reason||`${chosen?'保留你选择的回城目标。'+(pinned?'当前公开数据不再触发这项自动建议，你仍可手动保留或更换。':''):'继续你选择的成装方案。'}${targetPlan?.credit?`已持有组件抵扣约 ${targetPlan.credit} 金，优先利用已有投入。`:''}`;
  const ownChampion=data.champions.find(c=>c.id===s.id);
@@ -276,7 +278,7 @@ export function createGuideModel(data,value,live=null,current=null){
   priority:build.priority,first:build.first,skillOrder:build.skillOrder,skillNote:build.selectedSkill?.when,skillMechanism:build.skillMechanism,attributePlan:build.attributePlan,skillTitle:build.selectedSkill?.name,skillPatch:build.selectedSkill?.patch,skillStale:build.selectedSkill?.stale,skillSources:build.selectedSkill?.sources,skillReference:build.selectedSkill?.reference,skillSourceUrl:build.selectedSkill?.sourceUrl,skillSource:build.selectedSkill?.source||'机制整理',summoners:build.summoners.map(id=>({id,name:data.spells[id].name})),
   runes:build.runePage?.selectedPerkIds.map(id=>({id,name:runeNames.get(id)||SHARDS[id]}))||[],
   title:build.title,sourceOpponentName:s.sourceOpponent?(data.champions.find(c=>c.id===s.sourceOpponent)?.name||s.sourceOpponent):null,runeTitle:build.selectedRune?.name||null,combo:build.combo,comboConfirmed:current?.comboKnown===true&&!mismatch,selectionWarnings:build.selectionWarnings,tips:build.tips,adjustments:build.adjustments,source:build.source,sourceNote:build.sourceNote,configurationNote:build.configurationNote,configurationSources:build.configurationSources,sourceUrl:build.reference?.sourceUrl||null,fetchedAt:build.reference?.fetchedAt||null,
-  rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,ownedAugments,hexMicroRoutes:microRoutes,hexMicroPending:'该英雄的配套路线尚待核对；可在主界面查看单项强化与装备来源。',hexRoutes,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',hexDecision:hexChoices?{reroll:hexChoices.reroll,set:hexChoices.set}:null,comparison:hexChoices?.rows||compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key,patch:data.patch,mode:s.mode}),
+  rulesDate:build.rulesDate,stale:build.stale,status:dataStatus(data,build),stage:guide.stage||'auto',stageHint:comboStage(build.combo,liveModel,guide.stage||'auto'),support:build.support,augments,ownedAugments,hexMicroRoutes:microRoutes,hexMicroPending:!hexReady?HEX_DATA_PENDING:'该英雄的配套路线尚待核对；可在主界面查看单项强化与装备来源。',hexRoutes,augmentKind:s.augmentIds.length?'我的强化备选':'英雄强化参考',hexDecision:hexChoices?{reroll:hexChoices.reroll,set:hexChoices.set}:null,comparison:hexChoices?.rows||(s.mode==='hex'&&!hexReady?[]:compareAugments({champion,options:s.compareIds,owned:s.ownedAugmentIds,augments:data.augments,buildKey:build.key,patch:data.patch,mode:s.mode})),
   collapsed:guide.collapsed,clickThrough:guide.clickThrough,opacity:guide.opacity,imageOverrides:data.imageOverrides||{}};
 }
 export function currentPlayerSelection(session,champions,slots=[]){

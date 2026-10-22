@@ -13,7 +13,7 @@ import {createNationalReferenceCache} from '../services/national-reference.mjs';
 import {nationalBuildView} from '../src/national-reference-view.mjs';
 import {createNationalReferenceController} from '../src/national-reference-controller.mjs';
 
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/national-reference-16.20.json',import.meta.url))),now='2026-10-20T10:30:00.000Z',clock=()=>now;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/national-reference-16.20.json',import.meta.url))),now='2026-10-20T10:30:00.000Z',clock=()=>now;
 const pair=generateKeyPairSync('ed25519'),keys={test:pair.publicKey.export({type:'spki',format:'pem'})};
 const rank=tier=>parseNationalRankings(fixture.rankings,{data,tier,fetchedAt:now});
 const signed=(sequence,transform=x=>x)=>{const entries=Object.fromEntries(NATIONAL_TIERS.map(t=>{const ref=transform(rank(t.id));return [ref.key,ref];})),payload={schema:1,kind:'national-rankings',provider:'tencent101',patch:data.patch,publishedAt:now,sequence,entries},bytes=Buffer.from(JSON.stringify(payload)),envelope={keyId:'test',payload:bytes.toString('base64'),signature:sign(null,bytes,pair.privateKey).toString('base64')};return {payload,envelope};};

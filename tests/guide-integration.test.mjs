@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,8 +9,8 @@ import {defaultState,validateState} from '../services/storage.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 
-const data=JSON.parse(await fs.readFile('data/game.json'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift'};
 const player=(id,team,items=[])=>({riotId:'fixture-'+id,rawChampionName:'game_character_displayname_'+id,team,level:7,items:items.map(itemID=>({itemID,count:1})),scores:{kills:0,deaths:0,assists:0,creepScore:50}});
 const snapshot=()=>sanitizeLive({riotId:'fixture-Ashe',level:7,currentGold:800,abilities:Object.fromEntries(Object.entries({Q:1,W:3,E:1,R:1}).map(([k,abilityLevel])=>[k,{abilityLevel}])),championStats:{attackDamage:100,abilityPower:0,armor:45,magicResist:35,attackSpeed:1,critChance:0,moveSpeed:330,currentHealth:20,maxHealth:1300}},[player('Ashe','ORDER'),player('Janna','ORDER'),player('Jhin','CHAOS',[3031]),player('Jinx','CHAOS',[6672])],{mapNumber:11,gameMode:'CLASSIC',gameTime:600},data.champions,{queueId:430});

@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,9 +7,9 @@ import {canModelVayneAttacks,canModelYone,vayneAttackEvents} from '../src/core/c
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
-data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.hexBuilds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/hex-builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),vayne=hero('Vayne'),enemy=hero('Ahri');
 const ranks={Q:1,W:5,E:1,R:1},agg={...aggregateCombatStats(vayne,9,[],data),ad:100,atkSpeed:1,crit:0},def={hp:2000,armor:100,mr:500};
 const fixture=(mode='rift')=>({available:true,champion:'Vayne',mode,mapId:mode==='rift'?11:12,at:Date.now(),inventory:[],inventoryKnown:true,gold:800,level:9,skills:ranks,
@@ -67,7 +68,7 @@ test('Hex damage remains unavailable while visible inventory and saved opponent 
  assert.ok(model.combatUnavailable.includes('平衡与强化效果尚未完整核对'));
  const html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
  assert.equal(html.includes('2 秒约'),false);assert.ok(html.includes('暂不显示伤害数字'));
- assert.deepEqual(model.duelPick,{own:'Vayne',foe:'Ahri'});assert.ok(model.next);assert.ok(model.skillAdvice);
+ assert.deepEqual(model.duelPick,{own:'Vayne',foe:'Ahri'});assert.equal(model.next,null);assert.ok(model.skillAdvice);
 });
 
 test('levels nineteen and twenty never silently use level eighteen damage and custom allies obey the same boundary',()=>{

@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -5,7 +6,7 @@ import {BUNDLED_CATALOG,validateCatalog,catalogIssues} from '../src/core/catalog
 import {getBuild,buildAsText} from '../src/core/builds.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {loadoutSelector} from '../src/build-options-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 data.catalogInfo=catalogIssues(BUNDLED_CATALOG,data);
 const hero=id=>data.champions.find(c=>c.id===id);
 

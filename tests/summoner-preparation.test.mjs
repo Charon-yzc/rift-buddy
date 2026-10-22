@@ -90,7 +90,7 @@ test('source keeps every valid distinct spell pair and its own results, rejectin
   {ids:[4,4],play:10000,win:6000},{ids:[4,32],play:9000,win:5000},{ids:[4,99999],play:8000,win:4000},{ids:[4,14],play:7000,win:7001},
   {ids:[4,12],play:586,win:293,pick_rate:.7},{ids:[4,14],play:202,win:0,pick_rate:0},{ids:[12,4],play:20,win:10},{ids:['4',14],play:10,win:5}
  ];
- const champion=hero(sample.champion),ref=parseBuildJSON(raw,{champion,role:sample.role,data,url:sample.url});
+ const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),champion=data.champions.find(c=>c.id===sample.champion),ref=parseBuildJSON(raw,{champion,role:sample.role,data,url:sample.url});
  assert.equal(ref.sourceSummonerOptions.length,2);assert.deepEqual(ref.summoners,['SummonerFlash','SummonerTeleport']);
  assert.deepEqual(ref.sourceSummonerOptions.map(o=>[o.samples,o.wins,o.winRate,o.pickRate]),[[586,293,50,70],[202,0,0,0]]);
  assert.ok(validReference(ref,champion,sample.role,data));

@@ -124,7 +124,8 @@ test('duels flag approximation when the book is missing or partial',()=>{
  assert.equal(isolated.approx,true);
 });
 
-test('item attack speed and flat on-hit enter aggregates; unnumbered passives disclose',async()=>{
+test('historical reviewed item formulas remain scoped to their source version; unnumbered passives disclose',async()=>{
+ const game=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
  const {aggregateCombatStats,itemOnHits,hasUnparsedOnHit,duel}=await import('../src/core/live-estimate.mjs');
  const yone=game.champions.find(c=>c.id==='Yone'),ahri=game.champions.find(c=>c.id==='Ahri');
  const agg=aggregateCombatStats(yone,6,[{id:'3153',count:1}],game);

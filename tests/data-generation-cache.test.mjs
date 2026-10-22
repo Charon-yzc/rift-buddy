@@ -12,14 +12,14 @@ import {atomicJSON} from '../services/data.mjs';
 import {createBuildCache} from '../services/build-cache.mjs';
 import {BUILD_REGIONS,selectBuildSource} from '../src/core/build-source.mjs';
 
-const seed=await loadServerSeed('data'),pair=generateKeyPairSync('ed25519'),keys={test:pair.publicKey.export({type:'spki',format:'pem'})},now=Date.parse('2026-10-19T00:00:00Z');
+const seed=await loadServerSeed('tests/fixtures/snapshot-16.20'),pair=generateKeyPairSync('ed25519'),keys={test:pair.publicKey.export({type:'spki',format:'pem'})},now=Date.parse('2026-10-19T00:00:00Z');
 function fixture(value=seed,{sequence=100,checkedAt='2026-10-18T23:00:00Z',publishedAt='2026-10-18T23:00:00Z'}={}){
  const recipe=createGenerationRecipe(value,serverBuildJobs(value)),bundle=projectGenerationBundle(value,recipe),packed=packGenerationBundle(bundle,recipe);
  const manifest={schema:2,version:value.game.version,patch:value.game.patch,sequence,publishedAt,checkedAt,files:packed.files,recipe};manifest.release=generationRelease(manifest);
  const payload=Buffer.from(JSON.stringify(manifest)),envelope={keyId:'test',payload:payload.toString('base64'),signature:sign(null,payload,pair.privateKey).toString('base64')};
  return {manifest,envelope,assets:packed.assets,bundle};
 }
-const original=fixture(),newPatch=fixture(JSON.parse(JSON.stringify(seed).replaceAll('16.20','16.21')),{sequence:102,checkedAt:'2026-10-18T23:30:00Z'}),newerCheck=fixture(seed,{sequence:101,checkedAt:'2026-10-18T23:30:00Z'});
+const original=fixture(),newPatch=fixture(await loadServerSeed('data'),{sequence:102,checkedAt:'2026-10-18T23:30:00Z'}),newerCheck=fixture(seed,{sequence:101,checkedAt:'2026-10-18T23:30:00Z'});
 const oldFormulaSeed=structuredClone(seed);oldFormulaSeed.game.contentRevision=8;oldFormulaSeed.game.items[3115].tooltip.description='old unresolved formula';const oldFormulas=fixture(oldFormulaSeed,{sequence:105});
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 async function setup(t,{initial=seed.game,manualBase=null,prepareHook=async()=>{},write=atomicJSON,promote,initialIdle=true}={}){

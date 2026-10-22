@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,8 +12,8 @@ import {getBuild} from '../src/core/builds.mjs';
 import {profile} from '../src/core/rules.mjs';
 import {cooperationText,resultMemberJobs} from '../src/cooperation-view.mjs';
 import {buildRoleEvidence} from '../src/core/builds.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const graph=createCooperationGraph(data.champions),member=(champion,role)=>({champion,role});
 const setup=(fixed,open)=>createSlots().map(s=>({...s,party:fixed.some(m=>m.role===s.role)||s.role===open,...(fixed.find(m=>m.role===s.role)?{champion:fixed.find(m=>m.role===s.role).champion,locked:true,manualPosition:true}:{} )}));
 

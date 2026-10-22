@@ -1,9 +1,10 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {ultimateReference} from '../src/core/combat-models.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;data.hexBuilds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/hex-builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),cho=hero('Chogath'),garen=hero('Garen'),patch='16.20';
 const ranks={Q:4,W:2,E:2,R:1},input={champion:cho,level:9,skills:ranks,panel:{ap:200,maxHp:3000},patch};
 const live=()=>({available:true,champion:'Chogath',mode:'rift',mapId:11,level:9,skills:ranks,at:Date.now(),inventory:[{id:'3089',count:1},{id:'3084',count:1}],inventoryKnown:true,gold:800,stats:{ap:200,maxHp:3000},enemies:[]});

@@ -41,9 +41,11 @@ export function aggregateCombatStats(champion,level,items=[],data,context={}){
  const base=statAtLevel(champion.stats,level);
  const patch=data?.version?.split('.').slice(0,2).join('.');
  // Season 2026 restored standard crits to 200%; IE now adds 30%.
- // Keep this reviewed fallback tied to the bundled patch. Live panel values
- // take priority below, including champion-specific and temporary modifiers.
- const critBase=patch===COMBAT_PATCH?champion.id==='Ashe'?1:2:1.75;
+ // Independently checked 16.21 CharacterRecords/Root for all 173 heroes:
+ // critDamageMultiplier is 2, except Ashe's 1. This narrow base-stat review
+ // does not renew COMBAT_PATCH or any old skill/on-hit/item formula. Live
+ // panel values take priority below, including temporary modifiers.
+ const critBase=[COMBAT_PATCH,'16.21'].includes(patch)?champion.id==='Ashe'?1:2:1.75;
  const agg={ad:base.ad,ap:0,hp:base.hp,armor:base.armor,mr:base.mr,atkSpeed:base.atkSpeed,crit:0,critDamage:critBase,onHit:[],onHitApprox:false,combatPatch:patch};
  agg.combatMode=context.mode||'rift';
  let asPct=0;

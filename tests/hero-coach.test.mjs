@@ -7,7 +7,7 @@ import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {profile} from '../src/core/rules.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const data=JSON.parse(await fs.readFile('data/game.json','utf8')),historical=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 test('a saved member job retains its version and remains conditional on learned own skills',()=>{
  const combo={ownJob:'看到戴安娜实际拉起且目标可接 R 再跟；落地普攻/Q，留风墙与能 E 返回的单位。',patch:'16.19'};
@@ -16,7 +16,7 @@ test('a saved member job retains its version and remains conditional on learned 
  const opening=heroCoach({data,champion:'Yasuo',role:'mid',stage:'opening',combo});assert.notEqual(opening.action,combo.ownJob,'Opening retains lane preparation rather than calling an unavailable ultimate');
 });
 test('a future skill snapshot does not relabel existing manual action notes as reviewed',()=>{
- const current=heroCoach({data,champion:'Ahri',role:'mid'});
+ const current=heroCoach({data:historical,champion:'Ahri',role:'mid'});
  const next=heroCoach({data:{...data,patch:'16.21',version:'16.21.1'},champion:'Ahri',role:'mid'});
  assert.equal(next.action,current.action);assert.equal(next.actionPatch,HERO_PLAYS_PATCH);assert.equal(next.patch,'16.21');assert.equal(next.actionStale,true);
  assert.match(heroCoachView(next),/行动笔记 16\.20 · 旧版本/);assert.match(heroCoachView(next),/技能快照 16\.21/);

@@ -1,9 +1,10 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {BUNDLED_CATALOG,catalogIssues} from '../src/core/catalog.mjs';
 import {catalogPreviewDialog} from '../src/catalog-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
 test('independent skill version review is actionable without changing combination or equipment review',()=>{
  const catalog=structuredClone(BUNDLED_CATALOG),before=catalogIssues(catalog,data),p=catalog.skillPlans.find(p=>p.champion==='Malphite');p.patch='16.19';
  const after=catalogIssues(catalog,data);assert.deepEqual(after.status,before.status);assert.deepEqual(after.loadoutStatus,before.loadoutStatus);assert.deepEqual(after.reviewTasks,before.reviewTasks);assert.equal(after.stale,before.stale);assert.equal(after.staleLoadouts,before.staleLoadouts);assert.equal(after.staleSkillPlans,1);assert.equal(after.skillReviewTasks.length,1);assert.equal(after.skillReviewTasks[0].id,p.id);assert.equal(after.skillPlanStatus[p.id].stale,true);assert.equal(after.skillPlanStatus[p.id].reviewedAt,p.reviewedAt);

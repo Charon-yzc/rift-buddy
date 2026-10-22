@@ -3,7 +3,7 @@ const round=v=>Math.round(v*10000)/10000;
 const metric=(label,values,unit,basis)=>({label,values:values.map(round),unit,...(basis?{basis}:{})});
 // Form-specific metrics use current client bindings; source conflicts stay explicit.
 export function correctAdditionalForms({patch,ability,spell,values,replace,dictionary,corrections}){
- assert.equal(patch,'16.20');
+ assert(['16.20','16.21'].includes(patch));
  const bound=(id,name,field,expected)=>assert.deepEqual(values(id,name,field,expected.length),expected);
  const add=(a,name,description,metrics,notes=[])=>a.variants.push({name,description,metrics,notes});
  const pq=ability('Pyke','Q'),ps=spell('Pyke','PykeQ');

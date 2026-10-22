@@ -1,10 +1,11 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {BUNDLED_CATALOG,catalogIssues} from '../src/core/catalog.mjs';
 import {getBuild,validHexReference} from '../src/core/builds.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
+data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
 
 test('the reviewed KaiSa Nautilus pair resolves distinct complete member configurations instead of generic defaults',()=>{
  const combo=BUNDLED_CATALOG.duos.find(c=>c.id==='kaisa-nautilus'),status=catalogIssues(BUNDLED_CATALOG,data).status[combo.id];
@@ -17,7 +18,7 @@ test('the reviewed KaiSa Nautilus pair resolves distinct complete member configu
 });
 
 test('bundled Mayhem references remain current-patch mode-specific data rather than Rift configurations',async()=>{
- const references=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
+ const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),references=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
  assert.equal(Object.keys(references).length,data.champions.length);
  for(const champion of data.champions){const ref=references[champion.id];assert.equal(ref.patch,data.patch);assert.equal(ref.mode,'hex');assert.match(ref.sourceUrl,/\/modes\/aram-mayhem\//);assert.ok(validHexReference(ref,champion,data));}
  assert.ok(data.sources.augmentDescriptions.startsWith('https://raw.communitydragon.org/'+data.patch+'/'));

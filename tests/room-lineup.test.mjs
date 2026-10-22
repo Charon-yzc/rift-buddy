@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {adoptRoomLineup,roomLineupIdentity} from '../src/core/room-lineup.mjs';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
@@ -6,7 +7,7 @@ import {captureRoomConfigurations} from '../src/core/room-configuration.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),members=[['jungle','Diana'],['mid','Yasuo'],['support','Rakan']];
 const lineup=rows=>createSlots().map(s=>({...s,champion:rows.find(([role])=>role===s.role)?.[1]||null,party:rows.some(([role])=>role===s.role),locked:rows.some(([role])=>role===s.role)}));
 function share(rows=members){const slots=lineup(rows),[result]=recommend({slots,champions:data.champions,scope:'party'}),strategy=captureCreativePlan(result,data);assert.ok(strategy);return {kind:'state',v:1,from:'队友',at:1000,mode:'rift',lineup:slots.map(({role,champion})=>({role,champion})),strategy,configurations:captureRoomConfigurations(slots,data,createPreparationStore(),{creativePlan:strategy})};}

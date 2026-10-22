@@ -1,9 +1,10 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
 import {canonicalFamiliarity,localChampionFamiliarity,roleFamiliarityWeights,familiarityLineups,familiarityWinner} from '../src/core/recommendation-familiarity.mjs';
 import {recommend,createSlots} from '../src/core/recommend.mjs';
 import {recommendationKey} from '../src/core/preparation.mjs';
 import vm from 'node:vm';
-const {champions}=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
+const {champions}=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 const profile=(counts,mass=.85,member='local:a')=>({member,mass,usage:{sampled:Object.values(counts).reduce((a,b)=>a+b,0),counts}});
 const bottom=()=>createSlots().map(s=>({...s,party:['bottom','support'].includes(s.role),...(s.role==='support'?{champion:'Nami',locked:true}:{})}));
 const input=()=>({slots:bottom(),champions,scope:'bot',style:'balanced',rolePools:{bottom:{mode:'only',heroes:['Ashe','Jinx','Vayne','Jhin','Ezreal','MissFortune','Lucian','KogMaw']}},randomSeed:'round',limit:6});

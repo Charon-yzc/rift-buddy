@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -13,8 +14,8 @@ const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snaps
 import {resultAsText} from '../src/result-text.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const graph=createCooperationGraph(data.champions),hero=id=>data.champions.find(c=>c.id===id);
 const slotsFor=members=>createSlots().map(s=>({...s,champion:members.find(m=>m.role===s.role)?.champion||null,party:members.some(m=>m.role===s.role),locked:members.some(m=>m.role===s.role)}));
 

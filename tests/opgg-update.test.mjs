@@ -32,7 +32,7 @@ test('new base data retains older Cho jungle Hail pages across multiple patches 
   assert.equal(older.reference,saved);assert.equal(older.runePage.selectedPerkIds[0],9923);assert.equal(older.rulesPatch,patch);
   assert.match(companionPlanView(olderData,{build:older,selection:{id:'Chogath',role:'jungle',mode:'rift'}}),new RegExp(patch.replace('.','\\.')+' 旧版本参考'));
  }
- for(const patch of ['16.21','17.1','unknown','16.-1'])assert.equal(validReference({...ref,patch},hero('Chogath'),'jungle',fixture,{allowOlder:true}),false);
+ for(const patch of ['16.22','17.1','unknown','16.-1'])assert.equal(validReference({...ref,patch},hero('Chogath'),'jungle',fixture,{allowOlder:true}),false);
 });
 
 test('current patch beats a newer previous-patch cache and illegal previous items cannot enter the build',async()=>{
@@ -82,19 +82,18 @@ test('an obsolete source rune does not erase the source equipment or enable an i
  assert.equal(validReference(malformed,hero('Chogath'),'jungle',fixture,{allowOlder:true}),false);
 });
 
-test('older Hex source data survives a season transition without losing version information',async()=>{
+test('older Hex source data cannot survive into current automatic builds, cache or hero references',async()=>{
  const snapshot=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))),ref={...snapshot.entries.Chogath,patch:'15.24'};
- assert.equal(validHexReference(ref,hero('Chogath'),data,{allowOlder:true}),true);
+ assert.equal(validHexReference(ref,hero('Chogath'),data,{allowOlder:true}),false);
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'buddy-old-hex-'));await fs.writeFile(path.join(root,'hex-builds.json'),JSON.stringify({entries:{Chogath:ref}}));
  const hexBuilds=await loadHexBuilds([root],data),build=getBuild(hero('Chogath'),'top',{...data,hexBuilds},{mode:'hex'});
- assert.equal(build.rulesPatch,'15.24');assert.equal(build.referenceStale,true);assert.ok(build.items.length>=3);
+ assert.equal(hexBuilds.Chogath,undefined);assert.equal(build.reference,null);assert.equal(build.referenceStale,false);assert.equal(build.unavailable,true);assert.deepEqual(build.items,[]);
  const html=renderHexSourceReference({data:{...data,hexBuilds},hero:'Chogath'});
- assert.match(html,/15\.24 旧版本参考/);assert.match(html,/data-action="augment-detail"/);assert.ok(html.includes(ref.sourceUrl.replaceAll('&','&amp;')));
- assert.doesNotMatch(html,/暂时使用机制出装/);
+ assert.match(html,/旧版参考已停用/);assert.doesNotMatch(html,/data-action="augment-detail"|15\.24/);
  const partial=renderHexSourceReference({data:{...data,hexBuilds:{Chogath:{...ref,augmentIds:[ref.augmentIds[0],999999]}}},hero:'Chogath'});
- assert.match(partial,/1 项强化未收录/);assert.doesNotMatch(partial,/data-id="999999"/);
+ assert.match(partial,/旧版参考已停用/);assert.doesNotMatch(partial,/data-id="999999"/);
  const invalid=renderHexSourceReference({data:{...data,hexBuilds:{Chogath:{...ref,patch:'99.1'}}},hero:'Chogath'});
- assert.match(invalid,/暂时使用机制出装/);
+ assert.match(invalid,/旧版参考已停用/);
 });
 
 test('minor variations cannot crowd another observed keystone out of the bounded source pages',()=>{

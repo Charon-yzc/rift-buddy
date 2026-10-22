@@ -63,7 +63,7 @@ test('nine Hwei subskills and five Aphelios weapons do not inherit meaningless t
 test('invalid, stale or incomplete reference cannot silently masquerade as current data',async()=>{
  const clone=()=>structuredClone(data.abilityReference);
  for(const change of [r=>r.champions.pop(),r=>r.champions.push(r.champions[0]),r=>r.champions[0].abilities[0].description='@unresolved@',r=>r.champions[0].abilities[1].metrics[0].values=[NaN],r=>r.champions[0].source.url='http://evil.test',r=>r.version='16.19.1']){const r=clone();change(r);assert.equal(validAbilityReference(r,data),false);}
- const next={...data,patch:'16.21',version:'16.21.1'};assert.equal(validAbilityReference(data.abilityReference,next),false);assert.equal(validAbilityReference(data.abilityReference,next,{allowOlder:true}),true);
+ const next={...data,patch:'16.22',version:'16.22.1'};assert.equal(validAbilityReference(data.abilityReference,next),false);assert.equal(validAbilityReference(data.abilityReference,next,{allowOlder:true}),true);
  assert.match(championReferenceView(next,{id:'Ahri'}),/尚未完成新版技能复核/);
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-buddy-ability-'));assert.equal(await loadAbilities(root,data),null);
  await fs.writeFile(path.join(root,'abilities.json'),'{broken');assert.equal(await loadAbilities(root,data),null);

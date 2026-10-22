@@ -36,9 +36,9 @@ test('marked-set contributions remain separate from general hero fit and withdra
 });
 
 test('actual choices use reviewed trigger conditions and known conflicts instead of blindly copying the source list',()=>{
- const support=hexRecommendations({data,hero:'Sona',options:[1141,1205,1004]});assert.equal(support.bestChoice,1141);assert.match(support.rows[0].reasons.join(' '),/友方治疗或护盾/);
+ const support=hexRecommendations({data,hero:'Sona',options:[1141,1205,1004]});assert.equal(support.bestChoice,1141);assert.match(support.rows[0].reasons.join(' '),/W 治疗.*友方.*护盾/);
  const mage=hexRecommendations({data,hero:'Lux',options:[1141,2072]});assert.equal(mage.rows[0].level,'conditional');assert.equal(mage.bestChoice,null,'Having a shield does not establish a protection-first game plan');
- const clash=hexRecommendations({data,hero:'Ashe',owned:[1004],options:[1088,1047,2072]});assert.equal(clash.rows[0].level,'conflict');assert.equal(clash.bestChoice,1047);assert.match(clash.rows[0].cautions.join(' '),/禁用终极/);
+ const clash=hexRecommendations({data,hero:'Jinx',owned:[1004],options:[1088,1047,2072]});assert.equal(clash.rows[0].level,'conflict');assert.equal(clash.bestChoice,1047);assert.match(clash.rows[0].cautions.join(' '),/禁用终极/);
  const reverse=hexRecommendations({data,hero:'Karthus',owned:[1088],options:[1004]});assert.equal(reverse.rows[0].level,'conflict');assert.equal(reverse.bestChoice,null);
  assert.equal(hexRecommendations({data,hero:'Brand',owned:[1047],options:[1048,2072]}).bestChoice,1048);
 });
@@ -100,8 +100,8 @@ test('option entry resolves only exact known choices and the UI exposes short ad
 test('reviewed attack-crit and AP spell-crit advice is hero-specific and cannot survive a changed kit or effect',()=>{
  for(const [hero,id]of [['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]]){
   const result=hexRecommendations({data,hero,options:[2072,id,1205]});assert.deepEqual(result.rows.map(r=>r.id),[2072,id,1205]);assert.equal(result.bestChoice,id);assert.equal(result.rows[1].level,'preferred');assert.equal(result.rows[1].score,undefined);
-  for(const mutate of [d=>d.patch='16.21',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
-   const changed=structuredClone(data);mutate(changed);const degraded=hexRecommendations({data:changed,hero,options:[id]});assert.equal(degraded.bestChoice,null);assert.notEqual(degraded.rows[0].level,'preferred');
+  for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
+   const changed=structuredClone(data);mutate(changed);const degraded=hexRecommendations({data:changed,hero,options:[id]});assert.equal(degraded.bestChoice,null);assert.notEqual(degraded.rows[0]?.level,'preferred');
   }
  }
  for(const hero of ['Jhin','Ashe','Brand'])assert.equal(hexRecommendations({data,hero,options:[1328]}).bestChoice,null,'No blanket crit/marksman endorsement for '+hero);

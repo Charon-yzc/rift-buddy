@@ -1,3 +1,4 @@
+import {isCurrentHexData,HEX_DATA_PENDING} from './hex-data-current.mjs';
 import {profile} from './rules.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 import {validHexReference} from './builds.mjs';
@@ -86,6 +87,7 @@ function mechanicAdvice(data,champion,a,owned,p){
 }
 
 export function hexEquipmentImpact({data,hero,owned=[]}){
+ if(!isCurrentHexData(data))return [];
  const champion=data.champions.find(c=>c.id===hero);if(!champion)return [];
  const p=hexChampionReview(champion,data.patch)==='current'?profile(champion):null,records=[...new Set(owned)].slice(0,6).map(id=>activeRecord(data,id)).filter(a=>reviewed(a,data.patch)),has=id=>records.some(a=>a.id===id),rows=[];
  const add=(id,title,why,ids=[])=>rows.push({augment:id,title,why,items:itemRows(data,ids),patch:data.patch,kind:'mechanic'});
@@ -99,6 +101,7 @@ export function hexEquipmentImpact({data,hero,owned=[]}){
 }
 
 export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
+ if(!isCurrentHexData(data))return {rows:[],bestChoice:null,equipment:[],source:null,pending:HEX_DATA_PENDING};
  const champion=data.champions.find(c=>c.id===hero);if(!champion)return {rows:compareAugments({options,owned,augments:data.augments,patch:data.patch}).map(row=>({...row,level:'reference',label:labels.reference,priority:0,fromSource:false,mechanicReviewed:false})),bestChoice:null,equipment:[],source:null};
  const ref=data.hexBuilds?.[hero],current=validHexReference(ref,champion,data)&&ref.patch===data.patch;
  const sourceIds=new Set(current?ref.augmentIds:[]),ownedIds=new Set(owned),actual=options.length>0;

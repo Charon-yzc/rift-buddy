@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,9 +7,9 @@ import {createGuideModel,selectGuide,validateGuideState,nextSkill} from '../src/
 import {recommendSkill} from '../src/core/skill-advice.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
-data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.hexBuilds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/hex-builds.json','utf8')).entries;
 const selection={id:'Ashe',role:'bottom',mode:'rift'};
 const player=(id,team,items=[],extra={})=>({riotId:'private-'+id,rawChampionName:'game_character_displayname_'+id,team,items:items.map(itemID=>({itemID,count:1})),scores:{kills:0,deaths:0,assists:0,creepScore:50},...extra});
 const read=(enemies=[],own=[],extra={})=>sanitizeLive({riotId:'private-Ashe',currentGold:800,level:7,abilities:Object.fromEntries(Object.entries({Q:1,W:3,E:1,R:1}).map(([key,abilityLevel])=>[key,{abilityLevel}])),...extra},[player('Ashe','ORDER',own),...enemies],{gameMode:'CLASSIC',mapNumber:11,gameTime:600},data.champions);

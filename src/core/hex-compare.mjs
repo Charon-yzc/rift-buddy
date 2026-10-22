@@ -46,11 +46,11 @@ export function compareAugments({champion,options=[],owned=[],augments=[],buildK
 
  return [...new Set(options)].slice(0,3).map(id=>records.get(id)).filter(Boolean).map(a=>{
   const categories=augmentCategories(a),reasons=[],cautions=[],interactions=[],reviewed=mode==='hex'&&reviewedHexMechanic(a,patch),hasReviewed=id=>chosen.has(id)&&reviewedHexMechanic(records.get(id),patch);
+  const cooldown=cooldownEffect(a);if(cooldown&&mode==='hex'&&hexEffectMatches(a,patch))reasons.push(cooldown.reason);
   const protection=reviewed&&a.id===1141?hexAllyProtection(champion,patch,{ultimateDisabled:hasReviewed(1004)}):null;
   if(protection){reasons.push(...protection.conditions);cautions.push(...protection.cautions);}
   if(!p&&!protection)reasons.push(champion?'英雄机制待复核，先核对当前效果与技能':'选择英雄后可补充机制上的适配理由');
   if(p){
-   const cooldown=cooldownEffect(a);if(cooldown&&mode==='hex'&&hexEffectMatches(a,patch))reasons.push(cooldown.reason);
    if(categories.includes('crit')&&['crit','jhin','meleeCrit','senna'].includes(p.build))reasons.push('与常规暴击装备方向相近，转型成本较小');
    if(categories.includes('defense'))reasons.push(buildKey==='tank'||buildKey==='supportTank'||(!buildKey&&p.build==='tank')?'当前偏前排定位，生存向强化更容易撑到下一轮技能':p.frontline?'前排更容易撑到下一轮技能':'可补自保；仍需判断会不会牺牲主要输出');
    if(categories.includes('mobility'))reasons.push('便于走位和进退，收益取决于你能否持续利用');

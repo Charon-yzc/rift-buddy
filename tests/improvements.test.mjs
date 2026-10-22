@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,8 +12,8 @@ import {createCatalogStore} from '../services/catalog-store.mjs';
 import {sanitizeSession} from '../services/lcu.mjs';
 import {clientDraftStatus,moveChampion} from '../src/core/draft.mjs';
 import {itemConflicts} from '../src/core/mechanics.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(h=>h.id===id),clone=()=>structuredClone(BUNDLED_CATALOG);
 test('explicit legacy trio and bot pair lookup route each member to their own playable loadout',()=>{
  const slots=createSlots();for(const [role,id] of [['top','Malphite'],['jungle','JarvanIV'],['mid','Orianna'],['bottom','Varus'],['support','Ashe']])Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});

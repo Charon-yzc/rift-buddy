@@ -20,7 +20,7 @@ test('reviewed routes distinguish a future idea, a real option and an owned augm
 });
 
 test('a changed patch, hero kit or augment effect suppresses the authored route',()=>{
- assert.deepEqual(hexPlayerRoutes({data:{...data,patch:'16.21'},hero:'Gwen',owned:[1129]}),[]);
+ assert.deepEqual(hexPlayerRoutes({data:{...data,patch:'16.22'},hero:'Gwen',owned:[1129]}),[]);
  for(const mutate of [d=>d.champions.find(c=>c.id==='Gwen').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===1129).key='NewIdentity',d=>d.augments.find(a=>a.id===1129).description+=' changed']){
   const changed=structuredClone(data);mutate(changed);assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Gwen',owned:[1129]}),[]);
  }
@@ -55,9 +55,9 @@ test('crit routes keep normal attacks and spell damage separate, with conditiona
  assert.match(jinx.play.join(' '),/机枪.*火箭/);assert.match(cait.play.join(' '),/陷阱.*绳网/);
  assert.match(veigar.summary,/法强/);assert.match(lux.caution,/护盾/);
  for(const route of [veigar,lux]){assert.ok(route.gear.some(g=>g.items.some(i=>i.id===3089)));assert.ok(route.gear.every(g=>g.items.every(i=>![3031,3036,3072].includes(i.id))),'Spell crit does not prescribe an AD conversion');}
- assert.deepEqual(hexPlayerRoutes({data,hero:'Jhin',owned:[1328]}),[]);assert.deepEqual(hexPlayerRoutes({data,hero:'Ashe',owned:[1328]}),[]);
+ assert.ok(hexPlayerRoutes({data,hero:'Jhin',owned:[1328]}).some(route=>route.state==='owned'),'Separately reviewed 16.21 Jhin route remains available');assert.deepEqual(hexPlayerRoutes({data,hero:'Ashe',owned:[1328]}),[]);
  for(const [hero,id]of pairs.slice(-4)){
-  for(const mutate of [d=>d.patch='16.21',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
+  for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
    const changed=structuredClone(data);mutate(changed);assert.deepEqual(hexPlayerRoutes({data:changed,hero,owned:[id]}),[]);
   }
   for(const itemId of hexPlayerRoutes({data,hero,owned:[id]})[0].gear.flatMap(g=>g.items.map(i=>i.id))){

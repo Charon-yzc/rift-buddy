@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,8 +9,8 @@ import {COMMUNITY_DUOS} from '../src/core/community-combos.mjs';
 import {createSlots,analyzeTeam} from '../src/core/recommend.mjs';
 import {validateState,defaultState,mergeState} from '../services/storage.mjs';
 import {selectGuide,createGuideModel,validateGuideSelection} from '../src/core/guide.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
+data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),pair=(a,b)=>DUOS.find(d=>d.carry===a&&d.support===b);
 test('researched pairs are distinct, sourced and reachable with real champions',()=>{
  assert.ok(DUOS.length>=200);assert.equal(CROSS_SYNERGIES.length,127);assert.equal(new Set(DUOS.map(d=>d.id)).size,DUOS.length);

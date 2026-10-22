@@ -55,7 +55,7 @@ test('missing or stale source retains explicit choices without silently adopting
  const absent={...data,buildSource:{region:'kr',tier:'diamond_plus'}},fallback=getBuild(hero(base.id),base.role,absent,choice),fields=selectedBuildFields({...choice,build:fallback},{preserveUnavailable:true});
  assert.equal(fields.startId,choice.startId);assert.equal(fields.bootsId,choice.bootsId);assert.match(fallback.selectionWarnings.join(' '),/原选择保留/);
  const restored=build({...base,...fields});assert.equal(restored.selectedStartId,choice.startId);assert.equal(restored.selectedBootsId,choice.bootsId);
- const old=getBuild(hero(base.id),base.role,{...data,patch:'16.21',version:'16.21.1'},choice);assert.equal(old.selectedBootsId,choice.bootsId);assert.ok(old.bootsOptions.some(o=>o.source==='OP.GG'&&o.patch==='16.20'));
+ const old=getBuild(hero(base.id),base.role,{...data,patch:'16.22',version:'16.22.1'},choice);assert.equal(old.selectedBootsId,choice.bootsId);assert.ok(old.bootsOptions.some(o=>o.source==='OP.GG'&&o.patch===data.patch));
  assert.throws(()=>validateState({...defaultState(),preparations:[{...choice,startId:'../bad'}]}),/选择格式/);
 });
 

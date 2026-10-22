@@ -6,11 +6,11 @@ import {buildAugmentDescriptions} from '../services/augments.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
 
 test('catalogue includes disabled entries: absence from a hero ranking never becomes a ban',()=>{
- const pool=hexHeroPool({data,hero:'Yasuo'});assert.equal(pool.complete,false);assert.equal(pool.roundsComplete,false);assert.equal(pool.counts.disabled,7);assert(pool.counts.observed>100);assert(pool.counts.unobserved>0);
+ const pool=hexHeroPool({data,hero:'Yasuo'});assert.equal(pool.complete,false);assert.equal(pool.roundsComplete,false);assert.equal(pool.counts.disabled,9);assert.equal(pool.counts.observed,0);assert.equal(pool.counts.unobserved,0);assert(pool.counts.reference>0);
  assert.equal(pool.rows.find(r=>r.id===1066).status,'disabled');const unknown=pool.rows.find(r=>r.status==='unknown');assert(unknown);assert.match(unknown.reason,/未上榜.*不代表拿不到/);
- const noRef=hexHeroPool({data:{...data,hexBuilds:{}},hero:'Yasuo'});assert.equal(noRef.counts.reference,0);assert.equal(noRef.counts.disabled,7);
+ const noRef=hexHeroPool({data:{...data,hexBuilds:{}},hero:'Yasuo'});assert.equal(noRef.counts.reference,0);assert.equal(noRef.counts.disabled,9);
  const old=structuredClone(data);old.hexPoolObservations={};old.hexBuilds.Yasuo.patch='16.19';assert.equal(hexHeroPool({data:old,hero:'Yasuo'}).counts.reference,0);
- for(const round of [1,2,3,4]){const p=hexHeroPool({data,hero:'Yasuo',round});assert(p.rows.filter(r=>r.status!=='disabled').every(r=>r.label==='该轮未确认'));assert.match(hexPoolView(p),/额外获得强化/);assert.doesNotMatch(hexPoolView(p),/保证出现|完整可拿/);}
+ for(const round of ['regular']){const p=hexHeroPool({data,hero:'Yasuo',round});assert(p.rows.filter(r=>!['disabled','special'].includes(r.status)).every(r=>r.label==='该轮未确认'));assert.match(hexPoolView(p),/额外获得强化/);assert.doesNotMatch(hexPoolView(p),/保证出现|完整可拿/);}
 });
 
 test('disabled flags require matching catalogue patch and identity; new collector flags can override the old offline snapshot',()=>{
@@ -34,17 +34,18 @@ import {syncHexPools} from '../scripts/sync-hex-pools.mjs';
 import {createHexRoundStore,hexRoundForHero} from '../src/core/hex-round.mjs';
 import vm from 'node:vm';import os from 'node:os';import path from 'node:path';
 const observations=JSON.parse(await fs.readFile(new URL('../data/hex-hero-observations.json',import.meta.url)));
-test('all 173 bundled hero observations bind exact patches without storing player records or probabilities',()=>{
- assert.equal(Object.keys(observations.entries).length,173);
- for(const c of data.champions){const evidence=validHexPoolEvidence(observations,c.id,data.patch);assert(evidence,c.id);assert(evidence.rows.length>100);assert(evidence.rows.every(r=>Object.keys(r).sort().join(',')==='games,id,withheld'));}
- const yasuo=hexHeroPool({data,hero:'Yasuo'});assert.equal(yasuo.rows.find(r=>r.id===1058).games,1211);assert.equal(yasuo.rows.find(r=>r.id===1118).status,'unobserved');assert.equal(yasuo.rows.find(r=>r.id===1118).games,0);
- assert.equal(validHexPoolEvidence(observations,'Yasuo','16.21'),null);
- const invalid=structuredClone(observations);invalid.entries.Yasuo.rows.push(invalid.entries.Yasuo.rows[0]);assert.equal(validHexPoolEvidence(invalid,'Yasuo','16.20'),null);
+test('current package withholds unavailable 4.0 pool evidence while the 173 historical rows remain only as regression inputs',async()=>{
+ assert.equal(observations.patch,'16.21');assert.deepEqual(observations.entries,{});
+ const historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/hex-hero-observations.json',import.meta.url)));assert.equal(Object.keys(historical.entries).length,173);
+ for(const c of data.champions){assert.equal(validHexPoolEvidence(observations,c.id,data.patch),null);const prior=validHexPoolEvidence(historical,c.id,'16.20');assert(prior,c.id);assert(prior.rows.every(r=>Object.keys(r).sort().join(',')==='games,id,withheld'));assert.equal(validHexPoolEvidence(historical,c.id,data.patch),null);}
+ const current=hexHeroPool({data:{...data,hexPoolObservations:historical},hero:'Yasuo'});assert.equal(current.counts.observed,0);assert.equal(current.counts.unobserved,0);assert.equal(current.evidence,null);
+ const invalid=structuredClone(historical);invalid.entries.Yasuo.rows.push(invalid.entries.Yasuo.rows[0]);assert.equal(validHexPoolEvidence(invalid,'Yasuo','16.20'),null);
 });
+
 test('new mechanisms adapt acquisition paths instead of relabeling four fixed pools',()=>{
- assert.equal(hexAcquisitionRules({patch:'16.20',mechanism:'kda'}).stages.length,4);
- const kda=hexAcquisitionRules({patch:'16.21',mechanism:'kda'});assert.equal(kda.stages.length,4);assert.equal(kda.paths.length,5);assert.equal(kda.paths.at(-1).kind,'extra');assert.match(kda.paths.at(-1).condition,/4张/);
- const line=hexAcquisitionRules({patch:'16.21',mechanism:'command-line'});assert.equal(line.stages.length,4);assert(line.upgradeReroll);assert.equal(line.paths.at(-1).kind,'reroll');
+ assert.equal(hexAcquisitionRules({patch:'16.20',mechanism:'kda'}).stages.length,0);
+ const kda=hexAcquisitionRules({patch:'16.21',mechanism:'kda'});assert.equal(kda.stages.length,0);assert.equal(kda.regularStagesConfirmed,false);assert.equal(kda.paths.length,2);assert.equal(kda.paths.at(-1).kind,'extra');assert.match(kda.paths.at(-1).condition,/4张/);assert.doesNotMatch(kda.note,/第五次/);
+ const line=hexAcquisitionRules({patch:'16.21',mechanism:'command-line'});assert.equal(line.stages.length,0);assert(line.upgradeReroll);assert.equal(line.paths.at(-1).kind,'reroll');
  assert(hexAcquisitionRules({patch:'16.21',mechanism:'heartsteel'}).modifiedEffects);
  assert.equal(hexAcquisitionRules({patch:'16.21',mechanism:'random-unconfirmed'}).mechanism,'unknown');assert.deepEqual(hexAcquisitionRules({patch:'16.22'}).stages,[]);
  const pool=hexHeroPool({data:{...data,patch:'16.21'},hero:'Yasuo',mechanism:'kda',round:'extra-kda'});assert.equal(pool.round,'extra-kda');assert.match(hexPoolView(pool),/K\/DA 额外/);assert(pool.rows.every(r=>r.status!=='observed'),'Old-patch observations never leak into the new mechanism');
@@ -72,7 +73,8 @@ test('pool index stops an unavailable patch before hero requests and validates s
  const fetcher=async()=>new Response(referenced);assert.equal((await fetchHexPoolIndex({patch:'16.20',fetcher})).size,103);await assert.rejects(fetchHexPoolIndex({patch:'16.21',fetcher}),error=>error.code==='SOURCE_PATCH_UNAVAILABLE');
 });
 test('collector preserves failed heroes and leaves the file byte-identical on total failure',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-hex-pool-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const file=path.join(root,'pools.json'),previous={...observations,entries:{Yasuo:observations.entries.Yasuo,Lux:observations.entries.Lux}};await fs.writeFile(file,JSON.stringify(previous));
+ const historical=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/hex-hero-observations.json',import.meta.url)));
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'rift-hex-pool-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const file=path.join(root,'pools.json'),previous={...historical,entries:{Yasuo:historical.entries.Yasuo,Lux:historical.entries.Lux}};await fs.writeFile(file,JSON.stringify(previous));
  const index=[{champion_id:157,slug:'yasuo'},{champion_id:99,slug:'lux'},...Array.from({length:101},(_,i)=>({champion_id:10000+i,slug:'hero-'+i}))],fetcher=async url=>new Response(url==='https://mayhemmeta.com/'?flight(index):url.includes('/yasuo?')?poolHTML('Yasuo'):'offline',{status:url.includes('/lux?')?503:200});
  const input={data:{patch:'16.20',champions:[{id:'Yasuo',key:157},{id:'Lux',key:99}]},file,fetcher,wait:0},result=await syncHexPools(input);assert.equal(result.done,1);assert.equal(result.failed,1);
  const saved=JSON.parse(await fs.readFile(file));assert.deepEqual(saved.entries.Lux,previous.entries.Lux);assert.equal(saved.entries.Yasuo.rows[0].games,9);

@@ -35,8 +35,8 @@ test('unreviewed generic healing power is not falsely called unusable for self s
 test('changed identity, changed effect, changed hero kit, new patch and non-Hex mode lose confident labels',()=>{
  const changed=override=>({...data,augments:data.augments.map(a=>a.id===1141?{...a,...override}:a)});
  const changedKit={...data,champions:data.champions.map(c=>c.id==='Sona'?{...c,stats:{...c.stats,attackdamage:c.stats.attackdamage+1}}:c)};
- for(const extra of [{data:changed({key:'NewIdentity'})},{data:changed({description:'纯装饰效果'})},{data:changedKit},{data:{...data,patch:'16.21'}},{mode:'arena'},{mode:'rift'}]){
-  const input=args('Sona',[1141,1088,2118],[1004],extra),result=hexDecision(input);assert.equal(result.reroll.recommended,false);assert.ok(!result.rows.some(row=>row.top));assert.ok(result.rows.find(row=>row.id===1141).rank===null);assert.deepEqual(result.set.conflicts,[]);
+ for(const extra of [{data:changed({key:'NewIdentity'})},{data:changed({description:'纯装饰效果'})},{data:changedKit},{data:{...data,patch:'16.22'}},{mode:'arena'},{mode:'rift'}]){
+  const input=args('Sona',[1141,1088,2118],[1004],extra),result=hexDecision(input);assert.equal(result.reroll.recommended,false);assert.ok(!result.rows.some(row=>row.top));assert.ok((result.rows.find(row=>row.id===1141)?.rank??null)===null);assert.deepEqual(result.set.conflicts,[]);
  }
 });
 
@@ -57,8 +57,8 @@ test('duplicate owned marks remain bounded, and no rates or numeric strength sco
 });
 
 test('main/sidebar and in-game guide expose the same compact decision without replacing routes or inputs',()=>{
- const input=args('Ashe',[1141,1088,1047],[1048,1356]),html=renderHexComparison(input);assert.match(html,/data-hex-option-input/);assert.match(html,/本局组合/);assert.match(html,/联动与下一张|查看依据/);assert.match(html,/优先看这项/);assert.ok(html.indexOf('data-augment="1141"')<html.indexOf('data-augment="1088"'));
- const guide=createGuideModel(data,{...selectGuide(null,{id:'Ashe',role:'bottom',mode:'hex',compareIds:input.options,ownedAugmentIds:input.owned}),compact:false}),rendered=renderGuide({model:guide},'augments',false,()=>'<img>');
+ const input=args('Jinx',[1141,1088,1047],[1048,1356]),html=renderHexComparison(input);assert.match(html,/data-hex-option-input/);assert.match(html,/本局组合/);assert.match(html,/联动与下一张|查看依据/);assert.match(html,/优先看这项/);assert.ok(html.indexOf('data-augment="1141"')<html.indexOf('data-augment="1088"'));
+ const guide=createGuideModel(data,{...selectGuide(null,{id:'Jinx',role:'bottom',mode:'hex',compareIds:input.options,ownedAugmentIds:input.owned}),compact:false}),rendered=renderGuide({model:guide},'augments',false,()=>'<img>');
  assert.deepEqual(guide.hexDecision.set,hexDecision(input).set);assert.deepEqual(guide.comparison.map(row=>row.id),input.options);assert.match(rendered,/本局组合/);assert.match(rendered,/优先看这项/);assert.doesNotMatch(rendered,/流派已成形|胜率\s*\d/);
 });
 
