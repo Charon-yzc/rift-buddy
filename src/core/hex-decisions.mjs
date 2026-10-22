@@ -48,7 +48,9 @@ export function analyzeAugmentSet(args){
   synergies.push(...row.interactions);
   if(row.level==='conflict'&&row.cautions[0])conflicts.push(row.cautions[0]);
  }
- const next=mode==='hex'&&current(args)?hexRecommendations({data,hero,owned:present}).rows.filter(row=>row.mechanicReviewed&&row.level==='preferred'&&!owned.includes(row.id)).slice(0,2).map(row=>({id:row.id,name:row.name,reason:row.reasons.find(text=>!text.startsWith('当前版本 OP.GG'))||'先核对触发条件'})):[];
+ // General hero affinity is not a synergy with the marked set. The shared
+ // recommendation pass separately records only the marks' reviewed contribution.
+ const next=present.length&&mode==='hex'&&current(args)?hexRecommendations({data,hero,owned:present,limit:12}).rows.filter(row=>row.mechanicReviewed&&row.level==='preferred'&&!owned.includes(row.id)&&row.markedReasons?.length).slice(0,2).map(row=>({id:row.id,name:row.name,reason:row.markedReasons[0]})):[];
  return {count:present.length,missing:owned.length-present.length,pending,synergies:[...new Set(synergies)].slice(0,4),conflicts:[...new Set(conflicts)].slice(0,4),next,note:'只列已核对的机制，未列出的联动不代表无效。'};
 }
 export function hexDecision(args){const advice=optionAdvice(args),rows=rankedOptions(args,advice);return {rows,reroll:rerollAdvice(args,rows),set:analyzeAugmentSet(args),equipment:advice.equipment||[]};}
