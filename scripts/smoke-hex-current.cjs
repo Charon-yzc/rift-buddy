@@ -42,6 +42,13 @@ async function run(){
  assert.equal(await j(main,'!!document.querySelector(".augment-card[data-id=\\"3176\\"]")'),false);
  for(const id of [2031,2006,1220,2095,1345,2128,2042,2024,1356,2063,2082,2046,2118,2089])assert.equal(await j(main,`!!document.querySelector('.augment-card[data-id="${id}"]')`),false,'Retired '+id);
  assert.equal(await j(main,'!!document.querySelector(".augment-card[data-id=\\"3059\\"]")'),true);
+ // Exact current source coefficients and unknown live counters must survive
+ // the real packaged handbook/detail path, not just the collector parser.
+ for(const [id,text,unknown]of [[3018,'每1%攻击速度转为0.7%暴击伤害',true],[3052,'超过75%最大攻击距离',true],[3134,'600码内每有一个敌方英雄，你就会获得15%攻击速度、10护甲和10魔法抗性',false],[3039,'低于50%',true],[3058,'每1攻击力转为1.8%攻击速度',true],[3150,'（10 + 0.02×法术强度）%最大生命值',false]]){
+  await click('.augment-card[data-id="'+id+'"]');await until(()=>j(main,'!!document.querySelector("[role=dialog]")'),'Detail missing '+id);
+  const shown=await j(main,'document.querySelector("[role=dialog]").textContent');assert(shown.includes(text),'Current coefficient missing '+id);assert.equal(shown.includes('〔动态数值〕'),unknown,'Live counter boundary '+id);
+  assert.equal(data.augments.find(a=>a.id===id).tooltipParserRevision,2);await capture('numeric-detail-'+id+'.png');await click('[data-action=close]');
+ }
  const handbookGeometry=[],handbookWidths=[1180,1050];
  // Stay within the production main window's 1050 minimum; Electron silently
  // clamps smaller requests, which must not count as measured narrow coverage.

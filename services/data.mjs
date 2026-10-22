@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import {buildAugmentDescriptions} from './augments.mjs';
+import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from './augments.mjs';
 import {enrichChampionStats,hasCurrentCombatStats} from './champion-stats.mjs';
 import {enrichItemDescriptions} from './item-descriptions.mjs';
 import {captureChampionMechanicSource} from './champion-mechanics.mjs';
@@ -9,6 +9,7 @@ import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
 
 export const DD = 'https://ddragon.leagueoflegends.com';
 export const CN = 'https://game.gtimg.cn/images/lol/act/img/js';
+const hasAugmentDetails=a=>a.tooltip?.revision===1&&!!a.tooltip.description&&Number.isSafeInteger(a.tooltipParserRevision)&&a.tooltipParserRevision>=AUGMENT_TOOLTIP_PARSER_REVISION;
 export async function getJSON(url, timeout = 20000) {
   let last;
   for(let attempt=0;attempt<3;attempt++) {
@@ -54,18 +55,21 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
         progress('已补齐当前版本法强装备公式');
       }catch{progress('装备公式暂未补齐，保留原公式并等待重试');}
     }
-    if(previous.augments.some(a=>a.tooltip?.revision!==1||!a.tooltip.description)){
+    if(previous.augments.some(a=>!hasAugmentDetails(a))){
       try{
         const cd=`https://raw.communitydragon.org/${previous.patch}`,[bin,strings]=await Promise.all([readJSON(`${cd}/game/maps/modespecificdata/kiwi.bin.json`,35000),readJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);
-        const augments=buildAugmentDescriptions(previous.augments,bin,strings?.entries||{});
-        if(augments.some(a=>!a.description||a.descriptionStatus==='missing'||!a.tooltip?.description))throw Error('强化完整说明来源未覆盖已有清单');
+        const parsed=buildAugmentDescriptions(previous.augments.filter(a=>!hasAugmentDetails(a)),bin,strings?.entries||{});
+        if(parsed.some(a=>!a.description||a.descriptionStatus==='missing'||!hasAugmentDetails(a)))throw Error('强化完整说明来源未覆盖已有清单');
+        // Preserve already completed records, including newer parser results
+        // received from the signed feed, when repairing a mixed older cache.
+        let index=0;const augments=previous.augments.map(a=>hasAugmentDetails(a)?a:parsed[index++]);
         previous={...previous,augments};
         progress('已补齐同版本强化详细数值');
       }catch{progress('强化详细数值暂未补齐，保留原资料并等待重试');}
     }
-    // Detail completion lives on each tooltip, so it cannot skip an unfinished
+    // Parser completion lives on each augment, so it cannot skip an unfinished
     // revision-8 item migration or force the detail sources to be read again.
-    if(previous.contentRevision>=9&&previous.augments.every(a=>a.tooltip?.revision===1&&a.tooltip.description))previous={...previous,contentRevision:Math.max(11,previous.contentRevision)};
+    if(previous.contentRevision>=9&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(12,previous.contentRevision)};
     progress('当前已是最新资料版本');
     return {...previous,checkedAt:new Date(clock()).toISOString()};
   }
@@ -107,7 +111,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
+    schema: 1, contentRevision:itemDescriptions&&augments.length&&augments.every(hasAugmentDetails)?12:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,

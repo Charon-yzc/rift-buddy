@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "contentRevision": 11,
+  "contentRevision": 12,
   "mechanicSourceRevision": 1,
   "itemTooltipRevision": 1,
   "version": "16.21.1",
@@ -206375,7 +206375,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1141,
@@ -206398,7 +206399,8 @@
       "tags": [
         3,
         0
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1002,
@@ -206421,7 +206423,8 @@
       "tags": [
         4,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2087,
@@ -206443,7 +206446,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1004,
@@ -206465,7 +206469,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2103,
@@ -206492,7 +206497,8 @@
       "tags": [
         1,
         8
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1180,
@@ -206514,7 +206520,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1006,
@@ -206539,7 +206546,8 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1007,
@@ -206563,7 +206571,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1103,
@@ -206585,7 +206594,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1151,
@@ -206607,7 +206617,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1150,
@@ -206629,7 +206640,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1011,
@@ -206651,7 +206663,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1013,
@@ -206673,7 +206686,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1015,
@@ -206697,7 +206711,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1310,
@@ -206723,7 +206738,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1018,
@@ -206747,7 +206763,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1118,
@@ -206769,7 +206786,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1323,
@@ -206793,7 +206811,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1019,
@@ -206815,7 +206834,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1020,
@@ -206837,7 +206857,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1022,
@@ -206859,7 +206880,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1025,
@@ -206884,7 +206906,8 @@
       "tags": [
         0,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2099,
@@ -206912,7 +206935,8 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1301,
@@ -206934,7 +206958,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1026,
@@ -206958,7 +206983,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2010,
@@ -206980,7 +207006,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1134,
@@ -207003,7 +207030,8 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1225,
@@ -207025,7 +207053,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1027,
@@ -207050,7 +207079,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2004,
@@ -207077,7 +207107,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2098,
@@ -207101,7 +207132,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1028,
@@ -207124,7 +207156,8 @@
       "tags": [
         5,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1029,
@@ -207149,7 +207182,8 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1030,
@@ -207171,7 +207205,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1194,
@@ -207193,7 +207228,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1036,
@@ -207217,7 +207253,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1308,
@@ -207243,7 +207280,8 @@
       "tags": [
         4,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1037,
@@ -207266,7 +207304,8 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1187,
@@ -207292,7 +207331,8 @@
       "tags": [
         4,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1116,
@@ -207314,7 +207354,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1038,
@@ -207340,7 +207381,8 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1322,
@@ -207362,7 +207404,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1195,
@@ -207387,7 +207430,8 @@
       "tags": [
         4,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1041,
@@ -207410,7 +207454,8 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1138,
@@ -207432,7 +207477,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1181,
@@ -207455,7 +207501,8 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2107,
@@ -207478,7 +207525,8 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1105,
@@ -207500,7 +207548,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1044,
@@ -207522,7 +207571,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1001,
@@ -207547,7 +207597,8 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1149,
@@ -207570,7 +207621,8 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1045,
@@ -207596,7 +207648,8 @@
       "tags": [
         1,
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1046,
@@ -207620,7 +207673,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2005,
@@ -207648,7 +207702,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1047,
@@ -207670,7 +207725,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1211,
@@ -207694,7 +207750,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1048,
@@ -207718,7 +207775,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2016,
@@ -207745,7 +207803,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1305,
@@ -207767,7 +207826,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1051,
@@ -207792,7 +207852,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2007,
@@ -207821,7 +207882,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1053,
@@ -207843,7 +207905,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1133,
@@ -207867,7 +207930,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1129,
@@ -207891,7 +207955,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1054,
@@ -207913,7 +207978,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1056,
@@ -207937,7 +208003,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1104,
@@ -207959,7 +208026,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1057,
@@ -207983,7 +208051,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2055,
@@ -208012,7 +208081,8 @@
       "tags": [
         1,
         9
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1058,
@@ -208034,7 +208104,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1060,
@@ -208058,7 +208129,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1061,
@@ -208085,7 +208157,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1062,
@@ -208107,7 +208180,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1063,
@@ -208131,7 +208205,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1311,
@@ -208155,7 +208230,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 12317,
@@ -208177,7 +208253,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1064,
@@ -208201,7 +208278,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1390,
@@ -208225,7 +208303,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1324,
@@ -208252,7 +208331,8 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2018,
@@ -208276,7 +208356,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1066,
@@ -208303,7 +208384,8 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1152,
@@ -208326,7 +208408,8 @@
       "tags": [
         3,
         8
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1154,
@@ -208355,7 +208438,8 @@
         2,
         1,
         8
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1361,
@@ -208379,7 +208463,8 @@
         1,
         3,
         8
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1156,
@@ -208403,7 +208488,8 @@
         1,
         5,
         8
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2064,
@@ -208429,7 +208515,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1067,
@@ -208458,7 +208545,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1068,
@@ -208480,7 +208568,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1170,
@@ -208502,7 +208591,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1071,
@@ -208524,7 +208614,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1115,
@@ -208546,7 +208637,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1072,
@@ -208571,7 +208663,8 @@
       "tags": [
         1,
         0
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1073,
@@ -208593,7 +208686,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1074,
@@ -208617,7 +208711,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1113,
@@ -208639,7 +208734,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1136,
@@ -208662,7 +208758,8 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2088,
@@ -208684,7 +208781,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1076,
@@ -208709,7 +208807,8 @@
       "tags": [
         0,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1077,
@@ -208734,7 +208833,8 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2100,
@@ -208762,7 +208862,8 @@
       "tags": [
         5,
         9
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1214,
@@ -208786,7 +208887,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2104,
@@ -208813,7 +208915,8 @@
       "tags": [
         0,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1204,
@@ -208835,7 +208938,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1404,
@@ -208857,7 +208961,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1403,
@@ -208879,7 +208984,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1402,
@@ -208901,7 +209007,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1413,
@@ -208923,7 +209030,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2073,
@@ -208949,7 +209057,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1079,
@@ -208972,7 +209081,8 @@
       "tags": [
         1,
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1353,
@@ -208996,7 +209106,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1080,
@@ -209020,7 +209131,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1081,
@@ -209044,7 +209156,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2065,
@@ -209070,7 +209183,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1084,
@@ -209092,7 +209206,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1243,
@@ -209114,7 +209229,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1237,
@@ -209136,7 +209252,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1238,
@@ -209158,7 +209275,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1087,
@@ -209180,7 +209298,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1088,
@@ -209202,7 +209321,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1112,
@@ -209224,7 +209344,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1320,
@@ -209246,7 +209367,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1336,
@@ -209270,7 +209392,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1319,
@@ -209294,7 +209417,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1996,
@@ -209319,7 +209443,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1318,
@@ -209341,7 +209466,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1092,
@@ -209365,7 +209491,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1005,
@@ -209390,7 +209517,8 @@
       },
       "tags": [
         0
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1095,
@@ -209413,7 +209541,8 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1097,
@@ -209436,7 +209565,8 @@
       "tags": [
         1,
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1098,
@@ -209460,7 +209590,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2009,
@@ -209482,7 +209613,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1206,
@@ -209507,7 +209639,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2062,
@@ -209533,7 +209666,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1327,
@@ -209555,7 +209689,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3118,
@@ -209577,7 +209712,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3049,
@@ -209604,7 +209740,8 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3086,
@@ -209630,7 +209767,8 @@
       "tags": [
         5,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3018,
@@ -209645,17 +209783,17 @@
       "sourceKey": "Kiwi_Augment_BigShot_Description",
       "tooltip": {
         "revision": 1,
-        "description": "获得35%暴击伤害和25%额外攻击力。\n\n你的75%攻击速度转化为暴击伤害。\n(每1%攻击速度转为〔动态数值〕暴击伤害)\n\n当前暴击伤害：〔动态数值〕%",
+        "description": "获得35%暴击伤害和25%额外攻击力。\n\n你的75%攻击速度转化为暴击伤害。\n(每1%攻击速度转为0.7%暴击伤害)\n\n当前暴击伤害：〔动态数值〕%",
         "status": "partial",
         "unresolved": [
-          "Calc_Crit_Damage_Per_AS",
           "f1.1"
         ],
         "sourceKey": "Kiwi_Augment_BigShot_Tooltip"
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1329,
@@ -209679,7 +209817,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3051,
@@ -209701,7 +209840,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2111,
@@ -209728,7 +209868,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3048,
@@ -209752,7 +209893,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3071,
@@ -209778,7 +209920,8 @@
       "tags": [
         5,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2083,
@@ -209804,7 +209947,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2078,
@@ -209834,7 +209978,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3088,
@@ -209863,7 +210008,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1328,
@@ -209885,7 +210031,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2077,
@@ -209914,7 +210061,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1384,
@@ -209936,7 +210084,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2131,
@@ -209961,7 +210110,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2144,
@@ -209988,7 +210138,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2148,
@@ -210014,7 +210165,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3036,
@@ -210039,7 +210191,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1331,
@@ -210062,7 +210215,8 @@
       "tags": [
         3,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3163,
@@ -210087,7 +210241,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2091,
@@ -210111,7 +210266,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1333,
@@ -210134,7 +210290,8 @@
       "tags": [
         4,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1344,
@@ -210157,7 +210314,8 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2032,
@@ -210181,7 +210339,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1348,
@@ -210203,7 +210362,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3085,
@@ -210230,7 +210390,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2127,
@@ -210254,7 +210415,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3121,
@@ -210279,7 +210441,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3004,
@@ -210306,7 +210469,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3063,
@@ -210330,7 +210494,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1325,
@@ -210354,7 +210519,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1392,
@@ -210376,7 +210542,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1335,
@@ -210402,7 +210569,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3149,
@@ -210428,7 +210596,8 @@
       },
       "tags": [
         0
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1401,
@@ -210450,7 +210619,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3172,
@@ -210474,7 +210644,8 @@
         ],
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3176,
@@ -210496,7 +210667,8 @@
         "unresolved": [],
         "sourceKey": "GoH_PentakillAug_Display_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3170,
@@ -210520,7 +210692,8 @@
         ],
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3173,
@@ -210544,7 +210717,8 @@
         ],
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3171,
@@ -210568,7 +210742,8 @@
         ],
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1389,
@@ -210590,7 +210765,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3052,
@@ -210605,10 +210781,9 @@
       "sourceKey": "Kiwi_Augment_HandsOffTheTalent_Description",
       "tooltip": {
         "revision": 1,
-        "description": "在超过〔动态数值〕最大攻击距离处打出的攻击会额外造成〔动态数值〕物理伤害攻击特效。\n\n已打出的远距离攻击次数：〔动态数值〕",
+        "description": "在超过75%最大攻击距离处打出的攻击会额外造成〔动态数值〕物理伤害攻击特效。\n\n已打出的远距离攻击次数：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "MaxDistanceProximityTooltip",
           "AdditionalDamage",
           "f1"
         ],
@@ -210616,7 +210791,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3132,
@@ -210641,7 +210817,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1416,
@@ -210663,7 +210840,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1388,
@@ -210687,7 +210865,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2125,
@@ -210713,7 +210892,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3123,
@@ -210740,7 +210920,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2126,
@@ -210768,7 +210949,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2026,
@@ -210790,7 +210972,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1337,
@@ -210812,7 +210995,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3094,
@@ -210834,7 +211018,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2096,
@@ -210860,7 +211045,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3134,
@@ -210875,16 +211061,15 @@
       "sourceKey": "Kiwi_Augment_LonelyWarrior_Description",
       "tooltip": {
         "revision": 1,
-        "description": "附近600码内每有一个敌方英雄，你就会获得〔动态数值〕攻击速度、10护甲和10魔法抗性。",
-        "status": "partial",
-        "unresolved": [
-          "ASPerEnemyTooltip"
-        ],
+        "description": "附近600码内每有一个敌方英雄，你就会获得15%攻击速度、10护甲和10魔法抗性。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_Augment_LonelyWarrior_Tooltip"
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2133,
@@ -210912,7 +211097,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1314,
@@ -210934,7 +211120,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2072,
@@ -210961,7 +211148,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3053,
@@ -210988,7 +211176,8 @@
       "tags": [
         3,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2043,
@@ -211012,7 +211201,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1326,
@@ -211034,7 +211224,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3059,
@@ -211058,7 +211249,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1332,
@@ -211080,7 +211272,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2119,
@@ -211104,7 +211297,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2135,
@@ -211132,7 +211326,8 @@
       "tags": [
         1,
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2123,
@@ -211161,7 +211356,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2137,
@@ -211184,7 +211380,8 @@
         ],
         "sourceKey": "Augment_PatOnTheBack_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2139,
@@ -211211,7 +211408,8 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1358,
@@ -211235,7 +211433,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1347,
@@ -211257,7 +211456,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2102,
@@ -211282,7 +211482,8 @@
       "tags": [
         1,
         9
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1421,
@@ -211304,7 +211505,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1343,
@@ -211333,7 +211535,8 @@
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2141,
@@ -211356,7 +211559,8 @@
       "tags": [
         8,
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3075,
@@ -211383,27 +211587,25 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3039,
       "key": "Salvation",
       "name": "拯救",
       "rarity": "kGold",
-      "description": "受到伤害导致你的生命值低于〔动态数值〕%时，会释放一道冲击波，对附近敌人造成伤害并将其击退，同时为你周围大范围区域内的所有友方英雄回复生命值。",
+      "description": "受到伤害导致你的生命值低于50%时，会释放一道冲击波，对附近敌人造成伤害并将其击退，同时为你周围大范围区域内的所有友方英雄回复生命值。",
       "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/salvation_small.png",
-      "descriptionStatus": "partial",
+      "descriptionStatus": "complete",
       "catalogEnabled": true,
-      "unresolved": [
-        "HealthThresholdTooltipPercent"
-      ],
+      "unresolved": [],
       "sourceKey": "Kiwi_Augment_Salvation_Description",
       "tooltip": {
         "revision": 1,
-        "description": "受到伤害导致你的生命值低于〔动态数值〕%时，会释放一道冲击波，对敌方英雄造成〔动态数值〕魔法伤害并将其击退，同时为所有被命中的友方英雄回复〔动态数值〕生命值。",
+        "description": "受到伤害导致你的生命值低于50%时，会释放一道冲击波，对敌方英雄造成〔动态数值〕魔法伤害并将其击退，同时为所有被命中的友方英雄回复〔动态数值〕生命值。",
         "status": "partial",
         "unresolved": [
-          "HealthThresholdTooltipPercent",
           "Damage",
           "TotalHeal"
         ],
@@ -211411,7 +211613,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3129,
@@ -211436,7 +211639,8 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2034,
@@ -211460,7 +211664,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1373,
@@ -211487,7 +211692,8 @@
       "tags": [
         5,
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2109,
@@ -211515,7 +211721,8 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1334,
@@ -211540,7 +211747,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2080,
@@ -211564,7 +211772,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1420,
@@ -211587,7 +211796,8 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1375,
@@ -211611,7 +211821,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3025,
@@ -211636,7 +211847,8 @@
       "tags": [
         4,
         0
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2116,
@@ -211664,7 +211876,8 @@
       "tags": [
         1,
         8
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2054,
@@ -211691,7 +211904,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2115,
@@ -211716,7 +211930,8 @@
         ],
         "sourceKey": "Augment_SquishySlappyGrab_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3131,
@@ -211738,7 +211953,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2108,
@@ -211766,7 +211982,8 @@
       "tags": [
         0,
         8
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2134,
@@ -211788,7 +212005,8 @@
         ],
         "sourceKey": "Augment_SurgeField_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1315,
@@ -211812,7 +212030,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3116,
@@ -211841,7 +212060,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2129,
@@ -211867,7 +212087,8 @@
         ],
         "sourceKey": "Augment_Terraind_Tooltip"
       },
-      "tags": []
+      "tags": [],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3078,
@@ -211894,7 +212115,8 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3016,
@@ -211920,7 +212142,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3058,
@@ -211935,17 +212158,17 @@
       "sourceKey": "Kiwi_Augment_TickleMonster_Description",
       "tooltip": {
         "revision": 1,
-        "description": "攻击力转化为攻击速度。\n(每1攻击力转为〔动态数值〕攻击速度)\n\n普攻附带5–50（随等级）额外魔法伤害攻击特效。\n\n额外攻击速度：〔动态数值〕%",
+        "description": "攻击力转化为攻击速度。\n(每1攻击力转为1.8%攻击速度)\n\n普攻附带5–50（随等级）额外魔法伤害攻击特效。\n\n额外攻击速度：〔动态数值〕%",
         "status": "partial",
         "unresolved": [
-          "Calc_ASPerAD",
           "f1.1*100"
         ],
         "sourceKey": "Kiwi_Augment_TickleMonster_Tooltip"
       },
       "tags": [
         4
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2076,
@@ -211975,7 +212198,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3079,
@@ -212001,7 +212225,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2136,
@@ -212029,7 +212254,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1415,
@@ -212057,7 +212283,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1349,
@@ -212079,7 +212306,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3055,
@@ -212101,7 +212329,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2157,
@@ -212125,7 +212354,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2140,
@@ -212147,7 +212377,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3150,
@@ -212162,16 +212393,15 @@
       "sourceKey": "Kiwi_Augment_Upgrade_Stormsurge_Description",
       "tooltip": {
         "revision": 1,
-        "description": "风暴狂涌 - 风啸现在总会在一个区域内引爆，对附近所有敌人造成相当于〔动态数值〕最大生命值的魔法伤害。\n\n被初段引爆命中的敌方英雄会被风啸标记。\n\n获得金币500金币。",
-        "status": "partial",
-        "unresolved": [
-          "PercentHealthDamage"
-        ],
+        "description": "风暴狂涌 - 风啸现在总会在一个区域内引爆，对附近所有敌人造成相当于（10 + 0.02×法术强度）%最大生命值的魔法伤害。\n\n被初段引爆命中的敌方英雄会被风啸标记。\n\n获得金币500金币。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_Augment_Upgrade_Stormsurge_Tooltip"
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2143,
@@ -212193,7 +212423,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1379,
@@ -212215,7 +212446,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1346,
@@ -212238,7 +212470,8 @@
       "tags": [
         3,
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1034,
@@ -212260,7 +212493,8 @@
       },
       "tags": [
         5
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2097,
@@ -212288,7 +212522,8 @@
       },
       "tags": [
         1
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2138,
@@ -212315,7 +212550,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 2132,
@@ -212337,7 +212573,8 @@
       },
       "tags": [
         3
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 3081,
@@ -212361,7 +212598,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     },
     {
       "id": 1386,
@@ -212383,7 +212621,8 @@
       },
       "tags": [
         2
-      ]
+      ],
+      "tooltipParserRevision": 2
     }
   ]
 }
