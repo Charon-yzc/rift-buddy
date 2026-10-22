@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from './augments.mjs';
 import {enrichChampionStats,hasCurrentCombatStats} from './champion-stats.mjs';
-import {enrichItemDescriptions,enrichItemModeDescriptions} from './item-descriptions.mjs';
+import {enrichItemDescriptions,enrichItemModeDescriptions,hasCurrentItemDescription} from './item-descriptions.mjs';
 import {hasItemModeTooltip} from '../src/core/item-mode-tooltip.mjs';
 import {captureChampionMechanicSource} from './champion-mechanics.mjs';
 import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
@@ -32,6 +32,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
   let itemSources;
   const readItemSources=patch=>itemSources??=Promise.all([readJSON(`https://raw.communitydragon.org/${patch}/game/items.cdtb.bin.json`,35000),readJSON(`https://raw.communitydragon.org/${patch}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);
   const completeItemModes=(items,patch)=>Object.values(items).some(i=>i.tooltip?.patch===patch)&&Object.values(items).every(i=>hasItemModeTooltip(i,patch));
+  const completeItemDescriptions=(items,patch)=>Object.values(items).some(i=>i.tooltip?.patch===patch)&&Object.values(items).every(i=>hasCurrentItemDescription(i,patch));
   const checkAge=clock()-Date.parse(previous?.contentCheckedAt||previous?.fetchedAt),recentCheck=Number.isFinite(checkAge)&&checkAge>=0&&checkAge<86400000;
   if(!recheckVersion&&recentCheck&&previous?.version===version&&previous.itemTooltipRevision===1&&previous.contentRevision>=8&&previous.mechanicSourceRevision===1&&previous.champions?.every(c=>hasCurrentCombatStats(c,previous.patch)&&mechanicSourceInput(c,previous.patch)?.version===version)&&previous.augments?.length&&previous.augments.every(a=>a.description)&&previous.sources?.augmentDescriptions){
     // Tencent's names can catch up after Data Dragon has already shipped this
@@ -59,16 +60,20 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
         progress('已补齐当前版本法强装备公式');
       }catch{progress('装备公式暂未补齐，保留原公式并等待重试');}
     }
+    const pendingDescriptions=previous.contentRevision>=9?Object.entries(previous.items).filter(([,item])=>!hasCurrentItemDescription(item,previous.patch)):[];
     const pendingModes=Object.entries(previous.items).filter(([,item])=>!hasItemModeTooltip(item,previous.patch));
-    if(pendingModes.length){
+    if(pendingDescriptions.length||pendingModes.length){
       try{
         const [bin,strings]=await readItemSources(previous.patch);
         if(!bin||!Object.keys(bin).length||!strings?.entries||!Object.keys(strings.entries).length)throw Error('海克斯装备参数来源不完整');
-        const parsed=enrichItemModeDescriptions(Object.fromEntries(pendingModes),bin,strings,previous.patch);
-        if(pendingModes.some(([id,item])=>parsed[id]===item||!hasItemModeTooltip(parsed[id],previous.patch)))throw Error('海克斯装备参数未覆盖待核对记录');
-        previous={...previous,items:{...previous.items,...parsed}};
-        progress('已核对同版本公开海克斯装备参数');
-      }catch{progress('海克斯装备参数暂未补齐，保留原资料并等待重试');}
+        const bases=pendingDescriptions.length?enrichItemDescriptions(Object.fromEntries(pendingDescriptions),bin,strings,previous.patch):{};
+        if(pendingDescriptions.some(([id,item])=>bases[id]===item||!hasCurrentItemDescription(bases[id],previous.patch)))throw Error('装备基础字段未覆盖待核对记录');
+        for(const [id,item]of pendingDescriptions){const old=item.tooltip,next=bases[id].tooltip,count=text=>(text?.match(/〔数值未解析〕/g)||[]).length;if(old.description?.trim()&&!next.description?.trim()||old.status==='complete'&&next.status!=='complete'||count(next.description)>count(old.description))throw Error('已有装备说明未完整保留');}
+        const items={...previous.items,...bases},pending=Object.entries(items).filter(([,item])=>!hasItemModeTooltip(item,previous.patch)),parsed=enrichItemModeDescriptions(Object.fromEntries(pending),bin,strings,previous.patch);
+        if(pending.some(([id,item])=>parsed[id]===item||!hasItemModeTooltip(parsed[id],previous.patch)))throw Error('海克斯装备参数未覆盖待核对记录');
+        previous={...previous,items:{...items,...parsed}};
+        progress('已核对同版本装备基础字段与公开海克斯参数');
+      }catch{progress('装备基础字段或海克斯参数暂未补齐，保留原资料并等待重试');}
     }
     if(previous.augments.some(a=>!hasAugmentDetails(a))){
       try{
@@ -84,7 +89,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     }
     // Parser completion lives on each augment, so it cannot skip an unfinished
     // revision-8 item migration or force the detail sources to be read again.
-    if(previous.contentRevision>=9&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(completeItemModes(previous.items,previous.patch)?16:15,previous.contentRevision)};
+    if(previous.contentRevision>=9&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(completeItemModes(previous.items,previous.patch)?completeItemDescriptions(previous.items,previous.patch)?17:16:15,previous.contentRevision)};
     progress('当前已是最新资料版本');
     return {...previous,checkedAt:new Date(clock()).toISOString()};
   }
@@ -126,7 +131,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:itemDescriptions&&augments.length&&augments.every(hasAugmentDetails)?completeItemModes(itemDescriptions,patch)?16:15:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
+    schema: 1, contentRevision:itemDescriptions&&augments.length&&augments.every(hasAugmentDetails)?completeItemModes(itemDescriptions,patch)?completeItemDescriptions(itemDescriptions,patch)?17:16:15:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,

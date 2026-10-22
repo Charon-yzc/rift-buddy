@@ -22,8 +22,9 @@ test('rich hover cards escape source text, gate old formulas and show sourced ol
  assert.equal(gameTooltipView(game,'item',999999),'');
  assert.match(gameTooltipView(game,'rune',8005),/强攻/);assert.match(gameTooltipView(game,'spell','SummonerFlash'),/冷却/);
 });
-test('partial client formulas retain known same-patch official basic stats',()=>{
- for(const [id,number,label] of [[1004,'50%','基础法力回复'],[1027,'300','法力']]){const html=gameTooltipView(data,'item',id);assert.match(html,/同版本官方简介/);assert(html.includes('<strong>'+number+'</strong>'+label));assert.match(html,/数值未解析/);}
+test('resolved resource fields avoid duplicated fallback stats while genuinely partial formulas retain them',()=>{
+ for(const [id,number,label] of [[1004,'50%','基础法力回复'],[1027,'300','法力']]){const html=gameTooltipView(data,'item',id);assert.equal(data.items[id].tooltip.status,'complete');assert(html.includes('<strong>'+number+'</strong>'+label));assert.doesNotMatch(html,/数值未解析|同版本官方简介/);}
+ const partial={...data,items:{1004:{...data.items[1004],tooltip:{...data.items[1004].tooltip,status:'partial',description:'〔数值未解析〕基础法力回复'}}}},html=gameTooltipView(partial,'item',1004);assert.match(html,/同版本官方简介/);assert.match(html,/<strong>50%<\/strong>基础法力回复/);assert.match(html,/数值未解析/);
 });
 
 test('16.21 Hubris resolves hashed melee/ranged values without inventing the live statue count',async()=>{

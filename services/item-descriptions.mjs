@@ -5,6 +5,12 @@ import {canonicalJSON} from '../src/core/content-fingerprint.mjs';
 import {ITEM_MODE_TOOLTIP_REVISION,itemTooltipBasis} from '../src/core/item-mode-tooltip.mjs';
 // Resolve only client-authored Rift tooltip expressions that can be explained
 // without live player stats. Unknown calculations stay explicitly dynamic.
+export const ITEM_TOOLTIP_PARSER_REVISION=2;
+export function hasCurrentItemDescription(item,patch){
+ const tip=item?.tooltip;if(tip?.patch!==patch||tip.description==='')return true;
+ const revision=item.tooltipParserRevision;if(!Number.isSafeInteger(revision)||revision<ITEM_TOOLTIP_PARSER_REVISION)return false;
+ return revision>ITEM_TOOLTIP_PARSER_REVISION||typeof tip.description==='string'&&!!tip.description.trim();
+}
 export function enrichItemDescriptions(items,bin,strings,patch){return describeItems(items,bin,strings,patch,false);}
 export function enrichItemModeDescriptions(items,bin,strings,patch){return describeItems(items,bin,strings,patch,true);}
 function describeItems(items,bin,strings,patch,hex){
@@ -26,6 +32,9 @@ function describeItems(items,bin,strings,patch,hex){
   const values=new Map(),put=(name,value)=>{const key=identity(name);values.set(key,values.has(key)&&values.get(key)!==value?null:value);};
   for(const row of source.mDataValues||[])put(row.mName,hex?Number.isFinite(row.mValue)?row.mValue:null:row.mValue??0);
   for(const [key,value] of Object.entries(source))if(key.startsWith('m')&&Number.isFinite(value))put(key.slice(1),value);
+  // These ItemData stats are authored without the usual m prefix. They share
+  // the exact field identity with template values, including alias conflicts.
+  for(const key of ['flatMPPoolMod','percentBaseMPRegenMod','flatMPRegenMod'])if(Object.hasOwn(source,key))put(key,Number.isFinite(source[key])?source[key]:null);
   if(Number.isFinite(source.PhysicalLethality))put('PhysicalLethality',source.PhysicalLethality);
   const calculations=new Map(Object.entries(source.mItemCalculations||{}).map(([key,value])=>[key.toLowerCase(),value]));
   for(let index=0;index<(source.mEffectAmount||[]).length;index++)put('effect'+(index+1)+'amount',source.mEffectAmount[index]);
@@ -82,6 +91,6 @@ function describeItems(items,bin,strings,patch,hex){
   text=text.replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/?section[^>]*>/gi,'\n\n').replace(/<[^>]*>/g,'').replace(/%i:[^%\s]+%/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\n{3,}/g,'\n\n').trim();
   const sourceUrl=`https://raw.communitydragon.org/${patch}/game/items.cdtb.bin.json`;
   if(hex){const status=!layer?.DataValues.length?'none':!used.size?'unreferenced':unresolved.size?'partial':'complete',record={revision:ITEM_MODE_TOOLTIP_REVISION,patch,mode:'Kiwi',coverage:'public-data-values',status,...(used.size?{description:text}:{}),appliedKeys:[...new Set((layer?.DataValues||[]).filter(row=>used.has(identity(row.mName))).map(row=>row.mName))],source:sourceUrl,sourceHash:createHash('sha256').update(canonicalJSON({item:source,description:text})).digest('hex'),basisHash:itemTooltipBasis(item)};return [id,{...item,modeTooltips:{...item.modeTooltips,hex:record}}];}
-  return [id,{...item,tooltip:{patch,description:text,status:unresolved.size?'partial':'complete',source:sourceUrl}}];
+  return [id,{...item,tooltipParserRevision:ITEM_TOOLTIP_PARSER_REVISION,tooltip:{patch,description:text,status:unresolved.size?'partial':'complete',source:sourceUrl}}];
  }));
 }
