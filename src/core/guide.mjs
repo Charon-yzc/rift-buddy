@@ -1,3 +1,4 @@
+import {HEX_OWNED_LIMIT} from './hex-note-limits.mjs';
 import {validateSharedEquipment} from './shared-equipment.mjs';
 import {jungleGuidance,validateJungleNotes} from './jungle-guidance.mjs';
 import {completeGearPlan} from './complete-gear.mjs';
@@ -68,7 +69,7 @@ export function validateGuideSelection(value){
  if(value.coreIndex!==undefined&&(!Number.isInteger(value.coreIndex)||value.coreIndex<0||value.coreIndex>14))throw Error('核心方案格式不正确');
  if(value.conditions!==undefined&&(!Array.isArray(value.conditions)||value.conditions.length>5||!value.conditions.every(c=>conditions.includes(c))))throw Error('局势选项格式不正确');
  if(value.augmentIds!==undefined&&(!Array.isArray(value.augmentIds)||value.augmentIds.length>5||!value.augmentIds.every(Number.isInteger)))throw Error('强化备选格式不正确');
- for(const [key,max] of [['compareIds',3],['ownedAugmentIds',6]])if(value[key]!==undefined&&(!Array.isArray(value[key])||value[key].length>max||!value[key].every(Number.isInteger)))throw Error('强化比较格式不正确');
+ for(const [key,max] of [['compareIds',3],['ownedAugmentIds',HEX_OWNED_LIMIT]])if(value[key]!==undefined&&(!Array.isArray(value[key])||(key==='ownedAugmentIds'?new Set(value[key]).size:value[key].length)>max||!value[key].every(Number.isInteger)))throw Error('强化比较格式不正确');
  const focus={};for(const key of ['threatId','protectId'])if(value[key]){if(!hero(value[key]))throw Error('局势关注英雄格式不正确');if(value.mode==='rift')focus[key]=value[key];}
  if(value.matchupGameId!==undefined){if(value.mode!=='rift'||!focus.threatId||!/^\d{1,20}$/.test(String(value.matchupGameId))||Number(value.matchupGameId)<=0)throw Error('本局对手上下文格式不正确');focus.matchupGameId=String(value.matchupGameId);}
  if(value.combatFocus!==undefined&&!['lane','teamfight'].includes(value.combatFocus))throw Error('局势关注格式不正确');if(value.mode==='rift'&&value.combatFocus)focus.combatFocus=value.combatFocus;

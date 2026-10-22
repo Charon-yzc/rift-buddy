@@ -1,3 +1,4 @@
+import {HEX_OWNED_LIMIT} from '../src/core/hex-note-limits.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
@@ -50,11 +51,11 @@ function favorite(f){
  if(f.type==='hex'){
   if(f.champion!==null&&!hero(f.champion)||!Array.isArray(f.augments)||f.augments.length>5||!f.augments.every(Number.isInteger))throw Error('强化收藏格式不正确');
   const augList=(v,max)=>Array.isArray(v)?[...new Set(v.filter(Number.isInteger))].slice(0,max):[];
-  return {...base,champion:f.champion,augments:[...new Set(f.augments)],compareIds:augList(f.compareIds,3),ownedAugmentIds:augList(f.ownedAugmentIds,6)};
+  return {...base,champion:f.champion,augments:[...new Set(f.augments)],compareIds:augList(f.compareIds,3),ownedAugmentIds:augList(f.ownedAugmentIds,HEX_OWNED_LIMIT)};
  }
  if(!hero(f.champion)||!roles.includes(f.role)||!['rift','hex'].includes(f.mode))throw Error('英雄配置收藏格式不正确');
  const hexAug=v=>Array.isArray(v)?[...new Set(v.filter(Number.isInteger))]:[];
- return {...base,champion:f.champion,role:f.role,mode:f.mode,...validateLoadoutSelection({...f,id:f.champion}),coreIndex:Number.isInteger(f.coreIndex)&&f.coreIndex>=0&&f.coreIndex<15?f.coreIndex:0,conditions:Array.isArray(f.conditions)?[...new Set(f.conditions.filter(c=>conditions.includes(c)))]:[],...(f.mode==='hex'?{augmentIds:hexAug(f.augmentIds).slice(0,5),compareIds:hexAug(f.compareIds).slice(0,3),ownedAugmentIds:hexAug(f.ownedAugmentIds).slice(0,6)}:{})};
+ return {...base,champion:f.champion,role:f.role,mode:f.mode,...validateLoadoutSelection({...f,id:f.champion}),coreIndex:Number.isInteger(f.coreIndex)&&f.coreIndex>=0&&f.coreIndex<15?f.coreIndex:0,conditions:Array.isArray(f.conditions)?[...new Set(f.conditions.filter(c=>conditions.includes(c)))]:[],...(f.mode==='hex'?{augmentIds:hexAug(f.augmentIds).slice(0,5),compareIds:hexAug(f.compareIds).slice(0,3),ownedAugmentIds:hexAug(f.ownedAugmentIds).slice(0,HEX_OWNED_LIMIT)}:{})};
 }
 export function validateState(value) {
  if(!value||typeof value!=='object'||value.schema!==1)throw new Error('保存内容格式不正确');

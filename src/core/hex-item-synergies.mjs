@@ -1,3 +1,4 @@
+import {HEX_OWNED_LIMIT} from './hex-note-limits.mjs';
 import review from './hex-item-synergies.json' with {type:'json'};
 import {fingerprint} from './content-fingerprint.mjs';
 import {hexRouteItemFingerprint} from './hex-routes.mjs';
@@ -59,7 +60,7 @@ const rules=[
 // complete read. Prepared items stay a separate condition, never ownership.
 export function hexItemSynergies({data,hero,mode='hex',owned=[],options=[],preparedItems=[],inventory=[],inventoryKnown=false}){
  if(mode!=='hex'||data.patch!==review.patch||!String(data.version).startsWith(review.patch+'.')||!data.champions.some(c=>c.id===hero)||data.augmentError||data.augmentVersion&&data.augmentVersion!==data.version||data.sources?.augmentDescriptions!==review.sources.augments)return [];
- const ownedIds=new Set(owned.slice(0,6)),offered=new Set(options.slice(0,3)),held=new Set(inventoryKnown===true&&Array.isArray(inventory)?inventory.slice(0,12).filter(i=>Number.isInteger(i?.count)&&i.count>0&&i.count<=6).map(i=>Number(i.id)):[]),ids=[...new Set([...preparedItems.map(i=>Number(i?.id??i)),...held])];
+ const ownedIds=new Set([...new Set(owned)].slice(0,HEX_OWNED_LIMIT)),offered=new Set(options.slice(0,3)),held=new Set(inventoryKnown===true&&Array.isArray(inventory)?inventory.slice(0,12).filter(i=>Number.isInteger(i?.count)&&i.count>0&&i.count<=6).map(i=>Number(i.id)):[]),ids=[...new Set([...preparedItems.map(i=>Number(i?.id??i)),...held])];
  const checkedItem=id=>{const i=data.items[id],f=review.items[id];return f&&Number(i?.id)===id&&i?.maps?.['12']&&i.inStore&&i.gold?.purchasable!==false&&f.summary===hexRouteItemFingerprint(i)&&f.tooltip===fingerprint(i.tooltip)?[{id,name:i.name,description:i.description,core:true}]:[];};
  const items=ids.flatMap(checkedItem);
  return rules.flatMap(rule=>{

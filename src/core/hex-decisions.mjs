@@ -1,3 +1,4 @@
+import {HEX_OWNED_LIMIT} from './hex-note-limits.mjs';
 import {hexRecommendations} from './hex-recommendations.mjs';
 import {compareAugments} from './hex-compare.mjs';
 
@@ -18,7 +19,7 @@ function rankedOptions(args,advice){
   if(!eligible||!row.mechanicReviewed){
    const record=args.data.augments.find(a=>a.id===row.id),cautions=[];
    if(record?.descriptionStatus==='partial')cautions.push('动态数值或适用技能未完全展开，以局内当前说明为准');
-   if(unique(args.owned,6).includes(row.id))cautions.push('你已标记选过这一项，请确认它是否还能再次出现');
+   if(unique(args.owned,HEX_OWNED_LIMIT).includes(row.id))cautions.push('你已标记选过这一项，请确认它是否还能再次出现');
    return {...row,rank:null,top:false,priority:'待核对',level:'reference',label:'资料参考',reasons:['适配尚待核对，请对照局内当前效果与触发条件。'],cautions,interactions:[]};
   }
   const place=preferred.findIndex(value=>value.id===row.id),rank=place<0?null:preferred.findIndex(value=>value.priority===row.priority)+1;
@@ -29,7 +30,7 @@ function rankedOptions(args,advice){
 }
 export function rankAugmentOptions(args){return rankedOptions(args,optionAdvice(args));}
 function rerollAdvice(args,rows){
- const options=unique(args.options,4),known=new Set(args.data.augments.map(a=>a.id)),owned=new Set(unique(args.owned,6));
+ const options=unique(args.options,4),known=new Set(args.data.augments.map(a=>a.id)),owned=new Set(unique(args.owned,HEX_OWNED_LIMIT));
  if(!championOf(args))return {recommended:false,status:'hero',text:'选择英雄后再比较。'};
  if(options.length!==3||options.some(id=>!known.has(id)||owned.has(id)))return {recommended:false,status:'incomplete',text:'先录入3个不同的实际选项，再判断是否重随。'};
  const best=rows.find(row=>row.top);
@@ -41,7 +42,7 @@ function rerollAdvice(args,rows){
 export function recommendAugmentReroll(args){return rerollAdvice(args,rankAugmentOptions(args));}
 
 export function analyzeAugmentSet(args){
- const {data,hero,mode='hex'}=args,owned=unique(args.owned,6),known=new Set(data.augments.map(a=>a.id)),present=owned.filter(id=>known.has(id)),synergies=[],conflicts=[];
+ const {data,hero,mode='hex'}=args,owned=unique(args.owned,HEX_OWNED_LIMIT),known=new Set(data.augments.map(a=>a.id)),present=owned.filter(id=>known.has(id)),synergies=[],conflicts=[];
  let pending=0;
  for(const id of present){
   const row=optionAdvice({...args,options:[id],owned:present.filter(other=>other!==id)}).rows[0];
