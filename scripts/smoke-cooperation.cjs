@@ -118,7 +118,12 @@ async function run(){
    assert.ok(await js('!!document.querySelector('+JSON.stringify(laterSelector)+')'),'Morellonomicon source alternative missing');
    await js('(()=>{const b=document.querySelector('+JSON.stringify(laterSelector)+');let p=b.parentElement;while(p){if(p.tagName==="DETAILS")p.open=true;p=p.parentElement;}b.scrollIntoView({block:"center"});})()');
    await capture(restart?'morellonomicon-restart.png':'morellonomicon.png');
-   if(!restart)await click('[data-action=build-later][data-id="3165"]');
+   if(!restart){
+    await click('[data-action=build-later][data-id="3165"]');
+    // Opening a guide below reads main's accepted state, not the renderer's
+    // immediate preview. Observe the saved choice instead of a fixed delay.
+    await until(async()=>{const saved=(await state()).preparations.find(p=>p.id===member.champion&&p.role===member.role&&p.comboId===plan.id);return saved?.laterIds?.includes(3165);},'Selected late item was not saved');
+   }
   }
   assert.ok(await js('[...document.querySelectorAll("[data-action=build-partner]")].every(b=>b.textContent.length<40)'),'Partner controls must use champion names');
   // Peer detail is read-only in the UI. Exercise each member's guide data through
