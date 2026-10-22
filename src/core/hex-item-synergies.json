@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "patch": "16.21",
+  "reviewedAt": "2026-10-22",
+  "scope": "Conditional augment-item relationships in the current prepared plan only; no hero skill, offering pool, popularity or win-rate claims.",
+  "sources": {
+    "augments": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "items": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+  },
+  "effects": {
+    "1002": "5342b67e91c66da7",
+    "1058": "d51dae206a24d183",
+    "1129": "dc220ccf50570edf",
+    "1996": "3fa82b9c2eb5aa74"
+  },
+  "items": {
+    "3078": {
+      "summary": "521032faa395a097",
+      "tooltip": "1a5b77491c493c1a"
+    },
+    "3100": {
+      "summary": "61419a0480e75737",
+      "tooltip": "2c7333fe0cae4533"
+    },
+    "3115": {
+      "summary": "ef85e0677b1ae84c",
+      "tooltip": "8d247ea4e2c189bf"
+    },
+    "3143": {
+      "summary": "39e2e336e313f1d7",
+      "tooltip": "5c2bf872dc4f46ae"
+    },
+    "3152": {
+      "summary": "415c3993ffc7010b",
+      "tooltip": "db6cbf0fdb08c2b2"
+    },
+    "3157": {
+      "summary": "b2f73e80d3e77fe7",
+      "tooltip": "38b202f931ae091d"
+    },
+    "6662": {
+      "summary": "084d5ca9a18203f8",
+      "tooltip": "e71f17d41db37438"
+    }
+  }
+}
