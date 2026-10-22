@@ -45,6 +45,6 @@ test('raw source hash changes even if a coefficient drift rounds to the same vis
 
 test('full guide projection and existing micro rows carry each item conversion with no added always-visible copy',()=>{
  const [route]=hexItemSynergies({data,hero:'Elise',owned:[1205],preparedItems:[1036]});assert(route.conversion);const [micro]=hexMechanismMicroRoutes([route]);assert(micro.conversion);assert.match(micro.items[0].brief,/当前方案.*图鉴.*约16\.67法术强度.*非本局增量/);assert.equal(micro.items[0].core,false);
- assert.equal(route.id,'Elise-item-1205');const html=renderHexRoutes([route],{guide:true,image:()=>''});assert.match(html,/已选强化 · 属性转换/);assert.match(html,/data-action="hex-source" data-id="Elise-item-1205"/);assert.match(html,/每件基础属性与条件/);assert.match(html,/图鉴基础项示例：10攻击力→约16\.67法术强度/);
+ assert.equal(route.id,'Elise-item-1205');const html=renderHexRoutes([route],{guide:true,image:()=>''});assert.match(html,/已选强化 · 属性转换/);assert.match(html,/data-action="hex-source" data-id="Elise-item-1205"/);assert.match(html,/每件基础属性与条件/);assert.match(html,/图鉴基础项示例：10攻击力→约16\.67法术强度/);assert.equal(html.split(route.caution).length-1,1,'Do not repeat the same conversion condition');
  const ordinary={...micro,id:'ordinary',conversion:undefined};assert.equal(rankHexMicroRoutes([ordinary,micro],{owned:[1205]})[0].id,micro.id);assert.deepEqual(hexItemSynergies({data,hero:'Elise',owned:[],preparedItems:[1036]}),[]);
 });

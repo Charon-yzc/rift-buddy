@@ -25,10 +25,10 @@ export function hexItemConversions({data,hero,mode='hex',owned=[],options=[],pre
   });
   if(!items.length)return [];
   const equipped=items.filter(i=>held.has(i.id)),planned=items.filter(i=>!held.has(i.id)),state=equipped.length?planned.length?'mixed':'held':'prepared';
-  return [{id:hero+'-item-'+a.id,hero,kind:'item-synergy',conversion:true,title:rule.title,summary:(selected?'已选':'若选')+' · '+rule.ratioText,brief:(selected?'已选。':'若选择。')+rule.ratioText+'；原属性转出。',play:[multiple?'还有其他转换效果，结算顺序未核对，暂停单件换算。':rule.ratioText+'；所列数字只对应每件装备明示的基础属性。',rule.caution],caution:rule.caution,
+  return [{id:hero+'-item-'+a.id,hero,kind:'item-synergy',conversion:true,title:rule.title,summary:(selected?'已选':'若选')+' · '+rule.ratioText,brief:(selected?'已选。':'若选择。')+rule.ratioText+'；原属性转出。',play:[multiple?'还有其他转换效果，结算顺序未核对，暂停单件换算。':rule.ratioText+'；所列数字只对应每件装备明示的基础属性。'],caution:rule.caution,
    augment:{id:a.id,name:a.name},optionalAugments:[],state:selected?'owned':'offered',catalogDisabled:disabled,patch:data.patch,pendingItems:0,equipmentState:state,
    gear:[...(equipped.length?[{when:'本人已装备 · 图鉴示例',why:rule.ratioText,items:equipped}]:[]),...(planned.length?[{when:'当前方案 · 若购买',why:rule.ratioText,items:planned}]:[])],
-   basis:'按DDragon图鉴的明示基础项举例，未核对本模式装备修正，非本局实际增量。缺项不代表不转换；不合算动态被动、其他转换或最终面板，不代表英雄适配、热门构筑或购买建议。',
+   basis:'DDragon图鉴基础项示例，未核对本模式装备修正，非本局增量。缺项不代表不转换；动态效果和复合转换未合算，不代表英雄适配或购买建议。',
    sources:[{name:'当前强化规则',url:review.source.binUrl},{name:'官方模式说明',url:review.source.official},{name:'当前装备基础属性',url:data.sources.items}]}];
  });
 }
