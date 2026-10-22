@@ -48,7 +48,7 @@ module.exports=function createHexMicroWindows({root,getState,setState,getPayload
    name=player.name;brief=player.known&&Number.isFinite(player.value)?'公开装备标价 '+Math.floor(player.value)+' 金；不含未花金币。':'装备尚未读全。';
   }else if(input.kind==='status'&&!p.routes.length){name=p.hero?.name;brief=p.pending;}else{
    const route=p.routes.find(row=>row.id===input.route),list=input.kind==='augment'?route?.augments:input.kind==='item'?route?.items:null,entry=list?.find(row=>String(row.id)===String(input.id));if(!entry)return false;
-   name=(entry.core?'核心 · ':'')+entry.name;brief=(input.kind==='augment'?(entry.owned?'本局已选。':entry.core?'需选到此强化。':'')+(entry.catalogDisabled?'目录已停用，不代表仍可获取。':''):'')+(entry.core?route.patch+'机制参考，非热度。':'')+(entry.brief||'效果待核对');
+   const conditional=route.kind==='item-synergy';name=(conditional?'联动条件 · ':entry.core?'核心 · ':'')+entry.name;brief=(input.kind==='augment'?(entry.owned?'本局已选。':entry.core?(conditional?'本轮选项，若选择。':'需选到此强化。'):'')+(entry.catalogDisabled?'目录已停用，不代表仍可获取。':''):'')+(entry.core?(conditional?route.patch+'条件联动；方案装备未视作已购。':route.patch+'机制参考，非热度。'):'')+(entry.brief||'效果待核对');
   }
   const r=input.rect,b=e.win.getBounds();if(!r||!['x','y','width','height'].every(k=>Number.isFinite(r[k]))||r.x<0||r.y<0||r.width<1||r.height<1||r.x+r.width>b.width+1||r.y+r.height>b.height+1)return false;
   const key=JSON.stringify([kind,p.context,name,brief,r]);if(key===tipKey)return true;hideTooltip();tipKey=key;tipKind=kind;const serial=hoverSerial;

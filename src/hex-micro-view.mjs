@@ -20,6 +20,6 @@ export function hexEconomyView(equipment,image){
 // Display only: each route must be independently sourced and validated by the
 // provider. Separate item/augment lists are not evidence of a paired build.
 export function hexMicroRoutesView(routes,image){
- const slots=(entries,kind)=>entries.map(entry=>`<button type="button" class="hex-micro-icon${entry.core?' is-core':''}" data-micro-kind="${kind}" data-micro-id="${e(entry.id)}" aria-label="${e((entry.core?'核心 · ':'备选 · ')+entry.name)}">${image(kind,entry.id,entry.name)}</button>`).join('');
- return `<div class="hex-micro-routes" aria-label="海克斯配套路线">${routes.slice(0,3).map(route=>`<section class="hex-micro-route" data-micro-route="${e(route.id)}" aria-label="${e(route.title)}"><div class="hex-micro-augments">${slots(route.augments,'augment')}</div><div class="hex-micro-items">${slots(route.items,'item')}</div></section>`).join('')}</div>`;
+ const slots=(entries,kind,conditional)=>entries.map(entry=>`<button type="button" class="hex-micro-icon${entry.core?' is-core':''}" data-micro-kind="${kind}" data-micro-id="${e(entry.id)}" aria-label="${e((conditional?'联动条件 · ':entry.core?'核心 · ':'备选 · ')+entry.name)}">${image(kind,entry.id,entry.name)}</button>`).join('');
+ return `<div class="hex-micro-routes" aria-label="海克斯路线与条件联动">${routes.slice(0,3).map(route=>`<section class="hex-micro-route" data-micro-route="${e(route.id)}" aria-label="${e(route.title)}"><div class="hex-micro-augments">${slots(route.augments,'augment',route.kind==='item-synergy')}</div><div class="hex-micro-items">${slots(route.items,'item',route.kind==='item-synergy')}</div></section>`).join('')}</div>`;
 }
