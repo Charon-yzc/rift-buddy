@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {buildAugmentDescriptions} from '../services/augments.mjs';
+import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from '../services/augments.mjs';
 import {hexAugmentReference} from '../src/core/hex-augment-reference.mjs';
 import {hexAugmentDetail} from '../src/core/hex-augment-detail.mjs';
 const read=file=>fs.readFile(new URL(file,import.meta.url),'utf8').then(JSON.parse);
@@ -34,7 +34,7 @@ test('exact current augment source yields complete sums with original triggers, 
  assert.match(by(1206).tooltip.description,/获得15%总攻击力攻击力/);assert.doesNotMatch(by(1206).tooltip.description,/物理伤害|魔法伤害/);
  assert.match(by(2157).tooltip.description,/参与一次击杀后，即刻治疗125%额外攻击力生命值/);
  assert.match(by(1066).tooltip.description,/（10 \+ 0\.025×额外攻击力 \+ 0\.016×法术强度 \+ 0\.001×额外生命值）%最大生命值/);assert.doesNotMatch(by(1066).tooltip.description,/目标最大生命值|自身最大生命值/,'The renderer must not invent an owner omitted by the source text');
- for(const row of rows){const bundled=game.augments.find(a=>a.id===row.id);assert.equal(row.description,bundled.description);assert.deepEqual(row.tooltip,bundled.tooltip);assert.equal(row.tooltipParserRevision,3);}
+ for(const row of rows){const bundled=game.augments.find(a=>a.id===row.id);assert.equal(row.description,bundled.description);assert.deepEqual(row.tooltip,bundled.tooltip);assert.equal(row.tooltipParserRevision,AUGMENT_TOOLTIP_PARSER_REVISION);}
  assert.deepEqual(fixture,before);
 });
 
@@ -44,7 +44,7 @@ test('unreviewed OutputType withdraws the whole sum while an independent healing
  assert.match(row.tooltip.description,/回复50–250（随等级） \+ 8%最大生命值生命值/);assert.match(row.tooltip.description,/冷却时间缩减3秒/);assert.equal(row.tooltip.status,'partial');
  for(const id of [2091,2131,2099])assert.equal(by(id).tooltip.status,'partial');
  const coefficient={__type:'StatByCoefficientCalculationPart',mStat:12,mStatFormula:2,mCoefficient:.05};
- for(const part of [{...coefficient,OutputType:2},{...coefficient,OutputType:0},{...coefficient,unexpectedModifier:1},{...coefficient,mStat:2,mStatFormula:1},{...coefficient,mStat:6},{...coefficient,mStat:'2'}]){
+ for(const part of [{...coefficient,OutputType:2},{...coefficient,OutputType:0},{...coefficient,unexpectedModifier:1},{...coefficient,mStat:2,mStatFormula:1},{...coefficient,mStat:9},{...coefficient,mStat:'2'}]){
   const result=render([{__type:'NumberCalculationPart',mNumber:999},part]);assert.equal(result.description,'〔动态数值〕');assert.equal(result.descriptionStatus,'partial');assert.deepEqual(result.unresolved,['Amount']);
  }
  assert.equal(render([{...coefficient,mStat:2,mCoefficient:0}]).description,'0%额外攻击力');
