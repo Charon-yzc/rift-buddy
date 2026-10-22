@@ -11,8 +11,11 @@ const plan=captureCreativePlan({slots:legacy.slots,creative:legacy.creative},old
 state.favorites=[{id:'historical-personal-preserved',type:'team',title:'历史个人方案',version:old.version,createdAt:'2026-10-01T00:00:00.000Z',slots:legacy.slots,style:'fun',scope:'party',creativePlan:plan,configurations:[]}];
 await saveState(root,state);const persisted=JSON.parse(await fs.readFile(path.join(root,'settings.json')));await fs.writeFile(path.join(root,'original-favorite.json'),JSON.stringify(persisted.favorites[0]));
 const hexRoot=await fs.mkdtemp(path.resolve('.local/current-hex-smoke-'));
-for(const phase of ['prepare','restart','hex']){
- const child=spawn(electronExecutable(),['--force-device-scale-factor=1',path.resolve(phase==='hex'?'scripts/smoke-hex-current.cjs':'scripts/smoke-current-data.cjs')],{cwd:process.cwd(),windowsHide:true,stdio:'inherit',env:{...process.env,RIFT_BUDDY_USER_DATA:phase==='hex'?hexRoot:root,RIFT_BUDDY_CURRENT_PHASE:phase}}),timer=setTimeout(()=>child.kill(),150000);
+const cases=[{phase:'prepare',profile:root},{phase:'restart',profile:root}];
+for(const phase of ['hex-sync-0','hex-sync-180','hex-sync-500','spells-prepare']){const profile=await fs.mkdtemp(path.resolve('.local/current-configuration-'));await saveState(profile,state);await fs.writeFile(path.join(profile,'original-favorite.json'),JSON.stringify(persisted.favorites[0]));cases.push({phase,profile});if(phase==='spells-prepare')cases.push({phase:'spells-restore',profile});}
+cases.push({phase:'hex',profile:hexRoot});
+for(const {phase,profile} of cases){
+ const child=spawn(electronExecutable(),['--force-device-scale-factor=1',path.resolve(phase==='hex'?'scripts/smoke-hex-current.cjs':'scripts/smoke-current-data.cjs')],{cwd:process.cwd(),windowsHide:true,stdio:'inherit',env:{...process.env,RIFT_BUDDY_USER_DATA:profile,RIFT_BUDDY_CURRENT_PHASE:phase}}),timer=setTimeout(()=>child.kill(),150000);
  try{const [code]=await once(child,'exit');assert.equal(code,0,'Actual current data '+phase+' failed; '+root);}finally{clearTimeout(timer);}
 }
-assert.equal(sha(await fs.readFile(archive)),release.archiveSha256);const report={passed:true,root,hexRoot,archiveSha256:release.archiveSha256,patch:'16.21',dataInjected:false,historicalPersonalExampleOnly:true,actualClientWrites:0};await fs.writeFile('.local/latest-current-data-smoke.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+assert.equal(sha(await fs.readFile(archive)),release.archiveSha256);const report={passed:true,root,hexRoot,cases,archiveSha256:release.archiveSha256,patch:'16.21',dataInjected:false,historicalPersonalExampleOnly:true,actualClientWrites:0};await fs.writeFile('.local/latest-current-data-smoke.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));

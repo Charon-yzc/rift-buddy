@@ -1,6 +1,7 @@
 const {revealDraftAction}=require('./smoke-draft-ui.cjs');
-const {app,session}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),cp=require('node:child_process'),https=require('node:https'),{EventEmitter}=require('node:events'),{pathToFileURL}=require('node:url');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),restart=process.env.RIFT_BUDDY_CURRENT_PHASE==='restart',windows=[];
+const {app,session,ipcMain,globalShortcut}=require('electron'),fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),cp=require('node:child_process'),https=require('node:https'),{EventEmitter}=require('node:events'),{pathToFileURL}=require('node:url');
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_CURRENT_PHASE,restart=phase==='restart',syncMode=phase?.startsWith('hex-sync-'),syncDelay=syncMode?Number(phase.slice('hex-sync-'.length)):0,windows=[];let syncHits=0;
+globalShortcut.register=()=>false;
 global.fetch=async()=>{throw Error('Current-data smoke: external network disabled');};https.request=()=>{throw Error('Current-data smoke: real client and writes prohibited');};
 app.setPath('userData',root);app.on('browser-window-created',(_event,w)=>{windows.push(w);w.setFocusable(false);w.webContents.setBackgroundThrottling(false);});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -9,11 +10,16 @@ const mockExec=(_file,_args,_options,callback)=>{if(callback)queueMicrotask(()=>
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));async function until(check,label){for(let n=0;n<200;n++){if(await check())return;await delay(80);}throw Error(label);}
 async function run(){
  const release=JSON.parse(await fs.readFile('release/latest.json')),base=path.join(release.directory,'resources/app.asar'),data=JSON.parse(await fs.readFile(path.join(base,'data/game.json')));assert.equal(data.patch,'16.21');assert.equal(data.augments.length,249);
+ const register=ipcMain.handle.bind(ipcMain);if(syncMode){assert([0,180,500].includes(syncDelay));ipcMain.handle=(channel,handler)=>register(channel,channel==='update-guide'?async(...args)=>{syncHits++;await delay(syncDelay);return handler(...args);}:handler);}
  app.getVersion=()=>JSON.parse(require('node:fs').readFileSync(path.join(base,'package.json'))).version;require(path.join(base,'electron/main.cjs'));
  let main;await until(()=>{main=windows.find(w=>w.webContents.getURL().endsWith('/src/index.html'));return main;},'Current main missing');const js=code=>main.webContents.executeJavaScript(code,true),state=async()=>(await js('window.buddy.bootstrap()')).state;
  const click=async selector=>{selector=await revealDraftAction(js,selector);assert(await js('!!document.querySelector('+JSON.stringify(selector)+')'),selector);await js('document.querySelector('+JSON.stringify(selector)+').click()');await delay(100);};
- await until(()=>js('!!document.querySelector("[data-action=navigate]")'),'Current renderer missing');const bootstrap=await js('window.buddy.bootstrap()');assert.equal(bootstrap.data.patch,data.patch);assert.equal(bootstrap.data.version,data.version);
+ await until(()=>js('!!document.querySelector("[data-action=navigate]")'),'Current renderer missing');ipcMain.handle=register;const bootstrap=await js('window.buddy.bootstrap()');assert.equal(bootstrap.data.patch,data.patch);assert.equal(bootstrap.data.version,data.version);
  const original=JSON.parse(await fs.readFile(path.join(root,'original-favorite.json')));assert.deepEqual((await state()).favorites.find(f=>f.id===original.id),original,'Current startup changed historical personal data');
+ if(syncMode||phase?.startsWith('spells-')){
+  const checks=await require('./smoke-current-configuration.cjs')({phase,root,main,windows,js,click,state,until,delay,syncDelay,syncHits:()=>syncHits});assert.deepEqual((await state()).favorites.find(f=>f.id===original.id),original);
+  const proof={passed:true,phase,patch:data.patch,archiveSha256:release.archiveSha256,dataInjected:false,realClientWrites:0,...checks};await fs.writeFile(path.join(root,'current-'+phase+'.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify(proof));app.quit();return;
+ }
  const {createCooperationGraph,cooperationPlan}=await import(pathToFileURL(path.join(base,'src/core/cooperation.mjs')));assert.equal(cooperationPlan([{champion:'Trundle',role:'top'},{champion:'Sejuani',role:'jungle'},{champion:'Seraphine',role:'mid'}],createCooperationGraph(data.champions)),null,'Raw update must not renew the old skill link');
  let expected;
  if(!restart){
