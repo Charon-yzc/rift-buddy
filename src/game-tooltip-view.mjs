@@ -1,15 +1,17 @@
 import {escape as e,gameDescription,asset} from './ui.mjs';
 import {itemPatchNotes,patchDirectionLabel} from './core/patch-notes.mjs';
 import {compareBuildPatches} from './core/builds.mjs';
+import {itemModeTooltip} from './core/item-mode-tooltip.mjs';
 const numbers=value=>String(value).split(/(\d+(?:\.\d+)?(?:%|秒|金币|金)?)/g).map((part,index)=>index%2?`<strong>${e(part)}</strong>`:e(part)).join('');
 export function gameTooltipView(data,kind,id,{mode='rift',image=asset}={}){
- let name,description,meta='',partial=false,changes=[],basic='';
+ let name,description,meta='',partial=false,changes=[],basic='',modeDetail=null;
  if(kind==='item'){
   const item=data.items[id];if(!item)return '';
-  const detailed=item.tooltip?.patch===data.patch&&typeof item.tooltip.description==='string'?item.tooltip:null;
+  modeDetail=itemModeTooltip(item,data.patch,mode);
+  const detailed=modeDetail||(item.tooltip?.patch===data.patch&&typeof item.tooltip.description==='string'?item.tooltip:null);
   name=item.name;description=detailed?.description||item.description;partial=detailed?.status==='partial';
   if(partial){const official=gameDescription(item.description).split(/\n\s*\n/).find(block=>/^\s*\d/.test(block));if(official&&official.replace(/\s/g,'')!==gameDescription(description).split(/\n\s*\n/)[0].replace(/\s/g,''))basic=official;}
-  meta=['峡谷',data.patch,Number.isFinite(item.gold?.total)?item.gold.total+' 金':''].filter(Boolean).join(' · ');
+  meta=[modeDetail?'海克斯参数':'峡谷',data.patch,Number.isFinite(item.gold?.total)?(modeDetail?'基础标价 ':'')+item.gold.total+' 金':''].filter(Boolean).join(' · ');
   changes=itemPatchNotes(data,id).filter(row=>compareBuildPatches(row.patch,data.patch)<=0).slice(0,2);
  }else if(kind==='rune'){
   const rune=data.runes.flatMap(tree=>tree.slots.flatMap(slot=>slot.runes)).find(rune=>String(rune.id)===String(id));if(!rune)return '';
@@ -19,7 +21,7 @@ export function gameTooltipView(data,kind,id,{mode='rift',image=asset}={}){
   name=spell.name;description=spell.description;meta=[data.patch,spell.cooldownBurn?'冷却 '+spell.cooldownBurn+' 秒':''].filter(Boolean).join(' · ');
  }else return '';
  const paragraphs=gameDescription(description).slice(0,7000).split(/\n\s*\n/).filter(Boolean);
- return `<header>${image(kind,id,name)}<div><b>${e(name)}</b><small>${e(meta)}</small></div></header>${mode==='hex'?'<p class="game-tooltip-note">以下为峡谷基础值，海克斯模式调整未核对。</p>':''}${basic?`<section class="game-tooltip-basics"><small>基础属性 · 同版本官方简介</small><p>${numbers(basic)}</p></section>`:''}<div class="game-tooltip-description">${paragraphs.map(text=>`<p>${numbers(text)}</p>`).join('')}</div>${partial?'<small class="game-tooltip-note">部分数值尚未解析，请以游戏内显示为准。</small>':''}${changes.length?`<section class="game-tooltip-changes"><b>近期峡谷改动</b>${changes.map(row=>`<div><small>${e(row.officialPatch)} · ${patchDirectionLabel(row.direction)}</small>${row.changes.slice(0,5).map(change=>`<p><span>${e(change.field)}</span><span>${numbers(change.before)} <i>→</i> ${numbers(change.after)}</span></p>`).join('')}</div>`).join('')}</section>`:''}`;
+ return `<header>${image(kind,id,name)}<div><b>${e(name)}</b><small>${e(meta)}</small></div></header>${mode==='hex'?`<p class="game-tooltip-note">${modeDetail?'已应用公开海克斯参数；基础属性、其他模式修正与强化未合算。':'以下为峡谷基础值，海克斯模式调整未核对。'}</p>`:''}${basic?`<section class="game-tooltip-basics"><small>${modeDetail?'峡谷基础属性 · 同版本简介':'基础属性 · 同版本官方简介'}</small><p>${numbers(basic)}</p></section>`:''}<div class="game-tooltip-description">${paragraphs.map(text=>`<p>${numbers(text)}</p>`).join('')}</div>${partial?'<small class="game-tooltip-note">部分数值尚未解析，请以游戏内显示为准。</small>':''}${changes.length?`<section class="game-tooltip-changes"><b>近期峡谷改动</b>${changes.map(row=>`<div><small>${e(row.officialPatch)} · ${patchDirectionLabel(row.direction)}</small>${row.changes.slice(0,5).map(change=>`<p><span>${e(change.field)}</span><span>${numbers(change.before)} <i>→</i> ${numbers(change.after)}</span></p>`).join('')}</div>`).join('')}</section>`:''}`;
 }
 
 // A single top-layer card follows game assets across renderers and dialogs.

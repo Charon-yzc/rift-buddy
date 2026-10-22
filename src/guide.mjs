@@ -14,7 +14,7 @@ const viewStates=new Map();
 const root=document.getElementById('guide-root');
 const isPreview=!window.guide;
 const api=window.guide||{
- reference:async(kind,id)=>gameReference(window.previewGuideData,kind,id),
+ reference:async(kind,id,mode)=>gameReference(window.previewGuideData,kind,id,mode),
  bootstrap:async()=>{
   const {data,state}=await (await fetch('/api/bootstrap')).json();data.flashSlot=state.preferences?.flashSlot;
   const id=new URLSearchParams(location.search).get('hero')||'Ashe',mode=new URLSearchParams(location.search).get('mode')||'rift';

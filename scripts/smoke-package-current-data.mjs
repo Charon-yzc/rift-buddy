@@ -14,8 +14,9 @@ const hexRoot=await fs.mkdtemp(path.resolve('.local/current-hex-smoke-'));
 const cases=[{phase:'prepare',profile:root},{phase:'restart',profile:root}];
 for(const phase of ['hex-sync-0','hex-sync-180','hex-sync-500','spells-prepare']){const profile=await fs.mkdtemp(path.resolve('.local/current-configuration-'));await saveState(profile,state);await fs.writeFile(path.join(profile,'original-favorite.json'),JSON.stringify(persisted.favorites[0]));cases.push({phase,profile});if(phase==='spells-prepare')cases.push({phase:'spells-restore',profile});}
 cases.push({phase:'hex',profile:hexRoot});
+cases.push({phase:'item-mode-reference',profile:await fs.mkdtemp(path.resolve('.local/item-mode-reference-'))});
 for(const {phase,profile} of cases){
- const child=spawn(electronExecutable(),['--force-device-scale-factor=1',path.resolve(phase==='hex'?'scripts/smoke-hex-current.cjs':'scripts/smoke-current-data.cjs')],{cwd:process.cwd(),windowsHide:true,stdio:'inherit',env:{...process.env,RIFT_BUDDY_USER_DATA:profile,RIFT_BUDDY_CURRENT_PHASE:phase}}),timer=setTimeout(()=>child.kill(),150000);
+ const child=spawn(electronExecutable(),['--force-device-scale-factor=1',path.resolve(phase==='hex'?'scripts/smoke-hex-current.cjs':phase==='item-mode-reference'?'scripts/smoke-item-mode-reference.cjs':'scripts/smoke-current-data.cjs')],{cwd:process.cwd(),windowsHide:true,stdio:'inherit',env:{...process.env,RIFT_BUDDY_USER_DATA:profile,RIFT_BUDDY_CURRENT_PHASE:phase}}),timer=setTimeout(()=>child.kill(),150000);
  try{const [code]=await once(child,'exit');assert.equal(code,0,'Actual current data '+phase+' failed; '+root);}finally{clearTimeout(timer);}
 }
 assert.equal(sha(await fs.readFile(archive)),release.archiveSha256);const report={passed:true,root,hexRoot,cases,archiveSha256:release.archiveSha256,patch:'16.21',dataInjected:false,historicalPersonalExampleOnly:true,actualClientWrites:0};await fs.writeFile('.local/latest-current-data-smoke.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));
