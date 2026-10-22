@@ -74,7 +74,7 @@ function mechanicAdvice(data,champion,a,owned,p){
  }
  if(a.id===1002)cautions.push('先有可受装备急速影响的装备效果，才有对应收益；不缩短英雄技能冷却。');
  if(a.id===1205)cautions.push('额外攻击力转为法强，需同时核对装备属性和技能加成；不要照搬原有纯AD路线。');
- if(!kitCurrent)cautions.push('本英雄技能源有变动或缺失，英雄适配待复核；仍可核对强化本身效果。');
+ if(!kitCurrent)cautions.push('英雄适配尚待复核；这里只核对强化本身与已选强化，不推定英雄技能适用。');
  return {affinity,reasons,cautions,conflict,conditional,reviewed:true};
 }
 
@@ -109,14 +109,14 @@ export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
   const alone=ownedRecords.length?mechanicAdvice(data,champion,a,[],kit):advice;
   const markedReasons=advice.affinity>alone.affinity&&!advice.conflict?advice.reasons.filter(text=>!alone.reasons.includes(text)):[];
   const unknownSkill=a.unresolved?.includes('SpellName')||/适用技能/.test(a.description||'');
-  const level=advice.conflict?'conflict':ownedIds.has(id)?'owned':unknownSkill||advice.conditional?'conditional':advice.affinity>0?'preferred':sourceIds.has(id)?'reference':'conditional';
+  const level=advice.conflict?'conflict':ownedIds.has(id)?'owned':unknownSkill||advice.conditional||!kit&&advice.affinity>0?'conditional':advice.affinity>0?'preferred':sourceIds.has(id)?'reference':'conditional';
   const reasons=[...advice.reasons],cautions=[...advice.cautions];
   if(hexCatalogDisabled(data,a))cautions.push('当前目录标记禁用；这里保留你录入的实际选项，以本局服务器提供的选项为准。');
   if(sourceIds.has(id))reasons.push('当前版本 OP.GG 该英雄的强化参考清单包含此项；来源未提供该项正样本数。');
   if(unknownSkill)cautions.push('尚未核实本英雄具体适用哪项技能，先核对局内技能标记，不当作全技能生效。');
   if(!actual&&!sourceIds.has(id)&&advice.affinity<=0)return null;
   const priority=level==='preferred'?10+advice.affinity+(sourceIds.has(id)?1:0):level==='reference'?4:level==='conditional'?1:-1;
-  return {...base,reasons:[...new Set([...reasons,...base.reasons])],cautions:[...new Set([...cautions,...base.cautions])],markedReasons,level,label:labels[level],priority,fromSource:sourceIds.has(id),mechanicReviewed:advice.reviewed};
+  return {...base,reasons:[...new Set([...reasons,...base.reasons])],cautions:[...new Set([...cautions,...base.cautions])],markedReasons,level,label:labels[level],priority,fromSource:sourceIds.has(id),mechanicReviewed:advice.reviewed,heroReviewed:!!kit};
  }).filter(Boolean);
  const ordered=[...rows].sort((a,b)=>b.priority-a.priority||a.id-b.id),first=ordered[0],second=ordered[1];
  return {rows:actual?rows:ordered.slice(0,Math.max(0,Math.min(12,limit))),bestChoice:actual&&first?.level==='preferred'&&first.priority>(second?.priority??-Infinity)?first.id:null,

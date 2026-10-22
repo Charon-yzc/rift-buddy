@@ -85,9 +85,11 @@ test('ultimate conflict review gates both effects and never recommends reroll fo
   const changed={...data,augments:data.augments.map(a=>a.id===id?{...a,...change}:a)},result=hexDecision(args('Ashe',options,[1004],{data:changed}));assert.equal(result.reroll.recommended,false);
   if(id===1004)assert.ok(result.rows.every(row=>row.level!=='conflict'));else assert.notEqual(result.rows.find(row=>row.id===id).level,'conflict');
  }
- for(const extra of [{data:{...data,patch:'16.21'}},{mode:'rift'},{mode:'arena'},{data:{...data,champions:data.champions.map(c=>c.id==='Ashe'?{...c,mechanicSource:undefined}:c)}}]){
+ for(const extra of [{data:{...data,patch:'16.22'}},{mode:'rift'},{mode:'arena'}]){
   const result=hexDecision(args('Ashe',options,[1004],extra));assert.equal(result.reroll.recommended,false);assert.ok(result.rows.every(row=>row.priority==='待核对'));assert.deepEqual(result.set.conflicts,[]);
  }
+ const missingKit={...data,champions:data.champions.map(c=>c.id==='Ashe'?{...c,stats:{...c.stats,attackdamage:-1}}:c)},independent=hexDecision(args('Ashe',options,[1004],{data:missingKit}));
+ assert.equal(independent.reroll.recommended,true);assert.ok(independent.rows.every(row=>row.level==='conflict'&&!row.top&&row.rank===null));
 });
 
 test('a conflict is the visible main/sidebar headline and the first guide warning, before positive trigger instructions',()=>{
