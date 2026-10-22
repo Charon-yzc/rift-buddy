@@ -14,7 +14,7 @@ function setup(preferences={}){
  const value={referenceRevision:1,model:{mode:'hex',champion:{id:'Yasuo',name:'亚索'},matchId:'5',equipment:{available:true,ally:{players:[{id:'Yasuo',name:'亚索',known:true,value:300}]},enemy:{players:[]}},hexMicroRoutes:[]}};
  class Window extends EventEmitter{
   constructor(options){super();this.options=options;this.bounds={x:options.x||0,y:options.y||0,width:options.width,height:options.height};this.visible=false;this.shows=0;this.sent=[];this.webContents=new EventEmitter();this.webContents.mainFrame={};this.webContents.send=(...args)=>this.sent.push(args);this.webContents.setWindowOpenHandler=()=>{};this.webContents.executeJavaScript=()=>height();windows.push(this);}
-  getBounds(){return this.bounds;}setBounds(b){this.bounds=b;this.emit('move');}isDestroyed(){return this.destroyed===true;}isVisible(){return this.visible;}showInactive(){this.visible=true;this.shows++;}hide(){assert(!this.isDestroyed(),'must not touch a destroyed window');this.visible=false;}setAlwaysOnTop(){}setIgnoreMouseEvents(value){this.ignore=value;}loadFile(){}async loadURL(){}destroy(){this.destroyed=true;this.emit('closed');}
+  getBounds(){return this.bounds;}setBounds(b){this.bounds=b;this.emit('move');}isDestroyed(){return this.destroyed===true;}isVisible(){return this.visible;}showInactive(){this.visible=true;this.shows++;}hide(){assert(!this.isDestroyed(),'must not touch a destroyed window');this.visible=false;}setAlwaysOnTop(){}setIgnoreMouseEvents(value){this.ignore=value;}loadFile(){}async loadURL(url){this.url=url;}destroy(){this.destroyed=true;this.emit('closed');}
  }
  const module={exports:{}};vm.runInNewContext(fs.readFileSync(file,'utf8'),{module,require:name=>name==='electron'?{BrowserWindow:Window,ipcMain:{handle:(name,fn)=>{handlers[name]=fn;}},screen:{getCursorScreenPoint:()=>cursor}}:nativeRequire(name),setInterval:fn=>{intervals.push(fn);return {unref(){}};},clearInterval(){},setTimeout:fn=>{timers.set(++nextTimer,fn);return nextTimer;},clearTimeout:id=>timers.delete(id)});
  const micro=module.exports({root,getState:()=>state,setState:async(next,base)=>{saves++;await write(next,base);},getPayload:()=>value,getArea:()=>area,getGameBounds:()=>null,getScale:()=>1,getPreferences:()=>preferences,isActive:()=>active,isQuitting:()=>false,onHide(){},onChange(){},showMain(){},diagnostic(){}});
@@ -23,6 +23,14 @@ function setup(preferences={}){
 }
 const hover={side:'ally',id:'Yasuo',rect:{x:6,y:10,width:18,height:18}};
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
+
+test('narrow upgrade hovers distinguish suggested, prepared and held equipment before clipping the description',async()=>{
+ for(const [equipmentState,expected]of [['suggested','强化关联装备，若购买再利用。'],['prepared','方案装备未视作已购。'],['held','本人装备已读取，仍需满足触发条件。']]){
+  const s=setup();s.value.model.hexMicroRoutes=[{id:'upgrade',kind:'item-synergy',patch:'16.21',equipmentState,augments:[{id:1318,name:'升级：中娅',core:true,owned:true,brief:'长说明'.repeat(100)}],items:[{id:3157,name:'中娅沙漏',core:true,brief:'长说明'.repeat(100)}]}];s.micro.show();s.ready();const payload=s.call('routes','hex-micro-bootstrap');
+  for(const [kind,id]of [['augment',1318],['item',3157]]){assert.equal(await s.call('routes','hex-micro-hover',{kind,id,route:'upgrade',context:payload.context,rect:{x:3,y:10,width:32,height:32}}),true);const html=decodeURIComponent(s.windows[2].url.split(',').slice(1).join(','));assert(html.includes(expected));if(equipmentState==='suggested')assert(!html.includes('方案装备未视作已购'));}
+  s.micro.destroy();
+ }
+});
 
 test('delayed native readiness and repeated polling cannot reopen a closed micro window',()=>{
  const s=setup();s.micro.show();assert.equal(s.windows.length,2);
