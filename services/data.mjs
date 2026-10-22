@@ -9,7 +9,7 @@ import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
 
 export const DD = 'https://ddragon.leagueoflegends.com';
 export const CN = 'https://game.gtimg.cn/images/lol/act/img/js';
-const hasAugmentDetails=a=>a.tooltip?.revision===1&&!!a.tooltip.description&&Number.isSafeInteger(a.tooltipParserRevision)&&a.tooltipParserRevision>=AUGMENT_TOOLTIP_PARSER_REVISION;
+const hasAugmentDetails=a=>a.tooltip?.revision===1&&!!a.tooltip.description&&Number.isSafeInteger(a.tooltipParserRevision)&&a.tooltipParserRevision>=AUGMENT_TOOLTIP_PARSER_REVISION&&(a.tooltipParserRevision>AUGMENT_TOOLTIP_PARSER_REVISION||/^[a-f0-9]{64}$/.test(a.effectSourceHash||''));
 export async function getJSON(url, timeout = 20000) {
   let last;
   for(let attempt=0;attempt<3;attempt++) {
@@ -69,7 +69,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     }
     // Parser completion lives on each augment, so it cannot skip an unfinished
     // revision-8 item migration or force the detail sources to be read again.
-    if(previous.contentRevision>=9&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(14,previous.contentRevision)};
+    if(previous.contentRevision>=9&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(15,previous.contentRevision)};
     progress('当前已是最新资料版本');
     return {...previous,checkedAt:new Date(clock()).toISOString()};
   }
@@ -111,7 +111,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:itemDescriptions&&augments.length&&augments.every(hasAugmentDetails)?14:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
+    schema: 1, contentRevision:itemDescriptions&&augments.length&&augments.every(hasAugmentDetails)?15:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "contentRevision": 14,
+  "contentRevision": 15,
   "mechanicSourceRevision": 1,
   "itemTooltipRevision": 1,
   "version": "16.21.1",
@@ -206376,7 +206376,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "44a7dc11d4116c3e1dd9d61c5b9d0a17893229d8495361e456e006a382bb0921"
     },
     {
       "id": 1141,
@@ -206400,7 +206401,8 @@
         3,
         0
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "646ce0b070a6d5b65f0a8ea0644c9ddf10c04fb39ec1d590e5000f27848dbb5c"
     },
     {
       "id": 1002,
@@ -206424,7 +206426,8 @@
         4,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "7386ee271050ba0bbec98a22e2129d4ccb3e4e3eede09e238192f0ff4f2dc249"
     },
     {
       "id": 2087,
@@ -206447,7 +206450,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "aad24da115f59f13400fa4e112d9026fea5648e259ba6386c75c71b86e5fb1e3"
     },
     {
       "id": 1004,
@@ -206470,7 +206474,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "69ccae6ae3c5b392673b80723c91efb90fa8b98964958dbb684894e684959d4d"
     },
     {
       "id": 2103,
@@ -206498,7 +206503,8 @@
         1,
         8
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "2c10e78d96ce896c601fca6aa829834d26d6fa3c840402164903f1be8f432bdd"
     },
     {
       "id": 1180,
@@ -206521,7 +206527,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "79cde27c5d33886b1c1c8437eb66222756f4f868662ab4c965ca66f274406f5c"
     },
     {
       "id": 1006,
@@ -206545,7 +206552,8 @@
         1,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "def04e8ef56a615690d8d416cf29bd2e5a73a19a79b464e956f0bec558eb284a"
     },
     {
       "id": 1007,
@@ -206570,7 +206578,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a549b806fa264e4cb3bad95c81be4664fa43be6174b1d2db651e5f3705ed27ee"
     },
     {
       "id": 1103,
@@ -206593,7 +206602,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f1d1b8fe1acaa1fc388edb509e57c84a0c536d8afa5c32e9db271236ccd59683"
     },
     {
       "id": 1151,
@@ -206616,7 +206626,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c378d43b4a9f798ff5a06bb52326c117e41892525054d5488dba1eb8eedfe653"
     },
     {
       "id": 1150,
@@ -206639,7 +206650,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f22a4f517a26f6bfaed8b6ba2a957a31b4409c8a629a62c2b804d276628d13d5"
     },
     {
       "id": 1011,
@@ -206662,7 +206674,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1a913a5dc686d448eb12db9836d71a44a560498a7cd90c967b2306627f6325f8"
     },
     {
       "id": 1013,
@@ -206685,7 +206698,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "30e64d04b513501625ca566e015da89122c307af0f7d9235a35d63a378aeacff"
     },
     {
       "id": 1015,
@@ -206710,7 +206724,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a2923de4377210e5e3840ff81575ebb75743265db6cb6a84103605ef56fa7f2e"
     },
     {
       "id": 1310,
@@ -206735,7 +206750,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "0ff35c55fef1d066100156ed7cd93f04ae2149c7c3236541a583d0d2b52d21bb"
     },
     {
       "id": 1018,
@@ -206760,7 +206776,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "01177a68f5734042143bbc7fc3cecb6ac40d6efeacca3ff253f9e8393bac727a"
     },
     {
       "id": 1118,
@@ -206783,7 +206800,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "992334fef53b025eb9218a9c68fdfc0da0a8066d84df5c4b20f372a12bd6e941"
     },
     {
       "id": 1323,
@@ -206808,7 +206826,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "54ff2d848c074a7c72c86993f87330a11383fa1e49dc149af14aa2ac85fd9c77"
     },
     {
       "id": 1019,
@@ -206831,7 +206850,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "26bbde8dbace73339561c2e2a84352240eb56a683941c7a87ef47fd0bb8545c9"
     },
     {
       "id": 1020,
@@ -206854,7 +206874,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "41623b72e3ddbe34b62374a7eabb2fdce23dc5ce18a7d08b159172ffb829fdc7"
     },
     {
       "id": 1022,
@@ -206877,7 +206898,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c07ba71d22be3d7c248bebd438f65477a750582aae2879d954e235cc39dfff09"
     },
     {
       "id": 1025,
@@ -206903,7 +206925,8 @@
         0,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "bcb652cda009b3ac81828f1098bfd11a33c40efabfcb071039fd03928ef91eb0"
     },
     {
       "id": 2099,
@@ -206932,7 +206955,8 @@
         1,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "12ee82c0ee245a3bd845cc5bf31ad3e1f72c75e842a4f9f3827b9963193c2f8e"
     },
     {
       "id": 1301,
@@ -206955,7 +206979,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "68a1c749d80d9753aa4160f2da9cfcb2b97d6474afde29d3aa6fc96a94cb8c80"
     },
     {
       "id": 1026,
@@ -206980,7 +207005,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "75b3cbda7f85db0139070ca1cc71eabea6116de8e5aed70becd3480bbfb60b52"
     },
     {
       "id": 2010,
@@ -207003,7 +207029,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c12c9228c8b9d65c4020470fc4208835c3868c9dea29f974cb4fed8e36228505"
     },
     {
       "id": 1134,
@@ -207027,7 +207054,8 @@
         1,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1a1edbdcbc981f1461986552b4eabcfd882fdbcaf8f94502a02639537a8580b6"
     },
     {
       "id": 1225,
@@ -207050,7 +207078,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "973f0e48272d8ef2ec7b2535c1740fe880d6e99b2c40cf96786ea8d6e525cbd3"
     },
     {
       "id": 1027,
@@ -207075,7 +207104,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "21a5c3e830bd2cf1bc2837c9755b8eaf821538af4066bf008cf186580686588e"
     },
     {
       "id": 2004,
@@ -207103,7 +207133,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "164e27afe5c87f4f8d81f08ea4fff7a01925f44ba0088fe5de8bbdbf60f26054"
     },
     {
       "id": 2098,
@@ -207128,7 +207159,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e42275c35c0865000e51da560f4c23d1ca0c94701dc6441f2cadae73be632539"
     },
     {
       "id": 1028,
@@ -207152,7 +207184,8 @@
         5,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "24297e0687e91b4b6ebf4b34fe532381f2f6e94fc2904571c525d5682aff8709"
     },
     {
       "id": 1029,
@@ -207178,7 +207211,8 @@
         1,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "9f78a8b55b3bbb34b51a3d51af64715769608a760f123897f0c866ae06115042"
     },
     {
       "id": 1030,
@@ -207201,7 +207235,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e23a0a5b4b7b3a99e4e375411a99cc4a0f64dd5a2b84a4b4c8eb17024e6408cb"
     },
     {
       "id": 1194,
@@ -207224,7 +207259,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "d922482683c0946a60623076c8a00e4152747f7ee27730b7a0d4e6fe4c98851f"
     },
     {
       "id": 1036,
@@ -207249,7 +207285,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "408387a3e10a2811b752374d6ac0e44ec14c762709d557a47505cade4eeb434b"
     },
     {
       "id": 1308,
@@ -207275,7 +207312,8 @@
         4,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "365b6594ce4fe0279ee8638ec0e9e06ba2b15c0691fdd79f0bbb8f2f370d357a"
     },
     {
       "id": 1037,
@@ -207299,7 +207337,8 @@
         5,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ae24f0c70316870850c5d55c925d834827dbed641e6ec8895927f88ce451471e"
     },
     {
       "id": 1187,
@@ -207326,7 +207365,8 @@
         4,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "2c1fa68b041825323699a99a5ea3f7580fdf0e5149ab42a34f45e4dc7d7504ec"
     },
     {
       "id": 1116,
@@ -207349,7 +207389,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4f65119bfa1d9b6bb29a763a0e517a7f7fd628b8d3d3749ae9e228d48b2981b0"
     },
     {
       "id": 1038,
@@ -207376,7 +207417,8 @@
         1,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "3bc94979f287b64ca28df341bc12b4fcf31a826061b566460f5c62a630abbe11"
     },
     {
       "id": 1322,
@@ -207399,7 +207441,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "0022953b2e248acbca8b8dcbaa03842154a550a07c56c75a906baac074025382"
     },
     {
       "id": 1195,
@@ -207425,7 +207468,8 @@
         4,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f7f620d23fe1b60a9c832841a36c6620eea9180456a60bd61c900391bacecdbe"
     },
     {
       "id": 1041,
@@ -207449,7 +207493,8 @@
         3,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a40590bbd0181bd95208004e641f410061196f2c3f7df0fe873c5d7afd7aa07c"
     },
     {
       "id": 1138,
@@ -207472,7 +207517,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "04991b669649f917e95044de39fe7ece3298e8a6af13e4d81740398658d15b73"
     },
     {
       "id": 1181,
@@ -207496,7 +207542,8 @@
         3,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "df7be30632d5f41361cc5aed508623bb1d9fd1401373cda2633860eb949735db"
     },
     {
       "id": 2107,
@@ -207520,7 +207567,8 @@
         1,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "158909c59e259ab9122aa2cf3fe265960fb64048dea0302fb3658f4ce51ec012"
     },
     {
       "id": 1105,
@@ -207543,7 +207591,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "7343d7b016fcf52cd61ceafcee5b3b1b4505f207b9b54e9ee659e8267cd6127a"
     },
     {
       "id": 1044,
@@ -207566,7 +207615,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "6a7364461a8038bddebc2f315373eb62e42c720b68bea0fef82eca538d83a2e9"
     },
     {
       "id": 1001,
@@ -207592,7 +207642,8 @@
         3,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "3e88a4cff224a254402269ec528dd82bbb8d80df3b01fb6971e1088a90815663"
     },
     {
       "id": 1149,
@@ -207616,7 +207667,8 @@
         5,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "8e936a4425d4817ada41836e0d1e1e0244dd348e4707bff19add1345d0b2841a"
     },
     {
       "id": 1045,
@@ -207642,7 +207694,8 @@
         1,
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "d6a03f6da6805e99f26f49197fc0ca9c524c68218bc995f9e13f9a174b678392"
     },
     {
       "id": 1046,
@@ -207667,7 +207720,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a5ca56cfd2ee56238d5e2f1c4d234caca3061a52da7567d4d034e0053b04849f"
     },
     {
       "id": 2005,
@@ -207694,7 +207748,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "5fdcb8d51c17949dcce570cbc20f673a01a66cd63f8b926deda7467d6574d4c4"
     },
     {
       "id": 1047,
@@ -207717,7 +207772,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "00a4a5a6aa55e157c860fa2bd11387e4c8282e587e7247f35be5140ebd87d8ea"
     },
     {
       "id": 1211,
@@ -207742,7 +207798,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "6ea4b35d0428d2f2116e93a793337d182c48007c67ef3c1ae241fa74aa1bb524"
     },
     {
       "id": 1048,
@@ -207767,7 +207824,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "17ab97009d21af3f5e5c86b06b30713f633cf37a787005d6812519ae48c84bae"
     },
     {
       "id": 2016,
@@ -207795,7 +207853,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "fc3175b884921fc38fa0bebfc1a4a6757c712b52dc262dfea67fa8d64d81069a"
     },
     {
       "id": 1305,
@@ -207818,7 +207877,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "babd9243a7698b04f3850a33aa81e9b65c53b258244d112cc2e6afc8d6068240"
     },
     {
       "id": 1051,
@@ -207843,7 +207903,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "478a10e57f429baa42ba4ac9eaa16ed91fe282abcc884688620c55942e080bba"
     },
     {
       "id": 2007,
@@ -207872,7 +207933,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "56c8aebdce3a381aa8979ec84523a187ce97257ee65e76adc708a38fffbc7775"
     },
     {
       "id": 1053,
@@ -207895,7 +207957,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "994361131792d9739987b436a26a0808533668185b22aa2cfcb9a122c2433368"
     },
     {
       "id": 1133,
@@ -207920,7 +207983,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e821fd010db42e72e4e52c7b5f64ecc97aff6b3d363335417010ed2fd2137c08"
     },
     {
       "id": 1129,
@@ -207945,7 +208009,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "037c7ccf5f52456e5f4d8c1dcf224ad740432c946a5601fdbc5541389cf06cfd"
     },
     {
       "id": 1054,
@@ -207968,7 +208033,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "40340b371e7491cf4698ef6ae9df7436566d57584617994ff738d4f2d581d3f9"
     },
     {
       "id": 1056,
@@ -207993,7 +208059,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f2b57defd6fad6a916f2158a316ab81428e6ce37ef872d1dc3edf8a128e0c12b"
     },
     {
       "id": 1104,
@@ -208016,7 +208083,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "5598fd201ebe657f5a935990d6b8062904f154b8eb9874817d90a08067d5b9ec"
     },
     {
       "id": 1057,
@@ -208041,7 +208109,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "9a44c734291c8f21131209249687cf02beca5c995590c228db691855dd2ba741"
     },
     {
       "id": 2055,
@@ -208071,7 +208140,8 @@
         1,
         9
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "5c61514e703f4a9db6f8c1e3a60147382b836f184beac37e7443389f4ba7023f"
     },
     {
       "id": 1058,
@@ -208094,7 +208164,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "49d9095197b1adcadc9ce2bdd7a052059a5ec0f2593a9903e5d4e4cb6ef4c161"
     },
     {
       "id": 1060,
@@ -208119,7 +208190,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "167a58835f8ab1f7a3ebdf468b4bd5bad2439eb7895589d72996f93941f7efe0"
     },
     {
       "id": 1061,
@@ -208146,7 +208218,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "95e765fc0cc4da9ede0ba89a498debbce8c0e5a39d26118cd9bc0e1a02f075f9"
     },
     {
       "id": 1062,
@@ -208169,7 +208242,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1eee75b95488b8f8740f501c5fe2dfbb10cf0c6ee6b86ecbe224361ac3854c94"
     },
     {
       "id": 1063,
@@ -208194,7 +208268,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4fbc814fd402ce957995866e7d893ceeffdf948a960e2833528906da1f638f10"
     },
     {
       "id": 1311,
@@ -208219,7 +208294,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b577436af0ff93f37b370f225560c1b9d59bba3e05b68371de871ee7293d2cfc"
     },
     {
       "id": 12317,
@@ -208242,7 +208318,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a7c0ba32a7fe1d97929553521f70276bcee5eb51ea3301e1b68307f166604337"
     },
     {
       "id": 1064,
@@ -208267,7 +208344,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "21dab28b9defebef38fb141a5161867763c3f1fd58eea20466a6ae6fa5906048"
     },
     {
       "id": 1390,
@@ -208292,7 +208370,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "21759bc8c22129bbdd6b644ae363fe365eddcb6132a4645c04e51b96dde601c4"
     },
     {
       "id": 1324,
@@ -208316,7 +208395,8 @@
         5,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "254f890bc9360a1fc63e2082cb9d743ed2137678aec58474f47b962933b619b7"
     },
     {
       "id": 2018,
@@ -208341,7 +208421,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "bb5f125ed5b4b50337820cc9813c01bf2d3430cef9d9bd96b86b9eeac6dad405"
     },
     {
       "id": 1066,
@@ -208367,7 +208448,8 @@
         1,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "d6833b2d5ae7e4a555934ed28e1a11696e29fd10130f4d4f30bedd5747737753"
     },
     {
       "id": 1152,
@@ -208391,7 +208473,8 @@
         3,
         8
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "3fdfed107902b86fccc9ee4f70265751c5511dc9b9ba350805a87512a77749f9"
     },
     {
       "id": 1154,
@@ -208421,7 +208504,8 @@
         1,
         8
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "60309e7aefa73284481954ae1f24e19a834f9a975209f2e2ab68326dc825f9cb"
     },
     {
       "id": 1361,
@@ -208446,7 +208530,8 @@
         3,
         8
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "18a4d46ae7cb203d030d14a7e844f6a53187fabf400363857cb8854fd5598a34"
     },
     {
       "id": 1156,
@@ -208471,7 +208556,8 @@
         5,
         8
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "9bc5dab4b710373ef5dfd60e5c4267bf0af8943c0a6c9a6b0bdee42a26c2ee52"
     },
     {
       "id": 2064,
@@ -208498,7 +208584,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f036d1e16faa81e82ac955eeee0ac2bede7fb51241e17552d10abcf8bc9c6c92"
     },
     {
       "id": 1067,
@@ -208527,7 +208614,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f5e347243bf99e02d0eb88124911835ef270a8855f1aad512dbd24be4c797093"
     },
     {
       "id": 1068,
@@ -208550,7 +208638,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "14a8c6970eff75e92babbd0b43aa7c6514110db11a81f5b09eb2d63208faf621"
     },
     {
       "id": 1170,
@@ -208573,7 +208662,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "cdbd9deafe3391476f08f06f7311f9c23f5c36e17bca10d0d8dc895d03030f64"
     },
     {
       "id": 1071,
@@ -208596,7 +208686,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "afbad8934eb7ce91bbcab6ac3cc7ce6c7a115d8371c86bf6dc410e64ff5a84d8"
     },
     {
       "id": 1115,
@@ -208619,7 +208710,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "559e81d1a6a0f4820581d6e5a8d8ed21fba7066cc20707f1eb1122e161040c56"
     },
     {
       "id": 1072,
@@ -208645,7 +208737,8 @@
         1,
         0
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c8f27ddd388df0d35cefe9d917740ab73ca034e5e03f89ef10fe6a9e835cad15"
     },
     {
       "id": 1073,
@@ -208668,7 +208761,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "76b0c32a74d8ba44bde8b6a75344afd84ac3e65f3610ca1356dd12ef992661ab"
     },
     {
       "id": 1074,
@@ -208693,7 +208787,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "8b712aafadc8cbb478433ca7fa51e510d4f46813ca5a40d8989f99d4ae46a699"
     },
     {
       "id": 1113,
@@ -208716,7 +208811,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ab3309a61c6e64f92e94736b7415468ba4a68703d68f298736f2897145094665"
     },
     {
       "id": 1136,
@@ -208740,7 +208836,8 @@
         1,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ebd4adfb914f9f8fc44330fc60e0191b916d05397bc13214522e0d25cee90f7b"
     },
     {
       "id": 2088,
@@ -208763,7 +208860,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "2c591a7ae761fc042af24907227769f6fcbf6c5bad456f9fd52ad39764fbdd9d"
     },
     {
       "id": 1076,
@@ -208789,7 +208887,8 @@
         0,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b67e7e89ac167a20ee77934640e02f60fac1005ec2004fec274ce70ee5a1a795"
     },
     {
       "id": 1077,
@@ -208815,7 +208914,8 @@
         1,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "06dbe2e7a9cfcc223b2f81b32a75e3d999062b47dbb9bd88d875f10feef2e1bc"
     },
     {
       "id": 2100,
@@ -208844,7 +208944,8 @@
         5,
         9
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1919657edb760af810cce72c063a55d39790daa765eb761cdec5b9a01959b9d8"
     },
     {
       "id": 1214,
@@ -208869,7 +208970,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c3521d7e0fdcacebce846c5696140c33ef51cf108a055093220d88ff41091a24"
     },
     {
       "id": 2104,
@@ -208897,7 +208999,8 @@
         0,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "0c3966f9be97d6b95e4dd244e3d62b1d9b1553cb8e5d53f3b0bc9d24fea1e98e"
     },
     {
       "id": 1204,
@@ -208920,7 +209023,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4ad884e558881c6e2fdc7e4858eb012575d8d56745a43dc81fc20987a8b5f158"
     },
     {
       "id": 1404,
@@ -208943,7 +209047,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c51eb20538d3716ba78792dae84b55cae3ebbef7d23160d16ab1a8161fb25f03"
     },
     {
       "id": 1403,
@@ -208966,7 +209071,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e1e026892e7bac6bf22ff727639e78f68ea2c0158b702a6d4e14780803b93816"
     },
     {
       "id": 1402,
@@ -208989,7 +209095,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "6b3b4b82441d37ac20ab522780a9bf3e1409cf0717417f6efc429a3e071765d7"
     },
     {
       "id": 1413,
@@ -209012,7 +209119,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "bb5328552fa58bd7f304740ee6a508ca8845c71916f14f470e4dfa8d80daa8aa"
     },
     {
       "id": 2073,
@@ -209039,7 +209147,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "264e1788a4f62dbbd7b2e68d91fb89750fde0dde5514d8513e94a12c388b22d9"
     },
     {
       "id": 1079,
@@ -209063,7 +209172,8 @@
         1,
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "be4554b38f1b5dfda18af324a03e18dc6859661ce282cf873a82c5f87abe5d13"
     },
     {
       "id": 1353,
@@ -209088,7 +209198,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "5b51477e4be6b244dea300bdcb7b09a5b42758386d1afda3dcc039d60aaff6ba"
     },
     {
       "id": 1080,
@@ -209113,7 +209224,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "27d8fbcee03daf631e977f87ab1f84faa0b6b141b3a230fc1a70d83d3b87e996"
     },
     {
       "id": 1081,
@@ -209138,7 +209250,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4306f5daae4c1d584a99e372e80343d16cc34b01a543ddb65b918c851b3dbdf7"
     },
     {
       "id": 2065,
@@ -209165,7 +209278,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f7500613e4150d2de02b374d39253c196aaf8191326708c90dca2a000df28023"
     },
     {
       "id": 1084,
@@ -209188,7 +209302,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "0ad6a948d04ec8cc9aa5d9afd59f55d90c47009c349433f2d4621b801cacf011"
     },
     {
       "id": 1243,
@@ -209211,7 +209326,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "514dec30da516cda1cadfc002ffdd20381cfbc7089d4ef8e9214ad17fd5989e1"
     },
     {
       "id": 1237,
@@ -209234,7 +209350,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1f2e2996b763c2c1b6f55de4582604ce2c9d2ad4f4bf5092b5dc7681008a5111"
     },
     {
       "id": 1238,
@@ -209257,7 +209374,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ab3b120c13fc8ccd34a45c039367ee2a0ab266f9fc587852fbd5128b91198e21"
     },
     {
       "id": 1087,
@@ -209280,7 +209398,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "3fe20c422feda1183609660368a66fbdeae1629785262b1fdba336a499e69e20"
     },
     {
       "id": 1088,
@@ -209303,7 +209422,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1e509c73fa07db8557ce79e7ee59e9c4a8b3536b975a9b033389015d4e1442ec"
     },
     {
       "id": 1112,
@@ -209326,7 +209446,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "09b16cfbfdf5a505d1c6f663fdd118c21bd538ff2b0cd029b5231d70f50788c9"
     },
     {
       "id": 1320,
@@ -209349,7 +209470,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "0fc54a9b98ad5e3384512daa1173c04f40314f86519cad7e50b14af5ad84bbe0"
     },
     {
       "id": 1336,
@@ -209374,7 +209496,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "83609634e6da2db997a187a5458a54817c254e2036a2e966a59e34bcc7aa768e"
     },
     {
       "id": 1319,
@@ -209399,7 +209522,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "626caf64a8a2716680dce968548a8e80517acb164d2928b17e9241b5d028a8e2"
     },
     {
       "id": 1996,
@@ -209425,7 +209549,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "2f0b2453f32a60f50dc4a9b12f143f38ba4efc16d3fc6b911fbf50da1769c962"
     },
     {
       "id": 1318,
@@ -209448,7 +209573,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "400b7ecd583dc8dadd7339cc7f9d90958f007c38f82921e2a49d45bcdee6f931"
     },
     {
       "id": 1092,
@@ -209473,7 +209599,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "3481053aa46732b8863127303e32fa8afe56ee36109bda9c4115f7967831d6cf"
     },
     {
       "id": 1005,
@@ -209499,7 +209626,8 @@
       "tags": [
         0
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "9d54b7896d7b360770c79cb65caecfea97e3ac949e99b95936aa588d17aedf58"
     },
     {
       "id": 1095,
@@ -209523,7 +209651,8 @@
         5,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "813380e8d11a5eafa27068e6cc0f0e44cdaec771ae9cd02191267647e9724fe6"
     },
     {
       "id": 1097,
@@ -209547,7 +209676,8 @@
         1,
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "89e36baad3325ea1f1402782413efcc9a95a5a37ee1d920e250ec0104f6e5dcc"
     },
     {
       "id": 1098,
@@ -209572,7 +209702,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4309c9fca752441f29d3cfa24bb25974e9d40e06156faaf79c856b009255a099"
     },
     {
       "id": 2009,
@@ -209595,7 +209726,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e7078143570fa72b863ecb77d0215de25daf39499cc5f445171b6f150feb3217"
     },
     {
       "id": 1206,
@@ -209620,7 +209752,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a4c87be6cb29899d4227f7842b987f7c3baa8d6a0c3269936dd2a132cc5d1d24"
     },
     {
       "id": 2062,
@@ -209647,7 +209780,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1f9c2be4a264baaf163171e00519e21bffdc90cfc24c6ec74c607dd9a6fbe672"
     },
     {
       "id": 1327,
@@ -209670,7 +209804,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "367739ea8e98953bc4aa13b071ed2ab4ad2c6dd3e612b71895754e0c3920cfa6"
     },
     {
       "id": 3118,
@@ -209693,7 +209828,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "66c292e04b04b701abfd086ff236ae2706d4aa5ac8ec6a17ed0c7cccb0f3a1b5"
     },
     {
       "id": 3049,
@@ -209717,7 +209853,8 @@
         1,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f1811d033c5ee53732c26b9f09140343ba4d866c2ebda2c2fa66bf6cb93ad48b"
     },
     {
       "id": 3086,
@@ -209743,7 +209880,8 @@
         5,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "14a90cdd7db2f48830a024df5cbaebacd62c301aa6cdecee070a9815a3119408"
     },
     {
       "id": 3018,
@@ -209768,7 +209906,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "2651ab1ee273b67a0ef67063f87cd451b2653a89e8da7457f656504533e00a6c"
     },
     {
       "id": 1329,
@@ -209791,7 +209930,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "7598d667eea531ae6a3ce58d2652de45392c684fe818d2cdc111821c336af20c"
     },
     {
       "id": 3051,
@@ -209814,7 +209954,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b1d16ae49328fa64fdf25864eee2308c38f76bcb6f711ce0cf390435dc1d2c24"
     },
     {
       "id": 2111,
@@ -209842,7 +209983,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b4546edfd95a43c2f7dcfc23d7b949185a6b147c4ba0d05589f9c355b4496cb7"
     },
     {
       "id": 3048,
@@ -209867,7 +210009,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4eb948cd62922f7f6b35223bf28716c99a9b325de72b69e186b45c698da6f385"
     },
     {
       "id": 3071,
@@ -209891,7 +210034,8 @@
         5,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "d0e540a92fb5ae18fbad1df76903b53e818ca40d74954d7b831b762a2039460c"
     },
     {
       "id": 2083,
@@ -209918,7 +210062,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b6581d0dd185960d31e640929defdad5c38e1fd20ac1569466b3c7c0e6f524af"
     },
     {
       "id": 2078,
@@ -209949,7 +210094,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f6991046aaabf1ffaeed0a8e772e3e21435b13d28dca251d8498953e6f73f55c"
     },
     {
       "id": 3088,
@@ -209978,7 +210124,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1c33f1e46600dcb4335a6a7307ca38297406fb447252fbf0e7f1a5d229454de9"
     },
     {
       "id": 1328,
@@ -210001,7 +210148,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "9370aeb4089c3144051dff8dea6792d56eb7d2c923274b2e7aa17d24d22ac3a2"
     },
     {
       "id": 2077,
@@ -210031,7 +210179,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "63758f73268f8a1a4b4fb57ffa6a81e9f0e90c1df62b3f0360eef13fa03d8d69"
     },
     {
       "id": 1384,
@@ -210054,7 +210203,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "765a12bdfc9f001d5ad5f48eebe3e0bff43f26b1c0b0e6352a7a0be7740aeb47"
     },
     {
       "id": 2131,
@@ -210080,7 +210230,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ed668a37d8ae3292d7c07512a5e7f25b9e60a43870d46f786bf5d3825cabc59b"
     },
     {
       "id": 2144,
@@ -210108,7 +210259,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c509050d773665a7dd354348ec9123388ecdeaf579ddcfcab5e6c63f969a37eb"
     },
     {
       "id": 2148,
@@ -210135,7 +210287,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "da3dd049b56704c649c9e2f46ca8f2c202b50098f964e065eec1b022d8cf348c"
     },
     {
       "id": 3036,
@@ -210161,7 +210314,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "546ea0a6c0b6972a2b6df8c9dfda249ea96f9c7210071e3bccfede46cd41f15b"
     },
     {
       "id": 1331,
@@ -210185,7 +210339,8 @@
         3,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "fde124d489b9ff7b8f0f406f3c25c9ecd9e8122d88f89ca5512b6d3f65a14443"
     },
     {
       "id": 3163,
@@ -210211,7 +210366,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "945c7657ccd050395e1149977a37eec3a57a42c0b64257e247f79ec65621172a"
     },
     {
       "id": 2091,
@@ -210236,7 +210392,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e640151ab2f4f319c2ea704dcd1f731376ca97063fdfe661d6abcbf5f1e3dab2"
     },
     {
       "id": 1333,
@@ -210260,7 +210417,8 @@
         4,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "87f10170da2bf48ca1819d1a2634d9834d3ab22438db9800787af980dfe3ab63"
     },
     {
       "id": 1344,
@@ -210284,7 +210442,8 @@
         3,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "bdbac4b2861fc6af7f03a9124190de99325803ce647d61a1f3276070f1abf76e"
     },
     {
       "id": 2032,
@@ -210309,7 +210468,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "92fc8aa891f92143d07a53495f1f3b1c8a5355db61777c31d63d604e6f9e2976"
     },
     {
       "id": 1348,
@@ -210332,7 +210492,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a782b66e61dff1be9721d5dc9781fa161a4183ec0ac60c44d26f3ba1cd858a28"
     },
     {
       "id": 3085,
@@ -210360,7 +210521,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "9b6ed4660ac9dbf6388275408c4ac6340525488f4af000a034df430cc05ce70d"
     },
     {
       "id": 2127,
@@ -210385,7 +210547,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f230a17b1537998e490eb36dd2cdf02cecebc86920052c9d447d74bd4c680241"
     },
     {
       "id": 3121,
@@ -210410,7 +210573,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a1647cc79255bdfb6214333a8579c94e91a0ab5ec94a64757e7a5234dfc606d9"
     },
     {
       "id": 3004,
@@ -210437,7 +210601,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "86a0d8bdf3ab36e004083a0fed3c74cc0722b3921f1e064d8293a2625f49e15b"
     },
     {
       "id": 3063,
@@ -210462,7 +210627,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "96243ba00ac027dde52ced1651927dad867746cfc6cedac3cef37eb5214e50ad"
     },
     {
       "id": 1325,
@@ -210487,7 +210653,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "dc0e6c8d609584d44e292970ba8c48951ca664eda1323e73f1b6dce98ddb1e8d"
     },
     {
       "id": 1392,
@@ -210510,7 +210677,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a9666d6652affae473ec5fbba87a2589c647051844ed72aa33e741ddd9115eee"
     },
     {
       "id": 1335,
@@ -210536,7 +210704,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "277a1d0bfe0749e1036a906a08a1fb9f2199b820d16c7bd34f94de342a8f74fb"
     },
     {
       "id": 3149,
@@ -210563,7 +210732,8 @@
       "tags": [
         0
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b09bf4acc3252efa64fe2ddc94e8097de0d8040e689edb7d51a3191cf74fcc30"
     },
     {
       "id": 1401,
@@ -210586,7 +210756,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "cc8b5af106303c333683c2b4f0884cd696cff13a4b2c366d5ca781f4829edf01"
     },
     {
       "id": 3172,
@@ -210607,7 +210778,8 @@
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "82cdef6073bb7f65c8832f9c6ec289c5440adddb80d972d3e9eb1932f2139302"
     },
     {
       "id": 3176,
@@ -210630,7 +210802,8 @@
         "sourceKey": "GoH_PentakillAug_Display_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a781655b9499da41c67d50107035cc5fe4095cc7fadb436f0de6ab265d10ebdc"
     },
     {
       "id": 3170,
@@ -210651,7 +210824,8 @@
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c2e3acc9de2ffd4a4c2434a69ab17760e4a9740b79fc9f7ddda12ba515e1bdc4"
     },
     {
       "id": 3173,
@@ -210672,7 +210846,8 @@
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "6875e8b7a0255402d41caa83b06d70b0f575144b7deddc051e033177a43f8cfb"
     },
     {
       "id": 3171,
@@ -210693,7 +210868,8 @@
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "55f2b58ec68e871db18fed1a65c61117a2e36093f295c125f565e82ff7e1f1ca"
     },
     {
       "id": 1389,
@@ -210716,7 +210892,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "8606e93b4a616805440daea0bbf54cb5f21b98b75b1dbccbda986a73827b9b35"
     },
     {
       "id": 3052,
@@ -210741,7 +210918,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f6fdbb3764976b601e456758b5a7ad691397768383e9446ab2fec62e274f0a16"
     },
     {
       "id": 3132,
@@ -210767,7 +210945,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "dcd92ff51e66cc42770da8a5c9e3fa386abd1b6393ba69e98a91c762925cde6d"
     },
     {
       "id": 1416,
@@ -210790,7 +210969,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a9b23228b2fd03a93823479ee4a647f47d9951087c952474345bc07784886d2b"
     },
     {
       "id": 1388,
@@ -210815,7 +210995,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e5bdce6524922051cdffbb968918b2e595853d9356ef9a118677ef28d5cda845"
     },
     {
       "id": 2125,
@@ -210842,7 +211023,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "925fd4ab4bbf48fd0fc56409b4a45f7aec240a5064c1516ff7aff420754e6140"
     },
     {
       "id": 3123,
@@ -210870,7 +211052,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "541996457f7e1e0a8882a548554837d4a1665727944436d61e53d8f63c2da861"
     },
     {
       "id": 2126,
@@ -210899,7 +211082,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "edc854ad75b941406fdbfc421133966ac76e3942934f3b92d6fdec443f91c630"
     },
     {
       "id": 2026,
@@ -210922,7 +211106,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "08be7c8f23ffb9a9dd5a39ebf5a065f3b68e324d8aa13042ce600f164ff99afb"
     },
     {
       "id": 1337,
@@ -210945,7 +211130,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "847039c78f1f0bf76787737c9b3e7bf4eb497abd22e436df68869fed03537b9a"
     },
     {
       "id": 3094,
@@ -210968,7 +211154,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4ac478fb91cd940f03c6f035b2b93a8ac83bc631d1f339f73310cdfb4006ca85"
     },
     {
       "id": 2096,
@@ -210995,7 +211182,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "8bc17d7c47c1beb02c76b361d1c21dea5c7e8eb267ff51784ff64a9887e9958f"
     },
     {
       "id": 3134,
@@ -211018,7 +211206,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "dce24f1ace3728e5df92bf37e43a8ba54bd34dcf9a331b6659878ea04a021b04"
     },
     {
       "id": 2133,
@@ -211047,7 +211236,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "acaecd07cee95b1b7130d3a0be697b7818af9e47ccada6e6122454a840d74230"
     },
     {
       "id": 1314,
@@ -211070,7 +211260,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c82976e737bf7b31850cc6eb0674a47b4d3889f9b9de7f7b12fb01349a2b3669"
     },
     {
       "id": 2072,
@@ -211098,7 +211289,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "6750a554a9e7cfa1040d6b50f71d0fc49b7a2633bcc026d8e26177bafad1c9e0"
     },
     {
       "id": 3053,
@@ -211126,7 +211318,8 @@
         3,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e7d153adc119d9fc19a32e2fb528892ec995eb632b75373ebc172a4a8cf618fc"
     },
     {
       "id": 2043,
@@ -211151,7 +211344,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "0583a0c78f75f81d80d6f367a5f2dc2ec882fd4a2f2be69715e961e39e3edf6f"
     },
     {
       "id": 1326,
@@ -211174,7 +211368,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "3aec1389ca5bb78ca6d8ff46c7b9e18d26ffdf39f54ff83e2b5ec70803102fa2"
     },
     {
       "id": 3059,
@@ -211199,7 +211394,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "02a7634b31829355bc7a2fd77d7f906932675d860ccc460b17fb22d296c325d1"
     },
     {
       "id": 1332,
@@ -211222,7 +211418,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "12be84d2ef66702a2bb5d85de93f115f50e0f32b9b5d41debbb5de4475d61a2a"
     },
     {
       "id": 2119,
@@ -211247,7 +211444,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "98b0db1457ddc151a3e540d5a3675ac596cfa7fc61b093f5a6273a0b22feefe9"
     },
     {
       "id": 2135,
@@ -211276,7 +211474,8 @@
         1,
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ddc211f0b12e76ecee90952bcb5cb6fa9fee872d11e5b96d5145e9e3e3a683b1"
     },
     {
       "id": 2123,
@@ -211306,7 +211505,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ae76a76a85dc379b9d25be895d66fe0151e71ddd59efac7b85704161b6321d05"
     },
     {
       "id": 2137,
@@ -211330,7 +211530,8 @@
         "sourceKey": "Augment_PatOnTheBack_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c7ed085167e9ad2edd7f717919010c2974ed96b8d31a0bc2d6d5ce5530e3ce61"
     },
     {
       "id": 2139,
@@ -211357,7 +211558,8 @@
         3,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "76eb5097ea3c178f5f3473548479863c8b19bd35957fc21fc70a56a80700f978"
     },
     {
       "id": 1358,
@@ -211382,7 +211584,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1f97de2581cc432615a006db7a7bd60ff98692dee7607992fbcae7cc8021c219"
     },
     {
       "id": 1347,
@@ -211405,7 +211608,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ef442243fd4c6b8db2a6a1fc5c4eaf9eade6e9da13e72f428eeeee372801c595"
     },
     {
       "id": 2102,
@@ -211431,7 +211635,8 @@
         1,
         9
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e961dc85c158cf1d555f80ef7124490f6e86872f59411c75a77dba66e441cabe"
     },
     {
       "id": 1421,
@@ -211454,7 +211659,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b8f1e932d5af8c2e988351c20be2f57fbb07c3d4fa1062b3afb8d174cdfaa7f4"
     },
     {
       "id": 1343,
@@ -211484,7 +211690,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "5f3ac6f271925d7e87a12dad85c9d0259996cebbef4240f5a6a2fd039273f518"
     },
     {
       "id": 2141,
@@ -211508,7 +211715,8 @@
         8,
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "fc143dbea9dca847f5f0153ba9da31e856706ae1186bd76191b478bd2b3921e0"
     },
     {
       "id": 3075,
@@ -211536,7 +211744,8 @@
         1,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "429503ce5e246487579a67801904d3c9ae367c1fbb65afdfaad834021d4560d9"
     },
     {
       "id": 3039,
@@ -211559,7 +211768,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "90c343f8bc90f9ae3fa0fa640d6f1b9f680a02c149204ac8565b2877120554ef"
     },
     {
       "id": 3129,
@@ -211586,7 +211796,8 @@
         1,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "7ffa0e4c3de7150431153b9265bd060d2ce78f9c79f66a21275bf7a85954cc99"
     },
     {
       "id": 2034,
@@ -211609,7 +211820,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c9f424dea78e67d11d72d9bd7e733e7d13ab8ee4b0ccf6383453037c4023b4b9"
     },
     {
       "id": 1373,
@@ -211637,7 +211849,8 @@
         5,
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "cc747d71cae1b83ecf1af7fcd85be97b1787f4c79c4a36b42c2b07fd508331c9"
     },
     {
       "id": 2109,
@@ -211665,7 +211878,8 @@
         1,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "97753eaf5c94d996d30c2253598ebc519d3550ac874c41780ca0df1779451db8"
     },
     {
       "id": 1334,
@@ -211690,7 +211904,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "5b9e073cc5cf8a7598cd42d7b7fffe997c7626fdd56e2ebf69598b18669f4d14"
     },
     {
       "id": 2080,
@@ -211715,7 +211930,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "7075ebaa14fb86b297871cf09df55b5c8e786c54910616fe2d912451e898801d"
     },
     {
       "id": 1420,
@@ -211739,7 +211955,8 @@
         5,
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "db7ec46599de854ce0cc08b84ff9d6d0fcc07761c5ea0082d8334fb8241438fe"
     },
     {
       "id": 1375,
@@ -211764,7 +211981,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "11cb252b3e35b8a075fd5469960e9757cb33d0794f4f5c9778d0b7fa804d2f8a"
     },
     {
       "id": 3025,
@@ -211790,7 +212008,8 @@
         4,
         0
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b428420bd9c86a9fc872c36647f2d4ab37f2db1e2e56fd20e83e46b7eea1e0cc"
     },
     {
       "id": 2116,
@@ -211819,7 +212038,8 @@
         1,
         8
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "399b13d1a1c9a60ab396693aa0fa2bbb249ccc20bacc743f7a2035b52c62bba1"
     },
     {
       "id": 2054,
@@ -211847,7 +212067,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "86617baa7211574492e602216add380b2d48cf87c63aead32180b584b7fdb654"
     },
     {
       "id": 2115,
@@ -211872,7 +212093,8 @@
         "sourceKey": "Augment_SquishySlappyGrab_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "689e610729cfcd657a5c7a5c4a8035e08d1c480bf4851a7f7e314a080cbef6ea"
     },
     {
       "id": 3131,
@@ -211895,7 +212117,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "0977cdecb68235a884ba3c865ddaad635c4e696d3f606b32dab4a98781e72471"
     },
     {
       "id": 2108,
@@ -211924,7 +212147,8 @@
         0,
         8
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e68979bacc86a8b167c762ca9e0f2ce3af8e0b85e8534188bdbb833133fea766"
     },
     {
       "id": 2134,
@@ -211947,7 +212171,8 @@
         "sourceKey": "Augment_SurgeField_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "55101b147befc1ab3268cd873a8111a02c0ce2f994141ce13eeb8a2af2d9d557"
     },
     {
       "id": 1315,
@@ -211970,7 +212195,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "2b2bff5bba65e1b93a6ab1d772d730b524d46d558c3e62c558ca6182d7aabf67"
     },
     {
       "id": 3116,
@@ -212000,7 +212226,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "e055a0dbaec429bd246e071f75804c49fe9fbbe90516d0c3aadd4fd197362cdd"
     },
     {
       "id": 2129,
@@ -212027,7 +212254,8 @@
         "sourceKey": "Augment_Terraind_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c4ca372e6d3ec693d0f70d4e171d3fc83c98d463d43d05717019061d5db25f1f"
     },
     {
       "id": 3078,
@@ -212055,7 +212283,8 @@
         1,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "741e4b55a342885f86d9e42b8a340ae74baebb0605566adbc4b352d807e87bdd"
     },
     {
       "id": 3016,
@@ -212082,7 +212311,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f5c4a2d99cbbbb8359fe8e67a56ffb00ebcd6300a6f711735de72e67c1efae04"
     },
     {
       "id": 3058,
@@ -212107,7 +212337,8 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c620cd59bbfbd2faaf5a834b03002128a17702a231d0706c3d2a300c22edcbc9"
     },
     {
       "id": 2076,
@@ -212136,7 +212367,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "25eca1086ca2fabe70ecad5b02d6f650c58da5e54b1019a38cb0cc054e8f3d13"
     },
     {
       "id": 3079,
@@ -212163,7 +212395,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4783b62f402d359fba8809c130bced2e6b26cafba0c06d7f1cef830cf859ba68"
     },
     {
       "id": 2136,
@@ -212192,7 +212425,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "98c2857ac7cf734926cdf42ad5efec627b4606c37e5fea5f943493d07b6bcc8f"
     },
     {
       "id": 1415,
@@ -212219,7 +212453,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "08a810a04f03f99906355a75c6b5279b9c9c42b8b19a8613d2209267b04d7dc7"
     },
     {
       "id": 1349,
@@ -212242,7 +212477,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "744ddfdfd5258d8ea10599ce840c4c8a8df5c21d20ae44a875fa5ce3455985c2"
     },
     {
       "id": 3055,
@@ -212265,7 +212501,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "22defb1ca24b0ae7418445809c95727db001c1e2d7665b75559b6dfb61e4a86b"
     },
     {
       "id": 2157,
@@ -212288,7 +212525,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "1d9a9eb5bd989b42046d53891a8099d18189ddb142677db9ed6042c6f5df2ae2"
     },
     {
       "id": 2140,
@@ -212311,7 +212549,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "ef58c91284125aa4df6c2c7b9fa085500514f4fd0b5b4d3a0b9643eec9ac697a"
     },
     {
       "id": 3150,
@@ -212334,7 +212573,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "0881a0bbdc031e93bee4f14e9fe36d6a5ea9e7fbd47eaa99520fe412af9314fb"
     },
     {
       "id": 2143,
@@ -212357,7 +212597,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "bec4fe84d3ce03bcbae4f20f08dd0e7b2319b0ba9caa976ce3bcede8138ad66a"
     },
     {
       "id": 1379,
@@ -212380,7 +212621,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "b43671adab1c721256caeaeb319cf2c8cfff9ead159117b25cb7839d8d50f7c6"
     },
     {
       "id": 1346,
@@ -212404,7 +212646,8 @@
         3,
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "a859c5bc5ed6b587cdb30e5ed560a414ce9f6a91bb75dc306c17a01a9c2ed467"
     },
     {
       "id": 1034,
@@ -212427,7 +212670,8 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "4b71ea1a49978d10cd2a85bd340e6164270b74e4926e09731baa1177c62c2df8"
     },
     {
       "id": 2097,
@@ -212456,7 +212700,8 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "c06d38fca97f1860a6591dd5f47f8e42d633a1e53dafaedbed7bdcd447ca78dc"
     },
     {
       "id": 2138,
@@ -212484,7 +212729,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "3afbaccd49a2c3f402a177b79b44187233743278c87adff295cc1e747d5a987e"
     },
     {
       "id": 2132,
@@ -212507,7 +212753,8 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "eab4120de3f88a55da20b62b522b304f09ba9226738d6835cf34705d0a16bd5d"
     },
     {
       "id": 3081,
@@ -212532,7 +212779,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "f77b42e9971fa51ea01bbe15d45cd2763ba55c0ee21c966e57bbd19203a3a066"
     },
     {
       "id": 1386,
@@ -212555,7 +212803,8 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 4
+      "tooltipParserRevision": 5,
+      "effectSourceHash": "52ed340eb95783bf7e8640a2e43f377ac75b008f42e9fec889ca4fa53c677aec"
     }
   ]
 }

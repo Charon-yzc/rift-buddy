@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "patch": "16.21",
+  "scope": "Explicit static item-attribute conversion only; no hero affinity, live panel totals, compound conversions or purchase ranking",
+  "source": {
+    "binUrl": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "binSha256": "e1ed4bfa49ae574f9ea27e9261587e363f2ac3b0f2299a78b5ca42e518053351",
+    "stringsUrl": "https://raw.communitydragon.org/16.21/game/zh_cn/data/menu/en_us/lol.stringtable.json",
+    "stringsSha256": "5fca25e067fa2b83701bb407f9c68707fd50056785cbb22fee7790b697b985d7",
+    "official": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/"
+  },
+  "rules": [
+    {
+      "id": 1205,
+      "stat": "FlatPhysicalDamageMod",
+      "input": "装备攻击力",
+      "output": "法术强度",
+      "ratio": 1.666659951210022,
+      "scale": 1,
+      "title": "装备攻击力改作法强",
+      "ratioText": "额外AD→法强；另有15%总法强增幅",
+      "caution": "每件只算明示攻击力这一项，未合算其他额外AD、15%总法强增幅、帽子及装备被动。",
+      "key": "ARAM_ADAPt",
+      "descriptionHash": "990cee941dcf448a",
+      "tooltipHash": "7cc6ba268c13fc78",
+      "effectSourceHash": "44a7dc11d4116c3e1dd9d61c5b9d0a17893229d8495361e456e006a382bb0921"
+    },
+    {
+      "id": 3063,
+      "stat": "FlatHPPoolMod",
+      "input": "装备生命值",
+      "output": "穿甲",
+      "ratio": 0.05,
+      "scale": 1,
+      "title": "装备生命不再留作血量",
+      "ratioText": "每100装备生命→5穿甲",
+      "caution": "不再把这部分装备生命计作血量；独立等级奖励不按装备件数重复加，动态增幅与门槛另核对。",
+      "key": "GiftoftheDrowned",
+      "descriptionHash": "1b1f95c7e875e48b",
+      "tooltipHash": "32fa6773d7d571f4",
+      "effectSourceHash": "96243ba00ac027dde52ced1651927dad867746cfc6cedac3cef37eb5214e50ad"
+    },
+    {
+      "id": 3059,
+      "stat": "FlatMPPoolMod",
+      "input": "装备法力值",
+      "output": "法术强度",
+      "ratio": 0.0800000011920929,
+      "scale": 1,
+      "title": "装备法力改作法强",
+      "ratioText": "每10装备法力→0.8法强",
+      "caution": "不再把这部分装备法力计作续航；未合算15%总法强增幅、帽子、法力叠层及装备被动。",
+      "key": "NoManaNoProblem",
+      "descriptionHash": "b992c176b9a9eb66",
+      "tooltipHash": "dcd74589267cb423",
+      "effectSourceHash": "02a7634b31829355bc7a2fd77d7f906932675d860ccc460b17fb22d296c325d1"
+    },
+    {
+      "id": 3058,
+      "stat": "FlatPhysicalDamageMod",
+      "input": "装备攻击力",
+      "output": "攻击速度",
+      "ratio": 0.017500000074505806,
+      "scale": 100,
+      "title": "装备攻击力改作攻速",
+      "ratioText": "每1装备AD→1.75%攻速",
+      "caution": "按原始1.75%换算，卡牌1.8%为舍入；未合算攻速上限、英雄被动及装备动态属性，独立等级攻击特效不按装备重复加。",
+      "key": "TickleMonster",
+      "descriptionHash": "980afb82b5282506",
+      "tooltipHash": "98b0a58d6d6624d5",
+      "effectSourceHash": "c620cd59bbfbd2faaf5a834b03002128a17702a231d0706c3d2a300c22edcbc9"
+    }
+  ]
+}

@@ -51,7 +51,7 @@ const cnNames=()=>({version:data.patch,hero:data.champions.map(c=>({alias:c.id,t
 test('an already enriched snapshot checks global and CN versions without fetching every champion again',async()=>{
  const original=global.fetch,calls=[],previous=structuredClone(data);
  global.fetch=async url=>{calls.push(url);return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cnNames()};};
- try{const result=await collectSnapshot(()=>{},previous);assert.equal(result.contentRevision,14);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
+ try{const result=await collectSnapshot(()=>{},previous);assert.equal(result.contentRevision,15);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
  finally{global.fetch=original;}
 });
 

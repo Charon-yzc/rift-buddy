@@ -3,6 +3,7 @@ import review from './hex-item-synergies.json' with {type:'json'};
 import {fingerprint} from './content-fingerprint.mjs';
 import {hexRouteItemFingerprint} from './hex-routes.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
+import {hexItemConversions} from './hex-item-conversions.mjs';
 
 const sheen=[3078,3100,6662],onHit=[...sheen,3115],cooldowns={3157:120,3152:50,3143:90};
 const rules=[
@@ -63,7 +64,8 @@ export function hexItemSynergies({data,hero,mode='hex',owned=[],options=[],prepa
  const ownedIds=new Set([...new Set(owned)].slice(0,HEX_OWNED_LIMIT)),offered=new Set(options.slice(0,3)),held=new Set(inventoryKnown===true&&Array.isArray(inventory)?inventory.slice(0,12).filter(i=>Number.isInteger(i?.count)&&i.count>0&&i.count<=6).map(i=>Number(i.id)):[]),ids=[...new Set([...preparedItems.map(i=>Number(i?.id??i)),...held])];
  const checkedItem=id=>{const i=data.items[id],f=review.items[id];return f&&Number(i?.id)===id&&i?.maps?.['12']&&i.inStore&&i.gold?.purchasable!==false&&f.summary===hexRouteItemFingerprint(i)&&f.tooltip===fingerprint(i.tooltip)?[{id,name:i.name,description:i.description,core:true}]:[];};
  const items=ids.flatMap(checkedItem);
- return rules.flatMap(rule=>{
+ const conversions=hexItemConversions({data,hero,mode,owned,options,preparedItems,inventory,inventoryKnown});
+ return [...conversions,...rules.flatMap(rule=>{
   if(!ownedIds.has(rule.id)&&!offered.has(rule.id))return [];
   const a=data.augments.find(a=>a.id===rule.id),disabled=hexCatalogDisabled(data,a);let gear=items.filter(i=>rule.items.includes(i.id)),suggested=false;
   // Only explicitly named single-item upgrades can reveal a purchase option.
@@ -77,5 +79,5 @@ export function hexItemSynergies({data,hero,mode='hex',owned=[],options=[],prepa
    equipmentState,gear:[...(equipped.length?[{when:'本人已装备',why:detail.brief,items:equipped}]:[]),...(planned.length?[{when:suggested?'关联装备 · 若购买':'当前方案 · 若购买',why:detail.brief,items:planned}]:[])],
    basis:equipped.length?'按当前强化与已读取本人装备核对；方案候选仍未视作已购，不代表英雄适配、热门构筑或胜率。':suggested?'强化明确关联的装备参考；是否改购需结合英雄与局势，不代表已购买、热门构筑或胜率。':'按当前强化与已准备装备核对的条件联动，不代表已购买、英雄适配、热门构筑或胜率。',
    sources:[{name:'强化效果',url:review.sources.augments},{name:'装备效果',url:review.sources.items}]}];
- }).sort((a,b)=>Number(a.equipmentState==='suggested')-Number(b.equipmentState==='suggested'));
+ })].sort((a,b)=>Number(a.equipmentState==='suggested')-Number(b.equipmentState==='suggested'));
 }
