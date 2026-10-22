@@ -54,6 +54,9 @@ function mechanicAdvice(data,champion,a,owned){
   affinity+=3;reasons.push('这个英雄已核实有持续暴击普攻路线，可利用普攻暴击叠攻速；只用技能消耗不能替代触发。');
   if(champion.id==='Caitlyn')cautions.push('爆头和暴击不是同一条件；陷阱或绳网提供爆头，不代表普攻必定暴击。');
  }
+ if(p&&champion.id==='Jhin'&&[1328,1022].includes(a.id)&&a.descriptionStatus==='complete'){
+  affinity+=1;conditional=true;reasons.push((a.id===1328?'先靠普攻暴击叠加攻速。':'获得额外攻速后，')+'按被动提高攻击力与暴击后的移速；固定射速和四发换弹仍然保留。');
+ }
  if(p&&a.id===1048&&['Veigar','Lux'].includes(champion.id)){
   affinity+=3;reasons.push('保留已核实的法强伤害技能路线，法强还会提高珠光提供的暴击率；无需为技能暴击整套改买AD装备。');
   cautions.push(champion.id==='Lux'?'W 护盾不是伤害，不能按暴击伤害计算。':'E 控制没有伤害，不能按暴击伤害计算。');

@@ -21,6 +21,7 @@ const rules={
  1002:['ARAM_ApexInventor',/装备急速/],1004:['ARAM_BacktoBasics',/不能使用.*终极/],
  1006:['ARAM_BladeWaltz',/利刃华尔兹.*召唤师技能/],1045:['ARAM_InfernalConduit',/灼烧.*基础技能/s],
  1029:['ARAM_EtherealWeapon',/技能.*攻击特效.*1秒/s],1056:['ARAM_MindtoMatter',/最大生命值.*一半.*法力值/s],
+ 1022:['ARAM_Deft',/获得.*攻击速度/s],1077:['ARAM_SoulSiphon',/暴击.*治疗.*暴击几率/s],1080:['ARAM_TankItOrLeaveIt',/暴击几率.*会心防御.*所受伤害/s],
  1047:['ARAM_ItsCritical',/暴击几率/],1048:['ARAM_JeweledGauntlet',/技能.*暴击/s],
  1058:['ARAM_MysticPunch',/攻击特效.*冷却/s],
  1118:['ARAM_CriticalHealing',/治疗.*护盾.*暴击/s],

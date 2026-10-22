@@ -28,7 +28,7 @@ export function hexMechanismMicroRoutes(routes){
   const items=[...new Map(route.gear.flatMap(group=>group.items.map(item=>({id:item.id,name:item.name,core:false,brief:group.when+'。'+group.why}))).map(item=>[item.id,item])).values()].slice(0,8);
   if(!items.length)return [];
   return [{id:route.id,title:route.title,kind:'mechanism',patch:route.patch,basis:route.basis,source:route.sources[0]?.url,sources:route.sources,state:route.state,
-   augments:[{...route.augment,core:true,owned:route.state==='owned',catalogDisabled:route.catalogDisabled,brief:(route.ultimateUnavailable?'终极技能不可使用。':'')+(route.pendingItems?'部分装备待核对。':'')+route.play[0]},...(route.optionalAugments||[])],items}];
+   augments:[{...route.augment,core:true,owned:route.state==='owned',catalogDisabled:route.catalogDisabled,brief:(route.ultimateUnavailable?'终极技能不可使用。':route.augment.id===1004?'选择后禁用终极技能。':'')+(route.pendingItems?'部分装备待核对。':'')+route.play[0]},...(route.optionalAugments||[])],items}];
  });
 }
 

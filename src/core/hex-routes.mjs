@@ -1,17 +1,24 @@
 import itemsReview from './hex-route-items.json' with {type:'json'};
 import {fingerprint} from './content-fingerprint.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
-import {reviewedHexMechanic} from './hex-mechanics.mjs';
+import {reviewedHexMechanic,hexUltimateRequirement} from './hex-mechanics.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 
 const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击时多40%效果。',1141:'用于友军的治疗和护盾增强。',
+ 1047:'获得50%暴击几率；按当前暴击率重新比较装备。',1077:'暴击伤害的12%治疗自身，获得25%暴击几率。',1080:'以暴击几率进行会心防御，触发几率最多50%；获得25%暴击几率。',
+ 1022:'获得60%攻击速度。',1328:'普攻暴击叠加攻速，获得25%暴击几率。',1011:'施放终极技能后短暂免伤；仍须安全站位。',1088:'施放终极技能后刷新；有75秒自身冷却，阵亡可重置。',1112:'施放终极技能后免控3秒；8秒自身冷却。',1194:'终极技能伤害可触发变形。',
  1029:'技能命中可施加攻击特效；同一目标每1秒一次。',1058:'实际攻击特效使技能冷却缩短1.25秒；没有命中就没有收益。',
  1004:'强化基础技能，但禁用终极技能；接受不能使用R再考虑。',1214:'旋转类基础技能30急速、增伤30%；不覆盖其他技能。',
  1311:'法力消耗翻倍；技能增效取决于最大法力值，缺蓝时无法持续收益。',1056:'增加最大生命值，数额为法力值的一半；没有直接减冷却。'};
+const jhinComplements={1022:'60%攻速经被动提高攻击力和暴击后的移速；射速仍固定。',1328:'25%暴击，普攻暴击叠攻速；以被动增益攻击力和暴击后移速，射速仍固定。'};
 
 // Authored mechanism routes, not creator builds or statistical rankings. Each
 // route requires the exact reviewed hero kit, augment effect and item effects.
 const routes=[
+ {hero:'Jhin',patch:'16.21',augment:1328,family:'jhin-crit',optional:[1047,1077,1022,1080],title:'四发暴击走位',summary:'围绕四发节奏与暴击后移速，以被动利用额外攻速。',play:['获得25%暴击几率；普攻暴击叠攻速，经被动提高攻击力和暴击后的移速，射速仍固定。','在射击间隔调整位置，第四发寻找收尾；换弹期间用 Q、W 衔接，别站住等下一轮。'],caution:'强化由普攻暴击叠层；射速保持固定，换弹不能跳过，堆攻速不代表连续扫射。',gear:[['攻击力与暴击',[3031],'需要攻击力并能继续普攻时比较无尽；最终暴击收益仍受烬自身被动规则影响。'],['需要安全射程',[3094],'等待盈能后寻找安全的普攻窗口；火炮的攻击距离收益不延长技能射程。'],['护甲压力',[3036],'敌方有护甲与额外生命值时比较多米尼克，仍须保证能命中并安全离开。']]},
+ {hero:'Jhin',patch:'16.21',augment:1047,family:'jhin-crit',optional:[1328,1077,1022,1080],title:'暴击穿插',summary:'保留固定射击节奏，利用暴击与被动的攻击力收益。',play:['获得50%暴击几率；利用暴击后的移速调整位置，四发后换弹并以技能衔接。','先比较当前暴击率，再安排攻击力与护甲穿透；不要只为几率牺牲安全距离。'],caution:'烬的射速仍固定，暴击伤害有自身修正；按当前面板与实际装备比较收益。',gear:[['需要攻击力',[3031],'保留攻击力和暴击方向，但按烬自身的暴击规则结算。'],['安全普攻距离',[3094],'能等待盈能并利用额外普攻距离时比较火炮，技能射程保持原样。'],['护甲压力',[3036],'面对护甲与额外生命值时比较多米尼克；不代替走位和命中。']]},
+ {hero:'Jhin',patch:'16.21',augment:1211,optional:[1011,1112,1194,1088,1047],title:'远程谢幕收尾',summary:'先保住大招的射击位置，再利用实际伤害积累收尾。',play:['在安全位置开 R，瞄准能命中的英雄；只有实际造成的伤害会被储存。','前方有敌方英雄挡枪时调整目标，保留撤退方向；强化按自身规则引爆。'],caution:'引导期间要防贴身突进；终极技能被封印时这条路线不可用。',gear:[['需要大招回转',[6696],'伤害命中后，目标在3秒内阵亡才满足公理圆弧的返还条件；返还不是每次命中都触发。'],['护甲压力',[3036],'对护甲与额外生命值目标比较多米尼克；R 仍需实际命中目标。'],['收尾与攻击力',[6676],'伤害使英雄生命值低于5%才满足处决条件；按实际血量寻找收尾。']]},
+ {hero:'Jhin',patch:'16.21',augment:1004,optional:[1047,1328,1077,1022,1080],title:'基础技能穿插',summary:'接受失去大招，用 Q、W 和陷阱衔接四发普攻。',play:['用 Q 的弹跳寻找收尾，W 先确认目标有标记；换弹时保留安全距离。','E 放在进退路径，等待延迟爆炸；基础技能仍要实际命中。'],caution:'失去 R 的远程收尾；强化按基础技能实际命中兑现，普攻仍遵循固定射速和换弹。',gear:[['攻击力与普攻',[3031],'需要攻击力并能继续普攻时比较无尽，技能段与暴击段分别结算。'],['持续施法缺蓝',[3004],'频繁使用基础技能缺蓝时考虑魔宗；按法力流实际层数安排升级。'],['护甲压力',[3036],'需要处理护甲与额外生命值时比较多米尼克，先保证命中与站位。']]},
  {hero:'Hecarim',patch:'16.21',augment:1058,optional:[1029,1214,1004,1311,1056],title:'攻击特效循环',summary:'用实际命中缩短技能空档，保持 Q 层数与贴身距离。',play:['攻击特效减冷却1.25秒；在安全窗口普攻衔接 Q，E 强化攻击也要命中。','W 留在能贴近敌人交战时使用，E 用于进退；被拉开时先保住自己。'],caution:'没有攻击特效命中就没有强化减冷却；不保证无缝 Q，也不保证一直有蓝。',community:'https://arammayhem.com/zh-cn/combo/hecarim-ethereal-weapon-706/',gear:[['技能接普攻',[3078],'能持续穿插普攻时比较三相；咒刃有自身冷却，不能把每次 Q 都算作额外触发。'],['需要法力',[3004],'频繁施法缺蓝时考虑魔宗；法力流仍需叠层，按实际层数安排升级。'],['物理交战压力',[6333],'需要护甲并有参与击杀机会时比较死舞；延后承伤不是免伤。'],['魔法交战压力',[3065],'需要魔抗且能利用 W 恢复时比较振奋；无法贴近敌人时不能承诺持续治疗。']]},
  {hero:'Hecarim',patch:'16.21',augment:1004,optional:[1214,1058,1029,1311,1056],title:'基础技能续战',summary:'接受失去大招，围绕 Q 层数、W 恢复与 E 进退作战。',play:['Q 命中维持层数；在能持续接触敌人时开启 W，保留 E 调整位置。','基础技能仍有空档和法力消耗，无法贴住时先撤出，不追求原来的大招进场。'],caution:'选择后不能使用 R 的突进和恐惧；不要照搬原来的进场连招。',community:'https://arammayhem.com/zh-cn/combo/hecarim-back-to-basics-703/',gear:[['基础技能轮转',[3161],'接受失去大招后比较朔极之矛的基础技能方向；急速不提供无敌或无限蓝量。'],['持续施法缺蓝',[3004],'考虑魔宗补法力，法力流仍需叠层；不要为追求轮转丢掉生存。'],['需要抗爆发',[3053],'需要生命值与低血护盾时比较血手；护盾不等于免疫伤害。'],['需要魔抗',[3065],'有魔法压力且能利用 W 恢复时比较振奋；保住进退空间。']]},
  {hero:'Hecarim',patch:'16.21',augment:1311,optional:[1056,1004,1058,1029,1214],title:'法力增效续战',summary:'围绕最大法力与持续交战，先保证技能还能放出来。',play:['法力消耗翻倍；先确认蓝量够用，再以 Q 和 W 持续交战。','E 留作进退手段，别为追伤害耗光下一次 W 的法力。'],caution:'法力消耗翻倍；更大的法力上限不等于无限回蓝，也不保证更高胜率。',gear:[['法力与攻击力',[3004],'以魔宗补法力并保留攻击力方向；法力流需要叠层，按实际层数安排升级。'],['能持续施法',[3161],'法力足够并能以技能持续命中时比较朔极之矛；先处理断蓝问题。'],['需要魔抗与恢复',[3065],'有魔法压力且能通过 W 恢复时考虑振奋；不要只堆法力而忽略承伤。']]},
@@ -39,10 +46,10 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
  return routes.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{
   const augment=data.augments.find(a=>a.id===route.augment);
-  if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
+  if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||noUltimate&&hexUltimateRequirement(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
    const a=data.augments.find(a=>a.id===id),disabled=hexCatalogDisabled(data,a);
-   return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+augmentComplements[id]}]:[];
+   return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&!(noUltimate&&hexUltimateRequirement(a,data.patch))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+((hero==='Jhin'&&jhinComplements[id])||augmentComplements[id])}]:[];
   });
   let pendingItems=0;
   const gear=route.gear.flatMap(([when,ids,why])=>{
@@ -56,6 +63,6 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
    return items.length===ids.length?[{when,why,items}]:[];
   });
   return [{id:hero+'-'+augment.id,hero,family:route.family,optionalAugments,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
-   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
+   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(hero==='Jhin'?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
  }).sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered')).filter((route,index,all)=>!route.family||!all.slice(0,index).some(other=>other.family===route.family));
 }
