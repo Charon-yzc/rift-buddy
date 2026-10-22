@@ -11,9 +11,28 @@ test('current hero recommendations cover the bundled roster without inventing sa
  for(const hero of data.champions){
   const advice=hexRecommendations({data,hero:hero.id});assert.ok(advice.rows.length>0,hero.id);assert.ok(advice.rows.length<=6);
   assert.equal(new Set(advice.rows.map(row=>row.id)).size,advice.rows.length);assert.equal(advice.source.patch,data.patch);
-  for(const row of advice.rows){assert.ok(data.hexBuilds[hero.id].augmentIds.includes(row.id));assert.equal(row.fromSource,true);assert.equal(row.winRate,undefined);assert.equal(row.score,undefined);}
+  for(const row of advice.rows){const fromSource=data.hexBuilds[hero.id].augmentIds.includes(row.id);assert.equal(row.fromSource,fromSource);if(!fromSource){assert.equal(row.mechanicReviewed,true);assert.ok(['preferred','conditional'].includes(row.level));}assert.equal(row.winRate,undefined);assert.equal(row.score,undefined);}
  }
  assert.equal(JSON.stringify(data.hexBuilds),before);
+});
+
+test('an independent source shortlist cannot hide a reviewed mechanism, become an offer pool or acquire its provenance',()=>{
+ const before=JSON.stringify(data),hero='Teemo',id=1129,ref=data.hexBuilds[hero];assert(!ref.augmentIds.includes(id));
+ const source=hexRecommendations({data,hero,limit:12}),without=hexRecommendations({data:{...data,hexBuilds:{}},hero,limit:12});
+ for(const result of [source,without]){const row=result.rows.find(r=>r.id===id);assert(row);assert.equal(row.level,'preferred');assert.equal(row.fromSource,false);assert.equal(row.mechanicReviewed,true);assert(!row.reasons.some(r=>r.includes('OP.GG')));}
+ assert(source.rows.some(r=>r.fromSource));assert.equal(source.source.name,'OP.GG');
+ const options=ref.augmentIds.slice(0,3);assert(!options.includes(id));
+ for(const actual of [data,{...data,hexBuilds:{}}]){const result=hexRecommendations({data:actual,hero,options});assert.deepEqual(result.rows.map(r=>r.id),options);assert.equal(result.rows.some(r=>r.id===id),false);}
+ for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed',d=>d.augments.find(a=>a.id===id).catalogEnabled=false]){
+  const changed=structuredClone(data);mutate(changed);assert(!hexRecommendations({data:changed,hero,limit:12}).rows.some(r=>r.id===id));
+ }
+ assert.equal(JSON.stringify(data),before);
+});
+
+test('marked-set contributions remain separate from general hero fit and withdraw when their partner changes',()=>{
+ for(const owned of [[],[1002]])assert.deepEqual(hexRecommendations({data,hero:'Ashe',options:[1047],owned}).rows[0].markedReasons,[]);
+ const linked=hexRecommendations({data,hero:'Ashe',options:[1047,1058],owned:[1048]});assert.match(linked.rows[0].markedReasons.join(' '),/珠光护手/);assert.deepEqual(linked.rows[1].markedReasons,[]);
+ const changed=structuredClone(data);changed.augments.find(a=>a.id===1048).description+=' changed';assert.deepEqual(hexRecommendations({data:changed,hero:'Ashe',options:[1047],owned:[1048]}).rows[0].markedReasons,[]);
 });
 
 test('actual choices use reviewed trigger conditions and known conflicts instead of blindly copying the source list',()=>{

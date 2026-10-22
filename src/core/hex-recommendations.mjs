@@ -18,8 +18,8 @@ const activeRecord=(data,id)=>{
 };
 const itemRows=(data,ids)=>ids.flatMap(id=>{const item=data.items[id],review=currentHexReview(data.patch);return item?.maps?.['12']&&item.inStore&&item.gold?.purchasable!==false&&(!review||review.items[id]===hexRouteItemFingerprint(item))?[{id,name:item.name}]:[];});
 
-function mechanicAdvice(data,champion,a,owned){
- const kitCurrent=hexChampionReview(champion,data.patch)==='current',p=kitCurrent?profile(champion):null,reasons=[],cautions=[];let affinity=0,conflict=false,conditional=false;
+function mechanicAdvice(data,champion,a,owned,p){
+ const kitCurrent=!!p,reasons=[],cautions=[];let affinity=0,conflict=false,conditional=false;
  if(!reviewed(a,data.patch))return {affinity,reasons,cautions,conflict,reviewed:false};
  const has=id=>owned.some(other=>other.id===id&&reviewed(other,data.patch));
  const requirement=hexUltimateRequirement(a,data.patch),dependencies=a.id===1004?owned.filter(other=>hexUltimateRequirement(other,data.patch)):requirement&&has(1004)?[a]:[];
@@ -95,12 +95,19 @@ export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
  const champion=data.champions.find(c=>c.id===hero);if(!champion)return {rows:compareAugments({options,owned,augments:data.augments,patch:data.patch}).map(row=>({...row,level:'reference',label:labels.reference,priority:0,fromSource:false,mechanicReviewed:false})),bestChoice:null,equipment:[],source:null};
  const ref=data.hexBuilds?.[hero],current=validHexReference(ref,champion,data)&&ref.patch===data.patch;
  const sourceIds=new Set(current?ref.augmentIds:[]),ownedIds=new Set(owned),actual=options.length>0;
- const ids=actual?[...new Set(options)].slice(0,3):sourceIds.size?[...sourceIds]:hexMechanicIds;
+ // An independent source shortlist is evidence, not an exhaustive offer pool.
+ // Keep reviewed mechanism candidates even when the source omits them.
+ const ids=actual?[...new Set(options)].slice(0,3):[...new Set([...sourceIds,...hexMechanicIds])];
  const ownedRecords=[...ownedIds].slice(0,6).map(id=>activeRecord(data,id)).filter(Boolean);
+ const kit=hexChampionReview(champion,data.patch)==='current'?profile(champion):null;
  const rows=ids.map(id=>{
   const a=activeRecord(data,id);if(!a)return null;
   if(hexCatalogDisabled(data,a)&&!actual&&!ownedIds.has(id))return null;
-  const advice=mechanicAdvice(data,champion,a,ownedRecords),[base]=compareAugments({champion,options:[id],owned,augments:data.augments,patch:data.patch});
+  const advice=mechanicAdvice(data,champion,a,ownedRecords,kit),[base]=compareAugments({champion,options:[id],owned,augments:data.augments,patch:data.patch});
+  // Keep the marked-set contribution separate from general hero affinity.
+  // Reuse this pass instead of rebuilding the whole catalogue for each next card.
+  const alone=ownedRecords.length?mechanicAdvice(data,champion,a,[],kit):advice;
+  const markedReasons=advice.affinity>alone.affinity&&!advice.conflict?advice.reasons.filter(text=>!alone.reasons.includes(text)):[];
   const unknownSkill=a.unresolved?.includes('SpellName')||/适用技能/.test(a.description||'');
   const level=advice.conflict?'conflict':ownedIds.has(id)?'owned':unknownSkill||advice.conditional?'conditional':advice.affinity>0?'preferred':sourceIds.has(id)?'reference':'conditional';
   const reasons=[...advice.reasons],cautions=[...advice.cautions];
@@ -109,7 +116,7 @@ export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
   if(unknownSkill)cautions.push('尚未核实本英雄具体适用哪项技能，先核对局内技能标记，不当作全技能生效。');
   if(!actual&&!sourceIds.has(id)&&advice.affinity<=0)return null;
   const priority=level==='preferred'?10+advice.affinity+(sourceIds.has(id)?1:0):level==='reference'?4:level==='conditional'?1:-1;
-  return {...base,reasons:[...new Set([...reasons,...base.reasons])],cautions:[...new Set([...cautions,...base.cautions])],level,label:labels[level],priority,fromSource:sourceIds.has(id),mechanicReviewed:advice.reviewed};
+  return {...base,reasons:[...new Set([...reasons,...base.reasons])],cautions:[...new Set([...cautions,...base.cautions])],markedReasons,level,label:labels[level],priority,fromSource:sourceIds.has(id),mechanicReviewed:advice.reviewed};
  }).filter(Boolean);
  const ordered=[...rows].sort((a,b)=>b.priority-a.priority||a.id-b.id),first=ordered[0],second=ordered[1];
  return {rows:actual?rows:ordered.slice(0,Math.max(0,Math.min(12,limit))),bestChoice:actual&&first?.level==='preferred'&&first.priority>(second?.priority??-Infinity)?first.id:null,

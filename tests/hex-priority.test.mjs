@@ -62,7 +62,11 @@ test('main/sidebar and in-game guide expose the same compact decision without re
  assert.deepEqual(guide.hexDecision.set,hexDecision(input).set);assert.deepEqual(guide.comparison.map(row=>row.id),input.options);assert.match(rendered,/本局组合/);assert.match(rendered,/优先看这项/);assert.doesNotMatch(rendered,/流派已成形|胜率\s*\d/);
 });
 
- test('one mark without a reviewed relation does not create an empty analysis disclosure',()=>{const html=renderHexComparison(args('Ashe',[],[1048]));assert.doesNotMatch(html,/aria-label="本局组合"/);assert.match(html,/珠光护手/);});
+test('general hero affinity cannot create an unrelated next choice for an empty or unconnected marked set',()=>{
+ for(const owned of [[],[1002]]){assert.deepEqual(analyzeAugmentSet(args('Ashe',[],owned)).next,[]);assert.doesNotMatch(renderHexComparison(args('Ashe',[],owned)),/aria-label="本局组合"/);}
+ const next=analyzeAugmentSet(args('Ashe',[],[1048])).next;assert.match(next.find(row=>row.id===1047)?.reason||'',/珠光护手.*暴击/,'Explain the marked-set relation rather than generic hero affinity');assert(!next.some(row=>row.id===1058),'Generic attack affinity is not a relation to spell crit');
+ assert.match(renderHexComparison(args('Ashe',[],[1048])),/珠光护手/);
+});
 
 test('reviewed ultimate prerequisites conflict symmetrically with an owned ultimate lock, without classifying names as effects',()=>{
  const ids=[1011,1112,1194,1211,1344,1349,1413,2134];
