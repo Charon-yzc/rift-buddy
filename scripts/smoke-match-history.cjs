@@ -27,7 +27,7 @@ const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(o
  if(route.startsWith('/lol-summoner/v2/'))return route.endsWith(friend.puuid)?friend:own;
  if(route==='/lol-summoner/v1/summoners/aliases')return [friend];
  if(route.startsWith('/lol-summoner/v1/summoners?name='))return friend;
- if(route.includes('/matches?')){const q=new URLSearchParams(route.split('?')[1]),start=Number(q.get('begIndex')),count=Number(q.get('endIndex'))-start+1;historyReads.push({start,count});const value={games:{games:Array.from({length:usageSmoke?Math.max(0,Math.min(count,500-start)):start===0?count:3},(_,i)=>{const row=game(start+i+1);if(usageSmoke)row.participants[0].championId=[22,103,99,64,412,86][(start+i)%6];return row;})}};return holdUsage&&count===100&&start>0?new Promise(resolve=>releaseUsage=()=>{releaseUsage=null;resolve(value);}):value;}
+ if(route.includes('/matches?')){const q=new URLSearchParams(route.split('?')[1]),start=Number(q.get('begIndex')),count=Number(q.get('endIndex'))-start+1;historyReads.push({start,count});const value={games:{games:Array.from({length:usageSmoke?Math.max(0,Math.min(count,500-start)):start===0?count:3},(_,i)=>{const row=game(start+i+1);if(usageSmoke)row.participants[0].championId=[22,103,99,64,412,86][(start+i)%6];return row;})}};const settled=holdUsage&&count===100&&start>0?new Promise(resolve=>releaseUsage=()=>{releaseUsage=null;resolve(value);}):Promise.resolve(value);return usageSmoke&&count===100&&!holdUsage?settled.then(()=>new Promise(resolve=>setTimeout(resolve,120)).then(()=>value)):settled;}
  if(route.startsWith('/lol-match-history/v1/games/')){if(usageSmoke)throw Error('Summary must not fetch individual games');return game(Number(route.split('/').at(-1)));}
  if(route.includes('/game-timelines/'))return {frames:[{timestamp:60000,participantFrames:{1:{participantId:1,totalGold:600,currentGold:200,minionsKilled:6,jungleMinionsKilled:0,level:2,xp:300}},events:[{type:'ITEM_PURCHASED',timestamp:20000,participantId:1,itemId:1001},{type:'SKILL_LEVEL_UP',timestamp:0,participantId:1,skillSlot:1},{type:'CHAMPION_KILL',timestamp:50000,killerId:1,victimId:2}]}]};
  if(route.startsWith('/lol-ranked/'))return {queues:[{queueType:'RANKED_SOLO_5x5',tier:'GOLD',division:'I',leaguePoints:40,wins:30,losses:20}]};
@@ -97,7 +97,11 @@ async function run(){
   await js('window.buddy.client(true)');
   await until(()=>js('window.buddy.championUsage().then(value=>value.complete&&value.scanned===500)'),'Automatic500 summary missing');
   await until(()=>js('document.querySelectorAll(".history-match").length===20'),'Own history did not load automatically');
-  assert.deepEqual(historyReads.slice(0,5),[0,100,200,300,400].map(start=>({start,count:100})));assert.equal(historyReads[5].count,20,'History detail must follow priority statistics');
+  // The summary batches are slowed down so the page read can be observed
+  // while the bounded scan is still running.
+  const batches=historyReads.filter(read=>read.count===100).map(read=>read.start);assert.deepEqual(batches,[0,100,200,300,400],'The bounded summary must still read five ordered batches');
+  const listRead=historyReads.findIndex(read=>read.count===20);assert.ok(listRead>=0,'Own history page was not read');
+  assert.ok(listRead<historyReads.findIndex(read=>read.count===100&&read.start===400),'Own history must not wait for the priority statistics to finish');
   assert.match(await js('document.querySelector(".champion-usage").textContent'),/近 500 场/);assert.equal(await js('document.querySelector(".usage-details").open'),false);assert.equal(await js('document.querySelector(".history-search-disclosure").open'),false);
   main.setSize(1460,980);await capture('usage-main.png');
   const screen=require('electron').screen,area=screen.getPrimaryDisplay().workArea;
@@ -143,7 +147,7 @@ async function run(){
   offline=true;await js('window.buddy.client(true)');await until(()=>js('!document.querySelector(".champion-usage")&&!document.querySelector(".history-match")'),'Disconnect retained personal counts/history');
   if(roomUsageSmoke)await until(()=>roomFrames.findLast(frame=>frame.kind==='state')?.championUsage===null,'Disconnect did not revoke the main-owned room summary');
   assert.equal(writes.length,0);assert.equal(errors.length,0,errors.join('\n'));
-  await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,automatic500:true,priorityBeforeHistory:true,sharedTwoWindows:true,realRefreshClick:true,searchFocusAcrossBatches:true,activeRangeNodePreserved:true,sliderPersisted:true,disconnectCleared:true,...(roomVerified?{roomMainPublisher:true,roomRendererForgeryRejected:true,roomRealWorkerOwnership:true,roomUsageDetails:true,roomLeaveRecalculated:true,roomDisconnectRevoked:true}:{}),realWrites:0,screenshots:['usage-main.png','usage-daylight.png','usage-compact.png',...(roomVerified?['usage-room-details.png','usage-room-draft.png']:[])]},null,2));app.quit();return;
+  await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,automatic500:true,historyBeforePriority:true,sharedTwoWindows:true,realRefreshClick:true,searchFocusAcrossBatches:true,activeRangeNodePreserved:true,sliderPersisted:true,disconnectCleared:true,...(roomVerified?{roomMainPublisher:true,roomRendererForgeryRejected:true,roomRealWorkerOwnership:true,roomUsageDetails:true,roomLeaveRecalculated:true,roomDisconnectRevoked:true}:{}),realWrites:0,screenshots:['usage-main.png','usage-daylight.png','usage-compact.png',...(roomVerified?['usage-room-details.png','usage-room-draft.png']:[])]},null,2));app.quit();return;
  }
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);

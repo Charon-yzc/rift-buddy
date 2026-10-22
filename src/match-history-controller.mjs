@@ -67,7 +67,11 @@ export function createHistoryController({request,onChange=()=>{},analyze=null,se
  }
  function autoLoadOwn(client,summary){
   observeClient({...client,historySession:summary?.session||''});
-  if(!client?.connected||!summary?.session||!['ready','partial'].includes(summary.status)||autoSession===summary.session)return Promise.resolve();
+  // The summary session is published only after the client confirmed the
+  // account, so it is a safe point to read a page. The list must not wait for
+  // the bounded usage scan to finish: that scan reads hundreds of games in the
+  // background while the visible list needs a single page.
+  if(!client?.connected||!summary?.session||!['loading','ready','partial'].includes(summary.status)||autoSession===summary.session)return Promise.resolve();
   autoSession=summary.session;
   if(state.tabs.some(tab=>!tab.options.query&&!tab.options.puuid&&!tab.options.server))return Promise.resolve();
   return open({source:state.source==='auto'?summary.source||'auto':state.source,server:'',background:true});

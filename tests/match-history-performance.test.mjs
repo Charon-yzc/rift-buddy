@@ -102,6 +102,42 @@ test('a concurrent batch advances the scan by the whole batch',async()=>{
  assert.equal(second.identified,100);
 });
 
+test('the background scan waits for a running foreground read instead of sharing the backend with it',async()=>{
+ const started=[];let releaseForeground;
+ const f=service({backend:async()=>{
+  started.push('backend');
+  if(started.length===1)return new Promise(resolve=>{releaseForeground=()=>resolve({games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))});});
+  return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:100+i}}))};
+ }});
+ const page=f.service.execute('page',{source:'auto'});
+ await new Promise(r=>setTimeout(r,20));
+ assert.equal(started.length,1,'the foreground read reached the backend');
+ const scan=f.service.execute('own-summary-page',{source:'sgp'});
+ await new Promise(r=>setTimeout(r,100));
+ assert.equal(started.length,1,'the scan must not reach the backend while a foreground read is pending');
+ releaseForeground();
+ await page;
+ const result=await scan;
+ assert.equal(result.scanned,20);
+});
+
+test('a stalled foreground read cannot hold the background scan forever',async()=>{
+ let calls=0;
+ const f=service({backend:async()=>{
+  calls++;
+  if(calls===1)return new Promise(()=>{});
+  return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))};
+ }});
+ f.service.execute('page',{source:'auto'});
+ await new Promise(r=>setTimeout(r,20));
+ const started=Date.now();
+ const result=await f.service.execute('own-summary-page',{source:'sgp'});
+ const waited=Date.now()-started;
+ assert.equal(result.scanned,20);
+ assert.ok(waited>=2000,'the scan waited for the foreground read');
+ assert.ok(waited<8000,'the wait stays bounded');
+});
+
 test('a scan still completes at the bounded 500-game window',async()=>{
  let page=0;
  const f=service({backend:async()=>{page++;return page<=25?{games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:page*100+i}}))}:{games:[]};}});
