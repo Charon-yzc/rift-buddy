@@ -65,3 +65,15 @@ test('validated independent micro routes also take precedence, while a withdrawn
  updated.items[3031].description+=' changed';const withdrawn=createGuideModel(updated,state);
  assert(!withdrawn.hexMicroRoutes.some(r=>r.id==='yasuo-attack-cycle'));assert(withdrawn.hexMicroRoutes.some(r=>r.id==='Yasuo-item-1058'));
 });
+
+test('equipment upgrades keep per-target clocks, deferred damage and replacement stats precise',()=>{
+ const pairs=[[1318,3157],[2143,6610],[2157,6333],[2140,3074]],rows=run({owned:pairs.map(p=>p[0]),preparedItems:pairs.map(p=>p[1])});
+ assert.equal(rows.length,4);for(const [id,item] of pairs){const row=rows.find(r=>r.augment.id===id);assert(row);assert.equal(row.state,'owned');assert.deepEqual(row.gear[0].items.map(i=>i.id),[item]);assert.match(row.summary,/若购买/);assert.match(row.play[0],/金币不代表/);assert.equal(row.kind,'item-synergy');}
+ const by=id=>rows.find(r=>r.augment.id===id);
+ assert.match(by(1318).brief,/45秒.*其他装备急速另核对/);assert.match(by(1318).caution,/不合算其他装备急速/);
+ assert.match(by(2143).brief,/每个目标.*5秒.*9%已损生命/);assert.match(by(2143).caution,/不是最大生命值.*不与原装备比例直接相加/);
+ assert.match(by(2157).brief,/暂缓近战40%／远程15%.*仍会流血/);assert.match(by(2157).caution,/不是直接免除.*不编造/);
+ assert.match(by(2140).play[1],/变为20%，不是额外再加20%/);assert.match(by(2140).caution,/不把生命偷取推广为所有技能伤害吸血/);
+ const combined=run({owned:[1002,1318],preparedItems:[3157]});assert.equal(combined.length,2);assert(combined.every(r=>!JSON.stringify(r).includes('22.5')));
+ for(const [id,item] of pairs){assert.equal(run({owned:[],options:[id],preparedItems:[item]})[0].state,'offered');assert.deepEqual(run({owned:[id],preparedItems:[3089]}),[]);const changed=structuredClone(data);changed.augments.find(a=>a.id===id).description+=' changed';assert.deepEqual(run({data:changed,owned:[id],preparedItems:[item]}),[]);changed.augments=data.augments;changed.items[item].tooltip.description+=' changed';assert.deepEqual(run({data:changed,owned:[id],preparedItems:[item]}),[]);}
+});

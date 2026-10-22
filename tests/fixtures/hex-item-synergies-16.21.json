@@ -5,6 +5,50 @@
     "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json"
   },
   "items": {
+    "3074": {
+      "id": 3074,
+      "name": "贪欲九头蛇",
+      "description": "65攻击力\n15技能急速\n12%生命偷取\n\n顺劈\n攻击会对附近的敌人们造成物理伤害。血斩\n对你周围的敌人们造成物理伤害。\n你的生命偷取会作用于此伤害。",
+      "tags": [
+        "Damage",
+        "LifeSteal",
+        "CooldownReduction",
+        "OnHit",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 150,
+        "purchasable": true,
+        "total": 3300,
+        "sell": 2310
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "3077",
+        "1053",
+        "3133"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatPhysicalDamageMod": 65,
+        "PercentLifeStealMod": 0.12
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3074.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "65攻击力\n15技能急速\n12%生命偷取\n\n顺劈\n攻击会对附近的敌人们造成（近战 40%总攻击力 / 远程 20%总攻击力）物理伤害。\n\n 血斩  (10秒)\n对你周围的敌人们造成80%总攻击力物理伤害。\n你的生命偷取会作用于此伤害。",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
     "3078": {
       "id": 3078,
       "name": "三相之力",
@@ -266,6 +310,90 @@
         "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
       }
     },
+    "6333": {
+      "id": 6333,
+      "name": "死亡之舞",
+      "description": "60攻击力\n50护甲\n15技能急速\n\n无视痛苦\n所受的一部分伤害会以流血形式在3秒里持续扣除。\n\n蔑视\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，会净化无视痛苦的剩余伤害，并在2秒里持续为你回复生命值。",
+      "tags": [
+        "Armor",
+        "Damage",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 275,
+        "purchasable": true,
+        "total": 3300,
+        "sell": 2310
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "2019",
+        "1037",
+        "3133"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatArmorMod": 50,
+        "FlatPhysicalDamageMod": 60
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6333.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "60攻击力\n50护甲\n15技能急速\n\n无视痛苦\n所受的（近战 30% / 远程 10%）伤害会以流血形式在3秒里持续扣除。\n\n蔑视\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，会净化无视痛苦的剩余伤害，并在2秒里持续为你回复共75%额外攻击力生命值。",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "6610": {
+      "id": 6610,
+      "name": "焚天",
+      "description": "40攻击力\n400生命值\n10技能急速\n\n光盾打击\n你对一个英雄打出的第一次攻击会暴击并回复生命值。",
+      "tags": [
+        "Health",
+        "Damage",
+        "CooldownReduction",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 900,
+        "purchasable": true,
+        "total": 3100,
+        "sell": 2170
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "2021",
+        "3133"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatHPPoolMod": 400,
+        "FlatPhysicalDamageMod": 40
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6610.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "40攻击力\n400生命值\n10技能急速\n\n光盾打击 每个目标 (10秒)\n你对一个英雄打出的第一次攻击会暴击以造成你的80%常规暴击伤害，并回复自身〔数值未解析〕外加4%已损失生命值。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
     "6662": {
       "id": 6662,
       "name": "冰脉护手",
@@ -344,6 +472,96 @@
       "description": "你的咒刃效果造成额外伤害并治疗你自身，治疗量相当于目标生命值的一定百分比。此外，获得250金币。",
       "descriptionStatus": "complete",
       "catalogEnabled": true
+    },
+    {
+      "id": 1318,
+      "key": "ARAM_Upgrade_ZH",
+      "name": "升级：中娅",
+      "rarity": "kSilver",
+      "description": "【中娅沙漏】的冷却时间降低至45秒。你现在可以在【中娅沙漏】、【探索者的护臂】或【沃格勒特的巫师帽】凝滞状态持续期间移动并获得移动速度。\n\n获得250金币。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradezh_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "Kiwi_Upgrade_ZH_Summary",
+      "tags": [
+        5
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "【中娅沙漏】的冷却时间降低至45秒。你现在可以在【中娅沙漏】、【探索者的护臂】或【沃格勒特的巫师帽】凝滞状态持续期间移动并获得50%移动速度。",
+        "status": "complete",
+        "unresolved": [],
+        "sourceKey": "Kiwi_Upgrade_ZH_Tooltip"
+      }
+    },
+    {
+      "id": 2157,
+      "key": "Upgrade_DeathDance",
+      "name": "升级：死亡之舞",
+      "rarity": "kSilver",
+      "description": "获得金币 250。\n\n死亡之舞的无视痛苦提升至近战 40% / 远程 15%所受伤害，并且在参与一次击杀后，即刻治疗更多生命值。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradedeathdance_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "UpgradeDeathDance_Description",
+      "tags": [
+        5
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "获得金币 250。\n\n死亡之舞的无视痛苦提升至近战 40% / 远程 15%所受伤害，并且在参与一次击杀后，即刻治疗〔动态数值〕生命值。",
+        "status": "partial",
+        "unresolved": [
+          "HealTotal_UpgradeDD_TT"
+        ],
+        "sourceKey": "UpgradeDeathDance_Tooltip"
+      }
+    },
+    {
+      "id": 2140,
+      "key": "Upgrade_Ravenous",
+      "name": "升级：贪欲九头蛇",
+      "rarity": "kGold",
+      "description": "你对敌人的技能命中会触发顺劈。提升【贪欲九头蛇】的生命偷取至20%。\n\n获得500金币.",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradesheen_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "Upgrade_Ravenous_Description",
+      "tags": [
+        1
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "你对敌人的技能命中会触发顺劈。提升【贪欲九头蛇】的生命偷取至20%。\n\n获得500金币.",
+        "status": "complete",
+        "unresolved": [],
+        "sourceKey": "Upgrade_Ravenous_Tooltip"
+      }
+    },
+    {
+      "id": 2143,
+      "key": "Upgrade_SunderedSky",
+      "name": "升级：焚天",
+      "rarity": "kGold",
+      "description": "将【焚天】对每个目标的冷却时间缩短至5秒，并且治疗你9%已损失生命值。\n\n获得500金币。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradeie_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "UpgradeSunderedSky_Description",
+      "tags": [
+        1
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "将【焚天】对每个目标的冷却时间缩短至5秒，并且治疗你9%已损失生命值。\n\n获得500金币。",
+        "status": "complete",
+        "unresolved": [],
+        "sourceKey": "UpgradeSunderedSky_Tooltip"
+      }
     }
   ],
   "hexBuilds": {
