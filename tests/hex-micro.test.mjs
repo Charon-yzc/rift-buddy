@@ -28,7 +28,7 @@ test('three micro routes preserve their own core and optional icons without visi
 test('micro positions stay independent of Rift layout and follow the game display at both text scales',()=>{
  const area={x:-1920,y:0,width:1920,height:1040},game={x:-1800,y:40,width:1600,height:900};
  const small=hexMicroPlacement('economy',null,area,game),large=hexMicroPlacement('routes',null,area,game,1.25);
- assert.deepEqual(small,{x:-1788,y:52,width:168,height:84});assert.equal(large.width,80);assert.equal(large.height,64);
+ assert.deepEqual(small,{x:-1788,y:52,width:168,height:104});assert.equal(large.width,80);assert.equal(large.height,64);
  const offset=hexMicroOffset({...large,x:-1600,y:120},area,game);assert.deepEqual(offset,{x:200,y:80});
  assert.equal(hexMicroPlacement('routes',offset,area,game).x,-1600);
  assert.deepEqual(validateHexWindows({economy:{x:10,y:20,width:900},routes:{x:Infinity,y:3},extra:'private'}),{economy:{x:10,y:20}});
@@ -39,9 +39,10 @@ test('micro positions stay independent of Rift layout and follow the game displa
 test('micro routes take only the width required by real icons while full rows still fit',()=>{
  const area={x:0,y:0,width:1920,height:1080},route=(a,i)=>({augments:Array(a).fill({}),items:Array(i).fill({})});
  const narrow=hexMicroPlacement('routes',null,area,null,1,[route(1,3)]),full=hexMicroPlacement('routes',null,area,null,1,[route(9,9)]);
- assert.equal(narrow.width,66);assert.equal(narrow.x+narrow.width,1908);
- assert.equal(full.width,198);assert.equal(full.height,106);assert.equal(full.x+full.width,1908);
- assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(1,3)]).width,83);
+ assert.equal(narrow.width,114);assert.equal(narrow.x+narrow.width,1908);
+ assert.equal(full.width,289);assert.equal(full.height,162);assert.equal(full.x+full.width,1908);
+ assert.equal(hexMicroPlacement('routes',null,area,null,1,Array(3).fill(route(9,9))).height,482);
+ assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(1,3)]).width,143);
 });
 
 test('micro payloads ignore timers, wallets and unrelated combat changes so stable hovers do not flicker',()=>{
