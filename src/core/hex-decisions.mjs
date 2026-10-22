@@ -1,16 +1,17 @@
 import {HEX_OWNED_LIMIT} from './hex-note-limits.mjs';
-import {hexRecommendations} from './hex-recommendations.mjs';
-import {compareAugments} from './hex-compare.mjs';
+import {createHexRecommendations} from './hex-recommendations.mjs';
+import {createAugmentComparison} from './hex-compare.mjs';
 
 const unique=(values,limit)=>[...new Set(Array.isArray(values)?values:[])].slice(0,limit);
 const championOf=({data,hero})=>data.champions.find(c=>c.id===hero);
 // Augment-to-augment facts do not depend on a reviewed hero kit. The shared
 // advice pass still gates every hero affinity on its separate kit review.
 const hexContext=args=>(args.mode===undefined||args.mode==='hex')&&!!championOf(args);
-function optionAdvice(args){
- const {data,hero,options=[],owned=[],mode='hex'}=args;
- if(mode==='hex')return hexRecommendations({data,hero,options,owned});
- return {bestChoice:null,rows:compareAugments({champion:championOf(args),options,owned,augments:data.augments,patch:data.patch,mode}).map(row=>({...row,level:'reference',label:'资料参考',mechanicReviewed:false}))};
+function createAdvice(args){
+ const {data,hero,mode='hex'}=args;
+ if(mode==='hex')return createHexRecommendations({data,hero});
+ const compare=createAugmentComparison({champion:championOf(args),augments:data.augments,patch:data.patch,mode});
+ return value=>({bestChoice:null,rows:compare(value).map(row=>({...row,level:'reference',label:'资料参考',mechanicReviewed:false}))});
 }
 function rankedOptions(args,advice){
  if(!unique(args.options,4).length)return [];
@@ -28,7 +29,7 @@ function rankedOptions(args,advice){
   return {...row,rank,top:row.heroReviewed&&advice.bestChoice===row.id,priority:row.level==='conflict'?'有冲突':row.level==='preferred'?'优先参考':row.level==='owned'?'已选':'看条件'};
  });
 }
-export function rankAugmentOptions(args){return rankedOptions(args,optionAdvice(args));}
+export function rankAugmentOptions(args){return rankedOptions(args,createAdvice(args)(args));}
 function rerollAdvice(args,rows){
  const options=unique(args.options,4),known=new Set(args.data.augments.map(a=>a.id)),owned=new Set(unique(args.owned,HEX_OWNED_LIMIT));
  if(!championOf(args))return {recommended:false,status:'hero',text:'选择英雄后再比较。'};
@@ -41,18 +42,19 @@ function rerollAdvice(args,rows){
 }
 export function recommendAugmentReroll(args){return rerollAdvice(args,rankAugmentOptions(args));}
 
-export function analyzeAugmentSet(args){
+function analyzeSet(args,advise){
  const {data,hero,mode='hex'}=args,owned=unique(args.owned,HEX_OWNED_LIMIT),known=new Set(data.augments.map(a=>a.id)),present=owned.filter(id=>known.has(id)),synergies=[],conflicts=[];
  let pending=0;
  for(const id of present){
-  const row=optionAdvice({...args,options:[id],owned:present.filter(other=>other!==id)}).rows[0];
+  const row=advise({options:[id],owned:present.filter(other=>other!==id)}).rows[0];
   if(!hexContext(args)||!row?.mechanicReviewed){pending++;continue;}
   synergies.push(...row.interactions);
   if(row.level==='conflict'&&row.cautions[0])conflicts.push(row.cautions[0]);
  }
  // General hero affinity is not a synergy with the marked set. The shared
  // recommendation pass separately records only the marks' reviewed contribution.
- const next=present.length&&mode==='hex'&&hexContext(args)?hexRecommendations({data,hero,owned:present,limit:12}).rows.filter(row=>row.mechanicReviewed&&['preferred','conditional'].includes(row.level)&&!owned.includes(row.id)&&row.markedReasons?.length).slice(0,2).map(row=>({id:row.id,name:row.name,reason:row.markedReasons[0]})):[];
+ const next=present.length&&mode==='hex'&&hexContext(args)?advise({owned:present,limit:12}).rows.filter(row=>row.mechanicReviewed&&['preferred','conditional'].includes(row.level)&&!owned.includes(row.id)&&row.markedReasons?.length).slice(0,2).map(row=>({id:row.id,name:row.name,reason:row.markedReasons[0]})):[];
  return {count:present.length,missing:owned.length-present.length,pending,synergies:[...new Set(synergies)].slice(0,4),conflicts:[...new Set(conflicts)].slice(0,4),next,note:'只列已核对的机制，未列出的联动不代表无效。'};
 }
-export function hexDecision(args){const advice=optionAdvice(args),rows=rankedOptions(args,advice);return {rows,reroll:rerollAdvice(args,rows),set:analyzeAugmentSet(args),equipment:advice.equipment||[]};}
+export function analyzeAugmentSet(args){return analyzeSet(args,createAdvice(args));}
+export function hexDecision(args){const advise=createAdvice(args),advice=advise(args),rows=rankedOptions(args,advice);return {rows,reroll:rerollAdvice(args,rows),set:analyzeSet(args,advise),equipment:advice.equipment||[]};}

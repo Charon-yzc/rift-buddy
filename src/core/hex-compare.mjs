@@ -40,9 +40,13 @@ const cooldownById=new Map(cooldownRules.flatMap(([ids,pattern,scope,reason])=>i
 function cooldownEffect(augment){const effect=cooldownById.get(augment.id);return effect?.pattern.test(augment.description||'')?effect:null;}
 export function augmentCategories(augment){const text=`${augment.name} ${augment.description}`,effect=cooldownEffect(augment);return AUGMENT_CATEGORIES.filter(([id])=>id==='haste'?!!effect:patterns[id]?.test(text)).map(([id])=>id);}
 const allyHealers=new Set(['Alistar','Bard','Ivern','Janna','Karma','Kayle','Lulu','Lux','Milio','Nami','Nidalee','Orianna','Rakan','Renata','Senna','Seraphine','Shen','Sona','Soraka','Taric','Yuumi']);
-export function compareAugments({champion,options=[],owned=[],augments=[],buildKey=null,patch,mode='hex'}){
+// Share immutable facts only within one synchronous top-level calculation.
+// Callers must create a new evaluator for the next input/data snapshot.
+export function createAugmentComparison({champion,augments=[],patch,mode='hex'}){
  patch??=champion?.combatStatsSource?.patch;
- const kitCurrent=(mode==='hex'?hexChampionReview(champion,patch):mechanicReview(champion,patch))==='current',p=kitCurrent?profile(champion):null,chosen=new Set(owned),records=new Map(augments.map(a=>[a.id,hexAugmentReference(a,{patch,mode})]));
+ const kitCurrent=(mode==='hex'?hexChampionReview(champion,patch):mechanicReview(champion,patch))==='current',p=kitCurrent?profile(champion):null,records=new Map(augments.map(a=>[a.id,hexAugmentReference(a,{patch,mode})]));
+ return ({options=[],owned=[],buildKey=null}={})=>{
+ const chosen=new Set(owned);
 
  return [...new Set(options)].slice(0,3).map(id=>records.get(id)).filter(Boolean).map(a=>{
   const categories=augmentCategories(a),reasons=[],cautions=[],interactions=[],reviewed=mode==='hex'&&reviewedHexMechanic(a,patch),hasReviewed=id=>chosen.has(id)&&reviewedHexMechanic(records.get(id),patch);
@@ -67,6 +71,8 @@ export function compareAugments({champion,options=[],owned=[],augments=[],buildK
   if(reviewed&&a.id===1048&&[1047,1356,1328].some(hasReviewed))interactions.push('技能可暴击与暴击属性有机制上的联系；不能据此推出组合胜率');
   if(chosen.has(a.id))cautions.push('你已标记选过这一项，请确认它是否还能再次出现');
   if(!reasons.length&&!cautions.length)reasons.push('先比较触发条件、覆盖技能和当前装备方向');
-  return {id:a.id,name:a.name,description:a.description,categories,reasons,cautions,interactions,...(a.review?{review:a.review}:{})};
+  return {id:a.id,name:a.name,description:a.description,categories,reasons,cautions,interactions,...(a.review?{review:structuredClone(a.review)}:{})};
  });
+ };
 }
+export function compareAugments(args){return createAugmentComparison(args)(args);}
