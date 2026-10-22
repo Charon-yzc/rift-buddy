@@ -6,6 +6,7 @@ import {hexAugmentReference} from './hex-augment-reference.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {hexRouteItemFingerprint} from './hex-routes.mjs';
 import {reviewedHexMechanic as reviewed,hexMechanicIds,hexUltimateRequirement} from './hex-mechanics.mjs';
+import {hexAllyProtection} from './hex-ally-protection.mjs';
 
 // These are reviewed mechanic prerequisites, not occurrence eligibility or a
 // win-rate model. Unknown versions/keys remain browsable without these claims.
@@ -22,10 +23,16 @@ function mechanicAdvice(data,champion,a,owned,p){
  const kitCurrent=!!p,reasons=[],cautions=[];let affinity=0,conflict=false,conditional=false;
  if(!reviewed(a,data.patch))return {affinity,reasons,cautions,conflict,reviewed:false};
  const has=id=>owned.some(other=>other.id===id&&reviewed(other,data.patch));
+ const protection=a.id===1141?hexAllyProtection(champion,data.patch,{ultimateDisabled:has(1004)}):null;
  const requirement=hexUltimateRequirement(a,data.patch),dependencies=a.id===1004?owned.filter(other=>hexUltimateRequirement(other,data.patch)):requirement&&has(1004)?[a]:[];
  if(dependencies.length){conflict=true;cautions.push(...dependencies.map(other=>`回归基本功禁用终极技能，${other.name}的主要收益将无法利用。`));}
  if(requirement)reasons.push(requirement);
- if(p&&a.id===1141){
+ if(protection){
+  reasons.push(...protection.conditions);cautions.push(...protection.cautions);
+  if(protection.available)affinity+=p?.build==='enchanter'?4:1;
+  conditional=!p||p.build!=='enchanter'||!protection.available;
+ }
+ else if(p&&a.id===1141){
   if(allyHealers.has(champion.id)){affinity+=p.build==='enchanter'?4:1;conditional=p.build!=='enchanter';reasons.push('英雄有已核实的友方治疗或护盾，可满足强化的对象条件；收益取决于实际保护队友的频率。');}
   else cautions.push('英雄自身未核实友方治疗或护盾；自身吸血不能替代这个条件，需要另有可用手段。');
  }
@@ -74,7 +81,7 @@ function mechanicAdvice(data,champion,a,owned,p){
  }
  if(a.id===1002)cautions.push('先有可受装备急速影响的装备效果，才有对应收益；不缩短英雄技能冷却。');
  if(a.id===1205)cautions.push('额外攻击力转为法强，需同时核对装备属性和技能加成；不要照搬原有纯AD路线。');
- if(!kitCurrent)cautions.push('英雄适配尚待复核；这里只核对强化本身与已选强化，不推定英雄技能适用。');
+ if(!kitCurrent)cautions.push(protection?'仅核对上述友方治疗或护盾路径，其他英雄适配尚待复核。':'英雄适配尚待复核；这里只核对强化本身与已选强化，不推定英雄技能适用。');
  return {affinity,reasons,cautions,conflict,conditional,reviewed:true};
 }
 
