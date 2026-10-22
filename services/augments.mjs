@@ -2,7 +2,7 @@ import {stringTableLookup} from './riot-stringtable.mjs';
 // Render game-authored tooltip text without executing expressions from downloaded data.
 export function formatNumber(n){if(!Number.isFinite(n))return null;const scaled=n*1000;return String(Number.isFinite(scaled)?Math.round(scaled)/1000:n);}
 export function fieldHash(name){let h=2166136261;for(const c of String(name).toLowerCase())h=Math.imul(h^c.charCodeAt(0),16777619);return `{${(h>>>0).toString(16).padStart(8,'0')}}`;}
-export const AUGMENT_TOOLTIP_PARSER_REVISION=2;
+export const AUGMENT_TOOLTIP_PARSER_REVISION=3;
 export function buildAugmentDescriptions(catalog,bin,entries){
  const lookup=stringTableLookup(entries);
  const objects=Object.values(bin).filter(v=>v?.__type==='AugmentData');
@@ -55,9 +55,11 @@ export function buildAugmentDescriptions(catalog,bin,entries){
      if(part.__type==='NumberCalculationPart'){const n=scalar(part);return n===null?null:formatNumber(n*factor);}
      if(part.__type==='NamedDataValueCalculationPart')return named(part.mDataValue,factor);
      if(!['StatByNamedDataValueCalculationPart','StatByCoefficientCalculationPart'].includes(part.__type))return null;
-     // The omitted mStat enum is AP (0). Formula 2 is bonus health for stat12;
-     // unknown stats/formulas must not borrow a plausible-looking coefficient.
-     const stat=part.mStat===undefined?0:part.mStat,formula=part.mStatFormula===undefined?0:part.mStatFormula,label=stat===0&&formula===0?'法术强度':stat===12&&formula===0?'最大生命值':stat===12&&formula===2?'额外生命值':null;
+     // Current BIN parts and official explanations distinguish total/bonus AD
+     // and armor (stats 2/1). AP defaults to 0; health is stat12. Other
+     // stats/formulas and unreviewed modifiers cannot borrow a coefficient.
+     if(Object.keys(part).some(key=>!['__type','mStat','mStatFormula',part.__type==='StatByNamedDataValueCalculationPart'?'mDataValue':'mCoefficient'].includes(key)))return null;
+     const stat=part.mStat===undefined?0:part.mStat,formula=part.mStatFormula===undefined?0:part.mStatFormula,label=stat===0&&formula===0?'法术强度':[1,2].includes(stat)&&[0,2].includes(formula)?({0:'总',2:'额外'}[formula]+{1:'护甲',2:'攻击力'}[stat]):stat===12&&formula===0?'最大生命值':stat===12&&formula===2?'额外生命值':null;
      const coefficient=part.__type==='StatByNamedDataValueCalculationPart'?namedScalar(part.mDataValue):part.mCoefficient;
      if(!label||!Number.isFinite(coefficient))return null;const value=formatNumber(coefficient*factor*(percent?1:100));if(value===null)return null;hasStat=true;
      return value+(percent?'×':'%')+label;

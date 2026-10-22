@@ -1,0 +1,182 @@
+{
+  "researchOnly": true,
+  "scope": "Four semantic anchors; old official explanations cross-checked with exact current BIN parts. Not full champion mechanism renewal.",
+  "scannedCurrentFiles": 145,
+  "unscannedHeroes": 28,
+  "anchors": [
+    {
+      "champion": "MissFortune",
+      "patch": "16.21",
+      "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+      "sha256": "f77d39ea07df90b910ec96498da8b72fe2a2d5f393ffd496b70121a15d066625",
+      "spellKey": "Characters/MissFortune/Spells/MissFortuneBulletTimeAbility/MissFortuneBulletTime",
+      "calculationKey": "PhysicalDamagePerWave",
+      "calculation": {
+        "mSimpleTooltipCalculationDisplay": 6,
+        "mFormulaParts": [
+          {
+            "mDataValue": "BaseDamage",
+            "__type": "NamedDataValueCalculationPart"
+          },
+          {
+            "mStat": 2,
+            "mDataValue": "tADRatio",
+            "__type": "StatByNamedDataValueCalculationPart"
+          },
+          {
+            "mDataValue": "APRatio",
+            "__type": "StatByNamedDataValueCalculationPart"
+          }
+        ],
+        "__type": "GameCalculation"
+      },
+      "part": {
+        "mStat": 2,
+        "mDataValue": "tADRatio",
+        "__type": "StatByNamedDataValueCalculationPart"
+      },
+      "values": [
+        {
+          "name": "tADRatio",
+          "values": [
+            0.6000000238418579,
+            0.6000000238418579,
+            0.6000000238418579,
+            0.6000000238418579,
+            0.6000000238418579,
+            0.6000000238418579,
+            0.6000000238418579
+          ],
+          "__type": "SpellDataValue"
+        }
+      ],
+      "expected": "60%总攻击力",
+      "officialUrl": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/"
+    },
+    {
+      "champion": "Hecarim",
+      "patch": "16.21",
+      "url": "https://raw.communitydragon.org/16.21/game/data/characters/hecarim/hecarim.bin.json",
+      "sha256": "dbbfd0b754f4aa9516d8363eb52bd71d3895c113a3f6c16d50894ebf6d971542",
+      "spellKey": "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRamp",
+      "calculationKey": "MinDamage",
+      "calculation": {
+        "tooltipOnly": true,
+        "mFormulaParts": [
+          {
+            "mDataValue": "MinBaseDamage",
+            "__type": "NamedDataValueCalculationPart"
+          },
+          {
+            "mStat": 2,
+            "mStatFormula": 2,
+            "mDataValue": "BonusADRatio",
+            "__type": "StatByNamedDataValueCalculationPart"
+          }
+        ],
+        "__type": "GameCalculation"
+      },
+      "part": {
+        "mStat": 2,
+        "mStatFormula": 2,
+        "mDataValue": "BonusADRatio",
+        "__type": "StatByNamedDataValueCalculationPart"
+      },
+      "values": [
+        {
+          "name": "BonusADRatio",
+          "values": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "__type": "SpellDataValue"
+        }
+      ],
+      "expected": "50%额外攻击力",
+      "officialUrl": "https://www.leagueoflegends.com/en-gb/news/game-updates/patch-12-17-notes/"
+    },
+    {
+      "champion": "Leona",
+      "patch": "16.21",
+      "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+      "sha256": "327517c4407ef66c3498617f8ecc366f4673d22d215294de9266f8491281741f",
+      "spellKey": "Characters/Leona/Spells/LeonaSolarBarrierAbility/LeonaSolarBarrier",
+      "calculationKey": "BonusArmorTooltip",
+      "calculation": {
+        "mSimpleTooltipCalculationDisplay": 6,
+        "mFormulaParts": [
+          {
+            "mDataValue": "ArmorBaseBonus",
+            "__type": "NamedDataValueCalculationPart"
+          },
+          {
+            "mStat": 1,
+            "mStatFormula": 2,
+            "mCoefficient": 0.20000000298023224,
+            "__type": "StatByCoefficientCalculationPart"
+          }
+        ],
+        "__type": "GameCalculation"
+      },
+      "part": {
+        "mStat": 1,
+        "mStatFormula": 2,
+        "mCoefficient": 0.20000000298023224,
+        "__type": "StatByCoefficientCalculationPart"
+      },
+      "values": [],
+      "expected": "20%额外护甲",
+      "officialUrl": "https://www.leagueoflegends.com/en-gb/news/game-updates/patch-13-8-notes/"
+    },
+    {
+      "champion": "Rammus",
+      "patch": "16.21",
+      "url": "https://raw.communitydragon.org/16.21/game/data/characters/rammus/rammus.bin.json",
+      "sha256": "67c843fe365d29f76415177c7d1cec5e7a0cdd67121b43e7d6deb1da5f01321e",
+      "spellKey": "Characters/Rammus/Spells/RammusPAbility/RammusP",
+      "calculationKey": "TotalDamage",
+      "calculation": {
+        "mFormulaParts": [
+          {
+            "mStat": 1,
+            "mDataValue": "ArmorRatio",
+            "__type": "StatByNamedDataValueCalculationPart"
+          },
+          {
+            "mStat": 6,
+            "mDataValue": "MagicResistRatio",
+            "__type": "StatByNamedDataValueCalculationPart"
+          }
+        ],
+        "__type": "GameCalculation"
+      },
+      "part": {
+        "mStat": 1,
+        "mDataValue": "ArmorRatio",
+        "__type": "StatByNamedDataValueCalculationPart"
+      },
+      "values": [
+        {
+          "name": "ArmorRatio",
+          "values": [
+            0.15000000596046448,
+            0.15000000596046448,
+            0.15000000596046448,
+            0.15000000596046448,
+            0.15000000596046448,
+            0.15000000596046448,
+            0.15000000596046448
+          ],
+          "__type": "SpellDataValue"
+        }
+      ],
+      "expected": "15%总护甲",
+      "officialUrl": "https://www.leagueoflegends.com/en-gb/news/game-updates/patch-25-12-notes/"
+    }
+  ]
+}

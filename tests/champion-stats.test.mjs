@@ -49,9 +49,9 @@ test('bundled current stats include real level AD and distinct AS ratios for all
 });
 const cnNames=()=>({version:data.patch,hero:data.champions.map(c=>({alias:c.id,title:c.name,name:c.title,keywords:c.keywords}))});
 test('an already enriched snapshot checks global and CN versions without fetching every champion again',async()=>{
- const original=global.fetch,calls=[],previous={...data,contentRevision:12,augments:data.augments.map(a=>({...a,tooltipParserRevision:2,tooltip:{revision:1,description:a.description,status:a.descriptionStatus}}))};
+ const original=global.fetch,calls=[],previous={...data,contentRevision:13,augments:data.augments.map(a=>({...a,tooltipParserRevision:3,tooltip:{revision:1,description:a.description,status:a.descriptionStatus}}))};
  global.fetch=async url=>{calls.push(url);return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cnNames()};};
- try{const result=await collectSnapshot(()=>{},previous);assert.equal(result.contentRevision,12);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
+ try{const result=await collectSnapshot(()=>{},previous);assert.equal(result.contentRevision,13);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
  finally{global.fetch=original;}
 });
 
