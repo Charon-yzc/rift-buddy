@@ -235,7 +235,7 @@ async function historyAction(action,el,background=false){
   if(action==='history-self'){const search=document.querySelector('.history-search-disclosure');if(search)search.open=false;await history.open({source:history.state.source,server:''});}
  else if(action==='history-tab')history.select(id);
  else if(action==='history-close')history.close(id);
- else if(action==='history-refresh'&&tab)await history.load(tab,tab.page?{}:{handle:undefined});
+ else if(action==='history-refresh'&&tab)await history.load(tab,{...(tab.page?{}:{handle:undefined}),fresh:true});
  else if(action==='history-next'&&tab?.page)await history.load(tab,{start:tab.page.start+tab.page.count});
  else if(action==='history-prev'&&tab?.page)await history.load(tab,{start:Math.max(0,tab.page.start-tab.page.count)});
  else if(action==='history-first'&&tab)await history.load(tab,{start:0});

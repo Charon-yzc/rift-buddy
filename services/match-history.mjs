@@ -28,13 +28,17 @@ const SCAN_PAGE=20,SCAN_BATCH=80,SCAN_LOCAL_BATCH=100,SCAN_DEADLINE_MS=15000,FOR
 // A visible read must never hold a concurrency slot indefinitely: three stalled
 // transports would stop every later read and leave the page loading forever.
 const OPERATION_DEADLINE_MS=8000;
+// Paging back and forth re-read the same page from the network every time.
+// A short-lived page cache keeps navigation instant; an explicit refresh, or
+// a session change, bypasses and drops it.
+const LIST_CACHE_MS=60000,LIST_CACHE_MAX=12;
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now,operationDeadlineMs=OPERATION_DEADLINE_MS}={}){
- let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0,foreground=0;const waiting=[],idleWaiters=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map();let totalCacheBytes=0;
+ let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0,foreground=0;const waiting=[],idleWaiters=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map(),listCache=new Map();let totalCacheBytes=0;
  const preferredSource=new Map(),failedSource=new Map();
  const rememberSource=(server,source)=>preferredSource.set(server,source);
  const sourceBlocked=(server,source)=>now()<(failedSource.get(server+':'+source)??-Infinity);
  const blockSource=(server,source)=>failedSource.set(server+':'+source,now()+SOURCE_COOLDOWN_MS);
- function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();tokens.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;preferredSource.clear();failedSource.clear();}
+ function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();tokens.clear();totalCacheBytes=0;listCache.clear();rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;preferredSource.clear();failedSource.clear();}
  function clear(){clearGeneration++;discovery=null;discoveredAt=0;resetSession();}
  async function limited(fn){if(waiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>waiting.push(resolve));running++;try{return await fn();}finally{running--;waiting.shift()?.();}}
  // The usage scan reads the shared backend quota four pages at a time.
@@ -228,7 +232,10 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    let handle=p.handle,t=handle?handles.get(handle):null;if(handle&&!t)fail('战绩会话已失效，请重新查询');if(!t){t=await target(c,p);handle=crypto.randomBytes(16).toString('hex');}
    if(p.rosterKey&&t.player.puuid!==p.puuid)fail('对局成员与查询句柄不匹配');
   if(t.epoch!==c.epoch)fail('战绩会话已变化，请重新查询');if(t.cross&&t.preferred==='lcu')fail('客户端数据源不支持跨区查询，请选择游戏后台');
-  const tag=p.queue?`q_${Number(p.queue)}`:'';if(p.queue!==undefined&&p.queue!==''&&(!Number.isInteger(Number(p.queue))||Number(p.queue)<0||Number(p.queue)>10000))fail('战绩模式参数不正确');
+  const tag=p.queue?`q_${Number(p.queue)}`:'';
+  const pageKey=`${handle}|${start}|${count}|${tag}|${t.preferred}`;if(p.queue!==undefined&&p.queue!==''&&(!Number.isInteger(Number(p.queue))||Number(p.queue)<0||Number(p.queue)>10000))fail('战绩模式参数不正确');
+  const cachedPage=p.fresh===true?null:listCache.get(pageKey);
+  if(cachedPage&&now()-cachedPage.at<LIST_CACHE_MS)return {...cachedPage.value,games:[...cachedPage.value.games]};
   const loaded=await loadList(c,t,{start,count,tag});
   const raw=loaded.raw,source=loaded.source;let notice=loaded.notice;
   const entries=source==='sgp'?raw?.games:raw?.games?.games;if(!Array.isArray(entries))fail('客户端尚未返回有效战绩，请稍后重试');
@@ -264,7 +271,10 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    for(const game of games)for(const player of game.participants)delete player.publicStats;
   await check(c);if(p.rosterKey&&rosterCache?.key!==p.rosterKey)fail('当前对局已变化，已忽略旧查询');handles.set(handle,t);while(handles.size>48)handles.delete(handles.keys().next().value);
   for(const game of games){t.ids.set(game.id,source);while(t.ids.size>500)t.ids.delete(t.ids.keys().next().value);const key=`${handle}:${game.id}`,current=cache.get(key);put(key,{origin:source,...(current?.origin===source&&current.complete?{}:{game}),at:now()});}
-  return {handle,session:sessionId,player:t.player,server:t.server,localServer:c.localServer,cross:t.cross,source,notice,start,count,hasMore:entries.length>=count,games,servers:Object.entries(SGP_SERVERS).map(([id,s])=>({id,name:s.name})),receivedAt:now()};
+  const result={handle,session:sessionId,player:t.player,server:t.server,localServer:c.localServer,cross:t.cross,source,notice,start,count,hasMore:entries.length>=count,games,servers:Object.entries(SGP_SERVERS).map(([id,s])=>({id,name:s.name})),receivedAt:now()};
+  listCache.delete(pageKey);listCache.set(pageKey,{at:now(),value:result});
+  while(listCache.size>LIST_CACHE_MAX)listCache.delete(listCache.keys().next().value);
+  return result;
  }
  async function execute(operation,payload={}){
     if(!['own-summary-context','own-summary-page','page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))fail('不支持此战绩操作');

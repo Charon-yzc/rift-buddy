@@ -42,6 +42,16 @@ test('early or cached summaries preserve the user source policy instead of forci
   assert.equal(calls.find(c=>c.op==='page').p.source,source);
  }
 });
+test('a refresh bypasses the page cache exactly once',async()=>{
+ const calls=[];
+ const history=createHistoryController({request:async(op,p)=>{calls.push({op,p:{...p}});return op==='profile'?{}:page();}});
+ await history.open({source:'auto',server:''});
+ await history.load(history.current(),{fresh:true});
+ await history.load(history.current(),{});
+ const pages=calls.filter(c=>c.op==='page');
+ assert.equal(pages.at(-2).p.fresh,true,'the refresh asks for a fresh page');
+ assert.notEqual(pages.at(-1).p.fresh,true,'the flag must not stick to later loads');
+});
 test('automatic own tab does not take focus from an explicit player search or use its chosen region',async()=>{
  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:{...page(),cross:p.server==='TW2',server:p.server||'KR'};}});
  await history.open({query:'已搜索玩家',server:'TW2'});const current=history.state.current;await history.autoLoadOwn(client,summary);assert.equal(history.state.current,current);assert.equal(history.state.tabs.length,2);assert.equal(calls.filter(c=>c.op==='page').at(-1).p.server,'');

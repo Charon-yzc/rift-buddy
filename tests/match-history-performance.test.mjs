@@ -40,7 +40,7 @@ test('a source that just failed is skipped during its cooldown',async()=>{
  assert.equal(first.source,'sgp','the backend answers while the local route is down');
  const backendBefore=f.calls.backend;
  localDown=false;
- const second=await f.service.execute('page',{source:'auto',handle:first.handle});
+ const second=await f.service.execute('page',{source:'auto',handle:first.handle,start:20});
  assert.equal(second.source,'sgp');
  assert.equal(f.calls.backend,backendBefore+1,'the healthy backend is reused');
 });
@@ -120,6 +120,25 @@ test('an old cached source cannot lock the early visible page away from a health
  assert.equal(collector.snapshot().source,'sgp');assert.equal(calls.filter(c=>c.operation==='page').length,1);
 });
 
+test('a page that was already read is served from memory until it expires or is refreshed',async()=>{
+ let pageReads=0;
+ const f=service({request:async(_auth,route)=>{
+  if(route==='/lol-summoner/v1/current-summoner')return own;
+  if(route==='/entitlements/v1/token')return {accessToken:'t'};
+  if(route.includes('/matches?')){pageReads++;return localBody;}
+  return {};
+ }});
+ const first=await f.service.execute('page',{source:'lcu',start:0,count:20});
+ const before=pageReads;
+ const second=await f.service.execute('page',{source:'lcu',handle:first.handle,start:0,count:20});
+ assert.equal(pageReads,before,'a cached page must not be read again');
+ assert.deepEqual(second.games.map((g)=>g.id),first.games.map((g)=>g.id));
+ await f.service.execute('page',{source:'lcu',handle:first.handle,start:0,count:20,fresh:true});
+ assert.equal(pageReads,before+1,'an explicit refresh bypasses the cache');
+ await f.service.execute('clear');
+ await f.service.execute('page',{source:'lcu',start:0,count:20});
+ assert.equal(pageReads,before+2,'clearing the session drops cached pages');
+});
 const requestStub=(overrides={})=>async(_auth,route)=>{
  if(route==='/lol-summoner/v1/current-summoner')return own;
  if(route==='/entitlements/v1/token')return {accessToken:'token'};
