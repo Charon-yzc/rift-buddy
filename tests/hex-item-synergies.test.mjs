@@ -77,3 +77,55 @@ test('equipment upgrades keep per-target clocks, deferred damage and replacement
  const combined=run({owned:[1002,1318],preparedItems:[3157]});assert.equal(combined.length,2);assert(combined.every(r=>!JSON.stringify(r).includes('22.5')));
  for(const [id,item] of pairs){assert.equal(run({owned:[],options:[id],preparedItems:[item]})[0].state,'offered');assert.deepEqual(run({owned:[id],preparedItems:[3089]}),[]);const changed=structuredClone(data);changed.augments.find(a=>a.id===id).description+=' changed';assert.deepEqual(run({data:changed,owned:[id],preparedItems:[item]}),[]);changed.augments=data.augments;changed.items[item].tooltip.description+=' changed';assert.deepEqual(run({data:changed,owned:[id],preparedItems:[item]}),[]);}
 });
+
+test('the remaining equipment-upgrade families require both the actual mark and exact prepared equipment',()=>{
+ const pairs=[[1320,6676],[1336,3031],[1319,3068],[3150,4646],[1379,124011]],before=JSON.stringify(data);
+ for(const [id,item] of pairs){
+  for(const state of ['owned','offered']){const [row]=run({owned:state==='owned'?[id]:[],options:state==='offered'?[id]:[],preparedItems:[item]});assert(row,id);assert.equal(row.state,state);assert.match(row.summary,/若购买/);assert.deepEqual(row.gear[0].items.map(i=>i.id),[item]);assert.equal(row.kind,'item-synergy');assert.equal(row.score,undefined);assert.equal(row.winRate,undefined);}
+  for(const extra of [{owned:[],options:[],preparedItems:[item]},{owned:[id],preparedItems:[]},{owned:[id],preparedItems:[3089]}])assert.deepEqual(run(extra),[]);
+  for(const mutate of [d=>d.augments.find(a=>a.id===id).key='Changed',d=>d.augments.find(a=>a.id===id).description+=' hotfix',d=>d.augments.find(a=>a.id===id).descriptionStatus='partial',d=>d.items[item].tooltip.description+=' changed',d=>d.items[item].maps['12']=false,d=>d.items[item].gold.purchasable=false]){const changed=structuredClone(data);mutate(changed);assert.deepEqual(run({data:changed,owned:[id],preparedItems:[item]}),[]);}
+ }
+ assert.equal(JSON.stringify(data),before);
+});
+
+test('upgrade advice retains missing numerical fields rather than inventing growth, expectations or income',()=>{
+ const rows=run({owned:[1320,1336,1319,3150,1379],preparedItems:[6676,3031,3068,6664,4646,124011]}),by=id=>rows.find(r=>r.augment.id===id);assert.equal(rows.length,5);
+ assert.match(by(1320).brief,/0.5个百分点.*50金币/);assert.match(by(1320).play[0],/被动实际处决/);assert.match(by(1320).caution,/不预报本人已叠层数/);
+ assert.match(by(1336).brief,/上限为暴击几率的50%.*非固定收益/);assert.match(by(1336).caution,/未给分布和均值.*不.*合成期望伤害/);
+ assert.match(by(1319).brief,/12金币.*不推算每秒收入/);assert.deepEqual(by(1319).gear[0].items.map(i=>i.id),[3068,6664]);assert.match(by(1319).caution,/不把所有技能灼烧/);
+ assert.match(by(3150).play[1],/初段.*敌方英雄.*标记/);assert.match(by(3150).brief,/初段.*命中.*标记/);assert.match(by(3150).caution,/未给出.*生命值伤害比例.*无限连锁/);
+ assert.match(by(1379).brief,/100%攻速.*对英雄攻击.*250%.*不扩大为全治疗/);assert.match(by(1379).play[0],/攻击速度来自强化本身/);
+ for(const row of rows){const micro=hexMechanismMicroRoutes([row])[0];assert.equal(micro.kind,'item-synergy');assert.equal(micro.augments[0].brief,row.brief);assert.match(renderHexRoutes([row]),/条件联动/);assert(row.brief.length<60,'Keep the complete important condition within the narrow hover budget');}
+ const changed=structuredClone(data);changed.items[3068].tooltip.description+=' changed';assert.deepEqual(run({data:changed,owned:[1319],preparedItems:[3068,6664]})[0].gear[0].items.map(i=>i.id),[6664]);
+});
+
+test('detail-only values withdraw independently when the full tooltip is missing or changes',()=>{
+ for(const [id,item,numeric] of [[1320,6676,/0\.5个百分点|(?<!\d)50金币/],[1336,3031,/50%/]]){
+  for(const mutate of [a=>delete a.tooltip,a=>a.tooltip.description+=' changed',a=>a.tooltip.status='missing',a=>a.tooltip.unresolved.push('other'),a=>a.tooltip.revision=2]){
+   const changed=structuredClone(data);mutate(changed.augments.find(a=>a.id===id));
+   const [row]=run({data:changed,owned:[id],preparedItems:[item]});assert(row,'Valid summary still supports conditional advice');assert.doesNotMatch([row.brief,...row.play,row.caution].join(' '),numeric);assert.match(row.brief,/完整说明核对/);
+  }
+ }
+});
+
+test('complete own equipment enables upgrades outside the plan, without claiming planned items were purchased',()=>{
+ const before=JSON.stringify(data),[held]=run({owned:[1379],preparedItems:[],inventoryKnown:true,inventory:[{id:'124011',count:1}]});
+ assert.equal(held.equipmentState,'held');assert.match(held.summary,/本人已装备花晓之剑/);assert.equal(held.gear[0].when,'本人已装备');assert.match(hexMechanismMicroRoutes([held])[0].items[0].brief,/本人已装备/);
+ for(const extra of [{inventoryKnown:false},{inventory:[]},{inventory:[{id:'124011',count:0}]},{inventory:[{id:'124011',count:7}]},{inventory:[{id:'124011'}]},{inventory:[{id:'4011',count:1}]}])assert.deepEqual(run({owned:[1379],preparedItems:[],inventoryKnown:true,inventory:[{id:'124011',count:1}],...extra}),[]);
+ const [mixed]=run({owned:[1319],preparedItems:[3068,6664],inventoryKnown:true,inventory:[{id:'3068',count:1}]});assert.equal(mixed.equipmentState,'mixed');assert.deepEqual(mixed.gear.map(g=>[g.when,g.items.map(i=>i.id)]),[['本人已装备',[3068]],['当前方案 · 若购买',[6664]]]);
+ assert.equal(hexMechanismMicroRoutes([mixed])[0].equipmentState,'mixed');assert.equal(mixed.gear.flatMap(g=>g.items).length,2);
+ const changed=structuredClone(data);changed.items[124011].tooltip.description+=' hotfix';assert.deepEqual(run({data:changed,owned:[1379],preparedItems:[],inventoryKnown:true,inventory:[{id:'124011',count:1}]}),[]);assert.equal(JSON.stringify(data),before);
+});
+
+test('guide consumes only fresh, complete inventory matching the selected hero and mode and withdraws sold equipment',()=>{
+ const state=selectGuide(null,{id:'Ahri',role:'mid',mode:'hex',ownedAugmentIds:[1379]}),live={available:true,at:Date.now(),champion:'Ahri',mode:'hex',mapId:12,inventoryKnown:true,inventory:[{id:'124011',count:1}]},before=JSON.stringify(state);
+ const row=createGuideModel(data,state,live).hexRoutes.find(r=>r.augment.id===1379);assert(row);assert.equal(row.equipmentState,'held');assert.equal(createGuideModel(data,state,live).hexMicroRoutes.find(r=>r.id===row.id).equipmentState,'held');
+ for(const extra of [{inventoryKnown:false},{available:false},{at:Date.now()-13000},{champion:'Elise'},{mode:'rift',mapId:11},{inventory:[]}])assert(!createGuideModel(data,state,{...live,...extra}).hexRoutes.some(r=>r.augment.id===1379));
+ const changed=selectGuide(state,{...state.selection,ownedAugmentIds:[]});assert(!createGuideModel(data,changed,live).hexRoutes.some(r=>r.kind==='item-synergy'));assert.equal(JSON.stringify(state),before);
+});
+
+test('Flower sword keeps its mode-specific identity instead of normalizing same-named equipment',()=>{
+ for(const item of [4011,664011]){const changed=structuredClone(data);changed.items[item]={...changed.items[124011],id:item};assert.deepEqual(run({data:changed,owned:[1379],preparedItems:[item]}),[]);}
+ const [row]=run({owned:[1379],preparedItems:[124011,'124011',{id:'124011'}]});assert.deepEqual(row.gear[0].items.map(i=>i.id),[124011]);assert.match(data.items[124011].tooltip.description,/7%法术强度/);
+ assert.equal(run({owned:[],options:[1320,1336,1319,1379],preparedItems:[124011]}).length,0,'No fourth offered card may enter advice');
+});

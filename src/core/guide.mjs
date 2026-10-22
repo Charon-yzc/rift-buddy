@@ -155,7 +155,7 @@ export function createGuideModel(data,value,live=null,current=null){
  const ownedAugments=s.mode==='hex'?(s.ownedAugmentIds||[]).map(id=>augmentRecord(id)||{id,name:'未收录强化 #'+id,description:'当前资料未收录，请核对局内强化。',status:'missing'}):[];
  const hexChoices=s.mode==='hex'?hexDecision({data,hero:s.id,options:s.compareIds,owned:s.ownedAugmentIds}):null;
  const authored=s.mode==='hex'?hexPlayerRoutes({data,hero:s.id,owned:s.ownedAugmentIds,options:s.compareIds}):[];
- const synergies=hexItemSynergies({data,hero:s.id,mode:s.mode,owned:s.ownedAugmentIds,options:s.compareIds,preparedItems:preparedRoute}).filter(route=>!authored.some(other=>other.augment.id===route.augment.id));
+ const synergies=hexItemSynergies({data,hero:s.id,mode:s.mode,owned:s.ownedAugmentIds,options:s.compareIds,preparedItems:preparedRoute,inventory,inventoryKnown}).filter(route=>!authored.some(other=>other.augment.id===route.augment.id));
  const hexRoutes=[...authored,...synergies].sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered'));
  const curated=s.mode==='hex'?hexMicroRoutes({data,hero:s.id,owned:s.ownedAugmentIds}):[],projected=hexMechanismMicroRoutes(hexRoutes);
  const specific=[...curated,...projected.filter(r=>r.kind!=='item-synergy')],specificCores=new Set(specific.flatMap(r=>r.augments.filter(a=>a.core).map(a=>a.id)));

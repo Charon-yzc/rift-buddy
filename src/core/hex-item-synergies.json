@@ -2,7 +2,7 @@
   "schema": 1,
   "patch": "16.21",
   "reviewedAt": "2026-10-22",
-  "scope": "Conditional augment-item relationships in the current prepared plan only; no hero skill, offering pool, popularity or win-rate claims.",
+  "scope": "Conditional augment-item relationships with prepared plans or complete matching own inventories; no hero skill, offering pool, popularity or win-rate claims. Exact detail-only values require separately reviewed full tooltips.",
   "sources": {
     "augments": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
     "items": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
@@ -12,12 +12,25 @@
     "1058": "d51dae206a24d183",
     "1129": "dc220ccf50570edf",
     "1318": "28967e6c09fc3a3c",
+    "1319": "08f03629a2f4b7d6",
+    "1320": "5d7e4e68b65ac3a6",
+    "1336": "0597ce131eb7eb86",
+    "1379": "33b5cc6c8c9bad67",
     "1996": "3fa82b9c2eb5aa74",
     "2140": "e5b714aa1e2e5ea1",
     "2143": "202643c11e0e208f",
-    "2157": "b9fdcdf63b320514"
+    "2157": "b9fdcdf63b320514",
+    "3150": "f12df5c2993a4fcb"
   },
   "items": {
+    "3031": {
+      "summary": "399e9523f1b7d20a",
+      "tooltip": "c383ded1c44e4f12"
+    },
+    "3068": {
+      "summary": "e709ff3bde8f3378",
+      "tooltip": "b2a3fd993b01526a"
+    },
     "3074": {
       "summary": "ccc88bf1cf618a3c",
       "tooltip": "72942211977cc512"
@@ -46,6 +59,10 @@
       "summary": "b2f73e80d3e77fe7",
       "tooltip": "38b202f931ae091d"
     },
+    "4646": {
+      "summary": "d7f54fc27b1c146c",
+      "tooltip": "781c96c8bdcc39b8"
+    },
     "6333": {
       "summary": "65943886b530ef44",
       "tooltip": "4d4cb6d9f0da8fa1"
@@ -57,6 +74,22 @@
     "6662": {
       "summary": "084d5ca9a18203f8",
       "tooltip": "e71f17d41db37438"
+    },
+    "6664": {
+      "summary": "60339a7adfaa33b5",
+      "tooltip": "72cdd155c0bf7972"
+    },
+    "6676": {
+      "summary": "2227ece5ba86c42d",
+      "tooltip": "292e05bd961591f2"
+    },
+    "124011": {
+      "summary": "786d8bd5be901f9d",
+      "tooltip": "9d7d1c9fc37c7754"
     }
+  },
+  "details": {
+    "1320": "e08a49d16aa2d0ba",
+    "1336": "9020851e1d5d7268"
   }
 }

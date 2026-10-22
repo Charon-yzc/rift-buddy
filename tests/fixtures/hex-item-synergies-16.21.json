@@ -5,6 +5,90 @@
     "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json"
   },
   "items": {
+    "3031": {
+      "id": 3031,
+      "name": "无尽之刃",
+      "description": "75攻击力\n25%暴击几率\n30%暴击伤害\n\n",
+      "tags": [
+        "CriticalStrike",
+        "Damage"
+      ],
+      "gold": {
+        "base": 725,
+        "purchasable": true,
+        "total": 3500,
+        "sell": 2450
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "1038",
+        "1037",
+        "1018"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatCritChanceMod": 0.25,
+        "FlatPhysicalDamageMod": 75
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3031.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "75攻击力\n25%暴击几率\n30%暴击伤害",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "3068": {
+      "id": 3068,
+      "name": "日炎圣盾",
+      "description": "350生命值\n50护甲\n10技能急速\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成魔法伤害，持续3秒。 ",
+      "tags": [
+        "Health",
+        "Armor",
+        "Aura",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 700,
+        "purchasable": true,
+        "total": 2800,
+        "sell": 1960
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "6660",
+        "1031",
+        "1028"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatHPPoolMod": 350,
+        "FlatArmorMod": 50
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3068.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "350生命值\n50护甲\n10技能急速\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成〔数值未解析〕魔法伤害，持续3秒。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
     "3074": {
       "id": 3074,
       "name": "贪欲九头蛇",
@@ -310,6 +394,48 @@
         "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
       }
     },
+    "4646": {
+      "id": 4646,
+      "name": "风暴狂涌",
+      "description": "90法术强度\n15法术穿透\n6%移动速度\n\n风暴掠袭 \n在2.5秒内对一个英雄造成相当于其25%最大生命值的伤害时，对其施加风啸。\n\n风啸\n在2秒后，造成魔法伤害。如果目标在风啸触发前阵亡，那么它会对附近的敌人们造成伤害。",
+      "tags": [
+        "SpellDamage",
+        "GoldPer",
+        "NonbootsMovement",
+        "MagicPenetration"
+      ],
+      "gold": {
+        "base": 800,
+        "purchasable": true,
+        "total": 2800,
+        "sell": 1960
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "3145",
+        "3113"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatMagicDamageMod": 90,
+        "PercentMovementSpeedMod": 0.06
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/4646.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "90法术强度\n15法术穿透\n6%移动速度\n\n风暴掠袭  (30秒)\n在2.5秒内对一个英雄造成相当于其25%最大生命值的伤害时，对其施加风啸。\n\n风啸\n在2秒后，造成125 + 10%法术强度魔法伤害。如果目标在风啸触发前阵亡，那么它会对附近的敌人们造成伤害。",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
     "6333": {
       "id": 6333,
       "name": "死亡之舞",
@@ -438,6 +564,136 @@
         "status": "partial",
         "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
       }
+    },
+    "6664": {
+      "id": 6664,
+      "name": "璀璨回响",
+      "description": "400生命值\n40魔法抗性\n10技能急速\n100%基础生命回复\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成魔法伤害，持续3秒。\n\n荒弃\n击杀一个敌人时，会在其周围造成魔法伤害。",
+      "tags": [
+        "Health",
+        "SpellBlock",
+        "HealthRegen",
+        "Aura",
+        "MagicResist",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 650,
+        "purchasable": true,
+        "total": 2800,
+        "sell": 1960
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "6660",
+        "3211"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatSpellBlockMod": 40,
+        "FlatHPPoolMod": 400
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6664.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "400生命值\n40魔法抗性\n10技能急速\n100%基础生命回复\n\n献祭\n承受或造成伤害后，每秒对附近敌人造成〔数值未解析〕魔法伤害，持续3秒。\n\n荒弃\n击杀一个敌人时，会在其周围造成〔数值未解析〕魔法伤害。\n\n艾卡西亚的一件圣物，重制版。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "6676": {
+      "id": 6676,
+      "name": "收集者",
+      "description": "50攻击力\n10穿甲\n25%暴击几率\n\n死\n你的伤害会处决低于5%生命值的英雄。\n\n税\n击杀英雄时提供25额外金币。",
+      "tags": [
+        "Damage",
+        "CriticalStrike",
+        "ArmorPenetration"
+      ],
+      "gold": {
+        "base": 525,
+        "purchasable": true,
+        "total": 3000,
+        "sell": 2100
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "1037",
+        "3134",
+        "1018"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatCritChanceMod": 0.25,
+        "FlatPhysicalDamageMod": 50
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6676.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "50攻击力\n 10穿甲\n25%暴击几率\n\n死\n你的伤害会处决低于5%生命值的英雄。\n\n税\n击杀英雄时提供25额外金币。",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "124011": {
+      "id": 124011,
+      "name": "花晓之剑",
+      "description": "45法术强度\n200生命值\n12%治疗和护盾强度\n15技能急速\n\n欢腾\n你每拥有1%治疗和护盾强度，就会获得+1.2%攻击速度。\n\n薄荷\n攻击特效，为你附近生命值最低的那个友方英雄治疗0生命值，优先治疗更低生命值的友军。",
+      "tags": [
+        "Health",
+        "SpellDamage",
+        "CooldownReduction",
+        "OnHit",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 550,
+        "purchasable": true,
+        "total": 2350,
+        "sell": 1645
+      },
+      "maps": {
+        "11": false,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": false
+      },
+      "from": [
+        "3114",
+        "1052",
+        "3067"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatHPPoolMod": 200,
+        "FlatMagicDamageMod": 45
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/124011.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "45法术强度\n200生命值\n 12%治疗和护盾强度\n15技能急速\n\n欢腾\n你每拥有1%治疗和护盾强度，就会获得+ 1.2%攻击速度。\n\n薄荷\n攻击特效，为你附近生命值最低的那个友方英雄治疗15–45（随等级） + 10%额外攻击力 + 7%法术强度生命值，优先治疗更低生命值的友军。",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
     }
   },
   "augments": [
@@ -561,6 +817,122 @@
         "status": "complete",
         "unresolved": [],
         "sourceKey": "UpgradeSunderedSky_Tooltip"
+      }
+    },
+    {
+      "id": 1320,
+      "key": "ARAM_Upgrade_Collector",
+      "name": "升级：收集者",
+      "rarity": "kSilver",
+      "description": "在每次使用【收集者】的被动处决敌人时，会提升处决阈值，并且提供额外金币。\n获得250金币。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradecollector_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "Kiwi_Upgrade_Collector_Summary",
+      "tags": [
+        1
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "在每次使用【收集者】的被动处决敌人时，会使处决阈值提升0.5%，并且提供额外50金币。\n\n获得250金币。",
+        "status": "complete",
+        "unresolved": [],
+        "sourceKey": "Kiwi_Upgrade_Collector_Tooltip"
+      }
+    },
+    {
+      "id": 1336,
+      "key": "ARAM_Upgrade_IE",
+      "name": "升级：无尽之刃",
+      "rarity": "kGold",
+      "description": "获得500金币。\n装备无尽之刃后，可使你的暴击几率在每次攻击都会提供随机的暴击伤害。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradeie_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "Kiwi_Upgrade_IE_Summary",
+      "tags": [
+        1
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "获得500金币。\n装备【无尽之刃】后，可使你的暴击造成随机的额外暴击伤害，最高可至你暴击几率的50%。\n\n已造成的暴击伤害：〔动态数值〕",
+        "status": "partial",
+        "unresolved": [
+          "f1"
+        ],
+        "sourceKey": "Kiwi_Upgrade_IE_Tooltip"
+      }
+    },
+    {
+      "id": 1319,
+      "key": "ARAM_Upgrade_Immolate",
+      "name": "升级：献祭",
+      "rarity": "kSilver",
+      "description": "【璀璨回响】和【日炎圣盾】每当有目标受到【献祭】效果影响时，提供12 金币 。获得250金币。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradeimmolate_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "Kiwi_Upgrade_Immolate_Summary",
+      "tags": [
+        1
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "【璀璨回响】和【日炎圣盾】每当有目标受到【献祭】效果影响时，提供12金币。获得250金币。\n\n已赚取的金币：〔动态数值〕",
+        "status": "partial",
+        "unresolved": [
+          "f1"
+        ],
+        "sourceKey": "Kiwi_Upgrade_Immolate_Tooltip"
+      }
+    },
+    {
+      "id": 3150,
+      "key": "Upgrade_Stormsurge",
+      "name": "升级：风暴狂涌",
+      "rarity": "kGold",
+      "description": "风暴狂涌 - 风啸现在总会在一个区域内引爆，基于最大生命值造成魔法伤害。\n\n被初段引爆命中的敌方英雄会被风啸标记。\n\n获得金币500金币。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradehubris_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "Kiwi_Augment_Upgrade_Stormsurge_Description",
+      "tags": [
+        1
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "风暴狂涌 - 风啸现在总会在一个区域内引爆，对附近所有敌人造成相当于〔动态数值〕最大生命值的魔法伤害。\n\n被初段引爆命中的敌方英雄会被风啸标记。\n\n获得金币500金币。",
+        "status": "partial",
+        "unresolved": [
+          "PercentHealthDamage"
+        ],
+        "sourceKey": "Kiwi_Augment_Upgrade_Stormsurge_Tooltip"
+      }
+    },
+    {
+      "id": 1379,
+      "key": "Upgrade_SwordOfBlossom",
+      "name": "升级：花晓之剑",
+      "rarity": "kPrismatic",
+      "description": "获得100%攻击速度。\n\n你对英雄的攻击会使来自【花晓之剑】的治疗效果提升250%。",
+      "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgrademikaelsblessing_small.png",
+      "descriptionStatus": "complete",
+      "catalogEnabled": true,
+      "unresolved": [],
+      "sourceKey": "Kiwi_Upgrade_SwordOfBlossom_Summary",
+      "tags": [
+        5
+      ],
+      "tooltip": {
+        "revision": 1,
+        "description": "获得100%攻击速度。\n\n你对英雄的攻击会使来自【花晓之剑】的治疗效果提升250%。",
+        "status": "complete",
+        "unresolved": [],
+        "sourceKey": "Kiwi_Upgrade_SwordOfBlossom_Tooltip"
       }
     }
   ],
