@@ -74,6 +74,9 @@ async function run(){
  for(const zoom of [1,1.25]){side.webContents.setZoomFactor(zoom);assert.equal(await j(side,'document.documentElement.scrollWidth>innerWidth'),false);await capture('sidebar-current-'+zoom+'.png',side);}side.webContents.setZoomFactor(1);
  const conversionDetails=[];
  for(const [hero,id]of [['Ashe',1205],['Ashe',3058],['Ryze',3059],['Morgana',3063]]){
+  // Clearing a three-option comparison intentionally preserves owned augments.
+  // Remove the preceding case's notes explicitly before isolating each rule.
+  await j(main,`(async()=>{let p=await window.buddy.hexRound({operation:'select',hero:${JSON.stringify(hero)}});let r=[p.live,p.manual].find(r=>r?.hero===${JSON.stringify(hero)});for(const id of [...r.owned]){p=await window.buddy.hexRound({operation:'remove',id,context:r.context,revision:r.revision});r=[p.live,p.manual].find(r=>r?.hero===${JSON.stringify(hero)});}})()`);
   g=await open(hero,[id]);const selector='[data-hex-route="'+hero+'-item-'+id+'"]';await until(()=>j(g,'!!document.querySelector('+JSON.stringify(selector)+')'),'Conversion route missing '+id);
   const route=await j(g,'window.guide.bootstrap().then(p=>p.model.hexRoutes.find(r=>r.conversion&&r.augment.id==='+id+'))');assert(route);assert.equal(route.state,'owned');assert.equal(route.equipmentState,'prepared');assert(route.gear.every(group=>group.when.includes('若购买')));assert(route.gear.flatMap(group=>group.items).every(i=>i.conversion&&i.brief.includes('原属性转出')));
   if(id===3058){assert.equal(await j(g,'window.guide.control("hex-source","Ashe-item-1205").then(()=>false,error=>error.message.includes("强化路线已变化"))'),true,'Stale conversion source remained actionable');assert.equal(await j(main,'!!document.querySelector("[role=dialog]")'),false);}
