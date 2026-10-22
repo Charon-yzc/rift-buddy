@@ -1,6 +1,6 @@
 const {app,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
-const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[],cacheSmoke=process.env.RIFT_BUDDY_USAGE_CACHE_SMOKE,usageSmoke=process.env.RIFT_BUDDY_USAGE_SMOKE==='1',roomUsageSmoke=process.env.RIFT_BUDDY_ROOM_USAGE_SMOKE==='1',historyReads=[],roomSockets=[],roomFrames=[];let main,observer,offline=false,clientPhase='Lobby',holdUsage=false,releaseUsage=null;
+const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[],cacheSmoke=process.env.RIFT_BUDDY_USAGE_CACHE_SMOKE,usageSmoke=process.env.RIFT_BUDDY_USAGE_SMOKE==='1',roomUsageSmoke=process.env.RIFT_BUDDY_ROOM_USAGE_SMOKE==='1',historyReads=[],roomSockets=[],roomFrames=[];let main,observer,offline=false,clientPhase='Lobby',holdUsage=usageSmoke,releaseUsage=null;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',(_event,_level,message)=>{if(typeof message==='string'&&/TypeError|ReferenceError|SyntaxError/.test(message))errors.push(message);});});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -95,9 +95,17 @@ async function run(){
  }
  if(usageSmoke){
   await js('window.buddy.client(true)');
+  // Keep the second summary batch blocked until the visible list has loaded.
+  // Request order alone would still pass if rendering waited for all500.
+  await until(()=>releaseUsage,'Controlled initial summary batch missing');
+  await until(()=>js('document.querySelectorAll(".history-match").length===20'),'Own history waited for the blocked summary');
+  const scanning=await js('window.buddy.championUsage()');assert.equal(scanning.complete,false);assert.equal(scanning.scanned,100);assert.equal(scanning.status,'loading');
+  await capture('history-before-priority.png');holdUsage=false;releaseUsage();
   await until(()=>js('window.buddy.championUsage().then(value=>value.complete&&value.scanned===500)'),'Automatic500 summary missing');
   await until(()=>js('document.querySelectorAll(".history-match").length===20'),'Own history did not load automatically');
-  assert.deepEqual(historyReads.slice(0,5),[0,100,200,300,400].map(start=>({start,count:100})));assert.equal(historyReads[5].count,20,'History detail must follow priority statistics');
+  const batches=historyReads.filter(read=>read.count===100).map(read=>read.start);assert.deepEqual(batches,[0,100,200,300,400],'The bounded summary must still read five ordered batches');
+  const listRead=historyReads.findIndex(read=>read.count===20);assert.ok(listRead>=0,'Own history page was not read');
+  assert.ok(listRead<historyReads.findIndex(read=>read.count===100&&read.start===400),'Own history must not wait for the priority statistics to finish');
   assert.match(await js('document.querySelector(".champion-usage").textContent'),/近 500 场/);assert.equal(await js('document.querySelector(".usage-details").open'),false);assert.equal(await js('document.querySelector(".history-search-disclosure").open'),false);
   main.setSize(1460,980);await capture('usage-main.png');
   const screen=require('electron').screen,area=screen.getPrimaryDisplay().workArea;
@@ -143,7 +151,7 @@ async function run(){
   offline=true;await js('window.buddy.client(true)');await until(()=>js('!document.querySelector(".champion-usage")&&!document.querySelector(".history-match")'),'Disconnect retained personal counts/history');
   if(roomUsageSmoke)await until(()=>roomFrames.findLast(frame=>frame.kind==='state')?.championUsage===null,'Disconnect did not revoke the main-owned room summary');
   assert.equal(writes.length,0);assert.equal(errors.length,0,errors.join('\n'));
-  await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,automatic500:true,priorityBeforeHistory:true,sharedTwoWindows:true,realRefreshClick:true,searchFocusAcrossBatches:true,activeRangeNodePreserved:true,sliderPersisted:true,disconnectCleared:true,...(roomVerified?{roomMainPublisher:true,roomRendererForgeryRejected:true,roomRealWorkerOwnership:true,roomUsageDetails:true,roomLeaveRecalculated:true,roomDisconnectRevoked:true}:{}),realWrites:0,screenshots:['usage-main.png','usage-daylight.png','usage-compact.png',...(roomVerified?['usage-room-details.png','usage-room-draft.png']:[])]},null,2));app.quit();return;
+  await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,automatic500:true,historyBeforePriority:true,historyVisibleWhileScanPending:true,sharedTwoWindows:true,realRefreshClick:true,searchFocusAcrossBatches:true,activeRangeNodePreserved:true,sliderPersisted:true,disconnectCleared:true,...(roomVerified?{roomMainPublisher:true,roomRendererForgeryRejected:true,roomRealWorkerOwnership:true,roomUsageDetails:true,roomLeaveRecalculated:true,roomDisconnectRevoked:true}:{}),realWrites:0,screenshots:['history-before-priority.png','usage-main.png','usage-daylight.png','usage-compact.png',...(roomVerified?['usage-room-details.png','usage-room-draft.png']:[])]},null,2));app.quit();return;
  }
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);

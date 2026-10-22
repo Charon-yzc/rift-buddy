@@ -20,10 +20,27 @@ test('cached and screenshot summaries show their source without claiming recent5
  assert.match(html,/本地缓存 · 100 场 · 当前赛季/);assert.match(html,/仅含已展示英雄/);assert.match(html,/未收录英雄合计 15%/);assert.match(html,/导入我的统计/);assert.ok(!/近 100 场|未玩英雄/.test(html));assert.ok(!/<details[^>]* open/.test(html));
  const cached=championUsageView({...summary,cached:true,status:'loading'},data);assert.match(cached,/本地缓存/);assert.match(cached,/正在更新 100 \/ 500 场/);assert.match(cached,/完整读取后替换/);
 });
-test('automatic own history waits for priority summary and reuses the actual local-server tab',async()=>{
+test('automatic own history starts once the account is confirmed and reuses the actual local-server tab',async()=>{
  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:page();}});
- await history.autoLoadOwn(client,{...summary,status:'loading'});assert.equal(calls.length,0);await history.autoLoadOwn(client,summary);assert.deepEqual(calls.map(c=>c.op),['page','profile']);assert.equal(calls[0].p.server,'');
- await history.autoLoadOwn(client,summary);await history.open({source:'lcu',server:''});assert.equal(history.state.tabs.length,1);assert.equal(calls.filter(c=>c.op==='page').length,1);
+ await history.autoLoadOwn(client,{...summary,status:'loading',session:''});assert.equal(calls.length,0,'an unconfirmed account must not load a page');
+ await history.autoLoadOwn(client,{...summary,status:'loading'});assert.deepEqual(calls.map(c=>c.op),['page','profile'],'a confirmed account must not wait for the usage scan');assert.equal(calls[0].p.server,'');
+ await history.autoLoadOwn(client,summary);await history.open({source:'auto',server:''});assert.equal(history.state.tabs.length,1);assert.equal(calls.filter(c=>c.op==='page').length,1);
+});
+test('the own history page is read once per confirmed account, not once per scan batch',async()=>{
+ const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:page();}});
+ for(const scanned of [0,100,200,300,400])await history.autoLoadOwn(client,{...summary,status:'loading',scanned});
+ assert.deepEqual(calls.map(c=>c.op),['page','profile'],'the running scan must not repeat the page read');
+ await history.autoLoadOwn(client,{...summary,status:'ready'});assert.equal(calls.filter(c=>c.op==='page').length,1);
+ await history.autoLoadOwn(client,{...summary,session:b,status:'loading'});
+ assert.equal(history.state.tabs.length,1,'a new account replaces the old tab');
+ assert.equal(calls.filter(c=>c.op==='page').length,2,'one new page for the new account');
+});
+test('early or cached summaries preserve the user source policy instead of forcing their old source',async()=>{
+ for(const source of ['auto','lcu','sgp'])for(const status of ['loading','partial']){
+  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:page();}});history.state.source=source;
+  await history.autoLoadOwn(client,{...summary,cached:true,status,source:source==='sgp'?'lcu':'sgp'});
+  assert.equal(calls.find(c=>c.op==='page').p.source,source);
+ }
 });
 test('automatic own tab does not take focus from an explicit player search or use its chosen region',async()=>{
  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:{...page(),cross:p.server==='TW2',server:p.server||'KR'};}});

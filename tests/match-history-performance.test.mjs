@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMatchHistoryService} from '../services/match-history.mjs';
+import {createHistoryController} from '../src/match-history-controller.mjs';
+import {createChampionUsageCollector} from '../services/champion-usage-collector.mjs';
 
 const own={puuid:'a'.repeat(36),summonerId:1,gameName:'示例',tagLine:'CN1'};
 const raw={gameId:1,queueId:420,gameDuration:1200,gameCreation:1700000000000,gameVersion:'16.20',gameType:'MATCHED_GAME',participantIdentities:[{participantId:1,player:own}],participants:[{participantId:1,championId:22,puuid:own.puuid,teamId:100,stats:{kills:1,deaths:0,assists:2,win:true}}],teams:[]};
@@ -100,6 +102,58 @@ test('a concurrent batch advances the scan by the whole batch',async()=>{
  const second=await f.service.execute('own-summary-page',{session:undefined,source:'sgp',cursor:first.cursor});
  assert.equal(second.scanned,100);
  assert.equal(second.identified,100);
+});
+
+test('an old cached source cannot lock the early visible page away from a healthy backend',async()=>{
+ const f=service({local:async()=>{throw Object.assign(Error('Client history unavailable'),{status:500});}}),calls=[];
+ const client={connected:true,phase:'Lobby',own},history=createHistoryController({request:(operation,payload)=>{calls.push({operation,payload});return f.service.execute(operation,payload);}});
+ let releaseScan,pageFlight;const gate=new Promise(resolve=>releaseScan=resolve);
+ const collector=createChampionUsageCollector({champions:()=>[{id:'Ashe',key:22}],cache:{get:()=>({usage:{sampled:10,counts:{Ashe:10}},scanned:10,complete:true,source:'lcu',basis:'recent',updatedAt:1}),put:async()=>{}},request:async(_transport,operation,payload)=>{if(operation==='own-summary-page')await gate;return f.service.execute(operation,payload);},onChange:summary=>{if(summary.session&&summary.status==='loading'&&!pageFlight)pageFlight=history.autoLoadOwn(client,summary);}});
+ const scan=collector.observe(client,{});
+ try{
+  for(let n=0;n<100&&!pageFlight;n++)await new Promise(resolve=>setImmediate(resolve));
+  assert(pageFlight,'The collector must publish confirmed identity before reading the scan');await pageFlight;
+  assert.equal(collector.snapshot().cached,true);assert.equal(collector.snapshot().complete,false);
+  assert.equal(history.current().page?.source,'sgp','The cached LCU hint must not forbid the available SGP source');
+  assert.equal(history.current().error,'');assert.equal(calls.find(c=>c.operation==='page').payload.source,'auto');
+ }finally{releaseScan();await scan;}
+ assert.equal(collector.snapshot().source,'sgp');assert.equal(calls.filter(c=>c.operation==='page').length,1);
+});
+
+test('the background scan waits for a running foreground read instead of sharing the backend with it',async()=>{
+ const started=[];let releaseForeground;
+ const f=service({backend:async()=>{
+  started.push('backend');
+  if(started.length===1)return new Promise(resolve=>{releaseForeground=()=>resolve({games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))});});
+  return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:100+i}}))};
+ }});
+ const page=f.service.execute('page',{source:'auto'});
+ await new Promise(r=>setTimeout(r,20));
+ assert.equal(started.length,1,'the foreground read reached the backend');
+ const scan=f.service.execute('own-summary-page',{source:'sgp'});
+ await new Promise(r=>setTimeout(r,100));
+ assert.equal(started.length,1,'the scan must not reach the backend while a foreground read is pending');
+ releaseForeground();
+ await page;
+ const result=await scan;
+ assert.equal(result.scanned,20);
+});
+
+test('a stalled foreground read cannot hold the background scan forever',async()=>{
+ let calls=0;
+ const f=service({backend:async()=>{
+  calls++;
+  if(calls===1)return new Promise(()=>{});
+  return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))};
+ }});
+ f.service.execute('page',{source:'auto'});
+ await new Promise(r=>setTimeout(r,20));
+ const started=Date.now();
+ const result=await f.service.execute('own-summary-page',{source:'sgp'});
+ const waited=Date.now()-started;
+ assert.equal(result.scanned,20);
+ assert.ok(waited>=2000,'the scan waited for the foreground read');
+ assert.ok(waited<8000,'the wait stays bounded');
 });
 
 test('a scan still completes at the bounded 500-game window',async()=>{

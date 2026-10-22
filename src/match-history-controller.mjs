@@ -67,10 +67,17 @@ export function createHistoryController({request,onChange=()=>{},analyze=null,se
  }
  function autoLoadOwn(client,summary){
   observeClient({...client,historySession:summary?.session||''});
-  if(!client?.connected||!summary?.session||!['ready','partial'].includes(summary.status)||autoSession===summary.session)return Promise.resolve();
+  // The summary session is published only after the client confirmed the
+  // account, so it is a safe point to read a page. The list must not wait for
+  // the bounded usage scan to finish: that scan reads hundreds of games in the
+  // background while the visible list needs a single page.
+  if(!client?.connected||!summary?.session||!['loading','ready','partial'].includes(summary.status)||autoSession===summary.session)return Promise.resolve();
   autoSession=summary.session;
   if(state.tabs.some(tab=>!tab.options.query&&!tab.options.puuid&&!tab.options.server))return Promise.resolve();
-  return open({source:state.source==='auto'?summary.source||'auto':state.source,server:'',background:true});
+  // A loading/cached summary can still carry yesterday's source. It is not
+  // an explicit user policy and must not disable a working fallback today.
+  const source=state.source==='auto'&&summary.status!=='loading'&&!summary.cached?summary.source||'auto':state.source;
+  return open({source,server:'',background:true});
  }
   return {state,current,open,openOwnGame,search,load,close,detail,collect,replay,loadAnalysisDetails,challenges,clear,observeClient,autoLoadOwn,cancelSearch:()=>{searchTicket++;state.searching=false;state.searchResults=[];onChange();},select:id=>{state.current=id;onChange();},stop:()=>{const tab=current();if(tab){tab.collection=(tab.collection||0)+1;tab.loading=false;tab.collecting=false;onChange();}},filter:(key,value)=>{const tab=current();if(tab){tab.filter={...tab.filter,[key]:value};recalculate(tab);onChange();}},visible:()=>{const tab=current();return filterMatches(tab?.page?.games||[],tab?.filter);}};
 }

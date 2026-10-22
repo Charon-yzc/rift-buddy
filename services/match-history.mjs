@@ -24,9 +24,9 @@ const isSourceOutage=error=>{const status=Number(error?.status);if(status>=400&&
 const isSessionChange=error=>/会话|账号|重新查询|重新连接/.test(String(error?.message||''));
 const HISTORY_SOURCES_ALL_FAILED='战绩数据源暂时不可用：游戏后台与当前大区客户端的战绩接口都返回了错误。这通常是战绩服务正在维护或暂时不可达，请稍后重试。';
 // One hero-statistics read returns a bounded batch. The backend page is 20 games,
-const SCAN_PAGE=20,SCAN_BATCH=80,SCAN_LOCAL_BATCH=100,SCAN_DEADLINE_MS=15000;
+const SCAN_PAGE=20,SCAN_BATCH=80,SCAN_LOCAL_BATCH=100,SCAN_DEADLINE_MS=15000,FOREGROUND_WAIT_MS=3000;
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now}={}){
- let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0;const waiting=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map();let totalCacheBytes=0;
+ let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0,foreground=0;const waiting=[],idleWaiters=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map();let totalCacheBytes=0;
  const preferredSource=new Map(),failedSource=new Map();
  const rememberSource=(server,source)=>preferredSource.set(server,source);
  const sourceBlocked=(server,source)=>now()<(failedSource.get(server+':'+source)??-Infinity);
@@ -34,6 +34,19 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
  function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();tokens.clear();totalCacheBytes=0;rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;preferredSource.clear();failedSource.clear();}
  function clear(){clearGeneration++;discovery=null;discoveredAt=0;resetSession();}
  async function limited(fn){if(waiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>waiting.push(resolve));running++;try{return await fn();}finally{running--;waiting.shift()?.();}}
+ // The usage scan reads the shared backend quota four pages at a time.
+ // A foreground read must not queue behind it, so the scan waits for the
+ // running foreground read to finish. The wait is bounded: the scan still
+ // progresses when a foreground read stalls.
+ function waitForeground(ms){
+  if(!foreground)return Promise.resolve();
+  return new Promise(resolve=>{
+   const entry={resolve:()=>{clearTimeout(timer);resolve();}};
+   const timer=setTimeout(()=>{const index=idleWaiters.indexOf(entry);if(index>=0)idleWaiters.splice(index,1);resolve();},ms);
+   timer.unref?.();idleWaiters.push(entry);
+  });
+ }
+ function releaseForeground(){if(--foreground>0)return;for(const waiter of idleWaiters.splice(0))waiter.resolve();}
  async function context(generation,fresh=false){
   const startedEpoch=epoch,assertCurrent=()=>{if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');};
   let auth;try{if(fresh||!discovery||now()-discoveredAt>3000||now()<discoveredAt){discoveredAt=now();discovery=discover(typeof installPath==='function'?installPath():installPath,{includeRegion:true});}auth=await discovery;}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('暂时无法读取客户端连接');}assertCurrent();
@@ -141,6 +154,8 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   const start=scan.scanned;let source=scan.source,count=Math.min(source==='sgp'?(start?SCAN_BATCH:SCAN_PAGE):SCAN_LOCAL_BATCH,500-start),entries;
   // Each page uses an independent offset; counts need no per-game details.
   if(source==='sgp'){
+   // Yield the backend to a running foreground read before fanning out.
+   await waitForeground(FOREGROUND_WAIT_MS);
    try{entries=await summaryPages(c,c.localServer,c.own.puuid,start,count);}
    catch{await check(c);if(revision!==usageRevision)fail('英雄统计已重新开始，请忽略旧结果');if(start)fail('英雄统计暂时中断，已保留读取结果，请重试');source='lcu';count=Math.min(SCAN_LOCAL_BATCH,500-start);}
   }
@@ -251,13 +266,15 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
  async function execute(operation,payload={}){
     if(!['own-summary-context','own-summary-page','page','search','roster','detail','timeline','profile','challenges','replay','replay-status','clear'].includes(operation))fail('不支持此战绩操作');
   if(!payload||typeof payload!=='object'||Array.isArray(payload))fail('战绩查询参数不正确');if(operation==='clear'){clear();return true;}
-  const generation=clearGeneration;return limited(async()=>{
-  if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
+  const generation=clearGeneration,background=operation==='own-summary-page';return limited(async()=>{
+  if(!background)foreground++;
+  try{
+   if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
    const c=await context(generation,operation==='own-summary-context');
    if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
    if(operation==='own-summary-context')return {session:sessionId,server:c.localServer,cacheKey:SGP_SERVERS[c.localServer]?crypto.createHash('sha256').update(JSON.stringify(['own-champion-usage-v1',c.localServer,c.own.puuid])).digest('hex'):''};
-   if(operation==='own-summary-page')return ownSummaryPage(c,payload);
-   if(operation==='roster')return roster(c,payload);
+   if(operation==='own-summary-page')return await ownSummaryPage(c,payload);
+   if(operation==='roster')return await roster(c,payload);
   if(operation==='search'){
    const query=text(payload.query);if(!query||query.length>81)fail('请输入游戏名字或完整游戏 ID');
     let results;try{results=await aliases(c.auth,query);}catch{const t=await target(c,payload);results=[{puuid:t.player.puuid,gameName:t.player.name.split('#')[0],tagLine:t.player.name.split('#')[1]||''}];}
@@ -266,7 +283,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
     if(!SGP_SERVERS[server]||!players.length&&server===c.localServer){for(let i=0;i<results.length;i+=3)await Promise.all(results.slice(i,i+3).map(async alias=>{try{const raw=await request(c.auth,'/lol-summoner/v2/summoners/puuid/'+alias.puuid);if(raw?.puuid===alias.puuid)players.push({...profile(raw),name:alias.gameName?alias.gameName+(alias.tagLine?'#'+alias.tagLine:''):profile(raw).name,server});}catch{}}));}
     await check(c);return {players,servers:Object.entries(SGP_SERVERS).map(([id,s])=>({id,name:s.name}))};
   }
-  if(operation==='page')return page(c,payload);
+  if(operation==='page')return await page(c,payload);
   const t=handles.get(payload.handle);if(!t||t.epoch!==c.epoch)fail('战绩会话已失效，请重新查询');
   if(operation==='challenges'){
    if(!SGP_SERVERS[t.server])fail('当前大区未提供挑战数据源');
@@ -307,6 +324,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   }
   if(action!=='status'){const phase=await request(c.auth,'/lol-gameflow/v1/gameflow-phase');if(!['None','Lobby','EndOfGame','PreEndOfGame'].includes(phase))fail('请在大厅中下载或观看回放');await check(c);await request(c.auth,`/lol-replays/v1/rofls/${id}/${action}`,'POST',{componentType:'replay-button_match-history'});metadata=await request(c.auth,'/lol-replays/v1/metadata/'+id);}
   await check(c);return {id,state:text(metadata?.state),progress:['downloading','watch','download'].includes(metadata?.state)?number(metadata?.downloadProgress):null,action};
+ }finally{if(!background)releaseForeground();}
  });}
  return {execute,clear};
 }
