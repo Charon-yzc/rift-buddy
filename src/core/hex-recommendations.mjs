@@ -1,3 +1,4 @@
+import {HEX_OWNED_LIMIT} from './hex-note-limits.mjs';
 import {isCurrentHexData,HEX_DATA_PENDING} from './hex-data-current.mjs';
 import {profile} from './rules.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
@@ -89,7 +90,7 @@ function mechanicAdvice(data,champion,a,owned,p){
 export function hexEquipmentImpact({data,hero,owned=[]}){
  if(!isCurrentHexData(data))return [];
  const champion=data.champions.find(c=>c.id===hero);if(!champion)return [];
- const p=hexChampionReview(champion,data.patch)==='current'?profile(champion):null,records=[...new Set(owned)].slice(0,6).map(id=>activeRecord(data,id)).filter(a=>reviewed(a,data.patch)),has=id=>records.some(a=>a.id===id),rows=[];
+ const p=hexChampionReview(champion,data.patch)==='current'?profile(champion):null,records=[...new Set(owned)].slice(0,HEX_OWNED_LIMIT).map(id=>activeRecord(data,id)).filter(a=>reviewed(a,data.patch)),has=id=>records.some(a=>a.id===id),rows=[];
  const add=(id,title,why,ids=[])=>rows.push({augment:id,title,why,items:itemRows(data,ids),patch:data.patch,kind:'mechanic'});
  if(has(1002))add(1002,'优先检查装备效果冷却','装备急速只影响可适用的装备效果。法强路线可把中娅作为自保备选，不能据此认为所有装备都值得买。',p?.damageWeights.ap>=.5?[3157]:[]);
  if(has(1129))add(1129,'保留法强，确认普攻空间','强化收益来自法强与实际普攻。当前本来就穿插普攻的法强英雄可比较纳什；纯远程施法不要为此强行近身。',p?.damageWeights.ap>=.5&&apAttackers.has(champion.id)?[3115]:[]);
@@ -108,7 +109,7 @@ export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
  // An independent source shortlist is evidence, not an exhaustive offer pool.
  // Keep reviewed mechanism candidates even when the source omits them.
  const ids=actual?[...new Set(options)].slice(0,3):[...new Set([...sourceIds,...hexMechanicIds])];
- const ownedRecords=[...ownedIds].slice(0,6).map(id=>activeRecord(data,id)).filter(Boolean);
+ const ownedRecords=[...ownedIds].slice(0,HEX_OWNED_LIMIT).map(id=>activeRecord(data,id)).filter(Boolean);
  const kit=hexChampionReview(champion,data.patch)==='current'?profile(champion):null;
  const rows=ids.map(id=>{
   const a=activeRecord(data,id);if(!a)return null;

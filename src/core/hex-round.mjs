@@ -1,3 +1,4 @@
+import {HEX_OWNED_LIMIT} from './hex-note-limits.mjs';
 import {hexAugmentAcquisition} from './hex-acquisition.mjs';
 import {isCurrentHexData,HEX_DATA_PENDING} from './hex-data-current.mjs';
 // Main-process owner of bounded, ephemeral notes. Wishlists and reusable builds
@@ -46,7 +47,7 @@ export function createHexRoundStore({newToken=()=>crypto.randomUUID()}={}){
     else{if(record.options.length>=3)throw Error('最多比较 3 个实际选项，请先移出一个');record.options.push(id);}
    }else if(op==='clear')record.options=[];
    else if(op==='own'){
-    if(!record.owned.includes(id)){if(record.owned.length>=6)throw Error('最多标记 6 个已选强化');record.owned.push(id);}
+    if(!record.owned.includes(id)){if(record.owned.length>=HEX_OWNED_LIMIT)throw Error(`本局最多记录 ${HEX_OWNED_LIMIT} 个不同强化，请先移除误记项`);record.owned.push(id);}
     record.options=[];
    }else record.owned=record.owned.filter(x=>x!==id);
    record.revision++;revision++;return snapshot();
