@@ -8,13 +8,18 @@ const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击
  1047:'获得50%暴击几率；按当前暴击率重新比较装备。',1077:'暴击伤害的12%治疗自身，获得25%暴击几率。',1080:'以暴击几率进行会心防御，触发几率最多50%；获得25%暴击几率。',
  1022:'获得60%攻击速度。',1328:'普攻暴击叠加攻速，获得25%暴击几率。',1011:'施放终极技能后短暂免伤；仍须安全站位。',1088:'施放终极技能后刷新；有75秒自身冷却，阵亡可重置。',1112:'施放终极技能后免控3秒；8秒自身冷却。',1194:'终极技能伤害可触发变形。',
  1029:'技能命中可施加攻击特效；同一目标每1秒一次。',1058:'实际攻击特效使技能冷却缩短1.25秒；没有命中就没有收益。',
+ 1996:'获得250金币；强化已有咒刃的伤害与自疗，先具备咒刃装备。',
  1004:'强化基础技能，但禁用终极技能；接受不能使用R再考虑。',1214:'旋转类基础技能30急速、增伤30%；不覆盖其他技能。',
  1311:'法力消耗翻倍；技能增效取决于最大法力值，缺蓝时无法持续收益。',1056:'增加最大生命值，数额为法力值的一半；没有直接减冷却。'};
 const jhinComplements={1022:'60%攻速经被动提高攻击力和暴击后的移速；射速仍固定。',1328:'25%暴击，普攻暴击叠攻速；以被动增益攻击力和暴击后移速，射速仍固定。'};
+const camilleComplements={1022:'60%攻速用于普攻衔接；Q2 至少1.5秒的等待不能省略。'};
 
 // Authored mechanism routes, not creator builds or statistical rankings. Each
 // route requires the exact reviewed hero kit, augment effect and item effects.
 const routes=[
+ {hero:'Camille',patch:'16.21',augment:1996,optional:[1058,1004,1029,1022],coreItems:[3078],title:'咒刃穿插续战',summary:'先有咒刃，利用两段 Q 与走位穿插普攻。',play:['先有咒刃装备；获得250金币不代表咒刃已生效，Q1 后至少等1.5秒再用强化 Q2。','用 Q 的移速调整位置，W 外沿命中英雄恢复；E 借墙体进退，避免交完技能后被集火。'],caution:'咒刃有自身冷却；强化没有取消 Q2 等待，不把所有附加伤害或技能增幅都按等比例真伤计算。',gear:[['咒刃骨架',[3078],'需要可触发的咒刃效果；三相保留攻击力与普攻衔接，施法后下一次攻击仍需命中，咒刃有自身冷却。'],['物理交战压力',[6333],'面对物理伤害且有参与击杀机会时比较死舞；延后承伤不是免伤。'],['需要魔抗与恢复',[3065],'有魔法压力且能兑现 W 外圈恢复或自身护盾时比较振奋，仍须实际命中和安全距离。']]},
+ {hero:'Camille',patch:'16.21',augment:1058,optional:[1996,1004,1029,1022],title:'攻击特效轮转',summary:'普攻衔接 Q 缩短空档，保留 Q2 的等待节奏。',play:['攻击特效使技能冷却缩短1.25秒；普攻衔接 Q，Q2 仍至少等1.5秒再打。','E 利用墙体调整进退，W 外沿寻找英雄；技能未命中时先保住下一次攻击机会。'],caution:'没有攻击特效命中就没有强化减冷却；不保证无缝 Q 或无限蓝量，也不把每次技能伤害都当作攻击特效。',gear:[['技能接普攻',[3078],'有安全普攻窗口时比较三相的咒刃；不把每次 Q 都算成一次额外咒刃。'],['需要生命与基础急速',[3161],'需要生命值并能持续施放基础技能时比较朔极之矛；急速不会缩短 Q2 的蓄力等待。'],['需要抗爆发',[3053],'需要生命值与低血护盾时比较血手；护盾不是免伤，仍要保留退路。']]},
+ {hero:'Camille',patch:'16.21',augment:1004,optional:[1996,1058,1029,1022],title:'基础技能拉扯',summary:'接受失去大招，围绕两段 Q、W 外沿与 E 进退。',play:['Q1 后至少等1.5秒再 Q2；W 外沿命中英雄才恢复自己，靠走位留住下一轮技能。','E 借墙体进退，普攻触发的被动护盾仍有类型与冷却；不要把护盾当作常驻免伤。'],caution:'失去 R 的锁定区域、不可选取窗口与区域内额外攻击伤害；不能沿用原来的大招进场。',gear:[['技能接普攻',[3078],'仍有安全攻击窗口时比较三相；失去大招后需要自己保证能接近并撤离。'],['基础技能与生命值',[3161],'需要基础技能急速和生命值时比较朔极之矛；不据此承诺真伤等比例增幅。'],['魔法压力与自身恢复',[3065],'有魔法压力且能利用 W 外圈恢复和自身护盾时比较振奋；打小兵不能代替 W 命中英雄的恢复条件。']]},
  {hero:'Jhin',patch:'16.21',augment:1328,family:'jhin-crit',optional:[1047,1077,1022,1080],title:'四发暴击走位',summary:'围绕四发节奏与暴击后移速，以被动利用额外攻速。',play:['获得25%暴击几率；普攻暴击叠攻速，经被动提高攻击力和暴击后的移速，射速仍固定。','在射击间隔调整位置，第四发寻找收尾；换弹期间用 Q、W 衔接，别站住等下一轮。'],caution:'强化由普攻暴击叠层；射速保持固定，换弹不能跳过，堆攻速不代表连续扫射。',gear:[['攻击力与暴击',[3031],'需要攻击力并能继续普攻时比较无尽；最终暴击收益仍受烬自身被动规则影响。'],['需要安全射程',[3094],'等待盈能后寻找安全的普攻窗口；火炮的攻击距离收益不延长技能射程。'],['护甲压力',[3036],'敌方有护甲与额外生命值时比较多米尼克，仍须保证能命中并安全离开。']]},
  {hero:'Jhin',patch:'16.21',augment:1047,family:'jhin-crit',optional:[1328,1077,1022,1080],title:'暴击穿插',summary:'保留固定射击节奏，利用暴击与被动的攻击力收益。',play:['获得50%暴击几率；利用暴击后的移速调整位置，四发后换弹并以技能衔接。','先比较当前暴击率，再安排攻击力与护甲穿透；不要只为几率牺牲安全距离。'],caution:'烬的射速仍固定，暴击伤害有自身修正；按当前面板与实际装备比较收益。',gear:[['需要攻击力',[3031],'保留攻击力和暴击方向，但按烬自身的暴击规则结算。'],['安全普攻距离',[3094],'能等待盈能并利用额外普攻距离时比较火炮，技能射程保持原样。'],['护甲压力',[3036],'面对护甲与额外生命值时比较多米尼克；不代替走位和命中。']]},
  {hero:'Jhin',patch:'16.21',augment:1211,optional:[1011,1112,1194,1088,1047],title:'远程谢幕收尾',summary:'先保住大招的射击位置，再利用实际伤害积累收尾。',play:['在安全位置开 R，瞄准能命中的英雄；只有实际造成的伤害会被储存。','前方有敌方英雄挡枪时调整目标，保留撤退方向；强化按自身规则引爆。'],caution:'引导期间要防贴身突进；终极技能被封印时这条路线不可用。',gear:[['需要大招回转',[6696],'伤害命中后，目标在3秒内阵亡才满足公理圆弧的返还条件；返还不是每次命中都触发。'],['护甲压力',[3036],'对护甲与额外生命值目标比较多米尼克；R 仍需实际命中目标。'],['收尾与攻击力',[6676],'伤害使英雄生命值低于5%才满足处决条件；按实际血量寻找收尾。']]},
@@ -49,20 +54,21 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||noUltimate&&hexUltimateRequirement(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
    const a=data.augments.find(a=>a.id===id),disabled=hexCatalogDisabled(data,a);
-   return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&!(noUltimate&&hexUltimateRequirement(a,data.patch))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+((hero==='Jhin'&&jhinComplements[id])||augmentComplements[id])}]:[];
+   return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&!(noUltimate&&hexUltimateRequirement(a,data.patch))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+((hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id])}]:[];
   });
   let pendingItems=0;
   const gear=route.gear.flatMap(([when,ids,why])=>{
    const items=ids.flatMap(id=>{
     const item=data.items[id];
     if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||itemReview.items[id]!==hexRouteItemFingerprint(item)){pendingItems++;return [];}
-    return [{id,name:item.name,description:item.description}];
+    return [{id,name:item.name,description:item.description,...(route.coreItems?.includes(id)?{core:true}:{})}];
    });
    // A group explanation can depend on every listed item. Never leave old
    // combined claims behind when one of those item effects changes.
    return items.length===ids.length?[{when,why,items}]:[];
   });
+  if(route.coreItems?.some(id=>!gear.some(group=>group.items.some(item=>item.id===id))))return [];
   return [{id:hero+'-'+augment.id,hero,family:route.family,optionalAugments,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
-   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(hero==='Jhin'?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
+   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(['Jhin','Camille'].includes(hero)?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
  }).sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered')).filter((route,index,all)=>!route.family||!all.slice(0,index).some(other=>other.family===route.family));
 }

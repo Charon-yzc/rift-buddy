@@ -3,7 +3,7 @@
   "scope": "hex-routes-and-choices",
   "patch": "16.21",
   "reviewedAt": "2026-10-22",
-  "basis": "Explicit compatibility review of these 15 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
+  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
   "sources": {
     "notes": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
     "characters": "https://raw.communitydragon.org/16.21/game/data/characters/",
@@ -28,7 +28,8 @@
       "Lux": "50314ad04c92f1a6",
       "Yasuo": "d36ebea001e3d1cb",
       "Hecarim": "f9c4c9b8aea59e68",
-      "Jhin": "226e6c11b8a992f5"
+      "Jhin": "226e6c11b8a992f5",
+      "Camille": "d8925ce8a69d2250"
     },
     "sourceAnchors": {
       "Gwen": {
@@ -390,6 +391,30 @@
             "fingerprint": "3aaa1bcaed04d760"
           }
         }
+      },
+      "Camille": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d8925ce8a69d2250",
+        "observedAt": "2026-10-21T19:28:20.342Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Camille",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/camille/camille.bin.json",
+            "sha256": "032045fc45a37b5c7e01084660a1e374e98463d64bfbfb16238213f44a028907"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "67751120f662608d"
+          }
+        }
       }
     }
   },
@@ -423,6 +448,7 @@
     "1344": "93745b9978f7bac3",
     "1349": "8d402b2315f9dd91",
     "1413": "4e961bfa657a1320",
+    "1996": "3fa82b9c2eb5aa74",
     "2134": "225eb737c87a5ab5"
   },
   "items": {

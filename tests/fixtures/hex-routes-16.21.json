@@ -1,6 +1,6 @@
 {
   "sourceRelease": "0325f09ff11b0c63cccd1cd9937c22ac15c61561714ac35eeb9856c40f91ddcb",
-  "basis": "Explicit compatibility review of these 15 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
+  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
   "game": {
     "version": "16.21.1",
     "patch": "16.21",
@@ -14530,6 +14530,968 @@
           "patch": "16.21",
           "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json"
         }
+      },
+      {
+        "id": "Camille",
+        "name": "卡蜜尔",
+        "stats": {
+          "hp": 650,
+          "hpperlevel": 99,
+          "mp": 375,
+          "mpperlevel": 52,
+          "movespeed": 340,
+          "armor": 35,
+          "armorperlevel": 4.5,
+          "spellblock": 32,
+          "spellblockperlevel": 2.05,
+          "attackrange": 125,
+          "hpregen": 8.5,
+          "hpregenperlevel": 0.8,
+          "mpregen": 8.15,
+          "mpregenperlevel": 0.75,
+          "crit": 0,
+          "critperlevel": 0,
+          "attackdamage": 68,
+          "attackdamageperlevel": 3.8,
+          "attackspeedperlevel": 2.5,
+          "attackspeed": 0.644,
+          "attackspeedratio": 0.644,
+          "attacktype": "melee"
+        },
+        "mechanics": {
+          "passive": {
+            "name": "适应性防御",
+            "description": "对敌方英雄发起的普攻会基于该英雄的伤害类型（物理或魔法）提供一层专门吸收该类型伤害的护盾，护盾的生命值相当于卡蜜尔的一部分最大生命值，持续一小段时间。"
+          },
+          "spells": [
+            {
+              "name": "精准礼仪",
+              "description": "卡蜜尔的下一次普通攻击会斩击敌人，造成额外物理伤害，并为自身提供短暂的爆发性移动速度加成。这个技能可以在释放后的短时间内再次施放，并且如果两次释放之间存在一定的间隔，那么第二段攻击会造成显著的额外伤害。",
+              "maxrank": 5,
+              "cooldown": [
+                9,
+                8,
+                7,
+                6,
+                5
+              ],
+              "cost": [
+                25,
+                25,
+                25,
+                25,
+                25
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "战术横扫",
+              "description": "卡蜜尔在短暂延迟后引爆一个锥形范围，并造成伤害。外沿的敌人会被减速并且受到额外伤害，同时还会治疗卡蜜尔。",
+              "maxrank": 5,
+              "cooldown": [
+                12,
+                11.5,
+                11,
+                10.5,
+                10
+              ],
+              "cost": [
+                50,
+                55,
+                60,
+                65,
+                70
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "钩索",
+              "description": "卡蜜尔将她自己拉向一个墙体，然后跳下并在落地时击飞敌方英雄。",
+              "maxrank": 5,
+              "cooldown": [
+                16,
+                15,
+                14,
+                13,
+                12
+              ],
+              "cost": [
+                70,
+                70,
+                70,
+                70,
+                70
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "name": "海克斯最后通牒",
+              "description": "卡蜜尔冲向目标英雄，并将该英雄锚定在区域中。她对目标英雄发起的普攻还会造成额外的魔法伤害。",
+              "maxrank": 3,
+              "cooldown": [
+                140,
+                115,
+                90
+              ],
+              "cost": [
+                100,
+                100,
+                100
+              ],
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            }
+          ]
+        },
+        "mechanicSource": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Camille",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "observedAt": "2026-10-21T19:28:20.342Z",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/camille/camille.bin.json",
+            "sha256": "032045fc45a37b5c7e01084660a1e374e98463d64bfbfb16238213f44a028907"
+          },
+          "dataDragonURL": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "passive": {
+            "name": "适应性防御",
+            "description": "对敌方英雄发起的普攻会基于该英雄的伤害类型（物理或魔法）提供一层专门吸收该类型伤害的护盾，护盾的生命值相当于卡蜜尔的一部分最大生命值，持续一小段时间。",
+            "image": {
+              "full": "Camille_Passive.png",
+              "sprite": "passive0.png",
+              "group": "passive",
+              "x": 48,
+              "y": 96,
+              "w": 48,
+              "h": 48
+            }
+          },
+          "spells": [
+            {
+              "id": "CamilleQ",
+              "name": "精准礼仪",
+              "description": "卡蜜尔的下一次普通攻击会斩击敌人，造成额外物理伤害，并为自身提供短暂的爆发性移动速度加成。这个技能可以在释放后的短时间内再次施放，并且如果两次释放之间存在一定的间隔，那么第二段攻击会造成显著的额外伤害。",
+              "tooltip": "卡蜜尔的下次攻击造成额外的<physicalDamage>{{ bonusdamage }}物理伤害</physicalDamage>并为她提供<speed>{{ msbonus*100 }}%移动速度</speed>，持续{{ msduration }}秒。这个技能可以在接下来的{{ qtotalrecasttime }}秒里无消耗地<recast>再次施放</recast>。<br /><br />如果<recast>再次施放</recast>的攻击与第一段攻击相距至少{{ qrampuptime }}秒，那么额外伤害会提升至<physicalDamage>{{ empoweredbonusdamage }}</physicalDamage>，并且该次攻击的{{ damageconversionpercentage }}伤害转化为<trueDamage>真实伤害</trueDamage>。<br /><br /><rules>这个技能会在造成伤害时触发技能特效。</rules>{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "总攻击力收益",
+                  "移动速度",
+                  "冷却时间"
+                ],
+                "effect": [
+                  "{{ tadratio*100.000000 }}% -> {{ tadrationl*100.000000 }}%",
+                  "{{ msbonus*100.000000 }}% -> {{ msbonusnl*100.000000 }}%",
+                  "{{ cooldown }} -> {{ cooldownNL }}"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                9,
+                8,
+                7,
+                6,
+                5
+              ],
+              "cooldownBurn": "9/8/7/6/5",
+              "cost": [
+                25,
+                25,
+                25,
+                25,
+                25
+              ],
+              "costBurn": "25",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                325,
+                325,
+                325,
+                325,
+                325
+              ],
+              "rangeBurn": "325",
+              "image": {
+                "full": "CamilleQ.png",
+                "sprite": "spell2.png",
+                "group": "spell",
+                "x": 384,
+                "y": 144,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "CamilleW",
+              "name": "战术横扫",
+              "description": "卡蜜尔在短暂延迟后引爆一个锥形范围，并造成伤害。外沿的敌人会被减速并且受到额外伤害，同时还会治疗卡蜜尔。",
+              "tooltip": "卡蜜尔蓄力然后切割，造成<physicalDamage>{{ basedamagetotal }}物理伤害</physicalDamage>。<br /><br />被外沿命中的敌人会被<status>减速</status>{{ slowpercentage }}%，减速效果会在{{ slowduration }}秒里持续衰减，并会受到额外的<physicalDamage>{{ outeredgetooltip }}最大生命值的物理伤害</physicalDamage>。卡蜜尔会回复<healing>对敌方英雄们的{{ outerconehealingratio }}%实际额外伤害值的生命值</healing>。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "@AbilityResourceName@消耗",
+                  "伤害",
+                  "最大生命值伤害",
+                  "冷却时间"
+                ],
+                "effect": [
+                  "{{ cost }} -> {{ costNL }}",
+                  "{{ basedamage }} -> {{ basedamageNL }}",
+                  "{{ outerconemaxhpdamage*100.000000 }}% -> {{ outerconemaxhpdamagenl*100.000000 }}%",
+                  "{{ cooldown }} -> {{ cooldownNL }}"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                12,
+                11.5,
+                11,
+                10.5,
+                10
+              ],
+              "cooldownBurn": "12/11.5/11/10.5/10",
+              "cost": [
+                50,
+                55,
+                60,
+                65,
+                70
+              ],
+              "costBurn": "50/55/60/65/70",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                610,
+                610,
+                610,
+                610,
+                610
+              ],
+              "rangeBurn": "610",
+              "image": {
+                "full": "CamilleW.png",
+                "sprite": "spell2.png",
+                "group": "spell",
+                "x": 432,
+                "y": 144,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "CamilleE",
+              "name": "钩索",
+              "description": "卡蜜尔将她自己拉向一个墙体，然后跳下并在落地时击飞敌方英雄。",
+              "tooltip": "卡蜜尔发射一个可附着在地形上的钩索，并将卡蜜尔拉到钩索处，并使此技能可以在1秒内<recast>再次施放</recast>。<br /><br /><recast>再次施放：</recast>卡蜜尔从墙体上进行冲刺，与命中的第一个敌方英雄进行碰撞。在着陆时，她获得持续 {{ asduration }}秒的<attackSpeed>{{ asbuff*100 }}%攻击速度</attackSpeed>，对附近的敌人们造成<physicalDamage>{{ totaldamage }}物理伤害</physicalDamage>，并对附近的敌方英雄们造成{{ knockupduration }}秒<status>晕眩</status>。朝着敌方英雄冲刺时，冲刺距离翻倍。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "冷却时间",
+                  "伤害",
+                  "攻击速度"
+                ],
+                "effect": [
+                  "{{ cooldown }} -> {{ cooldownNL }}",
+                  "{{ basedamage }} -> {{ basedamageNL }}",
+                  "{{ asbuff*100.000000 }}% -> {{ asbuffnl*100.000000 }}%"
+                ]
+              },
+              "maxrank": 5,
+              "cooldown": [
+                16,
+                15,
+                14,
+                13,
+                12
+              ],
+              "cooldownBurn": "16/15/14/13/12",
+              "cost": [
+                70,
+                70,
+                70,
+                70,
+                70
+              ],
+              "costBurn": "70",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                800,
+                800,
+                800,
+                800,
+                800
+              ],
+              "rangeBurn": "800",
+              "image": {
+                "full": "CamilleE.png",
+                "sprite": "spell3.png",
+                "group": "spell",
+                "x": 0,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            },
+            {
+              "id": "CamilleR",
+              "name": "海克斯最后通牒",
+              "description": "卡蜜尔冲向目标英雄，并将该英雄锚定在区域中。她对目标英雄发起的普攻还会造成额外的魔法伤害。",
+              "tooltip": "卡蜜尔暂时变得无法被选取，并且跳向一个敌方英雄，打断引导状态并将该英雄锁定在一个区域内，并且该英雄怎样都无法逃出这个区域，持续{{ rduration }}秒。其它敌人会被<status>震开</status>。她的攻击会对目标敌人造成额外的<magicDamage>{{ rpercentcurrenthpdamage }}%当前生命值的魔法伤害</magicDamage>。{{ spellmodifierdescriptionappend }}",
+              "leveltip": {
+                "label": [
+                  "当前生命值伤害",
+                  "持续时间",
+                  "冷却时间"
+                ],
+                "effect": [
+                  "{{ rpercentcurrenthpdamage }}% -> {{ rpercentcurrenthpdamageNL }}%",
+                  "{{ rduration }} -> {{ rdurationNL }}",
+                  "{{ cooldown }} -> {{ cooldownNL }}"
+                ]
+              },
+              "maxrank": 3,
+              "cooldown": [
+                140,
+                115,
+                90
+              ],
+              "cooldownBurn": "140/115/90",
+              "cost": [
+                100,
+                100,
+                100
+              ],
+              "costBurn": "100",
+              "datavalues": {},
+              "effect": [
+                null,
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0
+                ]
+              ],
+              "effectBurn": [
+                null,
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "vars": [],
+              "costType": " {{ abilityresourcename }}",
+              "maxammo": "-1",
+              "range": [
+                475,
+                475,
+                475
+              ],
+              "rangeBurn": "475",
+              "image": {
+                "full": "CamilleR.png",
+                "sprite": "spell3.png",
+                "group": "spell",
+                "x": 48,
+                "y": 0,
+                "w": 48,
+                "h": 48
+              },
+              "resource": "{{ cost }} {{ abilityresourcename }}"
+            }
+          ]
+        },
+        "combatStatsSource": {
+          "patch": "16.21",
+          "url": "https://raw.communitydragon.org/16.21/game/data/characters/camille/camille.bin.json"
+        }
       }
     ],
     "augments": [
@@ -15065,6 +16027,21 @@
         "catalogEnabled": true,
         "unresolved": [],
         "sourceKey": "Kiwi_SpinToWin_Summary",
+        "tags": [
+          1
+        ]
+      },
+      {
+        "id": 1996,
+        "key": "ARAM_Upgrade_Sheen",
+        "name": "升级：耀光",
+        "rarity": "kGold",
+        "description": "你的咒刃效果造成额外伤害并治疗你自身，治疗量相当于目标生命值的一定百分比。此外，获得250金币。",
+        "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/upgradesheen_small.png",
+        "descriptionStatus": "complete",
+        "catalogEnabled": true,
+        "unresolved": [],
+        "sourceKey": "Kiwi_Upgrade_Sheen_Summary",
         "tags": [
           1
         ]
