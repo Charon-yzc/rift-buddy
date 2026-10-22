@@ -10,7 +10,7 @@ const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.
 const client=()=>({connected:true,phase:'ChampSelect',mode:{id:'hex'},session:sanitizeSession({localPlayerCellId:0,myTeam:['Lux','Ashe','Veigar','Sona','Jinx'].map((id,cellId)=>({cellId,championId:key(id)})),benchEnabled:true,benchChampions:['Malphite','Xerath','Lux'].map(id=>({championId:key(id),puuid:'private'}))})});
 test('Hex team alternatives use only public bench, retain teammates and explain coverage changes without lanes',()=>{
  const c=client(),before=structuredClone(c),model=hexDraft({data,client:c});
- assert.equal(model.team.length,5);assert.equal(model.candidates[0].hero.id,'Malphite');assert.deepEqual(model.candidates[0].added,['补前排']);assert.equal(model.candidates.length,2);
+ assert.equal(model.team.length,5);assert.equal(model.candidates[0].hero.id,'Malphite');assert.deepEqual(model.candidates[0].added,['补承伤手段']);assert.equal(model.candidates.length,2);
  for(const row of model.candidates){assert.equal(row.lineup[0].hero.id,row.hero.id);assert.deepEqual(row.lineup.slice(1).map(p=>p.hero.id),['Ashe','Veigar','Sona','Jinx']);}
  assert.deepEqual(c,before);assert(!JSON.stringify(c).includes('private'));
  const html=hexDraftView({data,client:c});assert.match(html,/换成墨菲特后的我方阵容/);assert.doesNotMatch(html,/上路|中路|打野|胜率\s*\d|data-action="(?:client-prepare|preselect)/);
@@ -37,7 +37,7 @@ test('same-patch hero source changes withdraw mechanical claims without hiding t
   if(id==='Ashe'){assert.equal(m.reviewed,false);assert.equal(m.coverage.length,0);assert(m.candidates.every(c=>!c.comparable));}
  }
  const transport=structuredClone(data);transport.champions.find(c=>c.id==='Malphite').mechanicSource.observedAt='2026-10-21T00:00:00Z';assert.deepEqual(hexDraft({data:transport,client:client()}).candidates.map(c=>[c.hero.id,c.priority]),hexDraft({data,client:client()}).candidates.map(c=>[c.hero.id,c.priority]));
- const partial=client();partial.session.myTeam[4].championId=0;const m=hexDraft({data,client:partial});assert(m.candidates.every(c=>!c.comparable&&!c.added.length&&!c.lost.length));assert.doesNotMatch(hexDraftView({data,client:partial}),/前排 缺/);
+ const partial=client();partial.session.myTeam[4].championId=0;const m=hexDraft({data,client:partial});assert(m.candidates.every(c=>!c.comparable&&!c.added.length&&!c.lost.length));assert.doesNotMatch(hexDraftView({data,client:partial}),/承伤手段 缺/);
 });
 test('fresh own availability removes unowned and disabled bench heroes; stale eligibility is never reused',()=>{
  const c=client();c.eligibility={context:pickEligibilityContext(c.session),localPlayerCellId:0,receivedAt:new Date().toISOString(),pickable:[key('Xerath')],disabled:[]};assert.deepEqual(hexDraft({data,client:c}).candidates.map(c=>c.hero.id),['Xerath']);
