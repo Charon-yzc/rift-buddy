@@ -135,7 +135,7 @@ test('eight explicit single-item upgrades reveal their associated equipment with
  const pairs=[[1318,3157],[2143,6610],[2157,6333],[2140,3074],[1320,6676],[1336,3031],[3150,4646],[1379,124011]],before=JSON.stringify(data);
  for(const [id,item]of pairs)for(const state of ['owned','offered']){
   const [row]=run({owned:state==='owned'?[id]:[],options:state==='offered'?[id]:[],preparedItems:[]});assert(row,id);assert.equal(row.state,state);assert.equal(row.equipmentState,'suggested');assert.equal(row.gear[0].when,'关联装备 · 若购买');assert.deepEqual(row.gear[0].items.map(i=>i.id),[item]);assert.match(row.summary,/若购买/);assert.doesNotMatch(row.summary,/当前方案|本人已装备/);
-  const [micro]=hexMechanismMicroRoutes([row]);assert.equal(micro.equipmentState,'suggested');assert.match(micro.items[0].brief,/关联装备 · 若购买/);assert.match(renderHexRoutes([row],{image}),/关联装备 · 若购买/);assert.equal(row.score,undefined);assert.equal(row.winRate,undefined);
+  const [micro]=hexMechanismMicroRoutes([row]);assert.equal(micro.equipmentState,'suggested');assert.equal(micro.items[0].brief,row.gear[0].why);assert.match(renderHexRoutes([row],{image}),/关联装备 · 若购买/);assert.equal(row.score,undefined);assert.equal(row.winRate,undefined);
  }
  for(const id of [1002,1996,1129,1058,1319])assert.deepEqual(run({owned:[id],preparedItems:[]}),[],'Generic or alternative equipment stays dependent on the actual plan');
  assert.deepEqual(run({owned:[1002,1318],preparedItems:[]}).map(r=>r.augment.id),[1318],'One rule cannot lend its suggested equipment to another rule');
