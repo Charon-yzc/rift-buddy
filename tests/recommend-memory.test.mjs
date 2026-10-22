@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {execFile} from 'node:child_process';
@@ -10,8 +11,8 @@ test('five-player search keeps three pages and complete plans within a 128 MiB w
   import {createSlots,recommend} from './src/core/recommend.mjs';
   import {BUNDLED_CATALOG,configureCatalog} from './src/core/catalog.mjs';
   configureCatalog(BUNDLED_CATALOG);
-  const data=JSON.parse(fs.readFileSync('data/game.json','utf8'));
-  const builds=JSON.parse(fs.readFileSync('data/builds.json','utf8')).entries;
+  const data=JSON.parse(fs.readFileSync('tests/fixtures/snapshot-16.20/game.json','utf8'));
+  const builds=JSON.parse(fs.readFileSync('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
   const rows=recommend({slots:createSlots().map(s=>({...s,party:true})),champions:data.champions,builds,scope:'party',play:{unusual:false},limit:18});
   assert.equal(rows.length,18);assert.equal(new Set(rows.map(r=>r.id)).size,18);
   for(const row of rows){

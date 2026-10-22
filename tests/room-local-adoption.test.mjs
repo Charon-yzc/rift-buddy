@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -9,7 +10,7 @@ import {captureRoomStrategy,captureRoomConfigurations,roomPreparation} from '../
 import {roomConfigurationDialog} from '../src/room-view.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;data.catalog=BUNDLED_CATALOG;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;data.catalog=BUNDLED_CATALOG;
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 test('explicit mixed-catalog adoption stays in the current same-group configuration through restart and reshare',()=>{
  try{

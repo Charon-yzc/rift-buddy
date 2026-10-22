@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,8 +8,8 @@ import {getBuild,validateRunePage} from '../src/core/builds.mjs';
 import {comboLoadout} from '../src/core/loadouts.mjs';
 import {conventionalRole} from '../src/core/rules.mjs';
 
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
+data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;
 const byId=new Map(data.champions.map(c=>[c.id,c]));
 const ids=[
  'party-taliyah-jhin-nautilus','party-viktor-aphelios-renata','party-hwei-varus-zyra',

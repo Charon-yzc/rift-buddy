@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import {createRecommendationFamiliarityState} from '../src/core/recommendation-familiarity-state.mjs';
 import {createPreparationContext} from '../src/core/preparation-context.mjs';
 import {prepareHeroWithSource} from '../src/core/hero-source-preparation.mjs';
@@ -40,7 +41,7 @@ import {createHistoryController} from '../src/match-history-controller.mjs';
 import {createOngoingGameController} from '../src/ongoing-game-controller.mjs';
 
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
 data.builds={};data.catalog={version:'mock'};
 const hero=id=>data.champions.find(c=>c.id===id);
 const noop=()=>{};
@@ -993,7 +994,7 @@ test('a real client hover change during preparation replaces stale configuration
 
 test('a hero click with a missing source hovers first, keeps fallback runes unwritten during fetch, and then applies the fetched same-source configuration',async()=>{
  const current=client(),incoming=structuredClone(current),{context:c,calls}=setup({current,incoming,slots:createSlots().map(slot=>({...slot,party:slot.role==='bottom'})),results:[]});
- const oldBuilds=data.builds,reference=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries['Ashe:bottom'];
+ const oldBuilds=data.builds,reference=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries['Ashe:bottom'];
  let resolve,started;const pending=new Promise(done=>resolve=done),fetchStarted=new Promise(done=>started=done);let runeWrites=0;
  c.api.refreshBuild=async()=>reference;
  c.refreshConfiguration=async()=>{started();await pending;data.builds={...data.builds,'Ashe:bottom':reference};return reference;};

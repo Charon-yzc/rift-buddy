@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {companionHeroAction} from '../src/core/companion-action.mjs';
 import {companionView} from '../src/companion-view.mjs';
@@ -8,7 +9,7 @@ import {defaultState,validateState} from '../services/storage.mjs';
 import {recommendationDraft} from '../src/core/draft-intents.mjs';
 import {lineupFit} from '../src/core/room-ballot.mjs';
 import {roomBallotView} from '../src/room-ballot-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json')),hero=id=>data.champions.find(c=>c.id===id);
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),hero=id=>data.champions.find(c=>c.id===id);
 const client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:77,localPlayerCellId:0,myTeam:[{cellId:0,championId:hero('Graves').key,assignedPosition:'JUNGLE'},{cellId:1,championId:hero('Vex').key,assignedPosition:'MIDDLE'}],theirTeam:[],bans:[],actions:[[{type:'pick',actorCellId:0,championId:hero('Graves').key,completed:false}]],allowDuplicatePicks:false}};
 
 test('sidebar candidate and room scores ignore a visible preview until that hero is locked',()=>{

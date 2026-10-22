@@ -8,7 +8,7 @@ const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snaps
 import {aggregateCombatStats,applyLivePanel,combatWindow,statAtLevel} from '../src/core/live-estimate.mjs';
 import {canModelYone} from '../src/core/combat-models.mjs';
 
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const data=JSON.parse(await fs.readFile('data/game.json','utf8')),historical=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
 data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
 const active={riotId:'fixture-only',level:7,currentGold:800,abilities:Object.fromEntries(Object.entries({Q:1,W:3,E:1,R:1}).map(([k,abilityLevel])=>[k,{abilityLevel}]))};
@@ -50,8 +50,8 @@ test('partial bags pause purchase and damage advice while skills and manual targ
 });
 
 test('Yone ultimate scales with bonus attack damage at the actual level',()=>{
- const yone=hero('Yone'),target=hero('Ahri'),level=11,base=statAtLevel(yone.stats,level);
- const bare=aggregateCombatStats(yone,level,[],data),equipped={...bare,ad:base.ad+50};
+ const yone=historical.champions.find(c=>c.id==='Yone'),target=historical.champions.find(c=>c.id==='Ahri'),level=11,base=statAtLevel(yone.stats,level);
+ const bare=aggregateCombatStats(yone,level,[],historical),equipped={...bare,ad:base.ad+50};
  const skills={Q:0,W:0,E:0,R:2},defense={hp:5000,armor:0,mr:0};
  const plain=combatWindow(yone,target,level,bare,defense,null,{skills});
  const bonus=combatWindow(yone,target,level,equipped,defense,null,{skills});
@@ -62,7 +62,7 @@ test('Yone ultimate scales with bonus attack damage at the actual level',()=>{
 });
 
 test('Yone reviewed model rejects impossible basic and ultimate ranks',()=>{
- const yone=hero('Yone'),agg=aggregateCombatStats(yone,7,[],data);
+ const yone=historical.champions.find(c=>c.id==='Yone'),agg=aggregateCombatStats(yone,7,[],historical);
  assert.equal(canModelYone(yone,3,agg,{Q:3,W:0,E:0,R:0}),false);
  assert.equal(canModelYone(yone,7,agg,{Q:3,W:1,E:1,R:2}),false);
  assert.equal(canModelYone(yone,15,agg,{Q:5,W:3,E:4,R:3}),false);

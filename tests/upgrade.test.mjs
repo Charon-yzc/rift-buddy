@@ -137,7 +137,7 @@ test('strict hero pools constrain only recommended heroes and do not replace two
 });
 test('Hex comparison explains mechanics and partial values without synthetic rates',()=>{
  const rows=compareAugments({champion:data.champions.find(c=>c.id==='Ashe'),options:[1048,1002,1141],owned:[1047],augments:data.augments});
- assert.equal(rows.length,3);assert.ok(rows[0].interactions.length);assert.match(rows[1].cautions.join(''),/装备急速/);assert.match(rows[2].cautions.join(''),/队友/);
+ assert.equal(rows.length,3);assert.ok(rows[0].interactions.length);assert.match(rows[1].cautions.join(''),/装备急速/);assert.match(rows[2].reasons.join(''),/机制待复核/);assert.doesNotMatch(rows[2].reasons.join(''),/当前英雄.*治疗/);
  assert.ok(!('score'in rows[0]));assert.ok(augmentCategories(data.augments.find(a=>a.id===1048)).includes('crit'));
 });
 test('old settings migrate and optional guide corruption preserves favorites; exported pool merges',async()=>{

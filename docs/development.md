@@ -359,3 +359,20 @@ v0.10.5 的选人侧栏直接修改当前 preparation，装备路线、符文、
 无控制、保护及撤退路线复用已核对的独立安全动作，不继承“接实际控制后”的通用跟进句。`smoke-package-curated-plan.mjs --independent-four/--independent-five` 验证盖伦、卡兹克、卡萨丁、芸阿娜及米利欧的原路线、备选、采用、收藏、重启和每位成员指引；`--tactics-four/--tactics` 验证消耗/保护与逐对样本。所有符文写入仍模拟。
 
 个人准备节点补尼菈、洛、卡兹克、男枪、格温与薇古丝，按实际形态、层数、进化、弹药及接应条件会合，不按分钟或等级直接宣称强势。2026-10-10 对照 Riot 16.19.1 与 16.20.1 的[加里奥](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json)、[尼菈](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nilah.json)、[洛](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rakan.json)：三者的基础属性、被动、技能描述/模板、冷却和范围未见差异；人工核对 W/R 实际控制、加里奥当时友军落点、尼菈接近与退出、洛 E 可选友军后，补齐“近身救援舞”的成立与停止条件并更新该套复核来源。专用配装及其他旧版套路继续保留原复核状态；这次机制核对不证明当前最优配装、国服对局有效性或整队胜率。
+# Current data and historical interaction acceptance
+
+`smoke-package-current-data.mjs` reads the actual current ASAR without replacing
+its data. It checks the real recommendation worker, ordinary configuration and
+favorite/restart flows, retained historical personal plans, and the Hex 4.0
+handbook, special acquisition, details and sidebar. A raw-data update does not
+renew authored Rift skill combinations: those stay pending until independently
+reviewed. Ordinary legal picks and same-patch statistical configurations remain
+available.
+
+The authored 16.20 native interaction contracts run separately from
+`.local/smoke-snapshot-16.20`, created by `prepare-historical-smoke.mjs` from the
+same source and the seven frozen public JSON fixtures. Its receipt identifies
+every data override and source hash. This is a test-only application package,
+never a current-data result or installer. It cannot overwrite the current
+package or its `release/latest.json`. Both sets of checks must pass; historical
+success does not establish current mechanism coverage.

@@ -22,7 +22,7 @@ const envelope=value=>{const payload=Buffer.from(JSON.stringify(value));return {
 
 test('signed global generation round-trips all four assets independently of the old client patch',async()=>{
  const signed=verifyGenerationEnvelope(envelope(manifest(base)),{keys});assert.deepEqual(Object.keys(signed.files),GENERATION_NAMES);
- assert.equal(signed.recipe.builds.length,309);assert.equal(signed.recipe.rankings.length,6);assert.equal(signed.recipe.hex.length,173);
+ assert.equal(signed.recipe.builds.length,314);assert.equal(signed.recipe.rankings.length,6);assert.equal(signed.recipe.hex.length,173);
  assert.deepEqual(await decodeGenerationAssets(signed,packed.assets),bundle);
  assert.throws(()=>verifyFeedEnvelope(envelope(signed),{keys}),/清单/,'Legacy three-file protocol must remain distinct');
 });
@@ -109,9 +109,9 @@ test('optional status cannot hide a required failure or allow an unknown dataset
  }
 });
 test('new patch is published globally only with current valid coverage, and replaces only generated old assets',async t=>{
- const f=await publication(t);await f.candidate(seed);const first=await f.publish(),before=await f.latest(),legacy=await f.legacy(seed.game.patch);
- const next=JSON.parse(JSON.stringify(seed).replaceAll('16.20','16.21')),oldHex=structuredClone(next);oldHex['hex-builds'].entries.Ahri=seed['hex-builds'].entries.Ahri;f.advance();await f.candidate(oldHex);
- await assert.rejects(f.publish(),/海克斯/);assert.equal(await f.latest(),before);assert.equal(await f.legacy(seed.game.patch),legacy);
+ const previous=await loadServerSeed('tests/fixtures/snapshot-16.20'),f=await publication(t);await f.candidate(previous);const first=await f.publish(),before=await f.latest(),legacy=await f.legacy(previous.game.patch);
+ const next=structuredClone(seed),oldHex=structuredClone(next);oldHex['hex-builds'].entries.Ahri=previous['hex-builds'].entries.Ahri;f.advance();
+ await assert.rejects(f.candidate(oldHex),/hex-builds/);assert.equal(await f.latest(),before);assert.equal(await f.legacy(previous.game.patch),legacy);
  f.advance();await f.candidate(next);const current=await f.publish();assert.equal(current.generation.manifest.patch,'16.21');assert.equal(current.generation.manifest.version,'16.21.1');assert.ok(current.generation.manifest.sequence>first.generation.manifest.sequence);
  assert.equal(verifyGenerationEnvelope(JSON.parse(await f.latest()),{keys}).patch,'16.21');assert.equal(verifyFeedEnvelope(JSON.parse(await f.legacy('16.21')),{keys}).patch,'16.21');
  assert.ok(current.generation.removed.includes('v2/assets/'+first.generation.manifest.files.game.file));assert.equal((await fs.readdir(path.join(f.publicRoot,'v2/assets'))).length,4);

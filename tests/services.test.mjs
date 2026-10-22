@@ -85,7 +85,7 @@ test('installing a newer bundle never lets an older cache downgrade game data',a
  await atomicJSON(path.join(root,'game.json'),{...data,contentRevision:0});
  assert.equal((await loadSnapshot(root,path.resolve('data'))).contentRevision,data.contentRevision);
  await atomicJSON(path.join(root,'game.json'),{...data,version:'16.20.1',patch:'16.20'});
- assert.equal((await loadSnapshot(root,path.resolve('data'))).version,'16.20.1');
+ assert.equal((await loadSnapshot(root,path.resolve('data'))).version,data.version);
 });
 test('backup imports restore preferences while retaining this machine\'s rune ownership and game path',()=>{
  const current={...defaultState(),ownedPageId:123,draft:{slots:createSlots(),style:'fun'}};

@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -7,7 +8,7 @@ import {createPreparationStore,recallPreparation,recommendationKey} from '../src
 import {defaultState,validateState} from '../services/storage.mjs';
 import {createCooperationGraph,cooperationPlan} from '../src/core/cooperation.mjs';
 
-const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));
+const data=JSON.parse(fs.readFileSync(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 const permutations=values=>values.length?values.flatMap((v,i)=>permutations(values.filter((_,j)=>j!==i)).map(rest=>[v,...rest])):[[]];
 const capture=slots=>captureCreativePlan(recommend({slots,champions:data.champions,scope:'party',style:'balanced'})[0],data,'2026-10-16T00:00:00Z');

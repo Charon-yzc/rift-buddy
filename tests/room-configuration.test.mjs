@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,8 +13,9 @@ import {fillSkillOrder} from '../src/core/skill-advice.mjs';
 import {captureRoomStrategy,captureRoomConfigurations,roomPreparation,roomPlayerRole,roomClientPlan} from '../src/core/room-configuration.mjs';
 import {sanitizeRoomConfiguration,sanitizeShare,encodeFrame,decodeFrame,MAX_FRAME} from '../src/core/room.mjs';
 import {roomConfigurationDialog,roomConfigurationText} from '../src/room-view.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
+data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;
+const hexData=JSON.parse(await fs.readFile('data/game.json'));hexData.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json')).entries;
 const slots=createSlots();for(const [role,champion]of [['jungle','Diana'],['mid','Yasuo'],['support','Rakan']])slots.find(s=>s.role===role).champion=champion;
 const store=createPreparationStore();
 test('received concrete spell pairs adopt the local Flash key while the sender snapshot stays unchanged',()=>{
@@ -138,7 +140,7 @@ test('an open build overrides a shared configuration only in the same mode and c
  const team=createSlots().map(s=>({...s,champion:s.role==='mid'?'Ahri':null})),champion=data.champions.find(c=>c.id==='Ahri'),empty=createPreparationStore();
  const base=getBuild(champion,'mid',data,{mode:'rift'}),page=base.runeOptions.at(-1).page;
  const current={id:'Ahri',role:'mid',mode:'rift',customRunePage:{...page,patch:data.patch},summonerIds:['SummonerFlash','SummonerBarrier']};
- const capture=(mode,selection)=>captureRoomConfigurations(team,data,empty,{mode,current:selection})[0];
+ const capture=(mode,selection)=>captureRoomConfigurations(team,mode==='hex'?hexData:data,empty,{mode,current:selection})[0];
  assert.equal(capture('hex',current).mode,'hex');assert.equal(capture('hex',current).runes,null);
  const rift=capture('rift',{...current,mode:'hex'});assert.equal(rift.mode,'rift');assert(rift.runes);
  const matched=capture('rift',current);assert.deepEqual(matched.runes.selectedPerkIds,page.selectedPerkIds);assert.deepEqual(matched.spells,current.summonerIds);
@@ -148,7 +150,7 @@ test('an open build overrides a shared configuration only in the same mode and c
 test('two, four and five members retain their own configurations and Hex does not become a Rift page',()=>{
  const full=createSlots().map((s,i)=>({...s,champion:['Garen','Diana','Yasuo','Ashe','Rakan'][i]}));
  for(const size of [2,4,5]){const team=full.map((s,i)=>i<size?s:{...s,champion:null}),configs=captureRoomConfigurations(team,data,createPreparationStore());assert.equal(configs.length,size);assert(configs.every(c=>c.mode==='rift'));assert(encodeFrame(sanitizeShare({kind:'state',v:1,from:'甲',at:1,lineup:team,configurations:configs})));}
- const configs=captureRoomConfigurations(full,data,createPreparationStore(),{mode:'hex'});assert.equal(configs.length,5);assert(configs.every(c=>c.mode==='hex'&&c.runes===null));assert.throws(()=>roomPreparation(configs[0],data),/海克斯/);
+ const configs=captureRoomConfigurations(full,hexData,createPreparationStore(),{mode:'hex'});assert.equal(configs.length,5);assert(configs.every(c=>c.mode==='hex'&&c.runes===null));assert.throws(()=>roomPreparation(configs[0],hexData),/海克斯/);
 });
 
 test('a late trio peer keeps attribute guidance and a three-point opening without inventing QWER ranks',async()=>{

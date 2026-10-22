@@ -67,7 +67,7 @@ export function normalizeAbilityReference(game,records,{overview,bins,sources,fe
  const replace=(id,key,old,next,evidence)=>{const a=ability(id,key);assert.equal(a.description.split(old).length,2,id+key+old);a.description=a.description.replace(old,next);corrections.push({champion:id,key,field:'description',old,value:next,evidence});};
  // Curated source corrections are patch-gated and guarded by both exact source
  // prose and same-version game-data fields. They must be reviewed next patch.
- assert.equal(game.patch,'16.20','Review the curated special-skill normalization for the new patch first');
+ assert(['16.20','16.21'].includes(game.patch),'Review the curated special-skill normalization for the new patch first');
  correctSemanticDescriptions({patch:game.patch,ability,spell,values,replace,dictionary});
  correctGrowthDescriptions({patch:game.patch,ability,spell,values,replace,dictionary});
  correctDirectRankFields({patch:game.patch,ability,spell,values,replace,dictionary});

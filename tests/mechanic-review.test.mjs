@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,8 +8,8 @@ import {getBuild} from '../src/core/builds.mjs';
 import {currentCombo,createSlots} from '../src/core/recommend.mjs';
 import {BUNDLED_CATALOG,catalogIssues} from '../src/core/catalog.mjs';
 import {companionPickIntent} from '../src/core/companion-plan.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
-const builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url))).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
+const builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url))).entries;
 const members=[{champion:'Trundle',role:'top'},{champion:'Sejuani',role:'jungle'},{champion:'Seraphine',role:'mid'}];
 test('new patches and same-patch kit changes cannot acquire current family or generic relay claims',()=>{
  const hero=data.champions.find(hero=>hero.id==='Sejuani');assert.equal(mechanicReview(hero,data.patch),'current');assert.equal(mechanicReview(hero,'16.21'),'pending-review');

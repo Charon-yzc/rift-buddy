@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,7 +7,7 @@ import {matchupPreparation,selectMatchupPreparation,MATCHUP_PRESSURE_GROUPS} fro
 import {matchupPreparationView} from '../src/matchup-preparation-view.mjs';
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
 const args=(id,role,targetId)=>({data,selection:{id,role,mode:'rift'},enemyIds:[targetId],targetId,publicContext:'fixture:game:1520'});
 

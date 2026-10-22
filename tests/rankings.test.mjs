@@ -17,7 +17,7 @@ const response=raw=>async()=>({ok:true,text:async()=>JSON.stringify(raw)});
 test('bundled six sources contain valid complete five-role aggregates and preserve source tier zero',()=>{
  assert.equal(Object.keys(bundled.entries).length,6);
  for(const [key,entry] of Object.entries(bundled.entries)){assert.equal(key,rankingKey(game.patch,entry));assert.ok(validRankingReference(entry,game),key);assert.equal(Object.keys(entry.boards).length,5);}
- assert.ok(Object.values(ref.boards).flat().some(row=>row.tier===0));
+ const raw=rawFor(),first=raw.data.find(row=>row.positions.length);first.positions[0].stats.tier_data.tier=0;assert.ok(Object.values(parseRankings(raw,{data:game,source}).boards).flat().some(row=>row.tier===0),'Parser preserves valid source tier zero even when this snapshot has none');
  assert.ok(Object.values(ref.boards).every(rows=>rows.length>0));
  assert.ok(validRankingReference(parseRankings(rawFor(),{data:game,source}),game));
 });

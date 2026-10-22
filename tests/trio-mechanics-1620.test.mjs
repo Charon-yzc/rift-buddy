@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,8 +8,8 @@ import {getBuild,buildAsText} from '../src/core/builds.mjs';
 import {COOPERATION_SKILLS} from '../src/core/cooperation-skills.mjs';
 import {captureCreativePlan} from '../src/core/creative-plan.mjs';
 import {createSlots} from '../src/core/recommend.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const hero=id=>data.champions.find(h=>h.id===id);
 const conditions={
  'kindred-taric-yasuo':[/10%.*不能.*治疗/,/E 眩晕不能触发亚索 R/,/未衔接成功就撤/],

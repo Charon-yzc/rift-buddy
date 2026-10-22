@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,7 +8,7 @@ import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {captureCreativePlan,validateCreativePlan} from '../src/core/creative-plan.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {cooperationText} from '../src/cooperation-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8')),member=(champion,role)=>({champion,role});
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8')),member=(champion,role)=>({champion,role});
 const setup=(members,open=[])=>createSlots().map(s=>({...s,party:members.some(m=>m.role===s.role)||open.includes(s.role),champion:members.find(m=>m.role===s.role)?.champion||null,locked:members.some(m=>m.role===s.role)}));
 
 test('ordinary locked farming junglers find a current full-party action plan with unrestricted remaining lanes',()=>{

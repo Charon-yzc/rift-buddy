@@ -1,3 +1,4 @@
+import {isCurrentHexData} from './hex-data-current.mjs';
 import itemsReview from './hex-route-items.json' with {type:'json'};
 import {fingerprint} from './content-fingerprint.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
@@ -45,8 +46,9 @@ const routes=[
 
 export const hexRouteItemFingerprint=item=>fingerprint({name:item?.name,description:item?.description,stats:item?.stats});
 export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
+ if(!isCurrentHexData(data))return [];
  const champion=data.champions.find(c=>c.id===hero);
- const itemReview=currentHexReview(data.patch)||(data.patch===itemsReview.patch?itemsReview:null);
+ const itemReview=currentHexReview(data.patch);
  if(!champion||!itemReview||hexChampionReview(champion,data.patch)!=='current')return [];
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
  return routes.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{

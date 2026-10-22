@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import {selectBuildSource} from "../src/core/build-source.mjs";
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,8 +11,8 @@ import {skillSelector} from '../src/build-options-view.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(await fs.readFile('data/game.json'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),live=(level,skills)=>({matched:true,level,skills});
 // Current OP.GG source sequences, independently checked against the
 // character record's actual rank gates (sixth basic rank at level 11).

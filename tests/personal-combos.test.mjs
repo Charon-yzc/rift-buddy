@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -10,8 +11,8 @@ import {comboMembers,comboKey} from '../src/core/combo-members.mjs';
 import {createSlots,recommend,currentCombo} from '../src/core/recommend.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {combinationRows} from '../src/draft-library-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const values={name:'我们的野中', 'role-0':'jungle','hero-0':'Graves','job-0':'保持可输出距离，跟已命中魅惑打一轮后退回刷野','loadout-0':'default','role-1':'mid','hero-1':'Ahri','job-1':'处理好中线，再用实际命中的魅惑让搭档接输出','loadout-1':'default',difficulty:'适中',tempo:'early',why:'先控再输出，保住两人的兵线和刷野经济',plan:'中线能离开且双方在场时约好同一目标\n魅惑实际命中再接输出，空了就各自返回经济',risk:'双方距离脱节或魅惑落空就不追',window:'实际具备魅惑，搭档能输出且有退出路线',early:'中路先处理兵线，打野不为等待浪费整轮刷野',economy:'中路补刀，打野刷野；支援失败各自回到原经济',source:'https://example.com/our-plan'};
 const entry=()=>personalCombo({kind:'duo',values,patch:'16.20',today:'2026-10-09',id:'local-mid-jg'});
 const slots=()=>createSlots().map(s=>({...s,party:['jungle','mid'].includes(s.role),champion:s.role==='jungle'?'Graves':null,locked:s.role==='jungle'}));
