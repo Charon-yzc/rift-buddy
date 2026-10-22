@@ -3,7 +3,7 @@ import {isCurrentHexData,HEX_DATA_PENDING} from './hex-data-current.mjs';
 import {profile} from './rules.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
 import {validHexReference} from './builds.mjs';
-import {compareAugments} from './hex-compare.mjs';
+import {createAugmentComparison} from './hex-compare.mjs';
 import {hexAugmentReference} from './hex-augment-reference.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {hexRouteItemFingerprint} from './hex-routes.mjs';
@@ -87,10 +87,8 @@ function mechanicAdvice(data,champion,a,owned,p){
  return {affinity,reasons,cautions,conflict,conditional,reviewed:true};
 }
 
-export function hexEquipmentImpact({data,hero,owned=[]}){
- if(!isCurrentHexData(data))return [];
- const champion=data.champions.find(c=>c.id===hero);if(!champion)return [];
- const p=hexChampionReview(champion,data.patch)==='current'?profile(champion):null,records=[...new Set(owned)].slice(0,HEX_OWNED_LIMIT).map(id=>activeRecord(data,id)).filter(a=>reviewed(a,data.patch)),has=id=>records.some(a=>a.id===id),rows=[];
+function equipmentImpact(data,champion,p,records){
+ const has=id=>records.some(a=>a.id===id),rows=[];
  const add=(id,title,why,ids=[])=>rows.push({augment:id,title,why,items:itemRows(data,ids),patch:data.patch,kind:'mechanic'});
  if(has(1002))add(1002,'优先检查装备效果冷却','装备急速只影响可适用的装备效果。法强路线可把中娅作为自保备选，不能据此认为所有装备都值得买。',p?.damageWeights.ap>=.5?[3157]:[]);
  if(has(1129))add(1129,'保留法强，确认普攻空间','强化收益来自法强与实际普攻。当前本来就穿插普攻的法强英雄可比较纳什；纯远程施法不要为此强行近身。',p?.damageWeights.ap>=.5&&apAttackers.has(champion.id)?[3115]:[]);
@@ -101,20 +99,33 @@ export function hexEquipmentImpact({data,hero,owned=[]}){
  return rows;
 }
 
-export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
- if(!isCurrentHexData(data))return {rows:[],bestChoice:null,equipment:[],source:null,pending:HEX_DATA_PENDING};
- const champion=data.champions.find(c=>c.id===hero);if(!champion)return {rows:compareAugments({options,owned,augments:data.augments,patch:data.patch}).map(row=>({...row,level:'reference',label:labels.reference,priority:0,fromSource:false,mechanicReviewed:false})),bestChoice:null,equipment:[],source:null};
+export function hexEquipmentImpact({data,hero,owned=[]}){
+ if(!isCurrentHexData(data))return [];
+ const champion=data.champions.find(c=>c.id===hero);if(!champion)return [];
+ const p=hexChampionReview(champion,data.patch)==='current'?profile(champion):null,records=[...new Set(owned)].slice(0,HEX_OWNED_LIMIT).map(id=>activeRecord(data,id)).filter(a=>reviewed(a,data.patch));
+ return equipmentImpact(data,champion,p,records);
+}
+
+// This evaluator belongs to one synchronous calculation, never a frame cache.
+export function createHexRecommendations({data,hero}){
+ if(!isCurrentHexData(data))return ()=>({rows:[],bestChoice:null,equipment:[],source:null,pending:HEX_DATA_PENDING});
+ const champion=data.champions.find(c=>c.id===hero),compare=createAugmentComparison({champion,augments:data.augments,patch:data.patch});
+ if(!champion)return (args={})=>({rows:compare(args).map(row=>({...row,level:'reference',label:labels.reference,priority:0,fromSource:false,mechanicReviewed:false})),bestChoice:null,equipment:[],source:null});
  const ref=data.hexBuilds?.[hero],current=validHexReference(ref,champion,data)&&ref.patch===data.patch;
- const sourceIds=new Set(current?ref.augmentIds:[]),ownedIds=new Set(owned),actual=options.length>0;
+ const sourceIds=new Set(current?ref.augmentIds:[]),records=new Map();
+ // activeRecord historically uses the first duplicate; compare uses the last.
+ for(const a of data.augments)if(!records.has(a.id))records.set(a.id,hexAugmentReference(a,{patch:data.patch}));
+ const kit=hexChampionReview(champion,data.patch)==='current'?profile(champion):null;
+ return ({options=[],owned=[],limit=6}={})=>{
+ const ownedIds=new Set(owned),actual=options.length>0;
  // An independent source shortlist is evidence, not an exhaustive offer pool.
  // Keep reviewed mechanism candidates even when the source omits them.
  const ids=actual?[...new Set(options)].slice(0,3):[...new Set([...sourceIds,...hexMechanicIds])];
- const ownedRecords=[...ownedIds].slice(0,HEX_OWNED_LIMIT).map(id=>activeRecord(data,id)).filter(Boolean);
- const kit=hexChampionReview(champion,data.patch)==='current'?profile(champion):null;
+ const ownedRecords=[...ownedIds].slice(0,HEX_OWNED_LIMIT).map(id=>records.get(id)).filter(Boolean);
  const rows=ids.map(id=>{
-  const a=activeRecord(data,id);if(!a)return null;
+  const a=records.get(id);if(!a)return null;
   if(hexCatalogDisabled(data,a)&&!actual&&!ownedIds.has(id))return null;
-  const advice=mechanicAdvice(data,champion,a,ownedRecords,kit),[base]=compareAugments({champion,options:[id],owned,augments:data.augments,patch:data.patch});
+  const advice=mechanicAdvice(data,champion,a,ownedRecords,kit),[base]=compare({options:[id],owned});
   // Keep the marked-set contribution separate from general hero affinity.
   // Reuse this pass instead of rebuilding the whole catalogue for each next card.
   const alone=ownedRecords.length?mechanicAdvice(data,champion,a,[],kit):advice;
@@ -131,8 +142,10 @@ export function hexRecommendations({data,hero,options=[],owned=[],limit=6}){
  }).filter(Boolean);
  const ordered=[...rows].sort((a,b)=>b.priority-a.priority||a.id-b.id),first=ordered[0],second=ordered[1];
  return {rows:actual?rows:ordered.slice(0,Math.max(0,Math.min(12,limit))),bestChoice:actual&&first?.level==='preferred'&&first.priority>(second?.priority??-Infinity)?first.id:null,
-  equipment:hexEquipmentImpact({data,hero,owned}),source:current?{patch:ref.patch,name:ref.source,url:ref.sourceUrl,fetchedAt:ref.fetchedAt}:null};
+  equipment:equipmentImpact(data,champion,kit,ownedRecords.filter(a=>reviewed(a,data.patch))),source:current?{patch:ref.patch,name:ref.source,url:ref.sourceUrl,fetchedAt:ref.fetchedAt}:null};
+ };
 }
+export function hexRecommendations(args){return createHexRecommendations(args)(args);}
 
 export function resolveHexAugmentInput(value,augments){
  const text=String(value||'').normalize('NFKC').trim();
