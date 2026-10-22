@@ -24,7 +24,7 @@ test('automatic own history starts once the account is confirmed and reuses the 
  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:page();}});
  await history.autoLoadOwn(client,{...summary,status:'loading',session:''});assert.equal(calls.length,0,'an unconfirmed account must not load a page');
  await history.autoLoadOwn(client,{...summary,status:'loading'});assert.deepEqual(calls.map(c=>c.op),['page','profile'],'a confirmed account must not wait for the usage scan');assert.equal(calls[0].p.server,'');
- await history.autoLoadOwn(client,summary);await history.open({source:'lcu',server:''});assert.equal(history.state.tabs.length,1);assert.equal(calls.filter(c=>c.op==='page').length,1);
+ await history.autoLoadOwn(client,summary);await history.open({source:'auto',server:''});assert.equal(history.state.tabs.length,1);assert.equal(calls.filter(c=>c.op==='page').length,1);
 });
 test('the own history page is read once per confirmed account, not once per scan batch',async()=>{
  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:page();}});
@@ -34,6 +34,13 @@ test('the own history page is read once per confirmed account, not once per scan
  await history.autoLoadOwn(client,{...summary,session:b,status:'loading'});
  assert.equal(history.state.tabs.length,1,'a new account replaces the old tab');
  assert.equal(calls.filter(c=>c.op==='page').length,2,'one new page for the new account');
+});
+test('early or cached summaries preserve the user source policy instead of forcing their old source',async()=>{
+ for(const source of ['auto','lcu','sgp'])for(const status of ['loading','partial']){
+  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:page();}});history.state.source=source;
+  await history.autoLoadOwn(client,{...summary,cached:true,status,source:source==='sgp'?'lcu':'sgp'});
+  assert.equal(calls.find(c=>c.op==='page').p.source,source);
+ }
 });
 test('automatic own tab does not take focus from an explicit player search or use its chosen region',async()=>{
  const calls=[],history=createHistoryController({request:async(op,p)=>{calls.push({op,p});return op==='profile'?{}:{...page(),cross:p.server==='TW2',server:p.server||'KR'};}});

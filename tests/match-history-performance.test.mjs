@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMatchHistoryService} from '../services/match-history.mjs';
+import {createHistoryController} from '../src/match-history-controller.mjs';
+import {createChampionUsageCollector} from '../services/champion-usage-collector.mjs';
 
 const own={puuid:'a'.repeat(36),summonerId:1,gameName:'示例',tagLine:'CN1'};
 const raw={gameId:1,queueId:420,gameDuration:1200,gameCreation:1700000000000,gameVersion:'16.20',gameType:'MATCHED_GAME',participantIdentities:[{participantId:1,player:own}],participants:[{participantId:1,championId:22,puuid:own.puuid,teamId:100,stats:{kills:1,deaths:0,assists:2,win:true}}],teams:[]};
@@ -100,6 +102,22 @@ test('a concurrent batch advances the scan by the whole batch',async()=>{
  const second=await f.service.execute('own-summary-page',{session:undefined,source:'sgp',cursor:first.cursor});
  assert.equal(second.scanned,100);
  assert.equal(second.identified,100);
+});
+
+test('an old cached source cannot lock the early visible page away from a healthy backend',async()=>{
+ const f=service({local:async()=>{throw Object.assign(Error('Client history unavailable'),{status:500});}}),calls=[];
+ const client={connected:true,phase:'Lobby',own},history=createHistoryController({request:(operation,payload)=>{calls.push({operation,payload});return f.service.execute(operation,payload);}});
+ let releaseScan,pageFlight;const gate=new Promise(resolve=>releaseScan=resolve);
+ const collector=createChampionUsageCollector({champions:()=>[{id:'Ashe',key:22}],cache:{get:()=>({usage:{sampled:10,counts:{Ashe:10}},scanned:10,complete:true,source:'lcu',basis:'recent',updatedAt:1}),put:async()=>{}},request:async(_transport,operation,payload)=>{if(operation==='own-summary-page')await gate;return f.service.execute(operation,payload);},onChange:summary=>{if(summary.session&&summary.status==='loading'&&!pageFlight)pageFlight=history.autoLoadOwn(client,summary);}});
+ const scan=collector.observe(client,{});
+ try{
+  for(let n=0;n<100&&!pageFlight;n++)await new Promise(resolve=>setImmediate(resolve));
+  assert(pageFlight,'The collector must publish confirmed identity before reading the scan');await pageFlight;
+  assert.equal(collector.snapshot().cached,true);assert.equal(collector.snapshot().complete,false);
+  assert.equal(history.current().page?.source,'sgp','The cached LCU hint must not forbid the available SGP source');
+  assert.equal(history.current().error,'');assert.equal(calls.find(c=>c.operation==='page').payload.source,'auto');
+ }finally{releaseScan();await scan;}
+ assert.equal(collector.snapshot().source,'sgp');assert.equal(calls.filter(c=>c.operation==='page').length,1);
 });
 
 test('the background scan waits for a running foreground read instead of sharing the backend with it',async()=>{
