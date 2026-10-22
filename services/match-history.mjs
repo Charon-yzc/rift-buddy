@@ -25,7 +25,10 @@ const isSessionChange=error=>/会话|账号|重新查询|重新连接/.test(Stri
 const HISTORY_SOURCES_ALL_FAILED='战绩数据源暂时不可用：游戏后台与当前大区客户端的战绩接口都返回了错误。这通常是战绩服务正在维护或暂时不可达，请稍后重试。';
 // One hero-statistics read returns a bounded batch. The backend page is 20 games,
 const SCAN_PAGE=20,SCAN_BATCH=80,SCAN_LOCAL_BATCH=100,SCAN_DEADLINE_MS=15000,FOREGROUND_WAIT_MS=3000;
-export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now}={}){
+// A visible read must never hold a concurrency slot indefinitely: three stalled
+// transports would stop every later read and leave the page loading forever.
+const OPERATION_DEADLINE_MS=8000;
+export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now,operationDeadlineMs=OPERATION_DEADLINE_MS}={}){
  let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0,foreground=0;const waiting=[],idleWaiters=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map();let totalCacheBytes=0;
  const preferredSource=new Map(),failedSource=new Map();
  const rememberSource=(server,source)=>preferredSource.set(server,source);
@@ -269,7 +272,8 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   const generation=clearGeneration,background=operation==='own-summary-page';return limited(async()=>{
   if(!background)foreground++;
   try{
-   if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
+   const work=async()=>{
+    if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
    const c=await context(generation,operation==='own-summary-context');
    if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');
    if(operation==='own-summary-context')return {session:sessionId,server:c.localServer,cacheKey:SGP_SERVERS[c.localServer]?crypto.createHash('sha256').update(JSON.stringify(['own-champion-usage-v1',c.localServer,c.own.puuid])).digest('hex'):''};
@@ -302,14 +306,22 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    if(!game){
     assertSession(c);let raw,actual=source;
     try{raw=source==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/SUMMARY`):cache.get(completedKey(c,id))?.raw||await request(c.auth,'/lol-match-history/v1/games/'+id);}
-    catch(error){if(source!=='sgp'||t.cross)throw error;raw=await request(c.auth,'/lol-match-history/v1/games/'+id);actual='lcu';notice='后台详情暂不可用，已使用当前大区客户端数据';}
+    catch(error){
+     if(t.cross)throw error;
+     if(source==='sgp'){raw=await request(c.auth,'/lol-match-history/v1/games/'+id);actual='lcu';notice='后台详情暂不可用，已使用当前大区客户端数据';}
+     else{const remoteServer=SGP_SERVERS[t.server];if(!remoteServer)throw error;raw=await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${remoteServer.region}_${id}/SUMMARY`);actual='sgp';notice='客户端详情暂不可用，已改用游戏后台数据';}
+    }
     game=normalizeMatch(raw,actual,t.player.puuid);if(!game||game.id!==id)fail('对局详情与当前对局不匹配');
     if(actual==='lcu')keepCompleted(c,id,raw);
    }
    await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取详情');put(key,{origin:source,game,complete:true,detailNotice:notice});return {game,notice};
   }
   if(operation==='timeline'){
-   let timeline=cached?.timeline,actual=cached?.timelineSource||source,notice=cached?.timelineNotice||'';if(!timeline){let raw;try{raw=source==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/DETAILS`):await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);}catch(error){if(source!=='sgp'||t.cross)throw error;raw=await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);actual='lcu';notice='后台时间线暂不可用，已使用当前大区客户端数据；部分属性和出装事件可能缺失';}timeline=normalizeTimeline(raw,actual);}
+   let timeline=cached?.timeline,actual=cached?.timelineSource||source,notice=cached?.timelineNotice||'';if(!timeline){let raw;try{raw=source==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/DETAILS`):await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);}catch(error){
+    if(t.cross)throw error;
+    if(source==='sgp'){raw=await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);actual='lcu';notice='后台时间线暂不可用，已使用当前大区客户端数据；部分属性和出装事件可能缺失';}
+    else{const remoteServer=SGP_SERVERS[t.server];if(!remoteServer)throw error;raw=await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${remoteServer.region}_${id}/DETAILS`);actual='sgp';notice='客户端时间线暂不可用，已改用游戏后台数据';}
+   }timeline=normalizeTimeline(raw,actual);}
    await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取时间线');put(key,{origin:source,timeline,timelineSource:actual,timelineNotice:notice});return {id,timeline,source:actual,notice};
   }
    if(t.cross)fail('跨区对局不支持在当前客户端播放回放');
@@ -324,6 +336,11 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   }
   if(action!=='status'){const phase=await request(c.auth,'/lol-gameflow/v1/gameflow-phase');if(!['None','Lobby','EndOfGame','PreEndOfGame'].includes(phase))fail('请在大厅中下载或观看回放');await check(c);await request(c.auth,`/lol-replays/v1/rofls/${id}/${action}`,'POST',{componentType:'replay-button_match-history'});metadata=await request(c.auth,'/lol-replays/v1/metadata/'+id);}
   await check(c);return {id,state:text(metadata?.state),progress:['downloading','watch','download'].includes(metadata?.state)?number(metadata?.downloadProgress):null,action};
+   };
+   // A timed-out operation keeps running; swallow its late rejection so the
+   // main process never sees an unhandled promise.
+   const pending=work();pending.catch(()=>{});
+   return background?await pending:await withDeadline(pending,operationDeadlineMs,'战绩查询超时，请重试');
  }finally{if(!background)releaseForeground();}
  });}
  return {execute,clear};

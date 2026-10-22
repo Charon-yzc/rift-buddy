@@ -8,15 +8,15 @@ const own={puuid:'a'.repeat(36),summonerId:1,gameName:'示例',tagLine:'CN1'};
 const raw={gameId:1,queueId:420,gameDuration:1200,gameCreation:1700000000000,gameVersion:'16.20',gameType:'MATCHED_GAME',participantIdentities:[{participantId:1,player:own}],participants:[{participantId:1,championId:22,puuid:own.puuid,teamId:100,stats:{kills:1,deaths:0,assists:2,win:true}}],teams:[]};
 const localBody={games:{games:[raw]}};
 
-function service({local=async()=>({body:localBody}),backend=async()=>({games:[{json:raw}]}),discover=async()=>({port:23456,password:'mock',region:'TENCENT',rsoPlatformId:'HN10'})}={}){
+function service({local=async()=>({body:localBody}),backend=async()=>({games:[{json:raw}]}),discover=async()=>({port:23456,password:'mock',region:'TENCENT',rsoPlatformId:'HN10'}),operationDeadlineMs,request:customRequest}={}){
  const calls={local:0,backend:0};
  return {
   calls,
   service:createMatchHistoryService({
    discover,
-   request:async(_auth,route)=>{calls.local++;if(route==='/lol-summoner/v1/current-summoner')return own;if(route==='/entitlements/v1/token')return {accessToken:'token'};if(route.includes('/matches'))return (await local()).body;if(route.includes('/games/'))return raw;return {};},
-   sgp:async()=>{calls.backend++;const value=await backend();if(value instanceof Error)throw value;return value;},
-   installPath:()=>''
+   request:customRequest||(async(_auth,route)=>{calls.local++;if(route==='/lol-summoner/v1/current-summoner')return own;if(route==='/entitlements/v1/token')return {accessToken:'token'};if(route.includes('/matches'))return (await local()).body;if(route.includes('/games/'))return raw;return {};}),
+   sgp:async(request)=>{calls.backend++;const value=await backend(request);if(value instanceof Error)throw value;return value;},
+   installPath:()=>'',operationDeadlineMs
   })
  };
 }
@@ -118,6 +118,45 @@ test('an old cached source cannot lock the early visible page away from a health
   assert.equal(history.current().error,'');assert.equal(calls.find(c=>c.operation==='page').payload.source,'auto');
  }finally{releaseScan();await scan;}
  assert.equal(collector.snapshot().source,'sgp');assert.equal(calls.filter(c=>c.operation==='page').length,1);
+});
+
+const requestStub=(overrides={})=>async(_auth,route)=>{
+ if(route==='/lol-summoner/v1/current-summoner')return own;
+ if(route==='/entitlements/v1/token')return {accessToken:'token'};
+ if(route.includes('/matches?'))return localBody;
+ if(route.startsWith('/lol-match-history/v1/games/')){if(overrides.detail==='fail')throw Object.assign(Error('客户端 500'),{status:500});return raw;}
+ if(route.includes('/game-timelines/')){if(overrides.timeline==='hang')return new Promise(()=>{});if(overrides.timeline==='fail')throw Object.assign(Error('客户端 503'),{status:503});return {frames:[]};}
+ if(route.startsWith('/lol-ranked/'))return {queues:[]};
+ if(route.includes('/champion-mastery/'))return [];
+ if(route.includes('/summoner-profile'))return {};
+ return {};
+};
+
+test('a stalled transport cannot hold a concurrency slot for a later read',async()=>{
+ const f=service({request:requestStub({timeline:'hang'}),operationDeadlineMs:60});
+ const page=await f.service.execute('page',{source:'lcu',start:0,count:20});
+ const started=Date.now();
+ await assert.rejects(f.service.execute('timeline',{handle:page.handle,id:page.games[0].id}),/超时/);
+ const waited=Date.now()-started;
+ assert.ok(waited<2000,'the deadline frees the slot instead of waiting for the transport');
+ const next=await f.service.execute('profile',{handle:page.handle});
+ assert.ok(Array.isArray(next.ranked),'a later read still runs after the stalled one timed out');
+});
+
+test('a client timeline failure falls back to the game backend',async()=>{
+ const f=service({request:requestStub({timeline:'fail'}),backend:async({route})=>route.includes('/player/')?{games:[{json:raw}]}:{json:{frames:[],events:[]}}});
+ const page=await f.service.execute('page',{source:'lcu',start:0,count:20});
+ const result=await f.service.execute('timeline',{handle:page.handle,id:page.games[0].id});
+ assert.equal(result.source,'sgp','the backend answered when the client timeline route failed');
+ assert.match(result.notice,/客户端时间线暂不可用/);
+});
+
+test('a client detail failure falls back to the game backend',async()=>{
+ const f=service({request:requestStub({detail:'fail'}),backend:async({route})=>route.includes('/player/')?{games:[{json:raw}]}:{json:raw}});
+ const page=await f.service.execute('page',{source:'lcu',start:0,count:20});
+ const detail=await f.service.execute('detail',{handle:page.handle,id:page.games[0].id});
+ assert.equal(detail.game.id,page.games[0].id);
+ assert.match(detail.notice,/客户端详情暂不可用/);
 });
 
 test('the background scan waits for a running foreground read instead of sharing the backend with it',async()=>{
