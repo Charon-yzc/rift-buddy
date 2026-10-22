@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "contentRevision": 12,
+  "contentRevision": 13,
   "mechanicSourceRevision": 1,
   "itemTooltipRevision": 1,
   "version": "16.21.1",
@@ -206376,7 +206376,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1141,
@@ -206400,7 +206400,7 @@
         3,
         0
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1002,
@@ -206424,7 +206424,7 @@
         4,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2087,
@@ -206447,7 +206447,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1004,
@@ -206470,7 +206470,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2103,
@@ -206498,7 +206498,7 @@
         1,
         8
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1180,
@@ -206521,7 +206521,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1006,
@@ -206536,18 +206536,16 @@
       "sourceKey": "Kiwi_BladeWaltz_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "让你进入不可被选取状态，在此期间对敌人进行突进并造成〔动态数值〕伤害8次(造成50%附带伤害)。",
-        "status": "partial",
-        "unresolved": [
-          "Damage"
-        ],
+        "description": "让你进入不可被选取状态，在此期间对敌人进行突进并造成30–150（随等级） + 10%额外攻击力 + 6%法术强度伤害8次(造成50%附带伤害)。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_BladeWaltz_Tooltip"
       },
       "tags": [
         1,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1007,
@@ -206572,7 +206570,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1103,
@@ -206595,7 +206593,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1151,
@@ -206618,7 +206616,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1150,
@@ -206641,7 +206639,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1011,
@@ -206664,7 +206662,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1013,
@@ -206687,7 +206685,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1015,
@@ -206712,7 +206710,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1310,
@@ -206727,11 +206725,9 @@
       "sourceKey": "Kiwi_ClownCollege_Tooltip",
       "tooltip": {
         "revision": 1,
-        "description": "背刺：你从背后袭击敌人时，会造成〔动态数值〕额外物理伤害。\n\n欺诈魔术：你传送并变为隐形，持续3秒。你在隐形状态下的第一次攻击将造成额外的〔动态数值〕物理伤害。如果从背后进行打击，那么这个攻击会暴击，造成〔动态数值〕伤害。\n\n幻像：阵亡：在阵亡时，在你周围造成25%最大生命值的真实伤害以及1秒恐惧。",
+        "description": "背刺：你从背后袭击敌人时，会造成20–35（随等级） + 35%法术强度 + 50%额外攻击力额外物理伤害。\n\n欺诈魔术：你传送并变为隐形，持续3秒。你在隐形状态下的第一次攻击将造成额外的100 + 150%额外攻击力 + 55%法术强度物理伤害。如果从背后进行打击，那么这个攻击会暴击，造成〔动态数值〕伤害。\n\n幻像：阵亡：在阵亡时，在你周围造成25%最大生命值的真实伤害以及1秒恐惧。",
         "status": "partial",
         "unresolved": [
-          "BasicAttackDamage",
-          "TotalDamage",
           "QCritDamageMod"
         ],
         "sourceKey": "Kiwi_ClownCollege_Description"
@@ -206739,7 +206735,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1018,
@@ -206764,7 +206760,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1118,
@@ -206787,7 +206783,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1323,
@@ -206812,7 +206808,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1019,
@@ -206835,7 +206831,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1020,
@@ -206858,7 +206854,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1022,
@@ -206881,7 +206877,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1025,
@@ -206907,7 +206903,7 @@
         0,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2099,
@@ -206936,7 +206932,7 @@
         1,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1301,
@@ -206959,7 +206955,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1026,
@@ -206984,7 +206980,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2010,
@@ -207007,7 +207003,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1134,
@@ -207031,7 +207027,7 @@
         1,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1225,
@@ -207054,7 +207050,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1027,
@@ -207069,10 +207065,9 @@
       "sourceKey": "Kiwi_Earthwake_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "你的冲刺、跳跃、闪烁或传送类技能会留下一条在1秒后爆炸的轨迹，造成〔动态数值〕物理伤害。\n\n已造成伤害的总和：〔动态数值〕",
+        "description": "你的冲刺、跳跃、闪烁或传送类技能会留下一条在1秒后爆炸的轨迹，造成90–250（随等级） + 60%法术强度 + 125%额外攻击力物理伤害。\n\n已造成伤害的总和：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "Damage",
           "f2"
         ],
         "sourceKey": "Kiwi_Earthwake_Tooltip"
@@ -207080,7 +207075,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2004,
@@ -207108,7 +207103,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2098,
@@ -207133,7 +207128,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1028,
@@ -207157,7 +207152,7 @@
         5,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1029,
@@ -207183,7 +207178,7 @@
         1,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1030,
@@ -207206,7 +207201,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1194,
@@ -207229,7 +207224,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1036,
@@ -207254,7 +207249,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1308,
@@ -207269,10 +207264,9 @@
       "sourceKey": "Cherry_Foxfire_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "自动施放：每7秒，获得25%移动速度并召唤3道烈焰环绕于你，瞄准距离内相距最近的那个可见英雄并造成〔动态数值〕自适应伤害。后续命中造成30%伤害。\n\n已造成伤害的总和：〔动态数值〕",
+        "description": "自动施放：每7秒，获得25%移动速度并召唤3道烈焰环绕于你，瞄准距离内相距最近的那个可见英雄并造成35–160（随等级） + 25%法术强度 + 25%额外攻击力自适应伤害。后续命中造成30%伤害。\n\n已造成伤害的总和：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "SingleFireDamage",
           "f1"
         ],
         "sourceKey": "Kiwi_FireFox_Tooltip"
@@ -207281,7 +207275,7 @@
         4,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1037,
@@ -207305,7 +207299,7 @@
         5,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1187,
@@ -207332,7 +207326,7 @@
         4,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1116,
@@ -207355,7 +207349,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1038,
@@ -207382,7 +207376,7 @@
         1,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1322,
@@ -207405,7 +207399,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1195,
@@ -207431,7 +207425,7 @@
         4,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1041,
@@ -207455,7 +207449,7 @@
         3,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1138,
@@ -207478,7 +207472,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1181,
@@ -207502,7 +207496,7 @@
         3,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2107,
@@ -207526,7 +207520,7 @@
         1,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1105,
@@ -207549,7 +207543,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1044,
@@ -207572,7 +207566,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1001,
@@ -207598,7 +207592,7 @@
         3,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1149,
@@ -207622,7 +207616,7 @@
         5,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1045,
@@ -207637,10 +207631,9 @@
       "sourceKey": "Kiwi_InfernalConduit_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "你的技能会施加一层可无限叠加的灼烧，在3秒的持续时间里每秒造成〔动态数值〕魔法伤害。\n\n你的所有灼烧效果会在对敌方英雄造成伤害时使你的各基础技能的冷却时间缩短0.08秒。\n\n已造成的伤害：〔动态数值〕",
+        "description": "你的技能会施加一层可无限叠加的灼烧，在3秒的持续时间里每秒造成2–20（随等级） + 1.2%法术强度 + 2.8%额外攻击力魔法伤害。\n\n你的所有灼烧效果会在对敌方英雄造成伤害时使你的各基础技能的冷却时间缩短0.08秒。\n\n已造成的伤害：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "BleedDamagePerSecond",
           "f2"
         ],
         "sourceKey": "Kiwi_InfernalConduit_Tooltip"
@@ -207649,7 +207642,7 @@
         1,
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1046,
@@ -207674,7 +207667,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2005,
@@ -207689,11 +207682,10 @@
       "sourceKey": "Kiwi_Augment_InfernoTriggered_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "使用与前一个不同的技能或攻击对敌人造成伤害时，会获得评价等级 (从F到S)。\n\n从每评价等级中获得〔动态数值〕移动速度。\n\n在S评价等级时，消耗你的评价等级来倾泻出大量的子弹，在2秒里持续对周围的所有敌人进行10次射击。每颗子弹造成〔动态数值〕物理伤害。低于30%生命值的敌人们会被暴击，受到〔动态数值〕物理伤害。这个效果有5秒冷却时间。\n\n子弹会施加生命偷取并对小兵造成25%伤害。\n\n已造成的伤害：〔动态数值〕\n炼狱扳机 触发次数：〔动态数值〕",
+        "description": "使用与前一个不同的技能或攻击对敌人造成伤害时，会获得评价等级 (从F到S)。\n\n从每评价等级中获得〔动态数值〕移动速度。\n\n在S评价等级时，消耗你的评价等级来倾泻出大量的子弹，在2秒里持续对周围的所有敌人进行10次射击。每颗子弹造成20–40（随等级） + 40%总攻击力 + 25%法术强度物理伤害。低于30%生命值的敌人们会被暴击，受到〔动态数值〕物理伤害。这个效果有5秒冷却时间。\n\n子弹会施加生命偷取并对小兵造成25%伤害。\n\n已造成的伤害：〔动态数值〕\n炼狱扳机 触发次数：〔动态数值〕",
         "status": "partial",
         "unresolved": [
           "Calc_Style_MS_Per_Stack",
-          "Calc_Damage_Per_Shot",
           "Calc_Crit_Damage_Per_Shot",
           "f1.0",
           "f2.0"
@@ -207703,7 +207695,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1047,
@@ -207726,7 +207718,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1211,
@@ -207751,7 +207743,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1048,
@@ -207776,7 +207768,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2016,
@@ -207804,7 +207796,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1305,
@@ -207827,7 +207819,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1051,
@@ -207842,10 +207834,9 @@
       "sourceKey": "Kiwi_LightemUp_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "每第4次攻击发射4个飞弹以造成〔动态数值〕魔法伤害。\n\n已造成的伤害：〔动态数值〕",
+        "description": "每第4次攻击发射4个飞弹以造成44–320（随等级） + 140%额外攻击力 + 76%法术强度魔法伤害。\n\n已造成的伤害：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "TOOLTIPONLYDamage",
           "f2"
         ],
         "sourceKey": "Kiwi_ARAM_LightemUp_Tooltip"
@@ -207853,7 +207844,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2007,
@@ -207868,11 +207859,10 @@
       "sourceKey": "Kiwi_Augment_LittleDevil_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "你已与【大魔王】本尊签订了一个契约。他每秒汲取你〔动态数值〕当前生命值，如果附近有敌人则提升至5%当前生命值。\n\n作为回报，他会增幅你的攻击和技能以造成额外的20%真实伤害，并且它们还会使生命残片出现在附近5秒。\n\n吸收一个生命残片会治疗你〔动态数值〕生命值并为你提供持续1秒的15%移动速度。\n\n被汲取的生命值：〔动态数值〕\n已造成的伤害：〔动态数值〕\n已获取的残片：〔动态数值〕\n已回复的生命值：〔动态数值〕\n周期性伤害有1.5秒冷却时间",
+        "description": "你已与【大魔王】本尊签订了一个契约。他每秒汲取你〔动态数值〕当前生命值，如果附近有敌人则提升至5%当前生命值。\n\n作为回报，他会增幅你的攻击和技能以造成额外的20%真实伤害，并且它们还会使生命残片出现在附近5秒。\n\n吸收一个生命残片会治疗你100–250（随等级） + 60%额外攻击力 + 30%法术强度生命值并为你提供持续1秒的15%移动速度。\n\n被汲取的生命值：〔动态数值〕\n已造成的伤害：〔动态数值〕\n已获取的残片：〔动态数值〕\n已回复的生命值：〔动态数值〕\n周期性伤害有1.5秒冷却时间",
         "status": "partial",
         "unresolved": [
           "Calc_Drain_Per_Second_Non_Combat",
-          "Calc_Remnant_Healing",
           "f1.0",
           "f2.0",
           "f4.0",
@@ -207883,7 +207873,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1053,
@@ -207906,7 +207896,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1133,
@@ -207931,7 +207921,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1129,
@@ -207956,7 +207946,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1054,
@@ -207979,7 +207969,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1056,
@@ -208004,7 +207994,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1104,
@@ -208027,7 +208017,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1057,
@@ -208052,7 +208042,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2055,
@@ -208082,7 +208072,7 @@
         1,
         9
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1058,
@@ -208105,7 +208095,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1060,
@@ -208130,7 +208120,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1061,
@@ -208147,10 +208137,9 @@
       "sourceKey": "Cherry_OkBoomerang_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "每7秒朝着一个附近的敌人自动施放投掷一个回力镖，对命中的敌人们造成〔动态数值〕自适应伤害。\n\n已造成的伤害：〔动态数值〕",
+        "description": "每7秒朝着一个附近的敌人自动施放投掷一个回力镖，对命中的敌人们造成40–200（随等级） + 30%额外攻击力 + 20%法术强度自适应伤害。\n\n已造成的伤害：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "Damage",
           "f2"
         ],
         "sourceKey": "Kiwi_OkBoomerang_Tooltip"
@@ -208158,7 +208147,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1062,
@@ -208181,7 +208170,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1063,
@@ -208206,7 +208195,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1311,
@@ -208231,7 +208220,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 12317,
@@ -208254,7 +208243,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1064,
@@ -208279,7 +208268,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1390,
@@ -208304,7 +208293,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1324,
@@ -208332,7 +208321,7 @@
         5,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2018,
@@ -208357,7 +208346,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1066,
@@ -208372,11 +208361,9 @@
       "sourceKey": "Kiwi_QuantumComputing_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "每30秒在你周围自动施放一次巨型斩击，造成〔动态数值〕物理伤害。被外沿命中的敌人会被施加在2秒里持续衰减的80%减速，并受到额外的〔动态数值〕最大生命值的物理伤害。你回复相当于80%已造成英雄伤害的生命值。\n\n已造成治疗效果的总和：〔动态数值〕",
+        "description": "每30秒在你周围自动施放一次巨型斩击，造成200–350（随等级） + 75%额外攻击力 + 45%法术强度物理伤害。被外沿命中的敌人会被施加在2秒里持续衰减的80%减速，并受到额外的（10 + 0.025×额外攻击力 + 0.016×法术强度 + 0.001×额外生命值）%最大生命值的物理伤害。你回复相当于80%已造成英雄伤害的生命值。\n\n已造成治疗效果的总和：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "BaseDamageTotal",
-          "OuterEdgeTooltip",
           "f2"
         ],
         "sourceKey": "Kiwi_QuantumComputing_Tooltip"
@@ -208385,7 +208372,7 @@
         1,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1152,
@@ -208409,7 +208396,7 @@
         3,
         8
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1154,
@@ -208439,7 +208426,7 @@
         1,
         8
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1361,
@@ -208464,7 +208451,7 @@
         3,
         8
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1156,
@@ -208489,7 +208476,7 @@
         5,
         8
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2064,
@@ -208516,7 +208503,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1067,
@@ -208533,20 +208520,19 @@
       "sourceKey": "Kiwi_RabbleRousing_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "使用【适用技能】技能时回复〔动态数值〕生命值\n\n已获得的总治疗量：〔动态数值〕\n治疗量等同于〔动态数值〕，对于冷却时间较长的技能，该数值还会提升至50%。",
+        "description": "使用【适用技能】技能时回复〔动态数值〕生命值\n\n已获得的总治疗量：〔动态数值〕\n治疗量等同于30–100（随等级） + 5%额外生命值 + 15%法术强度 + 25%额外攻击力，对于冷却时间较长的技能，该数值还会提升至50%。",
         "status": "partial",
         "unresolved": [
           "SpellName",
           "f1",
-          "f2",
-          "HealAmount"
+          "f2"
         ],
         "sourceKey": "Kiwi_RabbleRousing_Tooltip"
       },
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1068,
@@ -208569,7 +208555,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1170,
@@ -208592,7 +208578,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1071,
@@ -208615,7 +208601,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1115,
@@ -208638,7 +208624,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1072,
@@ -208664,7 +208650,7 @@
         1,
         0
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1073,
@@ -208687,7 +208673,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1074,
@@ -208712,7 +208698,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1113,
@@ -208735,7 +208721,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1136,
@@ -208759,7 +208745,7 @@
         1,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2088,
@@ -208782,7 +208768,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1076,
@@ -208808,7 +208794,7 @@
         0,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1077,
@@ -208834,7 +208820,7 @@
         1,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2100,
@@ -208863,7 +208849,7 @@
         5,
         9
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1214,
@@ -208888,7 +208874,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2104,
@@ -208916,7 +208902,7 @@
         0,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1204,
@@ -208939,7 +208925,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1404,
@@ -208962,7 +208948,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1403,
@@ -208985,7 +208971,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1402,
@@ -209008,7 +208994,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1413,
@@ -209031,7 +209017,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2073,
@@ -209058,7 +209044,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1079,
@@ -209082,7 +209068,7 @@
         1,
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1353,
@@ -209107,7 +209093,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1080,
@@ -209132,7 +209118,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1081,
@@ -209157,7 +209143,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2065,
@@ -209184,7 +209170,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1084,
@@ -209207,7 +209193,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1243,
@@ -209230,7 +209216,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1237,
@@ -209253,7 +209239,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1238,
@@ -209276,7 +209262,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1087,
@@ -209299,7 +209285,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1088,
@@ -209322,7 +209308,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1112,
@@ -209345,7 +209331,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1320,
@@ -209368,7 +209354,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1336,
@@ -209393,7 +209379,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1319,
@@ -209418,7 +209404,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1996,
@@ -209444,7 +209430,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1318,
@@ -209467,7 +209453,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1092,
@@ -209492,7 +209478,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1005,
@@ -209518,7 +209504,7 @@
       "tags": [
         0
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1095,
@@ -209542,7 +209528,7 @@
         5,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1097,
@@ -209566,7 +209552,7 @@
         1,
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1098,
@@ -209591,7 +209577,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2009,
@@ -209614,7 +209600,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1206,
@@ -209629,10 +209615,9 @@
       "sourceKey": "Cherry_escAPADe_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "将法术强度转化为额外攻击力，并获得〔动态数值〕攻击力。\n\n当前转化：〔动态数值〕\n\n每点法术强度转化为0.6攻击力。",
+        "description": "将法术强度转化为额外攻击力，并获得15%总攻击力攻击力。\n\n当前转化：〔动态数值〕\n\n每点法术强度转化为0.6攻击力。",
         "status": "partial",
         "unresolved": [
-          "ADAmpCalcTooltip",
           "f1"
         ],
         "sourceKey": "Cherry_EscAPADe_Tooltip"
@@ -209640,7 +209625,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2062,
@@ -209667,7 +209652,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1327,
@@ -209690,7 +209675,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3118,
@@ -209713,35 +209698,31 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3049,
       "key": "ArmoredImpact",
       "name": "装甲冲击",
       "rarity": "kGold",
-      "description": "施放技能后，你的下一次普通攻击会对附近敌人造成〔动态数值〕额外物理伤害。",
+      "description": "施放技能后，你的下一次普通攻击会对附近敌人造成250%额外护甲 + 50–125（随等级）额外物理伤害。",
       "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/armoredimpact_small.png",
-      "descriptionStatus": "partial",
+      "descriptionStatus": "complete",
       "catalogEnabled": true,
-      "unresolved": [
-        "ArmorDamage"
-      ],
+      "unresolved": [],
       "sourceKey": "Kiwi_Augment_ArmoredImpact_Description",
       "tooltip": {
         "revision": 1,
-        "description": "施放技能后，你的下一次普通攻击会对附近敌人造成〔动态数值〕额外物理伤害。",
-        "status": "partial",
-        "unresolved": [
-          "ArmorDamage"
-        ],
+        "description": "施放技能后，你的下一次普通攻击会对附近敌人造成250%额外护甲 + 50–125（随等级）额外物理伤害。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_Augment_ArmoredImpact_Tooltip"
       },
       "tags": [
         1,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3086,
@@ -209756,10 +209737,9 @@
       "sourceKey": "Kiwi_Augment_BEES_Description",
       "tooltip": {
         "revision": 1,
-        "description": "每15–10（随等级）秒，你的下一个命中敌方英雄的技能会朝该目标投掷一个蜂巢。在抵达时，该蜂巢会爆炸并且小蜜蜂会蜂拥至所有附近的敌方英雄处，使其在2秒里减速20%并持续造成〔动态数值〕魔法伤害。\n\n小蜜蜂附带40%效能的攻击特效。\n\n被小蜜蜂叮过的敌人数：〔动态数值〕\n\n根据所有已知的航空定律，蜜蜂就不可能会飞……",
+        "description": "每15–10（随等级）秒，你的下一个命中敌方英雄的技能会朝该目标投掷一个蜂巢。在抵达时，该蜂巢会爆炸并且小蜜蜂会蜂拥至所有附近的敌方英雄处，使其在2秒里减速20%并持续造成75–200（随等级） + 150%额外攻击力 + 70%法术强度魔法伤害。\n\n小蜜蜂附带40%效能的攻击特效。\n\n被小蜜蜂叮过的敌人数：〔动态数值〕\n\n根据所有已知的航空定律，蜜蜂就不可能会飞……",
         "status": "partial",
         "unresolved": [
-          "Calc_Damage",
           "f3"
         ],
         "sourceKey": "Kiwi_Augment_BEES_Tooltip"
@@ -209768,7 +209748,7 @@
         5,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3018,
@@ -209793,7 +209773,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1329,
@@ -209808,17 +209788,15 @@
       "sourceKey": "Kiwi_BiggestSnowballEver_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "你的雪球获得100技能急速。\n\n你的雪球现在变得非常大，并且可以穿过小兵。它会对敌人造成持续2秒的20%减速， 将他们击飞0.75秒，并造成额外〔动态数值〕伤害。\n\n如果你没有雪球，则获得一个雪球。",
-        "status": "partial",
-        "unresolved": [
-          "SnowballDamage"
-        ],
+        "description": "你的雪球获得100技能急速。\n\n你的雪球现在变得非常大，并且可以穿过小兵。它会对敌人造成持续2秒的20%减速， 将他们击飞0.75秒，并造成额外200–350（随等级） + 60%法术强度 + 100%额外攻击力伤害。\n\n如果你没有雪球，则获得一个雪球。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_BiggestSnowballEver_Tooltip"
       },
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3051,
@@ -209841,7 +209819,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2111,
@@ -209869,7 +209847,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3048,
@@ -209894,7 +209872,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3071,
@@ -209909,19 +209887,16 @@
       "sourceKey": "Kiwi_Augment_BrassBlast_Description",
       "tooltip": {
         "revision": 1,
-        "description": "将一个召唤师技能替换为黄铜爆音。\n\n开始蓄力：为大喇叭蓄力，最多蓄力1.5秒。\n\n释放：吹响喇叭，击退敌人并基于蓄力时间造成〔动态数值〕至〔动态数值〕魔法伤害。\n\n最短蓄力时间：0.25秒",
-        "status": "partial",
-        "unresolved": [
-          "BrassBlastDamage_Min",
-          "BrassBlastDamage_Max"
-        ],
+        "description": "将一个召唤师技能替换为黄铜爆音。\n\n开始蓄力：为大喇叭蓄力，最多蓄力1.5秒。\n\n释放：吹响喇叭，击退敌人并基于蓄力时间造成120–140（随等级） + 50%法术强度 + 70%额外攻击力至200–600（随等级） + 80%法术强度 + 115%额外攻击力魔法伤害。\n\n最短蓄力时间：0.25秒",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_Augment_BrassBlast_Tooltip"
       },
       "tags": [
         5,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2083,
@@ -209948,7 +209923,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2078,
@@ -209979,7 +209954,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3088,
@@ -209996,11 +209971,10 @@
       "sourceKey": "Kiwi_Augment_CrimsonCobalt_Description",
       "tooltip": {
         "revision": 1,
-        "description": "用【适用技能】技能伤害过的敌方英雄会被标记4秒。攻击一个带标记的敌人会造成〔动态数值〕魔法伤害并缩减【适用技能】技能65%秒冷却时间。\n\n已造成的伤害：〔动态数值〕\n已消耗的标记：〔动态数值〕",
+        "description": "用【适用技能】技能伤害过的敌方英雄会被标记4秒。攻击一个带标记的敌人会造成100–250（随等级） + 70%额外攻击力 + 35%法术强度魔法伤害并缩减【适用技能】技能65%秒冷却时间。\n\n已造成的伤害：〔动态数值〕\n已消耗的标记：〔动态数值〕",
         "status": "partial",
         "unresolved": [
           "SpellName",
-          "Calc_Damage",
           "f1",
           "f3"
         ],
@@ -210009,7 +209983,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1328,
@@ -210032,7 +210006,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2077,
@@ -210062,7 +210036,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1384,
@@ -210085,7 +210059,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2131,
@@ -210111,7 +210085,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2144,
@@ -210139,7 +210113,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2148,
@@ -210166,7 +210140,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3036,
@@ -210192,7 +210166,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1331,
@@ -210216,7 +210190,7 @@
         3,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3163,
@@ -210242,7 +210216,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2091,
@@ -210267,7 +210241,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1333,
@@ -210291,7 +210265,7 @@
         4,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1344,
@@ -210315,7 +210289,7 @@
         3,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2032,
@@ -210340,7 +210314,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1348,
@@ -210363,7 +210337,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3085,
@@ -210391,7 +210365,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2127,
@@ -210416,7 +210390,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3121,
@@ -210442,7 +210416,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3004,
@@ -210457,10 +210431,9 @@
       "sourceKey": "Kiwi_Augment_GetJinxed_Description",
       "tooltip": {
         "revision": 1,
-        "description": "将一个召唤师技能替换为罪恶快感！\n\n罪恶快感！：驾驶一枚飞弹，它会在命中敌方英雄、建筑物或地形时爆炸。该飞弹基于到达目标和附近敌方英雄时已行进的距离，对目标和附近敌方英雄造成〔动态数值〕+3%已损失生命值的物理伤害至〔动态数值〕+〔动态数值〕已损失生命值的物理伤害。\n\n飞弹的冲击半径会随行进而增长。\n你在驾驭该飞弹期间处于免疫伤害和不可被选取状态。\n\n阵亡在飞弹下的敌人数：〔动态数值〕\n\n“别慌，还能发生什么更糟糕的事情呢？”— 暴走萝莉 金克丝",
+        "description": "将一个召唤师技能替换为罪恶快感！\n\n罪恶快感！：驾驶一枚飞弹，它会在命中敌方英雄、建筑物或地形时爆炸。该飞弹基于到达目标和附近敌方英雄时已行进的距离，对目标和附近敌方英雄造成20–80（随等级） + 12%额外攻击力 + 8%法术强度+3%已损失生命值的物理伤害至〔动态数值〕+〔动态数值〕已损失生命值的物理伤害。\n\n飞弹的冲击半径会随行进而增长。\n你在驾驭该飞弹期间处于免疫伤害和不可被选取状态。\n\n阵亡在飞弹下的敌人数：〔动态数值〕\n\n“别慌，还能发生什么更糟糕的事情呢？”— 暴走萝莉 金克丝",
         "status": "partial",
         "unresolved": [
-          "Calc_Damage_Flat_Min",
           "Calc_Damage_Flat_Max",
           "Calc_Damage_Percent_Max",
           "f1"
@@ -210470,7 +210443,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3063,
@@ -210495,7 +210468,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1325,
@@ -210520,7 +210493,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1392,
@@ -210543,7 +210516,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1335,
@@ -210558,10 +210531,9 @@
       "sourceKey": "Kiwi_Goldrend_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "用攻击或技能对一个英雄造成伤害时会造成额外〔动态数值〕魔法伤害，并为你提供30金币和持续1.5秒的25%移动速度(每个英雄有30秒冷却时间)。\n\n已造成的伤害：〔动态数值〕\n已赚得金币：〔动态数值〕",
+        "description": "用攻击或技能对一个英雄造成伤害时会造成额外50–150（随等级） + 20%法术强度 + 40%额外攻击力魔法伤害，并为你提供30金币和持续1.5秒的25%移动速度(每个英雄有30秒冷却时间)。\n\n已造成的伤害：〔动态数值〕\n已赚得金币：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "ReaperDamage",
           "f1",
           "f2"
         ],
@@ -210570,7 +210542,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3149,
@@ -210597,7 +210569,7 @@
       "tags": [
         0
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1401,
@@ -210620,7 +210592,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3172,
@@ -210645,7 +210617,7 @@
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3176,
@@ -210668,7 +210640,7 @@
         "sourceKey": "GoH_PentakillAug_Display_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3170,
@@ -210693,7 +210665,7 @@
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3173,
@@ -210718,7 +210690,7 @@
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3171,
@@ -210743,7 +210715,7 @@
         "sourceKey": "Kiwi_GoH_PentakillAug_Generic_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1389,
@@ -210766,7 +210738,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3052,
@@ -210781,10 +210753,9 @@
       "sourceKey": "Kiwi_Augment_HandsOffTheTalent_Description",
       "tooltip": {
         "revision": 1,
-        "description": "在超过75%最大攻击距离处打出的攻击会额外造成〔动态数值〕物理伤害攻击特效。\n\n已打出的远距离攻击次数：〔动态数值〕",
+        "description": "在超过75%最大攻击距离处打出的攻击会额外造成15%额外攻击力 + 20%法术强度物理伤害攻击特效。\n\n已打出的远距离攻击次数：〔动态数值〕",
         "status": "partial",
         "unresolved": [
-          "AdditionalDamage",
           "f1"
         ],
         "sourceKey": "Kiwi_Augment_HandsOffTheTalent_Tooltip"
@@ -210792,7 +210763,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3132,
@@ -210818,7 +210789,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1416,
@@ -210841,7 +210812,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1388,
@@ -210866,7 +210837,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2125,
@@ -210893,7 +210864,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3123,
@@ -210921,7 +210892,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2126,
@@ -210950,7 +210921,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2026,
@@ -210973,7 +210944,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1337,
@@ -210996,7 +210967,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3094,
@@ -211019,7 +210990,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2096,
@@ -211046,7 +211017,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3134,
@@ -211069,7 +211040,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2133,
@@ -211098,7 +211069,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1314,
@@ -211121,7 +211092,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2072,
@@ -211149,7 +211120,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3053,
@@ -211177,7 +211148,7 @@
         3,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2043,
@@ -211202,7 +211173,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1326,
@@ -211225,7 +211196,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3059,
@@ -211250,7 +211221,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1332,
@@ -211273,7 +211244,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2119,
@@ -211298,7 +211269,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2135,
@@ -211327,7 +211298,7 @@
         1,
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2123,
@@ -211357,7 +211328,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2137,
@@ -211381,7 +211352,7 @@
         "sourceKey": "Augment_PatOnTheBack_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2139,
@@ -211409,7 +211380,7 @@
         3,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1358,
@@ -211434,7 +211405,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1347,
@@ -211457,7 +211428,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2102,
@@ -211483,7 +211454,7 @@
         1,
         9
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1421,
@@ -211506,7 +211477,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1343,
@@ -211536,7 +211507,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2141,
@@ -211560,7 +211531,7 @@
         8,
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3075,
@@ -211588,7 +211559,7 @@
         1,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3039,
@@ -211603,18 +211574,15 @@
       "sourceKey": "Kiwi_Augment_Salvation_Description",
       "tooltip": {
         "revision": 1,
-        "description": "受到伤害导致你的生命值低于50%时，会释放一道冲击波，对敌方英雄造成〔动态数值〕魔法伤害并将其击退，同时为所有被命中的友方英雄回复〔动态数值〕生命值。",
-        "status": "partial",
-        "unresolved": [
-          "Damage",
-          "TotalHeal"
-        ],
+        "description": "受到伤害导致你的生命值低于50%时，会释放一道冲击波，对敌方英雄造成100–500（随等级） + 125%额外攻击力 + 75%法术强度魔法伤害并将其击退，同时为所有被命中的友方英雄回复200–550（随等级） + 200%额外攻击力 + 120%法术强度生命值。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_Augment_Salvation_Tooltip"
       },
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3129,
@@ -211629,9 +211597,10 @@
       "sourceKey": "Kiwi_Augment_SapMagic_Description",
       "tooltip": {
         "revision": 1,
-        "description": "每20秒，你的下次攻击额外造成80–300（随等级） + 5%额外生命值物理伤害，并为你回复50–250（随等级） + 8%最大生命值生命值攻击特效。\n\n每次施放技能，会使该效果的冷却时间缩减3秒。\n\n生命值回复：〔动态数值〕",
+        "description": "每20秒，你的下次攻击额外造成〔动态数值〕物理伤害，并为你回复50–250（随等级） + 8%最大生命值生命值攻击特效。\n\n每次施放技能，会使该效果的冷却时间缩减3秒。\n\n生命值回复：〔动态数值〕",
         "status": "partial",
         "unresolved": [
+          "CalcDamage",
           "f2"
         ],
         "sourceKey": "Kiwi_Augment_SapMagic_Tooltip"
@@ -211640,7 +211609,7 @@
         1,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2034,
@@ -211655,17 +211624,15 @@
       "sourceKey": "Kiwi_Augment_SharkTempest_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "鲨鱼们环绕着你的【雪球】，对它们途经的敌人们造成减速和100–200（随等级）魔法伤害。如果你的【雪球】命中了一个英雄，鲨鱼们会吸附至其身上并生成一阵鲨鱼暴风，从而对附近的敌人们造成每秒〔动态数值〕魔法伤害和持续3秒的40%减速。",
-        "status": "partial",
-        "unresolved": [
-          "AttachedDamagePerSecond"
-        ],
+        "description": "鲨鱼们环绕着你的【雪球】，对它们途经的敌人们造成减速和100–200（随等级）魔法伤害。如果你的【雪球】命中了一个英雄，鲨鱼们会吸附至其身上并生成一阵鲨鱼暴风，从而对附近的敌人们造成每秒30–90（随等级） + 25%额外攻击力 + 15%法术强度魔法伤害和持续3秒的40%减速。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_Augment_SharkTempest_Tooltip"
       },
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1373,
@@ -211693,7 +211660,7 @@
         5,
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2109,
@@ -211710,11 +211677,10 @@
       "sourceKey": "Kiwi_SnapBack_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "再次施放【适用技能】技能时会产生爆炸，造成〔动态数值〕魔法伤害，并回到你的原本位置。",
+        "description": "再次施放【适用技能】技能时会产生爆炸，造成20%法术强度 + 20%总攻击力 + 100–300（随等级）魔法伤害，并回到你的原本位置。",
         "status": "partial",
         "unresolved": [
-          "SpellName",
-          "SnapDamage"
+          "SpellName"
         ],
         "sourceKey": "Kiwi_SnapBack_Tooltip"
       },
@@ -211722,7 +211688,7 @@
         1,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1334,
@@ -211737,10 +211703,9 @@
       "sourceKey": "Kiwi_SnowballUpgrade_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "你的雪球获得50技能急速。\n击中时会产生一片区域，使其中的敌人受到（50 + 0.06×法术强度）%减速效果，以及在2秒的持续时间里每秒造成〔动态数值〕魔法伤害(总计〔动态数值〕魔法伤害)。",
+        "description": "你的雪球获得50技能急速。\n击中时会产生一片区域，使其中的敌人受到（50 + 0.06×法术强度）%减速效果，以及在2秒的持续时间里每秒造成100 + 60%法术强度 + 100%额外攻击力魔法伤害(总计〔动态数值〕魔法伤害)。",
         "status": "partial",
         "unresolved": [
-          "TotalDamagePerSecond",
           "TotalDamage"
         ],
         "sourceKey": "Kiwi_SnowballUpgrade_Tooltip"
@@ -211748,7 +211713,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2080,
@@ -211773,7 +211738,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1420,
@@ -211797,7 +211762,7 @@
         5,
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1375,
@@ -211822,7 +211787,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3025,
@@ -211848,7 +211813,7 @@
         4,
         0
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2116,
@@ -211877,7 +211842,7 @@
         1,
         8
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2054,
@@ -211905,7 +211870,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2115,
@@ -211931,7 +211896,7 @@
         "sourceKey": "Augment_SquishySlappyGrab_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3131,
@@ -211954,7 +211919,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2108,
@@ -211983,7 +211948,7 @@
         0,
         8
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2134,
@@ -212006,7 +211971,7 @@
         "sourceKey": "Augment_SurgeField_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1315,
@@ -212021,17 +211986,15 @@
       "sourceKey": "Kiwi_SwiftAndSafe",
       "tooltip": {
         "revision": 1,
-        "description": "在冲刺或闪烁后，获得持续2秒的〔动态数值〕护盾值。 (5秒冷却时间)",
-        "status": "partial",
-        "unresolved": [
-          "ShieldAmount"
-        ],
+        "description": "在冲刺或闪烁后，获得持续2秒的65–290（随等级） + 26%法术强度 + 65%额外攻击力护盾值。 (5秒冷却时间)",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "Kiwi_SwiftAndSafe_Tooltip"
       },
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3116,
@@ -212061,7 +212024,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2129,
@@ -212088,7 +212051,7 @@
         "sourceKey": "Augment_Terraind_Tooltip"
       },
       "tags": [],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3078,
@@ -212116,7 +212079,7 @@
         1,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3016,
@@ -212143,7 +212106,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3058,
@@ -212168,7 +212131,7 @@
       "tags": [
         4
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2076,
@@ -212199,7 +212162,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3079,
@@ -212226,7 +212189,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2136,
@@ -212255,36 +212218,34 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1415,
       "key": "Twinfire",
       "name": "双生火焰",
       "rarity": "kSilver",
-      "description": "造成技能伤害时，发射1+〔动态数值〕个飞弹，每个造成〔动态数值〕魔法伤害。\n\n此外，获得25%暴击几率。",
+      "description": "造成技能伤害时，发射1+〔动态数值〕个飞弹，每个造成10–30（随等级） + 7%额外攻击力 + 7%法术强度魔法伤害。\n\n此外，获得25%暴击几率。",
       "icon": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/default/assets/ux/kiwi/augments/icons/twinfire_small.png",
       "descriptionStatus": "partial",
       "catalogEnabled": true,
       "unresolved": [
-        "AdditionalMis",
-        "Damage"
+        "AdditionalMis"
       ],
       "sourceKey": "Kiwi_TwinFire_Summary",
       "tooltip": {
         "revision": 1,
-        "description": "造成技能伤害时，发射1+〔动态数值〕个飞弹，每个造成〔动态数值〕魔法伤害。\n\n此外，获得25%暴击几率。",
+        "description": "造成技能伤害时，发射1+〔动态数值〕个飞弹，每个造成10–30（随等级） + 7%额外攻击力 + 7%法术强度魔法伤害。\n\n此外，获得25%暴击几率。",
         "status": "partial",
         "unresolved": [
-          "AdditionalMis",
-          "Damage"
+          "AdditionalMis"
         ],
         "sourceKey": "Kiwi_TwinFire_Tooltip"
       },
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1349,
@@ -212307,7 +212268,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3055,
@@ -212330,7 +212291,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2157,
@@ -212345,17 +212306,15 @@
       "sourceKey": "UpgradeDeathDance_Description",
       "tooltip": {
         "revision": 1,
-        "description": "获得金币 250。\n\n死亡之舞的无视痛苦提升至近战 40% / 远程 15%所受伤害，并且在参与一次击杀后，即刻治疗〔动态数值〕生命值。",
-        "status": "partial",
-        "unresolved": [
-          "HealTotal_UpgradeDD_TT"
-        ],
+        "description": "获得金币 250。\n\n死亡之舞的无视痛苦提升至近战 40% / 远程 15%所受伤害，并且在参与一次击杀后，即刻治疗125%额外攻击力生命值。",
+        "status": "complete",
+        "unresolved": [],
         "sourceKey": "UpgradeDeathDance_Tooltip"
       },
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2140,
@@ -212378,7 +212337,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3150,
@@ -212401,7 +212360,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2143,
@@ -212424,7 +212383,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1379,
@@ -212447,7 +212406,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1346,
@@ -212471,7 +212430,7 @@
         3,
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1034,
@@ -212494,7 +212453,7 @@
       "tags": [
         5
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2097,
@@ -212523,7 +212482,7 @@
       "tags": [
         1
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2138,
@@ -212551,7 +212510,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 2132,
@@ -212574,7 +212533,7 @@
       "tags": [
         3
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 3081,
@@ -212599,7 +212558,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     },
     {
       "id": 1386,
@@ -212622,7 +212581,7 @@
       "tags": [
         2
       ],
-      "tooltipParserRevision": 2
+      "tooltipParserRevision": 3
     }
   ]
 }
