@@ -122,7 +122,7 @@ async function run(){
     await click('[data-action=build-later][data-id="3165"]');
     // Opening a guide below reads main's accepted state, not the renderer's
     // immediate preview. Observe the saved choice instead of a fixed delay.
-    await until(async()=>{const saved=(await state()).preparations.find(p=>p.id===member.champion&&p.role===member.role&&p.comboId===plan.id);return saved?.laterIds?.includes(3165);},'Selected late item was not saved');
+    await until(async()=>{const saved=(await state()).preparations.find(p=>p.id===member.champion&&p.role===member.role&&p.mode==='rift'&&p.comboId===plan.id);return saved?.laterIds?.includes(3165);},'Selected late item was not saved');
    }
   }
   assert.ok(await js('[...document.querySelectorAll("[data-action=build-partner]")].every(b=>b.textContent.length<40)'),'Partner controls must use champion names');
