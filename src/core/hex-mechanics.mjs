@@ -24,6 +24,7 @@ const rules={
  1022:['ARAM_Deft',/获得.*攻击速度/s],1077:['ARAM_SoulSiphon',/暴击.*治疗.*暴击几率/s],1080:['ARAM_TankItOrLeaveIt',/暴击几率.*会心防御.*所受伤害/s],
  1047:['ARAM_ItsCritical',/暴击几率/],1048:['ARAM_JeweledGauntlet',/技能.*暴击/s],
  1058:['ARAM_MysticPunch',/攻击特效.*冷却/s],
+ 1996:['ARAM_Upgrade_Sheen',/咒刃.*额外伤害.*治疗.*250金币/s],
  1118:['ARAM_CriticalHealing',/治疗.*护盾.*暴击/s],
  1129:['ARAM_Marksmage',/攻击.*法术强度/s],1141:['ARAM_AllForYou',/治疗.*护盾.*友军/s],
  1205:['ARAM_ADAPt',/额外攻击力.*法术强度/s],1328:['CriticalRhythm',/普攻.*暴击.*攻击速度/s],

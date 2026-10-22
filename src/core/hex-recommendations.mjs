@@ -33,13 +33,20 @@ function mechanicAdvice(data,champion,a,owned){
   if(p.build==='burn'||p.damageWeights.ap>=.5&&p.sustain){affinity+=3;reasons.push('适合反复施法命中，利用强化灼烧降低基础技能冷却；不把脱战或未命中算作持续收益。');}
  }
  if(p&&a.id===1058){
-  if(champion.id==='Hecarim'){
+  if(champion.id==='Camille'&&a.descriptionStatus==='complete'){
+   affinity+=2;conditional=true;reasons.push('用实际普攻与 Q 的强化攻击触发攻击特效减冷却；Q2 仍须至少等待1.5秒，技能冷却缩短不会取消这段等待。');
+  }
+  else if(champion.id==='Hecarim'){
    const partner=owned.find(other=>other.id===1029&&other.descriptionStatus==='complete'&&reviewed(other,data.patch));
    if(a.descriptionStatus==='complete'&&partner){affinity+=4;reasons.push('已拿到虚幻武器，技能命中可施加攻击特效，再联动秘术冲拳；同一目标仍有1秒间隔，不保证无限循环。');}
    else{conditional=true;reasons.push('先靠实际普攻或 E 的强化攻击触发；没有虚幻武器时，不能把所有技能伤害都算作攻击特效。');}
   }
   else if(sustainedAttackers.has(champion.id)){affinity+=3;reasons.push('当前英雄有持续普攻打法，可用实际攻击特效衔接基础技能；仍需安全攻击距离。');}
   else cautions.push('需要实际触发攻击特效；当前技能是否能触发不能只看技能造成伤害。');
+ }
+ if(p&&champion.id==='Camille'&&a.id===1996&&a.descriptionStatus==='complete'){
+  affinity+=2;conditional=true;reasons.push('先有咒刃装备才能利用强化的额外伤害与自疗；获得250金币不等于已经触发咒刃。');
+  cautions.push('咒刃有自身冷却，Q2 等待时间仍保留；不把额外伤害或技能增幅直接当作等比例真伤。');
  }
  if(p&&a.id===1129){
   if(p.damageWeights.ap>=.5&&apAttackers.has(champion.id)){affinity+=3;reasons.push('法强与穿插普攻的打法能同时利用；新增伤害是普攻上的物理伤害。');}
