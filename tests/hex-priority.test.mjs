@@ -56,8 +56,8 @@ test('duplicate owned marks remain bounded, and no rates or numeric strength sco
  const check=value=>{if(!value||typeof value!=='object')return;for(const [key,child]of Object.entries(value)){assert.ok(!['score','winRate','pickRate','sampleSize'].includes(key));check(child);}};check(result);
 });
 
-test('main/sidebar and in-game guide expose the same compact decision without replacing routes or inputs',()=>{
- const input=args('Jinx',[1141,1088,1047],[1048,1356]),html=renderHexComparison(input);assert.match(html,/data-hex-option-input/);assert.match(html,/本局组合/);assert.match(html,/联动与下一张|查看依据/);assert.match(html,/优先看这项/);assert.ok(html.indexOf('data-augment="1141"')<html.indexOf('data-augment="1088"'));
+test('main/sidebar and in-game guide keep the same decision with three comparison options',()=>{
+ const input=args('Jinx',[1141,1088,1047],[1048,1356]),html=renderHexComparison(input);assert.doesNotMatch(html,/data-hex-option-input/);assert.match(html,/本局组合/);assert.match(html,/联动与下一张|查看依据/);assert.match(html,/优先看这项/);assert.ok(html.indexOf('data-augment="1141"')<html.indexOf('data-augment="1088"'));
  const guide=createGuideModel(data,{...selectGuide(null,{id:'Jinx',role:'bottom',mode:'hex',compareIds:input.options,ownedAugmentIds:input.owned}),compact:false}),rendered=renderGuide({model:guide},'augments',false,()=>'<img>');
  assert.deepEqual(guide.hexDecision.set,hexDecision(input).set);assert.deepEqual(guide.comparison.map(row=>row.id),input.options);assert.match(rendered,/本局组合/);assert.match(rendered,/优先看这项/);assert.doesNotMatch(rendered,/流派已成形|胜率\s*\d/);
 });
