@@ -11,16 +11,24 @@ export function dependencyRecords(entry,catalog,data){
  }
  return result;
 }
-export function reviewBaseline(entry,catalog,data){return Object.fromEntries(Object.entries(dependencyRecords(entry,catalog,data)).map(([id,value])=>[id,fingerprint(value)]));}
-export function reviewSourceAnchors(entry,catalog,data,options){
+// A review fingerprints the same champion, item and rune records once for every
+// plan that mentions them. A memo supplied by the caller scopes that reuse to a
+// single data snapshot, so callers that mutate a snapshot still see changes.
+function recordDigest(memo,id,value){
+ if(!memo)return fingerprint(value);
+ const known=memo.get(id);if(known!==undefined)return known;
+ const digest=fingerprint(value);memo.set(id,digest);return digest;
+}
+export function reviewBaseline(entry,catalog,data,memo){return Object.fromEntries(Object.entries(dependencyRecords(entry,catalog,data)).map(([id,value])=>[id,recordDigest(memo,id,value)]));}
+export function reviewSourceAnchors(entry,catalog,data,options,memo){
  const records=dependencyRecords(entry,catalog,data);
  return Object.fromEntries(Object.entries(records).filter(([id])=>id.startsWith('champion:')).map(([id,value])=>{
   const champion=data.champions.find(row=>row.id===id.slice(9));if(!champion)throw Error('英雄资料不完整，保留原复核记录');
-  return [champion.id,captureMechanicSourceAnchor(champion,data.patch,fingerprint(value),options)];
+  return [champion.id,captureMechanicSourceAnchor(champion,data.patch,recordDigest(memo,id,value),options)];
  }));
 }
-export function dependencyChanges(entry,catalog,data){
- const current=reviewBaseline(entry,catalog,data),prior=entry.reviewBaseline,ids=new Set([...Object.keys(current),...Object.keys(prior||{})]);
+export function dependencyChanges(entry,catalog,data,memo){
+ const current=reviewBaseline(entry,catalog,data,memo),prior=entry.reviewBaseline,ids=new Set([...Object.keys(current),...Object.keys(prior||{})]);
  const changes=[...ids].filter(id=>prior&&current[id]!==prior[id]).map(id=>{
   const [kind,key]=id.split(':');const name=kind==='champion'?data.champions.find(c=>c.id===key)?.name:kind==='item'?data.items[key]?.name:data.runes.flatMap(t=>t.slots.flatMap(s=>s.runes)).find(r=>r.id===Number(key))?.name;
   return {kind,id:key,name:name||key,reason:!(id in current)?'方案依赖已变化':Object.hasOwn(prior,id)?'资料内容发生变化':'新增依赖，需复核'};
