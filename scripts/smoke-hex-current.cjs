@@ -44,10 +44,10 @@ async function run(){
  assert.equal(await j(main,'!!document.querySelector(".augment-card[data-id=\\"3059\\"]")'),true);
  // Exact current source coefficients and unknown live counters must survive
  // the real packaged handbook/detail path, not just the collector parser.
- for(const [id,text,unknown]of [[3018,'每1%攻击速度转为0.7%暴击伤害',true],[3052,'15%额外攻击力 + 20%法术强度',true],[3134,'600码内每有一个敌方英雄，你就会获得15%攻击速度、10护甲和10魔法抗性',false],[3039,'200–550（随等级） + 200%额外攻击力 + 120%法术强度',false],[3058,'每1攻击力转为1.8%攻击速度',true],[3150,'（10 + 0.02×法术强度）%最大生命值',false],[2005,'40%总攻击力 + 25%法术强度',true],[3049,'250%额外护甲 + 50–125（随等级）',false],[3129,'回复50–250（随等级） + 8%最大生命值',true],[1051,'44–320（随等级） + 140%额外攻击力 + 76%法术强度',true]]){
+ for(const [id,text,unknown]of [[3018,'每1%攻击速度转为0.7%暴击伤害',true],[3052,'15%额外攻击力 + 20%法术强度',true],[3134,'600码内每有一个敌方英雄，你就会获得15%攻击速度、10护甲和10魔法抗性',false],[3039,'200–550（随等级） + 200%额外攻击力 + 120%法术强度',false],[3058,'每1攻击力转为1.8%攻击速度',true],[3150,'（10 + 0.02×法术强度）%最大生命值',false],[2005,'4.25/4.5/4.75/5（1/6/11/16级起）%移动速度',true],[3049,'250%额外护甲 + 50–125（随等级）',false],[3129,'回复50–250（随等级） + 8%最大生命值',true],[1051,'44–320（随等级） + 140%额外攻击力 + 76%法术强度',true],[1324,'（25 + 0.35×额外护甲 + 0.35×额外魔抗）%治疗和护盾强度',false],[2076,'1/2/3（1/7/11级起）护甲或魔抗',true],[3121,'3/4/5/6（1/7/11/15级起）个水果',true],[2139,'125%额外护甲 + 125%额外魔抗物理伤害',true],[2115,'50%额外护甲 + 50%额外魔抗护盾值',true]]){
   await click('.augment-card[data-id="'+id+'"]');await until(()=>j(main,'!!document.querySelector("[role=dialog]")'),'Detail missing '+id);
   const shown=await j(main,'document.querySelector("[role=dialog]").textContent');assert(shown.includes(text),'Current coefficient missing '+id);assert.equal(shown.includes('〔动态数值〕'),unknown,'Live counter boundary '+id);
-  assert.equal(data.augments.find(a=>a.id===id).tooltipParserRevision,3);await capture('numeric-detail-'+id+'.png');await click('[data-action=close]');
+  assert.equal(data.augments.find(a=>a.id===id).tooltipParserRevision,4);await capture('numeric-detail-'+id+'.png');await click('[data-action=close]');
  }
  const handbookGeometry=[],detailGeometry=[],handbookWidths=[1180,1050];
  // Stay within the production main window's 1050 minimum; Electron silently
