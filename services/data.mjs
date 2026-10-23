@@ -149,7 +149,8 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     items:Object.fromEntries(Object.entries(items.data).map(([id,i]) => [id, {
       id:Number(id), name:i.name, description:cleanText(i.description), tags:i.tags, gold:i.gold, maps:i.maps,
       from:i.from || [], into:i.into || [], inStore:i.inStore !== false, requiredAlly:i.requiredAlly,requiredChampion:i.requiredChampion,stats:i.stats,specialRecipe:i.specialRecipe||null,
-      icon:`${DD}/cdn/${version}/img/item/${i.image.full}`, ...(itemDescriptions?.[id]?.tooltip?{tooltip:itemDescriptions[id].tooltip}:{}),
+      icon:`${DD}/cdn/${version}/img/item/${i.image.full}`, ...(itemDescriptions?.[id]?.tooltip?{tooltip:itemDescriptions[id].tooltip,tooltipParserRevision:itemDescriptions[id].tooltipParserRevision}:{}),
+      ...(itemDescriptions?.[id]?.modeTooltips?{modeTooltips:itemDescriptions[id].modeTooltips}:{}),
     }])),
     runes, spells:spells.data, augments,
   };
