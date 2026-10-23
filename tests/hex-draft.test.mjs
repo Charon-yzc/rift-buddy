@@ -28,7 +28,7 @@ test('bench projection is bounded, deduplicated and drops all private fields',()
 test('Hex lineup and configuration pages have separate content and preserve round context',()=>{
  const c=client(),round={hero:'Lux',context:'one',revision:2,gameId:'1',options:[],owned:[]},props={data,client:c,hexRound:round,tab:'recommend',configurationStatus:{},preferences:{}};
  const lineup=companionView(props);assert.match(lineup,/我的阵容/);assert.match(lineup,/海克斯阵容/);assert.doesNotMatch(lineup,/本轮强化三选一|data-hex-option-input|英雄强化建议/);
- const plan=companionView({...props,tab:'plan'});assert.match(plan,/data-hex-option-input/);assert.match(plan,/强化池/);assert.doesNotMatch(plan,/海克斯阵容|阵容备选/);assert.match(plan,/data-hex-context="one"/);
+ const plan=companionView({...props,tab:'plan'});assert.match(plan,/data-hex-option-input/);assert.match(plan,/强化池/);assert.doesNotMatch(plan,/海克斯阵容|阵容备选/);assert.match(plan,/data-hex-context="one"/);assert.doesNotMatch(plan,/hex-current-hero|本局指引|companion-persistent/);
 });
 
 test('same-patch hero source changes withdraw mechanical claims without hiding the real bench',()=>{
