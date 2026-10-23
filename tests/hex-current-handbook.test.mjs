@@ -55,7 +55,7 @@ test('four selection stages are noninteractive context, never four copies claime
  const pool=hexHeroPool({data,hero:'Yasuo'}),html=hexPoolView(pool);assert.equal(pool.rules.stages.length,4);assert.equal(pool.roundsComplete,false);assert.equal(pool.complete,false);
  for(const label of ['首次','第二次','第三次','第四次'])assert(html.includes(label));assert.equal(pool.rules.stageTimingsConfirmed,false);assert(pool.rules.stages.every(s=>!s.timing));assert.match(html,/不代表四次池子相同/);assert.doesNotMatch(html,/data-round="[1-4]"/);assert(!html.includes('value="disabled"'));
  const configuration=hexConfigurationView({data,hero:data.champions.find(c=>c.id==='Yasuo'),round:{context:'isolated',revision:0,options:[],owned:[]}});
- assert.match(configuration,/<h3>强化参考<\/h3>/);assert.match(configuration,/常规四次强化选择/);assert.doesNotMatch(configuration,/目录停用|<h3>强化池<\/h3>/);for(const a of retired)assert(!configuration.includes('data-game-tooltip-id="'+a.id+'"'));
+ assert.match(configuration,/<h3>强化池/);for(const label of ['总池','第一次','第二次','第三次','第四次'])assert(configuration.includes(label));for(let n=1;n<=4;n++){const panel=configuration.split('data-stage="'+n+'">')[1].split('</div>')[0];assert(panel.includes('候选池待核实'));assert(!panel.includes('<img'));}for(const a of retired)assert(!configuration.includes('data-game-tooltip-id="'+a.id+'"'));
 });
 
 test('full configuration favorite caption follows old-only, add current, remove current without deleting the old record',()=>{

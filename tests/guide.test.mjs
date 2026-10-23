@@ -35,9 +35,9 @@ test('guide requests reject malformed heroes, modes, conditions, plans and overs
 });
 test('guide state round trip retains local progress and importing another backup preserves local guide',()=>{
  const guide={...selectGuide(null,selection),completedItems:['3031'],opacity:.85,collapsed:true};
- const state={...defaultState(),guide},restored=validateState(state);assert.deepEqual(restored.guide,guide);
+ const state={...defaultState(),guide},restored=validateState(state);assert.deepEqual(restored.guide,{...guide,collapsed:false});
  const merged=mergeState(restored,{...defaultState(),guide:selectGuide(null,{...selection,id:'Jhin'})},data.champions);
- assert.deepEqual(merged.guide,guide);assert.equal(validateState({...state,guide:{...guide,completedItems:['private',3031],opacity:0}}).guide.opacity,1);
+ assert.deepEqual(merged.guide,{...guide,collapsed:false});assert.equal(validateState({...state,guide:{...guide,completedItems:['private',3031],opacity:0}}).guide.opacity,1);
 });
 test('current player shortcut respects manual positions and never substitutes another player',()=>{
  const session={myTeam:[{cellId:1,championId:22,assignedPosition:'BOTTOM'},{cellId:2,championId:99,assignedPosition:'UTILITY'}],localPlayerCellId:1};
@@ -49,18 +49,18 @@ test('current player shortcut respects manual positions and never substitutes an
  const unknown={...session,myTeam:[{cellId:1,championId:22,assignedPosition:''}]};assert.equal(currentPlayerSelection(unknown,data.champions).positionKnown,false);
 });
 
-test('guide display mode persists as a floating ball across selections and saves',()=>{
+test('obsolete floating-ball state migrates without clearing selection or purchase progress',()=>{
  const base=selectGuide(null,selection);
  assert.equal(base.ball,false);
  assert.equal(validateGuideState({...base,ball:1}).ball,false);
  const ball=selectGuide({...base,ball:true},{...selection,coreIndex:1});
- assert.equal(ball.ball,true);assert.deepEqual(ball.completedItems,base.completedItems);
- assert.equal(validateState({...defaultState(),guide:ball}).guide.ball,true);
+ assert.equal(ball.ball,false);assert.equal(ball.compact,true);assert.deepEqual(ball.completedItems,base.completedItems);
+ assert.equal(validateState({...defaultState(),guide:ball}).guide.ball,false);
  assert.equal(validateGuideState({...ball,ball:undefined}).ball,false);
  const strip=selectGuide({...base,strip:true},{...selection,coreIndex:1});
- assert.equal(strip.strip,true);assert.equal(strip.ball,false);
+ assert.equal(strip.strip,false);assert.equal(strip.ball,false);
  assert.equal(validateGuideState({...strip,strip:1}).strip,false);
- assert.equal(validateState({...defaultState(),guide:strip}).guide.strip,true);
+ assert.equal(validateState({...defaultState(),guide:strip}).guide.strip,false);
 });
 
 test('duel picks validate, persist across selections and clear on a new game',async()=>{

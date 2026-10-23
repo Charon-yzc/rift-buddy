@@ -21,10 +21,10 @@ test('one sanitized live snapshot drives separate advice and estimates through t
  assert.equal(m.estimate.duels.length,2);assert.equal(m.estimate.danger,false);
  assert.equal(m.estimate.curHp,20);assert.equal(m.situation.enemies.length,2);
  const html=renderGuide({model:{...m,collapsed:false}},'items',false,(_kind,id)=>`<img src="${id}">`);
- assert.match(html,/本次购买为什么/);assert.doesNotMatch(html,/verdict danger|guide-duel-own/);
+ assert.match(html,/成装顺序/);assert.doesNotMatch(html,/verdict danger|guide-duel-own/);
  const focused=createGuideModel(data,selectGuide(null,{...selection,threatId:'Jhin'}),live);
  assert.equal(focused.automaticTarget,true);assert.equal(focused.estimate.enemy.id,'Jhin');
- assert.match(renderGuide({model:focused},'combat',false,()=>'<img>'),/guide-duel-own/);
+ assert.doesNotMatch(renderGuide({model:focused},'combat',false,()=>'<img>'),/guide-duel-own|data-tab=/);
  const manual=createGuideModel(data,{...guide,liveAdvice:false},live);
  assert.equal(manual.automaticTarget,false);assert.deepEqual(manual.estimate,m.estimate);
  assert.equal(Object.hasOwn(m.estimate,'liveBuy'),false);
@@ -58,7 +58,7 @@ test('different owned footwear replaces the unbought pair and invalidates the ol
  const m=createGuideModel(data,guide,live);
  assert.equal(m.next,null);assert.equal(m.action,null);assert.equal(m.routeBlocked.length,0);assert(m.targetBlockedReason.includes('已持有另一双成鞋'));assert.equal(m.purchaseTarget,'');assert(m.targetFallback);assert(!m.route.some(i=>i.id==='3047'));assert(m.route.some(i=>i.id==='3111'));
  const html=renderGuide({model:{...m,collapsed:false}},'items',false,(_kind,id)=>`<img src="${id}">`);
- assert.match(html,/已持有另一双成鞋/);assert.match(html,/这套路线已完成/);assert.match(html,/<option value="3047" disabled/);
+ assert.match(html,/完整路线已持有/);assert.match(html,/src="3111"/);assert.doesNotMatch(html,/src="3047"/);
  const upgraded=createGuideModel(data,guide,{...live,inventory:inventory.filter(i=>i.id!=='3111').concat({id:'3174',count:1})});
  assert.equal(upgraded.routeBlocked.length,0);assert.equal(upgraded.next,null);assert.ok(upgraded.autoCompletedItems.includes('3047'));
 });

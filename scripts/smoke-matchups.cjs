@@ -112,27 +112,28 @@ async function run(){
   const factory=require(path.join(base,'electron/guide-window.cjs'));
   const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);await fs.writeFile(saveFile,JSON.stringify(state,null,2));},getModel:()=>core.createGuideModel(data,state,{...live,at:Date.now()}),currentSelection:()=>null,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:false}),isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
   guide.show();const w=guide.window(),{js,click,change}=actions(w);
-  await until(()=>js('!!window.guide'),'Guide preload missing');await js('window.guide.control("layout","details")');await until(()=>js('!!document.querySelector("[data-tab=team]")'),'Team guide not loaded');await click('[data-tab=team]');
+  await until(()=>js('!!window.guide'),'Guide preload missing');await until(()=>js('!!document.querySelector(".compact-guide-main")'),'Compact guide missing');
+  const guideControl=(action,value)=>js("window.guide.control("+JSON.stringify(action)+","+JSON.stringify(value)+")");
   if(restored){const initial=await js('window.guide.bootstrap()');assert.equal(initial.model.selection.id,'Vladimir');assert.equal(initial.model.selection.threatId,'Janna');assert.equal(initial.model.coach.sequenceSource,'team');for(const step of plans[1].steps)assert.ok(initial.model.coach.sequence.includes(step));}
   const verified=[];
   for(const plan of plans)for(const member of plan.members){
    state=core.selectGuide(state,{id:member.champion,role:member.role,mode:'rift',comboId:plan.id,creativePlan:plan});live=liveFor(member.champion,member.role);guide.publish();
    await until(()=>js('window.guide.bootstrap().then(b=>b.model?.selection.id==='+JSON.stringify(member.champion)+')'),'Member plan missing');
-   await change('#guide-stage','key');
+   await guideControl('stage','key');
    for(const enemyId of ['Morgana','Janna','Soraka']){
-    await change('#guide-threat',enemyId);
+    await guideControl('threatId',enemyId);
     const payload=await js('window.guide.bootstrap()');assert.equal(payload.model.coach.matchup.enemy.id,enemyId);assert.equal(payload.model.coach.sequenceSource,'team');assert.deepEqual(payload.model.coach.unlearned,[]);
     for(const step of plan.steps)assert.ok(payload.model.coach.sequence.includes(step));
-    assert.ok(await js('document.querySelector(".hero-coach .coach-sequence").textContent.endsWith('+JSON.stringify(plan.steps.join(' → '))+')'),'Rendered enemy plan replaced the accepted team order');
+    assert.ok(await js('window.guide.bootstrap().then(b=>b.model.coach.sequence.endsWith('+JSON.stringify(plan.steps.join(' → '))+'))'),'Rendered enemy plan replaced the accepted team order');
    }
    if(member.champion==='Syndra'){
-    live.skills.E=0;guide.publish();await until(()=>js('!!document.querySelector("[data-guide-section=coach-future-sequence]")'),'Own missing spell did not gate the team action');
+    live.skills.E=0;guide.publish();await until(()=>js('window.guide.bootstrap().then(b=>!!b.model.coach.futureSequence)'),'Own missing spell did not gate the team action');
     const missing=await js('window.guide.bootstrap()');assert.deepEqual(missing.model.coach.unlearned,['E']);for(const step of plan.steps)assert.ok(missing.model.coach.futureSequence.includes(step));
     live.skills.E=1;guide.publish();
    }
-   live.enemies=[];live.roster=[];guide.publish();await until(()=>js('document.querySelectorAll("[data-matchup-enemy]").length===0'),'Withdrawn enemy leaked into team coaching');
+   live.enemies=[];live.roster=[];guide.publish();await until(()=>js('window.guide.bootstrap().then(b=>!b.model.coach.matchup)'),'Withdrawn enemy leaked into team coaching');
    const withdrawn=await js('window.guide.bootstrap()');for(const step of plan.steps)assert.ok(withdrawn.model.coach.sequence.includes(step));
-   live=liveFor(member.champion,member.role);guide.publish();await change('#guide-threat','Janna');
+   live=liveFor(member.champion,member.role);guide.publish();await guideControl('threatId','Janna');
    await js('window.guide.control("copy")');for(const step of plan.steps)assert.ok(copiedTexts.at(-1).includes(step));
    await js('[...document.querySelectorAll("details")].forEach(d=>d.open=true)');await capture(w,member.champion+'-team-order.png');verified.push(member.champion);
   }
@@ -149,42 +150,41 @@ async function run(){
   let current={id:'Nautilus',role:'support',mode:'rift',positionKnown:true,comboId:'naut-samira',comboKnown:true};
   const factory=require(path.join(base,'electron/guide-window.cjs'));
   const guide=factory({root:base,getState:()=>state,setState:async next=>{state=core.validateGuideState(next);},getModel:()=>core.createGuideModel(data,state,{...live,at:Date.now()},current),currentSelection:()=>current,prepareCurrent:async()=>true,getPreferences:()=>({guideAutoShow:false}),isQuitting:()=>true,showMain:()=>{},diagnostic:()=>{}});
-  guide.show();const w=guide.window(),{js,click,change}=actions(w);await until(()=>js('!!window.guide'),'Guide preload missing');await js('window.guide.control("layout","details")');await until(()=>js('!!document.querySelector("[data-tab=team]")'),'Guide not loaded');await click('[data-tab=team]');
+  guide.show();const w=guide.window(),{js,click,change}=actions(w);await until(()=>js('!!window.guide'),'Guide preload missing');await until(()=>js('!!document.querySelector(".compact-guide-main")'),'Compact guide missing');
+  const guideControl=(action,value)=>js("window.guide.control("+JSON.stringify(action)+","+JSON.stringify(value)+")");
   const plans={};for(const id of ['Morgana','Janna','Yuumi']){
-   await change('#guide-threat',id);await until(()=>js('document.querySelector("[data-matchup-enemy]")?.dataset.matchupEnemy==='+JSON.stringify(id)),id+' guide plan missing');
-   plans[id]=await js('document.querySelector(".hero-coach .coach-action").textContent');
+   await guideControl('threatId',id);await until(()=>js('window.guide.bootstrap().then(b=>b.model.coach.matchup?.enemy.id==='+JSON.stringify(id)+')'),id+' guide plan missing');
+   plans[id]=await js('window.guide.bootstrap().then(b=>b.model.coach.action)');
   }
-  assert.equal(new Set(Object.values(plans)).size,3);await capture(w,'guide-yuumi-plan.png');assert.equal(await js('document.querySelector("[data-matchup-enemy]").dataset.matchupEnemy'),'Yuumi');
-  await change('#guide-threat','Janna');await change('#guide-stage','opening');const opening=await js('document.querySelector(".hero-coach .coach-action").textContent');
-  await change('#guide-stage','later');assert.notEqual(await js('document.querySelector(".hero-coach .coach-action").textContent'),opening);
-  const duoActions={},actionGeometries={};for(const stage of ['opening','key','later']){
-   await change('#guide-stage',stage);await until(()=>js('document.querySelector("[data-duo-stage]")?.dataset.duoStage==='+JSON.stringify(stage)),'Duo phase did not follow guide stage');
-   duoActions[stage]=await js('document.querySelector(".duo-own-action").textContent');
-   const geometry=await js('(()=>{const action=document.querySelector(".expanded main .duo-own-action").getBoundingClientRect(),main=document.querySelector("main").getBoundingClientRect();return {top:action.top,bottom:action.bottom,height:action.height,mainTop:main.top,mainBottom:main.bottom};})()');
-   assert.ok(geometry.height>0&&geometry.top>=geometry.mainTop&&geometry.bottom<=geometry.mainBottom,'Own actionable guidance must be visible and fit the first team screen: '+stage);
-   actionGeometries[stage]=geometry;
+  assert.equal(new Set(Object.values(plans)).size,3);await capture(w,'guide-yuumi-plan.png');assert.equal(await js('window.guide.bootstrap().then(b=>b.model.coach.matchup?.enemy.id)'),'Yuumi');
+  await guideControl('threatId','Janna');await guideControl('stage','opening');const opening=await js('window.guide.bootstrap().then(b=>b.model.coach.action)');
+  await guideControl('stage','later');assert.notEqual(await js('window.guide.bootstrap().then(b=>b.model.coach.action)'),opening);
+  const duoActions={};for(const stage of ['opening','key','later']){
+   await guideControl('stage',stage);await until(()=>js('window.guide.bootstrap().then(b=>b.model.stageHint.id==='+JSON.stringify(stage)+')'),'Duo phase did not follow guide stage');
+   duoActions[stage]=await js('window.guide.bootstrap().then(b=>b.model.stageHint.play.ownAction)');
+   assert.equal(await js('!!document.querySelector("[data-tab],.duo-own-action")'),false,"Narrative must stay out of the overlay");
   }
   assert.equal(new Set(Object.values(duoActions)).size,3);
   await capture(w,'guide-own-first-screen.png');
-  live.enemies=live.enemies.filter(e=>e.id!=='Janna');live.roster=live.roster.filter(p=>p.champion!=='Janna');guide.publish();await until(()=>js('document.querySelectorAll("[data-matchup-enemy]").length===0'),'Guide leaked a disappeared opponent');
-  await change('#guide-threat','Morgana');await js('window.guide.control("new-game")');await until(()=>js('document.querySelectorAll("[data-matchup-enemy]").length===0'),'Guide retained previous-game opponent');
+  live.enemies=live.enemies.filter(e=>e.id!=='Janna');live.roster=live.roster.filter(p=>p.champion!=='Janna');guide.publish();await until(()=>js('window.guide.bootstrap().then(b=>!b.model.coach.matchup)'),'Guide leaked a disappeared opponent');
+  await guideControl('threatId','Morgana');await js('window.guide.control("new-game")');await until(()=>js('window.guide.bootstrap().then(b=>!b.model.coach.matchup)'),'Guide retained previous-game opponent');
   assert.equal(state.selection.threatId,undefined);assert.equal(state.selection.comboId,'naut-samira');
   state=core.selectGuide(state,{id:'Samira',role:'bottom',mode:'rift',comboId:'naut-samira'});current={...current,id:'Samira',role:'bottom'};live={...live,champion:'Samira'};live.roster=[...live.roster.filter(p=>p.side==='enemy'),{champion:'Nautilus',side:'ally',self:false,inventory:[],itemsKnown:true,level:7}];guide.publish();
-  await until(()=>js('document.querySelector(".hero-coach h3")?.textContent.includes("莎弥拉")'),'Guide kept previous partner role');await change('#guide-stage','key');
-  assert.ok((await js('document.querySelector(".hero-coach .coach-action").textContent')).includes('S 和安全近身'));assert.equal(state.selection.role,'bottom');await capture(w,'guide-samira-key.png');
+  await until(()=>js('window.guide.bootstrap().then(b=>b.model.champion.id==="Samira")'),'Guide kept previous partner role');await guideControl('stage','key');
+  assert.ok((await js('window.guide.bootstrap().then(b=>b.model.coach.action)')).includes('S 和安全近身'));assert.equal(state.selection.role,'bottom');await capture(w,'guide-samira-key.png');
   const soloRoleActions={},rolePlans=await import(pathToFileURL(path.join(base,'src/core/role-plays.mjs')).href);
   for(const [id,role]of [['Garen','top'],['Ahri','mid'],['LeeSin','jungle'],['Sejuani','jungle']]){
    state=core.selectGuide(null,{id,role,mode:'rift'});current={id,role,mode:'rift',positionKnown:true,comboKnown:true};
-   live={...live,champion:id,level:12,gameTime:1600,enemies:[],allies:[],roster:[]};guide.publish();await js('window.guide.control("layout","details")');await click('[data-tab=team]');
-   await until(()=>js('document.querySelector(".hero-coach h3")?.textContent.includes('+JSON.stringify(hero(id).name)+')'),'Solo role plan missing: '+id);
+   live={...live,champion:id,level:12,gameTime:1600,enemies:[],allies:[],roster:[]};guide.publish();
+   await until(()=>js('window.guide.bootstrap().then(b=>b.model.champion.name.includes('+JSON.stringify(hero(id).name)+'))'),'Solo role plan missing: '+id);
    const actions={};for(const stage of ['opening','key','later']){
-    await change('#guide-stage',stage);
-    actions[stage]=await js('document.querySelector(".hero-coach .coach-action").textContent');
+    await guideControl('stage',stage);
+    actions[stage]=await js('window.guide.bootstrap().then(b=>b.model.coach.action)');
     assert.equal(actions[stage],rolePlans.rolePlay(id,role,stage).action,id+':'+stage);
    }
    assert.equal(new Set(Object.values(actions)).size,3);soloRoleActions[id+':'+role]=actions;await capture(w,'guide-'+id+'-'+role+'-later.png');
   }
-  report={passed:true,archiveSha256:release.archiveSha256,distinctOwnPlans:true,manualStageAffectsAction:true,publicTargetOnly:true,vanishedTargetCleared:true,newGameCleared:true,comboKept:true,threeDuoPhases:true,duoActions,actionGeometries,partnerRoleSwap:true,soloRoleActions,runeWrites};
+  report={passed:true,archiveSha256:release.archiveSha256,distinctOwnPlans:true,manualStageAffectsAction:true,publicTargetOnly:true,vanishedTargetCleared:true,newGameCleared:true,comboKept:true,threeDuoPhases:true,duoActions,compactWithoutNarrative:true,partnerRoleSwap:true,soloRoleActions,runeWrites};
  }
  assert.equal(runeWrites,0);await fs.writeFile(path.join(root,'result.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));app.quit();
 }

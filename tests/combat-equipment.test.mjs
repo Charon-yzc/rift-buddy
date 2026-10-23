@@ -69,8 +69,8 @@ test('unresolved public forms omit the percent-health item effect with an explic
  const state=selectGuide(null,{id:'Gnar',role:'top',mode:'rift',conditions:[],threatId:'Ahri'}),live=snapshot('Gnar',null);
  const model=createGuideModel(data,state,live);
  assert.equal(model.estimate.mineWindow.percentOnHitUnknown,true);
- assert.ok(renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>').includes('形态待确认，未计破败'));
- assert.ok(renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>').includes('近战或远程形态未确认，破败百分比伤害未计入'));
+ const html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
  const ranged=createGuideModel(data,state,snapshot('Gnar','GnarQ'));
  assert.equal(ranged.estimate.mineWindow.percentOnHitUnknown,false);assert.ok(ranged.estimate.mineWindow.items>0);
  assert.equal(state.selection.id,'Gnar');

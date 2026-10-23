@@ -1,6 +1,6 @@
 const path=require('node:path');const {pathToFileURL}=require('node:url');
 const {jungleWidgetPlacement,jungleWidgetOffset,guideWindowLimits}=require('../src/core/guide-placement.mjs');
-module.exports=function createJungleWindow({root,getState,setState,getPayload,getArea,getGameBounds,getScale,isQuitting,onChange,showDetails,diagnostic,isActive=()=>getState()?.selection?.mode!=='hex'}){
+module.exports=function createJungleWindow({root,getState,setState,getPayload,getArea,getGameBounds,getScale,isQuitting,onChange,diagnostic,isActive=()=>getState()?.selection?.mode!=='hex'}){
  const {BrowserWindow,ipcMain}=require('electron');let win=null,moving=false,timer,last='',requested=false;
  const peek=require('./window-peek.cjs')({root,getWindow:()=>win,getArea,title:'野区规划',onRestore:()=>show()});
  const resize=require('./window-resize.cjs')({getWindow:()=>win,getArea,getLimits:area=>guideWindowLimits('jungle',area,getScale()),onStart:()=>clearTimeout(timer),onEnd:remember});
@@ -22,7 +22,7 @@ module.exports=function createJungleWindow({root,getState,setState,getPayload,ge
  function show(){if(!isActive())return;peek.unfold();requested=true;if(!getState()||getState().jungleWidget?.enabled===false||!eligible(getPayload()))return;if(!win)create();else{fit();win.showInactive();publish();}}
  function guard(name,handler){ipcMain.handle(name,(event,...args)=>{if(!win||event.sender!==win.webContents||event.senderFrame!==win.webContents.mainFrame)throw Error('不允许此操作');return handler(...args);});}
  guard('jungle-bootstrap',getPayload);guard('jungle-control',async(action,value)=>{if(!isActive())throw Error('当前模式不使用此窗口');if(action==='fold'){resize.cancel();peek.fold();return true;}if(['resize-start','resize','resize-end','resize-key'].includes(action))return resize.control(action,value);
-  if(action==='hide'){await close();return true;}if(action==='details'){await showDetails();return true;}
+  if(action==='hide'){await close();return true;}if(action==='details')throw Error('详情窗口已移除');
   if(action==='note'){
    const m=getPayload()?.model,current=getState();if(!m?.jungle||!current)throw Error('当前不是峡谷打野指引');
    if(typeof value!=='string'||value.length>100||!(['situation:invaded','situation:recalled','situation:no-window','half:red','half:blue','stage:opening','stage:rotation','resume'].includes(value)||/^(?:step:[A-Za-z][A-Za-z0-9-]{1,79}\.(?:\d{1,2}|reset)|adopt:[A-Za-z][A-Za-z0-9-]{1,79})$/.test(value)))throw Error('野区标记不正确');

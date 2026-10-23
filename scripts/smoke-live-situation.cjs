@@ -33,18 +33,12 @@ async function run(){
  await gjs('window.guide.control("threatId","Jhin")');
  await until(async()=>{const m=await model();return m?.automaticTarget&&m.next.id==='1029';},'Dynamic armor advice missing');
  assert.match((await model()).nextReason,/烬/);
- if((await model()).collapsed)await gjs('window.guide.control("collapse")');
- await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=items]").click()');
- await until(()=>gjs('!!document.querySelector(".purchase-reason")'),'Purchase rationale not rendered');
- assert.ok((await gjs('document.querySelector(".purchase-reason").textContent')).includes((await model()).nextReason),'Rendered purchase reason differs from the current target');
- await gjs('document.images&&[...document.images].forEach(image=>image.loading="eager")');
- await until(()=>gjs('[...document.images].every(i=>i.complete&&i.naturalWidth>0)'),'Offline images missing');
- await fs.writeFile(path.join(root,'equipment-reasons.png'),(await guide.webContents.capturePage()).toPNG());
- // Exercise the rendered action and the real preload/IPC, not a standalone model.
- await gjs('document.querySelector("[data-action=live-advice]").click()');
- await until(async()=>!(await model()).liveAdvice,'Disable did not persist');assert.equal((await model()).automaticTarget,false);
- await until(()=>gjs('document.querySelector("[data-action=live-advice]")?.getAttribute("aria-pressed")==="false"&&!document.querySelector("[data-action=live-advice]").disabled'),'Disabled toggle did not render');
- await gjs('document.querySelector("[data-action=live-advice]").click()');await until(async()=>(await model()).liveAdvice,'Enable did not persist');
+ await until(()=>gjs('!!document.querySelector(".compact-next")'),"Compact purchase missing");
+ await until(async()=>{const m=await model();return (await gjs('document.querySelector(".compact-next").textContent')).includes(m.completeGear.next.name);},'Compact complete-gear target not synchronized');
+ await fs.writeFile(path.join(root,"equipment-reference.png"),(await guide.webContents.capturePage()).toPNG());
+ // The former details action is gone; retain its stored-state IPC regression.
+ await gjs('window.guide.control("live-advice")');assert.equal((await model()).liveAdvice,false);assert.equal((await model()).automaticTarget,false);
+ await gjs('window.guide.control("live-advice")');assert.equal((await model()).liveAdvice,true);
  const core=(await model()).route[0].id;await gjs(`window.guide.control("purchase-target",${JSON.stringify(core)})`);assert.equal((await model()).next.id,core);assert.equal((await model()).automaticTarget,false);
  await gjs('window.guide.control("purchase-target","1029")');enemyItems=[0,0];await js('window.buddy.openGuide()');
  await until(async()=>(await model()).situation.signals.length===0,'Enemy signal remained');assert.equal((await model()).next.id,'1029','Manual situation target lost when the trigger disappeared');
@@ -52,15 +46,16 @@ async function run(){
  await gjs('window.guide.control("purchase-target","")');inventory=[1029];
  await js('window.buddy.openGuide()');await until(async()=>!(await model()).situation.candidates.some(c=>c.kind==='physical'),'Bought component still recommended');
  inventory=[];enemyItems=[0,0];await js('window.buddy.openGuide()');await until(async()=>(await model()).situation.signals.length===0,'Sold enemy gear left stale signals');
- // Verify a real skill-rationale tab, while keeping game input completely outside the test.
+ // Verify the retained independent skill widget, without game input.
  hero='Lux';role='UTILITY';enemyItems=[3031,6672];
  await js('window.buddy.client(true)');await js('window.buddy.openGuide({id:"Lux",role:"support",mode:"rift"})');
  await gjs('window.guide.control("condition","burst")');
  await until(async()=>{const m=await model();return m.live.matched&&m.skillAdvice.next==='W'&&m.skillAdvice.changed;},'Protection skill adjustment missing');
- await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=skills]").click()');await until(()=>gjs('document.querySelector(".skill-decision").textContent.includes("曲光屏障")'),'Skill rationale not rendered');
- await fs.writeFile(path.join(root,'skill-reasons.png'),(await guide.webContents.capturePage()).toPNG());
+ const skill=await until(()=>windows.find(w=>w.webContents.getURL().endsWith("/src/skill.html")),"Skill micro missing");
+ assert.equal(await skill.webContents.executeJavaScript('!!document.querySelector("[data-action=details]")'),false);
+ await fs.writeFile(path.join(root,"skill-reference.png"),(await skill.webContents.capturePage()).toPNG());
  await gjs('window.guide.control("hide")');await js('window.buddy.openGuide()');assert.equal((await model()).skillAdvice.next,'W');
- const result={passed:true,archiveSha256:release.archiveSha256,productionMain:true,publicScoreboardSanitized:true,dynamicEquipmentReasons:true,renderedToggle:true,manualTargetPreserved:true,boughtComponentStopsAdvice:true,enemySoldItemsRefresh:true,skillProtectionRationale:true,hideReopen:true,readOnlyRequests:requests,realGameInput:false,userSettingsIsolated:true,screenshots:root};
+ const result={passed:true,archiveSha256:release.archiveSha256,productionMain:true,publicScoreboardSanitized:true,dynamicEquipmentReasons:true,persistedAdviceToggle:true,compactTargetVisible:true,manualTargetPreserved:true,boughtComponentStopsAdvice:true,enemySoldItemsRefresh:true,skillProtectionModel:true,independentSkillWindow:true,hideReopen:true,readOnlyRequests:requests,realGameInput:false,userSettingsIsolated:true,screenshots:root};
  await fs.writeFile(path.join(root,'live-situation-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);await fs.writeFile(path.join(root,'live-situation-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

@@ -1,3 +1,4 @@
+import {skillSummary} from '../src/core/skill-summary.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -118,7 +119,7 @@ test('saved full, partial source and three-point personal orders reach all prepa
   const restored=state.guide.selection,after=getBuild(hero(restored.id),restored.role,data,restored),model=createGuideModel(data,state.guide);
   assert.equal(after.skillOrder,build.skillOrder);assert.equal(model.skillOrder,build.skillOrder);assert.equal(model.skillPatch,build.selectedSkill.patch);assert.equal(state.favorites[0].skillId,build.selectedSkillId);
   assert.deepEqual(after.runePage,build.runePage);
-  for(const html of [skillSelector(after),companionPlanView(data,{build:after,selection:restored}),renderGuide({model,phase:'Offline',connected:false},'skills',false,()=>'')]){
+  for(const html of [skillSelector(after),companionPlanView(data,{build:after,selection:restored})]){
    assert(html.includes('1–'+build.skillOrder.length+' 级'));assert(html.includes(build.selectedSkill.patch));
    if(build.skillOrder.length<18)assert(!html.includes('完整加点'));
    if(build.skillOrder.length===3)assert(html.includes('4–18 级按已学技能与优先级补点'));
@@ -137,7 +138,7 @@ test('independent skill baselines notice changed champion data and ignore unvali
   const after=getBuild(changed.champions.find(c=>c.id==='Malphite'),'top',changed,{comboId:'ball-delivery',skillId:b.selectedSkill.id});
   assert.equal(after.selectedSkill.stale,true);assert.match(after.selectedSkill.when,/内容已变化，待复核/);assert(after.selectionWarnings.some(w=>w.includes('所选组合加点')));
   const m=createGuideModel(changed,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery',skillId:b.selectedSkill.id}));assert.equal(m.skillStale,true);
-  assert.match(renderGuide({model:m,phase:'Offline',connected:false},'skills',false,()=>''),/机制整理 · 16.20 · 待复核/);
+  assert.match(skillSummary(m).detail,/旧版加点参考/);assert.equal(m.skillSource,'机制整理');assert.equal(m.skillPatch,'16.20');
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });
 
@@ -147,7 +148,7 @@ test('imported partial skill plans render with optional sources and never promis
   assert.equal(b.skillOrder.length,3);assert(!b.selectedSkill.when.includes('后续节点为机制补齐'));
   assert.match(skillSelector(b),/4–18 级按已学技能与优先级补点/);
   const model=createGuideModel(data,selectGuide(null,{id:'Malphite',role:'top',mode:'rift',comboId:'ball-delivery'}));
-  assert.match(renderGuide({model,phase:'Offline',connected:false},'skills',false,()=>''),/仅覆盖 1–3 级/);
+  assert.equal(model.skillOrder.length,3);assert.match(skillSummary(model).text,/^Q→/);
  }finally{configureCatalog(BUNDLED_CATALOG);}
 });
 

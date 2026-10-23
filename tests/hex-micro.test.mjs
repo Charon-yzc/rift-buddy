@@ -22,7 +22,7 @@ test('micro economy shows public holdings only; missing bags and unknown prices 
 test('three micro routes preserve their own core and optional icons without visible prose',()=>{
  const routes=Array.from({length:4},(_,i)=>({id:'route-'+i,title:'路线'+i,augments:Array.from({length:9},(_,j)=>({id:i*10+j,name:'强化'+j,core:j===0})),items:[{id:1001+i,name:'装备'+i,core:true}]}));
  const html=hexMicroRoutesView(routes,image);assert.equal((html.match(/class="hex-micro-route"/g)||[]).length,3);assert.equal((html.match(/data-micro-kind="augment"/g)||[]).length,27);assert.equal((html.match(/is-core/g)||[]).length,6);
- assert.match(html,/item\/1002.png/);assert.match(html,/augment\/20.png/);assert.doesNotMatch(html,/item\/1004.png/);assert.doesNotMatch(html.replace(/<[^>]+>/g,''),/\S/);
+ assert.match(html,/item\/1002.png/);assert.match(html,/augment\/20.png/);assert.doesNotMatch(html,/item\/1004.png/);assert.match(html,/路线0/);assert.match(html,/来源待核/);assert.doesNotMatch(html,/hex-micro-pin/);assert.match(html,/data-action="expand"/);
 });
 
 test('micro positions stay independent of Rift layout and follow the game display at both text scales',()=>{
@@ -39,10 +39,10 @@ test('micro positions stay independent of Rift layout and follow the game displa
 test('micro routes take only the width required by real icons while full rows still fit',()=>{
  const area={x:0,y:0,width:1920,height:1080},route=(a,i)=>({augments:Array(a).fill({}),items:Array(i).fill({})});
  const narrow=hexMicroPlacement('routes',null,area,null,1,[route(1,3)]),full=hexMicroPlacement('routes',null,area,null,1,[route(9,9)]);
- assert.equal(narrow.width,114);assert.equal(narrow.x+narrow.width,1908);
- assert.equal(full.width,289);assert.equal(full.height,162);assert.equal(full.x+full.width,1908);
- assert.equal(hexMicroPlacement('routes',null,area,null,1,Array(3).fill(route(9,9))).height,482);
- assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(1,3)]).width,143);
+ assert.equal(narrow.width,282);assert.equal(narrow.x+narrow.width,1908);
+ assert.equal(full.width,282);assert.equal(full.height,197);assert.equal(full.x+full.width,1908);
+ assert.equal(hexMicroPlacement('routes',null,area,null,1,Array(3).fill(route(9,9))).height,480);
+ assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(1,3)]).width,353);
 });
 
 test('micro payloads ignore timers, wallets and unrelated combat changes so stable hovers do not flicker',()=>{
@@ -100,7 +100,7 @@ test('owned cores outrank offered routes and actual choices never create three u
 test('actual paired routes retain provenance and independent cores; no popularity or unsupported infinite effects',()=>{
  const routes=hexMicroRoutes({data:bundled,hero:'Yasuo'});assert.equal(routes.length,3);assert.equal(new Set(routes.map(r=>r.augments.find(a=>a.core).id)).size,3);
  for(const route of routes){assert.ok(route.augments.length>4);assert.ok(route.items.some(i=>i.core));assert.match(route.source,/^https:\/\/arammayhem.com\/zh-cn\/combo\//);assert.match(route.basis,/非热度/);assert.ok(route.sourceFields.adapted);assert.ok(route.augments.every(a=>a.brief.length<=65));assert.ok(route.items.every(i=>bundled.items[i.id].maps['12']));}
- assert.deepEqual(createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes,routes.map(route=>({...route,augments:route.augments.map(a=>({...a,offered:false}))})));
+ assert.deepEqual(createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes.map(({card,...route})=>route),routes.map(route=>({...route,augments:route.augments.map(a=>({...a,offered:false}))})));
  assert.deepEqual(hexMicroRoutes({data:bundled,hero:'Yasuo',mode:'rift'}),[]);assert.deepEqual(hexMicroRoutes({data:{...bundled,patch:'16.22'},hero:'Yasuo'}),[]);
  for(const mutate of [d=>d.champions.find(c=>c.id==='Yasuo').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===1058).key='Changed',d=>d.items[123430].maps['12']=false]){
   const changed=structuredClone(bundled);mutate(changed);const next=hexMicroRoutes({data:changed,hero:'Yasuo'});assert.ok(next.length<3);

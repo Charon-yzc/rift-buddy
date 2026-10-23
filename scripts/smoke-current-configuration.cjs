@@ -5,11 +5,11 @@ module.exports=async function currentConfiguration({phase,root,main,windows,js,c
  if(phase.startsWith('hex-sync-')){
   await js('window.buddy.openGuide({id:"Ahri",role:"mid",mode:"rift"})');let guide;
   await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Current guide missing');const gjs=code=>guide.webContents.executeJavaScript(code,true);
-  await until(()=>gjs('!!window.guide'),'Current guide preload missing');await gjs('window.guide.control("layout","details")');
+  await until(()=>gjs('!!window.guide'),'Current guide preload missing');assert.equal(await gjs('!!document.querySelector("[data-action=layout]")'),false);
   // Canonical round owner, independent chosen augmentation, and all three
   // exact arrays are the original interleaved user-flow contract.
   await js(`(async()=>{await window.buddy.hexRound({operation:'select',hero:'Ashe'});for(const [operation,id]of [['own',1047],['compare',1048],['compare',1002]]){const snapshot=await window.buddy.hexRound(),record=snapshot.manual;await window.buddy.hexRound({...record,operation,id});}return window.buddy.openGuide({id:'Ashe',role:'bottom',mode:'hex',augmentIds:[1048]});})()`);
-  await gjs('window.guide.control("main")');await until(()=>js('document.querySelector(".champ-summary")?.textContent.includes("艾希")'),'Hex return missing');
+  main.webContents.send('open-build',(await state()).guide.selection);await until(()=>js('document.querySelector(".champ-summary")?.textContent.includes("艾希")'),'Hex configuration missing');
   await click('[data-action=build-condition][data-condition=heal]');
   await until(async()=>{const s=(await state()).guide.selection;return s.conditions.includes('heal')&&s.compareIds?.length===2;},'Hex context lost on sync');
   await click('[data-action=open-guide]');const h=(await state()).guide.selection;assert.deepEqual(h.augmentIds,[1048]);assert.deepEqual(h.compareIds,[1048,1002]);assert.deepEqual(h.ownedAugmentIds,[1047]);
@@ -32,7 +32,7 @@ module.exports=async function currentConfiguration({phase,root,main,windows,js,c
   const expected=JSON.parse(await fs.readFile(path.join(root,'expected-current-spells.json')));assert.deepEqual(await read(),expected.pair,'Rift D/F changed after restart');
   await click('[data-action=close]');await click('[data-action=navigate][data-route=favorites]');const favorites=(await state()).favorites,index=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='hex');assert(index>=0,'Current Hex favorite missing');
   await click('[data-action=open-favorite][data-index="'+index+'"]');assert.deepEqual(await read(),expected.hexPair);
-  await click('[data-action=open-guide]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Restored Hex guide missing');await until(()=>guide.webContents.executeJavaScript('window.guide.bootstrap().then(b=>JSON.stringify(b.model?.summoners.map(s=>s.id))==='+JSON.stringify(JSON.stringify(expected.hexPair))+')',true),'Restored Hex guide lost D/F');
+  await click('[data-action=open-guide]');await until(()=>windows.some(w=>w.webContents.getURL().endsWith('/src/hex-micro.html')),'Restored Hex cards missing');assert.deepEqual((await state()).guide.selection.summonerIds,expected.hexPair,'Restored Hex selection lost D/F');assert.deepEqual(await read(),expected.hexPair);
  }
  return {manualDAndF:true,hexModeRestrictions:phase==='spells-prepare',separateModeChoices:true,configurationAndFavorites:true,hexGuideSummonersRestored:phase==='spells-restore',offlineRestart:phase==='spells-restore'};
 };

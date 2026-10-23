@@ -1,3 +1,4 @@
+import {skillSummary} from '../src/core/skill-summary.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -139,6 +140,6 @@ test('skill ranks respect available points, ultimate thresholds, early unlocks a
 test('rendered guide exposes reasons, tradeoffs, candidate selection and a persistent automatic toggle',()=>{
  const m=model(read(physical())),image=(kind,id)=>`<img src="${kind}/${id}">`,snapshot={model:{...m,collapsed:false},connected:false};
  const html=renderGuide(snapshot,'items',false,image);
- assert.match(html,/本次购买为什么/);assert.match(html,/推迟/);assert.match(html,/data-action="live-advice"/);assert.match(html,/data-action="purchase-target" data-id="1029"/);
- const skills=renderGuide(snapshot,'skills',false,image);assert.match(skills,/当前建议升/);assert.match(skills,/保留已学技能/);
+ assert.match(html,/compact-route/);assert.doesNotMatch(html,/data-action="live-advice"|data-tab=/);for(const option of m.completeGear.alternatives)assert(html.includes(option.name));
+ const skills=skillSummary(m);assert.match(skills.detail,/当前可升/);assert.match(skills.text,/主/);
 });

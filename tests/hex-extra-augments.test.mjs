@@ -66,7 +66,7 @@ test('guide projection accepts all notes, preserves independent limits and strip
  assert.match(html,/<details class="hex-owned-details"[^>]*><summary>本局已选 · 32<\/summary>/);
  assert.equal((html.match(/data-action="remove-owned"/g)||[]).length,HEX_OWNED_LIMIT);
  assert.doesNotMatch(renderHexComparison({data,hero:'Sona',owned:owned.slice(0,6),options:[]}),/hex-owned-details/);
- assert.match(renderGuide({model:{...model,compact:false}},'augments',false,()=>'<img>'),/<details data-guide-section="owned"><summary tabindex="0" data-guide-focus="owned">查看全部 32 项<\/summary>/);
+ assert.doesNotMatch(renderGuide({model:{...model,compact:false}},'augments',false,()=>'<img>'),/data-guide-section="owned"|查看全部 32 项/);
  assert.deepEqual(validateGuideSelection({...value,ownedAugmentIds:[...owned,...owned]}).ownedAugmentIds,owned);
  assert.throws(()=>validateGuideSelection({...value,ownedAugmentIds:[...owned,ordinary.find(id=>!owned.includes(id))]}),/格式/);
  assert.throws(()=>validateGuideSelection({...value,compareIds:[1002,1047,1048,1141]}),/格式/);

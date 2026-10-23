@@ -1,139 +1,64 @@
 import {windowResizeGrip,installWindowResize} from './window-resize.mjs';
-import {changeJungleNotes} from './core/jungle-guidance.mjs';
 import {applyPresentation} from './presentation-view.mjs';
-import {changePresentation} from './core/presentation.mjs';
 import {renderGuide} from './guide-view.mjs';
 import {createGameTooltips,gameTooltipView} from './game-tooltip-view.mjs';
 import {gameReference} from './core/game-reference.mjs';
-import {escape as e,icon} from './ui.mjs';
+import {escape as e} from './ui.mjs';
 import {createGuideModel,selectGuide} from './core/guide.mjs';
-import {changeCompanionPlan} from './core/companion-plan.mjs';
-let snapshot,tab='overview',messageTimer,renderedView=null,renderedExpanded=false,renderedContext=null,renderedMatchId=null,renderedStateWritable=true;
-let activeSelect=null,pendingSelectUpdate=false,lastOpenTab=null,referenceContext=null;
-const viewStates=new Map();
-const root=document.getElementById('guide-root');
-const isPreview=!window.guide;
+const root=document.getElementById('guide-root'),isPreview=!window.guide;
+let snapshot,referenceContext=null,messageTimer,hoverHeader=false;
 const api=window.guide||{
  reference:async(kind,id,mode)=>gameReference(window.previewGuideData,kind,id,mode),
  bootstrap:async()=>{
-  const {data,state}=await (await fetch('/api/bootstrap')).json();data.flashSlot=state.preferences?.flashSlot;
-  const id=new URLSearchParams(location.search).get('hero')||'Ashe',mode=new URLSearchParams(location.search).get('mode')||'rift';
-  const selection={id,role:new URLSearchParams(location.search).get('role')||(mode==='hex'?'mid':'bottom'),mode,coreIndex:0,conditions:[],augmentIds:[]};
-  window.previewGuideData=data;window.previewGuideState=selectGuide(state.guide,selection);
-  return {presentation:state.preferences?.presentation,model:createGuideModel(data,window.previewGuideState),phase:'Offline',connected:false,hotkeyAvailable:false};
+  const {data,state}=await(await fetch('/api/bootstrap')).json(),params=new URLSearchParams(location.search),mode=params.get('mode')||'rift';
+  data.flashSlot=state.preferences?.flashSlot;window.previewGuideData=data;
+  window.previewGuideState=selectGuide(state.guide,{id:params.get('hero')||'Ashe',role:params.get('role')||(mode==='hex'?'mid':'bottom'),mode,coreIndex:0,conditions:[],augmentIds:[]});
+  return {presentation:state.preferences?.presentation,model:createGuideModel(data,window.previewGuideState),phase:'Offline',connected:false};
  },
  hover:async()=>false,
  control:async(action,value)=>{
-  const s=window.previewGuideState;
-  if(action==='presentation')return {...snapshot,presentation:changePresentation(snapshot.presentation,value)};
-  if(action==='reset-layout'||action==='recover'){s.ball=false;s.strip=false;s.collapsed=false;s.compact=true;}
-  if(action==='layout'){s.compact=value==='compact';s.ball=false;s.strip=false;s.collapsed=false;}
-  if(action==='jungle'){const [field,choice]=value.split(':');s.jungleNotes=changeJungleNotes(s.jungleNotes,field,choice,snapshot.model?.live?.matched?snapshot.model.live.gameTime:null,snapshot.model?.jungle?.route);}
-  if(action==='jungle-widget')s.jungleWidget={...s.jungleWidget,enabled:s.jungleWidget?.enabled===false};
-  if(action==='skill-widget')s.skillWidget={...s.skillWidget,enabled:s.skillWidget?.enabled===false};
-  if(action==='hide'){toast('桌面版可隐藏指引窗');return true;}if(action==='main'){location.href='/src/index.html';return true;}
-  if(action==='item')s.completedItems=s.completedItems.includes(value)?s.completedItems.filter(id=>id!==value):[...s.completedItems,value];
-  if(action==='purchase-target'){s.purchaseTarget=value||undefined;s.purchaseTargetKind=snapshot.model.shoppingTargets.find(i=>i.id===value)?.kind==='局势备选'?'situation':undefined;}if(action==='stage')s.stage=value==='auto'?undefined:value;
-  if(['threatId','protectId','combatFocus'].includes(action)){s.selection[action]=value||undefined;if(action==='threatId')delete s.selection.matchupGameId;}
-  if(action==='later')s.selection=changeCompanionPlan(window.previewGuideData,s.selection,'later',value);
-  if(action==='bottom-quest')s.bottomQuestConfirmed=!s.bottomQuestConfirmed;
-  if(action==='live-advice')s.liveAdvice=s.liveAdvice===false;
-  if(action==='condition')s.selection.conditions=s.selection.conditions.includes(value)?s.selection.conditions.filter(c=>c!==value):[...s.selection.conditions,value];if(action==='interaction')s.clickThrough=!s.clickThrough;if(action==='new-game'){s.jungleNotes=undefined;s.bottomQuestConfirmed=false;s.completedItems=[];s.duelPick=undefined;delete s.purchaseTarget;delete s.purchaseTargetKind;delete s.stage;s.selection.compareIds=[];s.selection.ownedAugmentIds=[];delete s.selection.threatId;delete s.selection.matchupGameId;delete s.selection.protectId;delete s.selection.combatFocus;}if(action==='reset')s.completedItems=[];if(action==='collapse')s.collapsed=!s.collapsed;if(action==='opacity')s.opacity=value;if(action==='ball'){s.ball=!s.ball;if(s.ball)s.strip=false;}if(action==='strip'){s.strip=!s.strip;if(s.strip)s.ball=false;}
-  if(action==='duel-own'||action==='duel-foe'){const side=action==='duel-own'?'own':'foe';if(value!==''&&!/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(value))throw Error('英雄选择格式不正确');const next={...(s.duelPick||{}),[side]:value||undefined};s.duelPick=next.own||next.foe?next:undefined;}
-  if(action==='copy'){toast('桌面版支持复制');return true;}
-  return {...snapshot,ball:!!s.ball,strip:!!s.strip,model:createGuideModel(window.previewGuideData,s)};
- },
+  const state=window.previewGuideState;
+  if(action==='main'){location.href='/src/index.html';return true;}
+  if(action==='hide'||action==='fold'){toast('桌面版可关闭或收起小窗');return true;}
+  if(action==='reset')state.completedItems=[];
+  if(action==='interaction')state.clickThrough=!state.clickThrough;
+  if(action==='skill-widget')state.skillWidget={...state.skillWidget,enabled:state.skillWidget?.enabled===false};
+  if(action==='jungle-widget')state.jungleWidget={...state.jungleWidget,enabled:state.jungleWidget?.enabled===false};
+  if(action==='bottom-quest'&&snapshot.model.bottomQuest?.eligible)state.bottomQuestConfirmed=!state.bottomQuestConfirmed;
+  if(action==='purchase-target'){state.purchaseTarget=value||undefined;state.purchaseTargetKind=snapshot.model.shoppingTargets.find(i=>i.id===value)?.kind==='局势备选'?'situation':undefined;}
+  return {...snapshot,model:createGuideModel(window.previewGuideData,state)};
+ }
 };
-const image=(kind,id,name)=>`<img ${['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${e(id)}"`:''} src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}" />`;
-const gameTooltips=createGameTooltips({document,observeRoots:[root],getMode:()=>snapshot?.model?.mode||'rift',getContent:async(kind,id,mode)=>{const reference=await api.reference?.(kind,id,mode,snapshot?.referenceRevision);return reference?gameTooltipView(reference,kind,id,{mode,image}):'';}});
+const image=(kind,id,name)=>`<img ${['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${e(id)}"`:''} src="${e(snapshot.model?.imageOverrides?.[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" alt="${e(name)}">`;
+const tooltips=createGameTooltips({document,observeRoots:[root],getMode:()=>snapshot?.model?.mode||'rift',getContent:async(kind,id,mode)=>{const reference=await api.reference?.(kind,id,mode,snapshot?.referenceRevision);return reference?gameTooltipView(reference,kind,id,{mode,image}):'';}});
 function toast(message){clearTimeout(messageTimer);const el=document.getElementById('guide-toast');el.textContent=message;el.className='visible';messageTimer=setTimeout(()=>el.className='',4000);}
 function render(){
- if(snapshot?.openTab?.serial!==lastOpenTab&&['skills','rhythm'].includes(snapshot?.openTab?.tab)){tab=snapshot.openTab.tab;lastOpenTab=snapshot.openTab.serial;}
- activeSelect=null;pendingSelectUpdate=false;
  applyPresentation(snapshot?.presentation,{theme:false});
- const m=snapshot?.model,matchId=m?.matchId||null;
- if(matchId!==renderedMatchId){viewStates.clear();renderedView=null;renderedExpanded=false;renderedContext=null;renderedMatchId=matchId;}
- const oldMain=root.querySelector('main');
- if(renderedView&&renderedExpanded&&renderedStateWritable&&oldMain){
-  const previous=viewStates.get(renderedView),details=new Map(previous?.details||[]);
-  for(const d of oldMain.querySelectorAll('details[data-guide-section]'))details.set(d.dataset.guideSection,d.open);
-  viewStates.set(renderedView,{scroll:oldMain.scrollTop,details:[...details]});
- }
- const context=[m?.champion?.id||'',m?.selection?.role||'',m?.mode||''].join(':'),view=context+':'+tab;
- const nextReferenceContext=JSON.stringify([view,matchId,snapshot?.referenceRevision,m?.version,m?.fetchedAt,m?.compact,m?.collapsed,snapshot?.ball,snapshot?.strip]);
- const retainReference=referenceContext===nextReferenceContext;referenceContext=nextReferenceContext;
- if(!retainReference)gameTooltips.close();
- const saved=viewStates.get(view)||{scroll:0,details:[]},focused=document.activeElement;
- const focus=renderedContext===context&&root.contains(focused)?{id:focused.id,data:{...focused.dataset}}:null;
- renderedView=view;renderedContext=context;
- renderedStateWritable=tab!=='scoreboard'||m?.equipment?.available===true;
- const ball=!!snapshot?.ball&&!snapshot?.strip,strip=!!snapshot?.strip;
- renderedExpanded=!ball&&!m?.collapsed;
- document.body.classList.toggle('ball',ball); document.body.classList.toggle('strip',strip);document.body.classList.toggle('compact',!ball&&!strip&&m?.compact!==false);
- root.className=strip?'strip':ball?'ball':(snapshot?.model?.collapsed?'collapsed':'');
- root.dataset.tab=tab;
- root.dataset.workspace=['skills','combat','scoreboard','rhythm','team','augments','settings'].includes(tab)?'focused':'overview';
- gameTooltips.repaint(root,()=>{
- root.innerHTML=renderGuide(snapshot,tab,isPreview,image)+(ball?'':windowResizeGrip);
- for(const node of root.querySelectorAll('[data-game-tooltip-kind]')){const owner=node.closest('button,a,[tabindex]')||node;if(owner===node)node.tabIndex=0;if(!owner.dataset.referenceFocus)owner.dataset.referenceFocus=node.dataset.gameTooltipKind+'/'+node.dataset.gameTooltipId;}
- const navigation=root.querySelector('nav[aria-label="指引内容"]'),activeTab=navigation?.querySelector('button.active');
- if(activeTab){const left=activeTab.offsetLeft-navigation.offsetLeft;if(left+activeTab.offsetWidth>navigation.clientWidth)navigation.scrollLeft=left+activeTab.offsetWidth-navigation.clientWidth;}
- for(const [key,open] of saved.details){const d=[...root.querySelectorAll('details[data-guide-section]')].find(d=>d.dataset.guideSection===key);if(d)d.open=open;}
- const main=root.querySelector('main');if(main)main.scrollTop=saved.scroll;
+ const m=snapshot?.model,context=JSON.stringify([m?.champion?.id,m?.selection?.role,m?.mode,m?.matchId,snapshot?.referenceRevision,m?.version,m?.fetchedAt]);
+ const focused=root.contains(document.activeElement)&&referenceContext===context?document.activeElement:null;
+ const focus=focused?{action:focused.dataset.action,id:focused.dataset.id,reference:focused.dataset.referenceFocus}:null;
+ if(referenceContext!==context)tooltips.close();referenceContext=context;
+ const scroll=root.querySelector('main')?.scrollTop||0;
+ document.body.className='compact';root.className='';root.dataset.workspace='overview';
+ tooltips.repaint(root,()=>{
+  root.innerHTML=renderGuide(snapshot,'overview',isPreview,image)+windowResizeGrip;
+  for(const node of root.querySelectorAll('[data-game-tooltip-kind]')){const owner=node.closest('button,a,[tabindex]')||node;if(owner===node)node.tabIndex=0;owner.dataset.referenceFocus=node.dataset.gameTooltipKind+'/'+node.dataset.gameTooltipId;}
+  const main=root.querySelector('main');if(main)main.scrollTop=scroll;
+  if(focus&&(focus.action||focus.reference)){
+   const target=[...root.querySelectorAll('[data-action],[data-reference-focus]')].find(node=>focus.reference?node.dataset.referenceFocus===focus.reference:node.dataset.action===focus.action&&node.dataset.id===focus.id);
+   if(target&&!target.disabled)target.focus({preventScroll:true});
+  }
  });
- if(focus){const target=focus.id?document.getElementById(focus.id):[...root.querySelectorAll('button,input,select,a,[tabindex]')].find(b=>Object.keys(focus.data).length&&Object.entries(focus.data).every(([k,v])=>b.dataset[k]===v));target?.focus({preventScroll:true});}
 }
-
-// Replacing a native select while its menu is open closes it on each poll.
-// Retain the newest snapshot, then paint it when the user finishes choosing.
-// Invalid or changed game/preparation contexts still render immediately.
-const selectionContext=value=>JSON.stringify([value?.model?.matchId,value?.model?.selection,value?.model?.collapsed,value?.model?.compact,value?.ball,value?.phase]);
-function endSelect(){activeSelect=null;if(pendingSelectUpdate)render();}
-document.addEventListener('pointerdown',event=>{if(event.target.tagName==='SELECT'&&root.contains(event.target))activeSelect=event.target;});
-document.addEventListener('keydown',event=>{
- if(event.target.tagName!=='SELECT'||!root.contains(event.target))return;
- if(['ArrowDown','ArrowUp',' '].includes(event.key))activeSelect=event.target;
- if(['Escape','Enter','Tab'].includes(event.key))setTimeout(endSelect,0);
-});
-document.addEventListener('focusout',event=>{if(event.target===activeSelect)setTimeout(()=>{if(!root.contains(document.activeElement))endSelect();},0);});
-document.addEventListener('click',event=>{if(activeSelect&&event.target!==activeSelect)setTimeout(endSelect,0);});
-document.addEventListener('change',event=>{if(event.target===activeSelect){activeSelect=null;pendingSelectUpdate=false;}},true);
-window.addEventListener('blur',endSelect);
 document.addEventListener('click',async event=>{
- const target=event.target.closest('button');if(!target)return;
- if(target.dataset.tab){if(snapshot.model?.compact!==false){try{snapshot=await api.control('layout','details');}catch(error){toast(error.message);return;}}if(snapshot.model?.collapsed){try{snapshot=await api.control('collapse');}catch(error){toast(error.message);return;}}if(target.dataset.tab==='settings'&&snapshot.mousePassThrough){try{snapshot=await api.control('interaction');}catch(error){toast(error.message);return;}}tab=target.dataset.tab;render();return;}
- // The floating ball lives on a draggable region: a real drag must move the
- // window, never toggle it. Only a near-stationary press counts as a click.
- if(target.dataset.action==='ball'||target.dataset.action==='strip'){const moved=dragMoved;dragMoved=false;if(moved)return;}
- target.disabled=true;
- try{const value=target.dataset.action==='new-game'?snapshot?.model?.hexRound:target.dataset.action==='presentation'?{field:target.dataset.field,value:target.dataset.field==='textScale'?Number(target.dataset.value):target.dataset.value}:target.dataset.id;const result=await api.control(target.dataset.action,value);if(result?.model!==undefined){if(target.dataset.action==='new-game'){viewStates.clear();renderedView=null;}snapshot=result;render();}if(target.dataset.action==='copy')toast('配置已复制');}
+ const target=event.target.closest('button[data-action]');if(!target)return;target.disabled=true;
+ try{const result=await api.control(target.dataset.action,target.dataset.id);if(result?.model!==undefined){snapshot=result;render();}}
  catch(error){toast(error.message||'操作未完成');}finally{target.disabled=false;}
 });
-document.addEventListener('change',async event=>{if(event.target.dataset.presentationModule){try{snapshot=await api.control('presentation',{field:'toggleModule',value:event.target.dataset.presentationModule});render();}catch(error){toast(error.message);}return;}const actions={'guide-settings-opacity':'opacity','guide-opacity':'opacity','guide-purchase-target':'purchase-target','guide-stage':'stage','guide-threat':'threatId','guide-protect':'protectId','guide-focus':'combatFocus','guide-duel-own':'duel-own','guide-duel-foe':'duel-foe'},action=actions[event.target.id];if(action){try{snapshot=await api.control(action,action==='opacity'?Number(event.target.value):event.target.value);render();}catch(error){toast(error.message);}}});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented&&!activeSelect)api.control('hide').catch(error=>toast(error.message));});
-let hoverHeader=false,downPos=null,dragMoved=false;
-document.addEventListener('mousedown',event=>{downPos=[event.screenX,event.screenY];dragMoved=false;});
-document.addEventListener('mousemove',event=>{if(event.buttons&&downPos&&Math.hypot(event.screenX-downPos[0],event.screenY-downPos[1])>6)dragMoved=true;});
-document.addEventListener('mouseup',()=>{setTimeout(()=>{dragMoved=false;downPos=null;},0);});
-function trackHeaderHover(event){
- // mousemove still reaches the page while the window passes clicks through
- // (forward:true). Report header hover on change only, so the main process
- // can lift pass-through for the drag bar + window buttons.
- const over=!!event.target?.closest?.('#guide-root>header,[data-window-resize]');
- if(over!==hoverHeader){hoverHeader=over;api.hover?.(over).catch(()=>{});}
-}
-document.addEventListener('mousemove',trackHeaderHover);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented)api.control('hide').catch(error=>toast(error.message));});
+document.addEventListener('mousemove',event=>{const over=!!event.target?.closest?.('#guide-root>header,[data-window-resize]');if(over!==hoverHeader){hoverHeader=over;api.hover?.(over).catch(()=>{});}});
 document.addEventListener('mouseleave',()=>{if(hoverHeader){hoverHeader=false;api.hover?.(false).catch(()=>{});}});
 document.addEventListener('error',event=>{if(event.target.tagName==='IMG')event.target.classList.add('missing');},true);
 installWindowResize(root,(action,value)=>api.control(action,value));
-api.onUpdate?.(next=>{
- if(next.model?.mode!=='hex'&&tab==='augments'||next.model?.mode==='hex'&&tab==='team')tab='overview';
- const before=snapshot?.model,after=next.model,missingField=['gold','level'].some(k=>before?.live?.[k]!==null&&after?.live?.[k]===null);
- const urgent=snapshot?.referenceRevision!==next.referenceRevision||selectionContext(snapshot)!==selectionContext(next)||before?.fetchedAt!==after?.fetchedAt||before?.live?.matched!==after?.live?.matched||before?.live?.kind!==after?.live?.kind||
-  before?.live?.inventoryKnown!==after?.live?.inventoryKnown||missingField||JSON.stringify(before?.duelOptions)!==JSON.stringify(after?.duelOptions)||
-  before?.estimate?.targetSelected!==after?.estimate?.targetSelected||before?.estimate?.mineSkillBasis!==after?.estimate?.mineSkillBasis||before?.combatUnavailable!==after?.combatUnavailable||before?.ultimateReference?.available!==after?.ultimateReference?.available||before?.ultimateReference?.rank!==after?.ultimateReference?.rank||before?.customDuel?.unresolved!==after?.customDuel?.unresolved;
- snapshot=next;
- if(!urgent&&activeSelect?.isConnected&&root.contains(activeSelect)){pendingSelectUpdate=true;return;}
- render();
-});
-try{snapshot=await api.bootstrap();render();}catch(error){root.innerHTML=`<div class="empty"><h2>指引暂时不可用</h2><p>${e(error.message)}</p><button data-action="main">打开完整助手</button></div>`;}
+api.onUpdate?.(next=>{snapshot=next;render();});
+try{snapshot=await api.bootstrap();render();}catch(error){root.innerHTML=`<header class="compact-header drag"><b>${e(error.message)}</b><button data-action="hide">×</button></header>`;}

@@ -94,11 +94,11 @@ test('enemy coaching is attached only to an explicit public opponent and cannot 
  const live={available:true,champion:'Ashe',mode:'rift',mapId:11,queueId:420,at:Date.now(),level:7,gold:800,gameTime:900,inventory:[],skills:{Q:1,W:3,E:1,R:1},enemies:[{id:'Zed',name:'劫',level:7,items:[],itemsKnown:true}],allies:[]};
  const model=createGuideModel(data,state,live);assert.equal(model.coach.enemy.id,'Zed');assert.equal(model.coach.stage,'key');
  const missing=createGuideModel(data,state,{...live,enemies:[]});assert.equal(missing.coach.enemy,null);
- const html=renderGuide({model},'team',false,()=>'<img>');assert.match(html,/已选对手 · 劫/);assert.match(html,/自己怎么打/);
+ const html=heroCoachView(model.coach);assert.match(html,/已选对手 · 劫/);assert.match(html,/自己怎么打/);
  const unselected=createGuideModel(data,selectGuide(null,{...selection,threatId:undefined}),live);assert.equal(unselected.coach.enemy,null);
 });
 test('a solo guide always exposes champion coaching, while Hex does not inherit Rift tactics',()=>{
  const model=createGuideModel(data,selectGuide(null,{id:'Garen',role:'top',mode:'rift'}));assert.equal(model.combo,null);
- const html=renderGuide({model},'team',false,()=>'<img>');assert.match(html,/data-tab="team"/);assert.match(html,/英雄机制|技能机制/);assert.match(html,/盖伦/);
+ const html=heroCoachView(model.coach);assert.doesNotMatch(html,/data-tab="team"/);assert.match(html,/英雄机制|技能机制/);assert.match(html,/盖伦/);
  const hex=createGuideModel(data,selectGuide(null,{id:'Garen',role:'top',mode:'hex'}));assert.equal(hex.coach,null);assert.doesNotMatch(renderGuide({model:hex},'overview',false,()=>'<img>'),/data-tab="team"/);
 });

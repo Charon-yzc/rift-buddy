@@ -74,8 +74,8 @@ test('guide stage, own action and displayed pair sequence agree while loadout ch
  for(const phase of ['opening','key','later']){
   const model=createGuideModel(data,{...state,stage:phase},live);actions.push(model.coach.action);
   assert.equal(model.coach.stage,phase);assert.equal(model.stageHint.id,phase);assert.equal(model.stageHint.text,model.coach.action);
-  const html=renderGuide({model},'team',false,()=>'<img>');assert.match(html,new RegExp('data-duo-stage="'+phase+'"'));
-  assert.equal((html.match(/id="guide-stage"/g)||[]).length,1);
+  const html=duoPlayView(model.combo.play,{stage:phase});assert.match(html,new RegExp('data-duo-stage="'+phase+'"'));
+  assert.equal((html.match(new RegExp('data-duo-stage="'+phase+'"','g'))||[]).length,1);
   const own=heroCoachView(model.coach);assert.ok(own.indexOf('coach-action')<own.indexOf('coach-sequence'));assert.ok(own.indexOf('coach-action')<own.indexOf('coach-skills'));
  }
  assert.equal(new Set(actions).size,3);assert.equal(JSON.stringify(state),before);

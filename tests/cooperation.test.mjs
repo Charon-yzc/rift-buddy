@@ -1,3 +1,4 @@
+import {heroCoachView} from '../src/hero-coach-view.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -89,8 +90,8 @@ test('saved cooperation leads the guide and cannot be replaced by a default pers
   // A known live phase uses the chosen plan rather than the hero's default sequence.
   const live={available:true,champion:selection.id,mode:'rift',mapId:11,queueId:420,at:Date.now(),level:9,gold:800,gameTime:900,inventory:[],skills:{Q:3,W:2,E:3,R:1},enemies:[],allies:[]};
   const current=createGuideModel(data,selectGuide(null,selection),live,{...selection,comboKnown:true});assert.ok(current.coach.action.startsWith(job));assert.equal(current.coach.sequence,plan.steps.join(' → '));
-  const html=renderGuide({model:current},'team',false,()=>'<img>');assert.ok(html.indexOf('hero-coach-compact')<html.indexOf('team-steps'));assert.ok(html.indexOf('team-steps')<html.indexOf('英雄机制、对位与个人打法'));
-  const overview=renderGuide({model},'overview',false,()=>'<img>');assert.match(overview,/本局配合 · 你的职责/);assert.ok(overview.indexOf('本局配合 · 你的职责')<overview.indexOf('英雄技能与对位参考'));
+  const html=heroCoachView(current.coach);assert(html.includes(job));for(const step of plan.steps)assert(html.includes(step));
+  const overview=renderGuide({model},'overview',false,()=>'<img>');assert.match(overview,/compact-guide-main/);assert.doesNotMatch(overview,/team-steps|hero-coach-compact/);
  }
 });
 

@@ -77,7 +77,7 @@ async function run(){
  await click('[data-action=build-partner]');await click('[data-action=build-partner]');assert.equal((await active()).rune,'curated-guardian');
  await click('[data-action=open-guide]');
  const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Guide missing'),gjs=c=>guide.webContents.executeJavaScript(c,true);
- await until(()=>gjs('!!window.guide'),'Guide preload missing');await gjs('window.guide.control("layout","details")');await until(()=>gjs('!!document.querySelector(".next-item")'),'Guide not rendered');
+ await until(()=>gjs('!!window.guide'),'Guide preload missing');await until(()=>gjs('!!document.querySelector(".compact-next")'),'Guide not rendered');
  // The delayed update-guide handler above overlaps edits from both windows.
  await click('[data-action=build-rune][data-id=curated-aery]');
  await gjs('window.guide.control("condition","ap")');

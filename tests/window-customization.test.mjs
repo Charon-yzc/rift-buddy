@@ -12,7 +12,7 @@ test('independent window sizes survive storage, hero changes and display recover
  const guide=selectGuide(null,selection);Object.assign(guide,{compactBounds:{x:-900,y:40,width:430,height:330},stripBounds:{x:-800,y:300,width:500,height:200},skillWidget:{enabled:false,offset:{x:-100,y:-180},size:{width:320,height:70}},jungleWidget:{enabled:true,offset:{x:-400,y:-400},size:{width:380,height:260}}});
  const saved=validateGuideState(JSON.parse(JSON.stringify(guide))),other=selectGuide(saved,{...selection,id:'Ashe',role:'bottom'});
  for(const key of ['compactBounds','stripBounds','skillWidget','jungleWidget'])assert.deepEqual(other[key],guide[key]);
- const compact=compactGuidePlacement(saved.compactBounds,area,null);assert.deepEqual(compact,saved.compactBounds);
+ const compact=compactGuidePlacement(saved.compactBounds,area,null);assert.deepEqual(compact,{...saved.compactBounds,width:400,height:320});
  const skill=skillWidgetPlacement(saved.skillWidget.offset,area,null,1,saved.skillWidget.size);assert.equal(skill.width,320);assert.equal(skill.height,28,'Saved tall skill prompts migrate to one line');
  const jungle=jungleWidgetPlacement(saved.jungleWidget.offset,area,null,1,saved.jungleWidget.size);assert.equal(jungle.width,380);assert.equal(jungle.height,260);
  const smaller={x:0,y:0,width:360,height:300},recovered=compactGuidePlacement(saved.compactBounds,smaller,null);assert.equal(recovered.width,360);assert.equal(recovered.height,300);assert.equal(recovered.x,0);assert.equal(recovered.y,0);
@@ -33,4 +33,5 @@ test('reset controls explain scope and keep window reset distinct from text/cont
  const side=playerFlowSettings({}, {custom:true});assert.match(side,/当前侧栏使用你保存的布局/);for(const action of ['window-follow','window-reset-side','window-reset-all'])assert.match(side,new RegExp('data-action="'+action+'"'));
  assert.match(side,/恢复侧栏只重置侧栏/);assert.match(side,/恢复全部.*主窗.*装备卡.*加点.*野区提示.*局内小窗/);assert.match(side,/(?:保留|不会改)[^<]*英雄[^<]*阵容[^<]*字号[^<]*收藏/);
  const guide=presentationSettings({}, {guide:true});assert.match(guide,/data-action="reset-layout"/);assert.match(guide,/data-action="presentation" data-field="reset"/);assert.match(guide,/每个窗口独立记住位置和尺寸/);
+ assert.doesNotMatch(guide,/data-presentation-module|moveUp|moveDown|详情页|放在详情|data-tab=/);
 });

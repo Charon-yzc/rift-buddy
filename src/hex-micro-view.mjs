@@ -1,4 +1,5 @@
 import {escape as e} from './ui.mjs';
+import {hexRouteCardFooter} from './hex-route-card-view.mjs';
 
 // The values are public inventory prices, never anyone's unspent gold.
 export function hexEconomyCells(equipment,side){
@@ -19,7 +20,7 @@ export function hexEconomyView(equipment,image){
 
 // Display only: each route must be independently sourced and validated by the
 // provider. Separate item/augment lists are not evidence of a paired build.
-export function hexMicroRoutesView(routes,image){
+export function hexMicroRoutesView(routes,image,{expanded=false}={}){
  const slots=(entries,kind,conditional)=>entries.map(entry=>`<button type="button" class="hex-micro-icon${entry.core?' is-core':''}" data-micro-kind="${kind}" data-micro-id="${e(entry.id)}" aria-label="${e((conditional?'联动条件 · ':entry.core?'核心 · ':'备选 · ')+entry.name)}">${image(kind,entry.id,entry.name)}</button>`).join('');
- return `<div class="hex-micro-routes" aria-label="海克斯路线与条件联动">${routes.slice(0,3).map(route=>`<section class="hex-micro-route" data-micro-route="${e(route.id)}" aria-label="${e(route.title)}"><div class="hex-micro-augments">${slots(route.augments,'augment',route.kind==='item-synergy')}</div><div class="hex-micro-items">${slots(route.items,'item',route.kind==='item-synergy')}</div></section>`).join('')}</div>`;
+ return `<div class="hex-micro-routes ${expanded?'is-expanded':''}" aria-label="海克斯配置"><div class="hex-micro-route-list">${routes.slice(0,expanded?30:3).map((route,index)=>`<section class="hex-micro-route" data-micro-route="${e(route.id)}" aria-label="${e(route.title)}">${expanded?`<button class="hex-micro-pin" data-action="pin" data-id="${e(route.id)}" aria-label="置顶 ${e(route.title)}" title="置顶" ${index===0?'disabled':''}>↑</button>`:''}<div class="hex-micro-augments">${slots(route.augments,'augment',route.kind==='item-synergy')}</div><div class="hex-route-bottom"><div class="hex-micro-items">${slots(route.items,'item',route.kind==='item-synergy')}</div>${hexRouteCardFooter(route.card||{title:route.title,source:'来源待核'})}</div></section>`).join('')}</div>${routes.length>3?`<button class="hex-micro-expand" data-action="expand" aria-expanded="${expanded}" aria-label="${expanded?'收起':'更多配置'}" title="${expanded?'收起':'更多配置'}">${expanded?'⌃':'⌄'}</button>`:''}</div>`;
 }

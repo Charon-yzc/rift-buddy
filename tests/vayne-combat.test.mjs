@@ -56,8 +56,7 @@ test('specialized combat subsets reject unsupported patch, mode, level and impos
 test('the packaged guide model labels AA plus W as a partial reference with visible excluded skills',()=>{
  const model=createGuideModel(data,selection('rift'),fixture()),html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
  assert.equal(model.estimate.mineSkillBasis,'vayne-attacks');
- assert.ok(html.includes('普攻 + W参考 · Q / E / R未计入')&&html.includes('次三环')&&html.includes('W真实伤害'));
- assert.ok(html.includes('从零层开始持续攻击同一对手')&&html.includes('羊刀幻影攻击未计入'));
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
  assert.equal(html.includes('技能模型已复核，仍需确认'),false);
  assert.equal(model.estimate.danger,false);
 });
@@ -67,7 +66,7 @@ test('Hex damage remains unavailable while visible inventory and saved opponent 
  assert.equal(model.estimate,null);assert.equal(model.customDuel.unresolved,true);
  assert.ok(model.combatUnavailable.includes('平衡与强化效果尚未完整核对'));
  const html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
- assert.equal(html.includes('2 秒约'),false);assert.ok(html.includes('暂不显示伤害数字'));
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
  assert.deepEqual(model.duelPick,{own:'Vayne',foe:'Ahri'});assert.equal(model.next,null);assert.ok(model.skillAdvice);
 });
 
@@ -78,7 +77,7 @@ test('levels nineteen and twenty never silently use level eighteen damage and cu
    const m=createGuideModel(data,state,changed);
    assert.equal(m.estimate,null);assert.equal(m.customDuel.unresolved,true);assert.ok(m.combatUnavailable.includes('19级及以上'));
    const html=renderGuide({model:m,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
-   assert.ok(html.includes('19级及以上'));assert.equal(html.includes('2 秒约'),false);
+   assert.doesNotMatch(html,/2 秒约|data-tab=|duel-box/);assert.equal(m.estimate,null);
    assert.ok(m.next);assert.equal(m.selection.threatId,'Ahri');
   }
   const ally=createGuideModel(data,{...state,duelPick:{own:'Janna',foe:'Ahri'}},{...live,allies:live.allies.map(a=>({...a,level}))});
