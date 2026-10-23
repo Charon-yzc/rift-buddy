@@ -9,13 +9,13 @@ const notes={kda:'集齐4张K/DA卡后有额外强化；与常规选择次数分
 export function hexAcquisitionRules({patch,mechanism='unknown'}={}){
  if(patch!=='16.21')return {patch,pending:true,mechanism:'unknown',choices:[],stages:[],paths:[],note:'当前4.0获取规则尚未就绪，不沿用旧版选择池。',sources:[support,update]};
  const selected=headliners.some(([id])=>id===mechanism)?mechanism:'unknown';
- // The current support article conflicts on the regular phase count. Do not
- // turn either sentence into a fabricated per-round pool or fixed level list.
- const stages=[];
- const paths=[{id:'regular',label:'常规选择',kind:'regular',condition:'按本局实际出现的选择核对；当前没有已确认的固定轮次与分轮完整池。'}];
+ // The current FAQ confirms four phases but its level list conflicts with
+ // its separate start offer. Keep the count; do not assert exact timings.
+ const stages=[{id:1,label:'首次'},{id:2,label:'第二次'},{id:3,label:'第三次'},{id:4,label:'第四次'}];
+ const paths=[{id:'regular',label:'常规选择',kind:'regular',condition:'常规四次；具体时点与选项以本局为准，分轮完整池未公开。'}];
  if(selected==='kda')paths.push({id:'extra-kda',label:'K/DA 额外',kind:'extra',condition:'集齐4张K/DA卡后额外获得强化。'});
  if(selected==='command-line')paths.push({id:'upgrade-reroll',label:'升阶重随',kind:'reroll',condition:'每次选择可将一项强化重随机为更高稀有度。'});
  if(selected==='pentakill')paths.push({id:'pentakill-start',label:'开局技能增强',kind:'skill',condition:'Pentakill 主秀开局增强一项技能，与普通强化选择分开。'},{id:'pentakill-18',label:'18级技能增强',kind:'skill',condition:'Pentakill 主秀18级增强一项技能，与普通强化选择分开。'});
  const note=notes[selected]||'本局主秀未由接口确认；可手动预览。任务解锁和额外获取与常规选择分别核对。';
- return {patch,pending:false,regularStagesConfirmed:false,mechanism:selected,choices:headliners,stages,paths,upgradeReroll:selected==='command-line',modifiedEffects:selected==='heartsteel',missionUnlocks:true,note,sources:[support,update]};
+ return {patch,pending:false,regularStagesConfirmed:true,stageTimingsConfirmed:false,mechanism:selected,choices:headliners,stages,paths,upgradeReroll:selected==='command-line',modifiedEffects:selected==='heartsteel',missionUnlocks:true,note,sources:[support,update]};
 }

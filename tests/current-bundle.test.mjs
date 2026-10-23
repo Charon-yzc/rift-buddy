@@ -19,7 +19,8 @@ test('every current Hex hero and all 314 role references resolve usable same-pat
 
 test('retired augment records, the internal placeholder and old hero-pool evidence never enter current player lists',()=>{
  const retired=[2031,2006,1220,2095,1345,2128,2042,2024,1356,2063,2082,2046,2118,2089],handbook=hexHandbookAugments(data),ordinary=hexOrdinaryAugments(data);
- assert.equal(data.augments.length,249);assert.equal(handbook.length,248);assert.equal(ordinary.length,244);
+ assert.equal(data.augments.length,249);assert.equal(handbook.length,239);assert.equal(ordinary.length,235);
+ for(const a of data.augments.filter(a=>a.catalogEnabled===false)){assert(!handbook.some(row=>row.id===a.id));assert(!ordinary.some(row=>row.id===a.id));}
  for(const id of retired){assert(!game.augments.some(a=>a.id===id));assert(!handbook.some(a=>a.id===id));}
  assert(!handbook.some(a=>a.id===3176));for(const id of [3170,3171,3172,3173])assert(!ordinary.some(a=>a.id===id));
  assert.equal(observations.patch,game.patch);assert.deepEqual(observations.entries,{});

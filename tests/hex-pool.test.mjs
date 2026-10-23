@@ -44,8 +44,8 @@ test('current package withholds unavailable 4.0 pool evidence while the 173 hist
 
 test('new mechanisms adapt acquisition paths instead of relabeling four fixed pools',()=>{
  assert.equal(hexAcquisitionRules({patch:'16.20',mechanism:'kda'}).stages.length,0);
- const kda=hexAcquisitionRules({patch:'16.21',mechanism:'kda'});assert.equal(kda.stages.length,0);assert.equal(kda.regularStagesConfirmed,false);assert.equal(kda.paths.length,2);assert.equal(kda.paths.at(-1).kind,'extra');assert.match(kda.paths.at(-1).condition,/4张/);assert.doesNotMatch(kda.note,/第五次/);
- const line=hexAcquisitionRules({patch:'16.21',mechanism:'command-line'});assert.equal(line.stages.length,0);assert(line.upgradeReroll);assert.equal(line.paths.at(-1).kind,'reroll');
+ const kda=hexAcquisitionRules({patch:'16.21',mechanism:'kda'});assert.equal(kda.stages.length,4);assert.equal(kda.regularStagesConfirmed,true);assert.equal(kda.paths.length,2);assert.equal(kda.paths.at(-1).kind,'extra');assert.match(kda.paths.at(-1).condition,/4张/);assert.doesNotMatch(kda.note,/第五次/);
+ const line=hexAcquisitionRules({patch:'16.21',mechanism:'command-line'});assert.equal(line.stages.length,4);assert(line.upgradeReroll);assert.equal(line.paths.at(-1).kind,'reroll');
  assert(hexAcquisitionRules({patch:'16.21',mechanism:'heartsteel'}).modifiedEffects);
  assert.equal(hexAcquisitionRules({patch:'16.21',mechanism:'random-unconfirmed'}).mechanism,'unknown');assert.deepEqual(hexAcquisitionRules({patch:'16.22'}).stages,[]);
  const pool=hexHeroPool({data:{...data,patch:'16.21'},hero:'Yasuo',mechanism:'kda',round:'extra-kda'});assert.equal(pool.round,'extra-kda');assert.match(hexPoolView(pool),/K\/DA 额外/);assert(pool.rows.every(r=>r.status!=='observed'),'Old-patch observations never leak into the new mechanism');

@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {hexAugmentDetail} from '../src/core/hex-augment-detail.mjs';
 import {hexAugmentReference} from '../src/core/hex-augment-reference.mjs';
-import {hexAugmentAcquisition,hexHandbookAugments} from '../src/core/hex-acquisition.mjs';
+import {hexAugmentAcquisition,hexHandbookAugments,hexCurrentAugmentIds} from '../src/core/hex-acquisition.mjs';
 import {compareAugments,augmentCategories} from '../src/core/hex-compare.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {renderGuide} from '../src/guide-view.mjs';
@@ -44,7 +44,7 @@ test('current text correction requires every full-tooltip field and preserves th
 
 test('main cards, details, three-choice comparison and restored guide share the reviewed effect',async()=>{
  const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8'),extract=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
- const context=vm.createContext({data,isCurrentHexData,HEX_DATA_PENDING,e:escape,asset,icon,button,hexAugmentReference,hexAugmentAcquisition,hexHandbookAugments,hexAugmentDetail,augmentCategories,hexHeroPool,hexPoolBadge,hexPoolRound:0,hexPoolFilter:'all',hexMechanism:'unknown',hexHero:null,hexCategory:'all',hexForHero:false,hexSelectedOnly:false,hexRarity:'all',hexQuery:'',hexSelected:[],hexOptions:[],hexOwned:[],currentHexRound:()=>null,rarityName:{},overlay:{innerHTML:''},picker:null,buildView:null,detailResult:null});
+ const context=vm.createContext({data,isCurrentHexData,HEX_DATA_PENDING,e:escape,asset,icon,button,hexAugmentReference,hexAugmentAcquisition,hexHandbookAugments,hexCurrentAugmentIds,hexAugmentDetail,augmentCategories,hexHeroPool,hexPoolBadge,hexPoolRound:0,hexPoolFilter:'all',hexMechanism:'unknown',hexHero:null,hexCategory:'all',hexForHero:false,hexSelectedOnly:false,hexRarity:'all',hexQuery:'',hexSelected:[],hexOptions:[],hexOwned:[],currentHexRound:()=>null,rarityName:{},overlay:{innerHTML:''},picker:null,buildView:null,detailResult:null});
  vm.runInContext(extract('function augmentTiles(){','function renderFavorites(){')+extract('function showAugment(','const recommendationRunner='),context);
  assert.doesNotMatch(context.augmentTiles(),/在命中时、最大距离时/);context.showAugment(2005);assert.match(context.overlay.innerHTML,/5秒冷却时间/);
  const comparison=compareAugments({champion,options:[2072,2005],augments:data.augments,patch:data.patch});assert.match(comparison[1].description,/冷却：5秒/);assert.ok(comparison.every(a=>a.review));
