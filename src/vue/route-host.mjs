@@ -10,14 +10,15 @@
 // On navigation to a non-Vue route, unmount before replacing the shell.
 import {createApp, h, shallowRef} from '../generated/vue.runtime.mjs';
 import FavoriteList from '../generated/FavoriteList.mjs';
+import HistoryCards from '../generated/HistoryCards.mjs';
 
-const COMPONENTS = {favorites: FavoriteList};
+const COMPONENTS = {favorites: FavoriteList, history: HistoryCards};
 
 export function createVueRouteHost() {
   let app = null;
   let host = null;
   let current = null;
-  const state = shallowRef({data: null, favorites: []});
+  const state = shallowRef({});
 
   function ensureHost(route) {
     if (!host) {
@@ -35,7 +36,7 @@ export function createVueRouteHost() {
       host?.remove();
       host = null;
       current = null;
-      state.value = {data: null, favorites: []};
+      state.value = {};
     }
   }
 
@@ -50,13 +51,16 @@ export function createVueRouteHost() {
     tpl.innerHTML = shell;
     const frag = tpl.content;
     const slot = frag.querySelector(`[data-vue-route="${route}"]`);
-    if (!slot) throw Error(`Missing Vue route slot: ${route}`);
+    if (!slot) {
+      if(route!=='history')throw Error(`Missing Vue route slot: ${route}`);
+      unmount();root.innerHTML=shell;return {mounted:false};
+    }
     if (current && current !== route) unmount();
     const live = ensureHost(route);
     const focused = live.contains(document.activeElement) ? document.activeElement : null;
     slot.replaceWith(live);
     root.replaceChildren(frag);
-    state.value = {data: props?.data ?? null, favorites: props?.favorites ?? []};
+    state.value = props||{};
     if (!app) {
       current = route;
       app = createApp({render: () => h(Component, state.value)});
@@ -66,5 +70,9 @@ export function createVueRouteHost() {
     return {mounted: true};
   }
 
-  return {render, unmount, get current() { return current; }};
+  function update(route,props){
+    if(!app||current!==route||!host?.isConnected)return false;
+    state.value=props;return true;
+  }
+  return {render, update, unmount, get current() { return current; }};
 }

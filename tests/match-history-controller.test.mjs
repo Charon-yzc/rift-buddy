@@ -43,6 +43,19 @@ test('repeated detail clicks share a single in-flight summary request',async()=>
  let release,calls=0;const c=createHistoryController({request:async(op)=>op==='profile'?{}:op==='page'?page('one'):op==='detail'?(calls++,new Promise(resolve=>release=resolve)):{timeline:{frames:[],events:[]}}});
  await c.open();const a=c.detail(1,'summary'),b=c.detail(1,'stats');assert.equal(calls,1);release({game:c.current().page.games[0]});await Promise.all([a,b]);assert.equal(c.current().details[1].section,'stats');
 });
+test('cached detail tabs notify once without entering a fake loading cycle or reanalyzing',async()=>{
+ const changes=[],calls=[];let analyses=0;
+ const c=createHistoryController({request:async op=>{calls.push(op);return op==='page'?page('one'):op==='profile'?{}:op==='detail'?{game:page('one').games[0]}:{timeline:{frames:[],events:[]}};},analyze:()=>++analyses,onChange:change=>changes.push({change,loading:c.current()?.details[1]?.loading})});
+ const tab=await c.open();await c.detail(1,'events');changes.length=0;const reads=calls.length,before=analyses;
+ await c.detail(1,'builds');
+ assert.equal(calls.length,reads);assert.equal(analyses,before);assert.equal(changes.length,1);assert.equal(changes[0].loading,false);assert.deepEqual(changes[0].change,{type:'detail',tabId:tab.id,id:1});
+});
+test('new detail measurements notify the sidebar once and background detail completion remains tagged to its owner',async()=>{
+ const changes=[];let release;
+ const c=createHistoryController({request:async(op,p)=>op==='page'?page(p.query||'one'):op==='profile'?{}:op==='detail'?new Promise(resolve=>release=resolve):{timeline:{frames:[],events:[]}},onChange:change=>changes.push(change)});
+ const owner=await c.open({query:'one'}),pending=c.detail(1,'summary');await c.open({query:'two'});release({game:page('one').games[0]});await pending;
+ assert.deepEqual(changes.at(-1),{type:'detail',tabId:owner.id,id:1,analysisChanged:true});assert.equal(c.current().page.player.name,'two');
+});
 test('a failed timeline flight settles waiting clicks without an automatic retry loop',{timeout:1000},async()=>{
  let release,calls=0;const c=createHistoryController({request:async(op)=>op==='profile'?{}:op==='page'?page('one'):op==='detail'?{game:page('one').games[0]}:(calls++,new Promise((_,reject)=>release=reject))});
  await c.open();const a=c.detail(1,'timeline');await new Promise(resolve=>setImmediate(resolve));const b=c.detail(1,'events');release(Error('offline'));await Promise.all([a,b]);assert.equal(calls,1);assert.match(c.current().details[1].error,/offline/);

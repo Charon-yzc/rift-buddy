@@ -46,6 +46,12 @@ test('rendered open and closed choices survive per page and sidebar scope',()=>{
  state.restore('sidebar:room',root(roomAgain));assert.equal(roomAgain.open,false);
  const other=detail('连接说明',{'data-companion-disclosure':'help'});assert.equal(state.restore('page:reference',root(other)),0);assert.equal(other.open,false);
 });
+test('Vue-owned disclosures and focus never trigger the legacy subtree scanner',()=>{
+ const state=createDisclosureState(),native=detail('原生说明',{id:'native',open:true}),owned=detail('事件位置',{open:true}),host=el('div',{'data-vue-host':'history'},owned),view=root(native,host);
+ const query=owned.querySelectorAll.bind(owned);owned.querySelectorAll=selector=>{assert.equal(selector,'*','Only the fixture traversal may visit the owned node');return query(selector);};
+ view.ownerDocument={activeElement:owned.children[0]};assert.equal(state.captureFocus(view),null);
+ assert.equal(state.capture('history',view),1);owned.open=false;native.open=false;state.restore('history',view);assert.equal(native.open,true);assert.equal(owned.open,false);
+});
 
 test('a native role select keeps focus across background updates but a changed or ambiguous enum is rejected',()=>{
  const state=createDisclosureState(),old=select('solo-role',['','top','mid']),before=root(old);before.ownerDocument={activeElement:old};

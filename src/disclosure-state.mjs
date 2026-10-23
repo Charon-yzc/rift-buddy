@@ -4,6 +4,7 @@ const text=node=>(node?.textContent||'').replace(/\s+/g,' ').trim();
 const children=node=>Array.from(node.children||[]);
 const descendants=node=>Array.from(node.querySelectorAll('*'));
 const summary=node=>children(node).find(child=>child.tagName==='SUMMARY');
+const managed=node=>{for(let p=node;p;p=p.parentElement)if(attr(p,'data-vue-host'))return true;return false;};
 const classes=node=>attr(node,'class').split(/\s+/).filter(name=>name&&!/^(active|on|featured|open|expanded|collapsed|selected|disabled|loading|pending)$/.test(name)).sort();
 const companionKey=node=>attr(node,'data-companion-disclosure').replace(/^candidate-\d+$/,'candidate');
 const explicitKey=node=>attr(node,'data-disclosure-key')||companionKey(node)||attr(node,'id');
@@ -58,6 +59,7 @@ function identity(detail,root){
 function uniqueDisclosures(root){
  const found=new Map(),ambiguous=new Set();
  for(const detail of root?.querySelectorAll('details')||[]){
+  if(managed(detail))continue;
   const key=identity(detail,root);
   if(!key||ambiguous.has(key))continue;
   if(found.has(key)){found.delete(key);ambiguous.add(key);}else found.set(key,detail);
@@ -82,8 +84,9 @@ function uniqueFocusTargets(root){
  const found=new Map(),ambiguous=new Set();
  const add=(key,target)=>{if(!key||ambiguous.has(key))return;if(found.has(key)){found.delete(key);ambiguous.add(key);}else found.set(key,target);};
  for(const [key,detail]of uniqueDisclosures(root))add(key,summary(detail));
- for(const node of root?.querySelectorAll('button')||[])add(buttonIdentity(node,root),node);
- for(const node of root?.querySelectorAll('select')||[]){
+  for(const node of root?.querySelectorAll('button')||[])if(!managed(node))add(buttonIdentity(node,root),node);
+  for(const node of root?.querySelectorAll('select')||[]){
+   if(managed(node))continue;
   const id=attr(node,'id');if(!id)continue;
   const options=descendants(node).filter(child=>child.tagName==='OPTION').map(child=>[attr(child,'value'),child.getAttribute('disabled')!==null]);
   add(JSON.stringify(['select',id,attr(node,'name'),options]),node);
@@ -97,6 +100,7 @@ export function createDisclosureState(){
   captureFocus(root){
    const active=root?.ownerDocument?.activeElement;
    if(!['SUMMARY','BUTTON','SELECT'].includes(active?.tagName))return null;
+   if(managed(active))return null;
    for(const [key,target] of uniqueFocusTargets(root))if(target===active)return key;
    return null;
   },

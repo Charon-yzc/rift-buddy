@@ -1,6 +1,7 @@
 const {app,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),https=require('node:https'),http=require('node:http'),cp=require('node:child_process'),{EventEmitter}=require('node:events');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),windows=[],writes=[],errors=[],cacheSmoke=process.env.RIFT_BUDDY_USAGE_CACHE_SMOKE,usageSmoke=process.env.RIFT_BUDDY_USAGE_SMOKE==='1',roomUsageSmoke=process.env.RIFT_BUDDY_ROOM_USAGE_SMOKE==='1',historyReads=[],roomSockets=[],roomFrames=[];let main,observer,offline=false,clientPhase='Lobby',holdUsage=usageSmoke,releaseUsage=null;
+const interactionSmoke=process.env.RIFT_BUDDY_HISTORY_INTERACTIONS==='1',interactionFixture=interactionSmoke?require('./history-interaction-fixture.cjs'):null;
 app.setPath('userData',root);globalShortcut.register=()=>false;
 app.on('browser-window-created',(_event,window)=>{windows.push(window);window.show=()=>{};window.showInactive=()=>{};window.focus=()=>{};window.webContents.setBackgroundThrottling(false);window.webContents.on('console-message',(_event,_level,message)=>{if(typeof message==='string'&&/TypeError|ReferenceError|SyntaxError/.test(message))errors.push(message);});});
 app.whenReady().then(()=>session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true})));
@@ -29,9 +30,9 @@ const output=options=>{assert.equal(options.hostname,'127.0.0.1');assert.equal(o
  if(route.startsWith('/lol-summoner/v1/summoners?name='))return friend;
  if(route.includes('/matches?')){const q=new URLSearchParams(route.split('?')[1]),start=Number(q.get('begIndex')),count=Number(q.get('endIndex'))-start+1;historyReads.push({start,count});const value={games:{games:Array.from({length:usageSmoke?Math.max(0,Math.min(count,500-start)):start===0?count:3},(_,i)=>{const row=game(start+i+1);if(usageSmoke)row.participants[0].championId=[22,103,99,64,412,86][(start+i)%6];return row;})}};return holdUsage&&count===100&&start>0?new Promise(resolve=>releaseUsage=()=>{releaseUsage=null;resolve(value);}):value;}
  if(route.startsWith('/lol-match-history/v1/games/')){if(usageSmoke)throw Error('Summary must not fetch individual games');return game(Number(route.split('/').at(-1)));}
- if(route.includes('/game-timelines/'))return {frames:[{timestamp:60000,participantFrames:{1:{participantId:1,totalGold:600,currentGold:200,minionsKilled:6,jungleMinionsKilled:0,level:2,xp:300}},events:[{type:'ITEM_PURCHASED',timestamp:20000,participantId:1,itemId:1001},{type:'SKILL_LEVEL_UP',timestamp:0,participantId:1,skillSlot:1},{type:'CHAMPION_KILL',timestamp:50000,killerId:1,victimId:2}]}]};
+ if(route.includes('/game-timelines/'))return interactionSmoke?interactionFixture.timeline():{frames:[{timestamp:60000,participantFrames:{1:{participantId:1,totalGold:600,currentGold:200,minionsKilled:6,jungleMinionsKilled:0,level:2,xp:300}},events:[{type:'ITEM_PURCHASED',timestamp:20000,participantId:1,itemId:1001},{type:'SKILL_LEVEL_UP',timestamp:0,participantId:1,skillSlot:1},{type:'CHAMPION_KILL',timestamp:50000,killerId:1,victimId:2}]}]};
  if(route.startsWith('/lol-ranked/'))return {queues:[{queueType:'RANKED_SOLO_5x5',tier:'GOLD',division:'I',leaguePoints:40,wins:30,losses:20}]};
- if(route.startsWith('/lol-champion-mastery/'))return [{championId:22,championLevel:10,championPoints:100000}];
+ if(route.startsWith('/lol-champion-mastery/'))return interactionSmoke?Array.from({length:173},(_,i)=>({championId:i+1,championLevel:10,championPoints:100000-i})):[{championId:22,championLevel:10,championPoints:100000}];
  if(route.includes('/rofls/')&&method==='POST'){writes.push(route);return {};}
  if(route.includes('/metadata/'))return {state:'readyToWatch',downloadProgress:100};
  throw Error('Unexpected fixture route');
@@ -155,6 +156,7 @@ async function run(){
  }
  await click('[data-action=history-self]');await until(()=>js('document.querySelectorAll(".history-match").length===20&&!document.querySelector(".history-loading")'),'History page missing');
   assert.match(await js('document.querySelector(".history-profile").textContent'),/战绩测试玩家/);assert.equal(writes.length,0);
+  if(interactionSmoke){const result=await interactionFixture.measure({main,js,until,click});assert.equal(writes.length,0);assert.deepEqual(errors,[]);await fs.writeFile(path.join(root,'result.json'),JSON.stringify({packaged:!source,...result,realWrites:0},null,2));app.quit();return;}
  for(const close of ['button','escape','backdrop']){
   await js('(()=>{document.querySelector("#history-query").value="示例";document.querySelector("#history-search").dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));})()');
   await until(()=>js('!!document.querySelector("[aria-label=玩家搜索结果]")'),'Search results missing');

@@ -42,11 +42,13 @@
 
 `node scripts/smoke-package-pick-eligibility.mjs` 使用实际 ASAR 的隔离客户端夹具，覆盖本机范围改变后的旧方案拒绝、明确接受新方案、收藏和重启、确认空范围、ban/不可镜像/允许镜像、未知位置确认、离线、锁定朋友、双排与三排组合库的按钮操作，以及主窗和 280/360/440 DIP 侧栏。所有网络、真实客户端和符文写入均禁用，不能替代国服实测。
 
-本指南面向拉取仓库后继续开发的人。项目是 Electron 桌面程序，界面正在从原生 HTML、CSS 与 JavaScript ES Modules 分阶段迁移到 Vue 3。收藏页使用 `src/vue/FavoriteList.vue`；其余页面暂沿用现有模块。不需要数据库服务器。
+本指南面向拉取仓库后继续开发的人。项目是 Electron 桌面程序，界面正在从原生 HTML、CSS 与 JavaScript ES Modules 分阶段迁移到 Vue 3。收藏页使用 `src/vue/FavoriteList.vue`；战绩卡片使用 `src/vue/HistoryCards.vue`，详情专用更新保留其余卡片与资料区；其他区域暂沿用现有模块。不需要数据库服务器。
 
 Vue 模板由官方 `@vue/compiler-sfc` 在启动、预览、测试、检查和打包前预编译，输出到忽略提交的 `src/generated/`。也可单独运行 `pnpm build:renderer`。运行时仅使用离线 runtime-only 构建，保留原有禁止 `eval` 的 CSP。直接运行 Electron 或源码验收脚本前，先执行一次构建；打包脚本本身会执行构建。收藏页沿用当前海克斯版本门禁，隐藏旧条目后操作索引仍指向原集合；旧版收藏的确认清理入口保留。
 
 `pnpm smoke:vue` 在禁用硬件加速的隔离 Electron 窗口中验证标题转义、节点复用、展开状态、焦点、删除后索引、事件委托与挂载/卸载。`node scripts/smoke-package-favorite-context.mjs` 从最新 ASAR 验证八种载入流程；设置 `$env:RIFT_BUDDY_SOURCE='1'` 可验证源码。构建不依赖 pnpm 的内部目录布局。系统提交内存紧张时，可临时设置 `$env:PNPM_WORKERS='999'` 将 pnpm 的 worker 池限制到一个；全量测试默认并发为 4。
+
+`node scripts/smoke-package-match-history.mjs --interactions` 验证较大时间线下的详情切换、其他对局和其他玩家查询，断言无关卡片与资料节点不被替换，并输出合成数据的耗时和 CPU 采样摘要。加 `--source` 使用源码。根因与测量限制见 [战绩交互性能调查](history-interaction-performance.md)。
 
 ## 环境与首次运行
 
