@@ -1,4 +1,4 @@
-import {escape as e} from './ui.mjs';
+import {escape as e,formatNumber} from './ui.mjs';
 import {HISTORICAL_STATS} from './core/match-history/stats.mjs';
 // Akari game-map.ts / Riot match-history map domains. This is a coordinate schematic.
 const MAPS={11:{minX:0,minY:0,maxX:14820,maxY:14881,name:'召唤师峡谷'},12:{minX:-28,minY:-19,maxX:12849,maxY:12858,name:'嚎哭深渊'}};
@@ -17,7 +17,7 @@ export function historyPositionMap(game,points,{label='历史玩家位置',selec
 export function historyStatsView(d){
  const {game,timeline}=d;if(!timeline?.frames.length)return '<p>没有可读取的逐分钟属性</p>';
  const index=Math.max(0,Math.min(timeline.frames.length-1,Math.trunc(Number(d.chartFrame))||0)),frame=timeline.frames[index],player=game.participants.find(p=>p.id===Number(d.chartPlayer))||game.self||game.participants[0],value=frame.players.find(p=>p.id===player?.id);
- const num=v=>Number.isFinite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:2}):'未读取';
+ const num=v=>Number.isFinite(v)?formatNumber(v,2):'未读取';
  const map=historyPositionMap(game,frame.players.map(p=>({...p,name:game.participants.find(q=>q.id===p.id)?.name,selected:p.id===player?.id})),{selectable:true});
  const stamp=Number.isFinite(frame.timestamp)?`${Math.floor(frame.timestamp/60000)}:${String(Math.floor(frame.timestamp/1000)%60).padStart(2,'0')}`:'时间未读取';
  return `<section class="history-frame-stats"><h3>${e(player?.name||'玩家')} · ${stamp} 属性快照</h3><div class="history-chart-controls"><label>属性玩家<select data-history-chart="${e(game.id)}" data-chart-field="chartPlayer">${game.participants.map(p=>`<option value="${e(p.id)}" ${p.id===player?.id?'selected':''}>${e(p.name||'玩家 '+p.id)}</option>`).join('')}</select></label><label>选择时间<input type="range" min="0" max="${timeline.frames.length-1}" value="${index}" data-history-chart="${e(game.id)}" data-chart-field="chartFrame" aria-label="历史属性时间"></label></div>${map}${!historyMapPoint(game.map,value?.position)?'<p class="muted">当前玩家这一分钟的位置未提供，或地图不支持坐标展示。</p>':''}${value?.stats?`<dl class="history-metrics">${Object.entries(HISTORICAL_STATS).map(([key,label])=>`<div><dt>${label}</dt><dd>${num(value.stats[key])}</dd></div>`).join('')}</dl>`:'<p class="muted">当前数据源没有提供这一分钟的完整属性。</p>'}<small>这是已结束对局在对应分钟的属性采样，不是实时数据。仅显示这一帧实际记录的位置。</small></section>`;

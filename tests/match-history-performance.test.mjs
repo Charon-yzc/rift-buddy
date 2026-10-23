@@ -174,6 +174,28 @@ test('a client timeline failure falls back to the game backend',async()=>{
  assert.match(result.notice,/客户端时间线暂不可用/);
 });
 
+// The client timeline route only returns kills, epic monsters and buildings, so a
+// first page read locally for speed must still take its timeline from the backend.
+test('an automatic first page read from the client still takes complete timelines from the game backend',async()=>{
+ const routes=[];
+ const f=service({request:async(auth,route)=>{routes.push(route);return requestStub()(auth,route);},backend:async({route})=>{routes.push(route);return route.includes('/player/')?{games:[{json:raw}]}:{json:{frames:[],events:[]}};}});
+ const page=await f.service.execute('page',{source:'auto',start:0,count:20});
+ assert.equal(page.source,'lcu','the first page still answers from the client');
+ const result=await f.service.execute('timeline',{handle:page.handle,id:page.games[0].id});
+ assert.equal(result.source,'sgp');
+ assert.equal(result.notice,'');
+ assert.ok(routes.some(route=>route.endsWith('/DETAILS')),'the backend timeline was read');
+ assert.ok(!routes.some(route=>route.includes('/game-timelines/')),'the reduced client timeline was not read');
+});
+
+test('a backend timeline failure after a client first page falls back to the client timeline with a notice',async()=>{
+ const f=service({request:requestStub(),backend:async({route})=>route.endsWith('/DETAILS')?Object.assign(Error('后台 503'),{status:503}):{games:[{json:raw}]}});
+ const page=await f.service.execute('page',{source:'auto',start:0,count:20});
+ const result=await f.service.execute('timeline',{handle:page.handle,id:page.games[0].id});
+ assert.equal(result.source,'lcu');
+ assert.match(result.notice,/出装事件可能缺失/);
+});
+
 test('a client detail failure falls back to the game backend',async()=>{
  const f=service({request:requestStub({detail:'fail'}),backend:async({route})=>route.includes('/player/')?{games:[{json:raw}]}:{json:raw}});
  const page=await f.service.execute('page',{source:'lcu',start:0,count:20});

@@ -1,8 +1,8 @@
 // Historical presentation adapted from League Akari 60f1584c (MIT, Hanxven).
-import {escape as e} from './ui.mjs';
+import {escape as e,formatNumber} from './ui.mjs';
 
 const finite=Number.isFinite;
-const num=v=>finite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:2}):'未读取';
+const num=v=>finite(v)?formatNumber(v,2):'未读取';
 const pct=v=>finite(v)?`${(v*100).toFixed(0)}%`:'未读取';
 const time=v=>finite(v)?`${Math.floor(v/60)}:${String(Math.floor(v%60)).padStart(2,'0')}`:'未读取';
 const camps={blue:'蓝 Buff',red:'红 Buff',wolves:'三狼',raptors:'锋喙鸟'};

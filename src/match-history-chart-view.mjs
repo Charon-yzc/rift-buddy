@@ -1,10 +1,10 @@
-import {escape as e} from './ui.mjs';
+import {escape as e,formatNumber} from './ui.mjs';
 import {timelineAnalysisView} from './match-history-timeline-view.mjs';
 import {historyStatsView} from './match-history-stats-view.mjs';
 
 const metrics={gold:'总金币',currentGold:'当前金币',cs:'补刀',xp:'经验',level:'等级',damage:'英雄伤害',damageTaken:'承受伤害',physicalDamage:'物理英雄伤害',magicDamage:'魔法英雄伤害',trueDamage:'真实英雄伤害',physicalTaken:'物理承伤',magicTaken:'魔法承伤',trueTaken:'真实承伤'};
 const time=v=>Number.isFinite(v)?Math.floor(v/60000)+':'+String(Math.floor(v/1000)%60).padStart(2,'0'):'时间未读取';
-const num=v=>Number.isFinite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:2}):'未读取';
+const num=v=>Number.isFinite(v)?formatNumber(v,2):'未读取';
 const playerName=p=>p?.name||'玩家 '+(p?.id??'未读取');
 const teamKnown=p=>typeof p.team==='string'&&!!p.team&&!p.team.endsWith('unknown');
 const teamName=key=>key==='TEAM-100'?'蓝色方':key==='TEAM-200'?'红色方':key.startsWith('CHERRY-')?'小队 '+key.slice(7):key;

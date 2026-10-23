@@ -1,4 +1,4 @@
-import {escape as e} from './ui.mjs';
+import {escape as e,formatNumber} from './ui.mjs';
 import {historyPositionMap} from './match-history-stats-view.mjs';
 import {historyTextTip} from './match-history-hover.mjs';
 const TYPES={CHAMPION_KILL:'英雄击杀',CHAMPION_SPECIAL_KILL:'特殊击杀',BUILDING_KILL:'建筑摧毁',TURRET_PLATE_DESTROYED:'防御塔镀层',ELITE_MONSTER_KILL:'史诗野怪',WARD_PLACED:'放置守卫',WARD_KILL:'摧毁守卫',GAME_END:'对局结束'};
@@ -7,7 +7,7 @@ const DETAILS={KILL_FIRST_BLOOD:'第一滴血',KILL_MULTI:'连续击杀',KILL_AC
 const stamp=v=>Number.isFinite(v)?Math.floor(v/60000)+':'+String(Math.floor(v/1000)%60).padStart(2,'0'):'时间未读取';
 const control=(d,key,label,choices,current,multiple=false)=>{const selected=multiple?new Set(Array.isArray(current)?current.map(String):[]):new Set([String(current||'')]);return `<label>${label}<select data-history-chart="${d.game.id}" data-chart-field="${key}" ${multiple?'multiple size="4"':''}>${choices.map(([id,name])=>`<option value="${e(id)}" ${selected.has(String(id))?'selected':''}>${e(name)}</option>`).join('')}</select></label>`;};
 function position(game,event){const map=historyPositionMap(game,[{position:event.position}],{label:'历史事件位置'});return map?`<details><summary>事件位置</summary>${map}<small>坐标 ${event.position.x}, ${event.position.y}</small></details>`:'';}
-const num=value=>Number.isFinite(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:2}):'未读取';
+const num=value=>Number.isFinite(value)?formatNumber(value,2):'未读取';
 const sum=values=>values.length&&values.every(Number.isFinite)?values.reduce((a,b)=>a+b,0):null;
 function damage(event,who){
  const groups=[['received','承受伤害','来源玩家',event.victimDamageReceived],['dealt','造成伤害','目标玩家',event.victimDamageDealt]].filter(([, , , rows])=>rows?.length);

@@ -1,4 +1,4 @@
-import {escape as e,button,portrait,roleIcon,icon} from './ui.mjs';
+import {escape as e,button,portrait,roleIcon,icon,formatNumber} from './ui.mjs';
 import {championUsageView} from './champion-usage-view.mjs';
 import {filterMatches,queueName,QUEUES} from './core/match-history/model.mjs';
 import {analyzeMatches} from './core/match-history/analysis.mjs';
@@ -11,7 +11,7 @@ import {historyComparisonView} from './match-history-comparison-view.mjs';
 import {historyDetailTableView} from './match-history-detail-table-view.mjs';
 import {historyAsset,historyTipAttributes} from './match-history-hover.mjs';
 
-const num=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:d}):'未读取';
+const num=(v,d=0)=>Number.isFinite(v)?formatNumber(v,d):'未读取';
 const pct=v=>Number.isFinite(v)?(v*100).toFixed(0)+'%':'未读取';
 const time=v=>Number.isFinite(v)?`${Math.floor(v/60)}:${String(Math.floor(v%60)).padStart(2,'0')}`:'未读取';
 const resultName={win:'胜利',loss:'失败',remake:'重开',abort:'已中止',unknown:'结果未读取'};
@@ -93,9 +93,21 @@ function masteryView(tab,data){
  return `<section class="history-mastery-panel"><header><h3>英雄点数</h3><small>${all.length} 位英雄</small></header>${all.slice(0,8).map(p=>`<div class="history-mastery-row">${playerHero(data,p)}<span><b>${e(hero(data,p.champion)?.name||p.champion)}</b><small>${num(p.level)} 级</small></span><span>${num(p.points)}<small>英雄点数</small></span></div>`).join('')||'<p class="muted">暂未读取</p>'}${tab.profile.notice?`<small>${e(tab.profile.notice)}</small>`:''}</section>`;
 }
 export function matchHistorySearchView(state){return `<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="玩家搜索结果"><header class="modal-header"><h2>选择玩家</h2>${button('close','','close','quiet icon-only')}</header><div class="panel-body">${state.searchResults.map(p=>`<button class="history-related" data-action="history-player" data-puuid="${e(p.puuid)}" data-server="${e(p.server)}">${e(p.name)}<small>查看战绩</small></button>`).join('')}</div></section></div>`;}
+// Every detail update lists all cards again, and an expanded events or builds
+// card is a large HTML string. Reuse a card's markup until its game, detail
+// state, page analysis or bundled data changes. Large objects are compared by
+// identity (the controller replaces them); small detail fields by value.
+const cardCache=new WeakMap(),objectIds=new WeakMap();let nextObjectId=0;
+const objectId=value=>{if(!value||typeof value!=='object')return '';let id=objectIds.get(value);if(id===undefined)objectIds.set(value,id=++nextObjectId);return id;};
+const detailKey=d=>d?JSON.stringify(Object.keys(d).sort().map(key=>[key,key==='game'||key==='timeline'||key==='flight'?objectId(d[key]):d[key]])):'';
+function cachedCard(data,game,d,fullAnalysis){
+ const key=[objectId(data),objectId(fullAnalysis),detailKey(d)].join('|'),cached=cardCache.get(game);
+ if(cached?.key===key)return cached.html;
+ const html=card(data,game,d,fullAnalysis);cardCache.set(game,{key,html});return html;
+}
 export function historyCardsView(state,data){
  const tab=state.tabs.find(t=>t.id===state.current),page=tab?.page,games=filterMatches(page?.games||[],tab?.filter);
- return {items:games.map(game=>({id:game.id,html:card(data,game,tab.details[game.id],page.fullAnalysis)})),empty:page?.games.length?'已加载对局中没有符合条件的战绩':'客户端返回的战绩为空'};
+ return {items:games.map(game=>({id:game.id,html:cachedCard(data,game,tab.details[game.id],page.fullAnalysis)})),empty:page?.games.length?'已加载对局中没有符合条件的战绩':'客户端返回的战绩为空'};
 }
 export function matchHistoryView(state,data,{vueCards=false}={}){
  const tab=state.tabs.find(t=>t.id===state.current),page=tab?.page,games=filterMatches(page?.games||[],tab?.filter),servers=[['','当前大区'],...(state.servers||[]).map(s=>[s.id,s.name])];

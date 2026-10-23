@@ -333,9 +333,13 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取详情');put(key,{origin:source,game,complete:true,detailNotice:notice});return {game,notice};
   }
   if(operation==='timeline'){
-   let timeline=cached?.timeline,actual=cached?.timelineSource||source,notice=cached?.timelineNotice||'';if(!timeline){let raw;try{raw=source==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/DETAILS`):await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);}catch(error){
+   // The client timeline route returns only kills, epic monsters and buildings.
+   // An automatic first page is read locally for speed, so its timelines still
+   // come from the backend; only an explicit client source keeps the client route.
+   const primary=source==='lcu'&&t.preferred!=='lcu'&&SGP_SERVERS[t.server]&&!sourceBlocked(t.server,'sgp')?'sgp':source;
+   let timeline=cached?.timeline,actual=cached?.timelineSource||primary,notice=cached?.timelineNotice||'';if(!timeline){let raw;try{raw=primary==='sgp'?await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${SGP_SERVERS[t.server].region}_${id}/DETAILS`):await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);}catch(error){
     if(t.cross)throw error;
-    if(source==='sgp'){raw=await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);actual='lcu';notice='后台时间线暂不可用，已使用当前大区客户端数据；部分属性和出装事件可能缺失';}
+    if(primary==='sgp'){raw=await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);actual='lcu';notice='后台时间线暂不可用，已使用当前大区客户端数据；部分属性和出装事件可能缺失';}
     else{const remoteServer=SGP_SERVERS[t.server];if(!remoteServer)throw error;raw=await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${remoteServer.region}_${id}/DETAILS`);actual='sgp';notice='客户端时间线暂不可用，已改用游戏后台数据';}
    }timeline=normalizeTimeline(raw,actual);}
    await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取时间线');put(key,{origin:source,timeline,timelineSource:actual,timelineNotice:notice});return {id,timeline,source:actual,notice};

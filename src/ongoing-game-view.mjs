@@ -2,7 +2,7 @@
 // Card anatomy follows Akari's ongoing-game panel: 240px cards in a fixed
 // column grid, avatar + level, one rank strip, one win-rate / KDA / position
 // row, tags, champion usage and a compact match list.
-import {escape as e,portrait,asset,button,roleIcon} from './ui.mjs';
+import {escape as e,portrait,asset,button,roleIcon,formatNumber} from './ui.mjs';
 import {queueName} from './core/match-history/model.mjs';
 import {normalizeOngoingSettings,ONGOING_TAGS} from './core/ongoing-game.mjs';
 import {ongoingGameAnalysisView,ongoingPositionName,ongoingTeamAnalysisView} from './ongoing-game-analysis-view.mjs';
@@ -13,7 +13,7 @@ import {rankTierLabel} from './core/rank-display.mjs';
 import {ongoingTipAttributes} from './ongoing-game-hover.mjs';
 
 const finite=Number.isFinite;
-const num=(v,d=0)=>finite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:d}):'未读取';
+const num=(v,d=0)=>finite(v)?formatNumber(v,d):'未读取';
 const pct=v=>finite(v)?`${(v*100).toFixed(0)}%`:'未读取';
 const champion=(data,id)=>(data?.champions||[]).find(c=>Number(c.key)===Number(id));
 const heroName=(data,id)=>champion(data,id)?.name||(id>0?`英雄 ${id}`:'英雄未选择');
