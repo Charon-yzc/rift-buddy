@@ -49,14 +49,14 @@ test('main cards, details, three-choice comparison and restored guide share the 
  assert.doesNotMatch(context.augmentTiles(),/在命中时、最大距离时/);context.showAugment(2005);assert.match(context.overlay.innerHTML,/5秒冷却时间/);
  const comparison=compareAugments({champion,options:[2072,2005],augments:data.augments,patch:data.patch});assert.match(comparison[1].description,/冷却：5秒/);assert.ok(comparison.every(a=>a.review));
  const state={...selectGuide(null,{id:'Ashe',role:'bottom',mode:'hex',augmentIds:[2072],ownedAugmentIds:[2005],compareIds:[]}),compact:false},model=createGuideModel(data,state),html=renderGuide({model},'augments',false,()=>'<img>');
- assert.deepEqual(model.ownedAugments.map(a=>a.id),[2005]);assert.equal(model.comparison.length,0);assert.match(html,/本局已选强化/);assert.match(html,/冷却：5秒/);assert.doesNotMatch(html,/在命中时、最大距离时/);
+ assert.deepEqual(model.ownedAugments.map(a=>a.id),[2005]);assert.equal(model.comparison.length,0);assert.match(model.ownedAugments[0].description,/冷却：5秒/);assert.doesNotMatch(html,/本局已选强化|data-tab=/);assert.doesNotMatch(html,/在命中时、最大距离时/);
  const restored=createGuideModel(data,structuredClone(state));assert.deepEqual(restored.ownedAugments,model.ownedAugments);
 });
 
 test('owned augments remain distinct from a wish list and preserve unavailable records honestly',()=>{
  const model=createGuideModel(data,{...selectGuide(null,{id:'Ashe',role:'bottom',mode:'hex',augmentIds:[1047],ownedAugmentIds:[2005,999999],compareIds:[]}),compact:false});
  assert.deepEqual(model.augments.map(a=>a.id),[1047]);assert.deepEqual(model.ownedAugments.map(a=>a.id),[2005,999999]);assert.equal(model.ownedAugments[1].status,'missing');
- assert.match(renderGuide({model},'augments',false,()=>'<img>'),/当前资料未收录/);
+ assert.match(model.ownedAugments[1].description,/当前资料未收录/);assert.doesNotMatch(renderGuide({model},'augments',false,()=>'<img>'),/data-tab=/);
  const rift=createGuideModel(data,selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift',ownedAugmentIds:[2005]}));assert.deepEqual(rift.ownedAugments,[]);
 });
 

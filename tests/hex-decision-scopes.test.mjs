@@ -50,5 +50,5 @@ test('main/sidebar and guide retain the same conflict headline without claiming 
  const input=args(),html=renderHexComparison(input);assert.equal((html.match(/data-hex-level="conflict"/g)||[]).length,3);assert.match(html,/三项都与已选强化存在已核对冲突/);assert.doesNotMatch(html,/英雄技能源有变动或缺失/);
  const model=createGuideModel(data,{...selectGuide(null,{id:'Ahri',role:'mid',mode:'hex',compareIds:options,ownedAugmentIds:owned}),compact:false});
  assert.deepEqual(model.comparison.map(r=>r.level),['conflict','conflict','conflict']);assert.equal(model.hexDecision.reroll.recommended,true);
- const guide=renderGuide({model},'augments',false,()=>'<img>');assert.match(guide,/有冲突/);assert.match(guide,/三项都与已选强化存在已核对冲突/);
+ const guide=renderGuide({model},'augments',false,()=>'<img>');assert.doesNotMatch(guide,/data-tab=|本次选项比较/);assert.match(model.hexDecision.reroll.text,/冲突/);
 });

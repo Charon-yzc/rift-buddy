@@ -4,10 +4,10 @@ import {createGuideModel,selectGuide,validateGuideState,reconcileGuide} from '..
 import {renderGuide} from '../src/guide-view.mjs';
 const data=JSON.parse(fs.readFileSync(new URL('../data/game.json',import.meta.url)));data.builds=JSON.parse(fs.readFileSync(new URL('../data/builds.json',import.meta.url))).entries;
 const selection={id:'Ashe',mode:'rift',role:'bottom',conditions:[]};
-test('default in-game card shows complete ordered items, while components and large modules require details',()=>{
+test('default in-game card shows complete ordered items, and ignores obsolete full-window layout requests',()=>{
  const m=createGuideModel(data,selectGuide(null,selection)),html=renderGuide({model:m},'overview',false,()=>'<img>');
- assert.equal(m.compact,true);assert.equal(m.completeGear.route.length,6);assert.equal((html.match(/class="compact-slot /g)||[]).length,6);assert.match(html,/成装顺序/);assert.match(html,/data-action="layout" data-id="details"/);assert.doesNotMatch(html,/本次回城 · 可买组件|duel-box|hero-summary|--gear-count/);
- const full=renderGuide({model:{...m,compact:false}},'items',false,()=>'<img>');assert.match(full,/完整成装顺序/);assert.match(full,/购买计划|回城/);assert.match(full,/data-id="compact"/);
+ assert.equal(m.compact,true);assert.equal(m.completeGear.route.length,6);assert.equal((html.match(/class="compact-slot /g)||[]).length,6);assert.match(html,/成装顺序/);assert.doesNotMatch(html,/data-action="layout"|data-tab=/);assert.doesNotMatch(html,/本次回城 · 可买组件|duel-box|hero-summary|--gear-count/);
+ const full=renderGuide({model:{...m,compact:false}},'items',false,()=>'<img>');assert.equal(full,html);
 });
 test('manual offline progress advances the compact goal without claiming real inventory',()=>{
  const state=selectGuide(null,selection),before=createGuideModel(data,state),first=before.route[0].id;
@@ -16,6 +16,9 @@ test('manual offline progress advances the compact goal without claiming real in
  assert.equal(gear.route.find(i=>i.id===first).planned,true);assert(gear.route.every(i=>!i.owned));assert(!gear.automatic);
  assert.deepEqual(model.autoCompletedItems,[]);assert.equal(model.targetPlan.credit,0);
  assert.match(html,/手动计划/);assert.match(html,/不代表已持有/);assert.match(html,new RegExp('下一件 <b>'+gear.next.name));
+ assert.match(html,/data-action="reset"[^>]*>清标记/);
+ assert.doesNotMatch(renderGuide({model:before},'overview',false,()=>'<img>'),/data-action="reset"/);
+ assert.doesNotMatch(renderGuide({model:{...model,live:{matched:true}}},'overview',false,()=>'<img>'),/data-action="reset"/);
  assert.doesNotMatch(html,/完整路线已持有|<em>✓<\/em>/);
  state.completedItems=before.completeGear.route.filter(i=>i.fromPreparation).map(i=>i.id);
  const remaining=createGuideModel(data,state);assert(remaining.completeGear.next.suggested);assert.equal(remaining.completeGear.next.planned,false);assert.equal(remaining.next.id,remaining.completeGear.next.id);
@@ -23,7 +26,7 @@ test('manual offline progress advances the compact goal without claiming real in
  state.completedItems=before.route.map(i=>i.id);
  const all=createGuideModel(data,validateGuideState(JSON.parse(JSON.stringify(state))));assert.equal(all.completeGear.next,null);assert.equal(all.next,null);assert.equal(all.purchaseTarget,'');assert.equal(all.route.length,6);assert.equal(all.selection.laterIds,undefined);
  assert.match(renderGuide({model:all},'overview',false,()=>'<img>'),/计划进度已标记/);
- assert.match(renderGuide({model:{...all,compact:false}},'items',false,()=>'<img>'),/这套路线已完成/);
+ assert.match(renderGuide({model:{...all,compact:false}},'items',false,()=>'<img>'),/计划进度已标记/);
 });
 
 test('automatically filled seventh items obey the same explicit quest and progress gates',()=>{

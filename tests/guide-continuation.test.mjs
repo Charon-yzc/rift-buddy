@@ -1,3 +1,5 @@
+import {getBuild} from '../src/core/builds.mjs';
+import {laterItemSelector} from '../src/build-options-view.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,7 +14,7 @@ const image=()=>'<img>';
 test('finishing core plus boots continues through the same complete runtime route',()=>{
  for(const[id,role]of [['Ashe','bottom'],['Ahri','mid'],['MasterYi','jungle'],['Nautilus','support']]){
   const guide=prepare(id,role),initial=createGuideModel(data,guide);guide.completedItems=initial.completeGear.route.filter(i=>i.fromPreparation).map(i=>i.id);const model=createGuideModel(data,guide),html=renderGuide({model},'items',false,image);
-  assert.equal(model.next.id,model.completeGear.next.id);assert.ok(model.completeGear.next.suggested);assert.ok(model.laterChoices.length);assert.match(html,/data-action="later"/);assert.match(html,new RegExp('data-action="item" data-id="'+model.next.id+'"'));assert.doesNotMatch(html,/这套路线已完成|核心路线完成，继续选择后期装备/);
+  assert.equal(model.next.id,model.completeGear.next.id);assert.ok(model.completeGear.next.suggested);assert.ok(model.laterChoices.length);assert.match(html,/compact-route/);assert(html.includes(model.next.name));assert.doesNotMatch(html,/data-action="later"|data-action="item"/);assert.doesNotMatch(html,/这套路线已完成|核心路线完成，继续选择后期装备/);
  }
 });
 test('late choice advances the same guide and saved preparation without losing core progress',()=>{
@@ -34,7 +36,7 @@ test('support late planning reserves its task item and enforces its smaller capa
  const another=model.laterChoices.find(i=>!i.selected&&!i.blockedReason);assert.ok(another);assert.throws(()=>changeCompanionPlan(data,selection,'later',another.id),/已满/);
 });
 test('unavailable original choices stay explicit and can be removed without an implicit replacement',()=>{
- const guide=selectGuide(null,{...prepare().selection,laterIds:[999999]});const model=createGuideModel(data,guide);assert.equal(model.unavailableLaterOptions[0].id,999999);assert.match(renderGuide({model},'items',false,image),/取消暂不可用的原选择/);
+ const guide=selectGuide(null,{...prepare().selection,laterIds:[999999]});const model=createGuideModel(data,guide);assert.equal(model.unavailableLaterOptions[0].id,999999);const build=getBuild(data.champions.find(c=>c.id===guide.selection.id),guide.selection.role,data,guide.selection);const html=laterItemSelector(build);assert.match(html,/取消原选择/);assert.match(html,/data-id="999999"/);
  const selection=changeCompanionPlan(data,guide.selection,'later','999999');assert.deepEqual(selection.laterIds,[]);assert.throws(()=>changeCompanionPlan(data,selection,'later','999999'),/已变化/);
 });
 
@@ -46,6 +48,6 @@ test('confirmed core inventory offers late planning and keeps quest completion s
  const choice=model.laterChoices.find(i=>!i.blockedReason);guide=selectGuide(guide,changeCompanionPlan(data,guide.selection,'later',choice.id));model=createGuideModel(data,guide,live);assert.equal(model.next.id,choice.id);assert.deepEqual(guide.completedItems,[]);assert.equal(model.autoCompletedItems.length,4);
  let selection={...prepare().selection,bottomQuestPlan:true};for(let n=0;n<3;n++){const current=createGuideModel(data,selectGuide(null,selection)),next=current.laterChoices.find(i=>!i.selected&&!i.blockedReason);assert.ok(next);selection=changeCompanionPlan(data,selection,'later',next.id);}
  const full=selectGuide(null,selection),planned=createGuideModel(data,full),six={...live,inventory:planned.route.slice(0,6).map((item,slot)=>({id:item.id,count:1,slot:slot===3?6:slot>3?slot-1:slot}))};
- const pending=createGuideModel(data,full,six);assert.equal(pending.maxLaterItems,3);assert.equal(pending.laterNeeded,0);assert.equal(pending.next,null);assert.match(renderGuide({model:pending},'items',false,image),/第七件等待本局下路任务/);
+ const pending=createGuideModel(data,full,six);assert.equal(pending.maxLaterItems,3);assert.equal(pending.laterNeeded,0);assert.equal(pending.next,null);assert.match(renderGuide({model:pending},'items',false,image),/第七件待任务/);
  const confirmed={...full,bottomQuestConfirmed:true},after=createGuideModel(data,confirmed,six);assert.equal(after.next.id,planned.route[6].id);assert.equal(storedPreparation(upsertPreparation([],confirmed.selection),confirmed.selection).bottomQuestConfirmed,undefined);
 });

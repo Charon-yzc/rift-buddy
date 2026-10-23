@@ -57,12 +57,12 @@ test('public equipment without stack counts remains visible; malformed entries i
  assert.equal(publicEquipment(data,invalid).enemy.players[0].value,null);
  assert.doesNotMatch(JSON.stringify(live.roster),/unretained|summonerName/);
 });
-test('overview obeys saved module order and visibility while stale live data cannot leak a scoreboard',()=>{
+test('compact view ignores retired module controls while stale live data cannot leak a scoreboard',()=>{
  const live={available:true,champion:'Ashe',mode:'rift',at:Date.now(),level:6,gold:900,inventory:[],skills:{Q:2,W:2,E:1,R:1},teamKnown:true,roster:[player('Ashe','ally',[])],gameTime:400};
  const m=createGuideModel(data,selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),live);
  assert.equal(m.equipment.available,true);
  const html=renderGuide({model:m,presentation:{guideModules:['scoreboard','skills']}},'overview',false,()=>'<img>');
- assert.ok(html.indexOf('data-overview-module="scoreboard"')<html.indexOf('data-overview-module="skills"'));
+ assert.match(html,/compact-guide-main/);assert.doesNotMatch(html,/data-overview-module=/);
  assert.doesNotMatch(html,/data-overview-module="purchase"|data-overview-module="situation"/);
  const stale=createGuideModel(data,selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),{...live,at:Date.now()-20000});assert.equal(stale.equipment.available,false);
  const mismatch=createGuideModel(data,selectGuide(null,{id:'Jinx',role:'bottom',mode:'rift'}),live);assert.equal(mismatch.equipment.available,false);

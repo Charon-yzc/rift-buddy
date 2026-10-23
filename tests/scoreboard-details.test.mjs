@@ -1,3 +1,4 @@
+import {hexEconomyView} from '../src/hex-micro-view.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -41,9 +42,9 @@ test('unread equipment does not erase known current scores or invent a team valu
 test('dedicated scoreboard shows current facts with unread markers, and removes stale snapshots',()=>{
  const live={available:true,champion:'Ashe',mode:'rift',at:Date.now(),inventory:[],inventoryKnown:true,level:9,gold:800,skills:{Q:4,W:2,E:2,R:1},teamKnown:true,gameTime:600,roster:[player(),player({champion:'Jhin',side:'enemy',self:false,position:null,scores:{kills:4}})]};
  const state=selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift'}),model=createGuideModel(data,state,live);
- const html=renderGuide({model},'scoreboard',false,()=>'<img>');
- assert.match(html,/data-tab="scoreboard"[^>]*title="双方公开 KDA、补刀与装备">双方/);assert.match(html,/0 \/ 2 \/ 3/);assert.match(html,/4 \/ — \/ —/);assert.match(html,/10\.0/);assert.match(html,/位置未确认/);assert.match(html,/data-guide-section="equipment-我方" open/);
- assert.match(html,/不含未花金币、已出售装备与真实累计经济/);assert.doesNotMatch(html,/领先优势|落后劣势/);
- const stale=renderGuide({model:createGuideModel(data,state,{...live,at:Date.now()-20000})},'scoreboard',false,()=>'<img>');
+ const html=hexEconomyView(model.equipment,()=>'<img>');
+ assert.equal((html.match(/hex-economy-icons/g)||[]).length,2);assert.equal((html.match(/hex-economy-values/g)||[]).length,2);assert(html.includes(String(model.equipment.ally.players[0].value)));
+ assert.doesNotMatch(html,/equipment-player-scores|data-tab=|KDA|领先优势|落后劣势/);
+ const stale=hexEconomyView(createGuideModel(data,state,{...live,at:Date.now()-20000}).equipment,()=>'<img>');
  assert.doesNotMatch(stale,/equipment-player-scores|0 \/ 2 \/ 3/);assert.match(stale,/尚未读取/);
 });

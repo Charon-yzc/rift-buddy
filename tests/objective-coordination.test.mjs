@@ -36,7 +36,7 @@ test('two-player guidance never assigns unknown teammates and rejects missing or
 test('actual guide model and rhythm UI retain adopted plan context; unconfirmed queues and wrong live context do not activate it',()=>{
  const plan=curated(TRIOS.find(t=>t.id==='ball-delivery')),selection={id:'Orianna',role:'mid',mode:'rift',comboId:plan.id,creativePlan:plan},guide=selectGuide(null,selection);
  const m=createGuideModel(data,guide,live('Orianna'));const dragon=m.objectives.rows.find(r=>r.id==='dragon');assert.equal(dragon.coordination.planId,plan.id);assert.equal(dragon.coordination.ownJob.champion,'Orianna');
- const html=renderGuide({model:m},'rhythm',false,()=>'<img>');assert.match(html,/本轮你怎么做/);assert.match(html,/取消／换收益/);assert.match(html,/采用的技能职责/);assert.match(html,/阵容尚未确认/);
+ const html=renderGuide({model:m},'rhythm',false,()=>'<img>');assert.match(html,/compact-guide-main/);assert.doesNotMatch(html,/data-tab=|本轮你怎么做/);assert(dragon.coordination.ownJob);
  const unsupported=objectiveRhythm({live:{...live('Orianna'),queueId:480},plan,champion:'Orianna',role:'mid',patch:data.patch,data});assert.equal(unsupported.available,false);assert.equal(unsupported.rows.length,0);
  const mismatch=createGuideModel(data,guide,live('Ashe'));assert.equal(mismatch.objectives.available,false);assert.equal(mismatch.objectives.rows.length,0);
 });

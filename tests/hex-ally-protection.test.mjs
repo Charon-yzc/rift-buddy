@@ -63,5 +63,5 @@ test('same-patch source drift and effect drift withdraw only the purpose-specifi
 
 test('main/sidebar and guide expose the same narrow evidence without an automatic best choice',()=>{
  const input={data,hero:'Morgana',options:[1058,1141,1004],owned:[]},text=hexAllyProtection(hero('Morgana'),data.patch).conditions[0],html=renderHexComparison(input);assert(html.includes(text));assert.doesNotMatch(html,/优先看这项/);
- const model=createGuideModel(data,{...selectGuide(null,{id:'Morgana',role:'support',mode:'hex',compareIds:input.options}),compact:false}),guide=renderGuide({model},'augments',false,()=>'<img>');assert(guide.includes(text));assert.equal(model.comparison.find(r=>r.id===1141).top,false);
+ const model=createGuideModel(data,{...selectGuide(null,{id:'Morgana',role:'support',mode:'hex',compareIds:input.options}),compact:false}),guide=renderGuide({model},'augments',false,()=>'<img>');assert.doesNotMatch(guide,/data-tab=|本次选项比较/);assert(model.comparison.find(r=>r.id===1141).reasons.join(' ').includes(text));assert.equal(model.comparison.find(r=>r.id===1141).top,false);
 });

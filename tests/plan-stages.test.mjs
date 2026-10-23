@@ -1,3 +1,5 @@
+import {duoPlayView} from '../src/duo-play-view.mjs';
+import {heroCoachView} from '../src/hero-coach-view.mjs';
 // Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,7 +32,7 @@ test('accepted Ashe/Braum stages survive source edits and storage without losing
   const key=createGuideModel(data,{...selectGuide(null,selection),stage:'key'}),later=createGuideModel(data,{...selectGuide(null,selection),stage:'later'});
   assert.notEqual(key.coach.action,later.coach.action);assert.match(later.coach.action,/自保或反开.*保护范围/);
   assert.match(later.stageHint.play.exit,/保护已交空.*不同战区/);
-  const html=renderGuide({model:later},'team',false,()=>'<img>');assert.ok(html.includes(later.coach.action));assert.doesNotMatch(html,/Changed later|Changed catalog/);
+  const html=duoPlayView(later.combo.play,{stage:later.stageHint.id});assert.ok(html.includes(later.coach.action));assert.doesNotMatch(html,/Changed later|Changed catalog/);
   const copy=resultAsText({...row,creativePlan:plan},data);assert.ok(copy.includes(later.coach.action));assert.ok(copy.includes(later.stageHint.play.exit));assert.doesNotMatch(copy,/Changed later|Changed catalog/);
  }finally{BOTTOM_PLAYS.Ashe.splice(0,3,...original);Object.assign(combo,originalCombo);if(!Object.hasOwn(originalCombo,'steps'))delete combo.steps;}
 });
@@ -78,7 +80,7 @@ test('accepted trio opening keeps the whole-party early plan alongside personal 
   for(const m of trio.members){
    const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',creativePlan:restored,comboId:restored.id}),stage:'opening'});
    assert.ok(model.stageHint.play.steps.includes(originalEarly));
-   const html=renderGuide({model},'team',false,()=>'<img>');assert.ok(html.includes(originalEarly));assert.ok(html.includes(model.coach.action));assert.doesNotMatch(html,/Changed opening/);
+   const html=duoPlayView(model.combo.play,{stage:model.stageHint.id});assert.ok(html.includes(originalEarly));assert.ok(html.includes(model.coach.action));assert.doesNotMatch(html,/Changed opening/);
   }
   assert.ok(resultAsText({trio,slots,creativePlan:restored},data).includes(originalEarly));
  }finally{trio.early=originalEarly;}
@@ -93,7 +95,7 @@ test('contradictory or incomplete saved stage content is rejected even with a re
 
 test('personal trio opening text is visible and party guide puts stop conditions before the expandable full sequence',()=>{
  const trio={...structuredClone(TRIOS.find(t=>t.id==='galio-nilah-rakan')),id:'local-opening',early:'先确认三人本轮安全兵线与实际到场时间，不能到就取消；个人三人开局专属约定。'},slots=slotsFor(trio.members),plan=captureCreativePlan({trio,slots,scope:'party'},data);
- for(const m of trio.members){const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'opening'}),html=renderGuide({model},'team',false,()=>'<img>');
+ for(const m of trio.members){const model=createGuideModel(data,{...selectGuide(null,{id:m.champion,role:m.role,mode:'rift',comboId:plan.id,creativePlan:plan}),stage:'opening'}),html=duoPlayView(model.combo.play,{stage:model.stageHint.id});
   assert.ok(html.includes(trio.early));assert.doesNotMatch(html,/class="quick-plan"/);
   const panel=html.slice(html.indexOf('class="duo-stage"'));assert.ok(panel.indexOf('何时停')<panel.indexOf('完整队友行动与顺序'));
   assert.match(panel,/data-guide-section="party-steps"/);assert.ok(panel.includes(model.coach.action));

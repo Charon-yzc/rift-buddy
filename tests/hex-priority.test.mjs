@@ -59,7 +59,7 @@ test('duplicate owned marks remain bounded, and no rates or numeric strength sco
 test('main/sidebar and in-game guide keep the same decision with three comparison options',()=>{
  const input=args('Jinx',[1141,1088,1047],[1048,1356]),html=renderHexComparison(input);assert.doesNotMatch(html,/data-hex-option-input/);assert.match(html,/本局组合/);assert.match(html,/联动与下一张|查看依据/);assert.match(html,/优先看这项/);assert.ok(html.indexOf('data-augment="1141"')<html.indexOf('data-augment="1088"'));
  const guide=createGuideModel(data,{...selectGuide(null,{id:'Jinx',role:'bottom',mode:'hex',compareIds:input.options,ownedAugmentIds:input.owned}),compact:false}),rendered=renderGuide({model:guide},'augments',false,()=>'<img>');
- assert.deepEqual(guide.hexDecision.set,hexDecision(input).set);assert.deepEqual(guide.comparison.map(row=>row.id),input.options);assert.match(rendered,/本局组合/);assert.match(rendered,/优先看这项/);assert.doesNotMatch(rendered,/流派已成形|胜率\s*\d/);
+ assert.deepEqual(guide.hexDecision.set,hexDecision(input).set);assert.deepEqual(guide.comparison.map(row=>row.id),input.options);assert.doesNotMatch(rendered,/本局组合|优先看这项|data-tab=/);assert.doesNotMatch(rendered,/流派已成形|胜率\s*\d/);
 });
 
 test('general hero affinity cannot create an unrelated next choice for an empty or unconnected marked set',()=>{
@@ -94,5 +94,5 @@ test('ultimate conflict review gates both effects and never recommends reroll fo
 
 test('a conflict is the visible main/sidebar headline and the first guide warning, before positive trigger instructions',()=>{
  const input=args('Ashe',[1088],[1004]),html=renderHexComparison(input),headline=html.match(/class="hex-advice-summary"[^>]*>([^<]*)<\/p>/)?.[1];assert.match(headline,/回归基本功.*禁用.*终极/);
- const model=createGuideModel(data,{...selectGuide(null,{id:'Ashe',role:'bottom',mode:'hex',compareIds:[1088],ownedAugmentIds:[1004]}),compact:false}),rendered=renderGuide({model},'augments',false,()=>'<img>');assert.ok(rendered.includes('本次选项比较'));const card=rendered.slice(rendered.indexOf('本次选项比较'));assert.match(card,/<small>有冲突<\/small><p class="caution">回归基本功/);
+ const model=createGuideModel(data,{...selectGuide(null,{id:'Ashe',role:'bottom',mode:'hex',compareIds:[1088],ownedAugmentIds:[1004]}),compact:false}),rendered=renderGuide({model},'augments',false,()=>'<img>');assert.doesNotMatch(rendered,/本次选项比较|data-tab=/);assert.equal(model.comparison[0].level,'conflict');
 });

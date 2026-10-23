@@ -15,15 +15,15 @@ const make=(change={})=>createGuideModel(data,selectGuide(null,{...selection,...
 test('purchase view has no shrink-to-ball entry, duel pickers or duplicated combat numbers',()=>{
  const m=make(),html=renderGuide({model:m,phase:'InProgress'},'items',false,()=>'<img>');
  assert.doesNotMatch(html,/data-action="ball"|class="verdict|guide-duel-own|6 秒持续/);
- assert.match(html,/本次回城/);assert.match(html,/data-tab="combat"/);
- assert.equal((html.match(/<main>/g)||[]).length,1);
+ assert.match(html,/成装顺序/);assert.doesNotMatch(html,/data-tab=/);
+ assert.equal((html.match(/<main class="compact-guide-main">/g)||[]).length,1);
 });
 test('combat display follows the explicit opponent, and a vanished target cannot silently become another enemy',()=>{
  const focused=make({threatId:'Soraka'});assert.equal(focused.estimate.enemy.id,'Soraka');
  const html=renderGuide({model:focused},'combat',false,()=>'<img>');
- assert.match(html,/伤害参考 · 索拉卡/);assert.doesNotMatch(html,/偏你|偏对方|均势|模型提示/);
+ assert.doesNotMatch(html,/伤害参考|duel-box/);assert.doesNotMatch(html,/偏你|偏对方|均势|模型提示/);
  const missing=make({threatId:'Jinx'});assert.equal(missing.estimate.targetSelected,false);assert.equal(missing.estimate.targetMissing,true);
- assert.match(renderGuide({model:missing},'combat',false,()=>'<img>'),/所选对手、等级或装备暂不可读/);
+ assert.equal(missing.estimate.targetSelected,false);assert.equal(missing.estimate.targetMissing,true);
  assert.doesNotMatch(renderGuide({model:missing},'combat',false,()=>'<img>'),/伤害参考 · 劫/);
 });
 test('a cheap component never gets described as funding its expensive completed item or a safe recall',()=>{
@@ -43,7 +43,7 @@ test('a full inventory blocks an unconsumed component but allows a combine using
  const withTrinket=bag.slice(0,5).concat({id:'3340',count:1,slot:6});
  assert.equal(purchaseAction(purchasePlan([target],items,withTrinket,500)[0],target,500,withTrinket).kind,'component');
 });
-test('legacy ball and compact mode have an explicit text recovery action',()=>{
- const m=make();assert.match(renderGuide({model:m,ball:true},'items',false,()=>'<img>'),/ball-label">展开/);
- assert.match(renderGuide({model:{...m,collapsed:true}},'items',false,()=>'<img>'),/data-action="collapse"[^>]*>展开/);
+test('legacy ball and collapsed state cannot restore a large overlay',()=>{
+ const m=make(),normal=renderGuide({model:m},'items',false,()=>'<img>');
+ for(const snapshot of [{model:m,ball:true},{model:m,strip:true},{model:{...m,collapsed:true,compact:false}}])assert.equal(renderGuide(snapshot,'items',false,()=>'<img>'),normal);
 });

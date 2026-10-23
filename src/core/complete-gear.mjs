@@ -133,10 +133,10 @@ export function completeGearPlan({data,build,selection,live=null,completedItems=
  if(route.length<slotLimit)notes.push('当前来源没有足够适合路线的成装候选；空余装备位由玩家选择，不以不合适装备凑满。');
  const pendingQuest=slotLimit===7&&route.length===7&&!bottomQuestConfirmed&&!owns(route[6]);
  if(pendingQuest)manualIds.delete(route[6]);
- if(pendingQuest)notes.unshift('第七件先等本局正式下路任务完成，并在详情确认；当前不作为可购买目标。');
+ if(pendingQuest)notes.unshift('第七件先等本局正式下路任务完成，并在装备卡确认；当前不作为可购买目标。');
  if(selection.bottomQuestPlan&&!bottomQuestEligible)notes.unshift('本局正式位置或队列不满足下路第七件条件，按六格参考。');
  const manualProgress=route.some(planned);
- if(manualProgress)notes.unshift('按详情中的手动计划标记推进；尚未读取真实背包，标记不代表已持有。');
+ if(manualProgress)notes.unshift('按已保存的手动计划标记推进；尚未读取真实背包，标记不代表已持有。');
  const describe=id=>({pending:pendingQuest&&route[6]===id,id,name:item(id)?.name||id,cost:item(id)?.gold?.total??null,use:equipmentUse(item(id),data.patch),description:clean(item(id)?.description),owned:owns(id),planned:planned(id),fromPreparation:baseSet.has(id),suggested:!baseSet.has(id),protected:protectedIds.has(id),reason:updates.find(c=>c.id===id)?.reason||(!baseSet.has(id)?'适合当前路线的后续参考；无整套联合胜率':null)});
  const next=route.find(id=>!owns(id)&&!planned(id)&&!(pendingQuest&&route[6]===id));
  return {pendingQuest,manualProgress,automatic,changed:JSON.stringify(route)!==JSON.stringify(baseline),rulesPatch:COMPLETE_GEAR_PATCH,route:route.map(describe),baseline:baseline.map(describe),next:next?describe(next):null,updates,alternatives:candidates.filter(c=>!c.alreadyPlanned&&!updates.some(u=>u.id===c.id)).slice(0,3),notes,slotLimit,reservedSupport:!!build.support,

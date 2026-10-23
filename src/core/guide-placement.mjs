@@ -5,7 +5,7 @@ const scaleOf=value=>[1,1.1,1.25].includes(value)?value:1;
 export const compactGuideSize=scale=>({width:Math.ceil(320*scaleOf(scale)),height:Math.ceil(236*scaleOf(scale))});
 export function guideWindowLimits(kind,area,scale=1){
  const s=scaleOf(scale),[w,h]=kind==='skill'?[208,26]:kind==='jungle'?[230,144]:kind==='compact'?[280,214]:kind==='strip'?[280,160]:[360,480];
- return {minWidth:Math.min(Math.ceil(w*s),area.width),minHeight:Math.min(Math.ceil(h*s),area.height),maxWidth:Math.min(kind==='skill'?640:1000,area.width),maxHeight:Math.min(kind==='skill'?200:1200,area.height)};
+ return {minWidth:Math.min(Math.ceil(w*s),area.width),minHeight:Math.min(Math.ceil(h*s),area.height),maxWidth:Math.min(kind==='skill'?640:kind==='compact'?400*s:1000,area.width),maxHeight:Math.min(kind==='skill'?200:kind==='compact'?320*s:1200,area.height)};
 }
 export function compactGuidePlacement(saved,area,game,scale=1){
  const size=compactGuideSize(scale),anchor=game||area;

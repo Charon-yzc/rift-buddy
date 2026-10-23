@@ -4,7 +4,7 @@ import {escape as e} from './ui.mjs';import {applyPresentation} from './presenta
 const root=document.getElementById('skill-root'),api=window.skillWidget;
 function render(value){applyPresentation(value?.presentation);const m=value?.model,wrong=['champion','mode','role','combo'].includes(m?.live?.kind);
  const summary=skillSummary(m,{wrong});
- root.innerHTML=`<header><b class="skill-content" title="${e(summary.detail)}">${e(summary.text)}</b><div class="skill-actions"><button data-action="fold" title="暂时收起" aria-label="暂时收起加点提示">‹</button><button data-action="details" title="完整加点" aria-label="查看完整加点">⋯</button><button data-action="hide" title="关闭加点提示" aria-label="关闭加点提示">×</button></div></header>${windowResizeGrip}`;
+ root.innerHTML=`<header><b class="skill-content" title="${e(summary.detail)}">${e(summary.text)}</b><div class="skill-actions"><button data-action="fold" title="暂时收起" aria-label="暂时收起加点提示">‹</button><button data-action="hide" title="关闭加点提示" aria-label="关闭加点提示">×</button></div></header>${windowResizeGrip}`;
 }
 root.addEventListener('click',async event=>{const button=event.target.closest('[data-action]');if(button)try{await api.control(button.dataset.action);}catch{button.title='操作未完成，请从本局指引恢复';}});
 installWindowResize(root,(action,value)=>api.control(action,value));

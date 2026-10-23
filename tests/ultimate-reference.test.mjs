@@ -24,7 +24,7 @@ test('the live health already includes items and Feast stacks, without adding ei
  assert.equal(model.ultimateReference.championDamage,572);assert.equal(model.ultimateReference.nonChampionDamage,1472);
  assert.equal(model.ultimateReference.ap,200);assert.ok(Math.abs(model.ultimateReference.bonusHp-1722.44)<1e-6);
  const bare=createGuideModel(data,state,{...live(),inventory:[]});assert.deepEqual(bare.ultimateReference,model.ultimateReference);
- const html=renderGuide({model},'combat',false,()=>'<img>');assert.match(html,/单次技能参考/);assert.match(html,/对英雄约 <strong>572/);assert.match(html,/未叠加惩戒/);
+ const html=renderGuide({model},'combat',false,()=>'<img>');assert.doesNotMatch(html,/对英雄约|单次技能参考/);assert.match(html,/compact-guide-main/);
 });
 
 test('a missing real AP or maximum-health field does not become guessed Feast damage',()=>{
@@ -33,7 +33,7 @@ test('a missing real AP or maximum-health field does not become guessed Feast da
  }
  assert.equal(ultimateReference({...input,panel:{ap:0,maxHp:3000}}).available,true,'A known zero AP is valid');
  const model=createGuideModel(data,state,{...live(),stats:{maxHp:3000}}),html=renderGuide({model},'combat',false,()=>'<img>');
- assert.match(html,/实时法强或最大生命暂不可读/);assert.doesNotMatch(html,/对英雄约 <strong>/);
+ assert.equal(model.ultimateReference.available,false);assert.match(model.ultimateReference.reason,/实时法强或最大生命暂不可读/);assert.doesNotMatch(html,/对英雄约 <strong>/);
 });
 
 test('single-cast references reject impossible ranks, unlearned R and unknown levels',()=>{
@@ -51,7 +51,7 @@ test('Garen uses the current R base plus missing-health ratio without fabricatin
   const result=ultimateReference({champion:garen,level,skills,patch,panel:{}});assert.equal(result.available,true);assert.equal(result.baseDamage,baseDamage);assert.equal(result.missingHealthRatio,missingHealthRatio);assert.equal(Object.hasOwn(result,'championDamage'),false);
  }
  const model=createGuideModel(data,selectGuide(null,{id:'Garen',role:'top',mode:'rift'}),{...live(),champion:'Garen',stats:{}}),html=renderGuide({model},'combat',false,()=>'<img>');
- assert.match(html,/基础 <strong>125/);assert.match(html,/助手没有对手当前生命/);assert.match(html,/26.14调整/);assert.doesNotMatch(html,/立即击杀|可斩杀|可抢龙/);
+ assert.equal(model.ultimateReference.baseDamage,125);assert.equal(model.ultimateReference.missingHealthRatio,.25);assert.equal(Object.hasOwn(model.ultimateReference,'championDamage'),false);assert.doesNotMatch(html,/立即击杀|可斩杀|可抢龙|对英雄约/);
 });
 
 test('R references remain useful without enemies but stop with stale, partial or unsupported snapshots',()=>{

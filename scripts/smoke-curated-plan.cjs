@@ -142,18 +142,18 @@ async function run(){
   const payload=await guide.webContents.executeJavaScript('window.guide.bootstrap()',true);assert.deepEqual(payload.model.combo.creativePlan,plan);assert.equal(payload.model.combo.ownJob,plan.ordered.find(m=>m.champion===member.champion).job);assert.equal(payload.model.runes.length,9);assert.deepEqual(payload.model.combo.steps,plan.steps);
   if(customRunes&&member.champion==='Galio'){assert.deepEqual(payload.model.selection.customRunePage,expectedCustom);assert.deepEqual(payload.model.runes.map(r=>r.id),expectedCustom.selectedPerkIds);assert.deepEqual(payload.model.selection.customSkillOrder,expectedCustomSkill);assert.equal(payload.model.skillOrder,expectedCustomSkill.order);}
   const gjs=async code=>{try{return await guide.webContents.executeJavaScript(code,true);}catch(error){throw Error(error.message+'\nGuide script: '+code);}};
-  await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=team]").click();void 0');
+  assert.equal(await gjs('!!document.querySelector("[data-tab]")'),false);await js('[...document.querySelectorAll(".drawer-content details")].forEach(d=>d.open=true)');
   for(const stage of ['opening','key','later']){
-   await gjs('(()=>{const el=document.querySelector("#guide-stage");el.value='+JSON.stringify(stage)+';el.dispatchEvent(new Event("change",{bubbles:true}));})()');
+   await gjs('window.guide.control("stage",'+JSON.stringify(stage)+')');
    await until(()=>gjs('window.guide.bootstrap().then(b=>b.model.coach.stage==='+JSON.stringify(stage)+')'),'Stage not applied');
    const expected=plan.stagePlan[stage],own=expected.memberJobs.find(m=>m.champion===member.champion),current=await gjs('window.guide.bootstrap()');
    assert.equal(current.model.coach.action,own.job);assert.deepEqual(current.model.stageHint.play.steps,expected.steps);assert.equal(current.model.stageHint.play.window,expected.window);assert.equal(current.model.stageHint.play.exit,expected.exit);
-   const visible=await gjs('document.body.textContent');assert.ok(visible.includes(own.job));assert.doesNotMatch(visible,/Changed later|Changed catalog|Changed job/);
+   const visible=await js('document.querySelector(".drawer-content").textContent');assert.ok(visible.includes(own.job));assert.doesNotMatch(visible,/Changed later|Changed catalog|Changed job/);
    for(const step of expected.steps)assert.ok(visible.includes(step));for(const clause of new Set([expected.window,expected.exit].flatMap(text=>text.split('。').map(s=>s.trim()).filter(Boolean))))assert.ok(visible.includes(clause),'Saved stage condition missing: '+clause);
    assert.ok(copied.includes(own.job));
    if(duoStages&&member.champion==='Ashe'&&stage==='later'){
     assert.match(visible,/自保或反开.*保护范围/);await gjs('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
-    await fs.writeFile(path.join(root,restart?'restart-duo-later.png':'duo-later.png'),(await guide.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
+    await fs.writeFile(path.join(root,restart?'restart-duo-later.png':'duo-later.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
    }
   }
   await click('[data-action=back-result]');

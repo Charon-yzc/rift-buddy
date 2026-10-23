@@ -55,6 +55,8 @@ jobs:
         run: node scripts/smoke-package-dual-windows.mjs
       - name: Check actual current offline data, saved configurations and Hex 4.0
         run: node scripts/smoke-package-current-data.mjs
+      - name: Check compact in-game cards, pinning, native hover and short displays
+        run: node scripts/smoke-package-compact-ingame.mjs
       - name: Prepare separate historical 16.20 interaction package
         run: node scripts/prepare-historical-smoke.mjs
       - name: Verify historical fixture package and source identity

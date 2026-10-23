@@ -75,7 +75,7 @@ test('an unread public inventory never becomes a bare-stat damage comparison',()
  const model=createGuideModel(data,state,own);
  assert.equal(model.estimate,null);assert.equal(model.customDuel.unresolved,true);
  const html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
- assert.ok(html.includes('等级或装备暂不可读'));assert.equal(html.includes('2 秒约'),false);
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
  const restored={...own,enemies:own.enemies.map(e=>({...e,itemsKnown:true}))};
  assert.ok(createGuideModel(data,state,restored).estimate.targetSelected);
 });

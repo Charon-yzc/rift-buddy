@@ -224,12 +224,12 @@ test('damage strip requires a selected public target and preserves the reviewed 
  assert.equal(killStrip({}),'');
  assert.equal(killStrip({estimate:{duels:[]}}),'');
  const full=renderGuide({model,strip:true,connected:true,phase:'InProgress',mousePassThrough:false},'items',false,()=>'<img>');
- assert.ok(full.includes('kill-strip')&&!full.includes('estimate-row danger'));
+ assert.match(full,/compact-guide-main/);assert.doesNotMatch(full,/kill-strip|estimate-row danger/);
  const mismatch=renderGuide({model,strip:true,current:{id:'Jinx',mode:'rift',role:'bottom'},connected:true,phase:'InProgress'},'items',false,()=>'<img>');
  assert.ok(mismatch.includes('已变化')&&!mismatch.includes('<strong>'));
  // The content must be a no-drag region (drag regions swallow pointer
  // events in a frameless window) with a separate drag grip beside it.
- assert.ok(full.includes('strip-grip')&&full.includes('strip-frame'));
+ assert.ok(!full.includes('strip-grip')&&!full.includes('strip-frame'));
  const css=await fs.readFile(new URL('../src/guide.css',import.meta.url),'utf8');
  const stripRule=css.match(/\.kill-strip\{[^}]*\}/)?.[0]||'';
  const gripRule=css.match(/\.strip-grip\{[^}]*\}/)?.[0]||'';

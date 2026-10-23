@@ -18,11 +18,27 @@ function setup(preferences={}){
  }
  const module={exports:{}};vm.runInNewContext(fs.readFileSync(file,'utf8'),{module,require:name=>name==='electron'?{BrowserWindow:Window,ipcMain:{handle:(name,fn)=>{handlers[name]=fn;}},screen:{getCursorScreenPoint:()=>cursor}}:nativeRequire(name),setInterval:fn=>{intervals.push(fn);return {unref(){}};},clearInterval(){},setTimeout:fn=>{timers.set(++nextTimer,fn);return nextTimer;},clearTimeout:id=>timers.delete(id)});
  const micro=module.exports({root,getState:()=>state,setState:async(next,base)=>{saves++;await write(next,base);},getPayload:()=>value,getArea:()=>area,getGameBounds:()=>null,getScale:()=>1,getPreferences:()=>preferences,isActive:()=>active,isQuitting:()=>false,onHide(){},onChange(){},showMain(){},diagnostic(){}});
- const call=(kind,name,input)=>{const win=windows.find(w=>w.options.webPreferences.additionalArguments?.includes('--rift-hex-window='+kind));return handlers[name]({sender:win.webContents,senderFrame:win.webContents.mainFrame},kind,input);};
+ const call=(kind,name,...args)=>{const win=windows.find(w=>w.options.webPreferences.additionalArguments?.includes('--rift-hex-window='+kind));return handlers[name]({sender:win.webContents,senderFrame:win.webContents.mainFrame},kind,...args);};
  return {micro,windows,value,handlers,call,ready:()=>windows.filter(w=>w.options.webPreferences.preload).forEach(w=>w.emit('ready-to-show')),active:v=>{active=v;},state:v=>{if(v)state=v;return state;},writer:fn=>{write=fn;},height:fn=>{height=fn;},pointer:p=>{cursor=p;intervals.forEach(fn=>fn());},timers,saveCount:()=>saves};
 }
 const hover={side:'ally',id:'Yasuo',rect:{x:6,y:10,width:18,height:18}};
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
+
+test('expanded pin order and bounded input regions survive refresh but reset with the match',()=>{
+ const s=setup();s.value.model.hexMicroRoutes=Array.from({length:5},(_,i)=>({id:'r'+i,augments:[],items:[]}));s.micro.show();s.ready();
+ const snapshot=()=>s.call('routes','hex-micro-bootstrap'),control=(action,id,context=snapshot().context)=>s.call('routes','hex-micro-control',action,{context,id});
+ assert.equal(control('pin','r4'),false);assert.equal(control('expand',null,'stale'),false);assert.equal(control('expand'),true);
+ assert.equal(control('pin','r4'),true);assert.deepEqual(Array.from(snapshot().routes,r=>r.id),['r4','r0','r1','r2','r3']);
+ const win=s.windows[1],b=win.bounds,rows=[{action:'pin',id:'r0',x:6,y:40,width:18,height:24}];
+ assert.equal(s.call('routes','hex-micro-regions',{context:snapshot().context,rows}),true);
+ s.pointer({x:b.x+10,y:b.y+45});assert.equal(win.ignore,false);s.pointer({x:b.x+50,y:b.y+45});assert.equal(win.ignore,true);
+ s.call('routes','hex-micro-regions',{context:snapshot().context,rows:[{...rows[0],width:200,height:200}]});s.pointer({x:b.x+10,y:b.y+45});assert.equal(win.ignore,true,'An oversized region must not swallow game clicks');
+ s.value.referenceRevision++;s.micro.publish();assert.equal(snapshot().expanded,true);assert.equal(snapshot().routes[0].id,'r4');
+ s.value.model.hexMicroRoutes=s.value.model.hexMicroRoutes.filter(r=>r.id!=='r4');s.micro.publish();assert.equal(snapshot().routes[0].id,'r0');
+ assert.equal(control('pin','r4'),false);s.value.model.hexRound={context:'manual-reset'};s.micro.publish();assert.equal(snapshot().expanded,false);
+ assert.equal(control('expand'),true);s.value.model.matchId='next';s.micro.publish();assert.equal(snapshot().expanded,false);
+ s.call('routes','hex-micro-control','hide');assert.equal(control('expand'),false);s.micro.destroy();
+});
 
 test('narrow upgrade hovers distinguish suggested, prepared and held equipment before clipping the description',async()=>{
  for(const [equipmentState,expected]of [['suggested','若购买，'],['prepared','方案装备，非已购确认。'],['held','已装备，仍需触发。']]){
@@ -109,43 +125,41 @@ function guideOwner({mode='hex',prepare=async()=>true,preferences={guideAutoShow
  return {guide,windows,widgets,legacy,micro,call,state:()=>state,current:value=>{current=value;},restore:()=>restore(),ready:()=>windows.forEach(w=>w.emit('ready-to-show'))};
 }
 
-test('Hex manual preview is editable; entering a game replaces it with only two micro windows',async()=>{
+test('Hex manual preview and game use only two micro windows and preserve independent close through reconnect',async()=>{
  const s=guideOwner();try{
-  s.guide.show();s.ready();assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
-  await s.call(s.legacy(),'guide-control','condition','ap');assert.deepEqual([...s.state().selection.conditions],['ap']);
+  s.guide.show();s.ready();assert.equal(s.legacy(),undefined);assert.equal(s.micro().length,2);
   await s.guide.phase('GameStart',true);s.ready();assert(s.micro().every(w=>w.isVisible()));
-  await s.guide.phase('Offline',false);s.guide.publish();s.restore();s.legacy().emit('ready-to-show');assert(!s.legacy().isVisible());
+  await s.guide.phase('Offline',false);s.guide.publish();s.restore();s.ready();assert.equal(s.legacy(),undefined);
   assert(s.micro().every(w=>w.isVisible()),'disconnect during first loading must retain micro windows');
-  await assert.rejects(s.call(s.legacy(),'guide-control','main'),/两个精简窗口/);
-  await s.guide.phase('InProgress',true);s.ready();assert.equal(s.micro().length,2);assert(s.micro().every(w=>w.isVisible()));assert(!s.legacy().isVisible());
-  s.restore();s.legacy().emit('ready-to-show');assert(!s.legacy().isVisible());
-  await assert.rejects(s.call(s.legacy(),'guide-control','main'),/两个精简窗口/);
-  await s.guide.phase('Offline',false);s.guide.publish();assert(s.micro().every(w=>w.isVisible()));assert(!s.legacy().isVisible());
+  assert.throws(()=>s.call(s.micro()[1],'hex-micro-control','routes','main'),/不支持/);
+  await s.guide.phase('InProgress',true);s.ready();assert.equal(s.micro().length,2);assert(s.micro().every(w=>w.isVisible()));assert.equal(s.legacy(),undefined);
+  s.restore();s.ready();assert.equal(s.legacy(),undefined);
+  await s.guide.phase('Offline',false);s.guide.publish();assert(s.micro().every(w=>w.isVisible()));assert.equal(s.legacy(),undefined);
   await s.guide.phase('Reconnect',true);assert(s.micro().every(w=>w.isVisible()));
   for(const w of s.micro()){const kind=w.options.webPreferences.additionalArguments[0].split('=').at(-1);s.call(w,'hex-micro-control',kind,'hide');}
   await s.guide.phase('GameStart',true);await s.guide.phase('InProgress',true);s.ready();assert(!s.guide.isVisible(),'same-game reconnect must preserve manual hide');
  }finally{s.guide.destroy();}
 });
 
-test('Hex game exits hide every overlay instead of resurrecting the editable preview',async()=>{
+test('Hex game exits hide overlays; a subsequent explicit preview works even after EndOfGame',async()=>{
  for(const exit of ['Lobby','ChampSelect','EndOfGame'])for(const clearBeforePublish of [false,true]){
   const s=guideOwner();try{
    await s.guide.phase('InProgress',true);s.ready();assert(s.micro().every(w=>w.isVisible()));
    await s.guide.phase('Offline',false);
    if(clearBeforePublish){s.current(null);s.guide.publish();assert(!s.guide.isVisible(),'identity cleared before phase notification');}
    await s.guide.phase(exit,true);s.guide.publish();s.ready();assert(!s.guide.isVisible(),exit);
-   s.guide.show();s.ready();assert(s.legacy().isVisible(),'an explicit out-of-game preview is still available');
-   await s.call(s.legacy(),'guide-control','condition','heal');assert(s.state().selection.conditions.includes('heal'));
+   s.guide.show();s.ready();assert.equal(s.legacy(),undefined);assert(s.micro().every(w=>w.isVisible()),'an explicit out-of-game preview is still available');
+   await s.guide.phase(exit,true);s.guide.publish();assert(s.micro().every(w=>w.isVisible()),'ordinary same-phase polling retains the explicit preview');
+   s.guide.toggle();await s.guide.phase(exit,true);s.guide.publish();s.ready();assert(!s.guide.isVisible(),'polling must not reopen a closed preview');
   }finally{s.guide.destroy();}
  }
 });
 
-test('a manual Hex reference during an actual Rift game stays editable',async()=>{
+test('a manual Hex reference during an actual Rift game remains compact without reopening Rift windows',async()=>{
  const s=guideOwner();try{
   s.current({id:'Ashe',mode:'rift'});await s.guide.phase('InProgress',true);s.guide.show();s.ready();
-  assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
-  await s.call(s.legacy(),'guide-control','condition','heal');assert(s.state().selection.conditions.includes('heal'));
-  await s.guide.phase('Offline',false);s.guide.publish();assert(s.legacy().isVisible());assert.equal(s.micro().length,0);
+  assert.equal(s.legacy(),undefined);assert.equal(s.micro().length,2);assert(s.micro().every(w=>w.isVisible()));
+  await s.guide.phase('Offline',false);s.guide.publish();assert.equal(s.legacy(),undefined);assert(s.micro().every(w=>w.isVisible()));
  }finally{s.guide.destroy();}
 });
 
