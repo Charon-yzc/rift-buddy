@@ -177,7 +177,7 @@ const micro=createHexMicroWindows({root,getState,setState,getPayload:payload,get
   return handler(...args);
  });}
  guard('guide-bootstrap',payload);
- guard('guide-reference',value=>{const current=getState();if(!current||!value||value.revision!==referenceRevision()||!['hex','rift'].includes(value.mode)||value.mode!==current.selection.mode)return null;return getReference(value.kind,value.id);});
+ guard('guide-reference',value=>{const current=getState();if(!current||!value||value.revision!==referenceRevision()||!['hex','rift'].includes(value.mode)||value.mode!==current.selection.mode)return null;return getReference(value.kind,value.id,value.mode);});
  guard('guide-hover',value=>{const next=!!value;if(next!==hoverHeader){hoverHeader=next;inputMode();}return hoverHeader;});
  guard('guide-control',async(action,value)=>{
   if(usesHexMicro())throw Error('海克斯局内使用两个精简窗口，请从主界面调整');

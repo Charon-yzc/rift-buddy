@@ -1,0 +1,1242 @@
+{
+  "sources": {
+    "binUrl": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+    "binSha256": "8c7b798a7a8ddf4bd7238c05c0864cc6fa29d33b7c57041ae24230f2d26514ec",
+    "stringsUrl": "https://raw.communitydragon.org/16.21/game/zh_cn/data/menu/en_us/lol.stringtable.json",
+    "stringsSha256": "5fca25e067fa2b83701bb407f9c68707fd50056785cbb22fee7790b697b985d7"
+  },
+  "items": {
+    "1036": {
+      "id": 1036,
+      "name": "长剑",
+      "description": "10攻击力\n\n",
+      "tags": [
+        "Damage",
+        "Lane"
+      ],
+      "gold": {
+        "base": 350,
+        "purchasable": true,
+        "total": 350,
+        "sell": 245
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [],
+      "into": [
+        "1053",
+        "4003",
+        "6701",
+        "2015",
+        "2019",
+        "2021",
+        "3077",
+        "6670",
+        "3133",
+        "2517",
+        "323004",
+        "3142",
+        "3004",
+        "2523",
+        "3032",
+        "3035",
+        "3044",
+        "3051",
+        "3155",
+        "6690",
+        "3123",
+        "3134",
+        "6699",
+        "6671",
+        "6692"
+      ],
+      "inStore": true,
+      "stats": {
+        "FlatPhysicalDamageMod": 10
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/1036.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "10攻击力",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "3083": {
+      "id": 3083,
+      "name": "狂徒铠甲",
+      "description": "1000生命值\n100%基础生命回复\n\n狂徒之心 \n如果你拥有2000额外生命值，并且在8秒内没有受到伤害，则每秒回复0生命值。\n\n狂徒之活力\n获得额外生命值，相当于你12%的装备生命值(0)。",
+      "tags": [
+        "Health",
+        "HealthRegen"
+      ],
+      "gold": {
+        "base": 500,
+        "purchasable": true,
+        "total": 3100,
+        "sell": 2170
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "1011",
+        "1011",
+        "3801"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatHPPoolMod": 1000
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3083.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "1000生命值\n100%基础生命回复\n\n狂徒之心 \n如果你拥有2000额外生命值，并且在8秒内没有受到伤害，则每秒回复〔数值未解析〕生命值。\n\n狂徒之活力\n获得额外生命值，相当于你12%的装备生命值(〔数值未解析〕)。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "3118": {
+      "id": 3118,
+      "name": "残疫",
+      "description": "90法术强度\n600法力\n15技能急速\n\n蔑视\n获得20终极技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面3秒，每秒造成魔法伤害并削减其魔法抗性。\n",
+      "tags": [
+        "SpellDamage",
+        "Mana",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 650,
+        "purchasable": true,
+        "total": 2700,
+        "sell": 1890
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "3802",
+        "1026"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatMPPoolMod": 600,
+        "FlatMagicDamageMod": 90
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3118.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "90法术强度\n 〔数值未解析〕法力\n15技能急速\n\n蔑视\n获得20终极技能急速。\n\n憎恨之雾\n在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面3秒，每秒造成60 + 5%法术强度魔法伤害并削减其10魔法抗性。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "6333": {
+      "id": 6333,
+      "name": "死亡之舞",
+      "description": "60攻击力\n50护甲\n15技能急速\n\n无视痛苦\n所受的一部分伤害会以流血形式在3秒里持续扣除。\n\n蔑视\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，会净化无视痛苦的剩余伤害，并在2秒里持续为你回复生命值。",
+      "tags": [
+        "Armor",
+        "Damage",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 275,
+        "purchasable": true,
+        "total": 3300,
+        "sell": 2310
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "2019",
+        "1037",
+        "3133"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatArmorMod": 50,
+        "FlatPhysicalDamageMod": 60
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6333.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "60攻击力\n50护甲\n15技能急速\n\n无视痛苦\n所受的（近战 30% / 远程 10%）伤害会以流血形式在3秒里持续扣除。\n\n蔑视\n如果一名在过去3秒内曾被你造成过伤害的英雄阵亡，会净化无视痛苦的剩余伤害，并在2秒里持续为你回复共75%额外攻击力生命值。",
+        "status": "complete",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "6673": {
+      "id": 6673,
+      "name": "不朽盾弓",
+      "description": "55攻击力\n25%暴击几率\n\n救主灵刃\n在受到将使你的生命值跌到30%以下的伤害时，提供持续3秒的护盾值。",
+      "tags": [
+        "Damage",
+        "CriticalStrike"
+      ],
+      "gold": {
+        "base": 825,
+        "purchasable": true,
+        "total": 3000,
+        "sell": 2100
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "1037",
+        "6670"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatCritChanceMod": 0.25,
+        "FlatPhysicalDamageMod": 55
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6673.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "55攻击力\n25%暴击几率\n\n救主灵刃  (90秒)\n在受到将使你的生命值跌到30%以下的伤害时，提供持续3秒的〔数值未解析〕护盾值。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    },
+    "6692": {
+      "id": 6692,
+      "name": "星蚀",
+      "description": "60攻击力\n15技能急速\n\n永升之月\n在2秒内用2次独立的攻击或技能命中一名英雄时，会为你提供持续2秒的护盾值。",
+      "tags": [
+        "Damage",
+        "CooldownReduction",
+        "AbilityHaste"
+      ],
+      "gold": {
+        "base": 625,
+        "purchasable": true,
+        "total": 2900,
+        "sell": 2030
+      },
+      "maps": {
+        "11": true,
+        "12": true,
+        "22": false,
+        "30": false,
+        "453": true
+      },
+      "from": [
+        "3133",
+        "1037",
+        "1036"
+      ],
+      "into": [],
+      "inStore": true,
+      "stats": {
+        "FlatPhysicalDamageMod": 60
+      },
+      "specialRecipe": null,
+      "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/6692.png",
+      "tooltip": {
+        "patch": "16.21",
+        "description": "60攻击力\n15技能急速\n\n永升之月  (6秒)\n在2秒内用2次独立的攻击或技能命中一名英雄时，会造成（近战 8% / 远程 5%）最大生命值的物理伤害并为你提供持续2秒的〔数值未解析〕护盾值。",
+        "status": "partial",
+        "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+      }
+    }
+  },
+  "bin": {
+    "Items/3118": {
+      "mDisplayName": "Item_3118_Name",
+      "itemID": 3118,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{143b41c4}"
+      ],
+      "mItemAdviceAttributes": [
+        "{8fd6c485}"
+      ],
+      "price": 650,
+      "mItemCalloutPlayer": true,
+      "mItemCalloutSpectator": true,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/3802",
+        "Items/1026"
+      ],
+      "mEffectAmount": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mDataValues": [
+        {
+          "mName": "AOESize",
+          "mValue": 250,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "UltimateHaste",
+          "mValue": 20,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "GroundDuration",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BaseDamage",
+          "mValue": 60,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "APRatio",
+          "mValue": 0.05000000074505806,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MaxRadius",
+          "mValue": 550,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "ARAM": {
+          "DataValues": [
+            {
+              "mName": "APRatio",
+              "mValue": 0.02800000086426735,
+              "__type": "ItemDataValue"
+            },
+            {
+              "mName": "BaseDamage",
+              "mValue": 40,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        },
+        "Kiwi": {
+          "DataValues": [
+            {
+              "mName": "APRatio",
+              "mValue": 0.02800000086426735,
+              "__type": "ItemDataValue"
+            },
+            {
+              "mName": "BaseDamage",
+              "mValue": 40,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        }
+      },
+      "mItemCalculations": {
+        "{8e8f7a34}": {
+          "mMultiplier": {
+            "mNumber": 0.25,
+            "__type": "NumberCalculationPart"
+          },
+          "mSimpleTooltipCalculationDisplay": 5,
+          "mExpandedTooltipCalculationDisplay": 5,
+          "mFormulaParts": [
+            {
+              "mDataValue": "BaseDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "APRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "MagicResistanceShred": {
+          "mFormulaParts": [
+            {
+              "mNumber": 10,
+              "__type": "NumberCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "GroundBurnDamagePerTickTooltipOnly": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "BaseDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "APRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "mAbilityHasteMod": 15,
+      "mFlatMagicDamageMod": 90,
+      "flatMPPoolMod": 600,
+      "mCategories": [
+        "SpellDamage",
+        "Mana",
+        "AbilityHaste"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        16
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "3118",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_3118_Name",
+            "keyBrief": "Item_3118_Brief",
+            "keyTooltip": "Item_3118_Tooltip",
+            "keyColloquialism": "Item_3107_Colloquialism",
+            "keyInventoryOnlyText": "Item_3118_InventoryOnlyText",
+            "keyTooltipExtendedRules": "Item_3118_TooltipExtendedRules",
+            "keyTooltipExternal": "Item_3118_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AbilityPower",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Mana",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AbilityHaste",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_3118_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_3118_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_3118_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/3118_malignance.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/3118_Malignance44.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/3118_Malignance88.png",
+        "epicness": 5,
+        "__type": "ItemDataClient"
+      },
+      "mVFXResourceResolver": {
+        "resourceMap": {
+          "3118_Ground_Burn": "Items/3118/Particles/3118_Ground_Burn",
+          "{21bdaee6}": "Items/3118/Particles/3118_Burn_tar",
+          "3118_Shred": "Items/3118/Particles/3118_Shred",
+          "3118_Ground_Burn_Enemy": "Items/3118/Particles/3118_Ground_Burn_Enemy"
+        },
+        "__type": "ResourceResolver"
+      },
+      "__type": "ItemData"
+    },
+    "Items/6333": {
+      "mDisplayName": "Item_6333_Name",
+      "itemID": 6333,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{001c1988}"
+      ],
+      "mItemAdviceAttributes": [
+        "{165d7c1f}",
+        "{dfe0e8e4}"
+      ],
+      "price": 275,
+      "{0b2aa694}": false,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/2019",
+        "Items/1037",
+        "Items/3133"
+      ],
+      "mDataValues": [
+        {
+          "mName": "BleedDurationWorst",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "HealDuration",
+          "mValue": 2,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MS",
+          "mValue": 0.4000000059604645,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "TakedownWindow",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BonusADRatio",
+          "mValue": 0.75,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "ARAM": {
+          "DataValues": [
+            {
+              "mName": "BonusADRatio",
+              "mValue": 1,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        },
+        "Kiwi": {
+          "DataValues": [
+            {
+              "mName": "BonusADRatio",
+              "mValue": 1,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        }
+      },
+      "mItemCalculations": {
+        "HealTotal": {
+          "mFormulaParts": [
+            {
+              "mStat": 2,
+              "mStatFormula": 2,
+              "mDataValue": "BonusADRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "ChampRange": {
+          "mSimpleTooltipCalculationDisplay": 5,
+          "mExpandedTooltipCalculationDisplay": 5,
+          "mDefaultGameCalculation": "{792cf56b}",
+          "mConditionalGameCalculation": "{06387172}",
+          "mConditionalCalculationRequirements": {
+            "__type": "IsRangedCastRequirement"
+          },
+          "__type": "GameCalculationConditional"
+        },
+        "MeleeItemCalcValue": {
+          "mFormulaParts": [
+            {
+              "mNumber": 0.30000001192092896,
+              "__type": "NumberCalculationPart"
+            }
+          ],
+          "mDisplayAsPercent": true,
+          "__type": "GameCalculation"
+        },
+        "RangedItemCalcValue": {
+          "mFormulaParts": [
+            {
+              "mNumber": 0.10000000149011612,
+              "__type": "NumberCalculationPart"
+            }
+          ],
+          "mDisplayAsPercent": true,
+          "__type": "GameCalculation"
+        },
+        "{792cf56b}": {
+          "mFormulaParts": [
+            {
+              "mNumber": 1,
+              "__type": "NumberCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "{06387172}": {
+          "mFormulaParts": [
+            {
+              "mNumber": 2,
+              "__type": "NumberCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "mAbilityHasteMod": 15,
+      "mFlatArmorMod": 50,
+      "mFlatPhysicalDamageMod": 60,
+      "mCategories": [
+        "Armor",
+        "Damage",
+        "AbilityHaste"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        1
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "6333",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_6333_Name",
+            "keyBrief": "Item_6333_Brief",
+            "keyTooltipInventory": "Item_6333_TooltipDynamic",
+            "keyTooltip": "Item_6333_Tooltip",
+            "keyColloquialism": "Item_6333_Colloquialism",
+            "keyTooltipExternal": "Item_6333_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AttackDamage",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Armor",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AbilityHaste",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_6333_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_6333_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_6333_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/6333_fighter_t3_deathsdance.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/6333_Fighter_T3_DeathsDance.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/6333_Fighter_T3_DeathsDance.png",
+        "epicness": 5,
+        "__type": "ItemDataClient"
+      },
+      "__type": "ItemData"
+    },
+    "Items/3083": {
+      "spellName": "WarmogsDummySpell",
+      "mDisplayName": "Item_3083_Name",
+      "itemID": 3083,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{a292a6ef}"
+      ],
+      "price": 500,
+      "mItemCalloutSpectator": true,
+      "ShowCooldownVfxToAllies": false,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/1011",
+        "Items/1011",
+        "Items/3801"
+      ],
+      "mEffectAmount": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mDataValues": [
+        {
+          "mName": "MaxHealthRatio",
+          "mValue": 0.014999999664723873,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "SecondsPerHeal",
+          "mValue": 0.5,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "HealthThreshold",
+          "mValue": 2000,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "OOCTimerChampion",
+          "mValue": 8,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "OOCTimer",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "HPAmp",
+          "mValue": 0.11999999731779099,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "ARAM": {
+          "DataValues": [
+            {
+              "mName": "OOCTimer",
+              "mValue": 4,
+              "__type": "ItemDataValue"
+            },
+            {
+              "mName": "OOCTimerChampion",
+              "mValue": 8,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        },
+        "Kiwi": {
+          "DataValues": [
+            {
+              "mName": "OOCTimer",
+              "mValue": 4,
+              "__type": "ItemDataValue"
+            },
+            {
+              "mName": "OOCTimerChampion",
+              "mValue": 8,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        }
+      },
+      "mItemCalculations": {
+        "TotalHealing": {
+          "mFormulaParts": [
+            {
+              "mStat": 12,
+              "mDataValue": "MaxHealthRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "TotalHealingTooltip": {
+          "mMultiplier": {
+            "mNumber": 2,
+            "__type": "NumberCalculationPart"
+          },
+          "mModifiedGameCalculation": "TotalHealing",
+          "__type": "GameCalculationModified"
+        }
+      },
+      "mFlatHPPoolMod": 1000,
+      "mPercentBaseHPRegenMod": 1,
+      "mCategories": [
+        "Health",
+        "HealthRegen"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        8
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "3083",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_3083_Name",
+            "keyBrief": "Item_3083_Brief",
+            "keyTooltip": "Item_3083_Tooltip",
+            "keyColloquialism": "Item_3083_Colloquialism",
+            "keyInventoryOnlyText": "Item_3083_InventoryOnlyText",
+            "keyTooltipExtendedRules": "Item_3083_TooltipExtendedRules",
+            "keyTooltipExternal": "Item_3083_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "Health",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "BaseHealthRegen",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_3083_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_3083_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_3083_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/3083_tank_t3_warmogs.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/3083_Tank_T3_Warmogs.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/3083_Tank_T3_Warmogs.png",
+        "epicness": 5,
+        "__type": "ItemDataClient"
+      },
+      "__type": "ItemData"
+    },
+    "Items/6673": {
+      "mDisplayName": "Item_6673_Name",
+      "itemID": 6673,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "Items/ItemGroups/LifelineItems",
+        "{aa652d63}"
+      ],
+      "mItemAdviceAttributes": [
+        "{dfe0e8e4}"
+      ],
+      "price": 825,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/1037",
+        "Items/6670"
+      ],
+      "mDataValues": [
+        {
+          "mName": "ShieldDuration",
+          "mValue": 3,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "Cooldown",
+          "mValue": 90,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "BuffDuration",
+          "mValue": 8,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "HealthThreshold",
+          "mValue": 0.30000001192092896,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "ARAM": {
+          "DataValues": [
+            {
+              "mName": "Cooldown",
+              "mValue": 75,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        },
+        "Kiwi": {
+          "DataValues": [
+            {
+              "mName": "Cooldown",
+              "mValue": 60,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        }
+      },
+      "mItemCalculations": {
+        "ShieldAmount": {
+          "mFormulaParts": [
+            {
+              "mLevel1Value": 400,
+              "mBreakpoints": [
+                {
+                  "mLevel": 9,
+                  "mBonusPerLevelAtAndAfter": 30,
+                  "__type": "Breakpoint"
+                }
+              ],
+              "__type": "ByCharLevelBreakpointsCalculationPart"
+            }
+          ],
+          "mRangedMultiplier": {
+            "mNumber": 0.800000011920929,
+            "__type": "NumberCalculationPart"
+          },
+          "__type": "{e9a3c91d}"
+        }
+      },
+      "mFlatCritChanceMod": 0.25,
+      "mFlatPhysicalDamageMod": 55,
+      "mCategories": [
+        "Damage",
+        "CriticalStrike"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        2
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "6673",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_6673_Name",
+            "keyBrief": "Item_6673_Brief",
+            "keyTooltip": "Item_6673_Tooltip",
+            "keyInventoryOnlyText": "Item_226673_InventoryOnlyText",
+            "keySecondaryBrief": "Item_Unique_Lifeline",
+            "keyTooltipExternal": "Item_6673_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AttackDamage",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "CritChance",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_6673_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_6673_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_6673_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/6673_marksman_t4_crimsonshieldbow.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/6673_Marksman_T4_CrimsonShieldbow.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/6673_Marksman_T4_CrimsonShieldbow.png",
+        "epicness": 6,
+        "__type": "ItemDataClient"
+      },
+      "mVFXResourceResolver": {
+        "resourceMap": {
+          "{8ccc8191}": "Items/6673/Particles/SRI_6673_Shield",
+          "{f1dde9a2}": "Items/6673/Particles/SRI_6673_Heal",
+          "{bfbeae89}": "Items/6673/Particles/SRI_6673_Buff",
+          "{3416bc38}": "Items/6673/Particles/SRI_6673_Shield_Deactivate"
+        },
+        "__type": "ResourceResolver"
+      },
+      "__type": "ItemData"
+    },
+    "Items/6692": {
+      "mDisplayName": "Item_6692_Name",
+      "itemID": 6692,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default",
+        "{b969c22e}"
+      ],
+      "mItemAdviceAttributes": [
+        "{e625a35a}",
+        "{dfe0e8e4}"
+      ],
+      "price": 625,
+      "mItemCalloutSpectator": true,
+      "ShowCooldownVfxToAllies": false,
+      "mCanBeSold": true,
+      "epicness": 5,
+      "recipeItemLinks": [
+        "Items/3133",
+        "Items/1037",
+        "Items/1036"
+      ],
+      "mDataValues": [
+        {
+          "mName": "WindowDuration",
+          "mValue": 2,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MeleePercMaxHP",
+          "mValue": 0.07999999821186066,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "RangedPercMaxHPMult",
+          "mValue": 0.625,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "Cooldown",
+          "mValue": 6,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "ShieldDuration",
+          "mValue": 2,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MeleeBaseShield",
+          "mValue": 150,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "MeleeBonusADShieldRatio",
+          "mValue": 0.4000000059604645,
+          "__type": "ItemDataValue"
+        },
+        {
+          "mName": "RangedShieldMult",
+          "mValue": 0.5,
+          "__type": "ItemDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "ARAM": {
+          "DataValues": [
+            {
+              "mName": "MeleeShieldADRatio",
+              "mValue": 0.5,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        },
+        "Kiwi": {
+          "DataValues": [
+            {
+              "mName": "MeleeShieldADRatio",
+              "mValue": 0.5,
+              "__type": "ItemDataValue"
+            }
+          ],
+          "__type": "ItemDataValues"
+        }
+      },
+      "mItemCalculations": {
+        "{d02ea590}": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "MeleeBaseShield",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mStat": 2,
+              "mStatFormula": 2,
+              "mDataValue": "{e367e801}",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "mRangedMultiplier": {
+            "mDataValue": "{51df2a01}",
+            "__type": "NamedDataValueCalculationPart"
+          },
+          "__type": "{e9a3c91d}"
+        },
+        "MaxHealthDamageCalc": {
+          "mFormulaParts": [
+            {
+              "mDataValue": "{b1f09313}",
+              "__type": "NamedDataValueCalculationPart"
+            }
+          ],
+          "mDisplayAsPercent": true,
+          "mRangedMultiplier": {
+            "mDataValue": "{4b5548be}",
+            "__type": "NamedDataValueCalculationPart"
+          },
+          "__type": "{e9a3c91d}"
+        }
+      },
+      "mAbilityHasteMod": 15,
+      "mFlatPhysicalDamageMod": 60,
+      "mCategories": [
+        "Damage",
+        "CooldownReduction",
+        "AbilityHaste"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        1
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "6692",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_6692_Name",
+            "keyBrief": "Item_6692_Brief",
+            "keyTooltip": "Item_6692_Tooltip",
+            "keyInventoryOnlyText": "Item_6692_InventoryOnlyText",
+            "keyTooltipInventory": "Item_6692_TooltipInventory",
+            "keyTooltipExternal": "Item_6692_TooltipExternal"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AttackDamage",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AbilityHaste",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_6692_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_6692_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_6692_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/6692_assassin_t4_eclipse.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/6692_Assassin_T4_Eclipse.png",
+        "InventoryIconLarge": "ASSETS/Items/Icons2D/AutoAtlas/LargeIcons/6692_Assassin_T4_Eclipse.png",
+        "epicness": 6,
+        "__type": "ItemDataClient"
+      },
+      "mVFXResourceResolver": {
+        "resourceMap": {
+          "{e329815a}": "Items/6692/Particles/6692_tar",
+          "6692_tar_child": "Items/6692/Particles/6692_tar_child",
+          "6692_Shield": "Items/6692/Particles/6692_Shield",
+          "6692_Ready": "Items/6692/Particles/6692_Ready",
+          "{b1e7710a}": "Items/6692/Particles/6692_SpeedBuff",
+          "6692_Shield_Break": "Items/6692/Particles/6692_Shield_Break"
+        },
+        "__type": "ResourceResolver"
+      },
+      "__type": "ItemData"
+    },
+    "Items/1036": {
+      "mDisplayName": "Item_1036_Name",
+      "itemID": 1036,
+      "maxStack": 1,
+      "mItemGroups": [
+        "Items/ItemGroups/Default"
+      ],
+      "price": 350,
+      "mCanBeSold": true,
+      "mFlatPhysicalDamageMod": 10,
+      "mCategories": [
+        "Damage",
+        "Lane"
+      ],
+      "mItemDataAvailability": {
+        "mInStore": true,
+        "__type": "ItemDataAvailability"
+      },
+      "mItemAttributes": [
+        1,
+        2,
+        4
+      ],
+      "mItemDataClient": {
+        "mTooltipData": {
+          "mObjectName": "1036",
+          "mFormat": "{32559c50}",
+          "mLocKeys": {
+            "keyName": "Item_1036_Name",
+            "keyColloquialism": "Item_1036_Colloquialism"
+          },
+          "mLists": {
+            "Stats": {
+              "Elements": [
+                {
+                  "type": "AttackDamage",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceItem"
+        },
+        "mDescription": "GeneratedTip_Item_1036_Description",
+        "mDynamicTooltip": "GeneratedTip_Item_1036_TooltipInventory",
+        "mShopTooltip": "GeneratedTip_Item_1036_TooltipShop",
+        "inventoryIcon": "assets/items/icons2d/1036_class_t1_longsword.dds",
+        "InventoryIconSmall": "ASSETS/Items/Icons2D/AutoAtlas/SmallIcons/1036_Class_T1_LongSword.png",
+        "__type": "ItemDataClient"
+      },
+      "__type": "ItemData"
+    }
+  },
+  "strings": {
+    "entries": {
+      "generatedtip_item_3118_description": "<section></section><section><attention>%i:scaleAP%@FlatMagicDamageMod@</attention>法术强度<br><attention>%i:scaleMana% @FlatMPPoolMod@</attention>法力<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速</section><section><passive>蔑视</passive><br>获得@UltimateHaste@终极技能急速。<br><br><passive>憎恨之雾</passive><br>在用你的终极技能对一个英雄造成伤害时，灼烧其脚下的地面@GroundDuration@秒，每秒造成<magicDamage>@GroundBurnDamagePerTickTooltipOnly@魔法伤害</magicDamage>并削减其<scaleMR>@MagicResistanceShred@魔法抗性</scaleMR>。<br></section><section></section><section><flavorText></flavorText></section>",
+      "generatedtip_item_6333_description": "<section></section><section><attention>%i:scaleAD%@FlatPhysicalDamageMod@</attention>攻击力<br><attention>%i:scaleArmor%@FlatArmorMod@</attention>护甲<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速</section><section><passive>无视痛苦</passive><br>所受的{{ Item_Melee_Ranged_Split_Dynamic }}伤害会以流血形式在@BleedDurationWorst@秒里持续扣除。<br><br><passive>蔑视</passive><br>如果一名在过去@TakedownWindow@秒内曾被你造成过伤害的英雄阵亡，会净化<passive>无视痛苦</passive>的剩余伤害，并在@HealDuration@秒里持续为你回复共<healing>@HealTotal@生命值</healing>。</section><section></section><section><flavorText></flavorText></section>",
+      "item_melee_ranged_split_dynamic": "{{ Item_Range_Mod_@ChampRange@_Dynamic }}",
+      "generatedtip_item_3083_description": "<section></section><section><attention>%i:scaleHealth%@FlatHPPoolMod@</attention>生命值<br><attention>%i:scaleHPRegen%@PercentBaseHPRegenMod*100@%</attention>基础生命回复</section><section><passive>狂徒之心</passive> <br>如果你拥有@HealthThreshold@额外生命值，并且在@OOCTimerChampion@秒内没有受到伤害，则每秒回复<healing>@TotalHealingTooltip@</healing>生命值。<br><br><passive>狂徒之活力</passive><br>获得额外生命值，相当于你@HPAmp*100@%的装备生命值(<healing>@f2@</healing>)。</section><section></section><section><flavorText></flavorText></section>",
+      "generatedtip_item_6673_description": "<section></section><section><attention>%i:scaleAD%@FlatPhysicalDamageMod@</attention>攻击力<br><attention>%i:scaleCrit%@FlatCritChanceMod*100@%</attention>暴击几率</section><section><passive>救主灵刃</passive> {{ Item_Cooldown }}<br>在受到将使你的生命值跌到@HealthThreshold*100@%以下的伤害时，提供持续@ShieldDuration@秒的<shield>@ShieldAmount@护盾值</shield>。</section><section></section><section><flavorText></flavorText></section>",
+      "item_cooldown": "%i:cooldown% (@Cooldown@秒)",
+      "generatedtip_item_6692_description": "<section></section><section><attention>%i:scaleAD%@FlatPhysicalDamageMod@</attention>攻击力<br><attention>%i:scaleCooldown%@AbilityHasteMod@</attention>技能急速</section><section><passive>永升之月</passive> {{ Item_Cooldown }}<br>在@WindowDuration@秒内用2次独立的攻击或技能命中一名英雄时，会造成<physicalDamage>@MaxHealthDamageCalc@最大生命值的物理伤害</physicalDamage>并为你提供持续@ShieldDuration@秒的<shield>@ShieldSplit@护盾值</shield>。</section><section></section><section><flavorText></flavorText></section>",
+      "generatedtip_item_1036_description": "<section></section><section><attention>%i:scaleAD%@FlatPhysicalDamageMod@</attention>攻击力</section><section></section><section></section><section><flavorText></flavorText></section>"
+    }
+  }
+}

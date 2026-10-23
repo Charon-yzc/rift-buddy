@@ -1,15 +1,18 @@
 import {itemPatchNotes} from './patch-notes.mjs';
+import {itemModeTooltip} from './item-mode-tooltip.mjs';
 const text=value=>typeof value==='string'?value.slice(0,7000):'';
 
 // A single public reference for a hover request. Never send the guide's live
 // model, the full dataset, or arbitrary properties from a collected record.
-export function gameReference(data,kind,id){
+export function gameReference(data,kind,id,mode='rift'){
  if(typeof id!=='string'&&!(typeof id==='number'&&Number.isSafeInteger(id)))return null;
  const key=String(id);
  if(kind==='item'&&/^\d{1,8}$/.test(key)&&Object.hasOwn(data.items,key)){
   const item=data.items[key],tooltip=item.tooltip;
   const record={name:text(item.name),description:text(item.description),gold:{total:Number.isFinite(item.gold?.total)?item.gold.total:null}};
   if(tooltip&&typeof tooltip.description==='string')record.tooltip={patch:text(tooltip.patch),status:tooltip.status==='partial'?'partial':'complete',description:text(tooltip.description)};
+  const hex=mode==='hex'&&itemModeTooltip(item,data.patch,mode);
+  if(hex)record.modeTooltips={hex:{revision:hex.revision,patch:text(hex.patch),mode:'Kiwi',coverage:'public-data-values',status:hex.status,description:text(hex.description),appliedKeys:hex.appliedKeys.filter(k=>typeof k==='string').map(k=>k.slice(0,128)),source:text(hex.source),sourceHash:hex.sourceHash,basisHash:hex.basisHash}};
   const patches=itemPatchNotes(data,key).slice(0,12).map(row=>({patch:text(row.patch),officialPatch:text(row.officialPatch),items:[{item:record.name,itemId:Number(key),direction:row.direction,changes:row.changes.slice(0,5).map(change=>({field:text(change.field),before:text(change.before),after:text(change.after)}))}]}));
   return {patch:data.patch,items:{[key]:record},patchNotes:{patches}};
  }

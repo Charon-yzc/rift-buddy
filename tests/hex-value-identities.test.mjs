@@ -11,5 +11,5 @@ test('six exact current source records resolve hashed aliases while keeping runt
  assert.match(by(3058).tooltip.description,/每1攻击力转为1\.8%攻击速度/);assert.deepEqual(by(3058).tooltip.unresolved,['f1.1*100']);
  assert.match(by(3150).tooltip.description,/（10 \+ 0\.02×法术强度）%最大生命值/);assert.equal(by(3150).tooltip.status,'complete');
  for(const a of rows){const bundled=game.augments.find(b=>b.id===a.id);assert.equal(a.tooltipParserRevision,AUGMENT_TOOLTIP_PARSER_REVISION);assert.deepEqual(a.tooltip,bundled.tooltip);assert.equal(a.description,bundled.description);assert.equal(a.tooltip.revision,1);}
- assert.deepEqual(fixture,before);assert.equal(game.contentRevision,15);assert(game.augments.every(a=>a.tooltipParserRevision===AUGMENT_TOOLTIP_PARSER_REVISION));
+ assert.deepEqual(fixture,before);assert.equal(game.contentRevision,16);assert(game.augments.every(a=>a.tooltipParserRevision===AUGMENT_TOOLTIP_PARSER_REVISION));
 });
