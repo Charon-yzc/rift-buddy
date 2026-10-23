@@ -34,3 +34,10 @@ test('drawer changes bind to the displayed round rather than a different handboo
  await assert.rejects(ctx.changeHexRound('remove',1318,element),/记录已变化/);ctx.hexRoundSnapshot={...store.snapshot(),live:null};await assert.rejects(ctx.changeHexRound('own',1002,element),/记录已变化/);assert.deepEqual(store.snapshot().manual.owned,[]);
  assert.equal(hexRoundForHero(store.snapshot(),'Ashe').owned.length,0);
 });
+test('the actual handbook resolves the complete current Hex selection before falling back to the default role',()=>{
+ const support={id:'Ahri',role:'support',mode:'hex',laterIds:[3157],coreId:'chosen-support'},ctx=vm.createContext({data,champ:id=>data.champions.find(c=>c.id===id),profile:()=>({roles:['mid']}),buildView:null,buildSelection:()=>{throw Error('No drawer');},companionPreparation:()=>({selection:support}),guideSelection:{id:'Ashe',role:'bottom',mode:'hex',laterIds:[3031]},rememberedPreparation:s=>({...s,laterIds:[3089]}),getBuild:(hero,role,d,selection)=>({champion:hero.id,role,mode:selection.mode,items:(selection.laterIds||[]).map(id=>d.items[id])})});
+ vm.runInContext(extract('function hexPreparedPlan(', 'function renderHexTools'),ctx);const actual=ctx.hexPreparedPlan('Ahri');assert.equal(actual.selection,support);assert.equal(actual.build.role,'support');assert.deepEqual(actual.build.items.map(i=>i.id),[3157]);
+ ctx.companionPreparation=()=>null;ctx.guideSelection=support;assert.equal(ctx.hexPreparedPlan('Ahri').selection,support);
+ const drawer={...support,role:'top',laterIds:[3152]};ctx.buildView=drawer;ctx.buildSelection=()=>drawer;assert.equal(ctx.hexPreparedPlan('Ahri').selection,drawer);ctx.buildView={...drawer,readOnly:true};ctx.buildSelection=()=>ctx.buildView;assert.equal(ctx.hexPreparedPlan('Ahri').selection,support);
+ ctx.guideSelection={...support,id:'Ashe'};const fallback=ctx.hexPreparedPlan('Ahri');assert.equal(fallback.selection.role,'mid');assert.deepEqual(fallback.selection.laterIds,[3089]);assert.equal(ctx.hexPreparedPlan('Unknown'),null);
+});
