@@ -1,7 +1,7 @@
 import {escape as e,button} from './ui.mjs';
 
 export function hexSelectionStages(rules){
- return rules.stages.length?`<div class="hex-pool-stages" aria-label="常规四次强化选择" title="常规选择阶段；各次完整强化池尚未公开，不代表四次池子相同">${rules.stages.map(stage=>`<span>${e(stage.label)}<small>${e(stage.timing)}</small></span>`).join('')}</div>`:'';
+ return rules.stages.length?`<div class="hex-pool-stages" aria-label="常规四次强化选择" title="常规选择阶段；各次完整强化池尚未公开，不代表四次池子相同">${rules.stages.map(stage=>`<span>${e(stage.label)}${stage.timing?`<small>${e(stage.timing)}</small>`:''}</span>`).join('')}</div>`:'';
 }
 export function hexPoolView(pool,{filter='all'}={}){
  const path=pool.rules.paths.find(p=>p.id===pool.round);

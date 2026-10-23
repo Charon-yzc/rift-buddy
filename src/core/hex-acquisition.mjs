@@ -30,7 +30,7 @@ export function hexAugmentAcquisition(data,augment){
 // Disabled catalogue records remain in the immutable source for diagnostics and
 // explicitly entered live choices, never in browse/recommendation pickers.
 export const hexHandbookAugments=(data,{includeDisabled=false}={})=>isCurrentHexData(data)?data.augments.filter(a=>hexAugmentAcquisition(data,a).displayable&&(includeDisabled||!hexCatalogDisabled(data,a))):[];
-export const hexOrdinaryAugments=data=>hexHandbookAugments(data).filter(a=>hexAugmentAcquisition(data,a).ordinaryOption);
+export const hexOrdinaryAugments=(data,options)=>hexHandbookAugments(data,options).filter(a=>hexAugmentAcquisition(data,a).ordinaryOption);
 export function hexCurrentAugmentIds(data,ids){
  if(!isCurrentHexData(data)||!Array.isArray(ids))return [];
  return [...new Set(ids)].filter(id=>{const a=data.augments.find(a=>a.id===id);return a&&hexAugmentAcquisition(data,a).displayable&&!hexCatalogDisabled(data,a);});

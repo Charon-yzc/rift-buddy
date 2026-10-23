@@ -34,7 +34,7 @@ test('unknown account unlocks explain access without declaring an ordinary augme
 });
 
 test('current four regular phases are timing only, separate from extra offers and unknown per-phase eligibility',()=>{
- for(const mechanism of ['unknown','kda','command-line','pentakill']){const rules=hexAcquisitionRules({patch:'16.21',mechanism});assert.equal(rules.regularStagesConfirmed,true);assert.deepEqual(rules.stages.map(s=>s.timing),['开局','7级','11级','15级']);assert.equal(rules.paths[0].id,'regular');assert(!rules.paths.some(p=>typeof p.id==='number'));assert(rules.stages.every(s=>!s.augmentIds));}
+ for(const mechanism of ['unknown','kda','command-line','pentakill']){const rules=hexAcquisitionRules({patch:'16.21',mechanism});assert.equal(rules.regularStagesConfirmed,true);assert.deepEqual(rules.stages.map(s=>s.label),['首次','第二次','第三次','第四次']);assert.equal(rules.stageTimingsConfirmed,false);assert(rules.stages.every(s=>!s.timing));assert.equal(rules.paths[0].id,'regular');assert(!rules.paths.some(p=>typeof p.id==='number'));assert(rules.stages.every(s=>!s.augmentIds));}
  const p=hexAcquisitionRules({patch:'16.21',mechanism:'pentakill'});assert.deepEqual(p.paths.filter(p=>p.kind==='skill').map(p=>p.id),['pentakill-start','pentakill-18']);
  const html=hexPoolView(hexHeroPool({data,hero:'Sona',mechanism:'pentakill'}));assert.match(html,/开局技能增强/);assert.match(html,/18级技能增强/);assert.doesNotMatch(html,/基础四次|第 4 次/);
 });

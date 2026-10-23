@@ -1,12 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
-import {hexHandbookAugments,hexOrdinaryAugments,hexCurrentAugmentIds,hexFavoriteIsCurrent} from '../src/core/hex-acquisition.mjs';
+import {hexAugmentAcquisition,hexHandbookAugments,hexOrdinaryAugments,hexCurrentAugmentIds,hexFavoriteIsCurrent} from '../src/core/hex-acquisition.mjs';
 import {hexCatalogDisabled} from '../src/core/hex-catalog.mjs';import {isCurrentHexData,HEX_DATA_PENDING} from '../src/core/hex-data-current.mjs';
 import {hexHeroPool} from '../src/core/hex-pool.mjs';import {hexPoolView,hexPoolBadge} from '../src/hex-pool-view.mjs';
 import {hexAugmentReference} from '../src/core/hex-augment-reference.mjs';import {escape,asset,icon,button} from '../src/ui.mjs';
 import {hexConfigurationView} from '../src/hex-configuration-view.mjs';
+import {companionPlanView} from '../src/companion-view.mjs';import {getBuild} from '../src/core/builds.mjs';import {selectedBuildFields} from '../src/core/build-favorites.mjs';
+import {resolveHexAugmentInput} from '../src/core/hex-recommendations.mjs';import {hexAugmentDetail} from '../src/core/hex-augment-detail.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
-const line=name=>source.split('\n').find(line=>line.startsWith('function '+name+'('));
+const line=name=>source.split('\n').find(line=>line.startsWith('function '+name+'(')||line.startsWith('async function '+name+'('));
 const visible=hexHandbookAugments(data),retired=data.augments.filter(a=>hexCatalogDisabled(data,a)),active=hexOrdinaryAugments(data)[0];
 
 test('current handbook and manual picker exclude retired catalogue rows, retaining immutable diagnostics and live-choice inspection',()=>{
@@ -36,7 +38,7 @@ test('actual handbook removes stale wishlist chips and disabled cards instead of
 
 test('actual favorites keep action indices stable while hiding obsolete Hex collections',()=>{
  const favorites=[{type:'hex',title:'obsolete-hex',version:'16.20.1',augments:[active.id]},{type:'build',title:'rift-kept',mode:'rift',version:'16.20.1'},{type:'hex',title:'current-hex',version:data.version,augments:[active.id]},{type:'hex',title:'disabled-hex',version:data.version,augments:[retired[0].id]},{type:'build',title:'obsolete-hex-build',mode:'hex',version:'16.20.1'}],before=JSON.stringify(favorites);
- const context=vm.createContext({data,saved:{favorites},hexFavoriteIsCurrent,heading:()=>'',e:escape,icon,button,portrait:()=>'',champ:()=>null,favoriteBuildSummary:()=>'',favoriteTeamSummary:()=>'',dateLabel:()=>''});vm.runInContext(line('renderFavorites'),context);
+ const context=vm.createContext({data,saved:{favorites},hexFavoriteIsCurrent,heading:()=>'',e:escape,icon,button,portrait:()=>'',champ:()=>null,favoriteBuildSummary:()=>'',favoriteTeamSummary:()=>'',dateLabel:()=>''});vm.runInContext(line('renderFavorites'),context);context.obsoleteHexFavoriteControl=()=>'';
  const html=context.renderFavorites();assert.match(html,/rift-kept/);assert.match(html,/current-hex/);assert.doesNotMatch(html,/obsolete-hex|disabled-hex|旧版强化/);assert.match(html,/data-action="open-favorite" data-index="1"/);assert.match(html,/data-action="open-favorite" data-index="2"/);assert.equal(JSON.stringify(favorites),before);
  context.saved.favorites=[favorites[0]];assert.match(context.renderFavorites(),/留住想玩的点子/);
 });
@@ -49,9 +51,35 @@ test('saving a current Hex collection cannot toggle-delete an invisible previous
  const navigation=source.slice(source.indexOf('function mainNavigation(){'),source.indexOf('function mainWindowActions(){'));context.nav=[['favorites','收藏','star']];context.route='favorites';context.icon=()=>'';vm.runInContext(navigation,context);assert.match(context.mainNavigation(),/class="badge">1/);context.saved.favorites=[old];assert.doesNotMatch(context.mainNavigation(),/class="badge"/);
 });
 
-test('four selection timings are noninteractive context, never four copies claimed as complete hero pools',()=>{
+test('four selection stages are noninteractive context, never four copies claimed as complete hero pools',()=>{
  const pool=hexHeroPool({data,hero:'Yasuo'}),html=hexPoolView(pool);assert.equal(pool.rules.stages.length,4);assert.equal(pool.roundsComplete,false);assert.equal(pool.complete,false);
- for(const timing of ['开局','7级','11级','15级'])assert(html.includes(timing));assert.match(html,/不代表四次池子相同/);assert.doesNotMatch(html,/data-round="[1-4]"/);assert(!html.includes('value="disabled"'));
+ for(const label of ['首次','第二次','第三次','第四次'])assert(html.includes(label));assert.equal(pool.rules.stageTimingsConfirmed,false);assert(pool.rules.stages.every(s=>!s.timing));assert.match(html,/不代表四次池子相同/);assert.doesNotMatch(html,/data-round="[1-4]"/);assert(!html.includes('value="disabled"'));
  const configuration=hexConfigurationView({data,hero:data.champions.find(c=>c.id==='Yasuo'),round:{context:'isolated',revision:0,options:[],owned:[]}});
  assert.match(configuration,/<h3>强化参考<\/h3>/);assert.match(configuration,/常规四次强化选择/);assert.doesNotMatch(configuration,/目录停用|<h3>强化池<\/h3>/);for(const a of retired)assert(!configuration.includes('data-game-tooltip-id="'+a.id+'"'));
+});
+
+test('full configuration favorite caption follows old-only, add current, remove current without deleting the old record',()=>{
+ const selection={id:'Ahri',role:'mid',mode:'hex',conditions:[],coreIndex:0},build=getBuild(data.champions.find(c=>c.id==='Ahri'),'mid',data,selection),plan={selection,build},old={...selectedBuildFields({...selection,build}),id:'old-hex-build',type:'build',champion:'Ahri',role:'mid',mode:'hex',version:'16.20.1'},current={...old,id:'current-hex-build',version:data.version},favorites=[old],before=JSON.stringify(old);
+ for(const surface of ['companion','build']){const view=rows=>companionPlanView(data,plan,rows,{surface});assert.match(view(favorites),/收藏当前搭配/);assert.doesNotMatch(view(favorites),/已收藏 · 点击取消/);assert.match(view([...favorites,current]),/已收藏 · 点击取消/);assert.doesNotMatch(view(favorites),/已收藏 · 点击取消/);}assert.equal(JSON.stringify(old),before);
+});
+
+test('actual input handler accepts explicitly typed catalogue-conflicting offers while browse stays filtered and system offers stay rejected',async()=>{
+ let handler;const changes=[],errors=[],context=vm.createContext({document:{addEventListener:(_event,fn)=>handler=fn,querySelector:()=>null},data,hexOrdinaryAugments,resolveHexAugmentInput,overlay:{contains:()=>false},buildView:null,hexRoundSnapshot:{manual:{context:'isolated',options:[]}},changeHexRound:async(operation,id)=>changes.push([operation,id]),render:()=>{},toast:message=>errors.push(message)});
+ vm.runInContext(source.split('\n').find(line=>line.startsWith("document.addEventListener('change'")&&line.includes('[data-hex-option-input]')),context);
+ const submit=async a=>handler({target:{matches:()=>true,value:a.name+' · #'+a.id,closest:()=>({dataset:{hexContext:'isolated'}})}});
+ await submit(retired[0]);assert.deepEqual(changes,[['compare',retired[0].id]]);assert.deepEqual(errors,[]);assert(!hexOrdinaryAugments(data).some(a=>a.id===retired[0].id));
+ for(const id of [3170,3171,3172,3173,3176])await submit(data.augments.find(a=>a.id===id));assert.equal(changes.length,1);assert.equal(errors.length,5);
+});
+
+test('explicit actual conflicting offer can show detail but cannot be added to current-only bookmarks',()=>{
+ const context=vm.createContext({data,isCurrentHexData,hexHandbookAugments,hexCurrentAugmentIds,hexAugmentAcquisition,hexAugmentReference,hexAugmentDetail,hexHeroPool,hexPoolBadge,hexHero:'Ahri',hexPoolRound:0,hexMechanism:'unknown',hexOptions:[retired[0].id],hexOwned:[],hexSelected:[],rarityName:{},picker:null,buildView:null,detailResult:null,overlay:{innerHTML:''},currentHexRound:()=>null,e:escape,asset,button});vm.runInContext(line('showAugment'),context);context.showAugment(retired[0].id);assert.match(context.overlay.innerHTML,/augment-modal/);assert.match(context.overlay.innerHTML,/compare-augment/);assert.doesNotMatch(context.overlay.innerHTML,/toggle-augment/);
+ context.overlay.innerHTML='';context.hexOptions=[];context.showAugment(retired[0].id);assert.equal(context.overlay.innerHTML,'');context.showAugment(active.id);assert.match(context.overlay.innerHTML,/toggle-augment/);
+});
+
+test('500 hidden Hex favorites offer explicit cleanup, preserve everything before confirmation, then allow a current save',async()=>{
+ const favorites=Array.from({length:500},(_,i)=>({id:'old-'+i,type:'hex',champion:null,title:'obsolete-private-'+i,version:'16.20.1',augments:[active.id]})),before=JSON.stringify(favorites),context=vm.createContext({data,saved:{favorites},isCurrentHexData,hexFavoriteIsCurrent,heading:()=>'',e:escape,icon,button,portrait:()=>'',champ:()=>null,favoriteBuildSummary:()=>'',favoriteTeamSummary:()=>'',dateLabel:()=>'',changeFavorites:async next=>context.saved.favorites=next});
+ vm.runInContext(source.split('\n').find(line=>line.startsWith('const obsoleteHexFavorites='))+'\n'+line('obsoleteHexFavoriteControl')+'\n'+line('clearObsoleteHexFavorites')+'\n'+line('addFavorite')+'\n'+line('renderFavorites'),context);
+ const html=context.renderFavorites();assert.match(html,/旧版收藏管理 · 500/);assert.match(html,/data-action="review-obsolete-hex"/);assert.doesNotMatch(html,/obsolete-private-/);assert.equal(JSON.stringify(favorites),before);await assert.rejects(context.addFavorite({id:'current'}),/500/);await assert.rejects(context.clearObsoleteHexFavorites('16.20.1'),/版本已变化/);assert.equal(JSON.stringify(favorites),before);
+ await context.clearObsoleteHexFavorites(data.version);await context.addFavorite({id:'current',type:'hex',champion:null,augments:[active.id]});assert.equal(context.saved.favorites.length,1);assert.equal(context.saved.favorites[0].id,'current');
+ const rift={id:'rift',type:'build',mode:'rift',version:'16.20.1'},current=context.saved.favorites[0];context.saved.favorites=[favorites[0],rift,current];await context.clearObsoleteHexFavorites(data.version);assert.deepEqual([...context.saved.favorites],[rift,current]);context.data={...data,augmentError:'unavailable'};await assert.rejects(context.clearObsoleteHexFavorites(data.version),/版本已变化/);assert.deepEqual([...context.saved.favorites],[rift,current]);
 });

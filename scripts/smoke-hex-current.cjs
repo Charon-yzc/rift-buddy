@@ -38,7 +38,7 @@ async function run(){
   const g=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/guide.html')),'Guide missing');await until(()=>j(g,'!!window.guide'),'Guide preload missing');await j(g,"window.guide.control('layout','details')");await until(()=>j(g,'!!document.querySelector("[data-tab=augments]")'),'Augment tab missing');await j(g,'document.querySelector("[data-tab=augments]").click()');await until(()=>j(g,`window.guide.bootstrap().then(p=>p.model.champion.id===${JSON.stringify(hero)})`),'Hero not updated');return g;
  };
  let g=await open('Sona',[2005],[2072,1141,3150]);main.webContents.send('main-page',{route:'hex-source',id:'Sona'});surface=main;
- await until(()=>j(main,'document.querySelectorAll(".augment-card").length===248'),'Current catalogue not visible');
+ await until(()=>j(main,'document.querySelectorAll(".augment-card").length===239'),'Current catalogue not visible');
  assert.equal(await j(main,'!!document.querySelector(".augment-card[data-id=\\"3176\\"]")'),false);
  for(const id of [2031,2006,1220,2095,1345,2128,2042,2024,1356,2063,2082,2046,2118,2089])assert.equal(await j(main,`!!document.querySelector('.augment-card[data-id="${id}"]')`),false,'Retired '+id);
  assert.equal(await j(main,'!!document.querySelector(".augment-card[data-id=\\"3059\\"]")'),true);
