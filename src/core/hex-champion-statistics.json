@@ -1,0 +1,1049 @@
+{
+  "schema": 1,
+  "mode": "aram-mayhem",
+  "source": "ARAMGG",
+  "sourceUrl": "https://aramgg.com/data/champions-stats.json",
+  "region": "CN",
+  "patch": "16.21",
+  "fetchedAt": "2026-10-23T05:55:05.492Z",
+  "rows": [
+    {
+      "hero": "Hecarim",
+      "winRate": 0.6092,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Teemo",
+      "winRate": 0.5453,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Yasuo",
+      "winRate": 0.5786,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "TwistedFate",
+      "winRate": 0.5686,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "TahmKench",
+      "winRate": 0.5326,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "MasterYi",
+      "winRate": 0.5564,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Morgana",
+      "winRate": 0.5326,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Yone",
+      "winRate": 0.5577,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ryze",
+      "winRate": 0.5174,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "MissFortune",
+      "winRate": 0.5101,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "XinZhao",
+      "winRate": 0.5591,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Lillia",
+      "winRate": 0.5431,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Graves",
+      "winRate": 0.513,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ekko",
+      "winRate": 0.5429,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Caitlyn",
+      "winRate": 0.5073,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Sett",
+      "winRate": 0.5153,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Lucian",
+      "winRate": 0.5065,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Kayn",
+      "winRate": 0.5394,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Kayle",
+      "winRate": 0.5511,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "AurelionSol",
+      "winRate": 0.5049,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Trundle",
+      "winRate": 0.5076,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Fizz",
+      "winRate": 0.5094,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Seraphine",
+      "winRate": 0.5156,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Tryndamere",
+      "winRate": 0.5142,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Kaisa",
+      "winRate": 0.4918,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Vayne",
+      "winRate": 0.5005,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "DrMundo",
+      "winRate": 0.5007,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Gangplank",
+      "winRate": 0.5055,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Jax",
+      "winRate": 0.5317,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Malzahar",
+      "winRate": 0.5111,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Fiora",
+      "winRate": 0.5698,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Brand",
+      "winRate": 0.4868,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ahri",
+      "winRate": 0.5179,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Corki",
+      "winRate": 0.5097,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Smolder",
+      "winRate": 0.4871,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Hwei",
+      "winRate": 0.5267,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Belveth",
+      "winRate": 0.57,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Katarina",
+      "winRate": 0.5015,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Gwen",
+      "winRate": 0.5654,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Aurora",
+      "winRate": 0.5055,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Sylas",
+      "winRate": 0.4942,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Viktor",
+      "winRate": 0.5175,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Viego",
+      "winRate": 0.5331,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Pantheon",
+      "winRate": 0.5093,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Alistar",
+      "winRate": 0.5135,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Rell",
+      "winRate": 0.5235,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Jhin",
+      "winRate": 0.4834,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Swain",
+      "winRate": 0.4877,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Sion",
+      "winRate": 0.5042,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Jinx",
+      "winRate": 0.4877,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ambessa",
+      "winRate": 0.5379,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Rengar",
+      "winRate": 0.5049,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Singed",
+      "winRate": 0.4999,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Velkoz",
+      "winRate": 0.5009,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Briar",
+      "winRate": 0.5556,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Maokai",
+      "winRate": 0.493,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Galio",
+      "winRate": 0.5059,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Karthus",
+      "winRate": 0.48,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Xerath",
+      "winRate": 0.4911,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Syndra",
+      "winRate": 0.5067,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Shyvana",
+      "winRate": 0.5252,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Shaco",
+      "winRate": 0.4806,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Zed",
+      "winRate": 0.4866,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Veigar",
+      "winRate": 0.4925,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Yunara",
+      "winRate": 0.4985,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Thresh",
+      "winRate": 0.499,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Zilean",
+      "winRate": 0.5133,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Sona",
+      "winRate": 0.5269,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "MonkeyKing",
+      "winRate": 0.5055,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Kassadin",
+      "winRate": 0.5269,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ezreal",
+      "winRate": 0.4736,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Darius",
+      "winRate": 0.4923,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Zaahen",
+      "winRate": 0.5419,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Malphite",
+      "winRate": 0.4769,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Draven",
+      "winRate": 0.5031,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Volibear",
+      "winRate": 0.51,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Leona",
+      "winRate": 0.4967,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Rumble",
+      "winRate": 0.4968,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Udyr",
+      "winRate": 0.4877,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Khazix",
+      "winRate": 0.4903,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Yuumi",
+      "winRate": 0.5209,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Jayce",
+      "winRate": 0.4721,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Shen",
+      "winRate": 0.5054,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Varus",
+      "winRate": 0.4784,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Poppy",
+      "winRate": 0.5058,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Nasus",
+      "winRate": 0.4979,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Zyra",
+      "winRate": 0.4998,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Twitch",
+      "winRate": 0.4766,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ashe",
+      "winRate": 0.448,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Janna",
+      "winRate": 0.5188,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Nautilus",
+      "winRate": 0.4878,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "JarvanIV",
+      "winRate": 0.4655,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Tristana",
+      "winRate": 0.4705,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Talon",
+      "winRate": 0.4926,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "KogMaw",
+      "winRate": 0.4866,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Gragas",
+      "winRate": 0.4884,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Heimerdinger",
+      "winRate": 0.5015,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Lux",
+      "winRate": 0.4814,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Aphelios",
+      "winRate": 0.4939,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Mel",
+      "winRate": 0.4648,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Vladimir",
+      "winRate": 0.4733,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ziggs",
+      "winRate": 0.4823,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Senna",
+      "winRate": 0.4612,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Soraka",
+      "winRate": 0.4978,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Chogath",
+      "winRate": 0.4685,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Nidalee",
+      "winRate": 0.4699,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Nilah",
+      "winRate": 0.5167,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Mordekaiser",
+      "winRate": 0.4621,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Amumu",
+      "winRate": 0.4827,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Garen",
+      "winRate": 0.4645,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Taric",
+      "winRate": 0.5113,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Blitzcrank",
+      "winRate": 0.461,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Samira",
+      "winRate": 0.4761,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Pyke",
+      "winRate": 0.4791,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Aatrox",
+      "winRate": 0.4693,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Xayah",
+      "winRate": 0.4814,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Vex",
+      "winRate": 0.5004,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ivern",
+      "winRate": 0.5081,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Karma",
+      "winRate": 0.4806,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Kled",
+      "winRate": 0.5072,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Milio",
+      "winRate": 0.4942,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Nocturne",
+      "winRate": 0.4847,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Riven",
+      "winRate": 0.4892,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Renata",
+      "winRate": 0.5028,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Fiddlesticks",
+      "winRate": 0.4802,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Warwick",
+      "winRate": 0.4957,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Irelia",
+      "winRate": 0.4965,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Orianna",
+      "winRate": 0.4838,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "RekSai",
+      "winRate": 0.503,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Sivir",
+      "winRate": 0.4662,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Sejuani",
+      "winRate": 0.4784,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Ornn",
+      "winRate": 0.4687,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "LeeSin",
+      "winRate": 0.4281,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Annie",
+      "winRate": 0.4882,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Taliyah",
+      "winRate": 0.4844,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Nami",
+      "winRate": 0.4908,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Diana",
+      "winRate": 0.4705,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Vi",
+      "winRate": 0.4798,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Kalista",
+      "winRate": 0.4856,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Illaoi",
+      "winRate": 0.4663,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Qiyana",
+      "winRate": 0.4706,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Olaf",
+      "winRate": 0.485,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Azir",
+      "winRate": 0.4822,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Kindred",
+      "winRate": 0.466,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Zoe",
+      "winRate": 0.4742,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Skarner",
+      "winRate": 0.4818,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Camille",
+      "winRate": 0.4834,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Urgot",
+      "winRate": 0.4591,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Gnar",
+      "winRate": 0.467,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Evelynn",
+      "winRate": 0.484,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Zeri",
+      "winRate": 0.4757,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Locke",
+      "winRate": 0.4652,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Lulu",
+      "winRate": 0.4812,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Rammus",
+      "winRate": 0.4608,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Elise",
+      "winRate": 0.4792,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Naafiri",
+      "winRate": 0.4574,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Lissandra",
+      "winRate": 0.4506,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Braum",
+      "winRate": 0.471,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Leblanc",
+      "winRate": 0.4412,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Neeko",
+      "winRate": 0.4578,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Renekton",
+      "winRate": 0.4629,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Akshan",
+      "winRate": 0.4561,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Nunu",
+      "winRate": 0.4588,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Anivia",
+      "winRate": 0.4502,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Akali",
+      "winRate": 0.4479,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Quinn",
+      "winRate": 0.4597,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Kennen",
+      "winRate": 0.4499,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Rakan",
+      "winRate": 0.4667,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Bard",
+      "winRate": 0.4686,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Cassiopeia",
+      "winRate": 0.4573,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "KSante",
+      "winRate": 0.4422,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Zac",
+      "winRate": 0.4518,
+      "samples": null,
+      "date": "2026-10-22"
+    },
+    {
+      "hero": "Yorick",
+      "winRate": 0.4548,
+      "samples": null,
+      "date": "2026-10-22"
+    }
+  ]
+}

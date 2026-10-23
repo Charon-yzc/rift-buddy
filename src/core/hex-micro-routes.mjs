@@ -36,13 +36,18 @@ export function hexMechanismMicroRoutes(routes){
  });
 }
 
-export function rankHexMicroRoutes(routes,{owned=[],options=[]}={}){
+export function rankHexMicroRoutes(routes,{owned=[],options=[],limit=3}={}){
  const has=(route,ids,core=false)=>route.augments.filter(a=>(!core||a.core)&&ids.includes(a.id)).length;
  return routes.map((route,index)=>({route,index,owned:has(route,owned,true),offered:has(route,options,true),shared:has(route,owned)}))
   .filter(row=>!options.length||row.owned||row.offered)
   // Surface an already selected stat conversion before ordinary advice; this
   // flags a changed item assumption, not a stronger build or extra offer.
-  .sort((a,b)=>b.owned-a.owned||b.offered-a.offered||Number(b.route.conversion===true)-Number(a.route.conversion===true)||b.shared-a.shared||a.index-b.index).slice(0,3).map(row=>row.route);
+  .sort((a,b)=>b.owned-a.owned||b.offered-a.offered||Number(b.route.conversion===true)-Number(a.route.conversion===true)||b.shared-a.shared||a.index-b.index).slice(0,Math.max(0,Math.min(30,limit))).map(row=>row.route);
+}
+
+export function hexPairedMicroRoutes({data,hero,owned=[],options=[],routes=[],limit=3}){
+ const curated=hexMicroRoutes({data,hero,owned}),projected=hexMechanismMicroRoutes(routes),specific=[...curated,...projected.filter(r=>r.kind!=='item-synergy')],cores=new Set(specific.flatMap(r=>r.augments.filter(a=>a.core).map(a=>a.id)));
+ return rankHexMicroRoutes([...specific,...projected.filter(r=>r.kind==='item-synergy'&&!r.augments.some(a=>a.core&&cores.has(a.id)))],{owned,options,limit});
 }
 
 // When no paired recipe has been reviewed, retain the player's actual loadout

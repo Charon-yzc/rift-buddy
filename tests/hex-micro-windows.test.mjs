@@ -25,7 +25,7 @@ const hover={side:'ally',id:'Yasuo',rect:{x:6,y:10,width:18,height:18}};
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 
 test('narrow upgrade hovers distinguish suggested, prepared and held equipment before clipping the description',async()=>{
- for(const [equipmentState,expected]of [['suggested','强化关联装备，若购买再利用。'],['prepared','方案装备未视作已购。'],['held','本人装备已读取，仍需满足触发条件。']]){
+ for(const [equipmentState,expected]of [['suggested','若购买，'],['prepared','方案装备，非已购确认。'],['held','已装备，仍需触发。']]){
   const s=setup();s.value.model.hexMicroRoutes=[{id:'upgrade',kind:'item-synergy',patch:'16.21',equipmentState,augments:[{id:1318,name:'升级：中娅',core:true,owned:true,brief:'长说明'.repeat(100)}],items:[{id:3157,name:'中娅沙漏',core:true,brief:'长说明'.repeat(100)}]}];s.micro.show();s.ready();const payload=s.call('routes','hex-micro-bootstrap');
   for(const [kind,id]of [['augment',1318],['item',3157]]){assert.equal(await s.call('routes','hex-micro-hover',{kind,id,route:'upgrade',context:payload.context,rect:{x:3,y:10,width:32,height:32}}),true);const html=decodeURIComponent(s.windows[2].url.split(',').slice(1).join(','));assert(html.includes(expected));if(equipmentState==='suggested')assert(!html.includes('方案装备未视作已购'));}
   s.micro.destroy();
