@@ -47,7 +47,7 @@ export function rankHexMicroRoutes(routes,{owned=[],options=[],limit=3}={}){
 
 export function hexPairedMicroRoutes({data,hero,owned=[],options=[],routes=[],limit=3}){
  const curated=hexMicroRoutes({data,hero,owned}),projected=hexMechanismMicroRoutes(routes),specific=[...curated,...projected.filter(r=>r.kind!=='item-synergy')],cores=new Set(specific.flatMap(r=>r.augments.filter(a=>a.core).map(a=>a.id)));
- return rankHexMicroRoutes([...specific,...projected.filter(r=>r.kind==='item-synergy'&&!r.augments.some(a=>a.core&&cores.has(a.id)))],{owned,options,limit});
+ return rankHexMicroRoutes([...specific,...projected.filter(r=>r.kind==='item-synergy'&&!r.augments.some(a=>a.core&&cores.has(a.id)))],{owned,options,limit}).map(route=>({...route,augments:route.augments.map(a=>({...a,owned:owned.includes(a.id),offered:options.includes(a.id)}))}));
 }
 
 // When no paired recipe has been reviewed, retain the player's actual loadout

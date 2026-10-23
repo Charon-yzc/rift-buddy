@@ -9,6 +9,8 @@ import {hexConfigurationView} from '../src/hex-configuration-view.mjs';
 import {gameTooltipView} from '../src/game-tooltip-view.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {hexMicroHint} from '../src/core/hex-micro-hint.mjs';
+import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';
+import {hexPairedMicroRoutes} from '../src/core/hex-micro-routes.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
 data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url),'utf8')).entries;
 const key=id=>data.champions.find(h=>h.id===id).key;
@@ -61,8 +63,17 @@ test('stale and unknown owned records keep scoped removal; compact hovers retain
  const hero=data.champions.find(h=>h.id==='Lux'),round={hero:hero.id,context:'stale-owned',revision:8,owned:[999999],options:[]};
  for(const value of [data,{...data,patch:'16.20'}]){const html=hexConfigurationView({data:value,hero,round});assert.match(html,/data-hex-context="stale-owned"/);assert.match(html,/data-action="remove-owned"[^>]*data-id="999999"/);}
  const entry={name:'触发',core:true,brief:'每次命中后触发。'};
- assert.match(hexMicroHint({},entry,'augment').brief,/^需选到。/);assert.match(hexMicroHint({state:'offered'},entry,'augment').brief,/^本轮若选。/);assert.match(hexMicroHint({}, {...entry,owned:true},'augment').brief,/^已选。/);
+ assert.match(hexMicroHint({},entry,'augment').brief,/^需选到。/);assert.match(hexMicroHint({}, {...entry,offered:true},'augment').brief,/^本轮若选。/);assert.match(hexMicroHint({}, {...entry,owned:true},'augment').brief,/^已选。/);
  assert.match(hexMicroHint({kind:'item-synergy',equipmentState:'suggested'},entry,'item').brief,/^若购买，/);assert.match(hexMicroHint({kind:'item-synergy',equipmentState:'held'},entry,'item').brief,/已装备，仍需触发/);
+});
+test('sidebar route hints preserve purchase conditions and individual actual offers',()=>{
+ for(const [id,owned,options]of [['Ahri',[1318],[]],['Camille',[],[1996]],['Yasuo',[],[1058]]]){
+  const hero=data.champions.find(h=>h.id===id),selection={id,role:'mid',mode:'hex'},plan={selection,build:getBuild(hero,'mid',data,selection)},round={hero:id,context:'hints-'+id,revision:1,owned,options};
+  const html=hexConfigurationView({data,hero,round,plan});
+  if(id==='Ahri'){assert.match(html,/data-game-tooltip-id="3157"[^>]+data-hex-brief="若购买，/);assert.match(html,/data-game-tooltip-id="1318"[^>]+data-hex-brief="已选。/);continue;}
+  const routes=hexPairedMicroRoutes({data,hero:id,owned,options,routes:hexPlayerRoutes({data,hero:id,owned,options}),limit:30});assert(routes.length);
+  for(const row of routes)for(const a of row.augments){assert.equal(a.offered,options.includes(a.id));const hint=hexMicroHint(row,a,'augment');assert.equal(hint.brief.startsWith('本轮若选。'),options.includes(a.id)&&!owned.includes(a.id));}
+ }
 });
 test('configuration defaults to icon equipment routes, keeps explicit actions scoped and separates uncertain hero pool',()=>{
  const hero=data.champions.find(h=>h.id==='Ahri'),selection={id:hero.id,role:'mid',mode:'hex'},plan={selection,build:getBuild(hero,'mid',data,selection)},round={hero:hero.id,context:'one',revision:3,owned:[],options:[2005,2072]};

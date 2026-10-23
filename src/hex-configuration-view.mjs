@@ -4,6 +4,7 @@ import {hexPlayerRoutes} from './core/hex-routes.mjs';
 import {hexItemSynergies} from './core/hex-item-synergies.mjs';
 import {hexHeroPool} from './core/hex-pool.mjs';
 import {hexOrdinaryAugments} from './core/hex-acquisition.mjs';
+import {hexMicroHint} from './core/hex-micro-hint.mjs';
 import {isCurrentHexData} from './core/hex-data-current.mjs';
 import {escape as e,asset,button} from './ui.mjs';
 
@@ -17,7 +18,7 @@ export function hexConfigurationView({data,hero,round,plan=null,pending=false}){
  const choices=plan?configurationChoices(data,plan.selection,plan.build):[];
  const authored=hexPlayerRoutes({data,hero:hero.id,owned,options}),synergies=hexItemSynergies({data,hero:hero.id,mode:'hex',owned,options,preparedItems:plan?.build.items||[],inventory:[],inventoryKnown:false}).filter(r=>!authored.some(a=>a.augment.id===r.augment.id));
  const paired=hexPairedMicroRoutes({data,hero:hero.id,owned,options,routes:[...authored,...synergies],limit:30});
- const route=row=>`<section class="hex-workspace-route" aria-label="${e(row.title)}"><div class="hex-workspace-augments">${row.augments.map(a=>icon('augment',a,`data-action="augment-detail" data-id="${a.id}" data-hex-brief="${e(a.brief||'')}"`)).join('')}</div><div class="hex-workspace-items">${row.items.map(i=>icon('item',i,`data-hex-brief="${e(i.brief||'')}"`)).join('')}</div></section>`;
+ const route=row=>`<section class="hex-workspace-route" data-hex-route="${e(row.id)}" aria-label="${e(row.title)}"><div class="hex-workspace-augments">${row.augments.map(a=>icon('augment',a,`data-action="augment-detail" data-id="${a.id}" data-hex-brief="${e(hexMicroHint(row,a,'augment').brief)}"`)).join('')}</div><div class="hex-workspace-items">${row.items.map(i=>icon('item',i,`data-hex-brief="${e(hexMicroHint(row,i,'item').brief)}"`)).join('')}</div></section>`;
  const key=plan?[plan.selection.id,plan.selection.role,plan.selection.mode].join(':'):'';
  const equipment=(choice,index)=>`<section class="hex-workspace-equipment" aria-label="装备方案 ${index+1}"><small>${index+1}</small><div class="hex-workspace-items">${choice.build.items.map(i=>icon('item',i)).join('')}</div>${button('configuration-switch',choice.id==='current'?'重用':'采用','','quiet small',`data-plan="${e(key)}" data-config="${e(choice.id)}" ${pending||plan?.selection.readOnly?'disabled':''}`)}</section>`;
  const input=options.length<3?`<input class="input" data-hex-option-input list="hex-sidebar-options" aria-label="添加局内强化选项" placeholder="录入本轮强化" autocomplete="off"><datalist id="hex-sidebar-options">${hexOrdinaryAugments(data).filter(a=>!options.includes(a.id)).map(a=>`<option value="${e(a.name)} · #${a.id}"></option>`).join('')}</datalist>`:'';
