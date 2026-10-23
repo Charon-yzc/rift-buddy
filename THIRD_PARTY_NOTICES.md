@@ -1,5 +1,9 @@
 # Third-party notices
 
+## Vue
+
+The renderer bundles the runtime-only Vue 3.5.44 browser build, copyright (c) 2018-present Yuxi (Evan) You and Vue contributors, under the MIT license. Templates in `src/vue/` are precompiled by the matching official `@vue/compiler-sfc`; the compiler is not shipped to the renderer. `scripts/build-renderer.mjs` copies the runtime and its full MIT license to `src/generated/vue.runtime.mjs` and `src/generated/vue-LICENSE.txt` before packaging. Source: https://github.com/vuejs/core/tree/v3.5.44 .
+
 ## Riot and Tencent champion reference data
 
 `data/abilities.json` contains Chinese champion descriptions from Tencent's public League of Legends champion details, with same-patch Riot Data Dragon cooldown/resource ordering and localized client spell data distributed by CommunityDragon used for special forms and source corrections. `data/images/ability/` bundles those public skill icons, using exact-version Data Dragon PNGs for missing Tencent icons. Each source URL and SHA-256 is retained in the reference data. No game process memory or private game data is used.

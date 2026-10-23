@@ -1,4 +1,5 @@
 import http from 'node:http';
+import './build-renderer.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {defaultState} from '../services/storage.mjs';
