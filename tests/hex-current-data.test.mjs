@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
 import {isCurrentHexData,HEX_DATA_PENDING} from '../src/core/hex-data-current.mjs';
-import {hexHandbookAugments,hexOrdinaryAugments} from '../src/core/hex-acquisition.mjs';
+import {hexHandbookAugments,hexOrdinaryAugments,hexCurrentAugmentIds} from '../src/core/hex-acquisition.mjs';
 import {hexRecommendations} from '../src/core/hex-recommendations.mjs';import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';
 import {hexMicroRoutes,hexMicroFallback} from '../src/core/hex-micro-routes.mjs';import {hexAcquisitionRules} from '../src/core/hex-mode-rules.mjs';
 import {renderHexAdvice,renderHexComparison,renderHexSourceReference} from '../src/hex-view.mjs';
@@ -61,6 +61,6 @@ test('the owner rejects stale additions while a disappeared owned record and old
 
 test('actual main handbook and automatic-guide owner share the current-data gate without changing Rift preparation',async()=>{
  const app=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8'),main=await fs.readFile(new URL('../electron/main.cjs',import.meta.url),'utf8');
- const context=vm.createContext({data:unavailable[0],isCurrentHexData,HEX_DATA_PENDING,e:String,heading:()=>'',button:(action,label)=>`<button data-action="${action}">${label}</button>`});vm.runInContext(app.match(/^function renderHex\(\).*$/m)[0],context);const html=context.renderHex();assert(html.includes(HEX_DATA_PENDING));assert(html.includes('data-action="update"'));assert(!html.includes('augment-card'));
+ const context=vm.createContext({data:unavailable[0],hexSelected:[],hexCurrentAugmentIds,isCurrentHexData,HEX_DATA_PENDING,e:String,heading:()=>'',button:(action,label)=>`<button data-action="${action}">${label}</button>`});vm.runInContext(app.match(/^function renderHex\(\).*$/m)[0],context);const html=context.renderHex();assert(html.includes(HEX_DATA_PENDING));assert(html.includes('data-action="update"'));assert(!html.includes('augment-card'));
  const code=main.match(/ const prepareCurrentGuide=async[\s\S]*?\n \};/)[0];let own={id:'Sona',mode:'hex'},called=0;const owner=vm.createContext({data:unavailable[0],isCurrentHexData,currentGuideSelection:()=>own,state:{guide:{selection:own}},guideCore:{guideIdentity:s=>s.id+':'+s.mode},setGuideState:()=>{called++;throw Error('Unexpected write');}});vm.runInContext(code+'\nglobalThis.prepare=prepareCurrentGuide;',owner);assert.equal(await owner.prepare(),false);assert.equal(called,0);owner.data=current;assert.equal(await owner.prepare(),true);own={id:'Sona',mode:'rift'};owner.state.guide.selection=own;owner.data=unavailable[0];assert.equal(await owner.prepare(),true);assert.equal(called,0);
 });

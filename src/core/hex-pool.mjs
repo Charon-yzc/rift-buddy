@@ -16,7 +16,7 @@ export function hexHeroPool({data,hero,round=0,mechanism='unknown'}){
  const compatible=isCurrentHexData(data),current=compatible&&!!champion&&validHexReference(ref,champion,data)&&ref.patch===data.patch;
  const reference=new Set(current?ref.augmentIds:[]),bundled=compatible?validHexPoolEvidence(data.hexPoolObservations||observations,hero,data.patch):null,remote=current?validHexPoolRecord(ref.poolEvidence,hero,data.patch):null,evidence=remote&&(!bundled||Date.parse(remote.fetchedAt)>Date.parse(bundled.fetchedAt))?remote:bundled,selected=new Map((evidence?.rows||[]).map(r=>[r.id,r]));
  const source=`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`;
- const rows=hexHandbookAugments(data).map(a=>{
+ const rows=hexHandbookAugments(data,{includeDisabled:true}).map(a=>{
   const acquisition=hexAugmentAcquisition(data,a);
   const disabled=hexCatalogDisabled(data,a);
   const record=selected.get(a.id),status=disabled?'disabled':record?.games>0?'observed':record?.games===0?'unobserved':reference.has(a.id)?'reference':'unknown';

@@ -1,4 +1,5 @@
 import {isCurrentHexData} from './hex-data-current.mjs';
+import {hexCatalogDisabled} from './hex-catalog.mjs';
 const update='https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/';
 const missions='https://support.riotgames.com/en-us/league-of-legends/events/aram-mayhem-journey-to-stardom';
 // Band progression unlocks are account conditions, not this game's Headliner
@@ -26,5 +27,19 @@ export function hexAugmentAcquisition(data,augment){
  if(row&&augment.key===row[0])return {...ordinary,unlock:{band:row[1],fame:row[2],milestone:row[3],completion:'unknown'},note:`${row[1]}乐队轨道第${row[3]}个里程碑解锁；轨道开启需${row[2]}声望。完成状态未知，以客户端为准；与本局主秀分别核对。`,sourceUrl:missions};
  return ordinary;
 }
-export const hexHandbookAugments=data=>isCurrentHexData(data)?data.augments.filter(a=>hexAugmentAcquisition(data,a).displayable):[];
-export const hexOrdinaryAugments=data=>isCurrentHexData(data)?data.augments.filter(a=>hexAugmentAcquisition(data,a).ordinaryOption):[];
+// Disabled catalogue records remain in the immutable source for diagnostics and
+// explicitly entered live choices, never in browse/recommendation pickers.
+export const hexHandbookAugments=(data,{includeDisabled=false}={})=>isCurrentHexData(data)?data.augments.filter(a=>hexAugmentAcquisition(data,a).displayable&&(includeDisabled||!hexCatalogDisabled(data,a))):[];
+export const hexOrdinaryAugments=data=>hexHandbookAugments(data).filter(a=>hexAugmentAcquisition(data,a).ordinaryOption);
+export function hexCurrentAugmentIds(data,ids){
+ if(!isCurrentHexData(data)||!Array.isArray(ids))return [];
+ return [...new Set(ids)].filter(id=>{const a=data.augments.find(a=>a.id===id);return a&&hexAugmentAcquisition(data,a).displayable&&!hexCatalogDisabled(data,a);});
+}
+// Hide obsolete Hex favorites without deleting personal files or changing
+// collection indices used by the existing open/delete actions.
+export function hexFavoriteIsCurrent(data,favorite){
+ if(favorite?.type!=='hex'&&!(favorite?.type==='build'&&favorite.mode==='hex'))return true;
+ if(!isCurrentHexData(data)||!/^\d+\.\d+\.\d+$/.test(favorite.version||'')||favorite.version.split('.').slice(0,2).join('.')!==data.patch)return false;
+ if(favorite.type!=='hex')return true;
+ return Array.isArray(favorite.augments)&&favorite.augments.length>0&&hexCurrentAugmentIds(data,favorite.augments).length===favorite.augments.length;
+}
