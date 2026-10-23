@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,7 +7,7 @@ import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {comboMembers} from '../src/core/combo-members.mjs';
 import {generateCreativeTrios} from '../src/core/creative-trios.mjs';
 import {curatedDescriptor} from '../src/core/curated-plan.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
 const ids=['poppy-top-anivia-mid','viego-jungle-lissandra-mid','nocturne-jungle-twistedfate-mid'];
 const fixed=members=>createSlots().map(slot=>({...slot,party:true,champion:members.find(m=>m.role===slot.role)?.champion||null,locked:true}));
 

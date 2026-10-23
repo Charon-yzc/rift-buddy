@@ -1,9 +1,9 @@
 <template>
- <div v-if="favorites.length" class="favorite-list">
-  <article v-for="(f, i) in rows" :key="f.id" class="favorite-card" :data-favorite-id="f.id">
+ <div v-if="rows.length" class="favorite-list">
+  <article v-for="f in rows" :key="f.id" class="favorite-card" :data-favorite-id="f.id">
    <div style="display:flex;justify-content:space-between">
     <span :class="'badge '+(f.type==='hex'?'purple':'green')">{{ f.type==='hex'?'海克斯灵感':f.type==='build'?'英雄配置':'开黑组合' }}</span>
-    <button class="favorite-button" data-action="delete-favorite" :data-index="i" :aria-label="'删除收藏'+f.title">
+    <button class="favorite-button" data-action="delete-favorite" :data-index="f.index" :aria-label="'删除收藏'+f.title">
      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/></svg>
     </button>
    </div>
@@ -22,17 +22,17 @@
     <section v-for="(selection, member) in f.configurations" :key="member">
      <h4>{{ hero(selection.id)?.name||selection.id }} · {{ roleName(selection.role) }}</h4>
      <div v-html="f.memberSummaries[member]"></div>
-     <button type="button" class="btn small" data-action="open-team-build" :data-index="i" :data-member="member">
+     <button type="button" class="btn small" data-action="open-team-build" :data-index="f.index" :data-member="member">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>查看配置
      </button>
     </section>
    </details>
    <p v-if="f.type==='hex'">{{ augmentText(f) }}<br>保存版本 {{ f.version||'未知' }}{{ f.version&&f.version!==dataVersion?' · 当前版本已变化':'' }}</p>
    <p v-else>收藏于 {{ dateLabel(f.createdAt) }}<br>保存版本 {{ f.version||'未知' }}{{ f.version&&f.version!==dataVersion?' · 当前版本已变化':'' }}</p>
-   <button type="button" class="btn small" data-action="open-favorite" :data-index="i">
+   <button type="button" class="btn small" data-action="open-favorite" :data-index="f.index">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>{{ f.type==='team'?'载入开黑成员与配置':'查看收藏' }}
    </button>
-   <button v-if="f.type==='team'" type="button" class="btn quiet small" data-action="update-team-favorite" :data-index="i">
+   <button v-if="f.type==='team'" type="button" class="btn quiet small" data-action="update-team-favorite" :data-index="f.index">
     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 6M4 12l2 6a7 7 0 0 0 12-1"/></svg>用最近选择更新配置
    </button>
   </article>
@@ -51,11 +51,12 @@
 <script>
 import {favoriteBuildSummary, favoriteTeamSummary} from '../favorites-view.mjs';
 import {ROLES} from '../core/rules.mjs';
+import {hexFavoriteIsCurrent} from '../core/hex-acquisition.mjs';
 export default {
  props: { favorites: {type: Array, default: () => []}, data: Object },
  computed: {
   dataVersion() { return this.data?.version || ''; },
-  rows() { return this.favorites.map((f,i)=>({...f,buildSummary:favoriteBuildSummary(this.data,f),teamSummary:favoriteTeamSummary(this.data,f,i,{includeConfigurations:false}),memberSummaries:f.type==='team'?(f.configurations||[]).map(selection=>favoriteBuildSummary(this.data,{...selection,type:'build',champion:selection.id,version:f.version})):[]})); },
+  rows() { return this.favorites.flatMap((f,i)=>hexFavoriteIsCurrent(this.data,f)?[{...f,index:i,buildSummary:favoriteBuildSummary(this.data,f),teamSummary:favoriteTeamSummary(this.data,f,i,{includeConfigurations:false}),memberSummaries:f.type==='team'?(f.configurations||[]).map(selection=>favoriteBuildSummary(this.data,{...selection,type:'build',champion:selection.id,version:f.version})):[]}]:[]); },
  },
  methods: {
   heroIds(f) { return (f.type==='team'?(f.slots||[]).filter(s=>s.party).map(s=>s.champion):[f.champion]).filter(Boolean).slice(0,5); },

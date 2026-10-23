@@ -23,8 +23,8 @@ test('pack rejects duplicate heroes, incompatible configs, bad items, rune pages
  for(const edit of [c=>c.duos.push(c.duos[0]),c=>c.trios[0].members[1].role=c.trios[0].members[0].role,c=>c.trios[0].members[0].loadoutId='trio-ball',c=>c.loadouts[0].items[0]=123456789,c=>c.runes.lethal.page.selectedPerkIds[0]=999,c=>c.duos[0].sources=[{name:'x',url:'javascript:alert(1)'}],c=>c.links.push(c.links[0])]){const c=clone();edit(c);assert.throws(()=>validateCatalog(c,data),/组合库/);}
  assert.equal(safeSourceURL('https://user:secret@site.example/file.json'),false);
 });
-test('patch review is per combo and invalid equipment marks only affected configs',()=>{
- const next={...data,patch:'16.20',items:{...data.items}};delete next.items[3142];const combo=BUNDLED_CATALOG.duos.find(d=>d.carry==='Varus'&&d.support==='Ashe');const issues=catalogIssues(clone(),next);assert.equal(issues.status[combo.id].stale,true);assert.equal(issues.status['galio-nilah-rakan'].stale,false);assert.equal(issues.status['camille-galio-vi'].stale,false);assert.ok(issues.status[combo.id].invalid);assert.equal(issues.status['jarvan-galio-mf'].invalid,false);assert.ok(issues.errors.length);
+test('patch review is per combo and invalid equipment marks only affected configs',async()=>{
+ const old=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),next={...old,items:{...old.items}};delete next.items[3142];const combo=BUNDLED_CATALOG.duos.find(d=>d.carry==='Varus'&&d.support==='Ashe');const issues=catalogIssues(clone(),next);assert.equal(issues.status[combo.id].stale,true);assert.equal(issues.status['galio-nilah-rakan'].stale,false);assert.equal(issues.status['camille-galio-vi'].stale,false);assert.ok(issues.status[combo.id].invalid);assert.equal(issues.status['jarvan-galio-mf'].invalid,false);assert.ok(issues.errors.length);
  const b=getBuild(hero('Varus'),'bottom',next,{comboId:combo.id});assert.equal(b.loadoutId,'default');assert.ok(b.selectionWarnings.length);
 });
 test('preview is inert, apply/rollback survive restart and retain custom combos',async()=>{

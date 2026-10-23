@@ -1,10 +1,11 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {migrateMechanicSourceAnchors} from '../scripts/migrate-mechanic-source-anchors.mjs';
 import {catalogIssues,BUNDLED_CATALOG,validateCatalog} from '../src/core/catalog.mjs';
 import {mechanicReview} from '../src/core/mechanic-review.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 const baseline=JSON.parse(await fs.readFile(new URL('../src/core/cooperation-baseline.json',import.meta.url)));
 function fixture(){
  const previous=structuredClone(data),legacy=structuredClone(baseline),catalog=structuredClone(BUNDLED_CATALOG);

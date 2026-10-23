@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -7,7 +8,7 @@ import {createPreparationStore,recallPreparation} from '../src/core/preparation.
 import {captureTeamConfigurations} from '../src/core/team-favorites.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {validateState,defaultState} from '../services/storage.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const setup=picks=>createSlots().map(s=>({...s,party:!!picks[s.role],champion:picks[s.role]||null,locked:!!picks[s.role]}));
 const context=(plan,m)=>({id:m.champion,role:m.role,mode:'rift',...creativeComboContext(creativeMemberCombo(plan,m.champion,m.role))});
 

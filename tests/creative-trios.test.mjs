@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -9,8 +10,8 @@ import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {resultCooperation} from '../src/core/creative-plan.mjs';
 import {escape as e} from '../src/ui.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const byId=new Map(data.champions.map(c=>[c.id,c]));
 const locked=(slots,pairs)=>{for(const [role,id] of pairs)Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});return slots;};
 const candidateSetsFor=(slots,scope='context')=>{

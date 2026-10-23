@@ -1,23 +1,47 @@
 import {fieldHash,formatNumber} from './augments.mjs';
 import {stringTableLookup} from './riot-stringtable.mjs';
+import {createHash} from 'node:crypto';
+import {canonicalJSON} from '../src/core/content-fingerprint.mjs';
+import {ITEM_MODE_TOOLTIP_REVISION,itemTooltipBasis} from '../src/core/item-mode-tooltip.mjs';
 // Resolve only client-authored Rift tooltip expressions that can be explained
 // without live player stats. Unknown calculations stay explicitly dynamic.
-export function enrichItemDescriptions(items,bin,strings,patch){
+export const ITEM_TOOLTIP_PARSER_REVISION=2;
+export function hasCurrentItemDescription(item,patch){
+ const tip=item?.tooltip;if(tip?.patch!==patch||tip.description==='')return true;
+ const revision=item.tooltipParserRevision;if(!Number.isSafeInteger(revision)||revision<ITEM_TOOLTIP_PARSER_REVISION)return false;
+ return revision>ITEM_TOOLTIP_PARSER_REVISION||typeof tip.description==='string'&&!!tip.description.trim();
+}
+export function enrichItemDescriptions(items,bin,strings,patch){return describeItems(items,bin,strings,patch,false);}
+export function enrichItemModeDescriptions(items,bin,strings,patch){return describeItems(items,bin,strings,patch,true);}
+function describeItems(items,bin,strings,patch,hex){
  const textOf=stringTableLookup(strings.entries);
  const statName=part=>{const stat=part.mStat===undefined?0:part.mStat;if(stat===0&&[undefined,0].includes(part.mStatFormula))return '法术强度';const name={2:'攻击力',12:'生命值'}[stat];return name&&[undefined,0,1,2].includes(part.mStatFormula)?({1:'基础',2:'额外'}[part.mStatFormula]||'总')+name:null;};
  return Object.fromEntries(Object.entries(items).map(([id,item])=>{
   const source=bin['Items/'+id],template=textOf(source?.mItemDataClient?.mDescription||'');
   if(!source||source.itemID!==Number(id)||typeof template!=='string')return [id,item];
+  if(hex&&(source.__type!=='ItemData'||item.tooltip?.patch!==patch||typeof item.tooltip.description!=='string'))return [id,item];
   // Current bins mix readable names and their FNV field hashes. Share one
   // identity so a conflict invalidates both forms, regardless of input order.
   const identity=name=>/^\{[a-f0-9]{8}\}$/i.test(name)?name.toLowerCase():fieldHash(name);
+  let layer=null;
+  if(hex&&source.DataValuesModeOverride!==undefined){
+   const modes=source.DataValuesModeOverride;if(!modes||typeof modes!=='object'||Array.isArray(modes))return [id,item];
+   if(Object.hasOwn(modes,'Kiwi')){layer=modes.Kiwi;if(!layer||layer.__type!=='ItemDataValues'||Object.keys(layer).some(k=>!['__type','DataValues'].includes(k))||!Array.isArray(layer.DataValues)||layer.DataValues.length>64||layer.DataValues.some(v=>!v||v.__type!=='ItemDataValue'||Object.keys(v).some(k=>!['__type','mName','mValue'].includes(k))||typeof v.mName!=='string'||!v.mName||v.mName.length>128))return [id,item];}
+  }
+  const modeValues=new Map(),used=new Set();for(const row of layer?.DataValues||[]){const key=identity(row.mName),value=Number.isFinite(row.mValue)?row.mValue:null;modeValues.set(key,modeValues.has(key)&&modeValues.get(key)!==value?null:value);}
   const values=new Map(),put=(name,value)=>{const key=identity(name);values.set(key,values.has(key)&&values.get(key)!==value?null:value);};
-  for(const row of source.mDataValues||[])put(row.mName,row.mValue??0);
+  for(const row of source.mDataValues||[])put(row.mName,hex?Number.isFinite(row.mValue)?row.mValue:null:row.mValue??0);
   for(const [key,value] of Object.entries(source))if(key.startsWith('m')&&Number.isFinite(value))put(key.slice(1),value);
+  // These ItemData stats are authored without the usual m prefix. They share
+  // the exact field identity with template values, including alias conflicts.
+  for(const key of ['flatMPPoolMod','percentBaseMPRegenMod','flatMPRegenMod'])if(Object.hasOwn(source,key))put(key,Number.isFinite(source[key])?source[key]:null);
   if(Number.isFinite(source.PhysicalLethality))put('PhysicalLethality',source.PhysicalLethality);
   const calculations=new Map(Object.entries(source.mItemCalculations||{}).map(([key,value])=>[key.toLowerCase(),value]));
   for(let index=0;index<(source.mEffectAmount||[]).length;index++)put('effect'+(index+1)+'amount',source.mEffectAmount[index]);
-  const lookup=(map,key)=>map===values?values.get(identity(key)):map.get(key.toLowerCase())??map.get(fieldHash(key)),unresolved=new Set();
+  // An intentional mode replacement is not a conflict with the base layer.
+  // Conflicting aliases within the mode layer remain null, regardless of order.
+  if(hex)for(const [key,value]of modeValues)values.set(key,value);
+  const lookup=(map,key)=>{if(map!==values)return map.get(key.toLowerCase())??map.get(fieldHash(key));const canonical=identity(key);if(hex&&modeValues.has(canonical))used.add(canonical);return values.get(canonical);},unresolved=new Set();
   function part(row,depth=0){
    if(!row||depth>8)return null;
    if(row.__type==='NumberCalculationPart')return Number.isFinite(row.mNumber??0)?row.mNumber??0:null;
@@ -65,6 +89,8 @@ export function enrichItemDescriptions(items,bin,strings,patch){
    unresolved.add(expression);return '〔数值未解析〕';
   });
   text=text.replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/?section[^>]*>/gi,'\n\n').replace(/<[^>]*>/g,'').replace(/%i:[^%\s]+%/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\n{3,}/g,'\n\n').trim();
-  return [id,{...item,tooltip:{patch,description:text,status:unresolved.size?'partial':'complete',source:`https://raw.communitydragon.org/${patch}/game/items.cdtb.bin.json`}}];
+  const sourceUrl=`https://raw.communitydragon.org/${patch}/game/items.cdtb.bin.json`;
+  if(hex){const status=!layer?.DataValues.length?'none':!used.size?'unreferenced':unresolved.size?'partial':'complete',record={revision:ITEM_MODE_TOOLTIP_REVISION,patch,mode:'Kiwi',coverage:'public-data-values',status,...(used.size?{description:text}:{}),appliedKeys:[...new Set((layer?.DataValues||[]).filter(row=>used.has(identity(row.mName))).map(row=>row.mName))],source:sourceUrl,sourceHash:createHash('sha256').update(canonicalJSON({item:source,description:text})).digest('hex'),basisHash:itemTooltipBasis(item)};return [id,{...item,modeTooltips:{...item.modeTooltips,hex:record}}];}
+  return [id,{...item,tooltipParserRevision:ITEM_TOOLTIP_PARSER_REVISION,tooltip:{patch,description:text,status:unresolved.size?'partial':'complete',source:sourceUrl}}];
  }));
 }

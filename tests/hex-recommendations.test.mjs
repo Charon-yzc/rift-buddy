@@ -11,15 +11,34 @@ test('current hero recommendations cover the bundled roster without inventing sa
  for(const hero of data.champions){
   const advice=hexRecommendations({data,hero:hero.id});assert.ok(advice.rows.length>0,hero.id);assert.ok(advice.rows.length<=6);
   assert.equal(new Set(advice.rows.map(row=>row.id)).size,advice.rows.length);assert.equal(advice.source.patch,data.patch);
-  for(const row of advice.rows){assert.ok(data.hexBuilds[hero.id].augmentIds.includes(row.id));assert.equal(row.fromSource,true);assert.equal(row.winRate,undefined);assert.equal(row.score,undefined);}
+  for(const row of advice.rows){const fromSource=data.hexBuilds[hero.id].augmentIds.includes(row.id);assert.equal(row.fromSource,fromSource);if(!fromSource){assert.equal(row.mechanicReviewed,true);assert.ok(['preferred','conditional'].includes(row.level));}assert.equal(row.winRate,undefined);assert.equal(row.score,undefined);}
  }
  assert.equal(JSON.stringify(data.hexBuilds),before);
 });
 
+test('an independent source shortlist cannot hide a reviewed mechanism, become an offer pool or acquire its provenance',()=>{
+ const before=JSON.stringify(data),hero='Teemo',id=1129,ref=data.hexBuilds[hero];assert(!ref.augmentIds.includes(id));
+ const source=hexRecommendations({data,hero,limit:12}),without=hexRecommendations({data:{...data,hexBuilds:{}},hero,limit:12});
+ for(const result of [source,without]){const row=result.rows.find(r=>r.id===id);assert(row);assert.equal(row.level,'preferred');assert.equal(row.fromSource,false);assert.equal(row.mechanicReviewed,true);assert(!row.reasons.some(r=>r.includes('OP.GG')));}
+ assert(source.rows.some(r=>r.fromSource));assert.equal(source.source.name,'OP.GG');
+ const options=ref.augmentIds.slice(0,3);assert(!options.includes(id));
+ for(const actual of [data,{...data,hexBuilds:{}}]){const result=hexRecommendations({data:actual,hero,options});assert.deepEqual(result.rows.map(r=>r.id),options);assert.equal(result.rows.some(r=>r.id===id),false);}
+ for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed',d=>d.augments.find(a=>a.id===id).catalogEnabled=false]){
+  const changed=structuredClone(data);mutate(changed);assert(!hexRecommendations({data:changed,hero,limit:12}).rows.some(r=>r.id===id));
+ }
+ assert.equal(JSON.stringify(data),before);
+});
+
+test('marked-set contributions remain separate from general hero fit and withdraw when their partner changes',()=>{
+ for(const owned of [[],[1002]])assert.deepEqual(hexRecommendations({data,hero:'Ashe',options:[1047],owned}).rows[0].markedReasons,[]);
+ const linked=hexRecommendations({data,hero:'Ashe',options:[1047,1058],owned:[1048]});assert.match(linked.rows[0].markedReasons.join(' '),/珠光护手/);assert.deepEqual(linked.rows[1].markedReasons,[]);
+ const changed=structuredClone(data);changed.augments.find(a=>a.id===1048).description+=' changed';assert.deepEqual(hexRecommendations({data:changed,hero:'Ashe',options:[1047],owned:[1048]}).rows[0].markedReasons,[]);
+});
+
 test('actual choices use reviewed trigger conditions and known conflicts instead of blindly copying the source list',()=>{
- const support=hexRecommendations({data,hero:'Sona',options:[1141,1205,1004]});assert.equal(support.bestChoice,1141);assert.match(support.rows[0].reasons.join(' '),/友方治疗或护盾/);
+ const support=hexRecommendations({data,hero:'Sona',options:[1141,1205,1004]});assert.equal(support.bestChoice,1141);assert.match(support.rows[0].reasons.join(' '),/W 治疗.*友方.*护盾/);
  const mage=hexRecommendations({data,hero:'Lux',options:[1141,2072]});assert.equal(mage.rows[0].level,'conditional');assert.equal(mage.bestChoice,null,'Having a shield does not establish a protection-first game plan');
- const clash=hexRecommendations({data,hero:'Ashe',owned:[1004],options:[1088,1047,2072]});assert.equal(clash.rows[0].level,'conflict');assert.equal(clash.bestChoice,1047);assert.match(clash.rows[0].cautions.join(' '),/禁用终极/);
+ const clash=hexRecommendations({data,hero:'Jinx',owned:[1004],options:[1088,1047,2072]});assert.equal(clash.rows[0].level,'conflict');assert.equal(clash.bestChoice,1047);assert.match(clash.rows[0].cautions.join(' '),/禁用终极/);
  const reverse=hexRecommendations({data,hero:'Karthus',owned:[1088],options:[1004]});assert.equal(reverse.rows[0].level,'conflict');assert.equal(reverse.bestChoice,null);
  assert.equal(hexRecommendations({data,hero:'Brand',owned:[1047],options:[1048,2072]}).bestChoice,1048);
 });
@@ -81,8 +100,8 @@ test('option entry resolves only exact known choices and the UI exposes short ad
 test('reviewed attack-crit and AP spell-crit advice is hero-specific and cannot survive a changed kit or effect',()=>{
  for(const [hero,id]of [['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]]){
   const result=hexRecommendations({data,hero,options:[2072,id,1205]});assert.deepEqual(result.rows.map(r=>r.id),[2072,id,1205]);assert.equal(result.bestChoice,id);assert.equal(result.rows[1].level,'preferred');assert.equal(result.rows[1].score,undefined);
-  for(const mutate of [d=>d.patch='16.21',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
-   const changed=structuredClone(data);mutate(changed);const degraded=hexRecommendations({data:changed,hero,options:[id]});assert.equal(degraded.bestChoice,null);assert.notEqual(degraded.rows[0].level,'preferred');
+  for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
+   const changed=structuredClone(data);mutate(changed);const degraded=hexRecommendations({data:changed,hero,options:[id]});assert.equal(degraded.bestChoice,null);assert.notEqual(degraded.rows[0]?.level,'preferred');
   }
  }
  for(const hero of ['Jhin','Ashe','Brand'])assert.equal(hexRecommendations({data,hero,options:[1328]}).bestChoice,null,'No blanket crit/marksman endorsement for '+hero);

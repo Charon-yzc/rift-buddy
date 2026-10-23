@@ -19,6 +19,6 @@ test('current16.21 hashed augment descriptions resolve without inventing unsuppo
  const rows=buildAugmentDescriptions(fixture.catalog,fixture.bin,fixture.entries),byId=id=>rows.find(a=>a.id===id);
  assert.match(byId(3118).description,/3秒内阵亡/);assert.equal(byId(3118).descriptionStatus,'complete');
  assert.match(byId(3059).description,/提升15%/);assert.equal(byId(3059).descriptionStatus,'complete');
- assert.equal(byId(3049).descriptionStatus,'partial');assert.match(byId(3049).description,/动态数值/);assert.deepEqual(byId(3049).unresolved,['ArmorDamage']);
+ assert.equal(byId(3049).descriptionStatus,'complete');assert.match(byId(3049).description,/250%额外护甲 \+ 50–125（随等级）/);assert.deepEqual(byId(3049).unresolved,[]);
  const missing=buildAugmentDescriptions(fixture.catalog,fixture.bin,{});assert(missing.every(row=>row.descriptionStatus==='missing'));
 });

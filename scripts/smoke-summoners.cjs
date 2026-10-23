@@ -2,7 +2,7 @@ const {revealDraftAction}=require('./smoke-draft-ui.cjs');
 const {app,ipcMain,globalShortcut,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),cp=require('node:child_process'),https=require('node:https'),{EventEmitter}=require('node:events'),{createHash}=require('node:crypto');
 const root=path.resolve(process.env.RIFT_BUDDY_USER_DATA),phase=process.env.RIFT_BUDDY_SUMMONER_PHASE,windows=[],copies=[];
-const pair=['SummonerDot','SummonerFlash'],hexPair=['SummonerMana','SummonerFlash'];let runeWrites=0;
+const pair=['SummonerDot','SummonerFlash'];let runeWrites=0;
 globalShortcut.register=()=>false;
 global.fetch=async()=>{throw Error('Isolated summoner smoke: network disabled');};
 https.request=()=>{throw Error('Isolated summoner smoke: game sockets disabled');};
@@ -36,7 +36,7 @@ async function run(){
   await until(async()=>JSON.stringify(await read(true))===JSON.stringify(ids),'Imported personal D/F did not reach whole configuration');
  };
  const open=async(id='Ashe',role='bottom',mode='rift')=>{main.webContents.send('open-build',{id,role,mode});await until(()=>js('!!document.querySelector("[data-build-summoner]")'),'Configuration missing');await delay(100);};
- const guidePair=async ids=>{await until(async()=>{const s=await state();return JSON.stringify(s.guide?.selection.summonerIds)===JSON.stringify(ids);},'Guide selection lost spells');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');const gjs=code=>guide.webContents.executeJavaScript(code,true);await until(()=>gjs('window.guide.bootstrap().then(b=>JSON.stringify(b.model?.summoners.map(s=>s.id))==='+JSON.stringify(JSON.stringify(ids))+')'),'Guide model lost D/F');await gjs('window.guide.control("layout","details")');await gjs('document.querySelector("[data-tab=skills]").click()');await until(()=>gjs('document.body.textContent.includes("D / F")'),'Guide lacks preparation context');assert.deepEqual(await gjs('[...document.querySelectorAll(".spells span")].map(s=>s.textContent)'),ids.map((id,i)=>(i?'F':'D')+' · '+(id==='SummonerDot'?'引燃':'闪现')));};
+ const guidePair=async ids=>{await until(async()=>{const s=await state();return JSON.stringify(s.guide?.selection.summonerIds)===JSON.stringify(ids);},'Guide selection lost spells');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Guide missing');const gjs=code=>guide.webContents.executeJavaScript(code,true);await until(()=>gjs('window.guide.bootstrap().then(b=>JSON.stringify(b.model?.summoners.map(s=>s.id))==='+JSON.stringify(JSON.stringify(ids))+')'),'Guide model lost D/F');assert.equal(await gjs('!!document.querySelector("[data-tab]")'),false);assert.deepEqual(await read(!!await js('document.querySelector(".configuration-current")')),ids);};
  const capture=async(name)=>{await js('Promise.all([...document.images].map(i=>{i.loading="eager";return i.decode().catch(()=>{});})).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await fs.writeFile(path.join(root,name),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());};
  await until(()=>js('!!document.querySelector("[data-action=navigate]")'),'UI missing');
  if(phase==='prepare'){
@@ -48,9 +48,8 @@ async function run(){
   await click('[data-action=open-guide]');await guidePair(pair);
   await change('[data-build-source-field=region]','kr');await change('[data-build-source-field=region]','global');assert.deepEqual(await read(),pair);await guidePair(pair);
   await click('[data-action=build-core][data-index="1"]');await click('[data-action=build-condition][data-condition=heal]');assert.deepEqual(await read(),pair);
-  await click('[data-action=build-mode][data-mode=hex]');await until(()=>js('!!document.querySelector("[data-build-summoner] option[value=SummonerMana]")'),'Mayhem spell options missing');
-  for(const id of ['SummonerExhaust','SummonerSmite','SummonerTeleport'])assert.equal(await js('!!document.querySelector("[data-build-summoner] option[value='+id+']")'),false,id+' illegal in Mayhem');
-  await preparePair(hexPair);await click('[data-action=favorite-build]');await click('[data-action=build-mode][data-mode=rift]');assert.deepEqual(await read(),pair,'Separate mode choice lost');
+  // Actual current-package prepare/restore covers Hex spell restrictions,
+  // Rift↔Hex isolation and saved Hex favorites: smoke-current-configuration.cjs.
   await click('[data-action=build-jump][data-section=skills]');await js('document.querySelector(".summoner-preparation").scrollIntoView({block:"center"})');await delay(300);await capture('full-summoner-preparation.png');await click('[data-action=close]');
   await click('[data-action=navigate][data-route=draft]');await click('[data-action=recommend]');await until(()=>js('!!document.querySelector(".result-card")'),'Results missing');
   const before=(await state()).draft.slots;await click('[data-action=companion-attach]');await click('[data-action=companion-preview][data-result-index="0"][data-id=Aphelios]');
@@ -67,8 +66,8 @@ async function run(){
   await click('[data-action=navigate][data-route=favorites]');const team=(await state()).favorites.findIndex(f=>f.type==='team');await click('[data-action=open-favorite][data-index="'+team+'"]');await open('Aphelios');assert.deepEqual(await read(),pair,'Team snapshot must restore manual spells');await click('[data-action=open-guide]');await guidePair(pair);await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');let favorites=(await state()).favorites;const ashe=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='rift'&&f.summonerIds);await click('[data-action=open-favorite][data-index="'+ashe+'"]');assert.deepEqual(await read(),pair);await click('[data-action=close]');
   await click('[data-action=navigate][data-route=favorites]');favorites=(await state()).favorites;const sourceDefault=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='rift'&&!f.summonerIds);await click('[data-action=open-favorite][data-index="'+sourceDefault+'"]');assert.deepEqual(await read(),expected.defaults,'Source-following favorite must clear a later manual choice');assert.equal(await js('document.querySelector("[data-action=build-summoner][data-field=summoner-reset]").disabled'),true);await click('[data-action=close]');
-  await click('[data-action=navigate][data-route=favorites]');favorites=(await state()).favorites;const hex=favorites.findIndex(f=>f.type==='build'&&f.champion==='Ashe'&&f.mode==='hex');await click('[data-action=open-favorite][data-index="'+hex+'"]');assert.deepEqual(await read(),hexPair);await capture('restored-hex-summoners.png');
+  await capture('restored-rift-summoners.png');
  }
- assert.equal(runeWrites,0);await fs.writeFile(path.join(root,phase+'.json'),JSON.stringify({passed:true,phase,version,archiveSha256,actualRuneWrites:runeWrites,manualDAndF:true,modeRestrictions:true,guideAndFavorites:true,offlineRestart:phase==='restore'},null,2));console.log('Summoner preparation '+phase+' passed');app.quit();
+ assert.equal(runeWrites,0);await fs.writeFile(path.join(root,phase+'.json'),JSON.stringify({passed:true,phase,version,archiveSha256,actualRuneWrites:runeWrites,manualDAndF:true,hexModeChecks:'separate-current-package',guideAndFavorites:true,offlineRestart:phase==='restore'},null,2));console.log('Summoner preparation '+phase+' passed');app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.writeFile(path.join(root,phase+'-error.txt'),error.stack);app.exit(1);});

@@ -25,4 +25,8 @@
 - [x] Run source route integration and all eight favorite context flows. Keep history migration as the next delivery; run the existing history usage smoke as regression coverage here.
 - [x] Run full tests with bounded Node test concurrency, then check and package. Full suite: 2466 tests, 2465 pass, 1 skip, 0 fail. Source and packaged Vue lifecycle, eight favorite context scenarios, and history usage smoke all passed; client writes remained zero. The pre-existing recovery tests were updated to exercise deep-page preference explicitly and bound their callback waits; independent review confirmed no runtime behavior was weakened.
 - [x] Obtain independent review and address findings. A member disclosure lost open state/focus when an earlier favorite was deleted; configuration disclosures/buttons are now Vue nodes, verified by a failing-then-passing browser regression and re-review.
-- [ ] Commit and push the migration branch, then create/link a PR if repository access allows. Keep installer artifacts local.
+- [x] Commit and push the migration branch, then create/link a PR if repository access allows. PR #150 is associated with this session. Local packaged apps remain under `release/`; no release binaries were uploaded.
+
+## Mainline integration
+
+Merged upstream 0.59.27 into this branch. Retained mainline's current-Hex gate and explicit obsolete-favorite cleanup, with original indices after filtering. Updated the prior string-renderer test to exercise the actual generated component projection and added current/obsolete-Hex DOM smoke assertions. Independent re-review found no blockers. Integrated verification: 2600 tests, 2599 pass, 1 skip, 0 fail; check passed for 680 JavaScript files and current data. Packaged lifecycle, eight favorite-context scenarios and history usage smoke passed, client writes zero. ASAR SHA-256: `34175e567eb8814daab20fd23fd8996099148d7452d69928a7d9ef6179eb5881`.

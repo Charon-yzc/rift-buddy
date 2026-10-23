@@ -1,9 +1,10 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {aggregateCombatStats,applyLivePanel,combatWindow} from '../src/core/live-estimate.mjs';
 import {canModelAsheAttacks,asheAttackEvents} from '../src/core/combat-models.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(await fs.readFile('data/game.json')),ashe=data.champions.find(c=>c.id==='Ashe'),enemy=data.champions.find(c=>c.id==='Ahri');
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),ashe=data.champions.find(c=>c.id==='Ashe'),enemy=data.champions.find(c=>c.id==='Ahri');
 const def={hp:2000,armor:100,mr:100},ranks={Q:4,W:2,E:2,R:1};
 const agg={...aggregateCombatStats(ashe,9,[],data),ad:100,atkSpeed:1,crit:.5};
 
@@ -43,6 +44,6 @@ test('guide exposes Ashe subset and exclusions without a complete skill claim or
  const selection=selectGuide(null,{id:'Ashe',role:'bottom',mode:'rift',threatId:'Ahri'}),live={available:true,champion:'Ashe',mode:'rift',mapId:11,at:Date.now(),inventory:[],inventoryKnown:true,gold:800,level:9,skills:ranks,stats:{ad:100,ap:0,armor:50,mr:40,atkSpeed:1,crit:.5,critDamage:1,hp:1000,maxHp:1500},enemies:[{id:'Ahri',name:enemy.name,level:9,items:[],itemsKnown:true}]};
  const model=createGuideModel(data,selection,live),html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
  assert.equal(model.estimate.mineSkillBasis,'ashe-attacks');assert.equal(model.estimate.mineWindow.skills,0);assert.equal(model.estimate.danger,false);
- for(const text of ['普攻 + 被动参考 · Q / W / R未计入','首发也适用','Q箭束伤害','不能作为整套斩杀线','普攻含被动'])assert.ok(html.includes(text),text);
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
  assert.equal(html.includes('技能模型已复核，仍需确认'),false);assert.equal(html.includes('技能约 0'),false);
 });

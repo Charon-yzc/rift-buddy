@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,8 +9,8 @@ import {legalSkillOrder,nextSkill,recommendSkill} from '../src/core/skill-advice
 import {sanitizeLive} from '../services/live-client.mjs';
 import {reviewBaseline,reviewSourceAnchors} from '../src/core/catalog-review.mjs';
 import {comboKey} from '../src/core/combo-members.mjs';
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
-data.builds=JSON.parse(await fs.readFile(new URL('../data/builds.json',import.meta.url),'utf8')).entries;
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
+data.builds=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/builds.json',import.meta.url),'utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),selection={id:'Ashe',role:'bottom',mode:'rift'};
 const p=(champion,side,items=[])=>({champion,side,inventory:items.map(id=>({id:String(id),count:1})),itemsKnown:true,scores:{kills:0}});
 const live=(extra={})=>({available:true,at:Date.now(),champion:'Ashe',mode:'rift',mapId:11,gold:800,level:7,skills:{Q:1,W:3,E:1,R:1},inventory:[],teamKnown:true,roster:[p('Jhin','enemy',[3031]),p('Jinx','enemy',[6672])],...extra});

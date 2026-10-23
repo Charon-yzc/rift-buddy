@@ -1,3 +1,5 @@
+import {heroCoachView} from '../src/hero-coach-view.mjs';
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -10,8 +12,8 @@ import {profile} from '../src/core/rules.mjs';
 import {selectGuide,createGuideModel} from '../src/core/guide.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 
 test('all bundled source positions retain authored and distinct opening, meeting and later duties',()=>{
  for(const b of Object.values(data.builds)){
@@ -28,7 +30,7 @@ test('all stored support and bottom preparations provide concrete distinct stage
   for(const stage of ['opening','key','later']){
    const model=createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift',threatId:'Nautilus'}),stage});
    assert.equal(model.coach.roleTask.generic,undefined,key);
-   const html=renderGuide({model},'team',false,()=>'<img>');
+   const html=heroCoachView(model.coach);
    assert.ok(html.includes(model.coach.action),key+':'+stage+' missing from the actual guide');
    const against=heroCoach({data,champion:id,role,enemyId:'Nautilus',stage});
    assert.doesNotMatch(against.matchup.opening,/刷野|清营地|覆盖营地|处理营地/,key);
@@ -71,7 +73,7 @@ test('uncovered hero-position pairs retain own mechanics plus distinct generic s
  const coaches=['opening','key','later'].map(stage=>heroCoach({data,champion:id,role,stage}));
  assert.equal(new Set(coaches.map(c=>c.action)).size,3);
  assert.match(coaches[0].action,/边线/);assert.match(coaches[1].action,/资源.*边线/);assert.match(coaches[2].action,/边线.*核心/);
- for(const coach of coaches){assert.equal(coach.roleTask.generic,true);assert.match(coach.sequence,/Q附着.*W缩短冷却.*第二次Q/);assert.match(renderGuide({model:createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift'}),stage:coach.stage})},'team',false,()=>'<img>'),/通用位置分工/);}
+ for(const coach of coaches){assert.equal(coach.roleTask.generic,true);assert.match(coach.sequence,/Q附着.*W缩短冷却.*第二次Q/);assert.match(heroCoachView(createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift'}),stage:coach.stage}).coach),/通用位置分工/);}
 });
 
 test('support stages and uncovered secondary roles never import jungle or solo-lane economy tasks',()=>{
@@ -98,7 +100,7 @@ test('fresh own skill ranks separate current actions from future R sequences wit
   const live={available:true,champion:id,mode:'rift',mapId:11,queueId:420,at:Date.now(),level:3,gold:700,gameTime:160,inventory:[],skills:{Q:1,W:1,E:1,R:0},enemies:[{id:enemy,level:3,items:[]}],allies:[]};
   const m=createGuideModel(data,state,live);assert.equal(m.live.matched,true);assert.equal(m.coach.stage,'opening');assert.deepEqual(m.coach.unlearned,['R']);
   assert.match(m.coach.futureSequence,/R/);assert.doesNotMatch(m.coach.sequence,/R接近|R 留一段|留蓝R退出/);assert.match(m.coach.sequence,/Q/);
-  const html=renderGuide({model:m},'team',false,()=>'<img>');assert.match(html,/学会 R 后的条件顺序/);assert.match(html,/尚未学会 R/);
+  const html=heroCoachView(m.coach);assert.match(html,/学会 R 后的条件顺序/);assert.match(html,/尚未学会 R/);
   const learned=createGuideModel(data,state,{...live,level:6,skills:{Q:3,W:1,E:1,R:1}});assert.equal(learned.coach.futureSequence,null);assert.match(learned.coach.sequence,/R/);
   const unknown=createGuideModel(data,state,{...live,at:Date.now()-20000});assert.equal(unknown.live.matched,false);assert.equal(unknown.coach.futureSequence,null,'Stale own ranks must not be used');
  }
@@ -150,7 +152,7 @@ test('remaining solo roles teach forms, resources and exits through the actual g
   for(const stage of ['opening','key','later']){
    const state={...selectGuide(null,{id,role,mode:'rift'}),stage},model=createGuideModel(data,state);
    assert.equal(model.coach.roleTask.generic,undefined,id+':'+stage);
-   assert.ok(renderGuide({model},'team',false,()=>'<img>').includes(model.coach.action));
+   assert.ok(heroCoachView(model.coach).includes(model.coach.action));
   }
  }
  for(const id of ['Aurora','Gangplank','Irelia','Kennen','Pantheon','Ryze']){
@@ -169,7 +171,7 @@ test('reviewed solo lane openings teach their own economy instead of a camp-clea
   assert.doesNotMatch(coach.opening,/刷野|营地/);
   assert.match(coach.action,/[QWER]/);
   const model=createGuideModel(data,{...selectGuide(null,{id,role,mode:'rift'}),stage});
-  assert.ok(renderGuide({model},'team',false,()=>'<img>').includes(coach.action));
+  assert.ok(heroCoachView(model.coach).includes(coach.action));
  }
  assert.match(heroCoach({data,champion:'Chogath',role:'jungle'}).opening,/营地/);
  assert.match(heroCoach({data,champion:'Volibear',role:'jungle'}).opening,/野怪/);
@@ -181,7 +183,7 @@ test('actual solo guide model and rendered action follow the later stage without
   const live={available:true,champion:id,mode:'rift',mapId:11,queueId:420,at:Date.now(),level:12,gold:800,gameTime:1600,inventory:[],skills:{Q:3,W:2,E:5,R:2},enemies:[],allies:[]};
   const model=createGuideModel(data,state,live);
   assert.equal(model.coach.roleTask.stage,'later');assert.equal(model.coach.action,rolePlay(id,role,'later').action);
-  assert.ok(renderGuide({model},'team',false,()=>'<img>').includes(model.coach.action));
+  assert.ok(heroCoachView(model.coach).includes(model.coach.action));
  }
 });
 

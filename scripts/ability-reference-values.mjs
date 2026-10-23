@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 const round=v=>Math.round(v*10000)/10000;
 // Rank and resource semantics cross-checked with same-patch localized tooltips.
 export function correctDirectRankFields({patch,ability,spell,values,replace,dictionary}){
- assert.equal(patch,'16.20');
+ assert(['16.20','16.21'].includes(patch));
  const change=(id,key,name,field,expected,old,next)=>{assert.deepEqual(values(id,name,field,expected.length),expected);replace(id,key,old,next,name+' '+field+' same-patch localized tooltip binding');};
  change('AurelionSol','Q','AurelionSolQ','MaxChannelDuration',[3.25,3.25,3.25,3.25,9999],'至多持续3.25秒','1—4级至多持续3.25秒，5级取消通常的引导时限（仍持续消耗法力，可被取消或打断）');
  const asq=ability('AurelionSol','Q');assert.deepEqual(values('AurelionSol','AurelionSolQ','ManaCostPerSecond',5),[30,35,40,45,50]);
@@ -77,8 +77,9 @@ export function correctDirectRankFields({patch,ability,spell,values,replace,dict
  yi.metrics.find(m=>m.label==='法力消耗').label='开启法力消耗';yi.metrics.push({label:'持续法力消耗',values:[6],unit:'%最大法力值/秒',basis:'引导期间额外消耗'});
  const locke=ability('Locke','W'),lockeSpell=spell('Locke','LockeW');assert.deepEqual(values('Locke','LockeW','HealthCost',1),[.02]);assert.deepEqual(values('Locke','LockeW','BaseDuration',1),[6]);assert(dictionary[lockeSpell.mClientData.mTooltipData.mLocKeys.keyCost.toLowerCase()].includes('@HealthCost*100@%当前生命值'));
  locke.metrics.push({label:'持续自身伤害',values:[2],unit:'%当前生命值/秒',basis:'持续期间每秒受到真实伤害，可提前结束'});
- assert.deepEqual(lockeSpell.mana.slice(0,5),[50,50,50,50,50]);assert.deepEqual(locke.metrics.find(m=>m.label==='法力消耗').values,[50,55,60,65,70]);
- locke.notes.push('基础法力按同版Data Dragon的50/55/60/65/70展示；另一客户端字段为固定50。两者的实际运行关系尚未取得真实游戏证据。');
+ const lockeMana=patch==='16.21'?[60,65,70,75,80]:[50,55,60,65,70];
+ assert.deepEqual(lockeSpell.mana.slice(0,5),[50,50,50,50,50]);assert.deepEqual(locke.metrics.find(m=>m.label==='法力消耗').values,lockeMana);
+ locke.notes.push(`基础法力按同版Data Dragon的${lockeMana.join('/')}展示；另一客户端字段为固定50。两者的实际运行关系尚未取得真实游戏证据。`);
  const dq=spell('Darius','DariusCleave');assert.equal(dq.mTargetingTypeData.__type,'SelfAoe');assert.deepEqual(dq.castRadiusSecondary.slice(1,6),[425,425,425,425,425]);
  const da=ability('Darius','Q');da.metrics=da.metrics.filter(m=>!['资料范围','范围'].includes(m.label));da.metrics.push({label:'斧刃作用半径',values:[425],unit:'单位'});
  const mr=spell('DrMundo','DrMundoR');assert.equal(mr.mTargetingTypeData.__type,'Self');const ma=ability('DrMundo','R');ma.metrics=ma.metrics.filter(m=>!['资料范围','范围'].includes(m.label));ma.metrics.push({label:'施放目标',text:'自身强化与恢复，无需选取其他目标'});

@@ -159,7 +159,7 @@ test('champion directory redirection is rejected before creating a recommended s
 test('canonical champion directory names and map selectors scope Wukong and Howling Abyss correctly',async()=>{
  const f=await fixture(),wukong=data.champions.find(c=>c.id==='MonkeyKing'),set=createItemSet(wukong,getBuild(wukong,'top',data),data);
  await f.write(set);const saved=JSON.parse(await fs.readFile(path.join(f.game,'Config','Champions','MonkeyKing','Recommended',set.uid+'.json'),'utf8'));assert.equal(saved.map,'SR');assert.equal(saved.priority,true);
- const hex=createItemSet(champion,getBuild(champion,'top',data,{mode:'hex'}),data);await f.write(hex);const abyss=JSON.parse(await fs.readFile(path.join(f.target,hex.uid+'.json'),'utf8'));assert.equal(abyss.map,'HA');assert.deepEqual(abyss.associatedMaps,[12]);
+ const hexData={...data,hexBuilds:JSON.parse(await fs.readFile('data/hex-builds.json')).entries};const hex=createItemSet(champion,getBuild(champion,'top',hexData,{mode:'hex'}),hexData);await f.write(hex);const abyss=JSON.parse(await fs.readFile(path.join(f.target,hex.uid+'.json'),'utf8'));assert.equal(abyss.map,'HA');assert.deepEqual(abyss.associatedMaps,[12]);
 });
 
 test('narrow LCU route is loopback-only; current-page writes and unrelated APIs keep their existing restrictions',async()=>{

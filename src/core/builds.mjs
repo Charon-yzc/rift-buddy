@@ -16,6 +16,7 @@ import {creativeMemberCombo,validateCreativePlan} from './creative-plan.mjs';
 import {fallbackMemberPlay} from './plan-stages.mjs';
 import {validateRunePage,validateCustomRunePage} from './rune-page.mjs';
 import {validHexPoolRecord} from './hex-pool-evidence.mjs';
+import {isCurrentHexData,HEX_DATA_PENDING} from './hex-data-current.mjs';
 export {validateRunePage} from './rune-page.mjs';
 
 export const BUILD_PARSER_VERSION=10;
@@ -85,11 +86,14 @@ export function validReference(ref,champion,role,data,{allowOlder=false,opponent
   (ref.matchups===undefined||validMatchups(ref.matchups))&&(ref.rankedStatistics===undefined||validRankedStatistics(ref.rankedStatistics))&&
   (ref.skillOptions===undefined||Array.isArray(ref.skillOptions)&&ref.skillOptions.length<=5&&ref.skillOptions.every(o=>typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&legalSkillOrder(o.order,champion.id)&&Number.isSafeInteger(o.samples)&&o.samples>0)));
 }
-export function validHexReference(ref,champion,data,{allowOlder=false}={}){
- const older=allowOlder&&compareBuildPatches(ref?.patch,data.patch)===-1;
- return !!(ref&&ref.schema===1&&ref.mode==='hex'&&ref.champion===champion.id&&usableBuildPatch(ref.patch,data.patch,allowOlder)&&ref.region==='global'&&ref.tier==='all'&&
-  Array.isArray(ref.core)&&ref.core.length&&ref.core.every(c=>Array.isArray(c.items)&&c.items.length===3&&c.items.every(id=>Number.isSafeInteger(id)&&id>0&&(older||data.items[id]?.maps?.['12'])))&&
-  validSourceMetadata(ref,data,older)&&validSourceRows(ref.core,data,'12',older)&&validSourceRows(ref.boots,data,'12',older)&&validSourceRows(ref.start,data,'12',older)&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'12',older))&&Array.isArray(ref.augmentIds)&&ref.augmentIds.every(Number.isInteger)&&
+// Mayhem's seasonal rules change the available augments and their builds.
+// An older source must not become a current automatic reference, even if a
+// caller still passes the former allowOlder option. Saved player plans remain
+// independent of this source-validation boundary.
+export function validHexReference(ref,champion,data){
+ return !!(ref&&ref.schema===1&&ref.mode==='hex'&&ref.champion===champion.id&&ref.patch===data.patch&&ref.region==='global'&&ref.tier==='all'&&
+  Array.isArray(ref.core)&&ref.core.length&&ref.core.every(c=>Array.isArray(c.items)&&c.items.length===3&&c.items.every(id=>Number.isSafeInteger(id)&&id>0&&data.items[id]?.maps?.['12']))&&
+  validSourceMetadata(ref,data,false)&&validSourceRows(ref.core,data,'12',false)&&validSourceRows(ref.boots,data,'12',false)&&validSourceRows(ref.start,data,'12',false)&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'12',false))&&Array.isArray(ref.augmentIds)&&ref.augmentIds.every(Number.isInteger)&&
   (ref.poolEvidence===undefined||validHexPoolRecord(ref.poolEvidence,champion.id,ref.patch)));
 }
 // Position eligibility may come from an existing validated source, even when
@@ -117,6 +121,17 @@ export function rankedClientRoles(data){
 const conflicts=itemConflicts;
 export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent,sharedEquipment}={}) {
  if(sharedEquipment){const base=getBuild(champion,role,data,{mode,variant,conditions,coreIndex,coreId,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds,bottomQuestPlan,sourceOpponent});return sharedEquipmentBuild(base,sharedEquipment,data);}
+ // Keep saved selections in storage, but never derive a fresh default from an
+ // old catalogue. Explicitly adopted personal equipment is handled above.
+ if(mode==='hex'&&(!isCurrentHexData(data)||!validHexReference(data.hexBuilds?.[champion.id],champion,data)))return {
+  key:'unavailable',dataPatch:data.patch,champion:champion.id,role,mode,title:'海克斯4.0资料待更新',unavailable:true,
+  items:[],start:[],early:[],granted:[],boots:null,laterOptions:[],selectedLaterIds:[],unavailableLaterOptions:[],selectedCoreIndex:0,selectedCoreId:null,adapted:false,
+  loadoutId:'default',loadoutOptions:[],configurationNote:isCurrentHexData(data)?'当前版本的英雄配置尚未就绪，旧版默认配置已停用。':HEX_DATA_PENDING,configurationSources:[],combo:null,runeOptions:[],selectedRuneId:null,selectedRune:null,runePage:null,runeValid:false,selectionWarnings:[isCurrentHexData(data)?'当前版本的英雄配置尚未就绪，旧版默认配置已停用。':HEX_DATA_PENDING],support:false,
+  summoners:[],summonerOptions:[],sourceSummonerOptions:[],selectedSummonerIds:null,summonerManual:false,hasManualSummoners:false,
+  skillChoices:[],defaultSkillId:null,selectedSkillId:null,selectedSkill:null,skillOrder:null,skillMechanism:'',attributePlan:null,priority:null,first:null,tips:'',adjustments:[],
+  rulesDate:'',rulesPatch:data.patch,stale:true,source:'资料待更新',reference:null,referenceStale:false,referenceExpired:true,sourceNote:HEX_DATA_PENDING,sourceOpponent:null,
+  bottomQuestPlan:false,maxLaterItems:0,missing:[],routeProfile:null,startOptions:[],bootsOptions:[],selectedStartId:null,selectedBootsId:null,
+ };
  coreIndex=Number.isInteger(coreIndex)&&coreIndex>=0?coreIndex:0;
  if(!Array.isArray(conditions))conditions=[];
  const p=profile(champion,mode==='hex'?undefined:role);let key=p.build;
@@ -164,7 +179,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  else if(role==='jungle'&&mode==='rift')t.start=[1103,2003];
  else if(['enchanter','senna','supportTank','pokeSupport'].includes(key))t.start=[p.damage==='ap'?1056:1055,2003];
  const hexCandidate=data.hexBuilds?.[champion.id];
- const ref=variant!=='default'||config?null:mode==='hex'?(validHexReference(hexCandidate,champion,data,{allowOlder:true})?hexCandidate:null):standardRef;
+ const ref=variant!=='default'||config?null:mode==='hex'?(validHexReference(hexCandidate,champion,data)?hexCandidate:null):standardRef;
  if(!p.reviewed&&!ref&&!config)throw Error(`${champion.name}的英雄机制尚未整理，所选来源也没有可用配置；请核对游戏内资料后自行准备。`);
  const referenceStale=!!ref&&ref.patch!==data.patch;
  const referenceExpired=!!ref&&!isFreshBuildReference(ref,data.patch,mode);

@@ -1,10 +1,11 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createSlots,recommend} from '../src/core/recommend.mjs';
 import {renderResultCard} from '../src/draft-result-view.mjs';
 import {restoreTeamFavorite} from '../src/core/team-favorites.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
 
 test('locked friends retain the same reviewed strategy and preference as the identical completion result',()=>{
  for(const scope of ['party','context'])for(const [members,tempo] of [[{mid:'Ahri',jungle:'Vi'},'early'],[{top:'Garen',jungle:'MasterYi'},'growth'],[{bottom:'KogMaw',support:'Lulu'},'protect']]){

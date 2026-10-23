@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,8 +9,8 @@ import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 import {renderGuide as renderGuideActual} from '../src/guide-view.mjs';
 const renderGuide=(snapshot,...rest)=>renderGuideActual({...snapshot,model:snapshot?.model?{...snapshot.model,compact:false}:snapshot?.model},...rest);
 import {parseChampionCombatStats} from '../services/champion-stats.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
 const bag=[{id:'3153',count:1}];
 const snapshot=(id,qId,level=9)=>sanitizeLive({riotId:'fixture-only',level,currentGold:1000,
@@ -68,8 +69,8 @@ test('unresolved public forms omit the percent-health item effect with an explic
  const state=selectGuide(null,{id:'Gnar',role:'top',mode:'rift',conditions:[],threatId:'Ahri'}),live=snapshot('Gnar',null);
  const model=createGuideModel(data,state,live);
  assert.equal(model.estimate.mineWindow.percentOnHitUnknown,true);
- assert.ok(renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>').includes('形态待确认，未计破败'));
- assert.ok(renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>').includes('近战或远程形态未确认，破败百分比伤害未计入'));
+ const html=renderGuide({model,connected:true,phase:'InProgress'},'combat',false,()=>'<img>');
+ assert.doesNotMatch(html,/duel-box|data-tab=|2 秒约|6 秒约|立即斩杀/);assert.match(html,/compact-guide-main/);
  const ranged=createGuideModel(data,state,snapshot('Gnar','GnarQ'));
  assert.equal(ranged.estimate.mineWindow.percentOnHitUnknown,false);assert.ok(ranged.estimate.mineWindow.items>0);
  assert.equal(state.selection.id,'Gnar');

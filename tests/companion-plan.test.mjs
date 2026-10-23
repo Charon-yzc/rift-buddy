@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -10,8 +11,8 @@ import {companionView,companionPlanView,readOnlyConfigurationAction} from '../sr
 import {clientPreparationPlan,clientPreparationKey} from '../src/client-preparation-view.mjs';
 import {preparationProgressView} from '../src/preparation-progress-view.mjs';
 import {captureCreativePlan,creativeMemberCombo,creativeComboContext} from '../src/core/creative-plan.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json')).entries;
 const hero=id=>data.champions.find(c=>c.id===id),base={id:'Volibear',role:'top',mode:'rift',conditions:[],coreIndex:0};
 const build=s=>getBuild(hero(s.id),s.role,data,s);
 

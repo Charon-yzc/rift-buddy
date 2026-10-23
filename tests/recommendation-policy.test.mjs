@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -13,7 +14,7 @@ import {companionView} from '../src/companion-view.mjs';
 import {defaultState} from '../services/storage.mjs';
 import {familiarityWinner} from '../src/core/recommendation-familiarity.mjs';
 
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
 const {champions,patch}=data,key=id=>champions.find(c=>c.id===id).key;
 const workerSource=(await fs.readFile(new URL('../src/recommend-worker.mjs',import.meta.url),'utf8')).replace(/^import .*;\r?\n/gm,'');
 function worker(input){let response;const context=vm.createContext({self:{postMessage:value=>response=value},recommend,replaceMember,configureCatalog,BUNDLED_CATALOG,orderRecommendationPage});vm.runInContext(workerSource,context);context.self.onmessage({data:{requestId:1,input,initialize:true}});assert.equal(response.error,undefined);return response.results;}

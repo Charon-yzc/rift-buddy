@@ -1,0 +1,96 @@
+{
+  "schema": 1,
+  "patch": "16.21",
+  "reviewedAt": "2026-10-22",
+  "scope": "Conditional augment-item relationships with prepared plans or complete matching own inventories; no hero skill, offering pool, popularity or win-rate claims. Exact detail-only values require separately reviewed full tooltips.",
+  "sources": {
+    "augments": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "items": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+  },
+  "effects": {
+    "1002": "5342b67e91c66da7",
+    "1058": "d51dae206a24d183",
+    "1129": "dc220ccf50570edf",
+    "1318": "28967e6c09fc3a3c",
+    "1319": "08f03629a2f4b7d6",
+    "1320": "5d7e4e68b65ac3a6",
+    "1336": "0597ce131eb7eb86",
+    "1379": "33b5cc6c8c9bad67",
+    "1996": "3fa82b9c2eb5aa74",
+    "2140": "e5b714aa1e2e5ea1",
+    "2143": "202643c11e0e208f",
+    "2157": "b9fdcdf63b320514",
+    "3150": "f12df5c2993a4fcb"
+  },
+  "items": {
+    "3031": {
+      "summary": "399e9523f1b7d20a",
+      "tooltip": "c383ded1c44e4f12"
+    },
+    "3068": {
+      "summary": "e709ff3bde8f3378",
+      "tooltip": "b2a3fd993b01526a"
+    },
+    "3074": {
+      "summary": "ccc88bf1cf618a3c",
+      "tooltip": "72942211977cc512"
+    },
+    "3078": {
+      "summary": "521032faa395a097",
+      "tooltip": "1a5b77491c493c1a"
+    },
+    "3100": {
+      "summary": "61419a0480e75737",
+      "tooltip": "2c7333fe0cae4533"
+    },
+    "3115": {
+      "summary": "ef85e0677b1ae84c",
+      "tooltip": "8d247ea4e2c189bf"
+    },
+    "3143": {
+      "summary": "39e2e336e313f1d7",
+      "tooltip": "5c2bf872dc4f46ae"
+    },
+    "3152": {
+      "summary": "415c3993ffc7010b",
+      "tooltip": "db6cbf0fdb08c2b2"
+    },
+    "3157": {
+      "summary": "b2f73e80d3e77fe7",
+      "tooltip": "38b202f931ae091d"
+    },
+    "4646": {
+      "summary": "d7f54fc27b1c146c",
+      "tooltip": "781c96c8bdcc39b8"
+    },
+    "6333": {
+      "summary": "65943886b530ef44",
+      "tooltip": "4d4cb6d9f0da8fa1"
+    },
+    "6610": {
+      "summary": "b989ba466079a218",
+      "tooltip": "972769f126f4a845"
+    },
+    "6662": {
+      "summary": "084d5ca9a18203f8",
+      "tooltip": "e71f17d41db37438"
+    },
+    "6664": {
+      "summary": "60339a7adfaa33b5",
+      "tooltip": "72cdd155c0bf7972"
+    },
+    "6676": {
+      "summary": "2227ece5ba86c42d",
+      "tooltip": "292e05bd961591f2"
+    },
+    "124011": {
+      "summary": "786d8bd5be901f9d",
+      "tooltip": "9d7d1c9fc37c7754"
+    }
+  },
+  "details": {
+    "1320": "e08a49d16aa2d0ba",
+    "1336": "9020851e1d5d7268",
+    "3150": "7740c451999b27a4"
+  }
+}

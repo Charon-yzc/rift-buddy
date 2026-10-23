@@ -2,11 +2,22 @@ import assert from 'node:assert/strict';
 const round=v=>Math.round(v*10000)/10000;
 // Curated same-patch corrections guarded by original prose and client bindings.
 export function correctSemanticDescriptions({patch,ability,spell,values,replace,dictionary}){
- assert.equal(patch,'16.20');
+ assert(['16.20','16.21'].includes(patch));
  const calculation=(id,name,key)=>{const c=spell(id,name).mSpellCalculations?.[key];assert(c,id+name+key);return c;};
  const equal=(actual,expected)=>assert.deepEqual(actual,expected);
  const coefficient=(id,name,key,index,value,stat=0,formula=0)=>{const p=calculation(id,name,key).mFormulaParts[index];equal(p.__type,'StatByCoefficientCalculationPart');equal([p.mStat||0,p.mStatFormula||0,round(p.mCoefficient)],[stat,formula,value]);};
  const ranks=(id,name,field,expected)=>equal(values(id,name,field,expected.length),expected);
+ if(patch==='16.21'){
+  const vw=spell('Varus','VarusW'),vt=dictionary[vw.mClientData.mTooltipData.mLocKeys.keyTooltip.toLowerCase()];
+  ranks('Varus','VarusW','CDRPerBlightStack',[.11]);assert(vt.includes('@CDRPerBlightStack*100@%基础冷却时间'));
+  replace('Varus','W','每层13%基础冷却时间','每层11%基础冷却时间','VarusW current CDRPerBlightStack binding overrides stale Tencent prose');
+  const yq=spell('Yone','YoneQ'),yt=dictionary[yq.mClientData.mTooltipData.mLocKeys.keyTooltip.toLowerCase()];
+  assert.equal(yt.split('@QDamage@').length,3);ranks('Yone','YoneQ','BaseDamage',[25,50,75,100,125]);ranks('Yone','YoneQ','ADRatio',[1.05,1.05,1.05,1.05,1.05]);
+  equal(calculation('Yone','YoneQ','QDamage').mFormulaParts,[{mDataValue:'BaseDamage',__type:'NamedDataValueCalculationPart'},{mStat:2,mDataValue:'ADRatio',__type:'StatByNamedDataValueCalculationPart'}]);
+  equal(calculation('Yone','YoneQ','TotalDamageCrit').mFormulaParts,[{mDataValue:'BaseDamage',__type:'NamedDataValueCalculationPart'},{mStat:2,mSubpart:{mStat:9,mDataValue:'ADRatio',__type:'StatByNamedDataValueCalculationPart'},__type:'StatBySubPartCalculationPart'}]);
+  replace('Yone','Q','+110%【攻击力】','+105%【攻击力】','YoneQ first and third casts both bind QDamage; current ratio is 1.05 total AD');
+  replace('Yone','Q','可以暴击以造成(【25/50/75/100/125】+207%【攻击力】)物理伤害','可以暴击以造成(【25/50/75/100/125】+105%【总攻击力】×当前暴击伤害倍率)物理伤害；基础伤害不随暴击翻倍','YoneQ TotalDamageCrit multiplies only the AD term by current critical-damage stat');
+ }
  const kp=spell('Kaisa','KaisaPassive'),kloc=dictionary[kp.mClientData.mTooltipData.mLocKeys.keyTooltip.toLowerCase()];
  for(const[key,index,label,old,next]of[
   ['Q',5,'额外攻击力','艾卡西亚暴雨：0.0/100额外攻击力','艾卡西亚暴雨：达到100额外攻击力可进化'],
@@ -55,9 +66,10 @@ export function correctSemanticDescriptions({patch,ability,spell,values,replace,
  ranks('MissFortune','MissFortuneBulletTime','BaseWaves',[14,16,18]);ranks('MissFortune','MissFortuneBulletTime','BaseDamage',[20,30,40]);
  equal(calculation('MissFortune','MissFortuneBulletTime','TotalPhysicalDamage').mModifiedGameCalculation,'PhysicalDamagePerWave');
  ranks('MissFortune','MissFortuneBulletTime','tADRatio',[.6,.6,.6]);ranks('MissFortune','MissFortuneBulletTime','APRatio',[.25,.25,.25]);
- ranks('MissFortune','MissFortuneBulletTime','CritDamageMultiplier',[.3,.3,.3]);
- replace('MissFortune','R','(总共【787-1813】【随等级提升】=（280+840%【攻击力】+350%【法术强度】）物理伤害)。','未触发暴击且全部命中时，总共造成(【280/480/720】+【840%/960%/1080%】【总攻击力】+【350%/400%/450%】【法术强度】)物理伤害（随R等级）。','MissFortuneBulletTime per-wave damage multiplied by 14/16/18 waves');
- replace('MissFortune','R','每一波均可触发暴击，造成73=（26+78%【攻击力】+32.5%【法术强度】）物理伤害。','每一波均可触发暴击；暴击波伤害为普通波伤害×[1+0.3×(当前暴击伤害倍率−1)]。暴击伤害倍率以英雄当前属性为准，不使用固定示例数值。','MissFortuneBulletTime CritDamagePerWave uses current critical-damage stat');
+ const mfCrit=patch==='16.21'?.45:.3;
+ ranks('MissFortune','MissFortuneBulletTime','CritDamageMultiplier',[mfCrit,mfCrit,mfCrit]);
+ replace('MissFortune','R',patch==='16.21'?'(总共【833-1871】【随等级提升】=（280+840%【攻击力】+350%【法术强度】）物理伤害)。':'(总共【787-1813】【随等级提升】=（280+840%【攻击力】+350%【法术强度】）物理伤害)。','未触发暴击且全部命中时，总共造成(【280/480/720】+【840%/960%/1080%】【总攻击力】+【350%/400%/450%】【法术强度】)物理伤害（随R等级）。','MissFortuneBulletTime per-wave damage multiplied by 14/16/18 waves');
+ replace('MissFortune','R',patch==='16.21'?'每一波均可触发暴击，造成（【29/43.5/58】+87%【攻击力】+36.25%【法术强度】）物理伤害。':'每一波均可触发暴击，造成73=（26+78%【攻击力】+32.5%【法术强度】）物理伤害。',`每一波均可触发暴击；暴击波伤害为普通波伤害×[1+${mfCrit}×(当前暴击伤害倍率−1)]。暴击伤害倍率以英雄当前属性为准，不使用固定示例数值。`,'MissFortuneBulletTime CritDamagePerWave uses current critical-damage stat');
  ranks('Tryndamere','TryndamereQ','MaximumBonusAD',[20,35,50,65,80]);ranks('Tryndamere','TryndamereQ','BonusHealPerFury',[.5,.95,1.4,1.85,2.3]);
  ranks('Tryndamere','TryndamereQ','APRatioPerFury',[.012,.012,.012,.012,.012]);
  replace('Tryndamere','Q','获得至多20攻击力','获得至多【20/35/50/65/80】攻击力（随Q等级）','TryndamereQ MaximumBonusAD');

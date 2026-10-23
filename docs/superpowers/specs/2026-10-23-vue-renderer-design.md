@@ -8,6 +8,7 @@ The user authorized the Vue migration and asked to finish favorites integration 
 - Keep the existing strict CSP, including `script-src 'self'`. Precompiled templates require neither runtime compilation nor `unsafe-eval`.
 - A route host owns one Vue application. On updates, detach its live host before replacing the surrounding legacy shell, then reattach and update its shallow state. On navigation or docking, unmount before removing its host. This preserves Vue node identity without a shell signature that can omit state changes.
 - Favorites uses a real SFC with keyed cards and escaped bindings for user text. Member configuration disclosures and action buttons are Vue nodes so array-index changes preserve their open state and focus. Existing escaped build descriptions and original-plan helpers remain a temporary HTML boundary. Delegated actions retain their existing names and original array indices.
+- Mainline 0.59.27 hides obsolete Hex favorites without deleting them. Use the same `hexFavoriteIsCurrent` gate and retain original collection indices after filtering; preserve the existing explicit review-and-cleanup controls outside the Vue host.
 - History keeps its existing renderer and local controller in this delivery. Its regression smoke must continue passing; raw games remain in bounded memory only.
 - Build or mount failures must surface in verification. Do not silently turn off Vue and call the result migrated.
 

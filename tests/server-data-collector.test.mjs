@@ -66,7 +66,9 @@ test('older analysis is rejected even when fetched today; bad data never changes
 });
 
 test('optional hero pools follow signed Hex data without overwriting a newer local build or admitting player records',async t=>{
- const root=await temporary(t),providers=sources(),hero=seed.game.champions[0],evidence=structuredClone(pools.entries[hero.id]);evidence.fetchedAt=new Date(Date.parse(evidence.fetchedAt)+1000).toISOString();
+ const root=await temporary(t),providers=sources(),hero=seed.game.champions[0];
+ // Synthetic evidence isolates server merging without claiming a live 4.0 pool.
+ const evidence={champion:hero.id,patch:seed.game.patch,source:'Mayhem:Meta',sourceUrl:`https://mayhemmeta.com/champions/${hero.id.toLowerCase()}?patch=${seed.game.patch}`,fetchedAt:'2026-10-22T12:00:00Z',kind:'selected-game-counts',rows:[{id:1058,games:10,withheld:false}]};
  providers.hexPoolIndex=async()=>new Map([[hero.key,hero.id.toLowerCase()]]);providers.hexPool=async()=>evidence;
  const result=await collectServerData({root,seedRoot,network,providers,maxChampions:1,collectHexPools:true});assert.equal(result.datasets['hex-pools'].changed,1);
  const bundle=(await loadServerData(root)).bundle;assert.deepEqual(bundle['hex-builds'].entries[hero.id].poolEvidence,evidence);validateFeedBundle(bundle,seed.game);

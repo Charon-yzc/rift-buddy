@@ -1,3 +1,4 @@
+import {isCurrentHexData} from './hex-data-current.mjs';
 import {hexDraftProfile,HEX_DRAFT_TRAITS as traits} from './hex-draft-profiles.mjs';
 import {pickEligibilityContext,normalizeChampionIds} from './pick-eligibility.mjs';
 
@@ -8,7 +9,7 @@ export function hexDraft({data,client}){
  const seen=new Set(),team=(session?.myTeam||[]).slice(0,5).filter(p=>Number.isInteger(p.cellId)&&!seen.has(p.cellId)&&seen.add(p.cellId)).map(p=>({cellId:p.cellId,self:p.cellId===session.localPlayerCellId,hero:lookup.get(p.championId)||null}));
  // Hash each observed kit once per projection, including when the bench has
  // fifty heroes. Never retain compatibility results across data refreshes.
- const profiles=new Map(),getProfile=hero=>{if(!hero)return null;if(!profiles.has(hero))profiles.set(hero,hexDraftProfile(hero,data.patch));return profiles.get(hero);};
+ const profiles=new Map(),getProfile=hero=>{if(!hero||!isCurrentHexData(data))return null;if(!profiles.has(hero))profiles.set(hero,hexDraftProfile(hero,data.patch));return profiles.get(hero);};
  const own=team.find(p=>p.self),known=team.filter(p=>p.hero),heroCurrent=hero=>!!getProfile(hero),reviewed=known.length>0&&known.every(p=>heroCurrent(p.hero)),coverage=rows=>{
   const selected=rows.filter(p=>p.hero).map(p=>getProfile(p.hero));
   return Object.fromEntries(traits.map(([key])=>[key,{count:selected.filter(p=>p?.traits[key]===true).length,uncertain:selected.filter(p=>p?.traits[key]===null).length}]));

@@ -1,8 +1,9 @@
+// Historical effect-scope contract. Current 4.0 source gates are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {augmentCategories,compareAugments} from '../src/core/hex-compare.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json')),champion=data.champions.find(c=>c.id==='Ashe');
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json')),champion=data.champions.find(c=>c.id==='Ashe');
 const compare=id=>compareAugments({champion,options:[id],augments:data.augments})[0];
 test('effect trigger intervals, resource refunds and haste-to-speed conversion are not ability cooldown benefits',()=>{
  for(const id of [1029,1220,1112,1314,2087,1098]){const row=compare(id);assert.equal(row.categories.includes('haste'),false,id+' '+row.name);assert.doesNotMatch(row.reasons.join(' '),/技能冷却更短|提供技能急速/);}

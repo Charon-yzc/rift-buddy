@@ -714,3 +714,29 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root .preselection-pic
  .recommendation-ui .pregame-controls .pregame-secondary{flex-basis:100%}
  .recommendation-ui .pregame-role .select{width:86px}
 }
+
+/* Compact handbook: keep filters with the hero; reserve detail for a click. */
+.recommendation-app .hex-handbook-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.recommendation-app .hex-handbook-toolbar .search-wrap{flex:1 1 230px;min-width:190px}
+.recommendation-app .hex-handbook-toolbar .select{padding:6px 9px;font-size:12px;max-width:170px}
+.recommendation-app .hex-handbook-hero{gap:7px;padding:6px 9px;min-height:36px}
+.recommendation-app .hex-handbook-hero b{font-size:13px}
+.recommendation-app .hex-handbook-hero .portrait{width:28px;height:28px;border-radius:5px}
+.recommendation-app .hex-handbook-hero>svg:last-child{width:12px;height:12px;color:var(--rb-muted)}
+.recommendation-app .hex-handbook-favorites{padding:6px 0;border-bottom:1px solid var(--rb-line);font-size:12px}
+.recommendation-app .hex-handbook-favorites>summary{cursor:pointer;color:var(--rb-ink)}
+.recommendation-app .hex-handbook-favorites .chips{margin:7px 0}
+.recommendation-app .hex-handbook .hex-pool{padding:8px 0;margin-bottom:8px}
+.recommendation-app .hex-handbook-count{margin:8px 0 4px;font-size:12px}
+.recommendation-app .hex-handbook .augment-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0 14px}
+.recommendation-app .hex-handbook .augment-card{min-width:0;min-height:126px;padding:10px 6px;gap:5px;border:0;border-bottom:1px solid var(--rb-line);border-radius:0;background:transparent;transform:none;transition:background .12s ease-out}
+.recommendation-app .hex-handbook .augment-card:hover,.recommendation-app .hex-handbook .augment-card.selected{background:var(--rb-raised)}
+.recommendation-app .hex-handbook .augment-card:focus-visible{outline:2px solid var(--rb-accent);outline-offset:-2px}
+.recommendation-app .hex-handbook .augment-title{gap:8px;min-width:0}
+.recommendation-app .hex-handbook .augment-title img{width:32px;height:32px}
+.recommendation-app .hex-handbook .augment-title>div{min-width:0;flex:1}
+.recommendation-app .hex-handbook .augment-title b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.recommendation-app .hex-handbook .augment-card p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:12px;line-height:1.65}
+.recommendation-app .hex-handbook .augment-footer{min-height:17px;gap:5px;font-size:11px}
+.recommendation-app .hex-handbook .augment-footer>svg{margin-left:auto;width:13px;height:13px}
+@media(prefers-reduced-motion:reduce){.recommendation-app .hex-handbook .augment-card{transition:none}}

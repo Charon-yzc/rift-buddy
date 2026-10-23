@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';import {hexRecommendations} from '../src/core/hex-recommendations.mjs';import {hexChampionReview} from '../src/core/hex-review.mjs';import {mechanicReview} from '../src/core/mechanic-review.mjs';import {createGuideModel,selectGuide} from '../src/core/guide.mjs';import {renderHexRoutes} from '../src/hex-routes-view.mjs';
 const offline=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-routes-16.21.json',import.meta.url))),data={...offline,...fixture.game,items:{...offline.items,...fixture.game.items},champions:offline.champions.map(c=>({...c,...fixture.game.champions.find(n=>n.id===c.id)}))};
+const legacy=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url)));
 
 test('current Camille has three independent paired routes with her Q timing and own conditional gear',()=>{
  const before=JSON.stringify(data),champion=data.champions.find(c=>c.id==='Camille');assert.equal(hexChampionReview(champion,data.patch),'current');assert.equal(mechanicReview(champion,data.patch),'pending-review');
@@ -24,7 +25,7 @@ test('Camille option advice keeps real order and spellblade prerequisite without
 
 test('Camille source drift withdraws hero claims and changed core spellblade withdraws its paired route',()=>{
  for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id==='Camille').mechanicSource.character.sha256='f'.repeat(64)]){const changed=structuredClone(data);mutate(changed);assert.deepEqual(hexPlayerRoutes({data:changed,hero:'Camille'}),[]);}
- assert.deepEqual(hexPlayerRoutes({data:offline,hero:'Camille'}),[]);assert.deepEqual(createGuideModel(data,selectGuide(null,{id:'Camille',role:'top',mode:'rift'})).hexRoutes,[]);
+ assert.deepEqual(hexPlayerRoutes({data:legacy,hero:'Camille'}),[]);assert.deepEqual(createGuideModel(data,selectGuide(null,{id:'Camille',role:'top',mode:'rift'})).hexRoutes,[]);
  for(const mutate of [a=>a.description+=' changed',a=>a.key='Different',a=>a.catalogEnabled=false]){const changed=structuredClone(data);mutate(changed.augments.find(a=>a.id===1996));assert(hexPlayerRoutes({data:changed,hero:'Camille'}).every(r=>r.augment.id!==1996));assert(hexPlayerRoutes({data:changed,hero:'Camille'}).every(r=>r.optionalAugments.every(a=>a.id!==1996)));}
  for(const mutate of [i=>i.description+=' changed',i=>i.maps['12']=false,i=>i.inStore=false,i=>i.gold.purchasable=false]){const changed=structuredClone(data);mutate(changed.items[3078]);const routes=hexPlayerRoutes({data:changed,hero:'Camille'});assert.deepEqual(routes.map(r=>r.augment.id),[1058,1004]);assert(routes.every(r=>r.pendingItems&&r.gear.every(g=>g.items.every(i=>i.id!==3078))));}
  const optional=structuredClone(data);optional.augments.find(a=>a.id===1029).descriptionStatus='partial';assert(hexPlayerRoutes({data:optional,hero:'Camille'}).every(r=>r.optionalAugments.every(a=>a.id!==1029)));const gear=structuredClone(data);gear.items[3065].description+=' changed';assert(hexPlayerRoutes({data:gear,hero:'Camille'}).every(r=>r.gear.every(g=>g.items.every(i=>i.id!==3065))));

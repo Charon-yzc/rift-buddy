@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -10,8 +11,8 @@ import {renderResultCard} from '../src/draft-result-view.mjs';
 import {resultPlayCard} from '../src/play-card-view.mjs';
 import {resultCooperation} from '../src/core/creative-plan.mjs';
 import {escape as e} from '../src/ui.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const locked=(slots,pairs)=>{for(const [role,id] of pairs)Object.assign(slots.find(s=>s.role===role),{champion:id,locked:true});return slots;};
 const viewData={champions:data.champions,catalogInfo:{status:{}}};
 

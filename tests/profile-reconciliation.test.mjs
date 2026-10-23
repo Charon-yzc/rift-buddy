@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,8 +7,8 @@ import {analyzeTeam,createSlots,recommend} from '../src/core/recommend.mjs';
 import {getBuild} from '../src/core/builds.mjs';
 import {selectBuildSource} from '../src/core/build-source.mjs';
 import {summarizeEnemyTraits,describeCurve} from '../src/core/strategy.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
 
 test('current hero identities and declared primary positions are covered by the reviewed mechanism profile',()=>{

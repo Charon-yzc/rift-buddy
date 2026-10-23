@@ -396,7 +396,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // grades them and catalogue seeds without a bonus for their source label.
  const creativeBySig=new Map(),familiarity=roleFamiliarityWeights(targets,candidateSets,familiarityByRole),shared=canonicalRoomFamiliarity(roomFamiliarity);
  const exploration={...(shared.length?Object.fromEntries(targets.map(role=>[role,roomChampionUsageWeights(candidateSets[role],shared)])):{}),...familiarity};
- for(const def of generateCreativeTrios({targets,candidateSets,champions,style,randomSeed,familiarity:exploration})){
+ for(const def of generateCreativeTrios({targets,candidateSets,champions,patch:context.patch,style,randomSeed,familiarity:exploration})){
   const trioSlots=fixed.map(s=>{const m=def.members.find(m=>m.role===s.role);return m?{...s,champion:m.champion}:s;});
   const picked=trioSlots.map(s=>s.champion).filter(Boolean);
   if(new Set(picked).size!==picked.length||trioSlots.some(s=>targets.includes(s.role)&&!s.champion))continue;

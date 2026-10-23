@@ -18,7 +18,7 @@ test('same-patch static growth supplements Data Dragon without guessing missing 
  assert.equal(parseChampionCombatStats(record('Jhin',4.4,0),'Jhin').attackspeedratio,0);
  for(const raw of [record('Ashe',undefined,.658),record('Ashe','3',.658),record('Ashe',3,-.5),record('Vayne',3,.658),{}])assert.throws(()=>parseChampionCombatStats(raw,'Ashe'));
  assert.throws(()=>championStatsURL('latest','Ashe'));assert.throws(()=>championStatsURL('16.20','../Ashe'));
- assert.equal(hasCurrentCombatStats(hero('Vayne'),'16.21'),false);
+ assert.equal(hasCurrentCombatStats(hero('Vayne'),'16.22'),false);
 });
 test('growth refresh returns a complete new snapshot and retains the old input on a source failure',async()=>{
  const champions=['Ashe','Lucian'].map(id=>({id,name:id,stats:{attackdamageperlevel:0,attackspeed:.658}}));
@@ -49,9 +49,9 @@ test('bundled current stats include real level AD and distinct AS ratios for all
 });
 const cnNames=()=>({version:data.patch,hero:data.champions.map(c=>({alias:c.id,title:c.name,name:c.title,keywords:c.keywords}))});
 test('an already enriched snapshot checks global and CN versions without fetching every champion again',async()=>{
- const original=global.fetch,calls=[];
+ const original=global.fetch,calls=[],previous=structuredClone(data);
  global.fetch=async url=>{calls.push(url);return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cnNames()};};
- try{const result=await collectSnapshot(()=>{},data);assert.equal(result.contentRevision,data.contentRevision);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
+ try{const result=await collectSnapshot(()=>{},previous);assert.equal(result.contentRevision,17);assert.deepEqual(result.champions,data.champions);assert.equal(calls.length,2);assert(calls[1].includes('game.gtimg.cn'));}
  finally{global.fetch=original;}
 });
 
@@ -64,7 +64,7 @@ test('same global patch can refresh a later CN dictionary without changing stats
 
 test('partial, mismatched and failed CN dictionaries retain existing names and CN version',async()=>{
  const original=global.fetch;
- try{for(const cn of [null,{version:data.patch,hero:[]},{...cnNames(),version:'16.21'}]){const messages=[];global.fetch=async url=>{if(cn===null&&!url.endsWith('versions.json'))throw Error('CN unavailable');return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cn};};const result=await collectSnapshot(m=>messages.push(m),data);assert.deepEqual(result.champions,data.champions);assert.equal(result.cnVersion,data.cnVersion);assert(messages.some(m=>m.includes('保留既有名称')));}}
+ try{for(const cn of [null,{version:data.patch,hero:[]},{...cnNames(),version:'16.22'}]){const messages=[];global.fetch=async url=>{if(cn===null&&!url.endsWith('versions.json'))throw Error('CN unavailable');return {ok:true,json:async()=>url.endsWith('versions.json')?[data.version]:cn};};const result=await collectSnapshot(m=>messages.push(m),data);assert.deepEqual(result.champions,data.champions);assert.equal(result.cnVersion,data.cnVersion);assert(messages.some(m=>m.includes('保留既有名称')));}}
  finally{global.fetch=original;}
 });
 test('an unchanged version number cannot pin old mechanics past the daily full recheck',async()=>{

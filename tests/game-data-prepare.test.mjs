@@ -39,8 +39,9 @@ test('manual action token uses actual file bytes while its content identity igno
 });
 
 test('manual same-patch preparation retains newer verified pool evidence independently of build timestamps',async t=>{
- const f=await fixture(t),hex=JSON.parse(await fs.readFile('data/hex-builds.json')).entries,observations=JSON.parse(await fs.readFile('data/hex-hero-observations.json')),disk=structuredClone(hex.Yasuo);
- disk.poolEvidence=observations.entries.Yasuo;disk.fetchedAt=new Date(Date.parse(disk.fetchedAt)+86400000).toISOString();disk.core[0].samples=123456;await fs.mkdir(path.join(f.root,'data'),{recursive:true});await fs.writeFile(path.join(f.root,'data/hex-builds.json'),JSON.stringify({schema:1,entries:{Yasuo:disk}}));
+ const f=await fixture(t),hex=JSON.parse(await fs.readFile('data/hex-builds.json')).entries,disk=structuredClone(hex.Yasuo);
+ // Synthetic bounded evidence tests precedence; no current public pool is claimed.
+ disk.poolEvidence={champion:'Yasuo',patch:game.patch,source:'Mayhem:Meta',sourceUrl:'https://mayhemmeta.com/champions/yasuo?patch='+game.patch,fetchedAt:disk.fetchedAt,kind:'selected-game-counts',rows:[{id:1058,games:10,withheld:false}]};disk.fetchedAt=new Date(Date.parse(disk.fetchedAt)+86400000).toISOString();disk.core[0].samples=123456;await fs.mkdir(path.join(f.root,'data'),{recursive:true});await fs.writeFile(path.join(f.root,'data/hex-builds.json'),JSON.stringify({schema:1,entries:{Yasuo:disk}}));
  for(const delta of [0,-3600000]){
   const memory=structuredClone(disk);memory.fetchedAt=new Date(Date.parse(disk.fetchedAt)+delta).toISOString();memory.poolEvidence.fetchedAt=new Date(Date.parse(disk.poolEvidence.fetchedAt)+3600000).toISOString();memory.poolEvidence.rows[0].games++;
   const {data}=await f.prepare(game,{current:{hexBuilds:{Yasuo:memory}},bundle:null});assert.equal(data.hexBuilds.Yasuo.fetchedAt,disk.fetchedAt);assert.equal(data.hexBuilds.Yasuo.core[0].samples,123456);assert.deepEqual(data.hexBuilds.Yasuo.poolEvidence,memory.poolEvidence);

@@ -213,6 +213,7 @@ async function boot(){
  const recommendationCore=await import('../src/core/recommend.mjs');
  const {publicClientGameId,reconcileClientDraft}=await import('../src/core/draft.mjs');
  const {createHexRoundStore,hexRoundSelection}=await import('../src/core/hex-round.mjs');
+ const {isCurrentHexData}=await import('../src/core/hex-data-current.mjs');
  const hexRounds=createHexRoundStore({newToken:require('node:crypto').randomUUID});let guideHexContext=null;
  if(state.guide?.selection.mode==='hex')state.guide={...state.guide,selection:hexRoundSelection(state.guide.selection,null)};
  const hexGuideRecord=(selection,context=guideHexContext)=>{
@@ -282,7 +283,7 @@ async function boot(){
   const own=currentGuideSelection(),previous=state.guide;
   // An ordinary preference save can refresh this hero's role/configuration,
   // but is not a request to replace a deliberately opened manual reference.
-  if(!own||matchingOnly&&previous&&(previous.selection.id!==own.id||previous.selection.mode!==own.mode))return false;
+  if(!own||own.mode==='hex'&&!isCurrentHexData(data)||matchingOnly&&previous&&(previous.selection.id!==own.id||previous.selection.mode!==own.mode))return false;
   if(!previous||guideCore.guideIdentity(previous.selection)!==guideCore.guideIdentity(own)||own.comboKnown&&(previous.selection.comboId||'')!==(own.comboId||'')){
    const next=guideCore.selectGuide(previous,own),gameId=publicClientGameId(latestClient);if(latestClient.connected)next.match={phase:latestClient.phase,...(gameId?{gameId}:{})};
    try{await setGuideState(next,previous);}catch(error){if(error.code==='GUIDE_CONTEXT_CHANGED')return false;throw error;}
@@ -306,7 +307,7 @@ async function boot(){
   const next=hexRounds.reset(expected);publishHexRound();syncHexGuide({from:record.context,to:next.context,hero:record.hero}).catch(error=>diagnostic('hex guide projection unavailable: '+error.message));return next.context;
  };
  guide=require('./guide-window.cjs')({root,getState:()=>state.guide,getModel:getGuideModel,isQuitting:()=>quitting,diagnostic,
-  currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,resetHexRound:resetHexGuideRound,getReference:(kind,id)=>gameReference(data,kind,id),referenceRevision:getGuideReferenceRevision,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
+  currentSelection:currentGuideSelection,prepareCurrent:prepareCurrentGuide,setState:setGuideState,resetHexRound:resetHexGuideRound,getReference:(kind,id,mode)=>gameReference(data,kind,id,mode),referenceRevision:getGuideReferenceRevision,getPreferences:()=>state.preferences,setPresentation,adjustPlan:(selection,field,value)=>changeCompanionPlan(data,selection,field,value),
   showHexSource:(id,routeId)=>{pendingBuild=null;pendingMainPage={route:'hex-source',id,routeId};showMainWindow();if(rendererReady){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}},
   showMain:selection=>{if(selection)pendingBuild=selection;showMainWindow();if(rendererReady&&pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}}});
  diagnostic(`loaded data ${data.version}`);

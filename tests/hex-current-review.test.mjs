@@ -4,11 +4,19 @@ import {mechanicReview} from '../src/core/mechanic-review.mjs';
 import {createCooperationGraph} from '../src/core/cooperation.mjs';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';
 import {hexMicroRoutes} from '../src/core/hex-micro-routes.mjs';
-import {hexEquipmentImpact} from '../src/core/hex-recommendations.mjs';
+import {hexEquipmentImpact,hexRecommendations} from '../src/core/hex-recommendations.mjs';
 import {hexDecision} from '../src/core/hex-decisions.mjs';
 import {createGuideModel,selectGuide} from '../src/core/guide.mjs';
 const fixture=JSON.parse(await fs.readFile(new URL('./fixtures/hex-routes-16.21.json',import.meta.url))),data=fixture.game;
 const pairs=[['Gwen',1129],['Kayle',1129],['Teemo',1129],['Sona',1141],['Soraka',1141],['Jax',1058],['Volibear',1058],['Brand',1045],['Jinx',1328],['Caitlyn',1328],['Veigar',1048],['Lux',1048]];
+
+test('current Hex reviews retain omitted mechanism candidates alongside a narrow independent source list',()=>{
+ // A synthetic source record isolates candidate selection from collection.
+ const ref={schema:1,parserVersion:3,mode:'hex',champion:'Teemo',patch:data.patch,region:'global',tier:'all',source:'OP.GG',sourceUrl:'https://op.gg/lol/modes/aram-mayhem/teemo/build?region=global&tier=all&patch='+data.patch,fetchedAt:'2026-10-22T00:00:00Z',core:[{items:[3115,3089,4633],samples:0,pickRate:null,winRate:null}],boots:[],start:[],later:[],priority:null,summoners:null,augmentIds:[1045]};
+ const current={...data,hexBuilds:{Teemo:ref}},result=hexRecommendations({data:current,hero:'Teemo'});assert.equal(result.source?.patch,'16.21');
+ assert(result.rows.some(r=>r.id===1045&&r.fromSource));assert(result.rows.some(r=>r.id===1129&&!r.fromSource&&r.level==='preferred'));
+ const changed=structuredClone(current);changed.champions.find(c=>c.id==='Teemo').mechanicSource.character.sha256='0'.repeat(64);assert(!hexRecommendations({data:changed,hero:'Teemo'}).rows.some(r=>r.id===1129));
+});
 
 test('exact 16.21 Hex kit reviews restore twelve conditional routes without renewing Rift cooperation',()=>{
  const before=JSON.stringify(data);

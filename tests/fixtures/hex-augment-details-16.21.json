@@ -1,0 +1,262 @@
+{
+  "patch": "16.21",
+  "source": {
+    "bin": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "strings": "https://raw.communitydragon.org/16.21/game/zh_cn/data/menu/en_us/lol.stringtable.json",
+    "binSha256": "e1ed4bfa49ae574f9ea27e9261587e363f2ac3b0f2299a78b5ca42e518053351",
+    "stringsSha256": "5fca25e067fa2b83701bb407f9c68707fd50056785cbb22fee7790b697b985d7",
+    "scope": "Exact three AugmentData records and RootSpell records;summary/full strings and referenced SpellName translation"
+  },
+  "catalog": [
+    {
+      "id": 2111,
+      "key": "Bonk",
+      "name": "邦！"
+    },
+    {
+      "id": 1004,
+      "key": "ARAM_BacktoBasics",
+      "name": "回归基本功"
+    },
+    {
+      "id": 1996,
+      "key": "ARAM_Upgrade_Sheen",
+      "name": "升级：耀光"
+    }
+  ],
+  "bin": {
+    "Maps/ModeSpecificData/Augments/Bonk": {
+      "AugmentNameId": "Bonk",
+      "NameTra": "Kiwi_Bonk_Name",
+      "DescriptionTra": "Kiwi_Bonk_Summary",
+      "AugmentTooltipTra": "Kiwi_Bonk_Tooltip",
+      "RootSpell": "Maps/ModeSpecificData/Augments/Bonk/Augment_Bonk",
+      "AugmentLargeIconPath": "assets/ux/kiwi/augments/icons/bonk_large.tex",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/bonk_large.tex",
+      "AugmentDisplayTags": [
+        1
+      ],
+      "rarity": 1,
+      "AugmentPlatformId": 2111,
+      "ResourceResolver": "Maps/ModeSpecificData/Augments/Bonk/Resources",
+      "IsAbilityAugment": true,
+      "__type": "AugmentData"
+    },
+    "Maps/ModeSpecificData/Augments/Bonk/Augment_Bonk": {
+      "ObjectName": "Augment_Bonk",
+      "objectPath": "Maps/ModeSpecificData/Augments/Bonk/Augment_Bonk",
+      "mScriptName": "Augment_Bonk",
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "DamageMultiplier",
+            "values": [
+              0.30000001192092896,
+              0.30000001192092896,
+              0.30000001192092896,
+              0.30000001192092896,
+              0.30000001192092896,
+              0.30000001192092896,
+              0.30000001192092896
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "AoERange",
+            "values": [
+              300,
+              300,
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mImgIconName": [
+          "ASSETS/Characters/Mordekaiser/HUD/Icons2D/MordekaiserQ.dds"
+        ],
+        "mResourceResolvers": [
+          "Maps/ModeSpecificData/Augments/Bonk/Resources"
+        ],
+        "__type": "SpellDataResource"
+      },
+      "__type": "SpellObject"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_BacktoBasics": {
+      "AugmentNameId": "ARAM_BacktoBasics",
+      "NameTra": "Kiwi_ARAM_BackToBasics_Name",
+      "DescriptionTra": "Cherry_BacktoBasics_Summary",
+      "AugmentTooltipTra": "Cherry_BacktoBasics_Tooltip",
+      "RootSpell": "Maps/ModeSpecificData/Augments/ARAM_BacktoBasics/Augment_ARAM_BacktoBasics",
+      "mAugmentTags": 1024,
+      "AugmentLargeIconPath": "assets/ux/cherry/augments/icons/backtobasics_large.tex",
+      "AugmentSmallIconPath": "assets/ux/cherry/augments/icons/backtobasics_small.tex",
+      "AugmentDisplayTags": [
+        2
+      ],
+      "rarity": 2,
+      "AugmentPlatformId": 1004,
+      "__type": "AugmentData"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_BacktoBasics/Augment_ARAM_BacktoBasics": {
+      "ObjectName": "Augment_ARAM_BacktoBasics",
+      "objectPath": "Maps/ModeSpecificData/Augments/ARAM_BacktoBasics/Augment_ARAM_BacktoBasics",
+      "mScriptName": "Augment_ARAM_BacktoBasics",
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "DamageAmp",
+            "values": [
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "HealingAmp",
+            "values": [
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "ShieldingAmp",
+            "values": [
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355,
+              0.3499999940395355
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "Haste",
+            "values": [
+              70,
+              70,
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mImgIconName": [
+          "ASSETS/Spells/Icons2D/Terrify.dds"
+        ],
+        "mClientData": {
+          "mTooltipData": {
+            "mObjectName": "Augment_ARAM_BacktoBasics",
+            "mFormat": "{d7c27163}",
+            "mLocKeys": {
+              "keyName": "Cherry_BacktoBasics_Name",
+              "keySummary": "Cherry_BacktoBasics_Tooltip"
+            },
+            "__type": "TooltipInstanceSpell"
+          },
+          "__type": "SpellDataResourceClient"
+        },
+        "__type": "SpellDataResource"
+      },
+      "__type": "SpellObject"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_Upgrade_Sheen": {
+      "AugmentNameId": "ARAM_Upgrade_Sheen",
+      "NameTra": "Kiwi_Upgrade_Sheen_Name",
+      "DescriptionTra": "Kiwi_Upgrade_Sheen_Summary",
+      "AugmentTooltipTra": "Kiwi_Upgrade_Sheen_Tooltip",
+      "RootSpell": "Maps/ModeSpecificData/Augments/ARAM_Upgrade_Sheen/Augment_ARAM_Upgrade_Sheen",
+      "mAugmentTags": 6,
+      "mBuildTags": 64,
+      "AugmentLargeIconPath": "assets/ux/kiwi/augments/icons/upgradesheen_large.tex",
+      "AugmentSmallIconPath": "assets/ux/kiwi/augments/icons/upgradesheen_small.tex",
+      "AugmentDisplayTags": [
+        1
+      ],
+      "rarity": 1,
+      "AugmentPlatformId": 1996,
+      "ResourceResolver": "Maps/ModeSpecificData/Augments/ARAM_Upgrade_Sheen/Loadable/Resources",
+      "__type": "AugmentData"
+    },
+    "Maps/ModeSpecificData/Augments/ARAM_Upgrade_Sheen/Augment_ARAM_Upgrade_Sheen": {
+      "ObjectName": "Augment_ARAM_Upgrade_Sheen",
+      "objectPath": "Maps/ModeSpecificData/Augments/ARAM_Upgrade_Sheen/Augment_ARAM_Upgrade_Sheen",
+      "mScriptName": "Augment_ARAM_Upgrade_Sheen",
+      "mSpell": {
+        "DataValues": [
+          {
+            "name": "DamageMaxHP",
+            "values": [
+              0.03999999910593033,
+              0.03999999910593033,
+              0.03999999910593033,
+              0.03999999910593033,
+              0.03999999910593033,
+              0.03999999910593033,
+              0.03999999910593033
+            ],
+            "__type": "SpellDataValue"
+          },
+          {
+            "name": "HealMaxHP",
+            "values": [
+              0.03500000014901161,
+              0.03500000014901161,
+              0.03500000014901161,
+              0.03500000014901161,
+              0.03500000014901161,
+              0.03500000014901161,
+              0.03500000014901161
+            ],
+            "__type": "SpellDataValue"
+          }
+        ],
+        "mImgIconName": [
+          "ASSETS/Spells/Icons2D/Terrify.dds"
+        ],
+        "mClientData": {
+          "mTooltipData": {
+            "mObjectName": "Augment_ARAM_Upgrade_Sheen",
+            "mFormat": "{d7c27163}",
+            "mLocKeys": {
+              "keyName": "Kiwi_Upgrade_Sheen_Name",
+              "keySummary": "Kiwi_Upgrade_Sheen_Summary"
+            },
+            "__type": "TooltipInstanceSpell"
+          },
+          "__type": "SpellDataResourceClient"
+        },
+        "__type": "SpellDataResource"
+      },
+      "__type": "SpellObject"
+    }
+  },
+  "entries": {
+    "kiwi_bonk_summary": "被【{{SpellName}}】技能强化的攻击或技能会对目标和附近的敌人们造成额外伤害。",
+    "kiwi_bonk_tooltip": "被【{{SpellName}}】技能强化的攻击或技能会对目标和附近的敌人们造成额外的@DamageMultiplier*100@%伤害。<br><br>被“邦”的额外英雄数量：@f1@",
+    "cherry_backtobasics_summary": "获得提升过的技能伤害、<healing>治疗效果</healing>、<shield>护盾</shield>和<scaleAbilityHaste>技能急速</scaleAbilityHaste>，但你<keywordMajor>不能使用你的终极技能</keywordMajor>。",
+    "cherry_backtobasics_tooltip": "你的终极技能已被封印。获得@DamageAmp*100@%技能伤害、<healing>治疗效果</healing>、<shield>护盾</shield>和<scaleAbilityHaste>@Haste@技能急速</scaleAbilityHaste>。",
+    "kiwi_upgrade_sheen_summary": "你的<passive>咒刃</passive>效果造成<physical>额外伤害</physical>并<heal>治疗</heal>你自身，治疗量相当于目标生命值的一定百分比。此外，获得<gold>250金币</gold>。",
+    "kiwi_upgrade_sheen_tooltip": "你的<passive>咒刃</passive>效果造成相当于目标@DamageMaxHP*100@%生命值的<physicalDamage>额外伤害</physicalDamage>，并<healing>治疗</healing>你自身，治疗效果相当于目标@HealMaxHP*100@%生命值。此外，获得<gold>250金币</gold>。<br><br>已造成的伤害：@f1@<br>已造成的治疗总和：@f2@",
+    "spellname": "<font color='#F0C200'>@SpellName@</font>"
+  }
+}

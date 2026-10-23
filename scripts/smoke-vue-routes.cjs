@@ -16,7 +16,7 @@ app.whenReady().then(async()=>{
   const {nextTick}=await import(${JSON.stringify(runtimeModule)});
   const root=document.getElementById('app'),routes=createVueRouteHost();
   const data={version:'test',champions:[{id:'Ahri',name:'阿狸',icon:''}],augments:[],items:{},runes:[]};
-  const one={id:'one',type:'hex',title:'<img src=x onerror=alert(1)>',champion:'Ahri',augments:[],version:'test',teamSummary:'<img data-injected-summary src=x>'};
+  const one={id:'one',type:'build',title:'<img src=x onerror=alert(1)>',champion:'MissingHero',version:'test',teamSummary:'<img data-injected-summary src=x>'};
   const two={...one,id:'two',title:'第二项'};
   const team={id:'team',type:'team',title:'组合',slots:[],configurations:[{id:'MissingHero',role:'mid',mode:'rift'}],creativePlan:{archetype:'shared',archetypeName:'共同分工',plan:'<img data-injected-plan src=x>',ordered:[],steps:[],window:'开团',caution:'撤退',patch:'test',rulesVersion:'1',dataVersion:'test'},version:'test'};
   const shell='<aside>导航</aside><main><div data-vue-route="favorites"></div></main>';
@@ -39,10 +39,17 @@ app.whenReady().then(async()=>{
   const unmounted=!original.isConnected;
   update([]);await nextTick();const empty=!!root.querySelector('[data-action="go-draft"]');
   update([two]);await nextTick();const remounted=root.querySelector('[data-favorite-id="two"]')!==original;
+  const obsolete={id:'obsolete',type:'hex',title:'旧版收藏',champion:'Ahri',augments:[1002],version:'16.20.1'};
+  update([obsolete,two,team]);await nextTick();
+  const hiddenObsolete=!root.querySelector('[data-favorite-id="obsolete"]')&&root.querySelector('[data-action="open-favorite"]').dataset.index==='1'&&root.querySelector('[data-action="open-team-build"]').dataset.index==='2';
+  update([obsolete]);await nextTick();const obsoleteEmpty=!!root.querySelector('[data-action="go-draft"]');
+  Object.assign(data,{patch:'16.21',version:'16.21.1',sources:{augmentDescriptions:'https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json'},augments:[{id:1002,key:'fixture-current',name:'当前强化'}]});
+  update([obsolete,two,{...obsolete,id:'current',title:'当前收藏',version:'16.21.1'},team]);await nextTick();
+  const currentHex=!!root.querySelector('[data-favorite-id="current"]')&&!root.querySelector('[data-favorite-id="obsolete"]')&&root.querySelector('[data-favorite-id="current"] [data-action="open-favorite"]').dataset.index==='2';
   routes.unmount();
-  return {safe,retained,disclosure,focus,memberIndex,index,delegated,unmounted,empty,remounted};
+  return {safe,retained,disclosure,focus,memberIndex,index,delegated,unmounted,empty,remounted,hiddenObsolete,obsoleteEmpty,currentHex};
  })()`,true);
- assert.deepEqual(result,{safe:true,retained:true,disclosure:true,focus:true,memberIndex:'1',index:'0',delegated:true,unmounted:true,empty:true,remounted:true});
+ assert.deepEqual(result,{safe:true,retained:true,disclosure:true,focus:true,memberIndex:'1',index:'0',delegated:true,unmounted:true,empty:true,remounted:true,hiddenObsolete:true,obsoleteEmpty:true,currentHex:true});
  assert.deepEqual(errors,[]);
  console.log(JSON.stringify({status:'passed',packaged,...result}));
  app.quit();

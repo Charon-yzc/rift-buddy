@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,7 +7,7 @@ import {moveChampion} from '../src/core/draft.mjs';
 import {defaultState,validateState} from '../services/storage.mjs';
 import {aggregateCombatStats,combatWindow,duel,applyLivePanel,statAtLevel} from '../src/core/live-estimate.mjs';
 import {canModelYone} from '../src/core/combat-models.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
 const hero=id=>data.champions.find(c=>c.id===id);
 
 test('solo unknown position offers independent lanes and never fills a whole party',()=>{

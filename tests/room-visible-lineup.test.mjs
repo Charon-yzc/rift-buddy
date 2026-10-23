@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -10,7 +11,7 @@ import {captureRoomStrategy,captureRoomConfigurations,roomPlayerRole} from '../s
 import {createPreparationStore} from '../src/core/preparation.mjs';
 import {rankedDraftPolicy} from '../src/core/ranked-draft.mjs';
 
-const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url),'utf8'));
+const data=JSON.parse(await fs.readFile(new URL('./fixtures/snapshot-16.20/game.json',import.meta.url),'utf8'));
 const source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 const start=source.indexOf('function roomSharePayload(){'),end=source.indexOf('async function publishRoomShare(',start);
 assert.ok(start>=0&&end>start);

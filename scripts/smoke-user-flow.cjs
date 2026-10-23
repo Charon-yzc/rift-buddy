@@ -77,7 +77,7 @@ async function run(){
  await click('[data-action=build-partner]');await click('[data-action=build-partner]');assert.equal((await active()).rune,'curated-guardian');
  await click('[data-action=open-guide]');
  const guide=await until(()=>windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html')),'Guide missing'),gjs=c=>guide.webContents.executeJavaScript(c,true);
- await until(()=>gjs('!!window.guide'),'Guide preload missing');await gjs('window.guide.control("layout","details")');await until(()=>gjs('!!document.querySelector(".next-item")'),'Guide not rendered');
+ await until(()=>gjs('!!window.guide'),'Guide preload missing');await until(()=>gjs('!!document.querySelector(".compact-next")'),'Guide not rendered');
  // The delayed update-guide handler above overlaps edits from both windows.
  await click('[data-action=build-rune][data-id=curated-aery]');
  await gjs('window.guide.control("condition","ap")');
@@ -89,13 +89,8 @@ async function run(){
  assert.ok(accepted.preparations.findLast(s=>s.id==='Seraphine'&&s.role==='bottom'&&s.comboId==='double-song').conditions.includes('ap'),'Saved preparation lost the accepted guide choice');
  assert.ok((await active()).conditions.includes('ap'),'Main window reverted the accepted guide choice');
  await capture('prepared-configuration.png');
- // Current-round Hex notes survive configuration edits and guide reopening;
- // seed the canonical owner instead of importing a previous game through a build.
- await js(`(async()=>{await window.buddy.hexRound({operation:'select',hero:'Ashe'});for(const [operation,id]of [['own',1047],['compare',1048],['compare',1002]]){const snapshot=await window.buddy.hexRound(),record=snapshot.manual;await window.buddy.hexRound({...record,operation,id});}return window.buddy.openGuide({id:'Ashe',role:'bottom',mode:'hex',augmentIds:[1048]});})()`);
- await gjs('window.guide.control("main")');await until(()=>js('document.querySelector(".champ-summary")?.textContent.includes("艾希")'),'Hex return missing');
- await click('[data-action=build-condition][data-condition=heal]');
- await until(async()=>{const s=(await state()).guide.selection;return s.conditions.includes('heal')&&s.compareIds?.length===2;},'Hex context lost on sync');
- await click('[data-action=open-guide]');let h=(await state()).guide.selection;assert.deepEqual(h.augmentIds,[1048]);assert.deepEqual(h.compareIds,[1048,1002]);assert.deepEqual(h.ownedAugmentIds,[1047]);
+ // Positive Hex notes/configuration/reopen assertions run with actual current
+ // data and the same 0/180/500 delay matrix in smoke-current-configuration.cjs.
  await gjs('window.guide.control("hide")');await click('[data-action=close]');await click('[data-action=navigate][data-route=draft]');
  await click('[data-action=example]');await click('[data-action=draft-scope][data-scope=party]');for(const role of ['top','jungle','mid','bottom','support']){const checked=await js('document.querySelector(".slot-toggle[data-role='+role+']")?.getAttribute("aria-pressed")==='+'"true"');if(checked!==['bottom','support'].includes(role))await click('.slot-toggle[data-role='+role+']');}await click('[data-action=recommend]');
  await until(()=>js('document.querySelectorAll(".result-card").length>=3&&document.querySelectorAll(".result-card").length<=6'),'No recommendations');await click('[data-action=result-detail]');
@@ -186,7 +181,7 @@ async function run(){
  await js('window.buddy.updateGuide({id:"Rengar",role:"bottom",mode:"rift",coreIndex:0,conditions:[],changedFields:["comboId","loadoutId","runeId"]})');
  await until(()=>js('!document.querySelector(".combo-config")'),'Backend combo removal did not reach configuration');await delay(600);assert.equal((await state()).guide.selection.comboId,undefined,'Main configuration restored a deleted backend combo');
  assert.equal(syntheticWriteAttempts,0,'Synthetic client received '+syntheticWriteAttempts+' write attempt(s); it must stay read-only');
- const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,restartRestore:true,partnerRoundTrip:true,interleavedGuideEdits:true,hexContextPreserved:true,successiveReplacements:true,failedReplacementRecovery:true,fixedFooter720:true,returnToScheme:true,cancelOnPreferenceEdit:true,unlockedReferenceHeroPrepares:true,changedPartnerClearsCombo:true,returningComboRestoresChoices:true,backendDeletedFieldsStayDeleted:true,actualRuneWrites:false,syntheticWriteAttempts,rejectedSaves,screenshots:root};
+ const result={passed:true,source:source?'working-tree':'packaged',archiveSha256:source?null:release.archiveSha256,restartRestore:true,partnerRoundTrip:true,interleavedGuideEdits:true,hexContextChecks:'separate-current-package',successiveReplacements:true,failedReplacementRecovery:true,fixedFooter720:true,returnToScheme:true,cancelOnPreferenceEdit:true,unlockedReferenceHeroPrepares:true,changedPartnerClearsCombo:true,returningComboRestoresChoices:true,backendDeletedFieldsStayDeleted:true,actualRuneWrites:false,syntheticWriteAttempts,rejectedSaves,screenshots:root};
  await fs.writeFile(path.join(root,'user-flow-smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));app.quit();
 }
 run().catch(async e=>{console.error(e);try{const target=windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/index.html'));console.error('FAILURE_CONTEXT '+(target?await target.webContents.executeJavaScript('window.buddy.bootstrap().then(b=>JSON.stringify({selection:b.state.guide?.selection||null,toast:document.querySelector("#toast")?.textContent||"",page:document.body.innerText.slice(0,700)}))'):'{}'));}catch(error){console.error('FAILURE_CONTEXT '+String(error.message||error));}await fs.writeFile(path.join(root,'user-flow-smoke-error.txt'),e.stack).catch(()=>{});app.exit(1);});

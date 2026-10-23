@@ -1,3 +1,4 @@
+// Historical 16.20 rule/continuity contract; current 4.0 data is tested independently.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -5,9 +6,9 @@ import {createSlots,recommend,analyzeTeam,explainContributions,mergeClientSessio
 import {summarizeEnemyTraits,threatNotes,strategySummary} from '../src/core/strategy.mjs';
 import {compareAugments} from '../src/core/hex-compare.mjs';
 import {candidateSummary} from '../src/draft-result-view.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
-data.hexBuilds=JSON.parse(await fs.readFile('data/hex-builds.json','utf8')).entries;
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+data.hexBuilds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/hex-builds.json','utf8')).entries;
 const hero=id=>data.champions.find(c=>c.id===id);
 
 test('automatic lanes follow a changed hero while explicit lanes remain attached to the player',()=>{

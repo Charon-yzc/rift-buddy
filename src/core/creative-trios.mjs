@@ -2,6 +2,7 @@ import {profile,conventionalRole,TRIOS,DUOS} from './rules.mjs';
 import {COOPERATION_SKILLS} from './cooperation-skills.mjs';
 import {explorationPool} from './recommendation-diversity.mjs';
 import {comboMembers,comboKey} from './combo-members.mjs';
+import {mechanicReview} from './mechanic-review.mjs';
 
 // Creative trio archetypes. Each one is defined only by role-function traits
 // (engage/peel/poke/sustain/aoe/damage) that already exist in the data model.
@@ -82,11 +83,13 @@ function orderMembers(members,profiles,order){
  });
 }
 
-export function generateCreativeTrios({targets,candidateSets,champions,style='fun',randomSeed='',familiarity={}}){
+export function generateCreativeTrios({targets,candidateSets,champions,patch,style='fun',randomSeed='',familiarity={}}){
  // Creative trios fill exactly the three open party roles. Anything else
  // (duo lane, single补位) is covered by the curated/duos path.
  if(!Array.isArray(targets)||targets.length!==3)return [];
- const byId=new Map(champions.map(c=>[c.id,c]));
+ // Every archetype uses authored role functions and skill jobs. A new raw
+ // snapshot cannot renew those rules, even for a trio without a named link.
+ const byId=new Map(champions.filter(c=>mechanicReview(c,patch)==='current').map(c=>[c.id,c]));
  // Per-call role-profile cache: generation evaluates up to a thousand triples,
  // each needing three profiles, so sharing them matters.
  const profCache=new Map();

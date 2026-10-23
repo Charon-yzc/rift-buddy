@@ -22,13 +22,13 @@ test('micro economy shows public holdings only; missing bags and unknown prices 
 test('three micro routes preserve their own core and optional icons without visible prose',()=>{
  const routes=Array.from({length:4},(_,i)=>({id:'route-'+i,title:'路线'+i,augments:Array.from({length:9},(_,j)=>({id:i*10+j,name:'强化'+j,core:j===0})),items:[{id:1001+i,name:'装备'+i,core:true}]}));
  const html=hexMicroRoutesView(routes,image);assert.equal((html.match(/class="hex-micro-route"/g)||[]).length,3);assert.equal((html.match(/data-micro-kind="augment"/g)||[]).length,27);assert.equal((html.match(/is-core/g)||[]).length,6);
- assert.match(html,/item\/1002.png/);assert.match(html,/augment\/20.png/);assert.doesNotMatch(html,/item\/1004.png/);assert.doesNotMatch(html.replace(/<[^>]+>/g,''),/\S/);
+ assert.match(html,/item\/1002.png/);assert.match(html,/augment\/20.png/);assert.doesNotMatch(html,/item\/1004.png/);assert.match(html,/路线0/);assert.match(html,/来源待核/);assert.doesNotMatch(html,/hex-micro-pin/);assert.match(html,/data-action="expand"/);
 });
 
 test('micro positions stay independent of Rift layout and follow the game display at both text scales',()=>{
  const area={x:-1920,y:0,width:1920,height:1040},game={x:-1800,y:40,width:1600,height:900};
  const small=hexMicroPlacement('economy',null,area,game),large=hexMicroPlacement('routes',null,area,game,1.25);
- assert.deepEqual(small,{x:-1788,y:52,width:168,height:84});assert.equal(large.width,80);assert.equal(large.height,64);
+ assert.deepEqual(small,{x:-1788,y:52,width:168,height:104});assert.equal(large.width,80);assert.equal(large.height,64);
  const offset=hexMicroOffset({...large,x:-1600,y:120},area,game);assert.deepEqual(offset,{x:200,y:80});
  assert.equal(hexMicroPlacement('routes',offset,area,game).x,-1600);
  assert.deepEqual(validateHexWindows({economy:{x:10,y:20,width:900},routes:{x:Infinity,y:3},extra:'private'}),{economy:{x:10,y:20}});
@@ -39,9 +39,10 @@ test('micro positions stay independent of Rift layout and follow the game displa
 test('micro routes take only the width required by real icons while full rows still fit',()=>{
  const area={x:0,y:0,width:1920,height:1080},route=(a,i)=>({augments:Array(a).fill({}),items:Array(i).fill({})});
  const narrow=hexMicroPlacement('routes',null,area,null,1,[route(1,3)]),full=hexMicroPlacement('routes',null,area,null,1,[route(9,9)]);
- assert.equal(narrow.width,66);assert.equal(narrow.x+narrow.width,1908);
- assert.equal(full.width,198);assert.equal(full.height,106);assert.equal(full.x+full.width,1908);
- assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(1,3)]).width,83);
+ assert.equal(narrow.width,282);assert.equal(narrow.x+narrow.width,1908);
+ assert.equal(full.width,282);assert.equal(full.height,197);assert.equal(full.x+full.width,1908);
+ assert.equal(hexMicroPlacement('routes',null,area,null,1,Array(3).fill(route(9,9))).height,480);
+ assert.equal(hexMicroPlacement('routes',null,area,null,1.25,[route(1,3)]).width,353);
 });
 
 test('micro payloads ignore timers, wallets and unrelated combat changes so stable hovers do not flicker',()=>{
@@ -80,8 +81,8 @@ test('reviewed hero mechanism routes reach the micro guide with conditions and p
 });
 
 test('micro pairing withdraws changed prerequisites as whole groups and never upgrades fallback references',()=>{
- for(const mutate of [d=>d.patch='16.21',d=>d.champions.find(h=>h.id==='Gwen').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===1129).description+=' changed']){
-  const changed=structuredClone(bundled);mutate(changed);const model=createGuideModel(changed,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]}));assert(model.hexMicroRoutes.every(r=>r.kind==='reference'));
+ for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(h=>h.id==='Gwen').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===1129).description+=' changed']){
+  const changed=structuredClone(bundled);mutate(changed);const model=createGuideModel(changed,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]}));assert(model.hexMicroRoutes.every(r=>['reference','item-synergy'].includes(r.kind)),'A changed hero kit withdraws hero routes; separately reviewed item/augment links need no kit claims');
  }
  const changed=structuredClone(bundled);changed.items[3115].description+=' changed';const [micro]=createGuideModel(changed,selectGuide(null,{id:'Gwen',role:'top',mode:'hex',ownedAugmentIds:[1129]})).hexMicroRoutes;
  assert.equal(micro.kind,'mechanism');assert(!micro.items.some(i=>i.id===3115||i.id===3089));assert(!micro.items.some(i=>i.brief.includes('纳什')));assert.match(micro.augments[0].brief,/部分装备待核对/);
@@ -99,8 +100,8 @@ test('owned cores outrank offered routes and actual choices never create three u
 test('actual paired routes retain provenance and independent cores; no popularity or unsupported infinite effects',()=>{
  const routes=hexMicroRoutes({data:bundled,hero:'Yasuo'});assert.equal(routes.length,3);assert.equal(new Set(routes.map(r=>r.augments.find(a=>a.core).id)).size,3);
  for(const route of routes){assert.ok(route.augments.length>4);assert.ok(route.items.some(i=>i.core));assert.match(route.source,/^https:\/\/arammayhem.com\/zh-cn\/combo\//);assert.match(route.basis,/非热度/);assert.ok(route.sourceFields.adapted);assert.ok(route.augments.every(a=>a.brief.length<=65));assert.ok(route.items.every(i=>bundled.items[i.id].maps['12']));}
- assert.deepEqual(createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes,routes);
- assert.deepEqual(hexMicroRoutes({data:bundled,hero:'Yasuo',mode:'rift'}),[]);assert.deepEqual(hexMicroRoutes({data:{...bundled,patch:'16.21'},hero:'Yasuo'}),[]);
+ assert.deepEqual(createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes.map(({card,...route})=>route),routes.map(route=>({...route,augments:route.augments.map(a=>({...a,offered:false}))})));
+ assert.deepEqual(hexMicroRoutes({data:bundled,hero:'Yasuo',mode:'rift'}),[]);assert.deepEqual(hexMicroRoutes({data:{...bundled,patch:'16.22'},hero:'Yasuo'}),[]);
  for(const mutate of [d=>d.champions.find(c=>c.id==='Yasuo').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===1058).key='Changed',d=>d.items[123430].maps['12']=false]){
   const changed=structuredClone(bundled);mutate(changed);const next=hexMicroRoutes({data:changed,hero:'Yasuo'});assert.ok(next.length<3);
  }

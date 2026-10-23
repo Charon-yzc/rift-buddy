@@ -44,7 +44,7 @@
 
 本指南面向拉取仓库后继续开发的人。项目是 Electron 桌面程序，界面正在从原生 HTML、CSS 与 JavaScript ES Modules 分阶段迁移到 Vue 3。收藏页使用 `src/vue/FavoriteList.vue`；其余页面暂沿用现有模块。不需要数据库服务器。
 
-Vue 模板由官方 `@vue/compiler-sfc` 在启动、预览、测试、检查和打包前预编译，输出到忽略提交的 `src/generated/`。也可单独运行 `pnpm build:renderer`。运行时仅使用离线 runtime-only 构建，保留原有禁止 `eval` 的 CSP。直接运行 Electron 或源码验收脚本前，先执行一次构建；打包脚本本身会执行构建。
+Vue 模板由官方 `@vue/compiler-sfc` 在启动、预览、测试、检查和打包前预编译，输出到忽略提交的 `src/generated/`。也可单独运行 `pnpm build:renderer`。运行时仅使用离线 runtime-only 构建，保留原有禁止 `eval` 的 CSP。直接运行 Electron 或源码验收脚本前，先执行一次构建；打包脚本本身会执行构建。收藏页沿用当前海克斯版本门禁，隐藏旧条目后操作索引仍指向原集合；旧版收藏的确认清理入口保留。
 
 `pnpm smoke:vue` 在禁用硬件加速的隔离 Electron 窗口中验证标题转义、节点复用、展开状态、焦点、删除后索引、事件委托与挂载/卸载。`node scripts/smoke-package-favorite-context.mjs` 从最新 ASAR 验证八种载入流程；设置 `$env:RIFT_BUDDY_SOURCE='1'` 可验证源码。构建不依赖 pnpm 的内部目录布局。系统提交内存紧张时，可临时设置 `$env:PNPM_WORKERS='999'` 将 pnpm 的 worker 池限制到一个；全量测试默认并发为 4。
 
@@ -363,3 +363,20 @@ v0.10.5 的选人侧栏直接修改当前 preparation，装备路线、符文、
 无控制、保护及撤退路线复用已核对的独立安全动作，不继承“接实际控制后”的通用跟进句。`smoke-package-curated-plan.mjs --independent-four/--independent-five` 验证盖伦、卡兹克、卡萨丁、芸阿娜及米利欧的原路线、备选、采用、收藏、重启和每位成员指引；`--tactics-four/--tactics` 验证消耗/保护与逐对样本。所有符文写入仍模拟。
 
 个人准备节点补尼菈、洛、卡兹克、男枪、格温与薇古丝，按实际形态、层数、进化、弹药及接应条件会合，不按分钟或等级直接宣称强势。2026-10-10 对照 Riot 16.19.1 与 16.20.1 的[加里奥](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Galio.json)、[尼菈](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Nilah.json)、[洛](https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Rakan.json)：三者的基础属性、被动、技能描述/模板、冷却和范围未见差异；人工核对 W/R 实际控制、加里奥当时友军落点、尼菈接近与退出、洛 E 可选友军后，补齐“近身救援舞”的成立与停止条件并更新该套复核来源。专用配装及其他旧版套路继续保留原复核状态；这次机制核对不证明当前最优配装、国服对局有效性或整队胜率。
+# Current data and historical interaction acceptance
+
+`smoke-package-current-data.mjs` reads the actual current ASAR without replacing
+its data. It checks the real recommendation worker, ordinary configuration and
+favorite/restart flows, retained historical personal plans, and the Hex 4.0
+handbook, special acquisition, details and sidebar. A raw-data update does not
+renew authored Rift skill combinations: those stay pending until independently
+reviewed. Ordinary legal picks and same-patch statistical configurations remain
+available.
+
+The authored 16.20 native interaction contracts run separately from
+`.local/smoke-snapshot-16.20`, created by `prepare-historical-smoke.mjs` from the
+same source and the seven frozen public JSON fixtures. Its receipt identifies
+every data override and source hash. This is a test-only application package,
+never a current-data result or installer. It cannot overwrite the current
+package or its `release/latest.json`. Both sets of checks must pass; historical
+success does not establish current mechanism coverage.

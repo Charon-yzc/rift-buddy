@@ -53,11 +53,23 @@ jobs:
         run: node scripts/smoke-package-data-generation.mjs
       - name: Check real main and sidebar synchronization and idle-game resources
         run: node scripts/smoke-package-dual-windows.mjs
-      - name: Check automatic pregame startup, unknown party lanes and one-click preparation
+      - name: Check actual current offline data, saved configurations and Hex 4.0
+        run: node scripts/smoke-package-current-data.mjs
+      - name: Check compact in-game cards, pinning, native hover and short displays
+        run: node scripts/smoke-package-compact-ingame.mjs
+      - name: Prepare separate historical 16.20 interaction package
+        run: node scripts/prepare-historical-smoke.mjs
+      - name: Verify historical fixture package and source identity
+        working-directory: .local/smoke-snapshot-16.20
+        run: node scripts/inspect-package.mjs --verify-current
+      - name: "Historical 16.20: Check automatic pregame startup, unknown party lanes and one-click preparation"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-pregame-startup.mjs
-      - name: Check optional hover context, lock navigation, participant proposals and compact pages
+      - name: "Historical 16.20: Check optional hover context, lock navigation, participant proposals and compact pages"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-recommendation-experience.mjs
-      - name: Check accepted trio hover, explicit preparation and cross-window configuration
+      - name: "Historical 16.20: Check accepted trio hover, explicit preparation and cross-window configuration"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-party-preparation.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -68,47 +80,62 @@ jobs:
           node scripts/smoke-package-party-preparation.mjs --loading-new-game
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-party-preparation.mjs --custom
-      - name: Check compact complete gear, conditional alternatives and jungle routes
+      - name: "Historical 16.20: Check compact complete gear, conditional alternatives and jungle routes"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-useful-guide.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-useful-guide.mjs --dpi-1
-      - name: Check independent equipment import and sidebar receipt replay
+      - name: "Historical 16.20: Check independent equipment import and sidebar receipt replay"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-party-preparation.mjs --standalone-items
-      - name: Check three visible choices, more candidates and keyboard details at main and sidebar sizes
+      - name: "Historical 16.20: Check three visible choices, more candidates and keyboard details at main and sidebar sizes"
+        working-directory: .local/smoke-snapshot-16.20
         run: pnpm exec electron scripts/smoke-selection-layout.cjs
-      - name: Check selection, loading and in-game transitions
+      - name: "Historical 16.20: Check selection, loading and in-game transitions"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-game-transition.mjs
-      - name: Check manual positions, preparation writes and explicit version refresh
+      - name: "Historical 16.20: Check manual positions, preparation writes and explicit version refresh"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-journey.mjs
-      - name: Check interleaved configuration and guide edits preserve accepted fields
+      - name: "Historical 16.20: Check interleaved configuration and guide edits preserve accepted fields"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           foreach ($delay in @(0,180,500)) {
             $env:RIFT_GUIDE_SYNC_DELAY = "$delay"
             node scripts/smoke-package-user-flow.mjs
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
-      - name: Check guide interaction and live-data fallback
+      - name: "Historical 16.20: Check guide interaction and live-data fallback"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-guide-input.mjs
-      - name: Check live situation advice and explanations
+      - name: "Historical 16.20: Check live situation advice and explanations"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-live-situation.mjs
-      - name: Check build choices and combination database
+      - name: "Historical 16.20: Check build choices and combination database"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-database.mjs
-      - name: Check arbitrary-role personal pairs, editor scrolling and saved member guides
+      - name: "Historical 16.20: Check arbitrary-role personal pairs, editor scrolling and saved member guides"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-catalog.mjs
-      - name: Check saved preparations and member configurations across restarts
+      - name: "Historical 16.20: Check saved preparations and member configurations across restarts"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-preparations.mjs
-      - name: Check in-guide late choices, support reservation, favorites and restart
+      - name: "Historical 16.20: Check in-guide late choices, support reservation, favorites and restart"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-guide-continuation.mjs
-      - name: Check favorites preserve current public picks, manual positions and member choices
+      - name: "Historical 16.20: Check favorites preserve current public picks, manual positions and member choices"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-favorite-context.mjs
-      - name: Check poke friends, distinct third-member duties and saved tactical choices
+      - name: "Historical 16.20: Check poke friends, distinct third-member duties and saved tactical choices"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-cooperation.mjs --poke
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --poke-guard
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Check prepared D/F spells, compact controls and saved member choices
+      - name: "Historical 16.20: Check prepared D/F spells, compact controls and saved member choices"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-summoners.mjs
       - name: Check backup merge capacity and explicit rune writes in isolated clients
         run: |
@@ -118,9 +145,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-rune-replacement.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Check creative action order preserves saved members and configurations
+      - name: "Historical 16.20: Check creative action order preserves saved members and configurations"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-creative-plan-continuity.mjs --reordered
-      - name: Check public-opponent plans and duo phases in packaged windows
+      - name: "Historical 16.20: Check public-opponent plans and duo phases in packaged windows"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-matchups.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -128,13 +157,17 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-role-preparation.mjs --matchup-choices
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Check public-opponent conditions preserve accepted team order and own skill gates
+      - name: "Historical 16.20: Check public-opponent conditions preserve accepted team order and own skill gates"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-matchups.mjs --team-order
-      - name: Check explicit opponent sources, independent statistics and saved member choices
+      - name: "Historical 16.20: Check explicit opponent sources, independent statistics and saved member choices"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-opponent-builds.mjs
-      - name: Check accepted mechanism plans across member guides and restarts
+      - name: "Historical 16.20: Check accepted mechanism plans across member guides and restarts"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-cooperation.mjs
-      - name: Check concrete three-person and full-party plans, first-screen actions and attribute preparation
+      - name: "Historical 16.20: Check concrete three-person and full-party plans, first-screen actions and attribute preparation"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-cooperation.mjs --specific
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -144,7 +177,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --party-five
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Check frozen curated plans, selectable party routes and sidebar adoption
+      - name: "Historical 16.20: Check frozen curated plans, selectable party routes and sidebar adoption"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-curated-plan.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -158,7 +192,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --custom-runes
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Check four/five-member poke, protection routes and separate pair evidence
+      - name: "Historical 16.20: Check four/five-member poke, protection routes and separate pair evidence"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-curated-plan.mjs --tactics-four
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -168,35 +203,46 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-curated-plan.mjs --independent-five
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Check locked cross-lane plans and complete late-item choices across restarts
+      - name: "Historical 16.20: Check locked cross-lane plans and complete late-item choices across restarts"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-cooperation.mjs --cross-lane
-      - name: Check retained pair order and third-member follow-ups across restarts
+      - name: "Historical 16.20: Check retained pair order and third-member follow-ups across restarts"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-cooperation.mjs --retained-pair
-      - name: Check ordinary locked-friend recommendations without hero pools
+      - name: "Historical 16.20: Check ordinary locked-friend recommendations without hero pools"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-cooperation.mjs --locked-friends
-      - name: Check shared resource and meeting plans without invented control across restarts
+      - name: "Historical 16.20: Check shared resource and meeting plans without invented control across restarts"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-cooperation.mjs --shared
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --growth
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Check role statistics and broad skill cooperation across saved member guides
+      - name: "Historical 16.20: Check role statistics and broad skill cooperation across saved member guides"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-cooperation.mjs --adaptive-data
-      - name: Check expanded cooperation and sidebar preview choices before accepting a plan
+      - name: "Historical 16.20: Check expanded cooperation and sidebar preview choices before accepting a plan"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-cooperation.mjs --coverage
-      - name: Check shooter marks and farming friends across saved preparations
+      - name: "Historical 16.20: Check shooter marks and farming friends across saved preparations"
+        working-directory: .local/smoke-snapshot-16.20
         run: |
           node scripts/smoke-package-cooperation.mjs --shooters
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-package-cooperation.mjs --farming
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Check member statistics refresh, offline caches and quest-only synchronization
+      - name: "Historical 16.20: Check member statistics refresh, offline caches and quest-only synchronization"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-pair-refresh.mjs
-      - name: Check sidebar choices survive uncached sources and individual edits
+      - name: "Historical 16.20: Check sidebar choices survive uncached sources and individual edits"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-companion-workflow.mjs
-      - name: Check public picks and source refresh invalidate recommendations
+      - name: "Historical 16.20: Check public picks and source refresh invalidate recommendations"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-recommendation-fit.mjs
-      - name: Check partial settings recovery and locked friend continuity
+      - name: "Historical 16.20: Check partial settings recovery and locked friend continuity"
+        working-directory: .local/smoke-snapshot-16.20
         run: node scripts/smoke-package-state-recovery.mjs
       - name: Check own selectable heroes, public draft restrictions and locked favorites
         run: node scripts/smoke-package-pick-eligibility.mjs

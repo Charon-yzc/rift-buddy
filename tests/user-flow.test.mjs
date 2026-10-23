@@ -1,3 +1,4 @@
+// Historical 16.20 plan/source contract; current 4.0 bundle and migration are tested separately.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,9 +7,9 @@ import {createPreparationStore,recommendationKey,configurationPatch,mergeConfigu
 import {createGuideModel,selectGuide,reconcileGuide,nextSkill,validateGuideState} from '../src/core/guide.mjs';
 import {purchasePlan,purchaseAction,liveGuideStatus} from '../src/core/purchase.mjs';
 import {TRIOS} from '../src/core/rules.mjs';
-const data=JSON.parse(await fs.readFile('data/game.json','utf8'));
-data.builds=JSON.parse(await fs.readFile('data/builds.json','utf8')).entries;
-try{data.spellbook=JSON.parse(await fs.readFile('data/spells.json','utf8')).champions||{};}catch{data.spellbook={};}
+const data=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/game.json','utf8'));
+data.builds=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/builds.json','utf8')).entries;
+try{data.spellbook=JSON.parse(await fs.readFile('tests/fixtures/snapshot-16.20/spells.json','utf8')).champions||{};}catch{data.spellbook={};}
 const selection={id:'Ashe',role:'bottom',mode:'rift',conditions:[],coreIndex:0};
 const now=1000000;
 const live={available:true,champion:'Ashe',mode:'rift',mapId:11,inventory:[],gold:500,level:1,skills:{Q:0,W:0,E:0,R:0},at:now,gameTime:1};
@@ -223,12 +224,12 @@ test('damage strip requires a selected public target and preserves the reviewed 
  assert.equal(killStrip({}),'');
  assert.equal(killStrip({estimate:{duels:[]}}),'');
  const full=renderGuide({model,strip:true,connected:true,phase:'InProgress',mousePassThrough:false},'items',false,()=>'<img>');
- assert.ok(full.includes('kill-strip')&&!full.includes('estimate-row danger'));
+ assert.match(full,/compact-guide-main/);assert.doesNotMatch(full,/kill-strip|estimate-row danger/);
  const mismatch=renderGuide({model,strip:true,current:{id:'Jinx',mode:'rift',role:'bottom'},connected:true,phase:'InProgress'},'items',false,()=>'<img>');
  assert.ok(mismatch.includes('已变化')&&!mismatch.includes('<strong>'));
  // The content must be a no-drag region (drag regions swallow pointer
  // events in a frameless window) with a separate drag grip beside it.
- assert.ok(full.includes('strip-grip')&&full.includes('strip-frame'));
+ assert.ok(!full.includes('strip-grip')&&!full.includes('strip-frame'));
  const css=await fs.readFile(new URL('../src/guide.css',import.meta.url),'utf8');
  const stripRule=css.match(/\.kill-strip\{[^}]*\}/)?.[0]||'';
  const gripRule=css.match(/\.strip-grip\{[^}]*\}/)?.[0]||'';

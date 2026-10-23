@@ -1,3 +1,6 @@
+import {HEX_OWNED_LIMIT} from './hex-note-limits.mjs';
+import {hexAugmentAcquisition} from './hex-acquisition.mjs';
+import {isCurrentHexData,HEX_DATA_PENDING} from './hex-data-current.mjs';
 // Main-process owner of bounded, ephemeral notes. Wishlists and reusable builds
 // are intentionally independent. Tokens distinguish same-hero successive games.
 export function createHexRoundStore({newToken=()=>crypto.randomUUID()}={}){
@@ -36,13 +39,15 @@ export function createHexRoundStore({newToken=()=>crypto.randomUUID()}={}){
    if(!record||record.revision!==value?.revision)throw Error('本局强化记录已变化，请按当前页面重试');
    const id=value?.id,op=value?.operation;
    if(!['compare','clear','own','remove'].includes(op))throw Error('强化操作不正确');
+   if(['compare','own'].includes(op)&&!isCurrentHexData(data))throw Error(HEX_DATA_PENDING);
    if(op!=='clear'&&(!Number.isSafeInteger(id)||id<1||!(op==='remove'&&record.owned.includes(id))&&!data.augments.some(a=>a.id===id)))throw Error('当前资料没有这项强化');
+   if(['compare','own'].includes(op)&&!hexAugmentAcquisition(data,data.augments.find(a=>a.id===id)).ordinaryOption)throw Error('主秀技能增强不是普通三选一选项，可在图鉴查看来源。');
    if(op==='compare'){
     if(record.options.includes(id))record.options=record.options.filter(x=>x!==id);
     else{if(record.options.length>=3)throw Error('最多比较 3 个实际选项，请先移出一个');record.options.push(id);}
    }else if(op==='clear')record.options=[];
    else if(op==='own'){
-    if(!record.owned.includes(id)){if(record.owned.length>=6)throw Error('最多标记 6 个已选强化');record.owned.push(id);}
+    if(!record.owned.includes(id)){if(record.owned.length>=HEX_OWNED_LIMIT)throw Error(`本局最多记录 ${HEX_OWNED_LIMIT} 个不同强化，请先移除误记项`);record.owned.push(id);}
     record.options=[];
    }else record.owned=record.owned.filter(x=>x!==id);
    record.revision++;revision++;return snapshot();

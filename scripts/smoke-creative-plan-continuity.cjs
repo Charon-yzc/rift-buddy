@@ -77,10 +77,10 @@ async function run(){
  await click('[data-action=guide-current]');let guide;await until(()=>{guide=windows.find(w=>w.webContents.getURL().endsWith('/src/guide.html'));return guide;},'Creative guide missing');
  const guideJs=code=>guide.webContents.executeJavaScript(code,true);await until(()=>guideJs('window.guide.bootstrap().then(b=>b.model?.combo?.origin==="creative")'),'Creative context did not reach guide');
  const payload=await guideJs('window.guide.bootstrap()'),model=payload.model;assert.equal(model.comboConfirmed,true);assert.deepEqual(model.combo.creativePlan,original);assert.deepEqual(model.combo.steps,original.steps);assert.equal(model.combo.window,original.window);assert.equal(model.runes.length,9);assert.equal(model.selection.role,'mid');assert.equal(payload.current.formalRole,'top');
- await guideJs('window.guide.control("layout","details")');await guideJs('document.querySelector("[data-tab=team]").click()');await until(()=>guideJs('!!document.querySelector(".team-steps")'),'Creative guide steps were not rendered');
- const guideText=await guideJs('document.querySelector(".expanded main").textContent');for(const step of original.steps)assert.ok(guideText.includes(step));assert.ok(guideText.includes(original.window));assert.ok(guideText.includes(original.ordered.find(m=>m.champion==='Annie').job));assert.ok(guideText.includes(original.dataVersion));
- await guideJs('document.querySelector(".team-steps").scrollIntoView({block:"center"})');
- await capture(guide,restart?'creative-reopened-guide.png':'creative-original-guide.png');
+ assert.equal(await guideJs('!!document.querySelector("[data-tab]")'),false);
+ main.webContents.send("open-build",model.selection);await until(()=>js('!!document.querySelector(".drawer-content .play-steps")'),"Saved plan configuration missing");
+ const guideText=await js('document.querySelector(".drawer-content").textContent');for(const step of original.steps)assert.ok(guideText.includes(step));assert.ok(guideText.includes(original.window));assert.ok(guideText.includes(original.ordered.find(m=>m.champion==="Annie").job));assert.ok(guideText.includes(original.dataVersion));
+ await capture(main,restart?"creative-reopened-configuration.png":"creative-original-configuration.png");await click('[data-action=close]');
  await js('[...document.images].forEach(i=>i.loading="eager")');await js('Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))))');await js('document.querySelector("#toast").className=""');
  await fs.writeFile(path.join(root,restart?'creative-reopened.png':'creative-loaded.png'),(await main.webContents.capturePage(undefined,{stayHidden:true,stayAwake:true})).toPNG());
  if(restart){
