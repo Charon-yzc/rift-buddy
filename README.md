@@ -9,18 +9,18 @@
   <a href="https://room.riftbuddy.dpdns.org/downloads/"><strong>下载安装包</strong></a> ·
   <a href="https://gitee.com/legender134/rift-buddy/releases">Gitee 国内镜像</a> ·
   <a href="https://github.com/Legender134/rift-buddy/releases">GitHub Releases</a> ·
-  <a href="https://github.com/Legender134/rift-buddy/releases/tag/v0.59.26">本次更新</a>
+  <a href="https://github.com/Legender134/rift-buddy/releases/tag/v0.59.27">本次更新</a>
 </p>
 
 **优先推荐你们会玩的英雄。** 连接后先统计本人最近最多 500 场，优先推荐常玩的英雄。已玩英雄按场次分配默认 **85%** 偏好，未玩英雄合计 **15%**，在“历史战绩 → 推荐偏好”调节。房间成员先各自归一化，再共同探索；每个位置仍按对应成员本人的偏好分配。
 
-**更新只下需要的内容。** 0.59.24 升到 0.59.26 的补丁约 **455 KiB**（466259 字节），0.59.8 约 **1.63 MiB**（1711191 字节）。从[下载页](https://room.riftbuddy.dpdns.org/downloads/)选择对应版本，退出助手后运行即可；旧更新器漏检时也用这个办法。0.57.1、0.57.3 可先使用 [0.59.24 桥接补丁](https://github.com/Legender134/rift-buddy/releases/tag/v0.59.24)再升级。暂停保留进度，取消清理下载；收藏、配置与配色保留。首次安装、运行库大幅变化或本机文件校验不匹配时仍需完整包。
+**更新只下需要的内容。** 0.59.26 升到 0.59.27 的补丁约 **4.10 MiB**（4295737 字节），0.58.7 约 **4.07 MiB**（4271709 字节）。从[下载页](https://room.riftbuddy.dpdns.org/downloads/)选择对应版本，退出助手后运行即可；旧更新器漏检时也用这个办法。0.57.1、0.57.3 可先使用 [0.59.24 桥接补丁](https://github.com/Legender134/rift-buddy/releases/tag/v0.59.24)再升级。0.59.25 可先使用 [0.59.26 桥接补丁](https://github.com/Legender134/rift-buddy/releases/tag/v0.59.26)。暂停保留进度，取消清理下载；收藏、配置与配色保留。首次安装、运行库大幅变化或本机文件校验不匹配时仍需完整包。
 
 [Akari 战绩与实时对局](docs/match-history.md)提供本人及公开玩家查询、筛选和单局复盘，也可查看大厅、选人和游戏中的公开玩家资料。个人战绩和备注只保留在本机当前运行内存；国服真实接口与回放兼容仍需授权客户端核验。
 
 [常用英雄推荐](docs/releases/v0.59.0.md)只向房间共享本人的有界英雄次数和偏好比例，不共享逐局战绩。偏好会影响候选，不增加机制契合分，也不代表胜率或固定展示比例。排位可参考公开双方阵容、对位和[分时统计](docs/ranked-recommendations.md)，也可浏览有出处的[跨位置双人方案](docs/cross-role-combinations.md)。
 
-公开安装包为 **0.59.26**，已同步 GitHub、Gitee 和下载页。[本次更新](docs/releases/v0.59.26.md)增加独立局内窗口开关、单行加点和左下角文字/截图反馈，修复失效提议与 Gitee 新版漏检。内置有效资料仍为16.20，新补丁的整套来源通过校验后才启用。
+公开安装包为 **0.59.27**，已同步 GitHub、Gitee 和下载页。[本次更新](docs/releases/v0.59.27.md)将局内配置压成图标小窗，支持展开与置顶，补充来源、加点和窄悬停说明；内置已校验的 16.21 资料。强化总池与第一至第四次入口分开，尚未核实的逐轮资格明确待核。
 
 
 每批候选按实际契合分筛选并排列，低于60分的数值候选不再推荐。稳妥优先常规、易执行，娱乐优先技能联动，花活优先特殊路线；风格不增加契合分，也不绕过熟悉英雄偏好、明确玩法和本局选人限制。保留0.59.23的局内指引与组队路线配置修复。
