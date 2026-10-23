@@ -26,7 +26,8 @@ export function hexPartyDraft({data,client,slots=[]}){
  // A pending trait must never become a zero that demotes its champion.
  const comparable=HEX_DRAFT_TRAITS.filter(([key])=>pool.every(h=>typeof traits(h)?.traits[key]==='boolean'));
  const weight=rows=>comparable.reduce((n,[key,,w])=>n+(rows.some(p=>traits(p.hero).traits[key]===true)?w:0),0);
- const rate=rows=>rows.reduce((n,p)=>n+(rates.get(p.hero.id)?.winRate??.5),0)/rows.length;
+ const ratesComparable=pool.every(h=>rates.has(h.id));
+ const rate=rows=>ratesComparable?rows.reduce((n,p)=>n+rates.get(p.hero.id).winRate,0)/rows.length:0;
  let plans=[{members:[],used:new Set(),fit:0,rate:0}];
  for(const player of [...party].sort((a,b)=>Number(b.self)-Number(a.self))){
   const next=[];

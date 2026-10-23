@@ -41,6 +41,12 @@ test('source parser rejects ARAM, previous patches and claimed samples instead o
  assert.equal(normalizeHexChampionStatistics([row],options).rows[0].samples,null);
  for(const changed of [{...row,version:'16.20'},{...row,numGames:1000},{...row,source:'opgg'},{...row,date:'2026-10-24'},{...row,winRate:51}])assert.throws(()=>normalizeHexChampionStatistics([changed],options));
 });
+test('partial hero statistics remain visible but never invent missing rates for lineup sorting',()=>{
+ const c=client(),partial=structuredClone(hexChampionStatistics(data));partial.rows=partial.rows.filter(r=>r.hero==='Lux');
+ const projected=hexPartyDraft({data:{...data,hexChampionStats:partial},client:c}),absent=hexPartyDraft({data:{...data,hexChampionStats:{...partial,patch:'16.20'}},client:c});
+ assert(projected.board.find(r=>r.hero.id==='Lux').statistics);assert.equal(projected.board.find(r=>r.hero.id==='Malphite').statistics,null);
+ assert.deepEqual(projected.lineups.map(r=>r.members.map(p=>p.hero.id)),absent.lineups.map(r=>r.members.map(p=>p.hero.id)));
+});
 test('five-party search retains different hero sets and preserves a constrained local assignment',()=>{
  const c=client();c.party.members=c.session.myTeam.map(p=>({cellId:p.cellId}));c.session.localPlayerCellId=4;c.session.bench.championIds=['Hecarim','Yasuo','Malphite','Xerath','Karma','Trundle','Teemo'].map(key);
  c.eligibility={context:pickEligibilityContext(c.session),localPlayerCellId:4,receivedAt:new Date().toISOString(),pickable:[key('Xerath')],disabled:[]};
