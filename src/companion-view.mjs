@@ -1,4 +1,4 @@
-import {renderHexAdvice,renderHexComparison} from './hex-view.mjs';
+import {hexConfigurationView} from './hex-configuration-view.mjs';
 import {hexDraftView} from './hex-draft-view.mjs';
 import {itemSetControls} from './item-sets-view.mjs';
 import {roomBallotView,candidateBallotActions} from './room-ballot-view.mjs';
@@ -78,7 +78,7 @@ export function companionPlanView(data,plan,favorites=[],{surface='companion',it
 }
 
 export function companionView({data,client,hexRound=null,enemyRoles=[],slots,unassigned,enemy=[],bans=[],scope,soloRole,playerPosition=null,style,tab,results,ballotKeys=[],generating,error,preparation,plan=preparation,favorites=[],configurationStatus={},applied=false,guideAutoShow=true,appVersion='',preferences={},room=null,roomContent='',rankings='',activePlan=null,pairRefresh={},overlap,recovery,adoptedShare='',draftNotice='',preparationStatus=null,taskControls='',taskPlan=null,taskComparing=false,claimingPosition=false,showAllCandidates=false,preselection=null,connectionBusy=false}){
- if(client.mode?.id==='hex')return hexCompanionView({data,client,round:hexRound,tab,plan,favorites,configurationStatus,roomContent,preferences,connectionBusy});
+ if(client.mode?.id==='hex')return hexCompanionView({data,client,slots,round:hexRound,tab,plan,favorites,configurationStatus,roomContent,preferences,connectionBusy});
  const ranked=rankedDraftPolicy(client).ranked,includePreselected=!ranked&&preferences.includePreselected===true;
  const hero=id=>data.champions.find(c=>c.id===id),analysis=analyzeTeam(slots,data.champions),live=clientDraftStatus(client,slots,data.champions);
  const own=preparation?.own,b=preparation?.build;
@@ -138,9 +138,8 @@ export function companionView({data,client,hexRound=null,enemyRoles=[],slots,una
 
 
 
-function hexCompanionView({data,client,round,tab,plan,favorites,configurationStatus,roomContent,preferences,connectionBusy}){
+function hexCompanionView({data,client,slots,round,tab,plan,favorites,configurationStatus,roomContent,preferences,connectionBusy}){
  const hero=data.champions.find(c=>c.id===round?.hero),boundPlan=plan?.selection.mode==='hex'&&plan.selection.id===hero?.id?plan:null;
- const notes=!!(round?.options.length||round?.owned.length),comparison=hero?renderHexComparison({data,hero:hero.id,options:round.options,owned:round.owned,round,plan:boundPlan,surface:'sidebar'}):'',advice=hero?renderHexAdvice({data,hero:hero.id,owned:round.owned,round}):'';
- const workbench=hero?(notes?comparison+'<details class="hex-config-details"><summary>更多强化参考</summary>'+advice+'</details>':advice+'<details class="hex-config-details"><summary>比较本轮强化</summary>'+comparison+'</details>'):'<p class="companion-empty">选好英雄后显示本局强化参考</p>';
- return `<div class="companion-shell sidebar-focused recommendation-ui hex-companion" data-tab="${e(tab)}" data-client-phase="${e(client.phase||'')}" data-client-game="${e(publicClientGameId(client)||'')}">${clientConnectionNotice(client,preferences,connectionBusy,{compact:true})}<nav class="companion-tabs" aria-label="海克斯侧栏">${[['recommend','选阵容'],['plan','我的配置'],['room','开黑房间']].map(([id,label])=>button('companion-tab',label,'',tab===id?'active':'',`data-tab="${id}" aria-pressed="${tab===id}"`)).join('')}<details class="companion-navigation-more"><summary>更多</summary><div>${button('theme-open','配色','','quiet small')}${button('window-fold','收起侧栏','','quiet small')}</div></details></nav><div class="companion-persistent">${hero&&tab==='plan'?`<div class="hex-current-hero">${portrait(hero,'sm')}<b>${e(hero.name)}</b><small>本局英雄 · 资料 ${e(data.patch)}</small>${button('guide-current','本局指引','book','quiet small')}</div>`:''}</div><main class="companion-content" id="main">${tab==='room'?roomContent:tab==='plan'?workbench+(boundPlan?'<details class="hex-config-details"><summary>装备与加点配置</summary>'+companionPlanView(data,boundPlan,favorites,configurationStatus)+'</details>':''):hexDraftView({data,client})}</main><footer class="companion-footer"><span class="companion-client-state" role="status">${clientConnectionControl(client,connectionBusy)}</span></footer></div>`;
+ const workbench=hexConfigurationView({data,hero,round,plan:boundPlan});
+ return `<div class="companion-shell sidebar-focused recommendation-ui hex-companion" data-tab="${e(tab)}" data-client-phase="${e(client.phase||'')}" data-client-game="${e(publicClientGameId(client)||'')}">${clientConnectionNotice(client,preferences,connectionBusy,{compact:true})}<nav class="companion-tabs" aria-label="海克斯侧栏">${[['recommend','我的阵容'],['plan','我的配置'],['room','开黑房间']].map(([id,label])=>button('companion-tab',label,'',tab===id?'active':'',`data-tab="${id}" aria-pressed="${tab===id}"`)).join('')}<details class="companion-navigation-more"><summary>更多</summary><div>${button('theme-open','配色','','quiet small')}${button('window-fold','收起侧栏','','quiet small')}</div></details></nav><main class="companion-content" id="main">${tab==='room'?roomContent:tab==='plan'?workbench+(boundPlan?'<details class="hex-config-details"><summary>完整配置与加点</summary>'+companionPlanView(data,boundPlan,favorites,configurationStatus)+'</details>':''):hexDraftView({data,client,slots})}</main><footer class="companion-footer"><span class="companion-client-state" role="status">${clientConnectionControl(client,connectionBusy)}</span></footer></div>`;
 }

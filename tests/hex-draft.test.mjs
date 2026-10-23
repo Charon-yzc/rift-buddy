@@ -13,7 +13,7 @@ test('Hex team alternatives use only public bench, retain teammates and explain 
  assert.equal(model.team.length,5);assert.equal(model.candidates[0].hero.id,'Malphite');assert.deepEqual(model.candidates[0].added,['补承伤手段']);assert.equal(model.candidates.length,2);
  for(const row of model.candidates){assert.equal(row.lineup[0].hero.id,row.hero.id);assert.deepEqual(row.lineup.slice(1).map(p=>p.hero.id),['Ashe','Veigar','Sona','Jinx']);}
  assert.deepEqual(c,before);assert(!JSON.stringify(c).includes('private'));
- const html=hexDraftView({data,client:c});assert.match(html,/换成墨菲特后的我方阵容/);assert.doesNotMatch(html,/上路|中路|打野|胜率\s*\d|data-action="(?:client-prepare|preselect)/);
+ const html=hexDraftView({data,client:c});assert.match(html,/我 · 墨菲特，查看配置/);assert.doesNotMatch(html,/上路|中路|打野|data-action="(?:client-prepare|preselect)/);
 });
 test('missing or stale bench never invents candidates; unknown patches never apply old coverage sorting',()=>{
  const c=client();delete c.session.bench;assert.equal(hexDraft({data,client:c}).candidates.length,0);assert.match(hexDraftView({data,client:c}),/暂未提供可换英雄/);
@@ -27,8 +27,8 @@ test('bench projection is bounded, deduplicated and drops all private fields',()
 });
 test('Hex lineup and configuration pages have separate content and preserve round context',()=>{
  const c=client(),round={hero:'Lux',context:'one',revision:2,gameId:'1',options:[],owned:[]},props={data,client:c,hexRound:round,tab:'recommend',configurationStatus:{},preferences:{}};
- const lineup=companionView(props);assert.match(lineup,/选阵容/);assert.match(lineup,/海克斯阵容/);assert.doesNotMatch(lineup,/本轮强化三选一|data-hex-option-input|英雄强化建议/);
- const plan=companionView({...props,tab:'plan'});assert.match(plan,/data-hex-option-input/);assert.match(plan,/英雄强化建议/);assert.doesNotMatch(plan,/海克斯阵容|阵容备选/);assert.match(plan,/data-hex-context="one"/);
+ const lineup=companionView(props);assert.match(lineup,/我的阵容/);assert.match(lineup,/海克斯阵容/);assert.doesNotMatch(lineup,/本轮强化三选一|data-hex-option-input|英雄强化建议/);
+ const plan=companionView({...props,tab:'plan'});assert.match(plan,/data-hex-option-input/);assert.match(plan,/强化池/);assert.doesNotMatch(plan,/海克斯阵容|阵容备选/);assert.match(plan,/data-hex-context="one"/);assert.doesNotMatch(plan,/hex-current-hero|本局指引|companion-persistent/);
 });
 
 test('same-patch hero source changes withdraw mechanical claims without hiding the real bench',()=>{

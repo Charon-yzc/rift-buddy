@@ -2,8 +2,10 @@ import {escape as e,gameDescription,asset} from './ui.mjs';
 import {itemPatchNotes,patchDirectionLabel} from './core/patch-notes.mjs';
 import {compareBuildPatches} from './core/builds.mjs';
 import {itemModeTooltip} from './core/item-mode-tooltip.mjs';
+import {hexAugmentReference} from './core/hex-augment-reference.mjs';
+import {isCurrentHexData} from './core/hex-data-current.mjs';
 const numbers=value=>String(value).split(/(\d+(?:\.\d+)?(?:%|秒|金币|金)?)/g).map((part,index)=>index%2?`<strong>${e(part)}</strong>`:e(part)).join('');
-export function gameTooltipView(data,kind,id,{mode='rift',image=asset}={}){
+export function gameTooltipView(data,kind,id,{mode='rift',image=asset,compact=false,brief='',poolStatus=''}={}){
  let name,description,meta='',partial=false,changes=[],basic='',modeDetail=null;
  if(kind==='item'){
   const item=data.items[id];if(!item)return '';
@@ -19,7 +21,12 @@ export function gameTooltipView(data,kind,id,{mode='rift',image=asset}={}){
  }else if(kind==='spell'){
   const spell=data.spells[id];if(!spell)return '';
   name=spell.name;description=spell.description;meta=[data.patch,spell.cooldownBurn?'冷却 '+spell.cooldownBurn+' 秒':''].filter(Boolean).join(' · ');
+ }else if(kind==='augment'){
+  if(mode!=='hex'||!isCurrentHexData(data))return '';
+  const augment=hexAugmentReference(data.augments.find(a=>String(a.id)===String(id)),{patch:data.patch});if(!augment)return '';
+  name=augment.name;description=augment.description;partial=augment.descriptionStatus!=='complete';meta=[data.patch,poolStatus].filter(Boolean).join(' · ');
  }else return '';
+ if(compact&&mode==='hex')return `<header>${image(kind,id,name)}<div><b>${e(name)}</b><small>${e(kind==='item'?(modeDetail?'海克斯':'峡谷基础值')+' · '+data.patch:meta)}</small></div></header>${brief?`<p class="game-tooltip-condition">${numbers(brief)}</p>`:''}<div class="game-tooltip-description">${gameDescription(description).slice(0,7000).split(/\n\s*\n/).filter(Boolean).map(text=>`<p>${numbers(text)}</p>`).join('')}</div>${partial?'<small class="game-tooltip-note">动态值以局内为准</small>':''}`;
  const paragraphs=gameDescription(description).slice(0,7000).split(/\n\s*\n/).filter(Boolean);
  return `<header>${image(kind,id,name)}<div><b>${e(name)}</b><small>${e(meta)}</small></div></header>${mode==='hex'?`<p class="game-tooltip-note">${modeDetail?'已应用公开海克斯参数；基础属性、其他模式修正与强化未合算。':'以下为峡谷基础值，海克斯模式调整未核对。'}</p>`:''}${basic?`<section class="game-tooltip-basics"><small>${modeDetail?'峡谷基础属性 · 同版本简介':'基础属性 · 同版本官方简介'}</small><p>${numbers(basic)}</p></section>`:''}<div class="game-tooltip-description">${paragraphs.map(text=>`<p>${numbers(text)}</p>`).join('')}</div>${partial?'<small class="game-tooltip-note">部分数值尚未解析，请以游戏内显示为准。</small>':''}${changes.length?`<section class="game-tooltip-changes"><b>近期峡谷改动</b>${changes.map(row=>`<div><small>${e(row.officialPatch)} · ${patchDirectionLabel(row.direction)}</small>${row.changes.slice(0,5).map(change=>`<p><span>${e(change.field)}</span><span>${numbers(change.before)} <i>→</i> ${numbers(change.after)}</span></p>`).join('')}</div>`).join('')}</section>`:''}`;
 }
@@ -53,11 +60,12 @@ export function createGameTooltips({document,getData,getMode=()=> 'rift',getCont
   muteTitles(node);
   timer=view.setTimeout(async()=>{
    if(serial!==request||anchor!==node||!node.isConnected||getMode()!==mode)return;
-   let html;try{html=await (getContent?getContent(node.dataset.gameTooltipKind,node.dataset.gameTooltipId,mode):gameTooltipView(getData(),node.dataset.gameTooltipKind,node.dataset.gameTooltipId,{mode}));}catch{if(serial===request)hide();return;}
+   const compact=node.closest('[data-game-tooltip-compact]');
+   let html;try{html=await (getContent?getContent(node.dataset.gameTooltipKind,node.dataset.gameTooltipId,mode):gameTooltipView(getData(),node.dataset.gameTooltipKind,node.dataset.gameTooltipId,{mode,compact:!!compact,brief:compact?.dataset.hexBrief||'',poolStatus:compact?.dataset.hexPoolStatus||''}));}catch{if(serial===request)hide();return;}
    if(serial!==request||anchor!==node||!node.isConnected||getMode()!==mode)return;
    timer=null;
    if(typeof html!=='string'||!html){hide();return;}
-   card.innerHTML=html;card.showPopover();place();
+   card.classList.toggle('game-tooltip-compact',!!compact);card.innerHTML=html;card.showPopover();place();
    assignOwner(focusOwner);
   },100);
  }
