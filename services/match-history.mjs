@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import {discoverClient,lcuRequest} from './lcu.mjs';
 import {SGP_SERVERS,sgpServerId,sgpRequest} from './match-history-sgp.mjs';
 import {normalizeTimeline,validPuuid,looksLikePuuid,text,number} from '../src/core/match-history/model.mjs';
-import {normalizeAkariMatch as normalizeMatch} from '../src/core/akari/bridge.mjs';
+import {normalizeAkariMatch as normalizeMatch,compactAkariTimeline} from '../src/core/akari/bridge.mjs';
 import {riotAliasRequest} from './match-history-riot.mjs';
 import {ongoingRoster} from '../src/core/ongoing-game.mjs';
 import {cleanPlayerChallenges,cleanPlayerProfile,normalizePublicRanked,normalizePublicMastery} from './match-history-profile.mjs';
@@ -32,14 +32,16 @@ const OPERATION_DEADLINE_MS=8000;
 // a session change, bypasses and drops it.
 const LIST_CACHE_MS=60000,LIST_CACHE_MAX=12;
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now,operationDeadlineMs=OPERATION_DEADLINE_MS}={}){
- let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0,foreground=0;const waiting=[],idleWaiters=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map(),listCache=new Map();let totalCacheBytes=0;
+ let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0,foreground=0;const waiting=[],lowWaiting=[],idleWaiters=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map(),listCache=new Map();let totalCacheBytes=0;
  const preferredSource=new Map(),failedSource=new Map();
  const rememberSource=(server,source)=>preferredSource.set(server,source);
  const sourceBlocked=(server,source)=>now()<(failedSource.get(server+':'+source)??-Infinity);
  const blockSource=(server,source)=>failedSource.set(server+':'+source,now()+SOURCE_COOLDOWN_MS);
  function resetSession(){connection='';epoch++;sessionId=crypto.randomBytes(16).toString('hex');handles.clear();cache.clear();cacheBytes.clear();tokens.clear();totalCacheBytes=0;listCache.clear();rosterCache=null;gsmCache=null;usageScan=null;usageReplay=null;usageRevision++;preferredSource.clear();failedSource.clear();}
  function clear(){clearGeneration++;discovery=null;discoveredAt=0;resetSession();}
- async function limited(fn){if(waiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>waiting.push(resolve));running++;try{return await fn();}finally{running--;waiting.shift()?.();}}
+ // Ongoing-game samples and deeper pages wait in a low-priority lane, so a page
+ // or player the user opens starts at the next free slot instead of behind them.
+ async function limited(fn,low=false){if(waiting.length+lowWaiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>(low?lowWaiting:waiting).push(resolve));running++;try{return await fn();}finally{running--;(waiting.shift()||lowWaiting.shift())?.();}}
  // The usage scan reads the shared backend quota four pages at a time.
  // A foreground read must not queue behind it, so the scan waits for the
  // running foreground read to finish. The wait is bounded: the scan still
@@ -357,7 +359,12 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
     if(primary==='sgp'){raw=await request(c.auth,'/lol-match-history/v1/game-timelines/'+id);actual='lcu';notice='后台时间线暂不可用，已使用当前大区客户端数据；部分属性和出装事件可能缺失';}
     else{const remoteServer=SGP_SERVERS[t.server];if(!remoteServer)throw error;raw=await remote(c,t.server,'entitlements',`/match-history-query/v1/products/lol/${remoteServer.region}_${id}/DETAILS`);actual='sgp';notice='客户端时间线暂不可用，已改用游戏后台数据';}
    }timeline=normalizeTimeline(raw,actual);}
-   await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取时间线');put(key,{origin:source,timeline,timelineSource:actual,timelineNotice:notice});return {id,timeline,source:actual,notice};
+   await check(c);if(t.ids.get(id)!==source)fail('对局数据源已变化，请重新读取时间线');
+   // Ongoing-game analysis reads only positions, levels, farm, damage, kills and
+   // epic monsters: return that compact copy (about a twentieth of the bytes over
+   // the helper pipe and IPC) and keep the full timeline out of the shared cache.
+   if(payload.compact===true)return {id,timeline:compactAkariTimeline(timeline),source:actual,notice};
+   put(key,{origin:source,timeline,timelineSource:actual,timelineNotice:notice});return {id,timeline,source:actual,notice};
   }
    if(t.cross)fail('跨区对局不支持在当前客户端播放回放');
    if(operation==='replay-status'){const metadata=await request(c.auth,'/lol-replays/v1/metadata/'+id);await check(c);return {id,state:text(metadata?.state),progress:['downloading','watch','download'].includes(metadata?.state)?number(metadata?.downloadProgress):null};}
@@ -374,7 +381,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    };
    return await work();
  }finally{if(!background)releaseForeground();}
- });
+ },payload.background===true&&['page','timeline'].includes(operation));
   // The caller may stop waiting, but limited() owns its slot until the native
   // transport completes. Expired queued reads must not start another request.
   // Explicit replay actions settle with their actual operation, never later
