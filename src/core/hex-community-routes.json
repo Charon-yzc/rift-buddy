@@ -266,20 +266,29 @@
         ]
       ],
       "communitySource": {
-        "author": "海斗的A面",
-        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
-        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "author": "银色子弹V",
+        "url": "https://www.bilibili.com/video/BV1xPHK6nErh/",
+        "publishedAt": "2026-10-24T13:11:42.000Z",
         "sourcePatch": null,
-        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "observedMode": "正式26.21上线后的海克斯大乱斗4.0教学；实际新强化卡面或作者字幕与本版定义交叉核验",
         "evidenceSeconds": [
+          0,
+          20,
+          40,
+          60,
+          75,
           90,
-          100,
-          110
+          120,
+          150,
+          155
         ],
-        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+        "adaptation": "作者当日明确列出装甲冲击、低音轰鸣、循环往复，并展示前两项实际卡面；装备保持项目条件配套，不把早期多件守护者装备画面当作完整六件推荐。未取得作者完整符文、逐级加点或购买顺序。"
       },
       "patch": "16.21",
-      "optional": [],
+      "optional": [
+        3078,
+        1068
+      ],
       "basicPlay": [
         "E接近后穿插实际普攻，Q强化攻击寻找命中；强化只服务施法后的下一次普通攻击，不是技能每段自动爆发。",
         "被动需要实际交战维持；W兼顾脱离，不把分身自动攻击视为本体必然重复触发。"
@@ -506,6 +515,245 @@
         ],
         "adaptation": "作者当日三强化同局展示与40秒六件推荐；项目按16.21核对触发边界并选用海克斯装备ID。未取得完整作者符文、逐级加点、鞋子时机及固定购买顺序；不声称三件强化必然出现或为热门胜率排行。"
       }
+    },
+    {
+      "hero": "Briar",
+      "patch": "16.21",
+      "augment": 3116,
+      "optional": [
+        3131
+      ],
+      "title": "印记普攻续战",
+      "summary": "持续命中叠印记，保留W二段和E脱离。",
+      "play": [
+        "血莽期间持续攻击英雄，为强化叠层；W二段在能实际咬中时使用，无法继续贴身就保留E结束血莽。",
+        "Q接近与削甲，E处理追击失控；强化消耗层数后才按伤害治疗，不把一次回血当作持续免伤。"
+      ],
+      "basicPlay": [
+        "已失去R，围绕Q、W与实际普攻交战；保留E结束血莽，不等待大招突进。"
+      ],
+      "caution": "持续治疗仍需实际命中并触发；被控制、拉开或遭重伤时收益下降，不照搬“永远不死”的标题。",
+      "gear": [
+        [
+          "作者明确列出的配装",
+          [
+            126697,
+            6333,
+            6676
+          ],
+          "狂妄靠参与击杀成长；死舞延后承伤，收集者只处决低于阈值的英雄。按生存压力购买。"
+        ],
+        [
+          "作者后续输出方向",
+          [
+            3031,
+            2517
+          ],
+          "无尽需要暴击与攻击机会；饥渴的急速与吸血各有条件。"
+        ],
+        [
+          "敌方护甲较高",
+          [
+            3036
+          ],
+          "作者只称“穿甲弓”，未指明哪件；项目在此比较多米尼克，不冒充作者指定装备。"
+        ]
+      ],
+      "communitySource": {
+        "author": "乱斗研究生",
+        "url": "https://www.bilibili.com/video/BV1o4HK6eEPc/",
+        "publishedAt": "2026-10-24T12:06:52.000Z",
+        "sourcePatch": null,
+        "observedMode": "正式26.21上线后的海克斯大乱斗4.0教学；实际新强化卡面或作者字幕与本版定义交叉核验",
+        "evidenceSeconds": [
+          0,
+          10,
+          15,
+          20,
+          25,
+          30,
+          35,
+          40,
+          45,
+          50,
+          55,
+          56,
+          60,
+          65
+        ],
+        "adaptation": "作者当日字幕点名将他们放倒倒倒、屹立不倒和五件明确装备；“穿甲弓”未明确，项目作条件比较。未取得作者完整符文、逐级加点、固定购买顺序或完整强化选项，不承诺标题中的不死效果。"
+      }
+    },
+    {
+      "hero": "Ekko",
+      "patch": "16.21",
+      "augment": 3086,
+      "optional": [],
+      "title": "蜂巢远程拉扯",
+      "summary": "Q命中英雄启动蜂巢，利用范围减速拉开。",
+      "play": [
+        "蜂巢就绪时用Q命中英雄；回拉路径照顾自身站位，利用爆炸与减速拉开距离。",
+        "W预判进退路线，E用于调整位置或安全接普攻；不因蜂巢范围伤害就强行贴脸。"
+      ],
+      "basicPlay": [
+        "已失去R，Q命中启动蜂巢，W预判、E留作进退；不能依靠大招回溯撤离。"
+      ],
+      "caution": "蜂巢有触发间隔，攻击特效按各自效能与冷却结算；不承诺每跳都叠一次被动、群体必出三环或一秒五环。",
+      "gear": [
+        [
+          "能安全穿插普攻",
+          [
+            3115,
+            3100
+          ],
+          "项目比较纳什与巫妖的攻击特效；咒刃仍有自身触发条件和冷却，不按每次蜂伤重复结算。"
+        ],
+        [
+          "需要技能爆发",
+          [
+            4645,
+            3089
+          ],
+          "项目比较影焰与帽子；按法强、目标血量和金币决定，不是蜂巢必出四件。"
+        ],
+        [
+          "需要自保",
+          [
+            3157
+          ],
+          "被突进或爆发威胁时比较中娅；凝滞期间不能继续主动攻击。"
+        ]
+      ],
+      "communitySource": {
+        "author": "可乐乱斗",
+        "url": "https://www.bilibili.com/video/BV1NJn665EUQ/",
+        "publishedAt": "2026-10-22T08:05:00.000Z",
+        "sourcePatch": null,
+        "observedMode": "正式26.21上线后的海克斯大乱斗4.0教学；实际新强化卡面或作者字幕与本版定义交叉核验",
+        "evidenceSeconds": [
+          10,
+          60,
+          65,
+          75,
+          80,
+          90,
+          100,
+          103,
+          105
+        ],
+        "adaptation": "作者4.0第二条小蜜蜂艾克思路，75/103/105秒实际卡面；条件装备由项目补充。深红钴蓝闪光的英雄技能映射仍待独立支持，不把它伪装成已完整解析的共同核心；未取得第二条路线的完整作者出装、符文及加点。"
+      }
+    },
+    {
+      "hero": "Graves",
+      "patch": "16.21",
+      "augment": 3081,
+      "optional": [],
+      "title": "首件穿透成长",
+      "summary": "先确认首件传说装备，再围绕参与击杀成长。",
+      "play": [
+        "作者用首件穿透装备承接成长；命运之武器只作用于第一件传说装备，不把后续装备也当作同步升级。",
+        "近身时保证弹丸能命中，E调整位置；弹药用完仍需换弹，护甲穿透不会让弹丸穿透单位。"
+      ],
+      "basicPlay": [
+        "已失去R，围绕Q与实际普攻交战，E调整射击位置；弹药用完仍需换弹。"
+      ],
+      "caution": "需要真实参与击杀兑现成长；不保证首件立即成型或达到100%穿透，不把单局后期面板当作固定收益。",
+      "coreItems": [
+        3036
+      ],
+      "gear": [
+        [
+          "作者首件方向",
+          [
+            3036
+          ],
+          "首件多米尼克承接命运之武器，且无法售出；先确认尚未用其他传说装备占用首件位置。"
+        ],
+        [
+          "能继续普攻输出",
+          [
+            3031,
+            3072
+          ],
+          "项目后续比较无尽和饮血；需要实际攻击、暴击与回复空间。"
+        ],
+        [
+          "物理交战压力",
+          [
+            6333
+          ],
+          "项目比较死舞；延后承伤不是免伤。"
+        ]
+      ],
+      "communitySource": {
+        "author": "海斗的A面",
+        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
+        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "正式26.21上线后的海克斯大乱斗4.0教学；实际新强化卡面或作者字幕与本版定义交叉核验",
+        "evidenceSeconds": [
+          65,
+          70,
+          75,
+          80,
+          85
+        ],
+        "adaptation": "作者4.0教学实际展示男枪与首件多米尼克成长；后续条件装备由项目补充。未采用“仅前两轮出现”或固定百穿说法，未取得作者完整符文、逐级加点和完整购买顺序。"
+      }
+    },
+    {
+      "hero": "Corki",
+      "patch": "16.21",
+      "augment": 3078,
+      "optional": [],
+      "title": "技能穿插快攻",
+      "summary": "技能后穿插普攻，短暂移速用来保持射击距离。",
+      "play": [
+        "Q或E施放后接实际普攻；有火箭弹药时用R衔接，保持能继续攻击的距离。",
+        "W留作撤离，强化攻击后的移速持续衰减；不把单次攻击变快当成常驻攻速，也不让每跳技能自动触发普攻。"
+      ],
+      "basicPlay": [
+        "已失去R，用Q、E衔接实际普攻，W留作撤离；不能继续等待或使用火箭。"
+      ],
+      "caution": "强化不替你自动攻击，也不补充大招弹药。仍需安全射击窗口，不根据录像的一次爆发推断固定胜率。",
+      "gear": [
+        [
+          "技能后能持续攻击",
+          [
+            3078
+          ],
+          "项目比较三相的咒刃；与强化分别结算，不按每次技能伤害重复触发。"
+        ],
+        [
+          "需要暴击输出",
+          [
+            3031
+          ],
+          "项目比较无尽；强化的一次快速攻击不代替后续的实际攻击频率。"
+        ],
+        [
+          "需要普攻续航",
+          [
+            3072
+          ],
+          "有安全攻击空间时比较饮血；先保留W的撤离位置。"
+        ]
+      ],
+      "communitySource": {
+        "author": "海斗的A面",
+        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
+        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "正式26.21上线后的海克斯大乱斗4.0教学；实际新强化卡面或作者字幕与本版定义交叉核验",
+        "evidenceSeconds": [
+          45,
+          50,
+          55,
+          60
+        ],
+        "adaptation": "作者4.0低音轰鸣卡面及库奇实战示例；项目按本版技能补充打法边界与条件装备。未取得作者完整符文、逐级加点或固定配装，不把单次攻击加速解释为常驻攻速。"
+      }
     }
   ],
   "championReview": {
@@ -520,7 +768,10 @@
       "Riven": "250743f905f1d048",
       "Irelia": "1a72d78b2846711a",
       "Briar": "c27bce7ec0937640",
-      "Hecarim": "f9c4c9b8aea59e68"
+      "Hecarim": "f9c4c9b8aea59e68",
+      "Ekko": "d17ece4a263656b8",
+      "Graves": "ea75172ee2199edb",
+      "Corki": "bf698b12d7779645"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -736,6 +987,78 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "2a4e6af555abb6c6"
+          }
+        }
+      },
+      "Ekko": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d17ece4a263656b8",
+        "observedAt": "2026-10-23T02:03:51.459Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Ekko",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/ekko/ekko.bin.json",
+            "sha256": "cc5b259955ce7c0062fb8a1e38e742b587f0f10a70c91945ccc62b2db7a14fc5"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "d146dbafe0178dc0"
+          }
+        }
+      },
+      "Graves": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "ea75172ee2199edb",
+        "observedAt": "2026-10-23T02:03:51.463Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Graves",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/graves/graves.bin.json",
+            "sha256": "9b4618aabfaf278a604ee9a59972ea4650d42aa659039f3314a110a748351e2a"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "177b5090af77b3cf"
+          }
+        }
+      },
+      "Corki": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "bf698b12d7779645",
+        "observedAt": "2026-10-23T02:03:51.456Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Corki",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/corki/corki.bin.json",
+            "sha256": "2738a7906a0e91d1c8f35f29cffc3263697cbe4777c9fc0661d872592ae76b8b"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "67e76fae7d2c0a44"
           }
         }
       }

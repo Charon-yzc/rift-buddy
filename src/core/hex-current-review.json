@@ -3,7 +3,7 @@
   "scope": "hex-routes-and-choices",
   "patch": "16.21",
   "reviewedAt": "2026-10-24",
-  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim. Effects 1305 and 2132 reviewed on 2026-10-24; prior hero reviews unchanged. Lillia has a separate community-route-only review. On 2026-10-24 reviewed TheBoomAndTheBass trigger only; Yasuo community kit anchor remains separate. Gluttonous Greaves3008 condition reviewed for the new Yasuo route; unresolved tooltip coefficients are not restated. On 2026-10-24 reviewed DoubleTime and ArmoredImpact trigger descriptions and conditional item dependencies for six separately scoped creator-inspired community directions; no shared hero or popularity review renewed. On 2026-10-24 reviewed GetJinxed and TakeemDownDownDown triggers plus the current map12 Hubris126697, Serylda6694, EndlessHunger2517 and Youmuu3142 item dependencies for the separate Hecarim creator route; no rocket damage coefficient or permanent movement-speed claim.",
+  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim. Effects 1305 and 2132 reviewed on 2026-10-24; prior hero reviews unchanged. Lillia has a separate community-route-only review. On 2026-10-24 reviewed TheBoomAndTheBass trigger only; Yasuo community kit anchor remains separate. Gluttonous Greaves3008 condition reviewed for the new Yasuo route; unresolved tooltip coefficients are not restated. On 2026-10-24 reviewed DoubleTime and ArmoredImpact trigger descriptions and conditional item dependencies for six separately scoped creator-inspired community directions; no shared hero or popularity review renewed. On 2026-10-24 reviewed GetJinxed and TakeemDownDownDown triggers plus the current map12 Hubris126697, Serylda6694, EndlessHunger2517 and Youmuu3142 item dependencies for the separate Hecarim creator route; no rocket damage coefficient or permanent movement-speed claim. On 2026-10-24 reviewed current BEES, StillHere, WeaponOfDestiny and Recursion summaries and community-only Ekko/Graves/Corki kit anchors. Gear3100/4645 checked for map12. Unresolved CrimsonCobalt SpellName and cooldown text remain unmodified and unadmitted. WeaponOfDestiny full tooltip is independently fingerprinted for its non-resale cost; a detailed-only change withdraws the route.",
   "sources": {
     "notes": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
     "characters": "https://raw.communitydragon.org/16.21/game/data/characters/",
@@ -430,6 +430,7 @@
     "1048": "618f747d50e3039c",
     "1056": "4e2d61bdf7c0e4e3",
     "1058": "d51dae206a24d183",
+    "1068": "d34d7a01433a86a1",
     "1077": "5c8235dd21ddee01",
     "1080": "300d567292578364",
     "1088": "2f50aa7d5b45f39f",
@@ -456,7 +457,10 @@
     "3036": "bd1608245289e556",
     "3049": "ded7ca341242c59d",
     "3078": "8232e380baff1ebc",
-    "3116": "4d38261370cf1dd7"
+    "3081": "b06d402b5eec2638",
+    "3086": "eb16992035c1c40e",
+    "3116": "4d38261370cf1dd7",
+    "3131": "51d21ab12c3299f6"
   },
   "items": {
     "2517": "0992511be8e60a36",
@@ -473,6 +477,7 @@
     "3078": "521032faa395a097",
     "3089": "999d4b976fe2d546",
     "3094": "29f19115313f6301",
+    "3100": "61419a0480e75737",
     "3115": "ef85e0677b1ae84c",
     "3116": "0527cd04d01e94a8",
     "3135": "4ccdf3ad2cfbc06c",
@@ -482,6 +487,7 @@
     "3161": "ef48fd76ee21d277",
     "3504": "4d964e703de16015",
     "4633": "ca994325451939bb",
+    "4645": "b114a6b51546e040",
     "6333": "65943886b530ef44",
     "6610": "b989ba466079a218",
     "6617": "85c508b874bbbc69",
@@ -499,5 +505,8 @@
     "itemIds": [],
     "basis": "仅收录有当前正式版本依据的社区配套；16.20来源未取得当版作者资料前不进入16.21推荐。"
   },
-  "communityPolicy": "current-source-only"
+  "communityPolicy": "current-source-only",
+  "effectDetails": {
+    "3081": "8851c37a2fa46d87"
+  }
 }
