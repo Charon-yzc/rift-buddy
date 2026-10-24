@@ -1363,7 +1363,10 @@
             3031
           ],
           "作者点名无尽；先确认两个强化都已拥有，再按当前暴击率和伤害规则比较；单有尤里卡不代表该买AD暴击装。",
-          [1048, 1205]
+          [
+            1048,
+            1205
+          ]
         ],
         [
           "已有物理转魔法且需要R回转时才比较",
@@ -1371,7 +1374,9 @@
             6696
           ],
           "作者点名公理圆弧；造成伤害后的目标需在3秒内阵亡才返还大招冷却，不是每次R都刷新。穿甲不增加魔法伤害，不补未解析的返还比例。",
-          [1205]
+          [
+            1205
+          ]
         ]
       ],
       "communitySource": {
@@ -1425,6 +1430,132 @@
         ],
         "adaptation": "作者在当版控制与急速讨论中给出局部配套；项目按正式16.21保留终极唤醒20秒自身冷却及实际命中条件，不继承每次R刷新或无限控制的说法。原文未标实战补丁、服务器、完整装备或加点，不作为当前录像实战证明或热门排行。"
       }
+    },
+    {
+      "hero": "Zoe",
+      "patch": "16.21",
+      "augment": 1116,
+      "optional": [
+        1187,
+        1348,
+        1347
+      ],
+      "title": "闪光摄影",
+      "summary": "安全普攻选定飞弹目标，召唤技能穿插W。",
+      "play": [
+        "闪现有3层充能，120秒后恢复全部；安全普攻后穿插W碎片或召唤师技能，飞弹仍要实际命中。",
+        "保留逃生技能；连续施放不保证多组飞弹叠加，R不当作召唤师技能。"
+      ],
+      "basicPlay": [
+        "闪现有3层充能，120秒后恢复全部；安全普攻后穿插W碎片或召唤师技能，保留逃生技能。"
+      ],
+      "caution": "编辑提供强化和六件装备方向，未给购买顺序、加点或独立实战记录；不推定两个闪现各有三层，也不把吵闹鬼算成两次W触发。",
+      "gear": [
+        [
+          "召唤技能回转",
+          [
+            3158
+          ],
+          "明朗分别提供技能急速和召唤师技能急速；不把它们合并计算成无限施放。"
+        ],
+        [
+          "技能后穿插普攻",
+          [
+            3100
+          ],
+          "施放技能后的下一次攻击利用咒刃；单独闪现不保证触发巫妖。"
+        ],
+        [
+          "法强后续比较",
+          [
+            3089,
+            4645,
+            4646,
+            3135
+          ],
+          "编辑列出的法强与法穿方向，按敌方魔抗和生存压力调整；没有固定购买顺序或必定处决承诺。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "sourcePatch": null,
+        "author": "DeepARAM 主厨特选",
+        "url": "https://deeparam.com/embed/fun/cook-builds/#chefs-special-2026-10-23",
+        "publishedAt": "2026-10-23",
+        "evidenceSections": [
+          "日期选择器2026-10-23：闪光摄影/佐伊",
+          "强化清单、六件装备列表及普攻后使用召唤师技能说明"
+        ],
+        "adaptation": "已通过正常浏览器实际展开编辑图文；父页标26.21，单篇未写补丁号。项目按正式16.21核对W、强化和装备，保留条件改编；不是作者录像实战、热门统计、购买顺序或专属加点证明。"
+      }
+    },
+    {
+      "hero": "Quinn",
+      "patch": "16.21",
+      "augment": 1019,
+      "optional": [
+        1375
+      ],
+      "title": "华尔街保安",
+      "summary": "E进退衔接标记普攻，保住后跳落点。",
+      "play": [
+        "位移类英雄技能获得175急速；E实际击退敌方英雄后攻击侵扰标记，W主动只开视野。",
+        "攻击侵扰标记目标才利用W被动攻速；保留法力与落点，等待实际冷却再E。"
+      ],
+      "basicPlay": [
+        "位移类英雄技能获得175急速；用E和标记普攻衔接，保留落点与法力，不依赖R转线。"
+      ],
+      "caution": "只采用原四强化中可核的两项；连锁反应与贪欲束缚的具体技能绑定未核，不纳入。六件仅为编辑列表，未给购买顺序、加点或独立实战证明。",
+      "gear": [
+        [
+          "普攻缩短空档",
+          [
+            6675
+          ],
+          "纳沃利缩短基础技能的剩余冷却，不是减少固定秒数，也不保证一次普攻刷新E。"
+        ],
+        [
+          "基础技能轮转",
+          [
+            3161
+          ],
+          "朔极提供基础技能急速，仍需实际施法、命中和法力。"
+        ],
+        [
+          "生命成长",
+          [
+            3084,
+            2501
+          ],
+          "心钢先满足蓄力并实际攻击；霸王按额外生命值提供攻击力，不按所有生命值预先叠满计算。"
+        ],
+        [
+          "低血自保",
+          [
+            3053
+          ],
+          "需要低血护盾时比较血手；不为装备收益刻意压低血量。"
+        ],
+        [
+          "魔法与控制压力",
+          [
+            3111
+          ],
+          "水银提供魔抗和韧性；不保证缩短击飞等不可减控制，也不提供施法免控。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "sourcePatch": null,
+        "author": "DeepARAM 主厨特选",
+        "url": "https://deeparam.com/embed/fun/cook-builds/#chefs-special-2026-10-22",
+        "publishedAt": "2026-10-22",
+        "evidenceSections": [
+          "日期选择器与上菜日期2026-10-22：华尔街保安/奎因",
+          "原四强化及六件装备清单；项目只采用1019与1375"
+        ],
+        "adaptation": "已通过正常浏览器实际展开编辑图文；父页标26.21，单篇未写补丁号。按正式16.21删减未核技能绑定并核对E、W和装备；不是完整四强化组合、无缝控制或作者实战证明，购买先后与加点未知。"
+      }
     }
   ],
   "championReview": {
@@ -1455,7 +1586,9 @@
       "Nautilus": "67da151a84906467",
       "Udyr": "fdaba836f9c37b70",
       "Karthus": "c1de84b19ac00ffe",
-      "Blitzcrank": "27f6b75f8d6eeb18"
+      "Blitzcrank": "27f6b75f8d6eeb18",
+      "Zoe": "d218618e341a560e",
+      "Quinn": "96eaff1d877b5c1a"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -2055,6 +2188,54 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "420c31b55a789119"
+          }
+        }
+      },
+      "Zoe": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d218618e341a560e",
+        "observedAt": "2026-10-23T02:03:51.644Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Zoe",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/zoe/zoe.bin.json",
+            "sha256": "ab1f95a80d4c5419819ca4866ed010dd044e8a091dc36243454ee908473baa69"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "d54715e1579901ee"
+          }
+        }
+      },
+      "Quinn": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "96eaff1d877b5c1a",
+        "observedAt": "2026-10-23T02:03:51.548Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Quinn",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/quinn/quinn.bin.json",
+            "sha256": "bbb2756d253d9b1ad3b4b73b243366e36c91cb8f550654ebe615b2a6ec5d4825"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "646da0026bf9e301"
           }
         }
       }
