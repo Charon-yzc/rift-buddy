@@ -90,6 +90,21 @@ test('a backend outage on a deeper page is remembered instead of retried on ever
  assert.equal(backendCalls,1,'the remembered client source keeps later pages off the failing backend');
 });
 
+// The client answers other players' histories one at a time (about a second
+// each), so a roster of ten read through it fills card by card.
+test('a roster batch reads automatic first pages from the backend and keeps the client as fallback',async()=>{
+ const f=service();
+ const page=await f.service.execute('page',{source:'auto',puuid:'b'.repeat(36),batch:true});
+ assert.equal(page.source,'sgp');assert.equal(f.calls.backend,1);
+ const single=await f.service.execute('page',{source:'auto',puuid:'b'.repeat(36)});
+ assert.equal(single.source,'lcu','a single history page still answers from the client first');
+ const down=service({backend:async()=>{throw Object.assign(Error('后台 503'),{status:503});}});
+ const fallback=await down.service.execute('page',{source:'auto',puuid:'b'.repeat(36),batch:true});
+ assert.equal(fallback.source,'lcu');assert.match(fallback.notice,/已改用当前大区客户端数据/);
+ const explicit=await f.service.execute('page',{source:'lcu',puuid:'b'.repeat(36),batch:true});
+ assert.equal(explicit.source,'lcu','an explicit client source is never overridden');
+});
+
 test('the hero-statistics batch is fetched concurrently instead of one page at a time',async()=>{
  const pending=[];let firstRead=true;
  const f=service({backend:async()=>{if(firstRead){firstRead=false;return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))};}return new Promise(resolve=>pending.push(resolve));}});

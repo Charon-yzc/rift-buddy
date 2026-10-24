@@ -206,7 +206,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    assertSession(c);const part=await pending[i];assertSession(c);if(part.error)throw part.error;entries.push(...part.games);if(part.games.length<chunks[i][1])break;
   }return entries;})(),SCAN_DEADLINE_MS,'英雄战绩读取超时');
  }
- async function loadList(c,t,{start,count,tag}){
+ async function loadList(c,t,{start,count,tag,batch=false}){
   const server=t.server,hasBackend=!!SGP_SERVERS[server];
   const backendAllowed=hasBackend&&t.preferred!=='lcu';
   const localAllowed=!t.cross;
@@ -216,8 +216,11 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   // tens of milliseconds, while the game backend needs about a second and shares
   // a rate limit with the usage scan. Deeper pages keep the order that last
   // worked: the client route cannot page past its own recent window on every
-  // build, so it is only trusted for the first page.
-  const localFirst=t.preferred==='lcu'||t.preferred==='auto'&&start===0;
+  // build, so it is only trusted for the first page. A roster batch is the
+  // exception: the client serves other players' histories one at a time (about
+  // a second each, so ten cards fill one by one), while the backend answers
+  // three at once in about the same time.
+  const localFirst=t.preferred==='lcu'||t.preferred==='auto'&&start===0&&!batch;
   const preferred=t.preferred==='sgp'?'sgp':localFirst?'lcu':preferredSource.get(server),order=preferred==='lcu'?['lcu','sgp']:['sgp','lcu'];
   const attempts=order.filter(source=>(source==='sgp'?backendAllowed:localAllowed)&&!sourceBlocked(server,source));
   if(!attempts.length){
@@ -256,7 +259,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
   const pageKey=`${handle}|${start}|${count}|${tag}|${t.preferred}`;if(p.queue!==undefined&&p.queue!==''&&(!Number.isInteger(Number(p.queue))||Number(p.queue)<0||Number(p.queue)>10000))fail('战绩模式参数不正确');
   const cachedPage=p.fresh===true?null:listCache.get(pageKey);
   if(cachedPage&&now()-cachedPage.at<LIST_CACHE_MS)return {...cachedPage.value,games:[...cachedPage.value.games]};
-  const loaded=await loadList(c,t,{start,count,tag});
+  const loaded=await loadList(c,t,{start,count,tag,batch:p.batch===true});
   const raw=loaded.raw,source=loaded.source;let notice=loaded.notice;
   const entries=source==='sgp'?raw?.games:raw?.games?.games;if(!Array.isArray(entries))fail('客户端尚未返回有效战绩，请稍后重试');
   const games=entries.slice(0,count).map(g=>normalizeMatch(g,source,t.player.puuid)).filter(Boolean);
