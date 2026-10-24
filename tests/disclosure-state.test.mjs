@@ -46,6 +46,12 @@ test('rendered open and closed choices survive per page and sidebar scope',()=>{
  state.restore('sidebar:room',root(roomAgain));assert.equal(roomAgain.open,false);
  const other=detail('连接说明',{'data-companion-disclosure':'help'});assert.equal(state.restore('page:reference',root(other)),0);assert.equal(other.open,false);
 });
+test('Vue-owned disclosures and focus never trigger the legacy subtree scanner',()=>{
+ const state=createDisclosureState(),native=detail('原生说明',{id:'native',open:true}),owned=detail('事件位置',{open:true}),host=el('div',{'data-vue-host':'history'},owned),view=root(native,host);
+ const query=owned.querySelectorAll.bind(owned);owned.querySelectorAll=selector=>{assert.equal(selector,'*','Only the fixture traversal may visit the owned node');return query(selector);};
+ view.ownerDocument={activeElement:owned.children[0]};assert.equal(state.captureFocus(view),null);
+ assert.equal(state.capture('history',view),1);owned.open=false;native.open=false;state.restore('history',view);assert.equal(native.open,true);assert.equal(owned.open,false);
+});
 
 test('a native role select keeps focus across background updates but a changed or ambiguous enum is rejected',()=>{
  const state=createDisclosureState(),old=select('solo-role',['','top','mid']),before=root(old);before.ownerDocument={activeElement:old};
@@ -163,4 +169,11 @@ test('configuration plan keys and enclosing disclosures separate nested explanat
  const first=detail('依据',{open:true}),second=detail('依据');state.capture('nested',root(detail('装备',{},first),detail('符文',{},second)));
  const firstAgain=detail('依据'),secondAgain=detail('依据');state.restore('nested',root(detail('符文',{},secondAgain),detail('装备',{},firstAgain)));
  assert.equal(firstAgain.open,true);assert.equal(secondAgain.open,false);
+});
+test('a card with many disclosures is scanned once per pass and keeps each disclosure state',()=>{
+ const card=()=>{const node=el('article',{class:'ongoing-player-card','data-disclosure-context':'ongoing-player:mock'},el('button',{'data-id':'22','data-role':'mid'}),...Array.from({length:12},(_,i)=>detail('英雄 '+i,{'data-disclosure-key':'ongoing-champion:'+i})));let scans=0;const all=node.querySelectorAll.bind(node);node.querySelectorAll=selector=>{if(selector==='*')scans++;return all(selector);};return {node,scans:()=>scans};};
+ const before=card(),state=createDisclosureState();before.node.children[5].open=true;
+ assert.equal(state.capture('main:ongoing',root(before.node)),12);assert.equal(before.scans(),2,'The fixture walk plus one control read for all twelve disclosures');
+ const after=card();assert.equal(state.restore('main:ongoing',root(after.node)),12);assert.equal(after.scans(),2);
+ assert.deepEqual(after.node.children.slice(1).map(d=>d.open),Array.from({length:12},(_,i)=>i===4));
 });

@@ -1,12 +1,12 @@
 // Ongoing-game hover details. Adapted from League Akari 60f1584c (MIT) ranked
 // table, stats and position popovers. Only data already loaded for the page is
 // shown; anything the source did not return stays "未读取".
-import {escape as e,portrait} from './ui.mjs';
+import {escape as e,portrait,formatNumber} from './ui.mjs';
 import {queueName} from './core/match-history/model.mjs';
 import {rankTierLabel} from './core/rank-display.mjs';
 import {ongoingPositionName} from './ongoing-game-analysis-view.mjs';
 
-const num=(value,digits=0)=>Number.isFinite(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:digits}):'未读取';
+const num=(value,digits=0)=>Number.isFinite(value)?formatNumber(value,digits):'未读取';
 const pct=value=>Number.isFinite(value)?(value*100).toFixed(0)+'%':'未读取';
 const TIER_NONE='未定级';
 const RANK_QUEUES=[['RANKED_SOLO_5x5','单 / 双排'],['RANKED_FLEX_SR','灵活组排'],['RANKED_CHERRY','斗魂竞技场'],['CHERRY','斗魂竞技场']];

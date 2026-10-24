@@ -77,6 +77,17 @@ function completeRoster(game){
   return game.participants.length===10&&[100,200].every(teamId=>game.participants.filter(p=>p.teamId===teamId&&p.team===`TEAM-${teamId}`).length===5);
 }
 
+const KEPT_EVENTS=new Set(['CHAMPION_KILL','ELITE_MONSTER_KILL']);
+/** Keeps only what the analysis reads from a normalized timeline (a few percent of it), so many players' samples can be held at once. */
+export function compactAkariTimeline(timeline){
+  if(!Array.isArray(timeline?.frames))return timeline;
+  const events=Array.isArray(timeline.events)?timeline.events:null;
+  return {
+    frames:timeline.frames.map(frame=>({timestamp:frame.timestamp,...(frame.eventsKnown===false?{eventsKnown:false}:{}),players:(frame.players||[]).map(p=>({id:p.id,position:p.position,level:p.level,cs:p.cs,damage:p.damage}))})),
+    ...(events?{events:events.filter(event=>KEPT_EVENTS.has(event?.type)).map(event=>({type:event.type,timestamp:event.timestamp,killerId:event.killerId,victimId:event.victimId,killerTeamId:event.killerTeamId,assists:event.assists,assistsKnown:event.assistsKnown,position:event.position,monster:event.monster})),eventCount:Number.isSafeInteger(timeline.eventCount)?timeline.eventCount:events.length}:{})
+  };
+}
+
 // Rebuild the original frame envelope from normalized frames plus their flat event list.
 function canonicalTimeline(timeline,game){
   if(!Array.isArray(timeline?.frames)||!timeline.frames.length||timeline.frames.length>240)return null;
@@ -91,8 +102,8 @@ function canonicalTimeline(timeline,game){
     }
     return [p.id,value];
   })),events:[]}));
-  const events=Array.isArray(timeline.events)?timeline.events:[];
-  if(events.length>15000)return null;
+  const events=Array.isArray(timeline.events)?timeline.events:[],eventCount=Number.isSafeInteger(timeline.eventCount)?timeline.eventCount:events.length;
+  if(eventCount>15000)return null;
    let objectiveTeams=true,eventTimes=Array.isArray(timeline.events)&&sourceFrames.every(frame=>frame.eventsKnown!==false),killIdentities=true,killPositions=true,soloObjectives=true;
   for(const event of events){
     if(!['CHAMPION_KILL','ELITE_MONSTER_KILL'].includes(event.type))continue;
@@ -120,7 +131,7 @@ function canonicalTimeline(timeline,game){
   const earlyGank=minuteFrames&&known(at3?.cs)&&known(at3?.level)&&!!at4&&killPositions&&killIdentities&&eventTimes;
   const earlyDeaths=eventTimes&&killIdentities&&sourceFrames.at(-1).timestamp>=Math.min(game.duration*1000,15*60000)-1500;
   return {details:{source:'sgp',gameId:game.id,data:{json:{frames}}},availability:{
-    frames:frames.length,events:events.length,objectives:objectiveTeams&&eventTimes&&coversEnd,
+    frames:frames.length,events:eventCount,objectives:objectiveTeams&&eventTimes&&coversEnd,
     soloObjectives,earlyDeaths,positions:!!positions&&minuteFrames,killPositions:killPositions&&killIdentities&&eventTimes&&coversEnd,
     earlyGank,minuteFrames,coversEnd,csSplit:false
   }};

@@ -49,7 +49,9 @@ async function run(){
  const click=async sel=>{sel=await revealDraftAction(js,sel);await js('(()=>{const el=document.querySelector('+JSON.stringify(sel)+');if(!el||el.disabled)throw Error("Control missing or disabled");el.click();})()');if(sel==='[data-action=task-edit]'){const boot=await js('window.buddy.bootstrap()'),champion=data.champions.find(c=>c.key===ownChampion);const reference=boot.state.preparations.findLast(p=>p.id===champion.id&&p.role==='top')||{id:champion.id,role:'top',mode:'rift'};main.webContents.send('open-build',{...reference,readOnly:false});await until(()=>js('!!document.querySelector("[data-action=apply-runes]")'),'Explicit rune reference missing');}};
  const applyRunes=async()=>{await click('[data-action=apply-runes]');await until(()=>js('document.querySelector("[data-action=apply-runes]")?.disabled===false'),'Rune application did not settle');};
  const sync=async()=>{
-  if(await js('!!document.querySelector("[data-action=close]")'))await click('[data-action=close]');
+  // A phase/hero change may already have closed the stale build drawer. Make
+  // this cleanup atomic instead of checking across several renderer IPC turns.
+  await js('document.querySelector("[data-action=close]")?.click()');
   await click('[data-action=navigate][data-route=settings]');await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Client sync not ready');await click('[data-action=sync]');
   await until(()=>js('document.querySelector("[data-action=sync]")?.disabled===false'),'Client sync stayed pending');
   await click('[data-action=navigate][data-route=draft]');

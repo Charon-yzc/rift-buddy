@@ -43,6 +43,19 @@ test('repeated detail clicks share a single in-flight summary request',async()=>
  let release,calls=0;const c=createHistoryController({request:async(op)=>op==='profile'?{}:op==='page'?page('one'):op==='detail'?(calls++,new Promise(resolve=>release=resolve)):{timeline:{frames:[],events:[]}}});
  await c.open();const a=c.detail(1,'summary'),b=c.detail(1,'stats');assert.equal(calls,1);release({game:c.current().page.games[0]});await Promise.all([a,b]);assert.equal(c.current().details[1].section,'stats');
 });
+test('cached detail tabs notify once without entering a fake loading cycle or reanalyzing',async()=>{
+ const changes=[],calls=[];let analyses=0;
+ const c=createHistoryController({request:async op=>{calls.push(op);return op==='page'?page('one'):op==='profile'?{}:op==='detail'?{game:page('one').games[0]}:{timeline:{frames:[],events:[]}};},analyze:()=>++analyses,onChange:change=>changes.push({change,loading:c.current()?.details[1]?.loading})});
+ const tab=await c.open();await c.detail(1,'events');changes.length=0;const reads=calls.length,before=analyses;
+ await c.detail(1,'builds');
+ assert.equal(calls.length,reads);assert.equal(analyses,before);assert.equal(changes.length,1);assert.equal(changes[0].loading,false);assert.deepEqual(changes[0].change,{type:'detail',tabId:tab.id,id:1});
+});
+test('new detail measurements notify the sidebar once and background detail completion remains tagged to its owner',async()=>{
+ const changes=[];let release;
+ const c=createHistoryController({request:async(op,p)=>op==='page'?page(p.query||'one'):op==='profile'?{}:op==='detail'?new Promise(resolve=>release=resolve):{timeline:{frames:[],events:[]}},onChange:change=>changes.push(change)});
+ const owner=await c.open({query:'one'}),pending=c.detail(1,'summary');await c.open({query:'two'});release({game:page('one').games[0]});await pending;
+ assert.deepEqual(changes.at(-1),{type:'detail',tabId:owner.id,id:1,analysisChanged:true});assert.equal(c.current().page.player.name,'two');
+});
 test('a failed timeline flight settles waiting clicks without an automatic retry loop',{timeout:1000},async()=>{
  let release,calls=0;const c=createHistoryController({request:async(op)=>op==='profile'?{}:op==='page'?page('one'):op==='detail'?{game:page('one').games[0]}:(calls++,new Promise((_,reject)=>release=reject))});
  await c.open();const a=c.detail(1,'timeline');await new Promise(resolve=>setImmediate(resolve));const b=c.detail(1,'events');release(Error('offline'));await Promise.all([a,b]);assert.equal(calls,1);assert.match(c.current().details[1].error,/offline/);
@@ -97,4 +110,36 @@ test('postgame review selects and refreshes own history before opening the exact
 
 test('a not-yet-synchronized settlement shows a useful own-history status without bypassing the loaded-game boundary',async()=>{
  let detailReads=0;const c=createHistoryController({request:async(op)=>{if(op==='profile')return {};if(op==='detail'){detailReads++;throw Error('Must not read');}return page('self',1);}});await c.openOwnGame(99);assert.equal(c.current().page.player.name,'self');assert.match(c.current().error,/尚未同步/);assert.equal(detailReads,0);
+});
+test('opening a card prefetches its timeline once, one card at a time, so timeline tabs need no second read',async()=>{
+ const calls=[],releases=[],two={...page('one'),games:[{...page('one').games[0]},{...page('one',2).games[0]}]};
+ const c=createHistoryController({request:async(op,p)=>{calls.push(op+(p?.id?':'+p.id:''));if(op==='page')return two;if(op==='profile')return {};if(op==='detail')return {game:two.games.find(g=>g.id===p.id)};return new Promise(resolve=>releases.push(resolve));}});
+ await c.open();await c.detail(1,'toggle');await c.detail(2,'toggle');
+ assert.deepEqual(calls.filter(call=>call.startsWith('timeline')),['timeline:1'],'Only one prefetch holds a request slot');
+ const events=c.detail(1,'events');releases[0]({timeline:{frames:[],events:[]}});await events;
+ assert.ok(c.current().details[1].timeline);assert.equal(calls.filter(call=>call==='timeline:1').length,1);
+});
+test('a failed timeline prefetch stays silent and the timeline tab reads it again',async()=>{
+ let fail=true;const calls=[];
+ const c=createHistoryController({request:async(op,p)=>{calls.push(op);if(op==='page')return page('one');if(op==='profile')return {};if(op==='detail')return {game:page('one').games[0]};if(fail){fail=false;throw Error('offline');}return {timeline:{frames:[],events:[]}};}});
+ await c.open();await c.detail(1,'toggle');await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(c.current().details[1].error,'');
+ await c.detail(1,'events');assert.ok(c.current().details[1].timeline);assert.equal(calls.filter(op=>op==='timeline').length,2);
+});
+test('a timeline tab opened during a prefetch shows loading until the prefetched timeline arrives',async()=>{
+ let release;const views=[];
+ const c=createHistoryController({request:async op=>op==='page'?page('one'):op==='profile'?{}:op==='detail'?{game:page('one').games[0]}:new Promise(resolve=>release=resolve),onChange:()=>{const d=c.current()?.details[1];if(d)views.push({section:d.section,loading:d.loading,timeline:!!d.timeline});}});
+ await c.open();await c.detail(1,'toggle');const events=c.detail(1,'events');
+ assert.deepEqual(views.at(-1),{section:'events',loading:true,timeline:false});
+ release({timeline:{frames:[],events:[]}});await events;
+ assert.deepEqual(views.at(-1),{section:'events',loading:false,timeline:true});
+});
+
+test('failed prefetch waiting in another player tab never retries with that player handle',async()=>{
+ let rejectTimeline;const reads=[];
+ const c=createHistoryController({request:async(op,p)=>{reads.push({op,...p});if(op==='page')return page(p.query||'one',p.query?2:1);if(op==='profile')return {};if(op==='detail')return {game:page('one').games[0]};return new Promise((_,reject)=>rejectTimeline=reject);}});
+ const first=await c.open();await c.detail(1,'toggle');const waiting=c.detail(1,'events');
+ const second=await c.open({query:'two'});rejectTimeline(Error('backend unavailable'));await waiting;
+ assert.equal(c.current(),second);assert.deepEqual(second.details,{});assert.equal(first.details[1].loading,false);
+ assert.equal(reads.some(r=>['detail','timeline'].includes(r.op)&&r.handle==='two'),false);
 });

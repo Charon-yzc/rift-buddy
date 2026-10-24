@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {normalizeAkariMatch,analyzeAkariHistory,analyzeAkariTeam,inferHistoricalGroups,findOutliersByIqr} from '../src/core/akari/bridge.mjs';
+import {normalizeAkariMatch,compactAkariTimeline,analyzeAkariHistory,analyzeAkariTeam,inferHistoricalGroups,findOutliersByIqr} from '../src/core/akari/bridge.mjs';
 import {analyzeGames,analyzePlayers} from '../src/core/akari/engine.mjs';
 import {normalizeTimeline} from '../src/core/match-history/model.mjs';
 
@@ -107,6 +107,16 @@ test('timeline early deaths and exact original jungle aggregates operate on norm
   assert.deepEqual(actual.jungle,expected.jungle);assert.deepEqual(actual.map[1].details,expected.map[1].details);
   assert.equal(actual.jungle.objectives.avgDragons,1);assert.equal(actual.jungle.earlyGank.level3GankCount,1);
   assert.equal(actual.availability.csSplit,false);
+});
+
+test('a compact timeline yields the identical analysis while holding only the fields it reads',()=>{
+  const events=[{type:'CHAMPION_KILL',timestamp:170000,killerId:7,victimId:1,assistingParticipantIds:[8],position:{x:3900,y:11000}},{type:'ELITE_MONSTER_KILL',timestamp:300000,killerId:2,killerTeamId:100,assistingParticipantIds:[],monsterType:'DRAGON'},...Array.from({length:40},(_,i)=>({type:'ITEM_PURCHASED',timestamp:1000+i,participantId:1,itemId:1001})),{type:'WARD_PLACED',timestamp:5000,creatorId:2,wardType:'YELLOW_TRINKET'}];
+  const timeline=normalizeTimeline(rawTimeline(events),'sgp'),compact=compactAkariTimeline(timeline);
+  assert.equal(compact.events.length,2);assert.equal(compact.eventCount,timeline.events.length);
+  assert.ok(JSON.stringify(compact).length<JSON.stringify(timeline).length);
+  for(const target of [1,2,8])assert.deepEqual(analyzeAkariHistory([normalized(rawGame(),target)],{timelines:{1:compact}}),analyzeAkariHistory([normalized(rawGame(),target)],{timelines:{1:timeline}}),'player '+target);
+  assert.deepEqual(compactAkariTimeline(compact),compact);
+  const unknownEvents={...timeline,events:undefined};assert.deepEqual(analyzeAkariHistory([normalized(rawGame())],{timelines:{1:compactAkariTimeline(unknownEvents)}}),analyzeAkariHistory([normalized(rawGame())],{timelines:{1:unknownEvents}}));
 });
 
 test('objective ownership uses roster team IDs rather than participant-ID ranges; unknown owners remain unavailable',()=>{
