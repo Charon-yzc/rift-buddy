@@ -43,5 +43,5 @@ test('Udyr partial Q source never fabricates the unnamed boots, EH or perpetual 
 
 test('publication can require the client containing new bounded descriptor guards',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'current-community-')),pair=generateKeyPairSync('ed25519'),key=path.join(root,'key.pem');await fs.writeFile(key,pair.privateKey.export({type:'pkcs8',format:'pem'}));
- const manifest=await publishCommunityData({publicRoot:path.join(root,'public'),keyFile:key,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:routes,minimumApp:'0.59.32'});assert.equal(manifest.minimumApp,'0.59.32');assert.equal(manifest.version,catalog.version);
+ const manifest=await publishCommunityData({publicRoot:path.join(root,'public'),keyFile:key,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:routes,minimumApp:'0.59.33'});assert.equal(manifest.minimumApp,'0.59.33');assert.equal(manifest.version,catalog.version);
 });

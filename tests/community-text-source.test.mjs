@@ -39,11 +39,11 @@ test('new text and video routes are scoped to reviewed current effects, kit and 
 
 test('signed text snapshots require a compatible client while legacy video-only feeds retain their prior floor',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'community-text-')),pair=generateKeyPairSync('ed25519'),keyFile=path.join(root,'key.pem');await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}));
- const textOnlyFormat=structuredClone(routes);textOnlyFormat.routes=textOnlyFormat.routes.filter(r=>r.gear.every(g=>g.length===3)&&!r.communitySource.url.startsWith('https://deeparam.com/'));
+ const textOnlyFormat=structuredClone(routes);textOnlyFormat.routes=textOnlyFormat.routes.filter(r=>r.itemReview===undefined&&r.gear.every(g=>g.length===3)&&!r.communitySource.url.startsWith('https://deeparam.com/'));
  const opts={publicRoot:path.join(root,'public'),keyFile,keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},keyId:'isolated',game,catalog,hexRoutes:textOnlyFormat};
  const first=await publishCommunityData(opts);assert.equal(first.minimumApp,'0.59.29');const pointer=await fs.readFile(path.join(opts.publicRoot,'community/v1/latest.json'));
  await assert.rejects(publishCommunityData({...opts,minimumApp:'0.59.28'}),/需要支持/);assert.deepEqual(await fs.readFile(path.join(opts.publicRoot,'community/v1/latest.json')),pointer);
- const legacy=structuredClone(routes);legacy.routes=legacy.routes.filter(r=>r.communitySource.medium!=='text');assert.equal((await publishCommunityData({...opts,hexRoutes:legacy,publicRoot:path.join(root,'legacy')})).minimumApp,'0.59.28');
+ const legacy=structuredClone(routes);legacy.routes=legacy.routes.filter(r=>r.itemReview===undefined&&r.communitySource.medium!=='text');assert(legacy.routes.length);assert.equal((await publishCommunityData({...opts,hexRoutes:legacy,publicRoot:path.join(root,'legacy')})).minimumApp,'0.59.28');
 });
 
 test('actual external-link handler opens current creator videos without authorizing arbitrary Bilibili URLs',async()=>{

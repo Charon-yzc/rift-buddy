@@ -35,6 +35,6 @@ test('actual external-link handler authorizes only the active dated editorial re
  data.patch='16.22';await assert.rejects(handlers.get('open-link')(opened[0]),/不支持的链接/);
 });
 test('new dated source format cannot be published for clients with the old text URL contract',async t=>{
- const root=await fs.mkdtemp(path.join(os.tmpdir(),'kitchen-source-format-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const pair=generateKeyPairSync('ed25519'),keyFile=path.join(root,'key.pem');await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}));const options={publicRoot:path.join(root,'public'),keyFile,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:routes};
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'kitchen-source-format-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const pair=generateKeyPairSync('ed25519'),keyFile=path.join(root,'key.pem');await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}));const legacy=structuredClone(routes);legacy.routes=legacy.routes.filter(r=>r.itemReview===undefined);const options={publicRoot:path.join(root,'public'),keyFile,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:legacy};
  for(const minimumApp of ['0.59.29','0.59.30','0.59.31'])await assert.rejects(publishCommunityData({...options,minimumApp}),/需要支持所用格式/);await assert.rejects(fs.access(options.publicRoot));assert.equal((await publishCommunityData(options)).minimumApp,'0.59.32');
 });

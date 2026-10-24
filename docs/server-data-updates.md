@@ -138,12 +138,14 @@ node --test tests/server-data-fetch.test.mjs tests/server-data-store.test.mjs te
 维护时先核验实例、冻结并审查源码及资料，在审核过的独立目录中通过同一把系统锁执行：
 
 ```sh
-sudo -u riftdata /usr/bin/flock -n /var/lib/rift-buddy-data/collect.lock /opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node scripts/publish-community-data.mjs --public-root /srv/rift-buddy-data --key /var/lib/rift-buddy-data/signing/ed25519.pem --minimum-app 0.59.32
+sudo -u riftdata /usr/bin/flock -n /var/lib/rift-buddy-data/collect.lock /opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node scripts/publish-community-data.mjs --public-root /srv/rift-buddy-data --key /var/lib/rift-buddy-data/signing/ed25519.pem --minimum-app 0.59.33
 ```
 
 用户和工作目录以生效 unit 为准，不创建新采集计划。最低客户端版本必须覆盖本批新增的机制守卫：2026.10.25.3 使用 0.59.30，不能仅按文字来源格式沿用 0.59.29；2026.10.25.4 的装备组包含独立强化依赖，需使用 0.59.31；2026.10.25.5 支持 DeepARAM 按日期定位的编辑图文，需使用 0.59.32，发布器会拒绝更低下限。该来源只允许精确方案路径和日期片段，日期须与来源发表日一致，不开放该站任意链接。必须检查发布退出码、HTTPS清单签名、资产双哈希、最低客户端版本、当前补丁及打包资料一致；失败保留旧清单。源码或服务器资料更新不等于已发布安装包。
 
 当前源码已将此独立快照接入现有“自动更新游戏资料”和手动“检查更新”，沿用原检查周期，不新增定时器或采集计划。客户端只访问固定公开 HTTPS 地址，校验原固定公钥、压缩前后哈希、补丁、最低应用版本、内置版本下限和单调序列。只下载变化的内容；仅签名发布时间变化时更新缓存元数据，不替换推荐引用。单个快照缓存上限1.5 MB，保留已接受与待启用两份；缓存不含个人组合或战绩。
+
+从0.59.33开始，单条社区路线可带`itemReview`：schema1、算法`hex-item-semantic-v1`、当前补丁、实际复核日及该路线全部装备的效果指纹。只批准这条路线，不更新内置路线或其他作者路线。指纹包含装备正文、详细说明和海克斯专属效果；效果变化时撤回相关装备组，物品不可购买或地图不符时仍撤回。采集文件整体哈希或抓取时间变化不等于该装备机制变化，同补丁后续维护保留原复核日。发布器检查当前效果匹配并强制最低0.59.33；旧资料继续使用原客户端下限。不得由采集器批量生成“已复核”指纹，必须人工核对来源、装备归属及解释。
 
 选人、游戏和短暂断线期间只暂存候选，确认回到大厅或结算后才完成机制校验与整体启用；失败继续使用有效资料。已启用缓存可离线恢复，待启用缓存重启后仍等确认空闲。手动安装的组合库和个人条目优先；个人保存和资料换代通过写入门禁及语义修订串行，保存个人组合时同时保留其引用的公共配置与符文快照，离线启动或官方撤回后仍可恢复，原审查版本不续期；若同名配置改变了适用英雄/分路，保留原库，修正个人引用后可离线重核已暂存内容。海克斯路线仍须通过当前英雄、强化和装备机制守卫，签名不等于已复核新机制。
 

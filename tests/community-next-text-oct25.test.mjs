@@ -28,7 +28,7 @@ test('signed community gear dependencies stay bounded and within the authored au
 });
 test('a dependency-bearing snapshot defaults to the supporting client and rejects earlier explicit floors',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'community-gear-format-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const pair=generateKeyPairSync('ed25519'),keyFile=path.join(root,'key.pem');await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}));
- const dependencyRoutes=structuredClone(routes);dependencyRoutes.routes=dependencyRoutes.routes.filter(r=>!r.communitySource.url.startsWith('https://deeparam.com/'));
+ const dependencyRoutes=structuredClone(routes);dependencyRoutes.routes=dependencyRoutes.routes.filter(r=>r.itemReview===undefined&&!r.communitySource.url.startsWith('https://deeparam.com/'));
  const options={publicRoot:path.join(root,'public'),keyFile,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:dependencyRoutes};
  for(const minimumApp of ['0.59.28','0.59.29','0.59.30'])await assert.rejects(publishCommunityData({...options,minimumApp}),/需要支持所用格式/);
  await assert.rejects(fs.access(options.publicRoot));const manifest=await publishCommunityData(options);assert.equal(manifest.minimumApp,'0.59.31');

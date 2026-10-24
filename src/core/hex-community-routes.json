@@ -25,11 +25,25 @@
       "caution": "四个强化是录像中同局观察，不代表必定能同时获得；被硬控仍会失去走位空间，灼烧伤害不保证永久刷新或无限治疗。",
       "gear": [
         [
-          "持续伤害",
+          "持续技能伤害",
           [
             6653
           ],
-          "项目按当前机制比较兰德里；不是录像已验证的固定购买顺序。"
+          "伤害技能灼烧3秒，每秒2%最大生命值魔伤；对英雄交战每秒增伤2%，最多6%。"
+        ],
+        [
+          "法力与生命成长",
+          [
+            6657
+          ],
+          "每40秒+10生命、30法力、3法强，最多10层；满层升1级。"
+        ],
+        [
+          "物理压力与机动",
+          [
+            3742
+          ],
+          "走位至多积攒20移速，下一次普攻消耗；所受减速效果降低15%。"
         ],
         [
           "持续近身交战",
@@ -54,10 +68,27 @@
         "observedMode": "海克斯大乱斗4.0：开局小蜜蜂乐队画面",
         "evidenceSeconds": [
           5,
+          290,
+          822,
+          824,
+          826,
           900,
           1300
         ],
-        "adaptation": "录像四强化思路；装备条件及操作边界由项目按16.21改编。未核实作者完整符文、技能节点和购买顺序，不称为完整作者配置或热门排行。"
+        "adaptation": "录像四强化思路；13:42—13:46本人装备栏逐件悬停确认时光之杖、亡者的板甲和兰德里的折磨。裂隙与中娅为项目条件比较；不把Tab里归属未证的黄昏与黎明计作作者装备。未核实录像补丁号、作者完整六件、符文、技能节点及购买顺序，按16.21当前效果改编，不称为热门排行。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3157": "742632d905f9bd60",
+          "3742": "fdd6c1940397b853",
+          "4633": "bc6d42df1c8c7570",
+          "6653": "9fb9534b546d1626",
+          "6657": "2f68b1fc2810ec85"
+        }
       }
     },
     {
@@ -244,18 +275,32 @@
       ],
       "gear": [
         [
+          "录像持有：持续近战",
+          [
+            6333
+          ],
+          "近战30%承伤延后3秒；满足3秒内伤害参与的英雄阵亡，清除剩余流血并在2秒内共回复100%额外攻击力生命值。"
+        ],
+        [
+          "录像持有：普攻与治疗压力",
+          [
+            3075
+          ],
+          "75护甲、150生命；被攻击命中时，对英雄施加3秒40%重伤。"
+        ],
+        [
+          "录像持有：攻击压力",
+          [
+            3047
+          ],
+          "25护甲、45移速；即将到来的攻击伤害降低10%。"
+        ],
+        [
           "技能接普攻",
           [
             3078
           ],
           "项目条件配套：三相服务施法后普攻；咒刃与强化各自结算，不因多次施法就承诺同时叠加。"
-        ],
-        [
-          "物理交战压力",
-          [
-            6333
-          ],
-          "项目比较死舞的护甲和承伤延后；仍会承受延后伤害，需要实际续战或参与击杀。"
         ],
         [
           "魔法压力与恢复",
@@ -279,10 +324,11 @@
           75,
           90,
           120,
+          145,
           150,
           155
         ],
-        "adaptation": "作者当日明确列出装甲冲击、低音轰鸣、循环往复，并展示前两项实际卡面；装备保持项目条件配套，不把早期多件守护者装备画面当作完整六件推荐。未取得作者完整符文、逐级加点或购买顺序。"
+        "adaptation": "作者当日列出装甲冲击、低音轰鸣、循环往复。2:25本人HUD可辨荆棘之甲、死亡之舞、铁板靴，另三格为锁子甲等护甲组件；这是该时点持有，不是购买顺序或完整六件毕业装。三相与振奋仍是项目条件比较。未取得作者完整符文、逐级加点或购买顺序，具体录像补丁未标注；按16.21当前效果复核。"
       },
       "patch": "16.21",
       "optional": [
@@ -293,7 +339,20 @@
         "E接近后穿插实际普攻，Q强化攻击寻找命中；强化只服务施法后的下一次普通攻击，不是技能每段自动爆发。",
         "被动需要实际交战维持；W兼顾脱离，不把分身自动攻击视为本体必然重复触发。"
       ],
-      "caution": "伤害以额外护甲和实际触发为条件；魔抗不是护甲。先看敌方伤害类型与攻击空间，不为增伤盲目全堆护甲，也不保证连招必胜。"
+      "caution": "伤害以额外护甲和实际触发为条件；魔抗不是护甲。先看敌方伤害类型与攻击空间，不为增伤盲目全堆护甲，也不保证连招必胜。",
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3047": "0b6eb528fea45bfb",
+          "3065": "522ddd38f23d9014",
+          "3075": "77e99cfe1e808733",
+          "3078": "9b97f8ba78b6fba5",
+          "6333": "95058514bbf67ac0"
+        }
+      }
     },
     {
       "hero": "Riven",
@@ -1556,6 +1615,112 @@
         ],
         "adaptation": "已通过正常浏览器实际展开编辑图文；父页标26.21，单篇未写补丁号。按正式16.21删减未核技能绑定并核对E、W和装备；不是完整四强化组合、无缝控制或作者实战证明，购买先后与加点未知。"
       }
+    },
+    {
+      "hero": "Brand",
+      "patch": "16.21",
+      "augment": 3081,
+      "optional": [],
+      "title": "命运虚空首件",
+      "summary": "首件虚空绑定命运之武器，以实际伤害参与积累。",
+      "play": [
+        "第一件传说装备做虚空之杖；命运之武器绑定后无法售出，不能先完成其他传说再换绑。",
+        "E扩散或Q、W实际命中英雄后，灼烧可维持近期伤害；仍须该英雄在本人伤害后3秒内阵亡才提升武器。"
+      ],
+      "basicPlay": [
+        "回归基本功下不使用R；以Q、W、E实际命中英雄，维持灼烧与伤害参与窗口。",
+        "灼烧每跳、小兵死亡和只打兵线都不直接升级武器；先看英雄能否实际收掉。"
+      ],
+      "caution": "首件穿透会让出其他成装的先手收益；作者单局90%法穿不是固定收益，不保证真伤或每跳升级。",
+      "coreItems": [
+        3135
+      ],
+      "gear": [
+        [
+          "命运首件",
+          [
+            3135
+          ],
+          "95法强、40%法穿；须作为第一件传说完成绑定，武器无法售出。",
+          [
+            3081
+          ]
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "More-Cut-7667",
+        "url": "https://www.reddit.com/r/arammayhem/comments/1xeiqku/comment/19rll72z5rsm8/",
+        "publishedAt": "2026-10-24T20:33:11.000Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "作者明确Brand与Void Staff首件；父评论讨论Weapon of Destiny。",
+          "作者描述最终90%法穿只作单局面板陈述，不继承为计算值。"
+        ],
+        "adaptation": "作者仅提供火男与首件虚空方向；项目按16.21核对3秒伤害参与、第一件传说与不可售出条件。未证明录像具体补丁、其余装备、符文、购买顺序及加点；不合并父评论尼菈或主帖盲僧的配置，不把90%当固定收益。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3135": "40317bddc5d92b12"
+        }
+      }
+    },
+    {
+      "hero": "Nilah",
+      "patch": "16.21",
+      "augment": 3081,
+      "optional": [],
+      "title": "命运多米尼克首件",
+      "summary": "Q与普攻实际参与伤害，首件多米尼克绑定成长。",
+      "play": [
+        "第一件传说装备做多米尼克；命运之武器绑定后无法售出，不能先做其他传说再换绑。",
+        "用Q与后续普攻实际伤到英雄；目标须在本人造成伤害后3秒内阵亡，才提升绑定装备。"
+      ],
+      "basicPlay": [
+        "回归基本功下不使用R；Q命中后找安全的普攻窗口，W应对攻击与魔法伤害。",
+        "只打兵或建筑不会给命运之武器提供英雄伤害参与；W的闪避也不直接造成伤害。"
+      ],
+      "caution": "Q被动的护穿不能与装备百分比直接相加；作者约75%是单局面板，不是固定收益。W不是全伤免疫。",
+      "coreItems": [
+        3036
+      ],
+      "gear": [
+        [
+          "命运首件",
+          [
+            3036
+          ],
+          "35攻击力、35%护穿、25%暴击；须作为第一件传说绑定，武器无法售出。",
+          [
+            3081
+          ]
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "Sztoku",
+        "url": "https://www.reddit.com/r/arammayhem/comments/1xeiqku/comment/19rll103g2sv6/",
+        "publishedAt": "2026-10-24T20:29:24.000Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "作者明确Nilah与LDR首件，位于Weapon of Destiny讨论。",
+          "约75%穿透是作者单局最终面板；未给其余装备或加点。"
+        ],
+        "adaptation": "作者仅提供尼菈与首件多米尼克方向；项目按16.21核对Q/实际普攻参与、3秒伤害窗口及武器不可售出。未证明录像具体补丁、其余装备、符文或加点；不加入其他评论者的装备，不把约75%或Q护穿直接相加当固定收益。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3036": "2758e8ff995f599d"
+        }
+      }
     }
   ],
   "championReview": {
@@ -1588,7 +1753,9 @@
       "Karthus": "c1de84b19ac00ffe",
       "Blitzcrank": "27f6b75f8d6eeb18",
       "Zoe": "d218618e341a560e",
-      "Quinn": "96eaff1d877b5c1a"
+      "Quinn": "96eaff1d877b5c1a",
+      "Brand": "dfe0f7f6ef8e7e6e",
+      "Nilah": "30e5ef1b4f79390e"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -2236,6 +2403,54 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "646da0026bf9e301"
+          }
+        }
+      },
+      "Brand": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "dfe0f7f6ef8e7e6e",
+        "observedAt": "2026-10-23T02:03:51.453Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Brand",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/brand/brand.bin.json",
+            "sha256": "6fa48fcc58833650750981e3f64657fdd6ba8392741ee11947fd48d6a7da96d4"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "12112af12e321441"
+          }
+        }
+      },
+      "Nilah": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "30e5ef1b4f79390e",
+        "observedAt": "2026-10-23T02:03:51.545Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Nilah",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+            "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "2f18ee1a98588cd1"
           }
         }
       }
