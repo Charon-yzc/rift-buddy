@@ -55,15 +55,15 @@ test('same-core authored routes retain precedence and do not duplicate the condi
  assert.equal(model.hexMicroRoutes[0].id,'Camille-1996');
 });
 
-test('validated independent micro routes also take precedence, while a withdrawn route permits conditional fallback',async()=>{
+test('old community micro recipes cannot mask a current independently reviewed item synergy',async()=>{
  const current=JSON.parse(await fs.readFile(new URL('./fixtures/hex-routes-16.21.json',import.meta.url))).game;
  const updated=structuredClone({...data,champions:data.champions.map(c=>({...c,...current.champions.find(row=>row.id===c.id)}))});
  // Isolated legal prepared plan; no statistical sample or source claim.
  updated.hexBuilds.Yasuo={...updated.hexBuilds.Camille,champion:'Yasuo',sourceUrl:'https://op.gg/lol/modes/aram-mayhem/yasuo/build?region=global&tier=all&patch=16.21',core:[{items:[3078,3115,3031],samples:0,pickRate:null,winRate:null}],augmentIds:[1058]};
  const state=selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex',ownedAugmentIds:[1058]});
- const normal=createGuideModel(updated,state);assert(normal.route.some(i=>String(i.id)==='3078'));assert(normal.hexMicroRoutes.some(r=>r.id==='yasuo-attack-cycle'));assert(!normal.hexMicroRoutes.some(r=>r.id==='Yasuo-item-1058'));
- updated.items[3031].description+=' changed';const withdrawn=createGuideModel(updated,state);
- assert(!withdrawn.hexMicroRoutes.some(r=>r.id==='yasuo-attack-cycle'));assert(withdrawn.hexMicroRoutes.some(r=>r.id==='Yasuo-item-1058'));
+ const normal=createGuideModel(updated,state);assert(normal.route.some(i=>String(i.id)==='3078'));assert(!normal.hexMicroRoutes.some(r=>r.id==='yasuo-attack-cycle'));assert(normal.hexMicroRoutes.some(r=>r.id==='Yasuo-item-1058'));
+ updated.augments.find(a=>a.id===1058).description+=' changed';const withdrawn=createGuideModel(updated,state);
+ assert(!withdrawn.hexMicroRoutes.some(r=>r.id==='yasuo-attack-cycle'||r.id==='Yasuo-item-1058'));
 });
 
 test('equipment upgrades keep per-target clocks, deferred damage and replacement stats precise',()=>{

@@ -31,6 +31,9 @@ const rules={
  1214:['ARAM_SpinToWin',/旋转类技能.*技能急速.*额外伤害/s],1311:['ARAM_Overflow',/法力消耗翻倍.*最大法力值/s],
  1305:['ARAM_LegDay',/获得50移动速度和50%减速抗性/],2132:['WarlockJuicebox',/10.*0\.035.*法术强度.*全能吸血/],
  1356:['CriticalMissile',/暴击.*飞弹.*暴击几率/s],
+ 3078:['TheBoomAndTheBass',/施放技能后.*下一次攻击.*额外魔法伤害.*移动速度/s],
+ 3036:['DoubleTime',/2种不同技能.*敌方英雄.*魔法伤害.*最大法力值/s],
+ 3049:['ArmoredImpact',/施放技能后.*下一次普通攻击.*额外护甲.*额外物理伤害/s],
 };
 export const hexMechanicIds=Object.keys(rules).map(Number);
 export function reviewedHexMechanic(augment,patch){

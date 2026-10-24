@@ -88,22 +88,16 @@ test('micro pairing withdraws changed prerequisites as whole groups and never up
  assert.equal(micro.kind,'mechanism');assert(!micro.items.some(i=>i.id===3115||i.id===3089));assert(!micro.items.some(i=>i.brief.includes('纳什')));assert.match(micro.augments[0].brief,/部分装备待核对/);
 });
 
-test('owned cores outrank offered routes and actual choices never create three unoffered recipes',()=>{
+test('current source route is prioritized only for its actual core and old recipes never fill missing choices',()=>{
  const model=selection=>createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex',...selection}));
- assert.equal(model({ownedAugmentIds:[1118]}).hexMicroRoutes[0].id,'yasuo-crit-sustain');
- assert.deepEqual(model({compareIds:[1315]}).hexMicroRoutes.map(r=>r.id),['yasuo-dash-shield']);
- const both=model({ownedAugmentIds:[1058],compareIds:[1315]});assert.deepEqual(both.hexMicroRoutes.map(r=>r.id),['yasuo-attack-cycle','yasuo-dash-shield']);
- assert.equal(both.hexMicroRoutes[0].augments.find(a=>a.id===1058).owned,true);
- assert.deepEqual(model({ownedAugmentIds:[]}).hexMicroRoutes.map(r=>r.id),hexMicroRoutes({data:bundled,hero:'Yasuo'}).map(r=>r.id));
- assert.equal(model({compareIds:[1002]}).hexMicroRoutes[0].kind,'reference');
+ for(const selection of [{},{ownedAugmentIds:[3078]},{compareIds:[3078]}])assert.deepEqual(model(selection).hexMicroRoutes.map(r=>r.id),['Yasuo-3078']);
+ const selected=model({ownedAugmentIds:[3078]});assert.equal(selected.hexMicroRoutes[0].augments.find(a=>a.id===3078).owned,true);
+ for(const selection of [{compareIds:[1315]},{ownedAugmentIds:[1058],compareIds:[1315]}])assert(model(selection).hexMicroRoutes.every(r=>!r.source?.includes('arammayhem.com')));
 });
-test('actual paired routes retain provenance and independent cores; no popularity or unsupported infinite effects',()=>{
- const routes=hexMicroRoutes({data:bundled,hero:'Yasuo'});assert.equal(routes.length,3);assert.equal(new Set(routes.map(r=>r.augments.find(a=>a.core).id)).size,3);
- for(const route of routes){assert.ok(route.augments.length>4);assert.ok(route.items.some(i=>i.core));assert.match(route.source,/^https:\/\/arammayhem.com\/zh-cn\/combo\//);assert.match(route.basis,/非热度/);assert.ok(route.sourceFields.adapted);assert.ok(route.augments.every(a=>a.brief.length<=65));assert.ok(route.items.every(i=>bundled.items[i.id].maps['12']));}
- assert.deepEqual(createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes.map(({card,...route})=>route),routes.map(route=>({...route,augments:route.augments.map(a=>({...a,offered:false}))})));
- assert.deepEqual(hexMicroRoutes({data:bundled,hero:'Yasuo',mode:'rift'}),[]);assert.deepEqual(hexMicroRoutes({data:{...bundled,patch:'16.22'},hero:'Yasuo'}),[]);
- for(const mutate of [d=>d.champions.find(c=>c.id==='Yasuo').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===1058).key='Changed',d=>d.items[123430].maps['12']=false]){
-  const changed=structuredClone(bundled);mutate(changed);const next=hexMicroRoutes({data:changed,hero:'Yasuo'});assert.ok(next.length<3);
- }
- const changed=structuredClone(bundled);changed.augments.find(a=>a.id===1022).description+=' changed';assert.ok(hexMicroRoutes({data:changed,hero:'Yasuo'}).every(r=>r.augments.every(a=>a.id!==1022)));
+
+test('previous-patch community recipes stay out of current recommendations even when their mechanics still match',()=>{
+ assert.deepEqual(hexMicroRoutes({data:bundled,hero:'Yasuo'}),[]);
+ const shown=createGuideModel(bundled,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes;
+ assert.equal(shown.length,1);assert.equal(shown[0].communitySource.author,'一个老九');assert.equal(shown[0].card.sourceUrl,'https://www.bilibili.com/video/BV1HGHP6TEhy/');assert.equal(shown[0].patch,bundled.patch);
+ for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id==='Yasuo').mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===3078).key='Changed',d=>d.items[123430].maps['12']=false]){const changed=structuredClone(bundled);mutate(changed);const routes=createGuideModel(changed,selectGuide(null,{id:'Yasuo',role:'mid',mode:'hex'})).hexMicroRoutes;assert(routes.every(r=>r.id!=='Yasuo-3078'&&!r.source?.includes('arammayhem.com')));}
 });

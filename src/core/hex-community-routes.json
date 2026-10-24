@@ -59,13 +59,405 @@
         ],
         "adaptation": "录像四强化思路；装备条件及操作边界由项目按16.21改编。未核实作者完整符文、技能节点和购买顺序，不称为完整作者配置或热门排行。"
       }
+    },
+    {
+      "hero": "Yasuo",
+      "patch": "16.21",
+      "augment": 3078,
+      "optional": [],
+      "title": "低音衔接普攻",
+      "summary": "施法后穿插普攻，先成型盾书与死舞。",
+      "play": [
+        "E、Q之间穿插实际普攻，利用强化攻击后的移速调整位置；不把强化当常驻攻速或Q冷却重置。",
+        "录像先做毁坏仪式、死亡之舞；后续仅比较下方已通过当前机制核验的条件装备，不把完整六件固定套用于所有对局。"
+      ],
+      "basicPlay": [
+        "回归基本功禁用R，靠Q/E与普攻拉扯；不等待大招触发增益。"
+      ],
+      "caution": "作者录像补丁未标注，当前16.21机制重核；单局高击杀不是胜率或热门度。未取得该强化时不套用放弃攻速路线；Q的攻速收益仍存在，强化不保证零攻速达到最短冷却。",
+      "coreItems": [
+        123430,
+        6333
+      ],
+      "gear": [
+        [
+          "取得低音且能安全近身",
+          [
+            123430,
+            6333
+          ],
+          "作者开场两件顺序；毁坏仪式提供技能护盾概率，死亡之舞不是无条件免伤。"
+        ],
+        [
+          "继续普攻输出且需要续航",
+          [
+            3031,
+            3072
+          ],
+          "录像后续方向；需要实际攻击、暴击与回复空间，不能一套固定压过所有对局。"
+        ],
+        [
+          "需要回复或承受魔法伤害",
+          [
+            3008,
+            3065
+          ],
+          "按威胁比较暴食胫甲与振奋，装备格有限，后续购买不是同时无条件添加。"
+        ]
+      ],
+      "communitySource": {
+        "author": "一个老九",
+        "url": "https://www.bilibili.com/video/BV1HGHP6TEhy/",
+        "publishedAt": "2026-10-24T09:30:00.000Z",
+        "sourcePatch": null,
+        "observedMode": "海克斯大乱斗；26.21新强化低音轰鸣",
+        "evidenceSeconds": [
+          0,
+          30,
+          60,
+          120,
+          180,
+          240,
+          270
+        ],
+        "adaptation": "作者当日录像开场配置与实战HUD；项目按16.21改编触发边界和条件装备。未核实作者完整符文、逐级加点与录制补丁，不称为完整作者页或热门排行。"
+      }
+    },
+    {
+      "hero": "Ryze",
+      "augment": 3036,
+      "title": "双技能叠法力",
+      "summary": "E、Q连续命中英雄，保留法力成长。",
+      "play": [
+        "E、Q在强化窗口内依次伤害命中同一英雄，叠最大法力；重复Q、只清兵或空放不算。",
+        "利用法力加成与原有技能轮转拉扯，W留给控制窗口；不要为叠层走进敌人集火。"
+      ],
+      "basicPlay": [
+        "用E、Q或W衔接命中同一英雄，靠基础技能与走位继续叠法力；不依赖传送进场。"
+      ],
+      "caution": "需要两种不同技能实际伤害命中同一敌方英雄；重复同一技能、只打小兵或空放不算。增加最大法力不等于立即回复已消耗法力，也不保证无限蓝。",
+      "gear": [
+        [
+          "需要法力与成长",
+          [
+            6657,
+            3003
+          ],
+          "项目条件配套：时光与大天使保留法力方向；按时光及女神泪的实际层数决定购买，不把未叠满收益提前兑现。"
+        ],
+        [
+          "成型后补法强",
+          [
+            3089
+          ],
+          "项目后续比较帽子；先满足法力与生存，不当作无条件首件。"
+        ],
+        [
+          "物理爆发威胁",
+          [
+            3157
+          ],
+          "项目自保选项；凝滞期间不能继续主动命中来叠法力。"
+        ]
+      ],
+      "communitySource": {
+        "author": "海斗的A面",
+        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
+        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "evidenceSeconds": [
+          0,
+          10,
+          20,
+          30,
+          40
+        ],
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+      },
+      "patch": "16.21",
+      "optional": []
+    },
+    {
+      "hero": "Kassadin",
+      "augment": 3036,
+      "title": "近身连招叠法力",
+      "summary": "不同伤害技能衔接，保留撤离与轮转所需法力。",
+      "play": [
+        "Q、E命中同一英雄，或在安全进场时用R伤害衔接另一伤害技能；仅位移但没打中不能触发。",
+        "W需要实际攻击才能回复法力；连续R会提高蓝耗，保留撤离所需的法力和落点。"
+      ],
+      "basicPlay": [
+        "已失去R，用Q、E命中同一英雄；W仍需实际攻击才恢复法力，不照搬R进场路线。"
+      ],
+      "caution": "需要两种不同技能实际伤害命中同一敌方英雄；重复同一技能、只打小兵或空放不算。增加最大法力不等于立即回复已消耗法力，也不保证无限蓝。",
+      "gear": [
+        [
+          "需要法力与成长",
+          [
+            6657,
+            3003
+          ],
+          "项目条件配套：时光与大天使保留法力方向；按时光及女神泪的实际层数决定购买，不把未叠满收益提前兑现。"
+        ],
+        [
+          "成型后补法强",
+          [
+            3089
+          ],
+          "项目后续比较帽子；先满足法力与生存，不当作无条件首件。"
+        ],
+        [
+          "物理爆发威胁",
+          [
+            3157
+          ],
+          "项目自保选项；凝滞期间不能继续主动命中来叠法力。"
+        ]
+      ],
+      "communitySource": {
+        "author": "海斗的A面",
+        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
+        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "evidenceSeconds": [
+          0,
+          10,
+          20,
+          30,
+          40
+        ],
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+      },
+      "patch": "16.21",
+      "optional": []
+    },
+    {
+      "hero": "MonkeyKing",
+      "augment": 3049,
+      "title": "护甲衔接强化攻击",
+      "summary": "技能之间实际普攻，利用自身护甲成长。",
+      "play": [
+        "E接近后穿插实际普攻，Q强化攻击寻找命中；强化只服务施法后的下一次普通攻击，不是技能每段自动爆发。",
+        "被动需要实际交战维持；W兼顾脱离，不把分身自动攻击视为本体必然重复触发。"
+      ],
+      "gear": [
+        [
+          "技能接普攻",
+          [
+            3078
+          ],
+          "项目条件配套：三相服务施法后普攻；咒刃与强化各自结算，不因多次施法就承诺同时叠加。"
+        ],
+        [
+          "物理交战压力",
+          [
+            6333
+          ],
+          "项目比较死舞的护甲和承伤延后；仍会承受延后伤害，需要实际续战或参与击杀。"
+        ],
+        [
+          "魔法压力与恢复",
+          [
+            3065
+          ],
+          "项目比较振奋；魔抗装备不直接增加装甲冲击的额外护甲伤害。"
+        ]
+      ],
+      "communitySource": {
+        "author": "海斗的A面",
+        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
+        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "evidenceSeconds": [
+          90,
+          100,
+          110
+        ],
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+      },
+      "patch": "16.21",
+      "optional": [],
+      "basicPlay": [
+        "E接近后穿插实际普攻，Q强化攻击寻找命中；强化只服务施法后的下一次普通攻击，不是技能每段自动爆发。",
+        "被动需要实际交战维持；W兼顾脱离，不把分身自动攻击视为本体必然重复触发。"
+      ],
+      "caution": "伤害以额外护甲和实际触发为条件；魔抗不是护甲。先看敌方伤害类型与攻击空间，不为增伤盲目全堆护甲，也不保证连招必胜。"
+    },
+    {
+      "hero": "Riven",
+      "augment": 3049,
+      "title": "护甲穿插普攻",
+      "summary": "保留技能与普攻交替，按威胁补护甲。",
+      "play": [
+        "Q、W或E之后穿插实际普攻，继续兑现被动充能；技能本身不代替强化要求的下一次普通攻击。",
+        "E留给位移护盾与撤离，无法接近目标时不为强化额外追击；多次施法不等于攒多次强化攻击。"
+      ],
+      "gear": [
+        [
+          "持续物理输出",
+          [
+            3071
+          ],
+          "项目对护甲目标比较黑切；需要实际物理伤害叠护甲削减，不提供装甲冲击所需的额外护甲。"
+        ],
+        [
+          "物理交战压力",
+          [
+            6333
+          ],
+          "项目比较死舞的护甲与承伤延后；不把延后伤害当免伤。"
+        ],
+        [
+          "需要抗爆发",
+          [
+            3053
+          ],
+          "项目比较血手的生命值与低血护盾；它不直接增加装甲冲击的额外护甲伤害。"
+        ]
+      ],
+      "communitySource": {
+        "author": "海斗的A面",
+        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
+        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "evidenceSeconds": [
+          90,
+          100,
+          110
+        ],
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+      },
+      "patch": "16.21",
+      "optional": [],
+      "basicPlay": [
+        "Q、W或E之后穿插实际普攻，继续兑现被动充能；技能本身不代替强化要求的下一次普通攻击。",
+        "E留给位移护盾与撤离，无法接近目标时不为强化额外追击；多次施法不等于攒多次强化攻击。"
+      ],
+      "caution": "伤害以额外护甲和实际触发为条件；魔抗不是护甲。先看敌方伤害类型与攻击空间，不为增伤盲目全堆护甲，也不保证连招必胜。"
+    },
+    {
+      "hero": "Irelia",
+      "augment": 3049,
+      "title": "突进后护甲普攻",
+      "summary": "Q寻找落点，接实际普攻兑现强化。",
+      "play": [
+        "利用标记或击杀重置Q寻找落点，再接实际普攻；不把Q的每次攻击特效直接当作强化要求的普通攻击。",
+        "E先找控制与标记，W留作承伤窗口；被拉开时保留退路，不为叠被动孤身追击。"
+      ],
+      "gear": [
+        [
+          "能持续普攻",
+          [
+            3153
+          ],
+          "项目条件配套：破败用于实际普攻的攻击特效与续航；它不直接增加装甲冲击所需的额外护甲。"
+        ],
+        [
+          "物理交战压力",
+          [
+            6333
+          ],
+          "项目比较死舞的护甲；仍须处理延后伤害，强化不替代自身承伤能力。"
+        ],
+        [
+          "魔法压力与恢复",
+          [
+            3065
+          ],
+          "项目比较振奋的魔抗与回复收益；不把魔抗折算成强化伤害。"
+        ]
+      ],
+      "communitySource": {
+        "author": "海斗的A面",
+        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
+        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "evidenceSeconds": [
+          90,
+          100,
+          110
+        ],
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+      },
+      "patch": "16.21",
+      "optional": [],
+      "basicPlay": [
+        "利用标记或击杀重置Q寻找落点，再接实际普攻；不把Q的每次攻击特效直接当作强化要求的普通攻击。",
+        "E先找控制与标记，W留作承伤窗口；被拉开时保留退路，不为叠被动孤身追击。"
+      ],
+      "caution": "伤害以额外护甲和实际触发为条件；魔抗不是护甲。先看敌方伤害类型与攻击空间，不为增伤盲目全堆护甲，也不保证连招必胜。"
+    },
+    {
+      "hero": "Briar",
+      "augment": 3049,
+      "title": "血莽护甲攻击",
+      "summary": "近身施法接普攻，E保留结束血莽。",
+      "play": [
+        "W或Q后接实际普攻，按额外护甲触发范围物理伤害；不把每跳流血当作额外触发。",
+        "E可结束血莽并争取承伤恢复窗口；不能控制追击目标时先考虑撤离，不承诺持续回血或无缝控制。"
+      ],
+      "gear": [
+        [
+          "能攻击不同英雄续战",
+          [
+            6610
+          ],
+          "项目条件配套：焚天按每个目标的实际触发条件比较；不是所有普攻都会重复暴击和治疗，也不提供额外护甲。"
+        ],
+        [
+          "物理交战压力",
+          [
+            6333
+          ],
+          "项目比较死舞的护甲与承伤延后；它不能把集中爆发变成无伤。"
+        ],
+        [
+          "魔法压力与恢复",
+          [
+            3065
+          ],
+          "项目比较振奋的魔抗和治疗增益；不把普通生命回复当成贝蕾亚自带的回血来源。"
+        ]
+      ],
+      "communitySource": {
+        "author": "海斗的A面",
+        "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
+        "publishedAt": "2026-10-22T05:39:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "evidenceSeconds": [
+          90,
+          100,
+          110
+        ],
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+      },
+      "patch": "16.21",
+      "optional": [],
+      "basicPlay": [
+        "W近身后实际攻击，Q命中再继续普攻；强化不把每跳流血变成额外触发。",
+        "E可结束血莽并争取承伤恢复窗口；不能控制追击目标时先考虑撤离，不承诺持续回血或无缝控制。"
+      ],
+      "caution": "伤害以额外护甲和实际触发为条件；魔抗不是护甲。先看敌方伤害类型与攻击空间，不为增伤盲目全堆护甲，也不保证连招必胜。"
     }
   ],
   "championReview": {
     "schema": 2,
     "patch": "16.21",
     "champions": {
-      "Lillia": "5abf3f00c1f24aac"
+      "Lillia": "5abf3f00c1f24aac",
+      "Yasuo": "d36ebea001e3d1cb",
+      "Ryze": "b4f669f0eec5ae8a",
+      "Kassadin": "a4049833b3044fcc",
+      "MonkeyKing": "d8e1f17e61bc6c8d",
+      "Riven": "250743f905f1d048",
+      "Irelia": "1a72d78b2846711a",
+      "Briar": "c27bce7ec0937640"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -89,6 +481,174 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "56de693659da9302"
+          }
+        }
+      },
+      "Yasuo": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d36ebea001e3d1cb",
+        "observedAt": "2026-10-23T02:03:51.641Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Yasuo",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+            "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "5c4d9aa5346ca2f7"
+          }
+        }
+      },
+      "Ryze": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "b4f669f0eec5ae8a",
+        "observedAt": "2026-10-23T02:03:51.551Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Ryze",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/ryze/ryze.bin.json",
+            "sha256": "55b188b8ab627a1c9fa8f6c81b3d2d642da6cfe0dd7fc94bd8bcfb505fb35323"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "e7adafbe320c260c"
+          }
+        }
+      },
+      "Kassadin": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "a4049833b3044fcc",
+        "observedAt": "2026-10-23T02:03:51.533Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Kassadin",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/kassadin/kassadin.bin.json",
+            "sha256": "0e1403e5655c55ce0b156d7293ca7a9b67e4d059cc921397736cfb5b47222e82"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "a24da5c05e98cd5a"
+          }
+        }
+      },
+      "MonkeyKing": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d8e1f17e61bc6c8d",
+        "observedAt": "2026-10-23T02:03:51.542Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "MonkeyKing",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/monkeyking/monkeyking.bin.json",
+            "sha256": "d09c7a65a77eb30b36113b707aecc05e71046b4048c22b444b25e90821afb5ed"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "bda828b502e12757"
+          }
+        }
+      },
+      "Riven": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "250743f905f1d048",
+        "observedAt": "2026-10-23T02:03:51.550Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Riven",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/riven/riven.bin.json",
+            "sha256": "df300621f17e5f3fc8da8708ec9eda050a330710655b66def6105633c4645610"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "3769b0a18a5ca181"
+          }
+        }
+      },
+      "Irelia": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "1a72d78b2846711a",
+        "observedAt": "2026-10-23T02:03:51.529Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Irelia",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/irelia/irelia.bin.json",
+            "sha256": "7b55cefdb6738c5eca5e2b6fd076f4eba3d4f0c97ef11a99eed4e1c7102f3f51"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "44842f520e22c165"
+          }
+        }
+      },
+      "Briar": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "c27bce7ec0937640",
+        "observedAt": "2026-10-23T02:03:51.454Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Briar",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/briar/briar.bin.json",
+            "sha256": "fed8d84d514e5621b05992dbc96057c5a43dda2a92e2142bb964871e7fae18ee"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "a56183c54c52c784"
           }
         }
       }

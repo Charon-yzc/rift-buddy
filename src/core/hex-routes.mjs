@@ -59,6 +59,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
  const authored=(baseReviewed?routes:[]).concat(communityReviewed?communityRoutes.routes:[]);
  return authored.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{
+  if(itemReview.communityPolicy==='current-source-only'&&route.community&&!route.communitySource)return [];
   const augment=data.augments.find(a=>a.id===route.augment);
   if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||noUltimate&&hexUltimateRequirement(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
