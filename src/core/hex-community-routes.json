@@ -1084,6 +1084,257 @@
         ],
         "adaptation": "作者只给出三相转护甲的局部经验；未把其他评论者的贾修、砧或强化组合归给作者。原文未标补丁与服务器，按当前16.21独立改编，不继承固定伤害或无冷却说法；冰心、反甲与技能衔接为项目条件补充，未取得作者符文、加点或完整购买顺序。"
       }
+    },
+    {
+      "hero": "Cassiopeia",
+      "patch": "16.21",
+      "augment": 1048,
+      "optional": [],
+      "title": "毒牙技能暴击",
+      "summary": "先施毒再用E输出，保留法力与安全施法空间。",
+      "play": [
+        "Q或W使目标中毒后用E输出；珠光提供技能暴击机会，不代表每段毒伤必定暴击。",
+        "先满足法力与生存需求；E击杀才返还消耗，不能把暴击或每次E命中当作回蓝。"
+      ],
+      "basicPlay": [
+        "失去R后仍以Q/W施毒和E输出，不等待大招控制创造输出窗口。"
+      ],
+      "caution": "不推导暴击同步放大治疗，不承诺持续满层、无限法力或固定收益。",
+      "gear": [
+        [
+          "后期补法强",
+          [
+            3089
+          ],
+          "作者建议中的法强方向；先满足法力、穿透与生存需求再比较帽子，不是必出首件。"
+        ],
+        [
+          "仅第五件条件比较：资源与自保已满足，且其他强化未决定配装",
+          [
+            123430
+          ],
+          "施法维持短时暴击层，护盾按概率触发；不是核心必出，也不保证每次施法获得护盾。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "Ok-Read4007",
+        "url": "https://www.reddit.com/r/arammayhem/comments/1xcdzrs/comment/19rhd2h623e9x/",
+        "publishedAt": "2026-10-22T11:42:27Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "对Cassiopeia、Ryze等持续施法英雄的条件建议",
+          "高法强及后期第五件装备比较"
+        ],
+        "adaptation": "作者提供条件性配装建议，并非完整实战攻略；项目按16.21技能、强化和装备独立改编。原文未标补丁与服务器，未提供作者符文、加点、六件顺序或收益保证。"
+      }
+    },
+    {
+      "hero": "Ryze",
+      "patch": "16.21",
+      "augment": 1048,
+      "optional": [],
+      "title": "涌动技能暴击",
+      "summary": "E铺涌动、Q命中，保留原有法力配装方向。",
+      "play": [
+        "E施加涌动后用Q命中；W/E可刷新Q冷却，但仍需法力、命中和安全施法空间。",
+        "已有法力强化时优先保留其配装方向；珠光不意味着改成普攻暴击装备或放弃生存。"
+      ],
+      "basicPlay": [
+        "失去R后以E/Q和W控制维持基础技能输出，不照搬传送进场或保证R等级带来的增伤。"
+      ],
+      "caution": "不承诺无限轮转、必定暴击或固定伤害提升；不作未经验证的法强、暴击与法力整套收益合算。",
+      "gear": [
+        [
+          "后期补法强",
+          [
+            3089
+          ],
+          "作者建议中的法强方向；保留原有法力、穿透与生存需求，再按金币和威胁比较帽子。"
+        ],
+        [
+          "仅第五件条件比较：资源与自保已满足，且其他强化未决定配装",
+          [
+            123430
+          ],
+          "施法维持短时暴击层，护盾是概率效果，不是每次命中必得。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "Ok-Read4007",
+        "url": "https://www.reddit.com/r/arammayhem/comments/1xcdzrs/comment/19rhd2h623e9x/",
+        "publishedAt": "2026-10-22T11:42:27Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "对Cassiopeia、Ryze等持续施法英雄的条件建议",
+          "高法强及后期第五件装备比较"
+        ],
+        "adaptation": "作者提供条件性配装建议，并非完整实战攻略；项目按16.21技能、强化和装备独立改编。原文未标补丁与服务器，未提供作者符文、加点、六件顺序或收益保证。"
+      }
+    },
+    {
+      "hero": "Morgana",
+      "patch": "16.21",
+      "augment": 3004,
+      "optional": [
+        1318
+      ],
+      "requiresUltimate": true,
+      "title": "飞弹进场魂链",
+      "summary": "飞弹接近后确认距离，再用魂链与凝滞争取控制窗口。",
+      "play": [
+        "先确认飞弹行进方向、碰撞位置与队友距离；结束后再看能否进入R的牵引范围，飞弹本身不保证眩晕。",
+        "确认R已施放且敌人未脱离牵引，再按威胁选择凝滞时机；凝滞期间不能继续施法，不能保证魂链必定留住目标。"
+      ],
+      "basicPlay": [
+        "终极技能不可用时撤回魂链进场路线。"
+      ],
+      "caution": "作者只给火箭配升级中娅的局部经验，未提供施放时序、装备顺序或加点；魂链有延迟，凝滞不保证覆盖整段控制窗口。",
+      "gear": [
+        [
+          "需要进场自保时比较",
+          [
+            3157
+          ],
+          "作者点名升级中娅；这里展示可购买的中娅。先确认魂链范围和威胁，再手动使用凝滞；升级效果只在已拥有该强化时成立，不合算其他装备急速。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "sourcePatch": null,
+        "author": "WeakSideUrn",
+        "url": "https://www.reddit.com/r/ARAM/comments/1xd1m07/comment/19rjdfv1ddxsw/",
+        "publishedAt": "2026-10-23T14:45:02Z",
+        "evidenceSections": [
+          "父评论明确讨论金克丝火箭",
+          "作者本人莫甘娜配合升级中娅的进场经验"
+        ],
+        "adaptation": "作者在新版本讨论中亲述莫甘娜使用火箭和升级中娅；项目按正式16.21补充条件进场与魂链边界，不声称作者已验证下述R或凝滞时序。原文未标实战补丁、服务器、完整装备、加点或购买顺序；不作为当前录像实战证明或热门排行。"
+      }
+    },
+    {
+      "hero": "Nautilus",
+      "patch": "16.21",
+      "augment": 1056,
+      "optional": [
+        1018,
+        1375,
+        1323
+      ],
+      "title": "法力护盾前排",
+      "summary": "用法力支撑生命值与W护盾，靠实际定身兑现已有强化。",
+      "play": [
+        "由心及物把法力值的一部分用于最大生命值，W护盾随最大生命值成长；不是立即回蓝，也不保证永久护盾。",
+        "用Q命中英雄、被动普攻或R完成硬控；Q撞墙、E减速和W本身都不能冒充定身，额外效果按实际已拥有的强化触发。"
+      ],
+      "basicPlay": [
+        "失去R后用Q命中英雄与被动普攻提供定身，W维持自保；E只有减速，不把它当作定身触发。"
+      ],
+      "caution": "作者列出的是个人偏好的强化与四件核心方向，不证明四个强化必得或固定购买顺序；末日寒冬须由前身叠层进化，未进化时不能提前计算成品收益。",
+      "gear": [
+        [
+          "法力与成长",
+          [
+            6657
+          ],
+          "作者点名时光；按当前海克斯模式实际叠层进度使用，不把其他模式的叠层间隔套进来。"
+        ],
+        [
+          "贴身交战",
+          [
+            4633
+          ],
+          "作者点名裂隙；需维持对英雄战斗才逐渐获得其完整收益，不按刚入场已叠满计算。"
+        ],
+        [
+          "能安全靠近并攻击",
+          [
+            3084
+          ],
+          "作者点名心钢；先满足靠近目标的蓄力条件，再实际攻击，不承诺每次普攻都叠层。"
+        ],
+        [
+          "末日寒冬的可购买前身",
+          [
+            3119
+          ],
+          "作者点名进化成品；先买凛冬之临，法力流积攒达到360后才进化。这里不预先计算未成型被动，也不补未知的生命转换系数。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "sourcePatch": null,
+        "author": "Mockingjay40",
+        "url": "https://www.reddit.com/r/ARAM/comments/1xd1m07/comment/19rjblhogx9b7/",
+        "publishedAt": "2026-10-23T14:03:42Z",
+        "evidenceSections": [
+          "作者明确表示泰坦为其主要使用英雄之一",
+          "同段列出由心及物、巨像勇气、吞噬灵魂、残忍及四件装备方向"
+        ],
+        "adaptation": "作者在新版本讨论中给出个人泰坦偏好；项目按正式16.21独立核对控制、法力、护盾和装备条件。末日寒冬不可直接购买，当前展示凛冬之临进化路径，不冒充已购买完整四件组合；未取得作者加点、鞋子或购买顺序，原文实战补丁和服务器未明示。"
+      }
+    },
+    {
+      "hero": "Udyr",
+      "patch": "16.21",
+      "augment": 1004,
+      "optional": [],
+      "title": "爪击贴身轮转",
+      "summary": "保留Q与普攻节奏，用W、E争取下一轮贴身机会。",
+      "play": [
+        "Q姿态后接实际普攻，W自保、E接近或撤离；本路线只安排QWE，不依赖冰川风暴。",
+        "增伤不等于自动刷新技能；离开攻击距离、被控制或缺蓝时先保住下一轮，不承诺无缝技能。"
+      ],
+      "basicPlay": [
+        "以Q姿态和实际普攻输出，W自保、E调整进退；不提供依赖R的操作或加点。"
+      ],
+      "caution": "作者给出Q路线与装备偏好，未指定鞋和EH缩写全名；这里仅保留能确认的具名装备，不继承最高爆发、无限技能或六件必出的说法。",
+      "gear": [
+        [
+          "基础技能与生命值",
+          [
+            3161
+          ],
+          "作者点名朔极；利用基础技能急速和生命值维持贴身，装备提供的基础技能急速不等于觉醒被动直接刷新。"
+        ],
+        [
+          "物理压力与交战续航",
+          [
+            6333
+          ],
+          "作者点名死舞；延后承伤不是免伤，净化剩余伤害仍需满足参与击杀条件。"
+        ],
+        [
+          "需要魔抗的路线",
+          [
+            3156
+          ],
+          "作者在需要魔抗时偏好饮魔刀路线；低血魔法护盾不是全伤害免疫，不与血手同时安排。"
+        ],
+        [
+          "需要双穿且能持续攻击",
+          [
+            3302
+          ],
+          "作者把界弓列为个人偏好；对英雄实际攻击后才逐步积累交相效果，不提前计算满层穿透。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "sourcePatch": null,
+        "author": "fAAbulous",
+        "url": "https://www.reddit.com/r/ARAM/comments/1xd0myz/comment/19rj50y2ahds2/",
+        "publishedAt": "2026-10-23T11:36:23Z",
+        "evidenceSections": [
+          "该作者父回复明确回归基本功与乌迪尔Q路线",
+          "同作者当日16:33子回复列出朔极、死舞、魔抗路线和界弓偏好"
+        ],
+        "adaptation": "同帖同作者先给乌迪尔Q与回归基本功方向，后续回复补充装备偏好；项目按正式16.21核对技能和条件购买。不把原文EH缩写或未指定的鞋子扩写，不推断完整六件、逐级加点或固定伤害收益；实战补丁和服务器未明示。"
+      },
+      "skillPriority": [
+        "Q"
+      ]
     }
   ],
   "championReview": {
@@ -1108,7 +1359,11 @@
       "Teemo": "b29454e3375baf8c",
       "Taric": "d7034e2662bef2b0",
       "KSante": "7aff85aec07e75db",
-      "Jax": "1776e83d7e3a24c7"
+      "Jax": "1776e83d7e3a24c7",
+      "Cassiopeia": "74ace7fa9d54e0e4",
+      "Morgana": "e0588c7ab7dba463",
+      "Nautilus": "67da151a84906467",
+      "Udyr": "fdaba836f9c37b70"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -1564,6 +1819,102 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "bfaaae4c0ee698a4"
+          }
+        }
+      },
+      "Cassiopeia": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "74ace7fa9d54e0e4",
+        "observedAt": "2026-10-23T02:03:51.455Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Cassiopeia",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/cassiopeia/cassiopeia.bin.json",
+            "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "328eb9f058249ee8"
+          }
+        }
+      },
+      "Morgana": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "e0588c7ab7dba463",
+        "observedAt": "2026-10-23T02:03:51.543Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Morgana",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+            "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "57d5f698304a1f45"
+          }
+        }
+      },
+      "Nautilus": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "67da151a84906467",
+        "observedAt": "2026-10-23T02:03:51.544Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Nautilus",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+            "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "21ceeeee51e3b384"
+          }
+        }
+      },
+      "Udyr": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "fdaba836f9c37b70",
+        "observedAt": "2026-10-23T02:03:51.636Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Udyr",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/udyr/udyr.bin.json",
+            "sha256": "232eb625661d9ea907bf679c345760e5e3c0bd7a4c2a2c79757c77cb2ea01c57"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "5e4ce0224042a71b"
           }
         }
       }

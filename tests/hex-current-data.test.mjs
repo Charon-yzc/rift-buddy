@@ -16,7 +16,8 @@ test('reviewed current augment cooldown scope does not depend on an unreviewed h
  const champion=base.champions.find(c=>c.id==='Ashe'),compare=a=>compareAugments({champion,options:[a.id],augments:[a],patch:base.patch})[0];
  const a=base.augments.find(a=>a.id===1002);assert.match(compare(a).reasons.join(' '),/装备.*不缩短英雄/);assert.match(compare(a).reasons.join(' '),/英雄机制待复核/);
  assert.doesNotMatch(compare({...a,description:a.description+' Changed source'}).reasons.join(' '),/缩短可受装备/);
- const pending=compare(base.augments.find(a=>a.id===1318));assert.doesNotMatch(pending.reasons.join(' '),/只改变说明中的中娅/,'Old exact effect review is not renewed on an unreviewed 4.0 effect');
+ const stasis=base.augments.find(a=>a.id===1318),reviewed=compare(stasis);assert.match(reviewed.reasons.join(' '),/只改变说明中的中娅/);assert.match(reviewed.reasons.join(' '),/英雄机制待复核/);
+ assert.doesNotMatch(compare({...stasis,description:stasis.description+' Changed source'}).reasons.join(' '),/只改变说明中的中娅/,'Changed effects still require a separate review');
 });
 
 test('old, future and mixed Hex data withdraw automatic advice at all shared view and guide entrances',()=>{
