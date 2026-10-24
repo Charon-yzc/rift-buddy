@@ -25,6 +25,8 @@ const rules={
  1029:['ARAM_EtherealWeapon',/技能.*攻击特效.*1秒/s],1056:['ARAM_MindtoMatter',/最大生命值.*一半.*法力值/s],
  1022:['ARAM_Deft',/获得.*攻击速度/s],1077:['ARAM_SoulSiphon',/暴击.*治疗.*暴击几率/s],1080:['ARAM_TankItOrLeaveIt',/暴击几率.*会心防御.*所受伤害/s],
  1047:['ARAM_ItsCritical',/暴击几率/],1048:['ARAM_JeweledGauntlet',/技能.*暴击/s],
+ 1030:['ARAM_Eureka',/获得相当于30%法术强度的技能急速/],
+ 3132:['HeavyIsTheCrown',/攻击力、法术强度和攻击速度.*移动速度降低.*参与击杀.*阵亡时失去一半层数/s],
  1058:['ARAM_MysticPunch',/攻击特效.*冷却/s],
  1996:['ARAM_Upgrade_Sheen',/咒刃.*额外伤害.*治疗.*250金币/s],
  1118:['ARAM_CriticalHealing',/治疗.*护盾.*暴击/s],
