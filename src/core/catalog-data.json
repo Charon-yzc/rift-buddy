@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.24.1",
+  "version": "2026.10.24.2",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。 2026-10-13新增16套三人机制执行卡，覆盖中下辅、上野中、野下辅、上中辅；仅新增条目按 Riot 16.20.1 技能复核。复用配置保持各自复核日期，普通位置默认不伪装成专用配装；Mobalytics常驻指南只作打法参考，不提供本组合当前版本胜率或强度证据，原有旧条目与资料状态保留。 2026-10-16新增四套双人、四套三人机制配合；旧社区内容仅作玩法灵感，未沿用旧配装、胜率或强度结论，旧条目复核状态保留。 2026-10-19新增三套跨位置双人执行卡：造墙配合、中野收割和双支援；仅新增条目对照当前16.20角色源复核，历史社区资料只作线索，不沿用其旧符文、配装或强度断言；原条目版本与复核锚点不变。 2026-10-24：仅新增霞/凯尔保护路线、两套专用配置及完整符文/加点，按16.21复核；其他条目不续期。来源首发未知，10/19为凯尔正文更新，霞10/22仅声明补丁兼容。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。 2026-10-13新增16套三人机制执行卡，覆盖中下辅、上野中、野下辅、上中辅；仅新增条目按 Riot 16.20.1 技能复核。复用配置保持各自复核日期，普通位置默认不伪装成专用配装；Mobalytics常驻指南只作打法参考，不提供本组合当前版本胜率或强度证据，原有旧条目与资料状态保留。 2026-10-16新增四套双人、四套三人机制配合；旧社区内容仅作玩法灵感，未沿用旧配装、胜率或强度结论，旧条目复核状态保留。 2026-10-19新增三套跨位置双人执行卡：造墙配合、中野收割和双支援；仅新增条目对照当前16.20角色源复核，历史社区资料只作线索，不沿用其旧符文、配装或强度断言；原条目版本与复核锚点不变。 2026-10-24：仅新增霞/凯尔保护路线、两套专用配置及完整符文/加点，按16.21复核；其他条目不续期。来源首发未知，10/19为凯尔正文更新，霞10/22仅声明补丁兼容。；10/24补齐霞洛成员配置、加入洛与AP图奇联动，作者配置和项目加点分别标注。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -505,64 +505,149 @@
       "tempo": "teamfight"
     },
     {
-      "id": "feather-dance",
-      "carry": "Xayah",
-      "support": "Rakan",
-      "name": "羽翼双人舞",
-      "style": "balanced",
+      "style": "fun",
       "difficulty": "适中",
-      "tags": [
-        "进退配合",
-        "自保"
-      ],
-      "why": "洛负责制造空间，霞借助羽毛控制限制追击，两人能配合进退。",
-      "plan": "霞补刀。洛先试探机会，霞留羽毛与大招处理反扑。",
-      "risk": "不要把霞当成远距离跟进英雄，进场要顾及她的位置。",
+      "tempo": "teamfight",
+      "patch": "16.21",
+      "reviewedAt": "2026-10-24",
       "partners": [
         "JarvanIV",
-        "Galio",
         "Sejuani"
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "economy": "射手补刀，洛使用辅助任务与视野经济；不抢兵线，不把双人都算作正常发育的输出核心。",
+      "id": "feather-dance",
+      "name": "羽翼双人舞",
+      "tags": [
+        "接控收羽",
+        "进退接力"
+      ],
+      "why": "洛命中控制创造羽毛回拉角度，霞保留退场技能接住反扑。",
+      "plan": "霞补刀铺羽，洛寻找可回身的进场；先手未中就收手。",
+      "risk": "波比的反突进、敌方打断和远程消耗会破坏进退；双方大招不是必定连中，也不能保证无缝控制。",
+      "early": "霞先稳补刀；洛Q恢复、W惩罚失误，不为硬抢二级越过兵线。",
+      "window": "双方六级且有安全E回身位置，再尝试洛R/W接霞羽阵；霞缺蓝时先等吸蓝刀成型。",
+      "steps": [
+        "洛先确认敌方能打断位移的技能，再决定W/R，始终保留能接应的队友位置。",
+        "霞跟进铺羽，敌人越过回拉线路时E；并非听到洛开大就立即交所有技能。",
+        "洛E回霞接应；霞R留给关键威胁，失去回身点就撤退。"
+      ],
       "sources": [
         {
-          "name": "Riot · 霞技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Xayah.json",
-          "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "name": "daltonfresh · 洛（10/21实质更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/26-21-rakan-for-low-elo-rush-dark-seal-play-with-xayah-updated-every-patch-647318",
+          "kind": "作者配置；项目补齐加点",
+          "checkedAt": "2026-10-24"
         },
         {
-          "name": "Riot · 洛技能资料",
-          "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Rakan.json",
-          "kind": "技能依据",
-          "checkedAt": "2026-10-06"
+          "name": "Fruxo · 霞（10/22声明26.21）",
+          "url": "https://www.mobafire.com/league-of-legends/build/how-to-use-feathers-537621",
+          "kind": "作者配置；项目补齐开局节点",
+          "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 26.21及10/22热修",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "当前机制复核",
+          "checkedAt": "2026-10-24"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "rakan-engage"
-      },
+      "members": [
+        {
+          "champion": "Xayah",
+          "role": "bottom",
+          "loadoutId": "community-xayah-rakan",
+          "job": "补刀铺羽，按敌人实际位置E收羽，R应对反扑。"
+        },
+        {
+          "champion": "Rakan",
+          "role": "support",
+          "loadoutId": "community-rakan-guardian",
+          "job": "W/R接控后E回队友，Q有效命中后接应恢复，不抢补刀。"
+        }
+      ],
       "reviewBaseline": {
-        "champion:Xayah": "b7332402902225ee",
-        "champion:Rakan": "5dadfc0f0f54ae6b",
+        "champion:Xayah": "6218a12d2240d28e",
+        "champion:Rakan": "69d7edc48cac55e5",
+        "item:3508": "f557158549cb18ca",
+        "item:6675": "b2ad1db20decb6ca",
+        "item:3031": "0ccdceb96f0cd392",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3036": "fcf5de31162e9e9d",
+        "item:3072": "5c29525fccb26a37",
+        "item:3139": "ded65c3f5f3ed714",
+        "item:3133": "b1bc2dd663869430",
+        "rune:8008": "d8ed59948702367b",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9103": "7d88abbfc22dd0df",
+        "rune:8014": "04092c4f9754532b",
+        "rune:8304": "aa454bdce540cb11",
+        "rune:8345": "02157c1d4d7f7531",
+        "item:3050": "c3e25c9df9075147",
+        "item:2524": "94b653f97efb42b2",
         "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:2065": "a30335c7d456f5fd",
         "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3222": "d079f1feafe021dd",
+        "item:2065": "a30335c7d456f5fd",
+        "item:1082": "998e36d530585108",
+        "item:3067": "125eedc86e016adb",
         "rune:8465": "4b16b0cca812d727",
         "rune:8463": "3296414353df0e65",
         "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429"
+        "rune:8242": "37935df8d31dd429",
+        "rune:8141": "4312a64dc5abceac",
+        "rune:8106": "bfb83fa22daf18de"
       },
-      "tempo": "teamfight"
+      "reviewSourceAnchors": {
+        "Xayah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6218a12d2240d28e",
+          "observedAt": "2026-10-23T02:03:51.640Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Xayah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+              "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ef84e7c599b03475"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-10-23T02:03:51.548Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
+      }
     },
     {
       "id": "mouth-lulu",
@@ -12652,6 +12737,150 @@
           "job": "W治疗移速支持霞，Q减速削抗；霞落地后按实际集火决定R，不抢补刀。"
         }
       ]
+    },
+    {
+      "style": "fun",
+      "difficulty": "适中",
+      "tempo": "teamfight",
+      "patch": "16.21",
+      "reviewedAt": "2026-10-24",
+      "partners": [
+        "JarvanIV",
+        "Sejuani"
+      ],
+      "economy": "射手补刀，洛使用辅助任务与视野经济；不抢兵线，不把双人都算作正常发育的输出核心。",
+      "id": "twitch-rakan-ambush",
+      "name": "潜行羽翼",
+      "tags": [
+        "侧翼接控",
+        "叠毒收尾"
+      ],
+      "why": "洛先限制走位，图奇从可支援的侧翼出现，利用叠毒窗口收尾。",
+      "plan": "图奇补刀，洛按两人能同时到场的距离接控；AP图奇配置与洛联动为项目改编。",
+      "risk": "真视、范围伤害和强开能打断偷袭；图奇没有霞的额外E接应距离，绕后太远会失去支援，AP路线不等同持续AD射手。",
+      "early": "图奇稳补刀，洛只在兵线和射手跟进允许时换血；不单独深入敌方后排。",
+      "window": "图奇纳什成型且双方六级后找控住目标；洛W落空或图奇尚未就位就停止追击。",
+      "steps": [
+        "先约定图奇现身位置，洛等队友可跟进再W/R控制，不臆测目标闪现已交。",
+        "图奇现身后W＋普攻叠毒，按实际层数和目标血量E，强攻仍要实际普攻触发。",
+        "洛E回实际范围内、可选取的队友；图奇隐身不会让洛一起隐藏，不为补毒越过第二层控制。"
+      ],
+      "sources": [
+        {
+          "name": "daltonfresh · 洛（10/21实质更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/26-21-rakan-for-low-elo-rush-dark-seal-play-with-xayah-updated-every-patch-647318",
+          "kind": "作者配置；项目补齐加点",
+          "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "rowzkit · AP图奇（声明26.21；更新时间未知）",
+          "url": "https://www.mobafire.com/league-of-legends/build/26-21-best-twitch-guide-best-twitch-build-for-ap-amp-ad-649594",
+          "kind": "作者配置；联动与技能节点由项目改编",
+          "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 26.21及10/22热修",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "当前机制复核",
+          "checkedAt": "2026-10-24"
+        }
+      ],
+      "members": [
+        {
+          "champion": "Twitch",
+          "role": "bottom",
+          "loadoutId": "community-twitch-ap",
+          "job": "补刀后从可接应侧翼出现，普攻叠毒、E收尾；隐身期间避免断开支援。"
+        },
+        {
+          "champion": "Rakan",
+          "role": "support",
+          "loadoutId": "community-rakan-guardian",
+          "job": "给图奇接控并保留普通E距离内的回身点；图奇隐身不会让自己一起隐藏，不抢补刀。"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Twitch": "ab3e76d629cf2787",
+        "champion:Rakan": "69d7edc48cac55e5",
+        "item:3115": "627135c117eaf20a",
+        "item:3089": "a8a9b060b253391c",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3158": "72ca672b9221f063",
+        "item:3135": "9eb1465e02c69db0",
+        "item:4645": "152f57227a713097",
+        "item:3102": "74374782f1274206",
+        "item:1082": "998e36d530585108",
+        "item:1052": "77d8b466f8ae53e1",
+        "rune:8005": "e05d6553b23e1d97",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8017": "50a79a13bce940f0",
+        "rune:8233": "8d66599d9c2e18c9",
+        "rune:8236": "a1bb7cfc15c3d089",
+        "item:3050": "c3e25c9df9075147",
+        "item:2524": "94b653f97efb42b2",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3222": "d079f1feafe021dd",
+        "item:2065": "a30335c7d456f5fd",
+        "item:3067": "125eedc86e016adb",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8141": "4312a64dc5abceac",
+        "rune:8106": "bfb83fa22daf18de"
+      },
+      "reviewSourceAnchors": {
+        "Twitch": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ab3e76d629cf2787",
+          "observedAt": "2026-10-23T02:03:51.636Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Twitch",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "461e810ef4e30853"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-10-23T02:03:51.548Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -31001,6 +31230,312 @@
           }
         }
       }
+    },
+    {
+      "id": "community-rakan-guardian",
+      "name": "洛 · 黑暗封印接应",
+      "champions": [
+        "Rakan"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "supportTank",
+      "items": [
+        3050,
+        2524,
+        3190
+      ],
+      "boots": 3158,
+      "late": [
+        3109,
+        3222,
+        2065
+      ],
+      "early": [
+        1082,
+        3067
+      ],
+      "runes": [
+        "rakan-guardian-2621"
+      ],
+      "priority": "WEQ",
+      "first": "QWE",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerHeal"
+      ],
+      "why": "云游图鉴＋两瓶药出门，任务升级星界据守。首回城视生存空间比较黑暗封印和明朗鞋，再补燃烧宝石；频繁阵亡就跳过封印。基克→班德尔音管，第三件烈阳；需保单核改骑士之誓，可解除控制压力改米凯尔，加速接应比较皇冠。后续装备互斥，满格前卖封印；治疗与射手技能协商，避免重复。班德尔的攻速增益需实际减速或定身触发。",
+      "skillReason": "作者默认Q开局；Q/W/E及主W副E的合法18点由项目补齐，保留E接应，不把网页不可读的技能格冒充作者顺序。",
+      "patch": "16.21",
+      "reviewedAt": "2026-10-24",
+      "sources": [
+        {
+          "name": "daltonfresh · 洛（10/21实质更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/26-21-rakan-for-low-elo-rush-dark-seal-play-with-xayah-updated-every-patch-647318",
+          "kind": "作者配置；项目补齐加点",
+          "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 26.21及10/22热修",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "当前机制复核",
+          "checkedAt": "2026-10-24"
+        }
+      ],
+      "skillOrder": "QWEWWRWEWEREEQQRQQ",
+      "reviewBaseline": {
+        "champion:Rakan": "69d7edc48cac55e5",
+        "item:3050": "c3e25c9df9075147",
+        "item:2524": "94b653f97efb42b2",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3158": "72ca672b9221f063",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3222": "d079f1feafe021dd",
+        "item:2065": "a30335c7d456f5fd",
+        "item:1082": "998e36d530585108",
+        "item:3067": "125eedc86e016adb",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8141": "4312a64dc5abceac",
+        "rune:8106": "bfb83fa22daf18de"
+      },
+      "reviewSourceAnchors": {
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-10-23T02:03:51.548Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "community-twitch-ap",
+      "name": "图奇 · 法强叠毒接控",
+      "champions": [
+        "Twitch"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "mage",
+      "items": [
+        3115,
+        3089,
+        3157
+      ],
+      "boots": 3158,
+      "late": [
+        3135,
+        4645,
+        3102
+      ],
+      "early": [
+        1082,
+        1052
+      ],
+      "runes": [
+        "twitch-ap-2621"
+      ],
+      "priority": "EWQ",
+      "first": "EWQ",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "damage": "mixed",
+      "why": "多兰戒＋两瓶药；首回城封印、增幅典籍，先纳什，再明朗鞋和帽子，接中娅。魔抗较高时比较虚空，被先手法术威胁时比较女妖；后续格互斥，不默认强出杀人书。先让洛实际控住，再用W和普攻叠毒后E；隐身不是无敌，洛的回身距离按普通队友计算，图奇隐身不会让洛一起隐藏。",
+      "skillReason": "作者技能格未读取；项目选择E/W/Q开局、主E副W的合法18点服务叠毒收尾，不宣称作者原加点。",
+      "patch": "16.21",
+      "reviewedAt": "2026-10-24",
+      "sources": [
+        {
+          "name": "rowzkit · AP图奇（声明26.21；更新时间未知）",
+          "url": "https://www.mobafire.com/league-of-legends/build/26-21-best-twitch-guide-best-twitch-build-for-ap-amp-ad-649594",
+          "kind": "作者配置；联动与技能节点由项目改编",
+          "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "daltonfresh · 洛（10/21实质更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/26-21-rakan-for-low-elo-rush-dark-seal-play-with-xayah-updated-every-patch-647318",
+          "kind": "作者配置；项目补齐加点",
+          "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 26.21及10/22热修",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "当前机制复核",
+          "checkedAt": "2026-10-24"
+        }
+      ],
+      "skillOrder": "EWQEEREWEWRWWQQRQQ",
+      "reviewBaseline": {
+        "champion:Twitch": "ab3e76d629cf2787",
+        "item:3115": "627135c117eaf20a",
+        "item:3089": "a8a9b060b253391c",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3158": "72ca672b9221f063",
+        "item:3135": "9eb1465e02c69db0",
+        "item:4645": "152f57227a713097",
+        "item:3102": "74374782f1274206",
+        "item:1082": "998e36d530585108",
+        "item:1052": "77d8b466f8ae53e1",
+        "rune:8005": "e05d6553b23e1d97",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8017": "50a79a13bce940f0",
+        "rune:8233": "8d66599d9c2e18c9",
+        "rune:8236": "a1bb7cfc15c3d089"
+      },
+      "reviewSourceAnchors": {
+        "Twitch": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ab3e76d629cf2787",
+          "observedAt": "2026-10-23T02:03:51.636Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Twitch",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "461e810ef4e30853"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "community-xayah-rakan",
+      "name": "霞 · 羽翼续战",
+      "champions": [
+        "Xayah"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "crit",
+      "items": [
+        3508,
+        6675,
+        3031
+      ],
+      "boots": 3006,
+      "late": [
+        3036,
+        3072,
+        3139
+      ],
+      "early": [
+        3133
+      ],
+      "runes": [
+        "xayah-kayle-feathers"
+      ],
+      "damage": "ad",
+      "priority": "EWQ",
+      "first": "QEW",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "why": "Fruxo吸蓝刀分支：多兰剑＋药水；首回城战锤，不足时分购长剑或短剑。吸蓝刀→纳沃利→无尽，神奇之鞋收到免费鞋后再升级攻速鞋；护甲、续航、可解除控制分别比较多米尼克、饮血、水银弯刀，后续格互斥。洛W/R命中后再铺羽收羽，保留R应对反扑；保持洛能E回来接应的距离。",
+      "skillReason": "作者主 E 副 W；Q/E/W 前三级及合法18点为项目补齐，不冒充原技能格。",
+      "patch": "16.21",
+      "reviewedAt": "2026-10-24",
+      "sources": [
+        {
+          "name": "Fruxo · 霞（10/22声明26.21）",
+          "url": "https://www.mobafire.com/league-of-legends/build/how-to-use-feathers-537621",
+          "kind": "作者配置；项目补齐开局节点",
+          "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "daltonfresh · 洛（10/21实质更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/26-21-rakan-for-low-elo-rush-dark-seal-play-with-xayah-updated-every-patch-647318",
+          "kind": "作者配置；项目补齐加点",
+          "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 26.21及10/22热修",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "当前机制复核",
+          "checkedAt": "2026-10-24"
+        }
+      ],
+      "skillOrder": "QEWEEREWEWRWWQQRQQ",
+      "reviewBaseline": {
+        "champion:Xayah": "6218a12d2240d28e",
+        "item:3508": "f557158549cb18ca",
+        "item:6675": "b2ad1db20decb6ca",
+        "item:3031": "0ccdceb96f0cd392",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3036": "fcf5de31162e9e9d",
+        "item:3072": "5c29525fccb26a37",
+        "item:3139": "ded65c3f5f3ed714",
+        "item:3133": "b1bc2dd663869430",
+        "rune:8008": "d8ed59948702367b",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9103": "7d88abbfc22dd0df",
+        "rune:8014": "04092c4f9754532b",
+        "rune:8304": "aa454bdce540cb11",
+        "rune:8345": "02157c1d4d7f7531"
+      },
+      "reviewSourceAnchors": {
+        "Xayah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6218a12d2240d28e",
+          "observedAt": "2026-10-23T02:03:51.640Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Xayah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+              "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ef84e7c599b03475"
+            }
+          }
+        }
+      }
     }
   ],
   "runes": {
@@ -31494,6 +32029,44 @@
           8347,
           5007,
           5001,
+          5011
+        ]
+      }
+    },
+    "rakan-guardian-2621": {
+      "name": "洛 · 守护接应",
+      "when": "daltonfresh守护者页；双适应＋韧性碎片，辅助任务经济。",
+      "page": {
+        "primaryStyleId": 8400,
+        "subStyleId": 8100,
+        "selectedPerkIds": [
+          8465,
+          8463,
+          8473,
+          8242,
+          8141,
+          8106,
+          5008,
+          5008,
+          5013
+        ]
+      }
+    },
+    "twitch-ap-2621": {
+      "name": "AP图奇 · 强攻叠毒",
+      "when": "rowzkit AP页；攻速＋适应＋固定生命碎片，需实际普攻触发强攻。",
+      "page": {
+        "primaryStyleId": 8000,
+        "subStyleId": 8200,
+        "selectedPerkIds": [
+          8005,
+          8009,
+          9104,
+          8017,
+          8233,
+          8236,
+          5005,
+          5008,
           5011
         ]
       }

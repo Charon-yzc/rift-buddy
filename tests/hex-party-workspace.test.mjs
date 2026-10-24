@@ -67,7 +67,7 @@ test('stale and unknown owned records keep scoped removal; compact hovers retain
  assert.match(hexMicroHint({kind:'item-synergy',equipmentState:'suggested'},entry,'item').brief,/^若购买，/);assert.match(hexMicroHint({kind:'item-synergy',equipmentState:'held'},entry,'item').brief,/已装备，仍需触发/);
 });
 test('sidebar route hints preserve purchase conditions and individual actual offers',()=>{
- for(const [id,owned,options]of [['Ahri',[1318],[]],['Camille',[],[1996]],['Yasuo',[],[1058]]]){
+ for(const [id,owned,options]of [['Ahri',[1318],[]],['Camille',[],[1996]],['Yasuo',[],[3078]]]){
   const hero=data.champions.find(h=>h.id===id),selection={id,role:'mid',mode:'hex'},plan={selection,build:getBuild(hero,'mid',data,selection)},round={hero:id,context:'hints-'+id,revision:1,owned,options};
   const html=hexConfigurationView({data,hero,round,plan});
   if(id==='Ahri'){assert.match(html,/data-game-tooltip-id="3157"[^>]+data-hex-brief="若购买，/);assert.match(html,/data-game-tooltip-id="1318"[^>]+data-hex-brief="已选。/);continue;}

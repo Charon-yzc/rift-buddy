@@ -59,13 +59,77 @@
         ],
         "adaptation": "录像四强化思路；装备条件及操作边界由项目按16.21改编。未核实作者完整符文、技能节点和购买顺序，不称为完整作者配置或热门排行。"
       }
+    },
+    {
+      "hero": "Yasuo",
+      "patch": "16.21",
+      "augment": 3078,
+      "optional": [],
+      "title": "低音衔接普攻",
+      "summary": "施法后穿插普攻，先成型盾书与死舞。",
+      "play": [
+        "E、Q之间穿插实际普攻，利用强化攻击后的移速调整位置；不把强化当常驻攻速或Q冷却重置。",
+        "录像先做毁坏仪式、死亡之舞；后续仅比较下方已通过当前机制核验的条件装备，不把完整六件固定套用于所有对局。"
+      ],
+      "basicPlay": [
+        "回归基本功禁用R，靠Q/E与普攻拉扯；不等待大招触发增益。"
+      ],
+      "caution": "作者录像补丁未标注，当前16.21机制重核；单局高击杀不是胜率或热门度。未取得该强化时不套用放弃攻速路线；Q的攻速收益仍存在，强化不保证零攻速达到最短冷却。",
+      "coreItems": [
+        123430,
+        6333
+      ],
+      "gear": [
+        [
+          "取得低音且能安全近身",
+          [
+            123430,
+            6333
+          ],
+          "作者开场两件顺序；毁坏仪式提供技能护盾概率，死亡之舞不是无条件免伤。"
+        ],
+        [
+          "继续普攻输出且需要续航",
+          [
+            3031,
+            3072
+          ],
+          "录像后续方向；需要实际攻击、暴击与回复空间，不能一套固定压过所有对局。"
+        ],
+        [
+          "需要回复或承受魔法伤害",
+          [
+            3008,
+            3065
+          ],
+          "按威胁比较暴食胫甲与振奋，装备格有限，后续购买不是同时无条件添加。"
+        ]
+      ],
+      "communitySource": {
+        "author": "一个老九",
+        "url": "https://www.bilibili.com/video/BV1HGHP6TEhy/",
+        "publishedAt": "2026-10-24T09:30:00.000Z",
+        "sourcePatch": null,
+        "observedMode": "海克斯大乱斗；26.21新强化低音轰鸣",
+        "evidenceSeconds": [
+          0,
+          30,
+          60,
+          120,
+          180,
+          240,
+          270
+        ],
+        "adaptation": "作者当日录像开场配置与实战HUD；项目按16.21改编触发边界和条件装备。未核实作者完整符文、逐级加点与录制补丁，不称为完整作者页或热门排行。"
+      }
     }
   ],
   "championReview": {
     "schema": 2,
     "patch": "16.21",
     "champions": {
-      "Lillia": "5abf3f00c1f24aac"
+      "Lillia": "5abf3f00c1f24aac",
+      "Yasuo": "d36ebea001e3d1cb"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -89,6 +153,30 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "56de693659da9302"
+          }
+        }
+      },
+      "Yasuo": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d36ebea001e3d1cb",
+        "observedAt": "2026-10-23T02:03:51.641Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Yasuo",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+            "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "5c4d9aa5346ca2f7"
           }
         }
       }

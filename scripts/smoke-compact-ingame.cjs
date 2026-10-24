@@ -35,9 +35,9 @@ async function run(){
  const j=(w,s)=>w.webContents.executeJavaScript(s,true).catch(error=>{throw Error(s,{cause:error});});
  await until(()=>j(main,'!!window.buddy&&!!document.querySelector("[data-action=navigate][data-route=favorites]")'),'Main ready');
  await click('[data-action=navigate][data-route=hex]');
- await click('[data-action=pick-hex]');await until(()=>j(main,'!!document.querySelector("#picker-grid [data-id=Yasuo]")'),'Hero picker absent');await click('#picker-grid [data-id=Yasuo]');
+ await click('[data-action=pick-hex]');await until(()=>j(main,'!!document.querySelector("#picker-grid [data-id=Camille]")'),'Hero picker absent');await click('#picker-grid [data-id=Camille]');
  await until(()=>j(main,'!document.querySelector(".hero-picker")'),'Picker remains');await click('.augment-card[data-id="1336"]');await until(()=>j(main,'!!document.querySelector(".augment-modal [data-action=own-augment]")'),'Owned action missing');await click('.augment-modal [data-action=own-augment]');await until(()=>j(main,'!document.querySelector(".augment-modal")'),'Owned action did not close');
- await j(main,'window.buddy.openGuide({id:"Yasuo",role:"mid",mode:"hex"})');
+ await j(main,'window.buddy.openGuide({id:"Camille",role:"top",mode:"hex"})');
  const micros=await until(async()=>{const found=windows.filter(w=>!w.isDestroyed()&&w.webContents.getURL().endsWith('/src/hex-micro.html'));return found.length===2?found:null;},'Hex micro pair missing');
  const values=await Promise.all(micros.map(w=>j(w,'window.hexMicro.bootstrap()'))),routes=micros[values.findIndex(v=>v.kind==='routes')],economy=micros[values.findIndex(v=>v.kind==='economy')];
  await until(()=>j(routes,'document.querySelectorAll(".hex-micro-route").length===3'),'Three cards missing');
@@ -68,7 +68,7 @@ async function run(){
  // must remain interactive while the rest of the overlay passes game clicks.
  const displayMatching=screen.getDisplayMatching.bind(screen);
  screen.getDisplayMatching=rect=>{const display=displayMatching(rect);return {...display,workArea:{...display.workArea,height:220}};};
- await j(main,'window.buddy.openGuide({id:"Yasuo",role:"mid",mode:"hex"})');
+ await j(main,'window.buddy.openGuide({id:"Camille",role:"top",mode:"hex"})');
  await until(()=>j(routes,'document.querySelector(".hex-micro-route-list").scrollHeight>document.querySelector(".hex-micro-route-list").clientHeight'),'Short layout did not overflow');
  assert(routes.getBounds().height<=145,'Short work area exceeded its cap');
  const short=await j(routes,'(()=>{const e=document.querySelector(".hex-micro-route-list"),r=e.getBoundingClientRect();return {right:r.right,y:r.y+Math.min(30,r.height/2),height:r.height};})()'),shortBounds=routes.getBounds();
@@ -78,9 +78,9 @@ async function run(){
  await until(()=>j(routes,'document.querySelector(".hex-micro-route-list").scrollTop>0'),'Short overlay would not scroll');
  await capture('micro-short-scrolled.png',routes);
  cursor={x:shortBounds.x+80,y:shortBounds.y+30};await until(()=>routes.__ignoring===true,'Icon body blocked game input');
- screen.getDisplayMatching=displayMatching;cursor={x:-1000,y:-1000};await j(main,'window.buddy.openGuide({id:"Yasuo",role:"mid",mode:"hex"})');
+ screen.getDisplayMatching=displayMatching;cursor={x:-1000,y:-1000};await j(main,'window.buddy.openGuide({id:"Camille",role:"top",mode:"hex"})');
 
- surface=main;await j(main,'window.buddy.openGuide({id:"Yasuo",role:"mid",mode:"hex"})');
+ surface=main;await j(main,'window.buddy.openGuide({id:"Camille",role:"top",mode:"hex"})');
  phase='ChampSelect';ownHero='Yasuo';await j(main,'window.buddy.client(true)');
  const area=screen.getPrimaryDisplay().workArea,anchor=new BrowserWindow({x:area.x+20,y:area.y+30,width:Math.max(500,area.width-580),height:Math.min(850,area.height-80),show:false,focusable:false,webPreferences:{sandbox:true}});await anchor.loadURL('data:text/html,<body>Isolated client</body>');anchor.showInactive();await until(()=>observer,'Observer missing');observer.stdout.emit('data',JSON.stringify({client:{...screen.dipToScreenRect(null,anchor.getBounds()),foreground:true,minimized:false},game:null})+'\n');
  await j(main,'window.buddy.companionMode(true)');const side=await until(()=>windows.find(w=>!w.isDestroyed()&&w.webContents.getURL().includes('surface=companion')),'Sidebar missing');surface=side;await until(()=>j(side,'!!document.querySelector("[data-action=companion-tab][data-tab=plan]")'),'Sidebar ready');await click('[data-action=companion-tab][data-tab=plan]');await until(()=>j(side,'!!document.querySelector(".hex-config-pools")'),'Sidebar pool missing');
