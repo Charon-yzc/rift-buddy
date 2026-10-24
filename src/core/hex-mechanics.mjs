@@ -34,6 +34,8 @@ const rules={
  3078:['TheBoomAndTheBass',/施放技能后.*下一次攻击.*额外魔法伤害.*移动速度/s],
  3036:['DoubleTime',/2种不同技能.*敌方英雄.*魔法伤害.*最大法力值/s],
  3049:['ArmoredImpact',/施放技能后.*下一次普通攻击.*额外护甲.*额外物理伤害/s],
+ 3004:['GetJinxed',/召唤师技能替换.*飞弹.*敌方英雄、建筑物或墙体.*物理伤害/s],
+ 3116:['TakeemDownDownDown',/普攻和技能.*敌方英雄施加层数.*消耗所有层数.*已损失生命值.*回复生命值/s],
 };
 export const hexMechanicIds=Object.keys(rules).map(Number);
 export function reviewedHexMechanic(augment,patch){

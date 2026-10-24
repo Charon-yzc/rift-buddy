@@ -444,6 +444,68 @@
         "E可结束血莽并争取承伤恢复窗口；不能控制追击目标时先考虑撤离，不承诺持续回血或无缝控制。"
       ],
       "caution": "伤害以额外护甲和实际触发为条件；魔抗不是护甲。先看敌方伤害类型与攻击空间，不为增伤盲目全堆护甲，也不保证连招必胜。"
+    },
+    {
+      "hero": "Hecarim",
+      "patch": "16.21",
+      "augment": 3078,
+      "optional": [
+        3004,
+        3116
+      ],
+      "title": "低音疾驰穿插",
+      "summary": "技能后接普攻，利用短暂移速调整进退。",
+      "play": [
+        "Q命中维持层数，技能后穿插实际普攻，利用强化攻击后的衰减移速进退；只按技能不会获得这次攻击后的移速。",
+        "W在能贴身交战时开启，E保留追击或撤离；额外移速可通过被动提供攻击力，但不能把录像的瞬时面板当作常驻属性。"
+      ],
+      "basicPlay": [
+        "已失去R，以Q命中维持层数、技能后实际普攻，E留作进退；不照搬大招突进与恐惧。"
+      ],
+      "caution": "强化移速持续衰减，不是常驻疾跑或技能冷却重置；不把录像中的瞬时移速、攻击力当作落地后仍会保留的属性。",
+      "gear": [
+        [
+          "作者六件推荐·按局势购买",
+          [
+            126697,
+            6333,
+            3004
+          ],
+          "狂妄靠参与击杀叠攻击力；死舞延后承伤，魔宗需叠泪。按局势购买。"
+        ],
+        [
+          "作者六件推荐·后续比较",
+          [
+            6694,
+            2517,
+            3142
+          ],
+          "按敌方护甲、续战和进退空间选择；饥渴的急速与幽梦移速各有条件。"
+        ]
+      ],
+      "communitySource": {
+        "author": "可乐乱斗",
+        "url": "https://www.bilibili.com/video/BV16fHK6kEPi/",
+        "publishedAt": "2026-10-24T10:43:46.000Z",
+        "sourcePatch": null,
+        "observedMode": "作者当日海克斯大乱斗4.0教学，实际卡面为本版罪恶快感、鼓声暴起低音轰鸣、将他们放倒倒倒",
+        "evidenceSeconds": [
+          0,
+          10,
+          15,
+          20,
+          30,
+          35,
+          40,
+          45,
+          50,
+          60,
+          65,
+          70,
+          75
+        ],
+        "adaptation": "作者当日三强化同局展示与40秒六件推荐；项目按16.21核对触发边界并选用海克斯装备ID。未取得完整作者符文、逐级加点、鞋子时机及固定购买顺序；不声称三件强化必然出现或为热门胜率排行。"
+      }
     }
   ],
   "championReview": {
@@ -457,7 +519,8 @@
       "MonkeyKing": "d8e1f17e61bc6c8d",
       "Riven": "250743f905f1d048",
       "Irelia": "1a72d78b2846711a",
-      "Briar": "c27bce7ec0937640"
+      "Briar": "c27bce7ec0937640",
+      "Hecarim": "f9c4c9b8aea59e68"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -649,6 +712,30 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "a56183c54c52c784"
+          }
+        }
+      },
+      "Hecarim": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "f9c4c9b8aea59e68",
+        "observedAt": "2026-10-21T19:28:20.427Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Hecarim",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/hecarim/hecarim.bin.json",
+            "sha256": "8107a10cc214af38a79ff9f0551fd3a8c77231a1998aeda6f8b5a6c0bf8a4dc1"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "2a4e6af555abb6c6"
           }
         }
       }

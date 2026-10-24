@@ -9,7 +9,7 @@ const game=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.
 const batch=[['Ryze',3036],['Kassadin',3036],['MonkeyKing',3049],['Riven',3049],['Irelia',3049],['Briar',3049]],source='https://www.bilibili.com/video/BV1CLn16HEk9/';
 
 test('the current 4.0 creator batch keeps six conditional directions and their explicit project adaptations',()=>{
- const before=JSON.stringify(game);assert.equal(validateCommunityData({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog,hexRoutes:routes},game).version,'2026.10.24.3');
+ const before=JSON.stringify(game);assert.equal(validateCommunityData({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog,hexRoutes:routes},game).version,catalog.version);
  for(const [hero,id] of batch){
   const [route]=hexPlayerRoutes({data:game,hero,options:[id]});assert(route,hero);assert.equal(route.state,'offered');assert.equal(route.augment.id,id);assert.equal(route.patch,game.patch);assert.equal(route.pendingItems,0);assert.equal(route.communitySource.url,source);assert.equal(route.communitySource.sourcePatch,null);assert.match(route.communitySource.observedMode,/4\.0/);assert.match(route.basis,/项目.*条件装备/);assert.match(route.basis,/未取得作者完整/);assert(route.sources.some(s=>s.url===source));
   const micro=hexMechanismMicroRoutes([route])[0],card=hexRouteCard(micro);assert.equal(card.source,'海斗的A面 · 改编');assert.equal(card.sourceUrl,source);assert.deepEqual(micro.augments.map(a=>a.id),[id]);assert(micro.augments[0].core);assert(micro.items.every(i=>!i.core),'Conditional project equipment must not be attributed as the creator’s fixed core');
