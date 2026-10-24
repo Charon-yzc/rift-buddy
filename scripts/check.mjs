@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import './build-renderer.mjs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {getBuild,validReference,validHexReference} from '../src/core/builds.mjs';

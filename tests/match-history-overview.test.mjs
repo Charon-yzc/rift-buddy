@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {cleanPublicStats,PUBLIC_STAT_FIELDS,PUBLIC_STAT_GROUPS,publicStatValue} from '../src/core/match-history/public-stats.mjs';
 import {historyDamageComposition,historyComparisonView,historyRadarData} from '../src/match-history-comparison-view.mjs';
 import {historyDetailTableView,historyPublicStatRows} from '../src/match-history-detail-table-view.mjs';
-import {matchHistoryView,historyMatchSummaryView,historyMatchAkariScore} from '../src/match-history-view.mjs';
+import {matchHistoryView,historyMatchSummaryView,historyMatchAkariScore,historyCardsView} from '../src/match-history-view.mjs';
 import {analyzeAkariHistory} from '../src/core/akari/bridge.mjs';
 
 const data={champions:[{key:'22',id:'Ashe',name:'寒冰射手'},{key:'103',id:'Ahri',name:'九尾妖狐'}],items:{1001:{name:'鞋子'},3869:{name:'职责装备'}},spells:{4:{name:'闪现'},7:{name:'治疗术'}},runes:[{id:8000,name:'精密',slots:[{runes:[{id:8005,name:'强攻'}]}]},{id:8100,name:'主宰',slots:[]}],augments:[{id:100,name:'测试强化'}]};
@@ -127,4 +127,17 @@ test('raw all-player matrix uses the union of known fields, searches labels and 
  const noResult=historyDetailTableView({game:extended,rawStatsQuery:'<script>bad</script>'},data);assert.match(noResult,/没有匹配的公开统计字段/);assert.doesNotMatch(noResult,/<script>|undefined|NaN|Infinity/);
  const statsTab=matchHistoryView(state('stats'),data);assert.match(statsTab,/history-public-matrix/);assert.match(statsTab,/全玩家详细数据/);
  assert.equal(publicStatValue(players[0],'__proto__'),null);assert.equal(publicStatValue({publicStats:{magicalDamageTaken:12}},'magicDamageTaken'),null);
+});
+
+test('reused card markup follows every detail change but not unrelated renders',()=>{
+ const s=state('summary',true),detail=s.tabs[0].details[42],html=()=>historyCardsView(s,data).items[0].html;
+ const first=html();assert.equal(html(),first,'an unchanged card renders identically');
+ detail.section='events';assert.match(html(),/事件数据尚未读取/,'a section switch is not served from the cache');
+ detail.timeline={frames:[],events:[{type:'WARD_PLACED',timestamp:61000,creatorId:1,wardType:'CONTROL_WARD'}]};const withTimeline=html();assert.match(withTimeline,/控制守卫/,'an arriving timeline replaces the placeholder');
+ detail.eventTypes=['CHAMPION_KILL'];assert.match(html(),/没有符合条件的事件/,'a new filter selection is applied');
+ detail.eventTypes=[];assert.equal(html(),withTimeline);
+ delete detail.timeline;assert.match(html(),/事件数据尚未读取/,'an evicted timeline is not served from the cache');
+ detail.open=false;assert.match(html(),/data-history-expanded="false"/);
+ s.tabs[0].page.fullAnalysis={map:{42:{akariScore:{total:9.99}}}};detail.open=true;detail.section='summary';
+ assert.match(html(),/Akari 参考 9.99/,'a recalculated page analysis refreshes the score');
 });

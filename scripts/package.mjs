@@ -1,4 +1,5 @@
 import {packager} from '@electron/packager';
+import './build-renderer.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -17,7 +18,7 @@ const paths=await packager({
  dir:root,out,platform:'win32',arch:'x64',name:'开黑搭子',executableName:'开黑搭子',
  appVersion:manifest.version,buildVersion:manifest.version,electronVersion:'44.5.1',icon:path.join(root,'assets/icon.ico'),
  asar:true,prune:false,overwrite:false,download:{mirrorOptions:{mirror:process.env.ELECTRON_MIRROR}},
- ignore:[/^\/(?:README\.md|CONTRIBUTING\.md|docs|relay|deploy|\.github)(?:\/|$)/,/^\/NVIDIA Corporation(?:\/|$)/,/^\/services\/server-data-[^/]+\.mjs$/,/^\/开黑搭子(?:\/|$)/,/^\/node_modules(?:\/|$)/,/^\/release(?:\/|$)/,/^\/\.local(?:\/|$)/,/^\/tests(?:\/|$)/,/^\/scripts(?:\/|$)/,/^\/test-results(?:\/|$)/,/^\/output(?:\/|$)/,/^\/\.playwright-mcp(?:\/|$)/,/^\/\.git(?:\/|$)/,/^\/AGENTS\.md$/,/^\/pnpm.*$/,/^\/\.git(?:ignore|attributes)$/],
+ ignore:[/^\/(?:README\.md|CONTRIBUTING\.md|docs|relay|deploy|server|\.github)(?:\/|$)/,/^\/NVIDIA Corporation(?:\/|$)/,/^\/services\/server-data-[^/]+\.mjs$/,/^\/开黑搭子(?:\/|$)/,/^\/node_modules(?:\/|$)/,/^\/release(?:\/|$)/,/^\/\.local(?:\/|$)/,/^\/tests(?:\/|$)/,/^\/scripts(?:\/|$)/,/^\/test-results(?:\/|$)/,/^\/output(?:\/|$)/,/^\/\.playwright-mcp(?:\/|$)/,/^\/\.git(?:\/|$)/,/^\/AGENTS\.md$/,/^\/pnpm.*$/,/^\/\.git(?:ignore|attributes)$/],
  win32metadata:{CompanyName:'个人开黑工具',FileDescription:'开黑搭子 — 选阵容、准备配置与局内参考',ProductName:'开黑搭子',InternalName:'RiftBuddy',OriginalFilename:'开黑搭子.exe'},
  });
 const directory=paths[0];

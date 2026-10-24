@@ -130,7 +130,7 @@ test('events expose received/dealt groups, ward actors, known identities and fil
   {type:'CHAMPION_KILL',timestamp:70000,killerId:0,victimId:3,assists:[]}
  ];
  const html=historyEventsView({game,timeline:{frames:[],events}});
- assert.match(html,/阵亡伤害明细/);assert.match(html,/承受伤害/);assert.match(html,/造成伤害/);assert.match(html,/来源玩家/);assert.match(html,/目标玩家/);
+ assert.ok(html.includes('<details data-lazy-details><summary>阵亡伤害明细</summary><template><section data-damage-group="received">'),'Damage tables wait in an inert template until opened');assert.ok(html.includes('<details data-lazy-details><summary>事件位置</summary><template>'));assert.match(html,/阵亡伤害明细/);assert.match(html,/承受伤害/);assert.match(html,/造成伤害/);assert.match(html,/来源玩家/);assert.match(html,/目标玩家/);
  assert.match(html,/控制守卫/);assert.match(html,/队友/);assert.match(html,/未读取/);assert.match(html,/非玩家/);
  assert.doesNotMatch(html,/玩家 0|NaN/);
  const selected=historyEventsView({game,timeline:{frames:[],events},eventPlayer:2});assert.match(selected,/1:05/);assert.match(selected,/1:00/);assert.doesNotMatch(selected,/1:10/);

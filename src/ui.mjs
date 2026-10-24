@@ -58,4 +58,8 @@ export function installAssets(prepared){localAssets=prepared.local;fallbackAsset
 export function configureAssets(data){installAssets(prepareAssets(data));}
 export const asset=(kind,id,alt='',cls='')=>`<img class="${cls}" ${['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${escape(id)}"`:''} src="${escape(localAssets[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" ${fallbackAssets.get(`${kind}/${id}`)?`data-fallback="${escape(fallbackAssets.get(`${kind}/${id}`))}"`:''} alt="${escape(alt)}" loading="lazy" />`;
 export const button=(action,label,ico='',cls='',extra='')=>`<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${ico?icon(ico):''}${label}</button>`;
+// Number#toLocaleString builds a new formatter on every call, and detail tables
+// format thousands of values per render; reuse one formatter per precision.
+const numberFormats=new Map();
+export const formatNumber=(value,digits=3)=>{let format=numberFormats.get(digits);if(!format)numberFormats.set(digits,format=new Intl.NumberFormat('zh-CN',{maximumFractionDigits:digits}));return format.format(value);};
 export const dateLabel=v=>v?new Date(v).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}):'未知';

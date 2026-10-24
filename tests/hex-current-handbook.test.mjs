@@ -6,6 +6,7 @@ import {hexAugmentReference} from '../src/core/hex-augment-reference.mjs';import
 import {hexConfigurationView} from '../src/hex-configuration-view.mjs';
 import {companionPlanView} from '../src/companion-view.mjs';import {getBuild} from '../src/core/builds.mjs';import {selectedBuildFields} from '../src/core/build-favorites.mjs';
 import {resolveHexAugmentInput} from '../src/core/hex-recommendations.mjs';import {hexAugmentDetail} from '../src/core/hex-augment-detail.mjs';
+import FavoriteList from '../src/generated/FavoriteList.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),source=await fs.readFile(new URL('../src/app.mjs',import.meta.url),'utf8');
 data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
 const line=name=>source.split('\n').find(line=>line.startsWith('function '+name+'(')||line.startsWith('async function '+name+'('));
@@ -36,11 +37,11 @@ test('actual handbook removes stale wishlist chips and disabled cards instead of
  for(const a of retired)assert(!html.includes('data-id="'+a.id+'"'));assert(!html.includes('value="disabled"'));
 });
 
-test('actual favorites keep action indices stable while hiding obsolete Hex collections',()=>{
+test('Vue favorites preserve original action indices while hiding obsolete Hex collections',()=>{
  const favorites=[{type:'hex',title:'obsolete-hex',version:'16.20.1',augments:[active.id]},{type:'build',title:'rift-kept',mode:'rift',version:'16.20.1'},{type:'hex',title:'current-hex',version:data.version,augments:[active.id]},{type:'hex',title:'disabled-hex',version:data.version,augments:[retired[0].id]},{type:'build',title:'obsolete-hex-build',mode:'hex',version:'16.20.1'}],before=JSON.stringify(favorites);
- const context=vm.createContext({data,saved:{favorites},hexFavoriteIsCurrent,heading:()=>'',e:escape,icon,button,portrait:()=>'',champ:()=>null,favoriteBuildSummary:()=>'',favoriteTeamSummary:()=>'',dateLabel:()=>''});vm.runInContext(line('renderFavorites'),context);context.obsoleteHexFavoriteControl=()=>'';
- const html=context.renderFavorites();assert.match(html,/rift-kept/);assert.match(html,/current-hex/);assert.doesNotMatch(html,/obsolete-hex|disabled-hex|旧版强化/);assert.match(html,/data-action="open-favorite" data-index="1"/);assert.match(html,/data-action="open-favorite" data-index="2"/);assert.equal(JSON.stringify(favorites),before);
- context.saved.favorites=[favorites[0]];assert.match(context.renderFavorites(),/留住想玩的点子/);
+ const rows=FavoriteList.computed.rows.call({data,favorites});
+ assert.deepEqual(rows.map(row=>[row.title,row.index]),[['rift-kept',1],['current-hex',2]]);assert.equal(JSON.stringify(favorites),before);
+ assert.deepEqual(FavoriteList.computed.rows.call({data,favorites:[favorites[0]]}),[]);
 });
 
 test('saving a current Hex collection cannot toggle-delete an invisible previous-patch collection with the same hero and IDs',()=>{

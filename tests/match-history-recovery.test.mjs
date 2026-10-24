@@ -13,10 +13,11 @@ function fixture(){
  return {service,calls,settings,account:p=>player=p,advance:ms=>clock+=ms};
 }
 
-test('remembering either source preserves fallback when it later fails, and explicit backend remains first',async()=>{
- const f=fixture();assert.equal((await f.service.execute('page')).source,'sgp');f.settings.backend=async()=>{throw http(503);};assert.equal((await f.service.execute('page')).source,'lcu');
- const g=fixture();g.settings.backend=async()=>{throw http(401);};assert.equal((await g.service.execute('page')).source,'lcu');g.settings.backend=async()=>({games:[{json:raw(old)}]});g.settings.local=async()=>{throw http(503);};assert.equal((await g.service.execute('page')).source,'sgp');
- const h=fixture();h.settings.backend=async()=>{throw http(401);};await h.service.execute('page');const localCalls=h.calls.local.length;h.settings.backend=async()=>({games:[{json:raw(old)}]});assert.equal((await h.service.execute('page',{source:'sgp'})).source,'sgp');assert.equal(h.calls.local.length,localCalls);
+test('deep pages remember either source while preserving fallback and explicit backend priority',async()=>{
+ const page={start:20,fresh:true};
+ const f=fixture();assert.equal((await f.service.execute('page',page)).source,'sgp');f.settings.backend=async()=>{throw http(503);};assert.equal((await f.service.execute('page',page)).source,'lcu');
+ const g=fixture();g.settings.backend=async()=>{throw http(401);};assert.equal((await g.service.execute('page',page)).source,'lcu');g.settings.backend=async()=>({games:[{json:raw(old)}]});g.settings.local=async()=>{throw http(503);};assert.equal((await g.service.execute('page',page)).source,'sgp');
+ const h=fixture();h.settings.backend=async()=>{throw http(401);};await h.service.execute('page',page);const localCalls=h.calls.local.length;h.settings.backend=async()=>({games:[{json:raw(old)}]});assert.equal((await h.service.execute('page',{...page,source:'sgp'})).source,'sgp');assert.equal(h.calls.local.length,localCalls);
 });
 
 test('both failed sources retain independent cooldowns and recover after expiry',async()=>{
@@ -36,15 +37,17 @@ test('HTTP 4xx errors do not become region-wide outages because of their message
 });
 
 test('old successful source responses cannot replace a new account preferred source',async()=>{
- const f=fixture();let release;f.settings.backend=async()=>new Promise(r=>release=r);const pending=f.service.execute('page'),rejected=assert.rejects(pending,/会话|账号/);while(!release)await pause();
- await f.service.execute('clear');f.account(other);f.settings.backend=async()=>{throw Object.assign(Error('战绩后台认证失效或不支持此大区'),{status:401});};assert.equal((await f.service.execute('page')).source,'lcu');
- release({games:[{json:raw(old)}]});await rejected;const before=f.calls.backend.length;f.settings.backend=async()=>({games:[{json:raw(other)}]});assert.equal((await f.service.execute('page')).source,'lcu');assert.equal(f.calls.backend.length,before);
+ const page={start:20,fresh:true};
+ const f=fixture();let release;f.settings.backend=async()=>new Promise(r=>release=r);const pending=f.service.execute('page',page),rejected=assert.rejects(pending,/会话|账号/);for(let n=0;n<100&&!release;n++)await pause();assert.equal(typeof release,'function','Deep page must start the backend request');
+ await f.service.execute('clear');f.account(other);f.settings.backend=async()=>{throw Object.assign(Error('战绩后台认证失效或不支持此大区'),{status:401});};assert.equal((await f.service.execute('page',page)).source,'lcu');
+ release({games:[{json:raw(old)}]});await rejected;const before=f.calls.backend.length;f.settings.backend=async()=>({games:[{json:raw(other)}]});assert.equal((await f.service.execute('page',page)).source,'lcu');assert.equal(f.calls.backend.length,before);
 });
 
 test('old failed source responses cannot cool down or query through a new account',async()=>{
- const f=fixture();let rejectOld;f.settings.backend=async()=>new Promise((_,reject)=>rejectOld=reject);const pending=f.service.execute('page'),rejected=assert.rejects(pending,/会话|账号/);while(!rejectOld)await pause();
+ const page={start:20,fresh:true};
+ const f=fixture();let rejectOld;f.settings.backend=async()=>new Promise((_,reject)=>rejectOld=reject);const pending=f.service.execute('page',page),rejected=assert.rejects(pending,/会话|账号/);for(let n=0;n<100&&!rejectOld;n++)await pause();assert.equal(typeof rejectOld,'function','Deep page must start the backend request');
  await f.service.execute('clear');f.account(other);await f.service.execute('own-summary-context');rejectOld(http(503));await rejected;assert.equal(f.calls.local.length,0,'A stale request must not start another source');
- f.settings.backend=async()=>({games:[{json:raw(other)}]});assert.equal((await f.service.execute('page')).source,'sgp');
+ f.settings.backend=async()=>({games:[{json:raw(other)}]});assert.equal((await f.service.execute('page',page)).source,'sgp');
 });
 
 test('summary scans keep a valid short page even when speculative following pages fail',async()=>{
@@ -52,7 +55,7 @@ test('summary scans keep a valid short page even when speculative following page
 });
 
 test('a paginated list stops at the first short source page and never joins across a failed page',async()=>{
- const f=fixture();f.settings.backend=async(start)=>{if(start)throw http(404);return {games:Array.from({length:7},(_,i)=>({json:raw(old,i+1)}))};};const page=await f.service.execute('page',{count:80});assert.equal(page.source,'sgp');assert.equal(page.games.length,7);assert.equal(page.hasMore,false);assert.equal(f.calls.local.length,0);
+ const f=fixture();f.settings.backend=async(start)=>{if(start)throw http(404);return {games:Array.from({length:7},(_,i)=>({json:raw(old,i+1)}))};};const page=await f.service.execute('page',{count:80,source:'sgp'});assert.equal(page.source,'sgp');assert.equal(page.games.length,7);assert.equal(page.hasMore,false);assert.equal(f.calls.local.length,0);
  const g=fixture();g.settings.backend=async(start)=>{if(start===40)throw http(503);return {games:Array.from({length:20},(_,i)=>({json:raw(old,start+i+1)}))};};const first=await g.service.execute('own-summary-page');await assert.rejects(g.service.execute('own-summary-page',{cursor:first.cursor}),/中断/);g.settings.backend=async(start)=>({games:Array.from({length:20},(_,i)=>({json:raw(old,start+i+1)}))});const next=await g.service.execute('own-summary-page',{cursor:first.cursor});assert.equal(next.scanned,100);assert.equal(next.identified,100);assert.equal(g.calls.local.length,0);
 });
 

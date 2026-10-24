@@ -1,4 +1,5 @@
 node_modules/
+src/generated/
 release/
 .local/
 开黑搭子/

@@ -2,21 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMatchHistoryService} from '../services/match-history.mjs';
 import {createHistoryController} from '../src/match-history-controller.mjs';
+import {createOngoingGameController} from '../src/ongoing-game-controller.mjs';
 import {createChampionUsageCollector} from '../services/champion-usage-collector.mjs';
 
 const own={puuid:'a'.repeat(36),summonerId:1,gameName:'示例',tagLine:'CN1'};
 const raw={gameId:1,queueId:420,gameDuration:1200,gameCreation:1700000000000,gameVersion:'16.20',gameType:'MATCHED_GAME',participantIdentities:[{participantId:1,player:own}],participants:[{participantId:1,championId:22,puuid:own.puuid,teamId:100,stats:{kills:1,deaths:0,assists:2,win:true}}],teams:[]};
 const localBody={games:{games:[raw]}};
 
-function service({local=async()=>({body:localBody}),backend=async()=>({games:[{json:raw}]}),discover=async()=>({port:23456,password:'mock',region:'TENCENT',rsoPlatformId:'HN10'})}={}){
+function service({local=async()=>({body:localBody}),backend=async()=>({games:[{json:raw}]}),discover=async()=>({port:23456,password:'mock',region:'TENCENT',rsoPlatformId:'HN10'}),operationDeadlineMs,request:customRequest}={}){
  const calls={local:0,backend:0};
  return {
   calls,
   service:createMatchHistoryService({
    discover,
-   request:async(_auth,route)=>{calls.local++;if(route==='/lol-summoner/v1/current-summoner')return own;if(route==='/entitlements/v1/token')return {accessToken:'token'};if(route.includes('/matches'))return (await local()).body;if(route.includes('/games/'))return raw;return {};},
-   sgp:async()=>{calls.backend++;const value=await backend();if(value instanceof Error)throw value;return value;},
-   installPath:()=>''
+   request:customRequest||(async(_auth,route)=>{calls.local++;if(route==='/lol-summoner/v1/current-summoner')return own;if(route==='/entitlements/v1/token')return {accessToken:'token'};if(route.includes('/matches'))return (await local()).body;if(route.includes('/games/'))return raw;return {};}),
+   sgp:async(request)=>{calls.backend++;const value=await backend(request);if(value instanceof Error)throw value;return value;},
+   installPath:()=>'',operationDeadlineMs
   })
  };
 }
@@ -40,7 +41,7 @@ test('a source that just failed is skipped during its cooldown',async()=>{
  assert.equal(first.source,'sgp','the backend answers while the local route is down');
  const backendBefore=f.calls.backend;
  localDown=false;
- const second=await f.service.execute('page',{source:'auto',handle:first.handle});
+ const second=await f.service.execute('page',{source:'auto',handle:first.handle,start:20});
  assert.equal(second.source,'sgp');
  assert.equal(f.calls.backend,backendBefore+1,'the healthy backend is reused');
 });
@@ -72,17 +73,21 @@ test('a rejected credential is retried on the next query instead of being cooled
  assert.deepEqual(sent,[1,2]);
 });
 
-test('an outage does earn a cooldown so the failing source is not retried every page',async()=>{
+test('a backend outage on a deeper page is remembered instead of retried on every page',async()=>{
  let backendCalls=0;
  const f=service({
   backend:async()=>{backendCalls++;throw Object.assign(Error('后台 503'),{status:503});},
   local:async()=>({body:localBody})
  });
  const first=await f.service.execute('page',{source:'auto'});
- assert.equal(first.source,'lcu');
- const second=await f.service.execute('page',{source:'auto',handle:first.handle});
+ assert.equal(first.source,'lcu','the first page stays on the client and never wakes the backend');
+ assert.equal(backendCalls,0);
+ const second=await f.service.execute('page',{source:'auto',handle:first.handle,start:20});
  assert.equal(second.source,'lcu');
- assert.equal(backendCalls,1,'the backend outage is remembered for its cooldown window');
+ assert.equal(backendCalls,1,'a deeper page tries the backend once');
+ const third=await f.service.execute('page',{source:'auto',handle:first.handle,start:40});
+ assert.equal(third.source,'lcu');
+ assert.equal(backendCalls,1,'the remembered client source keeps later pages off the failing backend');
 });
 
 test('the hero-statistics batch is fetched concurrently instead of one page at a time',async()=>{
@@ -120,6 +125,108 @@ test('an old cached source cannot lock the early visible page away from a health
  assert.equal(collector.snapshot().source,'sgp');assert.equal(calls.filter(c=>c.operation==='page').length,1);
 });
 
+test('a page that was already read is served from memory until it expires or is refreshed',async()=>{
+ let pageReads=0;
+ const f=service({request:async(_auth,route)=>{
+  if(route==='/lol-summoner/v1/current-summoner')return own;
+  if(route==='/entitlements/v1/token')return {accessToken:'t'};
+  if(route.includes('/matches?')){pageReads++;return localBody;}
+  return {};
+ }});
+ const first=await f.service.execute('page',{source:'lcu',start:0,count:20});
+ const before=pageReads;
+ const second=await f.service.execute('page',{source:'lcu',handle:first.handle,start:0,count:20});
+ assert.equal(pageReads,before,'a cached page must not be read again');
+ assert.deepEqual(second.games.map((g)=>g.id),first.games.map((g)=>g.id));
+ await f.service.execute('page',{source:'lcu',handle:first.handle,start:0,count:20,fresh:true});
+ assert.equal(pageReads,before+1,'an explicit refresh bypasses the cache');
+ await f.service.execute('clear');
+ await f.service.execute('page',{source:'lcu',start:0,count:20});
+ assert.equal(pageReads,before+2,'clearing the session drops cached pages');
+});
+const requestStub=(overrides={})=>async(_auth,route)=>{
+ if(route==='/lol-summoner/v1/current-summoner')return own;
+ if(route==='/entitlements/v1/token')return {accessToken:'token'};
+ if(route.includes('/matches?'))return localBody;
+ if(route.startsWith('/lol-match-history/v1/games/')){if(overrides.detail==='fail')throw Object.assign(Error('客户端 500'),{status:500});return raw;}
+ if(route.includes('/game-timelines/')){if(overrides.timeline==='hang')return new Promise(()=>{});if(overrides.timeline==='fail')throw Object.assign(Error('客户端 503'),{status:503});return {frames:[]};}
+ if(route.startsWith('/lol-ranked/'))return {queues:[]};
+ if(route.includes('/champion-mastery/'))return [];
+ if(route.includes('/summoner-profile'))return {};
+ return {};
+};
+
+test('a stalled read stops visible waiting while a free transport slot serves another read',async()=>{
+ const f=service({request:requestStub({timeline:'hang'}),operationDeadlineMs:60});
+ const page=await f.service.execute('page',{source:'lcu',start:0,count:20});
+ const started=Date.now();
+ await assert.rejects(f.service.execute('timeline',{handle:page.handle,id:page.games[0].id}),/超时/);
+ const waited=Date.now()-started;
+ assert.ok(waited<2000,'the caller stops waiting without freeing its real transport slot');
+ const next=await f.service.execute('profile',{handle:page.handle});
+ assert.ok(Array.isArray(next.ranked),'a later read still runs after the stalled one timed out');
+});
+
+test('timed out real transports remain bounded and expired queued operations never start',async()=>{
+ const releases=[];let active=0,maximum=0;
+ const base=requestStub(),f=service({operationDeadlineMs:60,request:async(auth,route)=>{
+  if(route.includes('/game-timelines/')){active++;maximum=Math.max(maximum,active);return new Promise(resolve=>releases.push(()=>{active--;resolve({frames:[]});}));}return base(auth,route);
+ }});
+ const first=await f.service.execute('page',{source:'lcu'});
+ await Promise.all(Array.from({length:3},()=>assert.rejects(f.service.execute('timeline',{handle:first.handle,id:1}),/超时/)));
+ assert.equal(active,3);await assert.rejects(f.service.execute('timeline',{handle:first.handle,id:1}),/超时/);
+ assert.equal(releases.length,3);for(const done of releases)done();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(maximum,3);assert.equal(releases.length,3);assert.equal(active,0);
+ assert.ok(Array.isArray((await f.service.execute('profile',{handle:first.handle})).ranked));
+});
+
+test('current-queue sampling uses one filtered cursor from first page through deeper pages',async()=>{
+ const offsets=[];let localReads=0;const matches=Array.from({length:50},(_,i)=>({json:{...raw,gameId:i+1}}));
+ const f=service({local:async()=>{localReads++;return {body:{games:{games:Array.from({length:20},(_,i)=>({...raw,gameId:1000+i,queueId:i<2?420:430}))}}};},backend:async({route})=>{
+  const url=new URL(route,'https://fixture.test');assert.equal(url.searchParams.get('tag'),'q_420');const start=Number(url.searchParams.get('startIndex')||0),count=Number(url.searchParams.get('count')||20);offsets.push(start);return {games:matches.slice(start,start+count)};
+ }});
+ const member={key:'self',puuid:own.puuid},c=createOngoingGameController({settings:{count:50,details:0,tag:'current'},request:(op,p)=>op==='roster'?Promise.resolve({key:'fixture',session:'fixture',phase:'in-game',queue:420,server:'',players:[member],teams:{SELF:['self']}}):f.service.execute(op,{...p,rosterKey:undefined}),analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ await c.refresh();assert.equal(c.state.players.self.error,'');assert.equal(localReads,0);assert.deepEqual(offsets,[0,20,40]);assert.deepEqual(c.state.players.self.page.games.map(g=>g.id),Array.from({length:50},(_,i)=>i+1));
+});
+
+test('a client timeline failure falls back to the game backend',async()=>{
+ const f=service({request:requestStub({timeline:'fail'}),backend:async({route})=>route.includes('/player/')?{games:[{json:raw}]}:{json:{frames:[],events:[]}}});
+ const page=await f.service.execute('page',{source:'lcu',start:0,count:20});
+ const result=await f.service.execute('timeline',{handle:page.handle,id:page.games[0].id});
+ assert.equal(result.source,'sgp','the backend answered when the client timeline route failed');
+ assert.match(result.notice,/客户端时间线暂不可用/);
+});
+
+// The client timeline route only returns kills, epic monsters and buildings, so a
+// first page read locally for speed must still take its timeline from the backend.
+test('an automatic first page read from the client still takes complete timelines from the game backend',async()=>{
+ const routes=[];
+ const f=service({request:async(auth,route)=>{routes.push(route);return requestStub()(auth,route);},backend:async({route})=>{routes.push(route);return route.includes('/player/')?{games:[{json:raw}]}:{json:{frames:[],events:[]}};}});
+ const page=await f.service.execute('page',{source:'auto',start:0,count:20});
+ assert.equal(page.source,'lcu','the first page still answers from the client');
+ const result=await f.service.execute('timeline',{handle:page.handle,id:page.games[0].id});
+ assert.equal(result.source,'sgp');
+ assert.equal(result.notice,'');
+ assert.ok(routes.some(route=>route.endsWith('/DETAILS')),'the backend timeline was read');
+ assert.ok(!routes.some(route=>route.includes('/game-timelines/')),'the reduced client timeline was not read');
+});
+
+test('a backend timeline failure after a client first page falls back to the client timeline with a notice',async()=>{
+ const f=service({request:requestStub(),backend:async({route})=>route.endsWith('/DETAILS')?Object.assign(Error('后台 503'),{status:503}):{games:[{json:raw}]}});
+ const page=await f.service.execute('page',{source:'auto',start:0,count:20});
+ const result=await f.service.execute('timeline',{handle:page.handle,id:page.games[0].id});
+ assert.equal(result.source,'lcu');
+ assert.match(result.notice,/出装事件可能缺失/);
+});
+
+test('a client detail failure falls back to the game backend',async()=>{
+ const f=service({request:requestStub({detail:'fail'}),backend:async({route})=>route.includes('/player/')?{games:[{json:raw}]}:{json:raw}});
+ const page=await f.service.execute('page',{source:'lcu',start:0,count:20});
+ const detail=await f.service.execute('detail',{handle:page.handle,id:page.games[0].id});
+ assert.equal(detail.game.id,page.games[0].id);
+ assert.match(detail.notice,/客户端详情暂不可用/);
+});
+
 test('the background scan waits for a running foreground read instead of sharing the backend with it',async()=>{
  const started=[];let releaseForeground;
  const f=service({backend:async()=>{
@@ -127,7 +234,7 @@ test('the background scan waits for a running foreground read instead of sharing
   if(started.length===1)return new Promise(resolve=>{releaseForeground=()=>resolve({games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))});});
   return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:100+i}}))};
  }});
- const page=f.service.execute('page',{source:'auto'});
+ const page=f.service.execute('page',{source:'sgp'});
  await new Promise(r=>setTimeout(r,20));
  assert.equal(started.length,1,'the foreground read reached the backend');
  const scan=f.service.execute('own-summary-page',{source:'sgp'});
@@ -146,7 +253,7 @@ test('a stalled foreground read cannot hold the background scan forever',async()
   if(calls===1)return new Promise(()=>{});
   return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))};
  }});
- f.service.execute('page',{source:'auto'});
+ f.service.execute('page',{source:'sgp'});
  await new Promise(r=>setTimeout(r,20));
  const started=Date.now();
  const result=await f.service.execute('own-summary-page',{source:'sgp'});
@@ -164,4 +271,36 @@ test('a scan still completes at the bounded 500-game window',async()=>{
  while(!result.complete&&guard++<20)result=await f.service.execute('own-summary-page',{session:undefined,source:'sgp',cursor:result.cursor});
  assert.equal(result.scanned,500);
  assert.equal(result.complete,true);
+});
+
+// Process discovery spawns PowerShell (about 0.6 s); a reachable client keeps its connection.
+function discoveryService(answers){
+ let clock=1000;const state={discoveries:0,port:23456,reachable:new Set([23456]),unreadable:false,tick:ms=>{clock+=ms;}};
+ const svc=createMatchHistoryService({
+  discover:async()=>{state.discoveries++;return state.unreadable?{unreadable:true}:{port:state.port,password:'mock',region:'TENCENT',rsoPlatformId:'HN10'};},
+  request:async(auth,route)=>{if(!state.reachable.has(auth.port))throw Error('客户端连接超时');if(route.includes('current-summoner'))return own;if(route.includes('/matches'))return localBody;if(route.includes('/games/'))return raw;return {};},
+  sgp:async()=>({games:[{json:raw}]}),now:()=>clock,...answers
+ });
+ return {svc,state};
+}
+test('a known client connection is reused instead of re-running process discovery for every read',async()=>{
+ const {svc,state}=discoveryService();
+ for(let i=0;i<3;i++){await svc.execute('page',{source:'lcu',fresh:true});state.tick(60000);}
+ assert.equal(state.discoveries,1);
+});
+test('a client that stops answering on the known connection is re-discovered once and the read still succeeds',async()=>{
+ const {svc,state}=discoveryService();
+ await svc.execute('page',{source:'lcu'});
+ state.port=23457;state.reachable=new Set([23457]);state.tick(60000);
+ const pages=await Promise.all([svc.execute('page',{source:'lcu',fresh:true}),svc.execute('page',{source:'lcu',fresh:true})]);
+ assert.equal(pages.every(page=>page.games.length===1),true);
+ assert.equal(state.discoveries,2,'Concurrent stale reads share one re-discovery');
+});
+test('a failed discovery is not kept, so the next read looks for the client again',async()=>{
+ const {svc,state}=discoveryService();
+ state.unreadable=true;
+ await assert.rejects(svc.execute('page',{source:'lcu'}),/Windows 权限/);
+ state.unreadable=false;
+ assert.equal((await svc.execute('page',{source:'lcu'})).games.length,1);
+ assert.equal(state.discoveries,2);
 });

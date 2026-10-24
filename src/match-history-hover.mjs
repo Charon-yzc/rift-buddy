@@ -1,8 +1,8 @@
-import {escape as e,asset,gameDescription,portrait} from './ui.mjs';
+import {escape as e,asset,gameDescription,portrait,formatNumber} from './ui.mjs';
 import {historicalSpell} from './match-history-spells.mjs';
 import {SHARDS} from './core/builds.mjs';
 
-const num=value=>Number.isFinite(value)?value.toLocaleString('zh-CN',{maximumFractionDigits:2}):'未读取';
+const num=value=>Number.isFinite(value)?formatNumber(value,2):'未读取';
 const runeIndex=new WeakMap();
 function rune(data,id){
  const trees=data.runes||[];let index=runeIndex.get(trees);
