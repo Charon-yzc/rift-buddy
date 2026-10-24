@@ -1,6 +1,7 @@
 import {isCurrentHexData} from './hex-data-current.mjs';
 import itemsReview from './hex-route-items.json' with {type:'json'};
-import {fingerprint} from './content-fingerprint.mjs';
+import {hexRouteItemFingerprint,communityHexItemFingerprint,validCommunityItemReview} from './community-item-review.mjs';
+export {hexRouteItemFingerprint} from './community-item-review.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {reviewedHexMechanic,hexUltimateRequirement} from './hex-mechanics.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
@@ -57,7 +58,6 @@ const routes=[
  {hero:'Lux',augment:1048,title:'控制接技能暴击',summary:'保持法强与命中率，先控住再找爆发窗口。',play:['Q 命中后衔接 E、R，先判断目标是否仍在技能范围；不要把技能暴击当成必定命中。','E 可先减速再引爆；只在安全距离内考虑普攻触发被动，不为补一次攻击走入危险。'],basicPlay:['Q 命中后衔接 E，引爆后利用基础技能的下一轮冷却继续消耗；不要等待大招爆发。','W 留给自己与需要保护的队友；只在安全距离内普攻触发被动，不为补一次攻击走入危险。'],caution:'W 的护盾不是伤害，不能按暴击伤害计算；强化不要求整套改买 AD 暴击装备。',gear:[['法强爆发',[3089],'帽子保留技能法强路线，并利用珠光随法强增长的暴击率；不是固定第一件。'],['对魔抗目标',[3135],'需要处理魔抗时比较虚空；法术穿透仍按技能原有伤害类型判断。'],['需要自保',[3157],'被物理突进或关键爆发威胁时比较中娅，保住下一轮施法机会。']]},
 ];
 
-export const hexRouteItemFingerprint=item=>fingerprint({name:item?.name,description:item?.description,stats:item?.stats});
 export function hexCommunitySourceURLs(data){
  const community=data.communityHexRoutes||communityRoutes;
  return [...new Set([...new Set(community.routes.map(r=>r.hero))].flatMap(hero=>hexPlayerRoutes({data,hero}).flatMap(r=>communitySourceMedium(r.communitySource)?[r.communitySource.url]:[])))];
@@ -76,6 +76,9 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  return authored.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{
   if(itemReview.communityPolicy==='current-source-only'&&route.community&&!route.communitySource)return [];
   if(route.requiresUltimate&&noUltimate)return [];
+  const scopedItems=community.routes.includes(route)&&route.itemReview!==undefined;
+  if(scopedItems&&!validCommunityItemReview(route.itemReview,route,data.patch,community.reviewedAt))return [];
+  const reviewedItems=scopedItems?route.itemReview.items:itemReview.items,itemFingerprint=scopedItems?communityHexItemFingerprint:hexRouteItemFingerprint;
   const augment=data.augments.find(a=>a.id===route.augment);
   if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||noUltimate&&hexUltimateRequirement(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
@@ -87,7 +90,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
    if(requires.some(id=>{const a=data.augments.find(a=>a.id===id);return a?.descriptionStatus!=='complete'||!reviewedHexMechanic(a,data.patch)||noUltimate&&hexUltimateRequirement(a,data.patch)||hexCatalogDisabled(data,a)&&!owned.includes(id);}))return [];
    const items=ids.flatMap(id=>{
     const item=data.items[id];
-    if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||itemReview.items[id]!==hexRouteItemFingerprint(item)){pendingItems++;return [];}
+    if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||reviewedItems[id]!==itemFingerprint(item,data.patch)){pendingItems++;return [];}
     return [{id,name:item.name,description:item.description,...(route.coreItems?.includes(id)?{core:true}:{})}];
    });
    // A group explanation can depend on every listed item. Never leave old

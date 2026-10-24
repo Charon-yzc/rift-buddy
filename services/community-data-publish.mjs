@@ -2,13 +2,15 @@ import fs from 'node:fs/promises';import path from 'node:path';
 import {createPrivateKey,createPublicKey,sign} from 'node:crypto';import {gzipSync} from 'node:zlib';
 import {atomicJSON} from './data.mjs';import {DATA_FEED_KEYS,feedHash} from './data-feed.mjs';
 import {validateCommunityData,verifyCommunityEnvelope,decodeCommunityData} from './community-data.mjs';
+import {communityHexItemFingerprint} from '../src/core/community-item-review.mjs';
 
 // Caller holds collect.lock, also used by the existing statistical service.
 export async function publishCommunityData({publicRoot,keyFile,game,catalog,hexRoutes,minimumApp,keys=DATA_FEED_KEYS,keyId='data-20261014',clock=()=>Date.now(),write=atomicJSON}){
  publicRoot=path.resolve(publicRoot);keyFile=path.resolve(keyFile);
  if(keyFile===publicRoot||keyFile.startsWith(publicRoot+path.sep))throw Error('签名密钥不可位于公开目录');
  const value=validateCommunityData({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:hexRoutes.reviewedAt,catalog,hexRoutes},game);
- const requiredApp=hexRoutes.routes.some(r=>r.communitySource?.url.startsWith('https://deeparam.com/'))?'0.59.32':hexRoutes.routes.some(r=>r.gear.some(g=>g.length===4))?'0.59.31':hexRoutes.routes.some(r=>r.communitySource?.medium==='text')?'0.59.29':'0.59.28';minimumApp??=requiredApp;
+ for(const route of hexRoutes.routes)if(route.itemReview)for(const [id,hash]of Object.entries(route.itemReview.items))if(!game.items[id]?.maps?.['12']||!game.items[id]?.inStore||game.items[id]?.gold?.purchasable===false||hash!==communityHexItemFingerprint(game.items[id],game.patch))throw Error('社区配套尚未通过当前装备复核');
+ const requiredApp=hexRoutes.routes.some(r=>r.itemReview!==undefined)?'0.59.33':hexRoutes.routes.some(r=>r.communitySource?.url.startsWith('https://deeparam.com/'))?'0.59.32':hexRoutes.routes.some(r=>r.gear.some(g=>g.length===4))?'0.59.31':hexRoutes.routes.some(r=>r.communitySource?.medium==='text')?'0.59.29':'0.59.28';minimumApp??=requiredApp;
  const number=p=>p.split('.').map(Number).reduce((n,v)=>n*1000+v,0);
  if(!/^\d+\.\d+\.\d+$/.test(minimumApp)||number(minimumApp)<number(requiredApp))throw Error('社区资料需要支持所用格式的版本');
  const key=createPrivateKey(await fs.readFile(keyFile));
