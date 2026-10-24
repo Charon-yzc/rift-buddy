@@ -3,6 +3,7 @@ import {gunzipSync} from 'node:zlib';
 import {DATA_FEED_KEYS,feedHash} from './data-feed.mjs';
 import {validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
 import {mechanicReview} from '../src/core/mechanic-review.mjs';
+import {validCommunitySource} from '../src/core/community-source.mjs';
 
 // A separately signed, manually reviewed snapshot. Daily statistical collection
 // must never rewrite its provenance or promote unreviewed creator material.
@@ -17,7 +18,9 @@ export function validateCommunityData(value,data){
  for(const r of routes.routes){
   const source=r.communitySource,key=r.hero+':'+r.augment;
   if(ids.has(key)||!data.champions.some(c=>c.id===r.hero)||r.patch!==data.patch||!data.augments.some(a=>a.id===r.augment)||!Array.isArray(r.optional)||r.optional.length>20||!r.optional.every(id=>data.augments.some(a=>a.id===id))||!text(r.title,120)||!text(r.summary)||!text(r.caution)||!Array.isArray(r.play)||!r.play.length||r.play.length>6||!r.play.every(s=>text(s))||!Array.isArray(r.basicPlay)||!r.basicPlay.length||!r.basicPlay.every(s=>text(s)))throw Error('社区海克斯路线无效');
-  if(!source||!text(source.author,100)||!/^https:\/\/www\.bilibili\.com\/video\/BV[A-Za-z0-9]+\/$/.test(source.url||'')||!Number.isFinite(Date.parse(source.publishedAt))||source.publishedAt.slice(0,10)>value.reviewedAt||!text(source.adaptation)||!Array.isArray(source.evidenceSeconds)||!source.evidenceSeconds.length||source.evidenceSeconds.length>20||!source.evidenceSeconds.every(s=>Number.isInteger(s)&&s>=0&&s<86400))throw Error('社区录像来源未完整记录');
+  if(!validCommunitySource(source,value.reviewedAt))throw Error('社区来源未完整记录');
+  if(r.skillPriority!==undefined&&(!Array.isArray(r.skillPriority)||r.skillPriority.length<1||r.skillPriority.length>3||new Set(r.skillPriority).size!==r.skillPriority.length||!r.skillPriority.every(key=>['Q','W','E'].includes(key))))throw Error('社区加点优先级无效');
+  if(r.requiresUltimate!==undefined&&typeof r.requiresUltimate!=='boolean')throw Error('社区大招条件无效');
   if(!Array.isArray(r.gear)||r.gear.length>12||!r.gear.every(g=>Array.isArray(g)&&g.length===3&&text(g[0])&&text(g[2])&&Array.isArray(g[1])&&g[1].length>0&&g[1].length<=6&&g[1].every(id=>data.items[id]?.maps?.['12']&&data.items[id]?.inStore)))throw Error('社区装备模式不符');
   if(!routes.championReview||mechanicReview(data.champions.find(c=>c.id===r.hero),data.patch,routes.championReview)!=='current')throw Error('社区英雄机制尚未复核');
   ids.add(key);
