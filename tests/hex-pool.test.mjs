@@ -4,6 +4,9 @@ import {hexPoolView} from '../src/hex-pool-view.mjs';
 import {hexRecommendations} from '../src/core/hex-recommendations.mjs';
 import {buildAugmentDescriptions} from '../services/augments.mjs';
 const data=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url)));data.hexBuilds=JSON.parse(await fs.readFile(new URL('../data/hex-builds.json',import.meta.url))).entries;
+// Exercise missing-evidence semantics deterministically. The actual bundled
+// current selected records are validated separately in current-bundle.test.
+for(const ref of Object.values(data.hexBuilds))delete ref.poolEvidence;
 
 test('catalogue includes disabled entries: absence from a hero ranking never becomes a ban',()=>{
  const pool=hexHeroPool({data,hero:'Yasuo'});assert.equal(pool.complete,false);assert.equal(pool.roundsComplete,false);assert.equal(pool.counts.disabled,9);assert.equal(pool.counts.observed,0);assert.equal(pool.counts.unobserved,0);assert(pool.counts.reference>0);

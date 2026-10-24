@@ -40,6 +40,7 @@ test('manual action token uses actual file bytes while its content identity igno
 
 test('manual same-patch preparation retains newer verified pool evidence independently of build timestamps',async t=>{
  const f=await fixture(t),hex=JSON.parse(await fs.readFile('data/hex-builds.json')).entries,disk=structuredClone(hex.Yasuo);
+ disk.fetchedAt=new Date(Math.max(Date.parse(disk.fetchedAt),Date.parse(disk.poolEvidence?.fetchedAt||disk.fetchedAt))+3600000).toISOString();
  // Synthetic bounded evidence tests precedence; no current public pool is claimed.
  disk.poolEvidence={champion:'Yasuo',patch:game.patch,source:'Mayhem:Meta',sourceUrl:'https://mayhemmeta.com/champions/yasuo?patch='+game.patch,fetchedAt:disk.fetchedAt,kind:'selected-game-counts',rows:[{id:1058,games:10,withheld:false}]};disk.fetchedAt=new Date(Date.parse(disk.fetchedAt)+86400000).toISOString();disk.core[0].samples=123456;await fs.mkdir(path.join(f.root,'data'),{recursive:true});await fs.writeFile(path.join(f.root,'data/hex-builds.json'),JSON.stringify({schema:1,entries:{Yasuo:disk}}));
  for(const delta of [0,-3600000]){
