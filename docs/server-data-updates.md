@@ -138,10 +138,10 @@ node --test tests/server-data-fetch.test.mjs tests/server-data-store.test.mjs te
 维护时先核验实例、冻结并审查源码及资料，在审核过的独立目录中通过同一把系统锁执行：
 
 ```sh
-sudo -u riftdata /usr/bin/flock -n /var/lib/rift-buddy-data/collect.lock /opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node scripts/publish-community-data.mjs --public-root /srv/rift-buddy-data --key /var/lib/rift-buddy-data/signing/ed25519.pem
+sudo -u riftdata /usr/bin/flock -n /var/lib/rift-buddy-data/collect.lock /opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node scripts/publish-community-data.mjs --public-root /srv/rift-buddy-data --key /var/lib/rift-buddy-data/signing/ed25519.pem --minimum-app 0.59.30
 ```
 
-用户和工作目录以生效 unit 为准，不创建新采集计划。必须检查发布退出码、HTTPS清单签名、资产双哈希、当前补丁及安装包内的内容一致；失败保留旧清单。
+用户和工作目录以生效 unit 为准，不创建新采集计划。最低客户端版本必须覆盖本批新增的机制守卫：2026.10.25.3 使用 0.59.30，不能仅按文字来源格式沿用 0.59.29。必须检查发布退出码、HTTPS清单签名、资产双哈希、最低客户端版本、当前补丁及打包资料一致；失败保留旧清单。源码或服务器资料更新不等于已发布安装包。
 
 当前源码已将此独立快照接入现有“自动更新游戏资料”和手动“检查更新”，沿用原检查周期，不新增定时器或采集计划。客户端只访问固定公开 HTTPS 地址，校验原固定公钥、压缩前后哈希、补丁、最低应用版本、内置版本下限和单调序列。只下载变化的内容；仅签名发布时间变化时更新缓存元数据，不替换推荐引用。单个快照缓存上限1.5 MB，保留已接受与待启用两份；缓存不含个人组合或战绩。
 
