@@ -943,6 +943,147 @@
         ],
         "adaptation": "仅收录作者一句短评提供的小蜜蜂、蘑菇和残疫方向；不是完整攻略或胜率证据。原文未标补丁与服务器，当前16.21条件由项目独立核验；未取得作者符文、加点、装备顺序，失去R时不提供此路线。"
       }
+    },
+    {
+      "hero": "Taric",
+      "patch": "16.21",
+      "augment": 3049,
+      "optional": [
+        1053
+      ],
+      "title": "护甲穿插续航",
+      "summary": "用被动双击衔接技能，护甲冲击仍需实际普攻。",
+      "play": [
+        "Q或W后打出被动强化普攻，缩短基础技能空档并补Q层数；装甲冲击只强化施法后的下一次普攻，不是两次被动各触发一遍。",
+        "W维持灵链与护甲，E预判控制；Q仍消耗法力并需要层数，保留R延迟保护的提前量。"
+      ],
+      "basicPlay": [
+        "已失去R，靠W护盾、E预判与Q回复保护，施法后在安全距离内接被动普攻；不再等待大招无敌。"
+      ],
+      "caution": "必须能接触目标，不能保证无限Q、连续控制或无消耗；伤害按实际额外护甲结算，不把全部技能都算作普攻。",
+      "gear": [
+        [
+          "作者生命与护甲",
+          [
+            3084,
+            2502
+          ],
+          "作者同段列出心钢与无终：心钢需要近身蓄力后普攻，本身不提供护甲；无终在英雄战斗状态周期伤害并治疗自己。"
+        ],
+        [
+          "作者法力与鞋子",
+          [
+            3070,
+            3047
+          ],
+          "作者列出女神泪与铁板靴；泪在技能命中后叠法力容量，不是回蓝，作者未指明升级终装；铁板靴减的是攻击伤害。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "zzz_Days",
+        "url": "https://www.reddit.com/r/arammayhem/comments/1xct1hu/i_think_armoured_impact_might_be_a_little_strong/",
+        "publishedAt": "2026-10-22T19:58:11.000Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "作者正文：装甲冲击、科学狂人",
+          "作者正文：心钢、无终恨意、女神之泪、铁板靴"
+        ],
+        "adaptation": "原作者正文提供当局两强化与四件装备；只按文字记录局部配置，没有把附带视频当作已看完的版本实证。补丁与服务器未标，按当前16.21技能和装备独立改编；未取得作者完整六件、购买顺序、符文或加点。技能衔接为项目补充，不采用评论者连招冒充作者指示。"
+      }
+    },
+    {
+      "hero": "KSante",
+      "patch": "16.21",
+      "augment": 3049,
+      "optional": [
+        3131,
+        1344,
+        3078
+      ],
+      "title": "护甲穿插·R取舍",
+      "summary": "普通形态施法接攻击，开R重新考虑防御代价。",
+      "play": [
+        "Q/W/E后接实际普攻兑现装甲冲击；Q须命中叠层，两层后的下一次Q才拉拽。",
+        "开R会失去部分最大生命和额外双抗；需要隔开目标再考虑，不能沿用开R前的护甲伤害。全盛W不再击退或晕眩。"
+      ],
+      "basicPlay": [
+        "已失去R，保留普通形态Q/W/E与实际普攻；W蓄力后控制，E向友军冲刺才同时给对方护盾，不沿用全盛形态的技能变化。"
+      ],
+      "caution": "不套用旧版双抗转攻击力；防御装备与R的结算不按静态快照推断，不承诺开R锁住原护甲或固定伤害倍率。",
+      "gear": [
+        [
+          "作者实战三件",
+          [
+            6662,
+            6665,
+            3075
+          ],
+          "实际背包只确认冰脉、贾修、反甲：冰脉施法接普攻留人且有咒刃间隔，贾修与英雄战斗5秒才提高额外双抗，反甲重伤须被英雄攻击触发。不是作者完整六件或固定先后。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "video",
+        "author": "黄焖鸡少放辣",
+        "url": "https://www.bilibili.com/video/BV1b7HN6QENe/",
+        "publishedAt": "2026-10-24T12:00:00.000Z",
+        "sourcePatch": null,
+        "observedMode": "蓝色嚎哭深渊海克斯大乱斗画面；实际装甲冲击卡面，未显示录像构建号或服务器",
+        "evidenceSeconds": [
+          0,
+          3,
+          100,
+          145
+        ],
+        "adaptation": "实际查看0/3/100/145秒关键画面，装甲冲击有卡面，其余三强化仅来自作者同画面叠字；只逐个确认冰脉、贾修、反甲三格，其余装备不强认。不是完整作者教学或购买顺序，未取得作者加点与符文；R取舍及条件由项目按当前16.21独立补充。录像环境未直接证明正式服。"
+      }
+    },
+    {
+      "hero": "Jax",
+      "patch": "16.21",
+      "augment": 3049,
+      "optional": [],
+      "title": "三相转护甲",
+      "summary": "先三相，施法穿插普攻，再按承伤补护甲。",
+      "play": [
+        "作者先三相再补护甲；Q接近后实际普攻，用W衔接下一次攻击。W强化Q的伤害不替代装甲冲击所需的实际普攻。",
+        "E留给敌方攻击压力；R命中英雄才暂获双抗，不能当作常驻护甲。三相咒刃也有自身间隔，不承诺每次W都重复触发。"
+      ],
+      "basicPlay": [
+        "已失去R，Q调整距离、W衔接实际攻击、E应对普攻；不依赖大招命中后的双抗收益。"
+      ],
+      "caution": "不采用原帖固定500伤害或无冷却断言；面对魔法伤害仍需魔抗，不能为了护甲转伤照抄全护甲。",
+      "coreItems": [
+        3078
+      ],
+      "gear": [
+        [
+          "作者首件方向",
+          [
+            3078
+          ],
+          "作者明确先三相，再泛指补护甲；没有指明后续成装、鞋子或六件顺序。"
+        ],
+        [
+          "普攻与治疗压力",
+          [
+            3110,
+            3075
+          ],
+          "项目条件比较冰心、反甲，均非原作者具名后续。冰心应对附近普攻，反甲重伤需要被英雄攻击触发；按实际承伤选择。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "akaciparaci",
+        "url": "https://www.reddit.com/r/ARAM/comments/1xche8v/armored_impact_kinda_busted_on_most_auto_reset/",
+        "publishedAt": "2026-10-22T12:37:11.000Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "原作者正文：贾克斯、装甲冲击、先三相后护甲"
+        ],
+        "adaptation": "作者只给出三相转护甲的局部经验；未把其他评论者的贾修、砧或强化组合归给作者。原文未标补丁与服务器，按当前16.21独立改编，不继承固定伤害或无冷却说法；冰心、反甲与技能衔接为项目条件补充，未取得作者符文、加点或完整购买顺序。"
+      }
     }
   ],
   "championReview": {
@@ -964,7 +1105,10 @@
       "Malphite": "1cef2e2fdec84d8d",
       "TahmKench": "9635271a9add58c5",
       "Kaisa": "792e7d85c3acdc09",
-      "Teemo": "b29454e3375baf8c"
+      "Teemo": "b29454e3375baf8c",
+      "Taric": "d7034e2662bef2b0",
+      "KSante": "7aff85aec07e75db",
+      "Jax": "1776e83d7e3a24c7"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -1348,6 +1492,78 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "0795d6a5dc4ba5bb"
+          }
+        }
+      },
+      "Taric": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d7034e2662bef2b0",
+        "observedAt": "2026-10-23T02:03:51.634Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Taric",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+            "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "a0599325a1012892"
+          }
+        }
+      },
+      "KSante": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "7aff85aec07e75db",
+        "observedAt": "2026-10-23T02:03:51.535Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "KSante",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/ksante/ksante.bin.json",
+            "sha256": "e02f140f4c0d4528cfbea56ca70e7098fcab424821ec03f93e56fb63f93bb91e"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "b9823f303cf354fa"
+          }
+        }
+      },
+      "Jax": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "1776e83d7e3a24c7",
+        "observedAt": "2026-10-23T02:03:51.530Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Jax",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/jax/jax.bin.json",
+            "sha256": "ef33ab080cbdbb35cabda5172f687bcba9d7e2c49c62cf9c7e4cfe8903d27f28"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "bfaaae4c0ee698a4"
           }
         }
       }
