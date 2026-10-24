@@ -9,7 +9,14 @@ const classes=node=>attr(node,'class').split(/\s+/).filter(name=>name&&!/^(activ
 const companionKey=node=>attr(node,'data-companion-disclosure').replace(/^candidate-\d+$/,'candidate');
 const explicitKey=node=>attr(node,'data-disclosure-key')||companionKey(node)||attr(node,'id');
 
-function objectControls(node){
+// One scan pass reuses each container's controls and heading: every
+// disclosure inside a large card (one per champion on an ongoing player card)
+// would otherwise rescan the whole card.
+let passMemo=null;
+function scanPass(run){if(passMemo)return run();passMemo={controls:new Map(),headings:new Map()};try{return run();}finally{passMemo=null;}}
+const remembered=(kind,read)=>node=>{const memo=passMemo?.[kind];if(memo?.has(node))return memo.get(node);const value=read(node);memo?.set(node,value);return value;};
+const objectControls=remembered('controls',scanControls);
+function scanControls(node){
  return [...new Set(descendants(node).filter(child=>attr(child,'data-id')&&attr(child,'data-role')).map(child=>JSON.stringify([
   attr(child,'data-id'),attr(child,'data-role'),attr(child,'data-mode'),attr(child,'data-combo'),attr(child,'data-member'),
  ])))].sort();
@@ -24,7 +31,8 @@ function candidateKey(node,detail){
  return ['candidate',result,objects,attr(description,'title')||text(description),attr(label,'aria-label')||text(label)];
 }
 
-function heading(node){
+const heading=remembered('headings',readHeading);
+function readHeading(node){
  const direct=children(node).find(child=>/^H[1-6]$/.test(child.tagName));
  if(direct)return text(direct);
  const header=children(node).find(child=>child.tagName==='HEADER'||classes(child).includes('panel-head'));
@@ -56,7 +64,8 @@ function identity(detail,root){
  return label?JSON.stringify(['summary',label,context,structure,classes(detail)]):null;
 }
 
-function uniqueDisclosures(root){
+const uniqueDisclosures=root=>scanPass(()=>scanDisclosures(root));
+function scanDisclosures(root){
  const found=new Map(),ambiguous=new Set();
  for(const detail of root?.querySelectorAll('details')||[]){
   if(managed(detail))continue;
@@ -80,7 +89,8 @@ function buttonIdentity(node,root){
  return JSON.stringify(['button',attributes,candidateContext,parents]);
 }
 
-function uniqueFocusTargets(root){
+const uniqueFocusTargets=root=>scanPass(()=>scanFocusTargets(root));
+function scanFocusTargets(root){
  const found=new Map(),ambiguous=new Set();
  const add=(key,target)=>{if(!key||ambiguous.has(key))return;if(found.has(key)){found.delete(key);ambiguous.add(key);}else found.set(key,target);};
  for(const [key,detail]of uniqueDisclosures(root))add(key,summary(detail));

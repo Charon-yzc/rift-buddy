@@ -119,7 +119,7 @@ import {advancedHistoryFilters} from './match-history-filters-view.mjs';
 import {createOngoingGameController} from './ongoing-game-controller.mjs';
 import {ongoingGameView} from './ongoing-game-view.mjs';
 import {ongoingGameAnalysisView} from './ongoing-game-analysis-view.mjs';
-import {analyzeAkariHistory,analyzeAkariTeam,inferHistoricalGroups} from './core/akari/bridge.mjs';
+import {analyzeAkariHistory,analyzeAkariTeam,compactAkariTimeline,inferHistoricalGroups} from './core/akari/bridge.mjs';
 import {matchHistoryToolsView,privateHistoryState,privateHistoryFilterTab} from './match-history-tools-view.mjs';
 import {parseHistoryFilterTree} from './core/match-history/filters.mjs';
 import {historyNavigationView} from './match-history-navigation-view.mjs';
@@ -217,7 +217,11 @@ const historyTooltips=bindHistoryTooltips({document,getData:()=>data,getGame:ele
  const tab=privateHistoryState(history.state).tabs.find(value=>value.id===history.state.current),id=Number(element.dataset.tipGame??element.closest('[data-history-match]')?.dataset.historyMatch);
  return tab?.details[id]?.game||tab?.page?.games.find(game=>game.id===id);
 }});
-const ongoing=createOngoingGameController({request:historyRequest,analyze:analyzeAkariHistory,teamAnalyze:analyzeAkariTeam,infer:inferHistoricalGroups,onChange:()=>{if(route==='ongoing'&&data)render();}});
+// Loading ten players emits a change per page, rank and sample batch, and each
+// one repaints the whole page. Paint at most every 150 ms; the last change still paints.
+let ongoingPainted=0,ongoingPaint=null;
+function paintOngoing(){ongoingPaint=null;if(route!=='ongoing'||!data)return;ongoingPainted=performance.now();render();}
+const ongoing=createOngoingGameController({request:historyRequest,analyze:analyzeAkariHistory,teamAnalyze:analyzeAkariTeam,infer:inferHistoricalGroups,compact:compactAkariTimeline,onChange:()=>{if(route!=='ongoing'||!data||ongoingPaint)return;const wait=150-(performance.now()-ongoingPainted);if(wait<=0)paintOngoing();else ongoingPaint=setTimeout(paintOngoing,wait);}});
 const ongoingTooltips=bindHistoryTooltips({document,attribute:'data-ongoing-tip',getData:()=>data,render:(element,value)=>value?ongoingTooltipView(ongoing.state,element,value):''});
 let ongoingObservedPhase='Offline';
 function acceptOngoingClient(value){

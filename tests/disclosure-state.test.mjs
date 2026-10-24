@@ -170,3 +170,10 @@ test('configuration plan keys and enclosing disclosures separate nested explanat
  const firstAgain=detail('依据'),secondAgain=detail('依据');state.restore('nested',root(detail('符文',{},secondAgain),detail('装备',{},firstAgain)));
  assert.equal(firstAgain.open,true);assert.equal(secondAgain.open,false);
 });
+test('a card with many disclosures is scanned once per pass and keeps each disclosure state',()=>{
+ const card=()=>{const node=el('article',{class:'ongoing-player-card','data-disclosure-context':'ongoing-player:mock'},el('button',{'data-id':'22','data-role':'mid'}),...Array.from({length:12},(_,i)=>detail('英雄 '+i,{'data-disclosure-key':'ongoing-champion:'+i})));let scans=0;const all=node.querySelectorAll.bind(node);node.querySelectorAll=selector=>{if(selector==='*')scans++;return all(selector);};return {node,scans:()=>scans};};
+ const before=card(),state=createDisclosureState();before.node.children[5].open=true;
+ assert.equal(state.capture('main:ongoing',root(before.node)),12);assert.equal(before.scans(),2,'The fixture walk plus one control read for all twelve disclosures');
+ const after=card();assert.equal(state.restore('main:ongoing',root(after.node)),12);assert.equal(after.scans(),2);
+ assert.deepEqual(after.node.children.slice(1).map(d=>d.open),Array.from({length:12},(_,i)=>i===4));
+});

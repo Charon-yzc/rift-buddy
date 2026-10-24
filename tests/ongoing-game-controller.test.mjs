@@ -20,7 +20,8 @@ test('a cancelled timeline batch cannot repaint the replacement roster',async()=
   if(op==='timeline')return new Promise(resolve=>releases.push(()=>resolve({timeline:{frames:[]}})));
   return {};
  },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{paints++;}});
- const previous=c.refresh();while(releases.length<4)await new Promise(resolve=>setImmediate(resolve));
+ const previous=c.refresh();while(releases.length<2)await new Promise(resolve=>setImmediate(resolve));
+ for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));assert.equal(releases.length,2,'Samples share a bounded queue');
  next={...roster('new-game'),players:[],teams:{}};await c.refresh();const accepted=paints;
  for(const release of releases)release();await previous;
  assert.equal(c.state.roster.key,'new-game');assert.equal(paints,accepted,'Cancelled work must not replace the new page DOM');
@@ -118,4 +119,40 @@ test('clearing a historical simulation returns refresh to the live roster',async
 test('Arena encounters use verified public subteams and preserve unknown relationship counts',async()=>{
  const other={...member,key:'mock-arena-other-player',puuid:'mock-arena-other-player',self:false,group:2,team:'TEAM-ALL'},unknown={...other,key:'mock-arena-unknown-player',puuid:'mock-arena-unknown-player',group:null};
  const c=createOngoingGameController({request:async op=>op==='roster'?{...roster(),gameId:100,phase:'in-game',mode:'CHERRY',players:[{...member,group:1,team:'TEAM-ALL'},other,unknown],teams:{'TEAM-ALL':[member.key,other.key,unknown.key]}}:op==='page'?page:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});await c.refresh();assert.equal(c.state.met[other.puuid].enemy,1);assert.equal(c.state.met[unknown.puuid].unknown,1);assert.equal(c.state.met[unknown.puuid].ally,0);
+});
+test('every list and rank arrives before detailed samples, which share one round-robin queue and read a shared game once',async()=>{
+ const members=Array.from({length:6},(_,i)=>({...member,key:'mock-public-member-'+i,puuid:'mock-public-member-'+i,self:i===0})),timelines=[],calls=[];let running=0,maxWhileLists=0,maxAfter=0;
+ // Every player's history holds the shared game 100 plus three own games.
+ const games=i=>[100,...[1,2,3].map(n=>i*10+n)].map(id=>({id,queue:430}));
+ const c=createOngoingGameController({settings:{details:4},request:async(op,p)=>{
+  calls.push([op,p]);
+  if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};
+  if(op==='page'){await new Promise(resolve=>setImmediate(resolve));return {...page,handle:'handle-'+p.puuid,games:games(members.findIndex(m=>m.puuid===p.puuid))};}
+  if(op==='profile')return {ranked:[]};
+  if(op==='timeline'){running++;const lists=Object.values(c.state.players).some(entry=>entry.loading);if(lists)maxWhileLists=Math.max(maxWhileLists,running);else maxAfter=Math.max(maxAfter,running);return new Promise(resolve=>timelines.push({id:p.id,resolve:()=>{running--;resolve({timeline:{frames:[]}});}}));}
+  return {};
+ },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ const loading=c.refresh();
+ for(let i=0;i<80&&(Object.keys(c.state.players).length<6||Object.values(c.state.players).some(entry=>entry.loading||!entry.profile));i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(members.every(m=>c.state.players[m.key].page&&c.state.players[m.key].profile&&!c.state.players[m.key].loading),'Pending samples must not hold back any list or rank');
+ assert.ok(maxWhileLists<=1,'Samples yield to list reads');
+ while(timelines.length){timelines.shift().resolve();for(let i=0;i<3;i++)await new Promise(resolve=>setImmediate(resolve));}
+ await loading;
+ const order=calls.filter(([op])=>op==='timeline').map(([,p])=>p.id);
+ assert.equal(order.filter(id=>id===100).length,1,'A game in several histories is read once');
+ assert.deepEqual(order.slice(0,6).sort((a,b)=>a-b),[1,11,21,31,41,51].slice(0,5).concat(100).sort((a,b)=>a-b),'Each player gets an early sample before anyone gets a second');
+ assert.ok(maxAfter<=2);
+ assert.ok(members.every(m=>c.state.players[m.key].loadedDetails===4&&!c.state.players[m.key].detailsLoading));
+});
+test('deeper history pages load in the background as one request and never hold a player slot',async()=>{
+ const members=Array.from({length:3},(_,i)=>({...member,key:'mock-deeper-member-'+i,puuid:'mock-deeper-member-'+i})),calls=[],releases=[];
+ const c=createOngoingGameController({settings:{concurrency:1},request:async(op,p)=>{calls.push([op,p]);if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};if(op==='page')return p.start?new Promise(resolve=>releases.push(()=>resolve({...page,start:20,count:p.count,games:[]}))):{...page,hasMore:true,games:[]};if(op==='profile')return {ranked:[]};return {};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ const loading=c.refresh();
+ for(let i=0;i<80&&(Object.keys(c.state.players).length<3||Object.values(c.state.players).some(entry=>!entry.profile));i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(members.every(m=>c.state.players[m.key].profile&&!c.state.players[m.key].loading&&c.state.players[m.key].detailsLoading),'Every rank shows while deeper pages are pending');
+ assert.ok(releases.length<=2,'Deeper pages share the bounded background queue');
+ while(releases.length){releases.shift()();for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));}
+ await loading;
+ assert.deepEqual(calls.filter(([op])=>op==='page').map(([,p])=>p.start+':'+p.count).sort(),['0:20','0:20','0:20','20:30','20:30','20:30']);
+ assert.ok(members.every(m=>!c.state.players[m.key].detailsLoading));
 });
