@@ -3,7 +3,7 @@ import {ongoingRoster} from './core/ongoing-game.mjs';
 
 export function createOngoingGameController({request,analyze,teamAnalyze,infer,compact=timeline=>timeline,onChange=()=>{},settings={},setTimer=setInterval,clearTimer=clearInterval}){
  const state={roster:null,players:{},settings:normalizeOngoingSettings(settings),loading:false,error:'',draft:false,notes:{},met:{},groups:[],teamAnalysis:{}};
- let generation=0,rosterTicket=0,timer=null,active=false,rosterPending=false,timelineBytes=0,loadingPlayers=0,backgroundRunning=0,sharedEpoch=-1,observedSession='',observedName='',paintedLoading=false;const visited=new Set(),flights=new Map(),playerQueue=[],backgroundQueue=[],sharedTimelines=new Map();
+ let generation=0,rosterTicket=0,timer=null,active=false,rosterPending=false,timelineBytes=0,loadingPlayers=0,backgroundRunning=0,pagesRunning=0,sharedEpoch=-1,observedSession='',observedName='',paintedLoading=false;const visited=new Set(),flights=new Map(),playerQueue=[],backgroundQueue=[],sharedTimelines=new Map();
  const message=error=>String(error?.message||'读取未完成').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');
  // Everything a card shows from the roster itself; used to skip no-op repaints.
  // group drives the Arena subteam sections, role the position cells and level
@@ -17,25 +17,28 @@ export function createOngoingGameController({request,analyze,teamAnalyze,infer,c
  // The rest shares one background queue across players: deeper pages first,
  // then every player's first sample, then every second sample, and so on. While
  // a first page is still loading, one background read runs so first pages keep
- // the request slots; afterwards two run, leaving a slot for pages the user
- // opens. A game in several histories (premades, a simulated match) is read once.
+ // the request slots; afterwards three run (the measured fastest backend
+ // concurrency). Deeper pages take 2-8 s and hold at most one of those slots,
+ // so samples never stall behind them. The service runs these reads at low
+ // priority, so a page the user opens starts next. A game in several histories
+ // (premades, a simulated match) is read once.
  function drainBackground(){
   for(let i=backgroundQueue.length-1;i>=0;i--)if(!backgroundQueue[i].valid())backgroundQueue.splice(i,1)[0].resolve(false);
-  while(backgroundQueue.length&&backgroundRunning<(loadingPlayers||playerQueue.length?1:2)){
-   let best=0;for(let i=1;i<backgroundQueue.length;i++)if(backgroundQueue[i].rank<backgroundQueue[best].rank)best=i;
-   backgroundRunning++;backgroundQueue.splice(best,1)[0].resolve(true);
+  while(backgroundRunning<(loadingPlayers||playerQueue.length?1:3)){
+   let best=-1;for(let i=0;i<backgroundQueue.length;i++){const item=backgroundQueue[i];if(item.rank<0&&pagesRunning)continue;if(best<0||item.rank<backgroundQueue[best].rank)best=i;}
+   if(best<0)break;const item=backgroundQueue.splice(best,1)[0];backgroundRunning++;if(item.rank<0)pagesRunning++;item.resolve(true);
   }
  }
  async function background(rank,valid,run){
   if(!await new Promise(resolve=>{backgroundQueue.push({rank,resolve,valid});drainBackground();}))return null;
-  try{return await run();}finally{backgroundRunning--;drainBackground();}
+  try{return await run();}finally{backgroundRunning--;if(rank<0)pagesRunning--;drainBackground();}
  }
  function sampleTimeline(game,handle,rank,valid){
   if(sharedEpoch!==generation){sharedTimelines.clear();sharedEpoch=generation;timelineBytes=0;}
   const id=game.historyKey||String(game.id),known=sharedTimelines.get(id);if(known){known.waiters.push(valid);return known.flight;}
   const epoch=generation,shared={waiters:[valid]};
   shared.flight=background(rank,()=>shared.waiters.some(test=>test()),async()=>{
-   const result=await request('timeline',{handle,id:game.id}),timeline=compact(result.timeline),bytes=JSON.stringify(timeline).length*2;
+   const result=await request('timeline',{handle,id:game.id,compact:true,background:true}),timeline=compact(result.timeline),bytes=JSON.stringify(timeline).length*2;
    if(epoch!==sharedEpoch)return null;
    if(timelineBytes+bytes>48_000_000)return {exceeded:true};
    timelineBytes+=bytes;return {timeline,notice:result.notice||''};
@@ -89,7 +92,7 @@ export function createOngoingGameController({request,analyze,teamAnalyze,infer,c
    const wave=()=>Promise.all(games.slice(0,max).map((game,rank)=>sampled.has(game.id)?null:sample(game,rank)));
    const deeper=(async()=>{
     for(let start=count;start<limit&&page.hasMore;){
-     const size=Math.min(100,limit-start),next=await background(-1,valid,()=>request('page',{...base,handle,count:size,start}));if(!next||!valid())return;
+     const size=Math.min(100,limit-start),next=await background(-1,valid,()=>request('page',{...base,handle,count:size,start,background:true}));if(!next||!valid())return;
      page=next;start+=size;games=[...new Map([...games,...scoped(page.games,page.server||roster.server||'')].map(g=>[g.id,g])).values()].slice(0,limit);entry.page={...page,games};entry.analysis=analyze(games,{timelines});recalculate();onChange();
     }
    })().catch(error=>{if(valid())note(message(error));});

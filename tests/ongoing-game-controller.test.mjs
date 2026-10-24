@@ -20,8 +20,8 @@ test('a cancelled timeline batch cannot repaint the replacement roster',async()=
   if(op==='timeline')return new Promise(resolve=>releases.push(()=>resolve({timeline:{frames:[]}})));
   return {};
  },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[],onChange:()=>{paints++;}});
- const previous=c.refresh();while(releases.length<2)await new Promise(resolve=>setImmediate(resolve));
- for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));assert.equal(releases.length,2,'Samples share a bounded queue');
+ const previous=c.refresh();while(releases.length<3)await new Promise(resolve=>setImmediate(resolve));
+ for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));assert.equal(releases.length,3,'Samples share a bounded queue');
  next={...roster('new-game'),players:[],teams:{}};await c.refresh();const accepted=paints;
  for(const release of releases)release();await previous;
  assert.equal(c.state.roster.key,'new-game');assert.equal(paints,accepted,'Cancelled work must not replace the new page DOM');
@@ -141,7 +141,8 @@ test('every list and rank arrives before detailed samples, which share one round
  const order=calls.filter(([op])=>op==='timeline').map(([,p])=>p.id);
  assert.equal(order.filter(id=>id===100).length,1,'A game in several histories is read once');
  assert.deepEqual(order.slice(0,6).sort((a,b)=>a-b),[1,11,21,31,41,51].slice(0,5).concat(100).sort((a,b)=>a-b),'Each player gets an early sample before anyone gets a second');
- assert.ok(maxAfter<=2);
+ assert.ok(maxAfter<=3,'Samples use at most the three measured-fastest backend reads');
+ assert.ok(calls.filter(([op])=>op==='timeline').every(([,p])=>p.compact===true&&p.background===true),'Samples ask for compact low-priority timelines');
  assert.ok(members.every(m=>c.state.players[m.key].loadedDetails===4&&!c.state.players[m.key].detailsLoading));
 });
 test('deeper history pages load in the background as one request and never hold a player slot',async()=>{
@@ -150,9 +151,28 @@ test('deeper history pages load in the background as one request and never hold 
  const loading=c.refresh();
  for(let i=0;i<80&&(Object.keys(c.state.players).length<3||Object.values(c.state.players).some(entry=>!entry.profile));i++)await new Promise(resolve=>setImmediate(resolve));
  assert.ok(members.every(m=>c.state.players[m.key].profile&&!c.state.players[m.key].loading&&c.state.players[m.key].detailsLoading),'Every rank shows while deeper pages are pending');
- assert.ok(releases.length<=2,'Deeper pages share the bounded background queue');
+ assert.ok(releases.length<=1,'Deeper pages hold at most one background slot');
  while(releases.length){releases.shift()();for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));}
  await loading;
  assert.deepEqual(calls.filter(([op])=>op==='page').map(([,p])=>p.start+':'+p.count).sort(),['0:20','0:20','0:20','20:30','20:30','20:30']);
  assert.ok(members.every(m=>!c.state.players[m.key].detailsLoading));
+});
+test('a slow deeper page holds one background slot while samples keep loading beside it',async()=>{
+ const members=Array.from({length:3},(_,i)=>({...member,key:'mock-lane-member-'+i,puuid:'mock-lane-member-'+i})),pages=[],timelines=[];let running=0,maxRunning=0;
+ const c=createOngoingGameController({settings:{details:4},request:async(op,p)=>{
+  if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};
+  const index=members.findIndex(m=>m.puuid===p.puuid);
+  if(op==='page'){if(p.start){assert.equal(p.background,true);return new Promise(resolve=>pages.push(()=>resolve({...page,start:p.start,count:p.count,games:[]})));}return {...page,handle:'handle-'+index,hasMore:true,games:[1,2,3,4].map(n=>({id:index*10+n,queue:430}))};}
+  if(op==='profile')return {ranked:[]};
+  if(op==='timeline'){running++;maxRunning=Math.max(maxRunning,running);return new Promise(resolve=>timelines.push(()=>{running--;resolve({timeline:{frames:[]}});}));}
+  return {};
+ },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ const loading=c.refresh();
+ for(let i=0;i<80&&(timelines.length<2||Object.values(c.state.players).some(entry=>entry.loading));i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(pages.length,1,'Only one deeper page runs at a time');
+ assert.equal(timelines.length,2,'Samples fill the other two slots instead of waiting behind deeper pages');
+ while(timelines.length||pages.length){(timelines.shift()||pages.shift())();for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));}
+ await loading;
+ assert.ok(maxRunning<=3);
+ assert.ok(members.every(m=>c.state.players[m.key].loadedDetails===4&&!c.state.players[m.key].detailsLoading));
 });
