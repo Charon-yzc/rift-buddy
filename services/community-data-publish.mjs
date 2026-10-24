@@ -8,9 +8,9 @@ export async function publishCommunityData({publicRoot,keyFile,game,catalog,hexR
  publicRoot=path.resolve(publicRoot);keyFile=path.resolve(keyFile);
  if(keyFile===publicRoot||keyFile.startsWith(publicRoot+path.sep))throw Error('签名密钥不可位于公开目录');
  const value=validateCommunityData({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:hexRoutes.reviewedAt,catalog,hexRoutes},game);
- const requiredApp=hexRoutes.routes.some(r=>r.communitySource?.medium==='text')?'0.59.29':'0.59.28';minimumApp??=requiredApp;
+ const requiredApp=hexRoutes.routes.some(r=>r.gear.some(g=>g.length===4))?'0.59.31':hexRoutes.routes.some(r=>r.communitySource?.medium==='text')?'0.59.29':'0.59.28';minimumApp??=requiredApp;
  const number=p=>p.split('.').map(Number).reduce((n,v)=>n*1000+v,0);
- if(!/^\d+\.\d+\.\d+$/.test(minimumApp)||number(minimumApp)<number(requiredApp))throw Error('社区文字来源需要支持该格式的版本');
+ if(!/^\d+\.\d+\.\d+$/.test(minimumApp)||number(minimumApp)<number(requiredApp))throw Error('社区资料需要支持所用格式的版本');
  const key=createPrivateKey(await fs.readFile(keyFile));
  if(key.asymmetricKeyType!=='ed25519'||!Object.hasOwn(keys,keyId)||!createPublicKey(key).export({format:'der',type:'spki'}).equals(createPublicKey(keys[keyId]).export({format:'der',type:'spki'})))throw Error('签名密钥与固定公钥不一致');
  const root=path.join(publicRoot,'community','v1'),assetRoot=path.join(root,'assets'),destination=path.join(root,'latest.json');

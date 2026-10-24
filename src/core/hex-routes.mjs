@@ -10,6 +10,7 @@ import {communitySourceLabel,communitySourceMedium} from './community-source.mjs
 
 const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击时多40%效果。',1141:'用于友军的治疗和护盾增强。',
  1047:'获得50%暴击几率；按当前暴击率重新比较装备。',1077:'暴击伤害的12%治疗自身，获得25%暴击几率。',1080:'以暴击几率进行会心防御，触发几率最多50%；获得25%暴击几率。',
+ 1030:'获得相当于30%法术强度的技能急速；不是固定大招冷却。',3132:'参与击杀叠加属性，同时降低移动速度；阵亡损失一半层数。',1205:'额外攻击力转为法术强度；获得15%法术强度，不改变技能的伤害类型。',
  1022:'获得60%攻击速度。',1328:'普攻暴击叠加攻速，获得25%暴击几率。',1011:'施放终极技能后短暂免伤；仍须安全站位。',1088:'施放终极技能后刷新；有75秒自身冷却，阵亡可重置。',1112:'施放终极技能后免控3秒；8秒自身冷却。',1194:'终极技能伤害可触发变形。',
  1029:'技能命中可施加攻击特效；同一目标每1秒一次。',1058:'实际攻击特效使技能冷却缩短1.25秒；没有命中就没有收益。',
  1996:'获得250金币；强化已有咒刃的伤害与自疗，先具备咒刃装备。',
@@ -80,7 +81,8 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
    return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&!(noUltimate&&hexUltimateRequirement(a,data.patch))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+((hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id])}]:[];
   });
   let pendingItems=0;
-  const gear=route.gear.flatMap(([when,ids,why])=>{
+  const gear=route.gear.flatMap(([when,ids,why,requires=[]])=>{
+   if(requires.some(id=>{const a=data.augments.find(a=>a.id===id);return a?.descriptionStatus!=='complete'||!reviewedHexMechanic(a,data.patch)||noUltimate&&hexUltimateRequirement(a,data.patch)||hexCatalogDisabled(data,a)&&!owned.includes(id);}))return [];
    const items=ids.flatMap(id=>{
     const item=data.items[id];
     if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||itemReview.items[id]!==hexRouteItemFingerprint(item)){pendingItems++;return [];}

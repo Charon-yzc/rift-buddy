@@ -14,9 +14,11 @@ import {atomicJSON} from '../services/data.mjs';
 import {hexPlayerRoutes,hexCommunitySourceURLs} from '../src/core/hex-routes.mjs';
 import {preserveGameContext} from '../services/data-generation-cache.mjs';
 
+// Keep synthetic signed snapshots ahead of the bundled floor as curated data advances.
+const bundledParts=BUNDLED_CATALOG.version.split('.'),acceptedVersion=[...bundledParts.slice(0,-1),Number(bundledParts.at(-1))+1].join('.'),pendingVersion=[...bundledParts.slice(0,-1),Number(bundledParts.at(-1))+2].join('.');
 const original=JSON.parse(readFileSync(new URL('../data/game.json',import.meta.url))),routes=JSON.parse(readFileSync(new URL('../src/core/hex-community-routes.json',import.meta.url)));
 const pair=generateKeyPairSync('ed25519'),keys={isolated:pair.publicKey.export({type:'spki',format:'pem'})},now=Date.parse('2026-10-25T00:00:00Z');
-function signed({version='2026.10.25.3',sequence=now-1000,minimumApp='0.59.28',patch=original.patch,publishedAt=new Date(now-1000).toISOString(),title='在线导管路线',editCatalog=()=>{}}={}){
+function signed({version=acceptedVersion,sequence=now-1000,minimumApp='0.59.28',patch=original.patch,publishedAt=new Date(now-1000).toISOString(),title='在线导管路线',editCatalog=()=>{}}={}){
  const catalog=structuredClone(BUNDLED_CATALOG);catalog.version=version;editCatalog(catalog);
  const hexRoutes=structuredClone(routes);hexRoutes.routes[0].title=title;
  const value={schema:1,kind:'community-snapshot',patch,version,reviewedAt:routes.reviewedAt,catalog,hexRoutes},raw=Buffer.from(JSON.stringify(value)),packed=gzipSync(raw);
@@ -36,7 +38,7 @@ async function fixture(t,options={}){
 }
 
 test('signed community data activates once at idle and drives runtime Hex routes',async t=>{
- const f=await fixture(t);f.phase('Lobby');const result=await f.cache.check();assert.equal(result.phase,'ready');assert.equal(f.commits(),1);assert.equal(f.data().catalog.version,'2026.10.25.3');assert.equal(hexPlayerRoutes({data:f.data(),hero:'Lillia'})[0].title,'在线导管路线');
+ const f=await fixture(t);f.phase('Lobby');const result=await f.cache.check();assert.equal(result.phase,'ready');assert.equal(f.commits(),1);assert.equal(f.data().catalog.version,acceptedVersion);assert.equal(hexPlayerRoutes({data:f.data(),hero:'Lillia'})[0].title,'在线导管路线');
  assert.equal(f.cache.activate(),false);await f.cache.check();assert.equal(f.commits(),1);assert.equal(f.requests.length,2);assert.equal(JSON.parse(await fs.readFile(f.currentFile)).schema,1);
  const changed=structuredClone(f.data());changed.augments.find(a=>a.id===1045).description+=' changed';assert.equal(hexPlayerRoutes({data:changed,hero:'Lillia'}).length,0,'Downloaded prose cannot bypass core mechanism review');
 });
@@ -49,7 +51,7 @@ test('accepted text and new video sources reach runtime routes without bypassing
 
 test('a current civil review day is accepted before UTC midnight while future publication is still rejected',async t=>{
  const earlier=now-6*60*60*1000,f=await fixture(t,{clock:()=>earlier}),current=signed({publishedAt:new Date(earlier-1000).toISOString(),sequence:earlier-1000});f.source(current);f.phase('Lobby');assert.equal((await f.cache.check()).phase,'ready');
- const future=signed({version:'2026.10.25.4',sequence:earlier,publishedAt:new Date(earlier+600000).toISOString()});f.source(future);assert.equal((await f.cache.check({force:true})).phase,'offline');assert.equal(f.data().catalog.version,current.value.version);
+ const future=signed({version:pendingVersion,sequence:earlier,publishedAt:new Date(earlier+600000).toISOString()});f.source(future);assert.equal((await f.cache.check({force:true})).phase,'offline');assert.equal(f.data().catalog.version,current.value.version);
 });
 
 test('draft, game and transient disconnect keep the displayed data until confirmed idle',async t=>{
@@ -70,23 +72,23 @@ test('custom installed catalog and personal entries survive automatic updates wi
 });
 
 test('automatic base keeps personal entries when no manual catalog is installed',async t=>{
- const f=await fixture(t),personal={...structuredClone(BUNDLED_CATALOG.duos.find(d=>d.id==='xayah-kayle-guard')),id:'local-protection',name:'我的保护组合'};await f.store.savePersonal(personal);const before=await fs.readFile(path.join(f.root,'combinations.json'));f.phase('Lobby');await f.cache.check();assert.equal(f.data().catalog.version,'2026.10.25.3');assert.ok(f.data().catalog.duos.some(d=>d.id===personal.id));assert.ok((await fs.readFile(path.join(f.root,'combinations.json'))).equals(before));
+ const f=await fixture(t),personal={...structuredClone(BUNDLED_CATALOG.duos.find(d=>d.id==='xayah-kayle-guard')),id:'local-protection',name:'我的保护组合'};await f.store.savePersonal(personal);const before=await fs.readFile(path.join(f.root,'combinations.json'));f.phase('Lobby');await f.cache.check();assert.equal(f.data().catalog.version,acceptedVersion);assert.ok(f.data().catalog.duos.some(d=>d.id===personal.id));assert.ok((await fs.readFile(path.join(f.root,'combinations.json'))).equals(before));
 });
 
 test('activated cache restores offline while a later pending snapshot waits across restart',async t=>{
- const f=await fixture(t);f.phase('Lobby');await f.cache.check();f.phase('ChampSelect');f.source(signed({version:'2026.10.25.4',sequence:now,title:'仍待空闲的新路线'}));await f.cache.check({force:true});
+ const f=await fixture(t);f.phase('Lobby');await f.cache.check();f.phase('ChampSelect');f.source(signed({version:pendingVersion,sequence:now,title:'仍待空闲的新路线'}));await f.cache.check({force:true});
  const fresh=structuredClone(original);f.replace(fresh);const gate=createDataFeedActivationGate({requireIdleConfirmation:true});let idle=false;
  const restarted=await createCommunityFeedCache({...f.base,getData:()=>fresh,prepare:f.prepare,restoreAtStartup:true,canActivate:()=>idle,download:async()=>{throw Error('offline');}});
- assert.equal(fresh.catalog.version,'2026.10.25.3');assert.equal(restarted.summary().phase,'pending');await restarted.check({force:true});assert.equal(fresh.catalog.version,'2026.10.25.3');idle=gate({connected:false});assert.equal(restarted.activate(),false);idle=gate({connected:true,phase:'Lobby'});assert.equal(restarted.activate(),true);assert.equal(fresh.catalog.version,'2026.10.25.4');
+ assert.equal(fresh.catalog.version,acceptedVersion);assert.equal(restarted.summary().phase,'pending');await restarted.check({force:true});assert.equal(fresh.catalog.version,acceptedVersion);idle=gate({connected:false});assert.equal(restarted.activate(),false);idle=gate({connected:true,phase:'Lobby'});assert.equal(restarted.activate(),true);assert.equal(fresh.catalog.version,pendingVersion);
 });
 
 test('atomic promotion failure preserves accepted disk and memory and can retry at idle',async t=>{
- const f=await fixture(t);f.phase('Lobby');await f.cache.check();const before=await fs.readFile(f.currentFile),catalog=f.data().catalog;f.source(signed({version:'2026.10.25.4',sequence:now}));f.failPromotion(true);await f.cache.check({force:true});assert.equal(f.data().catalog,catalog);assert.ok((await fs.readFile(f.currentFile)).equals(before));assert.equal(f.cache.summary().phase,'pending');f.failPromotion(false);assert.equal(f.cache.activate(),false,'Do not retry a locked file on every client poll');assert.equal(f.cache.activate({force:true}),true);assert.equal(f.data().catalog.version,'2026.10.25.4');
+ const f=await fixture(t);f.phase('Lobby');await f.cache.check();const before=await fs.readFile(f.currentFile),catalog=f.data().catalog;f.source(signed({version:pendingVersion,sequence:now}));f.failPromotion(true);await f.cache.check({force:true});assert.equal(f.data().catalog,catalog);assert.ok((await fs.readFile(f.currentFile)).equals(before));assert.equal(f.cache.summary().phase,'pending');f.failPromotion(false);assert.equal(f.cache.activate(),false,'Do not retry a locked file on every client poll');assert.equal(f.cache.activate({force:true}),true);assert.equal(f.data().catalog.version,pendingVersion);
 });
 
 test('replayed sequence and same-sequence equivocation never overwrite accepted data',async t=>{
- const f=await fixture(t);f.phase('Lobby');f.source(signed({version:'2026.10.25.4',sequence:now}));await f.cache.check();const before=await fs.readFile(f.currentFile),catalog=f.data().catalog;
- for(const incoming of [signed(),signed({version:'2026.10.25.4',sequence:now,title:'相同序列篡改内容'})]){f.source(incoming);assert.equal((await f.cache.check({force:true})).phase,'offline');assert.equal(f.data().catalog,catalog);assert.ok((await fs.readFile(f.currentFile)).equals(before));}
+ const f=await fixture(t);f.phase('Lobby');f.source(signed({version:pendingVersion,sequence:now}));await f.cache.check();const before=await fs.readFile(f.currentFile),catalog=f.data().catalog;
+ for(const incoming of [signed(),signed({version:pendingVersion,sequence:now,title:'相同序列篡改内容'})]){f.source(incoming);assert.equal((await f.cache.check({force:true})).phase,'offline');assert.equal(f.data().catalog,catalog);assert.ok((await fs.readFile(f.currentFile)).equals(before));}
 });
 
 for(const [name,change] of [
@@ -116,7 +118,7 @@ test('new signed metadata for identical content does not replace data or recalcu
 });
 
 test('a manually staged preview is invalidated by an intervening automatic official update',async t=>{
- const f=await fixture(t),preview=f.store.preview(BUNDLED_CATALOG);f.phase('Lobby');await f.cache.check();await assert.rejects(f.store.apply(preview.token),/组合库已变化/);assert.equal(f.store.summary().catalog.version,'2026.10.25.3');
+ const f=await fixture(t),preview=f.store.preview(BUNDLED_CATALOG);f.phase('Lobby');await f.cache.check();await assert.rejects(f.store.apply(preview.token),/组合库已变化/);assert.equal(f.store.summary().catalog.version,acceptedVersion);
 });
 
 test('semantic inspection is deferred during draft and invalid candidates are not retried every poll',async t=>{
@@ -125,7 +127,7 @@ test('semantic inspection is deferred during draft and invalid candidates are no
 
 test('corrupt cached bytes retain the signed watermark and are repaired from the public asset',async t=>{
  const f=await fixture(t);f.phase('Lobby');await f.cache.check();const record=JSON.parse(await fs.readFile(f.currentFile));record.packed='AAAA';await atomicJSON(f.currentFile,record);const fresh=structuredClone(original);f.replace(fresh);
- const restarted=await createCommunityFeedCache({...f.base,restoreAtStartup:true});assert.equal(fresh.communityHexRoutes,undefined);const requests=f.requests.length;await restarted.check({force:true});assert.equal(f.requests.length,requests+2);assert.equal(fresh.catalog.version,'2026.10.25.3');assert.equal(hexPlayerRoutes({data:fresh,hero:'Lillia'})[0].title,'在线导管路线');
+ const restarted=await createCommunityFeedCache({...f.base,restoreAtStartup:true});assert.equal(fresh.communityHexRoutes,undefined);const requests=f.requests.length;await restarted.check({force:true});assert.equal(f.requests.length,requests+2);assert.equal(fresh.catalog.version,acceptedVersion);assert.equal(hexPlayerRoutes({data:fresh,hero:'Lillia'})[0].title,'在线导管路线');
 });
 
 test('status progress cannot cancel a base-data transaction but a community content swap can',async t=>{
@@ -137,7 +139,7 @@ const removePersonalDependency=c=>{c.duos=c.duos.filter(d=>d.id!=='xayah-kayle-g
 const reassignPersonalDependency=c=>{c.duos=c.duos.filter(d=>d.id!=='xayah-kayle-guard');c.loadouts.find(l=>l.id==='xayah-kayle-feathers').roles=['mid'];c.skillPlans=c.skillPlans.filter(p=>p.loadoutId!=='xayah-kayle-feathers');};
 test('a held personal save cannot be crossed by an official snapshot removing its dependency',async t=>{
  let entered,release;const entering=new Promise(r=>entered=r),held=new Promise(r=>release=r),f=await fixture(t,{storeWrite:async(...args)=>{entered();await held;return atomicJSON(...args);}}),personal={...structuredClone(BUNDLED_CATALOG.duos.find(d=>d.id==='xayah-kayle-guard')),id:'local-guard',name:'保留个人组合'};
- f.source(signed({editCatalog:removePersonalDependency}));f.phase('Lobby');const saving=f.store.savePersonal(personal);await entering;await f.cache.check();assert.equal(f.commits(),0);release();const saved=await saving,expected=saved.catalog.duos.find(d=>d.id===personal.id);Object.assign(f.data(),{catalog:saved.catalog,catalogInfo:saved.info});const bytes=await fs.readFile(path.join(f.root,'combinations.json'));assert.match(expected.members[0].loadoutId,/^local-snapshot-/);assert.equal(f.cache.activate(),true);assert.equal(f.data().catalog.version,'2026.10.25.3');assert.deepEqual(f.data().catalog.duos.find(d=>d.id===personal.id),expected);assert.ok((await fs.readFile(path.join(f.root,'combinations.json'))).equals(bytes));
+ f.source(signed({editCatalog:removePersonalDependency}));f.phase('Lobby');const saving=f.store.savePersonal(personal);await entering;await f.cache.check();assert.equal(f.commits(),0);release();const saved=await saving,expected=saved.catalog.duos.find(d=>d.id===personal.id);Object.assign(f.data(),{catalog:saved.catalog,catalogInfo:saved.info});const bytes=await fs.readFile(path.join(f.root,'combinations.json'));assert.match(expected.members[0].loadoutId,/^local-snapshot-/);assert.equal(f.cache.activate(),true);assert.equal(f.data().catalog.version,acceptedVersion);assert.deepEqual(f.data().catalog.duos.find(d=>d.id===personal.id),expected);assert.ok((await fs.readFile(path.join(f.root,'combinations.json'))).equals(bytes));
 });
 
 test('correcting a legacy personal dependency retries the same pending signed snapshot offline',async t=>{
@@ -156,7 +158,7 @@ for(const sameId of [false,true])test('private '+(sameId?'same-ID expanded role'
 test('independent skill updates create distinct personal snapshots across restart and community withdrawal',async t=>{
  const f=await fixture(t),addPlan=(c,changed=false)=>{const loadout=c.loadouts.find(l=>l.id==='xayah-kayle-feathers'),order=loadout.skillOrder;c.skillPlans.push({id:'online-xayah-order',name:'独立加点',champion:'Xayah',role:'bottom',loadoutId:loadout.id,order:changed?order[0]+order[2]+order[1]+order.slice(3):order,reason:changed?'先W换血':'先E收羽',patch:c.patch,reviewedAt:'2026-10-24',sources:loadout.sources});};
  f.source(signed({editCatalog:c=>addPlan(c)}));f.phase('Lobby');await f.cache.check();const save=async id=>{const entry={...structuredClone(BUNDLED_CATALOG.duos.find(d=>d.id==='xayah-kayle-guard')),id,name:id};if(id==='local-after-skill'){entry.members[1]={champion:'Janna',role:'support',loadoutId:'default',job:'保护接应'};delete entry.reviewBaseline;delete entry.reviewSourceAnchors;}const saved=await f.store.savePersonal(entry);Object.assign(f.data(),{catalog:saved.catalog,catalogInfo:saved.info});return saved.catalog.duos.find(d=>d.id===id).members[0].loadoutId;};
- const first=await save('local-before-skill');f.source(signed({version:'2026.10.25.4',sequence:now,editCatalog:c=>addPlan(c,true)}));await f.cache.check({force:true});const second=await save('local-after-skill');assert.notEqual(first,second);
+ const first=await save('local-before-skill');f.source(signed({version:pendingVersion,sequence:now,editCatalog:c=>addPlan(c,true)}));await f.cache.check({force:true});const second=await save('local-after-skill');assert.notEqual(first,second);
  let data=structuredClone(original);const store=await createCatalogStore({root:f.root,getData:()=>data});assert.equal(store.summary().info.recovery,'');const before=await fs.readFile(path.join(f.root,'combinations.json'));const staged=store.prepareCommunity(null,original.patch);staged.commit();const result=store.summary(),a=result.catalog.skillPlans.find(p=>p.loadoutId===first),b=result.catalog.skillPlans.find(p=>p.loadoutId===second);assert(a&&b);assert.notEqual(a.order,b.order);assert.equal(a.reason,'先E收羽');assert.equal(b.reason,'先W换血');assert.ok((await fs.readFile(path.join(f.root,'combinations.json'))).equals(before));
 });
 

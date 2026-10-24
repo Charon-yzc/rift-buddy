@@ -1335,6 +1335,96 @@
       "skillPriority": [
         "Q"
       ]
+    },
+    {
+      "hero": "Karthus",
+      "patch": "16.21",
+      "augment": 1030,
+      "optional": [
+        3132,
+        1048,
+        1205
+      ],
+      "requiresUltimate": true,
+      "title": "法强急速安魂曲",
+      "summary": "法强经尤里卡转为急速，先保住R的施放窗口。",
+      "play": [
+        "尤里卡按当前法强提供技能急速；Q仍要实际命中，E持续耗蓝，W减速不是定身。",
+        "在安全位置引导R；王冠、珠光和物理转魔法仅在各自已拥有时生效，不能假定四个强化同时取得。"
+      ],
+      "basicPlay": [
+        "终极技能不可用时撤回安魂曲回转路线。"
+      ],
+      "caution": "作者仅给四强化与两件具名装备；2500法强、500急速、满暴击和15秒R属于单局自述，不是保底数值。未提供鞋子、加点、购买顺序或完整六件。",
+      "gear": [
+        [
+          "同时已有珠光护手和物理转魔法时才比较",
+          [
+            3031
+          ],
+          "作者点名无尽；先确认两个强化都已拥有，再按当前暴击率和伤害规则比较；单有尤里卡不代表该买AD暴击装。",
+          [1048, 1205]
+        ],
+        [
+          "已有物理转魔法且需要R回转时才比较",
+          [
+            6696
+          ],
+          "作者点名公理圆弧；造成伤害后的目标需在3秒内阵亡才返还大招冷却，不是每次R都刷新。穿甲不增加魔法伤害，不补未解析的返还比例。",
+          [1205]
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "sourcePatch": null,
+        "author": "Dry_Way_2655",
+        "url": "https://www.reddit.com/r/ARAM/comments/1xe5cn9/comment/19rkuv60miwjp/",
+        "publishedAt": "2026-10-24T10:42:50Z",
+        "evidenceSections": [
+          "作者本人卡尔萨斯单局经验",
+          "同段明确四强化与无尽、公理圆弧"
+        ],
+        "adaptation": "作者在当版海克斯讨论中亲述局部配套；项目按正式16.21核对法强急速、施法及装备条件，不继承作者面板、击杀或大招冷却保证。原文未标实战补丁、服务器、鞋子、加点或完整购买顺序，不作为当前录像实战证明或热门排行。"
+      }
+    },
+    {
+      "hero": "Blitzcrank",
+      "patch": "16.21",
+      "augment": 1349,
+      "optional": [
+        1068
+      ],
+      "requiresUltimate": true,
+      "title": "终极唤醒接控",
+      "summary": "R后接基础技能；终极唤醒自身有20秒冷却。",
+      "play": [
+        "终极唤醒可触发时施放R，才刷新基础技能并获得15秒基础急速；强化自身20秒冷却，不能每次短冷却R都重复启动。",
+        "E强化后的普攻实际命中才击飞，Q仍需命中目标；保留法力与贴身距离，不把高急速当作无限控制。"
+      ],
+      "basicPlay": [
+        "终极技能不可用时撤回终极唤醒接控路线。"
+      ],
+      "caution": "作者只点名终极唤醒、循环往复和残疫；约7秒R、0.97秒E是其单局自述，不作为保证。未提供完整装备、鞋子、加点或控制链证明。",
+      "gear": [
+        [
+          "需要法力与终极急速时比较",
+          [
+            3118
+          ],
+          "作者点名残疫；R需实际伤害命中英雄才生成憎恨之雾，敌人离开区域后不能继续按站满伤害计算；不缩短终极唤醒自身20秒冷却。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "sourcePatch": null,
+        "author": "wefolas",
+        "url": "https://www.reddit.com/r/ARAM/comments/1xdu5ks/comment/19rk30do30l8i/",
+        "publishedAt": "2026-10-24T00:18:19Z",
+        "evidenceSections": [
+          "作者本人布里茨使用终极唤醒、循环往复、残疫的经验"
+        ],
+        "adaptation": "作者在当版控制与急速讨论中给出局部配套；项目按正式16.21保留终极唤醒20秒自身冷却及实际命中条件，不继承每次R刷新或无限控制的说法。原文未标实战补丁、服务器、完整装备或加点，不作为当前录像实战证明或热门排行。"
+      }
     }
   ],
   "championReview": {
@@ -1363,7 +1453,9 @@
       "Cassiopeia": "74ace7fa9d54e0e4",
       "Morgana": "e0588c7ab7dba463",
       "Nautilus": "67da151a84906467",
-      "Udyr": "fdaba836f9c37b70"
+      "Udyr": "fdaba836f9c37b70",
+      "Karthus": "c1de84b19ac00ffe",
+      "Blitzcrank": "27f6b75f8d6eeb18"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -1915,6 +2007,54 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "5e4ce0224042a71b"
+          }
+        }
+      },
+      "Karthus": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "c1de84b19ac00ffe",
+        "observedAt": "2026-10-23T02:03:51.532Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Karthus",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/karthus/karthus.bin.json",
+            "sha256": "b4ac31106c87eec4085d1e93d37f54357a0dc5bbffd92b2fc08a4ab4c1dd8dfc"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "74e873421db425cc"
+          }
+        }
+      },
+      "Blitzcrank": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "27f6b75f8d6eeb18",
+        "observedAt": "2026-10-23T02:03:51.453Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Blitzcrank",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/blitzcrank/blitzcrank.bin.json",
+            "sha256": "f97fb1c78233b7a9d86c8e48e8f79f45bdfcf9a4357e72cc0ee312982d0fffb1"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "420c31b55a789119"
           }
         }
       }
