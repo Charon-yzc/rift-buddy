@@ -35,11 +35,12 @@ export function verifyCommunityEnvelope(envelope,{keys=DATA_FEED_KEYS}={}){
  if(m.schema!==1||m.kind!=='community-snapshot'||!/^\d{2}\.\d{1,2}$/.test(m.patch||'')||!/^\d{4}\.\d{2}\.\d{2}\.\d+$/.test(m.version||'')||!Number.isSafeInteger(m.sequence)||m.sequence<1||!Number.isFinite(Date.parse(m.publishedAt))||!Number.isFinite(Date.parse(m.reviewedAt))||!/^\d+\.\d+\.\d+$/.test(m.minimumApp||'')||!/^[a-f0-9]{64}$/.test(m.sha256||'')||!/^[a-f0-9]{64}$/.test(m.rawSha256||'')||m.file!==m.sha256+'.json.gz'||!Number.isInteger(m.bytes)||m.bytes<1||m.bytes>COMMUNITY_MAX_PACKED||!Number.isInteger(m.rawBytes)||m.rawBytes<1||m.rawBytes>COMMUNITY_MAX_RAW)throw Error('社区签名元数据无效');
  return m;
 }
-export function decodeCommunityData(manifest,packed,data){
+export function decodeCommunitySnapshot(manifest,packed){
  if(packed.length!==manifest.bytes||feedHash(packed)!==manifest.sha256)throw Error('社区资料下载校验失败');
  const raw=gunzipSync(packed,{maxOutputLength:COMMUNITY_MAX_RAW});
  if(raw.length!==manifest.rawBytes||feedHash(raw)!==manifest.rawSha256)throw Error('社区资料解压校验失败');
- const value=validateCommunityData(JSON.parse(raw),data);
- if(value.patch!==manifest.patch||value.version!==manifest.version||value.reviewedAt!==manifest.reviewedAt)throw Error('社区资料与签名身份不符');
+ const value=JSON.parse(raw);
+ if(value.schema!==1||value.kind!=='community-snapshot'||value.patch!==manifest.patch||value.version!==manifest.version||value.reviewedAt!==manifest.reviewedAt)throw Error('社区资料与签名身份不符');
  return value;
 }
+export function decodeCommunityData(manifest,packed,data){return validateCommunityData(decodeCommunitySnapshot(manifest,packed),data);}

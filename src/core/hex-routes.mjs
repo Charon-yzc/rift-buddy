@@ -54,7 +54,8 @@ const routes=[
 
 export const hexRouteItemFingerprint=item=>fingerprint({name:item?.name,description:item?.description,stats:item?.stats});
 export function hexCommunitySourceURLs(data){
- return [...new Set([...new Set(communityRoutes.routes.map(r=>r.hero))].flatMap(hero=>hexPlayerRoutes({data,hero}).flatMap(r=>communitySourceMedium(r.communitySource)?[r.communitySource.url]:[])))];
+ const community=data.communityHexRoutes||communityRoutes;
+ return [...new Set([...new Set(community.routes.map(r=>r.hero))].flatMap(hero=>hexPlayerRoutes({data,hero}).flatMap(r=>communitySourceMedium(r.communitySource)?[r.communitySource.url]:[])))];
 }
 export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  if(!isCurrentHexData(data))return [];
@@ -62,10 +63,11 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  const itemReview=currentHexReview(data.patch);
  if(!champion||!itemReview)return [];
  const baseReviewed=hexChampionReview(champion,data.patch)==='current';
- const communityReviewed=communityRoutes.patch===data.patch&&mechanicReview(champion,data.patch,communityRoutes.championReview)==='current';
+ const community=data.communityHexRoutes||communityRoutes;
+ const communityReviewed=community.patch===data.patch&&mechanicReview(champion,data.patch,community.championReview)==='current';
  if(!baseReviewed&&!communityReviewed)return [];
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
- const authored=(baseReviewed?routes:[]).concat(communityReviewed?communityRoutes.routes:[]);
+ const authored=(baseReviewed?routes:[]).concat(communityReviewed?community.routes:[]);
  return authored.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{
   if(itemReview.communityPolicy==='current-source-only'&&route.community&&!route.communitySource)return [];
   if(route.requiresUltimate&&noUltimate)return [];

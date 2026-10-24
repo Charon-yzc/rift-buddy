@@ -35,7 +35,7 @@ async function fixture(t,{write=dataService.atomicJSON,promote=renameSync}={}){
   guard:(name,fn)=>handlers.set(name,fn),publishWindows(){},diagnostic(){},state:{preferences:{}},selectBuildSource(){},pairFiles:[],
   loadBuildSources:async()=>({}),loadOpponentBuildSources:async()=>({}),loadPairStatisticsCache:async()=>({}),loadRankings:async()=>({}),loadPatchNotes:async()=>({}),loadAbilities:async()=>({}),loadHexBuilds:async()=>({}),
   imageCache:{cacheMissingImages:async()=>{imageEntered.resolve();await images.promise;return {overrides:{},saved:0,failed:0};}},
-  dataFeed:{summary:()=>({phase:'idle'})},catalogCore:{configureCatalog(){}},generation:{noteManual:(_game,token)=>manualTokens.push(token)},pureGameSnapshot,validateGenerationGame,preserveGameContext,feedHash:bytesHash,publishedBase:old,
+  dataFeed:{summary:()=>({phase:'idle'})},communityFeed:{reconcile(){},summary:()=>({phase:'idle'})},communityChanged:false,catalogStore:{revision:()=>0,isMutating:()=>false},catalogCore:{configureCatalog(){}},generation:{noteManual:(_game,token)=>manualTokens.push(token)},pureGameSnapshot,validateGenerationGame,preserveGameContext,feedHash:bytesHash,publishedBase:old,
   itemSetCore,itemSetService:{importItemSet:async options=>{itemData=options.data;itemEntered.resolve();await itemRelease.promise;return {complete:true};}},helper:{active:()=>false},beginPreparation:()=>({}),finishPreparation:()=>({revision:1}),preservePreparationResult:async written=>written,status:async()=>{},
   dataRevision:0,publishData:()=>{context.dataRevision++;published.push(digest(context.data));},guide:{publish(){}},refreshPreparedBuild(){}});
  Object.assign(context.imageCache,{imageEntries:imageCache.imageEntries,loadImageOverrides:async()=>({})});
