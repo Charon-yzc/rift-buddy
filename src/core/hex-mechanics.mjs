@@ -41,6 +41,7 @@ const rules={
  3081:['WeaponOfDestiny',/第一件传说级装备.*参与击杀英雄数/s],
  1068:['ARAM_Recursion',/获得60技能急速/],
  3094:['LichBrain',/获得30.*4%额外生命值.*法术强度/s],
+ 1053:['ARAM_MadScientist',/每次重生.*要么变大.*适应之力和生命值.*要么变小.*技能急速和移动速度/s],
 };
 export const hexMechanicIds=Object.keys(rules).map(Number);
 export function reviewedHexMechanic(augment,patch){
@@ -53,5 +54,9 @@ export function hexUltimateRequirement(augment,patch){return reviewedHexMechanic
 // changed trigger or number invalidates the explanation until reviewed again.
 export function hexEffectMatches(augment,patch){
  const selected=currentHexReview(patch)||(patch===baseline.patch?baseline:null);
- return !!augment&&!!selected&&selected.effects[augment.id]===fingerprint({key:augment.key,description:augment.description})&&(!selected.effectDetails?.[augment.id]||selected.effectDetails[augment.id]===fingerprint({key:augment.key,description:augment.description,tooltip:augment.tooltip?.description}));
+ if(!augment||!selected||selected.effects[augment.id]!==fingerprint({key:augment.key,description:augment.description}))return false;
+ // Numeric briefs require a resolved detailed text. Other reviewed excerpts
+ // may intentionally exclude unresolved live counters (for example3081).
+ if(selected.completeDetails?.includes(augment.id)&&(!selected.effectDetails?.[augment.id]||augment.tooltip?.status!=='complete'||!Array.isArray(augment.tooltip.unresolved)||augment.tooltip.unresolved.length))return false;
+ return !selected.effectDetails?.[augment.id]||selected.effectDetails[augment.id]===fingerprint({key:augment.key,description:augment.description,tooltip:augment.tooltip?.description});
 }
