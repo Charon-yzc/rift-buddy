@@ -84,7 +84,7 @@ async function run(){
  await click('[data-action=navigate][data-route=settings]');
 
  // An edit to one visible field must preserve richer JSON source metadata.
- const richSource=initial.data.catalog.duos.find(entry=>entry.reviewSourceAnchors)||initial.data.catalog.duos[0];
+ const richSource=initial.data.catalog.duos.find(entry=>entry.reviewSourceAnchors&&!initial.data.catalogInfo.status[entry.id]?.stale&&!initial.data.catalogInfo.status[entry.id]?.invalid);assert(richSource,'The fixture needs a valid source-metadata entry before testing explicit review');
  const rich={...richSource,id:'local-rich-editor',name:'多来源个人套路',style:'wild',patch:'16.18',reviewedAt:'2026-09-25',tags:['朋友自制'],partners:['Ahri'],sources:[{name:'第一来源',url:'https://example.com/one',kind:'个人收藏',checkedAt:'2026-10-01'},{name:'第二来源',url:'https://example.com/two',kind:'个人收藏',checkedAt:'2026-10-02'}]};
  await js(`window.buddy.catalogPersonal(${JSON.stringify(rich)})`);await reload();await until(()=>js('!!document.querySelector("#solo-role")'),'Rich editor reload missing');
  await click('[data-action=combination-library]');await click('[data-action=combo-kind][data-kind=duos]');await set('#combo-search','多来源个人');await click('[data-action=catalog-edit-entry][data-id=local-rich-editor]');await set('[name=risk]','仅更改这一条短板说明');await click('[data-action=catalog-save]');

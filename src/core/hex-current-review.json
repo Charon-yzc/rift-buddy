@@ -3,7 +3,7 @@
   "scope": "hex-routes-and-choices",
   "patch": "16.21",
   "reviewedAt": "2026-10-24",
-  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim. Effects 1305 and 2132 reviewed on 2026-10-24; prior hero reviews unchanged. Lillia has a separate community-route-only review. On 2026-10-24 reviewed TheBoomAndTheBass trigger only; Yasuo community kit anchor remains separate. Gluttonous Greaves3008 condition reviewed for the new Yasuo route; unresolved tooltip coefficients are not restated.",
+  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim. Effects 1305 and 2132 reviewed on 2026-10-24; prior hero reviews unchanged. Lillia has a separate community-route-only review. On 2026-10-24 reviewed TheBoomAndTheBass trigger only; Yasuo community kit anchor remains separate. Gluttonous Greaves3008 condition reviewed for the new Yasuo route; unresolved tooltip coefficients are not restated. On 2026-10-24 reviewed DoubleTime and ArmoredImpact trigger descriptions and conditional item dependencies for six separately scoped creator-inspired community directions; no shared hero or popularity review renewed.",
   "sources": {
     "notes": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
     "characters": "https://raw.communitydragon.org/16.21/game/data/characters/",
@@ -452,6 +452,8 @@
     "1996": "3fa82b9c2eb5aa74",
     "2132": "4ea87025478b03be",
     "2134": "225eb737c87a5ab5",
+    "3036": "bd1608245289e556",
+    "3049": "ded7ca341242c59d",
     "3078": "8232e380baff1ebc"
   },
   "items": {
@@ -463,6 +465,7 @@
     "3036": "638d1f3db688cb2e",
     "3053": "f263cbbf40846cc2",
     "3065": "65f6f24f8b1e8e92",
+    "3071": "f76d06cba940936d",
     "3072": "025dc8a402ea9021",
     "3078": "521032faa395a097",
     "3089": "999d4b976fe2d546",
@@ -470,13 +473,16 @@
     "3115": "ef85e0677b1ae84c",
     "3116": "0527cd04d01e94a8",
     "3135": "4ccdf3ad2cfbc06c",
+    "3153": "15587a38452aa78b",
     "3157": "b2f73e80d3e77fe7",
     "3161": "ef48fd76ee21d277",
     "3504": "4d964e703de16015",
     "4633": "ca994325451939bb",
     "6333": "65943886b530ef44",
+    "6610": "b989ba466079a218",
     "6617": "85c508b874bbbc69",
     "6653": "af920af056ef62d1",
+    "6657": "b1acf20d25d6c10f",
     "6676": "2227ece5ba86c42d",
     "6696": "c7d6e8cf7987593a",
     "123430": "24b48c9ae384a467"
