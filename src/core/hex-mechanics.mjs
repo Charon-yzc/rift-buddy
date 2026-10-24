@@ -40,6 +40,7 @@ const rules={
  3086:['BEES',/命中敌方英雄的技能.*蜜蜂巢穴.*魔法伤害和减速.*攻击特效/s],
  3081:['WeaponOfDestiny',/第一件传说级装备.*参与击杀英雄数/s],
  1068:['ARAM_Recursion',/获得60技能急速/],
+ 3094:['LichBrain',/获得30.*4%额外生命值.*法术强度/s],
 };
 export const hexMechanicIds=Object.keys(rules).map(Number);
 export function reviewedHexMechanic(augment,patch){

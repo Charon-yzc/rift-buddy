@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "patch": "16.21",
-  "reviewedAt": "2026-10-24",
+  "reviewedAt": "2026-10-25",
   "routes": [
     {
       "hero": "Lillia",
@@ -165,7 +165,7 @@
         "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
         "publishedAt": "2026-10-22T05:39:37.000Z",
         "sourcePatch": null,
-        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "observedMode": "海克斯大乱斗4.0教学；含已停用地图画面，录制环境未确认",
         "evidenceSeconds": [
           0,
           10,
@@ -173,7 +173,7 @@
           30,
           40
         ],
-        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。 录像含本补丁停用地图的画面，录制版本与服务器未确认；仅作教学线索，当前16.21强化与装备由项目独立核验，不视为当前正式服实战证明。"
       },
       "patch": "16.21",
       "optional": []
@@ -220,7 +220,7 @@
         "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
         "publishedAt": "2026-10-22T05:39:37.000Z",
         "sourcePatch": null,
-        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "observedMode": "海克斯大乱斗4.0教学；含已停用地图画面，录制环境未确认",
         "evidenceSeconds": [
           0,
           10,
@@ -228,7 +228,7 @@
           30,
           40
         ],
-        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。 录像含本补丁停用地图的画面，录制版本与服务器未确认；仅作教学线索，当前16.21强化与装备由项目独立核验，不视为当前正式服实战证明。"
       },
       "patch": "16.21",
       "optional": []
@@ -332,13 +332,13 @@
         "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
         "publishedAt": "2026-10-22T05:39:37.000Z",
         "sourcePatch": null,
-        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "observedMode": "海克斯大乱斗4.0教学；含已停用地图画面，录制环境未确认",
         "evidenceSeconds": [
           90,
           100,
           110
         ],
-        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。 录像含本补丁停用地图的画面，录制版本与服务器未确认；仅作教学线索，当前16.21强化与装备由项目独立核验，不视为当前正式服实战证明。"
       },
       "patch": "16.21",
       "optional": [],
@@ -385,13 +385,13 @@
         "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
         "publishedAt": "2026-10-22T05:39:37.000Z",
         "sourcePatch": null,
-        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "observedMode": "海克斯大乱斗4.0教学；含已停用地图画面，录制环境未确认",
         "evidenceSeconds": [
           90,
           100,
           110
         ],
-        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。 录像含本补丁停用地图的画面，录制版本与服务器未确认；仅作教学线索，当前16.21强化与装备由项目独立核验，不视为当前正式服实战证明。"
       },
       "patch": "16.21",
       "optional": [],
@@ -438,13 +438,13 @@
         "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
         "publishedAt": "2026-10-22T05:39:37.000Z",
         "sourcePatch": null,
-        "observedMode": "作者明确讲解海克斯大乱斗4.0；本版新强化翻倍时间、装甲冲击卡面",
+        "observedMode": "海克斯大乱斗4.0教学；含已停用地图画面，录制环境未确认",
         "evidenceSeconds": [
           90,
           100,
           110
         ],
-        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。"
+        "adaptation": "作者4.0教学的英雄与强化方向；项目按16.21补充条件装备和操作边界。未取得作者完整符文、逐级加点及购买顺序，不称为完整作者配置或热门排行。 录像含本补丁停用地图的画面，录制版本与服务器未确认；仅作教学线索，当前16.21强化与装备由项目独立核验，不视为当前正式服实战证明。"
       },
       "patch": "16.21",
       "optional": [],
@@ -691,7 +691,7 @@
         "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
         "publishedAt": "2026-10-22T05:39:37.000Z",
         "sourcePatch": null,
-        "observedMode": "正式26.21上线后的海克斯大乱斗4.0教学；实际新强化卡面或作者字幕与本版定义交叉核验",
+        "observedMode": "海克斯大乱斗4.0教学；含已停用地图画面，录制环境未确认",
         "evidenceSeconds": [
           65,
           70,
@@ -699,7 +699,7 @@
           80,
           85
         ],
-        "adaptation": "作者4.0教学实际展示男枪与首件多米尼克成长；后续条件装备由项目补充。未采用“仅前两轮出现”或固定百穿说法，未取得作者完整符文、逐级加点和完整购买顺序。"
+        "adaptation": "作者4.0教学实际展示男枪与首件多米尼克成长；后续条件装备由项目补充。未采用“仅前两轮出现”或固定百穿说法，未取得作者完整符文、逐级加点和完整购买顺序。 录像含本补丁停用地图的画面，录制版本与服务器未确认；仅作教学线索，当前16.21强化与装备由项目独立核验，不视为当前正式服实战证明。"
       }
     },
     {
@@ -745,14 +745,203 @@
         "url": "https://www.bilibili.com/video/BV1CLn16HEk9/",
         "publishedAt": "2026-10-22T05:39:37.000Z",
         "sourcePatch": null,
-        "observedMode": "正式26.21上线后的海克斯大乱斗4.0教学；实际新强化卡面或作者字幕与本版定义交叉核验",
+        "observedMode": "海克斯大乱斗4.0教学；含已停用地图画面，录制环境未确认",
         "evidenceSeconds": [
           45,
           50,
           55,
           60
         ],
-        "adaptation": "作者4.0低音轰鸣卡面及库奇实战示例；项目按本版技能补充打法边界与条件装备。未取得作者完整符文、逐级加点或固定配装，不把单次攻击加速解释为常驻攻速。"
+        "adaptation": "作者4.0低音轰鸣卡面及库奇实战示例；项目按本版技能补充打法边界与条件装备。未取得作者完整符文、逐级加点或固定配装，不把单次攻击加速解释为常驻攻速。 录像含本补丁停用地图的画面，录制版本与服务器未确认；仅作教学线索，当前16.21强化与装备由项目独立核验，不视为当前正式服实战证明。"
+      }
+    },
+    {
+      "hero": "Malphite",
+      "patch": "16.21",
+      "augment": 3049,
+      "optional": [],
+      "title": "主W护甲冲击",
+      "summary": "施法后接普攻，利用W护甲与装甲冲击。",
+      "skillPriority": [
+        "W"
+      ],
+      "play": [
+        "作者主W，施法后接实际普攻触发装甲冲击；W的护甲增益在被动护盾存在时更高。",
+        "面对物理普攻压力走护甲路线，Q调整距离、E限制攻速；先能接近并打出攻击，再安排进场。"
+      ],
+      "basicPlay": [
+        "已失去R，靠Q调整距离、E限制攻速，W后接普攻；不能照搬大招进场。"
+      ],
+      "caution": "强化按额外护甲而非总护甲计算；不采用原帖1200伤害或无冷却断言。全魔法阵容不能照抄堆护甲。",
+      "coreItems": [
+        3110,
+        3075
+      ],
+      "gear": [
+        [
+          "作者已用装备",
+          [
+            3110,
+            3075
+          ],
+          "作者同段经验使用冰心和反甲，另有未指明护甲散件；未给两件购买先后。冰心应对近身普攻，反甲重伤须被敌方英雄攻击触发。"
+        ],
+        [
+          "魔法伤害压力",
+          [
+            3065
+          ],
+          "项目条件补充：需要魔抗并能利用自身护盾时比较振奋，不为护甲转伤忽略魔法承伤。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "AcceptableWorker6227",
+        "url": "https://www.reddit.com/r/ARAM/comments/1xc9j8y/armored_impact_seems_incredibly_powerful/",
+        "publishedAt": "2026-10-22T05:00:46.000Z",
+        "editedAt": "2026-10-22T23:33:50.000Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "正文：石头人首个强化为装甲冲击",
+          "正文：冰心、反甲、未指明护甲散件与主W",
+          "编辑附言：再遇该强化并附战绩图，编辑范围不明"
+        ],
+        "adaptation": "作者文字经验提供装甲冲击、两件护甲成装和主W；仅是局部配置，不是完整攻略。正文未标补丁或服务器，按当前16.21机制独立改编，未取得完整符文、副技能和逐级加点。魔抗条件由项目补充；编辑时间不等于配装实质更新。"
+      }
+    },
+    {
+      "hero": "TahmKench",
+      "patch": "16.21",
+      "augment": 3094,
+      "optional": [],
+      "title": "生命转法强",
+      "summary": "额外生命转为法强，保留贴身攻击与Q命中。",
+      "play": [
+        "巫妖大脑获得30加4%额外生命值的法术强度；同时比较额外生命、法强与实际承伤。",
+        "Q命中英雄恢复并叠层，普攻衔接被动；W保留进退，吞敌仍需三层培养品味。"
+      ],
+      "basicPlay": [
+        "已失去R，保留Q命中英雄的恢复与E护盾，W进退后在安全窗口普攻；不能再吞敌或吞友保护。"
+      ],
+      "caution": "不把生命转法强当治疗或护盾倍率，也不沿用整件裂隙收益三倍、必定第二件或不出鞋的说法。",
+      "gear": [
+        [
+          "作者条件装备",
+          [
+            2510
+          ],
+          "作者在第二段对局讨论黄昏与黎明可作第二件；需施法后能安全普攻兑现咒刃，未采用未解析伤害数值。"
+        ],
+        [
+          "作者后续方向",
+          [
+            3089
+          ],
+          "作者随后提到帽子与未指明的法穿装备；这里只记录明确点名的帽子，不拼成同局六件套。"
+        ],
+        [
+          "魔法伤害与自身恢复",
+          [
+            3065
+          ],
+          "项目条件补充：有魔法压力，且需要放大Q治疗或E护盾时比较振奋；不能用纯法强替代承伤。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "video",
+        "author": "照赜",
+        "url": "https://www.bilibili.com/video/BV1FGHP6TEzC/",
+        "publishedAt": "2026-10-24T12:00:00.000Z",
+        "sourcePatch": null,
+        "observedMode": "海克斯大乱斗；55秒K/DA选卡、105秒巫妖大脑卡面，录像版本号未展示",
+        "evidenceSeconds": [
+          3,
+          55,
+          70,
+          72,
+          105,
+          140
+        ],
+        "adaptation": "实际查看作者字幕、巫妖大脑卡面与黄昏与黎明、帽子的讨论，按当前16.21机制改编。视频含两段对局，不拼接成同局完整配置。未取得作者完整符文、加点和购买顺序；振奋为项目条件补充。录像未标补丁或服务器，不作为固定强度或热门胜率证据。"
+      }
+    },
+    {
+      "hero": "Kaisa",
+      "patch": "16.21",
+      "augment": 3086,
+      "optional": [],
+      "title": "远程蜂巢消耗",
+      "summary": "用W寻找英雄命中，围绕蜂巢间隔进行消耗。",
+      "play": [
+        "作者以W命中配合小蜜蜂；蜂巢有自身间隔，不按每次技能命中都触发计算。",
+        "保留E调整站位；安全时再接普攻，不为补被动层数直接突入敌阵。"
+      ],
+      "basicPlay": [
+        "已失去R，保持W消耗与E退路，无法再靠大招贴近或获得大招护盾。"
+      ],
+      "caution": "不保证W叠满被动或秒杀满血英雄，也不据此宣称卡莎的全部强化资格。远程命中不等于必定触发作者所有装备被动。",
+      "gear": [
+        [
+          "作者实际装备",
+          [
+            3100,
+            4646,
+            6655
+          ],
+          "作者同段文字使用巫妖、风暴狂涌与卢登，未给购买顺序。巫妖仍需满足咒刃并打出攻击；风暴狂涌须达到伤害阈值，不能承诺蜂巢逐跳重复触发全部装备。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "Sp1ffy_Sp1ff",
+        "url": "https://www.reddit.com/r/arammayhem/comments/1xc24hb/they_may_need_to_remove_bees_from_kaisas_augment/",
+        "publishedAt": "2026-10-21T22:56:54.000Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "作者正文：本人卡莎W与小蜜蜂经验",
+          "同段正文：明确购买巫妖之祸、风暴狂涌与卢登"
+        ],
+        "adaptation": "作者亲述小蜜蜂与三件装备的局部经验；不是完整六件套或固定购买顺序。原文未给补丁号、服务器、符文和加点，按当前16.21技能与装备独立改编，不继承必杀或保证触发被动的说法。"
+      }
+    },
+    {
+      "hero": "Teemo",
+      "patch": "16.21",
+      "augment": 3086,
+      "optional": [],
+      "requiresUltimate": true,
+      "title": "蘑菇蜂巢消耗",
+      "summary": "保留蘑菇布点，命中英雄时比较蜂巢消耗。",
+      "play": [
+        "作者短评提到小蜜蜂、蘑菇与残疫；蘑菇须被英雄触发，蜂巢另有自身间隔。",
+        "在敌人通行与退路布点，保留安全距离；不能把蜂巢伤害当作另一轮大招重复触发残疫。"
+      ],
+      "basicPlay": [
+        "终极技能不可用时撤回蘑菇路线。"
+      ],
+      "caution": "只有一句局部使用经验，未给加点或完整出装；不保证每颗蘑菇触发蜂巢或形成无限连锁。",
+      "coreItems": [
+        3118
+      ],
+      "gear": [
+        [
+          "作者明确装备",
+          [
+            3118
+          ],
+          "作者点名残疫；其灼烧减魔抗区域需要终极技能对英雄造成伤害，普攻或蜂巢本身不能冒充大招来源。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "Opposing_Warrior385",
+        "url": "https://www.reddit.com/r/ARAM/comments/1xdin3j/comment/19rk24f2v99hg/",
+        "publishedAt": "2026-10-23T23:58:25.000Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "该作者精确评论：小蜜蜂、提莫蘑菇与残疫的使用经验"
+        ],
+        "adaptation": "仅收录作者一句短评提供的小蜜蜂、蘑菇和残疫方向；不是完整攻略或胜率证据。原文未标补丁与服务器，当前16.21条件由项目独立核验；未取得作者符文、加点、装备顺序，失去R时不提供此路线。"
       }
     }
   ],
@@ -771,7 +960,11 @@
       "Hecarim": "f9c4c9b8aea59e68",
       "Ekko": "d17ece4a263656b8",
       "Graves": "ea75172ee2199edb",
-      "Corki": "bf698b12d7779645"
+      "Corki": "bf698b12d7779645",
+      "Malphite": "1cef2e2fdec84d8d",
+      "TahmKench": "9635271a9add58c5",
+      "Kaisa": "792e7d85c3acdc09",
+      "Teemo": "b29454e3375baf8c"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -1059,6 +1252,102 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "67e76fae7d2c0a44"
+          }
+        }
+      },
+      "Malphite": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "1cef2e2fdec84d8d",
+        "observedAt": "2026-10-23T02:03:51.540Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Malphite",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/malphite/malphite.bin.json",
+            "sha256": "5a179a096f00299a2fbe60453c0b2b14aec2fbb1f93d0a6da3f1f43515c44d34"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "998655a1cdd4352a"
+          }
+        }
+      },
+      "TahmKench": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "9635271a9add58c5",
+        "observedAt": "2026-10-23T02:03:51.633Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "TahmKench",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/tahmkench/tahmkench.bin.json",
+            "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "324a3700d293797b"
+          }
+        }
+      },
+      "Kaisa": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "792e7d85c3acdc09",
+        "observedAt": "2026-10-23T02:03:51.531Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Kaisa",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+            "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "e793368118ed867a"
+          }
+        }
+      },
+      "Teemo": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "b29454e3375baf8c",
+        "observedAt": "2026-10-23T02:03:51.634Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Teemo",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+            "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "0795d6a5dc4ba5bb"
           }
         }
       }
