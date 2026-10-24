@@ -145,9 +145,9 @@ test('an older authentic bundle renders immediately while a normal guarded refre
 });
 
 test('the actual bundled national snapshot verifies with the production pin and renders its offline origin',async()=>{
- const envelope=JSON.parse(await fs.readFile(new URL('../data/national-feed.json',import.meta.url))),payload=verifyNationalEnvelope(envelope,data);
- assert.equal(Object.keys(payload.entries).length,3);assert.equal(payload.patch,data.patch);
- const {nationalRankingsView}=await import('../src/national-reference-view.mjs');assert.match(nationalRankingsView(data,{state:{reference:Object.values(payload.entries)[0],bundled:true}}),/内置参考/);
+ const current=JSON.parse(await fs.readFile(new URL('../data/game.json',import.meta.url))),envelope=JSON.parse(await fs.readFile(new URL('../data/national-feed.json',import.meta.url))),payload=verifyNationalEnvelope(envelope,current);
+ assert.equal(Object.keys(payload.entries).length,3);assert.equal(payload.patch,current.patch);
+ const {nationalRankingsView}=await import('../src/national-reference-view.mjs');assert.match(nationalRankingsView(current,{state:{reference:Object.values(payload.entries)[0],bundled:true}}),/内置参考/);
 });
 
 test('actual app base acceptance invalidates both completed and in-flight national overlays',async()=>{

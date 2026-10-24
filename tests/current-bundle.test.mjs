@@ -24,7 +24,7 @@ test('retired augment records, the internal placeholder and old hero-pool eviden
  for(const id of retired){assert(!game.augments.some(a=>a.id===id));assert(!handbook.some(a=>a.id===id));}
  assert(!handbook.some(a=>a.id===3176));for(const id of [3170,3171,3172,3173])assert(!ordinary.some(a=>a.id===id));
  assert.equal(observations.patch,game.patch);assert.deepEqual(observations.entries,{});
- for(const c of game.champions){const pool=hexHeroPool({data,hero:c.id});assert.equal(pool.complete,false);assert.equal(pool.roundsComplete,false);assert(!pool.rows.some(r=>r.status==='observed'));}
+ for(const c of game.champions){const pool=hexHeroPool({data,hero:c.id});assert.equal(pool.complete,false);assert.equal(pool.roundsComplete,false);if(pool.rows.some(r=>r.status==='observed')){assert.match(pool.evidence.sourceUrl,/\?patch=16\.21$/);assert.ok(pool.rows.filter(r=>r.status==='observed').every(r=>r.games>0));}const old={...data,hexBuilds:{[c.id]:{...hex.entries[c.id],poolEvidence:{...hex.entries[c.id].poolEvidence,patch:'16.20'}}}};assert(!hexHeroPool({data:old,hero:c.id}).rows.some(r=>r.status==='observed'));}
 });
 
 test('newer installer data wins over a valid old local cache without changing saved personal bytes',async t=>{
@@ -32,8 +32,8 @@ test('newer installer data wins over a valid old local cache without changing sa
  await fs.writeFile(path.join(root,'game.json'),old);await fs.writeFile(path.join(root,'personal.json'),personal);const restored=await loadSnapshot(root,path.resolve('data'));assert.equal(restored.patch,game.patch);assert.equal(restored.version,game.version);assert.equal(restored.champions.length,173);assert((await fs.readFile(path.join(root,'personal.json'))).equals(personal));assert((await fs.readFile(path.join(root,'game.json'))).equals(old),'Read-only startup selection does not erase the old file or player state');
 });
 
-test('a bundled previous-patch national feed cannot be relabelled as current statistics',async()=>{
- const envelope=await read('national-feed');assert.throws(()=>verifyNationalEnvelope(envelope,game),/版本或格式/);
+test('the bundled current national feed verifies and cannot be relabelled to another patch',async()=>{
+ const envelope=await read('national-feed');assert.equal(verifyNationalEnvelope(envelope,game).patch,game.patch);assert.throws(()=>verifyNationalEnvelope(envelope,{...game,patch:'16.20'}),/版本或格式/);
 });
 
 test('current or mixed raw data cannot generate creative skill jobs from an unreviewed previous-patch kit',async()=>{

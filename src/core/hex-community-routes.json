@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "patch": "16.21",
+  "reviewedAt": "2026-10-24",
+  "routes": [
+    {
+      "hero": "Lillia",
+      "patch": "16.21",
+      "augment": 1045,
+      "optional": [
+        2132,
+        1214,
+        1305
+      ],
+      "title": "导管转圈拉扯",
+      "summary": "技能挂灼烧，Q外圈命中后利用移速拉开。",
+      "play": [
+        "先以E或Q命中，再围绕Q外圈走位；导管灼烧降低基础技能冷却，不是立即重置。",
+        "R需先挂梦尘；睡眠会被伤害唤醒，寻找安全的W中心命中位置，追不到就回撤。"
+      ],
+      "basicPlay": [
+        "已选回归基本功，不能施放R；只以Q外圈、W与E命中保持移速和基础技能轮转。",
+        "不要为了等待睡眠进场，也不把被动或装备每一跳灼烧都当成重新施法。"
+      ],
+      "caution": "四个强化是录像中同局观察，不代表必定能同时获得；被硬控仍会失去走位空间，灼烧伤害不保证永久刷新或无限治疗。",
+      "gear": [
+        [
+          "持续伤害",
+          [
+            6653
+          ],
+          "项目按当前机制比较兰德里；不是录像已验证的固定购买顺序。"
+        ],
+        [
+          "持续近身交战",
+          [
+            4633
+          ],
+          "能延长交战才比较裂隙；不要把尚未满足的持续交战收益当作常驻。"
+        ],
+        [
+          "被突进集火",
+          [
+            3157
+          ],
+          "中娅用于躲关键伤害，凝滞期间不能继续主动施法。"
+        ]
+      ],
+      "communitySource": {
+        "author": "SeraphineBL",
+        "url": "https://www.bilibili.com/video/BV1eMHN6ZERG/",
+        "publishedAt": "2026-10-24T05:32:46.000Z",
+        "sourcePatch": null,
+        "observedMode": "海克斯大乱斗4.0：开局小蜜蜂乐队画面",
+        "evidenceSeconds": [
+          5,
+          900,
+          1300
+        ],
+        "adaptation": "录像四强化思路；装备条件及操作边界由项目按16.21改编。未核实作者完整符文、技能节点和购买顺序，不称为完整作者配置或热门排行。"
+      }
+    }
+  ],
+  "championReview": {
+    "schema": 2,
+    "patch": "16.21",
+    "champions": {
+      "Lillia": "5abf3f00c1f24aac"
+    },
+    "sourceAnchors": {
+      "Lillia": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "5abf3f00c1f24aac",
+        "observedAt": "2026-10-22T11:36:02.251Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Lillia",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/lillia/lillia.bin.json",
+            "sha256": "33930a7b757bc2faa64a56c0c313d49013a5ae579710ee4c045edb4f16e9bb71"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "56de693659da9302"
+          }
+        }
+      }
+    }
+  }
+}

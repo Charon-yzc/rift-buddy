@@ -2,10 +2,11 @@
 // A generic skill order must never be attributed to a community creator.
 export function hexRouteCard(route,build={}){
  const community=[route.source,...(route.sources||[]).map(s=>s.url)].find(url=>typeof url==='string'&&/^https:\/\/arammayhem\.com\//.test(url));
- const source=route.kind==='reference'?'当前配置':community?'ARAM Mayhem · 改编':'机制整理';
+ const creator=route.communitySource&&/^https:\/\/www\.bilibili\.com\/video\/BV[A-Za-z0-9]+\/$/.test(route.communitySource.url||'')?route.communitySource:null;
+ const source=route.kind==='reference'?'当前配置':creator?creator.author+' · 改编':community?'ARAM Mayhem · 改编':'机制整理';
  const order=typeof build.priority==='string'?[...new Set(build.priority.toUpperCase().replace(/[^QWE]/g,''))]:[];
  const priority=order.length>=2?`主${order[0]}副${order[1]}`:'';
- return {title:route.title,source,sourceUrl:community||route.source||null,priority,
+ return {title:route.title,source,sourceUrl:creator?.url||community||route.source||null,priority,
   skillSource:priority?(build.selectedSkill?.source||build.source||'英雄默认加点'):'',
   skillNote:priority?'英雄加点参考；未单独提供此路线的专属加点。':'此路线尚无已核实加点'};
 }

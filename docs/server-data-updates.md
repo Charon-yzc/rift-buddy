@@ -131,6 +131,18 @@ node --test tests/server-data-fetch.test.mjs tests/server-data-store.test.mjs te
 
 ## 已验证与待交付
 
+### 人工社区资料快照
+
+人工核验的组合与海克斯路线独立发布到 `/community/v1/latest.json`，沿用固定 Ed25519 公钥、压缩前后 SHA-256 和原子清单。它不属于每天两次的自动采集，采集器不能自动更新人工复核日期。目录仅允许 GET/HEAD；正文不含玩家数据。
+
+维护时先核验实例、冻结并审查源码及资料，在审核过的独立目录中通过同一把系统锁执行：
+
+```sh
+sudo -u riftdata /usr/bin/flock -n /var/lib/rift-buddy-data/collect.lock /opt/rift-buddy-runtime/node-v24.21.0-linux-arm64/bin/node scripts/publish-community-data.mjs --public-root /srv/rift-buddy-data --key /var/lib/rift-buddy-data/signing/ed25519.pem
+```
+
+用户和工作目录以生效 unit 为准，不创建新采集计划。必须检查发布退出码、HTTPS清单签名、资产双哈希、当前补丁及安装包内的内容一致；失败保留旧清单。现有桌面版尚未自动拉取此独立快照；本轮内容通过内置资料交付，组合库仍遵循预览后应用。不得把服务器存档称为旧客户端已自动更新。
+
 1. 独立域名已配置，B 的 Caddy 正常提供 HTTPS，HTTP 自动跳转；控制台已核对实例绑定的 HTTP/HTTPS 入站规则及受限 SSH 来源。[DNS 操作文档](data-server-dns-setup.md)保留为操作参考。
 2. 2026-10-15 使用正常 TLS 校验从公网下载了签名清单和三份统计文件，验证固定 Ed25519 公钥、压缩前后 SHA-256、内容格式与补丁；当时覆盖六份榜单、316 份常用配置和 173 份海克斯参考。
 3. 使用真实网络与隔离客户端状态验证了选人期间暂存、短暂断线继续暂存、回大厅启用，以及不发网络请求的重启缓存恢复。没有读写真实 LCU 或用户设置，真实对局和已安装客户端回归仍待验证。

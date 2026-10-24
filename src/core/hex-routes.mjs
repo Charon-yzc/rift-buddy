@@ -4,6 +4,8 @@ import {fingerprint} from './content-fingerprint.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {reviewedHexMechanic,hexUltimateRequirement} from './hex-mechanics.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
+import communityRoutes from './hex-community-routes.json' with {type:'json'};
+import {mechanicReview} from './mechanic-review.mjs';
 
 const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击时多40%效果。',1141:'用于友军的治疗和护盾增强。',
  1047:'获得50%暴击几率；按当前暴击率重新比较装备。',1077:'暴击伤害的12%治疗自身，获得25%暴击几率。',1080:'以暴击几率进行会心防御，触发几率最多50%；获得25%暴击几率。',
@@ -11,6 +13,7 @@ const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击
  1029:'技能命中可施加攻击特效；同一目标每1秒一次。',1058:'实际攻击特效使技能冷却缩短1.25秒；没有命中就没有收益。',
  1996:'获得250金币；强化已有咒刃的伤害与自疗，先具备咒刃装备。',
  1004:'强化基础技能，但禁用终极技能；接受不能使用R再考虑。',1214:'旋转类基础技能30急速、增伤30%；不覆盖其他技能。',
+ 1305:'获得50移动速度和50%减速抗性；不解除眩晕或禁锢。',2132:'获得（10＋0.035×法术强度）%全能吸血；不保证伤害全部转为治疗。',
  1311:'法力消耗翻倍；技能增效取决于最大法力值，缺蓝时无法持续收益。',1056:'增加最大生命值，数额为法力值的一半；没有直接减冷却。'};
 const jhinComplements={1022:'60%攻速经被动提高攻击力和暴击后的移速；射速仍固定。',1328:'25%暴击，普攻暴击叠攻速；以被动增益攻击力和暴击后移速，射速仍固定。'};
 const camilleComplements={1022:'60%攻速用于普攻衔接；Q2 至少1.5秒的等待不能省略。'};
@@ -49,9 +52,13 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  if(!isCurrentHexData(data))return [];
  const champion=data.champions.find(c=>c.id===hero);
  const itemReview=currentHexReview(data.patch);
- if(!champion||!itemReview||hexChampionReview(champion,data.patch)!=='current')return [];
+ if(!champion||!itemReview)return [];
+ const baseReviewed=hexChampionReview(champion,data.patch)==='current';
+ const communityReviewed=communityRoutes.patch===data.patch&&mechanicReview(champion,data.patch,communityRoutes.championReview)==='current';
+ if(!baseReviewed&&!communityReviewed)return [];
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
- return routes.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{
+ const authored=(baseReviewed?routes:[]).concat(communityReviewed?communityRoutes.routes:[]);
+ return authored.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{
   const augment=data.augments.find(a=>a.id===route.augment);
   if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||noUltimate&&hexUltimateRequirement(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
@@ -71,6 +78,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   });
   if(route.coreItems?.some(id=>!gear.some(group=>group.items.some(item=>item.id===id))))return [];
   return [{id:hero+'-'+augment.id,hero,family:route.family,optionalAugments,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
-   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(['Jhin','Camille'].includes(hero)?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
+   ...(route.communitySource?{communitySource:route.communitySource}:{}),
+   sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(['Jhin','Camille'].includes(hero)?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.communitySource?[{name:route.communitySource.author+" · "+route.communitySource.publishedAt.slice(0,10)+"（录像补丁号未标注）",url:route.communitySource.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.communitySource?route.communitySource.adaptation:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
  }).sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered')).filter((route,index,all)=>!route.family||!all.slice(0,index).some(other=>other.family===route.family));
 }

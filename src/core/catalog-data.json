@@ -1,11 +1,11 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.20.1",
+  "version": "2026.10.24.1",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
-  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。 2026-10-13新增16套三人机制执行卡，覆盖中下辅、上野中、野下辅、上中辅；仅新增条目按 Riot 16.20.1 技能复核。复用配置保持各自复核日期，普通位置默认不伪装成专用配装；Mobalytics常驻指南只作打法参考，不提供本组合当前版本胜率或强度证据，原有旧条目与资料状态保留。 2026-10-16新增四套双人、四套三人机制配合；旧社区内容仅作玩法灵感，未沿用旧配装、胜率或强度结论，旧条目复核状态保留。 2026-10-19新增三套跨位置双人执行卡：造墙配合、中野收割和双支援；仅新增条目对照当前16.20角色源复核，历史社区资料只作线索，不沿用其旧符文、配装或强度断言；原条目版本与复核锚点不变。",
+  "notes": "扩充可执行的下路与三人配合、明确经济分工和失败条件；新增保护/接控/增益配置与技能节点。资料依赖基线用于提醒未来复核，不代表对局验证。 补齐原有 50 套三人组合的个人技能、接力与退出条件；保留各套原动作顺序及旧版配装来源，不自动更新旧收藏。 近身救援舞已对照 Riot 16.19.1 与 16.20.1 的三位成员技能、冷却及范围复核，补齐可用、支援与退出条件；其余旧版套路与专用配装仍保留待复核状态。 本次逐项复核 28 套配装的技能、装备与符文触发条件，并拆开无定身消耗辅助及加里奥接控配置；其他条目保留原版本待复核，复核不代表组合实战或统计强度已验证。 新增六位英雄、七个英雄位置与配置范围的独立加点方案；仅这些加点按 16.20 机制复核，旧组合、配装与符文的版本和待复核状态保持原样。 再逐项整理青钢影上路、加里奥中路、蔚打野、慎上路与梦魇打野的技能节点及加里奥下路前三点；各自保留位置、配置、来源覆盖和机制取舍，加里奥下路不借用中路统计、不补造后续节点。 逐范围整理29个非常规下路/辅助配置的开局三点与后续补点优先，按实际经济、技能条件与退出方式说明；只更新独立加点，不提升旧组合或装备符文复核状态。 2026-10-11逐项复核慎/魔腾/加里奥、皎月/亚索/牛头、翠神/狮子狗/璐璐的实际技能接力、六级前准备、经济代价与取消条件，并核对五英雄低经济保护前排装备/符文触发；其他旧内容状态保留。 2026-10-13新增16套三人机制执行卡，覆盖中下辅、上野中、野下辅、上中辅；仅新增条目按 Riot 16.20.1 技能复核。复用配置保持各自复核日期，普通位置默认不伪装成专用配装；Mobalytics常驻指南只作打法参考，不提供本组合当前版本胜率或强度证据，原有旧条目与资料状态保留。 2026-10-16新增四套双人、四套三人机制配合；旧社区内容仅作玩法灵感，未沿用旧配装、胜率或强度结论，旧条目复核状态保留。 2026-10-19新增三套跨位置双人执行卡：造墙配合、中野收割和双支援；仅新增条目对照当前16.20角色源复核，历史社区资料只作线索，不沿用其旧符文、配装或强度断言；原条目版本与复核锚点不变。 2026-10-24：仅新增霞/凯尔保护路线、两套专用配置及完整符文/加点，按16.21复核；其他条目不续期。来源首发未知，10/19为凯尔正文更新，霞10/22仅声明补丁兼容。",
   "source": {
     "date": "2026-10-06",
     "patch": "16.19",
@@ -12501,6 +12501,157 @@
           }
         }
       }
+    },
+    {
+      "id": "xayah-kayle-guard",
+      "name": "羽阵守护",
+      "style": "fun",
+      "difficulty": "较高",
+      "tags": [
+        "保护接力",
+        "非常规辅助"
+      ],
+      "tempo": "protect",
+      "why": "霞自行铺羽与退场，凯尔用治疗、移速和免伤衔接保护。",
+      "plan": "霞补刀输出，凯尔低经济保护；先保证安全铺羽，再用Q减速、削抗帮助收羽。",
+      "risk": "六级前缺少可靠先手且怕强开；凯尔无闪现。霞R不可选取与凯尔R免伤不同，不承诺无缝四秒无敌。",
+      "early": "凯尔E安全触发任务、Q减速，W用于有效换血后恢复；霞保留羽毛防追击，兵线不利时不硬抢二级。",
+      "window": "双方六级且凯尔R可用，再考虑承接集火；W仍耗蓝，缺蓝或保护技能未好就拉开。",
+      "economy": "霞独占正常补刀，凯尔辅助任务和视野经济；不追求输出凯尔的装备或等级。",
+      "steps": [
+        "霞先布置羽毛；凯尔用Q减速创造回拉线路，不把减速当定身。",
+        "霞R避开关键技能，落地后才按仍存在的威胁考虑凯尔R，避免保护窗口无谓重叠。",
+        "凯尔W帮助走位，霞E收羽；被绕后、蓝量不足或凯尔无法接应时撤出。"
+      ],
+      "partners": [
+        "JarvanIV",
+        "Sejuani"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-10-24",
+      "sources": [
+        {
+          "name": "Kalakaua · 凯尔辅助（10/19实质更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/paladin-of-purity-the-righteous-guide-to-kayle-support-643223",
+          "checkedAt": "2026-10-24",
+          "kind": "作者玩法与配置；按当前机制改编"
+        },
+        {
+          "name": "Fruxo · 霞（10/22标注26.21）",
+          "url": "https://www.mobafire.com/league-of-legends/build/how-to-use-feathers-537621",
+          "checkedAt": "2026-10-24",
+          "kind": "作者配置；开局节点由项目补齐"
+        },
+        {
+          "name": "Riot · 26.21正式补丁及10/22热修",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "checkedAt": "2026-10-24",
+          "kind": "当前版本依据"
+        },
+        {
+          "name": "Riot · 16.21.1技能、装备、符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-24",
+          "kind": "项目机制复核"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Xayah": "6218a12d2240d28e",
+        "champion:Kayle": "24bd683389a6d92b",
+        "item:3508": "f557158549cb18ca",
+        "item:6675": "b2ad1db20decb6ca",
+        "item:3031": "0ccdceb96f0cd392",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3036": "fcf5de31162e9e9d",
+        "item:3072": "5c29525fccb26a37",
+        "item:3139": "ded65c3f5f3ed714",
+        "item:3133": "b1bc2dd663869430",
+        "rune:8008": "d8ed59948702367b",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9103": "7d88abbfc22dd0df",
+        "rune:8014": "04092c4f9754532b",
+        "rune:8304": "aa454bdce540cb11",
+        "rune:8345": "02157c1d4d7f7531",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:3190": "89cdf2838748dfc7",
+        "item:6617": "6dccd52cee1f2c6e",
+        "item:3158": "72ca672b9221f063",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3222": "d079f1feafe021dd",
+        "item:3143": "877281eb33362ecd",
+        "item:1004": "ee29ed217971b95c",
+        "item:1028": "1d7fc0b860a340d1",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8446": "321d014aaeb9ee11",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8347": "def2a55844436c47",
+        "rune:8473": "ed2f46234183276d"
+      },
+      "reviewSourceAnchors": {
+        "Xayah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6218a12d2240d28e",
+          "observedAt": "2026-10-22T11:36:02.348Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Xayah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+              "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ef84e7c599b03475"
+            }
+          }
+        },
+        "Kayle": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "24bd683389a6d92b",
+          "observedAt": "2026-10-22T11:36:02.248Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kayle",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kayle/kayle.bin.json",
+              "sha256": "c1e9422851c8d29227427f204b92d005a842e9c1685ee491a9193c64bc82eef3"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3fa2585bed59105f"
+            }
+          }
+        }
+      },
+      "members": [
+        {
+          "champion": "Xayah",
+          "role": "bottom",
+          "loadoutId": "xayah-kayle-feathers",
+          "job": "补刀铺羽，R保命后按敌人走位E收羽；等凯尔接应再延长输出。"
+        },
+        {
+          "champion": "Kayle",
+          "role": "support",
+          "loadoutId": "kayle-xayah-guardian",
+          "job": "W治疗移速支持霞，Q减速削抗；霞落地后按实际集火决定R，不抢补刀。"
+        }
+      ]
     }
   ],
   "links": [
@@ -30628,6 +30779,228 @@
           }
         }
       }
+    },
+    {
+      "id": "xayah-kayle-feathers",
+      "name": "霞羽阵续航",
+      "champions": [
+        "Xayah"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "crit",
+      "items": [
+        3508,
+        6675,
+        3031
+      ],
+      "boots": 3006,
+      "late": [
+        3036,
+        3072,
+        3139
+      ],
+      "early": [
+        3133
+      ],
+      "runes": [
+        "xayah-kayle-feathers"
+      ],
+      "damage": "ad",
+      "priority": "EWQ",
+      "first": "QEW",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "why": "采用 Fruxo 的吸蓝刀分支服务持续铺羽：多兰剑＋药水；首回城战锤，不足时长剑或短剑分购。吸蓝刀→纳沃利→无尽。带神奇之鞋，收到免费鞋后再升级攻速鞋；提前躲技能靠站位，不能购买基础鞋。护甲压力比较多米尼克，续航比较饮血，能解除的控制威胁比较水银弯刀；这些是互斥后续位，不一起塞满。凯尔不抢补刀，霞保留 E 和 R 处理反扑。",
+      "skillReason": "作者主 E 副 W；Q/E/W 前三级及合法18点为项目补齐，不冒充原技能格。",
+      "patch": "16.21",
+      "reviewedAt": "2026-10-24",
+      "sources": [
+        {
+          "name": "Kalakaua · 凯尔辅助（10/19实质更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/paladin-of-purity-the-righteous-guide-to-kayle-support-643223",
+          "checkedAt": "2026-10-24",
+          "kind": "作者玩法与配置；按当前机制改编"
+        },
+        {
+          "name": "Fruxo · 霞（10/22标注26.21）",
+          "url": "https://www.mobafire.com/league-of-legends/build/how-to-use-feathers-537621",
+          "checkedAt": "2026-10-24",
+          "kind": "作者配置；开局节点由项目补齐"
+        },
+        {
+          "name": "Riot · 26.21正式补丁及10/22热修",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "checkedAt": "2026-10-24",
+          "kind": "当前版本依据"
+        },
+        {
+          "name": "Riot · 16.21.1技能、装备、符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-24",
+          "kind": "项目机制复核"
+        }
+      ],
+      "skillOrder": "QEWEEREWEWRWWQQRQQ",
+      "reviewBaseline": {
+        "champion:Xayah": "6218a12d2240d28e",
+        "item:3508": "f557158549cb18ca",
+        "item:6675": "b2ad1db20decb6ca",
+        "item:3031": "0ccdceb96f0cd392",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3036": "fcf5de31162e9e9d",
+        "item:3072": "5c29525fccb26a37",
+        "item:3139": "ded65c3f5f3ed714",
+        "item:3133": "b1bc2dd663869430",
+        "rune:8008": "d8ed59948702367b",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9103": "7d88abbfc22dd0df",
+        "rune:8014": "04092c4f9754532b",
+        "rune:8304": "aa454bdce540cb11",
+        "rune:8345": "02157c1d4d7f7531"
+      },
+      "reviewSourceAnchors": {
+        "Xayah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6218a12d2240d28e",
+          "observedAt": "2026-10-22T11:36:02.348Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Xayah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+              "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ef84e7c599b03475"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "kayle-xayah-guardian",
+      "name": "凯尔羽阵保护",
+      "champions": [
+        "Kayle"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "enchanter",
+      "items": [
+        3107,
+        3190,
+        6617
+      ],
+      "boots": 3158,
+      "late": [
+        3109,
+        3222,
+        3143
+      ],
+      "early": [
+        1004,
+        1028
+      ],
+      "runes": [
+        "kayle-xayah-guardian",
+        "kayle-xayah-guardian-engage"
+      ],
+      "damage": "ap",
+      "priority": "WQE",
+      "first": "EQW",
+      "summoners": [
+        "SummonerExhaust",
+        "SummonerHeal"
+      ],
+      "why": "采用 Kalakaua 的守护、治疗＋虚弱辅助思路；项目按16.21取舍：任务装按当前规则获得，药水出门；首回城护符＋红水晶，不足按换血压力二选一，真眼留视野位。救赎→鸟盾→月石；被集火可先鸟盾。神奇之鞋到账后再升级明朗，不能提前买鞋。任务升级织梦者；强控考虑米凯尔，需保护持续输出者比较骑士之誓，物理暴击压力比较兰顿。无闪现、无稳定硬控，弱对线时优先退让，不用伤害装抢经济。",
+      "skillReason": "作者先满 W 再 Q；E/Q/W 开局及合法18点为项目补齐。R免伤不等于解除控制，不能给霞和自己同时无敌。",
+      "patch": "16.21",
+      "reviewedAt": "2026-10-24",
+      "sources": [
+        {
+          "name": "Kalakaua · 凯尔辅助（10/19实质更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/paladin-of-purity-the-righteous-guide-to-kayle-support-643223",
+          "checkedAt": "2026-10-24",
+          "kind": "作者玩法与配置；按当前机制改编"
+        },
+        {
+          "name": "Fruxo · 霞（10/22标注26.21）",
+          "url": "https://www.mobafire.com/league-of-legends/build/how-to-use-feathers-537621",
+          "checkedAt": "2026-10-24",
+          "kind": "作者配置；开局节点由项目补齐"
+        },
+        {
+          "name": "Riot · 26.21正式补丁及10/22热修",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "checkedAt": "2026-10-24",
+          "kind": "当前版本依据"
+        },
+        {
+          "name": "Riot · 16.21.1技能、装备、符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-24",
+          "kind": "项目机制复核"
+        }
+      ],
+      "skillOrder": "EQWWWRWQWQRQQEEREE",
+      "reviewBaseline": {
+        "champion:Kayle": "24bd683389a6d92b",
+        "item:3107": "53bdbba0a53ca5c6",
+        "item:3190": "89cdf2838748dfc7",
+        "item:6617": "6dccd52cee1f2c6e",
+        "item:3158": "72ca672b9221f063",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3222": "d079f1feafe021dd",
+        "item:3143": "877281eb33362ecd",
+        "item:1004": "ee29ed217971b95c",
+        "item:1028": "1d7fc0b860a340d1",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8446": "321d014aaeb9ee11",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8304": "aa454bdce540cb11",
+        "rune:8347": "def2a55844436c47",
+        "rune:8473": "ed2f46234183276d"
+      },
+      "reviewSourceAnchors": {
+        "Kayle": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "24bd683389a6d92b",
+          "observedAt": "2026-10-22T11:36:02.248Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kayle",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kayle/kayle.bin.json",
+              "sha256": "c1e9422851c8d29227427f204b92d005a842e9c1685ee491a9193c64bc82eef3"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3fa2585bed59105f"
+            }
+          }
+        }
+      }
     }
   ],
   "runes": {
@@ -31065,6 +31438,63 @@
           5005,
           5001,
           5001
+        ]
+      }
+    },
+    "xayah-kayle-feathers": {
+      "name": "羽阵持续作战",
+      "when": "作者致命节奏页；霞负责普攻输出和收羽，非辅助凯尔的符文。",
+      "page": {
+        "primaryStyleId": 8000,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8008,
+          8009,
+          9103,
+          8014,
+          8304,
+          8345,
+          5005,
+          5008,
+          5011
+        ]
+      }
+    },
+    "kayle-xayah-guardian": {
+      "name": "羽阵守护",
+      "when": "作者守护者抗消耗页；双成长生命碎片，辅助经济与保护路线。",
+      "page": {
+        "primaryStyleId": 8400,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8465,
+          8446,
+          8444,
+          8453,
+          8304,
+          8347,
+          5007,
+          5001,
+          5001
+        ]
+      }
+    },
+    "kayle-xayah-guardian-engage": {
+      "name": "羽阵守护·防突进",
+      "when": "作者抗强开分支：骸骨镀层、固定生命尾碎片；不把它当抗持续消耗。",
+      "page": {
+        "primaryStyleId": 8400,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8465,
+          8446,
+          8473,
+          8453,
+          8304,
+          8347,
+          5007,
+          5001,
+          5011
         ]
       }
     }

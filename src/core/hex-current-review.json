@@ -2,8 +2,8 @@
   "schema": 1,
   "scope": "hex-routes-and-choices",
   "patch": "16.21",
-  "reviewedAt": "2026-10-22",
-  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim.",
+  "reviewedAt": "2026-10-24",
+  "basis": "Explicit compatibility review of these 16 hero kits and existing Hex route/choice conditions only; not a Rift cooperation review, eligibility pool or popularity claim. Effects 1305 and 2132 reviewed on 2026-10-24; prior hero reviews unchanged. Lillia has a separate community-route-only review.",
   "sources": {
     "notes": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
     "characters": "https://raw.communitydragon.org/16.21/game/data/characters/",
@@ -441,6 +441,7 @@
     "1205": "f17a627ad7e21e23",
     "1211": "d963d75ae1e9b2bb",
     "1214": "d10779ed0f10b84c",
+    "1305": "143de88d1c83d389",
     "1311": "f31174789bb24e9e",
     "1314": "f9b04d2fe7aadef8",
     "1315": "1cee2338a5490aee",
@@ -449,6 +450,7 @@
     "1349": "8d402b2315f9dd91",
     "1413": "4e961bfa657a1320",
     "1996": "3fa82b9c2eb5aa74",
+    "2132": "4ea87025478b03be",
     "2134": "225eb737c87a5ab5"
   },
   "items": {

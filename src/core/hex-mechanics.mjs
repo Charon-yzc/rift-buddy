@@ -29,6 +29,7 @@ const rules={
  1129:['ARAM_Marksmage',/攻击.*法术强度/s],1141:['ARAM_AllForYou',/治疗.*护盾.*友军/s],
  1205:['ARAM_ADAPt',/额外攻击力.*法术强度/s],1328:['CriticalRhythm',/普攻.*暴击.*攻击速度/s],
  1214:['ARAM_SpinToWin',/旋转类技能.*技能急速.*额外伤害/s],1311:['ARAM_Overflow',/法力消耗翻倍.*最大法力值/s],
+ 1305:['ARAM_LegDay',/获得50移动速度和50%减速抗性/],2132:['WarlockJuicebox',/10.*0\.035.*法术强度.*全能吸血/],
  1356:['CriticalMissile',/暴击.*飞弹.*暴击几率/s],
 };
 export const hexMechanicIds=Object.keys(rules).map(Number);
