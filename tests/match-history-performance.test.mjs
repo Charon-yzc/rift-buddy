@@ -249,3 +249,35 @@ test('a scan still completes at the bounded 500-game window',async()=>{
  assert.equal(result.scanned,500);
  assert.equal(result.complete,true);
 });
+
+// Process discovery spawns PowerShell (about 0.6 s); a reachable client keeps its connection.
+function discoveryService(answers){
+ let clock=1000;const state={discoveries:0,port:23456,reachable:new Set([23456]),unreadable:false,tick:ms=>{clock+=ms;}};
+ const svc=createMatchHistoryService({
+  discover:async()=>{state.discoveries++;return state.unreadable?{unreadable:true}:{port:state.port,password:'mock',region:'TENCENT',rsoPlatformId:'HN10'};},
+  request:async(auth,route)=>{if(!state.reachable.has(auth.port))throw Error('客户端连接超时');if(route.includes('current-summoner'))return own;if(route.includes('/matches'))return localBody;if(route.includes('/games/'))return raw;return {};},
+  sgp:async()=>({games:[{json:raw}]}),now:()=>clock,...answers
+ });
+ return {svc,state};
+}
+test('a known client connection is reused instead of re-running process discovery for every read',async()=>{
+ const {svc,state}=discoveryService();
+ for(let i=0;i<3;i++){await svc.execute('page',{source:'lcu',fresh:true});state.tick(60000);}
+ assert.equal(state.discoveries,1);
+});
+test('a client that stops answering on the known connection is re-discovered once and the read still succeeds',async()=>{
+ const {svc,state}=discoveryService();
+ await svc.execute('page',{source:'lcu'});
+ state.port=23457;state.reachable=new Set([23457]);state.tick(60000);
+ const pages=await Promise.all([svc.execute('page',{source:'lcu',fresh:true}),svc.execute('page',{source:'lcu',fresh:true})]);
+ assert.equal(pages.every(page=>page.games.length===1),true);
+ assert.equal(state.discoveries,2,'Concurrent stale reads share one re-discovery');
+});
+test('a failed discovery is not kept, so the next read looks for the client again',async()=>{
+ const {svc,state}=discoveryService();
+ state.unreadable=true;
+ await assert.rejects(svc.execute('page',{source:'lcu'}),/Windows 权限/);
+ state.unreadable=false;
+ assert.equal((await svc.execute('page',{source:'lcu'})).games.length,1);
+ assert.equal(state.discoveries,2);
+});

@@ -126,6 +126,7 @@ import {historyNavigationView} from './match-history-navigation-view.mjs';
 import {bindHistoryTooltips} from './match-history-hover.mjs';
 import {historyCardsView,historySummaryView} from './match-history-view.mjs';
 import {nextTick} from './generated/vue.runtime.mjs';
+import {installLazyDetails} from './lazy-details.mjs';
 import {ongoingTooltipView} from './ongoing-game-hover.mjs';
 import {updateHistoryFilterTree,saveHistoryFilterPreset,loadHistoryFilterPreset,removeHistoryFilterPreset,historyRelativeTimeRange} from './match-history-filter-tree.mjs';
 function matchHistoryView(state,data){
@@ -201,7 +202,10 @@ function refreshHistoryAnalysis(){
 // Card-local state (detail tabs, charts, event filters, table search) patches
 // only the Vue card list; the full shell renders when Vue does not own the list.
 function updateHistoryCards(){if(route!=='history'||!data||!vueRoutes.update('history',currentHistoryCards()))return false;historyTooltips.close();return true;}
-const history=createHistoryController({request:historyRequest,analyze:analyzeAkariHistory,onChange:change=>{if(route==='history'&&data){if(change?.type==='detail'){if(change.tabId!==history.state.current)return;if(updateHistoryCards()){if(change.analysisChanged)refreshHistoryAnalysis();return;}}render();if(history.state.searchResults.length)overlay.innerHTML=matchHistorySearchView(privateHistoryState(history.state));if(history.state.error)toast(history.state.streamer?'查询失败，请检查连接':history.state.error,true);}}});
+const history=createHistoryController({request:historyRequest,analyze:analyzeAkariHistory,onChange:change=>{if(route==='history'&&data){
+ // A profile shows only in its own tab; a background tab's late profile needs no render.
+ if(change?.type==='profile'&&change.tabId!==history.state.current)return;
+ if(change?.type==='detail'){if(change.tabId!==history.state.current)return;if(updateHistoryCards()){if(change.analysisChanged)refreshHistoryAnalysis();return;}}render();if(history.state.searchResults.length)overlay.innerHTML=matchHistorySearchView(privateHistoryState(history.state));if(history.state.error)toast(history.state.streamer?'查询失败，请检查连接':history.state.error,true);}}});
 function acceptChampionUsage(value){
  if(!value||!Number.isSafeInteger(value.revision)||championUsage&&value.revision<=championUsage.revision)return;
  const before=data?recommendationKey(recommendationInput()):null;
@@ -414,6 +418,7 @@ function closeRecommendationMenus({except=null,restoreFocus=false}={}){
 }
 document.addEventListener('pointerdown',event=>closeRecommendationMenus({except:event.target.closest?.(recommendationMenus)}),true);
 document.addEventListener('focusin',event=>closeRecommendationMenus({except:event.target.closest?.(recommendationMenus)}));
+installLazyDetails(document);
 document.addEventListener('toggle',event=>{if(event.target.open&&event.target.matches?.(recommendationMenus))closeRecommendationMenus({except:event.target});},true);
 document.addEventListener('click',event=>{if(event.target.closest?.('[data-action]')?.closest(recommendationMenus))closeRecommendationMenus();},true);
 document.addEventListener('pointerdown',event=>{if(event.target.tagName==='SELECT'){if(app.contains(event.target)){activeAppSelect=event.target;appSelectVersion++;}if(overlay.contains(event.target)){activeOverlaySelect=event.target;overlaySelectVersion++;}}});

@@ -56,9 +56,21 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
  function releaseForeground(){if(--foreground>0)return;for(const waiter of idleWaiters.splice(0))waiter.resolve();}
  async function context(generation,fresh=false){
   const startedEpoch=epoch,assertCurrent=()=>{if(generation!==clearGeneration)fail('战绩会话已变化，请重新查询');};
-  let auth;try{if(fresh||!discovery||now()-discoveredAt>3000||now()<discoveredAt){discoveredAt=now();discovery=discover(typeof installPath==='function'?installPath():installPath,{includeRegion:true});}auth=await discovery;}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('暂时无法读取客户端连接');}assertCurrent();
-  if(!auth?.port){if(startedEpoch===epoch)resetSession();fail(auth?.unreadable?'需要先确认 Windows 权限，再读取战绩':'请先登录并连接英雄联盟客户端');}
-  let own;try{own=await request(auth,'/lol-summoner/v1/current-summoner');}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('无法确认当前账号，请重新连接客户端');}assertCurrent();
+  // Discovery queries the client process through PowerShell (about 0.6 s), so
+  // a known connection is reused while the client still answers on it. A
+  // failed identity read re-discovers once; a failed discovery is not kept.
+  const lookup=async force=>{
+   let auth;try{if(force||!discovery||now()<discoveredAt){discoveredAt=now();discovery=discover(typeof installPath==='function'?installPath():installPath,{includeRegion:true});}auth=await discovery;}catch{assertCurrent();if(startedEpoch===epoch){discovery=null;resetSession();}fail('暂时无法读取客户端连接');}assertCurrent();
+   if(!auth?.port){if(startedEpoch===epoch){discovery=null;resetSession();}fail(auth?.unreadable?'需要先确认 Windows 权限，再读取战绩':'请先登录并连接英雄联盟客户端');}
+   return auth;
+  };
+  const reused=!fresh&&!!discovery&&now()>=discoveredAt,used=discovery;
+  let auth=await lookup(fresh),own,read=false;
+  try{own=await request(auth,'/lol-summoner/v1/current-summoner');read=true;}catch{assertCurrent();}
+  // Concurrent reads that held the same stale connection share one re-discovery.
+  if(!read&&reused){auth=await lookup(discovery===used);try{own=await request(auth,'/lol-summoner/v1/current-summoner');read=true;}catch{assertCurrent();}}
+  if(!read){if(startedEpoch===epoch){discovery=null;resetSession();}fail('无法确认当前账号，请重新连接客户端');}
+  assertCurrent();
   if(!validPuuid(own?.puuid)){if(startedEpoch===epoch)resetSession();fail('客户端尚未返回当前账号，请等待登录完成后重试');}
   let locale={};if(!auth.region)try{locale=await request(auth,'/riotclient/region-locale');}catch{if(fresh){assertCurrent();if(startedEpoch===epoch)resetSession();fail('无法确认当前大区，请重新连接客户端');}}assertCurrent();
   const localServer=sgpServerId(auth,locale),key=crypto.createHash('sha256').update(JSON.stringify([auth.port,auth.password,own.puuid,localServer])).digest('hex');

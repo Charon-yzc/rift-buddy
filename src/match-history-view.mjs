@@ -107,7 +107,7 @@ function cachedCard(data,game,d,fullAnalysis){
 }
 export function historyCardsView(state,data){
  const tab=state.tabs.find(t=>t.id===state.current),page=tab?.page,games=filterMatches(page?.games||[],tab?.filter);
- return {items:games.map(game=>({id:game.id,html:cachedCard(data,game,tab.details[game.id],page.fullAnalysis)})),empty:page?.games.length?'已加载对局中没有符合条件的战绩':'客户端返回的战绩为空'};
+ return {tab:tab?.id??0,items:games.map(game=>({id:game.id,html:cachedCard(data,game,tab.details[game.id],page.fullAnalysis)})),empty:page?.games.length?'已加载对局中没有符合条件的战绩':'客户端返回的战绩为空'};
 }
 export function matchHistoryView(state,data,{vueCards=false}={}){
  const tab=state.tabs.find(t=>t.id===state.current),page=tab?.page,games=filterMatches(page?.games||[],tab?.filter),servers=[['','当前大区'],...(state.servers||[]).map(s=>[s.id,s.name])];

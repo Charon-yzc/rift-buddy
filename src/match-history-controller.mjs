@@ -13,7 +13,7 @@ export function createHistoryController({request,onChange=()=>{},analyze=null,se
    if(page.session&&state.session&&page.session!==state.session){for(const previous of state.tabs)if(previous!==tab)previous.ticket++;state.tabs=[tab];state.current=tab.id;}if(page.session)state.session=page.session;
    const games=append?[...new Map([...(tab.page?.games||[]),...page.games].map(g=>[g.id,g])).values()]:page.games;
     tab.page={...page,games};tab.options={...tab.options,handle:page.handle};tab.details={};tab.timelines={};recalculate(tab);state.servers=page.servers||state.servers;tab.loading=false;onChange();
-   try{const profile=await request('profile',{handle:page.handle});if(alive(tab,ticket)){tab.profile=profile;onChange();}}catch{}
+   try{const profile=await request('profile',{handle:page.handle});if(alive(tab,ticket)){tab.profile=profile;onChange({type:'profile',tabId:tab.id});}}catch{}
   }catch(error){if(alive(tab,ticket)){tab.error=message(error);tab.loading=false;onChange();}}
  }
  async function open(options={}){if(!options.background){searchTicket++;state.searching=false;state.searchResults=[];state.error='';}const {background=false,...query}={source:state.source,...options},server=query.server??state.server,previous=state.tabs.find(tab=>(server?(tab.page?.server??tab.options.server??'')===server:!tab.options.server&&!tab.page?.cross)&&(query.puuid?tab.page?.player?.puuid===query.puuid||tab.options.puuid===query.puuid:query.query?tab.options.query?.toLowerCase()===query.query.toLowerCase():!tab.options.query&&!tab.options.puuid));
@@ -21,15 +21,33 @@ export function createHistoryController({request,onChange=()=>{},analyze=null,se
   const tab={id:++next,ticket:0,options:{source:state.source,server,...query},page:null,filter:{excludePve:true},details:{},profile:null,loading:false,error:''};state.tabs.push(tab);if(!background||state.current===null)state.current=tab.id;if(state.tabs.length>10)close(state.tabs[0].id);await load(tab);return tab;}
  async function search(){const query=state.query.trim();if(query.includes('#'))return open({query});if(looksLikePuuid(query))return open({puuid:query});const ticket=++searchTicket;state.searching=true;state.error='';state.searchResults=[];onChange();try{const result=await request('search',{query,server:state.server,source:state.source});if(ticket!==searchTicket)return;state.servers=result.servers||state.servers;state.searchResults=result.players;if(!result.players.length)state.error='没有找到匹配玩家，请输入完整游戏 ID';}catch(error){if(ticket===searchTicket)state.error=message(error);}finally{if(ticket===searchTicket){state.searching=false;onChange();}}}
  function close(id){const tab=state.tabs.find(t=>t.id===id);if(tab){tab.ticket++;cancelReplay(tab);}state.tabs=state.tabs.filter(t=>t.id!==id);if(state.current===id)state.current=state.tabs.at(-1)?.id??null;onChange();}
+  // An opened card's events, builds and timeline tabs all wait on one backend
+  // timeline (about 1-2 s). Fetch it while the overview is read. Only one prefetch
+  // runs at a time, so it holds at most one request slot and a page or player
+  // the user opens never queues behind prefetches. A failure stays silent; the
+  // tab click then loads and reports it as before.
+  let prefetching=false;
+  function prefetchTimeline(tab,id,d){
+   if(prefetching||!alive(tab,tab.ticket)||!tab.page||tab.details[id]!==d||!d.complete||d.timeline||d.flight||d.error)return;
+   const ticket=tab.ticket,handle=tab.page.handle;let finish;prefetching=true;d.flight=new Promise(resolve=>finish=resolve);
+   request('timeline',{handle,id}).then(result=>{
+    if(!alive(tab,ticket)||tab.page.handle!==handle||tab.details[id]!==d||d.timeline)return;
+    keepTimeline(tab,id,result.timeline);d.timeline=result.timeline;d.notice=result.notice||d.notice;recalculate(tab);
+    onChange({type:'detail',tabId:tab.id,id,analysisChanged:true});
+   }).catch(()=>{}).finally(()=>{prefetching=false;delete d.flight;finish();});
+  }
   async function detail(id,section='summary'){
    const tab=current();if(!tab?.page)return;let analysisChanged=false;const changed=()=>onChange({type:'detail',tabId:tab.id,id,...(analysisChanged?{analysisChanged:true}:{})});let d=tab.details[id];if(d&&section==='toggle'){d.open=!d.open;changed();return;}
    if(!d){d={open:true,section:'summary',game:tab.page.games.find(g=>g.id===id),loading:false,error:''};tab.details[id]=d;}d.open=true;d.section=section==='toggle'?'summary':section;
    const needsTimeline=['timeline','events','builds','analysis'].includes(d.section);
-   if(d.complete&&(!needsTimeline||d.timeline)&&!d.flight){d.loading=false;d.error='';changed();return;}
-   const ticket=tab.ticket,handle=tab.page.handle;if(d.flight){changed();await d.flight;if(alive(tab,ticket)&&!d.error&&['timeline','events','builds','analysis'].includes(d.section)&&!d.timeline)return detail(id,d.section);return;}d.loading=true;d.error='';changed();let finish;d.flight=new Promise(resolve=>finish=resolve);
+   if(d.complete&&(!needsTimeline||d.timeline)&&!d.flight){d.loading=false;d.error='';changed();prefetchTimeline(tab,id,d);return;}
+   const ticket=tab.ticket,handle=tab.page.handle;if(d.flight){
+    // A background prefetch does not mark the card loading; a timeline tab waiting on it does.
+    const waiting=needsTimeline&&!d.timeline&&!d.loading;if(waiting)d.loading=true;changed();await d.flight;if(waiting&&alive(tab,ticket))d.loading=false;
+    if(alive(tab,ticket)&&!d.error&&['timeline','events','builds','analysis'].includes(d.section)&&!d.timeline)return detail(id,d.section);if(waiting&&alive(tab,ticket))changed();return;}d.loading=true;d.error='';changed();let finish;d.flight=new Promise(resolve=>finish=resolve);
     try{if(!d.complete){const result=await request('detail',{handle,id});if(!alive(tab,ticket)||tab.page.handle!==handle)return;d.game=result.game;d.notice=result.notice||'';d.complete=true;tab.page.games=tab.page.games.map(g=>g.id===id?result.game:g);recalculate(tab);analysisChanged=true;}
      if(['timeline','events','builds','analysis'].includes(d.section)&&!d.timeline){const result=await request('timeline',{handle,id});if(!alive(tab,ticket))return;keepTimeline(tab,id,result.timeline);d.timeline=result.timeline;d.notice=result.notice||d.notice;recalculate(tab);analysisChanged=true;}
-   }catch(error){if(alive(tab,ticket))d.error=message(error);}finally{delete d.flight;finish();if(alive(tab,ticket)){d.loading=false;changed();}}
+   }catch(error){if(alive(tab,ticket))d.error=message(error);}finally{delete d.flight;finish();if(alive(tab,ticket)){d.loading=false;changed();prefetchTimeline(tab,id,d);}}
  }
  async function collect({champion=null,position='',expectedCount=500,useFilters=false,scanFromStart=false}={}){const tab=current();if(!tab?.page||tab.loading||tab.page.games.length>=500&&!scanFromStart)return;if(champion)tab.filter.champion=Number(champion);if(position)tab.filter.position=position;const expected=Math.min(500,Math.max(1,Number(expectedCount)||500));
    if(scanFromStart){tab.ticket++;tab.page={...tab.page,games:[],hasMore:true,start:0};tab.details={};tab.timelines={};tab.analysisLoading=false;tab.challengesLoading=false;}

@@ -53,7 +53,10 @@ export function createVueRouteHost() {
     const slot = frag.querySelector(`[data-vue-route="${route}"]`);
     if (!slot) {
       if(route!=='history')throw Error(`Missing Vue route slot: ${route}`);
-      unmount();root.innerHTML=shell;return {mounted:false};
+      // A loading or empty history tab has no card list. Keep the app (and the
+      // other tabs' kept-alive cards) detached until a list returns.
+      if(current&&current!==route)unmount();
+      host?.remove();root.innerHTML=shell;return {mounted:false};
     }
     if (current && current !== route) unmount();
     const live = ensureHost(route);

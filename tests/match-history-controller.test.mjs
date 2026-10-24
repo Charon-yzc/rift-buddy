@@ -111,3 +111,26 @@ test('postgame review selects and refreshes own history before opening the exact
 test('a not-yet-synchronized settlement shows a useful own-history status without bypassing the loaded-game boundary',async()=>{
  let detailReads=0;const c=createHistoryController({request:async(op)=>{if(op==='profile')return {};if(op==='detail'){detailReads++;throw Error('Must not read');}return page('self',1);}});await c.openOwnGame(99);assert.equal(c.current().page.player.name,'self');assert.match(c.current().error,/尚未同步/);assert.equal(detailReads,0);
 });
+test('opening a card prefetches its timeline once, one card at a time, so timeline tabs need no second read',async()=>{
+ const calls=[],releases=[],two={...page('one'),games:[{...page('one').games[0]},{...page('one',2).games[0]}]};
+ const c=createHistoryController({request:async(op,p)=>{calls.push(op+(p?.id?':'+p.id:''));if(op==='page')return two;if(op==='profile')return {};if(op==='detail')return {game:two.games.find(g=>g.id===p.id)};return new Promise(resolve=>releases.push(resolve));}});
+ await c.open();await c.detail(1,'toggle');await c.detail(2,'toggle');
+ assert.deepEqual(calls.filter(call=>call.startsWith('timeline')),['timeline:1'],'Only one prefetch holds a request slot');
+ const events=c.detail(1,'events');releases[0]({timeline:{frames:[],events:[]}});await events;
+ assert.ok(c.current().details[1].timeline);assert.equal(calls.filter(call=>call==='timeline:1').length,1);
+});
+test('a failed timeline prefetch stays silent and the timeline tab reads it again',async()=>{
+ let fail=true;const calls=[];
+ const c=createHistoryController({request:async(op,p)=>{calls.push(op);if(op==='page')return page('one');if(op==='profile')return {};if(op==='detail')return {game:page('one').games[0]};if(fail){fail=false;throw Error('offline');}return {timeline:{frames:[],events:[]}};}});
+ await c.open();await c.detail(1,'toggle');await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(c.current().details[1].error,'');
+ await c.detail(1,'events');assert.ok(c.current().details[1].timeline);assert.equal(calls.filter(op=>op==='timeline').length,2);
+});
+test('a timeline tab opened during a prefetch shows loading until the prefetched timeline arrives',async()=>{
+ let release;const views=[];
+ const c=createHistoryController({request:async op=>op==='page'?page('one'):op==='profile'?{}:op==='detail'?{game:page('one').games[0]}:new Promise(resolve=>release=resolve),onChange:()=>{const d=c.current()?.details[1];if(d)views.push({section:d.section,loading:d.loading,timeline:!!d.timeline});}});
+ await c.open();await c.detail(1,'toggle');const events=c.detail(1,'events');
+ assert.deepEqual(views.at(-1),{section:'events',loading:true,timeline:false});
+ release({timeline:{frames:[],events:[]}});await events;
+ assert.deepEqual(views.at(-1),{section:'events',loading:false,timeline:true});
+});
