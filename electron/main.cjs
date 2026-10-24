@@ -169,20 +169,27 @@ async function boot(){
  // Automatic statistics must wait for confirmed idle after restart. Explicit
  // base-data refresh retains its existing initial-offline phase policy.
  const observeFeedPhase=createDataFeedActivationGate(),observeSignedFeedPhase=createDataFeedActivationGate({requireIdleConfirmation:true});let feedIdle=false;
- let publishedBase=data,afterBaseChange=()=>{};
- const generation=await createDataGenerationCache({root:path.join(storeRoot,'data'),getData:()=>data,manualBase:await readManualBase(path.join(storeRoot,'data')),
+ let publishedBase=data,afterBaseChange=()=>{},communityFeed=null,communityChanged=false;
+ const generation=await createDataGenerationCache({root:path.join(storeRoot,'data'),getData:()=>data,getContext:()=>catalogStore.revision(),manualBase:await readManualBase(path.join(storeRoot,'data')),
   prepare:async(bundle,manifest,context)=>(await prepareBaseData(bundle.game,{...context,bundle,manifest})).data,
-  replace:next=>{data=next;},canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
-  onChange:info=>{data.dataFeed=info;if(data!==publishedBase){catalogCore.configureCatalog(data.catalog);publishedBase=data;publishData(Object.keys(data),true);guide?.publish();afterBaseChange();}else publishData(['dataFeed']);}});
+  replace:next=>{data=next;},canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet&&!catalogStore.isMutating(),
+  onChange:info=>{data.dataFeed=info;if(data!==publishedBase){communityFeed?.reconcile({notify:false});if(communityFeed)data.communityFeed=communityFeed.summary();communityChanged=false;catalogCore.configureCatalog(data.catalog);publishedBase=data;publishData(Object.keys(data),true);guide?.publish();afterBaseChange();}else publishData(['dataFeed']);}});
  publishedBase=data;catalogCore.configureCatalog(data.catalog);
  // Do not discard a new hero's saved guide using the old bundled hero table.
  if(state.guide&&!data.champions.some(c=>c.id===state.guide.selection?.id)){state.guide=null;if(state.recovery?.backedUp!==false)await saveCurrentState();}
  const legacyFeed=generation.hasAccepted()?null:await createDataFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,restoreAtStartup:true,
   canActivate:()=>!generation.hasAccepted()&&feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
   onChange:info=>{if(!generation.hasAccepted()&&['idle','offline'].includes(generation.summary().phase)){data.dataFeed=info;publishData(['dataFeed','rankings','buildSources','builds','hexBuilds']);}}});
+ const {createCommunityFeedCache}=await import('../services/community-feed-cache.mjs');
+ const publishCommunity=info=>{data.communityFeed=info;if(communityChanged){communityChanged=false;catalogCore.installValidatedCatalog(data.catalog);publishData(['communityFeed','catalog','catalogInfo','communityHexRoutes']);guide?.publish();}else publishData(['communityFeed']);};
+ communityFeed=await createCommunityFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,getContext:()=>catalogStore.revision(),currentVersion:app.getVersion(),restoreAtStartup:true,
+  canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet&&!catalogStore.isMutating(),
+  prepare:(value,current)=>{const staged=catalogStore.prepareCommunity(value?.catalog||null,value?.patch,current);return ()=>{staged.commit();current.catalog=staged.catalog;current.catalogInfo=staged.info;current.communityHexRoutes=value?.hexRoutes||null;communityChanged=true;};},onChange:publishCommunity});
+ publishCommunity(communityFeed.summary());
+ const checkStructuredStatistics=async options=>{const info=await generation.check(options);return !generation.hasAccepted()&&info.phase==='offline'&&legacyFeed?legacyFeed.check(options):info;};
  const dataFeed={summary:()=>!generation.hasAccepted()&&['idle','offline'].includes(generation.summary().phase)?legacyFeed?.summary()||generation.summary():generation.summary(),
-  check:async options=>{const info=await generation.check(options);return !generation.hasAccepted()&&info.phase==='offline'&&legacyFeed?legacyFeed.check(options):info;},
-  activate:async()=>{await generation.activate();if(!generation.hasAccepted()&&generation.summary().phase!=='pending')legacyFeed?.activate();}};
+  check:async options=>{const [info]=await Promise.all([checkStructuredStatistics(options),communityFeed.check(options)]);return info;},
+  activate:async()=>{await generation.activate();if(!generation.hasAccepted()&&generation.summary().phase!=='pending')legacyFeed?.activate();communityFeed.activate();}};
  data.dataFeed=dataFeed.summary();
  for(const [key,value] of Object.entries(data))sharedDataFields.set(key,value);
  const buildCache=createBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
@@ -809,8 +816,9 @@ async function boot(){
  guard('update-data',async()=>{
   if(!observeFeedPhase(latestClient))throw Error('请在本局结束后更新基础资料，当前配置保持不变');
   if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，请完成后再更新资料');
+  if(catalogStore.isMutating())throw Error('组合库正在保存，请完成后再更新资料');
   if(updating)throw new Error('资料更新正在进行');updating=true;
-  const pendingSnapshot=path.join(storeRoot,'data',`game-update-${process.pid}.pending.json`),original=data,contextCurrent=preserveGameContext(()=>data,original);
+  const pendingSnapshot=path.join(storeRoot,'data',`game-update-${process.pid}.pending.json`),original=data,catalogRevision=catalogStore.revision(),contextCurrent=preserveGameContext(()=>data,original);
   try{const next=pureGameSnapshot(await dataService.collectSnapshot(msg=>publishWindows('data-progress',msg),data));
    if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，基础资料留待本局结束后更新');
    try{validateGenerationGame(next);}catch{throw Error(`新版本 ${next.patch} 资料尚未完整，继续使用 ${data.patch} 本地资料`);}
@@ -818,11 +826,15 @@ async function boot(){
    const token=feedHash(await fs.readFile(pendingSnapshot)),prepared=await prepareBaseData(next,{current:original});
    if(!observeFeedPhase(latestClient))throw Error('已进入选人或对局，当前窗口继续使用原资料');
    if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，基础资料未替换');
-   if(!contextCurrent())throw Error('配置或资料已变化，请重新检查基础资料');
+   if(catalogStore.isMutating())throw Error('组合库正在保存，基础资料未替换');
+   if(!contextCurrent()||catalogStore.revision()!==catalogRevision)throw Error('配置或资料已变化，请重新检查基础资料');
    // Keep disk promotion and the in-memory switch in one turn: an awaited
    // rename could cross into a draft after the final phase check.
    renameSync(pendingSnapshot,path.join(storeRoot,'data/game.json'));
-   data=prepared.data;generation.noteManual(data,token,{notify:false});data.dataFeed=dataFeed.summary();catalogCore.configureCatalog(data.catalog);publishedBase=data;
+   // The owner's final idle/context checks above authorize this synchronous
+   // base replacement. Revalidate only the accepted overlay while updating is
+   // still set; a newer pending snapshot keeps its normal activation gate.
+   data=prepared.data;generation.noteManual(data,token,{notify:false});data.dataFeed=dataFeed.summary();communityFeed.reconcile({restore:true,notify:false});data.communityFeed=communityFeed.summary();communityChanged=false;catalogCore.configureCatalog(data.catalog);publishedBase=data;
    publishData(Object.keys(data),true);guide.publish();refreshPreparedBuild();return {data,imageCache:prepared.imageCache,dataRevision};
   }finally{await fs.unlink(pendingSnapshot).catch(()=>{});updating=false;}
  });
