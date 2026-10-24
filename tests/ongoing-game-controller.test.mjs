@@ -29,6 +29,9 @@ test('a cancelled timeline batch cannot repaint the replacement roster',async()=
 test('ongoing game automatically loads each actual visible player with the bounded current roster',async()=>{
  const calls=[];const c=createOngoingGameController({request:async(op,p)=>{calls.push([op,p]);return op==='roster'?roster():op==='page'?page:{};},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
  await c.refresh();assert.equal(c.state.players[member.key].loading,false);assert.equal(c.state.roster.key,'one');assert.equal(calls.find(([op])=>op==='page')[1].rosterKey,'one');
+ // The roster's first pages are a batch: the service reads them from the
+ // backend instead of the client route that serves one player at a time.
+ assert.equal(calls.find(([op])=>op==='page')[1].batch,true);
 });
 test('a background tick repaints only when the public roster actually changed',async()=>{
  let current=roster(),changes=0;
@@ -120,6 +123,27 @@ test('Arena encounters use verified public subteams and preserve unknown relatio
  const other={...member,key:'mock-arena-other-player',puuid:'mock-arena-other-player',self:false,group:2,team:'TEAM-ALL'},unknown={...other,key:'mock-arena-unknown-player',puuid:'mock-arena-unknown-player',group:null};
  const c=createOngoingGameController({request:async op=>op==='roster'?{...roster(),gameId:100,phase:'in-game',mode:'CHERRY',players:[{...member,group:1,team:'TEAM-ALL'},other,unknown],teams:{'TEAM-ALL':[member.key,other.key,unknown.key]}}:op==='page'?page:{},analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});await c.refresh();assert.equal(c.state.met[other.puuid].enemy,1);assert.equal(c.state.met[unknown.puuid].unknown,1);assert.equal(c.state.met[unknown.puuid].ally,0);
 });
+test('a player slot covers only the first page, so the next list does not wait for a rank',async()=>{
+ const members=Array.from({length:2},(_,i)=>({...member,key:'mock-public-member-'+i,puuid:'mock-public-member-'+i,self:i===0})),calls=[],profiles=[];
+ const c=createOngoingGameController({settings:{concurrency:1,details:1},request:async(op,p)=>{
+  calls.push([op,p]);
+  if(op==='roster')return {...roster(),players:members,teams:{LOBBY:members.map(m=>m.key)}};
+  if(op==='page')return {...page,handle:'handle-'+p.puuid,games:[{id:members.findIndex(m=>m.puuid===p.puuid)+1,queue:430}]};
+  if(op==='profile')return new Promise(resolve=>profiles.push(()=>resolve({ranked:[]})));
+  if(op==='timeline')return {timeline:{frames:[]}};
+  return {};
+ },analyze:()=>null,teamAnalyze:()=>null,infer:()=>[]});
+ const loading=c.refresh();
+ for(let i=0;i<40&&calls.filter(([op])=>op==='page').length<2;i++)await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(calls.filter(([op])=>op==='page').length,2,'the second list starts while the first rank is pending');
+ assert.equal(c.state.players[members[0].key].loading,true,'the card still shows its rank as loading');
+ assert.ok(calls.filter(([op])=>op==='timeline').length<=1,'samples keep yielding until every rank arrives');
+ for(let i=0;i<40&&profiles.length<2;i++)await new Promise(resolve=>setImmediate(resolve));
+ while(profiles.length)profiles.shift()();
+ await loading;
+ assert.ok(members.every(m=>c.state.players[m.key].profile&&!c.state.players[m.key].loading));
+});
+
 test('every list and rank arrives before detailed samples, which share one round-robin queue and read a shared game once',async()=>{
  const members=Array.from({length:6},(_,i)=>({...member,key:'mock-public-member-'+i,puuid:'mock-public-member-'+i,self:i===0})),timelines=[],calls=[];let running=0,maxWhileLists=0,maxAfter=0;
  // Every player's history holds the shared game 100 plus three own games.
