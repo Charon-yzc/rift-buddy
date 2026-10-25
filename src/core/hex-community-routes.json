@@ -2651,6 +2651,319 @@
           }
         }
       }
+    },
+    {
+      "patch": "16.21",
+      "augment": 3086,
+      "optional": [],
+      "requiresUltimate": false,
+      "hero": "Kalista",
+      "title": "小蜜蜂穿甲叠矛",
+      "summary": "技能触发蜂巢后，按实际矛层和E斩杀条件收割。",
+      "play": [
+        "小蜜蜂附带40%效能攻击特效，不把每只蜜蜂当成一次完整普攻。",
+        "Q须击杀目标才穿透转移矛，E须击杀至少一个目标才刷新；先看实际矛层与血量。"
+      ],
+      "basicPlay": [
+        "不使用R；Q与实际攻击衔接，按已有矛层判断E斩杀。",
+        "Q须击杀目标才穿透转移矛，E须击杀才刷新，不把蜂群当无限E。"
+      ],
+      "caution": "蜂群每跳增加多少矛未核实；不保证技能命中就发射飓风弩箭或刷新E。",
+      "gear": [
+        [
+          "作者攻击力方向",
+          [
+            126697
+          ],
+          "使用海克斯狂妄；参与击杀叠攻击力，当前持续时间未解析，不填固定秒数。"
+        ],
+        [
+          "作者多目标攻击",
+          [
+            3085
+          ],
+          "实际攻击发射弩箭并施加攻击特效；不保证蜂群自动发射飓风弩箭。"
+        ],
+        [
+          "作者穿甲与留人",
+          [
+            6694
+          ],
+          "提供护甲穿透；伤害技能只对低于50%生命的敌人施加减速。"
+        ],
+        [
+          "作者护盾应对",
+          [
+            6695
+          ],
+          "面对护盾比较巨蛇；当前减盾比例未解析，不填确定百分比。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "video",
+        "author": "显眼煲",
+        "url": "https://www.youtube.com/watch?v=XFFTkU0xVo4",
+        "publishedAt": "2026-10-24T12:46:11Z",
+        "sourcePatch": null,
+        "observedMode": "字幕描述海克斯大乱斗4.0；未核视频画面",
+        "evidenceSeconds": [
+          16,
+          32,
+          48
+        ],
+        "adaptation": "已读带时间戳字幕；装备是作者推荐名单，不是已购装备或购买次序。未核视频画面、录制补丁、作者加点与召唤师技能；按16.21当前技能与强化独立适配，不采用必秒、无限连锁或65.5%胜率。0:16–0:48卡莉丝塔段落；四件为作者名单，不补成固定六件。"
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "3086": {
+            "coverage": "dynamic-counters",
+            "fingerprint": "ce2a943200b8677c",
+            "requiresUltimate": false
+          }
+        }
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3085": "33323dc6a3e8462a",
+          "6694": "76babbf775c1d8d2",
+          "6695": "91d858d6d0c5fd80",
+          "126697": "942097b9d9de1e23"
+        }
+      },
+      "coreBrief": "技能命中敌方英雄投蜂巢：2秒20%减速、40%效能攻击特效；持续魔伤75–200＋150%额外AD＋70%AP；冷却15–10秒和基础伤害随等级。"
+    },
+    {
+      "patch": "16.21",
+      "augment": 3086,
+      "optional": [],
+      "requiresUltimate": false,
+      "hero": "Gnar",
+      "title": "小蜜蜂法强小纳尔",
+      "summary": "小型纳尔用Q消耗并穿插攻击，怒气转大后改用控制。",
+      "play": [
+        "小型纳尔对同一敌人每第三次攻击或技能触发W；不承诺一次Q与蜂群就触发完整三环。",
+        "E保留进退空间；巨型W改为主动范围控制，不能沿用小型三环循环。"
+      ],
+      "basicPlay": [
+        "不使用R；小型用Q与实际攻击叠W，蜂群不保证一次Q直接触发三环。",
+        "E保留退路；巨型W是主动控制，不能继续套用小型被动。"
+      ],
+      "caution": "不保证秒杀，不混用斗魂竞技场对W或R的独立改动；蜂群攻击特效效能40%。",
+      "gear": [
+        [
+          "作者施法后攻击",
+          [
+            3100
+          ],
+          "巫妖须施法后实际攻击，咒刃有冷却，不会每跳蜂伤重复触发。"
+        ],
+        [
+          "作者攻击特效",
+          [
+            3115
+          ],
+          "纳什提供攻速、法强和普攻魔法攻击特效，不据此承诺无限连锁。"
+        ],
+        [
+          "作者低血量增伤",
+          [
+            4645
+          ],
+          "影焰对低于40%生命的目标提升魔法与真实伤害，不保证击杀。"
+        ],
+        [
+          "作者法强放大",
+          [
+            3089
+          ],
+          "帽子放大已有法强，收益随当前装备和经济变化。"
+        ],
+        [
+          "作者魔抗应对",
+          [
+            3135
+          ],
+          "虚空之杖提供40%法术穿透，按敌方魔抗比较。"
+        ],
+        [
+          "作者爆发门槛",
+          [
+            4646
+          ],
+          "风暴须在2.5秒内造成目标25%最大生命伤害才施加风啸，不假定必触发。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "video",
+        "author": "显眼煲",
+        "url": "https://www.youtube.com/watch?v=XFFTkU0xVo4",
+        "publishedAt": "2026-10-24T12:46:11Z",
+        "sourcePatch": null,
+        "observedMode": "字幕描述海克斯大乱斗4.0；未核视频画面",
+        "evidenceSeconds": [
+          48,
+          64,
+          79
+        ],
+        "adaptation": "已读带时间戳字幕；装备是作者推荐名单，不是已购装备或购买次序。未核视频画面、录制补丁、作者加点与召唤师技能；按16.21当前技能与强化独立适配，不采用必秒、无限连锁或65.5%胜率。0:48–1:19纳尔段落；小型与巨型机制分开，不借用竞技场增强。已选魔法转物理时撤下本法强分支。"
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "1206": {
+            "fingerprint": "d861b53cc39eb046",
+            "requiresUltimate": false,
+            "coverage": "dynamic-counters"
+          },
+          "3086": {
+            "coverage": "dynamic-counters",
+            "fingerprint": "ce2a943200b8677c",
+            "requiresUltimate": false
+          }
+        }
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3089": "27fe94d33bb7a1af",
+          "3100": "ee6e5a854bc79fff",
+          "3115": "156165de57c6fce7",
+          "3135": "40317bddc5d92b12",
+          "4645": "4389cef3a456f687",
+          "4646": "96e96d64e74507fd"
+        }
+      },
+      "excludedAugments": [
+        1206
+      ],
+      "coreBrief": "技能命中敌方英雄投蜂巢：2秒20%减速、40%效能攻击特效；持续魔伤75–200＋150%额外AD＋70%AP；冷却15–10秒和基础伤害随等级。"
+    },
+    {
+      "patch": "16.21",
+      "augment": 3086,
+      "optional": [],
+      "requiresUltimate": false,
+      "hero": "Volibear",
+      "title": "小蜜蜂法强雷霆",
+      "summary": "技能命中触发蜂巢，以实际攻击和技能伤害积攒被动。",
+      "play": [
+        "攻击与技能伤害叠被动，满层后通过攻击打连锁；蜂群只附带40%效能攻击特效。",
+        "E命中后仍需实际攻击衔接；W二段恢复需要标记与再次施放，不由蜂群代为施放。"
+      ],
+      "basicPlay": [
+        "不使用R；以E和实际攻击衔接，按已有被动层数持续输出。",
+        "蜂群不是额外W施放，不能跳过标记或二段恢复条件。"
+      ],
+      "caution": "蜂群接电刀立即满层及无限连锁未核实，不为追击交光进退技能。",
+      "gear": [
+        [
+          "作者盈能开场",
+          [
+            3087
+          ],
+          "海克斯电刀当前闪电基础伤害70，须盈能攻击触发；弹射目标数未解析，不推导固定连锁次数。"
+        ],
+        [
+          "作者施法穿插",
+          [
+            3100
+          ],
+          "施法后仍须实际攻击兑现咒刃，并等待咒刃冷却。"
+        ],
+        [
+          "作者低血量增伤",
+          [
+            4645
+          ],
+          "影焰对低于40%生命的目标提升魔法与真实伤害，不保证蜂群击杀。"
+        ],
+        [
+          "作者法强放大",
+          [
+            3089
+          ],
+          "帽子放大已有法强，不代替生存与进场条件。"
+        ],
+        [
+          "作者魔抗应对",
+          [
+            3135
+          ],
+          "按目标魔抗比较40%法术穿透，不把法穿当真实伤害。"
+        ],
+        [
+          "作者爆发门槛",
+          [
+            4646
+          ],
+          "在2.5秒内对英雄造成其25%最大生命值伤害才施加风啸，不承诺每次蜂群必触发。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "video",
+        "author": "显眼煲",
+        "url": "https://www.youtube.com/watch?v=XFFTkU0xVo4",
+        "publishedAt": "2026-10-24T12:46:11Z",
+        "sourcePatch": null,
+        "observedMode": "字幕描述海克斯大乱斗4.0；未核视频画面",
+        "evidenceSeconds": [
+          64,
+          79,
+          94,
+          110
+        ],
+        "adaptation": "已读带时间戳字幕；装备是作者推荐名单，不是已购装备或购买次序。未核视频画面、录制补丁、作者加点与召唤师技能；按16.21当前技能与强化独立适配，不采用必秒、无限连锁或65.5%胜率。1:04段后部起介绍沃利贝尔，1:19与1:34为机制和装备证据；作者电刀链式推演保留未核边界。已选魔法转物理时撤下本法强分支。"
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "1206": {
+            "fingerprint": "d861b53cc39eb046",
+            "requiresUltimate": false,
+            "coverage": "dynamic-counters"
+          },
+          "3086": {
+            "coverage": "dynamic-counters",
+            "fingerprint": "ce2a943200b8677c",
+            "requiresUltimate": false
+          }
+        }
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3087": "cb7b578ba1f607b4",
+          "3089": "27fe94d33bb7a1af",
+          "3100": "ee6e5a854bc79fff",
+          "3135": "40317bddc5d92b12",
+          "4645": "4389cef3a456f687",
+          "4646": "96e96d64e74507fd"
+        }
+      },
+      "excludedAugments": [
+        1206
+      ],
+      "coreBrief": "技能命中敌方英雄投蜂巢：2秒20%减速、40%效能攻击特效；持续魔伤75–200＋150%额外AD＋70%AP；冷却15–10秒和基础伤害随等级。"
     }
   ],
   "championReview": {
@@ -2693,7 +3006,10 @@
       "TwistedFate": "4b3a9807b94dcc47",
       "AurelionSol": "0feb05c65d40708e",
       "MasterYi": "035280b4b46c8b34",
-      "MissFortune": "10b496d2ce7c344d"
+      "MissFortune": "10b496d2ce7c344d",
+      "Kalista": "1793244f0dc8a65c",
+      "Gnar": "52048713e2c4916d",
+      "Volibear": "bf39a7d23077a7fc"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -3581,6 +3897,78 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "45c6c8d43f1a5c2f"
+          }
+        }
+      },
+      "Kalista": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "1793244f0dc8a65c",
+        "observedAt": "2026-10-23T02:03:51.532Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Kalista",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+            "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "44f72f75e4385140"
+          }
+        }
+      },
+      "Gnar": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "52048713e2c4916d",
+        "observedAt": "2026-10-23T02:03:51.462Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Gnar",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/gnar/gnar.bin.json",
+            "sha256": "cc87c8f64a6e0ee34a67523558951c142fa411d519625fbbf2a9f4af34a8f270"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "eaa8e8b3d5cb0bd6"
+          }
+        }
+      },
+      "Volibear": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "bf39a7d23077a7fc",
+        "observedAt": "2026-10-23T02:03:51.639Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Volibear",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/volibear/volibear.bin.json",
+            "sha256": "ec12da034e4cfecc17c38d4d3368793d30a0c56d08fa723af06a071d3555022c"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "340dacf5c50799b2"
           }
         }
       }

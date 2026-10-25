@@ -100,7 +100,7 @@ for(const [name,change] of [
  ['corrupt packed bytes',()=>{const s=signed();s.packed=Buffer.from(s.packed);s.packed[100]^=1;return s;}],
 ])test('rejects '+name+' and keeps usable bundled data',async t=>{const f=await fixture(t);f.source(change());f.phase('Lobby');const before=f.data().catalog;assert.equal((await f.cache.check()).phase,'offline');assert.equal(f.data().catalog,before);assert.equal(f.commits(),0);assert.equal(await fs.stat(f.currentFile).catch(()=>null),null);});
 
-for(const [currentVersion,minimumApp]of [['0.59.35','0.59.36'],['0.59.36','0.59.37']])test('client '+currentVersion+' rejects newer '+minimumApp+' format before fetching an asset or replacing its cached compatible snapshot',async t=>{
+for(const [currentVersion,minimumApp]of [['0.59.35','0.59.36'],['0.59.36','0.59.37'],['0.59.33','0.59.38'],['0.59.37','0.59.38']])test('client '+currentVersion+' rejects newer '+minimumApp+' format before fetching an asset or replacing its cached compatible snapshot',async t=>{
  const f=await fixture(t,{currentVersion});f.phase('Lobby');const initial=signed({minimumApp:currentVersion});f.source(initial);assert.equal((await f.cache.check()).phase,'ready');const before=await fs.readFile(f.currentFile),catalog=f.data().catalog,commits=f.commits(),requests=f.requests.length;f.source(signed({minimumApp,version:pendingVersion,sequence:now}));assert.equal((await f.cache.check({force:true})).phase,'offline');assert.equal(f.commits(),commits);assert.equal(f.data().catalog,catalog);assert.deepEqual(await fs.readFile(f.currentFile),before);assert.equal(f.requests.length,requests+1,'Reject at the manifest; do not download the new asset');
 });
 
@@ -172,4 +172,9 @@ for(const budget of ['loadouts','runes','bytes'])test('saving validates the comp
  if(budget==='runes')for(let n=0;n<101-Object.keys(BUNDLED_CATALOG.runes).length;n++)personal.runes['local-budget-'+n]=structuredClone(rune);
  if(budget==='bytes')personal.loadouts.push({...structuredClone(template),id:'local-large',extra:'x'.repeat(1500000)});
  const state={schema:1,installed,previous:null,personal,sourceUrl:'',lastCheckedAt:null},f=await fixture(t,{state}),filename=path.join(f.root,'combinations.json'),before=await fs.readFile(filename),entry={...structuredClone(BUNDLED_CATALOG.duos.find(d=>d.id==='xayah-kayle-guard')),id:'local-over-budget'};for(const m of entry.members)m.loadoutId='default';assert.equal(f.store.summary().info.recovery,'');await assert.rejects(f.store.savePersonal(entry),/组合库检查失败/);assert.ok((await fs.readFile(filename)).equals(before));const restarted=await createCatalogStore({root:f.root,getData:()=>f.data()});assert.equal(restarted.summary().info.recovery,'');assert.equal(restarted.summary().catalog.duos.some(d=>d.id===entry.id),false);
+});
+
+test('client38 verifies and activates current YouTube routes, then restores them offline',async t=>{
+ const f=await fixture(t,{currentVersion:'0.59.38'});f.source(signed({minimumApp:'0.59.38'}));f.phase('Lobby');assert.equal((await f.cache.check()).phase,'ready');assert(hexCommunitySourceURLs(f.data()).includes('https://www.youtube.com/watch?v=XFFTkU0xVo4'));
+ const reset=structuredClone(original);Object.assign(reset,{catalog:f.data().catalog,catalogInfo:f.data().catalogInfo});f.replace(reset);const restored=await createCommunityFeedCache({...f.base,restoreAtStartup:true,download:async()=>{throw Error('offline');}});assert.equal(restored.summary().phase,'ready');assert.equal(restored.summary().version,acceptedVersion);assert(hexPlayerRoutes({data:f.data(),hero:'Gnar'}).some(r=>r.augment.id===3086));
 });

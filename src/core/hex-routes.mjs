@@ -1,5 +1,5 @@
 import {isCurrentHexData} from './hex-data-current.mjs';
-import {communityHexAugmentFingerprint,validCommunityAugmentReview,validCommunityExclusions} from './community-augment-review.mjs';
+import {communityHexAugmentFingerprint,validCommunityAugmentReview,validCommunityExclusions,validCommunityCoreBrief} from './community-augment-review.mjs';
 import itemsReview from './hex-route-items.json' with {type:'json'};
 import {hexRouteItemFingerprint,communityHexItemFingerprint,validCommunityItemReview} from './community-item-review.mjs';
 export {hexRouteItemFingerprint} from './community-item-review.mjs';
@@ -85,6 +85,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   if(scopedItems&&!validCommunityItemReview(route.itemReview,route,data.patch,community.reviewedAt))return [];
   const scopedEffects=community.routes.includes(route)&&route.augmentReview!==undefined;
   if(!validCommunityExclusions(route)||route.excludedAugments!==undefined&&!scopedEffects)return [];
+  if(route.coreBrief!==undefined&&(!scopedEffects||!validCommunityCoreBrief(route)))return [];
   if(scopedEffects&&!validCommunityAugmentReview(route.augmentReview,route,data.patch,community.reviewedAt))return [];
   const effectCurrent=a=>scopedEffects?!!route.augmentReview.effects[a?.id]&&route.augmentReview.effects[a.id].fingerprint===communityHexAugmentFingerprint(a,data,route.augmentReview.effects[a.id].coverage):reviewedHexMechanic(a,data.patch);
   // Offers are not selections. Review the negative dependency as carefully as
@@ -113,7 +114,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   });
   if(route.coreItems?.some(id=>!gear.some(group=>group.items.some(item=>item.id===id))))return [];
   return [{id:hero+'-'+augment.id,hero,family:route.family,optionalAugments,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
-   ...(scopedEffects?{brief:(noUltimate?'终极技能不可使用。':'')+augment.tooltip.description}:{}),...(route.communitySource?{communitySource:route.communitySource}:{}),...(route.skillPriority?{skillPriority:route.skillPriority}:{}),
+   ...(scopedEffects?{brief:(noUltimate?'终极技能不可使用。':'')+(route.coreBrief||augment.tooltip.description)}:{}),...(route.communitySource?{communitySource:route.communitySource}:{}),...(route.skillPriority?{skillPriority:route.skillPriority}:{}),
    sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(['Jhin','Camille'].includes(hero)?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.communitySource?[{name:communitySourceLabel(route.communitySource),url:route.communitySource.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.communitySource?route.communitySource.adaptation:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
  }).sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered')).filter((route,index,all)=>!route.family||!all.slice(0,index).some(other=>other.family===route.family));
 }
