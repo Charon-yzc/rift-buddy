@@ -57,7 +57,8 @@ export async function discoverClient(installPath='',{includeRegion=false,reuseSn
 }
 export function lcuRequest(auth,route,method='GET',body) {
  const keys=body&&typeof body==='object'&&!Array.isArray(body)?Object.keys(body).sort().join(','):'';
- const benchSwap=method==='POST'&&/^\/lol-champ-select\/v1\/session\/bench\/swap\/\d+$/.test(route)&&!body&&Number.isSafeInteger(Number(route.split('/').pop()))&&Number(route.split('/').pop())>0;
+ const benchTail=method==='POST'?Number(route.split('/').pop()):NaN;
+ const benchSwap=Number.isSafeInteger(benchTail)&&benchTail>0&&route===`/lol-champ-select/v1/session/bench/swap/${benchTail}`&&!body;
  const preview=method==='PATCH'&&/^\/lol-champ-select\/v1\/session\/actions\/\d+$/.test(route)&&keys==='championId,completed'&&Number.isSafeInteger(body.championId)&&body.championId>0&&body.completed===false;
  const spells=method==='PATCH'&&route==='/lol-champ-select/v1/session/my-selection'&&keys==='spell1Id,spell2Id'&&[body.spell1Id,body.spell2Id].every(n=>Number.isSafeInteger(n)&&n>0)&&body.spell1Id!==body.spell2Id;
  const chatMessage=method==='POST'&&/^\/lol-chat\/v1\/conversations\/[a-zA-Z0-9_@.-]+\/messages$/.test(route)&&keys==='body,type'&&body.type==='chat'&&typeof body.body==='string'&&body.body.length>0&&body.body.length<=300&&!/[\r\n\0]/.test(body.body);
