@@ -8,6 +8,14 @@ const source=routes.routes.find(r=>r.hero==='Malphite').communitySource;
 const find=(data,hero,id,extra={})=>hexPlayerRoutes({data,hero,options:[id],...extra}).find(r=>r.augment.id===id);
 const value=()=>({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog:structuredClone(catalog),hexRoutes:structuredClone(routes)});
 
+test('an exact editorial source may disclose only author update time without inventing publication',()=>{
+ const updated={...source,author:'ExpCarry Editorial Team',url:'https://expcarry.com/lol-aram-mayhem-builds',publishedAt:null,editedAt:'2026-10-21T17:58:30+03:00',dateBasis:'author-updated',sourcePatch:'26.21'};
+ assert.equal(validCommunitySource(updated,routes.reviewedAt),true);assert.equal(communitySourceMedium(updated),'text');assert.match(communitySourceLabel(updated),/原文更新 2026-10-21/);
+ for(const change of [{publishedAt:undefined},{dateBasis:undefined},{dateBasis:'fetched'},{editedAt:undefined},{editedAt:'invalid'},{editedAt:'2027-01-01T00:00:00Z'},{publishedAt:'2026-10-21'},{url:source.url},{url:updated.url+'?date=2026-10-21'},{url:'https://expcarry.com/another-article'},{url:'https://expcarry.com.evil.invalid/lol-aram-mayhem-builds'},{url:'https://expcarry.com@127.0.0.1/lol-aram-mayhem-builds'},{medium:'video'}])assert.equal(validCommunitySource({...updated,...change},routes.reviewedAt),false,JSON.stringify(change));
+ assert.equal(validCommunitySource({...updated,publishedAt:'2026-10-20',dateBasis:undefined},routes.reviewedAt),true);
+ assert.equal(validCommunitySource({...updated,publishedAt:'2026-10-22',dateBasis:undefined},routes.reviewedAt),false);
+});
+
 test('text provenance retains author date and exact sections without inventing video timestamps',()=>{
  assert.equal(communitySourceMedium(),null);assert.equal(communitySourceMedium(source),'text');assert.equal(validCommunitySource(source,routes.reviewedAt),true);assert.match(communitySourceLabel(source),/原文未标注补丁号/);
  for(const url of ['http://www.reddit.com/r/ARAM/comments/1xc9j8y/example/','https://www.reddit.com.evil.invalid/r/ARAM/comments/1xc9j8y/example/','https://www.reddit.com@127.0.0.1/r/ARAM/comments/1xc9j8y/example/','javascript:alert(1)','https://www.reddit.com/r/ARAM/comments/1xc9j8y/example/?redirect=foo'])assert.equal(validCommunitySource({...source,url},routes.reviewedAt),false,url);

@@ -1945,6 +1945,199 @@
           }
         }
       }
+    },
+    {
+      "hero": "Caitlyn",
+      "patch": "16.21",
+      "augment": 1071,
+      "optional": [
+        1077,
+        1336
+      ],
+      "requiresUltimate": false,
+      "title": "射程拉扯暴击",
+      "summary": "保持普攻空间，按护甲、回复和突进压力调整暴击装备。",
+      "play": [
+        "用额外射程保持普攻空间，安全积累爆头；W/E命中后寻找对应爆头机会。",
+        "作者先比较收集者、无尽；后续按敌方护甲、回复和突进压力调整。"
+      ],
+      "basicPlay": [
+        "不使用R；继续以普攻、W/E与Q寻找安全输出机会。",
+        "保留射程与暴击装备方向，面对突进优先调整站位和防御。"
+      ],
+      "caution": "26.21已削弱爆头后期暴击收益；爆头不等于必定暴击。",
+      "coreItems": [
+        6676,
+        3031
+      ],
+      "gear": [
+        [
+          "作者暴击方向",
+          [
+            6676,
+            3031
+          ],
+          "作者前两件方向，不代表每局固定最优；安全持续普攻比追击补伤害更重要。"
+        ],
+        [
+          "敌方护甲压力",
+          [
+            3036
+          ],
+          "作者第三件为多米尼克；按敌方护甲需求调整购买时机。"
+        ],
+        [
+          "需要重伤时替换",
+          [
+            3033
+          ],
+          "作者以凡性的提醒替换穿甲位；与其他百分比穿甲装备择一比较。"
+        ],
+        [
+          "射程与鞋子选择",
+          [
+            3094,
+            3006
+          ],
+          "作者备选火炮与攻速鞋；按接近距离和敌方控制比较防御鞋。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "ExpCarry Editorial Team",
+        "url": "https://expcarry.com/lol-aram-mayhem-builds",
+        "publishedAt": null,
+        "editedAt": "2026-10-21T17:58:30+03:00",
+        "dateBasis": "author-updated",
+        "sourcePatch": "26.21",
+        "evidenceSections": [
+          "Caitlyn Items, Augment Priorities and Rerolls：同段三件方向、射程/重伤/鞋子备选及三项强化优先方向。",
+          "正文明确26.21爆头暴击收益削弱，剔除Fan the Hammer与Critical Missile；统计基础仍为26.20。",
+          "作者只给更新时间，未见首次发表时间；没有完整六件或专用加点表。"
+        ],
+        "adaptation": "按26.21机制改编自编辑指南；原统计来自26.20，不代表当版强度。主选额外射程，灵魂虹吸、升级无尽为条件备选。作者未给专用加点或固定六件；首次发表未知，日期为原文自报更新。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3006": "0456daa0af0073e0",
+          "3031": "00b9b8a238976a3f",
+          "3033": "d17e8fe8776ae561",
+          "3036": "2758e8ff995f599d",
+          "3094": "d1774a6a3ab85e3a",
+          "6676": "20a9c2a3ea1c7555"
+        }
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "1071": {
+            "fingerprint": "3e9fe628d77410e0",
+            "requiresUltimate": false
+          },
+          "1077": {
+            "fingerprint": "244429bb7a085640",
+            "requiresUltimate": false,
+            "coverage": "dynamic-counters"
+          },
+          "1336": {
+            "fingerprint": "ea1bd9a526a56194",
+            "requiresUltimate": false,
+            "coverage": "dynamic-counters"
+          }
+        }
+      }
+    },
+    {
+      "hero": "Seraphine",
+      "patch": "16.21",
+      "augment": 1030,
+      "optional": [
+        1068
+      ],
+      "requiresUltimate": false,
+      "title": "法强急速消耗",
+      "summary": "法强转急速，按团队需求比较灼烧、减速与保护方向。",
+      "play": [
+        "尤里卡将30%法强转为技能急速；仍按实际冷却、法力和命中组织技能。",
+        "E对已减速目标禁锢、已定身目标晕眩；冰杖提供减速条件，不保证首次E必定升级控制。"
+      ],
+      "basicPlay": [
+        "不使用R；以Q/E伤害配合冰杖、兰德里，W保护队友。",
+        "禁R时撤下残疫的R收益建议；保留其他装备方向，不改玩家已有装备。"
+      ],
+      "caution": "作者未给专用加点；敌方能持续突进时，优先比较防御与保护配置。",
+      "coreItems": [
+        3116,
+        6653
+      ],
+      "gear": [
+        [
+          "R能实际命中英雄",
+          [
+            3118
+          ],
+          "作者以残疫开局；海克斯灼烧为40＋2.8%AP，需R实际伤害敌方英雄。",
+          [],
+          true
+        ],
+        [
+          "减速与灼烧方向",
+          [
+            3116,
+            6653
+          ],
+          "作者后续方向为冰杖、兰德里；是否继续输出装需结合团队的保护需求。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "ExpCarry Editorial Team",
+        "url": "https://expcarry.com/lol-aram-mayhem-builds",
+        "publishedAt": null,
+        "editedAt": "2026-10-21T17:58:30+03:00",
+        "dateBasis": "author-updated",
+        "sourcePatch": "26.21",
+        "evidenceSections": [
+          "Seraphine Items, Augments and Alternative Paths：同段残疫→冰杖→兰德里，以及尤里卡、循环往复、无限循环往复方向。",
+          "同段另给非残疫开局和治疗/护盾装备选择；没有作者专用加点或固定六件。",
+          "正文声明26.20配置统计与26.21机制适配分开；更新时间不是首次发表时间。"
+        ],
+        "adaptation": "按26.21机制改编自编辑指南；原统计为26.20，不代表当版强度。主选尤里卡、可选循环往复；无限循环往复待核。禁R保留冰杖、兰德里为项目改编。作者未给加点、固定六件或首次发表日，日期仅为原文自报更新。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3116": "04c63460140d7887",
+          "3118": "9a274cdd335790d0",
+          "6653": "9fb9534b546d1626"
+        }
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "1030": {
+            "fingerprint": "ff52cb7b98a1ff87",
+            "requiresUltimate": false
+          },
+          "1068": {
+            "fingerprint": "358ac971737afa8f",
+            "requiresUltimate": false
+          }
+        }
+      }
     }
   ],
   "championReview": {
@@ -1981,7 +2174,9 @@
       "Brand": "dfe0f7f6ef8e7e6e",
       "Nilah": "30e5ef1b4f79390e",
       "Swain": "2df9ea554c5ac91d",
-      "Olaf": "71e89d2c6166e5dc"
+      "Olaf": "71e89d2c6166e5dc",
+      "Caitlyn": "d19bdcd858382502",
+      "Seraphine": "18e4440868d92eb5"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -2725,6 +2920,54 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "2276fc7d556626c9"
+          }
+        }
+      },
+      "Caitlyn": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "d19bdcd858382502",
+        "observedAt": "2026-10-23T02:03:51.454Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Caitlyn",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+            "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "6c728252e5826813"
+          }
+        }
+      },
+      "Seraphine": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "18e4440868d92eb5",
+        "observedAt": "2026-10-23T02:03:51.552Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Seraphine",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+            "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "b29132146d6ad36b"
           }
         }
       }
