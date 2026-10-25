@@ -1,0 +1,376 @@
+{
+  "schema": 1,
+  "featureSchema": "win-probability-offline-v1",
+  "source": "kaggle-ranked-timeline-20260918-v1",
+  "scope": "Public overseas champion-set baseline; exact queue and creation times unverified; not CN calibration",
+  "split": {
+    "method": "whole-match-patch-holdout",
+    "calibrationPatch": "16.17",
+    "testPatch": "16.18",
+    "train": {
+      "games": 32583,
+      "patches": [
+        "16.16",
+        "16.15",
+        "16.14",
+        "16.13",
+        "16.12",
+        "16.10",
+        "16.9",
+        "16.11",
+        "16.6",
+        "16.5",
+        "16.4",
+        "16.8",
+        "16.7",
+        "15.23",
+        "15.22",
+        "15.13",
+        "15.12",
+        "15.11",
+        "16.3",
+        "16.2",
+        "15.24",
+        "15.17",
+        "16.1",
+        "15.16",
+        "15.15"
+      ],
+      "regions": [
+        "EUW1",
+        "TR1"
+      ]
+    },
+    "calibration": {
+      "games": 27512,
+      "patches": [
+        "16.17"
+      ],
+      "regions": [
+        "EUW1",
+        "TR1",
+        "EUN1"
+      ]
+    },
+    "test": {
+      "games": 16124,
+      "patches": [
+        "16.18"
+      ],
+      "regions": [
+        "EUW1"
+      ]
+    }
+  },
+  "features": {
+    "kind": "unordered-champion-set-difference",
+    "count": 173,
+    "playerHistory": false,
+    "roles": false,
+    "postgameMeasurements": false
+  },
+  "hyperparameters": {
+    "iterations": 160,
+    "l2": 0.01,
+    "learningRate": 0.3,
+    "selectedBeforeTest": true
+  },
+  "calibration": {
+    "kind": "positive-slope-sigmoid-v1",
+    "slope": 0.8651749730500052,
+    "intercept": -0.005926928861179609,
+    "fittedOn": "calibration-only"
+  },
+  "test": {
+    "constant": {
+      "rows": 16124,
+      "games": 16124,
+      "positiveRate": 0.4708509054825105,
+      "brier": 0.24918423913483204,
+      "logLoss": 0.6915149927279242,
+      "accuracy": 0.5291490945174895,
+      "auc": 0.5,
+      "ece": 0.00582313026245096,
+      "reliability": [
+        {
+          "low": 0,
+          "high": 0.1,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "rows": 16124,
+          "weight": 16124,
+          "predicted": 0.46502777522005956,
+          "observed": 0.4708509054825105
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.9,
+          "high": 1,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        }
+      ]
+    },
+    "logistic": {
+      "rows": 16124,
+      "games": 16124,
+      "positiveRate": 0.4708509054825105,
+      "brier": 0.24894071908205562,
+      "logLoss": 0.6910776819058678,
+      "accuracy": 0.5328702555197221,
+      "auc": 0.534086204690505,
+      "ece": 0.018636055413575513,
+      "reliability": [
+        {
+          "low": 0,
+          "high": 0.1,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "rows": 12,
+          "weight": 12,
+          "predicted": 0.2880637590942627,
+          "observed": 0.6666666666666666
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "rows": 1813,
+          "weight": 1813,
+          "predicted": 0.37477804111449714,
+          "observed": 0.4247104247104247
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "rows": 10071,
+          "weight": 10071,
+          "predicted": 0.454125685084987,
+          "observed": 0.46370767550392217
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "rows": 4128,
+          "weight": 4128,
+          "predicted": 0.5307950173451889,
+          "observed": 0.5046027131782945
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "rows": 100,
+          "weight": 100,
+          "predicted": 0.6179505402817037,
+          "observed": 0.61
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.9,
+          "high": 1,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        }
+      ]
+    },
+    "calibratedLogistic": {
+      "rows": 16124,
+      "games": 16124,
+      "positiveRate": 0.4708509054825105,
+      "brier": 0.24861791158685465,
+      "logLoss": 0.6903999251762453,
+      "accuracy": 0.5332423716199455,
+      "auc": 0.534086204690505,
+      "ece": 0.012436312809439971,
+      "reliability": [
+        {
+          "low": 0,
+          "high": 0.1,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.1,
+          "high": 0.2,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.2,
+          "high": 0.3,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.3,
+          "high": 0.4,
+          "rows": 1172,
+          "weight": 1172,
+          "predicted": 0.3796060131175589,
+          "observed": 0.4249146757679181
+        },
+        {
+          "low": 0.4,
+          "high": 0.5,
+          "rows": 10880,
+          "weight": 10880,
+          "predicted": 0.45620647361380434,
+          "observed": 0.4618566176470588
+        },
+        {
+          "low": 0.5,
+          "high": 0.6,
+          "rows": 4032,
+          "weight": 4032,
+          "predicted": 0.5271797030108213,
+          "observed": 0.5064484126984127
+        },
+        {
+          "low": 0.6,
+          "high": 0.7,
+          "rows": 40,
+          "weight": 40,
+          "predicted": 0.6160193627062767,
+          "observed": 0.675
+        },
+        {
+          "low": 0.7,
+          "high": 0.8,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.8,
+          "high": 0.9,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        },
+        {
+          "low": 0.9,
+          "high": 1,
+          "rows": 0,
+          "weight": 0,
+          "predicted": null,
+          "observed": null
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "No exact queue IDs or match creation timestamps in source.",
+    "Patch holdout is not a within-patch chronological test.",
+    "No CN data; reported calibration applies only to held-out public-source samples.",
+    "Champion-set baseline has no confirmed roles, player history or live states.",
+    "Reliability bins are descriptive, not proof of calibration in every subgroup."
+  ],
+  "inputSha256": "d4dc84dbe7eb292a67de52ad0ea34963a6dd5cbae81ebfb5db8524e1a7d4015a",
+  "runtime": "v24.19.0",
+  "live": {
+    "status": "unavailable",
+    "reason": "No complete ten-player snapshots in audited source",
+    "modelsTrained": 0
+  }
+}
