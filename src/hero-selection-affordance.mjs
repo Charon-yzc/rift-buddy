@@ -1,7 +1,7 @@
 import {escape as e,button,portrait,roleIcon} from './ui.mjs';
 import {localPickLocked} from './core/draft-intents.mjs';
 export function heroClickAffordance(action={}){
- const label=action.prepare?'选用':action.blocked?'已锁定':'看配置';
+ const label=action.hexHover?'切换':action.prepare?'选用':action.blocked?'已锁定':'看配置';
  return `<span class="hero-click-affordance" data-selectable="${!!action.prepare}" aria-hidden="true">${e(label)}</span>`;
 }
 export function candidateReferencePortrait(slot,hero,{own=false,roleLabel=slot.role}={}){

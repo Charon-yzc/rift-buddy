@@ -29,7 +29,9 @@ test('sidebar candidate and room scores ignore a visible preview until that hero
 test('sidebar hero shortcuts distinguish own configuration, public teammate picks, locks and display-only mode',()=>{
  const before=structuredClone(client);assert.equal(companionHeroAction(client,hero('Graves')).prepare,true);assert.equal(companionHeroAction(client,hero('Vex')).prepare,false);assert.match(companionHeroAction(client,hero('Vex')).label,/队友已选/);assert.equal(companionHeroAction(client,hero('Diana')).prepare,true);
  const locked=structuredClone(client);locked.session.actions[0][0].completed=true;assert.equal(companionHeroAction(locked,hero('Diana')).prepare,false);assert.equal(companionHeroAction(locked,hero('Graves')).label,'应用当前配置');
- for(const c of [{...client,connected:false},{...client,phase:'Lobby'},{...client,mode:{id:'hex'}},{...client,session:null}])assert.equal(companionHeroAction(c,hero('Graves')).prepare,false);
+ for(const c of [{...client,connected:false},{...client,phase:'Lobby'},{...client,mode:{id:'aram'}},{...client,session:null}])assert.equal(companionHeroAction(c,hero('Graves')).prepare,false);
+ const hexed={...client,mode:{id:'hex'},session:{...client.session,myTeam:[{cellId:0,championId:hero('Ashe').key}],bench:{championIds:[hero('Graves').key]}}};assert.equal(companionHeroAction(hexed,hero('Graves')).prepare,true);assert.equal(companionHeroAction(hexed,hero('Graves')).hexHover,true);
+ assert.equal(companionHeroAction(client,hero('Graves')).hexHover||false,false);
  assert.equal(companionHeroAction(client,hero('Graves'),false).prepare,false);assert.equal(companionHeroAction({...client,session:{...client.session,bans:[hero('Diana').key]}},hero('Diana')).prepare,false);assert.deepEqual(client,before);
 });
 

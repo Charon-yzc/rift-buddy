@@ -214,4 +214,5 @@ test('wrong session, unsupported mode and mismatched item-set identity reject be
  for(const mutate of [f=>f.value.sessionGameId='778',f=>f.game.gameData.queue={id:450,gameMode:'ARAM'},f=>f.value.itemSet.associatedChampions=[1]]){const f=fixture();mutate(f);await assert.rejects(f.run());assert(!f.calls.some(c=>c.method!=='GET'));}
  const f=fixture();assert(validateClientPreparation(f.value,data));
  for(const [route,body] of [['/lol-champ-select/v1/session/actions/4',{championId:22,completed:true}],['/lol-champ-select/v1/session/actions/4',{championId:22,completed:false,type:'ban'}],['/lol-champ-select/v1/session/actions/4/complete',{championId:22}],['/lol-champ-select/v1/session/my-selection',{championPickIntent:22}]])assert.throws(()=>lcuRequest({port:1,password:'mock'},route,'PATCH',body),/不支持/);
+ assert.throws(()=>lcuRequest({port:1,password:'mock'},'/lol-champ-select/v1/session/bench/swap/22','POST',{championId:22}),/不支持/);
 });

@@ -80,6 +80,8 @@ jobs:
         run: node scripts/smoke-package-dual-windows.mjs
       - name: Check actual current offline data, saved configurations and Hex 4.0
         run: node scripts/smoke-package-current-data.mjs
+      - name: Check complete shared Hex bench, teammate updates and explicit switching
+        run: node scripts/smoke-package-hex-shared-bench.mjs
       - name: Check compact in-game cards, pinning, native hover and short displays
         run: node scripts/smoke-package-compact-ingame.mjs
       - name: Prepare separate historical 16.20 interaction package
