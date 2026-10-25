@@ -51,4 +51,5 @@ Files: `docs/win-probability-data-audit.md`, `docs/win-probability-feature-spec.
 - [x] 报告许可、实际完整率、适用范围、不可获得输入与后续数据条件。
 - [x] 记录可复跑命令与SHA-256；检索无身份、原始对局、凭据或本机路径泄漏。
 - [x] 运行 `pnpm test`、`pnpm check`，然后打包并执行现有隔离应用冒烟。上游751b085基础上：2,819通过、1跳过、0失败；check和9阶段打包冒烟通过。
-- [ ] 审查diff，只提交本阶段文件。按项目阶段交付规则推送并合并代码；安装包保留本地。
+- [x] 本地审查diff，只提交本阶段15个文件，推送`codex/win-probability-offline`并创建[PR #174](https://github.com/Legender134/rift-buddy/pull/174)；打包结果保留本地。
+- [ ] 上游合并。已尝试按固定head执行合并，GitHub返回当前账户缺少`MergePullRequest`权限；需有上游写权限的维护者完成。没有修改权限设置或绕过仓库检查。
