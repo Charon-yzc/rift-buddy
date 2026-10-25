@@ -29,6 +29,10 @@ const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击
  1344:'施放R：10秒50%最大生命值护盾、20%全能吸血、30%额外移速；20秒自身冷却。'};
 const jhinComplements={1022:'60%攻速经被动提高攻击力和暴击后的移速；射速仍固定。',1328:'25%暴击，普攻暴击叠攻速；以被动增益攻击力和暴击后移速，射速仍固定。'};
 const camilleComplements={1022:'60%攻速用于普攻衔接；Q2 至少1.5秒的等待不能省略。'};
+// Keep the source coefficients and trigger in the native 100-character hint.
+// These substitutions shorten wording only; a scoped fingerprint still binds
+// the unmodified full source text before this presentation step is reached.
+const scopedEffectBrief=a=>a.tooltip.description.replaceAll('攻击力攻击力','攻击力').replace('你的技能会施加一层可无限叠加的灼烧，在3秒的持续时间里每秒造成','技能灼烧可无限叠加；3秒内每秒').replace('你的所有灼烧效果会在对敌方英雄造成伤害时使你的各基础技能的冷却时间缩短','灼烧伤害敌方英雄时，各基础技能冷却缩短').replaceAll('法术强度','法强').replaceAll('额外攻击力','额外攻击').replace('已造成的伤害：','累计伤害：');
 
 // Authored mechanism routes, not creator builds or statistical rankings. Each
 // route requires the exact reviewed hero kit, augment effect and item effects.
@@ -88,7 +92,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   if(augment?.descriptionStatus!=='complete'||!effectCurrent(augment)||noUltimate&&needsUltimate(augment)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
    const a=data.augments.find(a=>a.id===id),disabled=hexCatalogDisabled(data,a);
-   return a?.descriptionStatus==='complete'&&effectCurrent(a)&&!(noUltimate&&needsUltimate(a))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+(reviewedHexMechanic(a,data.patch)?(hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id]||a.description:a.tooltip.description.replaceAll('攻击力攻击力','攻击力'))}]:[];
+   return a?.descriptionStatus==='complete'&&effectCurrent(a)&&!(noUltimate&&needsUltimate(a))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+(scopedEffects?scopedEffectBrief(a):reviewedHexMechanic(a,data.patch)?(hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id]||a.description:a.tooltip.description.replaceAll('攻击力攻击力','攻击力'))}]:[];
   });
   let pendingItems=0;
   const gear=route.gear.flatMap(([when,ids,why,requires=[],requiresUltimate=false])=>{
