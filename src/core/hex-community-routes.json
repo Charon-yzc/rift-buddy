@@ -2342,6 +2342,219 @@
           }
         }
       }
+    },
+    {
+      "hero": "TahmKench",
+      "patch": "16.21",
+      "augment": 1152,
+      "optional": [
+        1041,
+        1353
+      ],
+      "requiresUltimate": false,
+      "title": "心钢任务前排",
+      "summary": "能持续接近目标时叠心钢，按敌方伤害补抗性与续战。",
+      "play": [
+        "先持有心之钢，至少300层才满足任务；奖励将当前层数乘3，不把后续每次获取也算成3倍。",
+        "Q命中英雄争取恢复，E在承伤与脱战之间安排灰盾和回复；没有接近机会时先调整站位。"
+      ],
+      "basicPlay": [
+        "不使用R；用Q/W/E进退，保留心之钢的接近和实际攻击条件。",
+        "留意Q命中与E灰盾、脱战回复条件；不沿用吞人进场或友军R护盾计划。"
+      ],
+      "caution": "W有延迟，远程拉扯和可靠硬控会限制接近；血量和体型不等于永久免伤或免控。",
+      "coreItems": [
+        3084
+      ],
+      "gear": [
+        [
+          "先具备任务装备",
+          [
+            3084
+          ],
+          "作者以心之钢起步；敌方英雄在附近3秒后，下一次攻击触发，每目标30秒。"
+        ],
+        [
+          "满足脱战恢复条件",
+          [
+            3083
+          ],
+          "作者后续狂徒；需2000额外生命、8秒未受伤。回血系数未完全解析，不承诺购买即回满。"
+        ],
+        [
+          "能维持近身交战",
+          [
+            2502
+          ],
+          "作者后续无终恨意；与英雄战斗且附近有敌方英雄时比较，不能保证每轮都命中并回满。"
+        ],
+        [
+          "魔法伤害与恢复需求",
+          [
+            3065
+          ],
+          "作者备选振奋；需要魔抗并能实际兑现自身治疗或护盾时比较。"
+        ],
+        [
+          "敌方普攻与回复压力",
+          [
+            3075
+          ],
+          "作者备选荆棘之甲；被英雄的攻击命中后，对该攻击者施加重伤，不把自己的Q命中当作反甲触发。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "ExpCarry Editorial Team",
+        "url": "https://expcarry.com/lol-aram-mayhem-builds",
+        "publishedAt": null,
+        "editedAt": "2026-10-21T17:58:30+03:00",
+        "dateBasis": "author-updated",
+        "sourcePatch": "26.21",
+        "evidenceSections": [
+          "塔姆章节：心之钢→狂徒→无终恨意；振奋/荆棘之甲备选，钢化你心、坦克引擎、歌利亚巨人。",
+          "作者区分26.20统计和26.21适配；没有专用加点或固定六件，按威胁调整购买。"
+        ],
+        "adaptation": "按26.21当前机制改编的坦装方向，与生命转法强配装分开。作者的任务阈值及后续增长描述不沿用，按当前数据纠正为至少300层、当前层数乘3；原文26.20统计不是当版胜率。条件强化独立撤回，不填当前层数。禁R为项目改编，无作者加点；首发未知，仅标作者更新。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "2502": "f70d011ead077bb3",
+          "3065": "522ddd38f23d9014",
+          "3075": "77e99cfe1e808733",
+          "3083": "1f9ef0d0fe8bf89d",
+          "3084": "1d15c5181f27ae02"
+        }
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "1041": {
+            "fingerprint": "710b3255eb3082ec",
+            "requiresUltimate": false
+          },
+          "1152": {
+            "fingerprint": "e008ddc449c0cbc2",
+            "requiresUltimate": false
+          },
+          "1353": {
+            "fingerprint": "2b080778f066e20c",
+            "requiresUltimate": false,
+            "coverage": "dynamic-counters"
+          }
+        }
+      }
+    },
+    {
+      "hero": "MasterYi",
+      "patch": "16.21",
+      "augment": 1058,
+      "optional": [
+        1225
+      ],
+      "requiresUltimate": false,
+      "title": "普攻特效续战",
+      "summary": "以实际攻击兑现减冷却，在持续输出和抗爆发之间取舍。",
+      "play": [
+        "实际攻击特效使各技能冷却缩短1.25秒；先保证安全命中，不承诺固定次数就能刷新Q。",
+        "Q用于跟随和避开伤害窗口，W仍需引导；R免减速不免眩晕或压制，E收益仍需实际攻击。"
+      ],
+      "basicPlay": [
+        "不使用R；以Q/W/E和实际攻击组织输出，不能沿用R的移速、攻速或参与击杀收益。",
+        "保留进退空间；被硬控或无法接近时，装备和强化不会自动补出攻击命中。"
+      ],
+      "caution": "不能把连击或额外攻击特效直接乘成固定的Q刷新次数；没有实际命中就没有相应收益。",
+      "coreItems": [
+        3153,
+        3124
+      ],
+      "gear": [
+        [
+          "近战持续攻击",
+          [
+            3153
+          ],
+          "作者破败方向；海克斯近战9%目标当前生命物理伤害，不是固定斩杀或最大生命伤害。"
+        ],
+        [
+          "能叠满并持续攻击",
+          [
+            3124
+          ],
+          "作者鬼索方向；满层后每第三次攻击附带2次攻击特效，不据此保证强化多倍刷新。"
+        ],
+        [
+          "收尾需求与生存取舍",
+          [
+            6676
+          ],
+          "作者原开局为收集者；按目标和生存压力调整，不要求每局固定先出。"
+        ],
+        [
+          "物理爆发压力",
+          [
+            6333
+          ],
+          "作者备选死舞；被你伤害的英雄3秒内阵亡，才有2秒共100%额外AD治疗。延后承伤不是免伤。"
+        ],
+        [
+          "魔法压力下继续普攻",
+          [
+            3091
+          ],
+          "作者备选智慧末刃；需要魔抗且能安全普攻时比较，韧性不等于免控。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "ExpCarry Editorial Team",
+        "url": "https://expcarry.com/lol-aram-mayhem-builds",
+        "publishedAt": null,
+        "editedAt": "2026-10-21T17:58:30+03:00",
+        "dateBasis": "author-updated",
+        "sourcePatch": "26.21",
+        "evidenceSections": [
+          "剑圣章节：收集者→破败→鬼索；死舞/智慧末刃备选，以及秘术冲拳、双刀流的持续普攻方向。",
+          "作者区分26.20统计和26.21适配；没有专用加点或固定六件，按威胁调整购买。"
+        ],
+        "adaptation": "按26.21技能和海克斯装备核对后的条件方向；原文26.20统计不是当版胜率。保留作者普攻特效与生存取舍，不推断Q逐段、双重打击、鬼索或双刀的额外触发乘算。作者提到的其他攻击特效分支未完成脚本核验，暂未纳入。禁R为项目改编，无作者加点或完整六件；首发未知，仅标作者更新。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "3091": "90bd17c864ba00b1",
+          "3124": "fd05601d4463ba03",
+          "3153": "b957df6b74b79bb7",
+          "6333": "95058514bbf67ac0",
+          "6676": "20a9c2a3ea1c7555"
+        }
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "1058": {
+            "fingerprint": "5921c7b1e541526c",
+            "requiresUltimate": false
+          },
+          "1225": {
+            "fingerprint": "526b26238bcb531f",
+            "requiresUltimate": false
+          }
+        }
+      }
     }
   ],
   "championReview": {
@@ -2382,7 +2595,8 @@
       "Caitlyn": "d19bdcd858382502",
       "Seraphine": "18e4440868d92eb5",
       "TwistedFate": "4b3a9807b94dcc47",
-      "AurelionSol": "0feb05c65d40708e"
+      "AurelionSol": "0feb05c65d40708e",
+      "MasterYi": "035280b4b46c8b34"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -3222,6 +3436,30 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "1e1ed30a0f63af68"
+          }
+        }
+      },
+      "MasterYi": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "035280b4b46c8b34",
+        "observedAt": "2026-10-23T02:03:51.541Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "MasterYi",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/masteryi/masteryi.bin.json",
+            "sha256": "40a3490967e42db2eb3a3c4ed25e40d6ab18670226cc505dc6864cb551dc57b1"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "962193dba45a1a53"
           }
         }
       }
