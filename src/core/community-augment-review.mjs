@@ -23,3 +23,9 @@ export function validCommunityAugmentReview(review,route,patch,reviewedAt){
  const ids=new Set([route.augment,...route.optional,...(route.excludedAugments||[])]),keys=Object.keys(review.effects);
  return ids.size>0&&ids.size<=21&&keys.length===ids.size&&keys.every(key=>{const value=review.effects[key];return /^[1-9]\d*$/.test(key)&&Number.isSafeInteger(Number(key))&&ids.has(Number(key))&&value&&typeof value==='object'&&!Array.isArray(value)&&['fingerprint|requiresUltimate','coverage|fingerprint|requiresUltimate'].includes(Object.keys(value).sort().join('|'))&&(value.coverage===undefined||['complete','dynamic-counters','buff-counter'].includes(value.coverage))&&typeof value.fingerprint==='string'&&/^[a-f0-9]{16}$/.test(value.fingerprint)&&typeof value.requiresUltimate==='boolean';})&&review.effects[route.augment].requiresUltimate===route.requiresUltimate;
 }
+
+// Authored compact wording is allowed only beside a scoped current-effect review.
+// Leave room for selection and no-ultimate prefixes in the native 100-char card.
+export function validCommunityCoreBrief(route){
+ return route.coreBrief===undefined||typeof route.coreBrief==='string'&&route.coreBrief===route.coreBrief.trim()&&route.coreBrief.length>0&&route.coreBrief.length<=80&&!/[\u0000-\u001f\u007f<>]/.test(route.coreBrief)&&!!route.augmentReview?.effects?.[route.augment];
+}

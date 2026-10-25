@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';import path from 'node:path';
 import {createPrivateKey,createPublicKey,sign} from 'node:crypto';import {gzipSync} from 'node:zlib';
 import {atomicJSON} from './data.mjs';import {DATA_FEED_KEYS,feedHash} from './data-feed.mjs';
 import {validateCommunityData,verifyCommunityEnvelope,decodeCommunityData} from './community-data.mjs';
+import {isYouTubeCommunitySourceURL} from '../src/core/community-source.mjs';
 import {communityHexItemFingerprint} from '../src/core/community-item-review.mjs';
 import {communityHexAugmentFingerprint} from '../src/core/community-augment-review.mjs';
 
@@ -12,7 +13,7 @@ export async function publishCommunityData({publicRoot,keyFile,game,catalog,hexR
  const value=validateCommunityData({schema:1,kind:'community-snapshot',patch:game.patch,version:catalog.version,reviewedAt:hexRoutes.reviewedAt,catalog,hexRoutes},game);
  for(const route of hexRoutes.routes)if(route.itemReview)for(const [id,hash]of Object.entries(route.itemReview.items))if(!game.items[id]?.maps?.['12']||!game.items[id]?.inStore||game.items[id]?.gold?.purchasable===false||hash!==communityHexItemFingerprint(game.items[id],game.patch))throw Error('社区配套尚未通过当前装备复核');
  for(const route of hexRoutes.routes)if(route.augmentReview)for(const [id,entry]of Object.entries(route.augmentReview.effects))if(entry.fingerprint!==communityHexAugmentFingerprint(game.augments.find(a=>a.id===Number(id)),game,entry.coverage))throw Error('社区配套尚未通过当前强化复核');
- const requiredApp=hexRoutes.routes.some(r=>r.excludedAugments!==undefined)?'0.59.37':hexRoutes.routes.some(r=>Object.values(r.augmentReview?.effects||{}).some(e=>e.coverage==='buff-counter'))?'0.59.36':hexRoutes.routes.some(r=>r.communitySource?.url==='https://expcarry.com/lol-aram-mayhem-builds')?'0.59.35':hexRoutes.routes.some(r=>r.augmentReview!==undefined)?'0.59.34':hexRoutes.routes.some(r=>r.itemReview!==undefined)?'0.59.33':hexRoutes.routes.some(r=>r.communitySource?.url.startsWith('https://deeparam.com/'))?'0.59.32':hexRoutes.routes.some(r=>r.gear.some(g=>g.length===4))?'0.59.31':hexRoutes.routes.some(r=>r.communitySource?.medium==='text')?'0.59.29':'0.59.28';minimumApp??=requiredApp;
+ const requiredApp=hexRoutes.routes.some(r=>r.coreBrief!==undefined||isYouTubeCommunitySourceURL(r.communitySource?.url))?'0.59.38':hexRoutes.routes.some(r=>r.excludedAugments!==undefined)?'0.59.37':hexRoutes.routes.some(r=>Object.values(r.augmentReview?.effects||{}).some(e=>e.coverage==='buff-counter'))?'0.59.36':hexRoutes.routes.some(r=>r.communitySource?.url==='https://expcarry.com/lol-aram-mayhem-builds')?'0.59.35':hexRoutes.routes.some(r=>r.augmentReview!==undefined)?'0.59.34':hexRoutes.routes.some(r=>r.itemReview!==undefined)?'0.59.33':hexRoutes.routes.some(r=>r.communitySource?.url.startsWith('https://deeparam.com/'))?'0.59.32':hexRoutes.routes.some(r=>r.gear.some(g=>g.length===4))?'0.59.31':hexRoutes.routes.some(r=>r.communitySource?.medium==='text')?'0.59.29':'0.59.28';minimumApp??=requiredApp;
  const number=p=>p.split('.').map(Number).reduce((n,v)=>n*1000+v,0);
  if(!/^\d+\.\d+\.\d+$/.test(minimumApp)||number(minimumApp)<number(requiredApp))throw Error('社区资料需要支持所用格式的版本');
  const key=createPrivateKey(await fs.readFile(keyFile));

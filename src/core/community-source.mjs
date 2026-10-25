@@ -1,10 +1,15 @@
 const videoURL=/^https:\/\/www\.bilibili\.com\/video\/BV[A-Za-z0-9]+\/$/;
+export function isYouTubeCommunitySourceURL(url){
+ if(typeof url!=='string')return false;
+ const match=/^https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})$/.exec(url);
+ return !!match&&url==='https://www.youtube.com/watch?v='+match[1];
+}
 const textURL=/^https:\/\/www\.reddit\.com\/r\/[A-Za-z0-9_]+\/comments\/[a-z0-9]+\/(?:comment\/[a-z0-9]+|[a-z0-9_]+(?:\/[a-z0-9]+)?)\/$/;
 const kitchenURL=/^https:\/\/deeparam\.com\/embed\/fun\/cook-builds\/#chefs-special-(\d{4}-\d{2}-\d{2})$/;
 const editorialURL=/^https:\/\/expcarry\.com\/lol-aram-mayhem-builds$/;
 const text=(v,max)=>typeof v==='string'&&v.trim()&&v.length<=max;
 export function communitySourceMedium(source){
- if((source?.medium===undefined||source.medium==='video')&&videoURL.test(source?.url||''))return 'video';
+ if((source?.medium===undefined||source.medium==='video')&&(videoURL.test(source?.url||'')||isYouTubeCommunitySourceURL(source?.url)))return 'video';
  return source?.medium==='text'&&(textURL.test(source.url||'')||kitchenURL.test(source.url||'')||editorialURL.test(source.url||''))?'text':null;
 }
 export function validCommunitySource(source,reviewedAt){
