@@ -20,7 +20,8 @@ use tokio::sync::Semaphore;
 
 use crate::limits::{now_ms, random_salt, Limiter};
 use crate::store::Store;
-use crate::validate::{self, BODY_BYTES};
+use crate::validate::BODY_BYTES;
+use crate::wire;
 
 pub const MAX_INFLIGHT: usize = 2;
 pub const RECEIVE_TIMEOUT: Duration = Duration::from_secs(20);
@@ -119,11 +120,7 @@ async fn handle(State(state): State<Arc<AppState>>, ConnectInfo(peer): ConnectIn
         Ok(Ok(collected)) => collected.to_bytes(),
     };
 
-    let input: Value = match serde_json::from_slice(&collected) {
-        Ok(value) => value,
-        Err(_) => return error(400, "invalid feedback"),
-    };
-    let feedback = match validate::validate(&input) {
+    let feedback = match wire::parse(&collected) {
         Ok(feedback) => feedback,
         Err(failure) => return error(failure.status(), "invalid feedback"),
     };

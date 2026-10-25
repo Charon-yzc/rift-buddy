@@ -29,8 +29,11 @@ node scripts/check-feedback-rust.mjs
 The HTTP comparison starts both implementations with isolated synthetic stores,
 checks status codes and response fields, and compares stored payloads after
 removing generated IDs and timestamps. It never sends feedback to a public host.
-The Rust candidate binds only to `127.0.0.1:8790`; keep this port free during the
-comparison. Stop the candidate before starting another comparison.
+Each comparison starts a fresh Rust child on an OS-allocated loopback port.
+`RIFT_FEEDBACK_PORT` is overridden for that child and readiness names its actual
+port; no probe or synthetic POST is sent to the production port or another store.
+Fresh per-case processes prevent the burst quota from hiding validation cases.
+The normal service still defaults to 8790; port 0 is available for isolated tests.
 
 The candidate preserves the bounded feedback whitelist, PNG CRC and dimension
 checks, UTF-16 text length, IP admission quotas, two concurrent submissions,
@@ -61,3 +64,13 @@ their concurrency permit after a response deadline or client disconnect.
 
 Passing the initial test corpus does not establish complete protocol equivalence
 or production readiness. Dependency versions are recorded in `Cargo.lock`.
+
+## Review corrections (2026-10-25)
+
+The HTTP parser retains only the four permitted envelope fields and at most
+three images. Unknown and wrongly typed nested values are consumed without
+expanding them into JSON trees; complete syntax is checked before validation.
+Duplicate keys retain JSON.parse last-value semantics. The differential corpus
+checks each expected status as well as Node parity and stored whitelist content.
+Prior deployment measurements above describe the existing binary, not this
+revised source. Rebuild and validate in isolation before replacing production.

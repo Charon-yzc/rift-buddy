@@ -20,10 +20,10 @@ export async function downloadDataGeneration(relative,{limit,fetcher=fetch}={}){
 // prepare performs all awaited derivation without mutating active data.
 // replace is a synchronous, non-throwing reference assignment by the owner.
 export function preserveGameContext(getData,data=getData()){
- const entries=Object.entries(data).filter(([key])=>key!=='dataFeed'),base=generationBaseIdentity(data),catalog=JSON.stringify(data.catalog);
- return ()=>getData()===data&&Object.keys(data).filter(key=>key!=='dataFeed').length===entries.length&&entries.every(([key,value])=>data[key]===value)&&JSON.stringify(data.catalog)===catalog&&generationBaseIdentity(data)===base;
+ const semantic=key=>!['dataFeed','communityFeed'].includes(key),entries=Object.entries(data).filter(([key])=>semantic(key)),base=generationBaseIdentity(data),catalog=JSON.stringify(data.catalog);
+ return ()=>getData()===data&&Object.keys(data).filter(semantic).length===entries.length&&entries.every(([key,value])=>data[key]===value)&&JSON.stringify(data.catalog)===catalog&&generationBaseIdentity(data)===base;
 }
-export async function createDataGenerationCache({root,getData,prepare,replace,canActivate=()=>false,manualBase=null,onChange=()=>{},restoreAtStartup=true,download=downloadDataGeneration,keys=DATA_FEED_KEYS,clock=()=>Date.now(),write=atomicJSON,promote=renameSync}){
+export async function createDataGenerationCache({root,getData,prepare,replace,getContext=()=>null,canActivate=()=>false,manualBase=null,onChange=()=>{},restoreAtStartup=true,download=downloadDataGeneration,keys=DATA_FEED_KEYS,clock=()=>Date.now(),write=atomicJSON,promote=renameSync}){
  if(typeof prepare!=='function'||typeof replace!=='function')throw Error('整套资料缺少准备与启用操作');
  const filename=path.join(root,'data-generation.json'),pendingFile=path.join(root,'data-generation.pending.json');
  let active=null,activeData=null,pending=null,flight=null,activation=null,lastAttempt=-Infinity,lastVersion=null,manual=manualBase;
@@ -54,7 +54,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
   try{
    currentVersion(active.manifest,active.bundle.game);
    if(manualConflict(active))pending=active;
-   else{const original=getData(),contextCurrent=preserveGameContext(getData,original),manualContext=manual,next=prepared(await prepare(active.bundle,active.manifest,{current:original,restore:true}),active);if(!contextCurrent()||manual!==manualContext)throw Error('基础资料已变化');replace(next);activeData=next;status={...status,phase:'ready',source:'server',updatedAt:active.manifest.publishedAt,serverCheckedAt:active.manifest.checkedAt,message:'已载入本地整套资料'};}
+   else{const original=getData(),contextCurrent=preserveGameContext(getData,original),externalContext=getContext(),manualContext=manual,next=prepared(await prepare(active.bundle,active.manifest,{current:original,restore:true}),active);if(!contextCurrent()||getContext()!==externalContext||manual!==manualContext)throw Error('基础资料已变化');replace(next);activeData=next;status={...status,phase:'ready',source:'server',updatedAt:active.manifest.publishedAt,serverCheckedAt:active.manifest.checkedAt,message:'已载入本地整套资料'};}
   }catch{status={...status,phase:'offline',message:'使用内置或本地有效资料'};}
  }
  const storedPending=await read(pendingFile);
@@ -64,13 +64,13 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ca
  function activate({release=null,explicit=false}={}){
   if(activation)return activation;
   if(!pending||!canActivate()||explicit&&release!==pending.manifest.release||manualConflict(pending)&&!explicit)return Promise.resolve(false);
-  const selected=pending,original=getData(),contextCurrent=preserveGameContext(getData,original),manualContext=manual,stage=filename+'.'+process.pid+'-'+randomUUID()+'.stage';
+  const selected=pending,original=getData(),contextCurrent=preserveGameContext(getData,original),externalContext=getContext(),manualContext=manual,stage=filename+'.'+process.pid+'-'+randomUUID()+'.stage';
   activation=(async()=>{
    try{
     currentVersion(selected.manifest,selected.bundle.game);
     const next=prepared(await prepare(selected.bundle,selected.manifest,{current:original,restore:false}),selected);
     const record={...selected.record,manualToken:manualContext?.token||null};await write(stage,record);
-    if(pending!==selected||!contextCurrent()||manual!==manualContext||!canActivate())return false;
+    if(pending!==selected||!contextCurrent()||getContext()!==externalContext||manual!==manualContext||!canActivate())return false;
     currentVersion(selected.manifest,selected.bundle.game);
     promote(stage,filename);replace(next);active={...selected,record,file:filename};activeData=next;pending=null;
     publish({phase:'ready',source:'server',reason:null,release:null,availableVersion:null,updatedAt:selected.manifest.publishedAt,serverCheckedAt:selected.manifest.checkedAt,message:'整套资料已更新'});return true;

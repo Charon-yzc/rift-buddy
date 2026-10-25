@@ -6,7 +6,7 @@ export function hexRouteCard(route,build={}){
  const creator=communitySourceMedium(route.communitySource)?route.communitySource:null;
  const source=route.kind==='reference'?'当前配置':creator?creator.author+' · 改编':community?'ARAM Mayhem · 改编':'机制整理';
  const authored=creator&&Array.isArray(route.skillPriority)&&route.skillPriority.length>=1&&route.skillPriority.length<=3&&new Set(route.skillPriority).size===route.skillPriority.length&&route.skillPriority.every(key=>['Q','W','E'].includes(key));
- const order=authored?route.skillPriority:typeof build.priority==='string'?[...new Set(build.priority.toUpperCase().replace(/[^QWE]/g,''))]:[];
+ const order=authored?route.skillPriority:creator?[]:typeof build.priority==='string'?[...new Set(build.priority.toUpperCase().replace(/[^QWE]/g,''))]:[];
  const priority=order.length>=2?`主${order[0]}副${order[1]}`:authored?`主${order[0]}`:'';
  return {title:route.title,source,sourceUrl:creator?.url||community||route.source||null,priority,
   skillSource:priority?(authored?creator.author:build.selectedSkill?.source||build.source||'英雄默认加点'):'',

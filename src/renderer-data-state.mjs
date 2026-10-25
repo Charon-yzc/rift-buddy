@@ -23,7 +23,7 @@ export function createRendererDataState({getSource,requestSnapshot,beforeApply=(
   const keys=Object.keys(changes),has=list=>replace||!current||list.some(key=>Object.hasOwn(changes,key));
   const source=normalizeBuildSource(getSource?.()||current?.buildSource);
   const change={origin,replace,keys,baseChanged:has(baseFields),catalogChanged:has(['catalog']),assetsChanged:has(imageFields),
-   sourceChanged:has(sourceFields)||!sameBuildSource(source,current?.buildSource),statusOnly:!replace&&keys.every(key=>key==='dataFeed')};
+   sourceChanged:has(sourceFields)||!sameBuildSource(source,current?.buildSource),statusOnly:!replace&&keys.every(key=>['dataFeed','communityFeed'].includes(key))};
   const raw=replace?{...changes}:{...canonical,...changes},next=replace?{...raw}:{...current,...changes};
   // Prepare without changing active module indexes or the accepted watermark.
   if(change.catalogChanged)next.catalog=catalog.prepare(raw.catalog||BUNDLED_CATALOG);

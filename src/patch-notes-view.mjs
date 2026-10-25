@@ -5,11 +5,11 @@ export function patchChangeTable(row){
 }
 export function patchNotesView(data,{patch='',query=''}={}){
  const patches=data.patchNotes?.patches||[],selected=patches.find(p=>p.patch===patch)||patches[0];
- if(!selected)return '<h1>版本改动</h1><p class="callout">本机暂缺已核对的版本改动资料。</p>';
+ if(!selected)return '<p class="callout">本机暂缺已核对的版本改动资料。</p>';
  const needle=query.trim().toLowerCase(),matches=row=>{const hero=data.champions.find(c=>c.id===row.champion);return !needle||[hero?.id,hero?.name,hero?.title,hero?.keywords,row.item,row.sourceName,row.system].join(' ').toLowerCase().includes(needle);};
  const heroes=selected.champions.filter(matches),items=selected.items.filter(matches),systems=selected.systems.filter(matches);
  const renderRow=(row,name,hero)=>`<details class="patch-entry"><summary>${hero?portrait(hero):''}<h3>${hero?`<button class="patch-hero-link" data-action="reference-hero" data-id="${hero.id}" data-tab="changes">${e(name)}</button>`:e(name)}</h3><span class="patch-direction ${row.direction}">${patchDirectionLabel(row.direction)}</span><span class="patch-count">${row.changes.length} 项</span></summary>${patchChangeTable(row)}</details>`;
- return `<section class="patch-workspace" aria-label="版本改动"><div class="page-heading"><div><h1>版本改动</h1></div></div>
+ return `<section class="patch-workspace" aria-label="版本改动">
  <div class="patch-toolbar"><label>版本<select class="select" id="patch-version">${patches.map(p=>`<option value="${p.patch}" ${selected.patch===p.patch?'selected':''}>${p.officialPatch} · 资料${p.patch}</option>`).join('')}</select></label><label>搜索<input type="search" id="patch-search" value="${e(query)}" placeholder="英雄、装备或系统" autocomplete="off" /></label>${button('link','官方完整说明','link','small',`data-url="${e(selected.sourceURL)}"`)}</div>
  <p class="ranking-meta">Riot ${e(selected.officialPatch)} · ${dateLabel(selected.publishedAt)} · 召唤师峡谷 · 已收录最近${patches.length}版</p>
  ${patches[0].patch!==data.patch?`<p class="callout warning">当前游戏资料为${e(data.patch)}，改动记录最近收录至${e(patches[0].patch)}；尚未收录后续版本。</p>`:''}

@@ -15,6 +15,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  feedback-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Test Rust feedback service
+        run: cargo test --locked --manifest-path server/feedback-rs/Cargo.toml
+      - name: Build Rust feedback service
+        run: cargo build --locked --manifest-path server/feedback-rs/Cargo.toml
+      - name: Check isolated Rust and Node feedback parity
+        run: node scripts/check-feedback-rust.mjs
   verify:
     runs-on: windows-latest
     timeout-minutes: 55
@@ -37,6 +56,12 @@ jobs:
         run: npm install --global pnpm@11.25.0
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      - name: Test Rust feedback service
+        run: cargo test --locked --manifest-path server/feedback-rs/Cargo.toml
+      - name: Build Rust feedback service
+        run: cargo build --locked --manifest-path server/feedback-rs/Cargo.toml
+      - name: Check isolated Rust and Node feedback parity
+        run: node scripts/check-feedback-rust.mjs
       - name: Verify development Electron runtime
         run: pnpm exec electron --version
       - name: Run regression tests

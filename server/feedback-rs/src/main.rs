@@ -4,6 +4,7 @@ mod server;
 mod store;
 mod support;
 mod validate;
+mod wire;
 
 use std::path::PathBuf;
 
@@ -24,7 +25,7 @@ async fn main() {
         }
     };
 
-    let port: u16 = std::env::var("RIFT_FEEDBACK_PORT").ok().and_then(|v| v.parse().ok()).filter(|v| *v > 0).unwrap_or(8790);
+    let port: u16 = std::env::var("RIFT_FEEDBACK_PORT").ok().and_then(|v| v.parse().ok()).unwrap_or(8790);
     let listener = match tokio::net::TcpListener::bind(("127.0.0.1", port)).await {
         Ok(listener) => listener,
         Err(error) => {
@@ -32,6 +33,7 @@ async fn main() {
             std::process::exit(1);
         }
     };
+    let port = listener.local_addr().expect("bound listener address").port();
     println!("rift-buddy-feedback listening on 127.0.0.1:{port}");
 
     let connections = std::sync::Arc::new(tokio::sync::Semaphore::new(16));

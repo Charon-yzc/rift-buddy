@@ -443,7 +443,7 @@ async function run(){
    window.webContents.send('room-update',{mode:'idle',members:[],ballots:false});await delay(120);
    assert.equal(await js(window,`document.querySelector('${menu}').open`),true,'Background refresh closed a popup in use');
    assert.equal(await js(window,`document.activeElement.closest('${menu}')!==null`),true);
-   const point=await js(window,'(()=>{const r=document.querySelector(".companion-section-head h3,.draft-compare-header h1").getBoundingClientRect();return {x:Math.round(r.x+3),y:Math.round(r.y+3)}})()');
+   const point=await js(window,'(()=>{const r=document.querySelector(".companion-section-head,#main").getBoundingClientRect();return {x:Math.round(r.x+3),y:Math.round(r.y+3)}})()');
    window.webContents.sendInputEvent({type:'mouseDown',button:'left',clickCount:1,...point});window.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,...point});await delay(60);
    assert.equal(await js(window,`document.querySelector('${menu}').open`),false,'Clicking the workspace did not close the popup');
   }
