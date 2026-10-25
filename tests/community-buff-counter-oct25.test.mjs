@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import path from 'node:path';import os from 'node:os';import {generateKeyPairSync} from 'node:crypto';
 import {hexPlayerRoutes} from '../src/core/hex-routes.mjs';import {hexMechanismMicroRoutes} from '../src/core/hex-micro-routes.mjs';import {hexRouteCard} from '../src/core/hex-route-card.mjs';import {communityHexAugmentFingerprint} from '../src/core/community-augment-review.mjs';import {validAugmentCounterBasis} from '../src/core/augment-counter-basis.mjs';import {publishCommunityData} from '../services/community-data-publish.mjs';import {verifyCommunityEnvelope,decodeCommunityData} from '../services/community-data.mjs';
 import {hexMicroHint} from '../src/core/hex-micro-hint.mjs';
+import {hexRouteCardFooter} from '../src/hex-route-card-view.mjs';
 const read=async p=>JSON.parse(await fs.readFile(new URL(p,import.meta.url))),game=await read('../data/game.json'),routes=await read('../src/core/hex-community-routes.json'),catalog=await read('../src/core/catalog-data.json'),url='https://expcarry.com/lol-aram-mayhem-builds',live=()=>({...structuredClone(game),communityHexRoutes:structuredClone(routes)}),find=(d,hero,owned=[])=>hexPlayerRoutes({data:d,hero,owned}).find(r=>r.communitySource?.url===url);
 
 test('typed counters do not resolve player values or silently authorize an unrelated existing route',()=>{
@@ -21,6 +22,11 @@ test('current kit, items and optional-effect drift withdraw the corresponding sc
  const tf=live();tf.items[4645].description+=' changed';assert(find(tf,'TwistedFate'));assert(!find(tf,'TwistedFate').gear.some(g=>g.items.some(i=>i.id===4645)));assert.doesNotMatch(find(tf,'TwistedFate').play.join(' '),/影焰/);
  const sol=live();sol.augments.find(a=>a.id===1045).effectSourceHash='0'.repeat(64);const r=find(sol,'AurelionSol');assert(r);assert(!r.optionalAugments.some(a=>a.id===1045));assert.doesNotMatch([...r.play,r.caution].join(' '),/0.08|1.2%|2.8%/);
  for(const owned of [[],[1004]])for(const mutate of [i=>i.description+=' changed',i=>i.gold.purchasable=false,i=>i.maps['12']=false]){const d=live();mutate(d.items[3094]);const route=find(d,'TwistedFate',owned);assert(route);assert(route.gear.every(g=>g.items.every(i=>i.id!==3094)));assert.doesNotMatch([...route.play,route.summary,route.caution].join(' '),/火炮/);const micro=hexMechanismMicroRoutes([route])[0];assert(!micro.items.some(i=>i.id===3094));assert.doesNotMatch([...micro.items,...micro.augments].map(i=>i.brief).join(' '),/火炮/);}
+});
+
+test('community card without an authored skill order does not display a generic build order beneath that author',()=>{
+ for(const hero of ['Caitlyn','Seraphine','TwistedFate','AurelionSol']){const r=find(game,hero),micro=hexMechanismMicroRoutes([r])[0],card=hexRouteCard(micro,{priority:'QWE',source:'OP.GG'});assert.equal(card.priority,'');assert.equal(card.skillSource,'');assert.equal(card.source,'ExpCarry Editorial Team · 改编');const footer=hexRouteCardFooter(card);assert.doesNotMatch(footer,/主Q副W|加点待核/);assert.match(footer,/>ExpCarry Editorial Team · 改编</);}
+ const authored=routes.routes.find(r=>r.skillPriority?.length);assert(authored);const card=hexRouteCard(authored,{priority:'QWE',source:'OP.GG'});assert.equal(card.priority,'主'+authored.skillPriority[0]+(authored.skillPriority[1]?'副'+authored.skillPriority[1]:''));assert.equal(card.skillSource,authored.communitySource.author);assert.equal(hexRouteCard({title:'普通路线'},{priority:'QWE',source:'OP.GG'}).priority,'主Q副W');
 });
 
 test('signed buff-counter publication needs client36 and current basis and failed publication preserves the pointer',async t=>{
