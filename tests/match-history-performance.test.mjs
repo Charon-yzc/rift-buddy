@@ -4,6 +4,7 @@ import {createMatchHistoryService} from '../services/match-history.mjs';
 import {createHistoryController} from '../src/match-history-controller.mjs';
 import {createOngoingGameController} from '../src/ongoing-game-controller.mjs';
 import {createChampionUsageCollector} from '../services/champion-usage-collector.mjs';
+import {compactAkariTimeline} from '../src/core/akari/bridge.mjs';
 
 const own={puuid:'a'.repeat(36),summonerId:1,gameName:'示例',tagLine:'CN1'};
 const raw={gameId:1,queueId:420,gameDuration:1200,gameCreation:1700000000000,gameVersion:'16.20',gameType:'MATCHED_GAME',participantIdentities:[{participantId:1,player:own}],participants:[{participantId:1,championId:22,puuid:own.puuid,teamId:100,stats:{kills:1,deaths:0,assists:2,win:true}}],teams:[]};
@@ -88,6 +89,21 @@ test('a backend outage on a deeper page is remembered instead of retried on ever
  const third=await f.service.execute('page',{source:'auto',handle:first.handle,start:40});
  assert.equal(third.source,'lcu');
  assert.equal(backendCalls,1,'the remembered client source keeps later pages off the failing backend');
+});
+
+// The client answers other players' histories one at a time (about a second
+// each), so a roster of ten read through it fills card by card.
+test('a roster batch reads automatic first pages from the backend and keeps the client as fallback',async()=>{
+ const f=service();
+ const page=await f.service.execute('page',{source:'auto',puuid:'b'.repeat(36),batch:true});
+ assert.equal(page.source,'sgp');assert.equal(f.calls.backend,1);
+ const single=await f.service.execute('page',{source:'auto',puuid:'b'.repeat(36)});
+ assert.equal(single.source,'lcu','a single history page still answers from the client first');
+ const down=service({backend:async()=>{throw Object.assign(Error('后台 503'),{status:503});}});
+ const fallback=await down.service.execute('page',{source:'auto',puuid:'b'.repeat(36),batch:true});
+ assert.equal(fallback.source,'lcu');assert.match(fallback.notice,/已改用当前大区客户端数据/);
+ const explicit=await f.service.execute('page',{source:'lcu',puuid:'b'.repeat(36),batch:true});
+ assert.equal(explicit.source,'lcu','an explicit client source is never overridden');
 });
 
 test('the hero-statistics batch is fetched concurrently instead of one page at a time',async()=>{
@@ -303,4 +319,28 @@ test('a failed discovery is not kept, so the next read looks for the client agai
  state.unreadable=false;
  assert.equal((await svc.execute('page',{source:'lcu'})).games.length,1);
  assert.equal(state.discoveries,2);
+});
+
+test('a page or player the user opens starts before queued ongoing-game background reads',async()=>{
+ const gates=[],order=[];
+ const f=service({request:async(auth,route)=>{if(route.startsWith('/lol-ranked/'))order.push('profile');return requestStub()(auth,route);},backend:async({route})=>{if(!route.endsWith('/DETAILS'))return {games:[{json:raw}]};order.push('sample');return new Promise(resolve=>gates.push(()=>resolve({json:{frames:[],events:[]}})));}});
+ const page=await f.service.execute('page',{source:'auto',start:0,count:20});
+ const low=Array.from({length:4},()=>f.service.execute('timeline',{handle:page.handle,id:page.games[0].id,compact:true,background:true}));
+ while(gates.length<3)await new Promise(resolve=>setImmediate(resolve));
+ const profile=f.service.execute('profile',{handle:page.handle});
+ gates.shift()();await profile;
+ while(order.length<5)await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(order,['sample','sample','sample','profile','sample'],'the opened profile took the freed slot ahead of the queued sample');
+ while(gates.length)gates.shift()();await Promise.all(low);
+});
+
+test('an ongoing-game sample receives a compact timeline and leaves the shared cache to the history page',async()=>{
+ let details=0;const frames=[{timestamp:0,participantFrames:{1:{participantId:1,level:1,minionsKilled:0,position:{x:1,y:2}}},events:[{type:'ITEM_PURCHASED',timestamp:10,participantId:1,itemId:1055}]}];
+ const f=service({request:requestStub(),backend:async({route})=>{if(!route.endsWith('/DETAILS'))return {games:[{json:raw}]};details++;return {json:{frames,events:[]}};}});
+ const page=await f.service.execute('page',{source:'auto',start:0,count:20}),id=page.games[0].id;
+ const sample=await f.service.execute('timeline',{handle:page.handle,id,compact:true,background:true});
+ const full=await f.service.execute('timeline',{handle:page.handle,id});
+ assert.deepEqual(sample.timeline,compactAkariTimeline(full.timeline));
+ assert.equal(details,2,'the compact read was not cached in place of the full timeline');
+ await f.service.execute('timeline',{handle:page.handle,id});assert.equal(details,2,'the full timeline is cached for the history page');
 });

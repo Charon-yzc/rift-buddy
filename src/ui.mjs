@@ -41,7 +41,7 @@ const roleIcons={
  support:"<path fill-rule=\"evenodd\" d=\"M26,13c3.535,0,8-4,8-4H23l-3,3,2,7,5-2-3-4h2ZM22,5L20.827,3H13.062L12,5l5,6Zm-5,9-1-1L13,28l4,3,4-3L18,13ZM11,9H0s4.465,4,8,4h2L7,17l5,2,2-7Z\" fill=\"currentColor\"/>",
 };
 export const roleIcon=(role,cls='')=>roleIcons[role]?`<svg class="icon role-icon ${escape(cls)}" viewBox="0 0 34 34" aria-hidden="true">${roleIcons[role]}</svg>`:'';
-export const portrait=(c,cls='')=>c?`<img class="portrait ${cls}" src="${escape(localAssets[`champion/${c.id}`]||`../data/images/champion/${c.id}.png`)}" data-fallback="${escape(c.icon)}" alt="${escape(c.name)}" loading="lazy" />`:'<div class="empty-portrait">+</div>';
+export const portrait=(c,cls='')=>c?`<img class="portrait ${cls}" src="${escape(localAssets[`champion/${c.id}`]||`../data/images/champion/${c.id}.png`)}" data-fallback="${escape(c.icon)}" alt="${escape(c.name)}" decoding="async" loading="lazy" />`:'<div class="empty-portrait">+</div>';
 export const rosterPortrait=(c,cls='')=>c?portrait(c,cls).replace('<img ','<img draggable="false" '):`<span class="empty-portrait roster-empty" aria-hidden="true">${icon('user')}</span>`;
 let fallbackAssets=new Map(),localAssets={};
 export function prepareAssets(data){
@@ -56,7 +56,7 @@ export function prepareAssets(data){
 }
 export function installAssets(prepared){localAssets=prepared.local;fallbackAssets=prepared.fallback;}
 export function configureAssets(data){installAssets(prepareAssets(data));}
-export const asset=(kind,id,alt='',cls='')=>`<img class="${cls}" ${['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${escape(id)}"`:''} src="${escape(localAssets[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" ${fallbackAssets.get(`${kind}/${id}`)?`data-fallback="${escape(fallbackAssets.get(`${kind}/${id}`))}"`:''} alt="${escape(alt)}" loading="lazy" />`;
+export const asset=(kind,id,alt='',cls='')=>`<img class="${cls}" ${['item','rune','spell'].includes(kind)?`data-game-tooltip-kind="${kind}" data-game-tooltip-id="${escape(id)}"`:''} src="${escape(localAssets[`${kind}/${id}`]||`../data/images/${kind}/${id}.png`)}" ${fallbackAssets.get(`${kind}/${id}`)?`data-fallback="${escape(fallbackAssets.get(`${kind}/${id}`))}"`:''} alt="${escape(alt)}" decoding="async" loading="lazy" />`;
 export const button=(action,label,ico='',cls='',extra='')=>`<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${ico?icon(ico):''}${label}</button>`;
 // Number#toLocaleString builds a new formatter on every call, and detail tables
 // format thousands of values per render; reuse one formatter per precision.
