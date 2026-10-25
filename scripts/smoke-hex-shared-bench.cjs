@@ -83,7 +83,15 @@ async function run(){
  const count=writes.length;await click('.hex-ranking [data-action=hex-reference-preview]');await until(()=>js('!!document.querySelector("#overlay-root>*")'),'Read-only reference missing');assert.equal(writes.length,count);await click('[data-action=close]');
  bench=[];await js('window.buddy.client(true)');await until(async()=>(await ids()).length===0,'Emptied bench retained stale heroes');
  assert.equal(await js('document.querySelector(".hex-companion").dataset.tab'),'recommend');
- const proof={passed:true,source,archiveSha256:release?.archiveSha256||null,initialSharedHeroes:12,teammateUpdates:true,swapRefresh:true,staysOnLineup:true,rankingReadOnly:true,emptyPoolCleared:true,mockedBenchSwaps:writes.length,latestClickWins:true,emptyPickActions:true,realClientWrites:0,layouts};
+ const partyLayouts=[];
+ for(const width of [360,440])for(const zoom of [1,1.25]){
+  main.setContentSize(width,820);main.webContents.setZoomFactor(zoom);
+  await js(`(async()=>{const boot=await window.buddy.bootstrap(),{hexDraftView}=await import('./hex-draft-view.mjs');boot.client.party={members:boot.client.session.myTeam.map(p=>({cellId:p.cellId}))};boot.client.session.bench={championIds:[]};boot.client.eligibility=null;document.querySelector('.hex-draft').outerHTML=hexDraftView({data:boot.data,client:boot.client});})()`);
+  await delay(100);
+  const bounds=await js(`(()=>{const rows=[...document.querySelectorAll('.hex-party-lineup')];return {maxRowHeight:Math.max(...rows.map(e=>e.getBoundingClientRect().height)),rows:rows.length,members:rows[0]?.querySelectorAll('.hex-party-member').length,overflow:document.documentElement.scrollWidth>innerWidth,contained:rows.every(row=>{const r=row.getBoundingClientRect();return [...row.querySelectorAll('.hex-party-member,.hex-party-preview')].every(e=>{const b=e.getBoundingClientRect();return b.left>=r.left-1&&b.right<=r.right+1;});})}})()`);
+  await screenshot(`party-five-${width}-${zoom}.png`);assert.equal(bounds.members,5);assert(bounds.rows>0);assert.equal(bounds.overflow,false);assert(bounds.contained,'Five-member avatar actions overflow');assert(bounds.maxRowHeight<72,'Avatar actions became tall text buttons');partyLayouts.push({width,zoom,...bounds});
+ }
+ const proof={passed:true,source,archiveSha256:release?.archiveSha256||null,initialSharedHeroes:12,teammateUpdates:true,swapRefresh:true,staysOnLineup:true,rankingReadOnly:true,emptyPoolCleared:true,mockedBenchSwaps:writes.length,latestClickWins:true,emptyPickActions:true,realClientWrites:0,layouts,partyLayouts};
  await fs.writeFile(path.join(root,'proof.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify({...proof,root}));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'error.txt'),error.stack);app.exit(1);});
