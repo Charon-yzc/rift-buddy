@@ -1,4 +1,5 @@
 import {isCurrentHexData} from './hex-data-current.mjs';
+import {communityHexAugmentFingerprint,validCommunityAugmentReview} from './community-augment-review.mjs';
 import itemsReview from './hex-route-items.json' with {type:'json'};
 import {hexRouteItemFingerprint,communityHexItemFingerprint,validCommunityItemReview} from './community-item-review.mjs';
 export {hexRouteItemFingerprint} from './community-item-review.mjs';
@@ -78,16 +79,20 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   if(route.requiresUltimate&&noUltimate)return [];
   const scopedItems=community.routes.includes(route)&&route.itemReview!==undefined;
   if(scopedItems&&!validCommunityItemReview(route.itemReview,route,data.patch,community.reviewedAt))return [];
+  const scopedEffects=community.routes.includes(route)&&route.augmentReview!==undefined;
+  if(scopedEffects&&!validCommunityAugmentReview(route.augmentReview,route,data.patch,community.reviewedAt))return [];
+  const effectCurrent=a=>scopedEffects?!!route.augmentReview.effects[a?.id]&&route.augmentReview.effects[a.id].fingerprint===communityHexAugmentFingerprint(a,data):reviewedHexMechanic(a,data.patch);
+  const needsUltimate=a=>hexUltimateRequirement(a,data.patch)||(scopedEffects&&route.augmentReview.effects[a?.id]?.requiresUltimate);
   const reviewedItems=scopedItems?route.itemReview.items:itemReview.items,itemFingerprint=scopedItems?communityHexItemFingerprint:hexRouteItemFingerprint;
   const augment=data.augments.find(a=>a.id===route.augment);
-  if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||noUltimate&&hexUltimateRequirement(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
+  if(augment?.descriptionStatus!=='complete'||!effectCurrent(augment)||noUltimate&&needsUltimate(augment)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
    const a=data.augments.find(a=>a.id===id),disabled=hexCatalogDisabled(data,a);
-   return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&!(noUltimate&&hexUltimateRequirement(a,data.patch))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+((hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id])}]:[];
+   return a?.descriptionStatus==='complete'&&effectCurrent(a)&&!(noUltimate&&needsUltimate(a))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+(reviewedHexMechanic(a,data.patch)?(hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id]||a.description:a.description)}]:[];
   });
   let pendingItems=0;
   const gear=route.gear.flatMap(([when,ids,why,requires=[]])=>{
-   if(requires.some(id=>{const a=data.augments.find(a=>a.id===id);return a?.descriptionStatus!=='complete'||!reviewedHexMechanic(a,data.patch)||noUltimate&&hexUltimateRequirement(a,data.patch)||hexCatalogDisabled(data,a)&&!owned.includes(id);}))return [];
+   if(requires.some(id=>{const a=data.augments.find(a=>a.id===id);return a?.descriptionStatus!=='complete'||!effectCurrent(a)||noUltimate&&needsUltimate(a)||hexCatalogDisabled(data,a)&&!owned.includes(id);}))return [];
    const items=ids.flatMap(id=>{
     const item=data.items[id];
     if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||reviewedItems[id]!==itemFingerprint(item,data.patch)){pendingItems++;return [];}

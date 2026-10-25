@@ -33,7 +33,7 @@ test('later same-patch maintenance retains the original individual equipment rev
 });
 test('new review format rejects old floors and stale review hashes before publishing, while legacy snapshots retain their format floor',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'community-item-review-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const pair=generateKeyPairSync('ed25519'),keyFile=path.join(root,'key.pem');await fs.writeFile(keyFile,pair.privateKey.export({type:'pkcs8',format:'pem'}));
- const opts={publicRoot:path.join(root,'public'),keyFile,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:routes};
+ const itemOnly=structuredClone(routes);itemOnly.routes=itemOnly.routes.filter(r=>r.augmentReview===undefined);const opts={publicRoot:path.join(root,'public'),keyFile,keyId:'isolated',keys:{isolated:pair.publicKey.export({type:'spki',format:'pem'})},game,catalog,hexRoutes:itemOnly};
  for(const minimumApp of ['0.59.28','0.59.31','0.59.32'])await assert.rejects(publishCommunityData({...opts,minimumApp}),/需要支持所用格式/);await assert.rejects(fs.access(opts.publicRoot));
  const bad=structuredClone(routes);bad.routes.find(r=>r.hero==='Lillia').itemReview.items[3742]='0'.repeat(16);await assert.rejects(publishCommunityData({...opts,hexRoutes:bad,keyFile:path.join(root,'missing.pem')}),/当前装备复核/);await assert.rejects(fs.access(opts.publicRoot));
  assert.equal((await publishCommunityData(opts)).minimumApp,'0.59.33');

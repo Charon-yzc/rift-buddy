@@ -1721,6 +1721,91 @@
           "3036": "2758e8ff995f599d"
         }
       }
+    },
+    {
+      "hero": "Swain",
+      "patch": "16.21",
+      "augment": 3051,
+      "optional": [],
+      "requiresUltimate": false,
+      "title": "耗蓝短盾",
+      "summary": "耗蓝技能换取短盾，按冷却和蓝量穿插Q、W、E。",
+      "play": [
+        "实际花费法力获得1.5秒护盾；比例200–450%随等级，上限300–800随等级，最大法力不直接等于本次盾量。",
+        "按冷却穿插Q、W、E；E二段及R持续汲取不视作额外耗蓝触发，留足下一次施法蓝量。"
+      ],
+      "basicPlay": [
+        "回归基本功下不使用R；以Q、W、E的实际法力花费获得1.5秒短盾。",
+        "E二段不补造一次耗蓝；技能冷却和蓝量仍限制轮转，不保证永久护盾。"
+      ],
+      "caution": "多次护盾的刷新或叠加，以及增盾与上限的运算顺序未核实；不承诺无限E、回蓝或免控。",
+      "gear": [
+        [
+          "法力与生命成长",
+          [
+            6657
+          ],
+          "作者点名时光；海克斯每40秒成长，承受英雄伤害回复法力，施法按法力消耗治疗，不保证无限回蓝。"
+        ],
+        [
+          "魔法压力与恢复",
+          [
+            3065
+          ],
+          "作者点名振奋；自身治疗和护盾效果提升25%，按敌方魔法压力比较，不推算强化最终盾量。"
+        ],
+        [
+          "主动施法窗口",
+          [
+            2522
+          ],
+          "作者点名实现器；基础60秒冷却，持续8秒，技能额外耗蓝100%，基础技能冷却转速加快30%。额外增益系数待核，不等于冷却减少30%。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "video",
+        "author": "榴莲龟龟敲可爱",
+        "url": "https://www.bilibili.com/video/BV1yUHK6JESx/",
+        "publishedAt": "2026-10-24T10:56:37.000Z",
+        "sourcePatch": null,
+        "observedMode": "海克斯大乱斗4.0；蓝色屏障卡及本人装备说明",
+        "evidenceSeconds": [
+          2,
+          5,
+          7,
+          25,
+          27,
+          28,
+          29,
+          30,
+          35,
+          36
+        ],
+        "adaptation": "已抽查原录像：2–7秒蓝色屏障卡，25–29秒作者点名时光、振奋、实现器，30–36秒实现器悬停。按16.21独立核对实际耗蓝、短盾时限和上限；不继承无限E、回蓝或免控。未核实录像具体补丁、其他关键强化、完整六件、购买顺序与加点，实现器未解析增益系数保留待核。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "2522": "a52efbc5c967f235",
+          "3065": "522ddd38f23d9014",
+          "6657": "2f68b1fc2810ec85"
+        }
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "3051": {
+            "fingerprint": "0abb4a02b45cd4d6",
+            "requiresUltimate": false
+          }
+        }
+      }
     }
   ],
   "championReview": {
@@ -1755,7 +1840,8 @@
       "Zoe": "d218618e341a560e",
       "Quinn": "96eaff1d877b5c1a",
       "Brand": "dfe0f7f6ef8e7e6e",
-      "Nilah": "30e5ef1b4f79390e"
+      "Nilah": "30e5ef1b4f79390e",
+      "Swain": "2df9ea554c5ac91d"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -2451,6 +2537,30 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "2f18ee1a98588cd1"
+          }
+        }
+      },
+      "Swain": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "2df9ea554c5ac91d",
+        "observedAt": "2026-10-23T02:03:51.632Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "Swain",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
+            "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "f08241c738bc1369"
           }
         }
       }
