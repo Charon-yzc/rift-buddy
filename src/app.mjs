@@ -850,6 +850,11 @@ async function prepareHeroClick(context,expected=null){
  if(context.readOnly!==true&&client.connected&&pregamePhase(client.phase)&&(context.mode||'rift')==='rift'){await stagePregameIntent({champion:context.id,role:context.role,selection:heroClickSelection(data,context)});return;}
  const action=memberHeroAction(context.id,context.role);
  if(action.blocked&&context.readOnly!==true)throw Error('英雄已锁定，不能再选择其他英雄；仍可换位置、推荐和投票');
+ if(action.prepare&&clientMode==='hex'&&selectionMode==='hex'){
+  const clicked={selection:{id:context.id,role:context.role,mode:'hex',preselectOnly:true},build:getBuild(champ(context.id),context.role,data,{id:context.id,role:context.role,mode:'hex'})};
+  clickedHeroPreparation=clicked;companionPreview=null;companionTab='recommend';closeOverlay();render();
+  try{return await useClientPreparation({dataset:{preparationView:'clicked'}},true,expected,true);}finally{if(clickedHeroPreparation===clicked)clickedHeroPreparation=null;}
+ }
  // A reference lane may belong to an ally. It must not block the local pick
  // or silently move that ally; use the clicked build in the player's current lane.
  const target=slots.find(s=>s.role===context.role);
@@ -862,10 +867,6 @@ async function prepareHeroClick(context,expected=null){
  const selection={...context,...localConfigurationPreview(context,client,taskOwnRole())};
  if(action.readOnly)selection.readOnly=true;
  if(action.prepare){if(saved.draft)delete saved.draft.preselection;selection.readOnly=false;lastTaskSelection=selection;draftComparing=!localPickLocked(client.session);positionClaim=null;}
- if((context.quickSwitch===true||action.hexHover)&&action.prepare&&client.connected&&client.phase==='ChampSelect'&&clientMode==='hex'&&selectionMode==='hex'){
-  clickedHeroPreparation={selection:{id:context.id,role:context.role,mode:'hex',preselectOnly:true},build:getBuild(champ(context.id),context.role,data,{id:context.id,role:context.role,mode:'hex'})};companionPreview=null;companionTab='recommend';closeOverlay();render();
-  try{return await useClientPreparation({dataset:{preparationView:'clicked'}},true,expected,true);}finally{clickedHeroPreparation=null;}
- }
  if(action.prepare&&!localPickLocked(client.session)){
   clickedHeroPreparation={selection,build:getBuild(champ(selection.id),selection.role,data,selection)};companionPreview=null;companionTab='recommend';closeOverlay();render();
   let sourceReloaded=false;

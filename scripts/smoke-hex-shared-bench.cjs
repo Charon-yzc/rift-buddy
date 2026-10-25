@@ -17,16 +17,17 @@ async function run(){
  Object.assign(state.preferences,{installPath:install,autoSync:false,autoCheck:false,appUpdateCheck:false,roomAuto:false,guideAutoShow:false,autoLive:false,chatNotice:false,clickPrepare:true});
  await fs.writeFile(path.join(root,'settings.json'),JSON.stringify(state));
  const data=JSON.parse(await fs.readFile(path.join(base,'data/game.json'))),key=id=>data.champions.find(c=>c.id===id).key;
+ let holdSwap=false,releaseSwap,swapStarted;
  let ownHero='Lux',bench=['Malphite','Xerath','Teemo','Karma','Trundle','Brand','Morgana','Garen','Nami','Lulu','Kennen','Braum'];
- const raw=()=>({gameId:777,localPlayerCellId:0,myTeam:[ownHero,'Ashe','Veigar','Sona','Jinx'].map((id,cellId)=>({cellId,championId:key(id),assignedPosition:'',spell1Id:4,spell2Id:32})),theirTeam:[],benchEnabled:true,benchChampions:bench.map(id=>({championId:key(id)})),actions:[[{id:7,type:'pick',actorCellId:0,championId:key('Lux'),completed:true,isInProgress:false}]],bans:{myTeamBans:[],theirTeamBans:[]},timer:{phase:'FINALIZATION',adjustedTimeLeftInPhase:28000}});
+ const raw=()=>({gameId:777,localPlayerCellId:0,myTeam:[ownHero,'Ashe','Veigar','Sona','Jinx'].map((id,cellId)=>({cellId,championId:key(id),assignedPosition:'',spell1Id:4,spell2Id:32})),theirTeam:[],benchEnabled:true,benchChampions:bench.map(id=>({championId:key(id)})),actions:[],bans:{myTeamBans:[],theirTeamBans:[]},timer:{phase:'FINALIZATION',adjustedTimeLeftInPhase:28000}});
  https.request=(options,callback)=>{
   const request=new EventEmitter();request.write=()=>{throw Error('Unexpected client payload');};request.destroy=error=>{if(error)request.emit('error',error);};
-  request.end=()=>queueMicrotask(()=>{try{
+  request.end=()=>queueMicrotask(async()=>{try{
    assert.equal(options.hostname,'127.0.0.1');assert.equal(options.port,23456);assert.equal(options.auth,'riot:isolated-bench');
    let value;
    if(options.method==='POST'){
     const target=Number(options.path.match(/^\/lol-champ-select\/v1\/session\/bench\/swap\/(\d+)$/)?.[1]),index=bench.findIndex(id=>key(id)===target);
-    assert(index>=0,'Only a current shared-bench swap is allowed');writes.push(options.path);[ownHero,bench[index]]=[bench[index],ownHero];value=null;
+    assert(index>=0,'Only a current shared-bench swap is allowed');if(holdSwap){holdSwap=false;swapStarted();await new Promise(resolve=>releaseSwap=resolve);}writes.push(options.path);[ownHero,bench[index]]=[bench[index],ownHero];value=null;
    }else{
     assert.equal(options.method||'GET','GET');
     const values={'/lol-gameflow/v1/gameflow-phase':'ChampSelect','/lol-gameflow/v1/session':{gameData:{gameId:777,mapId:12,queue:{id:2400,gameMode:'KIWI'}}},'/lol-champ-select/v1/session':raw(),'/lol-champ-select/v1/pickable-champion-ids':data.champions.map(c=>c.key),'/lol-champ-select/v1/disabled-champion-ids':[],'/lol-summoner/v1/current-summoner':{summonerId:1,displayName:'隔离测试'},'/lol-lobby/v2/lobby':{members:[{summonerId:1}],localMember:{summonerId:1}},'/lol-perks/v1/pages':[],'/lol-chat/v1/conversations':[]};
@@ -73,10 +74,16 @@ async function run(){
  await until(()=>js('!document.body.textContent.includes("正在预选并配置")'),'Preparation did not settle');
  assert.equal(await js('document.querySelector(".hex-companion").dataset.tab'),'recommend','Hex swap navigated to configuration');assert.equal(writes.length,1);
  await screenshot('bench-after-swap.png');
+ holdSwap=true;const started=new Promise(resolve=>swapStarted=resolve);
+ await click('.hex-shared-bench [data-id=Malphite]');await started;
+ await click('.hex-shared-bench [data-id=Karma]');await delay(100);assert.equal(writes.length,1,'A later swap must wait for the in-flight transport');releaseSwap();
+ await until(()=>ownHero==='Karma','Latest avatar click did not win');
+ await until(async()=>!(await ids()).includes('Karma'),'Latest bench did not render');assert.equal(writes.length,3);
+
  const count=writes.length;await click('.hex-ranking [data-action=hex-reference-preview]');await until(()=>js('!!document.querySelector("#overlay-root>*")'),'Read-only reference missing');assert.equal(writes.length,count);await click('[data-action=close]');
  bench=[];await js('window.buddy.client(true)');await until(async()=>(await ids()).length===0,'Emptied bench retained stale heroes');
  assert.equal(await js('document.querySelector(".hex-companion").dataset.tab'),'recommend');
- const proof={passed:true,source,archiveSha256:release?.archiveSha256||null,initialSharedHeroes:12,teammateUpdates:true,swapRefresh:true,staysOnLineup:true,rankingReadOnly:true,emptyPoolCleared:true,mockedBenchSwaps:writes.length,realClientWrites:0,layouts};
+ const proof={passed:true,source,archiveSha256:release?.archiveSha256||null,initialSharedHeroes:12,teammateUpdates:true,swapRefresh:true,staysOnLineup:true,rankingReadOnly:true,emptyPoolCleared:true,mockedBenchSwaps:writes.length,latestClickWins:true,emptyPickActions:true,realClientWrites:0,layouts};
  await fs.writeFile(path.join(root,'proof.json'),JSON.stringify(proof,null,2));console.log(JSON.stringify({...proof,root}));app.quit();
 }
 run().catch(async error=>{console.error(error);await fs.mkdir(root,{recursive:true});await fs.writeFile(path.join(root,'error.txt'),error.stack);app.exit(1);});
