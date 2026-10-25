@@ -5,7 +5,7 @@ import {validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
 import {mechanicReview} from '../src/core/mechanic-review.mjs';
 import {validCommunitySource} from '../src/core/community-source.mjs';
 import {validCommunityItemReview} from '../src/core/community-item-review.mjs';
-import {validCommunityAugmentReview} from '../src/core/community-augment-review.mjs';
+import {validCommunityAugmentReview,validCommunityExclusions} from '../src/core/community-augment-review.mjs';
 
 // A separately signed, manually reviewed snapshot. Daily statistical collection
 // must never rewrite its provenance or promote unreviewed creator material.
@@ -23,6 +23,7 @@ export function validateCommunityData(value,data){
   if(!validCommunitySource(source,value.reviewedAt))throw Error('社区来源未完整记录');
   if(r.skillPriority!==undefined&&(!Array.isArray(r.skillPriority)||r.skillPriority.length<1||r.skillPriority.length>3||new Set(r.skillPriority).size!==r.skillPriority.length||!r.skillPriority.every(key=>['Q','W','E'].includes(key))))throw Error('社区加点优先级无效');
   if(r.requiresUltimate!==undefined&&typeof r.requiresUltimate!=='boolean')throw Error('社区大招条件无效');
+  if(!validCommunityExclusions(r)||r.excludedAugments!==undefined&&(!r.augmentReview||!r.excludedAugments.every(id=>data.augments.some(a=>a.id===id))))throw Error('社区强化排除条件无效');
   if(!Array.isArray(r.gear)||r.gear.length>12||!r.gear.every(g=>Array.isArray(g)&&[3,4,5].includes(g.length)&&text(g[0])&&text(g[2])&&Array.isArray(g[1])&&g[1].length>0&&g[1].length<=6&&g[1].every(id=>data.items[id]?.maps?.['12']&&data.items[id]?.inStore)&&(g.length===3||Array.isArray(g[3])&&(g[3].length>0||g.length===5)&&g[3].length<=20&&new Set(g[3]).size===g[3].length&&g[3].every(id=>Number.isSafeInteger(id)&&[r.augment,...r.optional].includes(id)))&&(g.length!==5||r.augmentReview!==undefined&&g[4]===true)))throw Error('社区装备模式不符');
   if(r.itemReview!==undefined&&!validCommunityItemReview(r.itemReview,r,value.patch,value.reviewedAt))throw Error('社区装备复核无效');
   if(r.augmentReview!==undefined&&!validCommunityAugmentReview(r.augmentReview,r,value.patch,value.reviewedAt))throw Error('社区强化复核无效');
