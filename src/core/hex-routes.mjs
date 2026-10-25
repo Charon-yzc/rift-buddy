@@ -81,17 +81,18 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   if(scopedItems&&!validCommunityItemReview(route.itemReview,route,data.patch,community.reviewedAt))return [];
   const scopedEffects=community.routes.includes(route)&&route.augmentReview!==undefined;
   if(scopedEffects&&!validCommunityAugmentReview(route.augmentReview,route,data.patch,community.reviewedAt))return [];
-  const effectCurrent=a=>scopedEffects?!!route.augmentReview.effects[a?.id]&&route.augmentReview.effects[a.id].fingerprint===communityHexAugmentFingerprint(a,data):reviewedHexMechanic(a,data.patch);
+  const effectCurrent=a=>scopedEffects?!!route.augmentReview.effects[a?.id]&&route.augmentReview.effects[a.id].fingerprint===communityHexAugmentFingerprint(a,data,route.augmentReview.effects[a.id].coverage):reviewedHexMechanic(a,data.patch);
   const needsUltimate=a=>hexUltimateRequirement(a,data.patch)||(scopedEffects&&route.augmentReview.effects[a?.id]?.requiresUltimate);
   const reviewedItems=scopedItems?route.itemReview.items:itemReview.items,itemFingerprint=scopedItems?communityHexItemFingerprint:hexRouteItemFingerprint;
   const augment=data.augments.find(a=>a.id===route.augment);
   if(augment?.descriptionStatus!=='complete'||!effectCurrent(augment)||noUltimate&&needsUltimate(augment)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
    const a=data.augments.find(a=>a.id===id),disabled=hexCatalogDisabled(data,a);
-   return a?.descriptionStatus==='complete'&&effectCurrent(a)&&!(noUltimate&&needsUltimate(a))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+(reviewedHexMechanic(a,data.patch)?(hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id]||a.description:a.description)}]:[];
+   return a?.descriptionStatus==='complete'&&effectCurrent(a)&&!(noUltimate&&needsUltimate(a))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+(reviewedHexMechanic(a,data.patch)?(hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id]||a.description:a.tooltip.description.replaceAll('攻击力攻击力','攻击力'))}]:[];
   });
   let pendingItems=0;
-  const gear=route.gear.flatMap(([when,ids,why,requires=[]])=>{
+  const gear=route.gear.flatMap(([when,ids,why,requires=[],requiresUltimate=false])=>{
+   if(requiresUltimate&&noUltimate)return [];
    if(requires.some(id=>{const a=data.augments.find(a=>a.id===id);return a?.descriptionStatus!=='complete'||!effectCurrent(a)||noUltimate&&needsUltimate(a)||hexCatalogDisabled(data,a)&&!owned.includes(id);}))return [];
    const items=ids.flatMap(id=>{
     const item=data.items[id];
