@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "contentRevision": 17,
+  "contentRevision": 18,
   "mechanicSourceRevision": 1,
   "itemTooltipRevision": 1,
   "version": "16.21.1",
@@ -218399,7 +218399,14 @@
       "effectSourceHash": "44a7dc11d4116c3e1dd9d61c5b9d0a17893229d8495361e456e006a382bb0921",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ADAPt",
+        "effectSourceHash": "44a7dc11d4116c3e1dd9d61c5b9d0a17893229d8495361e456e006a382bb0921",
+        "entries": []
+      }
     },
     {
       "id": 1141,
@@ -218424,7 +218431,14 @@
       "tags": [
         3,
         0
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_AllForYou",
+        "effectSourceHash": "646ce0b070a6d5b65f0a8ea0644c9ddf10c04fb39ec1d590e5000f27848dbb5c",
+        "entries": []
+      }
     },
     {
       "id": 1002,
@@ -218449,7 +218463,14 @@
       "tags": [
         4,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ApexInventor",
+        "effectSourceHash": "7386ee271050ba0bbec98a22e2129d4ccb3e4e3eede09e238192f0ff4f2dc249",
+        "entries": []
+      }
     },
     {
       "id": 2087,
@@ -218473,7 +218494,14 @@
       "effectSourceHash": "aad24da115f59f13400fa4e112d9026fea5648e259ba6386c75c71b86e5fb1e3",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Archmage",
+        "effectSourceHash": "aad24da115f59f13400fa4e112d9026fea5648e259ba6386c75c71b86e5fb1e3",
+        "entries": []
+      }
     },
     {
       "id": 1004,
@@ -218497,7 +218525,14 @@
       "effectSourceHash": "69ccae6ae3c5b392673b80723c91efb90fa8b98964958dbb684894e684959d4d",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_BacktoBasics",
+        "effectSourceHash": "69ccae6ae3c5b392673b80723c91efb90fa8b98964958dbb684894e684959d4d",
+        "entries": []
+      }
     },
     {
       "id": 2103,
@@ -218526,7 +218561,14 @@
       "tags": [
         1,
         8
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_BangBang",
+        "effectSourceHash": "2c10e78d96ce896c601fca6aa829834d26d6fa3c840402164903f1be8f432bdd",
+        "entries": []
+      }
     },
     {
       "id": 1180,
@@ -218550,7 +218592,14 @@
       "effectSourceHash": "79cde27c5d33886b1c1c8437eb66222756f4f868662ab4c965ca66f274406f5c",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_BigBrain",
+        "effectSourceHash": "79cde27c5d33886b1c1c8437eb66222756f4f868662ab4c965ca66f274406f5c",
+        "entries": []
+      }
     },
     {
       "id": 1006,
@@ -218575,7 +218624,14 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_BladeWaltz",
+        "effectSourceHash": "def04e8ef56a615690d8d416cf29bd2e5a73a19a79b464e956f0bec558eb284a",
+        "entries": []
+      }
     },
     {
       "id": 1007,
@@ -218601,7 +218657,14 @@
       "effectSourceHash": "a549b806fa264e4cb3bad95c81be4664fa43be6174b1d2db651e5f3705ed27ee",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_BluntForce",
+        "effectSourceHash": "a549b806fa264e4cb3bad95c81be4664fa43be6174b1d2db651e5f3705ed27ee",
+        "entries": []
+      }
     },
     {
       "id": 1103,
@@ -218625,7 +218688,14 @@
       "effectSourceHash": "f1d1b8fe1acaa1fc388edb509e57c84a0c536d8afa5c32e9db271236ccd59683",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_BreadAndButter",
+        "effectSourceHash": "f1d1b8fe1acaa1fc388edb509e57c84a0c536d8afa5c32e9db271236ccd59683",
+        "entries": []
+      }
     },
     {
       "id": 1151,
@@ -218649,7 +218719,14 @@
       "effectSourceHash": "c378d43b4a9f798ff5a06bb52326c117e41892525054d5488dba1eb8eedfe653",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_BreadAndCheese",
+        "effectSourceHash": "c378d43b4a9f798ff5a06bb52326c117e41892525054d5488dba1eb8eedfe653",
+        "entries": []
+      }
     },
     {
       "id": 1150,
@@ -218673,7 +218750,14 @@
       "effectSourceHash": "f22a4f517a26f6bfaed8b6ba2a957a31b4409c8a629a62c2b804d276628d13d5",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_BreadAndJam",
+        "effectSourceHash": "f22a4f517a26f6bfaed8b6ba2a957a31b4409c8a629a62c2b804d276628d13d5",
+        "entries": []
+      }
     },
     {
       "id": 1011,
@@ -218697,7 +218781,14 @@
       "effectSourceHash": "1a913a5dc686d448eb12db9836d71a44a560498a7cd90c967b2306627f6325f8",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_CantTouchThis",
+        "effectSourceHash": "1a913a5dc686d448eb12db9836d71a44a560498a7cd90c967b2306627f6325f8",
+        "entries": []
+      }
     },
     {
       "id": 1013,
@@ -218721,7 +218812,14 @@
       "effectSourceHash": "30e64d04b513501625ca566e015da89122c307af0f7d9235a35d63a378aeacff",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_CelestialBody",
+        "effectSourceHash": "30e64d04b513501625ca566e015da89122c307af0f7d9235a35d63a378aeacff",
+        "entries": []
+      }
     },
     {
       "id": 1015,
@@ -218747,7 +218845,14 @@
       "effectSourceHash": "a2923de4377210e5e3840ff81575ebb75743265db6cb6a84103605ef56fa7f2e",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_CircleofDeath",
+        "effectSourceHash": "a2923de4377210e5e3840ff81575ebb75743265db6cb6a84103605ef56fa7f2e",
+        "entries": []
+      }
     },
     {
       "id": 1310,
@@ -218773,7 +218878,14 @@
       "effectSourceHash": "0ff35c55fef1d066100156ed7cd93f04ae2149c7c3236541a583d0d2b52d21bb",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ClownCollege",
+        "effectSourceHash": "0ff35c55fef1d066100156ed7cd93f04ae2149c7c3236541a583d0d2b52d21bb",
+        "entries": []
+      }
     },
     {
       "id": 1018,
@@ -218799,7 +218911,14 @@
       "effectSourceHash": "01177a68f5734042143bbc7fc3cecb6ac40d6efeacca3ff253f9e8393bac727a",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_CourageoftheColossus",
+        "effectSourceHash": "01177a68f5734042143bbc7fc3cecb6ac40d6efeacca3ff253f9e8393bac727a",
+        "entries": []
+      }
     },
     {
       "id": 1118,
@@ -218823,7 +218942,14 @@
       "effectSourceHash": "992334fef53b025eb9218a9c68fdfc0da0a8066d84df5c4b20f372a12bd6e941",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_CriticalHealing",
+        "effectSourceHash": "992334fef53b025eb9218a9c68fdfc0da0a8066d84df5c4b20f372a12bd6e941",
+        "entries": []
+      }
     },
     {
       "id": 1323,
@@ -218849,7 +218975,14 @@
       "effectSourceHash": "54ff2d848c074a7c72c86993f87330a11383fa1e49dc149af14aa2ac85fd9c77",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Cruelty",
+        "effectSourceHash": "54ff2d848c074a7c72c86993f87330a11383fa1e49dc149af14aa2ac85fd9c77",
+        "entries": []
+      }
     },
     {
       "id": 1019,
@@ -218873,7 +219006,14 @@
       "effectSourceHash": "26bbde8dbace73339561c2e2a84352240eb56a683941c7a87ef47fd0bb8545c9",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Dashing",
+        "effectSourceHash": "26bbde8dbace73339561c2e2a84352240eb56a683941c7a87ef47fd0bb8545c9",
+        "entries": []
+      }
     },
     {
       "id": 1020,
@@ -218897,7 +219037,14 @@
       "effectSourceHash": "41623b72e3ddbe34b62374a7eabb2fdce23dc5ce18a7d08b159172ffb829fdc7",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_DawnbringersResolve",
+        "effectSourceHash": "41623b72e3ddbe34b62374a7eabb2fdce23dc5ce18a7d08b159172ffb829fdc7",
+        "entries": []
+      }
     },
     {
       "id": 1022,
@@ -218921,7 +219068,14 @@
       "effectSourceHash": "c07ba71d22be3d7c248bebd438f65477a750582aae2879d954e235cc39dfff09",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Deft",
+        "effectSourceHash": "c07ba71d22be3d7c248bebd438f65477a750582aae2879d954e235cc39dfff09",
+        "entries": []
+      }
     },
     {
       "id": 1025,
@@ -218948,7 +219102,14 @@
       "tags": [
         0,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_DiveBomber",
+        "effectSourceHash": "bcb652cda009b3ac81828f1098bfd11a33c40efabfcb071039fd03928ef91eb0",
+        "entries": []
+      }
     },
     {
       "id": 2099,
@@ -218978,7 +219139,14 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_DivineDomain",
+        "effectSourceHash": "12ee82c0ee245a3bd845cc5bf31ad3e1f72c75e842a4f9f3827b9963193c2f8e",
+        "entries": []
+      }
     },
     {
       "id": 1301,
@@ -219002,7 +219170,14 @@
       "effectSourceHash": "68a1c749d80d9753aa4160f2da9cfcb2b97d6474afde29d3aa6fc96a94cb8c80",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_DivineIntervention",
+        "effectSourceHash": "68a1c749d80d9753aa4160f2da9cfcb2b97d6474afde29d3aa6fc96a94cb8c80",
+        "entries": []
+      }
     },
     {
       "id": 1026,
@@ -219028,7 +219203,14 @@
       "effectSourceHash": "75b3cbda7f85db0139070ca1cc71eabea6116de8e5aed70becd3480bbfb60b52",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_DontBlink",
+        "effectSourceHash": "75b3cbda7f85db0139070ca1cc71eabea6116de8e5aed70becd3480bbfb60b52",
+        "entries": []
+      }
     },
     {
       "id": 2010,
@@ -219052,7 +219234,14 @@
       "effectSourceHash": "c12c9228c8b9d65c4020470fc4208835c3868c9dea29f974cb4fed8e36228505",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_DoubleTap",
+        "effectSourceHash": "c12c9228c8b9d65c4020470fc4208835c3868c9dea29f974cb4fed8e36228505",
+        "entries": []
+      }
     },
     {
       "id": 1134,
@@ -219077,7 +219266,14 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_DrawYourSword",
+        "effectSourceHash": "1a1edbdcbc981f1461986552b4eabcfd882fdbcaf8f94502a02639537a8580b6",
+        "entries": []
+      }
     },
     {
       "id": 1225,
@@ -219101,7 +219297,14 @@
       "effectSourceHash": "973f0e48272d8ef2ec7b2535c1740fe880d6e99b2c40cf96786ea8d6e525cbd3",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_DualWield",
+        "effectSourceHash": "973f0e48272d8ef2ec7b2535c1740fe880d6e99b2c40cf96786ea8d6e525cbd3",
+        "entries": []
+      }
     },
     {
       "id": 1027,
@@ -219127,7 +219330,14 @@
       "effectSourceHash": "21a5c3e830bd2cf1bc2837c9755b8eaf821538af4066bf008cf186580686588e",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Earthwake",
+        "effectSourceHash": "21a5c3e830bd2cf1bc2837c9755b8eaf821538af4066bf008cf186580686588e",
+        "entries": []
+      }
     },
     {
       "id": 2004,
@@ -219156,7 +219366,14 @@
       "effectSourceHash": "164e27afe5c87f4f8d81f08ea4fff7a01925f44ba0088fe5de8bbdbf60f26054",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_EmpoweredByTheFaithful",
+        "effectSourceHash": "164e27afe5c87f4f8d81f08ea4fff7a01925f44ba0088fe5de8bbdbf60f26054",
+        "entries": []
+      }
     },
     {
       "id": 2098,
@@ -219182,7 +219399,14 @@
       "effectSourceHash": "e42275c35c0865000e51da560f4c23d1ca0c94701dc6441f2cadae73be632539",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_EndlessHunt",
+        "effectSourceHash": "e42275c35c0865000e51da560f4c23d1ca0c94701dc6441f2cadae73be632539",
+        "entries": []
+      }
     },
     {
       "id": 1028,
@@ -219207,7 +219431,14 @@
       "tags": [
         5,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Erosion",
+        "effectSourceHash": "24297e0687e91b4b6ebf4b34fe532381f2f6e94fc2904571c525d5682aff8709",
+        "entries": []
+      }
     },
     {
       "id": 1029,
@@ -219234,7 +219465,14 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_EtherealWeapon",
+        "effectSourceHash": "9f78a8b55b3bbb34b51a3d51af64715769608a760f123897f0c866ae06115042",
+        "entries": []
+      }
     },
     {
       "id": 1030,
@@ -219258,7 +219496,14 @@
       "effectSourceHash": "e23a0a5b4b7b3a99e4e375411a99cc4a0f64dd5a2b84a4b4c8eb17024e6408cb",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Eureka",
+        "effectSourceHash": "e23a0a5b4b7b3a99e4e375411a99cc4a0f64dd5a2b84a4b4c8eb17024e6408cb",
+        "entries": []
+      }
     },
     {
       "id": 1194,
@@ -219282,7 +219527,14 @@
       "effectSourceHash": "d922482683c0946a60623076c8a00e4152747f7ee27730b7a0d4e6fe4c98851f",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_FeyMagic",
+        "effectSourceHash": "d922482683c0946a60623076c8a00e4152747f7ee27730b7a0d4e6fe4c98851f",
+        "entries": []
+      }
     },
     {
       "id": 1036,
@@ -219308,7 +219560,14 @@
       "effectSourceHash": "408387a3e10a2811b752374d6ac0e44ec14c762709d557a47505cade4eeb434b",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Firebrand",
+        "effectSourceHash": "408387a3e10a2811b752374d6ac0e44ec14c762709d557a47505cade4eeb434b",
+        "entries": []
+      }
     },
     {
       "id": 1308,
@@ -219335,7 +219594,14 @@
       "tags": [
         4,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Firefox",
+        "effectSourceHash": "365b6594ce4fe0279ee8638ec0e9e06ba2b15c0691fdd79f0bbb8f2f370d357a",
+        "entries": []
+      }
     },
     {
       "id": 1037,
@@ -219360,7 +219626,14 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_FirstAidKit",
+        "effectSourceHash": "ae24f0c70316870850c5d55c925d834827dbed641e6ec8895927f88ce451471e",
+        "entries": []
+      }
     },
     {
       "id": 1187,
@@ -219388,7 +219661,14 @@
       "tags": [
         4,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Flashbang",
+        "effectSourceHash": "2c1fa68b041825323699a99a5ea3f7580fdf0e5149ab42a34f45e4dc7d7504ec",
+        "entries": []
+      }
     },
     {
       "id": 1116,
@@ -219412,7 +219692,14 @@
       "effectSourceHash": "4f65119bfa1d9b6bb29a763a0e517a7f7fd628b8d3d3749ae9e228d48b2981b0",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Flashy",
+        "effectSourceHash": "4f65119bfa1d9b6bb29a763a0e517a7f7fd628b8d3d3749ae9e228d48b2981b0",
+        "entries": []
+      }
     },
     {
       "id": 1038,
@@ -219440,7 +219727,14 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_FromBeginningToEnd",
+        "effectSourceHash": "3bc94979f287b64ca28df341bc12b4fcf31a826061b566460f5c62a630abbe11",
+        "entries": []
+      }
     },
     {
       "id": 1322,
@@ -219464,7 +219758,14 @@
       "effectSourceHash": "0022953b2e248acbca8b8dcbaa03842154a550a07c56c75a906baac074025382",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_GetExcited",
+        "effectSourceHash": "0022953b2e248acbca8b8dcbaa03842154a550a07c56c75a906baac074025382",
+        "entries": []
+      }
     },
     {
       "id": 1195,
@@ -219491,7 +219792,14 @@
       "tags": [
         4,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_GiantSlayer",
+        "effectSourceHash": "f7f620d23fe1b60a9c832841a36c6620eea9180456a60bd61c900391bacecdbe",
+        "entries": []
+      }
     },
     {
       "id": 1041,
@@ -219516,7 +219824,14 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Goliath",
+        "effectSourceHash": "a40590bbd0181bd95208004e641f410061196f2c3f7df0fe873c5d7afd7aa07c",
+        "entries": []
+      }
     },
     {
       "id": 1138,
@@ -219540,7 +219855,14 @@
       "effectSourceHash": "04991b669649f917e95044de39fe7ece3298e8a6af13e4d81740398658d15b73",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Goredrink",
+        "effectSourceHash": "04991b669649f917e95044de39fe7ece3298e8a6af13e4d81740398658d15b73",
+        "entries": []
+      }
     },
     {
       "id": 1181,
@@ -219565,7 +219887,14 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_HeavyHitter",
+        "effectSourceHash": "df7be30632d5f41361cc5aed508623bb1d9fd1401373cda2633860eb949735db",
+        "entries": []
+      }
     },
     {
       "id": 2107,
@@ -219590,7 +219919,14 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Hellbent",
+        "effectSourceHash": "158909c59e259ab9122aa2cf3fe265960fb64048dea0302fb3658f4ce51ec012",
+        "entries": []
+      }
     },
     {
       "id": 1105,
@@ -219614,7 +219950,14 @@
       "effectSourceHash": "7343d7b016fcf52cd61ceafcee5b3b1b4505f207b9b54e9ee659e8267cd6127a",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Homeguard",
+        "effectSourceHash": "7343d7b016fcf52cd61ceafcee5b3b1b4505f207b9b54e9ee659e8267cd6127a",
+        "entries": []
+      }
     },
     {
       "id": 1044,
@@ -219638,7 +219981,14 @@
       "effectSourceHash": "6a7364461a8038bddebc2f315373eb62e42c720b68bea0fef82eca538d83a2e9",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_IceCold",
+        "effectSourceHash": "6a7364461a8038bddebc2f315373eb62e42c720b68bea0fef82eca538d83a2e9",
+        "entries": []
+      }
     },
     {
       "id": 1001,
@@ -219665,7 +220015,14 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ImTheJuggernaut",
+        "effectSourceHash": "3e88a4cff224a254402269ec528dd82bbb8d80df3b01fb6971e1088a90815663",
+        "entries": []
+      }
     },
     {
       "id": 1149,
@@ -219690,7 +220047,14 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Impassable",
+        "effectSourceHash": "8e936a4425d4817ada41836e0d1e1e0244dd348e4707bff19add1345d0b2841a",
+        "entries": []
+      }
     },
     {
       "id": 1045,
@@ -219717,7 +220081,14 @@
       "tags": [
         1,
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_InfernalConduit",
+        "effectSourceHash": "d6a03f6da6805e99f26f49197fc0ca9c524c68218bc995f9e13f9a174b678392",
+        "entries": []
+      }
     },
     {
       "id": 1046,
@@ -219743,7 +220114,14 @@
       "effectSourceHash": "a5ca56cfd2ee56238d5e2f1c4d234caca3061a52da7567d4d034e0053b04849f",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_InfernalSoul",
+        "effectSourceHash": "a5ca56cfd2ee56238d5e2f1c4d234caca3061a52da7567d4d034e0053b04849f",
+        "entries": []
+      }
     },
     {
       "id": 2005,
@@ -219771,7 +220149,14 @@
       "effectSourceHash": "5fdcb8d51c17949dcce570cbc20f673a01a66cd63f8b926deda7467d6574d4c4",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_InfernoTriggered",
+        "effectSourceHash": "5fdcb8d51c17949dcce570cbc20f673a01a66cd63f8b926deda7467d6574d4c4",
+        "entries": []
+      }
     },
     {
       "id": 1047,
@@ -219795,7 +220180,14 @@
       "effectSourceHash": "00a4a5a6aa55e157c860fa2bd11387e4c8282e587e7247f35be5140ebd87d8ea",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ItsCritical",
+        "effectSourceHash": "00a4a5a6aa55e157c860fa2bd11387e4c8282e587e7247f35be5140ebd87d8ea",
+        "entries": []
+      }
     },
     {
       "id": 1211,
@@ -219821,7 +220213,14 @@
       "effectSourceHash": "6ea4b35d0428d2f2116e93a793337d182c48007c67ef3c1ae241fa74aa1bb524",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ItsKillingTime",
+        "effectSourceHash": "6ea4b35d0428d2f2116e93a793337d182c48007c67ef3c1ae241fa74aa1bb524",
+        "entries": []
+      }
     },
     {
       "id": 1048,
@@ -219847,7 +220246,14 @@
       "effectSourceHash": "17ab97009d21af3f5e5c86b06b30713f633cf37a787005d6812519ae48c84bae",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_JeweledGauntlet",
+        "effectSourceHash": "17ab97009d21af3f5e5c86b06b30713f633cf37a787005d6812519ae48c84bae",
+        "entries": []
+      }
     },
     {
       "id": 2016,
@@ -219876,7 +220282,14 @@
       "effectSourceHash": "fc3175b884921fc38fa0bebfc1a4a6757c712b52dc262dfea67fa8d64d81069a",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Juiced",
+        "effectSourceHash": "fc3175b884921fc38fa0bebfc1a4a6757c712b52dc262dfea67fa8d64d81069a",
+        "entries": []
+      }
     },
     {
       "id": 1305,
@@ -219900,7 +220313,14 @@
       "effectSourceHash": "babd9243a7698b04f3850a33aa81e9b65c53b258244d112cc2e6afc8d6068240",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_LegDay",
+        "effectSourceHash": "babd9243a7698b04f3850a33aa81e9b65c53b258244d112cc2e6afc8d6068240",
+        "entries": []
+      }
     },
     {
       "id": 1051,
@@ -219926,7 +220346,14 @@
       "effectSourceHash": "478a10e57f429baa42ba4ac9eaa16ed91fe282abcc884688620c55942e080bba",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_LightemUp",
+        "effectSourceHash": "478a10e57f429baa42ba4ac9eaa16ed91fe282abcc884688620c55942e080bba",
+        "entries": []
+      }
     },
     {
       "id": 2007,
@@ -219956,7 +220383,14 @@
       "effectSourceHash": "56c8aebdce3a381aa8979ec84523a187ce97257ee65e76adc708a38fffbc7775",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_LittleDevil",
+        "effectSourceHash": "56c8aebdce3a381aa8979ec84523a187ce97257ee65e76adc708a38fffbc7775",
+        "entries": []
+      }
     },
     {
       "id": 1053,
@@ -219980,7 +220414,14 @@
       "effectSourceHash": "994361131792d9739987b436a26a0808533668185b22aa2cfcb9a122c2433368",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_MadScientist",
+        "effectSourceHash": "994361131792d9739987b436a26a0808533668185b22aa2cfcb9a122c2433368",
+        "entries": []
+      }
     },
     {
       "id": 1133,
@@ -220006,7 +220447,14 @@
       "effectSourceHash": "e821fd010db42e72e4e52c7b5f64ecc97aff6b3d363335417010ed2fd2137c08",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_MagicMissile",
+        "effectSourceHash": "e821fd010db42e72e4e52c7b5f64ecc97aff6b3d363335417010ed2fd2137c08",
+        "entries": []
+      }
     },
     {
       "id": 1129,
@@ -220032,7 +220480,14 @@
       "effectSourceHash": "037c7ccf5f52456e5f4d8c1dcf224ad740432c946a5601fdbc5541389cf06cfd",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Marksmage",
+        "effectSourceHash": "037c7ccf5f52456e5f4d8c1dcf224ad740432c946a5601fdbc5541389cf06cfd",
+        "entries": []
+      }
     },
     {
       "id": 1054,
@@ -220056,7 +220511,14 @@
       "effectSourceHash": "40340b371e7491cf4698ef6ae9df7436566d57584617994ff738d4f2d581d3f9",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_MasterofDuality",
+        "effectSourceHash": "40340b371e7491cf4698ef6ae9df7436566d57584617994ff738d4f2d581d3f9",
+        "entries": []
+      }
     },
     {
       "id": 1056,
@@ -220082,7 +220544,14 @@
       "effectSourceHash": "f2b57defd6fad6a916f2158a316ab81428e6ce37ef872d1dc3edf8a128e0c12b",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_MindtoMatter",
+        "effectSourceHash": "f2b57defd6fad6a916f2158a316ab81428e6ce37ef872d1dc3edf8a128e0c12b",
+        "entries": []
+      }
     },
     {
       "id": 1104,
@@ -220106,7 +220575,14 @@
       "effectSourceHash": "5598fd201ebe657f5a935990d6b8062904f154b8eb9874817d90a08067d5b9ec",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Minionmancer",
+        "effectSourceHash": "5598fd201ebe657f5a935990d6b8062904f154b8eb9874817d90a08067d5b9ec",
+        "entries": []
+      }
     },
     {
       "id": 1057,
@@ -220132,7 +220608,14 @@
       "effectSourceHash": "9a44c734291c8f21131209249687cf02beca5c995590c228db691855dd2ba741",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_MountainSoul",
+        "effectSourceHash": "9a44c734291c8f21131209249687cf02beca5c995590c228db691855dd2ba741",
+        "entries": []
+      }
     },
     {
       "id": 2055,
@@ -220163,7 +220646,14 @@
       "tags": [
         1,
         9
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Multishot",
+        "effectSourceHash": "5c61514e703f4a9db6f8c1e3a60147382b836f184beac37e7443389f4ba7023f",
+        "entries": []
+      }
     },
     {
       "id": 1058,
@@ -220187,7 +220677,14 @@
       "effectSourceHash": "49d9095197b1adcadc9ce2bdd7a052059a5ec0f2593a9903e5d4e4cb6ef4c161",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_MysticPunch",
+        "effectSourceHash": "49d9095197b1adcadc9ce2bdd7a052059a5ec0f2593a9903e5d4e4cb6ef4c161",
+        "entries": []
+      }
     },
     {
       "id": 1060,
@@ -220213,7 +220710,14 @@
       "effectSourceHash": "167a58835f8ab1f7a3ebdf468b4bd5bad2439eb7895589d72996f93941f7efe0",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_OceanSoul",
+        "effectSourceHash": "167a58835f8ab1f7a3ebdf468b4bd5bad2439eb7895589d72996f93941f7efe0",
+        "entries": []
+      }
     },
     {
       "id": 1061,
@@ -220241,7 +220745,14 @@
       "effectSourceHash": "95e765fc0cc4da9ede0ba89a498debbce8c0e5a39d26118cd9bc0e1a02f075f9",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_OkBoomerang",
+        "effectSourceHash": "95e765fc0cc4da9ede0ba89a498debbce8c0e5a39d26118cd9bc0e1a02f075f9",
+        "entries": []
+      }
     },
     {
       "id": 1062,
@@ -220265,7 +220776,14 @@
       "effectSourceHash": "1eee75b95488b8f8740f501c5fe2dfbb10cf0c6ee6b86ecbe224361ac3854c94",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_OmniSoul",
+        "effectSourceHash": "1eee75b95488b8f8740f501c5fe2dfbb10cf0c6ee6b86ecbe224361ac3854c94",
+        "entries": []
+      }
     },
     {
       "id": 1063,
@@ -220291,7 +220809,14 @@
       "effectSourceHash": "4fbc814fd402ce957995866e7d893ceeffdf948a960e2833528906da1f638f10",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_OutlawsGrit",
+        "effectSourceHash": "4fbc814fd402ce957995866e7d893ceeffdf948a960e2833528906da1f638f10",
+        "entries": []
+      }
     },
     {
       "id": 1311,
@@ -220317,7 +220842,14 @@
       "effectSourceHash": "b577436af0ff93f37b370f225560c1b9d59bba3e05b68371de871ee7293d2cfc",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Overflow",
+        "effectSourceHash": "b577436af0ff93f37b370f225560c1b9d59bba3e05b68371de871ee7293d2cfc",
+        "entries": []
+      }
     },
     {
       "id": 12317,
@@ -220341,7 +220873,14 @@
       "effectSourceHash": "a7c0ba32a7fe1d97929553521f70276bcee5eb51ea3301e1b68307f166604337",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_PandorasBox",
+        "effectSourceHash": "a7c0ba32a7fe1d97929553521f70276bcee5eb51ea3301e1b68307f166604337",
+        "entries": []
+      }
     },
     {
       "id": 1064,
@@ -220367,7 +220906,14 @@
       "effectSourceHash": "21dab28b9defebef38fb141a5161867763c3f1fd58eea20466a6ae6fa5906048",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Perseverance",
+        "effectSourceHash": "21dab28b9defebef38fb141a5161867763c3f1fd58eea20466a6ae6fa5906048",
+        "entries": []
+      }
     },
     {
       "id": 1390,
@@ -220393,7 +220939,14 @@
       "effectSourceHash": "21759bc8c22129bbdd6b644ae363fe365eddcb6132a4645c04e51b96dde601c4",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_PhenomenalEvil",
+        "effectSourceHash": "21759bc8c22129bbdd6b644ae363fe365eddcb6132a4645c04e51b96dde601c4",
+        "entries": []
+      }
     },
     {
       "id": 1324,
@@ -220418,7 +220971,14 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ProteinShake",
+        "effectSourceHash": "254f890bc9360a1fc63e2082cb9d743ed2137678aec58474f47b962933b619b7",
+        "entries": []
+      }
     },
     {
       "id": 2018,
@@ -220444,7 +221004,14 @@
       "effectSourceHash": "bb5f125ed5b4b50337820cc9813c01bf2d3430cef9d9bd96b86b9eeac6dad405",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Purist_Caster",
+        "effectSourceHash": "bb5f125ed5b4b50337820cc9813c01bf2d3430cef9d9bd96b86b9eeac6dad405",
+        "entries": []
+      }
     },
     {
       "id": 1066,
@@ -220471,7 +221038,14 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_QuantumComputing",
+        "effectSourceHash": "d6833b2d5ae7e4a555934ed28e1a11696e29fd10130f4d4f30bedd5747737753",
+        "entries": []
+      }
     },
     {
       "id": 1152,
@@ -220496,7 +221070,14 @@
       "tags": [
         3,
         8
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Quest_SteelYourHeart",
+        "effectSourceHash": "3fdfed107902b86fccc9ee4f70265751c5511dc9b9ba350805a87512a77749f9",
+        "entries": []
+      }
     },
     {
       "id": 1154,
@@ -220527,7 +221108,14 @@
         2,
         1,
         8
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Quest_UrfsChampion",
+        "effectSourceHash": "60309e7aefa73284481954ae1f24e19a834f9a975209f2e2ab68326dc825f9cb",
+        "entries": []
+      }
     },
     {
       "id": 1361,
@@ -220553,7 +221141,14 @@
         1,
         3,
         8
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Quest_VoidImmolation",
+        "effectSourceHash": "18a4d46ae7cb203d030d14a7e844f6a53187fabf400363857cb8854fd5598a34",
+        "entries": []
+      }
     },
     {
       "id": 1156,
@@ -220579,7 +221174,14 @@
         1,
         5,
         8
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Quest_WoogletsWitchcap",
+        "effectSourceHash": "9bc5dab4b710373ef5dfd60e5c4267bf0af8943c0a6c9a6b0bdee42a26c2ee52",
+        "entries": []
+      }
     },
     {
       "id": 2064,
@@ -220607,7 +221209,14 @@
       "effectSourceHash": "f036d1e16faa81e82ac955eeee0ac2bede7fb51241e17552d10abcf8bc9c6c92",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Quickstep",
+        "effectSourceHash": "f036d1e16faa81e82ac955eeee0ac2bede7fb51241e17552d10abcf8bc9c6c92",
+        "entries": []
+      }
     },
     {
       "id": 1067,
@@ -220637,7 +221246,14 @@
       "effectSourceHash": "f5e347243bf99e02d0eb88124911835ef270a8855f1aad512dbd24be4c797093",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_RabbleRousing",
+        "effectSourceHash": "f5e347243bf99e02d0eb88124911835ef270a8855f1aad512dbd24be4c797093",
+        "entries": []
+      }
     },
     {
       "id": 1068,
@@ -220661,7 +221277,14 @@
       "effectSourceHash": "14a8c6970eff75e92babbd0b43aa7c6514110db11a81f5b09eb2d63208faf621",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Recursion",
+        "effectSourceHash": "14a8c6970eff75e92babbd0b43aa7c6514110db11a81f5b09eb2d63208faf621",
+        "entries": []
+      }
     },
     {
       "id": 1170,
@@ -220685,7 +221308,14 @@
       "effectSourceHash": "cdbd9deafe3391476f08f06f7311f9c23f5c36e17bca10d0d8dc895d03030f64",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ScopedWeapons",
+        "effectSourceHash": "cdbd9deafe3391476f08f06f7311f9c23f5c36e17bca10d0d8dc895d03030f64",
+        "entries": []
+      }
     },
     {
       "id": 1071,
@@ -220709,7 +221339,14 @@
       "effectSourceHash": "afbad8934eb7ce91bbcab6ac3cc7ce6c7a115d8371c86bf6dc410e64ff5a84d8",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ScopierWeapons",
+        "effectSourceHash": "afbad8934eb7ce91bbcab6ac3cc7ce6c7a115d8371c86bf6dc410e64ff5a84d8",
+        "entries": []
+      }
     },
     {
       "id": 1115,
@@ -220733,7 +221370,14 @@
       "effectSourceHash": "559e81d1a6a0f4820581d6e5a8d8ed21fba7066cc20707f1eb1122e161040c56",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ScopiestWeapons",
+        "effectSourceHash": "559e81d1a6a0f4820581d6e5a8d8ed21fba7066cc20707f1eb1122e161040c56",
+        "entries": []
+      }
     },
     {
       "id": 1072,
@@ -220760,7 +221404,14 @@
       "tags": [
         1,
         0
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SearingDawn",
+        "effectSourceHash": "c8f27ddd388df0d35cefe9d917740ab73ca034e5e03f89ef10fe6a9e835cad15",
+        "entries": []
+      }
     },
     {
       "id": 1073,
@@ -220784,7 +221435,14 @@
       "effectSourceHash": "76b0c32a74d8ba44bde8b6a75344afd84ac3e65f3610ca1356dd12ef992661ab",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ShadowRunner",
+        "effectSourceHash": "76b0c32a74d8ba44bde8b6a75344afd84ac3e65f3610ca1356dd12ef992661ab",
+        "entries": []
+      }
     },
     {
       "id": 1074,
@@ -220810,7 +221468,14 @@
       "effectSourceHash": "8b712aafadc8cbb478433ca7fa51e510d4f46813ca5a40d8989f99d4ae46a699",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ShrinkRay",
+        "effectSourceHash": "8b712aafadc8cbb478433ca7fa51e510d4f46813ca5a40d8989f99d4ae46a699",
+        "entries": []
+      }
     },
     {
       "id": 1113,
@@ -220834,7 +221499,14 @@
       "effectSourceHash": "ab3309a61c6e64f92e94736b7415468ba4a68703d68f298736f2897145094665",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SkilledSniper",
+        "effectSourceHash": "ab3309a61c6e64f92e94736b7415468ba4a68703d68f298736f2897145094665",
+        "entries": []
+      }
     },
     {
       "id": 1136,
@@ -220859,7 +221531,14 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SlapAround",
+        "effectSourceHash": "ebd4adfb914f9f8fc44330fc60e0191b916d05397bc13214522e0d25cee90f7b",
+        "entries": []
+      }
     },
     {
       "id": 2088,
@@ -220883,7 +221562,14 @@
       "effectSourceHash": "2c591a7ae761fc042af24907227769f6fcbf6c5bad456f9fd52ad39764fbdd9d",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Snowday",
+        "effectSourceHash": "2c591a7ae761fc042af24907227769f6fcbf6c5bad456f9fd52ad39764fbdd9d",
+        "entries": []
+      }
     },
     {
       "id": 1076,
@@ -220910,7 +221596,14 @@
       "tags": [
         0,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SonicBoom",
+        "effectSourceHash": "b67e7e89ac167a20ee77934640e02f60fac1005ec2004fec274ce70ee5a1a795",
+        "entries": []
+      }
     },
     {
       "id": 1077,
@@ -220937,7 +221630,14 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SoulSiphon",
+        "effectSourceHash": "06dbe2e7a9cfcc223b2f81b32a75e3d999062b47dbb9bd88d875f10feef2e1bc",
+        "entries": []
+      }
     },
     {
       "id": 2100,
@@ -220967,7 +221667,14 @@
       "tags": [
         5,
         9
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SpecializedRecursion",
+        "effectSourceHash": "1919657edb760af810cce72c063a55d39790daa765eb761cdec5b9a01959b9d8",
+        "entries": []
+      }
     },
     {
       "id": 1214,
@@ -220993,7 +221700,14 @@
       "effectSourceHash": "c3521d7e0fdcacebce846c5696140c33ef51cf108a055093220d88ff41091a24",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SpinToWin",
+        "effectSourceHash": "c3521d7e0fdcacebce846c5696140c33ef51cf108a055093220d88ff41091a24",
+        "entries": []
+      }
     },
     {
       "id": 2104,
@@ -221022,7 +221736,14 @@
       "tags": [
         0,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SpiritBomb",
+        "effectSourceHash": "0c3966f9be97d6b95e4dd244e3d62b1d9b1553cb8e5d53f3b0bc9d24fea1e98e",
+        "entries": []
+      }
     },
     {
       "id": 1204,
@@ -221046,7 +221767,14 @@
       "effectSourceHash": "4ad884e558881c6e2fdc7e4858eb012575d8d56745a43dc81fc20987a8b5f158",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_StackosaurusRex",
+        "effectSourceHash": "4ad884e558881c6e2fdc7e4858eb012575d8d56745a43dc81fc20987a8b5f158",
+        "entries": []
+      }
     },
     {
       "id": 1404,
@@ -221070,7 +221798,14 @@
       "effectSourceHash": "c51eb20538d3716ba78792dae84b55cae3ebbef7d23160d16ab1a8161fb25f03",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Stats",
+        "effectSourceHash": "c51eb20538d3716ba78792dae84b55cae3ebbef7d23160d16ab1a8161fb25f03",
+        "entries": []
+      }
     },
     {
       "id": 1403,
@@ -221094,7 +221829,14 @@
       "effectSourceHash": "e1e026892e7bac6bf22ff727639e78f68ea2c0158b702a6d4e14780803b93816",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_StatsOnStats",
+        "effectSourceHash": "e1e026892e7bac6bf22ff727639e78f68ea2c0158b702a6d4e14780803b93816",
+        "entries": []
+      }
     },
     {
       "id": 1402,
@@ -221118,7 +221860,14 @@
       "effectSourceHash": "6b3b4b82441d37ac20ab522780a9bf3e1409cf0717417f6efc429a3e071765d7",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_StatsOnStatsOnStats",
+        "effectSourceHash": "6b3b4b82441d37ac20ab522780a9bf3e1409cf0717417f6efc429a3e071765d7",
+        "entries": []
+      }
     },
     {
       "id": 1413,
@@ -221142,7 +221891,14 @@
       "effectSourceHash": "bb5328552fa58bd7f304740ee6a508ca8845c71916f14f470e4dfa8d80daa8aa",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_StuckInHereWithMe",
+        "effectSourceHash": "bb5328552fa58bd7f304740ee6a508ca8845c71916f14f470e4dfa8d80daa8aa",
+        "entries": []
+      }
     },
     {
       "id": 2073,
@@ -221170,7 +221926,14 @@
       "effectSourceHash": "264e1788a4f62dbbd7b2e68d91fb89750fde0dde5514d8513e94a12c388b22d9",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SustainingStrike",
+        "effectSourceHash": "264e1788a4f62dbbd7b2e68d91fb89750fde0dde5514d8513e94a12c388b22d9",
+        "entries": []
+      }
     },
     {
       "id": 1079,
@@ -221195,7 +221958,14 @@
       "tags": [
         1,
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_SymphonyofWar",
+        "effectSourceHash": "be4554b38f1b5dfda18af324a03e18dc6859661ce282cf873a82c5f87abe5d13",
+        "entries": []
+      }
     },
     {
       "id": 1353,
@@ -221221,7 +221991,14 @@
       "effectSourceHash": "5b51477e4be6b244dea300bdcb7b09a5b42758386d1afda3dcc039d60aaff6ba",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_TankEngine",
+        "effectSourceHash": "5b51477e4be6b244dea300bdcb7b09a5b42758386d1afda3dcc039d60aaff6ba",
+        "entries": []
+      }
     },
     {
       "id": 1080,
@@ -221247,7 +222024,14 @@
       "effectSourceHash": "27d8fbcee03daf631e977f87ab1f84faa0b6b141b3a230fc1a70d83d3b87e996",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_TankItOrLeaveIt",
+        "effectSourceHash": "27d8fbcee03daf631e977f87ab1f84faa0b6b141b3a230fc1a70d83d3b87e996",
+        "entries": []
+      }
     },
     {
       "id": 1081,
@@ -221273,7 +222057,14 @@
       "effectSourceHash": "4306f5daae4c1d584a99e372e80343d16cc34b01a543ddb65b918c851b3dbdf7",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_TapDancer",
+        "effectSourceHash": "4306f5daae4c1d584a99e372e80343d16cc34b01a543ddb65b918c851b3dbdf7",
+        "entries": []
+      }
     },
     {
       "id": 2065,
@@ -221301,7 +222092,14 @@
       "effectSourceHash": "f7500613e4150d2de02b374d39253c196aaf8191326708c90dca2a000df28023",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Terror",
+        "effectSourceHash": "f7500613e4150d2de02b374d39253c196aaf8191326708c90dca2a000df28023",
+        "entries": []
+      }
     },
     {
       "id": 1084,
@@ -221325,7 +222123,14 @@
       "effectSourceHash": "0ad6a948d04ec8cc9aa5d9afd59f55d90c47009c349433f2d4621b801cacf011",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_ThreadtheNeedle",
+        "effectSourceHash": "0ad6a948d04ec8cc9aa5d9afd59f55d90c47009c349433f2d4621b801cacf011",
+        "entries": []
+      }
     },
     {
       "id": 1243,
@@ -221349,7 +222154,14 @@
       "effectSourceHash": "514dec30da516cda1cadfc002ffdd20381cfbc7089d4ef8e9214ad17fd5989e1",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_TransmuteChaos",
+        "effectSourceHash": "514dec30da516cda1cadfc002ffdd20381cfbc7089d4ef8e9214ad17fd5989e1",
+        "entries": []
+      }
     },
     {
       "id": 1237,
@@ -221373,7 +222185,14 @@
       "effectSourceHash": "1f2e2996b763c2c1b6f55de4582604ce2c9d2ad4f4bf5092b5dc7681008a5111",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_TransmuteGold",
+        "effectSourceHash": "1f2e2996b763c2c1b6f55de4582604ce2c9d2ad4f4bf5092b5dc7681008a5111",
+        "entries": []
+      }
     },
     {
       "id": 1238,
@@ -221397,7 +222216,14 @@
       "effectSourceHash": "ab3b120c13fc8ccd34a45c039367ee2a0ab266f9fc587852fbd5128b91198e21",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_TransmutePrismatic",
+        "effectSourceHash": "ab3b120c13fc8ccd34a45c039367ee2a0ab266f9fc587852fbd5128b91198e21",
+        "entries": []
+      }
     },
     {
       "id": 1087,
@@ -221421,7 +222247,14 @@
       "effectSourceHash": "3fe20c422feda1183609660368a66fbdeae1629785262b1fdba336a499e69e20",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Typhoon",
+        "effectSourceHash": "3fe20c422feda1183609660368a66fbdeae1629785262b1fdba336a499e69e20",
+        "entries": []
+      }
     },
     {
       "id": 1088,
@@ -221445,7 +222278,14 @@
       "effectSourceHash": "1e509c73fa07db8557ce79e7ee59e9c4a8b3536b975a9b033389015d4e1442ec",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_UltimateRevolution",
+        "effectSourceHash": "1e509c73fa07db8557ce79e7ee59e9c4a8b3536b975a9b033389015d4e1442ec",
+        "entries": []
+      }
     },
     {
       "id": 1112,
@@ -221469,7 +222309,14 @@
       "effectSourceHash": "09b16cfbfdf5a505d1c6f663fdd118c21bd538ff2b0cd029b5231d70f50788c9",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_UltimateUnstoppable",
+        "effectSourceHash": "09b16cfbfdf5a505d1c6f663fdd118c21bd538ff2b0cd029b5231d70f50788c9",
+        "entries": []
+      }
     },
     {
       "id": 1320,
@@ -221493,7 +222340,14 @@
       "effectSourceHash": "0fc54a9b98ad5e3384512daa1173c04f40314f86519cad7e50b14af5ad84bbe0",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Upgrade_Collector",
+        "effectSourceHash": "0fc54a9b98ad5e3384512daa1173c04f40314f86519cad7e50b14af5ad84bbe0",
+        "entries": []
+      }
     },
     {
       "id": 1336,
@@ -221519,7 +222373,14 @@
       "effectSourceHash": "83609634e6da2db997a187a5458a54817c254e2036a2e966a59e34bcc7aa768e",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Upgrade_IE",
+        "effectSourceHash": "83609634e6da2db997a187a5458a54817c254e2036a2e966a59e34bcc7aa768e",
+        "entries": []
+      }
     },
     {
       "id": 1319,
@@ -221545,7 +222406,14 @@
       "effectSourceHash": "626caf64a8a2716680dce968548a8e80517acb164d2928b17e9241b5d028a8e2",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Upgrade_Immolate",
+        "effectSourceHash": "626caf64a8a2716680dce968548a8e80517acb164d2928b17e9241b5d028a8e2",
+        "entries": []
+      }
     },
     {
       "id": 1996,
@@ -221572,7 +222440,14 @@
       "effectSourceHash": "2f0b2453f32a60f50dc4a9b12f143f38ba4efc16d3fc6b911fbf50da1769c962",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Upgrade_Sheen",
+        "effectSourceHash": "2f0b2453f32a60f50dc4a9b12f143f38ba4efc16d3fc6b911fbf50da1769c962",
+        "entries": []
+      }
     },
     {
       "id": 1318,
@@ -221596,7 +222471,14 @@
       "effectSourceHash": "400b7ecd583dc8dadd7339cc7f9d90958f007c38f82921e2a49d45bcdee6f931",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Upgrade_ZH",
+        "effectSourceHash": "400b7ecd583dc8dadd7339cc7f9d90958f007c38f82921e2a49d45bcdee6f931",
+        "entries": []
+      }
     },
     {
       "id": 1092,
@@ -221622,7 +222504,14 @@
       "effectSourceHash": "3481053aa46732b8863127303e32fa8afe56ee36109bda9c4115f7967831d6cf",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Vulnerability",
+        "effectSourceHash": "3481053aa46732b8863127303e32fa8afe56ee36109bda9c4115f7967831d6cf",
+        "entries": []
+      }
     },
     {
       "id": 1005,
@@ -221649,7 +222538,14 @@
       "effectSourceHash": "9d54b7896d7b360770c79cb65caecfea97e3ac949e99b95936aa588d17aedf58",
       "tags": [
         0
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_WeeWooWeeWoo",
+        "effectSourceHash": "9d54b7896d7b360770c79cb65caecfea97e3ac949e99b95936aa588d17aedf58",
+        "entries": []
+      }
     },
     {
       "id": 1095,
@@ -221674,7 +222570,14 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_WindspeakersBlessing",
+        "effectSourceHash": "813380e8d11a5eafa27068e6cc0f0e44cdaec771ae9cd02191267647e9724fe6",
+        "entries": []
+      }
     },
     {
       "id": 1097,
@@ -221699,7 +222602,14 @@
       "tags": [
         1,
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_WitchfulThinking",
+        "effectSourceHash": "89e36baad3325ea1f1402782413efcc9a95a5a37ee1d920e250ec0104f6e5dcc",
+        "entries": []
+      }
     },
     {
       "id": 1098,
@@ -221725,7 +222635,14 @@
       "effectSourceHash": "4309c9fca752441f29d3cfa24bb25974e9d40e06156faaf79c856b009255a099",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_WithHaste",
+        "effectSourceHash": "4309c9fca752441f29d3cfa24bb25974e9d40e06156faaf79c856b009255a099",
+        "entries": []
+      }
     },
     {
       "id": 2009,
@@ -221749,7 +222666,14 @@
       "effectSourceHash": "e7078143570fa72b863ecb77d0215de25daf39499cc5f445171b6f150feb3217",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_Zealot",
+        "effectSourceHash": "e7078143570fa72b863ecb77d0215de25daf39499cc5f445171b6f150feb3217",
+        "entries": []
+      }
     },
     {
       "id": 1206,
@@ -221775,7 +222699,14 @@
       "effectSourceHash": "a4c87be6cb29899d4227f7842b987f7c3baa8d6a0c3269936dd2a132cc5d1d24",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ARAM_escAPADe",
+        "effectSourceHash": "a4c87be6cb29899d4227f7842b987f7c3baa8d6a0c3269936dd2a132cc5d1d24",
+        "entries": []
+      }
     },
     {
       "id": 2062,
@@ -221803,7 +222734,14 @@
       "effectSourceHash": "1f9c2be4a264baaf163171e00519e21bffdc90cfc24c6ec74c607dd9a6fbe672",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Ability_SelfAOE_DoubleCast",
+        "effectSourceHash": "1f9c2be4a264baaf163171e00519e21bffdc90cfc24c6ec74c607dd9a6fbe672",
+        "entries": []
+      }
     },
     {
       "id": 1327,
@@ -221827,7 +222765,14 @@
       "effectSourceHash": "367739ea8e98953bc4aa13b071ed2ab4ad2c6dd3e612b71895754e0c3920cfa6",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Adamant",
+        "effectSourceHash": "367739ea8e98953bc4aa13b071ed2ab4ad2c6dd3e612b71895754e0c3920cfa6",
+        "entries": []
+      }
     },
     {
       "id": 3118,
@@ -221851,7 +222796,14 @@
       "effectSourceHash": "66c292e04b04b701abfd086ff236ae2706d4aa5ac8ec6a17ed0c7cccb0f3a1b5",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ArcaneAxiom",
+        "effectSourceHash": "66c292e04b04b701abfd086ff236ae2706d4aa5ac8ec6a17ed0c7cccb0f3a1b5",
+        "entries": []
+      }
     },
     {
       "id": 3049,
@@ -221876,7 +222828,14 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ArmoredImpact",
+        "effectSourceHash": "f1811d033c5ee53732c26b9f09140343ba4d866c2ebda2c2fa66bf6cb93ad48b",
+        "entries": []
+      }
     },
     {
       "id": 3086,
@@ -221903,7 +222862,14 @@
       "tags": [
         5,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "BEES",
+        "effectSourceHash": "14a90cdd7db2f48830a024df5cbaebacd62c301aa6cdecee070a9815a3119408",
+        "entries": []
+      }
     },
     {
       "id": 3018,
@@ -221929,7 +222895,14 @@
       "effectSourceHash": "2651ab1ee273b67a0ef67063f87cd451b2653a89e8da7457f656504533e00a6c",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "BigShot",
+        "effectSourceHash": "2651ab1ee273b67a0ef67063f87cd451b2653a89e8da7457f656504533e00a6c",
+        "entries": []
+      }
     },
     {
       "id": 1329,
@@ -221953,7 +222926,14 @@
       "effectSourceHash": "7598d667eea531ae6a3ce58d2652de45392c684fe818d2cdc111821c336af20c",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "BiggestSnowballEver",
+        "effectSourceHash": "7598d667eea531ae6a3ce58d2652de45392c684fe818d2cdc111821c336af20c",
+        "entries": []
+      }
     },
     {
       "id": 3051,
@@ -221977,7 +222957,14 @@
       "effectSourceHash": "b1d16ae49328fa64fdf25864eee2308c38f76bcb6f711ce0cf390435dc1d2c24",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "BlueBarrier",
+        "effectSourceHash": "b1d16ae49328fa64fdf25864eee2308c38f76bcb6f711ce0cf390435dc1d2c24",
+        "entries": []
+      }
     },
     {
       "id": 2111,
@@ -222006,7 +222993,14 @@
       "effectSourceHash": "b4546edfd95a43c2f7dcfc23d7b949185a6b147c4ba0d05589f9c355b4496cb7",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Bonk",
+        "effectSourceHash": "b4546edfd95a43c2f7dcfc23d7b949185a6b147c4ba0d05589f9c355b4496cb7",
+        "entries": []
+      }
     },
     {
       "id": 3048,
@@ -222032,7 +223026,14 @@
       "effectSourceHash": "4eb948cd62922f7f6b35223bf28716c99a9b325de72b69e186b45c698da6f385",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "BouncingBees",
+        "effectSourceHash": "4eb948cd62922f7f6b35223bf28716c99a9b325de72b69e186b45c698da6f385",
+        "entries": []
+      }
     },
     {
       "id": 3071,
@@ -222057,7 +223058,14 @@
       "tags": [
         5,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "BrassBlast",
+        "effectSourceHash": "d0e540a92fb5ae18fbad1df76903b53e818ca40d74954d7b831b762a2039460c",
+        "entries": []
+      }
     },
     {
       "id": 2083,
@@ -222085,7 +223093,14 @@
       "effectSourceHash": "b6581d0dd185960d31e640929defdad5c38e1fd20ac1569466b3c7c0e6f524af",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "BurstingTeeth",
+        "effectSourceHash": "b6581d0dd185960d31e640929defdad5c38e1fd20ac1569466b3c7c0e6f524af",
+        "entries": []
+      }
     },
     {
       "id": 2078,
@@ -222117,7 +223132,14 @@
       "effectSourceHash": "f6991046aaabf1ffaeed0a8e772e3e21435b13d28dca251d8498953e6f73f55c",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ChainReaction",
+        "effectSourceHash": "f6991046aaabf1ffaeed0a8e772e3e21435b13d28dca251d8498953e6f73f55c",
+        "entries": []
+      }
     },
     {
       "id": 3088,
@@ -222147,7 +223169,14 @@
       "effectSourceHash": "1c33f1e46600dcb4335a6a7307ca38297406fb447252fbf0e7f1a5d229454de9",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "CrimsonCobalt",
+        "effectSourceHash": "1c33f1e46600dcb4335a6a7307ca38297406fb447252fbf0e7f1a5d229454de9",
+        "entries": []
+      }
     },
     {
       "id": 1328,
@@ -222171,7 +223200,14 @@
       "effectSourceHash": "9370aeb4089c3144051dff8dea6792d56eb7d2c923274b2e7aa17d24d22ac3a2",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "CriticalRhythm",
+        "effectSourceHash": "9370aeb4089c3144051dff8dea6792d56eb7d2c923274b2e7aa17d24d22ac3a2",
+        "entries": []
+      }
     },
     {
       "id": 2077,
@@ -222202,7 +223238,14 @@
       "effectSourceHash": "63758f73268f8a1a4b4fb57ffa6a81e9f0e90c1df62b3f0360eef13fa03d8d69",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "DarkWind",
+        "effectSourceHash": "63758f73268f8a1a4b4fb57ffa6a81e9f0e90c1df62b3f0360eef13fa03d8d69",
+        "entries": []
+      }
     },
     {
       "id": 1384,
@@ -222226,7 +223269,14 @@
       "effectSourceHash": "765a12bdfc9f001d5ad5f48eebe3e0bff43f26b1c0b0e6352a7a0be7740aeb47",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Donation",
+        "effectSourceHash": "765a12bdfc9f001d5ad5f48eebe3e0bff43f26b1c0b0e6352a7a0be7740aeb47",
+        "entries": []
+      }
     },
     {
       "id": 2131,
@@ -222253,7 +223303,14 @@
       "effectSourceHash": "ed668a37d8ae3292d7c07512a5e7f25b9e60a43870d46f786bf5d3825cabc59b",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "DontChangeTheChannel",
+        "effectSourceHash": "ed668a37d8ae3292d7c07512a5e7f25b9e60a43870d46f786bf5d3825cabc59b",
+        "entries": []
+      }
     },
     {
       "id": 2144,
@@ -222282,7 +223339,14 @@
       "effectSourceHash": "c509050d773665a7dd354348ec9123388ecdeaf579ddcfcab5e6c63f969a37eb",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "DoubleDefense",
+        "effectSourceHash": "c509050d773665a7dd354348ec9123388ecdeaf579ddcfcab5e6c63f969a37eb",
+        "entries": []
+      }
     },
     {
       "id": 2148,
@@ -222310,7 +223374,14 @@
       "effectSourceHash": "da3dd049b56704c649c9e2f46ca8f2c202b50098f964e065eec1b022d8cf348c",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "DoubleStrike",
+        "effectSourceHash": "da3dd049b56704c649c9e2f46ca8f2c202b50098f964e065eec1b022d8cf348c",
+        "entries": []
+      }
     },
     {
       "id": 3036,
@@ -222337,7 +223408,14 @@
       "effectSourceHash": "546ea0a6c0b6972a2b6df8c9dfda249ea96f9c7210071e3bccfede46cd41f15b",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "DoubleTime",
+        "effectSourceHash": "546ea0a6c0b6972a2b6df8c9dfda249ea96f9c7210071e3bccfede46cd41f15b",
+        "entries": []
+      }
     },
     {
       "id": 1331,
@@ -222362,7 +223440,14 @@
       "tags": [
         3,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "EmpyreanPromise",
+        "effectSourceHash": "fde124d489b9ff7b8f0f406f3c25c9ecd9e8122d88f89ca5512b6d3f65a14443",
+        "entries": []
+      }
     },
     {
       "id": 3163,
@@ -222389,7 +223474,14 @@
       "effectSourceHash": "945c7657ccd050395e1149977a37eec3a57a42c0b64257e247f79ec65621172a",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "EnchantingButterflies",
+        "effectSourceHash": "945c7657ccd050395e1149977a37eec3a57a42c0b64257e247f79ec65621172a",
+        "entries": []
+      }
     },
     {
       "id": 2091,
@@ -222415,7 +223507,14 @@
       "effectSourceHash": "e640151ab2f4f319c2ea704dcd1f731376ca97063fdfe661d6abcbf5f1e3dab2",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "EndlessDecimation",
+        "effectSourceHash": "e640151ab2f4f319c2ea704dcd1f731376ca97063fdfe661d6abcbf5f1e3dab2",
+        "entries": []
+      }
     },
     {
       "id": 1333,
@@ -222440,7 +223539,14 @@
       "tags": [
         4,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "EscapePlan",
+        "effectSourceHash": "87f10170da2bf48ca1819d1a2634d9834d3ab22438db9800787af980dfe3ab63",
+        "entries": []
+      }
     },
     {
       "id": 1344,
@@ -222465,7 +223571,14 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "FinalForm",
+        "effectSourceHash": "bdbac4b2861fc6af7f03a9124190de99325803ce647d61a1f3276070f1abf76e",
+        "entries": []
+      }
     },
     {
       "id": 2032,
@@ -222491,7 +223604,14 @@
       "effectSourceHash": "92fc8aa891f92143d07a53495f1f3b1c8a5355db61777c31d63d604e6f9e2976",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "FishBait",
+        "effectSourceHash": "92fc8aa891f92143d07a53495f1f3b1c8a5355db61777c31d63d604e6f9e2976",
+        "entries": []
+      }
     },
     {
       "id": 1348,
@@ -222515,7 +223635,14 @@
       "effectSourceHash": "a782b66e61dff1be9721d5dc9781fa161a4183ec0ac60c44d26f3ba1cd858a28",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Flash2",
+        "effectSourceHash": "a782b66e61dff1be9721d5dc9781fa161a4183ec0ac60c44d26f3ba1cd858a28",
+        "entries": []
+      }
     },
     {
       "id": 3085,
@@ -222544,7 +223671,14 @@
       "effectSourceHash": "9b6ed4660ac9dbf6388275408c4ac6340525488f4af000a034df430cc05ce70d",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "FlowOfSpirit",
+        "effectSourceHash": "9b6ed4660ac9dbf6388275408c4ac6340525488f4af000a034df430cc05ce70d",
+        "entries": []
+      }
     },
     {
       "id": 2127,
@@ -222570,7 +223704,14 @@
       "effectSourceHash": "f230a17b1537998e490eb36dd2cdf02cecebc86920052c9d447d74bd4c680241",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ForgedByTheMaster",
+        "effectSourceHash": "f230a17b1537998e490eb36dd2cdf02cecebc86920052c9d447d74bd4c680241",
+        "entries": []
+      }
     },
     {
       "id": 3121,
@@ -222596,7 +223737,14 @@
       "effectSourceHash": "a1647cc79255bdfb6214333a8579c94e91a0ab5ec94a64757e7a5234dfc606d9",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Fruitify",
+        "effectSourceHash": "a1647cc79255bdfb6214333a8579c94e91a0ab5ec94a64757e7a5234dfc606d9",
+        "entries": []
+      }
     },
     {
       "id": 3004,
@@ -222624,7 +223772,14 @@
       "effectSourceHash": "86a0d8bdf3ab36e004083a0fed3c74cc0722b3921f1e064d8293a2625f49e15b",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GetJinxed",
+        "effectSourceHash": "86a0d8bdf3ab36e004083a0fed3c74cc0722b3921f1e064d8293a2625f49e15b",
+        "entries": []
+      }
     },
     {
       "id": 3063,
@@ -222650,7 +223805,14 @@
       "effectSourceHash": "96243ba00ac027dde52ced1651927dad867746cfc6cedac3cef37eb5214e50ad",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GiftoftheDrowned",
+        "effectSourceHash": "96243ba00ac027dde52ced1651927dad867746cfc6cedac3cef37eb5214e50ad",
+        "entries": []
+      }
     },
     {
       "id": 1325,
@@ -222676,7 +223838,14 @@
       "effectSourceHash": "dc0e6c8d609584d44e292970ba8c48951ca664eda1323e73f1b6dce98ddb1e8d",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GlassCannon",
+        "effectSourceHash": "dc0e6c8d609584d44e292970ba8c48951ca664eda1323e73f1b6dce98ddb1e8d",
+        "entries": []
+      }
     },
     {
       "id": 1392,
@@ -222700,7 +223869,14 @@
       "effectSourceHash": "a9666d6652affae473ec5fbba87a2589c647051844ed72aa33e741ddd9115eee",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GoldenSnowball",
+        "effectSourceHash": "a9666d6652affae473ec5fbba87a2589c647051844ed72aa33e741ddd9115eee",
+        "entries": []
+      }
     },
     {
       "id": 1335,
@@ -222727,7 +223903,14 @@
       "effectSourceHash": "277a1d0bfe0749e1036a906a08a1fb9f2199b820d16c7bd34f94de342a8f74fb",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Goldrend",
+        "effectSourceHash": "277a1d0bfe0749e1036a906a08a1fb9f2199b820d16c7bd34f94de342a8f74fb",
+        "entries": []
+      }
     },
     {
       "id": 3149,
@@ -222755,7 +223938,14 @@
       "effectSourceHash": "b09bf4acc3252efa64fe2ddc94e8097de0d8040e689edb7d51a3191cf74fcc30",
       "tags": [
         0
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GroupHug",
+        "effectSourceHash": "b09bf4acc3252efa64fe2ddc94e8097de0d8040e689edb7d51a3191cf74fcc30",
+        "entries": []
+      }
     },
     {
       "id": 1401,
@@ -222779,7 +223969,14 @@
       "effectSourceHash": "cc8b5af106303c333683c2b4f0884cd696cff13a4b2c366d5ca781f4829edf01",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GrowthSpurt",
+        "effectSourceHash": "cc8b5af106303c333683c2b4f0884cd696cff13a4b2c366d5ca781f4829edf01",
+        "entries": []
+      }
     },
     {
       "id": 3172,
@@ -222801,7 +223998,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "82cdef6073bb7f65c8832f9c6ec289c5440adddb80d972d3e9eb1932f2139302",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GoH_PentakillAug_E",
+        "effectSourceHash": "82cdef6073bb7f65c8832f9c6ec289c5440adddb80d972d3e9eb1932f2139302",
+        "entries": []
+      }
     },
     {
       "id": 3176,
@@ -222825,7 +224029,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "a781655b9499da41c67d50107035cc5fe4095cc7fadb436f0de6ab265d10ebdc",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GoH_PentakillAug_Generic",
+        "effectSourceHash": "a781655b9499da41c67d50107035cc5fe4095cc7fadb436f0de6ab265d10ebdc",
+        "entries": []
+      }
     },
     {
       "id": 3170,
@@ -222847,7 +224058,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "c2e3acc9de2ffd4a4c2434a69ab17760e4a9740b79fc9f7ddda12ba515e1bdc4",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GoH_PentakillAug_Q",
+        "effectSourceHash": "c2e3acc9de2ffd4a4c2434a69ab17760e4a9740b79fc9f7ddda12ba515e1bdc4",
+        "entries": []
+      }
     },
     {
       "id": 3173,
@@ -222869,7 +224087,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "6875e8b7a0255402d41caa83b06d70b0f575144b7deddc051e033177a43f8cfb",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GoH_PentakillAug_R",
+        "effectSourceHash": "6875e8b7a0255402d41caa83b06d70b0f575144b7deddc051e033177a43f8cfb",
+        "entries": []
+      }
     },
     {
       "id": 3171,
@@ -222891,7 +224116,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "55f2b58ec68e871db18fed1a65c61117a2e36093f295c125f565e82ff7e1f1ca",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "GoH_PentakillAug_W",
+        "effectSourceHash": "55f2b58ec68e871db18fed1a65c61117a2e36093f295c125f565e82ff7e1f1ca",
+        "entries": []
+      }
     },
     {
       "id": 1389,
@@ -222915,7 +224147,14 @@
       "effectSourceHash": "8606e93b4a616805440daea0bbf54cb5f21b98b75b1dbccbda986a73827b9b35",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "HandOfBaron",
+        "effectSourceHash": "8606e93b4a616805440daea0bbf54cb5f21b98b75b1dbccbda986a73827b9b35",
+        "entries": []
+      }
     },
     {
       "id": 3052,
@@ -222941,7 +224180,14 @@
       "effectSourceHash": "f6fdbb3764976b601e456758b5a7ad691397768383e9446ab2fec62e274f0a16",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "HandsOffTheTalent",
+        "effectSourceHash": "f6fdbb3764976b601e456758b5a7ad691397768383e9446ab2fec62e274f0a16",
+        "entries": []
+      }
     },
     {
       "id": 3132,
@@ -222968,7 +224214,14 @@
       "effectSourceHash": "dcd92ff51e66cc42770da8a5c9e3fa386abd1b6393ba69e98a91c762925cde6d",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "HeavyIsTheCrown",
+        "effectSourceHash": "dcd92ff51e66cc42770da8a5c9e3fa386abd1b6393ba69e98a91c762925cde6d",
+        "entries": []
+      }
     },
     {
       "id": 1416,
@@ -222992,7 +224245,14 @@
       "effectSourceHash": "a9b23228b2fd03a93823479ee4a647f47d9951087c952474345bc07784886d2b",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "HextechSoul",
+        "effectSourceHash": "a9b23228b2fd03a93823479ee4a647f47d9951087c952474345bc07784886d2b",
+        "entries": []
+      }
     },
     {
       "id": 1388,
@@ -223018,7 +224278,28 @@
       "effectSourceHash": "e5bdce6524922051cdffbb968918b2e595853d9356ef9a118677ef28d5cda845",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "InfiniteRecursion",
+        "effectSourceHash": "e5bdce6524922051cdffbb968918b2e595853d9356ef9a118677ef28d5cda845",
+        "entries": [
+          {
+            "token": "CurrentHaste",
+            "calculationKey": "{984a86b5}",
+            "kind": "linear-buff-counter",
+            "constant": 60,
+            "terms": [
+              {
+                "buff": "{95ab772f}",
+                "coefficient": 3
+              }
+            ],
+            "calculationHash": "0299ecadf2eecf0f"
+          }
+        ]
+      }
     },
     {
       "id": 2125,
@@ -223046,7 +224327,14 @@
       "effectSourceHash": "925fd4ab4bbf48fd0fc56409b4a45f7aec240a5064c1516ff7aff420754e6140",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ItsGoTime",
+        "effectSourceHash": "925fd4ab4bbf48fd0fc56409b4a45f7aec240a5064c1516ff7aff420754e6140",
+        "entries": []
+      }
     },
     {
       "id": 3123,
@@ -223075,7 +224363,14 @@
       "effectSourceHash": "541996457f7e1e0a8882a548554837d4a1665727944436d61e53d8f63c2da861",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "JeweledBracelet",
+        "effectSourceHash": "541996457f7e1e0a8882a548554837d4a1665727944436d61e53d8f63c2da861",
+        "entries": []
+      }
     },
     {
       "id": 2126,
@@ -223105,7 +224400,14 @@
       "effectSourceHash": "edc854ad75b941406fdbfc421133966ac76e3942934f3b92d6fdec443f91c630",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "KeepGoing",
+        "effectSourceHash": "edc854ad75b941406fdbfc421133966ac76e3942934f3b92d6fdec443f91c630",
+        "entries": []
+      }
     },
     {
       "id": 2026,
@@ -223129,7 +224431,14 @@
       "effectSourceHash": "08be7c8f23ffb9a9dd5a39ebf5a065f3b68e324d8aa13042ce600f164ff99afb",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "KillSecured",
+        "effectSourceHash": "08be7c8f23ffb9a9dd5a39ebf5a065f3b68e324d8aa13042ce600f164ff99afb",
+        "entries": []
+      }
     },
     {
       "id": 1337,
@@ -223153,7 +224462,14 @@
       "effectSourceHash": "847039c78f1f0bf76787737c9b3e7bf4eb497abd22e436df68869fed03537b9a",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "KingMe",
+        "effectSourceHash": "847039c78f1f0bf76787737c9b3e7bf4eb497abd22e436df68869fed03537b9a",
+        "entries": []
+      }
     },
     {
       "id": 3094,
@@ -223177,7 +224493,14 @@
       "effectSourceHash": "4ac478fb91cd940f03c6f035b2b93a8ac83bc631d1f339f73310cdfb4006ca85",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "LichBrain",
+        "effectSourceHash": "4ac478fb91cd940f03c6f035b2b93a8ac83bc631d1f339f73310cdfb4006ca85",
+        "entries": []
+      }
     },
     {
       "id": 2096,
@@ -223205,7 +224528,14 @@
       "effectSourceHash": "8bc17d7c47c1beb02c76b361d1c21dea5c7e8eb267ff51784ff64a9887e9958f",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "LittleExtraHelp",
+        "effectSourceHash": "8bc17d7c47c1beb02c76b361d1c21dea5c7e8eb267ff51784ff64a9887e9958f",
+        "entries": []
+      }
     },
     {
       "id": 3134,
@@ -223229,7 +224559,14 @@
       "effectSourceHash": "dce24f1ace3728e5df92bf37e43a8ba54bd34dcf9a331b6659878ea04a021b04",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "LonelyWarrior",
+        "effectSourceHash": "dce24f1ace3728e5df92bf37e43a8ba54bd34dcf9a331b6659878ea04a021b04",
+        "entries": []
+      }
     },
     {
       "id": 2133,
@@ -223259,7 +224596,14 @@
       "effectSourceHash": "acaecd07cee95b1b7130d3a0be697b7818af9e47ccada6e6122454a840d74230",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "MercysStrike",
+        "effectSourceHash": "acaecd07cee95b1b7130d3a0be697b7818af9e47ccada6e6122454a840d74230",
+        "entries": []
+      }
     },
     {
       "id": 1314,
@@ -223283,7 +224627,14 @@
       "effectSourceHash": "c82976e737bf7b31850cc6eb0674a47b4d3889f9b9de7f7b12fb01349a2b3669",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "MightyShield",
+        "effectSourceHash": "c82976e737bf7b31850cc6eb0674a47b4d3889f9b9de7f7b12fb01349a2b3669",
+        "entries": []
+      }
     },
     {
       "id": 2072,
@@ -223312,7 +224663,14 @@
       "effectSourceHash": "6750a554a9e7cfa1040d6b50f71d0fc49b7a2633bcc026d8e26177bafad1c9e0",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Missile_Split",
+        "effectSourceHash": "6750a554a9e7cfa1040d6b50f71d0fc49b7a2633bcc026d8e26177bafad1c9e0",
+        "entries": []
+      }
     },
     {
       "id": 3053,
@@ -223341,7 +224699,14 @@
       "tags": [
         3,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "MoshMonster",
+        "effectSourceHash": "e7d153adc119d9fc19a32e2fb528892ec995eb632b75373ebc172a4a8cf618fc",
+        "entries": []
+      }
     },
     {
       "id": 2043,
@@ -223367,7 +224732,14 @@
       "effectSourceHash": "0583a0c78f75f81d80d6f367a5f2dc2ec882fd4a2f2be69715e961e39e3edf6f",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "NatureIsHealing",
+        "effectSourceHash": "0583a0c78f75f81d80d6f367a5f2dc2ec882fd4a2f2be69715e961e39e3edf6f",
+        "entries": []
+      }
     },
     {
       "id": 1326,
@@ -223391,7 +224763,14 @@
       "effectSourceHash": "3aec1389ca5bb78ca6d8ff46c7b9e18d26ffdf39f54ff83e2b5ec70803102fa2",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Nightstalking",
+        "effectSourceHash": "3aec1389ca5bb78ca6d8ff46c7b9e18d26ffdf39f54ff83e2b5ec70803102fa2",
+        "entries": []
+      }
     },
     {
       "id": 3059,
@@ -223417,7 +224796,14 @@
       "effectSourceHash": "02a7634b31829355bc7a2fd77d7f906932675d860ccc460b17fb22d296c325d1",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "NoManaNoProblem",
+        "effectSourceHash": "02a7634b31829355bc7a2fd77d7f906932675d860ccc460b17fb22d296c325d1",
+        "entries": []
+      }
     },
     {
       "id": 1332,
@@ -223441,7 +224827,14 @@
       "effectSourceHash": "12be84d2ef66702a2bb5d85de93f115f50e0f32b9b5d41debbb5de4475d61a2a",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "OminousPact",
+        "effectSourceHash": "12be84d2ef66702a2bb5d85de93f115f50e0f32b9b5d41debbb5de4475d61a2a",
+        "entries": []
+      }
     },
     {
       "id": 2119,
@@ -223467,7 +224860,14 @@
       "effectSourceHash": "98b0db1457ddc151a3e540d5a3675ac596cfa7fc61b093f5a6273a0b22feefe9",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Overextender",
+        "effectSourceHash": "98b0db1457ddc151a3e540d5a3675ac596cfa7fc61b093f5a6273a0b22feefe9",
+        "entries": []
+      }
     },
     {
       "id": 2135,
@@ -223497,7 +224897,14 @@
       "tags": [
         1,
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Overkill",
+        "effectSourceHash": "ddc211f0b12e76ecee90952bcb5cb6fa9fee872d11e5b96d5145e9e3e3a683b1",
+        "entries": []
+      }
     },
     {
       "id": 2123,
@@ -223528,7 +224935,14 @@
       "effectSourceHash": "ae76a76a85dc379b9d25be895d66fe0151e71ddd59efac7b85704161b6321d05",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Overloaded",
+        "effectSourceHash": "ae76a76a85dc379b9d25be895d66fe0151e71ddd59efac7b85704161b6321d05",
+        "entries": []
+      }
     },
     {
       "id": 2137,
@@ -223553,7 +224967,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "c7ed085167e9ad2edd7f717919010c2974ed96b8d31a0bc2d6d5ce5530e3ce61",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "PatOnTheBack",
+        "effectSourceHash": "c7ed085167e9ad2edd7f717919010c2974ed96b8d31a0bc2d6d5ce5530e3ce61",
+        "entries": []
+      }
     },
     {
       "id": 2139,
@@ -223581,7 +225002,14 @@
       "tags": [
         3,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "PinCushion",
+        "effectSourceHash": "76eb5097ea3c178f5f3473548479863c8b19bd35957fc21fc70a56a80700f978",
+        "entries": []
+      }
     },
     {
       "id": 1358,
@@ -223607,7 +225035,14 @@
       "effectSourceHash": "1f97de2581cc432615a006db7a7bd60ff98692dee7607992fbcae7cc8021c219",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "PinballSnowball",
+        "effectSourceHash": "1f97de2581cc432615a006db7a7bd60ff98692dee7607992fbcae7cc8021c219",
+        "entries": []
+      }
     },
     {
       "id": 1347,
@@ -223631,7 +225066,14 @@
       "effectSourceHash": "ef442243fd4c6b8db2a6a1fc5c4eaf9eade6e9da13e72f428eeeee372801c595",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Poltergeist",
+        "effectSourceHash": "ef442243fd4c6b8db2a6a1fc5c4eaf9eade6e9da13e72f428eeeee372801c595",
+        "entries": []
+      }
     },
     {
       "id": 2102,
@@ -223658,7 +225100,14 @@
       "tags": [
         1,
         9
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "PressureCooker",
+        "effectSourceHash": "e961dc85c158cf1d555f80ef7124490f6e86872f59411c75a77dba66e441cabe",
+        "entries": []
+      }
     },
     {
       "id": 1421,
@@ -223682,7 +225131,14 @@
       "effectSourceHash": "b8f1e932d5af8c2e988351c20be2f57fbb07c3d4fa1062b3afb8d174cdfaa7f4",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "PromQueen",
+        "effectSourceHash": "b8f1e932d5af8c2e988351c20be2f57fbb07c3d4fa1062b3afb8d174cdfaa7f4",
+        "entries": []
+      }
     },
     {
       "id": 1343,
@@ -223713,7 +225169,14 @@
       "effectSourceHash": "5f3ac6f271925d7e87a12dad85c9d0259996cebbef4240f5a6a2fd039273f518",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Quest_Sneakerhead",
+        "effectSourceHash": "5f3ac6f271925d7e87a12dad85c9d0259996cebbef4240f5a6a2fd039273f518",
+        "entries": []
+      }
     },
     {
       "id": 2141,
@@ -223738,7 +225201,14 @@
       "tags": [
         8,
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Quest_UltraHydra",
+        "effectSourceHash": "fc143dbea9dca847f5f0153ba9da31e856706ae1186bd76191b478bd2b3921e0",
+        "entries": []
+      }
     },
     {
       "id": 3075,
@@ -223767,7 +225237,14 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Recoil",
+        "effectSourceHash": "429503ce5e246487579a67801904d3c9ae367c1fbb65afdfaad834021d4560d9",
+        "entries": []
+      }
     },
     {
       "id": 3039,
@@ -223791,7 +225268,14 @@
       "effectSourceHash": "90c343f8bc90f9ae3fa0fa640d6f1b9f680a02c149204ac8565b2877120554ef",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Salvation",
+        "effectSourceHash": "90c343f8bc90f9ae3fa0fa640d6f1b9f680a02c149204ac8565b2877120554ef",
+        "entries": []
+      }
     },
     {
       "id": 3129,
@@ -223819,7 +225303,14 @@
       "tags": [
         1,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SapMagic",
+        "effectSourceHash": "7ffa0e4c3de7150431153b9265bd060d2ce78f9c79f66a21275bf7a85954cc99",
+        "entries": []
+      }
     },
     {
       "id": 2034,
@@ -223843,7 +225334,14 @@
       "effectSourceHash": "c9f424dea78e67d11d72d9bd7e733e7d13ab8ee4b0ccf6383453037c4023b4b9",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SharkTempest",
+        "effectSourceHash": "c9f424dea78e67d11d72d9bd7e733e7d13ab8ee4b0ccf6383453037c4023b4b9",
+        "entries": []
+      }
     },
     {
       "id": 1373,
@@ -223872,7 +225370,14 @@
       "tags": [
         5,
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ShrinkEngine",
+        "effectSourceHash": "cc747d71cae1b83ecf1af7fcd85be97b1787f4c79c4a36b42c2b07fd508331c9",
+        "entries": []
+      }
     },
     {
       "id": 2109,
@@ -223901,7 +225406,14 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SnapBack",
+        "effectSourceHash": "97753eaf5c94d996d30c2253598ebc519d3550ac874c41780ca0df1779451db8",
+        "entries": []
+      }
     },
     {
       "id": 1334,
@@ -223927,7 +225439,14 @@
       "effectSourceHash": "5b9e073cc5cf8a7598cd42d7b7fffe997c7626fdd56e2ebf69598b18669f4d14",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SnowballUpgrade",
+        "effectSourceHash": "5b9e073cc5cf8a7598cd42d7b7fffe997c7626fdd56e2ebf69598b18669f4d14",
+        "entries": []
+      }
     },
     {
       "id": 2080,
@@ -223953,7 +225472,14 @@
       "effectSourceHash": "7075ebaa14fb86b297871cf09df55b5c8e786c54910616fe2d912451e898801d",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Snowbomb",
+        "effectSourceHash": "7075ebaa14fb86b297871cf09df55b5c8e786c54910616fe2d912451e898801d",
+        "entries": []
+      }
     },
     {
       "id": 1420,
@@ -223978,7 +225504,14 @@
       "tags": [
         5,
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Sonata",
+        "effectSourceHash": "db7ec46599de854ce0cc08b84ff9d6d0fcc07761c5ea0082d8334fb8241438fe",
+        "entries": []
+      }
     },
     {
       "id": 1375,
@@ -224004,7 +225537,28 @@
       "effectSourceHash": "11cb252b3e35b8a075fd5469960e9757cb33d0794f4f5c9778d0b7fa804d2f8a",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SoulEater",
+        "effectSourceHash": "11cb252b3e35b8a075fd5469960e9757cb33d0794f4f5c9778d0b7fa804d2f8a",
+        "entries": [
+          {
+            "token": "HealthGained",
+            "calculationKey": "{aef2f649}",
+            "kind": "linear-buff-counter",
+            "constant": 0,
+            "terms": [
+              {
+                "buff": "{14cf4ae0}",
+                "coefficient": 20
+              }
+            ],
+            "calculationHash": "41c436633fa4f2ba"
+          }
+        ]
+      }
     },
     {
       "id": 3025,
@@ -224031,7 +225585,14 @@
       "tags": [
         4,
         0
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Sound_Barrier",
+        "effectSourceHash": "b428420bd9c86a9fc872c36647f2d4ab37f2db1e2e56fd20e83e46b7eea1e0cc",
+        "entries": []
+      }
     },
     {
       "id": 2116,
@@ -224061,7 +225622,14 @@
       "tags": [
         1,
         8
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SpecializedEmpowerment",
+        "effectSourceHash": "399b13d1a1c9a60ab396693aa0fa2bbb249ccc20bacc743f7a2035b52c62bba1",
+        "entries": []
+      }
     },
     {
       "id": 2054,
@@ -224090,7 +225658,14 @@
       "effectSourceHash": "86617baa7211574492e602216add380b2d48cf87c63aead32180b584b7fdb654",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SpellVolley",
+        "effectSourceHash": "86617baa7211574492e602216add380b2d48cf87c63aead32180b584b7fdb654",
+        "entries": []
+      }
     },
     {
       "id": 2115,
@@ -224116,7 +225691,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "689e610729cfcd657a5c7a5c4a8035e08d1c480bf4851a7f7e314a080cbef6ea",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SquishySlappyGrab",
+        "effectSourceHash": "689e610729cfcd657a5c7a5c4a8035e08d1c480bf4851a7f7e314a080cbef6ea",
+        "entries": []
+      }
     },
     {
       "id": 3131,
@@ -224140,7 +225722,14 @@
       "effectSourceHash": "0977cdecb68235a884ba3c865ddaad635c4e696d3f606b32dab4a98781e72471",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "StillHere",
+        "effectSourceHash": "0977cdecb68235a884ba3c865ddaad635c4e696d3f606b32dab4a98781e72471",
+        "entries": []
+      }
     },
     {
       "id": 2108,
@@ -224170,7 +225759,14 @@
       "tags": [
         0,
         8
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SupportMain",
+        "effectSourceHash": "e68979bacc86a8b167c762ca9e0f2ce3af8e0b85e8534188bdbb833133fea766",
+        "entries": []
+      }
     },
     {
       "id": 2134,
@@ -224194,7 +225790,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "55101b147befc1ab3268cd873a8111a02c0ce2f994141ce13eeb8a2af2d9d557",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SurgeField",
+        "effectSourceHash": "55101b147befc1ab3268cd873a8111a02c0ce2f994141ce13eeb8a2af2d9d557",
+        "entries": []
+      }
     },
     {
       "id": 1315,
@@ -224218,7 +225821,14 @@
       "effectSourceHash": "2b2bff5bba65e1b93a6ab1d772d730b524d46d558c3e62c558ca6182d7aabf67",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "SwiftAndSafe",
+        "effectSourceHash": "2b2bff5bba65e1b93a6ab1d772d730b524d46d558c3e62c558ca6182d7aabf67",
+        "entries": []
+      }
     },
     {
       "id": 3116,
@@ -224249,7 +225859,14 @@
       "effectSourceHash": "e055a0dbaec429bd246e071f75804c49fe9fbbe90516d0c3aadd4fd197362cdd",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "TakeemDownDownDown",
+        "effectSourceHash": "e055a0dbaec429bd246e071f75804c49fe9fbbe90516d0c3aadd4fd197362cdd",
+        "entries": []
+      }
     },
     {
       "id": 2129,
@@ -224277,7 +225894,14 @@
       },
       "tooltipParserRevision": 5,
       "effectSourceHash": "c4ca372e6d3ec693d0f70d4e171d3fc83c98d463d43d05717019061d5db25f1f",
-      "tags": []
+      "tags": [],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Terraind",
+        "effectSourceHash": "c4ca372e6d3ec693d0f70d4e171d3fc83c98d463d43d05717019061d5db25f1f",
+        "entries": []
+      }
     },
     {
       "id": 3078,
@@ -224306,7 +225930,14 @@
       "tags": [
         1,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "TheBoomAndTheBass",
+        "effectSourceHash": "741e4b55a342885f86d9e42b8a340ae74baebb0605566adbc4b352d807e87bdd",
+        "entries": []
+      }
     },
     {
       "id": 3016,
@@ -224334,7 +225965,14 @@
       "effectSourceHash": "f5c4a2d99cbbbb8359fe8e67a56ffb00ebcd6300a6f711735de72e67c1efae04",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "ThirdTimesTheHarm",
+        "effectSourceHash": "f5c4a2d99cbbbb8359fe8e67a56ffb00ebcd6300a6f711735de72e67c1efae04",
+        "entries": []
+      }
     },
     {
       "id": 3058,
@@ -224360,7 +225998,14 @@
       "effectSourceHash": "c620cd59bbfbd2faaf5a834b03002128a17702a231d0706c3d2a300c22edcbc9",
       "tags": [
         4
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "TickleMonster",
+        "effectSourceHash": "c620cd59bbfbd2faaf5a834b03002128a17702a231d0706c3d2a300c22edcbc9",
+        "entries": []
+      }
     },
     {
       "id": 2076,
@@ -224390,7 +226035,14 @@
       "effectSourceHash": "25eca1086ca2fabe70ecad5b02d6f650c58da5e54b1019a38cb0cc054e8f3d13",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "TitansPulse",
+        "effectSourceHash": "25eca1086ca2fabe70ecad5b02d6f650c58da5e54b1019a38cb0cc054e8f3d13",
+        "entries": []
+      }
     },
     {
       "id": 3079,
@@ -224418,7 +226070,14 @@
       "effectSourceHash": "4783b62f402d359fba8809c130bced2e6b26cafba0c06d7f1cef830cf859ba68",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Totentanz",
+        "effectSourceHash": "4783b62f402d359fba8809c130bced2e6b26cafba0c06d7f1cef830cf859ba68",
+        "entries": []
+      }
     },
     {
       "id": 2136,
@@ -224448,7 +226107,14 @@
       "effectSourceHash": "98c2857ac7cf734926cdf42ad5efec627b4606c37e5fea5f943493d07b6bcc8f",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "TrustyWeapon",
+        "effectSourceHash": "98c2857ac7cf734926cdf42ad5efec627b4606c37e5fea5f943493d07b6bcc8f",
+        "entries": []
+      }
     },
     {
       "id": 1415,
@@ -224476,7 +226142,14 @@
       "effectSourceHash": "08a810a04f03f99906355a75c6b5279b9c9c42b8b19a8613d2209267b04d7dc7",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Twinfire",
+        "effectSourceHash": "08a810a04f03f99906355a75c6b5279b9c9c42b8b19a8613d2209267b04d7dc7",
+        "entries": []
+      }
     },
     {
       "id": 1349,
@@ -224500,7 +226173,14 @@
       "effectSourceHash": "744ddfdfd5258d8ea10599ce840c4c8a8df5c21d20ae44a875fa5ce3455985c2",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "UltimateAwakening",
+        "effectSourceHash": "744ddfdfd5258d8ea10599ce840c4c8a8df5c21d20ae44a875fa5ce3455985c2",
+        "entries": []
+      }
     },
     {
       "id": 3055,
@@ -224524,7 +226204,14 @@
       "effectSourceHash": "22defb1ca24b0ae7418445809c95727db001c1e2d7665b75559b6dfb61e4a86b",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "UltimateRecursion",
+        "effectSourceHash": "22defb1ca24b0ae7418445809c95727db001c1e2d7665b75559b6dfb61e4a86b",
+        "entries": []
+      }
     },
     {
       "id": 2157,
@@ -224548,7 +226235,14 @@
       "effectSourceHash": "1d9a9eb5bd989b42046d53891a8099d18189ddb142677db9ed6042c6f5df2ae2",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Upgrade_DeathDance",
+        "effectSourceHash": "1d9a9eb5bd989b42046d53891a8099d18189ddb142677db9ed6042c6f5df2ae2",
+        "entries": []
+      }
     },
     {
       "id": 2140,
@@ -224572,7 +226266,14 @@
       "effectSourceHash": "ef58c91284125aa4df6c2c7b9fa085500514f4fd0b5b4d3a0b9643eec9ac697a",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Upgrade_Ravenous",
+        "effectSourceHash": "ef58c91284125aa4df6c2c7b9fa085500514f4fd0b5b4d3a0b9643eec9ac697a",
+        "entries": []
+      }
     },
     {
       "id": 3150,
@@ -224596,7 +226297,14 @@
       "effectSourceHash": "0881a0bbdc031e93bee4f14e9fe36d6a5ea9e7fbd47eaa99520fe412af9314fb",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Upgrade_Stormsurge",
+        "effectSourceHash": "0881a0bbdc031e93bee4f14e9fe36d6a5ea9e7fbd47eaa99520fe412af9314fb",
+        "entries": []
+      }
     },
     {
       "id": 2143,
@@ -224620,7 +226328,14 @@
       "effectSourceHash": "bec4fe84d3ce03bcbae4f20f08dd0e7b2319b0ba9caa976ce3bcede8138ad66a",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Upgrade_SunderedSky",
+        "effectSourceHash": "bec4fe84d3ce03bcbae4f20f08dd0e7b2319b0ba9caa976ce3bcede8138ad66a",
+        "entries": []
+      }
     },
     {
       "id": 1379,
@@ -224644,7 +226359,14 @@
       "effectSourceHash": "b43671adab1c721256caeaeb319cf2c8cfff9ead159117b25cb7839d8d50f7c6",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Upgrade_SwordOfBlossom",
+        "effectSourceHash": "b43671adab1c721256caeaeb319cf2c8cfff9ead159117b25cb7839d8d50f7c6",
+        "entries": []
+      }
     },
     {
       "id": 1346,
@@ -224669,7 +226391,14 @@
       "tags": [
         3,
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "Vampirism",
+        "effectSourceHash": "a859c5bc5ed6b587cdb30e5ed560a414ce9f6a91bb75dc306c17a01a9c2ed467",
+        "entries": []
+      }
     },
     {
       "id": 1034,
@@ -224693,7 +226422,14 @@
       "effectSourceHash": "4b71ea1a49978d10cd2a85bd340e6164270b74e4926e09731baa1177c62c2df8",
       "tags": [
         5
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "VeilOfWarding",
+        "effectSourceHash": "4b71ea1a49978d10cd2a85bd340e6164270b74e4926e09731baa1177c62c2df8",
+        "entries": []
+      }
     },
     {
       "id": 2097,
@@ -224723,7 +226459,14 @@
       "effectSourceHash": "c06d38fca97f1860a6591dd5f47f8e42d633a1e53dafaedbed7bdcd447ca78dc",
       "tags": [
         1
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "VoidDash",
+        "effectSourceHash": "c06d38fca97f1860a6591dd5f47f8e42d633a1e53dafaedbed7bdcd447ca78dc",
+        "entries": []
+      }
     },
     {
       "id": 2138,
@@ -224752,7 +226495,14 @@
       "effectSourceHash": "3afbaccd49a2c3f402a177b79b44187233743278c87adff295cc1e747d5a987e",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "WardingWeapon",
+        "effectSourceHash": "3afbaccd49a2c3f402a177b79b44187233743278c87adff295cc1e747d5a987e",
+        "entries": []
+      }
     },
     {
       "id": 2132,
@@ -224776,7 +226526,14 @@
       "effectSourceHash": "eab4120de3f88a55da20b62b522b304f09ba9226738d6835cf34705d0a16bd5d",
       "tags": [
         3
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "WarlockJuicebox",
+        "effectSourceHash": "eab4120de3f88a55da20b62b522b304f09ba9226738d6835cf34705d0a16bd5d",
+        "entries": []
+      }
     },
     {
       "id": 3081,
@@ -224802,7 +226559,14 @@
       "effectSourceHash": "f77b42e9971fa51ea01bbe15d45cd2763ba55c0ee21c966e57bbd19203a3a066",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "WeaponOfDestiny",
+        "effectSourceHash": "f77b42e9971fa51ea01bbe15d45cd2763ba55c0ee21c966e57bbd19203a3a066",
+        "entries": []
+      }
     },
     {
       "id": 1386,
@@ -224826,7 +226590,14 @@
       "effectSourceHash": "52ed340eb95783bf7e8640a2e43f377ac75b008f42e9fec889ca4fa53c677aec",
       "tags": [
         2
-      ]
+      ],
+      "tooltipCounterBasis": {
+        "revision": 1,
+        "mode": "Kiwi",
+        "augmentKey": "YouSpinMeRightRound",
+        "effectSourceHash": "52ed340eb95783bf7e8640a2e43f377ac75b008f42e9fec889ca4fa53c677aec",
+        "entries": []
+      }
     }
   ]
 }
