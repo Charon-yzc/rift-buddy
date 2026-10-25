@@ -1008,7 +1008,7 @@ async function boot(){
  guard('open-link',async url=>{
   const parsed=new URL(url);const allowed=['developer.riotgames.com','www.leagueoflegends.com','lol.qq.com','101.qq.com','www.communitydragon.org','raw.communitydragon.org','ddragon.leagueoflegends.com','game.gtimg.cn','op.gg','www.reddit.com','reddit.com','www.mobafire.com','mobafire.com','botdiff.lol','github.com','gitee.com'];
   const catalogSources=[...data.catalog.duos,...data.catalog.trios].flatMap(c=>c.sources||[]).map(s=>s.url);
-  const communitySource=['www.bilibili.com','deeparam.com'].includes(parsed.hostname)&&hexCommunitySourceURLs(data).includes(url);
+  const communitySource=['www.bilibili.com','deeparam.com','expcarry.com'].includes(parsed.hostname)&&hexCommunitySourceURLs(data).includes(url);
   if(!catalogCore.safeSourceURL(url)||!allowed.includes(parsed.hostname)&&!catalogSources.includes(url)&&!communitySource)throw new Error('不支持的链接');
   if(['github.com','gitee.com'].includes(parsed.hostname)&&!isReleaseNotesUrl(url)&&!catalogSources.includes(url))throw new Error('不支持的链接');await shell.openExternal(parsed.href);return true;
  });
