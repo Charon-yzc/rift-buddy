@@ -968,13 +968,23 @@ async function boot(){
    catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'符文未完成')}});throw error;}
   finally{applyingRunes=false;}
  });
+ const {createHexSelectionQueue}=await import('../services/hex-selection-queue.mjs');
+ const hexSelections=createHexSelectionQueue(async(value,control)=>{
+  const service=await import('../services/client-preparation.mjs');
+  const result=await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath},{isCurrent:control.isCurrent});
+  return result;
+ });
  guard('prepare-selection',async value=>{
+  if(value?.mode==='hex'&&value?.preselectOnly===true){
+   const service=await import('../services/client-preparation.mjs');
+   return hexSelections(service.validateClientPreparation(value,data));
+  }
   if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，请稍后');
   applyingRunes=true;importingItemSet=true;
   let operation;
   try{
    const service=await import('../services/client-preparation.mjs'),selection=value?.selection===undefined?null:guideCore.validateGuideSelection(value.selection);value=service.validateClientPreparation(value,data);
-   if(selection&&(selection.id!==value.champion||selection.role!==value.role||selection.mode!==value.mode))throw Error('准备配置与英雄或位置不一致，请重新点击');
+   if(selection&&value.mode!=='hex'&&(selection.id!==value.champion||selection.role!==value.role||selection.mode!==value.mode))throw Error('准备配置与英雄或位置不一致，请重新点击');
    operation=beginPreparation('selection',{value,selection,context:value.context});
    const written=helper.active()?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId});
    let event=finishPreparation(operation,{result:written});

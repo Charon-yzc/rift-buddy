@@ -12,6 +12,13 @@ const slots=createSlots().map(s=>({...s,champion:({jungle:'Ivern',bottom:'Rengar
 const strategy=captureRoomStrategy(slots,data),hero=data.champions.find(c=>c.id==='Rengar');
 const selection={id:hero.id,role:'bottom',mode:'rift',...creativeComboContext(creativeMemberCombo(strategy,hero.id,'bottom'))};
 const plan={selection,build:getBuild(hero,'bottom',data,selection)},client={connected:true,phase:'ChampSelect',mode:{id:'rift'},session:{gameId:'777',localPlayerCellId:0,myTeam:[{cellId:0,championId:0}],actions:[[{type:'pick',actorCellId:0,completed:false}]]}};
+test('hex hover-only selection produces a hover-only plan without runes or items',()=>{
+ const hero=data.champions.find(c=>c.id==='Ashe');
+ const hexPlan={selection:{id:'Ashe',role:'bottom',mode:'hex',preselectOnly:true},build:getBuild(hero,'bottom',data,{id:'Ashe',role:'bottom',mode:'hex'})};
+ const prepared=clientPreparationPlan(data,hexPlan);
+ assert.ok(prepared.hexHover);assert.equal(prepared.value.mode,'hex');assert.equal(prepared.value.preselectOnly,true);
+ assert.ok(!('page' in prepared.value));assert.ok(!('itemSet' in prepared.value));
+});
 test('one-click payload uses the concrete selected combination and keeps explicit personal edits',()=>{
  assert(strategy);assert(plan.build.combo);const prepared=clientPreparationPlan(data,plan);
  assert.deepEqual(prepared.value.page.selectedPerkIds,plan.build.runePage.selectedPerkIds);assert.deepEqual(prepared.value.summoners,plan.build.summoners);

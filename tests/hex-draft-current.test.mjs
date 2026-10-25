@@ -38,7 +38,7 @@ test('current availability still limits public bench and same priority retains c
 
 test('unselected bench heroes expose their own conditions in a separate collapsed disclosure',()=>{
  const c=client(undefined,['Naafiri','Hecarim']),m=hexDraft({data,client:c}),row=m.candidates.find(r=>r.hero.id==='Naafiri');assert(row.added.includes('补承伤手段'));assert.match(row.evidence.frontline,/参与击杀.*重施.*第二次施放才获盾/);assert(!m.evidence.some(p=>p.hero.id==='Naafiri'));
- const html=hexDraftView({data,client:c}),article=[...html.matchAll(/<article class="hex-party-lineup"[\s\S]*?<\/article>/g)].map(r=>r[0]).find(r=>r.includes('data-id="Naafiri"'));assert(article);assert.match(article,/参与击杀.*第二次施放才获盾/);assert.match(article,/<details class="hex-party-traits">/);assert.doesNotMatch(article,/<details[^>]*\sopen(?:\s|>)/);assert.match(article,/data-action="hex-reference-preview"[^>]+data-id="Naafiri"/);
+ const html=hexDraftView({data,client:c}),article=[...html.matchAll(/<article class="hex-party-lineup"[\s\S]*?<\/article>/g)].map(r=>r[0]).find(r=>r.includes('data-id="Naafiri"'));assert(article);assert.match(article,/参与击杀.*第二次施放才获盾/);assert.match(article,/<details class="hex-party-traits">/);assert.doesNotMatch(article,/<details[^>]*\sopen(?:\s|>)/);assert.match(article,/data-action="hex-quick-pick"[^>]+data-id="Naafiri"/);
 });
 
 test('draft snapshot contains independently scoped source bindings and five-feature three-state evidence for every reviewed hero',()=>{
