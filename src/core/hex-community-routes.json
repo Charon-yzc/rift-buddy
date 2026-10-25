@@ -2555,6 +2555,102 @@
           }
         }
       }
+    },
+    {
+      "hero": "MissFortune",
+      "patch": "16.21",
+      "augment": 1092,
+      "optional": [
+        2127
+      ],
+      "excludedAugments": [
+        1206
+      ],
+      "requiresUltimate": false,
+      "title": "易损灼烧消耗",
+      "summary": "保留法强，用E减速覆盖目标，让持续伤害与装备灼烧发挥作用。",
+      "play": [
+        "先比较双方阵容和队伍伤害类型；用E减速覆盖目标，法强能提高减速，但不能保证敌人停满区域。",
+        "有安全引导位置才用R封路；易损提供装备和持续伤害的暴击机会，不保证每跳暴击。"
+      ],
+      "basicPlay": [
+        "已选回归基本功，不能施放R；以E减速与Q、普攻拉扯，仍需伤害型技能命中才触发相应装备灼烧。",
+        "不沿用弹幕引导计划；队伍魔法伤害已多或无法覆盖E时，重新比较物理输出和生存方向。"
+      ],
+      "caution": "远程消耗仍会被突进和魔抗限制；未给出作者完整六件或加点，不把个例当作胜率或固定最优出装。",
+      "coreItems": [
+        6653,
+        2503
+      ],
+      "gear": [
+        [
+          "作者首件的收尾取舍",
+          [
+            6676
+          ],
+          "作者先出收集者；自身伤害对低于5%生命的英雄处决，不保证灼烧抢击杀或先出经济最优。"
+        ],
+        [
+          "需要持续魔法伤害",
+          [
+            6653
+          ],
+          "作者后续兰德里；伤害型技能灼烧3秒，每秒2%最大生命魔伤。与英雄交战每秒增伤2%，至多6%。"
+        ],
+        [
+          "法力与多目标灼烧",
+          [
+            2503
+          ],
+          "作者后续黯炎火炬；伤害型技能灼烧3秒，每秒20+2%法强魔伤；受邪焰影响的每个英雄提供4%法强。"
+        ]
+      ],
+      "communitySource": {
+        "medium": "text",
+        "author": "SomebodyNeedsTherapy",
+        "url": "https://www.reddit.com/r/arammayhem/comments/1xekno8/comment/19rm0jlrmidnl/",
+        "publishedAt": "2026-10-25T02:17:17Z",
+        "sourcePatch": null,
+        "evidenceSections": [
+          "作者自述Mayhem女枪先收集者，再按强化和双方阵容转兰德里、黯炎火炬；列举易损、大师铸就、魔法转物理等分支。",
+          "作者另述ADC/暴击分支但没有具名装备；本方向仅改编保留法强的灼烧分支，不拼接其他评论者配装。"
+        ],
+        "adaptation": "按16.21当前技能、强化和装备改编；原文未标补丁号，确切发表时间来自原评论created_utc，edited为false。保留作者三件具名装备与条件分支，不继承“一到两屏”的射程或“几乎总是更好”的判断。魔法转物理会改变法强和E减速假设，已选时本方向自动撤回；不否认其他魔伤分支可能。易损和大师铸就是可选比较，不要求同局同时获得。未核作者加点、鞋子、固定六件或当前胜率；不将另一作者的录像归在此来源下。"
+      },
+      "itemReview": {
+        "schema": 1,
+        "algorithm": "hex-item-semantic-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "items": {
+          "2503": "0c136199a9e6fbf3",
+          "6653": "9fb9534b546d1626",
+          "6676": "20a9c2a3ea1c7555"
+        }
+      },
+      "augmentReview": {
+        "schema": 1,
+        "algorithm": "hex-effect-detail-v1",
+        "patch": "16.21",
+        "reviewedAt": "2026-10-25",
+        "effects": {
+          "1092": {
+            "fingerprint": "d008e882c4f56b77",
+            "requiresUltimate": false,
+            "coverage": "dynamic-counters"
+          },
+          "1206": {
+            "fingerprint": "d861b53cc39eb046",
+            "requiresUltimate": false,
+            "coverage": "dynamic-counters"
+          },
+          "2127": {
+            "fingerprint": "109fba3fe4d68196",
+            "requiresUltimate": false,
+            "coverage": "dynamic-counters"
+          }
+        }
+      }
     }
   ],
   "championReview": {
@@ -2596,7 +2692,8 @@
       "Seraphine": "18e4440868d92eb5",
       "TwistedFate": "4b3a9807b94dcc47",
       "AurelionSol": "0feb05c65d40708e",
-      "MasterYi": "035280b4b46c8b34"
+      "MasterYi": "035280b4b46c8b34",
+      "MissFortune": "10b496d2ce7c344d"
     },
     "sourceAnchors": {
       "Lillia": {
@@ -3460,6 +3557,30 @@
           "dataDragon": {
             "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
             "fingerprint": "962193dba45a1a53"
+          }
+        }
+      },
+      "MissFortune": {
+        "schema": 1,
+        "kind": "explicit-review",
+        "reviewCoverage": "summary-v1",
+        "legacyFingerprint": "10b496d2ce7c344d",
+        "observedAt": "2026-10-23T02:03:51.542Z",
+        "input": {
+          "schema": 1,
+          "normalizer": 1,
+          "champion": "MissFortune",
+          "patch": "16.21",
+          "version": "16.21.1",
+          "locale": "zh_CN",
+          "character": {
+            "algorithm": "canonical-json-sha256-v1",
+            "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+            "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+          },
+          "dataDragon": {
+            "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+            "fingerprint": "45c6c8d43f1a5c2f"
           }
         }
       }

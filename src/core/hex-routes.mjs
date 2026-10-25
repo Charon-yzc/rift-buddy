@@ -1,5 +1,5 @@
 import {isCurrentHexData} from './hex-data-current.mjs';
-import {communityHexAugmentFingerprint,validCommunityAugmentReview} from './community-augment-review.mjs';
+import {communityHexAugmentFingerprint,validCommunityAugmentReview,validCommunityExclusions} from './community-augment-review.mjs';
 import itemsReview from './hex-route-items.json' with {type:'json'};
 import {hexRouteItemFingerprint,communityHexItemFingerprint,validCommunityItemReview} from './community-item-review.mjs';
 export {hexRouteItemFingerprint} from './community-item-review.mjs';
@@ -84,8 +84,12 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   const scopedItems=community.routes.includes(route)&&route.itemReview!==undefined;
   if(scopedItems&&!validCommunityItemReview(route.itemReview,route,data.patch,community.reviewedAt))return [];
   const scopedEffects=community.routes.includes(route)&&route.augmentReview!==undefined;
+  if(!validCommunityExclusions(route)||route.excludedAugments!==undefined&&!scopedEffects)return [];
   if(scopedEffects&&!validCommunityAugmentReview(route.augmentReview,route,data.patch,community.reviewedAt))return [];
   const effectCurrent=a=>scopedEffects?!!route.augmentReview.effects[a?.id]&&route.augmentReview.effects[a.id].fingerprint===communityHexAugmentFingerprint(a,data,route.augmentReview.effects[a.id].coverage):reviewedHexMechanic(a,data.patch);
+  // Offers are not selections. Review the negative dependency as carefully as
+  // the core, but never display it as a compatible augment or gear requirement.
+  if((route.excludedAugments||[]).some(id=>owned.includes(id)||!effectCurrent(data.augments.find(a=>a.id===id))))return [];
   const needsUltimate=a=>hexUltimateRequirement(a,data.patch)||(scopedEffects&&route.augmentReview.effects[a?.id]?.requiresUltimate);
   const reviewedItems=scopedItems?route.itemReview.items:itemReview.items,itemFingerprint=scopedItems?communityHexItemFingerprint:hexRouteItemFingerprint;
   const augment=data.augments.find(a=>a.id===route.augment);

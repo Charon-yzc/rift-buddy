@@ -13,8 +13,13 @@ export function communityHexAugmentFingerprint(augment,data,coverage='complete')
  if(coverage==='buff-counter'&&(!validAugmentCounterBasis(augment)||augment.tooltipCounterBasis.entries.length!==detail.unresolved.length||!detail.unresolved.every(key=>augment.tooltipCounterBasis.entries.some(entry=>entry.token===key))))return null;
  return fingerprint({coverage,id:augment.id,key:augment.key,description:augment.description,sourceKey:augment.sourceKey,tooltip:{status:detail.status,description:detail.description,unresolved:detail.unresolved,sourceKey:detail.sourceKey},parserRevision:augment.tooltipParserRevision,effectSourceHash:augment.effectSourceHash,...(coverage==='buff-counter'?{counterBasis:augment.tooltipCounterBasis}:{})});
 }
+export function validCommunityExclusions(route){
+ const ids=route.excludedAugments;
+ return ids===undefined||Array.isArray(ids)&&ids.length>0&&ids.length<=20&&new Set(ids).size===ids.length&&ids.every(id=>Number.isSafeInteger(id)&&id>0&&id!==route.augment&&Array.isArray(route.optional)&&!route.optional.includes(id));
+}
 export function validCommunityAugmentReview(review,route,patch,reviewedAt){
  if(!review||typeof review!=='object'||Array.isArray(review)||Object.keys(review).sort().join('|')!=='algorithm|effects|patch|reviewedAt|schema'||review.schema!==1||review.algorithm!=='hex-effect-detail-v1'||review.patch!==patch||route.patch!==patch||typeof review.reviewedAt!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(review.reviewedAt)||!Number.isFinite(Date.parse(review.reviewedAt))||new Date(review.reviewedAt).toISOString().slice(0,10)!==review.reviewedAt||review.reviewedAt>reviewedAt||!Array.isArray(route.optional)||typeof route.requiresUltimate!=='boolean'||!review.effects||typeof review.effects!=='object'||Array.isArray(review.effects))return false;
- const ids=new Set([route.augment,...route.optional]),keys=Object.keys(review.effects);
+ if(!validCommunityExclusions(route))return false;
+ const ids=new Set([route.augment,...route.optional,...(route.excludedAugments||[])]),keys=Object.keys(review.effects);
  return ids.size>0&&ids.size<=21&&keys.length===ids.size&&keys.every(key=>{const value=review.effects[key];return /^[1-9]\d*$/.test(key)&&Number.isSafeInteger(Number(key))&&ids.has(Number(key))&&value&&typeof value==='object'&&!Array.isArray(value)&&['fingerprint|requiresUltimate','coverage|fingerprint|requiresUltimate'].includes(Object.keys(value).sort().join('|'))&&(value.coverage===undefined||['complete','dynamic-counters','buff-counter'].includes(value.coverage))&&typeof value.fingerprint==='string'&&/^[a-f0-9]{16}$/.test(value.fingerprint)&&typeof value.requiresUltimate==='boolean';})&&review.effects[route.augment].requiresUltimate===route.requiresUltimate;
 }
