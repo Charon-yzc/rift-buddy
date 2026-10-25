@@ -49,4 +49,3 @@ test('scoped concise core text retains critical values inside native selected/no
  for(const brief of ['',null,{},'x'.repeat(81),' text','text\n','<b>40%</b>']){const d=data(),r=d.communityHexRoutes.routes.find(r=>r.hero==='Gnar');r.coreBrief=brief;assert.equal(find(d,'Gnar'),undefined);assert(find(d,'Kalista'));assert.throws(()=>validateCommunityData({schema:1,kind:'community-snapshot',patch:base.patch,version:catalog.version,reviewedAt:routes.reviewedAt,catalog,hexRoutes:d.communityHexRoutes},d),/核心简述/);}
  const d=data();delete d.communityHexRoutes.routes.find(r=>r.hero==='Gnar').augmentReview;assert.equal(find(d,'Gnar'),undefined);
 });
-
