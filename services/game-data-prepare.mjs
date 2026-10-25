@@ -52,6 +52,7 @@ export async function createGameDataPreparer({bundleRoot,localRoot,catalogSummar
   const cached=restore?{overrides:await images.loadImageOverrides(imageRoot,next),saved:0,failed:0}:await images.cacheMissingImages({root:imageRoot,bundleRoot:path.join(bundleRoot,'images'),data:next,bundledKeys,progress});
   next.imageOverrides={...Object.fromEntries(entries.filter(([key])=>!bundledKeys.has(key))),...cached.overrides};
   const summary=catalogSummary(next);next.catalog=validateCatalog(summary.catalog);next.catalogInfo=summary.info;
+  next.communityHexRoutes=current.patch===next.patch?current.communityHexRoutes||null:null;
   return {data:next,imageCache:{saved:cached.saved,failed:cached.failed}};
  };
 }

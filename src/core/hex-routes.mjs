@@ -1,6 +1,8 @@
 import {isCurrentHexData} from './hex-data-current.mjs';
+import {communityHexAugmentFingerprint,validCommunityAugmentReview,validCommunityExclusions} from './community-augment-review.mjs';
 import itemsReview from './hex-route-items.json' with {type:'json'};
-import {fingerprint} from './content-fingerprint.mjs';
+import {hexRouteItemFingerprint,communityHexItemFingerprint,validCommunityItemReview} from './community-item-review.mjs';
+export {hexRouteItemFingerprint} from './community-item-review.mjs';
 import {currentHexReview,hexChampionReview} from './hex-review.mjs';
 import {reviewedHexMechanic,hexUltimateRequirement} from './hex-mechanics.mjs';
 import {hexCatalogDisabled} from './hex-catalog.mjs';
@@ -10,18 +12,27 @@ import {communitySourceLabel,communitySourceMedium} from './community-source.mjs
 
 const augmentComplements={1118:'提供25%暴击几率；治疗护盾实际暴击时多40%效果。',1141:'用于友军的治疗和护盾增强。',
  1047:'获得50%暴击几率；按当前暴击率重新比较装备。',1077:'暴击伤害的12%治疗自身，获得25%暴击几率。',1080:'以暴击几率进行会心防御，触发几率最多50%；获得25%暴击几率。',
+ 1030:'获得相当于30%法术强度的技能急速；不是固定大招冷却。',3132:'参与击杀叠加属性，同时降低移动速度；阵亡损失一半层数。',1205:'额外攻击力转为法术强度；获得15%法术强度，不改变技能的伤害类型。',
+ 1019:'位移类英雄技能获得175急速；不同时缩短全部技能或召唤师技能。',1187:'闪现引发伤害与减速爆炸；阵亡时重置，不补未解析伤害值。',
+ 1348:'获得第二个闪现和70召唤师技能急速；不推定两个闪现各有三层充能。',1347:'获得同时施放屏障与幽灵疾步的召唤师技能；不按两次W触发计算。',
  1022:'获得60%攻击速度。',1328:'普攻暴击叠加攻速，获得25%暴击几率。',1011:'施放终极技能后短暂免伤；仍须安全站位。',1088:'施放终极技能后刷新；有75秒自身冷却，阵亡可重置。',1112:'施放终极技能后免控3秒；8秒自身冷却。',1194:'终极技能伤害可触发变形。',
  1029:'技能命中可施加攻击特效；同一目标每1秒一次。',1058:'实际攻击特效使技能冷却缩短1.25秒；没有命中就没有收益。',
  1996:'获得250金币；强化已有咒刃的伤害与自疗，先具备咒刃装备。',
  1004:'强化基础技能，但禁用终极技能；接受不能使用R再考虑。',1214:'旋转类基础技能30急速、增伤30%；不覆盖其他技能。',
  1305:'获得50移动速度和50%减速抗性；不解除眩晕或禁锢。',2132:'获得（10＋0.035×法术强度）%全能吸血；不保证伤害全部转为治疗。',
  1311:'法力消耗翻倍；技能增效取决于最大法力值，缺蓝时无法持续收益。',1056:'增加最大生命值，数额为法力值的一半；没有直接减冷却。',
+ 1018:'定身或缚地敌方英雄后获得护盾；不是每次伤害都触发。',1375:'定身敌方英雄增加最大生命值；如果它是你的第二个强化，另有额外生命奖励。',
+ 1323:'定身或缚地敌方英雄后延迟造成范围魔法伤害；每次施法与同一目标都有触发限制。',1318:'具备中娅时，原文冷却45秒；相应凝滞期间可移动并获50%移速，其他急速另核。',
  3004:'替换一个召唤师技能为飞弹；命中英雄、建筑或墙体后爆炸，未取得时不套用飞弹玩法。',3116:'普攻和技能命中英雄叠层；满层消耗后按伤害回血，不是每次命中都治疗。',
  3131:'损失生命值时获得攻速与生命偷取；仍须命中，不为增益刻意压低血量。',3078:'施法后下一次实际攻击加速；攻击后移速持续衰减。',1068:'获得60技能急速；不是直接刷新技能，仍须支付法力并等待实际冷却。',
  1053:'重生后变大：30%适应之力、20%生命值；或变小：70急速、40%移速。两种状态互斥，不是同时获得。',
  1344:'施放R：10秒50%最大生命值护盾、20%全能吸血、30%额外移速；20秒自身冷却。'};
 const jhinComplements={1022:'60%攻速经被动提高攻击力和暴击后的移速；射速仍固定。',1328:'25%暴击，普攻暴击叠攻速；以被动增益攻击力和暴击后移速，射速仍固定。'};
 const camilleComplements={1022:'60%攻速用于普攻衔接；Q2 至少1.5秒的等待不能省略。'};
+// Keep the source coefficients and trigger in the native 100-character hint.
+// These substitutions shorten wording only; a scoped fingerprint still binds
+// the unmodified full source text before this presentation step is reached.
+const scopedEffectBrief=a=>a.tooltip.description.replaceAll('攻击力攻击力','攻击力').replace('你的技能会施加一层可无限叠加的灼烧，在3秒的持续时间里每秒造成','技能灼烧可无限叠加；3秒内每秒').replace('你的所有灼烧效果会在对敌方英雄造成伤害时使你的各基础技能的冷却时间缩短','灼烧伤害敌方英雄时，各基础技能冷却缩短').replaceAll('法术强度','法强').replaceAll('额外攻击力','额外攻击').replace('已造成的伤害：','累计伤害：');
 
 // Authored mechanism routes, not creator builds or statistical rankings. Each
 // route requires the exact reviewed hero kit, augment effect and item effects.
@@ -52,9 +63,9 @@ const routes=[
  {hero:'Lux',augment:1048,title:'控制接技能暴击',summary:'保持法强与命中率，先控住再找爆发窗口。',play:['Q 命中后衔接 E、R，先判断目标是否仍在技能范围；不要把技能暴击当成必定命中。','E 可先减速再引爆；只在安全距离内考虑普攻触发被动，不为补一次攻击走入危险。'],basicPlay:['Q 命中后衔接 E，引爆后利用基础技能的下一轮冷却继续消耗；不要等待大招爆发。','W 留给自己与需要保护的队友；只在安全距离内普攻触发被动，不为补一次攻击走入危险。'],caution:'W 的护盾不是伤害，不能按暴击伤害计算；强化不要求整套改买 AD 暴击装备。',gear:[['法强爆发',[3089],'帽子保留技能法强路线，并利用珠光随法强增长的暴击率；不是固定第一件。'],['对魔抗目标',[3135],'需要处理魔抗时比较虚空；法术穿透仍按技能原有伤害类型判断。'],['需要自保',[3157],'被物理突进或关键爆发威胁时比较中娅，保住下一轮施法机会。']]},
 ];
 
-export const hexRouteItemFingerprint=item=>fingerprint({name:item?.name,description:item?.description,stats:item?.stats});
 export function hexCommunitySourceURLs(data){
- return [...new Set([...new Set(communityRoutes.routes.map(r=>r.hero))].flatMap(hero=>hexPlayerRoutes({data,hero}).flatMap(r=>communitySourceMedium(r.communitySource)?[r.communitySource.url]:[])))];
+ const community=data.communityHexRoutes||communityRoutes;
+ return [...new Set([...new Set(community.routes.map(r=>r.hero))].flatMap(hero=>hexPlayerRoutes({data,hero}).flatMap(r=>communitySourceMedium(r.communitySource)?[r.communitySource.url]:[])))];
 }
 export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  if(!isCurrentHexData(data))return [];
@@ -62,24 +73,38 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
  const itemReview=currentHexReview(data.patch);
  if(!champion||!itemReview)return [];
  const baseReviewed=hexChampionReview(champion,data.patch)==='current';
- const communityReviewed=communityRoutes.patch===data.patch&&mechanicReview(champion,data.patch,communityRoutes.championReview)==='current';
+ const community=data.communityHexRoutes||communityRoutes;
+ const communityReviewed=community.patch===data.patch&&mechanicReview(champion,data.patch,community.championReview)==='current';
  if(!baseReviewed&&!communityReviewed)return [];
  const noUltimate=owned.includes(1004)&&reviewedHexMechanic(data.augments.find(a=>a.id===1004),data.patch);
- const authored=(baseReviewed?routes:[]).concat(communityReviewed?communityRoutes.routes:[]);
+ const authored=(baseReviewed?routes:[]).concat(communityReviewed?community.routes:[]);
  return authored.filter(route=>route.hero===hero&&(!route.patch||route.patch===data.patch)).flatMap(route=>{
   if(itemReview.communityPolicy==='current-source-only'&&route.community&&!route.communitySource)return [];
   if(route.requiresUltimate&&noUltimate)return [];
+  const scopedItems=community.routes.includes(route)&&route.itemReview!==undefined;
+  if(scopedItems&&!validCommunityItemReview(route.itemReview,route,data.patch,community.reviewedAt))return [];
+  const scopedEffects=community.routes.includes(route)&&route.augmentReview!==undefined;
+  if(!validCommunityExclusions(route)||route.excludedAugments!==undefined&&!scopedEffects)return [];
+  if(scopedEffects&&!validCommunityAugmentReview(route.augmentReview,route,data.patch,community.reviewedAt))return [];
+  const effectCurrent=a=>scopedEffects?!!route.augmentReview.effects[a?.id]&&route.augmentReview.effects[a.id].fingerprint===communityHexAugmentFingerprint(a,data,route.augmentReview.effects[a.id].coverage):reviewedHexMechanic(a,data.patch);
+  // Offers are not selections. Review the negative dependency as carefully as
+  // the core, but never display it as a compatible augment or gear requirement.
+  if((route.excludedAugments||[]).some(id=>owned.includes(id)||!effectCurrent(data.augments.find(a=>a.id===id))))return [];
+  const needsUltimate=a=>hexUltimateRequirement(a,data.patch)||(scopedEffects&&route.augmentReview.effects[a?.id]?.requiresUltimate);
+  const reviewedItems=scopedItems?route.itemReview.items:itemReview.items,itemFingerprint=scopedItems?communityHexItemFingerprint:hexRouteItemFingerprint;
   const augment=data.augments.find(a=>a.id===route.augment);
-  if(augment?.descriptionStatus!=='complete'||!reviewedHexMechanic(augment,data.patch)||noUltimate&&hexUltimateRequirement(augment,data.patch)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
+  if(augment?.descriptionStatus!=='complete'||!effectCurrent(augment)||noUltimate&&needsUltimate(augment)||hexCatalogDisabled(data,augment)&&!owned.includes(augment.id)||options.length&&!owned.includes(augment.id)&&!options.includes(augment.id))return [];
   const optionalAugments=(route.optional||[]).flatMap(id=>{
    const a=data.augments.find(a=>a.id===id),disabled=hexCatalogDisabled(data,a);
-   return a?.descriptionStatus==='complete'&&reviewedHexMechanic(a,data.patch)&&!(noUltimate&&hexUltimateRequirement(a,data.patch))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+((hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id])}]:[];
+   return a?.descriptionStatus==='complete'&&effectCurrent(a)&&!(noUltimate&&needsUltimate(a))&&(!disabled||owned.includes(id))?[{id,name:a.name,core:false,owned:owned.includes(id),catalogDisabled:disabled,brief:(disabled?'目录禁用；本局已选。':'')+(scopedEffects?scopedEffectBrief(a):reviewedHexMechanic(a,data.patch)?(hero==='Jhin'&&jhinComplements[id])||(hero==='Camille'&&camilleComplements[id])||augmentComplements[id]||a.description:a.tooltip.description.replaceAll('攻击力攻击力','攻击力'))}]:[];
   });
   let pendingItems=0;
-  const gear=route.gear.flatMap(([when,ids,why])=>{
+  const gear=route.gear.flatMap(([when,ids,why,requires=[],requiresUltimate=false])=>{
+   if(requiresUltimate&&noUltimate)return [];
+   if(requires.some(id=>{const a=data.augments.find(a=>a.id===id);return a?.descriptionStatus!=='complete'||!effectCurrent(a)||noUltimate&&needsUltimate(a)||hexCatalogDisabled(data,a)&&!owned.includes(id);}))return [];
    const items=ids.flatMap(id=>{
     const item=data.items[id];
-    if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||itemReview.items[id]!==hexRouteItemFingerprint(item)){pendingItems++;return [];}
+    if(!item?.maps?.['12']||!item.inStore||item.gold?.purchasable===false||reviewedItems[id]!==itemFingerprint(item,data.patch)){pendingItems++;return [];}
     return [{id,name:item.name,description:item.description,...(route.coreItems?.includes(id)?{core:true}:{})}];
    });
    // A group explanation can depend on every listed item. Never leave old
@@ -88,7 +113,7 @@ export function hexPlayerRoutes({data,hero,owned=[],options=[]}){
   });
   if(route.coreItems?.some(id=>!gear.some(group=>group.items.some(item=>item.id===id))))return [];
   return [{id:hero+'-'+augment.id,hero,family:route.family,optionalAugments,title:route.title,summary:route.summary,play:noUltimate&&route.basicPlay?route.basicPlay:route.play,caution:(noUltimate?'已选回归基本功，终极技能不可使用。':'')+route.caution,gear,pendingItems,ultimateUnavailable:!!noUltimate,catalogDisabled:hexCatalogDisabled(data,augment),augment:{id:augment.id,name:augment.name},state:owned.includes(augment.id)?'owned':options.includes(augment.id)?'offered':'preview',patch:data.patch,
-   ...(route.communitySource?{communitySource:route.communitySource}:{}),...(route.skillPriority?{skillPriority:route.skillPriority}:{}),
+   ...(scopedEffects?{brief:(noUltimate?'终极技能不可使用。':'')+augment.tooltip.description}:{}),...(route.communitySource?{communitySource:route.communitySource}:{}),...(route.skillPriority?{skillPriority:route.skillPriority}:{}),
    sources:[{name:'英雄技能',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/champion/${hero}.json`},{name:'海克斯强化',url:`https://raw.communitydragon.org/${data.patch}/game/maps/modespecificdata/kiwi.bin.json`},{name:'装备效果',url:`https://ddragon.leagueoflegends.com/cdn/${data.version}/data/zh_CN/item.json`},...(['Jhin','Camille'].includes(hero)?[{name:'技能完整资料',url:champion.mechanicSource.character.url}]:[]),...(route.communitySource?[{name:communitySourceLabel(route.communitySource),url:route.communitySource.url}]:[]),...(route.community?[{name:'社区思路（未标注版本日期）',url:route.community}]:[])],basis:route.communitySource?route.communitySource.adaptation:route.community?'社区思路，经项目按16.21机制改编；原组合未标注版本和日期，不是胜率或固定购买顺序。':'按当前技能、强化与装备效果推导，不是胜率或固定购买顺序。'}];
  }).sort((a,b)=>Number(b.state==='owned')-Number(a.state==='owned')||Number(b.state==='offered')-Number(a.state==='offered')).filter((route,index,all)=>!route.family||!all.slice(0,index).some(other=>other.family===route.family));
 }

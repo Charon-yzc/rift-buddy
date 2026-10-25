@@ -1,16 +1,18 @@
 import {stringTableLookup} from './riot-stringtable.mjs';
 import {createHash} from 'node:crypto';
 import {canonicalJSON} from '../src/core/content-fingerprint.mjs';
+import {fieldHash} from '../src/core/augment-counter-basis.mjs';
+import {buildAugmentCounterBasis} from './augment-counter-source.mjs';
+export {fieldHash} from '../src/core/augment-counter-basis.mjs';
 // Render game-authored tooltip text without executing expressions from downloaded data.
 export function formatNumber(n){if(!Number.isFinite(n))return null;const scaled=n*1000;return String(Number.isFinite(scaled)?Math.round(scaled)/1000:n);}
-export function fieldHash(name){let h=2166136261;for(const c of String(name).toLowerCase())h=Math.imul(h^c.charCodeAt(0),16777619);return `{${(h>>>0).toString(16).padStart(8,'0')}}`;}
 export const AUGMENT_TOOLTIP_PARSER_REVISION=5;
 export function buildAugmentDescriptions(catalog,bin,entries){
  const lookup=stringTableLookup(entries);
  const objects=Object.values(bin).filter(v=>v?.__type==='AugmentData');
  const byKey=new Map(objects.map(a=>[a.AugmentNameId?.toLowerCase(),a]));
  return catalog.map(a=>{
-  const {tooltip:oldTooltip,tooltipParserRevision:oldParser,effectSourceHash:oldSourceHash,...record}=a;
+  const {tooltip:oldTooltip,tooltipParserRevision:oldParser,effectSourceHash:oldSourceHash,tooltipCounterBasis:oldCounterBasis,...record}=a;
   const source=byKey.get(a.key.toLowerCase());if(!source)return {...record,description:'',descriptionStatus:'missing'};
   const spell=bin[source.RootSpell]?.mSpell||{};
   // BIN references can use the readable field name or its FNV hash. Keep one
@@ -112,12 +114,14 @@ export function buildAugmentDescriptions(catalog,bin,entries){
   // counters or hero-specific slots in the latter must not renew the former's
   // reviewed effect, nor conceal available static coefficients.
   unresolved.clear();const tooltipRaw=source.AugmentTooltipTra&&lookup(String(source.AugmentTooltipTra).toLowerCase()),detail=tooltipRaw?render(tooltipRaw,true):'';
+  const tooltip=detail?{revision:1,description:detail,status:unresolved.size?'partial':'complete',unresolved:[...unresolved],sourceKey:source.AugmentTooltipTra}:null;
+  const effectSourceHash=description&&detail&&bin[source.RootSpell]?.mSpell?createHash('sha256').update(canonicalJSON({augment:source,spell})).digest('hex'):null;
   return {...record,description,descriptionStatus,
    // This client catalogue flag is not champion/round offer eligibility.
    catalogEnabled:source.Enabled!==false,
    unresolved:summaryUnresolved,sourceKey:source.DescriptionTra,
-   ...(detail?{tooltip:{revision:1,description:detail,status:unresolved.size?'partial':'complete',unresolved:[...unresolved],sourceKey:source.AugmentTooltipTra}}:{}),
-   ...(description&&detail&&bin[source.RootSpell]?.mSpell?{tooltipParserRevision:AUGMENT_TOOLTIP_PARSER_REVISION,effectSourceHash:createHash('sha256').update(canonicalJSON({augment:source,spell})).digest('hex')}:{}),
+   ...(tooltip?{tooltip}:{}),
+   ...(effectSourceHash?{tooltipParserRevision:AUGMENT_TOOLTIP_PARSER_REVISION,effectSourceHash,tooltipCounterBasis:buildAugmentCounterBasis({...record,tooltip},spell,effectSourceHash)}:{}),
    // Useful for browsing categories, not for predicting strength.
    tags:source.AugmentDisplayTags||[],};
  });

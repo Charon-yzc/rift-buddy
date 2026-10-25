@@ -4,6 +4,8 @@ import {DATA_FEED_KEYS,feedHash} from './data-feed.mjs';
 import {validateCatalog,catalogIssues} from '../src/core/catalog.mjs';
 import {mechanicReview} from '../src/core/mechanic-review.mjs';
 import {validCommunitySource} from '../src/core/community-source.mjs';
+import {validCommunityItemReview} from '../src/core/community-item-review.mjs';
+import {validCommunityAugmentReview,validCommunityExclusions} from '../src/core/community-augment-review.mjs';
 
 // A separately signed, manually reviewed snapshot. Daily statistical collection
 // must never rewrite its provenance or promote unreviewed creator material.
@@ -21,7 +23,10 @@ export function validateCommunityData(value,data){
   if(!validCommunitySource(source,value.reviewedAt))throw Error('社区来源未完整记录');
   if(r.skillPriority!==undefined&&(!Array.isArray(r.skillPriority)||r.skillPriority.length<1||r.skillPriority.length>3||new Set(r.skillPriority).size!==r.skillPriority.length||!r.skillPriority.every(key=>['Q','W','E'].includes(key))))throw Error('社区加点优先级无效');
   if(r.requiresUltimate!==undefined&&typeof r.requiresUltimate!=='boolean')throw Error('社区大招条件无效');
-  if(!Array.isArray(r.gear)||r.gear.length>12||!r.gear.every(g=>Array.isArray(g)&&g.length===3&&text(g[0])&&text(g[2])&&Array.isArray(g[1])&&g[1].length>0&&g[1].length<=6&&g[1].every(id=>data.items[id]?.maps?.['12']&&data.items[id]?.inStore)))throw Error('社区装备模式不符');
+  if(!validCommunityExclusions(r)||r.excludedAugments!==undefined&&(!r.augmentReview||!r.excludedAugments.every(id=>data.augments.some(a=>a.id===id))))throw Error('社区强化排除条件无效');
+  if(!Array.isArray(r.gear)||r.gear.length>12||!r.gear.every(g=>Array.isArray(g)&&[3,4,5].includes(g.length)&&text(g[0])&&text(g[2])&&Array.isArray(g[1])&&g[1].length>0&&g[1].length<=6&&g[1].every(id=>data.items[id]?.maps?.['12']&&data.items[id]?.inStore)&&(g.length===3||Array.isArray(g[3])&&(g[3].length>0||g.length===5)&&g[3].length<=20&&new Set(g[3]).size===g[3].length&&g[3].every(id=>Number.isSafeInteger(id)&&[r.augment,...r.optional].includes(id)))&&(g.length!==5||r.augmentReview!==undefined&&g[4]===true)))throw Error('社区装备模式不符');
+  if(r.itemReview!==undefined&&!validCommunityItemReview(r.itemReview,r,value.patch,value.reviewedAt))throw Error('社区装备复核无效');
+  if(r.augmentReview!==undefined&&!validCommunityAugmentReview(r.augmentReview,r,value.patch,value.reviewedAt))throw Error('社区强化复核无效');
   if(!routes.championReview||mechanicReview(data.champions.find(c=>c.id===r.hero),data.patch,routes.championReview)!=='current')throw Error('社区英雄机制尚未复核');
   ids.add(key);
  }
@@ -35,11 +40,12 @@ export function verifyCommunityEnvelope(envelope,{keys=DATA_FEED_KEYS}={}){
  if(m.schema!==1||m.kind!=='community-snapshot'||!/^\d{2}\.\d{1,2}$/.test(m.patch||'')||!/^\d{4}\.\d{2}\.\d{2}\.\d+$/.test(m.version||'')||!Number.isSafeInteger(m.sequence)||m.sequence<1||!Number.isFinite(Date.parse(m.publishedAt))||!Number.isFinite(Date.parse(m.reviewedAt))||!/^\d+\.\d+\.\d+$/.test(m.minimumApp||'')||!/^[a-f0-9]{64}$/.test(m.sha256||'')||!/^[a-f0-9]{64}$/.test(m.rawSha256||'')||m.file!==m.sha256+'.json.gz'||!Number.isInteger(m.bytes)||m.bytes<1||m.bytes>COMMUNITY_MAX_PACKED||!Number.isInteger(m.rawBytes)||m.rawBytes<1||m.rawBytes>COMMUNITY_MAX_RAW)throw Error('社区签名元数据无效');
  return m;
 }
-export function decodeCommunityData(manifest,packed,data){
+export function decodeCommunitySnapshot(manifest,packed){
  if(packed.length!==manifest.bytes||feedHash(packed)!==manifest.sha256)throw Error('社区资料下载校验失败');
  const raw=gunzipSync(packed,{maxOutputLength:COMMUNITY_MAX_RAW});
  if(raw.length!==manifest.rawBytes||feedHash(raw)!==manifest.rawSha256)throw Error('社区资料解压校验失败');
- const value=validateCommunityData(JSON.parse(raw),data);
- if(value.patch!==manifest.patch||value.version!==manifest.version||value.reviewedAt!==manifest.reviewedAt)throw Error('社区资料与签名身份不符');
+ const value=JSON.parse(raw);
+ if(value.schema!==1||value.kind!=='community-snapshot'||value.patch!==manifest.patch||value.version!==manifest.version||value.reviewedAt!==manifest.reviewedAt)throw Error('社区资料与签名身份不符');
  return value;
 }
+export function decodeCommunityData(manifest,packed,data){return validateCommunityData(decodeCommunitySnapshot(manifest,packed),data);}

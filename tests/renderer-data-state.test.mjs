@@ -50,6 +50,12 @@ test('unrelated statistics preserve projected build references and active catalo
  assert.deepEqual(f.calls,calls);assert.equal(f.store.current().catalog,before.catalog);assert.equal(f.store.current().builds,before.builds);assert.equal(f.store.current().buildSources,before.buildSources);
  assert.equal(f.changes.length,21);assert.equal(f.store.revision(),20);
 });
+
+test('community progress is status-only while an accepted catalog and Hex overlay arrive together',()=>{
+ const f=fixture();f.store.bootstrap({data:base(),revision:0});const original=f.store.current(),calls={...f.calls};
+ f.store.accept({revision:1,changes:{communityFeed:{phase:'checking'}}});assert.equal(f.changes.at(-1).statusOnly,true);assert.deepEqual(f.calls,calls);assert.equal(f.store.current().catalog,original.catalog);
+ const communityHexRoutes={patch:'16.20',routes:[{title:'new source'}]};f.store.accept({revision:2,changes:{catalog:{version:2,name:'signed'},catalogInfo:{status:{}},communityHexRoutes,communityFeed:{phase:'ready'}}});assert.equal(f.changes.at(-1).statusOnly,false);assert.equal(f.changes.at(-1).catalogChanged,true);assert.equal(f.store.current().communityHexRoutes,communityHexRoutes);assert.equal(f.store.current().catalog.version,2);assert.equal(f.calls.images,calls.images);
+});
 test('the selected window source survives another source refresh and remains separate from raw builds',()=>{
  const f=fixture(),kr=ref('kr');f.store.bootstrap({data:{...base(),buildSources:{[buildSourceKey('Ashe','bottom',kr,kr.patch)]:kr}},revision:0});
  f.choose({region:'kr',tier:'emerald_plus'});f.store.selectSource();assert.equal(f.store.current().builds['Ashe:bottom'].region,'kr');

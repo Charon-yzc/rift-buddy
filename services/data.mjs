@@ -7,10 +7,12 @@ import {enrichItemDescriptions,enrichItemModeDescriptions,hasCurrentItemDescript
 import {hasItemModeTooltip} from '../src/core/item-mode-tooltip.mjs';
 import {captureChampionMechanicSource} from './champion-mechanics.mjs';
 import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
+import {AUGMENT_COUNTER_BASIS_REVISION,validAugmentCounterBasis} from '../src/core/augment-counter-basis.mjs';
 
 export const DD = 'https://ddragon.leagueoflegends.com';
 export const CN = 'https://game.gtimg.cn/images/lol/act/img/js';
 const hasAugmentDetails=a=>a.tooltip?.revision===1&&!!a.tooltip.description&&Number.isSafeInteger(a.tooltipParserRevision)&&a.tooltipParserRevision>=AUGMENT_TOOLTIP_PARSER_REVISION&&(a.tooltipParserRevision>AUGMENT_TOOLTIP_PARSER_REVISION||/^[a-f0-9]{64}$/.test(a.effectSourceHash||''));
+const hasCounterCompletion=a=>Number.isSafeInteger(a.tooltipParserRevision)&&a.tooltipParserRevision>AUGMENT_TOOLTIP_PARSER_REVISION||Number.isSafeInteger(a.tooltipCounterBasis?.revision)&&a.tooltipCounterBasis.revision>AUGMENT_COUNTER_BASIS_REVISION||validAugmentCounterBasis(a);
 export async function getJSON(url, timeout = 20000) {
   let last;
   for(let attempt=0;attempt<3;attempt++) {
@@ -75,22 +77,27 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
         progress('已核对同版本装备基础字段与公开海克斯参数');
       }catch{progress('装备基础字段或海克斯参数暂未补齐，保留原资料并等待重试');}
     }
-    if(previous.augments.some(a=>!hasAugmentDetails(a))){
+    const needsAugmentRepair=a=>!hasAugmentDetails(a)||!hasCounterCompletion(a);
+    if(previous.augments.some(needsAugmentRepair)){
       try{
         const cd=`https://raw.communitydragon.org/${previous.patch}`,[bin,strings]=await Promise.all([readJSON(`${cd}/game/maps/modespecificdata/kiwi.bin.json`,35000),readJSON(`${cd}/game/zh_cn/data/menu/en_us/lol.stringtable.json`,35000)]);
-        const parsed=buildAugmentDescriptions(previous.augments.filter(a=>!hasAugmentDetails(a)),bin,strings?.entries||{});
-        if(parsed.some(a=>!a.description||a.descriptionStatus==='missing'||!hasAugmentDetails(a)))throw Error('强化完整说明来源未覆盖已有清单');
+        const pending=previous.augments.filter(needsAugmentRepair),parsed=buildAugmentDescriptions(pending,bin,strings?.entries||{});
+        if(parsed.some(a=>!a.description||a.descriptionStatus==='missing'||!hasAugmentDetails(a)||!hasCounterCompletion(a)))throw Error('强化完整说明或计数来源未覆盖已有清单');
+        for(let i=0;i<pending.length;i++){
+          const old=pending[i],next=parsed[i];if(!hasAugmentDetails(old))continue;
+          if(old.descriptionStatus==='complete'&&next.descriptionStatus!=='complete'||old.tooltip.status==='complete'&&next.tooltip.status!=='complete'||(next.unresolved||[]).some(key=>!(old.unresolved||[]).includes(key))||(next.tooltip.unresolved||[]).some(key=>!(old.tooltip.unresolved||[]).includes(key)))throw Error('强化计数来源不能降低已完整解析的说明');
+        }
         // Preserve already completed records, including newer parser results
         // received from the signed feed, when repairing a mixed older cache.
-        let index=0;const augments=previous.augments.map(a=>hasAugmentDetails(a)?a:parsed[index++]);
+        let index=0;const augments=previous.augments.map(a=>needsAugmentRepair(a)?parsed[index++]:a);
         previous={...previous,augments};
-        progress('已补齐同版本强化详细数值');
-      }catch{progress('强化详细数值暂未补齐，保留原资料并等待重试');}
+        progress('已补齐同版本强化详细数值与动态计数资料');
+      }catch{progress('强化详细数值或计数资料暂未补齐，保留原资料并等待重试');}
     }
     // Parser completion lives on each augment, so it cannot skip an unfinished
     // revision-8 item migration or force the detail sources to be read again.
-    if(previous.contentRevision>=9&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(completeItemModes(previous.items,previous.patch)?completeItemDescriptions(previous.items,previous.patch)?17:16:15,previous.contentRevision)};
-    progress('当前已是最新资料版本');
+    if(previous.contentRevision>=9&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(completeItemModes(previous.items,previous.patch)?completeItemDescriptions(previous.items,previous.patch)?previous.augments.every(hasCounterCompletion)?18:17:16:15,previous.contentRevision)};
+    progress(previous.augments.every(a=>hasAugmentDetails(a)&&hasCounterCompletion(a))?'当前已是最新资料版本':'部分强化资料待补齐，保留既有可用内容');
     return {...previous,checkedAt:new Date(clock()).toISOString()};
   }
   const base = `${DD}/cdn/${version}/data/zh_CN`;
@@ -131,7 +138,7 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     augmentSource = `${cd}/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json`;
   } catch (e) { augmentError = e.message; }
   return {
-    schema: 1, contentRevision:itemDescriptions&&augments.length&&augments.every(hasAugmentDetails)?completeItemModes(itemDescriptions,patch)?completeItemDescriptions(itemDescriptions,patch)?17:16:15:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
+    schema: 1, contentRevision:itemDescriptions&&augments.length&&augments.every(hasAugmentDetails)?completeItemModes(itemDescriptions,patch)?completeItemDescriptions(itemDescriptions,patch)?augments.every(hasCounterCompletion)?18:17:16:15:11, mechanicSourceRevision:1,itemTooltipRevision:itemDescriptions?1:0,version, patch, fetchedAt: new Date(clock()).toISOString(),checkedAt:new Date(clock()).toISOString(),contentCheckedAt:new Date(clock()).toISOString(),
     sources: { champions:`${base}/championFull.json`, items:`${base}/item.json`, runes:`${base}/runesReforged.json`,
       names:`${CN}/heroList/hero_list.js`, augments:augmentSource,
       augmentDescriptions:augmentSource?`${cd}/game/maps/modespecificdata/kiwi.bin.json`:null,

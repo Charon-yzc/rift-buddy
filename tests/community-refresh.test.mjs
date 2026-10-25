@@ -37,7 +37,7 @@ test('new Headliner creator route keeps its exact core and fails closed when its
 test('sourced Hex route survives compact projection with creator credit and fails closed on changed triggers',()=>{
  const route=hexPlayerRoutes({data:game,hero:'Lillia'})[0];assert.equal(route.augment.id,1045);assert.deepEqual(route.optionalAugments.map(a=>a.id),[2132,1214,1305]);
  assert.ok(route.sources.some(s=>s.url===hexRoutes.routes[0].communitySource.url));assert.match(route.basis,/项目.*改编/);assert.match(route.basis,/未核实/);
- const micro=hexMechanismMicroRoutes([route])[0],card=hexRouteCard(micro,{priority:'QWE'});assert.equal(card.source,'SeraphineBL · 改编');assert.equal(card.sourceUrl,hexRoutes.routes[0].communitySource.url);assert.equal(card.priority,'主Q副W');
+ const micro=hexMechanismMicroRoutes([route])[0],card=hexRouteCard(micro,{priority:'QWE'});assert.equal(card.source,'SeraphineBL · 改编');assert.equal(card.sourceUrl,hexRoutes.routes[0].communitySource.url);assert.equal(card.priority,'');assert.equal(card.skillSource,'');assert.equal(route.skillPriority,undefined);
  const changed=structuredClone(game);changed.augments.find(a=>a.id===1045).description+=' changed';assert.equal(hexPlayerRoutes({data:changed,hero:'Lillia'}).length,0);
  for(const id of [2132,1214,1305]){const drift=structuredClone(game);drift.augments.find(a=>a.id===id).description+=' changed';const retained=hexPlayerRoutes({data:drift,hero:'Lillia'})[0];assert.ok(retained);assert.ok(!retained.optionalAugments.some(a=>a.id===id));assert.doesNotMatch(retained.play.join(' '),/果汁|练腿日|旋转至胜/);}
  const future={...game,patch:'16.22'};assert.equal(hexPlayerRoutes({data:future,hero:'Lillia'}).length,0);

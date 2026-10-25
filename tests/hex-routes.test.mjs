@@ -57,8 +57,9 @@ test('crit routes keep normal attacks and spell damage separate, with conditiona
  for(const route of [veigar,lux]){assert.ok(route.gear.some(g=>g.items.some(i=>i.id===3089)));assert.ok(route.gear.every(g=>g.items.every(i=>![3031,3036,3072].includes(i.id))),'Spell crit does not prescribe an AD conversion');}
  assert.ok(hexPlayerRoutes({data,hero:'Jhin',owned:[1328]}).some(route=>route.state==='owned'),'Separately reviewed 16.21 Jhin route remains available');assert.deepEqual(hexPlayerRoutes({data,hero:'Ashe',owned:[1328]}),[]);
  for(const [hero,id]of pairs.slice(-4)){
-  for(const mutate of [d=>d.patch='16.22',d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),d=>d.augments.find(a=>a.id===id).description+=' changed']){
-   const changed=structuredClone(data);mutate(changed);assert.deepEqual(hexPlayerRoutes({data:changed,hero,owned:[id]}),[]);
+  for(const [mutate,allRoutes]of [[d=>d.patch='16.22',true],[d=>d.champions.find(c=>c.id===hero).mechanicSource.character.sha256='0'.repeat(64),true],[d=>d.augments.find(a=>a.id===id).description+=' changed',false]]){
+   const changed=structuredClone(data);mutate(changed);const remaining=hexPlayerRoutes({data:changed,hero,owned:[id]});assert.deepEqual(remaining.filter(route=>allRoutes||route.augment.id===id),[]);
+   if(hero==='Caitlyn'&&!allRoutes)assert(remaining.some(route=>route.augment.id===1071),'An independently reviewed range route remains valid when another core changes');
   }
   for(const itemId of hexPlayerRoutes({data,hero,owned:[id]})[0].gear.flatMap(g=>g.items.map(i=>i.id))){
    const changed=structuredClone(data);changed.items[itemId].description+=' changed';const [route]=hexPlayerRoutes({data:changed,hero,owned:[id]});assert.equal(route.pendingItems,1);assert.ok(route.gear.every(g=>g.items.every(i=>i.id!==itemId)));assert.ok(route.play.length);

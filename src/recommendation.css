@@ -213,13 +213,10 @@ body:has(.recommendation-ui,.recommendation-app) #overlay-root :is(button,input,
 .recommendation-app .nav-item.active {background:var(--rb-tint);color:var(--rb-accent);box-shadow:inset 2px 0 var(--rb-accent)}
 .recommendation-app .nav-item.active svg {color:var(--rb-accent)}
 .recommendation-app .nav-item .badge {margin-left:auto;background:var(--rb-panel);color:var(--rb-muted);font-size:11px}
-.navigation-tools {border-top:1px solid var(--rb-line);padding-top:12px;margin-top:16px}
-.navigation-tools>summary {display:flex;align-items:center;gap:10px;list-style:none;color:var(--rb-muted);padding:9px 10px;min-height:38px;cursor:pointer;font-size:var(--ui-small);border-radius:5px}
-.navigation-tools>summary::-webkit-details-marker {display:none}
-.navigation-tools>summary:hover {background:var(--rb-panel);color:var(--rb-ink)}
-.navigation-tools>summary>.icon:last-child {margin-left:auto;width:12px;height:12px}
-.navigation-tools[open]>summary>.icon:last-child {transform:rotate(90deg)}
-.navigation-tools>div {padding-top:5px}
+.navigation-secondary {border-top:1px solid var(--rb-line);padding-top:10px;margin-top:12px}
+.recommendation-app .sidebar>.brand,.recommendation-app .sidebar-bottom {flex-shrink:0}
+.recommendation-app .sidebar>nav {flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.recommendation-app :is(.room-workspace-heading,.draft-compare-header).actions-only {justify-content:flex-end}
 .recommendation-app .sidebar-footer {color:var(--rb-subtle);font-size:calc(11px * var(--text-scale));padding:10px 7px 0;flex-wrap:wrap;line-height:1.5}
 .recommendation-app .status-dot.connected {background:var(--rb-success);box-shadow:none}
 .recommendation-app .topbar {height:48px;flex-shrink:0;padding:0 24px;background:var(--rb-bg);border-color:var(--rb-line);justify-content:flex-end}

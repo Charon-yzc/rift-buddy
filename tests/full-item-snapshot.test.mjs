@@ -52,7 +52,7 @@ test('fresh, forced and daily full collection retain base parser markers and Kiw
  for(const kind of ['fresh','forced','daily']){
   const previous=kind==='fresh'?null:{...game,contentCheckedAt:new Date(kind==='forced'?now:now-2*86400000).toISOString()},before=structuredClone(previous),source=sources();
   const result=await collect(t,previous,{readJSON:source.readJSON,recheckVersion:kind==='forced'});
-  assert(source.calls.some(url=>url.endsWith('/championFull.json')));assert.equal(result.contentRevision,17);assert.equal(result.itemTooltipRevision,1);
+  assert(source.calls.some(url=>url.endsWith('/championFull.json')));assert.equal(result.contentRevision,18);assert.equal(result.itemTooltipRevision,1);
   for(const id of Object.keys(items.items)){
    assert.equal(result.items[id].tooltipParserRevision,2,kind+' lost parser marker '+id);
    assert(hasCurrentItemDescription(result.items[id],game.patch));assert(hasItemModeTooltip(result.items[id],game.patch));
