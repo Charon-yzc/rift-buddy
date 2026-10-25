@@ -11,9 +11,12 @@ import {sanitizeGame,identifyMode} from '../src/core/game-mode.mjs';
 // Interface reference: LeagueAkari 5109b2f7, league-client/champ-select.ts.
 export function validateClientPreparation(value,data){
  const champion=data.champions.find(c=>c.id===value?.champion),context=validateRuneWriteContext(value?.context);
- if(!champion||!['top','jungle','mid','bottom','support'].includes(value.role)||value.mode!=='rift'||context.phase!=='ChampSelect')throw Error('请在峡谷选人阶段核对英雄、位置和方案');
+ const hexHover=value?.mode==='hex'&&value?.preselectOnly===true&&context.phase==='ChampSelect';
+ if(!champion)throw Error('请在选人阶段核对英雄');
+ if(hexHover?false:!['top','jungle','mid','bottom','support'].includes(value.role)||value.mode!=='rift'&&!hexHover||context.phase!=='ChampSelect')throw Error('请在峡谷选人阶段核对英雄、位置和方案');
  const sessionGameId=String(value.sessionGameId||'');
  if(!/^[1-9]\d{0,19}$/.test(sessionGameId)||context.gameId&&context.gameId!==sessionGameId)throw Error('尚未确认本局编号，请同步客户端后重试');
+ if(hexHover)return {champion:champion.id,championId:champion.key,role:null,mode:'hex',context,sessionGameId,preselectOnly:true};
  if(!validateRunePage(value.page,data.runes))throw Error('当前符文页不可用，请重新选择方案');
  const summoners=validateSummonerIds(value.summoners,'rift');
  if(!summoners||!summoners.every(id=>summonerOptions(data,'rift').includes(id)))throw Error('当前召唤师技能不可用');
@@ -30,8 +33,8 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  const read=async()=>{
   if(await request(auth,'/lol-gameflow/v1/gameflow-phase')!=='ChampSelect')throw Error('已离开选人阶段，请在客户端核对');
   const [gameValue,raw]=await Promise.all([request(auth,'/lol-gameflow/v1/session'),request(auth,'/lol-champ-select/v1/session')]);
-  const game=sanitizeGame(gameValue);
-  if(identifyMode(game).id!=='rift')throw Error('当前模式尚不支持客户端预选并配置');
+  const game=sanitizeGame(gameValue),mode=identifyMode(game).id;
+  if(mode!=='rift'&&!(mode==='hex'&&selected.mode==='hex'&&selected.preselectOnly))throw Error('当前模式尚不支持客户端预选并配置');
   const session=sanitizeSession(raw),gameId=champSelectGameId(session,game);
   if(gameId!==selected.sessionGameId)throw Error('选人会话已变化，请同步客户端后重试');
   const context=runeWriteContext({connected:true,phase:'ChampSelect',session,game}),own=raw.myTeam?.find(p=>p.cellId===session.localPlayerCellId);
@@ -42,7 +45,7 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  const initial=await read();
  if(!sameRuneWriteContext(initial.context,selected.context))throw Error('选人对象已变化，尚未操作；请核对后重新点击');
  const locked=initial.action.completed===true;
- if(locked&&initial.own.championId!==selected.championId)throw Error('客户端已锁定其他英雄，不能预选这位英雄');
+ if(selected.mode!=='hex'&&locked&&initial.own.championId!==selected.championId)throw Error('客户端已锁定其他英雄不能预选这位英雄');
  if(!locked&&initial.timer!=='PLANNING'&&initial.action.isInProgress!==true)throw Error('请在预选阶段或轮到本人选人时点击，不会自动等待或锁定');
  const readEligibility=async()=>{
   const [pickableValue,disabledValue]=await Promise.all([request(auth,'/lol-champ-select/v1/pickable-champion-ids'),request(auth,'/lol-champ-select/v1/disabled-champion-ids')]);
@@ -51,14 +54,20 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
   return {pickable,disabled};
  };
  const assertSelectable=(session,{pickable,disabled})=>{
+  if(selected.mode==='hex'){
+   const benchIds=session.bench?.championIds||[];
+   if(!benchIds.includes(selected.championId))throw Error('目标英雄不在备选池，请选择备选池中的英雄');
+   if(disabled.includes(selected.championId))throw Error('这个英雄本局不可选，请更换推荐');
+   return;
+  }
   const banned=session.bans.includes(selected.championId),taken=session.myTeam.some(p=>p.cellId!==session.localPlayerCellId&&p.championId===selected.championId)||session.allowDuplicatePicks===false&&session.theirTeam.some(p=>p.championId===selected.championId);
   if(!pickable.includes(selected.championId)||disabled.includes(selected.championId)||banned||taken)throw Error('这个英雄本局不可选，请更换推荐');
  };
  if(!locked)assertSelectable(initial.session,await readEligibility());
  const result={champion:selected.champion,gameId:selected.sessionGameId,steps:Object.fromEntries(['hover','runes','spells','items'].map(k=>[k,{status:'pending'}]))};
  let expected=initial.context,confirmedTarget=false;
- const targetMatches=now=>(now.action.completed===true||now.action.championId===selected.championId)&&typeof now.action.completed==='boolean'&&
-  (now.own.championId===selected.championId||now.own.championId===0&&now.action.completed===false&&now.own.championPickIntent===selected.championId);
+ const targetMatches=now=>((selected.mode==='hex'&&now.own.championPickIntent===selected.championId)||now.action.completed===true||now.action.championId===selected.championId)&&typeof now.action.completed==='boolean'&&
+  (now.own.championId===selected.championId||(selected.mode==='hex'&&now.own.championPickIntent===selected.championId)||now.own.championId===0&&now.action.completed===false&&now.own.championPickIntent===selected.championId);
  const ensure=async()=>{
   const now=await read();
   if(!sameRuneWriteContext(now.context,expected)||now.action.id!==initial.action.id||confirmedTarget&&!targetMatches(now))throw Error('选人对象或阶段已变化，已停止后续配置；请在客户端核对');
@@ -77,12 +86,15 @@ export async function prepareClientSelection({value,data,installPath='',ownedPag
  try{
   // Refresh target availability, then recheck this player's game and action.
   // Unrelated teammates can select or ban without invalidating this click.
-  const eligibility=!locked?await readEligibility():null;
+  // Hex bench reselects even after a lock, so the hover write always runs.
+  const hexHover=selected.mode==='hex'&&selected.preselectOnly===true;
+  const eligibility=!locked||hexHover?await readEligibility():null;
   const before=await ensure();
-  if(!locked){
+  if(!locked||hexHover){
    assertSelectable(before.session,eligibility);
-   if(before.action.completed===true||before.timer!=='PLANNING'&&before.action.isInProgress!==true)throw Error('选人轮次已变化，尚未预选');
-   await request(auth,`/lol-champ-select/v1/session/actions/${before.action.id}`,'PATCH',{championId:selected.championId,completed:false});
+   if(!hexHover&&(before.action.completed===true||before.timer!=='PLANNING'&&before.action.isInProgress!==true))throw Error('选人轮次已变化，尚未预选');
+   if(hexHover)await request(auth,`/lol-champ-select/v1/session/bench/swap/${selected.championId}`,'POST');
+   else await request(auth,`/lol-champ-select/v1/session/actions/${before.action.id}`,'PATCH',{championId:selected.championId,completed:false});
   }
   const after=await read();
   if(after.context.cellId!==initial.context.cellId||after.context.assignedPosition!==initial.context.assignedPosition||after.action.id!==initial.action.id||!targetMatches(after))throw Error('客户端未确认目标英雄，已停止配置；请在客户端核对预选');

@@ -13,7 +13,7 @@ test('Hex team alternatives use only public bench, retain teammates and explain 
  assert.equal(model.team.length,5);assert.equal(model.candidates[0].hero.id,'Malphite');assert.deepEqual(model.candidates[0].added,['补承伤手段']);assert.equal(model.candidates.length,2);
  for(const row of model.candidates){assert.equal(row.lineup[0].hero.id,row.hero.id);assert.deepEqual(row.lineup.slice(1).map(p=>p.hero.id),['Ashe','Veigar','Sona','Jinx']);}
  assert.deepEqual(c,before);assert(!JSON.stringify(c).includes('private'));
- const html=hexDraftView({data,client:c});assert.match(html,/我 · 墨菲特，查看配置/);assert.doesNotMatch(html,/上路|中路|打野|data-action="(?:client-prepare|preselect)/);
+ const html=hexDraftView({data,client:c});assert.match(html,/我 · 墨菲特，点击直接切换/);assert.doesNotMatch(html,/上路|中路|打野|data-action="(?:client-prepare|preselect)/); assert.ok(!html.includes(String.fromCharCode(100,97,116,97,45,97,99,116,105,111,110,61,34,104,101,120,45,113,117,105,99,107,45,112,105,99,107,34,32,100,97,116,97,45,105,100,61,34,72,101,99,97,114,105,109,34)));
 });
 test('missing or stale bench never invents candidates; unknown patches never apply old coverage sorting',()=>{
  const c=client();delete c.session.bench;assert.equal(hexDraft({data,client:c}).candidates.length,0);assert.match(hexDraftView({data,client:c}),/暂未提供可换英雄/);
