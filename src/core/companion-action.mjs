@@ -12,6 +12,7 @@ export function companionHeroAction(client,champion,clickPrepare=true){
  if(mode==='rift'&&locked&&own.championId!==key)return {...view('已锁定，不能选择',true),blocked:true};
  if((session.myTeam||[]).some(p=>p.cellId!==cell&&Number(p.championId)===key))return view('队友已选 · 看配置',true);
  if((session.bans||[]).includes(key)||session.allowDuplicatePicks===false&&(session.theirTeam||[]).some(p=>Number(p.championId)===key))return view('本局不可选 · 看配置',true);
+ if(mode==='hex'&&(own.championId===key||!session.bench?.championIds?.includes(key)))return view(own.championId===key?'当前英雄 · 看配置':'不在备选池 · 看配置');
  if(!clickPrepare)return view('查看配置');
  return {prepare:true,hexHover:mode==='hex',label:locked&&mode==='rift'?'应用当前配置':mode==='hex'?'快速切换':'预选并配置'};
 }

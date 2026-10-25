@@ -17,10 +17,10 @@ function busyContext({busy=true,phase='ChampSelect',mode='rift',selectionMode=nu
  const context=vm.createContext({
   structuredClone,api:{prepareSelection:writes||(async()=>{throw Error('must not reach client in this test');})},
   client,clientPreparing:busy,runeApplying:false,itemSetPending:null,
-  selectedClientPreparation:()=>plan,clientPreparationPlan,data,readOnlyPreparation:()=>false,
+  selectedClientPreparation:()=>mode==='hex'?{...plan,selection:{...plan.selection,mode:'hex'}}:plan,hexQuickSelectionRevision:0,clientPreparationPlan,data,readOnlyPreparation:()=>false,
   runeWriteContext,preparationGameId:()=> '777',clientPreparationKey,activeCreativePlan:null,
   preparationTarget:null,preparationPendingKey:'',clientPreparationStatuses:new Map(),render(){},buildView:null,
-  sync:async()=>{},persist:async()=>{},guideSyncChain:Promise.resolve(),memberHeroAction:()=>locked?{prepare:false,blocked:true}:{prepare:true},
+  sync:async()=>{},persist:async()=>{},guideSyncChain:Promise.resolve(),memberHeroAction:()=>locked&&mode!=='hex'?{prepare:false,blocked:true}:{prepare:true,hexHover:mode==='hex'},
   saved:{preferences:{chatNotice:false}},preparationRevision:0,preparations:{recall:s=>s},syncPreparedGuide(){},scheduleRoomPublish(){},
   currentPickIntent:()=>null,rememberIntentPreparation(){},rememberPreparation(){},champ,guideSelection:null,
   taskOwnRole:()=>'bottom',pregamePhase:()=>false,heroClickSelection:(d,c)=>c,recallPreparation:c=>c,
@@ -40,16 +40,12 @@ function busyContext({busy=true,phase='ChampSelect',mode='rift',selectionMode=nu
  return context;
 }
 
-test('a busy draft click degrades to hover-only instead of throwing',async()=>{
- const calls=[],context=busyContext({busy:true,writes:async value=>{calls.push(value);return {steps:{hover:{status:'done'}},complete:false};}});
- const result=await context.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'});
- assert.equal(result.steps.hover.status,'done');
- assert.equal(calls.length,1);
- assert.equal(calls[0].preselectOnly,true);
+test('a busy Rift draft retains the existing configuration lock',async()=>{
+ const context=busyContext({busy:true});await assert.rejects(context.prepareHeroClick({id:'Ashe',role:'bottom',mode:'rift'}),/正在应用配置/);
 });
 
 test('a busy draft click still throws when the game is locked or not selectable',async()=>{
- for(const opts of [{locked:true},{phase:'ReadyCheck'},{mode:'hex',selectionMode:'hex'}]){
+ for(const opts of [{locked:true},{phase:'ReadyCheck'}]){
   const context=busyContext({busy:true,...opts});
   const mode=opts.selectionMode||'rift';
   await assert.rejects(context.prepareHeroClick({id:'Ashe',role:'bottom',mode}));
