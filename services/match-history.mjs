@@ -28,12 +28,18 @@ const SCAN_PAGE=20,SCAN_BATCH=80,SCAN_LOCAL_BATCH=100,SCAN_DEADLINE_MS=15000,FOR
 // A visible read must never hold a concurrency slot indefinitely: three stalled
 // transports would stop every later read and leave the page loading forever.
 const OPERATION_DEADLINE_MS=8000;
+// Two concurrent requests, like League Akari: operations and game-backend calls.
+const OPERATION_SLOTS=2,BACKEND_SLOTS=2;
 // Paging back and forth re-read the same page from the network every time.
 // A short-lived page cache keeps navigation instant; an explicit refresh, or
 // a session change, bypasses and drops it.
 const LIST_CACHE_MS=60000,LIST_CACHE_MAX=12;
 export function createMatchHistoryService({discover=discoverClient,request=lcuRequest,sgp=sgpRequest,aliases=riotAliasRequest,installPath=()=>'',now=Date.now,operationDeadlineMs=OPERATION_DEADLINE_MS}={}){
  let connection='',epoch=0,running=0,clearGeneration=0,sessionId=crypto.randomBytes(16).toString('hex'),rosterCache=null,gsmCache=null,discovery=null,discoveredAt=0,usageScan=null,usageReplay=null,usageRevision=0,foreground=0;const waiting=[],lowWaiting=[],idleWaiters=[],handles=new Map(),cache=new Map(),cacheBytes=new Map(),tokens=new Map(),listCache=new Map();let totalCacheBytes=0;
+ // Every game-backend request, whatever operation or page fan-out it belongs to,
+ // shares these slots, so the backend sees at most two requests at a time.
+ let backendRunning=0;const backendWaiting=[];
+ async function backendSlot(fn){if(backendRunning>=BACKEND_SLOTS)await new Promise(resolve=>backendWaiting.push(resolve));backendRunning++;try{return await fn();}finally{backendRunning--;backendWaiting.shift()?.();}}
  const preferredSource=new Map(),failedSource=new Map();
  const rememberSource=(server,source)=>preferredSource.set(server,source);
  const sourceBlocked=(server,source)=>now()<(failedSource.get(server+':'+source)??-Infinity);
@@ -42,8 +48,8 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
  function clear(){clearGeneration++;discovery=null;discoveredAt=0;resetSession();}
  // Ongoing-game samples and deeper pages wait in a low-priority lane, so a page
  // or player the user opens starts at the next free slot instead of behind them.
- async function limited(fn,low=false){if(waiting.length+lowWaiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=3)await new Promise(resolve=>(low?lowWaiting:waiting).push(resolve));running++;try{return await fn();}finally{running--;(waiting.shift()||lowWaiting.shift())?.();}}
- // The usage scan reads the shared backend quota four pages at a time.
+ async function limited(fn,low=false){if(waiting.length+lowWaiting.length>=12)fail('战绩查询正在排队，请稍后重试');if(running>=OPERATION_SLOTS)await new Promise(resolve=>(low?lowWaiting:waiting).push(resolve));running++;try{return await fn();}finally{running--;(waiting.shift()||lowWaiting.shift())?.();}}
+ // The usage scan shares the two backend slots with every other read.
  // A foreground read must not queue behind it, so the scan waits for the
  // running foreground read to finish. The wait is bounded: the scan still
  // progresses when a foreground read stalls.
@@ -96,7 +102,7 @@ export function createMatchHistoryService({discover=discoverClient,request=lcuRe
    tokens.set(kind,{value:token,at:now()});
   }
   assertSession(c);
-  try{return await sgp({server,route:path,token,common:kind!=='entitlements',...(body?{method:'POST',body}:{})});}
+  try{return await backendSlot(()=>sgp({server,route:path,token,common:kind!=='entitlements',...(body?{method:'POST',body}:{})}));}
   catch(error){
    if([401,403].includes(error?.status)&&c.epoch===epoch&&c.key===connection&&tokens.get(kind)?.value===token)tokens.delete(kind);
    throw error;

@@ -61,7 +61,7 @@ test('a paginated list stops at the first short source page and never joins acro
 
 test('a known short page does not wait for a later unresponsive speculative page',async()=>{
  const f=fixture(),finish=[];let timer;f.settings.backend=async start=>start>=40?new Promise(r=>finish.push(r)):{games:Array.from({length:start===0?20:1},(_,i)=>({json:raw(old,start+i+1)}))};
- try{const first=await f.service.execute('own-summary-page'),result=await Promise.race([f.service.execute('own-summary-page',{cursor:first.cursor}),new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('short page waited for an unrelated tail')),1000))]);assert.equal(result.scanned,21);assert.equal(result.complete,true);assert.equal(finish.length,3);}finally{clearTimeout(timer);for(const done of finish)done({games:[]});}
+ try{const first=await f.service.execute('own-summary-page'),result=await Promise.race([f.service.execute('own-summary-page',{cursor:first.cursor}),new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('short page waited for an unrelated tail')),1000))]);assert.equal(result.scanned,21);assert.equal(result.complete,true);assert.equal(finish.length,2);}finally{clearTimeout(timer);for(const done of finish)done({games:[]});}
 });
 
 test('an explicit client-only failure does not claim both sources were queried',async()=>{

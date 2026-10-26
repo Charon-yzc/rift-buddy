@@ -61,11 +61,11 @@ test('clear immediately invalidates an in-flight query and prevents it publishin
 });
 test('clear bypasses full execution slots and cancels previously queued operations',{timeout:3000},async()=>{
  const releases=[];const service=createMatchHistoryService({discover:async()=>({port:23456,password:'mock-only'}),request:async(_a,route)=>route.includes('current-summoner')?own:route.includes('/matches?')?new Promise(resolve=>releases.push(resolve)):route.includes('/games/')?raw:{}});
- const active=Array.from({length:3},()=>service.execute('page',{source:'lcu'}));const settled=Promise.allSettled(active);
- while(releases.length<3)await new Promise(resolve=>setImmediate(resolve));
+ const active=Array.from({length:2},()=>service.execute('page',{source:'lcu'}));const settled=Promise.allSettled(active);
+ while(releases.length<2)await new Promise(resolve=>setImmediate(resolve));
  const queued=service.execute('page',{source:'lcu'});const queuedResult=assert.rejects(queued,/会话/);
  await service.execute('clear');for(const release of releases)release({games:{games:[raw]}});
- assert.ok((await settled).every(result=>result.status==='rejected'));await queuedResult;assert.equal(releases.length,3);
+ assert.ok((await settled).every(result=>result.status==='rejected'));await queuedResult;assert.equal(releases.length,2);
 });
 test('concurrent detail and timeline commits merge the current cache instead of losing a completed result',async()=>{
  let finishDetail,finishTimeline,detailCalls=0;

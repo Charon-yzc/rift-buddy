@@ -105,12 +105,15 @@ test('a roster batch reads automatic first pages from the backend and keeps the 
  assert.equal(explicit.source,'lcu','an explicit client source is never overridden');
 });
 
-test('the hero-statistics batch is fetched concurrently instead of one page at a time',async()=>{
+test('the hero-statistics batch reads two backend pages at a time',async()=>{
  const pending=[];let firstRead=true;
  const f=service({backend:async()=>{if(firstRead){firstRead=false;return {games:Array.from({length:20},(_,i)=>({json:{...raw,gameId:i+1}}))};}return new Promise(resolve=>pending.push(resolve));}});
  const first=await f.service.execute('own-summary-page',{source:'sgp'});assert.equal(first.scanned,20);assert.equal(f.calls.backend,1);
- const batch=f.service.execute('own-summary-page',{cursor:first.cursor});for(let i=0;i<50&&pending.length<4;i++)await new Promise(r=>setImmediate(r));assert.equal(pending.length,4,'all four requests start before any result is released');
- for(let i=3;i>=0;i--)pending[i]({games:Array.from({length:20},(_,j)=>({json:{...raw,gameId:21+i*20+j}}))});const result=await batch;assert.equal(f.calls.backend,5);assert.equal(result.scanned,100);assert.equal(result.identified,100);
+ const settle=async()=>{for(let i=0;i<20;i++)await new Promise(r=>setImmediate(r));};
+ const batch=f.service.execute('own-summary-page',{cursor:first.cursor});await settle();assert.equal(pending.length,2,'only two backend requests run before a result is released');
+ const release=(index)=>pending[index]({games:Array.from({length:20},(_,j)=>({json:{...raw,gameId:21+index*20+j}}))});
+ release(0);release(1);await settle();assert.equal(pending.length,4,'releasing two slots starts the next two pages');
+ release(2);release(3);const result=await batch;assert.equal(f.calls.backend,5);assert.equal(result.scanned,100);assert.equal(result.identified,100);
 });
 
 test('a concurrent batch advances the scan by the whole batch',async()=>{
@@ -303,12 +306,14 @@ test('a page or player the user opens starts before queued ongoing-game backgrou
  const f=service({request:async(auth,route)=>{if(route.startsWith('/lol-ranked/'))order.push('profile');return requestStub()(auth,route);},backend:async({route})=>{if(!route.endsWith('/DETAILS'))return {games:[{json:raw}]};order.push('sample');return new Promise(resolve=>gates.push(()=>resolve({json:{frames:[],events:[]}})));}});
  const page=await f.service.execute('page',{source:'auto',start:0,count:20});
  const low=Array.from({length:4},()=>f.service.execute('timeline',{handle:page.handle,id:page.games[0].id,compact:true,background:true}));
- while(gates.length<3)await new Promise(resolve=>setImmediate(resolve));
+ while(gates.length<2)await new Promise(resolve=>setImmediate(resolve));
  const profile=f.service.execute('profile',{handle:page.handle});
  gates.shift()();await profile;
- while(order.length<5)await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(order,['sample','sample','sample','profile','sample'],'the opened profile took the freed slot ahead of the queued sample');
- while(gates.length)gates.shift()();await Promise.all(low);
+ while(order.length<4)await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(order,['sample','sample','profile','sample'],'the opened profile took the freed slot ahead of the queued sample');
+ const done=Promise.all(low);let finished=false;done.then(()=>{finished=true;});
+ while(!finished){while(gates.length)gates.shift()();await new Promise(resolve=>setImmediate(resolve));}
+ await done;
 });
 
 test('an ongoing-game sample receives a compact timeline and leaves the shared cache to the history page',async()=>{
