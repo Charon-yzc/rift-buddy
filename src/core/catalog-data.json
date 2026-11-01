@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.25",
+  "version": "2026.11.02.26",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -7706,24 +7706,22 @@
     },
     {
       "id": "kaisa-nautilus",
-      "carry": "Kaisa",
-      "support": "Nautilus",
       "name": "深海猎手",
       "style": "balanced",
       "tags": [
         "稳定先手",
         "突进跟进"
       ],
-      "why": "泰坦实际定身给卡莎叠电浆并制造跟普攻/W的窗口；卡莎R只用于安全接应，不承诺控制命中就必杀。",
-      "plan": "卡莎吃线与主要经济；泰坦错开Q、被动普攻和R，卡莎跟进补电浆，音管与鸟盾覆盖她的输出窗口。项目按近期作者内容与当前机制改编。",
-      "risk": "兵线会分摊卡莎Q和挡W，定住不等于孤立Q；黑盾/法术护盾、净化、反开和打野包夹都可破坏接力。E减速、W伤害、沉默不当作额外友军定身层。",
+      "why": "泰坦实际定身帮助卡莎叠电浆，卡莎按距离与安全条件跟进；两人的技能配合不以特定装备为前提。",
+      "plan": "先看兵线、距离和敌方保护；泰坦 Q 越过不了前方小兵，实际命中并控制目标英雄后，卡莎再跟同一目标。被动普攻只有实际禁锢时才算，且对同一目标有冷却；泰坦 R 实际控制也可接。卡莎 R 需已学、目标英雄在射程内且带电浆，落点不安全时不飞。历史作者分支使用音管，旧项目方案还提到鸟盾；两者可选，不是电浆联动的必需条件。",
+      "risk": "兵线会分摊卡莎 Q 并阻挡 W，定住不等于孤立 Q；护盾、解控、反开和打野包夹都可破坏接力。泰坦 E 减速、W 伤害不当作额外友军定身电浆。",
       "partners": [
         "Galio",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-20",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Demonsedge90 · Attack Damage / On-Hit（目录更新10/15）",
@@ -7754,50 +7752,26 @@
           "url": "https://raw.communitydragon.org/16.20/game/items.cdtb.bin.json",
           "kind": "装备触发依据",
           "checkedAt": "2026-10-20"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "kaisa-naut-onhit",
-        "support": "naut-kaisa-engage"
-      },
       "reviewBaseline": {
         "champion:Kaisa": "792e7d85c3acdc09",
-        "champion:Nautilus": "67da151a84906467",
-        "item:3087": "84e4dae75d4d4953",
-        "item:3124": "a5fa166d09295f8f",
-        "item:3302": "c3e9201cb2cb4ba1",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3115": "627135c117eaf20a",
-        "item:3089": "a8a9b060b253391c",
-        "item:1037": "87659086affe2008",
-        "rune:8008": "d8ed59948702367b",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8143": "c3f9de836bc96957",
-        "rune:8106": "bfb83fa22daf18de",
-        "item:2524": "94b653f97efb42b2",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3067": "125eedc86e016adb",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8401": "0c0323486ace9a0c",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47"
+        "champion:Nautilus": "67da151a84906467"
       },
       "tempo": "teamfight",
-      "early": "卡莎补刀，泰坦用草丛与走位争取控制入口；未赢兵线或大波敌兵时不强抢二；第一次回城按各自预算分购组件，先确认打野位置再压线。",
-      "window": "双方能跟进、控制入口不被兵线挡、敌方关键解控/保护已确认；六级后先确认电浆标记与R安全落点，飞行不等于脱离敌方反开范围。",
-      "economy": "卡莎保留补刀经济，泰坦走辅助任务并留视野；音管增益与鸟盾需保持实际友军范围，不以双方同时拥有整套装备为前提。",
+      "early": "卡莎补刀，泰坦承担辅助任务与视野；先处理兵线，不因抢二而忽视敌方兵线和打野。",
+      "window": "泰坦控制可用、卡莎在跟进距离且敌方保护与退路已确认；卡莎 R 须已学、目标英雄在射程内且带电浆，落点安全。",
+      "economy": "卡莎使用下路经济，泰坦保留辅助视野；双方可选同英雄同分路参考，音管与鸟盾不是技能联动的前置条件。",
       "steps": [
-        "先确认兵线、打野和保护技能；贴身可普攻定身，远处Q需无遮挡。",
-        "泰坦将Q、被动普攻与R分开衔接；E用于减速，不虚算友军定身电浆。",
-        "卡莎在射程内普攻与W补层，Q尽量避开可分摊单位；R仅飞到能活着持续输出的落点。",
-        "泰坦音管接应、鸟盾挡爆发；没收掉就借控制撤回，不因一层标记追进多人。"
+        "先确认兵线、打野和保护；泰坦 Q 会被前方小兵挡住，实际命中并控制目标敌方英雄后，卡莎才跟同一目标。",
+        "泰坦被动普攻须实际禁锢目标，同一目标有冷却；R 控制须实际命中。卡莎在安全射程内普攻、W 补电浆；E 减速不计作友军定身层。",
+        "卡莎 Q 留意伤害分摊；R 须已学、目标英雄在射程内且带电浆，并选择安全落点；条件不成立或威胁逼近时撤退。"
       ],
       "reviewSourceAnchors": {
         "Kaisa": {
@@ -7805,21 +7779,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "792e7d85c3acdc09",
-          "observedAt": "2026-10-19T05:15:33.398Z",
+          "observedAt": "2026-10-23T02:03:51.531Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kaisa",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/kaisa/kaisa.bin.json",
-              "sha256": "afa45fece8ca5edb61d12432df11c5dfb2f6b08979daa35b05b193aa60ae85f4"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "e793368118ed867a"
             }
           }
@@ -7829,26 +7803,40 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-19T05:15:33.484Z",
+          "observedAt": "2026-10-23T02:03:51.544Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
         }
-      }
+      },
+      "members": [
+        {
+          "champion": "Kaisa",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "卡莎补刀，友军实际定身与自身普攻、W 按实际命中为同一目标叠电浆；R 须已学、目标英雄在射程内且带电浆，落点安全。"
+        },
+        {
+          "champion": "Nautilus",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "诺提勒斯辅助，Q 会被前方小兵挡住，实际命中并控制目标敌方英雄才报卡莎跟进；被动须实际禁锢且同一目标有冷却，R 看实际控制。E 减速不算友军定身叠层。"
+        }
+      ]
     },
     {
       "id": "kaisa-alistar",
