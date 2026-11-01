@@ -3,6 +3,7 @@ import {escape as e,icon,portrait,button} from './ui.mjs';
 import {ROLES} from './core/rules.mjs';
 import {roomPreparation} from './core/room-configuration.mjs';
 import {SHARDS} from './core/builds.mjs';
+import {attributeReference} from './core/skill-summary.mjs';
 import {creativeMemberCombo} from './core/creative-plan.mjs';
 import {duoPlayView} from './duo-play-view.mjs';
 import {stageVersionNotice} from './core/stage-versions.mjs';
@@ -11,8 +12,8 @@ import {cleanSharedChampionUsage} from './core/room-champion-usage.mjs';
 
 const roleName=id=>ROLES.find(r=>r.id===id)?.name||id;
 const LINK_TEXT={connecting:'连接中',connected:'已连接',reconnecting:'重连中',failed:'连接失败',idle:''};
-const attributeLines=plan=>plan?[
- `${plan.title}：${plan.priority.join(' > ')}`,plan.action,plan.note,
+const attributeLines=(plan,currentPatch)=>plan?[
+ `${plan.title}：${attributeReference(plan,currentPatch)}`,plan.action,plan.note,
  `属性方案来源：${plan.source} · ${plan.patch} · 整理于 ${plan.reviewedAt}`,
  `优先级来源：${plan.sourceUrl}`,...plan.mechanismUrls.map(url=>`机制来源：${url}`),
  '属性方案供查看与复制，不会作为 QWER 序列采用；助手未读取已投属性点。',
@@ -108,7 +109,7 @@ export function roomConfigurationText(config,data,from,strategy){
   ...(play?Object.values(play.stages).map(stage=>{const notice=stageVersionNotice(stage,play,data.patch);return `${stage.label}${notice?' · '+notice:''}：${stage.ownAction}\n${stage.steps.join(' → ')}\n窗口：${stage.window}\n停止：${stage.exit}`;}):strategy?[member?'旧方案未保存阶段分工。':'此英雄不在所分享组合的成员中；该英雄配置为单独参考。']:[]),
   `出门：${names(config.start)}`,`装备计划：${names(config.items)}`,`鞋子：${names(config.boots)}`,`召唤师技能：${config.spells.map(id=>data.spells[id]?.name||id).join(' / ')}`,
   `完整符文：${config.runes?config.runes.selectedPerkIds.map(id=>runes.get(id)||SHARDS[id]||`符文 #${id}`).join(' / '):'发送方未提供可用符文页'}`,
-  ...(config.attributePlan?attributeLines(config.attributePlan):[`${order?.length===3?'开局三点':'逐级加点'}：${order?order.split('').map((s,i)=>`${i+1}级 ${s}`).join(' → '):'发送方未提供后续逐级加点'}${coverage}`]),
+  ...(config.attributePlan?attributeLines(config.attributePlan,data.patch):[`${order?.length===3?'开局三点':'逐级加点'}：${order?order.split('').map((s,i)=>`${i+1}级 ${s}`).join(' → '):'发送方未提供后续逐级加点'}${coverage}`]),
   ...(config.priority?[`加点优先：${config.priority.split('').join(' > ')}；仍按游戏内可升级选项核对`]:[]),
   ...(config.basis?[`配置来源：${config.basis.title}；${config.basis.note}`,`符文说明：${config.basis.rune}`,`加点说明：${config.basis.skill}`]:['旧共享未提供来源说明，请与发送方核对']),
   '发送方配置快照；不代表已购买、技能就绪、联合胜率或最优配置。'].join('\n');
@@ -123,7 +124,7 @@ export function roomConfigurationDialog(config,data,from,strategy,{localStrategy
  const gearHtml=`<section class="detail-section" data-room-section="gear"><h3>发送方装备计划</h3><p>出门：${names(config.start)}</p><p>装备：${names(config.items)}</p><p>鞋子：${names(config.boots)}</p></section>`;
  const runeHtml=`<section class="detail-section" data-room-section="runes"><h3>发送方完整符文与碎片</h3>${page?`<p>${e(trees.get(page.primaryStyleId)?.name||`符文系 #${page.primaryStyleId}`)} / ${e(trees.get(page.subStyleId)?.name||`符文系 #${page.subStyleId}`)}</p><div class="room-runes">${page.selectedPerkIds.map(id=>`<span>${e(runes.get(id)?.name||SHARDS[id]||`未知符文 #${id}`)} <small>#${id}</small></span>`).join('')}</div>`:'<p>发送方未提供可用符文页；海克斯不应用峡谷符文。</p>'}</section>`;
  const order=config.skills||config.first;
- const skillHtml=`<section class="detail-section" data-room-section="skills"><h3>发送方召唤师技能与加点</h3>${config.priority?`<p>加点优先：${e(config.priority.split('').join(' > '))}；按游戏内可升级选项核对。</p>`:''}<p>${config.spells.map(id=>e(data.spells[id]?.name||id)).join(' / ')}</p>${config.attributePlan?attributeLines(config.attributePlan).map(line=>`<p>${e(line)}</p>`).join(''):order?`${order.length<18?`<p>${order.length===3?'开局三点':'部分逐级参考'}：仅覆盖前 ${order.length} 个技能点；发送方未提供后续逐级加点，后续按游戏内可升级选项核对。</p>`:''}<ol class="room-skill-order">${order.split('').map((key,i)=>`<li>${i+1}级 <b>${key}</b></li>`).join('')}</ol>`:'<p>发送方未提供普通逐级加点；特殊英雄属性点另行核对。</p>'}</section>`;
+ const skillHtml=`<section class="detail-section" data-room-section="skills"><h3>发送方召唤师技能与加点</h3>${config.priority?`<p>加点优先：${e(config.priority.split('').join(' > '))}；按游戏内可升级选项核对。</p>`:''}<p>${config.spells.map(id=>e(data.spells[id]?.name||id)).join(' / ')}</p>${config.attributePlan?attributeLines(config.attributePlan,data.patch).map(line=>`<p>${e(line)}</p>`).join(''):order?`${order.length<18?`<p>${order.length===3?'开局三点':'部分逐级参考'}：仅覆盖前 ${order.length} 个技能点；发送方未提供后续逐级加点，后续按游戏内可升级选项核对。</p>`:''}<ol class="room-skill-order">${order.split('').map((key,i)=>`<li>${i+1}级 <b>${key}</b></li>`).join('')}</ol>`:'<p>发送方未提供普通逐级加点；特殊英雄属性点另行核对。</p>'}</section>`;
  const sourceHtml=`<section class="detail-section" data-room-section="source">${config.basis?`<h3>发送方配置来源 · ${e(config.basis.title)}</h3><p>${e(config.basis.note)}</p><p>符文：${e(config.basis.rune)}</p><p>加点：${e(config.basis.skill)}</p>`:'<p class="callout warning">旧共享未提供来源说明，请与发送方核对。</p>'}</section>`;
  const nav=`<nav class="room-configuration-nav" aria-label="共享配置分区">${[['runes','符文'],['skills','召唤师技能与加点'],['gear','装备'],...(strategy?[['strategy','组合职责']]:[]),['source','来源说明']].map(([section,label])=>`<button class="btn quiet small" data-action="room-configuration-jump" data-section="${section}">${label}</button>`).join('')}</nav>`;
  return `<div class="modal-backdrop" data-backdrop="true"><section class="modal drawer room-configuration" role="dialog" aria-modal="true" aria-label="发送方配置"><header class="modal-header"><h2>${e(c?.name||config.champion)} · ${e(from)}的配置</h2>${fromFile?button('room-file-preview','全部成员','','quiet small'):''}<button class="btn quiet small" data-action="close">关闭</button></header><div class="drawer-content"><p class="section-copy">${e(roleName(config.role))} · ${config.mode==='hex'?'海克斯大乱斗':'召唤师峡谷'} · 发送方资料 ${e(config.patch)} · 本机资料 ${e(data.patch)}</p><p>这是点击时取得的发送方配置快照；装备是计划，符文尚未应用到你的客户端。</p>${config.patch!==data.patch?'<p class="callout warning">双方资料版本不同，名称按本机资料显示，原编号保留；先核对版本，不能采用替代符文页。</p>':''}${adoptionError?`<p class="callout warning">${e(adoptionError)}</p>`:''}<div class="detail-actions"><button class="btn small" data-action="room-copy-configuration">复制发送方配置</button><button class="btn primary small" data-action="room-adopt-configuration" ${adoptionError?'disabled':''}>采用符文${order?.length===3?'、开局三点':config.skills?'、加点':''}与召唤师技能${keepsLocal?' · 当前本机方案':play?'及组合职责':''}</button></div><p class="bottom-note">${keepsLocal?`采用到本机当前组合「${e(adoption.creativePlan.name)}」；保留本机分工，发送方组合说明另行参考。`:''}采用只编辑本机英雄配置，装备另行参考；写符文仍需在随后配置页核对英雄并明确点击替换。</p>${nav}${runeHtml}${skillHtml}${gearHtml}${strategyHtml}${sourceHtml}</div></section></div>`;

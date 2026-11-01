@@ -11,6 +11,7 @@ import {adaptEquipment} from './adaptive-build.mjs';
 import {validRankedStatistics} from './ranked-statistics.mjs';
 import {prepareGear} from './gear-choices.mjs';
 import {legalSkillOrder,orderPriority,skillMechanismNote,attributePreparation,validateCustomSkillOrder} from './skill-advice.mjs';
+import {attributeReference} from './skill-summary.mjs';
 import {duoPlay,duoPlayText} from './duo-plays.mjs';
 import {creativeMemberCombo,validateCreativePlan} from './creative-plan.mjs';
 import {catalogEntryRevision,catalogPlanGroups,catalogPlanCurrent} from './catalog-choice.mjs';
@@ -344,7 +345,7 @@ export function buildAsText(build, champion, data) {
   build.runePage?`符文：${build.runePage.selectedPerkIds.map(id=>runeNames.get(id)||SHARDS[id]).join(' / ')}`:build.mode==='hex'?'海克斯模式请以局内强化选择和实际规则为准。':'符文暂不可用，请核对当前资料版本。',
   build.selectedRune?`符文选择：${build.selectedRune.name}；${build.selectedRune.when}`:'',
   build.summoners.length?`召唤师技能：${build.summoners.map((id,index)=>(index?'F':'D')+' '+data.spells[id].name).join(' / ')}`:'',
-  build.attributePlan?`属性加点：${build.attributePlan.priority.join(' > ')}；${build.attributePlan.action} ${build.attributePlan.note}（${build.attributePlan.source} · ${build.attributePlan.patch}）`:build.skillOrder?`加点节点（前 ${build.skillOrder.length} 个技能点）：${build.skillOrder.split('').join(' > ')}；${build.selectedSkill?.when||'根据实时已点技能继续补齐。'}`:build.priority?`加点优先：${build.priority.split('').join(' > ')}；常规英雄通常优先 R，一级技能按对线或入侵调整。`:'',
+  build.attributePlan?`属性加点：${attributeReference(build.attributePlan,build.dataPatch)}；${build.attributePlan.action} ${build.attributePlan.note}（${build.attributePlan.source} · ${build.attributePlan.patch}）`:build.skillOrder?`加点节点（前 ${build.skillOrder.length} 个技能点）：${build.skillOrder.split('').join(' > ')}；${build.selectedSkill?.when||'根据实时已点技能继续补齐。'}`:build.priority?`加点优先：${build.priority.split('').join(' > ')}；常规英雄通常优先 R，一级技能按对线或入侵调整。`:'',
   build.skillMechanism?`加点机制：${build.skillMechanism}`:'',
   ...build.adjustments.map(a=>`${a.title}：${a.text}`),
   build.tips,
