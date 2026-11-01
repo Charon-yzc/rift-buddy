@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.23",
+  "version": "2026.11.02.24",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -13570,17 +13570,15 @@
     },
     {
       "id": "brand-nami",
-      "carry": "Brand",
-      "support": "Nami",
       "name": "潮汐火焰",
       "style": "fun",
       "tags": [
         "法术增益",
         "控制接力"
       ],
-      "why": "娜美的增益和减速支持火男命中技能，控制可交错使用。",
-      "plan": "火男补刀，娜美辅助；先减速再找火男控制，泡泡可留作保护。",
-      "risk": "双脆皮、双法术；持续燃烧不等于无限触发娜美增益。",
+      "why": "娜美的增益和减速帮助布兰德寻找实际技能命中窗口。",
+      "plan": "娜美 E 生效且仍有次数时，布兰德的攻击或技能实际命中才施加该次强化效果。 布兰德先用技能实际施加灼烧；Q 命中首个敌人且该目标仍被灼烧时才晕。 娜美 Q 实际命中才控制；技能落空、法力不足或侧翼受压时回撤。",
+      "risk": "布兰德 Q 可被首个敌人阻挡；持续燃烧不能当作娜美 E 无限触发。",
       "partners": [
         "Shen",
         "Graves"
@@ -13592,49 +13590,94 @@
           "url": "https://botdiff.lol/2025/11/04/top-off-meta-bot-lane-combinations-for-league-of-legends/",
           "kind": "guide",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "battle-mage",
-        "support": "nami-empower"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Brand": "faaa1f3065d564b1",
-        "champion:Nami": "6a067b32874ba55a",
-        "item:3040": "32f30786cea52b4a",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3020": "357a162d6a40286e",
-        "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:6617": "6dccd52cee1f2c6e",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727"
+        "champion:Brand": "dfe0f7f6ef8e7e6e",
+        "champion:Nami": "b10366f1187813b9"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Brand",
+          "role": "bottom",
+          "job": "布兰德保补刀，先以实际命中的技能施加灼烧，再判断 Q 路径和目标状态。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Nami",
+          "role": "support",
+          "job": "娜美保辅助任务，E 给友军后按生效时间与剩余次数判断强化，Q 留合适的控制窗口。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "娜美 E 生效且仍有次数时，布兰德的攻击或技能实际命中才施加该次强化效果。",
+        "布兰德先用技能实际施加灼烧；Q 命中首个敌人且该目标仍被灼烧时才晕。",
+        "娜美 Q 实际命中才控制；技能落空、法力不足或侧翼受压时回撤。"
+      ],
+      "window": "双方技能、法力和安全距离成立时。",
+      "early": "布兰德保下路补刀，娜美保蓝量与辅助任务。",
+      "economy": "布兰德下路补刀，娜美辅助。",
+      "reviewSourceAnchors": {
+        "Brand": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "dfe0f7f6ef8e7e6e",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Brand",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/brand/brand.bin.json",
+              "sha256": "6fa48fcc58833650750981e3f64657fdd6ba8392741ee11947fd48d6a7da96d4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "12112af12e321441"
+            }
+          }
+        },
+        "Nami": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b10366f1187813b9",
+          "observedAt": "2026-10-26T13:38:40.505Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nami",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d41e55e60af3c37e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "sion-zilean",
@@ -15216,17 +15259,15 @@
     },
     {
       "id": "xerath-velkoz",
-      "carry": "Xerath",
-      "support": "Velkoz",
       "name": "远程几何课",
       "style": "wild",
       "tags": [
         "远程消耗",
         "接控"
       ],
-      "why": "两位法师用远程技能限制走位，控制命中再补伤害。",
-      "plan": "泽拉斯补刀，维克兹辅助；避免同时交掉所有保护技能。",
-      "risk": "双脆皮、全法术；被贴脸时不能只继续蓄力。",
+      "why": "两位法师确认远程控制命中后再分段跟伤害。",
+      "plan": "泽拉斯 E 命中第一个敌人才晕；维克兹按目标位置接技能。 维克兹技能实际命中同一目标并叠到三层才触发被动伤害；两人保留侧翼退路。 控制被挡、目标贴近或引导面临打断时停止蓄力并撤退。",
+      "risk": "双法师脆弱；泽拉斯 E 会被第一个敌人挡住。",
       "partners": [
         "Shen",
         "JarvanIV"
@@ -15238,57 +15279,106 @@
           "url": "https://www.reddit.com/r/supportlol/comments/1m13oo1/off_meta_bot_lane_synergy_ideas/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "mana-control",
-        "support": "poke-support"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Xerath": "8686c1e8e481fd88",
-        "champion:Velkoz": "06abcf2e8bb52be6",
-        "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
-        "item:3089": "a8a9b060b253391c",
-        "item:3020": "357a162d6a40286e",
-        "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8369": "436163d51e34ebba",
-        "rune:8304": "aa454bdce540cb11",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3158": "72ca672b9221f063",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de"
+        "champion:Xerath": "c6bf3b1c613437cd",
+        "champion:Velkoz": "4fc6f59617324dce"
       },
-      "tempo": "poke"
+      "tempo": "poke",
+      "members": [
+        {
+          "champion": "Xerath",
+          "role": "bottom",
+          "job": "泽拉斯保补刀，E 命中第一个敌人才晕；Q 蓄力按安全距离决定。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Velkoz",
+          "role": "support",
+          "job": "维克兹保辅助任务，技能实际命中后再判断被动与控制。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "泽拉斯 E 命中第一个敌人才晕；维克兹按目标位置接技能。",
+        "维克兹技能实际命中同一目标并叠到三层才触发被动伤害；两人保留侧翼退路。",
+        "控制被挡、目标贴近或引导面临打断时停止蓄力并撤退。"
+      ],
+      "window": "控制路径、法力与安全距离均成立时。",
+      "early": "泽拉斯保补刀，维克兹保辅助任务和视野。",
+      "economy": "泽拉斯下路补刀，维克兹辅助。",
+      "reviewSourceAnchors": {
+        "Xerath": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c6bf3b1c613437cd",
+          "observedAt": "2026-10-26T13:38:40.603Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Xerath",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xerath/xerath.bin.json",
+              "sha256": "cd93216a854d592f605c11be9bb9e00acd9f35dab0bf98828909809f94145796"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "fe85c3d422f63fd0"
+            }
+          }
+        },
+        "Velkoz": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4fc6f59617324dce",
+          "observedAt": "2026-10-26T13:38:40.598Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Velkoz",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/velkoz/velkoz.bin.json",
+              "sha256": "d7083b07c94482f1814bd603cd7831d0de5fd1ba1170dc9b5ff386793ab08ffb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "83d561abb744eab5"
+            }
+          }
+        }
+      }
     },
     {
       "id": "lux-velkoz",
-      "carry": "Lux",
-      "support": "Velkoz",
       "name": "光束交叉",
       "style": "wild",
       "tags": [
         "定身接爆发",
         "远程消耗"
       ],
-      "why": "拉克丝定身与减速支持维克兹后续技能。",
-      "plan": "拉克丝补刀，维克兹辅助；控制错开，留意大招时的侧翼。",
-      "risk": "怕突进与打断；两人经济和清线要分工。",
+      "why": "拉克丝实际限制目标后，维克兹按位置跟进技能。",
+      "plan": "拉克丝 Q 实际命中时束缚路径上的前两个敌方单位；维克兹按目标当前位置跟进。 维克兹技能命中叠加被动，达到三层时造成爆发真实伤害；R 射线对近期受到该被动伤害的敌人改为真实伤害，不把队友伤害当自己的被动层。 控制落空、对手贴近或引导受到威胁时撤离。",
+      "risk": "两人脆弱且缺前排；维克兹 R 引导时要留意打断。",
       "partners": [
         "Shen",
         "Graves"
@@ -15300,43 +15390,94 @@
           "url": "https://www.reddit.com/r/supportlol/comments/1m13oo1/off_meta_bot_lane_synergy_ideas/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "mana-control",
-        "support": "poke-support"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Lux": "ca4ca5d4fa16b8c8",
-        "champion:Velkoz": "06abcf2e8bb52be6",
-        "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
-        "item:3089": "a8a9b060b253391c",
-        "item:3020": "357a162d6a40286e",
-        "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8369": "436163d51e34ebba",
-        "rune:8304": "aa454bdce540cb11",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3158": "72ca672b9221f063",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de"
+        "champion:Lux": "50314ad04c92f1a6",
+        "champion:Velkoz": "4fc6f59617324dce"
       },
-      "tempo": "poke"
+      "tempo": "poke",
+      "members": [
+        {
+          "champion": "Lux",
+          "role": "bottom",
+          "job": "拉克丝保补刀；Q 实际命中时最多束缚前两名敌人。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Velkoz",
+          "role": "support",
+          "job": "维克兹保辅助任务，按目标位置使用技能，R 引导前确认侧翼。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "拉克丝 Q 实际命中时束缚路径上的前两个敌方单位；维克兹按目标当前位置跟进。",
+        "维克兹技能命中叠加被动，达到三层时造成爆发真实伤害；R 射线对近期受到该被动伤害的敌人改为真实伤害，不把队友伤害当自己的被动层。",
+        "控制落空、对手贴近或引导受到威胁时撤离。"
+      ],
+      "window": "目标实际受控、双方有安全射线和侧翼视野时。",
+      "early": "拉克丝保补刀，维克兹保辅助任务与法力。",
+      "economy": "拉克丝下路补刀，维克兹辅助。",
+      "reviewSourceAnchors": {
+        "Lux": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "50314ad04c92f1a6",
+          "observedAt": "2026-10-26T13:38:40.500Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lux",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
+              "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "cc7818802b8d5fc7"
+            }
+          }
+        },
+        "Velkoz": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "4fc6f59617324dce",
+          "observedAt": "2026-10-26T13:38:40.598Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Velkoz",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/velkoz/velkoz.bin.json",
+              "sha256": "d7083b07c94482f1814bd603cd7831d0de5fd1ba1170dc9b5ff386793ab08ffb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "83d561abb744eab5"
+            }
+          }
+        }
+      }
     },
     {
       "id": "poppy-zilean",
@@ -18256,24 +18397,22 @@
     },
     {
       "id": "samira-milio",
-      "carry": "Samira",
-      "support": "Milio",
       "name": "暖火枪舞",
       "style": "wild",
       "tags": [
         "射程增益",
         "解控保护"
       ],
-      "why": "米利欧提供保护与射程窗口，帮助莎弥拉对线普攻和短换血。",
-      "plan": "莎弥拉补刀；先稳住对线，第三人补可靠先手，米利欧保留控制保护后排。",
-      "risk": "缺少稳定硬先手；米利欧大招不能解决所有限制效果。",
+      "why": "米利欧在覆盖范围内提供保护，莎弥拉按实际评价和安全位置输出。",
+      "plan": "米利欧 W 覆盖友军时提供普攻距离和治疗，E 可给范围内友军护盾；莎弥拉按实际站位换血。 莎弥拉交替使用不同攻击或技能实际命中积累评价；自身达到 S、R 可用且打断威胁可控时才引导。 缺少可靠先手、保护不到或侧翼危险时停止深入。",
+      "risk": "米利欧 W 增加普攻距离，不等于增加莎弥拉所有技能距离；其 R 不保证解除所有效果。",
       "partners": [
         "Shen",
         "JarvanIV"
       ],
       "difficulty": "较高",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 莎弥拉技能资料",
@@ -18286,48 +18425,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Milio.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "samira-reset",
-        "support": "milio-range"
-      },
       "reviewBaseline": {
-        "champion:Samira": "c5f97ec28c913a72",
-        "champion:Milio": "7bec2e4244a3e4bc",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:3504": "f6eed220149ca076",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8347": "def2a55844436c47"
+        "champion:Samira": "fb97a340c89c0ba1",
+        "champion:Milio": "9176ff8b22c1f1c9"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Samira",
+          "role": "bottom",
+          "job": "莎弥拉保补刀，交替使用不同攻击或技能命中积累评价；达到 S 且 R 可用时再判断引导。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Milio",
+          "role": "support",
+          "job": "米利欧保辅助任务，W 按友军实际覆盖提供普攻距离与治疗，E 给可及友军护盾。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "米利欧 W 覆盖友军时提供普攻距离和治疗，E 可给范围内友军护盾；莎弥拉按实际站位换血。",
+        "莎弥拉交替使用不同攻击或技能实际命中积累评价；自身达到 S、R 可用且打断威胁可控时才引导。",
+        "缺少可靠先手、保护不到或侧翼危险时停止深入。"
+      ],
+      "window": "保护实际覆盖、双方可接应且莎弥拉有安全退路时。",
+      "early": "莎弥拉保补刀，米利欧保辅助任务、法力与视野。",
+      "economy": "莎弥拉下路补刀，米利欧辅助。",
+      "reviewSourceAnchors": {
+        "Samira": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "fb97a340c89c0ba1",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Samira",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "12851dd9ef379ec4"
+            }
+          }
+        },
+        "Milio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9176ff8b22c1f1c9",
+          "observedAt": "2026-10-26T13:38:40.503Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Milio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "32194f4e3319e474"
+            }
+          }
+        }
+      }
     },
     {
       "id": "lucian-renata",
@@ -21013,24 +21195,22 @@
     },
     {
       "id": "ziggs-milio",
-      "carry": "Ziggs",
-      "support": "Milio",
       "name": "暖火炸弹",
       "style": "balanced",
       "tags": [
         "发育保护",
         "远程推线"
       ],
-      "why": "米利欧回复与护盾帮助吉格斯反复处理兵线，控制留给逼近的突进者。",
-      "plan": "吉格斯补刀；清线后再决定支援，米利欧的增益不等于所有炸弹都增加射程。",
-      "risk": "自主强开有限，米利欧射程增益主要作用于普攻。",
+      "why": "米利欧提供覆盖范围内的回复与保护，吉格斯先处理兵线。",
+      "plan": "米利欧 W 覆盖时提供普攻距离和治疗；吉格斯在安全距离清线，不把普攻距离增益套到炸弹技能。 吉格斯 W 可击退敌人与自己，使用前确认方向和退路。 保护不到或敌方突进已逼近时收缩。",
+      "risk": "双人强开有限；米利欧 W 不会因此提高吉格斯所有技能射程。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 吉格斯技能资料",
@@ -21043,32 +21223,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Milio.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "milio-range"
-      },
       "reviewBaseline": {
-        "champion:Ziggs": "cbc8f3b971dff5cb",
-        "champion:Milio": "7bec2e4244a3e4bc",
-        "item:3504": "f6eed220149ca076",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Ziggs": "301986c8fed3e8fb",
+        "champion:Milio": "9176ff8b22c1f1c9"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Ziggs",
+          "role": "bottom",
+          "job": "吉格斯保补刀与清线，W 按实际敌人位置和自身退路使用。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Milio",
+          "role": "support",
+          "job": "米利欧保辅助任务，W 覆盖友军时提供普攻距离与治疗，E 给可及友军护盾。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "米利欧 W 覆盖时提供普攻距离和治疗；吉格斯在安全距离清线，不把普攻距离增益套到炸弹技能。",
+        "吉格斯 W 可击退敌人与自己，使用前确认方向和退路。",
+        "保护不到或敌方突进已逼近时收缩。"
+      ],
+      "window": "米利欧能覆盖吉格斯且双方有退路时。",
+      "early": "吉格斯保补刀与清线，米利欧保辅助任务和视野。",
+      "economy": "吉格斯下路补刀，米利欧辅助。",
+      "reviewSourceAnchors": {
+        "Ziggs": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "301986c8fed3e8fb",
+          "observedAt": "2026-10-26T13:38:40.607Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ziggs",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "fdb99302b5ecb565"
+            }
+          }
+        },
+        "Milio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9176ff8b22c1f1c9",
+          "observedAt": "2026-10-26T13:38:40.503Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Milio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "32194f4e3319e474"
+            }
+          }
+        }
+      }
     },
     {
       "id": "ziggs-taric",
@@ -21215,24 +21454,22 @@
     },
     {
       "id": "brand-leona",
-      "carry": "Brand",
-      "support": "Leona",
       "name": "日焰接力",
       "style": "fun",
       "tags": [
         "连续控制",
         "法术爆发"
       ],
-      "why": "蕾欧娜先手限制行动，火男在控制窗口内补技能，后续控制错开使用。",
-      "plan": "火男补刀；确认蓝量和射程，蕾欧娜进场后火男再接输出。",
-      "risk": "双人都缺少安全退出方式，推线要处理侧翼视野。",
+      "why": "蕾欧娜实际控制后，布兰德按目标状态和射线接技能。",
+      "plan": "蕾欧娜确认 E 路径与最后命中的英雄，Q 强化普攻击中才晕。 布兰德先以技能实际施加灼烧；Q 命中首个敌人且灼烧仍有效时才晕。 控制落空、目标变化或后方队友无法接应时停止深入。",
+      "risk": "布兰德 Q 可被首个敌人挡住；蕾欧娜 R 中心实际命中才晕。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 布兰德技能资料",
@@ -21245,68 +21482,110 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Leona.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "battle-mage",
-        "support": "tank-engage"
-      },
       "reviewBaseline": {
-        "champion:Brand": "faaa1f3065d564b1",
-        "champion:Leona": "060aef3e3162ad2d",
-        "item:3040": "32f30786cea52b4a",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3020": "357a162d6a40286e",
-        "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Brand": "dfe0f7f6ef8e7e6e",
+        "champion:Leona": "2b7d4e998553b365"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Brand",
+          "role": "bottom",
+          "job": "布兰德保补刀，先用技能实际施加灼烧，Q 命中时再确认灼烧是否仍在。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Leona",
+          "role": "support",
+          "job": "蕾欧娜保辅助任务，E 冲向最后命中的敌方英雄，Q 强化普攻击中才晕。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "蕾欧娜确认 E 路径与最后命中的英雄，Q 强化普攻击中才晕。",
+        "布兰德先以技能实际施加灼烧；Q 命中首个敌人且灼烧仍有效时才晕。",
+        "控制落空、目标变化或后方队友无法接应时停止深入。"
+      ],
+      "window": "双方有技能、法力且能安全接近同一目标时。",
+      "early": "布兰德保补刀，蕾欧娜保血量与辅助任务。",
+      "economy": "布兰德下路补刀，蕾欧娜辅助。",
+      "reviewSourceAnchors": {
+        "Brand": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "dfe0f7f6ef8e7e6e",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Brand",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/brand/brand.bin.json",
+              "sha256": "6fa48fcc58833650750981e3f64657fdd6ba8392741ee11947fd48d6a7da96d4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "12112af12e321441"
+            }
+          }
+        },
+        "Leona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2b7d4e998553b365",
+          "observedAt": "2026-10-26T13:38:40.498Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leona",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7ff3b8a69842091d"
+            }
+          }
+        }
+      }
     },
     {
       "id": "brand-alistar",
-      "carry": "Brand",
-      "support": "Alistar",
       "name": "牛角烈焰",
       "style": "fun",
       "tags": [
         "稳定击飞",
         "法术跟进"
       ],
-      "why": "牛头击飞帮助火男命中技能，击退也可用于保护火男的施法位置。",
-      "plan": "火男补刀；先约好强开或保护，别把目标顶出火男技能范围。",
-      "risk": "控制失误或火男缺蓝时很难跟进，不能无限压线。",
+      "why": "阿利斯塔实际击飞后，布兰德在可及距离跟进。",
+      "plan": "阿利斯塔确认目标和接应位置，Q 实际命中才击飞；W 不把目标顶出友军射程。 布兰德先用技能实际施加灼烧，Q 命中首个敌人且灼烧仍有效时才晕。 控制落空、法力不足或目标被推离射程时停止追击。",
+      "risk": "W 击退方向可能破坏接力；Q 不保证命中。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 布兰德技能资料",
@@ -21319,47 +21598,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Alistar.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "battle-mage",
-        "support": "tank-peel"
-      },
       "reviewBaseline": {
-        "champion:Brand": "faaa1f3065d564b1",
-        "champion:Alistar": "8a197011035cf22f",
-        "item:3040": "32f30786cea52b4a",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3020": "357a162d6a40286e",
-        "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3050": "c3e25c9df9075147",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "champion:Brand": "dfe0f7f6ef8e7e6e",
+        "champion:Alistar": "e2aa1310b144ff1f"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Brand",
+          "role": "bottom",
+          "job": "布兰德保补刀，技能实际施加灼烧后再按 Q 的目标与时机接控。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Alistar",
+          "role": "support",
+          "job": "阿利斯塔保辅助任务，Q 实际命中才击飞，W 注意击退方向。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "阿利斯塔确认目标和接应位置，Q 实际命中才击飞；W 不把目标顶出友军射程。",
+        "布兰德先用技能实际施加灼烧，Q 命中首个敌人且灼烧仍有效时才晕。",
+        "控制落空、法力不足或目标被推离射程时停止追击。"
+      ],
+      "window": "阿利斯塔能实际接近且布兰德可安全跟进时。",
+      "early": "布兰德保补刀和法力，阿利斯塔保辅助任务与血量。",
+      "economy": "布兰德下路补刀，阿利斯塔辅助。",
+      "reviewSourceAnchors": {
+        "Brand": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "dfe0f7f6ef8e7e6e",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Brand",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/brand/brand.bin.json",
+              "sha256": "6fa48fcc58833650750981e3f64657fdd6ba8392741ee11947fd48d6a7da96d4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "12112af12e321441"
+            }
+          }
+        },
+        "Alistar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e2aa1310b144ff1f",
+          "observedAt": "2026-10-26T13:38:40.304Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Alistar",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "60b70b49d6326ac5"
+            }
+          }
+        }
+      }
     },
     {
       "id": "velkoz-amumu",
@@ -22097,8 +22420,6 @@
     },
     {
       "id": "ziggs-zilean-bombs",
-      "carry": "Ziggs",
-      "support": "Zilean",
       "name": "炸弹轮班",
       "style": "fun",
       "tempo": "poke",
@@ -22107,20 +22428,16 @@
         "双炸弹",
         "推线消耗"
       ],
-      "why": "基兰减速后更容易挂炸弹，双炸弹实际眩晕时，吉格斯再把伤害落在同一区域。",
-      "plan": "吉格斯补刀，基兰辅助任务经济。基兰先 E 减速再找 Q-W-Q，确认第二颗炸弹引爆眩晕后吉格斯跟 Q/E；吉格斯 W 优先留作脱离，不先把人炸出队友炸弹区域。",
-      "risk": "双炸弹要实际命中同一目标才眩晕；双法伤、缺少前排，容易被突进。推线先补河道视野，基兰 R 给真正受威胁的人；无大招或炸弹落空就后退。",
+      "why": "基兰实际眩晕后，吉格斯可在同一区域寻找技能命中窗口。",
+      "plan": "基兰 E 可对敌方英雄减速，Q 炸弹会附着靠近的单位；第二颗实际附着同一单位时引爆第一颗并眩晕爆炸范围内敌人。 确认眩晕后吉格斯按实际位置跟 Q/E；W 使用前确认不会把目标推离队友技能范围。 炸弹未附着同一单位、敌人不在爆炸范围或侧翼受压时回撤。",
+      "risk": "基兰 R 需在友方将阵亡前已有保护；炸弹不会保证自动命中同一目标。",
       "partners": [
         "JarvanIV",
         "Poppy",
         "Shen"
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "zilean-protect"
-      },
-      "patch": "16.20",
-      "reviewedAt": "2026-10-16",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 吉格斯 16.20 技能",
@@ -22133,27 +22450,89 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Zilean.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
         "champion:Ziggs": "301986c8fed3e8fb",
-        "champion:Zilean": "60f40731a1259a4a",
-        "item:2065": "a30335c7d456f5fd",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8473": "ed2f46234183276d"
+        "champion:Zilean": "60f40731a1259a4a"
+      },
+      "members": [
+        {
+          "champion": "Ziggs",
+          "role": "bottom",
+          "job": "吉格斯保补刀，控制实际生效后再按区域投 Q/E，W 留意自身退路。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Zilean",
+          "role": "support",
+          "job": "基兰保辅助任务，E 按目标选择加速或减速；Q 附着目标和第二颗落点均需实际确认。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "基兰 E 可对敌方英雄减速，Q 炸弹会附着靠近的单位；第二颗实际附着同一单位时引爆第一颗并眩晕爆炸范围内敌人。",
+        "确认眩晕后吉格斯按实际位置跟 Q/E；W 使用前确认不会把目标推离队友技能范围。",
+        "炸弹未附着同一单位、敌人不在爆炸范围或侧翼受压时回撤。"
+      ],
+      "window": "目标、炸弹附着和双方安全射程实际成立时。",
+      "early": "吉格斯保补刀与清线，基兰保辅助任务和视野。",
+      "economy": "吉格斯下路补刀，基兰辅助。",
+      "reviewSourceAnchors": {
+        "Ziggs": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "301986c8fed3e8fb",
+          "observedAt": "2026-10-26T13:38:40.607Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ziggs",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "fdb99302b5ecb565"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-10-26T13:38:40.608Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
       }
     },
     {
