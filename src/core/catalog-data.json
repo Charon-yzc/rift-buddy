@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.22",
+  "version": "2026.11.02.23",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -8985,24 +8985,22 @@
     },
     {
       "id": "kalista-renata",
-      "carry": "Kalista",
-      "support": "Renata",
       "name": "誓约救援队",
       "style": "fun",
       "tags": [
         "保护窗口",
         "进退"
       ],
-      "why": "烈娜塔 W 的保护窗口支持卡莉丝塔持续输出，大招可限制反扑。",
-      "plan": "卡莉丝塔补刀并绑定烈娜塔；W 提前给，R 用于接应或开团。",
-      "risk": "W 的救援有条件，不是永久免死；连环控制多时仍难输出。",
+      "why": "烈娜塔保护卡莉丝塔持续输出，誓约大招提供另一种进退选择。",
+      "plan": "确认烈娜塔是实际誓约者；卡莉丝塔 R 收回后由烈娜塔自己选择投放方向，不保证命中或安全。 实际获得烈娜塔 W 增益的友方英雄在增益期间阵亡可暂缓死亡；只有该英雄在衰减期间参与击杀才停止衰减，不能保证救回。 控制落空、射手无法攻击或对方反扑超出保护范围时回撤。",
+      "risk": "W 的救援有条件；烈娜塔 R 使命中的敌人狂暴，不等于保证禁锢。",
       "partners": [
         "Sejuani",
         "JarvanIV"
       ],
       "difficulty": "较高",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 卡莉丝塔技能资料",
@@ -9015,32 +9013,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Renata.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "renata-rescue"
-      },
       "reviewBaseline": {
-        "champion:Kalista": "f7feae9ddcfb9d20",
-        "champion:Renata": "d2081c74ab6d2eac",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3504": "f6eed220149ca076",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089"
+        "champion:Kalista": "1793244f0dc8a65c",
+        "champion:Renata": "040340652360d067"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Kalista",
+          "role": "bottom",
+          "job": "卡莉丝塔补刀，在安全距离攻击积累长矛；R 先确认实际誓约者。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Renata",
+          "role": "support",
+          "job": "烈娜塔保辅助任务，W 按友军血量与技能状态预先安排，Q 命中首个敌人才禁锢。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "确认烈娜塔是实际誓约者；卡莉丝塔 R 收回后由烈娜塔自己选择投放方向，不保证命中或安全。",
+        "实际获得烈娜塔 W 增益的友方英雄在增益期间阵亡可暂缓死亡；只有该英雄在衰减期间参与击杀才停止衰减，不能保证救回。",
+        "控制落空、射手无法攻击或对方反扑超出保护范围时回撤。"
+      ],
+      "window": "双方有可接应距离，W 或誓约大招按实际状态决定。",
+      "early": "卡莉丝塔保补刀，烈娜塔保辅助经济和法力。",
+      "economy": "卡莉丝塔下路补刀，烈娜塔辅助。",
+      "reviewSourceAnchors": {
+        "Kalista": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1793244f0dc8a65c",
+          "observedAt": "2026-10-26T13:38:40.401Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kalista",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+              "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "44f72f75e4385140"
+            }
+          }
+        },
+        "Renata": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "040340652360d067",
+          "observedAt": "2026-10-26T13:38:40.515Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renata",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "849f2ea81ec5e47e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "nilah-rakan",
@@ -11487,24 +11544,22 @@
     },
     {
       "id": "swain-leona",
-      "carry": "Swain",
-      "support": "Leona",
       "name": "日光乌鸦",
       "style": "fun",
       "tags": [
         "贴身控制",
         "持续作战"
       ],
-      "why": "蕾欧娜提供先手，斯维因在近中距离跟进技能。",
-      "plan": "斯维因补刀；别在大招冷却时盲目冲，先控住再接近。",
-      "risk": "伤害偏法术，手短且可能被消耗。",
+      "why": "蕾欧娜实际控制后，斯维因按距离跟进。",
+      "plan": "蕾欧娜确认 E 路径与最后命中的英雄，Q 强化普攻实际命中才晕。 斯维因在可及距离用 E 接控制，实际禁锢英雄后才考虑二段拉拽。 目标改变、队友跟不上或敌方反打压近时回撤。",
+      "risk": "蕾欧娜 R 仅中心实际命中才眩晕；双人手短且容易被远程消耗。",
       "partners": [
         "Graves",
         "Tristana"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 斯维因技能资料",
@@ -11517,35 +11572,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Leona.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "swain-brawl",
-        "support": "default"
-      },
       "reviewBaseline": {
-        "champion:Swain": "2f1ca8910269fb77",
-        "champion:Leona": "060aef3e3162ad2d",
-        "item:3118": "2bf87c4847cde85f",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Swain": "2df9ea554c5ac91d",
+        "champion:Leona": "2b7d4e998553b365"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Swain",
+          "role": "bottom",
+          "job": "斯维因补刀，E 折返实际禁锢英雄后再决定是否拉拽，R 看实际能量和位置。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Leona",
+          "role": "support",
+          "job": "蕾欧娜保辅助任务；E 冲向最后命中的敌方英雄，Q 强化普攻击中才晕。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "蕾欧娜确认 E 路径与最后命中的英雄，Q 强化普攻实际命中才晕。",
+        "斯维因在可及距离用 E 接控制，实际禁锢英雄后才考虑二段拉拽。",
+        "目标改变、队友跟不上或敌方反打压近时回撤。"
+      ],
+      "window": "双方有技能且能安全接近同一目标时。",
+      "early": "斯维因保补刀，蕾欧娜保血量与辅助任务。",
+      "economy": "斯维因下路补刀，蕾欧娜辅助。",
+      "reviewSourceAnchors": {
+        "Swain": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2df9ea554c5ac91d",
+          "observedAt": "2026-10-26T13:38:40.523Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Swain",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
+              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "f08241c738bc1369"
+            }
+          }
+        },
+        "Leona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2b7d4e998553b365",
+          "observedAt": "2026-10-26T13:38:40.498Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leona",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7ff3b8a69842091d"
+            }
+          }
+        }
+      }
     },
     {
       "id": "seraphine-lux",
@@ -19358,24 +19469,22 @@
     },
     {
       "id": "ezreal-seraphine",
-      "carry": "Ezreal",
-      "support": "Seraphine",
       "name": "远程回声",
       "style": "balanced",
       "tags": [
         "消耗接控",
         "群体保护"
       ],
-      "why": "萨勒芬妮的减速和控制帮助伊泽瑞尔命中技能，保护支持重复换血。",
-      "plan": "射手补刀；先安全消耗，控制命中再补伤害，E 保留给躲避。",
-      "risk": "技能被小兵挡住时收益降低，不能因消耗命中就强行追击。",
+      "why": "萨勒芬妮实际控制可帮助伊泽瑞尔寻找命中窗口。",
+      "plan": "萨勒芬妮 E 实际命中时，根据目标已有减速或定身判断控制；R 命中才魅惑。 伊泽瑞尔确认射线无遮挡后 Q 跟进，E 按危险与退路决定。 控制落空、兵线挡住射线或敌方切入时不强追。",
+      "risk": "Q 会被首个敌人挡住；E 已交或侧翼受压时撤退空间减少。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 伊泽瑞尔技能资料",
@@ -19388,30 +19497,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Seraphine.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "control-support"
-      },
       "reviewBaseline": {
-        "champion:Ezreal": "9509ab661fff89d0",
-        "champion:Seraphine": "02523bed2e580892",
-        "item:3190": "89cdf2838748dfc7",
-        "item:4005": "049fc32e0486e5b6",
-        "item:2065": "a30335c7d456f5fd",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65"
+        "champion:Ezreal": "c2201358b91fa06b",
+        "champion:Seraphine": "18e4440868d92eb5"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Ezreal",
+          "role": "bottom",
+          "job": "伊泽瑞尔补刀，Q 命中首个敌人；E 保留给安全位移。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Seraphine",
+          "role": "support",
+          "job": "萨勒芬妮保辅助状态，E 按命中时目标已有减速或定身状态升级控制。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "萨勒芬妮 E 实际命中时，根据目标已有减速或定身判断控制；R 命中才魅惑。",
+        "伊泽瑞尔确认射线无遮挡后 Q 跟进，E 按危险与退路决定。",
+        "控制落空、兵线挡住射线或敌方切入时不强追。"
+      ],
+      "window": "双方有技能和法力，目标可及且射线路径安全时。",
+      "early": "伊泽瑞尔保补刀，萨勒芬妮保辅助任务、法力与视野。",
+      "economy": "伊泽瑞尔下路补刀，萨勒芬妮辅助。",
+      "reviewSourceAnchors": {
+        "Ezreal": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c2201358b91fa06b",
+          "observedAt": "2026-10-26T13:38:40.393Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ezreal",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ezreal/ezreal.bin.json",
+              "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "6b1155906c9a8a0b"
+            }
+          }
+        },
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-10-26T13:38:40.519Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "varus-milio",
@@ -19885,24 +20055,22 @@
     },
     {
       "id": "missfortune-seraphine",
-      "carry": "MissFortune",
-      "support": "Seraphine",
       "name": "魅音弹幕",
       "style": "fun",
       "tags": [
         "范围控制",
         "远程跟进"
       ],
-      "why": "萨勒芬妮大招限制对手行动，为厄运小姐弹幕创造较清晰的输出方向。",
-      "plan": "射手补刀；控制确认命中后开弹幕，两人别同时露出侧翼。",
-      "risk": "大招都可能被躲开或打断，双脆皮需要第三人承担前排。",
+      "why": "萨勒芬妮的实际控制可为厄运小姐创造弹幕窗口。",
+      "plan": "萨勒芬妮 R 实际命中或 E 按目标已有状态形成控制，双方确认同一目标。 厄运小姐 R 可用且目标在前方锥形区域时，从安全位置引导。 控制落空、目标离开范围或敌方打断靠近时停止深入并撤离。",
+      "risk": "双人脆弱，弹幕引导可被打断；控制无法保证命中。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -19915,43 +20083,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Seraphine.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "spell-lethality",
-        "support": "control-support"
-      },
       "reviewBaseline": {
-        "champion:MissFortune": "ddbf8a2569548361",
-        "champion:Seraphine": "02523bed2e580892",
-        "item:3142": "4226f2eefc236540",
-        "item:6694": "8ac6919d2a7a1dd6",
-        "item:6697": "16b1481e352b1fef",
-        "item:3158": "72ca672b9221f063",
-        "item:3814": "f9788442be1f2810",
-        "item:3072": "5c29525fccb26a37",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "item:3190": "89cdf2838748dfc7",
-        "item:4005": "049fc32e0486e5b6",
-        "item:2065": "a30335c7d456f5fd",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65"
+        "champion:MissFortune": "10b496d2ce7c344d",
+        "champion:Seraphine": "18e4440868d92eb5"
       },
-      "tempo": "poke"
+      "tempo": "poke",
+      "members": [
+        {
+          "champion": "MissFortune",
+          "role": "bottom",
+          "job": "厄运小姐补刀，R 可用且侧翼安全时才向前方锥形范围引导弹幕。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Seraphine",
+          "role": "support",
+          "job": "萨勒芬妮保辅助状态，E 按目标实际减速或定身状态判断控制；R 实际命中才魅惑。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "萨勒芬妮 R 实际命中或 E 按目标已有状态形成控制，双方确认同一目标。",
+        "厄运小姐 R 可用且目标在前方锥形区域时，从安全位置引导。",
+        "控制落空、目标离开范围或敌方打断靠近时停止深入并撤离。"
+      ],
+      "window": "控制已实际命中、弹幕范围和侧翼安全成立。",
+      "early": "厄运小姐保补刀，萨勒芬妮保法力、辅助任务与视野。",
+      "economy": "厄运小姐下路补刀，萨勒芬妮辅助。",
+      "reviewSourceAnchors": {
+        "MissFortune": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "10b496d2ce7c344d",
+          "observedAt": "2026-10-26T13:38:40.503Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "MissFortune",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "45c6c8d43f1a5c2f"
+            }
+          }
+        },
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-10-26T13:38:40.519Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "missfortune-taric",
@@ -20488,24 +20704,22 @@
     },
     {
       "id": "swain-taric",
-      "carry": "Swain",
-      "support": "Taric",
       "name": "恶魔宝石",
       "style": "fun",
       "tags": [
         "近身持续战",
         "治疗保护"
       ],
-      "why": "斯维因持续近身战的窗口配合塔里克治疗与延迟无敌，双方控制交替使用。",
-      "plan": "斯维因补刀；先用拉扯确认目标愿意接战，宝石不要把治疗蓝量全花在无效追击。",
-      "risk": "双人手短且伤害偏法术，重伤和远程拉扯会影响续战。",
+      "why": "塔里克治疗和延迟免伤可支持斯维因在可接应距离内作战。",
+      "plan": "斯维因 E 折返实际禁锢英雄后才考虑拉拽；塔里克按联结距离和 E 延迟判断接控。 塔里克 R 提前安排，延迟后在实际覆盖范围内才免疫伤害；治疗按充能和范围确认。 保护未到、能量耗尽或双方离开可接应距离时回撤。",
+      "risk": "塔里克 R 不免控；重伤和远程拉扯影响双方持续作战。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 斯维因技能资料",
@@ -20524,67 +20738,110 @@
           "url": "https://www.mobafire.com/league-of-legends/build/patch-26-19-quick-taric-guide-613270",
           "kind": "社区玩法参考",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "swain-brawl",
-        "support": "taric-guardian"
-      },
       "reviewBaseline": {
-        "champion:Swain": "2f1ca8910269fb77",
-        "champion:Taric": "c80b2adac0419e29",
-        "item:3118": "2bf87c4847cde85f",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "item:1029": "9d0944aabf48d059",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "champion:Swain": "2df9ea554c5ac91d",
+        "champion:Taric": "d7034e2662bef2b0"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Swain",
+          "role": "bottom",
+          "job": "斯维因补刀，按目标距离和 R 实际能量判断持续作战。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Taric",
+          "role": "support",
+          "job": "塔里克保辅助任务，W 联结实际友军并维持距离，E 和 R 预留延迟。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "斯维因 E 折返实际禁锢英雄后才考虑拉拽；塔里克按联结距离和 E 延迟判断接控。",
+        "塔里克 R 提前安排，延迟后在实际覆盖范围内才免疫伤害；治疗按充能和范围确认。",
+        "保护未到、能量耗尽或双方离开可接应距离时回撤。"
+      ],
+      "window": "双方控制、法力和保护的距离及时序都成立时。",
+      "early": "斯维因保补刀与血量，塔里克保辅助任务与法力。",
+      "economy": "斯维因下路补刀，塔里克辅助。",
+      "reviewSourceAnchors": {
+        "Swain": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2df9ea554c5ac91d",
+          "observedAt": "2026-10-26T13:38:40.523Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Swain",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
+              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "f08241c738bc1369"
+            }
+          }
+        },
+        "Taric": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d7034e2662bef2b0",
+          "observedAt": "2026-10-26T13:38:40.593Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taric",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "a0599325a1012892"
+            }
+          }
+        }
+      }
     },
     {
       "id": "swain-morgana",
-      "carry": "Swain",
-      "support": "Morgana",
       "name": "黑盾恶魔",
       "style": "fun",
       "tags": [
         "禁锢接拉",
         "抗控保护"
       ],
-      "why": "莫甘娜禁锢帮助斯维因接控制，黑盾存在时支持他应对部分限制效果。",
-      "plan": "斯维因补刀；先命中禁锢，黑盾提前保护关键进场。",
-      "risk": "黑盾不吸收物理伤害，也不是受控后解除控制。",
+      "why": "莫甘娜实际禁锢与魔法护盾可帮助斯维因寻找安全接战窗口。",
+      "plan": "莫甘娜 Q 实际命中首个敌人后，斯维因按距离和 E 的实际命中接控制。 莫甘娜 E 提前给需要保护的友军；护盾仍在时才阻挡限制效果。 技能落空、护盾被破或敌方拉开距离时停止深入。",
+      "risk": "黑盾只吸收魔法伤害，破盾后不能继续阻挡控制；Q 易被首个敌人挡住。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 斯维因技能资料",
@@ -20597,35 +20854,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Morgana.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "swain-brawl",
-        "support": "default"
-      },
       "reviewBaseline": {
-        "champion:Swain": "2f1ca8910269fb77",
-        "champion:Morgana": "ae2ef5b01070433d",
-        "item:3118": "2bf87c4847cde85f",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Swain": "2df9ea554c5ac91d",
+        "champion:Morgana": "e0588c7ab7dba463"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Swain",
+          "role": "bottom",
+          "job": "斯维因补刀；E 折返禁锢英雄后才可二段拉拽，R 留意实际能量。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Morgana",
+          "role": "support",
+          "job": "莫甘娜保辅助经济；Q 命中首个敌人才禁锢，E 在护盾仍在时阻挡限制效果。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "莫甘娜 Q 实际命中首个敌人后，斯维因按距离和 E 的实际命中接控制。",
+        "莫甘娜 E 提前给需要保护的友军；护盾仍在时才阻挡限制效果。",
+        "技能落空、护盾被破或敌方拉开距离时停止深入。"
+      ],
+      "window": "禁锢路径和双方可接应距离成立时。",
+      "early": "斯维因保下路补刀，莫甘娜保法力与辅助任务。",
+      "economy": "斯维因下路补刀，莫甘娜辅助。",
+      "reviewSourceAnchors": {
+        "Swain": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2df9ea554c5ac91d",
+          "observedAt": "2026-10-26T13:38:40.523Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Swain",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
+              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "f08241c738bc1369"
+            }
+          }
+        },
+        "Morgana": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e0588c7ab7dba463",
+          "observedAt": "2026-10-26T13:38:40.504Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Morgana",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+              "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "57d5f698304a1f45"
+            }
+          }
+        }
+      }
     },
     {
       "id": "veigar-braum",
@@ -21667,8 +21980,6 @@
     },
     {
       "id": "kalista-tahm-rescue",
-      "carry": "Kalista",
-      "support": "TahmKench",
       "name": "互相捞一手",
       "style": "fun",
       "tempo": "protect",
@@ -21677,20 +21988,16 @@
         "契约救援",
         "分段控制"
       ],
-      "why": "卡莉丝塔的大招可收回契约塔姆，塔姆的大招可保护卡莉丝塔；先约谁留救援，避免两人同时交掉保命。",
-      "plan": "卡莉丝塔补刀，塔姆辅助。开局确认契约；卡莉丝塔 R 收回后由塔姆选择安全弹出方向，击飞落地再接 Q 和普攻。反打时塔姆优先把 R 留给受威胁的卡莉丝塔。",
-      "risk": "两种救援都依赖大招和距离，不能把现在的吞人当成旧版 W。塔姆 Q 眩晕要先有三层被动；无层数、被推线或塔姆大招未就绪时，以回撤为主。复用辅助保护配置，其复核状态独立。",
+      "why": "卡莉丝塔和塔姆可分别用大招接应队友，需先约好时机和安全落点。",
+      "plan": "确认塔姆是实际誓约者且卡莉丝塔 R 可用；被收回后由塔姆自行选择投放方向，按实际命中判断击退。 塔姆 R 可吞入可及的友方英雄保护，友军可提前离开；Q 命中已有三层被动的敌方英雄才晕。 任一救援不可用、队友不在范围或落点危险时优先回撤。",
+      "risk": "两个大招都有距离和时机限制；塔姆 Q 会被首个敌人阻挡。",
       "partners": [
         "Sejuani",
         "Galio",
         "Orianna"
       ],
-      "loadouts": {
-        "bottom": "onhit-carry",
-        "support": "tank-peel"
-      },
-      "patch": "16.20",
-      "reviewedAt": "2026-10-16",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 卡莉丝塔 16.20 技能",
@@ -21703,38 +22010,89 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/TahmKench.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
         "champion:Kalista": "1793244f0dc8a65c",
-        "champion:TahmKench": "9635271a9add58c5",
-        "item:3124": "a5fa166d09295f8f",
-        "item:3153": "a6d836f7e8db72c4",
-        "item:3085": "fbd0dd92f5cc7425",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3091": "9fbf7a8b541265a4",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8008": "d8ed59948702367b",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8014": "04092c4f9754532b",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3050": "c3e25c9df9075147",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8347": "def2a55844436c47",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "champion:TahmKench": "9635271a9add58c5"
+      },
+      "members": [
+        {
+          "champion": "Kalista",
+          "role": "bottom",
+          "job": "卡莉丝塔补刀并确认实际誓约者，安全攻击后按留存长矛决定 E。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "TahmKench",
+          "role": "support",
+          "job": "塔姆保辅助任务；Q 对目标英雄已有三层被动时才眩晕，R 可按范围保护友军。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "确认塔姆是实际誓约者且卡莉丝塔 R 可用；被收回后由塔姆自行选择投放方向，按实际命中判断击退。",
+        "塔姆 R 可吞入可及的友方英雄保护，友军可提前离开；Q 命中已有三层被动的敌方英雄才晕。",
+        "任一救援不可用、队友不在范围或落点危险时优先回撤。"
+      ],
+      "window": "誓约关系、各自技能和实际距离允许接应时。",
+      "early": "卡莉丝塔保补刀与血量，塔姆保任务与视野；六级前不假设大招可用。",
+      "economy": "卡莉丝塔下路补刀，塔姆辅助。",
+      "reviewSourceAnchors": {
+        "Kalista": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1793244f0dc8a65c",
+          "observedAt": "2026-10-26T13:38:40.401Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kalista",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+              "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "44f72f75e4385140"
+            }
+          }
+        },
+        "TahmKench": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9635271a9add58c5",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "TahmKench",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/tahmkench/tahmkench.bin.json",
+              "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "324a3700d293797b"
+            }
+          }
+        }
       }
     },
     {
@@ -21800,8 +22158,6 @@
     },
     {
       "id": "swain-renata-brawl",
-      "carry": "Swain",
-      "support": "Renata",
       "name": "续命拉扯局",
       "style": "fun",
       "tempo": "teamfight",
@@ -21810,20 +22166,16 @@
         "近距拉扯",
         "分段救援"
       ],
-      "why": "斯维因持续作战，烈娜塔用控制与救援为他争取输出时间；能继续接触目标时再投入下一轮保护。",
-      "plan": "斯维因补刀，烈娜塔辅助。斯维因 E 实际命中后，两人控制错开；烈娜塔 W 在即将承受集火时给，R 从侧角限制后续追兵，保留撤退方向。",
-      "risk": "烈娜塔 W 的延迟死亡救援要在规定时间内参与击杀才可能脱险，不能当稳定复活。斯维因大招离开敌人后不能无限维持；重伤、远程拉扯或无法跟进时退出，避免把两个救援同时浪费。",
+      "why": "斯维因寻找持续作战距离，烈娜塔按真实状态提供控制与救援。",
+      "plan": "斯维因 E 折返实际禁锢英雄后可再施放拉拽，烈娜塔按目标位置错开控制。 实际获得烈娜塔 W 增益的友方英雄在增益期间阵亡可暂缓死亡；只有该英雄在衰减期间参与击杀才停止衰减。 斯维因留意 R 能量与附近敌方英雄；救援不可用、目标脱离或反打超出接应时回撤。",
+      "risk": "烈娜塔 W 不是稳定复活；斯维因 R 离开敌人后不可假定无限持续。",
       "partners": [
         "JarvanIV",
         "Poppy",
         "Vi"
       ],
-      "loadouts": {
-        "bottom": "swain-brawl",
-        "support": "renata-rescue"
-      },
-      "patch": "16.20",
-      "reviewedAt": "2026-10-16",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 斯维因 16.20 技能",
@@ -21836,90 +22188,90 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Renata.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
         "champion:Swain": "2df9ea554c5ac91d",
-        "champion:Renata": "040340652360d067",
-        "item:3118": "2bf87c4847cde85f",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3504": "f6eed220149ca076",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8236": "a1bb7cfc15c3d089"
+        "champion:Renata": "040340652360d067"
       },
       "reviewSourceAnchors": {
         "Swain": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2df9ea554c5ac91d",
-          "observedAt": "2026-10-18T23:15:44.650Z",
+          "observedAt": "2026-10-26T13:38:40.523Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Swain",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/swain/swain.bin.json",
-              "sha256": "0b61b6e58deac8cb0c5d34088784a721e078b6087b1045ec6ad55068527ba73d"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/swain/swain.bin.json",
+              "sha256": "f60a7fef52ba32c6cf5ee594ce5296229f8b0030d8f5082cf9ac17c03ddc74f8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "f08241c738bc1369"
             }
           }
         },
         "Renata": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "040340652360d067",
-          "observedAt": "2026-10-18T23:15:29.216Z",
+          "observedAt": "2026-10-26T13:38:40.515Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Renata",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/renata/renata.bin.json",
-              "sha256": "78015e912952cfd2e4e1a36dd90880ba604bc1c946b0e1b9b666dbe97980eb2f"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "849f2ea81ec5e47e"
             }
           }
         }
-      }
+      },
+      "members": [
+        {
+          "champion": "Swain",
+          "role": "bottom",
+          "job": "斯维因补刀，E 折返实际禁锢英雄后才可再次施放拉拽；R 按实际能量和敌人位置判断。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Renata",
+          "role": "support",
+          "job": "烈娜塔保辅助任务，W 提前给可及友军；Q 和 R 依实际命中使用。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "斯维因 E 折返实际禁锢英雄后可再施放拉拽，烈娜塔按目标位置错开控制。",
+        "实际获得烈娜塔 W 增益的友方英雄在增益期间阵亡可暂缓死亡；只有该英雄在衰减期间参与击杀才停止衰减。",
+        "斯维因留意 R 能量与附近敌方英雄；救援不可用、目标脱离或反打超出接应时回撤。"
+      ],
+      "window": "双方有技能和法力，斯维因能安全接触对手时。",
+      "early": "斯维因保补刀与血量，烈娜塔保辅助任务与视野。",
+      "economy": "斯维因下路补刀，烈娜塔辅助。"
     },
     {
       "id": "poppy-top-anivia-mid",
