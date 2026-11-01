@@ -22,9 +22,18 @@ const reviewedOmnivampBlocks={
 // Return a display copy; stored source text, status and fingerprints stay intact.
 function referenceOmnivampCopy(data,item,id,mode){
  const reviewed=reviewedOmnivampBlocks[id];
- if(!reviewed||String(item.id)!==id||mode!=='rift'||data.version!=='16.21.1'||data.patch!=='16.21'||data.sources?.items!=='https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json')return null;
+ if((!reviewed&&id!=='3168')||String(item.id)!==id||mode!=='rift'||data.version!=='16.21.1'||data.patch!=='16.21'||data.sources?.items!=='https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json')return null;
  const tip=item.tooltip;
  if(tip?.patch!==data.patch||tip.status!=='partial'||item.tooltipParserRevision!==2||tip.source!=='https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json'||typeof tip.description!=='string'||typeof item.description!=='string'||itemModeTooltip(item,data.patch,'hex')||itemSourceConflict(data,id))return null;
+ // This task-locked branch compares the full reviewed source text; retain partial status.
+ if(id==='3168'){
+  const official="45移动速度\n4%全能吸血\n\n杀戮\n参与击杀英雄后获得0.6%全能吸血，可叠加至多10次。\n\n现在到永远\n在一半生命值以上时，造成4%额外伤害。\n\n在一半生命值以下时，获得12%额外治疗值、护盾值和回复。",original="(仅中路)锁定至任务完成为止\n\n45移动速度\n 〔数值未解析〕%全能吸血\n\n杀戮\n参与击杀英雄后获得0.6%全能吸血，可叠加至多10次。\n\n现在到永远\n在一半生命值以上时，造成4%额外伤害。\n\n在一半生命值以下时，获得12%额外治疗值、护盾值和回复。\n\n“鲜血中腾起杀戮的烈火。而我的心要见到光明。” - 不落魔锋 亚恒";
+  if(item.description!==official||tip.description!==original)return null;
+  const token="〔数值未解析〕%全能吸血",offset=original.indexOf(token);
+  if(offset<0||original.indexOf(token,offset+1)!==-1||gameDescription(original).slice(0,7000).slice(offset,offset+token.length)!==token)return null;
+  const description=original.slice(0,offset)+'4%全能吸血'+original.slice(offset+token.length);
+  return {...data,items:{...data.items,[id]:{...item,tooltip:{...tip,description}}}};
+ }
  const firstBlock=text=>text.split(/\r?\n[ \t]*\r?\n/,1)[0];
  const official=firstBlock(item.description),detail=firstBlock(tip.description);
  const normalize=text=>text.replace(/\r\n/g,'\n');
