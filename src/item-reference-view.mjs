@@ -2,6 +2,7 @@ import {escape as e,asset,button,dateLabel,gameDescription} from './ui.mjs';
 import {gameTooltipView} from './game-tooltip-view.mjs';
 import {itemModeTooltip} from './core/item-mode-tooltip.mjs';
 import {itemSourceConflict} from './core/item-source-conflict.mjs';
+import reviewedFormulas from './item-reference-formulas.json' with {type:'json'};
 
 const mapFor=mode=>mode==='hex'?'12':'11';
 const validId=id=>/^\d{1,8}$/.test(String(id));
@@ -32,6 +33,49 @@ function referenceOmnivampCopy(data,item,id,mode){
  // The exact reviewed prefix is plain text, so this offset is unchanged by gameDescription.
  if(offset<0||gameDescription(tip.description).slice(0,7000).slice(offset,offset+token.length)!==token)return null;
  const description=detail.slice(0,offset)+reviewed.value+'%全能吸血'+detail.slice(offset+token.length)+tip.description.slice(detail.length);
+ return {...data,items:{...data.items,[id]:{...item,tooltip:{...tip,description}}}};
+}
+// Compare every reviewed JSON value and every object key; object key order is
+// immaterial, while array order and scalar types remain significant.
+function exactJson(a,b){
+ if(a===b)return true;
+ if(!a||!b||typeof a!=='object'||typeof b!=='object'||Array.isArray(a)!==Array.isArray(b))return false;
+ if(Array.isArray(a))return a.length===b.length&&a.every((value,i)=>exactJson(value,b[i]));
+ const ak=Object.keys(a).sort(),bk=Object.keys(b).sort();
+ return ak.length===bk.length&&ak.every((key,i)=>key===bk[i]&&exactJson(a[key],b[key]));
+}
+// The supplied item is always the untouched snapshot, never the omnivamp copy.
+// Source-file hashes are offline evidence; they are not verified here.
+function referenceFormulaCopy(data,item,id,mode,omnivampCopy){
+ const row=reviewedFormulas[id],tip=item?.tooltip;
+ if(!row||mode!=='rift'||String(item.id)!==id||!row.acceptedFetchedAt.includes(data.fetchedAt)||itemSourceConflict(data,id))return null;
+ const actual={schema:data.schema,contentRevision:data.contentRevision,itemTooltipRevision:data.itemTooltipRevision,version:data.version,patch:data.patch,fetchedAt:row.binding.fetchedAt,sources:data.sources,mode,item};
+ if(!exactJson(actual,row.binding)||tip?.patch!==data.patch||tip.status!=='partial'||typeof tip.description!=='string'||itemModeTooltip(item,data.patch,mode))return null;
+ let description=tip.description;
+ for(const {anchor,replacement} of row.replacements){
+  const index=description.indexOf(anchor);
+  if(index<0||description.indexOf(anchor,index+1)!==-1)return null;
+  description=description.slice(0,index)+replacement+description.slice(index+anchor.length);
+ }
+ if(description!==row.description)return null;
+ if(omnivampCopy&&!row.combinedDescription)return null;
+ if(omnivampCopy&&row.combinedDescription){
+  let combined=omnivampCopy.items[id].tooltip.description;
+  for(const {anchor,replacement} of row.replacements){
+   const index=combined.indexOf(anchor);
+   if(index<0||combined.indexOf(anchor,index+1)!==-1)return null;
+   combined=combined.slice(0,index)+replacement+combined.slice(index+anchor.length);
+  }
+  if(combined!==row.combinedDescription)return null;
+  description=combined;
+ }
+ // Verify each complete replacement in the exact rendered 7000-character
+ // projection, including its position after any independent omnivamp edit.
+ const rendered=gameDescription(description),visible=rendered.slice(0,7000);
+ for(const {replacement} of row.replacements){
+  const index=rendered.indexOf(replacement);
+  if(index<0||rendered.indexOf(replacement,index+1)!==-1||visible.slice(index,index+replacement.length)!==replacement)return null;
+ }
  return {...data,items:{...data.items,[id]:{...item,tooltip:{...tip,description}}}};
 }
 const sourceLink=(url,host,label)=>{
@@ -75,7 +119,7 @@ export function itemReferenceView(data,{query='',mode='rift',id=''}={}){
  else if(selected&&!visible)detail=`<p class="item-reference-empty">${e(selected.name)}未列入${modeName(mode)}资料，请重新选择。</p>`;
  else if(selected){
   const tooltip=selected.tooltip,base=itemFor(data,selected.specialRecipe),from=Array.isArray(selected.from)?[...selected.from]:[];
-  const displayCopy=referenceOmnivampCopy(data,selected,String(id),mode),displayData=displayCopy||data,displayItem=displayData.items[id],displayTooltip=displayItem.tooltip;
+  const omnivampCopy=referenceOmnivampCopy(data,selected,String(id),mode),formulaCopy=referenceFormulaCopy(data,selected,String(id),mode,omnivampCopy),displayData=formulaCopy||omnivampCopy||data,displayItem=displayData.items[id],displayTooltip=displayItem.tooltip;
   if(base&&!from.some(value=>String(value)===String(base.id)))from.push(base.id);
   const sources=[sourceLink(data.sources?.items,'ddragon.leagueoflegends.com','Riot 装备资料'),tooltip?.patch===data.patch?sourceLink(tooltip.source,'raw.communitydragon.org','装备详细说明来源'):''].filter(Boolean).join('');
   const stale=!tooltip?.description?'<p class="bottom-note">详细说明暂缺，当前显示基础资料。</p>':tooltip.patch!==data.patch?'<p class="bottom-note">详细说明版本不同，当前显示基础资料。</p>':'';
@@ -86,7 +130,7 @@ export function itemReferenceView(data,{query='',mode='rift',id=''}={}){
    const shownDescription=gameDescription(shownDetail?.description||displayItem.description).slice(0,7000);
    if(/(?<![\d.])25000秒(?!\d)/.test(shownDescription))durationNote='<p class="bottom-note">来源时长数值待核，请以游戏内显示为准。</p>';
   }
-  detail=`<div class="item-reference-summary" data-item-region="summary">${gameTooltipView(displayData,'item',String(id),{mode})}</div>${displayCopy?'<p class="bottom-note">基础全能吸血取自同版本官方简介，请以游戏内显示为准。</p>':''}${durationNote}<p class="item-reference-availability">${e(availability(data,selected,mode))}</p>${stale}${relation(data,from,mode,'合成或转化来源','from')}${relation(data,selected.into,mode,'可合成','into')}${sources?`<details class="ui-disclosure item-reference-sources" data-item-region="sources" data-disclosure-key="item-reference-sources"><summary>资料来源</summary>${sources}</details>`:''}`;
+  detail=`<div class="item-reference-summary" data-item-region="summary">${gameTooltipView(displayData,'item',String(id),{mode})}</div>${omnivampCopy?'<p class="bottom-note">基础全能吸血取自同版本官方简介，请以游戏内显示为准。</p>':''}${formulaCopy?'<p class="bottom-note">近远程数值依据公开装备资料整理，请以游戏内显示为准。</p>':''}${durationNote}<p class="item-reference-availability">${e(availability(data,selected,mode))}</p>${stale}${relation(data,from,mode,'合成或转化来源','from')}${relation(data,selected.into,mode,'可合成','into')}${sources?`<details class="ui-disclosure item-reference-sources" data-item-region="sources" data-disclosure-key="item-reference-sources"><summary>资料来源</summary>${sources}</details>`:''}`;
  }
  return `<section class="reference-workspace item-reference" aria-label="装备图鉴" data-item-reference-mode="${mode}" data-item-reference-id="${e(id)}"><div class="item-reference-toolbar"><label class="ranking-search">搜索装备<input type="search" id="item-reference-search" value="${e(query)}" placeholder="名称或 ID" autocomplete="off"></label><div class="segmented" aria-label="装备模式">${[['rift','峡谷'],['hex','海克斯']].map(([value,name])=>`<button type="button" class="segment ${mode===value?'active':''}" data-action="reference-item-mode" data-mode="${value}" aria-pressed="${mode===value}">${name}</button>`).join('')}</div><span class="badge">资料 ${e(data.version||data.patch||'版本未知')} · 采集 ${e(collected)} · ${count} 件</span></div><div class="item-reference-layout"><div class="item-reference-list" id="item-reference-grid" data-scroll-key="item-reference-${mode}" aria-label="装备列表">${referenceItemTiles(data,{query,mode,id})}</div><article class="item-reference-detail" id="item-reference-detail" tabindex="-1" aria-label="装备详情">${detail}</article></div></section>`;
 }
