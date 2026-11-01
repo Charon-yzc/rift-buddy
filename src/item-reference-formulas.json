@@ -1605,5 +1605,185 @@
     "replacement": "造成（近战 40%总攻击力 / 远程 20%总攻击力）物理伤害"
    }
   ]
+ },
+ "3302": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3302,
+    "name": "界弓",
+    "description": "30攻击力\n35%攻击速度\n\n晦影\n攻击造成0额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的护甲和魔抗。附带黑暗特效的攻击提供持续5秒的10%护甲穿透和法术穿透。 ",
+    "tags": [
+     "Damage",
+     "AttackSpeed",
+     "OnHit",
+     "MagicPenetration",
+     "ArmorPenetration"
+    ],
+    "gold": {
+     "base": 1100,
+     "purchasable": true,
+     "total": 3000,
+     "sell": 2100
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3051",
+     "1043"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 30,
+     "PercentAttackSpeedMod": 0.35
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3302.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "30攻击力\n35%攻击速度\n\n晦影\n攻击造成30 + 10%额外攻击力 + 10%法术强度额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的〔数值未解析〕 护甲和魔抗(至多至〔数值未解析〕)。附带黑暗特效的攻击提供持续5秒的10%护甲穿透和法术穿透(至多至30%)。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "none",
+      "appliedKeys": [],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "6aad4431025a9eb99a3d4ed978a66104e6eede2f72b6d8defb8259bd71fdc690",
+      "basisHash": "4dcdcd8f73869797"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z"
+  ],
+  "description": "30攻击力\n35%攻击速度\n\n晦影\n攻击造成30 + 10%额外攻击力 + 10%法术强度额外魔法伤害 攻击特效。\n\n交相\n对抗英雄时，在光明特效和黑暗特效之间轮换：附带光明特效的攻击提供持续5秒的（1–10级 6 / 11–13级 7 / 14级及以上 8）护甲和魔抗（对应等级区间的上限分别为 18 / 21 / 24）。附带黑暗特效的攻击提供持续5秒的10%护甲穿透和法术穿透(至多至30%)。",
+  "replacements": [
+   {
+    "anchor": "〔数值未解析〕 护甲和魔抗(至多至〔数值未解析〕)",
+    "replacement": "（1–10级 6 / 11–13级 7 / 14级及以上 8）护甲和魔抗（对应等级区间的上限分别为 18 / 21 / 24）"
+   }
+  ]
+ },
+ "3087": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3087,
+    "name": "斯塔缇克电刃",
+    "description": "45攻击力\n45法术强度\n30%攻击速度\n4%移动速度\n\n电火花\n你的盈能攻击会发射连锁闪电，造成附带攻击特效，并且对附近的目标们造成魔法伤害。\n\n电疗 \n普通攻击提供额外盈能层数。",
+    "tags": [
+     "Damage",
+     "AttackSpeed",
+     "SpellDamage",
+     "OnHit",
+     "NonbootsMovement"
+    ],
+    "gold": {
+     "base": 625,
+     "purchasable": true,
+     "total": 3000,
+     "sell": 2100
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3144",
+     "3113",
+     "1037"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatMagicDamageMod": 45,
+     "FlatPhysicalDamageMod": 45,
+     "PercentAttackSpeedMod": 0.3,
+     "PercentMovementSpeedMod": 0.04
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3087.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "45攻击力\n45法术强度\n30%攻击速度\n4%移动速度\n\n电火花\n你的盈能攻击会发射连锁闪电，对最多〔数值未解析〕个目标造成60魔法伤害，攻击小兵和野怪时提升至90魔法伤害。附带 攻击特效至次级弹射目标们。\n\n电疗 \n普通攻击提供9额外盈能层数。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "partial",
+      "description": "45攻击力\n45法术强度\n30%攻击速度\n4%移动速度\n\n电火花\n你的盈能攻击会发射连锁闪电，对最多〔数值未解析〕个目标造成70魔法伤害，攻击小兵和野怪时提升至90魔法伤害。附带 攻击特效至次级弹射目标们。\n\n电疗 \n普通攻击提供9额外盈能层数。",
+      "appliedKeys": [
+       "ChainDamage"
+      ],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "8b4842512043c6bc7415b8830f1a57f50b32523823ca28c9bd48036510dfb151",
+      "basisHash": "70fdf7fe79a83bab"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z"
+  ],
+  "description": "45攻击力\n45法术强度\n30%攻击速度\n4%移动速度\n\n电火花\n你的盈能攻击会发射连锁闪电，对最多（1–5级 4 / 6–9级 5 / 10–13级 6 / 14–18级 7）个目标造成60魔法伤害，攻击小兵和野怪时提升至90魔法伤害。附带 攻击特效至次级弹射目标们。\n\n电疗 \n普通攻击提供9额外盈能层数。",
+  "replacements": [
+   {
+    "anchor": "最多〔数值未解析〕个目标",
+    "replacement": "最多（1–5级 4 / 6–9级 5 / 10–13级 6 / 14–18级 7）个目标"
+   }
+  ]
  }
 }
