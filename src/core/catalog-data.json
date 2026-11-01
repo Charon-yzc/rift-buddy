@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.26",
+  "version": "2026.11.02.27",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -5539,24 +5539,22 @@
     },
     {
       "id": "aphelios-lulu",
-      "carry": "Aphelios",
-      "support": "Lulu",
       "name": "月光护卫",
       "style": "balanced",
       "tags": [
         "增益保护",
         "持续输出"
       ],
-      "why": "璐璐提供攻速和保护，给厄斐琉斯更稳定的普攻窗口。",
-      "plan": "厄斐琉斯补刀；优先保护当前能输出的枪械状态。",
-      "risk": "没有可靠前排时很难站住，发育期不要硬开。",
+      "why": "璐璐在友军可持续输出时提供攻速与保护，厄斐琉斯按当前武器寻找安全普攻窗口。",
+      "plan": "先确认主副武器、弹药和射程，处理兵线；璐璐按实际距离把 E 给友军射手以提供护盾和皮克斯。 璐璐 W 对友军可提升攻速移速；若要用 W 变形敌方，则不能同时获得同次友军增益。 需要反打时，璐璐已学 R 且目标在范围内可给友军并击飞其周围敌人；保护距离断开或威胁逼近时撤退。 厄斐琉斯属性优先级沿用16.20旧参考，可自行调整；不是16.21统计，也不是配合必需条件。",
+      "risk": "没有可靠前排时不要因护盾强行站桩；弹药耗尽会换武器，皮克斯的飞弹也可能被其他单位挡住。",
       "partners": [
         "Shen",
         "Sejuani"
       ],
       "difficulty": "较高",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 厄斐琉斯技能资料",
@@ -5569,32 +5567,103 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Lulu.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Aphelios bottom 同位置配置",
+          "url": "https://op.gg/lol/champions/aphelios/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Lulu support 同位置配置",
+          "url": "https://op.gg/lol/champions/lulu/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "lulu-onhit"
-      },
       "reviewBaseline": {
-        "champion:Aphelios": "3aa1ca4eb079416d",
-        "champion:Lulu": "12ee018aa7e41dc6",
-        "item:3504": "f6eed220149ca076",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Aphelios": "a16a2bc3afe40b1c",
+        "champion:Lulu": "5f5091380ca45272"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Aphelios",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "厄斐琉斯下路补刀，先报主副武器与弹药；属性顺序是16.20旧参考，可按游戏内情况调整，不是配合必需。"
+        },
+        {
+          "champion": "Lulu",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "璐璐辅助；E 给射手需在范围内，W 按友军增益或敌方变形二选一；R 已学并确认友军位置后再用于反打。"
+        }
+      ],
+      "window": "主手可输出、璐璐能接应且有退路；W 的对友军与对敌人效果必须二选一。",
+      "steps": [
+        "先确认主副武器、弹药和射程，处理兵线；璐璐按实际距离把 E 给友军射手以提供护盾和皮克斯。",
+        "璐璐 W 对友军可提升攻速移速；若要用 W 变形敌方，则不能同时获得同次友军增益。",
+        "需要反打时，璐璐已学 R 且目标在范围内可给友军并击飞其周围敌人；保护距离断开或威胁逼近时撤退。"
+      ],
+      "early": "先处理各自兵线，确认队友位置、武器和技能状态；缺少安全机会就回撤。",
+      "economy": "厄斐琉斯补刀，辅助按自身任务和视野经济行动；同位置个人配置分项参考，不代表组合同局或最优。",
+      "reviewSourceAnchors": {
+        "Aphelios": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "a16a2bc3afe40b1c",
+          "observedAt": "2026-10-23T02:03:51.451Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Aphelios",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
+              "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ac55a790c915bb91"
+            }
+          }
+        },
+        "Lulu": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5f5091380ca45272",
+          "observedAt": "2026-10-23T02:03:51.539Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lulu",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "33e697bcb063b28b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "aphelios-braum",
@@ -19264,24 +19333,22 @@
     },
     {
       "id": "aphelios-milio",
-      "carry": "Aphelios",
-      "support": "Milio",
       "name": "月火长射",
       "style": "balanced",
       "tags": [
         "射程增益",
         "持续保护"
       ],
-      "why": "米利欧的射程窗口和保护帮助厄斐琉斯保持普攻位置。",
-      "plan": "射手补刀；按当前武器决定是否追击，米利欧用保护延长可输出时间。",
-      "risk": "射手武器切换会改变配合方式；两人仍缺少自主强开。",
+      "why": "米利欧的炉火为范围内友军提供攻击距离与治疗，协助厄斐琉斯按武器保持输出位置。",
+      "plan": "先确认射手主手武器、弹药与敌方威胁；米利欧 W 的炉火须实际覆盖射手才有攻击距离和治疗。 米利欧 E 按距离给友军护盾与移速，注意两层充能；W 可再次施放以改变跟随的友方英雄。 米利欧 R 已学且友军在范围时才提供治疗与技能所列控制净化；炉火覆盖断开或射手处境不安全时撤退。 厄斐琉斯属性优先级沿用16.20旧参考，可自行调整；不是16.21统计，也不是配合必需条件。",
+      "risk": "武器与实际炉火范围会变，额外攻击距离不保证安全；不要把 R 描述为解除所有效果。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 厄斐琉斯技能资料",
@@ -19294,67 +19361,122 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Milio.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Aphelios bottom 同位置配置",
+          "url": "https://op.gg/lol/champions/aphelios/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Milio support 同位置配置",
+          "url": "https://op.gg/lol/champions/milio/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "trio-crit-carry",
-        "support": "milio-range"
-      },
       "reviewBaseline": {
-        "champion:Aphelios": "3aa1ca4eb079416d",
-        "champion:Milio": "7bec2e4244a3e4bc",
-        "item:6672": "56acf36018ec56ee",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3085": "fbd0dd92f5cc7425",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8008": "d8ed59948702367b",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8021": "bffe59ad8f3db438",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8347": "def2a55844436c47",
-        "item:3504": "f6eed220149ca076",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d"
+        "champion:Aphelios": "a16a2bc3afe40b1c",
+        "champion:Milio": "9176ff8b22c1f1c9"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Aphelios",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "厄斐琉斯下路补刀，先报主副武器与弹药；属性顺序是16.20旧参考，可按游戏内情况调整，不是配合必需。"
+        },
+        {
+          "champion": "Milio",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "米利欧辅助；W 按实际跟随对象与覆盖范围提供治疗和攻击距离，E 留给威胁，R 按实际范围与控制类型使用。"
+        }
+      ],
+      "window": "射手处于炉火范围、米利欧能接应且双方有退路；R 受学习、距离和实际控制类型限制。",
+      "steps": [
+        "先确认射手主手武器、弹药与敌方威胁；米利欧 W 的炉火须实际覆盖射手才有攻击距离和治疗。",
+        "米利欧 E 按距离给友军护盾与移速，注意两层充能；W 可再次施放以改变跟随的友方英雄。",
+        "米利欧 R 已学且友军在范围时才提供治疗与技能所列控制净化；炉火覆盖断开或射手处境不安全时撤退。"
+      ],
+      "early": "先处理各自兵线，确认队友位置、武器和技能状态；缺少安全机会就回撤。",
+      "economy": "厄斐琉斯补刀，辅助按自身任务和视野经济行动；同位置个人配置分项参考，不代表组合同局或最优。",
+      "reviewSourceAnchors": {
+        "Aphelios": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "a16a2bc3afe40b1c",
+          "observedAt": "2026-10-23T02:03:51.451Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Aphelios",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
+              "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ac55a790c915bb91"
+            }
+          }
+        },
+        "Milio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9176ff8b22c1f1c9",
+          "observedAt": "2026-10-23T02:03:51.541Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Milio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "32194f4e3319e474"
+            }
+          }
+        }
+      }
     },
     {
       "id": "aphelios-renata",
-      "carry": "Aphelios",
-      "support": "Renata",
       "name": "月枪续命",
       "style": "fun",
       "tags": [
         "攻速增益",
         "反开保护"
       ],
-      "why": "烈娜塔的攻速和救援支持厄斐琉斯持续普攻，控制用于限制突进。",
-      "plan": "射手补刀；先沟通当前武器和目标，救援期间优先可命中的目标。",
-      "risk": "不能保证拿到击杀参与，射手站位仍决定是否能输出。",
+      "why": "烈娜塔 W 为友军提供攻速并可能延缓阵亡，厄斐琉斯结合当前武器与可攻击目标判断输出。",
+      "plan": "先沟通射手主副武器和弹药；烈娜塔 W 按友军位置提供攻速增益，射手只在可安全命中时输出。 若 W 作用下射手阵亡，救援期间生命衰减；只有在衰减期参与击杀才停止衰减并获得回复，不能预设一定救回。 烈娜塔 Q 禁锢首个命中的敌人；已学 R 按实际命中方向防守，救援机会不足或目标不可及就撤退。 厄斐琉斯属性优先级沿用16.20旧参考，可自行调整；不是16.21统计，也不是配合必需条件。",
+      "risk": "不能保证射手参与击杀，同一英雄仅可延缓一次死亡；W 救援不替代走位与撤退。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 厄斐琉斯技能资料",
@@ -19367,46 +19489,103 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Renata.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Aphelios bottom 同位置配置",
+          "url": "https://op.gg/lol/champions/aphelios/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Renata support 同位置配置",
+          "url": "https://op.gg/lol/champions/renata/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "trio-crit-carry",
-        "support": "renata-rescue"
-      },
       "reviewBaseline": {
-        "champion:Aphelios": "3aa1ca4eb079416d",
-        "champion:Renata": "d2081c74ab6d2eac",
-        "item:6672": "56acf36018ec56ee",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3085": "fbd0dd92f5cc7425",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8008": "d8ed59948702367b",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8021": "bffe59ad8f3db438",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8347": "def2a55844436c47",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3504": "f6eed220149ca076",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089"
+        "champion:Aphelios": "a16a2bc3afe40b1c",
+        "champion:Renata": "040340652360d067"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Aphelios",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "厄斐琉斯下路补刀，先报主副武器与弹药；属性顺序是16.20旧参考，可按游戏内情况调整，不是配合必需。"
+        },
+        {
+          "champion": "Renata",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "烈娜塔辅助；W 留给可接应的友军并沟通救援条件，Q 先确认首个命中对象，R 按实际位置与命中处理突进。"
+        }
+      ],
+      "window": "射手在 W 可施放范围且有可攻击目标；救援成功取决于衰减期间实际参与击杀。",
+      "steps": [
+        "先沟通射手主副武器和弹药；烈娜塔 W 按友军位置提供攻速增益，射手只在可安全命中时输出。",
+        "若 W 作用下射手阵亡，救援期间生命衰减；只有在衰减期参与击杀才停止衰减并获得回复，不能预设一定救回。",
+        "烈娜塔 Q 禁锢首个命中的敌人；已学 R 按实际命中方向防守，救援机会不足或目标不可及就撤退。"
+      ],
+      "early": "先处理各自兵线，确认队友位置、武器和技能状态；缺少安全机会就回撤。",
+      "economy": "厄斐琉斯补刀，辅助按自身任务和视野经济行动；同位置个人配置分项参考，不代表组合同局或最优。",
+      "reviewSourceAnchors": {
+        "Aphelios": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "a16a2bc3afe40b1c",
+          "observedAt": "2026-10-23T02:03:51.451Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Aphelios",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
+              "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ac55a790c915bb91"
+            }
+          }
+        },
+        "Renata": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "040340652360d067",
+          "observedAt": "2026-10-26T13:38:40.515Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renata",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "849f2ea81ec5e47e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "smolder-nami",
@@ -30574,38 +30753,39 @@
       "tags": [
         "保护核心"
       ],
-      "why": "发条与璐璐保护厄斐琉斯，发条大招留给逼近核心的敌人。",
-      "plan": "先确认厄斐琉斯当前枪械；发条 E 护送，璐璐留 W/R 反扑，范围控制后集中火力。",
-      "risk": "枪械状态决定战斗方式，保护齐全也不能让无位移核心站在敌方技能里。",
-      "early": "厄斐琉斯先补刀并报枪械，发条稳定发育，璐璐减少无意义追击。",
-      "window": "枪械适合当前目标、发条魔偶在有效距离且两位保护技能可用时。",
-      "economy": "两条线各自发育，厄斐琉斯优先下路资源；璐璐走辅助经济，发条仍保留中路输出。",
+      "why": "发条的球盾与璐璐的保护共同支持厄斐琉斯，发条 R 按球位置处理逼近的威胁。",
+      "plan": "发条中路先处理兵线，射手与璐璐维持下路；三人实际会合后再检查武器、弹药及保护距离。 发条 E 附到射手后确认球的位置和护盾，R 已学时才按球周围敌人位置、施法延迟与安全距离判断。 璐璐 E/W 可给友军保护和攻速，W 对敌变形时不能同时增益友军；R 已学且友军在范围内时留给实际突进。 厄斐琉斯属性优先级沿用16.20旧参考，可自行调整；不是16.21统计，也不是配合必需条件。",
+      "risk": "三人不在同一路，无法预设全程会合；保护和球的位置不能保证射手在敌方技能中安全输出。",
+      "early": "先处理各自兵线，确认队友位置、武器和技能状态；缺少安全机会就回撤。",
+      "window": "三人实际会合、射手枪械可用，发条球与璐璐施法距离有效；危险或脱节时撤退。",
+      "economy": "厄斐琉斯补刀，璐璐按辅助任务和视野经济行动，发条保留中路经济；同位置个人配置分项参考，不代表组合同局或最优。",
       "steps": [
-        "先确认厄斐琉斯当前枪械",
-        "发条 E 护送，璐璐留 W/R 反扑，范围控制后集中火力。"
+        "发条中路先处理兵线，射手与璐璐维持下路；三人实际会合后再检查武器、弹药及保护距离。",
+        "发条 E 附到射手后确认球的位置和护盾，R 已学时才按球周围敌人位置、施法延迟与安全距离判断。",
+        "璐璐 E/W 可给友军保护和攻速，W 对敌变形时不能同时增益友军；R 已学且友军在范围内时留给实际突进。"
       ],
       "members": [
         {
           "champion": "Orianna",
           "role": "mid",
-          "job": "E 按厄斐琉斯实际站位给盾并确认球位置，W 帮进退，R 接进入输出区的威胁或可靠控制；不能把球仍在身边当已附到核心。核心被迫换位时转接应。",
-          "loadoutId": "trio-ball"
+          "loadoutId": "default",
+          "job": "发条中路；E 附到目标友军后确认球位置，R 已学且目标处于球的实际范围时才尝试反开。"
         },
         {
           "champion": "Aphelios",
           "role": "bottom",
-          "job": "先报主副武器与弹药，普攻和 Q 按当前主手效果输出，坠明需先减速再 Q 禁锢；R 按真实武器与安全角度用。武器即将更换或保护距离断开时不照搬上一轮连招。",
-          "loadoutId": "trio-aphelios-weapons"
+          "loadoutId": "default",
+          "job": "厄斐琉斯下路补刀，先报主副武器与弹药；属性顺序是16.20旧参考，可按游戏内情况调整，不是配合必需。"
         },
         {
           "champion": "Lulu",
           "role": "support",
-          "job": "E/W 支持当前可持续普攻的窗口，W 变羊与 R 留真正突进者，和发条控制错开；施法范围断开或核心需要移位就先帮退，不因双保护让核心站在敌方技能里。",
-          "loadoutId": "enchanter-protect"
+          "loadoutId": "default",
+          "job": "璐璐辅助；E/W 支持友军，W 变形与友军增益择一，R 已学后按范围保护射手。"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 奥莉安娜技能资料",
@@ -30624,48 +30804,110 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Lulu.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Orianna mid 同位置配置",
+          "url": "https://op.gg/lol/champions/orianna/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Aphelios bottom 同位置配置",
+          "url": "https://op.gg/lol/champions/aphelios/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Lulu support 同位置配置",
+          "url": "https://op.gg/lol/champions/lulu/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
-        "champion:Orianna": "d35601ede743b428",
-        "champion:Aphelios": "3aa1ca4eb079416d",
-        "champion:Lulu": "12ee018aa7e41dc6",
-        "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
-        "item:3089": "a8a9b060b253391c",
-        "item:3020": "357a162d6a40286e",
-        "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:9103": "7d88abbfc22dd0df",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3504": "f6eed220149ca076",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3072": "5c29525fccb26a37",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:9111": "6667591beed15f1b",
-        "rune:8313": "00b2fb901efb6c81",
-        "rune:8321": "ec014268b03afd2b"
+        "champion:Orianna": "6897daa00a80bf73",
+        "champion:Aphelios": "a16a2bc3afe40b1c",
+        "champion:Lulu": "5f5091380ca45272"
+      },
+      "reviewSourceAnchors": {
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-10-23T02:03:51.546Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "b1c48967c70298c50b2324aed6a5c501348eac8811984027ba7598fd54801573"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "032f33bbd9d369d4"
+            }
+          }
+        },
+        "Aphelios": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "a16a2bc3afe40b1c",
+          "observedAt": "2026-10-23T02:03:51.451Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Aphelios",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
+              "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ac55a790c915bb91"
+            }
+          }
+        },
+        "Lulu": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5f5091380ca45272",
+          "observedAt": "2026-10-23T02:03:51.539Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lulu",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "33e697bcb063b28b"
+            }
+          }
+        }
       }
     },
     {
