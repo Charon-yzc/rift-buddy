@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.10.30.14",
+  "version": "2026.11.01.15",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -6259,24 +6259,22 @@
     },
     {
       "id": "twitch-nami",
-      "carry": "Twitch",
-      "support": "Nami",
       "name": "潮汐偷袭",
       "style": "fun",
       "tags": [
         "普攻增益",
         "减速接控"
       ],
-      "why": "娜美增益帮助图奇开火后的换血与追击。",
-      "plan": "图奇补刀；出手前要在娜美能给增益的范围内。",
-      "risk": "图奇隐身绕太远会失去娜美支援。",
+      "why": "娜美 E 增益与图奇实际命中配合，减速或眩晕为后续输出创造机会。",
+      "plan": "娜美 E 后图奇实际命中，再按减速瞄准泡泡；脱节就退。",
+      "risk": "图奇伪装绕远会失去娜美支援；娜美 Q 落空、敌方反进或退路受威胁时停止追击。",
       "partners": [
         "Shen",
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 图奇技能资料",
@@ -6289,32 +6287,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nami.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "nami-empower"
-      },
       "reviewBaseline": {
-        "champion:Twitch": "111f0429fcbd016f",
-        "champion:Nami": "6a067b32874ba55a",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:6617": "6dccd52cee1f2c6e",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Twitch": "ab3e76d629cf2787",
+        "champion:Nami": "b10366f1187813b9"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Twitch",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀并报告伪装走向；W 命中后视退路短换血。"
+        },
+        {
+          "champion": "Nami",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "保持接应距离，E 给有命中机会的友军，Q 可留反开。"
+        }
+      ],
+      "early": "先保血量、法力和经验，视野不足不贸然绕后。",
+      "window": "增益仍有效、目标可命中且两人可退时。",
+      "economy": "图奇保下路补刀，娜美处理辅助任务、视野与回城预算。",
+      "steps": [
+        "确认兵线、视野和 E、Q 是否可用。",
+        "娜美 E 生效后图奇实际命中；W 实际减速后再瞄准娜美 Q。",
+        "娜美 Q 未中或敌方反进时撤回安全位置。"
+      ],
+      "reviewSourceAnchors": {
+        "Twitch": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ab3e76d629cf2787",
+          "observedAt": "2026-10-26T13:38:40.596Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Twitch",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "461e810ef4e30853"
+            }
+          }
+        },
+        "Nami": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b10366f1187813b9",
+          "observedAt": "2026-10-26T13:38:40.505Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nami",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d41e55e60af3c37e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "zeri-lulu",
@@ -7040,24 +7097,22 @@
     },
     {
       "id": "ezreal-nami",
-      "carry": "Ezreal",
-      "support": "Nami",
       "name": "潮汐探险家",
       "style": "balanced",
       "tags": [
         "消耗",
         "回复"
       ],
-      "why": "娜美提供回复和增益，伊泽瑞尔可在安全距离反复换血。",
-      "plan": "伊泽瑞尔补刀；命中消耗后再前压，E 留给关键威胁。",
-      "risk": "两人清线并不总是快，别只丢 Q 不普攻。",
+      "why": "娜美 E 可强化伊泽瑞尔实际命中的攻击或技能，为短换血创造机会。",
+      "plan": "娜美 E 后伊泽瑞尔找实际命中，Q 被兵线挡住就不强追。",
+      "risk": "Q 可能被兵线挡；敌方贴近或视野不足时保留 E 朝安全区域撤离。",
       "partners": [
         "Vi",
         "Sejuani"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 伊泽瑞尔技能资料",
@@ -7070,32 +7125,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nami.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "nami-empower"
-      },
       "reviewBaseline": {
-        "champion:Ezreal": "9509ab661fff89d0",
-        "champion:Nami": "6a067b32874ba55a",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:6617": "6dccd52cee1f2c6e",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Ezreal": "c2201358b91fa06b",
+        "champion:Nami": "b10366f1187813b9"
       },
-      "tempo": "poke"
+      "tempo": "poke",
+      "members": [
+        {
+          "champion": "Ezreal",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀，用 Q 实际命中消耗，保留 E 安全落点。"
+        },
+        {
+          "champion": "Nami",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "E 给可命中的队友，W 按实际血量使用，Q 命中后再接续。"
+        }
+      ],
+      "early": "安全补刀，技能和蓝量不足时先稳住。",
+      "window": "娜美 E 有效且目标可实际命中，双方有撤退空间时。",
+      "economy": "伊泽瑞尔保下路补刀，娜美负责辅助任务与视野。",
+      "steps": [
+        "先确认兵线遮挡与退路。",
+        "娜美 E 作用于队友后，伊泽瑞尔瞄准首个敌人。",
+        "泡泡或 Q 未中、敌方接近时撤退。"
+      ],
+      "reviewSourceAnchors": {
+        "Ezreal": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "c2201358b91fa06b",
+          "observedAt": "2026-10-26T13:38:40.393Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ezreal",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ezreal/ezreal.bin.json",
+              "sha256": "017fe85cc1493ac674d9ff34600edfa48ec7af0f20cde53c12f184ea6d6b40a1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "6b1155906c9a8a0b"
+            }
+          }
+        },
+        "Nami": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b10366f1187813b9",
+          "observedAt": "2026-10-26T13:38:40.505Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nami",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d41e55e60af3c37e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "ezreal-yuumi",
@@ -16679,24 +16793,22 @@
     },
     {
       "id": "nilah-nami",
-      "carry": "Nilah",
-      "support": "Nami",
       "name": "水鞭回流",
       "style": "fun",
       "tags": [
         "治疗分享",
         "减速切入"
       ],
-      "why": "尼菈的治疗护盾联动配合娜美的治疗与增益，减速帮助近战射手接近目标。",
-      "plan": "尼菈补刀；娜美先减速，尼菈保留退出方向，泡泡用于接控或保护。",
-      "risk": "双人射程吃亏，泡泡不稳定；不能把治疗当作无视爆发的理由。",
+      "why": "符合距离及实际效果时，尼菈被动可增强并分享友方治疗；娜美 E 生效后可配合实际命中换血。",
+      "plan": "娜美 W 按实际治疗，E 生效后尼菈实际命中；双方保持接应距离并留退路。",
+      "risk": "近战容易受远程压制；治疗不保证挡住爆发，关键技能空档或退路被封时撤。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -16709,69 +16821,110 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nami.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "nilah-sustain",
-        "support": "nami-empower"
-      },
       "reviewBaseline": {
-        "champion:Nilah": "040a6c8c12c965e3",
-        "champion:Nami": "6a067b32874ba55a",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:6617": "6dccd52cee1f2c6e",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8347": "def2a55844436c47"
+        "champion:Nilah": "30e5ef1b4f79390e",
+        "champion:Nami": "b10366f1187813b9"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Nilah",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "保线和经验，Q 实际命中后视 W 与退路短换血。"
+        },
+        {
+          "champion": "Nami",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "W 按实际情况治疗，E 给有命中机会的队友，Q 用于接续或自保。"
+        }
+      ],
+      "early": "先保线与经验，不为换血放弃安全距离。",
+      "window": "双方能接应、相关效果实际生效且退路安全时。",
+      "economy": "尼菈补刀，娜美负责辅助任务与视野。",
+      "steps": [
+        "确认血量、技能与退路。",
+        "按实际治疗或 E 生效后的命中安排换血；尼菈 Q 命中敌方单位或建筑后才获得强化。",
+        "娜美 Q 落空或敌人集火时回撤。"
+      ],
+      "reviewSourceAnchors": {
+        "Nilah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "30e5ef1b4f79390e",
+          "observedAt": "2026-10-26T13:38:40.507Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nilah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "2f18ee1a98588cd1"
+            }
+          }
+        },
+        "Nami": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b10366f1187813b9",
+          "observedAt": "2026-10-26T13:38:40.505Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nami",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d41e55e60af3c37e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "nilah-lulu",
-      "carry": "Nilah",
-      "support": "Lulu",
       "name": "皮克斯鞭舞",
       "style": "balanced",
       "tags": [
         "护盾分享",
         "贴身保护"
       ],
-      "why": "璐璐护盾与大招为尼菈近身输出提供保护，尼菈可分享附近治疗护盾收益。",
-      "plan": "尼菈补刀；护盾在进入伤害窗口前给，变羊保留给阻止输出的突进者。",
-      "risk": "大招不是无敌，缺少稳定远程先手，需要第三人补前排。",
+      "why": "符合距离及实际效果时，尼菈被动可增强并分享友方护盾；W 接触友军可分享效果。",
+      "plan": "璐璐施盾，尼菈 Q 命中后换血；W 需接触友军才分享。",
+      "risk": "璐璐 W 对友方增益和对敌变形是不同选择；R 给额外最大生命并击飞周围敌人，不当作无敌。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -16784,69 +16937,110 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Lulu.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "nilah-sustain",
-        "support": "lulu-onhit"
-      },
       "reviewBaseline": {
-        "champion:Nilah": "040a6c8c12c965e3",
-        "champion:Lulu": "12ee018aa7e41dc6",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:3504": "f6eed220149ca076",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8347": "def2a55844436c47"
+        "champion:Nilah": "30e5ef1b4f79390e",
+        "champion:Lulu": "5f5091380ca45272"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Nilah",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀，Q 命中后换血；W 接触友军才分享。"
+        },
+        {
+          "champion": "Lulu",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "视威胁用 E 施盾，W 在友方增益与对敌变形之间择一，R 留实际反打。"
+        }
+      ],
+      "early": "先保近战补刀与经验。",
+      "window": "盾可实际给予、两人能接应且有退路时。",
+      "economy": "尼菈补刀，璐璐承担辅助任务和视野。",
+      "steps": [
+        "确认两人距离、W 和撤退路线。",
+        "璐璐 E 给盾，尼菈 Q 命中后再判断换血；W 接触友军才分享。",
+        "护盾结束、技能落空或两人分开时退出。"
+      ],
+      "reviewSourceAnchors": {
+        "Nilah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "30e5ef1b4f79390e",
+          "observedAt": "2026-10-26T13:38:40.507Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nilah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "2f18ee1a98588cd1"
+            }
+          }
+        },
+        "Lulu": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5f5091380ca45272",
+          "observedAt": "2026-10-26T13:38:40.500Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lulu",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "33e697bcb063b28b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "nilah-renata",
-      "carry": "Nilah",
-      "support": "Renata",
       "name": "不退鞭舞",
       "style": "fun",
       "tags": [
         "护盾联动",
         "持续作战"
       ],
-      "why": "烈娜塔提供护盾、攻击速度和临时救援窗口，尼菈利用近身持续输出来配合。",
-      "plan": "尼菈补刀；先约好救援后集火的目标，能收尾再继续打，不能收尾就撤。",
-      "risk": "W 需要击杀参与才能稳定续命，不能保证每次救援成功。",
+      "why": "烈娜塔实际护盾、被动标记和增益为双方共同攻击创造机会。",
+      "plan": "烈娜塔实际施盾并标记，尼菈攻击同一目标；缺收尾就退。",
+      "risk": "W 增益期间阵亡后的衰减需实际参与击杀才停止；治疗只能延缓，不能替代参与击杀。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -16859,48 +17053,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Renata.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "nilah-sustain",
-        "support": "renata-rescue"
-      },
       "reviewBaseline": {
-        "champion:Nilah": "040a6c8c12c965e3",
-        "champion:Renata": "d2081c74ab6d2eac",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3504": "f6eed220149ca076",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8347": "def2a55844436c47",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089"
+        "champion:Nilah": "30e5ef1b4f79390e",
+        "champion:Renata": "040340652360d067"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Nilah",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀，确认 Q 命中、E 可用目标与退路后输出。"
+        },
+        {
+          "champion": "Renata",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "E 命中友军才有盾；Q 命中后决定二段，W 给有实际输出和收尾机会的友军。"
+        }
+      ],
+      "early": "先稳线并保留反冲手段。",
+      "window": "盾、目标、接应距离和安全退路都成立时。",
+      "economy": "尼菈补刀，烈娜塔负责辅助任务与视野。",
+      "steps": [
+        "先确认距离、盾与同一目标。",
+        "烈娜塔 E 触及友军，标记后队友实际伤害该目标。",
+        "Q 落空、缺收尾机会或退路受威胁时退出。"
+      ],
+      "reviewSourceAnchors": {
+        "Nilah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "30e5ef1b4f79390e",
+          "observedAt": "2026-10-26T13:38:40.507Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nilah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "2f18ee1a98588cd1"
+            }
+          }
+        },
+        "Renata": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "040340652360d067",
+          "observedAt": "2026-10-26T13:38:40.515Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renata",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "849f2ea81ec5e47e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "nilah-braum",
@@ -17220,24 +17457,22 @@
     },
     {
       "id": "nilah-yuumi",
-      "carry": "Nilah",
-      "support": "Yuumi",
       "name": "猫咪鞭舞",
       "style": "wild",
       "tags": [
         "护盾联动",
         "持续跟随"
       ],
-      "why": "悠米随尼菈进场提供护盾与增益，尼菈被动支持近身持续作战。",
-      "plan": "尼菈补刀；以安全发育为先，队伍另找前排和稳定先手。",
-      "risk": "下路缺少站位压力和硬先手，容易被推线，不能照搬强开阵容。",
+      "why": "悠米实际附身后的护盾与命中的治疗波纹支持尼菈进退。",
+      "plan": "悠米附身后提供护盾，尼菈确认目标和退路再换血。",
+      "risk": "近战下路可能受推线和越塔压力；敌方围捕或尼菈没有安全可用撤离目标时提前退。",
       "partners": [
         "Shen",
         "JarvanIV"
       ],
       "difficulty": "较高",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -17250,48 +17485,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Yuumi.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "nilah-sustain",
-        "support": "enchanter-protect"
-      },
       "reviewBaseline": {
-        "champion:Nilah": "040a6c8c12c965e3",
-        "champion:Yuumi": "8878f62a7e5e6ec8",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3504": "f6eed220149ca076",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8347": "def2a55844436c47"
+        "champion:Nilah": "30e5ef1b4f79390e",
+        "champion:Yuumi": "74372983c2c1dbfe"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Nilah",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀，E 前确认可用目标和撤离路径。"
+        },
+        {
+          "champion": "Yuumi",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "安全时 W 附身，E 实际给盾，Q 消耗；挚友效果按实际状态判断。"
+        }
+      ],
+      "early": "先保经验与安全血量。",
+      "window": "附身、护盾和双方退路实际成立时。",
+      "economy": "尼菈补刀，悠米按实际辅助任务、金币与视野能力行动。",
+      "steps": [
+        "确认悠米附身及视野。",
+        "E 实际给盾后，尼菈按距离和退路短换血。",
+        "R 波纹以实际命中为准；撤离路径不安全时提前退。"
+      ],
+      "reviewSourceAnchors": {
+        "Nilah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "30e5ef1b4f79390e",
+          "observedAt": "2026-10-26T13:38:40.507Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nilah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "2f18ee1a98588cd1"
+            }
+          }
+        },
+        "Yuumi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "74372983c2c1dbfe",
+          "observedAt": "2026-10-26T13:38:40.605Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yuumi",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yuumi/yuumi.bin.json",
+              "sha256": "b65fd4e92df3a120fe88ee2ebd588f55a7f1a642f249c22d0668eae860f9c3aa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "2bfcd21ddb05bd3f"
+            }
+          }
+        }
+      }
     },
     {
       "id": "samira-taric",
@@ -18061,24 +18339,22 @@
     },
     {
       "id": "smolder-nami",
-      "carry": "Smolder",
-      "support": "Nami",
       "name": "幼龙潮汐",
       "style": "balanced",
       "tags": [
         "治疗续航",
         "减速接技能"
       ],
-      "why": "娜美提供换血回复和减速，帮助斯莫德在安全距离使用技能并发育。",
-      "plan": "射手补刀叠层；娜美不为了追击逼他离开可补刀的兵线。",
-      "risk": "前期硬拼和清线压力需要处理，不能把叠层成型当作当前战力。",
+      "why": "娜美 E 有效且次数未用尽时，斯莫德攻击或技能实际命中可触发增益；成长依赖技能命中英雄或 Q 击杀。",
+      "plan": "娜美 E 后斯莫德实际命中消耗，危险时回撤。",
+      "risk": "潜在层数不是现有强度；娜美 Q 落空或敌方突进时保留安全退路。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 斯莫德技能资料",
@@ -18091,53 +18367,110 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nami.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "nami-empower"
-      },
       "reviewBaseline": {
-        "champion:Smolder": "07562d4ce9824818",
-        "champion:Nami": "6a067b32874ba55a",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:6617": "6dccd52cee1f2c6e",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Smolder": "5f9af800584064ad",
+        "champion:Nami": "b10366f1187813b9"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Smolder",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀，观察小兵血量与实际获得层数，E 沿安全方向退出。"
+        },
+        {
+          "champion": "Nami",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "保持辅助距离，W 回复、E 增益，Q 命中后接续或防冲。"
+        }
+      ],
+      "early": "安全补刀，不为叠层走入控制范围。",
+      "window": "增益有效、目标可安全命中且回撤距离足够时。",
+      "economy": "斯莫德补刀，娜美负责辅助任务和视野。",
+      "steps": [
+        "观察兵线、退路和已有层数。",
+        "娜美 E 生效后斯莫德实际命中；技能命中英雄或 Q 击杀敌人才获层数。",
+        "技能落空或敌人突进时撤。"
+      ],
+      "reviewSourceAnchors": {
+        "Smolder": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5f9af800584064ad",
+          "observedAt": "2026-10-26T13:38:40.522Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Smolder",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e270c656917313cc"
+            }
+          }
+        },
+        "Nami": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b10366f1187813b9",
+          "observedAt": "2026-10-26T13:38:40.505Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nami",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d41e55e60af3c37e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "smolder-lulu",
-      "carry": "Smolder",
-      "support": "Lulu",
       "name": "皮克斯养龙",
       "style": "balanced",
       "tags": [
         "反突进",
         "发育保护"
       ],
-      "why": "璐璐的护盾、变羊和大招帮助斯莫德应对突进，给成长型射手争取空间。",
-      "plan": "射手补刀；璐璐优先处理冲向射手的敌人，再考虑进攻增益。",
-      "risk": "进攻先手有限，地图支援要先处理兵线。",
+      "why": "璐璐保护和斯莫德实际命中支持安全成长与换血。",
+      "plan": "璐璐施盾，斯莫德按实际命中和安全距离换血。",
+      "risk": "不为叠层走入控制范围；璐璐 R 为额外最大生命及附近击飞，不称治疗。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 斯莫德技能资料",
@@ -18150,32 +18483,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Lulu.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "lulu-onhit"
-      },
       "reviewBaseline": {
-        "champion:Smolder": "07562d4ce9824818",
-        "champion:Lulu": "12ee018aa7e41dc6",
-        "item:3504": "f6eed220149ca076",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Smolder": "5f9af800584064ad",
+        "champion:Lulu": "5f5091380ca45272"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Smolder",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀；技能命中英雄或 Q 击杀敌人才获得层数。"
+        },
+        {
+          "champion": "Lulu",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "保持保护距离，E 施盾，W 依局势选择友方增益或敌方变形。"
+        }
+      ],
+      "early": "先保补刀和经验。",
+      "window": "保护可接应且命中、撤退空间安全时。",
+      "economy": "斯莫德补刀，璐璐负责辅助任务与视野。",
+      "steps": [
+        "确认技能、兵线和退路。",
+        "璐璐 E 施盾；斯莫德 W 实际命中后才按减速判断换血。",
+        "敌方包夹或技能用尽时退出。"
+      ],
+      "reviewSourceAnchors": {
+        "Smolder": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5f9af800584064ad",
+          "observedAt": "2026-10-26T13:38:40.522Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Smolder",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e270c656917313cc"
+            }
+          }
+        },
+        "Lulu": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5f5091380ca45272",
+          "observedAt": "2026-10-26T13:38:40.500Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lulu",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "33e697bcb063b28b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "smolder-braum",
@@ -18321,24 +18713,22 @@
     },
     {
       "id": "draven-renata",
-      "carry": "Draven",
-      "support": "Renata",
       "name": "旋斧续战",
       "style": "fun",
       "tags": [
         "攻速增益",
         "短战收尾"
       ],
-      "why": "烈娜塔增益支持德莱文接斧输出，救援窗口可用于已有收尾机会的战斗。",
-      "plan": "德莱文补刀；以接斧路径为中心换血，W 后只追能安全命中的目标。",
-      "risk": "接斧落点可能暴露走位，救援不能保证延续。",
+      "why": "烈娜塔的实际护盾与增益支持德莱文在安全接斧距离输出。",
+      "plan": "烈娜塔施盾，德莱文安全接斧后输出；斧点危险就退。",
+      "risk": "W 延缓死亡不保证救回，衰减期需实际参与击杀；不要为接每把斧头进入集火。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 德莱文技能资料",
@@ -18351,32 +18741,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Renata.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "renata-rescue"
-      },
       "reviewBaseline": {
-        "champion:Draven": "f663c75656c0aae3",
-        "champion:Renata": "d2081c74ab6d2eac",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3504": "f6eed220149ca076",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089"
+        "champion:Draven": "6e70cb90d9331e71",
+        "champion:Renata": "040340652360d067"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Draven",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "管理飞斧与安全落点；接住 Q 旋转飞斧才刷新 W。"
+        },
+        {
+          "champion": "Renata",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "E 命中友军才给盾，Q 命中后决定二段，W 给有实际收尾机会的队友。"
+        }
+      ],
+      "early": "保线并留意斧头落点。",
+      "window": "安全斧点、实际护盾和退路同时成立时。",
+      "economy": "德莱文补刀并按实际获得赏金计算；烈娜塔负责辅助任务与视野。",
+      "steps": [
+        "确认飞斧落点、敌方控制和退路。",
+        "烈娜塔 E 实际命中队友，德莱文安全接斧后再攻击。",
+        "烈娜塔 Q 落空、斧点危险或缺收尾机会时撤。"
+      ],
+      "reviewSourceAnchors": {
+        "Draven": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6e70cb90d9331e71",
+          "observedAt": "2026-10-26T13:38:40.314Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Draven",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/draven/draven.bin.json",
+              "sha256": "530f1eee4e7bfe9fbe6dc5ba9711aad33f15e3dd9dc81378e217a090fc319747"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b7e878515739012b"
+            }
+          }
+        },
+        "Renata": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "040340652360d067",
+          "observedAt": "2026-10-26T13:38:40.515Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renata",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "849f2ea81ec5e47e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "tristana-taric",
@@ -19414,24 +19863,22 @@
     },
     {
       "id": "kaisa-rakan",
-      "carry": "Kaisa",
-      "support": "Rakan",
       "name": "虚空舞伴",
       "style": "balanced",
       "tags": [
         "击飞接层",
         "进退保护"
       ],
-      "why": "洛的限制效果帮助卡莎建立跟进条件，护盾和返回队友移动支持进退。",
-      "plan": "卡莎补刀；先确认控制命中与跟进距离，洛保留安全返回点。",
-      "risk": "不能把大招当无条件追击，深入后两人可能一起撤不回来。",
+      "why": "洛实际命中的控制为卡莎创造输出机会；卡莎按实际电浆和安全落点决定是否 R。",
+      "plan": "洛实际控制后，卡莎确认电浆与安全落点再决定是否 R。",
+      "risk": "卡莎 R 有电浆、距离和落点条件；洛 E 需范围内可选友军且技能可用，护盾不保证免死。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 卡莎技能资料",
@@ -19444,45 +19891,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Rakan.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "onhit-carry",
-        "support": "rakan-engage"
-      },
       "reviewBaseline": {
-        "champion:Kaisa": "c5aaf2939b58e718",
-        "champion:Rakan": "5dadfc0f0f54ae6b",
-        "item:3124": "a5fa166d09295f8f",
-        "item:3153": "a6d836f7e8db72c4",
-        "item:3085": "fbd0dd92f5cc7425",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3091": "9fbf7a8b541265a4",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8008": "d8ed59948702367b",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8014": "04092c4f9754532b",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:2065": "a30335c7d456f5fd",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429"
+        "champion:Kaisa": "792e7d85c3acdc09",
+        "champion:Rakan": "69d7edc48cac55e5"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Kaisa",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "安全补刀与输出，确认敌方英雄实际电浆、R 距离和落点。"
+        },
+        {
+          "champion": "Rakan",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "确认队友跟进与 E 回跳目标，W 或 R 实际命中才接续。"
+        }
+      ],
+      "early": "先稳线，六级前不安排卡莎 R 跟进。",
+      "window": "控制命中、目标已有电浆且两人具备安全退路时。",
+      "economy": "卡莎补刀，洛负责辅助任务和视野；装备按金币与威胁选择。",
+      "steps": [
+        "确认技能、敌方位置、洛 E 返回对象和双方退路。",
+        "洛 W 实际击飞或 R 实际魅惑；卡莎确认目标电浆及安全落点后再考虑 R。",
+        "W 落空、无回跳目标或落点受威胁时撤。"
+      ],
+      "reviewSourceAnchors": {
+        "Kaisa": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "792e7d85c3acdc09",
+          "observedAt": "2026-10-26T13:38:40.401Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kaisa",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e793368118ed867a"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-10-26T13:38:40.512Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
+      }
     },
     {
       "id": "kaisa-braum",
@@ -28495,38 +28988,39 @@
       "tags": [
         "团战连招"
       ],
-      "why": "瑟庄妮留人，洛制造聚拢，霞把羽毛铺在敌人的撤退方向。",
-      "plan": "洛先找 W/R，瑟庄妮接控制；霞观察羽毛位置再 E，霞 R 优先留给危险进场。",
-      "risk": "霞倒钩需要羽毛位置，不能把任何控制都当成保证命中的倒钩。",
-      "early": "霞洛先稳定双人线，瑟庄妮清野后靠有线权的一侧，不越过大波敌兵强开。",
-      "window": "羽毛已经覆盖退路且洛有回撤目标时。",
-      "economy": "霞补刀，瑟庄妮拿野区经济，洛优先开团和生存的低经济装备。",
+      "why": "洛与瑟庄妮按实际命中分段控制，霞观察羽毛位置和回程再决定 E。",
+      "plan": "洛实际控制后瑟庄妮接力，霞按羽毛回程判断倒钩。",
+      "risk": "瑟庄妮 E 需目标实际四层，霞远程普攻不能按附近近战友军叠层；羽毛不足、洛无回跳或输出跟不上就撤。",
+      "early": "瑟庄妮清野，霞保下路经验与 R，洛布辅助视野。",
+      "window": "实际控制命中、羽毛回程覆盖且洛有安全回跳目标时。",
+      "economy": "瑟庄妮保野区经济，霞补下路线，洛负责辅助任务与视野。",
       "steps": [
-        "洛先找 W/R，瑟庄妮接控制",
-        "霞观察羽毛位置再 E，霞 R 优先留给危险进场。"
+        "确认洛回跳目标、瑟庄妮位置与霞实际羽毛。",
+        "洛 W 或 R 命中后瑟庄妮接控制；E 只有目标实际四层才晕。",
+        "霞按回程实际命中数量决定 E；羽毛不足或队友无法接应就退。"
       ],
       "members": [
         {
           "champion": "Sejuani",
           "role": "jungle",
-          "job": "洛 W/R 实际命中后用 W 与近战队友普攻叠霜，四层才 E，R 留后续；霞的远程普攻不替自己叠霜。洛回跳或霞需自保时停追，Q 留接应。",
-          "loadoutId": "trio-jungle-frontline"
+          "loadoutId": "default",
+          "job": "保野区，W 与附近近战队友普攻按实际叠层；四层才 E，霞的远程攻击不按此叠层。"
         },
         {
           "champion": "Xayah",
           "role": "bottom",
-          "job": "洛与猪妹控制成立后 Q/普攻布羽毛，回程至少三根实际穿目标才 E 求禁锢，R 留危险进场；羽毛位置不成立时不预设倒钩必中，洛回撤就一起退。",
-          "loadoutId": "default"
+          "loadoutId": "default",
+          "job": "保线并按实际落羽和回程判断 E；R 的不可选取用于应对真实危险。"
         },
         {
           "champion": "Rakan",
           "role": "support",
-          "job": "先确认霞羽毛方向、猪妹位置与 E 返回友军，再 W/R 发起，命中后让猪妹接下一段；没有回跳目标或 W 落空时立即退，不等霞为救自己浪费自保 R。",
-          "loadoutId": "default"
+          "loadoutId": "default",
+          "job": "保视野并先确认 E 可回跳友军；W 落点击飞或 R 接触魅惑，落空就退。"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 瑟庄妮技能资料",
@@ -28545,30 +29039,92 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Rakan.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
       "reviewBaseline": {
-        "champion:Sejuani": "8b875d1d645405f8",
-        "champion:Xayah": "b7332402902225ee",
-        "champion:Rakan": "5dadfc0f0f54ae6b",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998"
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Xayah": "6218a12d2240d28e",
+        "champion:Rakan": "69d7edc48cac55e5"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Xayah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6218a12d2240d28e",
+          "observedAt": "2026-10-26T13:38:40.601Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Xayah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+              "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ef84e7c599b03475"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-10-26T13:38:40.512Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
       }
     },
     {
@@ -28728,38 +29284,39 @@
       "tags": [
         "抓人节奏"
       ],
-      "why": "希维尔加速帮助蕾欧娜靠近，魔腾从侧面切入同一个被留住的目标。",
-      "plan": "先确认三人距离，希维尔 R 提速，蕾欧娜留人，魔腾再切入；不要各自选不同后排。",
-      "risk": "关灯不等于敌人没有支援，魔腾落点必须有撤退或队友跟进。",
-      "early": "希维尔先清线，蕾欧娜保状态；魔腾六级前不要等同于有远距离支援。",
-      "window": "魔腾和希维尔大招可用，目标附近敌方人数已被视野确认时。",
-      "economy": "希维尔吃下路兵线，魔腾拿野区经济；蕾欧娜的功能装备优先保证跟得上。",
+      "why": "希维尔为附近友军提供加速，蕾欧娜实际留人后魔腾判断能否跟进同一目标。",
+      "plan": "希维尔加速附近队友，蕾欧娜留人，魔腾确认目标后跟进。",
+      "risk": "关灯不代表敌人没有支援；蕾欧娜 R 中心才晕、外围减速，魔腾 E 连线断开不预设恐惧。",
+      "early": "希维尔稳住下路线，蕾欧娜保视野和状态；魔腾先清野，六级前不安排 R 支援。",
+      "window": "双方 R 可用、希维尔实际覆盖队友且目标和落点可安全到达时。",
+      "economy": "希维尔补下路线，魔腾清野，蕾欧娜按辅助任务布视野。",
       "steps": [
-        "先确认三人距离，希维尔 R 提速，蕾欧娜留人，魔腾再切入",
-        "不要各自选不同后排。"
+        "报告目标、视野、三人距离和技能。",
+        "希维尔 R 加速附近友军；蕾欧娜实际命中控制，魔腾再判断是否突进同一目标。",
+        "希维尔安全输出；魔腾 E 断链、目标脱离或落点被包围时撤。"
       ],
       "members": [
         {
           "champion": "Nocturne",
           "role": "jungle",
-          "job": "先确认希维尔与蕾欧娜能跟进、目标在 R 范围且人数可知，再 R 切同一目标，Q/普攻输出、E 维持连接，W 留反击；关灯后落点被包就不独自续追。",
-          "loadoutId": "trio-nocturne-commit"
+          "loadoutId": "default",
+          "job": "清野后确认目标可选及落点，R 跟进后 E 连线保持才恐惧；被包围不续追。"
         },
         {
           "champion": "Sivir",
           "role": "bottom",
-          "job": "三人实际距离允许时 R 提速帮助蕾欧娜留人，Q/普攻与 W 打可触及区域，E 留能挡的关键技能；魔腾落得过远就保持安全输出，不追去兑现预想加速。",
-          "loadoutId": "default"
+          "loadoutId": "default",
+          "job": "保线，R 只加速附近友军，安全位置输出并用 E 挡实际技能。"
         },
         {
           "champion": "Leona",
           "role": "support",
-          "job": "确认两位输出能覆盖目标后 E/Q 或 R 留人，给魔腾报同一落点，W 承接反击；前段没中或希维尔被迫后退就停，不因魔腾关灯当敌方没有支援。",
-          "loadoutId": "tank-engage"
+          "loadoutId": "default",
+          "job": "保视野；E 末个命中英雄才冲过去并禁锢，Q 需普攻命中，R 中心才晕。"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 魔腾技能资料",
@@ -28778,38 +29335,92 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Leona.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
       "reviewBaseline": {
-        "champion:Nocturne": "8c842f929153f246",
-        "champion:Sivir": "9b8397c8bae846c7",
-        "champion:Leona": "060aef3e3162ad2d",
-        "item:3071": "8b44dc349847ea0e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:6333": "60ed05035db8354d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:9111": "6667591beed15f1b",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8008": "d8ed59948702367b",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8345": "02157c1d4d7f7531",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8453": "f9a0180e7f2f0432",
-        "item:3073": "fc0221a3ae08279d",
-        "item:6631": "0afacda99f318d21",
-        "rune:8106": "bfb83fa22daf18de",
-        "rune:8140": "93302565a400fc06"
+        "champion:Nocturne": "2759f235cb713880",
+        "champion:Sivir": "6c42062d13c38ce6",
+        "champion:Leona": "2b7d4e998553b365"
+      },
+      "reviewSourceAnchors": {
+        "Nocturne": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2759f235cb713880",
+          "observedAt": "2026-10-26T13:38:40.508Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nocturne",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "93338da160b2ed4c8ff61ee45eac0e21363f69939f6202524c29910e7beabf58"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7e6432fe64cf372b"
+            }
+          }
+        },
+        "Sivir": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6c42062d13c38ce6",
+          "observedAt": "2026-10-26T13:38:40.522Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sivir",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sivir/sivir.bin.json",
+              "sha256": "12c68a433a466cff6396e4e8642834ae342650bb54d7b4251a10152b501703b4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "6b46b8e16bb65277"
+            }
+          }
+        },
+        "Leona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2b7d4e998553b365",
+          "observedAt": "2026-10-26T13:38:40.498Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leona",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7ff3b8a69842091d"
+            }
+          }
+        }
       }
     },
     {
@@ -29167,38 +29778,39 @@
       "tags": [
         "团战连招"
       ],
-      "why": "慎支援进场者，扎克击飞后洛接控制，给另外两位队友创造输出窗口。",
-      "plan": "慎先确认要支援谁；扎克 E 命中后洛接控，慎落地后留嘲讽拦反扑。",
-      "risk": "这三人的输出不足，必须确认队友能跟上，不能当成三人独立秒人组合。",
-      "early": "慎保上路经验，扎克清野，洛按双人线状态游走；不要为了接力丢三路资源。",
-      "window": "慎 R 与扎克 E 可用，队友输出距离足够时。",
-      "economy": "慎上路、扎克野区各自发育；洛辅助低经济路线，额外资源优先给实际输出核心。",
+      "why": "慎在实际完成支援后接应，扎克与洛按命中和友军位置分段控制。",
+      "plan": "扎克命中后洛按回跳条件跟进，慎完成引导后接应。",
+      "risk": "慎引导不保证完成；扎克 E 与洛 W 都可落空，洛 E 没有范围内可选友军不能回跳。",
+      "early": "慎保上路线，扎克清野，洛保辅助视野和回跳点。",
+      "window": "支援能完成、输出可到场且实际命中并有退路时。",
+      "economy": "慎保上路线经验，扎克清野，洛按辅助预算布视野；三人伤害不保证足够。",
       "steps": [
-        "慎先确认要支援谁",
-        "扎克 E 命中后洛接控，慎落地后留嘲讽拦反扑。"
+        "确认输出队友、慎选定目标、洛 E 可达友军和落点。",
+        "扎克 E 实际命中后，洛按 W 命中和回跳条件决定是否接续。",
+        "慎完成引导后观察位置；缺输出、落空或无法接应时撤。"
       ],
       "members": [
         {
           "champion": "Shen",
           "role": "top",
-          "job": "先明确 R 支援扎克还是洛，从安全位置引导，落地 E 留反扑、W 保护附近普攻承伤；另外两名队友输出无法到场时不把支援当三人必杀，优先接应撤退。",
-          "loadoutId": "trio-frontline"
+          "loadoutId": "default",
+          "job": "保上路线；R 选实际友军，引导完成才到场，E 命中才嘲讽，W 在魂刃区域保护。"
         },
         {
           "champion": "Zac",
           "role": "jungle",
-          "job": "确认洛能接控、慎能支援且真正输出位到场，再 E 实际击飞，Q/W 限同一战区；落点被包或输出跟不上就回接应，不只凭三名前排到齐开团。",
-          "loadoutId": "default"
+          "loadoutId": "default",
+          "job": "清野并蓄 E，按实际落点和队友距离进场；落空或无人接应就退。"
         },
         {
           "champion": "Rakan",
           "role": "support",
-          "job": "扎克 E 实际命中后 W/R 接下一段，E 返回慎或其他安全友军；先报回跳目标，别与扎克同时盲开。慎支援受阻或输出未到时转保护，不续追深处。",
-          "loadoutId": "default"
+          "loadoutId": "default",
+          "job": "保辅助视野，W 实际命中才击飞，E 需范围内可选友军与可用次数。"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 慎技能资料",
@@ -29217,30 +29829,92 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Rakan.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
       "reviewBaseline": {
-        "champion:Shen": "d93abdead72ceaa9",
-        "champion:Zac": "9754f98869dae8ec",
-        "champion:Rakan": "5dadfc0f0f54ae6b",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8437": "c950f9daf1edb09d",
-        "rune:8446": "321d014aaeb9ee11",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47"
+        "champion:Shen": "e59438000b98dd56",
+        "champion:Zac": "79df9b9e7571e89c",
+        "champion:Rakan": "69d7edc48cac55e5"
+      },
+      "reviewSourceAnchors": {
+        "Shen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e59438000b98dd56",
+          "observedAt": "2026-10-26T13:38:40.520Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Shen",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
+              "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "56dbf98c4bc9628e"
+            }
+          }
+        },
+        "Zac": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "79df9b9e7571e89c",
+          "observedAt": "2026-10-26T13:38:40.606Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zac",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zac/zac.bin.json",
+              "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "cf22bab2f64d09f2"
+            }
+          }
+        },
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-10-26T13:38:40.512Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        }
       }
     },
     {
@@ -29347,38 +30021,39 @@
       "tags": [
         "抓人节奏"
       ],
-      "why": "蕾欧娜先控、蔚定点跟进，石头人保留范围大招打反扑或二次进场。",
-      "plan": "蕾欧娜找到落单目标，蔚 R 跟进；石头人等敌方救援聚集再决定 R，不全砸一个人。",
-      "risk": "大招齐交后撤退能力差，队伍还需要稳定的魔法输出或持续火力。",
-      "early": "石头人稳上路，蔚围绕有线权的路线抓人，蕾欧娜游走前先保证下路安全。",
-      "window": "目标落单且三人关键控制可用，有队友输出跟进时。",
-      "economy": "石头人上路补刀，蔚保持野区经济，蕾欧娜辅助路线优先生存与视野。",
+      "why": "蕾欧娜、蔚和墨菲特分段控制，为能到场的输出队友创造机会。",
+      "plan": "蕾欧娜留人，蔚接控制；墨菲特按落点选择进场或反开。",
+      "risk": "蔚 R 需可选敌方英雄，墨菲特 R 命中着陆区域才击飞；三名前排不保证击杀。",
+      "early": "墨菲特保上路线，蔚清野和观察目标，蕾欧娜维护辅助视野。",
+      "window": "实际控制命中、输出能覆盖且落点安全时。",
+      "economy": "墨菲特吃上路线，蔚吃野区，蕾欧娜以辅助经济保视野与生存。",
       "steps": [
-        "蕾欧娜找到落单目标，蔚 R 跟进",
-        "石头人等敌方救援聚集再决定 R，不全砸一个人。"
+        "确认输出队友、视野及敌方保护。",
+        "蕾欧娜实际留人后，蔚选择可命中的 Q 或可选目标 R 接续。",
+        "墨菲特根据实际位置进场或反开；输出不到、技能落空或被包围就撤。"
       ],
       "members": [
         {
           "champion": "Malphite",
           "role": "top",
-          "job": "先留 R 观察敌方救援是否集中，蕾欧娜与蔚已留单点时用 Q/E 承接，R 只开队友能覆盖的多人或反扑；不要三人大招砸一人，输出未到就回接应。",
-          "loadoutId": "trio-frontline"
+          "loadoutId": "default",
+          "job": "保上路，R 命中实际区域才击飞；落点不安全时保留反开。"
         },
         {
           "champion": "Vi",
           "role": "jungle",
-          "job": "蕾欧娜实际留人后 Q 或已就绪 R 接同一目标，普攻/E 兑现；先确认真正输出位跟得上与敌方反包人数。石头 R 未开不等于要追更深，退路断开就停。",
-          "loadoutId": "trio-vi-followup"
+          "loadoutId": "default",
+          "job": "清野并确认目标，Q 注意实际命中，R 选敌方英雄且到达目标才击飞。"
         },
         {
           "champion": "Leona",
           "role": "support",
-          "job": "先从有视野角度 E/Q 或 R 找队友可处理的落单目标，W 承伤后让蔚接下一段；石头保 R 应对救援。前段没中或输出不在时回保护，不继续单人深入。",
-          "loadoutId": "tank-engage"
+          "loadoutId": "default",
+          "job": "承担辅助视野，E/Q 或 R 按实际命中留人；R 中心才晕。"
         }
       ],
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-01",
       "sources": [
         {
           "name": "Riot · 墨菲特技能资料",
@@ -29397,45 +30072,92 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Leona.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 全英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "checkedAt": "2026-10-30",
+          "kind": "技能依据"
         }
       ],
       "reviewBaseline": {
-        "champion:Malphite": "72a1b3b4b24d83b0",
-        "champion:Vi": "3397db3348f1185c",
-        "champion:Leona": "060aef3e3162ad2d",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8437": "c950f9daf1edb09d",
-        "rune:8446": "321d014aaeb9ee11",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "item:3071": "8b44dc349847ea0e",
-        "item:3053": "6f40bd5cd29bb7d2",
-        "item:6333": "60ed05035db8354d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8453": "f9a0180e7f2f0432",
-        "item:3078": "00721100a51ed120",
-        "rune:8014": "04092c4f9754532b"
+        "champion:Malphite": "1cef2e2fdec84d8d",
+        "champion:Vi": "ed4ccc20b476dc0e",
+        "champion:Leona": "2b7d4e998553b365"
+      },
+      "reviewSourceAnchors": {
+        "Malphite": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1cef2e2fdec84d8d",
+          "observedAt": "2026-10-26T13:38:40.501Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Malphite",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/malphite/malphite.bin.json",
+              "sha256": "5a179a096f00299a2fbe60453c0b2b14aec2fbb1f93d0a6da3f1f43515c44d34"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "998655a1cdd4352a"
+            }
+          }
+        },
+        "Vi": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ed4ccc20b476dc0e",
+          "observedAt": "2026-10-26T13:38:40.599Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Vi",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/vi/vi.bin.json",
+              "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "8c5f2d227a1d26cb"
+            }
+          }
+        },
+        "Leona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2b7d4e998553b365",
+          "observedAt": "2026-10-26T13:38:40.498Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leona",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7ff3b8a69842091d"
+            }
+          }
+        }
       }
     },
     {
