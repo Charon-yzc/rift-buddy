@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.27",
+  "version": "2026.11.02.28",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -34846,40 +34846,41 @@
         "支援保护",
         "反开"
       ],
-      "why": "以支援保护、反开形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "慎支援前先处理上路兵线，烈娜塔护住射手输出，按武器和实际收尾机会决定追击。",
-      "risk": "慎大招会被打断，烈娜塔 W 不保证救援成功。",
+      "why": "慎按实际引导支援友军，烈娜塔提供增益与有条件的救援；厄斐琉斯结合当前武器寻找安全输出。",
+      "plan": "慎先处理上路兵线；射手与烈娜塔留意主副武器、弹药、双方距离与附近威胁。 慎 R 已学且目标友方英雄可选时提供护盾；引导未被打断才传送到其身边，中断或到场位置不安全时不承诺接战。 实际获得烈娜塔 W 增益的同一友方英雄阵亡进入衰减后，只有该英雄在衰减期间参与击杀，才停止衰减并回复；未满足时不保证救回。 慎到场后 E 嘲讽路径上实际命中的敌方英雄或野怪，W 看魂刃与友军位置；厄斐琉斯只有坠明且目标被该武器实际减速后才 Q 禁锢。 厄斐琉斯属性优先级沿用16.20旧参考，可自行调整；不是16.21统计，也不是配合必需条件。",
+      "risk": "慎引导可能被打断或到场后仍危险；获得烈娜塔 W 增益的友方英雄不一定能在衰减期参与击杀，同一英雄只能延缓一次死亡。",
       "difficulty": "适中",
       "members": [
         {
           "champion": "Shen",
           "role": "top",
-          "job": "先处理上路线，R 已可用且能完成引导才支援真实承伤者；到场 E 留反打、W 看实际剑阵范围，引导被打断就报无法到达。",
-          "loadoutId": "trio-frontline"
+          "loadoutId": "default",
+          "job": "慎上路；R 选择友方英雄给盾后须完成引导才到场，失败不承诺支援；E 只嘲讽路径上实际命中的敌方英雄或野怪，W 看魂刃与友军位置。"
         },
         {
           "champion": "Aphelios",
           "role": "bottom",
-          "job": "按当前主副武器 Q/普攻，坠明减速实际存在才 Q 禁锢；先在保护范围攻击，不把慎 R 或烈娜塔 W 当即刻无敌。",
-          "loadoutId": "trio-aphelios-weapons"
+          "loadoutId": "default",
+          "job": "厄斐琉斯下路补刀，先报主副武器与弹药；属性顺序为16.20旧参考，可按游戏内情况调整，并非配合必需。"
         },
         {
           "champion": "Renata",
           "role": "support",
-          "job": "E 护盾承接射手换血，Q 留突进者；W 给实际能继续输出的队友，假死后仍需真实击杀参与，不保证一定救回。",
-          "loadoutId": "renata-rescue"
+          "loadoutId": "default",
+          "job": "烈娜塔辅助；W 按范围给有实际输出机会的友方英雄；实际获得 W 增益的同一友方英雄阵亡进入衰减后，该英雄在衰减期参与击杀才停止衰减并回复。Q 与 E 按实际命中处理威胁。"
         }
       ],
       "steps": [
-        "慎支援前先处理上路兵线",
-        "烈娜塔护住射手输出",
-        "按武器和实际收尾机会决定追击。"
+        "慎先处理上路兵线；射手与烈娜塔留意主副武器、弹药、双方距离与附近威胁。",
+        "慎 R 已学且目标友方英雄可选时提供护盾；引导未被打断才传送到其身边，中断或到场位置不安全时不承诺接战。",
+        "实际获得烈娜塔 W 增益的同一友方英雄阵亡进入衰减后，只有该英雄在衰减期间参与击杀，才停止衰减并回复；未满足时不保证救回。",
+        "慎到场后 E 嘲讽路径上实际命中的敌方英雄或野怪，W 看魂刃与友军位置；厄斐琉斯只有坠明且目标被该武器实际减速后才 Q 禁锢。"
       ],
-      "window": "三人关键技能可用、输出跟得上且兵线允许行动时；技能状态需自己沟通。",
-      "early": "各自优先保证正式位置的经济与经验；六级前先用基础技能接力，不把完整大招连招当成已经拥有。",
-      "economy": "打野保留野区节奏；中上保留各自兵线；下路射手补刀，辅助保留任务经济。换位先重新约定。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "window": "慎 R 已学且能选择友方英雄并完成引导，烈娜塔和射手在可接应范围；武器、控制或退路不成立时先撤。",
+      "early": "各自处理原路兵线，先确认队友位置、武器与技能状态；不预设三人一直会合。",
+      "economy": "保持上路或中路与下路原有经济分工，烈娜塔按辅助任务与视野行动；同位置装备和符文为分项参考，非组合或联合统计。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 慎技能资料",
@@ -34898,55 +34899,112 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Renata.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Shen top 同位置配置",
+          "url": "https://op.gg/lol/champions/shen/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Aphelios bottom 同位置配置",
+          "url": "https://op.gg/lol/champions/aphelios/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Renata support 同位置配置",
+          "url": "https://op.gg/lol/champions/renata/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
-        "champion:Shen": "d93abdead72ceaa9",
-        "champion:Aphelios": "3aa1ca4eb079416d",
-        "champion:Renata": "d2081c74ab6d2eac",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8437": "c950f9daf1edb09d",
-        "rune:8446": "321d014aaeb9ee11",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:9103": "7d88abbfc22dd0df",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3504": "f6eed220149ca076",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3072": "5c29525fccb26a37",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:9111": "6667591beed15f1b",
-        "rune:8313": "00b2fb901efb6c81",
-        "rune:8321": "ec014268b03afd2b"
+        "champion:Shen": "e59438000b98dd56",
+        "champion:Aphelios": "a16a2bc3afe40b1c",
+        "champion:Renata": "040340652360d067"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "reviewSourceAnchors": {
+        "Shen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e59438000b98dd56",
+          "observedAt": "2026-10-26T13:38:40.520Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Shen",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
+              "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "56dbf98c4bc9628e"
+            }
+          }
+        },
+        "Aphelios": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "a16a2bc3afe40b1c",
+          "observedAt": "2026-10-23T02:03:51.451Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Aphelios",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
+              "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ac55a790c915bb91"
+            }
+          }
+        },
+        "Renata": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "040340652360d067",
+          "observedAt": "2026-10-26T13:38:40.515Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Renata",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "849f2ea81ec5e47e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "expand-poppy-smolder-braum",
@@ -36474,39 +36532,40 @@
         "重力区域",
         "救援反开"
       ],
-      "why": "厄斐琉斯有坠明时先禁锢，维克托把 W 放在目标脚下延长站位限制；烈娜塔保留慢速 R 与 W 处理冲进来的对手。",
-      "plan": "先报双枪与弹药，有坠明才安排普攻减速接 Q 禁锢、维克托 W/E；没有坠明就改守重力场，不照搬主动留人顺序。",
-      "risk": "维克托 W 需停留才眩晕，烈娜塔 R 可被躲开；没有坠明、射手弹药将空或救援中拿不到击杀参与时及时退，W 不能保证复活。",
+      "why": "厄斐琉斯的坠明禁锢可帮助维克托判断引力场落点，烈娜塔按实际机会保护射手。",
+      "plan": "维克托先处理原中路兵线，厄斐琉斯下路补刀、烈娜塔辅助；会合后确认主副武器、弹药与退路。 厄斐琉斯手持坠明，只有目标被该武器实际减速时才 Q 禁锢；无坠明或目标未受减速时不承诺这段控制。 维克托 W 按目标实际位置放置；敌人在场内停留足够时间才晕眩，坠明禁锢不保证已经满足停留条件。 实际获得烈娜塔 W 增益的同一友方英雄阵亡进入衰减后，只有该英雄在衰减期间参与击杀，才停止衰减并回复；控制落空或无法安全输出时撤退。 厄斐琉斯属性优先级沿用16.20旧参考，可自行调整；不是16.21统计，也不是配合必需条件。",
+      "risk": "缺坠明、目标离开引力场，或获得烈娜塔 W 增益的友方英雄未在衰减期参与击杀时，原连控与救援均不保证；三人会合不能预设。",
       "members": [
         {
           "champion": "Viktor",
           "role": "mid",
           "loadoutId": "default",
-          "job": "W 放在已被坠明 Q 限制的目标或突进落点，E/R 补覆盖；W 未停留到眩晕不提前追，保留 Q 护盾与自身距离。"
+          "job": "维克托中路；会合后按目标位置放 W，敌人留在场内足够久才晕眩，E/R 以自身安全距离为准。"
         },
         {
           "champion": "Aphelios",
           "role": "bottom",
-          "loadoutId": "trio-aphelios-weapons",
-          "job": "先报当前双枪和弹药；有坠明时普攻挂减速再 Q 禁锢，没有时按武器安全输出，不能把任意 Q 都当控制。"
+          "loadoutId": "default",
+          "job": "厄斐琉斯下路补刀，先报主副武器与弹药；属性顺序为16.20旧参考，可按游戏内情况调整，并非配合必需。"
         },
         {
           "champion": "Renata",
           "role": "support",
-          "loadoutId": "renata-rescue",
-          "job": "E 给射手护盾，Q/R 留给进入重力场的突进者；W 只交给有持续攻击和真实收尾机会的队友，救援失败先报撤退。"
+          "loadoutId": "default",
+          "job": "烈娜塔辅助；W 给可接应的友方英雄；实际获得 W 增益的同一友方英雄阵亡进入衰减后，该英雄在衰减期参与击杀才停止衰减并回复。Q 禁锢首个命中敌人，R 按实际位置使用。"
         }
       ],
       "steps": [
-        "射手报双枪；有坠明时普攻减速接 Q，没坠明则等对方进入防守区域。",
-        "维克托 W 覆盖目标位置并 E/R 跟伤害，烈娜塔不把 Q/R 与首段限制全部重叠。",
-        "烈娜塔 E/W 支持射手安全续打；对方脱离重力场、救援没有收尾条件就退出。"
+        "维克托先处理原中路兵线，厄斐琉斯下路补刀、烈娜塔辅助；会合后确认主副武器、弹药与退路。",
+        "厄斐琉斯手持坠明，只有目标被该武器实际减速时才 Q 禁锢；无坠明或目标未受减速时不承诺这段控制。",
+        "维克托 W 按目标实际位置放置；敌人在场内停留足够时间才晕眩，坠明禁锢不保证已经满足停留条件。",
+        "实际获得烈娜塔 W 增益的同一友方英雄阵亡进入衰减后，只有该英雄在衰减期间参与击杀，才停止衰减并回复；控制落空或无法安全输出时撤退。"
       ],
-      "early": "对线先保射手补刀与武器轮转，中路保兵线；六级前用坠明实际禁锢接 W，不把烈娜塔大招或维克托升级技能当现成能力。",
-      "window": "中期三人集合、射手武器和弹药已沟通，维克托 W 可用；烈娜塔六级后 R 用于对手已经进入的狭窄路线。",
-      "economy": "射手和中路各保一条线，烈娜塔辅助经济。维克托用普通中路默认配置，未另审专用配装；射手复用暴击配置、烈娜塔复用救援配置，不为配合硬改 AP 射手。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-13",
+      "early": "各自处理原路兵线，先确认队友位置、武器与技能状态；不预设三人一直会合。",
+      "window": "三人实际会合、坠明与相关技能可用，目标受到坠明减速且站位允许；保护不足或目标移出即停止。",
+      "economy": "保持上路或中路与下路原有经济分工，烈娜塔按辅助任务与视野行动；同位置装备和符文为分项参考，非组合或联合统计。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 维克托 16.20 技能",
@@ -36531,109 +36590,106 @@
           "url": "https://mobalytics.gg/lol/champions/renata/guide",
           "kind": "常驻打法参考，未作 16.20 专用配装依据",
           "checkedAt": "2026-10-13"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Viktor mid 同位置配置",
+          "url": "https://op.gg/lol/champions/viktor/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Aphelios bottom 同位置配置",
+          "url": "https://op.gg/lol/champions/aphelios/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "OP.GG · Renata support 同位置配置",
+          "url": "https://op.gg/lol/champions/renata/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "个人分路参考，非组合统计",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
-        "champion:Viktor": "c82f49fb2e5145f1",
+        "champion:Viktor": "0bd74fc675981fd6",
         "champion:Aphelios": "a16a2bc3afe40b1c",
-        "champion:Renata": "040340652360d067",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8347": "def2a55844436c47",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3504": "f6eed220149ca076",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3072": "5c29525fccb26a37",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:9111": "6667591beed15f1b",
-        "rune:8313": "00b2fb901efb6c81",
-        "rune:8321": "ec014268b03afd2b"
+        "champion:Renata": "040340652360d067"
       },
       "reviewSourceAnchors": {
         "Viktor": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "c82f49fb2e5145f1",
-          "observedAt": "2026-10-18T23:16:00.325Z",
+          "legacyFingerprint": "0bd74fc675981fd6",
+          "observedAt": "2026-10-23T02:03:51.639Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Viktor",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/viktor/viktor.bin.json",
-              "sha256": "706815ad0ac2c3ca20e358247d054f3bbf653f08bcd150fafe6987f447884295"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/viktor/viktor.bin.json",
+              "sha256": "adff371fb352f4765fe4360f7451fe77a0f8312275ccdc41d0b325c6fb0c7e09"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "ef737928ffc1b9ac"
             }
           }
         },
         "Aphelios": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "a16a2bc3afe40b1c",
-          "observedAt": "2026-10-18T23:14:18.307Z",
+          "observedAt": "2026-10-23T02:03:51.451Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Aphelios",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/aphelios/aphelios.bin.json",
-              "sha256": "4a8125c2266d08dc0585fcd46ea595f5ce75d3e69007d95c1aad88b28a44130f"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
+              "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "ac55a790c915bb91"
             }
           }
         },
         "Renata": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "040340652360d067",
-          "observedAt": "2026-10-18T23:15:29.216Z",
+          "observedAt": "2026-10-26T13:38:40.515Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Renata",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/renata/renata.bin.json",
-              "sha256": "78015e912952cfd2e4e1a36dd90880ba604bc1c946b0e1b9b666dbe97980eb2f"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "849f2ea81ec5e47e"
             }
           }
