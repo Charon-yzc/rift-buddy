@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.19",
+  "version": "2026.11.02.20",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -19625,24 +19625,22 @@
     },
     {
       "id": "missfortune-braum",
-      "carry": "MissFortune",
-      "support": "Braum",
       "name": "盾墙弹幕",
       "style": "balanced",
       "tags": [
         "反突进",
         "范围接控"
       ],
-      "why": "布隆控制与盾墙为厄运小姐弹幕提供位置保护，队伍可沿控制方向输出。",
-      "plan": "射手补刀；先让对手进入控制路径再开弹幕，布隆照看打断者。",
-      "risk": "盾墙并不阻止所有打断，弹幕位置过近仍危险。",
+      "why": "布隆实际控制或保护后，女枪按目标位置决定是否引导弹幕。",
+      "plan": "布隆 Q 或普攻击中英雄并实际挂上首层，友军安全普攻击中同一目标，四层才眩晕。 目标仍在前方弹幕锥形范围内且女枪 R 可用时，从安全位置引导；布隆朝真实来向处理弹体。 控制落空、目标离开前方弹幕锥形范围或其他打断威胁逼近时停止深入并撤退。",
+      "risk": "Q 可被小兵挡，布隆 E 有方向，弹幕引导仍可被打断；不为开 R 追入危险位置。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -19655,45 +19653,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Braum.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "spell-lethality",
-        "support": "braum-peel"
-      },
       "reviewBaseline": {
-        "champion:MissFortune": "ddbf8a2569548361",
-        "champion:Braum": "4726b43beaea9728",
-        "item:3142": "4226f2eefc236540",
-        "item:6694": "8ac6919d2a7a1dd6",
-        "item:6697": "16b1481e352b1fef",
-        "item:3158": "72ca672b9221f063",
-        "item:3814": "f9788442be1f2810",
-        "item:3072": "5c29525fccb26a37",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3050": "c3e25c9df9075147",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "champion:MissFortune": "10b496d2ce7c344d",
+        "champion:Braum": "ae3aa48403ffcbe5"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "MissFortune",
+          "role": "bottom",
+          "job": "女枪补刀并保安全侧翼；R 已学、可用且前方弹幕锥形范围覆盖目标、位置安全时才考虑引导。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Braum",
+          "role": "support",
+          "job": "布隆先实际命中并挂被动，朝真实来向举 E，W 留给范围内友军或小兵。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "布隆 Q 或普攻击中英雄并实际挂上首层，友军安全普攻击中同一目标，四层才眩晕。",
+        "目标仍在前方弹幕锥形范围内且女枪 R 可用时，从安全位置引导；布隆朝真实来向处理弹体。",
+        "控制落空、目标离开前方弹幕锥形范围或其他打断威胁逼近时停止深入并撤退。"
+      ],
+      "window": "实际控制、前方弹幕锥形范围覆盖目标且侧翼安全时再考虑 R；盾墙不是免控。",
+      "early": "女枪先保兵线和法力，布隆保视野与状态；未到六级不预设弹幕。",
+      "economy": "女枪补刀，布隆保辅助任务与视野；个人位置参考不代表组合专配。",
+      "reviewSourceAnchors": {
+        "MissFortune": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "10b496d2ce7c344d",
+          "observedAt": "2026-10-26T13:38:40.503Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "MissFortune",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "45c6c8d43f1a5c2f"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      }
     },
     {
       "id": "missfortune-seraphine",
@@ -20094,24 +20138,22 @@
     },
     {
       "id": "kaisa-braum",
-      "carry": "Kaisa",
-      "support": "Braum",
       "name": "虚空盾墙",
       "style": "balanced",
       "tags": [
         "被动接控",
         "反突进"
       ],
-      "why": "布隆被动与控制支持卡莎补普攻和技能，盾墙用于稳定近身输出位置。",
-      "plan": "卡莎补刀；同一目标叠被动，布隆优先拦住突进者。",
-      "risk": "缺少长距离先手，需要第三人补开团。",
+      "why": "布隆先实际挂被动，卡莎在安全距离以普攻协助叠层；布隆实际眩晕可按友军定身规则叠电浆。",
+      "plan": "布隆 Q 或普攻实际挂上首层后报目标；卡莎安全普攻击中同一英雄，实际四层才眩晕。 布隆按真实来向举 E；卡莎 R 只考虑带电浆的可及英雄及安全落点，不因布隆 Q 减速就假定定身电浆。 技能落空、目标离开射程或侧翼受压时停止追击。",
+      "risk": "布隆 Q 会被首个敌人阻挡；免叠层期不能重新挂层，E 不挡所有控制，R 落点不保证安全。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 卡莎技能资料",
@@ -20124,44 +20166,91 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Braum.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
-      "loadouts": {
-        "bottom": "onhit-carry",
-        "support": "braum-peel"
-      },
       "reviewBaseline": {
-        "champion:Kaisa": "c5aaf2939b58e718",
-        "champion:Braum": "4726b43beaea9728",
-        "item:3124": "a5fa166d09295f8f",
-        "item:3153": "a6d836f7e8db72c4",
-        "item:3085": "fbd0dd92f5cc7425",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3091": "9fbf7a8b541265a4",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8008": "d8ed59948702367b",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8014": "04092c4f9754532b",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3050": "c3e25c9df9075147",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8347": "def2a55844436c47",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "champion:Kaisa": "792e7d85c3acdc09",
+        "champion:Braum": "ae3aa48403ffcbe5"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Kaisa",
+          "role": "bottom",
+          "job": "卡莎补刀并保留安全攻击距离；只有目标实际带电浆且 R 可用、落点安全时才考虑接近。",
+          "loadoutId": "default"
+        },
+        {
+          "champion": "Braum",
+          "role": "support",
+          "job": "布隆保辅助经济；Q 首个敌人或普攻实际命中英雄、确认不在免叠层期后报同一目标，E 朝来袭弹体。",
+          "loadoutId": "default"
+        }
+      ],
+      "steps": [
+        "布隆 Q 或普攻实际挂上首层后报目标；卡莎安全普攻击中同一英雄，实际四层才眩晕。",
+        "布隆按真实来向举 E；卡莎 R 只考虑带电浆的可及英雄及安全落点，不因布隆 Q 减速就假定定身电浆。",
+        "技能落空、目标离开射程或侧翼受压时停止追击。"
+      ],
+      "window": "首层已实际挂上、双方可安全接近同一目标；没有首层或回撤空间就不追。",
+      "early": "卡莎保补刀与血量，布隆照看辅助任务和视野；先用已学技能短换血。",
+      "economy": "卡莎下路补刀，布隆保辅助任务经济；各用同英雄同分路参考，非组合专配。",
+      "reviewSourceAnchors": {
+        "Kaisa": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "792e7d85c3acdc09",
+          "observedAt": "2026-10-26T13:38:40.401Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Kaisa",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e793368118ed867a"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      }
     },
     {
       "id": "swain-taric",
@@ -26715,11 +26804,11 @@
       "tags": [
         "团战连招"
       ],
-      "why": "永恩协助猪妹衔接控制，布隆为持续近身战提供保护。",
-      "plan": "猪妹先限制目标；永恩把技能与普攻留在可回撤范围；布隆接控制并挡关键飞行技能；追击前看输出距离。",
-      "risk": "手短阵容怕消耗；永恩回到原位置时可能脱离队伍，不能一股脑追击。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "瑟庄妮、永恩和布隆确认同一目标，实际控制后再决定是否继续近身。",
+      "plan": "先确认中线、野区到场、射手与布隆距离，瑟庄妮 W 和附近近战友军攻击实际叠满四层才 E。 布隆 Q 或普攻击中英雄并实际挂首层后，队友安全普攻同一英雄，实际四层才眩晕。 永恩 E 先保身体回身点，Q 两层后再按实际命中判断击飞；目标脱离或保护距离断开就撤。",
+      "risk": "布隆 Q 可被首个敌人挡，免叠层期不能再叠；永恩 E 会回到身体位置，回身点危险时不深入。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 瑟庄妮技能资料",
@@ -26738,66 +26827,120 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Braum.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "members": [
         {
-          "role": "jungle",
           "champion": "Sejuani",
-          "job": "先手限制同一目标，W 与附近永恩普攻叠霜，实际四层后 E，R 接后续；Q 不算叠层。永恩回身或布隆保护距离断开时停止追层数，回头接应。",
-          "loadoutId": "trio-jungle-frontline"
-        },
-        {
-          "role": "mid",
-          "champion": "Yone",
-          "job": "E 本体先留安全回身点，猪妹实际限制后普攻/Q 配合叠层，Q3 或已就绪 R 只进可返回区域；按 E 时限回身。布隆跟不上或回身点危险就缩短这一轮。",
+          "role": "jungle",
+          "job": "瑟庄妮保野区，W 与附近近战友军攻击实际叠满四层后才 E。",
           "loadoutId": "default"
         },
         {
-          "role": "support",
+          "champion": "Yone",
+          "role": "mid",
+          "job": "永恩处理中线与 E 的身体位置，Q 实际叠两层后才有下一次旋风击飞。",
+          "loadoutId": "default"
+        },
+        {
           "champion": "Braum",
-          "job": "Q/普攻先给同一目标挂被动，永恩能安全普攻再补层，E 朝真实飞行威胁、W 接应；R 留后续或反扑。永恩回身时跟撤退队形，不独自追补眩晕。",
-          "loadoutId": "tank-peel"
+          "role": "support",
+          "job": "布隆保辅助任务，先实际挂被动后与队友按同一目标安全普攻。",
+          "loadoutId": "default"
         }
       ],
       "steps": [
-        "猪妹先限制目标",
-        "永恩把技能与普攻留在可回撤范围",
-        "布隆接控制并挡关键飞行技能",
-        "追击前看输出距离。"
+        "先确认中线、野区到场、射手与布隆距离，瑟庄妮 W 和附近近战友军攻击实际叠满四层才 E。",
+        "布隆 Q 或普攻击中英雄并实际挂首层后，队友安全普攻同一英雄，实际四层才眩晕。",
+        "永恩 E 先保身体回身点，Q 两层后再按实际命中判断击飞；目标脱离或保护距离断开就撤。"
       ],
-      "window": "瑟庄妮负责前排控制，永恩负责近身输出，布隆负责保护与后续控制；三人关键技能齐、输出跟得上且没有同时瞄准不同目标时。",
-      "early": "瑟庄妮先保野区清野节奏，永恩先保中路兵线经验，布隆先保辅助状态与视野；这套以完整技能的接力为主，前期先使用小技能换血，别等同于已经有大招连招。",
-      "economy": "瑟庄妮以野区经济为主，支援后别长期蹭线；永恩保留中路补刀和经验；布隆走辅助经济，保任务装与视野。这套按正式位置分工，换位先在客户端确认。",
+      "window": "目标、技能和安全接应距离都成立时分段控制，不要求同时交完大招。",
+      "early": "瑟庄妮保野区，永恩保中路兵线，布隆保辅助任务与视野。",
+      "economy": "各守原分路经济，普通配置可换同英雄同分路参考；不承诺联合构筑或胜率。",
       "reviewBaseline": {
-        "champion:Sejuani": "8b875d1d645405f8",
-        "champion:Yone": "b7e0bd8029a53446",
-        "champion:Braum": "4726b43beaea9728",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3050": "c3e25c9df9075147",
-        "item:3158": "72ca672b9221f063",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8345": "02157c1d4d7f7531"
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Yone": "9f3493c27921664f",
+        "champion:Braum": "ae3aa48403ffcbe5"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Yone": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9f3493c27921664f",
+          "observedAt": "2026-10-26T13:38:40.604Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yone",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yone/yone.bin.json",
+              "sha256": "686924ad8cd0bf22941513230c18e6acdc5f9ac2d02755e8d369a51155d70112"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "165686224e19c3fc"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
       }
     },
     {
@@ -32189,39 +32332,40 @@
         "控制跟进",
         "贴身保护"
       ],
-      "why": "以控制跟进、贴身保护形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "瑟庄妮先手留人，莎弥拉跟进补评级；宝石把 E 和大招分配到实际输出窗口。",
-      "risk": "等保护生效再深入，不要把全队控制一次交完。",
+      "why": "瑟庄妮实际控住后，莎弥拉判断安全窗口积评级，塔里克按真实位置接应。",
+      "plan": "先确认兵线、可接应距离和退路；瑟庄妮 W 与附近近战友军攻击对目标实际叠满四层才 E。 塔里克 W 联结友军并保持距离，E 延迟命中才晕，R 已学且生效后才有伤害免疫。 莎弥拉交替使用不同攻击或技能命中积累评价，达到 S，确认威胁后才 R；保护未生效或控制落空时退。",
+      "risk": "莎弥拉的远程普攻不代替近战友军霜冻叠层；塔里克 R 不免控，莎弥拉 R 仍可能被打断。",
       "difficulty": "适中",
       "members": [
         {
           "champion": "Sejuani",
           "role": "jungle",
-          "job": "Q/W 接近并靠近战普攻叠霜，实际四层才 E 冻结；不把莎弥拉远程普攻计作近战叠层，宝石跟不到就退出。",
-          "loadoutId": "trio-jungle-frontline"
+          "job": "瑟庄妮保野区，W 与附近近战友军攻击实际叠层；目标达到四层才 E。",
+          "loadoutId": "default"
         },
         {
           "champion": "Samira",
           "role": "bottom",
-          "job": "控制实际命中后普攻与技能交替提高评级；W 留反击，S 评级且 R 可用才开大，宝石延迟无敌未生效不深入。",
-          "loadoutId": "samira-reset"
+          "job": "莎弥拉保补刀与退路，靠自身交替使用不同攻击或技能命中积累评价，S 且 R 可用才考虑弹幕。",
+          "loadoutId": "default"
         },
         {
           "champion": "Taric",
           "role": "support",
-          "job": "W 联结真正承伤者，E 控制错开瑟庄妮；R 提前读条并报实际生效，范围脱节或技能落空时优先接应退出。",
-          "loadoutId": "taric-guardian"
+          "job": "塔里克 W 联结可接应友军，E 延迟实际命中才晕；R 提前安排并确认生效范围。",
+          "loadoutId": "default"
         }
       ],
       "steps": [
-        "瑟庄妮先手留人",
-        "莎弥拉跟进补评级；宝石把 E 和大招分配到实际输出窗口。"
+        "先确认兵线、可接应距离和退路；瑟庄妮 W 与附近近战友军攻击对目标实际叠满四层才 E。",
+        "塔里克 W 联结友军并保持距离，E 延迟命中才晕，R 已学且生效后才有伤害免疫。",
+        "莎弥拉交替使用不同攻击或技能命中积累评价，达到 S，确认威胁后才 R；保护未生效或控制落空时退。"
       ],
-      "window": "三人关键技能可用、输出跟得上且兵线允许行动时；技能状态需自己沟通。",
-      "early": "各自优先保证正式位置的经济与经验；六级前先用基础技能接力，不把完整大招连招当成已经拥有。",
-      "economy": "打野保留野区节奏；中上保留各自兵线；下路射手补刀，辅助保留任务经济。换位先重新约定。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "window": "技能可用、目标实际受控且保护与输出均能接应；不预设 S 或 R 衔接成功。",
+      "early": "瑟庄妮保野区，莎弥拉补下路线，塔里克处理任务与视野；六级前不预设 R。",
+      "economy": "各保原野区、补刀和辅助经济；位置参考可替换普通旧装，非本组合专配。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 瑟庄妮技能资料",
@@ -32240,55 +32384,94 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Taric.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
-        "champion:Sejuani": "8b875d1d645405f8",
-        "champion:Samira": "c5f97ec28c913a72",
-        "champion:Taric": "c80b2adac0419e29",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:1029": "9d0944aabf48d059",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8351": "6594874b24a7b00e"
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Samira": "fb97a340c89c0ba1",
+        "champion:Taric": "d7034e2662bef2b0"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Samira": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "fb97a340c89c0ba1",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Samira",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "12851dd9ef379ec4"
+            }
+          }
+        },
+        "Taric": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d7034e2662bef2b0",
+          "observedAt": "2026-10-26T13:38:40.593Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taric",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "a0599325a1012892"
+            }
+          }
+        }
+      }
     },
     {
       "id": "expand-ivern-jinx-lulu",
@@ -32706,41 +32889,40 @@
         "反突进",
         "发育保护"
       ],
-      "why": "以反突进、发育保护形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "波比 W 留能被阻挡的突进，E 只按真实墙角安排眩晕；布隆守射手侧翼，Q/普攻先挂印记再安全补四层。斯莫德按实际 Q 成长状态发育，E 留越地形退出，R 经过自己才治疗自己。",
-      "risk": "波比 W 不能拦所有位移，E 没撞墙没有眩晕，蓄力 R 会让队友暂时打不到目标。斯莫德当前未有对应层数就没有升级 Q 或处决；本版暴击增益也不等于已成型。",
+      "why": "波比和布隆处理实际接近的威胁，斯莫德在安全位置发育与输出。",
+      "plan": "先确认波比可到场和射手退路；W 中断实际可中断冲刺，E 撞到地形才晕。 布隆 Q 或普攻击中英雄并挂首层，友军安全普攻同一目标，四层才晕。 斯莫德按本人实际层数使用 Q，E 留退路；对方绕侧、控制落空或接应不到时后撤。",
+      "risk": "W 不拦闪烁，E 不撞地形不晕；布隆免叠层期不可再叠，斯莫德层数和 E 退路需实际确认。",
       "difficulty": "适中",
       "members": [
         {
           "champion": "Poppy",
           "role": "jungle",
-          "job": "W 留能被阻挡的突进，闪烁不当可挡冲刺；E 只有真实撞墙才眩晕。R 短按是击飞，蓄力会把目标送向其基地并令飞行时不可选取，先约用途，别送走射手正打的目标；后排被绕就回身接应。",
-          "loadoutId": "trio-jungle-frontline"
+          "job": "波比保野区，W 留给可被中断的冲刺，E 目标实际撞地形才晕。",
+          "loadoutId": "default"
         },
         {
           "champion": "Smolder",
           "role": "bottom",
-          "job": "Q 按实际层数与当前升级效果补刀输出，不预设处决；W 安全消耗，E 留越地形撤退。R 火焰经过自己才治疗自己，不治疗两位队友；敌方可绕过保护时先退，不以本版暴击加强推定已成型。",
+          "job": "斯莫德补刀并按实际层数输出，E 留安全越地形退路。",
           "loadoutId": "default"
         },
         {
           "champion": "Braum",
           "role": "support",
-          "job": "Q 或普攻挂第一层后报集火，实际四层才眩晕；W 跳可接应友军、E 挡来向，别为凑层数让射手走入危险区。",
-          "loadoutId": "braum-peel"
+          "job": "布隆先实际挂被动并报目标，E 朝来向，W 留可接应友军或小兵。",
+          "loadoutId": "default"
         }
       ],
       "steps": [
-        "先保斯莫德补刀区和 E 越地形退路，波比 W 留可阻挡突进，不能把闪现等闪烁当可挡冲刺。",
-        "波比 E 只有撞到地形才眩晕；布隆 Q/普攻挂第一层，友军安全普攻补到四层才眩晕。",
-        "斯莫德 Q 以本人实际层数和当前升级效果为准，W 从安全侧消耗，E 不提前拿去追低血目标。",
-        "波比 R 短按击飞、蓄力送走并令目标飞行时不可选取，先沟通避免送走集火目标；对手不突进就让出危险消耗区。"
+        "先确认波比可到场和射手退路；W 中断实际可中断冲刺，E 撞到地形才晕。",
+        "布隆 Q 或普攻击中英雄并挂首层，友军安全普攻同一目标，四层才晕。",
+        "斯莫德按本人实际层数使用 Q，E 留退路；对方绕侧、控制落空或接应不到时后撤。"
       ],
-      "window": "波比 W/E 与布隆保护实际可用，斯莫德有可持续输出的安全位置；面对消耗阵容先保补刀和撤退，不能只等对手主动冲进控制。",
-      "early": "波比按安全营地发育后才报到场，斯莫德先用 Q 补刀与技能命中积累实际层数，布隆保下路状态。斯莫德 R 只在已学且火焰经过自己时治疗自己，不当作三人群体回复。",
-      "economy": "波比保野区经济，斯莫德独享下路补刀，布隆保辅助任务与视野。夺萃/黑切/朔极路线换取蓝量、生命与技能频率，暴击收益较少；回城时比较暴击输出与生存需求，先确认能否持续接触目标，保留 E 退路，不为补伤害离开队友接应范围。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-12",
+      "window": "波比能到场、布隆能接应且斯莫德有安全输出位置；不要求对手必须突进。",
+      "early": "波比保野区节奏，斯莫德保下路补刀，布隆保辅助任务与视野。",
+      "economy": "三人保原分路经济；不预设旧夺萃、黑切或朔极路线，也不将个人位置参考当组合专配。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · Poppy 16.20.1 技能",
@@ -32765,108 +32947,89 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
           "kind": "版本机制依据",
           "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
         "champion:Poppy": "af33a45e62ad30e5",
         "champion:Smolder": "5f9af800584064ad",
-        "champion:Braum": "ae3aa48403ffcbe5",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3050": "c3e25c9df9075147",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8345": "02157c1d4d7f7531"
+        "champion:Braum": "ae3aa48403ffcbe5"
       },
       "tempo": "protect",
       "reviewSourceAnchors": {
         "Poppy": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "af33a45e62ad30e5",
-          "observedAt": "2026-10-18T23:15:23.567Z",
+          "observedAt": "2026-10-26T13:38:40.510Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Poppy",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/poppy/poppy.bin.json",
-              "sha256": "29a2eca7564e4ed5a2b059b99172130f8a9e2d4d27a149b940932e9fd646cffd"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "984283b0f66ff725"
             }
           }
         },
         "Smolder": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f9af800584064ad",
-          "observedAt": "2026-10-18T23:15:41.938Z",
+          "observedAt": "2026-10-26T13:38:40.522Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Smolder",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/smolder/smolder.bin.json",
-              "sha256": "863e5a4347b6390186dadfd6b29eb9fc6f70b9aeaae24811c0c7c9ae3efa3a8c"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "e270c656917313cc"
             }
           }
         },
         "Braum": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ae3aa48403ffcbe5",
-          "observedAt": "2026-10-18T23:14:25.367Z",
+          "observedAt": "2026-10-26T13:38:40.310Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Braum",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/braum/braum.bin.json",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
               "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "e136059064aa1034"
             }
           }
@@ -33030,41 +33193,40 @@
         "短换血",
         "中路支援"
       ],
-      "why": "以短换血、中路支援形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "娜美 E 支持卢锡安安全短换血，W 治疗或 Q/R 实际定身再确认警觉增益；加里奥先处理中线、确认 R 范围和固定落点，卢锡安留 E 退出，不把加里奥支援当瞬间全伤害保护。",
-      "risk": "加里奥 R 不是全地图、不是瞬间到达，施法后落点不会追踪卢锡安后续 E；区域护盾仅挡魔法伤害。娜美 E 是减速增伤，不能当硬控或本版帝国指令触发。",
+      "why": "卢锡安和娜美短换血，加里奥在可到场时支援，按实际警惕来源安排普攻。",
+      "plan": "娜美 E 的减速本身不触发警惕；其他友军实际治疗或护盾给卢锡安本人，或卢锡安附近敌方英雄实际被友军定身，分别确认。 若靠卢锡安 W 标记触发警惕，须先标记目标且友方英雄实际伤害被标记目标；其他警惕来源独立确认。 加里奥 R 选可及友军当时的位置，队友能撑到落地才接应；敌人离开、落点危险或射手 E 退出时不强追。",
+      "risk": "加里奥落点不追踪友军后续位移，区域护盾不挡物理伤害；娜美 E 减速不能单独算治疗、护盾或定身。",
       "difficulty": "适中",
       "members": [
         {
           "champion": "Galio",
           "role": "mid",
-          "job": "先清中线，R 可用且友军在当前等级范围内才选其当时位置；区域护盾仅挡魔法伤害，落地有延迟且落点不追踪卢锡安后续 E。队友撑不到或敌人已离开就不强接；落地 W/E 错开控制并留出口。",
-          "loadoutId": "trio-galio-engage"
+          "job": "加里奥处理中线，R 选范围内友军当时的位置，区域护盾只抵魔法伤害；落地后按实际位置接控。",
+          "loadoutId": "default"
         },
         {
           "champion": "Lucian",
           "role": "bottom",
-          "job": "娜美 E 只提供这轮减速增伤，警觉需实际治疗/护盾、附近敌方定身或友军触发 W 标记；Q/技能后被动双枪短换血，E 留安全退出。加里奥 R 落点不跟随自己后续 E，未到达不因预期保护继续深入。",
-          "loadoutId": "lucian-trade"
+          "job": "卢锡安补刀并留 E 退出；警惕需其他友军实际治疗或护盾给卢锡安本人，或附近敌方英雄实际被友军定身；若靠 W 标记，需友方英雄实际伤害被标记目标。",
+          "loadoutId": "default"
         },
         {
           "champion": "Nami",
           "role": "support",
-          "job": "E 给卢锡安能安全触及的换血窗口，W 在实际弹跳距离回复；Q 留可靠落点，R 已可用才接限制，队友脱节先保退路。",
-          "loadoutId": "nami-empower"
+          "job": "娜美 E 在安全窗口给友军，W 看实际弹跳和治疗；Q/R 实际命中才定身。",
+          "loadoutId": "default"
         }
       ],
       "steps": [
-        "卢锡安保 E 回撤，娜美 E 给实际可攻击窗口，再用 W 在弹跳距离内回复；E 减速本身不是定身。",
-        "警觉以真实治疗/护盾、附近敌方定身或友军伤害触发 W 标记为准，不能把任意 E 增益都当触发。",
-        "加里奥处理好中线，R 只能选施法范围内友军的当时位置，先确认队友能撑到延迟落地；区域护盾仅吸收魔法伤害。",
-        "卢锡安后续 E 不会拖着既定落点走；敌人离开落区或支援接不上就停止深入，加里奥落地后 W/E 错开接控。"
+        "娜美 E 的减速本身不触发警惕；其他友军实际治疗或护盾给卢锡安本人，或卢锡安附近敌方英雄实际被友军定身，分别确认。",
+        "若靠卢锡安 W 标记触发警惕，须先标记目标且友方英雄实际伤害被标记目标；其他警惕来源独立确认。",
+        "加里奥 R 选可及友军当时的位置，队友能撑到落地才接应；敌人离开、落点危险或射手 E 退出时不强追。"
       ],
-      "window": "加里奥 R 已学会可用、目标友军在当前等级施法范围，娜美控制或治疗实际给到且卢锡安有 E 退路；撑不到落地就只打一轮换血。",
-      "early": "卢锡安与娜美先安全补刀、Q/被动双枪短换血，娜美所选 W/E/Q 开局到三级才有 Q。加里奥先清中线，六级前靠真实步行支援，不把尚未学会的 R 当保护。",
-      "economy": "卢锡安吃下路兵线，加里奥保中线经验与回补节奏，娜美走辅助任务经济。娜美先保蓝量与视野，帝国指令仅作 Q/R 能实际定身时的备选，不靠 E 减速触发。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-12",
+      "window": "加里奥 R 已学可用且友军在范围、队友能撑到落地；下路短换血无需假设 R 已有。",
+      "early": "卢锡安保补刀，娜美保蓝与视野，加里奥先处理中线；六级前仅按实际走位支援。",
+      "economy": "中路、射手与辅助各保原经济；普通旧装备与符文换同英雄同分路参考，不等于作者专配。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · Galio 16.20.1 技能",
@@ -33089,125 +33251,89 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-20-notes/",
           "kind": "版本机制依据",
           "checkedAt": "2026-10-12"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
         "champion:Galio": "62214853523131ad",
         "champion:Lucian": "cd773946a58860de",
-        "champion:Nami": "b10366f1187813b9",
-        "item:3152": "37dc7712644a19f0",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3020": "357a162d6a40286e",
-        "item:3089": "a8a9b060b253391c",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "item:3508": "f557158549cb18ca",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3158": "72ca672b9221f063",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3072": "5c29525fccb26a37",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727"
+        "champion:Nami": "b10366f1187813b9"
       },
       "tempo": "teamfight",
       "reviewSourceAnchors": {
         "Galio": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-18T23:14:38.102Z",
+          "observedAt": "2026-10-26T13:38:40.394Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/galio/galio.bin.json",
-              "sha256": "1f96ad492546bfe653baf90a1c9fa473f81fbe8b1f911e0d3c14d4bb5a33dfad"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
         },
         "Lucian": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "cd773946a58860de",
-          "observedAt": "2026-10-18T23:15:05.150Z",
+          "observedAt": "2026-10-26T13:38:40.500Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lucian",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/lucian/lucian.bin.json",
-              "sha256": "f2044dcb5739b47027cde228e437017debdb41995fc4fc8fbb4cf40924b51602"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lucian/lucian.bin.json",
+              "sha256": "51e857476efee2f2d23e408d47540fb6c4cb9778572b2e9341d1273833876871"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "ddbca92e2885ac11"
             }
           }
         },
         "Nami": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b10366f1187813b9",
-          "observedAt": "2026-10-18T23:15:15.065Z",
+          "observedAt": "2026-10-26T13:38:40.505Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nami",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/nami/nami.bin.json",
-              "sha256": "d7fff6f2278d4427ae2b6671eb92495270c307ee469664ea4c11b091fc92ecf3"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "d41e55e60af3c37e"
             }
           }
@@ -33785,40 +33911,40 @@
         "击飞接大",
         "持续控制"
       ],
-      "why": "以击飞接大、持续控制形成三人分工；组合依据是公开技能机制，没有组合胜率样本。",
-      "plan": "泰坦给击飞窗口，亚索确认大招可跟进，瑟庄妮保留控制处理反打或第二目标。",
-      "risk": "大招空档与六级前先稳住下路经验，不因控制多就连续无视兵线强开。",
+      "why": "诺提勒斯 R 或瑟庄妮 Q 实际击飞后，亚索再判断是否接 R。",
+      "plan": "先确认兵线、目标、队友距离和退路；诺提勒斯 R 实际击飞或瑟庄妮 Q 实际命中后报告。 亚索 R 已学可用、敌方英雄仍浮空且落点安全时才接；短击飞窗口能否跟上由当局决定。 瑟庄妮 W 与附近近战友军攻击对同一目标实际叠满四层才 E；队友不到或控制落空就撤。",
+      "risk": "诺提勒斯 Q 命中地形只拉自己，不能据此宣称亚索可接 R；瑟庄妮 Q 短窗口不保证时延和距离足够。",
       "difficulty": "适中",
       "members": [
         {
           "champion": "Sejuani",
           "role": "jungle",
-          "job": "Q 实际击飞可报短窗口，W 与近战普攻实际四层后才 E 冻结；保留控制处理反打或第二目标，不把普通眩晕当亚索接大。",
-          "loadoutId": "trio-jungle-frontline"
+          "job": "瑟庄妮保野区，Q 碰到敌方英雄会停并击飞；W 与附近近战友军攻击实际叠满四层才 E。",
+          "loadoutId": "default"
         },
         {
           "champion": "Yasuo",
           "role": "bottom",
-          "job": "六级并且 R 实际可用、目标真实被击飞且可跟进时才接大；未满足就 Q/安全普攻，稳住经验，风墙与 E 回撤对象留反击。",
-          "loadoutId": "melee-crit"
+          "job": "亚索保补刀，R 已学可用且敌方英雄仍浮空、距离和落点安全时才接。",
+          "loadoutId": "default"
         },
         {
           "champion": "Nautilus",
           "role": "support",
-          "job": "R 已学会且实际击飞时给亚索报接大目标与距离；Q/普攻留人按实际效果衔接，不把任意控制命中都当击飞成立。",
-          "loadoutId": "tank-engage"
+          "job": "诺提勒斯保辅助任务；R 实际将目标或沿途敌人击飞时报告目标。",
+          "loadoutId": "default"
         }
       ],
       "steps": [
-        "泰坦给击飞窗口",
-        "亚索确认大招可跟进",
-        "瑟庄妮保留控制处理反打或第二目标。"
+        "先确认兵线、目标、队友距离和退路；诺提勒斯 R 实际击飞或瑟庄妮 Q 实际命中后报告。",
+        "亚索 R 已学可用、敌方英雄仍浮空且落点安全时才接；短击飞窗口能否跟上由当局决定。",
+        "瑟庄妮 W 与附近近战友军攻击对同一目标实际叠满四层才 E；队友不到或控制落空就撤。"
       ],
-      "window": "三人关键技能可用、输出跟得上且兵线允许行动时；技能状态需自己沟通。",
-      "early": "各自优先保证正式位置的经济与经验；六级前先用基础技能接力，不把完整大招连招当成已经拥有。",
-      "economy": "打野保留野区节奏；中上保留各自兵线；下路射手补刀，辅助保留任务经济。换位先重新约定。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "window": "目标真实浮空且亚索能够安全施 R；六级前按实际基础技能行动。",
+      "early": "瑟庄妮保野区，亚索保下路经验，诺提勒斯保视野；不把普通晕眩当浮空。",
+      "economy": "打野、下路补刀与辅助各保原经济；普通旧配置换成各自位置参考，不代表组合专配。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 瑟庄妮技能资料",
@@ -33837,54 +33963,94 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Nautilus.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能全文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
         }
       ],
       "reviewBaseline": {
-        "champion:Sejuani": "8b875d1d645405f8",
-        "champion:Yasuo": "bc4e1091fdb3cfb7",
-        "champion:Nautilus": "89b73fd1b583624c",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "item:3153": "a6d836f7e8db72c4",
-        "item:6673": "1fcc3aa1128ff960",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3006": "d8d9fde1f7908326",
-        "item:6333": "60ed05035db8354d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8008": "d8ed59948702367b",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "champion:Yasuo": "d36ebea001e3d1cb",
+        "champion:Nautilus": "67da151a84906467"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-26T13:38:40.604Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        },
+        "Nautilus": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "67da151a84906467",
+          "observedAt": "2026-10-26T13:38:40.506Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nautilus",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "21ceeeee51e3b384"
+            }
+          }
+        }
+      }
     },
     {
       "id": "expand-shen-tristana-taric",
