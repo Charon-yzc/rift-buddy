@@ -7,7 +7,10 @@ import {ITEM_MODE_TOOLTIP_REVISION,itemTooltipBasis} from '../src/core/item-mode
 // without live player stats. Unknown calculations stay explicitly dynamic.
 export const ITEM_TOOLTIP_PARSER_REVISION=2;
 export function hasCurrentItemDescription(item,patch){
- const tip=item?.tooltip;if(tip?.patch!==patch||tip.description==='')return true;
+ const tip=item?.tooltip;
+ // Only repair a stale tooltip when there was a real detailed description.
+ if(tip?.patch!==patch)return !(typeof tip?.description==='string'&&!!tip.description.trim());
+ if(tip.description==='')return true;
  const revision=item.tooltipParserRevision;if(!Number.isSafeInteger(revision)||revision<ITEM_TOOLTIP_PARSER_REVISION)return false;
  return revision>ITEM_TOOLTIP_PARSER_REVISION||typeof tip.description==='string'&&!!tip.description.trim();
 }

@@ -266,6 +266,97 @@
    }
   ]
  },
+ "3142": {
+  "binding": {
+   "schema": 1,
+   "contentRevision": 20,
+   "itemTooltipRevision": 1,
+   "version": "16.21.1",
+   "patch": "16.21",
+   "fetchedAt": "2026-10-26T13:38:40.301Z",
+   "sources": {
+    "champions": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+    "items": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+    "runes": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+    "names": "https://game.gtimg.cn/images/lol/act/img/js/heroList/hero_list.js",
+    "augments": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/augment-lists.json",
+    "augmentDescriptions": "https://raw.communitydragon.org/16.21/game/maps/modespecificdata/kiwi.bin.json",
+    "championCombatStats": "https://raw.communitydragon.org/16.21/game/data/characters"
+   },
+   "mode": "rift",
+   "item": {
+    "id": 3142,
+    "name": "幽梦之灵",
+    "description": "55攻击力\n18穿甲\n4%移动速度\n\n鬼影萦绕\n非战斗状态期间获得0移动速度。\n\n鬼魂步伐\n提供移动速度和幽灵状态，持续0秒。",
+    "tags": [
+     "Damage",
+     "Active",
+     "NonbootsMovement",
+     "ArmorPenetration"
+    ],
+    "gold": {
+     "base": 675,
+     "purchasable": true,
+     "total": 2800,
+     "sell": 1960
+    },
+    "maps": {
+     "11": true,
+     "12": true,
+     "22": false,
+     "30": false,
+     "453": true
+    },
+    "from": [
+     "3134",
+     "6690",
+     "1036"
+    ],
+    "into": [],
+    "inStore": true,
+    "stats": {
+     "FlatPhysicalDamageMod": 55,
+     "PercentMovementSpeedMod": 0.04
+    },
+    "specialRecipe": null,
+    "icon": "https://ddragon.leagueoflegends.com/cdn/16.21.1/img/item/3142.png",
+    "tooltip": {
+     "patch": "16.21",
+     "description": "55攻击力\n 18穿甲\n4%移动速度\n\n鬼影萦绕\n提供非战斗状态下的（近战 20 / 远程 10）移动速度。\n\n 鬼魂步伐 (45秒)\n提供〔数值未解析〕%移动速度和幽灵状态，持续（近战 6 / 远程 4.002）秒。",
+     "status": "partial",
+     "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json"
+    },
+    "tooltipParserRevision": 2,
+    "modeTooltips": {
+     "hex": {
+      "revision": 1,
+      "patch": "16.21",
+      "mode": "Kiwi",
+      "coverage": "public-data-values",
+      "status": "partial",
+      "description": "55攻击力\n 18穿甲\n4%移动速度\n\n鬼影萦绕\n提供非战斗状态下的（近战 30 / 远程 15）移动速度。\n\n 鬼魂步伐 (45秒)\n提供〔数值未解析〕%移动速度和幽灵状态，持续（近战 6 / 远程 4.002）秒。",
+      "appliedKeys": [
+       "BaseOOCMS"
+      ],
+      "source": "https://raw.communitydragon.org/16.21/game/items.cdtb.bin.json",
+      "sourceHash": "0dfa20db68e85b1b0328e6113613b1505e8ae4acf449284327f572a002047cd7",
+      "basisHash": "b482ba542764696d"
+     }
+    }
+   }
+  },
+  "acceptedFetchedAt": [
+   "2026-10-26T13:38:40.301Z",
+   "2026-10-23T02:03:51.446Z"
+  ],
+  "description": "55攻击力\n 18穿甲\n4%移动速度\n\n鬼影萦绕\n提供非战斗状态下的（近战 20 / 远程 10）移动速度。\n\n 鬼魂步伐 (45秒)\n提供（近战 20 / 远程 15）%移动速度和幽灵状态，持续（近战 6 / 远程 4.002）秒。",
+  "replacements": [
+   {
+    "anchor": "提供〔数值未解析〕%移动速度和幽灵状态",
+    "replacement": "提供（近战 20 / 远程 15）%移动速度和幽灵状态"
+   }
+  ]
+ },
  "3155": {
   "binding": {
    "schema": 1,

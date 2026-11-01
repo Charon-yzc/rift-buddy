@@ -3,8 +3,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {buildAugmentDescriptions,AUGMENT_TOOLTIP_PARSER_REVISION} from './augments.mjs';
 import {enrichChampionStats,hasCurrentCombatStats} from './champion-stats.mjs';
-import {enrichItemDescriptions,enrichItemModeDescriptions,hasCurrentItemDescription} from './item-descriptions.mjs';
-import {hasItemModeTooltip} from '../src/core/item-mode-tooltip.mjs';
+import {enrichItemDescriptions,enrichItemModeDescriptions,hasCurrentItemDescription,ITEM_TOOLTIP_PARSER_REVISION} from './item-descriptions.mjs';
+import {hasItemModeTooltip,ITEM_MODE_TOOLTIP_REVISION} from '../src/core/item-mode-tooltip.mjs';
 import {captureChampionMechanicSource} from './champion-mechanics.mjs';
 import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
 import {AUGMENT_COUNTER_BASIS_REVISION,validAugmentCounterBasis} from '../src/core/augment-counter-basis.mjs';
@@ -31,6 +31,11 @@ const hasScopedFormulas=augments=>scopedFormulaTargets.every(t=>{const rows=augm
 // Do not reinterpret or replace metadata written by a newer parser/counter.
 const needsScopedFormula=a=>a.tooltipParserRevision===AUGMENT_TOOLTIP_PARSER_REVISION&&!(Number.isSafeInteger(a.tooltipCounterBasis?.revision)&&a.tooltipCounterBasis.revision>AUGMENT_COUNTER_BASIS_REVISION)&&scopedFormulaTargets.some(t=>a.id===t.id&&a.key===t.key&&!hasScopedFormula(a,t));
 const augmentContentRevision=augments=>augments.every(hasCounterCompletion)?augments.every(hasBassFormula)?hasScopedFormulas(augments)?20:19:18:17;
+// Leave unknown or future parser data intact for a version that understands it.
+const unsupportedItemRevision=item=>{
+ const known=(revision,current)=>revision===undefined||Number.isSafeInteger(revision)&&revision>=0&&revision<=current;
+ return !known(item?.tooltipParserRevision,ITEM_TOOLTIP_PARSER_REVISION)||!known(item?.modeTooltips?.hex?.revision,ITEM_MODE_TOOLTIP_REVISION);
+};
 export async function getJSON(url, timeout = 20000) {
   let last;
   for(let attempt=0;attempt<3;attempt++) {
@@ -63,8 +68,11 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
       progress('已核对同补丁国服英雄名称资料');
       previous={...previous,cnVersion:cn.version,champions:previous.champions.map(c=>{const h=names.get(c.id.toLowerCase());return {...c,name:h.title,title:h.name,keywords:h.keywords};})};
     }else progress('国服名称来源尚未提供完整同补丁资料，保留既有名称与版本记录');
+    let itemRepairFailed=false;
     if(previous.contentRevision<9){
       try{
+        // The legacy migration rewrites every base tooltip; never touch future data.
+        if(Object.values(previous.items).some(unsupportedItemRevision))throw Error('装备包含尚不支持的来源修订');
         const [bin,strings]=await readItemSources(previous.patch);
         if(!bin||!Object.keys(bin).length||!strings?.entries||!Object.keys(strings.entries).length)throw Error('装备公式来源不完整');
         const items=enrichItemDescriptions(previous.items,bin,strings,previous.patch);
@@ -78,10 +86,10 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
         }
         previous={...previous,items,contentRevision:9};
         progress('已补齐当前版本法强装备公式');
-      }catch{progress('装备公式暂未补齐，保留原公式并等待重试');}
+      }catch{itemRepairFailed=true;progress('装备公式暂未补齐，保留原公式并等待重试');}
     }
-    const pendingDescriptions=previous.contentRevision>=9?Object.entries(previous.items).filter(([,item])=>!hasCurrentItemDescription(item,previous.patch)):[];
-    const pendingModes=Object.entries(previous.items).filter(([,item])=>!hasItemModeTooltip(item,previous.patch));
+    const pendingDescriptions=previous.contentRevision>=9?Object.entries(previous.items).filter(([,item])=>!unsupportedItemRevision(item)&&!hasCurrentItemDescription(item,previous.patch)):[];
+    const pendingModes=Object.entries(previous.items).filter(([,item])=>!unsupportedItemRevision(item)&&!hasItemModeTooltip(item,previous.patch));
     if(pendingDescriptions.length||pendingModes.length){
       try{
         const [bin,strings]=await readItemSources(previous.patch);
@@ -89,11 +97,11 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
         const bases=pendingDescriptions.length?enrichItemDescriptions(Object.fromEntries(pendingDescriptions),bin,strings,previous.patch):{};
         if(pendingDescriptions.some(([id,item])=>bases[id]===item||!hasCurrentItemDescription(bases[id],previous.patch)))throw Error('装备基础字段未覆盖待核对记录');
         for(const [id,item]of pendingDescriptions){const old=item.tooltip,next=bases[id].tooltip,count=text=>(text?.match(/〔数值未解析〕/g)||[]).length;if(old.description?.trim()&&!next.description?.trim()||old.status==='complete'&&next.status!=='complete'||count(next.description)>count(old.description))throw Error('已有装备说明未完整保留');}
-        const items={...previous.items,...bases},pending=Object.entries(items).filter(([,item])=>!hasItemModeTooltip(item,previous.patch)),parsed=enrichItemModeDescriptions(Object.fromEntries(pending),bin,strings,previous.patch);
+        const items={...previous.items,...bases},pending=Object.entries(items).filter(([,item])=>!unsupportedItemRevision(item)&&!hasItemModeTooltip(item,previous.patch)),parsed=enrichItemModeDescriptions(Object.fromEntries(pending),bin,strings,previous.patch);
         if(pending.some(([id,item])=>parsed[id]===item||!hasItemModeTooltip(parsed[id],previous.patch)))throw Error('海克斯装备参数未覆盖待核对记录');
         previous={...previous,items:{...items,...parsed}};
         progress('已核对同版本装备基础字段与公开海克斯参数');
-      }catch{progress('装备基础字段或海克斯参数暂未补齐，保留原资料并等待重试');}
+      }catch{itemRepairFailed=true;progress('装备基础字段或海克斯参数暂未补齐，保留原资料并等待重试');}
     }
     const needsAugmentRepair=a=>!hasAugmentDetails(a)||!hasCounterCompletion(a)||needsBassFormula(a)||needsScopedFormula(a);
     if(previous.augments.some(needsAugmentRepair)){
@@ -114,8 +122,10 @@ export async function collectSnapshot(progress = () => {}, previous = null, {rea
     }
     // Parser completion lives on each augment, so it cannot skip an unfinished
     // revision-8 item migration or force the detail sources to be read again.
-    if(previous.contentRevision>=9&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(completeItemModes(previous.items,previous.patch)?completeItemDescriptions(previous.items,previous.patch)?augmentContentRevision(previous.augments):16:15,previous.contentRevision)};
-    progress(previous.augments.every(a=>hasAugmentDetails(a)&&hasCounterCompletion(a)&&hasBassFormula(a))&&hasScopedFormulas(previous.augments)?'当前已是最新资料版本':'部分强化资料待补齐，保留既有可用内容');
+    if(previous.contentRevision>=9&&!Object.values(previous.items).some(unsupportedItemRevision)&&previous.augments.every(hasAugmentDetails))previous={...previous,contentRevision:Math.max(completeItemModes(previous.items,previous.patch)?completeItemDescriptions(previous.items,previous.patch)?augmentContentRevision(previous.augments):16:15,previous.contentRevision)};
+    const itemDataPending=itemRepairFailed||previous.contentRevision<9||Object.values(previous.items).some(item=>unsupportedItemRevision(item)||!hasCurrentItemDescription(item,previous.patch)||!hasItemModeTooltip(item,previous.patch));
+    const augmentDataPending=!previous.augments.every(a=>hasAugmentDetails(a)&&hasCounterCompletion(a)&&hasBassFormula(a))||!hasScopedFormulas(previous.augments);
+    progress(itemDataPending?(augmentDataPending?'部分装备与强化资料待核，保留现有资料':'部分装备资料待核，保留现有资料'):augmentDataPending?'部分强化资料待补齐，保留既有可用内容':'当前版本资料已检查');
     return {...previous,checkedAt:new Date(clock()).toISOString()};
   }
   const base = `${DD}/cdn/${version}/data/zh_CN`;
