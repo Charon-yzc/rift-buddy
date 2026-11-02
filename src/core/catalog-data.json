@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.32",
+  "version": "2026.11.02.33",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -13043,24 +13043,22 @@
     },
     {
       "id": "sion-senna",
-      "carry": "Sion",
-      "support": "Senna",
       "name": "长枪重甲",
       "style": "wild",
       "tags": [
         "前排与消耗",
         "经济分工"
       ],
-      "why": "赛恩补刀承担前排，赛娜辅助提供远程消耗与回复。",
-      "plan": "赛恩补刀，赛娜辅助；先减速或禁锢再尝试蓄 Q。",
-      "risk": "赛恩 Q 容易被打断，别为了蓄力吃掉所有技能。",
+      "why": "赛恩补刀承担前排，赛娜辅助远程减速和回复；实际命中的控制可为赛恩蓄 Q 提供机会，技能衔接为文本推断，未经对局验证。",
+      "plan": "赛恩下路补刀、赛娜辅助；赛娜 Q 实际命中敌人减速，W 命中第一个敌人后等待延迟禁锢，赛恩再按距离与退路判断蓄 Q。",
+      "risk": "赛娜 W 会被前方敌人挡住且禁锢有延迟；赛恩 Q 会被打断，未蓄满一秒或未实际命中不产生所述击飞眩晕。",
       "partners": [
         "Kindred",
         "Graves"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot · 赛恩技能资料",
@@ -13073,15 +13071,16 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Senna.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "farm-tank",
-        "support": "senna-fasting"
-      },
       "reviewBaseline": {
-        "champion:Sion": "1fe1c1e924fa8453",
-        "champion:Senna": "f950f738d007c58a",
+        "champion:Sion": "0852586a5d53c2bc",
+        "champion:Senna": "5e547c9cf10f2a05",
         "item:3068": "f23565139478f276",
         "item:2504": "ead2f4757e3e6c8c",
         "item:6665": "9693faf50145df4e",
@@ -13092,30 +13091,83 @@
         "rune:8446": "321d014aaeb9ee11",
         "rune:8444": "fbb59f496f94894e",
         "rune:8451": "9e4f8837510e3998",
-        "rune:8304": "aa454bdce540cb11",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "item:3071": "8b44dc349847ea0e",
-        "item:3094": "fe69f998d9961e0d",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3009": "f95ed3b88b918eed",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8021": "bffe59ad8f3db438",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8453": "f9a0180e7f2f0432"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "poke"
+      "tempo": "poke",
+      "members": [
+        {
+          "champion": "Sion",
+          "role": "bottom",
+          "loadoutId": "manual-sion-bottom-front",
+          "job": "近战补刀并观察目标，Q 至少蓄力一秒且实际命中才击飞眩晕，无法安全蓄力时撤。"
+        },
+        {
+          "champion": "Senna",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "Q 治疗范围内受光束影响的友方英雄并减速命中敌人；W 命中第一个敌人并经过延迟才禁锢目标及附近敌人。"
+        }
+      ],
+      "steps": [
+        "赛恩下路补刀、赛娜辅助；赛娜 Q 实际命中敌人减速，W 命中第一个敌人后等待延迟禁锢，赛恩再按距离与退路判断蓄 Q。",
+        "近战补刀并观察目标，Q 至少蓄力一秒且实际命中才击飞眩晕，无法安全蓄力时撤。",
+        "Q 治疗范围内受光束影响的友方英雄并减速命中敌人；W 命中第一个敌人并经过延迟才禁锢目标及附近敌人。",
+        "确认技能实际命中与退路；辅助优先任务与视野经济，无法接应或状态不足时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血量，辅助按任务和视野经济支援；技能或资源不足时不强行前压。",
+      "economy": "下路英雄承担补刀；辅助维持任务、视野与实际经济，装备按情况调整，不保证成型或最优。",
+      "window": "以实际技能可用、范围、目标与退路为准，控制未命中或队友无法接应时取消接续。",
+      "reviewSourceAnchors": {
+        "Sion": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "0852586a5d53c2bc",
+          "observedAt": "2026-10-26T13:38:40.521Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sion",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
+              "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e93d37d5494eda42"
+            }
+          }
+        },
+        "Senna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5e547c9cf10f2a05",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Senna",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+              "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "58582c22f3d6346b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "sett-senna",
@@ -14102,17 +14154,15 @@
     },
     {
       "id": "galio-senna",
-      "carry": "Galio",
-      "support": "Senna",
       "name": "巨像护枪",
       "style": "wild",
       "tags": [
         "前排与射程",
         "混合伤害"
       ],
-      "why": "加里奥补刀撑住前排，赛娜以射程提供持续支援。",
-      "plan": "加里奥补刀，赛娜买辅助装；先用减速缩小走位空间再接控制。",
-      "risk": "加里奥清线耗蓝；面对强物理对线时要重新评估。",
+      "why": "加里奥下路补刀承担前排，赛娜辅助以实际命中的减速与回复提供支援；控制接续依据技能文本推断，未经对局验证。",
+      "plan": "加里奥补刀、赛娜辅助；先确认赛娜 Q 命中减速或 W 延迟禁锢实际生效，再按距离、地形与法力决定是否接控制。",
+      "risk": "赛娜 W 可被前方敌人挡住；加里奥缺法力、E 碰地形或 W 释放时目标不在范围会使接续失败，物理消耗高时优先保血。",
       "partners": [
         "Kindred",
         "Graves"
@@ -14124,52 +14174,106 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "farm-tank",
-        "support": "senna-fasting"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Galio": "93e234e70ba0094e",
-        "champion:Senna": "f950f738d007c58a",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8437": "c950f9daf1edb09d",
-        "rune:8446": "321d014aaeb9ee11",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "item:3071": "8b44dc349847ea0e",
-        "item:3094": "fe69f998d9961e0d",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3009": "f95ed3b88b918eed",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8021": "bffe59ad8f3db438",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8214": "6d3b2bf192d500da",
+        "champion:Galio": "62214853523131ad",
+        "champion:Senna": "5e547c9cf10f2a05",
+        "item:6655": "e593f4433de96e4b",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:4645": "152f57227a713097",
+        "item:3020": "357a162d6a40286e",
+        "item:3089": "a8a9b060b253391c",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8229": "9eaed52046ba81fd",
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8453": "f9a0180e7f2f0432"
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Galio",
+          "role": "bottom",
+          "loadoutId": "manual-galio-bottom-magic",
+          "job": "Q 兼顾清线和法力，W 释放才嘲讽范围内敌方英雄；E 只击飞命中的首个敌方英雄且遇地形停止。"
+        },
+        {
+          "champion": "Senna",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "Q 治疗范围内受光束影响的友方英雄并减速命中敌人；W 命中第一个敌人并经过延迟才禁锢目标及附近敌人。"
+        }
+      ],
+      "steps": [
+        "加里奥补刀、赛娜辅助；先确认赛娜 Q 命中减速或 W 延迟禁锢实际生效，再按距离、地形与法力决定是否接控制。",
+        "Q 兼顾清线和法力，W 释放才嘲讽范围内敌方英雄；E 只击飞命中的首个敌方英雄且遇地形停止。",
+        "Q 治疗范围内受光束影响的友方英雄并减速命中敌人；W 命中第一个敌人并经过延迟才禁锢目标及附近敌人。",
+        "确认技能实际命中与退路；辅助优先任务与视野经济，无法接应或状态不足时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血量，辅助按任务和视野经济支援；技能或资源不足时不强行前压。",
+      "economy": "下路英雄承担补刀；辅助维持任务、视野与实际经济，装备按情况调整，不保证成型或最优。",
+      "window": "以实际技能可用、范围、目标与退路为准，控制未命中或队友无法接应时取消接续。",
+      "reviewSourceAnchors": {
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-10-26T13:38:40.394Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        },
+        "Senna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5e547c9cf10f2a05",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Senna",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+              "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "58582c22f3d6346b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "taliyah-senna",
@@ -15252,17 +15356,15 @@
     },
     {
       "id": "ekko-zilean",
-      "carry": "Ekko",
-      "support": "Zilean",
       "name": "时光双保险",
       "style": "wild",
       "tags": [
         "加速进场",
         "回身保护"
       ],
-      "why": "基兰加速支持艾克接近，复活作为额外保护。",
-      "plan": "艾克补刀；艾克先沟通回身点，基兰不用每次都跟入人群。",
-      "risk": "双法术且前期补刀难；两种保命都不能救所有失误。",
+      "why": "基兰 E 实际为范围内友方英雄加速，可帮助艾克调整接近或撤退；R 已学且实际施加后，目标在保护期间将要阵亡才复活。技能配合依据文本推断，未经对局验证。",
+      "plan": "艾克下路补刀，基兰辅助；E 实际给到艾克后按距离寻找机会，艾克 W 延迟后须自己进入区域才引爆，R 可用时才回到四秒前的位置。",
+      "risk": "两人偏法术且近战补刀易被消耗；基兰未及时施法、复活保护过期、艾克回身点危险或技能不可用都不能保证生还。",
       "partners": [
         "Graves",
         "Shen"
@@ -15274,19 +15376,20 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "ap-dive",
-        "support": "zilean-protect"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Ekko": "8d96134e3f7c73f4",
-        "champion:Zilean": "48a3289de06161b1",
-        "item:3152": "4817df23430cfd8f",
+        "champion:Ekko": "d17ece4a263656b8",
+        "champion:Zilean": "60f40731a1259a4a",
+        "item:3152": "37dc7712644a19f0",
         "item:4645": "152f57227a713097",
         "item:3157": "4e1ddce33472ee0f",
         "item:3020": "357a162d6a40286e",
@@ -15297,28 +15400,82 @@
         "rune:8140": "93302565a400fc06",
         "rune:8106": "bfb83fa22daf18de",
         "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "item:2065": "a30335c7d456f5fd",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "rune:8210": "e78877d51ff049ea"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Ekko",
+          "role": "bottom",
+          "loadoutId": "manual-ekko-bottom-magic",
+          "job": "W 的区域需等待并由艾克进入才引爆；R 可用时留意四秒前的位置，不假定复活或回身必然接续。"
+        },
+        {
+          "champion": "Zilean",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "E 实际对范围内友方英雄加速；R 已学且实际施加后，目标在保护期间将要阵亡才复活。"
+        }
+      ],
+      "steps": [
+        "艾克下路补刀，基兰辅助；E 实际给到艾克后按距离寻找机会，艾克 W 延迟后须自己进入区域才引爆，R 可用时才回到四秒前的位置。",
+        "W 的区域需等待并由艾克进入才引爆；R 可用时留意四秒前的位置，不假定复活或回身必然接续。",
+        "E 实际对范围内友方英雄加速；R 已学且实际施加后，目标在保护期间将要阵亡才复活。",
+        "确认技能实际命中与退路；辅助优先任务与视野经济，无法接应或状态不足时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血量，辅助按任务和视野经济支援；技能或资源不足时不强行前压。",
+      "economy": "下路英雄承担补刀；辅助维持任务、视野与实际经济，装备按情况调整，不保证成型或最优。",
+      "window": "以实际技能可用、范围、目标与退路为准，控制未命中或队友无法接应时取消接续。",
+      "reviewSourceAnchors": {
+        "Ekko": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d17ece4a263656b8",
+          "observedAt": "2026-10-26T13:38:40.392Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ekko",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ekko/ekko.bin.json",
+              "sha256": "cc5b259955ce7c0062fb8a1e38e742b587f0f10a70c91945ccc62b2db7a14fc5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d146dbafe0178dc0"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-10-26T13:38:40.608Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
     },
     {
       "id": "naafiri-leona",
@@ -16324,17 +16481,15 @@
     },
     {
       "id": "poppy-zilean",
-      "carry": "Poppy",
-      "support": "Zilean",
       "name": "加速撞墙",
       "style": "wild",
       "tags": [
         "加速接近",
         "地形控制"
       ],
-      "why": "基兰加速支持波比找撞墙角度，并提供保命机会。",
-      "plan": "波比补刀，基兰辅助；有地形再进场，炸弹优先接控制。",
-      "risk": "远程补刀困难；空旷处不能指望 E 总能晕人。",
+      "why": "基兰 E 实际为范围内友方英雄加速，可帮助波比寻找接近与撤退的角度；波比 E 仅在实际把目标带到地形时才眩晕。配合依据技能文本推断，未经对局验证。",
+      "plan": "波比下路补刀，基兰辅助；先看目标、地形与退路，基兰 E 实际给到波比后再判断接近，波比 E 把目标实际带到地形才产生眩晕。",
+      "risk": "对手远程消耗、空旷地形、距离不够或波比 E 未实际撞墙会使计划失效；基兰 R 不能保证施放或生还。",
       "partners": [
         "Kindred",
         "Orianna"
@@ -16346,18 +16501,19 @@
           "url": "https://www.reddit.com/r/supportlol/comments/1m13oo1/off_meta_bot_lane_synergy_ideas/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "farm-tank",
-        "support": "zilean-protect"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Poppy": "fa2cafaf8d0f2976",
-        "champion:Zilean": "48a3289de06161b1",
+        "champion:Poppy": "af33a45e62ad30e5",
+        "champion:Zilean": "60f40731a1259a4a",
         "item:3068": "f23565139478f276",
         "item:2504": "ead2f4757e3e6c8c",
         "item:6665": "9693faf50145df4e",
@@ -16368,27 +16524,83 @@
         "rune:8446": "321d014aaeb9ee11",
         "rune:8444": "fbb59f496f94894e",
         "rune:8451": "9e4f8837510e3998",
-        "rune:8304": "aa454bdce540cb11",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "item:2065": "a30335c7d456f5fd",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8351": "6594874b24a7b00e"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Poppy",
+          "role": "bottom",
+          "loadoutId": "manual-poppy-bottom-front",
+          "job": "近战补刀并先观察地形，E 实际将敌人带到地形才眩晕，不为找角度强追。"
+        },
+        {
+          "champion": "Zilean",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "E 实际给范围内友方英雄加速；R 已学且施加后，目标在保护期间将要阵亡才复活。"
+        }
+      ],
+      "steps": [
+        "波比下路补刀，基兰辅助；先看目标、地形与退路，基兰 E 实际给到波比后再判断接近，波比 E 把目标实际带到地形才产生眩晕。",
+        "近战补刀并先观察地形，E 实际将敌人带到地形才眩晕，不为找角度强追。",
+        "E 实际给范围内友方英雄加速；R 已学且施加后，目标在保护期间将要阵亡才复活。",
+        "确认技能实际命中与退路；辅助优先任务与视野经济，无法接应或状态不足时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血量，辅助按任务和视野经济支援；技能或资源不足时不强行前压。",
+      "economy": "下路英雄承担补刀；辅助维持任务、视野与实际经济，装备按情况调整，不保证成型或最优。",
+      "window": "以实际技能可用、范围、目标与退路为准，控制未命中或队友无法接应时取消接续。",
+      "reviewSourceAnchors": {
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-10-26T13:38:40.510Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-10-26T13:38:40.608Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
     },
     {
       "id": "syndra-zilean",
@@ -48927,6 +49139,374 @@
           }
         }
       }
+    },
+    {
+      "id": "manual-sion-bottom-front",
+      "name": "人工机制参考 · 赛恩下路",
+      "champions": [
+        "Sion"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "tank",
+      "items": [
+        3068,
+        2504,
+        6665
+      ],
+      "boots": 3047,
+      "late": [
+        3075,
+        3083
+      ],
+      "runes": [
+        "manual-sion-bottom-tank"
+      ],
+      "why": "人工机制适配的下路参考，非作者原配或同位置统计，未经对局验证。近战补刀要保血量与退路；出门和成装按经济、威胁及玩家选择调整。",
+      "priority": "QWE",
+      "skillOrder": "QWEQQRQWQWRWWEEREE",
+      "skillReason": "人工主 Q，并按本英雄技能顺序调整，有 R 点 R；非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sion": "0852586a5d53c2bc",
+        "item:3068": "f23565139478f276",
+        "item:2504": "ead2f4757e3e6c8c",
+        "item:6665": "9693faf50145df4e",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3075": "6d456e96c01062c6",
+        "item:3083": "ea58e4b0407db9d2",
+        "rune:8437": "c950f9daf1edb09d",
+        "rune:8446": "321d014aaeb9ee11",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Sion": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "0852586a5d53c2bc",
+          "observedAt": "2026-10-26T13:38:40.521Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sion",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
+              "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e93d37d5494eda42"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-poppy-bottom-front",
+      "name": "人工机制参考 · 波比下路",
+      "champions": [
+        "Poppy"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "tank",
+      "items": [
+        3068,
+        2504,
+        6665
+      ],
+      "boots": 3047,
+      "late": [
+        3075,
+        3083
+      ],
+      "runes": [
+        "manual-poppy-bottom-tank"
+      ],
+      "why": "人工机制适配的下路参考，非作者原配或同位置统计，未经对局验证。近战补刀要保血量与退路；出门和成装按经济、威胁及玩家选择调整。",
+      "priority": "QEW",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "人工主 Q，并按本英雄技能顺序调整，有 R 点 R；非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Poppy": "af33a45e62ad30e5",
+        "item:3068": "f23565139478f276",
+        "item:2504": "ead2f4757e3e6c8c",
+        "item:6665": "9693faf50145df4e",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3075": "6d456e96c01062c6",
+        "item:3083": "ea58e4b0407db9d2",
+        "rune:8437": "c950f9daf1edb09d",
+        "rune:8446": "321d014aaeb9ee11",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-10-26T13:38:40.510Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-ekko-bottom-magic",
+      "name": "人工机制参考 · 艾克下路",
+      "champions": [
+        "Ekko"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "apAssassin",
+      "items": [
+        3152,
+        4645,
+        3157
+      ],
+      "boots": 3020,
+      "late": [
+        3089,
+        3135
+      ],
+      "runes": [
+        "manual-ekko-bottom-electro"
+      ],
+      "why": "人工机制适配的下路参考，非作者原配或同位置统计，未经对局验证。近战补刀要保血量与退路；出门和成装按经济、威胁及玩家选择调整。",
+      "priority": "QEW",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "人工主 Q，并按本英雄技能顺序调整，有 R 点 R；非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Ekko": "d17ece4a263656b8",
+        "item:3152": "37dc7712644a19f0",
+        "item:4645": "152f57227a713097",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3089": "a8a9b060b253391c",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8112": "0082006b65520bc3",
+        "rune:8126": "9e648d4b51a0c973",
+        "rune:8140": "93302565a400fc06",
+        "rune:8106": "bfb83fa22daf18de",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea"
+      },
+      "reviewSourceAnchors": {
+        "Ekko": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d17ece4a263656b8",
+          "observedAt": "2026-10-26T13:38:40.392Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ekko",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ekko/ekko.bin.json",
+              "sha256": "cc5b259955ce7c0062fb8a1e38e742b587f0f10a70c91945ccc62b2db7a14fc5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d146dbafe0178dc0"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-galio-bottom-magic",
+      "name": "人工机制参考 · 加里奥下路",
+      "champions": [
+        "Galio"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "apAssassin",
+      "items": [
+        6655,
+        3157,
+        4645
+      ],
+      "boots": 3020,
+      "late": [
+        3089,
+        3135
+      ],
+      "runes": [
+        "manual-galio-bottom-comet"
+      ],
+      "why": "人工机制适配的下路参考，非作者原配或同位置统计，未经对局验证。近战补刀要保血量与退路；出门和成装按经济、威胁及玩家选择调整。",
+      "priority": "QWE",
+      "skillOrder": "QWEQQRQWQWRWWEEREE",
+      "skillReason": "人工主 Q，并按本英雄技能顺序调整，有 R 点 R；非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Galio": "62214853523131ad",
+        "item:6655": "e593f4433de96e4b",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:4645": "152f57227a713097",
+        "item:3020": "357a162d6a40286e",
+        "item:3089": "a8a9b060b253391c",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-10-26T13:38:40.394Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        }
+      }
     }
   ],
   "runes": {
@@ -49799,6 +50379,82 @@
           8345,
           8410,
           5005,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-sion-bottom-tank": {
+      "name": "人工机制参考 · 赛恩下路",
+      "when": "人工适配下路并按安全机会使用，非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8400,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8437,
+          8446,
+          8444,
+          8451,
+          8345,
+          8347,
+          5007,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-poppy-bottom-tank": {
+      "name": "人工机制参考 · 波比下路",
+      "when": "人工适配下路并按安全机会使用，非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8400,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8437,
+          8446,
+          8444,
+          8451,
+          8345,
+          8347,
+          5007,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-ekko-bottom-electro": {
+      "name": "人工机制参考 · 艾克下路",
+      "when": "人工适配下路并按安全机会使用，非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8100,
+        "subStyleId": 8200,
+        "selectedPerkIds": [
+          8112,
+          8126,
+          8140,
+          8106,
+          8226,
+          8210,
+          5007,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-galio-bottom-comet": {
+      "name": "人工机制参考 · 加里奥下路",
+      "when": "人工适配下路并按安全机会使用，非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8200,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8229,
+          8226,
+          8210,
+          8237,
+          8345,
+          8347,
+          5007,
           5008,
           5001
         ]
