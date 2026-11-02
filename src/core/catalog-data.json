@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.28",
+  "version": "2026.11.02.29",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -13378,31 +13378,36 @@
         "草丛互动",
         "非常规下路"
       ],
-      "why": "翠神 W 创造草丛，雷恩加尔可利用草丛被动跳跃接近。",
-      "plan": "狮子狗补刀，翠神辅助；先布草、约好落点再出手，翠神提供护盾保护。",
-      "risk": "狮子狗近战补刀会受压，失去草丛或护盾时就收手。",
+      "why": "艾翁 W 可造草丛，雷恩加尔被动可在草丛中普攻跳向目标；两段同版技能文字支持配合推断，未经对局验证。",
+      "plan": "雷恩加尔下路补刀，艾翁辅助；先确认 W 已学可用、草丛存在、目标可接近且落点有退路，再由艾翁护盾接应。雷恩加尔配置为人工机制参考，非同位置统计或作者原配。",
+      "risk": "雷恩加尔近战补刀易受远程消耗；草丛、护盾或安全退路不成立时停跳。普通 E 命中首个敌人后减速，只有强化 E 才禁锢；草丛不保证安全或反复跳跃。",
       "partners": [
         "Tristana",
         "Graves"
       ],
       "difficulty": "较高",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Reddit · 非常规下路联动",
           "url": "https://www.reddit.com/r/supportlol/comments/1m13oo1/off_meta_bot_lane_synergy_ideas/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 艾翁与雷恩加尔技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "loadouts": {
-        "bottom": "rengar-bush",
-        "support": "ivern-shield"
+        "bottom": "rengar-ivern-manual-bottom",
+        "support": "default"
       },
       "reviewBaseline": {
-        "champion:Rengar": "6aa1eae9db8d84fa",
-        "champion:Ivern": "5e7fbcf05d7dd05c",
+        "champion:Rengar": "37409a7c0d60e8e8",
+        "champion:Ivern": "f4b498c5991475d6",
         "item:3074": "6700c33eea0226cf",
         "item:6692": "bec6d540fde1d4ec",
         "item:3814": "f9788442be1f2810",
@@ -13410,31 +13415,64 @@
         "item:6333": "60ed05035db8354d",
         "item:3036": "fcf5de31162e9e9d",
         "item:3077": "418eae64a50fc1bf",
-        "rune:8010": "b8dd7b11cee84803",
+        "rune:8021": "bffe59ad8f3db438",
         "rune:9111": "6667591beed15f1b",
         "rune:9105": "8f6975f18cf3ff8d",
         "rune:8299": "d7db081cd64d0bc2",
         "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8021": "bffe59ad8f3db438",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3504": "f6eed220149ca076",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727"
+        "rune:8451": "9e4f8837510e3998"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "reviewSourceAnchors": {
+        "Rengar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "37409a7c0d60e8e8",
+          "observedAt": "2026-10-26T13:38:40.516Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rengar",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rengar/rengar.bin.json",
+              "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "a340ab4d1d71dccd"
+            }
+          }
+        },
+        "Ivern": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f4b498c5991475d6",
+          "observedAt": "2026-10-26T13:38:40.398Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ivern",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+              "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "a8c07de58a4e8f6d"
+            }
+          }
+        }
+      }
     },
     {
       "id": "cassiopeia-singed",
@@ -27246,11 +27284,11 @@
       "tags": [
         "抓人节奏"
       ],
-      "why": "翠神提供草丛和护盾，璐璐保护补刀狮子狗的进退窗口。",
-      "plan": "狮子狗与璐璐先保下路补刀经验；翠神完成必要野区循环后报到，放下实际可用草丛并E接应；狮子狗按残暴和保护距离选择进退，璐璐把W/R留给这一轮反扑。",
-      "risk": "近战下路容易被消耗，队伍缺持续远程火力；草丛不提供无条件安全，普通E只有减速、普通W不解控。璐璐对敌E没有友军护盾，W不能同时给友军增益和敌军变羊；保护交光或线野代价太大就停止重复跳入。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-11",
+      "why": "艾翁提供草丛和护盾，璐璐保护下路补刀雷恩加尔的进退；造草后草中跳跃是同版技能文字的配合推断，未经对局验证。",
+      "plan": "雷恩加尔与璐璐先保下路补刀经验；艾翁完成必要野区循环并学会 W 后报到，先确认草丛形成再 E 接应；雷恩加尔按残暴和保护距离选择进退，璐璐 W 选友方增益或敌方变形，R 已学且友方英雄在范围内时再考虑接应。",
+      "risk": "近战下路容易被消耗，队伍缺持续远程火力；草丛不提供无条件安全，雷恩加尔普通 E 只有减速、普通 W 不解控。璐璐 E 可给实际承伤的友方英雄提供护盾，对敌施放不提供友方护盾；W 不能同时给友方增益和敌方变形；保护交光或线野代价太大就停止重复跳入。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
       "sources": [
         {
           "name": "Riot Ivern 16.20.1 技能",
@@ -27269,40 +27307,44 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Lulu.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-11"
+        },
+        {
+          "name": "Riot 16.21.1 艾翁、雷恩加尔与璐璐技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "members": [
         {
           "role": "jungle",
           "champion": "Ivern",
-          "job": "先报到场并 W 放下实际草丛，E 给约定的狮子狗承接落点反击，Q 找同一目标、菊花挡追击；草丛未成立或狮子狗退出路径不清时不催他跳入。",
+          "job": "先报到场，W 已学可用时放下草丛，E 给约定的友军承接反击；Q 实际命中再报同一目标，R 已学且小菊可用时才安排掩护。草丛未形成或雷恩加尔退出路径不清时不催跳。",
           "loadoutId": "default"
         },
         {
           "role": "bottom",
           "champion": "Rengar",
-          "job": "确认翠神草丛、实际怒气和璐璐可保护距离，再从草中跳队友能处理的目标；Q/普攻兑现输出，强化技能按当前需要选择。没有草丛或被保护距离断开就停跳。",
-          "loadoutId": "rengar-bush"
+          "job": "确认艾翁 W 草丛已形成、实际残暴和璐璐可保护距离，再从草中跳向队友能处理的目标；Q/普攻输出，强化技能按当前需要选择。草丛或保护距离不成立就停跳。",
+          "loadoutId": "rengar-ivern-manual-bottom"
         },
         {
           "role": "support",
           "champion": "Lulu",
-          "job": "狮子狗进场前报 E/W/R 保护，护盾给实际承伤者，敌方反扑时 W 变羊或 R 接应；不要与翠神同时交光保护。狮子狗跳出支援距离时保住退出路线，不跟进敌阵追盾。",
-          "loadoutId": "enchanter-protect"
+          "job": "雷恩加尔进场前报 E/W/R 及保护距离；E 给实际承伤的友方英雄，W 选择友方增益或敌方英雄变形，R 已学且目标友方英雄在范围内才接应。与艾翁错开保护，距离断开就留退出路线，不跟进敌阵追盾。",
+          "loadoutId": "default"
         }
       ],
       "steps": [
-        "翠神先报营地、Q/E与草丛位置，璐璐报E/W/R和站位，狮子狗报实际残暴、血量、兵线与退出方向；先有安全草丛和共同目标再考虑跳跃。",
-        "狮子狗从实际草丛跳到可接应目标，Q/普攻输出；强化Q、E定身或W解控按当前需要选择。翠神Q命中可供友军接近，但不等于所有人都该跟进。",
-        "翠神E和璐璐E错开承接实际伤害；璐璐W明确选友军加速或敌军变羊，R明确给友军接应。保护距离断开就停跳，留控制和菊花掩护撤退。"
+        "艾翁先报营地、Q/E 与草丛位置，璐璐报 E/W/R 和站位，雷恩加尔报实际残暴、血量、兵线与退出方向；先确认草丛、撤退路径和共同目标再考虑跳跃。",
+        "先确认艾翁 W 已学且草丛实际形成，再由雷恩加尔从草中跳向双方可接应的目标，Q/普攻输出；强化 Q、强化 E 禁锢或强化 W 解控按实际残暴选择。艾翁 Q 命中并禁锢期间，友军攻击该目标可冲刺至自身攻击距离，不等于都该跟进。",
+        "艾翁 E 和璐璐 E 错开承接实际伤害，璐璐 E 给实际承伤的友方英雄提供护盾；璐璐 W 选择友方增益或敌方英雄变形，R 已学且友方英雄在范围内才接应。保护距离断开就停跳；艾翁 R 已学且小菊实际可用时才安排掩护。"
       ],
-      "window": "翠神草丛确已成立，狮子狗能从该位置合法跳跃，翠神/璐璐实际护盾和控制可用、目标在共同保护范围；狮子狗残暴与撤退路线由本人确认，不能把草丛视为安全视野。",
+      "window": "艾翁 W 已学且草丛实际形成、雷恩加尔处于草中且目标在可跳范围；两人护盾与璐璐可用技能和保护距离由玩家确认。人造草丛触发跳跃是技能文字推断，未经对局验证；不能把草丛视为安全视野。",
       "early": "狮子狗1–3级Q/W/E先补刀与短换血，近期受伤再用W，不为抢跳丢兵线；璐璐按E护盾与Q减速保下路状态；翠神依自己的被动营地成熟节奏获得金币经验，W学到且能到场才布草，不按普通打野攻击非史诗营地的逻辑分配任务。",
       "economy": "狮子狗承担下路补刀，璐璐走辅助任务与视野经济，翠神保留自己的野区收入；三人到下路前先报兵线、营地和补给，成功换血也不长期三人分一条线。资源前先决定狮子狗接线还是到场，无法安全接近入口就放弃跳入，守线或换另一侧已确认收益。",
       "reviewBaseline": {
-        "champion:Ivern": "f4b498c5991475d6",
         "champion:Rengar": "37409a7c0d60e8e8",
-        "champion:Lulu": "5f5091380ca45272",
+        "champion:Ivern": "f4b498c5991475d6",
         "item:3074": "6700c33eea0226cf",
         "item:6692": "bec6d540fde1d4ec",
         "item:3814": "f9788442be1f2810",
@@ -27310,99 +27352,83 @@
         "item:6333": "60ed05035db8354d",
         "item:3036": "fcf5de31162e9e9d",
         "item:3077": "418eae64a50fc1bf",
-        "rune:8010": "b8dd7b11cee84803",
+        "rune:8021": "bffe59ad8f3db438",
         "rune:9111": "6667591beed15f1b",
         "rune:9105": "8f6975f18cf3ff8d",
         "rune:8299": "d7db081cd64d0bc2",
         "rune:8473": "ed2f46234183276d",
         "rune:8451": "9e4f8837510e3998",
-        "rune:8021": "bffe59ad8f3db438",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "item:6620": "cfb94d4a02cc64c8",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3504": "f6eed220149ca076",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727"
+        "champion:Lulu": "5f5091380ca45272"
       },
       "reviewSourceAnchors": {
         "Ivern": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f4b498c5991475d6",
-          "observedAt": "2026-10-18T23:14:46.591Z",
+          "observedAt": "2026-10-26T13:38:40.398Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ivern",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/ivern/ivern.bin.json",
-              "sha256": "6317473eaa270f8826d65611048e987fe060d4cb335db16d78901217773e068f"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+              "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "a8c07de58a4e8f6d"
             }
           }
         },
         "Rengar": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "37409a7c0d60e8e8",
-          "observedAt": "2026-10-18T23:15:30.631Z",
+          "observedAt": "2026-10-26T13:38:40.516Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rengar",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/rengar/rengar.bin.json",
-              "sha256": "f32bdf8e03ad3da78da673bd64ba2156696ab99a2b324c3d66f56c9cab279346"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rengar/rengar.bin.json",
+              "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "a340ab4d1d71dccd"
             }
           }
         },
         "Lulu": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-18T23:15:06.419Z",
+          "observedAt": "2026-10-26T13:38:40.500Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -48105,6 +48131,103 @@
           }
         }
       }
+    },
+    {
+      "id": "rengar-ivern-manual-bottom",
+      "name": "人工机制参考 · 雷恩加尔下路",
+      "champions": [
+        "Rengar"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "fighter",
+      "items": [
+        3074,
+        6692,
+        3814
+      ],
+      "boots": 3158,
+      "late": [
+        6333,
+        3036
+      ],
+      "runes": [
+        "rengar-ivern-manual-fleet"
+      ],
+      "why": "人工按近战补刀与草丛接近机制调整，非同分路统计、非作者原配，未经对局验证。出门装备以应用实际显示为准；多兰盾加药水可由玩家局内自行考虑，不代表应用已选盾。提亚马特和九头蛇会推线，注意兵线与退路；星蚀须2秒内两次独立命中同一英雄。",
+      "early": [
+        3077
+      ],
+      "damage": "ad",
+      "priority": "QEW",
+      "skillOrder": "QWEQQRQEQEREEWWRWW",
+      "skillReason": "人工参考：主Q副E，有R点R；等级、进场和强化选择按游戏内确认，不代表下路统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 雷恩加尔技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Rengar": "37409a7c0d60e8e8",
+        "item:3074": "6700c33eea0226cf",
+        "item:6692": "bec6d540fde1d4ec",
+        "item:3814": "f9788442be1f2810",
+        "item:3158": "72ca672b9221f063",
+        "item:6333": "60ed05035db8354d",
+        "item:3036": "fcf5de31162e9e9d",
+        "item:3077": "418eae64a50fc1bf",
+        "rune:8021": "bffe59ad8f3db438",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998"
+      },
+      "reviewSourceAnchors": {
+        "Rengar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "37409a7c0d60e8e8",
+          "observedAt": "2026-10-26T13:38:40.516Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rengar",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rengar/rengar.bin.json",
+              "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "a340ab4d1d71dccd"
+            }
+          }
+        }
+      }
     }
   ],
   "runes": {
@@ -48902,6 +49025,25 @@
           8347,
           5007,
           5001,
+          5001
+        ]
+      }
+    },
+    "rengar-ivern-manual-fleet": {
+      "name": "迅捷步法 · 人工机制参考",
+      "when": "按雷恩加尔近战补刀及撤退需要人工整理；非同位置统计或作者原配。对小兵触发的治疗显著降低。",
+      "page": {
+        "primaryStyleId": 8000,
+        "subStyleId": 8400,
+        "selectedPerkIds": [
+          8021,
+          9111,
+          9105,
+          8299,
+          8473,
+          8451,
+          5005,
+          5008,
           5001
         ]
       }
