@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "patch": "16.21",
+  "locale": "zh_CN",
+  "build": "16.21.8298620+branch.releases-16-21.content.release",
+  "fetchedAt": "2026-11-02T18:29:00.209109+08:00",
+  "sources": [
+    {
+      "url": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/perks.json",
+      "sha256": "be0bb4eedde39f3a8e1dc245f9b4382379d87674c2fdc62b2650b6af4d9f565b"
+    },
+    {
+      "url": "https://raw.communitydragon.org/16.21/plugins/rcp-be-lol-game-data/global/zh_cn/v1/perkstyles.json",
+      "sha256": "cb1beb46339ba533102c87938ff394a107860a13291fb579e86c18a193c4062e"
+    }
+  ],
+  "rows": [
+    [
+      5008,
+      5005,
+      5007
+    ],
+    [
+      5008,
+      5010,
+      5001
+    ],
+    [
+      5011,
+      5013,
+      5001
+    ]
+  ],
+  "shards": [
+    {
+      "id": 5008,
+      "name": "适应之力",
+      "longDesc": "+9 <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Adaptive'><font color='#48C4B7'>适应之力</font></lol-uikit-tooltipped-keyword>"
+    },
+    {
+      "id": 5005,
+      "name": "攻击速度",
+      "longDesc": "+10%攻击速度"
+    },
+    {
+      "id": 5007,
+      "name": "技能急速",
+      "longDesc": "+8<lol-uikit-tooltipped-keyword key='LinkTooltip_Description_CDR'>技能急速</lol-uikit-tooltipped-keyword> "
+    },
+    {
+      "id": 5010,
+      "name": "移动速度",
+      "longDesc": "+2.5% <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_MS'>移动速度</lol-uikit-tooltipped-keyword>"
+    },
+    {
+      "id": 5001,
+      "name": "成长生命值",
+      "longDesc": "+10-180生命值(基于等级)"
+    },
+    {
+      "id": 5011,
+      "name": "生命值",
+      "longDesc": "+65生命值"
+    },
+    {
+      "id": 5013,
+      "name": "韧性和减速抗性",
+      "longDesc": "+15%韧性和减速抗性"
+    }
+  ]
+}

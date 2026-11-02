@@ -2,7 +2,7 @@ import {BUNDLED_CATALOG,validateCatalog,installValidatedCatalog,catalogIssues} f
 import {normalizeBuildSource,sameBuildSource,selectBuildSource} from './core/build-source.mjs';
 import {prepareAssets,installAssets} from './ui.mjs';
 
-const baseFields=['champions','items','runes','spells','abilityReference','spellbook','patch','version','mechanicSourceRevision'];
+const baseFields=['champions','items','runes','spells','abilityReference','historicalAbilityReference','spellbook','patch','version','mechanicSourceRevision'];
 const imageFields=['imageOverrides','items','augments','abilityReference','spells','runes','version'];
 const sourceFields=['builds','buildSources','buildSource','patch'];
 const revision=value=>Number.isSafeInteger(value)&&value>=0;

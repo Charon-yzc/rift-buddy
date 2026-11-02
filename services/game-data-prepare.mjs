@@ -47,7 +47,11 @@ export async function createGameDataPreparer({bundleRoot,localRoot,catalogSummar
   if(bundle)applyFeedBundle(next,bundle,manifest);
   const identity=generationBaseIdentity(next),matchesBundle=identity===bundledIdentity;
   // Version alone cannot authenticate values against a same-version hotfix.
-  next.abilityReference=matchesBundle?bundledAbilities:null;next.spellbook=matchesBundle?spellbook:{};
+  next.abilityReference=matchesBundle?bundledAbilities:null;
+  // Keep the validated bundled text available for explicit comparison, without
+  // treating its values as belonging to a different active game snapshot.
+  next.historicalAbilityReference=matchesBundle?null:bundledAbilities;
+  next.spellbook=matchesBundle?spellbook:{};
   const imageRoot=path.join(localRoot,'images','generations',identity),entries=images.imageEntries(next),bundledKeys=new Set(entries.filter(([key,url])=>bundledImages.get(key)===url).map(([key])=>key));
   const cached=restore?{overrides:await images.loadImageOverrides(imageRoot,next),saved:0,failed:0}:await images.cacheMissingImages({root:imageRoot,bundleRoot:path.join(bundleRoot,'images'),data:next,bundledKeys,progress});
   next.imageOverrides={...Object.fromEntries(entries.filter(([key])=>!bundledKeys.has(key))),...cached.overrides};

@@ -309,10 +309,10 @@ function repaintNationalDetail(){
 }
 let patchVersion='',patchQuery='';
 let referenceHero='',referenceQuery='',referenceRole='all',referenceTab='skills',referenceSkill='Q',referenceVariant=0;
-let referenceKind='champions',referenceItem='',referenceItemQuery='',referenceItemMode='rift',referenceRuneId='';
+let referenceKind='champions',referenceItem='',referenceItemQuery='',referenceItemMode='rift',referenceRuneId='',referenceShardRow='';
 function renderReference(){
  const tabs=[['champions','英雄'],['items','装备'],['runes','符文']].map(([id,name])=>`<button type="button" class="segment ${referenceKind===id?'active':''}" data-action="reference-kind" data-kind="${id}" aria-pressed="${referenceKind===id}">${name}</button>`).join('');
- return `<nav class="segmented reference-kind" aria-label="图鉴分类">${tabs}</nav>`+(referenceKind==='items'?itemReferenceView(data,{id:referenceItem,query:referenceItemQuery,mode:referenceItemMode}):referenceKind==='runes'?runeReferenceView(data,{id:referenceRuneId}):championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}));
+ return `<nav class="segmented reference-kind" aria-label="图鉴分类">${tabs}</nav>`+(referenceKind==='items'?itemReferenceView(data,{id:referenceItem,query:referenceItemQuery,mode:referenceItemMode}):referenceKind==='runes'?runeReferenceView(data,{id:referenceRuneId,shardRow:referenceShardRow}):championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}));
 }
 const rankingPending=new Set(),rankingErrors=new Map();
 const rankingOptions=()=>{const source=rankingSource||data.buildSource,key=rankingKey(data.patch,source);return {source,role:rankingRole,query:rankingQuery,sort:rankingSort,pending:rankingPending.has(key),error:rankingErrors.get(key)||'',heroAction:id=>companionHeroAction(client,champ(id),saved.preferences.clickPrepare!==false)};};
@@ -622,7 +622,7 @@ function captureItemReferenceFocus(){
  if(!root||!focused)return null;
  const scope={route:'reference',mode:root.dataset.itemReferenceMode,selected:root.dataset.itemReferenceId||''},detail=root.querySelector('#item-reference-detail'),list=root.querySelector('#item-reference-grid');
  const button=focused.closest?.('button[data-action]');
- if(button===focused&&(list?.contains(button)||detail?.contains(button)||root.querySelector('.item-reference-toolbar')?.contains(button)||app.querySelector('.reference-kind')?.contains(button)){
+ if(button===focused&&(list?.contains(button)||detail?.contains(button)||root.querySelector('.item-reference-toolbar')?.contains(button)||app.querySelector('.reference-kind')?.contains(button))){
   const area=list?.contains(button)?'list':detail?.contains(button)?'detail':root.contains(button)?'toolbar':'nav';
   const region=area==='detail'?button.closest('[data-item-region]')?.dataset.itemRegion||'detail':area;
   const attributes=[...button.attributes].filter(a=>a.name.startsWith('data-')).map(a=>[a.name,a.value]).sort(([a],[b])=>a.localeCompare(b));
@@ -673,16 +673,16 @@ function captureRuneReferenceFocus(){
  const focused=document.activeElement,root=app.querySelector('.rune-reference'),nav=app.querySelector('.reference-kind');
  if(!focused||focused.tagName!=='BUTTON')return null;
  const action=focused.dataset.action;
- if(nav?.contains(focused)&&action==='reference-kind')return {selected:referenceRuneId,area:'nav',action,kind:focused.dataset.kind};
- if(root?.contains(focused)&&action==='reference-rune')return {selected:referenceRuneId,area:'rune',action,id:focused.dataset.id};
- if(root?.contains(focused)&&action==='link')return {selected:referenceRuneId,area:'source',action,url:focused.dataset.url};
+ if(nav?.contains(focused)&&action==='reference-kind')return {selected:referenceRuneId,selectedRow:referenceShardRow,area:'nav',action,kind:focused.dataset.kind};
+ if(root?.contains(focused)&&action==='reference-rune')return {selected:referenceRuneId,selectedRow:referenceShardRow,area:'rune',action,id:focused.dataset.id,shardRow:focused.dataset.shardRow};
+ if(root?.contains(focused)&&action==='link')return {selected:referenceRuneId,selectedRow:referenceShardRow,area:'source',action,url:focused.dataset.url};
  return null;
 }
 function restoreRuneReferenceFocus(focus){
- if(!focus||windowLayout.docked||route!=='reference'||referenceKind!=='runes'||referenceRuneId!==focus.selected)return;
+ if(!focus||windowLayout.docked||route!=='reference'||referenceKind!=='runes'||referenceRuneId!==focus.selected||referenceShardRow!==focus.selectedRow)return;
  if(document.activeElement!==document.body&&document.activeElement!==document.documentElement)return;
  const root=focus.area==='nav'?app.querySelector('.reference-kind'):app.querySelector('.rune-reference');
- const matches=[...root?.querySelectorAll('button[data-action]')||[]].filter(node=>node.dataset.action===focus.action&&(focus.area==='nav'?node.dataset.kind===focus.kind:focus.area==='rune'?node.dataset.id===focus.id:node.dataset.url===focus.url));
+ const matches=[...root?.querySelectorAll('button[data-action]')||[]].filter(node=>node.dataset.action===focus.action&&(focus.area==='nav'?node.dataset.kind===focus.kind:focus.area==='rune'?node.dataset.id===focus.id&&node.dataset.shardRow===focus.shardRow:node.dataset.url===focus.url));
  const target=matches.length===1?matches[0]:null;
  if(target&&!target.disabled&&target.checkVisibility?.()!==false)target.focus({preventScroll:true});
 }
@@ -1860,7 +1860,7 @@ document.addEventListener('click',async event=>{
  if(action==='ranking-role'){if(!ROLES.some(r=>r.id===el.dataset.role))throw Error('位置不正确');rankingRole=el.dataset.role;companionScroll.delete('rankings');render();return;}
  if(action==='reference-hero'){if(!champ(el.dataset.id))throw Error('英雄资料已变化');if(windowLayout.docked&&api.openMainPage){await api.openMainPage({route:'reference',id:el.dataset.id,tab:el.dataset.tab==='changes'?'changes':'skills'});return;}referenceKind='champions';referenceHero=el.dataset.id;referenceTab=el.dataset.tab==='changes'?'changes':'skills';referenceSkill='Q';referenceVariant=0;route='reference';closeOverlay();render();return;}
  if(action==='reference-kind'){if(!['champions','items','runes'].includes(el.dataset.kind))return;referenceKind=el.dataset.kind;render();document.querySelector(`[data-action="reference-kind"][data-kind="${referenceKind}"]`)?.focus({preventScroll:true});return;}
- if(action==='reference-rune'){const id=el.dataset.id;if(route!=='reference'||referenceKind!=='runes'||!referenceRune(data,id))return;referenceRuneId=id;render();app.querySelector(`[data-action="reference-rune"][data-id="${id}"]`)?.focus({preventScroll:true});if(window.matchMedia('(max-width:760px)').matches){const detail=app.querySelector('.rune-reference-detail'),rect=detail?.getBoundingClientRect();if(rect&&(rect.top<0||rect.top+Math.min(rect.height,160)>window.innerHeight))detail.scrollIntoView({block:'nearest'});}return;}
+ if(action==='reference-rune'){const id=el.dataset.id,shardRow=el.dataset.shardRow||'';if(route!=='reference'||referenceKind!=='runes'||!referenceRune(data,id)||shardRow&&!/^[0-2]$/.test(shardRow))return;referenceRuneId=id;referenceShardRow=shardRow;render();[...app.querySelectorAll('button[data-action="reference-rune"]')].find(node=>node.dataset.id===id&&(node.dataset.shardRow||'')===shardRow)?.focus({preventScroll:true});if(window.matchMedia('(max-width:760px)').matches){const detail=app.querySelector('.rune-reference-detail'),rect=detail?.getBoundingClientRect();if(rect&&(rect.top<0||rect.top+Math.min(rect.height,160)>window.innerHeight))detail.scrollIntoView({block:'nearest'});}return;}
  if(action==='reference-item-mode'){if(!['rift','hex'].includes(el.dataset.mode))return;referenceItemMode=el.dataset.mode;render();document.querySelector(`[data-action="reference-item-mode"][data-mode="${referenceItemMode}"]`)?.focus({preventScroll:true});return;}
  if(action==='reference-item'){const id=el.dataset.id;if(!/^\d{1,8}$/.test(id||'')||!Object.hasOwn(data.items||{},id)||data.items[id].maps?.[referenceItemMode==='hex'?'12':'11']!==true)return;referenceItem=id;render();const detail=document.getElementById('item-reference-detail');if(detail){detail.focus({preventScroll:true});const rect=detail.getBoundingClientRect();if(rect.top<0||rect.top+Math.min(rect.height,160)>window.innerHeight)detail.scrollIntoView({block:'start',inline:'nearest'});}return;}
  if(action==='reference-back'){referenceHero='';render();return;}
