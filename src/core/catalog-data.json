@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.31",
+  "version": "2026.11.02.32",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -15732,17 +15732,15 @@
     },
     {
       "id": "teemo-shaco",
-      "carry": "Teemo",
-      "support": "Shaco",
       "name": "陷阱游乐园",
       "style": "wild",
       "tags": [
         "区域陷阱",
         "路线封锁"
       ],
-      "why": "提莫蘑菇与萨科盒子为提前布置的区域增加威胁。",
-      "plan": "提莫补刀，萨科辅助；围绕入口和撤退路线布置，避免无视兵线。",
-      "risk": "清场和扫描会削弱阵地；缺前排与稳定开团。",
+      "why": "提莫蘑菇与萨科盒子各自实际触发时可限制同一区域；两段技能文字支持配合推断，未经对局验证。",
+      "plan": "提莫下路补刀、萨科辅助；R 已学有充能时提莫先将蘑菇放到合适位置，萨科按可用状态布置盒子；敌人实际踩中蘑菇或触发盒子后再依情况跟进。",
+      "risk": "两个陷阱独立触发，盒子恐惧不保证敌人会踩中蘑菇；扫描、清除或对手绕开会削弱阵地，双方缺前排时保留退路。",
       "partners": [
         "Sejuani",
         "Galio"
@@ -15754,39 +15752,105 @@
           "url": "https://www.reddit.com/r/supportlol/comments/1m13oo1/off_meta_bot_lane_synergy_ideas/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "teemo-traps",
-        "support": "trap-shaco"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Teemo": "feed1f50df880a59",
-        "champion:Shaco": "b34bdc56bc3cd330",
+        "champion:Teemo": "b29454e3375baf8c",
+        "champion:Shaco": "ea2b12296434e0e4",
         "item:3115": "627135c117eaf20a",
+        "item:3124": "a5fa166d09295f8f",
         "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
         "item:3020": "357a162d6a40286e",
-        "item:3089": "a8a9b060b253391c",
+        "item:3157": "4e1ddce33472ee0f",
         "item:3135": "9eb1465e02c69db0",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
+        "rune:8005": "e05d6553b23e1d97",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3158": "72ca672b9221f063",
-        "item:3157": "4e1ddce33472ee0f"
+        "rune:8410": "da4ec8f245880032"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Teemo",
+          "role": "bottom",
+          "loadoutId": "teemo-bottom-manual-hybrid",
+          "job": "负责下路补刀；按实际距离安全普攻，R 已学且有充能时按退路布蘑菇，敌人实际踩中才触发，不为陷阱追入危险区域。"
+        },
+        {
+          "champion": "Shaco",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "W 已学可用时按实际入口和退路布盒，敌人靠近或盒子显形并实际触发后才考虑恐惧跟进；辅助保任务与视野经济。"
+        }
+      ],
+      "steps": [
+        "提莫 R 与萨科 W 已学且可用时，先约定入口、兵线和退路，分别在实际位置布置陷阱。",
+        "敌人实际踩中蘑菇才触发减速与伤害；盒子实际触发后才恐惧范围内敌人，不能假设同一目标必定接连命中。",
+        "陷阱被清除、目标绕开或退路不清时结束埋伏，保护补刀与视野。"
+      ],
+      "window": "提莫 R 已学且蘑菇实际落地，萨科 W 盒子实际布置并可用；双方按技能实际状态、敌人位置和撤退路线决定是否接战。",
+      "early": "提莫承担下路补刀并维持安全距离，辅助优先任务与视野；R 未学习或陷阱未触发时不预设蘑菇伤害。",
+      "economy": "提莫承担下路补刀；辅助按任务、视野和实际经济安排购买，不按补刀位速度承诺成装。",
+      "reviewSourceAnchors": {
+        "Teemo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b29454e3375baf8c",
+          "observedAt": "2026-10-26T13:38:40.593Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Teemo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+              "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0795d6a5dc4ba5bb"
+            }
+          }
+        },
+        "Shaco": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ea2b12296434e0e4",
+          "observedAt": "2026-10-26T13:38:40.520Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Shaco",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/shaco/shaco.bin.json",
+              "sha256": "1af1a820ae1fdf778ed9e2c284d376e4d24803f69dd8d898d21f309d783df297"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7abc8f79225d9e14"
+            }
+          }
+        }
+      }
     },
     {
       "id": "katarina-sejuani",
@@ -17788,17 +17852,15 @@
     },
     {
       "id": "teemo-milio",
-      "carry": "Teemo",
-      "support": "Milio",
       "name": "暖炉毒箭",
       "style": "wild",
       "tags": [
         "射程增益",
         "持续输出"
       ],
-      "why": "米利欧提供射程和保护，帮助提莫保持普攻距离。",
-      "plan": "提莫补刀，米利欧辅助；输出时留在支援范围，蘑菇优先保护侧翼。",
-      "risk": "缺稳定先手与前排；射程增益不代表不会被突进。",
+      "why": "米利欧炉火可提升附近友方英雄的普攻攻击距离并治疗；提莫在炉火附近才能利用该窗口增加普攻距离。",
+      "plan": "提莫下路补刀、米利欧辅助；W 已学可用时释放炉火，确认提莫实际在炉火附近后再安排普攻；提莫 R 已学有充能时可提前放蘑菇保护侧翼，敌人踩中才触发。",
+      "risk": "W 提升的是普攻攻击距离而非技能距离，增距不保证安全；炉火结束、提莫离开范围或护盾未能提供时停止前压。",
       "partners": [
         "Sejuani",
         "Shen"
@@ -17810,48 +17872,105 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "teemo-onhit",
-        "support": "milio-range"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Teemo": "feed1f50df880a59",
-        "champion:Milio": "7bec2e4244a3e4bc",
+        "champion:Teemo": "b29454e3375baf8c",
+        "champion:Milio": "9176ff8b22c1f1c9",
         "item:3115": "627135c117eaf20a",
         "item:3124": "a5fa166d09295f8f",
-        "item:3089": "a8a9b060b253391c",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3135": "9eb1465e02c69db0",
+        "item:6653": "dae566be4a35ad25",
+        "item:3020": "357a162d6a40286e",
         "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
         "rune:8005": "e05d6553b23e1d97",
         "rune:8009": "e88eb74c171319c4",
         "rune:9104": "e6b524a54b35a2f3",
         "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8008": "d8ed59948702367b",
-        "rune:8017": "50a79a13bce940f0",
-        "item:3504": "f6eed220149ca076",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8347": "def2a55844436c47"
+        "rune:8410": "da4ec8f245880032"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Teemo",
+          "role": "bottom",
+          "loadoutId": "teemo-bottom-manual-hybrid",
+          "job": "负责下路补刀；按实际距离安全普攻，R 已学且有充能时按退路布蘑菇，敌人实际踩中才触发，不为陷阱追入危险区域。"
+        },
+        {
+          "champion": "Milio",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "W 已学可用时释放炉火，确认跟随目标和提莫实际位置；E 对范围内友方英雄提供护盾，R 本人可施放且队友在范围内时再考虑治疗与净化。"
+        }
+      ],
+      "steps": [
+        "米利欧 W 已学且可用时释放炉火并确认提莫在附近，再按实际距离安排普攻。",
+        "提莫 R 已学且有充能时可在侧翼放蘑菇；敌人实际踩中才触发，蘑菇不代替普攻。",
+        "炉火结束、提莫离开范围或双方失去接应距离时停止追击；E 和 R 按实际目标、范围与施放状态使用。"
+      ],
+      "window": "米利欧 W 炉火已释放且提莫实际处于附近，双方仍在可接应距离；双方按技能实际状态、敌人位置和撤退路线决定是否接战。",
+      "early": "提莫承担下路补刀并维持安全距离，辅助优先任务与视野；R 未学习或陷阱未触发时不预设蘑菇伤害。",
+      "economy": "提莫承担下路补刀；辅助按任务、视野和实际经济安排购买，不按补刀位速度承诺成装。",
+      "reviewSourceAnchors": {
+        "Teemo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b29454e3375baf8c",
+          "observedAt": "2026-10-26T13:38:40.593Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Teemo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+              "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0795d6a5dc4ba5bb"
+            }
+          }
+        },
+        "Milio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9176ff8b22c1f1c9",
+          "observedAt": "2026-10-26T13:38:40.503Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Milio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "32194f4e3319e474"
+            }
+          }
+        }
+      }
     },
     {
       "id": "ashe-taric",
@@ -48715,6 +48834,99 @@
           }
         }
       }
+    },
+    {
+      "id": "teemo-bottom-manual-hybrid",
+      "name": "人工机制参考 · 提莫下路",
+      "champions": [
+        "Teemo"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "onhit",
+      "items": [
+        3115,
+        3124,
+        6653
+      ],
+      "boots": 3020,
+      "late": [
+        3157,
+        3135
+      ],
+      "runes": [
+        "teemo-bottom-manual-press"
+      ],
+      "why": "人工结合安全普攻与已学 R 的区域布置，非下路统计、非作者原配，未经对局验证。3124 需攻击叠层，不能把毒伤当普攻；R 蘑菇实际落地并由敌人踩中才触发。无法安全普攻或陷阱被清时按局势调整，勿把装备当配合必需。",
+      "damage": "ap",
+      "priority": "EQW",
+      "skillOrder": "EQWEEREQEQRQQWWRWW",
+      "skillReason": "人工参考：主 E 副 Q，有 R 点 R；技能与目标状态以游戏内为准，非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Teemo": "b29454e3375baf8c",
+        "item:3115": "627135c117eaf20a",
+        "item:3124": "a5fa166d09295f8f",
+        "item:6653": "dae566be4a35ad25",
+        "item:3020": "357a162d6a40286e",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3135": "9eb1465e02c69db0",
+        "rune:8005": "e05d6553b23e1d97",
+        "rune:8009": "e88eb74c171319c4",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8014": "04092c4f9754532b",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8410": "da4ec8f245880032"
+      },
+      "reviewSourceAnchors": {
+        "Teemo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b29454e3375baf8c",
+          "observedAt": "2026-10-26T13:38:40.593Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Teemo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+              "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0795d6a5dc4ba5bb"
+            }
+          }
+        }
+      }
     }
   ],
   "runes": {
@@ -49568,6 +49780,25 @@
           8473,
           8453,
           5007,
+          5008,
+          5001
+        ]
+      }
+    },
+    "teemo-bottom-manual-press": {
+      "name": "人工机制参考 · 提莫强攻",
+      "when": "以能够安全普攻的窗口人工整理；强攻需连续三次普攻同一敌方英雄，毒伤不当作额外普攻。非下路统计或原作者配装。",
+      "page": {
+        "primaryStyleId": 8000,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8005,
+          8009,
+          9104,
+          8014,
+          8345,
+          8410,
+          5005,
           5008,
           5001
         ]
