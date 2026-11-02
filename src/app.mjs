@@ -114,6 +114,7 @@ import {NATIONAL_TIERS,nationalRequest} from './core/national-reference.mjs';
 import {rankingKey,rankingReference,validRankingReference} from './core/rankings.mjs';
 import {patchNotesView} from './patch-notes-view.mjs';
 import {championReferenceView,referenceHeroTiles} from './champion-reference-view.mjs';
+import {runeReferenceView,referenceRune} from './rune-reference-view.mjs';
 import {itemReferenceView,referenceItemTiles} from './item-reference-view.mjs';
 import {createHistoryController} from './match-history-controller.mjs';
 import {matchHistoryView as baseHistoryView,matchHistorySearchView} from './match-history-view.mjs';
@@ -308,10 +309,10 @@ function repaintNationalDetail(){
 }
 let patchVersion='',patchQuery='';
 let referenceHero='',referenceQuery='',referenceRole='all',referenceTab='skills',referenceSkill='Q',referenceVariant=0;
-let referenceKind='champions',referenceItem='',referenceItemQuery='',referenceItemMode='rift';
+let referenceKind='champions',referenceItem='',referenceItemQuery='',referenceItemMode='rift',referenceRuneId='';
 function renderReference(){
- const tabs=[['champions','英雄'],['items','装备']].map(([id,name])=>`<button type="button" class="segment ${referenceKind===id?'active':''}" data-action="reference-kind" data-kind="${id}" aria-pressed="${referenceKind===id}">${name}</button>`).join('');
- return `<nav class="segmented reference-kind" aria-label="图鉴分类">${tabs}</nav>`+(referenceKind==='items'?itemReferenceView(data,{id:referenceItem,query:referenceItemQuery,mode:referenceItemMode}):championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}));
+ const tabs=[['champions','英雄'],['items','装备'],['runes','符文']].map(([id,name])=>`<button type="button" class="segment ${referenceKind===id?'active':''}" data-action="reference-kind" data-kind="${id}" aria-pressed="${referenceKind===id}">${name}</button>`).join('');
+ return `<nav class="segmented reference-kind" aria-label="图鉴分类">${tabs}</nav>`+(referenceKind==='items'?itemReferenceView(data,{id:referenceItem,query:referenceItemQuery,mode:referenceItemMode}):referenceKind==='runes'?runeReferenceView(data,{id:referenceRuneId}):championReferenceView(data,{id:referenceHero,query:referenceQuery,role:referenceRole,tab:referenceTab,skill:referenceSkill,variant:referenceVariant}));
 }
 const rankingPending=new Set(),rankingErrors=new Map();
 const rankingOptions=()=>{const source=rankingSource||data.buildSource,key=rankingKey(data.patch,source);return {source,role:rankingRole,query:rankingQuery,sort:rankingSort,pending:rankingPending.has(key),error:rankingErrors.get(key)||'',heroAction:id=>companionHeroAction(client,champ(id),saved.preferences.clickPrepare!==false)};};
@@ -651,6 +652,24 @@ function restoreItemReferenceFocus(focus){
  if(target?.disabled||target?.checkVisibility?.()===false)target=null;
  (target||document.getElementById('item-reference-search'))?.focus({preventScroll:true});
 }
+function captureRuneReferenceFocus(){
+ if(route!=='reference'||referenceKind!=='runes')return null;
+ const focused=document.activeElement,root=app.querySelector('.rune-reference'),nav=app.querySelector('.reference-kind');
+ if(!focused||focused.tagName!=='BUTTON')return null;
+ const action=focused.dataset.action;
+ if(nav?.contains(focused)&&action==='reference-kind')return {selected:referenceRuneId,area:'nav',action,kind:focused.dataset.kind};
+ if(root?.contains(focused)&&action==='reference-rune')return {selected:referenceRuneId,area:'rune',action,id:focused.dataset.id};
+ if(root?.contains(focused)&&action==='link')return {selected:referenceRuneId,area:'source',action,url:focused.dataset.url};
+ return null;
+}
+function restoreRuneReferenceFocus(focus){
+ if(!focus||windowLayout.docked||route!=='reference'||referenceKind!=='runes'||referenceRuneId!==focus.selected)return;
+ if(document.activeElement!==document.body&&document.activeElement!==document.documentElement)return;
+ const root=focus.area==='nav'?app.querySelector('.reference-kind'):app.querySelector('.rune-reference');
+ const matches=[...root?.querySelectorAll('button[data-action]')||[]].filter(node=>node.dataset.action===focus.action&&(focus.area==='nav'?node.dataset.kind===focus.kind:focus.area==='rune'?node.dataset.id===focus.id:node.dataset.url===focus.url));
+ const target=matches.length===1?matches[0]:null;
+ if(target&&!target.disabled&&target.checkVisibility?.()!==false)target.focus({preventScroll:true});
+}
 const dataState=createRendererDataState({getSource:()=>saved?.preferences.buildSource,
  requestSnapshot:()=>api.dataSnapshot?api.dataSnapshot():api.bootstrap().then(value=>({data:value.data,revision:value.dataRevision||0})),
  beforeApply:change=>dataReady&&change.origin==='remote'&&!change.statusOnly?recommendationKey(recommendationInput()):null,
@@ -819,7 +838,7 @@ function render(){
  if(dragPick){pendingDragRender=true;return;}
  const selectPreparation=windowLayout.docked?preparationContext():null,selectContext=appSelectionContext(selectPreparation);
  if(activeAppSelect?.isConnected&&app.contains(activeAppSelect)&&renderedSelectContext===selectContext&&currentMatchupSelect(activeAppSelect)){pendingAppRender=true;return;}
- const itemReferenceFocus=captureItemReferenceFocus();
+ const itemReferenceFocus=captureItemReferenceFocus(),runeReferenceFocus=captureRuneReferenceFocus();
  const previousProposals=new Set([...app.querySelectorAll('.room-ballot-row')].map(row=>row.dataset.proposalKey));
  const candidateScroll=candidateScrollPosition();
  activeAppSelect=null;pendingAppRender=false;renderedSelectContext=selectContext;
@@ -863,13 +882,13 @@ function render(){
    historyTooltips.close();ongoingTooltips.close();vueRoutes.render(app,`<div class="app-shell recommendation-app"><aside class="sidebar"><div class="brand"><img class="brand-mark" src="../assets/icon.svg" alt="" /><div><div class="brand-name">开黑搭子</div><div class="brand-en">RIFT BUDDY</div></div></div>${mainNavigation()}<div class="sidebar-bottom"><button class="nav-item" data-action="feedback-open">${icon('feedback')}反馈</button><button class="nav-item ${route==='settings'?'active':''}" data-action="navigate" data-route="settings">${icon('settings')}数据与连接</button><div class="sidebar-footer"><span class="status-dot ${client.connected?'connected':''}"></span>${client.connected?'客户端已连接':'未连接客户端'} · v${e(boot.version||'0.1.0')}</div></div></aside><div class="workspace"><header class="topbar">${mainWindowActions()}</header>${clientConnectionNotice(client,saved.preferences,syncing)}<main class="page" id="main" data-page="${route}" aria-label="${e(nav.find(([id])=>id===route)?.[1]||'开黑搭子')}">${stateRecoveryView(stateRecovery)}${route==='ongoing'?ongoingGameView(ongoing.state,data):route==='history'?matchHistoryView(history.state,data):route==='draft'?renderDraft():route==='room'?renderRoom():route==='builds'?renderLibrary():route==='reference'?renderReference():route==='rankings'?rankingContent():route==='patches'?patchNotesView(data,{patch:patchVersion,query:patchQuery}):route==='hex'?renderHex():route==='favorites'?renderFavorites():renderSettings()}</main></div></div>`,{route,props:route==='favorites'?{data,favorites:saved.favorites}:route==='history'?currentHistoryCards():undefined});
  const navigation=app.querySelector('.sidebar>nav');if(navigation)navigation.scrollTop=navigationScroll;
  if(navigationFocus)app.querySelector('.sidebar [data-action="navigate"][data-route="'+CSS.escape(navigationFocus)+'"]')?.focus({preventScroll:true});
- renderedDisclosureScope='main:'+route+':'+(route==='draft'?activeCreativePlan?.id||'':route==='reference'?(referenceKind==='items'?['items',referenceItemMode,referenceItem].join(':'):[referenceHero,referenceRole,referenceTab].join(':')):'');disclosureState.restore(renderedDisclosureScope,app);restoreScroll(app,keptScroll);markNewRoomProposals(previousProposals);
+ renderedDisclosureScope='main:'+route+':'+(route==='draft'?activeCreativePlan?.id||'':route==='reference'?(referenceKind==='items'?['items',referenceItemMode,referenceItem].join(':'):referenceKind==='runes'?['runes',referenceRuneId].join(':'):[referenceHero,referenceRole,referenceTab].join(':')):'');disclosureState.restore(renderedDisclosureScope,app);restoreScroll(app,keptScroll);markNewRoomProposals(previousProposals);
  if(disclosureFocus.scope===renderedDisclosureScope&&disclosureFocus.context===selectContext)disclosureState.restoreFocus(disclosureFocus.key,app);
  restoreCandidateScroll(candidateScroll,selectContext);renderedDraftResults=route==='draft'?results:null;
  reflectRunePending();
   if(rankingFocus){const input=rankingFocus.id?document.getElementById(rankingFocus.id):app.querySelector('[data-ranking-filter="'+CSS.escape(rankingFocus.filter)+'"]');input?.focus({preventScroll:true});if(rankingFocus.id)try{input?.setSelectionRange(rankingFocus.start,rankingFocus.end);}catch{}}
   if(formFocus){const focusRoute=route,focusTab=history.state.current,restore=()=>{if(route!==focusRoute||route==='history'&&history.state.current!==focusTab)return;const target=formFocus.id?document.getElementById(formFocus.id):[...app.querySelectorAll('input,textarea,select')].find(node=>node.tagName===formFocus.tag&&Object.keys(formFocus.data).length&&Object.entries(formFocus.data).every(([key,value])=>node.dataset[key]===value));if(target&&!target.disabled){if(target.tagName==='TEXTAREA'||['text','search','number','date'].includes(target.type))target.value=formFocus.value;target.focus({preventScroll:true});try{target.setSelectionRange(formFocus.start,formFocus.end);}catch{}}};restore();if(route==='history')nextTick(restore);}
-  restoreItemReferenceFocus(itemReferenceFocus);
+  restoreItemReferenceFocus(itemReferenceFocus);restoreRuneReferenceFocus(runeReferenceFocus);
 }
 function mainNavigation(){
  const primary=new Set(['draft','room','history','ongoing','favorites']),favoriteCount=saved.favorites.filter(f=>hexFavoriteIsCurrent(data,f)).length;
@@ -1824,7 +1843,8 @@ document.addEventListener('click',async event=>{
  if(action==='import-item-set'||action==='export-item-set'||action==='authorize-item-set'){await useItemSet(action,el);return;}
  if(action==='ranking-role'){if(!ROLES.some(r=>r.id===el.dataset.role))throw Error('位置不正确');rankingRole=el.dataset.role;companionScroll.delete('rankings');render();return;}
  if(action==='reference-hero'){if(!champ(el.dataset.id))throw Error('英雄资料已变化');if(windowLayout.docked&&api.openMainPage){await api.openMainPage({route:'reference',id:el.dataset.id,tab:el.dataset.tab==='changes'?'changes':'skills'});return;}referenceKind='champions';referenceHero=el.dataset.id;referenceTab=el.dataset.tab==='changes'?'changes':'skills';referenceSkill='Q';referenceVariant=0;route='reference';closeOverlay();render();return;}
- if(action==='reference-kind'){if(!['champions','items'].includes(el.dataset.kind))return;referenceKind=el.dataset.kind;render();document.querySelector(`[data-action="reference-kind"][data-kind="${referenceKind}"]`)?.focus({preventScroll:true});return;}
+ if(action==='reference-kind'){if(!['champions','items','runes'].includes(el.dataset.kind))return;referenceKind=el.dataset.kind;render();document.querySelector(`[data-action="reference-kind"][data-kind="${referenceKind}"]`)?.focus({preventScroll:true});return;}
+ if(action==='reference-rune'){const id=el.dataset.id;if(route!=='reference'||referenceKind!=='runes'||!referenceRune(data,id))return;referenceRuneId=id;render();app.querySelector(`[data-action="reference-rune"][data-id="${id}"]`)?.focus({preventScroll:true});if(window.matchMedia('(max-width:760px)').matches){const detail=app.querySelector('.rune-reference-detail'),rect=detail?.getBoundingClientRect();if(rect&&(rect.top<0||rect.top+Math.min(rect.height,160)>window.innerHeight))detail.scrollIntoView({block:'nearest'});}return;}
  if(action==='reference-item-mode'){if(!['rift','hex'].includes(el.dataset.mode))return;referenceItemMode=el.dataset.mode;render();document.querySelector(`[data-action="reference-item-mode"][data-mode="${referenceItemMode}"]`)?.focus({preventScroll:true});return;}
  if(action==='reference-item'){const id=el.dataset.id;if(!/^\d{1,8}$/.test(id||'')||!Object.hasOwn(data.items||{},id)||data.items[id].maps?.[referenceItemMode==='hex'?'12':'11']!==true)return;referenceItem=id;render();const detail=document.getElementById('item-reference-detail');if(detail){detail.focus({preventScroll:true});const rect=detail.getBoundingClientRect();if(rect.top<0||rect.top+Math.min(rect.height,160)>window.innerHeight)detail.scrollIntoView({block:'start',inline:'nearest'});}return;}
  if(action==='reference-back'){referenceHero='';render();return;}
