@@ -1,13 +1,20 @@
 import {escape as e,asset,button,dateLabel} from './ui.mjs';
+import {SHARD_ROWS} from './core/rune-page.mjs';
+import shardSnapshot from './core/rune-shard-reference.json' with {type:'json'};
 
 const validRune=rune=>Number.isSafeInteger(rune?.id)&&rune.id>0&&rune.id<100000000&&typeof rune.name==='string'&&!!rune.name.trim();
 const runeRows=data=>(Array.isArray(data?.runes)?data.runes:[]).flatMap(tree=>
  (Array.isArray(tree?.slots)?tree.slots:[]).flatMap((slot,index)=>
   (Array.isArray(slot?.runes)?slot.runes:[]).filter(validRune).map(rune=>({tree,index,rune}))));
+const shardRows=['进攻','灵活','防御'];
+const hasShardSnapshot=data=>data?.patch===shardSnapshot.patch&&SHARD_ROWS.length===shardSnapshot.rows.length&&SHARD_ROWS.every((row,index)=>row.length===shardSnapshot.rows[index].length&&row.every((id,i)=>id===shardSnapshot.rows[index][i]))&&!runeRows(data).some(row=>shardSnapshot.shards.some(shard=>shard.id===row.rune.id));
 export function referenceRune(data,id){
  const key=String(id);if(!/^\d{1,8}$/.test(key))return null;
  const matches=runeRows(data).filter(row=>String(row.rune.id)===key);
- return matches.length===1?matches[0]:null;
+ if(matches.length)return matches.length===1?matches[0]:null;
+ if(!hasShardSnapshot(data))return null;
+ const rune=shardSnapshot.shards.find(entry=>String(entry.id)===key);
+ return rune?{rune,shard:true,positions:SHARD_ROWS.flatMap((row,index)=>row.includes(rune.id)?[shardRows[index]]:[])}:null;
 }
 // This detects obvious structural omissions; it cannot prove that every rune
 // in a nonempty row is present in the source.
@@ -54,9 +61,9 @@ function sourceView(data,structurePresent){
  const when=Number.isFinite(Date.parse(data?.fetchedAt||''))?dateLabel(data.fetchedAt):'未知';
  return `<p class="bottom-note">资料 ${e(data?.version||'版本未知')} · 补丁 ${e(data?.patch||'未知')} · 采集 ${e(when)}${current?' · 来源字段：Riot Data Dragon':' · 来源待核'} · 收录完整性待核</p>${current?button('link','查看来源','link','quiet small',`data-url="${e(expected)}"`):''}`;
 }
-export function runeReferenceView(data,{id=''}={}){
+export function runeReferenceView(data,{id='',shardRow=''}={}){
  const rows=runeRows(data),selected=referenceRune(data,id),trees=Array.isArray(data?.runes)?data.runes:[],structurePresent=hasExpectedStructure(data,rows);
- const cards=trees.map(tree=>{
+ const treeCards=trees.map(tree=>{
   const slots=Array.isArray(tree?.slots)?tree.slots:[];
   const body=slots.map((slot,index)=>{
    const entries=rows.filter(row=>row.tree===tree&&row.index===index),label=index===0?'基石':`第${index}行`;
@@ -68,6 +75,8 @@ export function runeReferenceView(data,{id=''}={}){
   }).join('');
   return `<section class="rune-reference-tree"><h3>${e(tree?.name||'符文系')}</h3>${body||'<p class="bottom-note">此系资料暂缺。</p>'}</section>`;
  }).join('');
- const detail=selected?`<header><h2>${e(selected.rune.name)}</h2><p>${e(selected.tree?.name||'符文系')} · ${selected.index===0?'基石':`第${selected.index}行`}</p></header>${descriptionView(selected.rune)}`:'<p>选择符文查看说明。</p>';
- return `<section class="reference-workspace rune-reference" aria-label="符文图鉴"><header>${sourceView(data,structurePresent)}</header>${!structurePresent?'<p class="bottom-note">仅显示已收录符文，部分资料暂缺。</p>':''}${cards?`<div class="rune-reference-layout"><div class="rune-reference-grid">${cards}</div><article class="rune-reference-detail" aria-live="polite">${detail}</article></div>`:'<p>符文资料暂缺。</p>'}<p class="bottom-note">属性碎片详细资料暂缺。</p></section>`;
+ const shards=hasShardSnapshot(data)?`<section class="rune-reference-tree rune-reference-shards"><h3>属性碎片</h3>${SHARD_ROWS.map((row,index)=>`<div class="rune-reference-shard-row"><b>${shardRows[index]}</b>${row.map(id=>{const rune=shardSnapshot.shards.find(entry=>entry.id===id),active=selected?.shard&&selected.rune.id===id&&String(index)===shardRow;return rune?`<button type="button" class="rune-reference-shard ${active?'active':''}" data-action="reference-rune" data-id="${id}" data-shard-row="${index}" aria-label="${e(shardRows[index]+' · '+rune.name+' · '+plainDescription(rune.longDesc).text)}" aria-pressed="${active}"><span>${e(rune.name)}</span><small>${e(plainDescription(rune.longDesc).text)}</small></button>`:'';}).join('')}</div>`).join('')}<p class="bottom-note">${e(shardSnapshot.patch)} 客户端镜像 · 采集 ${e(dateLabel(shardSnapshot.fetchedAt))}，效果以游戏内为准。</p></section>`:'';
+ const cards=treeCards+shards;
+ const detail=selected?`<header><h2>${e(selected.rune.name)}</h2><p>${selected.shard?'属性碎片 · '+e(selected.positions.join(' / ')):e(selected.tree?.name||'符文系')+' · '+(selected.index===0?'基石':`第${selected.index}行`)}</p></header>${descriptionView(selected.rune)}${selected.shard?`<p class="bottom-note">客户端镜像 ${e(shardSnapshot.patch)} · 采集 ${e(dateLabel(shardSnapshot.fetchedAt))}；同版本热修可能不同。</p>${button('link','查看来源','link','quiet small',`data-url="${e(shardSnapshot.sources[0].url)}"`)}`:''}`:'<p>选择符文查看说明。</p>';
+ return `<section class="reference-workspace rune-reference" aria-label="符文图鉴"><header>${sourceView(data,structurePresent)}</header>${!structurePresent?'<p class="bottom-note">仅显示已收录符文，部分资料暂缺。</p>':''}${cards?`<div class="rune-reference-layout"><div class="rune-reference-grid">${cards}</div><article class="rune-reference-detail" aria-live="polite">${detail}</article></div>`:'<p>符文资料暂缺。</p>'}${shards?'':'<p class="bottom-note">当前补丁的属性碎片详细资料暂缺。</p>'}</section>`;
 }
