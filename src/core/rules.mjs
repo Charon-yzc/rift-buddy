@@ -109,8 +109,8 @@ export function profile(c, role) {
   difficulty:c.info?.difficulty??5,window:championWindow(c.id),sustainCondition:SUSTAIN_CONDITIONS[c.id]||null,...Object.fromEntries(Object.entries(sets).filter(([k])=>k!=='ap').map(([k,v])=>[k,v.has(c.id)]))};
 }
 
-export let DUOS=bundledCatalog.duos, CROSS_SYNERGIES=bundledCatalog.links, TRIOS=bundledCatalog.trios;
-export function configureRuleCatalog(catalog){DUOS=catalog.duos;CROSS_SYNERGIES=catalog.links;TRIOS=catalog.trios;RULES_PATCH=catalog.patch;RULES_VERSION=catalog.reviewedAt;COMBINATION_SOURCE={...catalog.source,date:catalog.reviewedAt,patch:catalog.patch,label:catalog.name};}
+export let DUOS=bundledCatalog.duos, CROSS_SYNERGIES=bundledCatalog.links, TRIOS=bundledCatalog.trios, RULE_CATALOG=bundledCatalog;
+export function configureRuleCatalog(catalog){RULE_CATALOG=catalog;DUOS=catalog.duos;CROSS_SYNERGIES=catalog.links;TRIOS=catalog.trios;RULES_PATCH=catalog.patch;RULES_VERSION=catalog.reviewedAt;COMBINATION_SOURCE={...catalog.source,date:catalog.reviewedAt,patch:catalog.patch,label:catalog.name};}
 
 export const SEARCH_ALIASES={
  MissFortune:'女枪 好运姐 mf nvqiang',Malphite:'石头人 石头 st str shitouren',MonkeyKing:'猴子 孙悟空 悟空 houzi wukong',

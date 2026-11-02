@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.36",
+  "version": "2026.11.03.37",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -26445,6 +26445,343 @@
       }
     }
   ],
+  "linkReviews": [
+    {
+      "schema": 1,
+      "heroes": [
+        "Malphite",
+        "Yasuo"
+      ],
+      "comboId": "wind-rock",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "bc170fcf8a3552f4",
+      "baseline": {
+        "Malphite": "1cef2e2fdec84d8d",
+        "Yasuo": "d36ebea001e3d1cb"
+      },
+      "anchors": {
+        "Malphite": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1cef2e2fdec84d8d",
+          "observedAt": "2026-10-23T02:03:51.540Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Malphite",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/malphite/malphite.bin.json",
+              "sha256": "5a179a096f00299a2fbe60453c0b2b14aec2fbb1f93d0a6da3f1f43515c44d34"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "998655a1cdd4352a"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-23T02:03:51.641Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Alistar",
+        "Yasuo"
+      ],
+      "comboId": "wind-cow",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "e61727db87a09c29",
+      "baseline": {
+        "Alistar": "e2aa1310b144ff1f",
+        "Yasuo": "d36ebea001e3d1cb"
+      },
+      "anchors": {
+        "Alistar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e2aa1310b144ff1f",
+          "observedAt": "2026-10-23T02:03:51.449Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Alistar",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "60b70b49d6326ac5"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-23T02:03:51.641Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Rakan",
+        "Yasuo"
+      ],
+      "comboId": "yasuo-rakan",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "527c1fb7d60bf0eb",
+      "baseline": {
+        "Rakan": "69d7edc48cac55e5",
+        "Yasuo": "d36ebea001e3d1cb"
+      },
+      "anchors": {
+        "Rakan": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "69d7edc48cac55e5",
+          "observedAt": "2026-10-23T02:03:51.548Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rakan",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "14165b7ab2f27514"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-23T02:03:51.641Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Nautilus",
+        "Yasuo"
+      ],
+      "comboId": "yasuo-nautilus",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "a32923a2f4b3089f",
+      "baseline": {
+        "Nautilus": "67da151a84906467",
+        "Yasuo": "d36ebea001e3d1cb"
+      },
+      "anchors": {
+        "Nautilus": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "67da151a84906467",
+          "observedAt": "2026-10-26T13:38:40.506Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nautilus",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "21ceeeee51e3b384"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-26T13:38:40.604Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Orianna",
+        "Malphite"
+      ],
+      "comboId": "orianna-malphite",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "5056df317cc2c20c",
+      "baseline": {
+        "Orianna": "6897daa00a80bf73",
+        "Malphite": "1cef2e2fdec84d8d"
+      },
+      "anchors": {
+        "Orianna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "6897daa00a80bf73",
+          "observedAt": "2026-10-26T13:38:40.509Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Orianna",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/orianna/orianna.bin.json",
+              "sha256": "b1c48967c70298c50b2324aed6a5c501348eac8811984027ba7598fd54801573"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "032f33bbd9d369d4"
+            }
+          }
+        },
+        "Malphite": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1cef2e2fdec84d8d",
+          "observedAt": "2026-10-26T13:38:40.501Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Malphite",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/malphite/malphite.bin.json",
+              "sha256": "5a179a096f00299a2fbe60453c0b2b14aec2fbb1f93d0a6da3f1f43515c44d34"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "998655a1cdd4352a"
+            }
+          }
+        }
+      }
+    }
+  ],
   "links": [
     [
       "Diana",
@@ -26454,7 +26791,7 @@
     [
       "Malphite",
       "Yasuo",
-      "范围击飞衔接亚索大招"
+      "墨菲特 R 实际击飞敌方英雄后，亚索确认目标仍浮空、R 可用且在范围内，再决定是否接大。"
     ],
     [
       "JarvanIV",
@@ -26519,12 +26856,12 @@
     [
       "Alistar",
       "Yasuo",
-      "牛头击飞命中后，亚索接大招；别过度脱离兵线"
+      "阿利斯塔 Q 实际击飞敌方英雄后，亚索确认目标仍浮空、R 可用且在范围内，再决定是否接大。"
     ],
     [
       "Rakan",
       "Yasuo",
-      "洛 W 击飞给亚索接大机会，注意落点与支援距离"
+      "洛 W 实际击飞敌方英雄后，亚索确认目标仍浮空、R 可用、目标在 R 范围内且落点安全，再决定是否接大。"
     ],
     [
       "Ornn",
@@ -26549,7 +26886,7 @@
     [
       "Nautilus",
       "Yasuo",
-      "泰坦大招击飞提供亚索接大的机会"
+      "诺提勒斯 R 实际击飞目标或沿途敌方英雄后，亚索确认目标仍浮空、R 可用且在范围内，再决定是否接大。"
     ],
     [
       "Nami",
@@ -26574,7 +26911,7 @@
     [
       "Orianna",
       "Malphite",
-      "发条把球放在石头人身上，配合击飞衔接大招。"
+      "奥莉安娜 E 把球交给墨菲特；墨菲特 R 命中后，确认球仍在、目标在范围且奥莉安娜 R 可用才接续。"
     ],
     [
       "Rakan",

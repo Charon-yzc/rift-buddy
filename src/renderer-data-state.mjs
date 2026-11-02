@@ -28,7 +28,7 @@ export function createRendererDataState({getSource,requestSnapshot,beforeApply=(
   // Prepare without changing active module indexes or the accepted watermark.
   if(change.catalogChanged)next.catalog=catalog.prepare(raw.catalog||BUNDLED_CATALOG);
   else next.catalog=current.catalog;
-  if(!next.catalogInfo||(change.baseChanged||change.catalogChanged)&&!Object.hasOwn(changes,'catalogInfo'))next.catalogInfo={...next.catalogInfo,...catalog.inspect(next.catalog,next),version:next.catalog.version,baseKind:'unknown'};
+  if(!next.catalogInfo||(change.baseChanged||change.catalogChanged)&&!Object.hasOwn(changes,'catalogInfo'))next.catalogInfo={...next.catalogInfo,...catalog.inspect(next.catalog,next),version:next.catalog.version,baseKind:'unknown',linkOrigins:[],linkConfigOverrides:{},linkStatus:{}};
   if(change.sourceChanged){const projected={...raw};projectSource(projected,source);next.buildSources=projected.buildSources;next.builds=projected.builds;next.buildSource=projected.buildSource;}
   const preparedImages=change.assetsChanged?images.prepare(next):null,before=beforeApply(change);
   if(change.catalogChanged)catalog.install(next.catalog);
