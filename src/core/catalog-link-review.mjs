@@ -49,3 +49,17 @@ export function reviewedCatalogLinks(catalog,{patch,status,baseKind,publicIds}={
  }
  return out;
 }
+
+// A link is a two-hero observation, not a complete executable plan. Keep its
+// owner's positions when using it to explore candidate lineups.
+export function reviewedLinkOwners(catalog,context={}){
+ const approved=new Set(reviewedCatalogLinks(catalog,context).map(link=>pairKey(link.slice(0,2))));
+ if(!approved.size)return [];
+ const duos=new Map(catalog.duos.map(entry=>[entry.id,entry])),out=[];
+ for(const review of catalog.linkReviews||[]){
+  const key=pairKey(review.heroes),entry=duos.get(review.comboId),members=comboMembers(entry);
+  if(!approved.has(key)||members.length!==2||pairKey(members.map(m=>m.champion))!==key||members[0].role===members[1].role)continue;
+  out.push(members.map(({role,champion})=>({role,champion})));
+ }
+ return out;
+}
