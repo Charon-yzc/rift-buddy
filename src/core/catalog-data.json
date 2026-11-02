@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.38",
+  "version": "2026.11.03.39",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -3027,24 +3027,22 @@
     },
     {
       "id": "caitlyn-bard",
-      "carry": "Caitlyn",
-      "support": "Bard",
       "name": "金身布夹",
       "style": "fun",
       "tags": [
         "控制接夹",
         "游走"
       ],
-      "why": "巴德大招的凝滞窗口，允许女警提前布置夹子。",
-      "plan": "女警补刀；约好大招落点，在凝滞结束前布夹，巴德游走前处理兵线。",
-      "risk": "巴德大招也会影响队友；夹子需要准备时间。",
+      "why": "巴德 R 的凝滞可提供观察落点与布置女警 W 的准备窗口；恢复后仍须敌方英雄实际踩中已激活的陷阱才禁锢、显形并触发女警的陷阱爆头收益。这是技能条件推断，不保证接控命中，未经对局验证。",
+      "plan": "女警下路正常补刀，巴德辅助先保血量和视野。准备接控时先沟通目标、夹子充能和可安全站到的位置；巴德 R 命中后，女警仅在不必冒险近身时于敌方英雄恢复后的可能路径布夹。凝滞中目标不可被选取且免疫伤害，不提前交伤害技能；恢复后确认敌方英雄实际踩中已激活的夹子，再接爆头与 Q。巴德 Q 须实际命中首个敌人，再继续命中第二个敌人或墙体才眩晕；只命中首个敌人时须减速实际生效，Q 落空没有控制，不能继续当作接控。",
+      "risk": "巴德 R 也会影响友军、单位和建筑，可能打断队友输出或替敌人挡伤害；先沟通投放区域。夹子需要激活，凝滞结束后的触发取决于放置位置、敌人移动与技能状态，不能按凝滞时长保证无缝接控。巴德离线游走时女警容易被越塔；敌方突进接近或视野不足就保留女警 E 与撤退路线。",
       "partners": [
         "Vi",
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-04",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
       "sources": [
         {
           "name": "Riot · 凯特琳技能资料",
@@ -3057,17 +3055,102 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Bard.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 凯特琳/巴德技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "腾讯英雄详情 · 凯特琳 16.21 已存详细文本",
+          "url": "https://game.gtimg.cn/images/lol/act/img/js/hero/51.js",
+          "kind": "技能依据"
+        },
+        {
+          "name": "腾讯英雄详情 · 巴德 16.21 已存详细文本",
+          "url": "https://game.gtimg.cn/images/lol/act/img/js/hero/432.js",
+          "kind": "技能依据"
         }
       ],
-      "loadouts": {
-        "bottom": "default",
-        "support": "default"
-      },
       "reviewBaseline": {
-        "champion:Caitlyn": "ffa017a1b5ab5269",
-        "champion:Bard": "1cfeb08305868b88"
+        "champion:Caitlyn": "d19bdcd858382502",
+        "champion:Bard": "59e4186e87276c5f"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Caitlyn",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "负责下路补刀与持续物理输出；安全距离内保留 W 充能，观察凝滞落点与恢复后的路径，敌方英雄实际踩中已激活的夹子才接爆头/Q，E 留作自保。"
+        },
+        {
+          "champion": "Bard",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "负责辅助视野、保护与控制时机；R 前沟通范围，避免误控队友或保住敌人；Q 先命中首个敌人，再命中第二个敌人或墙体才眩晕，游走前先确认女警能安全收线。"
+        }
+      ],
+      "steps": [
+        "女警先稳住补刀和血量；巴德照看视野，确认对手突进、己方支援与退路，不能为了找联动强行放弃兵线。",
+        "准备 R 配合时沟通同一目标，确认巴德 R、女警 W 充能、法力与安全布夹距离；R 会影响命中范围内的友军和建筑，避免覆盖己方正在输出的队友。",
+        "R 实际命中后观察凝滞落点；女警可在安全位置尝试布夹，让陷阱有机会在敌方英雄恢复后的路径上生效。不要把凝滞结束等同于敌方英雄已踩中激活的陷阱。",
+        "等凝滞结束，确认敌方英雄实际踩中已激活的夹子，再接陷阱爆头与 Q；凝滞期间不倾泻伤害，防止技能打在免疫伤害的目标上。",
+        "巴德 Q 须先实际命中首个敌人，再继续命中第二个敌人或墙体才眩晕；只命中首个敌人且减速实际生效时按减速处理，Q 落空没有控制。敌方英雄未踩中已激活的夹子、已经脱离或突进靠近，就保留 E 等撤退手段，不强行追击。"
+      ],
+      "early": "六级前以女警补刀、巴德保护和有条件的 Q 换血为主；只有 Q 确实触发眩晕且女警能安全布夹时才尝试接控制。R 配合必须等巴德学会并实际可用，不能把它写成开局就有的联动。巴德收集调和之音或游走应选兵线安全且有视野的窗口。",
+      "window": "巴德 R 已学会且可用，女警有可用 W 充能、法力和安全布夹位置，双方能观察同一敌方英雄及其恢复路径；后续收益取决于凝滞结束后敌方英雄实际踩中已激活的夹子，不能保证无缝控制。",
+      "economy": "女警以射手补刀和经验为主，巴德以辅助任务与视野经济为主，不抢常规兵线来凑联动。两人使用各自英雄、对应分路的默认配置；装备和符文不是凝滞接夹子的必须条件，默认配置不是作者专配。",
+      "reviewSourceAnchors": {
+        "Caitlyn": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d19bdcd858382502",
+          "observedAt": "2026-10-26T13:38:40.311Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Caitlyn",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "6c728252e5826813"
+            }
+          }
+        },
+        "Bard": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "59e4186e87276c5f",
+          "observedAt": "2026-10-26T13:38:40.309Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Bard",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/bard/bard.bin.json",
+              "sha256": "4b73426120b4a794709001352620eeb7b5644f1b7c78d674aee68a5e2b0ac692"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "20f447261a6d2716"
+            }
+          }
+        }
+      }
     },
     {
       "id": "caitlyn-thresh",
@@ -38903,39 +38986,39 @@
         "区域限制",
         "侧翼撤退"
       ],
-      "why": "韦鲁斯穿甲 Q 先压血线，婕拉 E 命中后彗的伤害与 R 更容易覆盖同一入口；植物和区域技能限制的是路线，不能代替前排。",
-      "plan": "先占安全侧翼再 Q 消耗，婕拉 E 留住后彗补伤害与 R；韦鲁斯 R 用于续控或拦突进，不在血线未压低时把三人都交进场。",
-      "risk": "三人身板脆、两人主要法伤，空根或侧翼被绕时立即退；穿甲韦鲁斯不能按特效站桩路线硬拼，彗 R 的减速不等于定身。",
+      "why": "原方案偏韦鲁斯穿甲消耗，现改为同位置通用配置下的技能接力；婕拉 E 命中后，彗和韦鲁斯可按距离与控制剩余时间尝试跟进，区域技能不能代替前排。",
+      "plan": "先确认视野和退路，用韦鲁斯 Q、彗的伤害技能尝试消耗；婕拉 E 实际命中后再按距离接技能。彗 R 须先命中敌方英雄；韦鲁斯 R 可尝试续控或拦突进。",
+      "risk": "三人缺少可靠前排，控制落空、蓝量不足或侧翼无视野时先退；技能需实际命中，彗 R 的减速不等于定身。",
       "members": [
         {
           "champion": "Hwei",
           "role": "mid",
           "loadoutId": "default",
-          "job": "按当前颜料选择 Q 伤害与 E 控制，婕拉根命中后 R 覆盖入口；R 是持续减速伤害，不把任意 E 形态都当禁锢，缺蓝先退。"
+          "job": "选择 Q 伤害与 E 控制形态；婕拉 E 命中后按距离跟进。R 须先命中敌方英雄，附着后才扩大并减速；缺蓝先退。"
         },
         {
           "champion": "Varus",
           "role": "bottom",
-          "loadoutId": "spell-lethality",
-          "job": "以穿甲 Q/E 消耗为主，Q 蓄力前确认侧翼；R 命中再让队友续技能，不能预设锁链必定传播到第二人。"
+          "loadoutId": "default",
+          "job": "用 Q/E 消耗并留意 Q 蓄力自减速与穿过单位的伤害衰减；R 命中敌方英雄才禁锢，不预设传播或队友一定续上控制。"
         },
         {
           "champion": "Zyra",
           "role": "support",
-          "loadoutId": "poke-support",
-          "job": "种子配 Q/E 生成对应植物，E 优先接靠近的目标；R 延迟击飞留给对手已进入的区域，不为补植物伤害独自站前排。"
+          "loadoutId": "default",
+          "job": "Q 的技能范围覆盖种子时可生成荆棘喷射者，E 的藤蔓经过种子附近可生成藤蔓鞭击者；E 命中才禁锢。R 两秒后击飞仍在范围内的敌人，不能保证与 E 无缝衔接。"
         }
       ],
       "steps": [
-        "三人先清到可退的兵线，韦鲁斯 Q 与彗远程伤害压入口血线。",
-        "婕拉 E 实际命中后，彗 R/伤害覆盖该位置，韦鲁斯 R 续控或保留防突进。",
-        "植物与区域技能结束前先收回阵型；根空、蓝量不足或侧翼无视野时放弃追击。"
+        "三人先确认兵线、视野和退路，用韦鲁斯 Q 与彗的远程技能尝试消耗。",
+        "婕拉 E 实际命中后，彗按范围选择伤害技能；R 需先命中敌方英雄，韦鲁斯可视控制剩余时间尝试以 R 续控或留作防守。",
+        "婕拉 R 两秒后才击飞仍在范围内的敌人，不保证接上 E；技能落空、蓝量不足或侧翼无视野时停止追击并撤退。"
       ],
-      "early": "中下各保兵线，婕拉用基础根接韦鲁斯 Q 短换血；彗未到三级或不能离线时不组织三人强开。",
-      "window": "中期资源刷新前已先占视野与侧翼退路，韦鲁斯走穿甲消耗路线且三人有蓝；先消耗再决定是否用大招续控。",
-      "economy": "彗与韦鲁斯各补自己的线，婕拉辅助任务经济不抢长线。彗用普通中路默认配置，未另审专用配装；韦鲁斯绑定穿甲、婕拉绑定消耗配置，不混用攻速核心。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-13",
+      "early": "中下先处理各自兵线，婕拉 E 命中后韦鲁斯可尝试接 Q；彗无法离线或三人状态不足时不强行组织。",
+      "window": "资源刷新前尝试布置视野与退路，确认技能、距离和蓝量，再消耗或决定是否交大招；控制接续不保证成功。",
+      "economy": "彗与韦鲁斯各补自己的线，婕拉优先辅助经济与视野。韦鲁斯同位置常用配置可能偏攻速，需调整输出节奏；这是通用机制适配，不是恢复原穿甲专配。装备符文参考各自可用来源或机制备选，非作者专配，不保证组合胜率。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
       "sources": [
         {
           "name": "Riot · 彗 16.20 技能",
@@ -38956,6 +39039,24 @@
           "checkedAt": "2026-10-13"
         },
         {
+          "name": "Riot · Hwei 16.21.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-26"
+        },
+        {
+          "name": "Riot · Varus 16.21.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-26"
+        },
+        {
+          "name": "Riot · Zyra 16.21.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-26"
+        },
+        {
           "name": "Mobalytics · 英雄常驻打法指南（非组合统计）",
           "url": "https://mobalytics.gg/lol/champions/hwei/guide",
           "kind": "常驻打法参考，未作 16.20 专用配装依据",
@@ -38964,98 +39065,78 @@
       ],
       "reviewBaseline": {
         "champion:Hwei": "357b22785623158b",
-        "champion:Varus": "7a703d4303dfcfdd",
-        "champion:Zyra": "f653495a90d1586e",
-        "item:3142": "4226f2eefc236540",
-        "item:6694": "8ac6919d2a7a1dd6",
-        "item:6697": "16b1481e352b1fef",
-        "item:3158": "72ca672b9221f063",
-        "item:3814": "f9788442be1f2810",
-        "item:3072": "5c29525fccb26a37",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3157": "4e1ddce33472ee0f"
+        "champion:Varus": "643e042201703827",
+        "champion:Zyra": "f653495a90d1586e"
       },
       "reviewSourceAnchors": {
         "Hwei": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "357b22785623158b",
-          "observedAt": "2026-10-18T23:14:43.869Z",
+          "observedAt": "2026-10-26T13:38:40.397Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Hwei",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/hwei/hwei.bin.json",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/hwei/hwei.bin.json",
               "sha256": "432285db911de128098ca01317bc135933fba477da091654a7742f23c754ae04"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "5220abe71b75d212"
             }
           }
         },
         "Varus": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "7a703d4303dfcfdd",
-          "observedAt": "2026-10-18T23:15:56.013Z",
+          "legacyFingerprint": "643e042201703827",
+          "observedAt": "2026-10-26T13:38:40.597Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/varus/varus.bin.json",
-              "sha256": "f20260c762e8a27fc42708be2af012dbeb184e087b1fd90cff97f3ad4fa8445d"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
+              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
-              "fingerprint": "b8d482e9dc32e336"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7b616ac861086a8b"
             }
           }
         },
         "Zyra": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f653495a90d1586e",
-          "observedAt": "2026-10-18T23:16:14.407Z",
+          "observedAt": "2026-10-26T13:38:40.609Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zyra",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/zyra/zyra.bin.json",
-              "sha256": "f9b097f90adc1830eeba7efc9a11f58f03cc760a202cad4e7e3eb21f3c92a030"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zyra/zyra.bin.json",
+              "sha256": "18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "e6ad7484cbc1effe"
             }
           }
