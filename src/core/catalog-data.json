@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.39",
+  "version": "2026.11.03.40",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -39154,39 +39154,41 @@
         "夹子布置",
         "黄牌跟进"
       ],
-      "why": "巴德 R 提供一次暂停布置的机会，女警在目标凝滞位置提前放 W，卡牌等凝滞结束再黄牌接力；凝滞期间不能造成伤害。",
-      "plan": "巴德先报 R 范围和命中者，女警布夹等其就绪，卡牌安全落点切黄牌；凝滞结束后确认夹子或黄牌生效才集中输出。",
-      "risk": "巴德 R 同样会凝滞友军并吃掉己方输出窗口；夹子有准备时间，落地不在夹子上或黄牌被挡时取消追击，不能保证这一轮抓到人。",
+      "why": "巴德 R 命中敌方英雄后可尝试布置女警 W：凝滞期间目标不可被选取且免疫伤害，恢复后仍须敌方英雄实际踩中已激活的夹子才禁锢。若想错开后续控制，卡牌可按目标状态和距离尝试金牌；夹子未触发时也可按安全条件独立使用金牌或撤退。这是条件推断，不保证命中或无缝接控，未经对局验证。",
+      "plan": "先确认退路、夹子充能和卡牌能否安全到场；卡牌 R 是可选转场，使用时先看显露位置并选安全落点。若巴德 R 实际命中敌方英雄，女警可从安全位置尝试在恢复路径布夹；凝滞期间目标不可被选取且免疫伤害。若敌方英雄恢复后实际踩中已激活夹子，卡牌可视距离与目标状态尝试错开金牌；未踩中时，卡牌也可在安全且目标可被攻击时独立用金牌或撤退。金牌须先锁定并以普攻实际命中才晕眩。",
+      "risk": "巴德 R 会影响友军和建筑，可能保住敌人或中断己方输出；布夹需要安全位置，凝滞结束不保证敌方英雄踩中已激活夹子。卡牌传送可被限制效果打断，落点危险或目标不可被选取时停止追击。R 与夹子均非所有配合的必需条件。",
       "members": [
         {
           "champion": "TwistedFate",
           "role": "mid",
-          "loadoutId": "trio-tf",
-          "job": "R 先看公开显露的敌方位置，再选队友能接应的落点；黄牌普攻等凝滞结束才交，R 的引导可被打断，不落进多人包围。"
+          "loadoutId": "default",
+          "job": "负责中路兵线和支援，先确认安全到场与退路；R 是可选转场，若使用则先看显露位置，注意传送范围及可能被限制效果打断。W 锁定金牌后，目标可被攻击且距离安全时可独立使用或尝试接续，普攻实际命中才晕眩。"
         },
         {
           "champion": "Caitlyn",
           "role": "bottom",
           "loadoutId": "default",
-          "job": "凝滞命中后 W 提前铺目标脚下并等夹子就绪，实际触发后再接爆头/Q；E 保留退出，R 不当即时爆发且可能被其他英雄挡。"
+          "job": "负责下路补刀和输出；若巴德 R 命中敌方英雄，可在安全位置观察恢复路径并尝试布 W。敌方英雄实际踩中已激活夹子才有陷阱禁锢与爆头机会；未触发时可根据安全距离输出或撤退，Q 需命中才有伤害，E 留作自保。"
         },
         {
           "champion": "Bard",
           "role": "support",
           "loadoutId": "default",
-          "job": "R 先报圈内友敌、避免冻住正在跟输出的队友；Q 只有后方再命中墙或第二单位才眩晕，E 门敌我都能使用，不能把门当保证安全的退路。"
+          "job": "负责视野和保护；若使用 R 先报范围，注意友军也会凝滞。Q 须先实际命中首个敌人，再继续命中第二个敌人或墙体才眩晕；只命中首敌须减速实际生效，落空没有控制。E 门附近任何英雄都可进入，不当作保证安全的退路。"
         }
       ],
       "steps": [
-        "巴德 R 命中后喊暂停输出，女警 W 放目标脚下，卡牌报黄牌和安全到场位置。",
-        "等凝滞结束与夹子准备完成，实际触发夹子后卡牌错开黄牌续控。",
-        "女警爆头/Q 跟伤害，巴德站退路接应；夹子未触发、落点危险或 R 冻住友军就撤。"
+        "三人确认目标、退路与卡牌安全到场方式；卡牌 R 是可选转场，不因能传送就落入包围，也可在安全条件下步行到场。",
+        "若巴德 R 实际命中敌方英雄，沟通凝滞位置；目标凝滞期间不可被选取且免疫伤害，女警可安全时尝试在恢复路径布夹，等待夹子激活。",
+        "若恢复后敌方英雄实际踩中已激活夹子，卡牌可视目标状态和距离以已锁定金牌普攻尝试错开续控，实际命中才晕眩；女警按安全距离尝试爆头或 Q。",
+        "若夹子未触发，卡牌仍可在安全、目标可被攻击时独立使用已锁定金牌，或选择撤退；不能把凝滞结束当成夹子必然触发。",
+        "巴德 Q 先命中首敌，再命中第二个敌人或墙体才眩晕；只命中首敌须减速实际生效，落空没有控制。落点危险或目标脱离时停止追击。"
       ],
-      "early": "六级前女警补刀，巴德 Q 接夹子做短换血；巴德游走前先确认射手能安全吃线，卡牌保中线不为未知落点离线。",
-      "window": "巴德与卡牌六级后大招可用，女警有 W 充能且能安全布夹；只对圈内实际命中和可接应落点执行。",
-      "economy": "女警补刀、卡牌保中线，巴德辅助经济；游走不可长期丢下下路。卡牌复用转场配置，女警与巴德用各自普通位置默认配置，本组未新增两人的专用装备符文复核。",
-      "patch": "16.20",
-      "reviewedAt": "2026-10-13",
+      "early": "六级前女警补刀、巴德保护与有条件 Q 换血；Q 须先命中首敌，再命中第二敌人或墙体才眩晕，女警仅在安全位置尝试接夹。卡牌可安全到场时独立使用金牌，不依赖夹子或巴德 R；巴德游走前确认射手安全。",
+      "window": "其中一个配合窗口：三人能安全靠近同一敌方英雄，巴德 R 已学且可用，女警 W 有充能且能安全布夹；卡牌可步行或用 R 到场。夹子与金牌续控取决于实际状态；不使用 R 或夹子也可按安全条件独立配合。",
+      "economy": "女警与卡牌各自补线，巴德优先辅助经济与视野。三人使用各自英雄对应分路的默认参考，卡牌不再使用旧版 trio-tf 专配；默认参考不是作者专配，各分路来源及可用状态可能不同，装备符文不保证组合胜率。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
       "sources": [
         {
           "name": "Riot · 崔斯特 16.20 技能",
@@ -39211,98 +39213,102 @@
           "url": "https://mobalytics.gg/lol/champions/caitlyn/guide",
           "kind": "常驻打法参考，未作 16.20 专用配装依据",
           "checkedAt": "2026-10-13"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 三英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "腾讯英雄详情 · TwistedFate 16.21 已存详细文本",
+          "url": "https://game.gtimg.cn/images/lol/act/img/js/hero/4.js",
+          "kind": "技能依据"
+        },
+        {
+          "name": "腾讯英雄详情 · Caitlyn 16.21 已存详细文本",
+          "url": "https://game.gtimg.cn/images/lol/act/img/js/hero/51.js",
+          "kind": "技能依据"
+        },
+        {
+          "name": "腾讯英雄详情 · Bard 16.21 已存详细文本",
+          "url": "https://game.gtimg.cn/images/lol/act/img/js/hero/432.js",
+          "kind": "技能依据"
         }
       ],
       "reviewBaseline": {
         "champion:TwistedFate": "4b3a9807b94dcc47",
         "champion:Caitlyn": "d19bdcd858382502",
-        "champion:Bard": "59e4186e87276c5f",
-        "item:6655": "e593f4433de96e4b",
-        "item:3100": "784ea66d3e781fdb",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3158": "72ca672b9221f063",
-        "item:3089": "a8a9b060b253391c",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8112": "0082006b65520bc3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47"
+        "champion:Bard": "59e4186e87276c5f"
       },
       "reviewSourceAnchors": {
         "TwistedFate": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "4b3a9807b94dcc47",
-          "observedAt": "2026-10-18T23:15:53.155Z",
+          "observedAt": "2026-10-26T13:38:40.595Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "TwistedFate",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/twistedfate/twistedfate.bin.json",
-              "sha256": "0bd50cf5bca7c6fb7e59408bddb72da6e78a3736d7cbd02bca7e8c556eda422b"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twistedfate/twistedfate.bin.json",
+              "sha256": "ec60137c806e0ca6e86bad8bcf6a216b8295761503dbb7a61eddc6b7e82bf4f4"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "f83bddbc2f7bb85b"
             }
           }
         },
         "Caitlyn": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d19bdcd858382502",
-          "observedAt": "2026-10-18T23:14:26.782Z",
+          "observedAt": "2026-10-26T13:38:40.311Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Caitlyn",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/caitlyn/caitlyn.bin.json",
-              "sha256": "563f5a7e2a04db112b2ef809ae4f12c0b7ce8157f3663b2f87109917fe642866"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "6c728252e5826813"
             }
           }
         },
         "Bard": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "59e4186e87276c5f",
-          "observedAt": "2026-10-18T23:14:22.523Z",
+          "observedAt": "2026-10-26T13:38:40.309Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Bard",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/bard/bard.bin.json",
-              "sha256": "c6fada3a610dc7a2845d9b2490490ecf74d35ae2f1f1c59d9dc9c163b32b1a55"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/bard/bard.bin.json",
+              "sha256": "4b73426120b4a794709001352620eeb7b5644f1b7c78d674aee68a5e2b0ac692"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "20f447261a6d2716"
             }
           }
