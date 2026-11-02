@@ -652,6 +652,22 @@ function restoreItemReferenceFocus(focus){
  if(target?.disabled||target?.checkVisibility?.()===false)target=null;
  (target||document.getElementById('item-reference-search'))?.focus({preventScroll:true});
 }
+function captureChampionReferenceFocus(){
+ if(route!=='reference'||referenceKind!=='champions')return null;
+ const root=app.querySelector('.reference-detail[data-reference-champion]'),focused=document.activeElement;
+ if(!root||!focused||focused.tagName!=='BUTTON'||!root.contains(focused)||!['reference-skill','reference-variant','reference-tab','link'].includes(focused.dataset.action))return null;
+ const tab=root.querySelector('.reference-tabs button[aria-pressed="true"]')?.dataset.tab;
+ const skill=root.querySelector('[data-reference-skill]')?.dataset.referenceSkill||'';
+ return {hero:root.dataset.referenceChampion,tab,skill,action:focused.dataset.action,key:focused.dataset.skill,tabKey:focused.dataset.tab,variant:focused.dataset.variant,url:focused.dataset.url};
+}
+function restoreChampionReferenceFocus(focus){
+ if(!focus||windowLayout.docked||route!=='reference'||referenceKind!=='champions'||referenceHero!==focus.hero||referenceTab!==focus.tab)return;
+ if(document.activeElement!==document.body&&document.activeElement!==document.documentElement)return;
+ const root=app.querySelector('.reference-detail[data-reference-champion]');
+ if(!root||root.dataset.referenceChampion!==focus.hero||(root.querySelector('[data-reference-skill]')?.dataset.referenceSkill||'')!==focus.skill)return;
+ const matches=[...root.querySelectorAll('button[data-action]')].filter(node=>node.dataset.action===focus.action&&node.dataset.skill===focus.key&&node.dataset.tab===focus.tabKey&&node.dataset.variant===focus.variant&&node.dataset.url===focus.url);
+ if(matches.length===1&&!matches[0].disabled&&matches[0].checkVisibility?.()!==false)matches[0].focus({preventScroll:true});
+}
 function captureRuneReferenceFocus(){
  if(route!=='reference'||referenceKind!=='runes')return null;
  const focused=document.activeElement,root=app.querySelector('.rune-reference'),nav=app.querySelector('.reference-kind');
@@ -838,7 +854,7 @@ function render(){
  if(dragPick){pendingDragRender=true;return;}
  const selectPreparation=windowLayout.docked?preparationContext():null,selectContext=appSelectionContext(selectPreparation);
  if(activeAppSelect?.isConnected&&app.contains(activeAppSelect)&&renderedSelectContext===selectContext&&currentMatchupSelect(activeAppSelect)){pendingAppRender=true;return;}
- const itemReferenceFocus=captureItemReferenceFocus(),runeReferenceFocus=captureRuneReferenceFocus();
+ const itemReferenceFocus=captureItemReferenceFocus(),runeReferenceFocus=captureRuneReferenceFocus(),championReferenceFocus=captureChampionReferenceFocus();
  const previousProposals=new Set([...app.querySelectorAll('.room-ballot-row')].map(row=>row.dataset.proposalKey));
  const candidateScroll=candidateScrollPosition();
  activeAppSelect=null;pendingAppRender=false;renderedSelectContext=selectContext;
@@ -888,7 +904,7 @@ function render(){
  reflectRunePending();
   if(rankingFocus){const input=rankingFocus.id?document.getElementById(rankingFocus.id):app.querySelector('[data-ranking-filter="'+CSS.escape(rankingFocus.filter)+'"]');input?.focus({preventScroll:true});if(rankingFocus.id)try{input?.setSelectionRange(rankingFocus.start,rankingFocus.end);}catch{}}
   if(formFocus){const focusRoute=route,focusTab=history.state.current,restore=()=>{if(route!==focusRoute||route==='history'&&history.state.current!==focusTab)return;const target=formFocus.id?document.getElementById(formFocus.id):[...app.querySelectorAll('input,textarea,select')].find(node=>node.tagName===formFocus.tag&&Object.keys(formFocus.data).length&&Object.entries(formFocus.data).every(([key,value])=>node.dataset[key]===value));if(target&&!target.disabled){if(target.tagName==='TEXTAREA'||['text','search','number','date'].includes(target.type))target.value=formFocus.value;target.focus({preventScroll:true});try{target.setSelectionRange(formFocus.start,formFocus.end);}catch{}}};restore();if(route==='history')nextTick(restore);}
-  restoreItemReferenceFocus(itemReferenceFocus);restoreRuneReferenceFocus(runeReferenceFocus);
+  restoreItemReferenceFocus(itemReferenceFocus);restoreRuneReferenceFocus(runeReferenceFocus);restoreChampionReferenceFocus(championReferenceFocus);
 }
 function mainNavigation(){
  const primary=new Set(['draft','room','history','ongoing','favorites']),favoriteCount=saved.favorites.filter(f=>hexFavoriteIsCurrent(data,f)).length;
@@ -1849,9 +1865,9 @@ document.addEventListener('click',async event=>{
  if(action==='reference-item'){const id=el.dataset.id;if(!/^\d{1,8}$/.test(id||'')||!Object.hasOwn(data.items||{},id)||data.items[id].maps?.[referenceItemMode==='hex'?'12':'11']!==true)return;referenceItem=id;render();const detail=document.getElementById('item-reference-detail');if(detail){detail.focus({preventScroll:true});const rect=detail.getBoundingClientRect();if(rect.top<0||rect.top+Math.min(rect.height,160)>window.innerHeight)detail.scrollIntoView({block:'start',inline:'nearest'});}return;}
  if(action==='reference-back'){referenceHero='';render();return;}
  if(action==='reference-role'){if(!['all',...ROLES.map(r=>r.id)].includes(el.dataset.role))return;referenceRole=el.dataset.role;render();return;}
- if(action==='reference-tab'){referenceTab=el.dataset.tab==='changes'?'changes':'skills';render();return;}
- if(action==='reference-skill'){if(!['P','Q','W','E','R'].includes(el.dataset.skill))return;referenceSkill=el.dataset.skill;referenceVariant=0;render();return;}
- if(action==='reference-variant'){const index=Number(el.dataset.variant);if(!Number.isInteger(index)||index<0||index>11)return;referenceVariant=index;render();return;}
+ if(action==='reference-tab'){referenceTab=el.dataset.tab==='changes'?'changes':'skills';render();app.querySelector(`.reference-detail [data-action="reference-tab"][data-tab="${referenceTab}"]`)?.focus({preventScroll:true});return;}
+ if(action==='reference-skill'){if(!['P','Q','W','E','R'].includes(el.dataset.skill))return;referenceSkill=el.dataset.skill;referenceVariant=0;render();app.querySelector(`.reference-detail [data-action="reference-skill"][data-skill="${referenceSkill}"]`)?.focus({preventScroll:true});return;}
+ if(action==='reference-variant'){const index=Number(el.dataset.variant);if(!Number.isInteger(index)||index<0||index>11)return;referenceVariant=index;render();app.querySelector(`.reference-detail [data-action="reference-variant"][data-variant="${index}"]`)?.focus({preventScroll:true});return;}
  if(action==='ranking-refresh'){await refreshRanking();return;}
  if(action==='national-refresh'){await nationalState().refresh(nationalRankInput(),{force:true});return;}
  if(action==='national-source'){await api.openLink('https://101.qq.com/');return;}
