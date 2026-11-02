@@ -1,4 +1,5 @@
-import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES, RULES_PATCH,profile,conventionalRole } from './rules.mjs';
+import { ROLES, DUOS, TRIOS, CROSS_SYNERGIES, RULES_PATCH,RULE_CATALOG,profile,conventionalRole } from './rules.mjs';
+import {reviewedCatalogLinks} from './catalog-link-review.mjs';
 import {draftTargets,scopeSlots,effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {recommendationDraft,clientRecommendationDraft,lockedOwnSlot,confirmedPlayerPick} from './draft-intents.mjs';
 import {validPartyCount,reconcilePartyRange} from './party-range.mjs';
@@ -171,10 +172,9 @@ export function comboContextKnown(slots,champion,role,previousComboId,previousCr
 }
 const SINGLE_ROLE_WEIGHTS={top:{frontline:4,sustain:4,engage:2,peel:1,poke:2,aoe:1},jungle:{frontline:2,sustain:2,engage:4,peel:2,poke:1,aoe:2},
   mid:{frontline:1,sustain:3,engage:2,peel:1,poke:3,aoe:2},bottom:{frontline:0,sustain:5,engage:1,peel:1,poke:2,aoe:2},support:{frontline:3,sustain:0,engage:4,peel:5,poke:2,aoe:1}};
-// Legacy links have one catalog-wide review version, not per-link evidence.
-// Keep them available for historical browsing, but do not use an older link
-// as a current recommendation explanation or candidate-search shortcut.
-const currentCatalogLinks=patch=>typeof patch==='string'&&patch===RULES_PATCH?CROSS_SYNERGIES:[];
+// Explicitly installed user libraries retain their legacy same-patch path.
+// Public libraries require per-link evidence; unknown sources fail closed.
+const currentCatalogLinks=(patch,review)=>review?.baseKind==='installed'&&typeof patch==='string'&&patch===RULES_PATCH?CROSS_SYNERGIES:reviewedCatalogLinks(RULE_CATALOG,{patch,...review});
 // Search explores far more teams than it displays. Memoize scalar scores only;
 // retaining every team's analysis and play instructions grows the worker heap
 // by hundreds of MB in a wide draft. Eviction changes work, never scoring.
@@ -214,7 +214,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  if((trio||duo)?.style===style)score+=5;
  let connections;
  if(!scoreOnly){
-  const links=currentCatalogLinks(context?.catalogLinksPatch),ids=new Set(slots.map(s=>s.champion)),linkHit=new Set(),{linkByChamp}=comboIndex();
+  const links=context?.catalogLinks||[],ids=new Set(slots.map(s=>s.champion)),linkHit=new Set(),linkByChamp=context?.linkByChamp||new Map();
   for(const id of ids)for(const link of linkByChamp.get(id)||[])if(ids.has(link[0])&&ids.has(link[1]))linkHit.add(link);
   connections=links.filter(l=>linkHit.has(l));
  }
@@ -248,7 +248,7 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  };
  const partyCombos=matchingCombos(party),partyDuo=partyCombos.find(c=>comboMembers(c).length===2&&valid(c)),partyTrio=partyCombos.find(c=>comboMembers(c).length===3&&valid(c));
  const planDuo=(relevant(partyDuo)?partyDuo:undefined)||(relevant(duo)?duo:undefined),planTrio=(relevant(partyTrio)?partyTrio:undefined)||(relevant(trio)?trio:undefined);
- const out={score,compositionFit:composition,analysis:a,duo:planDuo,trio:planTrio,connections,opponentFit:fit,adaptive,pairEvidence};
+ const out={score,compositionFit:composition,analysis:a,duo:planDuo,trio:planTrio,connections,connectionsReviewed:context?.connectionsReviewed===true,opponentFit:fit,adaptive,pairEvidence};
  return out;
 }
 const signature=slots=>slots.map(s=>`${s.role}:${s.champion||'-'}`).join('|');
@@ -283,13 +283,11 @@ function comboIndex(){
   const duoByMembers=new Map(DUOS.map(d=>[comboKey(d),d])),duoOrder=new Map(DUOS.map((d,i)=>[d,i]));
   const trioByMembers=new Map(),trioOrder=new Map();
   TRIOS.forEach((t,i)=>{trioOrder.set(t,i);if(t&&Array.isArray(t.members))trioByMembers.set(t.members.map(m=>`${m.role}:${m.champion}`).sort().join('|'),t);});
-  const linkByChamp=new Map();
-  for(const link of CROSS_SYNERGIES){for(const id of [link[0],link[1]]){if(!linkByChamp.has(id))linkByChamp.set(id,[]);linkByChamp.get(id).push(link);}}
-  comboIndexCache={duos:DUOS,trios:TRIOS,links:CROSS_SYNERGIES,duoByMembers,duoOrder,trioByMembers,trioOrder,linkByChamp};
+  comboIndexCache={duos:DUOS,trios:TRIOS,links:CROSS_SYNERGIES,duoByMembers,duoOrder,trioByMembers,trioOrder};
  }
  return comboIndexCache;
 }
-export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],rankedDraft=null,sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed='',familiarityByRole={},roomFamiliarity=[],minimumFitScore=null,fitSlots=null,fitSession=null,fitScope='',fitSoloRole='',stylePolicy=false}) {
+export function recommend({slots,champions,style='fun',excluded=[],publicBans=[],eligibleByRole={},confirmedPick=null,enemy=[],visibleEnemies=enemy,publicPicks=[],publicAllies=[],rankedDraft=null,sourceRoles=[],limit=5,offset=0,builds={},pairStatistics=null,buildSource,patch,pool:heroPool=[],poolMode='off',scope='context',soloRole='',soloChampion=null,play={},rolePools={},catalogStatus={},linkReviewContext=null,creativePlan=null,clientSession=null,party=null,includePreselected=false,randomSeed='',familiarityByRole={},roomFamiliarity=[],minimumFitScore=null,fitSlots=null,fitSession=null,fitScope='',fitSoloRole='',stylePolicy=false}) {
  creativePlan=automaticCreativePlan(creativePlan,catalogStatus,patch);
  if(Array.isArray(clientSession?.myTeam)){
   ({slots,session:clientSession}=clientRecommendationDraft(slots,clientSession,champions,{includePreselected,ownRole:soloRole}));
@@ -313,7 +311,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  limit=Number.isInteger(limit)?Math.max(0,limit):5;
  offset=Number.isInteger(offset)?Math.max(0,offset):0;
  if(scope==='solo'){
-  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,rankedDraft,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,creativePlan,clientSession,party,includePreselected,randomSeed,familiarityByRole,roomFamiliarity,minimumFitScore,fitSlots,fitSession,fitScope:'solo',stylePolicy};
+  const options={champions,style,excluded,publicBans,eligibleByRole,confirmedPick,enemy,visibleEnemies,publicPicks,publicAllies,rankedDraft,sourceRoles,builds,pairStatistics,buildSource,patch,pool:heroPool,poolMode,play,rolePools,catalogStatus,linkReviewContext,creativePlan,clientSession,party,includePreselected,randomSeed,familiarityByRole,roomFamiliarity,minimumFitScore,fitSlots,fitSession,fitScope:'solo',stylePolicy};
   const targets=soloChampion?[]:draftTargets(slots,'solo',soloRole);
   if(!targets.length){
    return recommend({...options,clientSession:null,slots:slots.map(s=>({...s,party:false})),limit:1}).map(r=>({...r,slots:structuredClone(slots),scope:'solo',soloRole:soloRole||slots.find(s=>s.champion===soloChampion)?.role||'',title:'我的本局配置',reason:'已选英雄保留，可查看自己的出装与符文；本局位置由你确认。'}));
@@ -332,7 +330,9 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  // Profiles are constant for one calculation; reuse them across the search beam.
  // Visibility affects fit in every draft; `enemy` separately controls which
  // heroes cannot be selected. Keep the legacy argument as the default.
- const context={byId:new Map(champions.map(c=>[c.id,c])),mandatoryOwn:lockedOwnSlot(slots,clientSession),publicAllies,profiles:new Map(),pool:new Set(heroPool),poolMode,scope,play,rolePools,catalogStatus,catalogLinksPatch:patch,enemyTraits:summarizeEnemyTraits(visibleEnemies,champions),comboCache:new Map(),scoreCache:new Map(),comboLoadouts:new Map()};
+ const catalogLinks=currentCatalogLinks(patch,linkReviewContext),linkByChamp=new Map();
+ for(const link of catalogLinks)for(const id of link.slice(0,2)){if(!linkByChamp.has(id))linkByChamp.set(id,[]);linkByChamp.get(id).push(link);}
+ const context={byId:new Map(champions.map(c=>[c.id,c])),mandatoryOwn:lockedOwnSlot(slots,clientSession),publicAllies,profiles:new Map(),pool:new Set(heroPool),poolMode,scope,play,rolePools,catalogStatus,catalogLinks,linkByChamp,connectionsReviewed:['bundled','community'].includes(linkReviewContext?.baseKind),enemyTraits:summarizeEnemyTraits(visibleEnemies,champions),comboCache:new Map(),scoreCache:new Map(),comboLoadouts:new Map()};
  context.rankedMatchup=rankedDraft?.ranked?createRankedMatchupIndex(rankedDraft.enemies,builds,{patch,source:buildSource}):null;
  context.patch=patch||champions[0]?.combatStatsSource?.patch;context.cooperationGraph=createCooperationGraph(champions,{currentPatch:context.patch});
  context.pairStatistics=createPairStatisticsIndex(pairStatistics,champions,{source:buildSource,patch});
@@ -423,14 +423,14 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  }
  const familiarSeeds=familiarityLineups(fixed,targets,candidateSets,exploration,randomSeed);
  let finished=[...discoveryLineups(fixed,targets,candidateSets,randomSeed),...familiarSeeds].map(slots=>({slots,score:0}));
- const hasCurrentCatalogLinks=currentCatalogLinks(context.catalogLinksPatch).length>0;
+ const hasCurrentCatalogLinks=context.catalogLinks.length>0;
  for(const seed of new Map(seeds.map(seed=>[signature(seed),seed])).values()) {
   let beam=[{slots:seed,score:0}];
   for(const role of ['bottom','support','jungle','mid','top'].filter(r=>targets.includes(r)&&!seed.find(s=>s.role===r).champion)) {
    const next=[];
    // Wide drafts keep every valid authored seed. Bound generic expansions,
    // while retaining low-ranked catalog links and authored skill partners.
-   for(const partial of beam)for(const c of candidateSets[role].filter((c,rank)=>targets.length<4||rank<24||(hasCurrentCatalogLinks&&(comboIndex().linkByChamp.get(c.id)||[]).some(link=>partial.slots.some(s=>s.champion===(link[0]===c.id?link[1]:link[0]))))||partial.slots.some(s=>s.champion&&context.cooperationGraph.edge({champion:c.id,role},s)?.family.startsWith('pair:')))) {
+   for(const partial of beam)for(const c of candidateSets[role].filter((c,rank)=>targets.length<4||rank<24||(hasCurrentCatalogLinks&&(context.linkByChamp.get(c.id)||[]).some(link=>partial.slots.some(s=>s.champion===(link[0]===c.id?link[1]:link[0]))))||partial.slots.some(s=>s.champion&&context.cooperationGraph.edge({champion:c.id,role},s)?.family.startsWith('pair:')))) {
     if(partial.slots.some(s=>s.champion===c.id))continue;
     const result=partial.slots.map(s=>s.role===role?{...s,champion:c.id}:s);
     const score=grade(result,champions,style,result.filter(s=>targets.includes(s.role)).map(s=>s.champion),roleWeights,context,true);
@@ -579,7 +579,7 @@ export function explainContributions(fixed,next,targets,champions,context,reuse=
   hero:m.champion,role:m.role,name:m.c.name,unusual:!conventionalRole(m.c,m.role),
   damage:m.p.damage==='ap'?'法术':m.p.damage==='ad'?'物理':'混合',
   helps:Object.entries(labels).filter(([key])=>m.p[key]).map(([key,label])=>`${before.traits[key]?'增加':'补上'}${label}`),
-  pairings:currentCatalogLinks(context?.catalogLinksPatch).filter(([a,b])=>[a,b].includes(m.champion)&&fixed.some(s=>s.champion===([a,b].find(id=>id!==m.champion)))).map(([, ,text])=>text),
+  pairings:(context?.catalogLinks||[]).filter(([a,b])=>[a,b].includes(m.champion)&&fixed.some(s=>s.champion===([a,b].find(id=>id!==m.champion)))).map(([, ,text])=>text),
   interactions:after.members.filter(other=>other.champion!==m.champion).map(other=>{const edge=graph.edge(m,other);return edge?.current?{with:other.champion,kept:kept.has(other.champion),name:edge.name,step:edge.step,condition:edge.condition,failure:edge.failure}:null;}).filter(Boolean).sort((a,b)=>Number(b.kept)-Number(a.kept)),
  }));
 }
