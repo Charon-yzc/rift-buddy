@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.33",
+  "version": "2026.11.02.34",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -14646,17 +14646,15 @@
     },
     {
       "id": "jhin-taliyah",
-      "carry": "Jhin",
-      "support": "Taliyah",
       "name": "谢幕岩阵",
       "style": "wild",
       "tags": [
         "禁锢接技能",
         "远程消耗"
       ],
-      "why": "烬的 W 禁锢窗口可以帮助塔莉垭衔接岩突。",
-      "plan": "烬补刀，塔莉垭辅助；先造成标记再接 W，岩突用于接控或阻止突进。",
-      "risk": "两人技能空档明显，塔莉垭辅助经济有限。",
+      "why": "友方英雄先实际伤害目标，烬 W 实际命中的首个敌方英雄仍在该伤害窗口时才禁锢；塔莉垭可按实际位置寻找岩突。接续按文本推断，未对局验证。",
+      "plan": "烬下路补刀，塔莉垭辅助；友方英雄先实际伤害目标，烬 W 命中首个敌方英雄时窗口仍有效才禁锢，再由塔莉垭按位置判断 W/E。",
+      "risk": "W 可能被其他敌方英雄挡住或飞行时伤害窗口过期；岩突须实际命中，E 碎石须目标冲刺或被强制位移实际途经才触发，辅助经济有限。",
       "partners": [
         "Shen",
         "Sejuani"
@@ -14668,45 +14666,106 @@
           "url": "https://www.mobafire.com/league-of-legends/build/taliyah-support-updated-s14-621554",
           "kind": "guide",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "jhin-control",
-        "support": "poke-support"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Jhin": "cc35368c11100f62",
-        "champion:Taliyah": "bbd8f417c4822070",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3094": "fe69f998d9961e0d",
-        "item:3009": "f95ed3b88b918eed",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3072": "5c29525fccb26a37",
-        "rune:8021": "bffe59ad8f3db438",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
+        "champion:Jhin": "226e6c11b8a992f5",
+        "champion:Taliyah": "164392e23c74360e",
+        "item:4005": "049fc32e0486e5b6",
+        "item:3116": "1ca09887b440d0f6",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3158": "72ca672b9221f063",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8229": "9eaed52046ba81fd",
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3158": "72ca672b9221f063",
-        "item:3157": "4e1ddce33472ee0f",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8237": "141d0a7c16b98b91"
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "poke"
+      "tempo": "poke",
+      "members": [
+        {
+          "champion": "Jhin",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "控制补刀和四发换弹节奏；W 命中时须是首个敌方英雄且同目标的友方伤害窗口仍有效，不能只看施法时状态。"
+        },
+        {
+          "champion": "Taliyah",
+          "role": "support",
+          "loadoutId": "manual-taliyah-support-control",
+          "job": "先按任务、视野和法力提供伤害；W 实际命中才位移，E 需目标冲刺或被强制位移实际途经碎石才爆炸。"
+        }
+      ],
+      "steps": [
+        "烬下路补刀，塔莉垭辅助；友方英雄先实际伤害目标，烬 W 命中首个敌方英雄时窗口仍有效才禁锢，再由塔莉垭按位置判断 W/E。",
+        "控制补刀和四发换弹节奏；W 命中时须是首个敌方英雄且同目标的友方伤害窗口仍有效，不能只看施法时状态。",
+        "先按任务、视野和法力提供伤害；W 实际命中才位移，E 需目标冲刺或被强制位移实际途经碎石才爆炸。",
+        "确认目标实际状态、队友距离与退路；未触发控制或无法接应时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血，辅助优先任务和视野；技能不可用、状态不足或双方距离断开时不强行接战。",
+      "economy": "补刀位与辅助分别管理经济；辅助装备按实际收入和格子调整，不保证完整成型。烬攻击节奏受其四发和固定射速机制影响；装备和符文是独立来源参考，按实际金币与用户选择调整，不将攻速装备视为普通射手等比例提升攻速。",
+      "window": "以技能已学、实际命中、目标状态、队友距离和撤退空间为准；任何条件不成立就取消接续。",
+      "reviewSourceAnchors": {
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-10-26T13:38:40.400Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        },
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        }
+      }
     },
     {
       "id": "nilah-ivern",
@@ -14874,17 +14933,15 @@
     },
     {
       "id": "seraphine-trundle",
-      "carry": "Seraphine",
-      "support": "Trundle",
       "name": "歌声石柱",
       "style": "wild",
       "tags": [
         "减速地形",
         "控制接力"
       ],
-      "why": "巨魔柱子的减速和地形帮助萨勒芬妮限制走位。",
-      "plan": "萨勒芬妮补刀，巨魔辅助；柱子先封退路，再接技能。",
-      "risk": "柱子可能妨碍队友；巨魔辅助缺经济，不能按上单装硬堆。",
+      "why": "特朗德尔冰柱可减速附近敌人；萨勒芬妮 E 实际命中仍被减速的目标时可按技能文本推断禁锢，跨英雄衔接未经对局验证。",
+      "plan": "萨勒芬妮补刀、特朗德尔辅助；柱子按退路放置，目标实际被减速且仍处状态时萨勒芬妮 E 命中，才按文本判断禁锢。",
+      "risk": "柱子可妨碍队友，敌人离开减速范围、状态结束或 E 未命中都不能保证禁锢；辅助经济不足时调整装备。",
       "partners": [
         "Graves",
         "Kindred"
@@ -14896,46 +14953,106 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "mana-control",
-        "support": "trundle-support"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Seraphine": "02523bed2e580892",
-        "champion:Trundle": "2a3f24e0366e2077",
-        "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
-        "item:3089": "a8a9b060b253391c",
-        "item:3020": "357a162d6a40286e",
-        "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8369": "436163d51e34ebba",
-        "rune:8304": "aa454bdce540cb11",
+        "champion:Seraphine": "18e4440868d92eb5",
+        "champion:Trundle": "63bbe05e19260ce3",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
-        "item:2065": "a30335c7d456f5fd",
-        "item:3009": "f95ed3b88b918eed",
+        "item:4401": "f83638cf9903db45",
+        "item:3047": "46ff9ea0f9199a8e",
         "item:3075": "6d456e96c01062c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "item:2504": "ead2f4757e3e6c8c",
+        "rune:8437": "c950f9daf1edb09d",
+        "rune:8446": "321d014aaeb9ee11",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Seraphine",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "先保法力和补刀；E 实际命中仍被减速的目标时按描述产生禁锢，不把柱子本身当作禁锢。"
+        },
+        {
+          "champion": "Trundle",
+          "role": "support",
+          "loadoutId": "manual-trundle-support-guard",
+          "job": "保任务和视野经济，E 柱子按地形实际放置，附近敌人实际减速后再报目标；不要堵住队友退路。"
+        }
+      ],
+      "steps": [
+        "萨勒芬妮补刀、特朗德尔辅助；柱子按退路放置，目标实际被减速且仍处状态时萨勒芬妮 E 命中，才按文本判断禁锢。",
+        "先保法力和补刀；E 实际命中仍被减速的目标时按描述产生禁锢，不把柱子本身当作禁锢。",
+        "保任务和视野经济，E 柱子按地形实际放置，附近敌人实际减速后再报目标；不要堵住队友退路。",
+        "确认目标实际状态、队友距离与退路；未触发控制或无法接应时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血，辅助优先任务和视野；技能不可用、状态不足或双方距离断开时不强行接战。",
+      "economy": "补刀位与辅助分别管理经济；辅助装备按实际收入和格子调整，不保证完整成型。若自行选择炽天使，应先购买大天使之杖并按游戏内条件转换，不能直接购买已转化成装。",
+      "window": "以技能已学、实际命中、目标状态、队友距离和撤退空间为准；任何条件不成立就取消接续。",
+      "reviewSourceAnchors": {
+        "Seraphine": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "18e4440868d92eb5",
+          "observedAt": "2026-10-26T13:38:40.519Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Seraphine",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b29132146d6ad36b"
+            }
+          }
+        },
+        "Trundle": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "63bbe05e19260ce3",
+          "observedAt": "2026-10-26T13:38:40.595Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Trundle",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/trundle/trundle.bin.json",
+              "sha256": "cc871076dceaa7cd474c1dc994f3c0e859ac814e4f687307eb693f61bcc48847"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "1d69ff1938c31389"
+            }
+          }
+        }
+      }
     },
     {
       "id": "aurelionsol-amumu",
@@ -16011,17 +16128,15 @@
     },
     {
       "id": "katarina-sejuani",
-      "carry": "Katarina",
-      "support": "Sejuani",
       "name": "冰链匕首",
       "style": "wild",
       "tags": [
         "近战叠层",
         "控制接力"
       ],
-      "why": "近战队友可协助瑟庄妮叠层，为卡特提供接近窗口。",
-      "plan": "卡特补刀，瑟庄妮辅助；先控制再进，保留技能应对撤退。",
-      "risk": "两人前期手短；匕首技能伤害不等于全部都是普攻叠层。",
+      "why": "瑟庄妮学会 E 后，附近近战友军实际攻击英雄或野怪可协助瑟庄妮叠层；目标达到四层且她的 E 已学可用时才能施放眩晕。技能配合按文本推断，未经对局验证。",
+      "plan": "卡特琳娜下路补刀，瑟庄妮辅助；先判断能否安全近身，攻击有效目标并看实际层数，达到四层且 E 可用时再控制。",
+      "risk": "两人前期手短，卡特技能和匕首伤害不能一概当作叠层普攻；未达四层、距离断开或退路不清就取消接续。",
       "partners": [
         "Graves",
         "Orianna"
@@ -16033,65 +16148,118 @@
           "url": "https://www.reddit.com/r/supportlol/comments/1m13oo1/off_meta_bot_lane_synergy_ideas/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "ap-dive",
-        "support": "tank-engage"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Katarina": "b5be788e01ba6ead",
-        "champion:Sejuani": "8b875d1d645405f8",
-        "item:3152": "4817df23430cfd8f",
-        "item:4645": "152f57227a713097",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3020": "357a162d6a40286e",
-        "item:3089": "a8a9b060b253391c",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8112": "0082006b65520bc3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
+        "champion:Katarina": "98848fc7138b49b3",
+        "champion:Sejuani": "1d8d94f1d8414573",
         "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
         "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
+        "item:4401": "f83638cf9903db45",
+        "item:3047": "46ff9ea0f9199a8e",
         "item:3075": "6d456e96c01062c6",
+        "item:2504": "ead2f4757e3e6c8c",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8453": "f9a0180e7f2f0432"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Katarina",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "补刀并观察退路；在安全距离内实际普攻同一有效目标，不把技能伤害当作普攻叠层。"
+        },
+        {
+          "champion": "Sejuani",
+          "role": "support",
+          "loadoutId": "manual-sejuani-support-guard",
+          "job": "E 已学后观察附近近战友军的实际攻击与目标层数；四层且 E 可用才能施放眩晕，辅助保任务和视野经济。"
+        }
+      ],
+      "steps": [
+        "卡特琳娜下路补刀，瑟庄妮辅助；先判断能否安全近身，攻击有效目标并看实际层数，达到四层且 E 可用时再控制。",
+        "补刀并观察退路；在安全距离内实际普攻同一有效目标，不把技能伤害当作普攻叠层。",
+        "E 已学后观察附近近战友军的实际攻击与目标层数；四层且 E 可用才能施放眩晕，辅助保任务和视野经济。",
+        "确认目标实际状态、队友距离与退路；未触发控制或无法接应时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血，辅助优先任务和视野；技能不可用、状态不足或双方距离断开时不强行接战。",
+      "economy": "补刀位与辅助分别管理经济；辅助装备按实际收入和格子调整，不保证完整成型。",
+      "window": "以技能已学、实际命中、目标状态、队友距离和撤退空间为准；任何条件不成立就取消接续。",
+      "reviewSourceAnchors": {
+        "Katarina": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "98848fc7138b49b3",
+          "observedAt": "2026-10-26T13:38:40.494Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Katarina",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/katarina/katarina.bin.json",
+              "sha256": "6cf261f42c08dc7cad52bbaf91309e1db259836d265ec0fe8a833d6f8bec2360"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "4e7c2f4db28dab8c"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "viego-sejuani",
-      "carry": "Viego",
-      "support": "Sejuani",
       "name": "破败冰链",
       "style": "wild",
       "tags": [
         "多次普攻",
         "连续控制"
       ],
-      "why": "佛耶戈利用普攻节奏协助瑟庄妮叠层。",
-      "plan": "佛耶戈补刀，瑟庄妮辅助；先确认近身条件，再叠层接控制。",
-      "risk": "手短且依赖近身；不要为了变身窗口冲得过深。",
+      "why": "瑟庄妮学会 E 后，附近近战友军实际攻击英雄或野怪可协助瑟庄妮叠层；佛耶戈按实际层数接续，不假定技能后双重打击各产生一层。配合由技能文字推断，未对局验证。",
+      "plan": "佛耶戈补刀、瑟庄妮辅助；先确认近身与退路，对同一有效目标实际攻击并看层数，四层且瑟庄妮 E 可用时才施放眩晕。",
+      "risk": "近战易被消耗，技能后双重打击是否分别叠层无直接证据；层数不足、目标脱离或队友无法接应时不追。",
       "partners": [
         "Orianna",
         "Shen"
@@ -16103,49 +16271,116 @@
           "url": "https://www.reddit.com/r/supportlol/comments/1m13oo1/off_meta_bot_lane_synergy_ideas/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "melee-fighter",
-        "support": "tank-engage"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Viego": "a88939f87906fcaa",
-        "champion:Sejuani": "8b875d1d645405f8",
-        "item:3071": "8b44dc349847ea0e",
-        "item:3053": "6f40bd5cd29bb7d2",
+        "champion:Viego": "61185e81ee691f67",
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "item:3153": "a6d836f7e8db72c4",
+        "item:6672": "56acf36018ec56ee",
         "item:6333": "60ed05035db8354d",
         "item:3047": "46ff9ea0f9199a8e",
+        "item:3071": "8b44dc349847ea0e",
         "item:3026": "9ac9f874ae405bd1",
-        "item:3075": "6d456e96c01062c6",
         "rune:8010": "b8dd7b11cee84803",
         "rune:9111": "6667591beed15f1b",
         "rune:9105": "8f6975f18cf3ff8d",
         "rune:8299": "d7db081cd64d0bc2",
         "rune:8473": "ed2f46234183276d",
         "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
         "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
         "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
+        "item:4401": "f83638cf9903db45",
+        "item:3075": "6d456e96c01062c6",
+        "item:2504": "ead2f4757e3e6c8c",
         "rune:8439": "b2c74fd18c4ad076",
         "rune:8463": "3296414353df0e65",
         "rune:8242": "37935df8d31dd429",
         "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8453": "f9a0180e7f2f0432"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Viego",
+          "role": "bottom",
+          "loadoutId": "manual-viego-bottom-fighter",
+          "job": "安全补刀并实际攻击有效目标，以实际层数为准；技能后的双重打击不能假定计作两层。"
+        },
+        {
+          "champion": "Sejuani",
+          "role": "support",
+          "loadoutId": "manual-sejuani-support-guard",
+          "job": "E 已学后观察实际层数和距离；四层且可施放才眩晕，优先任务和视野经济。"
+        }
+      ],
+      "steps": [
+        "佛耶戈补刀、瑟庄妮辅助；先确认近身与退路，对同一有效目标实际攻击并看层数，四层且瑟庄妮 E 可用时才施放眩晕。",
+        "安全补刀并实际攻击有效目标，以实际层数为准；技能后的双重打击不能假定计作两层。",
+        "E 已学后观察实际层数和距离；四层且可施放才眩晕，优先任务和视野经济。",
+        "确认目标实际状态、队友距离与退路；未触发控制或无法接应时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血，辅助优先任务和视野；技能不可用、状态不足或双方距离断开时不强行接战。",
+      "economy": "补刀位与辅助分别管理经济；辅助装备按实际收入和格子调整，不保证完整成型。",
+      "window": "以技能已学、实际命中、目标状态、队友距离和撤退空间为准；任何条件不成立就取消接续。",
+      "reviewSourceAnchors": {
+        "Viego": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "61185e81ee691f67",
+          "observedAt": "2026-10-26T13:38:40.599Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Viego",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/viego/viego.bin.json",
+              "sha256": "0b49991c3a4dd8aed0e97f623dfcd277e5c693a5f9a7eff07cf2bdf7179b2863"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d5b6622648148ffc"
+            }
+          }
+        },
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "mel-neeko",
@@ -18007,17 +18242,15 @@
     },
     {
       "id": "yone-yasuo",
-      "carry": "Yone",
-      "support": "Yasuo",
       "name": "双刃接力",
       "style": "wild",
       "tags": [
         "击飞衔接",
         "近战作战"
       ],
-      "why": "永恩的击飞可为亚索提供大招衔接窗口。",
-      "plan": "永恩补刀，亚索辅助；约好击飞时机，先安全吃经验。",
-      "risk": "极低容错、双近战；辅助亚索缺经济，不宜当默认稳定方案。",
+      "why": "永恩叠满 Q 后的旋风或 R 实际击飞敌方英雄，可为已学 R 的亚索提供接续机会；目标仍浮空且在射程内才能施放，文本推断未对局验证。",
+      "plan": "永恩补刀、亚索辅助；先沟通击飞与退路，永恩叠满 Q 后的旋风或 R 实际击飞敌方英雄，亚索确认其仍浮空且在范围才施放已学 R。",
+      "risk": "双近战容易受远程消耗且辅助经济有限；依靠 Q 旋风时须先叠满，永恩 R 实际击飞可独立提供浮空；击飞落空、目标落地或亚索 R 不可用/距离不足都不能接。",
       "partners": [
         "Sejuani",
         "Galio"
@@ -18029,38 +18262,106 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "melee-crit",
-        "support": "melee-crit"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Yone": "b7e0bd8029a53446",
-        "champion:Yasuo": "bc4e1091fdb3cfb7",
-        "item:3153": "a6d836f7e8db72c4",
+        "champion:Yone": "9f3493c27921664f",
+        "champion:Yasuo": "d36ebea001e3d1cb",
         "item:6673": "1fcc3aa1128ff960",
         "item:3031": "0ccdceb96f0cd392",
-        "item:3006": "d8d9fde1f7908326",
         "item:6333": "60ed05035db8354d",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3072": "5c29525fccb26a37",
         "item:3026": "9ac9f874ae405bd1",
         "rune:8008": "d8ed59948702367b",
-        "rune:8009": "e88eb74c171319c4",
+        "rune:9101": "16a8d9e11ec869d4",
         "rune:9104": "e6b524a54b35a2f3",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
         "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
+        "rune:8444": "fbb59f496f94894e",
         "rune:8451": "9e4f8837510e3998"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Yone",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "承担补刀并提前报 Q 层数；旋风或 R 只有实际命中才击飞，不为强开放弃退路。"
+        },
+        {
+          "champion": "Yasuo",
+          "role": "support",
+          "loadoutId": "manual-yasuo-support-duelist",
+          "job": "按任务和视野经济支援；R 已学且目标敌方英雄在范围内仍浮空时才可施放，W 阻挡敌方飞行道具。"
+        }
+      ],
+      "steps": [
+        "永恩补刀、亚索辅助；先沟通击飞与退路，永恩叠满 Q 后的旋风或 R 实际击飞敌方英雄，亚索确认其仍浮空且在范围才施放已学 R。",
+        "承担补刀并提前报 Q 层数；旋风或 R 只有实际命中才击飞，不为强开放弃退路。",
+        "按任务和视野经济支援；R 已学且目标敌方英雄在范围内仍浮空时才可施放，W 阻挡敌方飞行道具。",
+        "确认目标实际状态、队友距离与退路；未触发控制或无法接应时停止追击。"
+      ],
+      "early": "下路英雄负责补刀与保血，辅助优先任务和视野；技能不可用、状态不足或双方距离断开时不强行接战。",
+      "economy": "补刀位与辅助分别管理经济；辅助装备按实际收入和格子调整，不保证完整成型。",
+      "window": "以技能已学、实际命中、目标状态、队友距离和撤退空间为准；任何条件不成立就取消接续。",
+      "reviewSourceAnchors": {
+        "Yone": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9f3493c27921664f",
+          "observedAt": "2026-10-26T13:38:40.604Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yone",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yone/yone.bin.json",
+              "sha256": "686924ad8cd0bf22941513230c18e6acdc5f9ac2d02755e8d369a51155d70112"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "165686224e19c3fc"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-26T13:38:40.604Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
     },
     {
       "id": "teemo-milio",
@@ -49507,6 +49808,466 @@
           }
         }
       }
+    },
+    {
+      "id": "manual-sejuani-support-guard",
+      "name": "人工机制参考 · 瑟庄妮辅助",
+      "champions": [
+        "Sejuani"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "supportTank",
+      "items": [
+        3190,
+        3109,
+        4401
+      ],
+      "boots": 3047,
+      "late": [
+        3075,
+        2504
+      ],
+      "runes": [
+        "manual-sejuani-support-page"
+      ],
+      "why": "人工机制适配，非作者原配或同位置统计，未经对局验证。辅助优先任务和视野，已获辅助装时须保留占格；后续装备按位置和实际经济选择，不能保证全部同时携带。",
+      "priority": "WQE",
+      "skillOrder": "QWEWWRWQWQRQQEEREE",
+      "skillReason": "人工技能顺序，有 R 点 R；按技能状态与实际对局调整，非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerExhaust"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Sejuani": "1d8d94f1d8414573",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:4401": "f83638cf9903db45",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3075": "6d456e96c01062c6",
+        "item:2504": "ead2f4757e3e6c8c",
+        "rune:8439": "b2c74fd18c4ad076",
+        "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8306": "68d4bd3d69d9d19c",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Sejuani": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "1d8d94f1d8414573",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sejuani",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+              "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7cc5989bda48fb2b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-taliyah-support-control",
+      "name": "人工机制参考 · 塔莉垭辅助",
+      "champions": [
+        "Taliyah"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "pokeSupport",
+      "items": [
+        4005,
+        3116,
+        3157
+      ],
+      "boots": 3158,
+      "late": [
+        3135,
+        3089
+      ],
+      "runes": [
+        "manual-taliyah-support-page"
+      ],
+      "why": "人工机制适配，非作者原配或同位置统计，未经对局验证。辅助优先任务和视野，已获辅助装时须保留占格；后续装备按位置和实际经济选择，不能保证全部同时携带。",
+      "priority": "QEW",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "人工技能顺序，有 R 点 R；按技能状态与实际对局调整，非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerExhaust"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Taliyah": "164392e23c74360e",
+        "item:4005": "049fc32e0486e5b6",
+        "item:3116": "1ca09887b440d0f6",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3158": "72ca672b9221f063",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-trundle-support-guard",
+      "name": "人工机制参考 · 特朗德尔辅助",
+      "champions": [
+        "Trundle"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "supportTank",
+      "items": [
+        3190,
+        3109,
+        4401
+      ],
+      "boots": 3047,
+      "late": [
+        3075,
+        2504
+      ],
+      "runes": [
+        "manual-trundle-support-page"
+      ],
+      "why": "人工机制适配，非作者原配或同位置统计，未经对局验证。辅助优先任务和视野，已获辅助装时须保留占格；后续装备按位置和实际经济选择，不能保证全部同时携带。",
+      "priority": "QWE",
+      "skillOrder": "EQWQQRQWQWRWWEEREE",
+      "skillReason": "人工技能顺序，有 R 点 R；按技能状态与实际对局调整，非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerExhaust"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Trundle": "63bbe05e19260ce3",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:4401": "f83638cf9903db45",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3075": "6d456e96c01062c6",
+        "item:2504": "ead2f4757e3e6c8c",
+        "rune:8437": "c950f9daf1edb09d",
+        "rune:8446": "321d014aaeb9ee11",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Trundle": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "63bbe05e19260ce3",
+          "observedAt": "2026-10-26T13:38:40.595Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Trundle",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/trundle/trundle.bin.json",
+              "sha256": "cc871076dceaa7cd474c1dc994f3c0e859ac814e4f687307eb693f61bcc48847"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "1d69ff1938c31389"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-yasuo-support-duelist",
+      "name": "人工机制参考 · 亚索辅助",
+      "champions": [
+        "Yasuo"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "meleeCrit",
+      "items": [
+        6673,
+        3031,
+        6333
+      ],
+      "boots": 3006,
+      "late": [
+        3072,
+        3026
+      ],
+      "runes": [
+        "manual-yasuo-support-page"
+      ],
+      "why": "人工机制适配，非作者原配或同位置统计，未经对局验证。辅助优先任务和视野，已获辅助装时须保留占格；后续装备按位置和实际经济选择，不能保证全部同时携带。",
+      "priority": "QEW",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "人工技能顺序，有 R 点 R；按技能状态与实际对局调整，非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerExhaust"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Yasuo": "d36ebea001e3d1cb",
+        "item:6673": "1fcc3aa1128ff960",
+        "item:3031": "0ccdceb96f0cd392",
+        "item:6333": "60ed05035db8354d",
+        "item:3006": "d8d9fde1f7908326",
+        "item:3072": "5c29525fccb26a37",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8008": "d8ed59948702367b",
+        "rune:9101": "16a8d9e11ec869d4",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8444": "fbb59f496f94894e",
+        "rune:8451": "9e4f8837510e3998"
+      },
+      "reviewSourceAnchors": {
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-26T13:38:40.604Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-viego-bottom-fighter",
+      "name": "人工机制参考 · 佛耶戈下路",
+      "champions": [
+        "Viego"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "fighter",
+      "items": [
+        3153,
+        6672,
+        6333
+      ],
+      "boots": 3047,
+      "late": [
+        3071,
+        3026
+      ],
+      "runes": [
+        "manual-viego-bottom-page"
+      ],
+      "why": "人工机制适配，非作者原配或同位置统计，未经对局验证。下路补刀注意近战退路；装备按经济和实际威胁调整。",
+      "priority": "QEW",
+      "skillOrder": "QWEQQRQEQEREEWWRWW",
+      "skillReason": "人工技能顺序，有 R 点 R；按技能状态与实际对局调整，非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Viego": "61185e81ee691f67",
+        "item:3153": "a6d836f7e8db72c4",
+        "item:6672": "56acf36018ec56ee",
+        "item:6333": "60ed05035db8354d",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3071": "8b44dc349847ea0e",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998"
+      },
+      "reviewSourceAnchors": {
+        "Viego": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "61185e81ee691f67",
+          "observedAt": "2026-10-26T13:38:40.599Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Viego",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/viego/viego.bin.json",
+              "sha256": "0b49991c3a4dd8aed0e97f623dfcd277e5c693a5f9a7eff07cf2bdf7179b2863"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d5b6622648148ffc"
+            }
+          }
+        }
+      }
     }
   ],
   "runes": {
@@ -50455,6 +51216,101 @@
           8345,
           8347,
           5007,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-sejuani-support-page": {
+      "name": "人工机制参考 · 瑟庄妮",
+      "when": "按实际位置、经济与安全机会人工整理；非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8400,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8439,
+          8463,
+          8473,
+          8242,
+          8306,
+          8347,
+          5007,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-taliyah-support-page": {
+      "name": "人工机制参考 · 塔莉垭",
+      "when": "按实际位置、经济与安全机会人工整理；非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8200,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8229,
+          8226,
+          8210,
+          8237,
+          8345,
+          8347,
+          5007,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-trundle-support-page": {
+      "name": "人工机制参考 · 特朗德尔",
+      "when": "按实际位置、经济与安全机会人工整理；非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8400,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8437,
+          8446,
+          8444,
+          8451,
+          8345,
+          8347,
+          5007,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-yasuo-support-page": {
+      "name": "人工机制参考 · 亚索",
+      "when": "按实际位置、经济与安全机会人工整理；非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8000,
+        "subStyleId": 8400,
+        "selectedPerkIds": [
+          8008,
+          9101,
+          9104,
+          8299,
+          8444,
+          8451,
+          5005,
+          5008,
+          5001
+        ]
+      }
+    },
+    "manual-viego-bottom-page": {
+      "name": "人工机制参考 · 佛耶戈",
+      "when": "按实际位置、经济与安全机会人工整理；非作者原配、同位置统计或实战结论，可由玩家调整。",
+      "page": {
+        "primaryStyleId": 8000,
+        "subStyleId": 8400,
+        "selectedPerkIds": [
+          8010,
+          9111,
+          9105,
+          8299,
+          8473,
+          8451,
+          5005,
           5008,
           5001
         ]
