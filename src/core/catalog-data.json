@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.02.29",
+  "version": "2026.11.02.30",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -14173,17 +14173,15 @@
     },
     {
       "id": "taliyah-senna",
-      "carry": "Taliyah",
-      "support": "Senna",
       "name": "岩石与长枪",
       "style": "fun",
       "tags": [
         "减速接岩突",
         "混合伤害"
       ],
-      "why": "赛娜减速或禁锢后，塔莉垭更容易接岩突。",
-      "plan": "塔莉垭补刀，赛娜辅助；先确认控制命中再摆岩阵。",
-      "risk": "两人缺少稳定承伤；不要把岩突当必中的先手。",
+      "why": "赛娜 Q 命中减速或 W 命中延迟禁锢后，塔莉垭可按目标实际位置寻找 W/E 的控制角度。",
+      "plan": "塔莉垭下路补刀，赛娜辅助；赛娜 W 命中第一个敌人并等待禁锢实际生效，或 Q 命中后报减速，再由塔莉垭按目标位置选 W 推向；敌人被推过 E 碎石时才触发爆炸与晕眩。",
+      "risk": "两人缺少稳定承伤；W 有延迟且可能落空，不把减速或禁锢当作必定推中。辅助保视野和经济，技能空档看退路。",
       "partners": [
         "Shen",
         "Sejuani"
@@ -14195,20 +14193,21 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "mana-control",
-        "support": "senna-fasting"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Taliyah": "bbd8f417c4822070",
-        "champion:Senna": "f950f738d007c58a",
+        "champion:Taliyah": "164392e23c74360e",
+        "champion:Senna": "5e547c9cf10f2a05",
         "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
+        "item:3003": "88afa631f4faea9e",
         "item:3089": "a8a9b060b253391c",
         "item:3020": "357a162d6a40286e",
         "item:3135": "9eb1465e02c69db0",
@@ -14219,38 +14218,93 @@
         "rune:8210": "e78877d51ff049ea",
         "rune:8237": "141d0a7c16b98b91",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8369": "436163d51e34ebba",
-        "rune:8304": "aa454bdce540cb11",
-        "item:3071": "8b44dc349847ea0e",
-        "item:3094": "fe69f998d9961e0d",
-        "item:6617": "6dccd52cee1f2c6e",
-        "item:3009": "f95ed3b88b918eed",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8021": "bffe59ad8f3db438",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9103": "7d88abbfc22dd0df",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Taliyah",
+          "role": "bottom",
+          "loadoutId": "taliyah-bottom-manual-control",
+          "job": "负责下路补刀和控蓝；队友限制目标后按实际位置铺 E、选 W 方向，目标穿过碎石才有碎石晕眩。技能未命中或退路不清就停止追击。"
+        },
+        {
+          "champion": "Senna",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "Q 命中并造成减速时报目标；W 命中首个敌人后等待延迟禁锢实际生效再报目标；辅助留经济和视野，不为追击离开接应距离。"
+        }
+      ],
+      "steps": [
+        "赛娜 Q 命中并造成减速，或 W 延迟后实际禁锢目标后报目标与技能状态，双方确认实际距离、兵线和退路。",
+        "塔莉垭可先铺 E，再向实际目标施放 W 并确认推向；只有目标被推过碎石，才会由本次位移触发碎石爆炸与晕眩。",
+        "任一控制落空或目标离开接应范围就结束追击，优先守住视野和补刀路线。"
+      ],
+      "window": "赛娜 Q 命中并造成减速，或 W 延迟后实际禁锢目标，且塔莉垭 W/E 已学可用、目标处于实际施法范围；W 命中及目标经过碎石均须实际确认。",
+      "early": "塔莉垭下路补刀并管理法力，辅助用可用技能寻找安全消耗窗口；控制未命中前不预设后续 W 会命中。",
+      "economy": "塔莉垭承担下路补刀；辅助按任务、视野和实际经济安排购买，不把辅助成装时间按补刀位计算。",
+      "reviewSourceAnchors": {
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        },
+        "Senna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5e547c9cf10f2a05",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Senna",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+              "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "58582c22f3d6346b"
+            }
+          }
+        }
+      }
     },
     {
       "id": "taliyah-zyra",
-      "carry": "Taliyah",
-      "support": "Zyra",
       "name": "岩石花园",
       "style": "fun",
       "tags": [
         "定身接爆发",
         "阵地战"
       ],
-      "why": "婕拉定身给塔莉垭技能创造更清晰的落点。",
-      "plan": "塔莉垭补刀；植物布在撤退路径，定身命中后再接岩突。",
-      "risk": "双法术且容易推线，必须处理侧翼视野。",
+      "why": "婕拉 E 实际命中禁锢后，可为塔莉垭寻找 W/E 的位置创造窗口。",
+      "plan": "塔莉垭下路补刀，婕拉辅助；婕拉 E 实际命中后报同一目标，塔莉垭可先布 E 再按实际位置选择 W 推向；敌人被推过碎石时才触发爆炸与晕眩。",
+      "risk": "双法术且容易推线，需顾侧翼视野与辅助经济；植物存在不等于控制命中，塔莉垭 W 可能落空。",
       "partners": [
         "Graves",
         "JarvanIV"
@@ -14262,20 +14316,21 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "mana-control",
-        "support": "poke-support"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Taliyah": "bbd8f417c4822070",
-        "champion:Zyra": "7c484794dc761405",
+        "champion:Taliyah": "164392e23c74360e",
+        "champion:Zyra": "f653495a90d1586e",
         "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
+        "item:3003": "88afa631f4faea9e",
         "item:3089": "a8a9b060b253391c",
         "item:3020": "357a162d6a40286e",
         "item:3135": "9eb1465e02c69db0",
@@ -14286,33 +14341,93 @@
         "rune:8210": "e78877d51ff049ea",
         "rune:8237": "141d0a7c16b98b91",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8369": "436163d51e34ebba",
-        "rune:8304": "aa454bdce540cb11",
-        "item:4005": "049fc32e0486e5b6",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3158": "72ca672b9221f063",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Taliyah",
+          "role": "bottom",
+          "loadoutId": "taliyah-bottom-manual-control",
+          "job": "负责下路补刀和控蓝；队友限制目标后按实际位置铺 E、选 W 方向，目标穿过碎石才有碎石晕眩。技能未命中或退路不清就停止追击。"
+        },
+        {
+          "champion": "Zyra",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "E 实际命中禁锢后报目标，种子与植物按实际位置提供区域压力；辅助保视野，不把植物存在当作必定控制。"
+        }
+      ],
+      "steps": [
+        "婕拉 E 实际命中并禁锢目标后报目标与技能状态，双方确认实际距离、兵线和退路。",
+        "塔莉垭可先铺 E，再向实际目标施放 W 并确认推向；只有目标被推过碎石，才会由本次位移触发碎石爆炸与晕眩。",
+        "任一控制落空或目标离开接应范围就结束追击，优先守住视野和补刀路线。"
+      ],
+      "window": "婕拉 E 实际命中并禁锢目标，且塔莉垭 W/E 已学可用、目标处于实际施法范围；W 命中及目标经过碎石均须实际确认。",
+      "early": "塔莉垭下路补刀并管理法力，辅助用可用技能寻找安全消耗窗口；控制未命中前不预设后续 W 会命中。",
+      "economy": "塔莉垭承担下路补刀；辅助按任务、视野和实际经济安排购买，不把辅助成装时间按补刀位计算。",
+      "reviewSourceAnchors": {
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        },
+        "Zyra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f653495a90d1586e",
+          "observedAt": "2026-10-26T13:38:40.609Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zyra",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zyra/zyra.bin.json",
+              "sha256": "18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e6ad7484cbc1effe"
+            }
+          }
+        }
+      }
     },
     {
       "id": "taliyah-neeko",
-      "carry": "Taliyah",
-      "support": "Neeko",
       "name": "岩石伪装",
       "style": "wild",
       "tags": [
         "定身接岩突",
         "伪装先手"
       ],
-      "why": "妮蔻先限制移动，塔莉垭接区域控制与伤害。",
-      "plan": "塔莉垭补刀；伪装只是寻找角度，先确认队友跟得上。",
-      "risk": "双脆皮；妮蔻不能因伪装就无视视野与伤害。",
+      "why": "妮蔻 E 实际命中禁锢后，可为塔莉垭寻找 W/E 的位置创造窗口。",
+      "plan": "塔莉垭下路补刀，妮蔻辅助；妮蔻 E 真实命中后报同一目标，塔莉垭可先布 E 再按实际位置选择 W 推向；敌人被推过碎石时才触发爆炸与晕眩。",
+      "risk": "两人偏脆；妮蔻伪装不能无视视野、伤害或控制，塔莉垭 W 也可能落空，失去退路时停止前压。",
       "partners": [
         "Graves",
         "Shen"
@@ -14324,20 +14439,21 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "mana-control",
-        "support": "control-support"
-      },
+      "reviewedAt": "2026-11-02",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Taliyah": "bbd8f417c4822070",
-        "champion:Neeko": "dd80e63f768516f5",
+        "champion:Taliyah": "164392e23c74360e",
+        "champion:Neeko": "d6f4984cd7330b72",
         "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
+        "item:3003": "88afa631f4faea9e",
         "item:3089": "a8a9b060b253391c",
         "item:3020": "357a162d6a40286e",
         "item:3135": "9eb1465e02c69db0",
@@ -14348,22 +14464,81 @@
         "rune:8210": "e78877d51ff049ea",
         "rune:8237": "141d0a7c16b98b91",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8369": "436163d51e34ebba",
-        "rune:8304": "aa454bdce540cb11",
-        "item:3190": "89cdf2838748dfc7",
-        "item:4005": "049fc32e0486e5b6",
-        "item:2065": "a30335c7d456f5fd",
-        "item:3158": "72ca672b9221f063",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Taliyah",
+          "role": "bottom",
+          "loadoutId": "taliyah-bottom-manual-control",
+          "job": "负责下路补刀和控蓝；队友限制目标后按实际位置铺 E、选 W 方向，目标穿过碎石才有碎石晕眩。技能未命中或退路不清就停止追击。"
+        },
+        {
+          "champion": "Neeko",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "E 实际命中禁锢后报目标；伪装仅用于找角度，确认队友距离及退路，不把伪装当安全保护。"
+        }
+      ],
+      "steps": [
+        "妮蔻 E 实际命中并禁锢目标后报目标与技能状态，双方确认实际距离、兵线和退路。",
+        "塔莉垭可先铺 E，再向实际目标施放 W 并确认推向；只有目标被推过碎石，才会由本次位移触发碎石爆炸与晕眩。",
+        "任一控制落空或目标离开接应范围就结束追击，优先守住视野和补刀路线。"
+      ],
+      "window": "妮蔻 E 实际命中并禁锢目标，且塔莉垭 W/E 已学可用、目标处于实际施法范围；W 命中及目标经过碎石均须实际确认。",
+      "early": "塔莉垭下路补刀并管理法力，辅助用可用技能寻找安全消耗窗口；控制未命中前不预设后续 W 会命中。",
+      "economy": "塔莉垭承担下路补刀；辅助按任务、视野和实际经济安排购买，不把辅助成装时间按补刀位计算。",
+      "reviewSourceAnchors": {
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        },
+        "Neeko": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d6f4984cd7330b72",
+          "observedAt": "2026-10-26T13:38:40.506Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Neeko",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/neeko/neeko.bin.json",
+              "sha256": "0d2d79949fbeecdbb851ae627b1dfa189ceab975e17627c57c8f7de546d9d12a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "1d597517ddd4f92e"
+            }
+          }
+        }
+      }
     },
     {
       "id": "jhin-taliyah",
@@ -48228,6 +48403,103 @@
           }
         }
       }
+    },
+    {
+      "id": "taliyah-bottom-manual-control",
+      "name": "人工机制参考 · 塔莉垭下路",
+      "champions": [
+        "Taliyah"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "mage",
+      "items": [
+        6655,
+        3003,
+        3089
+      ],
+      "boots": 3020,
+      "late": [
+        3135,
+        3157
+      ],
+      "early": [
+        3070
+      ],
+      "runes": [
+        "taliyah-bottom-manual-comet"
+      ],
+      "why": "人工按技能与下路经济调整，非中路或下路统计、非原作者配装，未经对局验证。下路优先补刀控蓝；女神之泪按经济考虑，大天使叠满后才转炽天使，不能直接买炽天使。敌人冲刺或被强制位移经过 E 碎石才触发碎石晕眩；W 需实际命中并将敌人推过碎石，注意兵线与退路。",
+      "damage": "ap",
+      "priority": "QEW",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "人工参考：主 Q 副 E，有 R 点 R；等级和实际技能使用以游戏内为准，非同位置统计。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerTeleport"
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-02",
+      "sources": [
+        {
+          "name": "Riot 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据"
+        },
+        {
+          "name": "Riot 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备依据"
+        },
+        {
+          "name": "Riot 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Taliyah": "164392e23c74360e",
+        "item:6655": "e593f4433de96e4b",
+        "item:3003": "88afa631f4faea9e",
+        "item:3089": "a8a9b060b253391c",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3070": "e2dbf1b6d5da375b",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        }
+      }
     }
   ],
   "runes": {
@@ -49043,6 +49315,25 @@
           8473,
           8451,
           5005,
+          5008,
+          5001
+        ]
+      }
+    },
+    "taliyah-bottom-manual-comet": {
+      "name": "人工机制参考 · 奥术彗星",
+      "when": "以技能消耗并配合队友实际控制；人工调整，非塔莉垭下路统计或原作者配装。",
+      "page": {
+        "primaryStyleId": 8200,
+        "subStyleId": 8300,
+        "selectedPerkIds": [
+          8229,
+          8226,
+          8210,
+          8237,
+          8345,
+          8347,
+          5007,
           5008,
           5001
         ]
