@@ -2,6 +2,7 @@ import {BUNDLED_CATALOG,validateCatalog,installValidatedCatalog,catalogIssues} f
 import {normalizeBuildSource,sameBuildSource,selectBuildSource} from './core/build-source.mjs';
 import {prepareAssets,installAssets} from './ui.mjs';
 import {optionalGearCompatibility} from './core/optional-gear-review.mjs';
+import {historicalSkillCompatible} from './core/historical-catalog-review.mjs';
 
 const baseFields=['champions','items','runes','spells','abilityReference','historicalAbilityReference','spellbook','patch','version','mechanicSourceRevision'];
 const imageFields=['imageOverrides','items','augments','abilityReference','spells','runes','version'];
@@ -39,6 +40,11 @@ export function createRendererDataState({getSource,requestSnapshot,beforeApply=(
     const nextStatus={...status};delete nextStatus.optionalCompatible;delete nextStatus.optionalMissing;
     const missing=optionalGearCompatibility(entries.find(entry=>entry.id===id),next.catalog,next);
     if(missing)Object.assign(nextStatus,{optionalCompatible:true,optionalMissing:missing});statuses[id]=nextStatus;
+   }
+   const historicalDefaults=new Map();
+   for(const [id,status] of Object.entries(statuses))if(status?.historicalEvidence){
+    const nextStatus={...status};delete nextStatus.historicalCompatible;delete nextStatus.historicalPatch;
+    if(!nextStatus.invalid&&nextStatus.stale&&historicalSkillCompatible(entries.find(entry=>entry.id===id),next.catalog,next,status.historicalEvidence,historicalDefaults))Object.assign(nextStatus,{historicalCompatible:true,historicalPatch:next.patch});statuses[id]=nextStatus;
    }
    next.catalogInfo={...next.catalogInfo,status:statuses};
   }

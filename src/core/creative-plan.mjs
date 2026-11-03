@@ -14,6 +14,16 @@ const memberKey=m=>m.role+':'+m.champion;
 const content=plan=>Object.fromEntries([...['schema','archetype','archetypeName','name','tempo','members','ordered','why','plan','steps','window','caution','feasibility','patch','dataVersion','rulesVersion'],...(plan.archetype==='cooperation'?['cooperation']:plan.archetype==='shared'?['shared']:plan.archetype==='curated'?['curated']:[]),...(plan.stagePlan!==undefined?['stagePlan']:[]),...(plan.counterplay!==undefined?['counterplay']:[])].map(key=>[key,plan[key]]));
 export const creativePlanId=plan=>'creative-'+plan.archetype+'-'+fingerprint(content(plan));
 
+// Room protocol v1 predates the local neutral-stage markers. Send the same
+// materialized jobs, routes and stage snapshot with a v1 content identity so
+// older clients can validate the entire ballot instead of dropping it.
+export function roomCompatiblePlan(value){
+ const plan=validateCreativePlan(value);if(!plan.shared?.historicalNeutral)return plan;
+ const {historicalNeutral,historicalPatch,...shared}=plan.shared;
+ const compatible={...plan,shared};compatible.id=creativePlanId(compatible);
+ return validateCreativePlan(compatible);
+}
+
 // Keep the original conditional interactions with the saved member pages.
 // A future rules update must not silently rewrite an accepted plan.
 function savedCooperation(value,members){
@@ -67,6 +77,10 @@ function cooperationDescriptor(source,data){
 function savedShared(value,members){
  if(!value||value.kind!=='shared'||!(members.length>=4||value.routes?tempos:['poke','protect','growth']).includes(value.tempo)||value.bonus!==0||!Array.isArray(value.edges)||value.edges.length||JSON.stringify(value.members)!==JSON.stringify(members))throw Error('共同分工不能包含机制联动或加分');
  const result={kind:'shared',tempo:value.tempo,bonus:0,members:members.map(m=>({...m})),edges:[]};
+ if(value.historicalNeutral!==undefined||value.historicalPatch!==undefined){
+  if(value.historicalNeutral!==true||typeof value.historicalPatch!=='string'||!/^\d{1,2}\.\d{1,2}$/.test(value.historicalPatch)||members.length<4||!value.routes?.some(route=>route.loadoutGroup))throw Error('历史子组分工格式不正确');
+  result.historicalNeutral=true;result.historicalPatch=value.historicalPatch;
+ }
  for(const [field,max] of [['name',100],['why',700],['sourceNote',300],['opening',700],['economy',500],['patch',30],['reviewedAt',40]]){if(!text(value[field],max))throw Error('共同分工说明不完整');result[field]=value[field];}
  const seen=new Set();if(!Array.isArray(value.memberJobs)||value.memberJobs.length!==members.length)throw Error('共同分工成员不完整');
  result.memberJobs=value.memberJobs.map(m=>{if(!members.some(member=>memberKey(member)===memberKey(m))||seen.has(memberKey(m))||!text(m.job,700))throw Error('共同分工与成员不一致');seen.add(memberKey(m));return {role:m.role,champion:m.champion,job:m.job};});
@@ -142,6 +156,7 @@ export function validateCreativePlan(value,slots,{allowUnknown=false}={}){
  }
  if(value.archetype==='shared'){
   result.shared=savedShared(value.shared,result.members);
+  if(result.shared.historicalNeutral&&result.counterplay)throw Error('历史子组分工不能附带未经当版确认的独立反制图');
   const expected=sharedDescriptor(result.shared,{version:result.dataVersion});
   for(const key of ['archetypeName','name','tempo','ordered','why','plan','steps','window','caution','feasibility','patch','rulesVersion'])if(JSON.stringify(result[key])!==JSON.stringify(expected[key]))throw Error('共同分工条件与保存说明不一致');
  }

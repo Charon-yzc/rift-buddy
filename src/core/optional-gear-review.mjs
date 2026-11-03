@@ -72,21 +72,23 @@ export function publicOptionalGearReviews(base,merged,personal={}){
 
 // This is a local usability decision, not a new review or a publication
 // validator. Every other changed dependency remains a hard stop.
-function defaultMemberAvailable(member,catalog,data){
+export function memberLoadoutAvailable(member,catalog,data,loadoutId='default'){
  const champion=data.champions.find(value=>value.id===member.champion);if(!champion)return false;
  // Use the actual selected source, or the real mechanism template when no
  // usable source exists. The staged catalog may not yet be globally installed.
  const projected={...data,catalog};
  try{
-  const build=getBuild(champion,member.role,projected,{mode:'rift',loadoutId:'default',coreAuto:true,catalogOverride:catalog});
+  const build=getBuild(champion,member.role,projected,{mode:'rift',loadoutId,coreAuto:true,catalogOverride:catalog});
+  if(build.loadoutId!==loadoutId)return false;
   if(!build.runePage||!validateRunePage(build.runePage,data.runes)||build.summoners.length!==2||!(build.skillOrder||build.priority||build.first||build.attributePlan)||!build.boots||!build.start.length&&!build.granted.length||build.unavailableCoreRoutes?.[build.selectedCoreIndex]||build.items.filter(item=>!item.tags?.includes('Boots')).length<3)return false;
-  const core=build.reference?.core?.[build.selectedCoreIndex]?.items||build.mechanismCoreIds;
+  const core=build.reference?.core?.[build.selectedCoreIndex]?.items||(loadoutId==='default'?build.mechanismCoreIds:catalog.loadouts.find(value=>value.id===loadoutId)?.items);
   if(!Array.isArray(core)||core.length!==3||!core.every(id=>build.items.some(item=>Number(item.id)===Number(id))))return false;
   if([...requiredLoadoutItems({items:core,boots:build.boots},data)].some(id=>!data.items[id]))return false;
   const itemSet=createItemSet(champion,build,projected),items=itemSet.blocks.filter(block=>['当前成装路线 · 按顺序购买','后期计划 · 当前已选'].includes(block.type)).flatMap(block=>block.items.map(item=>item.id));
   return new Set(items).size>=3;
  }catch{return false;}
 }
+export const defaultMemberAvailable=(member,catalog,data)=>memberLoadoutAvailable(member,catalog,data);
 export function optionalGearCompatibility(entry,catalog,data,{checkDefaults=true}={}){
  if(!entry||entry.patch!==data.patch||catalogEntryRevision(entry,catalog)!==revisions[entry.id]||(entry.partners||[]).some(id=>!data.champions.some(champion=>champion.id===id)))return null;
  const missing=new Set(),required=new Set(),members=comboMembers(entry),loadouts=[],defaults=[];

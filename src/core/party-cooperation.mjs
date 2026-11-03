@@ -9,9 +9,32 @@ import {sharedResourceConflict} from './cooperation-resources.mjs';
 import {catalogEntryRevision} from './catalog-choice.mjs';
 import {reviewedCatalogEntry} from './mechanic-review.mjs';
 import {LOADOUTS,RUNE_PLANS,SKILL_PLANS} from './loadouts.mjs';
+import {mechanicSourceInput} from './mechanic-source.mjs';
 
 const roles=['top','jungle','mid','bottom','support'];
 const same=(a,b)=>a.role===b.role&&a.champion===b.champion;
+// Outside the skill graph's reviewed patch, only the independently proven
+// catalog subgroup may supply specific actions. Other party members receive
+// neutral responsibilities, not inferred current spells or control edges.
+export function historicalPartyPlan(members,graph,catalogStatus,catalogReviewPatch){
+ if(![4,5].includes(members.length)||graph.currentPatch!==catalogReviewPatch||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)))return null;
+ const sorted=[...members].sort((a,b)=>roles.indexOf(a.role)-roles.indexOf(b.role));
+ const sources=sorted.map(member=>{const source=mechanicSourceInput(graph.byId.get(member.champion),graph.currentPatch);return source?`https://ddragon.leagueoflegends.com/cdn/${source.version}/data/en_US/champion/${member.champion}.json`:null;});
+ if(sources.some(source=>!source))return null;
+ const t=TRIOS.find(entry=>catalogStatus?.[entry.id]?.historicalCompatible===true&&reviewedCatalogEntry(entry,catalogStatus,catalogReviewPatch)&&entry.members.every(member=>sorted.some(value=>same(member,value))));
+ if(!t||!Object.hasOwn(TEMPOS,t.tempo))return null;
+ const revision=catalogEntryRevision(t,{loadouts:LOADOUTS,runes:RUNE_PLANS,skillPlans:SKILL_PLANS});
+ const step=t.steps.join(' → '),confirm='每位成员自行确认当前技能、资源和退路；没有读取实时技能。';if(!revision||step.length>400||[confirm,t.window].join(' ').length>400||t.risk.length>400)return null;
+ const group={id:t.id,kind:'trio',reviewedAt:t.reviewedAt,early:t.early,economy:t.economy,sources:t.sources||[],revision,members:t.members.map(member=>({role:member.role,champion:member.champion,loadoutId:member.loadoutId||'default'}))};
+ const jobs=sorted.map(member=>{const own=t.members.find(value=>same(member,value));return {role:member.role,champion:member.champion,job:own?`${own.job}（沿用 ${t.patch} 组合说明）`:'先处理自己的兵线或安全营地，确认队友到位和退路后再接应；条件不成立就回撤。'};});
+ const fallbackJobs=sorted.map(member=>({role:member.role,champion:member.champion,job:'本轮取消深入，先确认队友和退路，接应撤退后处理安全资源。'}));
+ const routes=[{id:'curated:'+t.id,label:t.name.length<=100?t.name:'原三人配合',tempo:t.tempo,step,condition:t.window,failure:t.risk,memberJobs:jobs,loadoutGroup:group},{id:'reset',label:'取消进场，接应撤退',tempo:'growth',step:'条件不成立就取消深入，接应队友撤退，再处理安全兵线或营地。',condition:'队友和退路可以确认；先避免分散。',failure:'退路不安全时停止继续追击，重新确认集合方向。',memberJobs:fallbackJobs}];
+ const opening=`原三人组：${t.early} 其他成员先处理自己的安全资源，报告能否到场。`,economy=`原三人组：${t.economy} 其他成员按自己的位置保留安全资源。`;
+ if(economy.length>500)return null;
+ const steps=[opening,'主线：'+step,'备选：'+routes[1].step];
+ if(steps.some(value=>value.length>400))return null;
+ return {kind:'shared',historicalNeutral:true,historicalPatch:t.patch,name:`${sorted.length}人分工 · ${TEMPOS[t.tempo]}`,members:sorted.map(({role,champion})=>({role,champion})),memberJobs:jobs,routes,edges:[],bonus:0,tempo:t.tempo,steps,relaySteps:steps,opening,economy,why:'保留已审三人技能配合；其余成员按实际到场和退路接应，不推断额外技能联动。',conditions:[confirm,t.window],failures:['关键成员无法到场或退路不安全时取消本轮，先接应撤退。',t.risk],sourceNote:`三人组整理于 ${t.patch}，已审技能来源指纹一致；装备效果、任务与视野按当前核对，其余成员只列通用分工。未验证全队独特协同或对局胜率。`,patch:graph.currentPatch,reviewedAt:t.reviewedAt,sourceUrls:sources};
+}
 function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
  const name=id=>graph.byId.get(id).name;
  const priority=['pair:Malphite:Yasuo','pair:Diana:Yasuo','pair:Yasuo:Zac'];
@@ -74,7 +97,7 @@ function partyRoutes(members,graph,edges,tempo,curated,requestedTempo,basePlan){
 // only a subgroup has a reviewed interaction. This adds no synergy bonus and
 // does not claim that the whole group has a unique or measured advantage.
 export function partyCooperationPlan(members,graph,{catalogStatus={},catalogReviewPatch,tempo:requestedTempo='any',basePlan=null}={}){
- if(graph.currentPatch!==SKILL_COOPERATION_PATCH)return null;
+ if(graph.currentPatch!==SKILL_COOPERATION_PATCH)return historicalPartyPlan(members,graph,catalogStatus,catalogReviewPatch);
  if(members.some(member=>!graph.byId.has(member.champion)||!graph.profile(member).reviewed))return null;
  if(![3,4,5].includes(members.length)||members.some(m=>!roles.includes(m.role)||!graph.byId.has(m.champion)||!COOPERATION_SKILLS[m.champion])||new Set(members.map(m=>m.role)).size!==members.length||new Set(members.map(m=>m.champion)).size!==members.length)return null;
  members=[...members].sort((a,b)=>roles.indexOf(a.role)-roles.indexOf(b.role));

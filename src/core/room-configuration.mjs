@@ -9,6 +9,8 @@ import {validateCustomSkillOrder} from './skill-advice.mjs';
 import {validateSummonerIds,preferredFlashOrder,configuredFlashSlot} from './summoner-selection.mjs';
 import {currentPlayerSelection} from './guide.mjs';
 import {manualPlayerSlot,CLIENT_POSITION_ROLES} from './draft.mjs';
+import {restoreRoomHistoricalPlan} from './room-history.mjs';
+import {catalogPlanGroups} from './catalog-choice.mjs';
 
 // A saved solo preference can outlive its mode or game. When the client has
 // identified this player, share that player's current public/manual slot.
@@ -61,7 +63,9 @@ export function roomPreparation(raw,data,strategy,{localStrategy=null}={}){
  const order=config.skills||config.first;
  const skills=order?validateCustomSkillOrder({order,patch:config.patch,...(order.length===3&&config.priority?{priority:config.priority}:{})},config.champion):undefined;
  const summonerIds=preferredFlashOrder(validateSummonerIds(config.spells,'rift'),configuredFlashSlot(data));
- const incoming=strategy&&strategy.members?.some(m=>m.champion===config.champion&&m.role===config.role)?validateCreativePlan(strategy):null;
+ const candidate=strategy&&strategy.members?.some(m=>m.champion===config.champion&&m.role===config.role)?(restoreRoomHistoricalPlan(strategy,data)||validateCreativePlan(strategy)):null;
+ const bound=candidate&&catalogPlanGroups(candidate).length>0;
+ const incoming=bound?automaticCreativePlan(candidate,data.catalogInfo?.status,data.patch):candidate;
  // An explicit adoption can apply the concrete choices to this same local
  // group despite different catalog text identities. Its duties remain local;
  // the sender's frozen strategy remains visible as a separate reference.

@@ -5,6 +5,7 @@ import {roomClientPlan,captureRoomStrategy} from './room-configuration.mjs';
 import {fingerprint} from './catalog-review.mjs';
 import {creativePlanMatches} from './creative-plan.mjs';
 import {confirmedClientDraft,confirmedPlayerPick} from './draft-intents.mjs';
+import {restoreRoomHistoricalPlan} from './room-history.mjs';
 
 export const roomLineupIdentity=(share,from=share.from)=>fingerprint({from,mode:share.mode,lineup:share.lineup,configurations:share.configurations,strategy:share.strategy});
 
@@ -15,7 +16,8 @@ export function adoptRoomLineup(raw,data,current,client,availability={},syncOpti
  const inDraft=client?.connected&&client.phase==='ChampSelect'&&client.session;
  if(inDraft&&client.mode?.id!=='rift')throw Error('当前选人不是已确认的峡谷模式，请先查看队友分享');
  if(share.mode!=='rift'&&(share.mode!==undefined||!inDraft||client.mode?.id!=='rift'))throw Error('尚未确认峡谷模式，请先查看队友分享');
- const members=share.strategy?.members||share.lineup.filter(s=>s.champion);
+ const strategy=share.strategy&&(restoreRoomHistoricalPlan(share.strategy,data)||share.strategy);
+ const members=strategy?.members||share.lineup.filter(s=>s.champion);
  const desired=createSlots().map(s=>{const champion=share.lineup.find(p=>p.role===s.role)?.champion||null;return {...s,champion,locked:!!champion,automaticPosition:!!champion,party:members.some(m=>m.role===s.role&&m.champion===champion)};});
  // Adoption prepares an assistant plan, without writing the client. Public
  // previews remain visible separately; only confirmed locks constrain it.
@@ -25,7 +27,7 @@ export function adoptRoomLineup(raw,data,current,client,availability={},syncOpti
   if(Number.isInteger(s.clientCellId)&&!cells.has(s.clientCellId)){const {clientCellId,...rest}=s;return {...rest,champion:null,locked:false};}
   return s.automaticPosition&&!s.manualPosition&&!cells.has(s.clientCellId)?{...s,locked:false}:s;
  });
- const restored=restoreTeamFavorite({slots:desired,scope:'party',...(share.strategy?{creativePlan:share.strategy}:{})},reusable,data.champions,session,{...availability,moveUnbound:true});
+ const restored=restoreTeamFavorite({slots:desired,scope:'party',...(strategy?{creativePlan:strategy}:{})},reusable,data.champions,session,{...availability,moveUnbound:true});
  // Lineup-only messages have no party identities. Keep the receiver's marks.
  for(const slot of restored.slots){const prior=current.find(s=>s.role===slot.role);if(!share.strategy||prior.partyManual){slot.party=prior.party;if(prior.partyManual)slot.partyManual=true;}}
  if(inDraft){const merged=mergeClientSession(restored.slots,session,data.champions,{...syncOptions,creativePlan:restored.creativePlan});restored.slots=merged.slots;restored.unassigned=merged.unassigned;}

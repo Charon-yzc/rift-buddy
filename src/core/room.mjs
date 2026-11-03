@@ -202,7 +202,7 @@ export function sanitizeRoomBallot(value){
   const team=lineup(value.proposal.lineup);
   if(!team?.some(s=>s.champion)||new Set(team.filter(s=>s.champion).map(s=>s.champion)).size!==team.filter(s=>s.champion).length)return null;
   const builds=configurations(value.proposal.configurations,team);if(builds===null)return null;
-  let strategy;if(value.proposal.strategy){try{strategy=validateCreativePlan(value.proposal.strategy);if(!strategy.members.every(m=>team.some(s=>s.champion===m.champion&&s.role===m.role)))return null;}catch{return null;}}
+  let strategy;if(value.proposal.strategy){if(value.proposal.strategy.shared?.historicalNeutral!==undefined||value.proposal.strategy.shared?.historicalPatch!==undefined)return null;try{strategy=validateCreativePlan(value.proposal.strategy);if(!strategy.members.every(m=>team.some(s=>s.champion===m.champion&&s.role===m.role)))return null;}catch{return null;}}
   proposal={lineup:team,mode:'rift',...(builds?{configurations:builds}:{}),...(strategy?{strategy}:{})};
  }
  let accepted;
@@ -223,7 +223,7 @@ export function sanitizeShare(value){
  if(value.mode!==undefined&&!MODES.includes(value.mode))return null;
  const builds=configurations(value.configurations,team);if(builds===null)return null;
  let strategy;
- if(value.strategy!==undefined){try{strategy=validateCreativePlan(value.strategy);if(!strategy.members.every(m=>team.some(s=>s.role===m.role&&s.champion===m.champion)))return null;}catch{return null;}}
+ if(value.strategy!==undefined){if(value.strategy?.shared?.historicalNeutral!==undefined||value.strategy?.shared?.historicalPatch!==undefined)return null;try{strategy=validateCreativePlan(value.strategy);if(!strategy.members.every(m=>team.some(s=>s.role===m.role&&s.champion===m.champion)))return null;}catch{return null;}}
  const ballot=value.ballot===undefined?undefined:sanitizeRoomBallot(value.ballot);if(ballot===null)return null;
  let intent;
  if(value.intent!=null){if(!['',...ROLES].includes(value.intent.role)||value.intent.champion!==null&&!(typeof value.intent.champion==='string'&&HERO.test(value.intent.champion)))return null;intent={role:value.intent.role,champion:value.intent.champion};}
