@@ -92,7 +92,7 @@ import {ROLES,STYLES,DUOS,TRIOS,CROSS_SYNERGIES,COMBINATION_SOURCE,profile,match
 import {createSlots,recommend,analyzeTeam,mergeClientSession,validateSlots,clearClientPicks,currentCombo,comboContextKnown,automaticCreativePlan} from './core/recommend.mjs';
 import {DRAFT_SCOPES,CLIENT_POSITION_ROLES,draftTargets,scopeSlots,effectiveDraftScope,moveChampion,moveDisplayedChampion,assignClientChampion,clientDraftStatus,clearDraftPicks,manualPlayerSlot,restorePlayerPosition,clearManualPlayerPosition,publicClientGameId,reconcileClientDraft,pickerMatches,publicDraftPicks,unassignedPublicPicks} from './core/draft.mjs';
 import {combinationDialog,combinationRows} from './draft-library-view.mjs';
-import {getBuild,buildAsText,SHARDS,isFreshBuildReference,buildRoleEvidence,validReference} from './core/builds.mjs';
+import {getBuild,buildAsText,SHARDS,isFreshBuildReference,buildRoleEvidence,validReferenceForUse} from './core/builds.mjs';
 import {attributeReference} from './core/skill-summary.mjs';
 import {preparationSummary,runeApplicationKey} from './preparation-view.mjs';
 import {loadoutSelector,runeSelector,skillSelector,comboSourceLinks,laterItemSelector,bottomQuestPlanControl,gearSelector,sourceOpponentNotice} from './build-options-view.mjs';
@@ -146,7 +146,7 @@ window.matchMedia('(max-width: 1050px)').addEventListener('change',()=>{if(route
 
 let championUsage=null;
 let draftAdvanced=false,lastClientRead=null,lastRenderedClient='';
-let rankedRolesCache=null;const currentRankedRoles=()=>{if(rankedRolesCache?.builds!==data.builds||rankedRolesCache?.patch!==data.patch)rankedRolesCache={builds:data.builds,patch:data.patch,value:rankedClientRoles(data)};return rankedRolesCache.value;};
+let rankedRolesCache=null;const currentRankedRoles=()=>{const source=JSON.stringify(normalizeBuildSource(data.buildSource));if(rankedRolesCache?.builds!==data.builds||rankedRolesCache?.patch!==data.patch||rankedRolesCache?.source!==source)rankedRolesCache={builds:data.builds,patch:data.patch,source,value:rankedClientRoles(data)};return rankedRolesCache.value;};
 const includePublicPreselection=()=>!rankedDraftPolicy(client).ranked&&saved.preferences.includePreselected===true;
 const currentParty=()=>rankedDraftPolicy(client).ranked?client.party:partyWithPregameIntents(client.party,room,saved.draft?.preselection);
 const clientSyncOptions=()=>({autoArrange:saved.preferences.autoArrange!==false,autoParty:saved.preferences.autoParty!==false,party:currentParty(),partyCount:saved.draft?.partyCount,roleOrder:currentRankedRoles(),ownRole:taskOwnRole(),creativePlan:activeCreativePlan});
@@ -483,7 +483,7 @@ async function refreshOpponentConfiguration(el){
  try{
   const ref=await dataOperation(api.refreshOpponentBuild(selection.id,selection.role,target.id,source));
   if(data.patch!==patch)return;
-  if(!sameBuildSource(ref,source)||!validReference(ref,champ(selection.id),selection.role,data,{opponent:target.id}))throw Error('所选对手来源未通过核对');
+  if(!sameBuildSource(ref,source)||!validReferenceForUse(ref,champ(selection.id),selection.role,data,{opponent:target.id}))throw Error('所选对手来源未通过核对');
   if(!hasDataRevision(ref))dataState.local({opponentBuildSources:{...data.opponentBuildSources,[opponentBuildKey(selection.id,selection.role,target.id,source,ref.patch)]:ref}});
   if(key===opponentRequestKey(selection)&&context===selectionRequestContext()&&publicContext===matchupPreparationContext())toast('已取得所选对手的统计参考；选择配置后才会采用');
  }catch(error){if(context===selectionRequestContext()&&publicContext===matchupPreparationContext()){const message=String(error.message||'对手来源暂不可用').replace(/^Error invoking remote method '[^']+':(?: Error:)?\s*/,'');opponentRefreshErrors.set(key,message);while(opponentRefreshErrors.size>30)opponentRefreshErrors.delete(opponentRefreshErrors.keys().next().value);}}

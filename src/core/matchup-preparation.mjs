@@ -4,7 +4,7 @@ import {publicMatchupOpponent,matchupPlan} from './matchup-plans.mjs';
 import {profile} from './rules.mjs';
 import {fingerprint} from './catalog-review.mjs';
 import {selectedOpponentBuild} from './opponent-build-source.mjs';
-import {validReference} from './builds.mjs';
+import {validReferenceForUse} from './builds.mjs';
 import {normalizeBuildSource} from './build-source.mjs';
 
 export const MATCHUP_PREPARATION_PATCH='16.20';
@@ -107,7 +107,7 @@ export function matchupPreparation({data,selection,enemyIds=[],targetId='',publi
  const enemy=publicMatchupOpponent(data,enemyIds,targetId),champion=data?.champions.find(c=>c.id===selection?.id);
  if(!enemy||!champion||selection.mode!=='rift')return null;
  const b=build||getBuild(champion,selection.role,data,selection),tags=enemyPressures(enemy),mechanism=matchupPlan({data,champion,role:selection.role,enemyId:enemy.id});
- const candidate=selectedOpponentBuild(data,champion.id,selection.role,enemy.id),scoped=validReference(candidate,champion,selection.role,data,{allowOlder:true,opponent:enemy.id})?candidate:null;
+ const candidate=selectedOpponentBuild(data,champion.id,selection.role,enemy.id),scoped=validReferenceForUse(candidate,champion,selection.role,data,{allowOlder:true,opponent:enemy.id})?candidate:null;
  const choiceSelection=scoped?{...selection,sourceOpponent:enemy.id,variant:'default',loadoutId:'default'}:{...selection};
  if(!scoped)delete choiceSelection.sourceOpponent;
  const choices=scoped||selection.sourceOpponent?getBuild(champion,selection.role,data,choiceSelection):b;

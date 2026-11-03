@@ -2,7 +2,7 @@ import {sharedEquipmentBuild} from './shared-equipment.mjs';
 import {summonerPlan,validSourceSummonerOptions} from './summoner-selection.mjs';
 import {validMatchups} from './matchups.mjs';
 import {selectedOpponentBuild,validOpponentScope} from './opponent-build-source.mjs';
-import {validBuildSource,buildSourceLabel,selectedBuildReference,collectBuildSources} from './build-source.mjs';
+import {validBuildSource,buildSourceLabel,selectedBuildReference,collectBuildSources,sameBuildSource,normalizeBuildSource} from './build-source.mjs';
 import {profile, RULES_PATCH, RULES_VERSION, DUOS, TRIOS} from './rules.mjs';
 import {dependencyChanges} from './catalog-review.mjs';
 import {LOADOUT_DATE,LOADOUT_PATCH,RUNE_PLANS,SKILL_PLANS,loadoutOptions,loadoutSkillPlans,comboLoadout,comboSources,mechanismRuneKeys} from './loadouts.mjs';
@@ -82,12 +82,29 @@ export function validReference(ref,champion,role,data,{allowOlder=false,opponent
  return !!(ref&&ref.schema===1&&ref.champion===champion.id&&ref.role===role&&usableBuildPatch(ref.patch,data.patch,allowOlder)&&
   (opponent?validOpponentScope(ref,champion,role,opponent,data):ref.scope===undefined&&ref.opponent===undefined)&&
   validBuildSource(ref)&&Array.isArray(ref.core)&&ref.core.length&&
-  ref.core.every(c=>Array.isArray(c.items)&&c.items.length===3&&c.items.every((id,i)=>Number.isSafeInteger(id)&&id>0&&(older||relaxedEquipment||data.items[id]?.maps?.['11']&&!itemConflicts(id,c.items.slice(0,i)))))&&
+  ref.core.every(c=>c&&Array.isArray(c.items)&&c.items.length===3&&c.items.every((id,i)=>Number.isSafeInteger(id)&&id>0&&(older||relaxedEquipment||data.items[id]?.maps?.['11']&&!itemConflicts(id,c.items.slice(0,i)))))&&
   validSourceMetadata(ref,data,older)&&validSourceRows(ref.core,data,'11',older||relaxedEquipment)&&validSourceRows(ref.boots,data,'11',older||relaxedEquipment)&&validSourceRows(ref.start,data,'11',older||relaxedEquipment)&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'11',older||relaxedEquipment))&&(older?storedRunePage(ref.runePage):validateRunePage(ref.runePage,data.runes))&&
-  (ref.runeOptions===undefined||Array.isArray(ref.runeOptions)&&ref.runeOptions.length>0&&ref.runeOptions.length<=18&&ref.runeOptions.every(o=>typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&Number.isFinite(o.samples)&&o.samples>=0&&(older?storedRunePage(o.page):validateRunePage(o.page,data.runes))))&&
+  (ref.runeOptions===undefined||Array.isArray(ref.runeOptions)&&ref.runeOptions.length>0&&ref.runeOptions.length<=18&&ref.runeOptions.every(o=>o&&typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&Number.isFinite(o.samples)&&o.samples>=0&&(older?storedRunePage(o.page):validateRunePage(o.page,data.runes))))&&
   validSourceSummonerOptions(ref.sourceSummonerOptions,data,{older})&&
   (ref.matchups===undefined||validMatchups(ref.matchups))&&(ref.rankedStatistics===undefined||validRankedStatistics(ref.rankedStatistics))&&
-  (ref.skillOptions===undefined||Array.isArray(ref.skillOptions)&&ref.skillOptions.length<=5&&ref.skillOptions.every(o=>typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&legalSkillOrder(o.order,champion.id)&&Number.isSafeInteger(o.samples)&&o.samples>0)));
+  (ref.skillOptions===undefined||Array.isArray(ref.skillOptions)&&ref.skillOptions.length<=5&&ref.skillOptions.every(o=>o&&typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&legalSkillOrder(o.order,champion.id)&&Number.isSafeInteger(o.samples)&&o.samples>0)));
+}
+// Admit current source records with obsolete equipment only after validating their
+// original identity. Each equipment row is still checked when it is displayed.
+export function validReferenceForUse(ref,champion,role,data,{allowOlder=false,opponent}={}){
+ if(!champion||!['top','jungle','mid','bottom','support'].includes(role))return false;
+ if(validReference(ref,champion,role,data,{allowOlder,opponent}))return true;
+ if(ref?.patch!==data.patch||ref.source!=='OP.GG'||!Array.isArray(ref.core)||!Array.isArray(ref.boots)||!Array.isArray(ref.start)||!Array.isArray(ref.later)||!ref.later.every(Array.isArray))return false;
+ const rows=[...(ref.core||[]),...(ref.boots||[]),...(ref.start||[]),...(Array.isArray(ref.later)?ref.later.flat():[])];
+ if(rows.some(row=>!row||!Number.isSafeInteger(row.samples)||row.samples<0||row.wins!=null&&(!Number.isSafeInteger(row.wins)||row.wins<0||row.wins>row.samples)||row.wins!=null&&row.winRate!=null&&(row.samples===0||!Number.isFinite(row.winRate)||Math.abs(row.winRate-100*row.wins/row.samples)>0.005001)||['winRate','pickRate'].some(key=>row[key]!=null&&(!Number.isFinite(row[key])||row[key]<0||row[key]>100))||row.early!==undefined&&(!Array.isArray(row.early)||row.early.length>12||!row.early.every(id=>Number.isSafeInteger(id)&&id>0))))return false;
+ const position=role==='bottom'?'adc':role;
+ try{
+  const url=new URL(ref.sourceUrl);
+  if(url.origin!=='https://op.gg'||url.username||url.password||url.pathname!==`/lol/champions/${champion.id.toLowerCase()}/build/${position}`||['region','tier','patch'].some(k=>url.searchParams.getAll(k).length!==1||url.searchParams.get(k)!==ref[k])||url.searchParams.getAll('type').length!==1||url.searchParams.get('type')!=='ranked')return false;
+  const targets=url.searchParams.getAll('target_champion');
+  if(opponent?targets.length!==1||targets[0]!==opponent.toLowerCase():targets.length!==0)return false;
+ }catch{return false;}
+ return validReference(ref,champion,role,data,{allowOlder,opponent,allowInvalidEquipment:true});
 }
 // Mayhem's seasonal rules change the available augments and their builds.
 // An older source must not become a current automatic reference, even if a
@@ -106,7 +123,7 @@ export function buildRoleEvidence(data){
  const champions=new Map(data.champions.map(c=>[c.id,c])),seen=new Set(),result=[];
  for(const ref of Object.values(collectBuildSources(data))){
   const champion=champions.get(ref.champion),key=ref.champion+':'+ref.role;
-  if(!champion||seen.has(key)||!validReference(ref,champion,ref.role,data,{allowOlder:true}))continue;
+  if(!champion||seen.has(key)||!validReferenceForUse(ref,champion,ref.role,data,{allowOlder:true}))continue;
   seen.add(key);result.push({champion:ref.champion,role:ref.role,patch:ref.patch,region:ref.region,tier:ref.tier});
  }
  return result;
@@ -116,7 +133,7 @@ export function buildRoleEvidence(data){
 export function rankedClientRoles(data){
  const result={};
  for(const champion of data.champions){
-  const rows=Object.values(data.builds||{}).filter(ref=>ref?.champion===champion.id&&validReference(ref,champion,ref.role,data)&&Number.isSafeInteger(ref.roleSamples)&&ref.roleSamples>0);
+  const rows=Object.values(data.builds||{}).filter(ref=>ref?.champion===champion.id&&sameBuildSource(ref,normalizeBuildSource(data.buildSource))&&validReferenceForUse(ref,champion,ref.role,data)&&Number.isSafeInteger(ref.roleSamples)&&ref.roleSamples>0);
   if(rows.length&&rows.every(ref=>ref.region===rows[0].region&&ref.tier===rows[0].tier))result[champion.id]=rows.sort((a,b)=>b.roleSamples-a.roleSamples||a.role.localeCompare(b.role)).map(ref=>ref.role);
  }
  return result;
@@ -151,11 +168,10 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(play){play.currentPatch=data.patch;play.stale=Object.values(play.stages).some(stage=>(stage.patch||play.patch)!==data.patch);}
  const preferred=comboLoadout(duo,champion,role);
  const generic=selectedBuildReference(data,champion.id,role),scoped=mode==='rift'&&sourceOpponent?selectedOpponentBuild(data,champion.id,role,sourceOpponent):null;
- // Rendering may retain structurally sound current sources with unavailable item rows.
- // Cache/feed admission remains strict; the original rows and their samples stay intact.
- const allowInvalidEquipment=mode==='rift';
- const scopedRef=scoped&&validReference(scoped,champion,role,data,{allowOlder:true,opponent:sourceOpponent,allowInvalidEquipment})?scoped:null;
- const standardRef=scopedRef||(validReference(generic,champion,role,data,{allowOlder:true,allowInvalidEquipment})?generic:null);
+ // Current structurally sound sources may retain unavailable equipment rows;
+ // preserve their original samples and validate each row at display time.
+ const scopedRef=scoped&&validReferenceForUse(scoped,champion,role,data,{allowOlder:true,opponent:sourceOpponent})?scoped:null;
+ const standardRef=scopedRef||((mode==='rift'?validReferenceForUse(generic,champion,role,data,{allowOlder:true}):validReference(generic,champion,role,data,{allowOlder:true}))?generic:null);
  const referenceLabel=ref=>buildSourceLabel(ref)+(ref?.opponent?' · 对 '+(data.champions.find(c=>c.id===ref.opponent)?.name||ref.opponent)+' 的来源参考':'');
  const preferredLoadout=availableLoadouts.find(c=>c.id===preferred);
  const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&((preferredLoadout.patch||LOADOUT_PATCH)!==data.patch||data.catalogInfo?.loadoutStatus?.[preferredLoadout.id]?.stale||dependencyChanges(preferredLoadout,{runes:RUNE_PLANS},data).length>0)&&standardRef?.patch===data.patch;

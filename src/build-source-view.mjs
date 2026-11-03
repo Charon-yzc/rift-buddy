@@ -1,11 +1,11 @@
 import {BUILD_REGIONS,BUILD_TIERS,normalizeBuildSource,buildSourceLabel,selectedBuildReference,collectBuildSources,sameBuildSource,preferBuildReference} from './core/build-source.mjs';
-import {validReference,compareBuildPatches} from './core/builds.mjs';
+import {validReferenceForUse,compareBuildPatches} from './core/builds.mjs';
 import {escape as e,button} from './ui.mjs';
 export function cachedBuildAlternatives(data,champion,role){
  const hero=data.champions.find(c=>c.id===champion),selected=normalizeBuildSource(data.buildSource),choices=new Map();
  if(!hero)return [];
  for(const reference of Object.values(collectBuildSources(data))){
-  if(sameBuildSource(reference,selected)||!validReference(reference,hero,role,data,{allowOlder:true}))continue;
+  if(sameBuildSource(reference,selected)||!validReferenceForUse(reference,hero,role,data,{allowOlder:true}))continue;
   const key=reference.region+':'+reference.tier;
   if(preferBuildReference(reference,choices.get(key)))choices.set(key,reference);
  }
