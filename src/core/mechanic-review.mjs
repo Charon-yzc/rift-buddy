@@ -14,5 +14,5 @@ export function mechanicReview(champion,patch=champion?.combatStatsSource?.patch
 export function reviewedCatalogEntry(entry,status,patch){
  if(!entry||typeof entry.id!=='string'||typeof patch!=='string'||!patch||entry.patch!==patch||!status||typeof status!=='object'||Array.isArray(status)||!Object.hasOwn(status,entry.id))return false;
  const review=status[entry.id];
- return !!review&&typeof review==='object'&&!Array.isArray(review)&&['invalid','stale','patch'].every(key=>Object.hasOwn(review,key))&&review.invalid===false&&review.stale===false&&review.patch===patch;
+ return !!review&&typeof review==='object'&&!Array.isArray(review)&&['invalid','stale','patch'].every(key=>Object.hasOwn(review,key))&&review.patch===patch&&(review.invalid===false&&review.stale===false||review.optionalCompatible===true);
 }

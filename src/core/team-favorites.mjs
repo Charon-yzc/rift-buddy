@@ -24,7 +24,7 @@ export function validateTeamConfigurations(values,slots){
   seen.add(identity);return selection;
  });
 }
-export function captureTeamConfigurations(result,data,store){
+export function captureTeamConfigurations(result,data,store,guide=null){
  const lineup=scopeSlots(result.slots,result.scope),ownRole=resultSoloRole(result);
  const creativePlan=captureCreativePlan(result,data);
  if(result.scope==='solo'&&!ownRole)throw Error('单人方案未确认你的位置，请先确认位置再收藏');
@@ -33,7 +33,7 @@ export function captureTeamConfigurations(result,data,store){
   const champion=data.champions.find(c=>c.id===slot.champion);
   if(!champion)throw Error('当前资料没有这位组合成员');
   const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch}),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
-  const selection={coreIndex:0,conditions:[],...(recallPreparation(store,null,context)||{coreAuto:true}),...context},build=getBuild(champion,slot.role,data,selection);
+  const selection={coreIndex:0,conditions:[],...(recallPreparation(store,guide,context)||{coreAuto:true}),...context},build=getBuild(champion,slot.role,data,selection);
   const fields=selectedBuildFields({...selection,build},{preserveUnavailable:true});
   if(!fields.laterIds?.length){const existing=new Set(build.items.map(item=>String(item.id)));fields.laterIds=preparationEquipment(data,build,selection).filter(item=>!existing.has(String(item.id))).map(item=>Number(item.id));}
   const frozen={...selection,coreIndex:selection.coreId?selection.coreIndex:build.selectedCoreIndex,...fields};delete frozen.coreAuto;return validatePreparation(frozen);

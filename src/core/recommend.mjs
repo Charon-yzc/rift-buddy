@@ -134,7 +134,7 @@ export function currentCombo(slots,champion,role,status={},comboCache=null,creat
  if(selected&&requestedPatch&&status?.[selected.id]&&reviewedCatalogEntry(selected,status,requestedPatch)&&catalogChoiceMatches(catalogChoice,selected,slots)&&(!champion||comboLoadout(selected,{id:champion},role)!==null))return selected;
  const usablePlan=allowPending?creativePlan:automaticCreativePlan(creativePlan,status,requestedPatch);
  if(creativePlanMatches(usablePlan,slots)){const own=champion||usablePlan.members[0].champion,position=role||usablePlan.members[0].role,creative=creativeMemberCombo(usablePlan,own,position);if(creative)return creative;}
- const matches=matchingCombos(slots,comboCache).filter(c=>allowPending?!status?.[c.id]?.invalid:reviewedCatalogEntry(c,status,requestedPatch));
+ const matches=matchingCombos(slots,comboCache).filter(c=>allowPending?!status?.[c.id]?.invalid||status?.[c.id]?.optionalCompatible===true:reviewedCatalogEntry(c,status,requestedPatch));
  return memberCombo(matches,champion,role);
 }
 function memberCombo(matches,champion,role){

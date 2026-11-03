@@ -45,7 +45,7 @@ export async function createCommunityFeedCache({root,getData,prepare,getContext=
  active=await read(file);const staged=await read(pendingFile);if(staged&&follows(staged.manifest,active?.manifest)&&(!active||staged.manifest.sequence>active.manifest.sequence))pending=staged;
  function install(candidate,{restore=false,notify=true}={}){
   const data=getData();if(!restore&&!canActivate())return false;
-  let value,commit;try{compatible(candidate.manifest,data);value=validateCommunityData(candidate.value||decode(candidate.record,candidate.manifest),data);commit=prepare(value,data);if(typeof commit!=='function')throw Error('社区资料缺少提交步骤');}catch(error){if(error.code!=='CATALOG_BUSY')blocked={candidate,data,context:getContext(),message:error.code==='COMMUNITY_CATALOG_CONFLICT'?'个人组合依赖仍需保留，社区组合库暂未启用':'社区资料待机制复核，保留现有资料'};throw error;}
+  let value,commit;try{compatible(candidate.manifest,data);value=validateCommunityData(candidate.value||decode(candidate.record,candidate.manifest),data,{signedReceipt:true});commit=prepare(value,data);if(typeof commit!=='function')throw Error('社区资料缺少提交步骤');}catch(error){if(error.code!=='CATALOG_BUSY')blocked={candidate,data,context:getContext(),message:error.code==='COMMUNITY_CATALOG_CONFLICT'?'个人组合依赖仍需保留，社区组合库暂未启用':'社区资料待机制复核，保留现有资料'};throw error;}
   if(data!==getData()||!restore&&!canActivate())return false;
   if(candidate.file!==file)promote(candidate.file,file);
   commit();candidate.file=file;candidate.value=value;active=candidate;appliedData=data;clearedData=null;blocked=null;retry=null;if(pending===candidate)pending=null;

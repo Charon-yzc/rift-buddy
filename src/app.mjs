@@ -757,7 +757,7 @@ function roomErrorMessage(error){
 }
 function roomResultProposal(result){
  const strategy=resultCreativePlan(result),members=recommendationMembers(result),included=new Set(members.map(m=>m.role)),lineup=shareFromSlots(result.slots.map(s=>included.has(s.role)?s:{...s,champion:null}),null,'rift').lineup;
- return {lineup,mode:'rift',configurations:captureRoomConfigurations(members,data,preparations,{creativePlan:strategy,mode:'rift'}),...(strategy?{strategy}:{})};
+ return {lineup,mode:'rift',configurations:captureRoomConfigurations(members,data,preparations,{creativePlan:strategy,guide:guideSelection,mode:'rift'}),...(strategy?{strategy}:{})};
 }
 function roomSharePayload(){
  const mode=client.connected?(client.mode?.id||null):'rift',own=client.connected&&client.phase==='ChampSelect'?client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId):null;
@@ -770,7 +770,7 @@ function roomSharePayload(){
  // the client. Public teammates and completed picks continue to constrain it.
  const chosenMember=saved.draft?.catalogChoice?.members.find(m=>m.role===role);
  const chosenCombo=chosenMember&&currentCombo(slots,chosenMember.champion,role,data.catalogInfo?.status,null,null,{patch:data.patch,catalogChoice:saved.draft.catalogChoice});
- const proposedMember=currentPlan?.members.find(m=>m.role===role)||(chosenCombo&&chosenCombo.id===saved.draft?.catalogChoice?.id&&data.catalogInfo?.status?.[chosenCombo.id]&&!data.catalogInfo.status[chosenCombo.id].stale&&!data.catalogInfo.status[chosenCombo.id].invalid?chosenMember:null);
+ const proposedMember=currentPlan?.members.find(m=>m.role===role)||(chosenCombo&&chosenCombo.id===saved.draft?.catalogChoice?.id?chosenMember:null);
  if(own&&proposedMember&&!localPickLocked(client.session)){
   const editable=editableLocalDraft(slots,client.session,data.champions,role),proposed=recommendationDraft(editable.slots,editable.session,data.champions,{ownRole:role,party:currentParty(),confirmedOnly:true});
   const target=slots.find(s=>s.role===role),availability=localPickEligibility(client,slots,data.champions,{scope:'party',soloRole:role,playerPosition:saved.draft?.playerPosition}),eligible=availability.eligibleByRole?.[role];
@@ -1025,7 +1025,7 @@ function refreshClickedResult(result,input,current,previousSlots){
 }
 function assertLoadedChoiceResult(result){
  const choice=saved.draft?.catalogChoice;
- if(!choice||result.targets?.length||!data.patch||!data.catalogInfo?.status?.[choice.id]||data.catalogInfo.status[choice.id].stale||data.catalogInfo.status[choice.id].invalid)return;
+ if(!choice||result.targets?.length||!data.patch||!data.catalogInfo?.status?.[choice.id])return;
  const selected=currentCombo(slots,null,null,data.catalogInfo?.status,null,null,{patch:data.patch,catalogChoice:choice});
  const shown=result.creativePlan?.curated?.id||result.trio?.id||result.duo?.id||null;
  if(selected&&catalogChoiceMatches(choice,selected,slots)&&shown!==choice.id)throw Error('当前已载入另一套组合；请先确认组合范围或重新选择，再采用这套方案。');
@@ -2150,7 +2150,7 @@ document.addEventListener('click',async event=>{
  }
  else if(action==='copy-build'){await api.copy(buildAsText(buildView.build,champ(buildView.id),data));toast('配置已复制');}
  else if(action==='favorite-build'){await addFavorite({id:savedBuild(buildView)?.id||currentBuildFavoriteId(buildView),...selectedBuildFields(buildView,{preserveUnavailable:true}),type:'build',title:`${champ(buildView.id).name} · ${buildView.build.title}${buildView.build.selectedRune?' · '+buildView.build.selectedRune.name:''}${buildView.coreIndex?' · 方案 '+(buildView.coreIndex+1):''}`,champion:buildView.id,role:buildView.role,mode:buildView.mode,conditions:buildView.conditions,coreIndex:buildView.coreIndex,...(buildView.mode==='hex'?{augmentIds:[...(buildView.augmentIds||[])],compareIds:[...(buildView.compareIds||[])],ownedAugmentIds:[...(buildView.ownedAugmentIds||[])]}:{})});renderBuild();}
-  else if(action==='favorite-result'){const r=results[Number(el.dataset.index)];if(!r)throw Error('推荐已变化，请重新选择');const creativePlan=resultCreativePlan(r);await addFavorite({...(creativePlan?{creativePlan}:{}),id:findSavedTeam(saved.favorites,r,style)?.id||teamFavoriteId(r,style),type:'team',title:r.title,slots:structuredClone(r.slots),configurations:captureTeamConfigurations(r,data,preparations),style,scope:r.scope,...(r.scope==='solo'?{soloRole:r.soloRole||r.targets[0]}:{})});if(detailResult===r){const scroll=overlay.querySelector(".drawer-content")?.scrollTop||0;showResult(Number(el.dataset.index));overlay.querySelector(".drawer-content").scrollTop=scroll;}}
+  else if(action==='favorite-result'){const r=results[Number(el.dataset.index)];if(!r)throw Error('推荐已变化，请重新选择');const creativePlan=resultCreativePlan(r);await addFavorite({...(creativePlan?{creativePlan}:{}),id:findSavedTeam(saved.favorites,r,style)?.id||teamFavoriteId(r,style),type:'team',title:r.title,slots:structuredClone(r.slots),configurations:captureTeamConfigurations(r,data,preparations,guideSelection),style,scope:r.scope,...(r.scope==='solo'?{soloRole:r.soloRole||r.targets[0]}:{})});if(detailResult===r){const scroll=overlay.querySelector(".drawer-content")?.scrollTop||0;showResult(Number(el.dataset.index));overlay.querySelector(".drawer-content").scrollTop=scroll;}}
  else if(action==='copy-result'){const r=results[Number(el.dataset.index)];if(!r)throw Error('推荐已变化，请重新选择');resultCreativePlan(r);await api.copy(resultAsText(r,data));toast('组合说明已复制');}
  else if(action==='library-role'){libraryRole=el.dataset.role;render();}
  else if(action==='sync'){if(el.hasAttribute('data-client-connect')&&saved.preferences.autoSync===false){saved.preferences.autoSync=true;await persist({throwOnError:true});}await sync(true);}
@@ -2176,7 +2176,7 @@ document.addEventListener('click',async event=>{
  else if(action==='clear-obsolete-hex'){await clearObsoleteHexFavorites(obsoleteHexFavoriteReview);closeOverlay();render();}
  else if(action==='delete-favorite'){await changeFavorites(saved.favorites.filter((_,i)=>i!==Number(el.dataset.index)),'已移出收藏');}
  else if(action==='open-team-build'){const f=saved.favorites[Number(el.dataset.index)],selection=f?.type==='team'&&f.configurations?.[Number(el.dataset.member)];if(!selection)throw Error('收藏配置已变化，请重新打开');showBuild(selection.id,selection.role,selection.mode,selection);}
- else if(action==='update-team-favorite'){const index=Number(el.dataset.index),f=saved.favorites[index];if(f?.type!=='team')throw Error('组合收藏已变化');if(f.scope==='solo'&&!f.soloRole)throw Error('旧单人收藏未保存位置，请重新推荐并收藏');const next={...f,configurations:captureTeamConfigurations({...f,targets:f.soloRole?[f.soloRole]:[]},data,preparations),version:data.version};await changeFavorites(saved.favorites.map((favorite,i)=>i===index?next:favorite),'已更新收藏里的成员配置');}
+ else if(action==='update-team-favorite'){const index=Number(el.dataset.index),f=saved.favorites[index];if(f?.type!=='team')throw Error('组合收藏已变化');if(f.scope==='solo'&&!f.soloRole)throw Error('旧单人收藏未保存位置，请重新推荐并收藏');const next={...f,configurations:captureTeamConfigurations({...f,targets:f.soloRole?[f.soloRole]:[]},data,preparations,guideSelection),version:data.version};await changeFavorites(saved.favorites.map((favorite,i)=>i===index?next:favorite),'已更新收藏里的成员配置');}
  else if(action==='open-favorite'){const f=saved.favorites[Number(el.dataset.index)];if(!hexFavoriteIsCurrent(data,f))throw Error('这套海克斯收藏不适用于当前版本');if(f.type==='team'){
    const connectedDraft=client.connected&&client.phase==='ChampSelect';
    if(connectedDraft){await sync(false,{fresh:true});if(!client.connected||client.phase!=='ChampSelect'||!client.session)throw Error('无法确认本局选人，已保留当前阵容，请重新连接后载入');}
