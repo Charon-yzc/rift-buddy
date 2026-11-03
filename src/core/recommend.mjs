@@ -65,7 +65,7 @@ export function analyzeTeam(slots, champions, context,scoreOnly=false,catalogMat
   if(context?.profiles?.has(key))return context.profiles.get(key);
   const value=profile(byId.get(s.champion),s.role);context?.profiles?.set(key,value);return value;
  };
- const combos=(catalogMatches||matchingCombos(slots,context?.comboCache)).filter(c=>reviewedCatalogEntry(c,context?.catalogStatus,context?.patch));
+ const combos=(catalogMatches||matchingCombos(slots,context?.comboCache)).filter(c=>(!context?.requireReviewedCatalog||!!context.catalogReviewPatch&&!!context.catalogStatus?.[c.id])&&reviewedCatalogEntry(c,context?.catalogStatus,context?.requireReviewedCatalog?context.catalogReviewPatch:context?.patch));
  const members=analyzed.filter(s=>byId.has(s.champion)).map(s=>{const c=byId.get(s.champion),base=getProfile(s),combo=s.positionUnknown?null:memberCombo(combos,c.id,s.role);
   const loadoutId=comboLoadout(combo,c,s.role),cacheKey=loadoutId?c.id+':'+s.role+':'+loadoutId:null;
   let loadout;

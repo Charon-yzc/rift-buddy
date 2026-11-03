@@ -110,7 +110,7 @@ export function companionView({data,client,hexRound=null,enemyRoles=[],displayed
  const eligibilityLabel=({checked:'本机可选范围已核对',manual:'尚未核对客户端可选英雄',partial:'本机可选范围部分核对',position:'可选英雄与分路',unknown:'尚未核对客户端可选英雄'})[eligibility.status]||'查看可选范围';
  const eligibilityInfo=`<details class="companion-eligibility-status" data-companion-disclosure="eligibility" data-eligibility="${e(eligibility.status)}"><summary><span role="status">${e(eligibilityLabel)}</span></summary>${pickEligibilityView(eligibility)}${manual&&assigned&&manual.role!==assigned?`<p class="companion-position-note">方案：${roleName(manual.role)} · 客户端分路：${roleName(assigned)}。任务权益按客户端分路。</p>`:''}${manual?button('position-auto','恢复客户端位置','','quiet small'):''}${!['checked','manual'].includes(eligibility.status)?button('sync','重新同步','','quiet small'):''}</details>`;
  const curvesReady=rankedCurveReady(client,data,{slots});
- const incoming=rankedCurveView(client,data,{slots,enemyRoles})+(rankedCurveReplacesProposals(client,data,{slots})?'':roomBallotView(room,visibleRoster,data.champions,{scope,soloRole:ownRole,clientSession:client.connected?client.session:null,party,includePreselected}));
+ const incoming=rankedCurveView(client,data,{slots,enemyRoles})+(rankedCurveReplacesProposals(client,data,{slots})?'':roomBallotView(room,visibleRoster,data.champions,{scope,soloRole:ownRole,clientSession:client.connected?client.session:null,party,includePreselected,patch:data.patch,catalogStatus:data.catalogInfo?.status}));
  const chosen=companionChosenViews({data,client,activePlan,own:actionOwn,ownRole,heroAction,preparationStatus,pending:!!pendingOwn});
  const compact=preferences.compactTeam!==false;
  const rosterState=slot=>{
