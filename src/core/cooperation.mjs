@@ -80,7 +80,7 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
   // revisits the same role/hero pairs; keep this cache inside this one graph.
   if(!cache.has(ak))cache.set(ak,new Map());if(!cache.has(bk))cache.set(bk,new Map());cache.get(ak).set(bk,found);cache.get(bk).set(ak,found);return found;
  };
- return {edge,profile:prof,byId,skills:createSkillCooperation(byId,{isCurrent}),fitCache:new Map()};
+ return {edge,profile:prof,byId,currentPatch,skills:createSkillCooperation(byId,{isCurrent}),fitCache:new Map()};
 }
 
 function connectedEdges(members,graph,pairs=null){
