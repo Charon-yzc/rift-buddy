@@ -8,8 +8,40 @@ import {atomicJSON} from './data.mjs';
 import {comboMembers} from '../src/core/combo-members.mjs';
 import {publicLinkOrigins,linkReviewStatuses} from '../src/core/catalog-link-review.mjs';
 import {BUNDLED_CATALOG,CATALOG_LIMIT,validateCatalog,mergePersonal,catalogDiff,catalogIssues,safeSourceURL} from '../src/core/catalog.mjs';
+import {validateRunePage} from '../src/core/rune-page.mjs';
 
 const empty=()=>({duos:[],trios:[],loadouts:[],runes:{},skillPlans:[]});
+// A previously saved snapshot may contain removed equipment. Preserve it
+// without allowing a new or edited entry to introduce unavailable content.
+function validatePersonalChange(base,before,after,entryId,data){
+ const nextCatalog=mergePersonal(base,after),issues=catalogIssues(nextCatalog,data);
+ const changed=(previous,current)=>JSON.stringify(previous)!==JSON.stringify(current);
+ const heroes=new Set(data.champions.map(h=>h.id));
+ for(const [id,rune] of Object.entries(after.runes||{}))if(changed(before.runes?.[id],rune)&&!validateRunePage(rune.page,data.runes))throw Error('个人符文与当前资料不符：'+id);
+ const checkLoadout=l=>{
+  if(!l)throw Error('个人组合引用的配置不存在');
+  if(l.summoners&&!l.summoners.every(id=>data.spells[id]))throw Error('组合库检查失败：召唤师技能与资料不符');
+  if(l.champions.some(id=>!heroes.has(id))||issues.loadoutStatus[l.id]?.invalid)throw Error('个人配置的英雄、装备或符文不可用，请先核对');
+  for(const p of nextCatalog.skillPlans||[])if(p.loadoutId===l.id&&!heroes.has(p.champion))throw Error('个人加点引用的英雄不可用，请先核对');
+ };
+ const oldLoadouts=new Map((before.loadouts||[]).map(l=>[l.id,l]));
+ for(const l of after.loadouts||[]){
+  const prior=oldLoadouts.get(l.id),runesChanged=l.runes.some(id=>changed(before.runes?.[id]??base.runes[id],after.runes?.[id]??base.runes[id]));
+  if(!changed(prior,l)&&!runesChanged)continue;
+  checkLoadout(l);
+ }
+ const oldSkills=new Map((before.skillPlans||[]).map(p=>[p.id,p]));
+ for(const p of after.skillPlans||[])if(changed(oldSkills.get(p.id),p)&&!heroes.has(p.champion))throw Error('个人加点引用的英雄不可用，请先核对');
+ const oldCombos=new Map([...(before.duos||[]),...(before.trios||[])].map(c=>[c.id,c]));
+ for(const combo of [...(after.duos||[]),...(after.trios||[])])if(changed(oldCombos.get(combo.id),combo)&&issues.status[combo.id]?.invalid)throw Error('组合引用的英雄或配置不可用，请先核对');
+ const saved=[...(after.duos||[]),...(after.trios||[])].find(c=>c.id===entryId);
+ if(!saved||issues.status[entryId]?.invalid)throw Error('当前组合引用的英雄或配置不可用，请先核对');
+ for(const member of comboMembers(saved)){
+  if(member.loadoutId!=='default')checkLoadout(nextCatalog.loadouts.find(l=>l.id===member.loadoutId));
+  for(const p of nextCatalog.skillPlans||[])if(p.champion===member.champion&&p.role===member.role&&p.loadoutId===member.loadoutId&&!heroes.has(p.champion))throw Error('个人加点引用的英雄不可用，请先核对');
+ }
+ return nextCatalog;
+}
 // A personal save freezes the chosen public definition under a private ID.
 // Public IDs remain free to change roles, effects or availability independently.
 function freezePersonalEntry(catalog,personal,entryId){
@@ -85,7 +117,7 @@ export async function createCatalogStore({root,getData,write=atomicJSON,download
   setSource:async url=>{if(typeof url!=='string'||url&&!safeSourceURL(url))throw Error('请输入有效 HTTPS JSON 地址，或留空使用内置库检查');return mutate(s=>({...s,sourceUrl:url}));},
   apply:token=>mutate(s=>{const stage=staged.get(token);if(!stage||Date.now()-stage.createdAt>30*60*1000)throw Error('更新预览已过期，请重新检查');if(stage.baseVersion!==contentVersion(state))throw Error('组合库已变化，请重新预览');validateCatalog(stage.incoming,getData());mergePersonal(stage.incoming,s.personal);return {...s,previous:base(),installed:stage.incoming};}),
   rollback:()=>mutate(s=>{if(!s.previous)throw Error('没有可回退的组合库');const old=s.previous;mergePersonal(old,s.personal);return {...s,previous:base(),installed:old};}),
-  savePersonal:entry=>mutate(s=>{if(!entry||!entry.id?.startsWith('local-'))throw Error('自定义组合必须使用 local- 开头的 ID');const kind=entry.members?.length===3?'trios':'duos';const personal={...s.personal,duos:s.personal.duos.filter(x=>x.id!==entry.id),trios:s.personal.trios.filter(x=>x.id!==entry.id)};personal[kind].push(entry);const frozen=freezePersonalEntry(active(),personal,entry.id);validateCatalog(mergePersonal(base(),frozen),getData());validateCatalog(mergePersonal(BUNDLED_CATALOG,frozen));return {...s,personal:frozen};}),
+  savePersonal:entry=>mutate(s=>{if(!entry||!entry.id?.startsWith('local-'))throw Error('自定义组合必须使用 local- 开头的 ID');const kind=entry.members?.length===3?'trios':'duos';const personal={...s.personal,duos:s.personal.duos.filter(x=>x.id!==entry.id),trios:s.personal.trios.filter(x=>x.id!==entry.id)};personal[kind].push(entry);const frozen=freezePersonalEntry(active(),personal,entry.id);validatePersonalChange(base(),s.personal,frozen,entry.id,getData());validateCatalog(mergePersonal(BUNDLED_CATALOG,frozen));return {...s,personal:frozen};}),
   export:()=>active(),
  };
 }
