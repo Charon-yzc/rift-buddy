@@ -27,7 +27,7 @@ export async function createDataFeedCache({root,getData,canActivate=()=>false,re
   if(Date.parse(signed.publishedAt)>clock()+5*60*1000||Date.parse(signed.checkedAt)>clock()+5*60*1000)throw Error('资料发布时间无效');
   const bundle={};
   for(const name of DATA_FEED_NAMES){const file=signed.files[name],encoded=record.assets?.[file.sha256];if(typeof encoded!=='string'||encoded.length>Math.ceil(DATA_FEED_MAX_PACKED/3)*4)throw Error('资料缓存不完整');bundle[name]=await decodeFeedFile(Buffer.from(encoded,'base64'),file);}
-  validateFeedBundle(bundle,data);return {manifest:signed,bundle};
+  validateFeedBundle(bundle,data,{allowInvalidEquipment:true});return {manifest:signed,bundle};
  }
  const follows=(next,prior)=>!prior||next.sequence>=prior.sequence&&(next.sequence!==prior.sequence||next.release===prior.release&&next.checkedAt===prior.checkedAt)&&(!prior.checkedAt||!!next.checkedAt&&Date.parse(next.checkedAt)>=Date.parse(prior.checkedAt));
  async function read(file){
@@ -92,7 +92,7 @@ export async function createDataFeedCache({root,getData,canActivate=()=>false,re
      else packed=await download('/v1/assets/'+file.file,{limit:file.bytes});
      bundle[name]=await decodeFeedFile(packed,file);record.assets[file.sha256]=packed.toString('base64');
     }
-    if(getData().patch!==patch)throw Error('资料补丁已变化');validateFeedBundle(bundle,getData());
+    if(getData().patch!==patch)throw Error('资料补丁已变化');validateFeedBundle(bundle,getData(),{allowInvalidEquipment:true});
     if(activeRelease===next.release&&activeSequence===next.sequence&&activeData===getData()&&!pending){publish({phase:'ready',checkedAt:record.checkedAt,serverCheckedAt:next.checkedAt||null,updatedAt:next.publishedAt,message:'统计资料已是最新'});break;}
     const preparedFor=getData();
     try{

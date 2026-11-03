@@ -10,7 +10,7 @@ import * as imageCache from './image-cache.mjs';
 import {applyFeedBundle,feedHash} from './data-feed.mjs';
 import {pureGameSnapshot,generationBaseIdentity} from './data-generation.mjs';
 import {validSnapshot} from './data.mjs';
-import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
+import {validReferenceForUse,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
 import {validRankingReference,newerRanking} from '../src/core/rankings.mjs';
 import {buildSourceKey,preferBuildReference,selectBuildSource} from '../src/core/build-source.mjs';
 import {validateCatalog} from '../src/core/catalog.mjs';
@@ -34,7 +34,7 @@ export async function createGameDataPreparer({bundleRoot,localRoot,catalogSummar
   ]);
   // Previously verified in-memory references can be newer than their unsigned
   // disk projections, including signed recheck metadata. Validate each scope.
-  for(const [key,ref] of Object.entries(current.buildSources||{}))if(heroes.has(ref.champion)&&key===buildSourceKey(ref.champion,ref.role,ref,ref.patch)&&ref.scope===undefined&&ref.opponent===undefined&&validReference(ref,heroes.get(ref.champion),ref.role,next,{allowOlder:true})&&preferBuildReference(ref,next.buildSources[key]))next.buildSources[key]=ref;
+  for(const [key,ref] of Object.entries(current.buildSources||{}))if(heroes.has(ref.champion)&&key===buildSourceKey(ref.champion,ref.role,ref,ref.patch)&&ref.scope===undefined&&ref.opponent===undefined&&validReferenceForUse(ref,heroes.get(ref.champion),ref.role,next,{allowOlder:true})&&preferBuildReference(ref,next.buildSources[key]))next.buildSources[key]=ref;
   for(const [key,ref] of Object.entries(current.rankings||{}))if(key===ref.key&&validRankingReference(ref,next)&&newerRanking(ref,next.rankings[key]))next.rankings[key]=ref;
   for(const [key,ref] of Object.entries(current.hexBuilds||{})){
    const prior=next.hexBuilds[key],order=prior?compareBuildPatches(ref.patch,prior.patch):1;

@@ -4,7 +4,7 @@ import {DATA_FEED_KEYS,DATA_FEED_NAMES,DATA_FEED_MAX_PACKED,DATA_FEED_MAX_RAW,fe
 import {validSnapshot} from './data.mjs';
 import {hasCurrentCombatStats} from './champion-stats.mjs';
 import {mechanicSourceInput} from '../src/core/mechanic-source.mjs';
-import {validReference,validHexReference,BUILD_PARSER_VERSION} from '../src/core/builds.mjs';
+import {validReference,validReferenceForUse,validHexReference,BUILD_PARSER_VERSION} from '../src/core/builds.mjs';
 import {BUILD_REGIONS,BUILD_TIERS,DEFAULT_BUILD_SOURCE,buildSourceKey,sameBuildSource} from '../src/core/build-source.mjs';
 import {rankingKey} from '../src/core/rankings.mjs';
 import {defaultBuildJobs} from '../src/core/default-build-jobs.mjs';
@@ -80,16 +80,16 @@ export function createGenerationRecipe(bundle,jobs){
 export function projectGenerationBundle(bundle,recipe){
  return {game:bundle.game,...Object.fromEntries(DATA_FEED_NAMES.map(name=>[name,{schema:name==='builds'?2:1,entries:Object.fromEntries((name==='builds'?recipe.builds:name==='rankings'?recipe.rankings:recipe.hex).map(key=>[key,bundle[name].entries[key]]))}]))};
 }
-export function validateGenerationBundle(bundle,recipe){
+export function validateGenerationBundle(bundle,recipe,{allowInvalidEquipment=false}={}){
  if(!exact(bundle,GENERATION_NAMES))throw Error('整套资料文件不完整');
  const game=validateGenerationGame(bundle.game);validateGenerationRecipe(recipe,game.patch);
  if(recipe.baseSha256!==feedHash(JSON.stringify(game))||recipe.hex.join('\n')!==game.champions.map(c=>c.id).sort().join('\n'))throw Error('整套基础资料或英雄范围不匹配');
  for(const [name,expected] of [['rankings',recipe.rankings],['builds',recipe.builds],['hex-builds',recipe.hex]])if(!bundle[name]?.entries||!sameKeys(bundle[name].entries,expected)||expected.some(key=>!bundle[name].entries[key]))throw Error('整套资料未覆盖预定采集范围');
- validateFeedBundle(bundle,game);
+ validateFeedBundle(bundle,game,{allowInvalidEquipment});
  const expected=new Set(recipe.builds);
  for(const {champion,role} of defaultBuildJobs(game,bundle.rankings.entries,{}))if(!expected.has(buildSourceKey(champion.id,role,DEFAULT_BUILD_SOURCE,game.patch)))throw Error('整套资料缺少基础分路配置');
  const heroes=new Map(game.champions.map(c=>[c.id,c]));
- for(const ref of Object.values(bundle.builds.entries))if(ref.parserVersion!==BUILD_PARSER_VERSION||!sameBuildSource(ref,DEFAULT_BUILD_SOURCE)||!validReference(ref,heroes.get(ref.champion),ref.role,game))throw Error('整套配置不是当前补丁有效来源');
+ for(const ref of Object.values(bundle.builds.entries))if(ref.parserVersion!==BUILD_PARSER_VERSION||!sameBuildSource(ref,DEFAULT_BUILD_SOURCE)||!(allowInvalidEquipment?validReferenceForUse(ref,heroes.get(ref.champion),ref.role,game):validReference(ref,heroes.get(ref.champion),ref.role,game)))throw Error('整套配置不是当前补丁有效来源');
  for(const [id,ref] of Object.entries(bundle['hex-builds'].entries))if(ref.parserVersion!==3||!validHexReference(ref,heroes.get(id),game))throw Error('整套海克斯资料不是当前补丁有效来源');
  return bundle;
 }
@@ -102,9 +102,9 @@ export function packGenerationBundle(bundle,recipe){
  }
  return {files,assets};
 }
-export async function decodeGenerationAssets(manifest,assets){
+export async function decodeGenerationAssets(manifest,assets,{allowInvalidEquipment=false}={}){
  validateGenerationManifest(manifest);const bundle={};
  for(const name of GENERATION_NAMES)bundle[name]=await decodeFeedFile(assets[manifest.files[name].sha256],manifest.files[name]);
  if(bundle.game.version!==manifest.version||bundle.game.patch!==manifest.patch)throw Error('整套资料补丁不匹配');
- return validateGenerationBundle(bundle,manifest.recipe);
+ return validateGenerationBundle(bundle,manifest.recipe,{allowInvalidEquipment});
 }

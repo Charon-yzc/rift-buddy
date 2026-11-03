@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {validReference,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
+import {validReferenceForUse,validHexReference,compareBuildPatches} from '../src/core/builds.mjs';
 import {atomicJSON} from './data.mjs';
 import {createReferenceContext,commitReferenceCache} from './reference-cache-write.mjs';
 import {fetchChampionBuild} from './build-sources.mjs';
@@ -16,7 +16,7 @@ export async function loadBuildSources(roots,data){
     // Derived authority is restored only from the separately verified feed.
     const {serverCheckedAt,...ref}=stored||{};
     const champion=data.champions.find(c=>c.id===ref?.champion);
-    if(!champion||!validReference(ref,champion,ref.role,data,{allowOlder:true}))continue;
+    if(!champion||!validReferenceForUse(ref,champion,ref.role,data,{allowOlder:true}))continue;
     const cacheKey=buildSourceKey(champion.id,ref.role,ref,ref.patch);
     if((key===`${champion.id}:${ref.role}`||key===cacheKey)&&preferBuildReference(ref,result[cacheKey]))result[cacheKey]=ref;
    }
@@ -56,7 +56,7 @@ export function createBuildCache({root,getData,fetchRift=fetchChampionBuild,fetc
    if(!request.current())throw new Error('资料版本已更新，请重新刷新配置');
    const ref=role==='hex'?await fetchHex(champion,data):await fetchRift(champion,role,data,{allowOlder:true,...selected});
    const current=getData();if(!request.current())throw new Error('资料版本已更新，请重新刷新配置');
-   if(!(role==='hex'?validHexReference(ref,champion,current,{allowOlder:true}):validReference(ref,champion,role,current,{allowOlder:true})))throw new Error('来源配置不完整，已保留本地方案');
+   if(!(role==='hex'?validHexReference(ref,champion,current,{allowOlder:true}):validReferenceForUse(ref,champion,role,current,{allowOlder:true})))throw new Error('来源配置不完整，已保留本地方案');
    if(role!=='hex'&&!sameBuildSource(ref,selected))throw Error('来源地域或段位不一致，已保留本地方案');
    const entries=role==='hex'?null:collectBuildSources(current);
    const existing=role==='hex'?current.hexBuilds?.[id]:projectBuildSources(entries,selected,current.patch)[key];

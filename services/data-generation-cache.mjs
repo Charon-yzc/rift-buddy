@@ -46,7 +46,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ge
   const wanted=new Set(GENERATION_NAMES.map(name=>manifest.files[name].sha256));
   if(!record.assets||Object.keys(record.assets).length!==wanted.size||Object.keys(record.assets).some(key=>!wanted.has(key)))throw Error('整套资料缓存资产不完整');
   const assets={};for(const hash of wanted){const encoded=record.assets[hash],file=Object.values(manifest.files).find(file=>file.sha256===hash);if(typeof encoded!=='string'||encoded.length!==Math.ceil(file.bytes/3)*4)throw Error('整套资料缓存大小无效');const bytes=Buffer.from(encoded,'base64');if(bytes.toString('base64')!==encoded)throw Error('整套资料缓存编码无效');assets[hash]=bytes;}
-  return {record,manifest,bundle:await decodeGenerationAssets(manifest,assets),file};
+  return {record,manifest,bundle:await decodeGenerationAssets(manifest,assets,{allowInvalidEquipment:true}),file};
  }
  async function read(file){try{const stat=await fs.stat(file);if(stat.size>36*1024*1024)throw Error('整套资料缓存过大');return await decode(JSON.parse(await fs.readFile(file,'utf8')),file);}catch(error){if(error.code!=='ENOENT')status={...status,phase:'offline',message:'使用内置或本地有效资料'};return null;}}
  active=await read(filename);
@@ -92,7 +92,7 @@ export async function createDataGenerationCache({root,getData,prepare,replace,ge
      if(!follows(manifest,pending?.manifest||active?.manifest))throw Error('整套资料序列或复查时间倒退');
      const assets={},record={schema:1,envelope,assets:{},checkedAt:new Date(clock()).toISOString(),manualToken:manualContext?.token||null};
      for(const name of GENERATION_NAMES){const file=manifest.files[name],cached=pending?.record.assets[file.sha256]||active?.record.assets[file.sha256];assets[file.sha256]=cached?Buffer.from(cached,'base64'):await download('/v2/assets/'+file.file,{limit:file.bytes});record.assets[file.sha256]=assets[file.sha256].toString('base64');}
-     const bundle=await decodeGenerationAssets(manifest,assets);
+     const bundle=await decodeGenerationAssets(manifest,assets,{allowInvalidEquipment:true});
      currentVersion(manifest,bundle.game);
      if(getData()!==original||manual!==manualContext)throw Error('基础资料已变化');
      if(active&&JSON.stringify(manifest)===JSON.stringify(active.manifest)&&!pending&&activeData===getData()){publish({phase:'ready',checkedAt:record.checkedAt,serverCheckedAt:manifest.checkedAt,message:'整套资料已是最新'});break;}
