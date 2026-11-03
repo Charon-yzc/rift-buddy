@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.44",
+  "version": "2026.11.03.45",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -14127,17 +14127,15 @@
     },
     {
       "id": "anivia-poppy",
-      "carry": "Anivia",
-      "support": "Poppy",
       "name": "冰墙撞车",
       "style": "wild",
       "tags": [
         "造墙",
         "地形控制"
       ],
-      "why": "冰鸟造墙为波比 E 提供地形，后续衔接冰鸟控制。",
-      "plan": "冰鸟补刀，波比辅助；先找侧面角度，确认墙与目标的方向再撞。",
-      "risk": "造墙也会挡队友；站位、蓝量和兵线要求较高。",
+      "why": "历史攻略将冰鸟 W 冰墙列为波比 E 可撞地形；目标实际撞上墙体才眩晕。该互动依据历史社区文字与当前技能资料推断，未做当版对局验证。",
+      "plan": "冰鸟补刀，波比辅助；确认双方 W/E 已学可用、目标和安全角度后由冰鸟布墙，波比 E 推向墙。撞墙才眩晕；冰鸟 Q 爆炸实际命中可接控制，E 在目标实际冰冻时才有强化伤害。",
+      "risk": "冰墙也会挡队友和自己；未撞墙不眩晕，角度、法力、距离或退路不成立就收手。未验证本组合当版胜率。",
       "partners": [
         "JarvanIV",
         "Graves"
@@ -14149,47 +14147,112 @@
           "url": "https://botdiff.lol/2025/11/04/top-off-meta-bot-lane-combinations-for-league-of-legends/",
           "kind": "guide",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "MOBAFire · CryAwake 波比 E 撞冰墙历史指南（2019-10-25 更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/bruiser-poppy-jungle-in-depth-559523",
+          "kind": "历史社区文字；非当版对局验证",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
         }
       ],
-      "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "mana-control",
-        "support": "tank-peel"
-      },
+      "evidence": "历史社区文字与技能资料推断 · 非当版对局验证",
+      "reviewedAt": "2026-11-03",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Anivia": "16654ea552fc6200",
-        "champion:Poppy": "fa2cafaf8d0f2976",
-        "item:6655": "e593f4433de96e4b",
-        "item:3040": "32f30786cea52b4a",
-        "item:3089": "a8a9b060b253391c",
+        "champion:Anivia": "52343f9ffaa815a9",
+        "champion:Poppy": "af33a45e62ad30e5",
+        "item:6657": "a64a1d7699648e7b",
+        "item:3118": "2bf87c4847cde85f",
+        "item:3157": "4e1ddce33472ee0f",
         "item:3020": "357a162d6a40286e",
         "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
+        "item:3089": "a8a9b060b253391c",
         "rune:8229": "9eaed52046ba81fd",
         "rune:8226": "b05a5d0fb43e4a6e",
         "rune:8210": "e78877d51ff049ea",
         "rune:8237": "141d0a7c16b98b91",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "rune:8369": "436163d51e34ebba",
-        "rune:8304": "aa454bdce540cb11",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3050": "c3e25c9df9075147",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Anivia",
+          "role": "bottom",
+          "loadoutId": "anivia-bottom-wall-manual",
+          "job": "负责补刀与法力管理；W 已学可用时报墙落点并留退路，Q 实际爆炸命中才眩晕，E 强化需目标实际冰冻。"
+        },
+        {
+          "champion": "Poppy",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "负责辅助视野和保护；E 已学可用、角度安全时尝试推目标撞冰墙，确认实际碰撞才报眩晕。"
+        }
+      ],
+      "steps": [
+        "冰鸟补刀、波比照看视野；先确认墙、冲锋、法力和敌方位置及双方退路。",
+        "冰鸟 W 已学可用时布墙，避免封住队友；波比 E 已学可用且角度成立时推同一目标，实际撞墙才眩晕。",
+        "冰鸟 Q 实际爆炸命中才晕，E 命中带自身冰冻的目标才有强化伤害；条件不成立或敌人脱离时停止追击。"
+      ],
+      "early": "冰鸟 W 和波比 E 均须先学会才能尝试撞墙；无角度时保线与血量，不依赖六级技能。",
+      "window": "冰墙仍存在、目标在冲锋距离且波比推向墙的角度成立；只有实际撞墙才眩晕。",
+      "economy": "冰鸟补刀，波比负责辅助视野；冰鸟使用单独标明的人工配置，波比用辅助位置普通参考，装备符文均非撞墙必要条件。",
+      "reviewSourceAnchors": {
+        "Anivia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "52343f9ffaa815a9",
+          "observedAt": "2026-10-26T13:38:40.305Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Anivia",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/anivia/anivia.bin.json",
+              "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d7796f24d403cc8c"
+            }
+          }
+        },
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-10-26T13:38:40.510Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        }
+      }
     },
     {
       "id": "brand-nami",
@@ -25193,31 +25256,31 @@
         "造墙角度",
         "反突进"
       ],
-      "why": "冰鸟造墙，波比找推向墙体的角度；波比阻挡突进，给冰鸟留输出位置。",
-      "plan": "先报冰墙与英勇冲锋是否可用，确认站位后先造墙、再推墙；角度不成立就改为保护冰鸟。",
-      "risk": "冰墙会挡双方走位；波比 E 方向不对会把目标推离输出区，蓄力 R 也可能把目标送出冰鸟大招。没有角度就停手，不保证撞墙。",
+      "why": "历史攻略将冰鸟 W 冰墙列为波比 E 可撞地形；实际碰墙才眩晕。当前为技能资料加历史文字推断，非当版实测。",
+      "plan": "先确认双方技能已学可用、距离、墙的位置和退路；冰鸟布墙后波比选择能将目标推向墙体的角度。未撞墙或目标脱离时回身保护。",
+      "risk": "冰墙会挡双方走位；E 方向错误可能推离输出区，波比蓄力 R 也可能将目标送出冰鸟风暴。无角度或退路不安全就停手；未验证组合胜率。",
       "members": [
         {
           "champion": "Poppy",
           "role": "top",
           "loadoutId": "default",
-          "job": "先确认目标、冰墙和自己的推进方向；E 确认能推向墙体才交，W 留给可阻挡的突进。冰鸟跟不上时回身保护，不盲追。"
+          "job": "确认冰墙、目标及自身方向，E 已学可用且安全时推向墙，实际撞墙才报眩晕；W 留给可中断的突进。"
         },
         {
           "champion": "Anivia",
           "role": "mid",
           "loadoutId": "default",
-          "job": "先报冰墙落点，给波比和己方留路；目标被限制后再接 Q/R，E 按自身冰冻条件使用。墙会隔断队友或自己没蓝时取消。"
+          "job": "W 已学可用时报墙落点并留退路；Q 爆炸命中才晕，E 强化需目标实际冰冻，R 须已学可用。"
         }
       ],
       "steps": [
-        "两人先靠近同一战区，确认 E/W、冰鸟 Q/R 与蓝量。",
-        "冰鸟在目标撤退方向布墙，波比确认实际角度再 E 推墙。",
-        "确认控制命中后接冰鸟 Q/R/E；没撞墙或目标脱离时回到保护站位。"
+        "各自处理兵线并在同一战区确认技能、法力和退路。",
+        "冰鸟 W 已学可用时布墙，波比 E 已学可用且角度成立时推向冰墙，实际撞墙才眩晕。",
+        "冰鸟 Q 实际爆炸命中才眩晕；E 需目标实际冰冻才强化，R 已学可用才可跟进。条件不成立或目标脱离时停止追击。"
       ],
-      "window": "两人已在同一战区、冰墙和波比 E 可用且角度成立时。无需等六级才可尝试，小技能未学或距离不够时不强行执行。",
-      "early": "各自保住上中兵线；先学到需要的技能，利用回城、河道或目标争夺会合，不为凑配合长期弃线。",
-      "economy": "波比保上路、冰鸟保中路补刀与经验；用各自当前位置配置，不套用历史攻略的下路或辅助经济。",
+      "window": "同区且冰墙和 E 已学可用，目标在冲锋范围、角度和退路安全；实际撞墙才眩晕。",
+      "early": "各自保上中兵线，W/E 均学会才尝试；不依赖六级，避免长期弃线。",
+      "economy": "波比保上路线、冰鸟保中路补刀与经验；双方用当前位置普通参考，装备符文不是撞墙必要条件。",
       "partners": [],
       "sources": [
         {
@@ -25237,10 +25300,22 @@
           "url": "https://www.leagueoflegends.com/en-us/champions/anivia/",
           "kind": "当前机制依据",
           "checkedAt": "2026-10-19"
+        },
+        {
+          "name": "MOBAFire · CryAwake 波比 E 撞冰墙历史指南（2019-10-25 更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/bruiser-poppy-jungle-in-depth-559523",
+          "kind": "历史社区文字；非当版对局验证",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
         }
       ],
-      "patch": "16.20",
-      "reviewedAt": "2026-10-19",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
       "reviewBaseline": {
         "champion:Poppy": "af33a45e62ad30e5",
         "champion:Anivia": "52343f9ffaa815a9"
@@ -25251,21 +25326,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "af33a45e62ad30e5",
-          "observedAt": "2026-10-18T23:15:23.567Z",
+          "observedAt": "2026-10-26T13:38:40.510Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Poppy",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/poppy/poppy.bin.json",
-              "sha256": "29a2eca7564e4ed5a2b059b99172130f8a9e2d4d27a149b940932e9fd646cffd"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "984283b0f66ff725"
             }
           }
@@ -25275,26 +25350,27 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "52343f9ffaa815a9",
-          "observedAt": "2026-10-18T23:14:16.885Z",
+          "observedAt": "2026-10-26T13:38:40.305Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Anivia",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/anivia/anivia.bin.json",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/anivia/anivia.bin.json",
               "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "d7796f24d403cc8c"
             }
           }
         }
-      }
+      },
+      "evidence": "历史社区文字与技能资料推断 · 非当版对局验证"
     },
     {
       "id": "viego-jungle-lissandra-mid",
@@ -41687,37 +41763,38 @@
         "推线消耗",
         "位移反制"
       ],
-      "why": "艾尼维亚用冰墙压缩走位，波比寻找真正的撞墙角度，吉格斯在控制成立后补区域伤害；关键是墙与击退方向，而非无条件连控。",
-      "plan": "先报冰墙位置和撤退方向，波比 E 有撞墙角度才进；确认眩晕后吉格斯 Q/E 接伤害，W 留作拆塔或撤离，不提前把敌人炸走。",
-      "risk": "冰墙可能挡住自己人，波比 E 不撞墙不会眩晕，吉格斯 W 会改变落点；法伤过多或角度不成立就继续消耗。",
+      "why": "历史攻略将冰鸟 W 冰墙列为波比 E 可撞地形；实际撞墙才眩晕，吉格斯可在安全距离跟伤害。该配合基于历史文字和当版技能资料推断，未做当版对局验证。",
+      "plan": "冰鸟先报可用冰墙位置和退路，波比 E 已学可用且有安全角度时尝试推墙；吉格斯在控制或目标位置成立后以 Q/E 补伤害，E 地雷须敌人实际踩中。W 会击退目标，也可用于撤退，避免提前炸走目标。",
+      "risk": "冰墙可能挡队友，波比未撞墙不眩晕，吉格斯 W 会改变目标位置；技能不可用、视野或退路不足时收手，未验证组合胜率。",
       "members": [
         {
           "champion": "Poppy",
           "role": "jungle",
-          "job": "先看冰墙与敌人相对位置，E 真撞墙才报控制；W 留给可阻挡的突进，R 用于拆散追兵。",
-          "loadoutId": "trio-jungle-frontline"
+          "loadoutId": "default",
+          "job": "刷野并确认目标、冰墙和方向；E 已学可用且安全时推向墙，实际撞墙才报眩晕。"
         },
         {
           "champion": "Anivia",
           "role": "mid",
-          "job": "保蓝与中线，墙要给队友留通道；Q 实际眩晕后再承诺跟进，别用墙封住波比退路。",
-          "loadoutId": "default"
+          "loadoutId": "default",
+          "job": "保中线和法力；W 已学可用时报落点并留退路，Q 实际爆炸命中才眩晕。"
         },
         {
           "champion": "Ziggs",
           "role": "bottom",
-          "job": "按下路法核补刀，控制成立后 Q/E；W 留作退出，先核对全队物理输出。",
-          "loadoutId": "default"
+          "loadoutId": "default",
+          "job": "下路补刀并在安全距离尝试 Q/E 伤害；E 地雷须敌人踩中，W 会击退敌人，可留作撤退。"
         }
       ],
       "steps": [
-        "中下处理兵线，波比到场后由冰鸟报墙边角度。",
-        "波比确认 E 撞墙并命中，吉格斯再补区域伤害。",
-        "角度丢失就停，保留冰墙通道和吉格斯 W 撤离。"
+        "中下处理兵线，波比到场后三人确认视野、技能、目标和退路。",
+        "冰鸟 W 已学可用时布墙；波比 E 已学可用且角度成立时将目标推向冰墙，实际碰墙才眩晕。",
+        "吉格斯 Q/E 已学可用时从安全距离跟进，Q 需命中、E 需敌人踩雷；W 会击退敌人，提前使用可能破坏配合。",
+        "冰墙隔断退路、目标离场或无人能安全跟进时停止追击；波比和吉格斯保留可用脱身技能。"
       ],
-      "early": "中下各自保线，波比正常刷野；没有安全墙角不为了联动强行入侵。",
-      "window": "有视野的窄口、可用冰墙和波比 E，且中下能在有效距离内跟进。",
-      "economy": "波比正常打野、中路冰鸟与下路吉格斯各自补刀。除波比复用前排配置外使用位置默认参考，未新增专用出装。",
+      "early": "中下各自保线、波比刷野；冰鸟 W 与波比 E 学会后才能尝试，不为找角度强行入侵。",
+      "window": "冰墙与波比 E 已学可用，目标处于安全冲锋距离、推墙角度成立，吉格斯能够在安全范围跟进；实际撞墙才眩晕。",
+      "economy": "波比正常打野，冰鸟中路与吉格斯下路各自补刀；使用各自位置普通参考，普通装备和符文不是撞墙的必要条件。",
       "sources": [
         {
           "name": "Riot · 波比 16.20 技能",
@@ -41742,107 +41819,102 @@
           "url": "https://www.bilibili.com/video/BV1TFmUBeEM2/",
           "kind": "社区配合灵感，未作当前版本胜率依据",
           "checkedAt": "2026-10-16"
+        },
+        {
+          "name": "MOBAFire · CryAwake 波比 E 撞冰墙历史指南（2019-10-25 更新）",
+          "url": "https://www.mobafire.com/league-of-legends/build/bruiser-poppy-jungle-in-depth-559523",
+          "kind": "历史社区文字；非当版对局验证",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
         }
       ],
-      "patch": "16.20",
-      "reviewedAt": "2026-10-16",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
       "reviewBaseline": {
         "champion:Poppy": "af33a45e62ad30e5",
         "champion:Anivia": "52343f9ffaa815a9",
-        "champion:Ziggs": "301986c8fed3e8fb",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998"
+        "champion:Ziggs": "301986c8fed3e8fb"
       },
       "reviewSourceAnchors": {
         "Poppy": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "af33a45e62ad30e5",
-          "observedAt": "2026-10-18T23:15:23.567Z",
+          "observedAt": "2026-10-26T13:38:40.510Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Poppy",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/poppy/poppy.bin.json",
-              "sha256": "29a2eca7564e4ed5a2b059b99172130f8a9e2d4d27a149b940932e9fd646cffd"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "984283b0f66ff725"
             }
           }
         },
         "Anivia": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "52343f9ffaa815a9",
-          "observedAt": "2026-10-18T23:14:16.885Z",
+          "observedAt": "2026-10-26T13:38:40.305Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Anivia",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/anivia/anivia.bin.json",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/anivia/anivia.bin.json",
               "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "d7796f24d403cc8c"
             }
           }
         },
         "Ziggs": {
           "schema": 1,
-          "kind": "migration-anchor",
+          "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "301986c8fed3e8fb",
-          "observedAt": "2026-10-18T23:16:11.665Z",
+          "observedAt": "2026-10-26T13:38:40.607Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ziggs",
-            "patch": "16.20",
-            "version": "16.20.1",
+            "patch": "16.21",
+            "version": "16.21.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.20/game/data/characters/ziggs/ziggs.bin.json",
-              "sha256": "0bf2bab56f3c53b50d95cf898bcc3b5f0ed5020c7491063d65f73e073826fb9f"
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "fdb99302b5ecb565"
             }
           }
         }
-      }
+      },
+      "evidence": "历史社区文字与技能资料推断 · 非当版对局验证"
     },
     {
       "id": "party-fiddle-neeko-mf",
@@ -52657,6 +52729,91 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "6541b61e26cdad84"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "anivia-bottom-wall-manual",
+      "name": "冰鸟下路法力与生存 · 人工参考",
+      "champions": [
+        "Anivia"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "mage",
+      "items": [
+        6657,
+        3118,
+        3157
+      ],
+      "boots": 3020,
+      "late": [
+        3135,
+        3089
+      ],
+      "runes": [
+        "comet"
+      ],
+      "why": "当前资料缺少冰鸟下路同位置统计；这是人工整理的法力、生存和技能伤害参考，材料借鉴该英雄 16.21 中路单英雄来源，不能当作下路或本组合统计。时光之杖随时间成长；中娅须主动使用；彗星需要技能伤害命中敌方英雄，命中彗星本身不保证。Q/E/W 前三点是为提前提供冰墙的机制取舍，后续偏 E/Q；不声称作者原方案或最优路线。",
+      "damage": "ap",
+      "first": "QEW",
+      "priority": "EQW",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "sources": [
+        {
+          "name": "OP.GG · 冰鸟中路来源，仅作为人工配置素材",
+          "url": "https://op.gg/lol/champions/anivia/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "不同位置单英雄参考，不是下路统计或完整作者配置",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 游戏物品与英雄资料",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备机制依据",
+          "checkedAt": "2026-11-03"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Anivia": "52343f9ffaa815a9",
+        "item:6657": "a64a1d7699648e7b",
+        "item:3118": "2bf87c4847cde85f",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Anivia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "52343f9ffaa815a9",
+          "observedAt": "2026-10-26T13:38:40.305Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Anivia",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/anivia/anivia.bin.json",
+              "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d7796f24d403cc8c"
             }
           }
         }
