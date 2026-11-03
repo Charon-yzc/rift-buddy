@@ -8,9 +8,10 @@ import {summonerOptions} from './summoner-selection.mjs';
 import {getBuild} from './builds.mjs';
 import {createItemSet} from './item-sets.mjs';
 
-// Audited 16.21 combination text explicitly states that the interaction does
-// not require a specific item or rune. The complete revision also binds each
-// referenced loadout, rune plan and scoped skill plan. No prose is parsed.
+// Individually audited 16.21 skill interactions do not require a specified
+// item or rune; task and vision actions retain their own conditions. The exact
+// revision binds the entry, referenced loadouts, rune plans and skill plans.
+// Evidence is reviewed separately; no prose is parsed.
 const revisions=Object.freeze({
  'cassiopeia-singed':'b407f05b69886ba0','anivia-poppy':'7980bf1ff73c677e',
  'sion-zilean':'700f9a612a69a56d','pantheon-braum':'6d3dcf7b03cec084',
@@ -19,6 +20,13 @@ const revisions=Object.freeze({
  'cassiopeia-teemo':'04999b5434ba0e99','yasuo-thresh':'644483de6dd45e8d',
  'poppy-top-anivia-mid':'52fb3874cf6072bb','party-anivia-vayne-poppy':'88d6a3938722e289',
  'party-gnar-jarvan-viktor':'40ba26e5d2ea6d1f','party-poppy-anivia-ziggs':'9610377fcadd4177',
+ 'teemo-shaco':'6999eeb0dc33be35',
+ 'teemo-milio':'b3c34d7d8581d0e4',
+ 'taliyah-pantheon':'028eccc1ecd76fc4',
+ 'sett-senna':'5adf40f53eb52383',
+ 'garen-yuumi':'b8e0cb7b06088d94',
+ 'neeko-pyke':'12822fb21016eed0',
+ 'morgana-twitch-roam':'98785b563baff175',
 });
 
 // Only the store can establish the origin of a merged entry. An identical
