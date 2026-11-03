@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.48",
+  "version": "2026.11.03.49",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -13304,14 +13304,26 @@
       ],
       "reviewBaseline": {
         "champion:Sett": "76c5b480536d4f6c",
-        "champion:Senna": "5e547c9cf10f2a05"
+        "champion:Senna": "5e547c9cf10f2a05",
+        "item:6631": "0afacda99f318d21",
+        "item:3071": "8b44dc349847ea0e",
+        "item:2501": "95a3d5c737a55b8c",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3053": "6f40bd5cd29bb7d2",
+        "item:6333": "60ed05035db8354d",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998"
       },
       "tempo": "teamfight",
       "members": [
         {
           "champion": "Sett",
           "role": "bottom",
-          "loadoutId": "default",
+          "loadoutId": "manual-sett-bottom-reference",
           "job": "瑟提负责补刀；E 单侧命中会拉拽并减速，两侧均命中敌人才额外眩晕。"
         },
         {
@@ -13328,7 +13340,7 @@
       ],
       "window": "双方技能已学会且实际可用、距离和退路成立时按实际命中行动；不满足条件就停止。",
       "early": "下路成员先保补刀与经验，辅助观察兵线、视野和双方状态；按实际等级与对手技能决定换血。",
-      "economy": "下路成员以补刀为主，辅助以任务和视野经济为主；双方默认配置按当前位置实际来源显示，不冒称组合专属配置。",
+      "economy": "下路成员以补刀为主，辅助以任务和视野经济为主；瑟提使用人工参考，非下路统计或组合专配；赛娜使用辅助位置参考。",
       "reviewSourceAnchors": {
         "Sett": {
           "schema": 1,
@@ -13426,14 +13438,26 @@
       ],
       "reviewBaseline": {
         "champion:Garen": "da16a590f3304db3",
-        "champion:Yuumi": "74372983c2c1dbfe"
+        "champion:Yuumi": "74372983c2c1dbfe",
+        "item:6631": "0afacda99f318d21",
+        "item:3046": "70a1d226735997bb",
+        "item:3742": "781ae5e1d4c0324a",
+        "item:3006": "d8d9fde1f7908326",
+        "item:6333": "60ed05035db8354d",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998"
       },
       "tempo": "protect",
       "members": [
         {
           "role": "bottom",
           "champion": "Garen",
-          "loadoutId": "default",
+          "loadoutId": "manual-garen-bottom-reference",
           "job": "下路承担补刀、经验和接近距离判断；Q 移除自身减速并加速，强化攻击实际命中才沉默。"
         },
         {
@@ -13451,7 +13475,7 @@
       ],
       "early": "射程短，先尽量保经验与可安全取得的补刀，不预设能压制远程组合。",
       "window": "目标可安全触及且退路可用、双方关键技能和血量允许时；挚友附加效果以实际条件为准。",
-      "economy": "盖伦补刀；悠米用辅助任务经济。近战承压可能损失补刀，不假设这一问题已解决。 双方配置使用各自位置参考。",
+      "economy": "盖伦补刀；悠米用辅助任务经济。近战承压可能损失补刀，不假设这一问题已解决。盖伦使用人工参考，非下路统计或组合专配；悠米使用辅助位置参考。",
       "reviewSourceAnchors": {
         "Garen": {
           "schema": 1,
@@ -13797,14 +13821,27 @@
       ],
       "reviewBaseline": {
         "champion:Taliyah": "164392e23c74360e",
-        "champion:Pantheon": "ade6cc95e4c6b966"
+        "champion:Pantheon": "ade6cc95e4c6b966",
+        "item:6655": "e593f4433de96e4b",
+        "item:3003": "88afa631f4faea9e",
+        "item:3089": "a8a9b060b253391c",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3070": "e2dbf1b6d5da375b",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
       },
       "tempo": "teamfight",
       "members": [
         {
           "champion": "Taliyah",
           "role": "bottom",
-          "loadoutId": "default",
+          "loadoutId": "taliyah-bottom-manual-control",
           "job": "塔莉垭补刀并管理法力；E 铺设撒石阵，W 实际推动目标经过才触发对应效果。"
         },
         {
@@ -13821,7 +13858,7 @@
       ],
       "window": "双方技能已学会且实际可用、距离和退路成立时按实际命中行动；不满足条件就停止。",
       "early": "下路成员先保补刀与经验，辅助观察兵线、视野和双方状态；按实际等级与对手技能决定换血。",
-      "economy": "下路成员以补刀为主，辅助以任务和视野经济为主；双方默认配置按当前位置实际来源显示，不冒称组合专属配置。",
+      "economy": "下路成员以补刀为主，辅助以任务和视野经济为主；塔莉垭使用人工参考，非下路统计或组合专配；潘森使用辅助位置参考。",
       "reviewSourceAnchors": {
         "Taliyah": {
           "schema": 1,
@@ -24461,14 +24498,26 @@
       ],
       "reviewBaseline": {
         "champion:Neeko": "d6f4984cd7330b72",
-        "champion:Pyke": "750b7cf6d1187481"
+        "champion:Pyke": "750b7cf6d1187481",
+        "item:3152": "37dc7712644a19f0",
+        "item:4646": "a195092592feb18a",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8112": "0082006b65520bc3",
+        "rune:8126": "9e648d4b51a0c973",
+        "rune:8140": "93302565a400fc06",
+        "rune:8106": "bfb83fa22daf18de",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea"
       },
       "tempo": "teamfight",
       "members": [
         {
           "role": "bottom",
           "champion": "Neeko",
-          "loadoutId": "default",
+          "loadoutId": "manual-neeko-bottom-reference",
           "job": "负责补刀并确认目标，E 命中才禁锢；伪装被破或后续无人接应时回撤。"
         },
         {
@@ -24485,7 +24534,7 @@
       ],
       "window": "技能已学可用、目标在安全覆盖范围且退路明确。",
       "early": "下路成员先保补刀、经验、血量和视野；按实际技能、距离和来敌方向决定是否换血。",
-      "economy": "下路英雄以补刀为主，辅助保留任务与视野经济；双方使用位置默认资料，不代表本组合专配。",
+      "economy": "下路英雄以补刀为主，辅助保留任务与视野经济；妮蔻使用人工参考，非下路统计或组合专配；派克使用辅助位置参考。",
       "reviewSourceAnchors": {
         "Neeko": {
           "schema": 1,
@@ -24947,7 +24996,28 @@
       "reviewedAt": "2026-10-30",
       "reviewBaseline": {
         "champion:Morgana": "e0588c7ab7dba463",
-        "champion:Twitch": "ab3e76d629cf2787"
+        "champion:Twitch": "ab3e76d629cf2787",
+        "item:2503": "1fa1a03a714d3aa7",
+        "item:6653": "dae566be4a35ad25",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47",
+        "item:3115": "627135c117eaf20a",
+        "item:4645": "152f57227a713097",
+        "item:3006": "d8d9fde1f7908326",
+        "rune:9923": "89bc1d7f8c9bcddc",
+        "rune:8143": "c3f9de836bc96957",
+        "rune:8140": "93302565a400fc06",
+        "rune:8135": "d7b9ee19a520bf84",
+        "rune:9104": "e6b524a54b35a2f3",
+        "rune:8014": "04092c4f9754532b"
       },
       "reviewSourceAnchors": {
         "Morgana": {
@@ -25003,13 +25073,13 @@
         {
           "role": "bottom",
           "champion": "Morgana",
-          "loadoutId": "default",
+          "loadoutId": "manual-morgana-bottom-reference",
           "job": "下路补刀并报告兵线与越塔风险；Q 实际命中后禁锢，E 按来袭威胁给护盾。"
         },
         {
           "role": "support",
           "champion": "Twitch",
-          "loadoutId": "default",
+          "loadoutId": "twitch-support-poison-2621",
           "job": "承担辅助任务与安全视野；约定离线和返回时间，Q 伪装，W 加毒，按实际毒层与范围使用 E。"
         }
       ],
@@ -25021,7 +25091,7 @@
       ],
       "early": "不以莫甘娜被孤立或丢失经验为代价强行游走，图奇先完成辅助任务。",
       "window": "离线和回线安全，或双方重聚且 Q 实际命中、图奇可安全输出时。",
-      "economy": "莫甘娜补刀；图奇走辅助任务经济，不无故分走下路兵线。 双方配置使用各自位置参考。"
+      "economy": "莫甘娜补刀；图奇走辅助任务经济，不无故分走下路兵线。双方使用人工整理参考，非组合专配；莫甘娜配置非下路统计。"
     },
     {
       "id": "kalista-tahm-rescue",
@@ -53033,6 +53103,346 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "0ab565075cf8e870"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-sett-bottom-reference",
+      "name": "瑟提下路 · 人工参考",
+      "champions": [
+        "Sett"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "fighter",
+      "items": [
+        6631,
+        3071,
+        2501
+      ],
+      "boots": 3047,
+      "late": [
+        3053,
+        6333
+      ],
+      "runes": [
+        "conqueror"
+      ],
+      "damage": "ad",
+      "first": "WEQ",
+      "priority": "QWE",
+      "why": "本次签名快照缺少该英雄下路同位置统计；这是人工机制参考，部分素材来自同英雄不同位置资料，不是作者配装、下路统计或组合胜率。技能顺序为人工取舍，按对线调整。近战补刀先保血量与退路；挺进破坏者需主动使用，黑切需对英雄造成物理伤害才叠护甲削减，征服者需实际叠满才能获得满层收益。",
+      "sources": [
+        {
+          "name": "OP.GG · Sett top 来源，仅为人工配置素材",
+          "url": "https://op.gg/lol/champions/sett/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "不同位置单英雄资料，不是下路或组合统计",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄与装备快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备资料依据",
+          "checkedAt": "2026-11-03"
+        }
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "reviewBaseline": {
+        "champion:Sett": "76c5b480536d4f6c",
+        "item:6631": "0afacda99f318d21",
+        "item:3071": "8b44dc349847ea0e",
+        "item:2501": "95a3d5c737a55b8c",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3053": "6f40bd5cd29bb7d2",
+        "item:6333": "60ed05035db8354d",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998"
+      },
+      "reviewSourceAnchors": {
+        "Sett": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "76c5b480536d4f6c",
+          "observedAt": "2026-10-26T13:38:40.519Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sett",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sett/sett.bin.json",
+              "sha256": "432de9e0a6a3d5fe63d551f27a3f491e42e775cd1b25747664228f53343ea9f4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d105f0a4b5c99060"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-garen-bottom-reference",
+      "name": "盖伦下路 · 人工参考",
+      "champions": [
+        "Garen"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "fighter",
+      "items": [
+        6631,
+        3046,
+        3742
+      ],
+      "boots": 3006,
+      "late": [
+        6333,
+        3026
+      ],
+      "runes": [
+        "conqueror"
+      ],
+      "damage": "ad",
+      "first": "EQW",
+      "priority": "EQW",
+      "why": "本次签名快照缺少该英雄下路同位置统计；这是人工机制参考，部分素材来自同英雄不同位置资料，不是作者配装、下路统计或组合胜率。技能顺序为人工取舍，按对线调整。近战补刀先保血量与退路；挺进破坏者需主动使用，亡者的板甲提供护甲及移速，按实际伤害类型调整；对手治疗威胁较大时考虑重伤；征服者需实际叠满才能获得满层收益。",
+      "sources": [
+        {
+          "name": "OP.GG · Garen top 来源，仅为人工配置素材",
+          "url": "https://op.gg/lol/champions/garen/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "不同位置单英雄资料，不是下路或组合统计",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄与装备快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备资料依据",
+          "checkedAt": "2026-11-03"
+        }
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "reviewBaseline": {
+        "champion:Garen": "da16a590f3304db3",
+        "item:6631": "0afacda99f318d21",
+        "item:3046": "70a1d226735997bb",
+        "item:3742": "781ae5e1d4c0324a",
+        "item:3006": "d8d9fde1f7908326",
+        "item:6333": "60ed05035db8354d",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998"
+      },
+      "reviewSourceAnchors": {
+        "Garen": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "da16a590f3304db3",
+          "observedAt": "2026-10-26T13:38:40.395Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Garen",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/garen/garen.bin.json",
+              "sha256": "1f70b1e66d622e433606d551b6f23f5d170deba6dc4347ddff88fa9e6053a710"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "63254cd43dff2e1d"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-neeko-bottom-reference",
+      "name": "妮蔻下路 · 人工参考",
+      "champions": [
+        "Neeko"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "mage",
+      "items": [
+        3152,
+        4646,
+        3157
+      ],
+      "boots": 3020,
+      "late": [
+        3135,
+        3089
+      ],
+      "runes": [
+        "electro"
+      ],
+      "damage": "ap",
+      "first": "QEW",
+      "priority": "QEW",
+      "why": "本次签名快照缺少该英雄下路同位置统计；这是人工机制参考，部分素材来自同英雄不同位置资料，不是作者配装、下路统计或组合胜率。技能顺序为人工取舍，按对线调整。以补刀、法力与安全距离为先；火箭腰带和中娅需主动使用，风暴狂涌须在其时间窗口内对同一英雄造成足够伤害才触发，不能预设每次连招达标。",
+      "sources": [
+        {
+          "name": "OP.GG · Neeko mid 来源，仅为人工配置素材",
+          "url": "https://op.gg/lol/champions/neeko/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "不同位置单英雄资料，不是下路或组合统计",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄与装备快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备资料依据",
+          "checkedAt": "2026-11-03"
+        }
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "reviewBaseline": {
+        "champion:Neeko": "d6f4984cd7330b72",
+        "item:3152": "37dc7712644a19f0",
+        "item:4646": "a195092592feb18a",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8112": "0082006b65520bc3",
+        "rune:8126": "9e648d4b51a0c973",
+        "rune:8140": "93302565a400fc06",
+        "rune:8106": "bfb83fa22daf18de",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea"
+      },
+      "reviewSourceAnchors": {
+        "Neeko": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d6f4984cd7330b72",
+          "observedAt": "2026-10-26T13:38:40.506Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Neeko",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/neeko/neeko.bin.json",
+              "sha256": "0d2d79949fbeecdbb851ae627b1dfa189ceab975e17627c57c8f7de546d9d12a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "1d597517ddd4f92e"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-morgana-bottom-reference",
+      "name": "莫甘娜下路 · 人工参考",
+      "champions": [
+        "Morgana"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "mage",
+      "items": [
+        2503,
+        6653,
+        3157
+      ],
+      "boots": 3020,
+      "late": [
+        3135,
+        3089
+      ],
+      "runes": [
+        "comet"
+      ],
+      "damage": "ap",
+      "first": "WQE",
+      "priority": "WQE",
+      "why": "本次签名快照缺少该英雄下路同位置统计；这是人工机制参考，部分素材来自同英雄不同位置资料，不是作者配装、下路统计或组合胜率。技能顺序为人工取舍，按对线调整。下路优先补刀并保留法力与退路；伤害型技能实际命中才触发灼烧，中娅须主动使用；Q 命中和 E 护盾的实际持续时间不能预设。",
+      "sources": [
+        {
+          "name": "OP.GG · Morgana mid 来源，仅为人工配置素材",
+          "url": "https://op.gg/lol/champions/morgana/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "不同位置单英雄资料，不是下路或组合统计",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄与装备快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备资料依据",
+          "checkedAt": "2026-11-03"
+        }
+      ],
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "reviewBaseline": {
+        "champion:Morgana": "e0588c7ab7dba463",
+        "item:2503": "1fa1a03a714d3aa7",
+        "item:6653": "dae566be4a35ad25",
+        "item:3157": "4e1ddce33472ee0f",
+        "item:3020": "357a162d6a40286e",
+        "item:3135": "9eb1465e02c69db0",
+        "item:3089": "a8a9b060b253391c",
+        "rune:8229": "9eaed52046ba81fd",
+        "rune:8226": "b05a5d0fb43e4a6e",
+        "rune:8210": "e78877d51ff049ea",
+        "rune:8237": "141d0a7c16b98b91",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47"
+      },
+      "reviewSourceAnchors": {
+        "Morgana": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e0588c7ab7dba463",
+          "observedAt": "2026-10-26T13:38:40.504Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Morgana",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+              "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "57d5f698304a1f45"
             }
           }
         }
