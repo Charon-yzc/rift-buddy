@@ -9,6 +9,7 @@ const nameOf=(build,data)=>{
  const named=build.loadoutOptions.find(option=>option.id===build.loadoutId)?.name;if(named)return named;
  if(build.selectedRune?.source==='个人自选')return '自选配置';
  if(!build.reference)return '机制默认';
+ if(build.sourceCoreChanged)return 'OP.GG · 来源路线已调整';
  if(build.sourceOpponent)return 'OP.GG · 对'+(data.champions.find(hero=>hero.id===build.sourceOpponent)?.name||build.sourceOpponent);
  if(build.selectedCoreIndex>0)return 'OP.GG · '+(data.items[build.reference.core[build.selectedCoreIndex]?.items[0]]?.name||'备选')+'路线';
  if(build.selectedRuneId&&build.selectedRuneId!==build.runeOptions[0]?.id)return (build.selectedRune?.source==='OP.GG'?'OP.GG · ':'常用出装 · ')+build.selectedRune.name;
@@ -35,7 +36,7 @@ export function configurationChoices(data,selection,currentBuild){
  for(const option of ordinary.loadoutOptions){const s={...base,loadoutId:option.id};append('loadout:'+option.id,s,getBuild(hero,base.role,data,s),option.name);}
  for(const [index,core] of (ordinary.reference?.core||[]).slice(1,4).entries()){
   const s={...standard,coreIndex:index+1,coreId:'core-'+core.items.join('-')};
-  append(s.coreId,s,getBuild(hero,base.role,data,s),'OP.GG · '+(data.items[core.items[0]]?.name||'路线')+'路线');
+  const build=getBuild(hero,base.role,data,s);append(s.coreId,s,build,build.sourceCoreChanged?'OP.GG · 来源路线已调整':'OP.GG · '+(data.items[core.items[0]]?.name||'路线')+'路线');
  }
  for(const rune of ordinary.runeOptions.filter(value=>value.source==='OP.GG').slice(0,5)){
   const s={...standard,runeId:rune.id};append('rune:'+rune.id,s,getBuild(hero,base.role,data,s),'OP.GG · '+rune.name);
