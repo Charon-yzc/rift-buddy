@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.47",
+  "version": "2026.11.03.48",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -14503,17 +14503,15 @@
     },
     {
       "id": "pantheon-braum",
-      "carry": "Pantheon",
-      "support": "Braum",
       "name": "盾击三连",
       "style": "fun",
       "tags": [
         "多段普攻",
         "被动接控"
       ],
-      "why": "潘森强化 W 的连续普攻帮助叠布隆被动。",
-      "plan": "潘森补刀，布隆辅助；先确认被动层数与强化技能，再一起集火。",
-      "risk": "近战补刀会受压；不能为追击丢掉布隆保护范围。",
+      "why": "历史正式服社区评论描述潘森强化 W 与布隆被动的配合；布隆先成功上标记后，潘森可尝试以强化 W 后的攻击接续叠层。实际叠到四层才眩晕，不保证打击均命中或一次叠满；该互动基于历史文字与技能资料推断，未做当版对局验证。",
+      "plan": "潘森负责下路补刀，布隆辅助。先确认敌方英雄不处于布隆被动免叠期、布隆 Q 或普攻命中并实际挂上第一层，再确认潘森强化已就绪且 W 已学可用；潘森在安全距离 W 命中后，用后续攻击尝试对同一目标叠层。观察实际层数，满四层才眩晕。",
+      "risk": "近战补刀可能受压，标记过期、目标免叠、技能或攻击落空、目标脱离与进场不安全都会打断配合。不要把强化 W 按下当成已自动叠满，也不要追出布隆保护范围；未验证当版组合胜率。",
       "partners": [
         "Orianna",
         "Sejuani"
@@ -14525,50 +14523,113 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Reddit · NatsuEevee 潘森与布隆历史配合（发表日期未知）",
+          "url": "https://www.reddit.com/r/leagueoflegends/comments/1dx86q8/what_are_some_lowkey_combos_that_are_goated/",
+          "kind": "历史正式服社区文字；非当版实测",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
         }
       ],
-      "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "pantheon-stun",
-        "support": "braum-peel"
-      },
+      "evidence": "历史社区文字与技能资料推断 · 非当版对局验证",
+      "reviewedAt": "2026-11-03",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Pantheon": "c193013ff5c96a21",
-        "champion:Braum": "4726b43beaea9728",
+        "champion:Pantheon": "ade6cc95e4c6b966",
+        "champion:Braum": "ae3aa48403ffcbe5",
         "item:6692": "bec6d540fde1d4ec",
         "item:3071": "8b44dc349847ea0e",
         "item:3814": "f9788442be1f2810",
         "item:3158": "72ca672b9221f063",
         "item:6333": "60ed05035db8354d",
         "item:3026": "9ac9f874ae405bd1",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
         "rune:8010": "b8dd7b11cee84803",
         "rune:9111": "6667591beed15f1b",
         "rune:9105": "8f6975f18cf3ff8d",
         "rune:8299": "d7db081cd64d0bc2",
         "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3050": "c3e25c9df9075147",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3107": "53bdbba0a53ca5c6",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8463": "3296414353df0e65",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8347": "def2a55844436c47",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c"
+        "rune:8451": "9e4f8837510e3998"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Pantheon",
+          "role": "bottom",
+          "loadoutId": "manual-pantheon-bottom-braum",
+          "job": "负责补刀；确认强化就绪、W 已学可用及安全距离，W 命中后尝试攻击同一已标记目标，观察实际层数而不预设叠满。"
+        },
+        {
+          "champion": "Braum",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "负责辅助视野和保护；Q 命中首个敌人或普攻先挂标记，确认不在免叠期；观察层数并按需要保护退路。"
+        }
+      ],
+      "steps": [
+        "潘森保线和血量，布隆负责视野；确认双方技能、同一目标及安全退路。",
+        "布隆 Q 已学可用且命中的首个敌人为目标英雄，或普攻命中该英雄，目标不处于免叠期并实际挂上第一层后再沟通集火。",
+        "潘森 W 已学可用、强化已就绪且进场安全时尝试跃击；W 命中后以攻击跟进同一带标记目标，只有实际叠满四层才触发被动眩晕，不预设一次攻击叠满。",
+        "目标脱离、标记过期或处于免叠期、攻击未命中或退路不安全时停止追击；布隆按已学可用技能保护队友。"
+      ],
+      "early": "六级前先保近战补刀；布隆能实际挂第一层、潘森 W 已学可用且强化已就绪时才尝试原配合。技能顺序按实际对线调整。",
+      "window": "布隆标记实际存在且目标可继续叠层，潘森 W 已学可用、强化已就绪并能安全接近；后续攻击须实际命中同一目标，四层才眩晕。",
+      "economy": "潘森负责下路补刀，布隆承担辅助经济与视野；潘森使用明确标注的人工下路参考，布隆使用普通辅助位置参考。装备和符文不是被动叠层的必要条件。",
+      "reviewSourceAnchors": {
+        "Pantheon": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ade6cc95e4c6b966",
+          "observedAt": "2026-10-26T13:38:40.510Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pantheon",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/pantheon/pantheon.bin.json",
+              "sha256": "0acb5fa598525639a78e444a98a3e50cc46533843446d17657921c3639dd23df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0ab565075cf8e870"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      }
     },
     {
       "id": "galio-senna",
@@ -52887,6 +52948,91 @@
             "dataDragon": {
               "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
               "fingerprint": "d7796f24d403cc8c"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "manual-pantheon-bottom-braum",
+      "name": "潘森下路近身参考 · 人工配置",
+      "champions": [
+        "Pantheon"
+      ],
+      "roles": [
+        "bottom"
+      ],
+      "base": "fighter",
+      "items": [
+        6692,
+        3071,
+        3814
+      ],
+      "boots": 3158,
+      "late": [
+        6333,
+        3026
+      ],
+      "runes": [
+        "conqueror"
+      ],
+      "first": "QWE",
+      "priority": "QEW",
+      "why": "缺少潘森下路同位置 16.21 统计；沿用旧下路机制配置的装备并核当前购买条件，部分装备亦见同英雄辅助位置来源，仅作人工参考，非下路统计、作者原配或组合最优。Q/W/E 前三点及后续优先为人工取舍；近战补刀先保血量。征服者须持续命中敌方英雄叠满才有相应收益，不假定强化攻击必然叠满；星蚀需两次独立攻击或技能在条件窗口内命中英雄，夜之锋刃护盾只挡下一个敌方技能，主动装备和防御按局势调整。",
+      "damage": "ad",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "sources": [
+        {
+          "name": "OP.GG · 潘森辅助来源，仅为人工配置素材",
+          "url": "https://op.gg/lol/champions/pantheon/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.21",
+          "kind": "不同位置单英雄参考，不是下路统计或整套组合配装",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 装备资料",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备机制依据",
+          "checkedAt": "2026-11-03"
+        }
+      ],
+      "reviewBaseline": {
+        "champion:Pantheon": "ade6cc95e4c6b966",
+        "item:6692": "bec6d540fde1d4ec",
+        "item:3071": "8b44dc349847ea0e",
+        "item:3814": "f9788442be1f2810",
+        "item:3158": "72ca672b9221f063",
+        "item:6333": "60ed05035db8354d",
+        "item:3026": "9ac9f874ae405bd1",
+        "rune:8010": "b8dd7b11cee84803",
+        "rune:9111": "6667591beed15f1b",
+        "rune:9105": "8f6975f18cf3ff8d",
+        "rune:8299": "d7db081cd64d0bc2",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8451": "9e4f8837510e3998"
+      },
+      "reviewSourceAnchors": {
+        "Pantheon": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ade6cc95e4c6b966",
+          "observedAt": "2026-10-26T13:38:40.510Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pantheon",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/pantheon/pantheon.bin.json",
+              "sha256": "0acb5fa598525639a78e444a98a3e50cc46533843446d17657921c3639dd23df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0ab565075cf8e870"
             }
           }
         }
