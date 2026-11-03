@@ -3,6 +3,15 @@ import {reviewedCatalogEntry} from './core/mechanic-review.mjs';
 import {ROLES} from './core/rules.mjs';
 import {escape as e} from './ui.mjs';
 
+// Display evidence is always resolved from the current catalog, not a saved
+// plan or recommendation snapshot. Public hovers are not confirmed members.
+export function reviewedPartySubgroups(slots,data,{scope='party',excludeId=''}={}){
+ if(!['party','context'].includes(scope)||!Array.isArray(slots))return [];
+ const party=slots.filter(s=>s.party);
+ if(party.length<3||party.length>5)return [];
+ return (data.catalog?.duos||[]).filter(group=>group.id!==excludeId&&reviewedCatalogEntry(group,data.catalogInfo?.status,data.patch)&&comboMembers(group).every(m=>party.some(s=>!s.publicIntent&&s.role===m.role&&s.champion===m.champion)));
+}
+
 // A curated plan may cover only part of a larger displayed lineup.
 export function subgroupText(plan,slots,data,displayed=slots){
  if(!plan||(plan.archetype&&plan.archetype!=='curated')||!Array.isArray(slots)||!Array.isArray(displayed)||displayed.filter(s=>s.champion).length<4)return '';
@@ -20,7 +29,7 @@ function currentReviewedSubgroups(groups,slots,data){
   const group=data.catalog?.duos?.find(entry=>entry.id===previous.id);
   if(!group||comboKey(group)!==comboKey(previous)||!reviewedCatalogEntry(group,data.catalogInfo?.status,data.patch))return [];
   const members=comboMembers(group);
-  if(members.length!==2||!members.every(m=>slots.some(s=>s.party&&s.role===m.role&&s.champion===m.champion)))return [];
+  if(members.length!==2||!members.every(m=>slots.some(s=>s.party&&!s.publicIntent&&s.role===m.role&&s.champion===m.champion)))return [];
   return [{group,members}];
  });
 }
