@@ -1066,8 +1066,8 @@ async function prepareCandidate(el){
   const action=memberHeroAction(el.dataset.id,el.dataset.role);
   if(action.blocked)throw Error('英雄已锁定，不能选择其他英雄；仍可推荐、提议和投票');
   if(action.prepare){
-   const context=heroClickSelection(data,{id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(combo)}),index=Number(el.dataset.resultIndex);
-   const selection={...rememberedPreparation(context),...context};
+   const context={id:el.dataset.id,role:el.dataset.role,mode:'rift',...creativeComboContext(combo)},index=Number(el.dataset.resultIndex);
+   const selection=heroClickSelection(data,{...rememberedPreparation(context),...context});
    const expected={...context,planId:plan?.id||'',fingerprint:clientPreparationPlan(data,{selection,build:getBuild(champ(context.id),context.role,data,selection)})?.fingerprint};
    const clickGame=preparationGameId(client),clickCell=client.session?.localPlayerCellId,clickMode=client.mode?.id;
    const previousTarget=preparationTarget;preparationTarget=selection;
@@ -1293,7 +1293,8 @@ function changeConfigurationRole(el){
  // Browse the new lane as a complete setup. The dropdown must not move
  // roster members, resize our group or apply any client configuration.
  const {id,mode}=plan.selection,role=el.value,combo=mode==='rift'?currentCombo(slots,id,role,data.catalogInfo?.status,null,activeCreativePlan,{patch:data.patch,catalogChoice:saved.draft?.catalogChoice}):null;
- const selection=heroClickSelection(data,{id,role,mode,...creativeComboContext(combo)});
+ const context={id,role,mode,...creativeComboContext(combo)};
+ const selection=heroClickSelection(data,{...rememberedPreparation(context),...context});
  if(inBuild)showBuild(id,role,mode,{...selection,quickConfiguration:true});
  else{companionPreview=selection;companionTab='plan';render();}
 }
@@ -1442,7 +1443,7 @@ function editBuildSummoners(el,field,value){
  rememberFlashPreference({...next,readOnly:buildView.readOnly},field);
  if(next.summonerIds)buildView.summonerIds=[...next.summonerIds];renderBuild();
 }
-function buildSelection(){return {readOnly:configurationReadOnly(buildView,client,taskOwnRole()),id:buildView.id,role:buildView.role,mode:buildView.mode,coreIndex:buildView.coreIndex,conditions:[...buildView.conditions],...selectedBuildFields(buildView,{preserveUnavailable:true}),...(buildView.mode==='hex'?{augmentIds:buildView.augmentIds||[],compareIds:buildView.compareIds||[],ownedAugmentIds:buildView.ownedAugmentIds||[]}:{})};}
+function buildSelection(){return {readOnly:configurationReadOnly(buildView,client,taskOwnRole()),id:buildView.id,role:buildView.role,mode:buildView.mode,coreIndex:buildView.coreIndex,conditions:[...buildView.conditions],...selectedBuildFields(buildView,{preserveUnavailable:true,preparation:true}),...(buildView.mode==='hex'?{augmentIds:buildView.augmentIds||[],compareIds:buildView.compareIds||[],ownedAugmentIds:buildView.ownedAugmentIds||[]}:{})};}
 function buildSelectionContext(build){const own=currentPlayerSelection(client.session,data.champions,slots);return JSON.stringify([buildChoiceKey(buildSelection()),buildView.augmentIds||[],buildView.compareIds||[],buildView.ownedAugmentIds||[],data.patch,data.buildSource,build?.reference?.fetchedAt,client.connected,client.phase,client.game?.gameId,client.mode?.id,own?.id,own?.formalRole,own?.role,runeAppliedKeys.has(runeApplicationKey(build?.champion,build?.role,build?.runePage))]);}
 function acceptGuideSelection(selection){if(!selection)return;rememberPreparation(selection);guideSyncBase=selection;lastGuideSyncKey=buildChoiceKey(selection);if(buildView&&selection.id===buildView.id&&selection.role===buildView.role&&selection.mode===buildView.mode){for(const field of [...CONFIGURATION_FIELDS,'compareIds','ownedAugmentIds'])delete buildView[field];Object.assign(buildView,selection);renderBuild();}if(windowLayout.docked)render();}
 function receiveGuideSelection(selection,revision=0){
@@ -1543,7 +1544,7 @@ function renderBuild(){
  if(activeOverlaySelect?.isConnected&&overlay.contains(activeOverlaySelect)&&renderedBuildContext===buildSelectionContext(b)&&currentMatchupSelect(activeOverlaySelect)){pendingBuildRender=true;return;}
  activeOverlaySelect=null;pendingBuildRender=false;
  const restoreOverlay=preserveOverlay(overlay),refreshing=refreshingBuilds.has(buildKey(buildView.id,buildView.role,buildView.mode));
- buildView.build=b;maybeRefreshBuild(b.champion,b.role,b.mode);if(!b.unavailable&&(!buildView.coreId||buildView.coreId===b.selectedCoreId)){buildView.coreIndex=b.selectedCoreIndex;buildView.coreId=b.selectedCoreId||undefined;}renderedBuildContext=buildSelectionContext(b);if(!buildView.readOnly&&!b.unavailable){rememberPreparation(buildSelection());syncPreparedGuide(buildSelection());}
+ buildView.build=b;maybeRefreshBuild(b.champion,b.role,b.mode);if(!b.unavailable&&(!buildView.coreId||buildView.coreId===b.selectedCoreId)){buildView.coreIndex=b.selectedCoreIndex;if(!(buildView.mode==='rift'&&buildView.comboId&&(buildView.loadoutId===undefined||buildView.loadoutId==='auto')))buildView.coreId=b.selectedCoreId||undefined;}renderedBuildContext=buildSelectionContext(b);if(!buildView.readOnly&&!b.unavailable){rememberPreparation(buildSelection());syncPreparedGuide(buildSelection());}
  if(b.unavailable){
   overlay.innerHTML=`<div class="modal-backdrop drawer-backdrop" data-backdrop="true"><section class="modal drawer configuration-drawer recommendation-ui" role="dialog" aria-modal="true" aria-label="英雄配置"><header class="modal-header"><h3>我的配置 · ${e(c.name)}</h3>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="drawer-content">${companionPlanView(data,{selection:buildSelection(),build:b},saved.favorites,{surface:'build'})}</div></section></div>`;
   restoreOverlay();reflectRunePending();return;
@@ -2134,7 +2135,7 @@ document.addEventListener('click',async event=>{
  else if(action==='build-summoner'){editBuildSummoners(el,el.dataset.field,el.dataset.id);}
  else if(action==='build-skill'){const next=changeCompanionPlan(data,buildSelection(),'skill',el.dataset.id||'');delete buildView.customSkillOrder;Object.assign(buildView,next);renderBuild();}
  else if(action==='build-skill-reset'){delete buildView.skillId;delete buildView.customSkillOrder;renderBuild();}
- else if(action==='build-core'){buildView.coreIndex=Number(el.dataset.index);delete buildView.sharedEquipment;delete buildView.coreId;delete buildView.laterIds;renderBuild();}
+ else if(action==='build-core'){buildView.coreIndex=Number(el.dataset.index);delete buildView.sharedEquipment;const core=buildView.build?.reference?.core?.[buildView.coreIndex];if(core)buildView.coreId='core-'+core.items.join('-');else delete buildView.coreId;delete buildView.laterIds;renderBuild();}
  else if(action==='refresh-build')await refreshConfiguration(buildView.id,buildView.role,buildView.mode);
  else if(action==='build-condition'){const c=el.dataset.condition;buildView.conditions=buildView.conditions.includes(c)?buildView.conditions.filter(x=>x!==c):[...buildView.conditions,c];renderBuild();}
  else if(action==='apply-runes'){

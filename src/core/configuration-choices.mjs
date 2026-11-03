@@ -45,10 +45,8 @@ export function configurationChoices(data,selection,currentBuild){
  return rows;
 }
 
-// Preserve the dedicated route only when getBuild actually selected it.
-// An automatic fallback to a current reference must stay automatic.
+// A suggested route is resolved by getBuild, not an explicit user choice.
+// Keep an absent loadoutId absent so later source changes can be resolved again.
 export function heroClickSelection(data,context){
- const hero=data.champions.find(value=>value.id===context.id);if(!hero)return context;
- const build=getBuild(hero,context.role,data,context),preferred=build.combo?.preferred;
- return context.loadoutId===undefined&&preferred&&preferred!=='default'&&build.loadoutId===preferred?{...context,loadoutId:preferred}:context;
+ return context;
 }
