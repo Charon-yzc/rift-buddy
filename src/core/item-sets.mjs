@@ -35,7 +35,7 @@ export function createItemSet(champion,build,data){
  // Alternatives are a separate shop block, never presented as a joint build.
  add('后期备选 · 按局势选择',build.laterOptions?.filter(o=>o.fitsRoute!==false).flatMap(o=>o.items).filter(i=>!equipment.some(selected=>String(selected.id)===String(i.id))).slice(0,6),false);
  if(!blocks.length)throw Error('当前方案没有可购买装备，请刷新资料或切换方案');
- const patch=String(build.rulesPatch||data.patch),stale=build.referenceStale||build.stale;
+ const patch=String(build.displayRulesPatch||build.rulesPatch||data.patch),stale=build.referenceStale||build.stale;
  return validateItemSet({uid:`${ITEM_SET_PREFIX}${champion.key}-${build.role}-${build.mode}`,title:`${titlePrefix}${champion.name} · ${roles[build.role]} · ${build.mode==='hex'?'海克斯':'峡谷'} · ${patch}${stale?' 旧版本参考':''}`,sortrank:0,priority:true,type:'custom',map:map===11?'SR':'HA',mode:'any',blocks,associatedChampions:[champion.key],associatedMaps:[map],preferredItemSlots:[]},data);
 }
 // Both the UI process and the privileged connection process reconstruct this

@@ -26,7 +26,7 @@ export function preparationProgress({data,plan,client,statuses=new Map(),pending
 export function configurationSource(build){
  if(build.sharedEquipment)return '队友共享配置 · '+build.rulesPatch;
  const basis=build.loadoutId==='default'?(build.combo?'常规配置 · 组合适用性待核对':'常规位置配置'):'专用机制配置';
- return basis+' · '+(build.reference&&build.loadoutId==='default'?build.reference.source||'OP.GG':'人工整理')+' '+build.rulesPatch+(build.stale||build.referenceStale?' · 待复核':'');
+ return basis+' · '+(build.reference&&build.loadoutId==='default'?build.reference.source||'OP.GG':'人工整理')+' '+(build.displayRulesPatch||build.rulesPatch)+(build.stale||build.referenceStale?' · 待复核':'');
 }
 export function preparationProgressView(options){
  const {data,plan,client,view='task',available=false,busy=false,compact=false}=options,progress=preparationProgress(options);

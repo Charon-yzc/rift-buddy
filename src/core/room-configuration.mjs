@@ -12,6 +12,10 @@ import {manualPlayerSlot,CLIENT_POSITION_ROLES} from './draft.mjs';
 import {restoreRoomHistoricalPlan} from './room-history.mjs';
 import {catalogPlanGroups} from './catalog-choice.mjs';
 
+// The room protocol caps each basis field at 1000 UTF-16 units. Preserve the
+// provenance at the front and make any shortened explanation explicit.
+const roomBasisText=text=>text.length<=1000?text:text.slice(0,960).replace(/[\uD800-\uDBFF]$/,'')+'…（说明未完整分享，请向发送方查看。）';
+
 // A saved solo preference can outlive its mode or game. When the client has
 // identified this player, share that player's current public/manual slot.
 // Unknown positions and slots occupied by another client cell stay unknown.
@@ -46,7 +50,7 @@ export function captureRoomConfigurations(slots,data,store,{creativePlan=null,ca
   const context={id:champion.id,role:slot.role,mode,...creativeComboContext(combo)};
   const selection=current&&preparationIdentity(current)===preparationIdentity(context)?current:{coreIndex:0,conditions:[],...(recallPreparation(store,guide,context)||(mode==='rift'?{coreAuto:true}:{})),...context};
   const b=getBuild(champion,slot.role,data,selection);
-  return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:preparationEquipment(data,b,selection).map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,first:b.first,attributePlan:b.attributePlan,priority:b.priority,basis:{title:b.title,note:b.sourceNote+' 后续空位按同一局内指引的兼容成装参考补齐，不代表整套联合统计。',rune:b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文',skill:b.selectedSkill?.when||b.attributePlan?.note||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列'}});
+  return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:preparationEquipment(data,b,selection).map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,first:b.first,attributePlan:b.attributePlan,priority:b.priority,basis:{title:b.title,note:b.sourceNote+' 后续空位按同一局内指引的兼容成装参考补齐，不代表整套联合统计。',rune:roomBasisText(b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文'),skill:roomBasisText(b.selectedSkill?.when||b.attributePlan?.note||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列')}});
  }).filter(Boolean);
 }
 
