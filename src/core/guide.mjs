@@ -46,6 +46,7 @@ export function validateDuelPick(value){
 }
 export function validateLoadoutSelection(value){
  const selected={};
+ if(value.coreAuto!==undefined){if(value.mode!=='rift'||value.coreAuto!==true)throw Error('核心自动选择格式不正确');selected.coreAuto=true;}
  if(value.sharedEquipment!==undefined){if(value.mode!=='rift')throw Error('共享出装只适用于召唤师峡谷');selected.sharedEquipment=validateSharedEquipment(value.sharedEquipment);}
  if(value.sourceOpponent!==undefined){if(value.mode!=='rift'||!hero(value.sourceOpponent)||value.sourceOpponent===(value.id||value.champion))throw Error('来源对手筛选格式不正确');selected.sourceOpponent=value.sourceOpponent;}
  if(value.customRunePage!==undefined){if(value.mode!=='rift')throw Error('自选符文只适用于召唤师峡谷');selected.customRunePage=validateCustomRunePage(value.customRunePage);}
