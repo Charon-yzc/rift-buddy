@@ -248,7 +248,10 @@ function grade(slots, champions, style, requestedIds=[],roleWeights={},context,s
  };
  const partyCombos=matchingCombos(party),partyDuo=partyCombos.find(c=>comboMembers(c).length===2&&valid(c)),partyTrio=partyCombos.find(c=>comboMembers(c).length===3&&valid(c));
  const planDuo=(relevant(partyDuo)?partyDuo:undefined)||(relevant(duo)?duo:undefined),planTrio=(relevant(partyTrio)?partyTrio:undefined)||(relevant(trio)?trio:undefined);
- const out={score,compositionFit:composition,analysis:a,duo:planDuo,trio:planTrio,connections,connectionsReviewed:context?.connectionsReviewed===true,opponentFit:fit,adaptive,pairEvidence};
+ // Keep reviewed pairs as separate subgroup evidence, not as the full-party
+ // execution plan. A three-person lineup can contain more than one such pair.
+ const reviewedSubgroups=party.length===3?partyCombos.filter(c=>comboMembers(c).length===2&&valid(c)):[];
+ const out={score,compositionFit:composition,analysis:a,duo:planDuo,trio:planTrio,reviewedSubgroups,connections,connectionsReviewed:context?.connectionsReviewed===true,opponentFit:fit,adaptive,pairEvidence};
  return out;
 }
 const signature=slots=>slots.map(s=>`${s.role}:${s.champion||'-'}`).join('|');
@@ -514,7 +517,7 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  const makePool=(sorted,rows)=>{
  // Keep the best result for every curated duo reachable on reroll. Filling
  // the entire pool with minor variants of a few high scores hides the library.
- const anchors=new Map();for(const entry of sorted){const key=(entry.trio||entry.duo)?.id;if(key&&!anchors.has(key))anchors.set(key,entry);}
+ const anchors=new Map();for(const entry of sorted){for(const key of [(entry.trio||entry.duo)?.id,...(entry.reviewedSubgroups||[]).map(combo=>combo.id)])if(key&&!anchors.has(key))anchors.set(key,entry);}
  // Creative ideas get the same anchor treatment (one best entry per
  // archetype) so they survive the pool cap and stay discoverable.
  const creativeAnchors=new Map();for(const entry of sorted){if(entry.creative&&!creativeAnchors.has(entry.creative.archetype))creativeAnchors.set(entry.creative.archetype,entry);}
