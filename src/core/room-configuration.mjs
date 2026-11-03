@@ -42,7 +42,7 @@ export function captureRoomConfigurations(slots,data,store,{creativePlan=null,ca
   const champion=data.champions.find(c=>c.id===slot.champion);if(!champion)return null;
   const combo=mode==='rift'?currentCombo(slots,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch,catalogChoice}):null;
   const context={id:champion.id,role:slot.role,mode,...creativeComboContext(combo)};
-  const selection=current&&preparationIdentity(current)===preparationIdentity(context)?current:{coreIndex:0,conditions:[],...recallPreparation(store,guide,context),...context};
+  const selection=current&&preparationIdentity(current)===preparationIdentity(context)?current:{coreIndex:0,conditions:[],...(recallPreparation(store,guide,context)||(mode==='rift'?{coreAuto:true}:{})),...context};
   const b=getBuild(champion,slot.role,data,selection);
   return sanitizeRoomConfiguration({champion:champion.id,role:slot.role,mode:selection.mode,patch:data.patch,start:b.start.map(i=>Number(i.id)),items:preparationEquipment(data,b,selection).map(i=>Number(i.id)),boots:b.boots?[Number(b.boots)]:[],spells:b.summoners,runes:b.runePage,skills:b.skillOrder,first:b.first,attributePlan:b.attributePlan,priority:b.priority,basis:{title:b.title,note:b.sourceNote+' 后续空位按同一局内指引的兼容成装参考补齐，不代表整套联合统计。',rune:b.selectedRune?[b.selectedRune.name,b.selectedRune.source,b.selectedRune.when].filter(Boolean).join('；'):'发送方未提供普通符文',skill:b.selectedSkill?.when||b.attributePlan?.note||b.skillMechanism||'按发送方加点优先与游戏内可升级选项核对，不伪造逐级序列'}});
  }).filter(Boolean);

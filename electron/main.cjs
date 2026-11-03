@@ -278,7 +278,9 @@ async function boot(){
   const choice=state.draft?.catalogChoice,found=own.mode==='rift'?recommendationCore.currentCombo(observedSlots,own.id,own.role,data.catalogInfo?.status,null,state.draft?.creativePlan,{patch:data.patch,catalogChoice:choice}):null,combo=choice&&found?.id!==choice.id?null:found;
   const prior=state.guide?.selection,same=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own),stalePlan=!!prior?.creativePlan&&!recommendationCore.automaticCreativePlan(prior.creativePlan,data.catalogInfo?.status,data.patch),comboKnown=!!choice||!!combo||stalePlan||own.mode!=='rift'||!!(gameId&&state.guide?.match?.gameId&&gameId!==String(state.guide.match.gameId))||recommendationCore.comboContextKnown(observedSlots,own.id,own.role,same?prior.comboId:null,same?prior.creativePlan:null);
   const context={id:own.id,role:own.role,mode:own.mode,...creativeComboContext(combo)};
-  return {coreIndex:0,conditions:[],...storedPreparation(state.preparations,context),...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,...creativeComboContext(combo)};
+  const remembered=storedPreparation(state.preparations,context),previousSameHeroRole=prior&&guideCore.guideIdentity(prior)===guideCore.guideIdentity(own);
+  const fresh=!remembered&&!previousSameHeroRole&&own.mode==='rift';
+  return {coreIndex:0,conditions:[],...(fresh?{coreAuto:true}:{}),...remembered,...own,name:data.champions.find(c=>c.id===own.id)?.name,comboKnown,...creativeComboContext(combo)};
  };
  const actualGuideSelection=()=>{
   const gameId=publicClientGameId(latestClient);if(!gameId)return null;
@@ -813,9 +815,12 @@ async function boot(){
    const matched=stagedCatalogChoice(intent,choice.champion),derived=derivedCatalogState(baseSelection),helperReady=helper.active();
    const hoverOnly=!!intent.catalogChoiceToken&&(!matched||helperReady)||derived.required&&(!derived.current||helperReady);
    const requested=matched?{...baseSelection,comboId:matched.id}:baseSelection;
-   const remembered=matched?storedPreparation(state.preparations,requested):null;
-   const selection=hoverOnly?{id:choice.champion,role:choice.role,mode:'rift'}:matched?{...baseSelection,...remembered,id:requested.id,role:requested.role,mode:requested.mode}:requested;
-   if(matched&&!hoverOnly){for(const field of intent.selectionFields||CONFIGURATION_FIELDS){if(!CONFIGURATION_FIELDS.includes(field))continue;if(Object.hasOwn(baseSelection,field))selection[field]=baseSelection[field];else delete selection[field];}selection.comboId=matched.id;}
+   const priorSelection=()=>{const stored=storedPreparation(state.preparations,requested),previous=state.guide?.selection;return stored||(previous&&preparationIdentity(previous)===preparationIdentity(requested)?previous:null);};
+   const remembered=priorSelection();
+   const explicitFields=intent.selection?intent.selectionFields||CONFIGURATION_FIELDS:[];
+   const fresh=!remembered&&(!intent.selection||Array.isArray(intent.selectionFields)&&intent.selectionFields.every(field=>['comboId','creativePlan'].includes(field)));
+   const selection=hoverOnly?{id:choice.champion,role:choice.role,mode:'rift'}:{...(fresh?{coreAuto:true}:{}),...remembered,id:requested.id,role:requested.role,mode:requested.mode};
+   if(!hoverOnly){for(const field of explicitFields){if(!CONFIGURATION_FIELDS.includes(field))continue;if(Object.hasOwn(baseSelection,field))selection[field]=baseSelection[field];else delete selection[field];}if(matched)selection.comboId=matched.id;}
    const dispatchStamp=selectionReviewStamp(selection);
    const buildData=preparationData(),plan=hoverOnly?{value:{champion:choice.champion,role:choice.role,mode:'rift',preselectOnly:true}}:clientPreparationPlan(buildData,{selection,build:getBuild(hero,choice.role,buildData,selection)});if(!plan)throw Error('预选英雄资料暂不可用，请直接选择英雄');
    // An explicit configuration may have acquired the client while imports
@@ -825,7 +830,7 @@ async function boot(){
    if(intent.reviewStamp&&intent.reviewStamp!==selectionReviewStamp(baseSelection)||dispatchStamp!==selectionReviewStamp(selection))throw Error('组合或资料复核状态已变化，请重新选择配置');
    const value=service.validateClientPreparation({...plan.value,sessionGameId:gameId,context:runeWriteContext(latestClient),claimPosition:intent.kind!=='hero'},data);
    const selectionWriteAtDispatch=selectionWriteRevision;
-   const stillCurrent=()=>latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&buildData.flashSlot===state.preferences.flashSlot&&(!(intent.catalogChoiceToken||derived.required)||selectionWriteAtDispatch===selectionWriteRevision)&&isDeepStrictEqual(state.draft?.preselection,attemptedIntent)&&(!intent.reviewStamp||intent.reviewStamp===selectionReviewStamp(baseSelection))&&dispatchStamp===selectionReviewStamp(selection)&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion)?.id===matched.id&&isDeepStrictEqual(remembered,storedPreparation(state.preparations,requested)))&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection).current);
+   const stillCurrent=()=>latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&buildData.flashSlot===state.preferences.flashSlot&&(hoverOnly||selectionWriteAtDispatch===selectionWriteRevision)&&isDeepStrictEqual(state.draft?.preselection,attemptedIntent)&&(!intent.reviewStamp||intent.reviewStamp===selectionReviewStamp(baseSelection))&&dispatchStamp===selectionReviewStamp(selection)&&(hoverOnly||isDeepStrictEqual(remembered,priorSelection()))&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion)?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection).current);
    const guideCurrent=()=>selectionWriteAtDispatch===selectionWriteRevision&&stillCurrent();
    const operation=beginPreparation('selection',{value,selection,context:value.context});applyingRunes=true;importingItemSet=true;
    let hovered;

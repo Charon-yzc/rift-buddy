@@ -76,13 +76,14 @@ export function previousPatch(patch){
  const match=/^(\d+)\.(\d+)$/.exec(patch||'');
  return match&&Number(match[2])>1?`${Number(match[1])}.${Number(match[2])-1}`:null;
 }
-export function validReference(ref,champion,role,data,{allowOlder=false,opponent}={}) {
+export function validReference(ref,champion,role,data,{allowOlder=false,opponent,allowInvalidEquipment=false}={}) {
  const older=allowOlder&&compareBuildPatches(ref?.patch,data.patch)===-1;
+ const relaxedEquipment=allowInvalidEquipment&&ref?.patch===data.patch;
  return !!(ref&&ref.schema===1&&ref.champion===champion.id&&ref.role===role&&usableBuildPatch(ref.patch,data.patch,allowOlder)&&
   (opponent?validOpponentScope(ref,champion,role,opponent,data):ref.scope===undefined&&ref.opponent===undefined)&&
   validBuildSource(ref)&&Array.isArray(ref.core)&&ref.core.length&&
-  ref.core.every(c=>Array.isArray(c.items)&&c.items.length===3&&c.items.every((id,i)=>Number.isSafeInteger(id)&&id>0&&(older||data.items[id]?.maps?.['11']&&!itemConflicts(id,c.items.slice(0,i)))))&&
-  validSourceMetadata(ref,data,older)&&validSourceRows(ref.core,data,'11',older)&&validSourceRows(ref.boots,data,'11',older)&&validSourceRows(ref.start,data,'11',older)&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'11',older))&&(older?storedRunePage(ref.runePage):validateRunePage(ref.runePage,data.runes))&&
+  ref.core.every(c=>Array.isArray(c.items)&&c.items.length===3&&c.items.every((id,i)=>Number.isSafeInteger(id)&&id>0&&(older||relaxedEquipment||data.items[id]?.maps?.['11']&&!itemConflicts(id,c.items.slice(0,i)))))&&
+  validSourceMetadata(ref,data,older)&&validSourceRows(ref.core,data,'11',older||relaxedEquipment)&&validSourceRows(ref.boots,data,'11',older||relaxedEquipment)&&validSourceRows(ref.start,data,'11',older||relaxedEquipment)&&Array.isArray(ref.later)&&ref.later.every(rows=>validSourceRows(rows,data,'11',older||relaxedEquipment))&&(older?storedRunePage(ref.runePage):validateRunePage(ref.runePage,data.runes))&&
   (ref.runeOptions===undefined||Array.isArray(ref.runeOptions)&&ref.runeOptions.length>0&&ref.runeOptions.length<=18&&ref.runeOptions.every(o=>typeof o.id==='string'&&/^[a-z0-9-]{1,150}$/.test(o.id)&&Number.isFinite(o.samples)&&o.samples>=0&&(older?storedRunePage(o.page):validateRunePage(o.page,data.runes))))&&
   validSourceSummonerOptions(ref.sourceSummonerOptions,data,{older})&&
   (ref.matchups===undefined||validMatchups(ref.matchups))&&(ref.rankedStatistics===undefined||validRankedStatistics(ref.rankedStatistics))&&
@@ -121,8 +122,8 @@ export function rankedClientRoles(data){
  return result;
 }
 const conflicts=itemConflicts;
-export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent,sharedEquipment}={}) {
- if(sharedEquipment){const base=getBuild(champion,role,data,{mode,variant,conditions,coreIndex,coreId,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds,bottomQuestPlan,sourceOpponent});return sharedEquipmentBuild(base,sharedEquipment,data);}
+export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent,sharedEquipment}={}) {
+ if(sharedEquipment){const base=getBuild(champion,role,data,{mode,variant,conditions,coreIndex,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds,bottomQuestPlan,sourceOpponent});return sharedEquipmentBuild(base,sharedEquipment,data);}
  // Keep saved selections in storage, but never derive a fresh default from an
  // old catalogue. Explicitly adopted personal equipment is handled above.
  if(mode==='hex'&&(!isCurrentHexData(data)||!validHexReference(data.hexBuilds?.[champion.id],champion,data)))return {
@@ -150,8 +151,11 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(play){play.currentPatch=data.patch;play.stale=Object.values(play.stages).some(stage=>(stage.patch||play.patch)!==data.patch);}
  const preferred=comboLoadout(duo,champion,role);
  const generic=selectedBuildReference(data,champion.id,role),scoped=mode==='rift'&&sourceOpponent?selectedOpponentBuild(data,champion.id,role,sourceOpponent):null;
- const scopedRef=scoped&&validReference(scoped,champion,role,data,{allowOlder:true,opponent:sourceOpponent})?scoped:null;
- const standardRef=scopedRef||(validReference(generic,champion,role,data,{allowOlder:true})?generic:null);
+ // Rendering may retain structurally sound current sources with unavailable item rows.
+ // Cache/feed admission remains strict; the original rows and their samples stay intact.
+ const allowInvalidEquipment=mode==='rift';
+ const scopedRef=scoped&&validReference(scoped,champion,role,data,{allowOlder:true,opponent:sourceOpponent,allowInvalidEquipment})?scoped:null;
+ const standardRef=scopedRef||(validReference(generic,champion,role,data,{allowOlder:true,allowInvalidEquipment})?generic:null);
  const referenceLabel=ref=>buildSourceLabel(ref)+(ref?.opponent?' · 对 '+(data.champions.find(c=>c.id===ref.opponent)?.name||ref.opponent)+' 的来源参考':'');
  const preferredLoadout=availableLoadouts.find(c=>c.id===preferred);
  const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&((preferredLoadout.patch||LOADOUT_PATCH)!==data.patch||data.catalogInfo?.loadoutStatus?.[preferredLoadout.id]?.stale||dependencyChanges(preferredLoadout,{runes:RUNE_PLANS},data).length>0)&&standardRef?.patch===data.patch;
@@ -207,6 +211,15 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   return base?.maps?.[map]&&base.inStore&&base.gold?.purchasable!==false&&eligible(base)?{...i,purchaseBase:base}:null;
  };
  const checkCore=core=>{const items=[],unavailable=[],conflicting=[];for(const id of core.items){if(!resolve(id))unavailable.push(id);else if(itemConflicts(id,items))conflicting.push(id);else items.push(id);}return {items,unavailable,conflicting};};
+ if(mode==='rift'&&coreAuto===true&&!coreId&&ref)coreIndex=0;
+ if(mode==='rift'&&coreAuto===true&&!coreId&&ref?.patch===data.patch){
+  const first=checkCore(ref.core[0]);
+  if(first.unavailable.length||first.conflicting.length){
+   const next=ref.core.findIndex(core=>{const checked=checkCore(core);return !checked.unavailable.length&&!checked.conflicting.length;});
+   if(next>=0){coreIndex=next;selectionWarnings.push('来源默认核心含不可用或互斥装备，自动展示同英雄同位置的另一条完整当版核心；该路线统计仅对应所列来源。');}
+   else selectionWarnings.push('当前来源没有完整可用的核心路线，以下仅保留可用装备，请自行核对。');
+  }else coreIndex=0;
+ }
  let unavailableCore=[],conflictingCore=[];
  if(ref){
   const core=ref.core[Math.max(0,Math.min(ref.core.length-1,coreIndex))];
@@ -240,7 +253,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   }
  }
  const sourceEquipmentWarnings=[];
- if(ref?.filteredCoreCount)sourceEquipmentWarnings.push(`来源中 ${ref.filteredCoreCount} 条路线含互斥装备，已过滤，保留其他完整配置。`);
+ if(ref?.filteredCoreCount)sourceEquipmentWarnings.push(`来源中 ${ref.filteredCoreCount} 条路线含互斥装备，已过滤；其他路线仍需核对当前装备。`);
  const gear=mode==='rift'?prepareGear({data,champion:champion.id,role,start:t.start,boots:t.boots,fallbackStart,fallbackBoots,reference:standardRef,startId,bootsId}):null;
  if(gear){t.start=gear.start;t.boots=gear.boots;selectionWarnings.push(...gear.warnings);}
  const adaptive=adaptEquipment({items:t.items,boots:t.boots,late:t.late,key,support,champion:champion.id,conditions,data,map,bottomQuestPlan,bootsSelected:!!gear?.selectedBootsId,sourceCombination:!!ref&&mode==='rift',conditionalFrontline:['trio-frontline','trio-jungle-frontline'].includes(config?.id)&&!coreId});

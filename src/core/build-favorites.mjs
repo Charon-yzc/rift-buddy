@@ -14,6 +14,8 @@ export function selectedBuildFields(v,{preserveUnavailable=false,preparation=fal
   for(const key of ['coreId','runeId','skillId','startId','bootsId','loadoutId'])if(v[key])fields[key]=v[key];
   if(Array.isArray(v.laterIds))fields.laterIds=[...v.laterIds];
  }
+ // Keep an automatic core dynamic in preparations; favorites freeze the displayed core.
+ if(preparation&&v.mode==='rift'&&v.coreAuto===true&&!v.coreId){fields.coreAuto=true;delete fields.coreId;}
  // A displayed automatic combination is not a newly chosen configuration.
  // Keep explicit fields, including old ambiguous selections, unchanged.
  if(preparation&&v.mode==='rift'&&v.comboId&&(v.loadoutId===undefined||v.loadoutId==='auto')){

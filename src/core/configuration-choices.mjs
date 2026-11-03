@@ -26,7 +26,7 @@ export function configurationChoices(data,selection,currentBuild){
  const previous=cache.values.get(key);if(previous&&previous.token===token)return previous.rows;
  const hero=data.champions.find(value=>value.id===selection.id);if(!hero)return [];
  const base={id:selection.id,role:selection.role,mode:selection.mode,...(selection.comboId?{comboId:selection.comboId,creativePlan:selection.creativePlan}:{})};
- const standard={...base,loadoutId:'default'},ordinary=getBuild(hero,base.role,data,standard),rows=[],seen=new Set();
+ const standard={...base,loadoutId:'default',...(base.mode==='rift'?{coreAuto:true}:{})},ordinary=getBuild(hero,base.role,data,standard),rows=[],seen=new Set();
  const append=(id,s,build,name)=>{
   const fingerprint=JSON.stringify([build.runePage,build.summoners,createItemSet(hero,build,data),build.skillOrder,build.first,build.priority]);
   if(seen.has(fingerprint))return;seen.add(fingerprint);rows.push({id,selection:s,build,name,fingerprint});

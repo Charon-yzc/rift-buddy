@@ -63,11 +63,11 @@ export function changeCompanionPlan(data,selection,field,value){
   next.bottomQuestPlan=!selection.bottomQuestPlan;if(!next.bottomQuestPlan)next.laterIds=(next.laterIds||[]).slice(0,2);
  }else if(field==='loadout'){
   if(value!=='default'&&!current.loadoutOptions.some(o=>o.id===value))throw Error('玩法已变化，请重新选择');
-  next.loadoutId=value;next.coreIndex=0;delete next.coreId;delete next.runeId;delete next.customRunePage;delete next.skillId;delete next.customSkillOrder;next.laterIds=[];
+  next.loadoutId=value;next.coreIndex=0;delete next.coreId;if(value==='default'&&selection.mode==='rift')next.coreAuto=true;delete next.runeId;delete next.customRunePage;delete next.skillId;delete next.customSkillOrder;next.laterIds=[];
  }else if(field==='core'){
   const index=Number(value);
   if(!Number.isInteger(index)||index<0||!current.reference?.core[index])throw Error('装备路线已变化，请重新选择');
-  next.coreIndex=index;next.coreId='core-'+current.reference.core[index].items.join('-');next.laterIds=[];
+  next.coreIndex=index;next.coreId='core-'+current.reference.core[index].items.join('-');delete next.coreAuto;next.laterIds=[];
  }else if(field==='start'||field==='boots'){
   const key=field==='start'?'startId':'bootsId',options=field==='start'?current.startOptions:current.bootsOptions;
   if(value&&!options.some(o=>o.id===value))throw Error('出门装或鞋子选项已变化，请重新选择');
