@@ -45,7 +45,7 @@ export function candidateSummary(r,data={}){
  const focused=single&&(contribution?.pairings?.[0]||focusedJob||(fallback?fallback.text+(notice?`（${notice}）`:''):null));
  const title=r.scope==='solo'?(r.strategy?.label||r.title):plan?.kind==='shared'&&plan.routes?.[0]?.label?plan.routes[0].label:r.title;
  const line=interaction?.step||focused||(r.scope==='solo'?(r.strategy?.benefit||r.reason):plan?.routes?.[0]?.step||plan?.steps?.find(s=>s.startsWith('主线：'))||combo?.plan||combo?.steps?.[0]||plan?.steps?.[0]||r.creativePlan?.plan||r.strategy?.benefit||r.reason);
- return {title,line,warning,basis:r.catalogState?.optionalCompatible?'备选需调整':r.catalogState?.stale?'旧版待复核':''};
+ return {title,line,warning,basis:r.catalogState?.optionalCompatible?'备选需调整':r.catalogState?.historicalCompatible?'技能来源指纹一致':r.catalogState?.stale?'旧版待复核':''};
 }
 
 export function candidateDisclosureLabel(r,data){

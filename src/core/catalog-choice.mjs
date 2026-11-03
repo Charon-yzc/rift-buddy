@@ -49,9 +49,18 @@ export function catalogPlanCurrent(plan,catalog,status,patch){
  if(plan.archetype==='curated'&&!groups.length)return false;
  if(!groups.length)return true;
  const entries=[...(catalog?.duos||[]),...(catalog?.trios||[])];
- if(!patch||plan.patch!==patch)return false;
+ // A historical subgroup does not certify unrelated shared-plan jobs. A
+ // protocol-v1 projection is restored only after its whole neutral plan has
+ // been reconstructed locally from the proven catalog entry.
+ if(plan.archetype==='shared'&&groups.some(group=>status?.[group.id]?.historicalCompatible)&&!plan.shared?.historicalNeutral)return false;
+ if(!patch)return false;
+ // A saved historical plan keeps its original patch and exact group revision.
+ // It is usable only while every bound group has an authoritative unchanged
+ // proof for this local data; arbitrary older snapshots do not inherit it.
+ if(plan.patch!==patch&&(plan.archetype!=='curated'||!groups.every(group=>{const entry=entries.find(value=>value.id===group.id);return entry?.patch===plan.patch&&status?.[group.id]?.historicalCompatible===true&&status[group.id].historicalPatch===patch;})))return false;
  return groups.every(group=>{
   const entry=entries.find(value=>value.id===group.id),revision=entry&&catalogEntryRevision(entry,catalog);
+  if(plan.shared?.historicalNeutral&&entry?.patch!==plan.shared.historicalPatch)return false;
   if(!entry||!status?.[entry.id]||!reviewedCatalogEntry(entry,status,patch)||!revision||group.revision!==revision||comboKey(group)!==comboKey(entry))return false;
   const members=comboMembers(entry);
   return group.members.every(member=>members.some(value=>key(value)===key(member)&&(value.loadoutId||'default')===member.loadoutId));

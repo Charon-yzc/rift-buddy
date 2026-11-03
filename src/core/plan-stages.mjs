@@ -1,10 +1,22 @@
 import {duoPlay} from './duo-plays.mjs';
-import {rolePlay,genericRolePlay} from './role-plays.mjs';
+import {rolePlay,genericRolePlay,ROLE_PLAYS_PATCH} from './role-plays.mjs';
+import {catalogEntryRevision} from './catalog-choice.mjs';
 import {counterplayStage} from './party-counterplay.mjs';
 
 const phases={opening:'开局 / 对线',key:'关键配合',later:'后期团战'};
 const memberKey=m=>m.role+':'+m.champion;
 const text=(v,max)=>typeof v==='string'&&v.trim().length>0&&v.length<=max&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(v);
+const historicalMember=(plan,member)=>plan.shared?.historicalNeutral===true&&plan.shared.routes?.[0]?.loadoutGroup?.members.some(value=>memberKey(value)===memberKey(member));
+const keyPatch=(plan,member)=>historicalMember(plan,member)?plan.shared.historicalPatch:plan.patch;
+// A protocol-v1 projection lacks the local neutral marker. A bound shared
+// subgroup on a different role-play patch must not regain old hero-specific
+// opening/later instructions if its stage snapshot is rebuilt.
+const neutralShared=plan=>plan.shared?.historicalNeutral===true||!!plan.shared?.routes?.some(route=>route.loadoutGroup)&&plan.patch!==ROLE_PLAYS_PATCH;
+function projectedGroupPatch(plan,data){
+ const group=plan.shared?.routes?.[0]?.loadoutGroup;if(!group)return plan.patch;
+ const entry=[...(data.catalog?.duos||[]),...(data.catalog?.trios||[])].find(value=>value.id===group.id);
+ return entry&&catalogEntryRevision(entry,data.catalog)===group.revision?entry.patch:plan.patch;
+}
 
 // Freeze stage decisions with an accepted plan, including the original duo
 // stages. Resolving a saved catalog ID must never rewrite this content.
@@ -13,14 +25,15 @@ export function capturePlanStages(plan,data,combo=null){
  const names=new Map(data.champions.map(c=>[c.id,c.name])),result={};
  for(const [id,label] of Object.entries(phases)){
   const memberJobs=plan.members.map(m=>{
-   const original=duo?duoPlay(combo,data,m):null,task=rolePlay(m.champion,m.role,id)||genericRolePlay(m.role,id);
+   const original=duo?duoPlay(combo,data,m):null,task=neutralShared(plan)?genericRolePlay(m.role,id):rolePlay(m.champion,m.role,id)||genericRolePlay(m.role,id);
    const job=original?.stages[id]?.ownAction||(id==='key'?plan.ordered.find(p=>memberKey(p)===memberKey(m)).job:task?.action);
    if(!job)return null;
-   return {...m,job,patch:original?.patch||(id==='key'?plan.patch:task.patch),reviewedAt:original?.reviewedAt||(id==='key'?(plan.curated?.reviewedAt||plan.shared?.reviewedAt||plan.cooperation?.reviewedAt||plan.createdAt):task.reviewedAt),...(task?.generic&&id!=='key'?{generic:true}:{})};
+   const projected=neutralShared(plan)&&!plan.shared?.historicalNeutral&&plan.shared.routes?.[0]?.loadoutGroup?.members.some(value=>memberKey(value)===memberKey(m));
+   return {...m,job,patch:original?.patch||(id==='key'?(projected?projectedGroupPatch(plan,data):keyPatch(plan,m)):task.patch),reviewedAt:original?.reviewedAt||(id==='key'?(plan.curated?.reviewedAt||plan.shared?.reviewedAt||plan.cooperation?.reviewedAt||plan.createdAt):task.reviewedAt),...(task?.generic&&(id!=='key'||neutralShared(plan)&&!historicalMember(plan,m)&&!projected)?{generic:true}:{})};
   });
   if(memberJobs.some(m=>!m))return null;
   const opening=id==='opening'?(plan.curated?.early||plan.shared?.opening||plan.cooperation?.opening):null;
-  const original=duo?.stages[id],patch=duo?.patch||(id==='key'||opening?plan.patch:memberJobs[0].patch),reviewedAt=duo?.reviewedAt||(opening?(plan.curated?.reviewedAt||plan.shared?.reviewedAt||plan.cooperation?.reviewedAt||plan.createdAt):memberJobs[0].reviewedAt);
+  const original=duo?.stages[id],patch=duo?.patch||(id==='key'&&neutralShared(plan)&&plan.shared.routes?.[0]?.loadoutGroup?(plan.shared.historicalPatch||projectedGroupPatch(plan,data)):id==='key'||opening?plan.patch:memberJobs[0].patch),reviewedAt=duo?.reviewedAt||(opening?(plan.curated?.reviewedAt||plan.shared?.reviewedAt||plan.cooperation?.reviewedAt||plan.createdAt):memberJobs[0].reviewedAt);
   const steps=original?.steps||(id==='key'?[...plan.steps]:[...(opening?[opening]:[]),...memberJobs.map(m=>names.get(m.champion)+'：'+m.job)]);
   const route=id==='later'?plan.shared?.routes?.[0]:null;
   const window=original?.window||(id==='key'?plan.window:id==='opening'?'先确认各自兵线或安全营地、已学技能与到位时间；有各自资源任务时先完成，不要求多人空等。':route?route.condition:'资源前先处理安全兵线，与核心约同侧进入；关键配合仍须满足原来的技能、距离与落点条件。');
@@ -53,7 +66,8 @@ export function updatePlanKeyStage(plan){
  if(!plan.stagePlan)return plan;
  const current=plan.stagePlan.key;
  const route=plan.shared?.routes?.[0],later=plan.stagePlan.later;
- return {...plan,stagePlan:{...plan.stagePlan,...(route?{later:{...later,window:route.condition,exit:route.failure}}:{}),key:{...current,patch:plan.patch,steps:[...plan.steps],window:plan.window,exit:plan.caution,memberJobs:plan.members.map(m=>({...current.memberJobs.find(p=>memberKey(p)===memberKey(m)),job:plan.ordered.find(p=>memberKey(p)===memberKey(m)).job,patch:plan.patch}))}}};
+ const projected=neutralShared(plan)&&!plan.shared?.historicalNeutral;
+ return {...plan,stagePlan:{...plan.stagePlan,...(route?{later:{...later,window:route.condition,exit:route.failure}}:{}),key:{...current,patch:projected?current.patch:plan.shared?.historicalNeutral&&route?.loadoutGroup?plan.shared.historicalPatch:plan.patch,steps:[...plan.steps],window:plan.window,exit:plan.caution,memberJobs:plan.members.map(m=>{const prior=current.memberJobs.find(p=>memberKey(p)===memberKey(m));return {...prior,job:plan.ordered.find(p=>memberKey(p)===memberKey(m)).job,patch:projected?prior.patch:keyPatch(plan,m),...(plan.shared?.historicalNeutral?(historicalMember(plan,m)?{generic:undefined}:{generic:true}):{})};})}}};
 }
 
 export function savedMemberPlay(plan,champion,role){

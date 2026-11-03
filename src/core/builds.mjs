@@ -140,8 +140,8 @@ export function rankedClientRoles(data){
  return result;
 }
 const conflicts=itemConflicts;
-export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent,sharedEquipment,catalogOverride}={}) {
- if(sharedEquipment){const base=getBuild(champion,role,data,{mode,variant,conditions,coreIndex,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds,bottomQuestPlan,sourceOpponent,catalogOverride});return sharedEquipmentBuild(base,sharedEquipment,data);}
+export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent,sharedEquipment,catalogOverride,sharedEquipmentBase=false}={}) {
+ if(sharedEquipment){const base=getBuild(champion,role,data,{mode,variant,conditions,coreIndex,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds,bottomQuestPlan,sourceOpponent,catalogOverride,sharedEquipmentBase:true});return sharedEquipmentBuild(base,sharedEquipment,data);}
  const runePlans=catalogOverride?.runes||RUNE_PLANS,allSkillPlans=catalogOverride?.skillPlans||SKILL_PLANS;
  // Keep saved selections in storage, but never derive a fresh default from an
  // old catalogue. Explicitly adopted personal equipment is handled above.
@@ -185,10 +185,13 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const standardRef=scopedRef||((mode==='rift'?validReferenceForUse(generic,champion,role,data,{allowOlder:true}):validReference(generic,champion,role,data,{allowOlder:true}))?generic:null);
  const referenceLabel=ref=>buildSourceLabel(ref)+(ref?.opponent?' · 对 '+(data.champions.find(c=>c.id===ref.opponent)?.name||ref.opponent)+' 的来源参考':'');
  const preferredLoadout=availableLoadouts.find(c=>c.id===preferred);
- const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&!automaticOptional&&((preferredLoadout.patch||LOADOUT_PATCH)!==data.patch||data.catalogInfo?.loadoutStatus?.[preferredLoadout.id]?.stale||dependencyChanges(preferredLoadout,{runes:runePlans},data).length>0)&&standardRef?.patch===data.patch;
+ const historicStatus=reviewedId&&data.catalogInfo?.status?.[reviewedId];
+ const unchangedAutomatic=mode==='rift'&&variant==='default'&&coreAuto===true&&!sharedEquipmentBase&&!coreId&&!sourceOpponent&&!laterIds?.length&&(!loadoutId||loadoutId==='auto')&&historicStatus?.historicalCompatible===true&&historicStatus.historicalPatch===data.patch&&(!creative||catalogPlanCurrent(creativePlan,data.catalog,data.catalogInfo?.status,data.patch));
+ const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&!automaticOptional&&!unchangedAutomatic&&((preferredLoadout.patch||LOADOUT_PATCH)!==data.patch||data.catalogInfo?.loadoutStatus?.[preferredLoadout.id]?.stale||dependencyChanges(preferredLoadout,{runes:runePlans},data).length>0)&&standardRef?.patch===data.patch;
  const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];
+ if(unchangedAutomatic&&preferredLoadout&&config===preferredLoadout)selectionWarnings.push('组合整理于旧版；已审技能来源指纹一致。普通装备效果、任务与视野按当前规则核对；原配置不代表当前版本统计。');
  if(config&&(loadoutId===config.id||automaticOptional)){const unavailable=[...config.late,...(config.early||[])].filter(id=>!availableLoadoutItem(id));if(unavailable.length)selectionWarnings.push(`玩法核心和符文保留；旧的过渡或后期备选 ${unavailable.map(id=>data.items[id]?.name||`#${id}`).join('、')} 当前不可购买，已跳过。${automaticOptional?'该已审技能配合不要求固定装备；':'请核对这些装备是否为配合必要条件，再选择其他装备。'}`);}
  if(creative?.archetype==='shared'&&!config)selectionWarnings.push('当前行动路线没有适用的专用配置，个人准备使用普通位置参考；可在“配置玩法”主动选择，已有个人选择优先保留。');
  if(mode==='rift'&&sourceOpponent&&!scopedRef)selectionWarnings.push(`原对 ${data.champions.find(c=>c.id===sourceOpponent)?.name||sourceOpponent} 的来源参考在当前筛选下暂不可用，保留原选择，暂显示普通同位置配置；可刷新对手参考或恢复普通来源。`);

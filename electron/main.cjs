@@ -137,7 +137,7 @@ async function boot(){
  const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;publishData(['catalog','catalogInfo']);guide?.publish();return dataResult(result);};
  const refreshCatalogAvailability=()=>{
   try{data.catalogInfo=catalogStore.summary(data).info;}
-  catch{const status=Object.fromEntries(Object.entries(data.catalogInfo?.status||{}).map(([id,value])=>{const next={...value};delete next.optionalEvidence;delete next.optionalCompatible;delete next.optionalMissing;return [id,next];}));data.catalogInfo={...data.catalogInfo,status};}
+  catch{const status=Object.fromEntries(Object.entries(data.catalogInfo?.status||{}).map(([id,value])=>{const next={...value};delete next.optionalEvidence;delete next.optionalCompatible;delete next.optionalMissing;delete next.historicalEvidence;delete next.historicalCompatible;delete next.historicalPatch;return [id,next];}));data.catalogInfo={...data.catalogInfo,status};}
  };
  const refreshReference=(refresh,keys)=>async(...args)=>{
   const before=data,patch=data.patch,version=data.version,result=await refresh(...args);
