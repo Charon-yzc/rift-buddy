@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.40",
+  "version": "2026.11.03.41",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29451,11 +29451,11 @@
       "tags": [
         "控制消耗"
       ],
-      "why": "冰鸟限制通路，波比防突进，烬在安全距离接控制。",
-      "plan": "先守狭窄入口；冰鸟用墙和大招逼走位；波比留下 W 应对突进，烬接 W 或远程收尾。",
-      "risk": "冰墙也会挡住队友；阵地没布好时不要在开阔处硬开。",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-05",
+      "why": "艾尼维亚限制入口，波比留意可中断的敌方突进；友方英雄实际伤害敌方英雄后，烬可尝试 W 接续，命中时伤害窗口仍有效才可能禁锢。这是按技能说明的条件推演，不保证命中或控制衔接。",
+      "plan": "三人先确认能否安全会合、目标与退路；艾尼维亚用 W 改变路线时给队友留通道，Q 或已学且可用的 R 实际伤害敌方英雄后，烬可从安全位置朝同一目标尝试 W；命中首个敌方英雄且命中时伤害窗口仍有效，才可能禁锢。波比 W 留给可被中断的冲刺，E 不以冰墙碰撞为前提；位置不安全就撤退。",
+      "risk": "冰墙也可能挡住己方；烬 W 可能被另一敌方英雄先挡，命中前伤害窗口过期、目标离开或技能落空都不能接控。波比 W 不能阻止所有位移；缺视野或退路时不强守。",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
       "sources": [
         {
           "name": "Riot · 波比技能资料",
@@ -29474,58 +29474,121 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Jhin.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Riot · 三名英雄 16.21.1 中文技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-25"
         }
       ],
       "members": [
         {
           "role": "jungle",
           "champion": "Poppy",
-          "job": "先守入口，W 留敌方突进，冰墙实际形成且方向正确时 E 才找撞墙控制；Q 跟同一落点，R 可拆反扑。墙不成立或会把目标推离队友时不强撞。",
-          "loadoutId": "trio-jungle-frontline"
+          "job": "正常打野并确认安全到场，W 留给可中断的敌方冲刺；E 若使用，可在安全且目标实际撞上自然地形时眩晕，不以冰鸟 W 碰撞为前提。Q 按实际命中区域输出；R 蓄力会把目标击退且飞行时不可选取，可能妨碍队友输出，先沟通。",
+          "loadoutId": "default"
         },
         {
           "role": "mid",
           "champion": "Anivia",
-          "job": "R 覆盖入口、W 改路线前报墙方向，Q 实际控制后用满足冰冻条件的 E；给波比留撞墙角度但不封己方退路。法力不足或阵地被绕后就收技能回撤。",
+          "job": "保中路兵线与法力，W 阻路时给友军留出口；Q 冰晶爆裂实际命中才眩晕，R 已学且可用时覆盖入口。近期 Q 命中或已学且可用、完全形成的 R 造成近期伤害可为自己的 E 提供强化条件；实际伤害敌方英雄后可报烬尝试 W，命中前需留意窗口。",
           "loadoutId": "default"
         },
         {
           "role": "bottom",
           "champion": "Jhin",
-          "job": "先确认队友伤害标记，再 W 接受限目标；按当前弹药普攻，R 只在安全远处引导。没有标记或控制落空就不前走补最后一发，装填时退回己方阵地。",
+          "job": "下路补刀并按实际弹药与安全距离输出；确认队友实际伤害敌方英雄后向同一目标尝试 W，命中首个敌方英雄且命中时伤害窗口仍有效才可能禁锢。R 已学且可用时仅在安全位置考虑引导，失去视野或退路先撤。",
           "loadoutId": "default"
         }
       ],
       "steps": [
-        "先守狭窄入口",
-        "冰鸟用墙和大招逼走位",
-        "波比留下 W 应对突进，烬接 W 或远程收尾。"
+        "先处理各自兵线和野区，确认三人到场、视野与退路；不能安全会合时各自撤退。",
+        "冰鸟 W 可用于改变通路，但要留己方出口；冰鸟 Q 或已学且可用的 R 实际伤害敌方英雄后报目标，波比 W 留给可中断的突进。",
+        "烬从安全位置向同一目标尝试 W，须命中首个敌方英雄且命中时队友伤害窗口仍有效才可能禁锢；窗口在飞行途中过期、被其他英雄挡住或落空就不要追。",
+        "波比 E 可在安全且目标实际撞上自然地形时另行尝试眩晕；不以冰墙碰撞为前提，撞击未成立不视为眩晕。三人遇到绕后或退路被封时停止追击。"
       ],
-      "window": "波比负责阻止位移，艾尼维亚负责墙与区域限制，烬负责远程接控；敌方退路被地形或控制限制、我方有撤退空间时。",
-      "early": "波比先保野区清野节奏，艾尼维亚先保中路兵线经验，烬先保下路兵线经验；先用安全消耗和清线建立空间，空技能后后退。",
-      "economy": "波比以野区经济为主，支援后别长期蹭线；艾尼维亚保留中路补刀和经验；烬保留下路补刀和经验。这套按正式位置分工，换位先在客户端确认。",
+      "window": "三人能安全会合，友方英雄实际伤害敌方英雄，烬 W 可用、射线与安全距离成立，且 W 命中同一目标时伤害窗口仍有效；波比和冰鸟的技能也可按局面独立使用。",
+      "early": "波比按安全路线处理野区，冰鸟和烬分别保中下兵线；六级前不预设任一大招，冰鸟 Q 实际伤害敌方英雄后，烬可视距离尝试 W，命中时伤害窗口仍有效才可能禁锢；缺视野或无法会合时回撤。",
+      "economy": "波比以野区经济为主，中路冰鸟与下路烬各自补刀。三人按各自位置和局势选择装备与符文；上述技能配合不要求固定装备。",
       "reviewBaseline": {
-        "champion:Poppy": "fa2cafaf8d0f2976",
-        "champion:Anivia": "16654ea552fc6200",
-        "champion:Jhin": "cc35368c11100f62",
-        "item:3068": "f23565139478f276",
-        "item:2504": "ead2f4757e3e6c8c",
-        "item:6665": "9693faf50145df4e",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3075": "6d456e96c01062c6",
-        "item:3083": "ea58e4b0407db9d2",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998"
+        "champion:Poppy": "af33a45e62ad30e5",
+        "champion:Anivia": "52343f9ffaa815a9",
+        "champion:Jhin": "226e6c11b8a992f5"
+      },
+      "reviewSourceAnchors": {
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-10-26T13:38:40.510Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        },
+        "Anivia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "52343f9ffaa815a9",
+          "observedAt": "2026-10-26T13:38:40.305Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Anivia",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/anivia/anivia.bin.json",
+              "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d7796f24d403cc8c"
+            }
+          }
+        },
+        "Jhin": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "226e6c11b8a992f5",
+          "observedAt": "2026-10-26T13:38:40.400Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jhin",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jhin/jhin.bin.json",
+              "sha256": "8a8ab1af1ce47b0b95605ac535aa2e118c9ea15b494a4bd91b167ae39fe1cbc1"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3aaa1bcaed04d760"
+            }
+          }
+        }
       }
     },
     {
