@@ -41,6 +41,18 @@ const revisions=Object.freeze({
  'naut-samira':'adcfac37460c13d6',
  'rose-metal':'3a94bd5bf9841b0a',
  'yasuo-rakan':'897a3099d7ab364e',
+ 'nilah-braum':'3fa6b9f217b53c55',
+ 'nilah-alistar':'21e36bda0b9e298f',
+ 'samira-taric':'7eb2c2f9a6cb1087',
+ 'samira-rakan':'a18a0f4e690a196a',
+ 'kindred-taric':'28aee5b7c550ad72',
+ 'ashe-taric':'2b4c1f6f6e44b2a3',
+ 'tristana-taric':'077fb4c54bd5627d',
+ 'ziggs-taric':'75e77cab04746c6e',
+ 'smolder-braum':'2b514d5643f88984',
+ 'party-trundle-ashe-braum':'6add1407f8bd9e02',
+ 'ahri-ashe-braum':'30f0a6145de4013d',
+ 'expand-kindred-nilah-taric':'46bb2afd301fd09f',
 });
 
 // Only the store can establish the origin of a merged entry. An identical
