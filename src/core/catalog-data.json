@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.41",
+  "version": "2026.11.03.42",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -17535,17 +17535,15 @@
     },
     {
       "id": "cassiopeia-teemo",
-      "carry": "Cassiopeia",
-      "support": "Teemo",
       "name": "毒牙蘑菇",
       "style": "wild",
       "tags": [
         "中毒接输出",
         "区域控制"
       ],
-      "why": "提莫提供中毒状态，蛇女跟进持续法术输出。",
-      "plan": "蛇女补刀，提莫辅助；保持施法距离，毒与地形控制用于限制追击。",
-      "risk": "全法术、缺稳定先手；蛇女前期耗蓝很高。",
+      "why": "提莫学会 E 后，普攻命中可施毒；蛇女可在目标仍中毒且处于施法范围时接 E，争取额外伤害和回复。历史社区描述也指出蘑菇毒可配合毒牙；这是技能资料与历史描述的推断，并非 16.21 对局实测。",
+      "plan": "蛇女负责下路补刀，提莫辅助照看视野和血量。确认提莫已学 E、能安全普攻并命中同一目标后，蛇女观察中毒状态，在安全射程内接 E；毒消失或对手反打时不要追击。提莫 R 学会且有充能后可在安全路线放陷阱，敌人踩中才触发；蛇女 W 的毒云可减速和缚地，均不能保证敌人进入或命中。",
+      "risk": "全法术且缺可靠先手，双方容易被突进；蛇女频繁施法消耗法力，提莫为普攻上毒而靠近也有风险。陷阱需要敌人踩中才生效；敌人离开射程、毒消失、技能不可用或视野不足就停止追击。该组合没有已验证的当版胜率。",
       "partners": [
         "Graves",
         "Shen"
@@ -17557,45 +17555,107 @@
           "url": "https://www.reddit.com/r/supportlol/comments/1m13oo1/off_meta_bot_lane_synergy_ideas/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "Reddit · acktar 对外部毒素的历史说明（发表日期及补丁未知）",
+          "url": "https://www.reddit.com/r/leagueoflegends/comments/1w5fr05/what_champs_have_hidden_passives/",
+          "kind": "community",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot Data Dragon · 16.21.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 26.21 更新说明",
+          "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
         }
       ],
-      "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "battle-mage",
-        "support": "poke-no-immobilize"
-      },
+      "evidence": "技能文本与历史社区描述推断 · 非当版实战验证",
+      "reviewedAt": "2026-11-03",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Cassiopeia": "85636d3bc842c9dc",
-        "champion:Teemo": "feed1f50df880a59",
-        "item:3040": "32f30786cea52b4a",
-        "item:6653": "dae566be4a35ad25",
-        "item:3116": "1ca09887b440d0f6",
-        "item:3020": "357a162d6a40286e",
-        "item:3135": "9eb1465e02c69db0",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3070": "e2dbf1b6d5da375b",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8229": "9eaed52046ba81fd",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8347": "def2a55844436c47",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3158": "72ca672b9221f063",
-        "rune:8128": "d4f527472e056bb3",
-        "rune:8126": "9e648d4b51a0c973",
-        "rune:8140": "93302565a400fc06",
-        "rune:8106": "bfb83fa22daf18de"
+        "champion:Cassiopeia": "74ace7fa9d54e0e4",
+        "champion:Teemo": "b29454e3375baf8c"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Cassiopeia",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "负责补刀和输出；观察目标中毒状态、法力和安全射程，条件满足时用 E 跟进，W 留意缚地与撤退时机。"
+        },
+        {
+          "champion": "Teemo",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "负责辅助视野；学会 E 后在安全距离普攻同一目标施毒，R 学会且有充能后可布置陷阱，不能假定敌人一定踩中。"
+        }
+      ],
+      "steps": [
+        "蛇女补刀，提莫负责视野与消耗；先确认兵线、敌人突进和退路。",
+        "提莫已学 E 且能安全普攻时命中目标施毒；蛇女有法力且目标在安全射程内可接 E，只有 E 命中时目标仍中毒才有额外伤害和回复。",
+        "提莫 R 已学会且有充能时，可在安全路线上预置蘑菇；敌人实际踩中才触发减速和持续伤害，再观察是否有安全输出机会。",
+        "蛇女 W 命中区域可形成毒云、减速和缚地；R 已学会时仅对面向她的敌人造成眩晕，未面向者受减速。任何技能落空或敌人脱离时及时撤退。"
+      ],
+      "early": "六级前不依赖蘑菇；提莫 E 已学且普攻实际命中后才有施毒机会，蛇女注意法力与安全距离。",
+      "window": "提莫 E 已学且普攻命中，蛇女 E 可用且目标在安全施法范围内；只有 E 命中时目标仍中毒才有额外伤害和回复。蘑菇路线另需 R 已学、有充能并由敌人踩中。",
+      "economy": "蛇女以下路补刀和经验为主，提莫以辅助任务和视野为主；使用各自同位置普通参考，具体装备和符文不是毒素联动的必要条件。",
+      "reviewSourceAnchors": {
+        "Cassiopeia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "74ace7fa9d54e0e4",
+          "observedAt": "2026-10-26T13:38:40.312Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Cassiopeia",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/cassiopeia/cassiopeia.bin.json",
+              "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "328eb9f058249ee8"
+            }
+          }
+        },
+        "Teemo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b29454e3375baf8c",
+          "observedAt": "2026-10-26T13:38:40.593Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Teemo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+              "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0795d6a5dc4ba5bb"
+            }
+          }
+        }
+      }
     },
     {
       "id": "jhin-nidalee",
