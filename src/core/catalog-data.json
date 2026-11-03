@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.52",
+  "version": "2026.11.03.53",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -28210,6 +28210,542 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Amumu",
+        "MissFortune"
+      ],
+      "comboId": "bullet-mummy",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "1862af86ad6e1a26",
+      "baseline": {
+        "Amumu": "958a576cfa8191dd",
+        "MissFortune": "10b496d2ce7c344d"
+      },
+      "anchors": {
+        "Amumu": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "958a576cfa8191dd",
+          "observedAt": "2026-10-23T02:03:51.450Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Amumu",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/amumu/amumu.bin.json",
+              "sha256": "32ae8f1ffe870b3a94dd62e285bf7b2dedca0cc730abeabccf197d56f5174de3"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "8166548fe1af8c89"
+            }
+          }
+        },
+        "MissFortune": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "10b496d2ce7c344d",
+          "observedAt": "2026-10-23T02:03:51.542Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "MissFortune",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "45c6c8d43f1a5c2f"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Rell",
+        "Yasuo"
+      ],
+      "comboId": "yasuo-rell",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "6a256ee6749856da",
+      "baseline": {
+        "Rell": "bec49be1ddcf29c0",
+        "Yasuo": "d36ebea001e3d1cb"
+      },
+      "anchors": {
+        "Rell": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "bec49be1ddcf29c0",
+          "observedAt": "2026-10-26T13:38:40.515Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rell",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+              "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "f5469dea7fbc0dcb"
+            }
+          }
+        },
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-26T13:38:40.604Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Lulu",
+        "Jinx"
+      ],
+      "comboId": "jinx-lulu",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "588d7ddda67e262f",
+      "baseline": {
+        "Lulu": "5f5091380ca45272",
+        "Jinx": "98d589f2c16be412"
+      },
+      "anchors": {
+        "Lulu": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5f5091380ca45272",
+          "observedAt": "2026-10-23T02:03:51.539Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lulu",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "33e697bcb063b28b"
+            }
+          }
+        },
+        "Jinx": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "98d589f2c16be412",
+          "observedAt": "2026-10-23T02:03:51.531Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jinx",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json",
+              "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "18a489971bd9889a"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Milio",
+        "KogMaw"
+      ],
+      "comboId": "kogmaw-milio",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "29ec66f91f08d20f",
+      "baseline": {
+        "Milio": "9176ff8b22c1f1c9",
+        "KogMaw": "ba006aa34e05e235"
+      },
+      "anchors": {
+        "Milio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9176ff8b22c1f1c9",
+          "observedAt": "2026-10-23T02:03:51.541Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Milio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "32194f4e3319e474"
+            }
+          }
+        },
+        "KogMaw": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ba006aa34e05e235",
+          "observedAt": "2026-10-23T02:03:51.535Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "KogMaw",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kogmaw/kogmaw.bin.json",
+              "sha256": "2b7676bd783ef9d58380c1f10aefff5546e71946ba21c91bd44980befeb0376c"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "ad3707a256c213e5"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Milio",
+        "Jinx"
+      ],
+      "comboId": "jinx-milio",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "a55c6d0a86ef93fe",
+      "baseline": {
+        "Milio": "9176ff8b22c1f1c9",
+        "Jinx": "98d589f2c16be412"
+      },
+      "anchors": {
+        "Milio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "9176ff8b22c1f1c9",
+          "observedAt": "2026-10-23T02:03:51.541Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Milio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "32194f4e3319e474"
+            }
+          }
+        },
+        "Jinx": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "98d589f2c16be412",
+          "observedAt": "2026-10-23T02:03:51.531Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Jinx",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json",
+              "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "18a489971bd9889a"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Leona",
+        "MissFortune"
+      ],
+      "comboId": "missfortune-leona",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "69bbb18ac49daeb3",
+      "baseline": {
+        "Leona": "2b7d4e998553b365",
+        "MissFortune": "10b496d2ce7c344d"
+      },
+      "anchors": {
+        "Leona": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "2b7d4e998553b365",
+          "observedAt": "2026-10-23T02:03:51.536Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Leona",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "7ff3b8a69842091d"
+            }
+          }
+        },
+        "MissFortune": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "10b496d2ce7c344d",
+          "observedAt": "2026-10-23T02:03:51.542Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "MissFortune",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "45c6c8d43f1a5c2f"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Lux",
+        "Caitlyn"
+      ],
+      "comboId": "trap-light",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "173b1222ee299fdd",
+      "baseline": {
+        "Lux": "50314ad04c92f1a6",
+        "Caitlyn": "d19bdcd858382502"
+      },
+      "anchors": {
+        "Lux": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "50314ad04c92f1a6",
+          "observedAt": "2026-10-23T02:03:51.540Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Lux",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
+              "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "cc7818802b8d5fc7"
+            }
+          }
+        },
+        "Caitlyn": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d19bdcd858382502",
+          "observedAt": "2026-10-23T02:03:51.454Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Caitlyn",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "6c728252e5826813"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Morgana",
+        "Caitlyn"
+      ],
+      "comboId": "caitlyn-morgana",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "52f2197ce5810dce",
+      "baseline": {
+        "Morgana": "e0588c7ab7dba463",
+        "Caitlyn": "d19bdcd858382502"
+      },
+      "anchors": {
+        "Morgana": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "e0588c7ab7dba463",
+          "observedAt": "2026-10-23T02:03:51.543Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Morgana",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/morgana/morgana.bin.json",
+              "sha256": "063a6e6093dbeec416babbbe415461322fb20d02f249abf93e6ac885e31f2828"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "57d5f698304a1f45"
+            }
+          }
+        },
+        "Caitlyn": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d19bdcd858382502",
+          "observedAt": "2026-10-23T02:03:51.454Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Caitlyn",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "6c728252e5826813"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -28251,7 +28787,7 @@
     [
       "Amumu",
       "MissFortune",
-      "范围控制接弹幕"
+      "阿木木 Q 命中首个敌人并实际眩晕后，厄运小姐 R 已学可用时可在安全方向引导弹幕；敌人离开范围或引导被打断时不能预设全部命中。"
     ],
     [
       "Ivern",
@@ -28306,7 +28842,7 @@
     [
       "Rell",
       "Yasuo",
-      "芮尔击飞命中后亚索跟进，不把聚拢本身当击飞"
+      "芮尔骑乘状态 W 轰落实际击飞敌方英雄后，亚索 R 已学可用、目标仍浮空且在范围内时可尝试接大；先确认落点安全。"
     ],
     [
       "LeeSin",
@@ -28451,17 +28987,17 @@
     [
       "Lulu",
       "Jinx",
-      "璐璐增益与保护让金克丝更有条件持续普攻"
+      "璐璐 W 对友方英雄施放可提供攻速和移速，E 对友方英雄施放可提供护盾；金克丝按 Q 的当前枪型及实际距离输出。"
     ],
     [
       "Milio",
       "KogMaw",
-      "米利欧 W 提供普攻射程和回复，帮助大嘴保持距离"
+      "克格莫 W 实际开启期间获得额外攻击距离和攻击特效；米利欧 W 炉火覆盖时另提供普攻距离与治疗，两个条件分别判断。"
     ],
     [
       "Milio",
       "Jinx",
-      "米利欧 W 增加普攻射程，金克丝在支援范围内输出"
+      "米利欧 W 炉火已释放且金克丝处于覆盖范围时，可提供普攻距离与治疗；金克丝还需按当前枪型、法力和退路选择位置。"
     ],
     [
       "Ivern",
@@ -28521,7 +29057,7 @@
     [
       "Leona",
       "MissFortune",
-      "蕾欧娜限制移动，女枪接弹幕，留意打断"
+      "蕾欧娜 Q 后普攻实际命中或 R 中心命中可眩晕；厄运小姐 R 已学可用时可寻找安全方向引导弹幕，控制与引导均不保证命中。"
     ],
     [
       "Malphite",
@@ -28611,12 +29147,12 @@
     [
       "Lux",
       "Caitlyn",
-      "拉克丝禁锢命中后，女警接夹子延长限制"
+      "拉克丝 Q 实际禁锢目标后，凯特琳 W 已学且有充能时可尝试布夹；陷阱准备完成且被敌方英雄实际踩中后，才有对应禁锢和强化爆头机会。"
     ],
     [
       "Morgana",
       "Caitlyn",
-      "莫甘娜禁锢给女警布夹时间，黑盾留给关键控制"
+      "莫甘娜 Q 实际禁锢目标后，凯特琳 W 已学且有充能时可尝试布夹；敌方英雄实际踩中陷阱后才有后续爆头机会。莫甘娜 E 可提前保护，护盾不能事后解控。"
     ],
     [
       "Singed",
