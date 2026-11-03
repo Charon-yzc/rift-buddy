@@ -44,10 +44,10 @@ export function configurationChoices(data,selection,currentBuild){
  return rows;
 }
 
-// An avatar in a lineup asks for that member's dedicated route. Old source
-// versions remain labeled; a generic source page must not silently replace it.
+// Preserve the dedicated route only when getBuild actually selected it.
+// An automatic fallback to a current reference must stay automatic.
 export function heroClickSelection(data,context){
  const hero=data.champions.find(value=>value.id===context.id);if(!hero)return context;
  const build=getBuild(hero,context.role,data,context),preferred=build.combo?.preferred;
- return context.loadoutId===undefined&&preferred&&preferred!=='default'&&build.loadoutOptions.some(option=>option.id===preferred)?{...context,loadoutId:preferred}:context;
+ return context.loadoutId===undefined&&preferred&&preferred!=='default'&&build.loadoutId===preferred?{...context,loadoutId:preferred}:context;
 }
