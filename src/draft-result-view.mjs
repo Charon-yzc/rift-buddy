@@ -31,7 +31,7 @@ export function recommendationLoading(memberCount){
 export function candidateSummary(r,data={}){
  const plan=resultCooperation(r),combo=r.trio||r.duo;
  const unusual=r.contributions?.filter(m=>m.unusual).map(m=>m.name)||[];
- const invalid=r.catalogState?.stale&&!r.catalogState?.invalid?'':r.catalogState?.reasons?.join('；');
+ const invalid=r.catalogState?.optionalCompatible?'部分过渡或后期备选不可购买；已审配合、原核心与符文保留，请核对备选。':r.catalogState?.stale&&!r.catalogState?.invalid?'':r.catalogState?.reasons?.join('；');
  const warning=invalid||(unusual.length?`${unusual.join('、')}为非常规位置，先约好补刀与经济。`:'')||combo?.risk||plan?.failures?.[0]||r.strategy?.tradeoff||r.analysis?.warnings?.[0]||'';
  const contribution=r.contributions?.find(m=>(r.targets||[]).includes(m.role))||r.contributions?.[0];
  const own=r.scope==='solo'?r.slots?.find(s=>(r.targets||[]).includes(s.role)):null;
@@ -45,7 +45,7 @@ export function candidateSummary(r,data={}){
  const focused=single&&(contribution?.pairings?.[0]||focusedJob||(fallback?fallback.text+(notice?`（${notice}）`:''):null));
  const title=r.scope==='solo'?(r.strategy?.label||r.title):plan?.kind==='shared'&&plan.routes?.[0]?.label?plan.routes[0].label:r.title;
  const line=interaction?.step||focused||(r.scope==='solo'?(r.strategy?.benefit||r.reason):plan?.routes?.[0]?.step||plan?.steps?.find(s=>s.startsWith('主线：'))||combo?.plan||combo?.steps?.[0]||plan?.steps?.[0]||r.creativePlan?.plan||r.strategy?.benefit||r.reason);
- return {title,line,warning,basis:r.catalogState?.stale?'旧版待复核':''};
+ return {title,line,warning,basis:r.catalogState?.optionalCompatible?'备选需调整':r.catalogState?.stale?'旧版待复核':''};
 }
 
 export function candidateDisclosureLabel(r,data){

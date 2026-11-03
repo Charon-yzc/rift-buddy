@@ -1,4 +1,5 @@
 import {sharedEquipmentBuild} from './shared-equipment.mjs';
+import {requiredLoadoutItems} from './loadout-ingredients.mjs';
 import {summonerPlan,validSourceSummonerOptions} from './summoner-selection.mjs';
 import {validMatchups} from './matchups.mjs';
 import {selectedOpponentBuild,validOpponentScope} from './opponent-build-source.mjs';
@@ -139,8 +140,9 @@ export function rankedClientRoles(data){
  return result;
 }
 const conflicts=itemConflicts;
-export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent,sharedEquipment}={}) {
- if(sharedEquipment){const base=getBuild(champion,role,data,{mode,variant,conditions,coreIndex,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds,bottomQuestPlan,sourceOpponent});return sharedEquipmentBuild(base,sharedEquipment,data);}
+export function getBuild(champion,role,data,{mode='rift',variant='default',conditions=[],coreIndex=0,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds=[],bottomQuestPlan=false,sourceOpponent,sharedEquipment,catalogOverride}={}) {
+ if(sharedEquipment){const base=getBuild(champion,role,data,{mode,variant,conditions,coreIndex,coreId,coreAuto,loadoutId,comboId,creativePlan,runeId,customRunePage,skillId,customSkillOrder,summonerIds,startId,bootsId,laterIds,bottomQuestPlan,sourceOpponent,catalogOverride});return sharedEquipmentBuild(base,sharedEquipment,data);}
+ const runePlans=catalogOverride?.runes||RUNE_PLANS,allSkillPlans=catalogOverride?.skillPlans||SKILL_PLANS;
  // Keep saved selections in storage, but never derive a fresh default from an
  // old catalogue. Explicitly adopted personal equipment is handled above.
  if(mode==='hex'&&(!isCurrentHexData(data)||!validHexReference(data.hexBuilds?.[champion.id],champion,data)))return {
@@ -161,12 +163,21 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(['Karma','Zilean'].includes(champion.id)&&role==='mid')key='mage';
  if(variant==='ap'&&['Malphite','Gragas','Chogath','Amumu'].includes(champion.id))key='apAssassin';
  if(variant==='tank')key=role==='support'?'supportTank':'tank';
- const availableLoadouts=loadoutOptions(champion,role,mode).filter(l=>[...l.items,l.boots,...l.late,...(l.early||[])].every(id=>{const i=data.items[id],base=data.items[i?.specialRecipe],purchase=i?.inStore&&i.gold?.purchasable!==false?i:base;return i?.maps?.['11']&&purchase?.maps?.['11']&&purchase.inStore&&purchase.gold?.purchasable!==false&&!i.requiredAlly&&!purchase.requiredAlly&&(!i.requiredChampion||i.requiredChampion===champion.id)&&(!purchase.requiredChampion||purchase.requiredChampion===champion.id);})&&l.runes.every(k=>validateRunePage(RUNE_PLANS[k]?.page,data.runes)));
+ const availableLoadoutItem=id=>{const i=data.items[id],base=data.items[i?.specialRecipe],purchase=i?.inStore&&i.gold?.purchasable!==false?i:base;return i?.maps?.['11']&&purchase?.maps?.['11']&&purchase.inStore&&purchase.gold?.purchasable!==false&&!i.requiredAlly&&!purchase.requiredAlly&&(!i.requiredChampion||i.requiredChampion===champion.id)&&(!purchase.requiredChampion||purchase.requiredChampion===champion.id);};
  const creative=mode==='rift'&&creativePlan?.id===comboId?creativeMemberCombo(creativePlan,champion.id,role):null;
  const duo=creative||(mode==='rift'?[...TRIOS,...DUOS].find(d=>d.id===comboId&&comboLoadout(d,champion,role)!==null):null);
  const play=creative?(creative.play||fallbackMemberPlay(creative,data,champion.id,role)):duoPlay(duo,data,{champion:champion.id,role});
  if(play){play.currentPatch=data.patch;play.stale=Object.values(play.stages).some(stage=>(stage.patch||play.patch)!==data.patch);}
  const preferred=comboLoadout(duo,champion,role);
+ const reviewedId=creative?.curated?.id||creative?.shared?.routes?.[0]?.loadoutGroup?.id||(!creative?duo?.id:null);
+ const reviewedOptional=!!reviewedId&&data.catalogInfo?.status?.[reviewedId]?.optionalCompatible===true&&(!creative||catalogPlanCurrent(creativePlan,data.catalog,data.catalogInfo?.status,data.patch));
+ const automaticOptional=reviewedOptional&&coreAuto===true&&!coreId&&!sourceOpponent&&(!loadoutId||loadoutId==='auto');
+ // Never infer automatic selection for an old unknown or a manual core.
+ const candidates=catalogOverride&&mode==='rift'?catalogOverride.loadouts.filter(l=>l.champions.includes(champion.id)&&l.roles.includes(role)):loadoutOptions(champion,role,mode);
+ const availableLoadouts=candidates.filter(l=>{
+  const optional=[...l.late,...(l.early||[])],missing=optional.filter(id=>!availableLoadoutItem(id)),required=missing.length?requiredLoadoutItems(l,data):null;
+  return [...l.items,l.boots].every(availableLoadoutItem)&&l.runes.every(k=>validateRunePage(runePlans[k]?.page,data.runes))&&(!missing.length||reviewedOptional&&l.id===preferred&&(loadoutId===l.id||automaticOptional)&&missing.every(id=>!required.has(String(id))));
+ });
  const generic=selectedBuildReference(data,champion.id,role),scoped=mode==='rift'&&sourceOpponent?selectedOpponentBuild(data,champion.id,role,sourceOpponent):null;
  // Current structurally sound sources may retain unavailable equipment rows;
  // preserve their original samples and validate each row at display time.
@@ -174,10 +185,11 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const standardRef=scopedRef||((mode==='rift'?validReferenceForUse(generic,champion,role,data,{allowOlder:true}):validReference(generic,champion,role,data,{allowOlder:true}))?generic:null);
  const referenceLabel=ref=>buildSourceLabel(ref)+(ref?.opponent?' · 对 '+(data.champions.find(c=>c.id===ref.opponent)?.name||ref.opponent)+' 的来源参考':'');
  const preferredLoadout=availableLoadouts.find(c=>c.id===preferred);
- const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&((preferredLoadout.patch||LOADOUT_PATCH)!==data.patch||data.catalogInfo?.loadoutStatus?.[preferredLoadout.id]?.stale||dependencyChanges(preferredLoadout,{runes:RUNE_PLANS},data).length>0)&&standardRef?.patch===data.patch;
+ const currentReferencePreferred=(creative?.archetype==='curated'||duo?.members?.length>=3)&&(!loadoutId||loadoutId==='auto')&&preferredLoadout&&!automaticOptional&&((preferredLoadout.patch||LOADOUT_PATCH)!==data.patch||data.catalogInfo?.loadoutStatus?.[preferredLoadout.id]?.stale||dependencyChanges(preferredLoadout,{runes:runePlans},data).length>0)&&standardRef?.patch===data.patch;
  const requested=!loadoutId||loadoutId==='auto'?currentReferencePreferred?'default':preferred||'default':loadoutId;
  const config=availableLoadouts.find(c=>c.id===requested);
  const selectionWarnings=[];
+ if(config&&(loadoutId===config.id||automaticOptional)){const unavailable=[...config.late,...(config.early||[])].filter(id=>!availableLoadoutItem(id));if(unavailable.length)selectionWarnings.push(`玩法核心和符文保留；旧的过渡或后期备选 ${unavailable.map(id=>data.items[id]?.name||`#${id}`).join('、')} 当前不可购买，已跳过。${automaticOptional?'该已审技能配合不要求固定装备；':'请核对这些装备是否为配合必要条件，再选择其他装备。'}`);}
  if(creative?.archetype==='shared'&&!config)selectionWarnings.push('当前行动路线没有适用的专用配置，个人准备使用普通位置参考；可在“配置玩法”主动选择，已有个人选择优先保留。');
  if(mode==='rift'&&sourceOpponent&&!scopedRef)selectionWarnings.push(`原对 ${data.champions.find(c=>c.id===sourceOpponent)?.name||sourceOpponent} 的来源参考在当前筛选下暂不可用，保留原选择，暂显示普通同位置配置；可刷新对手参考或恢复普通来源。`);
  if(currentReferencePreferred)selectionWarnings.push(`原组合配装版本或依赖资料待复核，当前先展示${standardRef?` ${standardRef.patch} 同位置统计参考`:'同位置基础参考'}；组合专用配装可在“配置玩法”主动选择，统计不代表组合适配已经验证。`);
@@ -198,7 +210,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  }
  if(champion.id==='Samira'||champion.id==='Nilah'){t.items=[6676,3031,3072];t.late=[3036,3026];t.runes=rune(8000,8100,[8010,9111,9103,8014,8139,8135],[5005,5008,5001]);}
  if(champion.id==='Yasuo'||champion.id==='Yone')t.runes=rune(8000,8400,[8008,9111,9104,8299,8444,8451],[5005,5008,5001]);
- if(config){t.items=[...config.items];t.boots=config.boots;t.late=[...config.late];t.name=config.name;t.tips=config.why;t.runes=structuredClone(RUNE_PLANS[config.runes[0]].page);}
+ if(config){t.items=[...config.items];t.boots=config.boots;t.late=(loadoutId===config.id||automaticOptional)?config.late.filter(availableLoadoutItem):[...config.late];t.name=config.name;t.tips=config.why;t.runes=structuredClone(runePlans[config.runes[0]].page);}
  t.runes=mechanismRunePage(t.runes);
  const support=role==='support'&&mode==='rift';
  bottomQuestPlan=bottomQuestPlan===true&&role==='bottom'&&mode==='rift';
@@ -216,7 +228,7 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  if(ref&&coreId){const index=ref.core.findIndex(c=>'core-'+c.items.join('-')===coreId);if(index>=0)coreIndex=index;else{coreIndex=0;selectionWarnings.push('原核心路线暂不在当前来源中，当前展示默认路线；原选择仍保留，请核对后使用。');}}
  else if(mode==='rift'&&coreId&&!ref)selectionWarnings.push('所选核心路线暂不可用，当前展示机制备选；原选择仍保留，来源恢复后继续使用。');
  coreIndex=ref?Math.min(coreIndex,ref.core.length-1):0;
- const fallbackStart=[...t.start],fallbackBoots=t.boots;
+ const fallbackStart=[...t.start],fallbackBoots=t.boots,mechanismCoreIds=!config?[...t.items]:null;
  const map=mode==='hex'?'12':'11';
  const resolve=id=>{
   const i=data.items[String(id)];
@@ -290,12 +302,12 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
   if(!validateRunePage(page,data.runes)||runeMechanicIssue(champion.id,page))return;const identity=page.selectedPerkIds.join('-');if(runeSeen.has(identity))return;runeSeen.add(identity);runeOptions.push({...option,page});};
  const addMechanisms=()=>{if(!p.reviewed&&!config)return;const plans=champion.id==='DrMundo'&&key==='tank'?['grasp','phase']:config?.runes||mechanismRuneKeys(key,champion,role);for(const id of plans){
   if(['aftershock','glacial'].includes(id)&&['DrMundo'].includes(champion.id))continue;
-  const plan=RUNE_PLANS[id];if(plan)addRune({id:`curated-${id}`,name:plan.name,when:plan.when,source:'机制整理',samples:null,page:plan.page});}
+  const plan=runePlans[id];if(plan)addRune({id:`curated-${id}`,name:plan.name,when:plan.when,source:'机制整理',samples:null,page:plan.page});}
  };
  const addSource=()=>{for(const option of standardRef?.runeOptions|| (standardRef?[{id:`source-${standardRef.runePage.selectedPerkIds.join('-')}`,samples:standardRef.runeSamples||0,page:standardRef.runePage}]:[])){
   const keystone=data.runes.flatMap(tree=>tree.slots[0].runes).find(r=>r.id===option.page.selectedPerkIds[0]);
   const secondary=data.runes.find(tree=>tree.id===option.page.subStyleId);
-  const explanation=Object.values(RUNE_PLANS).find(p=>p.page.selectedPerkIds[0]===option.page.selectedPerkIds[0])?.when;
+  const explanation=Object.values(runePlans).find(p=>p.page.selectedPerkIds[0]===option.page.selectedPerkIds[0])?.when;
   addRune({...option,patch:standardRef.patch,name:`${keystone?.name||'来源符文'} · ${secondary?.name||''}`,when:(explanation?explanation+' ':'')+(config?`${referenceLabel(standardRef)}同英雄同位置参考，未验证适合这套娱乐组合。`:`${referenceLabel(standardRef)}完整方案；按对线与打法选择。`),source:'OP.GG'});
  }};
  if(mode==='rift'){if(config){addMechanisms();addSource();}else{addSource();addMechanisms();}if(!runeOptions.length)addRune({id:'curated-base',name:'机制基础方案',when:t.tips,source:'机制整理',samples:null,page:t.runes});}
@@ -313,13 +325,13 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  const skillChoices=mode==='rift'?(standardRef?.skillOptions||[]).filter(o=>legalSkillOrder(o.order,champion.id)).map(o=>({...o,patch:standardRef.patch,sourceUrl:standardRef.sourceUrl,fetchedAt:standardRef.fetchedAt,name:`来源加点 · ${orderPriority(o.order,champion.id).split('').join(' › ')}`,when:`${referenceLabel(standardRef)} · ${standardRef.patch} · 获取 ${standardRef.fetchedAt}；样本 ${o.samples} 场${o.samples<200?'，样本较少':''}；仅覆盖前 ${o.order.length} 个技能点，不代表这套组合的最优加点。`,source:'OP.GG'})):[];
  if(config?.skillOrder)skillChoices.unshift({id:'curated-skill-'+config.id,name:config.name+' · 节点加点',order:config.skillOrder,patch:config.patch||LOADOUT_PATCH,reviewedAt:config.reviewedAt||LOADOUT_DATE,when:config.skillReason||config.why,source:'机制整理',samples:null});
  const skillScope=config?.id||((currentReferencePreferred||skillId?.startsWith('scoped-skill-'))?preferredLoadout?.id:null)||'default';
- let skillPlans=loadoutSkillPlans(champion,role,skillScope);
- const requestedSkill=SKILL_PLANS.find(plan=>'scoped-skill-'+plan.id===skillId&&plan.champion===champion.id&&plan.role===role);
+ let skillPlans=catalogOverride?allSkillPlans.filter(plan=>plan.champion===champion.id&&plan.role===role&&plan.loadoutId===skillScope):loadoutSkillPlans(champion,role,skillScope);
+ const requestedSkill=allSkillPlans.find(plan=>'scoped-skill-'+plan.id===skillId&&plan.champion===champion.id&&plan.role===role);
  if(requestedSkill&&!skillPlans.includes(requestedSkill))skillPlans=[...skillPlans,requestedSkill];
  // An unusual lane may have no population build. Independently reviewed
  // nodes remain usable without reviving an old gear route; conflicting
  // authored orders never choose a default just because one was listed first.
- if(!config&&!standardRef&&!skillPlans.length){const rows=SKILL_PLANS.filter(plan=>plan.champion===champion.id&&plan.role===role&&plan.patch===data.patch&&!dependencyChanges(plan,null,data).length);if(new Set(rows.map(plan=>plan.order+':'+(plan.continuationPriority||''))).size===1)skillPlans=rows.slice(0,1);}
+ if(!config&&!standardRef&&!skillPlans.length){const rows=allSkillPlans.filter(plan=>plan.champion===champion.id&&plan.role===role&&plan.patch===data.patch&&!dependencyChanges(plan,null,data).length);if(new Set(rows.map(plan=>plan.order+':'+(plan.continuationPriority||''))).size===1)skillPlans=rows.slice(0,1);}
  const scopedSkills=mode==='rift'?skillPlans.map(p=>({stale:p.patch!==data.patch||dependencyChanges(p,null,data).length>0,id:'scoped-skill-'+p.id,name:p.name,champion:p.champion,role:p.role,loadoutId:p.loadoutId,order:p.order,priority:p.continuationPriority,reason:p.reason,patch:p.patch,reviewedAt:p.reviewedAt,reference:p.reference,sources:p.sources||[],source:'机制整理',samples:null,when:`机制整理 ${p.patch}，复核 ${p.reviewedAt}；${p.reason}${p.reference?` 前 ${p.reference.order.length} 点参考 ${p.reference.patch} 同位置来源（获取 ${p.reference.fetchedAt}）；${p.reference.order.length<p.order.length?'后续节点为机制补齐，':''}整套整理无统计样本。来源：${p.reference.url}`:' 整套整理无统计样本。'}`})) : [];
  if(config)skillChoices.unshift(...scopedSkills);else skillChoices.push(...scopedSkills);
  // A dedicated gear/rune route may have no authored skill nodes. Keep its
@@ -357,9 +369,9 @@ export function getBuild(champion,role,data,{mode='rift',variant='default',condi
  })).map(row=>({...row,items:row.items.map(resolve).filter(Boolean)})).filter(row=>row.items.length).map(row=>({...row,fitsRoute:fitsRoute(row.items[0])})).sort((a,b)=>Number(t.late.includes(Number(b.items[0].id)))-Number(t.late.includes(Number(a.items[0].id)))||Number(b.fitsRoute)-Number(a.fitsRoute)||b.samples-a.samples):[];
  const selectedLaterIds=ref?.laterBasis==='all-orders'?t.late.filter(id=>equipment.some(i=>Number(i.id)===id)):[];
  const unavailableLaterOptions=mode==='rift'&&Array.isArray(laterIds)?[...new Set(laterIds)].filter(id=>!selectedLaterIds.includes(id)).map(id=>({id,name:data.items[id]?.name||`旧版装备 #${id}`})):[];
- return {key,dataPatch:data.patch,sourceOpponent:scopedRef?.opponent||null,title:ref?(referenceStale?'旧版本常用参考':mode==='hex'?'海克斯常用配置':scopedRef?'所选对手统计参考':'本版本常用配置'):t.name,champion:champion.id,role,mode,selectedCoreIndex:coreIndex,selectedCoreId:ref?'core-'+ref.core[coreIndex].items.join('-'):null,sourceCoreChanged,unavailableCoreRoutes:mode==='rift'&&ref?ref.core.map(core=>{const checked=checkCore(core);return !!(checked.unavailable.length||checked.conflicting.length);}):[],items:equipment,laterOptions,selectedLaterIds,unavailableLaterOptions,start:t.start.filter(id=>id!==3865).map(resolve).filter(Boolean),granted:support?[data.items[3865]].filter(Boolean):[],boots,adapted:adaptive.adapted,
+ return {key,dataPatch:data.patch,sourceOpponent:scopedRef?.opponent||null,title:ref?(referenceStale?'旧版本常用参考':mode==='hex'?'海克斯常用配置':scopedRef?'所选对手统计参考':'本版本常用配置'):t.name,champion:champion.id,role,mode,selectedCoreIndex:coreIndex,selectedCoreId:ref?'core-'+ref.core[coreIndex].items.join('-'):null,mechanismCoreIds:!ref&&!config?mechanismCoreIds:null,sourceCoreChanged,unavailableCoreRoutes:mode==='rift'&&ref?ref.core.map(core=>{const checked=checkCore(core);return !!(checked.unavailable.length||checked.conflicting.length);}):[],items:equipment,laterOptions,selectedLaterIds,unavailableLaterOptions,start:t.start.filter(id=>id!==3865).map(resolve).filter(Boolean),granted:support?[data.items[3865]].filter(Boolean):[],boots,adapted:adaptive.adapted,
   loadoutId:config?.id||'default',loadoutOptions:availableLoadouts,configurationNote:config?.why||null,configurationSources:config?.sources||[],combo:duo?{...(creative?{origin:'creative',creativePlan:validateCreativePlan(creative),dataVersion:creative.dataVersion,rulesVersion:creative.rulesVersion,createdAt:creative.createdAt,verified:false}:{}),id:duo.id,title:duo.name,patch:duo.patch,reviewedAt:duo.reviewedAt,plan:duo.plan,risk:play?.risk||duo.risk,sources:comboSources(duo),preferred,members:(duo.members||[{champion:duo.carry,role:'bottom'},{champion:duo.support,role:'support'}]).filter(m=>m.champion!==champion.id),ownJob:play?.ownJob||duo.members?.find(m=>m.champion===champion.id&&m.role===role)?.job||null,steps:play?.steps||duo.steps||[],window:play?.window||duo.window||null,early:play?.early||duo.early||null,economy:play?.economy||duo.economy||null,play}:null,runeOptions,selectedRuneId:chosenRune?.id||null,selectedRune:chosenRune||null,selectionWarnings,sourceEquipmentWarnings,
-  support,early:[...new Set([...(config?.early||ref?.core[Math.min(ref.core.length-1,coreIndex)]?.early||[]),...adaptive.early])].filter(id=>!t.start.includes(id)).map(resolve).filter(Boolean),runePage:valid&&mode==='rift'?runePage:null,runeValid:valid,summoners:spells.ids,summonerOptions:spells.options,sourceSummonerOptions,selectedSummonerIds:spells.selectedSummonerIds,summonerManual:spells.manual,hasManualSummoners:summonerIds!==undefined,
+  support,early:[...new Set([...(config?.early?.filter(id=>!(loadoutId===config.id||automaticOptional)||availableLoadoutItem(id))||ref?.core[Math.min(ref.core.length-1,coreIndex)]?.early||[]),...adaptive.early])].filter(id=>!t.start.includes(id)).map(resolve).filter(Boolean),runePage:valid&&mode==='rift'?runePage:null,runeValid:valid,summoners:spells.ids,summonerOptions:spells.options,sourceSummonerOptions,selectedSummonerIds:spells.selectedSummonerIds,summonerManual:spells.manual,hasManualSummoners:summonerIds!==undefined,
   skillChoices,defaultSkillId:defaultSkill?.id||null,selectedSkillId:selectedSkill?.id||null,selectedSkill,skillOrder:selectedSkill?.order||null,skillMechanism:skillMechanismNote(champion.id),attributePlan:attributePreparation(champion.id),priority:champion.id==='Aphelios'?null:selectedSkill?selectedSkill.priority||orderPriority(selectedSkill.order,champion.id):config?.priority||ref?.priority||skillOrders[champion.id]||null,first:champion.id==='Aphelios'?null:selectedSkill?.order.slice(0,3)||config?.first||(champion.id==='Udyr'?(role==='jungle'?'QRW':'RWR'):champion.id==='Qiyana'&&role==='jungle'?'QWE':firstLevels[champion.id])||null,tips:mode==='hex'||!support?t.tips.replace(/保留辅助装升级位。|辅助位保留工资装升级位。/g,''):t.tips,adjustments,
   rulesDate:config?(config.reviewedAt||LOADOUT_DATE):RULES_VERSION,rulesPatch:ref?.patch||(config?(config.patch||LOADOUT_PATCH):RULES_PATCH),stale:!ref&&(data.patch!==(config?(config.patch||LOADOUT_PATCH):RULES_PATCH)||!!data.catalogInfo?.loadoutStatus?.[config?.id]?.stale),
   source:adaptive.adapted?'局势调整路线':ref?(referenceStale?'旧版本 OP.GG 参考':'OP.GG 常用配置'):config?'组合玩法参考':'机制基础方案',reference:ref,referenceStale,referenceExpired,

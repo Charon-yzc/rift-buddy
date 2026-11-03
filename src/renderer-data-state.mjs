@@ -1,6 +1,7 @@
 import {BUNDLED_CATALOG,validateCatalog,installValidatedCatalog,catalogIssues} from './core/catalog.mjs';
 import {normalizeBuildSource,sameBuildSource,selectBuildSource} from './core/build-source.mjs';
 import {prepareAssets,installAssets} from './ui.mjs';
+import {optionalGearCompatibility} from './core/optional-gear-review.mjs';
 
 const baseFields=['champions','items','runes','spells','abilityReference','historicalAbilityReference','spellbook','patch','version','mechanicSourceRevision'];
 const imageFields=['imageOverrides','items','augments','abilityReference','spells','runes','version'];
@@ -30,6 +31,17 @@ export function createRendererDataState({getSource,requestSnapshot,beforeApply=(
   else next.catalog=current.catalog;
   if(!next.catalogInfo||(change.baseChanged||change.catalogChanged)&&!Object.hasOwn(changes,'catalogInfo'))next.catalogInfo={...next.catalogInfo,...catalog.inspect(next.catalog,next),version:next.catalog.version,baseKind:'unknown',linkOrigins:[],linkConfigOverrides:{},linkStatus:{}};
   if(change.sourceChanged){const projected={...raw};projectSource(projected,source);next.buildSources=projected.buildSources;next.builds=projected.builds;next.buildSource=projected.buildSource;}
+  // Only narrow a proof supplied by the authoritative store. Source changes
+  // can invalidate or restore local usability; they cannot create a review.
+  if(next.catalogInfo?.status&&(change.sourceChanged||change.baseChanged||change.catalogChanged||Object.hasOwn(changes,'catalogInfo'))){
+   const statuses={...next.catalogInfo.status},entries=[...(next.catalog?.duos||[]),...(next.catalog?.trios||[])];
+   for(const [id,status] of Object.entries(statuses))if(status?.optionalEvidence){
+    const nextStatus={...status};delete nextStatus.optionalCompatible;delete nextStatus.optionalMissing;
+    const missing=optionalGearCompatibility(entries.find(entry=>entry.id===id),next.catalog,next);
+    if(missing)Object.assign(nextStatus,{optionalCompatible:true,optionalMissing:missing});statuses[id]=nextStatus;
+   }
+   next.catalogInfo={...next.catalogInfo,status:statuses};
+  }
   const preparedImages=change.assetsChanged?images.prepare(next):null,before=beforeApply(change);
   if(change.catalogChanged)catalog.install(next.catalog);
   if(change.assetsChanged)images.install(preparedImages);

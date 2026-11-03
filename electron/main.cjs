@@ -135,10 +135,15 @@ async function boot(){
  const catalogStore=await createCatalogStore({root:storeRoot,getData:()=>data});
  const dataResult=result=>({...result,dataRevision});
  const useCatalog=result=>{data.catalog=catalogCore.configureCatalog(result.catalog);data.catalogInfo=result.info;publishData(['catalog','catalogInfo']);guide?.publish();return dataResult(result);};
+ const refreshCatalogAvailability=()=>{
+  try{data.catalogInfo=catalogStore.summary(data).info;}
+  catch{const status=Object.fromEntries(Object.entries(data.catalogInfo?.status||{}).map(([id,value])=>{const next={...value};delete next.optionalEvidence;delete next.optionalCompatible;delete next.optionalMissing;return [id,next];}));data.catalogInfo={...data.catalogInfo,status};}
+ };
  const refreshReference=(refresh,keys)=>async(...args)=>{
   const before=data,patch=data.patch,version=data.version,result=await refresh(...args);
   if(data!==before||data.patch!==patch||data.version!==version)throw Error('基础资料已更新，请重新刷新参考');
-  publishData(keys);return result;
+  if(keys.includes('buildSources')&&sharedDataFields.get('buildSources')!==data.buildSources){refreshCatalogAvailability();publishData([...keys,'catalogInfo']);}
+  else publishData(keys);return result;
  };
  const {createBuildCache}=await import('../services/build-cache.mjs');
  const {createOpponentBuildCache}=await import('../services/opponent-build-cache.mjs');
@@ -146,7 +151,7 @@ async function boot(){
  const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
  const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
  const guideFeatureSignature=()=>JSON.stringify(['guideEconomy','guideEquipment','guideSkills','guideJungle'].map(key=>state.preferences[key]!==false));let lastGuideFeatures=guideFeatureSignature();
- synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);publishData(['buildSource','builds']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();const signature=guideFeatureSignature();if(signature!==lastGuideFeatures){lastGuideFeatures=signature;guide?.publish();}};
+ synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);refreshCatalogAvailability();publishData(['buildSource','builds','catalogInfo']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();const signature=guideFeatureSignature();if(signature!==lastGuideFeatures){lastGuideFeatures=signature;guide?.publish();}};
  const {createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
  const pairCache=createPairStatisticsCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshPairs=refreshReference(pairCache,['pairStatistics']);
@@ -180,12 +185,12 @@ async function boot(){
  if(state.guide&&!data.champions.some(c=>c.id===state.guide.selection?.id)){state.guide=null;if(state.recovery?.backedUp!==false)await saveCurrentState();}
  const legacyFeed=generation.hasAccepted()?null:await createDataFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,restoreAtStartup:true,
   canActivate:()=>!generation.hasAccepted()&&feedIdle&&!updating&&!applyingRunes&&!importingItemSet,
-  onChange:info=>{if(!generation.hasAccepted()&&['idle','offline'].includes(generation.summary().phase)){data.dataFeed=info;publishData(['dataFeed','rankings','buildSources','builds','hexBuilds']);}}});
+  onChange:info=>{if(!generation.hasAccepted()&&['idle','offline'].includes(generation.summary().phase)){data.dataFeed=info;const keys=['dataFeed','rankings','buildSources','builds','hexBuilds'];if(sharedDataFields.get('buildSources')!==data.buildSources){refreshCatalogAvailability();keys.push('catalogInfo');}publishData(keys);}}});
  const {createCommunityFeedCache}=await import('../services/community-feed-cache.mjs');
  const publishCommunity=info=>{data.communityFeed=info;if(communityChanged){communityChanged=false;catalogCore.installValidatedCatalog(data.catalog);publishData(['communityFeed','catalog','catalogInfo','communityHexRoutes']);guide?.publish();}else publishData(['communityFeed']);};
  communityFeed=await createCommunityFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,getContext:()=>catalogStore.revision(),currentVersion:app.getVersion(),restoreAtStartup:true,
   canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet&&!catalogStore.isMutating(),
-  prepare:(value,current)=>{const staged=catalogStore.prepareCommunity(value?.catalog||null,value?.patch,current);return ()=>{staged.commit();current.catalog=staged.catalog;current.catalogInfo=staged.info;current.communityHexRoutes=value?.hexRoutes||null;communityChanged=true;};},onChange:publishCommunity});
+  prepare:(value,current)=>{const staged=catalogStore.prepareCommunity(value?.catalog||null,value?.patch,current,{signedReceipt:true});return ()=>{staged.commit();current.catalog=staged.catalog;current.catalogInfo=staged.info;current.communityHexRoutes=value?.hexRoutes||null;communityChanged=true;};},onChange:publishCommunity});
  publishCommunity(communityFeed.summary());
  const checkStructuredStatistics=async options=>{const info=await generation.check(options);return !generation.hasAccepted()&&info.phase==='offline'&&legacyFeed?legacyFeed.check(options):info;};
  const dataFeed={summary:()=>!generation.hasAccepted()&&['idle','offline'].includes(generation.summary().phase)?legacyFeed?.summary()||generation.summary():generation.summary(),
@@ -762,7 +767,7 @@ async function boot(){
  function stagedCatalogChoice(intent,champion,session=latestClient.session){
   if(!intent.catalogChoiceToken)return null;
   const choice=state.draft?.catalogChoice,role=intent.role;
-  if(!choice||choice.token!==intent.catalogChoiceToken||!data.patch||!data.catalogInfo?.status?.[choice.id]||data.catalogInfo.status[choice.id].invalid||data.catalogInfo.status[choice.id].stale||!Number.isInteger(session?.localPlayerCellId))return null;
+  if(!choice||choice.token!==intent.catalogChoiceToken||!data.patch||!data.catalogInfo?.status?.[choice.id]||!Number.isInteger(session?.localPlayerCellId))return null;
   const confirmed=confirmedClientDraft(state.draft.slots,session,data.champions).slots,target=confirmed.find(s=>s.role===role);
   const ownSlot=confirmed.find(s=>s.clientCellId===session.localPlayerCellId);
   if(!target||ownSlot&&ownSlot.role!==role||target.champion&&target.champion!==champion||Number.isInteger(target.clientCellId)&&target.clientCellId!==session.localPlayerCellId)return null;
