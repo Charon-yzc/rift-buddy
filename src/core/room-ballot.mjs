@@ -68,7 +68,7 @@ export function lineupFit(lineup,current,champions,options={}){
   if(options.editableRoles.includes(role)){const editable=editableLocalDraft(current,options.clientSession,champions,role);current=editable.slots;options={...options,clientSession:editable.session};}
  }
  current=clientContextDraft(current,champions,options.clientSession,{scope:effectiveDraftScope(current,options.scope||'party'),soloRole:options.soloRole||'',party:options.party,includePreselected:options.includePreselected===true});
- const range=fitLineupSlots(lineup,current,options),mandatoryOwn=lockedOwnSlot(current,options.clientSession),context={...(options.context||fitContext(champions,options)),mandatoryOwn,publicAllies:['context','solo'].includes(range.scope)?publicAllyIds(options.clientSession,champions,{includePreselected:options.includePreselected===true}):[]};
+ const range=fitLineupSlots(lineup,current,options),mandatoryOwn=lockedOwnSlot(current,options.clientSession),context={...(options.context||fitContext(champions,options)),requireReviewedCatalog:options.requireReviewedCatalog===true,catalogReviewPatch:options.patch,mandatoryOwn,publicAllies:['context','solo'].includes(range.scope)?publicAllyIds(options.clientSession,champions,{includePreselected:options.includePreselected===true}):[]};
  const own=options.clientSession?.myTeam?.find(player=>player.cellId===options.clientSession.localPlayerCellId);
  if(confirmedPlayerPick(own,options.clientSession)&&!mandatoryOwn)return {score:null,rawScore:0,known:0,size:range.expectedSize,compatible:false,exact:false,scope:range.scope,breakdown:[],strengths:[],gaps:['请先确认已锁定英雄的分路'],reason:'请先确认已锁定英雄的分路，再核对这套阵容'};
  if(mandatoryOwn&&!range.slots.some(slot=>slot.champion===mandatoryOwn.champion))range.expectedSize++;
@@ -134,7 +134,7 @@ function proposalAvailable(lineup,current,champions,{clientSession,includePresel
 export function roomBallotBoard(room,current,champions,options={}){
  const members=(room?.members||[]).filter(m=>m.online!==false),groups=new Map();
  for(const member of members){const proposal=member.share?.ballot?.proposal;if(!proposal||!proposalAvailable(proposal.lineup,current,champions,options))continue;const key=proposalKey(proposal);let row=groups.get(key);
-  if(!row){row={key,proposal,from:member.nick,proposers:[],voters:[],adopters:[],mine:false,fit:lineupFit(proposal.lineup,current,champions,options)};groups.set(key,row);}row.proposers.push(member.nick);
+  if(!row){row={key,proposal,from:member.nick,proposers:[],voters:[],adopters:[],mine:false,fit:lineupFit(proposal.lineup,current,champions,{...options,requireReviewedCatalog:true})};groups.set(key,row);}row.proposers.push(member.nick);
  }
  for(const member of members)for(const key of ballotVotes(member.share?.ballot)){const row=groups.get(key);if(row){if(!row.voters.includes(member.nick))row.voters.push(member.nick);if(member.self)row.mine=true;}}
  for(const row of groups.values()){
