@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.51",
+  "version": "2026.11.03.52",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -27942,6 +27942,274 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Cassiopeia",
+        "Teemo"
+      ],
+      "comboId": "cassiopeia-teemo",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "03758b457fc2bc91",
+      "baseline": {
+        "Cassiopeia": "74ace7fa9d54e0e4",
+        "Teemo": "b29454e3375baf8c"
+      },
+      "anchors": {
+        "Cassiopeia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "74ace7fa9d54e0e4",
+          "observedAt": "2026-10-26T13:38:40.312Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Cassiopeia",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/cassiopeia/cassiopeia.bin.json",
+              "sha256": "57e4216d0882399f0a68f8087cab824c7ae331040c9a6e74cf7ab6379e69c737"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "328eb9f058249ee8"
+            }
+          }
+        },
+        "Teemo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b29454e3375baf8c",
+          "observedAt": "2026-10-26T13:38:40.593Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Teemo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/teemo/teemo.bin.json",
+              "sha256": "10d50d2f4967a515dd2603ea73f58513750327a71d9d515708496c74cb00ddcb"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0795d6a5dc4ba5bb"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Anivia",
+        "Poppy"
+      ],
+      "comboId": "anivia-poppy",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "552190e69db8ac90",
+      "baseline": {
+        "Anivia": "52343f9ffaa815a9",
+        "Poppy": "af33a45e62ad30e5"
+      },
+      "anchors": {
+        "Anivia": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "52343f9ffaa815a9",
+          "observedAt": "2026-10-26T13:38:40.305Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Anivia",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/anivia/anivia.bin.json",
+              "sha256": "c0a7fec988a4af4386b82c5eca35a7c895461a4c30f6af5bb772f199387eef79"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d7796f24d403cc8c"
+            }
+          }
+        },
+        "Poppy": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "af33a45e62ad30e5",
+          "observedAt": "2026-10-26T13:38:40.510Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Poppy",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "984283b0f66ff725"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Sion",
+        "Zilean"
+      ],
+      "comboId": "sion-zilean",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "001c2aa5bd494a23",
+      "baseline": {
+        "Sion": "0852586a5d53c2bc",
+        "Zilean": "60f40731a1259a4a"
+      },
+      "anchors": {
+        "Sion": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "0852586a5d53c2bc",
+          "observedAt": "2026-10-26T13:38:40.521Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sion",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
+              "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e93d37d5494eda42"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-10-26T13:38:40.608Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Pantheon",
+        "Braum"
+      ],
+      "comboId": "pantheon-braum",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "abb6cfdb63519f14",
+      "baseline": {
+        "Pantheon": "ade6cc95e4c6b966",
+        "Braum": "ae3aa48403ffcbe5"
+      },
+      "anchors": {
+        "Pantheon": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ade6cc95e4c6b966",
+          "observedAt": "2026-10-26T13:38:40.510Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pantheon",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/pantheon/pantheon.bin.json",
+              "sha256": "0acb5fa598525639a78e444a98a3e50cc46533843446d17657921c3639dd23df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0ab565075cf8e870"
+            }
+          }
+        },
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -28373,7 +28641,7 @@
     [
       "Anivia",
       "Poppy",
-      "冰鸟 W 造墙，波比 E 撞墙可眩晕；能否撞冰墙待核。"
+      "冰鸟 W 已学可用并放出冰墙后，波比 E 命中同一目标且实际将其推撞仍存在的冰墙才眩晕；角度与退路需安全。"
     ],
     [
       "Brand",
@@ -28383,12 +28651,12 @@
     [
       "Sion",
       "Zilean",
-      "赛恩 E 可击退小兵；基兰炸弹能否随载体移动待核。"
+      "基兰 Q 已学可用且炸弹实际附着敌方小兵后，赛恩 E 命中同一小兵可尝试将载体踢向敌人；爆炸时敌人须在范围内才受伤。"
     ],
     [
       "Pantheon",
       "Braum",
-      "潘森强化 W 后的下一次攻击会多次打击；能否逐次叠布隆被动待核。"
+      "布隆 Q 或普攻实际给敌方英雄挂上第一层后，潘森强化 W 后的攻击可尝试接续叠层；目标可叠层且实际达到四层才眩晕。"
     ],
     [
       "Galio",
@@ -28528,7 +28796,7 @@
     [
       "Cassiopeia",
       "Teemo",
-      "提莫可使目标中毒；蛇女 E 能否利用队友中毒待核。"
+      "提莫 E 已学且普攻命中同一目标后可施毒；蛇女 E 已学可用并命中时目标仍中毒，才有中毒额外伤害与治疗。"
     ],
     [
       "Jhin",
