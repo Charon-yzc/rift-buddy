@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.42",
+  "version": "2026.11.03.43",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -24433,24 +24433,22 @@
     },
     {
       "id": "yasuo-thresh",
-      "carry": "Yasuo",
-      "support": "Thresh",
       "name": "灯笼疾风",
       "style": "fun",
       "tags": [
         "接控击飞",
         "撤退工具"
       ],
-      "why": "锤石 E 的击飞提供亚索大招条件，灯笼帮助近战射手调整位置。",
-      "plan": "亚索补刀；先确认 E 命中，再接大，灯笼留在能点到的位置。",
-      "risk": "钩子命中不等于每次都有合适的大招角度，灯笼也需要主动点击。",
+      "why": "第三方攻略描述锤石 E 的推拉可提供亚索 R 的短暂浮空窗口；双方需命中同一敌方英雄，亚索 R 已学会且可用，并在目标仍浮空、距离与落点安全时尝试。该配合基于技能资料与社区文字推断，未做当版实战验证。",
+      "plan": "亚索负责下路补刀，锤石负责视野和保护。先沟通 E 方向、亚索 R 状态、同一目标及安全退路；锤石 E 命中后，亚索确认敌方英雄仍浮空且自己在可施放距离内，才尝试接 R。窗口可能很短，不保证来得及。锤石 W 灯笼须友军主动点击，放在可安全触及的位置。",
+      "risk": "亚索近战补刀易被消耗或突进，锤石 E 推拉方向不当可能改变目标位置；浮空结束、距离不足、R 不可用或落点危险时不要强接。灯笼需要主动点击且不保证能安全撤离；没有已验证的当版组合胜率。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.19",
-      "reviewedAt": "2026-10-06",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-03",
       "sources": [
         {
           "name": "Riot · 亚索技能资料",
@@ -24463,35 +24461,99 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.19.1/data/zh_CN/champion/Thresh.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-06"
+        },
+        {
+          "name": "Guides Factory · Thresh 与 Yasuo 配合文字（发表日期未知）",
+          "url": "https://guides-factory.com/guides/lol-thresh-guide",
+          "kind": "community",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
         }
       ],
-      "loadouts": {
-        "bottom": "melee-crit",
-        "support": "default"
-      },
       "reviewBaseline": {
-        "champion:Yasuo": "bc4e1091fdb3cfb7",
-        "champion:Thresh": "89037d310bb2f03a",
-        "item:3153": "a6d836f7e8db72c4",
-        "item:6673": "1fcc3aa1128ff960",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3006": "d8d9fde1f7908326",
-        "item:6333": "60ed05035db8354d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8008": "d8ed59948702367b",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8017": "50a79a13bce940f0",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998"
+        "champion:Yasuo": "d36ebea001e3d1cb",
+        "champion:Thresh": "766a02f3f37aa314"
       },
-      "tempo": "teamfight"
+      "tempo": "teamfight",
+      "members": [
+        {
+          "champion": "Yasuo",
+          "role": "bottom",
+          "loadoutId": "default",
+          "job": "负责补刀和输出；确认 R 已学会且可用、目标实际浮空、距离和落点安全，再尝试接大；必要时主动点击可安全到达的灯笼。"
+        },
+        {
+          "champion": "Thresh",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "负责辅助视野和保护；E 已学会时沟通推拉方向并尽量命中同一目标，W 灯笼放在友军可安全点击的位置。"
+        }
+      ],
+      "steps": [
+        "亚索先稳住兵线、血量和补刀，锤石确认视野、敌方突进和退路。",
+        "锤石学会 E 后沟通方向，寻找安全时机命中同一敌方英雄；短暂推拉不保证亚索能赶上。",
+        "亚索 R 已学会且可用时，确认目标仍浮空、距离足够且落点安全，再尝试施放；目标落地、脱离或进场危险就收手。",
+        "锤石 W 已学会且可用时，可把灯笼放在安全可触及位置；友军需主动点击，无法安全点击时选择其他退路。"
+      ],
+      "early": "六级前亚索 R 未学会，不安排接大；双方先以补刀、视野与安全换血为主，锤石 E 须已学会才可使用。",
+      "window": "锤石 E 已学且实际命中敌方英雄，亚索 R 已学可用，同一目标仍处于浮空、处在施放范围内且落点安全；浮空窗口短，不保证接上。",
+      "economy": "亚索负责下路补刀和经验，锤石负责辅助任务与视野；双方使用各自同位置普通参考，装备和符文不是 E 接 R 的必要条件。",
+      "evidence": "技能文本与社区攻略文字推断 · 非当版实战验证",
+      "reviewSourceAnchors": {
+        "Yasuo": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d36ebea001e3d1cb",
+          "observedAt": "2026-10-26T13:38:40.604Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Yasuo",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "5c4d9aa5346ca2f7"
+            }
+          }
+        },
+        "Thresh": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "766a02f3f37aa314",
+          "observedAt": "2026-10-26T13:38:40.594Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Thresh",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "9d08c31186ec4f58"
+            }
+          }
+        }
+      }
     },
     {
       "id": "morgana-twitch-roam",
