@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.46",
+  "version": "2026.11.03.47",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -14367,17 +14367,15 @@
     },
     {
       "id": "sion-zilean",
-      "carry": "Sion",
-      "support": "Zilean",
       "name": "定时坦克",
       "style": "wild",
       "tags": [
         "炸弹载体",
         "复活保护"
       ],
-      "why": "基兰给敌方小兵挂炸弹，赛恩 E 将载体踢向对手；也可用赛恩控制接双炸弹。",
-      "plan": "赛恩补刀，基兰辅助；先约好挂弹小兵和踢兵方向，别同时清掉载体。复活提前预判集火。",
-      "risk": "不能保证每次踢兵都命中；手短，怕持续消耗与百分比伤害。",
+      "why": "社区攻略描述基兰炸弹附着小兵后，赛恩可用 E 踢出载体；爆炸是否伤到敌人取决于实际附着、方向、时间与位置。此配合结合技能资料和社区文字推断，未做当版对局验证。",
+      "plan": "赛恩下路补刀，基兰辅助。先确认 Q/E 已学可用、敌方小兵及退路；基兰 Q 以实际附着该小兵为准，赛恩 E 实际命中同一小兵后尝试向敌人方向踢出。炸弹会按技能状态结算，不保证敌人处于爆炸范围，也不保证眩晕。赛恩 Q 蓄力至少一秒并实际命中可提供控制，再视基兰技能与目标位置尝试双炸弹。",
+      "risk": "炸弹可能附着其他单位，小兵可能被清掉、E 命中其他目标，或敌人离开爆炸范围；不要为踢兵走入危险位置。双炸弹需第二颗实际附着已有炸弹的同一单位且敌人在爆炸范围内，不保证命中或无缝接控。近战补刀容易受压，本组合当版胜率未验证。",
       "partners": [
         "Kindred",
         "Orianna"
@@ -14389,18 +14387,32 @@
           "url": "https://www.reddit.com/r/leagueoflegends/comments/1purqh1/offmeta_botlane_duo_recommendations/",
           "kind": "community",
           "checkedAt": "2026-10-04"
+        },
+        {
+          "name": "MOBAFire · Zileanaire 基兰与赛恩玩法（发表及段落更新日期未知）",
+          "url": "https://www.mobafire.com/league-of-legends/build/zilean-otp-in-depth-zilean-guide-2026-updated-may-644975",
+          "kind": "社区文字，历史组合；非当版实测",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "ARAMOnly · 英雄组合文字（发表日期未知）",
+          "url": "https://www.aramonly.com/lol-champion-combos/",
+          "kind": "社区文字；非当版实测",
+          "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 16.21.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+          "kind": "official",
+          "checkedAt": "2026-11-03"
         }
       ],
-      "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-04",
-      "patch": "16.19",
-      "loadouts": {
-        "bottom": "farm-tank",
-        "support": "zilean-protect"
-      },
+      "evidence": "技能资料与社区攻略文字推断 · 非当版对局验证",
+      "reviewedAt": "2026-11-03",
+      "patch": "16.21",
       "reviewBaseline": {
-        "champion:Sion": "1fe1c1e924fa8453",
-        "champion:Zilean": "48a3289de06161b1",
+        "champion:Sion": "0852586a5d53c2bc",
+        "champion:Zilean": "60f40731a1259a4a",
         "item:3068": "f23565139478f276",
         "item:2504": "ead2f4757e3e6c8c",
         "item:6665": "9693faf50145df4e",
@@ -14411,27 +14423,83 @@
         "rune:8446": "321d014aaeb9ee11",
         "rune:8444": "fbb59f496f94894e",
         "rune:8451": "9e4f8837510e3998",
-        "rune:8304": "aa454bdce540cb11",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "item:2065": "a30335c7d456f5fd",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3107": "53bdbba0a53ca5c6",
-        "item:3158": "72ca672b9221f063",
-        "item:3190": "89cdf2838748dfc7",
-        "rune:8214": "6d3b2bf192d500da",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8210": "e78877d51ff049ea",
-        "rune:8236": "a1bb7cfc15c3d089",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8351": "6594874b24a7b00e"
+        "rune:8347": "def2a55844436c47"
       },
-      "tempo": "protect"
+      "tempo": "protect",
+      "members": [
+        {
+          "champion": "Sion",
+          "role": "bottom",
+          "loadoutId": "manual-sion-bottom-front",
+          "job": "负责补刀；E 已学可用时确认实际携弹敌方小兵和方向后尝试踢出，Q 蓄力至少一秒且实际命中才击飞眩晕。"
+        },
+        {
+          "champion": "Zilean",
+          "role": "support",
+          "loadoutId": "default",
+          "job": "负责辅助视野与时机；Q 确认实际附着小兵再沟通，第二颗炸弹须实际附着已有炸弹的同一单位才能提前引爆并对范围内敌人造成眩晕。"
+        }
+      ],
+      "steps": [
+        "赛恩保线与血量，基兰照看视野；先确认 Q/E 已学可用、敌方小兵、敌人位置和退路。",
+        "基兰 Q 尝试放向目标小兵，确认炸弹实际附着；赛恩 E 尝试命中同一敌方小兵并向敌人方向踢出。载体未被命中、位置变化或炸弹未覆盖敌人时不按命中计算。",
+        "赛恩 Q 已学可用时至少蓄力一秒并实际命中，才会击飞眩晕；基兰可视冷却和实际位置尝试双炸弹，第二颗须实际附着已有炸弹的同一单位，只有爆炸范围内敌人才会眩晕。",
+        "基兰 R 已学可用时可预判施给友方英雄；仅在保护效果仍存续且该英雄将阵亡时触发复活。敌人脱离、技能不可用或退路不安全时收手。"
+      ],
+      "early": "双方先学会基兰 Q 与赛恩 E 才能尝试携弹小兵；近战补刀优先保血量，不必等六级。双炸弹取决于技能冷却、实际附着及爆炸范围。",
+      "window": "基兰 Q 与赛恩 E 已学可用，炸弹实际附着敌方小兵，赛恩能安全命中同一载体且方向成立；是否伤到敌人取决于炸弹结算时的实际位置。",
+      "economy": "赛恩负责下路补刀，基兰承担辅助经济与视野；赛恩使用明确标注的人工下路参考，基兰使用普通辅助位置参考。装备和符文不是携弹踢兵的必要条件。",
+      "reviewSourceAnchors": {
+        "Sion": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "0852586a5d53c2bc",
+          "observedAt": "2026-10-26T13:38:40.521Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Sion",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sion/sion.bin.json",
+              "sha256": "d78a9dc86390b3f25099939467de83f4cce5d5e4dc5fd171237ae84ded0d869d"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e93d37d5494eda42"
+            }
+          }
+        },
+        "Zilean": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "60f40731a1259a4a",
+          "observedAt": "2026-10-26T13:38:40.608Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zilean",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "3e2480aa7362c964"
+            }
+          }
+        }
+      }
     },
     {
       "id": "pantheon-braum",
