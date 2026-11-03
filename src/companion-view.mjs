@@ -83,7 +83,7 @@ export function companionPlanView(data,plan,favorites=[],{surface='companion',it
 export function companionView({data,client,hexRound=null,enemyRoles=[],displayedRoster=null,slots,unassigned,enemy=[],bans=[],scope,soloRole,playerPosition=null,style,tab,results,ballotKeys=[],generating,error,preparation,plan=preparation,favorites=[],configurationStatus={},applied=false,guideAutoShow=true,appVersion='',preferences={},room=null,roomContent='',rankings='',activePlan=null,pairRefresh={},overlap,recovery,adoptedShare='',draftNotice='',preparationStatus=null,taskControls='',taskPlan=null,taskComparing=false,claimingPosition=false,showAllCandidates=false,preselection=null,connectionBusy=false}){
  if(client.mode?.id==='hex')return hexCompanionView({data,client,slots,round:hexRound,tab,plan,favorites,configurationStatus,roomContent,preferences,connectionBusy});
  const ranked=rankedDraftPolicy(client).ranked,includePreselected=!ranked&&preferences.includePreselected===true;
- const hero=id=>data.champions.find(c=>c.id===id),analysis=analyzeTeam(slots,data.champions),live=clientDraftStatus(client,slots,data.champions);
+ const hero=id=>data.champions.find(c=>c.id===id),analysis=analyzeTeam(slots,data.champions,{catalogStatus:data.catalogInfo?.status,patch:data.patch}),live=clientDraftStatus(client,slots,data.champions);
  const own=preparation?.own,b=preparation?.build;
  const heroAction=(id,role)=>companionHeroAction(client,hero(id),preferences.clickPrepare!==false);
  const assigned=CLIENT_POSITION_ROLES[String(client.session?.myTeam?.find(p=>p.cellId===client.session.localPlayerCellId)?.assignedPosition||'').toUpperCase()];

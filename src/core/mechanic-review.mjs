@@ -11,4 +11,8 @@ export function mechanicReview(champion,patch=champion?.combatStatsSource?.patch
  if(review.schema===2)return mechanicSourceMatches(champion,patch,review.sourceAnchors?.[champion.id],legacy)?'current':'pending-review';
  return review.schema===1&&!champion.mechanicSource?'current':'pending-review';
 }
-export function reviewedCatalogEntry(entry,status={},patch){return !!entry&&!status?.[entry.id]?.invalid&&!status?.[entry.id]?.stale&&(!patch||entry.patch===patch);}
+export function reviewedCatalogEntry(entry,status,patch){
+ if(!entry||typeof entry.id!=='string'||typeof patch!=='string'||!patch||entry.patch!==patch||!status||typeof status!=='object'||Array.isArray(status)||!Object.hasOwn(status,entry.id))return false;
+ const review=status[entry.id];
+ return !!review&&typeof review==='object'&&!Array.isArray(review)&&['invalid','stale','patch'].every(key=>Object.hasOwn(review,key))&&review.invalid===false&&review.stale===false&&review.patch===patch;
+}
