@@ -111,8 +111,8 @@ export function duoPlay(duo,data,{champion,role}={}){
  };
  return {kind:'duo',id:duo.id,patch:ROLE_PLAYS_PATCH,reviewedAt:ROLE_PLAYS_REVIEWED_AT,stale:data.patch!==ROLE_PLAYS_PATCH,stages,window,economy,
   early:duo.early||stages.opening.steps.join('；'),ownJob:ownTask?.key||null,steps:stages.key.steps,risk:exit,
-  source:'Riot 英雄机制 · 人工分工与条件顺序，未经组合对局统计验证',
-  sources:[carry,support].map(c=>({name:'Riot · '+c.name+'技能机制',url:`https://ddragon.leagueoflegends.com/cdn/${encodeURIComponent(data.version)}/data/zh_CN/champion/${c.id}.json`,kind:'技能依据',checkedAt:ROLE_PLAYS_REVIEWED_AT}))};
+  source:'组合库整理 · 人工分工与条件顺序，未经组合对局统计验证',
+  sources:duo.sources||[]};
 }
 export function duoPlayText(play,currentPatch=play?.currentPatch){
  if(!play)return '';
