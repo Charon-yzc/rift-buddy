@@ -535,10 +535,6 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
  return {pool:[...preserved.values(),...sorted.filter(entry=>!preserved.has(signature(entry.slots))).slice(0,Math.max(0,240-preserved.size))].sort(order),anchors};
  };
  let {pool,anchors}=makePool(sorted,unique);
- // Reserve a fixed discovery position in the ordered stream, rather than
- // replacing each requested page's last result. Page size and offset must
- // never change which earlier candidates exist.
- const discoveryIndex=4;
  let count=Math.min(Math.max(0,limit+offset),pool.length);
  let preferencePriority=Math.max(...pool.map(entry=>Number(!!matching.get(entry)))),preferencePool=pool.filter(entry=>Number(!!matching.get(entry))===preferencePriority);
  const preferencePage=[];let selectionWeights=exploration,preferenceNotice='';
@@ -582,8 +578,6 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
    return novelty(b)-novelty(a)||signature(a.slots).localeCompare(signature(b.slots));
   })[0]:null;
   if(authoredDiscovery){chosen.push(pool.splice(pool.indexOf(authoredDiscovery),1)[0]);continue;}
-  const discovery=i===discoveryIndex&&creativeBySig.size&&!chosen.some(entry=>entry.creative)?pool.filter(entry=>entry.creative&&(!stylePolicy||priority(entry)===priorityCeiling)).sort((a,b)=>b.score-a.score||signature(a.slots).localeCompare(signature(b.slots)))[0]:null;
-  if(discovery){chosen.push(pool.splice(pool.indexOf(discovery),1)[0]);continue;}
   for(let j=0;j<pool.length;j++) {
    const entry=pool[j];
    if(botDiscovery?.size&&!botDiscovery.has(entry))continue;
