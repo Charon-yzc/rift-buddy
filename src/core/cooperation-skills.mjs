@@ -182,7 +182,7 @@ export const COOPERATION_SKILLS={
 
 const memberKey=m=>m.role+':'+m.champion;
 const source=id=>`https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/${id}.json`;
-export function createSkillCooperation(byId,{isCurrent=()=>false}={}){
+export function createSkillCooperation(byId,{isCurrent=()=>false,cacheLimit=Infinity}={}){
  const cache=new Map(),name=id=>byId.get(id).name;
  function edges(members){
   if(members.some(m=>!COOPERATION_SKILLS[m.champion]||!byId.has(m.champion)||!isCurrent(m.champion)))return null;
@@ -196,7 +196,7 @@ export function createSkillCooperation(byId,{isCurrent=()=>false}={}){
     step:`${name(leader.champion)}：${setup[3]} ${name(ally.champion)}：${follow[0]}`,
     condition:`相关技能已学会可用，双方实际到位。${setup[4]} ${name(ally.champion)}：${follow[1]}`,
     failure:`${setup[2]} ${name(ally.champion)}：${follow[2]} 先手未实际成功就取消跟进。`,
-    current:true,control:true,tempo:'teamfight',patch:SKILL_COOPERATION_PATCH,reviewedAt:SKILL_COOPERATION_REVIEWED_AT,sourceUrls:[source(leader.champion),source(ally.champion)]};cache.set(identity,edge);return edge;
+    current:true,control:true,tempo:'teamfight',patch:SKILL_COOPERATION_PATCH,reviewedAt:SKILL_COOPERATION_REVIEWED_AT,sourceUrls:[source(leader.champion),source(ally.champion)]};if(cache.size>=cacheLimit)cache.clear();cache.set(identity,edge);return edge;
   });
  }
  function coordination(members,edges){
@@ -219,5 +219,5 @@ export function createSkillCooperation(byId,{isCurrent=()=>false}={}){
    failure:`${name(ally.champion)}：${row[2]} 双人条件不成立或第三人无法到位就取消额外跟进，不强行改为三人开团。`,
    current:true,control:false,tempo:pair.tempo,patch:SKILL_COOPERATION_PATCH,reviewedAt:SKILL_COOPERATION_REVIEWED_AT,sourceUrls:[source(pair.a),source(ally.champion)]};
  }
- return {edges,coordination,followup};
+ return {edges,coordination,followup,clearCache:()=>cache.clear()};
 }

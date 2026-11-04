@@ -2,14 +2,15 @@ import {comboKey,comboMembers} from './core/combo-members.mjs';
 import {reviewedCatalogEntry} from './core/mechanic-review.mjs';
 import {ROLES} from './core/rules.mjs';
 import {escape as e} from './ui.mjs';
+import {comboSourceLinks} from './build-options-view.mjs';
 
 // Display evidence is always resolved from the current catalog, not a saved
 // plan or recommendation snapshot. Public hovers are not confirmed members.
 export function reviewedPartySubgroups(slots,data,{scope='party',excludeId=''}={}){
  if(!['party','context'].includes(scope)||!Array.isArray(slots))return [];
- const party=slots.filter(s=>s.party);
- if(party.length<3||party.length>5)return [];
- return (data.catalog?.duos||[]).filter(group=>group.id!==excludeId&&reviewedCatalogEntry(group,data.catalogInfo?.status,data.patch)&&comboMembers(group).every(m=>party.some(s=>!s.publicIntent&&s.role===m.role&&s.champion===m.champion)));
+ const party=scope==='context'?slots:slots.filter(s=>s.party);
+ if(party.length<2||party.length>5)return [];
+ return [...(data.catalog?.duos||[]),...(data.catalog?.trios||[])].filter(group=>group.id!==excludeId&&comboMembers(group).length<=party.length&&reviewedCatalogEntry(group,data.catalogInfo?.status,data.patch)&&comboMembers(group).every(m=>party.some(s=>!s.publicIntent&&s.role===m.role&&s.champion===m.champion)));
 }
 
 // A curated plan may cover only part of a larger displayed lineup.
@@ -26,22 +27,22 @@ export function subgroupNotice(plan,slots,data,displayed=slots){const text=subgr
 function currentReviewedSubgroups(groups,slots,data){
  if(!Array.isArray(groups)||!Array.isArray(slots))return [];
  return groups.flatMap(previous=>{
-  const group=data.catalog?.duos?.find(entry=>entry.id===previous.id);
+  const group=[...(data.catalog?.duos||[]),...(data.catalog?.trios||[])].find(entry=>entry.id===previous.id);
   if(!group||comboKey(group)!==comboKey(previous)||!reviewedCatalogEntry(group,data.catalogInfo?.status,data.patch))return [];
   const members=comboMembers(group);
-  if(members.length!==2||!members.every(m=>slots.some(s=>s.party&&!s.publicIntent&&s.role===m.role&&s.champion===m.champion)))return [];
+  if(![2,3].includes(members.length)||!members.every(m=>slots.some(s=>!s.publicIntent&&s.role===m.role&&s.champion===m.champion)))return [];
   return [{group,members}];
  });
 }
 export function reviewedSubgroupsSummary(groups,slots,data){
  const rows=currentReviewedSubgroups(groups,slots,data);
- return rows.length?`<p class="bottom-note">已复核双人配合 ${rows.length} 套：${rows.map(({group})=>e(group.name)).join('、')}</p>`:'';
+ return rows.length?`<p class="bottom-note">组合依据 ${rows.length} 套：${rows.map(({group})=>e(group.name)).join('、')}</p>`:'';
 }
-// Separate reviewed two-member evidence from the full-party execution plan.
+// Keep each two/three-member source separate from a full-party plan.
 export function reviewedSubgroupsNotice(groups,slots,data){
  const rows=currentReviewedSubgroups(groups,slots,data).map(({group,members})=>{
-  const names=members.map(m=>`${ROLES.find(r=>r.id===m.role)?.name||m.role}·${data.champions.find(c=>c.id===m.champion)?.name||m.champion}`).join('、');
-  return `<li><b>${e(group.name)}</b>：${e(names)}。${e(group.why)} <small>资料 ${e(group.patch)} · ${e(group.reviewedAt)} 复核</small></li>`;
+  const names=members.map(m=>`${ROLES.find(r=>r.id===m.role)?.name||m.role}·${data.champions.find(c=>c.id===m.champion)?.name||m.champion}${slots.find(slot=>slot.role===m.role)?.party===false?'（队友）':''}`).join('、');
+  return `<li><b>${e(group.name)}</b>：${e(names)}。${e(group.why)} <small>资料 ${e(group.patch)} · ${e(group.reviewedAt)} 复核</small>${comboSourceLinks(group.sources||[])}</li>`;
  });
- return rows.length?`<section class="bottom-note"><b>已复核的局部双人配合</b><ul>${rows.join('')}</ul><p>只涵盖所列两人；其他成员不在这段配合内，请另行确认分工。机制复核不代表组合实战结果或胜率。</p></section>`:'';
+ return rows.length?`<section class="bottom-note"><b>组合依据</b><ul>${rows.join('')}</ul><p>各套只对应所列成员，不额外推定其他人的职责或实战胜率。</p></section>`:'';
 }

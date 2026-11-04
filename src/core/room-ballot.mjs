@@ -1,6 +1,6 @@
 import {proposalKey,ballotVotes} from './room.mjs';
 import {CROSS_SYNERGIES,RULES_PATCH,RULES_VERSION} from './rules.mjs';
-import {analyzeTeam} from './recommend.mjs';
+import {analyzeTeam,selectedCatalogCombo} from './recommend.mjs';
 import {createCooperationGraph} from './cooperation.mjs';
 import {compositionFit} from './composition-fit.mjs';
 import {effectiveDraftScope,CLIENT_POSITION_ROLES} from './draft.mjs';
@@ -98,7 +98,12 @@ export function lineupFit(lineup,current,champions,options={}){
   if(role&&([...range.slots,...references].some(row=>row.role===role&&row.champion&&row.champion!==slot.champion))){referenceConflict=true;continue;}
   references.push({...slot,role,clientCellId:player.cellId,publicIntent:false,referenceOnly:true,locked:false});
  }
- const analysis=analyzeTeam([...range.slots.filter(row=>!references.some(ref=>ref.champion===row.champion)),...references],champions,context,true);
+ const analyzed=[...range.slots.filter(row=>!references.some(ref=>ref.champion===row.champion)),...references];
+ if(options.catalogSelectionId){
+  if(!selectedCatalogCombo(analyzed,options.catalogSelectionId,options.catalogStatus,options.patch))return {score:0,rawScore:0,known:0,size:range.expectedSize,compatible:false,exact:false,scope:range.scope,breakdown:[],strengths:[],gaps:['组合来源与当前阵容不一致'],reason:'组合来源已变化，请重新推荐'};
+  context.catalogSelectionId=options.catalogSelectionId;
+ }
+ const analysis=analyzeTeam(analyzed,champions,context,true);
  // analyzeTeam omits unknown IDs; retain their planned place in expectedSize.
  const fit=compositionFit(analysis,context.cooperationGraph,{expectedSize:range.expectedSize+references.filter(ref=>!range.slots.some(row=>row.champion===ref.champion)).length});
  const cap=compatible&&!referenceConflict?(exact?100:45):20,score=fit.score===null?null:Math.min(cap,fit.score),rawScore=fit.score===null?0:Math.min(cap,fit.rawScore);
