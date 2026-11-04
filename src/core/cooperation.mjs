@@ -52,8 +52,9 @@ const FAMILIES=[
   failure:'目标离开爆开范围就没有这段减速；不要为了引爆追进危险位置，Q 命中也不要求全员强行冲入。'},
 ];
 
-export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RULES_PATCH,currentPatch=champions[0]?.combatStatsSource?.patch,reviewedAt=RULES_VERSION}={}){
+export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RULES_PATCH,currentPatch=champions[0]?.combatStatsSource?.patch,reviewedAt=RULES_VERSION,cacheLimit=Infinity}={}){
  const byId=new Map(champions.map(c=>[c.id,c])),legacy=new Map(),cache=new Map(),profiles=new Map(),pairs=new Map(COOPERATION_PAIRS.map(row=>[pairKey(row[0],row[1]),row]));
+ let cachedPairs=0;
  for(const [a,b,text] of links)if(byId.has(a)&&byId.has(b))legacy.set(pairKey(a,b),{id:'catalog:'+pairKey(a,b),family:'catalog',name:'已整理两两联动',a,b,step:text,condition:'双方实际具备对应技能与接近条件后再衔接。',failure:'原说明没有确认当前技能可用或对手站位；关键技能落空就停止强接。',patch,reviewedAt,current:false,tempo:'teamfight',sourceUrls:[]});
  const reviews=new Map(),isCurrent=id=>{if(!reviews.has(id))reviews.set(id,mechanicReview(byId.get(id),currentPatch));return reviews.get(id)==='current';};
  const prof=m=>{const k=key(m);if(!profiles.has(k)){const value=profile(byId.get(m.champion),m.role);profiles.set(k,{...value,reviewed:value.reviewed&&isCurrent(m.champion),reviewState:reviews.get(m.champion)});}return profiles.get(k);};
@@ -78,9 +79,11 @@ export function createCooperationGraph(champions,{links=CROSS_SYNERGIES,patch=RU
   found||=legacy.get(pairKey(a.champion,b.champion))||null;
   // Cache both directions before canonicalization on the next lookup. Search
   // revisits the same role/hero pairs; keep this cache inside this one graph.
-  if(!cache.has(ak))cache.set(ak,new Map());if(!cache.has(bk))cache.set(bk,new Map());cache.get(ak).set(bk,found);cache.get(bk).set(ak,found);return found;
+  if(cachedPairs>=cacheLimit){cache.clear();cachedPairs=0;}
+  if(!cache.has(ak))cache.set(ak,new Map());if(!cache.has(bk))cache.set(bk,new Map());cache.get(ak).set(bk,found);cache.get(bk).set(ak,found);cachedPairs++;return found;
  };
- return {edge,profile:prof,byId,currentPatch,skills:createSkillCooperation(byId,{isCurrent}),fitCache:new Map()};
+ const skills=createSkillCooperation(byId,{isCurrent,cacheLimit}),fitCache=new Map();
+ return {edge,profile:prof,byId,currentPatch,skills,fitCache,clearCaches(){cache.clear();cachedPairs=0;profiles.clear();reviews.clear();skills.clearCache();fitCache.clear();}};
 }
 
 function connectedEdges(members,graph,pairs=null){

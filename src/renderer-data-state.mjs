@@ -30,7 +30,7 @@ export function createRendererDataState({getSource,requestSnapshot,beforeApply=(
   // Prepare without changing active module indexes or the accepted watermark.
   if(change.catalogChanged)next.catalog=catalog.prepare(raw.catalog||BUNDLED_CATALOG);
   else next.catalog=current.catalog;
-  if(!next.catalogInfo||(change.baseChanged||change.catalogChanged)&&!Object.hasOwn(changes,'catalogInfo'))next.catalogInfo={...next.catalogInfo,...catalog.inspect(next.catalog,next),version:next.catalog.version,baseKind:'unknown',linkOrigins:[],linkConfigOverrides:{},linkStatus:{}};
+  if(!next.catalogInfo||(change.baseChanged||change.catalogChanged)&&!Object.hasOwn(changes,'catalogInfo'))next.catalogInfo={...next.catalogInfo,...catalog.inspect(next.catalog,next),version:next.catalog.version,baseKind:'unknown',combinationOrigins:{},linkOrigins:[],linkConfigOverrides:{},linkStatus:{}};
   if(change.sourceChanged){const projected={...raw};projectSource(projected,source);next.buildSources=projected.buildSources;next.builds=projected.builds;next.buildSource=projected.buildSource;}
   // Only narrow a proof supplied by the authoritative store. Source changes
   // can invalidate or restore local usability; they cannot create a review.

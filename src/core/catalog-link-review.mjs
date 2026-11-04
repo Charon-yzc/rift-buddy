@@ -39,26 +39,27 @@ export function linkReviewStatuses(catalog,{patch,champions,mechanicSourceRevisi
  return result;
 }
 
-export function reviewedCatalogLinks(catalog,{patch,status,baseKind,publicIds}={}){
+function reviewedCatalogLinkRecords(catalog,{patch,status,baseKind,publicIds}={}){
  if(!catalog||!['bundled','community'].includes(baseKind)||!Array.isArray(publicIds)||typeof patch!=='string')return [];
  const approved=new Set(publicIds),links=new Map(catalog.links.map(link=>[pairKey(link.slice(0,2)),link])),out=[];
  for(const review of catalog.linkReviews||[]){
   const key=pairKey(review.heroes),link=links.get(key),state=status?.[key];
   if(review.patch!==patch||!approved.has(review.comboId)||!state||state.invalid!==false||state.stale!==false||!link||fingerprint(link)!==review.linkFingerprint)continue;
-  out.push(link);
+  out.push({link,review});
  }
  return out;
 }
+export function reviewedCatalogLinks(catalog,context={}){return reviewedCatalogLinkRecords(catalog,context).map(row=>row.link);}
 
 // A link is a two-hero observation, not a complete executable plan. Keep its
 // owner's positions when using it to explore candidate lineups.
 export function reviewedLinkOwners(catalog,context={}){
- const approved=new Set(reviewedCatalogLinks(catalog,context).map(link=>pairKey(link.slice(0,2))));
- if(!approved.size)return [];
+ const approved=reviewedCatalogLinkRecords(catalog,context);
+ if(!approved.length)return [];
  const duos=new Map(catalog.duos.map(entry=>[entry.id,entry])),out=[];
- for(const review of catalog.linkReviews||[]){
+ for(const {review} of approved){
   const key=pairKey(review.heroes),entry=duos.get(review.comboId),members=comboMembers(entry);
-  if(!approved.has(key)||members.length!==2||pairKey(members.map(m=>m.champion))!==key||members[0].role===members[1].role)continue;
+  if(members.length!==2||pairKey(members.map(m=>m.champion))!==key||members[0].role===members[1].role)continue;
   out.push(members.map(({role,champion})=>({role,champion})));
  }
  return out;

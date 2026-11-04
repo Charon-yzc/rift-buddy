@@ -3,8 +3,8 @@ import {conventionalRole} from './rules.mjs';
 
 // Use the very same public-roster projection as the visible score, including
 // incomplete evidence and fixed-position conflict caps. Never use grade.score.
-export function recommendationFit(entry,{slots,champions,scope,soloRole,clientSession,party,includePreselected,patch,catalogStatus}={}){
- return lineupFit(entry.slots,slots,champions,{scope:scope||entry.scope,soloRole:soloRole||entry.soloRole||entry.targets?.[0],clientSession,party,includePreselected,editableRoles:entry.targets,patch,catalogStatus});
+export function recommendationFit(entry,{slots,champions,scope,soloRole,clientSession,party,includePreselected,patch,catalogStatus,context}={}){
+ return lineupFit(entry.slots,slots,champions,{scope:scope||entry.scope,soloRole:soloRole||entry.soloRole||entry.targets?.[0],clientSession,party,includePreselected,editableRoles:entry.targets,patch,catalogStatus,catalogSelectionId:entry.communityCombinationId,context});
 }
 export const meetsRecommendationFit=(fit,minimum=60)=>!Number.isFinite(fit.score)||fit.score>=minimum;
 

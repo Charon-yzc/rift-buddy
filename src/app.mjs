@@ -22,6 +22,7 @@ import {resolvedRankedDraft,enemyRolesSignature} from './core/enemy-roles.mjs';
 import {createPreparationContext} from './core/preparation-context.mjs';
 import {createRendererDataState,awaitDataOperation,hasDataRevision} from './renderer-data-state.mjs';
 import {createRecommendationRunner} from './recommendation-runner.mjs';
+import {RECOMMENDATION_FACTORY_FIELDS,recommendationConditionsKey} from './core/recommendation-input.mjs';
 let enemyRolePending=false;
 import {rankedRefreshTargets} from './core/ranked-refresh.mjs';
 import {rankedConfigurationAdvice,adoptRankedConfigurationAdvice} from './core/ranked-configuration.mjs';
@@ -215,9 +216,10 @@ const history=createHistoryController({request:historyRequest,analyze:analyzeAka
  if(change?.type==='detail'){if(change.tabId!==history.state.current)return;if(updateHistoryCards()){if(change.analysisChanged)refreshHistoryAnalysis();return;}}render();if(history.state.searchResults.length)overlay.innerHTML=matchHistorySearchView(privateHistoryState(history.state));if(history.state.error)toast(history.state.streamer?'查询失败，请检查连接':history.state.error,true);}}});
 function acceptChampionUsage(value){
  if(!value||!Number.isSafeInteger(value.revision)||championUsage&&value.revision<=championUsage.revision)return;
+ const accountChanged=!!championUsage&&value.session!==championUsage.session;
  const before=data?recommendationKey(recommendationInput()):null;
  championUsage=value;history.observeClient({...client,historySession:value.session||''});
- if(before&&before!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;if(windowLayout.docked||route==='draft')render();queueCompanionRecommendation();}
+ if(accountChanged||before&&before!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation({releaseFactory:accountChanged});results=[];offset=0;if(data){if(windowLayout.docked||route==='draft')render();queueCompanionRecommendation();}}
  if(route==='history'&&data){if(!patchChampionUsage(app,value,data,{mass:saved.preferences.familiarityMass}))render();history.autoLoadOwn(client,value).catch(error=>toast(error.message,true));}
 }
 const historyTooltips=bindHistoryTooltips({document,getData:()=>data,getGame:element=>{
@@ -341,9 +343,9 @@ async function refreshPairData(){
  finally{pairRefreshes.delete(requestKey);render();}
 }
 let catalogPreview=null,catalogBusy=false,catalogRequest=0,catalogEditorKind="trio",resultDraftSignature="";
-let comboView=null,dragPick=null,draggedAt=0,pendingDragRender=false,activeRecommendation=null,generating=false,recommendationRun=0;
+let comboView=null,dragPick=null,draggedAt=0,pendingDragRender=false,activeRecommendation=null,generating=false,recommendationRun=0,recommendationSearchActive=false,recommendationRunner=null,recommendationFactoryGeneration=0,communityAfter='';
 let cancelRecommendationReveal=()=>{};
-function cancelRecommendation(){cancelRecommendationReveal();recommendationRun++;autoRecommendationKey='';if(activeRecommendation){activeRecommendation.cancel();activeRecommendation=null;}generating=false;}
+function cancelRecommendation({releaseFactory=false}={}){cancelRecommendationReveal();recommendationRun++;autoRecommendationKey='';recommendationSearchActive=false;if(activeRecommendation){activeRecommendation.cancel();activeRecommendation=null;}if(releaseFactory){recommendationRunner?.dispose();communityAfter='';}else recommendationRunner?.invalidate();generating=false;}
 let client={connected:false,phase:'Offline',message:'正在检查客户端…'},syncing=false,unassigned=[],enemy=[],clientBans=[];
 let picker=null,buildView=null,detailResult=null,updating=false,pinned=false;
 let libraryQuery='',libraryRole='all',hexQuery='',hexRarity='all',hexHero=null,hexSelected=[],hexSelectedOnly=false,hexForHero=false;
@@ -459,7 +461,7 @@ function queueCompanionRecommendation(){
  clearTimeout(autoRecommendTimer);
  if((!windowLayout.docked&&route!=='draft')||generating||syncing||['party','context'].includes(scope)&&!slots.some(slot=>slot.party)||['InProgress','GameStart','Reconnect','WaitingForStats','PreEndOfGame','EndOfGame'].includes(client.phase)||client.mode?.id==='hex')return;
  const key=recommendationKey(recommendationInput());if(key===autoRecommendationKey||key===resultsSignature&&results.length)return;
- autoRecommendTimer=setTimeout(()=>{if((!windowLayout.docked&&route!=='draft')||generating||syncing)return;autoRecommendationKey=key;generate(false,true);},250);
+ autoRecommendTimer=setTimeout(()=>{if((!windowLayout.docked&&route!=='draft')||generating||syncing)return;autoRecommendationKey=key;generate(false,true);},80);
 }
 function acceptWindowLayout(value){if(JSON.stringify(windowLayout)===JSON.stringify(value))return;windowLayout=value;render();queueCompanionRecommendation();}
 const refreshingBuilds=new Map(),refreshAttempts=new Map(),buildErrors=new Map();let recommendationError='';
@@ -691,10 +693,11 @@ const dataState=createRendererDataState({getSource:()=>saved?.preferences.buildS
  beforeApply:change=>dataReady&&change.origin==='remote'&&!change.statusOnly?recommendationKey(recommendationInput()):null,
  onChange:acceptDataState,onError:error=>{if(dataReady)toast('资料同步未完成，继续保留已接受的资料：'+error.message,true);}});
 function acceptDataState(change,before){
+ const factoryChanged=change.baseChanged||change.catalogChanged||change.sourceChanged||change.keys.includes('pairStatistics');if(factoryChanged)recommendationFactoryGeneration++;
  data=change.data;bindPlayerBuildPreferences();
  if(!dataReady||change.origin!=='remote')return;
  if(change.statusOnly){if(route==='settings')render();return;}
- if(change.baseChanged||change.catalogChanged||before!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;resultsSignature='';}
+ if(factoryChanged||before!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;resultsSignature='';}
  render();if(buildView)renderBuild();if(change.baseChanged)repaintNationalDetail();queueCompanionRecommendation();
 }
 function acceptSharedData(value){dataState.accept(value);}
@@ -1610,7 +1613,7 @@ function currentRoleEvidence(){
  if(!roleEvidenceCache||keys.some((value,index)=>value!==roleEvidenceCache.keys[index]))roleEvidenceCache={keys,value:buildRoleEvidence(data)};
  return roleEvidenceCache.value;
 }
-function recommendationInput(refreshFamiliarity=false){
+function recommendationInput(refreshFamiliarity=false,operation=null){
  // A recommendation keeps the last range for this exact public draft. Its
  // display freshness and every client write still require a fresh read.
  const at=Date.parse(client.eligibility?.receivedAt),now=Date.now(),referenceTime=Number.isFinite(at)?Math.min(now,at+15000):now;
@@ -1625,32 +1628,77 @@ function recommendationInput(refreshFamiliarity=false){
  const knownPicks=new Set((contextSession?.myTeam||[]).map(player=>data.champions.find(champion=>Number(champion.key)===Number(player.championId))?.id).filter(Boolean));
  const publicPicks=[...new Set([...unassigned.map(p=>p.champion),...unassignedPublicPicks(base,contextSession,data.champions).map(p=>p.champion)])].filter(id=>!contextSession||knownPicks.has(id));
  const liveFamiliarity=roomFamiliarityContext({client,room,slots:contextSlots,scope,ownRole:taskOwnRole(),summary:championUsage,mass:saved.preferences.familiarityMass});
- const input={includePreselected,rankedDraft:resolvedRankedDraft(client,data,saved.draft?.enemyRoles),randomSeed:String(publicClientGameId(client)||recommendationSessionSeed)+(recommendationBatch?":batch:"+recommendationBatch:""),clientSession:contextSession,party:currentParty(),soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,linkReviewContext:{baseKind:data.catalogInfo?.baseKind,publicIds:data.catalogInfo?.linkOrigins,status:data.catalogInfo?.linkStatus},excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:localPickLocked(session)?eligibility.confirmedPick:null,publicPicks,enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:currentPlan,catalogChoice:draftComparing?null:saved.draft?.catalogChoice,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
+ const input={includePreselected,rankedDraft:resolvedRankedDraft(client,data,saved.draft?.enemyRoles),randomSeed:String(publicClientGameId(client)||recommendationSessionSeed)+(recommendationBatch?":batch:"+recommendationBatch:""),clientSession:contextSession,party:currentParty(),soloRole,soloChampion:scope==='solo'?(own?.id||base.find(s=>s.role===soloRole&&s.locked)?.champion||null):null,slots:contextSlots,champions:data.champions,builds:data.builds,pairStatistics:data.pairStatistics,buildSource:data.buildSource,patch:data.patch,sourceRoles:currentRoleEvidence(),style,scope,pool:saved.preferences.pool,poolMode:saved.preferences.poolMode,play:saved.preferences.play,rolePools:saved.preferences.rolePools,catalog:data.catalog,catalogStatus:data.catalogInfo?.status,linkReviewContext:{baseKind:data.catalogInfo?.baseKind,combinationOrigins:data.catalogInfo?.combinationOrigins,publicIds:data.catalogInfo?.linkOrigins,status:data.catalogInfo?.linkStatus},excluded:[...saved.excluded],publicBans:clientBans,eligibleByRole:eligibility.eligibleByRole,confirmedPick:localPickLocked(session)?eligibility.confirmedPick:null,publicPicks,enemy:client.session?.allowDuplicatePicks===false?publicMatchupIds():[],visibleEnemies:publicMatchupIds(),creativePlan:draftComparing?null:currentPlan,catalogChoice:draftComparing?null:saved.draft?.catalogChoice,version:data.version,catalogVersion:data.catalog.version,limit:6,offset};
  input.fitSlots=recommendationDraft(slots,client.connected?client.session:null,data.champions,{ownRole:taskOwnRole(),party:currentParty()});input.fitSession=client.connected?client.session:null;
- const condition=recommendationKey(input)+'|'+liveFamiliarity.bindingKey;
- return {...input,...recommendationFamiliarity.read({...liveFamiliarity,condition},refreshFamiliarity)};
+ const captured=operation?.captured===true;
+ if(operation){
+  const identity=recommendationConditionsKey(input),refs=RECOMMENDATION_FACTORY_FIELDS.map(field=>input[field]);
+  if(captured){
+   if(operation.generation!==recommendationFactoryGeneration||operation.identity!==identity||operation.binding!==liveFamiliarity.bindingKey||operation.seed!==input.randomSeed||refs.some((value,index)=>value!==operation.refs[index]))return null;
+  }else Object.assign(operation,{generation:recommendationFactoryGeneration,identity,binding:liveFamiliarity.bindingKey,seed:input.randomSeed,refs});
+ }
+ // Reuse only this operation's already confirmed freeze condition. Current
+ // probes still rebuild all effective picks/roles/owners and verify data
+ // revision plus references, without repeatedly sorting the whole build set.
+ const condition=captured?operation.condition:recommendationKey(input)+'|'+liveFamiliarity.bindingKey;
+ if(operation&&!captured)Object.assign(operation,{captured:true,condition});
+ return {...input,factoryGeneration:recommendationFactoryGeneration,communityAfter,...recommendationFamiliarity.read({...liveFamiliarity,condition},refreshFamiliarity)};
 }
 function useCatalogResult(result){if(hasDataRevision(result))return;cancelRecommendation();dataState.local({catalog:result.catalog,catalogInfo:result.info});results=[];offset=0;render();}
 function rolePoolsDialog(){closeOverlay();overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal" role="dialog" aria-modal="true" aria-label="各位置英雄池"><header class="modal-header"><div><h2>各位置英雄池</h2><p>只限制本次需要推荐的位置，保留已经锁定的英雄。</p></div>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="panel-body">${ROLES.map(r=>`<div class="setting-row"><div><b>${r.name}</b><p>${saved.preferences.rolePools[r.id].heroes.map(id=>champ(id)?.name||id).join('、')||'未设置英雄池'}</p></div><select class="select" data-role-pool-mode="${r.id}" aria-label="${r.name}英雄池模式">${[['off','全部英雄'],['prefer','优先这个池'],['only','仅使用这个池']].map(([id,name])=>`<option value="${id}" ${saved.preferences.rolePools[r.id].mode===id?'selected':''}>${name}</option>`).join('')}</select>${button('role-pool-edit','选英雄','','small',`data-role="${r.id}"`)}</div>`).join('')}<p class="bottom-note">与全局英雄池同时限制时取交集；空池设为“仅使用”会提示你调整。</p></div></section></div>`;}
 function showAugment(id){refreshHexNotes();if(!isCurrentHexData(data)){toast(HEX_DATA_PENDING,true);return;}const activeHero=windowLayout.docked?currentHexRound()?.hero||hexHero:hexHero;const poolRow=hexHeroPool({data,hero:activeHero,round:hexPoolRound,mechanism:hexMechanism}).rows.find(r=>r.id===id);const actual=hexOptions.includes(id)||hexOwned.includes(id),a=hexAugmentReference((actual?data.augments:hexHandbookAugments(data)).find(x=>x.id===id),{patch:data.patch});if(!a||!hexAugmentAcquisition(data,a).displayable)return;const acquisition=hexAugmentAcquisition(data,a),detail=hexAugmentDetail(a);picker=null;buildView=null;detailResult=null;overlay.innerHTML=`<div class="modal-backdrop" data-backdrop="true"><section class="modal augment-modal" style="width:530px" role="dialog" aria-modal="true" aria-label="强化详情" ${currentHexRound()?`data-hex-context="${e(currentHexRound().context)}" data-hex-revision="${currentHexRound().revision}"`:''}><header class="modal-header"><div class="augment-title">${asset('augment',a.id,a.name)}<div><h2>${e(a.name)}</h2><span class="rarity-${a.rarity}">${rarityName[a.rarity]}</span></div></div>${button('close','','close','quiet icon-only','aria-label="关闭"')}</header><div class="panel-body"><p class="section-copy" style="white-space:pre-line">${e(detail.description||'已确认收录于当前海克斯大乱斗模式清单。详细效果尚未补充，以游戏内说明为准。')}</p>${a.review?`<p class="bottom-note">${e(a.review.label)} · ${e(a.review.note)} ${button('link','官方依据 ↗','','quiet small',`data-url="${e(a.review.sourceUrl)}"`)}</p>`:''}${detail.partial?'<p class="bottom-note">部分动态数值和适用技能以局内为准。</p>':''}<div class="callout">${hexPoolBadge(poolRow)}<p>${e(poolRow?.reason||'英雄与轮次资格尚未确认。')}</p>${poolRow?.sourceUrl?button('link','查看池资料来源 ↗','','quiet small',`data-url="${e(poolRow.sourceUrl)}"`):''}</div></div>${acquisition.ordinaryOption?`<footer class="modal-footer augment-actions">${button('compare-augment',hexOptions.includes(id)?'移出本次比较':'加入本次比较','hex','',`data-id="${id}"`)}${button('own-augment',hexOwned.includes(id)?'本局已选':'标记本局已选','check','',`data-id="${id}" ${hexOwned.includes(id)?'disabled':''}`)}${hexCurrentAugmentIds(data,[id]).length?button('toggle-augment',hexSelected.includes(id)?'移出我的备选':'加入我的备选',hexSelected.includes(id)?'close':'check','primary',`data-id="${id}"`):''}</footer>`:''}</section></div>`;}
 
-const recommendationRunner=createRecommendationRunner(()=>new Worker(new URL('./recommend-worker.mjs',import.meta.url),{type:'module'}));
+recommendationRunner=createRecommendationRunner(()=>new Worker(new URL('./recommend-worker.mjs',import.meta.url),{type:'module'}));
 window.addEventListener('pagehide',()=>recommendationRunner.dispose());
-function calculateRecommendation(input){
- const task=recommendationRunner.run(input);activeRecommendation=task;
- return task.promise.finally(()=>{if(activeRecommendation===task)activeRecommendation=null;});
+function calculateRecommendation(input,accept=()=>true,sliceOnly=false){
+ const task=recommendationRunner.run(input,{manualAcceptance:true,sliceOnly,snapshotRevision:input.factoryGeneration});activeRecommendation=task;
+ return task.promise.then(rows=>{
+  // Search progress and the visible page commit together. A response rejected
+  // by the current draft guard destroys the worker instead of skipping rows.
+  try{if(!accept(rows)||!task.accept())throw Object.assign(Error('条件已变化'),{cancelled:true});}catch(error){task.cancel();throw error;}
+  return {rows,search:task.search};
+ }).finally(()=>{if(activeRecommendation===task)activeRecommendation=null;});
 }
 async function generate(next=false,automatic=false){
- if(generating)return;clearTimeout(autoRecommendTimer);autoRecommendTimer=null;cancelRecommendationReveal();recommendationError='';const run=++recommendationRun;let reveal=false;generating=true;render();
+ if(generating)return;clearTimeout(autoRecommendTimer);autoRecommendTimer=null;cancelRecommendationReveal();recommendationError='';const run=++recommendationRun;let reveal=false,retry=false,prepareNextGuard=()=>false;generating=true;render();
  try{
-  let input=recommendationInput(!automatic);const weighted=Object.keys(input.familiarityByRole||{}).length||(input.roomFamiliarity||[]).length;
-  if(next&&weighted)recommendationBatch++;
-  offset=next&&!weighted?offset+6:0;input=recommendationInput();
+  const deadline=performance.now()+1200;
+  if(next)recommendationBatch++;
+  offset=0;const operation={},input=recommendationInput(!automatic,operation);input.continueSearch=next||recommendationSearchActive;input.newRecommendationPage=next;
   const signature=recommendationKey(input);
-  let result=await calculateRecommendation(input);if(!result.length&&offset){offset=0;result=await calculateRecommendation({...input,offset:0});}
-  if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;
-  for(const r of result)resultCreativePlan(r);results=result;showAllCandidates=false;resultsSignature=signature;if(!result.length)recommendationError=weighted?'没有达到60分且符合位置、玩法与英雄偏好的阵容，请调整限制':'没有达到60分且符合当前选人条件的阵容，请调整限制';if(!results.length)toast(recommendationError,true);else reveal=true;
- }catch(err){if(!err.cancelled&&run===recommendationRun){recommendationError=err.message;toast(err.message,true);}}finally{if(run===recommendationRun){generating=false;render();}}
+  const conditionIdentity=recommendationConditionsKey(input);
+  const current=()=>{if(run!==recommendationRun||input.factoryGeneration!==recommendationFactoryGeneration)return false;const fresh=recommendationInput(false,operation);return !!fresh&&conditionIdentity===recommendationConditionsKey(fresh);};
+  prepareNextGuard=()=>resultsSignature===signature&&current();
+  const accept=rows=>{if(!current())return false;for(const row of rows)resultCreativePlan(row);return true;};
+  let page=await calculateRecommendation(input,accept),slices=1;
+  recommendationSearchActive=!!page.search;
+  if(page.search?.restarted)toast('搜索会话已重启，从头查找');
+  let emptyPages=page.search?.complete&&!page.rows.length?1:0;
+  // Each worker slice shares one page-size scoring budget across all lanes.
+  // Pending draws retain their original heroes; a slow draw is never rerolled.
+  while(page.search&&(!page.search.complete||!page.rows.length&&!page.search.exhausted)&&(!page.rows.length||page.search.communityPending)&&(!page.search.prepared||!page.rows.length)&&!page.search.capacity&&emptyPages<3&&slices<192&&performance.now()<deadline){
+   // Yield between slices so client sync, picks and cancellation can run.
+   await new Promise(resolve=>setTimeout(resolve,0));if(!current())throw Object.assign(Error('条件已变化'),{cancelled:true});
+   page=await calculateRecommendation({...input,continueSearch:true},accept,true);slices++;
+   if(page.search?.complete&&!page.rows.length)emptyPages++;
+  }
+  const result=page.rows;
+  if(!current())throw Object.assign(Error('条件已变化'),{cancelled:true});
+  if(result.length&&page.search?.communityAfter)communityAfter=page.search.communityAfter;
+  if(page.search&&!page.search.complete){
+   // A partial page stays owned by the session and is returned again on resume.
+   // Keep the preceding cards if no new draw has completed yet.
+   if(result.length){results=result;showAllCandidates=false;}
+   resultsSignature=signature;
+   if(page.search.capacity){recommendationRunner.dispose();recommendationSearchActive=false;recommendationError='搜索缓存已满，下次重新搜索';}
+   else recommendationError=result.length?'':'暂未找到达标方案，可换一批';
+   return;
+  }
+  if(!result.length&&results.length){resultsSignature=signature;recommendationError=page.search?.preferenceConflict?'英雄偏好与所选玩法无匹配':page.search?.exhausted?'当前范围已搜索完，保留上一批':'暂无新候选，保留上一批';return;}
+  results=result;showAllCandidates=false;resultsSignature=signature;
+  if(page.search?.fallback)recommendationError='暂无所选玩法，显示其他匹配';
+  if(!result.length)recommendationError=page.search?.preferenceConflict?'英雄偏好与所选玩法无匹配':page.search?.exhausted?'当前范围已搜索完，可调整选人条件':'本批暂无达标候选，可继续查找';if(!results.length)toast(recommendationError,true);else reveal=true;
+ }catch(err){if(run===recommendationRun){if(err.cancelled){autoRecommendationKey='';recommendationSearchActive=false;markResultStale();results=[];resultsSignature='';retry=true;}else{recommendationError=err.message;toast(err.message,true);}}}finally{if(run===recommendationRun){generating=false;render();if(retry)queueCompanionRecommendation();else if(recommendationSearchActive&&prepareNextGuard())recommendationRunner.prepareNext();}}
 }
 const sync=createClientSync(performSync);
 const recommendationSessionSeed=crypto.randomUUID();
@@ -1720,7 +1768,7 @@ async function performSync(manual=true,fresh=false){
    if(manual)toast(client.message,!client.connected);
   }
  }catch(err){client={connected:false,phase:'Offline',message:err.message,...(lastClientRead?{receivedAt:lastClientRead}:{})};if(manual)toast(err.message,true);}
- finally{scheduleRoomPublish();if(newGame||previousRecommendation!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;changed=true;}changed=runeAppliedKeys.observe(client)||changed;await saveChain;syncing=false;if(manual||changed||before!==clientRenderIdentity(client)){
+ finally{scheduleRoomPublish();if(previousPhase==='ChampSelect'&&client.phase!=='ChampSelect')cancelRecommendation();if(newGame||previousRecommendation!==recommendationKey(recommendationInput())){markResultStale();cancelRecommendation();results=[];offset=0;changed=true;}changed=runeAppliedKeys.observe(client)||changed;await saveChain;syncing=false;if(manual||changed||before!==clientRenderIdentity(client)){
   // A background status tick must not replace an active search field while typing.
   if(dragPick)pendingDragRender=true;else if(activeAppSelect||windowLayout.docked&&changed||!document.activeElement?.matches('input,select'))render();
   if(buildView&&(renderedBuildContext!==buildSelectionContext(buildView.build)||previousMatchups!==matchupContext()))renderBuild();
@@ -2096,7 +2144,7 @@ document.addEventListener('click',async event=>{
  else if(action==='replace-member'){
    if(generating)return;if(!results[Number(el.dataset.index)]||resultDraftSignature!==recommendationKey(recommendationInput()))throw Error('推荐条件已变化，请重新推荐');
    const run=++recommendationRun,input=recommendationInput(),signature=recommendationKey(input);input.replace={result:results[Number(el.dataset.index)],role:el.dataset.role};generating=true;render();
-   try{const next=await calculateRecommendation(input);if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;if(!next.length)throw Error('没有可替换英雄，请调整英雄池；原方案已保留');for(const r of next)resultCreativePlan(r);results=next;resultsSignature=signature;closeOverlay();generating=false;render();showResult(0);}
+   try{const {rows:next}=await calculateRecommendation(input,()=>run===recommendationRun&&signature===recommendationKey(recommendationInput()));if(run!==recommendationRun||signature!==recommendationKey(recommendationInput()))return;if(!next.length)throw Error('没有可替换英雄，请调整英雄池；原方案已保留');for(const r of next)resultCreativePlan(r);results=next;resultsSignature=signature;closeOverlay();generating=false;render();showResult(0);}
    catch(error){if(!error.cancelled)toast(error.message+'；原方案已保留，可调整英雄池后重试',true);}
    finally{if(run===recommendationRun){generating=false;render();}}
   }
