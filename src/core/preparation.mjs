@@ -42,13 +42,15 @@ export function upsertPreparation(values,value){
 }
 // These are reusable preferences, not a record of previous matches.
 export function createPreparationStore(limit=PREPARATION_LIMIT){
- const choices=new Map();
+ const choices=new Map(),revisions=new Map();let revision=0;
+ const mark=key=>revisions.set(key,++revision);
  return {
-  remember(value){const s=validatePreparation(value),key=preparationIdentity(s);if(JSON.stringify(choices.get(key))!==JSON.stringify(s)){choices.delete(key);choices.set(key,s);if(choices.size>limit)choices.delete(choices.keys().next().value);}return structuredClone(s);},
+  remember(value){const s=validatePreparation(value),key=preparationIdentity(s);if(JSON.stringify(choices.get(key))!==JSON.stringify(s)){choices.delete(key);choices.set(key,s);mark(key);if(choices.size>limit){const oldest=choices.keys().next().value;choices.delete(oldest);mark(oldest);}}return structuredClone(s);},
+  revision(value){return revisions.get(preparationIdentity(value))||0;},
   recall(value){const s=choices.get(preparationIdentity(value));return s?structuredClone(s):null;},
   snapshot(){return structuredClone([...choices.values()]);},
-  restore(values){const valid=validatePreparations(values);choices.clear();for(const s of valid.slice(-limit))choices.set(preparationIdentity(s),s);},
-  clear(){choices.clear();},
+  restore(values){const valid=validatePreparations(values),next=new Map(valid.slice(-limit).map(s=>[preparationIdentity(s),s]));for(const key of new Set([...choices.keys(),...next.keys()]))if(JSON.stringify(choices.get(key))!==JSON.stringify(next.get(key)))mark(key);choices.clear();for(const [key,s] of next)choices.set(key,s);},
+  clear(){for(const key of choices.keys())mark(key);choices.clear();},
  };
 }
 export function recallPreparation(store,guide,context,{allowSavedCombo=false}={}){
