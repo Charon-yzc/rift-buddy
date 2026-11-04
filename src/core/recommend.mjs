@@ -569,10 +569,10 @@ export function recommend({slots,champions,style='fun',excluded=[],publicBans=[]
   // One preference sampler covers curated, creative and generated lineups.
   // Source/discovery reservations cannot silently bypass a member's heroes.
   // Draw from the original legal population every time. Removing a familiar
-  // hero must not redistribute its probability to unfamiliar heroes. A repeat
-  // within this batch leaves fewer cards instead of forcing a zero/low-weight
-  // alternative into view. Fit stays visible, separate from player preference.
-  const preferred=hasPreference?familiarityWinner(preferencePool,targets,selectionWeights,randomSeed,i,{bestVariant:true,variantPriority:stylePolicy?priority:null}):null;
+  // hero must not redistribute its probability to unfamiliar heroes. Once all
+  // variants in a group are shown, another draw of that group leaves a gap.
+  // Fit stays visible, separate from player preference.
+  const preferred=hasPreference?familiarityWinner(preferencePool,targets,selectionWeights,randomSeed,i,{variantPriority:stylePolicy?priority:null,available:new Set(pool)}):null;
   if(hasPreference){if(preferred&&pool.includes(preferred)){chosen.push(pool.splice(pool.indexOf(preferred),1)[0]);if(i>=offset)preferencePage.push(preferred);}continue;}
   const authoredDiscovery=partyMembers.length===3&&i%6===3?pool.filter(entry=>entry.trio&&actionable(entry)===3&&!usedCombos.has(entry.trio.id)&&priority(entry)===priorityCeiling&&entry.score>=bestFit-16).sort((a,b)=>{
    const novelty=entry=>rankScore(entry)-chosen.reduce((sum,c)=>sum+targets.filter(role=>c.slots.find(s=>s.role===role).champion===entry.slots.find(s=>s.role===role).champion).length*12+(c.compositionFit?.tactic?.id===entry.compositionFit?.tactic?.id?8:0),0);
