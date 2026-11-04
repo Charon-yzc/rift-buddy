@@ -75,6 +75,8 @@ const revisions=Object.freeze({
  'community-lux-soraka-2621':'0e7578f5827860ef',
  'community-twitch-rell-2621':'7212a316a3248161',
  'ivern-rengar-lulu':'deeb97fb9e2c2594',
+ 'diana-wind-cow':'fac5b937ffc47b53',
+ 'zac-yasuo-alistar':'6e85359fecb2ea7d',
 });
 
 // Only the store can establish the origin of a merged entry. An identical
