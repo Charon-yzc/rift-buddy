@@ -685,7 +685,7 @@ async function boot(){
  guard('catalog-personal',entry=>catalogStore.savePersonal(entry).then(useCatalog));
  guard('catalog-export',async()=>{const selected=await dialog.showSaveDialog(win,{title:'导出完整组合库',defaultPath:`开黑搭子-组合库-${data.catalog.version}.json`,filters:[{name:'组合库 JSON',extensions:['json']}]});if(selected.canceled)return false;await fs.writeFile(selected.filePath,JSON.stringify(catalogStore.export(),null,2),'utf8');return true;});
  guard('main-ready',({surface})=>{if(surface==='main'){rendererReady=true;if(pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}if(pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}}return {state,revision:stateRevision,preparationSnapshot:preparationLedger.snapshot()};},true);
- guard('save-state',async(next,base,{sender})=>{
+ guard('save-state',async(next,base,preparationGuard,{sender})=>{
   next=storage.validateState(next);
   // A delayed renderer snapshot cannot restore a binding from an earlier game.
   const gameId=publicClientGameId(latestClient),draftContext=reconcileClientDraft(next.draft,gameId,state.draft?.clientGameId||state.guide?.match?.gameId,{phase:latestClient.phase});
@@ -699,6 +699,7 @@ async function boot(){
   // ordinary renderer save cannot resurrect a withdrawn/traded hero binding.
   if(next.draft)delete next.draft.enemyRoles;if(before.draft)delete before.draft.enemyRoles;
   await saveCurrentState(current=>{
+   if(preparationGuard&&!isDeepStrictEqual(preparationGuard.expected,storedPreparation(current.preparations,preparationGuard.selection)))throw Error('这位英雄的准备已变化，请核对后重新应用');
    const merged={...current,preferences:{...current.preferences}};
    for(const key of Object.keys(next)){if(['preferences','ownedPageId','guide','preparations'].includes(key)||same(next[key],before[key]))continue;if(key==='draft'&&next.draft&&before.draft&&current.draft){
      if(!same(next.draft.catalogChoice,before.draft.catalogChoice)&&!same(current.draft.creativePlan,before.draft.creativePlan)||!same(next.draft.creativePlan,before.draft.creativePlan)&&!same(current.draft.catalogChoice,before.draft.catalogChoice))throw Error('选人配置同时发生变化，请重新同步');
@@ -990,7 +991,7 @@ async function boot(){
   const result=await refreshOpponentBuild(id,role,opponent,source);guide.publish();return dataResult(result);
  });
  guard('open-guide',async selection=>{let hexContext;if(selection?.mode==='hex'){hexContext=hexRounds.select(selection.id,data).context;publishHexRound();}if(selection){const connected=latestClient.connected,phase=latestClient.phase,gameId=publicClientGameId(latestClient),cell=latestClient.session?.localPlayerCellId,referenceGameId=gameId||(!connected?state.guide?.match?.gameId:null)||null,contextCurrent=()=>connected?latestClient.connected&&latestClient.phase===phase&&publicClientGameId(latestClient)===gameId&&(phase!=='ChampSelect'||latestClient.session?.localPlayerCellId===cell):!latestClient.connected||!!referenceGameId&&publicClientGameId(latestClient)===referenceGameId;const previous=connected&&!gameId&&['ChampSelect','GameStart','InProgress','Reconnect'].includes(phase)?state.guide:reconcileKnownGuide(state.guide,{phase,gameId,live:latestLive}).guide,next=guideCore.selectGuide(previous,selection);if(connected&&phase==='ChampSelect'&&!gameId&&next.match){next.match={...next.match};delete next.match.gameId;}if(!next.match&&connected)next.match={phase,...(gameId?{gameId}:{})};await setGuideState(next,undefined,hexContext,'open',false,contextCurrent,referenceGameId);}else await prepareCurrentGuide();const result=guide.show();pollLive();return {...result,selection:state.guide?.selection||null,revision:guideRevision};});
- guard('update-guide',async selection=>{const s=guideCore.validateGuideSelection(selection);if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(s))return {updated:false};await setGuideState(guideCore.selectGuide(state.guide,mergeConfiguration(state.guide.selection,s,Array.isArray(selection.changedFields)?selection.changedFields:undefined)),state.guide,undefined,true);guide.publish();return {updated:true,selection:state.guide.selection,revision:guideRevision};});
+ guard('update-guide',async selection=>{const s=guideCore.validateGuideSelection(selection);if(!state.guide||guideCore.guideIdentity(state.guide.selection)!==guideCore.guideIdentity(s))return {updated:false};const expected=Object.hasOwn(selection,'expectedPreparation')?selection.expectedPreparation:undefined;await setGuideState(guideCore.selectGuide(state.guide,mergeConfiguration(state.guide.selection,s,Array.isArray(selection.changedFields)?selection.changedFields:undefined)),state.guide,undefined,true,false,expected===undefined?null:()=>isDeepStrictEqual(expected,storedPreparation(state.preparations,s)));guide.publish();return {updated:true,selection:state.guide.selection,revision:guideRevision};});
  guard('matchup-focus',async context=>{
   const own=currentGuideSelection();
   if(!latestClient.connected||latestClient.phase!=='ChampSelect'||!own||!context||guideCore.guideIdentity(own)!==guideCore.guideIdentity(context))throw Error('选人上下文已变化，请同步后重新选择对手');
@@ -1174,6 +1175,7 @@ async function boot(){
    await saveTask;
    if(typeof value?.reviewStamp==='string'&&value.reviewStamp!==selectionReviewStamp(value.selection))throw Error('组合或资料复核状态已变化，请重新选择配置');
    const reviewStamp=value?.reviewStamp,stampedSelection=value?.selection,initialStamp=selectionReviewStamp(value?.selection),buildData=preparationData();
+   const expectedPreparation=Object.hasOwn(value,'expectedPreparation')?{value:value.expectedPreparation}:null;
    const selection=value?.selection===undefined?null:guideCore.validateGuideSelection(value.selection);value=service.validateClientPreparation(value,data);
    if(selection&&value.mode!=='hex'&&(selection.id!==value.champion||selection.role!==value.role||selection.mode!==value.mode))throw Error('准备配置与英雄或位置不一致，请重新点击');
    await saveTask;
@@ -1183,12 +1185,14 @@ async function boot(){
    const derived=value.preselectOnly?{required:!!(selection?.comboId||catalogPlanGroups(selection?.creativePlan).length),current:true}:derivedCatalogState(selection);
    if(derived.required&&!derived.current&&!value.preselectOnly)throw Error('组合成员或审核资料尚未确认，请重新选择配置');
    const helperReady=helper.active();
+   if(helperReady&&expectedPreparation)throw Error('连接助手暂不能安全校验收藏预览的并发变化，尚未操作，请在客户端手动配置');
    if(helperReady&&!value.preselectOnly&&derived.required)throw Error('连接助手暂不能安全同步组合变更，请在客户端手动配置');
    const remembered=selection?storedPreparation(state.preparations,selection):null;
+   if(expectedPreparation&&!isDeepStrictEqual(expectedPreparation.value,remembered))throw Error('准备已在其他窗口变化，尚未操作；请重新核对');
    const selectionWriteAtDispatch=selectionWriteRevision,dispatchStamp=selectionReviewStamp(stampedSelection);
    const stillCurrent=()=>buildData.flashSlot===state.preferences.flashSlot&&(!derived.required||selectionWriteAtDispatch===selectionWriteRevision)&&dispatchStamp===selectionReviewStamp(stampedSelection)&&(!selection||isDeepStrictEqual(remembered,storedPreparation(state.preparations,selection)))&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id)?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection).current);
    const guideCurrent=()=>selectionWriteAtDispatch===selectionWriteRevision&&stillCurrent();
-   operation=beginPreparation('selection',{value,selection,context:value.context});
+   operation=beginPreparation('selection',{value,selection,context:value.context,...(expectedPreparation?{snapshotPreview:true}:{})});
    const written=helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,session)?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,session).current)});
    let event=finishPreparation(operation,{result:written});
    if(written.complete&&selection&&!value.preselectOnly&&guideCurrent())rememberAppliedGuide(String(value.sessionGameId),selection);

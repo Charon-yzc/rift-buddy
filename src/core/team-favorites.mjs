@@ -1,13 +1,16 @@
 import {getBuild} from './builds.mjs';
 import {preparationEquipment} from './complete-gear.mjs';
 import {selectedBuildFields} from './build-favorites.mjs';
-import {validatePreparation,recallPreparation} from './preparation.mjs';
+import {validatePreparation,recallPreparation,preparationIdentity} from './preparation.mjs';
 import {scopeSlots} from './draft.mjs';
-import {currentCombo,validateSlots,mergeClientSession} from './recommend.mjs';
+import {currentCombo,automaticCreativePlan,validateSlots,mergeClientSession} from './recommend.mjs';
 import {captureCreativePlan,creativeComboContext,validateCreativePlan} from './creative-plan.mjs';
 import {publicUnavailableChampions} from './pick-eligibility.mjs';
 
 export const resultSoloRole=result=>result.soloRole||result.targets?.[0]||'';
+// A saved standalone selection keeps its own identity; an unrelated pending
+// catalog match cannot claim it during restoration.
+const restorableConfiguration=(selection,plan,combo)=>selection.creativePlan?plan?.id===selection.creativePlan.id:!plan&&!selection.comboId?true:(combo?.id||null)===(selection.comboId||null);
 export function teamFavoriteId(result,style){return `${result.id}${result.creativePlan?'|'+result.creativePlan.id:''}|${style}|${result.scope}${result.scope==='solo'?'|'+resultSoloRole(result):''}`;}
 export function findSavedTeam(favorites,result,style){
  const id=teamFavoriteId(result,style);
@@ -28,20 +31,45 @@ export function captureTeamConfigurations(result,data,store,guide=null){
  const lineup=scopeSlots(result.slots,result.scope),ownRole=resultSoloRole(result);
  const creativePlan=captureCreativePlan(result,data);
  if(result.scope==='solo'&&!ownRole)throw Error('单人方案未确认你的位置，请先确认位置再收藏');
+ // A frozen plan can remain readable without being eligible for a fresh
+ // build. Never replace its saved selections with a different/default route.
+ if(creativePlan&&!automaticCreativePlan(creativePlan,data.catalogInfo?.status,data.patch))throw Error('组合依据已变化，暂不能保存成员配置；已有收藏未修改，请重新推荐并确认。');
  const members=(result.scope==='solo'?result.slots.filter(s=>s.role===ownRole):lineup).filter(s=>s.champion);
- return members.map(slot=>{
+ const captured=members.map(slot=>{
   const champion=data.champions.find(c=>c.id===slot.champion);
   if(!champion)throw Error('当前资料没有这位组合成员');
   const combo=currentCombo(lineup,champion.id,slot.role,data.catalogInfo?.status,null,creativePlan,{patch:data.patch}),context={id:champion.id,role:slot.role,mode:'rift',...creativeComboContext(combo)};
-  const selection={coreIndex:0,conditions:[],...(recallPreparation(store,guide,context)||{coreAuto:true}),...context},build=getBuild(champion,slot.role,data,selection);
+  const prior=result.configurations?.find(s=>s.id===champion.id&&s.role===slot.role);
+  // Older favorites may have only a member comboId, or an orphaned member
+  // plan. No current/default configuration is proof of a replacement choice.
+  if(prior&&(preparationIdentity(prior)!==preparationIdentity(context)||prior.creativePlan&&prior.creativePlan.id!==creativePlan?.id))throw Error('原成员配置与当前组合身份不同；已有收藏未修改，请重新推荐并确认。');
+  const restoredCombo=currentCombo(lineup,champion.id,slot.role,null,null,creativePlan,{allowPending:true});
+  if(creativePlan&&(restoredCombo?.id||null)!==(combo?.id||null))throw Error('成员配置与组合身份不一致；已有收藏未修改，请重新推荐并确认。');
+  const recalled=recallPreparation(store,guide,context);
+  // If this identity has no current preparation, keeping the saved snapshot
+  // is the only evidence-preserving interpretation of an update.
+  if(prior&&!recalled){
+   if(!restorableConfiguration(prior,creativePlan,restoredCombo))throw Error('原成员配置无法按原组合身份恢复；已有收藏未修改，请重新推荐并确认。');
+   return structuredClone(prior);
+  }
+  const selection={coreIndex:0,conditions:[],...(recalled||{coreAuto:true}),...context};
+  const build=getBuild(champion,slot.role,data,selection);
   const fields=selectedBuildFields({...selection,build},{preserveUnavailable:true});
-  if(!fields.laterIds?.length){const existing=new Set(build.items.map(item=>String(item.id)));fields.laterIds=preparationEquipment(data,build,selection).filter(item=>!existing.has(String(item.id))).map(item=>Number(item.id));}
-  const frozen={...selection,coreIndex:selection.coreId?selection.coreIndex:build.selectedCoreIndex,...fields};delete frozen.coreAuto;return validatePreparation(frozen);
+  if(!Array.isArray(selection.laterIds)&&!fields.laterIds?.length){const existing=new Set(build.items.map(item=>String(item.id)));fields.laterIds=preparationEquipment(data,build,selection).filter(item=>!existing.has(String(item.id))).map(item=>Number(item.id));}
+  const frozen={...selection,coreIndex:selection.coreAuto===true&&!selection.coreId?build.selectedCoreIndex:selection.coreIndex,...fields};delete frozen.coreAuto;
+  const saved=validatePreparation(frozen);
+  if(!restorableConfiguration(saved,creativePlan,restoredCombo))throw Error('成员配置无法按原组合身份恢复；已有收藏未修改，请重新推荐并确认。');
+  return saved;
  });
+ if(!Array.isArray(result.configurations))return captured;
+ // Keep legacy snapshots outside today's capture scope in their saved order.
+ const pending=new Map(captured.map(s=>[s.id+':'+s.role,s]));
+ const retained=result.configurations.map(s=>{const key=s.id+':'+s.role,next=pending.get(key);pending.delete(key);return next||structuredClone(s);});
+ return [...retained,...pending.values()];
 }
 
 // Restore reusable members; previous non-party picks are never a current draft.
-export function restoreTeamFavorite(favorite,current,champions,session=null,{eligibleByRole={},confirmedPick=null,moveUnbound=false}={}){
+export function restoreTeamFavorite(favorite,current,champions,session=null,{eligibleByRole={},confirmedPick=null,moveUnbound=false,catalogStatus=null,patch=null}={}){
  validateSlots(favorite.slots,champions);validateSlots(current,champions);
  if(favorite.scope==='solo'&&!favorite.soloRole)throw Error('旧单人收藏未保存位置，请重新推荐并收藏');
  const desired=favorite.slots.filter(s=>s.champion&&(favorite.scope==='solo'?s.role===favorite.soloRole:favorite.scope==='bot'?['bottom','support'].includes(s.role):s.party));
@@ -74,12 +102,17 @@ export function restoreTeamFavorite(favorite,current,champions,session=null,{eli
  }
  validateSlots(next,champions);
  let creativePlan=null;if(favorite.creativePlan){try{if(conflicts.some(c=>c.role))throw Error('Member conflict');creativePlan=validateCreativePlan(favorite.creativePlan,next);}catch{conflicts.push({kind:'plan'});}}
- const configurations=(favorite.configurations||[]).filter(selection=>{
-  if(conflicts.some(c=>c.role===selection.role)||!desired.some(s=>s.role===selection.role&&s.champion===selection.id)||!next.some(s=>s.role===selection.role&&s.champion===selection.id))return false;
-  if(selection.creativePlan)return creativePlan?.id===selection.creativePlan.id;
-  return (currentCombo(scopeSlots(next,favorite.scope),selection.id,selection.role,null,null,creativePlan,{allowPending:true})?.id||null)===(selection.comboId||null);
- }).map(s=>structuredClone(s));
  const merged=session?mergeClientSession(next,session,champions):{slots:next,unassigned:[]};
+ const configurations=(favorite.configurations||[]).filter(selection=>{
+  if(conflicts.some(c=>c.role===selection.role)||!desired.some(s=>s.role===selection.role&&s.champion===selection.id)||!merged.slots.some(s=>s.role===selection.role&&s.champion===selection.id))return false;
+  // Other preparation entry points infer a current combo from the full draft.
+  // Report any different identity as not loaded; do not count a snapshot
+  // which those entry points would silently replace with another selection.
+  const inferred=currentCombo(merged.slots,selection.id,selection.role,catalogStatus,null,creativePlan,patch?{patch}:{allowPending:true});
+  if((inferred?.id||null)!==(selection.comboId||null))return false;
+  const combo=currentCombo(scopeSlots(next,favorite.scope),selection.id,selection.role,null,null,creativePlan,{allowPending:true});
+  return restorableConfiguration(selection,creativePlan,combo);
+ }).map(s=>structuredClone(s));
  return {...merged,creativePlan,configurations,conflicts,
   loadedMembers:desired.filter(member=>!conflicts.some(c=>c.role===member.role)&&next.some(slot=>slot.role===member.role&&slot.champion===member.champion)).length,
   skippedConfigurations:(favorite.configurations||[]).filter(selection=>desired.some(member=>member.role===selection.role&&member.champion===selection.id)).length-configurations.length};
