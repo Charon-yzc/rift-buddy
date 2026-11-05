@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.05.8",
+  "version": "2026.11.05.9",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -11438,8 +11438,8 @@
         "Ornn"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯莫德技能资料",
@@ -11458,6 +11458,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -11493,21 +11499,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f9af800584064ad",
-          "observedAt": "2026-10-23T02:03:51.631Z",
+          "observedAt": "2026-11-05T02:19:26.172Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Smolder",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
-              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "7ae85663ddcc3330f2b6719ebbdb7dec5d37bac178ff5ba216e1913fe439ed85"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e270c656917313cc"
             }
           }
@@ -11517,21 +11523,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "9176ff8b22c1f1c9",
-          "observedAt": "2026-10-23T02:03:51.541Z",
+          "observedAt": "2026-11-05T02:19:26.156Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Milio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/milio/milio.bin.json",
               "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "32194f4e3319e474"
             }
           }
@@ -11554,8 +11560,8 @@
         "Sejuani"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯莫德技能资料",
@@ -11580,6 +11586,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Janna.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -11615,21 +11627,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f9af800584064ad",
-          "observedAt": "2026-10-23T02:03:51.631Z",
+          "observedAt": "2026-11-05T02:19:26.172Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Smolder",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
-              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "7ae85663ddcc3330f2b6719ebbdb7dec5d37bac178ff5ba216e1913fe439ed85"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e270c656917313cc"
             }
           }
@@ -11639,21 +11651,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "174e8cfdc4e26ceb",
-          "observedAt": "2026-10-23T02:03:51.529Z",
+          "observedAt": "2026-11-05T02:19:26.075Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Janna",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/janna/janna.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/janna/janna.bin.json",
               "sha256": "4cec640827c538d66a8dba07f2330b0d11a6749bdbf85691628f6a2fd08320cf"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "59f8d2d99e76564e"
             }
           }
@@ -21942,8 +21954,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯莫德技能资料",
@@ -21962,6 +21974,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -21997,21 +22015,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f9af800584064ad",
-          "observedAt": "2026-10-26T13:38:40.522Z",
+          "observedAt": "2026-11-05T02:19:26.172Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Smolder",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
-              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "7ae85663ddcc3330f2b6719ebbdb7dec5d37bac178ff5ba216e1913fe439ed85"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e270c656917313cc"
             }
           }
@@ -22021,21 +22039,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b10366f1187813b9",
-          "observedAt": "2026-10-26T13:38:40.505Z",
+          "observedAt": "2026-11-05T02:19:26.158Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nami",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nami/nami.bin.json",
               "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "d41e55e60af3c37e"
             }
           }
@@ -22058,8 +22076,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-01",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯莫德技能资料",
@@ -22078,6 +22096,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -22113,21 +22137,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f9af800584064ad",
-          "observedAt": "2026-10-26T13:38:40.522Z",
+          "observedAt": "2026-11-05T02:19:26.172Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Smolder",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
-              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "7ae85663ddcc3330f2b6719ebbdb7dec5d37bac178ff5ba216e1913fe439ed85"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e270c656917313cc"
             }
           }
@@ -22137,21 +22161,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-26T13:38:40.500Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -22174,8 +22198,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 斯莫德技能资料",
@@ -22206,6 +22230,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -22237,7 +22267,7 @@
         {
           "role": "support",
           "champion": "Braum",
-          "loadoutId": "braum-peel",
+          "loadoutId": "braum-peel-smolder-2622",
           "job": "辅助先保任务经济与视野；目标敌方英雄的免叠层期结束后，Q 或普攻击中该英雄并实际挂上首层，再与队友安全普攻同一目标，达到四层才眩晕；E 朝来弹方向，W 需范围内有效友军或小兵。"
         }
       ],
@@ -22255,21 +22285,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f9af800584064ad",
-          "observedAt": "2026-10-23T02:03:51.631Z",
+          "observedAt": "2026-11-05T02:19:26.172Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Smolder",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
-              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "7ae85663ddcc3330f2b6719ebbdb7dec5d37bac178ff5ba216e1913fe439ed85"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e270c656917313cc"
             }
           }
@@ -22279,21 +22309,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ae3aa48403ffcbe5",
-          "observedAt": "2026-10-23T02:03:51.454Z",
+          "observedAt": "2026-11-05T02:19:26.062Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Braum",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
               "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e136059064aa1034"
             }
           }
@@ -40022,7 +40052,7 @@
       ],
       "why": "波比和布隆处理实际接近的威胁，斯莫德在安全位置发育与输出。",
       "plan": "先确认波比可到场和射手退路；W 中断实际可中断冲刺，E 撞到地形才晕。 布隆 Q 或普攻击中英雄并挂首层，友军安全普攻同一目标，四层才晕。 斯莫德按本人实际层数使用 Q，E 留退路；对方绕侧、控制落空或接应不到时后撤。",
-      "risk": "W 不拦闪烁，E 不撞地形不晕；布隆免叠层期不可再叠，斯莫德层数和 E 退路需实际确认。",
+      "risk": "波比 W 只按实际可中断冲刺判断，E 不撞地形不晕；布隆免叠层期不可再叠，斯莫德层数和 E 退路需实际确认。",
       "difficulty": "适中",
       "members": [
         {
@@ -40052,8 +40082,8 @@
       "window": "波比能到场、布隆能接应且斯莫德有安全输出位置；不要求对手必须突进。",
       "early": "波比保野区节奏，斯莫德保下路补刀，布隆保辅助任务与视野。",
       "economy": "三人保原分路经济；不预设旧夺萃、黑切或朔极路线，也不将个人位置参考当组合专配。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · Poppy 16.20.1 技能",
@@ -40084,6 +40114,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -40098,21 +40134,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "af33a45e62ad30e5",
-          "observedAt": "2026-10-26T13:38:40.510Z",
+          "observedAt": "2026-11-05T02:19:26.162Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Poppy",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/poppy/poppy.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/poppy/poppy.bin.json",
               "sha256": "b05a5e1a84242d49aff20c87430fed1cc06b081f6ae1b62103ae574e6dc2b508"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "984283b0f66ff725"
             }
           }
@@ -40122,21 +40158,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f9af800584064ad",
-          "observedAt": "2026-10-26T13:38:40.522Z",
+          "observedAt": "2026-11-05T02:19:26.172Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Smolder",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/smolder/smolder.bin.json",
-              "sha256": "82145a258cf89ebcf1d8329a941ce55c76c8c7c95d874d559203160e6ce95f60"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/smolder/smolder.bin.json",
+              "sha256": "7ae85663ddcc3330f2b6719ebbdb7dec5d37bac178ff5ba216e1913fe439ed85"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e270c656917313cc"
             }
           }
@@ -40146,21 +40182,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ae3aa48403ffcbe5",
-          "observedAt": "2026-10-26T13:38:40.310Z",
+          "observedAt": "2026-11-05T02:19:26.062Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Braum",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
               "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e136059064aa1034"
             }
           }
@@ -56431,6 +56467,148 @@
           }
         }
       }
+    },
+    {
+      "id": "braum-peel-smolder-2622",
+      "name": "布隆 · 斯莫德同目标保护（项目复核）",
+      "champions": [
+        "Braum"
+      ],
+      "roles": [
+        "support"
+      ],
+      "base": "supportTank",
+      "items": [
+        3190,
+        3109,
+        3050
+      ],
+      "boots": 3047,
+      "late": [
+        3107
+      ],
+      "runes": [
+        "guardian",
+        "aftershock"
+      ],
+      "priority": "QEW",
+      "first": "QEW",
+      "why": "布隆 Q 或普攻击中敌方英雄后，先确认目标不在免叠层期且实际挂上第一层；布隆或友军安全普攻击中同一目标才继续叠层，达到四层才眩晕。目标刚被该被动眩晕后的免叠层期不能重新挂层，未挂上就不能按层数成立。W 跳范围内友方英雄或小兵接应，E 朝来向拦截弹体，不能阻挡所有伤害。守护者看友军受威胁，余震须被动眩晕或 R 击飞实际定身；骑士之誓需绑定且队友在附近，基克需自己施 R 且敌人在附近。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
+      "reviewBaseline": {
+        "champion:Braum": "ae3aa48403ffcbe5",
+        "item:3190": "89cdf2838748dfc7",
+        "item:3109": "97c25fae90d4a8a4",
+        "item:3050": "c3e25c9df9075147",
+        "item:3047": "46ff9ea0f9199a8e",
+        "item:3107": "53bdbba0a53ca5c6",
+        "rune:8465": "4b16b0cca812d727",
+        "rune:8463": "3296414353df0e65",
+        "rune:8473": "ed2f46234183276d",
+        "rune:8453": "f9a0180e7f2f0432",
+        "rune:8345": "02157c1d4d7f7531",
+        "rune:8347": "def2a55844436c47",
+        "rune:8439": "b2c74fd18c4ad076",
+        "rune:8242": "37935df8d31dd429",
+        "rune:8306": "68d4bd3d69d9d19c"
+      },
+      "sources": [
+        {
+          "name": "Riot · 布隆技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/champion/Braum.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 装备说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · 16.20 符文说明",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.20.1/data/en_US/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-10"
+        },
+        {
+          "name": "Riot · Braum 16.21.1 技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Braum.json",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot · 16.21.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/item.json",
+          "kind": "装备触发依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot · 16.21.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
+          "kind": "符文触发依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Mobalytics · 16.21 布隆辅助单英雄配置（非组合实测）",
+          "url": "https://mobalytics.gg/lol/champions/braum/build/support",
+          "kind": "单英雄统计参考",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot · 26.21 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
+          "kind": "技能依据",
+          "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版英雄技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "装备依赖复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依赖复核",
+          "checkedAt": "2026-11-05"
+        }
+      ],
+      "reviewSourceAnchors": {
+        "Braum": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ae3aa48403ffcbe5",
+          "observedAt": "2026-11-05T02:19:26.062Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Braum",
+            "patch": "16.22",
+            "version": "16.22.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
+              "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "e136059064aa1034"
+            }
+          }
+        }
+      },
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "参考 Mobalytics 16.21 布隆辅助单英雄逐级加点；并非本组合实测，可按对线与接应需要调整。"
     }
   ],
   "runes": {
