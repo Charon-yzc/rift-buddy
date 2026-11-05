@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.34",
+  "version": "2026.11.06.35",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -14393,8 +14393,8 @@
         "Graves"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 塔莉垭技能资料",
@@ -14425,6 +14425,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -14473,21 +14479,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "164392e23c74360e",
-          "observedAt": "2026-10-23T02:03:51.633Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taliyah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taliyah/taliyah.bin.json",
               "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b2732603887d7e5f"
             }
           }
@@ -14497,21 +14503,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ade6cc95e4c6b966",
-          "observedAt": "2026-10-23T02:03:51.546Z",
+          "observedAt": "2026-11-05T02:19:26.162Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Pantheon",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/pantheon/pantheon.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/pantheon/pantheon.bin.json",
               "sha256": "0acb5fa598525639a78e444a98a3e50cc46533843446d17657921c3639dd23df"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0ab565075cf8e870"
             }
           }
@@ -15462,11 +15468,17 @@
           "name": "Riot 16.21.1 英雄技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Taliyah": "164392e23c74360e",
         "champion:Senna": "5e547c9cf10f2a05",
@@ -15513,21 +15525,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "164392e23c74360e",
-          "observedAt": "2026-10-26T13:38:40.592Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taliyah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taliyah/taliyah.bin.json",
               "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b2732603887d7e5f"
             }
           }
@@ -15537,21 +15549,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5e547c9cf10f2a05",
-          "observedAt": "2026-10-26T13:38:40.518Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Senna",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/senna/senna.bin.json",
               "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "58582c22f3d6346b"
             }
           }
@@ -15585,11 +15597,17 @@
           "name": "Riot 16.21.1 英雄技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Taliyah": "164392e23c74360e",
         "champion:Zyra": "f653495a90d1586e",
@@ -15636,21 +15654,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "164392e23c74360e",
-          "observedAt": "2026-10-26T13:38:40.592Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taliyah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taliyah/taliyah.bin.json",
               "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b2732603887d7e5f"
             }
           }
@@ -15660,21 +15678,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f653495a90d1586e",
-          "observedAt": "2026-10-26T13:38:40.609Z",
+          "observedAt": "2026-11-05T02:19:26.255Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zyra",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zyra/zyra.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zyra/zyra.bin.json",
               "sha256": "18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e6ad7484cbc1effe"
             }
           }
@@ -15708,11 +15726,17 @@
           "name": "Riot 16.21.1 英雄技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-11-02",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-06",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Taliyah": "164392e23c74360e",
         "champion:Neeko": "d6f4984cd7330b72",
@@ -15759,21 +15783,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "164392e23c74360e",
-          "observedAt": "2026-10-26T13:38:40.592Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taliyah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taliyah/taliyah.bin.json",
               "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b2732603887d7e5f"
             }
           }
@@ -15783,21 +15807,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d6f4984cd7330b72",
-          "observedAt": "2026-10-26T13:38:40.506Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Neeko",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/neeko/neeko.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/neeko/neeko.bin.json",
               "sha256": "0d2d79949fbeecdbb851ae627b1dfa189ceab975e17627c57c8f7de546d9d12a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1d597517ddd4f92e"
             }
           }
@@ -54136,7 +54160,7 @@
       "runes": [
         "taliyah-bottom-manual-comet"
       ],
-      "why": "人工按技能与下路经济调整，非中路或下路统计、非原作者配装，未经对局验证。下路优先补刀控蓝；女神之泪按经济考虑，大天使叠满后才转炽天使，不能直接买炽天使。敌人冲刺或被强制位移经过 E 碎石才触发碎石晕眩；W 需实际命中并将敌人推过碎石，注意兵线与退路。",
+      "why": "人工按下路补刀位的法力、站位和后续控场整理。女神之泪按经济考虑，大天使满足叠层条件后才转炽天使。先铺 E 再根据实际目标位置尝试 W，目标被推过仍存在的碎石才触发碎石眩晕。卢登的额外效果仍有未解析字段，联动只依赖技能实际命中。配置属于人工机制参考，无同分路统计或作者原配依据。",
       "damage": "ap",
       "priority": "QEW",
       "skillOrder": "QEWQQRQEQEREEWWRWW",
@@ -54145,8 +54169,8 @@
         "SummonerFlash",
         "SummonerTeleport"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot 16.21.1 英雄技能",
@@ -54162,6 +54186,24 @@
           "name": "Riot 16.21.1 符文",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/runesReforged.json",
           "kind": "符文依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "装备依据",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "符文依据",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -54186,21 +54228,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "164392e23c74360e",
-          "observedAt": "2026-10-26T13:38:40.592Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taliyah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taliyah/taliyah.bin.json",
               "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b2732603887d7e5f"
             }
           }
