@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.35",
+  "version": "2026.11.06.36",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -967,14 +967,14 @@
       ],
       "why": "芮尔以实际命中的控制为莎弥拉创造接近机会，莎弥拉依据位置与评价选择是否跟进。",
       "plan": "先确认兵线、双方血量、芮尔形态和撤退路径。 芮尔选择安全角度使用 W 或 Q，确认实际命中和控制类型；莎弥拉只在距离与位置安全时普攻跟进。 交替不同攻击与技能命中积累评价；R 已学可用、S 评价且施法窗口安全时才考虑施放。 W 落空、芮尔披甲后难退、队友跟不上或敌方反开时停止追击并撤退。",
-      "risk": "芮尔 R 拉拽及 W 命中不保证同时控制所有人；莎弥拉 W 只摧毁敌方飞行道具，E 不能跳友方，未满足重置条件不预支。",
+      "risk": "芮尔 R 拉拽及 W 命中不保证同时控制所有人。莎弥拉 W 能摧毁可拦截的敌方飞行道具，26.22 修复了 W 错误挡住阿萝拉 R。E 不能跳友方，未满足重置条件时不要把它当退路。",
       "partners": [
         "Diana",
         "Galio",
         "JarvanIV"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 莎弥拉技能资料",
@@ -999,11 +999,22 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 正式公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "当版修复与机制边界",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Samira": "fb97a340c89c0ba1",
-        "champion:Rell": "bec49be1ddcf29c0",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
         "item:3072": "5c29525fccb26a37",
@@ -1021,7 +1032,8 @@
         "rune:9104": "e6b524a54b35a2f3",
         "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032"
+        "rune:8410": "da4ec8f245880032",
+        "champion:Rell": "bec49be1ddcf29c0"
       },
       "tempo": "teamfight",
       "members": [
@@ -1053,21 +1065,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "fb97a340c89c0ba1",
-          "observedAt": "2026-10-23T02:03:51.551Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Samira",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/samira/samira.bin.json",
               "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "12851dd9ef379ec4"
             }
           }
@@ -1077,21 +1089,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "bec49be1ddcf29c0",
-          "observedAt": "2026-10-23T02:03:51.549Z",
+          "observedAt": "2026-11-05T02:19:26.164Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rell",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
               "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f5469dea7fbc0dcb"
             }
           }
@@ -10248,8 +10260,8 @@
         "Diana"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 莎弥拉技能资料",
@@ -10274,11 +10286,16 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Samira": "fb97a340c89c0ba1",
-        "champion:Alistar": "e2aa1310b144ff1f",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
         "item:3072": "5c29525fccb26a37",
@@ -10296,7 +10313,8 @@
         "rune:9104": "e6b524a54b35a2f3",
         "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032"
+        "rune:8410": "da4ec8f245880032",
+        "champion:Alistar": "e2aa1310b144ff1f"
       },
       "tempo": "teamfight",
       "members": [
@@ -10328,21 +10346,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "fb97a340c89c0ba1",
-          "observedAt": "2026-10-23T02:03:51.551Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Samira",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/samira/samira.bin.json",
               "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "12851dd9ef379ec4"
             }
           }
@@ -10352,21 +10370,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -21519,8 +21537,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 莎弥拉技能资料",
@@ -21545,11 +21563,16 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Samira": "fb97a340c89c0ba1",
-        "champion:Rakan": "69d7edc48cac55e5",
         "item:6676": "f75b10fbdb261e7f",
         "item:3031": "0ccdceb96f0cd392",
         "item:3072": "5c29525fccb26a37",
@@ -21568,6 +21591,7 @@
         "rune:8014": "04092c4f9754532b",
         "rune:8345": "02157c1d4d7f7531",
         "rune:8410": "da4ec8f245880032",
+        "champion:Rakan": "69d7edc48cac55e5",
         "item:3050": "c3e25c9df9075147",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
@@ -21612,21 +21636,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "fb97a340c89c0ba1",
-          "observedAt": "2026-10-23T02:03:51.551Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Samira",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/samira/samira.bin.json",
               "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "12851dd9ef379ec4"
             }
           }
@@ -21636,21 +21660,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "69d7edc48cac55e5",
-          "observedAt": "2026-10-23T02:03:51.548Z",
+          "observedAt": "2026-11-05T02:19:26.163Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rakan",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
               "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "14165b7ab2f27514"
             }
           }
@@ -50187,9 +50211,9 @@
       ],
       "priority": "QEW",
       "first": "QEW",
-      "why": "项目依据单英雄技能、装备和符文触发条件整理的机制备选，非组合实测或统计最优。收集者、无尽和饮血按经济取舍；铁板靴针对攻击压力，领主和复活甲按局势安排。征服者须实际命中敌方英雄，强攻需连续三次普攻击中同一敌方英雄，Q 与 R 不代替普攻。W 摧毁敌方飞行道具；E 选敌方单位或建筑，先确认落点和退路，受到莎弥拉伤害的敌方英雄在 3 秒内被击杀才重置。R 需 S 评价且可能被打断。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "why": "按莎弥拉下路接控与退路整理的备选。多兰剑和药水出门；首回城按金币补收集者组件，再接无尽。饮血是可购续航选项；铁板靴针对普攻压力，领主应对护甲，复活甲需要有可接应的落点。征服者需实际命中敌方英雄；强攻需三次连续普攻击中同一敌方英雄，Q 与 R 不代替普攻。E 只选敌方单位或建筑，本人造成伤害后 3 秒内该英雄被击杀才重置。R 需 S 评价。装备和两页符文是项目机制备选。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "reviewBaseline": {
         "champion:Samira": "fb97a340c89c0ba1",
         "item:6676": "f75b10fbdb261e7f",
@@ -50253,6 +50277,36 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 莎弥拉同位置加点与召唤师技能",
+          "url": "https://op.gg/lol/champions/samira/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版全球翡翠以上单英雄统计；非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 正式公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "当版修复与机制边界",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewSourceAnchors": {
@@ -50261,28 +50315,28 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "fb97a340c89c0ba1",
-          "observedAt": "2026-10-23T02:03:51.551Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Samira",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/samira/samira.bin.json",
               "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "12851dd9ef379ec4"
             }
           }
         }
       },
       "skillOrder": "QEWQQRQEQEREEWWRWW",
-      "skillReason": "参考 Mobalytics 16.21 莎弥拉下路单英雄逐级加点；并非这些组合的实测配置，可按对线调整。",
+      "skillReason": "前 15 级参考 16.22 同英雄同位置加点，后续按合法剩余技能补齐。不是组合实测。",
       "summoners": [
         "SummonerFlash",
         "SummonerBarrier"
@@ -50593,9 +50647,9 @@
       ],
       "priority": "WEQ",
       "first": "WEQ",
-      "why": "确认队友能跟进与 E 回跳目标后再 W；实际击飞或 R 接触魅惑后才安排接力。Q 需命中英雄或史诗级野怪才启动治疗，E 护盾与骑士之誓要看友军距离；W 落空、队友跟不上或退路被封时回到可接应位置。基克需自身施放 R 且敌人在附近，才能造成风暴伤害与减速。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "why": "辅助任务装出门，首回城按经济考虑鞋或燃烧宝石。确认队友能跟进与 E 回跳目标后再 W，实际命中才接力。Q 命中敌方英雄或史诗级野怪才启动治疗；E 护盾和骑士之誓都受友军位置限制。施放大招后留意基克风暴与敌方距离，敌方英雄在风暴范围内时才受影响。本组合不依赖基克。对面集中爆发考虑烈阳，需单保选骑士之誓；加速接应再考虑皇冠。装备与三页符文是项目机制备选。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "reviewBaseline": {
         "champion:Rakan": "69d7edc48cac55e5",
         "item:3050": "c3e25c9df9075147",
@@ -50662,6 +50716,30 @@
           "url": "https://mobalytics.gg/lol/champions/rakan/build/support",
           "kind": "单英雄统计参考",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非组合实测",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 洛同位置加点与召唤师技能",
+          "url": "https://op.gg/lol/champions/rakan/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版全球翡翠以上单英雄统计；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewSourceAnchors": {
@@ -50670,28 +50748,32 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "69d7edc48cac55e5",
-          "observedAt": "2026-10-23T02:03:51.548Z",
+          "observedAt": "2026-11-05T02:19:26.163Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rakan",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
               "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "14165b7ab2f27514"
             }
           }
         }
       },
       "skillOrder": "WEQWWRWEWEREEQQRQQ",
-      "skillReason": "参考 Mobalytics 16.21 洛辅助单英雄加点；该路线不是本组合实测，可按对线调整。"
+      "skillReason": "前 15 级参考 16.22 同英雄同位置加点，后续按合法剩余技能补齐。不是组合实测。",
+      "summoners": [
+        "SummonerFlash",
+        "SummonerHeal"
+      ]
     },
     {
       "id": "braum-peel",
