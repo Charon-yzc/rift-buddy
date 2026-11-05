@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.40",
+  "version": "2026.11.06.41",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -1244,8 +1244,8 @@
       "style": "fun",
       "difficulty": "适中",
       "tempo": "teamfight",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-24",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "partners": [
         "JarvanIV",
         "Sejuani"
@@ -1258,14 +1258,14 @@
         "进退接力"
       ],
       "why": "洛命中控制创造羽毛回拉角度，霞保留退场技能接住反扑。",
-      "plan": "霞补刀铺羽，洛寻找可回身的进场；先手未中就收手。",
+      "plan": "洛先确认队友可跟进的位置和敌方打断，W 击飞或 R 魅惑实际命中后再接。 霞按站位铺羽；附近的洛可获得霞 W 的效果，收羽是否禁锢看实际命中数。 洛 E 回可接应的友方英雄。霞保留 R 应对关键威胁，回身路径被封时撤。",
       "risk": "波比的反突进、敌方打断和远程消耗会破坏进退；双方大招不是必定连中，也不能保证无缝控制。",
       "early": "霞先稳补刀；洛Q恢复、W惩罚失误，不为硬抢二级越过兵线。",
       "window": "双方六级且有安全E回身位置，再尝试洛R/W接霞羽阵；霞缺蓝时先等吸蓝刀成型。",
       "steps": [
-        "洛先确认敌方能打断位移的技能，再决定W/R，始终保留能接应的队友位置。",
-        "霞跟进铺羽，敌人越过回拉线路时E；并非听到洛开大就立即交所有技能。",
-        "洛E回霞接应；霞R留给关键威胁，失去回身点就撤退。"
+        "洛先确认队友可跟进的位置和敌方打断，W 击飞或 R 魅惑实际命中后再接。",
+        "霞按站位铺羽；附近的洛可获得霞 W 的效果，收羽是否禁锢看实际命中数。",
+        "洛 E 回可接应的友方英雄。霞保留 R 应对关键威胁，回身路径被封时撤。"
       ],
       "sources": [
         {
@@ -1283,8 +1283,14 @@
         {
           "name": "Riot · 26.21及10/22热修",
           "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非作者配套证明",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -1303,7 +1309,6 @@
       ],
       "reviewBaseline": {
         "champion:Xayah": "6218a12d2240d28e",
-        "champion:Rakan": "69d7edc48cac55e5",
         "item:3508": "f557158549cb18ca",
         "item:6675": "b2ad1db20decb6ca",
         "item:3031": "0ccdceb96f0cd392",
@@ -1318,6 +1323,7 @@
         "rune:8014": "04092c4f9754532b",
         "rune:8304": "aa454bdce540cb11",
         "rune:8345": "02157c1d4d7f7531",
+        "champion:Rakan": "69d7edc48cac55e5",
         "item:3050": "c3e25c9df9075147",
         "item:2524": "94b653f97efb42b2",
         "item:3190": "89cdf2838748dfc7",
@@ -1340,21 +1346,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "6218a12d2240d28e",
-          "observedAt": "2026-10-23T02:03:51.640Z",
+          "observedAt": "2026-11-05T02:19:26.182Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Xayah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/xayah/xayah.bin.json",
               "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ef84e7c599b03475"
             }
           }
@@ -1364,21 +1370,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "69d7edc48cac55e5",
-          "observedAt": "2026-10-23T02:03:51.548Z",
+          "observedAt": "2026-11-05T02:19:26.163Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rakan",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
               "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "14165b7ab2f27514"
             }
           }
@@ -27149,8 +27155,8 @@
       "style": "fun",
       "difficulty": "适中",
       "tempo": "teamfight",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-24",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "partners": [
         "JarvanIV",
         "Sejuani"
@@ -27164,7 +27170,7 @@
       ],
       "why": "洛先限制走位，图奇从可支援的侧翼出现，利用叠毒窗口收尾。",
       "plan": "图奇补刀，洛按两人能同时到场的距离接控；AP图奇配置与洛联动为项目改编。",
-      "risk": "真视、范围伤害和强开能打断偷袭；图奇没有霞的额外E接应距离，绕后太远会失去支援，AP路线不等同持续AD射手。",
+      "risk": "侦测、范围伤害和强开会破坏偷袭；洛的 E 按实际距离和友军是否可选决定，图奇绕得太远便无法接应。AP 路线需实际叠毒再判断输出和撤退。",
       "early": "图奇稳补刀，洛只在兵线和射手跟进允许时换血；不单独深入敌方后排。",
       "window": "图奇纳什成型且双方六级后找控住目标；洛W落空或图奇尚未就位就停止追击。",
       "steps": [
@@ -27188,8 +27194,14 @@
         {
           "name": "Riot · 26.21及10/22热修",
           "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非作者配套证明",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -27208,7 +27220,6 @@
       ],
       "reviewBaseline": {
         "champion:Twitch": "ab3e76d629cf2787",
-        "champion:Rakan": "69d7edc48cac55e5",
         "item:3115": "627135c117eaf20a",
         "item:3089": "a8a9b060b253391c",
         "item:3157": "4e1ddce33472ee0f",
@@ -27224,6 +27235,7 @@
         "rune:8017": "50a79a13bce940f0",
         "rune:8233": "8d66599d9c2e18c9",
         "rune:8236": "a1bb7cfc15c3d089",
+        "champion:Rakan": "69d7edc48cac55e5",
         "item:3050": "c3e25c9df9075147",
         "item:2524": "94b653f97efb42b2",
         "item:3190": "89cdf2838748dfc7",
@@ -27244,21 +27256,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ab3e76d629cf2787",
-          "observedAt": "2026-10-23T02:03:51.636Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Twitch",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
               "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
             }
           }
@@ -27268,21 +27280,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "69d7edc48cac55e5",
-          "observedAt": "2026-10-23T02:03:51.548Z",
+          "observedAt": "2026-11-05T02:19:26.163Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rakan",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
               "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "14165b7ab2f27514"
             }
           }
@@ -52933,10 +52945,10 @@
         "SummonerFlash",
         "SummonerHeal"
       ],
-      "why": "云游图鉴＋两瓶药出门，任务升级星界据守。首回城视生存空间比较黑暗封印和明朗鞋，再补燃烧宝石；频繁阵亡就跳过封印。基克→班德尔音管，第三件烈阳；需保单核改骑士之誓，可解除控制压力改米凯尔，加速接应比较皇冠。后续装备互斥，满格前卖封印；治疗与射手技能协商，避免重复。班德尔的攻速增益需实际减速或定身触发。",
+      "why": "保留 daltonfresh 的黑暗封印备选与基克、班德尔音管、烈阳路线。辅助任务装出门，首回城按站位和存活预期考虑封印、明朗鞋或燃烧宝石。班德尔需要实际减速或定身，烈阳需主动覆盖附近队友；单保、可解除控制或加速分别考虑骑士之誓、米凯尔与皇冠。基克风暴生成时机文本有分歧，本配合不依赖它。",
       "skillReason": "作者默认Q开局；Q/W/E及主W副E的合法18点由项目补齐，保留E接应，不把网页不可读的技能格冒充作者顺序。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-24",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "daltonfresh · 洛（10/21实质更新）",
@@ -52947,8 +52959,26 @@
         {
           "name": "Riot · 26.21及10/22热修",
           "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非作者配套证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "skillOrder": "QWEWWRWEWEREEQQRQQ",
@@ -52976,21 +53006,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "69d7edc48cac55e5",
-          "observedAt": "2026-10-23T02:03:51.548Z",
+          "observedAt": "2026-11-05T02:19:26.163Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rakan",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
               "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "14165b7ab2f27514"
             }
           }
@@ -53032,10 +53062,10 @@
         "SummonerBarrier"
       ],
       "damage": "mixed",
-      "why": "多兰戒＋两瓶药；首回城封印、增幅典籍，先纳什，再明朗鞋和帽子，接中娅。魔抗较高时比较虚空，被先手法术威胁时比较女妖；后续格互斥，不默认强出杀人书。先让洛实际控住，再用W和普攻叠毒后E；隐身不是无敌，洛的回身距离按普通队友计算，图奇隐身不会让洛一起隐藏。",
+      "why": "保留 rowzkit 的 AP 图奇方向。多兰戒与两瓶药出门，首回城按预算选择封印或典籍；纳什后看明朗鞋、帽子和中娅，按魔抗或先手威胁比较虚空与女妖。W 命中和普攻实际积毒后按层数使用 E，伪装不能让洛一起隐藏。当前同位置签名样本的首选是 AD，独立于这套 AP 配置。",
       "skillReason": "作者技能格未读取；项目选择E/W/Q开局、主E副W的合法18点服务叠毒收尾，不宣称作者原加点。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-24",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "rowzkit · AP图奇（声明26.21；更新时间未知）",
@@ -53052,8 +53082,26 @@
         {
           "name": "Riot · 26.21及10/22热修",
           "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非作者配套证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "skillOrder": "EWQEEREWEWRWWQQRQQ",
@@ -53081,21 +53129,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ab3e76d629cf2787",
-          "observedAt": "2026-10-23T02:03:51.636Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Twitch",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
               "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
             }
           }
@@ -53136,10 +53184,10 @@
         "SummonerFlash",
         "SummonerBarrier"
       ],
-      "why": "Fruxo吸蓝刀分支：多兰剑＋药水；首回城战锤，不足时分购长剑或短剑。吸蓝刀→纳沃利→无尽，神奇之鞋收到免费鞋后再升级攻速鞋；护甲、续航、可解除控制分别比较多米尼克、饮血、水银弯刀，后续格互斥。洛W/R命中后再铺羽收羽，保留R应对反扑；保持洛能E回来接应的距离。",
+      "why": "保留 Fruxo 的夺萃、纳沃利、无尽支线。多兰刃与药出门，首回城按预算选战锤组件；神奇之鞋到账后再升级攻速鞋。后续分别比较穿甲、续航和解控。夺萃和饮血的部分数值未解析，接力只看洛实际控制、霞铺羽及命中回拉线。",
       "skillReason": "作者主 E 副 W；Q/E/W 前三级及合法18点为项目补齐，不冒充原技能格。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-24",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Fruxo · 霞（10/22声明26.21）",
@@ -53156,8 +53204,26 @@
         {
           "name": "Riot · 26.21及10/22热修",
           "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-24"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制核对，非作者配套证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "skillOrder": "QEWEEREWEWRWWQQRQQ",
@@ -53184,21 +53250,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "6218a12d2240d28e",
-          "observedAt": "2026-10-23T02:03:51.640Z",
+          "observedAt": "2026-11-05T02:19:26.182Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Xayah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/xayah/xayah.bin.json",
               "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ef84e7c599b03475"
             }
           }
