@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.25",
+  "version": "2026.11.06.26",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -29515,8 +29515,8 @@
         "Caitlyn"
       ],
       "comboId": "trap-light",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-03",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "basis": "champion-mechanics",
       "verification": "inferred-not-match-tested",
       "linkFingerprint": "173b1222ee299fdd",
@@ -29530,21 +29530,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "50314ad04c92f1a6",
-          "observedAt": "2026-10-23T02:03:51.540Z",
+          "observedAt": "2026-11-05T02:19:26.155Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lux",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
-              "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lux/lux.bin.json",
+              "sha256": "bcb1ca7a7e82072b504985d84dc1fa905471f3c249fbafb3ab72658a50f7595b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "cc7818802b8d5fc7"
             }
           }
@@ -29554,21 +29554,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d19bdcd858382502",
-          "observedAt": "2026-10-23T02:03:51.454Z",
+          "observedAt": "2026-11-05T02:19:26.063Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Caitlyn",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/caitlyn/caitlyn.bin.json",
               "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6c728252e5826813"
             }
           }
@@ -31151,8 +31151,8 @@
       "why": "皇子限制移动，加里奥提供后续控制，女枪从安全角度持续开大。",
       "plan": "皇子确认女枪距离后先手；加里奥以队友为落点接支援；女枪等控制生效再开弹幕。",
       "risk": "加里奥落地有延迟；皇子地形也可能妨碍队友，女枪大招怕打断。 嘉文 Q 未连接旗或目标未在路径上就不击飞，加里奥护盾只吸魔法伤害。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot Galio 技能说明",
@@ -31183,6 +31183,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -31190,13 +31196,13 @@
           "role": "jungle",
           "champion": "JarvanIV",
           "job": "女枪已有安全 R 角度、加里奥在支援范围才 EQ 接近并按需 R 限制目标；围绕落点承伤，不把人框在女枪范围外。队友要退出时解除地形，不追第二个目标。",
-          "loadoutId": "trio-jarvan-engage"
+          "loadoutId": "default"
         },
         {
           "role": "mid",
           "champion": "Galio",
           "job": "确认皇子当时位置在 R 范围内且能撑到落地，再 R 支援；落地 W/E 错开接控，给女枪保同一输出区。目标退出落点或皇子无法承伤时取消强接。",
-          "loadoutId": "trio-galio-engage"
+          "loadoutId": "default"
         },
         {
           "role": "bottom",
@@ -31216,36 +31222,7 @@
       "reviewBaseline": {
         "champion:JarvanIV": "c9d96bc727699c9b",
         "champion:Galio": "62214853523131ad",
-        "champion:MissFortune": "10b496d2ce7c344d",
-        "item:6610": "93878c29ffe17b52",
-        "item:3071": "8b44dc349847ea0e",
-        "item:6333": "60ed05035db8354d",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3053": "6f40bd5cd29bb7d2",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8347": "def2a55844436c47",
-        "item:3152": "37dc7712644a19f0",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3020": "357a162d6a40286e",
-        "item:3089": "a8a9b060b253391c",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998"
+        "champion:MissFortune": "10b496d2ce7c344d"
       },
       "reviewSourceAnchors": {
         "JarvanIV": {
@@ -31253,21 +31230,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c9d96bc727699c9b",
-          "observedAt": "2026-10-23T02:03:51.530Z",
+          "observedAt": "2026-11-05T02:19:26.076Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "JarvanIV",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jarvaniv/jarvaniv.bin.json",
-              "sha256": "6dfa4b87b045841df8ae4ffb982baf6308b5b5e34108ed8cfd3ae73141f9d141"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "62ea4f1e9467d2b7"
             }
           }
@@ -31277,21 +31254,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-23T02:03:51.461Z",
+          "observedAt": "2026-11-05T02:19:26.071Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
               "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
@@ -31301,21 +31278,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-23T02:03:51.542Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -31334,8 +31311,8 @@
       "why": "三人的进场围绕同一目标，加里奥帮助前排进场后撑过第一轮。",
       "plan": "先处理兵线并确认加里奥支援范围；卡蜜尔或蔚先手，另一人后手接控；加里奥跟上，确认击杀后一起撤。",
       "risk": "加里奥 R 以友军位置为落点且有延迟，不保证敌人留在范围内；蔚 W 是被动，不能接控。前两人都深入、友军被逼退或三人覆盖断开就取消强接并互相接应，不追进敌方全队。 卡蜜尔 E 要先挂地形再撞英雄，蔚 Q 击退、R 主目标击飞。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot Camille 16.20.1 技能说明",
@@ -31378,6 +31355,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -31391,13 +31374,13 @@
           "role": "jungle",
           "champion": "Vi",
           "job": "先报 Q/R 是否可用；卡蜜尔留住目标、加里奥能接应时，Q 命中英雄击退或 R 抵达主目标后击飞，别与卡蜜尔同时交完先手。普攻/E 按实际情况叠 W；队友跟不上或退路不清时停止深入。",
-          "loadoutId": "trio-vi-followup"
+          "loadoutId": "default"
         },
         {
           "role": "mid",
           "champion": "Galio",
           "job": "先确认卡蜜尔或蔚作为 R 的友军落点在范围内，且能撑到延迟落地；R 不以敌方英雄为目标。落地后用 W 嘲讽或 E 实际击飞错开接控，Q 补同一战区伤害。友军落点已被逼退、敌人离开落区或输出到不了时取消强接，转保护撤离。",
-          "loadoutId": "trio-galio-engage"
+          "loadoutId": "default"
         }
       ],
       "steps": [
@@ -31411,36 +31394,7 @@
       "reviewBaseline": {
         "champion:Camille": "d8925ce8a69d2250",
         "champion:Vi": "ed4ccc20b476dc0e",
-        "champion:Galio": "62214853523131ad",
-        "item:3078": "00721100a51ed120",
-        "item:3071": "8b44dc349847ea0e",
-        "item:6333": "60ed05035db8354d",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3053": "6f40bd5cd29bb7d2",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8347": "def2a55844436c47",
-        "item:3152": "37dc7712644a19f0",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3020": "357a162d6a40286e",
-        "item:3089": "a8a9b060b253391c",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998"
+        "champion:Galio": "62214853523131ad"
       },
       "reviewSourceAnchors": {
         "Camille": {
@@ -31448,21 +31402,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d8925ce8a69d2250",
-          "observedAt": "2026-10-23T02:03:51.455Z",
+          "observedAt": "2026-11-05T02:19:26.063Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Camille",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/camille/camille.bin.json",
-              "sha256": "032045fc45a37b5c7e01084660a1e374e98463d64bfbfb16238213f44a028907"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/camille/camille.bin.json",
+              "sha256": "4a71a33c3849552befed54f0ae747ad470c25ac1a4921095d44c43ee3167df80"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "67751120f662608d"
             }
           }
@@ -31472,21 +31426,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ed4ccc20b476dc0e",
-          "observedAt": "2026-10-23T02:03:51.638Z",
+          "observedAt": "2026-11-05T02:19:26.180Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Vi",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/vi/vi.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
               "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8c5f2d227a1d26cb"
             }
           }
@@ -31496,21 +31450,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-23T02:03:51.461Z",
+          "observedAt": "2026-11-05T02:19:26.071Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
               "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
@@ -31529,8 +31483,8 @@
       "why": "魔腾切入后，慎与加里奥按范围和引导条件支援。",
       "plan": "魔腾确认目标与退路；慎 R 盾保护友军，加里奥 R 选择范围内可选友军的位置支援。",
       "risk": "关灯不代表安全；慎引导可能中断，加里奥落点不跟随移动，缺输出或退路就退。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot Shen 16.20.1 技能",
@@ -31555,6 +31509,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -31596,21 +31556,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e59438000b98dd56",
-          "observedAt": "2026-10-26T13:38:40.520Z",
+          "observedAt": "2026-11-05T02:19:26.169Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Shen",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/shen/shen.bin.json",
-              "sha256": "ff70810a319271f9cc076508d6e6a5d877b06899ac6f69516963d975575284e5"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/shen/shen.bin.json",
+              "sha256": "74cb0c892cd17455b5b0cc635c3d396fbba9f6ef3663145ed701cfc6c895b142"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "56dbf98c4bc9628e"
             }
           }
@@ -31620,21 +31580,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2759f235cb713880",
-          "observedAt": "2026-10-26T13:38:40.508Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nocturne",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nocturne/nocturne.bin.json",
-              "sha256": "93338da160b2ed4c8ff61ee45eac0e21363f69939f6202524c29910e7beabf58"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nocturne/nocturne.bin.json",
+              "sha256": "8de4d928ce7dee799b759c87a7114069b297f9228ef8e51c21ba9f1da5b0ab49"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7e6432fe64cf372b"
             }
           }
@@ -31644,21 +31604,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-26T13:38:40.394Z",
+          "observedAt": "2026-11-05T02:19:26.071Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
               "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
@@ -34351,8 +34311,8 @@
       "why": "卡蜜尔限制目标，瑟庄妮按实际霜冻层数接控，加里奥判断距离和落点后支援。",
       "plan": "卡蜜尔确认墙体和目标后进场；瑟庄妮 W 与附近近战友军攻击对同一目标实际叠满四层才 E。 加里奥 R 选范围内友军当时的位置，区域友军获得魔法护盾；队友能撑到落地且敌人仍在范围时再按实际位置接控。 加里奥到不了、目标离开落点或敌方反包时停止深入并互相接应。",
       "risk": "加里奥落点不追踪友军后续位移，护盾只抵魔法伤害；控制和支援均不保证命中。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot Galio 技能说明",
@@ -34365,6 +34325,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -34406,21 +34372,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d8925ce8a69d2250",
-          "observedAt": "2026-10-26T13:38:40.312Z",
+          "observedAt": "2026-11-05T02:19:26.063Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Camille",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/camille/camille.bin.json",
-              "sha256": "032045fc45a37b5c7e01084660a1e374e98463d64bfbfb16238213f44a028907"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/camille/camille.bin.json",
+              "sha256": "4a71a33c3849552befed54f0ae747ad470c25ac1a4921095d44c43ee3167df80"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "67751120f662608d"
             }
           }
@@ -34430,21 +34396,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "1d8d94f1d8414573",
-          "observedAt": "2026-10-26T13:38:40.518Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Sejuani",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/sejuani/sejuani.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/sejuani/sejuani.bin.json",
               "sha256": "e5a19fab33de3cc6693e2e963c0a2cdd2277a5dd6bdade2d17880f6a1b00c948"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7cc5989bda48fb2b"
             }
           }
@@ -34454,21 +34420,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-26T13:38:40.394Z",
+          "observedAt": "2026-11-05T02:19:26.071Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
               "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
@@ -35603,7 +35569,7 @@
       "risk": "洛 W 落空、支援到不了、敌人离开固定落点或退路断开时取消深入；洛不应为等待 R 独自承伤。尼菈 W 和加里奥魔法护盾不免全部伤害或控制。",
       "early": "尼菈保下路补刀与血量，洛护送并维持视野；加里奥处理中线后再判断是否支援。",
       "window": "洛技能可用且有接应，加里奥 R 已学可用且友军当时位置在范围内；尼菈有可选接近和退出单位。三人距离、状态和退路由玩家确认。",
-      "economy": "尼菈拿下路补刀，加里奥保中线，洛保任务与视野经济；三人复用各自共享配置，不代表组合专配或组合实测。",
+      "economy": "尼菈拿下路补刀，加里奥保中线，洛保任务与视野经济；三人使用同英雄同分路默认参考，实际来源以界面状态为准，不代表组合专配或组合实测。",
       "steps": [
         "洛先确认 W、队友距离和可返回友军，尼菈保下路线；加里奥先处理兵线并确认 R 可用及友军当时位置。",
         "洛 W 实际击飞或 R 接触魅惑后报位置；加里奥 R 指向友军施放时的位置，区域内护盾只抵魔法伤害，落地有延迟。",
@@ -35614,23 +35580,23 @@
           "champion": "Galio",
           "role": "mid",
           "job": "先清中线并确认 R 可用；选择范围内友军当时位置作固定落点，区域护盾只抵魔法伤害。落地后按实际位置用 W/E；目标离开或队友撤退时取消强接。",
-          "loadoutId": "trio-galio-engage"
+          "loadoutId": "default"
         },
         {
           "champion": "Nilah",
           "role": "bottom",
           "job": "先处理下路线；确认 E 可选单位、剩余次数与退出方向，Q 命中敌方单位或建筑后才获得强化。队友未到、落点脱离或退路断开时不深进；W 接触友军才分享。",
-          "loadoutId": "nilah-sustain"
+          "loadoutId": "default"
         },
         {
           "champion": "Rakan",
           "role": "support",
           "job": "先确认可 E 的友军和实际距离，再用 W 或已就绪 R 控制；W 击飞与 R 魅惑分开判断。加里奥落点固定，按安全情况撤回，不为等落地独自承伤。",
-          "loadoutId": "rakan-engage"
+          "loadoutId": "default"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 加里奥技能资料",
@@ -35667,54 +35633,18 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Rakan.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Galio": "62214853523131ad",
         "champion:Nilah": "30e5ef1b4f79390e",
-        "champion:Rakan": "69d7edc48cac55e5",
-        "item:3152": "37dc7712644a19f0",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3020": "357a162d6a40286e",
-        "item:3089": "a8a9b060b253391c",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3072": "5c29525fccb26a37",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032",
-        "item:3050": "c3e25c9df9075147",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:2065": "a30335c7d456f5fd",
-        "rune:8465": "4b16b0cca812d727",
-        "rune:8453": "f9a0180e7f2f0432",
-        "rune:8351": "6594874b24a7b00e"
+        "champion:Rakan": "69d7edc48cac55e5"
       },
       "reviewSourceAnchors": {
         "Galio": {
@@ -35722,21 +35652,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-23T02:03:51.461Z",
+          "observedAt": "2026-11-05T02:19:26.071Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
               "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
@@ -35746,21 +35676,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-23T02:03:51.545Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -35770,21 +35700,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "69d7edc48cac55e5",
-          "observedAt": "2026-10-23T02:03:51.548Z",
+          "observedAt": "2026-11-05T02:19:26.163Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rakan",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rakan/rakan.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rakan/rakan.bin.json",
               "sha256": "c4e16a57f1a6f13ba5c08e1fe861629afca5435b0a3154c4c444fe89aaa17d6a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "14165b7ab2f27514"
             }
           }
@@ -44394,13 +44324,13 @@
         {
           "champion": "Galio",
           "role": "mid",
-          "loadoutId": "trio-galio-engage",
+          "loadoutId": "default",
           "job": "R 选芮尔或凯南当时可接应的位置，报延迟落点；落地后 W/E 接尚未受控者，魔法护盾不承担物理伤害和即时救命承诺。"
         },
         {
           "champion": "Rell",
           "role": "support",
-          "loadoutId": "tank-engage",
+          "loadoutId": "default",
           "job": "W/Q 实际控制才报凯南跟进，R 拉拢后仍要留意对手能施法；E 加速给能到场的人，不能把吸附当对手无法反击。"
         }
       ],
@@ -44411,9 +44341,9 @@
       ],
       "early": "上中各自保线，芮尔优先照顾下路；六级前仅做身边可到场的基础控制，不能让辅助长期离线等两个单人路大招。",
       "window": "中期三人关键 R 可用、凯南有可接触侧翼且加里奥落点仍能接应；选人时先核对余下两位的物理输出和持续伤害。",
-      "economy": "凯南使用普通上路默认配置，未新增专用配装复核；加里奥复用接控、芮尔复用辅助开团配置。上中保线、芮尔保辅助任务经济，不把三法伤连招当能处理所有前排。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "economy": "上中保线，芮尔保辅助任务经济；三人使用同英雄同分路默认参考，实际来源以界面状态为准，法伤集中时需队伍自行补足。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 凯南 16.20 技能",
@@ -44462,38 +44392,18 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Kennen": "acea9254a0f94a5c",
         "champion:Galio": "62214853523131ad",
-        "champion:Rell": "bec49be1ddcf29c0",
-        "item:3152": "37dc7712644a19f0",
-        "item:4005": "049fc32e0486e5b6",
-        "item:3157": "4e1ddce33472ee0f",
-        "item:3020": "357a162d6a40286e",
-        "item:3089": "a8a9b060b253391c",
-        "item:3135": "9eb1465e02c69db0",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8230": "b4da4b07836c5635",
-        "rune:8226": "b05a5d0fb43e4a6e",
-        "rune:8234": "018bc04903dfba25",
-        "rune:8237": "141d0a7c16b98b91",
-        "rune:8444": "fbb59f496f94894e",
-        "rune:8451": "9e4f8837510e3998",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Rell": "bec49be1ddcf29c0"
       },
       "reviewSourceAnchors": {
         "Kennen": {
@@ -44501,21 +44411,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "acea9254a0f94a5c",
-          "observedAt": "2026-10-23T02:03:51.534Z",
+          "observedAt": "2026-11-05T02:19:26.080Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kennen",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kennen/kennen.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kennen/kennen.bin.json",
               "sha256": "1f304430b94732440506d967be3a786532dbcfb840ef8e08c76200f74f6f8553"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8217ba3a90c36528"
             }
           }
@@ -44525,21 +44435,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "62214853523131ad",
-          "observedAt": "2026-10-23T02:03:51.461Z",
+          "observedAt": "2026-11-05T02:19:26.071Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Galio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/galio/galio.bin.json",
               "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e3a8cfa71c0b2970"
             }
           }
@@ -44549,21 +44459,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "bec49be1ddcf29c0",
-          "observedAt": "2026-10-23T02:03:51.549Z",
+          "observedAt": "2026-11-05T02:19:26.164Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rell",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
               "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f5469dea7fbc0dcb"
             }
           }
