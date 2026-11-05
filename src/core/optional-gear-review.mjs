@@ -13,7 +13,7 @@ import {createItemSet} from './item-sets.mjs';
 // revision binds the entry, referenced loadouts, rune plans and skill plans.
 // Evidence is reviewed separately; no prose is parsed.
 const revisions=Object.freeze({
- 'cassiopeia-singed':'b407f05b69886ba0','anivia-poppy':'7980bf1ff73c677e',
+ 'cassiopeia-singed':'7187ca75991aa76c','anivia-poppy':'7980bf1ff73c677e',
  'sion-zilean':'700f9a612a69a56d','pantheon-braum':'6d3dcf7b03cec084',
  'taliyah-senna':'179585d47ce22bab','taliyah-zyra':'c98c3e83162978a6',
  'taliyah-neeko':'9d4cdc18d50d2c8e','cassiopeia-twitch':'2504d838f829f173',
@@ -77,6 +77,8 @@ const revisions=Object.freeze({
  'ivern-rengar-lulu':'deeb97fb9e2c2594',
  'diana-wind-cow':'fac5b937ffc47b53',
  'zac-yasuo-alistar':'6e85359fecb2ea7d',
+ 'jhin-taliyah':'598dc5446f557a2b',
+ 'jhin-nidalee':'6079e00771cffe24',
 });
 
 // Only the store can establish the origin of a merged entry. An identical

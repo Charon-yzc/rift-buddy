@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.03.53",
+  "version": "2026.11.05.1",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -13558,6 +13558,12 @@
           "name": "Riot 16.21.1 艾翁与雷恩加尔技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据"
+        },
+        {
+          "name": "Berke Gursoy · 艾翁/狮子狗下路（2023-03-01）",
+          "url": "https://gamelevate.com/ivern-rengar-bot-lane-guide-tilt-your-enemies/",
+          "kind": "原作者文字攻略，历史玩法参考，非本版配装",
+          "checkedAt": "2026-11-04"
         }
       ],
       "loadouts": {
@@ -15168,9 +15174,9 @@
         "禁锢接技能",
         "远程消耗"
       ],
-      "why": "友方英雄先实际伤害目标，烬 W 实际命中的首个敌方英雄仍在该伤害窗口时才禁锢；塔莉垭可按实际位置寻找岩突。接续按文本推断，未对局验证。",
-      "plan": "烬下路补刀，塔莉垭辅助；友方英雄先实际伤害目标，烬 W 命中首个敌方英雄时窗口仍有效才禁锢，再由塔莉垭按位置判断 W/E。",
-      "risk": "W 可能被其他敌方英雄挡住或飞行时伤害窗口过期；岩突须实际命中，E 碎石须目标冲刺或被强制位移实际途经才触发，辅助经济有限。",
+      "why": "一种接续是友方英雄先伤害目标，烬 W 命中同一敌方英雄且友方伤害窗口仍有效时可禁锢；塔莉垭再按实际位置寻找岩突。接续按文本推断，未对局验证。",
+      "plan": "烬下路补刀，塔莉垭辅助；采用友方伤害接续时，友方英雄先实际伤害目标，烬 W 命中弹道首个敌方英雄且同一目标的伤害窗口仍有效时可禁锢，再由塔莉垭按位置判断 W/E。",
+      "risk": "这一路径可能因其他敌方英雄挡住 W 或命中时伤害窗口过期而无法禁锢；技能摘要与详细说明对其他标记来源不一致，尚待核实。岩突须实际命中，E 碎石须目标冲刺或被强制位移实际途经才触发，辅助经济有限。",
       "partners": [
         "Shen",
         "Sejuani"
@@ -15214,7 +15220,7 @@
           "champion": "Jhin",
           "role": "bottom",
           "loadoutId": "default",
-          "job": "控制补刀和四发换弹节奏；W 命中时须是首个敌方英雄且同目标的友方伤害窗口仍有效，不能只看施法时状态。"
+          "job": "控制补刀和四发换弹节奏；采用友方伤害接续时，W 命中弹道首个敌方英雄且同目标的伤害窗口仍有效才有这一路径的禁锢机会，不能只看施法时状态。"
         },
         {
           "champion": "Taliyah",
@@ -15224,8 +15230,8 @@
         }
       ],
       "steps": [
-        "烬下路补刀，塔莉垭辅助；友方英雄先实际伤害目标，烬 W 命中首个敌方英雄时窗口仍有效才禁锢，再由塔莉垭按位置判断 W/E。",
-        "控制补刀和四发换弹节奏；W 命中时须是首个敌方英雄且同目标的友方伤害窗口仍有效，不能只看施法时状态。",
+        "烬下路补刀，塔莉垭辅助；采用友方伤害接续时，友方英雄先实际伤害目标，烬 W 命中弹道首个敌方英雄且同一目标的伤害窗口仍有效时可禁锢，再由塔莉垭按位置判断 W/E。",
+        "控制补刀和四发换弹节奏；采用友方伤害接续时，W 命中弹道首个敌方英雄且同目标的伤害窗口仍有效才有这一路径的禁锢机会，不能只看施法时状态。",
         "先按任务、视野和法力提供伤害；W 实际命中才位移，E 需目标冲刺或被强制位移实际途经碎石才爆炸。",
         "确认目标实际状态、队友距离与退路；未触发控制或无法接应时停止追击。"
       ],
@@ -18040,9 +18046,9 @@
         "技能标记",
         "远程接控"
       ],
-      "why": "奈德丽实际造成伤害后，烬 W 命中同一敌方英雄时若友方伤害窗口仍有效，可尝试禁锢并寻找标枪角度。",
-      "plan": "烬下路补刀、奈德丽辅助；奈德丽人形 Q 或陷阱实际对敌方英雄造成伤害后，烬要计入 W 施法与飞行时间：命中同一目标时友方伤害窗口仍有效，且目标是弹道首个命中的敌方英雄，才会禁锢。",
-      "risk": "缺少可靠前排，W 可能因伤害窗口结束、其他敌方英雄挡住或未命中而无法禁锢；标枪也可能落空，烬装弹或目标离开接应距离时停止追击。",
+      "why": "一种接续是奈德丽实际伤害敌方英雄后，烬 W 命中同一目标时若友方伤害窗口仍有效，可尝试禁锢并寻找后续标枪角度。",
+      "plan": "烬下路补刀、奈德丽辅助；采用友方伤害接续时，奈德丽人形 Q 或陷阱实际对敌方英雄造成伤害后，烬计入 W 施法与飞行时间：命中同一目标时伤害窗口仍有效，且目标是弹道首个命中的敌方英雄，才有这一路径的禁锢机会。",
+      "risk": "缺少可靠前排；这一路径可能因伤害窗口结束、其他敌方英雄挡住 W 或未命中而无法禁锢。技能摘要与详细说明对其他标记来源不一致，尚待核实；标枪也可能落空，烬装弹或目标离开接应距离时停止追击。",
       "partners": [
         "Sejuani",
         "Shen"
@@ -18085,7 +18091,7 @@
           "champion": "Jhin",
           "role": "bottom",
           "loadoutId": "default",
-          "job": "先保下路补刀；友方实际伤害后确认目标，计入 W 施法与飞行时间，命中同一敌方英雄时伤害窗口仍有效且该英雄为弹道首个命中的敌方英雄才禁锢；装弹时保留退路。"
+          "job": "先保下路补刀；采用友方伤害接续时，确认队友实际伤害的目标并计入 W 施法与飞行时间，命中同一目标时伤害窗口仍有效且该英雄为弹道首个命中的敌方英雄才有这一路径的禁锢机会；装弹时保留退路。"
         },
         {
           "champion": "Nidalee",
@@ -18095,11 +18101,11 @@
         }
       ],
       "steps": [
-        "奈德丽实际伤害敌方英雄后，烬计入 W 施法与飞行时间，在命中同一目标时友方伤害窗口仍有效，且该目标是弹道首个命中的敌方英雄并被禁锢后报目标与技能状态，双方确认实际距离、兵线和退路。",
+        "采用友方伤害接续时，奈德丽实际伤害敌方英雄后，烬计入 W 施法与飞行时间；命中同一目标时伤害窗口仍有效且该目标是弹道首个命中的敌方英雄，实际禁锢后再报目标与技能状态，双方确认距离、兵线和退路。",
         "奈德丽人形 Q 瞄准敌方英雄，是否命中需实际确认；需要支援时人形 E 对施法范围内的友方单位施放，是否成功以实际施放为准，并留意退路。",
         "技能落空或目标离开接应范围就结束追击，优先保护补刀与视野。"
       ],
-      "window": "奈德丽实际伤害敌方英雄后，烬计入 W 施法与飞行时间，在命中同一目标时友方伤害窗口仍有效，且该目标是弹道首个命中的敌方英雄并被禁锢，且奈德丽在人形、Q 已学可用并处于实际施法范围；后续标枪是否命中需自行确认。",
+      "window": "采用友方伤害接续时，奈德丽先实际伤害敌方英雄；烬计入 W 施法与飞行时间，命中同一目标时伤害窗口仍有效且该目标是弹道首个命中的敌方英雄，实际禁锢后，奈德丽在人形、Q 已学可用且处于实际施法范围才考虑后续标枪；命中需自行确认。",
       "early": "射手承担下路补刀，奈德丽辅助按安全距离消耗并照顾治疗；技能未命中前不预设后续控制。",
       "economy": "射手承担下路补刀；奈德丽按辅助任务、视野与实际经济安排购买，不按补刀位速度承诺成装。",
       "reviewSourceAnchors": {
@@ -20415,8 +20421,8 @@
         "护盾联动",
         "持续跟随"
       ],
-      "why": "悠米实际附身后的护盾与命中的治疗波纹支持尼菈进退。",
-      "plan": "悠米附身后提供护盾，尼菈确认目标和退路再换血。",
+      "why": "悠米实际附身后施放 E 提供的护盾，与命中的治疗波纹可支持尼菈进退。",
+      "plan": "悠米实际附身后可施放 E 为尼菈提供护盾；尼菈确认目标和退路再换血。",
       "risk": "近战下路可能受推线和越塔压力；敌方围捕或尼菈没有安全可用撤离目标时提前退。",
       "partners": [
         "Shen",
@@ -28746,6 +28752,475 @@
           }
         }
       }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Brand",
+        "Nami"
+      ],
+      "comboId": "brand-nami",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-04",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "96a21728b2be7fe7",
+      "baseline": {
+        "Brand": "dfe0f7f6ef8e7e6e",
+        "Nami": "b10366f1187813b9"
+      },
+      "anchors": {
+        "Brand": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "dfe0f7f6ef8e7e6e",
+          "observedAt": "2026-10-26T13:38:40.310Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Brand",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/brand/brand.bin.json",
+              "sha256": "6fa48fcc58833650750981e3f64657fdd6ba8392741ee11947fd48d6a7da96d4"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "12112af12e321441"
+            }
+          }
+        },
+        "Nami": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b10366f1187813b9",
+          "observedAt": "2026-10-26T13:38:40.505Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Nami",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nami/nami.bin.json",
+              "sha256": "aba90cdddcd8bfe1cf6688273adc153f996acc12cf73890f4f10f8cf80acf104"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "d41e55e60af3c37e"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Galio",
+        "Senna"
+      ],
+      "comboId": "galio-senna",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-04",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "c39ab189c9bb219b",
+      "baseline": {
+        "Galio": "62214853523131ad",
+        "Senna": "5e547c9cf10f2a05"
+      },
+      "anchors": {
+        "Galio": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "62214853523131ad",
+          "observedAt": "2026-10-26T13:38:40.394Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Galio",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/galio/galio.bin.json",
+              "sha256": "7aa1e6e5b363ddcf43803eb25cc09aa80b8bbb39e563ae9d37443a83d08b2df5"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e3a8cfa71c0b2970"
+            }
+          }
+        },
+        "Senna": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "5e547c9cf10f2a05",
+          "observedAt": "2026-10-26T13:38:40.518Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Senna",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/senna/senna.bin.json",
+              "sha256": "1bc811e1ca9551f77ec55081571f502bac7d95d19297f3e8d12c56138b485c8a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "58582c22f3d6346b"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Pantheon",
+        "Taliyah"
+      ],
+      "comboId": "taliyah-pantheon",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-04",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "ce4bd645267271cf",
+      "baseline": {
+        "Pantheon": "ade6cc95e4c6b966",
+        "Taliyah": "164392e23c74360e"
+      },
+      "anchors": {
+        "Pantheon": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "ade6cc95e4c6b966",
+          "observedAt": "2026-10-23T02:03:51.546Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Pantheon",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/pantheon/pantheon.bin.json",
+              "sha256": "0acb5fa598525639a78e444a98a3e50cc46533843446d17657921c3639dd23df"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0ab565075cf8e870"
+            }
+          }
+        },
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-23T02:03:51.633Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Ivern",
+        "Rengar"
+      ],
+      "comboId": "rengar-ivern",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-04",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "8f9a9f0ed67af5be",
+      "baseline": {
+        "Ivern": "f4b498c5991475d6",
+        "Rengar": "37409a7c0d60e8e8"
+      },
+      "anchors": {
+        "Ivern": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f4b498c5991475d6",
+          "observedAt": "2026-10-26T13:38:40.398Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ivern",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+              "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "a8c07de58a4e8f6d"
+            }
+          }
+        },
+        "Rengar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "37409a7c0d60e8e8",
+          "observedAt": "2026-10-26T13:38:40.516Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Rengar",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rengar/rengar.bin.json",
+              "sha256": "e2e97e8e3cb202d4aaa9481df841c8040e1b8c7356d870a84760fabd5ede9f6b"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "a340ab4d1d71dccd"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Veigar",
+        "Ziggs"
+      ],
+      "comboId": "cage-bomb",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-04",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "76140c264118d2a1",
+      "baseline": {
+        "Veigar": "b0c876605f73d7f8",
+        "Ziggs": "301986c8fed3e8fb"
+      },
+      "anchors": {
+        "Veigar": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "b0c876605f73d7f8",
+          "observedAt": "2026-10-26T13:38:40.597Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Veigar",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "0d5181fbdf1760ef"
+            }
+          }
+        },
+        "Ziggs": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "301986c8fed3e8fb",
+          "observedAt": "2026-10-26T13:38:40.607Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Ziggs",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "fdb99302b5ecb565"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Taliyah",
+        "Neeko"
+      ],
+      "comboId": "taliyah-neeko",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-04",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "b0011db615a68459",
+      "baseline": {
+        "Taliyah": "164392e23c74360e",
+        "Neeko": "d6f4984cd7330b72"
+      },
+      "anchors": {
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        },
+        "Neeko": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "d6f4984cd7330b72",
+          "observedAt": "2026-10-26T13:38:40.506Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Neeko",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/neeko/neeko.bin.json",
+              "sha256": "0d2d79949fbeecdbb851ae627b1dfa189ceab975e17627c57c8f7de546d9d12a"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "1d597517ddd4f92e"
+            }
+          }
+        }
+      }
+    },
+    {
+      "schema": 1,
+      "heroes": [
+        "Taliyah",
+        "Zyra"
+      ],
+      "comboId": "taliyah-zyra",
+      "patch": "16.21",
+      "reviewedAt": "2026-11-04",
+      "basis": "champion-mechanics",
+      "verification": "inferred-not-match-tested",
+      "linkFingerprint": "ee2965457bf360c4",
+      "baseline": {
+        "Taliyah": "164392e23c74360e",
+        "Zyra": "f653495a90d1586e"
+      },
+      "anchors": {
+        "Taliyah": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "164392e23c74360e",
+          "observedAt": "2026-10-26T13:38:40.592Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Taliyah",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taliyah/taliyah.bin.json",
+              "sha256": "9bef888ff2c5445a27f2a7673a9ac194ee0305de7aa8a797fdc38f4ae50e9409"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "b2732603887d7e5f"
+            }
+          }
+        },
+        "Zyra": {
+          "schema": 1,
+          "kind": "explicit-review",
+          "reviewCoverage": "summary-v1",
+          "legacyFingerprint": "f653495a90d1586e",
+          "observedAt": "2026-10-26T13:38:40.609Z",
+          "input": {
+            "schema": 1,
+            "normalizer": 1,
+            "champion": "Zyra",
+            "patch": "16.21",
+            "version": "16.21.1",
+            "locale": "zh_CN",
+            "character": {
+              "algorithm": "canonical-json-sha256-v1",
+              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zyra/zyra.bin.json",
+              "sha256": "18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3"
+            },
+            "dataDragon": {
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "fingerprint": "e6ad7484cbc1effe"
+            }
+          }
+        }
+      }
     }
   ],
   "links": [
@@ -28792,7 +29267,7 @@
     [
       "Ivern",
       "Rengar",
-      "翠神草丛提供雷恩加尔跳跃接近的作战空间"
+      "艾翁 W 草丛仍存在时，雷恩加尔可从草中普攻跳向可见、可攻击且在跳跃范围内的目标；确认落点与退路，不预设连续跳或击杀。"
     ],
     [
       "Shen",
@@ -29107,7 +29582,7 @@
     [
       "Pantheon",
       "Taliyah",
-      "潘森 W 后塔莉垭接岩突与撒石阵"
+      "潘森 W 命中晕住后，塔莉垭先 E，再以 W 实际推目标经过仍存在的石阵；未经过石阵不预设额外眩晕。"
     ],
     [
       "Ahri",
@@ -29162,7 +29637,7 @@
     [
       "Veigar",
       "Ziggs",
-      "维迦笼子限制走位，吉格斯接远程技能"
+      "维迦 E 笼子限制走位，敌人触及边缘才眩晕；吉格斯按实际位置接 Q/E，命中仍需判断。"
     ],
     [
       "Ashe",
@@ -29182,7 +29657,7 @@
     [
       "Brand",
       "Nami",
-      "娜美的增益和减速支持火男命中技能，控制可交错使用。"
+      "娜美 E 强化仍有效且有次数，布兰德攻击或技能命中才减速；布兰德 Q 命中首个敌人且其灼烧仍在才眩晕。"
     ],
     [
       "Sion",
@@ -29197,7 +29672,7 @@
     [
       "Galio",
       "Senna",
-      "加里奥补刀撑住前排，赛娜以射程提供持续支援。"
+      "赛娜 Q 命中减速或 W 命中并延迟禁锢后，加里奥按距离接 W 嘲讽或 E；E 遇地形停止，只击飞首个命中的敌方英雄。"
     ],
     [
       "Taliyah",
@@ -29207,12 +29682,12 @@
     [
       "Taliyah",
       "Zyra",
-      "婕拉定身给塔莉垭技能创造更清晰的落点。"
+      "婕拉 E 实际命中禁锢后，塔莉垭按目标位置先 E 再接 W；目标被推过仍存在的碎石才触发后续晕眩。"
     ],
     [
       "Taliyah",
       "Neeko",
-      "妮蔻先限制移动，塔莉垭接区域控制与伤害。"
+      "妮蔻 E 实际命中禁锢后，塔莉垭按目标位置先 E 再接 W；目标被推过仍存在的碎石才触发后续晕眩。"
     ],
     [
       "Jhin",
@@ -32995,8 +33470,8 @@
         "控制消耗"
       ],
       "why": "努努 W 实际命中击飞后冰鸟 Q 可跟进；队友造成伤害后烬 W 可按标记接控。",
-      "plan": "努努 W 先选择可通过路线并确认实际碰撞；冰鸟 Q 瞄准实际落点。 烬 W 命中第一个敌方英雄时，对方仍有有效友方伤害标记才禁锢。",
-      "risk": "努努打野、冰鸟中路、烬下路；引导受打断或标记失效时撤退。",
+      "plan": "努努 W 先选择可通过路线并确认实际碰撞；冰鸟 Q 瞄准实际落点。 采用队友伤害接续时，烬 W 命中同一目标且目标是弹道首个敌方英雄、伤害窗口仍有效时可禁锢。",
+      "risk": "努努打野、冰鸟中路、烬下路；引导受打断或此接续的伤害窗口失效时撤退。烬 W 的技能摘要与详细说明对其他标记来源不一致，尚待核实。",
       "patch": "16.21",
       "reviewedAt": "2026-11-02",
       "sources": [
@@ -33041,13 +33516,13 @@
         {
           "champion": "Jhin",
           "role": "bottom",
-          "job": "烬下路，W 命中第一个敌方英雄且其仍有有效友方伤害标记才禁锢。",
+          "job": "烬下路；采用队友伤害接续时，W 命中同一目标且目标是弹道首个敌方英雄、伤害窗口仍有效时可禁锢。",
           "loadoutId": "default"
         }
       ],
       "steps": [
         "努努 W 先选择可通过路线并确认实际碰撞；冰鸟 Q 瞄准实际落点。",
-        "烬 W 命中第一个敌方英雄时，对方仍有有效友方伤害标记才禁锢。"
+        "采用队友伤害接续时，烬 W 命中同一目标且目标是弹道首个敌方英雄、伤害窗口仍有效时可禁锢。"
       ],
       "window": "冰鸟墙不得堵住队友；努努 E 一轮的三团雪球须全部实际命中同一目标以施减速，后续触发时目标仍在附近且该减速仍在，才按描述判断禁锢。",
       "early": "先处理各自兵线或野区，按已学技能和实际位置确认机会；条件不成立就撤退。",
@@ -33613,14 +34088,14 @@
         "控制消耗"
       ],
       "why": "小法的牢笼限制出口，莫甘娜禁锢后烬 W 跟进，适合逐个留人。",
-      "plan": "小法 E 限制退路，莫甘娜 Q 找目标；确认敌人已有队友伤害标记后烬 W 命中首名英雄才禁锢。黑盾提前给即将受到控制的队友。",
-      "risk": "小法 E 只有触碰边缘才眩晕，莫甘娜 Q 会被首个单位挡住；黑盾只吸魔伤、存续时阻挡适用控制，不能事后解控。",
+      "plan": "小法 E 限制退路，莫甘娜 Q 找目标；采用队友伤害接续时，烬 W 命中同一目标且目标是弹道首个敌方英雄、伤害窗口仍有效时可禁锢。黑盾提前给即将受到控制的队友。",
+      "risk": "小法 E 只有触碰边缘才眩晕，莫甘娜 Q 会被首个单位挡住；黑盾只吸魔伤、存续时阻挡适用控制，不能事后解控。烬 W 的技能摘要与详细说明对其他标记来源不一致，尚待核实。",
       "early": "烬在换弹时后撤，小法先清中线，莫甘娜不要为了摸 Q 越过兵线。",
       "window": "河道窄口视野确认、对手必须经过牢笼边缘时。",
       "economy": "烬与小法各吃自己的线；莫甘娜优先视野和功能，不与两位输出争经济。",
       "steps": [
         "维迦 E 限制退路，敌人碰到牢笼边缘才眩晕；莫甘娜 Q 确认弹道及实际目标。",
-        "确认目标先受队友伤害有标记，烬 W 命中首名英雄才禁锢；莫甘娜在关键控制到来前给黑盾。",
+        "采用队友伤害接续时，确认队友实际伤害同一目标；烬 W 命中弹道首个敌方英雄且该目标的伤害窗口仍有效时可禁锢；莫甘娜在关键控制到来前给黑盾。",
         "烬 R 只在安全位置引导；控制空、敌人突进或护盾消失时停止追击。"
       ],
       "members": [
@@ -33633,7 +34108,7 @@
         {
           "champion": "Jhin",
           "role": "bottom",
-          "job": "确认队友伤害标记后 W 接同一目标，按实际弹药普攻，R 在安全远处引导；围栏没碰到目标时不预设命中。装填或黑盾保护距离断开就停追。",
+          "job": "采用队友伤害接续时确认同一目标和命中时有效的伤害窗口，W 以弹道首个敌方英雄为准；按实际弹药普攻，R 在安全远处引导；围栏没碰到目标时不预设命中。装填或黑盾保护距离断开就停追。",
           "loadoutId": "default"
         },
         {
@@ -37143,14 +37618,14 @@
       ],
       "why": "波比与卡牌实际控制后，烬按标记和射线路径接 W。",
       "plan": "波比 E 实际撞地形才晕；卡牌黄牌命中，烬确认友方英雄伤害标记与首个英雄目标。",
-      "risk": "烬 W 命中首个敌方英雄且标记须仍有效；地形或落点不利就撤。",
+      "risk": "采用友方伤害接续时，烬 W 命中同一目标且目标为首个敌方英雄、伤害窗口仍有效时可禁锢；技能摘要与详细说明对其他标记来源不一致，尚待核实。地形或落点不利就撤。",
       "early": "波比保上路，卡牌处理中线，烬安全补下路。",
       "window": "墙体、有效标记、射线及三人位置实际成立时。",
       "economy": "波比保上路线，卡牌处理中线，烬补下路。",
       "steps": [
         "确认墙体、敌人位置与烬 W 射线。",
         "波比 E 实际将目标撞地形才晕，卡牌黄牌普攻命中才晕。",
-        "友方英雄对目标实际造成伤害，烬 W 命中时标记仍有效且目标是射线首个敌方英雄才禁锢；接不上就退。"
+        "采用友方伤害接续时，友方英雄对目标实际造成伤害，烬 W 命中同一目标时伤害窗口仍有效且目标是射线首个敌方英雄时可禁锢；接不上就退。"
       ],
       "members": [
         {
@@ -37168,7 +37643,7 @@
         {
           "champion": "Jhin",
           "role": "bottom",
-          "job": "保下路，确认 W 命中时友方英雄伤害标记仍有效，且目标是射线首个敌方英雄。",
+          "job": "保下路；采用友方伤害接续时，确认 W 命中同一目标时伤害窗口仍有效，且目标是射线首个敌方英雄。",
           "loadoutId": "default"
         }
       ],
@@ -40066,8 +40541,8 @@
         "短轮次抓人"
       ],
       "why": "诺提勒斯实际留人后，塔莉垭石阵与强制位移、烬伤害标记 W 可按命中情况接力。",
-      "plan": "诺提勒斯 Q 命中敌人或普攻实际留住同一目标；塔莉垭先 E 铺石阵，W 把目标强制位移途经石阵才触发额外晕眩。 友方英雄先实际对目标造成伤害；烬 W 命中直线上首个敌方英雄且命中时标记仍有效才禁锢。 石阵未触发、W 被其他英雄挡住或烬换弹赶不上时停止追击。",
-      "risk": "塔莉垭 W 推错方向可能送走目标；诺提勒斯 Q 撞地形只把自己拉向地形，不当作命中敌人。",
+      "plan": "诺提勒斯 Q 命中敌人或普攻实际留住同一目标；塔莉垭先 E 铺石阵，W 把目标强制位移途经石阵才触发额外晕眩。 采用友方伤害接续时，友方英雄先实际对目标造成伤害；烬 W 命中同一目标且目标是直线上首个敌方英雄、伤害窗口仍有效时可禁锢。 石阵未触发、W 被其他英雄挡住或烬换弹赶不上时停止追击。",
+      "risk": "塔莉垭 W 推错方向可能送走目标；诺提勒斯 Q 撞地形只把自己拉向地形，不当作命中敌人。烬 W 的技能摘要与详细说明对其他标记来源不一致，尚待核实。",
       "members": [
         {
           "champion": "Taliyah",
@@ -40078,7 +40553,7 @@
         {
           "champion": "Jhin",
           "role": "bottom",
-          "job": "烬补刀并报弹药；W 命中首个敌方英雄且该英雄命中时仍有友方英雄伤害标记才禁锢。",
+          "job": "烬补刀并报弹药；采用友方伤害接续时，W 命中同一目标且目标是首个敌方英雄、伤害窗口仍有效时可禁锢。",
           "loadoutId": "default"
         },
         {
@@ -40090,7 +40565,7 @@
       ],
       "steps": [
         "诺提勒斯 Q 命中敌人或普攻实际留住同一目标；塔莉垭先 E 铺石阵，W 把目标强制位移途经石阵才触发额外晕眩。",
-        "友方英雄先实际对目标造成伤害；烬 W 命中直线上首个敌方英雄且命中时标记仍有效才禁锢。",
+        "采用友方伤害接续时，友方英雄先实际对目标造成伤害；烬 W 命中同一目标且目标是直线上首个敌方英雄、伤害窗口仍有效时可禁锢。",
         "石阵未触发、W 被其他英雄挡住或烬换弹赶不上时停止追击。"
       ],
       "early": "塔莉垭先处理中线，烬保补刀，诺提勒斯保辅助任务与视野。",
@@ -43468,7 +43943,8 @@
       "runes": [
         "singed-support-poison-2621"
       ],
-      "why": "按 16.21 单英雄辅助资料与毒雾、减速机制人工整理；辅助位优先视野与撤退，鞋子可提前，减速和生存装按局势替换。这不是组合专属统计。",
+      "why": "按 16.21 单英雄辅助资料与毒雾、减速机制人工整理；辅助位优先视野与撤退，鞋子可提前，减速和生存装按局势替换。这不是组合专属统计。 开局 Q→E→W 为按 16.21 技能机制适配的人工取舍：先毒雾，再近身位移、后缚地；注意法力、视野与退路，非作者原顺序或辅助加点统计。",
+      "first": "QEW",
       "damage": "ap",
       "patch": "16.21",
       "reviewedAt": "2026-11-03",
@@ -43490,6 +43966,12 @@
           "url": "https://www.leagueoflegends.com/en-ph/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "official",
           "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 炼金 16.21.1 技能（加点机制依据）",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion/Singed.json",
+          "kind": "技能机制依据，非官方推荐加点",
+          "checkedAt": "2026-11-04"
         }
       ],
       "reviewBaseline": {
