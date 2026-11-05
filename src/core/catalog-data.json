@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.05.3",
+  "version": "2026.11.05.4",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -3168,8 +3168,8 @@
         "Sejuani"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 凯特琳技能资料",
@@ -3200,11 +3200,29 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Caitlyn bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/caitlyn/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Thresh support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
         "champion:Caitlyn": "d19bdcd858382502",
-        "champion:Thresh": "766a02f3f37aa314"
+        "champion:Thresh": "0cb41a1702121127"
       },
       "tempo": "protect",
       "members": [
@@ -3235,21 +3253,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d19bdcd858382502",
-          "observedAt": "2026-10-23T02:03:51.454Z",
+          "observedAt": "2026-11-05T02:19:26.063Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Caitlyn",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/caitlyn/caitlyn.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/caitlyn/caitlyn.bin.json",
               "sha256": "c20fc63ea58106641698a0ae236659329540b0a824d82469602ac0ba2a57dbf6"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "6c728252e5826813"
             }
           }
@@ -3258,23 +3276,23 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "766a02f3f37aa314",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Thresh",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
-              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "9d08c31186ec4f58"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
@@ -5116,8 +5134,8 @@
         "Sejuani"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 金克丝技能资料",
@@ -5148,11 +5166,29 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Jinx bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/jinx/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Thresh support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
         "champion:Jinx": "98d589f2c16be412",
-        "champion:Thresh": "766a02f3f37aa314"
+        "champion:Thresh": "0cb41a1702121127"
       },
       "tempo": "protect",
       "members": [
@@ -5183,21 +5219,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "98d589f2c16be412",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jinx",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jinx/jinx.bin.json",
               "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "18a489971bd9889a"
             }
           }
@@ -5206,23 +5242,23 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "766a02f3f37aa314",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Thresh",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
-              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "9d08c31186ec4f58"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
@@ -5514,8 +5550,8 @@
         "Sejuani"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 厄斐琉斯技能资料",
@@ -5540,11 +5576,29 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Thresh.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Aphelios bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/aphelios/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Thresh support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
         "champion:Aphelios": "a16a2bc3afe40b1c",
-        "champion:Thresh": "766a02f3f37aa314"
+        "champion:Thresh": "0cb41a1702121127"
       },
       "tempo": "protect",
       "members": [
@@ -5575,21 +5629,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "a16a2bc3afe40b1c",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Aphelios",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
-              "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/aphelios/aphelios.bin.json",
+              "sha256": "8881554ee09d6e07d583b702472e089b79698254423d28b846bb9c71874a65e1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ac55a790c915bb91"
             }
           }
@@ -5598,23 +5652,23 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "766a02f3f37aa314",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Thresh",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
-              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "9d08c31186ec4f58"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
@@ -8894,7 +8948,7 @@
         "控制",
         "撤退保护"
       ],
-      "why": "锤石实际钩控后德莱文可安全输出，灯笼提供主动撤退选择。",
+      "why": "锤石实际钩控后为德莱文创造输出窗口，灯笼提供主动撤退选择。",
       "plan": "锤石 Q 命中首个单位，先确认目标和射手距离。 德莱文接住 Q 斧才延续并刷新 W，斧落危险处可放弃；锤石不必每次二段。 灯笼需要队友主动点击并看锤石的落点；钩空或退路被堵就撤。",
       "risk": "钩子、接斧和灯笼都需实际操作，不保证救援成功。",
       "partners": [
@@ -8902,8 +8956,8 @@
         "Vi"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 德莱文技能资料",
@@ -8934,11 +8988,29 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Draven bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/draven/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Thresh support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
         "champion:Draven": "6e70cb90d9331e71",
-        "champion:Thresh": "766a02f3f37aa314"
+        "champion:Thresh": "0cb41a1702121127"
       },
       "tempo": "protect",
       "members": [
@@ -8969,21 +9041,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "6e70cb90d9331e71",
-          "observedAt": "2026-10-23T02:03:51.458Z",
+          "observedAt": "2026-11-05T02:19:26.067Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Draven",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/draven/draven.bin.json",
-              "sha256": "530f1eee4e7bfe9fbe6dc5ba9711aad33f15e3dd9dc81378e217a090fc319747"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/draven/draven.bin.json",
+              "sha256": "4247519fd03f93caefe06f15e65c5f72e99fec1f419c479efe636b751c5d181b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b7e878515739012b"
             }
           }
@@ -8992,23 +9064,23 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "766a02f3f37aa314",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Thresh",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
-              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "9d08c31186ec4f58"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
@@ -9030,8 +9102,8 @@
         "JarvanIV"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 卡莉丝塔技能资料",
@@ -9056,11 +9128,29 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Thresh.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Kalista bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/kalista/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Thresh support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
         "champion:Kalista": "1793244f0dc8a65c",
-        "champion:Thresh": "766a02f3f37aa314"
+        "champion:Thresh": "0cb41a1702121127"
       },
       "tempo": "teamfight",
       "members": [
@@ -9092,21 +9182,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "1793244f0dc8a65c",
-          "observedAt": "2026-10-23T02:03:51.532Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kalista",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kalista/kalista.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kalista/kalista.bin.json",
               "sha256": "d9745c7fdf99f1ec7baded98bba9547e6b6f0a9ec604edce4f88f0dbdfe30b39"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "44f72f75e4385140"
             }
           }
@@ -9115,23 +9205,23 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "766a02f3f37aa314",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Thresh",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
-              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "9d08c31186ec4f58"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
@@ -18499,14 +18589,32 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Veigar bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/veigar/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Thresh support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-29",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-05",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Veigar": "b0c876605f73d7f8",
-        "champion:Thresh": "766a02f3f37aa314"
+        "champion:Thresh": "0cb41a1702121127"
       },
       "tempo": "protect",
       "members": [
@@ -18537,21 +18645,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -18560,23 +18668,23 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "766a02f3f37aa314",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Thresh",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
-              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "9d08c31186ec4f58"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
@@ -24894,8 +25002,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-03",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 亚索技能资料",
@@ -24920,11 +25028,29 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "official",
           "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Yasuo bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/yasuo/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Thresh support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
         "champion:Yasuo": "d36ebea001e3d1cb",
-        "champion:Thresh": "766a02f3f37aa314"
+        "champion:Thresh": "0cb41a1702121127"
       },
       "tempo": "teamfight",
       "members": [
@@ -24957,21 +25083,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d36ebea001e3d1cb",
-          "observedAt": "2026-10-26T13:38:40.604Z",
+          "observedAt": "2026-11-05T02:19:26.182Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Yasuo",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/yasuo/yasuo.bin.json",
-              "sha256": "5ba9fbc24ac284698c7067f178bcf75781be14e58febbae0bd75fe15d25a69f6"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/yasuo/yasuo.bin.json",
+              "sha256": "d71e9cb941157590d2d537505d1cef1844c2136627e6c8934e7eb7d3e284137e"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "5c4d9aa5346ca2f7"
             }
           }
@@ -24980,23 +25106,23 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "766a02f3f37aa314",
-          "observedAt": "2026-10-26T13:38:40.594Z",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Thresh",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
-              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "9d08c31186ec4f58"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
@@ -40978,7 +41104,7 @@
         "救援反开"
       ],
       "why": "厄斐琉斯的坠明禁锢可帮助维克托判断引力场落点，烈娜塔按实际机会保护射手。",
-      "plan": "维克托先处理原中路兵线，厄斐琉斯下路补刀、烈娜塔辅助；会合后确认主副武器、弹药与退路。 厄斐琉斯手持坠明，只有目标被该武器实际减速时才 Q 禁锢；无坠明或目标未受减速时不承诺这段控制。 维克托 W 按目标实际位置放置；敌人在场内停留足够时间才晕眩，坠明禁锢不保证已经满足停留条件。 实际获得烈娜塔 W 增益的同一友方英雄阵亡进入衰减后，只有该英雄在衰减期间参与击杀，才停止衰减并回复；控制落空或无法安全输出时撤退。 厄斐琉斯属性优先级沿用16.20旧参考，可自行调整；不是16.21统计，也不是配合必需条件。",
+      "plan": "维克托先处理原中路兵线，厄斐琉斯下路补刀、烈娜塔辅助；会合后确认主副武器、弹药与退路。 厄斐琉斯手持坠明，只有目标被该武器实际减速时才 Q 禁锢；无坠明或目标未受减速时不承诺这段控制。 维克托 W 按目标实际位置放置；敌人在场内停留足够时间才晕眩，坠明禁锢不保证已经满足停留条件。 实际获得烈娜塔 W 增益的同一友方英雄阵亡进入衰减后，只有该英雄在衰减期间参与击杀，才停止衰减并回复；控制落空或无法安全输出时撤退。 厄斐琉斯按当前下路配置和对局调整属性点，配合无需固定加点。",
       "risk": "缺坠明、目标离开引力场，或获得烈娜塔 W 增益的友方英雄未在衰减期参与击杀时，原连控与救援均不保证；三人会合不能预设。",
       "members": [
         {
@@ -41009,8 +41135,8 @@
       "early": "各自处理原路兵线，先确认队友位置、武器与技能状态；不预设三人一直会合。",
       "window": "三人实际会合、坠明与相关技能可用，目标受到坠明减速且站位允许；保护不足或目标移出即停止。",
       "economy": "保持上路或中路与下路原有经济分工，烈娜塔按辅助任务与视野行动；同位置装备和符文为分项参考，非组合或联合统计。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 维克托 16.20 技能",
@@ -41059,10 +41185,34 @@
           "url": "https://op.gg/lol/champions/renata/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.21",
           "kind": "个人分路参考，非组合统计",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Viktor mid 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/viktor/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Aphelios bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/aphelios/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Renata support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/renata/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
-        "champion:Viktor": "0bd74fc675981fd6",
+        "champion:Viktor": "550827716c13075f",
         "champion:Aphelios": "a16a2bc3afe40b1c",
         "champion:Renata": "040340652360d067"
       },
@@ -41071,22 +41221,22 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "0bd74fc675981fd6",
-          "observedAt": "2026-10-23T02:03:51.639Z",
+          "legacyFingerprint": "550827716c13075f",
+          "observedAt": "2026-11-05T02:19:26.180Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Viktor",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/viktor/viktor.bin.json",
-              "sha256": "adff371fb352f4765fe4360f7451fe77a0f8312275ccdc41d0b325c6fb0c7e09"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/viktor/viktor.bin.json",
+              "sha256": "78e4afed5555bd1f9d0416c472b3693b5da0efdcca03b950acdcf6f910bdb731"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ef737928ffc1b9ac"
             }
           }
@@ -41096,21 +41246,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "a16a2bc3afe40b1c",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Aphelios",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/aphelios/aphelios.bin.json",
-              "sha256": "74327859d80e03b1654258c4ba2a2bc609dfcfece0b3fc9d7cb0b35d4140e8df"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/aphelios/aphelios.bin.json",
+              "sha256": "8881554ee09d6e07d583b702472e089b79698254423d28b846bb9c71874a65e1"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ac55a790c915bb91"
             }
           }
@@ -41120,21 +41270,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "040340652360d067",
-          "observedAt": "2026-10-26T13:38:40.515Z",
+          "observedAt": "2026-11-05T02:19:26.165Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Renata",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renata/renata.bin.json",
               "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "849f2ea81ec5e47e"
             }
           }
@@ -42203,8 +42353,8 @@
       "early": "六级前不依赖嘉文或纳尔 R；纳尔小型期注意怒气与换血，嘉文刷野，维克托保线。嘉文 E、Q 已学且 Q 连到军旗时，才会击飞沿途实际命中的敌人；维克托 W 的眩晕仍取决于实际停留。",
       "window": "嘉文 R、巨型纳尔 R 已学且可用，纳尔变身及角度、目标位置和三人距离允许；只有敌人实际被推到墙体才眩晕。维克托 W 必须已学可用，且目标在范围内驻留 1.25 秒才眩晕。",
       "economy": "纳尔保上路线和常规经济，嘉文刷野，维克托保中线；各用对应分路普通参考，装备与符文不是围场撞墙的必要条件。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-03",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 纳尔 16.20 技能",
@@ -42241,12 +42391,36 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "official",
           "checkedAt": "2026-11-03"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Gnar top 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/gnar/build/top?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · JarvanIV jungle 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/jarvaniv/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Viktor mid 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/viktor/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
         "champion:Gnar": "52048713e2c4916d",
         "champion:JarvanIV": "c9d96bc727699c9b",
-        "champion:Viktor": "0bd74fc675981fd6"
+        "champion:Viktor": "550827716c13075f"
       },
       "reviewSourceAnchors": {
         "Gnar": {
@@ -42254,21 +42428,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "52048713e2c4916d",
-          "observedAt": "2026-10-26T13:38:40.395Z",
+          "observedAt": "2026-11-05T02:19:26.072Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Gnar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/gnar/gnar.bin.json",
-              "sha256": "cc87c8f64a6e0ee34a67523558951c142fa411d519625fbbf2a9f4af34a8f270"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/gnar/gnar.bin.json",
+              "sha256": "53f7fd764fde51fd74c79ae2113b2657d2f621bb3e8ae84957044ce7052e6a8f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "eaa8e8b3d5cb0bd6"
             }
           }
@@ -42278,21 +42452,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c9d96bc727699c9b",
-          "observedAt": "2026-10-26T13:38:40.399Z",
+          "observedAt": "2026-11-05T02:19:26.076Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "JarvanIV",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jarvaniv/jarvaniv.bin.json",
-              "sha256": "6dfa4b87b045841df8ae4ffb982baf6308b5b5e34108ed8cfd3ae73141f9d141"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "62ea4f1e9467d2b7"
             }
           }
@@ -42301,22 +42475,22 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "0bd74fc675981fd6",
-          "observedAt": "2026-10-26T13:38:40.599Z",
+          "legacyFingerprint": "550827716c13075f",
+          "observedAt": "2026-11-05T02:19:26.180Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Viktor",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/viktor/viktor.bin.json",
-              "sha256": "adff371fb352f4765fe4360f7451fe77a0f8312275ccdc41d0b325c6fb0c7e09"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/viktor/viktor.bin.json",
+              "sha256": "78e4afed5555bd1f9d0416c472b3693b5da0efdcca03b950acdcf6f910bdb731"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ef737928ffc1b9ac"
             }
           }
@@ -42873,8 +43047,8 @@
       "early": "扎克清野，金克丝保下路，锤石负责辅助视野。",
       "window": "实际命中、陷阱就绪且灯笼与撤退路线可用时。",
       "economy": "扎克保野区，金克丝补下路，锤石负责辅助任务与视野。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 扎克 16.20 技能",
@@ -42905,12 +43079,36 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot · 26.22 正式补丁",
+          "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-22-notes/",
+          "kind": "当前机制依据",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Zac jungle 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/zac/build/jungle?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Jinx bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/jinx/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Thresh support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/thresh/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "单英雄同分路资料",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
         "champion:Zac": "79df9b9e7571e89c",
         "champion:Jinx": "98d589f2c16be412",
-        "champion:Thresh": "766a02f3f37aa314"
+        "champion:Thresh": "0cb41a1702121127"
       },
       "reviewSourceAnchors": {
         "Zac": {
@@ -42918,21 +43116,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "79df9b9e7571e89c",
-          "observedAt": "2026-10-26T13:38:40.606Z",
+          "observedAt": "2026-11-05T02:19:26.252Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zac",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zac/zac.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zac/zac.bin.json",
               "sha256": "40df6abd439891c7e6733966c1ec367a15392cb8b52754a7df145b6b854f0ff5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "cf22bab2f64d09f2"
             }
           }
@@ -42942,21 +43140,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "98d589f2c16be412",
-          "observedAt": "2026-10-26T13:38:40.401Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Jinx",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jinx/jinx.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jinx/jinx.bin.json",
               "sha256": "5ca25fc97c2da4874b88de6faec7dcfd5ea991b8edd1773d9a2cb9ecd5b2091f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "18a489971bd9889a"
             }
           }
@@ -42965,23 +43163,23 @@
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
-          "legacyFingerprint": "766a02f3f37aa314",
-          "observedAt": "2026-10-26T13:38:40.594Z",
+          "legacyFingerprint": "0cb41a1702121127",
+          "observedAt": "2026-11-05T02:19:26.176Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Thresh",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/thresh/thresh.bin.json",
-              "sha256": "f55dc93e1986c0547aa2b2446989f249186cbd3a2d604df58c1777e58410c5bf"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/thresh/thresh.bin.json",
+              "sha256": "f8e7ade21711df241e89a0874308d13a5d69d5d71786201d4c9595c4ea1b4bf7"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
-              "fingerprint": "9d08c31186ec4f58"
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+              "fingerprint": "c15f51aff1dfbd5e"
             }
           }
         }
