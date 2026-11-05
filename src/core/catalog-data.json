@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.28",
+  "version": "2026.11.06.29",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -12132,14 +12132,14 @@
       ],
       "why": "牛头 Q 实际击飞可为下路吉格斯创造技能窗口。",
       "plan": "牛头 Q 命中才击飞；W 可能把目标顶出技能范围，先沟通方向。 吉格斯根据实际位置放 Q/E，W 的击退方向应避免破坏接控或退路。 推塔前看侧翼，W 只会直接摧毁达到低血阈值的防御塔；控制空或被绕就撤。",
-      "risk": "非常规下路应先沟通分工，不能预设所有防御塔都能炸毁。",
+      "risk": "法师下路应先沟通分工，不能预设所有防御塔都能炸毁。",
       "partners": [
         "Kindred",
         "Graves"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 吉格斯技能资料",
@@ -12170,6 +12170,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -12205,21 +12211,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "301986c8fed3e8fb",
-          "observedAt": "2026-10-23T02:03:51.643Z",
+          "observedAt": "2026-11-05T02:19:26.253Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ziggs",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ziggs/ziggs.bin.json",
               "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "fdb99302b5ecb565"
             }
           }
@@ -12229,21 +12235,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -24753,8 +24759,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 吉格斯技能资料",
@@ -24773,6 +24779,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -24808,21 +24820,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "301986c8fed3e8fb",
-          "observedAt": "2026-10-26T13:38:40.607Z",
+          "observedAt": "2026-11-05T02:19:26.253Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ziggs",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ziggs/ziggs.bin.json",
               "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "fdb99302b5ecb565"
             }
           }
@@ -24832,21 +24844,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "9176ff8b22c1f1c9",
-          "observedAt": "2026-10-26T13:38:40.503Z",
+          "observedAt": "2026-11-05T02:19:26.156Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Milio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/milio/milio.bin.json",
               "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "32194f4e3319e474"
             }
           }
@@ -26141,8 +26153,8 @@
         "Poppy",
         "Shen"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 吉格斯 16.20 技能",
@@ -26161,6 +26173,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -26195,21 +26213,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "301986c8fed3e8fb",
-          "observedAt": "2026-10-26T13:38:40.607Z",
+          "observedAt": "2026-11-05T02:19:26.253Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ziggs",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ziggs/ziggs.bin.json",
               "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "fdb99302b5ecb565"
             }
           }
@@ -26219,21 +26237,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "60f40731a1259a4a",
-          "observedAt": "2026-10-26T13:38:40.608Z",
+          "observedAt": "2026-11-05T02:19:26.254Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zilean",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
               "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3e2480aa7362c964"
             }
           }
@@ -45050,7 +45068,7 @@
           "champion": "JarvanIV",
           "role": "jungle",
           "job": "Q 连接 E 旗且路径目标实际被击飞后才报跟进；R 围住不等于持续控制，队友被卡住或需撤退时重施拆墙。",
-          "loadoutId": "trio-jarvan-engage"
+          "loadoutId": "default"
         },
         {
           "champion": "Veigar",
@@ -45072,9 +45090,9 @@
       ],
       "early": "双法核优先保证蓝量与补刀，嘉文不要为追联动放弃全部野区；三级后仅抓实际前压目标。",
       "window": "三人有可用基础控制与区域伤害，敌方关键位移已交或撤退路径明确。",
-      "economy": "野、中、下分别保正常经济；嘉文复用打野开团配置，其余采用位置默认参考，辅助与上路优先补物理持续输出和保护。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "economy": "野、中、下分别保各自经济；三人使用同英雄同位置默认参考，实际来源以界面和对局为准；辅助与上路按阵容补足物理输出和保护。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 嘉文四世 16.20 技能",
@@ -45117,24 +45135,18 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:JarvanIV": "c9d96bc727699c9b",
         "champion:Veigar": "b0c876605f73d7f8",
-        "champion:Ziggs": "301986c8fed3e8fb",
-        "item:6610": "93878c29ffe17b52",
-        "item:3071": "8b44dc349847ea0e",
-        "item:6333": "60ed05035db8354d",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3053": "6f40bd5cd29bb7d2",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8347": "def2a55844436c47"
+        "champion:Ziggs": "301986c8fed3e8fb"
       },
       "reviewSourceAnchors": {
         "JarvanIV": {
@@ -45142,21 +45154,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c9d96bc727699c9b",
-          "observedAt": "2026-10-23T02:03:51.530Z",
+          "observedAt": "2026-11-05T02:19:26.076Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "JarvanIV",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/jarvaniv/jarvaniv.bin.json",
-              "sha256": "6dfa4b87b045841df8ae4ffb982baf6308b5b5e34108ed8cfd3ae73141f9d141"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/jarvaniv/jarvaniv.bin.json",
+              "sha256": "aa9591a707369ff6352cbb4f21e8fd8d10657e83bb690ba462cecdeb898e4ca0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "62ea4f1e9467d2b7"
             }
           }
@@ -45166,21 +45178,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -45190,21 +45202,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "301986c8fed3e8fb",
-          "observedAt": "2026-10-23T02:03:51.643Z",
+          "observedAt": "2026-11-05T02:19:26.253Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ziggs",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ziggs/ziggs.bin.json",
               "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "fdb99302b5ecb565"
             }
           }
