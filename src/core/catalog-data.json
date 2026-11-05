@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.05.5",
+  "version": "2026.11.05.6",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -2451,8 +2451,8 @@
         "Shen",
         "Galio"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 韦鲁斯技能资料",
@@ -2471,6 +2471,30 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前机制来源；非组合胜率",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · Varus 16.22 角色数据",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+          "kind": "当前角色来源与数值变化记录",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Varus bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Ashe support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/ashe/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -2506,21 +2530,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -2530,21 +2554,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f363e1846cfe0370",
-          "observedAt": "2026-10-23T02:03:51.451Z",
+          "observedAt": "2026-11-05T02:19:26.059Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ashe",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ashe/ashe.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ashe/ashe.bin.json",
               "sha256": "ada00af1ea15a42094a914a05794e0d3cedcb66c150ed52e8d3762b8d12dc6b5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1ab1be4161ebeecc"
             }
           }
@@ -10268,14 +10292,14 @@
       ],
       "why": "韦鲁斯按安全角度消耗，卡尔玛用护盾与加速协助拉扯。",
       "plan": "先确认兵线、侧翼与距离，韦鲁斯 E/Q 按实际弹道消耗，卡尔玛不要无目的交完护盾。 韦鲁斯 R 已学会且实际命中首名敌方英雄时，再按双方距离选择跟进或撤退。 技能落空、对方贴近或退路不足时停止追击。",
-      "risk": "缺少可靠位移和前排；本版韦鲁斯技能数值调整，不沿用旧版伤害保证。",
+      "risk": "缺少可靠位移和前排；伤害数值随版本变化，不沿用旧版伤害保证。",
       "partners": [
         "Shen",
         "Sejuani"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 韦鲁斯技能资料",
@@ -10306,6 +10330,30 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前机制来源；非组合胜率",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · Varus 16.22 角色数据",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+          "kind": "当前角色来源与数值变化记录",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Varus bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Karma support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/karma/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -10341,21 +10389,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -10365,21 +10413,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "36385f1555005577",
-          "observedAt": "2026-10-23T02:03:51.532Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Karma",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/karma/karma.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/karma/karma.bin.json",
               "sha256": "7b6328b43d94f80ea6eec0998d8f81d9e54f3f8c6bb7a37a12ebbd04d569bcf5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1f2620463bdb38d1"
             }
           }
@@ -10396,14 +10444,14 @@
       ],
       "why": "泰坦实际控制后，韦鲁斯可按目标位置接 R 或保留控制。",
       "plan": "先确认泰坦 Q 的首个碰撞单位与韦鲁斯距离，实际控制命中后再安排接力。 韦鲁斯 R 命中首个英雄才禁锢，向其他目标蔓延也需实际触及；并非击飞。 留一段控制应对反扑；目标离开或射手跟不上就撤。",
-      "risk": "两人撤退能力有限；本版 Q/W 数值有变化，不沿用旧伤害保证。",
+      "risk": "两人撤退能力有限；伤害数值随版本变化，不沿用旧版伤害保证。",
       "partners": [
         "Galio",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 韦鲁斯技能资料",
@@ -10434,6 +10482,30 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前机制来源；非组合胜率",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · Varus 16.22 角色数据",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+          "kind": "当前角色来源与数值变化记录",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Varus bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Nautilus support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/nautilus/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -10469,21 +10541,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -10493,21 +10565,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -10530,8 +10602,8 @@
         "Shen"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 韦鲁斯技能资料",
@@ -10550,6 +10622,30 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前机制来源；非组合胜率",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · Varus 16.22 角色数据",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+          "kind": "当前角色来源与数值变化记录",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Varus bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Renata support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/renata/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -10585,21 +10681,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -10609,21 +10705,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "040340652360d067",
-          "observedAt": "2026-10-23T02:03:51.549Z",
+          "observedAt": "2026-11-05T02:19:26.165Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Renata",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/renata/renata.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/renata/renata.bin.json",
               "sha256": "1cfca78f0a6354bb269b3a483441264e7489a484e8a4da0684db24d3955fd51c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "849f2ea81ec5e47e"
             }
           }
@@ -12647,14 +12743,14 @@
       ],
       "why": "维迦 E 约束撤退路线，牛头实际控制命中后协助接技能或保护。",
       "plan": "先保兵线与法力；维迦 E 封退路，只有目标触碰边缘才眩晕。 牛头 Q 命中后击飞，可留 W 反打；维迦根据实际控制用 W/Q 跟进。 不要预设牛头 W 必定将敌人顶到笼边；距离或退路不成立就停。",
-      "risk": "短手组合前期容易被消耗，W 方向可能把目标顶出技能范围。",
+      "risk": "短手组合前期容易被消耗，W 方向可能把目标顶出技能范围。 维迦 E 存在部署等待；先手控制不保证覆盖成形过程，目标脱离或退路不安全时停止跟进。",
       "partners": [
         "Kindred",
         "Graves"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 维迦技能资料",
@@ -12685,6 +12781,18 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · 维迦 16.22 角色来源",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+          "kind": "角色源对照",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -12720,21 +12828,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -12744,21 +12852,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "e2aa1310b144ff1f",
-          "observedAt": "2026-10-23T02:03:51.449Z",
+          "observedAt": "2026-11-05T02:19:26.057Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Alistar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/alistar/alistar.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/alistar/alistar.bin.json",
               "sha256": "1cab5ab714cd3675401bd947d668313154162d93409f35b46612e509ec603e7b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "60b70b49d6326ac5"
             }
           }
@@ -18385,7 +18493,7 @@
       ],
       "why": "蕾欧娜控制实际命中后，维迦可布置 E 限制退路并跟技能。",
       "plan": "确认兵线和距离，蕾欧娜 E 命中后接近，Q 下一次普攻命中才眩晕。 维迦 E 封退路，只有目标碰到笼边才眩晕；按实际位置接 W/Q。 技能落空、法师跟不上或辅助进场过深时撤退。",
-      "risk": "蕾欧娜 R 中心才眩晕、外围减速；笼子中央不会自动眩晕。",
+      "risk": "蕾欧娜 R 中心才眩晕、外围减速；笼子中央不会自动眩晕。 维迦 E 存在部署等待；先手控制不保证覆盖成形过程，目标脱离或退路不安全时停止跟进。",
       "partners": [
         "Graves",
         "Shen"
@@ -18415,11 +18523,23 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · 维迦 16.22 角色来源",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+          "kind": "角色源对照",
+          "checkedAt": "2026-11-05"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-29",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-05",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Veigar": "b0c876605f73d7f8",
         "champion:Leona": "2b7d4e998553b365"
@@ -18453,21 +18573,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -18477,21 +18597,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-23T02:03:51.536Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -18508,7 +18628,7 @@
       ],
       "why": "泰坦实际控制命中后，维迦可用 E 限制退路并判断输出。",
       "plan": "先确认兵线、距离与退路，泰坦 Q 可被首个单位或地形挡住。 泰坦实际控制后维迦 E 封出口，敌人碰到笼边才眩晕；再判断 W/Q 命中。 泰坦过深、维迦跟不上或技能落空时转保护而非继续追。",
-      "risk": "泰坦钩到地形与钩到敌人效果不同；双人不能预设整套命中。",
+      "risk": "泰坦钩到地形与钩到敌人效果不同；双人不能预设整套命中。 维迦 E 存在部署等待；先手控制不保证覆盖成形过程，目标脱离或退路不安全时停止跟进。",
       "partners": [
         "Kindred",
         "Graves"
@@ -18538,11 +18658,23 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · 维迦 16.22 角色来源",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+          "kind": "角色源对照",
+          "checkedAt": "2026-11-05"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-29",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-05",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Veigar": "b0c876605f73d7f8",
         "champion:Nautilus": "67da151a84906467"
@@ -18576,21 +18708,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -18600,21 +18732,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -18772,7 +18904,7 @@
       ],
       "why": "潘森 W 实际晕住目标后，维迦可限制退路并预判后续技能。",
       "plan": "潘森辅助先确认接近距离及退路，W 实际命中目标后再报控制。 维迦 E 封退路，目标碰到边缘才眩晕；W/Q 根据实际位置预判。 两人距离断开、W 失效或附近有反包时停止追击。",
-      "risk": "一次点控不保证后续全部命中，法师蓝量和射程需留意。",
+      "risk": "一次点控不保证后续全部命中，法师蓝量和射程需留意。 维迦 E 存在部署等待；先手控制不保证覆盖成形过程，目标脱离或退路不安全时停止跟进。",
       "partners": [
         "Shen",
         "Kindred"
@@ -18802,11 +18934,23 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · 维迦 16.22 角色来源",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+          "kind": "角色源对照",
+          "checkedAt": "2026-11-05"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-29",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-05",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Veigar": "b0c876605f73d7f8",
         "champion:Pantheon": "ade6cc95e4c6b966"
@@ -18840,21 +18984,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -18864,21 +19008,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ade6cc95e4c6b966",
-          "observedAt": "2026-10-23T02:03:51.546Z",
+          "observedAt": "2026-11-05T02:19:26.162Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Pantheon",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/pantheon/pantheon.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/pantheon/pantheon.bin.json",
               "sha256": "0acb5fa598525639a78e444a98a3e50cc46533843446d17657921c3639dd23df"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0ab565075cf8e870"
             }
           }
@@ -18894,8 +19038,8 @@
         "加速保护"
       ],
       "why": "维迦限制区域，基兰用炸弹接控并按需加速或保护。",
-      "plan": "维迦 E 限制退路，目标碰到边缘才眩晕。 基兰先确认第一颗 Q 的附着对象，W 后第二颗 Q 引爆同一承载目标时才会造成范围眩晕。 E 按情况加速或减速；需要保护时在致命伤害前给出已就绪的 R。",
-      "risk": "炸弹可能附到其他单位，预判落空或保护距离不足时撤退。",
+      "plan": "维迦 E 限制退路，目标碰到边缘才眩晕。 基兰先确认第一颗 Q 的附着对象；W 缩短基础技能冷却，第二颗 Q 实际可用并引爆同一承载目标时才会造成范围眩晕。 E 按情况加速或减速；需要保护时在致命伤害前给出已就绪的 R。",
+      "risk": "炸弹可能附到其他单位，预判落空或保护距离不足时撤退。 维迦 E 存在部署等待；先手控制不保证覆盖成形过程，目标脱离或退路不安全时停止跟进。",
       "partners": [
         "Graves",
         "JarvanIV"
@@ -18925,11 +19069,23 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · 维迦 16.22 角色来源",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+          "kind": "角色源对照",
+          "checkedAt": "2026-11-05"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-29",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-05",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Veigar": "b0c876605f73d7f8",
         "champion:Zilean": "60f40731a1259a4a"
@@ -18951,7 +19107,7 @@
       ],
       "steps": [
         "维迦 E 限制退路，目标碰到边缘才眩晕。",
-        "基兰先确认第一颗 Q 的附着对象，W 后第二颗 Q 引爆同一承载目标时才会造成范围眩晕。",
+        "基兰先确认第一颗 Q 的附着对象；W 缩短基础技能冷却，第二颗 Q 实际可用并引爆同一承载目标时才会造成范围眩晕。",
         "E 按情况加速或减速；需要保护时在致命伤害前给出已就绪的 R。"
       ],
       "window": "双方对应技能实际可用、距离与退路成立且关键技能命中时；条件不成立就保留撤退。",
@@ -18963,21 +19119,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -18987,21 +19143,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "60f40731a1259a4a",
-          "observedAt": "2026-10-23T02:03:51.644Z",
+          "observedAt": "2026-11-05T02:19:26.254Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zilean",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zilean/zilean.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zilean/zilean.bin.json",
               "sha256": "e2c68068002974df76d5e5188cb878bd2b8911d5a7fbbb07ba6e1b6a0269e2ec"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "3e2480aa7362c964"
             }
           }
@@ -19018,7 +19174,7 @@
       ],
       "why": "索拉卡治疗并用 E 沉默区域，维迦 E 限制对手退路。",
       "plan": "维迦保法力补刀，E 封退路；目标触碰边缘才眩晕。 索拉卡 E 覆盖目标，沉默在区域内生效，敌人留到结束才会被禁锢。 索拉卡 Q 命中英雄后恢复状态，按自身血量与安全距离用 W 治疗；两人受威胁就撤。",
-      "risk": "索拉卡 W 通常消耗自身生命；活力焕发会降低消耗，具体以实际等级和状态为准；E 不能保证目标留在范围内。",
+      "risk": "索拉卡 W 通常消耗自身生命；活力焕发会降低消耗，具体以实际等级和状态为准；E 不能保证目标留在范围内。 维迦 E 存在部署等待；先手控制不保证覆盖成形过程，目标脱离或退路不安全时停止跟进。",
       "partners": [
         "Sejuani",
         "Shen"
@@ -19048,11 +19204,23 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · 维迦 16.22 角色来源",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+          "kind": "角色源对照",
+          "checkedAt": "2026-11-05"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-29",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-05",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Veigar": "b0c876605f73d7f8",
         "champion:Soraka": "46ec394f508ebcc0"
@@ -19086,21 +19254,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -19110,21 +19278,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "46ec394f508ebcc0",
-          "observedAt": "2026-10-23T02:03:51.632Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Soraka",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/soraka/soraka.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/soraka/soraka.bin.json",
               "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "43b0fc1302f2816c"
             }
           }
@@ -19141,7 +19309,7 @@
       ],
       "why": "维迦 E 限制路径，萨勒芬妮按目标实际位置补技能。",
       "plan": "先约定兵线与经济，维迦 E 按目标可能的路径放置。 只有目标实际触碰边缘才眩晕；萨勒芬妮按目标位置和状态判断 E。 目标离开技能区域、关键技能落空或退路不安全时撤退。",
-      "risk": "双法术且前期脆弱；位于笼内不等于已眩晕，E 不保证必定禁锢。",
+      "risk": "双法术且前期脆弱；位于笼内不等于已眩晕，E 不保证必定禁锢。 维迦 E 存在部署等待；先手控制不保证覆盖成形过程，目标脱离或退路不安全时停止跟进。",
       "partners": [
         "Graves",
         "JarvanIV"
@@ -19171,11 +19339,23 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · 维迦 16.22 角色来源",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+          "kind": "角色源对照",
+          "checkedAt": "2026-11-05"
         }
       ],
       "evidence": "社区玩法启发 · 机制人工复核",
-      "reviewedAt": "2026-10-30",
-      "patch": "16.21",
+      "reviewedAt": "2026-11-05",
+      "patch": "16.22",
       "reviewBaseline": {
         "champion:Veigar": "b0c876605f73d7f8",
         "champion:Seraphine": "18e4440868d92eb5"
@@ -19209,21 +19389,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -19233,21 +19413,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "18e4440868d92eb5",
-          "observedAt": "2026-10-23T02:03:51.552Z",
+          "observedAt": "2026-11-05T02:19:26.168Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Seraphine",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
               "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b29132146d6ad36b"
             }
           }
@@ -22572,8 +22752,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 韦鲁斯技能资料",
@@ -22592,6 +22772,30 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前机制来源；非组合胜率",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · Varus 16.22 角色数据",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+          "kind": "当前角色来源与数值变化记录",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Varus bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Milio support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/milio/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -22627,21 +22831,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -22651,21 +22855,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "9176ff8b22c1f1c9",
-          "observedAt": "2026-10-23T02:03:51.541Z",
+          "observedAt": "2026-11-05T02:19:26.156Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Milio",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/milio/milio.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/milio/milio.bin.json",
               "sha256": "0b3afeb21eccfeb7d42d41cf6ea2abfd0d940e2ee0c501645a0b78d70a4843fa"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "32194f4e3319e474"
             }
           }
@@ -22688,8 +22892,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 韦鲁斯技能资料",
@@ -22708,6 +22912,30 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前机制来源；非组合胜率",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · Varus 16.22 角色数据",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+          "kind": "当前角色来源与数值变化记录",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Varus bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Lulu support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/lulu/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -22743,21 +22971,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -22767,21 +22995,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "5f5091380ca45272",
-          "observedAt": "2026-10-23T02:03:51.539Z",
+          "observedAt": "2026-11-05T02:19:26.154Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lulu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lulu/lulu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lulu/lulu.bin.json",
               "sha256": "b1ff4ed6af79bc618d6376cd83f370396fb9dbe74353e8b29964e6a2a73e1bcd"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "33e697bcb063b28b"
             }
           }
@@ -22804,8 +23032,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 韦鲁斯技能资料",
@@ -22830,6 +23058,30 @@
           "name": "Riot Data Dragon · 16.21.1 全英雄技能",
           "checkedAt": "2026-10-30",
           "kind": "技能依据"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前机制来源；非组合胜率",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · Varus 16.22 角色数据",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+          "kind": "当前角色来源与数值变化记录",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Varus bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Taric support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/taric/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -22865,21 +23117,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -22889,21 +23141,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d7034e2662bef2b0",
-          "observedAt": "2026-10-23T02:03:51.634Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taric",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
               "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a0599325a1012892"
             }
           }
@@ -23981,14 +24233,14 @@
       ],
       "why": "维迦 E 限制通道，布隆保护队友并在可安全普攻时叠被动。",
       "plan": "维迦 E 放在目标通路，只有接触边缘才眩晕。 布隆 Q 命中的首个敌人须为敌方英雄，或普攻实际命中敌方英雄，才能给该英雄挂首层；友军安全普攻同一目标才补层。",
-      "risk": "维迦补刀、布隆辅助；布隆不为凑四层抛下维迦。",
+      "risk": "维迦补刀、布隆辅助；布隆不为凑四层抛下维迦。 维迦 E 存在部署等待；先手控制不保证覆盖成形过程，目标脱离或退路不安全时停止跟进。",
       "partners": [
         "Sejuani",
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 维迦技能资料",
@@ -24007,6 +24259,18 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能复核",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · 维迦 16.22 角色来源",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+          "kind": "角色源对照",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -24041,21 +24305,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "b0c876605f73d7f8",
-          "observedAt": "2026-10-26T13:38:40.597Z",
+          "observedAt": "2026-11-05T02:19:26.179Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Veigar",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/veigar/veigar.bin.json",
-              "sha256": "3525cce16451c015199a0a478dd3298c85ac39cb9cc2bc41e1b643426c03cf24"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/veigar/veigar.bin.json",
+              "sha256": "4a1fae053b0e6721a440c3557880e93ac9e9351df40ad02b69b1339b3fe04eea"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "0d5181fbdf1760ef"
             }
           }
@@ -24065,21 +24329,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ae3aa48403ffcbe5",
-          "observedAt": "2026-10-26T13:38:40.310Z",
+          "observedAt": "2026-11-05T02:19:26.062Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Braum",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
               "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e136059064aa1034"
             }
           }
@@ -41456,8 +41720,8 @@
       "early": "中下先处理各自兵线，婕拉 E 命中后韦鲁斯可尝试接 Q；彗无法离线或三人状态不足时不强行组织。",
       "window": "资源刷新前尝试布置视野与退路，确认技能、距离和蓝量，再消耗或决定是否交大招；控制接续不保证成功。",
       "economy": "彗与韦鲁斯各补自己的线，婕拉优先辅助经济与视野。韦鲁斯同位置常用配置可能偏攻速，需调整输出节奏；这是通用机制适配，不是恢复原穿甲专配。装备符文参考各自可用来源或机制备选，非作者专配，不保证组合胜率。",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-03",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 彗 16.20 技能",
@@ -41500,6 +41764,36 @@
           "url": "https://mobalytics.gg/lol/champions/hwei/guide",
           "kind": "常驻打法参考，未作 16.20 专用配装依据",
           "checkedAt": "2026-10-13"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能快照",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前机制来源；非组合胜率",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "CommunityDragon · Varus 16.22 角色数据",
+          "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+          "kind": "当前角色来源与数值变化记录",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Hwei mid 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/hwei/build/mid?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Varus bottom 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
+        },
+        {
+          "name": "OP.GG · Zyra support 16.22 单英雄参考",
+          "url": "https://op.gg/lol/champions/zyra/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "同位置单英雄资料，非组合统计",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -41513,21 +41807,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "357b22785623158b",
-          "observedAt": "2026-10-26T13:38:40.397Z",
+          "observedAt": "2026-11-05T02:19:26.074Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Hwei",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/hwei/hwei.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/hwei/hwei.bin.json",
               "sha256": "432285db911de128098ca01317bc135933fba477da091654a7742f23c754ae04"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "5220abe71b75d212"
             }
           }
@@ -41537,21 +41831,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-26T13:38:40.597Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -41561,21 +41855,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f653495a90d1586e",
-          "observedAt": "2026-10-26T13:38:40.609Z",
+          "observedAt": "2026-11-05T02:19:26.255Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Zyra",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/zyra/zyra.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/zyra/zyra.bin.json",
               "sha256": "18f1cd91897b66a60a6c5c3b7205668e4c2ceb6305ce5e1e4e86d0cf649f89d3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e6ad7484cbc1effe"
             }
           }
