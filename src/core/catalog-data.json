@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.05.13",
+  "version": "2026.11.05.14",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -315,8 +315,8 @@
         "Galio",
         "JarvanIV"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -347,6 +347,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -382,21 +388,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-23T02:03:51.542Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -406,21 +412,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "958a576cfa8191dd",
-          "observedAt": "2026-10-23T02:03:51.450Z",
+          "observedAt": "2026-11-05T02:19:26.058Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Amumu",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/amumu/amumu.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/amumu/amumu.bin.json",
               "sha256": "32ae8f1ffe870b3a94dd62e285bf7b2dedca0cc730abeabccf197d56f5174de3"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8166548fe1af8c89"
             }
           }
@@ -10857,8 +10863,8 @@
         "JarvanIV"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -10889,6 +10895,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -10924,21 +10936,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-23T02:03:51.542Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -10948,21 +10960,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "2b7d4e998553b365",
-          "observedAt": "2026-10-23T02:03:51.536Z",
+          "observedAt": "2026-11-05T02:19:26.083Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Leona",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/leona/leona.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/leona/leona.bin.json",
               "sha256": "9064d034ca61a09ed84bff5f9f907af1d6e08ecf7a54ec2c58b1baa658480fd0"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7ff3b8a69842091d"
             }
           }
@@ -10985,8 +10997,8 @@
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -11017,6 +11029,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -11052,21 +11070,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-23T02:03:51.542Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -11076,21 +11094,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -11113,8 +11131,8 @@
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -11145,6 +11163,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -11180,21 +11204,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-23T02:03:51.542Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -11204,21 +11228,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "bec49be1ddcf29c0",
-          "observedAt": "2026-10-23T02:03:51.549Z",
+          "observedAt": "2026-11-05T02:19:26.164Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rell",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
               "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f5469dea7fbc0dcb"
             }
           }
@@ -23395,8 +23419,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -23415,6 +23439,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -23450,21 +23480,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-26T13:38:40.503Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -23474,21 +23504,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ae3aa48403ffcbe5",
-          "observedAt": "2026-10-26T13:38:40.310Z",
+          "observedAt": "2026-11-05T02:19:26.062Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Braum",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/braum/braum.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/braum/braum.bin.json",
               "sha256": "14ba3f22becfa225f217102f4a3afefbda7342212a388624b799162df15a68ef"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e136059064aa1034"
             }
           }
@@ -23511,8 +23541,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -23531,6 +23561,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -23566,21 +23602,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-26T13:38:40.503Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -23590,21 +23626,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "18e4440868d92eb5",
-          "observedAt": "2026-10-26T13:38:40.519Z",
+          "observedAt": "2026-11-05T02:19:26.168Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Seraphine",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/seraphine/seraphine.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/seraphine/seraphine.bin.json",
               "sha256": "d503b42d92615030eeddcaa093d21090bf10ad158067b21f76c5ede7a0230015"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b29132146d6ad36b"
             }
           }
@@ -23627,8 +23663,8 @@
         "Orianna"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-11-02",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-05",
       "sources": [
         {
           "name": "Riot · 厄运小姐技能资料",
@@ -23653,6 +23689,12 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 英雄技能原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版技能逐条复核；非胜率或实战依据",
+          "checkedAt": "2026-11-05"
         }
       ],
       "reviewBaseline": {
@@ -23688,21 +23730,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-26T13:38:40.503Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -23712,21 +23754,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "d7034e2662bef2b0",
-          "observedAt": "2026-10-26T13:38:40.593Z",
+          "observedAt": "2026-11-05T02:19:26.175Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Taric",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/taric/taric.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/taric/taric.bin.json",
               "sha256": "e03353ee1a9f08920f02f40c69489552f73953fcf396707e5ba884f5bb3c0e62"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a0599325a1012892"
             }
           }
