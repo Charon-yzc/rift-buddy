@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.22",
+  "version": "2026.11.06.23",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -1115,8 +1115,8 @@
         "Diana",
         "Orianna"
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 莎弥拉技能资料",
@@ -1141,36 +1141,24 @@
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Samira": "fb97a340c89c0ba1",
-        "champion:Nautilus": "67da151a84906467",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3072": "5c29525fccb26a37",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032"
+        "champion:Nautilus": "67da151a84906467"
       },
       "tempo": "teamfight",
       "members": [
         {
           "champion": "Samira",
           "role": "bottom",
-          "loadoutId": "samira-reset",
+          "loadoutId": "default",
           "job": "补刀并保退路；确认敌人实际受控且距离安全后普攻跟进，交替攻击与技能积评价，S 且安全时才考虑 R。"
         },
         {
@@ -1188,28 +1176,28 @@
       ],
       "early": "莎弥拉保补刀与经验，诺提勒斯根据兵线和实际血蓝决定是否接近。",
       "window": "诺提勒斯控制实际成立，射手在安全距离且退出方向明确时。",
-      "economy": "莎弥拉补刀；诺提勒斯承担辅助任务和安全视野。 莎弥拉采用共享机制备选，其他配置按各自英雄位置参考。",
+      "economy": "莎弥拉补刀，诺提勒斯承担辅助任务和安全视野；双方使用同英雄同分路默认参考，实际来源以界面显示为准，不代表组合实测。",
       "reviewSourceAnchors": {
         "Samira": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "fb97a340c89c0ba1",
-          "observedAt": "2026-10-23T02:03:51.551Z",
+          "observedAt": "2026-11-05T02:19:26.167Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Samira",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/samira/samira.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/samira/samira.bin.json",
               "sha256": "66207c6c2fbf270bfa686b40c2e39d6197c632bd26e959c7c75ed3843d6a24bb"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "12851dd9ef379ec4"
             }
           }
@@ -1219,21 +1207,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -10072,14 +10060,14 @@
       ],
       "why": "诺提勒斯实际命中的控制可为尼菈创造接近机会，双方仍需确认兵线、射程与退出条件。",
       "plan": "尼菈先保补刀；诺提勒斯观察兵线与钩线，Q 实际命中敌方英雄且队友能跟上才继续。 诺提勒斯安全时接被动普攻；尼菈 Q 命中后按射程与对手控制决定是否普攻，E 需保留有效退出单位。 R 已学且实际命中时才安排后续；钩被挡、碰到地形、队友跟不上或退路被封就撤。",
-      "risk": "Q 会碰到首个单位或地形；诺提勒斯 W 只保护自己，尼菈 W 不能免所有技能，两人被消耗时先保兵线。",
+      "risk": "Q 会碰到首个可命中的敌方单位或地形；诺提勒斯 W 只保护自己，尼菈 W 不能免所有技能，两人被消耗时先保兵线。",
       "partners": [
         "Galio",
         "Diana"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-30",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 尼菈技能资料",
@@ -10110,43 +10098,31 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-30"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Nilah": "30e5ef1b4f79390e",
-        "champion:Nautilus": "67da151a84906467",
-        "item:6676": "f75b10fbdb261e7f",
-        "item:3031": "0ccdceb96f0cd392",
-        "item:3036": "fcf5de31162e9e9d",
-        "item:3006": "d8d9fde1f7908326",
-        "item:3072": "5c29525fccb26a37",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8299": "d7db081cd64d0bc2",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8451": "9e4f8837510e3998",
-        "rune:8005": "e05d6553b23e1d97",
-        "rune:8009": "e88eb74c171319c4",
-        "rune:9104": "e6b524a54b35a2f3",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8410": "da4ec8f245880032"
+        "champion:Nautilus": "67da151a84906467"
       },
       "tempo": "teamfight",
       "members": [
         {
           "role": "bottom",
           "champion": "Nilah",
-          "loadoutId": "nilah-sustain",
+          "loadoutId": "default",
           "job": "负责下路补刀；钩控实际成立且能安全接触时再 Q 与普攻，E 进场前确认有效退出单位，W 留攻击压力并接触友军才共享。"
         },
         {
           "role": "support",
           "champion": "Nautilus",
           "loadoutId": "default",
-          "job": "Q 先确认首个碰撞单位和射手距离，实际命中敌方英雄后再报控制；安全时补被动普攻，W 只保护自己，R 已学可用时按目标范围接控。"
+          "job": "Q 先确认首个可命中的敌方单位或地形以及射手距离，实际命中敌方英雄后再报控制；安全时补被动普攻，W 只保护自己，R 已学可用时按目标范围接控。"
         }
       ],
       "steps": [
@@ -10156,28 +10132,28 @@
       ],
       "window": "双方技能实际可用、距离与退路成立且关键控制命中时再接；条件不成立就保留撤退。",
       "early": "尼菈先保补刀、经验与血量；辅助照看视野和兵线，按实际等级、蓝量及对手技能决定换血。",
-      "economy": "尼菈以补刀为主，辅助保留任务和视野经济；尼菈配置是单英雄共享机制参考，诺提勒斯使用位置默认配置，均不代表本组合实测配装。",
+      "economy": "尼菈以补刀为主，诺提勒斯保留辅助任务与视野经济；双方使用同位置默认参考，实际来源以界面显示为准，不代表组合实测。",
       "reviewSourceAnchors": {
         "Nilah": {
           "schema": 1,
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "30e5ef1b4f79390e",
-          "observedAt": "2026-10-23T02:03:51.545Z",
+          "observedAt": "2026-11-05T02:19:26.160Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nilah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nilah/nilah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nilah/nilah.bin.json",
               "sha256": "fb7dedbe829ca6073bed427ce77d930fe790697aa011d7096b2e696bde3f11fc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "2f18ee1a98588cd1"
             }
           }
@@ -10187,21 +10163,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -11352,8 +11328,8 @@
         "Galio"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 霞技能资料",
@@ -11384,6 +11360,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -11402,7 +11384,7 @@
           "champion": "Nautilus",
           "role": "support",
           "loadoutId": "default",
-          "job": "辅助守视野；Q 可碰到首个单位或地形，按实际控制命中与队友距离行动。"
+          "job": "辅助守视野；Q 可碰到首个可命中的敌方单位或地形，按实际控制命中与队友距离行动。"
         }
       ],
       "steps": [
@@ -11419,21 +11401,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "6218a12d2240d28e",
-          "observedAt": "2026-10-23T02:03:51.640Z",
+          "observedAt": "2026-11-05T02:19:26.182Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Xayah",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/xayah/xayah.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/xayah/xayah.bin.json",
               "sha256": "94e7c4f849daefb1f7967fda0b4abd1848747fceb9ff04b2530e00471f848de5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ef84e7c599b03475"
             }
           }
@@ -11443,21 +11425,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -11985,15 +11967,15 @@
         "推进"
       ],
       "why": "泰坦实际控制可帮助下路吉格斯预判区域技能。",
-      "plan": "泰坦 Q 会碰到首个单位或地形，实际控制命中后吉格斯按目标位置接 Q/E。 吉格斯 W 可击退自己和敌人，留作撤退时先看爆炸方向。 钩空、对手离开技能区域或被绕时撤回安全位置。",
-      "risk": "非常规下路需提前沟通，全队伤害类型与保护应按其他位置补足。",
+      "plan": "泰坦 Q 会碰到首个可命中的敌方单位或地形，实际控制命中后吉格斯按目标位置接 Q/E。 吉格斯 W 可击退自己和敌人，留作撤退时先看爆炸方向。 钩空、对手离开技能区域或被绕时撤回安全位置。",
+      "risk": "法师下路需提前沟通，全队伤害类型与保护应按其他位置补足。",
       "partners": [
         "Kindred",
         "Graves"
       ],
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 吉格斯技能资料",
@@ -12024,6 +12006,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -12042,11 +12030,11 @@
           "champion": "Nautilus",
           "role": "support",
           "loadoutId": "default",
-          "job": "辅助守视野；Q 可碰到首个单位或地形，按实际控制命中与队友距离行动。"
+          "job": "辅助守视野；Q 可碰到首个可命中的敌方单位或地形，按实际控制命中与队友距离行动。"
         }
       ],
       "steps": [
-        "泰坦 Q 会碰到首个单位或地形，实际控制命中后吉格斯按目标位置接 Q/E。",
+        "泰坦 Q 会碰到首个可命中的敌方单位或地形，实际控制命中后吉格斯按目标位置接 Q/E。",
         "吉格斯 W 可击退自己和敌人，留作撤退时先看爆炸方向。",
         "钩空、对手离开技能区域或被绕时撤回安全位置。"
       ],
@@ -12059,21 +12047,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "301986c8fed3e8fb",
-          "observedAt": "2026-10-23T02:03:51.643Z",
+          "observedAt": "2026-11-05T02:19:26.253Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ziggs",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ziggs/ziggs.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ziggs/ziggs.bin.json",
               "sha256": "0c07f0df0453c22942e9115fa6997b656808f49cd43225f4202741516c9abf3f"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "fdb99302b5ecb565"
             }
           }
@@ -12083,21 +12071,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -12863,14 +12851,14 @@
       ],
       "why": "泰坦实际控制可帮助下路卡尔萨斯预判 Q。",
       "plan": "泰坦确认 Q 首个目标，实际控制后卡尔萨斯按目标位置预判 Q。 Q 爆炸只命中一个敌方单位时才有单体伤害条件；W 可穿行，只提供减速与削魔抗。 R 需安全引导且不保证击杀；控制落空、法力不足或无退路就撤，不为被动主动送命。",
-      "risk": "非常规法师下路缺少灵活撤退，兵线存在时不能按单目标伤害计算。",
+      "risk": "法师下路缺少灵活撤退，兵线存在时不能按单目标伤害计算。",
       "partners": [
         "Kindred",
         "Graves"
       ],
       "difficulty": "较高",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 卡尔萨斯技能资料",
@@ -12901,6 +12889,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -12919,7 +12913,7 @@
           "champion": "Nautilus",
           "role": "support",
           "loadoutId": "default",
-          "job": "辅助守视野；Q 可碰到首个单位或地形，按实际控制命中与队友距离行动。"
+          "job": "辅助守视野；Q 可碰到首个可命中的敌方单位或地形，按实际控制命中与队友距离行动。"
         }
       ],
       "steps": [
@@ -12936,21 +12930,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "c1de84b19ac00ffe",
-          "observedAt": "2026-10-23T02:03:51.532Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Karthus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/karthus/karthus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/karthus/karthus.bin.json",
               "sha256": "b4ac31106c87eec4085d1e93d37f54357a0dc5bbffd92b2fc08a4ab4c1dd8dfc"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "74e873421db425cc"
             }
           }
@@ -12960,21 +12954,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -33378,8 +33372,8 @@
       "why": "蔚与泰坦创造狐狸命中技能的窗口，适合协作抓落单。",
       "plan": "先从有视野的方向接近；泰坦或蔚先手；狐狸确认目标控制生效再接 E，另一人留控制处理逃跑。",
       "risk": "不建议交三人大招追同一个残血；抓不到人时先处理线与目标。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 蔚技能资料",
@@ -33422,6 +33416,12 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "members": [
@@ -33429,7 +33429,7 @@
           "role": "jungle",
           "champion": "Vi",
           "job": "先确认狐狸输出距离与目标附近人数，泰坦先手实际命中后 Q 或已就绪 R 后手接同一目标；普攻/E 兑现。泰坦没中且落点无退路就停，不三人大招同时追残血。",
-          "loadoutId": "trio-vi-followup"
+          "loadoutId": "default"
         },
         {
           "role": "mid",
@@ -33441,13 +33441,13 @@
           "role": "support",
           "champion": "Nautilus",
           "job": "从有视野方向 Q 找同一目标，普攻被动或 R 与蔚后手错开，给狐狸留清晰 E 角度；Q 被阻挡或队友跟不上时不续追，留控制挡反扑。",
-          "loadoutId": "tank-engage"
+          "loadoutId": "default"
         }
       ],
       "steps": [
         "从有视野的方向接近，确认三人距离与目标附近人数。",
-        "泰坦 Q 碰到首个单位或地形，蔚 Q 命中英雄击退、R 主目标击飞；实际控制后再呼叫后续。",
-        "阿狸 E 会命中第一个单位，确认弹道后接魅惑；控制空或队友跟不上就停止追击。"
+        "泰坦 Q 碰到首个可命中的敌方单位或地形，蔚 Q 命中英雄击退、R 主目标击飞；实际控制后再呼叫后续。",
+        "阿狸 E 会命中第一个敌方单位，确认弹道后接魅惑；控制空或队友跟不上就停止追击。"
       ],
       "window": "泰坦先手命中或蔚 R 能留住目标，阿狸魅惑接得上且目标附近人数已确认时。",
       "early": "阿狸推线后靠近河道，泰坦从下路状态允许时游走，蔚先清野到能跟控制的一侧。",
@@ -33455,32 +33455,7 @@
       "reviewBaseline": {
         "champion:Vi": "ed4ccc20b476dc0e",
         "champion:Ahri": "bde1d83c334a89af",
-        "champion:Nautilus": "67da151a84906467",
-        "item:3078": "00721100a51ed120",
-        "item:3071": "8b44dc349847ea0e",
-        "item:6333": "60ed05035db8354d",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3053": "6f40bd5cd29bb7d2",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8347": "def2a55844436c47",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Nautilus": "67da151a84906467"
       },
       "reviewSourceAnchors": {
         "Vi": {
@@ -33488,21 +33463,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ed4ccc20b476dc0e",
-          "observedAt": "2026-10-23T02:03:51.638Z",
+          "observedAt": "2026-11-05T02:19:26.180Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Vi",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/vi/vi.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
               "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8c5f2d227a1d26cb"
             }
           }
@@ -33512,21 +33487,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "bde1d83c334a89af",
-          "observedAt": "2026-10-23T02:03:51.448Z",
+          "observedAt": "2026-11-05T02:19:26.056Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ahri",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ahri/ahri.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ahri/ahri.bin.json",
               "sha256": "7c53539d053f4bc18d564247c1bf33cd969637e151b5409fd23476a5a5c3598c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e4656df5a2cc81d8"
             }
           }
@@ -33536,21 +33511,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -36503,7 +36478,7 @@
           "champion": "Vi",
           "role": "jungle",
           "job": "泰坦实际留人后 Q 或已就绪 R 接同一目标，普攻/E 输出并给卡莎安全跟进区；目标队友反包或卡莎落点无退路时不继续突进，不把点名当保证击杀。",
-          "loadoutId": "trio-vi-followup"
+          "loadoutId": "default"
         },
         {
           "champion": "Kaisa",
@@ -36515,11 +36490,11 @@
           "champion": "Nautilus",
           "role": "support",
           "job": "从有视野角度 Q/被动普攻先留同一目标，R 与蔚后手错开，为卡莎保可触及战区；钩空或目标有反开支援时回身，留控制接应卡莎退出。",
-          "loadoutId": "tank-engage"
+          "loadoutId": "default"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 蔚技能资料",
@@ -36562,37 +36537,18 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Vi": "ed4ccc20b476dc0e",
         "champion:Kaisa": "792e7d85c3acdc09",
-        "champion:Nautilus": "67da151a84906467",
-        "item:3078": "00721100a51ed120",
-        "item:3071": "8b44dc349847ea0e",
-        "item:6333": "60ed05035db8354d",
-        "item:3047": "46ff9ea0f9199a8e",
-        "item:3053": "6f40bd5cd29bb7d2",
-        "item:3026": "9ac9f874ae405bd1",
-        "rune:8010": "b8dd7b11cee84803",
-        "rune:9111": "6667591beed15f1b",
-        "rune:9105": "8f6975f18cf3ff8d",
-        "rune:8014": "04092c4f9754532b",
-        "rune:8304": "aa454bdce540cb11",
-        "rune:8347": "def2a55844436c47",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Nautilus": "67da151a84906467"
       },
       "reviewSourceAnchors": {
         "Vi": {
@@ -36600,21 +36556,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ed4ccc20b476dc0e",
-          "observedAt": "2026-10-23T02:03:51.638Z",
+          "observedAt": "2026-11-05T02:19:26.180Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Vi",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/vi/vi.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/vi/vi.bin.json",
               "sha256": "39ab18fb02a711038ea11b42a89b8d69a8d5e61f0d3257def025935e78340269"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "8c5f2d227a1d26cb"
             }
           }
@@ -36624,21 +36580,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "792e7d85c3acdc09",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kaisa",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kaisa/kaisa.bin.json",
               "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e793368118ed867a"
             }
           }
@@ -36648,21 +36604,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -37927,11 +37883,11 @@
           "champion": "Nautilus",
           "role": "support",
           "job": "两位输出可覆盖时 Q/被动普攻或 R 控同一目标，留一段控制照看女枪打断者；钩空、女枪无安全角度或兰博 R 未就绪时转保护，不先进去等整套。",
-          "loadoutId": "tank-engage"
+          "loadoutId": "default"
         }
       ],
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 兰博技能资料",
@@ -37974,26 +37930,18 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Rumble": "8a349d0b8197b1d4",
         "champion:MissFortune": "10b496d2ce7c344d",
-        "champion:Nautilus": "67da151a84906467",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Nautilus": "67da151a84906467"
       },
       "reviewSourceAnchors": {
         "Rumble": {
@@ -38001,21 +37949,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "8a349d0b8197b1d4",
-          "observedAt": "2026-10-23T02:03:51.551Z",
+          "observedAt": "2026-11-05T02:19:26.166Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rumble",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rumble/rumble.bin.json",
-              "sha256": "b0691be6a2b5d9fc1d3ea31b5eabb7335458f4738e5be775ac9074ccc5d93646"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rumble/rumble.bin.json",
+              "sha256": "c2bbedb15375a937ef3159f045a9291a11e6678ec86a4267c1cfff7ce9e142c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "b24e1536e120ad82"
             }
           }
@@ -38025,21 +37973,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "10b496d2ce7c344d",
-          "observedAt": "2026-10-23T02:03:51.542Z",
+          "observedAt": "2026-11-05T02:19:26.157Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "MissFortune",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/missfortune/missfortune.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/missfortune/missfortune.bin.json",
               "sha256": "90f1824101a107b2c6615d37fb83d38442de537737302976dd3f592692c377c5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "45c6c8d43f1a5c2f"
             }
           }
@@ -38049,21 +37997,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
@@ -44252,7 +44200,7 @@
         {
           "champion": "Nautilus",
           "role": "support",
-          "loadoutId": "tank-engage",
+          "loadoutId": "default",
           "job": "Q/普攻或 R 实际留人后报落点，留一段控制处理卡莎身边威胁；不因卡莎有 R 就单独开到队友保护范围外。"
         }
       ],
@@ -44263,9 +44211,9 @@
       ],
       "early": "翠神保解放野怪与等级，卡莎保补刀，泰坦下路接基础控制；六级前不安排卡莎飞行或小菊到场，支援要先报真实时间。",
       "window": "中期队友硬控已实际命中、卡莎有可用 R 和合法目标，翠神 E 与小菊能覆盖落点；进化与装备由卡莎实际面板确认。",
-      "economy": "翠神用普通打野默认、卡莎普通下路默认，两者未新增专用配装复核；不套用辅助经济的翠神配置或旧版特效配置。泰坦复用开团配置，各自保野区、射手与辅助经济。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "economy": "翠神打野、卡莎补刀、泰坦辅助；各自使用同英雄同分路默认参考，实际来源以界面显示为准，不代表组合实测。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "Riot · 艾翁 16.20 技能",
@@ -44308,26 +44256,18 @@
           "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-21-notes/",
           "kind": "技能依据",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot Data Dragon · 16.22.1 hero 复核原文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当前资料复核；非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Ivern": "f4b498c5991475d6",
         "champion:Kaisa": "792e7d85c3acdc09",
-        "champion:Nautilus": "67da151a84906467",
-        "item:3190": "89cdf2838748dfc7",
-        "item:3050": "c3e25c9df9075147",
-        "item:3109": "97c25fae90d4a8a4",
-        "item:3158": "72ca672b9221f063",
-        "item:3075": "6d456e96c01062c6",
-        "rune:8439": "b2c74fd18c4ad076",
-        "rune:8463": "3296414353df0e65",
-        "rune:8473": "ed2f46234183276d",
-        "rune:8242": "37935df8d31dd429",
-        "rune:8306": "68d4bd3d69d9d19c",
-        "rune:8347": "def2a55844436c47",
-        "rune:8351": "6594874b24a7b00e",
-        "rune:8345": "02157c1d4d7f7531",
-        "rune:8453": "f9a0180e7f2f0432"
+        "champion:Nautilus": "67da151a84906467"
       },
       "reviewSourceAnchors": {
         "Ivern": {
@@ -44335,21 +44275,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "f4b498c5991475d6",
-          "observedAt": "2026-10-23T02:03:51.529Z",
+          "observedAt": "2026-11-05T02:19:26.075Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Ivern",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/ivern/ivern.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/ivern/ivern.bin.json",
               "sha256": "0a12c85032011c969b5c63fa88c7cb478af2cebfe54fe5ac707c20488e3fc74a"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "a8c07de58a4e8f6d"
             }
           }
@@ -44359,21 +44299,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "792e7d85c3acdc09",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kaisa",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kaisa/kaisa.bin.json",
               "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e793368118ed867a"
             }
           }
@@ -44383,21 +44323,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "67da151a84906467",
-          "observedAt": "2026-10-23T02:03:51.544Z",
+          "observedAt": "2026-11-05T02:19:26.159Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Nautilus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/nautilus/nautilus.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/nautilus/nautilus.bin.json",
               "sha256": "09a3dc32269053da4833aa505e2b0b3f258771802b318be07566bd4d88adb82b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "21ceeeee51e3b384"
             }
           }
