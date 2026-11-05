@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "rift-buddy-curated",
-  "version": "2026.11.06.39",
+  "version": "2026.11.06.40",
   "patch": "16.19",
   "reviewedAt": "2026-10-06",
   "name": "开黑搭子机制与社区组合库",
@@ -27295,8 +27295,8 @@
       "style": "balanced",
       "difficulty": "适中",
       "tempo": "protect",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "tags": [
         "潜航接箭",
         "吞人保护"
@@ -27307,7 +27307,7 @@
       ],
       "why": "塔姆潜航命中后，韦鲁斯可以利用击飞窗口蓄箭；危险时塔姆留大招保护射手。",
       "plan": "韦鲁斯下路补刀，塔姆辅助。视频展示一次塔姆 W 击飞后韦鲁斯蓄 WQ 跟进；其余分工和保护时机按当前技能机制整理。",
-      "risk": "塔姆 W 有落点提示，可能被躲开或打断；韦鲁斯 Q 蓄力会减速。视频录像补丁、服务器及是否预组未知；辅助配置是独立统计参考。",
+      "risk": "塔姆 W 有落点提示，可能被躲开或打断；韦鲁斯 Q 蓄力会减速。原片补丁、服务器与预组未知。塔姆配置来自独立同位置参考。",
       "early": "韦鲁斯稳补刀并消耗，塔姆利用草丛和视野寻找安全落点；射手跟不上时不独自潜入。",
       "window": "两人均可跟进且塔姆 W 有安全落点时尝试控制；六级后按形势保留 R 救援，不保证击飞命中。",
       "economy": "韦鲁斯负责补刀，塔姆靠辅助任务与视野获取经济；心之钢价格较高，应按局势决定成型节奏。",
@@ -27346,13 +27346,18 @@
         {
           "name": "Riot · 26.21 及 10/22 热修",
           "url": "https://www.leagueoflegends.com/en-sg/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核；不证明录像补丁",
+          "kind": "历史版本机制复核，录像补丁未知",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Varus": "643e042201703827",
-        "champion:TahmKench": "9635271a9add58c5",
         "item:3087": "84e4dae75d4d4953",
         "item:3124": "a5fa166d09295f8f",
         "item:3302": "c3e9201cb2cb4ba1",
@@ -27364,6 +27369,7 @@
         "rune:8017": "50a79a13bce940f0",
         "rune:8313": "00b2fb901efb6c81",
         "rune:8347": "def2a55844436c47",
+        "champion:TahmKench": "9635271a9add58c5",
         "item:3084": "674b7125a8312547",
         "item:3075": "6d456e96c01062c6",
         "item:3065": "3891f4b9ee257a38",
@@ -27379,21 +27385,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
@@ -27403,21 +27409,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "9635271a9add58c5",
-          "observedAt": "2026-10-23T02:03:51.633Z",
+          "observedAt": "2026-11-05T02:19:26.174Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "TahmKench",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/tahmkench/tahmkench.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/tahmkench/tahmkench.bin.json",
               "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "324a3700d293797b"
             }
           }
@@ -27430,8 +27436,8 @@
       "style": "balanced",
       "difficulty": "适中",
       "tempo": "protect",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "tags": [
         "护盾加速",
         "减速牵制"
@@ -27484,13 +27490,24 @@
         {
           "name": "Riot · 26.21 正式补丁",
           "url": "https://www.leagueoflegends.com/en-sg/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核；不证明录像补丁",
+          "kind": "历史版本机制复核，录像补丁未知",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 正式公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "本版克格莫 W 修复",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:KogMaw": "ba006aa34e05e235",
-        "champion:Karma": "36385f1555005577",
         "item:3124": "a5fa166d09295f8f",
         "item:6675": "b2ad1db20decb6ca",
         "item:3302": "c3e9201cb2cb4ba1",
@@ -27501,6 +27518,7 @@
         "rune:8299": "d7db081cd64d0bc2",
         "rune:8429": "b82860aabb36e71f",
         "rune:8451": "9e4f8837510e3998",
+        "champion:Karma": "36385f1555005577",
         "item:6620": "cfb94d4a02cc64c8",
         "item:6617": "6dccd52cee1f2c6e",
         "item:3107": "53bdbba0a53ca5c6",
@@ -27518,21 +27536,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ba006aa34e05e235",
-          "observedAt": "2026-10-23T02:03:51.535Z",
+          "observedAt": "2026-11-05T02:19:26.082Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "KogMaw",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kogmaw/kogmaw.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kogmaw/kogmaw.bin.json",
               "sha256": "2b7676bd783ef9d58380c1f10aefff5546e71946ba21c91bd44980befeb0376c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ad3707a256c213e5"
             }
           }
@@ -27542,21 +27560,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "36385f1555005577",
-          "observedAt": "2026-10-23T02:03:51.532Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Karma",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/karma/karma.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/karma/karma.bin.json",
               "sha256": "7b6328b43d94f80ea6eec0998d8f81d9e54f3f8c6bb7a37a12ebbd04d569bcf5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1f2620463bdb38d1"
             }
           }
@@ -27691,8 +27709,8 @@
     {
       "style": "balanced",
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "partners": [],
       "id": "community-kaisa-tahm-2621",
       "name": "深渊护航",
@@ -27748,13 +27766,18 @@
         {
           "name": "Riot · 26.21 正式补丁",
           "url": "https://www.leagueoflegends.com/en-sg/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核；不证明录像补丁",
+          "kind": "历史版本机制复核，录像补丁未知",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Kaisa": "792e7d85c3acdc09",
-        "champion:TahmKench": "9635271a9add58c5",
         "item:6672": "56acf36018ec56ee",
         "item:3124": "a5fa166d09295f8f",
         "item:3302": "c3e9201cb2cb4ba1",
@@ -27765,6 +27788,7 @@
         "rune:8017": "50a79a13bce940f0",
         "rune:8321": "ec014268b03afd2b",
         "rune:8347": "def2a55844436c47",
+        "champion:TahmKench": "9635271a9add58c5",
         "item:3084": "674b7125a8312547",
         "item:3075": "6d456e96c01062c6",
         "item:3065": "3891f4b9ee257a38",
@@ -27781,21 +27805,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "792e7d85c3acdc09",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kaisa",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kaisa/kaisa.bin.json",
               "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e793368118ed867a"
             }
           }
@@ -27805,21 +27829,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "9635271a9add58c5",
-          "observedAt": "2026-10-23T02:03:51.633Z",
+          "observedAt": "2026-11-05T02:19:26.174Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "TahmKench",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/tahmkench/tahmkench.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/tahmkench/tahmkench.bin.json",
               "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "324a3700d293797b"
             }
           }
@@ -27966,8 +27990,8 @@
     {
       "style": "balanced",
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "partners": [],
       "id": "community-lux-soraka-2621",
       "name": "光与星语",
@@ -28023,13 +28047,18 @@
         {
           "name": "Riot · 26.21 正式补丁",
           "url": "https://www.leagueoflegends.com/en-sg/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核；不证明录像补丁",
+          "kind": "历史版本机制复核，录像补丁未知",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Lux": "50314ad04c92f1a6",
-        "champion:Soraka": "46ec394f508ebcc0",
         "item:3118": "2bf87c4847cde85f",
         "item:4646": "a195092592feb18a",
         "item:4645": "152f57227a713097",
@@ -28040,6 +28069,7 @@
         "rune:8237": "141d0a7c16b98b91",
         "rune:8106": "bfb83fa22daf18de",
         "rune:8126": "9e648d4b51a0c973",
+        "champion:Soraka": "46ec394f508ebcc0",
         "item:6617": "6dccd52cee1f2c6e",
         "item:3107": "53bdbba0a53ca5c6",
         "item:6621": "b5f3cf223530db82",
@@ -28054,21 +28084,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "50314ad04c92f1a6",
-          "observedAt": "2026-10-23T02:03:51.540Z",
+          "observedAt": "2026-11-05T02:19:26.155Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lux",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
-              "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lux/lux.bin.json",
+              "sha256": "bcb1ca7a7e82072b504985d84dc1fa905471f3c249fbafb3ab72658a50f7595b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "cc7818802b8d5fc7"
             }
           }
@@ -28078,21 +28108,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "46ec394f508ebcc0",
-          "observedAt": "2026-10-23T02:03:51.632Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Soraka",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/soraka/soraka.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/soraka/soraka.bin.json",
               "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "43b0fc1302f2816c"
             }
           }
@@ -28102,8 +28132,8 @@
     {
       "style": "balanced",
       "difficulty": "适中",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "partners": [],
       "id": "community-twitch-rell-2621",
       "name": "潜行铁骑",
@@ -28159,13 +28189,18 @@
         {
           "name": "Riot · 26.21 正式补丁",
           "url": "https://www.leagueoflegends.com/en-sg/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核；不证明录像补丁",
+          "kind": "历史版本机制复核，录像补丁未知",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
         "champion:Twitch": "ab3e76d629cf2787",
-        "champion:Rell": "bec49be1ddcf29c0",
         "item:6676": "f75b10fbdb261e7f",
         "item:2512": "c27d4e092196e77a",
         "item:3031": "0ccdceb96f0cd392",
@@ -28176,6 +28211,7 @@
         "rune:8017": "50a79a13bce940f0",
         "rune:8224": "baebefc5e0e16e9e",
         "rune:8236": "a1bb7cfc15c3d089",
+        "champion:Rell": "bec49be1ddcf29c0",
         "item:3050": "c3e25c9df9075147",
         "item:3190": "89cdf2838748dfc7",
         "item:3109": "97c25fae90d4a8a4",
@@ -28193,21 +28229,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ab3e76d629cf2787",
-          "observedAt": "2026-10-23T02:03:51.636Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Twitch",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
               "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
             }
           }
@@ -28217,21 +28253,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "bec49be1ddcf29c0",
-          "observedAt": "2026-10-23T02:03:51.549Z",
+          "observedAt": "2026-11-05T02:19:26.164Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rell",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
               "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f5469dea7fbc0dcb"
             }
           }
@@ -53285,9 +53321,9 @@
         "varus-onhit-community-2621"
       ],
       "damage": "mixed",
-      "why": "作者图示电刀、羊刀、界弓与暴食胫甲，并建议后续补贾修；图里共五件，余下格位与购买时机按局势自选。技能加点、召唤师技能、出门及首回未由作者明确，界面其他参考不归于作者。作者称“新版本”，录像补丁和服务器未证；不采信其唯一选择或胜率主张。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "保留作者图示电刀、羊刀、界弓、暴食胫甲与可选贾修。核心三件和鞋另有当版同位置参考；作者未列技能与召唤师技能，界面这部分来自当版单英雄。出门可选多兰刃与一瓶药，或按当版同位置资料用多兰弓与两瓶药，首回城优先按经济补电刀组件。部分装备被动文本未完整解析，配合只靠实际控制、枯萎与技能命中。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "陪子哥 · 韦鲁斯特效（10/26发布，录像补丁未证）",
@@ -53298,8 +53334,32 @@
         {
           "name": "Riot · 26.21正式改动",
           "url": "https://www.leagueoflegends.com/en-au/news/game-updates/league-of-legends-patch-26-21-notes/",
-          "kind": "当前机制复核，非录像版本证明",
+          "kind": "历史版本机制复核，非录像版本证明",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 韦鲁斯同位置配置",
+          "url": "https://op.gg/lol/champions/varus/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置核心与加点，原符文为既有备选",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -53322,26 +53382,32 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "643e042201703827",
-          "observedAt": "2026-10-23T02:03:51.637Z",
+          "observedAt": "2026-11-05T02:19:26.178Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Varus",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/varus/varus.bin.json",
-              "sha256": "bac170ccc806133bc4f998eca45d7bcbbdd9c6ecf1057c5d63fe1d02ffe06937"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/varus/varus.bin.json",
+              "sha256": "a9134ac9228f32a1f00b389663b5c1a0bd4cf23c31819d790550346c6b00b8d5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "7b616ac861086a8b"
             }
           }
         }
-      }
+      },
+      "summoners": [
+        "SummonerFlash",
+        "SummonerBarrier"
+      ],
+      "skillOrder": "EWQQQRQWQWRWWEEREE",
+      "skillReason": "前 15 级参考当版同位置样本，后续按合法技能等级补齐。"
     },
     {
       "id": "community-tahm-support-2621",
@@ -53364,15 +53430,15 @@
         "tahm-support-reference-2621"
       ],
       "damage": "mixed",
-      "skillOrder": "QWEQQRQWQWRWWEE",
-      "skillReason": "OP.GG 同位置的前15级加点样本；与该装备、符文及具体组合分别统计，不代表同局或最优。",
+      "skillOrder": "QWEQQRQWQWRWWEEREE",
+      "skillReason": "前 15 级参考当版同位置样本，后续按合法技能等级补齐。",
       "summoners": [
         "SummonerFlash",
         "SummonerDot"
       ],
-      "why": "OP.GG 全球翡翠及以上的塔姆辅助分项参考；核心、鞋、符文与加点各自统计，不是视频作者配套或组合胜率。心之钢要近身充能后普攻，荆棘之甲被普攻才反伤并施加重伤；魔法压力和鞋子按局势调整。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "辅助任务装出门，首回城按金币和承伤比较鞋、生命值组件。心之钢需近身充能后普攻，荆棘看对手普攻压力，振奋看魔法威胁与自身恢复。装备、鞋、符文与加点分别为当版同位置参考；实际 W 命中或安全 R 接应是技能条件。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "OP.GG · 塔姆辅助 16.21（全球翡翠+）",
@@ -53383,8 +53449,32 @@
         {
           "name": "Riot · 塔姆 16.21 技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/TahmKench.json",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 塔姆同位置配置",
+          "url": "https://op.gg/lol/champions/tahmkench/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版独立分项，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -53406,21 +53496,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "9635271a9add58c5",
-          "observedAt": "2026-10-23T02:03:51.633Z",
+          "observedAt": "2026-11-05T02:19:26.174Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "TahmKench",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/tahmkench/tahmkench.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/tahmkench/tahmkench.bin.json",
               "sha256": "2c4d245e198a57458a95879789133f011276421c3cbc2f5a5293507a8ba34073"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "324a3700d293797b"
             }
           }
@@ -53448,15 +53538,15 @@
         "kogmaw-bottom-reference-2621"
       ],
       "damage": "mixed",
-      "skillOrder": "WQEWWRWQWQRQQEE",
-      "skillReason": "OP.GG 同位置前15级独立加点样本，不代表视频玩家或整套联动对局。",
+      "skillOrder": "WQEWWRWQWQRQQEEREE",
+      "skillReason": "前 15 级参考当版同位置样本，后续按合法技能等级补齐。",
       "summoners": [
         "SummonerFlash",
         "SummonerBarrier"
       ],
-      "why": "OP.GG 全球翡翠及以上下路分项参考；装备、鞋、符文和加点分别统计，不是作者配套或组合胜率。开 W 后在安全距离攻击，装备和开局按对局调整。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "出门可选多兰刃与一瓶药，或按当版同位置资料用多兰弓与两瓶药。首回城按经济考虑羊刀的攻击组件。开 W 后在可撤退的位置攻击，卡尔玛护盾只帮助站位。核心、鞋与符文及加点是独立的当版同位置资料；本版修复 W 在普攻飞行期间异常伤塔，不将其写进玩法。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "OP.GG · 大嘴下路 16.21（全球翡翠+）",
@@ -53467,8 +53557,38 @@
         {
           "name": "Riot · 大嘴 16.21 技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/KogMaw.json",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "腾讯 · 国服 26.22 正式公告",
+          "url": "https://lol.qq.com/gicp/news/410/37101296.html",
+          "kind": "本版克格莫 W 修复",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 克格莫同位置配置",
+          "url": "https://op.gg/lol/champions/kogmaw/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版独立分项，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -53490,21 +53610,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ba006aa34e05e235",
-          "observedAt": "2026-10-23T02:03:51.535Z",
+          "observedAt": "2026-11-05T02:19:26.082Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "KogMaw",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kogmaw/kogmaw.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kogmaw/kogmaw.bin.json",
               "sha256": "2b7676bd783ef9d58380c1f10aefff5546e71946ba21c91bd44980befeb0376c"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "ad3707a256c213e5"
             }
           }
@@ -53532,15 +53652,15 @@
         "karma-support-reference-2621"
       ],
       "damage": "ap",
-      "skillOrder": "QEWQQRQEQEREEWW",
-      "skillReason": "OP.GG 同位置前15级独立加点样本，不代表视频玩家或整套联动对局。",
+      "skillOrder": "QEWQQRQEQEREEWWRWW",
+      "skillReason": "前 15 级参考当版同位置样本，后续按合法技能等级补齐。",
       "summoners": [
         "SummonerFlash",
         "SummonerHeal"
       ],
-      "why": "OP.GG 全球翡翠及以上辅助分项参考；装备、鞋、符文和加点分别统计，不是作者配套或组合胜率。海力亚先对英雄造成伤害积攒充能，再给友军治疗或护盾触发；辅助经济和站位会影响成型。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "辅助任务装出门，首回城按需要选鞋或海力亚组件。核心、鞋与符文及加点各自参考当版同位置。用 Q 或 W 实际命中减速或牵制目标；E 给有安全输出位置的队友护盾和移速，海力亚的未解析数值不参与配合判断。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "OP.GG · 卡尔玛辅助 16.21（全球翡翠+）",
@@ -53551,8 +53671,32 @@
         {
           "name": "Riot · 卡尔玛 16.21 技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Karma.json",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 卡尔玛同位置配置",
+          "url": "https://op.gg/lol/champions/karma/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版独立分项，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -53574,21 +53718,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "36385f1555005577",
-          "observedAt": "2026-10-23T02:03:51.532Z",
+          "observedAt": "2026-11-05T02:19:26.078Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Karma",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/karma/karma.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/karma/karma.bin.json",
               "sha256": "7b6328b43d94f80ea6eec0998d8f81d9e54f3f8c6bb7a37a12ebbd04d569bcf5"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "1f2620463bdb38d1"
             }
           }
@@ -53784,15 +53928,15 @@
         "kaisa-bottom-reference-2621"
       ],
       "damage": "mixed",
-      "skillOrder": "QWEQQRQEQEREEWW",
-      "skillReason": "OP.GG 同位置前15级独立加点样本，不代表视频玩家或整套联动对局。",
+      "skillOrder": "QWEQQRQEQEREEWWRWW",
+      "skillReason": "前 15 级参考当版同位置样本，后续按合法技能等级补齐。",
       "summoners": [
         "SummonerFlash",
         "SummonerBarrier"
       ],
-      "why": "OP.GG 全球翡翠及以上的独立位置分项参考，不是视频玩家配置或组合胜率。符文选用无神奇之鞋的备选页；技能进化按游戏内实际属性确认。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "出门可选多兰刃与一瓶药，或按当版同位置资料用多兰弓与两瓶药。首回城按金币选择海妖的攻击或攻速组件。保留原无神奇之鞋符文备选。核心、鞋和加点参考当版同位置，技能进化按实际属性确认；塔姆的落点不安全时先撤。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "OP.GG · 卡莎 · 下路特效参考 16.21（全球翡翠+）",
@@ -53803,8 +53947,32 @@
         {
           "name": "Riot · 卡莎 · 下路特效参考 16.21 技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Kaisa.json",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 卡莎同位置配置",
+          "url": "https://op.gg/lol/champions/kaisa/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版同位置核心与加点，原符文为既有备选",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -53826,21 +53994,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "792e7d85c3acdc09",
-          "observedAt": "2026-10-23T02:03:51.531Z",
+          "observedAt": "2026-11-05T02:19:26.077Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Kaisa",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/kaisa/kaisa.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/kaisa/kaisa.bin.json",
               "sha256": "702f5270f6b4e24fa894679a67117b18896ef62b4897d409cabb1c53344375c8"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "e793368118ed867a"
             }
           }
@@ -54036,15 +54204,15 @@
         "lux-bottom-reference-2621"
       ],
       "damage": "ap",
-      "skillOrder": "EQWEEREQEQRQQWW",
-      "skillReason": "OP.GG 同位置前15级独立加点样本，不代表视频玩家或整套联动对局。",
+      "skillOrder": "EQWEEREQEQRQQWWRWW",
+      "skillReason": "前 15 级沿用历史下路参考，后续为人工补齐；当版无同位置数据。",
       "summoners": [
         "SummonerFlash",
         "SummonerTeleport"
       ],
-      "why": "OP.GG 全球翡翠及以上的独立位置分项参考，不是视频玩家配置或组合胜率。拉克丝 Q 命中后才能安排控制衔接；下路样本低于主流位置，装备和符文为独立分项。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "当版签名快照没有拉克丝下路同位置统计，保留旧下路配置作人工参考。多兰戒和两瓶药出门，首回城按经济补核心组件；装备以当前峡谷实际可购为前提。Q 确实命中后才安排索拉卡接 E。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "OP.GG · 拉克丝 · 下路法术参考 16.21（全球翡翠+）",
@@ -54055,8 +54223,26 @@
         {
           "name": "Riot · 拉克丝 · 下路法术参考 16.21 技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Lux.json",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -54078,21 +54264,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "50314ad04c92f1a6",
-          "observedAt": "2026-10-23T02:03:51.540Z",
+          "observedAt": "2026-11-05T02:19:26.155Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Lux",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/lux/lux.bin.json",
-              "sha256": "9223cdf0a3d94223309fc69eb0c3865444b2884004b443dbcd066e70ffe0b952"
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/lux/lux.bin.json",
+              "sha256": "bcb1ca7a7e82072b504985d84dc1fa905471f3c249fbafb3ab72658a50f7595b"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "cc7818802b8d5fc7"
             }
           }
@@ -54120,15 +54306,15 @@
         "soraka-support-reference-2621"
       ],
       "damage": "ap",
-      "skillOrder": "QWEWWRWQWQRQQEE",
-      "skillReason": "OP.GG 同位置前15级独立加点样本，不代表视频玩家或整套联动对局。",
+      "skillOrder": "QWEWWRWQWQRQQEEREE",
+      "skillReason": "前 15 级参考当版同位置样本，后续按合法技能等级补齐。",
       "summoners": [
         "SummonerFlash",
         "SummonerHeal"
       ],
-      "why": "OP.GG 全球翡翠及以上的独立位置分项参考，不是视频玩家配置或组合胜率。月石需实际治疗或护盾后连锁另一名友方英雄；救赎有延迟，E 需目标留在范围至结束才禁锢。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "辅助任务装出门，首回城按技能频率和承伤考虑鞋或月石组件。月石需实际治疗或护盾后连锁，救赎有延迟。E 先沉默范围内敌人，留至结束才禁锢。核心、鞋、符文、加点分别是同位置参考。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "OP.GG · 索拉卡 · 辅助治疗参考 16.21（全球翡翠+）",
@@ -54139,8 +54325,32 @@
         {
           "name": "Riot · 索拉卡 · 辅助治疗参考 16.21 技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Soraka.json",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 索拉卡同位置配置",
+          "url": "https://op.gg/lol/champions/soraka/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版独立分项，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -54162,21 +54372,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "46ec394f508ebcc0",
-          "observedAt": "2026-10-23T02:03:51.632Z",
+          "observedAt": "2026-11-05T02:19:26.173Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Soraka",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/soraka/soraka.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/soraka/soraka.bin.json",
               "sha256": "efdf1cfccf0fbb6bb3de9f8e2e7e5641eb0e628955c602dbe93be699b2ce8e83"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "43b0fc1302f2816c"
             }
           }
@@ -54204,15 +54414,15 @@
         "twitch-bottom-reference-2621"
       ],
       "damage": "ad",
-      "skillOrder": "QEWEEREQEQRQQWW",
-      "skillReason": "OP.GG 同位置前15级独立加点样本，不代表视频玩家或整套联动对局。",
+      "skillOrder": "QEWEEREQEQRQQWWRWW",
+      "skillReason": "前 15 级参考当版同位置样本，后续按合法技能等级补齐。",
       "summoners": [
         "SummonerFlash",
         "SummonerBarrier"
       ],
-      "why": "OP.GG 全球翡翠及以上的独立位置分项参考，不是视频玩家配置或组合胜率。猎魔人弩箭需释放 R 后在限时内攻击触发，不能当作常驻效果；Q 潜行仍需留意敌方侦测范围。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "出门可选多兰刃与一瓶药，或按当版同位置资料用多兰弓与两瓶药。首回城按金币考虑收集者组件。核心、鞋、符文、加点分别参考当版同位置；猎魔人弩箭要在释放 R 后的有效时间内攻击，不能当常驻效果。Q 伪装仍要看侦测和敌人距离。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "OP.GG · 图奇 · 下路暴击参考 16.21（全球翡翠+）",
@@ -54223,8 +54433,32 @@
         {
           "name": "Riot · 图奇 · 下路暴击参考 16.21 技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Twitch.json",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 图奇同位置配置",
+          "url": "https://op.gg/lol/champions/twitch/build/adc?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版独立分项，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -54246,21 +54480,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "ab3e76d629cf2787",
-          "observedAt": "2026-10-23T02:03:51.636Z",
+          "observedAt": "2026-11-05T02:19:26.177Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Twitch",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/twitch/twitch.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/twitch/twitch.bin.json",
               "sha256": "53894a05d1e512a9fdbfd4d2898f70d6ee38c2339efe94316ffed1a165a58e2d"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "461e810ef4e30853"
             }
           }
@@ -54288,15 +54522,15 @@
         "rell-support-reference-2621"
       ],
       "damage": "mixed",
-      "skillOrder": "WQEWWRWEWEREEQQ",
-      "skillReason": "OP.GG 同位置前15级独立加点样本，不代表视频玩家或整套联动对局。",
+      "skillOrder": "WQEWWRWEWEREEQQRQQ",
+      "skillReason": "前 15 级参考当版同位置样本，后续按合法技能等级补齐。",
       "summoners": [
         "SummonerFlash",
         "SummonerDot"
       ],
-      "why": "OP.GG 全球翡翠及以上的独立位置分项参考，不是视频玩家配置或组合胜率。余震需实际定身；海克斯闪现需要闪现冷却且安全引导，鸟盾需主动使用、骑士之誓需绑定。",
-      "patch": "16.21",
-      "reviewedAt": "2026-10-29",
+      "why": "辅助任务装出门，首回城按经济比较鞋或燃烧宝石。余震需实际定身，鸟盾需主动覆盖附近友军，骑士之誓要绑定并在有效距离。施放大招后留意基克与敌人的距离，风暴生成时机的文本差异不用于配合。核心、鞋、符文、加点分别参考当版同位置。",
+      "patch": "16.22",
+      "reviewedAt": "2026-11-06",
       "sources": [
         {
           "name": "OP.GG · 芮尔 · 辅助开团参考 16.21（全球翡翠+）",
@@ -54307,8 +54541,32 @@
         {
           "name": "Riot · 芮尔 · 辅助开团参考 16.21 技能",
           "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/champion/Rell.json",
-          "kind": "当前机制复核",
+          "kind": "历史版本机制复核",
           "checkedAt": "2026-10-29"
+        },
+        {
+          "name": "Riot · 16.22.1 英雄技能",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
+          "kind": "当版机制复核，非录像同版证明",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 装备",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/item.json",
+          "kind": "当版装备购买资格",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "Riot · 16.22.1 符文",
+          "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/runesReforged.json",
+          "kind": "当版符文复核",
+          "checkedAt": "2026-11-06"
+        },
+        {
+          "name": "OP.GG · 16.22 芮尔同位置配置",
+          "url": "https://op.gg/lol/champions/rell/build/support?region=global&type=ranked&tier=emerald_plus&patch=16.22",
+          "kind": "当版独立分项，非组合实测",
+          "checkedAt": "2026-11-06"
         }
       ],
       "reviewBaseline": {
@@ -54330,21 +54588,21 @@
           "kind": "explicit-review",
           "reviewCoverage": "summary-v1",
           "legacyFingerprint": "bec49be1ddcf29c0",
-          "observedAt": "2026-10-23T02:03:51.549Z",
+          "observedAt": "2026-11-05T02:19:26.164Z",
           "input": {
             "schema": 1,
             "normalizer": 1,
             "champion": "Rell",
-            "patch": "16.21",
-            "version": "16.21.1",
+            "patch": "16.22",
+            "version": "16.22.1",
             "locale": "zh_CN",
             "character": {
               "algorithm": "canonical-json-sha256-v1",
-              "url": "https://raw.communitydragon.org/16.21/game/data/characters/rell/rell.bin.json",
+              "url": "https://raw.communitydragon.org/16.22/game/data/characters/rell/rell.bin.json",
               "sha256": "1225a8f35e320898977194bcbc616538c20de3cdd99156ef7a8e963e56b67084"
             },
             "dataDragon": {
-              "url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/zh_CN/championFull.json",
+              "url": "https://ddragon.leagueoflegends.com/cdn/16.22.1/data/zh_CN/championFull.json",
               "fingerprint": "f5469dea7fbc0dcb"
             }
           }
