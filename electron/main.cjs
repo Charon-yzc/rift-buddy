@@ -149,7 +149,21 @@ async function boot(){
  const {createOpponentBuildCache}=await import('../services/opponent-build-cache.mjs');
  const opponentCache=createOpponentBuildCache({root:path.join(storeRoot,'data'),getData:()=>data});
  const refreshOpponentBuild=refreshReference(opponentCache,['opponentBuildSources']);
- const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource}=await import('../src/core/build-source.mjs');
+ const {selectBuildSource,buildSourcePendingKey,normalizeBuildSource,requireBuildSource}=await import('../src/core/build-source.mjs');
+ const windowSources=new WeakMap();
+ const noteWindowSource=(sender,source,epoch,{saveFallback=false}={})=>{
+  const selected=requireBuildSource(source);let entry=windowSources.get(sender);
+  if(epoch!==undefined&&(!Number.isSafeInteger(epoch)||epoch<0))throw Error('配置来源状态格式不正确');
+  if(entry?.helperLocked&&(epoch!==undefined&&epoch!==entry.epoch||!isDeepStrictEqual(entry.source,selected)))throw Error('连接助手正在应用该窗口的配置，请完成后再切换来源');
+  if(!entry){entry={source:selected,epoch:epoch??0,destroyed:false};windowSources.set(sender,entry);const invalidate=()=>{entry.destroyed=true;windowSources.delete(sender);};const onNavigation=(_event,_url,inPlace,mainFrame)=>{if(mainFrame&&!inPlace){invalidate();sender.removeListener('did-start-navigation',onNavigation);}};sender.on('did-start-navigation',onNavigation);sender.once('destroyed',invalidate);}
+  else if(epoch===undefined){if(!isDeepStrictEqual(entry.source,selected)){if(!saveFallback)throw Error('配置来源已变化，请重新选择');entry.source=selected;entry.epoch++;}}
+  else if(epoch<entry.epoch||epoch===entry.epoch&&!isDeepStrictEqual(entry.source,selected))throw Error('配置来源已变化，请重新选择');
+  else if(epoch>entry.epoch){entry.source=selected;entry.epoch=epoch;}
+  return {sender,entry,epoch:entry.epoch};
+ };
+ const sourceBindingCurrent=binding=>!!binding&&!binding.entry.destroyed&&binding.entry.epoch===binding.epoch;
+ const setHelperSourceLock=(binding,locked,source)=>{if(!binding)return;if(locked)binding.entry.helperLocked=true;else delete binding.entry.helperLocked;if(!binding.entry.destroyed)try{binding.sender.send('build-source-lock',locked?{locked:true,source:requireBuildSource(source)}:{locked:false});}catch{}};
+ guard('note-build-source',(value,{sender})=>{noteWindowSource(sender,value?.source,value?.epoch);return true;},true);
  const guideFeatureSignature=()=>JSON.stringify(['guideEconomy','guideEquipment','guideSkills','guideJungle'].map(key=>state.preferences[key]!==false));let lastGuideFeatures=guideFeatureSignature();
  synchronizeSavedState=()=>{if(JSON.stringify(data.buildSource)!==JSON.stringify(normalizeBuildSource(state.preferences.buildSource))){selectBuildSource(data,state.preferences.buildSource);refreshCatalogAvailability();publishData(['buildSource','builds','catalogInfo']);}if(state.preferences.autoLive===false)latestLive=null;roomUsagePublisher?.sync();postgameLifecycle?.observe();const signature=guideFeatureSignature();if(signature!==lastGuideFeatures){lastGuideFeatures=signature;guide?.publish();}};
  const {createPairStatisticsCache}=await import('../services/pair-statistics-cache.mjs');
@@ -190,7 +204,7 @@ async function boot(){
  const publishCommunity=info=>{data.communityFeed=info;if(communityChanged){communityChanged=false;catalogCore.installValidatedCatalog(data.catalog);publishData(['communityFeed','catalog','catalogInfo','communityHexRoutes']);guide?.publish();}else publishData(['communityFeed']);};
  communityFeed=await createCommunityFeedCache({root:path.join(storeRoot,'data'),getData:()=>data,getContext:()=>catalogStore.revision(),currentVersion:app.getVersion(),restoreAtStartup:true,
   canActivate:()=>feedIdle&&!updating&&!applyingRunes&&!importingItemSet&&!catalogStore.isMutating(),
-  prepare:(value,current)=>{const staged=catalogStore.prepareCommunity(value?.catalog||null,value?.patch,current,{signedReceipt:true});return ()=>{staged.commit();current.catalog=staged.catalog;current.catalogInfo=staged.info;current.communityHexRoutes=value?.hexRoutes||null;communityChanged=true;};},onChange:publishCommunity});
+  prepare:(value,current,{historicalRift=false}={})=>{const staged=catalogStore.prepareCommunity(value?.catalog||null,value?.patch,current,{signedReceipt:true,historicalRift});return ()=>{staged.commit();current.catalog=staged.catalog;current.catalogInfo=staged.info;current.communityHexRoutes=value?.hexRoutes||null;communityChanged=true;};},onChange:publishCommunity});
  publishCommunity(communityFeed.summary());
  const checkStructuredStatistics=async options=>{const info=await generation.check(options);return !generation.hasAccepted()&&info.phase==='offline'&&legacyFeed?legacyFeed.check(options):info;};
  const dataFeed={summary:()=>!generation.hasAccepted()&&['idle','offline'].includes(generation.summary().phase)?legacyFeed?.summary()||generation.summary():generation.summary(),
@@ -222,15 +236,23 @@ async function boot(){
  let guideReferenceBase=data,guideReferenceRevision=1;
  const getGuideReferenceRevision=()=>{if(data!==guideReferenceBase){guideReferenceBase=data;guideReferenceRevision++;}return guideReferenceRevision;};
  const guideRefresh=new Map(),guideRefreshKey=s=>s&&buildSourcePendingKey(data.patch,s.id,s.mode==='hex'?'hex':s.role,data.buildSource);
- const getGuideModel=()=>{currentGuideSelection();const selection=actualGuideSelection(),unknownRole=!!manualGuideReference&&(!selection||!selection.positionKnown),unbound=!!manualGuideReference&&!publicClientGameId(latestClient)||detachedGuideSelection||state.guide?.progressGameUnknown===true||!!state.guide?.progressGameId||unknownRole,live=unbound?{available:false,reason:'尚不能确认此参考对应的本局身份'}:state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,m=guideCore.createGuideModel({...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,live,selection);if(m){if(m.mode==='hex'){const record=hexGuideRecord(m.selection);m.hexRound=record?{context:record.context,revision:record.revision}:null;}const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;if(unbound)m.status.build=unknownRole&&publicClientGameId(latestClient)?'本人位置尚未确认，当前仅供阅读。':'尚不能确认此参考所属对局，当前仅供阅读。';}return m;};
+ const getGuideModel=()=>{currentGuideSelection();const selection=actualGuideSelection(),unknownRole=!!manualGuideReference&&(!selection||!selection.positionKnown),unbound=!!manualGuideReference&&!publicClientGameId(latestClient)||detachedGuideSelection||state.guide?.progressGameUnknown===true||!!state.guide?.progressGameId||unknownRole,live=unbound?{available:false,reason:'尚不能确认此参考对应的本局身份'}:state.preferences.autoLive===false?{available:false,reason:'局内装备读取已关闭，可手动标记'}:latestLive,guideSource=!!appliedGuideSelection?.source&&!manualGuideReference&&!detachedGuideSelection&&appliedGuideSelection.gameId===publicClientGameId(latestClient)&&state.guide?.selection&&guideCore.guideIdentity(state.guide.selection)===guideCore.guideIdentity(appliedGuideSelection.selection)?appliedGuideSelection.source:null,guideData=guideSource?projectPreparationData(guideSource,state.guide.selection):data,m=guideCore.createGuideModel({...guideData,flashSlot:state.preferences.flashSlot,clientFlashSlot:currentGame.flashSlot()},state.guide,live,selection);if(m){if(m.mode==='hex'){const record=hexGuideRecord(m.selection);m.hexRound=record?{context:record.context,revision:record.revision}:null;}const progress=guideRefresh.get(guideRefreshKey(m.selection));if(progress)m.status.build=progress.pending?'当前配置正在刷新':progress.error?'配置刷新未完成：'+progress.error:m.status.build;if(unbound)m.status.build=unknownRole&&publicClientGameId(latestClient)?'本人位置尚未确认，当前仅供阅读。':'尚不能确认此参考所属对局，当前仅供阅读。';}return m;};
  const recommendationCore=await import('../src/core/recommend.mjs');
  const {catalogChoiceCompatible,catalogChoiceMatches,catalogContextRevision,catalogPlanGroups,catalogPlanCurrent}=await import('../src/core/catalog-choice.mjs');
  const {comboMembers}=await import('../src/core/combo-members.mjs');
  const {reviewedCatalogEntry}=await import('../src/core/mechanic-review.mjs');
  const {curatedDescriptor,validateSavedCurated}=await import('../src/core/curated-plan.mjs');
- const preparationData=()=>{const own=latestClient.session?.myTeam?.find(player=>player.cellId===latestClient.session.localPlayerCellId),flash=Number(data.spells?.SummonerFlash?.key);return {...data,flashSlot:state.preferences.flashSlot,clientFlashSlot:own?.spell1Id===flash?'d':own?.spell2Id===flash?'f':undefined};};
+ const {projectCatalogAvailability}=await import('../src/core/catalog-availability.mjs');
+ const projectPreparationData=(source,selection,current=state)=>{
+  const projected={...data};selectBuildSource(projected,source===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(source));
+  const choice=current.draft?.catalogChoice,plan=current.draft?.creativePlan;
+  const ids=new Set([choice?.id,selection?.comboId,...catalogPlanGroups(selection?.creativePlan).map(group=>group.id),...catalogPlanGroups(plan).map(group=>group.id)].filter(Boolean));
+  if(projected.catalogInfo?.status)projected.catalogInfo={...projected.catalogInfo,status:projectCatalogAvailability(projected,ids)};
+  return projected;
+ };
+ const preparationData=(source,selection)=>{const own=latestClient.session?.myTeam?.find(player=>player.cellId===latestClient.session.localPlayerCellId),flash=Number(data.spells?.SummonerFlash?.key);return {...projectPreparationData(source,selection),flashSlot:state.preferences.flashSlot,clientFlashSlot:own?.spell1Id===flash?'d':own?.spell2Id===flash?'f':undefined};};
  const {confirmedClientDraft}=await import('../src/core/draft-intents.mjs');
- const selectionReviewStamp=(selection,current=state)=>{const choice=current.draft?.catalogChoice,plan=current.draft?.creativePlan,curated=selection?.creativePlan?.curated?.id||plan?.curated?.id;return JSON.stringify([data.patch,data.catalog?.version,choice||null,choice?data.catalogInfo?.status?.[choice.id]||null:null,curated||null,curated?data.catalogInfo?.status?.[curated]||null:null,plan?.id||'',catalogContextRevision(data,selection,choice,plan)]);};
+ const selectionReviewStamp=(selection,current=state,source)=>{const projected=projectPreparationData(source,selection,current),choice=current.draft?.catalogChoice,plan=current.draft?.creativePlan,curated=selection?.creativePlan?.curated?.id||plan?.curated?.id;return JSON.stringify([projected.patch,projected.catalog?.version,choice||null,choice?projected.catalogInfo?.status?.[choice.id]||null:null,curated||null,curated?projected.catalogInfo?.status?.[curated]||null:null,plan?.id||'',catalogContextRevision(projected,selection,choice,plan)]);};
  const {publicClientGameId,reconcileClientDraft}=await import('../src/core/draft.mjs');
  const {createHexRoundStore,hexRoundSelection}=await import('../src/core/hex-round.mjs');
  const {isCurrentHexData}=await import('../src/core/hex-data-current.mjs');
@@ -252,7 +274,7 @@ async function boot(){
  const guideRosterKey=slots=>slots?JSON.stringify(slots.map(slot=>[slot.role,slot.champion||null])):null;
  const guideManualRole=cell=>{if(!Number.isInteger(cell))return null;return state.draft?.slots?.find(slot=>slot.manualPosition&&slot.clientCellId===cell)?.role||(state.draft?.playerPosition?.cellId===cell?state.draft.playerPosition.role:null)||null;};
  const guideSnapshot=(gameId,selection,previous=null)=>{const cellId=latestClient.session?.localPlayerCellId??previous?.cellId,own=gameId&&latestClient.connected&&publicClientGameId(latestClient)===gameId?actualGuideSelection():null;return {gameId,selection:structuredClone(selection),choiceToken:state.draft?.catalogChoice?.token||null,planId:state.draft?.creativePlan?.id||null,cellId,manualRole:guideManualRole(cellId),ownRole:own?.positionKnown?own.role:previous?.ownRole||null,ownId:own?.id||previous?.ownId||null,ownMode:own?.mode||previous?.ownMode||null};};
- const rememberAppliedGuide=(gameId,selection)=>{appliedGuideSelection=guideSnapshot(gameId,selection);manualGuideReference=null;detachedGuideSelection=false;};
+ const rememberAppliedGuide=(gameId,selection,source)=>{appliedGuideSelection={...guideSnapshot(gameId,selection),source:requireBuildSource(source)};manualGuideReference=null;detachedGuideSelection=false;};
  const currentGuideSelection=()=>{
   if(manualGuideReference&&!manualGuideReference.gameId){if(publicClientGameId(latestClient)){manualGuideReference=null;detachedGuideSelection=true;}else if(latestClient.connected&&!['ChampSelect','GameStart','InProgress','Reconnect'].includes(latestClient.phase))manualGuideReference=null;else return null;}
   if(!publicClientGameId(latestClient))return null;
@@ -685,13 +707,20 @@ async function boot(){
  guard('catalog-personal',entry=>catalogStore.savePersonal(entry).then(useCatalog));
  guard('catalog-export',async()=>{const selected=await dialog.showSaveDialog(win,{title:'导出完整组合库',defaultPath:`开黑搭子-组合库-${data.catalog.version}.json`,filters:[{name:'组合库 JSON',extensions:['json']}]});if(selected.canceled)return false;await fs.writeFile(selected.filePath,JSON.stringify(catalogStore.export(),null,2),'utf8');return true;});
  guard('main-ready',({surface})=>{if(surface==='main'){rendererReady=true;if(pendingBuild){win.webContents.send('open-build',pendingBuild);pendingBuild=null;}if(pendingMainPage){win.webContents.send('main-page',pendingMainPage);pendingMainPage=null;}}return {state,revision:stateRevision,preparationSnapshot:preparationLedger.snapshot()};},true);
- guard('save-state',async(next,base,preparationGuard,{sender})=>{
+ guard('save-state',async(next,base,preparationGuard,sourceEpoch,context)=>{
+  if(context===undefined&&sourceEpoch?.sender){context=sourceEpoch;sourceEpoch=undefined;}
+  const {sender}=context;
+  if(sourceEpoch!==undefined&&(!Number.isSafeInteger(sourceEpoch)||sourceEpoch<0))throw Error('配置来源状态格式不正确');
   next=storage.validateState(next);
   // A delayed renderer snapshot cannot restore a binding from an earlier game.
   const gameId=publicClientGameId(latestClient),draftContext=reconcileClientDraft(next.draft,gameId,state.draft?.clientGameId||state.guide?.match?.gameId,{phase:latestClient.phase});
   next.draft=draftContext.newGame&&state.draft?.clientGameId===gameId?structuredClone(state.draft):draftContext.draft;
   // The renderer cannot claim ownership of existing user rune pages.
   const before=base?storage.validateState(base):structuredClone(state),same=isDeepStrictEqual;
+  if(!same(next.preferences.buildSource,before.preferences.buildSource)){
+   if(sourceEpoch===undefined)noteWindowSource(sender,next.preferences.buildSource,undefined,{saveFallback:true});
+   else {const entry=windowSources.get(sender);if(!(entry&&sourceEpoch<entry.epoch&&same(entry.source,next.preferences.buildSource)))noteWindowSource(sender,next.preferences.buildSource,sourceEpoch);}
+  }
   // Invalidate an in-flight combination operation as soon as a competing
   // renderer save enters the queue, not only after its disk write completes.
   if(!same(next.draft?.catalogChoice,before.draft?.catalogChoice)||!same(next.draft?.creativePlan,before.draft?.creativePlan)||!same(next.preparations,before.preparations))selectionWriteRevision++;
@@ -744,8 +773,8 @@ async function boot(){
    guide.publish();companion.sync();return {state,revision:stateRevision};
  },true);
  const {createClientSync}=await import('../src/core/async-tasks.mjs');
- let stagedSelectionParty='',stagedSelectionRunning=false;
- async function rememberSelectionHover(value,result){
+ let stagedSelectionParty='',stagedSelectionRunning=false,stagedSourceBinding=null;
+ async function rememberSelectionHover(value,result,source){
   if(result.steps?.hover?.status!=='done')return;
   const gameId=String(value.sessionGameId),cellId=value.context?.cellId;
   await saveCurrentState(current=>{
@@ -753,7 +782,7 @@ async function boot(){
    if(!current.draft||!latestClient.connected||latestClient.phase!=='ChampSelect'||publicClientGameId(latestClient)!==gameId||latestClient.session?.localPlayerCellId!==cellId||Number(own?.championId||own?.championPickIntent)!==value.championId)return current;
    if(value.preselectOnly||value.claimPosition){
     const previous=current.draft.preselection;
-    current.draft.preselection={...(value.preselectOnly&&previous?.kind==='hero'&&previous.champion===value.champion&&previous.role===value.role?previous:{}),role:value.role,champion:value.champion,attemptedGameId:gameId,hoveredCellId:cellId};
+    current.draft.preselection={...(value.preselectOnly&&previous?.kind==='hero'&&previous.champion===value.champion&&previous.role===value.role?previous:{}),role:value.role,champion:value.champion,...(source?{buildSource:source}:{}),attemptedGameId:gameId,hoveredCellId:cellId};
    }
    else delete current.draft.preselection;
    return current;
@@ -765,33 +794,33 @@ async function boot(){
   const own=latestClient.own,identity=own?.puuid||own?.summonerId||own?.riotId;
   return identity?JSON.stringify([identity,party.lobbyCount,party.members.map(member=>member.displayName||'').sort()]):'';
  };
- function stagedCatalogChoice(intent,champion,session=latestClient.session){
+ function stagedCatalogChoice(intent,champion,session=latestClient.session,snapshot=data){
   if(!intent.catalogChoiceToken)return null;
   const choice=state.draft?.catalogChoice,role=intent.role;
-  if(!choice||choice.token!==intent.catalogChoiceToken||!data.patch||!data.catalogInfo?.status?.[choice.id]||!Number.isInteger(session?.localPlayerCellId))return null;
-  const confirmed=confirmedClientDraft(state.draft.slots,session,data.champions).slots,target=confirmed.find(s=>s.role===role);
+  if(!choice||choice.token!==intent.catalogChoiceToken||!snapshot.patch||!snapshot.catalogInfo?.status?.[choice.id]||!Number.isInteger(session?.localPlayerCellId))return null;
+  const confirmed=confirmedClientDraft(state.draft.slots,session,snapshot.champions).slots,target=confirmed.find(s=>s.role===role);
   const ownSlot=confirmed.find(s=>s.clientCellId===session.localPlayerCellId);
   if(!target||ownSlot&&ownSlot.role!==role||target.champion&&target.champion!==champion||Number.isInteger(target.clientCellId)&&target.clientCellId!==session.localPlayerCellId)return null;
   const projected=confirmed.map(s=>s===target&&!s.champion?{...s,champion,locked:false}:s);
-  const entry=recommendationCore.currentCombo(projected,champion,role,data.catalogInfo.status,null,null,{patch:data.patch,catalogChoice:choice});
+  const entry=recommendationCore.currentCombo(projected,champion,role,snapshot.catalogInfo.status,null,null,{patch:snapshot.patch,catalogChoice:choice});
   return entry&&catalogChoiceMatches(choice,entry,projected)?entry:null;
  }
  // A frozen plan is evidence only while every referenced catalog group still
  // has its current reviewed definition and the public members are confirmed.
- function derivedCatalogState(selection,session=latestClient.session){
-  const plan=selection?.creativePlan,groups=catalogPlanGroups(plan),catalog=data.catalog,status=data.catalogInfo?.status,patch=data.patch;
+ function derivedCatalogState(selection,session=latestClient.session,snapshot=data){
+  const plan=selection?.creativePlan,groups=catalogPlanGroups(plan),catalog=snapshot.catalog,status=snapshot.catalogInfo?.status,patch=snapshot.patch;
   const entries=[...(catalog?.duos||[]),...(catalog?.trios||[])];
   const direct=!plan&&selection?.comboId?entries.find(entry=>entry.id===selection.comboId):null;
   const required=!!groups.length||plan?.archetype==='curated'||!!(!plan&&selection?.comboId);
   if(!required)return {required:false,current:true};
   if(!patch||plan&&!catalogPlanCurrent(plan,catalog,status,patch)||!plan&&(!direct||!comboMembers(direct).some(member=>member.champion===selection.id&&member.role===selection.role)||!status?.[direct.id]||!reviewedCatalogEntry(direct,status,patch)))return {required:true,current:false};
   for(const group of groups){
-   const entry=entries.find(row=>row.id===group.id),descriptor=entry&&curatedDescriptor(entry,data);
+   const entry=entries.find(row=>row.id===group.id),descriptor=entry&&curatedDescriptor(entry,snapshot);
    if(!descriptor||!isDeepStrictEqual(group,validateSavedCurated(descriptor.curated,descriptor.members)))return {required:true,current:false};
    if(plan.archetype==='curated'&&['name','tempo','members','ordered','why','plan','steps','window','caution','patch'].some(field=>!isDeepStrictEqual(plan[field],descriptor[field])))return {required:true,current:false};
   }
   if(!Number.isInteger(session?.localPlayerCellId)||!Array.isArray(session?.myTeam)||!Array.isArray(state.draft?.slots))return {required:true,current:false};
-  const confirmed=confirmedClientDraft(state.draft?.slots,session,data.champions).slots,target=confirmed?.find(slot=>slot.role===selection.role),own=confirmed?.find(slot=>slot.clientCellId===session.localPlayerCellId);
+  const confirmed=confirmedClientDraft(state.draft?.slots,session,snapshot.champions).slots,target=confirmed?.find(slot=>slot.role===selection.role),own=confirmed?.find(slot=>slot.clientCellId===session.localPlayerCellId);
   if(!target||own&&own.role!==selection.role||target.champion&&target.champion!==selection.id||Number.isInteger(target.clientCellId)&&target.clientCellId!==session.localPlayerCellId)return {required:true,current:false};
   const projected=confirmed.map(slot=>slot===target&&!slot.champion?{...slot,champion:selection.id,locked:false}:slot);
   const requiredEntries=direct?[direct]:groups.map(group=>entries.find(entry=>entry.id===group.id));
@@ -800,6 +829,11 @@ async function boot(){
  async function applyStagedSelection(){
   const intent=state.draft?.preselection,gameId=publicClientGameId(latestClient);
   if(stagedSelectionRunning||applyingRunes||importingItemSet||!intent||intent.attemptedGameId||!gameId||latestClient.phase!=='ChampSelect')return;
+  // A committed intent owns its frozen source independently of its window.
+  // Once consumption starts, subsequent edits in that same live window can
+  // still stop the in-flight write; closing the window does not erase intent.
+  const committedBinding=stagedSourceBinding,sourceBinding=committedBinding&&!committedBinding.entry.destroyed?{...committedBinding,epoch:committedBinding.entry.epoch}:null;
+  const stageBindingCurrent=()=>stagedSourceBinding===committedBinding&&(!sourceBinding||sourceBinding.entry.epoch===sourceBinding.epoch);
   stagedSelectionRunning=true;
   try{
    // A pregame click belongs to its current local party. Restarting the app
@@ -815,10 +849,11 @@ async function boot(){
    const attemptedIntent=structuredClone(state.draft.preselection);
    if(!choice.champion){publishWindows('preselection-status',{message:choice.reason});return;}
    const [{getBuild},{clientPreparationPlan},{runeWriteContext},service]=await Promise.all([import('../src/core/builds.mjs'),import('../src/client-preparation-view.mjs'),import('../src/core/rune-context.mjs'),import('../services/client-preparation.mjs')]);
-   await saveTask;if(!isDeepStrictEqual(state.draft?.preselection,attemptedIntent))return;
-   const baseSelection=intent.kind==='hero'&&intent.selection?intent.selection:{id:choice.champion,role:choice.role,mode:'rift'},hero=data.champions.find(value=>value.id===choice.champion);
-   if(intent.reviewStamp&&intent.reviewStamp!==selectionReviewStamp(baseSelection))throw Error('组合或资料复核状态已变化，请重新选择配置');
-   const matched=stagedCatalogChoice(intent,choice.champion),derived=derivedCatalogState(baseSelection),helperReady=helper.active();
+   await saveTask;if(stagedSourceBinding!==committedBinding||!isDeepStrictEqual(state.draft?.preselection,attemptedIntent))return;if(!stageBindingCurrent())throw Error('预选执行期间配置来源已变化，请重新选择配置');
+   const requestSource=attemptedIntent.buildSource===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(attemptedIntent.buildSource);
+   const baseSelection=intent.kind==='hero'&&intent.selection?intent.selection:{id:choice.champion,role:choice.role,mode:'rift'},hero=data.champions.find(value=>value.id===choice.champion),sourceData=()=>projectPreparationData(requestSource,baseSelection);
+   if(intent.reviewStamp&&intent.reviewStamp!==selectionReviewStamp(baseSelection,state,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
+   const matched=stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData()),derived=derivedCatalogState(baseSelection,latestClient.session,sourceData()),helperReady=helper.active();
    const hoverOnly=!!intent.catalogChoiceToken&&(!matched||helperReady)||derived.required&&(!derived.current||helperReady);
    const requested=matched?{...baseSelection,comboId:matched.id}:baseSelection;
    const priorSelection=()=>{const stored=storedPreparation(state.preparations,requested),previous=state.guide?.selection;return stored||(previous&&preparationIdentity(previous)===preparationIdentity(requested)?previous:null);};
@@ -827,35 +862,37 @@ async function boot(){
    const fresh=!remembered&&(!intent.selection||Array.isArray(intent.selectionFields)&&intent.selectionFields.every(field=>['comboId','creativePlan'].includes(field)));
    const selection=hoverOnly?{id:choice.champion,role:choice.role,mode:'rift'}:{...(fresh?{coreAuto:true}:{}),...remembered,id:requested.id,role:requested.role,mode:requested.mode};
    if(!hoverOnly){for(const field of explicitFields){if(!CONFIGURATION_FIELDS.includes(field))continue;if(Object.hasOwn(baseSelection,field))selection[field]=baseSelection[field];else delete selection[field];}if(matched)selection.comboId=matched.id;}
-   const dispatchStamp=selectionReviewStamp(selection);
-   const buildData=preparationData(),plan=hoverOnly?{value:{champion:choice.champion,role:choice.role,mode:'rift',preselectOnly:true}}:clientPreparationPlan(buildData,{selection,build:getBuild(hero,choice.role,buildData,selection)});if(!plan)throw Error('预选英雄资料暂不可用，请直接选择英雄');
+   const dispatchStamp=selectionReviewStamp(selection,state,requestSource);
+   const buildData=preparationData(requestSource,selection),plan=hoverOnly?{value:{champion:choice.champion,role:choice.role,mode:'rift',preselectOnly:true}}:clientPreparationPlan(buildData,{selection,build:getBuild(hero,choice.role,buildData,selection)});if(!plan)throw Error('预选英雄资料暂不可用，请直接选择英雄');
    // An explicit configuration may have acquired the client while imports
    // loaded. Its lock and newer choice take precedence over this old hover.
+   if(!stageBindingCurrent())throw Error('预选执行期间配置来源已变化，请重新选择配置');
    if(applyingRunes||importingItemSet||!latestClient.connected||latestClient.phase!=='ChampSelect'||publicClientGameId(latestClient)!==gameId||state.draft?.preselection?.attemptedGameId!==gameId||state.draft.preselection.champion!==choice.champion)return;
-   if(matched&&stagedCatalogChoice(intent,choice.champion)?.id!==matched.id)throw Error('组合成员或资料状态已变化，请重新选择配置');
-   if(intent.reviewStamp&&intent.reviewStamp!==selectionReviewStamp(baseSelection)||dispatchStamp!==selectionReviewStamp(selection))throw Error('组合或资料复核状态已变化，请重新选择配置');
+   if(matched&&stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData())?.id!==matched.id)throw Error('组合成员或资料状态已变化，请重新选择配置');
+   if(intent.reviewStamp&&intent.reviewStamp!==selectionReviewStamp(baseSelection,state,requestSource)||dispatchStamp!==selectionReviewStamp(selection,state,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
    const value=service.validateClientPreparation({...plan.value,sessionGameId:gameId,context:runeWriteContext(latestClient),claimPosition:intent.kind!=='hero'},data);
    const selectionWriteAtDispatch=selectionWriteRevision;
-   const stillCurrent=()=>latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&buildData.flashSlot===state.preferences.flashSlot&&(hoverOnly||selectionWriteAtDispatch===selectionWriteRevision)&&isDeepStrictEqual(state.draft?.preselection,attemptedIntent)&&(!intent.reviewStamp||intent.reviewStamp===selectionReviewStamp(baseSelection))&&dispatchStamp===selectionReviewStamp(selection)&&(hoverOnly||isDeepStrictEqual(remembered,priorSelection()))&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion)?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection).current);
+   const stillCurrent=()=>stageBindingCurrent()&&latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&buildData.flashSlot===state.preferences.flashSlot&&(hoverOnly||selectionWriteAtDispatch===selectionWriteRevision)&&isDeepStrictEqual(state.draft?.preselection,attemptedIntent)&&(!intent.reviewStamp||intent.reviewStamp===selectionReviewStamp(baseSelection,state,requestSource))&&dispatchStamp===selectionReviewStamp(selection,state,requestSource)&&(hoverOnly||isDeepStrictEqual(remembered,priorSelection()))&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,latestClient.session,sourceData())?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,latestClient.session,sourceData()).current);
    const guideCurrent=()=>selectionWriteAtDispatch===selectionWriteRevision&&stillCurrent();
    const operation=beginPreparation('selection',{value,selection,context:value.context});applyingRunes=true;importingItemSet=true;
    let hovered;
    try{
-    const written=helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,session)?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,session).current)});
+    let written;if(helperReady&&sourceBinding)setHelperSourceLock(sourceBinding,true,requestSource);try{written=helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>stageBindingCurrent()&&(!matched||hoverOnly||stagedCatalogChoice(intent,choice.champion,session,sourceData())?.id===matched.id)&&(!derived.required||hoverOnly||derivedCatalogState(baseSelection,session,sourceData()).current)});}finally{if(helperReady&&sourceBinding)setHelperSourceLock(sourceBinding,false);}
     finishPreparation(operation,{result:written});
-    if(intent.kind==='hero'&&written.complete&&!hoverOnly&&guideCurrent())rememberAppliedGuide(gameId,selection);
+    if(written.complete&&!hoverOnly&&guideCurrent())rememberAppliedGuide(gameId,selection,requestSource);
     const result=await preservePreparationResult(written,[
      ...(written.steps?.runes?.status==='done'?[['保存已写符文页',()=>saveCurrentState(current=>({...current,ownedPageId:written.steps.runes.pageId}))]]:[]),
      ...(intent.kind==='hero'&&!hoverOnly?[['保存英雄配置',()=>saveCurrentState(current=>stillCurrent()?({...current,preparations:upsertPreparation(current.preparations,selection)}):current)]]:[]),
      ['保存预选位置',async()=>{if(written.steps?.hover?.status==='done'&&publicClientGameId(latestClient)===gameId)await saveCurrentState(current=>{if(current.draft?.preselection?.attemptedGameId===gameId&&Number.isInteger(cellId)&&(!current.draft.playerPosition||current.draft.playerPosition.role===choice.role)){current.draft.playerPosition={role:choice.role,cellId};current.draft.soloRole=choice.role;}return current;});}]
     ]);
     if(result.followUpError!==written.followUpError)finishPreparation(operation,{result});
+    if(!stageBindingCurrent())publishWindows('preselection-status',{message:'预选执行期间来源或方案已变化，未完成的步骤已停止，请核对客户端。'});
     if(result.steps?.hover?.status!=='done'){publishWindows('preselection-status',{message:result.steps?.hover?.message||'预选未完成，请直接选择英雄'});return;}
     hovered=result;
    }catch(error){finishPreparation(operation,{result:{complete:false,message:String(error.message)}});throw error;}
    finally{applyingRunes=false;importingItemSet=false;}
    await status(true);
-   await rememberSelectionHover(value,hovered);
+   await rememberSelectionHover(value,hovered,requestSource);
    if(hoverOnly)publishWindows('preselection-status',{message:helperReady&&(matched||derived.current)?'已预选英雄；连接助手暂不支持安全同步组合变更，请确认后手动配置。':'已预选英雄；组合成员尚未确认或资料不可用，未应用组合配置，请确认后手动应用。'});
   }catch(error){if(latestClient.connected&&latestClient.phase==='ChampSelect'&&publicClientGameId(latestClient)===gameId&&state.draft?.preselection?.attemptedGameId===gameId)publishWindows('preselection-status',{message:String(error.message||'预选未完成，请直接选择英雄')});}
   finally{stagedSelectionRunning=false;}
@@ -942,22 +979,23 @@ async function boot(){
    return current;
   });return {state,revision:stateRevision};
  });
- guard('stage-selection',async value=>{
+ guard('stage-selection',async(value,{sender})=>{
   const intent=validatePregameIntent(value);if(intent.champion&&!data.champions.some(champion=>champion.id===intent.champion))throw Error('当前资料没有这位英雄');
+  const requestSource=intent.buildSource===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(intent.buildSource),sourceBinding=noteWindowSource(sender,requestSource,value.sourceEpoch);
   selectionWriteRevision++;
   await status(true);if(!latestClient.connected||!pregamePhase(latestClient.phase)||!stagedPartyIdentity())throw Error('请先连接游戏组队大厅，再设置预选');
   stagedSelectionParty=stagedPartyIdentity();
   const expectedParty=stagedSelectionParty;
   await saveCurrentState(current=>{
    if(!pregamePhase(latestClient.phase)||stagedPartyIdentity()!==expectedParty)throw Error('选人或组队已变化，请按当前界面重新选择');
-   if(typeof value.reviewStamp==='string'&&value.reviewStamp!==selectionReviewStamp(value.selection,current))throw Error('组合或资料复核状态已变化，请重新选择配置');
+   if(!sourceBindingCurrent(sourceBinding)||typeof value.reviewStamp==='string'&&value.reviewStamp!==selectionReviewStamp(value.selection,current,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
    if(intent.catalogChoiceToken&&intent.catalogChoiceToken!==current.draft?.catalogChoice?.token)throw Error('预选组合已变化，请重新选择配置');
    const draft=current.draft||{slots:createSlots(),scope:'party',soloRole:'',style:current.preferences.style};
    draft.slots=reconcilePartyRange(draft.slots,null,data.champions,{count:initialPartyCount(latestClient.party),party:latestClient.party,ownRole:intent.role,initial:true});
-   if(intent.role||intent.champion)draft.preselection={role:intent.role,champion:intent.champion,...(intent.kind?{kind:intent.kind}:{}),...(intent.selection?{selection:intent.selection}:{}),...(intent.selectionFields?{selectionFields:intent.selectionFields}:{}),...(intent.reviewStamp?{reviewStamp:intent.reviewStamp}:{}),...(intent.catalogChoiceToken?{catalogChoiceToken:intent.catalogChoiceToken}:{})};else delete draft.preselection;
+   if(intent.role||intent.champion)draft.preselection={role:intent.role,champion:intent.champion,...(intent.kind?{kind:intent.kind}:{}),...(intent.selection?{selection:intent.selection}:{}),...(intent.selectionFields?{selectionFields:intent.selectionFields}:{}),...(intent.reviewStamp?{reviewStamp:intent.reviewStamp}:{}),...(intent.buildSource?{buildSource:intent.buildSource}:{}),...(intent.catalogChoiceToken?{catalogChoiceToken:intent.catalogChoiceToken}:{})};else delete draft.preselection;
    current.draft=draft;return current;
-  });return {state,revision:stateRevision};
- });
+  });stagedSourceBinding=sourceBinding;return {state,revision:stateRevision};
+ },true);
  guard('cancel-preselection',async()=>{
   selectionWriteRevision++;
   await saveCurrentState(current=>{
@@ -965,7 +1003,7 @@ async function boot(){
    // Consumption and cancellation share the state queue. Once dispatched,
    // clearing a local intent must not pretend to undo a client selection.
    if(intent.attemptedGameId)throw Error('已进入选人，请在客户端更换英雄');
-   if(intent.role)current.draft.preselection={role:intent.role,champion:null,kind:'position'};
+   if(intent.role)current.draft.preselection={role:intent.role,champion:null,kind:'position',...(intent.buildSource?{buildSource:intent.buildSource}:{})};
    else delete current.draft.preselection;
    return current;
   });return {state,revision:stateRevision};
@@ -1160,12 +1198,13 @@ async function boot(){
   const result=await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath},{isCurrent:control.isCurrent});
   return result;
  });
- guard('prepare-selection',async value=>{
+ guard('prepare-selection',async(value,{sender})=>{
   if(value?.mode==='hex'&&value?.preselectOnly===true){
    const service=await import('../services/client-preparation.mjs');
    return hexSelections(service.validateClientPreparation(value,data));
   }
   if(applyingRunes||importingItemSet)throw Error('客户端配置正在处理，请稍后');
+  const requestSource=value?.buildSource===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(value.buildSource),sourceBinding=noteWindowSource(sender,requestSource,value?.sourceEpoch);
   applyingRunes=true;importingItemSet=true;
   let operation;
   try{
@@ -1173,39 +1212,40 @@ async function boot(){
    // waiting for its source. Check the authoritative state before dispatch.
    const service=await import('../services/client-preparation.mjs');
    await saveTask;
-   if(typeof value?.reviewStamp==='string'&&value.reviewStamp!==selectionReviewStamp(value.selection))throw Error('组合或资料复核状态已变化，请重新选择配置');
-   const reviewStamp=value?.reviewStamp,stampedSelection=value?.selection,initialStamp=selectionReviewStamp(value?.selection),buildData=preparationData();
+   if(!sourceBindingCurrent(sourceBinding)||typeof value?.reviewStamp==='string'&&value.reviewStamp!==selectionReviewStamp(value.selection,state,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
+   const reviewStamp=value?.reviewStamp,stampedSelection=value?.selection,initialStamp=selectionReviewStamp(value?.selection,state,requestSource),buildData=preparationData(requestSource,value?.selection);
    const expectedPreparation=Object.hasOwn(value,'expectedPreparation')?{value:value.expectedPreparation}:null;
    const selection=value?.selection===undefined?null:guideCore.validateGuideSelection(value.selection);value=service.validateClientPreparation(value,data);
    if(selection&&value.mode!=='hex'&&(selection.id!==value.champion||selection.role!==value.role||selection.mode!==value.mode))throw Error('准备配置与英雄或位置不一致，请重新点击');
    await saveTask;
-   if(buildData.flashSlot!==state.preferences.flashSlot||initialStamp!==selectionReviewStamp(stampedSelection)||typeof reviewStamp==='string'&&reviewStamp!==selectionReviewStamp(stampedSelection))throw Error('组合或资料复核状态已变化，请重新选择配置');
+   if(!sourceBindingCurrent(sourceBinding)||buildData.flashSlot!==state.preferences.flashSlot||initialStamp!==selectionReviewStamp(stampedSelection,state,requestSource)||typeof reviewStamp==='string'&&reviewStamp!==selectionReviewStamp(stampedSelection,state,requestSource))throw Error('组合或资料复核状态已变化，请重新选择配置');
    const catalogChoice=state.draft?.catalogChoice,guardedIntent=selection?.comboId&&selection.comboId===catalogChoice?.id?{catalogChoiceToken:catalogChoice.token,role:selection.role}:null;
-   if(!value.preselectOnly&&guardedIntent&&!stagedCatalogChoice(guardedIntent,selection.id))throw Error('组合成员尚未确认或资料已变化，请确认后再应用');
-   const derived=value.preselectOnly?{required:!!(selection?.comboId||catalogPlanGroups(selection?.creativePlan).length),current:true}:derivedCatalogState(selection);
+   const sourceData=()=>projectPreparationData(requestSource,stampedSelection);
+   if(!value.preselectOnly&&guardedIntent&&!stagedCatalogChoice(guardedIntent,selection.id,latestClient.session,sourceData()))throw Error('组合成员尚未确认或资料已变化，请确认后再应用');
+   const derived=value.preselectOnly?{required:!!(selection?.comboId||catalogPlanGroups(selection?.creativePlan).length),current:true}:derivedCatalogState(selection,latestClient.session,sourceData());
    if(derived.required&&!derived.current&&!value.preselectOnly)throw Error('组合成员或审核资料尚未确认，请重新选择配置');
    const helperReady=helper.active();
    if(helperReady&&expectedPreparation)throw Error('连接助手暂不能安全校验收藏预览的并发变化，尚未操作，请在客户端手动配置');
    if(helperReady&&!value.preselectOnly&&derived.required)throw Error('连接助手暂不能安全同步组合变更，请在客户端手动配置');
    const remembered=selection?storedPreparation(state.preparations,selection):null;
    if(expectedPreparation&&!isDeepStrictEqual(expectedPreparation.value,remembered))throw Error('准备已在其他窗口变化，尚未操作；请重新核对');
-   const selectionWriteAtDispatch=selectionWriteRevision,dispatchStamp=selectionReviewStamp(stampedSelection);
-   const stillCurrent=()=>buildData.flashSlot===state.preferences.flashSlot&&(!derived.required||selectionWriteAtDispatch===selectionWriteRevision)&&dispatchStamp===selectionReviewStamp(stampedSelection)&&(!selection||isDeepStrictEqual(remembered,storedPreparation(state.preparations,selection)))&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id)?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection).current);
+   const selectionWriteAtDispatch=selectionWriteRevision,dispatchStamp=selectionReviewStamp(stampedSelection,state,requestSource);
+   const stillCurrent=()=>sourceBindingCurrent(sourceBinding)&&buildData.flashSlot===state.preferences.flashSlot&&(!derived.required||selectionWriteAtDispatch===selectionWriteRevision)&&dispatchStamp===selectionReviewStamp(stampedSelection,state,requestSource)&&(!selection||isDeepStrictEqual(remembered,storedPreparation(state.preparations,selection)))&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,latestClient.session,sourceData())?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,latestClient.session,sourceData()).current);
    const guideCurrent=()=>selectionWriteAtDispatch===selectionWriteRevision&&stillCurrent();
    operation=beginPreparation('selection',{value,selection,context:value.context,...(expectedPreparation?{snapshotPreview:true}:{})});
-   const written=helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,session)?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,session).current)});
+   let written;if(helperReady)setHelperSourceLock(sourceBinding,true,requestSource);try{written=helperReady?await helper.request('prepareSelection',{value,operationId:operation.operationId,baseIdentity:generationBaseIdentity(data)}):await service.prepareClientSelection({value,data,installPath:state.preferences?.installPath,ownedPageId:state.ownedPageId},{isCurrent:stillCurrent,isCurrentSession:session=>sourceBindingCurrent(sourceBinding)&&(value.preselectOnly||!guardedIntent||stagedCatalogChoice(guardedIntent,selection.id,session,sourceData())?.id===selection.comboId)&&(!derived.required||value.preselectOnly||derivedCatalogState(selection,session,sourceData()).current)});}finally{if(helperReady)setHelperSourceLock(sourceBinding,false);}
    let event=finishPreparation(operation,{result:written});
-   if(written.complete&&selection&&!value.preselectOnly&&guideCurrent())rememberAppliedGuide(String(value.sessionGameId),selection);
+   if(written.complete&&selection&&!value.preselectOnly&&guideCurrent())rememberAppliedGuide(String(value.sessionGameId),selection,requestSource);
    // Loading can destroy the sidebar before its IPC reply. Commit the clicked
    // configuration in main so its guide survives that legitimate transition.
-   const result=await preservePreparationResult(written,[['保存符文页记录',async()=>{if(written.steps?.runes?.status==='done')await saveCurrentState(current=>({...current,ownedPageId:written.steps.runes.pageId}));}],['刷新客户端',()=>status(true)],['保存预选状态',()=>rememberSelectionHover(value,written)],['同步本局指引',async()=>{if(written.complete&&selection&&guideCurrent()&&inGame()&&publicClientGameId(latestClient)===String(value.sessionGameId)){
+   const result=await preservePreparationResult(written,[['保存符文页记录',async()=>{if(written.steps?.runes?.status==='done')await saveCurrentState(current=>({...current,ownedPageId:written.steps.runes.pageId}));}],['刷新客户端',()=>status(true)],['保存预选状态',()=>rememberSelectionHover(value,written,requestSource)],['同步本局指引',async()=>{if(written.complete&&selection&&guideCurrent()&&inGame()&&publicClientGameId(latestClient)===String(value.sessionGameId)){
     const previous=state.guide,basis=reconcileKnownGuide(previous,{phase:latestClient.phase,gameId:String(value.sessionGameId)}).guide,next=guideCore.selectGuide(basis,selection);
     next.match={...(next.match||{}),gameId:String(value.sessionGameId),phase:latestClient.phase};await setGuideState(next,previous,undefined,false,true,()=>guideCurrent()&&inGame()&&publicClientGameId(latestClient)===String(value.sessionGameId));guide.publish();await guide.phase(latestClient.phase,latestClient.connected);
    }}]]);
    if(result.followUpError!==written.followUpError)event=finishPreparation(operation,{result});if(written.complete&&value?.notice)broadcastChampSelectNotice(value.notice,{context:value.context,pageId:written.steps?.runes?.pageId,page:value.page},operation).catch(()=>{});return {...result,preparationRevision:event.revision};
   }catch(error){if(operation)finishPreparation(operation,{result:{complete:false,message:String(error.message||'配置未完成')}});throw error;
   }finally{applyingRunes=false;importingItemSet=false;}
- });
+ },true);
  guard('copy',text=>{clipboard.writeText(String(text).slice(0,20000));return true;});
  guard('import-item-set',async value=>{
   if(importingItemSet||applyingRunes)throw Error('客户端配置正在处理，请稍后');importingItemSet=true;
@@ -1244,10 +1284,14 @@ async function boot(){
  });
  guard('export-state',async()=>{const result=await dialog.showSaveDialog(win,{title:'备份收藏与偏好',defaultPath:'开黑搭子-备份.json',filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return false;
   await fs.writeFile(result.filePath,storage.createBackup(state),'utf8');return true;});
- guard('import-state',async()=>{const result=await dialog.showOpenDialog(win,{title:'导入收藏与偏好',properties:['openFile'],filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return null;
+ guard('import-state',async(value,context)=>{if(context===undefined&&value?.sender){context=value;value=undefined;}const {sender}=context;
+  const source=value?.source===undefined?normalizeBuildSource(data.buildSource):requireBuildSource(value.source),epoch=value?.sourceEpoch;
+  if(epoch!==undefined&&(!Number.isSafeInteger(epoch)||epoch<0))throw Error('配置来源状态格式不正确');
+  if(windowSources.get(sender)?.helperLocked)throw Error('连接助手正在应用该窗口的配置，请完成后再导入');
+  const result=await dialog.showOpenDialog(win,{title:'导入收藏与偏好',properties:['openFile'],filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return null;
   const incoming=await storage.readBackup(result.filePaths[0]);
-  await saveCurrentState(current=>storage.mergeState(current,incoming,data.champions));closeAutoRoomIfRevoked();publishWindows('presentation-update',state.preferences.presentation);guide.publish();companion.sync();return state;
- });
+  await saveCurrentState(current=>{const entry=windowSources.get(sender);if(entry?.helperLocked)throw Error('连接助手正在应用该窗口的配置，请完成后再导入');if(epoch!==undefined&&entry&&epoch<entry.epoch)throw Error('配置来源已变化，请重新导入');const merged=storage.mergeState(current,incoming,data.champions),previous=entry?.source||source;if(!isDeepStrictEqual(previous,merged.preferences.buildSource))noteWindowSource(sender,merged.preferences.buildSource,epoch,{saveFallback:epoch===undefined});return merged;});closeAutoRoomIfRevoked();publishWindows('presentation-update',state.preferences.presentation);guide.publish();companion.sync();return state;
+ },true);
  Menu.setApplicationMenu(null);createWindow();
  try{tray=new Tray(nativeImage.createFromPath(path.join(root,'assets/icon.png')));tray.setToolTip('开黑搭子');tray.setContextMenu(Menu.buildFromTemplate([{label:'打开开黑搭子',click:showMainWindow},{label:'本局指引',click:()=>prepareCurrentGuide().then(()=>guide.show()).catch(()=>guide.show())},{label:'找回指引到当前屏幕',click:()=>prepareCurrentGuide().then(()=>guide.recover()).catch(()=>guide.recover().catch(()=>{}))},{label:'切换指引交互 / 鼠标穿透',click:()=>guide.interact().catch(()=>{})},{label:'退出',click:()=>{quitting=true;app.quit();}}]));tray.on('double-click',showMainWindow);}catch{}
  hotkeyAvailable=globalShortcut.register('Control+Shift+Space',()=>{if(win?.isVisible()&&win.isFocused()){companion?.dismiss();win.hide();}else showMainWindow();});

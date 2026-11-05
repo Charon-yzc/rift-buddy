@@ -1,8 +1,8 @@
 import {BUNDLED_CATALOG,validateCatalog,installValidatedCatalog,catalogIssues} from './core/catalog.mjs';
 import {normalizeBuildSource,sameBuildSource,selectBuildSource} from './core/build-source.mjs';
 import {prepareAssets,installAssets} from './ui.mjs';
-import {optionalGearCompatibility} from './core/optional-gear-review.mjs';
-import {historicalSkillCompatible} from './core/historical-catalog-review.mjs';
+import {projectCatalogAvailability} from './core/catalog-availability.mjs';
+import {linkReviewStatuses} from './core/catalog-link-review.mjs';
 
 const baseFields=['champions','items','runes','spells','abilityReference','historicalAbilityReference','spellbook','patch','version','mechanicSourceRevision'];
 const imageFields=['imageOverrides','items','augments','abilityReference','spells','runes','version'];
@@ -35,18 +35,17 @@ export function createRendererDataState({getSource,requestSnapshot,beforeApply=(
   // Only narrow a proof supplied by the authoritative store. Source changes
   // can invalidate or restore local usability; they cannot create a review.
   if(next.catalogInfo?.status&&(change.sourceChanged||change.baseChanged||change.catalogChanged||Object.hasOwn(changes,'catalogInfo'))){
-   const statuses={...next.catalogInfo.status},entries=[...(next.catalog?.duos||[]),...(next.catalog?.trios||[])];
-   for(const [id,status] of Object.entries(statuses))if(status?.optionalEvidence){
-    const nextStatus={...status};delete nextStatus.optionalCompatible;delete nextStatus.optionalMissing;
-    const missing=optionalGearCompatibility(entries.find(entry=>entry.id===id),next.catalog,next);
-    if(missing)Object.assign(nextStatus,{optionalCompatible:true,optionalMissing:missing});statuses[id]=nextStatus;
+   next.catalogInfo={...next.catalogInfo,status:projectCatalogAvailability(next)};
+  }
+  // A renderer may narrow the main process proof when its inputs change; it
+  // cannot create a historical link authorization for another patch.
+  if(next.catalogInfo?.linkStatus&&(change.baseChanged||change.catalogChanged||Object.hasOwn(changes,'catalogInfo'))){
+   const authoritative=next.catalogInfo.linkStatus,currentLinks=linkReviewStatuses(next.catalog,{...next,allowHistoricalLinks:true}),linkStatus={};
+   for(const [key,fresh] of Object.entries(currentLinks)){
+    const prior=authoritative[key],approved=prior?.invalid===false&&prior.stale===false&&(!fresh.historicalPatch||prior.historicalPatch===fresh.historicalPatch);
+    linkStatus[key]=approved?fresh:{...fresh,stale:true};
    }
-   const historicalDefaults=new Map();
-   for(const [id,status] of Object.entries(statuses))if(status?.historicalEvidence){
-    const nextStatus={...status};delete nextStatus.historicalCompatible;delete nextStatus.historicalPatch;
-    if(!nextStatus.invalid&&nextStatus.stale&&historicalSkillCompatible(entries.find(entry=>entry.id===id),next.catalog,next,status.historicalEvidence,historicalDefaults))Object.assign(nextStatus,{historicalCompatible:true,historicalPatch:next.patch});statuses[id]=nextStatus;
-   }
-   next.catalogInfo={...next.catalogInfo,status:statuses};
+   next.catalogInfo={...next.catalogInfo,linkStatus};
   }
   const preparedImages=change.assetsChanged?images.prepare(next):null,before=beforeApply(change);
   if(change.catalogChanged)catalog.install(next.catalog);

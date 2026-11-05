@@ -3,6 +3,7 @@ import {ROLES,profile} from './rules.mjs';
 import {roleClaimChoice,activeRoleClaim} from './role-claim.mjs';
 import {CLIENT_POSITION_ROLES} from './draft.mjs';
 import {rankedDraftPolicy} from './ranked-draft.mjs';
+import {requireBuildSource} from './build-source.mjs';
 
 export const pregamePhase=phase=>['None','Lobby','Matchmaking','ReadyCheck'].includes(phase);
 export function validatePregameIntent(value){
@@ -17,7 +18,8 @@ export function validatePregameIntent(value){
  const selection=kind==='hero'&&value.selection?validateGuideSelection(value.selection):null;
  if(selection&&(selection.id!==value.champion||selection.mode!=='rift'||value.role&&selection.role!==value.role))throw Error('预选配置与英雄不一致');
  if(value.selectionFields!==undefined&&(!selection||!Array.isArray(value.selectionFields)||value.selectionFields.length>30||!value.selectionFields.every(field=>typeof field==='string'&&/^[A-Za-z][A-Za-z0-9]{0,39}$/.test(field))))throw Error('预选配置字段格式不正确');
- return {role:value.role,champion:value.champion,...(kind?{kind}:{}),...(selection?{selection}:{}),...(value.selectionFields?{selectionFields:[...new Set(value.selectionFields)]}:{}),...(reviewStamp?{reviewStamp}:{}),...(value.catalogChoiceToken?{catalogChoiceToken:value.catalogChoiceToken}:{}),...(attemptedGameId?{attemptedGameId}:{}),...(hoveredCellId!==null?{hoveredCellId}:{})};
+ const buildSource=value.buildSource===undefined?null:requireBuildSource(value.buildSource);
+ return {role:value.role,champion:value.champion,...(kind?{kind}:{}),...(selection?{selection}:{}),...(value.selectionFields?{selectionFields:[...new Set(value.selectionFields)]}:{}),...(reviewStamp?{reviewStamp}:{}),...(buildSource?{buildSource}:{}),...(value.catalogChoiceToken?{catalogChoiceToken:value.catalogChoiceToken}:{}),...(attemptedGameId?{attemptedGameId}:{}),...(hoveredCellId!==null?{hoveredCellId}:{})};
 }
 // Restore only a confirmed placeholder for this exact public game/player/hero.
 // This is display state, not permission to repeat a write after restarting.

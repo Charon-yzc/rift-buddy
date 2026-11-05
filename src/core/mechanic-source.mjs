@@ -1,5 +1,6 @@
 import {fingerprint} from './content-fingerprint.mjs';
 const hash=/^[a-f0-9]{64}$/,legacyHash=/^[a-f0-9]{16}$/,patchPattern=/^\d+\.\d+$/,heroPattern=/^[A-Za-z][A-Za-z0-9]+$/;
+export function olderPatch(left,right){if(!/^\d{2}\.\d{1,2}$/.test(left||'')||!/^\d{2}\.\d{1,2}$/.test(right||''))return false;const a=left.split('.').map(Number),b=right.split('.').map(Number);return a[0]<b[0]||a[0]===b[0]&&a[1]<b[1];}
 export function characterSourceURL(patch,id){
  if(!patchPattern.test(patch)||!heroPattern.test(id))throw Error('英雄机制来源编号或补丁无效');
  const name=id.toLowerCase();return `https://raw.communitydragon.org/${patch}/game/data/characters/${name}/${name}.bin.json`;
@@ -25,6 +26,13 @@ export function validMechanicSourceAnchor(anchor){
 export function mechanicSourceMatches(champion,patch,anchor,legacyFingerprint){
  if(!validMechanicSourceAnchor(anchor)||anchor.legacyFingerprint!==legacyFingerprint)return false;
  const input=mechanicSourceInput(champion,patch);return !!input&&fingerprint(input)===fingerprint(anchor.input);
+}
+// Across patches, URLs and version necessarily differ. Keep both full source
+// content checks; equality is change detection, not a new review.
+export function mechanicSourceContentMatches(champion,patch,anchor,legacyFingerprint){
+ if(!validMechanicSourceAnchor(anchor)||anchor.legacyFingerprint!==legacyFingerprint)return false;
+ const input=mechanicSourceInput(champion,patch);
+ return !!input&&input.character.sha256===anchor.input.character.sha256&&input.dataDragon.fingerprint===anchor.input.dataDragon.fingerprint;
 }
 // Call only for an explicit review or the one-time, reviewed migration tool.
 // Collection, cache restoration and statistics refresh never create anchors.

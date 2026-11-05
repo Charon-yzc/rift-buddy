@@ -1,6 +1,7 @@
 import {escape as e,button,icon} from './ui.mjs';
 import {ROLES} from './core/rules.mjs';
 import {partyRoleConflicts} from './core/party-range.mjs';
+import {buildSourceLabel} from './core/build-source.mjs';
 
 export function pregameControls({scope='party',style='balanced',ownRole='',slots=[],room=null,party=null,compact=false,moreContent='',preselection=null,preselectionHero='',includePreselected=false,busy=false,ranked=false}={}){
  const selectedStyle=['balanced','fun','wild'].includes(style)?style:'balanced';
@@ -16,6 +17,7 @@ export function pregameControls({scope='party',style='balanced',ownRole='',slots
   ${ranked?'':`<div class="pregame-primary">
    <label class="pregame-role" data-role-needed="${!ownRole}"><span>预选</span><select id="solo-role" class="select" aria-label="预选分路" ${busy?'disabled':''}><option value="" ${ownRole?'':'selected'}>分路</option>${ROLES.map(role=>`<option value="${e(role.id)}" ${ownRole===role.id?'selected':''}>${e(role.name)}</option>`).join('')}</select></label><div class="pregame-hero-choice" data-selected="${!!preselection?.champion}">${button('pregame-hero',preselectionHero||icon('user')+'<span>英雄</span>','','pregame-hero',`aria-label="${preselection?.champion?'更换预选英雄':'预选英雄'}" title="${busy?'正在应用配置':'选择英雄'}" ${busy?'disabled':''}`)}${preselection?.kind==='hero'&&preselection.champion&&!preselection.attemptedGameId?button('pregame-clear','','close','pregame-cancel','aria-label="取消预选英雄" title="取消预选英雄"'):''}</div>
   </div>`}
+  ${!ranked&&preselection?.buildSource?`<small class="pregame-source" title="已确认预选使用的配置来源">预选来源 · ${e(buildSourceLabel(preselection.buildSource))}</small>`:''}
   <div class="pregame-secondary">
    <div class="pregame-styles" role="group" aria-label="推荐风格">${[['balanced','稳妥'],['fun','娱乐'],['wild','花活']].map(([id,label])=>choice('draft-style','style',id,label,selectedStyle===id,`title="${styleHints[id]}"`)).join('')}</div>
    <label class="pregame-style-select"><select id="companion-style" class="select" aria-label="推荐风格" title="${styleHints[selectedStyle]}">${[['balanced','稳妥'],['fun','娱乐'],['wild','花活']].map(([id,label])=>`<option value="${id}" ${selectedStyle===id?'selected':''}>${label}</option>`).join('')}</select></label>

@@ -7,6 +7,7 @@ import {DATA_FEED_ORIGIN,DATA_FEED_KEYS} from './data-feed.mjs';
 import {COMMUNITY_MAX_PACKED,verifyCommunityEnvelope,decodeCommunitySnapshot,validateCommunityData} from './community-data.mjs';
 import {BUNDLED_CATALOG} from '../src/core/catalog.mjs';
 import {compareVersions} from '../src/core/app-update.mjs';
+import {olderPatch} from '../src/core/mechanic-source.mjs';
 
 const MAX_MANIFEST=16_384;
 // Disk records contain the compressed asset encoded as base64, its bounded
@@ -51,10 +52,25 @@ export async function createCommunityFeedCache({root,getData,prepare,getContext=
   commit();candidate.file=file;candidate.value=value;active=candidate;appliedData=data;clearedData=null;blocked=null;retry=null;if(pending===candidate)pending=null;
   const next={phase:pending?'pending':'ready',version:candidate.manifest.version,updatedAt:candidate.manifest.publishedAt,message:pending?'新社区资料将在空闲时启用':'社区资料已更新'};if(notify)publish(next);else status={...status,...next};return true;
  }
+ // Only the already accepted signed cache may outlive its game patch. The
+ // original envelope and both hashes are checked again on restart and refresh;
+ // no old Hex routes are passed to the owner.
+ function installHistoricalRift(candidate,{restore=false,notify=true}={}){
+  const data=getData();if(!restore&&!canActivate())return false;
+  const m=manifest(candidate.record.envelope);
+  if(JSON.stringify(m)!==JSON.stringify(candidate.manifest)||!olderPatch(m.patch,data.patch)||compare(m.version,bundledVersion)<0||compareVersions(currentVersion,m.minimumApp)<0)throw Error('历史社区资料身份不匹配');
+  const value=decode(candidate.record,m);
+  if(value.catalog?.version!==m.version)throw Error('历史组合库身份不匹配');
+  const commit=prepare({catalog:value.catalog,patch:m.patch,hexRoutes:null},data,{historicalRift:true});
+  if(typeof commit!=='function')throw Error('社区资料缺少提交步骤');
+  if(data!==getData()||!restore&&!canActivate())return false;
+  commit();appliedData=data;clearedData=null;blocked=null;retry=null;
+  const next={phase:pending?'pending':'ready',version:m.version,updatedAt:m.publishedAt,message:'保留旧版峡谷组合，海克斯等待当前版本资料'};if(notify)publish(next);else status={...status,...next};return true;
+ }
  function reconcile({restore=false,notify=true}={}){
   const data=getData();if(appliedData===data||clearedData===data&&clearedContext===getContext())return false;
   if(!restore&&!canActivate())return false;
-  if(active)try{if(install(active,{restore,notify}))return true;}catch{}
+  if(active)try{if(install(active,{restore,notify}))return true;}catch{try{if(installHistoricalRift(active,{restore,notify}))return true;}catch{}}
   // The owner has replaced its game generation. Remove any former official
   // overlay if it no longer validates; custom and personal catalogs stay owned
   // by the catalog store. The authenticated watermark remains on disk.
